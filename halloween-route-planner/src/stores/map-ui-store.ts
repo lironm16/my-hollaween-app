@@ -30,7 +30,7 @@ type MapUIStore = {
 };
 
 export const useMapUIStore = create<MapUIStore>((set) => ({
-  viewMode: "map",
+  viewMode: "list",
   filters: defaultFilters,
   setViewMode: (view) => set({ viewMode: view }),
   toggleScareLevel: (level) =>

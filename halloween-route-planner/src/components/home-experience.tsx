@@ -5,11 +5,13 @@ import { useShallow } from "zustand/shallow";
 import { FilterToolbar } from "@/components/filter-toolbar";
 import { HouseCard } from "@/components/house-card";
 import { HouseMap } from "@/components/house-map";
+import { MapFallback } from "@/components/map-fallback";
 import type { House } from "@/lib/types";
 import { useMapUIStore } from "@/stores/map-ui-store";
 import { filterHouses } from "@/lib/filtering";
 import { cn } from "@/lib/utils";
 import { BellRing, Download, Navigation, Route as RouteIcon } from "lucide-react";
+import { useMapAvailability } from "@/hooks/use-map-availability";
 
 type HomeExperienceProps = {
   initialHouses: House[];
@@ -32,6 +34,12 @@ export function HomeExperience({ initialHouses }: HomeExperienceProps) {
   );
 
   const selectedHouse = houses.find((house) => house.id === selectedHouseId);
+  const {
+    data: availability,
+    isLoading: isCheckingAvailability,
+    refetch: retryAvailability,
+    isFetching: isRefetchingAvailability,
+  } = useMapAvailability(viewMode === "map");
 
   function handleAddToRoute(house: House) {
     setRouteHouseIds((prev) =>
@@ -66,13 +74,37 @@ export function HomeExperience({ initialHouses }: HomeExperienceProps) {
 
           <div className="relative flex-1 overflow-hidden">
             {viewMode === "map" ? (
-              <HouseMap
-                houses={houses}
-                selectedId={selectedHouseId}
-                onSelect={(house) => {
-                  setSelectedHouseId(house.id);
-                }}
-              />
+              isCheckingAvailability ? (
+                <div className="flex h-full items-center justify-center rounded-3xl border border-white/10 bg-white/5">
+                  <div className="flex flex-col items-center gap-3 text-sm text-slate-200/80">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-transparent" />
+                    בודקים זמינות מפה בזמן אמת...
+                  </div>
+                </div>
+              ) : availability?.allowed ? (
+                <HouseMap
+                  houses={houses}
+                  selectedId={selectedHouseId}
+                  onSelect={(house) => {
+                    setSelectedHouseId(house.id);
+                  }}
+                />
+              ) : (
+                <MapFallback
+                  fallbackUrl={availability?.fallbackUrl ?? "/cached-map-fallback.svg"}
+                  onRetry={() => retryAvailability()}
+                  isRetrying={isRefetchingAvailability}
+                  usageInfo={
+                    availability
+                      ? {
+                          usage: availability.usage,
+                          limit: availability.limit,
+                          remaining: availability.remaining,
+                        }
+                      : undefined
+                  }
+                />
+              )
             ) : (
               <div className="grid h-full grid-cols-1 gap-4 overflow-y-auto pr-2 md:grid-cols-2 xl:grid-cols-3">
                 {houses.map((house) => (
