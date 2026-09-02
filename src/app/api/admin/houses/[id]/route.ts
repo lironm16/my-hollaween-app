@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { adminPatchSchema } from "@/lib/schema";
-import { adminUpdate } from "@/lib/store";
+import { adminDeleteHouse, adminUpdate } from "@/lib/store";
 import { geocodeHttpError } from "@/lib/geocode";
 
 export const runtime = "nodejs";
@@ -33,4 +33,19 @@ export async function PATCH(
       { status: 500 },
     );
   }
+}
+
+export async function DELETE(
+  _request: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  if (!(await isAdmin())) {
+    return NextResponse.json({ error: "נדרשת הרשאת מנהל." }, { status: 401 });
+  }
+  const { id } = await context.params;
+  const removed = await adminDeleteHouse(id);
+  if (!removed) {
+    return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404 });
+  }
+  return NextResponse.json({ ok: true });
 }

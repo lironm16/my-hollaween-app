@@ -243,6 +243,16 @@ export async function updateByEditCode(
   });
 }
 
+export async function adminDeleteHouse(id: string) {
+  return runSyncedWrite((db) => {
+    const idx = db.houses.findIndex((h) => h.id === id);
+    if (idx < 0) return false;
+    db.houses.splice(idx, 1);
+    db.updatedAt = new Date().toISOString();
+    return true;
+  });
+}
+
 export async function adminUpdate(
   id: string,
   patch: Partial<HouseInput> & NightPatch & {

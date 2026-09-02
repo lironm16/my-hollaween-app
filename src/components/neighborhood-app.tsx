@@ -188,10 +188,25 @@ export function NeighborhoodApp({
   }
 
   async function rejectHouse(id: string) {
-    const ok = await patchAdmin(id, { status: "rejected", rejectionReason: "נדחה על ידי מנהל" });
-    if (ok) {
-      toast.success("הבית נדחה");
+    setBusyAction(true);
+    try {
+      const res = await fetch(`/api/admin/houses/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      const data = await readApiJson<{ error?: string; ok?: boolean }>(res);
+      if (!res.ok || !data.ok) {
+        toast.error(data.error ?? "המחיקה נכשלה");
+        return;
+      }
+      setAdminHouses((list) => list.filter((house) => house.id !== id));
+      notifyCatalogChanged();
+      void refresh(true);
+      toast.success("הבית נדחה ונמחק");
       setSelectedId("closed");
+    } catch {
+      toast.error("אין קשר לשרת");
+    } finally {
+      setBusyAction(false);
     }
   }
 
@@ -302,7 +317,7 @@ export function NeighborhoodApp({
                     disabled={busyAction}
                     onClick={() => void rejectHouse(house.id)}
                   >
-                    דחייה
+                    דחייה ומחיקה
                   </Button>
                 </li>
               ))}
@@ -458,7 +473,7 @@ export function NeighborhoodApp({
                               disabled={busyAction}
                               onClick={() => void rejectHouse(selected.id)}
                             >
-                              דחייה
+                              דחייה ומחיקה
                             </Button>
                           </>
                         ) : null}
