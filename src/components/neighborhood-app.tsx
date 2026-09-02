@@ -60,6 +60,7 @@ export function NeighborhoodApp({
   const [likedOnly, setLikedOnly] = useState(false);
   const [unvisitedOnly, setUnvisitedOnly] = useState(false);
   const [followTick, setFollowTick] = useState(0);
+  const [fitTick, setFitTick] = useState(0);
   const [askedLocation, setAskedLocation] = useState(false);
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
   const [adminLoading, setAdminLoading] = useState(false);
@@ -197,6 +198,12 @@ export function NeighborhoodApp({
     geo.refresh();
   }
 
+  function goToMainMap() {
+    setView("map");
+    setSelectedId("closed");
+    setFitTick((n) => n + 1);
+  }
+
   function applyAdminHouse(next: House | PublicHouse) {
     const full = "editCode" in next && typeof next.editCode === "string"
       ? (next as House)
@@ -306,6 +313,7 @@ export function NeighborhoodApp({
       style={{ display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}
     >
       <AppHeader
+        onMainTap={goToMainMap}
         actions={
           <>
             {!admin ? (
@@ -486,6 +494,7 @@ export function NeighborhoodApp({
                 active={view === "map"}
                 userLocation={origin}
                 followTick={followTick}
+                fitTick={fitTick}
                 locating={geo.status === "pending" && askedLocation}
                 onLocate={goToMyLocation}
               />

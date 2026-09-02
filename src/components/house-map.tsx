@@ -162,27 +162,25 @@ function FlyToUser({
 function FitAllHouses({
   houses,
   active,
-  selectedId,
+  fitTick = 0,
 }: {
   houses: PublicHouse[];
   active: boolean;
-  selectedId?: string | null;
+  fitTick?: number;
 }) {
   const map = useMap();
-  const fittedFor = useRef<string>("");
-  const wasActive = useRef(false);
+  const didInitialFit = useRef(false);
+  const lastFitTick = useRef(0);
 
   useEffect(() => {
-    const opening = active && !wasActive.current;
-    wasActive.current = active;
-    if (!active || selectedId || houses.length === 0) return;
+    if (!active || houses.length === 0) return;
 
-    const key = houses
-      .map((house) => house.id)
-      .sort()
-      .join("|");
-    if (!opening && key === fittedFor.current) return;
-    fittedFor.current = key;
+    const isFirst = !didInitialFit.current;
+    const isMainTap = fitTick > lastFitTick.current;
+    if (!isFirst && !isMainTap) return;
+
+    didInitialFit.current = true;
+    lastFitTick.current = fitTick;
 
     map.invalidateSize({ animate: false });
     if (houses.length === 1) {
@@ -196,9 +194,9 @@ function FitAllHouses({
     map.fitBounds(next, {
       padding: [56, 56],
       maxZoom: Math.min(17, config.map.maxZoom),
-      animate: false,
+      animate: isMainTap,
     });
-  }, [active, houses, map, selectedId]);
+  }, [active, houses, map, fitTick]);
 
   return null;
 }
@@ -372,6 +370,7 @@ type Props = {
   active?: boolean;
   userLocation?: UserLocation | null;
   followTick?: number;
+  fitTick?: number;
   locating?: boolean;
   onLocate?: () => void;
 };
@@ -387,6 +386,7 @@ export function HouseMap({
   active = true,
   userLocation = null,
   followTick = 0,
+  fitTick = 0,
   locating = false,
   onLocate,
 }: Props) {
@@ -403,11 +403,6 @@ export function HouseMap({
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
     [houses, pickMode],
   );
-  const houseBounds = useMemo(() => {
-    if (pickMode || houses.length === 0) return null;
-    const next = L.latLngBounds(houses.map((house) => [house.lat, house.lng] as [number, number]));
-    return next.isValid() ? next : null;
-  }, [houses, pickMode]);
   const ready = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -439,8 +434,6 @@ export function HouseMap({
         key={pickMode ? "pick" : "view"}
         center={[config.map.center.lat, config.map.center.lng]}
         zoom={config.map.zoom}
-        bounds={houseBounds ?? undefined}
-        boundsOptions={{ padding: [56, 56], maxZoom: Math.min(17, config.map.maxZoom) }}
         minZoom={config.map.minZoom}
         maxZoom={config.map.maxZoom}
         maxBounds={bounds}
@@ -460,7 +453,7 @@ export function HouseMap({
         <ResizeFix />
         <VisibilityFix active={active} />
         {!pickMode ? (
-          <FitAllHouses houses={houses} active={active} selectedId={selectedId} />
+          <FitAllHouses houses={houses} active={active} fitTick={fitTick} />
         ) : null}
         {pickMode && onPick ? <ClickCatcher onPick={onPick} /> : null}
         {pickMode && pick ? (
