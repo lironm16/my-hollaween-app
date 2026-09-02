@@ -17,7 +17,7 @@ import { config, inNeighborhood } from "@/lib/config";
 import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
 import { houseHeadline, themeEmoji } from "@/lib/labels";
-import { candyLevel, effectiveVisit, isFrozen } from "@/lib/house-state";
+import { effectiveVisit, isFrozen } from "@/lib/house-state";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { HouseTags } from "@/components/house-tags";
 import { cn } from "@/lib/utils";
