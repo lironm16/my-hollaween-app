@@ -40,7 +40,7 @@ export default function EditPage() {
         body: JSON.stringify({ editCode }),
       });
       const data = await readApiJson<{ error?: string; house?: PublicHouse }>(res);
-      if (!res.ok) {
+      if (!res.ok || !data.house) {
         const local = owned.find((item) => item.id === id && item.editCode === editCode);
         if (local?.preview) {
           setHouse(local.preview);
