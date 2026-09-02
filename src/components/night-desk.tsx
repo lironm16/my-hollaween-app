@@ -48,7 +48,6 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(admin ? patch : { ...patch, editCode }),
-        signal: AbortSignal.timeout(20_000),
       });
       const data = await readApiJson<{ error?: string; house?: PublicHouse }>(res);
       if (!res.ok || !data.house) {

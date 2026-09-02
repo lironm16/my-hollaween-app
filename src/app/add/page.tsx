@@ -9,41 +9,34 @@ import { CodesCopy } from "@/components/codes-copy";
 import { buttonVariants } from "@/components/ui/button";
 import { saveOwnedHouse, notifyCatalogChanged } from "@/lib/offline-db";
 import { PersistNote } from "@/components/persist-note";
-import { readApiJson } from "@/lib/api-json";
+import { publishHouse } from "@/lib/publish-house";
 import type { HouseInput } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export default function AddPage() {
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState<{ id: string; editCode: string; name: string } | null>(
-    null,
-  );
+  const [done, setDone] = useState<{
+    id: string;
+    editCode: string;
+    name: string;
+    shared: boolean;
+  } | null>(null);
 
   async function onSubmit(input: HouseInput) {
     setBusy(true);
     try {
-      const res = await fetch("/api/houses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
-        signal: AbortSignal.timeout(20_000),
-      });
-      const data = await readApiJson<{ error?: string; house?: { id: string; name: string }; editCode?: string }>(res);
-      if (!res.ok || !data.house || !data.editCode) {
-        toast.error(data.error ?? "השליחה נכשלה");
-        return;
-      }
+      const { house, editCode, shared } = await publishHouse(input);
       saveOwnedHouse({
-        id: data.house.id,
-        name: data.house.name,
-        editCode: data.editCode,
-        preview: data.house,
+        id: house.id,
+        name: house.name,
+        editCode,
+        preview: house,
       });
       notifyCatalogChanged();
-      setDone({ id: data.house.id, editCode: data.editCode, name: data.house.name });
-      toast.success("הבית עלה למפה של כולם");
-    } catch {
-      toast.error("אין קשר לשרת. נסו שוב.");
+      setDone({ id: house.id, editCode, name: house.name, shared });
+      toast.success(shared ? "הבית עלה למפה של כולם" : "הבית נשמר במפה");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "השליחה נכשלה");
     } finally {
       setBusy(false);
     }
@@ -63,7 +56,9 @@ export default function AddPage() {
           <div className="space-y-4 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-400/30">
             <h1 className="font-display text-2xl text-orange-300">הבית עלה למפה</h1>
             <p className="text-sm text-violet-100">
-              {done.name} כבר באתר של השכונה. אחרי רענון קצר (עד כ־15 שניות) כולם רואים אותו במפה — לא רק בטלפון הזה.
+              {done.shared
+                ? `${done.name} כבר באתר של השכונה. אחרי רענון קצר כולם רואים אותו במפה.`
+                : `${done.name} שמור במפה בטלפון הזה.`}
             </p>
             <PersistNote />
             <CodesCopy id={done.id} editCode={done.editCode} />

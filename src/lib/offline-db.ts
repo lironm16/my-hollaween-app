@@ -66,11 +66,13 @@ export function loadOwnedHouses(): OwnedHouse[] {
 }
 
 export function saveOwnedHouse(house: OwnedHouse) {
-  const next = loadOwnedHouses().filter((h) => h.id !== house.id);
-  next.unshift(house);
-  localStorage.setItem(MY_HOUSES_KEY, JSON.stringify(next.slice(0, 20)));
-  if (typeof window !== "undefined") {
+  try {
+    const next = loadOwnedHouses().filter((h) => h.id !== house.id);
+    next.unshift(house);
+    localStorage.setItem(MY_HOUSES_KEY, JSON.stringify(next.slice(0, 20)));
     window.dispatchEvent(new Event("hw-owned-changed"));
+  } catch {
+    // Private mode / blocked storage should not look like a dead server.
   }
 }
 

@@ -131,7 +131,13 @@ export function HouseForm({
           return;
         }
         const theme = themeFromName(form.name) ?? form.theme;
-        void onSubmit({ ...form, theme });
+        const clock = (value: string) => (/^\d{2}:\d{2}/.exec(value)?.[0] ?? value);
+        void onSubmit({
+          ...form,
+          theme,
+          openFrom: clock(form.openFrom),
+          openTo: clock(form.openTo),
+        });
       }}
     >
       <div>

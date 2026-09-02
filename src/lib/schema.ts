@@ -22,8 +22,14 @@ const houseFields = z.object({
   treatStock: treatStockSchema,
   visit: z.enum(VISIT_STATES),
   scareLevel: z.enum(SCARE_LEVELS),
-  openFrom: z.string().regex(/^\d{2}:\d{2}$/),
-  openTo: z.string().regex(/^\d{2}:\d{2}$/),
+  openFrom: z.preprocess(
+    (value) => (typeof value === "string" ? value.slice(0, 5) : value),
+    z.string().regex(/^\d{2}:\d{2}$/),
+  ),
+  openTo: z.preprocess(
+    (value) => (typeof value === "string" ? value.slice(0, 5) : value),
+    z.string().regex(/^\d{2}:\d{2}$/),
+  ),
   notes: z.string().trim().max(240),
   accessible: z.boolean(),
 });
