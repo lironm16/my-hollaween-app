@@ -64,6 +64,8 @@ export type House = {
   createdAt: string;
   updatedAt: string;
   rejectionReason?: string;
+  /** Remote document id; never sent to the public catalog. */
+  storeId?: string;
 };
 
 export type HouseInput = {
@@ -94,7 +96,7 @@ export type NightPatch = {
   photoUrl?: string;
 };
 
-export type PublicHouse = Omit<House, "editCode" | "rejectionReason">;
+export type PublicHouse = Omit<House, "editCode" | "rejectionReason" | "storeId">;
 
 export type Catalog = {
   updatedAt: string;

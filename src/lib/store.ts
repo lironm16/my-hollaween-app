@@ -8,12 +8,10 @@ import { defaultTreatStock, effectiveVisit, isPubliclyListed } from "@/lib/house
 import { cloneDb } from "@/lib/catalog-sync";
 import { parsePhotoUrl } from "@/lib/photos";
 import {
-  acquireRemoteLock,
-  commitRemoteDb,
   fetchRemoteDb,
   fetchRemoteSnapshot,
+  persistRemote,
   putRemoteDb,
-  releaseRemoteLock,
   remoteDbUrl,
 } from "@/lib/remote-db";
 import {
@@ -168,32 +166,25 @@ async function runSyncedWrite<T>(fn: (db: DbFile) => T | Promise<T>): Promise<T>
       setMem(db);
       return result;
     }
-    const owner = `${process.pid}-${Math.random().toString(36).slice(2, 10)}`;
-    await acquireRemoteLock(owner);
-    try {
-      let lastError: Error | null = null;
-      for (let attempt = 0; attempt < 8; attempt++) {
-        const snap = await fetchRemoteSnapshot(url);
-        const db = snap ? normalizeDb(cloneDb(snap.db)) : normalizeDb(await readSeed());
-        const expectedRev = snap?.index.rev ?? 0;
-        const result = await fn(db);
-        try {
-          const ok = await commitRemoteDb(url, db, expectedRev);
-          if (ok) {
-            setMem(db);
-            return result;
-          }
-        } catch (error) {
-          lastError = error instanceof Error ? error : new Error("STORE_UNAVAILABLE");
+    let lastError: Error | null = null;
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const snap = await fetchRemoteSnapshot(url);
+      const db = snap ? normalizeDb(cloneDb(snap.db)) : normalizeDb(await readSeed());
+      const result = await fn(db);
+      try {
+        const ok = await persistRemote(url, snap?.db ?? null, db);
+        if (ok) {
+          setMem(db);
+          return result;
         }
-        await new Promise((resolve) =>
-          setTimeout(resolve, 40 * 2 ** Math.min(attempt, 4) + Math.floor(Math.random() * 50)),
-        );
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error("STORE_UNAVAILABLE");
       }
-      throw lastError ?? new Error("STORE_UNAVAILABLE");
-    } finally {
-      await releaseRemoteLock(owner);
+      await new Promise((resolve) =>
+        setTimeout(resolve, 50 * 2 ** Math.min(attempt, 4) + Math.floor(Math.random() * 40)),
+      );
     }
+    throw lastError ?? new Error("STORE_UNAVAILABLE");
   });
 }
 

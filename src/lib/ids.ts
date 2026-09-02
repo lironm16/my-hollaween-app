@@ -11,11 +11,12 @@ export function newEditCode() {
   return pin();
 }
 
-export function toPublicHouse<T extends { editCode?: string; rejectionReason?: string }>(
+export function toPublicHouse<T extends { editCode?: string; rejectionReason?: string; storeId?: string }>(
   house: T,
 ) {
   const rest = { ...house };
   delete rest.editCode;
   delete rest.rejectionReason;
-  return rest as Omit<T, "editCode" | "rejectionReason">;
+  delete rest.storeId;
+  return rest as Omit<T, "editCode" | "rejectionReason" | "storeId">;
 }
