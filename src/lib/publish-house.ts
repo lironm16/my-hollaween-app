@@ -1,12 +1,9 @@
-import { newEditCode, newPublicId } from "@/lib/ids";
 import { readApiJson } from "@/lib/api-json";
-import { defaultTreatStock } from "@/lib/house-state";
 import type { HouseInput, PublicHouse } from "@/lib/types";
 
 export type PublishResult = {
   house: PublicHouse;
   editCode: string;
-  shared: boolean;
 };
 
 function clock(value: string) {
@@ -28,57 +25,26 @@ export function readyHouseInput(input: HouseInput): HouseInput {
   };
 }
 
-function localPreview(input: HouseInput, id: string): PublicHouse {
-  const now = new Date().toISOString();
-  const visit = input.visit ?? "come";
-  const treats = input.treats?.includes("candy")
-    ? (input.treats ?? [])
-    : (["candy" as const, ...(input.treats ?? [])]);
-  return {
-    ...input,
-    treats,
-    treatStock: {
-      ...defaultTreatStock(treats),
-      ...(input.treatStock ?? {}),
-      candy: input.treatStock?.candy ?? "plenty",
-    },
-    visit,
-    id,
-    status: "approved",
-    soldOut: visit === "closed",
-    adminFrozen: false,
-    ownerFrozenUntil: null,
-    photoUrl: "",
-    createdAt: now,
-    updatedAt: now,
-  };
-}
-
+/** Always posts to the server. Never keeps a house only on the phone. */
 export async function publishHouse(input: HouseInput): Promise<PublishResult> {
   const body = readyHouseInput(input);
+  let res: Response;
   try {
-    const res = await fetch("/api/houses", {
+    res = await fetch("/api/houses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    const data = await readApiJson<{
-      error?: string;
-      house?: PublicHouse;
-      editCode?: string;
-    }>(res);
-    if (res.ok && data.house && data.editCode) {
-      return { house: data.house, editCode: data.editCode, shared: true };
-    }
-    if (res.ok === false && res.status >= 400 && res.status < 500) {
-      throw new Error(data.error || "השליחה נכשלה");
-    }
-  } catch (error) {
-    if (error instanceof Error && error.message && !/failed to fetch|network|abort/i.test(error.message) && error.name !== "TypeError") {
-      throw error;
-    }
+  } catch {
+    throw new Error("אין חיבור לשרת. בדקו את הרשת ונסו שוב.");
   }
-  const id = newPublicId();
-  const editCode = newEditCode();
-  return { house: localPreview(body, id), editCode, shared: false };
+  const data = await readApiJson<{
+    error?: string;
+    house?: PublicHouse;
+    editCode?: string;
+  }>(res);
+  if (res.ok && data.house && data.editCode) {
+    return { house: data.house, editCode: data.editCode };
+  }
+  throw new Error(data.error || "לא הצלחנו לשמור את הבית בשרת. נסו שוב.");
 }

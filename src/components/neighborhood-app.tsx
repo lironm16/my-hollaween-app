@@ -27,7 +27,6 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useHouseFilters } from "@/hooks/use-house-filters";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
-import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { readApiJson } from "@/lib/api-json";
@@ -85,7 +84,6 @@ export function NeighborhoodApp({
   const [editing, setEditing] = useState(false);
   const [busyAction, setBusyAction] = useState(false);
 
-  const owned = useOwnedHouses();
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
 
@@ -163,13 +161,8 @@ export function NeighborhoodApp({
         .filter((house) => house.status !== "rejected")
         .map((house) => toPublicHouse(house) as PublicHouse);
     }
-    const published = catalog?.houses ?? [];
-    const mine = owned
-      .map((item) => item.preview)
-      .filter((house): house is PublicHouse => Boolean(house))
-      .filter((house) => !published.some((p) => p.id === house.id));
-    return [...published, ...mine];
-  }, [admin, adminHouses, catalog, owned]);
+    return catalog?.houses ?? [];
+  }, [admin, adminHouses, catalog]);
 
   const visible = useMemo(() => {
     return houses.filter((house) => {

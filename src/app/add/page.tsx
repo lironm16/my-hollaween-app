@@ -19,13 +19,12 @@ export default function AddPage() {
     id: string;
     editCode: string;
     name: string;
-    shared: boolean;
   } | null>(null);
 
   async function onSubmit(input: HouseInput) {
     setBusy(true);
     try {
-      const { house, editCode, shared } = await publishHouse(input);
+      const { house, editCode } = await publishHouse(input);
       saveOwnedHouse({
         id: house.id,
         name: house.name,
@@ -33,8 +32,8 @@ export default function AddPage() {
         preview: house,
       });
       notifyCatalogChanged();
-      setDone({ id: house.id, editCode, name: house.name, shared });
-      toast.success(shared ? "הבית נוסף למפה" : "הבית נשמר בטלפון הזה");
+      setDone({ id: house.id, editCode, name: house.name });
+      toast.success("הבית נוסף למפה");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "השליחה נכשלה");
     } finally {
@@ -56,14 +55,13 @@ export default function AddPage() {
           <div className="space-y-4 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-400/30">
             <h1 className="font-display text-2xl text-orange-300">הבית במפה</h1>
             <p className="text-sm text-violet-100">
-              {done.shared
-                ? `${done.name} כבר מופיע במפה הציבורית של השכונה.`
-                : `${done.name} נשמר בטלפון הזה. כשהשרת חוזר הוא יעלה למפה.`}
+              {done.name} נשמר בשרת ומופיע במפה הציבורית של השכונה.
             </p>
             <PersistNote />
             <CodesCopy id={done.id} editCode={done.editCode} />
             <p className="text-xs text-amber-200">
               שמרו את המזהה ואת קוד העריכה — רק איתם אפשר לעדכן מלאי, שעות או להקפיא את הבית.
+              עותק של הקודים נשמר גם בטלפון הזה לנוחות שלכם.
             </p>
             <div className="flex flex-wrap gap-2">
               <Link
@@ -81,7 +79,7 @@ export default function AddPage() {
           <>
             <h1 className="font-display mb-1 text-2xl text-orange-300">הוספת בית מפחיד</h1>
             <p className="mb-4 text-sm text-violet-200">
-              בחרו שם וכתובת אמיתית מהרשימה. אחרי השליחה הבית מופיע מיד במפה.
+              בחרו שם וכתובת אמיתית מהרשימה. אחרי השליחה הבית נשמר בשרת ומופיע מיד במפה.
             </p>
             <PersistNote className="mb-4" />
             <HouseForm submitLabel="הוסיפו למפה" onSubmit={onSubmit} busy={busy} />

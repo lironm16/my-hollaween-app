@@ -41,13 +41,7 @@ export default function EditPage() {
       });
       const data = await readApiJson<{ error?: string; house?: PublicHouse }>(res);
       if (!res.ok || !data.house) {
-        const local = owned.find((item) => item.id === id && item.editCode === editCode);
-        if (local?.preview) {
-          setHouse(local.preview);
-          toast.message("השרת לא זוכר את הבית. זה העותק שנשמר בטלפון הזה.");
-          return;
-        }
-        toast.error(data.error ?? "לא הצלחנו לפתוח לעריכה");
+        toast.error(data.error ?? "לא הצלחנו לפתוח לעריכה. בדקו את המזהה ואת קוד העריכה.");
         return;
       }
       setHouse(data.house);
