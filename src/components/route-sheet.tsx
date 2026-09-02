@@ -13,6 +13,7 @@ import { houseHeadline } from "@/lib/labels";
 import { formatDisplayAddress } from "@/lib/config";
 import {
   formatRouteSummary,
+  googleMapsNavigateUrl,
   googleMapsWalkingUrl,
   ROUTE_MAPS_MAX_STOPS,
   type WalkingRoute,
@@ -37,6 +38,11 @@ export function RouteSheet({
   hasGps: boolean;
 }) {
   const mapsUrl = route ? googleMapsWalkingUrl(route) : null;
+  const firstStop = route?.stops[0]?.house;
+  const navigateFirstUrl =
+    route && firstStop
+      ? googleMapsNavigateUrl(route.origin, { lat: firstStop.lat, lng: firstStop.lng })
+      : null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -91,55 +97,94 @@ export function RouteSheet({
                 ) : null}
               </div>
 
-              {mapsUrl ? (
-                <a
-                  href={mapsUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={cn(
-                    buttonVariants(),
-                    "h-11 w-full bg-orange-500 text-black hover:bg-orange-400",
-                  )}
-                >
-                  <Navigation className="size-4" />
-                  ניווט רגלי ב־Google Maps
-                  {route.stops.length > ROUTE_MAPS_MAX_STOPS
-                    ? ` (עד ${ROUTE_MAPS_MAX_STOPS} עצירות)`
-                    : ""}
-                </a>
-              ) : null}
+              <div className="space-y-2">
+                {mapsUrl ? (
+                  <a
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={cn(
+                      buttonVariants(),
+                      "h-11 w-full bg-orange-500 text-black hover:bg-orange-400",
+                    )}
+                  >
+                    <Navigation className="size-4" />
+                    פתיחת המסלול במפה (הליכה)
+                    {route.stops.length > ROUTE_MAPS_MAX_STOPS
+                      ? ` · ${ROUTE_MAPS_MAX_STOPS} עצירות`
+                      : ""}
+                  </a>
+                ) : null}
+                {navigateFirstUrl ? (
+                  <a
+                    href={navigateFirstUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={cn(buttonVariants({ variant: "outline" }), "h-11 w-full")}
+                  >
+                    התחלת ניווט רגלי לעצירה 1
+                  </a>
+                ) : null}
+                <p className="text-[11px] text-violet-400">
+                  «פתיחת המסלול» מציגה את כל העצירות על המפה בהליכה. «התחלת ניווט» מפעילה הוראות קוליות
+                  לעצירה הראשונה.
+                </p>
+              </div>
 
               <ol className="space-y-2">
-                {route.stops.map((stop) => (
-                  <li key={stop.house.id}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onSelectHouse(stop.house.id);
-                        onOpenChange(false);
-                      }}
-                      className="flex w-full items-start gap-3 rounded-2xl bg-[#1d1028] p-3 text-start ring-1 ring-orange-500/15 transition hover:ring-orange-400/40"
-                    >
-                      <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-black">
-                        {stop.order}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-medium text-orange-100">
-                          {houseHeadline(stop.house)}
-                        </span>
-                        <span className="mt-0.5 block text-xs text-violet-300">
-                          {formatDisplayAddress(stop.house)}
-                        </span>
-                        <span className="mt-1 block text-[11px] text-violet-400">
-                          {stop.order === 1 ? "מההתחלה" : `מעצירה קודמת`}:{" "}
-                          {formatDistance(stop.fromPreviousMeters)}
-                          {" · "}
-                          מצטבר {formatDistance(stop.cumulativeMeters)}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                ))}
+                {route.stops.map((stop, index) => {
+                  const prev =
+                    index === 0
+                      ? route.origin
+                      : {
+                          lat: route.stops[index - 1]!.house.lat,
+                          lng: route.stops[index - 1]!.house.lng,
+                        };
+                  const stepUrl = googleMapsNavigateUrl(prev, {
+                    lat: stop.house.lat,
+                    lng: stop.house.lng,
+                  });
+                  return (
+                    <li key={stop.house.id}>
+                      <div className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/15">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onSelectHouse(stop.house.id);
+                            onOpenChange(false);
+                          }}
+                          className="flex w-full items-start gap-3 text-start"
+                        >
+                          <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-black">
+                            {stop.order}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-medium text-orange-100">
+                              {houseHeadline(stop.house)}
+                            </span>
+                            <span className="mt-0.5 block text-xs text-violet-300">
+                              {formatDisplayAddress(stop.house)}
+                            </span>
+                            <span className="mt-1 block text-[11px] text-violet-400">
+                              {stop.order === 1 ? "מההתחלה" : "מעצירה קודמת"}:{" "}
+                              {formatDistance(stop.fromPreviousMeters)}
+                              {" · "}
+                              מצטבר {formatDistance(stop.cumulativeMeters)}
+                            </span>
+                          </span>
+                        </button>
+                        <a
+                          href={stepUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-2 inline-flex text-xs font-medium text-orange-300 underline-offset-2 hover:underline"
+                        >
+                          ניווט רגלי לכאן
+                        </a>
+                      </div>
+                    </li>
+                  );
+                })}
               </ol>
             </>
           )}

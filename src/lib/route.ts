@@ -139,21 +139,32 @@ export function formatRouteSummary(route: WalkingRoute) {
   return `${route.stops.length} עצירות · ${formatDistance(route.totalMeters)} · כ־${route.totalMinutes} דק׳`;
 }
 
-/** Walking directions URL for Google Maps (origin + stops). */
+function fmtLatLng(point: LatLng) {
+  return `${point.lat.toFixed(6)},${point.lng.toFixed(6)}`;
+}
+
+/**
+ * Multi-stop walking route URL.
+ * Path form (`/dir/a/b/c/data=!4m2!4m1!3e2`) opens the map with walking
+ * directions on mobile — the api=1+waypoints form often lands on the
+ * empty “Dropped pin / N stops” editor (especially on iOS).
+ */
 export function googleMapsWalkingUrl(route: WalkingRoute) {
   const stops = route.stops.slice(0, ROUTE_MAPS_MAX_STOPS);
   if (stops.length === 0) return null;
-  const fmt = (p: LatLng) => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`;
-  const origin = fmt(route.origin);
-  const destination = fmt(pointOf(stops[stops.length - 1]!.house));
-  const middle = stops.slice(0, -1).map((stop) => fmt(pointOf(stop.house)));
+  const parts = [fmtLatLng(route.origin), ...stops.map((stop) => fmtLatLng(pointOf(stop.house)))];
+  return `https://www.google.com/maps/dir/${parts.join("/")}/data=!4m2!4m1!3e2`;
+}
+
+/** Turn-by-turn walking to a single stop (more reliable “start navigating” on phones). */
+export function googleMapsNavigateUrl(origin: LatLng, destination: LatLng) {
   const params = new URLSearchParams({
     api: "1",
     travelmode: "walking",
-    origin,
-    destination,
+    dir_action: "navigate",
+    origin: fmtLatLng(origin),
+    destination: fmtLatLng(destination),
   });
-  if (middle.length > 0) params.set("waypoints", middle.join("|"));
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
