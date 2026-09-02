@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Heart, List, MapPinned, RefreshCw, WifiOff } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
@@ -18,6 +18,8 @@ import {
 import { useCatalog } from "@/hooks/use-catalog";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
+import { useUserLocation } from "@/hooks/use-user-location";
+import { inNeighborhood } from "@/lib/config";
 import { distanceMeters, NEARBY_METERS } from "@/lib/geo";
 import { isFrozen, offersGlutenFree } from "@/lib/house-state";
 import type { Catalog, PublicHouse } from "@/lib/types";
@@ -31,21 +33,19 @@ export function NeighborhoodApp({
   focusId?: string | null;
 }) {
   const { catalog, loading, offline, error, source, refresh } = useCatalog(initialCatalog);
+  const geo = useUserLocation();
+  const origin = geo.location;
   const [view, setView] = useState<"map" | "list">("map");
   const [selectedId, setSelectedId] = useState<string | "closed" | null>(null);
-  const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(null);
   const [accessibleOnly, setAccessibleOnly] = useState(false);
   const [glutenFreeOnly, setGlutenFreeOnly] = useState(false);
   const [nearbyOnly, setNearbyOnly] = useState(false);
   const [likedOnly, setLikedOnly] = useState(false);
-  const [geoError, setGeoError] = useState(false);
+  const [followTick, setFollowTick] = useState(0);
+  const [askedLocation, setAskedLocation] = useState(false);
 
   const owned = useOwnedHouses();
   const likes = useLikedHouses();
-
-  useEffect(() => {
-    locate(false);
-  }, []);
 
   const houses = useMemo(() => {
     const published = catalog?.houses ?? [];
@@ -71,28 +71,25 @@ export function NeighborhoodApp({
 
   const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const selected = visible.find((house) => house.id === activeId) ?? houses.find((house) => house.id === activeId) ?? null;
+  const geoError =
+    askedLocation && (geo.status === "denied" || geo.status === "error" || geo.status === "unavailable");
+  const outsideNeighborhood = Boolean(
+    origin && askedLocation && followTick > 0 && !inNeighborhood(origin.lat, origin.lng),
+  );
 
-  function locate(fromUser: boolean) {
-    if (!navigator.geolocation) {
-      if (fromUser) setGeoError(true);
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setOrigin({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setGeoError(false);
-      },
-      () => {
-        if (fromUser) setGeoError(true);
-      },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60_000 },
-    );
+  function goToMyLocation() {
+    setAskedLocation(true);
+    setFollowTick((n) => n + 1);
+    geo.refresh();
   }
 
   function toggleNearby() {
     const next = !nearbyOnly;
     setNearbyOnly(next);
-    if (next && !origin) locate(true);
+    if (next && !origin) {
+      setAskedLocation(true);
+      geo.refresh();
+    }
   }
 
   return (
@@ -164,6 +161,10 @@ export function NeighborhoodApp({
         </div>
         {nearbyOnly && geoError ? (
           <p className="mt-1 text-[11px] text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום כדי לסנן ולמיין לפי מרחק.</p>
+        ) : geoError ? (
+          <p className="mt-1 text-[11px] text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>
+        ) : outsideNeighborhood ? (
+          <p className="mt-1 text-[11px] text-amber-200">המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.</p>
         ) : null}
       </div>
       {error ? (
@@ -195,6 +196,10 @@ export function NeighborhoodApp({
                 onSelect={(house) => setSelectedId(house.id)}
                 className="h-full w-full"
                 active={view === "map"}
+                userLocation={origin}
+                followTick={followTick}
+                locating={geo.status === "pending" && askedLocation}
+                onLocate={goToMyLocation}
               />
             </div>
             {view === "list" ? (

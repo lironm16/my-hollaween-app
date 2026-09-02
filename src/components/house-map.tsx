@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import {
+  Circle,
   MapContainer,
   Marker,
   Popup,
@@ -10,8 +11,10 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import L from "leaflet";
+import { LocateFixed } from "lucide-react";
 import "leaflet/dist/leaflet.css";
-import { config } from "@/lib/config";
+import { config, inNeighborhood } from "@/lib/config";
+import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
 import { houseHeadline, themeEmoji } from "@/lib/labels";
 import { effectiveVisit, isFrozen } from "@/lib/house-state";
@@ -45,6 +48,14 @@ const pickIcon = L.divIcon({
   html: `<div class="pumpkin-pin is-pick"><span>📍</span></div>`,
   iconSize: [40, 44],
   iconAnchor: [20, 42],
+});
+
+const youAreHereIcon = L.divIcon({
+  className: "you-are-here-wrap",
+  html: `<div class="you-are-here" aria-hidden="true"><span class="you-are-here-pulse"></span><span class="you-are-here-dot"></span></div>`,
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
+  popupAnchor: [0, -12],
 });
 
 function ResizeFix() {
@@ -112,6 +123,30 @@ function FlyTo({ lat, lng }: { lat: number; lng: number }) {
   return null;
 }
 
+function FlyToUser({
+  location,
+  tick,
+}: {
+  location: UserLocation | null;
+  tick: number;
+}) {
+  const map = useMap();
+  const flownTick = useRef(0);
+  useEffect(() => {
+    if (!location || tick < 1 || tick === flownTick.current) return;
+    flownTick.current = tick;
+    let lat = location.lat;
+    let lng = location.lng;
+    if (!inNeighborhood(lat, lng)) {
+      const b = config.map.bounds;
+      lat = Math.min(b.north, Math.max(b.south, lat));
+      lng = Math.min(b.east, Math.max(b.west, lng));
+    }
+    map.flyTo([lat, lng], Math.max(map.getZoom(), 17), { duration: 0.5 });
+  }, [location, tick, map]);
+  return null;
+}
+
 type Props = {
   houses?: PublicHouse[];
   selectedId?: string | null;
@@ -121,6 +156,10 @@ type Props = {
   onPick?: (lat: number, lng: number) => void;
   className?: string;
   active?: boolean;
+  userLocation?: UserLocation | null;
+  followTick?: number;
+  locating?: boolean;
+  onLocate?: () => void;
 };
 
 export function HouseMap({
@@ -132,6 +171,10 @@ export function HouseMap({
   onPick,
   className,
   active = true,
+  userLocation = null,
+  followTick = 0,
+  locating = false,
+  onLocate,
 }: Props) {
   const bounds = useMemo(
     () =>
@@ -232,8 +275,51 @@ export function HouseMap({
               </Popup>
             </Marker>
           ))}
+        {!pickMode && userLocation ? (
+          <>
+            {userLocation.accuracy > 8 && userLocation.accuracy < 120 ? (
+              <Circle
+                center={[userLocation.lat, userLocation.lng]}
+                radius={userLocation.accuracy}
+                pathOptions={{
+                  color: "#7dd3fc",
+                  fillColor: "#38bdf8",
+                  fillOpacity: 0.18,
+                  weight: 1,
+                }}
+                interactive={false}
+              />
+            ) : null}
+            <Marker
+              position={[userLocation.lat, userLocation.lng]}
+              icon={youAreHereIcon}
+              zIndexOffset={800}
+            >
+              <Popup>
+                <div dir="rtl" className="text-right">
+                  <strong>אתם כאן</strong>
+                  {!inNeighborhood(userLocation.lat, userLocation.lng) ? (
+                    <div>מחוץ לגבול המפה של השכונה</div>
+                  ) : null}
+                </div>
+              </Popup>
+            </Marker>
+          </>
+        ) : null}
         {selected ? <FlyTo lat={selected.lat} lng={selected.lng} /> : null}
+        <FlyToUser location={userLocation} tick={followTick} />
       </MapContainer>
+      {onLocate && !pickMode ? (
+        <button
+          type="button"
+          className="locate-me absolute bottom-6 right-3 z-[1100] flex size-11 items-center justify-center rounded-full bg-[#1d1028] text-sky-300 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-sky-400/40 hover:bg-[#2a1638] hover:text-sky-200"
+          aria-label="המיקום שלי"
+          title="המיקום שלי"
+          onClick={onLocate}
+        >
+          <LocateFixed className={cn("size-5", locating && "animate-pulse")} />
+        </button>
+      ) : null}
     </div>
   );
 }
