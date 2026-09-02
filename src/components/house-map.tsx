@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import {
   MapContainer,
   Marker,
@@ -102,10 +102,29 @@ export function HouseMap({
     [],
   );
   const selected = houses.find((h) => h.id === selectedId);
+  const ready = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
+  if (!ready) {
+    return (
+      <div
+        className={
+          className ??
+          "flex h-full min-h-[280px] w-full items-center justify-center bg-[#1a1024] text-orange-200"
+        }
+      >
+        טוענים את המפה…
+      </div>
+    );
+  }
 
   return (
     <div className={className ?? "h-full min-h-[280px] w-full"} dir="ltr">
       <MapContainer
+        key={pickMode ? "pick" : "view"}
         center={[config.map.center.lat, config.map.center.lng]}
         zoom={config.map.zoom}
         minZoom={config.map.minZoom}

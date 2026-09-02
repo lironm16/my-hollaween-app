@@ -1,5 +1,5 @@
-const CACHE = "hw-shell-v1";
-const TILE_CACHE = "hw-tiles-v1";
+const CACHE = "hw-shell-v2";
+const TILE_CACHE = "hw-tiles-v2";
 const PRECACHE = [
   "/",
   "/add",
@@ -39,7 +39,12 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
-  if (url.pathname.startsWith("/api/admin") || url.pathname.startsWith("/api/houses")) {
+  if (
+    url.pathname.startsWith("/_next/") ||
+    url.pathname.startsWith("/__next") ||
+    url.pathname.startsWith("/api/admin") ||
+    url.pathname.startsWith("/api/houses")
+  ) {
     return;
   }
 
