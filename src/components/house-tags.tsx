@@ -7,6 +7,7 @@ import {
   treatLevel,
 } from "@/lib/house-state";
 import { scareShort, stockLabels, treatLabels } from "@/lib/labels";
+import { formatHoursLabel } from "@/lib/hours";
 import type { ScareLevel, TreatId, TreatStock } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,8 @@ export function HouseTags({
     scareLevel?: ScareLevel;
     openFrom?: string;
     openTo?: string;
+    openFrom2?: string;
+    openTo2?: string;
   };
   /** Smaller set for map popups. */
   compact?: boolean;
@@ -37,6 +40,7 @@ export function HouseTags({
   const candy = candyLevel(withTreats);
   const gluten = markedGlutenFree(withTreats);
   const glutenOut = gluten && treatLevel(withTreats, "glutenFree") === "out";
+  const hoursLabel = formatHoursLabel(house);
 
   return (
     <div className="flex flex-wrap gap-1">
@@ -64,9 +68,9 @@ export function HouseTags({
       >
         {scareShort[scare]}
       </Badge>
-      {showHours && !compact && house.openFrom && house.openTo ? (
+      {showHours && !compact && hoursLabel ? (
         <Badge variant="secondary" className="h-6 bg-black/30 text-sm text-violet-100">
-          {house.openFrom}–{house.openTo}
+          {hoursLabel}
         </Badge>
       ) : null}
       {house.accessible ? (

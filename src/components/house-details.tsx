@@ -6,8 +6,10 @@ import { CheckCircle2, Heart, Pencil, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { CodesCopy } from "@/components/codes-copy";
+import { HoursStatusBanner } from "@/components/hours-status-banner";
 import { HouseTags } from "@/components/house-tags";
 import { formatDisplayAddress } from "@/lib/config";
+import { formatHoursLabel } from "@/lib/hours";
 import { houseHeadline } from "@/lib/labels";
 import { effectiveVisit, freezeLabel, isFrozen } from "@/lib/house-state";
 import { loadOwnedHouses } from "@/lib/offline-db";
@@ -146,6 +148,10 @@ export function HouseDetails({
           הבית מקושט ושמחים שתבקרו להסתכל — בלי ממתקים כרגע.
         </p>
       ) : null}
+      {formatHoursLabel(house) ? (
+        <p className="text-sm text-violet-200">שעות: {formatHoursLabel(house)}</p>
+      ) : null}
+      <HoursStatusBanner house={house} />
       {house.arrival ? (
         <p className="rounded-lg bg-[#2a1638] px-3 py-2 text-sm text-amber-100">
           איך מגיעים: {house.arrival}

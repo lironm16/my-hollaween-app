@@ -22,6 +22,8 @@ export function readyHouseInput(input: HouseInput): HouseInput {
     visit: input.visit ?? "come",
     openFrom: clock(input.openFrom),
     openTo: clock(input.openTo),
+    openFrom2: input.openFrom2 ? clock(input.openFrom2) : "",
+    openTo2: input.openTo2 ? clock(input.openTo2) : "",
   };
 }
 

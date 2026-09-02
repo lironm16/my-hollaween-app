@@ -30,6 +30,20 @@ const houseFields = z.object({
     (value) => (typeof value === "string" ? value.slice(0, 5) : value),
     z.string().regex(/^\d{2}:\d{2}$/),
   ),
+  openFrom2: z.preprocess(
+    (value) => {
+      if (value === null || value === undefined) return "";
+      return typeof value === "string" ? value.slice(0, 5) : value;
+    },
+    z.union([z.literal(""), z.string().regex(/^\d{2}:\d{2}$/)]),
+  ),
+  openTo2: z.preprocess(
+    (value) => {
+      if (value === null || value === undefined) return "";
+      return typeof value === "string" ? value.slice(0, 5) : value;
+    },
+    z.union([z.literal(""), z.string().regex(/^\d{2}:\d{2}$/)]),
+  ),
   notes: z.string().trim().max(240),
   accessible: z.boolean(),
 });
@@ -41,6 +55,20 @@ export const houseInputSchema = houseFields.extend({
   treats: z.array(z.enum(TREAT_OPTIONS)).max(12).default([]),
   treatStock: treatStockSchema.default({}),
   visit: z.enum(VISIT_STATES).default("come"),
+  openFrom2: z.preprocess(
+    (value) => {
+      if (value === null || value === undefined) return "";
+      return typeof value === "string" ? value.slice(0, 5) : value;
+    },
+    z.union([z.literal(""), z.string().regex(/^\d{2}:\d{2}$/)]),
+  ).default(""),
+  openTo2: z.preprocess(
+    (value) => {
+      if (value === null || value === undefined) return "";
+      return typeof value === "string" ? value.slice(0, 5) : value;
+    },
+    z.union([z.literal(""), z.string().regex(/^\d{2}:\d{2}$/)]),
+  ).default(""),
   notes: z.string().trim().max(240).default(""),
   accessible: z.boolean().default(false),
 });

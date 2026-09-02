@@ -21,6 +21,8 @@ const houseSchema = z.object({
   scareLevel: z.enum(SCARE_LEVELS),
   openFrom: z.string(),
   openTo: z.string(),
+  openFrom2: z.string().optional(),
+  openTo2: z.string().optional(),
   notes: z.string().optional(),
   accessible: z.boolean().optional(),
   status: z.enum(["pending", "approved", "rejected"]),

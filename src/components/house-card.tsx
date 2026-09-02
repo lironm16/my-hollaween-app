@@ -6,9 +6,11 @@ import { HouseTags } from "@/components/house-tags";
 import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
 import { formatDistance } from "@/lib/geo";
+import { formatHoursLabel } from "@/lib/hours";
 import { effectiveVisit, isFrozen } from "@/lib/house-state";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { HoursStatusBanner } from "@/components/hours-status-banner";
 
 export function HouseCard({
   house,
@@ -75,9 +77,10 @@ export function HouseCard({
         <p className="text-base">{formatDisplayAddress(house)}</p>
         {house.arrival ? <p className="text-sm text-amber-200/90">{house.arrival}</p> : null}
         <p className="text-sm">
-          {house.openFrom}–{house.openTo}
+          {formatHoursLabel(house)}
           {distanceM !== undefined ? ` · ${formatDistance(distanceM)}` : ""}
         </p>
+        <HoursStatusBanner house={house} className="text-sm" />
         {effectiveVisit(house) === "closed" ? (
           <p className="text-base font-semibold text-red-500">נגמר המלאי — אין סיבה לבוא עכשיו</p>
         ) : null}

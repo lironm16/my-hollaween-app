@@ -107,6 +107,8 @@ function normalizeHouse(house: House): House {
     adminFrozen: Boolean(house.adminFrozen),
     ownerFrozenUntil: house.ownerFrozenUntil ?? null,
     photoUrl: house.photoUrl ?? "",
+    openFrom2: house.openFrom2 ?? "",
+    openTo2: house.openTo2 ?? "",
   };
 }
 
@@ -421,6 +423,8 @@ export async function adminUpdate(
     if (patch.scareLevel !== undefined) house.scareLevel = patch.scareLevel;
     if (patch.openFrom !== undefined) house.openFrom = patch.openFrom;
     if (patch.openTo !== undefined) house.openTo = patch.openTo;
+    if (patch.openFrom2 !== undefined) house.openFrom2 = patch.openFrom2;
+    if (patch.openTo2 !== undefined) house.openTo2 = patch.openTo2;
     if (patch.notes !== undefined) house.notes = patch.notes;
     if (patch.accessible !== undefined) house.accessible = patch.accessible;
     if (patch.adminFrozen !== undefined) house.adminFrozen = patch.adminFrozen;
@@ -465,6 +469,8 @@ function sanitizeOwnerPatch(
   if (patch.scareLevel !== undefined) next.scareLevel = patch.scareLevel;
   if (patch.openFrom !== undefined) next.openFrom = patch.openFrom;
   if (patch.openTo !== undefined) next.openTo = patch.openTo;
+  if (patch.openFrom2 !== undefined) next.openFrom2 = patch.openFrom2;
+  if (patch.openTo2 !== undefined) next.openTo2 = patch.openTo2;
   if (patch.notes !== undefined) next.notes = patch.notes;
   if (patch.accessible !== undefined) next.accessible = patch.accessible;
   if (patch.ownerFrozenUntil !== undefined) next.ownerFrozenUntil = patch.ownerFrozenUntil;

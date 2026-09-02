@@ -58,6 +58,9 @@ export type House = {
   scareLevel: ScareLevel;
   openFrom: string;
   openTo: string;
+  /** Optional second open window (e.g. 17–18 and 20–21). */
+  openFrom2?: string;
+  openTo2?: string;
   notes: string;
   accessible: boolean;
   status: HouseStatus;
@@ -87,6 +90,8 @@ export type HouseInput = {
   scareLevel: ScareLevel;
   openFrom: string;
   openTo: string;
+  openFrom2?: string;
+  openTo2?: string;
   notes: string;
   accessible: boolean;
 };

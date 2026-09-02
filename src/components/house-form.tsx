@@ -35,6 +35,8 @@ const empty: HouseInput = {
   scareLevel: "mild",
   openFrom: "17:00",
   openTo: "21:00",
+  openFrom2: "",
+  openTo2: "",
   notes: "",
   accessible: false,
   visit: "come",
@@ -68,6 +70,9 @@ export function HouseForm({
   const [addressOk, setAddressOk] = useState(Boolean(initial?.address && initial.lat && initial.lng));
   const [decorated, setDecorated] = useState(() => initialDecorated(initial));
   const [hasCandy, setHasCandy] = useState(() => initialHasCandy(initial));
+  const [secondWindow, setSecondWindow] = useState(
+    () => Boolean(initial?.openFrom2 && initial?.openTo2),
+  );
 
   function setTreat(id: TreatId, on: boolean) {
     setForm((f) => {
@@ -160,6 +165,12 @@ export function HouseForm({
         if (hasCandy) treatStock.candy = treatStock.candy ?? "plenty";
         else delete treatStock.candy;
         const visit: VisitState = hasCandy ? "come" : decorated ? "decorOnly" : "come";
+        const openFrom2 = secondWindow ? clock(form.openFrom2 || "") : "";
+        const openTo2 = secondWindow ? clock(form.openTo2 || "") : "";
+        if (secondWindow && (!/^\d{2}:\d{2}$/.test(openFrom2) || !/^\d{2}:\d{2}$/.test(openTo2))) {
+          toast.error("מלאו גם את חלון השעות השני, או בטלו אותו.");
+          return;
+        }
         void onSubmit({
           ...form,
           theme,
@@ -168,6 +179,8 @@ export function HouseForm({
           visit,
           openFrom: clock(form.openFrom),
           openTo: clock(form.openTo),
+          openFrom2,
+          openTo2,
         });
       }}
     >
@@ -310,21 +323,62 @@ export function HouseForm({
           className="min-h-24"
         />
       </Field>
-      <div className="grid grid-cols-1 gap-3">
-        <Field label="פתיחה">
-          <TimeField
-            required
-            value={form.openFrom}
-            onChange={(openFrom) => setForm({ ...form, openFrom })}
+      <div className="space-y-3">
+        <p className="text-sm font-medium">שעות פעילות</p>
+        <p className="text-xs text-violet-300">
+          חלון אחד ברצף, או שני חלונות אם יוצאים באמצע לטריק-אור-טריט (למשל 17:00–18:00 ו־20:00–21:00).
+          ליציאה ספונטנית באמצע הערב — השתמשו בהקפאה לשעה במסך העריכה.
+        </p>
+        <div className="grid grid-cols-1 gap-3">
+          <Field label="פתיחה">
+            <TimeField
+              required
+              value={form.openFrom}
+              onChange={(openFrom) => setForm({ ...form, openFrom })}
+            />
+          </Field>
+          <Field label="סגירה">
+            <TimeField
+              required
+              value={form.openTo}
+              onChange={(openTo) => setForm({ ...form, openTo })}
+            />
+          </Field>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-orange-50">
+          <input
+            type="checkbox"
+            className="size-4 accent-orange-500"
+            checked={secondWindow}
+            onChange={(e) => {
+              const on = e.target.checked;
+              setSecondWindow(on);
+              if (!on) setForm((f) => ({ ...f, openFrom2: "", openTo2: "" }));
+              else if (!form.openFrom2 && !form.openTo2) {
+                setForm((f) => ({ ...f, openFrom2: "20:00", openTo2: "21:00" }));
+              }
+            }}
           />
-        </Field>
-        <Field label="סגירה">
-          <TimeField
-            required
-            value={form.openTo}
-            onChange={(openTo) => setForm({ ...form, openTo })}
-          />
-        </Field>
+          יש גם חלון שעות שני בערב
+        </label>
+        {secondWindow ? (
+          <div className="grid grid-cols-1 gap-3">
+            <Field label="פתיחה שנייה">
+              <TimeField
+                required
+                value={form.openFrom2 || "20:00"}
+                onChange={(openFrom2) => setForm({ ...form, openFrom2 })}
+              />
+            </Field>
+            <Field label="סגירה שנייה">
+              <TimeField
+                required
+                value={form.openTo2 || "21:00"}
+                onChange={(openTo2) => setForm({ ...form, openTo2 })}
+              />
+            </Field>
+          </div>
+        ) : null}
       </div>
       <div>
         <p className="mb-2 text-sm font-medium">רמת פחד</p>
