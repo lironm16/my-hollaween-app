@@ -48,7 +48,7 @@ export function HouseList({
     return (
       <div className="px-4 py-16 text-center text-violet-200">
         <p className="font-display text-2xl text-orange-300">אין בתים שמתאימים לסינון</p>
-        <p className="mt-2 text-sm">נסו לבטל נגיש, ללא גלוטן, קרוב או שמרתי.</p>
+        <p className="mt-2 text-sm">נסו לבטל נגיש, ללא גלוטן או שמרתי.</p>
       </div>
     );
   }
@@ -63,9 +63,7 @@ export function HouseList({
       />
       {origin ? (
         <p className="text-[11px] text-violet-300">ממוין לפי מרחק מכם</p>
-      ) : (
-        <p className="text-[11px] text-violet-300">לחצו «קרוב» כדי למיין לפי מרחק</p>
-      )}
+      ) : null}
       {filtered.length === 0 ? (
         <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לחיפוש.</p>
       ) : (

@@ -20,7 +20,6 @@ import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { inNeighborhood } from "@/lib/config";
-import { distanceMeters, NEARBY_METERS } from "@/lib/geo";
 import { isFrozen, offersGlutenFree } from "@/lib/house-state";
 import type { Catalog, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -39,7 +38,6 @@ export function NeighborhoodApp({
   const [selectedId, setSelectedId] = useState<string | "closed" | null>(null);
   const [accessibleOnly, setAccessibleOnly] = useState(false);
   const [glutenFreeOnly, setGlutenFreeOnly] = useState(false);
-  const [nearbyOnly, setNearbyOnly] = useState(false);
   const [likedOnly, setLikedOnly] = useState(false);
   const [followTick, setFollowTick] = useState(0);
   const [askedLocation, setAskedLocation] = useState(false);
@@ -61,13 +59,9 @@ export function NeighborhoodApp({
       if (accessibleOnly && !house.accessible) return false;
       if (glutenFreeOnly && !offersGlutenFree(house)) return false;
       if (likedOnly && !likes.likedIds.includes(house.id)) return false;
-      if (nearbyOnly) {
-        if (!origin) return false;
-        if (distanceMeters(origin, house) > NEARBY_METERS) return false;
-      }
       return true;
     });
-  }, [houses, accessibleOnly, glutenFreeOnly, likedOnly, nearbyOnly, origin, likes.likedIds]);
+  }, [houses, accessibleOnly, glutenFreeOnly, likedOnly, likes.likedIds]);
 
   const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const selected = visible.find((house) => house.id === activeId) ?? houses.find((house) => house.id === activeId) ?? null;
@@ -81,15 +75,6 @@ export function NeighborhoodApp({
     setAskedLocation(true);
     setFollowTick((n) => n + 1);
     geo.refresh();
-  }
-
-  function toggleNearby() {
-    const next = !nearbyOnly;
-    setNearbyOnly(next);
-    if (next && !origin) {
-      setAskedLocation(true);
-      geo.refresh();
-    }
   }
 
   return (
@@ -151,17 +136,12 @@ export function NeighborhoodApp({
           <FilterChip active={glutenFreeOnly} onClick={() => setGlutenFreeOnly((v) => !v)}>
             ללא גלוטן
           </FilterChip>
-          <FilterChip active={nearbyOnly} onClick={toggleNearby}>
-            קרוב
-          </FilterChip>
           <FilterChip active={likedOnly} onClick={() => setLikedOnly((v) => !v)}>
             <Heart className={cn("size-3", likedOnly && "fill-black")} />
             שמרתי
           </FilterChip>
         </div>
-        {nearbyOnly && geoError ? (
-          <p className="mt-1 text-[11px] text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום כדי לסנן ולמיין לפי מרחק.</p>
-        ) : geoError ? (
+        {geoError ? (
           <p className="mt-1 text-[11px] text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>
         ) : outsideNeighborhood ? (
           <p className="mt-1 text-[11px] text-amber-200">המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.</p>
