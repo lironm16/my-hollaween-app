@@ -38,7 +38,7 @@ function localPreview(input: HouseInput, id: string): PublicHouse {
     treatStock: { ...defaultTreatStock(treats), ...(input.treatStock ?? {}) },
     visit,
     id,
-    status: "approved",
+    status: "pending",
     soldOut: visit === "closed",
     adminFrozen: false,
     ownerFrozenUntil: null,

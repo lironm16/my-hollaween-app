@@ -189,7 +189,7 @@ export async function submitHouse(input: HouseInput) {
       treatStock: { ...defaultTreatStock(treats), ...(input.treatStock ?? {}) },
       visit,
       id,
-      status: "approved",
+      status: "pending",
       soldOut: visit === "closed",
       adminFrozen: false,
       ownerFrozenUntil: null,
