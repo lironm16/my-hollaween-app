@@ -75,21 +75,33 @@ function ResizeFix() {
   const map = useMap();
   useEffect(() => {
     const container = map.getContainer();
+    let lastW = 0;
+    let lastH = 0;
+    let timer = 0;
     const invalidate = () => {
+      const { width, height } = container.getBoundingClientRect();
+      if (Math.abs(width - lastW) < 1 && Math.abs(height - lastH) < 1) return;
+      lastW = width;
+      lastH = height;
       map.invalidateSize({ animate: false });
     };
+    const schedule = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(invalidate, 120);
+    };
     const id = window.setTimeout(invalidate, 0);
-    const ro = new ResizeObserver(() => invalidate());
+    const ro = new ResizeObserver(schedule);
     ro.observe(container);
     const parent = container.parentElement;
     if (parent) ro.observe(parent);
-    window.addEventListener("orientationchange", invalidate);
-    window.addEventListener("resize", invalidate);
+    window.addEventListener("orientationchange", schedule);
+    window.addEventListener("resize", schedule);
     return () => {
       window.clearTimeout(id);
+      window.clearTimeout(timer);
       ro.disconnect();
-      window.removeEventListener("orientationchange", invalidate);
-      window.removeEventListener("resize", invalidate);
+      window.removeEventListener("orientationchange", schedule);
+      window.removeEventListener("resize", schedule);
     };
   }, [map]);
   return null;
@@ -133,6 +145,29 @@ function FlyTo({ lat, lng }: { lat: number; lng: number }) {
   useEffect(() => {
     map.flyTo([lat, lng], Math.max(map.getZoom(), 16), { duration: 0.45 });
   }, [lat, lng, map]);
+  return null;
+}
+
+/** Pan once per selected house — never fight popup autoPan with a looping flyTo. */
+function PanToSelected({
+  id,
+  lat,
+  lng,
+}: {
+  id: string;
+  lat: number;
+  lng: number;
+}) {
+  const map = useMap();
+  const lastId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!id || lastId.current === id) return;
+    lastId.current = id;
+    const point = L.latLng(lat, lng);
+    // Only nudge if the pin is outside the comfortable viewport.
+    if (map.getBounds().pad(-0.2).contains(point)) return;
+    map.panTo(point, { animate: true, duration: 0.35 });
+  }, [id, lat, lng, map]);
   return null;
 }
 
@@ -226,8 +261,7 @@ function HousePreviewPopup({
       className="house-map-popup-root"
       maxWidth={multi ? 280 : 260}
       minWidth={multi ? 200 : 176}
-      autoPan
-      autoPanPadding={[48, 72]}
+      autoPan={false}
       closeButton
     >
       <div ref={bindPopupRoot} dir="rtl" className={cn("house-map-popup", multi && "is-multi")}>
@@ -323,7 +357,10 @@ function ClusterMarker({
 
   useEffect(() => {
     if (!selectedHere) return;
-    markerRef.current?.openPopup();
+    const marker = markerRef.current;
+    if (!marker) return;
+    // Open without Leaflet auto-panning — PanToSelected handles a single nudge if needed.
+    marker.openPopup();
   }, [selectedHere, selectedId]);
 
   return (
@@ -332,6 +369,11 @@ function ClusterMarker({
       position={[cluster.lat, cluster.lng]}
       icon={clusterIcon(cluster)}
       zIndexOffset={selectedHere ? 500 : cluster.houses.length > 1 ? 200 : 0}
+      eventHandlers={{
+        click: () => {
+          if (cluster.houses.length === 1) onSelect?.(cluster.houses[0]);
+        },
+      }}
     >
       <HousePreviewPopup
         houses={cluster.houses}
@@ -495,7 +537,9 @@ export function HouseMap({
             </Marker>
           </>
         ) : null}
-        {selected ? <FlyTo lat={selected.lat} lng={selected.lng} /> : null}
+        {selected ? (
+          <PanToSelected id={selected.id} lat={selected.lat} lng={selected.lng} />
+        ) : null}
         <FlyToUser location={userLocation} tick={followTick} />
       </MapContainer>
       {onLocate && !pickMode ? (
