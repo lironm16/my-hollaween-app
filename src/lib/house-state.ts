@@ -68,6 +68,7 @@ export function markedCandy(house: { treats: TreatId[] }) {
 
 export function candyLevel(house: { treats: TreatId[]; treatStock?: TreatStock }): StockLevel {
   if (house.treatStock?.candy) return house.treatStock.candy as StockLevel;
+  if (!house.treats.includes("candy")) return "out";
   return "plenty";
 }
 

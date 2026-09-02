@@ -18,8 +18,10 @@ import {
   type HouseInput,
   type ScareLevel,
   type TreatId,
+  type VisitState,
 } from "@/lib/types";
 import { treatLabels } from "@/lib/labels";
+import { candyLevel, effectiveVisit } from "@/lib/house-state";
 
 const empty: HouseInput = {
   name: "",
@@ -39,6 +41,17 @@ const empty: HouseInput = {
   treatStock: { candy: "plenty" },
 };
 
+function initialHasCandy(initial?: Partial<HouseInput>) {
+  if (!initial) return true;
+  const treats = initial.treats ?? ["candy"];
+  return candyLevel({ treats, treatStock: initial.treatStock }) !== "out";
+}
+
+function initialDecorated(initial?: Partial<HouseInput>) {
+  if (!initial) return true;
+  return effectiveVisit(initial) !== "closed";
+}
+
 export function HouseForm({
   initial,
   submitLabel,
@@ -53,6 +66,8 @@ export function HouseForm({
   const [form, setForm] = useState<HouseInput>({ ...empty, ...initial });
   const [locating, setLocating] = useState(false);
   const [addressOk, setAddressOk] = useState(Boolean(initial?.address && initial.lat && initial.lng));
+  const [decorated, setDecorated] = useState(() => initialDecorated(initial));
+  const [hasCandy, setHasCandy] = useState(() => initialHasCandy(initial));
 
   function setTreat(id: TreatId, on: boolean) {
     setForm((f) => {
@@ -133,11 +148,24 @@ export function HouseForm({
           toast.error("בחרו כתובת אמיתית מהרשימה, או גררו את הסיכה לבית.");
           return;
         }
+        if (!decorated && !hasCandy) {
+          toast.error("סמנו לפחות קישוטים או ממתקים — אחרת אין סיבה להוסיף את הבית למפה.");
+          return;
+        }
         const theme = themeFromName(form.name) ?? form.theme;
         const clock = (value: string) => (/^\d{2}:\d{2}/.exec(value)?.[0] ?? value);
+        const withoutCandy = form.treats.filter((id) => id !== "candy");
+        const treats = hasCandy ? (["candy" as const, ...withoutCandy] as TreatId[]) : withoutCandy;
+        const treatStock = { ...(form.treatStock ?? {}) };
+        if (hasCandy) treatStock.candy = treatStock.candy ?? "plenty";
+        else delete treatStock.candy;
+        const visit: VisitState = hasCandy ? "come" : decorated ? "decorOnly" : "come";
         void onSubmit({
           ...form,
           theme,
+          treats,
+          treatStock,
+          visit,
           openFrom: clock(form.openFrom),
           openTo: clock(form.openTo),
         });
@@ -226,6 +254,34 @@ export function HouseForm({
           <span className="font-medium text-orange-100">נגיש</span>
           <span className="block text-xs text-violet-300">
             בלי מדרגות בכניסה, מתאים לעגלה או לכיסא גלגלים
+          </span>
+        </span>
+      </label>
+      <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-sm ring-1 ring-orange-500/20">
+        <input
+          type="checkbox"
+          className="mt-1 size-4 accent-orange-500"
+          checked={decorated}
+          onChange={(e) => setDecorated(e.target.checked)}
+        />
+        <span>
+          <span className="font-medium text-orange-100">הבית מקושט</span>
+          <span className="block text-xs text-violet-300">
+            יש קישוטי האלווין שאפשר לראות מבחוץ או בכניסה
+          </span>
+        </span>
+      </label>
+      <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-sm ring-1 ring-orange-500/20">
+        <input
+          type="checkbox"
+          className="mt-1 size-4 accent-orange-500"
+          checked={hasCandy}
+          onChange={(e) => setHasCandy(e.target.checked)}
+        />
+        <span>
+          <span className="font-medium text-orange-100">יהיו ממתקים</span>
+          <span className="block text-xs text-violet-300">
+            מחלקים ממתקים או שוקולד לילדים שמגיעים
           </span>
         </span>
       </label>

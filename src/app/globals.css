@@ -519,3 +519,44 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   color: var(--foreground);
   z-index: 1;
 }
+
+.house-added-success {
+  animation: house-added-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.house-added-check {
+  animation: house-added-pop 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+}
+
+.house-added-burst {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.house-added-burst span {
+  display: inline-block;
+  animation: house-added-float 0.7s ease-out both;
+}
+
+.house-added-burst span:nth-child(1) { animation-delay: 0.05s; }
+.house-added-burst span:nth-child(2) { animation-delay: 0.18s; }
+.house-added-burst span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes house-added-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes house-added-pop {
+  0% { opacity: 0; transform: scale(0.4); }
+  70% { opacity: 1; transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes house-added-float {
+  0% { opacity: 0; transform: translateY(10px) scale(0.6); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}

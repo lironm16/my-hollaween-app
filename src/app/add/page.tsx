@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { HouseForm } from "@/components/house-form";
@@ -32,6 +33,7 @@ export default function AddPage() {
         preview: house,
       });
       notifyCatalogChanged();
+      // Success UI only after the server confirmed the house.
       setDone({ id: house.id, editCode, name: house.name });
       toast.success("הבית נוסף למפה");
     } catch (error) {
@@ -52,11 +54,19 @@ export default function AddPage() {
           className="mb-4 h-28 w-full rounded-2xl object-cover ring-1 ring-orange-500/30"
         />
         {done ? (
-          <div className="space-y-4 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-400/30">
-            <h1 className="font-display text-2xl text-orange-300">הבית במפה</h1>
-            <p className="text-sm text-violet-100">
-              {done.name} נשמר בשרת ומופיע במפה הציבורית של השכונה.
-            </p>
+          <div className="house-added-success space-y-4 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-400/30">
+            <div className="house-added-burst" aria-hidden="true">
+              <span>🎃</span>
+              <span>✨</span>
+              <span>🍬</span>
+            </div>
+            <div className="flex flex-col items-center gap-2 text-center">
+              <CheckCircle2 className="house-added-check size-14 text-emerald-400" />
+              <h1 className="font-display text-2xl text-orange-300">הבית במפה!</h1>
+              <p className="text-sm text-violet-100">
+                {done.name} נשמר בשרת ומופיע במפה הציבורית של השכונה.
+              </p>
+            </div>
             <PersistNote />
             <CodesCopy id={done.id} editCode={done.editCode} />
             <p className="text-xs text-amber-200">
@@ -79,7 +89,7 @@ export default function AddPage() {
           <>
             <h1 className="font-display mb-1 text-2xl text-orange-300">הוספת בית מפחיד</h1>
             <p className="mb-4 text-sm text-violet-200">
-              בחרו שם וכתובת אמיתית מהרשימה. אחרי השליחה הבית נשמר בשרת ומופיע מיד במפה.
+              בחרו שם וכתובת אמיתית מהרשימה. אחרי אישור השרת הבית מופיע במפה.
             </p>
             <PersistNote className="mb-4" />
             <HouseForm submitLabel="הוסיפו למפה" onSubmit={onSubmit} busy={busy} />

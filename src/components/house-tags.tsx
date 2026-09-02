@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { resolveNeighborhood } from "@/lib/config";
 import {
   candyLevel,
   markedGlutenFree,
@@ -31,7 +30,6 @@ export function HouseTags({
 }) {
   const treats = house.treats ?? [];
   const withTreats = { treats, treatStock: house.treatStock };
-  const neighborhood = resolveNeighborhood(house);
   const scare = house.scareLevel ?? "mild";
   const candy = candyLevel(withTreats);
   const gluten = markedGlutenFree(withTreats);
@@ -39,11 +37,6 @@ export function HouseTags({
 
   return (
     <div className="flex flex-wrap gap-1">
-      {neighborhood ? (
-        <Badge className="bg-[#3b1d54] text-violet-100 ring-1 ring-violet-400/30">
-          {neighborhood}
-        </Badge>
-      ) : null}
       <Badge
         className={cn(
           candy === "out"
