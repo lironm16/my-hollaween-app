@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Keep the seed on Vercel so /api/catalog can boot without a writable data dir.
+  outputFileTracingIncludes: {
+    "/api/**/*": ["./data/seed.json"],
+  },
   allowedDevOrigins: [
     "127.0.0.1",
     "localhost",
