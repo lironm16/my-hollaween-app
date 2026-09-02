@@ -90,8 +90,8 @@ function formatLabel(hit: NominatimHit): string | null {
   const num = address?.house_number;
   if (!road && !num) return null;
   const street = num && road ? `${road} ${num}` : road || `${num}`;
-  const place = suburb || city;
-  return place && place !== road ? `${street}, ${place}` : street;
+  const area = suburb && suburb !== road ? suburb : city;
+  return area && !street.includes(area) ? `${street}, ${area}` : street;
 }
 
 function inSearchArea(lat: number, lng: number) {
