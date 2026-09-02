@@ -74,6 +74,11 @@ export function saveOwnedHouse(house: OwnedHouse) {
   }
 }
 
+export function notifyCatalogChanged() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event("hw-catalog-changed"));
+}
+
 const LIKED_KEY = "hw-liked-houses";
 
 export function loadLikedIds(): string[] {

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
-import { saveOwnedHouse } from "@/lib/offline-db";
+import { saveOwnedHouse, notifyCatalogChanged } from "@/lib/offline-db";
 import type { HouseInput, PublicHouse } from "@/lib/types";
 import { NightDesk } from "@/components/night-desk";
 import { PersistNote } from "@/components/persist-note";
@@ -78,6 +78,7 @@ export default function EditPage() {
         return;
       }
       setHouse(data.house);
+      notifyCatalogChanged();
       toast.success("הפרטים עודכנו");
     } catch {
       toast.error("אין קשר לשרת");

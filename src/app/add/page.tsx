@@ -7,7 +7,7 @@ import { AppHeader } from "@/components/app-header";
 import { HouseForm } from "@/components/house-form";
 import { CodesCopy } from "@/components/codes-copy";
 import { buttonVariants } from "@/components/ui/button";
-import { saveOwnedHouse } from "@/lib/offline-db";
+import { saveOwnedHouse, notifyCatalogChanged } from "@/lib/offline-db";
 import { PersistNote } from "@/components/persist-note";
 import type { HouseInput } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -37,6 +37,7 @@ export default function AddPage() {
         editCode: data.editCode,
         preview: data.house,
       });
+      notifyCatalogChanged();
       setDone({ id: data.house.id, editCode: data.editCode, name: data.house.name });
       toast.success("הבית עלה למפה של כולם");
     } catch {

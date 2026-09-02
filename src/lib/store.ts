@@ -5,8 +5,17 @@ import { inNeighborhood } from "@/lib/config";
 import { config } from "@/lib/config";
 import { assertRealAddress } from "@/lib/geocode";
 import { defaultTreatStock, effectiveVisit, isPubliclyListed } from "@/lib/house-state";
+import { cloneDb } from "@/lib/catalog-sync";
 import { parsePhotoUrl } from "@/lib/photos";
-import { fetchRemoteDb, putRemoteDb, remoteDbUrl } from "@/lib/remote-db";
+import {
+  acquireRemoteLock,
+  commitRemoteDb,
+  fetchRemoteDb,
+  fetchRemoteSnapshot,
+  putRemoteDb,
+  releaseRemoteLock,
+  remoteDbUrl,
+} from "@/lib/remote-db";
 import {
   HOUSE_THEMES,
   type Catalog,
@@ -132,15 +141,6 @@ async function readDb(fresh = false): Promise<DbFile> {
   return seed;
 }
 
-async function persistDb(db: DbFile) {
-  const url = remoteDbUrl();
-  if (url) {
-    await putRemoteDb(url, db);
-    return;
-  }
-  await writeFileDb(db);
-}
-
 let mem: DbFile | null = null;
 let memAt = 0;
 let catalogMem: Catalog | null = null;
@@ -158,9 +158,43 @@ async function loadDb(fresh = false): Promise<DbFile> {
   return db;
 }
 
-async function writeDb(db: DbFile) {
-  await persistDb(db);
-  setMem(db);
+async function runSyncedWrite<T>(fn: (db: DbFile) => T | Promise<T>): Promise<T> {
+  return withLock(async () => {
+    const url = remoteDbUrl();
+    if (!url) {
+      const db = await loadDb(true);
+      const result = await fn(db);
+      await writeFileDb(db);
+      setMem(db);
+      return result;
+    }
+    const owner = `${process.pid}-${Math.random().toString(36).slice(2, 10)}`;
+    await acquireRemoteLock(owner);
+    try {
+      let lastError: Error | null = null;
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const snap = await fetchRemoteSnapshot(url);
+        const db = snap ? normalizeDb(cloneDb(snap.db)) : normalizeDb(await readSeed());
+        const expectedRev = snap?.index.rev ?? 0;
+        const result = await fn(db);
+        try {
+          const ok = await commitRemoteDb(url, db, expectedRev);
+          if (ok) {
+            setMem(db);
+            return result;
+          }
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error("STORE_UNAVAILABLE");
+        }
+        await new Promise((resolve) =>
+          setTimeout(resolve, 40 * 2 ** Math.min(attempt, 4) + Math.floor(Math.random() * 50)),
+        );
+      }
+      throw lastError ?? new Error("STORE_UNAVAILABLE");
+    } finally {
+      await releaseRemoteLock(owner);
+    }
+  });
 }
 
 export function asCatalog(houses: House[], updatedAt: string): Catalog {
@@ -192,11 +226,17 @@ export async function getHouse(id: string): Promise<House | undefined> {
 
 export async function submitHouse(input: HouseInput) {
   await assertRealAddress(input);
-  return withLock(async () => {
-    const db = await loadDb(true);
+  let id = "";
+  let editCode = "";
+  return runSyncedWrite((db) => {
+    if (!id) {
+      id = newPublicId();
+      while (db.houses.some((h) => h.id === id)) id = newPublicId();
+      editCode = newEditCode();
+    }
+    const already = db.houses.find((h) => h.id === id);
+    if (already) return already;
     const now = new Date().toISOString();
-    let id = newPublicId();
-    while (db.houses.some((h) => h.id === id)) id = newPublicId();
     const visit: VisitState = input.visit ?? "come";
     const treats = input.treats;
     const house: House = {
@@ -210,13 +250,12 @@ export async function submitHouse(input: HouseInput) {
       adminFrozen: false,
       ownerFrozenUntil: null,
       photoUrl: "",
-      editCode: newEditCode(),
+      editCode,
       createdAt: now,
       updatedAt: now,
     };
     db.houses.push(house);
     db.updatedAt = now;
-    await writeDb(db);
     return house;
   });
 }
@@ -235,8 +274,7 @@ export async function updateByEditCode(
       lng: patch.lng ?? current.lng,
     });
   }
-  return withLock(async () => {
-    const db = await loadDb(true);
+  return runSyncedWrite((db) => {
     const house = db.houses.find((h) => h.id === id);
     if (!house || house.editCode !== editCode) return null;
     if (patch.lat !== undefined && patch.lng !== undefined) {
@@ -257,7 +295,6 @@ export async function updateByEditCode(
     house.updatedAt = new Date().toISOString();
     if (house.status === "rejected") house.status = "approved";
     db.updatedAt = house.updatedAt;
-    await writeDb(db);
     return house;
   });
 }
@@ -278,8 +315,7 @@ export async function adminUpdate(
       lng: patch.lng ?? current.lng,
     });
   }
-  return withLock(async () => {
-    const db = await loadDb(true);
+  return runSyncedWrite((db) => {
     const house = db.houses.find((h) => h.id === id);
     if (!house) return null;
     if (patch.lat !== undefined && patch.lng !== undefined) {
@@ -317,7 +353,6 @@ export async function adminUpdate(
     if (patch.status === "approved") house.rejectionReason = undefined;
     house.updatedAt = new Date().toISOString();
     db.updatedAt = house.updatedAt;
-    await writeDb(db);
     return house;
   });
 }

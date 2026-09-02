@@ -15,6 +15,7 @@ import { HouseTags } from "@/components/house-tags";
 import { PersistNote } from "@/components/persist-note";
 import { statusLabels, houseHeadline } from "@/lib/labels";
 import { freezeLabel, isFrozen } from "@/lib/house-state";
+import { notifyCatalogChanged } from "@/lib/offline-db";
 import type { House, HouseInput, HouseStatus, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -91,6 +92,7 @@ export default function AdminPage() {
       return;
     }
     toast.success("עודכן");
+    notifyCatalogChanged();
     await loadHouses();
     setEditing(null);
   }

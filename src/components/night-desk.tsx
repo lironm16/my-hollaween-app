@@ -22,6 +22,7 @@ import {
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { parsePhotoUrl, hostJpegFromBrowser } from "@/lib/photos";
+import { notifyCatalogChanged } from "@/lib/offline-db";
 
 type Props = {
   house: PublicHouse;
@@ -53,6 +54,7 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
         return false;
       }
       onUpdated(data.house as PublicHouse);
+      notifyCatalogChanged();
       if (typeof data.house?.photoUrl === "string") setPhotoLink(data.house.photoUrl);
       if (!options?.quiet) toast.success("עודכן");
       return true;
@@ -95,6 +97,7 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
         return;
       }
       onUpdated(data.house as PublicHouse);
+      notifyCatalogChanged();
       if (typeof data.house?.photoUrl === "string") setPhotoLink(data.house.photoUrl);
       toast.success("התמונה עלתה לאירוח חינמי");
     } catch {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Catalog } from "@/lib/types";
+import { syncCatalog } from "@/lib/catalog-sync";
 import { loadCatalogCache, saveCatalogCache } from "@/lib/offline-db";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
@@ -51,7 +52,7 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
     setOffline(typeof navigator !== "undefined" && !navigator.onLine);
     try {
       const live = await fetchJson("/api/catalog", force);
-      setCatalog(live);
+      setCatalog((prev) => syncCatalog(prev, live));
       setSource("network");
       setError(null);
       await saveCatalogCache(live);
@@ -59,7 +60,7 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
     } catch {
       try {
         const snap = await fetchJson("/catalog.json", force);
-        setCatalog(snap);
+        setCatalog((prev) => syncCatalog(prev, snap));
         setSource("snapshot");
         setError(null);
         await saveCatalogCache(snap);
@@ -100,6 +101,8 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
       if (document.visibilityState === "visible") void refresh(false);
     };
     document.addEventListener("visibilitychange", onVis);
+    const onChanged = () => void refresh(true);
+    window.addEventListener("hw-catalog-changed", onChanged);
     const poll = window.setInterval(() => {
       if (document.visibilityState === "visible") void refresh(false);
     }, 15_000);
@@ -109,6 +112,7 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
       window.removeEventListener("online", onOff);
       window.removeEventListener("offline", onOff);
       document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("hw-catalog-changed", onChanged);
     };
     // initial is server-provided for this mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
