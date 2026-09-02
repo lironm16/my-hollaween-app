@@ -2,17 +2,15 @@ import { gunzipSync, gzipSync } from "node:zlib";
 import { cloneDb, mergeHouses } from "@/lib/catalog-sync";
 import type { DbFile, House } from "@/lib/types";
 
-const DEFAULT_COLLECTION_URL =
-  "https://crudcrud.com/api/09924525e45c411aa92eca7327b0952d/houses";
 const RESTFUL_OBJECTS = "https://api.restful-api.dev/objects";
 
 /** restful-api.dev returns 500 if the JSON body is ~1000+ bytes. */
 const CHUNK_CHARS = 820;
 const TIMEOUT_MS = 12_000;
-const QUOTA_COOLDOWN_MS = 30 * 60 * 1000;
 const FAIL_COOLDOWN_MS = 60 * 1000;
 
 let remoteCoolUntil = 0;
+let remoteChain: Promise<unknown> = Promise.resolve();
 
 export function remoteHealthy() {
   return Date.now() >= remoteCoolUntil;
@@ -23,9 +21,36 @@ export function rememberRemoteOk() {
 }
 
 export function rememberRemoteError(error: unknown) {
-  const msg = error instanceof Error ? error.message : String(error ?? "");
-  const ms = msg === "STORE_QUOTA" ? QUOTA_COOLDOWN_MS : FAIL_COOLDOWN_MS;
-  remoteCoolUntil = Math.max(remoteCoolUntil, Date.now() + ms);
+  void error;
+  remoteCoolUntil = Math.max(remoteCoolUntil, Date.now() + FAIL_COOLDOWN_MS);
+}
+
+function withRemoteQueue<T>(fn: () => Promise<T>): Promise<T> {
+  const run = remoteChain.then(fn, fn);
+  remoteChain = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function retryDelayMs(res: Response, attempt: number) {
+  const raw = res.headers.get("retry-after");
+  const seconds = raw ? Number(raw) : NaN;
+  if (Number.isFinite(seconds) && seconds >= 0) return Math.min(seconds * 1000, 15_000);
+  return Math.min(400 * 2 ** attempt, 8_000);
+}
+
+function isBusy(status: number, text: string) {
+  return (
+    status === 429 ||
+    status === 503 ||
+    /exceeded allowed number of requests|quota|rate.?limit|too many requests/i.test(text)
+  );
 }
 
 export type RemoteIndex = {
@@ -42,9 +67,8 @@ export type RemoteSnapshot = {
 
 export function remoteDbUrl(): string | null {
   const raw = process.env.HOUSE_DB_URL?.trim();
-  if (raw === "file" || raw === "local") return null;
-  if (raw) return raw;
-  return DEFAULT_COLLECTION_URL;
+  if (!raw || raw === "file" || raw === "local") return null;
+  return raw;
 }
 
 export function usesRemoteDb() {
@@ -65,23 +89,27 @@ function headers(extra?: HeadersInit): HeadersInit {
 }
 
 async function request(url: string, init?: RequestInit) {
-  return fetch(url, {
-    ...init,
-    cache: "no-store",
-    headers: headers(init?.headers),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+  return withRemoteQueue(async () => {
+    let last: Response | null = null;
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const res = await fetch(url, {
+        ...init,
+        cache: "no-store",
+        headers: headers(init?.headers),
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
+      last = res;
+      if (res.ok || res.status === 404) return res;
+      const text = await res.clone().text().catch(() => "");
+      if (!isBusy(res.status, text)) return res;
+      await sleep(retryDelayMs(res, attempt));
+    }
+    return last as Response;
   });
 }
 
 async function assertOk(res: Response) {
   if (res.ok) return;
-  const text = await res.text().catch(() => "");
-  if (
-    res.status === 429 ||
-    /exceeded allowed number of requests|quota|rate.?limit|too many requests/i.test(text)
-  ) {
-    throw new Error("STORE_QUOTA");
-  }
   throw new Error("STORE_UNAVAILABLE");
 }
 

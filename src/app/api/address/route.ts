@@ -1,13 +1,9 @@
 import { NextResponse } from "next/server";
-import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { reverseAddress, searchAddress } from "@/lib/geocode";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  if (!rateLimit(`geo:${clientKey(request.headers)}`, 40, 60 * 1000)) {
-    return NextResponse.json({ error: "יותר מדי חיפושי כתובת. נסו שוב בעוד רגע." }, { status: 429 });
-  }
   const url = new URL(request.url);
   const q = url.searchParams.get("q")?.trim() ?? "";
   const lat = Number(url.searchParams.get("lat"));

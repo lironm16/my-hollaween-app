@@ -3,7 +3,6 @@ import path from "node:path";
 import { NextResponse } from "next/server";
 import { getHouse, updateByEditCode } from "@/lib/store";
 import { toPublicHouse } from "@/lib/ids";
-import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { uploadPublicPhoto } from "@/lib/photo-host";
 
 export const runtime = "nodejs";
@@ -14,9 +13,6 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  if (!rateLimit(`photo:${clientKey(request.headers)}`, 10, 60 * 60 * 1000)) {
-    return NextResponse.json({ error: "יותר מדי תמונות. נסו שוב אחר כך." }, { status: 429 });
-  }
   const { id } = await context.params;
   const body = (await request.json().catch(() => null)) as
     | { editCode?: string; image?: string }

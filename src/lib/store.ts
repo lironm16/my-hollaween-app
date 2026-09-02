@@ -167,9 +167,12 @@ function setMem(db: DbFile) {
 
 async function loadDb(fresh = false): Promise<DbFile> {
   if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return mem;
-  const db = await readDb(fresh);
-  setMem(db);
-  return db;
+  return withLock(async () => {
+    if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return mem;
+    const db = await readDb(fresh);
+    setMem(db);
+    return db;
+  });
 }
 
 async function runSyncedWrite<T>(fn: (db: DbFile) => T | Promise<T>): Promise<T> {
