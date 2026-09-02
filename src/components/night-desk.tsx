@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { treatLabels, visitLabels, stockLabels } from "@/lib/labels";
 import {
   freezeLabel,
@@ -22,6 +23,7 @@ import {
   type VisitState,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { parsePhotoUrl } from "@/lib/photos";
 
 type Props = {
   house: PublicHouse;
@@ -32,6 +34,7 @@ type Props = {
 
 export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
   const [busy, setBusy] = useState(false);
+  const [photoLink, setPhotoLink] = useState(house.photoUrl ?? "");
   const frozen = isFrozen(house);
   const freezeText = freezeLabel(house);
 
@@ -52,6 +55,7 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
         return;
       }
       onUpdated(data.house as PublicHouse);
+      if (typeof data.house?.photoUrl === "string") setPhotoLink(data.house.photoUrl);
       toast.success("עודכן");
     } catch {
       toast.error("אין קשר לשרת");
@@ -76,6 +80,7 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
         return;
       }
       onUpdated(data.house as PublicHouse);
+      if (typeof data.house?.photoUrl === "string") setPhotoLink(data.house.photoUrl);
       toast.success("התמונה נשמרה");
     } catch {
       toast.error("לא הצלחנו לדחוס או לשמור את התמונה");
@@ -210,7 +215,7 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
       <div className="space-y-1.5 border-t border-orange-500/15 pt-3">
         <p className="text-xs text-violet-300">תמונת קישוט (לא חובה)</p>
         <p className="text-[11px] text-violet-400">
-          תמונה אחת, דחוסה לכ־100KB, נטענת רק כשפותחים את כרטיס הבית — לא על המפה. ככה 1,000 ילדים בלילה לא שורפים את החבילה החינמית.
+          עדיף קישור לתמונה שכבר עלתה לאינטרנט (Imgur, Cloudinary, Drive ציבורי). הקטלוג שומר רק את הכתובת, לא את הקובץ — בלילה העמוס השרת שלנו לא שולח תמונות. ברשת איטית או במצב חיסכון הילדים רואים כפתור במקום התמונה.
         </p>
         {house.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -220,10 +225,34 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
             className="h-28 w-full rounded-xl object-cover ring-1 ring-orange-500/25"
           />
         ) : null}
+        <div className="flex flex-col gap-1.5 sm:flex-row">
+          <Input
+            value={photoLink}
+            onChange={(e) => setPhotoLink(e.target.value)}
+            placeholder="https://… קישור לתמונה"
+            className="h-9 bg-black/30"
+            disabled={busy}
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={busy}
+            onClick={() => {
+              const parsed = parsePhotoUrl(photoLink);
+              if (parsed === null) {
+                toast.error("צריך קישור http(s), או להשאיר ריק");
+                return;
+              }
+              void save({ photoUrl: parsed });
+            }}
+          >
+            שמירת קישור
+          </Button>
+        </div>
         {editCode ? (
           <label className="inline-flex cursor-pointer">
-            <span className="rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-medium text-black">
-              {house.photoUrl ? "החלפת תמונה" : "העלאת תמונה"}
+            <span className="rounded-lg bg-orange-500/20 px-3 py-1.5 text-xs font-medium text-orange-100 ring-1 ring-orange-500/30">
+              או קובץ מהטלפון (רק בהרצה מקומית)
             </span>
             <input
               type="file"
@@ -234,7 +263,7 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
             />
           </label>
         ) : (
-          <p className="text-[11px] text-violet-400">העלאה דרך קוד העריכה של בעל הבית.</p>
+          <p className="text-[11px] text-violet-400">קישור נשמר עם קוד העריכה של בעל הבית.</p>
         )}
       </div>
     </div>

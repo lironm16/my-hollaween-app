@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandTitle } from "@/components/brand-title";
 import { config } from "@/lib/config";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -22,10 +23,8 @@ export function AppHeader({
             className="size-10 rounded-xl ring-1 ring-orange-400/40"
           />
           <span className="min-w-0">
-            <span className="font-display block truncate text-base leading-tight text-orange-300 sm:text-lg">
-              {config.appName}
-            </span>
-            <span className="block truncate text-[11px] text-violet-200/80">
+            <BrandTitle />
+            <span className="mt-0.5 block truncate text-[11px] text-violet-200/80">
               {config.neighborhood}
             </span>
           </span>

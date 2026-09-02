@@ -1,7 +1,14 @@
 import { z } from "zod";
 import { HOUSE_THEMES, SCARE_LEVELS, STOCK_LEVELS, TREAT_OPTIONS, VISIT_STATES } from "@/lib/types";
+import { parsePhotoUrl } from "@/lib/photos";
 
 const treatStockSchema = z.partialRecord(z.enum(TREAT_OPTIONS), z.enum(STOCK_LEVELS));
+
+const photoUrlSchema = z
+  .string()
+  .max(500)
+  .refine((value) => parsePhotoUrl(value) !== null, "כתובת תמונה לא תקינה")
+  .transform((value) => parsePhotoUrl(value) as string);
 
 const houseFields = z.object({
   name: z.string().trim().min(2).max(80),
@@ -35,7 +42,7 @@ export const houseInputSchema = houseFields.extend({
 export const ownerPatchSchema = houseFields.partial().extend({
   soldOut: z.boolean().optional(),
   ownerFrozenUntil: z.string().nullable().optional(),
-  photoUrl: z.string().max(240).optional(),
+  photoUrl: photoUrlSchema.optional(),
   editCode: z.string().min(4).max(12),
 });
 
@@ -43,7 +50,7 @@ export const adminPatchSchema = houseFields.partial().extend({
   soldOut: z.boolean().optional(),
   ownerFrozenUntil: z.string().nullable().optional(),
   adminFrozen: z.boolean().optional(),
-  photoUrl: z.string().max(240).optional(),
+  photoUrl: photoUrlSchema.optional(),
   status: z.enum(["pending", "approved", "rejected"]).optional(),
   rejectionReason: z.string().max(240).optional(),
 });

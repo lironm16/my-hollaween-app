@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 export default function HousePage() {
   const params = useParams<{ id: string }>();
   const id = decodeURIComponent(params.id);
-  const { catalog, loading, error } = useCatalog();
+  const { catalog, loading, error, source } = useCatalog();
   const owned = useOwnedHouses();
   const house =
     catalog?.houses.find((h) => h.id === id) ??
@@ -29,7 +29,7 @@ export default function HousePage() {
             <div className="relative z-0 isolate h-56 overflow-hidden rounded-2xl ring-1 ring-orange-500/30">
               <HouseMapDynamic houses={[house]} selectedId={house.id} />
             </div>
-            <HouseDetails house={house} />
+            <HouseDetails house={house} catalogSource={source} />
           </div>
         ) : loading ? (
           <p className="text-orange-200">טוענים בית…</p>

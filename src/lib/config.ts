@@ -4,7 +4,9 @@ const latPad = 0.0075;
 const lngPad = 0.014;
 
 export const config = {
-  appName: "הלואין בשכונה",
+  appName: "Holloween בשכונה",
+  brandEn: "Holloween",
+  brandHe: "בשכונה",
   tagline: "מפת הבתים המפחידים של השכונה",
   neighborhood:
     process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שיכון ותיקים · חרוזים · נחלת גנים",

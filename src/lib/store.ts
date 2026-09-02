@@ -5,6 +5,7 @@ import { inNeighborhood } from "@/lib/config";
 import { config } from "@/lib/config";
 import { assertRealAddress } from "@/lib/geocode";
 import { defaultTreatStock, effectiveVisit, isPubliclyListed } from "@/lib/house-state";
+import { parsePhotoUrl } from "@/lib/photos";
 import {
   HOUSE_THEMES,
   type Catalog,
@@ -215,6 +216,10 @@ export async function updateByEditCode(
       delete clean.treatStock;
     }
     Object.assign(house, clean);
+    if (house.photoUrl) {
+      const parsed = parsePhotoUrl(house.photoUrl);
+      if (parsed !== null) house.photoUrl = parsed;
+    }
     house.updatedAt = new Date().toISOString();
     if (house.status === "rejected") house.status = "pending";
     db.updatedAt = house.updatedAt;
@@ -265,7 +270,7 @@ export async function adminUpdate(
     if (patch.accessible !== undefined) house.accessible = patch.accessible;
     if (patch.adminFrozen !== undefined) house.adminFrozen = patch.adminFrozen;
     if (patch.ownerFrozenUntil !== undefined) house.ownerFrozenUntil = patch.ownerFrozenUntil;
-    if (patch.photoUrl !== undefined) house.photoUrl = patch.photoUrl;
+    if (patch.photoUrl !== undefined) house.photoUrl = parsePhotoUrl(patch.photoUrl) ?? patch.photoUrl;
     if (patch.visit !== undefined) house.soldOut = patch.visit === "closed";
     else if (patch.soldOut !== undefined) {
       house.soldOut = patch.soldOut;

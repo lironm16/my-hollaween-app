@@ -161,7 +161,7 @@ export function NeighborhoodApp({
                   הבית מוקפא — הילדים בשכונה לא רואים אותו. רק אתם (או מנהל) רואים את הסיכה השקופה.
                 </p>
               ) : null}
-              <HouseDetails house={selected} />
+              <HouseDetails house={selected} catalogSource={source} />
             </div>
           </SheetContent>
         ) : null}
