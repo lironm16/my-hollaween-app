@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
@@ -9,16 +9,25 @@ import { CodesCopy } from "@/components/codes-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { loadOwnedHouses, saveOwnedHouse } from "@/lib/offline-db";
+import { useOwnedHouses } from "@/hooks/use-owned-houses";
+import { saveOwnedHouse } from "@/lib/offline-db";
 import type { HouseInput, PublicHouse } from "@/lib/types";
 
 export default function EditPage() {
-  const owned = useMemo(() => loadOwnedHouses(), []);
-  const [id, setId] = useState(owned[0]?.id ?? "");
-  const [editCode, setEditCode] = useState(owned[0]?.editCode ?? "");
+  const owned = useOwnedHouses();
+  const [id, setId] = useState("");
+  const [editCode, setEditCode] = useState("");
   const [house, setHouse] = useState<PublicHouse | null>(null);
   const [soldOut, setSoldOut] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [filledFromStorage, setFilledFromStorage] = useState(false);
+
+  useEffect(() => {
+    if (filledFromStorage || owned.length === 0) return;
+    setId(owned[0].id);
+    setEditCode(owned[0].editCode);
+    setFilledFromStorage(true);
+  }, [owned, filledFromStorage]);
 
   async function unlock() {
     setBusy(true);

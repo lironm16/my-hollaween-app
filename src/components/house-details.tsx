@@ -1,24 +1,31 @@
 "use client";
 
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { CodesCopy } from "@/components/codes-copy";
 import { scareLabels, treatLabels, themeEmoji, themeLabels } from "@/lib/labels";
 import { loadOwnedHouses } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export function HouseDetails({
   house,
   extra,
 }: {
   house: PublicHouse;
-  extra?: React.ReactNode;
+  extra?: ReactNode;
 }) {
   const maps = `https://www.google.com/maps?q=${house.lat},${house.lng}`;
   const waze = `https://waze.com/ul?ll=${house.lat},${house.lng}&navigate=yes`;
-  const owned = loadOwnedHouses().find((item) => item.id === house.id);
+  const [editCode, setEditCode] = useState<string | undefined>(undefined);
   const theme = house.theme ?? "pumpkin";
+
+  useEffect(() => {
+    const owned = loadOwnedHouses().find((item) => item.id === house.id);
+    setEditCode(owned?.editCode);
+  }, [house.id]);
   return (
     <div className="space-y-3">
       <div>
@@ -59,20 +66,29 @@ export function HouseDetails({
       {house.notes ? (
         <p className="text-sm text-amber-200/90">הערה: {house.notes}</p>
       ) : null}
-      <CodesCopy id={house.id} editCode={owned?.editCode} />
+      <CodesCopy id={house.id} editCode={editCode} />
       <div className="flex flex-wrap gap-2 pt-1">
-        <a href={waze} target="_blank" rel="noreferrer">
-          <Button size="sm">ניווט ב־Waze</Button>
+        <a
+          href={waze}
+          target="_blank"
+          rel="noreferrer"
+          className={cn(buttonVariants({ size: "sm" }))}
+        >
+          ניווט ב־Waze
         </a>
-        <a href={maps} target="_blank" rel="noreferrer">
-          <Button size="sm" variant="outline">
-            Google Maps
-          </Button>
+        <a
+          href={maps}
+          target="_blank"
+          rel="noreferrer"
+          className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+        >
+          Google Maps
         </a>
-        <Link href={`/house/${encodeURIComponent(house.id)}`}>
-          <Button size="sm" variant="ghost">
-            קישור לבית
-          </Button>
+        <Link
+          href={`/house/${encodeURIComponent(house.id)}`}
+          className={cn(buttonVariants({ size: "sm", variant: "ghost" }))}
+        >
+          קישור לבית
         </Link>
       </div>
       {extra}

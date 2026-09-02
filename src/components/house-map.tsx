@@ -14,6 +14,7 @@ import "leaflet/dist/leaflet.css";
 import { config } from "@/lib/config";
 import type { PublicHouse } from "@/lib/types";
 import { scareShort, themeEmoji, themeLabels } from "@/lib/labels";
+import { cn } from "@/lib/utils";
 
 function pinIcon(house: PublicHouse) {
   const kind = house.status === "pending" ? "pending" : house.soldOut ? "soldout" : "ok";
@@ -111,10 +112,10 @@ export function HouseMap({
   if (!ready) {
     return (
       <div
-        className={
-          className ??
-          "flex h-full min-h-[280px] w-full items-center justify-center bg-[#1a1024] text-orange-200"
-        }
+        className={cn(
+          "relative z-0 isolate flex items-center justify-center overflow-hidden bg-[#1a1024] text-orange-200",
+          className ?? "h-full min-h-[280px] w-full",
+        )}
       >
         טוענים את המפה…
       </div>
@@ -122,7 +123,13 @@ export function HouseMap({
   }
 
   return (
-    <div className={className ?? "h-full min-h-[280px] w-full"} dir="ltr">
+    <div
+      className={cn(
+        "relative z-0 isolate overflow-hidden",
+        className ?? "h-full min-h-[280px] w-full",
+      )}
+      dir="ltr"
+    >
       <MapContainer
         key={pickMode ? "pick" : "view"}
         center={[config.map.center.lat, config.map.center.lng]}

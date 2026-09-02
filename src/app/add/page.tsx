@@ -6,9 +6,10 @@ import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { HouseForm } from "@/components/house-form";
 import { CodesCopy } from "@/components/codes-copy";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { saveOwnedHouse } from "@/lib/offline-db";
 import type { HouseInput } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export default function AddPage() {
   const [busy, setBusy] = useState(false);
@@ -65,13 +66,14 @@ export default function AddPage() {
               עם הקוד אפשר לעדכן פרטים או לסמן שנגמרו הממתקים, גם בלי מנהל.
             </p>
             <div className="flex flex-wrap gap-2">
-              <Link href={`/?focus=${encodeURIComponent(done.id)}`}>
-                <Button className="bg-orange-500 text-black hover:bg-orange-400">
-                  צפו בבית במפה
-                </Button>
+              <Link
+                href={`/?focus=${encodeURIComponent(done.id)}`}
+                className={cn(buttonVariants(), "bg-orange-500 text-black hover:bg-orange-400")}
+              >
+                צפו בבית במפה
               </Link>
-              <Link href="/edit">
-                <Button variant="outline">לעריכה</Button>
+              <Link href="/edit" className={cn(buttonVariants({ variant: "outline" }))}>
+                לעריכה
               </Link>
             </div>
           </div>

@@ -15,7 +15,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useCatalog } from "@/hooks/use-catalog";
-import { loadOwnedHouses } from "@/lib/offline-db";
+import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import type { Catalog, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -32,16 +32,17 @@ export function NeighborhoodApp({
   const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(null);
   const [accessibleOnly, setAccessibleOnly] = useState(false);
 
+  const owned = useOwnedHouses();
   const houses = useMemo(() => {
     const published = catalog?.houses ?? [];
-    const mine = loadOwnedHouses()
+    const mine = owned
       .map((item) => item.preview)
       .filter((house): house is PublicHouse => Boolean(house))
       .filter((house) => !published.some((p) => p.id === house.id));
     const merged = [...published, ...mine];
     if (!accessibleOnly) return merged;
     return merged.filter((house) => house.accessible);
-  }, [catalog, accessibleOnly]);
+  }, [catalog, accessibleOnly, owned]);
 
   const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const selected = houses.find((house) => house.id === activeId) ?? null;
@@ -56,7 +57,7 @@ export function NeighborhoodApp({
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col">
+    <div className="relative isolate flex min-h-dvh flex-col">
       <AppHeader
         actions={
           <>
@@ -75,7 +76,7 @@ export function NeighborhoodApp({
           </>
         }
       />
-      <div className="relative z-10 flex items-center gap-2 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2">
+      <div className="relative z-40 flex items-center gap-2 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2">
         <div className="flex rounded-lg bg-[#1d1028] p-0.5 ring-1 ring-orange-500/20">
           <Toggle active={view === "map"} onClick={() => setView("map")} icon={<MapPinned className="size-3.5" />}>
             מפה
@@ -115,11 +116,11 @@ export function NeighborhoodApp({
         </span>
       </div>
       {error ? (
-        <div className="relative z-10 bg-red-950/70 px-3 py-2 text-center text-sm text-red-100">
+        <div className="relative z-30 bg-red-950/70 px-3 py-2 text-center text-sm text-red-100">
           {error}
         </div>
       ) : null}
-      <main className="relative z-10 min-h-0 flex-1">
+      <main className="relative z-0 min-h-0 flex-1 isolate overflow-hidden">
         {loading && houses.length === 0 ? (
           <div className="flex h-full min-h-[60vh] items-center justify-center text-orange-200">
             מדליקים דלעות…
@@ -129,20 +130,25 @@ export function NeighborhoodApp({
             houses={houses}
             selectedId={selected?.id}
             onSelect={(house) => setSelectedId(house.id)}
-            className="h-[calc(100dvh-7.2rem)] w-full"
+            className="h-full w-full"
           />
         ) : (
-          <div className="h-[calc(100dvh-7.2rem)] overflow-y-auto">
+          <div className="h-full overflow-y-auto">
             <HouseList houses={houses} onOpen={(house) => setSelectedId(house.id)} origin={origin} />
           </div>
         )}
       </main>
-      <Sheet open={Boolean(selected)} onOpenChange={(open) => !open && setSelectedId("closed")}>
-        <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto bg-[#1a0d24] sm:max-w-none">
-          <SheetHeader>
-            <SheetTitle className="sr-only">פרטי בית</SheetTitle>
-          </SheetHeader>
-          {selected ? (
+      <Sheet
+        open={Boolean(selected)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedId("closed");
+        }}
+      >
+        {selected ? (
+          <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto bg-[#1a0d24] sm:max-w-none">
+            <SheetHeader>
+              <SheetTitle className="sr-only">פרטי בית</SheetTitle>
+            </SheetHeader>
             <div className="px-4 pb-8">
               {selected.status === "pending" ? (
                 <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-sm text-violet-100">
@@ -151,8 +157,8 @@ export function NeighborhoodApp({
               ) : null}
               <HouseDetails house={selected} />
             </div>
-          ) : null}
-        </SheetContent>
+          </SheetContent>
+        ) : null}
       </Sheet>
     </div>
   );

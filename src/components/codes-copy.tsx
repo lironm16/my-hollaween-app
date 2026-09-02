@@ -5,8 +5,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 async function copyText(text: string, ok: string) {
-  await navigator.clipboard.writeText(text);
-  toast.success(ok);
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success(ok);
+  } catch {
+    toast.error("לא הצלחנו להעתיק. אפשר לסמן את הטקסט ידנית.");
+  }
 }
 
 export function CodesCopy({

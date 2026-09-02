@@ -98,7 +98,7 @@ export function HouseForm({
         <p className="mb-2 text-xs text-violet-300">
           יש כבר סיכה במרכז השכונה. גררו אותה או לחצו במקום הנכון.
         </p>
-        <div className="h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/30">
+        <div className="relative z-0 isolate h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/30">
           <HouseMapDynamic
             pickMode
             pick={{ lat: form.lat, lng: form.lng }}

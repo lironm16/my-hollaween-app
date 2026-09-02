@@ -69,4 +69,7 @@ export function saveOwnedHouse(house: OwnedHouse) {
   const next = loadOwnedHouses().filter((h) => h.id !== house.id);
   next.unshift(house);
   localStorage.setItem(MY_HOUSES_KEY, JSON.stringify(next.slice(0, 20)));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("hw-owned-changed"));
+  }
 }

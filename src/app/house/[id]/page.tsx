@@ -5,8 +5,9 @@ import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { HouseDetails } from "@/components/house-details";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { useCatalog } from "@/hooks/use-catalog";
+import { cn } from "@/lib/utils";
 
 export default function HousePage() {
   const params = useParams<{ id: string }>();
@@ -21,7 +22,7 @@ export default function HousePage() {
       <main className="relative z-10 mx-auto w-full max-w-lg flex-1 px-4 py-5">
         {house ? (
           <div className="space-y-4">
-            <div className="h-56 overflow-hidden rounded-2xl ring-1 ring-orange-500/30">
+            <div className="relative z-0 isolate h-56 overflow-hidden rounded-2xl ring-1 ring-orange-500/30">
               <HouseMapDynamic houses={[house]} selectedId={house.id} />
             </div>
             <HouseDetails house={house} />
@@ -33,8 +34,8 @@ export default function HousePage() {
             <p className="text-violet-100">
               {error ?? (missing ? "הבית לא נמצא במפה. אולי הוא עדיין ממתין לאישור." : "לא נמצא.")}
             </p>
-            <Link href="/">
-              <Button>חזרה למפה</Button>
+            <Link href="/" className={cn(buttonVariants())}>
+              חזרה למפה
             </Link>
           </div>
         )}

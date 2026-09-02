@@ -9,7 +9,7 @@ export function AppHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <header className="relative z-20 border-b border-orange-500/20 bg-[#14091c]/90 backdrop-blur-md">
+    <header className="relative z-50 border-b border-orange-500/20 bg-[#14091c]/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-3 py-2.5 sm:px-4">
         <Link href="/" className="flex min-w-0 items-center gap-2.5">
           {/* Static PWA icon; next/image is unnecessary for this tiny local asset. */}

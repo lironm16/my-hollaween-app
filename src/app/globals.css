@@ -114,6 +114,8 @@
   font-family: var(--font-heebo), sans-serif;
   width: 100%;
   height: 100%;
+  z-index: 0;
+  isolation: isolate;
 }
 
 .leaflet-popup-content-wrapper,
@@ -154,6 +156,7 @@
   width: 120px;
   height: 120px;
   opacity: 0.22;
+  pointer-events: none;
   background:
     radial-gradient(circle at 0 0, transparent 18px, rgba(245, 230, 200, 0.7) 19px, transparent 20px),
     repeating-conic-gradient(from 0deg, transparent 0 12deg, rgba(245, 230, 200, 0.35) 12deg 13deg);
@@ -173,6 +176,7 @@
 
 .moon-glow {
   position: absolute;
+  pointer-events: none;
   top: 2rem;
   inset-inline-end: 8%;
   width: 90px;
@@ -184,6 +188,7 @@
 
 .bat {
   position: absolute;
+  pointer-events: none;
   top: 4rem;
   font-size: 18px;
   animation: bat-fly 18s linear infinite;
