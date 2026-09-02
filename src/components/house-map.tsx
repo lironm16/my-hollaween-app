@@ -147,6 +147,50 @@ function FlyToUser({
   return null;
 }
 
+function FitAllHouses({
+  houses,
+  active,
+  selectedId,
+}: {
+  houses: PublicHouse[];
+  active: boolean;
+  selectedId?: string | null;
+}) {
+  const map = useMap();
+  const fittedFor = useRef<string>("");
+  const wasActive = useRef(false);
+
+  useEffect(() => {
+    const opening = active && !wasActive.current;
+    wasActive.current = active;
+    if (!active || selectedId || houses.length === 0) return;
+
+    const key = houses
+      .map((house) => house.id)
+      .sort()
+      .join("|");
+    if (!opening && key === fittedFor.current) return;
+    fittedFor.current = key;
+
+    map.invalidateSize({ animate: false });
+    if (houses.length === 1) {
+      map.setView([houses[0].lat, houses[0].lng], Math.min(17, config.map.maxZoom), {
+        animate: false,
+      });
+      return;
+    }
+    const next = L.latLngBounds(houses.map((house) => [house.lat, house.lng] as [number, number]));
+    if (!next.isValid()) return;
+    map.fitBounds(next, {
+      padding: [56, 56],
+      maxZoom: Math.min(17, config.map.maxZoom),
+      animate: false,
+    });
+  }, [active, houses, map, selectedId]);
+
+  return null;
+}
+
 function bindPopupRoot(node: HTMLDivElement | null) {
   if (!node) return;
   L.DomEvent.disableClickPropagation(node);
@@ -236,6 +280,11 @@ export function HouseMap({
     [],
   );
   const selected = houses.find((h) => h.id === selectedId);
+  const houseBounds = useMemo(() => {
+    if (pickMode || houses.length === 0) return null;
+    const next = L.latLngBounds(houses.map((house) => [house.lat, house.lng] as [number, number]));
+    return next.isValid() ? next : null;
+  }, [houses, pickMode]);
   const ready = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -267,6 +316,8 @@ export function HouseMap({
         key={pickMode ? "pick" : "view"}
         center={[config.map.center.lat, config.map.center.lng]}
         zoom={config.map.zoom}
+        bounds={houseBounds ?? undefined}
+        boundsOptions={{ padding: [56, 56], maxZoom: Math.min(17, config.map.maxZoom) }}
         minZoom={config.map.minZoom}
         maxZoom={config.map.maxZoom}
         maxBounds={bounds}
@@ -285,6 +336,9 @@ export function HouseMap({
         />
         <ResizeFix />
         <VisibilityFix active={active} />
+        {!pickMode ? (
+          <FitAllHouses houses={houses} active={active} selectedId={selectedId} />
+        ) : null}
         {pickMode && onPick ? <ClickCatcher onPick={onPick} /> : null}
         {pickMode && pick ? (
           <>
