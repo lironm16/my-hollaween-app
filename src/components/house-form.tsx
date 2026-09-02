@@ -14,9 +14,12 @@ import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
 import {
   HOUSE_THEMES,
+  SENSITIVITY_OPTIONS,
   type HouseInput,
   type ScareLevel,
+  type TreatId,
 } from "@/lib/types";
+import { treatLabels } from "@/lib/labels";
 
 const empty: HouseInput = {
   name: "",
@@ -51,13 +54,13 @@ export function HouseForm({
   const [locating, setLocating] = useState(false);
   const [addressOk, setAddressOk] = useState(Boolean(initial?.address && initial.lat && initial.lng));
 
-  function setGlutenFree(on: boolean) {
+  function setTreat(id: TreatId, on: boolean) {
     setForm((f) => {
-      const rest = f.treats.filter((t) => t !== "glutenFree");
-      const treats = on ? [...rest, "glutenFree" as const] : rest;
+      const rest = f.treats.filter((t) => t !== id);
+      const treats = on ? [...rest, id] : rest;
       const treatStock = { ...(f.treatStock ?? {}) };
-      if (on) treatStock.glutenFree = treatStock.glutenFree ?? "plenty";
-      else delete treatStock.glutenFree;
+      if (on) treatStock[id] = treatStock[id] ?? "plenty";
+      else delete treatStock[id];
       return { ...f, treats, treatStock };
     });
   }
@@ -226,20 +229,23 @@ export function HouseForm({
           </span>
         </span>
       </label>
-      <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-sm ring-1 ring-orange-500/20">
-        <input
-          type="checkbox"
-          className="mt-1 size-4 accent-orange-500"
-          checked={form.treats.includes("glutenFree")}
-          onChange={(e) => setGlutenFree(e.target.checked)}
-        />
-        <span>
-          <span className="font-medium text-orange-100">ללא גלוטן</span>
-          <span className="block text-xs text-violet-300">
-            יש ממתקים או שוקולד בלי גלוטן
-          </span>
-        </span>
-      </label>
+      <div className="space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
+        <p className="text-sm font-medium text-orange-100">רגישויות והתאמות</p>
+        <p className="text-xs text-violet-300">סמנו מה יש בבית לילדים עם רגישויות</p>
+        <div className="space-y-2">
+          {SENSITIVITY_OPTIONS.map((id) => (
+            <label key={id} className="flex items-center gap-2 text-sm text-orange-50">
+              <input
+                type="checkbox"
+                className="size-4 accent-orange-500"
+                checked={form.treats.includes(id)}
+                onChange={(e) => setTreat(id, e.target.checked)}
+              />
+              {treatLabels[id]}
+            </label>
+          ))}
+        </div>
+      </div>
       <Field label="מה מחכה בבית?">
         <Textarea
           value={form.description}

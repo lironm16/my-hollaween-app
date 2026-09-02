@@ -5,6 +5,8 @@ export const TREAT_OPTIONS = [
   "candy",
   "chocolate",
   "glutenFree",
+  "nutsFree",
+  "sesameFree",
   "vegan",
   "fruit",
   "toys",
@@ -12,6 +14,9 @@ export const TREAT_OPTIONS = [
   "allergenFriendly",
 ] as const;
 export type TreatId = (typeof TREAT_OPTIONS)[number];
+
+export const SENSITIVITY_OPTIONS = ["glutenFree", "nutsFree", "sesameFree"] as const;
+export type SensitivityId = (typeof SENSITIVITY_OPTIONS)[number];
 
 export const HOUSE_THEMES = [
   "ghost",

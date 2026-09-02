@@ -45,6 +45,23 @@ export function offersGlutenFree(house: { treats: TreatId[]; treatStock?: TreatS
   return markedGlutenFree(house) && treatLevel(house, "glutenFree") !== "out";
 }
 
+export function offersNutsFree(house: { treats: TreatId[]; treatStock?: TreatStock }) {
+  return house.treats.includes("nutsFree") && treatLevel(house, "nutsFree") !== "out";
+}
+
+export function offersSesameFree(house: { treats: TreatId[]; treatStock?: TreatStock }) {
+  return house.treats.includes("sesameFree") && treatLevel(house, "sesameFree") !== "out";
+}
+
+export function offersSensitivity(
+  house: { treats: TreatId[]; treatStock?: TreatStock },
+  id: "glutenFree" | "nutsFree" | "sesameFree",
+) {
+  if (id === "glutenFree") return offersGlutenFree(house);
+  if (id === "nutsFree") return offersNutsFree(house);
+  return offersSesameFree(house);
+}
+
 export function markedCandy(house: { treats: TreatId[] }) {
   return house.treats.includes("candy");
 }

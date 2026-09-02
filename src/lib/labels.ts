@@ -12,6 +12,8 @@ export const treatLabels: Record<TreatId, string> = {
   candy: "ממתקים",
   chocolate: "שוקולד",
   glutenFree: "ללא גלוטן",
+  nutsFree: "ללא אגוזים",
+  sesameFree: "ללא שומשום",
   vegan: "טבעוני",
   fruit: "פירות",
   toys: "צעצועים",

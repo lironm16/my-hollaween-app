@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Heart, List, LogOut, MapPinned, RefreshCw, WifiOff } from "lucide-react";
+import { List, LogOut, MapPinned, RefreshCw, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
-import { FilterChip } from "@/components/filter-chip";
+import { FilterMenu, FilterOption } from "@/components/filter-menu";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseList } from "@/components/house-list";
 import { HouseDetails } from "@/components/house-details";
@@ -27,7 +27,7 @@ import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { readApiJson } from "@/lib/api-json";
 import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
 import { toPublicHouse } from "@/lib/ids";
-import { isFrozen, offersCandy, offersGlutenFree } from "@/lib/house-state";
+import { isFrozen, offersCandy, offersSensitivity } from "@/lib/house-state";
 import {
   backupLooksNewer,
   loadServerDbBackup,
@@ -35,9 +35,9 @@ import {
   saveServerDbBackup,
   type ServerDbBackup,
 } from "@/lib/offline-db";
-import { scareShort } from "@/lib/labels";
-import type { Catalog, House, HouseInput, PublicHouse, ScareLevel } from "@/lib/types";
-import { SCARE_LEVELS } from "@/lib/types";
+import { scareShort, treatLabels } from "@/lib/labels";
+import type { Catalog, House, HouseInput, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
+import { SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function NeighborhoodApp({
@@ -54,8 +54,8 @@ export function NeighborhoodApp({
   const [view, setView] = useState<"map" | "list">("map");
   const [selectedId, setSelectedId] = useState<string | "closed" | null>(null);
   const [accessibleOnly, setAccessibleOnly] = useState(false);
-  const [glutenFreeOnly, setGlutenFreeOnly] = useState(false);
   const [candyOnly, setCandyOnly] = useState(false);
+  const [sensitivityFilters, setSensitivityFilters] = useState<SensitivityId[]>([]);
   const [scareFilters, setScareFilters] = useState<ScareLevel[]>([]);
   const [neighborhoodFilters, setNeighborhoodFilters] = useState<NeighborhoodId[]>([]);
   const [likedOnly, setLikedOnly] = useState(false);
@@ -157,8 +157,10 @@ export function NeighborhoodApp({
   const visible = useMemo(() => {
     return houses.filter((house) => {
       if (accessibleOnly && !house.accessible) return false;
-      if (glutenFreeOnly && !offersGlutenFree(house)) return false;
       if (candyOnly && !offersCandy(house)) return false;
+      for (const sensitivity of sensitivityFilters) {
+        if (!offersSensitivity(house, sensitivity)) return false;
+      }
       if (scareFilters.length > 0 && !scareFilters.includes(house.scareLevel)) return false;
       if (!houseInNeighborhoods(house, neighborhoodFilters)) return false;
       if (likedOnly && !likes.likedIds.includes(house.id)) return false;
@@ -168,8 +170,8 @@ export function NeighborhoodApp({
   }, [
     houses,
     accessibleOnly,
-    glutenFreeOnly,
     candyOnly,
+    sensitivityFilters,
     scareFilters,
     neighborhoodFilters,
     likedOnly,
@@ -189,6 +191,15 @@ export function NeighborhoodApp({
       current.includes(area) ? current.filter((item) => item !== area) : [...current, area],
     );
   }
+
+  function toggleSensitivity(id: SensitivityId) {
+    setSensitivityFilters((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
+    );
+  }
+
+  const moreFilterCount =
+    Number(accessibleOnly) + Number(candyOnly) + Number(likedOnly) + Number(unvisitedOnly);
 
   const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const selected =
@@ -439,41 +450,53 @@ export function NeighborhoodApp({
           </span>
         </div>
         <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5">
-          {NEIGHBORHOODS.map((area) => (
-            <FilterChip
-              key={area}
-              active={neighborhoodFilters.includes(area)}
-              onClick={() => toggleNeighborhood(area)}
-            >
-              {area}
-            </FilterChip>
-          ))}
-          <FilterChip active={accessibleOnly} onClick={() => setAccessibleOnly((v) => !v)}>
-            נגיש
-          </FilterChip>
-          <FilterChip active={candyOnly} onClick={() => setCandyOnly((v) => !v)}>
-            ממתקים
-          </FilterChip>
-          <FilterChip active={glutenFreeOnly} onClick={() => setGlutenFreeOnly((v) => !v)}>
-            ללא גלוטן
-          </FilterChip>
-          {SCARE_LEVELS.map((level) => (
-            <FilterChip
-              key={level}
-              active={scareFilters.includes(level)}
-              onClick={() => toggleScare(level)}
-            >
-              {scareShort[level]}
-            </FilterChip>
-          ))}
-          <FilterChip active={likedOnly} onClick={() => setLikedOnly((v) => !v)}>
-            <Heart className={cn("size-3", likedOnly && "fill-black")} />
-            שמרתי
-          </FilterChip>
-          <FilterChip active={unvisitedOnly} onClick={() => setUnvisitedOnly((v) => !v)}>
-            <CheckCircle2 className={cn("size-3", unvisitedOnly && "text-black")} />
-            לא ביקרתי
-          </FilterChip>
+          <FilterMenu title="שכונה" activeCount={neighborhoodFilters.length}>
+            {NEIGHBORHOODS.map((area) => (
+              <FilterOption
+                key={area}
+                checked={neighborhoodFilters.includes(area)}
+                onChange={() => toggleNeighborhood(area)}
+              >
+                {area}
+              </FilterOption>
+            ))}
+          </FilterMenu>
+          <FilterMenu title="רגישויות" activeCount={sensitivityFilters.length}>
+            {SENSITIVITY_OPTIONS.map((id) => (
+              <FilterOption
+                key={id}
+                checked={sensitivityFilters.includes(id)}
+                onChange={() => toggleSensitivity(id)}
+              >
+                {treatLabels[id]}
+              </FilterOption>
+            ))}
+          </FilterMenu>
+          <FilterMenu title="רמת פחד" activeCount={scareFilters.length}>
+            {SCARE_LEVELS.map((level) => (
+              <FilterOption
+                key={level}
+                checked={scareFilters.includes(level)}
+                onChange={() => toggleScare(level)}
+              >
+                {scareShort[level]}
+              </FilterOption>
+            ))}
+          </FilterMenu>
+          <FilterMenu title="עוד" activeCount={moreFilterCount}>
+            <FilterOption checked={candyOnly} onChange={() => setCandyOnly((v) => !v)}>
+              יש ממתקים
+            </FilterOption>
+            <FilterOption checked={accessibleOnly} onChange={() => setAccessibleOnly((v) => !v)}>
+              נגיש
+            </FilterOption>
+            <FilterOption checked={likedOnly} onChange={() => setLikedOnly((v) => !v)}>
+              שמרתי
+            </FilterOption>
+            <FilterOption checked={unvisitedOnly} onChange={() => setUnvisitedOnly((v) => !v)}>
+              לא ביקרתי
+            </FilterOption>
+          </FilterMenu>
         </div>
         {geoError ? (
           <p className="mt-1 text-[11px] text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>

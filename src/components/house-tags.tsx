@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
-import { candyLevel, markedGlutenFree, treatLevel } from "@/lib/house-state";
-import { scareShort, stockLabels } from "@/lib/labels";
+import { candyLevel, markedGlutenFree, offersNutsFree, offersSesameFree, treatLevel } from "@/lib/house-state";
+import { scareShort, stockLabels, treatLabels } from "@/lib/labels";
 import type { ScareLevel, TreatId, TreatStock } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -55,8 +55,14 @@ export function HouseTags({
           }
           variant={glutenOut ? "outline" : "default"}
         >
-          ללא גלוטן
+          {treatLabels.glutenFree}
         </Badge>
+      ) : null}
+      {offersNutsFree(house) ? (
+        <Badge className="bg-amber-800 text-amber-50">{treatLabels.nutsFree}</Badge>
+      ) : null}
+      {offersSesameFree(house) ? (
+        <Badge className="bg-amber-800 text-amber-50">{treatLabels.sesameFree}</Badge>
       ) : null}
     </div>
   );
