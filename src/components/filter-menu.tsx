@@ -1,83 +1,126 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
+import type { ReactNode } from "react";
+import { Filter, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
-export function FilterMenu({
+export function FilterTrigger({
+  activeCount,
+  onClick,
+}: {
+  activeCount: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={activeCount > 0 ? `סינון (${activeCount})` : "סינון"}
+      onClick={onClick}
+      className={cn(
+        "relative inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
+        activeCount > 0
+          ? "bg-orange-500 text-black"
+          : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
+      )}
+    >
+      <Filter className="size-4" />
+      {activeCount > 0 ? (
+        <span className="absolute -top-1 -start-1 inline-flex min-w-4 items-center justify-center rounded-full bg-black px-1 text-[10px] font-bold text-orange-300">
+          {activeCount}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
+export function FiltersSheet({
+  open,
+  onOpenChange,
+  activeCount,
+  onClear,
+  children,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  activeCount: number;
+  onClear: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="bottom"
+        showCloseButton={false}
+        className="flex h-[min(92vh,720px)] max-h-[92vh] flex-col gap-0 overflow-hidden rounded-t-2xl border-orange-500/25 bg-[#160b1f] p-0 sm:max-w-none"
+      >
+        <SheetHeader className="shrink-0 border-b border-orange-500/15 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <SheetTitle className="text-lg font-semibold text-orange-50">סינון</SheetTitle>
+            {activeCount > 0 ? (
+              <span className="rounded-full bg-orange-500/20 px-2 py-0.5 text-xs font-medium text-orange-200">
+                {activeCount} פעילים
+              </span>
+            ) : null}
+            <button
+              type="button"
+              aria-label="סגירה"
+              onClick={() => onOpenChange(false)}
+              className="ms-auto inline-flex size-9 items-center justify-center rounded-lg text-orange-100 hover:bg-orange-500/10"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+        </SheetHeader>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+          <div className="mx-auto flex w-full max-w-lg flex-col gap-6">{children}</div>
+        </div>
+
+        <SheetFooter className="shrink-0 flex-row gap-2 border-t border-orange-500/15 bg-[#12081a] p-4">
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1"
+            disabled={activeCount === 0}
+            onClick={onClear}
+          >
+            נקה הכל
+          </Button>
+          <Button
+            type="button"
+            className="flex-1 bg-orange-500 text-black hover:bg-orange-400"
+            onClick={() => onOpenChange(false)}
+          >
+            הצג תוצאות
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+export function FilterSection({
   title,
-  activeCount = 0,
   children,
 }: {
   title: string;
-  activeCount?: number;
   children: ReactNode;
 }) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const menuId = useId();
-
-  useEffect(() => {
-    if (!open) return;
-    function onPointer(event: MouseEvent | TouchEvent) {
-      const node = rootRef.current;
-      if (!node) return;
-      if (event.target instanceof Node && !node.contains(event.target)) {
-        setOpen(false);
-      }
-    }
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", onPointer);
-    document.addEventListener("touchstart", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onPointer);
-      document.removeEventListener("touchstart", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
   return (
-    <div ref={rootRef} className="relative shrink-0">
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls={menuId}
-        onClick={() => setOpen((value) => !value)}
-        className={cn(
-          "inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm",
-          activeCount > 0
-            ? "bg-orange-500 font-medium text-black"
-            : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
-        )}
-      >
-        <span>{title}</span>
-        {activeCount > 0 ? (
-          <span
-            className={cn(
-              "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold",
-              "bg-black/20 text-black",
-            )}
-          >
-            {activeCount}
-          </span>
-        ) : null}
-        <ChevronDown className={cn("size-3.5 transition", open && "rotate-180")} />
-      </button>
-      {open ? (
-        <div
-          id={menuId}
-          role="group"
-          aria-label={title}
-          className="absolute top-[calc(100%+6px)] end-0 z-[60] min-w-[13rem] rounded-xl bg-[#1d1028] p-2 shadow-[0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-orange-500/30"
-        >
-          <p className="px-2 pb-1.5 text-[11px] font-medium text-violet-300">{title}</p>
-          <div className="flex flex-col gap-0.5">{children}</div>
-        </div>
-      ) : null}
-    </div>
+    <section className="space-y-2">
+      <h3 className="text-sm font-semibold text-violet-200">{title}</h3>
+      <div className="flex flex-col gap-1 rounded-xl bg-[#1d1028] p-1.5 ring-1 ring-orange-500/20">
+        {children}
+      </div>
+    </section>
   );
 }
 
@@ -91,14 +134,19 @@ export function FilterOption({
   children: ReactNode;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm text-orange-50 hover:bg-orange-500/10">
+    <label
+      className={cn(
+        "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition",
+        checked ? "bg-orange-500/15 text-orange-50" : "text-orange-50 hover:bg-orange-500/10",
+      )}
+    >
       <input
         type="checkbox"
         className="size-4 accent-orange-500"
         checked={checked}
         onChange={onChange}
       />
-      <span className="min-w-0 flex-1">{children}</span>
+      <span className="min-w-0 flex-1 text-start">{children}</span>
     </label>
   );
 }

@@ -5,7 +5,12 @@ import Link from "next/link";
 import { List, LogOut, MapPinned, RefreshCw, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
-import { FilterMenu, FilterOption } from "@/components/filter-menu";
+import {
+  FilterOption,
+  FilterSection,
+  FilterTrigger,
+  FiltersSheet,
+} from "@/components/filter-menu";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseList } from "@/components/house-list";
 import { HouseDetails } from "@/components/house-details";
@@ -60,6 +65,7 @@ export function NeighborhoodApp({
   const [neighborhoodFilters, setNeighborhoodFilters] = useState<NeighborhoodId[]>([]);
   const [likedOnly, setLikedOnly] = useState(false);
   const [unvisitedOnly, setUnvisitedOnly] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [followTick, setFollowTick] = useState(0);
   const [fitTick, setFitTick] = useState(0);
   const [askedLocation, setAskedLocation] = useState(false);
@@ -200,6 +206,21 @@ export function NeighborhoodApp({
 
   const moreFilterCount =
     Number(accessibleOnly) + Number(candyOnly) + Number(likedOnly) + Number(unvisitedOnly);
+  const activeFilterCount =
+    neighborhoodFilters.length +
+    sensitivityFilters.length +
+    scareFilters.length +
+    moreFilterCount;
+
+  function clearAllFilters() {
+    setNeighborhoodFilters([]);
+    setSensitivityFilters([]);
+    setScareFilters([]);
+    setAccessibleOnly(false);
+    setCandyOnly(false);
+    setLikedOnly(false);
+    setUnvisitedOnly(false);
+  }
 
   const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const selected =
@@ -434,6 +455,7 @@ export function NeighborhoodApp({
               רשימה
             </Toggle>
           </div>
+          <FilterTrigger activeCount={activeFilterCount} onClick={() => setFiltersOpen(true)} />
           <Button size="sm" variant="ghost" onClick={() => void onRefresh()}>
             <RefreshCw className={cn("size-3.5", adminLoading && "animate-spin")} />
             רענון
@@ -449,61 +471,66 @@ export function NeighborhoodApp({
             )}
           </span>
         </div>
-        <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5">
-          <FilterMenu title="שכונה" activeCount={neighborhoodFilters.length}>
-            {NEIGHBORHOODS.map((area) => (
-              <FilterOption
-                key={area}
-                checked={neighborhoodFilters.includes(area)}
-                onChange={() => toggleNeighborhood(area)}
-              >
-                {area}
-              </FilterOption>
-            ))}
-          </FilterMenu>
-          <FilterMenu title="רגישויות" activeCount={sensitivityFilters.length}>
-            {SENSITIVITY_OPTIONS.map((id) => (
-              <FilterOption
-                key={id}
-                checked={sensitivityFilters.includes(id)}
-                onChange={() => toggleSensitivity(id)}
-              >
-                {treatLabels[id]}
-              </FilterOption>
-            ))}
-          </FilterMenu>
-          <FilterMenu title="רמת פחד" activeCount={scareFilters.length}>
-            {SCARE_LEVELS.map((level) => (
-              <FilterOption
-                key={level}
-                checked={scareFilters.includes(level)}
-                onChange={() => toggleScare(level)}
-              >
-                {scareShort[level]}
-              </FilterOption>
-            ))}
-          </FilterMenu>
-          <FilterMenu title="עוד" activeCount={moreFilterCount}>
-            <FilterOption checked={candyOnly} onChange={() => setCandyOnly((v) => !v)}>
-              יש ממתקים
-            </FilterOption>
-            <FilterOption checked={accessibleOnly} onChange={() => setAccessibleOnly((v) => !v)}>
-              נגיש
-            </FilterOption>
-            <FilterOption checked={likedOnly} onChange={() => setLikedOnly((v) => !v)}>
-              שמרתי
-            </FilterOption>
-            <FilterOption checked={unvisitedOnly} onChange={() => setUnvisitedOnly((v) => !v)}>
-              לא ביקרתי
-            </FilterOption>
-          </FilterMenu>
-        </div>
         {geoError ? (
           <p className="mt-1 text-[11px] text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>
         ) : outsideNeighborhood ? (
           <p className="mt-1 text-[11px] text-amber-200">המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.</p>
         ) : null}
       </div>
+      <FiltersSheet
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        activeCount={activeFilterCount}
+        onClear={clearAllFilters}
+      >
+        <FilterSection title="שכונה">
+          {NEIGHBORHOODS.map((area) => (
+            <FilterOption
+              key={area}
+              checked={neighborhoodFilters.includes(area)}
+              onChange={() => toggleNeighborhood(area)}
+            >
+              {area}
+            </FilterOption>
+          ))}
+        </FilterSection>
+        <FilterSection title="רגישויות">
+          {SENSITIVITY_OPTIONS.map((id) => (
+            <FilterOption
+              key={id}
+              checked={sensitivityFilters.includes(id)}
+              onChange={() => toggleSensitivity(id)}
+            >
+              {treatLabels[id]}
+            </FilterOption>
+          ))}
+        </FilterSection>
+        <FilterSection title="רמת פחד">
+          {SCARE_LEVELS.map((level) => (
+            <FilterOption
+              key={level}
+              checked={scareFilters.includes(level)}
+              onChange={() => toggleScare(level)}
+            >
+              {scareShort[level]}
+            </FilterOption>
+          ))}
+        </FilterSection>
+        <FilterSection title="עוד">
+          <FilterOption checked={candyOnly} onChange={() => setCandyOnly((v) => !v)}>
+            יש ממתקים
+          </FilterOption>
+          <FilterOption checked={accessibleOnly} onChange={() => setAccessibleOnly((v) => !v)}>
+            נגיש
+          </FilterOption>
+          <FilterOption checked={likedOnly} onChange={() => setLikedOnly((v) => !v)}>
+            שמרתי
+          </FilterOption>
+          <FilterOption checked={unvisitedOnly} onChange={() => setUnvisitedOnly((v) => !v)}>
+            לא ביקרתי
+          </FilterOption>
+        </FilterSection>
+      </FiltersSheet>
       {error ? (
         <div className="relative z-30 bg-red-950/70 px-3 py-2 text-center text-sm text-red-100">
           {error}
