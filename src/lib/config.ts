@@ -1,20 +1,26 @@
+const centerLat = Number(process.env.NEXT_PUBLIC_MAP_CENTER_LAT ?? 32.0736);
+const centerLng = Number(process.env.NEXT_PUBLIC_MAP_CENTER_LNG ?? 34.8105);
+const latPad = 0.0078;
+const lngPad = 0.0095;
+
 export const config = {
   appName: "הלואין בשכונה",
   tagline: "מפת הבתים המפחידים של השכונה",
-  neighborhood: process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שכונת האלונים",
+  neighborhood:
+    process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שיכון ותיקים · חרוזים · נחלת גנים",
   map: {
     center: {
-      lat: Number(process.env.NEXT_PUBLIC_MAP_CENTER_LAT ?? 32.1848),
-      lng: Number(process.env.NEXT_PUBLIC_MAP_CENTER_LNG ?? 34.8706),
+      lat: centerLat,
+      lng: centerLng,
     },
     zoom: 16,
     minZoom: 14,
     maxZoom: 18,
     bounds: {
-      north: 32.1915,
-      south: 32.1775,
-      west: 34.8615,
-      east: 34.8805,
+      north: centerLat + latPad,
+      south: centerLat - latPad,
+      west: centerLng - lngPad,
+      east: centerLng + lngPad,
     },
   },
   tiles: {
