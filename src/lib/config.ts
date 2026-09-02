@@ -23,6 +23,13 @@ const tiles = cartoKey
 export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים"] as const;
 export type NeighborhoodId = (typeof NEIGHBORHOODS)[number];
 
+/** Approximate centers used when address text has no neighborhood name. */
+const NEIGHBORHOOD_CENTERS: Record<NeighborhoodId, { lat: number; lng: number }> = {
+  חרוזים: { lat: 32.0908, lng: 34.8038 },
+  "שיכון ותיקים": { lat: 32.0939, lng: 34.8133 },
+  "נחלת גנים": { lat: 32.0928, lng: 34.8188 },
+};
+
 export const config = {
   appName: "בשכונה Halloween",
   brandEn: "Halloween",
@@ -67,11 +74,73 @@ export function neighborhoodFromAddress(address: string): NeighborhoodId | null 
   return null;
 }
 
+/** Nearest of the three neighborhood centers (for labels that only say רמת גן). */
+export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId {
+  let best: NeighborhoodId = NEIGHBORHOODS[0];
+  let bestDist = Number.POSITIVE_INFINITY;
+  for (const name of NEIGHBORHOODS) {
+    const c = NEIGHBORHOOD_CENTERS[name];
+    const d = (lat - c.lat) ** 2 + (lng - c.lng) ** 2;
+    if (d < bestDist) {
+      bestDist = d;
+      best = name;
+    }
+  }
+  return best;
+}
+
+export function resolveNeighborhood(house: {
+  address?: string;
+  lat?: number;
+  lng?: number;
+}): NeighborhoodId | null {
+  if (house.address) {
+    const fromText = neighborhoodFromAddress(house.address);
+    if (fromText) return fromText;
+  }
+  if (
+    typeof house.lat === "number" &&
+    typeof house.lng === "number" &&
+    Number.isFinite(house.lat) &&
+    Number.isFinite(house.lng)
+  ) {
+    return neighborhoodFromCoords(house.lat, house.lng);
+  }
+  return null;
+}
+
+/** Street + neighborhood for UI (never city / רמת גן). */
+export function formatDisplayAddress(house: {
+  address: string;
+  lat?: number;
+  lng?: number;
+}): string {
+  const street = streetPartForDisplay(house.address);
+  const area = resolveNeighborhood(house);
+  if (!street) return area ?? house.address.trim();
+  if (!area) return street;
+  return `${street}, ${area}`;
+}
+
+function streetPartForDisplay(address: string): string {
+  let text = address.trim();
+  text = text
+    .replace(/,?\s*רמת\s*גן\s*$/iu, "")
+    .replace(/,?\s*Ramat\s*Gan\s*$/iu, "")
+    .replace(/,?\s*ישראל\s*$/iu, "")
+    .trim();
+  for (const name of NEIGHBORHOODS) {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    text = text.replace(new RegExp(`,?\\s*${escaped}\\s*$`, "u"), "").trim();
+  }
+  return text;
+}
+
 export function houseInNeighborhoods(
-  house: { address: string },
+  house: { address: string; lat?: number; lng?: number },
   selected: readonly NeighborhoodId[],
 ) {
   if (selected.length === 0) return true;
-  const area = neighborhoodFromAddress(house.address);
+  const area = resolveNeighborhood(house);
   return area !== null && selected.includes(area);
 }

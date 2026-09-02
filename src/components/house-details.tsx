@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { CodesCopy } from "@/components/codes-copy";
 import { HouseTags } from "@/components/house-tags";
+import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
 import { effectiveVisit, freezeLabel, isFrozen } from "@/lib/house-state";
 import { loadOwnedHouses } from "@/lib/offline-db";
@@ -34,9 +35,10 @@ export function HouseDetails({
   /** When set (manager session), always show this edit code for resend. */
   managerEditCode?: string;
 }) {
-  const mapsQuery = /רמת\s*גן/u.test(house.address)
-    ? house.address.trim()
-    : `${house.address.trim()}, רמת גן`;
+  const displayAddress = formatDisplayAddress(house);
+  const mapsQuery = /רמת\s*גן/u.test(displayAddress)
+    ? displayAddress
+    : `${displayAddress}, רמת גן`;
   const maps = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapsQuery)}&travelmode=walking`;
   const waze = `https://waze.com/ul?q=${encodeURIComponent(mapsQuery)}&navigate=yes`;
   const [ownedEditCode, setOwnedEditCode] = useState<string | undefined>(undefined);
@@ -61,7 +63,7 @@ export function HouseDetails({
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
-          <p className="text-sm text-violet-200">{house.address}</p>
+          <p className="text-sm text-violet-200">{displayAddress}</p>
         </div>
         <div className="flex items-center gap-0.5">
           {onToggleVisited ? (

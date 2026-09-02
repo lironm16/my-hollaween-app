@@ -30,7 +30,7 @@ import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { readApiJson } from "@/lib/api-json";
-import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
+import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, formatDisplayAddress, type NeighborhoodId } from "@/lib/config";
 import { toPublicHouse } from "@/lib/ids";
 import { isFrozen, offersCandy, offersSensitivity } from "@/lib/house-state";
 import {
@@ -414,7 +414,7 @@ export function NeighborhoodApp({
                   >
                     <span className="block truncate text-sm text-orange-100">{house.name}</span>
                     <span className="block truncate text-[11px] text-violet-300">
-                      {house.address} · קוד {house.editCode}
+                      {formatDisplayAddress(house)} · קוד {house.editCode}
                     </span>
                   </button>
                   <Button

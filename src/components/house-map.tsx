@@ -13,7 +13,7 @@ import {
 import L from "leaflet";
 import { LocateFixed } from "lucide-react";
 import "leaflet/dist/leaflet.css";
-import { config, inNeighborhood } from "@/lib/config";
+import { config, formatDisplayAddress, inNeighborhood } from "@/lib/config";
 import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
 import { houseHeadline, themeEmoji } from "@/lib/labels";
@@ -219,7 +219,7 @@ function HousePreviewPopup({
 }) {
   const map = useMap();
   const multi = houses.length > 1;
-  const address = houses[0]?.address ?? "";
+  const address = houses[0] ? formatDisplayAddress(houses[0]) : "";
 
   return (
     <Popup
@@ -278,7 +278,7 @@ function HousePreviewPopup({
         ) : (
           <>
             <strong>{houseHeadline(houses[0])}</strong>
-            <div className="house-map-popup-meta">{houses[0].address}</div>
+            <div className="house-map-popup-meta">{formatDisplayAddress(houses[0])}</div>
             {houses[0].arrival ? (
               <div className="house-map-popup-meta">{houses[0].arrival}</div>
             ) : null}

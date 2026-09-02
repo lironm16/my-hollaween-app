@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { neighborhoodFromAddress } from "@/lib/config";
+import { resolveNeighborhood } from "@/lib/config";
 import {
   candyLevel,
   markedGlutenFree,
@@ -17,6 +17,8 @@ export function HouseTags({
 }: {
   house: {
     address?: string;
+    lat?: number;
+    lng?: number;
     accessible?: boolean;
     treats?: TreatId[];
     treatStock?: TreatStock;
@@ -29,7 +31,7 @@ export function HouseTags({
 }) {
   const treats = house.treats ?? [];
   const withTreats = { treats, treatStock: house.treatStock };
-  const neighborhood = house.address ? neighborhoodFromAddress(house.address) : null;
+  const neighborhood = resolveNeighborhood(house);
   const scare = house.scareLevel ?? "mild";
   const candy = candyLevel(withTreats);
   const gluten = markedGlutenFree(withTreats);

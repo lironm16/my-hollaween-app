@@ -1,4 +1,4 @@
-import { config, inNeighborhood } from "@/lib/config";
+import { config, inNeighborhood, neighborhoodFromCoords, resolveNeighborhood } from "@/lib/config";
 import { houseNumberFromHit, parseStreetAndNumber } from "@/lib/address-text";
 import type { AddressHit } from "@/lib/types";
 
@@ -17,6 +17,26 @@ type NominatimAddress = {
   village?: string;
   country_code?: string;
 };
+
+function isCityName(value: string) {
+  return /רמת\s*גן/u.test(value) || /ramat\s*gan/i.test(value);
+}
+
+function areaLabelFor(hit: {
+  suburb?: string;
+  city?: string;
+  lat: number;
+  lng: number;
+  road?: string;
+}) {
+  const suburb = hit.suburb?.trim() || "";
+  if (suburb && suburb !== hit.road && !isCityName(suburb)) {
+    const known = resolveNeighborhood({ address: suburb, lat: hit.lat, lng: hit.lng });
+    if (known) return known;
+    return suburb;
+  }
+  return neighborhoodFromCoords(hit.lat, hit.lng);
+}
 
 type NominatimHit = {
   place_id?: number;
@@ -89,11 +109,16 @@ function formatLabel(hit: NominatimHit): string | null {
   const address = hit.address;
   const road = roadOf(address);
   const suburb = address?.suburb || address?.neighbourhood || "";
-  const city = cityOf(address);
   const num = address?.house_number;
   if (!road && !num) return null;
   const street = num && road ? `${road} ${num}` : road || `${num}`;
-  const area = suburb && suburb !== road ? suburb : city;
+  const lat = Number(hit.lat);
+  const lng = Number(hit.lon);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    const area = suburb && suburb !== road && !isCityName(suburb) ? suburb : null;
+    return area && !street.includes(area) ? `${street}, ${area}` : street;
+  }
+  const area = areaLabelFor({ suburb, city: cityOf(address), lat, lng, road });
   return area && !street.includes(area) ? `${street}, ${area}` : street;
 }
 
@@ -224,7 +249,13 @@ function attachTypedNumber(hit: AddressHit, num: string): AddressHit {
     new RegExp(`\\s+${num}$`, "u"),
     "",
   );
-  const area = hit.suburb && hit.suburb !== road ? hit.suburb : hit.city;
+  const area = areaLabelFor({
+    suburb: hit.suburb,
+    city: hit.city,
+    lat: hit.lat,
+    lng: hit.lng,
+    road,
+  });
   const label = area ? `${road} ${num}, ${area}` : `${road} ${num}`;
   return { ...hit, road, houseNumber: num, label, precise: hit.precise && already === num };
 }

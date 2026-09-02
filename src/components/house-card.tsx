@@ -3,6 +3,7 @@
 import { CheckCircle2, Heart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HouseTags } from "@/components/house-tags";
+import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
 import { formatDistance } from "@/lib/geo";
 import { effectiveVisit, isFrozen } from "@/lib/house-state";
@@ -71,7 +72,7 @@ export function HouseCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 text-violet-100/80">
-        <p>{house.address}</p>
+        <p>{formatDisplayAddress(house)}</p>
         {house.arrival ? <p className="text-xs text-amber-200/90">{house.arrival}</p> : null}
         <p className="text-xs">
           {house.openFrom}–{house.openTo}
