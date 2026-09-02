@@ -323,10 +323,10 @@ export function NeighborhoodApp({
         >
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-medium text-amber-100">
-              מצב מנהל · {pendingQueue.length} ממתינים לאישור
+              מצב מנהל · עריכה בלי קוד · הקפאה ומחיקה
             </p>
             <span className="text-[11px] text-violet-300">
-              לוחצים על בית במפה לעריכה בלי קוד · יציאה רק בכפתור
+              בתים חדשים נכנסים למפה מיד · יציאה רק בכפתור
             </span>
           </div>
           {pendingQueue.length > 0 ? (
@@ -367,7 +367,7 @@ export function NeighborhoodApp({
               ))}
             </ul>
           ) : (
-            <p className="mt-1 text-[11px] text-violet-300">אין בתים ממתינים. מוקפאים מופיעים במפה כסיכות שקופות.</p>
+            <p className="mt-1 text-[11px] text-violet-300">מוקפאים מופיעים במפה כסיכות שקופות. לחצו על בית לעריכה או מחיקה.</p>
           )}
         </div>
       ) : null}

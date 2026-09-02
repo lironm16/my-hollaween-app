@@ -223,6 +223,9 @@ function HousePreviewPopup({
           {house.accessible ? " · נגיש" : ""}
           {house.treats.includes("glutenFree") ? " · ללא גלוטן" : ""}
         </div>
+        {effectiveVisit(house) === "closed" ? (
+          <div className="house-map-popup-soldout">נגמר המלאי — אין סיבה לבוא עכשיו</div>
+        ) : null}
         {onOpenDetails ? (
           <button
             type="button"

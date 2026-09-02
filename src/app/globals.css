@@ -178,6 +178,14 @@
   color: #3f3f46;
 }
 
+.house-map-popup-soldout {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #dc2626;
+}
+
 .house-map-popup-btn {
   display: block;
   width: 100%;
@@ -225,8 +233,8 @@
   filter: grayscale(0.55);
 }
 
-.pumpkin-pin.is-closed {
-  opacity: 0.72;
+.pumpkin-pin.is-closed span {
+  filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.85));
 }
 
 .pumpkin-pin.is-decor span {

@@ -136,11 +136,9 @@ export default function EditPage() {
             <CodesCopy id={house.id} editCode={editCode} />
             <p className="text-sm text-violet-200">
               סטטוס: {statusText(house.status)}
-              {house.status === "pending"
-                ? " — הבית עדיין לא במפה הציבורית."
-                : house.status === "rejected"
-                  ? " — אחרי עדכון הבית חוזר למפה."
-                  : " — שינויים (מלאי, שעות, הקפאה) נראים לכל השכונה."}
+              {house.status === "rejected"
+                ? " — אחרי עדכון הבית חוזר למפה."
+                : " — שינויים (מלאי, שעות, הקפאה) נראים לכל השכונה."}
             </p>
             <NightDesk
               house={house}

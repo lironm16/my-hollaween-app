@@ -31,8 +31,6 @@ export function HouseCard({
       size="sm"
       className={cn(
         "cursor-pointer border-orange-500/15 bg-[#1d1028]/90 transition hover:border-orange-400/50 hover:bg-[#261536]",
-        house.soldOut && "opacity-70",
-        effectiveVisit(house) === "closed" && "opacity-70",
         isFrozen(house) && "opacity-50",
       )}
       onClick={onOpen}
@@ -79,6 +77,9 @@ export function HouseCard({
           {house.openFrom}–{house.openTo}
           {distanceM !== undefined ? ` · ${formatDistance(distanceM)}` : ""}
         </p>
+        {effectiveVisit(house) === "closed" ? (
+          <p className="text-sm font-semibold text-red-500">נגמר המלאי — אין סיבה לבוא עכשיו</p>
+        ) : null}
         <HouseTags house={house} />
         {house.status === "pending" ? (
           <p className="text-xs font-medium text-amber-200">ממתין לאישור</p>

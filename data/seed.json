@@ -8,8 +8,14 @@
       "description": "דלעות על המדרגה, קורי עכביש בשער, ושקית ממתקים לכל ילד. הכלב בפנים.",
       "lat": 32.0916477,
       "lng": 34.8028691,
-      "treats": ["candy", "chocolate"],
-      "treatStock": { "candy": "plenty", "chocolate": "plenty" },
+      "treats": [
+        "candy",
+        "chocolate"
+      ],
+      "treatStock": {
+        "candy": "plenty",
+        "chocolate": "plenty"
+      },
       "visit": "come",
       "scareLevel": "mild",
       "openFrom": "17:00",
@@ -34,8 +40,16 @@
       "description": "בית רדוף אמיתי: ערפל, מוזיקת אימה, ורוח רפאים בחצר. לא לילדים קטנים.",
       "lat": 32.0911258,
       "lng": 34.8032634,
-      "treats": ["candy", "chocolate", "drinks"],
-      "treatStock": { "candy": "out", "chocolate": "out", "drinks": "out" },
+      "treats": [
+        "candy",
+        "chocolate",
+        "drinks"
+      ],
+      "treatStock": {
+        "candy": "out",
+        "chocolate": "out",
+        "drinks": "out"
+      },
       "visit": "closed",
       "scareLevel": "spicy",
       "openFrom": "18:00",
@@ -60,7 +74,12 @@
       "description": "קישוט עדין, שוקולד ביתי, וממתקים ללא גלוטן לפי בקשה. מחבקים את כולם.",
       "lat": 32.0903646,
       "lng": 34.8040585,
-      "treats": ["chocolate", "glutenFree", "allergenFriendly", "fruit"],
+      "treats": [
+        "chocolate",
+        "glutenFree",
+        "allergenFriendly",
+        "fruit"
+      ],
       "treatStock": {
         "chocolate": "plenty",
         "glutenFree": "out",
@@ -91,8 +110,16 @@
       "description": "מכונת ערפל, עכבישים תלויים, וקערת ממתקים ענקית. אפשר גם צעצוע במקום סוכר.",
       "lat": 32.0902303,
       "lng": 34.8049664,
-      "treats": ["candy", "toys", "vegan"],
-      "treatStock": { "candy": "out", "toys": "plenty", "vegan": "out" },
+      "treats": [
+        "candy",
+        "toys",
+        "vegan"
+      ],
+      "treatStock": {
+        "candy": "out",
+        "toys": "plenty",
+        "vegan": "out"
+      },
       "visit": "decorOnly",
       "scareLevel": "medium",
       "openFrom": "17:30",
@@ -117,8 +144,16 @@
       "description": "תאורה סגולה, שלדים על הגדר, ושוקולד מריר למבוגרים שמלווים.",
       "lat": 32.0897422,
       "lng": 34.8046437,
-      "treats": ["candy", "chocolate", "drinks"],
-      "treatStock": { "candy": "plenty", "chocolate": "plenty", "drinks": "plenty" },
+      "treats": [
+        "candy",
+        "chocolate",
+        "drinks"
+      ],
+      "treatStock": {
+        "candy": "plenty",
+        "chocolate": "plenty",
+        "drinks": "plenty"
+      },
       "visit": "come",
       "scareLevel": "medium",
       "openFrom": "17:00",
@@ -143,8 +178,16 @@
       "description": "בלי סוכר: מדבקות, עפרונות ומחקים מפחידים. מושלם לילדים עם אלרגיות.",
       "lat": 32.0933735,
       "lng": 34.8194967,
-      "treats": ["toys", "allergenFriendly", "fruit"],
-      "treatStock": { "toys": "plenty", "allergenFriendly": "plenty", "fruit": "plenty" },
+      "treats": [
+        "toys",
+        "allergenFriendly",
+        "fruit"
+      ],
+      "treatStock": {
+        "toys": "plenty",
+        "allergenFriendly": "plenty",
+        "fruit": "plenty"
+      },
       "visit": "come",
       "scareLevel": "mild",
       "openFrom": "16:00",
@@ -169,8 +212,18 @@
       "description": "שלוש משפחות בחצר משותפת. מסלול קטן עם הפתעות וממתקים בסוף.",
       "lat": 32.0929438,
       "lng": 34.8185959,
-      "treats": ["candy", "chocolate", "toys", "vegan"],
-      "treatStock": { "candy": "plenty", "chocolate": "low", "toys": "plenty", "vegan": "plenty" },
+      "treats": [
+        "candy",
+        "chocolate",
+        "toys",
+        "vegan"
+      ],
+      "treatStock": {
+        "candy": "plenty",
+        "chocolate": "low",
+        "toys": "plenty",
+        "vegan": "plenty"
+      },
       "visit": "come",
       "scareLevel": "medium",
       "openFrom": "17:00",
@@ -195,8 +248,16 @@
       "description": "קישוט קלאסי של הלואין, מרקחת בועות, ושקית לכל תחפושת.",
       "lat": 32.0930869,
       "lng": 34.8178136,
-      "treats": ["candy", "glutenFree", "drinks"],
-      "treatStock": { "candy": "plenty", "glutenFree": "low", "drinks": "plenty" },
+      "treats": [
+        "candy",
+        "glutenFree",
+        "drinks"
+      ],
+      "treatStock": {
+        "candy": "plenty",
+        "glutenFree": "low",
+        "drinks": "plenty"
+      },
       "visit": "come",
       "scareLevel": "mild",
       "openFrom": "17:00",
@@ -221,14 +282,20 @@
       "description": "עוד בית חדש לשכונה — קישוט בינוני וממתקים טבעוניים.",
       "lat": 32.0920125,
       "lng": 34.8192341,
-      "treats": ["candy", "vegan"],
-      "treatStock": { "candy": "plenty", "vegan": "plenty" },
+      "treats": [
+        "candy",
+        "vegan"
+      ],
+      "treatStock": {
+        "candy": "plenty",
+        "vegan": "plenty"
+      },
       "visit": "come",
       "scareLevel": "medium",
       "openFrom": "17:00",
       "openTo": "21:00",
       "notes": "",
-      "status": "pending",
+      "status": "approved",
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
@@ -247,14 +314,20 @@
       "description": "רוצים להצטרף השנה עם דלעות ושוקולד.",
       "lat": 32.0939393,
       "lng": 34.813308,
-      "treats": ["chocolate", "fruit"],
-      "treatStock": { "chocolate": "plenty", "fruit": "plenty" },
+      "treats": [
+        "chocolate",
+        "fruit"
+      ],
+      "treatStock": {
+        "chocolate": "plenty",
+        "fruit": "plenty"
+      },
       "visit": "come",
       "scareLevel": "mild",
       "openFrom": "16:30",
       "openTo": "20:00",
       "notes": "יש גדר חיה, הכניסה מהשער הימני",
-      "status": "pending",
+      "status": "approved",
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,

@@ -116,8 +116,8 @@ export function HouseDetails({
         </p>
       ) : null}
       {effectiveVisit(house) === "closed" ? (
-        <p className="rounded-lg bg-red-950/60 px-3 py-2 text-sm text-red-200">
-          נגמר מה לחלק. אין סיבה לבוא עכשיו.
+        <p className="rounded-lg bg-red-950/40 px-3 py-2 text-sm font-semibold text-red-500">
+          נגמר המלאי — אין סיבה לבוא עכשיו
         </p>
       ) : effectiveVisit(house) === "decorOnly" ? (
         <p className="rounded-lg bg-amber-950/50 px-3 py-2 text-sm text-amber-100">

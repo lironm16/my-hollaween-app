@@ -34,7 +34,7 @@ export default function AddPage() {
       });
       notifyCatalogChanged();
       setDone({ id: house.id, editCode, name: house.name, shared });
-      toast.success(shared ? "הבית נשלח לאישור מנהל" : "הבית נשמר וממתין לאישור");
+      toast.success(shared ? "הבית נוסף למפה" : "הבית נשמר בטלפון הזה");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "השליחה נכשלה");
     } finally {
@@ -54,16 +54,16 @@ export default function AddPage() {
         />
         {done ? (
           <div className="space-y-4 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-400/30">
-            <h1 className="font-display text-2xl text-orange-300">נשלח לאישור</h1>
+            <h1 className="font-display text-2xl text-orange-300">הבית במפה</h1>
             <p className="text-sm text-violet-100">
               {done.shared
-                ? `${done.name} מחכה למנהל. אחרי אישור הוא יופיע במפה הציבורית של השכונה.`
-                : `${done.name} שמור בטלפון הזה וממתין לאישור.`}
+                ? `${done.name} כבר מופיע במפה הציבורית של השכונה.`
+                : `${done.name} נשמר בטלפון הזה. כשהשרת חוזר הוא יעלה למפה.`}
             </p>
             <PersistNote />
             <CodesCopy id={done.id} editCode={done.editCode} />
             <p className="text-xs text-amber-200">
-              עם הקוד אפשר לעדכן פרטים גם לפני האישור. רק אתם רואים את הבית עד שמנהל מאשר.
+              שמרו את המזהה ואת קוד העריכה — רק איתם אפשר לעדכן מלאי, שעות או להקפיא את הבית.
             </p>
             <div className="flex flex-wrap gap-2">
               <Link
@@ -81,10 +81,10 @@ export default function AddPage() {
           <>
             <h1 className="font-display mb-1 text-2xl text-orange-300">הוספת בית מפחיד</h1>
             <p className="mb-4 text-sm text-violet-200">
-              בחרו שם, כתובת אמיתית מהרשימה, ושלחו. מנהל יאשר לפני שהבית יופיע לכולם במפה.
+              בחרו שם וכתובת אמיתית מהרשימה. אחרי השליחה הבית מופיע מיד במפה.
             </p>
             <PersistNote className="mb-4" />
-            <HouseForm submitLabel="שלחו לאישור" onSubmit={onSubmit} busy={busy} />
+            <HouseForm submitLabel="הוסיפו למפה" onSubmit={onSubmit} busy={busy} />
           </>
         )}
       </main>
