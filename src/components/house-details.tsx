@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { CheckCircle2, Heart } from "lucide-react";
+import { CheckCircle2, Heart, Pencil, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { CodesCopy } from "@/components/codes-copy";
@@ -24,6 +24,9 @@ export function HouseDetails({
   visited,
   onToggleVisited,
   managerEditCode,
+  canEdit = false,
+  editing = false,
+  onToggleEdit,
 }: {
   house: PublicHouse;
   extra?: ReactNode;
@@ -34,6 +37,9 @@ export function HouseDetails({
   onToggleVisited?: () => void;
   /** When set (manager session), always show this edit code for resend. */
   managerEditCode?: string;
+  canEdit?: boolean;
+  editing?: boolean;
+  onToggleEdit?: () => void;
 }) {
   const displayAddress = formatDisplayAddress(house);
   const mapsQuery = /רמת\s*גן/u.test(displayAddress)
@@ -61,11 +67,25 @@ export function HouseDetails({
   return (
     <div className="space-y-3">
       <div className="flex items-start justify-between gap-2">
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
           <p className="text-sm text-violet-200">{displayAddress}</p>
         </div>
-        <div className="flex items-center gap-0.5">
+        <div className="flex shrink-0 items-center gap-0.5">
+          {canEdit && onToggleEdit ? (
+            <button
+              type="button"
+              aria-label={editing ? "סגירת עריכה" : "עריכת מלאי ופרטים"}
+              aria-pressed={editing}
+              onClick={onToggleEdit}
+              className={cn(
+                "rounded-full p-1.5 hover:bg-orange-500/15",
+                editing ? "bg-orange-500 text-black hover:bg-orange-400" : "text-orange-200",
+              )}
+            >
+              {editing ? <X className="size-6" /> : <Pencil className="size-6" />}
+            </button>
+          ) : null}
           {onToggleVisited ? (
             <button
               type="button"

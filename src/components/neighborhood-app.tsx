@@ -27,6 +27,7 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useHouseFilters } from "@/hooks/use-house-filters";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
+import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { readApiJson } from "@/lib/api-json";
@@ -37,6 +38,7 @@ import {
   backupLooksNewer,
   loadServerDbBackup,
   notifyCatalogChanged,
+  saveOwnedHouse,
   saveServerDbBackup,
   type ServerDbBackup,
 } from "@/lib/offline-db";
@@ -86,6 +88,12 @@ export function NeighborhoodApp({
 
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
+  const owned = useOwnedHouses();
+  const ownedEditCode = useMemo(() => {
+    if (!selectedId || selectedId === "closed") return undefined;
+    return owned.find((item) => item.id === selectedId)?.editCode;
+  }, [owned, selectedId]);
+  const canEditSelected = Boolean(admin || ownedEditCode);
 
   const rememberAdminDb = useCallback((houses: House[], updatedAt: string) => {
     saveServerDbBackup({
@@ -612,54 +620,67 @@ export function NeighborhoodApp({
                 visited={visits.visited(selected.id)}
                 onToggleVisited={() => visits.toggle(selected.id)}
                 managerEditCode={admin ? editCodeById.get(selected.id) : undefined}
+                canEdit={canEditSelected}
+                editing={editing}
+                onToggleEdit={() => setEditing((v) => !v)}
                 extra={
-                  admin ? (
-                    <div className="mt-4 space-y-3">
+                  <div className="mt-4 space-y-3">
+                    {admin && selected.status === "pending" ? (
                       <div className="flex flex-wrap gap-2">
-                        {selected.status === "pending" ? (
-                          <>
-                            <Button
-                              className="bg-emerald-600 text-white hover:bg-emerald-500"
-                              disabled={busyAction}
-                              onClick={() => void approveHouse(selected.id)}
-                            >
-                              אישור למפה
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              disabled={busyAction}
-                              onClick={() => void rejectHouse(selected.id)}
-                            >
-                              דחייה ומחיקה
-                            </Button>
-                          </>
-                        ) : null}
                         <Button
-                          variant={editing ? "secondary" : "outline"}
+                          className="bg-emerald-600 text-white hover:bg-emerald-500"
                           disabled={busyAction}
-                          onClick={() => setEditing((v) => !v)}
+                          onClick={() => void approveHouse(selected.id)}
                         >
-                          {editing ? "סגירת עריכה" : "עריכה בלי קוד"}
+                          אישור למפה
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          disabled={busyAction}
+                          onClick={() => void rejectHouse(selected.id)}
+                        >
+                          דחייה ומחיקה
                         </Button>
                       </div>
-                      {editing ? (
-                        <div className="space-y-3">
-                          <NightDesk
-                            house={selected}
-                            admin
-                            editCode={editCodeById.get(selected.id)}
-                            onUpdated={(next) => applyAdminHouse(next)}
-                          />
+                    ) : null}
+                    {editing && canEditSelected ? (
+                      <div className="space-y-3">
+                        <NightDesk
+                          house={selected}
+                          admin={admin}
+                          editCode={admin ? editCodeById.get(selected.id) : ownedEditCode}
+                          onUpdated={(next) => {
+                            if (admin) {
+                              applyAdminHouse(next);
+                              return;
+                            }
+                            if (ownedEditCode) {
+                              saveOwnedHouse({
+                                id: next.id,
+                                name: next.name,
+                                editCode: ownedEditCode,
+                                preview: next,
+                              });
+                            }
+                            notifyCatalogChanged();
+                            void refresh(true);
+                          }}
+                        />
+                        {admin ? (
                           <HouseForm
                             initial={selected}
                             submitLabel="שמירת פרטי בית"
                             onSubmit={saveHouseDetails}
                             busy={busyAction}
                           />
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : undefined
+                        ) : null}
+                      </div>
+                    ) : canEditSelected ? (
+                      <p className="text-xs text-violet-300">
+                        לחצו על סמל העיפרון למעלה כדי לעדכן מלאי ממתקים, האם כדאי לבוא, והקפאה.
+                      </p>
+                    ) : null}
+                  </div>
                 }
               />
             </div>
