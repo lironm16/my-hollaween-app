@@ -11,6 +11,7 @@ export function HoursStatusBanner({
     openTo?: string;
     openFrom2?: string;
     openTo2?: string;
+    openHours?: { from: string; to: string }[];
     visit?: VisitState;
     soldOut?: boolean;
   };

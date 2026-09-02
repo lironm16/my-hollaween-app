@@ -1,5 +1,5 @@
 import type { VisitState } from "@/lib/types";
-import { effectiveVisit } from "@/lib/house-state";
+import { effectiveVisit, isFrozen } from "@/lib/house-state";
 
 export type HoursWindow = { from: string; to: string };
 
@@ -13,6 +13,7 @@ export type HoursStatus =
   | { kind: "unknown" };
 
 const CLOSING_SOON_MINUTES = 30;
+const MAX_WINDOWS = 6;
 
 export function parseClockMinutes(value: string): number | null {
   const match = /^(\d{2}):(\d{2})$/.exec(value.trim());
@@ -23,12 +24,35 @@ export function parseClockMinutes(value: string): number | null {
   return hours * 60 + minutes;
 }
 
-export function houseHoursWindows(house: {
+export function isValidHoursWindow(window: HoursWindow): boolean {
+  const from = parseClockMinutes(window.from);
+  const to = parseClockMinutes(window.to);
+  return from !== null && to !== null && to > from;
+}
+
+export function normalizeHoursWindows(windows: HoursWindow[]): HoursWindow[] {
+  const cleaned = windows
+    .map((window) => ({
+      from: window.from.slice(0, 5),
+      to: window.to.slice(0, 5),
+    }))
+    .filter(isValidHoursWindow)
+    .sort((a, b) => (parseClockMinutes(a.from) ?? 0) - (parseClockMinutes(b.from) ?? 0));
+  return cleaned.slice(0, MAX_WINDOWS);
+}
+
+type HoursSource = {
   openFrom?: string;
   openTo?: string;
   openFrom2?: string;
   openTo2?: string;
-}): HoursWindow[] {
+  openHours?: HoursWindow[];
+};
+
+export function houseHoursWindows(house: HoursSource): HoursWindow[] {
+  if (Array.isArray(house.openHours) && house.openHours.length > 0) {
+    return normalizeHoursWindows(house.openHours);
+  }
   const windows: HoursWindow[] = [];
   if (house.openFrom && house.openTo) {
     windows.push({ from: house.openFrom.slice(0, 5), to: house.openTo.slice(0, 5) });
@@ -36,19 +60,30 @@ export function houseHoursWindows(house: {
   if (house.openFrom2 && house.openTo2) {
     windows.push({ from: house.openFrom2.slice(0, 5), to: house.openTo2.slice(0, 5) });
   }
-  return windows.filter((window) => {
-    const from = parseClockMinutes(window.from);
-    const to = parseClockMinutes(window.to);
-    return from !== null && to !== null && to > from;
-  });
+  return normalizeHoursWindows(windows);
 }
 
-export function formatHoursLabel(house: {
-  openFrom?: string;
-  openTo?: string;
-  openFrom2?: string;
-  openTo2?: string;
-}): string {
+/** Keep openFrom/openTo (+ legacy openFrom2) in sync with openHours. */
+export function syncHoursFields(windows: HoursWindow[]): {
+  openHours: HoursWindow[];
+  openFrom: string;
+  openTo: string;
+  openFrom2: string;
+  openTo2: string;
+} {
+  const openHours = normalizeHoursWindows(windows);
+  const first = openHours[0] ?? { from: "17:00", to: "21:00" };
+  const second = openHours[1];
+  return {
+    openHours,
+    openFrom: first.from,
+    openTo: first.to,
+    openFrom2: second?.from ?? "",
+    openTo2: second?.to ?? "",
+  };
+}
+
+export function formatHoursLabel(house: HoursSource): string {
   const windows = houseHoursWindows(house);
   if (windows.length === 0) {
     if (house.openFrom && house.openTo) return `${house.openFrom}–${house.openTo}`;
@@ -63,11 +98,7 @@ function minutesNow(now: Date) {
 
 /** Open / not-yet / closing-soon based on today's clock windows. */
 export function hoursStatus(
-  house: {
-    openFrom?: string;
-    openTo?: string;
-    openFrom2?: string;
-    openTo2?: string;
+  house: HoursSource & {
     visit?: VisitState;
     soldOut?: boolean;
   },
@@ -79,14 +110,12 @@ export function hoursStatus(
   if (windows.length === 0) return { kind: "unknown" };
 
   const nowMin = minutesNow(now);
-  const parsed = windows
-    .map((window) => ({
-      from: parseClockMinutes(window.from) as number,
-      to: parseClockMinutes(window.to) as number,
-      labelFrom: window.from,
-      labelTo: window.to,
-    }))
-    .sort((a, b) => a.from - b.from);
+  const parsed = windows.map((window) => ({
+    from: parseClockMinutes(window.from) as number,
+    to: parseClockMinutes(window.to) as number,
+    labelFrom: window.from,
+    labelTo: window.to,
+  }));
 
   for (const window of parsed) {
     if (nowMin >= window.from && nowMin < window.to) {
@@ -109,3 +138,20 @@ export function hoursStatus(
 
   return { kind: "after" };
 }
+
+/** True when kids should come now (within hours, not sold out / frozen). */
+export function isOpenNow(
+  house: HoursSource & {
+    visit?: VisitState;
+    soldOut?: boolean;
+    adminFrozen?: boolean;
+    ownerFrozenUntil?: string | null;
+  },
+  now = new Date(),
+) {
+  if (isFrozen(house, now.getTime())) return false;
+  const status = hoursStatus(house, now);
+  return status.kind === "open" || status.kind === "closingSoon";
+}
+
+export const MAX_HOUR_WINDOWS = MAX_WINDOWS;

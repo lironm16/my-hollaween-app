@@ -22,6 +22,8 @@ import {
 } from "@/lib/types";
 import { treatLabels } from "@/lib/labels";
 import { candyLevel, effectiveVisit } from "@/lib/house-state";
+import { houseHoursWindows, MAX_HOUR_WINDOWS, syncHoursFields } from "@/lib/hours";
+import type { HoursWindow } from "@/lib/types";
 
 const empty: HouseInput = {
   name: "",
@@ -35,6 +37,7 @@ const empty: HouseInput = {
   scareLevel: "mild",
   openFrom: "17:00",
   openTo: "21:00",
+  openHours: [{ from: "17:00", to: "21:00" }],
   openFrom2: "",
   openTo2: "",
   notes: "",
@@ -42,6 +45,10 @@ const empty: HouseInput = {
   visit: "come",
   treatStock: { candy: "plenty" },
 };
+
+function clock(value: string) {
+  return /^\d{2}:\d{2}/.exec(value)?.[0] ?? value;
+}
 
 function initialHasCandy(initial?: Partial<HouseInput>) {
   if (!initial) return true;
@@ -70,9 +77,31 @@ export function HouseForm({
   const [addressOk, setAddressOk] = useState(Boolean(initial?.address && initial.lat && initial.lng));
   const [decorated, setDecorated] = useState(() => initialDecorated(initial));
   const [hasCandy, setHasCandy] = useState(() => initialHasCandy(initial));
-  const [secondWindow, setSecondWindow] = useState(
-    () => Boolean(initial?.openFrom2 && initial?.openTo2),
-  );
+  const [hourWindows, setHourWindows] = useState<HoursWindow[]>(() => {
+    const windows = houseHoursWindows({ ...empty, ...initial });
+    return windows.length ? windows : [{ from: "17:00", to: "21:00" }];
+  });
+
+  function updateHourWindow(index: number, patch: Partial<HoursWindow>) {
+    setHourWindows((current) =>
+      current.map((window, i) => (i === index ? { ...window, ...patch } : window)),
+    );
+  }
+
+  function addHourWindow() {
+    setHourWindows((current) => {
+      if (current.length >= MAX_HOUR_WINDOWS) return current;
+      const last = current[current.length - 1];
+      const nextFrom = last?.to || "20:00";
+      return [...current, { from: nextFrom, to: "21:00" }];
+    });
+  }
+
+  function removeHourWindow(index: number) {
+    setHourWindows((current) =>
+      current.length <= 1 ? current : current.filter((_, i) => i !== index),
+    );
+  }
 
   function setTreat(id: TreatId, on: boolean) {
     setForm((f) => {
@@ -158,29 +187,35 @@ export function HouseForm({
           return;
         }
         const theme = themeFromName(form.name) ?? form.theme;
-        const clock = (value: string) => (/^\d{2}:\d{2}/.exec(value)?.[0] ?? value);
         const withoutCandy = form.treats.filter((id) => id !== "candy");
         const treats = hasCandy ? (["candy" as const, ...withoutCandy] as TreatId[]) : withoutCandy;
         const treatStock = { ...(form.treatStock ?? {}) };
         if (hasCandy) treatStock.candy = treatStock.candy ?? "plenty";
         else delete treatStock.candy;
         const visit: VisitState = hasCandy ? "come" : decorated ? "decorOnly" : "come";
-        const openFrom2 = secondWindow ? clock(form.openFrom2 || "") : "";
-        const openTo2 = secondWindow ? clock(form.openTo2 || "") : "";
-        if (secondWindow && (!/^\d{2}:\d{2}$/.test(openFrom2) || !/^\d{2}:\d{2}$/.test(openTo2))) {
-          toast.error("מלאו גם את חלון השעות השני, או בטלו אותו.");
+        const windows = hourWindows.map((window) => ({
+          from: clock(window.from),
+          to: clock(window.to),
+        }));
+        if (
+          windows.length === 0 ||
+          windows.some((window) => !/^\d{2}:\d{2}$/.test(window.from) || !/^\d{2}:\d{2}$/.test(window.to))
+        ) {
+          toast.error("מלאו את כל חלונות השעות, או הסירו חלון ריק.");
           return;
         }
+        const hours = syncHoursFields(windows);
         void onSubmit({
           ...form,
           theme,
           treats,
           treatStock,
           visit,
-          openFrom: clock(form.openFrom),
-          openTo: clock(form.openTo),
-          openFrom2,
-          openTo2,
+          openHours: hours.openHours,
+          openFrom: hours.openFrom,
+          openTo: hours.openTo,
+          openFrom2: hours.openFrom2,
+          openTo2: hours.openTo2,
         });
       }}
     >
@@ -326,58 +361,54 @@ export function HouseForm({
       <div className="space-y-3">
         <p className="text-sm font-medium">שעות פעילות</p>
         <p className="text-xs text-violet-300">
-          חלון אחד ברצף, או שני חלונות אם יוצאים באמצע לטריק-אור-טריט (למשל 17:00–18:00 ו־20:00–21:00).
-          ליציאה ספונטנית באמצע הערב — השתמשו בהקפאה לשעה במסך העריכה.
+          אפשר כמה חלונות בערב (למשל 17:00–18:00, 19:00–20:00, 20:30–21:00) אם יוצאים באמצע
+          לטריק-אור-טריט. ליציאה ספונטנית — השתמשו בהקפאה לשעה במסך העריכה.
         </p>
-        <div className="grid grid-cols-1 gap-3">
-          <Field label="פתיחה">
-            <TimeField
-              required
-              value={form.openFrom}
-              onChange={(openFrom) => setForm({ ...form, openFrom })}
-            />
-          </Field>
-          <Field label="סגירה">
-            <TimeField
-              required
-              value={form.openTo}
-              onChange={(openTo) => setForm({ ...form, openTo })}
-            />
-          </Field>
-        </div>
-        <label className="flex items-center gap-2 text-sm text-orange-50">
-          <input
-            type="checkbox"
-            className="size-4 accent-orange-500"
-            checked={secondWindow}
-            onChange={(e) => {
-              const on = e.target.checked;
-              setSecondWindow(on);
-              if (!on) setForm((f) => ({ ...f, openFrom2: "", openTo2: "" }));
-              else if (!form.openFrom2 && !form.openTo2) {
-                setForm((f) => ({ ...f, openFrom2: "20:00", openTo2: "21:00" }));
-              }
-            }}
-          />
-          יש גם חלון שעות שני בערב
-        </label>
-        {secondWindow ? (
-          <div className="grid grid-cols-1 gap-3">
-            <Field label="פתיחה שנייה">
-              <TimeField
-                required
-                value={form.openFrom2 || "20:00"}
-                onChange={(openFrom2) => setForm({ ...form, openFrom2 })}
-              />
-            </Field>
-            <Field label="סגירה שנייה">
-              <TimeField
-                required
-                value={form.openTo2 || "21:00"}
-                onChange={(openTo2) => setForm({ ...form, openTo2 })}
-              />
-            </Field>
+        {hourWindows.map((window, index) => (
+          <div
+            key={`hours-${index}`}
+            className="space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-medium text-orange-100">
+                {hourWindows.length === 1 ? "חלון שעות" : `חלון ${index + 1}`}
+              </p>
+              {hourWindows.length > 1 ? (
+                <button
+                  type="button"
+                  className="text-xs text-violet-300 underline-offset-2 hover:underline"
+                  onClick={() => removeHourWindow(index)}
+                >
+                  הסרה
+                </button>
+              ) : null}
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              <Field label="פתיחה">
+                <TimeField
+                  required
+                  value={window.from}
+                  onChange={(from) => updateHourWindow(index, { from })}
+                />
+              </Field>
+              <Field label="סגירה">
+                <TimeField
+                  required
+                  value={window.to}
+                  onChange={(to) => updateHourWindow(index, { to })}
+                />
+              </Field>
+            </div>
           </div>
+        ))}
+        {hourWindows.length < MAX_HOUR_WINDOWS ? (
+          <button
+            type="button"
+            className="text-sm font-medium text-orange-300 underline-offset-2 hover:underline"
+            onClick={addHourWindow}
+          >
+            + הוספת חלון שעות
+          </button>
         ) : null}
       </div>
       <div>

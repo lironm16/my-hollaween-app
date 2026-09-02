@@ -35,6 +35,7 @@ import { readApiJson } from "@/lib/api-json";
 import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, formatDisplayAddress, type NeighborhoodId } from "@/lib/config";
 import { toPublicHouse } from "@/lib/ids";
 import { isFrozen, offersCandy, offersSensitivity } from "@/lib/house-state";
+import { isOpenNow } from "@/lib/hours";
 import {
   backupLooksNewer,
   loadServerDbBackup,
@@ -72,6 +73,7 @@ export function NeighborhoodApp({
   const {
     accessibleOnly,
     candyOnly,
+    openNowOnly,
     sensitivityFilters,
     scareFilters,
     neighborhoodFilters,
@@ -180,6 +182,7 @@ export function NeighborhoodApp({
     return houses.filter((house) => {
       if (accessibleOnly && !house.accessible) return false;
       if (candyOnly && !offersCandy(house)) return false;
+      if (openNowOnly && !isOpenNow(house)) return false;
       for (const sensitivity of sensitivityFilters) {
         if (!offersSensitivity(house, sensitivity)) return false;
       }
@@ -193,6 +196,7 @@ export function NeighborhoodApp({
     houses,
     accessibleOnly,
     candyOnly,
+    openNowOnly,
     sensitivityFilters,
     scareFilters,
     neighborhoodFilters,
@@ -203,7 +207,11 @@ export function NeighborhoodApp({
   ]);
 
   const moreFilterCount =
-    Number(accessibleOnly) + Number(candyOnly) + Number(likedOnly) + Number(unvisitedOnly);
+    Number(accessibleOnly) +
+    Number(candyOnly) +
+    Number(openNowOnly) +
+    Number(likedOnly) +
+    Number(unvisitedOnly);
   // Empty or fully selected category = show all (not an active restriction).
   const neighborhoodActiveCount =
     neighborhoodFilters.length === 0 || neighborhoodFilters.length === NEIGHBORHOODS.length
@@ -546,6 +554,12 @@ export function NeighborhoodApp({
           ))}
         </FilterSection>
         <FilterSection title="עוד">
+          <FilterOption
+            checked={openNowOnly}
+            onChange={() => updateFilters({ openNowOnly: !openNowOnly })}
+          >
+            פתוח עכשיו
+          </FilterOption>
           <FilterOption
             checked={candyOnly}
             onChange={() => updateFilters({ candyOnly: !candyOnly })}

@@ -10,6 +10,24 @@ const photoUrlSchema = z
   .refine((value) => parsePhotoUrl(value) !== null, "כתובת תמונה לא תקינה")
   .transform((value) => parsePhotoUrl(value) as string);
 
+const clockField = z.preprocess(
+  (value) => (typeof value === "string" ? value.slice(0, 5) : value),
+  z.string().regex(/^\d{2}:\d{2}$/),
+);
+
+const optionalClockField = z.preprocess(
+  (value) => {
+    if (value === null || value === undefined) return "";
+    return typeof value === "string" ? value.slice(0, 5) : value;
+  },
+  z.union([z.literal(""), z.string().regex(/^\d{2}:\d{2}$/)]),
+);
+
+const hoursWindowSchema = z.object({
+  from: clockField,
+  to: clockField,
+});
+
 const houseFields = z.object({
   name: z.string().trim().min(2).max(80),
   theme: z.enum(HOUSE_THEMES),
@@ -22,28 +40,11 @@ const houseFields = z.object({
   treatStock: treatStockSchema,
   visit: z.enum(VISIT_STATES),
   scareLevel: z.enum(SCARE_LEVELS),
-  openFrom: z.preprocess(
-    (value) => (typeof value === "string" ? value.slice(0, 5) : value),
-    z.string().regex(/^\d{2}:\d{2}$/),
-  ),
-  openTo: z.preprocess(
-    (value) => (typeof value === "string" ? value.slice(0, 5) : value),
-    z.string().regex(/^\d{2}:\d{2}$/),
-  ),
-  openFrom2: z.preprocess(
-    (value) => {
-      if (value === null || value === undefined) return "";
-      return typeof value === "string" ? value.slice(0, 5) : value;
-    },
-    z.union([z.literal(""), z.string().regex(/^\d{2}:\d{2}$/)]),
-  ),
-  openTo2: z.preprocess(
-    (value) => {
-      if (value === null || value === undefined) return "";
-      return typeof value === "string" ? value.slice(0, 5) : value;
-    },
-    z.union([z.literal(""), z.string().regex(/^\d{2}:\d{2}$/)]),
-  ),
+  openFrom: clockField,
+  openTo: clockField,
+  openHours: z.array(hoursWindowSchema).max(6).optional(),
+  openFrom2: optionalClockField,
+  openTo2: optionalClockField,
   notes: z.string().trim().max(240),
   accessible: z.boolean(),
 });
@@ -55,20 +56,9 @@ export const houseInputSchema = houseFields.extend({
   treats: z.array(z.enum(TREAT_OPTIONS)).max(12).default([]),
   treatStock: treatStockSchema.default({}),
   visit: z.enum(VISIT_STATES).default("come"),
-  openFrom2: z.preprocess(
-    (value) => {
-      if (value === null || value === undefined) return "";
-      return typeof value === "string" ? value.slice(0, 5) : value;
-    },
-    z.union([z.literal(""), z.string().regex(/^\d{2}:\d{2}$/)]),
-  ).default(""),
-  openTo2: z.preprocess(
-    (value) => {
-      if (value === null || value === undefined) return "";
-      return typeof value === "string" ? value.slice(0, 5) : value;
-    },
-    z.union([z.literal(""), z.string().regex(/^\d{2}:\d{2}$/)]),
-  ).default(""),
+  openHours: z.array(hoursWindowSchema).max(6).optional().default([]),
+  openFrom2: optionalClockField.default(""),
+  openTo2: optionalClockField.default(""),
   notes: z.string().trim().max(240).default(""),
   accessible: z.boolean().default(false),
 });

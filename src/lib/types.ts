@@ -43,6 +43,8 @@ export type VisitState = (typeof VISIT_STATES)[number];
 
 export type TreatStock = Partial<Record<TreatId, StockLevel>>;
 
+export type HoursWindow = { from: string; to: string };
+
 export type House = {
   id: string;
   name: string;
@@ -58,7 +60,9 @@ export type House = {
   scareLevel: ScareLevel;
   openFrom: string;
   openTo: string;
-  /** Optional second open window (e.g. 17–18 and 20–21). */
+  /** All open windows for the evening (preferred). */
+  openHours?: HoursWindow[];
+  /** @deprecated Prefer openHours; kept for older records. */
   openFrom2?: string;
   openTo2?: string;
   notes: string;
@@ -90,6 +94,7 @@ export type HouseInput = {
   scareLevel: ScareLevel;
   openFrom: string;
   openTo: string;
+  openHours?: HoursWindow[];
   openFrom2?: string;
   openTo2?: string;
   notes: string;

@@ -183,6 +183,7 @@ const FILTERS_KEY = "hw-house-filters";
 export type HouseFiltersState = {
   accessibleOnly: boolean;
   candyOnly: boolean;
+  openNowOnly: boolean;
   sensitivityFilters: SensitivityId[];
   scareFilters: ScareLevel[];
   neighborhoodFilters: NeighborhoodId[];

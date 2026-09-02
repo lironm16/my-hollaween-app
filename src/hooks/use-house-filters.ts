@@ -8,6 +8,7 @@ import { SCARE_LEVELS, SENSITIVITY_OPTIONS, type ScareLevel, type SensitivityId 
 export const DEFAULT_HOUSE_FILTERS: HouseFiltersState = {
   accessibleOnly: false,
   candyOnly: false,
+  openNowOnly: false,
   sensitivityFilters: [],
   scareFilters: [...SCARE_LEVELS],
   neighborhoodFilters: [...NEIGHBORHOODS],
@@ -29,6 +30,7 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
   return {
     accessibleOnly: Boolean(raw.accessibleOnly),
     candyOnly: Boolean(raw.candyOnly),
+    openNowOnly: Boolean(raw.openNowOnly),
     likedOnly: Boolean(raw.likedOnly),
     unvisitedOnly: Boolean(raw.unvisitedOnly),
     neighborhoodFilters: neighborhoods.length > 0 ? neighborhoods : [...NEIGHBORHOODS],

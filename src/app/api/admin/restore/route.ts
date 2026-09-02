@@ -21,6 +21,10 @@ const houseSchema = z.object({
   scareLevel: z.enum(SCARE_LEVELS),
   openFrom: z.string(),
   openTo: z.string(),
+  openHours: z
+    .array(z.object({ from: z.string(), to: z.string() }))
+    .max(6)
+    .optional(),
   openFrom2: z.string().optional(),
   openTo2: z.string().optional(),
   notes: z.string().optional(),

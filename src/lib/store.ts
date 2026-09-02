@@ -6,6 +6,7 @@ import { inNeighborhood } from "@/lib/config";
 import { config } from "@/lib/config";
 import { assertRealAddress } from "@/lib/geocode";
 import { defaultTreatStock, effectiveVisit, isPubliclyListed } from "@/lib/house-state";
+import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import { cloneDb, mergeHouses } from "@/lib/catalog-sync";
 import { parsePhotoUrl } from "@/lib/photos";
 import {
@@ -95,6 +96,7 @@ function normalizeHouse(house: House): House {
     ...(house.treatStock ?? {}),
   };
   if (treats.includes("candy") && !treatStock.candy) treatStock.candy = "plenty";
+  const hours = syncHoursFields(houseHoursWindows(house));
   return {
     ...house,
     theme,
@@ -107,8 +109,11 @@ function normalizeHouse(house: House): House {
     adminFrozen: Boolean(house.adminFrozen),
     ownerFrozenUntil: house.ownerFrozenUntil ?? null,
     photoUrl: house.photoUrl ?? "",
-    openFrom2: house.openFrom2 ?? "",
-    openTo2: house.openTo2 ?? "",
+    openHours: hours.openHours,
+    openFrom: hours.openFrom,
+    openTo: hours.openTo,
+    openFrom2: hours.openFrom2,
+    openTo2: hours.openTo2,
   };
 }
 
@@ -296,11 +301,17 @@ export async function submitHouse(input: HouseInput) {
       ...(input.treatStock ?? {}),
     };
     if (treats.includes("candy") && !treatStock.candy) treatStock.candy = "plenty";
+    const hours = syncHoursFields(
+      input.openHours?.length
+        ? input.openHours
+        : houseHoursWindows(input),
+    );
     const house: House = {
       ...input,
       treats,
       treatStock,
       visit,
+      ...hours,
       id,
       status: "approved",
       soldOut: visit === "closed",
@@ -425,6 +436,24 @@ export async function adminUpdate(
     if (patch.openTo !== undefined) house.openTo = patch.openTo;
     if (patch.openFrom2 !== undefined) house.openFrom2 = patch.openFrom2;
     if (patch.openTo2 !== undefined) house.openTo2 = patch.openTo2;
+    if (patch.openHours !== undefined || patch.openFrom !== undefined || patch.openTo !== undefined || patch.openFrom2 !== undefined || patch.openTo2 !== undefined) {
+      const synced = syncHoursFields(
+        patch.openHours?.length
+          ? patch.openHours
+          : houseHoursWindows({
+              openFrom: house.openFrom,
+              openTo: house.openTo,
+              openFrom2: house.openFrom2,
+              openTo2: house.openTo2,
+              openHours: house.openHours,
+            }),
+      );
+      house.openHours = synced.openHours;
+      house.openFrom = synced.openFrom;
+      house.openTo = synced.openTo;
+      house.openFrom2 = synced.openFrom2;
+      house.openTo2 = synced.openTo2;
+    }
     if (patch.notes !== undefined) house.notes = patch.notes;
     if (patch.accessible !== undefined) house.accessible = patch.accessible;
     if (patch.adminFrozen !== undefined) house.adminFrozen = patch.adminFrozen;
@@ -471,6 +500,24 @@ function sanitizeOwnerPatch(
   if (patch.openTo !== undefined) next.openTo = patch.openTo;
   if (patch.openFrom2 !== undefined) next.openFrom2 = patch.openFrom2;
   if (patch.openTo2 !== undefined) next.openTo2 = patch.openTo2;
+  if (patch.openHours !== undefined || patch.openFrom !== undefined || patch.openTo !== undefined) {
+    const synced = syncHoursFields(
+      patch.openHours?.length
+        ? patch.openHours
+        : houseHoursWindows({
+            openFrom: patch.openFrom,
+            openTo: patch.openTo,
+            openFrom2: patch.openFrom2,
+            openTo2: patch.openTo2,
+            openHours: patch.openHours,
+          }),
+    );
+    next.openHours = synced.openHours;
+    next.openFrom = synced.openFrom;
+    next.openTo = synced.openTo;
+    next.openFrom2 = synced.openFrom2;
+    next.openTo2 = synced.openTo2;
+  }
   if (patch.notes !== undefined) next.notes = patch.notes;
   if (patch.accessible !== undefined) next.accessible = patch.accessible;
   if (patch.ownerFrozenUntil !== undefined) next.ownerFrozenUntil = patch.ownerFrozenUntil;

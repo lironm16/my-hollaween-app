@@ -1,4 +1,5 @@
 import { readApiJson } from "@/lib/api-json";
+import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import type { HouseInput, PublicHouse } from "@/lib/types";
 
 export type PublishResult = {
@@ -12,6 +13,20 @@ function clock(value: string) {
 }
 
 export function readyHouseInput(input: HouseInput): HouseInput {
+  const hours = syncHoursFields(
+    input.openHours?.length
+      ? input.openHours.map((window) => ({
+          from: clock(window.from),
+          to: clock(window.to),
+        }))
+      : houseHoursWindows({
+          ...input,
+          openFrom: clock(input.openFrom),
+          openTo: clock(input.openTo),
+          openFrom2: input.openFrom2 ? clock(input.openFrom2) : "",
+          openTo2: input.openTo2 ? clock(input.openTo2) : "",
+        }),
+  );
   return {
     ...input,
     arrival: input.arrival ?? "",
@@ -20,10 +35,7 @@ export function readyHouseInput(input: HouseInput): HouseInput {
     treats: input.treats ?? [],
     treatStock: input.treatStock ?? {},
     visit: input.visit ?? "come",
-    openFrom: clock(input.openFrom),
-    openTo: clock(input.openTo),
-    openFrom2: input.openFrom2 ? clock(input.openFrom2) : "",
-    openTo2: input.openTo2 ? clock(input.openTo2) : "",
+    ...hours,
   };
 }
 

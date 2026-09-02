@@ -28,6 +28,7 @@ export function HouseTags({
     openTo?: string;
     openFrom2?: string;
     openTo2?: string;
+    openHours?: { from: string; to: string }[];
   };
   /** Smaller set for map popups. */
   compact?: boolean;
