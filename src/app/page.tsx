@@ -1,16 +1,12 @@
-import { Suspense } from "react";
 import { NeighborhoodApp } from "@/components/neighborhood-app";
+import { getCatalog } from "@/lib/store";
 
-export default function HomePage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-dvh items-center justify-center text-orange-200">
-          מדליקים דלעות…
-        </div>
-      }
-    >
-      <NeighborhoodApp />
-    </Suspense>
-  );
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ focus?: string }>;
+}) {
+  const catalog = await getCatalog();
+  const { focus } = await searchParams;
+  return <NeighborhoodApp initialCatalog={catalog} focusId={focus ?? null} />;
 }

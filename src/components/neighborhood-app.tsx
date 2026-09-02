@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { List, MapPinned, RefreshCw, WifiOff } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
@@ -17,13 +16,17 @@ import {
 } from "@/components/ui/sheet";
 import { useCatalog } from "@/hooks/use-catalog";
 import { loadOwnedHouses } from "@/lib/offline-db";
-import type { PublicHouse } from "@/lib/types";
+import type { Catalog, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function NeighborhoodApp() {
-  const { catalog, loading, offline, error, source, refresh } = useCatalog();
-  const params = useSearchParams();
-  const focusId = params.get("focus");
+export function NeighborhoodApp({
+  initialCatalog,
+  focusId = null,
+}: {
+  initialCatalog: Catalog;
+  focusId?: string | null;
+}) {
+  const { catalog, loading, offline, error, source, refresh } = useCatalog(initialCatalog);
   const [view, setView] = useState<"map" | "list">("map");
   const [selectedId, setSelectedId] = useState<string | "closed" | null>(null);
   const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(null);

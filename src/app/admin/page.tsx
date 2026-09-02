@@ -29,7 +29,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/session", { cache: "no-store" })
+    fetch("/api/admin/session", { cache: "no-store", signal: AbortSignal.timeout(5000) })
       .then((res) => res.json())
       .then(async (data: { admin?: boolean }) => {
         if (cancelled) return;

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import type { Catalog } from "@/lib/types";
 import { loadCatalogCache, saveCatalogCache } from "@/lib/offline-db";
 
-type Source = "network" | "cache" | "snapshot";
+type Source = "network" | "cache" | "snapshot" | "ssr";
 
 export type CatalogState = {
   catalog: Catalog | null;
@@ -24,12 +24,27 @@ async function fetchJson(url: string, force = false): Promise<Catalog> {
   return res.json() as Promise<Catalog>;
 }
 
-export function useCatalog(): CatalogState {
-  const [catalog, setCatalog] = useState<Catalog | null>(null);
-  const [loading, setLoading] = useState(true);
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  return new Promise((resolve) => {
+    const t = window.setTimeout(() => resolve(null), ms);
+    promise
+      .then((value) => {
+        window.clearTimeout(t);
+        resolve(value);
+      })
+      .catch(() => {
+        window.clearTimeout(t);
+        resolve(null);
+      });
+  });
+}
+
+export function useCatalog(initial?: Catalog | null): CatalogState {
+  const [catalog, setCatalog] = useState<Catalog | null>(initial ?? null);
+  const [loading, setLoading] = useState(!initial);
   const [offline, setOffline] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [source, setSource] = useState<Source | null>(null);
+  const [source, setSource] = useState<Source | null>(initial ? "ssr" : null);
 
   const refresh = async (force = false) => {
     setOffline(typeof navigator !== "undefined" && !navigator.onLine);
@@ -49,14 +64,16 @@ export function useCatalog(): CatalogState {
         await saveCatalogCache(snap);
         return;
       } catch {
-        const cached = await loadCatalogCache();
+        const cached = await withTimeout(loadCatalogCache(), 400);
         if (cached) {
           setCatalog(cached);
           setSource("cache");
           setError(null);
           return;
         }
-        setError("לא הצלחנו לטעון את המפה. נסו שוב בעוד רגע.");
+        if (!initial) {
+          setError("לא הצלחנו לטעון את המפה. נסו שוב בעוד רגע.");
+        }
       }
     }
   };
@@ -64,11 +81,13 @@ export function useCatalog(): CatalogState {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const cached = await loadCatalogCache();
-      if (cached && !cancelled) {
-        setCatalog(cached);
-        setSource("cache");
-        setLoading(false);
+      if (!initial) {
+        const cached = await withTimeout(loadCatalogCache(), 400);
+        if (cached && !cancelled) {
+          setCatalog(cached);
+          setSource("cache");
+          setLoading(false);
+        }
       }
       await refresh(false);
       if (!cancelled) setLoading(false);
@@ -86,6 +105,8 @@ export function useCatalog(): CatalogState {
       window.removeEventListener("offline", onOff);
       document.removeEventListener("visibilitychange", onVis);
     };
+    // initial is server-provided for this mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { catalog, loading, offline, error, source, refresh };
