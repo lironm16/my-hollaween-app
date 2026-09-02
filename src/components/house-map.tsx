@@ -147,6 +147,57 @@ function FlyToUser({
   return null;
 }
 
+function bindPopupRoot(node: HTMLDivElement | null) {
+  if (!node) return;
+  L.DomEvent.disableClickPropagation(node);
+  L.DomEvent.disableScrollPropagation(node);
+}
+
+function HousePreviewPopup({
+  house,
+  onOpenDetails,
+}: {
+  house: PublicHouse;
+  onOpenDetails?: (house: PublicHouse) => void;
+}) {
+  const map = useMap();
+  return (
+    <Popup
+      className="house-map-popup-root"
+      maxWidth={260}
+      minWidth={176}
+      autoPan
+      autoPanPadding={[48, 72]}
+      closeButton
+    >
+      <div ref={bindPopupRoot} dir="rtl" className="house-map-popup">
+        <strong>{houseHeadline(house)}</strong>
+        <div className="house-map-popup-meta">{house.address}</div>
+        {house.arrival ? <div className="house-map-popup-meta">{house.arrival}</div> : null}
+        <div className="house-map-popup-meta">
+          {house.openFrom}–{house.openTo}
+          {house.accessible ? " · נגיש" : ""}
+          {house.treats.includes("glutenFree") ? " · ללא גלוטן" : ""}
+        </div>
+        {onOpenDetails ? (
+          <button
+            type="button"
+            className="house-map-popup-btn"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              map.closePopup();
+              onOpenDetails(house);
+            }}
+          >
+            לפרטי הבית
+          </button>
+        ) : null}
+      </div>
+    </Popup>
+  );
+}
+
 type Props = {
   houses?: PublicHouse[];
   selectedId?: string | null;
@@ -253,26 +304,8 @@ export function HouseMap({
         ) : null}
         {!pickMode &&
           houses.map((house) => (
-            <Marker
-              key={house.id}
-              position={[house.lat, house.lng]}
-              icon={pinIcon(house)}
-              eventHandlers={{
-                click: () => onSelect?.(house),
-              }}
-            >
-              <Popup>
-                <div dir="rtl" className="min-w-[160px] text-right">
-                  <strong>{houseHeadline(house)}</strong>
-                  <div>{house.address}</div>
-                  {house.arrival ? <div>{house.arrival}</div> : null}
-                  <div>
-                    {house.openFrom}–{house.openTo}
-                    {house.accessible ? " · נגיש" : ""}
-                    {house.treats.includes("glutenFree") ? " · ללא גלוטן" : ""}
-                  </div>
-                </div>
-              </Popup>
+            <Marker key={house.id} position={[house.lat, house.lng]} icon={pinIcon(house)}>
+              <HousePreviewPopup house={house} onOpenDetails={onSelect} />
             </Marker>
           ))}
         {!pickMode && userLocation ? (
