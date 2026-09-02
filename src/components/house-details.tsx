@@ -153,7 +153,7 @@ export function HouseDetails({
       {house.notes ? (
         <p className="text-sm text-amber-200/90">הערה: {house.notes}</p>
       ) : null}
-      <CodesCopy id={house.id} editCode={editCode} />
+      <CodesCopy editCode={editCode} />
       <div className="flex flex-wrap gap-2 pt-1">
         <a
           href={waze}
@@ -181,22 +181,18 @@ export function HouseDetails({
       {canEdit && onToggleEdit ? (
         <button
           type="button"
-          aria-label={editing ? "סגירת עריכה" : "עריכת מלאי ופרטים"}
+          aria-label={editing ? "סגירת עריכה" : "עריכה"}
           aria-pressed={editing}
           onClick={onToggleEdit}
           className={cn(
-            "flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-start text-sm ring-1 transition",
+            "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition",
             editing
-              ? "bg-orange-500 text-black ring-orange-400 hover:bg-orange-400"
-              : "bg-[#2a1638] text-orange-100 ring-orange-500/25 hover:bg-[#341c44]",
+              ? "bg-orange-500 text-black hover:bg-orange-400"
+              : "text-orange-200 hover:bg-orange-500/15",
           )}
         >
-          {editing ? <X className="size-5 shrink-0" /> : <Pencil className="size-5 shrink-0" />}
-          <span className="min-w-0 leading-snug">
-            {editing
-              ? "סגירת עריכה"
-              : "עריכת מלאי — לחצו כאן לעדכון. בני משפחה יכולים להזין קוד עריכה."}
-          </span>
+          {editing ? <X className="size-4 shrink-0" /> : <Pencil className="size-4 shrink-0" />}
+          <span>{editing ? "סגירה" : "עריכה"}</span>
         </button>
       ) : null}
       {extra}

@@ -68,10 +68,10 @@ export default function AddPage() {
               </p>
             </div>
             <PersistNote />
-            <CodesCopy id={done.id} editCode={done.editCode} />
+            <CodesCopy editCode={done.editCode} />
             <p className="text-xs text-amber-200">
-              שמרו את המזהה ואת קוד העריכה — רק איתם אפשר לעדכן מלאי, שעות או להקפיא את הבית.
-              עותק של הקודים נשמר גם בטלפון הזה לנוחות שלכם.
+              שמרו את קוד העריכה — אפשר לשתף אותו עם בני משפחה כדי לעדכן מלאי מהכרטיס של הבית.
+              עותק נשמר גם בטלפון הזה לנוחות שלכם.
             </p>
             <div className="flex flex-wrap gap-2">
               <Link

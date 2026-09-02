@@ -127,7 +127,7 @@ export default function EditPage() {
         </div>
         {house ? (
           <div className="space-y-3">
-            <CodesCopy id={house.id} editCode={editCode} />
+            <CodesCopy editCode={editCode} />
             <p className="text-sm text-violet-200">
               סטטוס: {statusText(house.status)}
               {house.status === "rejected"
