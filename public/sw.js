@@ -1,9 +1,10 @@
-const CACHE = "hw-shell-v9";
+const CACHE = "hw-shell-v10";
 const TILE_CACHE = "hw-tiles-v3";
 const PRECACHE = [
   "/catalog.json",
   "/manifest.webmanifest",
   "/shell.css",
+  "/app.css",
   "/icon-192.png",
   "/icon-512.png",
   "/images/banner.jpg",
@@ -53,6 +54,9 @@ self.addEventListener("fetch", (event) => {
     url.pathname.startsWith("/_next/") ||
     url.pathname.startsWith("/__next") ||
     url.pathname.endsWith(".css") ||
+    url.pathname === "/sw.js" ||
+    url.pathname === "/boot.js" ||
+    url.pathname === "/app.css" ||
     url.pathname.startsWith("/api/admin") ||
     url.pathname.startsWith("/api/houses") ||
     url.pathname.startsWith("/api/address") ||

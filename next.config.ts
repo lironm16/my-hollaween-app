@@ -13,9 +13,13 @@ const nextConfig: NextConfig = {
     "127.0.0.1",
     "localhost",
     "[::1]",
+    "**.localhost",
     "*.cursor.sh",
+    "**.cursor.sh",
     "*.cursor.com",
+    "**.cursor.com",
     "*.cursorusercontent.com",
+    "**.cursorusercontent.com",
   ],
   async headers() {
     return [
@@ -34,6 +38,14 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/shell.css",
+        headers: [{ key: "Cache-Control", value: "no-cache" }],
+      },
+      {
+        source: "/app.css",
+        headers: [{ key: "Cache-Control", value: "no-cache" }],
+      },
+      {
+        source: "/boot.js",
         headers: [{ key: "Cache-Control", value: "no-cache" }],
       },
       {
