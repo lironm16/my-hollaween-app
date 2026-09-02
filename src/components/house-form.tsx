@@ -254,25 +254,19 @@ export function HouseForm({
           className="min-h-24"
         />
       </Field>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3">
         <Field label="פתיחה">
-          <Input
-            type="time"
+          <TimeField
             required
-            dir="ltr"
             value={form.openFrom}
-            onChange={(e) => setForm({ ...form, openFrom: e.target.value })}
-            className="h-11 w-full min-w-0 bg-[#1d1028] text-base [color-scheme:dark]"
+            onChange={(openFrom) => setForm({ ...form, openFrom })}
           />
         </Field>
         <Field label="סגירה">
-          <Input
-            type="time"
+          <TimeField
             required
-            dir="ltr"
             value={form.openTo}
-            onChange={(e) => setForm({ ...form, openTo: e.target.value })}
-            className="h-11 w-full min-w-0 bg-[#1d1028] text-base [color-scheme:dark]"
+            onChange={(openTo) => setForm({ ...form, openTo })}
           />
         </Field>
       </div>
@@ -323,6 +317,34 @@ function Field({
     <div className="space-y-1.5">
       <Label>{label}</Label>
       {children}
+    </div>
+  );
+}
+
+/** Native time inputs ignore RTL text-align; overlay pins the value to the end. */
+function TimeField({
+  value,
+  onChange,
+  required,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  required?: boolean;
+}) {
+  return (
+    <div className="house-time-wrap relative w-full">
+      <Input
+        type="time"
+        required={required}
+        dir="ltr"
+        lang="he-IL"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="house-time-input h-11 w-full min-w-0 bg-[#1d1028] text-base"
+      />
+      <span className="house-time-value" aria-hidden="true">
+        {value || "--:--"}
+      </span>
     </div>
   );
 }

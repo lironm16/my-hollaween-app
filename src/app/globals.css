@@ -465,3 +465,57 @@
   50% { transform: translateY(18px) rotate(8deg); }
   100% { inset-inline-start: 110%; transform: translateY(-8px) rotate(-8deg); }
 }
+
+/* Hours: full-width border; native value hidden; overlay shows RTL-aligned time */
+.house-time-wrap {
+  width: 100%;
+}
+
+input[type="time"].house-time-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  direction: ltr;
+  position: relative;
+  padding-inline: 0.625rem;
+  -webkit-appearance: none;
+  appearance: none;
+  color-scheme: dark;
+  color: transparent;
+  caret-color: transparent;
+}
+
+input[type="time"].house-time-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset-inline-start: 0.55rem;
+  inset-inline-end: auto;
+  margin: 0;
+  cursor: pointer;
+  opacity: 0.9;
+  z-index: 2;
+  filter: invert(0.85) sepia(1) saturate(5) hue-rotate(0deg);
+}
+
+input[type="time"].house-time-input::-webkit-datetime-edit,
+input[type="time"].house-time-input::-webkit-datetime-edit-fields-wrapper,
+input[type="time"].house-time-input::-webkit-datetime-edit-text,
+input[type="time"].house-time-input::-webkit-datetime-edit-hour-field,
+input[type="time"].house-time-input::-webkit-datetime-edit-minute-field,
+input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
+  color: transparent;
+}
+
+.house-time-value {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: right; /* physical right — matches RTL field text */
+  padding-inline: 0.625rem;
+  padding-inline-start: 2.25rem;
+  font-size: 1rem;
+  line-height: 1.25;
+  color: var(--foreground);
+  z-index: 1;
+}
