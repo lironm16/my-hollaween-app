@@ -1,5 +1,5 @@
-const CACHE = "hw-shell-v4";
-const TILE_CACHE = "hw-tiles-v2";
+const CACHE = "hw-shell-v5";
+const TILE_CACHE = "hw-tiles-v3";
 const PRECACHE = [
   "/",
   "/add",

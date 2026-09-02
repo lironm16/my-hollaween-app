@@ -118,6 +118,11 @@
   isolation: isolate;
 }
 
+/* Dark Halloween look without a Carto/Mapbox key. Markers stay in another pane. */
+.leaflet-container.is-osm-dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) saturate(0.35) brightness(0.82) contrast(1.05);
+}
+
 /* Tailwind preflight sets img { max-width: 100%; height: auto } and hides tiles. */
 .leaflet-container img,
 .leaflet-pane img,

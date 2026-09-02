@@ -178,7 +178,10 @@ export function HouseMap({
         maxBounds={bounds}
         maxBoundsViscosity={1}
         scrollWheelZoom
-        className="h-full w-full rounded-none bg-[#1a1024]"
+        className={cn(
+          "h-full w-full rounded-none bg-[#1a1024]",
+          config.tiles.invert && "is-osm-dark",
+        )}
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
