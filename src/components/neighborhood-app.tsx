@@ -475,6 +475,7 @@ export function NeighborhoodApp({
                           <NightDesk
                             house={selected}
                             admin
+                            editCode={editCodeById.get(selected.id)}
                             onUpdated={(next) => applyAdminHouse(next)}
                           />
                           <HouseForm
