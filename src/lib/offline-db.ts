@@ -1,3 +1,5 @@
+import type { NeighborhoodId } from "@/lib/config";
+import type { ScareLevel, SensitivityId } from "@/lib/types";
 import type { Catalog, PublicHouse } from "@/lib/types";
 
 const DB_NAME = "halloween-neighborhood";
@@ -174,4 +176,38 @@ export function backupLooksNewer(backup: ServerDbBackup, serverUpdatedAt: string
   const backupApproved = backup.houses.filter((h) => h.status === "approved").length;
   const serverApproved = serverHouses.filter((h) => h.status === "approved").length;
   return backupApproved > serverApproved;
+}
+
+const FILTERS_KEY = "hw-house-filters";
+
+export type HouseFiltersState = {
+  accessibleOnly: boolean;
+  candyOnly: boolean;
+  sensitivityFilters: SensitivityId[];
+  scareFilters: ScareLevel[];
+  neighborhoodFilters: NeighborhoodId[];
+  likedOnly: boolean;
+  unvisitedOnly: boolean;
+};
+
+export function loadHouseFilters(): HouseFiltersState | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(FILTERS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<HouseFiltersState>;
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed as HouseFiltersState;
+  } catch {
+    return null;
+  }
+}
+
+export function saveHouseFilters(filters: HouseFiltersState) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(FILTERS_KEY, JSON.stringify(filters));
+  } catch {
+    /* private mode */
+  }
 }

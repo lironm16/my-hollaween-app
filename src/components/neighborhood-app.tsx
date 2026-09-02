@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/sheet";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
+import { useHouseFilters } from "@/hooks/use-house-filters";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
@@ -58,13 +59,23 @@ export function NeighborhoodApp({
   const origin = geo.location;
   const [view, setView] = useState<"map" | "list">("map");
   const [selectedId, setSelectedId] = useState<string | "closed" | null>(null);
-  const [accessibleOnly, setAccessibleOnly] = useState(false);
-  const [candyOnly, setCandyOnly] = useState(false);
-  const [sensitivityFilters, setSensitivityFilters] = useState<SensitivityId[]>([]);
-  const [scareFilters, setScareFilters] = useState<ScareLevel[]>([...SCARE_LEVELS]);
-  const [neighborhoodFilters, setNeighborhoodFilters] = useState<NeighborhoodId[]>([...NEIGHBORHOODS]);
-  const [likedOnly, setLikedOnly] = useState(false);
-  const [unvisitedOnly, setUnvisitedOnly] = useState(false);
+  const {
+    filters,
+    update: updateFilters,
+    clear: clearAllFilters,
+    toggleNeighborhood,
+    toggleScare,
+    toggleSensitivity,
+  } = useHouseFilters();
+  const {
+    accessibleOnly,
+    candyOnly,
+    sensitivityFilters,
+    scareFilters,
+    neighborhoodFilters,
+    likedOnly,
+    unvisitedOnly,
+  } = filters;
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [followTick, setFollowTick] = useState(0);
   const [fitTick, setFitTick] = useState(0);
@@ -186,24 +197,6 @@ export function NeighborhoodApp({
     visits.visitedIds,
   ]);
 
-  function toggleScare(level: ScareLevel) {
-    setScareFilters((current) =>
-      current.includes(level) ? current.filter((item) => item !== level) : [...current, level],
-    );
-  }
-
-  function toggleNeighborhood(area: NeighborhoodId) {
-    setNeighborhoodFilters((current) =>
-      current.includes(area) ? current.filter((item) => item !== area) : [...current, area],
-    );
-  }
-
-  function toggleSensitivity(id: SensitivityId) {
-    setSensitivityFilters((current) =>
-      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
-    );
-  }
-
   const moreFilterCount =
     Number(accessibleOnly) + Number(candyOnly) + Number(likedOnly) + Number(unvisitedOnly);
   // Empty or fully selected category = show all (not an active restriction).
@@ -217,16 +210,6 @@ export function NeighborhoodApp({
       : scareFilters.length;
   const activeFilterCount =
     neighborhoodActiveCount + sensitivityFilters.length + scareActiveCount + moreFilterCount;
-
-  function clearAllFilters() {
-    setNeighborhoodFilters([...NEIGHBORHOODS]);
-    setSensitivityFilters([]);
-    setScareFilters([...SCARE_LEVELS]);
-    setAccessibleOnly(false);
-    setCandyOnly(false);
-    setLikedOnly(false);
-    setUnvisitedOnly(false);
-  }
 
   const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const selected =
@@ -523,16 +506,28 @@ export function NeighborhoodApp({
           ))}
         </FilterSection>
         <FilterSection title="עוד">
-          <FilterOption checked={candyOnly} onChange={() => setCandyOnly((v) => !v)}>
+          <FilterOption
+            checked={candyOnly}
+            onChange={() => updateFilters({ candyOnly: !candyOnly })}
+          >
             יש ממתקים
           </FilterOption>
-          <FilterOption checked={accessibleOnly} onChange={() => setAccessibleOnly((v) => !v)}>
+          <FilterOption
+            checked={accessibleOnly}
+            onChange={() => updateFilters({ accessibleOnly: !accessibleOnly })}
+          >
             נגיש
           </FilterOption>
-          <FilterOption checked={likedOnly} onChange={() => setLikedOnly((v) => !v)}>
+          <FilterOption
+            checked={likedOnly}
+            onChange={() => updateFilters({ likedOnly: !likedOnly })}
+          >
             שמרתי
           </FilterOption>
-          <FilterOption checked={unvisitedOnly} onChange={() => setUnvisitedOnly((v) => !v)}>
+          <FilterOption
+            checked={unvisitedOnly}
+            onChange={() => updateFilters({ unvisitedOnly: !unvisitedOnly })}
+          >
             לא ביקרתי
           </FilterOption>
         </FilterSection>
