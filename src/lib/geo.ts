@@ -1,5 +1,3 @@
-export const NEARBY_METERS = 400;
-
 export function distanceMeters(
   a: { lat: number; lng: number },
   b: { lat: number; lng: number },
