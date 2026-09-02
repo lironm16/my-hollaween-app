@@ -9,6 +9,24 @@ const RESTFUL_OBJECTS = "https://api.restful-api.dev/objects";
 /** restful-api.dev returns 500 if the JSON body is ~1000+ bytes. */
 const CHUNK_CHARS = 820;
 const TIMEOUT_MS = 12_000;
+const QUOTA_COOLDOWN_MS = 30 * 60 * 1000;
+const FAIL_COOLDOWN_MS = 60 * 1000;
+
+let remoteCoolUntil = 0;
+
+export function remoteHealthy() {
+  return Date.now() >= remoteCoolUntil;
+}
+
+export function rememberRemoteOk() {
+  remoteCoolUntil = 0;
+}
+
+export function rememberRemoteError(error: unknown) {
+  const msg = error instanceof Error ? error.message : String(error ?? "");
+  const ms = msg === "STORE_QUOTA" ? QUOTA_COOLDOWN_MS : FAIL_COOLDOWN_MS;
+  remoteCoolUntil = Math.max(remoteCoolUntil, Date.now() + ms);
+}
 
 export type RemoteIndex = {
   v: 1;
@@ -55,6 +73,18 @@ async function request(url: string, init?: RequestInit) {
   });
 }
 
+async function assertOk(res: Response) {
+  if (res.ok) return;
+  const text = await res.text().catch(() => "");
+  if (
+    res.status === 429 ||
+    /exceeded allowed number of requests|quota|rate.?limit|too many requests/i.test(text)
+  ) {
+    throw new Error("STORE_QUOTA");
+  }
+  throw new Error("STORE_UNAVAILABLE");
+}
+
 function latestUpdatedAt(houses: House[]) {
   return houses.reduce((max, house) => (house.updatedAt > max ? house.updatedAt : max), houses[0]?.updatedAt ?? new Date().toISOString());
 }
@@ -73,7 +103,7 @@ function toRemoteHouse(house: House) {
 async function fetchCollection(url: string): Promise<DbFile | null> {
   const res = await request(url);
   if (res.status === 404) return null;
-  if (!res.ok) throw new Error("STORE_UNAVAILABLE");
+  await assertOk(res);
   const rows: unknown = await res.json();
   if (!Array.isArray(rows) || rows.length === 0) return null;
   const houses = (rows as Array<House & { _id?: string }>).map(fromRemoteHouse);
@@ -86,7 +116,7 @@ async function postHouse(url: string, house: House): Promise<string> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(toRemoteHouse(house)),
   });
-  if (!res.ok) throw new Error("STORE_UNAVAILABLE");
+  await assertOk(res);
   const created = (await res.json()) as { _id?: string };
   if (!created._id) throw new Error("STORE_UNAVAILABLE");
   return created._id;
@@ -98,7 +128,7 @@ async function putHouse(url: string, storeId: string, house: House) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(toRemoteHouse(house)),
   });
-  if (!res.ok) throw new Error("STORE_UNAVAILABLE");
+  await assertOk(res);
 }
 
 function changed(a: House, b: House) {
@@ -210,13 +240,13 @@ function asIndex(payload: unknown): RemoteIndex | null {
 async function fetchChunkSnapshot(indexUrl: string): Promise<RemoteSnapshot | null> {
   const res = await request(indexUrl);
   if (res.status === 404) return null;
-  if (!res.ok) throw new Error("STORE_UNAVAILABLE");
+  await assertOk(res);
   const index = asIndex(await res.json());
   if (!index || index.oids.length === 0) return null;
   const parts = await Promise.all(
     index.oids.map(async (oid) => {
       const chunk = await request(`${RESTFUL_OBJECTS}/${oid}`);
-      if (!chunk.ok) throw new Error("STORE_UNAVAILABLE");
+      await assertOk(chunk);
       const json = (await chunk.json()) as { data?: { p?: string }; p?: string };
       const part = json.data?.p ?? json.p;
       if (typeof part !== "string") throw new Error("STORE_UNAVAILABLE");
@@ -236,7 +266,7 @@ async function commitChunked(indexUrl: string, db: DbFile, expectedRev: number):
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "hw-chunk", data: { p: part } }),
     });
-    if (!res.ok) throw new Error("STORE_UNAVAILABLE");
+    await assertOk(res);
     const json = (await res.json()) as { id?: string };
     if (!json.id) throw new Error("STORE_UNAVAILABLE");
     oids.push(json.id);
@@ -251,6 +281,6 @@ async function commitChunked(indexUrl: string, db: DbFile, expectedRev: number):
     headers: { "Content-Type": "application/json" },
     body: indexBody,
   });
-  if (!res.ok) throw new Error("STORE_UNAVAILABLE");
+  await assertOk(res);
   return true;
 }

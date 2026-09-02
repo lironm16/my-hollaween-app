@@ -11,8 +11,10 @@ import {
   fetchRemoteDb,
   fetchRemoteSnapshot,
   persistRemote,
-  putRemoteDb,
   remoteDbUrl,
+  rememberRemoteError,
+  rememberRemoteOk,
+  remoteHealthy,
 } from "@/lib/remote-db";
 import {
   HOUSE_THEMES,
@@ -30,6 +32,7 @@ import {
 
 const SEED_PATH = path.join(process.cwd(), "data", "seed.json");
 const MEM_TTL_MS = 1500;
+const REMOTE_PULL_MS = 2 * 60 * 1000;
 
 let chain: Promise<unknown> = Promise.resolve();
 
@@ -118,25 +121,38 @@ async function writeFileDb(db: DbFile) {
   await fs.rename(tmp, file);
 }
 
-async function readDb(fresh = false): Promise<DbFile> {
+function mergeDb(a: DbFile, b: DbFile): DbFile {
+  const houses = mergeHouses(a.houses, b.houses).map(normalizeHouse);
+  const updatedAt = a.updatedAt >= b.updatedAt ? a.updatedAt : b.updatedAt;
+  return { houses, updatedAt };
+}
+
+let lastRemotePullAt = 0;
+
+async function pullRemote(force: boolean): Promise<DbFile | null> {
   const url = remoteDbUrl();
-  if (!url) return readFileDb();
-  void fresh;
+  if (!url || !remoteHealthy()) return null;
+  if (!force && Date.now() - lastRemotePullAt < REMOTE_PULL_MS) return null;
   try {
     const remote = await fetchRemoteDb(url);
-    if (remote && remote.houses.length > 0) {
-      return normalizeDb(remote);
-    }
-  } catch {
-    return normalizeDb(await readSeed());
+    lastRemotePullAt = Date.now();
+    rememberRemoteOk();
+    return remote;
+  } catch (error) {
+    rememberRemoteError(error);
+    return null;
   }
-  const seed = normalizeDb(await readSeed());
-  try {
-    await putRemoteDb(url, seed);
-  } catch {
-    // First visitor still sees the seed; the next successful write retries.
+}
+
+async function readDb(fresh = false): Promise<DbFile> {
+  const file = await readFileDb();
+  const remote = await pullRemote(fresh);
+  if (!remote || remote.houses.length === 0) return file;
+  const merged = mergeDb(file, remote);
+  if (merged.houses.length !== file.houses.length || merged.updatedAt !== file.updatedAt) {
+    await writeFileDb(merged);
   }
-  return seed;
+  return merged;
 }
 
 let mem: DbFile | null = null;
@@ -158,33 +174,31 @@ async function loadDb(fresh = false): Promise<DbFile> {
 
 async function runSyncedWrite<T>(fn: (db: DbFile) => T | Promise<T>): Promise<T> {
   return withLock(async () => {
+    const file = await readFileDb();
     const url = remoteDbUrl();
-    if (!url) {
-      const db = await loadDb(true);
-      const result = await fn(db);
-      await writeFileDb(db);
-      setMem(db);
-      return result;
+    let snap: Awaited<ReturnType<typeof fetchRemoteSnapshot>> = null;
+    if (url && remoteHealthy()) {
+      try {
+        snap = await fetchRemoteSnapshot(url);
+        lastRemotePullAt = Date.now();
+        rememberRemoteOk();
+      } catch (error) {
+        rememberRemoteError(error);
+      }
     }
-    let lastError: Error | null = null;
-    for (let attempt = 0; attempt < 6; attempt++) {
-      const snap = await fetchRemoteSnapshot(url);
-      const db = snap ? normalizeDb(cloneDb(snap.db)) : normalizeDb(await readSeed());
-      const result = await fn(db);
+    const db = normalizeDb(snap ? mergeDb(file, snap.db) : cloneDb(file));
+    const result = await fn(db);
+    await writeFileDb(db);
+    setMem(db);
+    if (url && remoteHealthy()) {
       try {
         const ok = await persistRemote(url, snap?.db ?? null, db);
-        if (ok) {
-          setMem(db);
-          return result;
-        }
+        if (ok) rememberRemoteOk();
       } catch (error) {
-        lastError = error instanceof Error ? error : new Error("STORE_UNAVAILABLE");
+        rememberRemoteError(error);
       }
-      await new Promise((resolve) =>
-        setTimeout(resolve, 50 * 2 ** Math.min(attempt, 4) + Math.floor(Math.random() * 40)),
-      );
     }
-    throw lastError ?? new Error("STORE_UNAVAILABLE");
+    return result;
   });
 }
 
