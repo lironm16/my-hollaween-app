@@ -38,10 +38,15 @@ export function RouteSheet({
   hasGps: boolean;
 }) {
   const mapsUrl = route ? googleMapsWalkingUrl(route) : null;
+  const accessible = Boolean(route?.accessible);
   const firstStop = route?.stops[0]?.house;
   const navigateFirstUrl =
     route && firstStop
-      ? googleMapsNavigateUrl(route.origin, { lat: firstStop.lat, lng: firstStop.lng })
+      ? googleMapsNavigateUrl(
+          route.origin,
+          { lat: firstStop.lat, lng: firstStop.lng },
+          { accessible },
+        )
       : null;
 
   return (
@@ -54,7 +59,9 @@ export function RouteSheet({
         <SheetHeader className="shrink-0 border-b border-orange-500/15 px-4 py-3">
           <div className="flex items-center gap-2">
             <Footprints className="size-5 text-orange-300" />
-            <SheetTitle className="text-lg font-semibold text-orange-50">המסלול שלכם</SheetTitle>
+            <SheetTitle className="text-lg font-semibold text-orange-50">
+              {accessible ? "המסלול הנגיש שלכם" : "המסלול שלכם"}
+            </SheetTitle>
             <button
               type="button"
               aria-label="סגירה"
@@ -82,6 +89,7 @@ export function RouteSheet({
                   {route.startedFrom === "gps"
                     ? "מתחילים מהמיקום שלכם"
                     : "אין GPS — מתחילים ממרכז השכונה"}
+                  {accessible ? " · זמן מותאם לנגישות · Google Maps במצב נגיש" : ""}
                 </p>
                 {!hasGps && onRequestLocation ? (
                   <Button
@@ -109,7 +117,9 @@ export function RouteSheet({
                     )}
                   >
                     <Navigation className="size-4" />
-                    פתיחת המסלול במפה (הליכה)
+                    {accessible
+                      ? "פתיחת מסלול נגיש במפה"
+                      : "פתיחת המסלול במפה (הליכה)"}
                     {route.stops.length > ROUTE_MAPS_MAX_STOPS
                       ? ` · ${ROUTE_MAPS_MAX_STOPS} עצירות`
                       : ""}
@@ -122,12 +132,13 @@ export function RouteSheet({
                     rel="noreferrer"
                     className={cn(buttonVariants({ variant: "outline" }), "h-11 w-full")}
                   >
-                    התחלת ניווט רגלי לעצירה 1
+                    {accessible ? "ניווט נגיש לעצירה 1" : "התחלת ניווט רגלי לעצירה 1"}
                   </a>
                 ) : null}
                 <p className="text-[11px] text-violet-400">
-                  «פתיחת המסלול» מציגה את כל העצירות על המפה בהליכה. «התחלת ניווט» מפעילה הוראות קוליות
-                  לעצירה הראשונה.
+                  {accessible
+                    ? "כשסינון «נגיש» פעיל — הזמן מחושב לאט יותר, ורק בתים נגישים נכנסים למסלול. Google Maps נפתח עם העדפת נגישות."
+                    : "«פתיחת המסלול» מציגה את כל העצירות על המפה בהליכה. «התחלת ניווט» מפעילה הוראות קוליות לעצירה הראשונה."}
                 </p>
               </div>
 
@@ -140,10 +151,14 @@ export function RouteSheet({
                           lat: route.stops[index - 1]!.house.lat,
                           lng: route.stops[index - 1]!.house.lng,
                         };
-                  const stepUrl = googleMapsNavigateUrl(prev, {
-                    lat: stop.house.lat,
-                    lng: stop.house.lng,
-                  });
+                  const stepUrl = googleMapsNavigateUrl(
+                    prev,
+                    {
+                      lat: stop.house.lat,
+                      lng: stop.house.lng,
+                    },
+                    { accessible },
+                  );
                   return (
                     <li key={stop.house.id}>
                       <div className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/15">
@@ -179,7 +194,7 @@ export function RouteSheet({
                           rel="noreferrer"
                           className="mt-2 inline-flex text-xs font-medium text-orange-300 underline-offset-2 hover:underline"
                         >
-                          ניווט רגלי לכאן
+                          {accessible ? "ניווט נגיש לכאן" : "ניווט רגלי לכאן"}
                         </a>
                       </div>
                     </li>

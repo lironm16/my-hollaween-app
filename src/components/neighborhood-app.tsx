@@ -227,8 +227,8 @@ export function NeighborhoodApp({
     neighborhoodActiveCount + sensitivityFilters.length + scareActiveCount + moreFilterCount;
 
   const walkingRoute = useMemo(
-    () => buildWalkingRoute(visible, origin),
-    [visible, origin],
+    () => buildWalkingRoute(visible, origin, { accessible: accessibleOnly }),
+    [visible, origin, accessibleOnly],
   );
 
   const routePrefsLabel = useMemo(() => {
