@@ -20,23 +20,27 @@ export function HouseDetails({
   catalogSource,
   liked,
   onToggleLike,
+  managerEditCode,
 }: {
   house: PublicHouse;
   extra?: ReactNode;
   catalogSource?: string | null;
   liked?: boolean;
   onToggleLike?: () => void;
+  /** When set (manager session), always show this edit code for resend. */
+  managerEditCode?: string;
 }) {
   const mapsQuery = /רמת\s*גן/u.test(house.address)
     ? house.address.trim()
     : `${house.address.trim()}, רמת גן`;
   const maps = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapsQuery)}&travelmode=walking`;
   const waze = `https://waze.com/ul?q=${encodeURIComponent(mapsQuery)}&navigate=yes`;
-  const [editCode, setEditCode] = useState<string | undefined>(undefined);
+  const [ownedEditCode, setOwnedEditCode] = useState<string | undefined>(undefined);
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
   const [photoReady, setPhotoReady] = useState(false);
   const loadPhoto = photoReady && (showPhoto || shouldLoadHousePhoto(catalogSource));
+  const editCode = managerEditCode ?? ownedEditCode;
 
   useEffect(() => {
     setPhotoReady(true);
@@ -44,7 +48,7 @@ export function HouseDetails({
 
   useEffect(() => {
     const owned = loadOwnedHouses().find((item) => item.id === house.id);
-    setEditCode(owned?.editCode);
+    setOwnedEditCode(owned?.editCode);
     setShowPhoto(false);
     setPhotoBroken(false);
   }, [house.id, house.photoUrl]);

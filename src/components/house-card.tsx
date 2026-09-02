@@ -59,6 +59,12 @@ export function HouseCard({
           {distanceM !== undefined ? ` · ${formatDistance(distanceM)}` : ""}
         </p>
         <HouseTags house={house} />
+        {house.status === "pending" ? (
+          <p className="text-xs font-medium text-amber-200">ממתין לאישור</p>
+        ) : null}
+        {isFrozen(house) ? (
+          <p className="text-xs font-medium text-violet-300">מוקפא מהמפה הציבורית</p>
+        ) : null}
       </CardContent>
     </Card>
   );
