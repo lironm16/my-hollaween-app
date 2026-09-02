@@ -20,6 +20,9 @@ const tiles = cartoKey
       invert: true,
     };
 
+export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים"] as const;
+export type NeighborhoodId = (typeof NEIGHBORHOODS)[number];
+
 export const config = {
   appName: "בשכונה Halloween",
   brandEn: "Halloween",
@@ -27,6 +30,7 @@ export const config = {
   tagline: "מפת הבתים המפחידים של השכונה",
   neighborhood:
     process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שיכון ותיקים · חרוזים · נחלת גנים",
+  neighborhoods: NEIGHBORHOODS,
   map: {
     center: {
       lat: centerLat,
@@ -52,4 +56,22 @@ export const config = {
 export function inNeighborhood(lat: number, lng: number) {
   const b = config.map.bounds;
   return lat >= b.south && lat <= b.north && lng >= b.west && lng <= b.east;
+}
+
+/** Detect which of the three areas a house belongs to from its address text. */
+export function neighborhoodFromAddress(address: string): NeighborhoodId | null {
+  const text = address.trim();
+  for (const name of NEIGHBORHOODS) {
+    if (text.includes(name)) return name;
+  }
+  return null;
+}
+
+export function houseInNeighborhoods(
+  house: { address: string },
+  selected: readonly NeighborhoodId[],
+) {
+  if (selected.length === 0) return true;
+  const area = neighborhoodFromAddress(house.address);
+  return area !== null && selected.includes(area);
 }

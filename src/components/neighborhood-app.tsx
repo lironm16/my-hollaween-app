@@ -25,7 +25,7 @@ import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { readApiJson } from "@/lib/api-json";
-import { inNeighborhood } from "@/lib/config";
+import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
 import { toPublicHouse } from "@/lib/ids";
 import { isFrozen, offersCandy, offersGlutenFree } from "@/lib/house-state";
 import {
@@ -57,6 +57,7 @@ export function NeighborhoodApp({
   const [glutenFreeOnly, setGlutenFreeOnly] = useState(false);
   const [candyOnly, setCandyOnly] = useState(false);
   const [scareFilters, setScareFilters] = useState<ScareLevel[]>([]);
+  const [neighborhoodFilters, setNeighborhoodFilters] = useState<NeighborhoodId[]>([]);
   const [likedOnly, setLikedOnly] = useState(false);
   const [unvisitedOnly, setUnvisitedOnly] = useState(false);
   const [followTick, setFollowTick] = useState(0);
@@ -159,6 +160,7 @@ export function NeighborhoodApp({
       if (glutenFreeOnly && !offersGlutenFree(house)) return false;
       if (candyOnly && !offersCandy(house)) return false;
       if (scareFilters.length > 0 && !scareFilters.includes(house.scareLevel)) return false;
+      if (!houseInNeighborhoods(house, neighborhoodFilters)) return false;
       if (likedOnly && !likes.likedIds.includes(house.id)) return false;
       if (unvisitedOnly && visits.visitedIds.includes(house.id)) return false;
       return true;
@@ -169,6 +171,7 @@ export function NeighborhoodApp({
     glutenFreeOnly,
     candyOnly,
     scareFilters,
+    neighborhoodFilters,
     likedOnly,
     unvisitedOnly,
     likes.likedIds,
@@ -178,6 +181,12 @@ export function NeighborhoodApp({
   function toggleScare(level: ScareLevel) {
     setScareFilters((current) =>
       current.includes(level) ? current.filter((item) => item !== level) : [...current, level],
+    );
+  }
+
+  function toggleNeighborhood(area: NeighborhoodId) {
+    setNeighborhoodFilters((current) =>
+      current.includes(area) ? current.filter((item) => item !== area) : [...current, area],
     );
   }
 
@@ -430,6 +439,15 @@ export function NeighborhoodApp({
           </span>
         </div>
         <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5">
+          {NEIGHBORHOODS.map((area) => (
+            <FilterChip
+              key={area}
+              active={neighborhoodFilters.includes(area)}
+              onClick={() => toggleNeighborhood(area)}
+            >
+              {area}
+            </FilterChip>
+          ))}
           <FilterChip active={accessibleOnly} onClick={() => setAccessibleOnly((v) => !v)}>
             נגיש
           </FilterChip>
