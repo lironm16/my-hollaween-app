@@ -5,6 +5,7 @@ import type { VisitState } from "@/lib/types";
 export function HoursStatusBanner({
   house,
   className,
+  now,
 }: {
   house: {
     openFrom?: string;
@@ -16,8 +17,10 @@ export function HoursStatusBanner({
     soldOut?: boolean;
   };
   className?: string;
+  /** Override clock for previews / tests. */
+  now?: Date;
 }) {
-  const status = hoursStatus(house);
+  const status = hoursStatus(house, now);
   if (status.kind === "unknown" || status.kind === "open" || status.kind === "closedVisit") {
     return null;
   }
