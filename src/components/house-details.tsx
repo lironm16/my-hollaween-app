@@ -27,7 +27,10 @@ export function HouseDetails({
   liked?: boolean;
   onToggleLike?: () => void;
 }) {
-  const maps = `https://www.google.com/maps?q=${house.lat},${house.lng}`;
+  const mapsQuery = /רמת\s*גן/u.test(house.address)
+    ? house.address
+    : `${house.address}, רמת גן`;
+  const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`;
   const waze = `https://waze.com/ul?ll=${house.lat},${house.lng}&navigate=yes`;
   const [editCode, setEditCode] = useState<string | undefined>(undefined);
   const [showPhoto, setShowPhoto] = useState(false);
