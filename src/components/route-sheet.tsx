@@ -12,6 +12,7 @@ import { formatDistance } from "@/lib/geo";
 import { houseHeadline } from "@/lib/labels";
 import { formatDisplayAddress } from "@/lib/config";
 import {
+  appleMapsWalkingUrl,
   formatRouteSummary,
   googleMapsNavigateUrl,
   googleMapsWalkingUrl,
@@ -37,16 +38,16 @@ export function RouteSheet({
   onRequestLocation?: () => void;
   hasGps: boolean;
 }) {
-  const mapsUrl = route ? googleMapsWalkingUrl(route) : null;
   const accessible = Boolean(route?.accessible);
+  const overviewUrl = route ? googleMapsWalkingUrl(route) : null;
   const firstStop = route?.stops[0]?.house;
   const navigateFirstUrl =
     route && firstStop
-      ? googleMapsNavigateUrl(
-          route.origin,
-          { lat: firstStop.lat, lng: firstStop.lng },
-          { accessible },
-        )
+      ? googleMapsNavigateUrl(route.origin, { lat: firstStop.lat, lng: firstStop.lng })
+      : null;
+  const appleFirstUrl =
+    route && firstStop
+      ? appleMapsWalkingUrl(route.origin, { lat: firstStop.lat, lng: firstStop.lng })
       : null;
 
   return (
@@ -72,7 +73,7 @@ export function RouteSheet({
             </button>
           </div>
           <p className="text-start text-xs text-violet-300">
-            לפי הסינון הנוכחי{prefsLabel ? ` · ${prefsLabel}` : ""}
+            לפי הסינון הנוכחי{prefsLabel ? ` · ${prefsLabel}` : ""} · הליכה בלבד
           </p>
         </SheetHeader>
 
@@ -89,7 +90,7 @@ export function RouteSheet({
                   {route.startedFrom === "gps"
                     ? "מתחילים מהמיקום שלכם"
                     : "אין GPS — מתחילים ממרכז השכונה"}
-                  {accessible ? " · זמן מותאם לנגישות · Google Maps במצב נגיש" : ""}
+                  {accessible ? " · זמן מותאם לנגישות" : ""}
                 </p>
                 {!hasGps && onRequestLocation ? (
                   <Button
@@ -106,9 +107,9 @@ export function RouteSheet({
               </div>
 
               <div className="space-y-2">
-                {mapsUrl ? (
+                {navigateFirstUrl ? (
                   <a
-                    href={mapsUrl}
+                    href={navigateFirstUrl}
                     target="_blank"
                     rel="noreferrer"
                     className={cn(
@@ -117,28 +118,32 @@ export function RouteSheet({
                     )}
                   >
                     <Navigation className="size-4" />
-                    {accessible
-                      ? "פתיחת מסלול נגיש במפה"
-                      : "פתיחת המסלול במפה (הליכה)"}
-                    {route.stops.length > ROUTE_MAPS_MAX_STOPS
-                      ? ` · ${ROUTE_MAPS_MAX_STOPS} עצירות`
-                      : ""}
+                    התחל הליכה לעצירה 1
                   </a>
                 ) : null}
-                {navigateFirstUrl ? (
+                {overviewUrl ? (
                   <a
-                    href={navigateFirstUrl}
+                    href={overviewUrl}
                     target="_blank"
                     rel="noreferrer"
                     className={cn(buttonVariants({ variant: "outline" }), "h-11 w-full")}
                   >
-                    {accessible ? "ניווט נגיש לעצירה 1" : "התחלת ניווט רגלי לעצירה 1"}
+                    כל המסלול בהליכה (עד {Math.min(route.stops.length, ROUTE_MAPS_MAX_STOPS)} עצירות)
+                  </a>
+                ) : null}
+                {appleFirstUrl ? (
+                  <a
+                    href={appleFirstUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={cn(buttonVariants({ variant: "ghost" }), "h-10 w-full text-orange-200")}
+                  >
+                    הליכה ב־Apple Maps לעצירה 1
                   </a>
                 ) : null}
                 <p className="text-[11px] text-violet-400">
-                  {accessible
-                    ? "כשסינון «נגיש» פעיל — הזמן מחושב לאט יותר, ורק בתים נגישים נכנסים למסלול. Google Maps נפתח עם העדפת נגישות."
-                    : "«פתיחת המסלול» מציגה את כל העצירות על המפה בהליכה. «התחלת ניווט» מפעילה הוראות קוליות לעצירה הראשונה."}
+                  מומלץ: «התחל הליכה» — פותח ניווט רגלי בגוגל מפות. אם נפתח מצב רכב בטעות, לחצו על אייקון ההליכה
+                  במפות, או השתמשו ב־Apple Maps.
                 </p>
               </div>
 
@@ -151,14 +156,14 @@ export function RouteSheet({
                           lat: route.stops[index - 1]!.house.lat,
                           lng: route.stops[index - 1]!.house.lng,
                         };
-                  const stepUrl = googleMapsNavigateUrl(
-                    prev,
-                    {
-                      lat: stop.house.lat,
-                      lng: stop.house.lng,
-                    },
-                    { accessible },
-                  );
+                  const stepUrl = googleMapsNavigateUrl(prev, {
+                    lat: stop.house.lat,
+                    lng: stop.house.lng,
+                  });
+                  const appleStep = appleMapsWalkingUrl(prev, {
+                    lat: stop.house.lat,
+                    lng: stop.house.lng,
+                  });
                   return (
                     <li key={stop.house.id}>
                       <div className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/15">
@@ -188,14 +193,24 @@ export function RouteSheet({
                             </span>
                           </span>
                         </button>
-                        <a
-                          href={stepUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="mt-2 inline-flex text-xs font-medium text-orange-300 underline-offset-2 hover:underline"
-                        >
-                          {accessible ? "ניווט נגיש לכאן" : "ניווט רגלי לכאן"}
-                        </a>
+                        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+                          <a
+                            href={stepUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs font-medium text-orange-300 underline-offset-2 hover:underline"
+                          >
+                            הליכה לכאן (Google)
+                          </a>
+                          <a
+                            href={appleStep}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs font-medium text-violet-300 underline-offset-2 hover:underline"
+                          >
+                            Apple Maps
+                          </a>
+                        </div>
                       </div>
                     </li>
                   );

@@ -29,8 +29,11 @@ const WALK_METERS_PER_MIN = 70;
 const ACCESSIBLE_METERS_PER_MIN = 45;
 const MINUTES_PER_STOP = 2;
 const ACCESSIBLE_MINUTES_PER_STOP = 3;
-/** Google Maps URL waypoint limit stays comfortable under this. */
-export const ROUTE_MAPS_MAX_STOPS = 10;
+/**
+ * Google Maps on mobile only reliably accepts a few waypoints.
+ * Keep overview links short so travelmode=walking is honored.
+ */
+export const ROUTE_MAPS_MAX_STOPS = 4;
 export const ROUTE_MAX_STOPS = 20;
 
 function pointOf(house: PublicHouse): LatLng {
@@ -157,29 +160,26 @@ function fmtLatLng(point: LatLng) {
 }
 
 /**
- * Multi-stop walking route URL.
- * Path form opens the map with walking directions on mobile.
- * When accessible: `!2m1!1b1` asks Google Maps for wheelchair-accessible prefs
- * with walking mode (`!3e2`).
+ * Official Maps URLs directions (api=1). Without api=1, mobile Maps often
+ * ignores travelmode and opens the car route editor — which is what broke walking.
+ * Mobile supports only a few waypoints, so we cap stops.
  */
 export function googleMapsWalkingUrl(route: WalkingRoute) {
   const stops = route.stops.slice(0, ROUTE_MAPS_MAX_STOPS);
   if (stops.length === 0) return null;
-  const parts = [fmtLatLng(route.origin), ...stops.map((stop) => fmtLatLng(pointOf(stop.house)))];
-  const data = route.accessible ? "data=!4m4!4m3!2m1!1b1!3e2" : "data=!4m2!4m1!3e2";
-  return `https://www.google.com/maps/dir/${parts.join("/")}/${data}`;
+  const params = new URLSearchParams({
+    api: "1",
+    travelmode: "walking",
+    origin: fmtLatLng(route.origin),
+    destination: fmtLatLng(pointOf(stops[stops.length - 1]!.house)),
+  });
+  const via = stops.slice(0, -1).map((stop) => fmtLatLng(pointOf(stop.house)));
+  if (via.length > 0) params.set("waypoints", via.join("|"));
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
-/** Turn-by-turn walking to a single stop (more reliable “start navigating” on phones). */
-export function googleMapsNavigateUrl(
-  origin: LatLng,
-  destination: LatLng,
-  options?: { accessible?: boolean },
-) {
-  const parts = `${fmtLatLng(origin)}/${fmtLatLng(destination)}`;
-  if (options?.accessible) {
-    return `https://www.google.com/maps/dir/${parts}/data=!4m4!4m3!2m1!1b1!3e2`;
-  }
+/** Turn-by-turn walking to one stop — most reliable on iPhone. */
+export function googleMapsNavigateUrl(origin: LatLng, destination: LatLng) {
   const params = new URLSearchParams({
     api: "1",
     travelmode: "walking",
@@ -188,6 +188,16 @@ export function googleMapsNavigateUrl(
     destination: fmtLatLng(destination),
   });
   return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
+
+/** Apple Maps walking (fallback when Google mishandles the link on iOS). */
+export function appleMapsWalkingUrl(origin: LatLng, destination: LatLng) {
+  const params = new URLSearchParams({
+    saddr: fmtLatLng(origin),
+    daddr: fmtLatLng(destination),
+    dirflg: "w",
+  });
+  return `https://maps.apple.com/?${params.toString()}`;
 }
 
 export function routeStopLabel(house: PublicHouse) {
