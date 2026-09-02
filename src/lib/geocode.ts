@@ -134,6 +134,104 @@ function toHit(raw: NominatimHit): AddressHit | null {
   };
 }
 
+const HOUSE_NUM = String.raw`(\d+[א-תA-Za-z]?(?:[/-]\d+)?)`;
+
+function stripCity(query: string) {
+  return query
+    .replace(/,?\s*רמת\s*גן\s*$/u, "")
+    .replace(/,?\s*ישראל\s*$/u, "")
+    .trim();
+}
+
+/** Hebrew typing is usually "נחליאלי 4"; Nominatim prefers "4 נחליאלי". */
+export function parseStreetAndNumber(query: string): { road: string; num?: string } {
+  const q = stripCity(query);
+  const end = q.match(new RegExp(`^(.+?)\\s+${HOUSE_NUM}$`, "u"));
+  if (end && end[1].replace(/\d/g, "").trim().length >= 2) {
+    return { road: end[1].trim(), num: end[2] };
+  }
+  const start = q.match(new RegExp(`^${HOUSE_NUM}\\s+(.+)$`, "u"));
+  if (start && start[2].replace(/\d/g, "").trim().length >= 2) {
+    return { road: start[2].trim(), num: start[1] };
+  }
+  return { road: q };
+}
+
+type EsriCandidate = {
+  address?: string;
+  score?: number;
+  location?: { x: number; y: number };
+  attributes?: {
+    AddNum?: string;
+    StName?: string;
+    StAddr?: string;
+    Nbrhd?: string;
+    City?: string;
+    Addr_type?: string;
+    LongLabel?: string;
+  };
+};
+
+async function searchEsri(query: string, parsed: { road: string; num?: string }): Promise<AddressHit[]> {
+  const b = config.map.bounds;
+  const line = parsed.num
+    ? `${parsed.road} ${parsed.num}, רמת גן`
+    : /רמת\s*גן/.test(query)
+      ? query
+      : `${query} רמת גן`;
+  const url = new URL("https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates");
+  url.searchParams.set("f", "json");
+  url.searchParams.set("SingleLine", line);
+  url.searchParams.set("countryCode", "ISR");
+  url.searchParams.set("sourceCountry", "ISR");
+  url.searchParams.set("langCode", "he");
+  url.searchParams.set("maxLocations", "6");
+  url.searchParams.set("forStorage", "false");
+  url.searchParams.set("outFields", "AddNum,StName,StAddr,Nbrhd,City,Addr_type,LongLabel");
+  url.searchParams.set("searchExtent", `${b.west},${b.south},${b.east},${b.north}`);
+  url.searchParams.set("location", `${config.map.center.lng},${config.map.center.lat}`);
+  const res = await fetch(url, {
+    headers: { Accept: "application/json", "User-Agent": USER_AGENT },
+    cache: "no-store",
+    signal: AbortSignal.timeout(6000),
+  });
+  if (!res.ok) return [];
+  const data = (await res.json()) as { candidates?: EsriCandidate[] };
+  const hits: AddressHit[] = [];
+  for (const cand of data.candidates ?? []) {
+    const lat = Number(cand.location?.y);
+    const lng = Number(cand.location?.x);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || !inSearchArea(lat, lng)) continue;
+    const attrs = cand.attributes ?? {};
+    const city = attrs.City || "";
+    if (city && !city.includes("רמת גן") && !city.toLowerCase().includes("ramat gan")) continue;
+    const road = (attrs.StName || parsed.road).replace(/^רחוב\s+/u, "").trim();
+    const num = attrs.AddNum || undefined;
+    const fake: NominatimHit = {
+      lat: String(lat),
+      lon: String(lng),
+      addresstype: num ? "house" : "road",
+      address: {
+        house_number: num,
+        road,
+        suburb: attrs.Nbrhd,
+        city: city || "רמת גן",
+      },
+    };
+    const hit = toHit(fake);
+    if (hit) hits.push(hit);
+  }
+  return hits;
+}
+
+function attachTypedNumber(hit: AddressHit, num: string): AddressHit {
+  if (hit.houseNumber) return hit;
+  const road = hit.road || hit.label.split(",")[0]?.trim() || "";
+  const area = hit.suburb && hit.suburb !== road ? hit.suburb : hit.city;
+  const label = area ? `${road} ${num}, ${area}` : `${road} ${num}`;
+  return { ...hit, houseNumber: num, label, precise: false };
+}
+
 function uniqueHits(hits: AddressHit[]) {
   const seen = new Set<string>();
   const out: AddressHit[] = [];
@@ -146,9 +244,11 @@ function uniqueHits(hits: AddressHit[]) {
   return out;
 }
 
-function rank(hit: AddressHit, query: string) {
+function rank(hit: AddressHit, query: string, parsed?: { road: string; num?: string }) {
   let score = 0;
   if (hit.precise) score += 40;
+  if (parsed?.num && hit.houseNumber === parsed.num) score += 30;
+  if (parsed?.road && hit.road.includes(parsed.road)) score += 15;
   if (inNeighborhood(hit.lat, hit.lng)) score += 20;
   const q = query.replace(/\s+/g, "");
   const label = hit.label.replace(/\s+/g, "");
@@ -159,24 +259,43 @@ function rank(hit: AddressHit, query: string) {
 export async function searchAddress(query: string): Promise<AddressHit[]> {
   const q = query.trim();
   if (q.length < 2) return [];
-  const withCity = /רמת\s*גן/.test(q) ? q : `${q} רמת גן`;
-  const params = {
-    format: "jsonv2",
-    q: withCity,
-    countrycodes: "il",
-    viewbox: viewbox(),
-    bounded: "1",
-    addressdetails: "1",
-    limit: "10",
-    "accept-language": "he",
-  };
-  let raw = await nominatim<NominatimHit[]>("search", params);
-  if (!Array.isArray(raw) || raw.length === 0) {
-    raw = await nominatim<NominatimHit[]>("search", { ...params, bounded: "0" });
+  const parsed = parseStreetAndNumber(q);
+  const collected: AddressHit[] = [];
+
+  if (parsed.num) {
+    try {
+      collected.push(...(await searchEsri(q, parsed)));
+    } catch {
+      // Keep going with OpenStreetMap if the numbered lookup fails.
+    }
   }
-  if (!Array.isArray(raw)) return [];
-  const hits = uniqueHits(raw.map(toHit).filter((h): h is AddressHit => Boolean(h)));
-  hits.sort((a, b) => rank(b, q) - rank(a, q));
+
+  const hasNumbered = collected.some((h) => h.precise && (!parsed.num || h.houseNumber === parsed.num));
+  if (!hasNumbered) {
+    const withCity = /רמת\s*גן/.test(q) ? q : `${q} רמת גן`;
+    const params = {
+      format: "jsonv2",
+      q: parsed.num ? `${parsed.num} ${parsed.road} רמת גן` : withCity,
+      countrycodes: "il",
+      viewbox: viewbox(),
+      bounded: "1",
+      addressdetails: "1",
+      limit: "10",
+      "accept-language": "he",
+    };
+    let raw = await nominatim<NominatimHit[]>("search", params);
+    if (!Array.isArray(raw) || raw.length === 0) {
+      raw = await nominatim<NominatimHit[]>("search", { ...params, q: withCity, bounded: "0" });
+    }
+    if (Array.isArray(raw)) {
+      let nom = raw.map(toHit).filter((h): h is AddressHit => Boolean(h));
+      if (parsed.num) nom = nom.map((h) => attachTypedNumber(h, parsed.num as string));
+      collected.push(...nom);
+    }
+  }
+
+  const hits = uniqueHits(collected);
+  hits.sort((a, b) => rank(b, q, parsed) - rank(a, q, parsed));
   return hits.slice(0, 8);
 }
 

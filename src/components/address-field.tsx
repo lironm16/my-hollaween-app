@@ -150,7 +150,11 @@ export function AddressField({ value, onChange, onSelect, confirmed, disabled }:
                   <span>
                     <span className="block">{hit.label}</span>
                     {!hit.precise ? (
-                      <span className="block text-[11px] text-violet-300">רחוב בלי מספר — גררו את הסיכה לבית</span>
+                      <span className="block text-[11px] text-violet-300">
+                        {hit.houseNumber
+                          ? `המספר ${hit.houseNumber} לא במפה — גררו את הסיכה לכניסה`
+                          : "רחוב בלי מספר — גררו את הסיכה לבית"}
+                      </span>
                     ) : null}
                   </span>
                 </button>
