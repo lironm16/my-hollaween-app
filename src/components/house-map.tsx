@@ -187,6 +187,7 @@ export function HouseMap({
         <TileLayer
           attribution={config.tiles.attribution}
           url={config.tiles.url}
+          key={config.tiles.url}
         />
         <ResizeFix />
         <VisibilityFix active={active} />
