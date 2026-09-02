@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 /**
  * Stress-test the read path that Halloween night depends on.
- * Default: 1000 parallel GETs against /api/catalog and /catalog.json
+ * Default: 1000 parallel GETs against /catalog.json (night-of CDN path)
+ * and /api/catalog (live catalog, in-memory after first read).
+ *
+ * Night-of SLO is the static file. The API is a live fallback.
  *
  *   node scripts/stress-test.mjs
  *   BASE_URL=http://127.0.0.1:43127 CONCURRENCY=1000 node scripts/stress-test.mjs
@@ -9,7 +12,11 @@
 
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:43127";
 const CONCURRENCY = Number(process.env.CONCURRENCY ?? 1000);
-const PATHS = (process.env.PATHS ?? "/api/catalog,/catalog.json").split(",");
+const PATHS = (process.env.PATHS ?? "/catalog.json,/api/catalog").split(",");
+const P95_LIMIT = {
+  "/catalog.json": Number(process.env.STATIC_P95_MS ?? 1500),
+  "/api/catalog": Number(process.env.API_P95_MS ?? 3000),
+};
 
 function percentile(sorted, p) {
   if (sorted.length === 0) return 0;
@@ -79,9 +86,12 @@ for (const path of PATHS) {
   console.log(JSON.stringify(report, null, 2));
 }
 
-const failed = reports.filter((r) => r.fail > r.concurrency * 0.01 || r.p95 > 3000);
+const failed = reports.filter((r) => {
+  const limit = P95_LIMIT[r.path] ?? 3000;
+  return r.fail > r.concurrency * 0.01 || r.p95 > limit;
+});
 if (failed.length) {
-  console.error("Stress test failed: error rate > 1% or p95 > 3s");
+  console.error("Stress test failed: error rate > 1% or p95 over the path budget");
   process.exit(1);
 }
 console.log("Stress test passed.");

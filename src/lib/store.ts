@@ -68,11 +68,32 @@ async function readDb(): Promise<DbFile> {
   }
 }
 
+let mem: DbFile | null = null;
+let catalogMem: Catalog | null = null;
+let loadOnce: Promise<DbFile> | null = null;
+
+function setMem(db: DbFile) {
+  mem = db;
+  catalogMem = asCatalog(db.houses, db.updatedAt);
+}
+
+async function ensureDb(): Promise<DbFile> {
+  if (mem) return mem;
+  if (!loadOnce) {
+    loadOnce = readDb().then((db) => {
+      setMem(db);
+      return db;
+    });
+  }
+  return loadOnce;
+}
+
 async function writeDb(db: DbFile) {
   const file = await dbPath();
   const tmp = `${file}.${process.pid}.tmp`;
   await fs.writeFile(tmp, JSON.stringify(db, null, 2));
   await fs.rename(tmp, file);
+  setMem(db);
 }
 
 export function asCatalog(houses: House[], updatedAt: string): Catalog {
@@ -87,21 +108,18 @@ export function asCatalog(houses: House[], updatedAt: string): Catalog {
 }
 
 export async function getCatalog(): Promise<Catalog> {
-  return withLock(async () => {
-    const db = await readDb();
-    return asCatalog(db.houses, db.updatedAt);
-  });
+  await ensureDb();
+  return catalogMem as Catalog;
 }
 
 export async function getAllHouses(): Promise<House[]> {
-  return withLock(async () => (await readDb()).houses);
+  const db = await ensureDb();
+  return db.houses;
 }
 
 export async function getHouse(id: string): Promise<House | undefined> {
-  return withLock(async () => {
-    const db = await readDb();
-    return db.houses.find((h) => h.id === id);
-  });
+  const db = await ensureDb();
+  return db.houses.find((h) => h.id === id);
 }
 
 export async function submitHouse(input: HouseInput) {
@@ -109,7 +127,7 @@ export async function submitHouse(input: HouseInput) {
     throw new Error("OUT_OF_BOUNDS");
   }
   return withLock(async () => {
-    const db = await readDb();
+    const db = await ensureDb();
     const now = new Date().toISOString();
     let id = newPublicId();
     while (db.houses.some((h) => h.id === id)) id = newPublicId();
@@ -135,7 +153,7 @@ export async function updateByEditCode(
   patch: Partial<HouseInput> & { soldOut?: boolean },
 ) {
   return withLock(async () => {
-    const db = await readDb();
+    const db = await ensureDb();
     const house = db.houses.find((h) => h.id === id);
     if (!house || house.editCode !== editCode) return null;
     if (patch.lat !== undefined && patch.lng !== undefined) {
@@ -161,7 +179,7 @@ export async function adminUpdate(
   },
 ) {
   return withLock(async () => {
-    const db = await readDb();
+    const db = await ensureDb();
     const house = db.houses.find((h) => h.id === id);
     if (!house) return null;
     if (patch.lat !== undefined && patch.lng !== undefined) {
