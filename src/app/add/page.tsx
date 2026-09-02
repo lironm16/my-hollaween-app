@@ -81,7 +81,7 @@ export default function AddPage() {
           <>
             <h1 className="font-display mb-1 text-2xl text-orange-300">הוספת בית מפחיד</h1>
             <p className="mb-4 text-sm text-violet-200">
-              סמנו על המפה (יש כבר סיכה — גררו או לחצו), מלאו שם וכתובת, ושלחו. אחרי השליחה תראו את הבית במפה כממתין לאישור.
+              בחרו שם (אפשר מההצעות), כתובת אמיתית מהרשימה, ושלחו. הסיכה תזוז לכתובת. אחרי השליחה תראו את הבית במפה כממתין לאישור.
             </p>
             <HouseForm submitLabel="שלחו לאישור" onSubmit={onSubmit} busy={busy} />
           </>

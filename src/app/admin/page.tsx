@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { statusLabels, themeEmoji, themeLabels } from "@/lib/labels";
+import { statusLabels, houseHeadline } from "@/lib/labels";
 import type { House, HouseInput, HouseStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -211,11 +211,8 @@ export default function AdminPage() {
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <p className="font-medium text-orange-100">
-                          {themeEmoji[house.theme ?? "pumpkin"]} {house.name}{" "}
+                          {houseHeadline(house)}{" "}
                           <span className="font-mono text-xs text-violet-300">{house.id}</span>
-                        </p>
-                        <p className="text-xs text-orange-200/80">
-                          {themeLabels[house.theme ?? "pumpkin"]}
                         </p>
                         <p className="text-sm text-violet-200">{house.address}</p>
                         {house.arrival ? (

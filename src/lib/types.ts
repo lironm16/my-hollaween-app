@@ -77,6 +77,18 @@ export type Catalog = {
   houses: PublicHouse[];
 };
 
+export type AddressHit = {
+  id: string;
+  label: string;
+  lat: number;
+  lng: number;
+  road: string;
+  houseNumber?: string;
+  suburb?: string;
+  city: string;
+  precise: boolean;
+};
+
 export type DbFile = {
   houses: House[];
   updatedAt: string;

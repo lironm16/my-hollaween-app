@@ -13,7 +13,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { config } from "@/lib/config";
 import type { PublicHouse } from "@/lib/types";
-import { scareShort, themeEmoji, themeLabels } from "@/lib/labels";
+import { scareShort, houseHeadline, themeEmoji } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 
 function pinIcon(house: PublicHouse) {
@@ -175,10 +175,7 @@ export function HouseMap({
             >
               <Popup>
                 <div dir="rtl" className="min-w-[160px] text-right">
-                  <strong>{house.name}</strong>
-                  <div>
-                    {themeEmoji[house.theme ?? "pumpkin"]} {themeLabels[house.theme ?? "pumpkin"]}
-                  </div>
+                  <strong>{houseHeadline(house)}</strong>
                   <div>{house.address}</div>
                   {house.arrival ? <div>{house.arrival}</div> : null}
                   <div>

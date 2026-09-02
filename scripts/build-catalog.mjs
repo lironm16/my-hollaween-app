@@ -15,7 +15,7 @@ const houses = seed.houses
 
 const catalog = {
   updatedAt: seed.updatedAt,
-  neighborhood: process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שכונת האלונים",
+  neighborhood: process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שיכון ותיקים · חרוזים · נחלת גנים",
   houses,
 };
 

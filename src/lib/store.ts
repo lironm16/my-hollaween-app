@@ -3,6 +3,7 @@ import path from "node:path";
 import { newEditCode, newPublicId, toPublicHouse } from "@/lib/ids";
 import { inNeighborhood } from "@/lib/config";
 import { config } from "@/lib/config";
+import { assertRealAddress } from "@/lib/geocode";
 import {
   HOUSE_THEMES,
   type Catalog,
@@ -140,9 +141,7 @@ export async function getHouse(id: string): Promise<House | undefined> {
 }
 
 export async function submitHouse(input: HouseInput) {
-  if (!inNeighborhood(input.lat, input.lng)) {
-    throw new Error("OUT_OF_BOUNDS");
-  }
+  await assertRealAddress(input);
   return withLock(async () => {
     const db = await ensureDb();
     const now = new Date().toISOString();
@@ -169,6 +168,15 @@ export async function updateByEditCode(
   editCode: string,
   patch: Partial<HouseInput> & { soldOut?: boolean },
 ) {
+  const current = await getHouse(id);
+  if (!current || current.editCode !== editCode) return null;
+  if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
+    await assertRealAddress({
+      address: patch.address ?? current.address,
+      lat: patch.lat ?? current.lat,
+      lng: patch.lng ?? current.lng,
+    });
+  }
   return withLock(async () => {
     const db = await ensureDb();
     const house = db.houses.find((h) => h.id === id);
@@ -195,6 +203,15 @@ export async function adminUpdate(
     rejectionReason?: string;
   },
 ) {
+  const current = await getHouse(id);
+  if (!current) return null;
+  if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
+    await assertRealAddress({
+      address: patch.address ?? current.address,
+      lat: patch.lat ?? current.lat,
+      lng: patch.lng ?? current.lng,
+    });
+  }
   return withLock(async () => {
     const db = await ensureDb();
     const house = db.houses.find((h) => h.id === id);

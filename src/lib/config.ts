@@ -1,7 +1,7 @@
-const centerLat = Number(process.env.NEXT_PUBLIC_MAP_CENTER_LAT ?? 32.0736);
-const centerLng = Number(process.env.NEXT_PUBLIC_MAP_CENTER_LNG ?? 34.8105);
-const latPad = 0.0078;
-const lngPad = 0.0095;
+const centerLat = Number(process.env.NEXT_PUBLIC_MAP_CENTER_LAT ?? 32.0919);
+const centerLng = Number(process.env.NEXT_PUBLIC_MAP_CENTER_LNG ?? 34.8112);
+const latPad = 0.0075;
+const lngPad = 0.014;
 
 export const config = {
   appName: "הלואין בשכונה",

@@ -3,6 +3,7 @@ import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { houseInputSchema } from "@/lib/schema";
 import { submitHouse } from "@/lib/store";
 import { toPublicHouse } from "@/lib/ids";
+import { geocodeHttpError } from "@/lib/geocode";
 
 export const runtime = "nodejs";
 
@@ -33,12 +34,8 @@ export async function POST(request: Request) {
       editCode: house.editCode,
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "OUT_OF_BOUNDS") {
-      return NextResponse.json(
-        { error: "המיקום מחוץ לגבולות השכונה." },
-        { status: 400 },
-      );
-    }
+    const geo = geocodeHttpError(error);
+    if (geo) return NextResponse.json({ error: geo.error }, { status: geo.status });
     throw error;
   }
 }

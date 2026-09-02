@@ -56,7 +56,7 @@ CONCURRENCY=1000 BASE_URL=http://127.0.0.1:43127 npm run stress
 3. **עריכת בית** — עם המזהה והקוד: שינוי פרטים או «נגמרו הממתקים».
 4. **ניהול** — אישור / דחייה / עריכה לכל בית, כולל צפייה בקוד העריכה אם משפחה שכחה.
 
-נתוני דמו כבר ב־`data/seed.json` (שכונת האלונים). שני בתים ממתינים לאישור כדי לבדוק את תור המנהלים.
+נתוני דמו כבר ב־`data/seed.json` עם כתובות אמיתיות בשיכון ותיקים, חרוזים ונחלת גנים. שני בתים ממתינים לאישור כדי לבדוק את תור המנהלים.
 
 ## פרסום
 
@@ -69,8 +69,8 @@ CONCURRENCY=1000 BASE_URL=http://127.0.0.1:43127 npm run stress
 
 ```
 NEXT_PUBLIC_NEIGHBORHOOD_NAME=שם השכונה
-NEXT_PUBLIC_MAP_CENTER_LAT=32.1848
-NEXT_PUBLIC_MAP_CENTER_LNG=34.8706
+NEXT_PUBLIC_MAP_CENTER_LAT=32.0919
+NEXT_PUBLIC_MAP_CENTER_LNG=34.8112
 ADMIN_PASSWORD=replace-me
 ```
 

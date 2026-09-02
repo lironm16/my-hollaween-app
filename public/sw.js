@@ -1,4 +1,4 @@
-const CACHE = "hw-shell-v2";
+const CACHE = "hw-shell-v3";
 const TILE_CACHE = "hw-tiles-v2";
 const PRECACHE = [
   "/",
@@ -43,7 +43,8 @@ self.addEventListener("fetch", (event) => {
     url.pathname.startsWith("/_next/") ||
     url.pathname.startsWith("/__next") ||
     url.pathname.startsWith("/api/admin") ||
-    url.pathname.startsWith("/api/houses")
+    url.pathname.startsWith("/api/houses") ||
+    url.pathname.startsWith("/api/address")
   ) {
     return;
   }

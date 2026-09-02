@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { adminPatchSchema } from "@/lib/schema";
 import { adminUpdate } from "@/lib/store";
+import { geocodeHttpError } from "@/lib/geocode";
 
 export const runtime = "nodejs";
 
@@ -25,12 +26,8 @@ export async function PATCH(
     }
     return NextResponse.json({ house });
   } catch (error) {
-    if (error instanceof Error && error.message === "OUT_OF_BOUNDS") {
-      return NextResponse.json(
-        { error: "המיקום מחוץ לגבולות השכונה." },
-        { status: 400 },
-      );
-    }
+    const geo = geocodeHttpError(error);
+    if (geo) return NextResponse.json({ error: geo.error }, { status: geo.status });
     throw error;
   }
 }

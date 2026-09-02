@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { CodesCopy } from "@/components/codes-copy";
-import { scareLabels, treatLabels, themeEmoji, themeLabels } from "@/lib/labels";
+import { scareLabels, treatLabels, houseHeadline } from "@/lib/labels";
 import { loadOwnedHouses } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -20,7 +20,6 @@ export function HouseDetails({
   const maps = `https://www.google.com/maps?q=${house.lat},${house.lng}`;
   const waze = `https://waze.com/ul?ll=${house.lat},${house.lng}&navigate=yes`;
   const [editCode, setEditCode] = useState<string | undefined>(undefined);
-  const theme = house.theme ?? "pumpkin";
 
   useEffect(() => {
     const owned = loadOwnedHouses().find((item) => item.id === house.id);
@@ -29,12 +28,7 @@ export function HouseDetails({
   return (
     <div className="space-y-3">
       <div>
-        <p className="text-sm text-orange-200/90">
-          {themeEmoji[theme]} {themeLabels[theme]}
-        </p>
-        <p className="font-display text-xl text-orange-300">
-          {house.soldOut ? "🕸️" : themeEmoji[theme]} {house.name}
-        </p>
+        <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
         <p className="text-sm text-violet-200">{house.address}</p>
       </div>
       {house.arrival ? (
