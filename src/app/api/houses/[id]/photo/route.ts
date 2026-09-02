@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getHouse, updateByEditCode } from "@/lib/store";
 import { toPublicHouse } from "@/lib/ids";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
+import { uploadPublicPhoto } from "@/lib/photo-host";
 
 export const runtime = "nodejs";
 
@@ -37,24 +38,31 @@ export async function POST(
     return NextResponse.json({ error: "הקובץ אינו JPEG." }, { status: 400 });
   }
 
-  const dir = path.join(process.cwd(), "public", "house-photos");
+  let photoUrl: string | null = null;
   try {
-    await fs.mkdir(dir, { recursive: true });
-    const file = `${id.replace(/[^0-9\u0590-\u05FFa-zA-Z-]/g, "") || "house"}.jpg`;
-    await fs.writeFile(path.join(dir, file), buf);
-    const photoUrl = `/house-photos/${file}?v=${Date.now()}`;
-    const updated = await updateByEditCode(id, body.editCode, { photoUrl });
-    if (!updated) {
-      return NextResponse.json({ error: "השמירה נכשלה." }, { status: 500 });
-    }
-    return NextResponse.json({ house: toPublicHouse(updated) });
+    photoUrl = (await uploadPublicPhoto(buf)).url;
   } catch {
-    return NextResponse.json(
-      {
-        error:
-          "אי אפשר לשמור תמונות על שרת ה-Hobby. הריצו מקומית, או צרפו את הקובץ ל-public/house-photos לפני הפרסום.",
-      },
-      { status: 503 },
-    );
+    photoUrl = null;
   }
+
+  if (!photoUrl) {
+    const dir = path.join(process.cwd(), "public", "house-photos");
+    try {
+      await fs.mkdir(dir, { recursive: true });
+      const file = `${id.replace(/[^0-9\u0590-\u05FFa-zA-Z-]/g, "") || "house"}.jpg`;
+      await fs.writeFile(path.join(dir, file), buf);
+      photoUrl = `/house-photos/${file}?v=${Date.now()}`;
+    } catch {
+      return NextResponse.json(
+        { error: "העלאה לאירוח החינמי נכשלה. נסו שוב, או הדביקו קישור לתמונה." },
+        { status: 503 },
+      );
+    }
+  }
+
+  const updated = await updateByEditCode(id, body.editCode, { photoUrl });
+  if (!updated) {
+    return NextResponse.json({ error: "השמירה נכשלה." }, { status: 500 });
+  }
+  return NextResponse.json({ house: toPublicHouse(updated) });
 }

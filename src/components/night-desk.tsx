@@ -23,7 +23,7 @@ import {
   type VisitState,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { parsePhotoUrl } from "@/lib/photos";
+import { parsePhotoUrl, hostJpegFromBrowser } from "@/lib/photos";
 
 type Props = {
   house: PublicHouse;
@@ -38,8 +38,8 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
   const frozen = isFrozen(house);
   const freezeText = freezeLabel(house);
 
-  async function save(patch: NightPatch) {
-    setBusy(true);
+  async function save(patch: NightPatch, options?: { quiet?: boolean }) {
+    if (!options?.quiet) setBusy(true);
     try {
       const url = admin
         ? `/api/admin/houses/${encodeURIComponent(house.id)}`
@@ -52,23 +52,40 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
       const data = await res.json();
       if (!res.ok) {
         toast.error(data.error ?? "העדכון נכשל");
-        return;
+        return false;
       }
       onUpdated(data.house as PublicHouse);
       if (typeof data.house?.photoUrl === "string") setPhotoLink(data.house.photoUrl);
-      toast.success("עודכן");
+      if (!options?.quiet) toast.success("עודכן");
+      return true;
     } catch {
       toast.error("אין קשר לשרת");
+      return false;
     } finally {
-      setBusy(false);
+      if (!options?.quiet) setBusy(false);
     }
   }
 
   async function onPhoto(file: File | undefined) {
-    if (!file || !editCode) return;
+    if (!file) return;
     setBusy(true);
     try {
       const image = await compressJpeg(file);
+      let photoUrl: string | null = null;
+      try {
+        photoUrl = await hostJpegFromBrowser(image);
+      } catch {
+        photoUrl = null;
+      }
+      if (photoUrl) {
+        const ok = await save({ photoUrl }, { quiet: true });
+        if (ok) toast.success("התמונה עלתה לאירוח חינמי");
+        return;
+      }
+      if (!editCode) {
+        toast.error("העלאה לאירוח החינמי נכשלה");
+        return;
+      }
       const res = await fetch(`/api/houses/${encodeURIComponent(house.id)}/photo`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -81,7 +98,7 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
       }
       onUpdated(data.house as PublicHouse);
       if (typeof data.house?.photoUrl === "string") setPhotoLink(data.house.photoUrl);
-      toast.success("התמונה נשמרה");
+      toast.success("התמונה עלתה לאירוח חינמי");
     } catch {
       toast.error("לא הצלחנו לדחוס או לשמור את התמונה");
     } finally {
@@ -215,7 +232,7 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
       <div className="space-y-1.5 border-t border-orange-500/15 pt-3">
         <p className="text-xs text-violet-300">תמונת קישוט (לא חובה)</p>
         <p className="text-[11px] text-violet-400">
-          עדיף קישור לתמונה שכבר עלתה לאינטרנט (Imgur, Cloudinary, Drive ציבורי). הקטלוג שומר רק את הכתובת, לא את הקובץ — בלילה העמוס השרת שלנו לא שולח תמונות. ברשת איטית או במצב חיסכון הילדים רואים כפתור במקום התמונה.
+          מעלים מהטלפון. אנחנו דוחסים לכ־100KB ושולחים לאירוח חינמי — הקטלוג שומר רק קישור. 1,000 ילדים בלילה לא עוברים דרך השרת שלנו בשביל תמונות. ברשת איטית התמונה לא נטענת עד שלוחצים.
         </p>
         {house.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -225,11 +242,26 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
             className="h-28 w-full rounded-xl object-cover ring-1 ring-orange-500/25"
           />
         ) : null}
+        <label className="inline-flex cursor-pointer">
+          <span className="rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-medium text-black">
+            {house.photoUrl ? "החלפת תמונה מהטלפון" : "העלאה מהטלפון"}
+          </span>
+          <input
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            disabled={busy}
+            onChange={(e) => void onPhoto(e.target.files?.[0])}
+          />
+        </label>
+        <p className="text-[11px] text-violet-400">
+          בלי חשבון התמונה נשמרת ל־72 שעות (מספיק לסוף השבוע של הלילה). לקישוט מוקדם אפשר Cloudinary חינמי ב־`.env.local`.
+        </p>
         <div className="flex flex-col gap-1.5 sm:flex-row">
           <Input
             value={photoLink}
             onChange={(e) => setPhotoLink(e.target.value)}
-            placeholder="https://… קישור לתמונה"
+            placeholder="או הדביקו https://… אם כבר יש קישור"
             className="h-9 bg-black/30"
             disabled={busy}
           />
@@ -249,22 +281,6 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
             שמירת קישור
           </Button>
         </div>
-        {editCode ? (
-          <label className="inline-flex cursor-pointer">
-            <span className="rounded-lg bg-orange-500/20 px-3 py-1.5 text-xs font-medium text-orange-100 ring-1 ring-orange-500/30">
-              או קובץ מהטלפון (רק בהרצה מקומית)
-            </span>
-            <input
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              disabled={busy}
-              onChange={(e) => void onPhoto(e.target.files?.[0])}
-            />
-          </label>
-        ) : (
-          <p className="text-[11px] text-violet-400">קישור נשמר עם קוד העריכה של בעל הבית.</p>
-        )}
       </div>
     </div>
   );
