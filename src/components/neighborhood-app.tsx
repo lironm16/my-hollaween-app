@@ -61,8 +61,8 @@ export function NeighborhoodApp({
   const [accessibleOnly, setAccessibleOnly] = useState(false);
   const [candyOnly, setCandyOnly] = useState(false);
   const [sensitivityFilters, setSensitivityFilters] = useState<SensitivityId[]>([]);
-  const [scareFilters, setScareFilters] = useState<ScareLevel[]>([]);
-  const [neighborhoodFilters, setNeighborhoodFilters] = useState<NeighborhoodId[]>([]);
+  const [scareFilters, setScareFilters] = useState<ScareLevel[]>([...SCARE_LEVELS]);
+  const [neighborhoodFilters, setNeighborhoodFilters] = useState<NeighborhoodId[]>([...NEIGHBORHOODS]);
   const [likedOnly, setLikedOnly] = useState(false);
   const [unvisitedOnly, setUnvisitedOnly] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -206,16 +206,22 @@ export function NeighborhoodApp({
 
   const moreFilterCount =
     Number(accessibleOnly) + Number(candyOnly) + Number(likedOnly) + Number(unvisitedOnly);
+  // Empty or fully selected category = show all (not an active restriction).
+  const neighborhoodActiveCount =
+    neighborhoodFilters.length === 0 || neighborhoodFilters.length === NEIGHBORHOODS.length
+      ? 0
+      : neighborhoodFilters.length;
+  const scareActiveCount =
+    scareFilters.length === 0 || scareFilters.length === SCARE_LEVELS.length
+      ? 0
+      : scareFilters.length;
   const activeFilterCount =
-    neighborhoodFilters.length +
-    sensitivityFilters.length +
-    scareFilters.length +
-    moreFilterCount;
+    neighborhoodActiveCount + sensitivityFilters.length + scareActiveCount + moreFilterCount;
 
   function clearAllFilters() {
-    setNeighborhoodFilters([]);
+    setNeighborhoodFilters([...NEIGHBORHOODS]);
     setSensitivityFilters([]);
-    setScareFilters([]);
+    setScareFilters([...SCARE_LEVELS]);
     setAccessibleOnly(false);
     setCandyOnly(false);
     setLikedOnly(false);

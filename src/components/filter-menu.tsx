@@ -92,7 +92,7 @@ export function FiltersSheet({
             disabled={activeCount === 0}
             onClick={onClear}
           >
-            נקה הכל
+            איפוס
           </Button>
           <Button
             type="button"
