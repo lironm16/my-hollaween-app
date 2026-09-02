@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { parsePhotoUrl, hostJpegFromBrowser } from "@/lib/photos";
 import { notifyCatalogChanged } from "@/lib/offline-db";
+import { readApiJson } from "@/lib/api-json";
 
 type Props = {
   house: PublicHouse;
@@ -47,9 +48,10 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(admin ? patch : { ...patch, editCode }),
+        signal: AbortSignal.timeout(20_000),
       });
-      const data = await res.json();
-      if (!res.ok) {
+      const data = await readApiJson<{ error?: string; house?: PublicHouse }>(res);
+      if (!res.ok || !data.house) {
         toast.error(data.error ?? "העדכון נכשל");
         return false;
       }

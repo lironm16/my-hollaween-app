@@ -14,6 +14,7 @@ import { saveOwnedHouse, notifyCatalogChanged } from "@/lib/offline-db";
 import type { HouseInput, PublicHouse } from "@/lib/types";
 import { NightDesk } from "@/components/night-desk";
 import { PersistNote } from "@/components/persist-note";
+import { readApiJson } from "@/lib/api-json";
 
 export default function EditPage() {
   const owned = useOwnedHouses();
@@ -37,8 +38,9 @@ export default function EditPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ editCode }),
+        signal: AbortSignal.timeout(20_000),
       });
-      const data = await res.json();
+      const data = await readApiJson<{ error?: string; house?: PublicHouse }>(res);
       if (!res.ok) {
         const local = owned.find((item) => item.id === id && item.editCode === editCode);
         if (local?.preview) {
@@ -71,9 +73,10 @@ export default function EditPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...input, editCode }),
+        signal: AbortSignal.timeout(20_000),
       });
-      const data = await res.json();
-      if (!res.ok) {
+      const data = await readApiJson<{ error?: string; house?: PublicHouse }>(res);
+      if (!res.ok || !data.house) {
         toast.error(data.error ?? "השמירה נכשלה");
         return;
       }

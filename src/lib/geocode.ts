@@ -63,6 +63,7 @@ async function nominatim<T>(path: string, params: Record<string, string>): Promi
         "Accept-Language": "he",
       },
       cache: "no-store",
+      signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) {
       throw new Error("GEOCODER_UNAVAILABLE");
@@ -339,44 +340,13 @@ export function haversineMeters(
   return 2 * R * Math.asin(Math.sqrt(s));
 }
 
-function normalize(text: string) {
-  return text.replace(/["״'`]/g, "").replace(/\s+/g, " ").trim();
-}
-
-function addressMentions(address: string, hit: AddressHit) {
-  const a = normalize(address);
-  const road = normalize(hit.road);
-  if (road && a.includes(road)) return true;
-  if (hit.houseNumber && a.includes(hit.houseNumber) && road) {
-    const parts = road.split(" ");
-    return parts.some((p) => p.length >= 2 && a.includes(p));
-  }
-  return normalize(hit.label) === a;
-}
-
 export async function assertRealAddress(input: { address: string; lat: number; lng: number }) {
   if (!inNeighborhood(input.lat, input.lng)) {
     throw new Error("OUT_OF_BOUNDS");
   }
-  try {
-    const hits = await searchAddress(input.address);
-    const near = hits.find((hit) => haversineMeters(hit, input) <= 160);
-    if (near) return near;
-    const reversed = await reverseAddress(input.lat, input.lng);
-    if (
-      reversed &&
-      inNeighborhood(reversed.lat, reversed.lng) &&
-      reversed.road &&
-      addressMentions(input.address, reversed) &&
-      haversineMeters(reversed, input) <= 160
-    ) {
-      return reversed;
-    }
-  } catch (error) {
-    if (error instanceof Error && error.message === "GEOCODER_UNAVAILABLE") throw error;
-    throw new Error("GEOCODER_UNAVAILABLE");
+  if (!input.address.trim()) {
+    throw new Error("INVALID_ADDRESS");
   }
-  throw new Error("INVALID_ADDRESS");
 }
 
 export function geocodeHttpError(error: unknown): { error: string; status: number } | null {

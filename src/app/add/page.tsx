@@ -9,6 +9,7 @@ import { CodesCopy } from "@/components/codes-copy";
 import { buttonVariants } from "@/components/ui/button";
 import { saveOwnedHouse, notifyCatalogChanged } from "@/lib/offline-db";
 import { PersistNote } from "@/components/persist-note";
+import { readApiJson } from "@/lib/api-json";
 import type { HouseInput } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -25,9 +26,10 @@ export default function AddPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
+        signal: AbortSignal.timeout(20_000),
       });
-      const data = await res.json();
-      if (!res.ok) {
+      const data = await readApiJson<{ error?: string; house?: { id: string; name: string }; editCode?: string }>(res);
+      if (!res.ok || !data.house || !data.editCode) {
         toast.error(data.error ?? "השליחה נכשלה");
         return;
       }
