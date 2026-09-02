@@ -11,6 +11,7 @@ import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { scareLabels, suggestedHouseName, nameMatchesTheme, themeFromName } from "@/lib/labels";
 import { config, inNeighborhood } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
+import { streetPinHint } from "@/lib/address-text";
 import {
   HOUSE_THEMES,
   type HouseInput,
@@ -80,7 +81,7 @@ export function HouseForm({
     setForm((f) => ({ ...f, address: hit.label, lat: hit.lat, lng: hit.lng }));
     setAddressOk(true);
     if (!hit.precise) {
-      toast.message("סימנו את הרחוב. גררו את הסיכה עד לבית שלכם.");
+      toast.message(streetPinHint(hit) ?? "סימנו את הרחוב. גררו את הסיכה עד לבית שלכם.");
     }
   }
 

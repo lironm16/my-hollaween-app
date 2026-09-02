@@ -1,7 +1,9 @@
 import { config, inNeighborhood } from "@/lib/config";
+import { houseNumberFromHit, parseStreetAndNumber } from "@/lib/address-text";
 import type { AddressHit } from "@/lib/types";
 
 export type { AddressHit } from "@/lib/types";
+export { parseStreetAndNumber } from "@/lib/address-text";
 
 type NominatimAddress = {
   house_number?: string;
@@ -121,40 +123,18 @@ function toHit(raw: NominatimHit): AddressHit | null {
   if (!label) return null;
   const road = roadOf(raw.address);
   if (!road && !raw.address?.house_number) return null;
+  const houseNumber = raw.address?.house_number || parseStreetAndNumber(label).num;
   return {
     id: `${raw.osm_type ?? "p"}-${raw.osm_id ?? raw.place_id ?? label}`,
     label,
     lat,
     lng,
     road,
-    houseNumber: raw.address?.house_number,
+    houseNumber,
     suburb: raw.address?.suburb || raw.address?.neighbourhood,
     city: city || "רמת גן",
     precise: Boolean(raw.address?.house_number),
   };
-}
-
-const HOUSE_NUM = String.raw`(\d+[א-תA-Za-z]?(?:[/-]\d+)?)`;
-
-function stripCity(query: string) {
-  return query
-    .replace(/,?\s*רמת\s*גן\s*$/u, "")
-    .replace(/,?\s*ישראל\s*$/u, "")
-    .trim();
-}
-
-/** Hebrew typing is usually "נחליאלי 4"; Nominatim prefers "4 נחליאלי". */
-export function parseStreetAndNumber(query: string): { road: string; num?: string } {
-  const q = stripCity(query);
-  const end = q.match(new RegExp(`^(.+?)\\s+${HOUSE_NUM}$`, "u"));
-  if (end && end[1].replace(/\d/g, "").trim().length >= 2) {
-    return { road: end[1].trim(), num: end[2] };
-  }
-  const start = q.match(new RegExp(`^${HOUSE_NUM}\\s+(.+)$`, "u"));
-  if (start && start[2].replace(/\d/g, "").trim().length >= 2) {
-    return { road: start[2].trim(), num: start[1] };
-  }
-  return { road: q };
 }
 
 type EsriCandidate = {
@@ -203,33 +183,49 @@ async function searchEsri(query: string, parsed: { road: string; num?: string })
     const lng = Number(cand.location?.x);
     if (!Number.isFinite(lat) || !Number.isFinite(lng) || !inSearchArea(lat, lng)) continue;
     const attrs = cand.attributes ?? {};
+    if (attrs.Addr_type === "Locality" || attrs.Addr_type === "City" || attrs.Addr_type === "Postal") continue;
     const city = attrs.City || "";
     if (city && !city.includes("רמת גן") && !city.toLowerCase().includes("ramat gan")) continue;
     const road = (attrs.StName || parsed.road).replace(/^רחוב\s+/u, "").trim();
-    const num = attrs.AddNum || undefined;
+    const num =
+      attrs.AddNum ||
+      parseStreetAndNumber(attrs.StAddr || "").num ||
+      parseStreetAndNumber(attrs.LongLabel || "").num ||
+      undefined;
+    const point =
+      attrs.Addr_type === "PointAddress" ||
+      attrs.Addr_type === "Subaddress" ||
+      (attrs.Addr_type === "StreetAddress" && Boolean(num));
     const fake: NominatimHit = {
       lat: String(lat),
       lon: String(lng),
-      addresstype: num ? "house" : "road",
+      addresstype: point ? "house" : "road",
       address: {
-        house_number: num,
+        house_number: point ? num : undefined,
         road,
         suburb: attrs.Nbrhd,
         city: city || "רמת גן",
       },
     };
     const hit = toHit(fake);
-    if (hit) hits.push(hit);
+    if (hit) {
+      if (num && !hit.houseNumber) hit.houseNumber = num;
+      hits.push(hit);
+    }
   }
   return hits;
 }
 
 function attachTypedNumber(hit: AddressHit, num: string): AddressHit {
-  if (hit.houseNumber) return hit;
-  const road = hit.road || hit.label.split(",")[0]?.trim() || "";
+  const already = houseNumberFromHit(hit);
+  if (already === num && hit.houseNumber) return { ...hit, houseNumber: num };
+  const road = (hit.road || parseStreetAndNumber(hit.label).road || hit.label.split(",")[0]?.trim() || "").replace(
+    new RegExp(`\\s+${num}$`, "u"),
+    "",
+  );
   const area = hit.suburb && hit.suburb !== road ? hit.suburb : hit.city;
   const label = area ? `${road} ${num}, ${area}` : `${road} ${num}`;
-  return { ...hit, houseNumber: num, label, precise: false };
+  return { ...hit, road, houseNumber: num, label, precise: hit.precise && already === num };
 }
 
 function uniqueHits(hits: AddressHit[]) {
@@ -241,7 +237,19 @@ function uniqueHits(hits: AddressHit[]) {
     seen.add(key);
     out.push(hit);
   }
-  return out;
+  const bestByLabel = new Map<string, AddressHit>();
+  for (const hit of out) {
+    const current = bestByLabel.get(hit.label);
+    if (!current) {
+      bestByLabel.set(hit.label, hit);
+      continue;
+    }
+    const prefer =
+      Number(hit.precise) - Number(current.precise) ||
+      Number(inNeighborhood(hit.lat, hit.lng)) - Number(inNeighborhood(current.lat, current.lng));
+    if (prefer > 0) bestByLabel.set(hit.label, hit);
+  }
+  return [...bestByLabel.values()];
 }
 
 function rank(hit: AddressHit, query: string, parsed?: { road: string; num?: string }) {
@@ -294,7 +302,11 @@ export async function searchAddress(query: string): Promise<AddressHit[]> {
     }
   }
 
-  const hits = uniqueHits(collected);
+  const hits = uniqueHits(collected).map((hit) => {
+    const fromLabel = parseStreetAndNumber(hit.label).num;
+    if (fromLabel && !hit.houseNumber) return { ...hit, houseNumber: fromLabel };
+    return hit;
+  });
   hits.sort((a, b) => rank(b, q, parsed) - rank(a, q, parsed));
   return hits.slice(0, 8);
 }

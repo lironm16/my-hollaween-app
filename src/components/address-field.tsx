@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { MapPin } from "lucide-react";
 import { inputStyles } from "@/components/ui/input";
 import type { AddressHit } from "@/lib/types";
+import { streetPinHint } from "@/lib/address-text";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -135,7 +136,9 @@ export function AddressField({ value, onChange, onSelect, confirmed, disabled }:
               אין כתובת כזו בשכונה. נסו רחוב ומספר בית, למשל «חרוזים 8».
             </li>
           ) : (
-            hits.map((hit, i) => (
+            hits.map((hit, i) => {
+              const hint = streetPinHint(hit);
+              return (
               <li key={hit.id} role="option" aria-selected={i === active}>
                 <button
                   type="button"
@@ -149,17 +152,12 @@ export function AddressField({ value, onChange, onSelect, confirmed, disabled }:
                   <MapPin className="mt-0.5 size-3.5 shrink-0 text-orange-400" />
                   <span>
                     <span className="block">{hit.label}</span>
-                    {!hit.precise ? (
-                      <span className="block text-[11px] text-violet-300">
-                        {hit.houseNumber
-                          ? `המספר ${hit.houseNumber} לא במפה — גררו את הסיכה לכניסה`
-                          : "רחוב בלי מספר — גררו את הסיכה לבית"}
-                      </span>
-                    ) : null}
+                    {hint ? <span className="block text-[11px] text-violet-300">{hint}</span> : null}
                   </span>
                 </button>
               </li>
-            ))
+              );
+            })
           )}
         </ul>
       ) : null}
