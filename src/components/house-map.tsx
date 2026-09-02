@@ -15,10 +15,12 @@ import { config } from "@/lib/config";
 import type { PublicHouse } from "@/lib/types";
 import { scareShort } from "@/lib/labels";
 
-function pinIcon(soldOut: boolean) {
+function pinIcon(house: PublicHouse) {
+  const kind = house.status === "pending" ? "pending" : house.soldOut ? "soldout" : "ok";
+  const emoji = kind === "pending" ? "👻" : kind === "soldout" ? "🕸️" : "🎃";
   return L.divIcon({
     className: "",
-    html: `<div class="pumpkin-pin ${soldOut ? "is-soldout" : ""}"><span>${soldOut ? "🕸️" : "🎃"}</span></div>`,
+    html: `<div class="pumpkin-pin ${kind === "soldout" ? "is-soldout" : ""} ${kind === "pending" ? "is-pending" : ""}"><span>${emoji}</span></div>`,
     iconSize: [40, 44],
     iconAnchor: [20, 42],
     popupAnchor: [0, -36],
@@ -54,10 +56,20 @@ function ClickCatcher({
   return null;
 }
 
+function FlyIfNeeded({ lat, lng }: { lat: number; lng: number }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!map.getBounds().contains([lat, lng])) {
+      map.panTo([lat, lng]);
+    }
+  }, [lat, lng, map]);
+  return null;
+}
+
 function FlyTo({ lat, lng }: { lat: number; lng: number }) {
   const map = useMap();
   useEffect(() => {
-    map.flyTo([lat, lng], Math.max(map.getZoom(), 17), { duration: 0.4 });
+    map.flyTo([lat, lng], Math.max(map.getZoom(), 16), { duration: 0.45 });
   }, [lat, lng, map]);
   return null;
 }
@@ -111,8 +123,18 @@ export function HouseMap({
         {pickMode && onPick ? <ClickCatcher onPick={onPick} /> : null}
         {pickMode && pick ? (
           <>
-            <Marker position={[pick.lat, pick.lng]} icon={pickIcon} />
-            <FlyTo lat={pick.lat} lng={pick.lng} />
+            <Marker
+              position={[pick.lat, pick.lng]}
+              icon={pickIcon}
+              draggable={Boolean(onPick)}
+              eventHandlers={{
+                dragend: (event) => {
+                  const latlng = event.target.getLatLng();
+                  onPick?.(latlng.lat, latlng.lng);
+                },
+              }}
+            />
+            <FlyIfNeeded lat={pick.lat} lng={pick.lng} />
           </>
         ) : null}
         {!pickMode &&
@@ -120,7 +142,7 @@ export function HouseMap({
             <Marker
               key={house.id}
               position={[house.lat, house.lng]}
-              icon={pinIcon(house.soldOut)}
+              icon={pinIcon(house)}
               eventHandlers={{
                 click: () => onSelect?.(house),
               }}
@@ -131,6 +153,8 @@ export function HouseMap({
                   <div>{house.address}</div>
                   <div>
                     {scareShort[house.scareLevel]} · {house.openFrom}–{house.openTo}
+                    {house.accessible ? " · נגיש" : ""}
+                    {house.status === "pending" ? " · ממתין" : ""}
                   </div>
                 </div>
               </Popup>

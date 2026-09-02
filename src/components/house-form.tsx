@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { treatLabels, scareLabels } from "@/lib/labels";
-import { config } from "@/lib/config";
+import { config, inNeighborhood } from "@/lib/config";
 import {
   TREAT_OPTIONS,
   type HouseInput,
@@ -26,6 +26,7 @@ const empty: HouseInput = {
   openFrom: "17:00",
   openTo: "21:00",
   notes: "",
+  accessible: false,
 };
 
 export function HouseForm({
@@ -46,7 +47,7 @@ export function HouseForm({
   onSoldOutChange?: (v: boolean) => void;
 }) {
   const [form, setForm] = useState<HouseInput>({ ...empty, ...initial });
-  const [picked, setPicked] = useState(Boolean(initial?.lat && initial?.lng));
+  const [locating, setLocating] = useState(false);
 
   function toggleTreat(id: TreatId) {
     setForm((f) => ({
@@ -57,15 +58,54 @@ export function HouseForm({
     }));
   }
 
+  function useMyLocation() {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        if (!inNeighborhood(lat, lng)) {
+          setLocating(false);
+          return;
+        }
+        setForm((f) => ({ ...f, lat, lng }));
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
+  }
+
   return (
     <form
       className="space-y-4"
       onSubmit={(e) => {
         e.preventDefault();
-        if (!picked) return;
         void onSubmit(form);
       }}
     >
+      <div>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="text-sm font-medium">סמנו את הבית על המפה</p>
+          <Button type="button" size="sm" variant="outline" onClick={useMyLocation}>
+            {locating ? "מאתרים…" : "המיקום שלי"}
+          </Button>
+        </div>
+        <p className="mb-2 text-xs text-violet-300">
+          יש כבר סיכה במרכז השכונה. גררו אותה או לחצו במקום הנכון.
+        </p>
+        <div className="h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/30">
+          <HouseMapDynamic
+            pickMode
+            pick={{ lat: form.lat, lng: form.lng }}
+            onPick={(lat, lng) => setForm((f) => ({ ...f, lat, lng }))}
+          />
+        </div>
+        <p className="mt-1 text-xs text-violet-300">
+          מיקום: {form.lat.toFixed(5)}, {form.lng.toFixed(5)}
+        </p>
+      </div>
       <Field label="שם הבית / המשפחה">
         <Input
           required
@@ -84,6 +124,20 @@ export function HouseForm({
           placeholder="רחוב ומספר"
         />
       </Field>
+      <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-sm ring-1 ring-orange-500/20">
+        <input
+          type="checkbox"
+          className="mt-1 size-4 accent-orange-500"
+          checked={form.accessible}
+          onChange={(e) => setForm({ ...form, accessible: e.target.checked })}
+        />
+        <span>
+          <span className="font-medium text-orange-100">נגיש</span>
+          <span className="block text-xs text-violet-300">
+            בלי מדרגות בכניסה, מתאים לעגלה או לכיסא גלגלים
+          </span>
+        </span>
+      </label>
       <Field label="מה מחכה בבית?">
         <Textarea
           value={form.description}
@@ -158,38 +212,16 @@ export function HouseForm({
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
+            className="size-4 accent-orange-500"
             checked={Boolean(soldOut)}
             onChange={(e) => onSoldOutChange?.(e.target.checked)}
           />
           נגמרו הממתקים
         </label>
       ) : null}
-      <div>
-        <p className="mb-2 text-sm font-medium">
-          לחצו על המפה כדי לסמן את הבית
-          {picked ? "" : " — חובה"}
-        </p>
-        <div className="h-64 overflow-hidden rounded-xl ring-1 ring-orange-500/30">
-          <HouseMapDynamic
-            pickMode
-            pick={picked ? { lat: form.lat, lng: form.lng } : null}
-            onPick={(lat, lng) => {
-              setForm((f) => ({ ...f, lat, lng }));
-              setPicked(true);
-            }}
-          />
-        </div>
-        {picked ? (
-          <p className="mt-1 text-xs text-violet-300">
-            מיקום: {form.lat.toFixed(5)}, {form.lng.toFixed(5)}
-          </p>
-        ) : (
-          <p className="mt-1 text-xs text-amber-300">עדיין לא נבחר מיקום.</p>
-        )}
-      </div>
       <Button
         type="submit"
-        disabled={busy || !picked}
+        disabled={busy}
         className="h-10 w-full bg-orange-500 text-black hover:bg-orange-400"
       >
         {busy ? "שולחים…" : submitLabel}

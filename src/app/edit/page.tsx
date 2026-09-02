@@ -34,7 +34,12 @@ export default function EditPage() {
       }
       setHouse(data.house);
       setSoldOut(Boolean(data.house.soldOut));
-      saveOwnedHouse({ id: data.house.id, name: data.house.name, editCode });
+      saveOwnedHouse({
+        id: data.house.id,
+        name: data.house.name,
+        editCode,
+        preview: data.house,
+      });
     } catch {
       toast.error("אין קשר לשרת");
     } finally {

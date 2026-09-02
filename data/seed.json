@@ -8,7 +8,10 @@
       "description": "דלעות על המדרגה, קורי עכביש בשער, ושקית ממתקים לכל ילד. הכלב בפנים.",
       "lat": 32.1858,
       "lng": 34.8691,
-      "treats": ["candy", "chocolate"],
+      "treats": [
+        "candy",
+        "chocolate"
+      ],
       "scareLevel": "mild",
       "openFrom": "17:00",
       "openTo": "21:00",
@@ -17,7 +20,8 @@
       "soldOut": false,
       "editCode": "184701",
       "createdAt": "2026-09-01T10:00:00.000Z",
-      "updatedAt": "2026-09-01T10:00:00.000Z"
+      "updatedAt": "2026-09-01T10:00:00.000Z",
+      "accessible": false
     },
     {
       "id": "בית-2291",
@@ -26,7 +30,11 @@
       "description": "בית רדוף אמיתי: ערפל, מוזיקת אימה, ורוח רפאים בחצר. לא לילדים קטנים.",
       "lat": 32.1839,
       "lng": 34.8722,
-      "treats": ["candy", "chocolate", "drinks"],
+      "treats": [
+        "candy",
+        "chocolate",
+        "drinks"
+      ],
       "scareLevel": "spicy",
       "openFrom": "18:00",
       "openTo": "22:00",
@@ -35,7 +43,8 @@
       "soldOut": false,
       "editCode": "229102",
       "createdAt": "2026-09-01T10:05:00.000Z",
-      "updatedAt": "2026-09-01T10:05:00.000Z"
+      "updatedAt": "2026-09-01T10:05:00.000Z",
+      "accessible": false
     },
     {
       "id": "בית-3304",
@@ -44,7 +53,12 @@
       "description": "קישוט עדין, שוקולד ביתי, וממתקים ללא גלוטן לפי בקשה. מחבקים את כולם.",
       "lat": 32.1865,
       "lng": 34.8718,
-      "treats": ["chocolate", "glutenFree", "allergenFriendly", "fruit"],
+      "treats": [
+        "chocolate",
+        "glutenFree",
+        "allergenFriendly",
+        "fruit"
+      ],
       "scareLevel": "mild",
       "openFrom": "16:30",
       "openTo": "20:30",
@@ -53,7 +67,8 @@
       "soldOut": false,
       "editCode": "330403",
       "createdAt": "2026-09-01T10:10:00.000Z",
-      "updatedAt": "2026-09-01T10:10:00.000Z"
+      "updatedAt": "2026-09-01T10:10:00.000Z",
+      "accessible": true
     },
     {
       "id": "בית-4418",
@@ -62,7 +77,11 @@
       "description": "מכונת ערפל, עכבישים תלויים, וקערת ממתקים ענקית. אפשר גם צעצוע במקום סוכר.",
       "lat": 32.1827,
       "lng": 34.8688,
-      "treats": ["candy", "toys", "vegan"],
+      "treats": [
+        "candy",
+        "toys",
+        "vegan"
+      ],
       "scareLevel": "medium",
       "openFrom": "17:30",
       "openTo": "21:30",
@@ -71,7 +90,8 @@
       "soldOut": false,
       "editCode": "441804",
       "createdAt": "2026-09-01T10:15:00.000Z",
-      "updatedAt": "2026-09-01T10:15:00.000Z"
+      "updatedAt": "2026-09-01T10:15:00.000Z",
+      "accessible": false
     },
     {
       "id": "בית-5520",
@@ -80,7 +100,11 @@
       "description": "תאורה סגולה, שלדים על הגדר, ושוקולד מריר למבוגרים שמלווים.",
       "lat": 32.1842,
       "lng": 34.874,
-      "treats": ["candy", "chocolate", "drinks"],
+      "treats": [
+        "candy",
+        "chocolate",
+        "drinks"
+      ],
       "scareLevel": "medium",
       "openFrom": "17:00",
       "openTo": "21:00",
@@ -89,7 +113,8 @@
       "soldOut": false,
       "editCode": "552005",
       "createdAt": "2026-09-01T10:20:00.000Z",
-      "updatedAt": "2026-09-01T10:20:00.000Z"
+      "updatedAt": "2026-09-01T10:20:00.000Z",
+      "accessible": false
     },
     {
       "id": "בית-6637",
@@ -98,7 +123,11 @@
       "description": "בלי סוכר: מדבקות, עפרונות ומחקים מפחידים. מושלם לילדים עם אלרגיות.",
       "lat": 32.1872,
       "lng": 34.8685,
-      "treats": ["toys", "allergenFriendly", "fruit"],
+      "treats": [
+        "toys",
+        "allergenFriendly",
+        "fruit"
+      ],
       "scareLevel": "mild",
       "openFrom": "16:00",
       "openTo": "20:00",
@@ -107,7 +136,8 @@
       "soldOut": false,
       "editCode": "663706",
       "createdAt": "2026-09-01T10:25:00.000Z",
-      "updatedAt": "2026-09-01T10:25:00.000Z"
+      "updatedAt": "2026-09-01T10:25:00.000Z",
+      "accessible": true
     },
     {
       "id": "בית-7742",
@@ -116,7 +146,12 @@
       "description": "שלוש משפחות בחצר משותפת. מסלול קטן עם הפתעות וממתקים בסוף.",
       "lat": 32.1831,
       "lng": 34.871,
-      "treats": ["candy", "chocolate", "toys", "vegan"],
+      "treats": [
+        "candy",
+        "chocolate",
+        "toys",
+        "vegan"
+      ],
       "scareLevel": "medium",
       "openFrom": "17:00",
       "openTo": "21:00",
@@ -125,7 +160,8 @@
       "soldOut": false,
       "editCode": "774207",
       "createdAt": "2026-09-01T10:30:00.000Z",
-      "updatedAt": "2026-09-01T10:30:00.000Z"
+      "updatedAt": "2026-09-01T10:30:00.000Z",
+      "accessible": false
     },
     {
       "id": "בית-8859",
@@ -134,7 +170,11 @@
       "description": "קישוט קלאסי של הלואין, מרקחת בועות, ושקית לכל תחפושת.",
       "lat": 32.1851,
       "lng": 34.8675,
-      "treats": ["candy", "glutenFree", "drinks"],
+      "treats": [
+        "candy",
+        "glutenFree",
+        "drinks"
+      ],
       "scareLevel": "mild",
       "openFrom": "17:00",
       "openTo": "20:30",
@@ -143,7 +183,8 @@
       "soldOut": false,
       "editCode": "885908",
       "createdAt": "2026-09-01T10:35:00.000Z",
-      "updatedAt": "2026-09-01T10:35:00.000Z"
+      "updatedAt": "2026-09-01T10:35:00.000Z",
+      "accessible": true
     },
     {
       "id": "בית-9011",
@@ -152,7 +193,10 @@
       "description": "עוד בית חדש לשכונה — קישוט בינוני וממתקים טבעוניים.",
       "lat": 32.186,
       "lng": 34.8732,
-      "treats": ["candy", "vegan"],
+      "treats": [
+        "candy",
+        "vegan"
+      ],
       "scareLevel": "medium",
       "openFrom": "17:00",
       "openTo": "21:00",
@@ -161,7 +205,8 @@
       "soldOut": false,
       "editCode": "901109",
       "createdAt": "2026-09-02T07:10:00.000Z",
-      "updatedAt": "2026-09-02T07:10:00.000Z"
+      "updatedAt": "2026-09-02T07:10:00.000Z",
+      "accessible": false
     },
     {
       "id": "בית-9124",
@@ -170,7 +215,10 @@
       "description": "רוצים להצטרף השנה עם דלעות ושוקולד.",
       "lat": 32.182,
       "lng": 34.87,
-      "treats": ["chocolate", "fruit"],
+      "treats": [
+        "chocolate",
+        "fruit"
+      ],
       "scareLevel": "mild",
       "openFrom": "16:30",
       "openTo": "20:00",
@@ -179,7 +227,8 @@
       "soldOut": false,
       "editCode": "912410",
       "createdAt": "2026-09-02T07:40:00.000Z",
-      "updatedAt": "2026-09-02T07:40:00.000Z"
+      "updatedAt": "2026-09-02T07:40:00.000Z",
+      "accessible": true
     }
   ]
 }

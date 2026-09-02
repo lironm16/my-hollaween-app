@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { List, MapPinned, RefreshCw, WifiOff } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
@@ -15,16 +16,32 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useCatalog } from "@/hooks/use-catalog";
+import { loadOwnedHouses } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function NeighborhoodApp() {
   const { catalog, loading, offline, error, source, refresh } = useCatalog();
+  const params = useSearchParams();
+  const focusId = params.get("focus");
   const [view, setView] = useState<"map" | "list">("map");
-  const [selected, setSelected] = useState<PublicHouse | null>(null);
+  const [selectedId, setSelectedId] = useState<string | "closed" | null>(null);
   const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(null);
+  const [accessibleOnly, setAccessibleOnly] = useState(false);
 
-  const houses = catalog?.houses ?? [];
+  const houses = useMemo(() => {
+    const published = catalog?.houses ?? [];
+    const mine = loadOwnedHouses()
+      .map((item) => item.preview)
+      .filter((house): house is PublicHouse => Boolean(house))
+      .filter((house) => !published.some((p) => p.id === house.id));
+    const merged = [...published, ...mine];
+    if (!accessibleOnly) return merged;
+    return merged.filter((house) => house.accessible);
+  }, [catalog, accessibleOnly]);
+
+  const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
+  const selected = houses.find((house) => house.id === activeId) ?? null;
 
   function locate() {
     if (!navigator.geolocation) return;
@@ -64,6 +81,18 @@ export function NeighborhoodApp() {
             רשימה
           </Toggle>
         </div>
+        <button
+          type="button"
+          onClick={() => setAccessibleOnly((v) => !v)}
+          className={cn(
+            "rounded-full px-3 py-1.5 text-xs",
+            accessibleOnly
+              ? "bg-orange-500 text-black"
+              : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
+          )}
+        >
+          נגיש
+        </button>
         <Button size="sm" variant="ghost" onClick={() => void refresh(true)}>
           <RefreshCw className="size-3.5" />
           רענון
@@ -96,22 +125,27 @@ export function NeighborhoodApp() {
           <HouseMapDynamic
             houses={houses}
             selectedId={selected?.id}
-            onSelect={setSelected}
+            onSelect={(house) => setSelectedId(house.id)}
             className="h-[calc(100dvh-7.2rem)] w-full"
           />
         ) : (
           <div className="h-[calc(100dvh-7.2rem)] overflow-y-auto">
-            <HouseList houses={houses} onOpen={setSelected} origin={origin} />
+            <HouseList houses={houses} onOpen={(house) => setSelectedId(house.id)} origin={origin} />
           </div>
         )}
       </main>
-      <Sheet open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)}>
+      <Sheet open={Boolean(selected)} onOpenChange={(open) => !open && setSelectedId("closed")}>
         <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto bg-[#1a0d24] sm:max-w-none">
           <SheetHeader>
             <SheetTitle className="sr-only">פרטי בית</SheetTitle>
           </SheetHeader>
           {selected ? (
             <div className="px-4 pb-8">
+              {selected.status === "pending" ? (
+                <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-sm text-violet-100">
+                  הבית שלכם ממתין לאישור מנהל. רק אתם רואים אותו במפה בינתיים.
+                </p>
+              ) : null}
               <HouseDetails house={selected} />
             </div>
           ) : null}

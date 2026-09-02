@@ -38,6 +38,12 @@ export function HouseCard({
           {house.soldOut ? " · נגמרו הממתקים" : ""}
         </p>
         <div className="flex flex-wrap gap-1">
+          {house.accessible ? (
+            <Badge className="bg-emerald-700 text-emerald-50">נגיש</Badge>
+          ) : null}
+          {house.status === "pending" ? (
+            <Badge variant="secondary">ממתין לאישור</Badge>
+          ) : null}
           {house.treats.map((t) => (
             <Badge key={t} variant="outline" className="border-orange-400/30 text-orange-100">
               {treatLabels[t]}

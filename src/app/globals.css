@@ -144,8 +144,8 @@
   line-height: 1;
 }
 
-.pumpkin-pin.is-soldout {
-  filter: grayscale(0.8) drop-shadow(0 3px 2px rgba(0, 0, 0, 0.65));
+.pumpkin-pin.is-pending span {
+  filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.9));
 }
 
 .cobweb {

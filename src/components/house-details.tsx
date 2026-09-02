@@ -35,6 +35,8 @@ export function HouseDetails({
         <Badge variant="secondary">
           {house.openFrom}–{house.openTo}
         </Badge>
+        {house.accessible ? <Badge className="bg-emerald-700 text-emerald-50">נגיש</Badge> : null}
+        {house.status === "pending" ? <Badge variant="secondary">ממתין לאישור</Badge> : null}
         {house.treats.map((t) => (
           <Badge key={t} variant="outline">
             {treatLabels[t]}

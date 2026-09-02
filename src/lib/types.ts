@@ -28,6 +28,7 @@ export type House = {
   openFrom: string;
   openTo: string;
   notes: string;
+  accessible: boolean;
   status: HouseStatus;
   soldOut: boolean;
   editCode: string;
@@ -47,6 +48,7 @@ export type HouseInput = {
   openFrom: string;
   openTo: string;
   notes: string;
+  accessible: boolean;
 };
 
 export type PublicHouse = Omit<House, "editCode" | "rejectionReason">;

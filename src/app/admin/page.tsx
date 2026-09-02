@@ -218,6 +218,9 @@ export default function AdminPage() {
                         <p className="mt-1 text-xs text-violet-300">{house.description}</p>
                         <div className="mt-2 flex flex-wrap gap-1">
                           <Badge variant="secondary">{statusLabels[house.status]}</Badge>
+                          {house.accessible ? (
+                            <Badge className="bg-emerald-700 text-emerald-50">נגיש</Badge>
+                          ) : null}
                           {house.soldOut ? <Badge variant="destructive">נגמרו</Badge> : null}
                           <Badge variant="outline">קוד {house.editCode}</Badge>
                         </div>

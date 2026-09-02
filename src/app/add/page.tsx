@@ -32,6 +32,7 @@ export default function AddPage() {
         id: data.house.id,
         name: data.house.name,
         editCode: data.editCode,
+        preview: data.house,
       });
       setDone({ id: data.house.id, editCode: data.editCode, name: data.house.name });
       toast.success("הבית נשלח לאישור");
@@ -56,16 +57,18 @@ export default function AddPage() {
           <div className="space-y-4 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-400/30">
             <h1 className="font-display text-2xl text-orange-300">הבית ממתין לאישור</h1>
             <p className="text-sm text-violet-100">
-              {done.name} נשלח למנהלי השכונה. הוא יופיע במפה רק אחרי אישור.
+              {done.name} נשלח למנהלי השכונה. עד האישור רק אתם תראו אותו במפה, כסיכת רוח 👻.
             </p>
             <CopyRow label="מזהה הבית" value={done.id} />
             <CopyRow label="קוד עריכה סודי — שמרו אותו" value={done.editCode} />
             <p className="text-xs text-amber-200">
               עם הקוד אפשר לעדכן פרטים או לסמן שנגמרו הממתקים, גם בלי מנהל.
             </p>
-            <div className="flex gap-2">
-              <Link href="/">
-                <Button>חזרה למפה</Button>
+            <div className="flex flex-wrap gap-2">
+              <Link href={`/?focus=${encodeURIComponent(done.id)}`}>
+                <Button className="bg-orange-500 text-black hover:bg-orange-400">
+                  צפו בבית במפה
+                </Button>
               </Link>
               <Link href="/edit">
                 <Button variant="outline">לעריכה</Button>
@@ -76,7 +79,7 @@ export default function AddPage() {
           <>
             <h1 className="font-display mb-1 text-2xl text-orange-300">הוספת בית מפחיד</h1>
             <p className="mb-4 text-sm text-violet-200">
-              מלאו פרטים, סמנו על המפה, ושלחו לאישור. הבית לא יופיע לציבור לפני שמנהל מאשר.
+              סמנו על המפה (יש כבר סיכה — גררו או לחצו), מלאו שם וכתובת, ושלחו. אחרי השליחה תראו את הבית במפה כממתין לאישור.
             </p>
             <HouseForm submitLabel="שלחו לאישור" onSubmit={onSubmit} busy={busy} />
           </>

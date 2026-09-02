@@ -1,4 +1,4 @@
-import type { Catalog } from "@/lib/types";
+import type { Catalog, PublicHouse } from "@/lib/types";
 
 const DB_NAME = "halloween-neighborhood";
 const STORE = "catalog";
@@ -52,6 +52,7 @@ export type OwnedHouse = {
   id: string;
   name: string;
   editCode: string;
+  preview?: PublicHouse;
 };
 
 export function loadOwnedHouses(): OwnedHouse[] {

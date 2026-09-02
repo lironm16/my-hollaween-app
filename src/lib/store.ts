@@ -56,15 +56,25 @@ async function readSeed(): Promise<DbFile> {
   return JSON.parse(raw) as DbFile;
 }
 
+function normalizeHouse(house: House): House {
+  return {
+    ...house,
+    accessible: Boolean(house.accessible),
+    soldOut: Boolean(house.soldOut),
+  };
+}
+
 async function readDb(): Promise<DbFile> {
   const file = await dbPath();
   try {
     const raw = await fs.readFile(file, "utf8");
-    return JSON.parse(raw) as DbFile;
+    const db = JSON.parse(raw) as DbFile;
+    return { ...db, houses: db.houses.map(normalizeHouse) };
   } catch {
     const seed = await readSeed();
-    await fs.writeFile(file, JSON.stringify(seed, null, 2));
-    return seed;
+    const normalized = { ...seed, houses: seed.houses.map(normalizeHouse) };
+    await fs.writeFile(file, JSON.stringify(normalized, null, 2));
+    return normalized;
   }
 }
 
@@ -197,6 +207,7 @@ export async function adminUpdate(
     if (patch.openFrom !== undefined) house.openFrom = patch.openFrom;
     if (patch.openTo !== undefined) house.openTo = patch.openTo;
     if (patch.notes !== undefined) house.notes = patch.notes;
+    if (patch.accessible !== undefined) house.accessible = patch.accessible;
     if (patch.soldOut !== undefined) house.soldOut = patch.soldOut;
     if (patch.status !== undefined) house.status = patch.status;
     if (patch.rejectionReason !== undefined) {
@@ -224,6 +235,7 @@ function sanitizeOwnerPatch(
   if (patch.openFrom !== undefined) next.openFrom = patch.openFrom;
   if (patch.openTo !== undefined) next.openTo = patch.openTo;
   if (patch.notes !== undefined) next.notes = patch.notes;
+  if (patch.accessible !== undefined) next.accessible = patch.accessible;
   if (patch.soldOut !== undefined) next.soldOut = patch.soldOut;
   return next;
 }
