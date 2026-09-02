@@ -1,44 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import { Camera, Snowflake } from "lucide-react";
 import { toast } from "sonner";
+import { HouseForm } from "@/components/house-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { visitLabels, stockLabels } from "@/lib/labels";
+import { visitLabels, visitShort, stockLabels, treatLabels } from "@/lib/labels";
 import {
+  candyLevel,
+  effectiveVisit,
+  freezeExpireIso,
   freezeLabel,
   isFrozen,
-  ownerFreezeUntil,
-  tonightAt,
   treatLevel,
 } from "@/lib/house-state";
+import { notifyCatalogChanged } from "@/lib/offline-db";
+import { hostJpegFromBrowser } from "@/lib/photos";
+import { readApiJson } from "@/lib/api-json";
 import {
+  SENSITIVITY_OPTIONS,
   STOCK_LEVELS,
   VISIT_STATES,
+  type HouseInput,
   type NightPatch,
   type PublicHouse,
+  type SensitivityId,
   type StockLevel,
+  type TreatId,
   type VisitState,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { parsePhotoUrl, hostJpegFromBrowser } from "@/lib/photos";
-import { notifyCatalogChanged } from "@/lib/offline-db";
-import { readApiJson } from "@/lib/api-json";
 
 type Props = {
   house: PublicHouse;
   onUpdated: (house: PublicHouse) => void;
   editCode?: string;
   admin?: boolean;
+  /** When false, hide the full house-details form (e.g. nested elsewhere). */
+  showDetailsForm?: boolean;
 };
 
-export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
+export function NightDesk({
+  house,
+  onUpdated,
+  editCode,
+  admin,
+  showDetailsForm = true,
+}: Props) {
   const [busy, setBusy] = useState(false);
-  const [photoLink, setPhotoLink] = useState(house.photoUrl ?? "");
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [freezeUntil, setFreezeUntil] = useState("");
   const frozen = isFrozen(house);
   const freezeText = freezeLabel(house);
+  const visit = effectiveVisit(house);
+  const sensitivities = SENSITIVITY_OPTIONS.filter((id) => house.treats.includes(id));
 
-  async function save(patch: NightPatch, options?: { quiet?: boolean }) {
+  async function save(patch: NightPatch & Partial<HouseInput>, options?: { quiet?: boolean }) {
     if (!options?.quiet) setBusy(true);
     try {
       const url = admin
@@ -54,10 +72,9 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
         toast.error(data.error ?? "העדכון נכשל");
         return false;
       }
-      onUpdated(data.house as PublicHouse);
+      onUpdated(data.house);
       notifyCatalogChanged();
-      if (typeof data.house?.photoUrl === "string") setPhotoLink(data.house.photoUrl);
-      if (!options?.quiet) toast.success("עודכן");
+      if (!options?.quiet) toast.success("נשמר");
       return true;
     } catch {
       toast.error("אין קשר לשרת");
@@ -80,11 +97,11 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
       }
       if (photoUrl) {
         const ok = await save({ photoUrl }, { quiet: true });
-        if (ok) toast.success("התמונה עלתה לאירוח חינמי");
+        if (ok) toast.success("התמונה עודכנה");
         return;
       }
       if (!editCode) {
-        toast.error("העלאה לאירוח החינמי נכשלה");
+        toast.error("העלאת התמונה נכשלה");
         return;
       }
       const res = await fetch(`/api/houses/${encodeURIComponent(house.id)}/photo`, {
@@ -92,239 +109,283 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ editCode, image }),
       });
-      const data = await res.json();
-      if (!res.ok) {
+      const data = await readApiJson<{ error?: string; house?: PublicHouse }>(res);
+      if (!res.ok || !data.house) {
         toast.error(data.error ?? "העלאת התמונה נכשלה");
         return;
       }
-      onUpdated(data.house as PublicHouse);
+      onUpdated(data.house);
       notifyCatalogChanged();
-      if (typeof data.house?.photoUrl === "string") setPhotoLink(data.house.photoUrl);
-      toast.success("התמונה עלתה לאירוח חינמי");
+      toast.success("התמונה עודכנה");
     } catch {
-      toast.error("לא הצלחנו לדחוס או לשמור את התמונה");
+      toast.error("לא הצלחנו לשמור את התמונה");
     } finally {
       setBusy(false);
     }
   }
 
+  function setStock(id: TreatId, level: StockLevel) {
+    const treats = house.treats.includes(id) ? house.treats : ([...house.treats, id] as TreatId[]);
+    void save({
+      treats,
+      treatStock: { ...house.treatStock, [id]: level },
+      ...(id === "candy" && level === "out" ? { visit: "closed" as VisitState } : {}),
+    });
+  }
+
   return (
-    <div className="space-y-3 rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-400/30">
-      <p className="font-medium text-orange-200">מצב עכשיו — מלאי והקפאה</p>
-      {house.adminFrozen && !admin ? (
-        <p className="rounded-lg bg-violet-950/70 px-3 py-2 text-sm text-violet-100">
-          מנהל הסתיר את הבית מהמפה הציבורית. אי אפשר לבטל את זה מקוד העריכה.
-        </p>
-      ) : null}
-      {freezeText ? (
-        <p className="rounded-lg bg-[#2a1638] px-3 py-2 text-sm text-amber-100">{freezeText}</p>
-      ) : null}
-
-      <p className="text-xs text-violet-300">האם כדאי לבוא?</p>
-      <div className="flex flex-wrap gap-1.5">
-        {VISIT_STATES.map((state) => (
-          <button
-            key={state}
-            type="button"
-            disabled={busy}
-            onClick={() => void save({ visit: state as VisitState })}
-            className={cn(
-              "rounded-full px-3 py-1.5 text-xs",
-              (house.visit ?? (house.soldOut ? "closed" : "come")) === state
-                ? state === "closed"
-                  ? "bg-red-700 text-white"
-                  : "bg-orange-500 text-black"
-                : "bg-black/30 text-orange-100 ring-1 ring-orange-500/30",
-            )}
-          >
-            {visitLabels[state]}
-          </button>
-        ))}
-      </div>
-
-      <p className="text-xs text-violet-300">מלאי ממתקים</p>
-      <ul className="space-y-1.5">
-        <li className="flex flex-wrap items-center justify-between gap-2">
-          <span className="text-sm text-orange-100">ממתקים</span>
-          <span className="flex gap-1">
-            {STOCK_LEVELS.map((level) => (
-              <button
-                key={level}
-                type="button"
-                disabled={busy}
-                onClick={() => {
-                  const treats = house.treats.includes("candy")
-                    ? house.treats
-                    : (["candy" as const, ...house.treats]);
-                  void save({
-                    treats,
-                    treatStock: { ...house.treatStock, candy: level as StockLevel },
-                    ...(level === "out" ? { visit: "closed" as VisitState } : {}),
-                  });
-                }}
-                  className={cn(
-                    "rounded-full px-2.5 py-1 text-[11px]",
-                    (house.treatStock?.candy ?? "plenty") === level
-                      ? level === "out"
-                        ? "bg-red-700 text-white"
-                        : level === "low"
-                          ? "bg-amber-400 text-black"
-                          : "bg-emerald-700 text-white"
-                      : "bg-black/30 text-violet-100 ring-1 ring-violet-500/25",
-                  )}
-              >
-                {stockLabels[level]}
-              </button>
-            ))}
-          </span>
-        </li>
-      </ul>
-
-      <p className="text-xs text-violet-300">מלאי ללא גלוטן</p>
-      {house.treats.includes("glutenFree") ? (
-        <ul className="space-y-1.5">
-          <li className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-sm text-orange-100">ללא גלוטן</span>
-            <span className="flex gap-1">
-              {STOCK_LEVELS.map((level) => (
-                <button
-                  key={level}
-                  type="button"
-                  disabled={busy}
-                  onClick={() =>
-                    void save({
-                      treatStock: { ...house.treatStock, glutenFree: level as StockLevel },
-                    })
-                  }
-                  className={cn(
-                    "rounded-full px-2.5 py-1 text-[11px]",
-                    treatLevel(house, "glutenFree") === level
-                      ? level === "out"
-                        ? "bg-red-700 text-white"
-                        : level === "low"
-                          ? "bg-amber-400 text-black"
-                          : "bg-emerald-700 text-white"
-                      : "bg-black/30 text-violet-100 ring-1 ring-violet-500/25",
-                  )}
-                >
-                  {stockLabels[level]}
-                </button>
-              ))}
-            </span>
-          </li>
-        </ul>
-      ) : (
-        <p className="text-xs text-violet-400">הבית לא מסומן כ«ללא גלוטן». אפשר להוסיף את זה בטופס העריכה.</p>
-      )}
-
-      <p className="text-xs text-violet-300">הקפאה מהמפה הציבורית</p>
-      <p className="text-[11px] text-violet-400">
-        בהקפאה הילדים לא רואים את הבית. אצל המנהלים הוא נשאר כסיכה שקופה. מתאים ליציאה ספונטנית לטריק-אור-טריט.
-        לשני חלונות מתוכננים מראש (למשל 17–18 ו־20–21) עדכנו שעות בטופס העריכה.
-      </p>
-      <div className="flex flex-wrap gap-1.5">
-        {admin ? (
-          <Button
-            size="sm"
-            variant={house.adminFrozen ? "outline" : "destructive"}
-            disabled={busy}
-            onClick={() => void save({ adminFrozen: !house.adminFrozen })}
-          >
-            {house.adminFrozen ? "החזרה למפה הציבורית" : "הקפאת מנהל"}
-          </Button>
-        ) : null}
-        {!house.adminFrozen || admin ? (
-          <>
-            <Button
-              size="sm"
-              variant="outline"
+    <div className="space-y-4">
+      <Section title="סטטוס הערב" hint="מה הילדים צריכים לדעת עכשיו">
+        <div className="grid grid-cols-3 gap-1.5">
+          {VISIT_STATES.map((state) => (
+            <button
+              key={state}
+              type="button"
               disabled={busy}
-              onClick={() => void save({ ownerFrozenUntil: ownerFreezeUntil(30 * 60 * 1000) })}
+              title={visitLabels[state]}
+              onClick={() => void save({ visit: state as VisitState })}
+              className={cn(
+                "rounded-xl px-2 py-2.5 text-center text-xs font-medium transition",
+                visit === state
+                  ? state === "closed"
+                    ? "bg-red-700 text-white"
+                    : "bg-orange-500 text-black"
+                  : "bg-[#12081a] text-orange-100 ring-1 ring-orange-500/20",
+              )}
             >
-              30 דק׳
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={busy}
-              onClick={() => void save({ ownerFrozenUntil: ownerFreezeUntil(60 * 60 * 1000) })}
-            >
-              שעה
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={busy}
-              onClick={() => void save({ ownerFrozenUntil: tonightAt(22) })}
-            >
-              עד 22:00
-            </Button>
-            {frozen ? (
-              <Button
-                size="sm"
-                disabled={busy}
-                onClick={() => void save({ ownerFrozenUntil: null, ...(admin ? { adminFrozen: false } : {}) })}
-              >
-                בטל הקפאה
-              </Button>
-            ) : null}
-          </>
-        ) : null}
-      </div>
+              {visitShort[state]}
+            </button>
+          ))}
+        </div>
+      </Section>
 
-      <div className="space-y-1.5 border-t border-orange-500/15 pt-3">
-        <p className="text-xs text-violet-300">תמונת קישוט (לא חובה)</p>
-        <p className="text-[11px] text-violet-400">
-          מעלים מהטלפון. אנחנו דוחסים לכ־100KB ושולחים לאירוח חינמי — הקטלוג שומר רק קישור. 1,000 ילדים בלילה לא עוברים דרך השרת שלנו בשביל תמונות. ברשת איטית התמונה לא נטענת עד שלוחצים.
-        </p>
+      <Section title="מלאי" hint="מתעדכן מיד במפה">
+        <StockRow
+          label={treatLabels.candy}
+          level={candyLevel(house)}
+          busy={busy}
+          onPick={(level) => setStock("candy", level)}
+        />
+        {sensitivities.length === 0 ? (
+          <p className="text-xs text-violet-400">
+            אין רגישויות מסומנות. אפשר להוסיף ב«פרטי הבית» למטה.
+          </p>
+        ) : (
+          sensitivities.map((id) => (
+            <StockRow
+              key={id}
+              label={treatLabels[id as SensitivityId]}
+              level={treatLevel(house, id)}
+              busy={busy}
+              onPick={(level) => setStock(id, level)}
+            />
+          ))
+        )}
+      </Section>
+
+      <Section
+        title="תמונת קישוט"
+        hint="מוצגת בכרטיס הבית כשפותחים אותו במפה"
+      >
         {house.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={house.photoUrl}
             alt=""
-            className="h-28 w-full rounded-xl object-cover ring-1 ring-orange-500/25"
+            className="h-36 w-full rounded-xl object-cover ring-1 ring-orange-500/25"
           />
-        ) : null}
-        <label className="inline-flex cursor-pointer">
-          <span className="rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-medium text-black">
-            {house.photoUrl ? "החלפת תמונה מהטלפון" : "העלאה מהטלפון"}
-          </span>
-          <input
-            type="file"
-            accept="image/*"
-            className="sr-only"
-            disabled={busy}
-            onChange={(e) => void onPhoto(e.target.files?.[0])}
-          />
-        </label>
-        <p className="text-[11px] text-violet-400">
-          בלי חשבון התמונה נשמרת ל־72 שעות (מספיק לסוף השבוע של הלילה). לקישוט מוקדם אפשר Cloudinary חינמי ב־`.env.local`.
-        </p>
-        <div className="flex flex-col gap-1.5 sm:flex-row">
-          <Input
-            value={photoLink}
-            onChange={(e) => setPhotoLink(e.target.value)}
-            placeholder="או הדביקו https://… אם כבר יש קישור"
-            className="h-9 bg-black/30"
-            disabled={busy}
-          />
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={busy}
-            onClick={() => {
-              const parsed = parsePhotoUrl(photoLink);
-              if (parsed === null) {
-                toast.error("צריך קישור http(s), או להשאיר ריק");
-                return;
-              }
-              void save({ photoUrl: parsed });
-            }}
-          >
-            שמירת קישור
-          </Button>
+        ) : (
+          <div className="flex h-28 items-center justify-center rounded-xl bg-[#12081a] text-sm text-violet-400 ring-1 ring-orange-500/15">
+            אין תמונה עדיין
+          </div>
+        )}
+        <div className="flex flex-wrap gap-2">
+          <label className="inline-flex cursor-pointer">
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-xs font-medium text-black",
+                busy && "opacity-60",
+              )}
+            >
+              <Camera className="size-3.5" />
+              {house.photoUrl ? "החלפת תמונה" : "העלאת תמונה"}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="sr-only"
+              disabled={busy}
+              onChange={(e) => {
+                void onPhoto(e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
+          </label>
+          {house.photoUrl ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              onClick={() => void save({ photoUrl: "" })}
+            >
+              הסרת תמונה
+            </Button>
+          ) : null}
         </div>
-      </div>
+      </Section>
+
+      <Section
+        title="הקפאה מהמפה"
+        hint="ילדים לא רואים את הבית עד שמבטלים או עד השעה שבחרתם"
+      >
+        {house.adminFrozen && !admin ? (
+          <p className="rounded-lg bg-violet-950/70 px-3 py-2 text-sm text-violet-100">
+            מנהל הסתיר את הבית מהמפה. אי אפשר לבטל את זה מכאן.
+          </p>
+        ) : null}
+        {freezeText ? (
+          <p className="rounded-lg bg-[#2a1638] px-3 py-2 text-sm text-amber-100">{freezeText}</p>
+        ) : null}
+
+        {admin ? (
+          <Button
+            type="button"
+            size="sm"
+            variant={house.adminFrozen ? "outline" : "destructive"}
+            disabled={busy}
+            onClick={() => void save({ adminFrozen: !house.adminFrozen })}
+          >
+            {house.adminFrozen ? "החזרה למפה (מנהל)" : "הסתרה קבועה (מנהל)"}
+          </Button>
+        ) : null}
+
+        {!house.adminFrozen || admin ? (
+          frozen && !house.adminFrozen ? (
+            <Button
+              type="button"
+              disabled={busy}
+              onClick={() => void save({ ownerFrozenUntil: null })}
+            >
+              בטל הקפאה
+            </Button>
+          ) : !house.adminFrozen ? (
+            <div className="space-y-2">
+              <label className="block space-y-1">
+                <span className="text-xs text-violet-300">עד מתי? (אופציונלי)</span>
+                <Input
+                  type="time"
+                  dir="ltr"
+                  value={freezeUntil}
+                  onChange={(e) => setFreezeUntil(e.target.value)}
+                  disabled={busy}
+                  className="h-10 max-w-[10rem] bg-[#12081a]"
+                />
+              </label>
+              <Button
+                type="button"
+                disabled={busy}
+                className="bg-sky-700 text-white hover:bg-sky-600"
+                onClick={() =>
+                  void save({ ownerFrozenUntil: freezeExpireIso(freezeUntil || null) })
+                }
+              >
+                <Snowflake className="size-4" />
+                הקפא מהמפה
+              </Button>
+            </div>
+          ) : null
+        ) : null}
+      </Section>
+
+      {showDetailsForm ? (
+        <Section
+          title="פרטי הבית"
+          hint="שם, שעות, כתובת ורגישויות — נשמרים בלחיצה על הכפתור"
+        >
+          <button
+            type="button"
+            className="text-sm font-medium text-orange-300 underline-offset-2 hover:underline"
+            onClick={() => setDetailsOpen((v) => !v)}
+          >
+            {detailsOpen ? "הסתרת טופס הפרטים" : "עריכת פרטי הבית"}
+          </button>
+          {detailsOpen ? (
+            <div className="rounded-xl bg-[#12081a]/80 p-3 ring-1 ring-orange-500/15">
+              <HouseForm
+                initial={house}
+                submitLabel="שמירת פרטי הבית"
+                busy={busy}
+                onSubmit={async (input) => {
+                  const ok = await save(input);
+                  if (ok) setDetailsOpen(false);
+                }}
+              />
+            </div>
+          ) : null}
+        </Section>
+      ) : null}
+    </div>
+  );
+}
+
+function Section({
+  title,
+  hint,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="space-y-2.5 rounded-2xl bg-[#1d1028] p-3.5 ring-1 ring-orange-500/20">
+      <header className="space-y-0.5">
+        <h3 className="text-sm font-semibold text-orange-100">{title}</h3>
+        {hint ? <p className="text-xs text-violet-400">{hint}</p> : null}
+      </header>
+      <div className="space-y-2">{children}</div>
+    </section>
+  );
+}
+
+function StockRow({
+  label,
+  level,
+  busy,
+  onPick,
+}: {
+  label: string;
+  level: StockLevel;
+  busy: boolean;
+  onPick: (level: StockLevel) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <span className="text-sm text-orange-50">{label}</span>
+      <span className="flex gap-1">
+        {STOCK_LEVELS.map((item) => (
+          <button
+            key={item}
+            type="button"
+            disabled={busy}
+            onClick={() => onPick(item)}
+            className={cn(
+              "rounded-full px-2.5 py-1 text-[11px] font-medium",
+              level === item
+                ? item === "out"
+                  ? "bg-red-700 text-white"
+                  : item === "low"
+                    ? "bg-amber-400 text-black"
+                    : "bg-emerald-700 text-white"
+                : "bg-[#12081a] text-violet-100 ring-1 ring-violet-500/25",
+            )}
+          >
+            {stockLabels[item]}
+          </button>
+        ))}
+      </span>
     </div>
   );
 }

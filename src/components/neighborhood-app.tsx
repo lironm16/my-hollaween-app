@@ -14,7 +14,6 @@ import {
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseList } from "@/components/house-list";
 import { HouseDetails } from "@/components/house-details";
-import { HouseForm } from "@/components/house-form";
 import { NightDesk } from "@/components/night-desk";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +44,7 @@ import {
   type ServerDbBackup,
 } from "@/lib/offline-db";
 import { scareShort, treatLabels } from "@/lib/labels";
-import type { Catalog, House, HouseInput, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
+import type { Catalog, House, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -358,15 +357,6 @@ export function NeighborhoodApp({
       toast.error("אין קשר לשרת");
     } finally {
       setBusyAction(false);
-    }
-  }
-
-  async function saveHouseDetails(input: HouseInput) {
-    if (!selected) return;
-    const ok = await patchAdmin(selected.id, input);
-    if (ok) {
-      toast.success("הפרטים נשמרו");
-      setEditing(false);
     }
   }
 
@@ -698,44 +688,34 @@ export function NeighborhoodApp({
                     ) : null}
                     {editing ? (
                       canEditSelected ? (
-                        <div className="space-y-3">
-                          <NightDesk
-                            house={selected}
-                            admin={admin}
-                            editCode={admin ? editCodeById.get(selected.id) : ownedEditCode}
-                            onUpdated={(next) => {
-                              if (admin) {
-                                applyAdminHouse(next);
-                                return;
-                              }
-                              const code = ownedEditCode;
-                              if (code) {
-                                saveOwnedHouse({
-                                  id: next.id,
-                                  name: next.name,
-                                  editCode: code,
-                                  preview: next,
-                                });
-                              }
-                              notifyCatalogChanged();
-                              void refresh(true);
-                            }}
-                          />
-                          {admin ? (
-                            <HouseForm
-                              initial={selected}
-                              submitLabel="שמירת פרטי בית"
-                              onSubmit={saveHouseDetails}
-                              busy={busyAction}
-                            />
-                          ) : null}
-                        </div>
+                        <NightDesk
+                          house={selected}
+                          admin={admin}
+                          editCode={admin ? editCodeById.get(selected.id) : ownedEditCode}
+                          onUpdated={(next) => {
+                            if (admin) {
+                              applyAdminHouse(next);
+                              return;
+                            }
+                            const code = ownedEditCode;
+                            if (code) {
+                              saveOwnedHouse({
+                                id: next.id,
+                                name: next.name,
+                                editCode: code,
+                                preview: next,
+                              });
+                            }
+                            notifyCatalogChanged();
+                            void refresh(true);
+                          }}
+                        />
                       ) : (
                         <div className="space-y-3 rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-400/30">
                           <p className="text-sm font-medium text-orange-200">קוד עריכה למשפחה</p>
                           <p className="text-xs text-violet-300">
-                            לא אתם הוספתם את הבית בטלפון הזה? הזינו את קוד העריכה (6 ספרות) שקיבל מי שהוסיף —
-                            ואפשר לעדכן מלאי ממתקים כמו כולם.
+                            הזינו את קוד העריכה (6 ספרות) שקיבל מי שהוסיף את הבית — ואפשר לעדכן מלאי
+                            ותמונה כמו כולם.
                           </p>
                           <Input
                             value={familyEditCode}

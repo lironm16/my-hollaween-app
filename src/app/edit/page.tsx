@@ -4,14 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
-import { HouseForm } from "@/components/house-form";
 import { CodesCopy } from "@/components/codes-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
-import { saveOwnedHouse, notifyCatalogChanged } from "@/lib/offline-db";
-import type { HouseInput, PublicHouse } from "@/lib/types";
+import { saveOwnedHouse } from "@/lib/offline-db";
+import type { PublicHouse } from "@/lib/types";
 import { NightDesk } from "@/components/night-desk";
 import { PersistNote } from "@/components/persist-note";
 import { readApiJson } from "@/lib/api-json";
@@ -58,37 +57,13 @@ export default function EditPage() {
     }
   }
 
-  async function onSubmit(input: HouseInput) {
-    if (!house) return;
-    setBusy(true);
-    try {
-      const res = await fetch(`/api/houses/${encodeURIComponent(house.id)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...input, editCode }),
-      });
-      const data = await readApiJson<{ error?: string; house?: PublicHouse }>(res);
-      if (!res.ok || !data.house) {
-        toast.error(data.error ?? "השמירה נכשלה");
-        return;
-      }
-      setHouse(data.house);
-      notifyCatalogChanged();
-      toast.success("הפרטים עודכנו");
-    } catch {
-      toast.error("אין קשר לשרת");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
     <div className="relative flex min-h-dvh flex-col">
       <AppHeader />
       <main className="relative z-10 mx-auto w-full max-w-lg flex-1 px-4 py-5">
         <h1 className="font-display mb-1 text-2xl text-orange-300">עריכת בית</h1>
         <p className="mb-4 text-sm text-violet-200">
-          הזינו את מזהה הבית ואת קוד העריכה שקיבלתם אחרי ההרשמה.
+          עדיף לערוך מתוך כרטיס הבית במפה. כאן אפשר לפתוח עם קוד אם צריך.
         </p>
         <PersistNote className="mb-4" />
         {owned.length > 0 ? (
@@ -103,7 +78,7 @@ export default function EditPage() {
                   setEditCode(h.editCode);
                 }}
               >
-                {h.name} · {h.id}
+                {h.name}
               </button>
             ))}
           </div>
@@ -128,12 +103,7 @@ export default function EditPage() {
         {house ? (
           <div className="space-y-3">
             <CodesCopy editCode={editCode} />
-            <p className="text-sm text-violet-200">
-              סטטוס: {statusText(house.status)}
-              {house.status === "rejected"
-                ? " — אחרי עדכון הבית חוזר למפה."
-                : " — שינויים (מלאי, שעות, הקפאה) נראים לכל השכונה."}
-            </p>
+            <p className="text-sm text-violet-200">סטטוס: {statusText(house.status)}</p>
             <NightDesk
               house={house}
               editCode={editCode}
@@ -146,12 +116,6 @@ export default function EditPage() {
                   preview: next,
                 });
               }}
-            />
-            <HouseForm
-              initial={house}
-              submitLabel="שמירת שינויים"
-              onSubmit={onSubmit}
-              busy={busy}
             />
           </div>
         ) : (

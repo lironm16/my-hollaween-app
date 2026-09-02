@@ -66,7 +66,7 @@ export const houseInputSchema = houseFields.extend({
 export const ownerPatchSchema = houseFields.partial().extend({
   soldOut: z.boolean().optional(),
   ownerFrozenUntil: z.string().nullable().optional(),
-  photoUrl: photoUrlSchema.optional(),
+  photoUrl: z.union([photoUrlSchema, z.literal("")]).optional(),
   editCode: z.string().min(4).max(12),
 });
 
@@ -74,7 +74,7 @@ export const adminPatchSchema = houseFields.partial().extend({
   soldOut: z.boolean().optional(),
   ownerFrozenUntil: z.string().nullable().optional(),
   adminFrozen: z.boolean().optional(),
-  photoUrl: photoUrlSchema.optional(),
+  photoUrl: z.union([photoUrlSchema, z.literal("")]).optional(),
   status: z.enum(["pending", "approved", "rejected"]).optional(),
   rejectionReason: z.string().max(240).optional(),
 });

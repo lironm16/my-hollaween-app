@@ -88,11 +88,29 @@ export function tonightAt(hours: number, minutes = 0) {
   return d.toISOString();
 }
 
+/** Freeze until an optional clock time today (rolls to tomorrow if past); omit for until manually cleared. */
+export function freezeExpireIso(expireClock?: string | null) {
+  const clock = expireClock?.trim() ?? "";
+  if (/^\d{2}:\d{2}$/.test(clock)) {
+    const hours = Number(clock.slice(0, 2));
+    const minutes = Number(clock.slice(3, 5));
+    return tonightAt(hours, minutes);
+  }
+  // Far future — stays frozen until the owner taps unfreeze.
+  return new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString();
+}
+
 export function freezeLabel(house: { adminFrozen?: boolean; ownerFrozenUntil?: string | null }) {
   if (house.adminFrozen) return "מוקפא על ידי מנהל";
   if (isOwnerFrozen(house)) {
-    const t = new Date(house.ownerFrozenUntil as string);
-    return `מוקפא עד ${t.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}`;
+    const t = Date.parse(house.ownerFrozenUntil as string);
+    if (!Number.isFinite(t)) return "מוקפא מהמפה";
+    const msLeft = t - Date.now();
+    if (msLeft > 36 * 60 * 60 * 1000) return "מוקפא מהמפה";
+    return `מוקפא עד ${new Date(t).toLocaleTimeString("he-IL", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
   }
   return null;
 }
