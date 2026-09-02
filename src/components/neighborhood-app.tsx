@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { List, LogOut, MapPinned, RefreshCw, WifiOff } from "lucide-react";
+import { List, LogOut, MapPinned, RefreshCw, Route, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import {
@@ -15,6 +15,7 @@ import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseList } from "@/components/house-list";
 import { HouseDetails } from "@/components/house-details";
 import { NightDesk } from "@/components/night-desk";
+import { RouteSheet } from "@/components/route-sheet";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -44,6 +45,7 @@ import {
   type ServerDbBackup,
 } from "@/lib/offline-db";
 import { scareShort, treatLabels } from "@/lib/labels";
+import { buildWalkingRoute } from "@/lib/route";
 import type { Catalog, House, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -80,6 +82,7 @@ export function NeighborhoodApp({
     unvisitedOnly,
   } = filters;
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [routeOpen, setRouteOpen] = useState(false);
   const [followTick, setFollowTick] = useState(0);
   const [fitTick, setFitTick] = useState(0);
   const [askedLocation, setAskedLocation] = useState(false);
@@ -222,6 +225,37 @@ export function NeighborhoodApp({
       : scareFilters.length;
   const activeFilterCount =
     neighborhoodActiveCount + sensitivityFilters.length + scareActiveCount + moreFilterCount;
+
+  const walkingRoute = useMemo(
+    () => buildWalkingRoute(visible, origin),
+    [visible, origin],
+  );
+
+  const routePrefsLabel = useMemo(() => {
+    const parts: string[] = [];
+    if (openNowOnly) parts.push("פתוח עכשיו");
+    if (candyOnly) parts.push("ממתקים");
+    if (accessibleOnly) parts.push("נגיש");
+    if (likedOnly) parts.push("שמרתי");
+    if (unvisitedOnly) parts.push("לא ביקרתי");
+    for (const id of sensitivityFilters) parts.push(treatLabels[id]);
+    if (scareActiveCount > 0) {
+      parts.push(scareFilters.map((level) => scareShort[level]).join("/"));
+    }
+    if (neighborhoodActiveCount > 0) parts.push(neighborhoodFilters.join(" · "));
+    return parts.slice(0, 4).join(" · ");
+  }, [
+    openNowOnly,
+    candyOnly,
+    accessibleOnly,
+    likedOnly,
+    unvisitedOnly,
+    sensitivityFilters,
+    scareFilters,
+    scareActiveCount,
+    neighborhoodFilters,
+    neighborhoodActiveCount,
+  ]);
 
   const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const selected =
@@ -483,6 +517,21 @@ export function NeighborhoodApp({
             </Toggle>
           </div>
           <FilterTrigger activeCount={activeFilterCount} onClick={() => setFiltersOpen(true)} />
+          <button
+            type="button"
+            aria-label="בניית מסלול"
+            onClick={() => {
+              if (!origin) {
+                setAskedLocation(true);
+                setFollowTick((n) => n + 1);
+                geo.refresh();
+              }
+              setRouteOpen(true);
+            }}
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25"
+          >
+            <Route className="size-4" />
+          </button>
           <Button size="sm" variant="ghost" onClick={() => void onRefresh()}>
             <RefreshCw className={cn("size-3.5", adminLoading && "animate-spin")} />
             רענון
@@ -576,6 +625,15 @@ export function NeighborhoodApp({
           </FilterOption>
         </FilterSection>
       </FiltersSheet>
+      <RouteSheet
+        open={routeOpen}
+        onOpenChange={setRouteOpen}
+        route={walkingRoute}
+        prefsLabel={routePrefsLabel}
+        hasGps={Boolean(origin)}
+        onRequestLocation={goToMyLocation}
+        onSelectHouse={(id) => setSelectedId(id)}
+      />
       {error ? (
         <div className="relative z-30 bg-red-950/70 px-3 py-2 text-center text-sm text-red-100">
           {error}
