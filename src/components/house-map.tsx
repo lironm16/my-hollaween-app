@@ -71,43 +71,8 @@ const youAreHereIcon = L.divIcon({
   popupAnchor: [0, -12],
 });
 
-function ResizeFix() {
-  const map = useMap();
-  useEffect(() => {
-    const container = map.getContainer();
-    let lastW = 0;
-    let lastH = 0;
-    let timer = 0;
-    const invalidate = () => {
-      const { width, height } = container.getBoundingClientRect();
-      if (Math.abs(width - lastW) < 1 && Math.abs(height - lastH) < 1) return;
-      lastW = width;
-      lastH = height;
-      map.invalidateSize({ animate: false });
-    };
-    const schedule = () => {
-      window.clearTimeout(timer);
-      timer = window.setTimeout(invalidate, 120);
-    };
-    const id = window.setTimeout(invalidate, 0);
-    const ro = new ResizeObserver(schedule);
-    ro.observe(container);
-    const parent = container.parentElement;
-    if (parent) ro.observe(parent);
-    window.addEventListener("orientationchange", schedule);
-    window.addEventListener("resize", schedule);
-    return () => {
-      window.clearTimeout(id);
-      window.clearTimeout(timer);
-      ro.disconnect();
-      window.removeEventListener("orientationchange", schedule);
-      window.removeEventListener("resize", schedule);
-    };
-  }, [map]);
-  return null;
-}
-
-function VisibilityFix({ active }: { active: boolean }) {
+/** One-shot size sync only — never pans/zooms the map. */
+function SizeSync({ active }: { active: boolean }) {
   const map = useMap();
   useEffect(() => {
     if (!active) return;
@@ -127,105 +92,6 @@ function ClickCatcher({
       onPick(e.latlng.lat, e.latlng.lng);
     },
   });
-  return null;
-}
-
-function FlyIfNeeded({ lat, lng }: { lat: number; lng: number }) {
-  const map = useMap();
-  useEffect(() => {
-    if (!map.getBounds().contains([lat, lng])) {
-      map.panTo([lat, lng]);
-    }
-  }, [lat, lng, map]);
-  return null;
-}
-
-/** Pan once per selected house — never fight popup autoPan with a looping flyTo. */
-function PanToSelected({
-  id,
-  lat,
-  lng,
-}: {
-  id: string;
-  lat: number;
-  lng: number;
-}) {
-  const map = useMap();
-  const lastId = useRef<string | null>(null);
-  useEffect(() => {
-    if (!id || lastId.current === id) return;
-    lastId.current = id;
-    const point = L.latLng(lat, lng);
-    // Only nudge if the pin is outside the comfortable viewport.
-    if (map.getBounds().pad(-0.2).contains(point)) return;
-    map.panTo(point, { animate: true, duration: 0.35 });
-  }, [id, lat, lng, map]);
-  return null;
-}
-
-function FlyToUser({
-  location,
-  tick,
-}: {
-  location: UserLocation | null;
-  tick: number;
-}) {
-  const map = useMap();
-  const flownTick = useRef(0);
-  useEffect(() => {
-    if (!location || tick < 1 || tick === flownTick.current) return;
-    flownTick.current = tick;
-    let lat = location.lat;
-    let lng = location.lng;
-    if (!inNeighborhood(lat, lng)) {
-      const b = config.map.bounds;
-      lat = Math.min(b.north, Math.max(b.south, lat));
-      lng = Math.min(b.east, Math.max(b.west, lng));
-    }
-    map.flyTo([lat, lng], Math.max(map.getZoom(), 17), { duration: 0.5 });
-  }, [location, tick, map]);
-  return null;
-}
-
-function FitAllHouses({
-  houses,
-  active,
-  fitTick = 0,
-}: {
-  houses: PublicHouse[];
-  active: boolean;
-  fitTick?: number;
-}) {
-  const map = useMap();
-  const didInitialFit = useRef(false);
-  const lastFitTick = useRef(0);
-
-  useEffect(() => {
-    if (!active || houses.length === 0) return;
-
-    const isFirst = !didInitialFit.current;
-    const isMainTap = fitTick > lastFitTick.current;
-    if (!isFirst && !isMainTap) return;
-
-    didInitialFit.current = true;
-    lastFitTick.current = fitTick;
-
-    map.invalidateSize({ animate: false });
-    if (houses.length === 1) {
-      map.setView([houses[0].lat, houses[0].lng], Math.min(17, config.map.maxZoom), {
-        animate: false,
-      });
-      return;
-    }
-    const next = L.latLngBounds(houses.map((house) => [house.lat, house.lng] as [number, number]));
-    if (!next.isValid()) return;
-    map.fitBounds(next, {
-      padding: [56, 56],
-      maxZoom: Math.min(17, config.map.maxZoom),
-      animate: isMainTap,
-    });
-  }, [active, houses, map, fitTick]);
-
   return null;
 }
 
@@ -254,6 +120,7 @@ function HousePreviewPopup({
       maxWidth={multi ? 280 : 260}
       minWidth={multi ? 200 : 176}
       autoPan={false}
+      keepInView={false}
       closeButton
     >
       <div ref={bindPopupRoot} dir="rtl" className={cn("house-map-popup", multi && "is-multi")}>
@@ -349,10 +216,7 @@ function ClusterMarker({
 
   useEffect(() => {
     if (!selectedHere) return;
-    const marker = markerRef.current;
-    if (!marker) return;
-    // Open without Leaflet auto-panning — PanToSelected handles a single nudge if needed.
-    marker.openPopup();
+    markerRef.current?.openPopup();
   }, [selectedHere, selectedId]);
 
   return (
@@ -386,7 +250,9 @@ type Props = {
   className?: string;
   active?: boolean;
   userLocation?: UserLocation | null;
+  /** @deprecated No map movement — kept for call-site compatibility. */
   followTick?: number;
+  /** @deprecated No map movement — kept for call-site compatibility. */
   fitTick?: number;
   locating?: boolean;
   onLocate?: () => void;
@@ -402,20 +268,9 @@ export function HouseMap({
   className,
   active = true,
   userLocation = null,
-  followTick = 0,
-  fitTick = 0,
   locating = false,
   onLocate,
 }: Props) {
-  const bounds = useMemo(
-    () =>
-      L.latLngBounds(
-        [config.map.bounds.south, config.map.bounds.west],
-        [config.map.bounds.north, config.map.bounds.east],
-      ),
-    [],
-  );
-  const selected = houses.find((h) => h.id === selectedId);
   const clusters = useMemo(
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
     [houses, pickMode],
@@ -453,8 +308,6 @@ export function HouseMap({
         zoom={config.map.zoom}
         minZoom={config.map.minZoom}
         maxZoom={config.map.maxZoom}
-        maxBounds={bounds}
-        maxBoundsViscosity={1}
         scrollWheelZoom
         className={cn(
           "h-full w-full rounded-none bg-[#1a1024]",
@@ -467,27 +320,20 @@ export function HouseMap({
           url={config.tiles.url}
           key={config.tiles.url}
         />
-        <ResizeFix />
-        <VisibilityFix active={active} />
-        {!pickMode ? (
-          <FitAllHouses houses={houses} active={active} fitTick={fitTick} />
-        ) : null}
+        <SizeSync active={active} />
         {pickMode && onPick ? <ClickCatcher onPick={onPick} /> : null}
         {pickMode && pick ? (
-          <>
-            <Marker
-              position={[pick.lat, pick.lng]}
-              icon={pickIcon}
-              draggable={Boolean(onPick)}
-              eventHandlers={{
-                dragend: (event) => {
-                  const latlng = event.target.getLatLng();
-                  onPick?.(latlng.lat, latlng.lng);
-                },
-              }}
-            />
-            <FlyIfNeeded lat={pick.lat} lng={pick.lng} />
-          </>
+          <Marker
+            position={[pick.lat, pick.lng]}
+            icon={pickIcon}
+            draggable={Boolean(onPick)}
+            eventHandlers={{
+              dragend: (event) => {
+                const latlng = event.target.getLatLng();
+                onPick?.(latlng.lat, latlng.lng);
+              },
+            }}
+          />
         ) : null}
         {!pickMode &&
           clusters.map((cluster) => (
@@ -518,7 +364,7 @@ export function HouseMap({
               icon={youAreHereIcon}
               zIndexOffset={800}
             >
-              <Popup>
+              <Popup autoPan={false} keepInView={false}>
                 <div dir="rtl" className="text-right">
                   <strong>אתם כאן</strong>
                   {!inNeighborhood(userLocation.lat, userLocation.lng) ? (
@@ -529,10 +375,6 @@ export function HouseMap({
             </Marker>
           </>
         ) : null}
-        {selected ? (
-          <PanToSelected id={selected.id} lat={selected.lat} lng={selected.lng} />
-        ) : null}
-        <FlyToUser location={userLocation} tick={followTick} />
       </MapContainer>
       {onLocate && !pickMode ? (
         <button
