@@ -28,10 +28,10 @@ export function HouseDetails({
   onToggleLike?: () => void;
 }) {
   const mapsQuery = /רמת\s*גן/u.test(house.address)
-    ? house.address
-    : `${house.address}, רמת גן`;
-  const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`;
-  const waze = `https://waze.com/ul?ll=${house.lat},${house.lng}&navigate=yes`;
+    ? house.address.trim()
+    : `${house.address.trim()}, רמת גן`;
+  const maps = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapsQuery)}&travelmode=walking`;
+  const waze = `https://waze.com/ul?q=${encodeURIComponent(mapsQuery)}&navigate=yes`;
   const [editCode, setEditCode] = useState<string | undefined>(undefined);
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
