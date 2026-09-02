@@ -69,7 +69,7 @@ CONCURRENCY=1000 BASE_URL=http://127.0.0.1:43127 npm run stress
 
 זה אפליקציית ווב (PWA). בטלפון: «הוספה למסך הבית».
 
-- **Vercel (חינם):** Publish / `vercel`. לפני הלילה ייצאו `catalog.json` ועדכנו את הקובץ ב-`public/`.
+- **Vercel (חינם):** Publish / `vercel`. **כתיבה לא נשמרת** בין רענוני שרת (אין קבצים קבועים ב-Hobby). בתים חדשים נשארים בטלפון ששלח אותם. לפני הלילה: אשרו בתים מקומית (`npm start`), ייצאו `catalog.json`, ופרסמו את הקובץ ב-`public/`.
 - **App Store / Google Play:** לא כלול בגרסה המינימלית. אפשר לעטוף אחר כך ב-[Capacitor](https://capacitorjs.com/) מאותו אתר. בינתיים PWA מכסה iOS/Android בלי חנות.
 
 שנו שם שכונה ומרכז מפה ב-`.env.local`:

@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  env: {
+    NEXT_PUBLIC_DURABLE_WRITES: process.env.VERCEL ? "0" : "1",
+  },
   // Keep the seed on Vercel so /api/catalog can boot without a writable data dir.
   outputFileTracingIncludes: {
     "/api/**/*": ["./data/seed.json"],

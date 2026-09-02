@@ -8,6 +8,7 @@ import { HouseForm } from "@/components/house-form";
 import { CodesCopy } from "@/components/codes-copy";
 import { buttonVariants } from "@/components/ui/button";
 import { saveOwnedHouse } from "@/lib/offline-db";
+import { PersistNote } from "@/components/persist-note";
 import type { HouseInput } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -57,10 +58,11 @@ export default function AddPage() {
         />
         {done ? (
           <div className="space-y-4 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-400/30">
-            <h1 className="font-display text-2xl text-orange-300">הבית ממתין לאישור</h1>
+            <h1 className="font-display text-2xl text-orange-300">הבית נשמר אצלכם</h1>
             <p className="text-sm text-violet-100">
-              {done.name} נשלח למנהלי השכונה. עד האישור רק אתם תראו אותו במפה, כסיכת רוח 👻.
+              {done.name} מחכה לאישור מנהל. עד אז רק בטלפון הזה תראו אותו במפה, כסיכת רוח 👻. שאר השכונה תראה אותו אחרי אישור.
             </p>
+            <PersistNote />
             <CodesCopy id={done.id} editCode={done.editCode} />
             <p className="text-xs text-amber-200">
               עם הקוד אפשר לעדכן פרטים או לסמן שנגמרו הממתקים, גם בלי מנהל.
@@ -81,8 +83,9 @@ export default function AddPage() {
           <>
             <h1 className="font-display mb-1 text-2xl text-orange-300">הוספת בית מפחיד</h1>
             <p className="mb-4 text-sm text-violet-200">
-              בחרו שם (אפשר מההצעות), כתובת אמיתית מהרשימה, ושלחו. הסיכה תזוז לכתובת. אחרי השליחה תראו את הבית במפה כממתין לאישור.
+              בחרו שם, כתובת אמיתית מהרשימה, ושלחו. הבית לא עולה למפה הציבורית עד שמנהל מאשר — בינתיים הוא נשמר בטלפון שלכם.
             </p>
+            <PersistNote className="mb-4" />
             <HouseForm submitLabel="שלחו לאישור" onSubmit={onSubmit} busy={busy} />
           </>
         )}

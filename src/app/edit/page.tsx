@@ -13,6 +13,7 @@ import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { saveOwnedHouse } from "@/lib/offline-db";
 import type { HouseInput, PublicHouse } from "@/lib/types";
 import { NightDesk } from "@/components/night-desk";
+import { PersistNote } from "@/components/persist-note";
 
 export default function EditPage() {
   const owned = useOwnedHouses();
@@ -39,6 +40,12 @@ export default function EditPage() {
       });
       const data = await res.json();
       if (!res.ok) {
+        const local = owned.find((item) => item.id === id && item.editCode === editCode);
+        if (local?.preview) {
+          setHouse(local.preview);
+          toast.message("השרת לא זוכר את הבית. זה העותק שנשמר בטלפון הזה.");
+          return;
+        }
         toast.error(data.error ?? "לא הצלחנו לפתוח לעריכה");
         return;
       }
@@ -87,6 +94,7 @@ export default function EditPage() {
         <p className="mb-4 text-sm text-violet-200">
           הזינו את מזהה הבית ואת קוד העריכה שקיבלתם אחרי ההרשמה.
         </p>
+        <PersistNote className="mb-4" />
         {owned.length > 0 ? (
           <div className="mb-4 flex flex-wrap gap-1.5">
             {owned.map((h) => (

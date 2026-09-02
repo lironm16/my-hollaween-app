@@ -12,6 +12,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { HouseTags } from "@/components/house-tags";
+import { PersistNote } from "@/components/persist-note";
 import { statusLabels, houseHeadline } from "@/lib/labels";
 import { freezeLabel, isFrozen } from "@/lib/house-state";
 import type { House, HouseInput, HouseStatus, PublicHouse } from "@/lib/types";
@@ -169,6 +170,7 @@ export default function AdminPage() {
             <p className="text-sm text-violet-200">
               {pendingCount} ממתינים · {houses.filter((h) => h.status === "approved").length} מאושרים · {frozenCount} מוקפאים (סיכה שקופה במפה)
             </p>
+            <PersistNote />
             <div className="flex flex-wrap gap-2">
               {(["pending", "approved", "rejected", "frozen", "all"] as const).map((key) => (
                 <button
