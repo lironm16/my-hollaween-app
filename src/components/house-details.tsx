@@ -135,9 +135,6 @@ export function HouseDetails({
       <div className="flex flex-wrap items-center gap-1.5">
         <HouseTags house={house} />
         {house.status === "pending" ? <Badge variant="secondary">ממתין לאישור</Badge> : null}
-        <span className="text-xs text-violet-300">
-          {house.openFrom}–{house.openTo}
-        </span>
       </div>
       {house.notes ? (
         <p className="text-sm text-amber-200/90">הערה: {house.notes}</p>

@@ -254,6 +254,14 @@
   line-height: 1.35;
 }
 
+.house-map-popup-tags {
+  margin-top: 6px;
+}
+
+.house-map-popup-tags .flex {
+  gap: 4px;
+}
+
 .house-map-popup-meta {
   margin-top: 4px;
   font-size: 15px;

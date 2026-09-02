@@ -1,24 +1,47 @@
 import { Badge } from "@/components/ui/badge";
-import { candyLevel, markedGlutenFree, offersNutsFree, offersSesameFree, treatLevel } from "@/lib/house-state";
+import { neighborhoodFromAddress } from "@/lib/config";
+import {
+  candyLevel,
+  markedGlutenFree,
+  offersNutsFree,
+  offersSesameFree,
+  treatLevel,
+} from "@/lib/house-state";
 import { scareShort, stockLabels, treatLabels } from "@/lib/labels";
 import type { ScareLevel, TreatId, TreatStock } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function HouseTags({
   house,
+  compact = false,
 }: {
   house: {
-    accessible: boolean;
-    treats: TreatId[];
+    address?: string;
+    accessible?: boolean;
+    treats?: TreatId[];
     treatStock?: TreatStock;
     scareLevel?: ScareLevel;
+    openFrom?: string;
+    openTo?: string;
   };
+  /** Smaller set for map popups. */
+  compact?: boolean;
 }) {
-  const gluten = markedGlutenFree(house);
-  const glutenOut = gluten && treatLevel(house, "glutenFree") === "out";
-  const candy = candyLevel(house);
+  const treats = house.treats ?? [];
+  const withTreats = { treats, treatStock: house.treatStock };
+  const neighborhood = house.address ? neighborhoodFromAddress(house.address) : null;
+  const scare = house.scareLevel ?? "mild";
+  const candy = candyLevel(withTreats);
+  const gluten = markedGlutenFree(withTreats);
+  const glutenOut = gluten && treatLevel(withTreats, "glutenFree") === "out";
+
   return (
     <div className="flex flex-wrap gap-1">
+      {neighborhood ? (
+        <Badge className="bg-[#3b1d54] text-violet-100 ring-1 ring-violet-400/30">
+          {neighborhood}
+        </Badge>
+      ) : null}
       <Badge
         className={cn(
           candy === "out"
@@ -30,17 +53,20 @@ export function HouseTags({
       >
         ממתקים · {stockLabels[candy]}
       </Badge>
-      {house.scareLevel ? (
-        <Badge
-          className={cn(
-            house.scareLevel === "spicy"
-              ? "bg-red-800 text-red-50"
-              : house.scareLevel === "medium"
-                ? "bg-violet-800 text-violet-50"
-                : "bg-sky-800 text-sky-50",
-          )}
-        >
-          {scareShort[house.scareLevel]}
+      <Badge
+        className={cn(
+          scare === "spicy"
+            ? "bg-red-800 text-red-50"
+            : scare === "medium"
+              ? "bg-violet-800 text-violet-50"
+              : "bg-sky-800 text-sky-50",
+        )}
+      >
+        {scareShort[scare]}
+      </Badge>
+      {!compact && house.openFrom && house.openTo ? (
+        <Badge variant="secondary" className="bg-black/30 text-violet-100">
+          {house.openFrom}–{house.openTo}
         </Badge>
       ) : null}
       {house.accessible ? (
@@ -58,10 +84,10 @@ export function HouseTags({
           {treatLabels.glutenFree}
         </Badge>
       ) : null}
-      {offersNutsFree(house) ? (
+      {offersNutsFree(withTreats) ? (
         <Badge className="bg-amber-800 text-amber-50">{treatLabels.nutsFree}</Badge>
       ) : null}
-      {offersSesameFree(house) ? (
+      {offersSesameFree(withTreats) ? (
         <Badge className="bg-amber-800 text-amber-50">{treatLabels.sesameFree}</Badge>
       ) : null}
     </div>

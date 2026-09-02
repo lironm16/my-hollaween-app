@@ -16,9 +16,10 @@ import "leaflet/dist/leaflet.css";
 import { config, inNeighborhood } from "@/lib/config";
 import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
-import { houseHeadline, stockLabels, themeEmoji } from "@/lib/labels";
+import { houseHeadline, themeEmoji } from "@/lib/labels";
 import { candyLevel, effectiveVisit, isFrozen } from "@/lib/house-state";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
+import { HouseTags } from "@/components/house-tags";
 import { cn } from "@/lib/utils";
 
 function pinKind(house: PublicHouse) {
@@ -239,7 +240,6 @@ function HousePreviewPopup({
             <p className="house-map-popup-meta">בחרו דירה בבניין</p>
             <ul className="house-map-popup-list">
               {houses.map((house) => {
-                const candy = candyLevel(house);
                 const closed = effectiveVisit(house) === "closed";
                 return (
                   <li
@@ -263,17 +263,12 @@ function HousePreviewPopup({
                       {house.arrival ? (
                         <span className="house-map-popup-item-arrival">{house.arrival}</span>
                       ) : null}
-                      <span
-                        className={cn(
-                          "house-map-popup-candy",
-                          candy === "out" && "is-out",
-                          candy === "low" && "is-low",
-                          candy === "plenty" && "is-plenty",
-                        )}
-                      >
-                        ממתקים · {stockLabels[candy]}
-                        {closed ? " · נגמר" : ""}
-                      </span>
+                      <div className="house-map-popup-tags">
+                        <HouseTags house={house} compact />
+                      </div>
+                      {closed ? (
+                        <span className="house-map-popup-soldout">נגמר המלאי</span>
+                      ) : null}
                     </button>
                   </li>
                 );
@@ -287,20 +282,8 @@ function HousePreviewPopup({
             {houses[0].arrival ? (
               <div className="house-map-popup-meta">{houses[0].arrival}</div>
             ) : null}
-            <div className="house-map-popup-meta">
-              {houses[0].openFrom}–{houses[0].openTo}
-              {houses[0].accessible ? " · נגיש" : ""}
-              {houses[0].treats.includes("glutenFree") ? " · ללא גלוטן" : ""}
-            </div>
-            <div
-              className={cn(
-                "house-map-popup-candy",
-                candyLevel(houses[0]) === "out" && "is-out",
-                candyLevel(houses[0]) === "low" && "is-low",
-                candyLevel(houses[0]) === "plenty" && "is-plenty",
-              )}
-            >
-              ממתקים · {stockLabels[candyLevel(houses[0])]}
+            <div className="house-map-popup-tags">
+              <HouseTags house={houses[0]} />
             </div>
             {effectiveVisit(houses[0]) === "closed" ? (
               <div className="house-map-popup-soldout">נגמר המלאי — אין סיבה לבוא עכשיו</div>
