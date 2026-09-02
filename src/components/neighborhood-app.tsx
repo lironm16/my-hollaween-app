@@ -17,6 +17,7 @@ import { HouseDetails } from "@/components/house-details";
 import { HouseForm } from "@/components/house-form";
 import { NightDesk } from "@/components/night-desk";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -85,6 +86,8 @@ export function NeighborhoodApp({
   const [adminLoading, setAdminLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [busyAction, setBusyAction] = useState(false);
+  const [familyEditCode, setFamilyEditCode] = useState("");
+  const [unlockBusy, setUnlockBusy] = useState(false);
 
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
@@ -150,6 +153,7 @@ export function NeighborhoodApp({
 
   useEffect(() => {
     setEditing(false);
+    setFamilyEditCode("");
   }, [selectedId]);
 
   const editCodeById = useMemo(() => {
@@ -285,6 +289,41 @@ export function NeighborhoodApp({
   async function approveHouse(id: string) {
     const ok = await patchAdmin(id, { status: "approved" });
     if (ok) toast.success("הבית אושר ונכנס למפה הציבורית");
+  }
+
+  async function unlockWithFamilyCode(house: PublicHouse) {
+    const code = familyEditCode.trim();
+    if (!code) {
+      toast.error("הזינו את קוד העריכה (6 ספרות)");
+      return;
+    }
+    setUnlockBusy(true);
+    try {
+      const res = await fetch(`/api/houses/${encodeURIComponent(house.id)}/unlock`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ editCode: code }),
+      });
+      const data = await readApiJson<{ error?: string; house?: PublicHouse }>(res);
+      if (!res.ok || !data.house) {
+        toast.error(data.error ?? "קוד העריכה שגוי");
+        return;
+      }
+      saveOwnedHouse({
+        id: data.house.id,
+        name: data.house.name,
+        editCode: code,
+        preview: data.house,
+      });
+      setFamilyEditCode("");
+      setEditing(true);
+      toast.success("אפשר לעדכן מלאי ופרטים");
+      void refresh(true);
+    } catch {
+      toast.error("אין קשר לשרת");
+    } finally {
+      setUnlockBusy(false);
+    }
   }
 
   async function rejectHouse(id: string) {
@@ -620,7 +659,7 @@ export function NeighborhoodApp({
                 visited={visits.visited(selected.id)}
                 onToggleVisited={() => visits.toggle(selected.id)}
                 managerEditCode={admin ? editCodeById.get(selected.id) : undefined}
-                canEdit={canEditSelected}
+                canEdit
                 editing={editing}
                 onToggleEdit={() => setEditing((v) => !v)}
                 extra={
@@ -643,43 +682,71 @@ export function NeighborhoodApp({
                         </Button>
                       </div>
                     ) : null}
-                    {editing && canEditSelected ? (
-                      <div className="space-y-3">
-                        <NightDesk
-                          house={selected}
-                          admin={admin}
-                          editCode={admin ? editCodeById.get(selected.id) : ownedEditCode}
-                          onUpdated={(next) => {
-                            if (admin) {
-                              applyAdminHouse(next);
-                              return;
-                            }
-                            if (ownedEditCode) {
-                              saveOwnedHouse({
-                                id: next.id,
-                                name: next.name,
-                                editCode: ownedEditCode,
-                                preview: next,
-                              });
-                            }
-                            notifyCatalogChanged();
-                            void refresh(true);
-                          }}
-                        />
-                        {admin ? (
-                          <HouseForm
-                            initial={selected}
-                            submitLabel="שמירת פרטי בית"
-                            onSubmit={saveHouseDetails}
-                            busy={busyAction}
+                    {editing ? (
+                      canEditSelected ? (
+                        <div className="space-y-3">
+                          <NightDesk
+                            house={selected}
+                            admin={admin}
+                            editCode={admin ? editCodeById.get(selected.id) : ownedEditCode}
+                            onUpdated={(next) => {
+                              if (admin) {
+                                applyAdminHouse(next);
+                                return;
+                              }
+                              const code = ownedEditCode;
+                              if (code) {
+                                saveOwnedHouse({
+                                  id: next.id,
+                                  name: next.name,
+                                  editCode: code,
+                                  preview: next,
+                                });
+                              }
+                              notifyCatalogChanged();
+                              void refresh(true);
+                            }}
                           />
-                        ) : null}
-                      </div>
-                    ) : canEditSelected ? (
+                          {admin ? (
+                            <HouseForm
+                              initial={selected}
+                              submitLabel="שמירת פרטי בית"
+                              onSubmit={saveHouseDetails}
+                              busy={busyAction}
+                            />
+                          ) : null}
+                        </div>
+                      ) : (
+                        <div className="space-y-3 rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-400/30">
+                          <p className="text-sm font-medium text-orange-200">קוד עריכה למשפחה</p>
+                          <p className="text-xs text-violet-300">
+                            לא אתם הוספתם את הבית בטלפון הזה? הזינו את קוד העריכה (6 ספרות) שקיבל מי שהוסיף —
+                            ואפשר לעדכן מלאי ממתקים כמו כולם.
+                          </p>
+                          <Input
+                            value={familyEditCode}
+                            onChange={(e) => setFamilyEditCode(e.target.value)}
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            placeholder="6 ספרות"
+                            className="h-10 bg-[#12081a] text-base tracking-widest"
+                            maxLength={12}
+                          />
+                          <Button
+                            type="button"
+                            className="w-full bg-orange-500 text-black hover:bg-orange-400"
+                            disabled={unlockBusy || !familyEditCode.trim()}
+                            onClick={() => void unlockWithFamilyCode(selected)}
+                          >
+                            {unlockBusy ? "בודקים…" : "פתיחה לעריכה"}
+                          </Button>
+                        </div>
+                      )
+                    ) : (
                       <p className="text-xs text-violet-300">
-                        לחצו על סמל העיפרון למעלה כדי לעדכן מלאי ממתקים, האם כדאי לבוא, והקפאה.
+                        לחצו על סמל העיפרון למעלה כדי לעדכן מלאי. בני משפחה יכולים להזין קוד עריכה.
                       </p>
-                    ) : null}
+                    )}
                   </div>
                 }
               />
