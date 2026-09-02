@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 export function HouseTags({
   house,
   compact = false,
+  showHours = true,
 }: {
   house: {
     address?: string;
@@ -27,6 +28,8 @@ export function HouseTags({
   };
   /** Smaller set for map popups. */
   compact?: boolean;
+  /** Hours already shown on list cards — hide the badge there. */
+  showHours?: boolean;
 }) {
   const treats = house.treats ?? [];
   const withTreats = { treats, treatStock: house.treatStock };
@@ -39,6 +42,7 @@ export function HouseTags({
     <div className="flex flex-wrap gap-1">
       <Badge
         className={cn(
+          "h-6 text-sm",
           candy === "out"
             ? "bg-red-700 text-white"
             : candy === "low"
@@ -50,6 +54,7 @@ export function HouseTags({
       </Badge>
       <Badge
         className={cn(
+          "h-6 text-sm",
           scare === "spicy"
             ? "bg-red-800 text-red-50"
             : scare === "medium"
@@ -59,31 +64,32 @@ export function HouseTags({
       >
         {scareShort[scare]}
       </Badge>
-      {!compact && house.openFrom && house.openTo ? (
-        <Badge variant="secondary" className="bg-black/30 text-violet-100">
+      {showHours && !compact && house.openFrom && house.openTo ? (
+        <Badge variant="secondary" className="h-6 bg-black/30 text-sm text-violet-100">
           {house.openFrom}–{house.openTo}
         </Badge>
       ) : null}
       {house.accessible ? (
-        <Badge className="bg-emerald-700 text-emerald-50">נגיש</Badge>
+        <Badge className="h-6 bg-emerald-700 text-sm text-emerald-50">נגיש</Badge>
       ) : null}
       {gluten ? (
         <Badge
-          className={
+          className={cn(
+            "h-6 text-sm",
             glutenOut
               ? "border-red-400/40 bg-transparent text-red-200 line-through"
-              : "bg-amber-800 text-amber-50"
-          }
+              : "bg-amber-800 text-amber-50",
+          )}
           variant={glutenOut ? "outline" : "default"}
         >
           {treatLabels.glutenFree}
         </Badge>
       ) : null}
       {offersNutsFree(withTreats) ? (
-        <Badge className="bg-amber-800 text-amber-50">{treatLabels.nutsFree}</Badge>
+        <Badge className="h-6 bg-amber-800 text-sm text-amber-50">{treatLabels.nutsFree}</Badge>
       ) : null}
       {offersSesameFree(withTreats) ? (
-        <Badge className="bg-amber-800 text-amber-50">{treatLabels.sesameFree}</Badge>
+        <Badge className="h-6 bg-amber-800 text-sm text-amber-50">{treatLabels.sesameFree}</Badge>
       ) : null}
     </div>
   );
