@@ -8,15 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
-import { treatLabels, scareLabels, suggestedHouseName, nameMatchesTheme, themeFromName } from "@/lib/labels";
+import { scareLabels, suggestedHouseName, nameMatchesTheme, themeFromName } from "@/lib/labels";
 import { config, inNeighborhood } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 import {
   HOUSE_THEMES,
-  TREAT_OPTIONS,
   type HouseInput,
   type ScareLevel,
-  type TreatId,
 } from "@/lib/types";
 
 const empty: HouseInput = {
@@ -27,14 +25,14 @@ const empty: HouseInput = {
   description: "",
   lat: config.map.center.lat,
   lng: config.map.center.lng,
-  treats: ["candy"],
+  treats: [],
   scareLevel: "mild",
   openFrom: "17:00",
   openTo: "21:00",
   notes: "",
   accessible: false,
   visit: "come",
-  treatStock: { candy: "plenty" },
+  treatStock: {},
 };
 
 export function HouseForm({
@@ -52,13 +50,13 @@ export function HouseForm({
   const [locating, setLocating] = useState(false);
   const [addressOk, setAddressOk] = useState(Boolean(initial?.address && initial.lat && initial.lng));
 
-  function toggleTreat(id: TreatId) {
+  function setGlutenFree(on: boolean) {
     setForm((f) => {
-      const on = f.treats.includes(id);
-      const treats = on ? f.treats.filter((t) => t !== id) : [...f.treats, id];
+      const rest = f.treats.filter((t) => t !== "glutenFree");
+      const treats = on ? [...rest, "glutenFree" as const] : rest;
       const treatStock = { ...(f.treatStock ?? {}) };
-      if (on) delete treatStock[id];
-      else treatStock[id] = "plenty";
+      if (on) treatStock.glutenFree = treatStock.glutenFree ?? "plenty";
+      else delete treatStock.glutenFree;
       return { ...f, treats, treatStock };
     });
   }
@@ -221,6 +219,20 @@ export function HouseForm({
           </span>
         </span>
       </label>
+      <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-sm ring-1 ring-orange-500/20">
+        <input
+          type="checkbox"
+          className="mt-1 size-4 accent-orange-500"
+          checked={form.treats.includes("glutenFree")}
+          onChange={(e) => setGlutenFree(e.target.checked)}
+        />
+        <span>
+          <span className="font-medium text-orange-100">ללא גלוטן</span>
+          <span className="block text-xs text-violet-300">
+            יש ממתקים או שוקולד בלי גלוטן
+          </span>
+        </span>
+      </label>
       <Field label="מה מחכה בבית?">
         <Textarea
           value={form.description}
@@ -262,25 +274,6 @@ export function HouseForm({
               }
             >
               {scareLabels[level]}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div>
-        <p className="mb-2 text-sm font-medium">מה מחלקים</p>
-        <div className="flex flex-wrap gap-1.5">
-          {TREAT_OPTIONS.map((id) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => toggleTreat(id)}
-              className={
-                form.treats.includes(id)
-                  ? "rounded-full bg-violet-600 px-3 py-1.5 text-xs font-medium text-white"
-                  : "rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-violet-100 ring-1 ring-violet-500/30"
-              }
-            >
-              {treatLabels[id]}
             </button>
           ))}
         </div>

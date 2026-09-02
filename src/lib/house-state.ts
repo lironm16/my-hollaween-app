@@ -36,6 +36,15 @@ export function treatLevel(
   return house.treats.includes(id) ? "plenty" : "out";
 }
 
+export function markedGlutenFree(house: { treats: TreatId[] }) {
+  return house.treats.includes("glutenFree");
+}
+
+/** Currently handing out gluten-free (not just marked, and not sold out). */
+export function offersGlutenFree(house: { treats: TreatId[]; treatStock?: TreatStock }) {
+  return markedGlutenFree(house) && treatLevel(house, "glutenFree") !== "out";
+}
+
 export function ownerFreezeUntil(msFromNow: number) {
   return new Date(Date.now() + msFromNow).toISOString();
 }

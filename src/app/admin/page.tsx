@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { statusLabels, houseHeadline, visitShort } from "@/lib/labels";
+import { HouseTags } from "@/components/house-tags";
+import { statusLabels, houseHeadline } from "@/lib/labels";
 import { freezeLabel, isFrozen } from "@/lib/house-state";
 import type { House, HouseInput, HouseStatus, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -264,15 +265,12 @@ export default function AdminPage() {
                         <p className="mt-1 text-xs text-violet-300">{house.description}</p>
                         <div className="mt-2 flex flex-wrap gap-1">
                           <Badge variant="secondary">{statusLabels[house.status]}</Badge>
-                          <Badge variant="outline">{visitShort[house.visit ?? "come"]}</Badge>
-                          {house.accessible ? (
-                            <Badge className="bg-emerald-700 text-emerald-50">נגיש</Badge>
-                          ) : null}
                           {isFrozen(house) ? (
                             <Badge className="bg-violet-900 text-violet-100">
                               {freezeLabel(house) ?? "מוקפא"}
                             </Badge>
                           ) : null}
+                          <HouseTags house={house} />
                         </div>
                         <div className="mt-2">
                           <CodesCopy id={house.id} editCode={house.editCode} />

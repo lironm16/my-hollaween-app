@@ -3,49 +3,36 @@
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { HouseCard } from "@/components/house-card";
-import { treatLabels, visitShort } from "@/lib/labels";
+import { distanceMeters } from "@/lib/geo";
 import { effectiveVisit, isFrozen } from "@/lib/house-state";
-import { TREAT_OPTIONS, type PublicHouse, type TreatId, type VisitState } from "@/lib/types";
-
-function haversine(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
-  const R = 6371000;
-  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
-  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
-  const s =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((a.lat * Math.PI) / 180) *
-      Math.cos((b.lat * Math.PI) / 180) *
-      Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(s));
-}
+import type { PublicHouse } from "@/lib/types";
 
 export function HouseList({
   houses,
   onOpen,
   origin,
+  likedIds,
+  onToggleLike,
 }: {
   houses: PublicHouse[];
   onOpen: (house: PublicHouse) => void;
   origin?: { lat: number; lng: number } | null;
+  likedIds?: string[];
+  onToggleLike?: (id: string) => void;
 }) {
   const [q, setQ] = useState("");
-  const [treat, setTreat] = useState<TreatId | "all">("all");
-  const [visit, setVisit] = useState<VisitState | "all">("all");
 
   const filtered = useMemo(() => {
     const needle = q.trim();
     return houses
       .filter((h) => {
-        const text = `${h.name} ${h.address} ${h.description} ${h.id} ${h.arrival ?? ""} ${h.theme ?? ""}`;
-        const matchQ = !needle || text.includes(needle);
-        const matchT = treat === "all" || h.treats.includes(treat);
-        const v = effectiveVisit(h);
-        const matchV = visit === "all" || v === visit;
-        return matchQ && matchT && matchV;
+        if (!needle) return true;
+        const text = `${h.name} ${h.address} ${h.description} ${h.id} ${h.arrival ?? ""}`;
+        return text.includes(needle);
       })
       .map((h) => ({
         h,
-        d: origin ? haversine(origin, h) : undefined,
+        d: origin ? distanceMeters(origin, h) : undefined,
       }))
       .sort((a, b) => {
         if (isFrozen(a.h) !== isFrozen(b.h)) return isFrozen(a.h) ? 1 : -1;
@@ -55,13 +42,13 @@ export function HouseList({
         if (a.d !== undefined && b.d !== undefined) return a.d - b.d;
         return a.h.name.localeCompare(b.h.name, "he");
       });
-  }, [houses, q, treat, visit, origin]);
+  }, [houses, q, origin]);
 
   if (houses.length === 0) {
     return (
       <div className="px-4 py-16 text-center text-violet-200">
-        <p className="font-display text-2xl text-orange-300">עדיין אין בתים במפה</p>
-        <p className="mt-2 text-sm">ברגע שמנהל יאשר בתים, הם יופיעו כאן וגם בלי רשת.</p>
+        <p className="font-display text-2xl text-orange-300">אין בתים שמתאימים לסינון</p>
+        <p className="mt-2 text-sm">נסו לבטל נגיש, ללא גלוטן, קרוב או שמרתי.</p>
       </div>
     );
   }
@@ -71,64 +58,28 @@ export function HouseList({
       <Input
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="חיפוש לפי שם, רחוב או מזהה…"
+        placeholder="חיפוש לפי שם או רחוב…"
         className="h-10 bg-[#1d1028] text-base"
       />
-      <div className="flex gap-1.5 overflow-x-auto pb-1">
-        <FilterChip active={visit === "all"} onClick={() => setVisit("all")}>
-          הכל
-        </FilterChip>
-        <FilterChip active={visit === "come"} onClick={() => setVisit("come")}>
-          {visitShort.come}
-        </FilterChip>
-        <FilterChip active={visit === "decorOnly"} onClick={() => setVisit("decorOnly")}>
-          {visitShort.decorOnly}
-        </FilterChip>
-        <FilterChip active={visit === "closed"} onClick={() => setVisit("closed")}>
-          {visitShort.closed}
-        </FilterChip>
-      </div>
-      <div className="flex gap-1.5 overflow-x-auto pb-1">
-        <FilterChip active={treat === "all"} onClick={() => setTreat("all")}>
-          הכל
-        </FilterChip>
-        {TREAT_OPTIONS.map((id) => (
-          <FilterChip key={id} active={treat === id} onClick={() => setTreat(id)}>
-            {treatLabels[id]}
-          </FilterChip>
-        ))}
-      </div>
+      {origin ? (
+        <p className="text-[11px] text-violet-300">ממוין לפי מרחק מכם</p>
+      ) : (
+        <p className="text-[11px] text-violet-300">לחצו «קרוב» כדי למיין לפי מרחק</p>
+      )}
       {filtered.length === 0 ? (
-        <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לסינון.</p>
+        <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לחיפוש.</p>
       ) : (
         filtered.map(({ h, d }) => (
-          <HouseCard key={h.id} house={h} distanceM={d} onOpen={() => onOpen(h)} />
+          <HouseCard
+            key={h.id}
+            house={h}
+            distanceM={d}
+            onOpen={() => onOpen(h)}
+            liked={likedIds?.includes(h.id)}
+            onToggleLike={onToggleLike ? () => onToggleLike(h.id) : undefined}
+          />
         ))
       )}
     </div>
-  );
-}
-
-function FilterChip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={
-        active
-          ? "shrink-0 rounded-full bg-orange-500 px-3 py-1 text-xs font-medium text-black"
-          : "shrink-0 rounded-full bg-[#1d1028] px-3 py-1 text-xs text-orange-100 ring-1 ring-orange-500/25"
-      }
-    >
-      {children}
-    </button>
   );
 }

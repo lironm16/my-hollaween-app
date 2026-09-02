@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { treatLabels, visitLabels, stockLabels } from "@/lib/labels";
+import { visitLabels, stockLabels } from "@/lib/labels";
 import {
   freezeLabel,
   isFrozen,
@@ -14,12 +14,10 @@ import {
 } from "@/lib/house-state";
 import {
   STOCK_LEVELS,
-  TREAT_OPTIONS,
   VISIT_STATES,
   type NightPatch,
   type PublicHouse,
   type StockLevel,
-  type TreatId,
   type VisitState,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -140,11 +138,11 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
         ))}
       </div>
 
-      <p className="text-xs text-violet-300">מלאי לפי סוג</p>
-      <ul className="space-y-1.5">
-        {TREAT_OPTIONS.filter((id) => house.treats.includes(id)).map((id) => (
-          <li key={id} className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-sm text-orange-100">{treatLabels[id]}</span>
+      <p className="text-xs text-violet-300">מלאי ללא גלוטן</p>
+      {house.treats.includes("glutenFree") ? (
+        <ul className="space-y-1.5">
+          <li className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-sm text-orange-100">ללא גלוטן</span>
             <span className="flex gap-1">
               {STOCK_LEVELS.map((level) => (
                 <button
@@ -153,12 +151,12 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
                   disabled={busy}
                   onClick={() =>
                     void save({
-                      treatStock: { ...house.treatStock, [id]: level as StockLevel },
+                      treatStock: { ...house.treatStock, glutenFree: level as StockLevel },
                     })
                   }
                   className={cn(
                     "rounded-full px-2.5 py-1 text-[11px]",
-                    treatLevel(house, id as TreatId) === level
+                    treatLevel(house, "glutenFree") === level
                       ? level === "out"
                         ? "bg-red-700 text-white"
                         : level === "low"
@@ -172,8 +170,10 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
               ))}
             </span>
           </li>
-        ))}
-      </ul>
+        </ul>
+      ) : (
+        <p className="text-xs text-violet-400">הבית לא מסומן כ«ללא גלוטן». אפשר להוסיף את זה בטופס העריכה.</p>
+      )}
 
       <p className="text-xs text-violet-300">הקפאה מהמפה הציבורית</p>
       <p className="text-[11px] text-violet-400">

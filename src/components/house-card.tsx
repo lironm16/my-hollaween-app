@@ -1,7 +1,11 @@
-import { Badge } from "@/components/ui/badge";
+"use client";
+
+import { Heart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { scareShort, treatLabels, houseHeadline, visitShort, stockLabels } from "@/lib/labels";
-import { effectiveVisit, isFrozen, treatLevel } from "@/lib/house-state";
+import { HouseTags } from "@/components/house-tags";
+import { houseHeadline } from "@/lib/labels";
+import { formatDistance } from "@/lib/geo";
+import { effectiveVisit, isFrozen } from "@/lib/house-state";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -9,10 +13,14 @@ export function HouseCard({
   house,
   onOpen,
   distanceM,
+  liked,
+  onToggleLike,
 }: {
   house: PublicHouse;
   onOpen?: () => void;
   distanceM?: number;
+  liked?: boolean;
+  onToggleLike?: () => void;
 }) {
   return (
     <Card
@@ -28,9 +36,19 @@ export function HouseCard({
       <CardHeader className="pb-1">
         <CardTitle className="flex items-start justify-between gap-2 text-orange-100">
           <span>{houseHeadline(house)}</span>
-          <Badge variant={house.scareLevel === "spicy" ? "destructive" : "secondary"}>
-            {scareShort[house.scareLevel]}
-          </Badge>
+          {onToggleLike ? (
+            <button
+              type="button"
+              aria-label={liked ? "הסירו מהשמורים" : "שמרו את הבית"}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleLike();
+              }}
+              className="rounded-full p-1 text-orange-200 hover:bg-orange-500/15"
+            >
+              <Heart className={cn("size-5", liked && "fill-orange-500 text-orange-500")} />
+            </button>
+          ) : null}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 text-violet-100/80">
@@ -39,42 +57,9 @@ export function HouseCard({
         <p className="text-xs">
           {house.openFrom}–{house.openTo}
           {distanceM !== undefined ? ` · ${formatDistance(distanceM)}` : ""}
-          {effectiveVisit(house) === "closed" ? " · נגמר — אל תבואו" : ""}
-          {effectiveVisit(house) === "decorOnly" ? " · מקושט בלי ממתקים" : ""}
-          {isFrozen(house) ? " · מוקפא" : ""}
         </p>
-        <div className="flex flex-wrap gap-1">
-          {house.accessible ? (
-            <Badge className="bg-emerald-700 text-emerald-50">נגיש</Badge>
-          ) : null}
-          {house.status === "pending" ? (
-            <Badge variant="secondary">ממתין לאישור</Badge>
-          ) : null}
-          <Badge variant="outline">{visitShort[effectiveVisit(house)]}</Badge>
-          {house.treats.map((t) => {
-            const level = treatLevel(house, t);
-            return (
-              <Badge
-                key={t}
-                variant="outline"
-                className={
-                  level === "out"
-                    ? "border-red-400/40 text-red-200"
-                    : "border-orange-400/30 text-orange-100"
-                }
-              >
-                {treatLabels[t]}
-                {level !== "plenty" ? ` · ${stockLabels[level]}` : ""}
-              </Badge>
-            );
-          })}
-        </div>
+        <HouseTags house={house} />
       </CardContent>
     </Card>
   );
-}
-
-function formatDistance(m: number) {
-  if (m < 1000) return `${Math.round(m)} מ׳`;
-  return `${(m / 1000).toFixed(1)} ק״מ`;
 }

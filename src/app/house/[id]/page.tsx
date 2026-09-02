@@ -7,6 +7,7 @@ import { HouseDetails } from "@/components/house-details";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { buttonVariants } from "@/components/ui/button";
 import { useCatalog } from "@/hooks/use-catalog";
+import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +16,7 @@ export default function HousePage() {
   const id = decodeURIComponent(params.id);
   const { catalog, loading, error, source } = useCatalog();
   const owned = useOwnedHouses();
+  const likes = useLikedHouses();
   const house =
     catalog?.houses.find((h) => h.id === id) ??
     owned.find((item) => item.id === id)?.preview;
@@ -29,7 +31,12 @@ export default function HousePage() {
             <div className="relative z-0 isolate h-56 overflow-hidden rounded-2xl ring-1 ring-orange-500/30">
               <HouseMapDynamic houses={[house]} selectedId={house.id} />
             </div>
-            <HouseDetails house={house} catalogSource={source} />
+            <HouseDetails
+              house={house}
+              catalogSource={source}
+              liked={likes.liked(house.id)}
+              onToggleLike={() => likes.toggle(house.id)}
+            />
           </div>
         ) : loading ? (
           <p className="text-orange-200">טוענים בית…</p>

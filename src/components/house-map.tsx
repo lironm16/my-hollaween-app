@@ -13,7 +13,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { config } from "@/lib/config";
 import type { PublicHouse } from "@/lib/types";
-import { scareShort, houseHeadline, themeEmoji, visitShort } from "@/lib/labels";
+import { houseHeadline, themeEmoji } from "@/lib/labels";
 import { effectiveVisit, isFrozen } from "@/lib/house-state";
 import { cn } from "@/lib/utils";
 
@@ -220,10 +220,9 @@ export function HouseMap({
                   <div>{house.address}</div>
                   {house.arrival ? <div>{house.arrival}</div> : null}
                   <div>
-                    {scareShort[house.scareLevel]} · {house.openFrom}–{house.openTo}
+                    {house.openFrom}–{house.openTo}
                     {house.accessible ? " · נגיש" : ""}
-                    {house.status === "pending" ? " · ממתין" : ""}
-                    {isFrozen(house) ? " · מוקפא" : ` · ${visitShort[effectiveVisit(house)]}`}
+                    {house.treats.includes("glutenFree") ? " · ללא גלוטן" : ""}
                   </div>
                 </div>
               </Popup>

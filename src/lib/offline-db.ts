@@ -73,3 +73,30 @@ export function saveOwnedHouse(house: OwnedHouse) {
     window.dispatchEvent(new Event("hw-owned-changed"));
   }
 }
+
+const LIKED_KEY = "hw-liked-houses";
+
+export function loadLikedIds(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(LIKED_KEY);
+    const ids = raw ? (JSON.parse(raw) as unknown) : [];
+    return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+export function isLiked(id: string) {
+  return loadLikedIds().includes(id);
+}
+
+export function toggleLiked(id: string): string[] {
+  const current = loadLikedIds();
+  const next = current.includes(id) ? current.filter((item) => item !== id) : [id, ...current];
+  localStorage.setItem(LIKED_KEY, JSON.stringify(next.slice(0, 80)));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("hw-liked-changed"));
+  }
+  return next;
+}

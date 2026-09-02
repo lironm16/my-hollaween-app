@@ -5,21 +5,27 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { CodesCopy } from "@/components/codes-copy";
-import { scareLabels, treatLabels, houseHeadline, visitLabels, stockLabels } from "@/lib/labels";
-import { effectiveVisit, freezeLabel, isFrozen, treatLevel } from "@/lib/house-state";
+import { houseHeadline } from "@/lib/labels";
+import { effectiveVisit, freezeLabel, isFrozen } from "@/lib/house-state";
 import { loadOwnedHouses } from "@/lib/offline-db";
 import { shouldLoadHousePhoto } from "@/lib/photos";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { HouseTags } from "@/components/house-tags";
+import { Heart } from "lucide-react";
 
 export function HouseDetails({
   house,
   extra,
   catalogSource,
+  liked,
+  onToggleLike,
 }: {
   house: PublicHouse;
   extra?: ReactNode;
   catalogSource?: string | null;
+  liked?: boolean;
+  onToggleLike?: () => void;
 }) {
   const maps = `https://www.google.com/maps?q=${house.lat},${house.lng}`;
   const waze = `https://waze.com/ul?ll=${house.lat},${house.lng}&navigate=yes`;
@@ -41,9 +47,21 @@ export function HouseDetails({
   }, [house.id, house.photoUrl]);
   return (
     <div className="space-y-3">
-      <div>
-        <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
-        <p className="text-sm text-violet-200">{house.address}</p>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
+          <p className="text-sm text-violet-200">{house.address}</p>
+        </div>
+        {onToggleLike ? (
+          <button
+            type="button"
+            aria-label={liked ? "הסירו מהשמורים" : "שמרו את הבית"}
+            onClick={onToggleLike}
+            className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
+          >
+            <Heart className={cn("size-6", liked && "fill-orange-500 text-orange-500")} />
+          </button>
+        ) : null}
       </div>
       {house.photoUrl && !photoBroken ? (
         loadPhoto ? (
@@ -89,32 +107,12 @@ export function HouseDetails({
       {house.description ? (
         <p className="text-sm leading-relaxed text-violet-50">{house.description}</p>
       ) : null}
-      <div className="flex flex-wrap gap-1.5">
-        <Badge>{scareLabels[house.scareLevel]}</Badge>
-        <Badge variant="secondary">
-          {house.openFrom}–{house.openTo}
-        </Badge>
-        {house.accessible ? <Badge className="bg-emerald-700 text-emerald-50">נגיש</Badge> : null}
+      <div className="flex flex-wrap items-center gap-1.5">
+        <HouseTags house={house} />
         {house.status === "pending" ? <Badge variant="secondary">ממתין לאישור</Badge> : null}
-        <Badge variant="outline">{visitLabels[effectiveVisit(house)]}</Badge>
-        {house.treats.map((t) => {
-          const level = treatLevel(house, t);
-          return (
-            <Badge
-              key={t}
-              variant="outline"
-              className={
-                level === "out"
-                  ? "border-red-400/40 text-red-200 line-through"
-                  : level === "low"
-                    ? "border-amber-400/50 text-amber-100"
-                    : "border-orange-400/30 text-orange-100"
-              }
-            >
-              {treatLabels[t]} · {stockLabels[level]}
-            </Badge>
-          );
-        })}
+        <span className="text-xs text-violet-300">
+          {house.openFrom}–{house.openTo}
+        </span>
       </div>
       {house.notes ? (
         <p className="text-sm text-amber-200/90">הערה: {house.notes}</p>
