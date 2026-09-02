@@ -2,7 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  allowedDevOrigins: ["127.0.0.1", "localhost"],
+  allowedDevOrigins: [
+    "127.0.0.1",
+    "localhost",
+    "[::1]",
+    "*.cursor.sh",
+    "*.cursor.com",
+    "*.cursorusercontent.com",
+  ],
   async headers() {
     return [
       {

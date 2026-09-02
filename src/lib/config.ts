@@ -4,8 +4,8 @@ const latPad = 0.0075;
 const lngPad = 0.014;
 
 export const config = {
-  appName: "Holloween בשכונה",
-  brandEn: "Holloween",
+  appName: "Halloween בשכונה",
+  brandEn: "Halloween",
   brandHe: "בשכונה",
   tagline: "מפת הבתים המפחידים של השכונה",
   neighborhood:
