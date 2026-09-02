@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
-import { getAllHouses } from "@/lib/store";
+import { getDbSnapshot } from "@/lib/store";
 
 export const runtime = "nodejs";
 
@@ -8,9 +8,9 @@ export async function GET() {
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "נדרשת הרשאת מנהל." }, { status: 401 });
   }
-  const houses = await getAllHouses();
+  const db = await getDbSnapshot();
   return NextResponse.json(
-    { houses },
+    { houses: db.houses, updatedAt: db.updatedAt },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

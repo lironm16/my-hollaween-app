@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Heart, List, LogOut, MapPinned, RefreshCw, WifiOff } from "lucide-react";
+import { CheckCircle2, Heart, List, LogOut, MapPinned, RefreshCw, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { FilterChip } from "@/components/filter-chip";
@@ -23,11 +23,18 @@ import { useCatalog } from "@/hooks/use-catalog";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
+import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { readApiJson } from "@/lib/api-json";
 import { inNeighborhood } from "@/lib/config";
 import { toPublicHouse } from "@/lib/ids";
 import { isFrozen, offersGlutenFree } from "@/lib/house-state";
-import { notifyCatalogChanged } from "@/lib/offline-db";
+import {
+  backupLooksNewer,
+  loadServerDbBackup,
+  notifyCatalogChanged,
+  saveServerDbBackup,
+  type ServerDbBackup,
+} from "@/lib/offline-db";
 import type { Catalog, House, HouseInput, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +54,7 @@ export function NeighborhoodApp({
   const [accessibleOnly, setAccessibleOnly] = useState(false);
   const [glutenFreeOnly, setGlutenFreeOnly] = useState(false);
   const [likedOnly, setLikedOnly] = useState(false);
+  const [unvisitedOnly, setUnvisitedOnly] = useState(false);
   const [followTick, setFollowTick] = useState(0);
   const [askedLocation, setAskedLocation] = useState(false);
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
@@ -56,6 +64,14 @@ export function NeighborhoodApp({
 
   const owned = useOwnedHouses();
   const likes = useLikedHouses();
+  const visits = useVisitedHouses();
+
+  const rememberAdminDb = useCallback((houses: House[], updatedAt: string) => {
+    saveServerDbBackup({
+      updatedAt,
+      houses: houses as ServerDbBackup["houses"],
+    });
+  }, []);
 
   const loadAdminHouses = useCallback(async () => {
     if (!admin) return;
@@ -63,14 +79,34 @@ export function NeighborhoodApp({
     try {
       const res = await fetch("/api/admin/houses", { cache: "no-store" });
       if (!res.ok) return;
-      const data = (await res.json()) as { houses?: House[] };
-      setAdminHouses(data.houses ?? []);
+      const data = (await res.json()) as { houses?: House[]; updatedAt?: string };
+      let houses = data.houses ?? [];
+      let updatedAt = data.updatedAt ?? new Date().toISOString();
+      const backup = loadServerDbBackup();
+      if (backup && backupLooksNewer(backup, updatedAt, houses)) {
+        const restoreRes = await fetch("/api/admin/restore", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(backup),
+        });
+        if (restoreRes.ok) {
+          const restored = (await restoreRes.json()) as {
+            houses?: House[];
+            updatedAt?: string;
+          };
+          houses = restored.houses ?? houses;
+          updatedAt = restored.updatedAt ?? updatedAt;
+          notifyCatalogChanged();
+        }
+      }
+      setAdminHouses(houses);
+      rememberAdminDb(houses, updatedAt);
     } catch {
       /* keep last list */
     } finally {
       setAdminLoading(false);
     }
-  }, [admin]);
+  }, [admin, rememberAdminDb]);
 
   useEffect(() => {
     if (!admin) {
@@ -117,9 +153,10 @@ export function NeighborhoodApp({
       if (accessibleOnly && !house.accessible) return false;
       if (glutenFreeOnly && !offersGlutenFree(house)) return false;
       if (likedOnly && !likes.likedIds.includes(house.id)) return false;
+      if (unvisitedOnly && visits.visitedIds.includes(house.id)) return false;
       return true;
     });
-  }, [houses, accessibleOnly, glutenFreeOnly, likedOnly, likes.likedIds]);
+  }, [houses, accessibleOnly, glutenFreeOnly, likedOnly, unvisitedOnly, likes.likedIds, visits.visitedIds]);
 
   const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const selected =
@@ -142,19 +179,22 @@ export function NeighborhoodApp({
     const full = "editCode" in next && typeof next.editCode === "string"
       ? (next as House)
       : null;
-    if (full) {
-      setAdminHouses((list) => {
+    setAdminHouses((list) => {
+      let nextList: House[];
+      if (full) {
         const idx = list.findIndex((h) => h.id === full.id);
-        if (idx < 0) return [...list, full];
-        const copy = [...list];
-        copy[idx] = full;
-        return copy;
-      });
-    } else {
-      setAdminHouses((list) =>
-        list.map((h) => (h.id === next.id ? { ...h, ...next } : h)),
-      );
-    }
+        if (idx < 0) nextList = [...list, full];
+        else {
+          nextList = [...list];
+          nextList[idx] = full;
+        }
+      } else {
+        nextList = list.map((h) => (h.id === next.id ? { ...h, ...next } : h));
+      }
+      const updatedAt = new Date().toISOString();
+      rememberAdminDb(nextList, updatedAt);
+      return nextList;
+    });
     notifyCatalogChanged();
     void refresh(true);
   }
@@ -198,7 +238,11 @@ export function NeighborhoodApp({
         toast.error(data.error ?? "המחיקה נכשלה");
         return;
       }
-      setAdminHouses((list) => list.filter((house) => house.id !== id));
+      setAdminHouses((list) => {
+        const next = list.filter((house) => house.id !== id);
+        rememberAdminDb(next, new Date().toISOString());
+        return next;
+      });
       notifyCatalogChanged();
       void refresh(true);
       toast.success("הבית נדחה ונמחק");
@@ -366,6 +410,10 @@ export function NeighborhoodApp({
             <Heart className={cn("size-3", likedOnly && "fill-black")} />
             שמרתי
           </FilterChip>
+          <FilterChip active={unvisitedOnly} onClick={() => setUnvisitedOnly((v) => !v)}>
+            <CheckCircle2 className={cn("size-3", unvisitedOnly && "text-black")} />
+            לא ביקרתי
+          </FilterChip>
         </div>
         {geoError ? (
           <p className="mt-1 text-[11px] text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>
@@ -419,6 +467,8 @@ export function NeighborhoodApp({
                   origin={origin}
                   likedIds={likes.likedIds}
                   onToggleLike={likes.toggle}
+                  visitedIds={visits.visitedIds}
+                  onToggleVisited={visits.toggle}
                 />
               </div>
             ) : null}
@@ -454,6 +504,8 @@ export function NeighborhoodApp({
                 catalogSource={source}
                 liked={likes.liked(selected.id)}
                 onToggleLike={() => likes.toggle(selected.id)}
+                visited={visits.visited(selected.id)}
+                onToggleVisited={() => visits.toggle(selected.id)}
                 managerEditCode={admin ? editCodeById.get(selected.id) : undefined}
                 extra={
                   admin ? (

@@ -107,3 +107,71 @@ export function toggleLiked(id: string): string[] {
   }
   return next;
 }
+
+const VISITED_KEY = "hw-visited-houses";
+
+export function loadVisitedIds(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(VISITED_KEY);
+    const ids = raw ? (JSON.parse(raw) as unknown) : [];
+    return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+export function isVisited(id: string) {
+  return loadVisitedIds().includes(id);
+}
+
+export function toggleVisited(id: string): string[] {
+  const current = loadVisitedIds();
+  const next = current.includes(id) ? current.filter((item) => item !== id) : [id, ...current];
+  localStorage.setItem(VISITED_KEY, JSON.stringify(next.slice(0, 200)));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("hw-visited-changed"));
+  }
+  return next;
+}
+
+const SERVER_DB_KEY = "hw-server-db-backup";
+
+export type ServerDbBackup = {
+  updatedAt: string;
+  houses: Array<Record<string, unknown> & { id: string; status: string; updatedAt: string }>;
+};
+
+export function loadServerDbBackup(): ServerDbBackup | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(SERVER_DB_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ServerDbBackup;
+    if (!parsed?.updatedAt || !Array.isArray(parsed.houses)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function saveServerDbBackup(db: ServerDbBackup) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(SERVER_DB_KEY, JSON.stringify(db));
+  } catch {
+    /* private mode */
+  }
+}
+
+function stamp(value: string) {
+  const n = Date.parse(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+export function backupLooksNewer(backup: ServerDbBackup, serverUpdatedAt: string, serverHouses: Array<{ status: string }>) {
+  if (stamp(backup.updatedAt) > stamp(serverUpdatedAt)) return true;
+  const backupApproved = backup.houses.filter((h) => h.status === "approved").length;
+  const serverApproved = serverHouses.filter((h) => h.status === "approved").length;
+  return backupApproved > serverApproved;
+}

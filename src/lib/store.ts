@@ -1,11 +1,12 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { get as getBlob, put as putBlob } from "@vercel/blob";
 import { newEditCode, newPublicId, toPublicHouse } from "@/lib/ids";
 import { inNeighborhood } from "@/lib/config";
 import { config } from "@/lib/config";
 import { assertRealAddress } from "@/lib/geocode";
 import { defaultTreatStock, effectiveVisit, isPubliclyListed } from "@/lib/house-state";
-import { cloneDb } from "@/lib/catalog-sync";
+import { cloneDb, mergeHouses } from "@/lib/catalog-sync";
 import { parsePhotoUrl } from "@/lib/photos";
 import {
   HOUSE_THEMES,
@@ -22,6 +23,7 @@ import {
 } from "@/lib/types";
 
 const SEED_PATH = path.join(process.cwd(), "data", "seed.json");
+const BLOB_PATH = "halloween-houses/db.json";
 const MEM_TTL_MS = 1500;
 
 let chain: Promise<unknown> = Promise.resolve();
@@ -33,6 +35,22 @@ function withLock<T>(fn: () => Promise<T>): Promise<T> {
     () => undefined,
   );
   return run;
+}
+
+type GlobalBag = { __hwHouseDb?: DbFile };
+
+function stamp(value: { updatedAt: string }) {
+  const n = Date.parse(value.updatedAt);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function getGlobalDb(): DbFile | null {
+  const db = (globalThis as GlobalBag).__hwHouseDb;
+  return db ? cloneDb(db) : null;
+}
+
+function setGlobalDb(db: DbFile) {
+  (globalThis as GlobalBag).__hwHouseDb = cloneDb(db);
 }
 
 async function canWrite(dir: string) {
@@ -92,15 +110,49 @@ function normalizeDb(db: DbFile): DbFile {
   return { ...db, houses: db.houses.map(normalizeHouse) };
 }
 
-async function readFileDb(): Promise<DbFile> {
-  const file = await dbPath();
+function blobEnabled() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+}
+
+async function readBlobDb(): Promise<DbFile | null> {
+  if (!blobEnabled()) return null;
   try {
+    const result = await getBlob(BLOB_PATH, {
+      access: "private",
+      useCache: false,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    });
+    if (!result?.stream) return null;
+    const text = await new Response(result.stream).text();
+    return normalizeDb(JSON.parse(text) as DbFile);
+  } catch {
+    return null;
+  }
+}
+
+async function writeBlobDb(db: DbFile) {
+  if (!blobEnabled()) return;
+  try {
+    await putBlob(BLOB_PATH, JSON.stringify(db), {
+      access: "private",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: "application/json",
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+      cacheControlMaxAge: 0,
+    });
+  } catch {
+    /* keep file/memory copy even if blob write fails */
+  }
+}
+
+async function readLocalFileDb(): Promise<DbFile | null> {
+  try {
+    const file = await dbPath();
     const raw = await fs.readFile(file, "utf8");
     return normalizeDb(JSON.parse(raw) as DbFile);
   } catch {
-    const seed = normalizeDb(await readSeed());
-    await fs.writeFile(file, JSON.stringify(seed, null, 2));
-    return seed;
+    return null;
   }
 }
 
@@ -111,6 +163,33 @@ async function writeFileDb(db: DbFile) {
   await fs.rename(tmp, file);
 }
 
+function pickNewest(...candidates: Array<DbFile | null | undefined>): DbFile | null {
+  let best: DbFile | null = null;
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    if (!best || stamp(candidate) >= stamp(best)) best = candidate;
+  }
+  return best;
+}
+
+async function readFileDb(): Promise<DbFile> {
+  const [local, blob, global] = await Promise.all([
+    readLocalFileDb(),
+    readBlobDb(),
+    Promise.resolve(getGlobalDb()),
+  ]);
+  const newest = pickNewest(local, blob, global);
+  if (newest) return newest;
+  const seed = normalizeDb(await readSeed());
+  try {
+    await writeFileDb(seed);
+  } catch {
+    /* /tmp may still work later */
+  }
+  void writeBlobDb(seed);
+  return seed;
+}
+
 let mem: DbFile | null = null;
 let memAt = 0;
 let catalogMem: Catalog | null = null;
@@ -119,6 +198,17 @@ function setMem(db: DbFile) {
   mem = db;
   memAt = Date.now();
   catalogMem = null;
+  setGlobalDb(db);
+}
+
+async function persistDb(db: DbFile) {
+  setMem(db);
+  try {
+    await writeFileDb(db);
+  } catch {
+    /* memory/blob still hold the write */
+  }
+  await writeBlobDb(db);
 }
 
 async function loadDb(fresh = false): Promise<DbFile> {
@@ -126,17 +216,25 @@ async function loadDb(fresh = false): Promise<DbFile> {
   return withLock(async () => {
     if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return mem;
     const db = await readFileDb();
-    setMem(db);
-    return db;
+    const global = getGlobalDb();
+    const chosen = pickNewest(db, global) ?? db;
+    setMem(chosen);
+    if (global && stamp(global) > stamp(db)) {
+      void persistDb(chosen);
+    }
+    return chosen;
   });
 }
 
 async function runSyncedWrite<T>(fn: (db: DbFile) => T | Promise<T>): Promise<T> {
   return withLock(async () => {
     const db = normalizeDb(cloneDb(await readFileDb()));
+    const global = getGlobalDb();
+    if (global && stamp(global) > stamp(db)) {
+      Object.assign(db, normalizeDb(cloneDb(global)));
+    }
     const result = await fn(db);
-    await writeFileDb(db);
-    setMem(db);
+    await persistDb(db);
     return result;
   });
 }
@@ -161,6 +259,10 @@ export async function getCatalog(): Promise<Catalog> {
 export async function getAllHouses(): Promise<House[]> {
   const db = await loadDb(true);
   return db.houses;
+}
+
+export async function getDbSnapshot(): Promise<DbFile> {
+  return loadDb(true);
 }
 
 export async function getHouse(id: string): Promise<House | undefined> {
@@ -250,6 +352,26 @@ export async function adminDeleteHouse(id: string) {
     db.houses.splice(idx, 1);
     db.updatedAt = new Date().toISOString();
     return true;
+  });
+}
+
+/** Merge a manager-device backup so approvals survive ephemeral serverless disks. */
+export async function adminRestoreDb(incoming: DbFile) {
+  return runSyncedWrite((db) => {
+    const mergedHouses = mergeHouses(db.houses, normalizeDb(incoming).houses).map((house) => {
+      const local = db.houses.find((h) => h.id === house.id);
+      const remote = incoming.houses.find((h) => h.id === house.id);
+      if (!local || !remote) return normalizeHouse(house);
+      if (remote.status === "approved" && local.status !== "approved") {
+        return normalizeHouse({ ...house, status: "approved", rejectionReason: undefined });
+      }
+      return normalizeHouse(house);
+    });
+    db.houses = mergedHouses;
+    db.updatedAt = new Date(
+      Math.max(stamp(db), stamp(incoming), Date.now()),
+    ).toISOString();
+    return cloneDb(db);
   });
 }
 

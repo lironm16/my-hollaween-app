@@ -2,17 +2,17 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { CheckCircle2, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { CodesCopy } from "@/components/codes-copy";
+import { HouseTags } from "@/components/house-tags";
 import { houseHeadline } from "@/lib/labels";
 import { effectiveVisit, freezeLabel, isFrozen } from "@/lib/house-state";
 import { loadOwnedHouses } from "@/lib/offline-db";
 import { shouldLoadHousePhoto } from "@/lib/photos";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { HouseTags } from "@/components/house-tags";
-import { Heart } from "lucide-react";
 
 export function HouseDetails({
   house,
@@ -20,6 +20,8 @@ export function HouseDetails({
   catalogSource,
   liked,
   onToggleLike,
+  visited,
+  onToggleVisited,
   managerEditCode,
 }: {
   house: PublicHouse;
@@ -27,6 +29,8 @@ export function HouseDetails({
   catalogSource?: string | null;
   liked?: boolean;
   onToggleLike?: () => void;
+  visited?: boolean;
+  onToggleVisited?: () => void;
   /** When set (manager session), always show this edit code for resend. */
   managerEditCode?: string;
 }) {
@@ -59,16 +63,30 @@ export function HouseDetails({
           <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
           <p className="text-sm text-violet-200">{house.address}</p>
         </div>
-        {onToggleLike ? (
-          <button
-            type="button"
-            aria-label={liked ? "הסירו מהשמורים" : "שמרו את הבית"}
-            onClick={onToggleLike}
-            className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
-          >
-            <Heart className={cn("size-6", liked && "fill-orange-500 text-orange-500")} />
-          </button>
-        ) : null}
+        <div className="flex items-center gap-0.5">
+          {onToggleVisited ? (
+            <button
+              type="button"
+              aria-label={visited ? "סמנו כלא ביקרתי" : "סמנו שביקרתי"}
+              onClick={onToggleVisited}
+              className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
+            >
+              <CheckCircle2
+                className={cn("size-6", visited && "fill-emerald-500/30 text-emerald-400")}
+              />
+            </button>
+          ) : null}
+          {onToggleLike ? (
+            <button
+              type="button"
+              aria-label={liked ? "הסירו מהשמורים" : "שמרו את הבית"}
+              onClick={onToggleLike}
+              className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
+            >
+              <Heart className={cn("size-6", liked && "fill-orange-500 text-orange-500")} />
+            </button>
+          ) : null}
+        </div>
       </div>
       {house.photoUrl && !photoBroken ? (
         loadPhoto ? (

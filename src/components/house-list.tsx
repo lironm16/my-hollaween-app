@@ -13,12 +13,16 @@ export function HouseList({
   origin,
   likedIds,
   onToggleLike,
+  visitedIds,
+  onToggleVisited,
 }: {
   houses: PublicHouse[];
   onOpen: (house: PublicHouse) => void;
   origin?: { lat: number; lng: number } | null;
   likedIds?: string[];
   onToggleLike?: (id: string) => void;
+  visitedIds?: string[];
+  onToggleVisited?: (id: string) => void;
 }) {
   const [q, setQ] = useState("");
 
@@ -48,7 +52,7 @@ export function HouseList({
     return (
       <div className="px-4 py-16 text-center text-violet-200">
         <p className="font-display text-2xl text-orange-300">אין בתים שמתאימים לסינון</p>
-        <p className="mt-2 text-sm">נסו לבטל נגיש, ללא גלוטן או שמרתי.</p>
+        <p className="mt-2 text-sm">נסו לבטל נגיש, ללא גלוטן, שמרתי או לא ביקרתי.</p>
       </div>
     );
   }
@@ -75,6 +79,8 @@ export function HouseList({
             onOpen={() => onOpen(h)}
             liked={likedIds?.includes(h.id)}
             onToggleLike={onToggleLike ? () => onToggleLike(h.id) : undefined}
+            visited={visitedIds?.includes(h.id)}
+            onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
           />
         ))
       )}

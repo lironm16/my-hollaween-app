@@ -9,6 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
+import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { cn } from "@/lib/utils";
 
 export default function HousePage() {
@@ -17,6 +18,7 @@ export default function HousePage() {
   const { catalog, loading, error, source } = useCatalog();
   const owned = useOwnedHouses();
   const likes = useLikedHouses();
+  const visits = useVisitedHouses();
   const house =
     catalog?.houses.find((h) => h.id === id) ??
     owned.find((item) => item.id === id)?.preview;
@@ -36,6 +38,8 @@ export default function HousePage() {
               catalogSource={source}
               liked={likes.liked(house.id)}
               onToggleLike={() => likes.toggle(house.id)}
+              visited={visits.visited(house.id)}
+              onToggleVisited={() => visits.toggle(house.id)}
             />
           </div>
         ) : loading ? (
