@@ -142,6 +142,44 @@ export function NightDesk({ house, onUpdated, editCode, admin }: Props) {
         ))}
       </div>
 
+      <p className="text-xs text-violet-300">מלאי ממתקים</p>
+      <ul className="space-y-1.5">
+        <li className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-sm text-orange-100">ממתקים</span>
+          <span className="flex gap-1">
+            {STOCK_LEVELS.map((level) => (
+              <button
+                key={level}
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  const treats = house.treats.includes("candy")
+                    ? house.treats
+                    : (["candy" as const, ...house.treats]);
+                  void save({
+                    treats,
+                    treatStock: { ...house.treatStock, candy: level as StockLevel },
+                    ...(level === "out" ? { visit: "closed" as VisitState } : {}),
+                  });
+                }}
+                  className={cn(
+                    "rounded-full px-2.5 py-1 text-[11px]",
+                    (house.treatStock?.candy ?? "plenty") === level
+                      ? level === "out"
+                        ? "bg-red-700 text-white"
+                        : level === "low"
+                          ? "bg-amber-400 text-black"
+                          : "bg-emerald-700 text-white"
+                      : "bg-black/30 text-violet-100 ring-1 ring-violet-500/25",
+                  )}
+              >
+                {stockLabels[level]}
+              </button>
+            ))}
+          </span>
+        </li>
+      </ul>
+
       <p className="text-xs text-violet-300">מלאי ללא גלוטן</p>
       {house.treats.includes("glutenFree") ? (
         <ul className="space-y-1.5">

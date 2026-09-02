@@ -26,14 +26,14 @@ const empty: HouseInput = {
   description: "",
   lat: config.map.center.lat,
   lng: config.map.center.lng,
-  treats: [],
+  treats: ["candy"],
   scareLevel: "mild",
   openFrom: "17:00",
   openTo: "21:00",
   notes: "",
   accessible: false,
   visit: "come",
-  treatStock: {},
+  treatStock: { candy: "plenty" },
 };
 
 export function HouseForm({

@@ -45,6 +45,20 @@ export function offersGlutenFree(house: { treats: TreatId[]; treatStock?: TreatS
   return markedGlutenFree(house) && treatLevel(house, "glutenFree") !== "out";
 }
 
+export function markedCandy(house: { treats: TreatId[] }) {
+  return house.treats.includes("candy");
+}
+
+export function candyLevel(house: { treats: TreatId[]; treatStock?: TreatStock }): StockLevel {
+  if (house.treatStock?.candy) return house.treatStock.candy as StockLevel;
+  return "plenty";
+}
+
+/** Has candy left (green or orange). Red / out is filtered out. */
+export function offersCandy(house: { treats: TreatId[]; treatStock?: TreatStock }) {
+  return candyLevel(house) !== "out";
+}
+
 export function ownerFreezeUntil(msFromNow: number) {
   return new Date(Date.now() + msFromNow).toISOString();
 }

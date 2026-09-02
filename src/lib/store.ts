@@ -88,9 +88,15 @@ function normalizeHouse(house: House): House {
   const theme = HOUSE_THEMES.includes(house.theme as HouseTheme)
     ? (house.theme as HouseTheme)
     : "pumpkin";
-  const treats = house.treats ?? [];
+  const treats = house.treats?.includes("candy")
+    ? (house.treats ?? [])
+    : (["candy" as const, ...(house.treats ?? [])]);
   const visit = effectiveVisit(house);
-  const treatStock: TreatStock = { ...defaultTreatStock(treats), ...(house.treatStock ?? {}) };
+  const treatStock: TreatStock = {
+    ...defaultTreatStock(treats),
+    ...(house.treatStock ?? {}),
+  };
+  if (!treatStock.candy) treatStock.candy = "plenty";
   return {
     ...house,
     theme,
@@ -284,11 +290,17 @@ export async function submitHouse(input: HouseInput) {
     if (already) return already;
     const now = new Date().toISOString();
     const visit: VisitState = input.visit ?? "come";
-    const treats = input.treats;
+    const treats = input.treats.includes("candy")
+      ? input.treats
+      : (["candy" as const, ...input.treats]);
     const house: House = {
       ...input,
       treats,
-      treatStock: { ...defaultTreatStock(treats), ...(input.treatStock ?? {}) },
+      treatStock: {
+        ...defaultTreatStock(treats),
+        ...(input.treatStock ?? {}),
+        candy: input.treatStock?.candy ?? "plenty",
+      },
       visit,
       id,
       status: "approved",

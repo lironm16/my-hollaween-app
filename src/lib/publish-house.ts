@@ -31,11 +31,17 @@ export function readyHouseInput(input: HouseInput): HouseInput {
 function localPreview(input: HouseInput, id: string): PublicHouse {
   const now = new Date().toISOString();
   const visit = input.visit ?? "come";
-  const treats = input.treats ?? [];
+  const treats = input.treats?.includes("candy")
+    ? (input.treats ?? [])
+    : (["candy" as const, ...(input.treats ?? [])]);
   return {
     ...input,
     treats,
-    treatStock: { ...defaultTreatStock(treats), ...(input.treatStock ?? {}) },
+    treatStock: {
+      ...defaultTreatStock(treats),
+      ...(input.treatStock ?? {}),
+      candy: input.treatStock?.candy ?? "plenty",
+    },
     visit,
     id,
     status: "approved",

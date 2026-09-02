@@ -186,6 +186,25 @@
   color: #dc2626;
 }
 
+.house-map-popup-candy {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.house-map-popup-candy.is-plenty {
+  color: #15803d;
+}
+
+.house-map-popup-candy.is-low {
+  color: #d97706;
+}
+
+.house-map-popup-candy.is-out {
+  color: #dc2626;
+}
+
 .house-map-popup-btn {
   display: block;
   width: 100%;

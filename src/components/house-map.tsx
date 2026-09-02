@@ -16,8 +16,8 @@ import "leaflet/dist/leaflet.css";
 import { config, inNeighborhood } from "@/lib/config";
 import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
-import { houseHeadline, themeEmoji } from "@/lib/labels";
-import { effectiveVisit, isFrozen } from "@/lib/house-state";
+import { houseHeadline, stockLabels, themeEmoji } from "@/lib/labels";
+import { candyLevel, effectiveVisit, isFrozen } from "@/lib/house-state";
 import { cn } from "@/lib/utils";
 
 function pinIcon(house: PublicHouse) {
@@ -222,6 +222,16 @@ function HousePreviewPopup({
           {house.openFrom}–{house.openTo}
           {house.accessible ? " · נגיש" : ""}
           {house.treats.includes("glutenFree") ? " · ללא גלוטן" : ""}
+        </div>
+        <div
+          className={cn(
+            "house-map-popup-candy",
+            candyLevel(house) === "out" && "is-out",
+            candyLevel(house) === "low" && "is-low",
+            candyLevel(house) === "plenty" && "is-plenty",
+          )}
+        >
+          ממתקים · {stockLabels[candyLevel(house)]}
         </div>
         {effectiveVisit(house) === "closed" ? (
           <div className="house-map-popup-soldout">נגמר המלאי — אין סיבה לבוא עכשיו</div>

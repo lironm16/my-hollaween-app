@@ -27,7 +27,7 @@ import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { readApiJson } from "@/lib/api-json";
 import { inNeighborhood } from "@/lib/config";
 import { toPublicHouse } from "@/lib/ids";
-import { isFrozen, offersGlutenFree } from "@/lib/house-state";
+import { isFrozen, offersCandy, offersGlutenFree } from "@/lib/house-state";
 import {
   backupLooksNewer,
   loadServerDbBackup,
@@ -53,6 +53,7 @@ export function NeighborhoodApp({
   const [selectedId, setSelectedId] = useState<string | "closed" | null>(null);
   const [accessibleOnly, setAccessibleOnly] = useState(false);
   const [glutenFreeOnly, setGlutenFreeOnly] = useState(false);
+  const [candyOnly, setCandyOnly] = useState(false);
   const [likedOnly, setLikedOnly] = useState(false);
   const [unvisitedOnly, setUnvisitedOnly] = useState(false);
   const [followTick, setFollowTick] = useState(0);
@@ -152,11 +153,21 @@ export function NeighborhoodApp({
     return houses.filter((house) => {
       if (accessibleOnly && !house.accessible) return false;
       if (glutenFreeOnly && !offersGlutenFree(house)) return false;
+      if (candyOnly && !offersCandy(house)) return false;
       if (likedOnly && !likes.likedIds.includes(house.id)) return false;
       if (unvisitedOnly && visits.visitedIds.includes(house.id)) return false;
       return true;
     });
-  }, [houses, accessibleOnly, glutenFreeOnly, likedOnly, unvisitedOnly, likes.likedIds, visits.visitedIds]);
+  }, [
+    houses,
+    accessibleOnly,
+    glutenFreeOnly,
+    candyOnly,
+    likedOnly,
+    unvisitedOnly,
+    likes.likedIds,
+    visits.visitedIds,
+  ]);
 
   const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const selected =
@@ -402,6 +413,9 @@ export function NeighborhoodApp({
         <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5">
           <FilterChip active={accessibleOnly} onClick={() => setAccessibleOnly((v) => !v)}>
             נגיש
+          </FilterChip>
+          <FilterChip active={candyOnly} onClick={() => setCandyOnly((v) => !v)}>
+            ממתקים
           </FilterChip>
           <FilterChip active={glutenFreeOnly} onClick={() => setGlutenFreeOnly((v) => !v)}>
             ללא גלוטן
