@@ -4,11 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { HouseForm } from "@/components/house-form";
+import { CodesCopy } from "@/components/codes-copy";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { statusLabels } from "@/lib/labels";
+import { statusLabels, themeEmoji, themeLabels } from "@/lib/labels";
 import type { House, HouseInput, HouseStatus } from "@/lib/types";
 
 export default function AdminPage() {
@@ -211,10 +212,16 @@ export default function AdminPage() {
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <p className="font-medium text-orange-100">
-                          {house.name}{" "}
+                          {themeEmoji[house.theme ?? "pumpkin"]} {house.name}{" "}
                           <span className="font-mono text-xs text-violet-300">{house.id}</span>
                         </p>
+                        <p className="text-xs text-orange-200/80">
+                          {themeLabels[house.theme ?? "pumpkin"]}
+                        </p>
                         <p className="text-sm text-violet-200">{house.address}</p>
+                        {house.arrival ? (
+                          <p className="text-xs text-amber-200/90">{house.arrival}</p>
+                        ) : null}
                         <p className="mt-1 text-xs text-violet-300">{house.description}</p>
                         <div className="mt-2 flex flex-wrap gap-1">
                           <Badge variant="secondary">{statusLabels[house.status]}</Badge>
@@ -222,7 +229,9 @@ export default function AdminPage() {
                             <Badge className="bg-emerald-700 text-emerald-50">נגיש</Badge>
                           ) : null}
                           {house.soldOut ? <Badge variant="destructive">נגמרו</Badge> : null}
-                          <Badge variant="outline">קוד {house.editCode}</Badge>
+                        </div>
+                        <div className="mt-2">
+                          <CodesCopy id={house.id} editCode={house.editCode} />
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-1.5">

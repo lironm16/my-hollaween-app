@@ -13,13 +13,29 @@ export const TREAT_OPTIONS = [
 ] as const;
 export type TreatId = (typeof TREAT_OPTIONS)[number];
 
+export const HOUSE_THEMES = [
+  "ghost",
+  "witch",
+  "pumpkin",
+  "vampire",
+  "skeleton",
+  "monster",
+  "haunted",
+  "candy",
+  "spider",
+  "blackCat",
+] as const;
+export type HouseTheme = (typeof HOUSE_THEMES)[number];
+
 export const HOUSE_STATUSES = ["pending", "approved", "rejected"] as const;
 export type HouseStatus = (typeof HOUSE_STATUSES)[number];
 
 export type House = {
   id: string;
   name: string;
+  theme: HouseTheme;
   address: string;
+  arrival: string;
   description: string;
   lat: number;
   lng: number;
@@ -39,7 +55,9 @@ export type House = {
 
 export type HouseInput = {
   name: string;
+  theme: HouseTheme;
   address: string;
+  arrival: string;
   description: string;
   lat: number;
   lng: number;

@@ -21,7 +21,9 @@
       "editCode": "184701",
       "createdAt": "2026-09-01T10:00:00.000Z",
       "updatedAt": "2026-09-01T10:00:00.000Z",
-      "accessible": false
+      "accessible": false,
+      "theme": "pumpkin",
+      "arrival": "קומה קרקע. שלוש מדרגות לכניסה."
     },
     {
       "id": "בית-2291",
@@ -44,7 +46,9 @@
       "editCode": "229102",
       "createdAt": "2026-09-01T10:05:00.000Z",
       "updatedAt": "2026-09-01T10:05:00.000Z",
-      "accessible": false
+      "accessible": false,
+      "theme": "haunted",
+      "arrival": "השער הגדול בחזית, לא החצר האחורית."
     },
     {
       "id": "בית-3304",
@@ -68,7 +72,9 @@
       "editCode": "330403",
       "createdAt": "2026-09-01T10:10:00.000Z",
       "updatedAt": "2026-09-01T10:10:00.000Z",
-      "accessible": true
+      "accessible": true,
+      "theme": "candy",
+      "arrival": "דירה 1, כניסה שטוחה מימין לשביל."
     },
     {
       "id": "בית-4418",
@@ -91,7 +97,9 @@
       "editCode": "441804",
       "createdAt": "2026-09-01T10:15:00.000Z",
       "updatedAt": "2026-09-01T10:15:00.000Z",
-      "accessible": false
+      "accessible": false,
+      "theme": "spider",
+      "arrival": "קומה קרקע. הכלב קשור בחצר — להיכנס מהשער."
     },
     {
       "id": "בית-5520",
@@ -114,7 +122,9 @@
       "editCode": "552005",
       "createdAt": "2026-09-01T10:20:00.000Z",
       "updatedAt": "2026-09-01T10:20:00.000Z",
-      "accessible": false
+      "accessible": false,
+      "theme": "witch",
+      "arrival": "קומה 2, דירה 8. מעלית בצד ימין."
     },
     {
       "id": "בית-6637",
@@ -137,7 +147,9 @@
       "editCode": "663706",
       "createdAt": "2026-09-01T10:25:00.000Z",
       "updatedAt": "2026-09-01T10:25:00.000Z",
-      "accessible": true
+      "accessible": true,
+      "theme": "ghost",
+      "arrival": "קומה 1. לצלצל פעם אחת."
     },
     {
       "id": "בית-7742",
@@ -161,7 +173,9 @@
       "editCode": "774207",
       "createdAt": "2026-09-01T10:30:00.000Z",
       "updatedAt": "2026-09-01T10:30:00.000Z",
-      "accessible": false
+      "accessible": false,
+      "theme": "monster",
+      "arrival": "חצר משותפת מאחורי הבניין. לא מהרחוב הראשי."
     },
     {
       "id": "בית-8859",
@@ -184,7 +198,9 @@
       "editCode": "885908",
       "createdAt": "2026-09-01T10:35:00.000Z",
       "updatedAt": "2026-09-01T10:35:00.000Z",
-      "accessible": true
+      "accessible": true,
+      "theme": "pumpkin",
+      "arrival": "דירה 3, ימינה אחרי הדלת הכחולה."
     },
     {
       "id": "בית-9011",
@@ -206,7 +222,9 @@
       "editCode": "901109",
       "createdAt": "2026-09-02T07:10:00.000Z",
       "updatedAt": "2026-09-02T07:10:00.000Z",
-      "accessible": false
+      "accessible": false,
+      "theme": "vampire",
+      "arrival": "קומה קרקע, הכניסה השמאלית."
     },
     {
       "id": "בית-9124",
@@ -228,7 +246,9 @@
       "editCode": "912410",
       "createdAt": "2026-09-02T07:40:00.000Z",
       "updatedAt": "2026-09-02T07:40:00.000Z",
-      "accessible": true
+      "accessible": true,
+      "theme": "blackCat",
+      "arrival": "השער הימני ליד הפארק."
     }
   ]
 }

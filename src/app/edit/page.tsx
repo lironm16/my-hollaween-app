@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { HouseForm } from "@/components/house-form";
+import { CodesCopy } from "@/components/codes-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -114,6 +115,7 @@ export default function EditPage() {
         </div>
         {house ? (
           <div className="space-y-3">
+            <CodesCopy id={house.id} editCode={editCode} />
             <p className="text-sm text-violet-200">
               סטטוס: {statusText(house.status)}
               {house.status === "pending"

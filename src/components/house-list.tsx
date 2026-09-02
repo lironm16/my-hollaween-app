@@ -34,7 +34,7 @@ export function HouseList({
     const needle = q.trim();
     return houses
       .filter((h) => {
-        const text = `${h.name} ${h.address} ${h.description} ${h.id}`;
+        const text = `${h.name} ${h.address} ${h.description} ${h.id} ${h.arrival ?? ""} ${h.theme ?? ""}`;
         const matchQ = !needle || text.includes(needle);
         const matchT = treat === "all" || h.treats.includes(treat);
         return matchQ && matchT;

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { HouseForm } from "@/components/house-form";
+import { CodesCopy } from "@/components/codes-copy";
 import { Button } from "@/components/ui/button";
 import { saveOwnedHouse } from "@/lib/offline-db";
 import type { HouseInput } from "@/lib/types";
@@ -59,8 +60,7 @@ export default function AddPage() {
             <p className="text-sm text-violet-100">
               {done.name} נשלח למנהלי השכונה. עד האישור רק אתם תראו אותו במפה, כסיכת רוח 👻.
             </p>
-            <CopyRow label="מזהה הבית" value={done.id} />
-            <CopyRow label="קוד עריכה סודי — שמרו אותו" value={done.editCode} />
+            <CodesCopy id={done.id} editCode={done.editCode} />
             <p className="text-xs text-amber-200">
               עם הקוד אפשר לעדכן פרטים או לסמן שנגמרו הממתקים, גם בלי מנהל.
             </p>
@@ -85,24 +85,6 @@ export default function AddPage() {
           </>
         )}
       </main>
-    </div>
-  );
-}
-
-function CopyRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs text-violet-300">{label}</p>
-      <button
-        type="button"
-        className="mt-1 w-full rounded-lg bg-black/40 px-3 py-2 text-start font-mono text-lg tracking-wide text-orange-200 ring-1 ring-orange-500/20"
-        onClick={async () => {
-          await navigator.clipboard.writeText(value);
-          toast.success("הועתק");
-        }}
-      >
-        {value}
-      </button>
     </div>
   );
 }

@@ -13,11 +13,11 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { config } from "@/lib/config";
 import type { PublicHouse } from "@/lib/types";
-import { scareShort } from "@/lib/labels";
+import { scareShort, themeEmoji, themeLabels } from "@/lib/labels";
 
 function pinIcon(house: PublicHouse) {
   const kind = house.status === "pending" ? "pending" : house.soldOut ? "soldout" : "ok";
-  const emoji = kind === "pending" ? "👻" : kind === "soldout" ? "🕸️" : "🎃";
+  const emoji = kind === "pending" ? "👻" : kind === "soldout" ? "🕸️" : themeEmoji[house.theme ?? "pumpkin"];
   return L.divIcon({
     className: "",
     html: `<div class="pumpkin-pin ${kind === "soldout" ? "is-soldout" : ""} ${kind === "pending" ? "is-pending" : ""}"><span>${emoji}</span></div>`,
@@ -169,7 +169,11 @@ export function HouseMap({
               <Popup>
                 <div dir="rtl" className="min-w-[160px] text-right">
                   <strong>{house.name}</strong>
+                  <div>
+                    {themeEmoji[house.theme ?? "pumpkin"]} {themeLabels[house.theme ?? "pumpkin"]}
+                  </div>
                   <div>{house.address}</div>
+                  {house.arrival ? <div>{house.arrival}</div> : null}
                   <div>
                     {scareShort[house.scareLevel]} · {house.openFrom}–{house.openTo}
                     {house.accessible ? " · נגיש" : ""}

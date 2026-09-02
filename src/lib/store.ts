@@ -3,13 +3,15 @@ import path from "node:path";
 import { newEditCode, newPublicId, toPublicHouse } from "@/lib/ids";
 import { inNeighborhood } from "@/lib/config";
 import { config } from "@/lib/config";
-import type {
-  Catalog,
-  DbFile,
-  House,
-  HouseInput,
-  HouseStatus,
-  PublicHouse,
+import {
+  HOUSE_THEMES,
+  type Catalog,
+  type DbFile,
+  type House,
+  type HouseInput,
+  type HouseStatus,
+  type HouseTheme,
+  type PublicHouse,
 } from "@/lib/types";
 
 const SEED_PATH = path.join(process.cwd(), "data", "seed.json");
@@ -57,8 +59,13 @@ async function readSeed(): Promise<DbFile> {
 }
 
 function normalizeHouse(house: House): House {
+  const theme = HOUSE_THEMES.includes(house.theme as HouseTheme)
+    ? (house.theme as HouseTheme)
+    : "pumpkin";
   return {
     ...house,
+    theme,
+    arrival: house.arrival ?? "",
     accessible: Boolean(house.accessible),
     soldOut: Boolean(house.soldOut),
   };
@@ -198,7 +205,9 @@ export async function adminUpdate(
       }
     }
     if (patch.name !== undefined) house.name = patch.name;
+    if (patch.theme !== undefined) house.theme = patch.theme;
     if (patch.address !== undefined) house.address = patch.address;
+    if (patch.arrival !== undefined) house.arrival = patch.arrival;
     if (patch.description !== undefined) house.description = patch.description;
     if (patch.lat !== undefined) house.lat = patch.lat;
     if (patch.lng !== undefined) house.lng = patch.lng;
@@ -226,7 +235,9 @@ function sanitizeOwnerPatch(
 ): Partial<House> {
   const next: Partial<House> = {};
   if (patch.name !== undefined) next.name = patch.name;
+  if (patch.theme !== undefined) next.theme = patch.theme;
   if (patch.address !== undefined) next.address = patch.address;
+  if (patch.arrival !== undefined) next.arrival = patch.arrival;
   if (patch.description !== undefined) next.description = patch.description;
   if (patch.lat !== undefined) next.lat = patch.lat;
   if (patch.lng !== undefined) next.lng = patch.lng;

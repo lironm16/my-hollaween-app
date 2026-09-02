@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
-import { treatLabels, scareLabels } from "@/lib/labels";
+import { treatLabels, scareLabels, themeLabels, themeEmoji } from "@/lib/labels";
 import { config, inNeighborhood } from "@/lib/config";
 import {
+  HOUSE_THEMES,
   TREAT_OPTIONS,
   type HouseInput,
   type ScareLevel,
@@ -17,7 +18,9 @@ import {
 
 const empty: HouseInput = {
   name: "",
+  theme: "pumpkin",
   address: "",
+  arrival: "",
   description: "",
   lat: config.map.center.lat,
   lng: config.map.center.lng,
@@ -115,6 +118,25 @@ export function HouseForm({
           placeholder="למשל בית משפחת לוי"
         />
       </Field>
+      <div>
+        <p className="mb-2 text-sm font-medium">כותרת הבית</p>
+        <div className="flex flex-wrap gap-1.5">
+          {HOUSE_THEMES.map((theme) => (
+            <button
+              key={theme}
+              type="button"
+              onClick={() => setForm({ ...form, theme })}
+              className={
+                form.theme === theme
+                  ? "rounded-full bg-orange-500 px-3 py-1.5 text-xs font-medium text-black"
+                  : "rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
+              }
+            >
+              {themeEmoji[theme]} {themeLabels[theme]}
+            </button>
+          ))}
+        </div>
+      </div>
       <Field label="כתובת">
         <Input
           required
@@ -122,6 +144,13 @@ export function HouseForm({
           minLength={3}
           onChange={(e) => setForm({ ...form, address: e.target.value })}
           placeholder="רחוב ומספר"
+        />
+      </Field>
+      <Field label="איך מגיעים — קומה, דירה, הוראות">
+        <Input
+          value={form.arrival}
+          onChange={(e) => setForm({ ...form, arrival: e.target.value })}
+          placeholder="קומה 2, דירה 5, ימינה אחרי השער"
         />
       </Field>
       <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-sm ring-1 ring-orange-500/20">

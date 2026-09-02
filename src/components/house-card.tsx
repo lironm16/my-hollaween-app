@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { scareShort, treatLabels } from "@/lib/labels";
+import { scareShort, treatLabels, themeEmoji, themeLabels } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -24,14 +24,19 @@ export function HouseCard({
     >
       <CardHeader className="pb-1">
         <CardTitle className="flex items-start justify-between gap-2 text-orange-100">
-          <span>{house.soldOut ? "🕸️ " : "🎃 "}{house.name}</span>
+          <span>
+            {house.soldOut ? "🕸️ " : `${themeEmoji[house.theme ?? "pumpkin"]} `}
+            {house.name}
+          </span>
           <Badge variant={house.scareLevel === "spicy" ? "destructive" : "secondary"}>
             {scareShort[house.scareLevel]}
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 text-violet-100/80">
+        <p className="text-xs text-orange-200/80">{themeLabels[house.theme ?? "pumpkin"]}</p>
         <p>{house.address}</p>
+        {house.arrival ? <p className="text-xs text-amber-200/90">{house.arrival}</p> : null}
         <p className="text-xs">
           {house.openFrom}–{house.openTo}
           {distanceM !== undefined ? ` · ${formatDistance(distanceM)}` : ""}

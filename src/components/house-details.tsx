@@ -1,8 +1,12 @@
+"use client";
+
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { scareLabels, treatLabels } from "@/lib/labels";
+import { CodesCopy } from "@/components/codes-copy";
+import { scareLabels, treatLabels, themeEmoji, themeLabels } from "@/lib/labels";
+import { loadOwnedHouses } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
-import Link from "next/link";
 
 export function HouseDetails({
   house,
@@ -13,15 +17,24 @@ export function HouseDetails({
 }) {
   const maps = `https://www.google.com/maps?q=${house.lat},${house.lng}`;
   const waze = `https://waze.com/ul?ll=${house.lat},${house.lng}&navigate=yes`;
+  const owned = loadOwnedHouses().find((item) => item.id === house.id);
+  const theme = house.theme ?? "pumpkin";
   return (
     <div className="space-y-3">
       <div>
+        <p className="text-sm text-orange-200/90">
+          {themeEmoji[theme]} {themeLabels[theme]}
+        </p>
         <p className="font-display text-xl text-orange-300">
-          {house.soldOut ? "🕸️" : "🎃"} {house.name}
+          {house.soldOut ? "🕸️" : themeEmoji[theme]} {house.name}
         </p>
         <p className="text-sm text-violet-200">{house.address}</p>
-        <p className="mt-1 font-mono text-xs text-orange-200/70">{house.id}</p>
       </div>
+      {house.arrival ? (
+        <p className="rounded-lg bg-[#2a1638] px-3 py-2 text-sm text-amber-100">
+          איך מגיעים: {house.arrival}
+        </p>
+      ) : null}
       {house.soldOut ? (
         <p className="rounded-lg bg-red-950/60 px-3 py-2 text-sm text-red-200">
           נגמרו הממתקים בבית הזה לפי שעה.
@@ -46,6 +59,7 @@ export function HouseDetails({
       {house.notes ? (
         <p className="text-sm text-amber-200/90">הערה: {house.notes}</p>
       ) : null}
+      <CodesCopy id={house.id} editCode={owned?.editCode} />
       <div className="flex flex-wrap gap-2 pt-1">
         <a href={waze} target="_blank" rel="noreferrer">
           <Button size="sm">ניווט ב־Waze</Button>

@@ -1,9 +1,11 @@
 import { z } from "zod";
-import { SCARE_LEVELS, TREAT_OPTIONS } from "@/lib/types";
+import { HOUSE_THEMES, SCARE_LEVELS, TREAT_OPTIONS } from "@/lib/types";
 
 const houseFields = z.object({
   name: z.string().trim().min(2).max(80),
+  theme: z.enum(HOUSE_THEMES),
   address: z.string().trim().min(3).max(120),
+  arrival: z.string().trim().max(240),
   description: z.string().trim().max(500),
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
@@ -16,6 +18,8 @@ const houseFields = z.object({
 });
 
 export const houseInputSchema = houseFields.extend({
+  theme: z.enum(HOUSE_THEMES).default("pumpkin"),
+  arrival: z.string().trim().max(240).default(""),
   description: z.string().trim().max(500).default(""),
   treats: z.array(z.enum(TREAT_OPTIONS)).max(12).default([]),
   notes: z.string().trim().max(240).default(""),
