@@ -7,13 +7,17 @@ import { HouseDetails } from "@/components/house-details";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { buttonVariants } from "@/components/ui/button";
 import { useCatalog } from "@/hooks/use-catalog";
+import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { cn } from "@/lib/utils";
 
 export default function HousePage() {
   const params = useParams<{ id: string }>();
   const id = decodeURIComponent(params.id);
   const { catalog, loading, error } = useCatalog();
-  const house = catalog?.houses.find((h) => h.id === id);
+  const owned = useOwnedHouses();
+  const house =
+    catalog?.houses.find((h) => h.id === id) ??
+    owned.find((item) => item.id === id)?.preview;
   const missing = !loading && Boolean(catalog) && !house;
 
   return (
@@ -32,7 +36,10 @@ export default function HousePage() {
         ) : (
           <div className="space-y-3">
             <p className="text-violet-100">
-              {error ?? (missing ? "הבית לא נמצא במפה. אולי הוא עדיין ממתין לאישור." : "לא נמצא.")}
+              {error ??
+                (missing
+                  ? "הבית לא במפה הציבורית. אולי הוא ממתין לאישור, מוקפא, או שנגמר הערב."
+                  : "לא נמצא.")}
             </p>
             <Link href="/" className={cn(buttonVariants())}>
               חזרה למפה

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/sheet";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
+import { isFrozen } from "@/lib/house-state";
 import type { Catalog, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -153,6 +154,11 @@ export function NeighborhoodApp({
               {selected.status === "pending" ? (
                 <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-sm text-violet-100">
                   הבית שלכם ממתין לאישור מנהל. רק אתם רואים אותו במפה בינתיים.
+                </p>
+              ) : null}
+              {isFrozen(selected) ? (
+                <p className="mb-3 rounded-lg bg-[#2a1638] px-3 py-2 text-sm text-amber-100">
+                  הבית מוקפא — הילדים בשכונה לא רואים אותו. רק אתם (או מנהל) רואים את הסיכה השקופה.
                 </p>
               ) : null}
               <HouseDetails house={selected} />

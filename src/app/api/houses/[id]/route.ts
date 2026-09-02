@@ -18,7 +18,7 @@ export async function GET(
     const hidden = await getHouse(id);
     if (hidden) {
       return NextResponse.json(
-        { error: "הבית ממתין לאישור ואינו מוצג במפה עדיין." },
+        { error: "הבית לא מוצג במפה הציבורית עכשיו." },
         { status: 404 },
       );
     }

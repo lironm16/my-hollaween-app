@@ -13,15 +13,27 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { config } from "@/lib/config";
 import type { PublicHouse } from "@/lib/types";
-import { scareShort, houseHeadline, themeEmoji } from "@/lib/labels";
+import { scareShort, houseHeadline, themeEmoji, visitShort } from "@/lib/labels";
+import { effectiveVisit, isFrozen } from "@/lib/house-state";
 import { cn } from "@/lib/utils";
 
 function pinIcon(house: PublicHouse) {
-  const kind = house.status === "pending" ? "pending" : house.soldOut ? "soldout" : "ok";
-  const emoji = kind === "pending" ? "👻" : kind === "soldout" ? "🕸️" : themeEmoji[house.theme ?? "pumpkin"];
+  const frozen = isFrozen(house);
+  const visit = effectiveVisit(house);
+  const kind = frozen
+    ? "frozen"
+    : house.status === "pending"
+      ? "pending"
+      : visit === "closed"
+        ? "closed"
+        : visit === "decorOnly"
+          ? "decor"
+          : "ok";
+  const emoji =
+    kind === "pending" ? "👻" : kind === "closed" ? "🕸️" : kind === "frozen" ? "😶" : themeEmoji[house.theme ?? "pumpkin"];
   return L.divIcon({
     className: "",
-    html: `<div class="pumpkin-pin ${kind === "soldout" ? "is-soldout" : ""} ${kind === "pending" ? "is-pending" : ""}"><span>${emoji}</span></div>`,
+    html: `<div class="pumpkin-pin is-${kind}"><span>${emoji}</span></div>`,
     iconSize: [40, 44],
     iconAnchor: [20, 42],
     popupAnchor: [0, -36],
@@ -182,6 +194,7 @@ export function HouseMap({
                     {scareShort[house.scareLevel]} · {house.openFrom}–{house.openTo}
                     {house.accessible ? " · נגיש" : ""}
                     {house.status === "pending" ? " · ממתין" : ""}
+                    {isFrozen(house) ? " · מוקפא" : ` · ${visitShort[effectiveVisit(house)]}`}
                   </div>
                 </div>
               </Popup>

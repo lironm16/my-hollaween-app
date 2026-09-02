@@ -1,4 +1,12 @@
-import { HOUSE_THEMES, type HouseStatus, type HouseTheme, type ScareLevel, type TreatId } from "@/lib/types";
+import {
+  HOUSE_THEMES,
+  type HouseStatus,
+  type HouseTheme,
+  type ScareLevel,
+  type StockLevel,
+  type TreatId,
+  type VisitState,
+} from "@/lib/types";
 
 export const treatLabels: Record<TreatId, string> = {
   candy: "ממתקים",
@@ -66,10 +74,16 @@ export function themeFromName(name: string): HouseTheme | undefined {
   return HOUSE_THEMES.find((theme) => nameMatchesTheme(name, theme));
 }
 
-export function houseHeadline(house: { name: string; theme?: HouseTheme; soldOut?: boolean }) {
+export function houseHeadline(house: {
+  name: string;
+  theme?: HouseTheme;
+  soldOut?: boolean;
+  visit?: VisitState;
+}) {
   const theme = house.theme ?? "pumpkin";
   const name = house.name.trim();
-  if (house.soldOut && !name.includes("🕸️")) {
+  const closed = house.visit === "closed" || Boolean(house.soldOut);
+  if (closed && !name.includes("🕸️")) {
     return nameMatchesTheme(name, theme) || name.includes(themeEmoji[theme])
       ? `🕸️ ${name.replace(themeEmoji[theme], "").trim()}`
       : `🕸️ ${name}`;
@@ -77,6 +91,24 @@ export function houseHeadline(house: { name: string; theme?: HouseTheme; soldOut
   if (name.includes(themeEmoji[theme]) || nameMatchesTheme(name, theme)) return name;
   return `${themeEmoji[theme]} ${name}`;
 }
+
+export const visitLabels: Record<VisitState, string> = {
+  come: "בואו — יש מה לקבל",
+  decorOnly: "מקושט — בלי ממתקים, אפשר להסתכל",
+  closed: "נגמר — אין סיבה לבוא",
+};
+
+export const visitShort: Record<VisitState, string> = {
+  come: "בואו",
+  decorOnly: "מקושט",
+  closed: "נגמר",
+};
+
+export const stockLabels: Record<StockLevel, string> = {
+  plenty: "יש",
+  low: "מעט",
+  out: "נגמר",
+};
 
 export const statusLabels: Record<HouseStatus, string> = {
   pending: "ממתין לאישור",

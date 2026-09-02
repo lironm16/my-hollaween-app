@@ -4,13 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { HouseForm } from "@/components/house-form";
+import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { CodesCopy } from "@/components/codes-copy";
+import { NightDesk } from "@/components/night-desk";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { statusLabels, houseHeadline } from "@/lib/labels";
-import type { House, HouseInput, HouseStatus } from "@/lib/types";
+import { statusLabels, houseHeadline, visitShort } from "@/lib/labels";
+import { freezeLabel, isFrozen } from "@/lib/house-state";
+import type { House, HouseInput, HouseStatus, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export default function AdminPage() {
@@ -18,9 +21,10 @@ export default function AdminPage() {
   const [admin, setAdmin] = useState(false);
   const [password, setPassword] = useState("");
   const [houses, setHouses] = useState<House[]>([]);
-  const [filter, setFilter] = useState<HouseStatus | "all">("pending");
+  const [filter, setFilter] = useState<HouseStatus | "all" | "frozen">("pending");
   const [editing, setEditing] = useState<House | null>(null);
   const [busy, setBusy] = useState(false);
+  const [view, setView] = useState<"list" | "map">("list");
 
   async function loadHouses() {
     const res = await fetch("/api/admin/houses", { cache: "no-store" });
@@ -93,17 +97,26 @@ export default function AdminPage() {
     if (!editing) return;
     setBusy(true);
     try {
-      await patch(editing.id, { ...input, soldOut: editing.soldOut });
+      await patch(editing.id, { ...input });
     } finally {
       setBusy(false);
     }
   }
 
   const pendingCount = houses.filter((h) => h.status === "pending").length;
-  const visible = useMemo(
-    () => (filter === "all" ? houses : houses.filter((h) => h.status === filter)),
-    [houses, filter],
-  );
+  const frozenCount = houses.filter((h) => isFrozen(h)).length;
+  const visible = useMemo(() => {
+    if (filter === "all") return houses;
+    if (filter === "frozen") return houses.filter((h) => isFrozen(h));
+    return houses.filter((h) => h.status === filter);
+  }, [houses, filter]);
+  const mapHouses: PublicHouse[] = houses
+    .filter((h) => h.status !== "rejected")
+    .map(({ editCode, rejectionReason, ...rest }) => {
+      void editCode;
+      void rejectionReason;
+      return rest;
+    });
 
   if (!ready) {
     return (
@@ -153,10 +166,10 @@ export default function AdminPage() {
         ) : (
           <div className="mt-4 space-y-4">
             <p className="text-sm text-violet-200">
-              {pendingCount} בתים ממתינים לאישור · {houses.filter((h) => h.status === "approved").length} במפה
+              {pendingCount} ממתינים · {houses.filter((h) => h.status === "approved").length} מאושרים · {frozenCount} מוקפאים (סיכה שקופה במפה)
             </p>
             <div className="flex flex-wrap gap-2">
-              {(["pending", "approved", "rejected", "all"] as const).map((key) => (
+              {(["pending", "approved", "rejected", "frozen", "all"] as const).map((key) => (
                 <button
                   key={key}
                   type="button"
@@ -167,9 +180,16 @@ export default function AdminPage() {
                       : "rounded-full bg-[#1d1028] px-3 py-1 text-xs text-orange-100 ring-1 ring-orange-500/25"
                   }
                 >
-                  {key === "all" ? "הכל" : statusLabels[key]}
+                  {key === "all" ? "הכל" : key === "frozen" ? "מוקפאים" : statusLabels[key]}
                 </button>
               ))}
+              <button
+                type="button"
+                onClick={() => setView(view === "map" ? "list" : "map")}
+                className="rounded-full bg-[#1d1028] px-3 py-1 text-xs text-orange-100 ring-1 ring-orange-500/25"
+              >
+                {view === "map" ? "רשימה" : "מפת מנהל"}
+              </button>
               <a href="/api/admin/export" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
                 הורדת catalog.json
               </a>
@@ -188,25 +208,48 @@ export default function AdminPage() {
                 <p className="mb-3 font-mono text-xs text-violet-300">
                   {editing.id} · קוד עריכה: {editing.editCode}
                 </p>
+                <div className="mb-4">
+                  <NightDesk
+                    admin
+                    house={{ ...editing }}
+                    editCode={editing.editCode}
+                    onUpdated={(next) => {
+                      setEditing({ ...editing, ...next, editCode: editing.editCode });
+                      void loadHouses();
+                    }}
+                  />
+                </div>
                 <HouseForm
                   initial={editing}
                   submitLabel="שמירת מנהל"
                   onSubmit={saveEdit}
                   busy={busy}
-                  showSoldOut
-                  soldOut={editing.soldOut}
-                  onSoldOutChange={(v) => setEditing({ ...editing, soldOut: v })}
                 />
               </div>
             ) : null}
-            <ul className="space-y-2">
+            {view === "map" ? (
+              <div className="relative z-0 isolate h-[50vh] overflow-hidden rounded-xl ring-1 ring-orange-500/25">
+                <HouseMapDynamic
+                  houses={mapHouses}
+                  onSelect={(h) => {
+                    const full = houses.find((x) => x.id === h.id);
+                    if (full) setEditing(full);
+                  }}
+                  className="h-full w-full"
+                />
+              </div>
+            ) : (
+              <ul className="space-y-2">
               {visible.length === 0 ? (
                 <li className="py-10 text-center text-violet-300">אין בתים בתור הזה.</li>
               ) : (
                 visible.map((house) => (
                   <li
                     key={house.id}
-                    className="rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/15"
+                    className={cn(
+                      "rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/15",
+                      isFrozen(house) && "opacity-70",
+                    )}
                   >
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
@@ -221,10 +264,15 @@ export default function AdminPage() {
                         <p className="mt-1 text-xs text-violet-300">{house.description}</p>
                         <div className="mt-2 flex flex-wrap gap-1">
                           <Badge variant="secondary">{statusLabels[house.status]}</Badge>
+                          <Badge variant="outline">{visitShort[house.visit ?? "come"]}</Badge>
                           {house.accessible ? (
                             <Badge className="bg-emerald-700 text-emerald-50">נגיש</Badge>
                           ) : null}
-                          {house.soldOut ? <Badge variant="destructive">נגמרו</Badge> : null}
+                          {isFrozen(house) ? (
+                            <Badge className="bg-violet-900 text-violet-100">
+                              {freezeLabel(house) ?? "מוקפא"}
+                            </Badge>
+                          ) : null}
                         </div>
                         <div className="mt-2">
                           <CodesCopy id={house.id} editCode={house.editCode} />
@@ -258,10 +306,15 @@ export default function AdminPage() {
                           size="sm"
                           variant="outline"
                           onClick={() =>
-                            void patch(house.id, { soldOut: !house.soldOut })
+                            void patch(
+                              house.id,
+                              isFrozen(house)
+                                ? { adminFrozen: false, ownerFrozenUntil: null }
+                                : { adminFrozen: true },
+                            )
                           }
                         >
-                          {house.soldOut ? "יש ממתקים" : "נגמרו"}
+                          {isFrozen(house) ? "החזר למפה" : "הקפא"}
                         </Button>
                         <Button size="sm" variant="ghost" onClick={() => setEditing(house)}>
                           עריכה
@@ -271,7 +324,8 @@ export default function AdminPage() {
                   </li>
                 ))
               )}
-            </ul>
+              </ul>
+            )}
           </div>
         )}
       </main>

@@ -151,6 +151,19 @@
   filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.9));
 }
 
+.pumpkin-pin.is-frozen {
+  opacity: 0.38;
+  filter: grayscale(0.55);
+}
+
+.pumpkin-pin.is-closed {
+  opacity: 0.72;
+}
+
+.pumpkin-pin.is-decor span {
+  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.85));
+}
+
 .cobweb {
   position: absolute;
   width: 120px;

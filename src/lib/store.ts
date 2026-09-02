@@ -4,6 +4,7 @@ import { newEditCode, newPublicId, toPublicHouse } from "@/lib/ids";
 import { inNeighborhood } from "@/lib/config";
 import { config } from "@/lib/config";
 import { assertRealAddress } from "@/lib/geocode";
+import { defaultTreatStock, effectiveVisit, isPubliclyListed } from "@/lib/house-state";
 import {
   HOUSE_THEMES,
   type Catalog,
@@ -12,7 +13,10 @@ import {
   type HouseInput,
   type HouseStatus,
   type HouseTheme,
+  type NightPatch,
   type PublicHouse,
+  type TreatStock,
+  type VisitState,
 } from "@/lib/types";
 
 const SEED_PATH = path.join(process.cwd(), "data", "seed.json");
@@ -63,12 +67,21 @@ function normalizeHouse(house: House): House {
   const theme = HOUSE_THEMES.includes(house.theme as HouseTheme)
     ? (house.theme as HouseTheme)
     : "pumpkin";
+  const treats = house.treats ?? [];
+  const visit = effectiveVisit(house);
+  const treatStock: TreatStock = { ...defaultTreatStock(treats), ...(house.treatStock ?? {}) };
   return {
     ...house,
     theme,
     arrival: house.arrival ?? "",
     accessible: Boolean(house.accessible),
-    soldOut: Boolean(house.soldOut),
+    treats,
+    visit,
+    treatStock,
+    soldOut: visit === "closed",
+    adminFrozen: Boolean(house.adminFrozen),
+    ownerFrozenUntil: house.ownerFrozenUntil ?? null,
+    photoUrl: house.photoUrl ?? "",
   };
 }
 
@@ -92,7 +105,7 @@ let loadOnce: Promise<DbFile> | null = null;
 
 function setMem(db: DbFile) {
   mem = db;
-  catalogMem = asCatalog(db.houses, db.updatedAt);
+  catalogMem = null;
 }
 
 async function ensureDb(): Promise<DbFile> {
@@ -116,7 +129,7 @@ async function writeDb(db: DbFile) {
 
 export function asCatalog(houses: House[], updatedAt: string): Catalog {
   const published: PublicHouse[] = houses
-    .filter((h) => h.status === "approved")
+    .filter((h) => isPubliclyListed(h))
     .map((h) => toPublicHouse(h));
   return {
     updatedAt,
@@ -126,8 +139,10 @@ export function asCatalog(houses: House[], updatedAt: string): Catalog {
 }
 
 export async function getCatalog(): Promise<Catalog> {
-  await ensureDb();
-  return catalogMem as Catalog;
+  const db = await ensureDb();
+  // Re-filter every read so a timed owner freeze can expire without another write.
+  catalogMem = asCatalog(db.houses, db.updatedAt);
+  return catalogMem;
 }
 
 export async function getAllHouses(): Promise<House[]> {
@@ -147,11 +162,19 @@ export async function submitHouse(input: HouseInput) {
     const now = new Date().toISOString();
     let id = newPublicId();
     while (db.houses.some((h) => h.id === id)) id = newPublicId();
+    const visit: VisitState = input.visit ?? "come";
+    const treats = input.treats;
     const house: House = {
       ...input,
+      treats,
+      treatStock: { ...defaultTreatStock(treats), ...(input.treatStock ?? {}) },
+      visit,
       id,
       status: "pending",
-      soldOut: false,
+      soldOut: visit === "closed",
+      adminFrozen: false,
+      ownerFrozenUntil: null,
+      photoUrl: "",
       editCode: newEditCode(),
       createdAt: now,
       updatedAt: now,
@@ -166,7 +189,7 @@ export async function submitHouse(input: HouseInput) {
 export async function updateByEditCode(
   id: string,
   editCode: string,
-  patch: Partial<HouseInput> & { soldOut?: boolean },
+  patch: Partial<HouseInput> & NightPatch,
 ) {
   const current = await getHouse(id);
   if (!current || current.editCode !== editCode) return null;
@@ -186,7 +209,12 @@ export async function updateByEditCode(
         throw new Error("OUT_OF_BOUNDS");
       }
     }
-    Object.assign(house, sanitizeOwnerPatch(patch));
+    const clean = sanitizeOwnerPatch(patch);
+    if (clean.treatStock) {
+      house.treatStock = { ...house.treatStock, ...clean.treatStock };
+      delete clean.treatStock;
+    }
+    Object.assign(house, clean);
     house.updatedAt = new Date().toISOString();
     if (house.status === "rejected") house.status = "pending";
     db.updatedAt = house.updatedAt;
@@ -197,9 +225,8 @@ export async function updateByEditCode(
 
 export async function adminUpdate(
   id: string,
-  patch: Partial<HouseInput> & {
+  patch: Partial<HouseInput> & NightPatch & {
     status?: HouseStatus;
-    soldOut?: boolean;
     rejectionReason?: string;
   },
 ) {
@@ -229,12 +256,21 @@ export async function adminUpdate(
     if (patch.lat !== undefined) house.lat = patch.lat;
     if (patch.lng !== undefined) house.lng = patch.lng;
     if (patch.treats !== undefined) house.treats = patch.treats;
+    if (patch.treatStock !== undefined) house.treatStock = { ...house.treatStock, ...patch.treatStock };
+    if (patch.visit !== undefined) house.visit = patch.visit;
     if (patch.scareLevel !== undefined) house.scareLevel = patch.scareLevel;
     if (patch.openFrom !== undefined) house.openFrom = patch.openFrom;
     if (patch.openTo !== undefined) house.openTo = patch.openTo;
     if (patch.notes !== undefined) house.notes = patch.notes;
     if (patch.accessible !== undefined) house.accessible = patch.accessible;
-    if (patch.soldOut !== undefined) house.soldOut = patch.soldOut;
+    if (patch.adminFrozen !== undefined) house.adminFrozen = patch.adminFrozen;
+    if (patch.ownerFrozenUntil !== undefined) house.ownerFrozenUntil = patch.ownerFrozenUntil;
+    if (patch.photoUrl !== undefined) house.photoUrl = patch.photoUrl;
+    if (patch.visit !== undefined) house.soldOut = patch.visit === "closed";
+    else if (patch.soldOut !== undefined) {
+      house.soldOut = patch.soldOut;
+      house.visit = patch.soldOut ? "closed" : house.visit === "closed" ? "come" : house.visit;
+    }
     if (patch.status !== undefined) house.status = patch.status;
     if (patch.rejectionReason !== undefined) {
       house.rejectionReason = patch.rejectionReason;
@@ -248,7 +284,7 @@ export async function adminUpdate(
 }
 
 function sanitizeOwnerPatch(
-  patch: Partial<HouseInput> & { soldOut?: boolean },
+  patch: Partial<HouseInput> & NightPatch,
 ): Partial<House> {
   const next: Partial<House> = {};
   if (patch.name !== undefined) next.name = patch.name;
@@ -259,11 +295,20 @@ function sanitizeOwnerPatch(
   if (patch.lat !== undefined) next.lat = patch.lat;
   if (patch.lng !== undefined) next.lng = patch.lng;
   if (patch.treats !== undefined) next.treats = patch.treats;
+  if (patch.treatStock !== undefined) next.treatStock = patch.treatStock;
+  if (patch.visit !== undefined) {
+    next.visit = patch.visit;
+    next.soldOut = patch.visit === "closed";
+  } else if (patch.soldOut !== undefined) {
+    next.soldOut = patch.soldOut;
+    next.visit = patch.soldOut ? "closed" : "come";
+  }
   if (patch.scareLevel !== undefined) next.scareLevel = patch.scareLevel;
   if (patch.openFrom !== undefined) next.openFrom = patch.openFrom;
   if (patch.openTo !== undefined) next.openTo = patch.openTo;
   if (patch.notes !== undefined) next.notes = patch.notes;
   if (patch.accessible !== undefined) next.accessible = patch.accessible;
-  if (patch.soldOut !== undefined) next.soldOut = patch.soldOut;
+  if (patch.ownerFrozenUntil !== undefined) next.ownerFrozenUntil = patch.ownerFrozenUntil;
+  if (patch.photoUrl !== undefined) next.photoUrl = patch.photoUrl;
   return next;
 }

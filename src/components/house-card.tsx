@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { scareShort, treatLabels, houseHeadline } from "@/lib/labels";
+import { scareShort, treatLabels, houseHeadline, visitShort, stockLabels } from "@/lib/labels";
+import { effectiveVisit, isFrozen, treatLevel } from "@/lib/house-state";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,8 @@ export function HouseCard({
       className={cn(
         "cursor-pointer border-orange-500/15 bg-[#1d1028]/90 transition hover:border-orange-400/50 hover:bg-[#261536]",
         house.soldOut && "opacity-70",
+        effectiveVisit(house) === "closed" && "opacity-70",
+        isFrozen(house) && "opacity-50",
       )}
       onClick={onOpen}
     >
@@ -36,7 +39,9 @@ export function HouseCard({
         <p className="text-xs">
           {house.openFrom}–{house.openTo}
           {distanceM !== undefined ? ` · ${formatDistance(distanceM)}` : ""}
-          {house.soldOut ? " · נגמרו הממתקים" : ""}
+          {effectiveVisit(house) === "closed" ? " · נגמר — אל תבואו" : ""}
+          {effectiveVisit(house) === "decorOnly" ? " · מקושט בלי ממתקים" : ""}
+          {isFrozen(house) ? " · מוקפא" : ""}
         </p>
         <div className="flex flex-wrap gap-1">
           {house.accessible ? (
@@ -45,11 +50,24 @@ export function HouseCard({
           {house.status === "pending" ? (
             <Badge variant="secondary">ממתין לאישור</Badge>
           ) : null}
-          {house.treats.map((t) => (
-            <Badge key={t} variant="outline" className="border-orange-400/30 text-orange-100">
-              {treatLabels[t]}
-            </Badge>
-          ))}
+          <Badge variant="outline">{visitShort[effectiveVisit(house)]}</Badge>
+          {house.treats.map((t) => {
+            const level = treatLevel(house, t);
+            return (
+              <Badge
+                key={t}
+                variant="outline"
+                className={
+                  level === "out"
+                    ? "border-red-400/40 text-red-200"
+                    : "border-orange-400/30 text-orange-100"
+                }
+              >
+                {treatLabels[t]}
+                {level !== "plenty" ? ` · ${stockLabels[level]}` : ""}
+              </Badge>
+            );
+          })}
         </div>
       </CardContent>
     </Card>

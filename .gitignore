@@ -38,6 +38,11 @@ yarn-error.log*
 /data/db.json
 /data/.write-probe
 
+# optional house photos (generated locally)
+/public/house-photos/*.jpg
+/public/house-photos/*.jpeg
+/public/house-photos/*.webp
+
 # vercel
 .vercel
 

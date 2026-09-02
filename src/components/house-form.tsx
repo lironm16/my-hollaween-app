@@ -33,6 +33,8 @@ const empty: HouseInput = {
   openTo: "21:00",
   notes: "",
   accessible: false,
+  visit: "come",
+  treatStock: { candy: "plenty" },
 };
 
 export function HouseForm({
@@ -40,29 +42,25 @@ export function HouseForm({
   submitLabel,
   onSubmit,
   busy,
-  showSoldOut,
-  soldOut,
-  onSoldOutChange,
 }: {
   initial?: Partial<HouseInput>;
   submitLabel: string;
   onSubmit: (input: HouseInput) => Promise<void> | void;
   busy?: boolean;
-  showSoldOut?: boolean;
-  soldOut?: boolean;
-  onSoldOutChange?: (v: boolean) => void;
 }) {
   const [form, setForm] = useState<HouseInput>({ ...empty, ...initial });
   const [locating, setLocating] = useState(false);
   const [addressOk, setAddressOk] = useState(Boolean(initial?.address && initial.lat && initial.lng));
 
   function toggleTreat(id: TreatId) {
-    setForm((f) => ({
-      ...f,
-      treats: f.treats.includes(id)
-        ? f.treats.filter((t) => t !== id)
-        : [...f.treats, id],
-    }));
+    setForm((f) => {
+      const on = f.treats.includes(id);
+      const treats = on ? f.treats.filter((t) => t !== id) : [...f.treats, id];
+      const treatStock = { ...(f.treatStock ?? {}) };
+      if (on) delete treatStock[id];
+      else treatStock[id] = "plenty";
+      return { ...f, treats, treatStock };
+    });
   }
 
   function applyNameSuggestion(theme: (typeof HOUSE_THEMES)[number]) {
@@ -293,17 +291,6 @@ export function HouseForm({
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
         />
       </Field>
-      {showSoldOut ? (
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            className="size-4 accent-orange-500"
-            checked={Boolean(soldOut)}
-            onChange={(e) => onSoldOutChange?.(e.target.checked)}
-          />
-          נגמרו הממתקים
-        </label>
-      ) : null}
       <Button
         type="submit"
         disabled={busy}

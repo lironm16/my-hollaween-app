@@ -12,13 +12,13 @@ import { Label } from "@/components/ui/label";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { saveOwnedHouse } from "@/lib/offline-db";
 import type { HouseInput, PublicHouse } from "@/lib/types";
+import { NightDesk } from "@/components/night-desk";
 
 export default function EditPage() {
   const owned = useOwnedHouses();
   const [id, setId] = useState("");
   const [editCode, setEditCode] = useState("");
   const [house, setHouse] = useState<PublicHouse | null>(null);
-  const [soldOut, setSoldOut] = useState(false);
   const [busy, setBusy] = useState(false);
   const [filledFromStorage, setFilledFromStorage] = useState(false);
 
@@ -43,7 +43,6 @@ export default function EditPage() {
         return;
       }
       setHouse(data.house);
-      setSoldOut(Boolean(data.house.soldOut));
       saveOwnedHouse({
         id: data.house.id,
         name: data.house.name,
@@ -64,7 +63,7 @@ export default function EditPage() {
       const res = await fetch(`/api/houses/${encodeURIComponent(house.id)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...input, editCode, soldOut }),
+        body: JSON.stringify({ ...input, editCode }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -133,14 +132,24 @@ export default function EditPage() {
                   ? " — אחרי עדכון הבית יישלח שוב לאישור."
                   : ""}
             </p>
+            <NightDesk
+              house={house}
+              editCode={editCode}
+              onUpdated={(next) => {
+                setHouse(next);
+                saveOwnedHouse({
+                  id: next.id,
+                  name: next.name,
+                  editCode,
+                  preview: next,
+                });
+              }}
+            />
             <HouseForm
               initial={house}
               submitLabel="שמירת שינויים"
               onSubmit={onSubmit}
               busy={busy}
-              showSoldOut
-              soldOut={soldOut}
-              onSoldOutChange={setSoldOut}
             />
           </div>
         ) : (

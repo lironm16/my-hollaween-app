@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { HouseCard } from "@/components/house-card";
-import { treatLabels } from "@/lib/labels";
-import { TREAT_OPTIONS, type PublicHouse, type TreatId } from "@/lib/types";
+import { treatLabels, visitShort } from "@/lib/labels";
+import { effectiveVisit, isFrozen } from "@/lib/house-state";
+import { TREAT_OPTIONS, type PublicHouse, type TreatId, type VisitState } from "@/lib/types";
 
 function haversine(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   const R = 6371000;
@@ -29,6 +30,7 @@ export function HouseList({
 }) {
   const [q, setQ] = useState("");
   const [treat, setTreat] = useState<TreatId | "all">("all");
+  const [visit, setVisit] = useState<VisitState | "all">("all");
 
   const filtered = useMemo(() => {
     const needle = q.trim();
@@ -37,18 +39,23 @@ export function HouseList({
         const text = `${h.name} ${h.address} ${h.description} ${h.id} ${h.arrival ?? ""} ${h.theme ?? ""}`;
         const matchQ = !needle || text.includes(needle);
         const matchT = treat === "all" || h.treats.includes(treat);
-        return matchQ && matchT;
+        const v = effectiveVisit(h);
+        const matchV = visit === "all" || v === visit;
+        return matchQ && matchT && matchV;
       })
       .map((h) => ({
         h,
         d: origin ? haversine(origin, h) : undefined,
       }))
       .sort((a, b) => {
-        if (a.h.soldOut !== b.h.soldOut) return a.h.soldOut ? 1 : -1;
+        if (isFrozen(a.h) !== isFrozen(b.h)) return isFrozen(a.h) ? 1 : -1;
+        const va = effectiveVisit(a.h) === "closed";
+        const vb = effectiveVisit(b.h) === "closed";
+        if (va !== vb) return va ? 1 : -1;
         if (a.d !== undefined && b.d !== undefined) return a.d - b.d;
         return a.h.name.localeCompare(b.h.name, "he");
       });
-  }, [houses, q, treat, origin]);
+  }, [houses, q, treat, visit, origin]);
 
   if (houses.length === 0) {
     return (
@@ -67,6 +74,20 @@ export function HouseList({
         placeholder="חיפוש לפי שם, רחוב או מזהה…"
         className="h-10 bg-[#1d1028] text-base"
       />
+      <div className="flex gap-1.5 overflow-x-auto pb-1">
+        <FilterChip active={visit === "all"} onClick={() => setVisit("all")}>
+          הכל
+        </FilterChip>
+        <FilterChip active={visit === "come"} onClick={() => setVisit("come")}>
+          {visitShort.come}
+        </FilterChip>
+        <FilterChip active={visit === "decorOnly"} onClick={() => setVisit("decorOnly")}>
+          {visitShort.decorOnly}
+        </FilterChip>
+        <FilterChip active={visit === "closed"} onClick={() => setVisit("closed")}>
+          {visitShort.closed}
+        </FilterChip>
+      </div>
       <div className="flex gap-1.5 overflow-x-auto pb-1">
         <FilterChip active={treat === "all"} onClick={() => setTreat("all")}>
           הכל

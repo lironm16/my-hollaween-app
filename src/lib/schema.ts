@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { HOUSE_THEMES, SCARE_LEVELS, TREAT_OPTIONS } from "@/lib/types";
+import { HOUSE_THEMES, SCARE_LEVELS, STOCK_LEVELS, TREAT_OPTIONS, VISIT_STATES } from "@/lib/types";
+
+const treatStockSchema = z.partialRecord(z.enum(TREAT_OPTIONS), z.enum(STOCK_LEVELS));
 
 const houseFields = z.object({
   name: z.string().trim().min(2).max(80),
@@ -10,6 +12,8 @@ const houseFields = z.object({
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
   treats: z.array(z.enum(TREAT_OPTIONS)).max(12),
+  treatStock: treatStockSchema,
+  visit: z.enum(VISIT_STATES),
   scareLevel: z.enum(SCARE_LEVELS),
   openFrom: z.string().regex(/^\d{2}:\d{2}$/),
   openTo: z.string().regex(/^\d{2}:\d{2}$/),
@@ -22,17 +26,24 @@ export const houseInputSchema = houseFields.extend({
   arrival: z.string().trim().max(240).default(""),
   description: z.string().trim().max(500).default(""),
   treats: z.array(z.enum(TREAT_OPTIONS)).max(12).default([]),
+  treatStock: treatStockSchema.default({}),
+  visit: z.enum(VISIT_STATES).default("come"),
   notes: z.string().trim().max(240).default(""),
   accessible: z.boolean().default(false),
 });
 
 export const ownerPatchSchema = houseFields.partial().extend({
   soldOut: z.boolean().optional(),
+  ownerFrozenUntil: z.string().nullable().optional(),
+  photoUrl: z.string().max(240).optional(),
   editCode: z.string().min(4).max(12),
 });
 
 export const adminPatchSchema = houseFields.partial().extend({
   soldOut: z.boolean().optional(),
+  ownerFrozenUntil: z.string().nullable().optional(),
+  adminFrozen: z.boolean().optional(),
+  photoUrl: z.string().max(240).optional(),
   status: z.enum(["pending", "approved", "rejected"]).optional(),
   rejectionReason: z.string().max(240).optional(),
 });
