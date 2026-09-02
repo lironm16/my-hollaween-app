@@ -1,12 +1,9 @@
-const CACHE = "hw-shell-v7";
+const CACHE = "hw-shell-v9";
 const TILE_CACHE = "hw-tiles-v3";
 const PRECACHE = [
-  "/",
-  "/add",
-  "/edit",
-  "/admin",
   "/catalog.json",
   "/manifest.webmanifest",
+  "/shell.css",
   "/icon-192.png",
   "/icon-512.png",
   "/images/banner.jpg",
@@ -39,9 +36,23 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
+  if (req.mode === "navigate" || req.destination === "document") {
+    event.respondWith(
+      fetch(req).catch(
+        () =>
+          new Response("לא מקוון", {
+            status: 503,
+            headers: { "Content-Type": "text/plain; charset=utf-8" },
+          }),
+      ),
+    );
+    return;
+  }
+
   if (
     url.pathname.startsWith("/_next/") ||
     url.pathname.startsWith("/__next") ||
+    url.pathname.endsWith(".css") ||
     url.pathname.startsWith("/api/admin") ||
     url.pathname.startsWith("/api/houses") ||
     url.pathname.startsWith("/api/address") ||

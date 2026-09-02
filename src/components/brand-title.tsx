@@ -22,10 +22,11 @@ export function BrandTitle({
         >
           {config.brandHe}
         </span>
+        <span aria-hidden="true"> </span>
         <span
           dir="ltr"
           className={cn(
-            "font-[family-name:var(--font-creepster)] tracking-wide text-orange-400 [text-shadow:0_0_14px_rgba(251,146,60,0.45)]",
+            "font-creepster tracking-wide text-orange-400 [text-shadow:0_0_14px_rgba(251,146,60,0.45)]",
             size === "header" ? "text-[1.35rem] sm:text-[1.55rem]" : "text-4xl sm:text-5xl",
           )}
         >

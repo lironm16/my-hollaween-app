@@ -50,6 +50,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${heebo.variable} ${creepster.variable} dark h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Loaded before hashed Next CSS so a blocked Turbopack URL still has a theme. */}
+        <link rel="stylesheet" href="/shell.css" />
+      </head>
       <body className="relative h-full min-h-dvh font-sans">
         <HalloweenFx />
         <Providers>{children}</Providers>

@@ -107,6 +107,9 @@
     letter-spacing: 0.01em;
     text-shadow: 0 0 22px rgba(255, 140, 0, 0.35);
   }
+  .font-creepster {
+    font-family: var(--font-creepster), Creepster, cursive;
+  }
 }
 
 .leaflet-container {

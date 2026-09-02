@@ -96,7 +96,11 @@ export function NeighborhoodApp({
   }
 
   return (
-    <div className="relative isolate flex h-dvh flex-col overflow-hidden">
+    <div
+      id="neighborhood-shell"
+      className="relative isolate flex h-dvh flex-col overflow-hidden"
+      style={{ display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}
+    >
       <AppHeader
         actions={
           <>
@@ -115,7 +119,10 @@ export function NeighborhoodApp({
           </>
         }
       />
-      <div className="relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2">
+      <div
+        className="app-toolbar relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2"
+        style={{ flexShrink: 0 }}
+      >
         <div className="flex items-center gap-2">
           <div className="flex rounded-lg bg-[#1d1028] p-0.5 ring-1 ring-orange-500/20">
             <Toggle active={view === "map"} onClick={() => setView("map")} icon={<MapPinned className="size-3.5" />}>
@@ -164,7 +171,10 @@ export function NeighborhoodApp({
           {error}
         </div>
       ) : null}
-      <main className="relative z-0 min-h-0 flex-1 isolate">
+      <main
+        className="relative z-0 min-h-0 flex-1 isolate"
+        style={{ flex: 1, minHeight: 0, position: "relative" }}
+      >
         {loading && houses.length === 0 ? (
           <div className="flex h-full items-center justify-center text-orange-200">
             מדליקים דלעות…
@@ -173,9 +183,10 @@ export function NeighborhoodApp({
           <>
             <div
               className={cn(
-                "absolute inset-0",
+                "map-stage absolute inset-0",
                 view !== "map" && "invisible pointer-events-none",
               )}
+              style={{ position: "absolute", inset: 0 }}
               aria-hidden={view !== "map"}
             >
               <HouseMapDynamic
@@ -187,7 +198,10 @@ export function NeighborhoodApp({
               />
             </div>
             {view === "list" ? (
-              <div className="absolute inset-0 overflow-y-auto bg-[#12081a]">
+              <div
+                className="absolute inset-0 overflow-y-auto bg-[#12081a]"
+                style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#12081a" }}
+              >
                 <HouseList
                   houses={visible}
                   onOpen={(house) => setSelectedId(house.id)}
