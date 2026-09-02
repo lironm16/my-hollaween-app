@@ -1,6 +1,8 @@
 import { NeighborhoodApp } from "@/components/neighborhood-app";
 import { getCatalog } from "@/lib/store";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage({
   searchParams,
 }: {

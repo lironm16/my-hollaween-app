@@ -3,6 +3,7 @@ import { config } from "@/lib/config";
 import { getCatalog } from "@/lib/store";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const catalog = await getCatalog();

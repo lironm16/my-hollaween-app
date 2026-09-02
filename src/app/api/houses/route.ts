@@ -36,6 +36,12 @@ export async function POST(request: Request) {
   } catch (error) {
     const geo = geocodeHttpError(error);
     if (geo) return NextResponse.json({ error: geo.error }, { status: geo.status });
+    if (error instanceof Error && error.message === "STORE_UNAVAILABLE") {
+      return NextResponse.json(
+        { error: "לא הצלחנו לשמור לשכונה. נסו שוב בעוד רגע." },
+        { status: 503 },
+      );
+    }
     throw error;
   }
 }

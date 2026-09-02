@@ -43,9 +43,9 @@ export const config = {
     },
   },
   tiles,
-  catalogCacheSeconds: process.env.NODE_ENV === "production" ? 60 : 0,
+  catalogCacheSeconds: process.env.NODE_ENV === "production" ? 8 : 0,
   adminCookie: "hw_admin",
-  // Vercel serverless cannot keep data/db.json. Local `npm run dev` / `npm start` can.
+  // Shared remote JSON by default so every phone sees the same map.
   durableWrites: process.env.NEXT_PUBLIC_DURABLE_WRITES !== "0",
 } as const;
 

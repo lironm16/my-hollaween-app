@@ -1,4 +1,4 @@
-const CACHE = "hw-shell-v5";
+const CACHE = "hw-shell-v6";
 const TILE_CACHE = "hw-tiles-v3";
 const PRECACHE = [
   "/",
@@ -44,12 +44,13 @@ self.addEventListener("fetch", (event) => {
     url.pathname.startsWith("/__next") ||
     url.pathname.startsWith("/api/admin") ||
     url.pathname.startsWith("/api/houses") ||
-    url.pathname.startsWith("/api/address")
+    url.pathname.startsWith("/api/address") ||
+    url.pathname.startsWith("/api/catalog")
   ) {
     return;
   }
 
-  if (url.pathname === "/api/catalog" || url.pathname === "/catalog.json") {
+  if (url.pathname === "/catalog.json") {
     event.respondWith(staleWhileRevalidate(req, CACHE));
     return;
   }

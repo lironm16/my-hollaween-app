@@ -16,8 +16,9 @@ export type CatalogState = {
 };
 
 async function fetchJson(url: string, force = false): Promise<Catalog> {
-  const res = await fetch(url, {
-    cache: force ? "reload" : "default",
+  const href = force ? `${url}${url.includes("?") ? "&" : "?"}t=${Date.now()}` : url;
+  const res = await fetch(href, {
+    cache: force ? "no-store" : "default",
     signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) throw new Error("bad status");
@@ -99,8 +100,12 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
       if (document.visibilityState === "visible") void refresh(false);
     };
     document.addEventListener("visibilitychange", onVis);
+    const poll = window.setInterval(() => {
+      if (document.visibilityState === "visible") void refresh(false);
+    }, 15_000);
     return () => {
       cancelled = true;
+      window.clearInterval(poll);
       window.removeEventListener("online", onOff);
       window.removeEventListener("offline", onOff);
       document.removeEventListener("visibilitychange", onVis);

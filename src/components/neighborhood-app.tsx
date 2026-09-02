@@ -214,7 +214,7 @@ export function NeighborhoodApp({
             <div className="px-4 pb-8">
               {selected.status === "pending" ? (
                 <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-sm text-violet-100">
-                  הבית שלכם ממתין לאישור מנהל. רק אתם רואים אותו במפה בינתיים.
+                  הבית הזה עדיין לא במפה הציבורית. אם זה הבית שלכם, מנהל יכול לאשר אותו.
                 </p>
               ) : null}
               {isFrozen(selected) ? (

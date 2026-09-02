@@ -38,7 +38,7 @@ export default function AddPage() {
         preview: data.house,
       });
       setDone({ id: data.house.id, editCode: data.editCode, name: data.house.name });
-      toast.success("הבית נשלח לאישור");
+      toast.success("הבית עלה למפה של כולם");
     } catch {
       toast.error("אין קשר לשרת. נסו שוב.");
     } finally {
@@ -58,9 +58,9 @@ export default function AddPage() {
         />
         {done ? (
           <div className="space-y-4 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-400/30">
-            <h1 className="font-display text-2xl text-orange-300">הבית נשמר אצלכם</h1>
+            <h1 className="font-display text-2xl text-orange-300">הבית עלה למפה</h1>
             <p className="text-sm text-violet-100">
-              {done.name} מחכה לאישור מנהל. עד אז רק בטלפון הזה תראו אותו במפה, כסיכת רוח 👻. שאר השכונה תראה אותו אחרי אישור.
+              {done.name} כבר באתר של השכונה. אחרי רענון קצר (עד כ־15 שניות) כולם רואים אותו במפה — לא רק בטלפון הזה.
             </p>
             <PersistNote />
             <CodesCopy id={done.id} editCode={done.editCode} />
@@ -83,10 +83,10 @@ export default function AddPage() {
           <>
             <h1 className="font-display mb-1 text-2xl text-orange-300">הוספת בית מפחיד</h1>
             <p className="mb-4 text-sm text-violet-200">
-              בחרו שם, כתובת אמיתית מהרשימה, ושלחו. הבית לא עולה למפה הציבורית עד שמנהל מאשר — בינתיים הוא נשמר בטלפון שלכם.
+              בחרו שם, כתובת אמיתית מהרשימה, ושלחו. הבית עולה מיד למפה שכל השכונה רואה.
             </p>
             <PersistNote className="mb-4" />
-            <HouseForm submitLabel="שלחו לאישור" onSubmit={onSubmit} busy={busy} />
+            <HouseForm submitLabel="פרסמו בשכונה" onSubmit={onSubmit} busy={busy} />
           </>
         )}
       </main>

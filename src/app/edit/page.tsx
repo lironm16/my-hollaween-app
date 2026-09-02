@@ -135,10 +135,10 @@ export default function EditPage() {
             <p className="text-sm text-violet-200">
               סטטוס: {statusText(house.status)}
               {house.status === "pending"
-                ? " — שינויים יישמרו, והבית עדיין מחכה לאישור."
+                ? " — הבית עדיין לא במפה הציבורית."
                 : house.status === "rejected"
-                  ? " — אחרי עדכון הבית יישלח שוב לאישור."
-                  : ""}
+                  ? " — אחרי עדכון הבית חוזר למפה."
+                  : " — שינויים (מלאי, שעות, הקפאה) נראים לכל השכונה."}
             </p>
             <NightDesk
               house={house}
