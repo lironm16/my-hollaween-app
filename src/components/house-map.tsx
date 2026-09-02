@@ -140,14 +140,6 @@ function FlyIfNeeded({ lat, lng }: { lat: number; lng: number }) {
   return null;
 }
 
-function FlyTo({ lat, lng }: { lat: number; lng: number }) {
-  const map = useMap();
-  useEffect(() => {
-    map.flyTo([lat, lng], Math.max(map.getZoom(), 16), { duration: 0.45 });
-  }, [lat, lng, map]);
-  return null;
-}
-
 /** Pan once per selected house — never fight popup autoPan with a looping flyTo. */
 function PanToSelected({
   id,
