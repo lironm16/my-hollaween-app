@@ -74,20 +74,6 @@ export function HouseDetails({
           <p className="text-sm text-violet-200">{displayAddress}</p>
         </div>
         <div className="flex shrink-0 items-center gap-0.5">
-          {canEdit && onToggleEdit ? (
-            <button
-              type="button"
-              aria-label={editing ? "סגירת עריכה" : "עריכת מלאי ופרטים"}
-              aria-pressed={editing}
-              onClick={onToggleEdit}
-              className={cn(
-                "rounded-full p-1.5 hover:bg-orange-500/15",
-                editing ? "bg-orange-500 text-black hover:bg-orange-400" : "text-orange-200",
-              )}
-            >
-              {editing ? <X className="size-6" /> : <Pencil className="size-6" />}
-            </button>
-          ) : null}
           {onToggleVisited ? (
             <button
               type="button"
@@ -192,6 +178,27 @@ export function HouseDetails({
           קישור לבית
         </Link>
       </div>
+      {canEdit && onToggleEdit ? (
+        <button
+          type="button"
+          aria-label={editing ? "סגירת עריכה" : "עריכת מלאי ופרטים"}
+          aria-pressed={editing}
+          onClick={onToggleEdit}
+          className={cn(
+            "flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-start text-sm ring-1 transition",
+            editing
+              ? "bg-orange-500 text-black ring-orange-400 hover:bg-orange-400"
+              : "bg-[#2a1638] text-orange-100 ring-orange-500/25 hover:bg-[#341c44]",
+          )}
+        >
+          {editing ? <X className="size-5 shrink-0" /> : <Pencil className="size-5 shrink-0" />}
+          <span className="min-w-0 leading-snug">
+            {editing
+              ? "סגירת עריכה"
+              : "עריכת מלאי — לחצו כאן לעדכון. בני משפחה יכולים להזין קוד עריכה."}
+          </span>
+        </button>
+      ) : null}
       {extra}
     </div>
   );

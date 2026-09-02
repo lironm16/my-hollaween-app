@@ -756,11 +756,7 @@ export function NeighborhoodApp({
                           </Button>
                         </div>
                       )
-                    ) : (
-                      <p className="text-xs text-violet-300">
-                        לחצו על סמל העיפרון למעלה כדי לעדכן מלאי. בני משפחה יכולים להזין קוד עריכה.
-                      </p>
-                    )}
+                    ) : null}
                   </div>
                 }
               />
