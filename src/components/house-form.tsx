@@ -248,21 +248,25 @@ export function HouseForm({
           className="min-h-24"
         />
       </Field>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="פתיחה">
           <Input
             type="time"
             required
+            dir="ltr"
             value={form.openFrom}
             onChange={(e) => setForm({ ...form, openFrom: e.target.value })}
+            className="h-11 w-full min-w-0 bg-[#1d1028] text-base [color-scheme:dark]"
           />
         </Field>
         <Field label="סגירה">
           <Input
             type="time"
             required
+            dir="ltr"
             value={form.openTo}
             onChange={(e) => setForm({ ...form, openTo: e.target.value })}
+            className="h-11 w-full min-w-0 bg-[#1d1028] text-base [color-scheme:dark]"
           />
         </Field>
       </div>

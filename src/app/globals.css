@@ -90,6 +90,9 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    font-size: 20px;
+  }
   html,
   body {
     @apply bg-background text-foreground;
@@ -170,7 +173,7 @@
 
 .house-map-popup strong {
   display: block;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 800;
   line-height: 1.3;
   color: #1a1024;
@@ -193,7 +196,7 @@
   border-radius: 999px;
   background: #f97316;
   color: #1a1024;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
   line-height: 1;
   padding: 5px 8px;
@@ -240,27 +243,27 @@
 }
 
 .house-map-popup-item-title {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
   color: #1a1024;
 }
 
 .house-map-popup-item-arrival {
-  font-size: 12px;
+  font-size: 14px;
   color: #52525b;
   line-height: 1.35;
 }
 
 .house-map-popup-meta {
   margin-top: 4px;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.4;
   color: #3f3f46;
 }
 
 .house-map-popup-soldout {
   margin-top: 6px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
   line-height: 1.35;
   color: #dc2626;
@@ -268,7 +271,7 @@
 
 .house-map-popup-candy {
   margin-top: 6px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   line-height: 1.35;
 }
@@ -294,7 +297,7 @@
   background: #f97316;
   color: #1a1024;
   font-weight: 800;
-  font-size: 14px;
+  font-size: 16px;
   padding: 8px 10px;
   cursor: pointer;
 }
@@ -320,7 +323,7 @@
 }
 
 .pumpkin-pin span {
-  font-size: 28px;
+  font-size: 30px;
   line-height: 1;
 }
 
@@ -335,7 +338,7 @@
   border-radius: 999px;
   background: #f97316;
   color: #1a1024;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
   line-height: 18px;
   text-align: center;
@@ -440,14 +443,14 @@
   position: absolute;
   pointer-events: none;
   top: 4rem;
-  font-size: 18px;
+  font-size: 20px;
   animation: bat-fly 18s linear infinite;
   opacity: 0.7;
 }
 
 .bat-1 { animation-duration: 16s; top: 5rem; }
-.bat-2 { animation-duration: 22s; animation-delay: -6s; top: 8rem; font-size: 14px; }
-.bat-3 { animation-duration: 19s; animation-delay: -11s; top: 3.2rem; font-size: 12px; }
+.bat-2 { animation-duration: 22s; animation-delay: -6s; top: 8rem; font-size: 16px; }
+.bat-3 { animation-duration: 19s; animation-delay: -11s; top: 3.2rem; font-size: 14px; }
 
 @keyframes bat-fly {
   0% { inset-inline-start: -10%; transform: translateY(0) rotate(-8deg); }

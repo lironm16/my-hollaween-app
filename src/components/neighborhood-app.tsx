@@ -35,7 +35,9 @@ import {
   saveServerDbBackup,
   type ServerDbBackup,
 } from "@/lib/offline-db";
-import type { Catalog, House, HouseInput, PublicHouse } from "@/lib/types";
+import { scareShort } from "@/lib/labels";
+import type { Catalog, House, HouseInput, PublicHouse, ScareLevel } from "@/lib/types";
+import { SCARE_LEVELS } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function NeighborhoodApp({
@@ -54,6 +56,7 @@ export function NeighborhoodApp({
   const [accessibleOnly, setAccessibleOnly] = useState(false);
   const [glutenFreeOnly, setGlutenFreeOnly] = useState(false);
   const [candyOnly, setCandyOnly] = useState(false);
+  const [scareFilters, setScareFilters] = useState<ScareLevel[]>([]);
   const [likedOnly, setLikedOnly] = useState(false);
   const [unvisitedOnly, setUnvisitedOnly] = useState(false);
   const [followTick, setFollowTick] = useState(0);
@@ -154,6 +157,7 @@ export function NeighborhoodApp({
       if (accessibleOnly && !house.accessible) return false;
       if (glutenFreeOnly && !offersGlutenFree(house)) return false;
       if (candyOnly && !offersCandy(house)) return false;
+      if (scareFilters.length > 0 && !scareFilters.includes(house.scareLevel)) return false;
       if (likedOnly && !likes.likedIds.includes(house.id)) return false;
       if (unvisitedOnly && visits.visitedIds.includes(house.id)) return false;
       return true;
@@ -163,11 +167,18 @@ export function NeighborhoodApp({
     accessibleOnly,
     glutenFreeOnly,
     candyOnly,
+    scareFilters,
     likedOnly,
     unvisitedOnly,
     likes.likedIds,
     visits.visitedIds,
   ]);
+
+  function toggleScare(level: ScareLevel) {
+    setScareFilters((current) =>
+      current.includes(level) ? current.filter((item) => item !== level) : [...current, level],
+    );
+  }
 
   const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const selected =
@@ -420,6 +431,15 @@ export function NeighborhoodApp({
           <FilterChip active={glutenFreeOnly} onClick={() => setGlutenFreeOnly((v) => !v)}>
             ללא גלוטן
           </FilterChip>
+          {SCARE_LEVELS.map((level) => (
+            <FilterChip
+              key={level}
+              active={scareFilters.includes(level)}
+              onClick={() => toggleScare(level)}
+            >
+              {scareShort[level]}
+            </FilterChip>
+          ))}
           <FilterChip active={likedOnly} onClick={() => setLikedOnly((v) => !v)}>
             <Heart className={cn("size-3", likedOnly && "fill-black")} />
             שמרתי

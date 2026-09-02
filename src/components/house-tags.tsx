@@ -1,13 +1,18 @@
 import { Badge } from "@/components/ui/badge";
 import { candyLevel, markedGlutenFree, treatLevel } from "@/lib/house-state";
-import { stockLabels } from "@/lib/labels";
-import type { TreatId, TreatStock } from "@/lib/types";
+import { scareShort, stockLabels } from "@/lib/labels";
+import type { ScareLevel, TreatId, TreatStock } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function HouseTags({
   house,
 }: {
-  house: { accessible: boolean; treats: TreatId[]; treatStock?: TreatStock };
+  house: {
+    accessible: boolean;
+    treats: TreatId[];
+    treatStock?: TreatStock;
+    scareLevel?: ScareLevel;
+  };
 }) {
   const gluten = markedGlutenFree(house);
   const glutenOut = gluten && treatLevel(house, "glutenFree") === "out";
@@ -25,6 +30,19 @@ export function HouseTags({
       >
         ממתקים · {stockLabels[candy]}
       </Badge>
+      {house.scareLevel ? (
+        <Badge
+          className={cn(
+            house.scareLevel === "spicy"
+              ? "bg-red-800 text-red-50"
+              : house.scareLevel === "medium"
+                ? "bg-violet-800 text-violet-50"
+                : "bg-sky-800 text-sky-50",
+          )}
+        >
+          {scareShort[house.scareLevel]}
+        </Badge>
+      ) : null}
       {house.accessible ? (
         <Badge className="bg-emerald-700 text-emerald-50">נגיש</Badge>
       ) : null}
