@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-02T08:00:00.000Z",
+  "updatedAt": "2026-09-02T17:00:00.000Z",
   "houses": [
     {
       "id": "בית-1847",
@@ -31,7 +31,41 @@
       "updatedAt": "2026-09-01T10:00:00.000Z",
       "accessible": false,
       "theme": "pumpkin",
-      "arrival": "קומה קרקע. שלוש מדרגות לכניסה."
+      "arrival": "קומה 1 דירה 3"
+    },
+    {
+      "id": "בית-1848",
+      "name": "הפמקין שלי",
+      "address": "חרוזים 8, חרוזים",
+      "description": "דירה גבוהה באותו בניין — דלעות בחלון וממתקים ליד הדלת.",
+      "lat": 32.0916477,
+      "lng": 34.8028691,
+      "treats": [
+        "candy",
+        "chocolate",
+        "toys"
+      ],
+      "treatStock": {
+        "candy": "plenty",
+        "chocolate": "plenty",
+        "toys": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:30",
+      "notes": "מעלית בבניין",
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "",
+      "editCode": "184802",
+      "createdAt": "2026-09-01T10:02:00.000Z",
+      "updatedAt": "2026-09-01T10:02:00.000Z",
+      "accessible": true,
+      "theme": "candy",
+      "arrival": "קומה 7 דירה 34"
     },
     {
       "id": "בית-2291",

@@ -18,29 +18,41 @@ import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
 import { houseHeadline, stockLabels, themeEmoji } from "@/lib/labels";
 import { candyLevel, effectiveVisit, isFrozen } from "@/lib/house-state";
+import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { cn } from "@/lib/utils";
 
-function pinIcon(house: PublicHouse) {
+function pinKind(house: PublicHouse) {
   const frozen = isFrozen(house);
   const visit = effectiveVisit(house);
-  const kind = frozen
-    ? "frozen"
-    : house.status === "pending"
-      ? "pending"
-      : visit === "closed"
-        ? "closed"
-        : visit === "decorOnly"
-          ? "decor"
-          : "ok";
+  if (frozen) return "frozen" as const;
+  if (house.status === "pending") return "pending" as const;
+  if (visit === "closed") return "closed" as const;
+  if (visit === "decorOnly") return "decor" as const;
+  return "ok" as const;
+}
+
+function pinIcon(house: PublicHouse, count = 1) {
+  const kind = pinKind(house);
   const emoji =
     kind === "pending" ? "👻" : kind === "closed" ? "🕸️" : kind === "frozen" ? "😶" : themeEmoji[house.theme ?? "pumpkin"];
+  const badge =
+    count > 1
+      ? `<b class="pin-count" aria-label="${count} בתים">${count}</b>`
+      : "";
   return L.divIcon({
     className: "",
-    html: `<div class="pumpkin-pin is-${kind}"><span>${emoji}</span></div>`,
+    html: `<div class="pumpkin-pin is-${kind}">${badge}<span>${emoji}</span></div>`,
     iconSize: [40, 44],
     iconAnchor: [20, 42],
     popupAnchor: [0, -36],
   });
+}
+
+function clusterIcon(cluster: HouseCluster) {
+  const lead =
+    cluster.houses.find((h) => effectiveVisit(h) !== "closed" && !isFrozen(h)) ??
+    cluster.houses[0];
+  return pinIcon(lead, cluster.houses.length);
 }
 
 const pickIcon = L.divIcon({
@@ -198,60 +210,154 @@ function bindPopupRoot(node: HTMLDivElement | null) {
 }
 
 function HousePreviewPopup({
-  house,
+  houses,
   onOpenDetails,
+  selectedId,
 }: {
-  house: PublicHouse;
+  houses: PublicHouse[];
   onOpenDetails?: (house: PublicHouse) => void;
+  selectedId?: string | null;
 }) {
   const map = useMap();
+  const multi = houses.length > 1;
+  const address = houses[0]?.address ?? "";
+
   return (
     <Popup
       className="house-map-popup-root"
-      maxWidth={260}
-      minWidth={176}
+      maxWidth={multi ? 280 : 260}
+      minWidth={multi ? 200 : 176}
       autoPan
       autoPanPadding={[48, 72]}
       closeButton
     >
-      <div ref={bindPopupRoot} dir="rtl" className="house-map-popup">
-        <strong>{houseHeadline(house)}</strong>
-        <div className="house-map-popup-meta">{house.address}</div>
-        {house.arrival ? <div className="house-map-popup-meta">{house.arrival}</div> : null}
-        <div className="house-map-popup-meta">
-          {house.openFrom}–{house.openTo}
-          {house.accessible ? " · נגיש" : ""}
-          {house.treats.includes("glutenFree") ? " · ללא גלוטן" : ""}
-        </div>
-        <div
-          className={cn(
-            "house-map-popup-candy",
-            candyLevel(house) === "out" && "is-out",
-            candyLevel(house) === "low" && "is-low",
-            candyLevel(house) === "plenty" && "is-plenty",
-          )}
-        >
-          ממתקים · {stockLabels[candyLevel(house)]}
-        </div>
-        {effectiveVisit(house) === "closed" ? (
-          <div className="house-map-popup-soldout">נגמר המלאי — אין סיבה לבוא עכשיו</div>
-        ) : null}
-        {onOpenDetails ? (
-          <button
-            type="button"
-            className="house-map-popup-btn"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              map.closePopup();
-              onOpenDetails(house);
-            }}
-          >
-            לפרטי הבית
-          </button>
-        ) : null}
+      <div ref={bindPopupRoot} dir="rtl" className={cn("house-map-popup", multi && "is-multi")}>
+        {multi ? (
+          <>
+            <div className="house-map-popup-cluster-head">
+              <strong>{address}</strong>
+              <span className="house-map-popup-badge">{houses.length} בתים</span>
+            </div>
+            <p className="house-map-popup-meta">בחרו דירה בבניין</p>
+            <ul className="house-map-popup-list">
+              {houses.map((house) => {
+                const candy = candyLevel(house);
+                const closed = effectiveVisit(house) === "closed";
+                return (
+                  <li
+                    key={house.id}
+                    className={cn(
+                      "house-map-popup-item",
+                      selectedId === house.id && "is-selected",
+                    )}
+                  >
+                    <button
+                      type="button"
+                      className="house-map-popup-item-btn"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        map.closePopup();
+                        onOpenDetails?.(house);
+                      }}
+                    >
+                      <span className="house-map-popup-item-title">{houseHeadline(house)}</span>
+                      {house.arrival ? (
+                        <span className="house-map-popup-item-arrival">{house.arrival}</span>
+                      ) : null}
+                      <span
+                        className={cn(
+                          "house-map-popup-candy",
+                          candy === "out" && "is-out",
+                          candy === "low" && "is-low",
+                          candy === "plenty" && "is-plenty",
+                        )}
+                      >
+                        ממתקים · {stockLabels[candy]}
+                        {closed ? " · נגמר" : ""}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        ) : (
+          <>
+            <strong>{houseHeadline(houses[0])}</strong>
+            <div className="house-map-popup-meta">{houses[0].address}</div>
+            {houses[0].arrival ? (
+              <div className="house-map-popup-meta">{houses[0].arrival}</div>
+            ) : null}
+            <div className="house-map-popup-meta">
+              {houses[0].openFrom}–{houses[0].openTo}
+              {houses[0].accessible ? " · נגיש" : ""}
+              {houses[0].treats.includes("glutenFree") ? " · ללא גלוטן" : ""}
+            </div>
+            <div
+              className={cn(
+                "house-map-popup-candy",
+                candyLevel(houses[0]) === "out" && "is-out",
+                candyLevel(houses[0]) === "low" && "is-low",
+                candyLevel(houses[0]) === "plenty" && "is-plenty",
+              )}
+            >
+              ממתקים · {stockLabels[candyLevel(houses[0])]}
+            </div>
+            {effectiveVisit(houses[0]) === "closed" ? (
+              <div className="house-map-popup-soldout">נגמר המלאי — אין סיבה לבוא עכשיו</div>
+            ) : null}
+            {onOpenDetails ? (
+              <button
+                type="button"
+                className="house-map-popup-btn"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  map.closePopup();
+                  onOpenDetails(houses[0]);
+                }}
+              >
+                לפרטי הבית
+              </button>
+            ) : null}
+          </>
+        )}
       </div>
     </Popup>
+  );
+}
+
+function ClusterMarker({
+  cluster,
+  selectedId,
+  onSelect,
+}: {
+  cluster: HouseCluster;
+  selectedId?: string | null;
+  onSelect?: (house: PublicHouse) => void;
+}) {
+  const markerRef = useRef<L.Marker | null>(null);
+  const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
+
+  useEffect(() => {
+    if (!selectedHere) return;
+    markerRef.current?.openPopup();
+  }, [selectedHere, selectedId]);
+
+  return (
+    <Marker
+      ref={markerRef}
+      position={[cluster.lat, cluster.lng]}
+      icon={clusterIcon(cluster)}
+      zIndexOffset={selectedHere ? 500 : cluster.houses.length > 1 ? 200 : 0}
+    >
+      <HousePreviewPopup
+        houses={cluster.houses}
+        onOpenDetails={onSelect}
+        selectedId={selectedId}
+      />
+    </Marker>
   );
 }
 
@@ -293,6 +399,10 @@ export function HouseMap({
     [],
   );
   const selected = houses.find((h) => h.id === selectedId);
+  const clusters = useMemo(
+    () => (pickMode ? [] : clusterHousesByAddress(houses)),
+    [houses, pickMode],
+  );
   const houseBounds = useMemo(() => {
     if (pickMode || houses.length === 0) return null;
     const next = L.latLngBounds(houses.map((house) => [house.lat, house.lng] as [number, number]));
@@ -370,10 +480,13 @@ export function HouseMap({
           </>
         ) : null}
         {!pickMode &&
-          houses.map((house) => (
-            <Marker key={house.id} position={[house.lat, house.lng]} icon={pinIcon(house)}>
-              <HousePreviewPopup house={house} onOpenDetails={onSelect} />
-            </Marker>
+          clusters.map((cluster) => (
+            <ClusterMarker
+              key={cluster.key}
+              cluster={cluster}
+              selectedId={selectedId}
+              onSelect={onSelect}
+            />
           ))}
         {!pickMode && userLocation ? (
           <>
