@@ -58,7 +58,7 @@ export function NeighborhoodApp({
   }
 
   return (
-    <div className="relative isolate flex min-h-dvh flex-col">
+    <div className="relative isolate flex h-dvh flex-col overflow-hidden">
       <AppHeader
         actions={
           <>
@@ -121,22 +121,34 @@ export function NeighborhoodApp({
           {error}
         </div>
       ) : null}
-      <main className="relative z-0 min-h-0 flex-1 isolate overflow-hidden">
+      <main className="relative z-0 min-h-0 flex-1 isolate">
         {loading && houses.length === 0 ? (
-          <div className="flex h-full min-h-[60vh] items-center justify-center text-orange-200">
+          <div className="flex h-full items-center justify-center text-orange-200">
             מדליקים דלעות…
           </div>
-        ) : view === "map" ? (
-          <HouseMapDynamic
-            houses={houses}
-            selectedId={selected?.id}
-            onSelect={(house) => setSelectedId(house.id)}
-            className="h-full w-full"
-          />
         ) : (
-          <div className="h-full overflow-y-auto">
-            <HouseList houses={houses} onOpen={(house) => setSelectedId(house.id)} origin={origin} />
-          </div>
+          <>
+            <div
+              className={cn(
+                "absolute inset-0",
+                view !== "map" && "invisible pointer-events-none",
+              )}
+              aria-hidden={view !== "map"}
+            >
+              <HouseMapDynamic
+                houses={houses}
+                selectedId={selected?.id}
+                onSelect={(house) => setSelectedId(house.id)}
+                className="h-full w-full"
+                active={view === "map"}
+              />
+            </div>
+            {view === "list" ? (
+              <div className="absolute inset-0 overflow-y-auto bg-[#12081a]">
+                <HouseList houses={houses} onOpen={(house) => setSelectedId(house.id)} origin={origin} />
+              </div>
+            ) : null}
+          </>
         )}
       </main>
       <Sheet

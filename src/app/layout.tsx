@@ -50,7 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${heebo.variable} ${creepster.variable} dark h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="relative min-h-full font-sans">
+      <body className="relative h-full min-h-dvh font-sans">
         <HalloweenFx />
         <Providers>{children}</Providers>
       </body>

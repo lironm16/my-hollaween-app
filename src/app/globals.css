@@ -118,6 +118,16 @@
   isolation: isolate;
 }
 
+/* Tailwind preflight sets img { max-width: 100%; height: auto } and hides tiles. */
+.leaflet-container img,
+.leaflet-pane img,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+  max-width: none !important;
+  max-height: none !important;
+}
+
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
   background: #241333;

@@ -50,9 +50,34 @@ const pickIcon = L.divIcon({
 function ResizeFix() {
   const map = useMap();
   useEffect(() => {
-    const id = window.setTimeout(() => map.invalidateSize(), 60);
-    return () => window.clearTimeout(id);
+    const container = map.getContainer();
+    const invalidate = () => {
+      map.invalidateSize({ animate: false });
+    };
+    const id = window.setTimeout(invalidate, 0);
+    const ro = new ResizeObserver(() => invalidate());
+    ro.observe(container);
+    const parent = container.parentElement;
+    if (parent) ro.observe(parent);
+    window.addEventListener("orientationchange", invalidate);
+    window.addEventListener("resize", invalidate);
+    return () => {
+      window.clearTimeout(id);
+      ro.disconnect();
+      window.removeEventListener("orientationchange", invalidate);
+      window.removeEventListener("resize", invalidate);
+    };
   }, [map]);
+  return null;
+}
+
+function VisibilityFix({ active }: { active: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!active) return;
+    const id = window.setTimeout(() => map.invalidateSize({ animate: false }), 40);
+    return () => window.clearTimeout(id);
+  }, [active, map]);
   return null;
 }
 
@@ -95,6 +120,7 @@ type Props = {
   pick?: { lat: number; lng: number } | null;
   onPick?: (lat: number, lng: number) => void;
   className?: string;
+  active?: boolean;
 };
 
 export function HouseMap({
@@ -105,6 +131,7 @@ export function HouseMap({
   pick,
   onPick,
   className,
+  active = true,
 }: Props) {
   const bounds = useMemo(
     () =>
@@ -152,12 +179,14 @@ export function HouseMap({
         maxBoundsViscosity={1}
         scrollWheelZoom
         className="h-full w-full rounded-none bg-[#1a1024]"
+        style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
           attribution={config.tiles.attribution}
           url={config.tiles.url}
         />
         <ResizeFix />
+        <VisibilityFix active={active} />
         {pickMode && onPick ? <ClickCatcher onPick={onPick} /> : null}
         {pickMode && pick ? (
           <>

@@ -9,16 +9,11 @@ export function BrandTitle({
   size?: "header" | "hero";
 }) {
   return (
-    <span className={cn("block min-w-0 truncate leading-none", className)}>
-      <span dir="ltr" className="inline-flex max-w-full items-baseline gap-[0.4em] align-baseline">
-        <span
-          className={cn(
-            "font-display tracking-wide text-orange-400 [text-shadow:0_0_14px_rgba(251,146,60,0.45)]",
-            size === "header" ? "text-[1.35rem] sm:text-[1.55rem]" : "text-4xl sm:text-5xl",
-          )}
-        >
-          {config.brandEn}
-        </span>
+    <span className={cn("block min-w-0 leading-none", className)}>
+      <span
+        dir="ltr"
+        className="inline-flex max-w-full flex-wrap items-baseline gap-x-[0.4em] gap-y-0.5 align-baseline"
+      >
         <span
           className={cn(
             "font-sans font-semibold text-orange-300",
@@ -26,6 +21,15 @@ export function BrandTitle({
           )}
         >
           {config.brandHe}
+        </span>
+        <span
+          dir="ltr"
+          className={cn(
+            "font-[family-name:var(--font-creepster)] tracking-wide text-orange-400 [text-shadow:0_0_14px_rgba(251,146,60,0.45)]",
+            size === "header" ? "text-[1.35rem] sm:text-[1.55rem]" : "text-4xl sm:text-5xl",
+          )}
+        >
+          {config.brandEn}
         </span>
       </span>
     </span>
