@@ -1,0 +1,23 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const seed = JSON.parse(readFileSync(join(root, "data/seed.json"), "utf8"));
+const houses = seed.houses
+  .filter((h) => h.status === "approved")
+  .map((h) => {
+    const house = { ...h };
+    delete house.editCode;
+    delete house.rejectionReason;
+    return house;
+  });
+
+const catalog = {
+  updatedAt: seed.updatedAt,
+  neighborhood: process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שכונת האלונים",
+  houses,
+};
+
+writeFileSync(join(root, "public/catalog.json"), JSON.stringify(catalog));
+console.log(`wrote public/catalog.json (${houses.length} houses)`);
