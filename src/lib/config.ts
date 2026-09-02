@@ -58,6 +58,13 @@ export const config = {
   adminCookie: "hw_admin",
   // The neighborhood list lives on this app server. Writes are queued one at a time.
   durableWrites: process.env.NEXT_PUBLIC_DURABLE_WRITES !== "0",
+  /** Houses open only on this calendar night (local time). */
+  eventNight: {
+    year: 2026,
+    month: 10,
+    day: 31,
+    labelHe: "31 באוקטובר",
+  },
 } as const;
 
 export function inNeighborhood(lat: number, lng: number) {

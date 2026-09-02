@@ -1,10 +1,13 @@
+import { config } from "@/lib/config";
 import type { VisitState } from "@/lib/types";
 import { effectiveVisit, isFrozen } from "@/lib/house-state";
 
 export type HoursWindow = { from: string; to: string };
 
 export type HoursStatus =
+  | { kind: "beforeEvent"; opensAt: string; dateLabel: string }
   | { kind: "before"; opensAt: string }
+  | { kind: "opensSoon"; opensAt: string }
   | { kind: "between"; opensAt: string }
   | { kind: "open"; closesAt: string }
   | { kind: "closingSoon"; closesAt: string }
@@ -13,6 +16,7 @@ export type HoursStatus =
   | { kind: "unknown" };
 
 const CLOSING_SOON_MINUTES = 30;
+const OPENS_SOON_MINUTES = 30;
 const MAX_WINDOWS = 6;
 
 export function parseClockMinutes(value: string): number | null {
@@ -96,7 +100,37 @@ function minutesNow(now: Date) {
   return now.getHours() * 60 + now.getMinutes();
 }
 
-/** Open / not-yet / closing-soon based on today's clock windows. */
+function ymdLocal(now: Date) {
+  return {
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+    day: now.getDate(),
+  };
+}
+
+function eventNightParts() {
+  const { year, month, day, labelHe } = config.eventNight;
+  return { year, month, day, labelHe };
+}
+
+/** -1 before event night, 0 on the night, 1 after. */
+export function eventNightRelation(now = new Date()): -1 | 0 | 1 {
+  const event = eventNightParts();
+  const today = ymdLocal(now);
+  if (today.year < event.year) return -1;
+  if (today.year > event.year) return 1;
+  if (today.month < event.month) return -1;
+  if (today.month > event.month) return 1;
+  if (today.day < event.day) return -1;
+  if (today.day > event.day) return 1;
+  return 0;
+}
+
+export function eventNightDateLabel() {
+  return eventNightParts().labelHe;
+}
+
+/** Open / not-yet / closing-soon — only on the Halloween event night. */
 export function hoursStatus(
   house: HoursSource & {
     visit?: VisitState;
@@ -108,6 +142,19 @@ export function hoursStatus(
 
   const windows = houseHoursWindows(house);
   if (windows.length === 0) return { kind: "unknown" };
+
+  const firstOpen = windows[0]!.from;
+  const day = eventNightRelation(now);
+
+  if (day < 0) {
+    return {
+      kind: "beforeEvent",
+      opensAt: firstOpen,
+      dateLabel: eventNightDateLabel(),
+    };
+  }
+
+  if (day > 0) return { kind: "after" };
 
   const nowMin = minutesNow(now);
   const parsed = windows.map((window) => ({
@@ -129,6 +176,10 @@ export function hoursStatus(
 
   const next = parsed.find((window) => nowMin < window.from);
   if (next) {
+    const minutesUntil = next.from - nowMin;
+    if (minutesUntil <= OPENS_SOON_MINUTES) {
+      return { kind: "opensSoon", opensAt: next.labelFrom };
+    }
     const anyEarlierEnded = parsed.some((window) => nowMin >= window.to);
     return {
       kind: anyEarlierEnded ? "between" : "before",
