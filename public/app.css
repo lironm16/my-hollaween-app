@@ -3273,7 +3273,7 @@ svg.leaflet-zoom-animated {
   z-index: 0;
   isolation: isolate;
 }
-.leaflet-container.is-osm-dark .leaflet-tile-pane {
+.leaflet-container.is-osm-dark .leaflet-tile {
   filter: invert(1) hue-rotate(180deg) saturate(0.35) brightness(0.82) contrast(1.05);
 }
 .leaflet-container img,
@@ -3470,6 +3470,7 @@ svg.leaflet-zoom-animated {
   background: transparent !important;
   border: none !important;
 }
+.house-pin,
 .pumpkin-pin {
   position: relative;
   display: grid;
@@ -3477,16 +3478,18 @@ svg.leaflet-zoom-animated {
   width: 38px;
   height: 38px;
   border-radius: 999px;
-  background: #6d28d9;
+  background: #6d28d9 !important;
   border: 2.5px solid #fff7ed;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
   opacity: 1;
 }
+.house-pin span,
 .pumpkin-pin span {
   font-size: 22px;
   line-height: 1;
   filter: none;
 }
+.house-pin .pin-count,
 .pumpkin-pin .pin-count {
   position: absolute;
   top: -5px;
@@ -3505,8 +3508,9 @@ svg.leaflet-zoom-animated {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   letter-spacing: -0.02em;
 }
+.house-pin.is-pick,
 .pumpkin-pin.is-pick {
-  background: #6d28d9;
+  background: #6d28d9 !important;
 }
 .route-stop-icon {
   background: transparent !important;

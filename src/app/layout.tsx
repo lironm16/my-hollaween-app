@@ -4,7 +4,7 @@ import Script from "next/script";
 import { Providers } from "@/components/providers";
 import { HalloweenFx } from "@/components/halloween-fx";
 import { config } from "@/lib/config";
-import { inlineThemeCss } from "@/lib/inline-css";
+import { getInlineThemeCss } from "@/lib/inline-css";
 import "./globals.css";
 
 const rubik = Rubik({
@@ -46,6 +46,7 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  const themeCss = getInlineThemeCss();
   return (
     <html
       lang="he"
@@ -61,9 +62,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           rel="stylesheet"
         />
         {/* Inlined: Cursor Preview is a different origin and Next.js 16 returns 403 for /_next CSS. */}
-        {inlineThemeCss ? <style dangerouslySetInnerHTML={{ __html: inlineThemeCss }} /> : null}
-        <link rel="stylesheet" href="/app.css" />
-        <link rel="stylesheet" href="/shell.css" />
+        {themeCss ? <style dangerouslySetInnerHTML={{ __html: themeCss }} /> : null}
+        <link rel="stylesheet" href="/app.css?v=24" />
+        <link rel="stylesheet" href="/shell.css?v=24" />
       </head>
       <body className="relative h-full min-h-dvh font-sans">
         <Script src="/boot.js" strategy="beforeInteractive" />

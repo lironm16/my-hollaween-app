@@ -53,7 +53,7 @@ function pinIcon(house: PublicHouse, count = 1) {
       : "";
   return L.divIcon({
     className: "pumpkin-pin-icon",
-    html: `<div class="pumpkin-pin">${badge}<span>${emoji}</span></div>`,
+    html: `<div class="house-pin" style="background:#6d28d9">${badge}<span>${emoji}</span></div>`,
     iconSize: [40, 44],
     iconAnchor: [20, 42],
     popupAnchor: [0, -36],
@@ -66,7 +66,7 @@ function clusterIcon(cluster: HouseCluster) {
 
 const pickIcon = L.divIcon({
   className: "pumpkin-pin-icon",
-  html: `<div class="pumpkin-pin is-pick"><span>📍</span></div>`,
+  html: `<div class="house-pin is-pick" style="background:#6d28d9"><span>📍</span></div>`,
   iconSize: [40, 44],
   iconAnchor: [20, 42],
 });

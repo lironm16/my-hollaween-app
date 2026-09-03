@@ -9,8 +9,9 @@ function readPublicCss(name: string) {
   }
 }
 
-/** Full theme CSS inlined into HTML so Preview iframes still look like Halloween
- *  when Next.js blocks `/_next/static/css` as a cross-origin dev resource. */
-export const inlineThemeCss = [readPublicCss("app.css"), readPublicCss("shell.css")]
-  .filter(Boolean)
-  .join("\n");
+/** Read on each render so pin colors cannot stick to a stale server snapshot. */
+export function getInlineThemeCss() {
+  return [readPublicCss("app.css"), readPublicCss("shell.css")]
+    .filter(Boolean)
+    .join("\n");
+}
