@@ -2,10 +2,12 @@ import { distanceMeters } from "@/lib/geo";
 import type { LatLng } from "@/lib/route";
 
 /**
- * Public router.project-osrm.org only has a car graph — /route/v1/foot
- * returns the same geometry as driving. FOSSGIS hosts a real foot network.
+ * Use the car / street graph so the line stays on roads and goes around parks.
+ * The FOSSGIS foot graph follows park paths; walking time is still estimated
+ * from distance on the client.
  */
-const OSRM_FOOT = "https://routing.openstreetmap.de/routed-foot/route/v1/foot";
+const OSRM_STREET = "https://routing.openstreetmap.de/routed-car/route/v1/driving";
+const OSRM_STREET_FALLBACK = "https://router.project-osrm.org/route/v1/driving";
 const UA = "bashchona-halloween/1.0 (neighborhood walking map)";
 
 function encodePoints(points: LatLng[]) {
@@ -22,8 +24,8 @@ function dedupeNearby(points: LatLng[], meters = 30): LatLng[] {
   return unique;
 }
 
-async function fetchLeg(from: LatLng, to: LatLng): Promise<LatLng[] | null> {
-  const url = `${OSRM_FOOT}/${encodePoints([from, to])}?overview=full&geometries=geojson&steps=false`;
+async function fetchOsrm(base: string, from: LatLng, to: LatLng): Promise<LatLng[] | null> {
+  const url = `${base}/${encodePoints([from, to])}?overview=full&geometries=geojson&steps=false`;
   const res = await fetch(url, {
     headers: { Accept: "application/json", "User-Agent": UA },
   });
@@ -36,7 +38,13 @@ async function fetchLeg(from: LatLng, to: LatLng): Promise<LatLng[] | null> {
   return coords.map(([lng, lat]) => ({ lat, lng }));
 }
 
-/** Street-following walking line that visits points in order. */
+async function fetchLeg(from: LatLng, to: LatLng): Promise<LatLng[] | null> {
+  const street = await fetchOsrm(OSRM_STREET, from, to);
+  if (street && street.length >= 2) return street;
+  return fetchOsrm(OSRM_STREET_FALLBACK, from, to);
+}
+
+/** Street-only line that visits points in order — roads around parks, not footpaths. */
 export async function fetchWalkingGeometry(points: LatLng[]): Promise<LatLng[] | null> {
   const unique = dedupeNearby(points);
   if (unique.length < 2) return unique.length ? unique : null;
