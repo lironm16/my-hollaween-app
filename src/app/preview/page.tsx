@@ -1,5 +1,4 @@
 import { CANDY_TONES, CandySign } from "@/components/candy-glyphs";
-import { DecorSign } from "@/components/decor-glyphs";
 import { PreviewNav } from "@/components/preview-nav";
 import { SCARE_TONES, ScareSign } from "@/components/scare-glyphs";
 import { SENSITIVITY_KINDS, SensitivitySign } from "@/components/sensitivity-glyphs";
@@ -53,7 +52,7 @@ export default function PreviewHubPage() {
           <p className="text-xs text-violet-300">ירוק = לילדים. אפור עם קו = לא מקושט.</p>
           <div className="flex flex-wrap items-end gap-4">
             <div className="flex flex-col items-center gap-1">
-              <DecorSign level="none" className="size-12" />
+              <ScareSign level="none" className="size-12" />
               <span className="text-[11px] text-violet-300">לא מקושט</span>
             </div>
             {SCARE_TONES.map((tone) => (

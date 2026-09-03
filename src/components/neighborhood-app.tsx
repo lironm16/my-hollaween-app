@@ -38,11 +38,10 @@ import { toPublicHouse } from "@/lib/ids";
 import { isFrozen, offersCandy, offersSensitivity, isDecorated } from "@/lib/house-state";
 import { AccessibleMark } from "@/components/symbols";
 import { CandyMark } from "@/components/candy-glyphs";
-import { DecorSign } from "@/components/decor-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
 import { OpenNowMark } from "@/components/open-now-mark";
 import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
-import { ScareMark } from "@/components/scare-glyphs";
+import { ScareMark, ScareSign } from "@/components/scare-glyphs";
 import { isOpenNow } from "@/lib/hours";
 import {
   backupLooksNewer,
@@ -629,7 +628,7 @@ export function NeighborhoodApp({
             onChange={() => updateFilters({ includeUndecorated: !includeUndecorated })}
           >
             <span className="inline-flex items-center gap-2">
-              <DecorSign level="none" />
+              <ScareSign level="none" />
               <span>{decorShort.none}</span>
             </span>
           </FilterOption>

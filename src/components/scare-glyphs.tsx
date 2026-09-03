@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { BADGE_TONE_CLASS } from "@/lib/badge-tones";
-import { scareShort } from "@/lib/labels";
+import { decorShort, scareShort } from "@/lib/labels";
 import type { ScareLevel } from "@/lib/types";
 import { DiscStrike } from "@/components/disc-strike";
 
@@ -101,7 +101,7 @@ export function ScareSign({
 }) {
   const struck = level === "none";
   const useOfferedGhost = !Glyph || Glyph === ScareGhost;
-  const label = struck ? "לא מפחיד" : scareShort[level];
+  const label = struck ? decorShort.none : scareShort[level];
 
   return (
     <span
@@ -114,7 +114,12 @@ export function ScareSign({
       aria-label={label}
     >
       {useOfferedGhost ? (
-        <span className="flex size-[108%] items-center justify-center">
+        <span
+          className={cn(
+            "flex size-[108%] items-center justify-center",
+            struck && "grayscale",
+          )}
+        >
           <ScareGhost level={struck ? "mild" : level} />
         </span>
       ) : (

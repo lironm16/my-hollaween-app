@@ -26,7 +26,6 @@ import { candyTone, CandySign, CANDY_TONES, type CandyTone } from "@/components/
 import { resolveDecorLevel } from "@/lib/house-state";
 import { StrollerSign } from "@/components/symbols";
 import { ScareSign } from "@/components/scare-glyphs";
-import { DecorSign } from "@/components/decor-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
 import { houseHoursWindows, MAX_HOUR_WINDOWS, syncHoursFields } from "@/lib/hours";
 import type { HoursWindow } from "@/lib/types";
@@ -412,7 +411,7 @@ export function HouseForm({
                   : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
               }
             >
-              <DecorSign level="none" className="size-6" />
+              <ScareSign level="none" className="size-6" />
               {decorShort.none}
             </button>
             {(["mild", "medium", "spicy"] as ScareLevel[]).map((level) => (

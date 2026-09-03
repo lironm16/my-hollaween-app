@@ -33,7 +33,6 @@ import {
   type VisitState,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { DecorSign } from "@/components/decor-glyphs";
 import { ScareSign } from "@/components/scare-glyphs";
 
 type Props = {
@@ -177,7 +176,7 @@ export function NightDesk({
                 : "bg-[#12081a] text-orange-100 ring-1 ring-orange-500/20",
             )}
           >
-            <DecorSign level="none" className="size-7" />
+            <ScareSign level="none" className="size-7" />
             {decorShort.none}
           </button>
           {SCARE_LEVELS.map((level) => (
