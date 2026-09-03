@@ -208,6 +208,10 @@ button {
   overflow-y: auto;
 }
 
+.house-map-popup-item {
+  flex-shrink: 0;
+}
+
 .house-map-popup.is-multi > .house-map-popup-meta {
   flex-shrink: 0;
 }

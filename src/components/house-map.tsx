@@ -119,12 +119,15 @@ function capPopupList(node: HTMLUListElement, rows = POPUP_VISIBLE_APARTMENTS) {
     node.classList.remove("is-capped");
     return;
   }
-  node.classList.add("is-capped");
+  node.classList.remove("is-capped");
+  node.style.maxHeight = "none";
+  void node.offsetHeight;
   const styles = getComputedStyle(node);
   const gap = Number.parseFloat(styles.rowGap || styles.gap || "6") || 6;
   const height =
     items.slice(0, rows).reduce((sum, el) => sum + el.offsetHeight, 0) + gap * (rows - 1);
-  if (height > 0) node.style.maxHeight = `${height}px`;
+  node.classList.add("is-capped");
+  if (height > 0) node.style.maxHeight = `${Math.round(height)}px`;
 }
 
 /** Keep apartment-list swipes on the list so the map does not steal them. */
@@ -181,7 +184,11 @@ function HousePreviewPopup({
     const run = () => capPopupList(node);
     run();
     const frame = window.requestAnimationFrame(run);
-    return () => window.cancelAnimationFrame(frame);
+    const later = window.setTimeout(run, 80);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(later);
+    };
   }, [multi, houses, popupMaxHeight]);
 
   return (

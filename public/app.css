@@ -3396,6 +3396,7 @@ svg.leaflet-zoom-animated {
 }
 .house-map-popup-item {
   margin: 0;
+  flex-shrink: 0;
   border-radius: 10px;
   background: #f4f4f5;
   overflow: hidden;
