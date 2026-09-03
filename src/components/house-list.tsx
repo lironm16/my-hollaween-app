@@ -52,7 +52,7 @@ export function HouseList({
     return (
       <div className="px-4 py-16 text-center text-violet-200">
         <p className="font-display text-2xl text-orange-300">אין בתים שמתאימים לסינון</p>
-        <p className="mt-2 text-sm">נסו לבטל סינון בתפריטי שכונה, רגישויות, רמת פחד או עוד.</p>
+        <p className="mt-2 text-sm">נסו לבטל סינון בתפריטי שכונה, רמת פחד, עוד או רגישויות.</p>
       </div>
     );
   }
