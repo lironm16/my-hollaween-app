@@ -320,7 +320,7 @@ export function HouseForm({
       <div>
         <p className="mb-2 text-sm font-medium">קישוט בחוץ</p>
         <p className="mb-2 text-xs text-violet-300">
-          כמה קישוטי האלווין יש לראות מהרחוב או מהכניסה
+          כמה כיף יש לראות מהרחוב: שקט, קריצה, חגיגה או פיצוץ
         </p>
         <div className="flex flex-wrap gap-1.5">
           {DECOR_LEVELS.map((level) => (
