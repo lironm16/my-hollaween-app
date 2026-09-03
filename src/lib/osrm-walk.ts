@@ -3,30 +3,32 @@ import type { LatLng } from "@/lib/route";
 
 /**
  * Walking (foot) graph — not car.
- * Park footpaths are shorter, so we detect cuts through the green strip between
- * חרוזים and שיכון ותיקים / נחלת גנים, and the Rosh Tzipor / HaHava belt north
- * of המרגנית, then walk around on streets instead.
+ * Stay on neighborhood streets around גבעת נפוליאון when the detour is short.
+ * Never send the walk up into ראש ציפור / HaHava (north of המרגנית).
+ * If the street loop is much longer (the old 4→5 U on אבא הלל), keep the short
+ * named walk along שדרת הנרקיסים / רוקח.
  */
 const OSRM_FOOT = "https://routing.openstreetmap.de/routed-foot/route/v1/foot";
 const UA = "bashchona-halloween/1.0 (neighborhood walking map)";
 const PARK_FRACTION_MAX = 0.08;
+/** Accept a hill cut when going around would add more than this. */
+const HILL_DETOUR_MAX = 1.2;
 /** North of this, footpaths are the farm / Yarkon — not neighborhood streets. */
 const NORTH_STREET_EDGE = 32.0948;
 
-/** Interior of גבעת נפוליאון / the strip — not Krinitzi or המרגנית. */
-const PARK_RINGS: LatLng[][] = [
-  [
-    { lat: 32.0908, lng: 34.8064 },
-    { lat: 32.0908, lng: 34.8119 },
-    { lat: 32.0935, lng: 34.8119 },
-    { lat: 32.0935, lng: 34.8064 },
-  ],
-  [
-    { lat: NORTH_STREET_EDGE, lng: 34.802 },
-    { lat: NORTH_STREET_EDGE, lng: 34.819 },
-    { lat: 32.1008, lng: 34.819 },
-    { lat: 32.1008, lng: 34.802 },
-  ],
+/** Interior of the hill — west of רוקח, south of המרגנית, north of קריניצי. */
+const HILL_RING: LatLng[] = [
+  { lat: 32.09115, lng: 34.8069 },
+  { lat: 32.09115, lng: 34.80935 },
+  { lat: 32.09285, lng: 34.80935 },
+  { lat: 32.09285, lng: 34.8069 },
+];
+
+const FARM_RING: LatLng[] = [
+  { lat: NORTH_STREET_EDGE, lng: 34.802 },
+  { lat: NORTH_STREET_EDGE, lng: 34.819 },
+  { lat: 32.1008, lng: 34.819 },
+  { lat: 32.1008, lng: 34.802 },
 ];
 
 /** South skirt of the park (קריניצי) — not אבא הלל a block further south. */
@@ -34,7 +36,24 @@ const KRINITZI_LAT = 32.09022;
 const KRINITZI_EAST = { lat: KRINITZI_LAT, lng: 34.81185 };
 const KRINITZI_MID = { lat: KRINITZI_LAT, lng: 34.80915 };
 const KRINITZI_WEST = { lat: KRINITZI_LAT, lng: 34.80615 };
-const STREET_VIAS: LatLng[] = [KRINITZI_EAST, KRINITZI_MID, KRINITZI_WEST];
+
+/** East street (רוקח) — shorter 4→5 than looping Aba Hillel. */
+const ROKACH_SOUTH = { lat: 32.0902, lng: 34.8097 };
+const ROKACH_EAST = { lat: 32.0928, lng: 34.8122 };
+
+/** North street (המרגנית), still south of the farm belt. */
+const HARMARGANIT_MID = { lat: 32.09346, lng: 34.80942 };
+const HARMARGANIT_EAST = { lat: 32.0937, lng: 34.813 };
+
+const STREET_VIAS: LatLng[] = [
+  KRINITZI_EAST,
+  KRINITZI_MID,
+  KRINITZI_WEST,
+  ROKACH_SOUTH,
+  ROKACH_EAST,
+  HARMARGANIT_MID,
+  HARMARGANIT_EAST,
+];
 /** Vias south of here drop onto Aba Hillel and zigzag the grid. */
 const SOUTH_STREET_LIMIT = 32.0895;
 
@@ -65,13 +84,29 @@ function pointInRing(point: LatLng, ring: LatLng[]) {
   return inside;
 }
 
+function inHill(point: LatLng) {
+  return pointInRing(point, HILL_RING);
+}
+
+function inFarm(point: LatLng) {
+  return pointInRing(point, FARM_RING);
+}
+
 function inPark(point: LatLng) {
-  return PARK_RINGS.some((ring) => pointInRing(point, ring));
+  return inHill(point) || inFarm(point);
+}
+
+function fractionOn(line: LatLng[], test: (point: LatLng) => boolean) {
+  if (line.length === 0) return 0;
+  return line.filter(test).length / line.length;
 }
 
 function parkFraction(line: LatLng[]) {
-  if (line.length === 0) return 0;
-  return line.filter(inPark).length / line.length;
+  return fractionOn(line, inPark);
+}
+
+function farmFraction(line: LatLng[]) {
+  return fractionOn(line, inFarm);
 }
 
 function pathMeters(line: LatLng[]) {
@@ -84,6 +119,7 @@ function viaAroundPark(from: LatLng, to: LatLng, line: LatLng[]): LatLng[] {
   const hits = line.filter(inPark);
   const goingWest = to.lng < from.lng - 0.0003;
   const goingEast = to.lng > from.lng + 0.0003;
+  const goingNorth = to.lat > from.lat + 0.0003;
   const pad = 0.0005;
   const around: LatLng[] = [...STREET_VIAS];
   if (hits.length > 0) {
@@ -102,6 +138,9 @@ function viaAroundPark(from: LatLng, to: LatLng, line: LatLng[]): LatLng[] {
     around.push({ lat: south - pad, lng: midLng });
     around.push({ lat: south - pad, lng: west - pad });
     around.push({ lat: south - pad, lng: east + pad });
+    const northLat = Math.min(north + pad, NORTH_STREET_EDGE - 0.00025);
+    if (goingNorth || !goingWest) around.push({ lat: northLat, lng: midLng });
+    if (goingNorth) around.push({ lat: northLat, lng: east + pad });
     if (!goingWest) around.push({ lat: midLat, lng: east + pad });
     if (!goingEast) around.push({ lat: midLat, lng: west - pad });
   }
@@ -118,6 +157,23 @@ function viaAroundPark(from: LatLng, to: LatLng, line: LatLng[]): LatLng[] {
 function southSkirt(from: LatLng, to: LatLng): LatLng[] {
   if (from.lng >= to.lng) return [from, KRINITZI_EAST, KRINITZI_WEST, to];
   return [from, KRINITZI_WEST, KRINITZI_EAST, to];
+}
+
+function northSkirt(from: LatLng, to: LatLng): LatLng[] {
+  if (from.lng >= to.lng) return [from, HARMARGANIT_EAST, HARMARGANIT_MID, to];
+  return [from, HARMARGANIT_MID, HARMARGANIT_EAST, to];
+}
+
+function rokachSkirt(from: LatLng, to: LatLng): LatLng[] {
+  return [from, ROKACH_SOUTH, ROKACH_EAST, to];
+}
+
+function wantSouthSkirt(from: LatLng, to: LatLng) {
+  return from.lat < 32.0922 && to.lat < 32.0922;
+}
+
+function wantNorthSkirt(from: LatLng, to: LatLng) {
+  return from.lat > 32.0918 || to.lat > 32.0918;
 }
 
 async function fetchOsrm(points: LatLng[]): Promise<LatLng[] | null> {
@@ -138,17 +194,34 @@ async function fetchOsrm(points: LatLng[]): Promise<LatLng[] | null> {
 async function fetchWalkLeg(from: LatLng, to: LatLng): Promise<LatLng[] | null> {
   const direct = await fetchOsrm([from, to]);
   if (!direct || direct.length < 2) return null;
-  if (parkFraction(direct) <= PARK_FRACTION_MAX) return direct;
+  const directFarm = farmFraction(direct);
+  const directPark = parkFraction(direct);
+  const directMeters = pathMeters(direct);
+  if (directFarm <= PARK_FRACTION_MAX && directPark <= PARK_FRACTION_MAX) return direct;
 
   const viaLines = viaAroundPark(from, to, direct).map((via) => fetchOsrm([from, via, to]));
-  const candidates = await Promise.all([fetchOsrm(southSkirt(from, to)), ...viaLines]);
+  const extra: Promise<LatLng[] | null>[] = [fetchOsrm(rokachSkirt(from, to))];
+  if (wantSouthSkirt(from, to)) extra.push(fetchOsrm(southSkirt(from, to)));
+  if (wantNorthSkirt(from, to)) extra.push(fetchOsrm(northSkirt(from, to)));
+  const candidates = await Promise.all([...extra, ...viaLines]);
   const ranked = candidates
     .filter((line): line is LatLng[] => Boolean(line && line.length >= 2))
-    .map((line) => ({ line, frac: parkFraction(line), meters: pathMeters(line) }))
+    .map((line) => ({
+      line,
+      farm: farmFraction(line),
+      frac: parkFraction(line),
+      meters: pathMeters(line),
+    }))
+    .filter((item) => item.farm <= PARK_FRACTION_MAX)
     .sort((a, b) => a.meters - b.meters || a.frac - b.frac);
+
   const around = ranked.find((item) => item.frac <= PARK_FRACTION_MAX);
-  if (around) return around.line;
-  if (ranked[0] && ranked[0].frac < parkFraction(direct)) return ranked[0].line;
+  if (directFarm > PARK_FRACTION_MAX) {
+    if (around) return around.line;
+    return ranked[0]?.line ?? direct;
+  }
+
+  if (around && around.meters <= directMeters * HILL_DETOUR_MAX) return around.line;
   return direct;
 }
 
