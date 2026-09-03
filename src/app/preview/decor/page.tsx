@@ -1,44 +1,20 @@
-import Link from "next/link";
 import { DECOR_OPTIONS, DECOR_TONES, DecorSign } from "@/components/decor-glyphs";
+import { PreviewNav, PreviewPhoto } from "@/components/preview-nav";
 import { config } from "@/lib/config";
 
 export default function DecorPreviewPage() {
   return (
     <div className="min-h-dvh bg-[#140a1c] px-4 py-6 text-orange-50" dir="rtl">
       <div className="mx-auto max-w-lg space-y-6">
-        <header className="space-y-2">
+        <header className="space-y-3">
           <p className="text-xs text-violet-300">{config.appName} · בחירת אייקון</p>
           <h1 className="text-2xl font-semibold text-orange-100">איזה קישוט יותר ברור?</h1>
           <p className="text-sm text-violet-200">
-            ירוק = עדין, כתום = בינוני, אדום = כבד, אפור עם קו = בלי קישוט. אותו ירוק־כתום־אדום כמו בממתקים וברוח. בפופאפ עכשיו: מספר 3, קורי עכביש.
+            ירוק = עדין, כתום = בינוני, אדום = כבד, אפור עם קו = בלי קישוט בכלל. בפופאפ עכשיו: מספר 3,
+            קורי עכביש.
           </p>
-          <div className="flex flex-wrap gap-3 text-sm">
-            <Link href="/" className="text-orange-300 underline-offset-2 hover:underline">
-              חזרה למפה
-            </Link>
-            <Link href="/preview/candies" className="text-orange-300 underline-offset-2 hover:underline">
-              ממתקים
-            </Link>
-            <Link href="/preview/strollers" className="text-orange-300 underline-offset-2 hover:underline">
-              עגלות
-            </Link>
-            <Link href="/preview/scare" className="text-orange-300 underline-offset-2 hover:underline">
-              פחד
-            </Link>
-            <Link href="/preview/sensitivities" className="text-orange-300 underline-offset-2 hover:underline">
-              רגישויות
-            </Link>
-          </div>
+          <PreviewNav current="/preview/decor" />
         </header>
-
-        <figure className="overflow-hidden rounded-2xl ring-1 ring-orange-500/20">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/preview/decor-icon-options.png"
-            alt="חמש צורות קישוט במצב מקושט ולא מקושט"
-            className="h-auto w-full"
-          />
-        </figure>
 
         <div className="space-y-3">
           {DECOR_OPTIONS.map((option) => {
@@ -71,6 +47,8 @@ export default function DecorPreviewPage() {
             );
           })}
         </div>
+
+        <PreviewPhoto src="/preview/decor-icon-options.png" alt="חמש צורות קישוט במצב מקושט ולא מקושט" />
       </div>
     </div>
   );

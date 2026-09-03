@@ -186,10 +186,10 @@ export function DecorMark({
 }
 
 export const DECOR_TONES: { id: DecorLevel; label: string }[] = [
-  { id: "none", label: decorShort.none },
   { id: "mild", label: decorShort.mild },
   { id: "medium", label: decorShort.medium },
   { id: "heavy", label: decorShort.heavy },
+  { id: "none", label: decorShort.none },
 ];
 
 export const DECOR_OPTIONS = [

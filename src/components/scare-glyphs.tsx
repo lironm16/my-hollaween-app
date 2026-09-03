@@ -144,11 +144,10 @@ export function ScareMark({
   );
 }
 
-export const SCARE_TONES: { id: ScareLevel | "none"; label: string }[] = [
+export const SCARE_TONES: { id: ScareLevel; label: string }[] = [
   { id: "mild", label: scareShort.mild },
   { id: "medium", label: scareShort.medium },
   { id: "spicy", label: scareShort.spicy },
-  { id: "none", label: "בלי פחד" },
 ];
 
 export const SCARE_OPTIONS = [

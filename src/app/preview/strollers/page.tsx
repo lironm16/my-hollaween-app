@@ -1,44 +1,19 @@
-import Link from "next/link";
 import { STROLLER_OPTIONS } from "@/components/stroller-glyphs";
+import { PreviewNav, PreviewPhoto } from "@/components/preview-nav";
 import { config } from "@/lib/config";
 
 export default function StrollerPreviewPage() {
   return (
     <div className="min-h-dvh bg-[#140a1c] px-4 py-6 text-orange-50" dir="rtl">
       <div className="mx-auto max-w-lg space-y-6">
-        <header className="space-y-2">
+        <header className="space-y-3">
           <p className="text-xs text-violet-300">{config.appName} · בחירת אייקון</p>
           <h1 className="text-2xl font-semibold text-orange-100">איזה עגלה יותר ברורה?</h1>
           <p className="text-sm text-violet-200">
             בפופאפ עכשיו: מספר 1, העגלה מהתמונה. כתבו מספר אחר אם תרצו להחליף.
           </p>
-          <div className="flex flex-wrap gap-3 text-sm">
-            <Link href="/" className="text-orange-300 underline-offset-2 hover:underline">
-              חזרה למפה
-            </Link>
-            <Link href="/preview/candies" className="text-orange-300 underline-offset-2 hover:underline">
-              ממתקים
-            </Link>
-            <Link href="/preview/scare" className="text-orange-300 underline-offset-2 hover:underline">
-              פחד
-            </Link>
-            <Link href="/preview/decor" className="text-orange-300 underline-offset-2 hover:underline">
-              קישוט
-            </Link>
-            <Link href="/preview/sensitivities" className="text-orange-300 underline-offset-2 hover:underline">
-              רגישויות
-            </Link>
-          </div>
+          <PreviewNav current="/preview/strollers" />
         </header>
-
-        <figure className="overflow-hidden rounded-2xl ring-1 ring-orange-500/20">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/preview/stroller-icon-options.png"
-            alt="שש אפשרויות לאייקון עגלה"
-            className="h-auto w-full"
-          />
-        </figure>
 
         <div className="space-y-3">
           {STROLLER_OPTIONS.map((option) => {
@@ -92,6 +67,8 @@ export default function StrollerPreviewPage() {
             );
           })}
         </div>
+
+        <PreviewPhoto src="/preview/stroller-icon-options.png" alt="שש אפשרויות לאייקון עגלה" />
       </div>
     </div>
   );

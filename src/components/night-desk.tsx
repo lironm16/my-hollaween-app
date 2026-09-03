@@ -163,7 +163,7 @@ export function NightDesk({
         </div>
       </Section>
 
-      <Section title="קישוט" hint="כמה יש לראות בחוץ — ירוק עדין, כתום בינוני, אדום כבד">
+      <Section title="קישוט" hint="כמה יש לראות בחוץ — ירוק עדין, כתום בינוני, אדום כבד, אפור בלי קישוט בכלל">
         <div className="grid grid-cols-4 gap-1.5">
           {DECOR_LEVELS.map((level) => (
             <button
