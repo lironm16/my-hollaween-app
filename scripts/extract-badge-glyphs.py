@@ -151,7 +151,6 @@ def main() -> None:
     extract_disc_glyph(ROOT / "scare-ghost-disc-mild.png", ROOT / "scare-ghost-mild.png", (3, 111, 69), 62)
     extract_medium_ghost()
     extract_disc_glyph(ROOT / "scare-ghost-disc-spicy.png", ROOT / "scare-ghost-spicy.png", (164, 15, 19), 62)
-    extract_disc_glyph(ROOT / "decor-web-on.png", ROOT / "decor-web-glyph.png", (195, 52, 0), 64)
     terracotta = (158, 65, 13)
     extract_sensitivity(ROOT / "sensitivity-gluten.png", ROOT / "sensitivity-gluten-glyph.png", terracotta)
     extract_sensitivity(ROOT / "sensitivity-nuts.png", ROOT / "sensitivity-nuts-glyph.png", terracotta)

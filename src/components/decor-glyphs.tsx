@@ -2,8 +2,9 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { BADGE_TONE_CLASS } from "@/lib/badge-tones";
 import { DiscStrike } from "@/components/disc-strike";
+import { ScareGhost } from "@/components/scare-glyphs";
 import { decorShort } from "@/lib/labels";
-import type { DecorLevel } from "@/lib/types";
+import type { DecorLevel, ScareLevel } from "@/lib/types";
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -13,24 +14,17 @@ function Icon({ children }: { children: ReactNode }) {
   );
 }
 
-const WEB_GLYPH = "/icons/decor-web-glyph.png";
-
-function DecorWebArt() {
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={WEB_GLYPH} alt="" aria-hidden className="h-full w-full object-contain" />
-  );
-}
-
-/** Live popup mark — picker option 3, spiderweb. */
+/** Live popup mark — same ghost as scare. */
 export function DecorGlyph() {
-  return <DecorWebArt />;
+  return <ScareGhost level="mild" />;
 }
 
-/** 3 — Cobweb, no spider (picker identity). */
-export function DecorWeb() {
-  return <DecorWebArt />;
-}
+const DECOR_GHOST: Record<DecorLevel, ScareLevel> = {
+  none: "mild",
+  mild: "mild",
+  medium: "medium",
+  heavy: "spicy",
+};
 
 /** 1 — Three large outdoor bulbs. */
 export function DecorLights3() {
@@ -76,8 +70,7 @@ export function DecorLights6() {
   );
 }
 
-
-/** 4 — Wreath with a bow. */
+/** 3 — Wreath with a bow. */
 export function DecorWreath() {
   return (
     <Icon>
@@ -101,7 +94,7 @@ export function DecorWreath() {
   );
 }
 
-/** 5 — Pennant bunting. */
+/** 4 — Pennant bunting. */
 export function DecorBunting() {
   return (
     <Icon>
@@ -137,11 +130,12 @@ export function DecorSign({
   /** @deprecated Use `level`. true → medium, false → none. */
   on?: boolean;
   className?: string;
-  Glyph?: () => ReactNode;
+  Glyph?: (props: { level?: ScareLevel | "none" }) => ReactNode;
 }) {
   const resolved: DecorLevel = level ?? (on === false ? "none" : on === true ? "medium" : "mild");
   const struck = resolved === "none";
-  const useOfferedWeb = !Glyph || Glyph === DecorWeb || Glyph === DecorGlyph;
+  const ghostLevel = DECOR_GHOST[resolved];
+  const useGhost = !Glyph || Glyph === ScareGhost || Glyph === DecorGlyph;
   const label = decorShort[resolved];
 
   return (
@@ -154,9 +148,9 @@ export function DecorSign({
       title={label}
       aria-label={label}
     >
-      {useOfferedWeb ? (
-        <span className="size-[90%]">
-          <DecorWebArt />
+      {useGhost ? (
+        <span className="size-[88%]">
+          <ScareGhost level={ghostLevel} />
         </span>
       ) : (
         <span className="size-[82%]">
@@ -193,9 +187,9 @@ export const DECOR_TONES: { id: DecorLevel; label: string }[] = [
 ];
 
 export const DECOR_OPTIONS = [
-  { id: "lights3", number: 1, name: "שלוש מנורות", current: false, Glyph: DecorLights3 },
-  { id: "lights6", number: 2, name: "שרשרת אורות", current: false, Glyph: DecorLights6 },
-  { id: "web", number: 3, name: "קורי עכביש", current: true, Glyph: DecorWeb },
+  { id: "ghost", number: 1, name: "רוח", current: true, Glyph: ScareGhost },
+  { id: "lights3", number: 2, name: "שלוש מנורות", current: false, Glyph: DecorLights3 },
+  { id: "lights6", number: 3, name: "שרשרת אורות", current: false, Glyph: DecorLights6 },
   { id: "wreath", number: 4, name: "זר", current: false, Glyph: DecorWreath },
   { id: "bunting", number: 5, name: "דגלים", current: false, Glyph: DecorBunting },
 ] as const;
