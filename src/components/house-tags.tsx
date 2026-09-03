@@ -1,14 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { StrollerSign } from "@/components/symbols";
+import { CandySign, candyTone } from "@/components/candy-glyphs";
 import {
-  candyLevel,
   isDecorated,
   markedGlutenFree,
   offersNutsFree,
   offersSesameFree,
   treatLevel,
 } from "@/lib/house-state";
-import { scareShort, stockLabels, treatLabels } from "@/lib/labels";
+import { scareShort, treatLabels } from "@/lib/labels";
 import { formatHoursLabel } from "@/lib/hours";
 import type { ScareLevel, TreatId, TreatStock } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -43,25 +43,14 @@ export function HouseTags({
   const treats = house.treats ?? [];
   const withTreats = { treats, treatStock: house.treatStock };
   const scare = house.scareLevel ?? "mild";
-  const candy = candyLevel(withTreats);
+  const candy = candyTone(withTreats);
   const gluten = markedGlutenFree(withTreats);
   const glutenOut = gluten && treatLevel(withTreats, "glutenFree") === "out";
   const hoursLabel = formatHoursLabel(house);
 
   return (
     <div className="flex flex-wrap gap-1">
-      <Badge
-        className={cn(
-          "h-6 text-sm",
-          candy === "out"
-            ? "bg-red-700 text-white"
-            : candy === "low"
-              ? "bg-amber-400 text-black"
-              : "bg-emerald-700 text-white",
-        )}
-      >
-        ממתקים · {stockLabels[candy]}
-      </Badge>
+      <CandySign tone={candy} />
       <Badge
         className={cn(
           "h-6 text-sm",

@@ -37,6 +37,7 @@ import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, formatDisplayAddre
 import { toPublicHouse } from "@/lib/ids";
 import { isFrozen, offersCandy, offersSensitivity, isDecorated } from "@/lib/house-state";
 import { AccessibleMark } from "@/components/symbols";
+import { CandyMark } from "@/components/candy-glyphs";
 import { isOpenNow } from "@/lib/hours";
 import {
   backupLooksNewer,
@@ -649,7 +650,7 @@ export function NeighborhoodApp({
             checked={candyOnly}
             onChange={() => updateFilters({ candyOnly: !candyOnly })}
           >
-            יש ממתקים
+            <CandyMark labeled />
           </FilterOption>
           <FilterOption
             checked={decoratedOnly}

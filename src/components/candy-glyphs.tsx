@@ -1,5 +1,8 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { candyLevel, markedCandy } from "@/lib/house-state";
+import type { TreatId, TreatStock } from "@/lib/types";
+import { stockLabels } from "@/lib/labels";
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -90,24 +93,40 @@ const TONE_CLASS: Record<CandyTone, string> = {
   none: "bg-[#94a3b8] text-[#fff7ed]",
 };
 
+export function candyTone(house: { treats?: TreatId[]; treatStock?: TreatStock }): CandyTone {
+  const treats = house.treats ?? [];
+  if (!markedCandy({ treats })) return "none";
+  const level = candyLevel({ treats, treatStock: house.treatStock });
+  if (level === "low") return "low";
+  if (level === "out") return "out";
+  return "plenty";
+}
+
+export function candyToneLabel(tone: CandyTone) {
+  if (tone === "none") return "בלי ממתקים";
+  return `ממתקים · ${stockLabels[tone]}`;
+}
+
 export function CandySign({
-  Glyph,
+  Glyph = CandyTwist,
   tone,
   className,
 }: {
-  Glyph: () => ReactNode;
+  Glyph?: () => ReactNode;
   tone: CandyTone;
   className?: string;
 }) {
   return (
     <span
       className={cn(
-        "relative inline-flex size-10 shrink-0 items-center justify-center rounded-full",
+        "relative inline-flex size-8 shrink-0 items-center justify-center rounded-full",
         TONE_CLASS[tone],
         className,
       )}
+      title={candyToneLabel(tone)}
+      aria-label={candyToneLabel(tone)}
     >
-      <span className="size-6">
+      <span className="size-[62%]">
         <Glyph />
       </span>
       {tone === "none" ? (
@@ -120,6 +139,23 @@ export function CandySign({
   );
 }
 
+export function CandyMark({
+  labeled = false,
+  tone = "plenty",
+  className,
+}: {
+  labeled?: boolean;
+  tone?: CandyTone;
+  className?: string;
+}) {
+  return (
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <CandySign tone={tone} />
+      {labeled ? <span>יש ממתקים</span> : <span className="sr-only">{candyToneLabel(tone)}</span>}
+    </span>
+  );
+}
+
 export const CANDY_TONES: { id: CandyTone; label: string }[] = [
   { id: "plenty", label: "יש" },
   { id: "low", label: "מעט" },
@@ -128,9 +164,9 @@ export const CANDY_TONES: { id: CandyTone; label: string }[] = [
 ];
 
 export const CANDY_OPTIONS = [
-  { id: "twist", number: 1, name: "סוכרייה עטופה", Glyph: CandyTwist },
-  { id: "round", number: 2, name: "עגולה עטופה", Glyph: CandyRound },
-  { id: "lollipop", number: 3, name: "סוכרייה על מקל", Glyph: CandyLollipop },
-  { id: "cane", number: 4, name: "מקל סוכר", Glyph: CandyCane },
-  { id: "pair", number: 5, name: "שתי סוכריות", Glyph: CandyPair },
+  { id: "twist", number: 1, name: "סוכרייה עטופה", current: true, Glyph: CandyTwist },
+  { id: "round", number: 2, name: "עגולה עטופה", current: false, Glyph: CandyRound },
+  { id: "lollipop", number: 3, name: "סוכרייה על מקל", current: false, Glyph: CandyLollipop },
+  { id: "cane", number: 4, name: "מקל סוכר", current: false, Glyph: CandyCane },
+  { id: "pair", number: 5, name: "שתי סוכריות", current: false, Glyph: CandyPair },
 ] as const;
