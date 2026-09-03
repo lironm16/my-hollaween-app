@@ -15,7 +15,7 @@ import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseList } from "@/components/house-list";
 import { HouseDetails } from "@/components/house-details";
 import { NightDesk } from "@/components/night-desk";
-import { RouteSheet } from "@/components/route-sheet";
+import { RouteList } from "@/components/route-list";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +46,7 @@ import {
   type ServerDbBackup,
 } from "@/lib/offline-db";
 import { scareShort, treatLabels } from "@/lib/labels";
-import { buildWalkingRoute } from "@/lib/route";
+import { buildWalkingRoute, googleMapsNavigateUrl } from "@/lib/route";
 import type { Catalog, House, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -83,8 +83,7 @@ export function NeighborhoodApp({
     unvisitedOnly,
   } = filters;
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [routeOpen, setRouteOpen] = useState(false);
-  const [routeOnMap, setRouteOnMap] = useState(false);
+  const [routeMode, setRouteMode] = useState(false);
   const [followTick, setFollowTick] = useState(0);
   const [fitTick, setFitTick] = useState(0);
   const [askedLocation, setAskedLocation] = useState(false);
@@ -228,11 +227,15 @@ export function NeighborhoodApp({
   const activeFilterCount =
     neighborhoodActiveCount + sensitivityFilters.length + scareActiveCount + moreFilterCount;
 
-  const walkingRoute = useMemo(
-    () => buildWalkingRoute(visible, origin, { accessible: accessibleOnly }),
-    [visible, origin, accessibleOnly],
+  const routeHouses = useMemo(
+    () => visible.filter((house) => !visits.visitedIds.includes(house.id)),
+    [visible, visits.visitedIds],
   );
-  const { line: routeLine } = useRouteGeometry(walkingRoute, routeOpen || routeOnMap);
+  const walkingRoute = useMemo(
+    () => buildWalkingRoute(routeHouses, origin, { accessible: accessibleOnly }),
+    [routeHouses, origin, accessibleOnly],
+  );
+  const { line: routeLine } = useRouteGeometry(walkingRoute, routeMode);
 
   const routePrefsLabel = useMemo(() => {
     const parts: string[] = [];
@@ -279,8 +282,19 @@ export function NeighborhoodApp({
 
   function goToMainMap() {
     setView("map");
+    setRouteMode(false);
     setSelectedId("closed");
     setFitTick((n) => n + 1);
+  }
+
+  function enterRouteMode() {
+    if (!origin) {
+      setAskedLocation(true);
+      setFollowTick((n) => n + 1);
+      geo.refresh();
+    }
+    setRouteMode(true);
+    setView("map");
   }
 
   function applyAdminHouse(next: House | PublicHouse) {
@@ -522,16 +536,15 @@ export function NeighborhoodApp({
           <FilterTrigger activeCount={activeFilterCount} onClick={() => setFiltersOpen(true)} />
           <button
             type="button"
-            aria-label="בניית מסלול"
-            onClick={() => {
-              if (!origin) {
-                setAskedLocation(true);
-                setFollowTick((n) => n + 1);
-                geo.refresh();
-              }
-              setRouteOpen(true);
-            }}
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25"
+            aria-label={routeMode ? "יציאה מהמסלול" : "מסלול"}
+            aria-pressed={routeMode}
+            onClick={() => (routeMode ? setRouteMode(false) : enterRouteMode())}
+            className={cn(
+              "inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
+              routeMode
+                ? "bg-orange-500 text-black"
+                : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
+            )}
           >
             <Route className="size-4" />
           </button>
@@ -539,17 +552,14 @@ export function NeighborhoodApp({
             <RefreshCw className={cn("size-3.5", adminLoading && "animate-spin")} />
             רענון
           </Button>
-          {routeOnMap ? (
-            <Button size="sm" variant="ghost" onClick={() => setRouteOnMap(false)}>
-              הסתר מסלול
-            </Button>
-          ) : null}
           <span className="ms-auto flex items-center gap-1 text-[11px] text-violet-300">
             {offline || source === "cache" || source === "snapshot" ? (
               <>
                 <WifiOff className="size-3" />
                 {offline ? "לא מקוון" : source === "snapshot" ? "עותק סטטי" : "מהזיכרון"}
               </>
+            ) : routeMode ? (
+              <span>{walkingRoute?.stops.length ?? 0} עצירות</span>
             ) : (
               <span>{visible.length} בתים</span>
             )}
@@ -559,6 +569,10 @@ export function NeighborhoodApp({
           <p className="mt-1 text-[11px] text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>
         ) : outsideNeighborhood ? (
           <p className="mt-1 text-[11px] text-amber-200">המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.</p>
+        ) : routeMode ? (
+          <p className="mt-1 text-[11px] text-violet-300">
+            מסלול לפי הסינון{routePrefsLabel ? ` · ${routePrefsLabel}` : ""} · בלי בתים שביקרתם · מפה / רשימה
+          </p>
         ) : null}
       </div>
       <FiltersSheet
@@ -633,20 +647,6 @@ export function NeighborhoodApp({
           </FilterOption>
         </FilterSection>
       </FiltersSheet>
-      <RouteSheet
-        open={routeOpen}
-        onOpenChange={setRouteOpen}
-        route={walkingRoute}
-        prefsLabel={routePrefsLabel}
-        hasGps={Boolean(origin)}
-        onRequestLocation={goToMyLocation}
-        onSelectHouse={(id) => setSelectedId(id)}
-        onShowOnMap={() => {
-          setRouteOnMap(true);
-          setView("map");
-          setRouteOpen(false);
-        }}
-      />
       {error ? (
         <div className="relative z-30 bg-red-950/70 px-3 py-2 text-center text-sm text-red-100">
           {error}
@@ -671,7 +671,7 @@ export function NeighborhoodApp({
               aria-hidden={view !== "map"}
             >
               <HouseMapDynamic
-                houses={visible}
+                houses={routeMode ? routeHouses : visible}
                 selectedId={selected?.id}
                 onSelect={(house) => setSelectedId(house.id)}
                 className="h-full w-full"
@@ -681,15 +681,28 @@ export function NeighborhoodApp({
                 fitTick={fitTick}
                 locating={geo.status === "pending" && askedLocation}
                 onLocate={goToMyLocation}
-                routeLine={routeOnMap ? routeLine : null}
+                routeLine={routeMode ? routeLine : null}
                 routeStops={
-                  routeOnMap && walkingRoute
-                    ? walkingRoute.stops.map((stop) => ({
-                        id: stop.house.id,
-                        order: stop.order,
-                        lat: stop.house.lat,
-                        lng: stop.house.lng,
-                      }))
+                  routeMode && walkingRoute
+                    ? walkingRoute.stops.map((stop, index) => {
+                        const prev =
+                          index === 0
+                            ? walkingRoute.origin
+                            : {
+                                lat: walkingRoute.stops[index - 1]!.house.lat,
+                                lng: walkingRoute.stops[index - 1]!.house.lng,
+                              };
+                        return {
+                          id: stop.house.id,
+                          order: stop.order,
+                          lat: stop.house.lat,
+                          lng: stop.house.lng,
+                          walkUrl: googleMapsNavigateUrl(prev, {
+                            lat: stop.house.lat,
+                            lng: stop.house.lng,
+                          }),
+                        };
+                      })
                     : null
                 }
               />
@@ -699,15 +712,25 @@ export function NeighborhoodApp({
                 className="absolute inset-0 overflow-y-auto bg-[#12081a]"
                 style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#12081a" }}
               >
-                <HouseList
-                  houses={visible}
-                  onOpen={(house) => setSelectedId(house.id)}
-                  origin={origin}
-                  likedIds={likes.likedIds}
-                  onToggleLike={likes.toggle}
-                  visitedIds={visits.visitedIds}
-                  onToggleVisited={visits.toggle}
-                />
+                {routeMode ? (
+                  <RouteList
+                    route={walkingRoute}
+                    prefsLabel={routePrefsLabel}
+                    hasGps={Boolean(origin)}
+                    onRequestLocation={goToMyLocation}
+                    onSelectHouse={(id) => setSelectedId(id)}
+                  />
+                ) : (
+                  <HouseList
+                    houses={visible}
+                    onOpen={(house) => setSelectedId(house.id)}
+                    origin={origin}
+                    likedIds={likes.likedIds}
+                    onToggleLike={likes.toggle}
+                    visitedIds={visits.visitedIds}
+                    onToggleVisited={visits.toggle}
+                  />
+                )}
               </div>
             ) : null}
           </>

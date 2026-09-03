@@ -1,0 +1,124 @@
+"use client";
+
+import { Navigation } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { formatDisplayAddress } from "@/lib/config";
+import { formatDistance } from "@/lib/geo";
+import { houseHeadline } from "@/lib/labels";
+import {
+  appleMapsWalkingUrl,
+  formatRouteSummary,
+  googleMapsNavigateUrl,
+  type WalkingRoute,
+} from "@/lib/route";
+import { cn } from "@/lib/utils";
+
+export function RouteList({
+  route,
+  prefsLabel,
+  hasGps,
+  onRequestLocation,
+  onSelectHouse,
+}: {
+  route: WalkingRoute | null;
+  prefsLabel: string;
+  hasGps: boolean;
+  onRequestLocation?: () => void;
+  onSelectHouse: (id: string) => void;
+}) {
+  if (!route) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center text-violet-200">
+        <p className="font-display text-2xl text-orange-300">אין עצירות במסלול</p>
+        <p className="mt-2 text-sm">
+          שנו סינון, או סמנו בתים כ«לא ביקרתי» — בתים שכבר ביקרתם לא נכנסים למסלול.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto flex w-full max-w-lg flex-col gap-3 px-3 py-3">
+      <div className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
+        <p className="text-sm font-medium text-orange-100">{formatRouteSummary(route)}</p>
+        <p className="mt-1 text-xs text-violet-300">
+          {route.startedFrom === "gps" ? "מהמיקום שלכם" : "ממרכז השכונה"}
+          {prefsLabel ? ` · ${prefsLabel}` : ""}
+          {" · בלי בתים שביקרתם"}
+        </p>
+        {!hasGps && onRequestLocation ? (
+          <Button type="button" size="sm" variant="outline" className="mt-2" onClick={onRequestLocation}>
+            <Navigation className="size-3.5" />
+            הפעילו מיקום
+          </Button>
+        ) : null}
+      </div>
+
+      <ol className="space-y-2">
+        {route.stops.map((stop, index) => {
+          const prev =
+            index === 0
+              ? route.origin
+              : {
+                  lat: route.stops[index - 1]!.house.lat,
+                  lng: route.stops[index - 1]!.house.lng,
+                };
+          const walkUrl = googleMapsNavigateUrl(prev, {
+            lat: stop.house.lat,
+            lng: stop.house.lng,
+          });
+          const appleUrl = appleMapsWalkingUrl(prev, {
+            lat: stop.house.lat,
+            lng: stop.house.lng,
+          });
+          return (
+            <li key={stop.house.id} className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/15">
+              <button
+                type="button"
+                onClick={() => onSelectHouse(stop.house.id)}
+                className="flex w-full items-start gap-3 text-start"
+              >
+                <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-black">
+                  {stop.order}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium text-orange-100">
+                    {houseHeadline(stop.house)}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-violet-300">
+                    {formatDisplayAddress(stop.house)}
+                  </span>
+                  <span className="mt-1 block text-[11px] text-violet-400">
+                    {stop.order === 1 ? "מההתחלה" : "מעצירה קודמת"}:{" "}
+                    {formatDistance(stop.fromPreviousMeters)}
+                    {" · "}
+                    מצטבר {formatDistance(stop.cumulativeMeters)}
+                  </span>
+                </span>
+              </button>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <a
+                  href={walkUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={cn(buttonVariants({ size: "sm" }), "bg-orange-500 text-black hover:bg-orange-400")}
+                >
+                  <Navigation className="size-3.5" />
+                  ניווט לכאן
+                </a>
+                <a
+                  href={appleUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={cn(buttonVariants({ size: "sm", variant: "ghost" }), "text-violet-200")}
+                >
+                  Apple Maps
+                </a>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}

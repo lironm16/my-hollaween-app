@@ -268,7 +268,7 @@ type Props = {
   locating?: boolean;
   onLocate?: () => void;
   routeLine?: LatLng[] | null;
-  routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
+  routeStops?: { id: string; order: number; lat: number; lng: number; walkUrl?: string }[] | null;
 };
 
 export function HouseMap({
@@ -368,7 +368,25 @@ export function HouseMap({
               position={[stop.lat, stop.lng]}
               icon={routeOrderIcon(stop.order)}
               zIndexOffset={600}
-            />
+            >
+              {stop.walkUrl ? (
+                <Popup autoPan={false} keepInView={false}>
+                  <div dir="rtl" className="text-right">
+                    <strong>עצירה {stop.order}</strong>
+                    <div className="mt-2">
+                      <a
+                        href={stop.walkUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex rounded-lg bg-orange-500 px-2.5 py-1 text-xs font-medium text-black"
+                      >
+                        ניווט לכאן
+                      </a>
+                    </div>
+                  </div>
+                </Popup>
+              ) : null}
+            </Marker>
           ))}
         {!pickMode &&
           clusters.map((cluster) => (
