@@ -19,10 +19,12 @@ import {
   type DecorLevel,
   type HouseInput,
   type ScareLevel,
+  type SensitivityId,
   type TreatId,
   type VisitState,
 } from "@/lib/types";
-import { candyLevel, resolveDecorLevel } from "@/lib/house-state";
+import { candyTone, CandySign, CANDY_TONES, type CandyTone } from "@/components/candy-glyphs";
+import { resolveDecorLevel } from "@/lib/house-state";
 import { StrollerSign } from "@/components/symbols";
 import { ScareSign } from "@/components/scare-glyphs";
 import { DecorSign } from "@/components/decor-glyphs";
@@ -57,10 +59,9 @@ function clock(value: string) {
   return /^\d{2}:\d{2}/.exec(value)?.[0] ?? value;
 }
 
-function initialHasCandy(initial?: Partial<HouseInput>) {
-  if (!initial) return true;
-  const treats = initial.treats ?? ["candy"];
-  return candyLevel({ treats, treatStock: initial.treatStock }) !== "out";
+function initialCandyTone(initial?: Partial<HouseInput>): CandyTone {
+  if (!initial) return "plenty";
+  return candyTone({ treats: initial.treats ?? ["candy"], treatStock: initial.treatStock });
 }
 
 function initialDecorLevel(initial?: Partial<HouseInput>): DecorLevel {
@@ -83,7 +84,7 @@ export function HouseForm({
   const [locating, setLocating] = useState(false);
   const [addressOk, setAddressOk] = useState(Boolean(initial?.address && initial.lat && initial.lng));
   const [decorLevel, setDecorLevel] = useState<DecorLevel>(() => initialDecorLevel(initial));
-  const [hasCandy, setHasCandy] = useState(() => initialHasCandy(initial));
+  const [candy, setCandy] = useState<CandyTone>(() => initialCandyTone(initial));
   const [hourWindows, setHourWindows] = useState<HoursWindow[]>(() => {
     const windows = houseHoursWindows({ ...empty, ...initial });
     return windows.length ? windows : [{ from: "17:00", to: "21:00" }];
@@ -109,6 +110,20 @@ export function HouseForm({
       current.length <= 1 ? current : current.filter((_, i) => i !== index),
     );
   }
+
+  function pickCandy(tone: CandyTone) {
+    setCandy(tone);
+    if (tone !== "plenty" && tone !== "low") {
+      setForm((f) => {
+        const treats = f.treats.filter((id) => !SENSITIVITY_OPTIONS.includes(id as SensitivityId));
+        const treatStock = { ...(f.treatStock ?? {}) };
+        for (const id of SENSITIVITY_OPTIONS) delete treatStock[id];
+        return { ...f, treats, treatStock };
+      });
+    }
+  }
+
+  const candyOffered = candy === "plenty" || candy === "low";
 
   function setTreat(id: TreatId, on: boolean) {
     setForm((f) => {
@@ -189,17 +204,34 @@ export function HouseForm({
           toast.error("בחרו כתובת אמיתית מהרשימה, או גררו את הסיכה לבית.");
           return;
         }
-        if (decorLevel === "none" && !hasCandy) {
+        if (decorLevel === "none" && candy !== "plenty" && candy !== "low") {
           toast.error("סמנו לפחות קישוטים או ממתקים — אחרת אין סיבה להוסיף את הבית למפה.");
           return;
         }
         const theme = themeFromName(form.name) ?? form.theme;
         const withoutCandy = form.treats.filter((id) => id !== "candy");
-        const treats = hasCandy ? (["candy" as const, ...withoutCandy] as TreatId[]) : withoutCandy;
+        const treats =
+          candy === "none"
+            ? withoutCandy.filter((id) => !SENSITIVITY_OPTIONS.includes(id as SensitivityId))
+            : (["candy" as const, ...withoutCandy] as TreatId[]);
         const treatStock = { ...(form.treatStock ?? {}) };
-        if (hasCandy) treatStock.candy = treatStock.candy ?? "plenty";
-        else delete treatStock.candy;
-        const visit: VisitState = hasCandy ? "come" : decorLevel !== "none" ? "decorOnly" : "come";
+        if (candy === "none") {
+          delete treatStock.candy;
+          for (const id of SENSITIVITY_OPTIONS) delete treatStock[id];
+        } else {
+          treatStock.candy = candy;
+          if (candy === "out") {
+            for (const id of SENSITIVITY_OPTIONS) delete treatStock[id];
+          }
+        }
+        const visit: VisitState =
+          candy === "plenty" || candy === "low"
+            ? "come"
+            : candy === "out"
+              ? "closed"
+              : decorLevel !== "none"
+                ? "decorOnly"
+                : "come";
         const windows = hourWindows.map((window) => ({
           from: clock(window.from),
           to: clock(window.to),
@@ -340,30 +372,50 @@ export function HouseForm({
           ))}
         </div>
       </div>
-      <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-sm ring-1 ring-orange-500/20">
-        <input
-          type="checkbox"
-          className="mt-1 size-4 accent-orange-500"
-          checked={hasCandy}
-          onChange={(e) => setHasCandy(e.target.checked)}
-        />
-        <span>
-          <span className="font-medium text-orange-100">יהיו ממתקים</span>
-          <span className="block text-xs text-violet-300">
-            מחלקים ממתקים או שוקולד לילדים שמגיעים
-          </span>
-        </span>
-      </label>
-      <div className="space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
+      <div>
+        <p className="mb-2 text-sm font-medium">ממתקים</p>
+        <p className="mb-2 text-xs text-violet-300">
+          ירוק יש, כתום מעט, אדום נגמר, אפור בלי ממתקים
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {CANDY_TONES.map((tone) => (
+            <button
+              key={tone.id}
+              type="button"
+              onClick={() => pickCandy(tone.id)}
+              className={
+                candy === tone.id
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-xs font-medium text-black"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
+              }
+            >
+              <CandySign tone={tone.id} className="size-6" />
+              {tone.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div
+        className={
+          candyOffered
+            ? "space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20"
+            : "space-y-2 rounded-xl bg-[#1d1028] p-3 opacity-45 ring-1 ring-orange-500/15"
+        }
+      >
         <p className="text-sm font-medium text-orange-100">רגישויות והתאמות</p>
-        <p className="text-xs text-violet-300">סמנו מה יש בבית לילדים עם רגישויות</p>
+        <p className="text-xs text-violet-300">
+          {candyOffered
+            ? "סמנו מה יש בבית לילדים עם רגישויות"
+            : "בחרו יש או מעט ממתקים כדי לסמן רגישויות"}
+        </p>
         <div className="space-y-2">
           {SENSITIVITY_OPTIONS.map((id) => (
             <label key={id} className="flex items-center gap-2 text-sm text-orange-50">
               <input
                 type="checkbox"
                 className="size-4 accent-orange-500"
-                checked={form.treats.includes(id)}
+                disabled={!candyOffered}
+                checked={candyOffered && form.treats.includes(id)}
                 onChange={(e) => setTreat(id, e.target.checked)}
               />
               <SensitivityMark labeled kind={id} />

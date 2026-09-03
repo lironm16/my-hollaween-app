@@ -172,10 +172,10 @@ export function CandyMark({
 }
 
 export const CANDY_TONES: { id: CandyTone; label: string }[] = [
+  { id: "none", label: "בלי ממתקים" },
   { id: "plenty", label: "יש" },
   { id: "low", label: "מעט" },
   { id: "out", label: "נגמר" },
-  { id: "none", label: "בלי ממתקים מההתחלה" },
 ];
 
 export const CANDY_OPTIONS = [
