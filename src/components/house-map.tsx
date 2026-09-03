@@ -270,19 +270,32 @@ function HousePreviewPopup({
     const stop = (event: Event) => event.stopPropagation();
     const sync = () => setPage(pageFromOverlap(node));
     let snapTimer = 0;
+    let wheelLock = false;
     const snap = () => {
       const next = pageFromOverlap(node);
       setPage(next);
       scrollPageIntoView(node, next, "smooth");
     };
+    const go = (index: number) => {
+      const last = node.children.length - 1;
+      const next = Math.min(last, Math.max(0, index));
+      setPage(next);
+      scrollPageIntoView(node, next, "smooth");
+    };
     const onWheel = (event: WheelEvent) => {
       const dx = event.deltaX + event.deltaY;
-      if (dx === 0) return;
+      if (Math.abs(dx) < 8) return;
       event.preventDefault();
       event.stopPropagation();
-      node.scrollLeft += dx;
-      window.clearTimeout(snapTimer);
-      snapTimer = window.setTimeout(snap, 80);
+      if (wheelLock) return;
+      const current = pageFromOverlap(node);
+      const next = current + (dx > 0 ? 1 : -1);
+      if (next === current || next < 0 || next >= node.children.length) return;
+      wheelLock = true;
+      go(next);
+      window.setTimeout(() => {
+        wheelLock = false;
+      }, 320);
     };
     let drag: { id: number; x: number; scroll: number } | null = null;
     const onDown = (event: PointerEvent) => {
