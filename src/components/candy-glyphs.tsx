@@ -109,7 +109,7 @@ export function candyToneLabel(tone: CandyTone) {
 }
 
 export function CandySign({
-  Glyph = CandyTwist,
+  Glyph = CandyRound,
   tone,
   className,
 }: {
@@ -160,8 +160,8 @@ export const CANDY_TONES: { id: CandyTone; label: string }[] = [
 ];
 
 export const CANDY_OPTIONS = [
-  { id: "twist", number: 1, name: "סוכרייה עטופה", current: true, Glyph: CandyTwist },
-  { id: "round", number: 2, name: "עגולה עטופה", current: false, Glyph: CandyRound },
+  { id: "twist", number: 1, name: "סוכרייה עטופה", current: false, Glyph: CandyTwist },
+  { id: "round", number: 2, name: "עגולה עטופה", current: true, Glyph: CandyRound },
   { id: "lollipop", number: 3, name: "סוכרייה על מקל", current: false, Glyph: CandyLollipop },
   { id: "cane", number: 4, name: "מקל סוכר", current: false, Glyph: CandyCane },
   { id: "pair", number: 5, name: "שתי סוכריות", current: false, Glyph: CandyPair },
