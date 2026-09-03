@@ -133,6 +133,12 @@ button {
   max-height: none !important;
 }
 
+.leaflet-popup,
+.leaflet-popup-content-wrapper,
+.leaflet-popup-content {
+  touch-action: manipulation;
+}
+
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
   background: #fff;
@@ -156,12 +162,50 @@ button {
   text-align: right;
 }
 
+.house-map-popup.is-multi {
+  min-width: 200px;
+  max-width: 260px;
+  max-height: var(--house-popup-max, min(46dvh, 340px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .house-map-popup strong {
   display: block;
   font-size: 15px;
   font-weight: 800;
   line-height: 1.3;
   color: #1a1024;
+}
+
+.house-map-popup-cluster-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.house-map-popup-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0 2px 4px 0;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  max-height: calc(var(--house-popup-max, min(46dvh, 340px)) - 5.5rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+.house-map-popup.is-multi > .house-map-popup-meta {
+  flex-shrink: 0;
 }
 
 .house-map-popup-meta {

@@ -691,6 +691,9 @@
   .touch-none {
     touch-action: none;
   }
+  .resize {
+    resize: both;
+  }
   .scroll-my-1 {
     scroll-margin-block: var(--spacing);
   }
@@ -3292,6 +3295,11 @@ svg.leaflet-zoom-animated {
   max-width: none !important;
   max-height: none !important;
 }
+.leaflet-popup,
+.leaflet-popup-content-wrapper,
+.leaflet-popup-content {
+  touch-action: manipulation;
+}
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
   background: #fff;
@@ -3317,6 +3325,10 @@ svg.leaflet-zoom-animated {
 .house-map-popup.is-multi {
   min-width: 200px;
   max-width: 260px;
+  max-height: var(--house-popup-max, min(46dvh, 340px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 .house-map-popup strong {
   display: block;
@@ -3330,6 +3342,7 @@ svg.leaflet-zoom-animated {
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
+  flex-shrink: 0;
 }
 .house-map-popup-cluster-head strong {
   flex: 1;
@@ -3348,12 +3361,26 @@ svg.leaflet-zoom-animated {
 .house-map-popup-list {
   list-style: none;
   margin: 8px 0 0;
-  padding: 0;
+  padding: 0 2px 4px 0;
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 6px;
-  max-height: 220px;
+  min-height: 0;
+  max-height: calc(var(--house-popup-max, min(46dvh, 340px)) - 5.5rem);
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  scrollbar-gutter: stable;
+}
+.house-map-popup-list::-webkit-scrollbar {
+  width: 6px;
+}
+.house-map-popup-list::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 99px;
 }
 .house-map-popup-item {
   margin: 0;
@@ -3375,6 +3402,7 @@ svg.leaflet-zoom-animated {
   padding: 8px 10px;
   text-align: right;
   cursor: pointer;
+  touch-action: pan-y;
 }
 .house-map-popup-item-btn:hover,
 .house-map-popup-item-btn:focus-visible {
@@ -3401,6 +3429,9 @@ svg.leaflet-zoom-animated {
   font-size: 15px;
   line-height: 1.4;
   color: #3f3f46;
+}
+.house-map-popup.is-multi > .house-map-popup-meta {
+  flex-shrink: 0;
 }
 .house-map-popup-soldout {
   margin-top: 6px;

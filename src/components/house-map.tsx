@@ -109,6 +109,33 @@ function bindPopupRoot(node: HTMLDivElement | null) {
   L.DomEvent.disableScrollPropagation(node);
 }
 
+/** Keep apartment-list swipes on the list so the map does not steal them. */
+function bindPopupList(node: HTMLUListElement | null) {
+  if (!node || node.dataset.scrollBound === "1") return;
+  node.dataset.scrollBound = "1";
+  L.DomEvent.disableClickPropagation(node);
+  L.DomEvent.disableScrollPropagation(node);
+  const stop = (event: Event) => event.stopPropagation();
+  node.addEventListener("touchmove", stop, { passive: true });
+  node.addEventListener("pointermove", stop, { passive: true });
+}
+
+function useMapPopupMaxHeight() {
+  const map = useMap();
+  const [maxHeight, setMaxHeight] = useState(240);
+  useEffect(() => {
+    const update = () => {
+      setMaxHeight(Math.max(168, map.getSize().y - 72));
+    };
+    update();
+    map.on("resize", update);
+    return () => {
+      map.off("resize", update);
+    };
+  }, [map]);
+  return maxHeight;
+}
+
 function HousePreviewPopup({
   houses,
   onOpenDetails,
@@ -124,6 +151,7 @@ function HousePreviewPopup({
   const map = useMap();
   const multi = houses.length > 1;
   const address = houses[0] ? formatDisplayAddress(houses[0]) : "";
+  const popupMaxHeight = useMapPopupMaxHeight();
 
   return (
     <Popup
@@ -138,7 +166,10 @@ function HousePreviewPopup({
         ref={bindPopupRoot}
         dir="rtl"
         className={cn("house-map-popup", multi && "is-multi")}
-        style={interactive ? undefined : { pointerEvents: "none" }}
+        style={{
+          ...(interactive ? undefined : { pointerEvents: "none" }),
+          ...(multi ? { ["--house-popup-max" as string]: `${popupMaxHeight}px` } : undefined),
+        }}
       >
         {multi ? (
           <>
@@ -147,7 +178,7 @@ function HousePreviewPopup({
               <span className="house-map-popup-badge">{houses.length} בתים</span>
             </div>
             <p className="house-map-popup-meta">בחרו דירה בבניין</p>
-            <ul className="house-map-popup-list">
+            <ul ref={bindPopupList} className="house-map-popup-list">
               {houses.map((house) => {
                 const closed = effectiveVisit(house) === "closed";
                 return (
