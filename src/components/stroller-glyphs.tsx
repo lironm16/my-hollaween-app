@@ -8,24 +8,16 @@ function Icon({ children }: { children: ReactNode }) {
   );
 }
 
-/** 1 — Classic bassinet pram (close to what’s on the map now). */
+/** 1 — Classic bassinet pram (picker artwork). */
 export function StrollerClassic() {
   return (
-    <Icon>
-      <path
-        d="M3.2 14.2V7.6C3.2 4.55 5.7 2.2 8.8 2.2h3.4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.7"
-        strokeLinecap="round"
-      />
-      <path
-        fill="currentColor"
-        d="M6.5 7.6h12.8c.85 0 1.5.8 1.35 1.62L19.4 15.4H8.05L6.5 7.6Z"
-      />
-      <circle cx="8.35" cy="19.05" r="3.2" fill="currentColor" />
-      <circle cx="17.15" cy="19.05" r="2.65" fill="currentColor" />
-    </Icon>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/icons/stroller-classic.png"
+      alt=""
+      aria-hidden
+      className="h-full w-full object-contain"
+    />
   );
 }
 
@@ -146,7 +138,7 @@ export const STROLLER_OPTIONS = [
     id: "classic",
     number: 1,
     name: "עגלה קלאסית",
-    blurb: "סל + ידית מעוגלת. זה מה שעל המפה עכשיו.",
+    blurb: "סל עם גגון מחולק וידית מעוגלת — מה שבחרתם.",
     current: true,
     Glyph: StrollerClassic,
   },
