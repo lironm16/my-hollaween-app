@@ -17,6 +17,7 @@
     --color-orange-300: oklch(83.7% 0.128 66.29);
     --color-orange-400: oklch(75% 0.183 55.934);
     --color-orange-500: oklch(70.5% 0.213 47.604);
+    --color-orange-800: oklch(47% 0.157 37.304);
     --color-orange-950: oklch(26.6% 0.079 36.259);
     --color-amber-50: oklch(98.7% 0.022 95.277);
     --color-amber-100: oklch(96.2% 0.059 95.617);
@@ -25,7 +26,6 @@
     --color-amber-500: oklch(76.9% 0.188 70.08);
     --color-amber-800: oklch(47.3% 0.137 46.201);
     --color-amber-950: oklch(27.9% 0.077 45.635);
-    --color-emerald-50: oklch(97.9% 0.021 166.113);
     --color-emerald-200: oklch(90.5% 0.093 164.15);
     --color-emerald-300: oklch(84.5% 0.143 164.978);
     --color-emerald-400: oklch(76.5% 0.177 163.223);
@@ -280,17 +280,26 @@
   .inset-0 {
     inset: 0px;
   }
+  .-start-0\.5 {
+    inset-inline-start: calc(var(--spacing) * -0.5);
+  }
   .-start-1 {
     inset-inline-start: calc(var(--spacing) * -1);
   }
   .start-1\/2 {
     inset-inline-start: calc(1/2 * 100%);
   }
+  .start-\[10px\] {
+    inset-inline-start: 10px;
+  }
   .end-2 {
     inset-inline-end: calc(var(--spacing) * 2);
   }
   .end-3 {
     inset-inline-end: calc(var(--spacing) * 3);
+  }
+  .-top-0\.5 {
+    top: calc(var(--spacing) * -0.5);
   }
   .-top-1 {
     top: calc(var(--spacing) * -1);
@@ -306,6 +315,9 @@
   }
   .top-3 {
     top: calc(var(--spacing) * 3);
+  }
+  .top-\[10px\] {
+    top: 10px;
   }
   .right-3 {
     right: calc(var(--spacing) * 3);
@@ -462,6 +474,22 @@
     width: calc(var(--spacing) * 14);
     height: calc(var(--spacing) * 14);
   }
+  .size-20 {
+    width: calc(var(--spacing) * 20);
+    height: calc(var(--spacing) * 20);
+  }
+  .size-\[18px\] {
+    width: 18px;
+    height: 18px;
+  }
+  .size-\[38px\] {
+    width: 38px;
+    height: 38px;
+  }
+  .size-\[58px\] {
+    width: 58px;
+    height: 58px;
+  }
   .size-full {
     width: 100%;
     height: 100%;
@@ -507,6 +535,9 @@
   }
   .h-\[min\(92vh\,720px\)\] {
     height: min(92vh, 720px);
+  }
+  .h-auto {
+    height: auto;
   }
   .h-dvh {
     height: 100dvh;
@@ -642,11 +673,17 @@
   .flex-wrap {
     flex-wrap: wrap;
   }
+  .place-items-center {
+    place-items: center;
+  }
   .items-baseline {
     align-items: baseline;
   }
   .items-center {
     align-items: center;
+  }
+  .items-end {
+    align-items: flex-end;
   }
   .items-start {
     align-items: flex-start;
@@ -726,6 +763,11 @@
     --tw-space-y-reverse: 0;
     margin-block-start: calc(calc(var(--spacing) * 5) * var(--tw-space-y-reverse));
     margin-block-end: calc(calc(var(--spacing) * 5) * calc(1 - var(--tw-space-y-reverse)));
+  }
+  :where(.space-y-6 > :not(:last-child)) {
+    --tw-space-y-reverse: 0;
+    margin-block-start: calc(calc(var(--spacing) * 6) * var(--tw-space-y-reverse));
+    margin-block-end: calc(calc(var(--spacing) * 6) * calc(1 - var(--tw-space-y-reverse)));
   }
   .gap-x-\[0\.4em\] {
     column-gap: 0.4em;
@@ -891,6 +933,12 @@
   .bg-\[\#14091c\]\/90 {
     background-color: color-mix(in oklab, #14091c 90%, transparent);
   }
+  .bg-\[\#047857\] {
+    background-color: #047857;
+  }
+  .bg-\[\#fff7ed\] {
+    background-color: #fff7ed;
+  }
   .bg-amber-400 {
     background-color: var(--color-amber-400);
   }
@@ -986,6 +1034,9 @@
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-orange-500) 20%, transparent);
     }
+  }
+  .bg-orange-800 {
+    background-color: var(--color-orange-800);
   }
   .bg-orange-950\/55 {
     background-color: color-mix(in srgb, oklch(26.6% 0.079 36.259) 55%, transparent);
@@ -1240,6 +1291,9 @@
   .text-\[11px\] {
     font-size: 11px;
   }
+  .text-\[22px\] {
+    font-size: 22px;
+  }
   .leading-none {
     --tw-leading: 1;
     line-height: 1;
@@ -1275,6 +1329,9 @@
   .whitespace-nowrap {
     white-space: nowrap;
   }
+  .text-\[\#1c0e24\] {
+    color: #1c0e24;
+  }
   .text-amber-50 {
     color: var(--color-amber-50);
   }
@@ -1298,9 +1355,6 @@
   }
   .text-destructive {
     color: var(--destructive);
-  }
-  .text-emerald-50 {
-    color: var(--color-emerald-50);
   }
   .text-emerald-200 {
     color: var(--color-emerald-200);
@@ -1444,6 +1498,20 @@
   .ring-1 {
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+  .ring-2 {
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+  .ring-\[2\.5px\] {
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2.5px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+  .ring-\[\#1c0e24\] {
+    --tw-ring-color: #1c0e24;
+  }
+  .ring-\[\#fff7ed\] {
+    --tw-ring-color: #fff7ed;
   }
   .ring-amber-500\/25 {
     --tw-ring-color: color-mix(in srgb, oklch(76.9% 0.188 70.08) 25%, transparent);
@@ -3348,22 +3416,32 @@ svg.leaflet-zoom-animated {
   background: rgba(18, 8, 26, 0.75) !important;
   color: #c4b5d6 !important;
 }
+.pumpkin-pin-icon {
+  background: transparent !important;
+  border: none !important;
+}
 .pumpkin-pin {
   position: relative;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 44px;
-  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.65));
+  width: 38px;
+  height: 38px;
+  margin: 10px;
+  border-radius: 999px;
+  background: #047857;
+  border: 2.5px solid #fff7ed;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+  opacity: 1;
 }
 .pumpkin-pin span {
-  font-size: 30px;
+  font-size: 22px;
   line-height: 1;
+  filter: none;
 }
 .pumpkin-pin .pin-count {
   position: absolute;
-  top: -3px;
-  inset-inline-end: -6px;
+  top: -5px;
+  inset-inline-end: -7px;
   z-index: 2;
   min-width: 20px;
   height: 16px;
@@ -3378,18 +3456,41 @@ svg.leaflet-zoom-animated {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   letter-spacing: -0.02em;
 }
-.pumpkin-pin.is-pending span {
-  filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.9));
+.pumpkin-pin .pin-access {
+  position: absolute;
+  top: -10px;
+  inset-inline-start: -10px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #1c0e24;
+  border: 2.5px solid #1c0e24;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.55);
 }
-.pumpkin-pin.is-frozen {
-  opacity: 0.38;
-  filter: grayscale(0.55);
+.pumpkin-pin .pin-access svg {
+  width: 18px;
+  height: 18px;
 }
-.pumpkin-pin.is-closed span {
-  filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.85));
+.pumpkin-pin.is-ok {
+  background: #047857;
 }
-.pumpkin-pin.is-decor span {
-  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.85));
+.pumpkin-pin.is-low {
+  background: #d97706;
+}
+.pumpkin-pin.is-out {
+  background: #b91c1c;
+}
+.pumpkin-pin.is-closed,
+.pumpkin-pin.is-frozen,
+.pumpkin-pin.is-pending {
+  background: #475569;
+}
+.pumpkin-pin.is-pick {
+  background: #ea580c;
 }
 .route-stop-icon {
   background: transparent !important;
