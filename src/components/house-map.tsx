@@ -145,12 +145,10 @@ function GoogleMapsGlyph() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden>
       <path
-        fill="#4285F4"
+        fill="currentColor"
         d="M12 2c-4.2 0-7.6 3.3-7.6 7.4 0 5.6 7.6 12.6 7.6 12.6s7.6-7 7.6-12.6C19.6 5.3 16.2 2 12 2z"
       />
-      <path fill="#34A853" d="M12 2v20s7.6-7 7.6-12.6C19.6 5.3 16.2 2 12 2z" opacity="0.35" />
-      <circle cx="12" cy="9.2" r="3.2" fill="#fff" />
-      <circle cx="12" cy="9.2" r="1.7" fill="#EA4335" />
+      <circle cx="12" cy="9.2" r="2.4" fill="#f97316" />
     </svg>
   );
 }

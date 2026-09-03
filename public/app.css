@@ -3599,20 +3599,21 @@ svg.leaflet-zoom-animated {
   display: grid;
   place-items: center;
   width: 48px;
+  border: 0;
   border-radius: 12px;
-  background: #2a1638;
-  box-shadow: inset 0 0 0 1.5px rgba(248, 245, 239, 0.18);
+  background: #f97316;
+  color: #1a1024;
   text-decoration: none;
 }
 .house-map-popup-page .house-map-popup-maps {
-  background: #160b20;
+  background: #f97316;
 }
 .house-map-popup-maps svg {
   width: 26px;
   height: 26px;
 }
 .house-map-popup-maps:active {
-  background: #3a2048;
+  background: #ea580c;
 }
 .house-map-popup-maps:focus-visible {
   outline: 2px solid #fdba74;

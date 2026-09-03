@@ -291,8 +291,8 @@ button {
   place-items: center;
   width: 48px;
   border-radius: 12px;
-  background: #160b20;
-  box-shadow: inset 0 0 0 1.5px rgba(248, 245, 239, 0.18);
+  background: #f97316;
+  color: #1a1024;
 }
 
 .house-map-popup-maps svg {
