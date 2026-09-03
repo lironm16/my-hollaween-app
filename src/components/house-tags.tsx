@@ -1,13 +1,11 @@
 import { StrollerSign } from "@/components/symbols";
 import { CandySign, candyTone } from "@/components/candy-glyphs";
-import { DecorSign } from "@/components/decor-glyphs";
 import { ScareSign } from "@/components/scare-glyphs";
 import { SensitivitySign } from "@/components/sensitivity-glyphs";
 import {
   markedGlutenFree,
   offersNutsFree,
   offersSesameFree,
-  resolveDecorLevel,
   treatLevel,
 } from "@/lib/house-state";
 import type { DecorLevel, ScareLevel, TreatId, TreatStock } from "@/lib/types";
@@ -45,7 +43,6 @@ export function HouseTags({
     <div className="flex flex-wrap gap-1">
       <CandySign tone={candy} />
       <ScareSign level={scare} />
-      <DecorSign level={resolveDecorLevel(house)} />
       {house.accessible ? (
         <span title="נגיש" aria-label="נגיש">
           <StrollerSign />
