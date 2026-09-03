@@ -1,19 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { routePoints, type LatLng, type WalkingRoute } from "@/lib/route";
+
+function geometryKey(route: WalkingRoute) {
+  const origin = `${route.origin.lat.toFixed(4)},${route.origin.lng.toFixed(4)}`;
+  const stops = route.stops.map((stop) => stop.house.id).join(",");
+  return `${origin}|${route.accessible ? "a" : "w"}|${stops}`;
+}
 
 export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
   const [line, setLine] = useState<LatLng[] | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "fallback">("idle");
+  const routeRef = useRef(route);
+  routeRef.current = route;
+  const key = useMemo(() => {
+    if (!enabled || !route || route.stops.length === 0) return "";
+    return geometryKey(route);
+  }, [enabled, route]);
 
   useEffect(() => {
-    if (!enabled || !route || route.stops.length === 0) {
+    const current = routeRef.current;
+    if (!key || !current) {
       setLine(null);
       setStatus("idle");
       return;
     }
-    const points = routePoints(route);
+    const points = routePoints(current);
     let cancelled = false;
     setStatus("loading");
     setLine(points);
@@ -45,7 +58,7 @@ export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
     return () => {
       cancelled = true;
     };
-  }, [enabled, route]);
+  }, [key]);
 
   return { line, status };
 }

@@ -290,6 +290,13 @@ export function HouseMap({
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
     [houses, pickMode],
   );
+  const routePositions = useMemo(
+    () =>
+      routeLine && routeLine.length >= 2
+        ? routeLine.map((point) => [point.lat, point.lng] as [number, number])
+        : null,
+    [routeLine],
+  );
   const ready = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -350,9 +357,9 @@ export function HouseMap({
             }}
           />
         ) : null}
-        {!pickMode && routeLine && routeLine.length >= 2 ? (
+        {!pickMode && routePositions ? (
           <Polyline
-            positions={routeLine.map((point) => [point.lat, point.lng] as [number, number])}
+            positions={routePositions}
             pathOptions={{
               color: "#f97316",
               weight: 4,

@@ -46,6 +46,7 @@ import {
   type ServerDbBackup,
 } from "@/lib/offline-db";
 import { scareShort, treatLabels } from "@/lib/labels";
+import { movedAtLeast, ROUTE_REANCHOR_METERS } from "@/lib/geo";
 import { buildWalkingRoute, googleMapsNavigateUrl } from "@/lib/route";
 import type { Catalog, House, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
@@ -62,6 +63,7 @@ export function NeighborhoodApp({
   const { ready: adminReady, admin, logout } = useAdminSession();
   const geo = useUserLocation();
   const origin = geo.location;
+  const [routeAnchor, setRouteAnchor] = useState<{ lat: number; lng: number } | null>(null);
   const [view, setView] = useState<"map" | "list">("map");
   const [selectedId, setSelectedId] = useState<string | "closed" | null>(null);
   const {
@@ -231,9 +233,28 @@ export function NeighborhoodApp({
     () => visible.filter((house) => !visits.visitedIds.includes(house.id)),
     [visible, visits.visitedIds],
   );
+
+  useEffect(() => {
+    if (!routeMode) {
+      setRouteAnchor(origin ? { lat: origin.lat, lng: origin.lng } : null);
+      return;
+    }
+    if (!origin) return;
+    setRouteAnchor((prev) => {
+      if (!prev) return { lat: origin.lat, lng: origin.lng };
+      if (movedAtLeast(prev, origin, ROUTE_REANCHOR_METERS)) {
+        return { lat: origin.lat, lng: origin.lng };
+      }
+      return prev;
+    });
+  }, [routeMode, origin]);
+
   const walkingRoute = useMemo(
-    () => buildWalkingRoute(routeHouses, origin, { accessible: accessibleOnly }),
-    [routeHouses, origin, accessibleOnly],
+    () =>
+      buildWalkingRoute(routeHouses, routeMode ? (routeAnchor ?? origin) : origin, {
+        accessible: accessibleOnly,
+      }),
+    [routeHouses, routeMode, routeAnchor, origin, accessibleOnly],
   );
   const { line: routeLine } = useRouteGeometry(walkingRoute, routeMode);
 
@@ -277,6 +298,7 @@ export function NeighborhoodApp({
   function goToMyLocation() {
     setAskedLocation(true);
     setFollowTick((n) => n + 1);
+    setRouteAnchor(null);
     geo.refresh();
   }
 
