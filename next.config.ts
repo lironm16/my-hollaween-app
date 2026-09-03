@@ -27,6 +27,8 @@ const nextConfig: NextConfig = {
     "**.oncursor.com",
     "*.vercel.app",
     "**.vercel.app",
+    "*.trycloudflare.com",
+    "**.trycloudflare.com",
   ],
   async headers() {
     return [
