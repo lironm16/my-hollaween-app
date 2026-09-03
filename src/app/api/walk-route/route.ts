@@ -3,7 +3,7 @@ import { fetchWalkingGeometry } from "@/lib/osrm-walk";
 
 export const runtime = "nodejs";
 
-/** Proxy walking geometry so phones don't hit OSRM 403/CORS. */
+/** Proxy walking geometry (FOSSGIS foot graph) so phones don't hit CORS. */
 export async function POST(request: Request) {
   const json = (await request.json().catch(() => null)) as
     | { points?: { lat: number; lng: number }[] }
