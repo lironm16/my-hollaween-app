@@ -130,10 +130,21 @@ export function CandySign({
         <Glyph />
       </span>
       {tone === "none" ? (
-        <span
+        <svg
           aria-hidden
-          className="pointer-events-none absolute start-1/2 top-1/2 h-[2.5px] w-[70%] -translate-x-1/2 -translate-y-1/2 rotate-[-32deg] rounded-full bg-[#1c0e24]"
-        />
+          viewBox="0 0 32 32"
+          className="pointer-events-none absolute inset-0"
+        >
+          <line
+            x1="7"
+            y1="25"
+            x2="25"
+            y2="7"
+            stroke="#1c0e24"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+        </svg>
       ) : null}
     </span>
   );
