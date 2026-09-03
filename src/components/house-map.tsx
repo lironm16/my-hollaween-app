@@ -45,16 +45,15 @@ function houseWalkLinks(house: PublicHouse) {
   };
 }
 
-type PinKind = "ok" | "low" | "out" | "closed" | "decor" | "frozen" | "pending";
+type PinKind = "ok" | "low" | "out" | "closed" | "frozen" | "pending";
 
 const PIN_KIND_RANK: Record<PinKind, number> = {
   ok: 0,
   low: 1,
-  decor: 2,
-  out: 3,
-  closed: 4,
-  pending: 5,
-  frozen: 6,
+  out: 2,
+  closed: 3,
+  pending: 4,
+  frozen: 5,
 };
 
 function pinKind(house: PublicHouse): PinKind {
@@ -62,10 +61,10 @@ function pinKind(house: PublicHouse): PinKind {
   if (house.status === "pending") return "pending";
   const visit = effectiveVisit(house);
   if (visit === "closed") return "closed";
-  if (visit === "decorOnly") return "decor";
-  if (markedCandy(house) && candyLevel(house) === "out") return "out";
-  if (candyLevel(house) === "low") return "low";
-  return "ok";
+  const candy = candyLevel(house);
+  if (candy === "low") return "low";
+  if (candy === "plenty" && markedCandy(house)) return "ok";
+  return "out";
 }
 
 function clusterPinKind(cluster: HouseCluster): PinKind {

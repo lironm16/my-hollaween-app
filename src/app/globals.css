@@ -406,20 +406,13 @@
   background: #d97706;
 }
 
-.pumpkin-pin.is-out,
-.pumpkin-pin.is-closed {
+.pumpkin-pin.is-out {
   background: #b91c1c;
 }
 
-.pumpkin-pin.is-decor {
-  background: #c2410c;
-}
-
+.pumpkin-pin.is-closed,
+.pumpkin-pin.is-frozen,
 .pumpkin-pin.is-pending {
-  background: #6d28d9;
-}
-
-.pumpkin-pin.is-frozen {
   background: #475569;
 }
 
