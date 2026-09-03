@@ -24,7 +24,7 @@ export function ScareGhost({ level = "mild" }: { level?: ScareLevel | "none" }) 
   const src = GHOST_GLYPH[level === "none" ? "mild" : level];
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt="" aria-hidden className="h-full w-full object-contain" />
+    <img src={src} alt="" aria-hidden className="block h-full w-full object-contain object-center" />
   );
 }
 
@@ -114,7 +114,7 @@ export function ScareSign({
       aria-label={label}
     >
       {useOfferedGhost ? (
-        <span className="size-[88%]">
+        <span className="flex size-[88%] items-center justify-center">
           <ScareGhost level={struck ? "mild" : level} />
         </span>
       ) : (

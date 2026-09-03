@@ -149,7 +149,7 @@ export function DecorSign({
       aria-label={label}
     >
       {useGhost ? (
-        <span className="size-[88%]">
+        <span className="flex size-[88%] items-center justify-center">
           <ScareGhost level={ghostLevel} />
         </span>
       ) : (

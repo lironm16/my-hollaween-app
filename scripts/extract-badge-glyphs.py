@@ -58,10 +58,39 @@ def trim(im: Image.Image, pad: int = 8) -> Image.Image:
     return im.crop((l, t, r, b))
 
 
+def recenter_glyph(im: Image.Image, pad: int = 14) -> Image.Image:
+    """Place the opaque mass at the center of a square so disc badges sit even."""
+    src = im.convert("RGBA")
+    px = src.load()
+    w, h = src.size
+    mass_x = mass_y = total = 0.0
+    minx, miny, maxx, maxy = w, h, 0, 0
+    for y in range(h):
+        for x in range(w):
+            alpha = px[x, y][3]
+            if alpha <= 20:
+                continue
+            mass_x += x * alpha
+            mass_y += y * alpha
+            total += alpha
+            minx = min(minx, x)
+            miny = min(miny, y)
+            maxx = max(maxx, x)
+            maxy = max(maxy, y)
+    if total <= 0:
+        return src
+    cx, cy = mass_x / total, mass_y / total
+    half = int(math.ceil(max(cx - minx, maxx - cx, cy - miny, maxy - cy) + pad))
+    size = max(half * 2, 1)
+    out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    out.paste(src, (int(round(size / 2 - cx)), int(round(size / 2 - cy))), src)
+    return out
+
+
 def extract_disc_glyph(src: Path, dest: Path, bg: tuple[int, int, int], thresh: float = 58) -> None:
     keyed = chroma_key(Image.open(src), bg, thresh=thresh)
     keyed = chroma_key(keyed, bg, thresh=thresh - 8, softness=16)
-    trim(keyed, pad=10).save(dest)
+    recenter_glyph(trim(keyed, pad=4)).save(dest)
     print(f"wrote {dest.name}")
 
 
@@ -143,7 +172,7 @@ def extract_medium_ghost() -> None:
                 continue
             if p[0] > 160 and 70 < p[1] < 180 and p[2] < 60:
                 px[x, y] = (body[0], body[1], body[2], p[3])
-    trim(keyed, pad=6).save(ROOT / "scare-ghost-medium.png")
+    recenter_glyph(trim(keyed, pad=4)).save(ROOT / "scare-ghost-medium.png")
     print("wrote scare-ghost-medium.png")
 
 
