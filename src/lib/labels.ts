@@ -35,14 +35,14 @@ export const scareShort: Record<ScareLevel, string> = {
 };
 
 export const decorLabels: Record<DecorLevel, string> = {
-  none: "שקט בחוץ — בלי קישוט",
+  none: "לא מקושט — בלי קישוט בחוץ",
   mild: "קריצה של האלווין",
   medium: "חגיגה ברחוב",
   heavy: "פיצוץ של קישוטים",
 };
 
 export const decorShort: Record<DecorLevel, string> = {
-  none: "שקט",
+  none: "לא מקושט",
   mild: "קריצה",
   medium: "חגיגה",
   heavy: "פיצוץ",
