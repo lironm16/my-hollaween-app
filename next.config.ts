@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
     "/api/**/*": ["./data/seed.json"],
   },
   allowedDevOrigins: [
+    // Cursor Preview iframes send Origin: null (opaque/sandboxed). Next 16
+    // otherwise 403s /_next CSS and JS with body "Unauthorized".
+    "null",
     "127.0.0.1",
     "localhost",
     "[::1]",
