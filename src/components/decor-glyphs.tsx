@@ -14,9 +14,9 @@ function Icon({ children }: { children: ReactNode }) {
   );
 }
 
-/** Live popup mark — same ghost as scare. */
+/** Live decoration mark — outdoor lights, not the scare ghost. */
 export function DecorGlyph() {
-  return <ScareGhost level="mild" />;
+  return <DecorLights3 />;
 }
 
 const DECOR_GHOST: Record<DecorLevel, ScareLevel> = {
@@ -135,7 +135,7 @@ export function DecorSign({
   const resolved: DecorLevel = level ?? (on === false ? "none" : on === true ? "medium" : "mild");
   const struck = resolved === "none";
   const ghostLevel = DECOR_GHOST[resolved];
-  const useGhost = !Glyph || Glyph === ScareGhost || Glyph === DecorGlyph;
+  const useGhostPreview = Glyph === ScareGhost;
   const label = decorShort[resolved];
 
   return (
@@ -148,13 +148,13 @@ export function DecorSign({
       title={label}
       aria-label={label}
     >
-      {useGhost ? (
+      {useGhostPreview ? (
         <span className="flex size-[108%] items-center justify-center">
           <ScareGhost level={ghostLevel} />
         </span>
       ) : (
         <span className="size-[82%]">
-          <Glyph />
+          {Glyph && Glyph !== DecorGlyph ? <Glyph /> : <DecorLights3 />}
         </span>
       )}
       {struck ? <DiscStrike /> : null}
@@ -187,9 +187,9 @@ export const DECOR_TONES: { id: DecorLevel; label: string }[] = [
 ];
 
 export const DECOR_OPTIONS = [
-  { id: "ghost", number: 1, name: "רוח", current: true, Glyph: ScareGhost },
-  { id: "lights3", number: 2, name: "שלוש מנורות", current: false, Glyph: DecorLights3 },
-  { id: "lights6", number: 3, name: "שרשרת אורות", current: false, Glyph: DecorLights6 },
-  { id: "wreath", number: 4, name: "זר", current: false, Glyph: DecorWreath },
-  { id: "bunting", number: 5, name: "דגלים", current: false, Glyph: DecorBunting },
+  { id: "lights3", number: 1, name: "שלוש מנורות", current: true, Glyph: DecorLights3 },
+  { id: "lights6", number: 2, name: "שרשרת אורות", current: false, Glyph: DecorLights6 },
+  { id: "wreath", number: 3, name: "זר", current: false, Glyph: DecorWreath },
+  { id: "bunting", number: 4, name: "דגלים", current: false, Glyph: DecorBunting },
+  { id: "ghost", number: 5, name: "רוח (כמו פחד)", current: false, Glyph: ScareGhost },
 ] as const;

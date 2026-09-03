@@ -10,8 +10,8 @@ export default function DecorPreviewPage() {
           <p className="text-xs text-violet-300">{config.appName} · בחירת אייקון</p>
           <h1 className="text-2xl font-semibold text-orange-100">איזה קישוט יותר ברור?</h1>
           <p className="text-sm text-violet-200">
-            ירוק = קריצה, כתום = חגיגה, אדום = פיצוץ, אפור עם קו = לא מקושט. בפופאפ עכשיו: מספר 1,
-            רוח — אותו אייקון כמו בפחד.
+            ירוק = קריצה, כתום = חגיגה, אדום = פיצוץ, אפור עם קו = לא מקושט. בטופס ובדלפק: מספר 1,
+            שלוש מנורות — לא רוח הרפאים של רמת הפחד.
           </p>
           <PreviewNav current="/preview/decor" />
         </header>
@@ -31,7 +31,7 @@ export default function DecorPreviewPage() {
                   </h2>
                   {"current" in option && option.current ? (
                     <span className="shrink-0 rounded-full bg-orange-500 px-2 py-0.5 text-[11px] font-medium text-black">
-                      בפופאפ עכשיו
+                      בטופס עכשיו
                     </span>
                   ) : null}
                 </div>
