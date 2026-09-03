@@ -623,17 +623,6 @@ export function NeighborhoodApp({
             </FilterOption>
           ))}
         </FilterSection>
-        <FilterSection title="רגישויות">
-          {SENSITIVITY_OPTIONS.map((id) => (
-            <FilterOption
-              key={id}
-              checked={sensitivityFilters.includes(id)}
-              onChange={() => toggleSensitivity(id)}
-            >
-              <SensitivityMark labeled kind={id} />
-            </FilterOption>
-          ))}
-        </FilterSection>
         <FilterSection title="רמת פחד">
           <FilterOption
             checked={includeUndecorated}
@@ -685,6 +674,17 @@ export function NeighborhoodApp({
           >
             <UnvisitedMark labeled />
           </FilterOption>
+        </FilterSection>
+        <FilterSection title="רגישויות">
+          {SENSITIVITY_OPTIONS.map((id) => (
+            <FilterOption
+              key={id}
+              checked={sensitivityFilters.includes(id)}
+              onChange={() => toggleSensitivity(id)}
+            >
+              <SensitivityMark labeled kind={id} />
+            </FilterOption>
+          ))}
         </FilterSection>
       </FiltersSheet>
       {error ? (
