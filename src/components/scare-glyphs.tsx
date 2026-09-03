@@ -12,17 +12,18 @@ function Icon({ children }: { children: ReactNode }) {
   );
 }
 
-/** 1 — Ghost. */
-export function ScareGhost() {
+const GHOST_DISC: Record<ScareLevel, string> = {
+  mild: "/icons/scare-ghost-disc-mild.png",
+  medium: "/icons/scare-ghost-disc-medium.png",
+  spicy: "/icons/scare-ghost-disc-spicy.png",
+};
+
+/** 1 — The ghost from the picker (smiling / surprised / angry). */
+export function ScareGhost({ level = "mild" }: { level?: ScareLevel | "none" }) {
+  const src = GHOST_DISC[level === "none" ? "mild" : level];
   return (
-    <Icon>
-      <path
-        fill="currentColor"
-        d="M12 2.4c3.7 0 6.4 2.9 6.4 6.8v11.1c0 .7-.8 1.1-1.3.6L15.4 19l-1.7 1.9-1.7-1.9-1.7 1.9-1.7-1.9-1.7 1.9c-.5.5-1.3.1-1.3-.6V9.2C5.6 5.3 8.3 2.4 12 2.4Z"
-      />
-      <circle cx="9.6" cy="10.2" r="1.15" fill="#1c0e24" />
-      <circle cx="14.4" cy="10.2" r="1.15" fill="#1c0e24" />
-    </Icon>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt="" aria-hidden className="h-full w-full rounded-full object-cover" />
   );
 }
 
@@ -89,15 +90,36 @@ const TONE_CLASS: Record<ScareLevel | "none", string> = {
 };
 
 export function ScareSign({
-  Glyph = ScareGhost,
+  Glyph,
   level,
   className,
 }: {
-  Glyph?: () => ReactNode;
+  Glyph?: (props: { level?: ScareLevel | "none" }) => ReactNode;
   level: ScareLevel | "none";
   className?: string;
 }) {
   const struck = level === "none";
+  const useOfferedGhost = !Glyph || Glyph === ScareGhost;
+  const label = struck ? "לא מקושט" : scareShort[level];
+
+  if (useOfferedGhost) {
+    return (
+      <span
+        className={cn(
+          "relative inline-flex size-8 shrink-0 overflow-hidden rounded-full",
+          className,
+        )}
+        title={label}
+        aria-label={label}
+      >
+        <span className={cn("size-full", struck && "grayscale")}>
+          <ScareGhost level={struck ? "mild" : level} />
+        </span>
+        {struck ? <DiscStrike /> : null}
+      </span>
+    );
+  }
+
   return (
     <span
       className={cn(
@@ -105,8 +127,8 @@ export function ScareSign({
         TONE_CLASS[level],
         className,
       )}
-      title={struck ? "לא מקושט" : scareShort[level]}
-      aria-label={struck ? "לא מקושט" : scareShort[level]}
+      title={label}
+      aria-label={label}
     >
       <span className="size-[70%]">
         <Glyph />
