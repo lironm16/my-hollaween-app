@@ -119,14 +119,14 @@ function pageFromOverlap(scroller: HTMLElement) {
 
 function scrollPageIntoView(scroller: HTMLElement, index: number, behavior: ScrollBehavior) {
   const target = scroller.children[index] as HTMLElement | undefined;
-  target?.scrollIntoView({ behavior, inline: "start", block: "nearest" });
+  if (!target) return;
+  scroller.scrollTo({ left: target.offsetLeft, behavior });
 }
 
-/** Keep pager swipes on the popup so the map does not steal them. */
+/** Keep pager drags on the popup so the map does not steal them. */
 function bindPopupScroller(node: HTMLDivElement | null) {
   if (!node) return;
   L.DomEvent.disableClickPropagation(node);
-  L.DomEvent.disableScrollPropagation(node);
   node.style.touchAction = "pan-x";
 }
 
@@ -297,28 +297,32 @@ function HousePreviewPopup({
         wheelLock = false;
       }, 320);
     };
-    let drag: { id: number; x: number; scroll: number } | null = null;
+    let drag: { id: number; x: number } | null = null;
     const onDown = (event: PointerEvent) => {
       if ((event.target as Element | null)?.closest("a, button")) return;
-      drag = { id: event.pointerId, x: event.clientX, scroll: node.scrollLeft };
+      drag = { id: event.pointerId, x: event.clientX };
       node.setPointerCapture(event.pointerId);
     };
     const onMove = (event: PointerEvent) => {
       if (!drag || event.pointerId !== drag.id) return;
       event.stopPropagation();
-      node.scrollLeft = drag.scroll - (event.clientX - drag.x);
     };
     const onUp = (event: PointerEvent) => {
       if (!drag || event.pointerId !== drag.id) return;
+      const delta = event.clientX - drag.x;
       drag = null;
-      snap();
+      if (Math.abs(delta) < 40) {
+        snap();
+        return;
+      }
+      go(pageFromOverlap(node) + (delta < 0 ? 1 : -1));
     };
     node.addEventListener("touchmove", stop, { passive: true });
     node.addEventListener("pointermove", onMove);
     node.addEventListener("pointerdown", onDown);
     node.addEventListener("pointerup", onUp);
     node.addEventListener("pointercancel", onUp);
-    node.addEventListener("wheel", onWheel, { passive: false });
+    node.addEventListener("wheel", onWheel, { passive: false, capture: true });
     node.addEventListener("scroll", sync, { passive: true });
     const jump = () => scrollPageIntoView(node, startIndex, "instant");
     const frame = window.requestAnimationFrame(jump);
@@ -391,7 +395,7 @@ function HousePreviewPopup({
                       aria-hidden={page !== index}
                     >
                       <div className="house-map-popup-page-body">
-                        <PopupHouseCopy house={house} />
+                        <PopupHouseCopy house={house} showAddress />
                         <PopupActions house={house} onDetails={onOpenDetails ? openHouse : undefined} />
                       </div>
                     </div>
