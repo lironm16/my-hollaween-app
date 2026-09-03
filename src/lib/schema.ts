@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { HOUSE_THEMES, SCARE_LEVELS, STOCK_LEVELS, TREAT_OPTIONS, VISIT_STATES } from "@/lib/types";
+import {
+  DECOR_LEVELS,
+  HOUSE_THEMES,
+  SCARE_LEVELS,
+  STOCK_LEVELS,
+  TREAT_OPTIONS,
+  VISIT_STATES,
+} from "@/lib/types";
 import { parsePhotoUrl } from "@/lib/photos";
 
 const treatStockSchema = z.partialRecord(z.enum(TREAT_OPTIONS), z.enum(STOCK_LEVELS));
@@ -47,6 +54,7 @@ const houseFields = z.object({
   openTo2: optionalClockField,
   notes: z.string().trim().max(240),
   accessible: z.boolean(),
+  decorLevel: z.enum(DECOR_LEVELS).optional(),
   decorated: z.boolean().optional(),
 });
 
@@ -62,6 +70,7 @@ export const houseInputSchema = houseFields.extend({
   openTo2: optionalClockField.default(""),
   notes: z.string().trim().max(240).default(""),
   accessible: z.boolean().default(false),
+  decorLevel: z.enum(DECOR_LEVELS).optional(),
   decorated: z.boolean().optional(),
 });
 

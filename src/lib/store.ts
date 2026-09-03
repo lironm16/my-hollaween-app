@@ -5,7 +5,7 @@ import { newEditCode, newPublicId, toPublicHouse } from "@/lib/ids";
 import { inNeighborhood } from "@/lib/config";
 import { config } from "@/lib/config";
 import { assertRealAddress } from "@/lib/geocode";
-import { defaultTreatStock, effectiveVisit, isDecorated, isPubliclyListed } from "@/lib/house-state";
+import { defaultTreatStock, effectiveVisit, isPubliclyListed, syncDecorFields } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import { cloneDb, mergeHouses } from "@/lib/catalog-sync";
 import { parsePhotoUrl } from "@/lib/photos";
@@ -97,12 +97,14 @@ function normalizeHouse(house: House): House {
   };
   if (treats.includes("candy") && !treatStock.candy) treatStock.candy = "plenty";
   const hours = syncHoursFields(houseHoursWindows(house));
+  const decor = syncDecorFields(house);
   return {
     ...house,
     theme,
     arrival: house.arrival ?? "",
     accessible: Boolean(house.accessible),
-    decorated: isDecorated(house),
+    decorLevel: decor.decorLevel,
+    decorated: decor.decorated,
     treats,
     visit,
     treatStock,
@@ -307,6 +309,7 @@ export async function submitHouse(input: HouseInput) {
         ? input.openHours
         : houseHoursWindows(input),
     );
+    const decor = syncDecorFields({ ...input, visit });
     const house: House = {
       ...input,
       treats,
@@ -314,7 +317,8 @@ export async function submitHouse(input: HouseInput) {
       visit,
       ...hours,
       id,
-      decorated: input.decorated ?? visit === "decorOnly",
+      decorLevel: decor.decorLevel,
+      decorated: decor.decorated,
       status: "approved",
       soldOut: visit === "closed",
       adminFrozen: false,
@@ -362,6 +366,9 @@ export async function updateByEditCode(
       const parsed = parsePhotoUrl(house.photoUrl);
       if (parsed !== null) house.photoUrl = parsed;
     }
+    const decor = syncDecorFields(house);
+    house.decorLevel = decor.decorLevel;
+    house.decorated = decor.decorated;
     house.updatedAt = new Date().toISOString();
     if (house.status === "rejected") house.status = "approved";
     db.updatedAt = house.updatedAt;
@@ -458,8 +465,20 @@ export async function adminUpdate(
     }
     if (patch.notes !== undefined) house.notes = patch.notes;
     if (patch.accessible !== undefined) house.accessible = patch.accessible;
-    if (patch.decorated !== undefined) house.decorated = patch.decorated;
-    if (patch.visit === "decorOnly") house.decorated = true;
+    if (
+      patch.decorLevel !== undefined ||
+      patch.decorated !== undefined ||
+      patch.visit === "decorOnly"
+    ) {
+      const decor = syncDecorFields({
+        ...house,
+        decorLevel: patch.decorLevel ?? house.decorLevel,
+        decorated: patch.decorated ?? house.decorated,
+        visit: patch.visit ?? house.visit,
+      });
+      house.decorLevel = decor.decorLevel;
+      house.decorated = decor.decorated;
+    }
     if (patch.adminFrozen !== undefined) house.adminFrozen = patch.adminFrozen;
     if (patch.ownerFrozenUntil !== undefined) house.ownerFrozenUntil = patch.ownerFrozenUntil;
     if (patch.photoUrl !== undefined) house.photoUrl = parsePhotoUrl(patch.photoUrl) ?? patch.photoUrl;
@@ -524,8 +543,8 @@ function sanitizeOwnerPatch(
   }
   if (patch.notes !== undefined) next.notes = patch.notes;
   if (patch.accessible !== undefined) next.accessible = patch.accessible;
+  if (patch.decorLevel !== undefined) next.decorLevel = patch.decorLevel;
   if (patch.decorated !== undefined) next.decorated = patch.decorated;
-  if (patch.visit === "decorOnly") next.decorated = true;
   if (patch.ownerFrozenUntil !== undefined) next.ownerFrozenUntil = patch.ownerFrozenUntil;
   if (patch.photoUrl !== undefined) next.photoUrl = patch.photoUrl;
   return next;

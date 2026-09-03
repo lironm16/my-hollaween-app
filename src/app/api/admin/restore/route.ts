@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdmin } from "@/lib/admin";
 import { adminRestoreDb } from "@/lib/store";
-import { HOUSE_THEMES, SCARE_LEVELS, STOCK_LEVELS, TREAT_OPTIONS, VISIT_STATES } from "@/lib/types";
+import { HOUSE_THEMES, DECOR_LEVELS, SCARE_LEVELS, STOCK_LEVELS, TREAT_OPTIONS, VISIT_STATES } from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -29,6 +29,7 @@ const houseSchema = z.object({
   openTo2: z.string().optional(),
   notes: z.string().optional(),
   accessible: z.boolean().optional(),
+  decorLevel: z.enum(DECOR_LEVELS).optional(),
   decorated: z.boolean().optional(),
   status: z.enum(["pending", "approved", "rejected"]),
   soldOut: z.boolean().optional(),
@@ -64,6 +65,7 @@ export async function POST(request: Request) {
       description: house.description ?? "",
       notes: house.notes ?? "",
       accessible: Boolean(house.accessible),
+      decorLevel: house.decorLevel,
       decorated: house.decorated,
       treatStock: house.treatStock ?? {},
       visit: house.visit ?? "come",

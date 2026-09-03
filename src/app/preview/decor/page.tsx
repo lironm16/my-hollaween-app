@@ -10,7 +10,7 @@ export default function DecorPreviewPage() {
           <p className="text-xs text-violet-300">{config.appName} · בחירת אייקון</p>
           <h1 className="text-2xl font-semibold text-orange-100">איזה קישוט יותר ברור?</h1>
           <p className="text-sm text-violet-200">
-            כתום = הבית מקושט, אפור עם קו = לא מקושט. בפופאפ עכשיו: מספר 3, קורי עכביש.
+            ירוק = עדין, כתום = בינוני, אדום = כבד, אפור עם קו = בלי קישוט. אותו ירוק־כתום־אדום כמו בממתקים וברוח. בפופאפ עכשיו: מספר 3, קורי עכביש.
           </p>
           <div className="flex flex-wrap gap-3 text-sm">
             <Link href="/" className="text-orange-300 underline-offset-2 hover:underline">
@@ -62,7 +62,7 @@ export default function DecorPreviewPage() {
                 <div className="flex flex-wrap items-center gap-3">
                   {DECOR_TONES.map((tone) => (
                     <div key={tone.id} className="flex flex-col items-center gap-1">
-                      <DecorSign Glyph={Glyph} on={tone.id === "on"} className="size-10" />
+                      <DecorSign Glyph={Glyph} level={tone.id} className="size-10" />
                       <span className="text-[10px] text-violet-300">{tone.label}</span>
                     </div>
                   ))}

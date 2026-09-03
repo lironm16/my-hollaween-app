@@ -6,22 +6,25 @@ import { toast } from "sonner";
 import { HouseForm } from "@/components/house-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { visitLabels, visitShort, stockLabels, treatLabels } from "@/lib/labels";
+import { visitLabels, visitShort, stockLabels, treatLabels, decorShort } from "@/lib/labels";
 import {
   candyLevel,
   effectiveVisit,
   freezeExpireIso,
   freezeLabel,
   isFrozen,
+  resolveDecorLevel,
   treatLevel,
 } from "@/lib/house-state";
 import { notifyCatalogChanged } from "@/lib/offline-db";
 import { hostJpegFromBrowser } from "@/lib/photos";
 import { readApiJson } from "@/lib/api-json";
 import {
+  DECOR_LEVELS,
   SENSITIVITY_OPTIONS,
   STOCK_LEVELS,
   VISIT_STATES,
+  type DecorLevel,
   type HouseInput,
   type NightPatch,
   type PublicHouse,
@@ -31,6 +34,7 @@ import {
   type VisitState,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { DecorSign } from "@/components/decor-glyphs";
 
 type Props = {
   house: PublicHouse;
@@ -154,6 +158,29 @@ export function NightDesk({
               )}
             >
               {visitShort[state]}
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="קישוט" hint="כמה יש לראות בחוץ — ירוק עדין, כתום בינוני, אדום כבד">
+        <div className="grid grid-cols-4 gap-1.5">
+          {DECOR_LEVELS.map((level) => (
+            <button
+              key={level}
+              type="button"
+              disabled={busy}
+              title={decorShort[level]}
+              onClick={() => void save({ decorLevel: level as DecorLevel })}
+              className={cn(
+                "flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-center text-[11px] font-medium transition",
+                resolveDecorLevel(house) === level
+                  ? "bg-orange-500 text-black"
+                  : "bg-[#12081a] text-orange-100 ring-1 ring-orange-500/20",
+              )}
+            >
+              <DecorSign level={level} className="size-7" />
+              {decorShort[level]}
             </button>
           ))}
         </div>

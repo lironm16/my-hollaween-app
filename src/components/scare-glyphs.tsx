@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { BADGE_TONE_CLASS } from "@/lib/badge-tones";
 import { scareShort } from "@/lib/labels";
 import type { ScareLevel } from "@/lib/types";
 import { DiscStrike } from "@/components/disc-strike";
@@ -12,18 +13,18 @@ function Icon({ children }: { children: ReactNode }) {
   );
 }
 
-const GHOST_DISC: Record<ScareLevel, string> = {
-  mild: "/icons/scare-ghost-disc-mild.png",
-  medium: "/icons/scare-ghost-disc-medium.png",
-  spicy: "/icons/scare-ghost-disc-spicy.png",
+const GHOST_GLYPH: Record<ScareLevel, string> = {
+  mild: "/icons/scare-ghost-mild.png",
+  medium: "/icons/scare-ghost-medium.png",
+  spicy: "/icons/scare-ghost-spicy.png",
 };
 
 /** 1 — The ghost from the picker (smiling / surprised / angry). */
 export function ScareGhost({ level = "mild" }: { level?: ScareLevel | "none" }) {
-  const src = GHOST_DISC[level === "none" ? "mild" : level];
+  const src = GHOST_GLYPH[level === "none" ? "mild" : level];
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt="" aria-hidden className="h-full w-full rounded-full object-cover" />
+    <img src={src} alt="" aria-hidden className="h-full w-full object-contain" />
   );
 }
 
@@ -83,10 +84,10 @@ export function ScarePumpkin() {
 }
 
 const TONE_CLASS: Record<ScareLevel | "none", string> = {
-  mild: "bg-[#047857] text-[#fff7ed]",
-  medium: "bg-[#d97706] text-[#1c0e24]",
-  spicy: "bg-[#b91c1c] text-[#fff7ed]",
-  none: "bg-[#94a3b8] text-[#fff7ed]",
+  mild: BADGE_TONE_CLASS.green,
+  medium: BADGE_TONE_CLASS.amber,
+  spicy: BADGE_TONE_CLASS.red,
+  none: BADGE_TONE_CLASS.gray,
 };
 
 export function ScareSign({
@@ -100,39 +101,27 @@ export function ScareSign({
 }) {
   const struck = level === "none";
   const useOfferedGhost = !Glyph || Glyph === ScareGhost;
-  const label = struck ? "לא מקושט" : scareShort[level];
-
-  if (useOfferedGhost) {
-    return (
-      <span
-        className={cn(
-          "relative inline-flex size-8 shrink-0 overflow-hidden rounded-full",
-          className,
-        )}
-        title={label}
-        aria-label={label}
-      >
-        <span className={cn("size-full", struck && "grayscale")}>
-          <ScareGhost level={struck ? "mild" : level} />
-        </span>
-        {struck ? <DiscStrike /> : null}
-      </span>
-    );
-  }
+  const label = struck ? "לא מפחיד" : scareShort[level];
 
   return (
     <span
       className={cn(
-        "relative inline-flex size-8 shrink-0 items-center justify-center rounded-full",
+        "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full",
         TONE_CLASS[level],
         className,
       )}
       title={label}
       aria-label={label}
     >
-      <span className="size-[70%]">
-        <Glyph />
-      </span>
+      {useOfferedGhost ? (
+        <span className="size-[88%]">
+          <ScareGhost level={struck ? "mild" : level} />
+        </span>
+      ) : (
+        <span className="size-[70%]">
+          <Glyph />
+        </span>
+      )}
       {struck ? <DiscStrike /> : null}
     </span>
   );
@@ -159,7 +148,7 @@ export const SCARE_TONES: { id: ScareLevel | "none"; label: string }[] = [
   { id: "mild", label: scareShort.mild },
   { id: "medium", label: scareShort.medium },
   { id: "spicy", label: scareShort.spicy },
-  { id: "none", label: "לא מקושט" },
+  { id: "none", label: "בלי פחד" },
 ];
 
 export const SCARE_OPTIONS = [

@@ -1,6 +1,9 @@
 export const SCARE_LEVELS = ["mild", "medium", "spicy"] as const;
 export type ScareLevel = (typeof SCARE_LEVELS)[number];
 
+export const DECOR_LEVELS = ["none", "mild", "medium", "heavy"] as const;
+export type DecorLevel = (typeof DECOR_LEVELS)[number];
+
 export const TREAT_OPTIONS = [
   "candy",
   "chocolate",
@@ -67,6 +70,8 @@ export type House = {
   openTo2?: string;
   notes: string;
   accessible: boolean;
+  /** Four-level outdoor decoration. `decorated` is kept in sync for older records. */
+  decorLevel?: DecorLevel;
   decorated?: boolean;
   status: HouseStatus;
   soldOut: boolean;
@@ -100,11 +105,13 @@ export type HouseInput = {
   openTo2?: string;
   notes: string;
   accessible: boolean;
+  decorLevel?: DecorLevel;
   decorated?: boolean;
 };
 
 export type NightPatch = {
   visit?: VisitState;
+  decorLevel?: DecorLevel;
   decorated?: boolean;
   treatStock?: TreatStock;
   treats?: TreatId[];

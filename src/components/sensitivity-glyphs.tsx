@@ -220,10 +220,10 @@ const KIND_LABEL: Record<SensitivityId, string> = {
   sesameFree: treatLabels.sesameFree,
 };
 
-const SENSITIVITY_DISC: Record<SensitivityId, string> = {
-  glutenFree: "/icons/sensitivity-gluten.png",
-  nutsFree: "/icons/sensitivity-nuts.png",
-  sesameFree: "/icons/sensitivity-sesame.png",
+const SENSITIVITY_GLYPH: Record<SensitivityId, string> = {
+  glutenFree: "/icons/sensitivity-gluten-glyph.png",
+  nutsFree: "/icons/sensitivity-nuts-glyph.png",
+  sesameFree: "/icons/sensitivity-sesame-glyph.png",
 };
 
 export function SensitivitySign({
@@ -238,13 +238,13 @@ export function SensitivitySign({
   className?: string;
 }) {
   const label = KIND_LABEL[kind];
-  const photo = SENSITIVITY_DISC[kind];
+  const photo = SENSITIVITY_GLYPH[kind];
 
   if (!Glyph) {
     return (
       <span
         className={cn(
-          "relative inline-flex size-8 shrink-0 overflow-hidden rounded-full",
+          "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#9e410d] text-[#fff7ed]",
           out && "grayscale",
           className,
         )}
@@ -252,8 +252,8 @@ export function SensitivitySign({
         aria-label={label}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={photo} alt="" aria-hidden className="h-full w-full object-cover" />
-        {out ? <DiscStrike /> : null}
+        <img src={photo} alt="" aria-hidden className="h-[82%] w-[82%] object-contain" />
+        <DiscStrike />
       </span>
     );
   }
@@ -261,7 +261,7 @@ export function SensitivitySign({
   return (
     <span
       className={cn(
-        "relative inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-800 text-amber-50",
+        "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#9e410d] text-amber-50",
         className,
       )}
       title={label}

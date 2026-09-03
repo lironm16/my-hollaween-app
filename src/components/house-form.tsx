@@ -8,19 +8,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
-import { scareLabels, suggestedHouseName, nameMatchesTheme, themeFromName } from "@/lib/labels";
+import { scareLabels, decorShort, suggestedHouseName, nameMatchesTheme, themeFromName } from "@/lib/labels";
 import { config, inNeighborhood } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
 import {
+  DECOR_LEVELS,
   HOUSE_THEMES,
   SENSITIVITY_OPTIONS,
+  type DecorLevel,
   type HouseInput,
   type ScareLevel,
   type TreatId,
   type VisitState,
 } from "@/lib/types";
-import { candyLevel, effectiveVisit } from "@/lib/house-state";
+import { candyLevel, resolveDecorLevel } from "@/lib/house-state";
 import { StrollerSign } from "@/components/symbols";
 import { ScareSign } from "@/components/scare-glyphs";
 import { DecorSign } from "@/components/decor-glyphs";
@@ -47,6 +49,8 @@ const empty: HouseInput = {
   accessible: false,
   visit: "come",
   treatStock: { candy: "plenty" },
+  decorLevel: "mild",
+  decorated: true,
 };
 
 function clock(value: string) {
@@ -59,10 +63,9 @@ function initialHasCandy(initial?: Partial<HouseInput>) {
   return candyLevel({ treats, treatStock: initial.treatStock }) !== "out";
 }
 
-function initialDecorated(initial?: Partial<HouseInput>) {
-  if (!initial) return true;
-  if (typeof initial.decorated === "boolean") return initial.decorated;
-  return effectiveVisit(initial) !== "closed";
+function initialDecorLevel(initial?: Partial<HouseInput>): DecorLevel {
+  if (!initial) return "mild";
+  return resolveDecorLevel(initial);
 }
 
 export function HouseForm({
@@ -79,7 +82,7 @@ export function HouseForm({
   const [form, setForm] = useState<HouseInput>({ ...empty, ...initial });
   const [locating, setLocating] = useState(false);
   const [addressOk, setAddressOk] = useState(Boolean(initial?.address && initial.lat && initial.lng));
-  const [decorated, setDecorated] = useState(() => initialDecorated(initial));
+  const [decorLevel, setDecorLevel] = useState<DecorLevel>(() => initialDecorLevel(initial));
   const [hasCandy, setHasCandy] = useState(() => initialHasCandy(initial));
   const [hourWindows, setHourWindows] = useState<HoursWindow[]>(() => {
     const windows = houseHoursWindows({ ...empty, ...initial });
@@ -186,7 +189,7 @@ export function HouseForm({
           toast.error("בחרו כתובת אמיתית מהרשימה, או גררו את הסיכה לבית.");
           return;
         }
-        if (!decorated && !hasCandy) {
+        if (decorLevel === "none" && !hasCandy) {
           toast.error("סמנו לפחות קישוטים או ממתקים — אחרת אין סיבה להוסיף את הבית למפה.");
           return;
         }
@@ -196,7 +199,7 @@ export function HouseForm({
         const treatStock = { ...(form.treatStock ?? {}) };
         if (hasCandy) treatStock.candy = treatStock.candy ?? "plenty";
         else delete treatStock.candy;
-        const visit: VisitState = hasCandy ? "come" : decorated ? "decorOnly" : "come";
+        const visit: VisitState = hasCandy ? "come" : decorLevel !== "none" ? "decorOnly" : "come";
         const windows = hourWindows.map((window) => ({
           from: clock(window.from),
           to: clock(window.to),
@@ -215,7 +218,8 @@ export function HouseForm({
           treats,
           treatStock,
           visit,
-          decorated,
+          decorLevel,
+          decorated: decorLevel !== "none",
           openHours: hours.openHours,
           openFrom: hours.openFrom,
           openTo: hours.openTo,
@@ -313,23 +317,29 @@ export function HouseForm({
           </span>
         </span>
       </label>
-      <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-sm ring-1 ring-orange-500/20">
-        <input
-          type="checkbox"
-          className="mt-1 size-4 accent-orange-500"
-          checked={decorated}
-          onChange={(e) => setDecorated(e.target.checked)}
-        />
-        <span>
-          <span className="inline-flex items-center gap-2 font-medium text-orange-100">
-            <DecorSign on={decorated} />
-            הבית מקושט
-          </span>
-          <span className="block text-xs text-violet-300">
-            יש קישוטי האלווין שאפשר לראות מבחוץ או בכניסה
-          </span>
-        </span>
-      </label>
+      <div>
+        <p className="mb-2 text-sm font-medium">קישוט בחוץ</p>
+        <p className="mb-2 text-xs text-violet-300">
+          כמה קישוטי האלווין יש לראות מהרחוב או מהכניסה
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {DECOR_LEVELS.map((level) => (
+            <button
+              key={level}
+              type="button"
+              onClick={() => setDecorLevel(level)}
+              className={
+                decorLevel === level
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-xs font-medium text-black"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
+              }
+            >
+              <DecorSign level={level} className="size-6" />
+              {decorShort[level]}
+            </button>
+          ))}
+        </div>
+      </div>
       <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-sm ring-1 ring-orange-500/20">
         <input
           type="checkbox"

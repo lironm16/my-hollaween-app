@@ -1,4 +1,13 @@
-import type { House, PublicHouse, StockLevel, TreatId, TreatStock, VisitState } from "@/lib/types";
+import {
+  DECOR_LEVELS,
+  type DecorLevel,
+  type House,
+  type PublicHouse,
+  type StockLevel,
+  type TreatId,
+  type TreatStock,
+  type VisitState,
+} from "@/lib/types";
 
 export function isOwnerFrozen(house: { ownerFrozenUntil?: string | null }, now = Date.now()) {
   if (!house.ownerFrozenUntil) return false;
@@ -79,13 +88,38 @@ export function offersCandy(house: { treats: TreatId[]; treatStock?: TreatStock 
 
 /** Outdoor Halloween decorations you can look at. */
 export function isDecorated(house: {
+  decorLevel?: DecorLevel;
   decorated?: boolean;
   visit?: VisitState;
   soldOut?: boolean;
 }) {
-  if (house.decorated === false) return false;
-  if (house.decorated === true) return true;
-  return effectiveVisit(house) !== "closed";
+  return resolveDecorLevel(house) !== "none";
+}
+
+export function resolveDecorLevel(house: {
+  decorLevel?: DecorLevel;
+  decorated?: boolean;
+  visit?: VisitState;
+  soldOut?: boolean;
+}): DecorLevel {
+  if (house.decorLevel && (DECOR_LEVELS as readonly string[]).includes(house.decorLevel)) {
+    return house.decorLevel;
+  }
+  if (house.decorated === false) return "none";
+  if (house.decorated === true) return "medium";
+  return effectiveVisit(house) !== "closed" ? "mild" : "none";
+}
+
+/** Keep `decorLevel` and the older `decorated` boolean in lockstep. */
+export function syncDecorFields(input: {
+  decorLevel?: DecorLevel;
+  decorated?: boolean;
+  visit?: VisitState;
+  soldOut?: boolean;
+}): { decorLevel: DecorLevel; decorated: boolean } {
+  let level = resolveDecorLevel(input);
+  if (input.visit === "decorOnly" && level === "none") level = "mild";
+  return { decorLevel: level, decorated: level !== "none" };
 }
 
 export function ownerFreezeUntil(msFromNow: number) {

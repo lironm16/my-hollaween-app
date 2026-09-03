@@ -35,6 +35,7 @@ export function readyHouseInput(input: HouseInput): HouseInput {
     treats: input.treats ?? [],
     treatStock: input.treatStock ?? {},
     visit: input.visit ?? "come",
+    decorLevel: input.decorLevel,
     decorated: input.decorated,
     ...hours,
   };

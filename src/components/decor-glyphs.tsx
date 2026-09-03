@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { BADGE_TONE_CLASS } from "@/lib/badge-tones";
 import { DiscStrike } from "@/components/disc-strike";
+import { decorShort } from "@/lib/labels";
+import type { DecorLevel } from "@/lib/types";
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -10,31 +13,23 @@ function Icon({ children }: { children: ReactNode }) {
   );
 }
 
-const WEB_DISC = {
-  on: "/icons/decor-web-on.png",
-  off: "/icons/decor-web-off.png",
-};
+const WEB_GLYPH = "/icons/decor-web-glyph.png";
 
-function DecorWebArt({ on = true }: { on?: boolean }) {
+function DecorWebArt() {
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={on ? WEB_DISC.on : WEB_DISC.off}
-      alt=""
-      aria-hidden
-      className="h-full w-full rounded-full object-cover"
-    />
+    <img src={WEB_GLYPH} alt="" aria-hidden className="h-full w-full object-contain" />
   );
 }
 
 /** Live popup mark — picker option 3, spiderweb. */
 export function DecorGlyph() {
-  return <DecorWebArt on />;
+  return <DecorWebArt />;
 }
 
 /** 3 — Cobweb, no spider (picker identity). */
 export function DecorWeb() {
-  return <DecorWebArt on />;
+  return <DecorWebArt />;
 }
 
 /** 1 — Three large outdoor bulbs. */
@@ -125,69 +120,76 @@ export function DecorBunting() {
   );
 }
 
+const TONE_CLASS: Record<DecorLevel, string> = {
+  none: BADGE_TONE_CLASS.gray,
+  mild: BADGE_TONE_CLASS.green,
+  medium: BADGE_TONE_CLASS.amber,
+  heavy: BADGE_TONE_CLASS.red,
+};
+
 export function DecorSign({
+  level,
   on,
   className,
   Glyph,
 }: {
-  on: boolean;
+  level?: DecorLevel;
+  /** @deprecated Use `level`. true → medium, false → none. */
+  on?: boolean;
   className?: string;
   Glyph?: () => ReactNode;
 }) {
+  const resolved: DecorLevel = level ?? (on === false ? "none" : on === true ? "medium" : "mild");
+  const struck = resolved === "none";
   const useOfferedWeb = !Glyph || Glyph === DecorWeb || Glyph === DecorGlyph;
-  const label = on ? "מקושט" : "לא מקושט";
-
-  if (useOfferedWeb) {
-    return (
-      <span
-        className={cn(
-          "relative inline-flex size-8 shrink-0 overflow-hidden rounded-full",
-          className,
-        )}
-        title={label}
-        aria-label={label}
-      >
-        <DecorWebArt on={on} />
-      </span>
-    );
-  }
+  const label = decorShort[resolved];
 
   return (
     <span
       className={cn(
-        "relative inline-flex size-8 shrink-0 items-center justify-center rounded-full",
-        on ? "bg-[#c2410c] text-[#fff7ed]" : "bg-[#94a3b8] text-[#fff7ed]",
+        "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full",
+        TONE_CLASS[resolved],
         className,
       )}
       title={label}
       aria-label={label}
     >
-      <span className="size-[82%]">
-        <Glyph />
-      </span>
-      {on ? null : <DiscStrike />}
+      {useOfferedWeb ? (
+        <span className="size-[90%]">
+          <DecorWebArt />
+        </span>
+      ) : (
+        <span className="size-[82%]">
+          <Glyph />
+        </span>
+      )}
+      {struck ? <DiscStrike /> : null}
     </span>
   );
 }
 
 export function DecorMark({
   labeled = false,
+  level = "medium",
   className,
 }: {
   labeled?: boolean;
+  level?: DecorLevel;
   className?: string;
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <DecorSign on />
-      {labeled ? <span>מקושט</span> : <span className="sr-only">מקושט</span>}
+      <DecorSign level={level} />
+      {labeled ? <span>מקושט</span> : <span className="sr-only">{decorShort[level]}</span>}
     </span>
   );
 }
 
-export const DECOR_TONES = [
-  { id: "on" as const, label: "מקושט" },
-  { id: "off" as const, label: "לא מקושט" },
+export const DECOR_TONES: { id: DecorLevel; label: string }[] = [
+  { id: "none", label: decorShort.none },
+  { id: "mild", label: decorShort.mild },
+  { id: "medium", label: decorShort.medium },
+  { id: "heavy", label: decorShort.heavy },
 ];
 
 export const DECOR_OPTIONS = [

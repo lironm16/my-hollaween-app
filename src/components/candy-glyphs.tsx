@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { BADGE_TONE_CLASS } from "@/lib/badge-tones";
 import { candyLevel, markedCandy } from "@/lib/house-state";
 import type { TreatId, TreatStock } from "@/lib/types";
 import { stockLabels } from "@/lib/labels";
@@ -88,10 +89,10 @@ export function CandyPair() {
 export type CandyTone = "plenty" | "low" | "out" | "none";
 
 const TONE_CLASS: Record<CandyTone, string> = {
-  plenty: "bg-[#047857] text-[#fff7ed]",
-  low: "bg-[#d97706] text-[#1c0e24]",
-  out: "bg-[#b91c1c] text-[#fff7ed]",
-  none: "bg-[#94a3b8] text-[#fff7ed]",
+  plenty: BADGE_TONE_CLASS.green,
+  low: BADGE_TONE_CLASS.amber,
+  out: BADGE_TONE_CLASS.red,
+  none: BADGE_TONE_CLASS.gray,
 };
 
 export function candyTone(house: { treats?: TreatId[]; treatStock?: TreatStock }): CandyTone {

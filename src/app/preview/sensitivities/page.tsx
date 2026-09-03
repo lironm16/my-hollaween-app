@@ -14,7 +14,7 @@ export default function SensitivitiesPreviewPage() {
           <p className="text-xs text-violet-300">{config.appName} · בחירת אייקון</p>
           <h1 className="text-2xl font-semibold text-orange-100">איזה סימון רגישויות יותר ברור?</h1>
           <p className="text-sm text-violet-200">
-            שלוש עמודות: ללא גלוטן · ללא אגוזים · ללא שומשום. בפופאפ עכשיו: מספר 1, עם קו.
+            שלוש עמודות: ללא גלוטן · ללא אגוזים · ללא שומשום. הקו הוא של האפליקציה — עבה, מפינה ימנית־עליונה לשמאלית־תחתונה. בפופאפ עכשיו: מספר 1, עם קו.
           </p>
           <div className="flex flex-wrap gap-3 text-sm">
             <Link href="/" className="text-orange-300 underline-offset-2 hover:underline">
