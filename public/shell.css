@@ -168,6 +168,12 @@ button {
   color: #3f3f46;
 }
 
+.house-map-popup-nav {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
 .house-map-popup-btn {
   display: block;
   width: 100%;
@@ -180,6 +186,23 @@ button {
   font-size: 14px;
   padding: 8px 10px;
   cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.house-map-popup-nav .house-map-popup-btn {
+  margin-top: 0;
+}
+
+.house-map-popup-btn.is-secondary {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.house-map-popup-btn.is-ghost {
+  background: transparent;
+  color: #6d28d9;
 }
 
 .you-are-here-wrap {
