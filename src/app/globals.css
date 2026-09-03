@@ -473,11 +473,6 @@
   100% { transform: scale(1.85); opacity: 0; }
 }
 
-.locate-me {
-  appearance: none;
-  border: 0;
-}
-
 .cobweb {
   position: absolute;
   width: 120px;
@@ -625,4 +620,21 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 @keyframes house-added-float {
   0% { opacity: 0; transform: translateY(10px) scale(0.6); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* iOS PWA / notch: keep the header below the clock and system icons. */
+.app-header {
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.locate-me {
+  appearance: none;
+  border: 0;
+  bottom: calc(1.5rem + constant(safe-area-inset-bottom));
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+[data-slot="sheet-content"][data-side="bottom"] {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }

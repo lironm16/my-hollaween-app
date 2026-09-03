@@ -1,4 +1,4 @@
-const CACHE = "hw-shell-v26";
+const CACHE = "hw-shell-v27";
 const TILE_CACHE = "hw-tiles-v3";
 const PRECACHE = [
   "/catalog.json",

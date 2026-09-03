@@ -318,9 +318,6 @@
   .bottom-0 {
     bottom: 0px;
   }
-  .bottom-6 {
-    bottom: calc(var(--spacing) * 6);
-  }
   .isolate {
     isolation: isolate;
   }
@@ -705,9 +702,6 @@
   }
   .grid-cols-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .grid-cols-4 {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .flex-col {
     flex-direction: column;
@@ -1272,6 +1266,9 @@
   .pt-1 {
     padding-top: var(--spacing);
   }
+  .pt-\[env\(safe-area-inset-top\,0px\)\] {
+    padding-top: env(safe-area-inset-top,0px);
+  }
   .pb-1 {
     padding-bottom: var(--spacing);
   }
@@ -1525,6 +1522,9 @@
   }
   .accent-orange-500 {
     accent-color: var(--color-orange-500);
+  }
+  .opacity-45 {
+    opacity: 45%;
   }
   .opacity-50 {
     opacity: 50%;
@@ -3576,10 +3576,6 @@ svg.leaflet-zoom-animated {
     opacity: 0;
   }
 }
-.locate-me {
-  appearance: none;
-  border: 0;
-}
 .cobweb {
   position: absolute;
   width: 120px;
@@ -3754,6 +3750,19 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+.app-header {
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.locate-me {
+  appearance: none;
+  border: 0;
+  bottom: calc(1.5rem + constant(safe-area-inset-bottom));
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+}
+[data-slot="sheet-content"][data-side="bottom"] {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 @property --tw-translate-x {
   syntax: "*";

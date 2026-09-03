@@ -41,6 +41,8 @@ button {
   z-index: 50;
   border-bottom: 1px solid rgba(249, 115, 22, 0.2);
   background: rgba(20, 9, 28, 0.92);
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 .app-header > div {
@@ -245,7 +247,8 @@ button {
 .locate-me {
   appearance: none;
   position: absolute;
-  bottom: 1.5rem;
+  bottom: calc(1.5rem + constant(safe-area-inset-bottom));
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
   right: 0.75rem;
   z-index: 1100;
   display: flex;
@@ -258,6 +261,10 @@ button {
   background: #1d1028;
   color: #7dd3fc;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+[data-slot="sheet-content"][data-side="bottom"] {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .cobweb {
