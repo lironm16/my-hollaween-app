@@ -19,7 +19,7 @@ import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
 import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
 import { distanceMeters } from "@/lib/geo";
-import { houseHeadline } from "@/lib/labels";
+import { houseHeadline, themeEmoji } from "@/lib/labels";
 import { effectiveVisit } from "@/lib/house-state";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { HouseTags } from "@/components/house-tags";
@@ -45,14 +45,15 @@ function houseWalkLinks(house: PublicHouse) {
   };
 }
 
-function pinIcon(count = 1) {
+function pinIcon(house: PublicHouse, count = 1) {
+  const emoji = themeEmoji[house.theme ?? "pumpkin"];
   const badge =
     count > 1
       ? `<b class="pin-count" aria-label="${count} דירות">×${count}</b>`
       : "";
   return L.divIcon({
     className: "pumpkin-pin-icon",
-    html: `<div class="pumpkin-pin">${badge}<span>🎃</span></div>`,
+    html: `<div class="pumpkin-pin">${badge}<span>${emoji}</span></div>`,
     iconSize: [40, 44],
     iconAnchor: [20, 42],
     popupAnchor: [0, -36],
@@ -60,7 +61,7 @@ function pinIcon(count = 1) {
 }
 
 function clusterIcon(cluster: HouseCluster) {
-  return pinIcon(cluster.houses.length);
+  return pinIcon(cluster.houses[0], cluster.houses.length);
 }
 
 const pickIcon = L.divIcon({
