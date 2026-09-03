@@ -378,7 +378,7 @@ function HousePreviewPopup({
                       aria-hidden={page !== index}
                     >
                       <div className="house-map-popup-page-body">
-                        <PopupHouseCopy house={house} showAddress />
+                        <PopupHouseCopy house={house} />
                         <PopupActions house={house} onDetails={onOpenDetails ? openHouse : undefined} />
                       </div>
                     </div>
