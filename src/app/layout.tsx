@@ -22,11 +22,11 @@ const creepster = Creepster({
 export const metadata: Metadata = {
   title: config.appName,
   description: `${config.tagline} — ${config.neighborhood}`,
-  applicationName: config.appName,
+  applicationName: config.brandHe,
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: config.appName,
+    title: config.brandHe,
     statusBarStyle: "black-translucent",
   },
   icons: {
@@ -63,8 +63,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
         {/* Inlined: Cursor Preview is a different origin and Next.js 16 returns 403 for /_next CSS. */}
         {themeCss ? <style dangerouslySetInnerHTML={{ __html: themeCss }} /> : null}
-        <link rel="stylesheet" href="/app.css?v=25" />
-        <link rel="stylesheet" href="/shell.css?v=25" />
+        <link rel="stylesheet" href="/app.css?v=26" />
+        <link rel="stylesheet" href="/shell.css?v=26" />
       </head>
       <body className="relative h-full min-h-dvh font-sans">
         <Script src="/boot.js" strategy="beforeInteractive" />

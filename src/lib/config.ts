@@ -34,7 +34,7 @@ export const config = {
   appName: "בשכונה Halloween",
   brandEn: "Halloween",
   brandHe: "בשכונה",
-  /** Browser tab cycles these; home-screen label uses the full appName. */
+  /** Browser tab cycles these. Home-screen / PWA label is brandHe only. */
   titleWords: ["בשכונה", "Halloween"] as const,
   tagline: "מפת הבתים המפחידים של השכונה",
   neighborhood:
