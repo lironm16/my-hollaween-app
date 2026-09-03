@@ -495,6 +495,10 @@
     width: 62%;
     height: 62%;
   }
+  .size-\[70\%\] {
+    width: 70%;
+    height: 70%;
+  }
   .size-full {
     width: 100%;
     height: 100%;
@@ -926,6 +930,9 @@
   .bg-\[\#2a1638\]\/95 {
     background-color: color-mix(in oklab, #2a1638 95%, transparent);
   }
+  .bg-\[\#6d28d9\] {
+    background-color: #6d28d9;
+  }
   .bg-\[\#94a3b8\] {
     background-color: #94a3b8;
   }
@@ -937,6 +944,12 @@
   }
   .bg-\[\#160b1f\] {
     background-color: #160b1f;
+  }
+  .bg-\[\#0369a1\] {
+    background-color: #0369a1;
+  }
+  .bg-\[\#991b1b\] {
+    background-color: #991b1b;
   }
   .bg-\[\#12081a\] {
     background-color: #12081a;
