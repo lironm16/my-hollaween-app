@@ -111,6 +111,7 @@ export type HouseInput = {
 
 export type NightPatch = {
   visit?: VisitState;
+  scareLevel?: ScareLevel;
   decorLevel?: DecorLevel;
   decorated?: boolean;
   treatStock?: TreatStock;

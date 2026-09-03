@@ -13,7 +13,6 @@ import { config, inNeighborhood } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
 import {
-  DECOR_LEVELS,
   HOUSE_THEMES,
   SENSITIVITY_OPTIONS,
   type DecorLevel,
@@ -124,6 +123,12 @@ export function HouseForm({
   }
 
   const candyOffered = candy === "plenty" || candy === "low";
+  const undecorated = decorLevel === "none";
+
+  function pickScare(level: ScareLevel) {
+    setForm((f) => ({ ...f, scareLevel: level }));
+    setDecorLevel((current) => (current === "none" ? "mild" : current));
+  }
 
   function setTreat(id: TreatId, on: boolean) {
     setForm((f) => {
@@ -393,39 +398,30 @@ export function HouseForm({
       </FormSection>
       <FormSection title="מה יפגשו בבית">
         <div>
-          <p className="mb-2 text-sm font-medium">קישוט בחוץ</p>
+          <p className="mb-2 text-sm font-medium">רמת פחד</p>
           <p className="mb-2 text-xs text-violet-300">
-            כמה כיף יש לראות מהרחוב: לא מקושט, קריצה, חגיגה או פיצוץ
+            לילדים, קצת מפחיד או מפחיד — ואם אין קישוט בחוץ, בחרו לא מקושט
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {DECOR_LEVELS.map((level) => (
-              <button
-                key={level}
-                type="button"
-                onClick={() => setDecorLevel(level)}
-                className={
-                  decorLevel === level
-                    ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-xs font-medium text-black"
-                    : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
-                }
-              >
-                <DecorSign level={level} className="size-6" />
-                {decorShort[level]}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div>
-          <p className="mb-2 text-sm font-medium">רמת פחד</p>
-          <p className="mb-2 text-xs text-violet-300">מה מרגישים בכניסה, לא כמה הבית מקושט</p>
-          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => setDecorLevel("none")}
+              className={
+                undecorated
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-xs font-medium text-black"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
+              }
+            >
+              <DecorSign level="none" className="size-6" />
+              {decorShort.none}
+            </button>
             {(["mild", "medium", "spicy"] as ScareLevel[]).map((level) => (
               <button
                 key={level}
                 type="button"
-                onClick={() => setForm({ ...form, scareLevel: level })}
+                onClick={() => pickScare(level)}
                 className={
-                  form.scareLevel === level
+                  !undecorated && form.scareLevel === level
                     ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-xs font-medium text-black"
                     : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
                 }

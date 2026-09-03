@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { HouseForm } from "@/components/house-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { visitLabels, visitShort, stockLabels, treatLabels, decorShort } from "@/lib/labels";
+import { visitLabels, visitShort, stockLabels, treatLabels, decorShort, scareShort } from "@/lib/labels";
 import {
   candyLevel,
   effectiveVisit,
@@ -20,11 +20,10 @@ import { notifyCatalogChanged } from "@/lib/offline-db";
 import { hostJpegFromBrowser } from "@/lib/photos";
 import { readApiJson } from "@/lib/api-json";
 import {
-  DECOR_LEVELS,
+  SCARE_LEVELS,
   SENSITIVITY_OPTIONS,
   STOCK_LEVELS,
   VISIT_STATES,
-  type DecorLevel,
   type HouseInput,
   type NightPatch,
   type PublicHouse,
@@ -35,6 +34,7 @@ import {
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { DecorSign } from "@/components/decor-glyphs";
+import { ScareSign } from "@/components/scare-glyphs";
 
 type Props = {
   house: PublicHouse;
@@ -163,24 +163,44 @@ export function NightDesk({
         </div>
       </Section>
 
-      <Section title="קישוט" hint="ירוק קריצה, כתום חגיגה, אדום פיצוץ, אפור לא מקושט">
-        <div className="grid grid-cols-4 gap-1.5">
-          {DECOR_LEVELS.map((level) => (
+      <Section title="רמת פחד" hint="לילדים, מפחיד, או בלי קישוט בחוץ">
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            disabled={busy}
+            title={decorShort.none}
+            onClick={() => void save({ decorLevel: "none" })}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition",
+              resolveDecorLevel(house) === "none"
+                ? "bg-orange-500 text-black"
+                : "bg-[#12081a] text-orange-100 ring-1 ring-orange-500/20",
+            )}
+          >
+            <DecorSign level="none" className="size-7" />
+            {decorShort.none}
+          </button>
+          {SCARE_LEVELS.map((level) => (
             <button
               key={level}
               type="button"
               disabled={busy}
-              title={decorShort[level]}
-              onClick={() => void save({ decorLevel: level as DecorLevel })}
+              title={scareShort[level]}
+              onClick={() =>
+                void save({
+                  scareLevel: level,
+                  ...(resolveDecorLevel(house) === "none" ? { decorLevel: "mild" as const } : {}),
+                })
+              }
               className={cn(
-                "flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-center text-[11px] font-medium transition",
-                resolveDecorLevel(house) === level
+                "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition",
+                resolveDecorLevel(house) !== "none" && house.scareLevel === level
                   ? "bg-orange-500 text-black"
                   : "bg-[#12081a] text-orange-100 ring-1 ring-orange-500/20",
               )}
             >
-              <DecorSign level={level} className="size-7" />
-              {decorShort[level]}
+              <ScareSign level={level} className="size-7" />
+              {scareShort[level]}
             </button>
           ))}
         </div>

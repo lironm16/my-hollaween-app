@@ -189,7 +189,8 @@ export type HouseFiltersState = {
   neighborhoodFilters: NeighborhoodId[];
   likedOnly: boolean;
   unvisitedOnly: boolean;
-  decoratedOnly: boolean;
+  /** Include houses with no outdoor decoration (gray struck lights). */
+  includeUndecorated: boolean;
 };
 
 export function loadHouseFilters(): HouseFiltersState | null {

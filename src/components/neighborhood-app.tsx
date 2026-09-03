@@ -38,7 +38,7 @@ import { toPublicHouse } from "@/lib/ids";
 import { isFrozen, offersCandy, offersSensitivity, isDecorated } from "@/lib/house-state";
 import { AccessibleMark } from "@/components/symbols";
 import { CandyMark } from "@/components/candy-glyphs";
-import { DecorMark } from "@/components/decor-glyphs";
+import { DecorSign } from "@/components/decor-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
 import { OpenNowMark } from "@/components/open-now-mark";
 import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
@@ -52,7 +52,7 @@ import {
   saveServerDbBackup,
   type ServerDbBackup,
 } from "@/lib/offline-db";
-import { scareShort, treatLabels } from "@/lib/labels";
+import { scareShort, treatLabels, decorShort } from "@/lib/labels";
 import { movedAtLeast, ROUTE_REANCHOR_METERS } from "@/lib/geo";
 import { buildWalkingRoute } from "@/lib/route";
 import type { Catalog, House, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
@@ -90,7 +90,7 @@ export function NeighborhoodApp({
     neighborhoodFilters,
     likedOnly,
     unvisitedOnly,
-    decoratedOnly,
+    includeUndecorated,
   } = filters;
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [routeMode, setRouteMode] = useState(false);
@@ -195,12 +195,14 @@ export function NeighborhoodApp({
     return houses.filter((house) => {
       if (accessibleOnly && !house.accessible) return false;
       if (candyOnly && !offersCandy(house)) return false;
-      if (decoratedOnly && !isDecorated(house)) return false;
+      if (!includeUndecorated && !isDecorated(house)) return false;
       if (openNowOnly && !isOpenNow(house)) return false;
       for (const sensitivity of sensitivityFilters) {
         if (!offersSensitivity(house, sensitivity)) return false;
       }
-      if (scareFilters.length > 0 && !scareFilters.includes(house.scareLevel)) return false;
+      if (isDecorated(house) && scareFilters.length > 0 && !scareFilters.includes(house.scareLevel)) {
+        return false;
+      }
       if (!houseInNeighborhoods(house, neighborhoodFilters)) return false;
       if (likedOnly && !likes.likedIds.includes(house.id)) return false;
       if (unvisitedOnly && visits.visitedIds.includes(house.id)) return false;
@@ -210,7 +212,7 @@ export function NeighborhoodApp({
     houses,
     accessibleOnly,
     candyOnly,
-    decoratedOnly,
+    includeUndecorated,
     openNowOnly,
     sensitivityFilters,
     scareFilters,
@@ -224,7 +226,6 @@ export function NeighborhoodApp({
   const moreFilterCount =
     Number(accessibleOnly) +
     Number(candyOnly) +
-    Number(decoratedOnly) +
     Number(openNowOnly) +
     Number(likedOnly) +
     Number(unvisitedOnly);
@@ -233,10 +234,11 @@ export function NeighborhoodApp({
     neighborhoodFilters.length === 0 || neighborhoodFilters.length === NEIGHBORHOODS.length
       ? 0
       : neighborhoodFilters.length;
-  const scareActiveCount =
+  const scareLevelsActive =
     scareFilters.length === 0 || scareFilters.length === SCARE_LEVELS.length
       ? 0
       : scareFilters.length;
+  const scareActiveCount = scareLevelsActive + Number(!includeUndecorated);
   const activeFilterCount =
     neighborhoodActiveCount + sensitivityFilters.length + scareActiveCount + moreFilterCount;
 
@@ -268,7 +270,7 @@ export function NeighborhoodApp({
     const parts: string[] = [];
     if (openNowOnly) parts.push("פתוח עכשיו");
     if (candyOnly) parts.push("ממתקים");
-    if (decoratedOnly) parts.push("מקושט");
+    if (!includeUndecorated) parts.push("מקושט");
     if (accessibleOnly) parts.push("נגיש");
     if (likedOnly) parts.push("אהבתי");
     if (unvisitedOnly) parts.push("לא ביקרתי");
@@ -281,7 +283,7 @@ export function NeighborhoodApp({
   }, [
     openNowOnly,
     candyOnly,
-    decoratedOnly,
+    includeUndecorated,
     accessibleOnly,
     likedOnly,
     unvisitedOnly,
@@ -633,6 +635,15 @@ export function NeighborhoodApp({
           ))}
         </FilterSection>
         <FilterSection title="רמת פחד">
+          <FilterOption
+            checked={includeUndecorated}
+            onChange={() => updateFilters({ includeUndecorated: !includeUndecorated })}
+          >
+            <span className="inline-flex items-center gap-2">
+              <DecorSign level="none" />
+              <span>{decorShort.none}</span>
+            </span>
+          </FilterOption>
           {SCARE_LEVELS.map((level) => (
             <FilterOption
               key={level}
@@ -655,12 +666,6 @@ export function NeighborhoodApp({
             onChange={() => updateFilters({ candyOnly: !candyOnly })}
           >
             <CandyMark labeled />
-          </FilterOption>
-          <FilterOption
-            checked={decoratedOnly}
-            onChange={() => updateFilters({ decoratedOnly: !decoratedOnly })}
-          >
-            <DecorMark labeled />
           </FilterOption>
           <FilterOption
             checked={accessibleOnly}

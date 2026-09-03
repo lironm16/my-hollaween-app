@@ -14,7 +14,7 @@ export const DEFAULT_HOUSE_FILTERS: HouseFiltersState = {
   neighborhoodFilters: [...NEIGHBORHOODS],
   likedOnly: false,
   unvisitedOnly: false,
-  decoratedOnly: false,
+  includeUndecorated: true,
 };
 
 function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
@@ -28,13 +28,18 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
   const sensitivities = (raw.sensitivityFilters ?? []).filter((item): item is SensitivityId =>
     (SENSITIVITY_OPTIONS as readonly string[]).includes(item),
   );
+  const legacy = raw as HouseFiltersState & { decoratedOnly?: boolean };
+  const includeUndecorated =
+    legacy.includeUndecorated !== undefined
+      ? Boolean(legacy.includeUndecorated)
+      : !Boolean(legacy.decoratedOnly);
   return {
     accessibleOnly: Boolean(raw.accessibleOnly),
     candyOnly: Boolean(raw.candyOnly),
     openNowOnly: Boolean(raw.openNowOnly),
     likedOnly: Boolean(raw.likedOnly),
     unvisitedOnly: Boolean(raw.unvisitedOnly),
-    decoratedOnly: Boolean(raw.decoratedOnly),
+    includeUndecorated,
     neighborhoodFilters: neighborhoods.length > 0 ? neighborhoods : [...NEIGHBORHOODS],
     scareFilters: scares.length > 0 ? scares : [...SCARE_LEVELS],
     sensitivityFilters: sensitivities,
