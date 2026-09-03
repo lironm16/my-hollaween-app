@@ -4,13 +4,16 @@ import type { LatLng } from "@/lib/route";
 /**
  * Walking (foot) graph — not car.
  * Park footpaths are shorter, so we detect cuts through the green strip between
- * חרוזים and שיכון ותיקים / נחלת גנים and walk around on streets instead.
+ * חרוזים and שיכון ותיקים / נחלת גנים, and the Rosh Tzipor / HaHava belt north
+ * of המרגנית, then walk around on streets instead.
  */
 const OSRM_FOOT = "https://routing.openstreetmap.de/routed-foot/route/v1/foot";
 const UA = "bashchona-halloween/1.0 (neighborhood walking map)";
 const PARK_FRACTION_MAX = 0.12;
+/** North of this, footpaths are the farm / Yarkon — not neighborhood streets. */
+const NORTH_STREET_EDGE = 32.0948;
 
-/** Green / park corridor the foot graph uses as a shortcut. */
+/** Green / park areas the foot graph uses as a shortcut. */
 const PARK_RINGS: LatLng[][] = [
   [
     { lat: 32.09035, lng: 34.80595 },
@@ -18,6 +21,20 @@ const PARK_RINGS: LatLng[][] = [
     { lat: 32.09385, lng: 34.81245 },
     { lat: 32.09385, lng: 34.80595 },
   ],
+  [
+    { lat: NORTH_STREET_EDGE, lng: 34.802 },
+    { lat: NORTH_STREET_EDGE, lng: 34.819 },
+    { lat: 32.1008, lng: 34.819 },
+    { lat: 32.1008, lng: 34.802 },
+  ],
+];
+
+/** Street corners south of the park — Krinitzi / Aba Hillel / east approach. */
+const STREET_VIAS: LatLng[] = [
+  { lat: 32.0898, lng: 34.8124 },
+  { lat: 32.0889, lng: 34.8105 },
+  { lat: 32.0892, lng: 34.811 },
+  { lat: 32.0897, lng: 34.8137 },
 ];
 
 function encodePoints(points: LatLng[]) {
@@ -64,7 +81,7 @@ function pathMeters(line: LatLng[]) {
 
 function viaAroundPark(line: LatLng[]): LatLng[] {
   const hits = line.filter(inPark);
-  if (hits.length === 0) return [];
+  if (hits.length === 0) return STREET_VIAS;
   let south = hits[0]!.lat;
   let north = hits[0]!.lat;
   let west = hits[0]!.lng;
@@ -78,16 +95,21 @@ function viaAroundPark(line: LatLng[]): LatLng[] {
   const pad = 0.00135;
   const midLat = (south + north) / 2;
   const midLng = (west + east) / 2;
-  return [
+  const around: LatLng[] = [
     { lat: south - pad, lng: midLng },
-    { lat: north + pad, lng: midLng },
     { lat: midLat, lng: west - pad },
     { lat: midLat, lng: east + pad },
     { lat: south - pad, lng: west - pad },
     { lat: south - pad, lng: east + pad },
-    { lat: north + pad, lng: west - pad },
-    { lat: north + pad, lng: east + pad },
+    ...STREET_VIAS,
   ];
+  const unique: LatLng[] = [];
+  for (const via of around) {
+    if (via.lat >= NORTH_STREET_EDGE) continue;
+    if (unique.some((other) => distanceMeters(other, via) < 40)) continue;
+    unique.push(via);
+  }
+  return unique;
 }
 
 async function fetchOsrm(from: LatLng, to: LatLng): Promise<LatLng[] | null> {
@@ -119,7 +141,7 @@ async function fetchWalkLeg(from: LatLng, to: LatLng): Promise<LatLng[] | null> 
   const ranked = candidates
     .filter((line): line is LatLng[] => Boolean(line && line.length >= 2))
     .map((line) => ({ line, frac: parkFraction(line), meters: pathMeters(line) }))
-    .sort((a, b) => a.frac - b.frac || a.meters - b.meters);
+    .sort((a, b) => a.meters - b.meters || a.frac - b.frac);
   const around = ranked.find((item) => item.frac <= PARK_FRACTION_MAX);
   if (around) return around.line;
   if (ranked[0] && ranked[0].frac < parkFraction(direct)) return ranked[0].line;
