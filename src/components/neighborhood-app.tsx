@@ -47,7 +47,7 @@ import {
 } from "@/lib/offline-db";
 import { scareShort, treatLabels } from "@/lib/labels";
 import { movedAtLeast, ROUTE_REANCHOR_METERS } from "@/lib/geo";
-import { buildWalkingRoute, googleMapsNavigateUrl } from "@/lib/route";
+import { buildWalkingRoute } from "@/lib/route";
 import type { Catalog, House, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -229,11 +229,6 @@ export function NeighborhoodApp({
   const activeFilterCount =
     neighborhoodActiveCount + sensitivityFilters.length + scareActiveCount + moreFilterCount;
 
-  const routeHouses = useMemo(
-    () => visible.filter((house) => !visits.visitedIds.includes(house.id)),
-    [visible, visits.visitedIds],
-  );
-
   useEffect(() => {
     if (!routeMode) {
       setRouteAnchor(origin ? { lat: origin.lat, lng: origin.lng } : null);
@@ -251,10 +246,10 @@ export function NeighborhoodApp({
 
   const walkingRoute = useMemo(
     () =>
-      buildWalkingRoute(routeHouses, routeMode ? (routeAnchor ?? origin) : origin, {
+      buildWalkingRoute(visible, routeMode ? (routeAnchor ?? origin) : origin, {
         accessible: accessibleOnly,
       }),
-    [routeHouses, routeMode, routeAnchor, origin, accessibleOnly],
+    [visible, routeMode, routeAnchor, origin, accessibleOnly],
   );
   const { line: routeLine } = useRouteGeometry(walkingRoute, routeMode);
 
@@ -593,7 +588,7 @@ export function NeighborhoodApp({
           <p className="mt-1 text-[11px] text-amber-200">המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.</p>
         ) : routeMode ? (
           <p className="mt-1 text-[11px] text-violet-300">
-            מסלול לפי הסינון{routePrefsLabel ? ` · ${routePrefsLabel}` : ""} · בלי בתים שביקרתם · מפה / רשימה
+            מסלול לפי הסינון{routePrefsLabel ? ` · ${routePrefsLabel}` : ""} · מפה / רשימה
           </p>
         ) : null}
       </div>
@@ -693,7 +688,7 @@ export function NeighborhoodApp({
               aria-hidden={view !== "map"}
             >
               <HouseMapDynamic
-                houses={routeMode ? routeHouses : visible}
+                houses={visible}
                 selectedId={selected?.id}
                 onSelect={(house) => setSelectedId(house.id)}
                 className="h-full w-full"
@@ -706,25 +701,12 @@ export function NeighborhoodApp({
                 routeLine={routeMode ? routeLine : null}
                 routeStops={
                   routeMode && walkingRoute
-                    ? walkingRoute.stops.map((stop, index) => {
-                        const prev =
-                          index === 0
-                            ? walkingRoute.origin
-                            : {
-                                lat: walkingRoute.stops[index - 1]!.house.lat,
-                                lng: walkingRoute.stops[index - 1]!.house.lng,
-                              };
-                        return {
-                          id: stop.house.id,
-                          order: stop.order,
-                          lat: stop.house.lat,
-                          lng: stop.house.lng,
-                          walkUrl: googleMapsNavigateUrl(prev, {
-                            lat: stop.house.lat,
-                            lng: stop.house.lng,
-                          }),
-                        };
-                      })
+                    ? walkingRoute.stops.map((stop) => ({
+                        id: stop.house.id,
+                        order: stop.order,
+                        lat: stop.house.lat,
+                        lng: stop.house.lng,
+                      }))
                     : null
                 }
               />

@@ -31,7 +31,7 @@ export function RouteList({
       <div className="mx-auto max-w-lg px-4 py-16 text-center text-violet-200">
         <p className="font-display text-2xl text-orange-300">אין עצירות במסלול</p>
         <p className="mt-2 text-sm">
-          שנו סינון, או סמנו בתים כ«לא ביקרתי» — בתים שכבר ביקרתם לא נכנסים למסלול.
+          שנו סינון כדי לראות בתים במסלול. «לא ביקרתי» מסתיר בתים שכבר סימנתם.
         </p>
       </div>
     );
@@ -44,7 +44,6 @@ export function RouteList({
         <p className="mt-1 text-xs text-violet-300">
           {route.startedFrom === "gps" ? "מהמיקום שלכם" : "ממרכז השכונה"}
           {prefsLabel ? ` · ${prefsLabel}` : ""}
-          {" · בלי בתים שביקרתם"}
         </p>
         {!hasGps && onRequestLocation ? (
           <Button type="button" size="sm" variant="outline" className="mt-2" onClick={onRequestLocation}>

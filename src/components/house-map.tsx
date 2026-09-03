@@ -33,6 +33,17 @@ function routeOrderIcon(order: number) {
   });
 }
 
+function houseWalkLinks(house: PublicHouse) {
+  const displayAddress = formatDisplayAddress(house);
+  const mapsQuery = /רמת\s*גן/u.test(displayAddress)
+    ? displayAddress
+    : `${displayAddress}, רמת גן`;
+  return {
+    maps: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapsQuery)}&travelmode=walking`,
+    waze: `https://waze.com/ul?q=${encodeURIComponent(mapsQuery)}&navigate=yes`,
+  };
+}
+
 function pinKind(house: PublicHouse) {
   const frozen = isFrozen(house);
   const visit = effectiveVisit(house);
@@ -192,10 +203,30 @@ function HousePreviewPopup({
             {effectiveVisit(houses[0]) === "closed" ? (
               <div className="house-map-popup-soldout">נגמר המלאי — אין סיבה לבוא עכשיו</div>
             ) : null}
+            <div className="house-map-popup-nav">
+              <a
+                href={houseWalkLinks(houses[0]).waze}
+                target="_blank"
+                rel="noreferrer"
+                className="house-map-popup-btn"
+                onClick={(event) => event.stopPropagation()}
+              >
+                ניווט ב־Waze
+              </a>
+              <a
+                href={houseWalkLinks(houses[0]).maps}
+                target="_blank"
+                rel="noreferrer"
+                className="house-map-popup-btn is-secondary"
+                onClick={(event) => event.stopPropagation()}
+              >
+                Google Maps
+              </a>
+            </div>
             {onOpenDetails ? (
               <button
                 type="button"
-                className="house-map-popup-btn"
+                className="house-map-popup-btn is-ghost"
                 onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
@@ -268,7 +299,7 @@ type Props = {
   locating?: boolean;
   onLocate?: () => void;
   routeLine?: LatLng[] | null;
-  routeStops?: { id: string; order: number; lat: number; lng: number; walkUrl?: string }[] | null;
+  routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
 };
 
 export function HouseMap({
@@ -375,25 +406,9 @@ export function HouseMap({
               position={[stop.lat, stop.lng]}
               icon={routeOrderIcon(stop.order)}
               zIndexOffset={600}
-            >
-              {stop.walkUrl ? (
-                <Popup autoPan={false} keepInView={false}>
-                  <div dir="rtl" className="text-right">
-                    <strong>עצירה {stop.order}</strong>
-                    <div className="mt-2">
-                      <a
-                        href={stop.walkUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex rounded-lg bg-orange-500 px-2.5 py-1 text-xs font-medium text-black"
-                      >
-                        ניווט לכאן
-                      </a>
-                    </div>
-                  </div>
-                </Popup>
-              ) : null}
-            </Marker>
+              interactive={false}
+              keyboard={false}
+            />
           ))}
         {!pickMode &&
           clusters.map((cluster) => (
