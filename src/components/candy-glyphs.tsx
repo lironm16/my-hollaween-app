@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { candyLevel, markedCandy } from "@/lib/house-state";
 import type { TreatId, TreatStock } from "@/lib/types";
 import { stockLabels } from "@/lib/labels";
+import { DiscStrike } from "@/components/disc-strike";
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -129,23 +130,7 @@ export function CandySign({
       <span className="size-[62%]">
         <Glyph />
       </span>
-      {tone === "none" ? (
-        <svg
-          aria-hidden
-          viewBox="0 0 32 32"
-          className="pointer-events-none absolute inset-0"
-        >
-          <line
-            x1="7"
-            y1="25"
-            x2="25"
-            y2="7"
-            stroke="#1c0e24"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-        </svg>
-      ) : null}
+      {tone === "none" ? <DiscStrike /> : null}
     </span>
   );
 }

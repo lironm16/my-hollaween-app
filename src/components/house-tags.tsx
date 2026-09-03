@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { StrollerSign } from "@/components/symbols";
 import { CandySign, candyTone } from "@/components/candy-glyphs";
+import { DecorSign } from "@/components/decor-glyphs";
 import {
   isDecorated,
   markedGlutenFree,
@@ -68,9 +69,7 @@ export function HouseTags({
           {hoursLabel}
         </Badge>
       ) : null}
-      {isDecorated(house) ? (
-        <Badge className="h-6 bg-orange-800 text-sm text-orange-50">מקושט</Badge>
-      ) : null}
+      <DecorSign on={isDecorated(house)} />
       {house.accessible ? (
         <span title="נגיש" aria-label="נגיש">
           <StrollerSign />

@@ -10,7 +10,7 @@ export default function ScarePreviewPage() {
           <p className="text-xs text-violet-300">{config.appName} · בחירת אייקון</p>
           <h1 className="text-2xl font-semibold text-orange-100">איזה פחד יותר ברור?</h1>
           <p className="text-sm text-violet-200">
-            ירוק = עדין, כתום = בינוני, אדום = מפחיד — אותם צבעים כמו הממתקים. כתבו מספר צורה.
+            ירוק = עדין, כתום = בינוני, אדום = מפחיד, אפור עם קו = לא מקושט. כתבו מספר צורה.
           </p>
           <div className="flex flex-wrap gap-3 text-sm">
             <Link href="/" className="text-orange-300 underline-offset-2 hover:underline">

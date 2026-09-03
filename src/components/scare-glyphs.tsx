@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { scareShort } from "@/lib/labels";
 import type { ScareLevel } from "@/lib/types";
+import { DiscStrike } from "@/components/disc-strike";
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -80,10 +81,11 @@ export function ScarePumpkin() {
   );
 }
 
-const TONE_CLASS: Record<ScareLevel, string> = {
+const TONE_CLASS: Record<ScareLevel | "none", string> = {
   mild: "bg-[#047857] text-[#fff7ed]",
   medium: "bg-[#d97706] text-[#1c0e24]",
   spicy: "bg-[#b91c1c] text-[#fff7ed]",
+  none: "bg-[#94a3b8] text-[#fff7ed]",
 };
 
 export function ScareSign({
@@ -92,9 +94,10 @@ export function ScareSign({
   className,
 }: {
   Glyph: () => ReactNode;
-  level: ScareLevel;
+  level: ScareLevel | "none";
   className?: string;
 }) {
+  const struck = level === "none";
   return (
     <span
       className={cn(
@@ -102,20 +105,22 @@ export function ScareSign({
         TONE_CLASS[level],
         className,
       )}
-      title={scareShort[level]}
-      aria-label={scareShort[level]}
+      title={struck ? "לא מקושט" : scareShort[level]}
+      aria-label={struck ? "לא מקושט" : scareShort[level]}
     >
       <span className="size-[70%]">
         <Glyph />
       </span>
+      {struck ? <DiscStrike /> : null}
     </span>
   );
 }
 
-export const SCARE_TONES: { id: ScareLevel; label: string }[] = [
+export const SCARE_TONES: { id: ScareLevel | "none"; label: string }[] = [
   { id: "mild", label: scareShort.mild },
   { id: "medium", label: scareShort.medium },
   { id: "spicy", label: scareShort.spicy },
+  { id: "none", label: "לא מקושט" },
 ];
 
 export const SCARE_OPTIONS = [

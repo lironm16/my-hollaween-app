@@ -38,6 +38,7 @@ import { toPublicHouse } from "@/lib/ids";
 import { isFrozen, offersCandy, offersSensitivity, isDecorated } from "@/lib/house-state";
 import { AccessibleMark } from "@/components/symbols";
 import { CandyMark } from "@/components/candy-glyphs";
+import { DecorMark } from "@/components/decor-glyphs";
 import { isOpenNow } from "@/lib/hours";
 import {
   backupLooksNewer,
@@ -656,7 +657,7 @@ export function NeighborhoodApp({
             checked={decoratedOnly}
             onChange={() => updateFilters({ decoratedOnly: !decoratedOnly })}
           >
-            מקושט
+            <DecorMark labeled />
           </FilterOption>
           <FilterOption
             checked={accessibleOnly}
