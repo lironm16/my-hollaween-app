@@ -25,6 +25,9 @@ export default function CandyPreviewPage() {
             <Link href="/preview/decor" className="text-orange-300 underline-offset-2 hover:underline">
               קישוט
             </Link>
+            <Link href="/preview/sensitivities" className="text-orange-300 underline-offset-2 hover:underline">
+              רגישויות
+            </Link>
           </div>
         </header>
 

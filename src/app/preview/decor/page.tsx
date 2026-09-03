@@ -25,6 +25,9 @@ export default function DecorPreviewPage() {
             <Link href="/preview/scare" className="text-orange-300 underline-offset-2 hover:underline">
               פחד
             </Link>
+            <Link href="/preview/sensitivities" className="text-orange-300 underline-offset-2 hover:underline">
+              רגישויות
+            </Link>
           </div>
         </header>
 
