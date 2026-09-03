@@ -1,7 +1,7 @@
 /* Kill a stale service worker that cached unstyled HTML. Public path so
    Preview iframes can run it even when Next.js blocks /_next/*. */
 (function () {
-  var flag = "hw-sw-bust-v31";
+  var flag = "hw-sw-bust-v32";
   try {
     if (sessionStorage.getItem(flag)) return;
   } catch (e) {}

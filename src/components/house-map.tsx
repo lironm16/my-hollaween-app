@@ -34,16 +34,6 @@ function routeOrderIcon(order: number) {
   });
 }
 
-function houseWalkLinks(house: PublicHouse) {
-  const displayAddress = formatDisplayAddress(house);
-  const mapsQuery = /רמת\s*גן/u.test(displayAddress)
-    ? displayAddress
-    : `${displayAddress}, רמת גן`;
-  return {
-    maps: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapsQuery)}&travelmode=walking`,
-    waze: `https://waze.com/ul?q=${encodeURIComponent(mapsQuery)}&navigate=yes`,
-  };
-}
 
 function pinIcon(house: PublicHouse, count = 1) {
   const emoji = themeEmoji[house.theme ?? "pumpkin"];
@@ -270,9 +260,6 @@ function HousePreviewPopup({
                         }}
                       >
                         <span className="house-map-popup-item-title">{houseHeadline(house)}</span>
-                        {house.arrival ? (
-                          <span className="house-map-popup-item-arrival">{house.arrival}</span>
-                        ) : null}
                         <div className="house-map-popup-tags">
                           <HouseTags house={house} />
                         </div>
@@ -309,47 +296,23 @@ function HousePreviewPopup({
               <strong>{houseHeadline(houses[0])}</strong>
               <PopupCloseButton onClose={closePopup} />
             </div>
-            <div className="house-map-popup-meta">{formatDisplayAddress(houses[0])}</div>
-            {houses[0].arrival ? (
-              <div className="house-map-popup-meta">{houses[0].arrival}</div>
-            ) : null}
             <div className="house-map-popup-tags">
               <HouseTags house={houses[0]} />
             </div>
             {effectiveVisit(houses[0]) === "closed" ? (
-              <div className="house-map-popup-soldout">נגמר המלאי — אין סיבה לבוא עכשיו</div>
+              <div className="house-map-popup-soldout">נגמר המלאי</div>
             ) : null}
-            <div className="house-map-popup-nav">
-              <a
-                href={houseWalkLinks(houses[0]).waze}
-                target="_blank"
-                rel="noreferrer"
-                className="house-map-popup-btn"
-                onClick={(event) => event.stopPropagation()}
-              >
-                Waze
-              </a>
-              <a
-                href={houseWalkLinks(houses[0]).maps}
-                target="_blank"
-                rel="noreferrer"
-                className="house-map-popup-btn is-secondary"
-                onClick={(event) => event.stopPropagation()}
-              >
-                Maps
-              </a>
-            </div>
             {onOpenDetails ? (
               <button
                 type="button"
-                className="house-map-popup-btn is-ghost"
+                className="house-map-popup-btn"
                 onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
                   openHouse(houses[0]);
                 }}
               >
-                לפרטי הבית
+                לפרטים
               </button>
             ) : null}
           </>
