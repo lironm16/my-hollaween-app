@@ -40,6 +40,7 @@ import { AccessibleMark } from "@/components/symbols";
 import { CandyMark } from "@/components/candy-glyphs";
 import { DecorMark } from "@/components/decor-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
+import { OpenNowMark } from "@/components/open-now-mark";
 import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
 import { ScareMark } from "@/components/scare-glyphs";
 import { isOpenNow } from "@/lib/hours";
@@ -647,7 +648,7 @@ export function NeighborhoodApp({
             checked={openNowOnly}
             onChange={() => updateFilters({ openNowOnly: !openNowOnly })}
           >
-            פתוח עכשיו
+            <OpenNowMark labeled />
           </FilterOption>
           <FilterOption
             checked={candyOnly}
