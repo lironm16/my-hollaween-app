@@ -83,10 +83,16 @@ export function RouteList({
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium text-orange-100">
                     {houseHeadline(stop.house)}
+                    {stop.houses.length > 1 ? ` · ${stop.houses.length} דירות` : ""}
                   </span>
                   <span className="mt-0.5 block text-xs text-violet-300">
                     {formatDisplayAddress(stop.house)}
                   </span>
+                  {stop.houses.length > 1 ? (
+                    <span className="mt-0.5 block text-[11px] text-violet-400">
+                      {stop.houses.map((house) => houseHeadline(house)).join(" · ")}
+                    </span>
+                  ) : null}
                   <span className="mt-1 block text-[11px] text-violet-400">
                     {stop.order === 1 ? "מההתחלה" : "מעצירה קודמת"}:{" "}
                     {formatDistance(stop.fromPreviousMeters)}

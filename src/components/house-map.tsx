@@ -17,7 +17,8 @@ import "leaflet/dist/leaflet.css";
 import { config, formatDisplayAddress, inNeighborhood } from "@/lib/config";
 import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
-import type { LatLng } from "@/lib/route";
+import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
+import { distanceMeters } from "@/lib/geo";
 import { houseHeadline, themeEmoji } from "@/lib/labels";
 import { effectiveVisit, isFrozen } from "@/lib/house-state";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
@@ -26,10 +27,10 @@ import { cn } from "@/lib/utils";
 
 function routeOrderIcon(order: number) {
   return L.divIcon({
-    className: "",
-    html: `<div class="route-stop-pin">${order}</div>`,
-    iconSize: [22, 22],
-    iconAnchor: [11, 11],
+    className: "route-stop-icon",
+    html: `<div class="route-stop-pin" aria-label="עצירה ${order}">${order}</div>`,
+    iconSize: [28, 34],
+    iconAnchor: [14, 56],
   });
 }
 
@@ -60,7 +61,7 @@ function pinIcon(house: PublicHouse, count = 1) {
     kind === "pending" ? "👻" : kind === "closed" ? "🕸️" : kind === "frozen" ? "😶" : themeEmoji[house.theme ?? "pumpkin"];
   const badge =
     count > 1
-      ? `<b class="pin-count" aria-label="${count} בתים">${count}</b>`
+      ? `<b class="pin-count" aria-label="${count} דירות">×${count}</b>`
       : "";
   return L.divIcon({
     className: "",
@@ -328,6 +329,15 @@ export function HouseMap({
         : null,
     [routeLine],
   );
+  const approachPositions = useMemo(() => {
+    const first = routeStops?.[0];
+    if (!userLocation || !first) return null;
+    if (distanceMeters(userLocation, first) <= ROUTE_INCLUDE_ORIGIN_METERS) return null;
+    return [
+      [userLocation.lat, userLocation.lng] as [number, number],
+      [first.lat, first.lng] as [number, number],
+    ];
+  }, [userLocation, routeStops]);
   const ready = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -386,6 +396,18 @@ export function HouseMap({
                 onPick?.(latlng.lat, latlng.lng);
               },
             }}
+          />
+        ) : null}
+        {!pickMode && approachPositions ? (
+          <Polyline
+            positions={approachPositions}
+            pathOptions={{
+              color: "#fdba74",
+              weight: 3,
+              opacity: 0.7,
+              dashArray: "7 8",
+            }}
+            interactive={false}
           />
         ) : null}
         {!pickMode && routePositions ? (

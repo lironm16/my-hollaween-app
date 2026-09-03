@@ -1,20 +1,27 @@
+import { distanceMeters } from "@/lib/geo";
 import type { LatLng } from "@/lib/route";
 
 const OSRM_FOOT = "https://router.project-osrm.org/route/v1/foot";
-/** Public demo server is happier with shorter batches. */
-const BATCH = 24;
 
 function encodePoints(points: LatLng[]) {
   return points.map((point) => `${point.lng.toFixed(6)},${point.lat.toFixed(6)}`).join(";");
 }
 
-async function fetchBatch(points: LatLng[]): Promise<LatLng[] | null> {
-  if (points.length < 2) return points.slice();
-  const url = `${OSRM_FOOT}/${encodePoints(points)}?overview=full&geometries=geojson&steps=false`;
+function dedupeNearby(points: LatLng[], meters = 30): LatLng[] {
+  const unique: LatLng[] = [];
+  for (const point of points) {
+    const last = unique[unique.length - 1];
+    if (last && distanceMeters(last, point) < meters) continue;
+    unique.push(point);
+  }
+  return unique;
+}
+
+async function fetchLeg(from: LatLng, to: LatLng): Promise<LatLng[] | null> {
+  const url = `${OSRM_FOOT}/${encodePoints([from, to])}?overview=full&geometries=geojson&steps=false`;
   const res = await fetch(url, { headers: { Accept: "application/json" } });
   if (!res.ok) return null;
   const data = (await res.json()) as {
-    code?: string;
     routes?: { geometry?: { coordinates?: [number, number][] } }[];
   };
   const coords = data.routes?.[0]?.geometry?.coordinates;
@@ -22,18 +29,19 @@ async function fetchBatch(points: LatLng[]): Promise<LatLng[] | null> {
   return coords.map(([lng, lat]) => ({ lat, lng }));
 }
 
-/** Street-following walking line for the whole in-app route. Falls back to null. */
+/** Street-following line that visits points in order, one building at a time. */
 export async function fetchWalkingGeometry(points: LatLng[]): Promise<LatLng[] | null> {
-  if (points.length < 2) return null;
+  const unique = dedupeNearby(points);
+  if (unique.length < 2) return unique.length ? unique : null;
   try {
-    if (points.length <= BATCH) return await fetchBatch(points);
+    const legs = await Promise.all(
+      unique.slice(0, -1).map((from, index) => fetchLeg(from, unique[index + 1]!)),
+    );
+    if (legs.some((leg) => !leg || leg.length < 2)) return null;
     const line: LatLng[] = [];
-    for (let i = 0; i < points.length - 1; i += BATCH - 1) {
-      const chunk = points.slice(i, Math.min(points.length, i + BATCH));
-      const part = await fetchBatch(chunk);
-      if (!part) return null;
-      if (line.length > 0) part.shift();
-      line.push(...part);
+    for (const part of legs) {
+      if (line.length > 0) part!.shift();
+      line.push(...part!);
     }
     return line.length >= 2 ? line : null;
   } catch {

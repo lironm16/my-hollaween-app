@@ -1,4 +1,5 @@
 import { config, formatDisplayAddress } from "@/lib/config";
+import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { distanceMeters, formatDistance } from "@/lib/geo";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
@@ -7,10 +8,15 @@ export type LatLng = { lat: number; lng: number };
 
 export type RouteStop = {
   house: PublicHouse;
+  /** All apartments at this address — one map stop. */
+  houses: PublicHouse[];
   order: number;
   fromPreviousMeters: number;
   cumulativeMeters: number;
 };
+
+/** Include GPS on the street line only when you are already this close to stop 1. */
+export const ROUTE_INCLUDE_ORIGIN_METERS = 200;
 
 export type WalkingRoute = {
   stops: RouteStop[];
@@ -41,7 +47,11 @@ function pointOf(house: PublicHouse): LatLng {
   return { lat: house.lat, lng: house.lng };
 }
 
-/** Nearest-neighbor path, then a light 2-opt polish for short lists. */
+function clusterPoint(cluster: HouseCluster): LatLng {
+  return { lat: cluster.lat, lng: cluster.lng };
+}
+
+/** One stop per building, nearest-neighbor, then a light 2-opt polish. */
 export function buildWalkingRoute(
   houses: PublicHouse[],
   gps: LatLng | null | undefined,
@@ -61,15 +71,15 @@ export function buildWalkingRoute(
       ? { lat: gps!.lat, lng: gps!.lng }
       : { lat: config.map.center.lat, lng: config.map.center.lng };
 
-  const remaining = candidates.slice();
-  const ordered: PublicHouse[] = [];
+  const remaining = clusterHousesByAddress(candidates);
+  const ordered: HouseCluster[] = [];
   let cursor = origin;
 
   while (remaining.length > 0) {
     let bestIdx = 0;
     let bestDist = Number.POSITIVE_INFINITY;
     for (let i = 0; i < remaining.length; i++) {
-      const d = distanceMeters(cursor, pointOf(remaining[i]!));
+      const d = distanceMeters(cursor, clusterPoint(remaining[i]!));
       if (d < bestDist) {
         bestDist = d;
         bestIdx = i;
@@ -77,16 +87,16 @@ export function buildWalkingRoute(
     }
     const next = remaining.splice(bestIdx, 1)[0]!;
     ordered.push(next);
-    cursor = pointOf(next);
+    cursor = clusterPoint(next);
   }
 
-  const polished = ordered.length >= 4 ? twoOpt(ordered, origin) : ordered;
+  const polished = ordered.length >= 4 ? twoOptClusters(ordered, origin) : ordered;
   return summarizeRoute(polished, origin, startedFrom, accessible);
 }
 
-function twoOpt(houses: PublicHouse[], origin: LatLng): PublicHouse[] {
-  if (houses.length > 40) return houses;
-  let best = houses.slice();
+function twoOptClusters(clusters: HouseCluster[], origin: LatLng): HouseCluster[] {
+  if (clusters.length > 40) return clusters;
+  let best = clusters.slice();
   let improved = true;
   let guard = 0;
   while (improved && guard < 40) {
@@ -95,7 +105,7 @@ function twoOpt(houses: PublicHouse[], origin: LatLng): PublicHouse[] {
     for (let i = 0; i < best.length - 1; i++) {
       for (let k = i + 1; k < best.length; k++) {
         const next = best.slice(0, i).concat(best.slice(i, k + 1).reverse(), best.slice(k + 1));
-        if (pathLength(next, origin) + 1 < pathLength(best, origin)) {
+        if (pathLengthClusters(next, origin) + 1 < pathLengthClusters(best, origin)) {
           best = next;
           improved = true;
         }
@@ -105,11 +115,11 @@ function twoOpt(houses: PublicHouse[], origin: LatLng): PublicHouse[] {
   return best;
 }
 
-function pathLength(houses: PublicHouse[], origin: LatLng) {
+function pathLengthClusters(clusters: HouseCluster[], origin: LatLng) {
   let total = 0;
   let prev = origin;
-  for (const house of houses) {
-    const point = pointOf(house);
+  for (const cluster of clusters) {
+    const point = clusterPoint(cluster);
     total += distanceMeters(prev, point);
     prev = point;
   }
@@ -117,7 +127,7 @@ function pathLength(houses: PublicHouse[], origin: LatLng) {
 }
 
 function summarizeRoute(
-  houses: PublicHouse[],
+  clusters: HouseCluster[],
   origin: LatLng,
   startedFrom: WalkingRoute["startedFrom"],
   accessible: boolean,
@@ -125,12 +135,14 @@ function summarizeRoute(
   const stops: RouteStop[] = [];
   let prev = origin;
   let cumulative = 0;
-  houses.forEach((house, index) => {
-    const point = pointOf(house);
+  clusters.forEach((cluster, index) => {
+    const point = clusterPoint(cluster);
     const leg = distanceMeters(prev, point);
     cumulative += leg;
+    const lead = cluster.houses[0]!;
     stops.push({
-      house,
+      house: { ...lead, lat: cluster.lat, lng: cluster.lng },
+      houses: cluster.houses,
       order: index + 1,
       fromPreviousMeters: leg,
       cumulativeMeters: cumulative,
@@ -212,7 +224,12 @@ export function graphhopperWalkingUrl(route: WalkingRoute) {
 }
 
 export function routePoints(route: WalkingRoute): LatLng[] {
-  return [route.origin, ...route.stops.map((stop) => pointOf(stop.house))];
+  const stops = route.stops.map((stop) => pointOf(stop.house));
+  if (stops.length === 0) return [];
+  const includeOrigin =
+    route.startedFrom === "gps" &&
+    distanceMeters(route.origin, stops[0]!) <= ROUTE_INCLUDE_ORIGIN_METERS;
+  return includeOrigin ? [route.origin, ...stops] : stops;
 }
 
 export function routeStopLabel(house: PublicHouse) {
