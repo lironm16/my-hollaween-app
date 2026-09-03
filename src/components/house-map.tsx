@@ -23,7 +23,6 @@ import { houseHeadline, themeEmoji } from "@/lib/labels";
 import { candyLevel, effectiveVisit, isFrozen, markedCandy } from "@/lib/house-state";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { HouseTags } from "@/components/house-tags";
-import { STROLLER_GLYPH_SVG } from "@/components/symbols";
 import { cn } from "@/lib/utils";
 
 function routeOrderIcon(order: number) {
@@ -87,21 +86,18 @@ function pinEmoji(house: PublicHouse, kind: PinKind) {
   return themeEmoji[house.theme ?? "pumpkin"];
 }
 
-function pinIcon(house: PublicHouse, count = 1, kind = pinKind(house), accessible = house.accessible) {
+function pinIcon(house: PublicHouse, count = 1, kind = pinKind(house)) {
   const emoji = pinEmoji(house, kind);
   const badge =
     count > 1
       ? `<b class="pin-count" aria-label="${count} דירות">×${count}</b>`
       : "";
-  const access = accessible
-    ? `<b class="pin-access" title="נגיש" aria-label="נגיש">${STROLLER_GLYPH_SVG}</b>`
-    : "";
   return L.divIcon({
     className: "pumpkin-pin-icon",
-    html: `<div class="pumpkin-pin is-${kind}">${badge}${access}<span>${emoji}</span></div>`,
-    iconSize: [58, 58],
-    iconAnchor: [29, 48],
-    popupAnchor: [0, -40],
+    html: `<div class="pumpkin-pin is-${kind}">${badge}<span>${emoji}</span></div>`,
+    iconSize: [40, 44],
+    iconAnchor: [20, 42],
+    popupAnchor: [0, -36],
   });
 }
 
@@ -111,8 +107,7 @@ function clusterIcon(cluster: HouseCluster) {
     cluster.houses.find((h) => pinKind(h) === kind) ??
     cluster.houses.find((h) => effectiveVisit(h) !== "closed" && !isFrozen(h)) ??
     cluster.houses[0];
-  const accessible = cluster.houses.some((house) => house.accessible);
-  return pinIcon(lead, cluster.houses.length, kind, accessible);
+  return pinIcon(lead, cluster.houses.length, kind);
 }
 
 const pickIcon = L.divIcon({

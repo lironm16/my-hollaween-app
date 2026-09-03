@@ -366,7 +366,6 @@
   place-items: center;
   width: 38px;
   height: 38px;
-  margin: 10px;
   border-radius: 999px;
   background: #047857;
   border: 2.5px solid #fff7ed;
@@ -397,27 +396,6 @@
   text-align: center;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   letter-spacing: -0.02em;
-}
-
-.pumpkin-pin .pin-access {
-  position: absolute;
-  top: -10px;
-  inset-inline-start: -10px;
-  z-index: 3;
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  background: #fff7ed;
-  color: #1c0e24;
-  border: 2.5px solid #1c0e24;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.55);
-}
-
-.pumpkin-pin .pin-access svg {
-  width: 18px;
-  height: 18px;
 }
 
 .pumpkin-pin.is-ok {
