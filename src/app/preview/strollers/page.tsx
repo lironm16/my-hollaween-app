@@ -12,9 +12,17 @@ export default function StrollerPreviewPage() {
           <p className="text-sm text-violet-200">
             שש צורות. המפה עדיין עם מספר 1. כתבו לי מספר — או שם — ונחליף.
           </p>
-          <Link href="/" className="inline-block text-sm text-orange-300 underline-offset-2 hover:underline">
-            חזרה למפה
-          </Link>
+          <div className="flex flex-wrap gap-3 text-sm">
+            <Link href="/" className="text-orange-300 underline-offset-2 hover:underline">
+              חזרה למפה
+            </Link>
+            <Link href="/preview/candies" className="text-orange-300 underline-offset-2 hover:underline">
+              ממתקים
+            </Link>
+            <Link href="/preview/scare" className="text-orange-300 underline-offset-2 hover:underline">
+              פחד
+            </Link>
+          </div>
         </header>
 
         <figure className="overflow-hidden rounded-2xl ring-1 ring-orange-500/20">
