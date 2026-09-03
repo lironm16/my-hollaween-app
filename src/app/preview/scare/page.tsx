@@ -10,7 +10,7 @@ export default function ScarePreviewPage() {
           <p className="text-xs text-violet-300">{config.appName} · בחירת אייקון</p>
           <h1 className="text-2xl font-semibold text-orange-100">איזה פחד יותר ברור?</h1>
           <p className="text-sm text-violet-200">
-            ירוק = ידידותי לילדים, כתום = בינוני, אדום = מפחיד. אין רוח אפורה — אפור עם קו הוא שקט
+            ירוק = לילדים, כתום = קצת מפחיד, אדום = מפחיד. אין רוח אפורה — אפור עם קו הוא שקט
             בחוץ, בעמוד הקישוט.
           </p>
           <PreviewNav current="/preview/scare" />

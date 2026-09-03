@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
-import { scareLabels, decorShort, suggestedHouseName, nameMatchesTheme, themeFromName } from "@/lib/labels";
+import { scareShort, decorShort, suggestedHouseName, nameMatchesTheme, themeFromName } from "@/lib/labels";
 import { config, inNeighborhood } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
@@ -448,7 +448,7 @@ export function HouseForm({
               }
             >
               <ScareSign level={level} className="size-6" />
-              {scareLabels[level]}
+              {scareShort[level]}
             </button>
           ))}
         </div>

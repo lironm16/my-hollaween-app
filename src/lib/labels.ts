@@ -23,14 +23,14 @@ export const treatLabels: Record<TreatId, string> = {
 };
 
 export const scareLabels: Record<ScareLevel, string> = {
-  mild: "ידידותי לילדים",
-  medium: "בינוני",
-  spicy: "מפחיד ממש",
+  mild: "לילדים",
+  medium: "קצת מפחיד",
+  spicy: "מפחיד",
 };
 
 export const scareShort: Record<ScareLevel, string> = {
   mild: "לילדים",
-  medium: "בינוני",
+  medium: "קצת מפחיד",
   spicy: "מפחיד",
 };
 
