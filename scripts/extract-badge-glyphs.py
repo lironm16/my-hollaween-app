@@ -58,7 +58,7 @@ def trim(im: Image.Image, pad: int = 8) -> Image.Image:
     return im.crop((l, t, r, b))
 
 
-def recenter_glyph(im: Image.Image, pad: int = 14) -> Image.Image:
+def recenter_glyph(im: Image.Image, pad: int = 4) -> Image.Image:
     """Place the opaque mass at the center of a square so disc badges sit even."""
     src = im.convert("RGBA")
     px = src.load()

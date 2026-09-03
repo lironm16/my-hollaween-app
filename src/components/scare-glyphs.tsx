@@ -114,7 +114,7 @@ export function ScareSign({
       aria-label={label}
     >
       {useOfferedGhost ? (
-        <span className="flex size-[88%] items-center justify-center">
+        <span className="flex size-[108%] items-center justify-center">
           <ScareGhost level={struck ? "mild" : level} />
         </span>
       ) : (
