@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Catalog } from "@/lib/types";
 import { syncCatalog } from "@/lib/catalog-sync";
-import { loadCatalogCache, saveCatalogCache } from "@/lib/offline-db";
+import { loadCatalogCache, loadCatalogCacheSync, saveCatalogCache } from "@/lib/offline-db";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
 
@@ -11,6 +11,8 @@ export type CatalogState = {
   catalog: Catalog | null;
   loading: boolean;
   offline: boolean;
+  /** Browser thinks it is online, but /api/catalog and /catalog.json both failed. */
+  unreachable: boolean;
   error: string | null;
   source: Source | null;
   refresh: (force?: boolean) => Promise<void>;
@@ -41,41 +43,71 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
   });
 }
 
+async function readDeviceCatalog() {
+  return (await withTimeout(loadCatalogCache(), 1500)) ?? loadCatalogCacheSync();
+}
+
 export function useCatalog(initial?: Catalog | null): CatalogState {
-  const [catalog, setCatalog] = useState<Catalog | null>(initial ?? null);
-  const [loading, setLoading] = useState(!initial);
+  const [catalog, setCatalog] = useState<Catalog | null>(
+    () => initial ?? loadCatalogCacheSync(),
+  );
+  const [loading, setLoading] = useState(() => !initial && !loadCatalogCacheSync());
   const [offline, setOffline] = useState(false);
+  const [unreachable, setUnreachable] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [source, setSource] = useState<Source | null>(initial ? "ssr" : null);
+  const [source, setSource] = useState<Source | null>(() =>
+    initial ? "ssr" : loadCatalogCacheSync() ? "cache" : null,
+  );
 
   const refresh = async (force = false) => {
-    setOffline(typeof navigator !== "undefined" && !navigator.onLine);
+    const online = typeof navigator === "undefined" || navigator.onLine;
+    setOffline(!online);
     try {
       const live = await fetchJson("/api/catalog", force);
-      setCatalog((prev) => syncCatalog(prev, live));
+      let next: Catalog = live;
+      setCatalog((prev) => {
+        next = syncCatalog(prev, live);
+        return next;
+      });
       setSource("network");
+      setUnreachable(false);
       setError(null);
-      await saveCatalogCache(live);
+      await saveCatalogCache(next);
       return;
     } catch {
       try {
         const snap = await fetchJson("/catalog.json", force);
-        setCatalog((prev) => syncCatalog(prev, snap));
+        let next: Catalog = snap;
+        setCatalog((prev) => {
+          next = syncCatalog(prev, snap);
+          return next;
+        });
         setSource("snapshot");
+        setUnreachable(false);
         setError(null);
-        await saveCatalogCache(snap);
+        await saveCatalogCache(next);
         return;
       } catch {
-        const cached = await withTimeout(loadCatalogCache(), 400);
-        if (cached) {
-          setCatalog(cached);
+        const cached = await readDeviceCatalog();
+        let kept = false;
+        setCatalog((prev) => {
+          const next = prev && cached ? syncCatalog(cached, prev) : (prev ?? cached);
+          kept = Boolean(next);
+          if (next) void saveCatalogCache(next);
+          return next ?? prev;
+        });
+        if (kept) {
           setSource("cache");
+          setUnreachable(online);
           setError(null);
           return;
         }
-        if (!initial) {
-          setError("לא הצלחנו לטעון את המפה. נסו שוב בעוד רגע.");
-        }
+        setUnreachable(online);
+        setError(
+          online
+            ? "השרת לא עונה, ואין עותק שמור בטלפון. נסו שוב כשיש קליטה."
+            : "אין אינטרנט, ואין עותק שמור בטלפון. פתחו את האפליקציה פעם אחת כשיש רשת.",
+        );
       }
     }
   };
@@ -83,8 +115,9 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      if (initial) await saveCatalogCache(initial);
       if (!initial) {
-        const cached = await withTimeout(loadCatalogCache(), 400);
+        const cached = await readDeviceCatalog();
         if (cached && !cancelled) {
           setCatalog(cached);
           setSource("cache");
@@ -94,7 +127,12 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
       await refresh(false);
       if (!cancelled) setLoading(false);
     })();
-    const onOff = () => setOffline(!navigator.onLine);
+    const onOff = () => {
+      const nowOffline = !navigator.onLine;
+      setOffline(nowOffline);
+      if (nowOffline) setUnreachable(false);
+      else void refresh(false);
+    };
     window.addEventListener("online", onOff);
     window.addEventListener("offline", onOff);
     const onVis = () => {
@@ -118,5 +156,5 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { catalog, loading, offline, error, source, refresh };
+  return { catalog, loading, offline, unreachable, error, source, refresh };
 }

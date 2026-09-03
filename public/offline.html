@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>בשכונה · לא מקוון</title>
+    <link rel="stylesheet" href="/shell.css" />
+    <style>
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        background: #12081a;
+        color: #fff7ed;
+        font-family: Rubik, sans-serif;
+        padding: 24px 16px 40px;
+      }
+      h1 { font-size: 1.4rem; color: #fdba74; margin: 0 0 8px; }
+      p { color: #ddd6fe; line-height: 1.45; }
+      a {
+        display: inline-block;
+        margin-top: 12px;
+        background: #f97316;
+        color: #1c0e24;
+        font-weight: 800;
+        text-decoration: none;
+        border-radius: 12px;
+        padding: 10px 14px;
+      }
+      ul { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 8px; }
+      li {
+        background: #1d1028;
+        border-radius: 14px;
+        padding: 12px 14px;
+        box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.25);
+      }
+      strong { display: block; color: #ffedd5; }
+      span { display: block; margin-top: 4px; font-size: 13px; color: #c4b5fd; }
+    </style>
+  </head>
+  <body>
+    <h1>הרשימה שמורה בטלפון</h1>
+    <p id="status">אין קשר לשרת או לאינטרנט. אם כבר פתחתם את האפליקציה פעם אחת, הבתים מופיעים כאן מהעותק המקומי.</p>
+    <a href="/">נסו שוב את המפה</a>
+    <ul id="houses"></ul>
+    <script>
+      (function () {
+        var status = document.getElementById("status");
+        var list = document.getElementById("houses");
+        try {
+          var raw = localStorage.getItem("hw-catalog-cache");
+          var catalog = raw ? JSON.parse(raw) : null;
+          var houses = catalog && Array.isArray(catalog.houses) ? catalog.houses : [];
+          if (!houses.length) {
+            status.textContent = "אין עותק שמור בטלפון. פתחו את האפליקציה פעם אחת כשיש רשת, ואז הרשימה תישאר כאן.";
+            return;
+          }
+          status.textContent = houses.length + " בתים שמורים במכשיר. המפה המלאה תחזור כשיש קליטה.";
+          houses.forEach(function (house) {
+            var li = document.createElement("li");
+            var title = document.createElement("strong");
+            title.textContent = house.name || "בית";
+            var meta = document.createElement("span");
+            meta.textContent = house.address || "";
+            li.appendChild(title);
+            li.appendChild(meta);
+            list.appendChild(li);
+          });
+        } catch (err) {
+          status.textContent = "לא הצלחנו לקרוא את הרשימה השמורה במכשיר.";
+        }
+      })();
+    </script>
+  </body>
+</html>

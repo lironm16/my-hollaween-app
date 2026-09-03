@@ -5,6 +5,7 @@ import type { Catalog, PublicHouse } from "@/lib/types";
 const DB_NAME = "halloween-neighborhood";
 const STORE = "catalog";
 const KEY = "latest";
+const CATALOG_LS_KEY = "hw-catalog-cache";
 
 function openDb() {
   return new Promise<IDBDatabase>((resolve, reject) => {
@@ -17,35 +18,87 @@ function openDb() {
   });
 }
 
+export function asCachedCatalog(value: unknown): Catalog | null {
+  if (!value || typeof value !== "object") return null;
+  const catalog = value as Catalog;
+  if (typeof catalog.updatedAt !== "string" || typeof catalog.neighborhood !== "string") return null;
+  if (!Array.isArray(catalog.houses)) return null;
+  const houses = catalog.houses.filter(
+    (house): house is PublicHouse =>
+      Boolean(
+        house &&
+          typeof house === "object" &&
+          typeof house.id === "string" &&
+          typeof house.name === "string" &&
+          typeof house.lat === "number" &&
+          typeof house.lng === "number",
+      ),
+  );
+  if (houses.length !== catalog.houses.length) return null;
+  return { ...catalog, houses };
+}
+
+function readLocalCatalog(): Catalog | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(CATALOG_LS_KEY);
+    if (!raw) return null;
+    return asCachedCatalog(JSON.parse(raw) as unknown);
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalCatalog(catalog: Catalog) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(CATALOG_LS_KEY, JSON.stringify(catalog));
+  } catch {
+    /* private mode / quota */
+  }
+}
+
+export function loadCatalogCacheSync(): Catalog | null {
+  return readLocalCatalog();
+}
+
 export async function saveCatalogCache(catalog: Catalog) {
+  const safe = asCachedCatalog(catalog);
+  if (!safe) return;
+  writeLocalCatalog(safe);
   try {
     const db = await openDb();
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(STORE, "readwrite");
-      tx.objectStore(STORE).put(catalog, KEY);
+      tx.objectStore(STORE).put(safe, KEY);
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
     db.close();
   } catch {
-    // IndexedDB can be blocked in private mode; ignore.
+    // IndexedDB can be blocked in private mode; localStorage is enough.
   }
 }
 
 export async function loadCatalogCache(): Promise<Catalog | null> {
   try {
     const db = await openDb();
-    const value = await new Promise<Catalog | undefined>((resolve, reject) => {
+    const value = await new Promise<unknown>((resolve, reject) => {
       const tx = db.transaction(STORE, "readonly");
       const req = tx.objectStore(STORE).get(KEY);
-      req.onsuccess = () => resolve(req.result as Catalog | undefined);
+      req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
     });
     db.close();
-    return value ?? null;
+    const fromDb = asCachedCatalog(value);
+    if (fromDb) {
+      writeLocalCatalog(fromDb);
+      return fromDb;
+    }
   } catch {
-    return null;
+    /* fall through to localStorage */
   }
+  return readLocalCatalog();
 }
 
 const MY_HOUSES_KEY = "hw-my-houses";

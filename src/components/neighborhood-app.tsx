@@ -62,10 +62,10 @@ export function NeighborhoodApp({
   initialCatalog,
   focusId = null,
 }: {
-  initialCatalog: Catalog;
+  initialCatalog?: Catalog | null;
   focusId?: string | null;
 }) {
-  const { catalog, loading, offline, error, source, refresh } = useCatalog(initialCatalog);
+  const { catalog, loading, offline, unreachable, error, source, refresh } = useCatalog(initialCatalog);
   const { ready: adminReady, admin, logout } = useAdminSession();
   const geo = useUserLocation();
   const origin = geo.location;
@@ -582,17 +582,18 @@ export function NeighborhoodApp({
             <RefreshCw className={cn("size-3.5", adminLoading && "animate-spin")} />
             רענון
           </Button>
-          <span className="ms-auto flex items-center gap-1 text-[11px] text-violet-300">
-            {offline || source === "cache" || source === "snapshot" ? (
+          <span className="ms-auto flex items-center gap-1.5 text-[11px] text-violet-300">
+            <span>{visible.length} בתים</span>
+            {offline || unreachable || source === "cache" || source === "snapshot" ? (
               <>
-                <WifiOff className="size-3" />
-                {offline ? "לא מקוון" : source === "snapshot" ? "עותק סטטי" : "מהזיכרון"}
+                <WifiOff className="size-3 shrink-0" />
+                <span>
+                  {offline ? "לא מקוון" : unreachable ? "השרת לא עונה" : source === "snapshot" ? "עותק סטטי" : "שמור בטלפון"}
+                </span>
               </>
             ) : routeMode ? (
               <span>{walkingRoute?.stops.length ?? 0} עצירות</span>
-            ) : (
-              <span>{visible.length} בתים</span>
-            )}
+            ) : null}
           </span>
         </div>
         {geoError ? (
@@ -686,7 +687,17 @@ export function NeighborhoodApp({
           ))}
         </FilterSection>
       </FiltersSheet>
-      {error ? (
+      {offline || unreachable ? (
+        <div className="relative z-30 bg-[#2a1638] px-3 py-2 text-center text-sm text-amber-100 ring-1 ring-inset ring-amber-500/20">
+          {offline
+            ? houses.length > 0
+              ? "אין אינטרנט · מוצגת הרשימה ששמורה בטלפון"
+              : "אין אינטרנט, ואין עותק שמור בטלפון"
+            : houses.length > 0
+              ? "השרת לא עונה · מוצגת הרשימה ששמורה בטלפון"
+              : "השרת לא עונה, ואין עותק שמור בטלפון"}
+        </div>
+      ) : error ? (
         <div className="relative z-30 bg-red-950/70 px-3 py-2 text-center text-sm text-red-100">
           {error}
         </div>
