@@ -67,6 +67,7 @@ export type House = {
   openTo2?: string;
   notes: string;
   accessible: boolean;
+  decorated?: boolean;
   status: HouseStatus;
   soldOut: boolean;
   adminFrozen: boolean;
@@ -99,10 +100,12 @@ export type HouseInput = {
   openTo2?: string;
   notes: string;
   accessible: boolean;
+  decorated?: boolean;
 };
 
 export type NightPatch = {
   visit?: VisitState;
+  decorated?: boolean;
   treatStock?: TreatStock;
   treats?: TreatId[];
   ownerFrozenUntil?: string | null;

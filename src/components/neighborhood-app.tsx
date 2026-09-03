@@ -35,7 +35,7 @@ import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { readApiJson } from "@/lib/api-json";
 import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, formatDisplayAddress, type NeighborhoodId } from "@/lib/config";
 import { toPublicHouse } from "@/lib/ids";
-import { isFrozen, offersCandy, offersSensitivity } from "@/lib/house-state";
+import { isFrozen, offersCandy, offersSensitivity, isDecorated } from "@/lib/house-state";
 import { isOpenNow } from "@/lib/hours";
 import {
   backupLooksNewer,
@@ -83,6 +83,7 @@ export function NeighborhoodApp({
     neighborhoodFilters,
     likedOnly,
     unvisitedOnly,
+    decoratedOnly,
   } = filters;
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [routeMode, setRouteMode] = useState(false);
@@ -187,6 +188,7 @@ export function NeighborhoodApp({
     return houses.filter((house) => {
       if (accessibleOnly && !house.accessible) return false;
       if (candyOnly && !offersCandy(house)) return false;
+      if (decoratedOnly && !isDecorated(house)) return false;
       if (openNowOnly && !isOpenNow(house)) return false;
       for (const sensitivity of sensitivityFilters) {
         if (!offersSensitivity(house, sensitivity)) return false;
@@ -214,6 +216,7 @@ export function NeighborhoodApp({
   const moreFilterCount =
     Number(accessibleOnly) +
     Number(candyOnly) +
+    Number(decoratedOnly) +
     Number(openNowOnly) +
     Number(likedOnly) +
     Number(unvisitedOnly);
@@ -257,6 +260,7 @@ export function NeighborhoodApp({
     const parts: string[] = [];
     if (openNowOnly) parts.push("פתוח עכשיו");
     if (candyOnly) parts.push("ממתקים");
+    if (decoratedOnly) parts.push("מקושט");
     if (accessibleOnly) parts.push("נגיש");
     if (likedOnly) parts.push("שמרתי");
     if (unvisitedOnly) parts.push("לא ביקרתי");
@@ -269,6 +273,7 @@ export function NeighborhoodApp({
   }, [
     openNowOnly,
     candyOnly,
+    decoratedOnly,
     accessibleOnly,
     likedOnly,
     unvisitedOnly,
@@ -643,6 +648,12 @@ export function NeighborhoodApp({
             onChange={() => updateFilters({ candyOnly: !candyOnly })}
           >
             יש ממתקים
+          </FilterOption>
+          <FilterOption
+            checked={decoratedOnly}
+            onChange={() => updateFilters({ decoratedOnly: !decoratedOnly })}
+          >
+            מקושט
           </FilterOption>
           <FilterOption
             checked={accessibleOnly}

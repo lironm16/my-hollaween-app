@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import {
   candyLevel,
+  isDecorated,
   markedGlutenFree,
   offersNutsFree,
   offersSesameFree,
@@ -24,6 +25,9 @@ export function HouseTags({
     treats?: TreatId[];
     treatStock?: TreatStock;
     scareLevel?: ScareLevel;
+    visit?: "come" | "decorOnly" | "closed";
+    decorated?: boolean;
+    soldOut?: boolean;
     openFrom?: string;
     openTo?: string;
     openFrom2?: string;
@@ -73,6 +77,9 @@ export function HouseTags({
         <Badge variant="secondary" className="h-6 bg-black/30 text-sm text-violet-100">
           {hoursLabel}
         </Badge>
+      ) : null}
+      {isDecorated(house) ? (
+        <Badge className="h-6 bg-orange-800 text-sm text-orange-50">מקושט</Badge>
       ) : null}
       {house.accessible ? (
         <Badge className="h-6 bg-emerald-700 text-sm text-emerald-50">נגיש</Badge>

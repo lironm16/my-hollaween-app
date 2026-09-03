@@ -72,9 +72,20 @@ export function candyLevel(house: { treats: TreatId[]; treatStock?: TreatStock }
   return "plenty";
 }
 
-/** Has candy left (green or orange). Red / out is filtered out. */
+/** Currently handing out candy (green or orange). Red / out is filtered out. */
 export function offersCandy(house: { treats: TreatId[]; treatStock?: TreatStock }) {
   return candyLevel(house) !== "out";
+}
+
+/** Outdoor Halloween decorations you can look at. */
+export function isDecorated(house: {
+  decorated?: boolean;
+  visit?: VisitState;
+  soldOut?: boolean;
+}) {
+  if (house.decorated === false) return false;
+  if (house.decorated === true) return true;
+  return effectiveVisit(house) !== "closed";
 }
 
 export function ownerFreezeUntil(msFromNow: number) {

@@ -47,6 +47,7 @@ const houseFields = z.object({
   openTo2: optionalClockField,
   notes: z.string().trim().max(240),
   accessible: z.boolean(),
+  decorated: z.boolean().optional(),
 });
 
 export const houseInputSchema = houseFields.extend({
@@ -61,6 +62,7 @@ export const houseInputSchema = houseFields.extend({
   openTo2: optionalClockField.default(""),
   notes: z.string().trim().max(240).default(""),
   accessible: z.boolean().default(false),
+  decorated: z.boolean().optional(),
 });
 
 export const ownerPatchSchema = houseFields.partial().extend({

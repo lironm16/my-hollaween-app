@@ -14,6 +14,7 @@ export const DEFAULT_HOUSE_FILTERS: HouseFiltersState = {
   neighborhoodFilters: [...NEIGHBORHOODS],
   likedOnly: false,
   unvisitedOnly: false,
+  decoratedOnly: false,
 };
 
 function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
@@ -33,6 +34,7 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
     openNowOnly: Boolean(raw.openNowOnly),
     likedOnly: Boolean(raw.likedOnly),
     unvisitedOnly: Boolean(raw.unvisitedOnly),
+    decoratedOnly: Boolean(raw.decoratedOnly),
     neighborhoodFilters: neighborhoods.length > 0 ? neighborhoods : [...NEIGHBORHOODS],
     scareFilters: scares.length > 0 ? scares : [...SCARE_LEVELS],
     sensitivityFilters: sensitivities,

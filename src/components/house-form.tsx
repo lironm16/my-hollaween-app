@@ -58,6 +58,7 @@ function initialHasCandy(initial?: Partial<HouseInput>) {
 
 function initialDecorated(initial?: Partial<HouseInput>) {
   if (!initial) return true;
+  if (typeof initial.decorated === "boolean") return initial.decorated;
   return effectiveVisit(initial) !== "closed";
 }
 
@@ -211,6 +212,7 @@ export function HouseForm({
           treats,
           treatStock,
           visit,
+          decorated,
           openHours: hours.openHours,
           openFrom: hours.openFrom,
           openTo: hours.openTo,

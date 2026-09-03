@@ -189,6 +189,7 @@ export type HouseFiltersState = {
   neighborhoodFilters: NeighborhoodId[];
   likedOnly: boolean;
   unvisitedOnly: boolean;
+  decoratedOnly: boolean;
 };
 
 export function loadHouseFilters(): HouseFiltersState | null {
