@@ -257,6 +257,7 @@ function HousePreviewPopup({
   );
   const [page, setPage] = useState(startIndex);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const houseKey = houses.map((house) => house.id).join(",");
 
   useEffect(() => {
     setPage(startIndex);
@@ -333,13 +334,13 @@ function HousePreviewPopup({
       node.removeEventListener("pointerdown", onDown);
       node.removeEventListener("pointerup", onUp);
       node.removeEventListener("pointercancel", onUp);
-      node.removeEventListener("wheel", onWheel);
+      node.removeEventListener("wheel", onWheel, true);
       node.removeEventListener("scroll", sync);
       window.clearTimeout(snapTimer);
       window.cancelAnimationFrame(frame);
       window.clearTimeout(later);
     };
-  }, [multi, houses, startIndex]);
+  }, [multi, houseKey, startIndex]);
 
   const closePopup = () => map.closePopup();
   const openHouse = (house: PublicHouse) => {
