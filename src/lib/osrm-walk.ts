@@ -9,17 +9,17 @@ import type { LatLng } from "@/lib/route";
  */
 const OSRM_FOOT = "https://routing.openstreetmap.de/routed-foot/route/v1/foot";
 const UA = "bashchona-halloween/1.0 (neighborhood walking map)";
-const PARK_FRACTION_MAX = 0.12;
+const PARK_FRACTION_MAX = 0.08;
 /** North of this, footpaths are the farm / Yarkon — not neighborhood streets. */
 const NORTH_STREET_EDGE = 32.0948;
 
-/** Green / park areas the foot graph uses as a shortcut. */
+/** Interior of גבעת נפוליאון / the strip — not Krinitzi or המרגנית. */
 const PARK_RINGS: LatLng[][] = [
   [
-    { lat: 32.09035, lng: 34.80595 },
-    { lat: 32.09035, lng: 34.81245 },
-    { lat: 32.09385, lng: 34.81245 },
-    { lat: 32.09385, lng: 34.80595 },
+    { lat: 32.0908, lng: 34.8064 },
+    { lat: 32.0908, lng: 34.8119 },
+    { lat: 32.0935, lng: 34.8119 },
+    { lat: 32.0935, lng: 34.8064 },
   ],
   [
     { lat: NORTH_STREET_EDGE, lng: 34.802 },
@@ -29,13 +29,14 @@ const PARK_RINGS: LatLng[][] = [
   ],
 ];
 
-/** Street corners south of the park — Krinitzi / Aba Hillel / east approach. */
-const STREET_VIAS: LatLng[] = [
-  { lat: 32.0898, lng: 34.8124 },
-  { lat: 32.0889, lng: 34.8105 },
-  { lat: 32.0892, lng: 34.811 },
-  { lat: 32.0897, lng: 34.8137 },
-];
+/** South skirt of the park (קריניצי) — not אבא הלל a block further south. */
+const KRINITZI_LAT = 32.09022;
+const KRINITZI_EAST = { lat: KRINITZI_LAT, lng: 34.81185 };
+const KRINITZI_MID = { lat: KRINITZI_LAT, lng: 34.80915 };
+const KRINITZI_WEST = { lat: KRINITZI_LAT, lng: 34.80615 };
+const STREET_VIAS: LatLng[] = [KRINITZI_EAST, KRINITZI_MID, KRINITZI_WEST];
+/** Vias south of here drop onto Aba Hillel and zigzag the grid. */
+const SOUTH_STREET_LIMIT = 32.0895;
 
 function encodePoints(points: LatLng[]) {
   return points.map((point) => `${point.lng.toFixed(6)},${point.lat.toFixed(6)}`).join(";");
@@ -79,41 +80,49 @@ function pathMeters(line: LatLng[]) {
   return total;
 }
 
-function viaAroundPark(line: LatLng[]): LatLng[] {
+function viaAroundPark(from: LatLng, to: LatLng, line: LatLng[]): LatLng[] {
   const hits = line.filter(inPark);
-  if (hits.length === 0) return STREET_VIAS;
-  let south = hits[0]!.lat;
-  let north = hits[0]!.lat;
-  let west = hits[0]!.lng;
-  let east = hits[0]!.lng;
-  for (const hit of hits) {
-    south = Math.min(south, hit.lat);
-    north = Math.max(north, hit.lat);
-    west = Math.min(west, hit.lng);
-    east = Math.max(east, hit.lng);
+  const goingWest = to.lng < from.lng - 0.0003;
+  const goingEast = to.lng > from.lng + 0.0003;
+  const pad = 0.0005;
+  const around: LatLng[] = [...STREET_VIAS];
+  if (hits.length > 0) {
+    let south = hits[0]!.lat;
+    let north = hits[0]!.lat;
+    let west = hits[0]!.lng;
+    let east = hits[0]!.lng;
+    for (const hit of hits) {
+      south = Math.min(south, hit.lat);
+      north = Math.max(north, hit.lat);
+      west = Math.min(west, hit.lng);
+      east = Math.max(east, hit.lng);
+    }
+    const midLat = (south + north) / 2;
+    const midLng = (west + east) / 2;
+    around.push({ lat: south - pad, lng: midLng });
+    around.push({ lat: south - pad, lng: west - pad });
+    around.push({ lat: south - pad, lng: east + pad });
+    if (!goingWest) around.push({ lat: midLat, lng: east + pad });
+    if (!goingEast) around.push({ lat: midLat, lng: west - pad });
   }
-  const pad = 0.00135;
-  const midLat = (south + north) / 2;
-  const midLng = (west + east) / 2;
-  const around: LatLng[] = [
-    { lat: south - pad, lng: midLng },
-    { lat: midLat, lng: west - pad },
-    { lat: midLat, lng: east + pad },
-    { lat: south - pad, lng: west - pad },
-    { lat: south - pad, lng: east + pad },
-    ...STREET_VIAS,
-  ];
   const unique: LatLng[] = [];
   for (const via of around) {
     if (via.lat >= NORTH_STREET_EDGE) continue;
+    if (via.lat < SOUTH_STREET_LIMIT) continue;
     if (unique.some((other) => distanceMeters(other, via) < 40)) continue;
     unique.push(via);
   }
   return unique;
 }
 
-async function fetchOsrm(from: LatLng, to: LatLng): Promise<LatLng[] | null> {
-  const url = `${OSRM_FOOT}/${encodePoints([from, to])}?overview=full&geometries=geojson&steps=false`;
+function southSkirt(from: LatLng, to: LatLng): LatLng[] {
+  if (from.lng >= to.lng) return [from, KRINITZI_EAST, KRINITZI_WEST, to];
+  return [from, KRINITZI_WEST, KRINITZI_EAST, to];
+}
+
+async function fetchOsrm(points: LatLng[]): Promise<LatLng[] | null> {
+  if (points.length < 2) return null;
+  const url = `${OSRM_FOOT}/${encodePoints(points)}?overview=full&geometries=geojson&steps=false`;
   const res = await fetch(url, {
     headers: { Accept: "application/json", "User-Agent": UA },
   });
@@ -126,18 +135,13 @@ async function fetchOsrm(from: LatLng, to: LatLng): Promise<LatLng[] | null> {
   return coords.map(([lng, lat]) => ({ lat, lng }));
 }
 
-async function walkVia(from: LatLng, via: LatLng, to: LatLng): Promise<LatLng[] | null> {
-  const [first, second] = await Promise.all([fetchOsrm(from, via), fetchOsrm(via, to)]);
-  if (!first || first.length < 2 || !second || second.length < 2) return null;
-  return first.concat(second.slice(1));
-}
-
 async function fetchWalkLeg(from: LatLng, to: LatLng): Promise<LatLng[] | null> {
-  const direct = await fetchOsrm(from, to);
+  const direct = await fetchOsrm([from, to]);
   if (!direct || direct.length < 2) return null;
   if (parkFraction(direct) <= PARK_FRACTION_MAX) return direct;
 
-  const candidates = await Promise.all(viaAroundPark(direct).map((via) => walkVia(from, via, to)));
+  const viaLines = viaAroundPark(from, to, direct).map((via) => fetchOsrm([from, via, to]));
+  const candidates = await Promise.all([fetchOsrm(southSkirt(from, to)), ...viaLines]);
   const ranked = candidates
     .filter((line): line is LatLng[] => Boolean(line && line.length >= 2))
     .map((line) => ({ line, frac: parkFraction(line), meters: pathMeters(line) }))
