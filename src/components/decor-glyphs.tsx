@@ -10,22 +10,31 @@ function Icon({ children }: { children: ReactNode }) {
   );
 }
 
-/** Live popup until a picker shape is chosen — hanging baubles. */
-export function DecorGlyph() {
+const WEB_DISC = {
+  on: "/icons/decor-web-on.png",
+  off: "/icons/decor-web-off.png",
+};
+
+function DecorWebArt({ on = true }: { on?: boolean }) {
   return (
-    <Icon>
-      <path
-        d="M3.2 6.4c2.8 3.6 4.6 3.6 7.4 0 2.8 3.6 4.6 3.6 7.4 0 1.4 1.8 2.2 1.8 3 0"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-      />
-      <circle cx="7" cy="12.4" r="2.35" fill="currentColor" />
-      <circle cx="12" cy="13.6" r="2.35" fill="currentColor" />
-      <circle cx="17" cy="12.4" r="2.35" fill="currentColor" />
-    </Icon>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={on ? WEB_DISC.on : WEB_DISC.off}
+      alt=""
+      aria-hidden
+      className="h-full w-full rounded-full object-cover"
+    />
   );
+}
+
+/** Live popup mark — picker option 3, spiderweb. */
+export function DecorGlyph() {
+  return <DecorWebArt on />;
+}
+
+/** 3 — Cobweb, no spider (picker identity). */
+export function DecorWeb() {
+  return <DecorWebArt on />;
 }
 
 /** 1 — Three large outdoor bulbs. */
@@ -72,44 +81,6 @@ export function DecorLights6() {
   );
 }
 
-/** 3 — Cobweb, no spider. */
-export function DecorWeb() {
-  return (
-    <Icon>
-      <circle
-        cx="12"
-        cy="12"
-        r="9.2"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M12 2.8v18.4M3.4 8.2 20.6 15.8M3.4 15.8 20.6 8.2M2.8 12h18.4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.35"
-        strokeLinecap="round"
-      />
-      <circle
-        cx="12"
-        cy="12"
-        r="5.6"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.35"
-      />
-      <circle
-        cx="12"
-        cy="12"
-        r="2.8"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.35"
-      />
-    </Icon>
-  );
-}
 
 /** 4 — Wreath with a bow. */
 export function DecorWreath() {
@@ -157,12 +128,30 @@ export function DecorBunting() {
 export function DecorSign({
   on,
   className,
-  Glyph = DecorGlyph,
+  Glyph,
 }: {
   on: boolean;
   className?: string;
   Glyph?: () => ReactNode;
 }) {
+  const useOfferedWeb = !Glyph || Glyph === DecorWeb || Glyph === DecorGlyph;
+  const label = on ? "מקושט" : "לא מקושט";
+
+  if (useOfferedWeb) {
+    return (
+      <span
+        className={cn(
+          "relative inline-flex size-8 shrink-0 overflow-hidden rounded-full",
+          className,
+        )}
+        title={label}
+        aria-label={label}
+      >
+        <DecorWebArt on={on} />
+      </span>
+    );
+  }
+
   return (
     <span
       className={cn(
@@ -170,8 +159,8 @@ export function DecorSign({
         on ? "bg-[#c2410c] text-[#fff7ed]" : "bg-[#94a3b8] text-[#fff7ed]",
         className,
       )}
-      title={on ? "מקושט" : "לא מקושט"}
-      aria-label={on ? "מקושט" : "לא מקושט"}
+      title={label}
+      aria-label={label}
     >
       <span className="size-[82%]">
         <Glyph />
@@ -204,7 +193,7 @@ export const DECOR_TONES = [
 export const DECOR_OPTIONS = [
   { id: "lights3", number: 1, name: "שלוש מנורות", current: false, Glyph: DecorLights3 },
   { id: "lights6", number: 2, name: "שרשרת אורות", current: false, Glyph: DecorLights6 },
-  { id: "web", number: 3, name: "קורי עכביש", current: false, Glyph: DecorWeb },
+  { id: "web", number: 3, name: "קורי עכביש", current: true, Glyph: DecorWeb },
   { id: "wreath", number: 4, name: "זר", current: false, Glyph: DecorWreath },
   { id: "bunting", number: 5, name: "דגלים", current: false, Glyph: DecorBunting },
 ] as const;
