@@ -30,11 +30,11 @@ export function asCachedCatalog(value: unknown): Catalog | null {
           typeof house === "object" &&
           typeof house.id === "string" &&
           typeof house.name === "string" &&
-          typeof house.lat === "number" &&
-          typeof house.lng === "number",
+          typeof (house as PublicHouse).lat === "number" &&
+          typeof (house as PublicHouse).lng === "number",
       ),
   );
-  if (houses.length !== catalog.houses.length) return null;
+  if (!houses.length) return null;
   return { ...catalog, houses };
 }
 
