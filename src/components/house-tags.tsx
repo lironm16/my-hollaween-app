@@ -55,10 +55,10 @@ export function HouseTags({
         className={cn(
           "h-6 text-sm",
           scare === "spicy"
-            ? "bg-red-800 text-red-50"
+            ? "bg-[#b91c1c] text-[#fff7ed]"
             : scare === "medium"
-              ? "bg-violet-800 text-violet-50"
-              : "bg-sky-800 text-sky-50",
+              ? "bg-[#d97706] text-[#1c0e24]"
+              : "bg-[#047857] text-[#fff7ed]",
         )}
       >
         {scareShort[scare]}

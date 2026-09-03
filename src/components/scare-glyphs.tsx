@@ -81,9 +81,9 @@ export function ScarePumpkin() {
 }
 
 const TONE_CLASS: Record<ScareLevel, string> = {
-  mild: "bg-[#0369a1] text-[#fff7ed]",
-  medium: "bg-[#6d28d9] text-[#fff7ed]",
-  spicy: "bg-[#991b1b] text-[#fff7ed]",
+  mild: "bg-[#047857] text-[#fff7ed]",
+  medium: "bg-[#d97706] text-[#1c0e24]",
+  spicy: "bg-[#b91c1c] text-[#fff7ed]",
 };
 
 export function ScareSign({
