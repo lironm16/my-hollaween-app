@@ -20,7 +20,7 @@ import type { PublicHouse } from "@/lib/types";
 import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
 import { distanceMeters } from "@/lib/geo";
 import { houseHeadline, themeEmoji } from "@/lib/labels";
-import { effectiveVisit, isFrozen } from "@/lib/house-state";
+import { candyLevel, effectiveVisit, isFrozen, markedCandy } from "@/lib/house-state";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { HouseTags } from "@/components/house-tags";
 import { cn } from "@/lib/utils";
@@ -45,26 +45,56 @@ function houseWalkLinks(house: PublicHouse) {
   };
 }
 
-function pinKind(house: PublicHouse) {
-  const frozen = isFrozen(house);
+type PinKind = "ok" | "low" | "out" | "closed" | "decor" | "frozen" | "pending";
+
+const PIN_KIND_RANK: Record<PinKind, number> = {
+  ok: 0,
+  low: 1,
+  decor: 2,
+  out: 3,
+  closed: 4,
+  pending: 5,
+  frozen: 6,
+};
+
+function pinKind(house: PublicHouse): PinKind {
+  if (isFrozen(house)) return "frozen";
+  if (house.status === "pending") return "pending";
   const visit = effectiveVisit(house);
-  if (frozen) return "frozen" as const;
-  if (house.status === "pending") return "pending" as const;
-  if (visit === "closed") return "closed" as const;
-  if (visit === "decorOnly") return "decor" as const;
-  return "ok" as const;
+  if (visit === "closed") return "closed";
+  if (visit === "decorOnly") return "decor";
+  if (markedCandy(house) && candyLevel(house) === "out") return "out";
+  if (candyLevel(house) === "low") return "low";
+  return "ok";
 }
 
-function pinIcon(house: PublicHouse, count = 1) {
-  const kind = pinKind(house);
-  const emoji =
-    kind === "pending" ? "👻" : kind === "closed" ? "🕸️" : kind === "frozen" ? "😶" : themeEmoji[house.theme ?? "pumpkin"];
+function clusterPinKind(cluster: HouseCluster): PinKind {
+  let best: PinKind = "frozen";
+  let bestRank = PIN_KIND_RANK.frozen;
+  for (const house of cluster.houses) {
+    const kind = pinKind(house);
+    if (PIN_KIND_RANK[kind] < bestRank) {
+      best = kind;
+      bestRank = PIN_KIND_RANK[kind];
+    }
+  }
+  return best;
+}
+
+function pinEmoji(house: PublicHouse, kind: PinKind) {
+  if (kind === "pending") return "👻";
+  if (kind === "frozen") return "😶";
+  return themeEmoji[house.theme ?? "pumpkin"];
+}
+
+function pinIcon(house: PublicHouse, count = 1, kind = pinKind(house)) {
+  const emoji = pinEmoji(house, kind);
   const badge =
     count > 1
       ? `<b class="pin-count" aria-label="${count} דירות">×${count}</b>`
       : "";
   return L.divIcon({
-    className: "",
+    className: "pumpkin-pin-icon",
     html: `<div class="pumpkin-pin is-${kind}">${badge}<span>${emoji}</span></div>`,
     iconSize: [40, 44],
     iconAnchor: [20, 42],
@@ -73,14 +103,16 @@ function pinIcon(house: PublicHouse, count = 1) {
 }
 
 function clusterIcon(cluster: HouseCluster) {
+  const kind = clusterPinKind(cluster);
   const lead =
+    cluster.houses.find((h) => pinKind(h) === kind) ??
     cluster.houses.find((h) => effectiveVisit(h) !== "closed" && !isFrozen(h)) ??
     cluster.houses[0];
-  return pinIcon(lead, cluster.houses.length);
+  return pinIcon(lead, cluster.houses.length, kind);
 }
 
 const pickIcon = L.divIcon({
-  className: "",
+  className: "pumpkin-pin-icon",
   html: `<div class="pumpkin-pin is-pick"><span>📍</span></div>`,
   iconSize: [40, 44],
   iconAnchor: [20, 42],

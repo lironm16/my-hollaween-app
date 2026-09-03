@@ -355,24 +355,34 @@
   color: #c4b5d6 !important;
 }
 
+.pumpkin-pin-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
 .pumpkin-pin {
   position: relative;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 44px;
-  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.65));
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: #047857;
+  border: 2.5px solid #fff7ed;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+  opacity: 1;
 }
 
 .pumpkin-pin span {
-  font-size: 30px;
+  font-size: 22px;
   line-height: 1;
+  filter: none;
 }
 
 .pumpkin-pin .pin-count {
   position: absolute;
-  top: -3px;
-  inset-inline-end: -6px;
+  top: -5px;
+  inset-inline-end: -7px;
   z-index: 2;
   min-width: 20px;
   height: 16px;
@@ -388,21 +398,33 @@
   letter-spacing: -0.02em;
 }
 
-.pumpkin-pin.is-pending span {
-  filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.9));
+.pumpkin-pin.is-ok {
+  background: #047857;
+}
+
+.pumpkin-pin.is-low {
+  background: #d97706;
+}
+
+.pumpkin-pin.is-out,
+.pumpkin-pin.is-closed {
+  background: #b91c1c;
+}
+
+.pumpkin-pin.is-decor {
+  background: #c2410c;
+}
+
+.pumpkin-pin.is-pending {
+  background: #6d28d9;
 }
 
 .pumpkin-pin.is-frozen {
-  opacity: 0.38;
-  filter: grayscale(0.55);
+  background: #475569;
 }
 
-.pumpkin-pin.is-closed span {
-  filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.85));
-}
-
-.pumpkin-pin.is-decor span {
-  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.85));
+.pumpkin-pin.is-pick {
+  background: #ea580c;
 }
 
 .route-stop-icon {
