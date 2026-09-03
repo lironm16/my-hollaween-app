@@ -5,7 +5,6 @@
   :root, :host {
     --color-red-100: oklch(93.6% 0.032 17.717);
     --color-red-200: oklch(88.5% 0.062 18.334);
-    --color-red-400: oklch(70.4% 0.191 22.216);
     --color-red-500: oklch(63.7% 0.237 25.331);
     --color-red-700: oklch(50.5% 0.213 27.518);
     --color-red-950: oklch(25.8% 0.092 26.042);
@@ -15,14 +14,12 @@
     --color-orange-300: oklch(83.7% 0.128 66.29);
     --color-orange-400: oklch(75% 0.183 55.934);
     --color-orange-500: oklch(70.5% 0.213 47.604);
-    --color-orange-800: oklch(47% 0.157 37.304);
     --color-orange-950: oklch(26.6% 0.079 36.259);
     --color-amber-50: oklch(98.7% 0.022 95.277);
     --color-amber-100: oklch(96.2% 0.059 95.617);
     --color-amber-200: oklch(92.4% 0.12 95.746);
     --color-amber-400: oklch(82.8% 0.189 84.429);
     --color-amber-500: oklch(76.9% 0.188 70.08);
-    --color-amber-800: oklch(47.3% 0.137 46.201);
     --color-amber-950: oklch(27.9% 0.077 45.635);
     --color-emerald-200: oklch(90.5% 0.093 164.15);
     --color-emerald-300: oklch(84.5% 0.143 164.978);
@@ -84,7 +81,7 @@
     --blur-md: 12px;
     --default-transition-duration: 150ms;
     --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    --default-font-family: var(--font-heebo), ui-sans-serif, system-ui, sans-serif;
+    --default-font-family: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
     --default-mono-font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 }
@@ -474,10 +471,6 @@
     width: calc(var(--spacing) * 20);
     height: calc(var(--spacing) * 20);
   }
-  .size-\[18px\] {
-    width: 18px;
-    height: 18px;
-  }
   .size-\[38px\] {
     width: 38px;
     height: 38px;
@@ -493,6 +486,26 @@
   .size-\[70\%\] {
     width: 70%;
     height: 70%;
+  }
+  .size-\[78\%\] {
+    width: 78%;
+    height: 78%;
+  }
+  .size-\[82\%\] {
+    width: 82%;
+    height: 82%;
+  }
+  .size-\[86\%\] {
+    width: 86%;
+    height: 86%;
+  }
+  .size-\[88\%\] {
+    width: 88%;
+    height: 88%;
+  }
+  .size-\[90\%\] {
+    width: 90%;
+    height: 90%;
   }
   .size-full {
     width: 100%;
@@ -533,6 +546,12 @@
   }
   .h-72 {
     height: calc(var(--spacing) * 72);
+  }
+  .h-\[82\%\] {
+    height: 82%;
+  }
+  .h-\[88\%\] {
+    height: 88%;
   }
   .h-\[calc\(100\%-1px\)\] {
     height: calc(100% - 1px);
@@ -584,6 +603,15 @@
   }
   .w-\(--anchor-width\) {
     width: var(--anchor-width);
+  }
+  .w-\[82\%\] {
+    width: 82%;
+  }
+  .w-\[88\%\] {
+    width: 88%;
+  }
+  .w-\[90\%\] {
+    width: 90%;
   }
   .w-fit {
     width: fit-content;
@@ -670,6 +698,9 @@
   }
   .grid-cols-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .flex-col {
     flex-direction: column;
@@ -898,12 +929,6 @@
       border-color: color-mix(in oklab, var(--color-orange-500) 25%, transparent);
     }
   }
-  .border-red-400\/40 {
-    border-color: color-mix(in srgb, oklch(70.4% 0.191 22.216) 40%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklab, var(--color-red-400) 40%, transparent);
-    }
-  }
   .border-transparent {
     border-color: transparent;
   }
@@ -924,6 +949,15 @@
   }
   .bg-\[\#2a1638\]\/95 {
     background-color: color-mix(in oklab, #2a1638 95%, transparent);
+  }
+  .bg-\[\#4f46e5\] {
+    background-color: #4f46e5;
+  }
+  .bg-\[\#9e410d\] {
+    background-color: #9e410d;
+  }
+  .bg-\[\#22d3ee\] {
+    background-color: #22d3ee;
   }
   .bg-\[\#94a3b8\] {
     background-color: #94a3b8;
@@ -952,20 +986,17 @@
   .bg-\[\#b91c1c\] {
     background-color: #b91c1c;
   }
-  .bg-\[\#c2410c\] {
-    background-color: #c2410c;
-  }
   .bg-\[\#d97706\] {
     background-color: #d97706;
+  }
+  .bg-\[\#e11d48\] {
+    background-color: #e11d48;
   }
   .bg-\[\#fff7ed\] {
     background-color: #fff7ed;
   }
   .bg-amber-400 {
     background-color: var(--color-amber-400);
-  }
-  .bg-amber-800 {
-    background-color: var(--color-amber-800);
   }
   .bg-amber-950\/50 {
     background-color: color-mix(in srgb, oklch(27.9% 0.077 45.635) 50%, transparent);
@@ -989,12 +1020,6 @@
     background-color: color-mix(in srgb, #000 25%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-black) 25%, transparent);
-    }
-  }
-  .bg-black\/30 {
-    background-color: color-mix(in srgb, #000 30%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-black) 30%, transparent);
     }
   }
   .bg-black\/35 {
@@ -1123,6 +1148,9 @@
   .fill-orange-500 {
     fill: var(--color-orange-500);
   }
+  .object-contain {
+    object-fit: contain;
+  }
   .object-cover {
     object-fit: cover;
   }
@@ -1250,16 +1278,16 @@
     vertical-align: baseline;
   }
   .font-display {
-    font-family: var(--font-creepster), var(--font-heebo), cursive;
+    font-family: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
   }
   .font-heading {
-    font-family: var(--font-heebo), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
   }
   .font-mono {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
   .font-sans {
-    font-family: var(--font-heebo), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
   }
   .text-2xl {
     font-size: var(--text-2xl);
@@ -1469,9 +1497,6 @@
   .text-white {
     color: var(--color-white);
   }
-  .line-through {
-    text-decoration-line: line-through;
-  }
   .underline {
     text-decoration-line: underline;
   }
@@ -1506,20 +1531,17 @@
     --tw-shadow: 0 4px 6px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 2px 4px -2px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
-  .ring-1 {
+  .ring {
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
-  .ring-2 {
-    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+  .ring-1 {
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .ring-\[2\.5px\] {
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2.5px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-  }
-  .ring-\[\#1c0e24\] {
-    --tw-ring-color: #1c0e24;
   }
   .ring-\[\#fff7ed\] {
     --tw-ring-color: #fff7ed;
@@ -1601,6 +1623,10 @@
   .outline {
     outline-style: var(--tw-outline-style);
     outline-width: 1px;
+  }
+  .grayscale {
+    --tw-grayscale: grayscale(100%);
+    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
   }
   .invert {
     --tw-invert: invert(100%);
@@ -3217,9 +3243,9 @@ svg.leaflet-zoom-animated {
     min-height: 100%;
   }
   .font-display {
-    font-family: var(--font-heebo), ui-sans-serif, system-ui, sans-serif;
-    font-weight: 800;
-    letter-spacing: 0.01em;
+    font-family: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.03em;
     text-shadow: 0 0 22px rgba(255, 140, 0, 0.35);
   }
   .font-creepster {
@@ -3228,7 +3254,7 @@ svg.leaflet-zoom-animated {
 }
 .leaflet-container {
   background: #14091c;
-  font-family: var(--font-heebo), sans-serif;
+  font-family: var(--font-rubik), sans-serif;
   width: 100%;
   height: 100%;
   z-index: 0;

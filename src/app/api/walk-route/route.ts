@@ -3,7 +3,7 @@ import { fetchWalkingGeometry } from "@/lib/osrm-walk";
 
 export const runtime = "nodejs";
 
-/** Proxy street geometry (car graph) so the line stays on roads, not park paths. */
+/** Proxy walking geometry so phones don't hit CORS. Stays on streets around parks. */
 export async function POST(request: Request) {
   const json = (await request.json().catch(() => null)) as
     | { points?: { lat: number; lng: number }[] }

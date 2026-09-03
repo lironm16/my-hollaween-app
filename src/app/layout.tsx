@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Heebo, Creepster } from "next/font/google";
+import { Rubik, Creepster } from "next/font/google";
 import Script from "next/script";
 import { Providers } from "@/components/providers";
 import { HalloweenFx } from "@/components/halloween-fx";
@@ -7,9 +7,10 @@ import { config } from "@/lib/config";
 import { inlineThemeCss } from "@/lib/inline-css";
 import "./globals.css";
 
-const heebo = Heebo({
+const rubik = Rubik({
   subsets: ["hebrew", "latin"],
-  variable: "--font-heebo",
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-rubik",
 });
 
 const creepster = Creepster({
@@ -49,14 +50,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="he"
       dir="rtl"
-      className={`${heebo.variable} ${creepster.variable} dark h-full antialiased`}
+      className={`${rubik.variable} ${creepster.variable} dark h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Creepster&family=Heebo:wght@400;600;800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Creepster&family=Rubik:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
         />
         {/* Inlined: Cursor Preview is a different origin and Next.js 16 returns 403 for /_next CSS. */}
