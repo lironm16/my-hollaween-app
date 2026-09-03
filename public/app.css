@@ -3273,8 +3273,16 @@ svg.leaflet-zoom-animated {
   z-index: 0;
   isolation: isolate;
 }
-.leaflet-container.is-osm-dark .leaflet-tile {
+.leaflet-container.is-osm-dark .leaflet-tile-pane {
   filter: invert(1) hue-rotate(180deg) saturate(0.35) brightness(0.82) contrast(1.05);
+}
+.leaflet-container.is-osm-dark .leaflet-overlay-pane,
+.leaflet-container.is-osm-dark .leaflet-shadow-pane,
+.leaflet-container.is-osm-dark .leaflet-marker-pane,
+.leaflet-container.is-osm-dark .leaflet-tooltip-pane,
+.leaflet-container.is-osm-dark .leaflet-popup-pane {
+  filter: none;
+  isolation: isolate;
 }
 .leaflet-container img,
 .leaflet-pane img,

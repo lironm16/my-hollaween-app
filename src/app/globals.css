@@ -124,9 +124,19 @@
   isolation: isolate;
 }
 
-/* Invert OSM tiles only. Filtering the whole pane turns purple pins green. */
-.leaflet-container.is-osm-dark .leaflet-tile {
+/* Black Halloween basemap (inverted OSM). Keep this look — do not grayscale.
+   Invert the tile pane only so house pins stay their own color. */
+.leaflet-container.is-osm-dark .leaflet-tile-pane {
   filter: invert(1) hue-rotate(180deg) saturate(0.35) brightness(0.82) contrast(1.05);
+}
+
+.leaflet-container.is-osm-dark .leaflet-overlay-pane,
+.leaflet-container.is-osm-dark .leaflet-shadow-pane,
+.leaflet-container.is-osm-dark .leaflet-marker-pane,
+.leaflet-container.is-osm-dark .leaflet-tooltip-pane,
+.leaflet-container.is-osm-dark .leaflet-popup-pane {
+  filter: none;
+  isolation: isolate;
 }
 
 /* Tailwind preflight sets img { max-width: 100%; height: auto } and hides tiles. */
