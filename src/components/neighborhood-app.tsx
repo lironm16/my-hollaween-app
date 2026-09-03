@@ -36,6 +36,7 @@ import { readApiJson } from "@/lib/api-json";
 import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, formatDisplayAddress, type NeighborhoodId } from "@/lib/config";
 import { toPublicHouse } from "@/lib/ids";
 import { isFrozen, offersCandy, offersSensitivity, isDecorated } from "@/lib/house-state";
+import { AccessibleMark } from "@/components/symbols";
 import { isOpenNow } from "@/lib/hours";
 import {
   backupLooksNewer,
@@ -660,7 +661,7 @@ export function NeighborhoodApp({
             checked={accessibleOnly}
             onChange={() => updateFilters({ accessibleOnly: !accessibleOnly })}
           >
-            נגיש
+            <AccessibleMark labeled />
           </FilterOption>
           <FilterOption
             checked={likedOnly}

@@ -398,6 +398,27 @@
   letter-spacing: -0.02em;
 }
 
+.pumpkin-pin .pin-access {
+  position: absolute;
+  bottom: -5px;
+  inset-inline-start: -6px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #047857;
+  color: #ecfdf5;
+  border: 1.5px solid #fff7ed;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.pumpkin-pin .pin-access svg {
+  width: 12px;
+  height: 12px;
+}
+
 .pumpkin-pin.is-ok {
   background: #047857;
 }
