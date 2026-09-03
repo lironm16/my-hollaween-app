@@ -5,6 +5,7 @@ import {
   Circle,
   MapContainer,
   Marker,
+  Polyline,
   Popup,
   TileLayer,
   useMap,
@@ -16,11 +17,21 @@ import "leaflet/dist/leaflet.css";
 import { config, formatDisplayAddress, inNeighborhood } from "@/lib/config";
 import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
+import type { LatLng } from "@/lib/route";
 import { houseHeadline, themeEmoji } from "@/lib/labels";
 import { effectiveVisit, isFrozen } from "@/lib/house-state";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { HouseTags } from "@/components/house-tags";
 import { cn } from "@/lib/utils";
+
+function routeOrderIcon(order: number) {
+  return L.divIcon({
+    className: "",
+    html: `<div class="route-stop-pin">${order}</div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+  });
+}
 
 function pinKind(house: PublicHouse) {
   const frozen = isFrozen(house);
@@ -256,6 +267,8 @@ type Props = {
   fitTick?: number;
   locating?: boolean;
   onLocate?: () => void;
+  routeLine?: LatLng[] | null;
+  routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
 };
 
 export function HouseMap({
@@ -270,6 +283,8 @@ export function HouseMap({
   userLocation = null,
   locating = false,
   onLocate,
+  routeLine = null,
+  routeStops = null,
 }: Props) {
   const clusters = useMemo(
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
@@ -335,6 +350,26 @@ export function HouseMap({
             }}
           />
         ) : null}
+        {!pickMode && routeLine && routeLine.length >= 2 ? (
+          <Polyline
+            positions={routeLine.map((point) => [point.lat, point.lng] as [number, number])}
+            pathOptions={{
+              color: "#f97316",
+              weight: 4,
+              opacity: 0.9,
+            }}
+            interactive={false}
+          />
+        ) : null}
+        {!pickMode &&
+          routeStops?.map((stop) => (
+            <Marker
+              key={`route-${stop.id}`}
+              position={[stop.lat, stop.lng]}
+              icon={routeOrderIcon(stop.order)}
+              zIndexOffset={600}
+            />
+          ))}
         {!pickMode &&
           clusters.map((cluster) => (
             <ClusterMarker

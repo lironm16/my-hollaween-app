@@ -16,6 +16,7 @@ import { HouseList } from "@/components/house-list";
 import { HouseDetails } from "@/components/house-details";
 import { NightDesk } from "@/components/night-desk";
 import { RouteSheet } from "@/components/route-sheet";
+import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -83,6 +84,7 @@ export function NeighborhoodApp({
   } = filters;
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [routeOpen, setRouteOpen] = useState(false);
+  const [routeOnMap, setRouteOnMap] = useState(false);
   const [followTick, setFollowTick] = useState(0);
   const [fitTick, setFitTick] = useState(0);
   const [askedLocation, setAskedLocation] = useState(false);
@@ -230,6 +232,7 @@ export function NeighborhoodApp({
     () => buildWalkingRoute(visible, origin, { accessible: accessibleOnly }),
     [visible, origin, accessibleOnly],
   );
+  const { line: routeLine } = useRouteGeometry(walkingRoute, routeOpen || routeOnMap);
 
   const routePrefsLabel = useMemo(() => {
     const parts: string[] = [];
@@ -536,6 +539,11 @@ export function NeighborhoodApp({
             <RefreshCw className={cn("size-3.5", adminLoading && "animate-spin")} />
             רענון
           </Button>
+          {routeOnMap ? (
+            <Button size="sm" variant="ghost" onClick={() => setRouteOnMap(false)}>
+              הסתר מסלול
+            </Button>
+          ) : null}
           <span className="ms-auto flex items-center gap-1 text-[11px] text-violet-300">
             {offline || source === "cache" || source === "snapshot" ? (
               <>
@@ -633,6 +641,11 @@ export function NeighborhoodApp({
         hasGps={Boolean(origin)}
         onRequestLocation={goToMyLocation}
         onSelectHouse={(id) => setSelectedId(id)}
+        onShowOnMap={() => {
+          setRouteOnMap(true);
+          setView("map");
+          setRouteOpen(false);
+        }}
       />
       {error ? (
         <div className="relative z-30 bg-red-950/70 px-3 py-2 text-center text-sm text-red-100">
@@ -668,6 +681,17 @@ export function NeighborhoodApp({
                 fitTick={fitTick}
                 locating={geo.status === "pending" && askedLocation}
                 onLocate={goToMyLocation}
+                routeLine={routeOnMap ? routeLine : null}
+                routeStops={
+                  routeOnMap && walkingRoute
+                    ? walkingRoute.stops.map((stop) => ({
+                        id: stop.house.id,
+                        order: stop.order,
+                        lat: stop.house.lat,
+                        lng: stop.house.lng,
+                      }))
+                    : null
+                }
               />
             </div>
             {view === "list" ? (

@@ -16,6 +16,7 @@ import {
   formatRouteSummary,
   googleMapsNavigateUrl,
   googleMapsWalkingUrl,
+  graphhopperWalkingUrl,
   ROUTE_MAPS_MAX_STOPS,
   type WalkingRoute,
 } from "@/lib/route";
@@ -29,6 +30,7 @@ export function RouteSheet({
   onSelectHouse,
   onRequestLocation,
   hasGps,
+  onShowOnMap,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -37,9 +39,11 @@ export function RouteSheet({
   onSelectHouse: (id: string) => void;
   onRequestLocation?: () => void;
   hasGps: boolean;
+  onShowOnMap?: () => void;
 }) {
   const accessible = Boolean(route?.accessible);
   const overviewUrl = route ? googleMapsWalkingUrl(route) : null;
+  const allStopsUrl = route ? graphhopperWalkingUrl(route) : null;
   const firstStop = route?.stops[0]?.house;
   const navigateFirstUrl =
     route && firstStop
@@ -107,28 +111,45 @@ export function RouteSheet({
               </div>
 
               <div className="space-y-2">
+                {onShowOnMap ? (
+                  <Button
+                    type="button"
+                    className="h-11 w-full bg-orange-500 text-black hover:bg-orange-400"
+                    onClick={onShowOnMap}
+                  >
+                    <Footprints className="size-4" />
+                    הצג את כל {route.stops.length} העצירות על המפה שלנו
+                  </Button>
+                ) : null}
+                {allStopsUrl ? (
+                  <a
+                    href={allStopsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={cn(buttonVariants({ variant: "outline" }), "h-11 w-full")}
+                  >
+                    מסלול מלא בהליכה (GraphHopper) — כל העצירות
+                  </a>
+                ) : null}
                 {navigateFirstUrl ? (
                   <a
                     href={navigateFirstUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className={cn(
-                      buttonVariants(),
-                      "h-11 w-full bg-orange-500 text-black hover:bg-orange-400",
-                    )}
+                    className={cn(buttonVariants({ variant: "outline" }), "h-11 w-full")}
                   >
                     <Navigation className="size-4" />
-                    התחל הליכה לעצירה 1
+                    התחל הליכה לעצירה 1 (Google)
                   </a>
                 ) : null}
-                {overviewUrl ? (
+                {overviewUrl && route.stops.length > 1 ? (
                   <a
                     href={overviewUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className={cn(buttonVariants({ variant: "outline" }), "h-11 w-full")}
+                    className={cn(buttonVariants({ variant: "ghost" }), "h-10 w-full text-orange-200")}
                   >
-                    כל המסלול בהליכה (עד {Math.min(route.stops.length, ROUTE_MAPS_MAX_STOPS)} עצירות)
+                    Google — רק {Math.min(route.stops.length, ROUTE_MAPS_MAX_STOPS)} עצירות ראשונות
                   </a>
                 ) : null}
                 {appleFirstUrl ? (
@@ -136,14 +157,14 @@ export function RouteSheet({
                     href={appleFirstUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className={cn(buttonVariants({ variant: "ghost" }), "h-10 w-full text-orange-200")}
+                    className={cn(buttonVariants({ variant: "ghost" }), "h-10 w-full text-violet-200")}
                   >
                     הליכה ב־Apple Maps לעצירה 1
                   </a>
                 ) : null}
                 <p className="text-[11px] text-violet-400">
-                  מומלץ: «התחל הליכה» — פותח ניווט רגלי בגוגל מפות. אם נפתח מצב רכב בטעות, לחצו על אייקון ההליכה
-                  במפות, או השתמשו ב־Apple Maps.
+                  הרשימה למטה כוללת את כל הבתים שמתאימים לסינון. Google Maps בטלפון לא יודע לקבל מסלול ארוך
+                  בהליכה — לכן המסלול המלא הוא על המפה שלנו או ב־GraphHopper.
                 </p>
               </div>
 

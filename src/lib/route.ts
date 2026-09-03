@@ -30,11 +30,12 @@ const ACCESSIBLE_METERS_PER_MIN = 45;
 const MINUTES_PER_STOP = 2;
 const ACCESSIBLE_MINUTES_PER_STOP = 3;
 /**
- * Google Maps on mobile only reliably accepts a few waypoints.
- * Keep overview links short so travelmode=walking is honored.
+ * Google Maps on phones only honors walking with a short waypoint list.
+ * The in-app route includes every matching house — no cap.
  */
 export const ROUTE_MAPS_MAX_STOPS = 4;
-export const ROUTE_MAX_STOPS = 20;
+/** GraphHopper Maps accepts many walking points (all in-app stops). */
+export const ROUTE_GRAPHHOPPER_MAX_STOPS = 80;
 
 function pointOf(house: PublicHouse): LatLng {
   return { lat: house.lat, lng: house.lng };
@@ -44,9 +45,8 @@ function pointOf(house: PublicHouse): LatLng {
 export function buildWalkingRoute(
   houses: PublicHouse[],
   gps: LatLng | null | undefined,
-  options?: { maxStops?: number; accessible?: boolean },
+  options?: { accessible?: boolean },
 ): WalkingRoute | null {
-  const maxStops = options?.maxStops ?? ROUTE_MAX_STOPS;
   const accessible = Boolean(options?.accessible);
   const candidates = houses
     .filter((house) => Number.isFinite(house.lat) && Number.isFinite(house.lng))
@@ -65,7 +65,7 @@ export function buildWalkingRoute(
   const ordered: PublicHouse[] = [];
   let cursor = origin;
 
-  while (remaining.length > 0 && ordered.length < maxStops) {
+  while (remaining.length > 0) {
     let bestIdx = 0;
     let bestDist = Number.POSITIVE_INFINITY;
     for (let i = 0; i < remaining.length; i++) {
@@ -85,6 +85,7 @@ export function buildWalkingRoute(
 }
 
 function twoOpt(houses: PublicHouse[], origin: LatLng): PublicHouse[] {
+  if (houses.length > 40) return houses;
   let best = houses.slice();
   let improved = true;
   let guard = 0;
@@ -198,6 +199,20 @@ export function appleMapsWalkingUrl(origin: LatLng, destination: LatLng) {
     dirflg: "w",
   });
   return `https://maps.apple.com/?${params.toString()}`;
+}
+
+/** All-stop walking overview — GraphHopper Maps (no Google waypoint cap). */
+export function graphhopperWalkingUrl(route: WalkingRoute) {
+  const stops = route.stops.slice(0, ROUTE_GRAPHHOPPER_MAX_STOPS);
+  if (stops.length === 0) return null;
+  const params = new URLSearchParams({ profile: "foot" });
+  params.append("point", fmtLatLng(route.origin));
+  for (const stop of stops) params.append("point", fmtLatLng(pointOf(stop.house)));
+  return `https://graphhopper.com/maps/?${params.toString()}`;
+}
+
+export function routePoints(route: WalkingRoute): LatLng[] {
+  return [route.origin, ...route.stops.map((stop) => pointOf(stop.house))];
 }
 
 export function routeStopLabel(house: PublicHouse) {
