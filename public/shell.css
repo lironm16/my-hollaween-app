@@ -236,6 +236,8 @@ button {
   scroll-snap-type: x mandatory;
   overscroll-behavior: contain;
   touch-action: pan-x;
+  cursor: grab;
+  user-select: none;
   scrollbar-width: none;
 }
 
@@ -248,17 +250,14 @@ button {
   background: #2a1638;
 }
 
-.house-map-popup-item-btn {
+.house-map-popup-page-body {
   display: flex;
   width: 100%;
   flex-direction: column;
   gap: 2px;
-  border: 0;
-  background: transparent;
-  padding: 10px 12px;
+  padding: 10px 12px 12px;
   text-align: right;
   color: inherit;
-  touch-action: pan-x;
 }
 
 .house-map-popup-item-title {
@@ -267,9 +266,38 @@ button {
   color: #f8f5ef;
 }
 
-.house-map-popup-item-arrival {
+.house-map-popup-arrival {
+  margin-top: 2px;
   font-size: 13px;
-  color: #c4b5d6;
+  line-height: 1.35;
+  color: #e7d4a8;
+}
+
+.house-map-popup-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.house-map-popup-actions .house-map-popup-btn {
+  margin-top: 0;
+  flex: 1;
+}
+
+.house-map-popup-maps {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  border-radius: 12px;
+  background: #160b20;
+  box-shadow: inset 0 0 0 1.5px rgba(248, 245, 239, 0.18);
+}
+
+.house-map-popup-maps svg {
+  width: 26px;
+  height: 26px;
 }
 
 .house-map-popup-soldout {

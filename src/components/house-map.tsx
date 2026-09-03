@@ -130,6 +130,95 @@ function bindPopupScroller(node: HTMLDivElement | null) {
   node.style.touchAction = "pan-x";
 }
 
+function houseMapsUrl(house: PublicHouse) {
+  if (Number.isFinite(house.lat) && Number.isFinite(house.lng)) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${house.lat},${house.lng}&travelmode=walking`;
+  }
+  const displayAddress = formatDisplayAddress(house);
+  const mapsQuery = /רמת\s*גן/u.test(displayAddress)
+    ? displayAddress
+    : `${displayAddress}, רמת גן`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapsQuery)}&travelmode=walking`;
+}
+
+function GoogleMapsGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path
+        fill="#4285F4"
+        d="M12 2c-4.2 0-7.6 3.3-7.6 7.4 0 5.6 7.6 12.6 7.6 12.6s7.6-7 7.6-12.6C19.6 5.3 16.2 2 12 2z"
+      />
+      <path fill="#34A853" d="M12 2v20s7.6-7 7.6-12.6C19.6 5.3 16.2 2 12 2z" opacity="0.35" />
+      <circle cx="12" cy="9.2" r="3.2" fill="#fff" />
+      <circle cx="12" cy="9.2" r="1.7" fill="#EA4335" />
+    </svg>
+  );
+}
+
+function PopupActions({
+  house,
+  onDetails,
+}: {
+  house: PublicHouse;
+  onDetails?: (house: PublicHouse) => void;
+}) {
+  return (
+    <div className="house-map-popup-actions">
+      {onDetails ? (
+        <button
+          type="button"
+          className="house-map-popup-btn"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onDetails(house);
+          }}
+        >
+          לפרטים
+        </button>
+      ) : null}
+      <a
+        href={houseMapsUrl(house)}
+        target="_blank"
+        rel="noreferrer"
+        className="house-map-popup-maps"
+        aria-label="ניווט ב-Google Maps"
+        title="ניווט"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <GoogleMapsGlyph />
+      </a>
+    </div>
+  );
+}
+
+function PopupHouseCopy({
+  house,
+  showAddress,
+  showTitle = true,
+}: {
+  house: PublicHouse;
+  showAddress?: boolean;
+  showTitle?: boolean;
+}) {
+  const closed = effectiveVisit(house) === "closed";
+  return (
+    <>
+      {showTitle ? (
+        <span className="house-map-popup-item-title">{houseHeadline(house)}</span>
+      ) : null}
+      {showAddress ? (
+        <p className="house-map-popup-meta">{formatDisplayAddress(house)}</p>
+      ) : null}
+      {house.arrival ? <p className="house-map-popup-arrival">{house.arrival}</p> : null}
+      <div className="house-map-popup-tags">
+        <HouseTags house={house} />
+      </div>
+      {closed ? <span className="house-map-popup-soldout">נגמר המלאי</span> : null}
+    </>
+  );
+}
+
 function PopupCloseButton({ onClose }: { onClose: () => void }) {
   return (
     <button
@@ -180,16 +269,56 @@ function HousePreviewPopup({
     bindPopupScroller(node);
     const stop = (event: Event) => event.stopPropagation();
     const sync = () => setPage(pageFromOverlap(node));
+    let snapTimer = 0;
+    const snap = () => {
+      const next = pageFromOverlap(node);
+      setPage(next);
+      scrollPageIntoView(node, next, "smooth");
+    };
+    const onWheel = (event: WheelEvent) => {
+      const dx = event.deltaX + event.deltaY;
+      if (dx === 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      node.scrollLeft += dx;
+      window.clearTimeout(snapTimer);
+      snapTimer = window.setTimeout(snap, 80);
+    };
+    let drag: { id: number; x: number; scroll: number } | null = null;
+    const onDown = (event: PointerEvent) => {
+      if ((event.target as Element | null)?.closest("a, button")) return;
+      drag = { id: event.pointerId, x: event.clientX, scroll: node.scrollLeft };
+      node.setPointerCapture(event.pointerId);
+    };
+    const onMove = (event: PointerEvent) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      event.stopPropagation();
+      node.scrollLeft = drag.scroll - (event.clientX - drag.x);
+    };
+    const onUp = (event: PointerEvent) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      drag = null;
+      snap();
+    };
     node.addEventListener("touchmove", stop, { passive: true });
-    node.addEventListener("pointermove", stop, { passive: true });
+    node.addEventListener("pointermove", onMove);
+    node.addEventListener("pointerdown", onDown);
+    node.addEventListener("pointerup", onUp);
+    node.addEventListener("pointercancel", onUp);
+    node.addEventListener("wheel", onWheel, { passive: false });
     node.addEventListener("scroll", sync, { passive: true });
     const jump = () => scrollPageIntoView(node, startIndex, "instant");
     const frame = window.requestAnimationFrame(jump);
     const later = window.setTimeout(jump, 80);
     return () => {
       node.removeEventListener("touchmove", stop);
-      node.removeEventListener("pointermove", stop);
+      node.removeEventListener("pointermove", onMove);
+      node.removeEventListener("pointerdown", onDown);
+      node.removeEventListener("pointerup", onUp);
+      node.removeEventListener("pointercancel", onUp);
+      node.removeEventListener("wheel", onWheel);
       node.removeEventListener("scroll", sync);
+      window.clearTimeout(snapTimer);
       window.cancelAnimationFrame(frame);
       window.clearTimeout(later);
     };
@@ -210,8 +339,8 @@ function HousePreviewPopup({
   return (
     <Popup
       className="house-map-popup-root"
-      maxWidth={multi ? 288 : 260}
-      minWidth={multi ? 220 : 176}
+      maxWidth={multi ? 300 : 280}
+      minWidth={multi ? 232 : 200}
       autoPan={false}
       keepInView={false}
       closeButton={false}
@@ -239,9 +368,7 @@ function HousePreviewPopup({
                 aria-roledescription="carousel"
                 aria-label="דירות בבניין"
               >
-                {houses.map((house, index) => {
-                  const closed = effectiveVisit(house) === "closed";
-                  return (
+                {houses.map((house, index) => (
                     <div
                       key={house.id}
                       className={cn(
@@ -250,26 +377,12 @@ function HousePreviewPopup({
                       )}
                       aria-hidden={page !== index}
                     >
-                      <button
-                        type="button"
-                        className="house-map-popup-item-btn"
-                        onClick={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          openHouse(house);
-                        }}
-                      >
-                        <span className="house-map-popup-item-title">{houseHeadline(house)}</span>
-                        <div className="house-map-popup-tags">
-                          <HouseTags house={house} />
-                        </div>
-                        {closed ? (
-                          <span className="house-map-popup-soldout">נגמר המלאי</span>
-                        ) : null}
-                      </button>
+                      <div className="house-map-popup-page-body">
+                        <PopupHouseCopy house={house} showAddress />
+                        <PopupActions house={house} onDetails={onOpenDetails ? openHouse : undefined} />
+                      </div>
                     </div>
-                  );
-                })}
+                ))}
               </div>
               <div className="house-map-popup-dots" role="tablist" aria-label="בחירת דירה">
                 {houses.map((house, index) => (
@@ -296,25 +409,8 @@ function HousePreviewPopup({
               <strong>{houseHeadline(houses[0])}</strong>
               <PopupCloseButton onClose={closePopup} />
             </div>
-            <div className="house-map-popup-tags">
-              <HouseTags house={houses[0]} />
-            </div>
-            {effectiveVisit(houses[0]) === "closed" ? (
-              <div className="house-map-popup-soldout">נגמר המלאי</div>
-            ) : null}
-            {onOpenDetails ? (
-              <button
-                type="button"
-                className="house-map-popup-btn"
-                onClick={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  openHouse(houses[0]);
-                }}
-              >
-                לפרטים
-              </button>
-            ) : null}
+            <PopupHouseCopy house={houses[0]} showAddress showTitle={false} />
+            <PopupActions house={houses[0]} onDetails={onOpenDetails ? openHouse : undefined} />
           </>
         )}
       </div>
