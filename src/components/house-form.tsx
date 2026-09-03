@@ -197,7 +197,7 @@ export function HouseForm({
 
   return (
     <form
-      className="space-y-4"
+      className="space-y-6"
       onSubmit={(e) => {
         e.preventDefault();
         if (!addressOk) {
@@ -260,257 +260,267 @@ export function HouseForm({
         });
       }}
     >
-      <div>
-        <p className="mb-2 text-sm font-medium">שם הבית</p>
-        <Input
-          required
-          value={form.name}
-          minLength={2}
-          onChange={(e) => {
-            const name = e.target.value;
-            const theme = themeFromName(name) ?? form.theme;
-            setForm({ ...form, name, theme });
-          }}
-          placeholder="בית משפחת לוי, או בחרו הצעה"
-          className="h-10 bg-[#1d1028]"
-        />
-        <p className="mt-2 text-xs text-violet-300">הצעות לשם — לחיצה ממלאת את השדה</p>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {HOUSE_THEMES.map((theme) => {
-            const selected = nameMatchesTheme(form.name, theme);
-            return (
+      <FormSection title="הבית">
+        <div>
+          <p className="mb-2 text-sm font-medium">שם הבית</p>
+          <Input
+            required
+            value={form.name}
+            minLength={2}
+            onChange={(e) => {
+              const name = e.target.value;
+              const theme = themeFromName(name) ?? form.theme;
+              setForm({ ...form, name, theme });
+            }}
+            placeholder="בית משפחת לוי, או בחרו הצעה"
+            className="h-10 bg-[#1d1028]"
+          />
+          <p className="mt-2 text-xs text-violet-300">הצעות לשם — לחיצה ממלאת את השדה</p>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {HOUSE_THEMES.map((theme) => {
+              const selected = nameMatchesTheme(form.name, theme);
+              return (
+                <button
+                  key={theme}
+                  type="button"
+                  onClick={() => applyNameSuggestion(theme)}
+                  className={
+                    selected
+                      ? "rounded-full bg-orange-500 px-3 py-1.5 text-xs font-medium text-black"
+                      : "rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
+                  }
+                >
+                  {suggestedHouseName(theme)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </FormSection>
+      <FormSection title="איפה למצוא">
+        <Field label="כתובת">
+          <AddressField
+            value={form.address}
+            onChange={onAddressTyped}
+            onSelect={onAddressSelect}
+            confirmed={addressOk}
+            disabled={busy}
+          />
+        </Field>
+        <div>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-sm font-medium">סיכה על המפה</p>
+            <Button type="button" size="sm" variant="outline" onClick={useMyLocation}>
+              {locating ? "מאתרים…" : "המיקום שלי"}
+            </Button>
+          </div>
+          <p className="mb-2 text-xs text-violet-300">
+            אחרי בחירת כתובת הסיכה זזה לשם. אפשר לגרור אותה לכניסה המדויקת.
+          </p>
+          <div className="relative z-0 isolate h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/30">
+            <HouseMapDynamic
+              pickMode
+              pick={{ lat: form.lat, lng: form.lng }}
+              onPick={(lat, lng) => void syncFromPin(lat, lng)}
+            />
+          </div>
+          <p className="mt-1 text-xs text-violet-300">
+            מיקום: {form.lat.toFixed(5)}, {form.lng.toFixed(5)}
+          </p>
+        </div>
+        <Field label="איך מגיעים — קומה, דירה, הוראות">
+          <Input
+            value={form.arrival}
+            onChange={(e) => setForm({ ...form, arrival: e.target.value })}
+            placeholder="קומה 2, דירה 5, ימינה אחרי השער"
+          />
+        </Field>
+      </FormSection>
+      <FormSection title="מתי פתוחים">
+        <div className="space-y-3">
+          <p className="text-sm font-medium">שעות ב־31 באוקטובר</p>
+          <p className="text-xs text-violet-300">
+            הבתים פתוחים רק בליל האלווין. אפשר כמה חלונות בערב (למשל 17:00–18:00, 19:00–20:00) אם
+            יוצאים באמצע לטריק-אור-טריט. ליציאה ספונטנית — השתמשו בהקפאה לשעה במסך העריכה.
+          </p>
+          {hourWindows.map((window, index) => (
+            <div
+              key={`hours-${index}`}
+              className="space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-medium text-orange-100">
+                  {hourWindows.length === 1 ? "חלון שעות" : `חלון ${index + 1}`}
+                </p>
+                {hourWindows.length > 1 ? (
+                  <button
+                    type="button"
+                    className="text-xs text-violet-300 underline-offset-2 hover:underline"
+                    onClick={() => removeHourWindow(index)}
+                  >
+                    הסרה
+                  </button>
+                ) : null}
+              </div>
+              <div className="grid grid-cols-1 gap-3">
+                <Field label="פתיחה">
+                  <TimeField
+                    required
+                    value={window.from}
+                    onChange={(from) => updateHourWindow(index, { from })}
+                  />
+                </Field>
+                <Field label="סגירה">
+                  <TimeField
+                    required
+                    value={window.to}
+                    onChange={(to) => updateHourWindow(index, { to })}
+                  />
+                </Field>
+              </div>
+            </div>
+          ))}
+          {hourWindows.length < MAX_HOUR_WINDOWS ? (
+            <button
+              type="button"
+              className="text-sm font-medium text-orange-300 underline-offset-2 hover:underline"
+              onClick={addHourWindow}
+            >
+              + הוספת חלון שעות
+            </button>
+          ) : null}
+        </div>
+      </FormSection>
+      <FormSection title="מה יפגשו בבית">
+        <div>
+          <p className="mb-2 text-sm font-medium">קישוט בחוץ</p>
+          <p className="mb-2 text-xs text-violet-300">
+            כמה כיף יש לראות מהרחוב: לא מקושט, קריצה, חגיגה או פיצוץ
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {DECOR_LEVELS.map((level) => (
               <button
-                key={theme}
+                key={level}
                 type="button"
-                onClick={() => applyNameSuggestion(theme)}
+                onClick={() => setDecorLevel(level)}
                 className={
-                  selected
-                    ? "rounded-full bg-orange-500 px-3 py-1.5 text-xs font-medium text-black"
-                    : "rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
+                  decorLevel === level
+                    ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-xs font-medium text-black"
+                    : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
                 }
               >
-                {suggestedHouseName(theme)}
+                <DecorSign level={level} className="size-6" />
+                {decorShort[level]}
               </button>
-            );
-          })}
-        </div>
-      </div>
-      <Field label="כתובת">
-        <AddressField
-          value={form.address}
-          onChange={onAddressTyped}
-          onSelect={onAddressSelect}
-          confirmed={addressOk}
-          disabled={busy}
-        />
-      </Field>
-      <div>
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="text-sm font-medium">סיכה על המפה</p>
-          <Button type="button" size="sm" variant="outline" onClick={useMyLocation}>
-            {locating ? "מאתרים…" : "המיקום שלי"}
-          </Button>
-        </div>
-        <p className="mb-2 text-xs text-violet-300">
-          אחרי בחירת כתובת הסיכה זזה לשם. אפשר לגרור אותה לכניסה המדויקת.
-        </p>
-        <div className="relative z-0 isolate h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/30">
-          <HouseMapDynamic
-            pickMode
-            pick={{ lat: form.lat, lng: form.lng }}
-            onPick={(lat, lng) => void syncFromPin(lat, lng)}
-          />
-        </div>
-        <p className="mt-1 text-xs text-violet-300">
-          מיקום: {form.lat.toFixed(5)}, {form.lng.toFixed(5)}
-        </p>
-      </div>
-      <Field label="איך מגיעים — קומה, דירה, הוראות">
-        <Input
-          value={form.arrival}
-          onChange={(e) => setForm({ ...form, arrival: e.target.value })}
-          placeholder="קומה 2, דירה 5, ימינה אחרי השער"
-        />
-      </Field>
-      <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-sm ring-1 ring-orange-500/20">
-        <input
-          type="checkbox"
-          className="mt-1 size-4 accent-orange-500"
-          checked={form.accessible}
-          onChange={(e) => setForm({ ...form, accessible: e.target.checked })}
-        />
-        <span>
-          <span className="inline-flex items-center gap-2 font-medium text-orange-100">
-            <StrollerSign />
-            נגיש
-          </span>
-          <span className="block text-xs text-violet-300">
-            בלי מדרגות בכניסה, מתאים לעגלה או לכיסא גלגלים
-          </span>
-        </span>
-      </label>
-      <div>
-        <p className="mb-2 text-sm font-medium">קישוט בחוץ</p>
-        <p className="mb-2 text-xs text-violet-300">
-          כמה כיף יש לראות מהרחוב: לא מקושט, קריצה, חגיגה או פיצוץ
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          {DECOR_LEVELS.map((level) => (
-            <button
-              key={level}
-              type="button"
-              onClick={() => setDecorLevel(level)}
-              className={
-                decorLevel === level
-                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-xs font-medium text-black"
-                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
-              }
-            >
-              <DecorSign level={level} className="size-6" />
-              {decorShort[level]}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div>
-        <p className="mb-2 text-sm font-medium">ממתקים</p>
-        <p className="mb-2 text-xs text-violet-300">
-          ירוק יש, כתום מעט, אדום נגמר, אפור בלי ממתקים
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          {CANDY_TONES.map((tone) => (
-            <button
-              key={tone.id}
-              type="button"
-              onClick={() => pickCandy(tone.id)}
-              className={
-                candy === tone.id
-                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-xs font-medium text-black"
-                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
-              }
-            >
-              <CandySign tone={tone.id} className="size-6" />
-              {tone.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div
-        className={
-          candyOffered
-            ? "space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20"
-            : "space-y-2 rounded-xl bg-[#1d1028] p-3 opacity-45 ring-1 ring-orange-500/15"
-        }
-      >
-        <p className="text-sm font-medium text-orange-100">רגישויות והתאמות</p>
-        <p className="text-xs text-violet-300">
-          {candyOffered
-            ? "סמנו מה יש בבית לילדים עם רגישויות"
-            : "בחרו יש או מעט ממתקים כדי לסמן רגישויות"}
-        </p>
-        <div className="space-y-2">
-          {SENSITIVITY_OPTIONS.map((id) => (
-            <label key={id} className="flex items-center gap-2 text-sm text-orange-50">
-              <input
-                type="checkbox"
-                className="size-4 accent-orange-500"
-                disabled={!candyOffered}
-                checked={candyOffered && form.treats.includes(id)}
-                onChange={(e) => setTreat(id, e.target.checked)}
-              />
-              <SensitivityMark labeled kind={id} />
-            </label>
-          ))}
-        </div>
-      </div>
-      <Field label="מה מחכה בבית?">
-        <Textarea
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          placeholder="קישוטים, אווירה, הפתעות…"
-          className="min-h-24"
-        />
-      </Field>
-      <div className="space-y-3">
-        <p className="text-sm font-medium">שעות פעילות ב־31 באוקטובר</p>
-        <p className="text-xs text-violet-300">
-          הבתים פתוחים רק בליל האלווין (31 באוקטובר). אפשר כמה חלונות בערב (למשל 17:00–18:00,
-          19:00–20:00) אם יוצאים באמצע לטריק-אור-טריט. ליציאה ספונטנית — השתמשו בהקפאה לשעה במסך
-          העריכה.
-        </p>
-        {hourWindows.map((window, index) => (
-          <div
-            key={`hours-${index}`}
-            className="space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-medium text-orange-100">
-                {hourWindows.length === 1 ? "חלון שעות" : `חלון ${index + 1}`}
-              </p>
-              {hourWindows.length > 1 ? (
-                <button
-                  type="button"
-                  className="text-xs text-violet-300 underline-offset-2 hover:underline"
-                  onClick={() => removeHourWindow(index)}
-                >
-                  הסרה
-                </button>
-              ) : null}
-            </div>
-            <div className="grid grid-cols-1 gap-3">
-              <Field label="פתיחה">
-                <TimeField
-                  required
-                  value={window.from}
-                  onChange={(from) => updateHourWindow(index, { from })}
-                />
-              </Field>
-              <Field label="סגירה">
-                <TimeField
-                  required
-                  value={window.to}
-                  onChange={(to) => updateHourWindow(index, { to })}
-                />
-              </Field>
-            </div>
+            ))}
           </div>
-        ))}
-        {hourWindows.length < MAX_HOUR_WINDOWS ? (
-          <button
-            type="button"
-            className="text-sm font-medium text-orange-300 underline-offset-2 hover:underline"
-            onClick={addHourWindow}
-          >
-            + הוספת חלון שעות
-          </button>
-        ) : null}
-      </div>
-      <div>
-        <p className="mb-2 text-sm font-medium">רמת פחד</p>
-        <div className="flex flex-wrap gap-1.5">
-          {(["mild", "medium", "spicy"] as ScareLevel[]).map((level) => (
-            <button
-              key={level}
-              type="button"
-              onClick={() => setForm({ ...form, scareLevel: level })}
-              className={
-                form.scareLevel === level
-                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-xs font-medium text-black"
-                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
-              }
-            >
-              <ScareSign level={level} className="size-6" />
-              {scareShort[level]}
-            </button>
-          ))}
         </div>
-      </div>
-      <Field label="הערות (כלב, מדרגות, עגלה…)">
-        <Input
-          value={form.notes}
-          onChange={(e) => setForm({ ...form, notes: e.target.value })}
-        />
-      </Field>
+        <div>
+          <p className="mb-2 text-sm font-medium">רמת פחד</p>
+          <p className="mb-2 text-xs text-violet-300">מה מרגישים בכניסה, לא כמה הבית מקושט</p>
+          <div className="flex flex-wrap gap-1.5">
+            {(["mild", "medium", "spicy"] as ScareLevel[]).map((level) => (
+              <button
+                key={level}
+                type="button"
+                onClick={() => setForm({ ...form, scareLevel: level })}
+                className={
+                  form.scareLevel === level
+                    ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-xs font-medium text-black"
+                    : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
+                }
+              >
+                <ScareSign level={level} className="size-6" />
+                {scareShort[level]}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="mb-2 text-sm font-medium">ממתקים</p>
+          <p className="mb-2 text-xs text-violet-300">
+            ירוק יש, כתום מעט, אדום נגמר, אפור בלי ממתקים
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {CANDY_TONES.map((tone) => (
+              <button
+                key={tone.id}
+                type="button"
+                onClick={() => pickCandy(tone.id)}
+                className={
+                  candy === tone.id
+                    ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-xs font-medium text-black"
+                    : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
+                }
+              >
+                <CandySign tone={tone.id} className="size-6" />
+                {tone.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div
+          className={
+            candyOffered
+              ? "space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20"
+              : "space-y-2 rounded-xl bg-[#1d1028] p-3 opacity-45 ring-1 ring-orange-500/15"
+          }
+        >
+          <p className="text-sm font-medium text-orange-100">רגישויות והתאמות</p>
+          <p className="text-xs text-violet-300">
+            {candyOffered
+              ? "סמנו מה יש בבית לילדים עם רגישויות"
+              : "בחרו יש או מעט ממתקים כדי לסמן רגישויות"}
+          </p>
+          <div className="space-y-2">
+            {SENSITIVITY_OPTIONS.map((id) => (
+              <label key={id} className="flex items-center gap-2 text-sm text-orange-50">
+                <input
+                  type="checkbox"
+                  className="size-4 accent-orange-500"
+                  disabled={!candyOffered}
+                  checked={candyOffered && form.treats.includes(id)}
+                  onChange={(e) => setTreat(id, e.target.checked)}
+                />
+                <SensitivityMark labeled kind={id} />
+              </label>
+            ))}
+          </div>
+        </div>
+        <Field label="מה מחכה בבית?">
+          <Textarea
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            placeholder="קישוטים, אווירה, הפתעות…"
+            className="min-h-24"
+          />
+        </Field>
+      </FormSection>
+      <FormSection title="הכניסה">
+        <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-sm ring-1 ring-orange-500/20">
+          <input
+            type="checkbox"
+            className="mt-1 size-4 accent-orange-500"
+            checked={form.accessible}
+            onChange={(e) => setForm({ ...form, accessible: e.target.checked })}
+          />
+          <span>
+            <span className="inline-flex items-center gap-2 font-medium text-orange-100">
+              <StrollerSign />
+              נגיש
+            </span>
+            <span className="block text-xs text-violet-300">
+              בלי מדרגות בכניסה, מתאים לעגלה או לכיסא גלגלים
+            </span>
+          </span>
+        </label>
+        <Field label="הערות (כלב, מדרגות, עגלה…)">
+          <Input
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+          />
+        </Field>
+      </FormSection>
       <Button
         type="submit"
         disabled={busy}
@@ -519,6 +529,23 @@ export function HouseForm({
         {busy ? "שולחים…" : submitLabel}
       </Button>
     </form>
+  );
+}
+
+function FormSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="space-y-4">
+      <h2 className="border-b border-orange-500/25 pb-1 text-sm font-semibold text-orange-200">
+        {title}
+      </h2>
+      {children}
+    </section>
   );
 }
 
