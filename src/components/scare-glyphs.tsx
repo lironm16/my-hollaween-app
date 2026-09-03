@@ -89,11 +89,11 @@ const TONE_CLASS: Record<ScareLevel | "none", string> = {
 };
 
 export function ScareSign({
-  Glyph,
+  Glyph = ScareGhost,
   level,
   className,
 }: {
-  Glyph: () => ReactNode;
+  Glyph?: () => ReactNode;
   level: ScareLevel | "none";
   className?: string;
 }) {
@@ -116,6 +116,23 @@ export function ScareSign({
   );
 }
 
+export function ScareMark({
+  labeled = false,
+  level = "mild",
+  className,
+}: {
+  labeled?: boolean;
+  level?: ScareLevel;
+  className?: string;
+}) {
+  return (
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <ScareSign level={level} />
+      {labeled ? <span>{scareShort[level]}</span> : <span className="sr-only">{scareShort[level]}</span>}
+    </span>
+  );
+}
+
 export const SCARE_TONES: { id: ScareLevel | "none"; label: string }[] = [
   { id: "mild", label: scareShort.mild },
   { id: "medium", label: scareShort.medium },
@@ -124,9 +141,9 @@ export const SCARE_TONES: { id: ScareLevel | "none"; label: string }[] = [
 ];
 
 export const SCARE_OPTIONS = [
-  { id: "ghost", number: 1, name: "רוח", Glyph: ScareGhost },
-  { id: "skull", number: 2, name: "גולגולת", Glyph: ScareSkull },
-  { id: "spider", number: 3, name: "עכביש", Glyph: ScareSpider },
-  { id: "bat", number: 4, name: "עטלף", Glyph: ScareBat },
-  { id: "pumpkin", number: 5, name: "דלעת", Glyph: ScarePumpkin },
+  { id: "ghost", number: 1, name: "רוח", current: true, Glyph: ScareGhost },
+  { id: "skull", number: 2, name: "גולגולת", current: false, Glyph: ScareSkull },
+  { id: "spider", number: 3, name: "עכביש", current: false, Glyph: ScareSpider },
+  { id: "bat", number: 4, name: "עטלף", current: false, Glyph: ScareBat },
+  { id: "pumpkin", number: 5, name: "דלעת", current: false, Glyph: ScarePumpkin },
 ] as const;

@@ -23,6 +23,7 @@ import {
 import { treatLabels } from "@/lib/labels";
 import { candyLevel, effectiveVisit } from "@/lib/house-state";
 import { StrollerSign } from "@/components/symbols";
+import { ScareSign } from "@/components/scare-glyphs";
 import { houseHoursWindows, MAX_HOUR_WINDOWS, syncHoursFields } from "@/lib/hours";
 import type { HoursWindow } from "@/lib/types";
 
@@ -428,10 +429,11 @@ export function HouseForm({
               onClick={() => setForm({ ...form, scareLevel: level })}
               className={
                 form.scareLevel === level
-                  ? "rounded-full bg-orange-500 px-3 py-1.5 text-xs font-medium text-black"
-                  : "rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-xs font-medium text-black"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-xs text-orange-100 ring-1 ring-orange-500/30"
               }
             >
+              <ScareSign level={level} className="size-6" />
               {scareLabels[level]}
             </button>
           ))}

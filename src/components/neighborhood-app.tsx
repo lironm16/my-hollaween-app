@@ -39,6 +39,7 @@ import { isFrozen, offersCandy, offersSensitivity, isDecorated } from "@/lib/hou
 import { AccessibleMark } from "@/components/symbols";
 import { CandyMark } from "@/components/candy-glyphs";
 import { DecorMark } from "@/components/decor-glyphs";
+import { ScareMark } from "@/components/scare-glyphs";
 import { isOpenNow } from "@/lib/hours";
 import {
   backupLooksNewer,
@@ -636,7 +637,7 @@ export function NeighborhoodApp({
               checked={scareFilters.includes(level)}
               onChange={() => toggleScare(level)}
             >
-              {scareShort[level]}
+              <ScareMark labeled level={level} />
             </FilterOption>
           ))}
         </FilterSection>

@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { StrollerSign } from "@/components/symbols";
 import { CandySign, candyTone } from "@/components/candy-glyphs";
 import { DecorSign } from "@/components/decor-glyphs";
+import { ScareSign } from "@/components/scare-glyphs";
 import {
   isDecorated,
   markedGlutenFree,
@@ -9,7 +10,7 @@ import {
   offersSesameFree,
   treatLevel,
 } from "@/lib/house-state";
-import { scareShort, treatLabels } from "@/lib/labels";
+import { treatLabels } from "@/lib/labels";
 import { formatHoursLabel } from "@/lib/hours";
 import type { ScareLevel, TreatId, TreatStock } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -52,18 +53,7 @@ export function HouseTags({
   return (
     <div className="flex flex-wrap gap-1">
       <CandySign tone={candy} />
-      <Badge
-        className={cn(
-          "h-6 text-sm",
-          scare === "spicy"
-            ? "bg-[#b91c1c] text-[#fff7ed]"
-            : scare === "medium"
-              ? "bg-[#d97706] text-[#1c0e24]"
-              : "bg-[#047857] text-[#fff7ed]",
-        )}
-      >
-        {scareShort[scare]}
-      </Badge>
+      <ScareSign level={scare} />
       {showHours && !compact && hoursLabel ? (
         <Badge variant="secondary" className="h-6 bg-black/30 text-sm text-violet-100">
           {hoursLabel}
