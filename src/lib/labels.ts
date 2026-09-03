@@ -112,7 +112,7 @@ export function houseHeadline(house: {
 export const visitLabels: Record<VisitState, string> = {
   come: "בואו — יש מה לקבל",
   decorOnly: "מקושט — בלי ממתקים, אפשר להסתכל",
-  closed: "נגמר — אין סיבה לבוא",
+  closed: "נגמר המלאי",
 };
 
 export const visitShort: Record<VisitState, string> = {

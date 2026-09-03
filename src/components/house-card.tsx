@@ -82,7 +82,7 @@ export function HouseCard({
         </p>
         <HoursStatusBanner house={house} className="text-sm" />
         {effectiveVisit(house) === "closed" ? (
-          <p className="text-base font-semibold text-red-500">נגמר המלאי — אין סיבה לבוא עכשיו</p>
+          <p className="text-base font-semibold text-red-500">נגמר המלאי</p>
         ) : null}
         <HouseTags house={house} />
         {house.status === "pending" ? (
