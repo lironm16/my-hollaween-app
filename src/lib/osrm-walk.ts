@@ -1,7 +1,12 @@
 import { distanceMeters } from "@/lib/geo";
 import type { LatLng } from "@/lib/route";
 
-const OSRM_FOOT = "https://router.project-osrm.org/route/v1/foot";
+/**
+ * Public router.project-osrm.org only has a car graph — /route/v1/foot
+ * returns the same geometry as driving. FOSSGIS hosts a real foot network.
+ */
+const OSRM_FOOT = "https://routing.openstreetmap.de/routed-foot/route/v1/foot";
+const UA = "bashchona-halloween/1.0 (neighborhood walking map)";
 
 function encodePoints(points: LatLng[]) {
   return points.map((point) => `${point.lng.toFixed(6)},${point.lat.toFixed(6)}`).join(";");
@@ -19,7 +24,9 @@ function dedupeNearby(points: LatLng[], meters = 30): LatLng[] {
 
 async function fetchLeg(from: LatLng, to: LatLng): Promise<LatLng[] | null> {
   const url = `${OSRM_FOOT}/${encodePoints([from, to])}?overview=full&geometries=geojson&steps=false`;
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  const res = await fetch(url, {
+    headers: { Accept: "application/json", "User-Agent": UA },
+  });
   if (!res.ok) return null;
   const data = (await res.json()) as {
     routes?: { geometry?: { coordinates?: [number, number][] } }[];
@@ -29,7 +36,7 @@ async function fetchLeg(from: LatLng, to: LatLng): Promise<LatLng[] | null> {
   return coords.map(([lng, lat]) => ({ lat, lng }));
 }
 
-/** Street-following line that visits points in order, one building at a time. */
+/** Street-following walking line that visits points in order. */
 export async function fetchWalkingGeometry(points: LatLng[]): Promise<LatLng[] | null> {
   const unique = dedupeNearby(points);
   if (unique.length < 2) return unique.length ? unique : null;
