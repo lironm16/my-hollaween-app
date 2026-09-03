@@ -203,6 +203,7 @@ export function NeighborhoodApp({
     houses,
     accessibleOnly,
     candyOnly,
+    decoratedOnly,
     openNowOnly,
     sensitivityFilters,
     scareFilters,
