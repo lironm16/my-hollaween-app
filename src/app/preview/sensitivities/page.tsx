@@ -14,8 +14,7 @@ export default function SensitivitiesPreviewPage() {
           <p className="text-xs text-violet-300">{config.appName} · בחירת אייקון</p>
           <h1 className="text-2xl font-semibold text-orange-100">איזה סימון רגישויות יותר ברור?</h1>
           <p className="text-sm text-violet-200">
-            שלוש עמודות: ללא גלוטן · ללא אגוזים · ללא שומשום. כתבו מספר שורה — סט שלם — או שלושה
-            מספרים, אחד לכל עמודה.
+            שלוש עמודות: ללא גלוטן · ללא אגוזים · ללא שומשום. בפופאפ עכשיו: מספר 1, עם קו.
           </p>
           <div className="flex flex-wrap gap-3 text-sm">
             <Link href="/" className="text-orange-300 underline-offset-2 hover:underline">
@@ -52,11 +51,18 @@ export default function SensitivitiesPreviewPage() {
               id={set.id}
               className="space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/20"
             >
-              <div>
-                <h2 className="text-base font-medium text-orange-100">
-                  {set.number}. {set.name}
-                </h2>
-                <p className="text-xs text-violet-300">{set.blurb}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h2 className="text-base font-medium text-orange-100">
+                    {set.number}. {set.name}
+                  </h2>
+                  <p className="text-xs text-violet-300">{set.blurb}</p>
+                </div>
+                {"current" in set && set.current ? (
+                  <span className="shrink-0 rounded-full bg-orange-500 px-2 py-0.5 text-[11px] font-medium text-black">
+                    בפופאפ עכשיו
+                  </span>
+                ) : null}
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 {SENSITIVITY_KINDS.map((kind) => {
@@ -68,12 +74,16 @@ export default function SensitivitiesPreviewPage() {
                         : set.sesame;
                   return (
                     <div key={kind.id} className="flex flex-col items-center gap-1">
-                      <SensitivitySign
-                        Glyph={Glyph}
-                        kind={kind.id}
-                        out={set.slash}
-                        className="size-10"
-                      />
+                      {"current" in set && set.current ? (
+                        <SensitivitySign kind={kind.id} className="size-10" />
+                      ) : (
+                        <SensitivitySign
+                          Glyph={Glyph}
+                          kind={kind.id}
+                          out={"slash" in set && set.slash}
+                          className="size-10"
+                        />
+                      )}
                       <span className="max-w-16 text-center text-[10px] leading-tight text-violet-300">
                         {kind.label}
                       </span>

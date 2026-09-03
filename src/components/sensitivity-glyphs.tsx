@@ -220,30 +220,76 @@ const KIND_LABEL: Record<SensitivityId, string> = {
   sesameFree: treatLabels.sesameFree,
 };
 
+const SENSITIVITY_DISC: Record<SensitivityId, string> = {
+  glutenFree: "/icons/sensitivity-gluten.png",
+  nutsFree: "/icons/sensitivity-nuts.png",
+  sesameFree: "/icons/sensitivity-sesame.png",
+};
+
 export function SensitivitySign({
   Glyph,
   kind,
   out = false,
   className,
 }: {
-  Glyph: () => ReactNode;
+  Glyph?: () => ReactNode;
   kind: SensitivityId;
   out?: boolean;
   className?: string;
 }) {
+  const label = KIND_LABEL[kind];
+  const photo = SENSITIVITY_DISC[kind];
+
+  if (!Glyph) {
+    return (
+      <span
+        className={cn(
+          "relative inline-flex size-8 shrink-0 overflow-hidden rounded-full",
+          out && "grayscale",
+          className,
+        )}
+        title={label}
+        aria-label={label}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={photo} alt="" aria-hidden className="h-full w-full object-cover" />
+        {out ? <DiscStrike /> : null}
+      </span>
+    );
+  }
+
   return (
     <span
       className={cn(
         "relative inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-800 text-amber-50",
         className,
       )}
-      title={KIND_LABEL[kind]}
-      aria-label={KIND_LABEL[kind]}
+      title={label}
+      aria-label={label}
     >
       <span className="size-[78%]">
         <Glyph />
       </span>
       {out ? <DiscStrike /> : null}
+    </span>
+  );
+}
+
+export function SensitivityMark({
+  kind,
+  labeled = false,
+  out = false,
+  className,
+}: {
+  kind: SensitivityId;
+  labeled?: boolean;
+  out?: boolean;
+  className?: string;
+}) {
+  return (
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <SensitivitySign kind={kind} out={out} />
+      {labeled ? <span>{KIND_LABEL[kind]}</span> : <span className="sr-only">{KIND_LABEL[kind]}</span>}
     </span>
   );
 }
@@ -264,6 +310,7 @@ export const SENSITIVITY_SETS = [
     nuts: Peanut,
     sesame: SesameSeeds,
     slash: true,
+    current: true,
   },
   {
     id: "plain",

@@ -69,10 +69,10 @@ export default function StrollerPreviewPage() {
                     </div>
                   </div>
                   <span
-                    className="inline-flex size-10 items-center justify-center rounded-full bg-[#fff7ed] text-[#1c0e24] ring-2 ring-[#1c0e24]"
+                    className="inline-flex size-10 items-center justify-center overflow-hidden rounded-full bg-[#22d3ee]"
                     title="תג ברשימה"
                   >
-                    <span className="size-6">
+                    <span className="size-8">
                       <Glyph />
                     </span>
                   </span>
@@ -80,8 +80,8 @@ export default function StrollerPreviewPage() {
                     <div className="absolute start-[10px] top-[10px] grid size-[38px] place-items-center rounded-full bg-[#047857] text-[22px] leading-none ring-[2.5px] ring-[#fff7ed]">
                       🎃
                     </div>
-                    <span className="absolute -start-0.5 -top-0.5 grid size-7 place-items-center rounded-full bg-[#fff7ed] text-[#1c0e24] ring-[2.5px] ring-[#1c0e24]">
-                      <span className="size-[18px]">
+                    <span className="absolute -start-0.5 -top-0.5 grid size-7 place-items-center overflow-hidden rounded-full bg-[#22d3ee]">
+                      <span className="size-6">
                         <Glyph />
                       </span>
                     </span>

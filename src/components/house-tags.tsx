@@ -1,8 +1,8 @@
-import { Badge } from "@/components/ui/badge";
 import { StrollerSign } from "@/components/symbols";
 import { CandySign, candyTone } from "@/components/candy-glyphs";
 import { DecorSign } from "@/components/decor-glyphs";
 import { ScareSign } from "@/components/scare-glyphs";
+import { SensitivitySign } from "@/components/sensitivity-glyphs";
 import {
   isDecorated,
   markedGlutenFree,
@@ -10,9 +10,7 @@ import {
   offersSesameFree,
   treatLevel,
 } from "@/lib/house-state";
-import { treatLabels } from "@/lib/labels";
 import type { ScareLevel, TreatId, TreatStock } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
 export function HouseTags({
   house,
@@ -52,25 +50,9 @@ export function HouseTags({
           <StrollerSign />
         </span>
       ) : null}
-      {gluten ? (
-        <Badge
-          className={cn(
-            "h-6 text-sm",
-            glutenOut
-              ? "border-red-400/40 bg-transparent text-red-200 line-through"
-              : "bg-amber-800 text-amber-50",
-          )}
-          variant={glutenOut ? "outline" : "default"}
-        >
-          {treatLabels.glutenFree}
-        </Badge>
-      ) : null}
-      {offersNutsFree(withTreats) ? (
-        <Badge className="h-6 bg-amber-800 text-sm text-amber-50">{treatLabels.nutsFree}</Badge>
-      ) : null}
-      {offersSesameFree(withTreats) ? (
-        <Badge className="h-6 bg-amber-800 text-sm text-amber-50">{treatLabels.sesameFree}</Badge>
-      ) : null}
+      {gluten ? <SensitivitySign kind="glutenFree" out={glutenOut} /> : null}
+      {offersNutsFree(withTreats) ? <SensitivitySign kind="nutsFree" /> : null}
+      {offersSesameFree(withTreats) ? <SensitivitySign kind="sesameFree" /> : null}
     </div>
   );
 }

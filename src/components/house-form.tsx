@@ -20,11 +20,11 @@ import {
   type TreatId,
   type VisitState,
 } from "@/lib/types";
-import { treatLabels } from "@/lib/labels";
 import { candyLevel, effectiveVisit } from "@/lib/house-state";
 import { StrollerSign } from "@/components/symbols";
 import { ScareSign } from "@/components/scare-glyphs";
 import { DecorSign } from "@/components/decor-glyphs";
+import { SensitivityMark } from "@/components/sensitivity-glyphs";
 import { houseHoursWindows, MAX_HOUR_WINDOWS, syncHoursFields } from "@/lib/hours";
 import type { HoursWindow } from "@/lib/types";
 
@@ -356,7 +356,7 @@ export function HouseForm({
                 checked={form.treats.includes(id)}
                 onChange={(e) => setTreat(id, e.target.checked)}
               />
-              {treatLabels[id]}
+              <SensitivityMark labeled kind={id} />
             </label>
           ))}
         </div>

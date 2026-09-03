@@ -39,6 +39,8 @@ import { isFrozen, offersCandy, offersSensitivity, isDecorated } from "@/lib/hou
 import { AccessibleMark } from "@/components/symbols";
 import { CandyMark } from "@/components/candy-glyphs";
 import { DecorMark } from "@/components/decor-glyphs";
+import { SensitivityMark } from "@/components/sensitivity-glyphs";
+import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
 import { ScareMark } from "@/components/scare-glyphs";
 import { isOpenNow } from "@/lib/hours";
 import {
@@ -267,7 +269,7 @@ export function NeighborhoodApp({
     if (candyOnly) parts.push("ממתקים");
     if (decoratedOnly) parts.push("מקושט");
     if (accessibleOnly) parts.push("נגיש");
-    if (likedOnly) parts.push("שמרתי");
+    if (likedOnly) parts.push("אהבתי");
     if (unvisitedOnly) parts.push("לא ביקרתי");
     for (const id of sensitivityFilters) parts.push(treatLabels[id]);
     if (scareActiveCount > 0) {
@@ -626,7 +628,7 @@ export function NeighborhoodApp({
               checked={sensitivityFilters.includes(id)}
               onChange={() => toggleSensitivity(id)}
             >
-              {treatLabels[id]}
+              <SensitivityMark labeled kind={id} />
             </FilterOption>
           ))}
         </FilterSection>
@@ -670,13 +672,13 @@ export function NeighborhoodApp({
             checked={likedOnly}
             onChange={() => updateFilters({ likedOnly: !likedOnly })}
           >
-            שמרתי
+            <LikedMark labeled />
           </FilterOption>
           <FilterOption
             checked={unvisitedOnly}
             onChange={() => updateFilters({ unvisitedOnly: !unvisitedOnly })}
           >
-            לא ביקרתי
+            <UnvisitedMark labeled />
           </FilterOption>
         </FilterSection>
       </FiltersSheet>

@@ -24,7 +24,7 @@ export function StrollerSign({
   return (
     <span
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#fff7ed] text-[#1c0e24] ring-2 ring-[#1c0e24]",
+        "inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#22d3ee] text-[#1c0e24]",
         className,
       )}
     >
