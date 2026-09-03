@@ -196,12 +196,16 @@ button {
   flex-direction: column;
   gap: 6px;
   min-height: 0;
-  max-height: calc(var(--house-popup-max, min(46dvh, 340px)) - 5.5rem);
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: visible;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
+}
+
+.house-map-popup-list.is-capped {
+  max-height: 13.5rem;
+  overflow-y: auto;
 }
 
 .house-map-popup.is-multi > .house-map-popup-meta {

@@ -109,9 +109,29 @@ function bindPopupRoot(node: HTMLDivElement | null) {
   L.DomEvent.disableScrollPropagation(node);
 }
 
+/** Show two apartments; anything after that scrolls inside the popup. */
+const POPUP_VISIBLE_APARTMENTS = 2;
+
+function capPopupList(node: HTMLUListElement, rows = POPUP_VISIBLE_APARTMENTS) {
+  const items = [...node.children] as HTMLElement[];
+  if (items.length <= rows) {
+    node.style.maxHeight = "";
+    node.classList.remove("is-capped");
+    return;
+  }
+  node.classList.add("is-capped");
+  const styles = getComputedStyle(node);
+  const gap = Number.parseFloat(styles.rowGap || styles.gap || "6") || 6;
+  const height =
+    items.slice(0, rows).reduce((sum, el) => sum + el.offsetHeight, 0) + gap * (rows - 1);
+  if (height > 0) node.style.maxHeight = `${height}px`;
+}
+
 /** Keep apartment-list swipes on the list so the map does not steal them. */
 function bindPopupList(node: HTMLUListElement | null) {
-  if (!node || node.dataset.scrollBound === "1") return;
+  if (!node) return;
+  capPopupList(node);
+  if (node.dataset.scrollBound === "1") return;
   node.dataset.scrollBound = "1";
   L.DomEvent.disableClickPropagation(node);
   L.DomEvent.disableScrollPropagation(node);
@@ -152,6 +172,17 @@ function HousePreviewPopup({
   const multi = houses.length > 1;
   const address = houses[0] ? formatDisplayAddress(houses[0]) : "";
   const popupMaxHeight = useMapPopupMaxHeight();
+  const listRef = useRef<HTMLUListElement | null>(null);
+
+  useEffect(() => {
+    if (!multi) return;
+    const node = listRef.current;
+    if (!node) return;
+    const run = () => capPopupList(node);
+    run();
+    const frame = window.requestAnimationFrame(run);
+    return () => window.cancelAnimationFrame(frame);
+  }, [multi, houses, popupMaxHeight]);
 
   return (
     <Popup
@@ -178,7 +209,13 @@ function HousePreviewPopup({
               <span className="house-map-popup-badge">{houses.length} בתים</span>
             </div>
             <p className="house-map-popup-meta">בחרו דירה בבניין</p>
-            <ul ref={bindPopupList} className="house-map-popup-list">
+            <ul
+              ref={(node) => {
+                listRef.current = node;
+                bindPopupList(node);
+              }}
+              className={cn("house-map-popup-list", houses.length > 2 && "is-capped")}
+            >
               {houses.map((house) => {
                 const closed = effectiveVisit(house) === "closed";
                 return (

@@ -1562,6 +1562,12 @@
   .ring-\[\#fff7ed\] {
     --tw-ring-color: #fff7ed;
   }
+  .ring-amber-500\/20 {
+    --tw-ring-color: color-mix(in srgb, oklch(76.9% 0.188 70.08) 20%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--color-amber-500) 20%, transparent);
+    }
+  }
   .ring-amber-500\/25 {
     --tw-ring-color: color-mix(in srgb, oklch(76.9% 0.188 70.08) 25%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1707,6 +1713,9 @@
   }
   .\[text-shadow\:0_0_14px_rgba\(251\,146\,60\,0\.45\)\] {
     text-shadow: 0 0 14px rgba(251,146,60,0.45);
+  }
+  .ring-inset {
+    --tw-ring-inset: inset;
   }
   .group-data-\[disabled\=true\]\:pointer-events-none:is(:where(.group)[data-disabled="true"] *) {
     pointer-events: none;
@@ -3367,12 +3376,15 @@ svg.leaflet-zoom-animated {
   flex-direction: column;
   gap: 6px;
   min-height: 0;
-  max-height: calc(var(--house-popup-max, min(46dvh, 340px)) - 5.5rem);
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: visible;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
+}
+.house-map-popup-list.is-capped {
+  max-height: 13.5rem;
+  overflow-y: auto;
   scrollbar-gutter: stable;
 }
 .house-map-popup-list::-webkit-scrollbar {
