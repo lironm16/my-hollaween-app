@@ -11,14 +11,11 @@ import {
   treatLevel,
 } from "@/lib/house-state";
 import { treatLabels } from "@/lib/labels";
-import { formatHoursLabel } from "@/lib/hours";
 import type { ScareLevel, TreatId, TreatStock } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function HouseTags({
   house,
-  compact = false,
-  showHours = true,
 }: {
   house: {
     address?: string;
@@ -37,10 +34,6 @@ export function HouseTags({
     openTo2?: string;
     openHours?: { from: string; to: string }[];
   };
-  /** Smaller set for map popups. */
-  compact?: boolean;
-  /** Hours already shown on list cards — hide the badge there. */
-  showHours?: boolean;
 }) {
   const treats = house.treats ?? [];
   const withTreats = { treats, treatStock: house.treatStock };
@@ -48,17 +41,11 @@ export function HouseTags({
   const candy = candyTone(withTreats);
   const gluten = markedGlutenFree(withTreats);
   const glutenOut = gluten && treatLevel(withTreats, "glutenFree") === "out";
-  const hoursLabel = formatHoursLabel(house);
 
   return (
     <div className="flex flex-wrap gap-1">
       <CandySign tone={candy} />
       <ScareSign level={scare} />
-      {showHours && !compact && hoursLabel ? (
-        <Badge variant="secondary" className="h-6 bg-black/30 text-sm text-violet-100">
-          {hoursLabel}
-        </Badge>
-      ) : null}
       <DecorSign on={isDecorated(house)} />
       {house.accessible ? (
         <span title="נגיש" aria-label="נגיש">

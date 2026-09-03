@@ -84,7 +84,7 @@ export function HouseCard({
         {effectiveVisit(house) === "closed" ? (
           <p className="text-base font-semibold text-red-500">נגמר המלאי — אין סיבה לבוא עכשיו</p>
         ) : null}
-        <HouseTags house={house} showHours={false} />
+        <HouseTags house={house} />
         {house.status === "pending" ? (
           <p className="text-sm font-medium text-amber-200">ממתין לאישור</p>
         ) : null}

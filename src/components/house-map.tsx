@@ -219,7 +219,7 @@ function HousePreviewPopup({
                         <span className="house-map-popup-item-arrival">{house.arrival}</span>
                       ) : null}
                       <div className="house-map-popup-tags">
-                        <HouseTags house={house} compact />
+                        <HouseTags house={house} />
                       </div>
                       {closed ? (
                         <span className="house-map-popup-soldout">נגמר המלאי</span>
