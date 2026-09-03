@@ -24,6 +24,7 @@ import { treatLabels } from "@/lib/labels";
 import { candyLevel, effectiveVisit } from "@/lib/house-state";
 import { StrollerSign } from "@/components/symbols";
 import { ScareSign } from "@/components/scare-glyphs";
+import { DecorSign } from "@/components/decor-glyphs";
 import { houseHoursWindows, MAX_HOUR_WINDOWS, syncHoursFields } from "@/lib/hours";
 import type { HoursWindow } from "@/lib/types";
 
@@ -320,7 +321,10 @@ export function HouseForm({
           onChange={(e) => setDecorated(e.target.checked)}
         />
         <span>
-          <span className="font-medium text-orange-100">הבית מקושט</span>
+          <span className="inline-flex items-center gap-2 font-medium text-orange-100">
+            <DecorSign on={decorated} />
+            הבית מקושט
+          </span>
           <span className="block text-xs text-violet-300">
             יש קישוטי האלווין שאפשר לראות מבחוץ או בכניסה
           </span>
