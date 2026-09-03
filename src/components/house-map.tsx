@@ -423,7 +423,7 @@ export function HouseMap({
         maxZoom={config.map.maxZoom}
         scrollWheelZoom
         className={cn(
-          "h-full w-full rounded-none bg-[#1a1024]",
+          "h-full w-full rounded-none bg-[#1a1024] is-map-muted",
           config.tiles.invert && "is-osm-dark",
         )}
         style={{ height: "100%", width: "100%" }}

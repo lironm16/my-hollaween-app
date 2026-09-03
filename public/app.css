@@ -3274,7 +3274,10 @@ svg.leaflet-zoom-animated {
   isolation: isolate;
 }
 .leaflet-container.is-osm-dark .leaflet-tile-pane {
-  filter: invert(1) hue-rotate(180deg) saturate(0.35) brightness(0.82) contrast(1.05);
+  filter: invert(1) hue-rotate(180deg) saturate(0) brightness(0.82) contrast(1.08);
+}
+.leaflet-container.is-map-muted:not(.is-osm-dark) .leaflet-tile-pane {
+  filter: saturate(0) brightness(0.9) contrast(1.05);
 }
 .leaflet-container img,
 .leaflet-pane img,
