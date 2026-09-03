@@ -307,10 +307,29 @@ button {
   color: #f87171;
 }
 
+.house-map-popup-pager-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.house-map-popup-skip {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(248, 245, 239, 0.1);
+  color: #f8f5ef;
+}
+
 .house-map-popup-dots {
   display: flex;
   justify-content: center;
   gap: 2px;
+  flex: 1;
 }
 
 .house-map-popup-dot {

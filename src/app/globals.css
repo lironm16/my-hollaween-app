@@ -331,11 +331,47 @@
   color: #f8f5ef;
 }
 
+.house-map-popup-pager-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.house-map-popup-skip {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(248, 245, 239, 0.1);
+  color: #f8f5ef;
+  cursor: pointer;
+}
+
+.house-map-popup-skip svg {
+  width: 20px;
+  height: 20px;
+}
+
+.house-map-popup-skip:disabled {
+  opacity: 0.28;
+  cursor: default;
+}
+
+.house-map-popup-skip:active:not(:disabled) {
+  background: rgba(249, 115, 22, 0.28);
+}
+
 .house-map-popup-dots {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 2px;
+  flex: 1;
   flex-shrink: 0;
 }
 

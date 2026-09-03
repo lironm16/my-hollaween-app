@@ -12,7 +12,7 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import L from "leaflet";
-import { LocateFixed, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, LocateFixed, X } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import { config, formatDisplayAddress, inNeighborhood } from "@/lib/config";
 import type { UserLocation } from "@/hooks/use-user-location";
@@ -350,8 +350,9 @@ function HousePreviewPopup({
   const goToPage = (index: number) => {
     const node = scrollerRef.current;
     if (!node) return;
-    setPage(index);
-    scrollPageIntoView(node, index, "smooth");
+    const next = Math.min(houses.length - 1, Math.max(0, index));
+    setPage(next);
+    scrollPageIntoView(node, next, "smooth");
   };
 
   return (
@@ -378,7 +379,16 @@ function HousePreviewPopup({
               </div>
               <PopupCloseButton onClose={closePopup} />
             </div>
-            <div className="house-map-popup-pager">
+            <div
+              className="house-map-popup-pager"
+              onWheel={(event) => {
+                const dx = event.deltaX + event.deltaY;
+                if (Math.abs(dx) < 8) return;
+                event.preventDefault();
+                event.stopPropagation();
+                goToPage(page + (dx > 0 ? 1 : -1));
+              }}
+            >
               <div
                 ref={scrollerRef}
                 className="house-map-popup-scroller"
@@ -402,22 +412,50 @@ function HousePreviewPopup({
                     </div>
                 ))}
               </div>
-              <div className="house-map-popup-dots" role="tablist" aria-label="בחירת דירה">
-                {houses.map((house, index) => (
-                  <button
-                    key={house.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={page === index}
-                    aria-label={`${houseHeadline(house)} · ${index + 1} מתוך ${houses.length}`}
-                    className={cn("house-map-popup-dot", page === index && "is-active")}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      goToPage(index);
-                    }}
-                  />
-                ))}
+              <div className="house-map-popup-pager-nav">
+                <button
+                  type="button"
+                  className="house-map-popup-skip"
+                  aria-label="דירה קודמת"
+                  disabled={page <= 0}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    goToPage(page - 1);
+                  }}
+                >
+                  <ChevronRight aria-hidden />
+                </button>
+                <div className="house-map-popup-dots" role="tablist" aria-label="בחירת דירה">
+                  {houses.map((house, index) => (
+                    <button
+                      key={house.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={page === index}
+                      aria-label={`${houseHeadline(house)} · ${index + 1} מתוך ${houses.length}`}
+                      className={cn("house-map-popup-dot", page === index && "is-active")}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        goToPage(index);
+                      }}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="house-map-popup-skip"
+                  aria-label="דירה הבאה"
+                  disabled={page >= houses.length - 1}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    goToPage(page + 1);
+                  }}
+                >
+                  <ChevronLeft aria-hidden />
+                </button>
               </div>
             </div>
           </>
