@@ -463,6 +463,10 @@
     width: calc(var(--spacing) * 11);
     height: calc(var(--spacing) * 11);
   }
+  .size-12 {
+    width: calc(var(--spacing) * 12);
+    height: calc(var(--spacing) * 12);
+  }
   .size-14 {
     width: calc(var(--spacing) * 14);
     height: calc(var(--spacing) * 14);
@@ -483,6 +487,10 @@
     width: 62%;
     height: 62%;
   }
+  .size-\[68\%\] {
+    width: 68%;
+    height: 68%;
+  }
   .size-\[70\%\] {
     width: 70%;
     height: 70%;
@@ -499,13 +507,9 @@
     width: 86%;
     height: 86%;
   }
-  .size-\[88\%\] {
-    width: 88%;
-    height: 88%;
-  }
-  .size-\[90\%\] {
-    width: 90%;
-    height: 90%;
+  .size-\[108\%\] {
+    width: 108%;
+    height: 108%;
   }
   .size-full {
     width: 100%;
@@ -627,6 +631,9 @@
   }
   .max-w-16 {
     max-width: calc(var(--spacing) * 16);
+  }
+  .max-w-20 {
+    max-width: calc(var(--spacing) * 20);
   }
   .max-w-\[10rem\] {
     max-width: 10rem;
@@ -992,6 +999,9 @@
   .bg-\[\#e11d48\] {
     background-color: #e11d48;
   }
+  .bg-\[\#fbbf24\] {
+    background-color: #fbbf24;
+  }
   .bg-\[\#fff7ed\] {
     background-color: #fff7ed;
   }
@@ -1153,6 +1163,9 @@
   }
   .object-cover {
     object-fit: cover;
+  }
+  .object-center {
+    object-position: center;
   }
   .p-\(--card-spacing\) {
     padding: var(--card-spacing);
@@ -3464,7 +3477,7 @@ svg.leaflet-zoom-animated {
   width: 38px;
   height: 38px;
   border-radius: 999px;
-  background: #047857;
+  background: #ea580c;
   border: 2.5px solid #fff7ed;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
   opacity: 1;
@@ -3491,20 +3504,6 @@ svg.leaflet-zoom-animated {
   text-align: center;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   letter-spacing: -0.02em;
-}
-.pumpkin-pin.is-ok {
-  background: #047857;
-}
-.pumpkin-pin.is-low {
-  background: #d97706;
-}
-.pumpkin-pin.is-out {
-  background: #b91c1c;
-}
-.pumpkin-pin.is-closed,
-.pumpkin-pin.is-frozen,
-.pumpkin-pin.is-pending {
-  background: #475569;
 }
 .pumpkin-pin.is-pick {
   background: #ea580c;
