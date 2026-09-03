@@ -13,7 +13,7 @@ const tiles = cartoKey
       invert: false,
     }
   : {
-      // Carto watermarks raster tiles without a key. OSM is inverted + desaturated in CSS.
+      // Carto now watermarks raster tiles with "API key required" unless a key is passed.
       url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
