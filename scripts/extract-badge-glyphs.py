@@ -46,8 +46,59 @@ def chroma_key(
     return out
 
 
+def keep_largest_blob(im: Image.Image, min_alpha: int = 40) -> Image.Image:
+    """Drop chroma-key specks on the disc rim so the ghost can crop tight."""
+    src = im.convert("RGBA")
+    w, h = src.size
+    px = src.load()
+    seen = [[False] * w for _ in range(h)]
+    best: list[tuple[int, int]] = []
+    for y in range(h):
+        for x in range(w):
+            if seen[y][x] or px[x, y][3] <= min_alpha:
+                continue
+            stack = [(x, y)]
+            seen[y][x] = True
+            blob: list[tuple[int, int]] = []
+            while stack:
+                cx, cy = stack.pop()
+                blob.append((cx, cy))
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    nx, ny = cx + dx, cy + dy
+                    if 0 <= nx < w and 0 <= ny < h and not seen[ny][nx] and px[nx, ny][3] > min_alpha:
+                        seen[ny][nx] = True
+                        stack.append((nx, ny))
+            if len(blob) > len(best):
+                best = blob
+    out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    op = out.load()
+    for x, y in best:
+        op[x, y] = px[x, y]
+    return out
+
+
+def opaque_bbox(im: Image.Image, min_alpha: int = 24) -> tuple[int, int, int, int] | None:
+    src = im.convert("RGBA")
+    px = src.load()
+    w, h = src.size
+    minx, miny, maxx, maxy = w, h, 0, 0
+    found = False
+    for y in range(h):
+        for x in range(w):
+            if px[x, y][3] <= min_alpha:
+                continue
+            found = True
+            minx = min(minx, x)
+            miny = min(miny, y)
+            maxx = max(maxx, x)
+            maxy = max(maxy, y)
+    if not found:
+        return None
+    return minx, miny, maxx + 1, maxy + 1
+
+
 def trim(im: Image.Image, pad: int = 8) -> Image.Image:
-    bbox = im.getbbox()
+    bbox = opaque_bbox(im)
     if not bbox:
         return im
     l, t, r, b = bbox
@@ -59,38 +110,23 @@ def trim(im: Image.Image, pad: int = 8) -> Image.Image:
 
 
 def recenter_glyph(im: Image.Image, pad: int = 4) -> Image.Image:
-    """Place the opaque mass at the center of a square so disc badges sit even."""
+    """Square crop around the opaque figure so every ghost fills the disc the same."""
     src = im.convert("RGBA")
-    px = src.load()
-    w, h = src.size
-    mass_x = mass_y = total = 0.0
-    minx, miny, maxx, maxy = w, h, 0, 0
-    for y in range(h):
-        for x in range(w):
-            alpha = px[x, y][3]
-            if alpha <= 20:
-                continue
-            mass_x += x * alpha
-            mass_y += y * alpha
-            total += alpha
-            minx = min(minx, x)
-            miny = min(miny, y)
-            maxx = max(maxx, x)
-            maxy = max(maxy, y)
-    if total <= 0:
+    bbox = opaque_bbox(src)
+    if not bbox:
         return src
-    cx, cy = mass_x / total, mass_y / total
-    half = int(math.ceil(max(cx - minx, maxx - cx, cy - miny, maxy - cy) + pad))
-    size = max(half * 2, 1)
-    out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    out.paste(src, (int(round(size / 2 - cx)), int(round(size / 2 - cy))), src)
+    cropped = src.crop(bbox)
+    w, h = cropped.size
+    side = max(w, h) + pad * 2
+    out = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+    out.paste(cropped, ((side - w) // 2, (side - h) // 2), cropped)
     return out
 
 
 def extract_disc_glyph(src: Path, dest: Path, bg: tuple[int, int, int], thresh: float = 58) -> None:
     keyed = chroma_key(Image.open(src), bg, thresh=thresh)
     keyed = chroma_key(keyed, bg, thresh=thresh - 8, softness=16)
-    recenter_glyph(trim(keyed, pad=4)).save(dest)
+    recenter_glyph(trim(keep_largest_blob(keyed), pad=2)).save(dest)
     print(f"wrote {dest.name}")
 
 
@@ -172,7 +208,7 @@ def extract_medium_ghost() -> None:
                 continue
             if p[0] > 160 and 70 < p[1] < 180 and p[2] < 60:
                 px[x, y] = (body[0], body[1], body[2], p[3])
-    recenter_glyph(trim(keyed, pad=4)).save(ROOT / "scare-ghost-medium.png")
+    recenter_glyph(trim(keep_largest_blob(keyed), pad=2)).save(ROOT / "scare-ghost-medium.png")
     print("wrote scare-ghost-medium.png")
 
 
