@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
-/** International Symbol of Access — readable at badge and map-pin size. */
-export function AccessibleGlyph({ className }: { className?: string }) {
+/** Side-view stroller — chunky so it reads at pin and badge size. */
+export function StrollerGlyph({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -9,18 +9,46 @@ export function AccessibleGlyph({ className }: { className?: string }) {
       aria-hidden="true"
       focusable="false"
     >
-      <circle cx="14" cy="4" r="2.05" fill="currentColor" />
+      <path
+        d="M3.2 14.2V7.6C3.2 4.55 5.7 2.2 8.8 2.2h3.4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.7"
+        strokeLinecap="round"
+      />
       <path
         fill="currentColor"
-        d="M9.1 7.55h5.35c.55 0 1.02.38 1.15.91L16.5 12h2.6a1 1 0 0 1 0 2h-3.05l-.7-2.35h-2.2l.85 3.05A5.2 5.2 0 1 1 8.15 16.4V8.7c0-.64.52-1.15 1.15-1.15Z"
+        d="M6.5 7.6h12.8c.85 0 1.5.8 1.35 1.62L19.4 15.4H8.05L6.5 7.6Z"
       />
+      <circle cx="8.35" cy="19.05" r="3.2" fill="currentColor" />
+      <circle cx="17.15" cy="19.05" r="2.65" fill="currentColor" />
     </svg>
   );
 }
 
-/** Inline SVG for Leaflet pin HTML (same glyph as AccessibleGlyph). */
-export const ACCESSIBLE_GLYPH_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="14" cy="4" r="2.05" fill="currentColor"/><path fill="currentColor" d="M9.1 7.55h5.35c.55 0 1.02.38 1.15.91L16.5 12h2.6a1 1 0 0 1 0 2h-3.05l-.7-2.35h-2.2l.85 3.05A5.2 5.2 0 1 1 8.15 16.4V8.7c0-.64.52-1.15 1.15-1.15Z"/></svg>';
+/** Cream disc + black stroller for Leaflet pin HTML. */
+export const STROLLER_GLYPH_SVG =
+  '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3.2 14.2V7.6C3.2 4.55 5.7 2.2 8.8 2.2h3.4" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/><path fill="currentColor" d="M6.5 7.6h12.8c.85 0 1.5.8 1.35 1.62L19.4 15.4H8.05L6.5 7.6Z"/><circle cx="8.35" cy="19.05" r="3.2" fill="currentColor"/><circle cx="17.15" cy="19.05" r="2.65" fill="currentColor"/></svg>';
+
+/** High-contrast sign: cream circle, dark stroller — never green. */
+export function StrollerSign({
+  className,
+  glyphClassName,
+}: {
+  className?: string;
+  glyphClassName?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#fff7ed] text-[#1c0e24] ring-2 ring-[#1c0e24]",
+        className,
+      )}
+    >
+      <StrollerGlyph className={cn("size-5", glyphClassName)} />
+    </span>
+  );
+}
 
 export function AccessibleMark({
   labeled = false,
@@ -31,7 +59,7 @@ export function AccessibleMark({
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <AccessibleGlyph className="size-5 shrink-0" />
+      <StrollerSign />
       {labeled ? <span>נגיש</span> : <span className="sr-only">נגיש</span>}
     </span>
   );

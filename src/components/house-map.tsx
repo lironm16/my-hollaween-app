@@ -23,7 +23,7 @@ import { houseHeadline, themeEmoji } from "@/lib/labels";
 import { candyLevel, effectiveVisit, isFrozen, markedCandy } from "@/lib/house-state";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { HouseTags } from "@/components/house-tags";
-import { ACCESSIBLE_GLYPH_SVG } from "@/components/symbols";
+import { STROLLER_GLYPH_SVG } from "@/components/symbols";
 import { cn } from "@/lib/utils";
 
 function routeOrderIcon(order: number) {
@@ -94,14 +94,14 @@ function pinIcon(house: PublicHouse, count = 1, kind = pinKind(house), accessibl
       ? `<b class="pin-count" aria-label="${count} דירות">×${count}</b>`
       : "";
   const access = accessible
-    ? `<b class="pin-access" title="נגיש" aria-label="נגיש">${ACCESSIBLE_GLYPH_SVG}</b>`
+    ? `<b class="pin-access" title="נגיש" aria-label="נגיש">${STROLLER_GLYPH_SVG}</b>`
     : "";
   return L.divIcon({
     className: "pumpkin-pin-icon",
     html: `<div class="pumpkin-pin is-${kind}">${badge}${access}<span>${emoji}</span></div>`,
-    iconSize: [40, 44],
-    iconAnchor: [20, 42],
-    popupAnchor: [0, -36],
+    iconSize: [58, 58],
+    iconAnchor: [29, 48],
+    popupAnchor: [0, -40],
   });
 }
 

@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { AccessibleGlyph } from "@/components/symbols";
+import { StrollerSign } from "@/components/symbols";
 import {
   candyLevel,
   isDecorated,
@@ -83,13 +83,9 @@ export function HouseTags({
         <Badge className="h-6 bg-orange-800 text-sm text-orange-50">מקושט</Badge>
       ) : null}
       {house.accessible ? (
-        <Badge
-          className="size-6 justify-center bg-emerald-700 p-0 text-emerald-50"
-          aria-label="נגיש"
-          title="נגיש"
-        >
-          <AccessibleGlyph className="size-3.5" />
-        </Badge>
+        <span title="נגיש" aria-label="נגיש">
+          <StrollerSign />
+        </span>
       ) : null}
       {gluten ? (
         <Badge

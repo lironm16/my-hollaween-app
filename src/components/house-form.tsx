@@ -22,7 +22,7 @@ import {
 } from "@/lib/types";
 import { treatLabels } from "@/lib/labels";
 import { candyLevel, effectiveVisit } from "@/lib/house-state";
-import { AccessibleGlyph } from "@/components/symbols";
+import { StrollerSign } from "@/components/symbols";
 import { houseHoursWindows, MAX_HOUR_WINDOWS, syncHoursFields } from "@/lib/hours";
 import type { HoursWindow } from "@/lib/types";
 
@@ -303,7 +303,7 @@ export function HouseForm({
         />
         <span>
           <span className="inline-flex items-center gap-2 font-medium text-orange-100">
-            <AccessibleGlyph className="size-5 text-emerald-300" />
+            <StrollerSign />
             נגיש
           </span>
           <span className="block text-xs text-violet-300">
