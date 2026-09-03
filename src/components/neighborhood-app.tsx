@@ -323,7 +323,6 @@ export function NeighborhoodApp({
       geo.refresh();
     }
     setRouteMode(true);
-    setView("map");
   }
 
   function applyAdminHouse(next: House | PublicHouse) {
