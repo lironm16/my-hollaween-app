@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pull ghost / web / sensitivity figures off their baked discs."""
+"""Pull ghost / sensitivity figures off their baked discs."""
 
 from __future__ import annotations
 
