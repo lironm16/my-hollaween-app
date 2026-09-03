@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   Circle,
   MapContainer,
@@ -159,10 +159,13 @@ function HousePreviewPopup({
   houses,
   onOpenDetails,
   selectedId,
+  interactive = true,
 }: {
   houses: PublicHouse[];
   onOpenDetails?: (house: PublicHouse) => void;
   selectedId?: string | null;
+  /** False for a short moment after open so the same tap cannot hit buttons. */
+  interactive?: boolean;
 }) {
   const map = useMap();
   const multi = houses.length > 1;
@@ -177,7 +180,12 @@ function HousePreviewPopup({
       keepInView={false}
       closeButton
     >
-      <div ref={bindPopupRoot} dir="rtl" className={cn("house-map-popup", multi && "is-multi")}>
+      <div
+        ref={bindPopupRoot}
+        dir="rtl"
+        className={cn("house-map-popup", multi && "is-multi")}
+        style={interactive ? undefined : { pointerEvents: "none" }}
+      >
         {multi ? (
           <>
             <div className="house-map-popup-cluster-head">
@@ -286,12 +294,16 @@ function ClusterMarker({
   onSelect?: (house: PublicHouse) => void;
 }) {
   const markerRef = useRef<L.Marker | null>(null);
+  const armTimer = useRef<number>(0);
+  const [popupArmed, setPopupArmed] = useState(false);
   const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
 
   useEffect(() => {
     if (!selectedHere) return;
     markerRef.current?.openPopup();
   }, [selectedHere, selectedId]);
+
+  useEffect(() => () => window.clearTimeout(armTimer.current), []);
 
   return (
     <Marker
@@ -300,8 +312,14 @@ function ClusterMarker({
       icon={clusterIcon(cluster)}
       zIndexOffset={selectedHere ? 500 : cluster.houses.length > 1 ? 200 : 0}
       eventHandlers={{
-        click: () => {
-          if (cluster.houses.length === 1) onSelect?.(cluster.houses[0]);
+        popupopen: () => {
+          setPopupArmed(false);
+          window.clearTimeout(armTimer.current);
+          armTimer.current = window.setTimeout(() => setPopupArmed(true), 400);
+        },
+        popupclose: () => {
+          window.clearTimeout(armTimer.current);
+          setPopupArmed(false);
         },
       }}
     >
@@ -309,6 +327,7 @@ function ClusterMarker({
         houses={cluster.houses}
         onOpenDetails={onSelect}
         selectedId={selectedId}
+        interactive={popupArmed}
       />
     </Marker>
   );
