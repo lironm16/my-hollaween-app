@@ -930,9 +930,6 @@
   .bg-\[\#2a1638\]\/95 {
     background-color: color-mix(in oklab, #2a1638 95%, transparent);
   }
-  .bg-\[\#6d28d9\] {
-    background-color: #6d28d9;
-  }
   .bg-\[\#94a3b8\] {
     background-color: #94a3b8;
   }
@@ -944,12 +941,6 @@
   }
   .bg-\[\#160b1f\] {
     background-color: #160b1f;
-  }
-  .bg-\[\#0369a1\] {
-    background-color: #0369a1;
-  }
-  .bg-\[\#991b1b\] {
-    background-color: #991b1b;
   }
   .bg-\[\#12081a\] {
     background-color: #12081a;
@@ -1086,9 +1077,6 @@
   .bg-red-700 {
     background-color: var(--color-red-700);
   }
-  .bg-red-800 {
-    background-color: var(--color-red-800);
-  }
   .bg-red-950\/40 {
     background-color: color-mix(in srgb, oklch(25.8% 0.092 26.042) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1107,9 +1095,6 @@
   .bg-sky-700 {
     background-color: var(--color-sky-700);
   }
-  .bg-sky-800 {
-    background-color: var(--color-sky-800);
-  }
   .bg-sky-950\/50 {
     background-color: color-mix(in srgb, oklch(29.3% 0.066 243.157) 50%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1118,9 +1103,6 @@
   }
   .bg-transparent {
     background-color: transparent;
-  }
-  .bg-violet-800 {
-    background-color: var(--color-violet-800);
   }
   .bg-violet-950\/50 {
     background-color: color-mix(in srgb, oklch(28.3% 0.141 291.089) 50%, transparent);
@@ -1444,9 +1426,6 @@
   .text-primary-foreground {
     color: var(--primary-foreground);
   }
-  .text-red-50 {
-    color: var(--color-red-50);
-  }
   .text-red-100 {
     color: var(--color-red-100);
   }
@@ -1458,9 +1437,6 @@
   }
   .text-secondary-foreground {
     color: var(--secondary-foreground);
-  }
-  .text-sky-50 {
-    color: var(--color-sky-50);
   }
   .text-sky-100 {
     color: var(--color-sky-100);
