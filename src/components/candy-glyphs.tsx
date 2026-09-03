@@ -129,7 +129,7 @@ export function CandySign({
   return (
     <span
       className={cn(
-        "relative inline-flex size-8 shrink-0 items-center justify-center rounded-full",
+        "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full",
         TONE_CLASS[tone],
         className,
       )}
