@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
     "**.cursor.com",
     "*.cursorusercontent.com",
     "**.cursorusercontent.com",
+    "*.oncursor.com",
+    "**.oncursor.com",
+    "*.vercel.app",
+    "**.vercel.app",
   ],
   async headers() {
     return [
