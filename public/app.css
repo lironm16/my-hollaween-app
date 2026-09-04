@@ -3730,7 +3730,7 @@ svg.leaflet-zoom-animated {
   display: block;
   border-radius: 999px;
   pointer-events: none;
-  animation: pin-hours-fade 2.8s ease-in-out infinite;
+  animation: pin-hours-fade 4.5s ease-in-out infinite;
 }
 .house-pin.house-pin-dot .pin-hours-ring {
   inset: -5px;
@@ -3755,10 +3755,10 @@ svg.leaflet-zoom-animated {
 }
 @keyframes pin-hours-fade {
   0%, 100% {
-    opacity: 0.22;
+    opacity: 0.38;
   }
   50% {
-    opacity: 1;
+    opacity: 0.92;
   }
 }
 @media (prefers-reduced-motion: reduce) {
