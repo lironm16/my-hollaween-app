@@ -128,12 +128,13 @@ export default function EditPage() {
       setHouse(picked);
       return;
     }
-    if (!ownedMatch) {
+    const mine = owned.find((item) => item.id === picked.id);
+    if (!mine) {
       setEditCode("");
       return;
     }
     const target = picked;
-    const code = ownedMatch.editCode;
+    const code = mine.editCode;
     setEditCode(code);
     let cancelled = false;
     void unlockWith(target, code, { quiet: true }).then((ok) => {
@@ -142,8 +143,10 @@ export default function EditPage() {
     return () => {
       cancelled = true;
     };
+    // Intentionally only when the chosen house or admin session changes.
+    // Saving the house as owned after unlock must not remount the editor.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [picked?.id, admin, ownedMatch?.editCode]);
+  }, [picked?.id, admin]);
 
   useEffect(() => {
     if (admin && adminEditCode) setEditCode(adminEditCode);
