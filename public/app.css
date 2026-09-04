@@ -291,6 +291,9 @@
   .start-\[10px\] {
     inset-inline-start: 10px;
   }
+  .end-0 {
+    inset-inline-end: calc(var(--spacing) * 0);
+  }
   .end-2 {
     inset-inline-end: calc(var(--spacing) * 2);
   }
@@ -318,11 +321,11 @@
   .top-\[10px\] {
     top: 10px;
   }
-  .right-3 {
-    right: calc(var(--spacing) * 3);
-  }
   .bottom-0 {
     bottom: 0px;
+  }
+  .bottom-\[calc\(100\%\+0\.5rem\)\] {
+    bottom: calc(100% + 0.5rem);
   }
   .isolate {
     isolation: isolate;
@@ -625,6 +628,9 @@
   }
   .w-\[90\%\] {
     width: 90%;
+  }
+  .w-\[min\(17\.5rem\,calc\(100vw-1\.5rem\)\)\] {
+    width: min(17.5rem, calc(100vw - 1.5rem));
   }
   .w-\[min\(20rem\,88vw\)\] {
     width: min(20rem, 88vw);
@@ -1004,6 +1010,9 @@
   }
   .bg-\[\#160b1f\] {
     background-color: #160b1f;
+  }
+  .bg-\[\#160b20\]\/95 {
+    background-color: color-mix(in oklab, #160b20 95%, transparent);
   }
   .bg-\[\#12081a\] {
     background-color: #12081a;
@@ -1599,6 +1608,10 @@
     --tw-shadow: 0 8px 24px var(--tw-shadow-color, rgba(0,0,0,0.45));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
+  .shadow-\[0_12px_32px_rgba\(0\,0\,0\,0\.5\)\] {
+    --tw-shadow: 0 12px 32px var(--tw-shadow-color, rgba(0,0,0,0.5));
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
   .shadow-lg {
     --tw-shadow: 0 10px 15px -3px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 4px 6px -4px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
@@ -1680,6 +1693,12 @@
     --tw-ring-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 30%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       --tw-ring-color: color-mix(in oklab, var(--color-orange-500) 30%, transparent);
+    }
+  }
+  .ring-orange-500\/35 {
+    --tw-ring-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 35%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--color-orange-500) 35%, transparent);
     }
   }
   .ring-sky-400\/40 {
@@ -1958,6 +1977,9 @@
     }
     .hover\:text-muted-foreground:hover {
       color: var(--muted-foreground);
+    }
+    .hover\:text-orange-100:hover {
+      color: var(--color-orange-100);
     }
     .hover\:underline:hover {
       text-decoration-line: underline;
@@ -4154,12 +4176,52 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
     top: calc(env(safe-area-inset-top, 0px) + 4rem) !important;
   }
 }
-.locate-me {
-  appearance: none;
-  border: 0;
+.map-fab-stack {
+  position: absolute;
+  right: 0.75rem;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 0.5rem;
   bottom: calc(1.5rem + constant(safe-area-inset-bottom) + var(--map-sheet-h, 0px));
   bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--map-sheet-h, 0px));
   transition: bottom 0.2s ease;
+}
+.locate-me {
+  appearance: none;
+  border: 0;
+}
+.house-pin.is-legend {
+  width: 28px;
+  height: 28px;
+  border-width: 2px;
+}
+.house-pin.is-legend span {
+  font-size: 15px;
+}
+.house-pin.is-legend .pin-sprinkles {
+  inset: -7px;
+}
+.house-pin.is-legend .pin-sprinkles i {
+  width: 7px;
+  height: 7px;
+}
+.house-pin.is-legend .pin-status {
+  width: 9px;
+  height: 9px;
+}
+.house-pin.is-legend .pin-hours-ring {
+  inset: -6px;
+  border-width: 2px;
+}
+.house-pin.is-legend .pin-apt-dots {
+  right: -4px;
+  bottom: -3px;
+}
+.house-pin.is-legend .pin-apt-dot {
+  width: 8px;
+  height: 8px;
 }
 .map-house-sheet {
   position: absolute;

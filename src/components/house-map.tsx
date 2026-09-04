@@ -13,6 +13,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import { LocateFixed } from "lucide-react";
+import { MapLegend } from "@/components/map-legend";
 import "leaflet/dist/leaflet.css";
 import { config, inNeighborhood } from "@/lib/config";
 import type { UserLocation } from "@/hooks/use-user-location";
@@ -497,16 +498,21 @@ export function HouseMap({
           </>
         ) : null}
       </MapContainer>
-      {onLocate && !pickMode ? (
-        <button
-          type="button"
-          className="locate-me absolute right-3 z-[1100] flex size-11 items-center justify-center rounded-full bg-[#1d1028] text-sky-300 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-sky-400/40"
-          aria-label="המיקום שלי"
-          title="המיקום שלי"
-          onClick={onLocate}
-        >
-          <LocateFixed className={cn("size-5", locating && "animate-pulse")} />
-        </button>
+      {!pickMode ? (
+        <div className="map-fab-stack">
+          {onLocate ? (
+            <button
+              type="button"
+              className="locate-me flex size-11 items-center justify-center rounded-full bg-[#1d1028] text-sky-300 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-sky-400/40"
+              aria-label="המיקום שלי"
+              title="המיקום שלי"
+              onClick={onLocate}
+            >
+              <LocateFixed className={cn("size-5", locating && "animate-pulse")} />
+            </button>
+          ) : null}
+          <MapLegend />
+        </div>
       ) : null}
     </div>
   );

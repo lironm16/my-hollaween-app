@@ -991,12 +991,61 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   }
 }
 
-.locate-me {
-  appearance: none;
-  border: 0;
+.map-fab-stack {
+  position: absolute;
+  right: 0.75rem;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 0.5rem;
   bottom: calc(1.5rem + constant(safe-area-inset-bottom) + var(--map-sheet-h, 0px));
   bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--map-sheet-h, 0px));
   transition: bottom 0.2s ease;
+}
+
+.locate-me {
+  appearance: none;
+  border: 0;
+}
+
+.house-pin.is-legend {
+  width: 28px;
+  height: 28px;
+  border-width: 2px;
+}
+
+.house-pin.is-legend span {
+  font-size: 15px;
+}
+
+.house-pin.is-legend .pin-sprinkles {
+  inset: -7px;
+}
+
+.house-pin.is-legend .pin-sprinkles i {
+  width: 7px;
+  height: 7px;
+}
+
+.house-pin.is-legend .pin-status {
+  width: 9px;
+  height: 9px;
+}
+
+.house-pin.is-legend .pin-hours-ring {
+  inset: -6px;
+  border-width: 2px;
+}
+
+.house-pin.is-legend .pin-apt-dots {
+  right: -4px;
+  bottom: -3px;
+}
+
+.house-pin.is-legend .pin-apt-dot {
+  width: 8px;
+  height: 8px;
 }
 
 .map-house-sheet {
