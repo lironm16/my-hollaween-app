@@ -10,7 +10,7 @@ const CORS: Record<string, string> = {
   "Cross-Origin-Opener-Policy": "unsafe-none",
 };
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   if (request.method === "OPTIONS") {
     return new NextResponse(null, { status: 204, headers: CORS });
   }
