@@ -865,6 +865,19 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
+/* Keep toasts below the phone status bar (and the app header on small screens). */
+[data-sonner-toaster][data-y-position="top"] {
+  top: calc(constant(safe-area-inset-top) + 1.5rem) !important;
+  top: calc(env(safe-area-inset-top, 0px) + 1.5rem) !important;
+}
+
+@media (max-width: 600px) {
+  [data-sonner-toaster][data-y-position="top"] {
+    top: calc(constant(safe-area-inset-top) + 4rem) !important;
+    top: calc(env(safe-area-inset-top, 0px) + 4rem) !important;
+  }
+}
+
 .locate-me {
   appearance: none;
   border: 0;

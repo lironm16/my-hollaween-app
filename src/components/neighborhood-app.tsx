@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { List, LogOut, MapPinned, RefreshCw, Route, WifiOff } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { List, MapPinned, RefreshCw, Route, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { AdminBroadcast } from "@/components/admin-broadcast";
 import { AppHeader } from "@/components/app-header";
@@ -18,7 +17,7 @@ import { MapHouseSheet } from "@/components/map-house-sheet";
 import { NightDesk } from "@/components/night-desk";
 import { RouteList } from "@/components/route-list";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
@@ -62,7 +61,7 @@ export function NeighborhoodApp({
   focusId?: string | null;
 }) {
   const { catalog, loading, offline, unreachable, error, source, refresh } = useCatalog(initialCatalog);
-  const { ready: adminReady, admin, logout } = useAdminSession();
+  const { admin } = useAdminSession();
   const geo = useUserLocation();
   const origin = geo.location;
   const [routeAnchor, setRouteAnchor] = useState<{ lat: number; lng: number } | null>(null);
@@ -160,6 +159,15 @@ export function NeighborhoodApp({
     const timer = window.setInterval(() => void loadAdminHouses(), 15_000);
     return () => window.clearInterval(timer);
   }, [admin, loadAdminHouses]);
+
+  const wasAdmin = useRef(false);
+  useEffect(() => {
+    if (wasAdmin.current && !admin) {
+      setSelectedId("closed");
+      void refresh(true);
+    }
+    wasAdmin.current = admin;
+  }, [admin, refresh]);
 
   useEffect(() => {
     setEditing(false);
@@ -444,15 +452,6 @@ export function NeighborhoodApp({
     }
   }
 
-  async function onLogout() {
-    await logout();
-    setAdminHouses([]);
-    setSelectedId("closed");
-    setEditing(false);
-    toast.message("יצאתם ממצב מנהל");
-    void refresh(true);
-  }
-
   async function onRefresh() {
     if (admin) await loadAdminHouses();
     await refresh(true);
@@ -464,41 +463,7 @@ export function NeighborhoodApp({
       className="relative isolate flex h-dvh flex-col overflow-hidden"
       style={{ display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}
     >
-      <AppHeader
-        onMainTap={goToMainMap}
-        actions={
-          <>
-            {!admin ? (
-              <Link
-                href="/edit"
-                className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "inline-flex")}
-              >
-                <span className="sm:hidden">עריכה</span>
-                <span className="hidden sm:inline">עריכת בית</span>
-              </Link>
-            ) : null}
-            {adminReady && admin ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="border-orange-400/40 text-orange-100"
-                onClick={() => void onLogout()}
-              >
-                <LogOut className="size-3.5" />
-                יציאה
-              </Button>
-            ) : (
-              <Link
-                href="/admin"
-                className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-violet-200")}
-              >
-                ניהול
-              </Link>
-            )}
-          </>
-        }
-      />
+      <AppHeader onMainTap={goToMainMap} />
       {admin ? (
         <div
           className="relative z-40 border-b border-amber-500/25 bg-[#2a1638]/95 px-3 py-2"
@@ -564,7 +529,15 @@ export function NeighborhoodApp({
             <Toggle active={view === "map"} onClick={() => setView("map")} icon={<MapPinned className="size-3.5" />}>
               מפה
             </Toggle>
-            <Toggle active={view === "list"} onClick={() => setView("list")} icon={<List className="size-3.5" />}>
+            <Toggle
+              active={view === "list"}
+              onClick={() => {
+                setView("list");
+                setSelectedId("closed");
+                setEditing(false);
+              }}
+              icon={<List className="size-3.5" />}
+            >
               רשימה
             </Toggle>
           </div>
@@ -781,7 +754,7 @@ export function NeighborhoodApp({
       {selected ? (
         <MapHouseSheet
           house={selected}
-          clusterHouses={selectedCluster}
+          clusterHouses={view === "map" ? selectedCluster : [selected]}
           onSelectHouse={(house) => setSelectedId(house.id)}
           onClose={() => setSelectedId("closed")}
           start={view === "map" ? "peek" : "full"}
