@@ -277,6 +277,7 @@ function ClusterMarker({
 
   return (
     <Marker
+      key={`${cluster.key}-${selectedHere ? "open" : "shut"}`}
       position={[cluster.lat, cluster.lng]}
       icon={clusterIcon(cluster, selectedId, now)}
       zIndexOffset={selectedHere ? 500 : closingSoon ? 360 : openingSoon ? 320 : cluster.houses.length > 1 ? 200 : 0}
