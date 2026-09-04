@@ -3696,6 +3696,7 @@ svg.leaflet-zoom-animated {
   position: relative;
   width: 100%;
   height: 100%;
+  overflow: visible;
 }
 .pumpkin-pin-icon.is-closing-soon,
 .pumpkin-pin-icon.is-opening-soon,
@@ -3750,31 +3751,31 @@ svg.leaflet-zoom-animated {
 }
 .pin-sprinkles i {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   background: #facc15;
-  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
-  filter: drop-shadow(0 0 2px rgba(250, 204, 21, 0.9));
+  clip-path: polygon(50% 0, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0 50%, 39% 35%);
+  filter: drop-shadow(0 0 3px rgba(250, 204, 21, 1));
 }
 .pin-sprinkles i:nth-child(1) {
   top: 0;
   left: 50%;
-  margin-left: -4px;
+  margin-left: -5px;
 }
 .pin-sprinkles i:nth-child(2) {
   top: 50%;
   right: 0;
-  margin-top: -4px;
+  margin-top: -5px;
 }
 .pin-sprinkles i:nth-child(3) {
   bottom: 0;
   left: 50%;
-  margin-left: -4px;
+  margin-left: -5px;
 }
 .pin-sprinkles i:nth-child(4) {
   top: 50%;
   left: 0;
-  margin-top: -4px;
+  margin-top: -5px;
 }
 .pin-apt-dots {
   position: absolute;

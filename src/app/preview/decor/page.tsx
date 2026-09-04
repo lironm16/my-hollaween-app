@@ -56,6 +56,64 @@ export default function DecorPreviewPage() {
               </div>
               <span className="text-[11px] text-violet-300">לפני הקשה</span>
             </div>
+            <div className="flex flex-col items-center gap-2">
+              <div
+                className="house-pin-fan relative"
+                style={{ width: 156, height: 135 }}
+                aria-label="אחרי הקשה"
+              >
+                <svg className="pin-fan-lines" aria-hidden viewBox="0 0 156 135" width={156} height={135}>
+                  <line x1="78" y1="116" x2="41" y2="76" />
+                  <line x1="78" y1="116" x2="78" y2="65" />
+                  <line x1="78" y1="116" x2="115" y2="76" />
+                </svg>
+                <div className="house-pin is-base is-building" style={{ background: "#6d28d9" }} aria-hidden>
+                  <span>🎃</span>
+                  <span className="pin-apt-dots">
+                    <i className="pin-apt-dot is-ok" />
+                    <i className="pin-apt-dot is-decor" />
+                    <i className="pin-apt-dot is-closed" />
+                  </span>
+                </div>
+                <div
+                  className="house-pin is-apt"
+                  style={{ left: 22, bottom: 40, background: "#6d28d9" }}
+                  aria-label="מקושט"
+                >
+                  <i className="pin-sprinkles" aria-hidden>
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </i>
+                  <span>🎃</span>
+                </div>
+                <div
+                  className="house-pin is-apt is-closing-soon"
+                  style={{ left: 59, bottom: 51, background: "#6d28d9" }}
+                  aria-label="נסגר בקרוב"
+                >
+                  <i className="pin-hours-ring is-closing" aria-hidden />
+                  <span>🍬</span>
+                  <b className="pin-status is-decor" />
+                </div>
+                <div
+                  className="house-pin is-apt"
+                  style={{ left: 96, bottom: 40, background: "#6d28d9" }}
+                  aria-label="נגמר המלאי"
+                >
+                  <i className="pin-sprinkles" aria-hidden>
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </i>
+                  <span>💀</span>
+                  <b className="pin-status is-closed" />
+                </div>
+              </div>
+              <span className="text-[11px] text-violet-300">אחרי הקשה</span>
+            </div>
           </div>
         </section>
 
