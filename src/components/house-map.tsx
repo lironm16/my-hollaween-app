@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import {
   Circle,
   MapContainer,
@@ -12,17 +12,16 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import L from "leaflet";
-import { ChevronLeft, ChevronRight, LocateFixed, X } from "lucide-react";
+import { LocateFixed } from "lucide-react";
 import "leaflet/dist/leaflet.css";
-import { config, formatDisplayAddress, inNeighborhood } from "@/lib/config";
+import { config, inNeighborhood } from "@/lib/config";
 import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
 import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
 import { distanceMeters } from "@/lib/geo";
-import { houseHeadline, themeEmoji } from "@/lib/labels";
-import { effectiveVisit } from "@/lib/house-state";
+import { themeEmoji } from "@/lib/labels";
+import { pinNightStatus } from "@/lib/house-state";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
-import { HouseTags } from "@/components/house-tags";
 import { cn } from "@/lib/utils";
 
 function routeOrderIcon(order: number) {
@@ -34,24 +33,29 @@ function routeOrderIcon(order: number) {
   });
 }
 
-
-function pinIcon(house: PublicHouse, count = 1) {
-  const emoji = themeEmoji[house.theme ?? "pumpkin"];
-  const badge =
-    count > 1
-      ? `<b class="pin-count" aria-label="${count} דירות">×${count}</b>`
-      : "";
-  return L.divIcon({
-    className: "pumpkin-pin-icon",
-    html: `<div class="house-pin" style="background:#6d28d9">${badge}<span>${emoji}</span></div>`,
-    iconSize: [40, 44],
-    iconAnchor: [20, 42],
-    popupAnchor: [0, -36],
-  });
+function pinStatusMark(houses: PublicHouse[]) {
+  const status = pinNightStatus(houses);
+  if (status === "ok") return "";
+  const label =
+    status === "closed"
+      ? "נגמר המלאי"
+      : status === "decor"
+        ? "מקושט בלי ממתקים"
+        : "חלק מהדירות נגמרו";
+  return `<b class="pin-status is-${status}" aria-label="${label}"></b>`;
 }
 
-function clusterIcon(cluster: HouseCluster) {
-  return pinIcon(cluster.houses[0], cluster.houses.length);
+function clusterIcon(cluster: HouseCluster, selected = false) {
+  const emoji = themeEmoji[cluster.houses[0].theme ?? "pumpkin"];
+  const count = cluster.houses.length;
+  const badge =
+    count > 1 ? `<b class="pin-count" aria-label="${count} דירות">×${count}</b>` : "";
+  return L.divIcon({
+    className: `pumpkin-pin-icon${selected ? " is-selected" : ""}`,
+    html: `<div class="house-pin${selected ? " is-selected" : ""}" style="background:#6d28d9">${badge}${pinStatusMark(cluster.houses)}<span>${emoji}</span></div>`,
+    iconSize: [40, 44],
+    iconAnchor: [20, 42],
+  });
 }
 
 const pickIcon = L.divIcon({
@@ -93,385 +97,6 @@ function ClickCatcher({
   return null;
 }
 
-function bindPopupRoot(node: HTMLDivElement | null) {
-  if (!node) return;
-  L.DomEvent.disableClickPropagation(node);
-  L.DomEvent.disableScrollPropagation(node);
-}
-
-/** Which pager card is centered — works in RTL where scrollLeft is unreliable. */
-function pageFromOverlap(scroller: HTMLElement) {
-  const pages = [...scroller.children] as HTMLElement[];
-  if (pages.length === 0) return 0;
-  const mid = (scroller.getBoundingClientRect().left + scroller.getBoundingClientRect().right) / 2;
-  let best = 0;
-  let bestDist = Number.POSITIVE_INFINITY;
-  pages.forEach((page, index) => {
-    const box = page.getBoundingClientRect();
-    const dist = Math.abs((box.left + box.right) / 2 - mid);
-    if (dist < bestDist) {
-      bestDist = dist;
-      best = index;
-    }
-  });
-  return best;
-}
-
-function scrollPageIntoView(scroller: HTMLElement, index: number, behavior: ScrollBehavior) {
-  const target = scroller.children[index] as HTMLElement | undefined;
-  if (!target) return;
-  scroller.scrollTo({ left: target.offsetLeft, behavior });
-}
-
-/** Keep pager drags on the popup so the map does not steal them. */
-function bindPopupScroller(node: HTMLDivElement | null) {
-  if (!node) return;
-  L.DomEvent.disableClickPropagation(node);
-  node.style.touchAction = "pan-x";
-}
-
-function houseMapsUrl(house: PublicHouse) {
-  if (Number.isFinite(house.lat) && Number.isFinite(house.lng)) {
-    return `https://www.google.com/maps/dir/?api=1&destination=${house.lat},${house.lng}&travelmode=walking`;
-  }
-  const displayAddress = formatDisplayAddress(house);
-  const mapsQuery = /רמת\s*גן/u.test(displayAddress)
-    ? displayAddress
-    : `${displayAddress}, רמת גן`;
-  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapsQuery)}&travelmode=walking`;
-}
-
-function GoogleMapsGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden>
-      <path
-        fill="currentColor"
-        d="M12 2c-4.2 0-7.6 3.3-7.6 7.4 0 5.6 7.6 12.6 7.6 12.6s7.6-7 7.6-12.6C19.6 5.3 16.2 2 12 2z"
-      />
-      <circle cx="12" cy="9.2" r="2.4" fill="#f97316" />
-    </svg>
-  );
-}
-
-function PopupActions({
-  house,
-  onDetails,
-}: {
-  house: PublicHouse;
-  onDetails?: (house: PublicHouse) => void;
-}) {
-  return (
-    <div className="house-map-popup-actions">
-      {onDetails ? (
-        <button
-          type="button"
-          className="house-map-popup-btn"
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            onDetails(house);
-          }}
-        >
-          לפרטים
-        </button>
-      ) : null}
-      <a
-        href={houseMapsUrl(house)}
-        target="_blank"
-        rel="noreferrer"
-        className="house-map-popup-maps"
-        aria-label="ניווט ב-Google Maps"
-        title="ניווט"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <GoogleMapsGlyph />
-      </a>
-    </div>
-  );
-}
-
-function PopupHouseCopy({
-  house,
-  showAddress,
-  showTitle = true,
-}: {
-  house: PublicHouse;
-  showAddress?: boolean;
-  showTitle?: boolean;
-}) {
-  const closed = effectiveVisit(house) === "closed";
-  return (
-    <>
-      {showTitle ? (
-        <span className="house-map-popup-item-title">{houseHeadline(house)}</span>
-      ) : null}
-      {showAddress ? (
-        <p className="house-map-popup-meta">{formatDisplayAddress(house)}</p>
-      ) : null}
-      {house.arrival ? <p className="house-map-popup-arrival">{house.arrival}</p> : null}
-      <div className="house-map-popup-tags">
-        <HouseTags house={house} />
-      </div>
-      {closed ? <span className="house-map-popup-soldout">נגמר המלאי</span> : null}
-    </>
-  );
-}
-
-function PopupCloseButton({ onClose }: { onClose: () => void }) {
-  return (
-    <button
-      type="button"
-      className="house-map-popup-close"
-      aria-label="סגירה"
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        onClose();
-      }}
-    >
-      <X aria-hidden strokeWidth={2.5} />
-    </button>
-  );
-}
-
-function HousePreviewPopup({
-  houses,
-  onOpenDetails,
-  selectedId,
-  interactive = true,
-}: {
-  houses: PublicHouse[];
-  onOpenDetails?: (house: PublicHouse) => void;
-  selectedId?: string | null;
-  /** False for a short moment after open so the same tap cannot hit buttons. */
-  interactive?: boolean;
-}) {
-  const map = useMap();
-  const multi = houses.length > 1;
-  const address = houses[0] ? formatDisplayAddress(houses[0]) : "";
-  const startIndex = Math.max(
-    0,
-    houses.findIndex((house) => house.id === selectedId),
-  );
-  const [page, setPage] = useState(startIndex);
-  const scrollerRef = useRef<HTMLDivElement | null>(null);
-  const houseKey = houses.map((house) => house.id).join(",");
-
-  useEffect(() => {
-    setPage(startIndex);
-  }, [startIndex]);
-
-  useEffect(() => {
-    if (!multi) return;
-    const node = scrollerRef.current;
-    if (!node) return;
-    bindPopupScroller(node);
-    const stop = (event: Event) => event.stopPropagation();
-    const sync = () => setPage(pageFromOverlap(node));
-    let snapTimer = 0;
-    let wheelLock = false;
-    const snap = () => {
-      const next = pageFromOverlap(node);
-      setPage(next);
-      scrollPageIntoView(node, next, "smooth");
-    };
-    const go = (index: number) => {
-      const last = node.children.length - 1;
-      const next = Math.min(last, Math.max(0, index));
-      setPage(next);
-      scrollPageIntoView(node, next, "smooth");
-    };
-    const onWheel = (event: WheelEvent) => {
-      const dx = event.deltaX + event.deltaY;
-      if (Math.abs(dx) < 8) return;
-      event.preventDefault();
-      event.stopPropagation();
-      if (wheelLock) return;
-      const current = pageFromOverlap(node);
-      const next = current + (dx > 0 ? 1 : -1);
-      if (next === current || next < 0 || next >= node.children.length) return;
-      wheelLock = true;
-      go(next);
-      window.setTimeout(() => {
-        wheelLock = false;
-      }, 320);
-    };
-    let drag: { id: number; x: number } | null = null;
-    const onDown = (event: PointerEvent) => {
-      if ((event.target as Element | null)?.closest("a, button")) return;
-      drag = { id: event.pointerId, x: event.clientX };
-      node.setPointerCapture(event.pointerId);
-    };
-    const onMove = (event: PointerEvent) => {
-      if (!drag || event.pointerId !== drag.id) return;
-      event.stopPropagation();
-    };
-    const onUp = (event: PointerEvent) => {
-      if (!drag || event.pointerId !== drag.id) return;
-      const delta = event.clientX - drag.x;
-      drag = null;
-      if (Math.abs(delta) < 40) {
-        snap();
-        return;
-      }
-      go(pageFromOverlap(node) + (delta < 0 ? 1 : -1));
-    };
-    node.addEventListener("touchmove", stop, { passive: true });
-    node.addEventListener("pointermove", onMove);
-    node.addEventListener("pointerdown", onDown);
-    node.addEventListener("pointerup", onUp);
-    node.addEventListener("pointercancel", onUp);
-    node.addEventListener("wheel", onWheel, { passive: false, capture: true });
-    node.addEventListener("scroll", sync, { passive: true });
-    const jump = () => scrollPageIntoView(node, startIndex, "instant");
-    const frame = window.requestAnimationFrame(jump);
-    const later = window.setTimeout(jump, 80);
-    return () => {
-      node.removeEventListener("touchmove", stop);
-      node.removeEventListener("pointermove", onMove);
-      node.removeEventListener("pointerdown", onDown);
-      node.removeEventListener("pointerup", onUp);
-      node.removeEventListener("pointercancel", onUp);
-      node.removeEventListener("wheel", onWheel, true);
-      node.removeEventListener("scroll", sync);
-      window.clearTimeout(snapTimer);
-      window.cancelAnimationFrame(frame);
-      window.clearTimeout(later);
-    };
-  }, [multi, houseKey, startIndex]);
-
-  const closePopup = () => map.closePopup();
-  const openHouse = (house: PublicHouse) => {
-    closePopup();
-    onOpenDetails?.(house);
-  };
-  const goToPage = (index: number) => {
-    const node = scrollerRef.current;
-    if (!node) return;
-    const next = Math.min(houses.length - 1, Math.max(0, index));
-    setPage(next);
-    scrollPageIntoView(node, next, "smooth");
-  };
-
-  return (
-    <Popup
-      className="house-map-popup-root"
-      maxWidth={multi ? 300 : 280}
-      minWidth={multi ? 232 : 200}
-      autoPan={false}
-      keepInView={false}
-      closeButton={false}
-    >
-      <div
-        ref={bindPopupRoot}
-        dir="rtl"
-        className={cn("house-map-popup", multi && "is-multi")}
-        style={interactive ? undefined : { pointerEvents: "none" }}
-      >
-        {multi ? (
-          <>
-            <div className="house-map-popup-cluster-head">
-              <div className="house-map-popup-cluster-copy">
-                <strong>{address}</strong>
-                <p className="house-map-popup-meta">{houses.length} דירות בבניין</p>
-              </div>
-              <PopupCloseButton onClose={closePopup} />
-            </div>
-            <div
-              className="house-map-popup-pager"
-              onWheel={(event) => {
-                const dx = event.deltaX + event.deltaY;
-                if (Math.abs(dx) < 8) return;
-                event.preventDefault();
-                event.stopPropagation();
-                goToPage(page + (dx > 0 ? 1 : -1));
-              }}
-            >
-              <div
-                ref={scrollerRef}
-                className="house-map-popup-scroller"
-                role="region"
-                aria-roledescription="carousel"
-                aria-label="דירות בבניין"
-              >
-                {houses.map((house, index) => (
-                    <div
-                      key={house.id}
-                      className={cn(
-                        "house-map-popup-page",
-                        selectedId === house.id && "is-selected",
-                      )}
-                      aria-hidden={page !== index}
-                    >
-                      <div className="house-map-popup-page-body">
-                        <PopupHouseCopy house={house} showAddress />
-                        <PopupActions house={house} onDetails={onOpenDetails ? openHouse : undefined} />
-                      </div>
-                    </div>
-                ))}
-              </div>
-              <div className="house-map-popup-pager-nav">
-                <button
-                  type="button"
-                  className="house-map-popup-skip"
-                  aria-label="דירה קודמת"
-                  disabled={page <= 0}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    goToPage(page - 1);
-                  }}
-                >
-                  <ChevronRight aria-hidden />
-                </button>
-                <div className="house-map-popup-dots" role="tablist" aria-label="בחירת דירה">
-                  {houses.map((house, index) => (
-                    <button
-                      key={house.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={page === index}
-                      aria-label={`${houseHeadline(house)} · ${index + 1} מתוך ${houses.length}`}
-                      className={cn("house-map-popup-dot", page === index && "is-active")}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        goToPage(index);
-                      }}
-                    />
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  className="house-map-popup-skip"
-                  aria-label="דירה הבאה"
-                  disabled={page >= houses.length - 1}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    goToPage(page + 1);
-                  }}
-                >
-                  <ChevronLeft aria-hidden />
-                </button>
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="house-map-popup-cluster-head">
-              <strong>{houseHeadline(houses[0])}</strong>
-              <PopupCloseButton onClose={closePopup} />
-            </div>
-            <PopupHouseCopy house={houses[0]} showAddress showTitle={false} />
-            <PopupActions house={houses[0]} onDetails={onOpenDetails ? openHouse : undefined} />
-          </>
-        )}
-      </div>
-    </Popup>
-  );
-}
-
 function ClusterMarker({
   cluster,
   selectedId,
@@ -481,43 +106,22 @@ function ClusterMarker({
   selectedId?: string | null;
   onSelect?: (house: PublicHouse) => void;
 }) {
-  const markerRef = useRef<L.Marker | null>(null);
-  const armTimer = useRef<number>(0);
-  const [popupArmed, setPopupArmed] = useState(false);
   const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
-
-  useEffect(() => {
-    if (!selectedHere) return;
-    markerRef.current?.openPopup();
-  }, [selectedHere, selectedId]);
-
-  useEffect(() => () => window.clearTimeout(armTimer.current), []);
 
   return (
     <Marker
-      ref={markerRef}
       position={[cluster.lat, cluster.lng]}
-      icon={clusterIcon(cluster)}
+      icon={clusterIcon(cluster, selectedHere)}
       zIndexOffset={selectedHere ? 500 : cluster.houses.length > 1 ? 200 : 0}
       eventHandlers={{
-        popupopen: () => {
-          setPopupArmed(false);
-          window.clearTimeout(armTimer.current);
-          armTimer.current = window.setTimeout(() => setPopupArmed(true), 400);
-        },
-        popupclose: () => {
-          window.clearTimeout(armTimer.current);
-          setPopupArmed(false);
+        click: () => {
+          const keep = selectedId
+            ? cluster.houses.find((house) => house.id === selectedId)
+            : undefined;
+          onSelect?.(keep ?? cluster.houses[0]);
         },
       }}
-    >
-      <HousePreviewPopup
-        houses={cluster.houses}
-        onOpenDetails={onSelect}
-        selectedId={selectedId}
-        interactive={popupArmed}
-      />
-    </Marker>
+    />
   );
 }
 
@@ -714,7 +318,7 @@ export function HouseMap({
       {onLocate && !pickMode ? (
         <button
           type="button"
-          className="locate-me absolute right-3 z-[1100] flex size-11 items-center justify-center rounded-full bg-[#1d1028] text-sky-300 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-sky-400/40 hover:bg-[#2a1638] hover:text-sky-200"
+          className="locate-me absolute right-3 z-[1100] flex size-11 items-center justify-center rounded-full bg-[#1d1028] text-sky-300 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-sky-400/40"
           aria-label="המיקום שלי"
           title="המיקום שלי"
           onClick={onLocate}

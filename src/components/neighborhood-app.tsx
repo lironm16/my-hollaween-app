@@ -13,18 +13,12 @@ import {
 } from "@/components/filter-menu";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseList } from "@/components/house-list";
-import { HouseDetails } from "@/components/house-details";
+import { MapHouseSheet } from "@/components/map-house-sheet";
 import { NightDesk } from "@/components/night-desk";
 import { RouteList } from "@/components/route-list";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useHouseFilters } from "@/hooks/use-house-filters";
@@ -34,6 +28,7 @@ import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { readApiJson } from "@/lib/api-json";
 import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, formatDisplayAddress, type NeighborhoodId } from "@/lib/config";
+import { clusterHousesByAddress } from "@/lib/house-clusters";
 import { toPublicHouse } from "@/lib/ids";
 import { isFrozen, offersCandy, offersSensitivity, isDecorated } from "@/lib/house-state";
 import { AccessibleMark } from "@/components/symbols";
@@ -298,6 +293,13 @@ export function NeighborhoodApp({
     visible.find((house) => house.id === activeId) ??
     houses.find((house) => house.id === activeId) ??
     null;
+  const selectedCluster = useMemo(() => {
+    if (!selected) return [];
+    const cluster = clusterHousesByAddress(visible).find((item) =>
+      item.houses.some((house) => house.id === selected.id),
+    );
+    return cluster?.houses ?? [selected];
+  }, [selected, visible]);
   const geoError =
     askedLocation && (geo.status === "denied" || geo.status === "error" || geo.status === "unavailable");
   const outsideNeighborhood = Boolean(
@@ -773,119 +775,113 @@ export function NeighborhoodApp({
           </>
         )}
       </main>
-      <Sheet
-        open={Boolean(selected)}
-        onOpenChange={(open) => {
-          if (!open) setSelectedId("closed");
-        }}
-      >
-        {selected ? (
-          <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto bg-[#1a0d24] sm:max-w-none">
-            <SheetHeader>
-              <SheetTitle className="sr-only">פרטי בית</SheetTitle>
-            </SheetHeader>
-            <div className="px-4 pb-8">
-              {selected.status === "pending" ? (
-                <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-sm text-violet-100">
-                  {admin
-                    ? "בית ממתין לאישור — עדיין לא במפה הציבורית."
-                    : "הבית הזה עדיין לא במפה הציבורית. אם זה הבית שלכם, מנהל יכול לאשר אותו."}
-                </p>
+      {selected ? (
+        <MapHouseSheet
+          house={selected}
+          clusterHouses={selectedCluster}
+          onSelectHouse={(house) => setSelectedId(house.id)}
+          onClose={() => setSelectedId("closed")}
+          start={view === "map" ? "peek" : "full"}
+          liked={likes.liked(selected.id)}
+          onToggleLike={() => likes.toggle(selected.id)}
+          visited={visits.visited(selected.id)}
+          onToggleVisited={() => visits.toggle(selected.id)}
+          catalogSource={source}
+          managerEditCode={admin ? editCodeById.get(selected.id) : undefined}
+          canEdit
+          editing={editing}
+          onToggleEdit={() => setEditing((v) => !v)}
+          pendingNote={
+            selected.status === "pending" ? (
+              <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-sm text-violet-100">
+                {admin
+                  ? "בית ממתין לאישור — עדיין לא במפה הציבורית."
+                  : "הבית הזה עדיין לא במפה הציבורית. אם זה הבית שלכם, מנהל יכול לאשר אותו."}
+              </p>
+            ) : null
+          }
+          frozenNote={
+            isFrozen(selected) ? (
+              <p className="mb-3 rounded-lg bg-[#2a1638] px-3 py-2 text-sm text-amber-100">
+                הבית מוקפא — הילדים בשכונה לא רואים אותו. רק אתם (או מנהל) רואים את הסיכה השקופה.
+              </p>
+            ) : null
+          }
+          extra={
+            <div className="mt-4 space-y-3">
+              {admin && selected.status === "pending" ? (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    className="bg-emerald-600 text-white hover:bg-emerald-500"
+                    disabled={busyAction}
+                    onClick={() => void approveHouse(selected.id)}
+                  >
+                    אישור למפה
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    disabled={busyAction}
+                    onClick={() => void rejectHouse(selected.id)}
+                  >
+                    דחייה ומחיקה
+                  </Button>
+                </div>
               ) : null}
-              {isFrozen(selected) ? (
-                <p className="mb-3 rounded-lg bg-[#2a1638] px-3 py-2 text-sm text-amber-100">
-                  הבית מוקפא — הילדים בשכונה לא רואים אותו. רק אתם (או מנהל) רואים את הסיכה השקופה.
-                </p>
-              ) : null}
-              <HouseDetails
-                house={selected}
-                catalogSource={source}
-                liked={likes.liked(selected.id)}
-                onToggleLike={() => likes.toggle(selected.id)}
-                visited={visits.visited(selected.id)}
-                onToggleVisited={() => visits.toggle(selected.id)}
-                managerEditCode={admin ? editCodeById.get(selected.id) : undefined}
-                canEdit
-                editing={editing}
-                onToggleEdit={() => setEditing((v) => !v)}
-                extra={
-                  <div className="mt-4 space-y-3">
-                    {admin && selected.status === "pending" ? (
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          className="bg-emerald-600 text-white hover:bg-emerald-500"
-                          disabled={busyAction}
-                          onClick={() => void approveHouse(selected.id)}
-                        >
-                          אישור למפה
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          disabled={busyAction}
-                          onClick={() => void rejectHouse(selected.id)}
-                        >
-                          דחייה ומחיקה
-                        </Button>
-                      </div>
-                    ) : null}
-                    {editing ? (
-                      canEditSelected ? (
-                        <NightDesk
-                          house={selected}
-                          admin={admin}
-                          editCode={admin ? editCodeById.get(selected.id) : ownedEditCode}
-                          onUpdated={(next) => {
-                            if (admin) {
-                              applyAdminHouse(next);
-                              return;
-                            }
-                            const code = ownedEditCode;
-                            if (code) {
-                              saveOwnedHouse({
-                                id: next.id,
-                                name: next.name,
-                                editCode: code,
-                                preview: next,
-                              });
-                            }
-                            notifyCatalogChanged();
-                            void refresh(true);
-                          }}
-                        />
-                      ) : (
-                        <div className="space-y-3 rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-400/30">
-                          <p className="text-sm font-medium text-orange-200">קוד עריכה למשפחה</p>
-                          <p className="text-xs text-violet-300">
-                            הזינו את קוד העריכה (6 ספרות) שקיבל מי שהוסיף את הבית — ואפשר לעדכן מלאי
-                            ותמונה כמו כולם.
-                          </p>
-                          <Input
-                            value={familyEditCode}
-                            onChange={(e) => setFamilyEditCode(e.target.value)}
-                            inputMode="numeric"
-                            autoComplete="one-time-code"
-                            placeholder="6 ספרות"
-                            className="h-10 bg-[#12081a] text-base tracking-widest"
-                            maxLength={12}
-                          />
-                          <Button
-                            type="button"
-                            className="w-full bg-orange-500 text-black hover:bg-orange-400"
-                            disabled={unlockBusy || !familyEditCode.trim()}
-                            onClick={() => void unlockWithFamilyCode(selected)}
-                          >
-                            {unlockBusy ? "בודקים…" : "פתיחה לעריכה"}
-                          </Button>
-                        </div>
-                      )
-                    ) : null}
+              {editing ? (
+                canEditSelected ? (
+                  <NightDesk
+                    house={selected}
+                    admin={admin}
+                    editCode={admin ? editCodeById.get(selected.id) : ownedEditCode}
+                    onUpdated={(next) => {
+                      if (admin) {
+                        applyAdminHouse(next);
+                        return;
+                      }
+                      const code = ownedEditCode;
+                      if (code) {
+                        saveOwnedHouse({
+                          id: next.id,
+                          name: next.name,
+                          editCode: code,
+                          preview: next,
+                        });
+                      }
+                      notifyCatalogChanged();
+                      void refresh(true);
+                    }}
+                  />
+                ) : (
+                  <div className="space-y-3 rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-400/30">
+                    <p className="text-sm font-medium text-orange-200">קוד עריכה למשפחה</p>
+                    <p className="text-xs text-violet-300">
+                      הזינו את קוד העריכה (6 ספרות) שקיבל מי שהוסיף את הבית — ואפשר לעדכן מלאי
+                      ותמונה כמו כולם.
+                    </p>
+                    <Input
+                      value={familyEditCode}
+                      onChange={(e) => setFamilyEditCode(e.target.value)}
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      placeholder="6 ספרות"
+                      className="h-10 bg-[#12081a] text-base tracking-widest"
+                      maxLength={12}
+                    />
+                    <Button
+                      type="button"
+                      className="w-full bg-orange-500 text-black hover:bg-orange-400"
+                      disabled={unlockBusy || !familyEditCode.trim()}
+                      onClick={() => void unlockWithFamilyCode(selected)}
+                    >
+                      {unlockBusy ? "בודקים…" : "פתיחה לעריכה"}
+                    </Button>
                   </div>
-                }
-              />
+                )
+              ) : null}
             </div>
-          </SheetContent>
-        ) : null}
-      </Sheet>
+          }
+        />
+      ) : null}
     </div>
   );
 }

@@ -31,6 +31,20 @@ export function effectiveVisit(house: { visit?: VisitState; soldOut?: boolean })
   return house.soldOut ? "closed" : "come";
 }
 
+/** Glanceable night-of pin mark: skip (closed), mixed building, or decor-only. */
+export function pinNightStatus(
+  houses: Array<{ visit?: VisitState; soldOut?: boolean }>,
+): "ok" | "closed" | "mixed" | "decor" {
+  if (houses.length === 0) return "ok";
+  const visits = houses.map(effectiveVisit);
+  const closed = visits.filter((visit) => visit === "closed").length;
+  const decor = visits.filter((visit) => visit === "decorOnly").length;
+  if (closed === visits.length) return "closed";
+  if (closed > 0) return "mixed";
+  if (decor === visits.length) return "decor";
+  return "ok";
+}
+
 export function defaultTreatStock(treats: TreatId[]): TreatStock {
   const stock: TreatStock = {};
   for (const id of treats) stock[id] = "plenty";

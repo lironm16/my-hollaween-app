@@ -416,8 +416,9 @@ button {
 .locate-me {
   appearance: none;
   position: absolute;
-  bottom: calc(1.5rem + constant(safe-area-inset-bottom));
-  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(1.5rem + constant(safe-area-inset-bottom) + var(--map-sheet-h, 0px));
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--map-sheet-h, 0px));
+  transition: bottom 0.2s ease;
   right: 0.75rem;
   z-index: 1100;
   display: flex;

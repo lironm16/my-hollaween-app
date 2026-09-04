@@ -29,6 +29,7 @@ export function HouseDetails({
   canEdit = false,
   editing = false,
   onToggleEdit,
+  chrome = "page",
 }: {
   house: PublicHouse;
   extra?: ReactNode;
@@ -42,6 +43,8 @@ export function HouseDetails({
   canEdit?: boolean;
   editing?: boolean;
   onToggleEdit?: () => void;
+  /** Sheet chrome already has Waze / share / heart / visited. */
+  chrome?: "page" | "sheet";
 }) {
   const displayAddress = formatDisplayAddress(house);
   const mapsQuery = /רמת\s*גן/u.test(displayAddress)
@@ -66,8 +69,10 @@ export function HouseDetails({
     setShowPhoto(false);
     setPhotoBroken(false);
   }, [house.id, house.photoUrl]);
+  const sheet = chrome === "sheet";
   return (
     <div className="space-y-3">
+      {sheet ? null : (
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
@@ -98,6 +103,7 @@ export function HouseDetails({
           ) : null}
         </div>
       </div>
+      )}
       {house.photoUrl && !photoBroken ? (
         loadPhoto ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -154,6 +160,7 @@ export function HouseDetails({
         <p className="text-sm text-amber-200/90">הערה: {house.notes}</p>
       ) : null}
       <CodesCopy editCode={editCode} />
+      {sheet ? null : (
       <div className="flex flex-wrap gap-2 pt-1">
         <a
           href={waze}
@@ -178,6 +185,7 @@ export function HouseDetails({
           קישור לבית
         </Link>
       </div>
+      )}
       {canEdit && onToggleEdit ? (
         <button
           type="button"

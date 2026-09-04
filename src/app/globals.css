@@ -577,6 +577,39 @@
   background: #6d28d9 !important;
 }
 
+.house-pin.is-selected,
+.pumpkin-pin.is-selected {
+  box-shadow: 0 0 0 2px #fdba74, 0 2px 6px rgba(0, 0, 0, 0.55);
+}
+
+.house-pin .pin-status,
+.pumpkin-pin .pin-status {
+  position: absolute;
+  bottom: -2px;
+  inset-inline-start: -2px;
+  z-index: 2;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid #fff7ed;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.house-pin .pin-status.is-closed,
+.pumpkin-pin .pin-status.is-closed {
+  background: #dc2626;
+}
+
+.house-pin .pin-status.is-mixed,
+.pumpkin-pin .pin-status.is-mixed {
+  background: #ea580c;
+}
+
+.house-pin .pin-status.is-decor,
+.pumpkin-pin .pin-status.is-decor {
+  background: #d97706;
+}
+
 .route-stop-icon {
   background: transparent !important;
   border: none !important;
@@ -792,8 +825,191 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .locate-me {
   appearance: none;
   border: 0;
-  bottom: calc(1.5rem + constant(safe-area-inset-bottom));
-  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(1.5rem + constant(safe-area-inset-bottom) + var(--map-sheet-h, 0px));
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--map-sheet-h, 0px));
+  transition: bottom 0.2s ease;
+}
+
+.map-house-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #160b20;
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(249, 115, 22, 0.28);
+  border-bottom: 0;
+  transition: height 0.22s ease;
+}
+
+.map-house-sheet.is-dragging {
+  transition: none;
+}
+
+.map-house-sheet-handle-hit {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  padding: 10px 0 4px;
+  touch-action: none;
+  cursor: grab;
+}
+
+.map-house-sheet-handle {
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  background: #6b4a7a;
+}
+
+.map-house-sheet-top {
+  flex-shrink: 0;
+  padding: 0 14px 8px;
+}
+
+.map-house-sheet-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  -webkit-overflow-scrolling: touch;
+}
+
+.map-house-sheet-kicker,
+.map-house-sheet-title {
+  margin: 0;
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fdba74;
+  line-height: 1.3;
+}
+
+.map-house-sheet-sub,
+.map-house-sheet-arrival {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: #ddd6fe;
+}
+
+.map-house-sheet-tags {
+  margin-top: 10px;
+}
+
+.map-house-sheet-sold {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #f87171;
+}
+
+.map-house-sheet-apts {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.map-house-sheet-apt {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  text-align: start;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #1d1028;
+  color: #f8f5ef;
+  border: 1px solid rgba(249, 115, 22, 0.18);
+}
+
+.map-house-sheet-apt:active {
+  background: #2a1638;
+}
+
+.map-house-sheet-apt.is-on {
+  border-color: #f97316;
+  background: #2a1638;
+}
+
+.map-house-sheet-apt-title {
+  font-weight: 700;
+  color: #fdba74;
+}
+
+.map-house-sheet-apt-meta {
+  font-size: 0.8rem;
+  color: #c4b5d6;
+}
+
+.map-house-sheet-apt-tags {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.map-house-sheet-more {
+  margin-top: 14px;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #fdba74;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.map-house-sheet-more:active {
+  background: #2a1638;
+}
+
+.map-house-sheet-full {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(249, 115, 22, 0.18);
+}
+
+.house-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.house-action-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: #2a1638;
+  color: #fde68a;
+  text-decoration: none;
+}
+
+.house-action-btn:active {
+  background: #3b1d4e;
+}
+
+.house-action-btn.is-on {
+  color: #fb7185;
+  background: #3f1d32;
+}
+
+.house-action-btn.is-visited {
+  color: #34d399;
+}
+
+.house-action-btn.is-close {
+  margin-inline-start: auto;
+  background: #1a1024;
+  color: #e9d5ff;
 }
 
 [data-slot="sheet-content"][data-side="bottom"] {
