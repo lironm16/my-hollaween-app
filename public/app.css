@@ -620,6 +620,9 @@
   .w-\[90\%\] {
     width: 90%;
   }
+  .w-\[min\(20rem\,88vw\)\] {
+    width: min(20rem, 88vw);
+  }
   .w-fit {
     width: fit-content;
   }
@@ -741,6 +744,9 @@
   }
   .justify-center {
     justify-content: center;
+  }
+  .justify-start {
+    justify-content: flex-start;
   }
   .gap-\(--card-spacing\) {
     gap: var(--card-spacing);
@@ -1356,6 +1362,9 @@
   }
   .text-\[11px\] {
     font-size: 11px;
+  }
+  .text-\[13px\] {
+    font-size: 13px;
   }
   .text-\[22px\] {
     font-size: 22px;
@@ -2214,12 +2223,6 @@
     }
   }
   @media (width >= 40rem) {
-    .sm\:hidden {
-      display: none;
-    }
-    .sm\:inline {
-      display: inline;
-    }
     .sm\:max-w-none {
       max-width: none;
     }
