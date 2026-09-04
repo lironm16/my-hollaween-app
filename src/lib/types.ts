@@ -142,7 +142,21 @@ export type AddressHit = {
   precise: boolean;
 };
 
+export type PushSubscriptionRecord = {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+  createdAt: string;
+};
+
+export type VapidKeys = {
+  publicKey: string;
+  privateKey: string;
+  subject: string;
+};
+
 export type DbFile = {
   houses: House[];
   updatedAt: string;
+  pushSubscriptions?: PushSubscriptionRecord[];
+  vapid?: VapidKeys;
 };

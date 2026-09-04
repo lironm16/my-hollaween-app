@@ -1,4 +1,4 @@
-import type { Catalog, House, PublicHouse } from "@/lib/types";
+import type { Catalog, DbFile, House, PublicHouse } from "@/lib/types";
 
 function stamp(value: { updatedAt: string }) {
   const n = Date.parse(value.updatedAt);
@@ -46,13 +46,19 @@ export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
   return { ...prev, houses: [...byId.values()] };
 }
 
-export function cloneDb(db: { houses: House[]; updatedAt: string }) {
+export function cloneDb(db: DbFile): DbFile {
   return {
     updatedAt: db.updatedAt,
     houses: db.houses.map((house) => ({
       ...house,
       treats: [...house.treats],
       treatStock: { ...house.treatStock },
+    })),
+    vapid: db.vapid ? { ...db.vapid } : undefined,
+    pushSubscriptions: db.pushSubscriptions?.map((item) => ({
+      endpoint: item.endpoint,
+      createdAt: item.createdAt,
+      keys: { ...item.keys },
     })),
   };
 }

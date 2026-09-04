@@ -969,6 +969,43 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   background: #2a1638;
 }
 
+.map-house-sheet-edit {
+  margin-top: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  border-radius: 12px;
+  background: #2a1638;
+  color: #fdba74;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.map-house-sheet-edit.is-on {
+  background: #ea580c;
+  color: #12081a;
+  border-color: #ea580c;
+}
+
+.map-house-sheet-edit-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.map-house-sheet-edit-bar .map-house-sheet-kicker {
+  flex: 1;
+  min-width: 0;
+}
+
+.map-house-sheet-edit-bar .map-house-sheet-edit {
+  margin-top: 0;
+  width: auto;
+  padding: 8px 12px;
+}
+
 .map-house-sheet-full {
   margin-top: 14px;
   padding-top: 12px;

@@ -19,9 +19,16 @@ import {
   type HouseTheme,
   type NightPatch,
   type PublicHouse,
+  type PushSubscriptionRecord,
   type TreatStock,
   type VisitState,
 } from "@/lib/types";
+import {
+  ensureVapid,
+  importantHouseAlert,
+  sendPushToSubscriptions,
+  type PushPayload,
+} from "@/lib/push";
 
 const SEED_PATH = path.join(process.cwd(), "data", "seed.json");
 const BLOB_PATH = "halloween-houses/db.json";
@@ -121,7 +128,12 @@ function normalizeHouse(house: House): House {
 }
 
 function normalizeDb(db: DbFile): DbFile {
-  return { ...db, houses: db.houses.map(normalizeHouse) };
+  return {
+    ...db,
+    houses: db.houses.map(normalizeHouse),
+    pushSubscriptions: Array.isArray(db.pushSubscriptions) ? db.pushSubscriptions : [],
+    vapid: db.vapid?.publicKey && db.vapid?.privateKey ? db.vapid : undefined,
+  };
 }
 
 function blobEnabled() {
@@ -341,6 +353,7 @@ export async function updateByEditCode(
 ) {
   const current = await getHouse(id);
   if (!current || current.editCode !== editCode) return null;
+  const prev = snapshotHouse(current);
   if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
     await assertRealAddress({
       address: patch.address ?? current.address,
@@ -348,7 +361,7 @@ export async function updateByEditCode(
       lng: patch.lng ?? current.lng,
     });
   }
-  return runSyncedWrite((db) => {
+  const updated = await runSyncedWrite((db) => {
     const house = db.houses.find((h) => h.id === id);
     if (!house || house.editCode !== editCode) return null;
     if (patch.lat !== undefined && patch.lng !== undefined) {
@@ -374,6 +387,8 @@ export async function updateByEditCode(
     db.updatedAt = house.updatedAt;
     return house;
   });
+  if (updated && prev) queueHouseAlert(prev, updated);
+  return updated;
 }
 
 export async function adminDeleteHouse(id: string) {
@@ -399,6 +414,12 @@ export async function adminRestoreDb(incoming: DbFile) {
       return normalizeHouse(house);
     });
     db.houses = mergedHouses;
+    if (incoming.vapid?.publicKey && incoming.vapid?.privateKey) {
+      db.vapid = incoming.vapid;
+    }
+    if (incoming.pushSubscriptions && incoming.pushSubscriptions.length > 0) {
+      db.pushSubscriptions = incoming.pushSubscriptions;
+    }
     db.updatedAt = new Date(
       Math.max(stamp(db), stamp(incoming), Date.now()),
     ).toISOString();
@@ -415,6 +436,7 @@ export async function adminUpdate(
 ) {
   const current = await getHouse(id);
   if (!current) return null;
+  const prev = snapshotHouse(current);
   if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
     await assertRealAddress({
       address: patch.address ?? current.address,
@@ -422,7 +444,7 @@ export async function adminUpdate(
       lng: patch.lng ?? current.lng,
     });
   }
-  return runSyncedWrite((db) => {
+  const updated = await runSyncedWrite((db) => {
     const house = db.houses.find((h) => h.id === id);
     if (!house) return null;
     if (patch.lat !== undefined && patch.lng !== undefined) {
@@ -496,6 +518,8 @@ export async function adminUpdate(
     db.updatedAt = house.updatedAt;
     return house;
   });
+  if (updated && prev) queueHouseAlert(prev, updated);
+  return updated;
 }
 
 function sanitizeOwnerPatch(
@@ -548,4 +572,70 @@ function sanitizeOwnerPatch(
   if (patch.ownerFrozenUntil !== undefined) next.ownerFrozenUntil = patch.ownerFrozenUntil;
   if (patch.photoUrl !== undefined) next.photoUrl = patch.photoUrl;
   return next;
+}
+
+function snapshotHouse(house: House): House {
+  return {
+    ...house,
+    treats: [...house.treats],
+    treatStock: { ...house.treatStock },
+  };
+}
+
+function queueHouseAlert(prev: House, next: House) {
+  const payload = importantHouseAlert(prev, next);
+  if (!payload) return;
+  void broadcastPush(payload).catch(() => undefined);
+}
+
+export async function getVapidPublicKey() {
+  return runSyncedWrite((db) => ensureVapid(db).publicKey);
+}
+
+export async function savePushSubscription(sub: Omit<PushSubscriptionRecord, "createdAt">) {
+  return runSyncedWrite((db) => {
+    ensureVapid(db);
+    const list = db.pushSubscriptions ?? [];
+    const next: PushSubscriptionRecord = {
+      endpoint: sub.endpoint,
+      keys: { ...sub.keys },
+      createdAt: new Date().toISOString(),
+    };
+    const idx = list.findIndex((item) => item.endpoint === sub.endpoint);
+    if (idx >= 0) list[idx] = next;
+    else {
+      if (list.length >= 8000) list.shift();
+      list.push(next);
+    }
+    db.pushSubscriptions = list;
+    return list.length;
+  });
+}
+
+export async function removePushSubscription(endpoint: string) {
+  return runSyncedWrite((db) => {
+    db.pushSubscriptions = (db.pushSubscriptions ?? []).filter((item) => item.endpoint !== endpoint);
+    return db.pushSubscriptions.length;
+  });
+}
+
+export async function broadcastPush(payload: PushPayload) {
+  const { vapid, subscriptions } = await runSyncedWrite((db) => {
+    const vapid = ensureVapid(db);
+    return {
+      vapid,
+      subscriptions: [...(db.pushSubscriptions ?? [])],
+    };
+  });
+  const dead = await sendPushToSubscriptions({ vapid, subscriptions, payload });
+  if (dead.length > 0) {
+    const deadSet = new Set(dead);
+    await runSyncedWrite((db) => {
+      db.pushSubscriptions = (db.pushSubscriptions ?? []).filter((item) => !deadSet.has(item.endpoint));
+    });
+  }
+  return {
+    sent: Math.max(0, subscriptions.length - dead.length),
+    failed: dead.length,
+  };
 }

@@ -29,7 +29,6 @@
     --color-emerald-700: oklch(50.8% 0.118 165.612);
     --color-emerald-950: oklch(26.2% 0.051 172.552);
     --color-sky-100: oklch(95.1% 0.026 236.824);
-    --color-sky-200: oklch(90.1% 0.058 230.902);
     --color-sky-300: oklch(82.8% 0.111 230.318);
     --color-sky-400: oklch(74.6% 0.16 232.661);
     --color-sky-600: oklch(58.8% 0.158 241.966);
@@ -376,6 +375,9 @@
   .mt-2 {
     margin-top: calc(var(--spacing) * 2);
   }
+  .mt-3 {
+    margin-top: calc(var(--spacing) * 3);
+  }
   .mt-4 {
     margin-top: calc(var(--spacing) * 4);
   }
@@ -582,6 +584,9 @@
   .max-h-56 {
     max-height: calc(var(--spacing) * 56);
   }
+  .max-h-64 {
+    max-height: calc(var(--spacing) * 64);
+  }
   .max-h-\[92vh\] {
     max-height: 92vh;
   }
@@ -593,6 +598,9 @@
   }
   .min-h-24 {
     min-height: calc(var(--spacing) * 24);
+  }
+  .min-h-\[4rem\] {
+    min-height: 4rem;
   }
   .min-h-\[280px\] {
     min-height: 280px;
@@ -1173,6 +1181,9 @@
   }
   .p-1\.5 {
     padding: calc(var(--spacing) * 1.5);
+  }
+  .p-2\.5 {
+    padding: calc(var(--spacing) * 2.5);
   }
   .p-3 {
     padding: calc(var(--spacing) * 3);
@@ -2185,8 +2196,11 @@
     }
   }
   @media (width >= 40rem) {
-    .sm\:inline-flex {
-      display: inline-flex;
+    .sm\:hidden {
+      display: none;
+    }
+    .sm\:inline {
+      display: inline;
     }
     .sm\:max-w-none {
       max-width: none;
@@ -4047,6 +4061,38 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 }
 .map-house-sheet-more:active {
   background: #2a1638;
+}
+.map-house-sheet-edit {
+  margin-top: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  border-radius: 12px;
+  background: #2a1638;
+  color: #fdba74;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.map-house-sheet-edit.is-on {
+  background: #ea580c;
+  color: #12081a;
+  border-color: #ea580c;
+}
+.map-house-sheet-edit-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.map-house-sheet-edit-bar .map-house-sheet-kicker {
+  flex: 1;
+  min-width: 0;
+}
+.map-house-sheet-edit-bar .map-house-sheet-edit {
+  margin-top: 0;
+  width: auto;
+  padding: 8px 12px;
 }
 .map-house-sheet-full {
   margin-top: 14px;

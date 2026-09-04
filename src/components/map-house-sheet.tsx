@@ -64,14 +64,23 @@ export function MapHouseSheet({
   }, [clusterKey, start]);
 
   useEffect(() => {
+    if (editing) setSnap("full");
+  }, [editing]);
+
+  useEffect(() => {
     const peek = Math.min(PEEK_PX, Math.round(window.innerHeight * 0.42));
     const full = Math.round(window.innerHeight * FULL_VH);
     const h = dragH ?? (snap === "full" ? full : peek);
     document.documentElement.style.setProperty("--map-sheet-h", `${h}px`);
+    if (dragH === null) {
+      window.dispatchEvent(
+        new CustomEvent("hw-map-sheet", { detail: { snap, height: h } }),
+      );
+    }
     return () => {
       document.documentElement.style.removeProperty("--map-sheet-h");
     };
-  }, [snap, dragH]);
+  }, [snap, dragH, house.id]);
 
   function snapHeight(next: "peek" | "full") {
     const peek = Math.min(PEEK_PX, Math.round(window.innerHeight * 0.42));
@@ -206,24 +215,51 @@ export function MapHouseSheet({
             ) : null}
           </>
         )}
+        {snap === "peek" && canEdit && onToggleEdit && !editing ? (
+          <button
+            type="button"
+            className="map-house-sheet-edit"
+            onClick={() => onToggleEdit()}
+          >
+            עריכת הבית
+          </button>
+        ) : null}
         {snap === "full" ? (
           <div className="map-house-sheet-full">
             {pendingNote}
             {frozenNote}
-            <HouseDetails
-              house={house}
-              catalogSource={catalogSource}
-              liked={liked}
-              onToggleLike={onToggleLike}
-              visited={visited}
-              onToggleVisited={onToggleVisited}
-              managerEditCode={managerEditCode}
-              canEdit={canEdit}
-              editing={editing}
-              onToggleEdit={onToggleEdit}
-              extra={extra}
-              chrome="sheet"
-            />
+            {editing ? (
+              <>
+                <div className="map-house-sheet-edit-bar">
+                  <p className="map-house-sheet-kicker">{houseHeadline(house)}</p>
+                  {onToggleEdit ? (
+                    <button
+                      type="button"
+                      className="map-house-sheet-edit is-on"
+                      onClick={() => onToggleEdit()}
+                    >
+                      סגירת עריכה
+                    </button>
+                  ) : null}
+                </div>
+                {extra}
+              </>
+            ) : (
+              <HouseDetails
+                house={house}
+                catalogSource={catalogSource}
+                liked={liked}
+                onToggleLike={onToggleLike}
+                visited={visited}
+                onToggleVisited={onToggleVisited}
+                managerEditCode={managerEditCode}
+                canEdit={canEdit}
+                editing={editing}
+                onToggleEdit={onToggleEdit}
+                extra={extra}
+                chrome="sheet"
+              />
+            )}
           </div>
         ) : (
           <button

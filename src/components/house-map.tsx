@@ -84,6 +84,48 @@ function SizeSync({ active }: { active: boolean }) {
   return null;
 }
 
+/**
+ * After a pin tap (and peek↔full snap), pan so the house stays in the map
+ * above the detail sheet. Does not fly to GPS, filters, or the route.
+ */
+function KeepSelectedVisible({
+  lat,
+  lng,
+  active,
+}: {
+  lat: number;
+  lng: number;
+  active: boolean;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    if (!active) return;
+    const pan = () => {
+      const raw = getComputedStyle(document.documentElement).getPropertyValue("--map-sheet-h");
+      const sheetH = Number.parseFloat(raw);
+      if (!Number.isFinite(sheetH) || sheetH < 80) return;
+      const size = map.getSize();
+      const visibleMidY = Math.max(56, (size.y - sheetH) / 2);
+      const point = map.latLngToContainerPoint(L.latLng(lat, lng));
+      const dx = point.x - size.x / 2;
+      const dy = point.y - visibleMidY;
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      map.panBy([dx, dy], { animate: true, duration: 0.28 });
+    };
+    const onSheet = (event: Event) => {
+      const snap = (event as CustomEvent<{ snap?: string }>).detail?.snap;
+      if (snap === "peek" || snap === "full") pan();
+    };
+    const timer = window.setTimeout(pan, 70);
+    window.addEventListener("hw-map-sheet", onSheet);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("hw-map-sheet", onSheet);
+    };
+  }, [map, lat, lng, active]);
+  return null;
+}
+
 function ClickCatcher({
   onPick,
 }: {
@@ -164,6 +206,13 @@ export function HouseMap({
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
     [houses, pickMode],
   );
+  const focus = useMemo(() => {
+    if (pickMode || !selectedId) return null;
+    const cluster = clusters.find((item) => item.houses.some((house) => house.id === selectedId));
+    if (cluster) return { lat: cluster.lat, lng: cluster.lng };
+    const house = houses.find((item) => item.id === selectedId);
+    return house ? { lat: house.lat, lng: house.lng } : null;
+  }, [clusters, houses, pickMode, selectedId]);
   const routePositions = useMemo(
     () =>
       routeLine && routeLine.length >= 2
@@ -226,6 +275,7 @@ export function HouseMap({
           key={config.tiles.url}
         />
         <SizeSync active={active} />
+        {focus ? <KeepSelectedVisible lat={focus.lat} lng={focus.lng} active={active} /> : null}
         {pickMode && onPick ? <ClickCatcher onPick={onPick} /> : null}
         {pickMode && pick ? (
           <Marker

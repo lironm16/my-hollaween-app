@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_DURABLE_WRITES: process.env.NEXT_PUBLIC_DURABLE_WRITES ?? "1",
   },
+  serverExternalPackages: ["web-push"],
   // Keep the seed on Vercel so /api/catalog can boot without a writable data dir.
   outputFileTracingIncludes: {
     "/api/**/*": ["./data/seed.json"],

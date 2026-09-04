@@ -1,4 +1,4 @@
-const CACHE = "hw-shell-v36";
+const CACHE = "hw-shell-v37";
 const TILE_CACHE = "hw-tiles-v3";
 const PRECACHE = [
   "/offline.html",
@@ -47,7 +47,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (url.pathname.startsWith("/api/admin") || url.pathname.startsWith("/api/houses") || url.pathname.startsWith("/api/address")) {
+  if (url.pathname.startsWith("/_next/")) {
+    return;
+  }
+
+  if (url.pathname.startsWith("/api/") && !url.pathname.startsWith("/api/catalog")) {
     return;
   }
 
@@ -67,6 +71,49 @@ self.addEventListener("fetch", (event) => {
   if (url.origin === self.location.origin) {
     event.respondWith(staleWhileRevalidate(req, CACHE));
   }
+});
+
+self.addEventListener("push", (event) => {
+  let data = { title: "בשכונה", body: "", url: "/" };
+  try {
+    if (event.data) data = { ...data, ...event.data.json() };
+  } catch (_) {
+    try {
+      const text = event.data && event.data.text();
+      if (text) data.body = text;
+    } catch (__) {
+      /* ignore */
+    }
+  }
+  const title = data.title || "בשכונה";
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: data.body || "",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      lang: "he",
+      dir: "rtl",
+      data: { url: data.url || "/" },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || "/";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ("focus" in client) {
+          client.focus();
+          if ("navigate" in client) return client.navigate(target);
+          return undefined;
+        }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(target);
+      return undefined;
+    }),
+  );
 });
 
 async function navigation(request) {

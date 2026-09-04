@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandTitle } from "@/components/brand-title";
+import { PushAlertsButton } from "@/components/push-alerts-button";
 import { config } from "@/lib/config";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -50,6 +51,7 @@ export function AppHeader({
           </span>
         </Link>
         <div className="ms-auto flex items-center gap-1.5 sm:gap-2">
+          <PushAlertsButton />
           {actions}
           <Link
             href="/add"

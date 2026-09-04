@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { List, LogOut, MapPinned, RefreshCw, Route, WifiOff } from "lucide-react";
 import { toast } from "sonner";
+import { AdminBroadcast } from "@/components/admin-broadcast";
 import { AppHeader } from "@/components/app-header";
 import {
   FilterOption,
@@ -470,9 +471,10 @@ export function NeighborhoodApp({
             {!admin ? (
               <Link
                 href="/edit"
-                className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "hidden sm:inline-flex")}
+                className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "inline-flex")}
               >
-                עריכת בית
+                <span className="sm:hidden">עריכה</span>
+                <span className="hidden sm:inline">עריכת בית</span>
               </Link>
             ) : null}
             {adminReady && admin ? (
@@ -550,6 +552,7 @@ export function NeighborhoodApp({
           ) : (
             <p className="mt-1 text-[11px] text-violet-300">מוקפאים מופיעים במפה כסיכות שקופות. לחצו על בית לעריכה או מחיקה.</p>
           )}
+          <AdminBroadcast />
         </div>
       ) : null}
       <div
