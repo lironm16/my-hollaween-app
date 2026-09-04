@@ -16,6 +16,49 @@ export default function DecorPreviewPage() {
           <PreviewNav current="/preview/decor" />
         </header>
 
+        <section className="space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/20">
+          <h2 className="text-base font-medium text-orange-100">סיכות במפה — קישוט בספרינקלס</h2>
+          <p className="text-sm text-violet-200">
+            בית מקושט מקבל ניצוצות זהובים. בניין עם כמה דירות נשאר סיכה אחת עם נקודות צבע, ואחרי הקשה
+            הדירות עולות מעליה.
+          </p>
+          <div className="flex flex-wrap items-end gap-8 pt-2">
+            <div className="flex flex-col items-center gap-2">
+              <div className="house-pin relative" style={{ background: "#6d28d9" }} aria-label="מקושט">
+                <i className="pin-sprinkles" aria-hidden>
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                </i>
+                <span>👻</span>
+              </div>
+              <span className="text-[11px] text-violet-300">מקושט</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <div className="house-pin relative" style={{ background: "#6d28d9" }}>
+                <span>🎃</span>
+              </div>
+              <span className="text-[11px] text-violet-300">בלי קישוט</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <div
+                className="house-pin is-building relative"
+                style={{ background: "#6d28d9" }}
+                aria-label="3 דירות"
+              >
+                <span>🎃</span>
+                <span className="pin-apt-dots">
+                  <i className="pin-apt-dot is-ok" />
+                  <i className="pin-apt-dot is-decor" />
+                  <i className="pin-apt-dot is-closed" />
+                </span>
+              </div>
+              <span className="text-[11px] text-violet-300">לפני הקשה</span>
+            </div>
+          </div>
+        </section>
+
         <div className="space-y-3">
           {DECOR_OPTIONS.map((option) => {
             const Glyph = option.Glyph;

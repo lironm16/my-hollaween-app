@@ -45,6 +45,16 @@ export function pinNightStatus(
   return "ok";
 }
 
+/** One apartment on a building pin: green open, amber decor-only, red sold out. */
+export function apartmentDotStatus(
+  house: { visit?: VisitState; soldOut?: boolean },
+): "ok" | "closed" | "decor" {
+  const visit = effectiveVisit(house);
+  if (visit === "closed") return "closed";
+  if (visit === "decorOnly") return "decor";
+  return "ok";
+}
+
 export function defaultTreatStock(treats: TreatId[]): TreatStock {
   const stock: TreatStock = {};
   for (const id of treats) stock[id] = "plenty";

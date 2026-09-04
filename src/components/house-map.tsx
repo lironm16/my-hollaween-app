@@ -20,7 +20,7 @@ import type { PublicHouse } from "@/lib/types";
 import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
 import { distanceMeters } from "@/lib/geo";
 import { themeEmoji } from "@/lib/labels";
-import { pinNightStatus } from "@/lib/house-state";
+import { apartmentDotStatus, isDecorated, pinNightStatus } from "@/lib/house-state";
 import { isClosingSoon, isOpeningSoon } from "@/lib/hours";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { cn } from "@/lib/utils";
@@ -45,9 +45,12 @@ function routeOrderIcon(order: number) {
   });
 }
 
-const PIN_DOT = 24;
-/** 50% overlap: each extra apartment is offset by half a dot. */
-const PIN_DOT_STEP = PIN_DOT * 0.5;
+const PIN = 38;
+const FAN_R = 70;
+
+function attr(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
 
 function pinStatusMark(houses: PublicHouse[]) {
   const status = pinNightStatus(houses);
@@ -77,25 +80,46 @@ function hoursPinClass(house: PublicHouse, now: Date) {
   return "";
 }
 
-function pinDotHtml(
+function sprinklesHtml(house: PublicHouse) {
+  if (!isDecorated(house)) return "";
+  return `<i class="pin-sprinkles" aria-hidden="true"><i></i><i></i><i></i><i></i></i>`;
+}
+
+function aptDotsHtml(houses: PublicHouse[]) {
+  const dots = houses
+    .map((house) => `<i class="pin-apt-dot is-${apartmentDotStatus(house)}"></i>`)
+    .join("");
+  return `<span class="pin-apt-dots" aria-label="${houses.length} דירות">${dots}</span>`;
+}
+
+function housePinHtml(
   house: PublicHouse,
-  selected: boolean,
   now: Date,
-  offset?: { left: number; z: number },
+  extras?: { selected?: boolean; houseId?: string; extraClass?: string; extraStyle?: string },
 ) {
   const emoji = themeEmoji[house.theme ?? "pumpkin"];
-  const selectedClass = selected ? " is-selected" : "";
+  const selectedClass = extras?.selected ? " is-selected" : "";
   const hoursClass = hoursPinClass(house, now);
-  const ring = hoursRingHtml(house, now);
+  const extraClass = extras?.extraClass ? ` ${extras.extraClass}` : "";
+  const idAttr = extras?.houseId ? ` data-house-id="${attr(extras.houseId)}"` : "";
+  const style = extras?.extraStyle ? `${extras.extraStyle};background:#6d28d9` : "background:#6d28d9";
   const label = isClosingSoon(house, now)
     ? 'aria-label="נסגר בקרוב"'
     : isOpeningSoon(house, now)
       ? 'aria-label="נפתח בקרוב"'
-      : "";
-  if (!offset) {
-    return `<div class="house-pin${selectedClass}${hoursClass}" style="background:#6d28d9" ${label}>${ring}${pinStatusMark([house])}<span>${emoji}</span></div>`;
-  }
-  return `<div class="house-pin house-pin-dot${selectedClass}${hoursClass}" style="background:#6d28d9;left:${offset.left}px;z-index:${offset.z}" ${label}>${ring}${pinStatusMark([house])}<span>${emoji}</span></div>`;
+      : isDecorated(house)
+        ? 'aria-label="מקושט"'
+        : "";
+  return `<div class="house-pin${selectedClass}${hoursClass}${extraClass}" style="${style}" ${label}${idAttr}>${sprinklesHtml(house)}${hoursRingHtml(house, now)}${pinStatusMark([house])}<span>${emoji}</span></div>`;
+}
+
+function fanOffsets(count: number) {
+  const spread = Math.min(96, 32 * Math.max(1, count - 1));
+  return Array.from({ length: count }, (_, index) => {
+    const t = count === 1 ? 0.5 : index / (count - 1);
+    const rad = ((-spread / 2 + t * spread) * Math.PI) / 180;
+    return { x: Math.sin(rad) * FAN_R, y: Math.cos(rad) * FAN_R };
+  });
 }
 
 function clusterIcon(cluster: HouseCluster, selectedId: string | null | undefined, now: Date) {
@@ -103,32 +127,56 @@ function clusterIcon(cluster: HouseCluster, selectedId: string | null | undefine
   const only = houses[0];
   const selectedHere = Boolean(selectedId && houses.some((house) => house.id === selectedId));
   const selectedClass = selectedHere ? " is-selected" : "";
-  const closingHere = houses.some((house) => isClosingSoon(house, now));
-  const openingHere = !closingHere && houses.some((house) => isOpeningSoon(house, now));
-  const hoursClass = closingHere ? " is-closing-soon" : openingHere ? " is-opening-soon" : "";
 
   if (!only || houses.length <= 1) {
+    const hoursClass = only ? hoursPinClass(only, now) : "";
     return L.divIcon({
       className: `pumpkin-pin-icon${selectedClass}${hoursClass}`,
-      html: only ? pinDotHtml(only, selectedHere, now) : "",
+      html: only ? housePinHtml(only, now, { selected: selectedHere }) : "",
       iconSize: [40, 44],
       iconAnchor: [20, 42],
     });
   }
 
-  const width = PIN_DOT + (houses.length - 1) * PIN_DOT_STEP;
-  const height = PIN_DOT;
-  const dots = houses
-    .map((house, index) =>
-      pinDotHtml(house, house.id === selectedId, now, {
-        left: index * PIN_DOT_STEP,
-        z: house.id === selectedId ? houses.length + 2 : index + 1,
-      }),
-    )
+  const emoji = themeEmoji[only.theme ?? "pumpkin"];
+  if (!selectedHere) {
+    return L.divIcon({
+      className: `pumpkin-pin-icon pumpkin-pin-building${selectedClass}`,
+      html: `<div class="house-pin is-building" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות"><span>${emoji}</span>${aptDotsHtml(houses)}</div>`,
+      iconSize: [44, 48],
+      iconAnchor: [22, 44],
+    });
+  }
+
+  const offsets = fanOffsets(houses.length);
+  const pad = 22;
+  const maxX = Math.max(...offsets.map((item) => Math.abs(item.x)));
+  const width = Math.ceil(Math.max(44, 2 * (maxX + PIN / 2 + pad)));
+  const height = Math.ceil(FAN_R + PIN / 2 + PIN + 8);
+  const cx = width / 2;
+  const lines = offsets
+    .map((item) => {
+      const x2 = cx + item.x;
+      const y2 = height - item.y;
+      return `<line x1="${cx}" y1="${height - PIN / 2}" x2="${x2}" y2="${y2}" />`;
+    })
+    .join("");
+  const apts = houses
+    .map((house, index) => {
+      const { x, y } = offsets[index]!;
+      const left = cx + x - PIN / 2;
+      const bottom = y - PIN / 2;
+      return housePinHtml(house, now, {
+        selected: house.id === selectedId,
+        houseId: house.id,
+        extraClass: "is-apt",
+        extraStyle: `left:${left}px;bottom:${bottom}px;z-index:${house.id === selectedId ? houses.length + 2 : index + 1}`,
+      });
+    })
     .join("");
   return L.divIcon({
-    className: `pumpkin-pin-icon pumpkin-pin-stack${selectedClass}${hoursClass}`,
-    html: `<div class="house-pin-stack" dir="ltr" role="img" aria-label="${houses.length} דירות">${dots}</div>`,
+    className: `pumpkin-pin-icon pumpkin-pin-fan${selectedClass}`,
+    html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building" style="background:#6d28d9" aria-hidden="true"><span>${emoji}</span>${aptDotsHtml(houses)}</div>${apts}</div>`,
     iconSize: [width, height],
     iconAnchor: [width / 2, height],
   });
@@ -233,7 +281,14 @@ function ClusterMarker({
       icon={clusterIcon(cluster, selectedId, now)}
       zIndexOffset={selectedHere ? 500 : closingSoon ? 360 : openingSoon ? 320 : cluster.houses.length > 1 ? 200 : 0}
       eventHandlers={{
-        click: () => {
+        click: (event) => {
+          const hit = (event.originalEvent.target as Element | null)?.closest?.("[data-house-id]");
+          const id = hit?.getAttribute("data-house-id");
+          const fromPin = id ? cluster.houses.find((house) => house.id === id) : undefined;
+          if (fromPin) {
+            onSelect?.(fromPin);
+            return;
+          }
           const keep = selectedId
             ? cluster.houses.find((house) => house.id === selectedId)
             : undefined;
