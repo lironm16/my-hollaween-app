@@ -85,13 +85,14 @@ export function MapLegend() {
   }, [open]);
 
   return (
-    <div ref={wrapRef} className="relative" dir="rtl">
+    <div ref={wrapRef} className="relative">
       {open ? (
         <div
           id={panelId}
           role="dialog"
           aria-label="מקרא המפה"
-          className="map-legend-panel absolute end-0 bottom-[calc(100%+0.5rem)] w-[min(17.5rem,calc(100vw-1.5rem))] rounded-2xl bg-[#160b20]/95 p-3 text-right shadow-[0_12px_32px_rgba(0,0,0,0.5)] ring-1 ring-orange-500/30 backdrop-blur-md"
+          dir="rtl"
+          className="map-legend-panel absolute right-0 bottom-[calc(100%+0.5rem)] w-[min(17.5rem,calc(100vw-1.5rem))] rounded-2xl bg-[#160b20]/95 p-3 text-right shadow-[0_12px_32px_rgba(0,0,0,0.45)] ring-1 ring-orange-500/30 backdrop-blur-md"
         >
           <div className="mb-2 flex items-center justify-between gap-2">
             <h2 className="text-sm font-semibold text-orange-100">מקרא</h2>
