@@ -946,6 +946,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 
 .map-house-sheet-card .house-action-bar {
   margin-inline-end: 0;
+  flex-wrap: wrap;
 }
 
 .map-house-sheet-sold {

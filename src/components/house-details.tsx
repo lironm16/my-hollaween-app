@@ -31,6 +31,7 @@ export function HouseDetails({
   editing = false,
   onToggleEdit,
   chrome = "page",
+  actions,
 }: {
   house: PublicHouse;
   extra?: ReactNode;
@@ -44,6 +45,8 @@ export function HouseDetails({
   canEdit?: boolean;
   editing?: boolean;
   onToggleEdit?: () => void;
+  /** Rendered under the title, e.g. per-apartment map actions in the sheet. */
+  actions?: ReactNode;
   /** Sheet cards have their own action bar; still show the title and details. */
   chrome?: "page" | "sheet";
 }) {
@@ -100,6 +103,7 @@ export function HouseDetails({
           </div>
         )}
       </div>
+      {actions}
       {house.photoUrl && !photoBroken ? (
         loadPhoto ? (
           // eslint-disable-next-line @next/next/no-img-element

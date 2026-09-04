@@ -174,15 +174,6 @@ export function MapHouseSheet({
                   if (!active) onSelectHouse(item);
                 }}
               >
-                <HouseActionBar
-                  house={item}
-                  liked={liked?.(item.id)}
-                  visited={visited?.(item.id)}
-                  onToggleLike={onToggleLike ? () => onToggleLike(item.id) : undefined}
-                  onToggleVisited={
-                    onToggleVisited ? () => onToggleVisited(item.id) : undefined
-                  }
-                />
                 {active ? pendingNote : null}
                 {active ? frozenNote : null}
                 {editing && active ? (
@@ -217,6 +208,17 @@ export function MapHouseSheet({
                     onToggleEdit={onToggleEdit ? () => handleEdit(item) : undefined}
                     extra={active ? extra : undefined}
                     chrome="sheet"
+                    actions={
+                      <HouseActionBar
+                        house={item}
+                        liked={liked?.(item.id)}
+                        visited={visited?.(item.id)}
+                        onToggleLike={onToggleLike ? () => onToggleLike(item.id) : undefined}
+                        onToggleVisited={
+                          onToggleVisited ? () => onToggleVisited(item.id) : undefined
+                        }
+                      />
+                    }
                   />
                 )}
               </section>
