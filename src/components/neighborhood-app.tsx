@@ -564,7 +564,15 @@ export function NeighborhoodApp({
             <Toggle active={view === "map"} onClick={() => setView("map")} icon={<MapPinned className="size-3.5" />}>
               מפה
             </Toggle>
-            <Toggle active={view === "list"} onClick={() => setView("list")} icon={<List className="size-3.5" />}>
+            <Toggle
+              active={view === "list"}
+              onClick={() => {
+                setView("list");
+                setSelectedId("closed");
+                setEditing(false);
+              }}
+              icon={<List className="size-3.5" />}
+            >
               רשימה
             </Toggle>
           </div>
@@ -781,7 +789,7 @@ export function NeighborhoodApp({
       {selected ? (
         <MapHouseSheet
           house={selected}
-          clusterHouses={selectedCluster}
+          clusterHouses={view === "map" ? selectedCluster : [selected]}
           onSelectHouse={(house) => setSelectedId(house.id)}
           onClose={() => setSelectedId("closed")}
           start={view === "map" ? "peek" : "full"}
