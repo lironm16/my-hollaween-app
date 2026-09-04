@@ -3304,6 +3304,10 @@ svg.leaflet-zoom-animated {
   max-width: none !important;
   max-height: none !important;
 }
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+  overflow: visible !important;
+}
 .leaflet-popup,
 .leaflet-popup-content-wrapper,
 .leaflet-popup-content {
@@ -3629,6 +3633,10 @@ svg.leaflet-zoom-animated {
 .pumpkin-pin-icon {
   background: transparent !important;
   border: none !important;
+  overflow: visible !important;
+}
+.pumpkin-pin-icon.is-closing-soon {
+  overflow: visible !important;
 }
 .house-pin,
 .pumpkin-pin {
@@ -3642,6 +3650,7 @@ svg.leaflet-zoom-animated {
   border: 2.5px solid #fff7ed;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
   opacity: 1;
+  overflow: visible;
 }
 .house-pin span,
 .pumpkin-pin span {
@@ -3675,6 +3684,38 @@ svg.leaflet-zoom-animated {
 .house-pin.is-selected,
 .pumpkin-pin.is-selected {
   box-shadow: 0 0 0 2px #fdba74, 0 2px 6px rgba(0, 0, 0, 0.55);
+}
+.house-pin .pin-closing-ring,
+.pumpkin-pin .pin-closing-ring {
+  position: absolute;
+  inset: -8px;
+  z-index: 0;
+  display: block;
+  border-radius: 999px;
+  border: 3px solid #f97316;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.4), 0 0 14px rgba(249, 115, 22, 0.55);
+  pointer-events: none;
+  animation: pin-closing-flicker 1s steps(1, end) infinite;
+}
+.house-pin.is-closing-soon span,
+.pumpkin-pin.is-closing-soon span {
+  position: relative;
+  z-index: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .house-pin .pin-closing-ring,
+  .pumpkin-pin .pin-closing-ring {
+    animation: none;
+    opacity: 1;
+  }
+}
+@keyframes pin-closing-flicker {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0;
+  }
 }
 .house-pin .pin-status,
 .pumpkin-pin .pin-status {

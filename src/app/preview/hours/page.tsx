@@ -154,6 +154,21 @@ export default function HoursPreviewPage() {
                         פתוח עכשיו — אין באנר אזהרה (רק שעות למעלה)
                       </p>
                     ) : null}
+                    {item.id === "closing-1" ? (
+                      <div className="mt-3 flex items-center gap-3">
+                        <div
+                          className="house-pin is-closing-soon relative"
+                          style={{ background: "#6d28d9" }}
+                          aria-label="נסגר בקרוב"
+                        >
+                          <i className="pin-closing-ring" aria-hidden />
+                          <span>🎃</span>
+                        </div>
+                        <p className="text-sm text-orange-200">
+                          על המפה: עיגול כתום מהבהב מסביב לסיכה בחצי השעה האחרונה.
+                        </p>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </section>
