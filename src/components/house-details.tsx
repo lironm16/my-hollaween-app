@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { CheckCircle2, Heart, Pencil, X } from "lucide-react";
+import { CheckCircle2, Heart, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { CodesCopy } from "@/components/codes-copy";
@@ -100,6 +100,20 @@ export function HouseDetails({
                 <Heart className={cn("size-6", liked && "fill-orange-500 text-orange-500")} />
               </button>
             ) : null}
+            {canEdit && onToggleEdit ? (
+              <button
+                type="button"
+                aria-label={editing ? "סגירת עריכה" : "עריכת הבית"}
+                aria-pressed={editing}
+                onClick={onToggleEdit}
+                className={cn(
+                  "rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15",
+                  editing && "bg-orange-500/20 text-orange-300",
+                )}
+              >
+                <Pencil className="size-6" />
+              </button>
+            ) : null}
           </div>
         )}
       </div>
@@ -178,23 +192,6 @@ export function HouseDetails({
         </Link>
       </div>
       )}
-      {canEdit && onToggleEdit ? (
-        <button
-          type="button"
-          aria-label={editing ? "סגירת עריכה" : "עריכה"}
-          aria-pressed={editing}
-          onClick={onToggleEdit}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition",
-            editing
-              ? "bg-orange-500 text-black hover:bg-orange-400"
-              : "text-orange-200 hover:bg-orange-500/15",
-          )}
-        >
-          {editing ? <X className="size-4 shrink-0" /> : <Pencil className="size-4 shrink-0" />}
-          <span>{editing ? "סגירה" : "עריכה"}</span>
-        </button>
-      ) : null}
       {extra}
     </div>
   );

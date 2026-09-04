@@ -4128,6 +4128,10 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .house-action-btn.is-visited {
   color: #34d399;
 }
+.house-action-btn.is-edit {
+  color: #fdba74;
+  background: #3f2a16;
+}
 .house-action-btn.is-close {
   margin-inline-start: auto;
   background: #1a1024;

@@ -30,7 +30,6 @@ export default function EditPage() {
   const [house, setHouse] = useState<PublicHouse | null>(null);
   const [busy, setBusy] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
-  const [codeRequired, setCodeRequired] = useState(false);
   const pickedIdRef = useRef<string | null>(null);
   pickedIdRef.current = picked?.id ?? null;
 
@@ -70,7 +69,7 @@ export default function EditPage() {
 
   const ownedMatch = picked ? owned.find((item) => item.id === picked.id) : undefined;
   const adminEditCode = picked && admin ? adminHouses.find((item) => item.id === picked.id)?.editCode : undefined;
-  const needsCode = Boolean(picked) && !admin && !house && (codeRequired || !ownedMatch);
+  const needsCode = Boolean(picked) && !admin && !ownedMatch && !house;
 
   useEffect(() => {
     if (prefilled || owned.length === 0 || picked) return;
@@ -119,7 +118,6 @@ export default function EditPage() {
 
   useEffect(() => {
     setHouse(null);
-    setCodeRequired(false);
     if (!picked) {
       setEditCode("");
       return;
@@ -136,9 +134,10 @@ export default function EditPage() {
     const target = picked;
     const code = mine.editCode;
     setEditCode(code);
+    setHouse(picked);
     let cancelled = false;
     void unlockWith(target, code, { quiet: true }).then((ok) => {
-      if (!cancelled && !ok) setCodeRequired(true);
+      if (cancelled || !ok) return;
     });
     return () => {
       cancelled = true;
@@ -158,8 +157,8 @@ export default function EditPage() {
       <main className="relative z-10 mx-auto w-full max-w-lg flex-1 px-4 py-5">
         <h1 className="font-display mb-1 text-2xl text-orange-300">עריכת בית</h1>
         <p className="mb-4 text-sm text-violet-200">
-          בחרו בית מהרשימה. אם זה הבית שלכם במכשיר הזה, או שאתם מנהלים, נכנסים ישר לעריכה.
-          אחרת מזינים את קוד העריכה שקיבלה המשפחה.
+          בחרו בית מהרשימה. מנהל או מי שהבית שמור אצלו במכשיר נכנסים ישר לעריכה, בלי קוד.
+          מישהו אחר מהמשפחה מזין את קוד העריכה שקיבלה המשפחה.
         </p>
         <PersistNote className="mb-4" />
         <div className="mb-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">

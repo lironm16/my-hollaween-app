@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
+import { CodesCopy } from "@/components/codes-copy";
 import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
@@ -23,7 +24,8 @@ export function MapHouseSheet({
   extra,
   catalogSource,
   managerEditCode,
-  canEdit,
+  editCodeFor,
+  canEditHouse,
   editing,
   onToggleEdit,
   pendingNote,
@@ -40,7 +42,8 @@ export function MapHouseSheet({
   extra?: ReactNode;
   catalogSource?: string | null;
   managerEditCode?: string;
-  canEdit?: boolean;
+  editCodeFor?: (id: string) => string | undefined;
+  canEditHouse?: (id: string) => boolean;
   editing?: boolean;
   onToggleEdit?: () => void;
   pendingNote?: ReactNode;
@@ -166,6 +169,20 @@ export function MapHouseSheet({
         <div className="map-house-sheet-cards">
           {clusterHouses.map((item) => {
             const active = item.id === house.id;
+            const canEditThis = Boolean(canEditHouse?.(item.id) && onToggleEdit);
+            const actionBar = (
+              <HouseActionBar
+                house={item}
+                liked={liked?.(item.id)}
+                visited={visited?.(item.id)}
+                onToggleLike={onToggleLike ? () => onToggleLike(item.id) : undefined}
+                onToggleVisited={
+                  onToggleVisited ? () => onToggleVisited(item.id) : undefined
+                }
+                onToggleEdit={canEditThis ? () => handleEdit(item) : undefined}
+                editing={editing && active}
+              />
+            );
             return (
               <section
                 key={item.id}
@@ -177,21 +194,14 @@ export function MapHouseSheet({
                 {active ? pendingNote : null}
                 {active ? frozenNote : null}
                 {editing && active ? (
-                  <div className="map-house-sheet-edit-bar">
+                  <>
                     <p className="map-house-sheet-kicker">{houseHeadline(item)}</p>
-                    {onToggleEdit ? (
-                      <button
-                        type="button"
-                        className="map-house-sheet-edit is-on"
-                        onClick={() => onToggleEdit()}
-                      >
-                        סגירת עריכה
-                      </button>
-                    ) : null}
-                  </div>
-                ) : null}
-                {editing && active ? (
-                  extra
+                    {actionBar}
+                    <CodesCopy
+                      editCode={editCodeFor?.(item.id) ?? managerEditCode}
+                    />
+                    {extra}
+                  </>
                 ) : (
                   <HouseDetails
                     house={item}
@@ -202,23 +212,10 @@ export function MapHouseSheet({
                     onToggleVisited={
                       onToggleVisited ? () => onToggleVisited(item.id) : undefined
                     }
-                    managerEditCode={active ? managerEditCode : undefined}
-                    canEdit={canEdit}
-                    editing={editing && active}
-                    onToggleEdit={onToggleEdit ? () => handleEdit(item) : undefined}
+                    managerEditCode={editCodeFor?.(item.id) ?? (active ? managerEditCode : undefined)}
                     extra={active ? extra : undefined}
                     chrome="sheet"
-                    actions={
-                      <HouseActionBar
-                        house={item}
-                        liked={liked?.(item.id)}
-                        visited={visited?.(item.id)}
-                        onToggleLike={onToggleLike ? () => onToggleLike(item.id) : undefined}
-                        onToggleVisited={
-                          onToggleVisited ? () => onToggleVisited(item.id) : undefined
-                        }
-                      />
-                    }
+                    actions={actionBar}
                   />
                 )}
               </section>

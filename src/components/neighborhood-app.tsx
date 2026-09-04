@@ -19,7 +19,6 @@ import { NightDesk } from "@/components/night-desk";
 import { RouteList } from "@/components/route-list";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useHouseFilters } from "@/hooks/use-house-filters";
@@ -96,8 +95,6 @@ export function NeighborhoodApp({
   const [adminLoading, setAdminLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [busyAction, setBusyAction] = useState(false);
-  const [familyEditCode, setFamilyEditCode] = useState("");
-  const [unlockBusy, setUnlockBusy] = useState(false);
 
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
@@ -163,7 +160,6 @@ export function NeighborhoodApp({
 
   useEffect(() => {
     setEditing(false);
-    setFamilyEditCode("");
   }, [selectedId]);
 
   const editCodeById = useMemo(() => {
@@ -380,41 +376,6 @@ export function NeighborhoodApp({
   async function approveHouse(id: string) {
     const ok = await patchAdmin(id, { status: "approved" });
     if (ok) toast.success("הבית אושר ונכנס למפה הציבורית");
-  }
-
-  async function unlockWithFamilyCode(house: PublicHouse) {
-    const code = familyEditCode.trim();
-    if (!code) {
-      toast.error("הזינו את קוד העריכה (6 ספרות)");
-      return;
-    }
-    setUnlockBusy(true);
-    try {
-      const res = await fetch(`/api/houses/${encodeURIComponent(house.id)}/unlock`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ editCode: code }),
-      });
-      const data = await readApiJson<{ error?: string; house?: PublicHouse }>(res);
-      if (!res.ok || !data.house) {
-        toast.error(data.error ?? "קוד העריכה שגוי");
-        return;
-      }
-      saveOwnedHouse({
-        id: data.house.id,
-        name: data.house.name,
-        editCode: code,
-        preview: data.house,
-      });
-      setFamilyEditCode("");
-      setEditing(true);
-      toast.success("אפשר לעדכן מלאי ופרטים");
-      void refresh(true);
-    } catch {
-      toast.error("אין קשר לשרת");
-    } finally {
-      setUnlockBusy(false);
-    }
   }
 
   async function rejectHouse(id: string) {
@@ -789,7 +750,10 @@ export function NeighborhoodApp({
           onToggleVisited={visits.toggle}
           catalogSource={source}
           managerEditCode={admin ? editCodeById.get(selected.id) : undefined}
-          canEdit
+          editCodeFor={(id) =>
+            admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode
+          }
+          canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
           editing={editing}
           onToggleEdit={() => setEditing((v) => !v)}
           pendingNote={
@@ -828,56 +792,29 @@ export function NeighborhoodApp({
                   </Button>
                 </div>
               ) : null}
-              {editing ? (
-                canEditSelected ? (
-                  <NightDesk
-                    house={selected}
-                    admin={admin}
-                    editCode={admin ? editCodeById.get(selected.id) : ownedEditCode}
-                    onUpdated={(next) => {
-                      if (admin) {
-                        applyAdminHouse(next);
-                        return;
-                      }
-                      const code = ownedEditCode;
-                      if (code) {
-                        saveOwnedHouse({
-                          id: next.id,
-                          name: next.name,
-                          editCode: code,
-                          preview: next,
-                        });
-                      }
-                      notifyCatalogChanged();
-                      void refresh(true);
-                    }}
-                  />
-                ) : (
-                  <div className="space-y-3 rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-400/30">
-                    <p className="text-sm font-medium text-orange-200">קוד עריכה למשפחה</p>
-                    <p className="text-xs text-violet-300">
-                      הזינו את קוד העריכה (6 ספרות) שקיבל מי שהוסיף את הבית — ואפשר לעדכן מלאי
-                      ותמונה כמו כולם.
-                    </p>
-                    <Input
-                      value={familyEditCode}
-                      onChange={(e) => setFamilyEditCode(e.target.value)}
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      placeholder="6 ספרות"
-                      className="h-10 bg-[#12081a] text-base tracking-widest"
-                      maxLength={12}
-                    />
-                    <Button
-                      type="button"
-                      className="w-full bg-orange-500 text-black hover:bg-orange-400"
-                      disabled={unlockBusy || !familyEditCode.trim()}
-                      onClick={() => void unlockWithFamilyCode(selected)}
-                    >
-                      {unlockBusy ? "בודקים…" : "פתיחה לעריכה"}
-                    </Button>
-                  </div>
-                )
+              {editing && canEditSelected ? (
+                <NightDesk
+                  house={selected}
+                  admin={admin}
+                  editCode={admin ? editCodeById.get(selected.id) : ownedEditCode}
+                  onUpdated={(next) => {
+                    if (admin) {
+                      applyAdminHouse(next);
+                      return;
+                    }
+                    const code = ownedEditCode;
+                    if (code) {
+                      saveOwnedHouse({
+                        id: next.id,
+                        name: next.name,
+                        editCode: code,
+                        preview: next,
+                      });
+                    }
+                    notifyCatalogChanged();
+                    void refresh(true);
+                  }}
+                />
               ) : null}
             </div>
           }
