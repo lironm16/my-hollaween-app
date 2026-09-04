@@ -1,5 +1,13 @@
 import type { NextConfig } from "next";
 
+const corsHeaders = [
+  { key: "Access-Control-Allow-Origin", value: "*" },
+  { key: "Access-Control-Allow-Methods", value: "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD" },
+  { key: "Access-Control-Allow-Headers", value: "*" },
+  { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
+  { key: "Cross-Origin-Opener-Policy", value: "unsafe-none" },
+];
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   env: {
@@ -31,8 +39,25 @@ const nextConfig: NextConfig = {
     "*.trycloudflare.com",
     "**.trycloudflare.com",
   ],
+  experimental: {
+    serverActions: {
+      allowedOrigins: [
+        "localhost:43127",
+        "127.0.0.1:43127",
+        "*.vercel.app",
+        "*.cursor.com",
+        "*.cursorusercontent.com",
+        "*.oncursor.com",
+        "*.trycloudflare.com",
+      ],
+    },
+  },
   async headers() {
     return [
+      {
+        source: "/:path*",
+        headers: corsHeaders,
+      },
       {
         source: "/catalog.json",
         headers: [

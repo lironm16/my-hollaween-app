@@ -54,6 +54,8 @@ npm run dev
 
 סיסמת מנהל ברירת מחדל: `pumpkin2026`
 
+אם Cursor Preview מציג **403 Forbidden** על `/_next`, זה בגלל iframe עם `Origin: null`. אחרי `npm install` רץ תיקון שמרשה את זה, והמפה גם טוענת CSS מ־`/app.css`. עדיף לפתוח את הקישור ב־Chrome / Safari / בטלפון. קישור Vercel זמני נגמר אחרי כשעה אם לא מאשרים אותו («Claim»).
+
 ### בדיקת עומס (1,000 במקביל)
 
 ```bash
