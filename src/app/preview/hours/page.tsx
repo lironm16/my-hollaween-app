@@ -94,7 +94,7 @@ function kindLabel(kind: string) {
     case "before":
       return "לפני הפתיחה באותו יום";
     case "opensSoon":
-      return "נפתח בקרוב (כתום)";
+      return "נפתח בקרוב (טורקיז)";
     case "open":
       return "פתוח — בלי באנר";
     case "closingSoon":
@@ -153,6 +153,36 @@ export default function HoursPreviewPage() {
                       <p className="rounded-lg bg-emerald-950/40 px-3 py-2 text-sm text-emerald-200">
                         פתוח עכשיו — אין באנר אזהרה (רק שעות למעלה)
                       </p>
+                    ) : null}
+                    {item.id === "closing-1" ? (
+                      <div className="mt-3 flex items-center gap-3">
+                        <div
+                          className="house-pin is-closing-soon relative"
+                          style={{ background: "#6d28d9" }}
+                          aria-label="נסגר בקרוב"
+                        >
+                          <i className="pin-hours-ring is-closing" aria-hidden />
+                          <span>🎃</span>
+                        </div>
+                        <p className="text-sm text-orange-200">
+                          על המפה: עיגול כתום שנמוג לאט סביב הסיכה בחצי השעה האחרונה. בכרטיס: ״נסגר בקרוב ב־…״ בלי אייקון.
+                        </p>
+                      </div>
+                    ) : null}
+                    {item.id === "opens-soon-1" || item.id === "opens-soon-2" ? (
+                      <div className="mt-3 flex items-center gap-3">
+                        <div
+                          className="house-pin is-opening-soon relative"
+                          style={{ background: "#6d28d9" }}
+                          aria-label="נפתח בקרוב"
+                        >
+                          <i className="pin-hours-ring is-opening" aria-hidden />
+                          <span>🎃</span>
+                        </div>
+                        <p className="text-sm text-cyan-100">
+                          על המפה: עיגול טורקיז שנמוג לאט סביב הסיכה בחצי השעה שלפני הפתיחה. בכרטיס: ״נפתח בקרוב ב־…״ בלי אייקון.
+                        </p>
+                      </div>
                     ) : null}
                   </div>
                 </div>

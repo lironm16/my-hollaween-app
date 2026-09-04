@@ -190,6 +190,57 @@ export function hoursStatus(
   return { kind: "after" };
 }
 
+type SoonHouse = HoursSource & {
+  visit?: VisitState;
+  soldOut?: boolean;
+  adminFrozen?: boolean;
+  ownerFrozenUntil?: string | null;
+};
+
+/**
+ * Last 30 minutes of an open clock window. Ignores the Halloween date so
+ * rehearsal nights still mark pins and cards; sold-out / frozen houses do not.
+ */
+export function closingSoonAt(house: SoonHouse, now = new Date()): string | null {
+  if (effectiveVisit(house) === "closed") return null;
+  if (isFrozen(house, now.getTime())) return null;
+  const nowMin = minutesNow(now);
+  for (const window of houseHoursWindows(house)) {
+    const from = parseClockMinutes(window.from);
+    const to = parseClockMinutes(window.to);
+    if (from === null || to === null) continue;
+    if (nowMin >= from && nowMin < to && to - nowMin <= CLOSING_SOON_MINUTES) {
+      return window.to;
+    }
+  }
+  return null;
+}
+
+/** Next 30 minutes before an open clock window. Same rehearsal rules as closing soon. */
+export function openingSoonAt(house: SoonHouse, now = new Date()): string | null {
+  if (effectiveVisit(house) === "closed") return null;
+  if (isFrozen(house, now.getTime())) return null;
+  if (closingSoonAt(house, now)) return null;
+  const nowMin = minutesNow(now);
+  for (const window of houseHoursWindows(house)) {
+    const from = parseClockMinutes(window.from);
+    const to = parseClockMinutes(window.to);
+    if (from === null || to === null) continue;
+    if (nowMin < from && from - nowMin <= OPENS_SOON_MINUTES) {
+      return window.from;
+    }
+  }
+  return null;
+}
+
+export function isClosingSoon(house: SoonHouse, now = new Date()) {
+  return closingSoonAt(house, now) !== null;
+}
+
+export function isOpeningSoon(house: SoonHouse, now = new Date()) {
+  return openingSoonAt(house, now) !== null;
+}
+
 /** True when kids should come now (within hours, not sold out / frozen). */
 export function isOpenNow(
   house: HoursSource & {

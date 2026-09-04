@@ -550,6 +550,7 @@
   border: 2.5px solid #fff7ed;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
   opacity: 1;
+  overflow: visible;
 }
 
 .house-pin.house-pin-dot {
@@ -599,6 +600,55 @@
 .house-pin.is-selected,
 .pumpkin-pin.is-selected {
   box-shadow: 0 0 0 2px #fdba74, 0 2px 6px rgba(0, 0, 0, 0.55);
+}
+
+.house-pin .pin-hours-ring,
+.pumpkin-pin .pin-hours-ring {
+  position: absolute;
+  inset: -8px;
+  z-index: 0;
+  display: block;
+  border-radius: 999px;
+  pointer-events: none;
+  animation: pin-hours-fade 2.8s ease-in-out infinite;
+}
+
+.house-pin.house-pin-dot .pin-hours-ring {
+  inset: -5px;
+  border-width: 2px;
+}
+
+.house-pin .pin-hours-ring.is-closing,
+.pumpkin-pin .pin-hours-ring.is-closing {
+  border: 3px solid #f97316;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.28), 0 0 12px rgba(249, 115, 22, 0.4);
+}
+
+.house-pin .pin-hours-ring.is-opening,
+.pumpkin-pin .pin-hours-ring.is-opening {
+  border: 3px solid #22d3ee;
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.28), 0 0 12px rgba(34, 211, 238, 0.4);
+}
+
+.house-pin.is-closing-soon span,
+.house-pin.is-opening-soon span,
+.pumpkin-pin.is-closing-soon span,
+.pumpkin-pin.is-opening-soon span {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes pin-hours-fade {
+  0%, 100% { opacity: 0.22; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .house-pin .pin-hours-ring,
+  .pumpkin-pin .pin-hours-ring {
+    animation: none;
+    opacity: 0.85;
+  }
 }
 
 .house-pin .pin-status,

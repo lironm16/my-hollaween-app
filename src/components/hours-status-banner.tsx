@@ -1,5 +1,10 @@
 import { cn } from "@/lib/utils";
-import { formatHoursLabel, hoursStatus } from "@/lib/hours";
+import {
+  closingSoonAt,
+  formatHoursLabel,
+  hoursStatus,
+  openingSoonAt,
+} from "@/lib/hours";
 import type { VisitState } from "@/lib/types";
 
 export function HoursStatusBanner({
@@ -15,12 +20,32 @@ export function HoursStatusBanner({
     openHours?: { from: string; to: string }[];
     visit?: VisitState;
     soldOut?: boolean;
+    adminFrozen?: boolean;
+    ownerFrozenUntil?: string | null;
   };
   className?: string;
   /** Override clock for previews / tests. */
   now?: Date;
 }) {
-  const status = hoursStatus(house, now);
+  const clock = now ?? new Date();
+  const closesAt = closingSoonAt(house, clock);
+  if (closesAt) {
+    return (
+      <p className={cn("rounded-lg bg-orange-950/55 px-3 py-2 text-sm font-medium text-orange-200", className)}>
+        נסגר בקרוב ב־{closesAt}
+      </p>
+    );
+  }
+  const opensSoonAt = openingSoonAt(house, clock);
+  if (opensSoonAt) {
+    return (
+      <p className={cn("rounded-lg bg-cyan-950/55 px-3 py-2 text-sm font-medium text-cyan-100", className)}>
+        נפתח בקרוב ב־{opensSoonAt}
+      </p>
+    );
+  }
+
+  const status = hoursStatus(house, clock);
   if (status.kind === "unknown" || status.kind === "open" || status.kind === "closedVisit") {
     return null;
   }
@@ -28,13 +53,6 @@ export function HoursStatusBanner({
     return (
       <p className={cn("rounded-lg bg-sky-950/50 px-3 py-2 text-sm text-sky-100", className)}>
         עדיין סגור — נפתח ב־{status.dateLabel} בשעה {status.opensAt}
-      </p>
-    );
-  }
-  if (status.kind === "opensSoon") {
-    return (
-      <p className={cn("rounded-lg bg-orange-950/55 px-3 py-2 text-sm font-medium text-orange-200", className)}>
-        נפתח בקרוב — ב־{status.opensAt}
       </p>
     );
   }
@@ -49,13 +67,6 @@ export function HoursStatusBanner({
     return (
       <p className={cn("rounded-lg bg-sky-950/50 px-3 py-2 text-sm text-sky-100", className)}>
         הפסקה עכשיו — נפתח שוב ב־{status.opensAt}
-      </p>
-    );
-  }
-  if (status.kind === "closingSoon") {
-    return (
-      <p className={cn("rounded-lg bg-orange-950/55 px-3 py-2 text-sm font-medium text-orange-200", className)}>
-        נסגר בקרוב — עד {status.closesAt}
       </p>
     );
   }
