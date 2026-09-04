@@ -21,8 +21,20 @@ import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
 import { distanceMeters } from "@/lib/geo";
 import { themeEmoji } from "@/lib/labels";
 import { pinNightStatus } from "@/lib/house-state";
+import { isClosingSoon } from "@/lib/hours";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { cn } from "@/lib/utils";
+
+function useMinuteTick() {
+  return useSyncExternalStore(
+    (onStoreChange) => {
+      const id = window.setInterval(onStoreChange, 15_000);
+      return () => window.clearInterval(id);
+    },
+    () => Math.floor(Date.now() / 15_000),
+    () => 0,
+  );
+}
 
 function routeOrderIcon(order: number) {
   return L.divIcon({
@@ -45,14 +57,18 @@ function pinStatusMark(houses: PublicHouse[]) {
   return `<b class="pin-status is-${status}" aria-label="${label}"></b>`;
 }
 
-function clusterIcon(cluster: HouseCluster, selected = false) {
+function clusterIcon(cluster: HouseCluster, selected = false, closingSoon = false) {
   const emoji = themeEmoji[cluster.houses[0].theme ?? "pumpkin"];
   const count = cluster.houses.length;
   const badge =
     count > 1 ? `<b class="pin-count" aria-label="${count} דירות">×${count}</b>` : "";
+  const ring = closingSoon
+    ? `<i class="pin-closing-ring" aria-hidden="true"></i>`
+    : "";
+  const closingClass = closingSoon ? " is-closing-soon" : "";
   return L.divIcon({
-    className: `pumpkin-pin-icon${selected ? " is-selected" : ""}`,
-    html: `<div class="house-pin${selected ? " is-selected" : ""}" style="background:#6d28d9">${badge}${pinStatusMark(cluster.houses)}<span>${emoji}</span></div>`,
+    className: `pumpkin-pin-icon${selected ? " is-selected" : ""}${closingClass}`,
+    html: `<div class="house-pin${selected ? " is-selected" : ""}${closingClass}" style="background:#6d28d9" ${closingSoon ? 'aria-label="נסגר בקרוב"' : ""}>${ring}${badge}${pinStatusMark(cluster.houses)}<span>${emoji}</span></div>`,
     iconSize: [40, 44],
     iconAnchor: [20, 42],
   });
@@ -148,13 +164,16 @@ function ClusterMarker({
   selectedId?: string | null;
   onSelect?: (house: PublicHouse) => void;
 }) {
+  const tick = useMinuteTick();
   const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
+  const now = new Date(tick * 15_000);
+  const closingSoon = cluster.houses.some((house) => isClosingSoon(house, now));
 
   return (
     <Marker
       position={[cluster.lat, cluster.lng]}
-      icon={clusterIcon(cluster, selectedHere)}
-      zIndexOffset={selectedHere ? 500 : cluster.houses.length > 1 ? 200 : 0}
+      icon={clusterIcon(cluster, selectedHere, closingSoon)}
+      zIndexOffset={selectedHere ? 500 : closingSoon ? 350 : cluster.houses.length > 1 ? 200 : 0}
       eventHandlers={{
         click: () => {
           const keep = selectedId

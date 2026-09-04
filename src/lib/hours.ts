@@ -190,6 +190,32 @@ export function hoursStatus(
   return { kind: "after" };
 }
 
+type ClosingSoonHouse = HoursSource & {
+  visit?: VisitState;
+  soldOut?: boolean;
+  adminFrozen?: boolean;
+  ownerFrozenUntil?: string | null;
+};
+
+/**
+ * Last 30 minutes of an open window. Uses the clock (not the Halloween date)
+ * so a rehearsal night still blinks, and sold-out / frozen houses do not.
+ */
+export function isClosingSoon(house: ClosingSoonHouse, now = new Date()) {
+  if (effectiveVisit(house) === "closed") return false;
+  if (isFrozen(house, now.getTime())) return false;
+  const nowMin = minutesNow(now);
+  for (const window of houseHoursWindows(house)) {
+    const from = parseClockMinutes(window.from);
+    const to = parseClockMinutes(window.to);
+    if (from === null || to === null) continue;
+    if (nowMin >= from && nowMin < to && to - nowMin <= CLOSING_SOON_MINUTES) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /** True when kids should come now (within hours, not sold out / frozen). */
 export function isOpenNow(
   house: HoursSource & {
