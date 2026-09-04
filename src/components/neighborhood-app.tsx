@@ -524,7 +524,7 @@ export function NeighborhoodApp({
         className="app-toolbar relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2"
         style={{ flexShrink: 0 }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex flex-nowrap items-center gap-2">
           <div className="flex rounded-lg bg-[#1d1028] p-0.5 ring-1 ring-orange-500/20">
             <Toggle active={view === "map"} onClick={() => setView("map")} icon={<MapPinned className="size-3.5" />}>
               מפה
@@ -556,23 +556,15 @@ export function NeighborhoodApp({
           >
             <Route className="size-4" />
           </button>
-          <Button size="sm" variant="ghost" onClick={() => void onRefresh()}>
-            <RefreshCw className={cn("size-3.5", adminLoading && "animate-spin")} />
-            רענון
-          </Button>
-          <span className="ms-auto flex items-center gap-1.5 text-[11px] text-violet-300">
-            <span>{visible.length} בתים</span>
-            {offline || unreachable || source === "cache" || source === "snapshot" ? (
-              <>
-                <WifiOff className="size-3 shrink-0" />
-                <span>
-                  {offline ? "לא מקוון" : unreachable ? "השרת לא עונה" : source === "snapshot" ? "עותק סטטי" : "שמור בטלפון"}
-                </span>
-              </>
-            ) : routeMode ? (
-              <span>{walkingRoute?.stops.length ?? 0} עצירות</span>
-            ) : null}
-          </span>
+          <button
+            type="button"
+            aria-label="רענון"
+            title="רענון"
+            onClick={() => void onRefresh()}
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25"
+          >
+            <RefreshCw className={cn("size-4", (loading || adminLoading) && "animate-spin")} />
+          </button>
         </div>
         {geoError ? (
           <p className="mt-1 text-[11px] text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>
@@ -580,7 +572,8 @@ export function NeighborhoodApp({
           <p className="mt-1 text-[11px] text-amber-200">המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.</p>
         ) : routeMode ? (
           <p className="mt-1 text-[11px] text-violet-300">
-            מסלול לפי הסינון{routePrefsLabel ? ` · ${routePrefsLabel}` : ""} · מפה / רשימה
+            מסלול לפי הסינון{routePrefsLabel ? ` · ${routePrefsLabel}` : ""} ·{" "}
+            {walkingRoute?.stops.length ?? 0} עצירות · מפה / רשימה
           </p>
         ) : null}
       </div>
@@ -721,6 +714,13 @@ export function NeighborhoodApp({
                     : null
                 }
               />
+              <CatalogMetaChip
+                houseCount={visible.length}
+                stopCount={routeMode ? walkingRoute?.stops.length ?? 0 : null}
+                offline={offline}
+                unreachable={unreachable}
+                source={source}
+              />
             </div>
             {view === "list" ? (
               <div
@@ -858,6 +858,44 @@ export function NeighborhoodApp({
           }
         />
       ) : null}
+    </div>
+  );
+}
+
+function CatalogMetaChip({
+  houseCount,
+  stopCount,
+  offline,
+  unreachable,
+  source,
+}: {
+  houseCount: number;
+  stopCount?: number | null;
+  offline: boolean;
+  unreachable: boolean;
+  source: string | null;
+}) {
+  const stale = offline || unreachable || source === "cache" || source === "snapshot";
+  return (
+    <div className="pointer-events-none absolute top-2 start-2 z-[1100]">
+      <span className="inline-flex max-w-[min(100%,16rem)] items-center gap-1.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-[11px] text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
+        <span>{houseCount} בתים</span>
+        {stopCount != null ? <span>· {stopCount} עצירות</span> : null}
+        {stale ? (
+          <>
+            <WifiOff className="size-3 shrink-0" />
+            <span>
+              {offline
+                ? "לא מקוון"
+                : unreachable
+                  ? "השרת לא עונה"
+                  : source === "snapshot"
+                    ? "עותק סטטי"
+                    : "שמור בטלפון"}
+            </span>
+          </>
+        ) : null}
+      </span>
     </div>
   );
 }

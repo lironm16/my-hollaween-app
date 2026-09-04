@@ -107,7 +107,7 @@ button {
 .app-toolbar > div {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.5rem;
 }
 
