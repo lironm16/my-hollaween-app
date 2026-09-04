@@ -46,7 +46,13 @@ export function HoursStatusBanner({
   }
 
   const status = hoursStatus(house, clock);
-  if (status.kind === "unknown" || status.kind === "open" || status.kind === "closedVisit") {
+  if (
+    status.kind === "unknown" ||
+    status.kind === "open" ||
+    status.kind === "closedVisit" ||
+    status.kind === "opensSoon" ||
+    status.kind === "closingSoon"
+  ) {
     return null;
   }
   if (status.kind === "beforeEvent") {
