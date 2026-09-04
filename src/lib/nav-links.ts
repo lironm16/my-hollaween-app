@@ -14,13 +14,6 @@ export function houseMapsUrl(house: PublicHouse) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapsQueryFor(house))}&travelmode=walking`;
 }
 
-export function houseWazeUrl(house: PublicHouse) {
-  if (Number.isFinite(house.lat) && Number.isFinite(house.lng)) {
-    return `https://waze.com/ul?ll=${house.lat},${house.lng}&navigate=yes`;
-  }
-  return `https://waze.com/ul?q=${encodeURIComponent(mapsQueryFor(house))}&navigate=yes`;
-}
-
 export function houseSharePath(house: PublicHouse) {
   return `/house/${encodeURIComponent(house.id)}`;
 }
