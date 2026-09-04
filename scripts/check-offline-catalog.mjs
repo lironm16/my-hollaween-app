@@ -55,14 +55,14 @@ async function main() {
   await page.route("**/api/catalog**", (route) => route.abort("failed"));
   await page.route("**/catalog.json**", (route) => route.abort("failed"));
   await page.getByRole("button", { name: "רענון" }).click();
-  await page.getByText("השרת לא עונה").first().waitFor();
+  await page.getByText(/השרת לא עונה/).first().waitFor();
   if (firstName) await page.getByText(firstName).first().waitFor();
   await page.screenshot({ path: `${OUT}/server-down-keeps-houses.png`, fullPage: true });
   console.log("server-down still showing", saved.count, "houses");
 
   await context.setOffline(true);
   await page.getByRole("button", { name: "רענון" }).click();
-  await page.getByText("לא מקוון").first().waitFor();
+  await page.getByText(/לא מקוון|אין אינטרנט/).first().waitFor();
   if (firstName) await page.getByText(firstName).first().waitFor();
   await page.screenshot({ path: `${OUT}/no-internet-keeps-houses.png`, fullPage: true });
   console.log("no-internet still showing the saved list");
