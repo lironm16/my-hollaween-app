@@ -54,7 +54,7 @@ export function RouteList({
       </div>
 
       <ol className="space-y-2">
-        {route.stops.map((stop, index) => {
+        {route.stops.flatMap((stop, index) => {
           const prev =
             index === 0
               ? route.origin
@@ -70,11 +70,11 @@ export function RouteList({
             lat: stop.house.lat,
             lng: stop.house.lng,
           });
-          return (
-            <li key={stop.house.id} className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/15">
+          return stop.houses.map((house, houseIndex) => (
+            <li key={house.id} className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/15">
               <button
                 type="button"
-                onClick={() => onSelectHouse(stop.house.id)}
+                onClick={() => onSelectHouse(house.id)}
                 className="flex w-full items-start gap-3 text-start"
               >
                 <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-black">
@@ -82,22 +82,18 @@ export function RouteList({
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium text-orange-100">
-                    {houseHeadline(stop.house)}
-                    {stop.houses.length > 1 ? ` · ${stop.houses.length} דירות` : ""}
+                    {houseHeadline(house)}
                   </span>
                   <span className="mt-0.5 block text-xs text-violet-300">
-                    {formatDisplayAddress(stop.house)}
+                    {formatDisplayAddress(house)}
                   </span>
-                  {stop.houses.length > 1 ? (
-                    <span className="mt-0.5 block text-[11px] text-violet-400">
-                      {stop.houses.map((house) => houseHeadline(house)).join(" · ")}
-                    </span>
+                  {house.arrival ? (
+                    <span className="mt-0.5 block text-[11px] text-amber-200/90">{house.arrival}</span>
                   ) : null}
                   <span className="mt-1 block text-[11px] text-violet-400">
-                    {stop.order === 1 ? "מההתחלה" : "מעצירה קודמת"}:{" "}
-                    {formatDistance(stop.fromPreviousMeters)}
-                    {" · "}
-                    מצטבר {formatDistance(stop.cumulativeMeters)}
+                    {houseIndex > 0
+                      ? "אותו בניין"
+                      : `${stop.order === 1 ? "מההתחלה" : "מעצירה קודמת"}: ${formatDistance(stop.fromPreviousMeters)} · מצטבר ${formatDistance(stop.cumulativeMeters)}`}
                   </span>
                 </span>
               </button>
@@ -121,7 +117,7 @@ export function RouteList({
                 </a>
               </div>
             </li>
-          );
+          ));
         })}
       </ol>
     </div>
