@@ -31,7 +31,7 @@ export function HouseList({
     return houses
       .filter((h) => {
         if (!needle) return true;
-        const text = `${h.name} ${h.address} ${h.description} ${h.id} ${h.arrival ?? ""}`;
+        const text = `${h.name} ${h.address} ${h.description} ${h.arrival ?? ""}`;
         return text.includes(needle);
       })
       .map((h) => ({

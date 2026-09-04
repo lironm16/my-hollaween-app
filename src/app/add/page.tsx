@@ -64,7 +64,7 @@ export default function AddPage() {
               <CheckCircle2 className="house-added-check size-14 text-emerald-400" />
               <h1 className="font-display text-2xl text-orange-300">הבית במפה!</h1>
               <p className="text-sm text-violet-100">
-                {done.name} נשמר בשרת ומופיע במפה הציבורית של השכונה.
+                {done.name} נשמר ומופיע במפה הציבורית של השכונה.
               </p>
             </div>
             <PersistNote />
