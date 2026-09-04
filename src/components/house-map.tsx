@@ -33,6 +33,10 @@ function routeOrderIcon(order: number) {
   });
 }
 
+const PIN_DOT = 24;
+/** 50% overlap: each extra apartment is offset by half a dot. */
+const PIN_DOT_STEP = PIN_DOT * 0.5;
+
 function pinStatusMark(houses: PublicHouse[]) {
   const status = pinNightStatus(houses);
   if (status === "ok") return "";
@@ -45,16 +49,49 @@ function pinStatusMark(houses: PublicHouse[]) {
   return `<b class="pin-status is-${status}" aria-label="${label}"></b>`;
 }
 
-function clusterIcon(cluster: HouseCluster, selected = false) {
-  const emoji = themeEmoji[cluster.houses[0].theme ?? "pumpkin"];
-  const count = cluster.houses.length;
-  const badge =
-    count > 1 ? `<b class="pin-count" aria-label="${count} דירות">×${count}</b>` : "";
+function pinDotHtml(
+  house: PublicHouse,
+  selected: boolean,
+  offset?: { left: number; z: number },
+) {
+  const emoji = themeEmoji[house.theme ?? "pumpkin"];
+  const selectedClass = selected ? " is-selected" : "";
+  if (!offset) {
+    return `<div class="house-pin${selectedClass}" style="background:#6d28d9">${pinStatusMark([house])}<span>${emoji}</span></div>`;
+  }
+  return `<div class="house-pin house-pin-dot${selectedClass}" style="background:#6d28d9;left:${offset.left}px;z-index:${offset.z}">${pinStatusMark([house])}<span>${emoji}</span></div>`;
+}
+
+function clusterIcon(cluster: HouseCluster, selectedId?: string | null) {
+  const houses = cluster.houses;
+  const only = houses[0];
+  const selectedHere = Boolean(selectedId && houses.some((house) => house.id === selectedId));
+  const selectedClass = selectedHere ? " is-selected" : "";
+
+  if (!only || houses.length <= 1) {
+    return L.divIcon({
+      className: `pumpkin-pin-icon${selectedClass}`,
+      html: only ? pinDotHtml(only, selectedHere) : "",
+      iconSize: [40, 44],
+      iconAnchor: [20, 42],
+    });
+  }
+
+  const width = PIN_DOT + (houses.length - 1) * PIN_DOT_STEP;
+  const height = PIN_DOT;
+  const dots = houses
+    .map((house, index) =>
+      pinDotHtml(house, house.id === selectedId, {
+        left: index * PIN_DOT_STEP,
+        z: house.id === selectedId ? houses.length + 2 : index + 1,
+      }),
+    )
+    .join("");
   return L.divIcon({
-    className: `pumpkin-pin-icon${selected ? " is-selected" : ""}`,
-    html: `<div class="house-pin${selected ? " is-selected" : ""}" style="background:#6d28d9">${badge}${pinStatusMark(cluster.houses)}<span>${emoji}</span></div>`,
-    iconSize: [40, 44],
-    iconAnchor: [20, 42],
+    className: `pumpkin-pin-icon pumpkin-pin-stack${selectedClass}`,
+    html: `<div class="house-pin-stack" dir="ltr" role="img" aria-label="${houses.length} דירות">${dots}</div>`,
+    iconSize: [width, height],
+    iconAnchor: [width / 2, height],
   });
 }
 
@@ -85,8 +122,8 @@ function SizeSync({ active }: { active: boolean }) {
 }
 
 /**
- * After a pin tap (and peek↔full snap), pan so the house stays in the map
- * above the detail sheet. Does not fly to GPS, filters, or the route.
+ * After a pin tap, pan so the house stays in the map above the detail sheet.
+ * Does not fly to GPS, filters, or the route.
  */
 function KeepSelectedVisible({
   lat,
@@ -112,10 +149,7 @@ function KeepSelectedVisible({
       if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
       map.panBy([dx, dy], { animate: true, duration: 0.28 });
     };
-    const onSheet = (event: Event) => {
-      const snap = (event as CustomEvent<{ snap?: string }>).detail?.snap;
-      if (snap === "peek" || snap === "full") pan();
-    };
+    const onSheet = () => pan();
     const timer = window.setTimeout(pan, 70);
     window.addEventListener("hw-map-sheet", onSheet);
     return () => {
@@ -153,7 +187,7 @@ function ClusterMarker({
   return (
     <Marker
       position={[cluster.lat, cluster.lng]}
-      icon={clusterIcon(cluster, selectedHere)}
+      icon={clusterIcon(cluster, selectedId)}
       zIndexOffset={selectedHere ? 500 : cluster.houses.length > 1 ? 200 : 0}
       eventHandlers={{
         click: () => {

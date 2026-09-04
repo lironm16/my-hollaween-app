@@ -777,18 +777,16 @@ export function NeighborhoodApp({
             ) : null}
           </>
         )}
-      </main>
-      {selected ? (
+        {selected ? (
         <MapHouseSheet
           house={selected}
           clusterHouses={selectedCluster}
           onSelectHouse={(house) => setSelectedId(house.id)}
           onClose={() => setSelectedId("closed")}
-          start={view === "map" ? "peek" : "full"}
-          liked={likes.liked(selected.id)}
-          onToggleLike={() => likes.toggle(selected.id)}
-          visited={visits.visited(selected.id)}
-          onToggleVisited={() => visits.toggle(selected.id)}
+          liked={likes.liked}
+          onToggleLike={likes.toggle}
+          visited={visits.visited}
+          onToggleVisited={visits.toggle}
           catalogSource={source}
           managerEditCode={admin ? editCodeById.get(selected.id) : undefined}
           canEdit
@@ -884,7 +882,8 @@ export function NeighborhoodApp({
             </div>
           }
         />
-      ) : null}
+        ) : null}
+      </main>
     </div>
   );
 }

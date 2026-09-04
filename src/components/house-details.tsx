@@ -44,7 +44,7 @@ export function HouseDetails({
   canEdit?: boolean;
   editing?: boolean;
   onToggleEdit?: () => void;
-  /** Sheet chrome already has Maps / share / heart / visited. */
+  /** Sheet cards have their own action bar; still show the title and details. */
   chrome?: "page" | "sheet";
 }) {
   const displayAddress = formatDisplayAddress(house);
@@ -68,38 +68,38 @@ export function HouseDetails({
   const sheet = chrome === "sheet";
   return (
     <div className="space-y-3">
-      {sheet ? null : (
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
           <p className="text-sm text-violet-200">{displayAddress}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-0.5">
-          {onToggleVisited ? (
-            <button
-              type="button"
-              aria-label={visited ? "סמנו כלא ביקרתי" : "סמנו שביקרתי"}
-              onClick={onToggleVisited}
-              className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
-            >
-              <CheckCircle2
-                className={cn("size-6", visited && "fill-emerald-500/30 text-emerald-400")}
-              />
-            </button>
-          ) : null}
-          {onToggleLike ? (
-            <button
-              type="button"
-              aria-label={liked ? "הסירו מהשמורים" : "שמרו את הבית"}
-              onClick={onToggleLike}
-              className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
-            >
-              <Heart className={cn("size-6", liked && "fill-orange-500 text-orange-500")} />
-            </button>
-          ) : null}
-        </div>
+        {sheet ? null : (
+          <div className="flex shrink-0 items-center gap-0.5">
+            {onToggleVisited ? (
+              <button
+                type="button"
+                aria-label={visited ? "סמנו כלא ביקרתי" : "סמנו שביקרתי"}
+                onClick={onToggleVisited}
+                className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
+              >
+                <CheckCircle2
+                  className={cn("size-6", visited && "fill-emerald-500/30 text-emerald-400")}
+                />
+              </button>
+            ) : null}
+            {onToggleLike ? (
+              <button
+                type="button"
+                aria-label={liked ? "הסירו מהשמורים" : "שמרו את הבית"}
+                onClick={onToggleLike}
+                className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
+              >
+                <Heart className={cn("size-6", liked && "fill-orange-500 text-orange-500")} />
+              </button>
+            ) : null}
+          </div>
+        )}
       </div>
-      )}
       {house.photoUrl && !photoBroken ? (
         loadPhoto ? (
           // eslint-disable-next-line @next/next/no-img-element

@@ -529,6 +529,13 @@
 .pumpkin-pin-icon {
   background: transparent !important;
   border: none !important;
+  overflow: visible !important;
+}
+
+.house-pin-stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 .house-pin,
@@ -545,11 +552,23 @@
   opacity: 1;
 }
 
+.house-pin.house-pin-dot {
+  position: absolute;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  border-width: 2px;
+}
+
 .house-pin span,
 .pumpkin-pin span {
   font-size: 22px;
   line-height: 1;
   filter: none;
+}
+
+.house-pin.house-pin-dot span {
+  font-size: 13px;
 }
 
 .house-pin .pin-count,
@@ -608,6 +627,11 @@
 .house-pin .pin-status.is-decor,
 .pumpkin-pin .pin-status.is-decor {
   background: #d97706;
+}
+
+.house-pin.house-pin-dot .pin-status {
+  width: 9px;
+  height: 9px;
 }
 
 .route-stop-icon {
@@ -838,6 +862,8 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   z-index: 50;
   display: flex;
   flex-direction: column;
+  height: auto;
+  max-height: min(33%, 33dvh);
   overflow: hidden;
   background: #160b20;
   border-radius: 22px 22px 0 0;
@@ -851,10 +877,16 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   transition: none;
 }
 
+.map-house-sheet-chrome .house-action-btn.is-close {
+  margin-inline-start: 0;
+  flex-shrink: 0;
+}
+
 .map-house-sheet-handle-hit {
   display: grid;
   place-items: center;
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 28px;
   padding: 10px 0 4px;
   touch-action: none;
   cursor: grab;
@@ -867,16 +899,12 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   background: #6b4a7a;
 }
 
-.map-house-sheet-top {
-  flex-shrink: 0;
-  padding: 0 14px 8px;
-}
-
 .map-house-sheet-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 0 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  overscroll-behavior: contain;
+  padding: 0 16px calc(16px + env(safe-area-inset-bottom, 0px));
   -webkit-overflow-scrolling: touch;
 }
 
@@ -884,7 +912,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .map-house-sheet-title {
   margin: 0;
   font-family: var(--font-display), sans-serif;
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #fdba74;
   line-height: 1.3;
@@ -892,13 +920,32 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 
 .map-house-sheet-sub,
 .map-house-sheet-arrival {
-  margin: 4px 0 0;
-  font-size: 0.875rem;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 500;
   color: #ddd6fe;
 }
 
-.map-house-sheet-tags {
-  margin-top: 10px;
+.map-house-sheet-cards {
+  display: grid;
+  gap: 14px;
+  padding-top: 6px;
+}
+
+.map-house-sheet-card {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(249, 115, 22, 0.18);
+}
+
+.map-house-sheet-card:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.map-house-sheet-card .house-action-bar {
+  margin-inline-end: 0;
 }
 
 .map-house-sheet-sold {
@@ -907,66 +954,6 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   font-size: 0.8rem;
   font-weight: 700;
   color: #f87171;
-}
-
-.map-house-sheet-apts {
-  list-style: none;
-  margin: 12px 0 0;
-  padding: 0;
-  display: grid;
-  gap: 8px;
-}
-
-.map-house-sheet-apt {
-  display: grid;
-  gap: 4px;
-  width: 100%;
-  text-align: start;
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: #1d1028;
-  color: #f8f5ef;
-  border: 1px solid rgba(249, 115, 22, 0.18);
-}
-
-.map-house-sheet-apt:active {
-  background: #2a1638;
-}
-
-.map-house-sheet-apt.is-on {
-  border-color: #f97316;
-  background: #2a1638;
-}
-
-.map-house-sheet-apt-title {
-  font-weight: 700;
-  color: #fdba74;
-}
-
-.map-house-sheet-apt-meta {
-  font-size: 0.8rem;
-  color: #c4b5d6;
-}
-
-.map-house-sheet-apt-tags {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.map-house-sheet-more {
-  margin-top: 14px;
-  width: 100%;
-  padding: 10px;
-  border: 0;
-  border-radius: 12px;
-  background: transparent;
-  color: #fdba74;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.map-house-sheet-more:active {
-  background: #2a1638;
 }
 
 .map-house-sheet-edit {
@@ -992,7 +979,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
 }
 
 .map-house-sheet-edit-bar .map-house-sheet-kicker {
@@ -1004,12 +991,6 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   margin-top: 0;
   width: auto;
   padding: 8px 12px;
-}
-
-.map-house-sheet-full {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(249, 115, 22, 0.18);
 }
 
 .house-action-bar {
