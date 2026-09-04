@@ -149,6 +149,11 @@
   max-height: none !important;
 }
 
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+  overflow: visible !important;
+}
+
 .leaflet-popup,
 .leaflet-popup-content-wrapper,
 .leaflet-popup-content {
@@ -538,6 +543,11 @@
   height: 100%;
 }
 
+.pumpkin-pin-icon.is-closing-soon,
+.pumpkin-pin-icon.is-opening-soon {
+  overflow: visible !important;
+}
+
 .house-pin,
 .pumpkin-pin {
   position: relative;
@@ -650,7 +660,6 @@
     opacity: 0.85;
   }
 }
-
 .house-pin .pin-status,
 .pumpkin-pin .pin-status {
   position: absolute;
@@ -894,6 +903,19 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .app-header {
   padding-top: constant(safe-area-inset-top);
   padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Keep toasts below the phone status bar (and the app header on small screens). */
+[data-sonner-toaster][data-y-position="top"] {
+  top: calc(constant(safe-area-inset-top) + 1.5rem) !important;
+  top: calc(env(safe-area-inset-top, 0px) + 1.5rem) !important;
+}
+
+@media (max-width: 600px) {
+  [data-sonner-toaster][data-y-position="top"] {
+    top: calc(constant(safe-area-inset-top) + 4rem) !important;
+    top: calc(env(safe-area-inset-top, 0px) + 4rem) !important;
+  }
 }
 
 .locate-me {

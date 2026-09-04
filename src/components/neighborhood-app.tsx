@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { List, LogOut, MapPinned, RefreshCw, Route, WifiOff } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { List, MapPinned, RefreshCw, Route, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { AdminBroadcast } from "@/components/admin-broadcast";
 import { AppHeader } from "@/components/app-header";
@@ -18,7 +17,7 @@ import { MapHouseSheet } from "@/components/map-house-sheet";
 import { NightDesk } from "@/components/night-desk";
 import { RouteList } from "@/components/route-list";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useHouseFilters } from "@/hooks/use-house-filters";
@@ -61,7 +60,7 @@ export function NeighborhoodApp({
   focusId?: string | null;
 }) {
   const { catalog, loading, offline, unreachable, error, source, refresh } = useCatalog(initialCatalog);
-  const { ready: adminReady, admin, logout } = useAdminSession();
+  const { admin } = useAdminSession();
   const geo = useUserLocation();
   const origin = geo.location;
   const [routeAnchor, setRouteAnchor] = useState<{ lat: number; lng: number } | null>(null);
@@ -157,6 +156,15 @@ export function NeighborhoodApp({
     const timer = window.setInterval(() => void loadAdminHouses(), 15_000);
     return () => window.clearInterval(timer);
   }, [admin, loadAdminHouses]);
+
+  const wasAdmin = useRef(false);
+  useEffect(() => {
+    if (wasAdmin.current && !admin) {
+      setSelectedId("closed");
+      void refresh(true);
+    }
+    wasAdmin.current = admin;
+  }, [admin, refresh]);
 
   useEffect(() => {
     setEditing(false);
@@ -405,15 +413,6 @@ export function NeighborhoodApp({
     }
   }
 
-  async function onLogout() {
-    await logout();
-    setAdminHouses([]);
-    setSelectedId("closed");
-    setEditing(false);
-    toast.message("יצאתם ממצב מנהל");
-    void refresh(true);
-  }
-
   async function onRefresh() {
     if (admin) await loadAdminHouses();
     await refresh(true);
@@ -425,41 +424,7 @@ export function NeighborhoodApp({
       className="relative isolate flex h-dvh flex-col overflow-hidden"
       style={{ display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}
     >
-      <AppHeader
-        onMainTap={goToMainMap}
-        actions={
-          <>
-            {!admin ? (
-              <Link
-                href="/edit"
-                className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "inline-flex")}
-              >
-                <span className="sm:hidden">עריכה</span>
-                <span className="hidden sm:inline">עריכת בית</span>
-              </Link>
-            ) : null}
-            {adminReady && admin ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="border-orange-400/40 text-orange-100"
-                onClick={() => void onLogout()}
-              >
-                <LogOut className="size-3.5" />
-                יציאה
-              </Button>
-            ) : (
-              <Link
-                href="/admin"
-                className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-violet-200")}
-              >
-                ניהול
-              </Link>
-            )}
-          </>
-        }
-      />
+      <AppHeader onMainTap={goToMainMap} />
       {admin ? (
         <div
           className="relative z-40 border-b border-amber-500/25 bg-[#2a1638]/95 px-3 py-2"
@@ -520,12 +485,20 @@ export function NeighborhoodApp({
         className="app-toolbar relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2"
         style={{ flexShrink: 0 }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex flex-nowrap items-center gap-2">
           <div className="flex rounded-lg bg-[#1d1028] p-0.5 ring-1 ring-orange-500/20">
             <Toggle active={view === "map"} onClick={() => setView("map")} icon={<MapPinned className="size-3.5" />}>
               מפה
             </Toggle>
-            <Toggle active={view === "list"} onClick={() => setView("list")} icon={<List className="size-3.5" />}>
+            <Toggle
+              active={view === "list"}
+              onClick={() => {
+                setView("list");
+                setSelectedId("closed");
+                setEditing(false);
+              }}
+              icon={<List className="size-3.5" />}
+            >
               רשימה
             </Toggle>
           </div>
@@ -544,23 +517,15 @@ export function NeighborhoodApp({
           >
             <Route className="size-4" />
           </button>
-          <Button size="sm" variant="ghost" onClick={() => void onRefresh()}>
-            <RefreshCw className={cn("size-3.5", adminLoading && "animate-spin")} />
-            רענון
-          </Button>
-          <span className="ms-auto flex items-center gap-1.5 text-[11px] text-violet-300">
-            <span>{visible.length} בתים</span>
-            {offline || unreachable || source === "cache" || source === "snapshot" ? (
-              <>
-                <WifiOff className="size-3 shrink-0" />
-                <span>
-                  {offline ? "לא מקוון" : unreachable ? "השרת לא עונה" : source === "snapshot" ? "עותק סטטי" : "שמור בטלפון"}
-                </span>
-              </>
-            ) : routeMode ? (
-              <span>{walkingRoute?.stops.length ?? 0} עצירות</span>
-            ) : null}
-          </span>
+          <button
+            type="button"
+            aria-label="רענון"
+            title="רענון"
+            onClick={() => void onRefresh()}
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25"
+          >
+            <RefreshCw className={cn("size-4", (loading || adminLoading) && "animate-spin")} />
+          </button>
         </div>
         {geoError ? (
           <p className="mt-1 text-[11px] text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>
@@ -568,7 +533,8 @@ export function NeighborhoodApp({
           <p className="mt-1 text-[11px] text-amber-200">המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.</p>
         ) : routeMode ? (
           <p className="mt-1 text-[11px] text-violet-300">
-            מסלול לפי הסינון{routePrefsLabel ? ` · ${routePrefsLabel}` : ""} · מפה / רשימה
+            מסלול לפי הסינון{routePrefsLabel ? ` · ${routePrefsLabel}` : ""} ·{" "}
+            {walkingRoute?.stops.length ?? 0} עצירות · מפה / רשימה
           </p>
         ) : null}
       </div>
@@ -709,6 +675,13 @@ export function NeighborhoodApp({
                     : null
                 }
               />
+              <CatalogMetaChip
+                houseCount={visible.length}
+                stopCount={routeMode ? walkingRoute?.stops.length ?? 0 : null}
+                offline={offline}
+                unreachable={unreachable}
+                source={source}
+              />
             </div>
             {view === "list" ? (
               <div
@@ -741,7 +714,7 @@ export function NeighborhoodApp({
         {selected ? (
         <MapHouseSheet
           house={selected}
-          clusterHouses={selectedCluster}
+          clusterHouses={view === "map" ? selectedCluster : [selected]}
           onSelectHouse={(house) => setSelectedId(house.id)}
           onClose={() => setSelectedId("closed")}
           liked={likes.liked}
@@ -821,6 +794,44 @@ export function NeighborhoodApp({
         />
         ) : null}
       </main>
+    </div>
+  );
+}
+
+function CatalogMetaChip({
+  houseCount,
+  stopCount,
+  offline,
+  unreachable,
+  source,
+}: {
+  houseCount: number;
+  stopCount?: number | null;
+  offline: boolean;
+  unreachable: boolean;
+  source: string | null;
+}) {
+  const stale = offline || unreachable || source === "cache" || source === "snapshot";
+  return (
+    <div className="pointer-events-none absolute top-2 start-2 z-[1100]">
+      <span className="inline-flex max-w-[min(100%,16rem)] items-center gap-1.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-[11px] text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
+        <span>{houseCount} בתים</span>
+        {stopCount != null ? <span>· {stopCount} עצירות</span> : null}
+        {stale ? (
+          <>
+            <WifiOff className="size-3 shrink-0" />
+            <span>
+              {offline
+                ? "לא מקוון"
+                : unreachable
+                  ? "השרת לא עונה"
+                  : source === "snapshot"
+                    ? "עותק סטטי"
+                    : "שמור בטלפון"}
+            </span>
+          </>
+        ) : null}
+      </span>
     </div>
   );
 }

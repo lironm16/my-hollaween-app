@@ -59,12 +59,15 @@ export function HouseList({
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-3 py-3">
-      <Input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="חיפוש לפי שם או רחוב…"
-        className="h-10 bg-[#1d1028] text-base"
-      />
+      <div className="flex items-center gap-2">
+        <Input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="חיפוש לפי שם או רחוב…"
+          className="h-10 min-w-0 flex-1 bg-[#1d1028] text-base"
+        />
+        <span className="shrink-0 text-[11px] text-violet-300">{houses.length} בתים</span>
+      </div>
       {origin ? (
         <p className="text-[11px] text-violet-300">ממוין לפי מרחק מכם</p>
       ) : null}
