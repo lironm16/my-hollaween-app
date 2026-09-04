@@ -936,8 +936,17 @@
       border-color: color-mix(in oklab, var(--color-orange-500) 25%, transparent);
     }
   }
+  .border-orange-500\/30 {
+    border-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 30%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-orange-500) 30%, transparent);
+    }
+  }
   .border-transparent {
     border-color: transparent;
+  }
+  .bg-\[\#1a0d24\] {
+    background-color: #1a0d24;
   }
   .bg-\[\#1a1024\] {
     background-color: #1a1024;
@@ -980,6 +989,9 @@
   }
   .bg-\[\#12081a\]\/80 {
     background-color: color-mix(in oklab, #12081a 80%, transparent);
+  }
+  .bg-\[\#14091c\]\/80 {
+    background-color: color-mix(in oklab, #14091c 80%, transparent);
   }
   .bg-\[\#14091c\]\/90 {
     background-color: color-mix(in oklab, #14091c 90%, transparent);
@@ -1502,6 +1514,12 @@
     color: color-mix(in srgb, oklch(89.4% 0.057 293.283) 80%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       color: color-mix(in oklab, var(--color-violet-200) 80%, transparent);
+    }
+  }
+  .text-violet-200\/90 {
+    color: color-mix(in srgb, oklch(89.4% 0.057 293.283) 90%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-violet-200) 90%, transparent);
     }
   }
   .text-violet-300 {
@@ -3975,6 +3993,16 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .app-header {
   padding-top: constant(safe-area-inset-top);
   padding-top: env(safe-area-inset-top, 0px);
+}
+[data-sonner-toaster][data-y-position="top"] {
+  top: calc(constant(safe-area-inset-top) + 1.5rem) !important;
+  top: calc(env(safe-area-inset-top, 0px) + 1.5rem) !important;
+}
+@media (max-width: 600px) {
+  [data-sonner-toaster][data-y-position="top"] {
+    top: calc(constant(safe-area-inset-top) + 4rem) !important;
+    top: calc(env(safe-area-inset-top, 0px) + 4rem) !important;
+  }
 }
 .locate-me {
   appearance: none;
