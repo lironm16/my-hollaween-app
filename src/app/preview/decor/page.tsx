@@ -40,6 +40,7 @@ export default function DecorPreviewPage() {
             <div className="flex flex-col items-center gap-2">
               <div className="house-pin relative" style={{ background: "#6d28d9" }}>
                 <span>🎃</span>
+                <b className="pin-status is-plenty" />
               </div>
               <span className="text-[11px] text-violet-300">בלי קישוט</span>
             </div>
