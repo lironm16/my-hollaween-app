@@ -19,8 +19,9 @@ export default function DecorPreviewPage() {
         <section className="space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/20">
           <h2 className="text-base font-medium text-orange-100">סיכות במפה — קישוט בספרינקלס</h2>
           <p className="text-sm text-violet-200">
-            בית מקושט מקבל ניצוצות זהובים. בניין עם כמה דירות נשאר סיכה אחת עם נקודות צבע, ואחרי הקשה
-            הדירות עולות מעליה.
+            בית מקושט מקבל ניצוצות זהובים. נקודת הצבע היא רק ממתקים: ירוק = יש, כתום = מעט, ובלי
+            ממתקים אין נקודה. בניין עם כמה דירות נשאר סיכה אחת עם אותן נקודות, ואחרי הקשה הדירות
+            עולות מעליה.
           </p>
           <div className="flex flex-wrap items-end gap-8 pt-2">
             <div className="flex flex-col items-center gap-2">
@@ -32,6 +33,7 @@ export default function DecorPreviewPage() {
                   <i />
                 </i>
                 <span>👻</span>
+                <b className="pin-status is-plenty" />
               </div>
               <span className="text-[11px] text-violet-300">מקושט</span>
             </div>
@@ -49,9 +51,8 @@ export default function DecorPreviewPage() {
               >
                 <span>🎃</span>
                 <span className="pin-apt-dots">
-                  <i className="pin-apt-dot is-ok" />
-                  <i className="pin-apt-dot is-decor" />
-                  <i className="pin-apt-dot is-closed" />
+                  <i className="pin-apt-dot is-plenty" />
+                  <i className="pin-apt-dot is-low" />
                 </span>
               </div>
               <span className="text-[11px] text-violet-300">לפני הקשה</span>
@@ -70,9 +71,8 @@ export default function DecorPreviewPage() {
                 <div className="house-pin is-base is-building" style={{ background: "#6d28d9" }} aria-hidden>
                   <span>🎃</span>
                   <span className="pin-apt-dots">
-                    <i className="pin-apt-dot is-ok" />
-                    <i className="pin-apt-dot is-decor" />
-                    <i className="pin-apt-dot is-closed" />
+                    <i className="pin-apt-dot is-plenty" />
+                    <i className="pin-apt-dot is-low" />
                   </span>
                 </div>
                 <div
@@ -87,6 +87,7 @@ export default function DecorPreviewPage() {
                     <i />
                   </i>
                   <span>🎃</span>
+                  <b className="pin-status is-plenty" />
                 </div>
                 <div
                   className="house-pin is-apt is-closing-soon"
@@ -95,12 +96,12 @@ export default function DecorPreviewPage() {
                 >
                   <i className="pin-hours-ring is-closing" aria-hidden />
                   <span>🍬</span>
-                  <b className="pin-status is-decor" />
+                  <b className="pin-status is-low" />
                 </div>
                 <div
                   className="house-pin is-apt"
                   style={{ left: 96, bottom: 40, background: "#6d28d9" }}
-                  aria-label="נגמר המלאי"
+                  aria-label="מקושט בלי ממתקים"
                 >
                   <i className="pin-sprinkles" aria-hidden>
                     <i />
@@ -109,7 +110,6 @@ export default function DecorPreviewPage() {
                     <i />
                   </i>
                   <span>💀</span>
-                  <b className="pin-status is-closed" />
                 </div>
               </div>
               <span className="text-[11px] text-violet-300">אחרי הקשה</span>

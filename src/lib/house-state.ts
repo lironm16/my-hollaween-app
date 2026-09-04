@@ -45,14 +45,14 @@ export function pinNightStatus(
   return "ok";
 }
 
-/** One apartment on a building pin: green open, amber decor-only, red sold out. */
-export function apartmentDotStatus(
-  house: { visit?: VisitState; soldOut?: boolean },
-): "ok" | "closed" | "decor" {
-  const visit = effectiveVisit(house);
-  if (visit === "closed") return "closed";
-  if (visit === "decorOnly") return "decor";
-  return "ok";
+/** Map-pin candy dot: plenty / low, or none if this house has no candy. */
+export function candyPinDot(
+  house: { treats?: TreatId[]; treatStock?: TreatStock },
+): "plenty" | "low" | null {
+  if (!markedCandy({ treats: house.treats ?? [] })) return null;
+  const level = candyLevel({ treats: house.treats ?? [], treatStock: house.treatStock });
+  if (level === "plenty" || level === "low") return level;
+  return null;
 }
 
 export function defaultTreatStock(treats: TreatId[]): TreatStock {

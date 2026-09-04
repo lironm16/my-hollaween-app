@@ -20,7 +20,7 @@ import type { PublicHouse } from "@/lib/types";
 import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
 import { distanceMeters } from "@/lib/geo";
 import { themeEmoji } from "@/lib/labels";
-import { apartmentDotStatus, isDecorated, pinNightStatus } from "@/lib/house-state";
+import { candyPinDot, isDecorated } from "@/lib/house-state";
 import { isClosingSoon, isOpeningSoon } from "@/lib/hours";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { cn } from "@/lib/utils";
@@ -52,16 +52,11 @@ function attr(value: string) {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
-function pinStatusMark(houses: PublicHouse[]) {
-  const status = pinNightStatus(houses);
-  if (status === "ok") return "";
-  const label =
-    status === "closed"
-      ? "נגמר המלאי"
-      : status === "decor"
-        ? "מקושט בלי ממתקים"
-        : "חלק מהדירות נגמרו";
-  return `<b class="pin-status is-${status}" aria-label="${label}"></b>`;
+function pinStatusMark(house: PublicHouse) {
+  const dot = candyPinDot(house);
+  if (!dot) return "";
+  const label = dot === "low" ? "מעט ממתקים" : "יש ממתקים";
+  return `<b class="pin-status is-${dot}" aria-label="${label}"></b>`;
 }
 
 function hoursRingHtml(house: PublicHouse, now: Date) {
@@ -87,9 +82,13 @@ function sprinklesHtml(house: PublicHouse) {
 
 function aptDotsHtml(houses: PublicHouse[]) {
   const dots = houses
-    .map((house) => `<i class="pin-apt-dot is-${apartmentDotStatus(house)}"></i>`)
+    .map((house) => {
+      const dot = candyPinDot(house);
+      return dot ? `<i class="pin-apt-dot is-${dot}"></i>` : "";
+    })
     .join("");
-  return `<span class="pin-apt-dots" aria-label="${houses.length} דירות">${dots}</span>`;
+  if (!dots) return "";
+  return `<span class="pin-apt-dots">${dots}</span>`;
 }
 
 function housePinHtml(
@@ -110,7 +109,7 @@ function housePinHtml(
       : isDecorated(house)
         ? 'aria-label="מקושט"'
         : "";
-  return `<div class="house-pin${selectedClass}${hoursClass}${extraClass}" style="${style}" ${label}${idAttr}>${sprinklesHtml(house)}${hoursRingHtml(house, now)}${pinStatusMark([house])}<span>${emoji}</span></div>`;
+  return `<div class="house-pin${selectedClass}${hoursClass}${extraClass}" style="${style}" ${label}${idAttr}>${sprinklesHtml(house)}${hoursRingHtml(house, now)}${pinStatusMark(house)}<span>${emoji}</span></div>`;
 }
 
 function fanOffsets(count: number) {

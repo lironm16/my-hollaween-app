@@ -641,16 +641,12 @@
   margin-right: 0;
 }
 
-.pin-apt-dot.is-ok {
-  background: #22c55e;
+.pin-apt-dot.is-plenty {
+  background: #047857;
 }
 
-.pin-apt-dot.is-decor {
+.pin-apt-dot.is-low {
   background: #d97706;
-}
-
-.pin-apt-dot.is-closed {
-  background: #dc2626;
 }
 
 .house-pin span,
@@ -755,18 +751,13 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
-.house-pin .pin-status.is-closed,
-.pumpkin-pin .pin-status.is-closed {
-  background: #dc2626;
+.house-pin .pin-status.is-plenty,
+.pumpkin-pin .pin-status.is-plenty {
+  background: #047857;
 }
 
-.house-pin .pin-status.is-mixed,
-.pumpkin-pin .pin-status.is-mixed {
-  background: #ea580c;
-}
-
-.house-pin .pin-status.is-decor,
-.pumpkin-pin .pin-status.is-decor {
+.house-pin .pin-status.is-low,
+.pumpkin-pin .pin-status.is-low {
   background: #d97706;
 }
 
