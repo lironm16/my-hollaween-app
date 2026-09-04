@@ -11,6 +11,7 @@ import { HouseTags } from "@/components/house-tags";
 import { formatDisplayAddress } from "@/lib/config";
 import { formatHoursLabel } from "@/lib/hours";
 import { houseHeadline } from "@/lib/labels";
+import { houseMapsUrl } from "@/lib/nav-links";
 import { effectiveVisit, freezeLabel, isFrozen } from "@/lib/house-state";
 import { loadOwnedHouses } from "@/lib/offline-db";
 import { shouldLoadHousePhoto } from "@/lib/photos";
@@ -43,15 +44,10 @@ export function HouseDetails({
   canEdit?: boolean;
   editing?: boolean;
   onToggleEdit?: () => void;
-  /** Sheet chrome already has Waze / share / heart / visited. */
+  /** Sheet chrome already has Maps / share / heart / visited. */
   chrome?: "page" | "sheet";
 }) {
   const displayAddress = formatDisplayAddress(house);
-  const mapsQuery = /רמת\s*גן/u.test(displayAddress)
-    ? displayAddress
-    : `${displayAddress}, רמת גן`;
-  const maps = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapsQuery)}&travelmode=walking`;
-  const waze = `https://waze.com/ul?q=${encodeURIComponent(mapsQuery)}&navigate=yes`;
   const [ownedEditCode, setOwnedEditCode] = useState<string | undefined>(undefined);
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
@@ -163,20 +159,12 @@ export function HouseDetails({
       {sheet ? null : (
       <div className="flex flex-wrap gap-2 pt-1">
         <a
-          href={waze}
+          href={houseMapsUrl(house)}
           target="_blank"
           rel="noreferrer"
           className={cn(buttonVariants({ size: "sm" }))}
         >
-          ניווט ב־Waze
-        </a>
-        <a
-          href={maps}
-          target="_blank"
-          rel="noreferrer"
-          className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
-        >
-          Google Maps
+          ניווט ב־Google Maps
         </a>
         <Link
           href={`/house/${encodeURIComponent(house.id)}`}
