@@ -4202,7 +4202,7 @@ svg.leaflet-zoom-animated {
 }
 .house-pin-route .route-stop-pin {
   flex-shrink: 0;
-  margin-bottom: -3px;
+  margin-bottom: -4px;
 }
 .house-pin-fan > .route-stop-pin {
   position: absolute;
