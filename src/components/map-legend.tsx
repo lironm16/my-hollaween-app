@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Info, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -68,56 +69,71 @@ const ROWS: { key: string; label: string; node: ReactNode }[] = [
 
 export function MapLegend() {
   const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const titleId = useId();
   const panelId = useId();
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
-    const onPointer = (event: PointerEvent) => {
-      if (!wrapRef.current?.contains(event.target as Node)) setOpen(false);
-    };
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
-    document.addEventListener("pointerdown", onPointer);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("pointerdown", onPointer);
+      document.body.style.overflow = prevOverflow;
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
 
   return (
-    <div ref={wrapRef} className="relative">
-      {open ? (
-        <div
-          id={panelId}
-          role="dialog"
-          aria-label="מקרא המפה"
-          dir="rtl"
-          className="map-legend-panel absolute right-0 bottom-[calc(100%+0.5rem)] z-10 w-[min(17.5rem,calc(100vw-1.5rem))] rounded-2xl bg-[#160b20]/95 p-3 text-right shadow-[0_12px_32px_rgba(0,0,0,0.45)] ring-1 ring-orange-500/30 backdrop-blur-md"
-        >
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold text-orange-100">מקרא</h2>
-            <button
-              type="button"
-              className="inline-flex size-7 items-center justify-center rounded-full text-violet-200 hover:bg-orange-500/15 hover:text-orange-100"
-              aria-label="סגירת המקרא"
+    <div className="relative">
+      {mounted && open
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/60 p-3"
               onClick={() => setOpen(false)}
             >
-              <X className="size-4" />
-            </button>
-          </div>
-          <ul className="space-y-2">
-            {ROWS.map((row) => (
-              <li key={row.key} className="flex items-center gap-2.5">
-                <div className="grid size-9 shrink-0 place-items-center">{row.node}</div>
-                <span className="text-sm leading-snug text-violet-100">{row.label}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+              <div
+                id={panelId}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={titleId}
+                dir="rtl"
+                className="map-legend-panel relative max-h-[min(88dvh,40rem)] w-[min(38rem,calc(100vw-1.5rem))] overflow-y-auto overscroll-contain rounded-2xl bg-[#160b20] px-3 pb-3 pt-12 text-right shadow-[0_16px_48px_rgba(0,0,0,0.55)] ring-1 ring-orange-500/30"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  className="absolute top-2 left-2 inline-flex size-9 items-center justify-center rounded-full text-violet-200 hover:bg-orange-500/15 hover:text-orange-100"
+                  aria-label="סגירת המקרא"
+                  onClick={() => setOpen(false)}
+                >
+                  <X className="size-5" />
+                </button>
+                <h2 id={titleId} className="absolute top-3 right-4 text-sm font-semibold text-orange-100">
+                  מקרא
+                </h2>
+                <ul className="grid grid-cols-2 gap-x-3 gap-y-3">
+                  {ROWS.map((row) => (
+                    <li key={row.key} className="flex min-h-14 items-center gap-2">
+                      <div className="grid size-14 shrink-0 place-items-center overflow-visible" dir="ltr">
+                        {row.node}
+                      </div>
+                      <span className="text-sm leading-snug text-violet-100">{row.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
       <button
         type="button"
         className="inline-flex size-11 items-center justify-center rounded-full bg-[#1d1028] text-orange-100 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-orange-500/35 hover:bg-orange-500/10"

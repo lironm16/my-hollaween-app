@@ -1154,81 +1154,19 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   border: 0;
 }
 
-.house-pin.is-legend {
-  width: 28px;
-  height: 28px;
-  border-width: 2px;
-}
-
-.house-pin.is-legend span {
-  font-size: 15px;
-}
-
-.house-pin.is-legend .pin-sprinkles {
-  inset: -7px;
-}
-
-.house-pin.is-legend .pin-sprinkles i {
-  width: 7px;
-  height: 7px;
-}
-
-.house-pin.is-legend .pin-status {
-  width: 16px;
-  height: 16px;
-  bottom: -5px;
-  inset-inline-start: -5px;
-}
-
-.house-pin.is-legend .pin-scare {
-  width: 92% !important;
-  height: 92% !important;
-  max-width: 92% !important;
-  max-height: 92% !important;
-}
-
-.house-pin.is-legend .pin-houses {
-  transform: translateY(4px) scale(0.78);
-}
-
-.house-pin.is-legend .pin-status.is-break {
-  box-shadow: none;
-}
-
-.house-pin.is-legend .pin-status.is-closed::after {
-  height: 3px;
-  left: 1px;
-  right: 1px;
-}
-
 .house-pin.is-legend .pin-status.is-break::before,
 .house-pin.is-legend .pin-status.is-break::after {
-  top: 3px;
-  height: 8px;
+  top: 5px;
   width: 3px;
+  height: 10px;
 }
 
 .house-pin.is-legend .pin-status.is-break::before {
-  left: 3px;
+  left: 4px;
 }
 
 .house-pin.is-legend .pin-status.is-break::after {
-  right: 3px;
-}
-
-.house-pin.is-legend .pin-hours-ring {
-  inset: -6px;
-  border-width: 2px;
-}
-
-.house-pin.is-legend .pin-apt-dots {
-  right: -4px;
-  bottom: -3px;
-}
-
-.house-pin.is-legend .pin-apt-dot {
-  width: 8px;
-  height: 8px;
+  right: 4px;
 }
 
 .map-house-sheet {
