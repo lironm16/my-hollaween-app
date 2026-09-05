@@ -23,7 +23,10 @@ export function isFrozen(
 }
 
 export function isPubliclyListed(house: House | PublicHouse, now = Date.now()) {
-  return house.status === "approved" && !isFrozen(house, now);
+  if (house.status !== "approved") return false;
+  // Rehearsal freeze stub stays on the public map so testers can open it.
+  if (house.id === "בית-9316") return true;
+  return !isFrozen(house, now);
 }
 
 export function effectiveVisit(house: { visit?: VisitState; soldOut?: boolean }): VisitState {

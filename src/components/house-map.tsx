@@ -40,9 +40,10 @@ function useMinuteTick() {
 function routeOrderIcon(order: number) {
   return L.divIcon({
     className: "route-stop-icon",
-    html: `<div class="route-stop-pin" aria-label="עצירה ${order}">${order}</div>`,
-    iconSize: [28, 34],
-    iconAnchor: [14, 56],
+    html: `<div class="route-stop-pin" aria-label="עצירה ${order}"><b class="route-stop-num">${order}</b></div>`,
+    iconSize: [28, 36],
+    // Sit above the 38px house pin (anchor ~42px) with a gap — do not cover or touch the frame.
+    iconAnchor: [14, 88],
   });
 }
 

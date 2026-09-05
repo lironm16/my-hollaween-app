@@ -6,7 +6,17 @@ import {
   onBreakAt,
   openingSoonAt,
 } from "@/lib/hours";
-import type { VisitState } from "@/lib/types";
+import {
+  candyLevel,
+  effectiveVisit,
+  freezeLabel,
+  isFrozen,
+  markedCandy,
+} from "@/lib/house-state";
+import type { TreatStock, TreatId, VisitState } from "@/lib/types";
+
+const BANNER = "rounded-lg px-3 py-2 text-base font-medium";
+const CLOSED_TONE = "bg-red-950/80 text-red-100";
 
 export function HoursStatusBanner({
   house,
@@ -24,16 +34,44 @@ export function HoursStatusBanner({
     soldOut?: boolean;
     adminFrozen?: boolean;
     ownerFrozenUntil?: string | null;
+    treats?: TreatId[];
+    treatStock?: TreatStock;
   };
   className?: string;
   /** Override clock for previews / tests. */
   now?: Date;
 }) {
   const clock = now ?? new Date();
+
+  if (isFrozen(house, clock.getTime())) {
+    return (
+      <p className={cn(BANNER, "bg-slate-900/70 text-slate-100", className)}>
+        {freezeLabel(house) ?? "מוקפא מהמפה"}
+      </p>
+    );
+  }
+
+  if (effectiveVisit(house) === "closed") {
+    return (
+      <p className={cn(BANNER, CLOSED_TONE, className)}>הבית סגור</p>
+    );
+  }
+
+  const withTreats = { treats: house.treats ?? [], treatStock: house.treatStock };
+  if (
+    effectiveVisit(house) === "come" &&
+    markedCandy(withTreats) &&
+    candyLevel(withTreats) === "out"
+  ) {
+    return (
+      <p className={cn(BANNER, CLOSED_TONE, className)}>נגמר המלאי</p>
+    );
+  }
+
   const closesAt = closingSoonAt(house, clock);
   if (closesAt) {
     return (
-      <p className={cn("rounded-lg bg-orange-950/55 px-3 py-2 text-base font-medium text-orange-200", className)}>
+      <p className={cn(BANNER, "bg-orange-950/55 text-orange-200", className)}>
         נסגר בקרוב ב־{closesAt}
       </p>
     );
@@ -41,7 +79,7 @@ export function HoursStatusBanner({
   const opensSoonAt = openingSoonAt(house, clock);
   if (opensSoonAt) {
     return (
-      <p className={cn("rounded-lg bg-cyan-950/55 px-3 py-2 text-base font-medium text-cyan-100", className)}>
+      <p className={cn(BANNER, "bg-cyan-950/55 text-cyan-100", className)}>
         נפתח בקרוב ב־{opensSoonAt}
       </p>
     );
@@ -49,7 +87,7 @@ export function HoursStatusBanner({
   const breakOpens = onBreakAt(house, clock);
   if (breakOpens) {
     return (
-      <p className={cn("rounded-lg bg-slate-900/70 px-3 py-2 text-base font-medium text-slate-100", className)}>
+      <p className={cn(BANNER, "bg-slate-900/70 text-slate-100", className)}>
         הפסקה עכשיו — נפתח שוב ב־{breakOpens}
       </p>
     );
@@ -67,27 +105,27 @@ export function HoursStatusBanner({
   }
   if (status.kind === "beforeEvent") {
     return (
-      <p className={cn("rounded-lg bg-sky-950/50 px-3 py-2 text-base text-sky-100", className)}>
+      <p className={cn(BANNER, "bg-sky-950/50 text-sky-100", className)}>
         עדיין סגור — נפתח ב־{status.dateLabel} בשעה {status.opensAt}
       </p>
     );
   }
   if (status.kind === "before") {
     return (
-      <p className={cn("rounded-lg bg-sky-950/50 px-3 py-2 text-base text-sky-100", className)}>
+      <p className={cn(BANNER, "bg-sky-950/50 text-sky-100", className)}>
         עדיין סגור — נפתח ב־{status.opensAt}
       </p>
     );
   }
   if (status.kind === "between") {
     return (
-      <p className={cn("rounded-lg bg-sky-950/50 px-3 py-2 text-base text-sky-100", className)}>
+      <p className={cn(BANNER, "bg-sky-950/50 text-sky-100", className)}>
         הפסקה עכשיו — נפתח שוב ב־{status.opensAt}
       </p>
     );
   }
   return (
-    <p className={cn("rounded-lg bg-violet-950/50 px-3 py-2 text-base text-violet-200", className)}>
+    <p className={cn(BANNER, "bg-violet-950/50 text-violet-200", className)}>
       כבר סגור ({formatHoursLabel(house) || "שעות הפעילות עברו"})
     </p>
   );
