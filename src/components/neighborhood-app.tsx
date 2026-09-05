@@ -40,14 +40,14 @@ import {
   backupLooksNewer,
   loadServerDbBackup,
   notifyCatalogChanged,
+  removeOwnedHouse,
   saveOwnedHouse,
   saveServerDbBackup,
   type ServerDbBackup,
 } from "@/lib/offline-db";
 import { scareShort, treatLabels, decorShort } from "@/lib/labels";
-import { movedAtLeast, ROUTE_REANCHOR_METERS } from "@/lib/geo";
 import { readHomeView, writeHomeView, type HomeView } from "@/lib/home-view";
-import { buildWalkingRoute } from "@/lib/route";
+import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
 import type { Catalog, House, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -63,7 +63,6 @@ export function NeighborhoodApp({
   const { admin } = useAdminSession();
   const geo = useUserLocation();
   const origin = geo.location;
-  const [routeAnchor, setRouteAnchor] = useState<{ lat: number; lng: number } | null>(null);
   const view = useSyncExternalStore(
     (onStoreChange) => {
       window.addEventListener("hw-home-view", onStoreChange);
@@ -95,6 +94,11 @@ export function NeighborhoodApp({
   } = filters;
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [routeMode, setRouteMode] = useState(false);
+  const [pinnedRoute, setPinnedRoute] = useState<WalkingRoute | null>(null);
+  const [routeFitTick, setRouteFitTick] = useState(0);
+  const pendingRouteGps = useRef(false);
+  const cheerTimer = useRef(0);
+  const [visitCheer, setVisitCheer] = useState(false);
   const [followTick, setFollowTick] = useState(0);
   const [fitTick, setFitTick] = useState(0);
   const [askedLocation, setAskedLocation] = useState(false);
@@ -106,6 +110,8 @@ export function NeighborhoodApp({
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
   const owned = useOwnedHouses();
+
+  useEffect(() => () => window.clearTimeout(cheerTimer.current), []);
 
   function setView(next: HomeView) {
     writeHomeView(next);
@@ -250,28 +256,22 @@ export function NeighborhoodApp({
   const activeFilterCount =
     neighborhoodActiveCount + sensitivityFilters.length + scareActiveCount + moreFilterCount;
 
-  useEffect(() => {
-    if (!routeMode) {
-      setRouteAnchor(origin ? { lat: origin.lat, lng: origin.lng } : null);
-      return;
-    }
-    if (!origin) return;
-    setRouteAnchor((prev) => {
-      if (!prev) return { lat: origin.lat, lng: origin.lng };
-      if (movedAtLeast(prev, origin, ROUTE_REANCHOR_METERS)) {
-        return { lat: origin.lat, lng: origin.lng };
-      }
-      return prev;
-    });
-  }, [routeMode, origin]);
-
-  const walkingRoute = useMemo(
-    () =>
-      buildWalkingRoute(visible, routeMode ? (routeAnchor ?? origin) : origin, {
-        accessible: accessibleOnly,
-      }),
-    [visible, routeMode, routeAnchor, origin, accessibleOnly],
+  const pinCurrentRoute = useCallback(
+    (gps: { lat: number; lng: number } | null | undefined) => {
+      const houses = visible.filter((house) => !visits.visitedIds.includes(house.id));
+      setPinnedRoute(buildWalkingRoute(houses, gps, { accessible: accessibleOnly }));
+      setRouteFitTick((n) => n + 1);
+    },
+    [visible, visits.visitedIds, accessibleOnly],
   );
+
+  useEffect(() => {
+    if (!routeMode || !pendingRouteGps.current || !origin) return;
+    pendingRouteGps.current = false;
+    pinCurrentRoute(origin);
+  }, [routeMode, origin, pinCurrentRoute]);
+
+  const walkingRoute = routeMode ? pinnedRoute : null;
   const { line: routeLine } = useRouteGeometry(walkingRoute, routeMode);
 
   const routePrefsLabel = useMemo(() => {
@@ -323,32 +323,56 @@ export function NeighborhoodApp({
   function goToMyLocation() {
     setAskedLocation(true);
     setFollowTick((n) => n + 1);
-    setRouteAnchor(null);
     geo.refresh();
+  }
+
+  function exitRouteMode() {
+    pendingRouteGps.current = false;
+    setRouteMode(false);
+    setPinnedRoute(null);
   }
 
   function goToMainMap() {
     setView("map");
-    setRouteMode(false);
+    exitRouteMode();
     setSelectedId("closed");
     setClusterOverview(false);
     setFitTick((n) => n + 1);
   }
 
   function goHome() {
-    setRouteMode(false);
+    exitRouteMode();
     setSelectedId("closed");
     setClusterOverview(false);
     setEditing(false);
   }
 
   function enterRouteMode() {
+    setAskedLocation(true);
     if (!origin) {
-      setAskedLocation(true);
+      pendingRouteGps.current = true;
       setFollowTick((n) => n + 1);
       geo.refresh();
+    } else {
+      pendingRouteGps.current = false;
     }
+    setSelectedId("closed");
+    setClusterOverview(false);
+    setEditing(false);
     setRouteMode(true);
+    pinCurrentRoute(origin);
+  }
+
+  function onToggleVisited(id: string) {
+    const marking = !visits.visited(id);
+    visits.toggle(id);
+    if (!marking) return;
+    setVisitCheer(false);
+    window.clearTimeout(cheerTimer.current);
+    window.requestAnimationFrame(() => {
+      setVisitCheer(true);
+      cheerTimer.current = window.setTimeout(() => setVisitCheer(false), 1400);
+    });
   }
 
   function applyAdminHouse(next: House | PublicHouse) {
@@ -470,7 +494,7 @@ export function NeighborhoodApp({
             type="button"
             aria-label={routeMode ? "יציאה מהמסלול" : "מסלול"}
             aria-pressed={routeMode}
-            onClick={() => (routeMode ? setRouteMode(false) : enterRouteMode())}
+            onClick={() => (routeMode ? exitRouteMode() : enterRouteMode())}
             className={cn(
               "inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
               routeMode
@@ -635,6 +659,8 @@ export function NeighborhoodApp({
                 locating={geo.status === "pending" && askedLocation}
                 onLocate={goToMyLocation}
                 routeLine={routeMode ? routeLine : null}
+                routeFitTick={routeMode ? routeFitTick : 0}
+                visitedIds={visits.visitedIds}
                 routeStops={
                   routeMode && walkingRoute
                     ? walkingRoute.stops.map((stop) => ({
@@ -681,7 +707,7 @@ export function NeighborhoodApp({
                     likedIds={likes.likedIds}
                     onToggleLike={likes.toggle}
                     visitedIds={visits.visitedIds}
-                    onToggleVisited={visits.toggle}
+                    onToggleVisited={onToggleVisited}
                   />
                 )}
               </div>
@@ -700,7 +726,7 @@ export function NeighborhoodApp({
           liked={likes.liked}
           onToggleLike={likes.toggle}
           visited={visits.visited}
-          onToggleVisited={visits.toggle}
+          onToggleVisited={onToggleVisited}
           catalogSource={source}
           managerEditCode={admin ? editCodeById.get(selected.id) : undefined}
           editCodeFor={(id) =>
@@ -749,7 +775,21 @@ export function NeighborhoodApp({
                 <NightDesk
                   house={selected}
                   admin={admin}
+                  allowDelete
                   editCode={admin ? editCodeById.get(selected.id) : ownedEditCode}
+                  onDeleted={() => {
+                    const id = selected.id;
+                    setAdminHouses((list) => {
+                      const next = list.filter((house) => house.id !== id);
+                      rememberAdminDb(next, new Date().toISOString());
+                      return next;
+                    });
+                    removeOwnedHouse(id);
+                    setSelectedId("closed");
+                    setClusterOverview(false);
+                    setEditing(false);
+                    void refresh(true);
+                  }}
                   onUpdated={(next) => {
                     if (admin) {
                       applyAdminHouse(next);
@@ -774,6 +814,11 @@ export function NeighborhoodApp({
         />
         ) : null}
       </main>
+      {visitCheer ? (
+        <div className="visit-cheer" role="status" aria-live="polite">
+          <div className="visit-cheer-card">כל הכבוד!</div>
+        </div>
+      ) : null}
     </div>
   );
 }

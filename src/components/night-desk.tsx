@@ -22,7 +22,6 @@ type Props = {
   onUpdated: (house: PublicHouse) => void;
   editCode?: string;
   admin?: boolean;
-  /** Delete is only on the dedicated edit-house page. */
   allowDelete?: boolean;
   onDeleted?: () => void;
 };

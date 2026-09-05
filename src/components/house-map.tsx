@@ -114,13 +114,20 @@ function pinFaceHtml(house: PublicHouse) {
 function housePinHtml(
   house: PublicHouse,
   now: Date,
-  extras?: { selected?: boolean; houseId?: string; extraClass?: string; extraStyle?: string },
+  extras?: {
+    selected?: boolean;
+    houseId?: string;
+    extraClass?: string;
+    extraStyle?: string;
+    visited?: boolean;
+  },
 ) {
   const selectedClass = extras?.selected ? " is-selected" : "";
   const hoursClass = hoursPinClass(house, now);
   const face = pinFaceKind(house);
   const visit = pinVisitKind(house, now);
   const bareClass = face === "bare" ? " is-undecorated" : "";
+  const visitedClass = extras?.visited ? " is-visited" : "";
   const extraClass = extras?.extraClass ? ` ${extras.extraClass}` : "";
   const idAttr = extras?.houseId ? ` data-house-id="${attr(extras.houseId)}"` : "";
   const fill = face === "bare" ? "#94a3b8" : "#6d28d9";
@@ -137,7 +144,7 @@ function housePinHtml(
             : face === "scare"
               ? 'aria-label="מקושט"'
               : 'aria-label="לא מקושט"';
-  return `<div class="house-pin${selectedClass}${hoursClass}${bareClass}${extraClass}" style="${style}" ${label}${idAttr}>${hoursRingHtml(house, now)}${pinStatusMark(house, now)}${pinFaceHtml(house)}</div>`;
+  return `<div class="house-pin${selectedClass}${hoursClass}${bareClass}${visitedClass}${extraClass}" style="${style}" ${label}${idAttr}>${hoursRingHtml(house, now)}${pinStatusMark(house, now)}${pinFaceHtml(house)}</div>`;
 }
 
 function fanLayout(count: number) {
@@ -159,16 +166,23 @@ function clusterIcon(
   now: Date,
   routeOrder?: number,
   overview?: boolean,
+  visitedIds: string[] = [],
 ) {
   const houses = cluster.houses;
   const only = houses[0];
   const selectedHere = Boolean(selectedId && houses.some((house) => house.id === selectedId));
   const selectedClass = selectedHere ? " is-selected" : "";
+  const allVisited = houses.length > 0 && houses.every((house) => visitedIds.includes(house.id));
 
   if (!only || houses.length <= 1) {
     const hoursClass = only ? hoursPinClass(only, now) : "";
     const wrapped = wrapRoutePin(
-      only ? housePinHtml(only, now, { selected: selectedHere }) : "",
+      only
+        ? housePinHtml(only, now, {
+            selected: selectedHere,
+            visited: visitedIds.includes(only.id),
+          })
+        : "",
       routeOrder,
     );
     return L.divIcon({
@@ -181,7 +195,7 @@ function clusterIcon(
 
   if (!selectedHere) {
     const wrapped = wrapRoutePin(
-      `<div class="house-pin is-building" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span></div>`,
+      `<div class="house-pin is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span></div>`,
       routeOrder,
     );
     return L.divIcon({
@@ -220,6 +234,7 @@ function clusterIcon(
       return housePinHtml(house, now, {
         selected: !overview && house.id === selectedId,
         houseId: house.id,
+        visited: visitedIds.includes(house.id),
         extraClass: "is-apt",
         extraStyle: `left:${left}px;bottom:${bottom}px;z-index:${house.id === selectedId ? houses.length + 3 : index + 2}`,
       });
@@ -228,7 +243,7 @@ function clusterIcon(
   const badge = routeOrder ? routeBadgeHtml(routeOrder) : "";
   return L.divIcon({
     className: `pumpkin-pin-icon pumpkin-pin-fan${selectedClass}`,
-    html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building" style="background:#6d28d9" aria-hidden="true"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span></div>${badge}${apts}</div>`,
+    html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" aria-hidden="true"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span></div>${badge}${apts}</div>`,
     iconSize: [width, height],
     iconAnchor: [width / 2, height],
   });
@@ -248,6 +263,30 @@ const youAreHereIcon = L.divIcon({
   iconAnchor: [11, 11],
   popupAnchor: [0, -12],
 });
+
+/** Fit the walking path only after a route-button tap (tick). */
+function FitRoute({
+  positions,
+  tick,
+}: {
+  positions: [number, number][] | null;
+  tick: number;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    if (!tick || !positions || positions.length < 2) return;
+    const id = window.setTimeout(() => {
+      map.invalidateSize({ animate: false });
+      map.fitBounds(L.latLngBounds(positions), {
+        padding: [48, 48],
+        maxZoom: 17,
+        animate: true,
+      });
+    }, 60);
+    return () => window.clearTimeout(id);
+  }, [map, positions, tick]);
+  return null;
+}
 
 /** Keep Leaflet sized to the visible viewport — never pans/zooms the map. */
 function SizeSync({ active }: { active: boolean }) {
@@ -341,6 +380,7 @@ function ClusterMarker({
   onSelect,
   onClose,
   routeOrder,
+  visitedIds,
 }: {
   cluster: HouseCluster;
   selectedId?: string | null;
@@ -348,6 +388,7 @@ function ClusterMarker({
   onSelect?: (house: PublicHouse, opts?: { clusterOverview?: boolean }) => void;
   onClose?: () => void;
   routeOrder?: number;
+  visitedIds: string[];
 }) {
   const tick = useMinuteTick();
   const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
@@ -355,12 +396,13 @@ function ClusterMarker({
   const closingSoon = cluster.houses.some((house) => isClosingSoon(house, now));
   const openingSoon = !closingSoon && cluster.houses.some((house) => isOpeningSoon(house, now));
   const overview = Boolean(clusterOverview && selectedHere);
+  const visitedKey = cluster.houses.map((house) => (visitedIds.includes(house.id) ? "1" : "0")).join("");
 
   return (
     <Marker
-      key={`${cluster.key}-${selectedHere ? (overview ? "peek" : selectedId ?? "open") : "shut"}-${routeOrder ?? 0}`}
+      key={`${cluster.key}-${selectedHere ? (overview ? "peek" : selectedId ?? "open") : "shut"}-${routeOrder ?? 0}-${visitedKey}`}
       position={[cluster.lat, cluster.lng]}
-      icon={clusterIcon(cluster, selectedId, now, routeOrder, overview)}
+      icon={clusterIcon(cluster, selectedId, now, routeOrder, overview, visitedIds)}
       zIndexOffset={
         selectedHere
           ? 10000
@@ -415,6 +457,9 @@ type Props = {
   onLocate?: () => void;
   routeLine?: LatLng[] | null;
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
+  /** Increment only on route-button tap to fit the whole path. */
+  routeFitTick?: number;
+  visitedIds?: string[];
 };
 
 export function HouseMap({
@@ -433,6 +478,8 @@ export function HouseMap({
   onLocate,
   routeLine = null,
   routeStops = null,
+  routeFitTick = 0,
+  visitedIds = [],
 }: Props) {
   const clusters = useMemo(
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
@@ -512,6 +559,9 @@ export function HouseMap({
           key={config.tiles.url}
         />
         <SizeSync active={active} />
+        {routeFitTick > 0 && routePositions ? (
+          <FitRoute positions={routePositions} tick={routeFitTick} />
+        ) : null}
         {focus ? <KeepSelectedVisible lat={focus.lat} lng={focus.lng} active={active} /> : null}
         {!pickMode ? (
           <MapDismiss enabled={Boolean(selectedId)} onDismiss={onClose} />
@@ -562,6 +612,7 @@ export function HouseMap({
               clusterOverview={clusterOverview}
               onSelect={onSelect}
               onClose={onClose}
+              visitedIds={visitedIds}
               routeOrder={cluster.houses.reduce<number | undefined>(
                 (found, house) => found ?? routeOrderById.get(house.id),
                 undefined,

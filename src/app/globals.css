@@ -777,6 +777,15 @@
   box-shadow: 0 0 0 2px #fdba74, 0 2px 6px rgba(0, 0, 0, 0.55);
 }
 
+.house-pin.is-visited,
+.pumpkin-pin.is-visited {
+  border-color: #059669;
+}
+
+.house-pin.is-apt.is-visited {
+  box-shadow: 0 0 0 4px #059669, 0 2px 6px rgba(0, 0, 0, 0.55);
+}
+
 .house-pin.is-apt {
   box-shadow:
     0 0 0 4px #fb923c,
@@ -1490,6 +1499,52 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .house-action-btn.is-visited {
   background: #059669;
   color: #ffffff;
+}
+
+.visit-cheer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.visit-cheer-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 24px;
+  border-radius: 22px;
+  background: #059669;
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 800;
+  box-shadow: 0 14px 40px rgba(5, 150, 105, 0.45);
+  animation: visit-cheer-pop 1.35s ease forwards;
+}
+
+@keyframes visit-cheer-pop {
+  0% {
+    transform: scale(0.45);
+    opacity: 0;
+  }
+  14% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  28% {
+    transform: scale(1);
+  }
+  72% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.94) translateY(-14px);
+  }
 }
 
 .house-action-btn.is-edit {

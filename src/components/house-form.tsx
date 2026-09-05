@@ -562,7 +562,6 @@ export function HouseForm({
               <input
                 type="file"
                 accept="image/*"
-                capture="environment"
                 className="sr-only"
                 disabled={busy}
                 onChange={(e) => {
