@@ -146,6 +146,8 @@ export type PushSubscriptionRecord = {
   endpoint: string;
   keys: { p256dh: string; auth: string };
   createdAt: string;
+  /** Topics this device wants. Missing means all (older subscriptions). */
+  topics?: Array<"newHouse" | "houseStatus" | "admin">;
 };
 
 export type VapidKeys = {

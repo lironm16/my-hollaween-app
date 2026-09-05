@@ -29,6 +29,7 @@ import {
   sendPushToSubscriptions,
   type PushPayload,
 } from "@/lib/push";
+import { subscriptionAllowsTopic } from "@/lib/push-topics";
 import {
   AUTO_PUSH_KINDS,
   PUSH_KINDS,
@@ -679,12 +680,18 @@ export async function savePushSubscription(sub: Omit<PushSubscriptionRecord, "cr
   return runSyncedWrite((db) => {
     ensureVapid(db);
     const list = db.pushSubscriptions ?? [];
+    const idx = list.findIndex((item) => item.endpoint === sub.endpoint);
+    const existing = idx >= 0 ? list[idx] : undefined;
     const next: PushSubscriptionRecord = {
       endpoint: sub.endpoint,
       keys: { ...sub.keys },
-      createdAt: new Date().toISOString(),
+      createdAt: existing?.createdAt ?? new Date().toISOString(),
+      ...(sub.topics !== undefined
+        ? { topics: [...sub.topics] }
+        : existing?.topics !== undefined
+          ? { topics: [...existing.topics] }
+          : {}),
     };
-    const idx = list.findIndex((item) => item.endpoint === sub.endpoint);
     if (idx >= 0) list[idx] = next;
     else {
       if (list.length >= 8000) list.shift();
@@ -707,7 +714,9 @@ export async function broadcastPush(payload: PushPayload) {
     const vapid = ensureVapid(db);
     return {
       vapid,
-      subscriptions: [...(db.pushSubscriptions ?? [])],
+      subscriptions: (db.pushSubscriptions ?? []).filter((item) =>
+        subscriptionAllowsTopic(item, payload.topic),
+      ),
     };
   });
   const dead = await sendPushToSubscriptions({ vapid, subscriptions, payload });

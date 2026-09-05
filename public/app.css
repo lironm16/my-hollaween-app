@@ -47,6 +47,7 @@
     --color-white: #fff;
     --spacing: 0.25rem;
     --container-sm: 24rem;
+    --container-md: 28rem;
     --container-lg: 32rem;
     --container-3xl: 48rem;
     --container-6xl: 72rem;
@@ -282,11 +283,17 @@
   .-start-1 {
     inset-inline-start: calc(var(--spacing) * -1);
   }
+  .start-0\.5 {
+    inset-inline-start: calc(var(--spacing) * 0.5);
+  }
   .start-1\/2 {
     inset-inline-start: calc(1/2 * 100%);
   }
   .start-2 {
     inset-inline-start: calc(var(--spacing) * 2);
+  }
+  .start-5 {
+    inset-inline-start: calc(var(--spacing) * 5);
   }
   .start-\[10px\] {
     inset-inline-start: 10px;
@@ -305,6 +312,9 @@
   }
   .top-0 {
     top: 0px;
+  }
+  .top-0\.5 {
+    top: calc(var(--spacing) * 0.5);
   }
   .top-1\/2 {
     top: calc(1 / 2 * 100%);
@@ -629,6 +639,9 @@
   }
   .w-11 {
     width: calc(var(--spacing) * 11);
+  }
+  .w-12 {
+    width: calc(var(--spacing) * 12);
   }
   .w-\[82\%\] {
     width: 82%;
@@ -1848,6 +1861,11 @@
     transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
     transition-duration: var(--tw-duration, var(--default-transition-duration));
   }
+  .transition-\[inset-inline-start\] {
+    transition-property: inset-inline-start;
+    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+    transition-duration: var(--tw-duration, var(--default-transition-duration));
+  }
   .transition-all {
     transition-property: all;
     transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
@@ -2378,6 +2396,9 @@
     }
   }
   @media (width >= 40rem) {
+    .sm\:max-w-md {
+      max-width: var(--container-md);
+    }
     .sm\:max-w-none {
       max-width: none;
     }

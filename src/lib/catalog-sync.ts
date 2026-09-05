@@ -59,6 +59,7 @@ export function cloneDb(db: DbFile): DbFile {
       endpoint: item.endpoint,
       createdAt: item.createdAt,
       keys: { ...item.keys },
+      ...(item.topics !== undefined ? { topics: [...item.topics] } : {}),
     })),
     pushSettings: db.pushSettings
       ? {

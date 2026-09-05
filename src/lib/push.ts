@@ -8,11 +8,13 @@ import {
   type PushKind,
   type StoredPushSettings,
 } from "@/lib/push-templates";
+import { normalizePushTopics, topicForKind, type PushTopic } from "@/lib/push-topics";
 
 export type PushPayload = {
   title: string;
   body: string;
   url: string;
+  topic?: PushTopic;
 };
 
 const MAX_TITLE = 80;
@@ -27,11 +29,17 @@ export function clipPushText(value: string, max: number) {
   return `${text.slice(0, Math.max(0, max - 1)).trim()}…`;
 }
 
-export function sanitizePushPayload(input: { title: string; body: string; url?: string }): PushPayload {
+export function sanitizePushPayload(input: {
+  title: string;
+  body: string;
+  url?: string;
+  topic?: PushTopic;
+}): PushPayload {
   return {
     title: clipPushText(input.title, MAX_TITLE) || "בשכונה",
     body: clipPushText(input.body, MAX_BODY),
     url: input.url?.startsWith("/") ? input.url : "/",
+    ...(input.topic ? { topic: input.topic } : {}),
   };
 }
 
@@ -55,7 +63,11 @@ export function payloadForKind(
   const template = templates[kind];
   if (!template.enabled) return null;
   const filled = fillPushTemplate(template, house);
-  return sanitizePushPayload({ ...filled, url: housePushUrl(house) });
+  return sanitizePushPayload({
+    ...filled,
+    url: housePushUrl(house),
+    topic: topicForKind(kind),
+  });
 }
 
 function vapidFromEnv(): VapidKeys | null {
@@ -156,8 +168,10 @@ export function parseSubscription(input: unknown): Omit<PushSubscriptionRecord, 
   const auth = rec.keys?.auth;
   if (typeof p256dh !== "string" || typeof auth !== "string") return null;
   if (p256dh.length < 20 || auth.length < 8) return null;
+  const topics = normalizePushTopics((input as { topics?: unknown }).topics);
   return {
     endpoint: rec.endpoint,
     keys: { p256dh, auth },
+    ...(topics !== undefined ? { topics } : {}),
   };
 }
