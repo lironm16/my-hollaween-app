@@ -56,7 +56,7 @@ export const config = {
     },
   },
   tiles,
-  catalogCacheSeconds: process.env.NODE_ENV === "production" ? 8 : 0,
+  catalogCacheSeconds: process.env.NODE_ENV === "production" ? 30 : 0,
   adminCookie: "hw_admin",
   // The neighborhood list lives on this app server. Writes are queued one at a time.
   durableWrites: process.env.NEXT_PUBLIC_DURABLE_WRITES !== "0",
