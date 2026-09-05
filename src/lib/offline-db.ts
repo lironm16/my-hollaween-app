@@ -131,6 +131,16 @@ export function saveOwnedHouse(house: OwnedHouse) {
   }
 }
 
+export function removeOwnedHouse(id: string) {
+  try {
+    const next = loadOwnedHouses().filter((h) => h.id !== id);
+    localStorage.setItem(MY_HOUSES_KEY, JSON.stringify(next));
+    window.dispatchEvent(new Event("hw-owned-changed"));
+  } catch {
+    /* private mode */
+  }
+}
+
 export function notifyCatalogChanged() {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new Event("hw-catalog-changed"));

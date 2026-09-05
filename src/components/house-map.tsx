@@ -37,13 +37,18 @@ function useMinuteTick() {
   );
 }
 
-function routeOrderIcon(order: number) {
-  return L.divIcon({
-    className: "route-stop-icon",
-    html: `<div class="route-stop-pin" aria-label="עצירה ${order}">${order}</div>`,
-    iconSize: [28, 34],
-    iconAnchor: [14, 56],
-  });
+const ROUTE_BADGE_H = 24;
+
+function routeBadgeHtml(order: number) {
+  return `<span class="route-stop-pin" aria-label="עצירה ${order}">${order}</span>`;
+}
+
+function wrapRoutePin(html: string, routeOrder?: number) {
+  if (!routeOrder) return { html, extraH: 0 };
+  return {
+    extraH: ROUTE_BADGE_H,
+    html: `<div class="house-pin-route">${routeBadgeHtml(routeOrder)}${html}</div>`,
+  };
 }
 
 const PIN = 38;
@@ -148,7 +153,12 @@ function fanLayout(count: number) {
   return { offsets, r };
 }
 
-function clusterIcon(cluster: HouseCluster, selectedId: string | null | undefined, now: Date) {
+function clusterIcon(
+  cluster: HouseCluster,
+  selectedId: string | null | undefined,
+  now: Date,
+  routeOrder?: number,
+) {
   const houses = cluster.houses;
   const only = houses[0];
   const selectedHere = Boolean(selectedId && houses.some((house) => house.id === selectedId));
@@ -156,20 +166,28 @@ function clusterIcon(cluster: HouseCluster, selectedId: string | null | undefine
 
   if (!only || houses.length <= 1) {
     const hoursClass = only ? hoursPinClass(only, now) : "";
+    const wrapped = wrapRoutePin(
+      only ? housePinHtml(only, now, { selected: selectedHere }) : "",
+      routeOrder,
+    );
     return L.divIcon({
       className: `pumpkin-pin-icon${selectedClass}${hoursClass}`,
-      html: only ? housePinHtml(only, now, { selected: selectedHere }) : "",
-      iconSize: [40, 44],
-      iconAnchor: [20, 42],
+      html: wrapped.html,
+      iconSize: [40, 44 + wrapped.extraH],
+      iconAnchor: [20, 42 + wrapped.extraH],
     });
   }
 
   if (!selectedHere) {
+    const wrapped = wrapRoutePin(
+      `<div class="house-pin is-building" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span></div>`,
+      routeOrder,
+    );
     return L.divIcon({
       className: `pumpkin-pin-icon pumpkin-pin-building${selectedClass}`,
-      html: `<div class="house-pin is-building" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span></div>`,
-      iconSize: [44, 48],
-      iconAnchor: [22, 44],
+      html: wrapped.html,
+      iconSize: [44, 48 + wrapped.extraH],
+      iconAnchor: [22, 44 + wrapped.extraH],
     });
   }
 
@@ -206,9 +224,10 @@ function clusterIcon(cluster: HouseCluster, selectedId: string | null | undefine
       });
     })
     .join("");
+  const badge = routeOrder ? routeBadgeHtml(routeOrder) : "";
   return L.divIcon({
     className: `pumpkin-pin-icon pumpkin-pin-fan${selectedClass}`,
-    html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building" style="background:#6d28d9" aria-hidden="true"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span></div>${apts}</div>`,
+    html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building" style="background:#6d28d9" aria-hidden="true"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span></div>${badge}${apts}</div>`,
     iconSize: [width, height],
     iconAnchor: [width / 2, height],
   });
@@ -312,11 +331,13 @@ function ClusterMarker({
   selectedId,
   onSelect,
   onClose,
+  routeOrder,
 }: {
   cluster: HouseCluster;
   selectedId?: string | null;
   onSelect?: (house: PublicHouse) => void;
   onClose?: () => void;
+  routeOrder?: number;
 }) {
   const tick = useMinuteTick();
   const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
@@ -326,10 +347,22 @@ function ClusterMarker({
 
   return (
     <Marker
-      key={`${cluster.key}-${selectedHere ? "open" : "shut"}`}
+      key={`${cluster.key}-${selectedHere ? "open" : "shut"}-${routeOrder ?? 0}`}
       position={[cluster.lat, cluster.lng]}
-      icon={clusterIcon(cluster, selectedId, now)}
-      zIndexOffset={selectedHere ? 10000 : closingSoon ? 360 : openingSoon ? 320 : cluster.houses.length > 1 ? 200 : 0}
+      icon={clusterIcon(cluster, selectedId, now, routeOrder)}
+      zIndexOffset={
+        selectedHere
+          ? 10000
+          : routeOrder
+            ? 700
+            : closingSoon
+              ? 360
+              : openingSoon
+                ? 320
+                : cluster.houses.length > 1
+                  ? 200
+                  : 0
+      }
       eventHandlers={{
         click: (event) => {
           L.DomEvent.stopPropagation(event.originalEvent);
@@ -392,6 +425,11 @@ export function HouseMap({
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
     [houses, pickMode],
   );
+  const routeOrderById = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const stop of routeStops ?? []) map.set(stop.id, stop.order);
+    return map;
+  }, [routeStops]);
   const focus = useMemo(() => {
     if (pickMode || !selectedId) return null;
     const cluster = clusters.find((item) => item.houses.some((house) => house.id === selectedId));
@@ -503,17 +541,6 @@ export function HouseMap({
           />
         ) : null}
         {!pickMode &&
-          routeStops?.map((stop) => (
-            <Marker
-              key={`route-${stop.id}`}
-              position={[stop.lat, stop.lng]}
-              icon={routeOrderIcon(stop.order)}
-              zIndexOffset={600}
-              interactive={false}
-              keyboard={false}
-            />
-          ))}
-        {!pickMode &&
           clusters.map((cluster) => (
             <ClusterMarker
               key={cluster.key}
@@ -521,6 +548,10 @@ export function HouseMap({
               selectedId={selectedId}
               onSelect={onSelect}
               onClose={onClose}
+              routeOrder={cluster.houses.reduce<number | undefined>(
+                (found, house) => found ?? routeOrderById.get(house.id),
+                undefined,
+              )}
             />
           ))}
         {!pickMode && userLocation ? (

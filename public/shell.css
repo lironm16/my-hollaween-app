@@ -79,6 +79,17 @@ button {
   gap: 0.65rem;
 }
 
+.neighborhood-marquee {
+  overflow: hidden;
+  min-width: 0;
+}
+
+.neighborhood-marquee-text {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
 .app-header > div > div {
   display: flex;
   align-items: center;

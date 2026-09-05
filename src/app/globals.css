@@ -919,16 +919,69 @@
 .route-stop-pin {
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 999px 999px 999px 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
   background: #fff7ed;
   color: #9a3412;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 900;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
   border: 2px solid #ea580c;
-  transform: rotate(-8deg);
+  line-height: 1;
+}
+
+.house-pin-route {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  overflow: visible;
+}
+
+.house-pin-route .route-stop-pin {
+  flex-shrink: 0;
+}
+
+.house-pin-fan > .route-stop-pin {
+  position: absolute;
+  left: 50%;
+  bottom: calc(38px + 1px);
+  z-index: 5;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.neighborhood-marquee {
+  overflow: hidden;
+  min-width: 0;
+  mask-image: linear-gradient(to left, transparent, #000 10px, #000 calc(100% - 10px), transparent);
+}
+
+.neighborhood-marquee-text {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.neighborhood-marquee-text.is-scroll {
+  max-width: none;
+  padding-inline: 2px;
+  animation: neighborhood-marquee 8.5s ease-in-out infinite alternate;
+}
+
+@keyframes neighborhood-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(var(--marquee-shift, 0px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neighborhood-marquee-text.is-scroll {
+    animation: none;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 .you-are-here-wrap {

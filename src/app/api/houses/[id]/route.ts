@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ownerPatchSchema } from "@/lib/schema";
-import { getCatalog, getHouse, updateByEditCode } from "@/lib/store";
+import { deleteByEditCode, getCatalog, getHouse, updateByEditCode } from "@/lib/store";
 import { toPublicHouse } from "@/lib/ids";
 import { config } from "@/lib/config";
 import { geocodeHttpError } from "@/lib/geocode";
@@ -67,4 +67,32 @@ export async function PATCH(
       { status: 500 },
     );
   }
+}
+
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  const { id } = await context.params;
+  let json: unknown;
+  try {
+    json = await request.json();
+  } catch {
+    return NextResponse.json({ error: "גוף הבקשה אינו תקין." }, { status: 400 });
+  }
+  const editCode =
+    json && typeof json === "object" && "editCode" in json && typeof json.editCode === "string"
+      ? json.editCode.trim()
+      : "";
+  if (editCode.length < 4 || editCode.length > 12) {
+    return NextResponse.json({ error: "נדרש קוד עריכה." }, { status: 401 });
+  }
+  const removed = await deleteByEditCode(id, editCode);
+  if (!removed) {
+    return NextResponse.json(
+      { error: "קוד העריכה שגוי או שהבית לא נמצא." },
+      { status: 403 },
+    );
+  }
+  return NextResponse.json({ ok: true });
 }

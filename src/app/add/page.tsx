@@ -11,8 +11,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { saveOwnedHouse, notifyCatalogChanged } from "@/lib/offline-db";
 import { PersistNote } from "@/components/persist-note";
 import { publishHouse } from "@/lib/publish-house";
+import { publishHousePhoto } from "@/lib/house-photo";
 import type { HouseInput } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import type { HouseFormExtras } from "@/components/house-form";
 
 export default function AddPage() {
   const [busy, setBusy] = useState(false);
@@ -23,19 +25,27 @@ export default function AddPage() {
     autoPush?: boolean;
   } | null>(null);
 
-  async function onSubmit(input: HouseInput) {
+  async function onSubmit(input: HouseInput, extras?: HouseFormExtras) {
     setBusy(true);
     try {
       const { house, editCode, autoPush } = await publishHouse(input);
+      let preview = house;
+      if (extras?.photoDataUrl) {
+        try {
+          preview = await publishHousePhoto(house.id, editCode, extras.photoDataUrl);
+        } catch {
+          toast.error("הבית נוסף, אבל העלאת התמונה נכשלה. אפשר להוסיף אותה בעריכה.");
+        }
+      }
       saveOwnedHouse({
-        id: house.id,
-        name: house.name,
+        id: preview.id,
+        name: preview.name,
         editCode,
-        preview: house,
+        preview,
       });
       notifyCatalogChanged();
       // Success UI only after the server confirmed the house.
-      setDone({ id: house.id, editCode, name: house.name, autoPush });
+      setDone({ id: preview.id, editCode, name: preview.name, autoPush });
       toast.success(autoPush ? "הבית נוסף למפה · נשלחה התראה לשכונה" : "הבית נוסף למפה");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "השליחה נכשלה");

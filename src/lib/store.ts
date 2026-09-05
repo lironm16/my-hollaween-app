@@ -406,6 +406,16 @@ export async function updateByEditCode(
   return { house: updated, push };
 }
 
+export async function deleteByEditCode(id: string, editCode: string) {
+  return runSyncedWrite((db) => {
+    const idx = db.houses.findIndex((h) => h.id === id && h.editCode === editCode);
+    if (idx < 0) return false;
+    db.houses.splice(idx, 1);
+    db.updatedAt = new Date().toISOString();
+    return true;
+  });
+}
+
 export async function adminDeleteHouse(id: string) {
   return runSyncedWrite((db) => {
     const idx = db.houses.findIndex((h) => h.id === id);
