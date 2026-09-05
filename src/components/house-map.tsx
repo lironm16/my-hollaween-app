@@ -23,7 +23,7 @@ import { distanceMeters } from "@/lib/geo";
 import { candyPinDot, effectiveVisit, isDecorated } from "@/lib/house-state";
 import { isClosingSoon, isOnBreak, isOpeningSoon } from "@/lib/hours";
 import type { ScareLevel } from "@/lib/types";
-import { clusterHousesForMap, type HouseCluster } from "@/lib/house-clusters";
+import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { cn } from "@/lib/utils";
 
 function useMinuteTick() {
@@ -296,10 +296,12 @@ function ClusterMarker({
   cluster,
   selectedId,
   onSelect,
+  onClose,
 }: {
   cluster: HouseCluster;
   selectedId?: string | null;
   onSelect?: (house: PublicHouse) => void;
+  onClose?: () => void;
 }) {
   const tick = useMinuteTick();
   const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
@@ -322,10 +324,11 @@ function ClusterMarker({
             onSelect?.(fromPin);
             return;
           }
-          const keep = selectedId
-            ? cluster.houses.find((house) => house.id === selectedId)
-            : undefined;
-          onSelect?.(keep ?? cluster.houses[0]);
+          if (selectedHere && cluster.houses.length > 1) {
+            onClose?.();
+            return;
+          }
+          onSelect?.(cluster.houses[0]);
         },
       }}
     />
@@ -336,6 +339,7 @@ type Props = {
   houses?: PublicHouse[];
   selectedId?: string | null;
   onSelect?: (house: PublicHouse) => void;
+  onClose?: () => void;
   pickMode?: boolean;
   pick?: { lat: number; lng: number } | null;
   onPick?: (lat: number, lng: number) => void;
@@ -356,6 +360,7 @@ export function HouseMap({
   houses = [],
   selectedId,
   onSelect,
+  onClose,
   pickMode,
   pick,
   onPick,
@@ -368,7 +373,7 @@ export function HouseMap({
   routeStops = null,
 }: Props) {
   const clusters = useMemo(
-    () => (pickMode ? [] : clusterHousesForMap(houses)),
+    () => (pickMode ? [] : clusterHousesByAddress(houses)),
     [houses, pickMode],
   );
   const focus = useMemo(() => {
@@ -496,6 +501,7 @@ export function HouseMap({
               cluster={cluster}
               selectedId={selectedId}
               onSelect={onSelect}
+              onClose={onClose}
             />
           ))}
         {!pickMode && userLocation ? (
