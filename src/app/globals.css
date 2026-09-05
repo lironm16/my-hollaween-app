@@ -914,21 +914,54 @@
 .route-stop-icon {
   background: transparent !important;
   border: none !important;
+  overflow: visible !important;
 }
 
 .route-stop-pin {
+  position: relative;
+  width: 28px;
+  height: 36px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
+}
+
+.route-stop-pin::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 26px;
+  height: 26px;
+  margin-left: -13px;
+  background: #fff7ed;
+  border: 2px solid #ea580c;
+  border-radius: 999px;
+}
+
+.route-stop-pin::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 17px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  background: #fff7ed;
+  border-right: 2px solid #ea580c;
+  border-bottom: 2px solid #ea580c;
+  transform: rotate(45deg);
+}
+
+.route-stop-num {
+  position: relative;
+  z-index: 1;
   display: grid;
   place-items: center;
   width: 26px;
   height: 26px;
-  border-radius: 999px 999px 999px 6px;
-  background: #fff7ed;
   color: #9a3412;
   font-size: 13px;
   font-weight: 900;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
-  border: 2px solid #ea580c;
-  transform: rotate(-8deg);
+  line-height: 1;
 }
 
 .you-are-here-wrap {
@@ -1371,7 +1404,8 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 }
 
 .house-action-btn.is-visited {
-  color: #34d399;
+  background: #059669;
+  color: #ffffff;
 }
 
 .house-action-btn.is-edit {

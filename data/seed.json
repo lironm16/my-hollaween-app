@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-05T05:50:00.000Z",
+  "updatedAt": "2026-09-05T16:30:00.000Z",
   "houses": [
     {
       "id": "בית-1847",
@@ -288,6 +288,168 @@
       "editCode": "931319",
       "createdAt": "2026-09-05T05:50:00.000Z",
       "updatedAt": "2026-09-05T05:50:00.000Z"
+    },
+    {
+      "id": "בית-9314",
+      "name": "הבית עם ההערות הארוכות",
+      "theme": "monster",
+      "address": "חרוזים 20, חרוזים",
+      "arrival": "קומה 2, דירה 9, אחרי דלת המתכת הירוקה ואז שמאלה במסדרון הצר עד הסוף",
+      "description": "סטאב לחזרה — הערות ארוכות מאוד כדי לבדוק גלילה בכרטיס ובגיליון.",
+      "lat": 32.0917,
+      "lng": 34.8022,
+      "treats": [
+        "candy",
+        "chocolate"
+      ],
+      "treatStock": {
+        "candy": "plenty",
+        "chocolate": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "יש שלוש מדרגות בכניסה לבניין ואז עוד שתיים עד הדלת. המעלית לפעמים תקועה בין הקומות אז עדיף במדרגות. הכלב בפנים אבל נובח חזק כשפותחים את הדלת — לא יוצא החוצה, רק מפחיד רגע. הממתקים בסלסלה מימין לשטיח הכתום, שוקולד בקופסה נפרדת. אם מגיעים עם עגלה צריך להרים אותה במדרגות. השכנים בקומה 1 מבקשים לא לצלצל אחרי תשע. יש תאורה מהבהבת בחצר וערפל קל מהמכונה ליד העציץ. אם אין תשובה בדלת אפשר לדפוק על החלון השמאלי. החניה תפוסה בערב, עדיף להגיע ברגל מהרחוב הראשי ולא מהסמטה. יש גם הערה על אלרגיות: הממתקים הרגילים עלולים להכיל עקבות בוטנים, ויש קופסה נפרדת ללא גלוטן לפי בקשה. בבקשה לא להיכנס לחצר האחורית, הכלב שם לפעמים בלי רצועה. אם הגשם מתחזק עוברים לחלוקת ממתקים מחלון המטבח בצד הרחוב.",
+      "accessible": false,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "",
+      "editCode": "931420",
+      "createdAt": "2026-09-05T16:30:00.000Z",
+      "updatedAt": "2026-09-05T16:30:00.000Z"
+    },
+    {
+      "id": "בית-9315",
+      "name": "הבית עם התמונה",
+      "theme": "pumpkin",
+      "address": "חרוזים 22, חרוזים",
+      "arrival": "הכניסה עם הדלעות על המדרגות",
+      "description": "סטאב לחזרה — בית עם תמונת קישוט.",
+      "lat": 32.0908,
+      "lng": 34.803,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "תמונת הקישוט בכרטיס",
+      "accessible": true,
+      "decorLevel": "heavy",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stub-house.png",
+      "editCode": "931521",
+      "createdAt": "2026-09-05T16:30:00.000Z",
+      "updatedAt": "2026-09-05T16:30:00.000Z"
+    },
+    {
+      "id": "בית-9316",
+      "name": "הבית המוקפא",
+      "theme": "ghost",
+      "address": "חרוזים 24, חרוזים",
+      "arrival": "דירה 2",
+      "description": "סטאב לחזרה — הקפאה בלי שעת חזרה.",
+      "lat": 32.0922,
+      "lng": 34.8033,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": false,
+      "decorLevel": "mild",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": "2027-12-31T21:00:00.000Z",
+      "photoUrl": "",
+      "editCode": "931622",
+      "createdAt": "2026-09-05T16:30:00.000Z",
+      "updatedAt": "2026-09-05T16:30:00.000Z"
+    },
+    {
+      "id": "בית-9317",
+      "name": "הבית בלי מלאי",
+      "theme": "candy",
+      "address": "חרוזים 26, חרוזים",
+      "arrival": "קומה קרקע",
+      "description": "סטאב לחזרה — נגמר המלאי, הבית עדיין פתוח לביקור.",
+      "lat": 32.0912,
+      "lng": 34.8038,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "out"
+      },
+      "visit": "come",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": false,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "",
+      "editCode": "931723",
+      "createdAt": "2026-09-05T16:30:00.000Z",
+      "updatedAt": "2026-09-05T16:30:00.000Z"
     },
     {
       "id": "בית-2291",

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, HousePlus, LogOut, Menu, Pencil, Shield } from "lucide-react";
+import { Bell, Home, HousePlus, LogOut, Menu, Pencil, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
 import { PushAlertsButton } from "@/components/push-alerts-button";
@@ -20,9 +20,12 @@ import { cn } from "@/lib/utils";
 
 export function AppHeader({
   onMainTap,
+  onHomeTap,
 }: {
   /** When set, tapping the brand resets to the main map overview. */
   onMainTap?: () => void;
+  /** Side-menu Home: return to the last map/list home screen. */
+  onHomeTap?: () => void;
 }) {
   const router = useRouter();
   const { admin, logout } = useAdminSession();
@@ -89,6 +92,22 @@ export function AppHeader({
             <SheetTitle className="text-lg font-semibold text-orange-50">תפריט</SheetTitle>
           </SheetHeader>
           <nav className="flex flex-col gap-2 p-4">
+            <Link
+              href="/"
+              onClick={(event) => {
+                setMenuOpen(false);
+                if (!onHomeTap) return;
+                event.preventDefault();
+                onHomeTap();
+              }}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "lg" }),
+                "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+              )}
+            >
+              <Home className="size-4" />
+              מסך הבית
+            </Link>
             <Link
               href="/add"
               onClick={() => setMenuOpen(false)}

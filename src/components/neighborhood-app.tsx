@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { List, MapPinned, RefreshCw, Route, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
@@ -46,6 +46,7 @@ import {
 } from "@/lib/offline-db";
 import { scareShort, treatLabels, decorShort } from "@/lib/labels";
 import { movedAtLeast, ROUTE_REANCHOR_METERS } from "@/lib/geo";
+import { readHomeView, writeHomeView, type HomeView } from "@/lib/home-view";
 import { buildWalkingRoute } from "@/lib/route";
 import type { Catalog, House, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
@@ -63,7 +64,14 @@ export function NeighborhoodApp({
   const geo = useUserLocation();
   const origin = geo.location;
   const [routeAnchor, setRouteAnchor] = useState<{ lat: number; lng: number } | null>(null);
-  const [view, setView] = useState<"map" | "list">("map");
+  const view = useSyncExternalStore(
+    (onStoreChange) => {
+      window.addEventListener("hw-home-view", onStoreChange);
+      return () => window.removeEventListener("hw-home-view", onStoreChange);
+    },
+    readHomeView,
+    () => "map" as HomeView,
+  );
   const [selectedId, setSelectedId] = useState<string | "closed" | null>(null);
   const {
     filters,
@@ -97,6 +105,11 @@ export function NeighborhoodApp({
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
   const owned = useOwnedHouses();
+
+  function setView(next: HomeView) {
+    writeHomeView(next);
+  }
+
   const ownedEditCode = useMemo(() => {
     if (!selectedId || selectedId === "closed") return undefined;
     return owned.find((item) => item.id === selectedId)?.editCode;
@@ -319,6 +332,12 @@ export function NeighborhoodApp({
     setFitTick((n) => n + 1);
   }
 
+  function goHome() {
+    setRouteMode(false);
+    setSelectedId("closed");
+    setEditing(false);
+  }
+
   function enterRouteMode() {
     if (!origin) {
       setAskedLocation(true);
@@ -418,7 +437,7 @@ export function NeighborhoodApp({
       className="relative isolate flex h-dvh flex-col overflow-hidden"
       style={{ display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}
     >
-      <AppHeader onMainTap={goToMainMap} />
+      <AppHeader onMainTap={goToMainMap} onHomeTap={goHome} />
       <div
         className="app-toolbar relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2"
         style={{ flexShrink: 0 }}
@@ -472,7 +491,7 @@ export function NeighborhoodApp({
         ) : routeMode ? (
           <p className="mt-1 text-base text-violet-300">
             מסלול לפי הסינון{routePrefsLabel ? ` · ${routePrefsLabel}` : ""} ·{" "}
-            {walkingRoute?.stops.length ?? 0} עצירות · מפה / רשימה
+            {walkingRoute?.stops.length ?? 0} עצירות
           </p>
         ) : null}
       </div>
