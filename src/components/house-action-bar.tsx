@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Heart, Navigation, Pencil, Share2, X } from "lucide-react";
+import { CheckCircle2, Heart, Navigation, Pencil, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
@@ -14,7 +14,6 @@ export function HouseActionBar({
   onToggleVisited,
   onToggleEdit,
   editing,
-  onClose,
 }: {
   house: PublicHouse;
   liked?: boolean;
@@ -23,7 +22,6 @@ export function HouseActionBar({
   onToggleVisited?: () => void;
   onToggleEdit?: () => void;
   editing?: boolean;
-  onClose?: () => void;
 }) {
   return (
     <div className="house-action-bar" dir="rtl">
@@ -35,7 +33,7 @@ export function HouseActionBar({
         aria-label="ניווט ב-Google Maps"
         title="Google Maps"
       >
-        <Navigation className="size-5" strokeWidth={2.2} />
+        <Navigation className="size-6" strokeWidth={2.2} />
       </a>
       <button
         type="button"
@@ -49,7 +47,7 @@ export function HouseActionBar({
           });
         }}
       >
-        <Share2 className="size-5" strokeWidth={2.2} />
+        <Share2 className="size-6" strokeWidth={2.2} />
       </button>
       {onToggleLike ? (
         <button
@@ -60,7 +58,7 @@ export function HouseActionBar({
           title="אהבתי"
           onClick={onToggleLike}
         >
-          <Heart className={cn("size-5", liked && "fill-current")} strokeWidth={2.2} />
+          <Heart className={cn("size-6", liked && "fill-current")} strokeWidth={2.2} />
         </button>
       ) : null}
       {onToggleVisited ? (
@@ -72,7 +70,7 @@ export function HouseActionBar({
           title="ביקרתי"
           onClick={onToggleVisited}
         >
-          <CheckCircle2 className={cn("size-5", visited && "fill-current")} strokeWidth={2.2} />
+          <CheckCircle2 className={cn("size-6", visited && "fill-current")} strokeWidth={2.2} />
         </button>
       ) : null}
       {onToggleEdit ? (
@@ -84,17 +82,7 @@ export function HouseActionBar({
           title="עריכה"
           onClick={onToggleEdit}
         >
-          <Pencil className="size-5" strokeWidth={2.2} />
-        </button>
-      ) : null}
-      {onClose ? (
-        <button
-          type="button"
-          className="house-action-btn is-close"
-          aria-label="סגירה"
-          onClick={onClose}
-        >
-          <X className="size-5" strokeWidth={2.5} />
+          <Pencil className="size-6" strokeWidth={2.2} />
         </button>
       ) : null}
     </div>

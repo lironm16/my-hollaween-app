@@ -292,6 +292,21 @@ function ClickCatcher({
   return null;
 }
 
+function MapDismiss({
+  enabled,
+  onDismiss,
+}: {
+  enabled: boolean;
+  onDismiss?: () => void;
+}) {
+  useMapEvents({
+    click() {
+      if (enabled) onDismiss?.();
+    },
+  });
+  return null;
+}
+
 function ClusterMarker({
   cluster,
   selectedId,
@@ -317,6 +332,7 @@ function ClusterMarker({
       zIndexOffset={selectedHere ? 10000 : closingSoon ? 360 : openingSoon ? 320 : cluster.houses.length > 1 ? 200 : 0}
       eventHandlers={{
         click: (event) => {
+          L.DomEvent.stopPropagation(event.originalEvent);
           const hit = (event.originalEvent.target as Element | null)?.closest?.("[data-house-id]");
           const id = hit?.getAttribute("data-house-id");
           const fromPin = id ? cluster.houses.find((house) => house.id === id) : undefined;
@@ -446,6 +462,9 @@ export function HouseMap({
         />
         <SizeSync active={active} />
         {focus ? <KeepSelectedVisible lat={focus.lat} lng={focus.lng} active={active} /> : null}
+        {!pickMode ? (
+          <MapDismiss enabled={Boolean(selectedId)} onDismiss={onClose} />
+        ) : null}
         {pickMode && onPick ? <ClickCatcher onPick={onPick} /> : null}
         {pickMode && pick ? (
           <Marker

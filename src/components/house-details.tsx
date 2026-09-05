@@ -12,7 +12,7 @@ import { formatDisplayAddress } from "@/lib/config";
 import { formatHoursLabel } from "@/lib/hours";
 import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl } from "@/lib/nav-links";
-import { effectiveVisit, freezeLabel, isFrozen } from "@/lib/house-state";
+import { effectiveVisit, freezeLabel, isFrozen, candyLevel, markedCandy } from "@/lib/house-state";
 import { loadOwnedHouses } from "@/lib/offline-db";
 import { shouldLoadHousePhoto } from "@/lib/photos";
 import type { PublicHouse } from "@/lib/types";
@@ -69,12 +69,31 @@ export function HouseDetails({
     setPhotoBroken(false);
   }, [house.id, house.photoUrl]);
   const sheet = chrome === "sheet";
+  const hours = formatHoursLabel(house);
+  const visit = effectiveVisit(house);
+  const withTreats = { treats: house.treats ?? [], treatStock: house.treatStock };
+  const candyOut = visit === "come" && markedCandy(withTreats) && candyLevel(withTreats) === "out";
+  const addressLine = hours ? `${displayAddress} · ${hours}` : displayAddress;
   return (
     <div className="space-y-3">
+      {visit === "closed" ? (
+        <p className="rounded-lg bg-red-950/40 px-3 py-2 text-sm font-semibold text-red-500">
+          הבית סגור
+        </p>
+      ) : visit === "decorOnly" ? (
+        <p className="rounded-lg bg-amber-950/50 px-3 py-2 text-sm text-amber-100">
+          הבית מקושט ושמחים שתבקרו להסתכל — בלי ממתקים כרגע.
+        </p>
+      ) : candyOut ? (
+        <p className="rounded-lg bg-red-950/40 px-3 py-2 text-sm font-semibold text-red-500">
+          נגמר המלאי
+        </p>
+      ) : null}
+      <HoursStatusBanner house={house} />
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
-          <p className="text-sm text-violet-200">{displayAddress}</p>
+          <p className={cn("text-violet-200", sheet ? "text-base" : "text-sm")}>{addressLine}</p>
         </div>
         {sheet ? null : (
           <div className="flex shrink-0 items-center gap-0.5">
@@ -145,19 +164,10 @@ export function HouseDetails({
           {freezeLabel(house)} — לא מוצג לילדים במפה הציבורית.
         </p>
       ) : null}
-      {effectiveVisit(house) === "closed" ? (
-        <p className="rounded-lg bg-red-950/40 px-3 py-2 text-sm font-semibold text-red-500">
-          נגמר המלאי
-        </p>
-      ) : effectiveVisit(house) === "decorOnly" ? (
-        <p className="rounded-lg bg-amber-950/50 px-3 py-2 text-sm text-amber-100">
-          הבית מקושט ושמחים שתבקרו להסתכל — בלי ממתקים כרגע.
-        </p>
-      ) : null}
-      {formatHoursLabel(house) ? (
-        <p className="text-sm text-violet-200">שעות: {formatHoursLabel(house)}</p>
-      ) : null}
-      <HoursStatusBanner house={house} />
+      <div className="flex flex-wrap items-center gap-1.5">
+        <HouseTags house={house} />
+        {house.status === "pending" ? <Badge variant="secondary">ממתין לאישור</Badge> : null}
+      </div>
       {house.arrival ? (
         <p className="rounded-lg bg-[#2a1638] px-3 py-2 text-sm text-amber-100">
           איך מגיעים: {house.arrival}
@@ -166,10 +176,6 @@ export function HouseDetails({
       {house.description ? (
         <p className="text-sm leading-relaxed text-violet-50">{house.description}</p>
       ) : null}
-      <div className="flex flex-wrap items-center gap-1.5">
-        <HouseTags house={house} />
-        {house.status === "pending" ? <Badge variant="secondary">ממתין לאישור</Badge> : null}
-      </div>
       {house.notes ? (
         <p className="text-sm text-amber-200/90">הערה: {house.notes}</p>
       ) : null}

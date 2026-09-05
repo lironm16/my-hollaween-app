@@ -1236,8 +1236,8 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   z-index: 50;
   display: flex;
   flex-direction: column;
-  height: auto;
-  max-height: min(33%, 33dvh);
+  height: 50%;
+  max-height: 50dvh;
   overflow: hidden;
   background: #160b20;
   border-radius: 22px 22px 0 0;
@@ -1260,36 +1260,31 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 
 .map-house-sheet-chrome {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px 0;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 2px 8px 4px;
   flex-shrink: 0;
 }
 
 .map-house-sheet-chrome .house-action-bar {
-  flex-shrink: 0;
+  width: 100%;
+  justify-content: space-evenly;
+  gap: 0;
   flex-wrap: nowrap;
-  gap: 4px;
   margin-inline-start: 0;
 }
 
 .map-house-sheet-chrome .house-action-btn {
-  width: 40px;
-  height: 40px;
-}
-
-.map-house-sheet-chrome .house-action-btn.is-close {
-  margin-inline-start: 0;
-  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
 }
 
 .map-house-sheet-handle-hit {
   display: grid;
   place-items: center;
-  flex: 1;
-  min-width: 28px;
-  min-height: 44px;
-  padding: 8px 0;
+  width: 100%;
+  min-height: 28px;
+  padding: 8px 0 2px;
   touch-action: none;
   cursor: grab;
 }
