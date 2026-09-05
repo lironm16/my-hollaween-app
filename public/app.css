@@ -4078,6 +4078,16 @@ svg.leaflet-zoom-animated {
 .pumpkin-pin.is-selected {
   box-shadow: 0 0 0 2px #fdba74, 0 2px 6px rgba(0, 0, 0, 0.55);
 }
+.house-pin.is-apt {
+  box-shadow: 0 0 0 3px rgba(253, 186, 116, 0.95),
+    0 0 16px 6px rgba(251, 146, 60, 0.55),
+    0 2px 6px rgba(0, 0, 0, 0.55);
+}
+.house-pin.is-apt.is-selected {
+  box-shadow: 0 0 0 3px #fdba74,
+    0 0 20px 8px rgba(251, 146, 60, 0.72),
+    0 2px 6px rgba(0, 0, 0, 0.55);
+}
 .house-pin .pin-hours-ring,
 .pumpkin-pin .pin-hours-ring {
   position: absolute;
@@ -4196,11 +4206,11 @@ svg.leaflet-zoom-animated {
 }
 .house-pin .pin-status.is-break::before,
 .pumpkin-pin .pin-status.is-break::before {
-  left: 5px;
+  left: 4px;
 }
 .house-pin .pin-status.is-break::after,
 .pumpkin-pin .pin-status.is-break::after {
-  right: 5px;
+  right: 4px;
 }
 .house-pin.house-pin-dot .pin-status {
   width: 14px;
@@ -4474,18 +4484,6 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .house-pin.is-legend .pin-houses {
   transform: scale(1.2);
 }
-.house-pin.is-legend .pin-status.is-break::before,
-.house-pin.is-legend .pin-status.is-break::after {
-  top: 5px;
-  width: 4px;
-  height: 10px;
-}
-.house-pin.is-legend .pin-status.is-break::before {
-  left: 4px;
-}
-.house-pin.is-legend .pin-status.is-break::after {
-  right: 4px;
-}
 .map-house-sheet {
   position: absolute;
   left: 0;
@@ -4512,6 +4510,13 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .map-house-sheet.is-dragging,
 .map-house-sheet.is-raised {
   max-height: calc(100dvh - 8px);
+}
+.map-house-sheet.is-cluster-overview {
+  height: auto;
+  max-height: none;
+}
+.map-house-sheet.is-cluster-overview .map-house-sheet-sub {
+  margin-top: 0.25rem;
 }
 .map-house-sheet-chrome {
   display: flex;

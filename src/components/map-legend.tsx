@@ -54,6 +54,14 @@ function SwatchPin({
 
 const GROUPS: { title: string; items: { key: string; label: string; node: ReactNode }[] }[] = [
   {
+    title: "ממתקים",
+    items: [
+      { key: "plenty", label: "יש", node: <SwatchPin scare="mild" candy="plenty" /> },
+      { key: "low", label: "מעט", node: <SwatchPin scare="mild" candy="low" /> },
+      { key: "out", label: "נגמר", node: <SwatchPin scare="mild" candy="out" /> },
+    ],
+  },
+  {
     title: "קישוט",
     items: [
       { key: "bare", label: "ללא", node: <SwatchPin bare /> },
@@ -63,18 +71,11 @@ const GROUPS: { title: string; items: { key: string; label: string; node: ReactN
     ],
   },
   {
-    title: "ממתקים",
-    items: [
-      { key: "plenty", label: "יש", node: <SwatchPin scare="mild" candy="plenty" /> },
-      { key: "low", label: "מעט", node: <SwatchPin scare="mild" candy="low" /> },
-      { key: "out", label: "נגמר", node: <SwatchPin scare="mild" candy="out" /> },
-    ],
-  },
-  {
-    title: "מצב",
+    title: "בית",
     items: [
       { key: "closed", label: "סגור", node: <SwatchPin scare="mild" closed /> },
       { key: "break", label: "הפסקה", node: <SwatchPin scare="mild" onBreak /> },
+      { key: "multi", label: "כמה בתים", node: <SwatchPin multi /> },
     ],
   },
   {
@@ -83,10 +84,6 @@ const GROUPS: { title: string; items: { key: string; label: string; node: ReactN
       { key: "close", label: "נסגר בקרוב", node: <SwatchPin scare="mild" hours="closing" /> },
       { key: "open", label: "נפתח בקרוב", node: <SwatchPin scare="mild" hours="opening" /> },
     ],
-  },
-  {
-    title: "בתים",
-    items: [{ key: "multi", label: "כמה בתים", node: <SwatchPin multi /> }],
   },
 ];
 

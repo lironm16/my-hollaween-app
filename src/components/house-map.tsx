@@ -148,7 +148,12 @@ function fanLayout(count: number) {
   return { offsets, r };
 }
 
-function clusterIcon(cluster: HouseCluster, selectedId: string | null | undefined, now: Date) {
+function clusterIcon(
+  cluster: HouseCluster,
+  selectedId: string | null | undefined,
+  now: Date,
+  overview?: boolean,
+) {
   const houses = cluster.houses;
   const only = houses[0];
   const selectedHere = Boolean(selectedId && houses.some((house) => house.id === selectedId));
@@ -199,7 +204,7 @@ function clusterIcon(cluster: HouseCluster, selectedId: string | null | undefine
       const left = cx + x - PIN / 2;
       const bottom = y - PIN / 2;
       return housePinHtml(house, now, {
-        selected: house.id === selectedId,
+        selected: !overview && house.id === selectedId,
         houseId: house.id,
         extraClass: "is-apt",
         extraStyle: `left:${left}px;bottom:${bottom}px;z-index:${house.id === selectedId ? houses.length + 3 : index + 2}`,
@@ -310,12 +315,14 @@ function MapDismiss({
 function ClusterMarker({
   cluster,
   selectedId,
+  clusterOverview,
   onSelect,
   onClose,
 }: {
   cluster: HouseCluster;
   selectedId?: string | null;
-  onSelect?: (house: PublicHouse) => void;
+  clusterOverview?: boolean;
+  onSelect?: (house: PublicHouse, opts?: { clusterOverview?: boolean }) => void;
   onClose?: () => void;
 }) {
   const tick = useMinuteTick();
@@ -323,12 +330,13 @@ function ClusterMarker({
   const now = new Date(tick * 15_000);
   const closingSoon = cluster.houses.some((house) => isClosingSoon(house, now));
   const openingSoon = !closingSoon && cluster.houses.some((house) => isOpeningSoon(house, now));
+  const overview = Boolean(clusterOverview && selectedHere);
 
   return (
     <Marker
-      key={`${cluster.key}-${selectedHere ? "open" : "shut"}`}
+      key={`${cluster.key}-${selectedHere ? (overview ? "peek" : selectedId ?? "open") : "shut"}`}
       position={[cluster.lat, cluster.lng]}
-      icon={clusterIcon(cluster, selectedId, now)}
+      icon={clusterIcon(cluster, selectedId, now, overview)}
       zIndexOffset={selectedHere ? 10000 : closingSoon ? 360 : openingSoon ? 320 : cluster.houses.length > 1 ? 200 : 0}
       eventHandlers={{
         click: (event) => {
@@ -344,7 +352,7 @@ function ClusterMarker({
             onClose?.();
             return;
           }
-          onSelect?.(cluster.houses[0]);
+          onSelect?.(cluster.houses[0], cluster.houses.length > 1 ? { clusterOverview: true } : undefined);
         },
       }}
     />
@@ -354,7 +362,8 @@ function ClusterMarker({
 type Props = {
   houses?: PublicHouse[];
   selectedId?: string | null;
-  onSelect?: (house: PublicHouse) => void;
+  clusterOverview?: boolean;
+  onSelect?: (house: PublicHouse, opts?: { clusterOverview?: boolean }) => void;
   onClose?: () => void;
   pickMode?: boolean;
   pick?: { lat: number; lng: number } | null;
@@ -375,6 +384,7 @@ type Props = {
 export function HouseMap({
   houses = [],
   selectedId,
+  clusterOverview,
   onSelect,
   onClose,
   pickMode,
@@ -519,6 +529,7 @@ export function HouseMap({
               key={cluster.key}
               cluster={cluster}
               selectedId={selectedId}
+              clusterOverview={clusterOverview}
               onSelect={onSelect}
               onClose={onClose}
             />
