@@ -42,8 +42,9 @@ function routeOrderIcon(order: number) {
     className: "route-stop-icon",
     html: `<div class="route-stop-pin" aria-label="עצירה ${order}"><b class="route-stop-num">${order}</b></div>`,
     iconSize: [28, 36],
-    // Sit above the 38px house pin (anchor ~42px) with a gap — do not cover or touch the frame.
-    iconAnchor: [14, 88],
+    // House pin top is ~42px above the latlng. Keep a clear air gap so the
+    // teardrop points at the house without covering or touching the frame.
+    iconAnchor: [14, 112],
   });
 }
 

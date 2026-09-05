@@ -16,7 +16,7 @@ import {
 import type { TreatStock, TreatId, VisitState } from "@/lib/types";
 
 const BANNER = "rounded-lg px-3 py-2 text-base font-medium";
-const CLOSED_TONE = "bg-red-950/80 text-red-100";
+const CLOSED_TONE = "bg-red-900/80 text-red-50";
 
 export function HoursStatusBanner({
   house,
