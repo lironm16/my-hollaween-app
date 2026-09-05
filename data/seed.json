@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-03T13:15:00.000Z",
+  "updatedAt": "2026-09-05T05:50:00.000Z",
   "houses": [
     {
       "id": "בית-1847",
@@ -124,6 +124,170 @@
       "editCode": "184903",
       "createdAt": "2026-09-03T13:00:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
+    },
+    {
+      "id": "בית-9310",
+      "name": "הבית שנפתח בקרוב",
+      "theme": "ghost",
+      "address": "חרוזים 10, חרוזים",
+      "arrival": "קומה קרקע, דלת כתומה",
+      "description": "סטאב לחזרה — נפתח בקרוב.",
+      "lat": 32.0919,
+      "lng": 34.8031,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "",
+      "editCode": "931016",
+      "createdAt": "2026-09-05T05:50:00.000Z",
+      "updatedAt": "2026-09-05T05:50:00.000Z"
+    },
+    {
+      "id": "בית-9311",
+      "name": "הבית שנסגר בקרוב",
+      "theme": "pumpkin",
+      "address": "חרוזים 14, חרוזים",
+      "arrival": "קומה 1, דירה 2",
+      "description": "סטאב לחזרה — נסגר בקרוב.",
+      "lat": 32.0914,
+      "lng": 34.8034,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": false,
+      "decorLevel": "heavy",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "",
+      "editCode": "931117",
+      "createdAt": "2026-09-05T05:50:00.000Z",
+      "updatedAt": "2026-09-05T05:50:00.000Z"
+    },
+    {
+      "id": "בית-9312",
+      "name": "בית בהפסקה",
+      "theme": "witch",
+      "address": "חרוזים 16, חרוזים",
+      "arrival": "השער הקטן מהסמטה",
+      "description": "סטאב לחזרה — הפסקה בין חלונות.",
+      "lat": 32.091,
+      "lng": 34.8026,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "spicy",
+      "openFrom": "17:00",
+      "openTo": "18:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "18:00"
+        },
+        {
+          "from": "20:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "20:00",
+      "openTo2": "21:00",
+      "notes": "",
+      "accessible": false,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "",
+      "editCode": "931218",
+      "createdAt": "2026-09-05T05:50:00.000Z",
+      "updatedAt": "2026-09-05T05:50:00.000Z"
+    },
+    {
+      "id": "בית-9313",
+      "name": "הבית הסגור",
+      "theme": "skeleton",
+      "address": "חרוזים 18, חרוזים",
+      "arrival": "דירה 5",
+      "description": "סטאב לחזרה — סגור הערב.",
+      "lat": 32.092,
+      "lng": 34.8024,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "out"
+      },
+      "visit": "closed",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": false,
+      "decorLevel": "mild",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": true,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "",
+      "editCode": "931319",
+      "createdAt": "2026-09-05T05:50:00.000Z",
+      "updatedAt": "2026-09-05T05:50:00.000Z"
     },
     {
       "id": "בית-2291",

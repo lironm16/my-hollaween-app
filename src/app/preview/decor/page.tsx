@@ -17,29 +17,22 @@ export default function DecorPreviewPage() {
         </header>
 
         <section className="space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/20">
-          <h2 className="text-base font-medium text-orange-100">סיכות במפה — קישוט בספרינקלס</h2>
+          <h2 className="text-base font-medium text-orange-100">סיכות במפה — רוח לפחד, נקודה לממתקים</h2>
           <p className="text-sm text-violet-200">
-            בית מקושט מקבל ניצוצות זהובים. נקודת הצבע היא רק ממתקים: ירוק = יש, כתום = מעט, ובלי
-            ממתקים אין נקודה. בניין עם כמה דירות נשאר סיכה אחת עם אותן נקודות, ואחרי הקשה הדירות
-            עולות מעליה.
+            התמונה על הסיכה היא רמת הפחד. הסיכה הסגולה נשארת, לא מקושט הוא אפור. נקודת הממתקים
+            גדולה יותר: ירוק / כתום / אדום. סגור והפסקה הם נקודה על הסיכה, בלי רוח ובלי ממתקים.
           </p>
           <div className="flex flex-wrap items-end gap-8 pt-2">
             <div className="flex flex-col items-center gap-2">
               <div className="house-pin relative" style={{ background: "#6d28d9" }} aria-label="מקושט">
-                <i className="pin-sprinkles" aria-hidden>
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                </i>
-                <span>👻</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="pin-scare" src="/icons/pin-scare-mild.png" alt="" />
                 <b className="pin-status is-plenty" />
               </div>
               <span className="text-[11px] text-violet-300">מקושט</span>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <div className="house-pin relative" style={{ background: "#6d28d9" }}>
-                <span>🎃</span>
+              <div className="house-pin is-undecorated relative" style={{ background: "#94a3b8" }}>
                 <b className="pin-status is-plenty" />
               </div>
               <span className="text-[11px] text-violet-300">בלי קישוט</span>

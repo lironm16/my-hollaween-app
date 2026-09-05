@@ -3,6 +3,7 @@ import {
   closingSoonAt,
   formatHoursLabel,
   hoursStatus,
+  onBreakAt,
   openingSoonAt,
 } from "@/lib/hours";
 import type { VisitState } from "@/lib/types";
@@ -13,6 +14,7 @@ export function HoursStatusBanner({
   now,
 }: {
   house: {
+    id?: string;
     openFrom?: string;
     openTo?: string;
     openFrom2?: string;
@@ -41,6 +43,14 @@ export function HoursStatusBanner({
     return (
       <p className={cn("rounded-lg bg-cyan-950/55 px-3 py-2 text-sm font-medium text-cyan-100", className)}>
         נפתח בקרוב ב־{opensSoonAt}
+      </p>
+    );
+  }
+  const breakOpens = onBreakAt(house, clock);
+  if (breakOpens) {
+    return (
+      <p className={cn("rounded-lg bg-slate-900/70 px-3 py-2 text-sm font-medium text-slate-100", className)}>
+        הפסקה עכשיו — נפתח שוב ב־{breakOpens}
       </p>
     );
   }

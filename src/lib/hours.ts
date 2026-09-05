@@ -133,12 +133,26 @@ export function eventNightDateLabel() {
 /** Open / not-yet / closing-soon — only on the Halloween event night. */
 export function hoursStatus(
   house: HoursSource & {
+    id?: string;
     visit?: VisitState;
     soldOut?: boolean;
   },
   now = new Date(),
 ): HoursStatus {
+  house = withRehearsalPin(house, now);
   if (effectiveVisit(house) === "closed") return { kind: "closedVisit" };
+  if (house.id && REHEARSAL_PIN[house.id] === "break") {
+    const opensAt = onBreakAt(house, now) ?? houseHoursWindows(house)[1]?.from ?? "";
+    return { kind: "between", opensAt };
+  }
+  if (house.id && REHEARSAL_PIN[house.id] === "opensSoon") {
+    const opensAt = openingSoonAt(house, now) ?? houseHoursWindows(house)[0]?.from ?? "";
+    return { kind: "opensSoon", opensAt };
+  }
+  if (house.id && REHEARSAL_PIN[house.id] === "closingSoon") {
+    const closesAt = closingSoonAt(house, now) ?? houseHoursWindows(house)[0]?.to ?? "";
+    return { kind: "closingSoon", closesAt };
+  }
 
   const windows = houseHoursWindows(house);
   if (windows.length === 0) return { kind: "unknown" };
@@ -191,17 +205,55 @@ export function hoursStatus(
 }
 
 type SoonHouse = HoursSource & {
+  id?: string;
   visit?: VisitState;
   soldOut?: boolean;
   adminFrozen?: boolean;
   ownerFrozenUntil?: string | null;
 };
 
+/** Stub houses that always show one pin state during rehearsal, regardless of wall-clock. */
+const REHEARSAL_PIN: Record<string, "opensSoon" | "closingSoon" | "break" | "closed"> = {
+  "בית-9310": "opensSoon",
+  "בית-9311": "closingSoon",
+  "בית-9312": "break",
+  "בית-9313": "closed",
+};
+
+function clockLabel(totalMin: number) {
+  const clamped = Math.max(0, Math.min(23 * 60 + 59, totalMin));
+  const hours = Math.floor(clamped / 60);
+  const minutes = clamped % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+function rehearsalWindows(kind: "opensSoon" | "closingSoon" | "break", now: Date): HoursWindow[] {
+  const nowMin = minutesNow(now);
+  if (kind === "opensSoon") {
+    return [{ from: clockLabel(nowMin + 15), to: clockLabel(nowMin + 120) }];
+  }
+  if (kind === "closingSoon") {
+    return [{ from: clockLabel(nowMin - 90), to: clockLabel(nowMin + 12) }];
+  }
+  return [
+    { from: clockLabel(nowMin - 150), to: clockLabel(nowMin - 40) },
+    { from: clockLabel(nowMin + 50), to: clockLabel(nowMin + 150) },
+  ];
+}
+
+function withRehearsalPin<T extends SoonHouse>(house: T, now: Date): T {
+  const kind = house.id ? REHEARSAL_PIN[house.id] : undefined;
+  if (!kind) return house;
+  if (kind === "closed") return { ...house, visit: "closed" };
+  return { ...house, ...syncHoursFields(rehearsalWindows(kind, now)), visit: "come" };
+}
+
 /**
  * Last 30 minutes of an open clock window. Ignores the Halloween date so
  * rehearsal nights still mark pins and cards; sold-out / frozen houses do not.
  */
 export function closingSoonAt(house: SoonHouse, now = new Date()): string | null {
+  house = withRehearsalPin(house, now);
   if (effectiveVisit(house) === "closed") return null;
   if (isFrozen(house, now.getTime())) return null;
   const nowMin = minutesNow(now);
@@ -218,6 +270,7 @@ export function closingSoonAt(house: SoonHouse, now = new Date()): string | null
 
 /** Next 30 minutes before an open clock window. Same rehearsal rules as closing soon. */
 export function openingSoonAt(house: SoonHouse, now = new Date()): string | null {
+  house = withRehearsalPin(house, now);
   if (effectiveVisit(house) === "closed") return null;
   if (isFrozen(house, now.getTime())) return null;
   if (closingSoonAt(house, now)) return null;
@@ -239,6 +292,30 @@ export function isClosingSoon(house: SoonHouse, now = new Date()) {
 
 export function isOpeningSoon(house: SoonHouse, now = new Date()) {
   return openingSoonAt(house, now) !== null;
+}
+
+/** Between two clock windows (not yet opening-soon). Same rehearsal rules. */
+export function onBreakAt(house: SoonHouse, now = new Date()): string | null {
+  house = withRehearsalPin(house, now);
+  if (effectiveVisit(house) === "closed") return null;
+  if (isFrozen(house, now.getTime())) return null;
+  if (closingSoonAt(house, now) || openingSoonAt(house, now)) return null;
+  const nowMin = minutesNow(now);
+  const parsed = houseHoursWindows(house).flatMap((window) => {
+    const from = parseClockMinutes(window.from);
+    const to = parseClockMinutes(window.to);
+    if (from === null || to === null) return [];
+    return [{ from, to, labelFrom: window.from }];
+  });
+  if (parsed.some((window) => nowMin >= window.from && nowMin < window.to)) return null;
+  const next = parsed.find((window) => nowMin < window.from);
+  const anyEnded = parsed.some((window) => nowMin >= window.to);
+  if (next && anyEnded) return next.labelFrom;
+  return null;
+}
+
+export function isOnBreak(house: SoonHouse, now = new Date()) {
+  return onBreakAt(house, now) !== null;
 }
 
 /** True when kids should come now (within hours, not sold out / frozen). */
