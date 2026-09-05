@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { X } from "lucide-react";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
 import { CodesCopy } from "@/components/codes-copy";
@@ -10,7 +9,14 @@ import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const MAP_SHEET_MAX_VH = 0.33;
+const MAP_SHEET_PEEK_VH = 0.33;
+
+function isSheetInteractive(target: EventTarget | null) {
+  return (
+    target instanceof Element &&
+    Boolean(target.closest("button, a, input, textarea, select, label, [role='button']"))
+  );
+}
 
 export function MapHouseSheet({
   house,
@@ -37,7 +43,6 @@ export function MapHouseSheet({
   onClose: () => void;
   liked?: (id: string) => boolean;
   onToggleLike?: (id: string) => void;
-  visited?: (id: string) => boolean;
   onToggleVisited?: (id: string) => void;
   extra?: ReactNode;
   catalogSource?: string | null;
@@ -53,12 +58,20 @@ export function MapHouseSheet({
   const sheetRef = useRef<HTMLDivElement>(null);
   const naturalH = useRef(0);
   const drag = useRef<{ y: number; h: number; moved: boolean } | null>(null);
+  const liveH = useRef(0);
   const skipClick = useRef(false);
   const draggingRef = useRef(false);
   const [dragH, setDragH] = useState<number | null>(null);
+  const [sheetH, setSheetH] = useState<number | null>(null);
   const multi = clusterHouses.length > 1;
   const address = formatDisplayAddress(house);
   const clusterKey = clusterHouses.map((item) => item.id).join(",");
+  const canEditSelected = Boolean(canEditHouse?.(house.id) && onToggleEdit);
+  const height = dragH ?? sheetH;
+
+  useEffect(() => {
+    setSheetH(null);
+  }, [clusterKey, house.id]);
 
   useEffect(() => {
     const el = sheetRef.current;
@@ -83,77 +96,88 @@ export function MapHouseSheet({
       ro.disconnect();
       document.documentElement.style.removeProperty("--map-sheet-h");
     };
-  }, [clusterKey, house.id, editing]);
+  }, [clusterKey, house.id, editing, sheetH]);
 
-  function maxSheetPx() {
-    return Math.round(window.innerHeight * MAP_SHEET_MAX_VH);
+  function peekPx() {
+    return Math.round(window.innerHeight * MAP_SHEET_PEEK_VH);
   }
 
-  function onHandlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
-    const h = sheetRef.current?.getBoundingClientRect().height ?? maxSheetPx();
+  function maxPx() {
+    return Math.max(peekPx(), window.innerHeight - 8);
+  }
+
+  function onSheetPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) return;
+    if (isSheetInteractive(event.target)) return;
+    const h = sheetRef.current?.getBoundingClientRect().height ?? peekPx();
     naturalH.current = h;
+    liveH.current = h;
     drag.current = { y: event.clientY, h, moved: false };
     draggingRef.current = true;
     event.currentTarget.setPointerCapture(event.pointerId);
   }
 
-  function onHandlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+  function onSheetPointerMove(event: React.PointerEvent<HTMLDivElement>) {
     if (!drag.current) return;
     if (Math.abs(event.clientY - drag.current.y) > 6) drag.current.moved = true;
-    const next = drag.current.h + (drag.current.y - event.clientY);
-    setDragH(Math.min(drag.current.h, Math.max(72, next)));
+    const next = Math.min(maxPx(), Math.max(72, drag.current.h + (drag.current.y - event.clientY)));
+    liveH.current = next;
+    setDragH(next);
   }
 
-  function onHandlePointerUp() {
+  function onSheetPointerUp() {
     if (!drag.current) return;
-    const start = drag.current.h;
-    const h = dragH ?? start;
-    if (drag.current.moved) skipClick.current = true;
+    const moved = drag.current.moved;
+    const h = liveH.current;
     drag.current = null;
     draggingRef.current = false;
     setDragH(null);
-    if (h < start * 0.55) onClose();
-  }
-
-  function handleEdit(item: PublicHouse) {
-    if (item.id !== house.id) {
-      onSelectHouse(item);
-      if (!editing) onToggleEdit?.();
+    if (!moved) return;
+    skipClick.current = true;
+    if (h < peekPx() * 0.5) {
+      setSheetH(null);
+      onClose();
       return;
     }
-    onToggleEdit?.();
+    setSheetH(h);
   }
 
   return (
     <div
       ref={sheetRef}
-      className={cn("map-house-sheet", dragH !== null && "is-dragging")}
+      className={cn(
+        "map-house-sheet",
+        dragH !== null && "is-dragging",
+        sheetH !== null && "is-raised",
+      )}
       role="dialog"
       aria-labelledby={labelId}
-      style={dragH !== null ? { height: dragH } : undefined}
+      style={height != null ? { height } : undefined}
       dir="rtl"
+      onPointerDown={onSheetPointerDown}
+      onPointerMove={onSheetPointerMove}
+      onPointerUp={onSheetPointerUp}
+      onPointerCancel={onSheetPointerUp}
+      onClickCapture={(event) => {
+        if (!skipClick.current) return;
+        skipClick.current = false;
+        event.stopPropagation();
+      }}
     >
       <div className="map-house-sheet-chrome">
-        <div
-          className="map-house-sheet-handle-hit"
-          onPointerDown={onHandlePointerDown}
-          onPointerMove={onHandlePointerMove}
-          onPointerUp={onHandlePointerUp}
-          onPointerCancel={onHandlePointerUp}
-          onClick={() => {
-            if (skipClick.current) skipClick.current = false;
-          }}
-        >
+        <div className="map-house-sheet-handle-hit">
           <div className="map-house-sheet-handle" />
         </div>
-        <button
-          type="button"
-          className="house-action-btn is-close"
-          aria-label="סגירה"
-          onClick={onClose}
-        >
-          <X className="size-5" strokeWidth={2.5} />
-        </button>
+        <HouseActionBar
+          house={house}
+          liked={liked?.(house.id)}
+          visited={visited?.(house.id)}
+          onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
+          onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
+          onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
+          editing={editing}
+          onClose={onClose}
+        />
       </div>
       <div className="map-house-sheet-body">
         {multi ? (
@@ -169,25 +193,12 @@ export function MapHouseSheet({
         <div className="map-house-sheet-cards">
           {clusterHouses.map((item) => {
             const active = item.id === house.id;
-            const canEditThis = Boolean(canEditHouse?.(item.id) && onToggleEdit);
-            const actionBar = (
-              <HouseActionBar
-                house={item}
-                liked={liked?.(item.id)}
-                visited={visited?.(item.id)}
-                onToggleLike={onToggleLike ? () => onToggleLike(item.id) : undefined}
-                onToggleVisited={
-                  onToggleVisited ? () => onToggleVisited(item.id) : undefined
-                }
-                onToggleEdit={canEditThis ? () => handleEdit(item) : undefined}
-                editing={editing && active}
-              />
-            );
             return (
               <section
                 key={item.id}
                 className={cn("map-house-sheet-card", active && "is-on")}
                 onClick={() => {
+                  if (skipClick.current) return;
                   if (!active) onSelectHouse(item);
                 }}
               >
@@ -196,7 +207,6 @@ export function MapHouseSheet({
                 {editing && active ? (
                   <>
                     <p className="map-house-sheet-kicker">{houseHeadline(item)}</p>
-                    {actionBar}
                     <CodesCopy
                       editCode={editCodeFor?.(item.id) ?? managerEditCode}
                     />
@@ -215,7 +225,6 @@ export function MapHouseSheet({
                     managerEditCode={editCodeFor?.(item.id) ?? (active ? managerEditCode : undefined)}
                     extra={active ? extra : undefined}
                     chrome="sheet"
-                    actions={actionBar}
                   />
                 )}
               </section>
