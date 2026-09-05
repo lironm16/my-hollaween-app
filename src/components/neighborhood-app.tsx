@@ -73,6 +73,7 @@ export function NeighborhoodApp({
     () => "map" as HomeView,
   );
   const [selectedId, setSelectedId] = useState<string | "closed" | null>(null);
+  const [clusterOverview, setClusterOverview] = useState(false);
   const {
     filters,
     update: updateFilters,
@@ -173,6 +174,7 @@ export function NeighborhoodApp({
   useEffect(() => {
     if (wasAdmin.current && !admin) {
       setSelectedId("closed");
+      setClusterOverview(false);
       void refresh(true);
     }
     wasAdmin.current = admin;
@@ -329,12 +331,14 @@ export function NeighborhoodApp({
     setView("map");
     setRouteMode(false);
     setSelectedId("closed");
+    setClusterOverview(false);
     setFitTick((n) => n + 1);
   }
 
   function goHome() {
     setRouteMode(false);
     setSelectedId("closed");
+    setClusterOverview(false);
     setEditing(false);
   }
 
@@ -419,6 +423,7 @@ export function NeighborhoodApp({
       void refresh(true);
       toast.success("הבית נדחה ונמחק");
       setSelectedId("closed");
+      setClusterOverview(false);
     } catch {
       toast.error("אין קשר לשרת");
     } finally {
@@ -452,6 +457,7 @@ export function NeighborhoodApp({
               onClick={() => {
                 setView("list");
                 setSelectedId("closed");
+                setClusterOverview(false);
                 setEditing(false);
               }}
               icon={<List className="size-3.5" />}
@@ -612,8 +618,15 @@ export function NeighborhoodApp({
               <HouseMapDynamic
                 houses={visible}
                 selectedId={selected?.id}
-                onSelect={(house) => setSelectedId(house.id)}
-                onClose={() => setSelectedId("closed")}
+                clusterOverview={clusterOverview}
+                onSelect={(house, opts) => {
+                  setClusterOverview(Boolean(opts?.clusterOverview));
+                  setSelectedId(house.id);
+                }}
+                onClose={() => {
+                  setClusterOverview(false);
+                  setSelectedId("closed");
+                }}
                 className="h-full w-full"
                 active={view === "map"}
                 userLocation={origin}
@@ -652,12 +665,18 @@ export function NeighborhoodApp({
                     prefsLabel={routePrefsLabel}
                     hasGps={Boolean(origin)}
                     onRequestLocation={goToMyLocation}
-                    onSelectHouse={(id) => setSelectedId(id)}
+                    onSelectHouse={(id) => {
+                      setClusterOverview(false);
+                      setSelectedId(id);
+                    }}
                   />
                 ) : (
                   <HouseList
                     houses={visible}
-                    onOpen={(house) => setSelectedId(house.id)}
+                    onOpen={(house) => {
+                      setClusterOverview(false);
+                      setSelectedId(house.id);
+                    }}
                     origin={origin}
                     likedIds={likes.likedIds}
                     onToggleLike={likes.toggle}
@@ -673,8 +692,11 @@ export function NeighborhoodApp({
         <MapHouseSheet
           house={selected}
           clusterHouses={view === "map" ? selectedCluster : [selected]}
-          onSelectHouse={(house) => setSelectedId(house.id)}
-          onClose={() => setSelectedId("closed")}
+          clusterOverview={view === "map" && clusterOverview}
+          onClose={() => {
+            setClusterOverview(false);
+            setSelectedId("closed");
+          }}
           liked={likes.liked}
           onToggleLike={likes.toggle}
           visited={visits.visited}
