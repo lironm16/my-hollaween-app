@@ -159,4 +159,20 @@ export type DbFile = {
   updatedAt: string;
   pushSubscriptions?: PushSubscriptionRecord[];
   vapid?: VapidKeys;
+  pushSettings?: {
+    templates?: Partial<
+      Record<
+        | "onBreak"
+        | "backFromBreak"
+        | "houseAdded"
+        | "closed"
+        | "decorOnly"
+        | "candyLow"
+        | "candyOut"
+        | "candyRestock"
+        | "backActive",
+        { enabled: boolean; title: string; body: string }
+      >
+    >;
+  };
 };

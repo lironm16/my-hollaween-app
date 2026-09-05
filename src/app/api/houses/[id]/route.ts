@@ -51,14 +51,14 @@ export async function PATCH(
   }
   const { editCode, ...patch } = parsed.data;
   try {
-    const house = await updateByEditCode(id, editCode, patch);
-    if (!house) {
+    const result = await updateByEditCode(id, editCode, patch);
+    if (!result) {
       return NextResponse.json(
         { error: "קוד העריכה שגוי או שהבית לא נמצא." },
         { status: 403 },
       );
     }
-    return NextResponse.json({ house: toPublicHouse(house) });
+    return NextResponse.json({ house: toPublicHouse(result.house), push: result.push });
   } catch (error) {
     const geo = geocodeHttpError(error);
     if (geo) return NextResponse.json({ error: geo.error }, { status: geo.status });

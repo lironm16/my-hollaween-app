@@ -1,7 +1,13 @@
 import webpush from "web-push";
-import { formatDisplayAddress } from "@/lib/config";
-import { candyLevel, effectiveVisit, isPubliclyListed } from "@/lib/house-state";
 import type { DbFile, House, PushSubscriptionRecord, VapidKeys } from "@/lib/types";
+import {
+  classifyHouseAlert,
+  fillPushTemplate,
+  housePushUrl,
+  mergePushTemplates,
+  type PushKind,
+  type StoredPushSettings,
+} from "@/lib/push-templates";
 
 export type PushPayload = {
   title: string;
@@ -13,7 +19,10 @@ const MAX_TITLE = 80;
 const MAX_BODY = 280;
 
 export function clipPushText(value: string, max: number) {
-  const text = value.replace(/\s+/g, " ").trim();
+  const text = value
+    .replace(/[^\S\n]+/g, " ")
+    .replace(/\n+/g, "\n")
+    .trim();
   if (text.length <= max) return text;
   return `${text.slice(0, Math.max(0, max - 1)).trim()}…`;
 }
@@ -26,73 +35,27 @@ export function sanitizePushPayload(input: { title: string; body: string; url?: 
   };
 }
 
-function houseAlertLabel(house: House) {
-  const name = house.name.trim() || "בית בשכונה";
-  const address = formatDisplayAddress(house);
-  return address ? `«${name}» (${address})` : `«${name}»`;
+/** Night-of alerts from the current (or default) templates. */
+export function importantHouseAlert(
+  prev: House,
+  next: House,
+  stored?: StoredPushSettings | null,
+): PushPayload | null {
+  const kind = classifyHouseAlert(prev, next);
+  if (!kind) return null;
+  return payloadForKind(kind, next, stored);
 }
 
-function houseUrl(house: House) {
-  return `/?focus=${encodeURIComponent(house.id)}`;
-}
-
-/** Night-of alerts only — never include a house id in the copy. */
-export function importantHouseAlert(prev: House, next: House): PushPayload | null {
-  if (!isPubliclyListed(next)) return null;
-
-  const label = houseAlertLabel(next);
-  const prevVisit = effectiveVisit(prev);
-  const nextVisit = effectiveVisit(next);
-
-  if (prevVisit !== "closed" && nextVisit === "closed") {
-    return {
-      title: "נגמר המלאי",
-      body: `נגמר המלאי ב${label}.`,
-      url: houseUrl(next),
-    };
-  }
-  if (prevVisit !== "decorOnly" && nextVisit === "decorOnly") {
-    return {
-      title: "מקושט בלי ממתקים",
-      body: `${label} מקושט בלי ממתקים כרגע.`,
-      url: houseUrl(next),
-    };
-  }
-  if ((prevVisit === "closed" || prevVisit === "decorOnly") && nextVisit === "come") {
-    return {
-      title: "יש שוב ממתקים",
-      body: `${label} חזר עם ממתקים.`,
-      url: houseUrl(next),
-    };
-  }
-
-  if (nextVisit === "come") {
-    const prevCandy = candyLevel(prev);
-    const nextCandy = candyLevel(next);
-    if (prevCandy !== "out" && nextCandy === "out") {
-      return {
-        title: "נגמרו הממתקים",
-        body: `נגמרו הממתקים ב${label}.`,
-        url: houseUrl(next),
-      };
-    }
-    if (prevCandy === "plenty" && nextCandy === "low") {
-      return {
-        title: "מעט ממתקים",
-        body: `נשארו מעט ממתקים ב${label}.`,
-        url: houseUrl(next),
-      };
-    }
-    if (prevCandy === "out" && nextCandy !== "out") {
-      return {
-        title: "יש שוב ממתקים",
-        body: `${label} חזר עם ממתקים.`,
-        url: houseUrl(next),
-      };
-    }
-  }
-
-  return null;
+export function payloadForKind(
+  kind: PushKind,
+  house: House,
+  stored?: StoredPushSettings | null,
+): PushPayload | null {
+  const templates = mergePushTemplates(stored);
+  const template = templates[kind];
+  if (!template.enabled) return null;
+  const filled = fillPushTemplate(template, house);
+  return sanitizePushPayload({ ...filled, url: housePushUrl(house) });
 }
 
 function vapidFromEnv(): VapidKeys | null {

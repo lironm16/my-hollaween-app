@@ -60,5 +60,5 @@ export async function POST(
   if (!updated) {
     return NextResponse.json({ error: "השמירה נכשלה." }, { status: 500 });
   }
-  return NextResponse.json({ house: toPublicHouse(updated) });
+  return NextResponse.json({ house: toPublicHouse(updated.house) });
 }

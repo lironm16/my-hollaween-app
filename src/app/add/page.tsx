@@ -20,12 +20,13 @@ export default function AddPage() {
     id: string;
     editCode: string;
     name: string;
+    autoPush?: boolean;
   } | null>(null);
 
   async function onSubmit(input: HouseInput) {
     setBusy(true);
     try {
-      const { house, editCode } = await publishHouse(input);
+      const { house, editCode, autoPush } = await publishHouse(input);
       saveOwnedHouse({
         id: house.id,
         name: house.name,
@@ -34,8 +35,8 @@ export default function AddPage() {
       });
       notifyCatalogChanged();
       // Success UI only after the server confirmed the house.
-      setDone({ id: house.id, editCode, name: house.name });
-      toast.success("הבית נוסף למפה");
+      setDone({ id: house.id, editCode, name: house.name, autoPush });
+      toast.success(autoPush ? "הבית נוסף למפה · נשלחה התראה לשכונה" : "הבית נוסף למפה");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "השליחה נכשלה");
     } finally {
@@ -66,6 +67,11 @@ export default function AddPage() {
               <p className="text-sm text-violet-100">
                 {done.name} נשמר ומופיע במפה הציבורית של השכונה.
               </p>
+              {done.autoPush ? (
+                <p className="rounded-xl bg-emerald-950/70 px-3 py-2 text-sm text-emerald-100 ring-1 ring-emerald-500/25">
+                  שלחנו התראה אוטומטית לשכונה על הבית החדש.
+                </p>
+              ) : null}
             </div>
             <PersistNote />
             <CodesCopy editCode={done.editCode} />

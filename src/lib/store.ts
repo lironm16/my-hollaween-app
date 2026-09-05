@@ -25,10 +25,20 @@ import {
 } from "@/lib/types";
 import {
   ensureVapid,
-  importantHouseAlert,
+  payloadForKind,
   sendPushToSubscriptions,
   type PushPayload,
 } from "@/lib/push";
+import {
+  AUTO_PUSH_KINDS,
+  PUSH_KINDS,
+  classifyHouseAlert,
+  houseMatchesNotifyKind,
+  mergePushTemplates,
+  ownerOfferKindFromPatch,
+  type PushKind,
+  type StoredPushSettings,
+} from "@/lib/push-templates";
 
 const SEED_PATH = path.join(process.cwd(), "data", "seed.json");
 const BLOB_PATH = "halloween-houses/db.json";
@@ -133,6 +143,7 @@ function normalizeDb(db: DbFile): DbFile {
     houses: db.houses.map(normalizeHouse),
     pushSubscriptions: Array.isArray(db.pushSubscriptions) ? db.pushSubscriptions : [],
     vapid: db.vapid?.publicKey && db.vapid?.privateKey ? db.vapid : undefined,
+    pushSettings: db.pushSettings?.templates ? { templates: { ...db.pushSettings.templates } } : undefined,
   };
 }
 
@@ -300,7 +311,7 @@ export async function submitHouse(input: HouseInput) {
   await assertRealAddress(input);
   let id = "";
   let editCode = "";
-  return runSyncedWrite((db) => {
+  const house = await runSyncedWrite((db) => {
     if (!id) {
       id = newPublicId();
       while (db.houses.some((h) => h.id === id)) id = newPublicId();
@@ -344,6 +355,8 @@ export async function submitHouse(input: HouseInput) {
     db.updatedAt = now;
     return house;
   });
+  const push = await dispatchHousePush(null, house, "houseAdded");
+  return { house, push };
 }
 
 export async function updateByEditCode(
@@ -387,8 +400,9 @@ export async function updateByEditCode(
     db.updatedAt = house.updatedAt;
     return house;
   });
-  if (updated && prev) queueHouseAlert(prev, updated);
-  return updated;
+  if (!updated) return null;
+  const push = await dispatchHousePush(prev, updated, undefined, patch);
+  return { house: updated, push };
 }
 
 export async function adminDeleteHouse(id: string) {
@@ -518,8 +532,9 @@ export async function adminUpdate(
     db.updatedAt = house.updatedAt;
     return house;
   });
-  if (updated && prev) queueHouseAlert(prev, updated);
-  return updated;
+  if (!updated) return null;
+  const push = await dispatchHousePush(prev, updated, undefined, patch);
+  return { house: updated, push };
 }
 
 function sanitizeOwnerPatch(
@@ -574,18 +589,86 @@ function sanitizeOwnerPatch(
   return next;
 }
 
+export type HousePushResult = {
+  kind: PushKind;
+  autoSent?: boolean;
+  title?: string;
+  body?: string;
+  offer?: { kind: PushKind; title: string; body: string };
+};
+
+async function dispatchHousePush(
+  prev: House | null,
+  next: House,
+  forcedKind?: PushKind,
+  patch?: { visit?: VisitState; treatStock?: TreatStock },
+): Promise<HousePushResult | undefined> {
+  const kind =
+    forcedKind ??
+    (prev ? classifyHouseAlert(prev, next) : "houseAdded") ??
+    ownerOfferKindFromPatch(patch, next);
+  if (!kind) return;
+  const stored = (await loadDb()).pushSettings as StoredPushSettings | undefined;
+  const payload = payloadForKind(kind, next, stored);
+  if (!payload) return { kind };
+  if (AUTO_PUSH_KINDS.has(kind)) {
+    void broadcastPush(payload).catch(() => undefined);
+    return { kind, autoSent: true, title: payload.title, body: payload.body };
+  }
+  return { kind, offer: { kind, title: payload.title, body: payload.body } };
+}
+
+export async function getPushTemplateList() {
+  const db = await loadDb();
+  return Object.values(mergePushTemplates(db.pushSettings));
+}
+
+export async function savePushTemplates(input: StoredPushSettings) {
+  return runSyncedWrite((db) => {
+    const merged = mergePushTemplates({
+      templates: {
+        ...db.pushSettings?.templates,
+        ...input.templates,
+      },
+    });
+    const templates: NonNullable<StoredPushSettings["templates"]> = {};
+    for (const id of PUSH_KINDS) {
+      templates[id] = {
+        enabled: merged[id].enabled,
+        title: merged[id].title,
+        body: merged[id].body,
+      };
+    }
+    db.pushSettings = { templates };
+    db.updatedAt = new Date().toISOString();
+    return Object.values(mergePushTemplates(db.pushSettings));
+  });
+}
+
+export async function notifyHouseKind(options: {
+  id: string;
+  kind: PushKind;
+  editCode?: string;
+  admin?: boolean;
+}) {
+  const house = await getHouse(options.id);
+  if (!house) return { error: "missing" as const };
+  if (!options.admin && house.editCode !== options.editCode) return { error: "forbidden" as const };
+  if (AUTO_PUSH_KINDS.has(options.kind)) return { error: "auto" as const };
+  if (!houseMatchesNotifyKind(house, options.kind)) return { error: "mismatch" as const };
+  const stored = (await loadDb()).pushSettings as StoredPushSettings | undefined;
+  const payload = payloadForKind(options.kind, house, stored);
+  if (!payload) return { error: "disabled" as const };
+  const result = await broadcastPush(payload);
+  return { ok: true as const, ...result, title: payload.title, body: payload.body };
+}
+
 function snapshotHouse(house: House): House {
   return {
     ...house,
     treats: [...house.treats],
     treatStock: { ...house.treatStock },
   };
-}
-
-function queueHouseAlert(prev: House, next: House) {
-  const payload = importantHouseAlert(prev, next);
-  if (!payload) return;
-  void broadcastPush(payload).catch(() => undefined);
 }
 
 export async function getVapidPublicKey() {

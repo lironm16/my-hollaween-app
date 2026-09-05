@@ -8,6 +8,7 @@ export const PREVIEW_LINKS = [
   { href: "/preview/scare", label: "פחד" },
   { href: "/preview/decor", label: "קישוט" },
   { href: "/preview/strollers", label: "עגלות" },
+  { href: "/preview/push", label: "התראות" },
 ] as const;
 
 export function PreviewNav({ current }: { current: string }) {

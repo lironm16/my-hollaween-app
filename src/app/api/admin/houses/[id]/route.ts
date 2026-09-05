@@ -20,11 +20,11 @@ export async function PATCH(
     return NextResponse.json({ error: "נתונים לא תקינים." }, { status: 400 });
   }
   try {
-    const house = await adminUpdate(id, parsed.data);
-    if (!house) {
+    const result = await adminUpdate(id, parsed.data);
+    if (!result) {
       return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404 });
     }
-    return NextResponse.json({ house });
+    return NextResponse.json({ house: result.house, push: result.push });
   } catch (error) {
     const geo = geocodeHttpError(error);
     if (geo) return NextResponse.json({ error: geo.error }, { status: geo.status });

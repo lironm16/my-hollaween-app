@@ -60,5 +60,12 @@ export function cloneDb(db: DbFile): DbFile {
       createdAt: item.createdAt,
       keys: { ...item.keys },
     })),
+    pushSettings: db.pushSettings
+      ? {
+          templates: Object.fromEntries(
+            Object.entries(db.pushSettings.templates ?? {}).map(([id, fields]) => [id, { ...fields }]),
+          ),
+        }
+      : undefined,
   };
 }

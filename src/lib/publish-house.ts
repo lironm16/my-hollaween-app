@@ -5,6 +5,7 @@ import type { HouseInput, PublicHouse } from "@/lib/types";
 export type PublishResult = {
   house: PublicHouse;
   editCode: string;
+  autoPush?: boolean;
 };
 
 function clock(value: string) {
@@ -58,9 +59,10 @@ export async function publishHouse(input: HouseInput): Promise<PublishResult> {
     error?: string;
     house?: PublicHouse;
     editCode?: string;
+    push?: { autoSent?: boolean };
   }>(res);
   if (res.ok && data.house && data.editCode) {
-    return { house: data.house, editCode: data.editCode };
+    return { house: data.house, editCode: data.editCode, autoPush: Boolean(data.push?.autoSent) };
   }
   throw new Error(data.error || "לא הצלחנו לשמור את הבית בשרת. נסו שוב.");
 }
