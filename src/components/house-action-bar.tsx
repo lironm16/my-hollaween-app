@@ -1,6 +1,7 @@
 "use client";
 
-import { CheckCircle2, Heart, Navigation, Pencil, Share2 } from "lucide-react";
+import { Heart, Navigation, Pencil, Share2 } from "lucide-react";
+import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
@@ -74,7 +75,7 @@ export function HouseActionBar({
               title="ביקרתי"
               onClick={onToggleVisited}
             >
-              <CheckCircle2 className={cn("size-6", visited && "fill-current")} strokeWidth={2.2} />
+              <VisitedCheck visited={visited} inButton />
             </button>
           ) : null}
           {onToggleEdit ? (

@@ -3,10 +3,11 @@
 @layer theme, base, components, utilities;
 @layer theme {
   :root, :host {
+    --color-red-50: oklch(97.1% 0.013 17.38);
     --color-red-100: oklch(93.6% 0.032 17.717);
     --color-red-200: oklch(88.5% 0.062 18.334);
-    --color-red-500: oklch(63.7% 0.237 25.331);
     --color-red-700: oklch(50.5% 0.213 27.518);
+    --color-red-900: oklch(39.6% 0.141 25.723);
     --color-red-950: oklch(25.8% 0.092 26.042);
     --color-orange-50: oklch(98% 0.016 73.684);
     --color-orange-100: oklch(95.4% 0.038 75.164);
@@ -375,6 +376,9 @@
   }
   .-mx-4 {
     margin-inline: calc(var(--spacing) * -4);
+  }
+  .mx-3 {
+    margin-inline: calc(var(--spacing) * 3);
   }
   .mx-auto {
     margin-inline: auto;
@@ -1227,10 +1231,10 @@
   .bg-red-700 {
     background-color: var(--color-red-700);
   }
-  .bg-red-950\/40 {
-    background-color: color-mix(in srgb, oklch(25.8% 0.092 26.042) 40%, transparent);
+  .bg-red-900\/80 {
+    background-color: color-mix(in srgb, oklch(39.6% 0.141 25.723) 80%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-red-950) 40%, transparent);
+      background-color: color-mix(in oklab, var(--color-red-900) 80%, transparent);
     }
   }
   .bg-red-950\/70 {
@@ -1289,12 +1293,6 @@
   }
   .fill-current {
     fill: currentcolor;
-  }
-  .fill-emerald-500\/30 {
-    fill: color-mix(in srgb, oklch(69.6% 0.17 162.48) 30%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      fill: color-mix(in oklab, var(--color-emerald-500) 30%, transparent);
-    }
   }
   .fill-orange-500 {
     fill: var(--color-orange-500);
@@ -1619,14 +1617,14 @@
   .text-primary-foreground {
     color: var(--primary-foreground);
   }
+  .text-red-50 {
+    color: var(--color-red-50);
+  }
   .text-red-100 {
     color: var(--color-red-100);
   }
   .text-red-200 {
     color: var(--color-red-200);
-  }
-  .text-red-500 {
-    color: var(--color-red-500);
   }
   .text-secondary-foreground {
     color: var(--secondary-foreground);
@@ -4219,20 +4217,50 @@ svg.leaflet-zoom-animated {
 .route-stop-icon {
   background: transparent !important;
   border: none !important;
+  overflow: visible !important;
 }
 .route-stop-pin {
+  position: relative;
+  width: 28px;
+  height: 36px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
+}
+.route-stop-pin::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 26px;
+  height: 26px;
+  margin-left: -13px;
+  background: #fff7ed;
+  border: 2px solid #ea580c;
+  border-radius: 999px;
+}
+.route-stop-pin::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 17px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  background: #fff7ed;
+  border-right: 2px solid #ea580c;
+  border-bottom: 2px solid #ea580c;
+  transform: rotate(45deg);
+}
+.route-stop-num {
+  position: relative;
+  z-index: 1;
   display: grid;
   place-items: center;
   width: 26px;
   height: 26px;
-  border-radius: 999px 999px 999px 6px;
-  background: #fff7ed;
   color: #9a3412;
   font-size: 13px;
   font-weight: 900;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
-  border: 2px solid #ea580c;
-  transform: rotate(-8deg);
+  line-height: 1;
 }
 .you-are-here-wrap {
   background: transparent !important;
@@ -4659,7 +4687,8 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   background: #3f1d32;
 }
 .house-action-btn.is-visited {
-  color: #34d399;
+  background: #059669;
+  color: #ffffff;
 }
 .house-action-btn.is-edit {
   color: #fdba74;

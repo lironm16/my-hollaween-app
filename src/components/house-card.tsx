@@ -1,13 +1,14 @@
 "use client";
 
-import { CheckCircle2, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HouseTags } from "@/components/house-tags";
+import { VisitedCheck } from "@/components/visited-check";
 import { formatDisplayAddress } from "@/lib/config";
-import { houseHeadline, visitLabels } from "@/lib/labels";
+import { houseHeadline } from "@/lib/labels";
 import { formatDistance } from "@/lib/geo";
 import { formatHoursLabel } from "@/lib/hours";
-import { effectiveVisit, isFrozen } from "@/lib/house-state";
+import { isFrozen } from "@/lib/house-state";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
@@ -38,6 +39,7 @@ export function HouseCard({
       )}
       onClick={onOpen}
     >
+      <HoursStatusBanner house={house} className="mx-3 text-base" />
       <CardHeader className="pb-1">
         <CardTitle className="flex items-start justify-between gap-2 text-base text-orange-100 group-data-[size=sm]/card:text-base">
           <span>{houseHeadline(house)}</span>
@@ -52,9 +54,7 @@ export function HouseCard({
                 }}
                 className="rounded-full p-1 text-orange-200 hover:bg-orange-500/15"
               >
-                <CheckCircle2
-                  className={cn("size-5", visited && "fill-emerald-500/30 text-emerald-400")}
-                />
+                <VisitedCheck visited={visited} size="sm" />
               </button>
             ) : null}
             {onToggleLike ? (
@@ -80,16 +80,9 @@ export function HouseCard({
           {formatHoursLabel(house)}
           {distanceM !== undefined ? ` · ${formatDistance(distanceM)}` : ""}
         </p>
-        <HoursStatusBanner house={house} className="text-base" />
-        {effectiveVisit(house) === "closed" ? (
-          <p className="text-base font-semibold text-red-500">{visitLabels.closed}</p>
-        ) : null}
         <HouseTags house={house} />
         {house.status === "pending" ? (
           <p className="text-base font-medium text-amber-200">ממתין לאישור</p>
-        ) : null}
-        {isFrozen(house) ? (
-          <p className="text-base font-medium text-violet-300">מוקפא מהמפה הציבורית</p>
         ) : null}
         {visited ? (
           <p className="text-base font-medium text-emerald-300">ביקרתם כאן</p>

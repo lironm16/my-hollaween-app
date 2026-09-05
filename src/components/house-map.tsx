@@ -40,9 +40,11 @@ function useMinuteTick() {
 function routeOrderIcon(order: number) {
   return L.divIcon({
     className: "route-stop-icon",
-    html: `<div class="route-stop-pin" aria-label="עצירה ${order}">${order}</div>`,
-    iconSize: [28, 34],
-    iconAnchor: [14, 56],
+    html: `<div class="route-stop-pin" aria-label="עצירה ${order}"><b class="route-stop-num">${order}</b></div>`,
+    iconSize: [28, 36],
+    // House pin top is ~42px above the latlng. Keep a clear air gap so the
+    // teardrop points at the house without covering or touching the frame.
+    iconAnchor: [14, 112],
   });
 }
 
