@@ -3990,6 +3990,9 @@ svg.leaflet-zoom-animated {
   display: block;
   width: 22px;
   height: 16px;
+  font-size: 0;
+  line-height: 0;
+  transform: translateY(4px);
 }
 .pin-houses i {
   position: absolute;
@@ -4472,7 +4475,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   max-height: 92% !important;
 }
 .house-pin.is-legend .pin-houses {
-  transform: scale(0.78);
+  transform: translateY(4px) scale(0.78);
 }
 .house-pin.is-legend .pin-status.is-break {
   box-shadow: none;

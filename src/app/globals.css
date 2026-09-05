@@ -690,6 +690,9 @@
   display: block;
   width: 22px;
   height: 16px;
+  font-size: 0;
+  line-height: 0;
+  transform: translateY(4px);
 }
 
 .pin-houses i {
@@ -1185,7 +1188,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 }
 
 .house-pin.is-legend .pin-houses {
-  transform: scale(0.78);
+  transform: translateY(4px) scale(0.78);
 }
 
 .house-pin.is-legend .pin-status.is-break {
