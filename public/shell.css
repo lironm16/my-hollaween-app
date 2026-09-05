@@ -8,6 +8,14 @@ html {
   --font-rubik: Rubik, "Segoe UI", Tahoma, sans-serif;
   --font-heebo: var(--font-rubik);
   --font-creepster: Creepster, "Segoe UI", cursive;
+  --app-h: 100dvh;
+  --vv-bottom-inset: 0px;
+}
+
+@supports (height: 100svh) {
+  html {
+    --app-h: 100svh;
+  }
 }
 
 html,
@@ -97,10 +105,24 @@ button {
   margin-inline-start: auto;
 }
 
+html:has(#neighborhood-shell),
+html:has(#neighborhood-shell) body {
+  height: var(--app-h, 100svh);
+  min-height: 0;
+  max-height: var(--app-h, 100svh);
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 #neighborhood-shell {
   display: flex;
   flex-direction: column;
   height: 100dvh;
+  height: 100svh;
+  height: var(--app-h, 100svh);
+  max-height: 100dvh;
+  max-height: 100svh;
+  max-height: var(--app-h, 100svh);
   overflow: hidden;
   position: relative;
   isolation: isolate;
@@ -133,6 +155,8 @@ button {
 .map-stage {
   position: absolute;
   inset: 0;
+  z-index: 0;
+  isolation: isolate;
   width: 100%;
   height: 100%;
   min-height: 280px;
@@ -463,7 +487,13 @@ button {
 }
 
 [data-slot="sheet-content"][data-side="bottom"] {
+  bottom: var(--vv-bottom-inset, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.filters-sheet-panel {
+  height: min(720px, calc(var(--app-h, 100svh) * 0.92));
+  max-height: min(720px, calc(var(--app-h, 100svh) - var(--vv-bottom-inset, 0px)));
 }
 
 .cobweb {

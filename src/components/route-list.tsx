@@ -2,6 +2,7 @@
 
 import { Navigation } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { HoursStatusBanner } from "@/components/hours-status-banner";
 import { formatDisplayAddress } from "@/lib/config";
 import { formatDistance } from "@/lib/geo";
 import { houseHeadline } from "@/lib/labels";
@@ -72,6 +73,7 @@ export function RouteList({
           });
           return stop.houses.map((house, houseIndex) => (
             <li key={house.id} className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/15">
+              <HoursStatusBanner house={house} className="mb-2" />
               <button
                 type="button"
                 onClick={() => onSelectHouse(house.id)}

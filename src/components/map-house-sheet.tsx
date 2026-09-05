@@ -8,6 +8,7 @@ import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { visualViewportHeight } from "@/lib/viewport";
 
 const MAP_SHEET_PEEK_VH = 0.5;
 
@@ -21,7 +22,7 @@ function isSheetInteractive(target: EventTarget | null) {
 export function MapHouseSheet({
   house,
   clusterHouses,
-  onSelectHouse,
+  clusterOverview = false,
   onClose,
   liked,
   onToggleLike,
@@ -39,7 +40,7 @@ export function MapHouseSheet({
 }: {
   house: PublicHouse;
   clusterHouses: PublicHouse[];
-  onSelectHouse: (house: PublicHouse) => void;
+  clusterOverview?: boolean;
   onClose: () => void;
   liked?: (id: string) => boolean;
   onToggleLike?: (id: string) => void;
@@ -65,6 +66,7 @@ export function MapHouseSheet({
   const [dragH, setDragH] = useState<number | null>(null);
   const [sheetH, setSheetH] = useState<number | null>(null);
   const multi = clusterHouses.length > 1;
+  const overview = multi && clusterOverview;
   const address = formatDisplayAddress(house);
   const clusterKey = clusterHouses.map((item) => item.id).join(",");
   const canEditSelected = Boolean(canEditHouse?.(house.id) && onToggleEdit);
@@ -72,7 +74,7 @@ export function MapHouseSheet({
 
   useEffect(() => {
     setSheetH(null);
-  }, [clusterKey, house.id]);
+  }, [clusterKey, house.id, overview]);
 
   useEffect(() => {
     const el = sheetRef.current;
@@ -97,19 +99,20 @@ export function MapHouseSheet({
       ro.disconnect();
       document.documentElement.style.removeProperty("--map-sheet-h");
     };
-  }, [clusterKey, house.id, editing, sheetH]);
+  }, [clusterKey, house.id, editing, sheetH, overview]);
 
   function peekPx() {
-    return Math.round(window.innerHeight * MAP_SHEET_PEEK_VH);
+    return Math.round(visualViewportHeight() * MAP_SHEET_PEEK_VH);
   }
 
   function maxPx() {
-    return Math.max(peekPx(), window.innerHeight - 8);
+    return Math.max(peekPx(), visualViewportHeight() - 8);
   }
 
   function onSheetPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.button !== 0) return;
     if (isSheetInteractive(event.target)) return;
+    if (event.target instanceof Element && event.target.closest(".map-house-sheet-body")) return;
     const h = sheetRef.current?.getBoundingClientRect().height ?? peekPx();
     naturalH.current = h;
     liveH.current = h;
@@ -148,6 +151,7 @@ export function MapHouseSheet({
       ref={sheetRef}
       className={cn(
         "map-house-sheet",
+        overview && "is-cluster-overview",
         dragH !== null && "is-dragging",
         sheetH !== null && "is-raised",
       )}
@@ -171,6 +175,7 @@ export function MapHouseSheet({
         </div>
         <HouseActionBar
           house={house}
+          navOnly={overview}
           liked={liked?.(house.id)}
           visited={visited?.(house.id)}
           onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
@@ -180,57 +185,47 @@ export function MapHouseSheet({
         />
       </div>
       <div className="map-house-sheet-body">
-        {multi ? (
-          <p id={labelId} className="map-house-sheet-kicker">
-            {address}
-            <span className="map-house-sheet-sub"> · {clusterHouses.length} דירות</span>
-          </p>
+        {overview ? (
+          <div id={labelId}>
+            <p className="map-house-sheet-kicker">{address}</p>
+            <p className="map-house-sheet-sub">{clusterHouses.length} בתים</p>
+          </div>
         ) : (
-          <span id={labelId} className="sr-only">
-            {houseHeadline(house)}
-          </span>
-        )}
-        <div className="map-house-sheet-cards">
-          {clusterHouses.map((item) => {
-            const active = item.id === house.id;
-            return (
-              <section
-                key={item.id}
-                className={cn("map-house-sheet-card", active && "is-on")}
-                onClick={() => {
-                  if (skipClick.current) return;
-                  if (!active) onSelectHouse(item);
-                }}
-              >
-                {active ? pendingNote : null}
-                {active ? frozenNote : null}
-                {editing && active ? (
+          <>
+            <span id={labelId} className="sr-only">
+              {houseHeadline(house)}
+            </span>
+            <div className="map-house-sheet-cards">
+              <section className="map-house-sheet-card is-on">
+                {pendingNote}
+                {frozenNote}
+                {editing ? (
                   <>
-                    <p className="map-house-sheet-kicker">{houseHeadline(item)}</p>
+                    <p className="map-house-sheet-kicker">{houseHeadline(house)}</p>
                     <CodesCopy
-                      editCode={editCodeFor?.(item.id) ?? managerEditCode}
+                      editCode={editCodeFor?.(house.id) ?? managerEditCode}
                     />
                     {extra}
                   </>
                 ) : (
                   <HouseDetails
-                    house={item}
+                    house={house}
                     catalogSource={catalogSource}
-                    liked={liked?.(item.id)}
-                    onToggleLike={onToggleLike ? () => onToggleLike(item.id) : undefined}
-                    visited={visited?.(item.id)}
+                    liked={liked?.(house.id)}
+                    onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
+                    visited={visited?.(house.id)}
                     onToggleVisited={
-                      onToggleVisited ? () => onToggleVisited(item.id) : undefined
+                      onToggleVisited ? () => onToggleVisited(house.id) : undefined
                     }
-                    managerEditCode={editCodeFor?.(item.id) ?? (active ? managerEditCode : undefined)}
-                    extra={active ? extra : undefined}
+                    managerEditCode={editCodeFor?.(house.id) ?? managerEditCode}
+                    extra={extra}
                     chrome="sheet"
                   />
                 )}
               </section>
-            );
-          })}
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

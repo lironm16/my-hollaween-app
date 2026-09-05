@@ -59,7 +59,7 @@ export function FiltersSheet({
       <SheetContent
         side="bottom"
         showCloseButton={false}
-        className="flex h-[min(92vh,720px)] max-h-[92vh] flex-col gap-0 overflow-hidden rounded-t-2xl border-orange-500/25 bg-[#160b1f] p-0 sm:max-w-none"
+        className="filters-sheet-panel flex flex-col gap-0 overflow-hidden rounded-t-2xl border-orange-500/25 bg-[#160b1f] p-0 sm:max-w-none"
       >
         <SheetHeader className="shrink-0 border-b border-orange-500/15 px-4 py-3">
           <div className="flex items-center gap-2">

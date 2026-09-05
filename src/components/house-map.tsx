@@ -37,10 +37,10 @@ function useMinuteTick() {
   );
 }
 
-const ROUTE_BADGE_H = 20;
+const ROUTE_BADGE_H = 32;
 
 function routeBadgeHtml(order: number) {
-  return `<span class="route-stop-pin" aria-label="עצירה ${order}">${order}</span>`;
+  return `<span class="route-stop-pin" aria-label="עצירה ${order}"><b class="route-stop-num">${order}</b></span>`;
 }
 
 function wrapRoutePin(html: string, routeOrder?: number) {
@@ -158,6 +158,7 @@ function clusterIcon(
   selectedId: string | null | undefined,
   now: Date,
   routeOrder?: number,
+  overview?: boolean,
 ) {
   const houses = cluster.houses;
   const only = houses[0];
@@ -217,7 +218,7 @@ function clusterIcon(
       const left = cx + x - PIN / 2;
       const bottom = y - PIN / 2;
       return housePinHtml(house, now, {
-        selected: house.id === selectedId,
+        selected: !overview && house.id === selectedId,
         houseId: house.id,
         extraClass: "is-apt",
         extraStyle: `left:${left}px;bottom:${bottom}px;z-index:${house.id === selectedId ? houses.length + 3 : index + 2}`,
@@ -248,13 +249,20 @@ const youAreHereIcon = L.divIcon({
   popupAnchor: [0, -12],
 });
 
-/** One-shot size sync only — never pans/zooms the map. */
+/** Keep Leaflet sized to the visible viewport — never pans/zooms the map. */
 function SizeSync({ active }: { active: boolean }) {
   const map = useMap();
   useEffect(() => {
     if (!active) return;
-    const id = window.setTimeout(() => map.invalidateSize({ animate: false }), 40);
-    return () => window.clearTimeout(id);
+    const sync = () => map.invalidateSize({ animate: false });
+    const id = window.setTimeout(sync, 40);
+    window.addEventListener("resize", sync);
+    window.visualViewport?.addEventListener("resize", sync);
+    return () => {
+      window.clearTimeout(id);
+      window.removeEventListener("resize", sync);
+      window.visualViewport?.removeEventListener("resize", sync);
+    };
   }, [active, map]);
   return null;
 }
@@ -329,13 +337,15 @@ function MapDismiss({
 function ClusterMarker({
   cluster,
   selectedId,
+  clusterOverview,
   onSelect,
   onClose,
   routeOrder,
 }: {
   cluster: HouseCluster;
   selectedId?: string | null;
-  onSelect?: (house: PublicHouse) => void;
+  clusterOverview?: boolean;
+  onSelect?: (house: PublicHouse, opts?: { clusterOverview?: boolean }) => void;
   onClose?: () => void;
   routeOrder?: number;
 }) {
@@ -344,12 +354,13 @@ function ClusterMarker({
   const now = new Date(tick * 15_000);
   const closingSoon = cluster.houses.some((house) => isClosingSoon(house, now));
   const openingSoon = !closingSoon && cluster.houses.some((house) => isOpeningSoon(house, now));
+  const overview = Boolean(clusterOverview && selectedHere);
 
   return (
     <Marker
-      key={`${cluster.key}-${selectedHere ? "open" : "shut"}-${routeOrder ?? 0}`}
+      key={`${cluster.key}-${selectedHere ? (overview ? "peek" : selectedId ?? "open") : "shut"}-${routeOrder ?? 0}`}
       position={[cluster.lat, cluster.lng]}
-      icon={clusterIcon(cluster, selectedId, now, routeOrder)}
+      icon={clusterIcon(cluster, selectedId, now, routeOrder, overview)}
       zIndexOffset={
         selectedHere
           ? 10000
@@ -377,7 +388,7 @@ function ClusterMarker({
             onClose?.();
             return;
           }
-          onSelect?.(cluster.houses[0]);
+          onSelect?.(cluster.houses[0], cluster.houses.length > 1 ? { clusterOverview: true } : undefined);
         },
       }}
     />
@@ -387,7 +398,8 @@ function ClusterMarker({
 type Props = {
   houses?: PublicHouse[];
   selectedId?: string | null;
-  onSelect?: (house: PublicHouse) => void;
+  clusterOverview?: boolean;
+  onSelect?: (house: PublicHouse, opts?: { clusterOverview?: boolean }) => void;
   onClose?: () => void;
   pickMode?: boolean;
   pick?: { lat: number; lng: number } | null;
@@ -408,6 +420,7 @@ type Props = {
 export function HouseMap({
   houses = [],
   selectedId,
+  clusterOverview,
   onSelect,
   onClose,
   pickMode,
@@ -546,6 +559,7 @@ export function HouseMap({
               key={cluster.key}
               cluster={cluster}
               selectedId={selectedId}
+              clusterOverview={clusterOverview}
               onSelect={onSelect}
               onClose={onClose}
               routeOrder={cluster.houses.reduce<number | undefined>(

@@ -2,7 +2,8 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { CheckCircle2, Heart, Pencil } from "lucide-react";
+import { Heart, Pencil } from "lucide-react";
+import { VisitedCheck } from "@/components/visited-check";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { CodesCopy } from "@/components/codes-copy";
@@ -12,7 +13,7 @@ import { formatDisplayAddress } from "@/lib/config";
 import { formatHoursLabel } from "@/lib/hours";
 import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl } from "@/lib/nav-links";
-import { effectiveVisit, freezeLabel, isFrozen, candyLevel, markedCandy } from "@/lib/house-state";
+import { freezeLabel, isFrozen } from "@/lib/house-state";
 import { loadOwnedHouses } from "@/lib/offline-db";
 import { shouldLoadHousePhoto } from "@/lib/photos";
 import type { PublicHouse } from "@/lib/types";
@@ -70,26 +71,16 @@ export function HouseDetails({
   }, [house.id, house.photoUrl]);
   const sheet = chrome === "sheet";
   const hours = formatHoursLabel(house);
-  const visit = effectiveVisit(house);
-  const withTreats = { treats: house.treats ?? [], treatStock: house.treatStock };
-  const candyOut = visit === "come" && markedCandy(withTreats) && candyLevel(withTreats) === "out";
+  const visit = house.visit;
   const addressLine = hours ? `${displayAddress} · ${hours}` : displayAddress;
   return (
     <div className="space-y-3">
-      {visit === "closed" ? (
-        <p className="rounded-lg bg-red-950/40 px-3 py-2 text-base font-semibold text-red-500">
-          הבית סגור
-        </p>
-      ) : visit === "decorOnly" ? (
+      <HoursStatusBanner house={house} />
+      {visit === "decorOnly" ? (
         <p className="rounded-lg bg-amber-950/50 px-3 py-2 text-base text-amber-100">
           הבית מקושט ושמחים שתבקרו להסתכל — בלי ממתקים כרגע.
         </p>
-      ) : candyOut ? (
-        <p className="rounded-lg bg-red-950/40 px-3 py-2 text-base font-semibold text-red-500">
-          נגמר המלאי
-        </p>
       ) : null}
-      <HoursStatusBanner house={house} />
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
@@ -104,9 +95,7 @@ export function HouseDetails({
                 onClick={onToggleVisited}
                 className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
               >
-                <CheckCircle2
-                  className={cn("size-6", visited && "fill-emerald-500/30 text-emerald-400")}
-                />
+                <VisitedCheck visited={visited} />
               </button>
             ) : null}
             {onToggleLike ? (
@@ -159,9 +148,9 @@ export function HouseDetails({
           </button>
         )
       ) : null}
-      {isFrozen(house) ? (
+      {isFrozen(house) && freezeLabel(house) ? (
         <p className="rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
-          {freezeLabel(house)} — לא מוצג לילדים במפה הציבורית.
+          לא מוצג לילדים במפה הציבורית.
         </p>
       ) : null}
       <div className="flex flex-wrap items-center gap-1.5">

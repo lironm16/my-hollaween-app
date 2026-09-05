@@ -52,6 +52,8 @@
 
 :root,
 .dark {
+  --app-h: 100dvh;
+  --vv-bottom-inset: 0px;
   --background: oklch(0.17 0.04 310);
   --foreground: oklch(0.96 0.03 80);
   --card: oklch(0.23 0.05 310);
@@ -92,6 +94,12 @@
   }
   html {
     font-size: 18px;
+  }
+  @supports (height: 100svh) {
+    :root,
+    .dark {
+      --app-h: 100svh;
+    }
   }
   html,
   body {
@@ -769,6 +777,20 @@
   box-shadow: 0 0 0 2px #fdba74, 0 2px 6px rgba(0, 0, 0, 0.55);
 }
 
+.house-pin.is-apt {
+  box-shadow:
+    0 0 0 4px #fb923c,
+    0 0 22px 8px rgba(251, 146, 60, 0.95),
+    0 2px 6px rgba(0, 0, 0, 0.55);
+}
+
+.house-pin.is-apt.is-selected {
+  box-shadow:
+    0 0 0 4px #fdba74,
+    0 0 28px 12px rgba(251, 146, 60, 1),
+    0 2px 6px rgba(0, 0, 0, 0.55);
+}
+
 .house-pin .pin-hours-ring,
 .pumpkin-pin .pin-hours-ring {
   position: absolute;
@@ -898,12 +920,12 @@
 
 .house-pin .pin-status.is-break::before,
 .pumpkin-pin .pin-status.is-break::before {
-  left: 5px;
+  left: 4px;
 }
 
 .house-pin .pin-status.is-break::after,
 .pumpkin-pin .pin-status.is-break::after {
-  right: 5px;
+  right: 4px;
 }
 
 .house-pin.house-pin-dot .pin-status {
@@ -914,20 +936,53 @@
 .route-stop-icon {
   background: transparent !important;
   border: none !important;
+  overflow: visible !important;
 }
 
 .route-stop-pin {
+  position: relative;
+  width: 28px;
+  height: 36px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
+}
+
+.route-stop-pin::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 26px;
+  height: 26px;
+  margin-left: -13px;
+  background: #fff7ed;
+  border: 2px solid #ea580c;
+  border-radius: 999px;
+}
+
+.route-stop-pin::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 17px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  background: #fff7ed;
+  border-right: 2px solid #ea580c;
+  border-bottom: 2px solid #ea580c;
+  transform: rotate(45deg);
+}
+
+.route-stop-num {
+  position: relative;
+  z-index: 1;
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  background: #fff7ed;
+  width: 26px;
+  height: 26px;
   color: #9a3412;
   font-size: 12px;
   font-weight: 900;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
-  border: 2px solid #ea580c;
   line-height: 1;
 }
 
@@ -941,13 +996,13 @@
 
 .house-pin-route .route-stop-pin {
   flex-shrink: 0;
-  margin-bottom: -4px;
+  margin-bottom: -8px;
 }
 
 .house-pin-fan > .route-stop-pin {
   position: absolute;
   left: 50%;
-  bottom: 35px;
+  bottom: 30px;
   z-index: 5;
   transform: translateX(-50%);
   pointer-events: none;
@@ -1220,21 +1275,6 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   transform: scale(1.2);
 }
 
-.house-pin.is-legend .pin-status.is-break::before,
-.house-pin.is-legend .pin-status.is-break::after {
-  top: 5px;
-  width: 4px;
-  height: 10px;
-}
-
-.house-pin.is-legend .pin-status.is-break::before {
-  left: 4px;
-}
-
-.house-pin.is-legend .pin-status.is-break::after {
-  right: 4px;
-}
-
 .map-house-sheet {
   position: absolute;
   left: 0;
@@ -1245,13 +1285,14 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   flex-direction: column;
   height: 50%;
   max-height: 50dvh;
+  max-height: calc(var(--app-h, 100svh) * 0.5);
   overflow: hidden;
   background: #160b20;
   border-radius: 22px 22px 0 0;
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(249, 115, 22, 0.28);
   border-bottom: 0;
-  touch-action: none;
+  touch-action: pan-y;
   user-select: none;
   transition: height 0.22s ease;
 }
@@ -1263,6 +1304,16 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .map-house-sheet.is-dragging,
 .map-house-sheet.is-raised {
   max-height: calc(100dvh - 8px);
+  max-height: calc(var(--app-h, 100svh) - 8px);
+}
+
+.map-house-sheet.is-cluster-overview {
+  height: auto;
+  max-height: none;
+}
+
+.map-house-sheet.is-cluster-overview .map-house-sheet-sub {
+  margin-top: 0.25rem;
 }
 
 .map-house-sheet-chrome {
@@ -1286,6 +1337,11 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   height: 48px;
 }
 
+.map-house-sheet-chrome,
+.map-house-sheet-handle-hit {
+  touch-action: none;
+}
+
 .map-house-sheet-handle-hit {
   display: grid;
   place-items: center;
@@ -1306,7 +1362,11 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .map-house-sheet-body {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   padding: 0 16px calc(16px + env(safe-area-inset-bottom, 0px));
 }
 
@@ -1428,7 +1488,8 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 }
 
 .house-action-btn.is-visited {
-  color: #34d399;
+  background: #059669;
+  color: #ffffff;
 }
 
 .house-action-btn.is-edit {
@@ -1443,5 +1504,11 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 }
 
 [data-slot="sheet-content"][data-side="bottom"] {
+  bottom: var(--vv-bottom-inset, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.filters-sheet-panel {
+  height: min(720px, calc(var(--app-h, 100svh) * 0.92));
+  max-height: min(720px, calc(var(--app-h, 100svh) - var(--vv-bottom-inset, 0px)));
 }

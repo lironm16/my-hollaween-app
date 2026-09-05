@@ -3,9 +3,11 @@
 @layer theme, base, components, utilities;
 @layer theme {
   :root, :host {
+    --color-red-50: oklch(97.1% 0.013 17.38);
     --color-red-100: oklch(93.6% 0.032 17.717);
     --color-red-200: oklch(88.5% 0.062 18.334);
     --color-red-500: oklch(63.7% 0.237 25.331);
+    --color-red-900: oklch(39.6% 0.141 25.723);
     --color-red-950: oklch(25.8% 0.092 26.042);
     --color-orange-50: oklch(98% 0.016 73.684);
     --color-orange-100: oklch(95.4% 0.038 75.164);
@@ -350,9 +352,6 @@
   .z-50 {
     z-index: 50;
   }
-  .z-\[1100\] {
-    z-index: 1100;
-  }
   .z-\[1200\] {
     z-index: 1200;
   }
@@ -370,6 +369,9 @@
   }
   .-mx-4 {
     margin-inline: calc(var(--spacing) * -4);
+  }
+  .mx-3 {
+    margin-inline: calc(var(--spacing) * 3);
   }
   .mx-auto {
     margin-inline: auto;
@@ -591,9 +593,6 @@
   .h-\[calc\(100\%-1px\)\] {
     height: calc(100% - 1px);
   }
-  .h-\[min\(92vh\,720px\)\] {
-    height: min(92vh, 720px);
-  }
   .h-auto {
     height: auto;
   }
@@ -614,9 +613,6 @@
   }
   .max-h-64 {
     max-height: calc(var(--spacing) * 64);
-  }
-  .max-h-\[92vh\] {
-    max-height: 92vh;
   }
   .max-h-\[min\(88dvh\,40rem\)\] {
     max-height: min(88dvh, 40rem);
@@ -748,6 +744,9 @@
   }
   .touch-none {
     touch-action: none;
+  }
+  .resize {
+    resize: both;
   }
   .scroll-my-1 {
     scroll-margin-block: var(--spacing);
@@ -1208,10 +1207,10 @@
   .bg-primary {
     background-color: var(--primary);
   }
-  .bg-red-950\/40 {
-    background-color: color-mix(in srgb, oklch(25.8% 0.092 26.042) 40%, transparent);
+  .bg-red-900\/80 {
+    background-color: color-mix(in srgb, oklch(39.6% 0.141 25.723) 80%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-red-950) 40%, transparent);
+      background-color: color-mix(in oklab, var(--color-red-900) 80%, transparent);
     }
   }
   .bg-red-950\/70 {
@@ -1267,12 +1266,6 @@
   }
   .fill-current {
     fill: currentcolor;
-  }
-  .fill-emerald-500\/30 {
-    fill: color-mix(in srgb, oklch(69.6% 0.17 162.48) 30%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      fill: color-mix(in oklab, var(--color-emerald-500) 30%, transparent);
-    }
   }
   .fill-orange-500 {
     fill: var(--color-orange-500);
@@ -1597,14 +1590,14 @@
   .text-primary-foreground {
     color: var(--primary-foreground);
   }
+  .text-red-50 {
+    color: var(--color-red-50);
+  }
   .text-red-100 {
     color: var(--color-red-100);
   }
   .text-red-200 {
     color: var(--color-red-200);
-  }
-  .text-red-500 {
-    color: var(--color-red-500);
   }
   .text-secondary-foreground {
     color: var(--secondary-foreground);
@@ -3409,6 +3402,8 @@ svg.leaflet-zoom-animated {
 }
 :root,
 .dark {
+  --app-h: 100dvh;
+  --vv-bottom-inset: 0px;
   --background: oklch(0.17 0.04 310);
   --foreground: oklch(0.96 0.03 80);
   --card: oklch(0.23 0.05 310);
@@ -3452,6 +3447,12 @@ svg.leaflet-zoom-animated {
   }
   html {
     font-size: 18px;
+  }
+  @supports (height: 100svh) {
+    :root,
+    .dark {
+      --app-h: 100svh;
+    }
   }
   html,
   body {
@@ -4047,6 +4048,16 @@ svg.leaflet-zoom-animated {
 .pumpkin-pin.is-selected {
   box-shadow: 0 0 0 2px #fdba74, 0 2px 6px rgba(0, 0, 0, 0.55);
 }
+.house-pin.is-apt {
+  box-shadow: 0 0 0 4px #fb923c,
+    0 0 22px 8px rgba(251, 146, 60, 0.95),
+    0 2px 6px rgba(0, 0, 0, 0.55);
+}
+.house-pin.is-apt.is-selected {
+  box-shadow: 0 0 0 4px #fdba74,
+    0 0 28px 12px rgba(251, 146, 60, 1),
+    0 2px 6px rgba(0, 0, 0, 0.55);
+}
 .house-pin .pin-hours-ring,
 .pumpkin-pin .pin-hours-ring {
   position: absolute;
@@ -4165,11 +4176,11 @@ svg.leaflet-zoom-animated {
 }
 .house-pin .pin-status.is-break::before,
 .pumpkin-pin .pin-status.is-break::before {
-  left: 5px;
+  left: 4px;
 }
 .house-pin .pin-status.is-break::after,
 .pumpkin-pin .pin-status.is-break::after {
-  right: 5px;
+  right: 4px;
 }
 .house-pin.house-pin-dot .pin-status {
   width: 14px;
@@ -4178,19 +4189,49 @@ svg.leaflet-zoom-animated {
 .route-stop-icon {
   background: transparent !important;
   border: none !important;
+  overflow: visible !important;
 }
 .route-stop-pin {
+  position: relative;
+  width: 28px;
+  height: 36px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
+}
+.route-stop-pin::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 26px;
+  height: 26px;
+  margin-left: -13px;
+  background: #fff7ed;
+  border: 2px solid #ea580c;
+  border-radius: 999px;
+}
+.route-stop-pin::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 17px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  background: #fff7ed;
+  border-right: 2px solid #ea580c;
+  border-bottom: 2px solid #ea580c;
+  transform: rotate(45deg);
+}
+.route-stop-num {
+  position: relative;
+  z-index: 1;
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  background: #fff7ed;
+  width: 26px;
+  height: 26px;
   color: #9a3412;
   font-size: 12px;
   font-weight: 900;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
-  border: 2px solid #ea580c;
   line-height: 1;
 }
 .house-pin-route {
@@ -4202,12 +4243,12 @@ svg.leaflet-zoom-animated {
 }
 .house-pin-route .route-stop-pin {
   flex-shrink: 0;
-  margin-bottom: -4px;
+  margin-bottom: -8px;
 }
 .house-pin-fan > .route-stop-pin {
   position: absolute;
   left: 50%;
-  bottom: 35px;
+  bottom: 30px;
   z-index: 5;
   transform: translateX(-50%);
   pointer-events: none;
@@ -4495,18 +4536,6 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .house-pin.is-legend .pin-houses {
   transform: scale(1.2);
 }
-.house-pin.is-legend .pin-status.is-break::before,
-.house-pin.is-legend .pin-status.is-break::after {
-  top: 5px;
-  width: 4px;
-  height: 10px;
-}
-.house-pin.is-legend .pin-status.is-break::before {
-  left: 4px;
-}
-.house-pin.is-legend .pin-status.is-break::after {
-  right: 4px;
-}
 .map-house-sheet {
   position: absolute;
   left: 0;
@@ -4517,13 +4546,14 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   flex-direction: column;
   height: 50%;
   max-height: 50dvh;
+  max-height: calc(var(--app-h, 100svh) * 0.5);
   overflow: hidden;
   background: #160b20;
   border-radius: 22px 22px 0 0;
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(249, 115, 22, 0.28);
   border-bottom: 0;
-  touch-action: none;
+  touch-action: pan-y;
   user-select: none;
   transition: height 0.22s ease;
 }
@@ -4533,6 +4563,14 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .map-house-sheet.is-dragging,
 .map-house-sheet.is-raised {
   max-height: calc(100dvh - 8px);
+  max-height: calc(var(--app-h, 100svh) - 8px);
+}
+.map-house-sheet.is-cluster-overview {
+  height: auto;
+  max-height: none;
+}
+.map-house-sheet.is-cluster-overview .map-house-sheet-sub {
+  margin-top: 0.25rem;
 }
 .map-house-sheet-chrome {
   display: flex;
@@ -4552,6 +4590,10 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   width: 48px;
   height: 48px;
 }
+.map-house-sheet-chrome,
+.map-house-sheet-handle-hit {
+  touch-action: none;
+}
 .map-house-sheet-handle-hit {
   display: grid;
   place-items: center;
@@ -4570,7 +4612,11 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .map-house-sheet-body {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   padding: 0 16px calc(16px + env(safe-area-inset-bottom, 0px));
 }
 .map-house-sheet button,
@@ -4675,7 +4721,8 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   background: #3f1d32;
 }
 .house-action-btn.is-visited {
-  color: #34d399;
+  background: #059669;
+  color: #ffffff;
 }
 .house-action-btn.is-edit {
   color: #fdba74;
@@ -4687,7 +4734,12 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   color: #e9d5ff;
 }
 [data-slot="sheet-content"][data-side="bottom"] {
+  bottom: var(--vv-bottom-inset, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.filters-sheet-panel {
+  height: min(720px, calc(var(--app-h, 100svh) * 0.92));
+  max-height: min(720px, calc(var(--app-h, 100svh) - var(--vv-bottom-inset, 0px)));
 }
 @property --tw-translate-x {
   syntax: "*";

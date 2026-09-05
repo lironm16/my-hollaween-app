@@ -1,6 +1,23 @@
 /* Kill a stale service worker that cached unstyled HTML. Public path so
    Preview iframes can run it even when Next.js blocks /_next/*. */
 (function () {
+  function syncAppH() {
+    var vv = window.visualViewport;
+    var h = vv ? vv.height : window.innerHeight;
+    var inset = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
+    var root = document.documentElement;
+    root.style.setProperty("--app-h", Math.round(h) + "px");
+    root.style.setProperty("--vv-bottom-inset", Math.round(inset) + "px");
+  }
+  syncAppH();
+  window.addEventListener("resize", syncAppH);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", syncAppH);
+    window.visualViewport.addEventListener("scroll", syncAppH);
+  }
+})();
+
+(function () {
   var flag = "hw-sw-bust-v37";
   try {
     if (sessionStorage.getItem(flag)) return;
