@@ -13,7 +13,6 @@ import { formatDisplayAddress } from "@/lib/config";
 import { formatHoursLabel } from "@/lib/hours";
 import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl } from "@/lib/nav-links";
-import { freezeLabel, isFrozen } from "@/lib/house-state";
 import { loadOwnedHouses } from "@/lib/offline-db";
 import { shouldLoadHousePhoto } from "@/lib/photos";
 import type { PublicHouse } from "@/lib/types";
@@ -71,16 +70,10 @@ export function HouseDetails({
   }, [house.id, house.photoUrl]);
   const sheet = chrome === "sheet";
   const hours = formatHoursLabel(house);
-  const visit = house.visit;
   const addressLine = hours ? `${displayAddress} · ${hours}` : displayAddress;
   return (
     <div className="space-y-3">
       <HoursStatusBanner house={house} />
-      {visit === "decorOnly" ? (
-        <p className="rounded-lg bg-amber-950/50 px-3 py-2 text-base text-amber-100">
-          הבית מקושט ושמחים שתבקרו להסתכל — בלי ממתקים כרגע.
-        </p>
-      ) : null}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
@@ -147,11 +140,6 @@ export function HouseDetails({
             יש תמונת קישוט — לחצו רק אם הרשת פנויה
           </button>
         )
-      ) : null}
-      {isFrozen(house) && freezeLabel(house) ? (
-        <p className="rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
-          לא מוצג לילדים במפה הציבורית.
-        </p>
       ) : null}
       <div className="flex flex-wrap items-center gap-1.5">
         <HouseTags house={house} />

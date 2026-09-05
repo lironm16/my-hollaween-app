@@ -212,7 +212,6 @@ export default function EditPage() {
         {house ? (
           <div className="space-y-3">
             <CodesCopy editCode={admin ? adminEditCode : editCode} />
-            <p className="text-base text-violet-200">סטטוס: {statusText(house.status)}</p>
             <NightDesk
               house={house}
               admin={admin}
@@ -248,10 +247,4 @@ export default function EditPage() {
       </main>
     </div>
   );
-}
-
-function statusText(status: PublicHouse["status"]) {
-  if (status === "approved") return "מאושר במפה";
-  if (status === "rejected") return "נדחה";
-  return "ממתין לאישור";
 }

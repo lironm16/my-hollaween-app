@@ -36,7 +36,6 @@ export function MapHouseSheet({
   editing,
   onToggleEdit,
   pendingNote,
-  frozenNote,
 }: {
   house: PublicHouse;
   clusterHouses: PublicHouse[];
@@ -54,7 +53,6 @@ export function MapHouseSheet({
   editing?: boolean;
   onToggleEdit?: () => void;
   pendingNote?: ReactNode;
-  frozenNote?: ReactNode;
 }) {
   const labelId = useId();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -198,7 +196,6 @@ export function MapHouseSheet({
             <div className="map-house-sheet-cards">
               <section className="map-house-sheet-card is-on">
                 {pendingNote}
-                {frozenNote}
                 {editing ? (
                   <>
                     <p className="map-house-sheet-kicker">{houseHeadline(house)}</p>

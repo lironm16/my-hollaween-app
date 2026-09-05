@@ -125,7 +125,7 @@ export function NightDesk({
   async function onSave(input: HouseInput, extras?: HouseFormExtras) {
     const saved = await save({
       ...input,
-      ownerFrozenUntil: null,
+      ownerFrozenUntil: extras?.ownerFrozenUntil ?? null,
       ...(extras?.clearPhoto && !extras.photoDataUrl ? { photoUrl: "" } : {}),
     });
     if (!saved) return;

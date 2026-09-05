@@ -141,10 +141,15 @@ function normalizeHouse(house: House): House {
 function normalizeDb(db: DbFile): DbFile {
   return {
     ...db,
-    houses: db.houses.map(normalizeHouse),
+    houses: db.houses.filter((house) => house.id !== "בית-9316").map(normalizeHouse),
     pushSubscriptions: Array.isArray(db.pushSubscriptions) ? db.pushSubscriptions : [],
     vapid: db.vapid?.publicKey && db.vapid?.privateKey ? db.vapid : undefined,
-    pushSettings: db.pushSettings?.templates ? { templates: { ...db.pushSettings.templates } } : undefined,
+    pushSettings: db.pushSettings?.templates
+      ? {
+          updatedAt: db.pushSettings.updatedAt,
+          templates: { ...db.pushSettings.templates },
+        }
+      : undefined,
   };
 }
 
@@ -201,13 +206,35 @@ async function writeFileDb(db: DbFile) {
   await fs.rename(tmp, file);
 }
 
+function pushSettingsStamp(settings?: DbFile["pushSettings"], fallbackUpdatedAt?: string) {
+  const raw = settings?.updatedAt ?? fallbackUpdatedAt ?? "";
+  const n = Date.parse(raw);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function pickPushSettings(...candidates: Array<DbFile | null | undefined>): DbFile["pushSettings"] {
+  let best: DbFile["pushSettings"] = undefined;
+  let bestStamp = -1;
+  for (const candidate of candidates) {
+    if (!candidate?.pushSettings?.templates) continue;
+    const t = pushSettingsStamp(candidate.pushSettings, candidate.updatedAt);
+    if (t >= bestStamp) {
+      bestStamp = t;
+      best = candidate.pushSettings;
+    }
+  }
+  return best;
+}
+
 function pickNewest(...candidates: Array<DbFile | null | undefined>): DbFile | null {
   let best: DbFile | null = null;
   for (const candidate of candidates) {
     if (!candidate) continue;
     if (!best || stamp(candidate) >= stamp(best)) best = candidate;
   }
-  return best;
+  if (!best) return null;
+  const pushSettings = pickPushSettings(...candidates) ?? best.pushSettings;
+  return pushSettings ? { ...best, pushSettings } : best;
 }
 
 async function readFileDb(): Promise<DbFile> {
@@ -240,6 +267,7 @@ function setMem(db: DbFile) {
 }
 
 async function persistDb(db: DbFile) {
+  if (!db.pushSettings && mem?.pushSettings) db.pushSettings = mem.pushSettings;
   setMem(db);
   try {
     await writeFileDb(db);
@@ -650,7 +678,7 @@ export async function savePushTemplates(input: StoredPushSettings) {
         body: merged[id].body,
       };
     }
-    db.pushSettings = { templates };
+    db.pushSettings = { updatedAt: new Date().toISOString(), templates };
     db.updatedAt = new Date().toISOString();
     return Object.values(mergePushTemplates(db.pushSettings));
   });

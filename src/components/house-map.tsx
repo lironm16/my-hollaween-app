@@ -20,7 +20,7 @@ import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
 import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
 import { distanceMeters } from "@/lib/geo";
-import { candyPinDot, effectiveVisit, isDecorated } from "@/lib/house-state";
+import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { isClosingSoon, isOnBreak, isOpeningSoon } from "@/lib/hours";
 import type { ScareLevel } from "@/lib/types";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
@@ -66,7 +66,7 @@ const SCARE_SRC: Record<ScareLevel, string> = {
 
 function pinVisitKind(house: PublicHouse, now: Date): "closed" | "break" | null {
   if (effectiveVisit(house) === "closed") return "closed";
-  if (isOnBreak(house, now)) return "break";
+  if (isOwnerFrozen(house, now.getTime()) || isOnBreak(house, now)) return "break";
   return null;
 }
 

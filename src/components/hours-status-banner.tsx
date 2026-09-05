@@ -9,8 +9,7 @@ import {
 import {
   candyLevel,
   effectiveVisit,
-  freezeLabel,
-  isFrozen,
+  isOwnerFrozen,
   markedCandy,
 } from "@/lib/house-state";
 import type { TreatStock, TreatId, VisitState } from "@/lib/types";
@@ -43,10 +42,10 @@ export function HoursStatusBanner({
 }) {
   const clock = now ?? new Date();
 
-  if (isFrozen(house, clock.getTime())) {
+  if (isOwnerFrozen(house, clock.getTime())) {
     return (
       <p className={cn(BANNER, "bg-slate-900/70 text-slate-100", className)}>
-        {freezeLabel(house) ?? "מוקפא מהמפה"}
+        הפסקה עכשיו
       </p>
     );
   }

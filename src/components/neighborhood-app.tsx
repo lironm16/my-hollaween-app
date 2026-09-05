@@ -28,7 +28,7 @@ import { readApiJson } from "@/lib/api-json";
 import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
 import { clusterHousesByAddress } from "@/lib/house-clusters";
 import { toPublicHouse } from "@/lib/ids";
-import { isFrozen, offersCandy, offersSensitivity, isDecorated } from "@/lib/house-state";
+import { offersCandy, offersSensitivity, isDecorated } from "@/lib/house-state";
 import { AccessibleMark } from "@/components/symbols";
 import { CandyMark } from "@/components/candy-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
@@ -741,13 +741,6 @@ export function NeighborhoodApp({
                 {admin
                   ? "בית ממתין לאישור — עדיין לא במפה הציבורית."
                   : "הבית הזה עדיין לא במפה הציבורית. אם זה הבית שלכם, מנהל יכול לאשר אותו."}
-              </p>
-            ) : null
-          }
-          frozenNote={
-            isFrozen(selected) ? (
-              <p className="mb-3 rounded-lg bg-[#2a1638] px-3 py-2 text-base text-amber-100">
-                הבית מוקפא — הילדים בשכונה לא רואים אותו. רק אתם (או מנהל) רואים את הסיכה השקופה.
               </p>
             ) : null
           }

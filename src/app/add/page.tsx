@@ -86,8 +86,8 @@ export default function AddPage() {
             <PersistNote />
             <CodesCopy editCode={done.editCode} />
             <p className="text-base text-amber-200">
-              שמרו את קוד העריכה — אפשר לשתף אותו עם בני משפחה כדי לעדכן מלאי מהכרטיס של הבית.
-              עותק נשמר גם בטלפון הזה לנוחות שלכם.
+              אפשר לעדכן את הבית בכל עת — מהמסך הראשי או מעריכה בתפריט הצדדי. גם עד האירוע וגם בלילה
+              עצמו, למשל מלאי ממתקים או סגירת הבית לביקור.
             </p>
             <div className="flex flex-wrap gap-2">
               <Link

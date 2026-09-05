@@ -111,7 +111,7 @@ export default function HousePage() {
             <p className="text-violet-100">
               {error ??
                 (missing
-                  ? "הבית לא במפה הציבורית. אולי הוא מוקפא, או שנגמר הערב."
+                  ? "הבית לא במפה הציבורית. אולי נגמר הערב, או שהקישור ישן."
                   : "לא נמצא.")}
             </p>
             <Link href="/" className={cn(buttonVariants())}>

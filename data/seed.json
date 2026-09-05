@@ -372,46 +372,6 @@
       "updatedAt": "2026-09-05T16:30:00.000Z"
     },
     {
-      "id": "בית-9316",
-      "name": "הבית המוקפא",
-      "theme": "ghost",
-      "address": "חרוזים 24, חרוזים",
-      "arrival": "דירה 2",
-      "description": "סטאב לחזרה — הקפאה בלי שעת חזרה.",
-      "lat": 32.0922,
-      "lng": 34.8033,
-      "treats": [
-        "candy"
-      ],
-      "treatStock": {
-        "candy": "plenty"
-      },
-      "visit": "come",
-      "scareLevel": "mild",
-      "openFrom": "17:00",
-      "openTo": "21:00",
-      "openHours": [
-        {
-          "from": "17:00",
-          "to": "21:00"
-        }
-      ],
-      "openFrom2": "",
-      "openTo2": "",
-      "notes": "",
-      "accessible": false,
-      "decorLevel": "mild",
-      "decorated": true,
-      "status": "approved",
-      "soldOut": false,
-      "adminFrozen": false,
-      "ownerFrozenUntil": "2027-12-31T21:00:00.000Z",
-      "photoUrl": "",
-      "editCode": "931622",
-      "createdAt": "2026-09-05T16:30:00.000Z",
-      "updatedAt": "2026-09-05T16:30:00.000Z"
-    },
-    {
       "id": "בית-9317",
       "name": "הבית בלי מלאי",
       "theme": "candy",

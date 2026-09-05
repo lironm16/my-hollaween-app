@@ -121,6 +121,7 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
 };
 
 export type StoredPushSettings = {
+  updatedAt?: string;
   templates?: Partial<Record<PushKind, PushTemplateFields>>;
 };
 
