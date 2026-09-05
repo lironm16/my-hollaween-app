@@ -371,7 +371,7 @@ export function NeighborhoodApp({
     window.clearTimeout(cheerTimer.current);
     window.requestAnimationFrame(() => {
       setVisitCheer(true);
-      cheerTimer.current = window.setTimeout(() => setVisitCheer(false), 1400);
+      cheerTimer.current = window.setTimeout(() => setVisitCheer(false), 1600);
     });
   }
 
@@ -816,7 +816,13 @@ export function NeighborhoodApp({
       </main>
       {visitCheer ? (
         <div className="visit-cheer" role="status" aria-live="polite">
-          <div className="visit-cheer-card">כל הכבוד!</div>
+          <div className="visit-cheer-card">
+            <span className="visit-cheer-burst" aria-hidden="true">
+              <i /><i /><i /><i /><i /><i />
+            </span>
+            <span className="visit-cheer-check" aria-hidden="true" />
+            כל הכבוד!
+          </div>
         </div>
       ) : null}
     </div>
