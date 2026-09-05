@@ -41,7 +41,7 @@ export function RouteList({
     <div className="mx-auto flex w-full max-w-lg flex-col gap-3 px-3 py-3">
       <div className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
         <p className="text-sm font-medium text-orange-100">{formatRouteSummary(route)}</p>
-        <p className="mt-1 text-xs text-violet-300">
+        <p className="mt-1 text-sm text-violet-300">
           {route.startedFrom === "gps" ? "מהמיקום שלכם" : "ממרכז השכונה"}
           {prefsLabel ? ` · ${prefsLabel}` : ""}
         </p>
@@ -84,13 +84,13 @@ export function RouteList({
                   <span className="block text-sm font-medium text-orange-100">
                     {houseHeadline(house)}
                   </span>
-                  <span className="mt-0.5 block text-xs text-violet-300">
+                  <span className="mt-0.5 block text-sm text-violet-300">
                     {formatDisplayAddress(house)}
                   </span>
                   {house.arrival ? (
-                    <span className="mt-0.5 block text-[11px] text-amber-200/90">{house.arrival}</span>
+                    <span className="mt-0.5 block text-sm text-amber-200/90">{house.arrival}</span>
                   ) : null}
-                  <span className="mt-1 block text-[11px] text-violet-400">
+                  <span className="mt-1 block text-sm text-violet-400">
                     {houseIndex > 0
                       ? "אותו בניין"
                       : `${stop.order === 1 ? "מההתחלה" : "מעצירה קודמת"}: ${formatDistance(stop.fromPreviousMeters)} · מצטבר ${formatDistance(stop.cumulativeMeters)}`}

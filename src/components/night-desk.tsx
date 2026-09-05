@@ -214,7 +214,7 @@ export function NightDesk({
                 <Bell className="mt-0.5 size-4 shrink-0 text-orange-300" />
                 <div className="min-w-0 space-y-0.5">
                   <p className="text-sm font-semibold text-orange-100">לשלוח התראה לשכונה?</p>
-                  <p className="text-xs text-violet-300">
+                  <p className="text-sm text-violet-300">
                     {DEFAULT_PUSH_TEMPLATES[notice.offer.kind].label} · נשלח רק אם תלחצו על הכפתור
                   </p>
                 </div>
@@ -265,7 +265,7 @@ export function NightDesk({
               title={visitLabels[state]}
               onClick={() => void save({ visit: state as VisitState })}
               className={cn(
-                "rounded-xl px-2 py-2.5 text-center text-xs font-medium transition",
+                "rounded-xl px-2 py-2.5 text-center text-sm font-medium transition",
                 visit === state
                   ? state === "closed"
                     ? "bg-red-700 text-white"
@@ -287,7 +287,7 @@ export function NightDesk({
             title={decorShort.none}
             onClick={() => void save({ decorLevel: "none" })}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition",
+              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition",
               resolveDecorLevel(house) === "none"
                 ? "bg-orange-500 text-black"
                 : "bg-[#12081a] text-orange-100 ring-1 ring-orange-500/20",
@@ -309,7 +309,7 @@ export function NightDesk({
                 })
               }
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition",
+                "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition",
                 resolveDecorLevel(house) !== "none" && house.scareLevel === level
                   ? "bg-orange-500 text-black"
                   : "bg-[#12081a] text-orange-100 ring-1 ring-orange-500/20",
@@ -330,7 +330,7 @@ export function NightDesk({
           onPick={(level) => setStock("candy", level)}
         />
         {sensitivities.length === 0 ? (
-          <p className="text-xs text-violet-400">
+          <p className="text-sm text-violet-400">
             אין רגישויות מסומנות. אפשר להוסיף ב«פרטי הבית» למטה.
           </p>
         ) : (
@@ -366,7 +366,7 @@ export function NightDesk({
           <label className="inline-flex cursor-pointer">
             <span
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-xs font-medium text-black",
+                "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-sm font-medium text-black",
                 busy && "opacity-60",
               )}
             >
@@ -436,7 +436,7 @@ export function NightDesk({
           ) : !house.adminFrozen ? (
             <div className="space-y-2">
               <label className="block space-y-1">
-                <span className="text-xs text-violet-300">עד מתי? (אופציונלי)</span>
+                <span className="text-sm text-violet-300">עד מתי? (אופציונלי)</span>
                 <Input
                   type="time"
                   dir="ltr"
@@ -506,7 +506,7 @@ function Section({
     <section className="space-y-2.5 rounded-2xl bg-[#1d1028] p-3.5 ring-1 ring-orange-500/20">
       <header className="space-y-0.5">
         <h3 className="text-sm font-semibold text-orange-100">{title}</h3>
-        {hint ? <p className="text-xs text-violet-400">{hint}</p> : null}
+        {hint ? <p className="text-sm text-violet-400">{hint}</p> : null}
       </header>
       <div className="space-y-2">{children}</div>
     </section>
@@ -535,7 +535,7 @@ function StockRow({
             disabled={busy}
             onClick={() => onPick(item)}
             className={cn(
-              "rounded-full px-2.5 py-1 text-[11px] font-medium",
+              "rounded-full px-2.5 py-1 text-sm font-medium",
               level === item
                 ? item === "out"
                   ? "bg-red-700 text-white"

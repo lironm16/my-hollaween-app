@@ -33,7 +33,7 @@ export function FilterTrigger({
     >
       <Filter className="size-4" />
       {activeCount > 0 ? (
-        <span className="absolute -top-1 -start-1 inline-flex min-w-4 items-center justify-center rounded-full bg-black px-1 text-[10px] font-bold text-orange-300">
+        <span className="absolute -top-1 -start-1 inline-flex min-w-4 items-center justify-center rounded-full bg-black px-1 text-sm font-bold text-orange-300">
           {activeCount}
         </span>
       ) : null}
@@ -65,7 +65,7 @@ export function FiltersSheet({
           <div className="flex items-center gap-2">
             <SheetTitle className="text-lg font-semibold text-orange-50">סינון</SheetTitle>
             {activeCount > 0 ? (
-              <span className="rounded-full bg-orange-500/20 px-2 py-0.5 text-xs font-medium text-orange-200">
+              <span className="rounded-full bg-orange-500/20 px-2 py-0.5 text-sm font-medium text-orange-200">
                 {activeCount} פעילים
               </span>
             ) : null}

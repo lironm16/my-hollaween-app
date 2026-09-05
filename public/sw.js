@@ -93,6 +93,7 @@ self.addEventListener("push", (event) => {
       badge: "/icon-192.png",
       lang: "he",
       dir: "rtl",
+      tag: data.topic === "admin" ? "admin-broadcast" : undefined,
       data: { url: data.url || "/" },
     }),
   );

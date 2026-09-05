@@ -155,12 +155,12 @@ export function HousePicker({
                     <Home className="mt-0.5 size-3.5 shrink-0 text-orange-400" />
                     <span className="min-w-0 flex-1">
                       <span className="block font-medium">{houseHeadline(house)}</span>
-                      <span className="block text-[11px] text-violet-300">
+                      <span className="block text-sm text-violet-300">
                         {address}
                         {house.arrival ? ` · ${house.arrival}` : ""}
                       </span>
                       {mine ? (
-                        <span className="mt-0.5 block text-[11px] text-emerald-300">הבית שלכם</span>
+                        <span className="mt-0.5 block text-sm text-emerald-300">הבית שלכם</span>
                       ) : null}
                     </span>
                   </button>

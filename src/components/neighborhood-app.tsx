@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { List, MapPinned, RefreshCw, Route, WifiOff } from "lucide-react";
 import { toast } from "sonner";
-import { AdminPushPanel } from "@/components/admin-push-panel";
 import { AppHeader } from "@/components/app-header";
 import {
   FilterOption,
@@ -26,7 +25,7 @@ import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { readApiJson } from "@/lib/api-json";
-import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, formatDisplayAddress, type NeighborhoodId } from "@/lib/config";
+import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
 import { clusterHousesByAddress } from "@/lib/house-clusters";
 import { toPublicHouse } from "@/lib/ids";
 import { isFrozen, offersCandy, offersSensitivity, isDecorated } from "@/lib/house-state";
@@ -175,11 +174,6 @@ export function NeighborhoodApp({
     for (const house of adminHouses) map.set(house.id, house.editCode);
     return map;
   }, [adminHouses]);
-
-  const pendingQueue = useMemo(
-    () => adminHouses.filter((house) => house.status === "pending"),
-    [adminHouses],
-  );
 
   const houses = useMemo(() => {
     if (admin) {
@@ -425,62 +419,6 @@ export function NeighborhoodApp({
       style={{ display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}
     >
       <AppHeader onMainTap={goToMainMap} />
-      {admin ? (
-        <div
-          className="relative z-40 border-b border-amber-500/25 bg-[#2a1638]/95 px-3 py-2"
-          style={{ flexShrink: 0 }}
-        >
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-sm font-medium text-amber-100">
-              מצב מנהל · עריכה בלי קוד · הקפאה ומחיקה
-            </p>
-            <span className="text-[11px] text-violet-300">
-              בתים חדשים נכנסים למפה מיד · יציאה רק בכפתור
-            </span>
-          </div>
-          {pendingQueue.length > 0 ? (
-            <ul className="mt-2 max-h-28 space-y-1.5 overflow-y-auto">
-              {pendingQueue.map((house) => (
-                <li
-                  key={house.id}
-                  className="flex flex-wrap items-center gap-2 rounded-lg bg-black/25 px-2.5 py-1.5"
-                >
-                  <button
-                    type="button"
-                    className="min-w-0 flex-1 text-start"
-                    onClick={() => setSelectedId(house.id)}
-                  >
-                    <span className="block truncate text-sm text-orange-100">{house.name}</span>
-                    <span className="block truncate text-[11px] text-violet-300">
-                      {formatDisplayAddress(house)} · קוד {house.editCode}
-                    </span>
-                  </button>
-                  <Button
-                    size="sm"
-                    className="h-8 bg-emerald-600 text-white hover:bg-emerald-500"
-                    disabled={busyAction}
-                    onClick={() => void approveHouse(house.id)}
-                  >
-                    אישור
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8"
-                    disabled={busyAction}
-                    onClick={() => void rejectHouse(house.id)}
-                  >
-                    דחייה ומחיקה
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-1 text-[11px] text-violet-300">מוקפאים מופיעים במפה כסיכות שקופות. לחצו על בית לעריכה או מחיקה.</p>
-          )}
-          <AdminPushPanel />
-        </div>
-      ) : null}
       <div
         className="app-toolbar relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2"
         style={{ flexShrink: 0 }}
@@ -528,11 +466,11 @@ export function NeighborhoodApp({
           </button>
         </div>
         {geoError ? (
-          <p className="mt-1 text-[11px] text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>
+          <p className="mt-1 text-sm text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>
         ) : outsideNeighborhood ? (
-          <p className="mt-1 text-[11px] text-amber-200">המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.</p>
+          <p className="mt-1 text-sm text-amber-200">המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.</p>
         ) : routeMode ? (
-          <p className="mt-1 text-[11px] text-violet-300">
+          <p className="mt-1 text-sm text-violet-300">
             מסלול לפי הסינון{routePrefsLabel ? ` · ${routePrefsLabel}` : ""} ·{" "}
             {walkingRoute?.stops.length ?? 0} עצירות · מפה / רשימה
           </p>
@@ -814,7 +752,7 @@ function CatalogMetaChip({
   const stale = offline || unreachable || source === "cache" || source === "snapshot";
   return (
     <div className="pointer-events-none absolute top-2 start-2 z-[1100]">
-      <span className="inline-flex max-w-[min(100%,16rem)] items-center gap-1.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-[11px] text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
+      <span className="inline-flex max-w-[min(100%,16rem)] items-center gap-1.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-sm text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
         <span>{houseCount} בתים</span>
         {stopCount != null ? <span>· {stopCount} עצירות</span> : null}
         {stale ? (
