@@ -1154,10 +1154,19 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   border: 0;
 }
 
+.house-pin.is-legend {
+  width: 48px;
+  height: 48px;
+}
+
+.house-pin.is-legend .pin-houses {
+  transform: scale(1.2);
+}
+
 .house-pin.is-legend .pin-status.is-break::before,
 .house-pin.is-legend .pin-status.is-break::after {
   top: 5px;
-  width: 3px;
+  width: 4px;
   height: 10px;
 }
 

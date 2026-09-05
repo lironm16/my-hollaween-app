@@ -85,8 +85,8 @@ const GROUPS: { title: string; items: { key: string; label: string; node: ReactN
     ],
   },
   {
-    title: "דירות",
-    items: [{ key: "multi", label: "כמה דירות", node: <SwatchPin multi /> }],
+    title: "בתים",
+    items: [{ key: "multi", label: "כמה בתים", node: <SwatchPin multi /> }],
   },
 ];
 
@@ -139,20 +139,20 @@ export function MapLegend() {
                 >
                   <X className="size-5" />
                 </button>
-                <h2 id={titleId} className="absolute top-3 right-4 text-sm font-semibold text-orange-100">
+                <h2 id={titleId} className="absolute top-3 right-4 text-base font-semibold text-orange-100">
                   מקרא
                 </h2>
-                <div className="flex flex-col gap-2.5">
+                <div className="flex flex-col gap-3">
                   {GROUPS.map((group) => (
                     <section key={group.title}>
-                      <h3 className="mb-1 text-xs font-semibold text-orange-200">{group.title}</h3>
-                      <ul className="grid grid-cols-4">
+                      <h3 className="mb-1.5 text-base font-semibold text-orange-200">{group.title}</h3>
+                      <ul className="flex flex-wrap justify-start gap-x-1 gap-y-2">
                         {group.items.map((item) => (
-                          <li key={item.key} className="flex min-w-0 flex-col items-center gap-1">
-                            <div className="grid size-12 shrink-0 place-items-center overflow-visible" dir="ltr">
+                          <li key={item.key} className="flex w-[4.75rem] min-w-0 flex-col items-center gap-1">
+                            <div className="grid size-16 shrink-0 place-items-center overflow-visible" dir="ltr">
                               {item.node}
                             </div>
-                            <span className="w-full text-center text-xs leading-tight text-violet-100">
+                            <span className="w-full text-center text-base leading-tight text-violet-100">
                               {item.label}
                             </span>
                           </li>
