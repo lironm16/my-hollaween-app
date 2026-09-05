@@ -26,7 +26,7 @@ import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { readApiJson } from "@/lib/api-json";
 import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
-import { clusterHousesForMap } from "@/lib/house-clusters";
+import { clusterHousesByAddress } from "@/lib/house-clusters";
 import { toPublicHouse } from "@/lib/ids";
 import { isFrozen, offersCandy, offersSensitivity, isDecorated } from "@/lib/house-state";
 import { AccessibleMark } from "@/components/symbols";
@@ -294,7 +294,7 @@ export function NeighborhoodApp({
     null;
   const selectedCluster = useMemo(() => {
     if (!selected) return [];
-    const cluster = clusterHousesForMap(visible).find((item) =>
+    const cluster = clusterHousesByAddress(visible).find((item) =>
       item.houses.some((house) => house.id === selected.id),
     );
     return cluster?.houses ?? [selected];
@@ -594,6 +594,7 @@ export function NeighborhoodApp({
                 houses={visible}
                 selectedId={selected?.id}
                 onSelect={(house) => setSelectedId(house.id)}
+                onClose={() => setSelectedId("closed")}
                 className="h-full w-full"
                 active={view === "map"}
                 userLocation={origin}
