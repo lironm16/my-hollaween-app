@@ -64,18 +64,18 @@ export default function AddPage() {
             <div className="flex flex-col items-center gap-2 text-center">
               <CheckCircle2 className="house-added-check size-14 text-emerald-400" />
               <h1 className="font-display text-2xl text-orange-300">הבית במפה!</h1>
-              <p className="text-sm text-violet-100">
+              <p className="text-base text-violet-100">
                 {done.name} נשמר ומופיע במפה הציבורית של השכונה.
               </p>
               {done.autoPush ? (
-                <p className="rounded-xl bg-emerald-950/70 px-3 py-2 text-sm text-emerald-100 ring-1 ring-emerald-500/25">
+                <p className="rounded-xl bg-emerald-950/70 px-3 py-2 text-base text-emerald-100 ring-1 ring-emerald-500/25">
                   שלחנו התראה אוטומטית לשכונה על הבית החדש.
                 </p>
               ) : null}
             </div>
             <PersistNote />
             <CodesCopy editCode={done.editCode} />
-            <p className="text-sm text-amber-200">
+            <p className="text-base text-amber-200">
               שמרו את קוד העריכה — אפשר לשתף אותו עם בני משפחה כדי לעדכן מלאי מהכרטיס של הבית.
               עותק נשמר גם בטלפון הזה לנוחות שלכם.
             </p>
@@ -94,7 +94,7 @@ export default function AddPage() {
         ) : (
           <>
             <h1 className="font-display mb-1 text-2xl text-orange-300">הוספת בית מפחיד</h1>
-            <p className="mb-4 text-sm text-violet-200">
+            <p className="mb-4 text-base text-violet-200">
               בחרו שם וכתובת אמיתית מהרשימה. אחרי אישור השרת הבית מופיע במפה.
             </p>
             <PersistNote className="mb-4" />

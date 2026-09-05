@@ -82,8 +82,8 @@ function TopicSwitch({
       )}
     >
       <span className="min-w-0">
-        <span className="block text-sm font-medium text-orange-50">{title}</span>
-        <span className="mt-0.5 block text-sm text-violet-300">{hint}</span>
+        <span className="block text-base font-medium text-orange-50">{title}</span>
+        <span className="mt-0.5 block text-base text-violet-300">{hint}</span>
       </span>
       <span
         className={cn(

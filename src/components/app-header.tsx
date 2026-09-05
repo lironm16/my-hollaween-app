@@ -61,7 +61,7 @@ export function AppHeader({
           />
           <span className="min-w-0">
             <BrandTitle />
-            <span className="mt-0.5 block truncate text-sm text-violet-200/80">
+            <span className="mt-0.5 block truncate text-base text-violet-200/80">
               {config.neighborhood}
             </span>
           </span>

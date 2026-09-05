@@ -33,7 +33,7 @@ export function FilterTrigger({
     >
       <Filter className="size-4" />
       {activeCount > 0 ? (
-        <span className="absolute -top-1 -start-1 inline-flex min-w-4 items-center justify-center rounded-full bg-black px-1 text-sm font-bold text-orange-300">
+        <span className="absolute -top-1 -start-1 inline-flex min-w-4 items-center justify-center rounded-full bg-black px-1 text-base font-bold text-orange-300">
           {activeCount}
         </span>
       ) : null}
@@ -65,7 +65,7 @@ export function FiltersSheet({
           <div className="flex items-center gap-2">
             <SheetTitle className="text-lg font-semibold text-orange-50">סינון</SheetTitle>
             {activeCount > 0 ? (
-              <span className="rounded-full bg-orange-500/20 px-2 py-0.5 text-sm font-medium text-orange-200">
+              <span className="rounded-full bg-orange-500/20 px-2 py-0.5 text-base font-medium text-orange-200">
                 {activeCount} פעילים
               </span>
             ) : null}
@@ -116,7 +116,7 @@ export function FilterSection({
 }) {
   return (
     <section className="space-y-2">
-      <h3 className="text-sm font-semibold text-violet-200">{title}</h3>
+      <h3 className="text-base font-semibold text-violet-200">{title}</h3>
       <div className="flex flex-col gap-1 rounded-xl bg-[#1d1028] p-1.5 ring-1 ring-orange-500/20">
         {children}
       </div>
@@ -136,7 +136,7 @@ export function FilterOption({
   return (
     <label
       className={cn(
-        "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition",
+        "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-base transition",
         checked ? "bg-orange-500/15 text-orange-50" : "text-orange-50 hover:bg-orange-500/10",
       )}
     >

@@ -125,7 +125,7 @@ export function AddressField({ value, onChange, onSelect, confirmed, disabled }:
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-xl bg-[#1d1028] py-1 text-sm shadow-lg ring-1 ring-orange-500/30"
+          className="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-xl bg-[#1d1028] py-1 text-base shadow-lg ring-1 ring-orange-500/30"
         >
           {loading ? (
             <li className="px-3 py-2 text-violet-300">מחפשים כתובות…</li>
@@ -152,7 +152,7 @@ export function AddressField({ value, onChange, onSelect, confirmed, disabled }:
                   <MapPin className="mt-0.5 size-3.5 shrink-0 text-orange-400" />
                   <span>
                     <span className="block">{hit.label}</span>
-                    {hint ? <span className="block text-sm text-violet-300">{hint}</span> : null}
+                    {hint ? <span className="block text-base text-violet-300">{hint}</span> : null}
                   </span>
                 </button>
               </li>
@@ -162,11 +162,11 @@ export function AddressField({ value, onChange, onSelect, confirmed, disabled }:
         </ul>
       ) : null}
       {confirmed ? (
-        <p className="mt-1 text-sm text-emerald-300">כתובת מאומתת על המפה</p>
+        <p className="mt-1 text-base text-emerald-300">כתובת מאומתת על המפה</p>
       ) : value.trim().length >= 3 ? (
-        <p className="mt-1 text-sm text-amber-200">בחרו כתובת מהרשימה, או גררו את הסיכה לבית הנכון</p>
+        <p className="mt-1 text-base text-amber-200">בחרו כתובת מהרשימה, או גררו את הסיכה לבית הנכון</p>
       ) : (
-        <p className="mt-1 text-sm text-violet-300">הכתובת חייבת להיות כתובת אמיתית בשכונה</p>
+        <p className="mt-1 text-base text-violet-300">הכתובת חייבת להיות כתובת אמיתית בשכונה</p>
       )}
     </div>
   );

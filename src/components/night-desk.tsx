@@ -213,8 +213,8 @@ export function NightDesk({
               <div className="flex items-start gap-2">
                 <Bell className="mt-0.5 size-4 shrink-0 text-orange-300" />
                 <div className="min-w-0 space-y-0.5">
-                  <p className="text-sm font-semibold text-orange-100">לשלוח התראה לשכונה?</p>
-                  <p className="text-sm text-violet-300">
+                  <p className="text-base font-semibold text-orange-100">לשלוח התראה לשכונה?</p>
+                  <p className="text-base text-violet-300">
                     {DEFAULT_PUSH_TEMPLATES[notice.offer.kind].label} · נשלח רק אם תלחצו על הכפתור
                   </p>
                 </div>
@@ -241,7 +241,7 @@ export function NightDesk({
             <>
               <div className="flex items-start gap-2">
                 <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-400" />
-                <p className="text-sm font-semibold text-emerald-200">
+                <p className="text-base font-semibold text-emerald-200">
                   {notice.mode === "auto"
                     ? "נשלחה התראה אוטומטית לשכונה"
                     : "ההתראה נשלחה לשכונה"}
@@ -265,7 +265,7 @@ export function NightDesk({
               title={visitLabels[state]}
               onClick={() => void save({ visit: state as VisitState })}
               className={cn(
-                "rounded-xl px-2 py-2.5 text-center text-sm font-medium transition",
+                "rounded-xl px-2 py-2.5 text-center text-base font-medium transition",
                 visit === state
                   ? state === "closed"
                     ? "bg-red-700 text-white"
@@ -287,7 +287,7 @@ export function NightDesk({
             title={decorShort.none}
             onClick={() => void save({ decorLevel: "none" })}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition",
+              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-base font-medium transition",
               resolveDecorLevel(house) === "none"
                 ? "bg-orange-500 text-black"
                 : "bg-[#12081a] text-orange-100 ring-1 ring-orange-500/20",
@@ -309,7 +309,7 @@ export function NightDesk({
                 })
               }
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition",
+                "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-base font-medium transition",
                 resolveDecorLevel(house) !== "none" && house.scareLevel === level
                   ? "bg-orange-500 text-black"
                   : "bg-[#12081a] text-orange-100 ring-1 ring-orange-500/20",
@@ -330,7 +330,7 @@ export function NightDesk({
           onPick={(level) => setStock("candy", level)}
         />
         {sensitivities.length === 0 ? (
-          <p className="text-sm text-violet-400">
+          <p className="text-base text-violet-400">
             אין רגישויות מסומנות. אפשר להוסיף ב«פרטי הבית» למטה.
           </p>
         ) : (
@@ -358,7 +358,7 @@ export function NightDesk({
             className="h-36 w-full rounded-xl object-cover ring-1 ring-orange-500/25"
           />
         ) : (
-          <div className="flex h-28 items-center justify-center rounded-xl bg-[#12081a] text-sm text-violet-400 ring-1 ring-orange-500/15">
+          <div className="flex h-28 items-center justify-center rounded-xl bg-[#12081a] text-base text-violet-400 ring-1 ring-orange-500/15">
             אין תמונה עדיין
           </div>
         )}
@@ -366,7 +366,7 @@ export function NightDesk({
           <label className="inline-flex cursor-pointer">
             <span
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-sm font-medium text-black",
+                "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-base font-medium text-black",
                 busy && "opacity-60",
               )}
             >
@@ -404,12 +404,12 @@ export function NightDesk({
         hint="ילדים לא רואים את הבית עד שמבטלים או עד השעה שבחרתם"
       >
         {house.adminFrozen && !admin ? (
-          <p className="rounded-lg bg-violet-950/70 px-3 py-2 text-sm text-violet-100">
+          <p className="rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
             מנהל הסתיר את הבית מהמפה. אי אפשר לבטל את זה מכאן.
           </p>
         ) : null}
         {freezeText ? (
-          <p className="rounded-lg bg-[#2a1638] px-3 py-2 text-sm text-amber-100">{freezeText}</p>
+          <p className="rounded-lg bg-[#2a1638] px-3 py-2 text-base text-amber-100">{freezeText}</p>
         ) : null}
 
         {admin ? (
@@ -436,7 +436,7 @@ export function NightDesk({
           ) : !house.adminFrozen ? (
             <div className="space-y-2">
               <label className="block space-y-1">
-                <span className="text-sm text-violet-300">עד מתי? (אופציונלי)</span>
+                <span className="text-base text-violet-300">עד מתי? (אופציונלי)</span>
                 <Input
                   type="time"
                   dir="ltr"
@@ -469,7 +469,7 @@ export function NightDesk({
         >
           <button
             type="button"
-            className="text-sm font-medium text-orange-300 underline-offset-2 hover:underline"
+            className="text-base font-medium text-orange-300 underline-offset-2 hover:underline"
             onClick={() => setDetailsOpen((v) => !v)}
           >
             {detailsOpen ? "הסתרת טופס הפרטים" : "עריכת פרטי הבית"}
@@ -505,8 +505,8 @@ function Section({
   return (
     <section className="space-y-2.5 rounded-2xl bg-[#1d1028] p-3.5 ring-1 ring-orange-500/20">
       <header className="space-y-0.5">
-        <h3 className="text-sm font-semibold text-orange-100">{title}</h3>
-        {hint ? <p className="text-sm text-violet-400">{hint}</p> : null}
+        <h3 className="text-base font-semibold text-orange-100">{title}</h3>
+        {hint ? <p className="text-base text-violet-400">{hint}</p> : null}
       </header>
       <div className="space-y-2">{children}</div>
     </section>
@@ -526,7 +526,7 @@ function StockRow({
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <span className="text-sm text-orange-50">{label}</span>
+      <span className="text-base text-orange-50">{label}</span>
       <span className="flex gap-1">
         {STOCK_LEVELS.map((item) => (
           <button
@@ -535,7 +535,7 @@ function StockRow({
             disabled={busy}
             onClick={() => onPick(item)}
             className={cn(
-              "rounded-full px-2.5 py-1 text-sm font-medium",
+              "rounded-full px-2.5 py-1 text-base font-medium",
               level === item
                 ? item === "out"
                   ? "bg-red-700 text-white"

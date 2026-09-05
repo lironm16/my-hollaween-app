@@ -131,7 +131,7 @@ export function HousePicker({
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-xl bg-[#1d1028] py-1 text-sm shadow-lg ring-1 ring-orange-500/30"
+          className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-xl bg-[#1d1028] py-1 text-base shadow-lg ring-1 ring-orange-500/30"
         >
           {loading ? (
             <li className="px-3 py-2 text-violet-300">טוענים בתים…</li>
@@ -155,12 +155,12 @@ export function HousePicker({
                     <Home className="mt-0.5 size-3.5 shrink-0 text-orange-400" />
                     <span className="min-w-0 flex-1">
                       <span className="block font-medium">{houseHeadline(house)}</span>
-                      <span className="block text-sm text-violet-300">
+                      <span className="block text-base text-violet-300">
                         {address}
                         {house.arrival ? ` · ${house.arrival}` : ""}
                       </span>
                       {mine ? (
-                        <span className="mt-0.5 block text-sm text-emerald-300">הבית שלכם</span>
+                        <span className="mt-0.5 block text-base text-emerald-300">הבית שלכם</span>
                       ) : null}
                     </span>
                   </button>

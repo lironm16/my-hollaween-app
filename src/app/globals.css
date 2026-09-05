@@ -434,7 +434,7 @@
 
 .house-map-popup-candy {
   margin-top: 6px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   line-height: 1.35;
 }
@@ -453,7 +453,7 @@
 
 .house-map-popup-arrival {
   margin-top: 2px;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.35;
   color: #e7d4a8;
 }
@@ -1328,7 +1328,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .map-house-sheet-sub,
 .map-house-sheet-arrival {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 16px;
   font-weight: 500;
   color: #ddd6fe;
 }
@@ -1354,7 +1354,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .map-house-sheet-sold {
   display: inline-block;
   margin-top: 8px;
-  font-size: 0.8rem;
+  font-size: 16px;
   font-weight: 700;
   color: #f87171;
 }

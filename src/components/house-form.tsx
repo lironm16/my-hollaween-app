@@ -266,7 +266,7 @@ export function HouseForm({
     >
       <FormSection title="הבית">
         <div>
-          <p className="mb-2 text-sm font-medium">שם הבית</p>
+          <p className="mb-2 text-base font-medium">שם הבית</p>
           <Input
             required
             value={form.name}
@@ -279,7 +279,7 @@ export function HouseForm({
             placeholder="בית משפחת לוי, או בחרו הצעה"
             className="h-10 bg-[#1d1028]"
           />
-          <p className="mt-2 text-sm text-violet-300">הצעות לשם — לחיצה ממלאת את השדה</p>
+          <p className="mt-2 text-base text-violet-300">הצעות לשם — לחיצה ממלאת את השדה</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {HOUSE_THEMES.map((theme) => {
               const selected = nameMatchesTheme(form.name, theme);
@@ -290,8 +290,8 @@ export function HouseForm({
                   onClick={() => applyNameSuggestion(theme)}
                   className={
                     selected
-                      ? "rounded-full bg-orange-500 px-3 py-1.5 text-sm font-medium text-black"
-                      : "rounded-full bg-[#1d1028] px-3 py-1.5 text-sm text-orange-100 ring-1 ring-orange-500/30"
+                      ? "rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
+                      : "rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
                   }
                 >
                   {suggestedHouseName(theme)}
@@ -313,12 +313,12 @@ export function HouseForm({
         </Field>
         <div>
           <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="text-sm font-medium">סיכה על המפה</p>
+            <p className="text-base font-medium">סיכה על המפה</p>
             <Button type="button" size="sm" variant="outline" onClick={useMyLocation}>
               {locating ? "מאתרים…" : "המיקום שלי"}
             </Button>
           </div>
-          <p className="mb-2 text-sm text-violet-300">
+          <p className="mb-2 text-base text-violet-300">
             אחרי בחירת כתובת הסיכה זזה לשם. אפשר לגרור אותה לכניסה המדויקת.
           </p>
           <div className="relative z-0 isolate h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/30">
@@ -328,7 +328,7 @@ export function HouseForm({
               onPick={(lat, lng) => void syncFromPin(lat, lng)}
             />
           </div>
-          <p className="mt-1 text-sm text-violet-300">
+          <p className="mt-1 text-base text-violet-300">
             מיקום: {form.lat.toFixed(5)}, {form.lng.toFixed(5)}
           </p>
         </div>
@@ -342,8 +342,8 @@ export function HouseForm({
       </FormSection>
       <FormSection title="מתי פתוחים">
         <div className="space-y-3">
-          <p className="text-sm font-medium">שעות ב־31 באוקטובר</p>
-          <p className="text-sm text-violet-300">
+          <p className="text-base font-medium">שעות ב־31 באוקטובר</p>
+          <p className="text-base text-violet-300">
             הבתים פתוחים רק בליל האלווין. אפשר כמה חלונות בערב (למשל 17:00–18:00, 19:00–20:00) אם
             יוצאים באמצע לטריק-אור-טריט. ליציאה ספונטנית — השתמשו בהקפאה לשעה במסך העריכה.
           </p>
@@ -353,13 +353,13 @@ export function HouseForm({
               className="space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20"
             >
               <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-medium text-orange-100">
+                <p className="text-base font-medium text-orange-100">
                   {hourWindows.length === 1 ? "חלון שעות" : `חלון ${index + 1}`}
                 </p>
                 {hourWindows.length > 1 ? (
                   <button
                     type="button"
-                    className="text-sm text-violet-300 underline-offset-2 hover:underline"
+                    className="text-base text-violet-300 underline-offset-2 hover:underline"
                     onClick={() => removeHourWindow(index)}
                   >
                     הסרה
@@ -387,7 +387,7 @@ export function HouseForm({
           {hourWindows.length < MAX_HOUR_WINDOWS ? (
             <button
               type="button"
-              className="text-sm font-medium text-orange-300 underline-offset-2 hover:underline"
+              className="text-base font-medium text-orange-300 underline-offset-2 hover:underline"
               onClick={addHourWindow}
             >
               + הוספת חלון שעות
@@ -397,8 +397,8 @@ export function HouseForm({
       </FormSection>
       <FormSection title="מה יפגשו בבית">
         <div>
-          <p className="mb-2 text-sm font-medium">רמת פחד</p>
-          <p className="mb-2 text-sm text-violet-300">
+          <p className="mb-2 text-base font-medium">רמת פחד</p>
+          <p className="mb-2 text-base text-violet-300">
             לילדים, קצת מפחיד או מפחיד — ואם אין קישוט בחוץ, בחרו לא מקושט
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -407,8 +407,8 @@ export function HouseForm({
               onClick={() => setDecorLevel("none")}
               className={
                 undecorated
-                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-sm font-medium text-black"
-                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-sm text-orange-100 ring-1 ring-orange-500/30"
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
               }
             >
               <ScareSign level="none" className="size-6" />
@@ -421,8 +421,8 @@ export function HouseForm({
                 onClick={() => pickScare(level)}
                 className={
                   !undecorated && form.scareLevel === level
-                    ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-sm font-medium text-black"
-                    : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-sm text-orange-100 ring-1 ring-orange-500/30"
+                    ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
+                    : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
                 }
               >
                 <ScareSign level={level} className="size-6" />
@@ -432,8 +432,8 @@ export function HouseForm({
           </div>
         </div>
         <div>
-          <p className="mb-2 text-sm font-medium">ממתקים</p>
-          <p className="mb-2 text-sm text-violet-300">
+          <p className="mb-2 text-base font-medium">ממתקים</p>
+          <p className="mb-2 text-base text-violet-300">
             ירוק יש, כתום מעט, אדום נגמר, אפור בלי ממתקים
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -444,8 +444,8 @@ export function HouseForm({
                 onClick={() => pickCandy(tone.id)}
                 className={
                   candy === tone.id
-                    ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-sm font-medium text-black"
-                    : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-sm text-orange-100 ring-1 ring-orange-500/30"
+                    ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
+                    : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
                 }
               >
                 <CandySign tone={tone.id} className="size-6" />
@@ -461,15 +461,15 @@ export function HouseForm({
               : "space-y-2 rounded-xl bg-[#1d1028] p-3 opacity-45 ring-1 ring-orange-500/15"
           }
         >
-          <p className="text-sm font-medium text-orange-100">רגישויות והתאמות</p>
-          <p className="text-sm text-violet-300">
+          <p className="text-base font-medium text-orange-100">רגישויות והתאמות</p>
+          <p className="text-base text-violet-300">
             {candyOffered
               ? "סמנו מה יש בבית לילדים עם רגישויות"
               : "בחרו יש או מעט ממתקים כדי לסמן רגישויות"}
           </p>
           <div className="space-y-2">
             {SENSITIVITY_OPTIONS.map((id) => (
-              <label key={id} className="flex items-center gap-2 text-sm text-orange-50">
+              <label key={id} className="flex items-center gap-2 text-base text-orange-50">
                 <input
                   type="checkbox"
                   className="size-4 accent-orange-500"
@@ -492,7 +492,7 @@ export function HouseForm({
         </Field>
       </FormSection>
       <FormSection title="הכניסה">
-        <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-sm ring-1 ring-orange-500/20">
+        <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-base ring-1 ring-orange-500/20">
           <input
             type="checkbox"
             className="mt-1 size-4 accent-orange-500"
@@ -504,7 +504,7 @@ export function HouseForm({
               <StrollerSign />
               נגיש
             </span>
-            <span className="block text-sm text-violet-300">
+            <span className="block text-base text-violet-300">
               בלי מדרגות בכניסה, מתאים לעגלה או לכיסא גלגלים
             </span>
           </span>
@@ -536,7 +536,7 @@ function FormSection({
 }) {
   return (
     <section className="space-y-4">
-      <h2 className="border-b border-orange-500/25 pb-1 text-sm font-semibold text-orange-200">
+      <h2 className="border-b border-orange-500/25 pb-1 text-base font-semibold text-orange-200">
         {title}
       </h2>
       {children}

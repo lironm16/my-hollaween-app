@@ -7,9 +7,9 @@ export default function StrollerPreviewPage() {
     <div className="min-h-dvh bg-[#140a1c] px-4 py-6 text-orange-50" dir="rtl">
       <div className="mx-auto max-w-lg space-y-6">
         <header className="space-y-3">
-          <p className="text-sm text-violet-300">{config.appName} · בחירת אייקון</p>
+          <p className="text-base text-violet-300">{config.appName} · בחירת אייקון</p>
           <h1 className="text-2xl font-semibold text-orange-100">איזה עגלה יותר ברורה?</h1>
-          <p className="text-sm text-violet-200">
+          <p className="text-base text-violet-200">
             בפופאפ עכשיו: מספר 1, העגלה מהתמונה. כתבו מספר אחר אם תרצו להחליף.
           </p>
           <PreviewNav current="/preview/strollers" />
@@ -29,10 +29,10 @@ export default function StrollerPreviewPage() {
                     <h2 className="text-base font-medium text-orange-100">
                       {option.number}. {option.name}
                     </h2>
-                    <p className="text-sm text-violet-300">{option.blurb}</p>
+                    <p className="text-base text-violet-300">{option.blurb}</p>
                   </div>
                   {option.current ? (
-                    <span className="shrink-0 rounded-full bg-orange-500 px-2 py-0.5 text-sm font-medium text-black">
+                    <span className="shrink-0 rounded-full bg-orange-500 px-2 py-0.5 text-base font-medium text-black">
                       בפופאפ עכשיו
                     </span>
                   ) : null}
@@ -62,7 +62,7 @@ export default function StrollerPreviewPage() {
                     </span>
                   </div>
                 </div>
-                <p className="text-sm text-violet-400">גדול · תג · סיכה</p>
+                <p className="text-base text-violet-400">גדול · תג · סיכה</p>
               </section>
             );
           })}
