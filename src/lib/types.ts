@@ -146,6 +146,8 @@ export type PushSubscriptionRecord = {
   endpoint: string;
   keys: { p256dh: string; auth: string };
   createdAt: string;
+  /** Topics this device wants. Missing means all (older subscriptions). */
+  topics?: Array<"newHouse" | "houseStatus" | "admin">;
 };
 
 export type VapidKeys = {
@@ -159,4 +161,20 @@ export type DbFile = {
   updatedAt: string;
   pushSubscriptions?: PushSubscriptionRecord[];
   vapid?: VapidKeys;
+  pushSettings?: {
+    templates?: Partial<
+      Record<
+        | "onBreak"
+        | "backFromBreak"
+        | "houseAdded"
+        | "closed"
+        | "decorOnly"
+        | "candyLow"
+        | "candyOut"
+        | "candyRestock"
+        | "backActive",
+        { enabled: boolean; title: string; body: string }
+      >
+    >;
+  };
 };

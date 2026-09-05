@@ -23,8 +23,9 @@ export async function POST(request: Request) {
   try {
     const house = await submitHouse(parsed.data);
     return NextResponse.json({
-      house: toPublicHouse(house),
-      editCode: house.editCode,
+      house: toPublicHouse(house.house),
+      editCode: house.house.editCode,
+      push: house.push,
     });
   } catch (error) {
     const geo = geocodeHttpError(error);

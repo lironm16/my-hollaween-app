@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { Camera, Snowflake } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Bell, Camera, CheckCircle2, Snowflake } from "lucide-react";
 import { toast } from "sonner";
 import { HouseForm } from "@/components/house-form";
+import { PushNotice } from "@/components/push-notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { visitLabels, visitShort, stockLabels, treatLabels, decorShort, scareShort } from "@/lib/labels";
@@ -34,6 +35,12 @@ import {
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { ScareSign } from "@/components/scare-glyphs";
+import { DEFAULT_PUSH_TEMPLATES, type PushKind } from "@/lib/push-templates";
+
+type PushOffer = { kind: PushKind; title: string; body: string };
+type PushNoticeState =
+  | { mode: "offer"; offer: PushOffer }
+  | { mode: "auto" | "sent"; title: string; body: string };
 
 type Props = {
   house: PublicHouse;
@@ -54,10 +61,18 @@ export function NightDesk({
   const [busy, setBusy] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [freezeUntil, setFreezeUntil] = useState("");
+  const [notice, setNotice] = useState<PushNoticeState | null>(null);
+  const [offerBusy, setOfferBusy] = useState(false);
+  const noticeRef = useRef<HTMLDivElement>(null);
   const frozen = isFrozen(house);
   const freezeText = freezeLabel(house);
   const visit = effectiveVisit(house);
   const sensitivities = SENSITIVITY_OPTIONS.filter((id) => house.treats.includes(id));
+
+  useEffect(() => {
+    if (!notice) return;
+    noticeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [notice]);
 
   async function save(patch: NightPatch & Partial<HouseInput>, options?: { quiet?: boolean }) {
     if (!options?.quiet) setBusy(true);
@@ -70,20 +85,70 @@ export function NightDesk({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(admin ? patch : { ...patch, editCode }),
       });
-      const data = await readApiJson<{ error?: string; house?: PublicHouse }>(res);
+      const data = await readApiJson<{
+        error?: string;
+        house?: PublicHouse;
+        push?: {
+          kind?: PushKind;
+          autoSent?: boolean;
+          title?: string;
+          body?: string;
+          offer?: PushOffer;
+        };
+      }>(res);
       if (!res.ok || !data.house) {
         toast.error(data.error ?? "העדכון נכשל");
         return false;
       }
       onUpdated(data.house);
       notifyCatalogChanged();
-      if (!options?.quiet) toast.success("נשמר");
+      if (data.push?.autoSent) {
+        setNotice({
+          mode: "auto",
+          title: data.push.title ?? "",
+          body: data.push.body ?? "",
+        });
+        if (!options?.quiet) toast.success("נשמר · התראה נשלחה לשכונה");
+      } else if (data.push?.offer) {
+        setNotice({ mode: "offer", offer: data.push.offer });
+        if (!options?.quiet) toast.success("נשמר — אפשר לשלוח התראה");
+      } else if (data.push?.kind && !data.push.autoSent && !data.push.offer) {
+        setNotice(null);
+        if (!options?.quiet) toast.success("נשמר · סוג ההתראה כבוי אצל המנהלים");
+      } else if (!options?.quiet) {
+        setNotice(null);
+        toast.success("נשמר");
+      }
       return true;
     } catch {
       toast.error("אין קשר לשרת");
       return false;
     } finally {
       if (!options?.quiet) setBusy(false);
+    }
+  }
+
+  async function sendOffer() {
+    if (notice?.mode !== "offer") return;
+    const offer = notice.offer;
+    setOfferBusy(true);
+    try {
+      const res = await fetch(`/api/houses/${encodeURIComponent(house.id)}/notify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ editCode, kind: offer.kind }),
+      });
+      const data = await readApiJson<{ error?: string; sent?: number }>(res);
+      if (!res.ok) {
+        toast.error(data.error ?? "השליחה נכשלה");
+        return;
+      }
+      toast.success(`התראה נשלחה ל־${data.sent ?? 0} מכשירים`);
+      setNotice({ mode: "sent", title: offer.title, body: offer.body });
+    } catch {
+      toast.error("אין קשר לשרת");
+    } finally {
+      setOfferBusy(false);
     }
   }
 
@@ -138,6 +203,58 @@ export function NightDesk({
 
   return (
     <div className="space-y-4">
+      {notice ? (
+        <div
+          ref={noticeRef}
+          className="space-y-3 rounded-2xl bg-[#1d1028] p-3.5 ring-1 ring-orange-400/35"
+        >
+          {notice.mode === "offer" ? (
+            <>
+              <div className="flex items-start gap-2">
+                <Bell className="mt-0.5 size-4 shrink-0 text-orange-300" />
+                <div className="min-w-0 space-y-0.5">
+                  <p className="text-sm font-semibold text-orange-100">לשלוח התראה לשכונה?</p>
+                  <p className="text-xs text-violet-300">
+                    {DEFAULT_PUSH_TEMPLATES[notice.offer.kind].label} · נשלח רק אם תלחצו על הכפתור
+                  </p>
+                </div>
+              </div>
+              <PushNotice
+                payload={{ title: notice.offer.title, body: notice.offer.body, url: "/" }}
+              />
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  disabled={offerBusy}
+                  className="bg-orange-500 text-black hover:bg-orange-400"
+                  onClick={() => void sendOffer()}
+                >
+                  <Bell className="size-4" />
+                  {offerBusy ? "שולחים…" : "שלחו התראה לשכונה"}
+                </Button>
+                <Button type="button" variant="outline" disabled={offerBusy} onClick={() => setNotice(null)}>
+                  לא עכשיו
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-400" />
+                <p className="text-sm font-semibold text-emerald-200">
+                  {notice.mode === "auto"
+                    ? "נשלחה התראה אוטומטית לשכונה"
+                    : "ההתראה נשלחה לשכונה"}
+                </p>
+              </div>
+              {notice.title ? (
+                <PushNotice payload={{ title: notice.title, body: notice.body, url: "/" }} />
+              ) : null}
+            </>
+          )}
+        </div>
+      ) : null}
+
       <Section title="סטטוס הערב" hint="מה הילדים צריכים לדעת עכשיו">
         <div className="grid grid-cols-3 gap-1.5">
           {VISIT_STATES.map((state) => (

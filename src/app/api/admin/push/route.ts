@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "צריך כותרת וטקסט." }, { status: 400 });
   }
   try {
-    const payload = sanitizePushPayload({ title, body, url: "/" });
+    const payload = sanitizePushPayload({ title, body, url: "/", topic: "admin" });
     const result = await broadcastPush(payload);
     return NextResponse.json({ ok: true, ...result, title: payload.title, body: payload.body });
   } catch {

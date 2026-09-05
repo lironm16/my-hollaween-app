@@ -1,0 +1,45 @@
+import type { PushKind } from "@/lib/push-templates";
+
+export const PUSH_TOPICS = ["newHouse", "houseStatus", "admin"] as const;
+export type PushTopic = (typeof PUSH_TOPICS)[number];
+export type PushTopicPrefs = Record<PushTopic, boolean>;
+
+export const DEFAULT_PUSH_TOPIC_PREFS: PushTopicPrefs = {
+  newHouse: true,
+  houseStatus: true,
+  admin: true,
+};
+
+export function topicsFromPrefs(prefs: PushTopicPrefs): PushTopic[] {
+  return PUSH_TOPICS.filter((topic) => prefs[topic]);
+}
+
+export function anyPushTopicOn(prefs: PushTopicPrefs) {
+  return PUSH_TOPICS.some((topic) => prefs[topic]);
+}
+
+export function normalizePushTopics(input: unknown): PushTopic[] | undefined {
+  if (!Array.isArray(input)) return undefined;
+  const allowed = new Set<PushTopic>(PUSH_TOPICS);
+  const seen = new Set<PushTopic>();
+  for (const item of input) {
+    if (typeof item === "string" && allowed.has(item as PushTopic)) {
+      seen.add(item as PushTopic);
+    }
+  }
+  return PUSH_TOPICS.filter((topic) => seen.has(topic));
+}
+
+export function topicForKind(kind: PushKind): PushTopic {
+  return kind === "houseAdded" ? "newHouse" : "houseStatus";
+}
+
+/** Older records with no topics list still get every alert. */
+export function subscriptionAllowsTopic(
+  sub: { topics?: PushTopic[] },
+  topic: PushTopic | undefined,
+) {
+  if (!topic) return true;
+  if (!sub.topics) return true;
+  return sub.topics.includes(topic);
+}

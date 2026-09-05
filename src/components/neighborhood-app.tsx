@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { List, MapPinned, RefreshCw, Route, WifiOff } from "lucide-react";
 import { toast } from "sonner";
-import { AdminBroadcast } from "@/components/admin-broadcast";
+import { AdminPushPanel } from "@/components/admin-push-panel";
 import { AppHeader } from "@/components/app-header";
 import {
   FilterOption,
@@ -478,7 +478,7 @@ export function NeighborhoodApp({
           ) : (
             <p className="mt-1 text-[11px] text-violet-300">מוקפאים מופיעים במפה כסיכות שקופות. לחצו על בית לעריכה או מחיקה.</p>
           )}
-          <AdminBroadcast />
+          <AdminPushPanel />
         </div>
       ) : null}
       <div

@@ -43,7 +43,7 @@ export function AdminBroadcast() {
         void send();
       }}
     >
-      <p className="text-sm font-medium text-amber-100">הודעה לכל מי שהפעיל התראות</p>
+      <p className="text-sm font-medium text-amber-100">הודעה למי שבחר הודעות מהמנהלים</p>
       <Input
         value={title}
         onChange={(event) => setTitle(event.target.value)}
