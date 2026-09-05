@@ -7,7 +7,7 @@ export default function DecorPreviewPage() {
     <div className="min-h-dvh bg-[#140a1c] px-4 py-6 text-orange-50" dir="rtl">
       <div className="mx-auto max-w-lg space-y-6">
         <header className="space-y-3">
-          <p className="text-xs text-violet-300">{config.appName} · בחירת אייקון</p>
+          <p className="text-sm text-violet-300">{config.appName} · בחירת אייקון</p>
           <h1 className="text-2xl font-semibold text-orange-100">איזה קישוט יותר ברור?</h1>
           <p className="text-sm text-violet-200">
             ירוק = קריצה, כתום = חגיגה, אדום = פיצוץ, אפור עם קו = לא מקושט. בטופס ובדלפק: מספר 1,
@@ -29,13 +29,13 @@ export default function DecorPreviewPage() {
                 <img className="pin-scare" src="/icons/pin-scare-mild.png" alt="" />
                 <b className="pin-status is-plenty" />
               </div>
-              <span className="text-[11px] text-violet-300">מקושט</span>
+              <span className="text-sm text-violet-300">מקושט</span>
             </div>
             <div className="flex flex-col items-center gap-2">
               <div className="house-pin is-undecorated relative" style={{ background: "#94a3b8" }}>
                 <b className="pin-status is-plenty" />
               </div>
-              <span className="text-[11px] text-violet-300">בלי קישוט</span>
+              <span className="text-sm text-violet-300">בלי קישוט</span>
             </div>
             <div className="flex flex-col items-center gap-2">
               <div
@@ -49,7 +49,7 @@ export default function DecorPreviewPage() {
                   <i className="pin-apt-dot is-low" />
                 </span>
               </div>
-              <span className="text-[11px] text-violet-300">לפני הקשה</span>
+              <span className="text-sm text-violet-300">לפני הקשה</span>
             </div>
             <div className="flex flex-col items-center gap-2">
               <div
@@ -106,7 +106,7 @@ export default function DecorPreviewPage() {
                   <span>💀</span>
                 </div>
               </div>
-              <span className="text-[11px] text-violet-300">אחרי הקשה</span>
+              <span className="text-sm text-violet-300">אחרי הקשה</span>
             </div>
           </div>
         </section>
@@ -125,7 +125,7 @@ export default function DecorPreviewPage() {
                     {option.number}. {option.name}
                   </h2>
                   {"current" in option && option.current ? (
-                    <span className="shrink-0 rounded-full bg-orange-500 px-2 py-0.5 text-[11px] font-medium text-black">
+                    <span className="shrink-0 rounded-full bg-orange-500 px-2 py-0.5 text-sm font-medium text-black">
                       בטופס עכשיו
                     </span>
                   ) : null}
@@ -134,7 +134,7 @@ export default function DecorPreviewPage() {
                   {DECOR_TONES.map((tone) => (
                     <div key={tone.id} className="flex flex-col items-center gap-1">
                       <DecorSign Glyph={Glyph} level={tone.id} className="size-10" />
-                      <span className="text-[10px] text-violet-300">{tone.label}</span>
+                      <span className="text-sm text-violet-300">{tone.label}</span>
                     </div>
                   ))}
                 </div>

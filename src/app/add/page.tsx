@@ -75,7 +75,7 @@ export default function AddPage() {
             </div>
             <PersistNote />
             <CodesCopy editCode={done.editCode} />
-            <p className="text-xs text-amber-200">
+            <p className="text-sm text-amber-200">
               שמרו את קוד העריכה — אפשר לשתף אותו עם בני משפחה כדי לעדכן מלאי מהכרטיס של הבית.
               עותק נשמר גם בטלפון הזה לנוחות שלכם.
             </p>

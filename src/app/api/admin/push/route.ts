@@ -13,7 +13,11 @@ export async function POST(request: Request) {
   if (!rateLimit(`admin-push:${clientKey(request.headers)}`, 12, 10 * 60 * 1000)) {
     return NextResponse.json({ error: "יותר מדי שליחות. המתינו כמה דקות." }, { status: 429 });
   }
-  const json = (await request.json().catch(() => null)) as { title?: string; body?: string } | null;
+  const json = (await request.json().catch(() => null)) as {
+    title?: string;
+    body?: string;
+    includeEndpoint?: string;
+  } | null;
   const title = json?.title?.trim() ?? "";
   const body = json?.body?.trim() ?? "";
   if (!title || !body) {
@@ -21,7 +25,11 @@ export async function POST(request: Request) {
   }
   try {
     const payload = sanitizePushPayload({ title, body, url: "/", topic: "admin" });
-    const result = await broadcastPush(payload);
+    const includeEndpoint =
+      typeof json?.includeEndpoint === "string" && json.includeEndpoint.length > 20
+        ? json.includeEndpoint
+        : undefined;
+    const result = await broadcastPush(payload, includeEndpoint);
     return NextResponse.json({ ok: true, ...result, title: payload.title, body: payload.body });
   } catch {
     return NextResponse.json({ error: "השליחה נכשלה." }, { status: 500 });

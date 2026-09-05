@@ -112,7 +112,7 @@ export function MapLegend() {
             {ROWS.map((row) => (
               <li key={row.key} className="flex items-center gap-2.5">
                 <div className="grid size-9 shrink-0 place-items-center">{row.node}</div>
-                <span className="text-[13px] leading-snug text-violet-100">{row.label}</span>
+                <span className="text-sm leading-snug text-violet-100">{row.label}</span>
               </li>
             ))}
           </ul>

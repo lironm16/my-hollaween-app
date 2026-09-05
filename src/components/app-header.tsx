@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { HousePlus, LogOut, Menu, Pencil, Shield } from "lucide-react";
+import { Bell, HousePlus, LogOut, Menu, Pencil, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
 import { PushAlertsButton } from "@/components/push-alerts-button";
@@ -61,7 +61,7 @@ export function AppHeader({
           />
           <span className="min-w-0">
             <BrandTitle />
-            <span className="mt-0.5 block truncate text-[13px] text-violet-200/80">
+            <span className="mt-0.5 block truncate text-sm text-violet-200/80">
               {config.neighborhood}
             </span>
           </span>
@@ -112,17 +112,30 @@ export function AppHeader({
               עריכת בית
             </Link>
             {admin ? (
-              <button
-                type="button"
-                onClick={() => void onLogout()}
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "lg" }),
-                  "h-11 justify-start gap-2 border-orange-400/40 text-base text-orange-100",
-                )}
-              >
-                <LogOut className="size-4" />
-                יציאה
-              </button>
+              <>
+                <Link
+                  href="/admin/alerts"
+                  onClick={() => setMenuOpen(false)}
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "lg" }),
+                    "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+                  )}
+                >
+                  <Bell className="size-4" />
+                  התראות לשכונה
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => void onLogout()}
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "lg" }),
+                    "h-11 justify-start gap-2 border-orange-400/40 text-base text-orange-100",
+                  )}
+                >
+                  <LogOut className="size-4" />
+                  יציאה
+                </button>
+              </>
             ) : (
               <Link
                 href="/admin"

@@ -92,7 +92,7 @@ export default function PushCopyTryPage() {
     <div className="min-h-dvh bg-[#140a1c] px-4 py-6 text-orange-50" dir="rtl">
       <div className="mx-auto max-w-lg space-y-6">
         <header className="space-y-3">
-          <p className="text-xs text-violet-300">{config.appName} · ניסוי כותרת</p>
+          <p className="text-sm text-violet-300">{config.appName} · ניסוי כותרת</p>
           <h1 className="text-2xl font-semibold text-orange-100">כינוי הבית בכותרת</h1>
           <p className="text-sm text-violet-200">
             כינוי בכותרת, ואז משפט קצר. השורה האחרונה תמיד רחוב ושכונה. «מקושט בלי ממתקים» ו«נסגר» הם שני
@@ -106,7 +106,7 @@ export default function PushCopyTryPage() {
           <div className="space-y-4 rounded-2xl bg-[#0c0612] p-4 ring-1 ring-white/8">
             {backScenes.map((scene) => (
               <div key={scene.id} id={scene.id} className="space-y-2">
-                <p className="text-[11px] text-violet-400">{scene.label}</p>
+                <p className="text-sm text-violet-400">{scene.label}</p>
                 <PushNotice payload={scene.payload} time={scene.time} />
               </div>
             ))}
@@ -118,7 +118,7 @@ export default function PushCopyTryPage() {
           <div className="space-y-4 rounded-2xl bg-[#0c0612] p-4 ring-1 ring-white/8">
             {visitChoiceScenes.map((scene) => (
               <div key={scene.id} id={scene.id} className="space-y-2">
-                <p className="text-[11px] text-violet-400">{scene.label}</p>
+                <p className="text-sm text-violet-400">{scene.label}</p>
                 <PushNotice payload={scene.payload} time={scene.time} />
               </div>
             ))}
@@ -130,7 +130,7 @@ export default function PushCopyTryPage() {
           <div className="space-y-4 rounded-2xl bg-[#0c0612] p-4 ring-1 ring-white/8">
             {breakScenes.map((scene) => (
               <div key={scene.id} id={scene.id} className="space-y-2">
-                <p className="text-[11px] text-violet-400">{scene.label}</p>
+                <p className="text-sm text-violet-400">{scene.label}</p>
                 <PushNotice payload={scene.payload} time={scene.time} />
               </div>
             ))}

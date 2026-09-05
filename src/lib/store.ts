@@ -709,13 +709,15 @@ export async function removePushSubscription(endpoint: string) {
   });
 }
 
-export async function broadcastPush(payload: PushPayload) {
+export async function broadcastPush(payload: PushPayload, includeEndpoint?: string) {
   const { vapid, subscriptions } = await runSyncedWrite((db) => {
     const vapid = ensureVapid(db);
     return {
       vapid,
-      subscriptions: (db.pushSubscriptions ?? []).filter((item) =>
-        subscriptionAllowsTopic(item, payload.topic),
+      subscriptions: (db.pushSubscriptions ?? []).filter(
+        (item) =>
+          subscriptionAllowsTopic(item, payload.topic) ||
+          (includeEndpoint !== undefined && item.endpoint === includeEndpoint),
       ),
     };
   });

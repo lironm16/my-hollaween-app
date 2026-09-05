@@ -199,9 +199,9 @@ export default function EditPage() {
               </Button>
             </div>
           ) : picked && admin ? (
-            <p className="text-xs text-emerald-300">מצב מנהל — אפשר לערוך בלי קוד.</p>
+            <p className="text-sm text-emerald-300">מצב מנהל — אפשר לערוך בלי קוד.</p>
           ) : picked && ownedMatch ? (
-            <p className="text-xs text-emerald-300">הבית שמור במכשיר הזה — נפתח לעריכה.</p>
+            <p className="text-sm text-emerald-300">הבית שמור במכשיר הזה — נפתח לעריכה.</p>
           ) : null}
         </div>
         {house ? (

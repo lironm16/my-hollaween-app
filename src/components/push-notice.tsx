@@ -31,12 +31,12 @@ export function PushNotice({
       />
       <div className="min-w-0 flex-1 text-right">
         <div className="flex items-baseline justify-between gap-3">
-          <p className="text-[12px] font-medium tracking-wide text-white/65">{config.brandHe}</p>
-          <p className="text-[11px] text-white/40">{time}</p>
+          <p className="text-sm font-medium tracking-wide text-white/65">{config.brandHe}</p>
+          <p className="text-sm text-white/40">{time}</p>
         </div>
         <p className="mt-0.5 text-[15px] font-semibold leading-snug text-white">{payload.title}</p>
         {payload.body ? (
-          <p className="mt-0.5 whitespace-pre-line text-[13px] leading-snug text-white/78">{payload.body}</p>
+          <p className="mt-0.5 whitespace-pre-line text-sm leading-snug text-white/78">{payload.body}</p>
         ) : null}
       </div>
     </article>

@@ -11,7 +11,7 @@ export default function SensitivitiesPreviewPage() {
     <div className="min-h-dvh bg-[#140a1c] px-4 py-6 text-orange-50" dir="rtl">
       <div className="mx-auto max-w-lg space-y-6">
         <header className="space-y-3">
-          <p className="text-xs text-violet-300">{config.appName} · בחירת אייקון</p>
+          <p className="text-sm text-violet-300">{config.appName} · בחירת אייקון</p>
           <h1 className="text-2xl font-semibold text-orange-100">איזה סימון רגישויות יותר ברור?</h1>
           <p className="text-sm text-violet-200">
             ללא גלוטן · ללא אגוזים · ללא שומשום. הקו דק, מקצה לקצה — כמו בתמונה המקורית, רק דק יותר.
@@ -31,10 +31,10 @@ export default function SensitivitiesPreviewPage() {
                   <h2 className="text-base font-medium text-orange-100">
                     {set.number}. {set.name}
                   </h2>
-                  <p className="text-xs text-violet-300">{set.blurb}</p>
+                  <p className="text-sm text-violet-300">{set.blurb}</p>
                 </div>
                 {"current" in set && set.current ? (
-                  <span className="shrink-0 rounded-full bg-orange-500 px-2 py-0.5 text-[11px] font-medium text-black">
+                  <span className="shrink-0 rounded-full bg-orange-500 px-2 py-0.5 text-sm font-medium text-black">
                     בפופאפ עכשיו
                   </span>
                 ) : null}
@@ -59,7 +59,7 @@ export default function SensitivitiesPreviewPage() {
                           className="size-10"
                         />
                       )}
-                      <span className="max-w-16 text-center text-[10px] leading-tight text-violet-300">
+                      <span className="max-w-16 text-center text-sm leading-tight text-violet-300">
                         {kind.label}
                       </span>
                     </div>

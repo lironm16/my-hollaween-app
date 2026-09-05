@@ -152,7 +152,7 @@ export function AddressField({ value, onChange, onSelect, confirmed, disabled }:
                   <MapPin className="mt-0.5 size-3.5 shrink-0 text-orange-400" />
                   <span>
                     <span className="block">{hit.label}</span>
-                    {hint ? <span className="block text-[11px] text-violet-300">{hint}</span> : null}
+                    {hint ? <span className="block text-sm text-violet-300">{hint}</span> : null}
                   </span>
                 </button>
               </li>
@@ -162,11 +162,11 @@ export function AddressField({ value, onChange, onSelect, confirmed, disabled }:
         </ul>
       ) : null}
       {confirmed ? (
-        <p className="mt-1 text-xs text-emerald-300">כתובת מאומתת על המפה</p>
+        <p className="mt-1 text-sm text-emerald-300">כתובת מאומתת על המפה</p>
       ) : value.trim().length >= 3 ? (
-        <p className="mt-1 text-xs text-amber-200">בחרו כתובת מהרשימה, או גררו את הסיכה לבית הנכון</p>
+        <p className="mt-1 text-sm text-amber-200">בחרו כתובת מהרשימה, או גררו את הסיכה לבית הנכון</p>
       ) : (
-        <p className="mt-1 text-xs text-violet-300">הכתובת חייבת להיות כתובת אמיתית בשכונה</p>
+        <p className="mt-1 text-sm text-violet-300">הכתובת חייבת להיות כתובת אמיתית בשכונה</p>
       )}
     </div>
   );
