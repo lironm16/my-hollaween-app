@@ -996,9 +996,11 @@
 }
 
 .house-pin-route {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding-top: 24px;
   gap: 0;
   overflow: visible;
   isolation: isolate;
@@ -1009,9 +1011,14 @@
 }
 
 .house-pin-route .route-stop-pin {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 8;
   flex-shrink: 0;
-  z-index: 6;
-  margin-bottom: -8px;
+  margin: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .house-pin-fan > .route-stop-pin {
