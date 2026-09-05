@@ -20,7 +20,7 @@ export function CodesCopy({ editCode }: { editCode?: string }) {
     <div className="space-y-2 rounded-xl bg-black/35 p-3 ring-1 ring-orange-500/20">
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
-          <p className="text-sm text-violet-300">קוד עריכה למשפחה</p>
+          <p className="text-base text-violet-300">קוד עריכה למשפחה</p>
           <p className="truncate font-mono text-lg tracking-wide text-orange-200">{editCode}</p>
         </div>
         <Button

@@ -52,7 +52,7 @@ export function HouseList({
     return (
       <div className="px-4 py-16 text-center text-violet-200">
         <p className="font-display text-2xl text-orange-300">אין בתים שמתאימים לסינון</p>
-        <p className="mt-2 text-sm">נסו לבטל סינון בתפריטי שכונה, רמת פחד, עוד או רגישויות.</p>
+        <p className="mt-2 text-base">נסו לבטל סינון בתפריטי שכונה, רמת פחד, עוד או רגישויות.</p>
       </div>
     );
   }
@@ -66,10 +66,10 @@ export function HouseList({
           placeholder="חיפוש לפי שם או רחוב…"
           className="h-10 min-w-0 flex-1 bg-[#1d1028] text-base"
         />
-        <span className="shrink-0 text-sm text-violet-300">{houses.length} בתים</span>
+        <span className="shrink-0 text-base text-violet-300">{houses.length} בתים</span>
       </div>
       {origin ? (
-        <p className="text-sm text-violet-300">ממוין לפי מרחק מכם</p>
+        <p className="text-base text-violet-300">ממוין לפי מרחק מכם</p>
       ) : null}
       {filtered.length === 0 ? (
         <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לחיפוש.</p>

@@ -55,8 +55,6 @@
     --container-lg: 32rem;
     --container-3xl: 48rem;
     --container-6xl: 72rem;
-    --text-sm: 0.875rem;
-    --text-sm--line-height: calc(1.25 / 0.875);
     --text-base: 1rem;
     --text-base--line-height: calc(1.5 / 1);
     --text-lg: 1.125rem;
@@ -1482,10 +1480,6 @@
     font-size: var(--text-lg);
     line-height: var(--tw-leading, var(--text-lg--line-height));
   }
-  .text-sm {
-    font-size: var(--text-sm);
-    line-height: var(--tw-leading, var(--text-sm--line-height));
-  }
   .text-xl {
     font-size: var(--text-xl);
     line-height: var(--tw-leading, var(--text-xl--line-height));
@@ -1978,10 +1972,6 @@
     font-size: var(--text-base);
     line-height: var(--tw-leading, var(--text-base--line-height));
   }
-  .group-data-\[size\=sm\]\/card\:text-sm:is(:where(.group\/card)[data-size="sm"] *) {
-    font-size: var(--text-sm);
-    line-height: var(--tw-leading, var(--text-sm--line-height));
-  }
   .group-data-\[variant\=line\]\/tabs-list\:bg-transparent:is(:where(.group\/tabs-list)[data-variant="line"] *) {
     background-color: transparent;
   }
@@ -2019,9 +2009,9 @@
   .file\:bg-transparent::file-selector-button {
     background-color: transparent;
   }
-  .file\:text-sm::file-selector-button {
-    font-size: var(--text-sm);
-    line-height: var(--tw-leading, var(--text-sm--line-height));
+  .file\:text-base::file-selector-button {
+    font-size: var(--text-base);
+    line-height: var(--tw-leading, var(--text-base--line-height));
   }
   .file\:font-medium::file-selector-button {
     --tw-font-weight: var(--font-weight-medium);
@@ -2476,10 +2466,6 @@
       font-size: var(--text-5xl);
       line-height: var(--tw-leading, var(--text-5xl--line-height));
     }
-    .sm\:text-base {
-      font-size: var(--text-base);
-      line-height: var(--tw-leading, var(--text-base--line-height));
-    }
     .sm\:text-\[1\.55rem\] {
       font-size: 1.55rem;
     }
@@ -2488,12 +2474,6 @@
     }
     .data-\[side\=right\]\:sm\:max-w-sm[data-side="right"] {
       max-width: var(--container-sm);
-    }
-  }
-  @media (width >= 48rem) {
-    .md\:text-sm {
-      font-size: var(--text-sm);
-      line-height: var(--tw-leading, var(--text-sm--line-height));
     }
   }
   .rtl\:translate-x-1\/2:where(:dir(rtl), [dir="rtl"], [dir="rtl"] *) {
@@ -3797,7 +3777,7 @@ svg.leaflet-zoom-animated {
 }
 .house-map-popup-candy {
   margin-top: 6px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   line-height: 1.35;
 }
@@ -3812,7 +3792,7 @@ svg.leaflet-zoom-animated {
 }
 .house-map-popup-arrival {
   margin-top: 2px;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.35;
   color: #e7d4a8;
 }
@@ -4592,7 +4572,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .map-house-sheet-sub,
 .map-house-sheet-arrival {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 16px;
   font-weight: 500;
   color: #ddd6fe;
 }
@@ -4614,7 +4594,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .map-house-sheet-sold {
   display: inline-block;
   margin-top: 8px;
-  font-size: 0.8rem;
+  font-size: 16px;
   font-weight: 700;
   color: #f87171;
 }

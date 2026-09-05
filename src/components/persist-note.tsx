@@ -6,7 +6,7 @@ export function PersistNote({ className }: { className?: string }) {
   return (
     <p
       className={cn(
-        "rounded-xl bg-amber-950/50 px-3 py-2 text-sm text-amber-100 ring-1 ring-amber-500/25",
+        "rounded-xl bg-amber-950/50 px-3 py-2 text-base text-amber-100 ring-1 ring-amber-500/25",
         className,
       )}
     >

@@ -43,13 +43,13 @@ export function AdminBroadcast() {
         void send();
       }}
     >
-      <p className="text-sm font-medium text-amber-100">הודעה למי שבחר הודעות מהמנהלים</p>
+      <p className="text-base font-medium text-amber-100">הודעה למי שבחר הודעות מהמנהלים</p>
       <Input
         value={title}
         onChange={(event) => setTitle(event.target.value)}
         placeholder="כותרת"
         maxLength={80}
-        className="h-9 bg-[#12081a] text-sm"
+        className="h-9 bg-[#12081a] text-base"
       />
       <Textarea
         value={body}
@@ -57,7 +57,7 @@ export function AdminBroadcast() {
         placeholder="למשל: הגשם מתחיל, הממתקים בחוץ עד 21:00"
         maxLength={280}
         rows={2}
-        className="min-h-[4rem] bg-[#12081a] text-sm"
+        className="min-h-[4rem] bg-[#12081a] text-base"
       />
       <Button
         type="submit"

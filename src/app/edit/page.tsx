@@ -156,7 +156,7 @@ export default function EditPage() {
       <AppHeader />
       <main className="relative z-10 mx-auto w-full max-w-lg flex-1 px-4 py-5">
         <h1 className="font-display mb-1 text-2xl text-orange-300">עריכת בית</h1>
-        <p className="mb-4 text-sm text-violet-200">
+        <p className="mb-4 text-base text-violet-200">
           בחרו בית מהרשימה. מנהל או מי שהבית שמור אצלו במכשיר נכנסים ישר לעריכה, בלי קוד.
           מישהו אחר מהמשפחה מזין את קוד העריכה שקיבלה המשפחה.
         </p>
@@ -199,16 +199,16 @@ export default function EditPage() {
               </Button>
             </div>
           ) : picked && admin ? (
-            <p className="text-sm text-emerald-300">מצב מנהל — אפשר לערוך בלי קוד.</p>
+            <p className="text-base text-emerald-300">מצב מנהל — אפשר לערוך בלי קוד.</p>
           ) : picked && ownedMatch ? (
-            <p className="text-sm text-emerald-300">הבית שמור במכשיר הזה — נפתח לעריכה.</p>
+            <p className="text-base text-emerald-300">הבית שמור במכשיר הזה — נפתח לעריכה.</p>
           ) : null}
         </div>
         {house ? (
           <div className="space-y-3">
-            <p className="text-sm font-medium text-orange-100">{houseHeadline(house)}</p>
+            <p className="text-base font-medium text-orange-100">{houseHeadline(house)}</p>
             <CodesCopy editCode={admin ? adminEditCode : editCode} />
-            <p className="text-sm text-violet-200">סטטוס: {statusText(house.status)}</p>
+            <p className="text-base text-violet-200">סטטוס: {statusText(house.status)}</p>
             <NightDesk
               house={house}
               admin={admin}
@@ -228,7 +228,7 @@ export default function EditPage() {
             />
           </div>
         ) : (
-          <p className="text-sm text-violet-300">
+          <p className="text-base text-violet-300">
             הבית לא ברשימה?{" "}
             <Link href="/add" className="text-orange-300 underline">
               הוסיפו בית חדש

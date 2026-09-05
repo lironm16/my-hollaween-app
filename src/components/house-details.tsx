@@ -77,15 +77,15 @@ export function HouseDetails({
   return (
     <div className="space-y-3">
       {visit === "closed" ? (
-        <p className="rounded-lg bg-red-950/40 px-3 py-2 text-sm font-semibold text-red-500">
+        <p className="rounded-lg bg-red-950/40 px-3 py-2 text-base font-semibold text-red-500">
           הבית סגור
         </p>
       ) : visit === "decorOnly" ? (
-        <p className="rounded-lg bg-amber-950/50 px-3 py-2 text-sm text-amber-100">
+        <p className="rounded-lg bg-amber-950/50 px-3 py-2 text-base text-amber-100">
           הבית מקושט ושמחים שתבקרו להסתכל — בלי ממתקים כרגע.
         </p>
       ) : candyOut ? (
-        <p className="rounded-lg bg-red-950/40 px-3 py-2 text-sm font-semibold text-red-500">
+        <p className="rounded-lg bg-red-950/40 px-3 py-2 text-base font-semibold text-red-500">
           נגמר המלאי
         </p>
       ) : null}
@@ -93,7 +93,7 @@ export function HouseDetails({
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
-          <p className={cn("text-violet-200", sheet ? "text-base" : "text-sm")}>{addressLine}</p>
+          <p className="text-base text-violet-200">{addressLine}</p>
         </div>
         {sheet ? null : (
           <div className="flex shrink-0 items-center gap-0.5">
@@ -153,14 +153,14 @@ export function HouseDetails({
           <button
             type="button"
             onClick={() => setShowPhoto(true)}
-            className="w-full rounded-xl bg-[#2a1638] px-3 py-3 text-sm text-amber-100 ring-1 ring-orange-500/20"
+            className="w-full rounded-xl bg-[#2a1638] px-3 py-3 text-base text-amber-100 ring-1 ring-orange-500/20"
           >
             יש תמונת קישוט — לחצו רק אם הרשת פנויה
           </button>
         )
       ) : null}
       {isFrozen(house) ? (
-        <p className="rounded-lg bg-violet-950/70 px-3 py-2 text-sm text-violet-100">
+        <p className="rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
           {freezeLabel(house)} — לא מוצג לילדים במפה הציבורית.
         </p>
       ) : null}
@@ -169,15 +169,15 @@ export function HouseDetails({
         {house.status === "pending" ? <Badge variant="secondary">ממתין לאישור</Badge> : null}
       </div>
       {house.arrival ? (
-        <p className="rounded-lg bg-[#2a1638] px-3 py-2 text-sm text-amber-100">
+        <p className="rounded-lg bg-[#2a1638] px-3 py-2 text-base text-amber-100">
           איך מגיעים: {house.arrival}
         </p>
       ) : null}
       {house.description ? (
-        <p className="text-sm leading-relaxed text-violet-50">{house.description}</p>
+        <p className="text-base leading-relaxed text-violet-50">{house.description}</p>
       ) : null}
       {house.notes ? (
-        <p className="text-sm text-amber-200/90">הערה: {house.notes}</p>
+        <p className="text-base text-amber-200/90">הערה: {house.notes}</p>
       ) : null}
       <CodesCopy editCode={editCode} />
       {sheet ? null : (

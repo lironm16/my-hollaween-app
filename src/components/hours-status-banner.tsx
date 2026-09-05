@@ -33,7 +33,7 @@ export function HoursStatusBanner({
   const closesAt = closingSoonAt(house, clock);
   if (closesAt) {
     return (
-      <p className={cn("rounded-lg bg-orange-950/55 px-3 py-2 text-sm font-medium text-orange-200", className)}>
+      <p className={cn("rounded-lg bg-orange-950/55 px-3 py-2 text-base font-medium text-orange-200", className)}>
         נסגר בקרוב ב־{closesAt}
       </p>
     );
@@ -41,7 +41,7 @@ export function HoursStatusBanner({
   const opensSoonAt = openingSoonAt(house, clock);
   if (opensSoonAt) {
     return (
-      <p className={cn("rounded-lg bg-cyan-950/55 px-3 py-2 text-sm font-medium text-cyan-100", className)}>
+      <p className={cn("rounded-lg bg-cyan-950/55 px-3 py-2 text-base font-medium text-cyan-100", className)}>
         נפתח בקרוב ב־{opensSoonAt}
       </p>
     );
@@ -49,7 +49,7 @@ export function HoursStatusBanner({
   const breakOpens = onBreakAt(house, clock);
   if (breakOpens) {
     return (
-      <p className={cn("rounded-lg bg-slate-900/70 px-3 py-2 text-sm font-medium text-slate-100", className)}>
+      <p className={cn("rounded-lg bg-slate-900/70 px-3 py-2 text-base font-medium text-slate-100", className)}>
         הפסקה עכשיו — נפתח שוב ב־{breakOpens}
       </p>
     );
@@ -67,27 +67,27 @@ export function HoursStatusBanner({
   }
   if (status.kind === "beforeEvent") {
     return (
-      <p className={cn("rounded-lg bg-sky-950/50 px-3 py-2 text-sm text-sky-100", className)}>
+      <p className={cn("rounded-lg bg-sky-950/50 px-3 py-2 text-base text-sky-100", className)}>
         עדיין סגור — נפתח ב־{status.dateLabel} בשעה {status.opensAt}
       </p>
     );
   }
   if (status.kind === "before") {
     return (
-      <p className={cn("rounded-lg bg-sky-950/50 px-3 py-2 text-sm text-sky-100", className)}>
+      <p className={cn("rounded-lg bg-sky-950/50 px-3 py-2 text-base text-sky-100", className)}>
         עדיין סגור — נפתח ב־{status.opensAt}
       </p>
     );
   }
   if (status.kind === "between") {
     return (
-      <p className={cn("rounded-lg bg-sky-950/50 px-3 py-2 text-sm text-sky-100", className)}>
+      <p className={cn("rounded-lg bg-sky-950/50 px-3 py-2 text-base text-sky-100", className)}>
         הפסקה עכשיו — נפתח שוב ב־{status.opensAt}
       </p>
     );
   }
   return (
-    <p className={cn("rounded-lg bg-violet-950/50 px-3 py-2 text-sm text-violet-200", className)}>
+    <p className={cn("rounded-lg bg-violet-950/50 px-3 py-2 text-base text-violet-200", className)}>
       כבר סגור ({formatHoursLabel(house) || "שעות הפעילות עברו"})
     </p>
   );
