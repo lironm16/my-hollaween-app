@@ -12,9 +12,8 @@ import { Label } from "@/components/ui/label";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
-import { saveOwnedHouse } from "@/lib/offline-db";
+import { saveOwnedHouse, removeOwnedHouse } from "@/lib/offline-db";
 import { toPublicHouse } from "@/lib/ids";
-import { houseHeadline } from "@/lib/labels";
 import type { House, PublicHouse } from "@/lib/types";
 import { NightDesk } from "@/components/night-desk";
 import { PersistNote } from "@/components/persist-note";
@@ -155,10 +154,16 @@ export default function EditPage() {
     <div className="relative flex min-h-dvh flex-col">
       <AppHeader />
       <main className="relative z-10 mx-auto w-full max-w-lg flex-1 px-4 py-5">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/banner.jpg"
+          alt=""
+          className="mb-4 h-28 w-full rounded-2xl object-cover ring-1 ring-orange-500/30"
+        />
         <h1 className="font-display mb-1 text-2xl text-orange-300">עריכת בית</h1>
         <p className="mb-4 text-base text-violet-200">
           בחרו בית מהרשימה. מנהל או מי שהבית שמור אצלו במכשיר נכנסים ישר לעריכה, בלי קוד.
-          מישהו אחר מהמשפחה מזין את קוד העריכה שקיבלה המשפחה.
+          מישהו אחר מזין את קוד העריכה שקיבל מי שהוסיף את הבית.
         </p>
         <PersistNote className="mb-4" />
         <div className="mb-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
@@ -177,7 +182,7 @@ export default function EditPage() {
           </div>
           {needsCode ? (
             <div className="space-y-1.5">
-              <Label htmlFor="edit-code">קוד עריכה למשפחה</Label>
+              <Label htmlFor="edit-code">קוד עריכה</Label>
               <Input
                 id="edit-code"
                 value={editCode}
@@ -206,13 +211,18 @@ export default function EditPage() {
         </div>
         {house ? (
           <div className="space-y-3">
-            <p className="text-base font-medium text-orange-100">{houseHeadline(house)}</p>
             <CodesCopy editCode={admin ? adminEditCode : editCode} />
             <p className="text-base text-violet-200">סטטוס: {statusText(house.status)}</p>
             <NightDesk
               house={house}
               admin={admin}
+              allowDelete
               editCode={admin ? adminEditCode : editCode}
+              onDeleted={() => {
+                removeOwnedHouse(house.id);
+                setHouse(null);
+                setPicked(null);
+              }}
               onUpdated={(next) => {
                 setHouse(next);
                 setPicked(next);

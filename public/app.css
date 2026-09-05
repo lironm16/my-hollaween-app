@@ -6,7 +6,7 @@
     --color-red-50: oklch(97.1% 0.013 17.38);
     --color-red-100: oklch(93.6% 0.032 17.717);
     --color-red-200: oklch(88.5% 0.062 18.334);
-    --color-red-700: oklch(50.5% 0.213 27.518);
+    --color-red-500: oklch(63.7% 0.237 25.331);
     --color-red-900: oklch(39.6% 0.141 25.723);
     --color-red-950: oklch(25.8% 0.092 26.042);
     --color-orange-50: oklch(98% 0.016 73.684);
@@ -19,7 +19,6 @@
     --color-amber-50: oklch(98.7% 0.022 95.277);
     --color-amber-100: oklch(96.2% 0.059 95.617);
     --color-amber-200: oklch(92.4% 0.12 95.746);
-    --color-amber-400: oklch(82.8% 0.189 84.429);
     --color-amber-500: oklch(76.9% 0.188 70.08);
     --color-amber-950: oklch(27.9% 0.077 45.635);
     --color-emerald-100: oklch(95% 0.052 163.051);
@@ -28,15 +27,12 @@
     --color-emerald-400: oklch(76.5% 0.177 163.223);
     --color-emerald-500: oklch(69.6% 0.17 162.48);
     --color-emerald-600: oklch(59.6% 0.145 163.225);
-    --color-emerald-700: oklch(50.8% 0.118 165.612);
     --color-emerald-950: oklch(26.2% 0.051 172.552);
     --color-cyan-100: oklch(95.6% 0.045 203.388);
     --color-cyan-950: oklch(30.2% 0.056 229.695);
     --color-sky-100: oklch(95.1% 0.026 236.824);
     --color-sky-300: oklch(82.8% 0.111 230.318);
     --color-sky-400: oklch(74.6% 0.16 232.661);
-    --color-sky-600: oklch(58.8% 0.158 241.966);
-    --color-sky-700: oklch(50% 0.134 242.749);
     --color-sky-950: oklch(29.3% 0.066 243.157);
     --color-violet-50: oklch(96.9% 0.016 293.756);
     --color-violet-100: oklch(94.3% 0.029 294.588);
@@ -570,6 +566,9 @@
   .h-11 {
     height: calc(var(--spacing) * 11);
   }
+  .h-24 {
+    height: calc(var(--spacing) * 24);
+  }
   .h-28 {
     height: calc(var(--spacing) * 28);
   }
@@ -684,9 +683,6 @@
   .max-w-20 {
     max-width: calc(var(--spacing) * 20);
   }
-  .max-w-\[10rem\] {
-    max-width: 10rem;
-  }
   .max-w-\[calc\(100\%-2rem\)\] {
     max-width: calc(100% - 2rem);
   }
@@ -713,6 +709,9 @@
   }
   .flex-1 {
     flex: 1;
+  }
+  .shrink {
+    flex-shrink: 1;
   }
   .shrink-0 {
     flex-shrink: 0;
@@ -760,9 +759,6 @@
   }
   .grid-cols-1 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
-  }
-  .grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .flex-col {
     flex-direction: column;
@@ -858,11 +854,6 @@
     --tw-space-y-reverse: 0;
     margin-block-start: calc(calc(var(--spacing) * 2) * var(--tw-space-y-reverse));
     margin-block-end: calc(calc(var(--spacing) * 2) * calc(1 - var(--tw-space-y-reverse)));
-  }
-  :where(.space-y-2\.5 > :not(:last-child)) {
-    --tw-space-y-reverse: 0;
-    margin-block-start: calc(calc(var(--spacing) * 2.5) * var(--tw-space-y-reverse));
-    margin-block-end: calc(calc(var(--spacing) * 2.5) * calc(1 - var(--tw-space-y-reverse)));
   }
   :where(.space-y-3 > :not(:last-child)) {
     --tw-space-y-reverse: 0;
@@ -1105,9 +1096,6 @@
   .bg-\[\#fff7ed\] {
     background-color: #fff7ed;
   }
-  .bg-amber-400 {
-    background-color: var(--color-amber-400);
-  }
   .bg-amber-950\/50 {
     background-color: color-mix(in srgb, oklch(27.9% 0.077 45.635) 50%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1171,9 +1159,6 @@
   .bg-emerald-600 {
     background-color: var(--color-emerald-600);
   }
-  .bg-emerald-700 {
-    background-color: var(--color-emerald-700);
-  }
   .bg-emerald-950\/40 {
     background-color: color-mix(in srgb, oklch(26.2% 0.051 172.552) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1222,9 +1207,6 @@
   .bg-primary {
     background-color: var(--primary);
   }
-  .bg-red-700 {
-    background-color: var(--color-red-700);
-  }
   .bg-red-900\/80 {
     background-color: color-mix(in srgb, oklch(39.6% 0.141 25.723) 80%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1239,9 +1221,6 @@
   }
   .bg-secondary {
     background-color: var(--secondary);
-  }
-  .bg-sky-700 {
-    background-color: var(--color-sky-700);
   }
   .bg-sky-950\/50 {
     background-color: color-mix(in srgb, oklch(29.3% 0.066 243.157) 50%, transparent);
@@ -1837,12 +1816,6 @@
       --tw-ring-color: color-mix(in oklab, var(--color-sky-400) 40%, transparent);
     }
   }
-  .ring-violet-500\/25 {
-    --tw-ring-color: color-mix(in srgb, oklch(60.6% 0.25 292.717) 25%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      --tw-ring-color: color-mix(in oklab, var(--color-violet-500) 25%, transparent);
-    }
-  }
   .ring-white\/8 {
     --tw-ring-color: color-mix(in srgb, #fff 8%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -2117,9 +2090,6 @@
       .hover\:bg-primary\/80:hover {
         background-color: color-mix(in oklab, var(--primary) 80%, transparent);
       }
-    }
-    .hover\:bg-sky-600:hover {
-      background-color: var(--color-sky-600);
     }
     .hover\:text-foreground:hover {
       color: var(--foreground);
@@ -4260,9 +4230,61 @@ svg.leaflet-zoom-animated {
   width: 26px;
   height: 26px;
   color: #9a3412;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 900;
   line-height: 1;
+}
+.house-pin-route {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  overflow: visible;
+}
+.house-pin-route .route-stop-pin {
+  flex-shrink: 0;
+  margin-bottom: -8px;
+}
+.house-pin-fan > .route-stop-pin {
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  z-index: 5;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.neighborhood-marquee {
+  overflow: hidden;
+  min-width: 0;
+}
+.neighborhood-marquee.is-overflow {
+  mask-image: linear-gradient(to left, transparent, #000 10px, #000 calc(100% - 10px), transparent);
+}
+.neighborhood-marquee-text {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+}
+.neighborhood-marquee-text.is-scroll {
+  max-width: none;
+  padding-inline: 2px;
+  animation: neighborhood-marquee 8.5s ease-in-out infinite alternate;
+}
+@keyframes neighborhood-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(var(--marquee-shift, 0px));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .neighborhood-marquee-text.is-scroll {
+    animation: none;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 .you-are-here-wrap {
   background: transparent !important;

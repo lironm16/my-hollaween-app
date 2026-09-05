@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Bell, Home, HousePlus, LogOut, Menu, Pencil, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
+import { NeighborhoodMarquee } from "@/components/neighborhood-marquee";
 import { PushAlertsButton } from "@/components/push-alerts-button";
 import {
   Sheet,
@@ -15,7 +16,6 @@ import {
 } from "@/components/ui/sheet";
 import { buttonVariants } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
-import { config } from "@/lib/config";
 import { cn } from "@/lib/utils";
 
 export function AppHeader({
@@ -64,9 +64,7 @@ export function AppHeader({
           />
           <span className="min-w-0">
             <BrandTitle />
-            <span className="mt-0.5 block truncate text-base text-violet-200/80">
-              {config.neighborhood}
-            </span>
+            <NeighborhoodMarquee />
           </span>
         </Link>
         <div className="ms-auto flex items-center gap-1.5 sm:gap-2">
