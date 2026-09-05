@@ -37,7 +37,7 @@ function useMinuteTick() {
   );
 }
 
-const ROUTE_BADGE_H = 24;
+const ROUTE_BADGE_H = 20;
 
 function routeBadgeHtml(order: number) {
   return `<span class="route-stop-pin" aria-label="עצירה ${order}">${order}</span>`;

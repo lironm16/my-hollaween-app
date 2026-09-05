@@ -30,7 +30,11 @@ export function NeighborhoodMarquee({ className }: { className?: string }) {
       ref={wrapRef}
       title={config.neighborhood}
       aria-label={config.neighborhood}
-      className={cn("neighborhood-marquee mt-0.5 block text-base text-violet-200/80", className)}
+      className={cn(
+        "neighborhood-marquee mt-0.5 block text-base text-violet-200/80",
+        shift > 0 && "is-overflow",
+        className,
+      )}
     >
       <span
         ref={textRef}

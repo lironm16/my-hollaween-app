@@ -935,18 +935,19 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1px;
+  gap: 0;
   overflow: visible;
 }
 
 .house-pin-route .route-stop-pin {
   flex-shrink: 0;
+  margin-bottom: -3px;
 }
 
 .house-pin-fan > .route-stop-pin {
   position: absolute;
   left: 50%;
-  bottom: calc(38px + 1px);
+  bottom: 35px;
   z-index: 5;
   transform: translateX(-50%);
   pointer-events: none;
@@ -955,6 +956,9 @@
 .neighborhood-marquee {
   overflow: hidden;
   min-width: 0;
+}
+
+.neighborhood-marquee.is-overflow {
   mask-image: linear-gradient(to left, transparent, #000 10px, #000 calc(100% - 10px), transparent);
 }
 
