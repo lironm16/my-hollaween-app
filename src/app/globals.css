@@ -771,15 +771,15 @@
 
 .house-pin.is-apt {
   box-shadow:
-    0 0 0 3px rgba(253, 186, 116, 0.95),
-    0 0 16px 6px rgba(251, 146, 60, 0.55),
+    0 0 0 4px #fb923c,
+    0 0 22px 8px rgba(251, 146, 60, 0.95),
     0 2px 6px rgba(0, 0, 0, 0.55);
 }
 
 .house-pin.is-apt.is-selected {
   box-shadow:
-    0 0 0 3px #fdba74,
-    0 0 20px 8px rgba(251, 146, 60, 0.72),
+    0 0 0 4px #fdba74,
+    0 0 28px 12px rgba(251, 146, 60, 1),
     0 2px 6px rgba(0, 0, 0, 0.55);
 }
 
