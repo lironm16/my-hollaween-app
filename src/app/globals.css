@@ -654,11 +654,11 @@
 }
 
 .pin-apt-dot.is-closed {
-  background: #7f1d1d;
+  background: #e11d48;
 }
 
 .pin-apt-dot.is-break {
-  background: #334155;
+  background: #22c55e;
 }
 
 .house-pin .pin-scare {
@@ -845,7 +845,8 @@
 
 .house-pin .pin-status.is-closed,
 .pumpkin-pin .pin-status.is-closed {
-  background: #7f1d1d;
+  background: #e11d48;
+  border-color: #fff;
 }
 
 .house-pin .pin-status.is-closed::after,
@@ -855,15 +856,17 @@
   left: 2px;
   right: 2px;
   top: 50%;
-  height: 4px;
-  border-radius: 999px;
-  background: #fff7ed;
+  height: 5px;
+  border-radius: 1px;
+  background: #fff;
   transform: translateY(-50%);
 }
 
 .house-pin .pin-status.is-break,
 .pumpkin-pin .pin-status.is-break {
-  background: #334155;
+  background: #22c55e;
+  border-color: #fff;
+  box-shadow: inset 0 0 0 2px #22c55e, inset 0 0 0 3.5px #fff;
 }
 
 .house-pin .pin-status.is-break::before,
@@ -875,18 +878,18 @@
   top: 4px;
   width: 3px;
   height: 8px;
-  border-radius: 1px;
-  background: #fff7ed;
+  border-radius: 999px;
+  background: #fff;
 }
 
 .house-pin .pin-status.is-break::before,
 .pumpkin-pin .pin-status.is-break::before {
-  left: 5px;
+  left: 4px;
 }
 
 .house-pin .pin-status.is-break::after,
 .pumpkin-pin .pin-status.is-break::after {
-  right: 5px;
+  right: 4px;
 }
 
 .house-pin.house-pin-dot .pin-status {
@@ -1168,6 +1171,16 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 
 .house-pin.is-legend .pin-houses {
   transform: scale(0.78);
+}
+
+.house-pin.is-legend .pin-status.is-break {
+  box-shadow: inset 0 0 0 1px #22c55e, inset 0 0 0 2px #fff;
+}
+
+.house-pin.is-legend .pin-status.is-closed::after {
+  height: 3px;
+  left: 1px;
+  right: 1px;
 }
 
 .house-pin.is-legend .pin-status.is-break::before,

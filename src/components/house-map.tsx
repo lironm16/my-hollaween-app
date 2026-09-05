@@ -59,19 +59,22 @@ const SCARE_SRC: Record<ScareLevel, string> = {
   spicy: "/icons/pin-scare-spicy.png",
 };
 
-function pinFaceKind(house: PublicHouse, now: Date): "closed" | "break" | "bare" | "scare" {
+function pinVisitKind(house: PublicHouse, now: Date): "closed" | "break" | null {
   if (effectiveVisit(house) === "closed") return "closed";
   if (isOnBreak(house, now)) return "break";
-  if (!isDecorated(house)) return "bare";
-  return "scare";
+  return null;
+}
+
+function pinFaceKind(house: PublicHouse): "bare" | "scare" {
+  return isDecorated(house) ? "scare" : "bare";
 }
 
 function pinStatusMark(house: PublicHouse, now: Date) {
-  const face = pinFaceKind(house, now);
-  if (face === "closed") {
+  const visit = pinVisitKind(house, now);
+  if (visit === "closed") {
     return `<b class="pin-status is-closed" aria-label="סגור"></b>`;
   }
-  if (face === "break") {
+  if (visit === "break") {
     return `<b class="pin-status is-break" aria-label="הפסקה"></b>`;
   }
   const dot = candyPinDot(house);
@@ -81,7 +84,7 @@ function pinStatusMark(house: PublicHouse, now: Date) {
 }
 
 function hoursRingHtml(house: PublicHouse, now: Date) {
-  if (pinFaceKind(house, now) === "closed" || pinFaceKind(house, now) === "break") return "";
+  if (pinVisitKind(house, now)) return "";
   if (isClosingSoon(house, now)) {
     return `<i class="pin-hours-ring is-closing" aria-hidden="true"></i>`;
   }
@@ -92,16 +95,14 @@ function hoursRingHtml(house: PublicHouse, now: Date) {
 }
 
 function hoursPinClass(house: PublicHouse, now: Date) {
-  const face = pinFaceKind(house, now);
-  if (face === "closed" || face === "break") return "";
+  if (pinVisitKind(house, now)) return "";
   if (isClosingSoon(house, now)) return " is-closing-soon";
   if (isOpeningSoon(house, now)) return " is-opening-soon";
   return "";
 }
 
-function pinFaceHtml(house: PublicHouse, now: Date) {
-  const face = pinFaceKind(house, now);
-  if (face !== "scare") return "";
+function pinFaceHtml(house: PublicHouse) {
+  if (pinFaceKind(house) !== "scare") return "";
   const src = SCARE_SRC[house.scareLevel ?? "mild"];
   return `<img class="pin-scare" src="${src}" alt="" />`;
 }
@@ -113,16 +114,17 @@ function housePinHtml(
 ) {
   const selectedClass = extras?.selected ? " is-selected" : "";
   const hoursClass = hoursPinClass(house, now);
-  const face = pinFaceKind(house, now);
+  const face = pinFaceKind(house);
+  const visit = pinVisitKind(house, now);
   const bareClass = face === "bare" ? " is-undecorated" : "";
   const extraClass = extras?.extraClass ? ` ${extras.extraClass}` : "";
   const idAttr = extras?.houseId ? ` data-house-id="${attr(extras.houseId)}"` : "";
   const fill = face === "bare" ? "#94a3b8" : "#6d28d9";
   const style = extras?.extraStyle ? `${extras.extraStyle};background:${fill}` : `background:${fill}`;
   const label =
-    face === "closed"
+    visit === "closed"
       ? 'aria-label="סגור"'
-      : face === "break"
+      : visit === "break"
         ? 'aria-label="הפסקה"'
         : isClosingSoon(house, now)
           ? 'aria-label="נסגר בקרוב"'
@@ -131,7 +133,7 @@ function housePinHtml(
             : face === "scare"
               ? 'aria-label="מקושט"'
               : 'aria-label="לא מקושט"';
-  return `<div class="house-pin${selectedClass}${hoursClass}${bareClass}${extraClass}" style="${style}" ${label}${idAttr}>${hoursRingHtml(house, now)}${pinStatusMark(house, now)}${pinFaceHtml(house, now)}</div>`;
+  return `<div class="house-pin${selectedClass}${hoursClass}${bareClass}${extraClass}" style="${style}" ${label}${idAttr}>${hoursRingHtml(house, now)}${pinStatusMark(house, now)}${pinFaceHtml(house)}</div>`;
 }
 
 function fanOffsets(count: number) {
