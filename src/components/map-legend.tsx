@@ -128,7 +128,7 @@ export function MapLegend() {
                 aria-modal="true"
                 aria-labelledby={titleId}
                 dir="rtl"
-                className="map-legend-panel relative max-h-[min(88dvh,40rem)] w-[min(38rem,calc(100vw-1.5rem))] overflow-y-auto overscroll-contain rounded-2xl bg-[#160b20] px-3 pb-4 pt-12 text-right shadow-[0_16px_48px_rgba(0,0,0,0.55)] ring-1 ring-orange-500/30"
+                className="map-legend-panel relative max-h-[min(88dvh,40rem)] w-[min(38rem,calc(100vw-1.5rem))] overflow-y-auto overscroll-contain rounded-2xl bg-[#160b20] px-3 pb-3 pt-11 text-right shadow-[0_16px_48px_rgba(0,0,0,0.55)] ring-1 ring-orange-500/30"
                 onClick={(event) => event.stopPropagation()}
               >
                 <button
@@ -142,17 +142,14 @@ export function MapLegend() {
                 <h2 id={titleId} className="absolute top-3 right-4 text-sm font-semibold text-orange-100">
                   מקרא
                 </h2>
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2.5">
                   {GROUPS.map((group) => (
                     <section key={group.title}>
-                      <h3 className="mb-2 text-sm font-semibold text-orange-200">{group.title}</h3>
-                      <ul className="flex">
+                      <h3 className="mb-1 text-xs font-semibold text-orange-200">{group.title}</h3>
+                      <ul className="grid grid-cols-4">
                         {group.items.map((item) => (
-                          <li
-                            key={item.key}
-                            className="flex min-w-0 flex-1 flex-col items-center gap-1.5"
-                          >
-                            <div className="grid size-14 shrink-0 place-items-center overflow-visible" dir="ltr">
+                          <li key={item.key} className="flex min-w-0 flex-col items-center gap-1">
+                            <div className="grid size-12 shrink-0 place-items-center overflow-visible" dir="ltr">
                               {item.node}
                             </div>
                             <span className="w-full text-center text-xs leading-tight text-violet-100">
