@@ -4015,11 +4015,11 @@ svg.leaflet-zoom-animated {
 .pumpkin-pin .pin-status.is-closed::after {
   content: "";
   position: absolute;
-  left: 3px;
-  right: 3px;
+  left: 2px;
+  right: 2px;
   top: 50%;
-  height: 3px;
-  border-radius: 2px;
+  height: 4px;
+  border-radius: 999px;
   background: #fff7ed;
   transform: translateY(-50%);
 }
