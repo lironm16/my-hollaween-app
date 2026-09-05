@@ -75,14 +75,9 @@ const GROUPS: { title: string; items: { key: string; label: string; node: ReactN
     items: [
       { key: "closed", label: "סגור", node: <SwatchPin scare="mild" closed /> },
       { key: "break", label: "הפסקה", node: <SwatchPin scare="mild" onBreak /> },
-      { key: "multi", label: "כמה בתים", node: <SwatchPin multi /> },
-    ],
-  },
-  {
-    title: "שעות",
-    items: [
       { key: "close", label: "נסגר בקרוב", node: <SwatchPin scare="mild" hours="closing" /> },
       { key: "open", label: "נפתח בקרוב", node: <SwatchPin scare="mild" hours="opening" /> },
+      { key: "multi", label: "כמה בתים", node: <SwatchPin multi /> },
     ],
   },
 ];
