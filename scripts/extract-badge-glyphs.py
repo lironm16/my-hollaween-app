@@ -197,19 +197,8 @@ def extract_sensitivity(src: Path, dest: Path, bg: tuple[int, int, int]) -> None
 
 
 def extract_medium_ghost() -> None:
-    src = ROOT / "scare-ghost-disc-medium.png"
-    keyed = chroma_key(Image.open(src), (242, 120, 1), thresh=92, softness=20)
-    px = keyed.load()
-    body = (18, 9, 31)
-    for y in range(keyed.height):
-        for x in range(keyed.width):
-            p = px[x, y]
-            if p[3] < 20:
-                continue
-            if p[0] > 160 and 70 < p[1] < 180 and p[2] < 60:
-                px[x, y] = (body[0], body[1], body[2], p[3])
-    recenter_glyph(trim(keep_largest_blob(keyed), pad=2)).save(ROOT / "scare-ghost-medium.png")
-    print("wrote scare-ghost-medium.png")
+    # Cream body like mild/spicy — not a dark silhouette.
+    extract_disc_glyph(ROOT / "scare-ghost-disc-medium.png", ROOT / "scare-ghost-medium.png", (217, 119, 6), 72)
 
 
 def main() -> None:

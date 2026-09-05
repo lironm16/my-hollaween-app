@@ -34,9 +34,9 @@ function SwatchPin({
     >
       {hours === "closing" ? <i className="pin-hours-ring is-closing" /> : null}
       {hours === "opening" ? <i className="pin-hours-ring is-opening" /> : null}
-      {scare ? (
+      {scare || bare ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="pin-scare" src={`/icons/pin-scare-${scare}.png`} alt="" />
+        <img className="pin-scare" src={`/icons/pin-scare-${scare ?? "mild"}.png`} alt="" />
       ) : null}
       {multi ? (
         <span className="pin-houses">

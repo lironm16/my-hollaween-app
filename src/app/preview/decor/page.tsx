@@ -19,8 +19,9 @@ export default function DecorPreviewPage() {
         <section className="space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/20">
           <h2 className="text-base font-medium text-orange-100">סיכות במפה — רוח לפחד, נקודה לממתקים</h2>
           <p className="text-sm text-violet-200">
-            התמונה על הסיכה היא רמת הפחד. הסיכה הסגולה נשארת, לא מקושט הוא אפור. נקודת הממתקים
-            גדולה יותר: ירוק / כתום / אדום. סגור והפסקה הם נקודה על הסיכה, בלי רוח ובלי ממתקים.
+            התמונה על הסיכה היא רמת הפחד. הסיכה הסגולה נשארת, לא מקושט הוא אפור עם רוח ידידותית.
+            נקודת הממתקים: ירוק / כתום / אדום. סגור והפסקה נשארים נקודה על הסיכה — הפסקה אפורה עם שתי
+            קווים.
           </p>
           <div className="flex flex-wrap items-end gap-8 pt-2">
             <div className="flex flex-col items-center gap-2">
@@ -33,6 +34,8 @@ export default function DecorPreviewPage() {
             </div>
             <div className="flex flex-col items-center gap-2">
               <div className="house-pin is-undecorated relative" style={{ background: "#94a3b8" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="pin-scare" src="/icons/pin-scare-mild.png" alt="" />
                 <b className="pin-status is-plenty" />
               </div>
               <span className="text-sm text-violet-300">בלי קישוט</span>

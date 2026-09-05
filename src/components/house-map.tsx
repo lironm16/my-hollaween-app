@@ -23,7 +23,7 @@ import { distanceMeters } from "@/lib/geo";
 import { candyPinDot, effectiveVisit, isDecorated } from "@/lib/house-state";
 import { isClosingSoon, isOnBreak, isOpeningSoon } from "@/lib/hours";
 import type { ScareLevel } from "@/lib/types";
-import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
+import { clusterHousesForMap, type HouseCluster } from "@/lib/house-clusters";
 import { cn } from "@/lib/utils";
 
 function useMinuteTick() {
@@ -102,8 +102,7 @@ function hoursPinClass(house: PublicHouse, now: Date) {
 }
 
 function pinFaceHtml(house: PublicHouse) {
-  if (pinFaceKind(house) !== "scare") return "";
-  const src = SCARE_SRC[house.scareLevel ?? "mild"];
+  const src = SCARE_SRC[pinFaceKind(house) === "scare" ? (house.scareLevel ?? "mild") : "mild"];
   return `<img class="pin-scare" src="${src}" alt="" />`;
 }
 
@@ -136,13 +135,17 @@ function housePinHtml(
   return `<div class="house-pin${selectedClass}${hoursClass}${bareClass}${extraClass}" style="${style}" ${label}${idAttr}>${hoursRingHtml(house, now)}${pinStatusMark(house, now)}${pinFaceHtml(house)}</div>`;
 }
 
-function fanOffsets(count: number) {
-  const spread = Math.min(96, 32 * Math.max(1, count - 1));
-  return Array.from({ length: count }, (_, index) => {
+function fanLayout(count: number) {
+  const spread = count <= 4 ? Math.min(120, 38 * Math.max(1, count - 1)) : Math.min(220, 26 * (count - 1));
+  const gap = PIN + 16;
+  const arc = gap * Math.max(1, count - 1);
+  const r = Math.max(FAN_R, arc / ((Math.max(spread, 1) * Math.PI) / 180));
+  const offsets = Array.from({ length: count }, (_, index) => {
     const t = count === 1 ? 0.5 : index / (count - 1);
     const rad = ((-spread / 2 + t * spread) * Math.PI) / 180;
-    return { x: Math.sin(rad) * FAN_R, y: Math.cos(rad) * FAN_R };
+    return { x: Math.sin(rad) * r, y: Math.cos(rad) * r };
   });
+  return { offsets, r };
 }
 
 function clusterIcon(cluster: HouseCluster, selectedId: string | null | undefined, now: Date) {
@@ -170,17 +173,24 @@ function clusterIcon(cluster: HouseCluster, selectedId: string | null | undefine
     });
   }
 
-  const offsets = fanOffsets(houses.length);
+  const { offsets, r } = fanLayout(houses.length);
   const pad = 22;
   const maxX = Math.max(...offsets.map((item) => Math.abs(item.x)));
   const width = Math.ceil(Math.max(44, 2 * (maxX + PIN / 2 + pad)));
-  const height = Math.ceil(FAN_R + PIN / 2 + PIN + 8);
+  const height = Math.ceil(r + PIN / 2 + PIN + 8);
   const cx = width / 2;
+  const baseY = height - PIN / 2;
+  const edge = PIN / 2 + 1;
   const lines = offsets
     .map((item) => {
       const x2 = cx + item.x;
       const y2 = height - item.y;
-      return `<line x1="${cx}" y1="${height - PIN / 2}" x2="${x2}" y2="${y2}" />`;
+      const dx = x2 - cx;
+      const dy = y2 - baseY;
+      const dist = Math.hypot(dx, dy) || 1;
+      const ux = dx / dist;
+      const uy = dy / dist;
+      return `<line x1="${cx + ux * edge}" y1="${baseY + uy * edge}" x2="${x2 - ux * edge}" y2="${y2 - uy * edge}" />`;
     })
     .join("");
   const apts = houses
@@ -192,7 +202,7 @@ function clusterIcon(cluster: HouseCluster, selectedId: string | null | undefine
         selected: house.id === selectedId,
         houseId: house.id,
         extraClass: "is-apt",
-        extraStyle: `left:${left}px;bottom:${bottom}px;z-index:${house.id === selectedId ? houses.length + 2 : index + 1}`,
+        extraStyle: `left:${left}px;bottom:${bottom}px;z-index:${house.id === selectedId ? houses.length + 3 : index + 2}`,
       });
     })
     .join("");
@@ -302,7 +312,7 @@ function ClusterMarker({
       key={`${cluster.key}-${selectedHere ? "open" : "shut"}`}
       position={[cluster.lat, cluster.lng]}
       icon={clusterIcon(cluster, selectedId, now)}
-      zIndexOffset={selectedHere ? 500 : closingSoon ? 360 : openingSoon ? 320 : cluster.houses.length > 1 ? 200 : 0}
+      zIndexOffset={selectedHere ? 10000 : closingSoon ? 360 : openingSoon ? 320 : cluster.houses.length > 1 ? 200 : 0}
       eventHandlers={{
         click: (event) => {
           const hit = (event.originalEvent.target as Element | null)?.closest?.("[data-house-id]");
@@ -358,7 +368,7 @@ export function HouseMap({
   routeStops = null,
 }: Props) {
   const clusters = useMemo(
-    () => (pickMode ? [] : clusterHousesByAddress(houses)),
+    () => (pickMode ? [] : clusterHousesForMap(houses)),
     [houses, pickMode],
   );
   const focus = useMemo(() => {
