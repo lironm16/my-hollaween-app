@@ -75,24 +75,24 @@ export function HouseCard({
       </CardHeader>
       <CardContent className="space-y-2 text-base text-violet-100/80">
         <p className="text-base">{formatDisplayAddress(house)}</p>
-        {house.arrival ? <p className="text-sm text-amber-200/90">{house.arrival}</p> : null}
-        <p className="text-sm">
+        {house.arrival ? <p className="text-base text-amber-200/90">{house.arrival}</p> : null}
+        <p className="text-base">
           {formatHoursLabel(house)}
           {distanceM !== undefined ? ` · ${formatDistance(distanceM)}` : ""}
         </p>
-        <HoursStatusBanner house={house} className="text-sm" />
+        <HoursStatusBanner house={house} className="text-base" />
         {effectiveVisit(house) === "closed" ? (
           <p className="text-base font-semibold text-red-500">{visitLabels.closed}</p>
         ) : null}
         <HouseTags house={house} />
         {house.status === "pending" ? (
-          <p className="text-sm font-medium text-amber-200">ממתין לאישור</p>
+          <p className="text-base font-medium text-amber-200">ממתין לאישור</p>
         ) : null}
         {isFrozen(house) ? (
-          <p className="text-sm font-medium text-violet-300">מוקפא מהמפה הציבורית</p>
+          <p className="text-base font-medium text-violet-300">מוקפא מהמפה הציבורית</p>
         ) : null}
         {visited ? (
-          <p className="text-sm font-medium text-emerald-300">ביקרתם כאן</p>
+          <p className="text-base font-medium text-emerald-300">ביקרתם כאן</p>
         ) : null}
       </CardContent>
     </Card>

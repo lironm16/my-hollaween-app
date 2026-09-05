@@ -60,7 +60,7 @@ export default function AdminPage() {
             void login();
           }}
         >
-          <p className="text-sm text-violet-200">
+          <p className="text-base text-violet-200">
             אחרי הכניסה תישארו במפה הרגילה. תוכלו לערוך בלי קוד, להקפיא או למחוק בתים, עד שתלחצו יציאה.
           </p>
           <div className="space-y-1.5">

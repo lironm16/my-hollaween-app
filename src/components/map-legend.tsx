@@ -98,7 +98,7 @@ export function MapLegend() {
           className="map-legend-panel absolute right-0 bottom-[calc(100%+0.5rem)] z-10 w-[min(17.5rem,calc(100vw-1.5rem))] rounded-2xl bg-[#160b20]/95 p-3 text-right shadow-[0_12px_32px_rgba(0,0,0,0.45)] ring-1 ring-orange-500/30 backdrop-blur-md"
         >
           <div className="mb-2 flex items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold text-orange-100">מקרא</h2>
+            <h2 className="text-base font-semibold text-orange-100">מקרא</h2>
             <button
               type="button"
               className="inline-flex size-7 items-center justify-center rounded-full text-violet-200 hover:bg-orange-500/15 hover:text-orange-100"
@@ -112,7 +112,7 @@ export function MapLegend() {
             {ROWS.map((row) => (
               <li key={row.key} className="flex items-center gap-2.5">
                 <div className="grid size-9 shrink-0 place-items-center">{row.node}</div>
-                <span className="text-sm leading-snug text-violet-100">{row.label}</span>
+                <span className="text-base leading-snug text-violet-100">{row.label}</span>
               </li>
             ))}
           </ul>

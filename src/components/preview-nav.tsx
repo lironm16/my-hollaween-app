@@ -19,7 +19,7 @@ export function PreviewNav({ current }: { current: string }) {
           key={link.href}
           href={link.href}
           className={cn(
-            "rounded-full px-3 py-2 text-sm font-medium",
+            "rounded-full px-3 py-2 text-base font-medium",
             current === link.href
               ? "bg-orange-500 text-black"
               : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/30",
@@ -30,7 +30,7 @@ export function PreviewNav({ current }: { current: string }) {
       ))}
       <Link
         href="/"
-        className="rounded-full px-3 py-2 text-sm text-violet-300 underline-offset-2 hover:underline"
+        className="rounded-full px-3 py-2 text-base text-violet-300 underline-offset-2 hover:underline"
       >
         חזרה למפה
       </Link>

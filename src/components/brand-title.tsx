@@ -17,7 +17,7 @@ export function BrandTitle({
         <span
           className={cn(
             "font-sans font-semibold text-orange-300",
-            size === "header" ? "text-sm sm:text-base" : "text-xl sm:text-2xl",
+            size === "header" ? "text-base" : "text-xl sm:text-2xl",
           )}
         >
           {config.brandHe}

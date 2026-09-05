@@ -466,11 +466,11 @@ export function NeighborhoodApp({
           </button>
         </div>
         {geoError ? (
-          <p className="mt-1 text-sm text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>
+          <p className="mt-1 text-base text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>
         ) : outsideNeighborhood ? (
-          <p className="mt-1 text-sm text-amber-200">המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.</p>
+          <p className="mt-1 text-base text-amber-200">המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.</p>
         ) : routeMode ? (
-          <p className="mt-1 text-sm text-violet-300">
+          <p className="mt-1 text-base text-violet-300">
             מסלול לפי הסינון{routePrefsLabel ? ` · ${routePrefsLabel}` : ""} ·{" "}
             {walkingRoute?.stops.length ?? 0} עצירות · מפה / רשימה
           </p>
@@ -558,7 +558,7 @@ export function NeighborhoodApp({
         </FilterSection>
       </FiltersSheet>
       {offline || unreachable ? (
-        <div className="relative z-30 bg-[#2a1638] px-3 py-2 text-center text-sm text-amber-100 ring-1 ring-inset ring-amber-500/20">
+        <div className="relative z-30 bg-[#2a1638] px-3 py-2 text-center text-base text-amber-100 ring-1 ring-inset ring-amber-500/20">
           {offline
             ? houses.length > 0
               ? "אין אינטרנט · מוצגת הרשימה ששמורה בטלפון"
@@ -568,7 +568,7 @@ export function NeighborhoodApp({
               : "השרת לא עונה, ואין עותק שמור בטלפון"}
         </div>
       ) : error ? (
-        <div className="relative z-30 bg-red-950/70 px-3 py-2 text-center text-sm text-red-100">
+        <div className="relative z-30 bg-red-950/70 px-3 py-2 text-center text-base text-red-100">
           {error}
         </div>
       ) : null}
@@ -670,7 +670,7 @@ export function NeighborhoodApp({
           onToggleEdit={() => setEditing((v) => !v)}
           pendingNote={
             selected.status === "pending" ? (
-              <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-sm text-violet-100">
+              <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
                 {admin
                   ? "בית ממתין לאישור — עדיין לא במפה הציבורית."
                   : "הבית הזה עדיין לא במפה הציבורית. אם זה הבית שלכם, מנהל יכול לאשר אותו."}
@@ -679,7 +679,7 @@ export function NeighborhoodApp({
           }
           frozenNote={
             isFrozen(selected) ? (
-              <p className="mb-3 rounded-lg bg-[#2a1638] px-3 py-2 text-sm text-amber-100">
+              <p className="mb-3 rounded-lg bg-[#2a1638] px-3 py-2 text-base text-amber-100">
                 הבית מוקפא — הילדים בשכונה לא רואים אותו. רק אתם (או מנהל) רואים את הסיכה השקופה.
               </p>
             ) : null
@@ -753,7 +753,7 @@ function CatalogMetaChip({
   const stale = offline || unreachable || source === "cache" || source === "snapshot";
   return (
     <div className="pointer-events-none absolute top-2 start-2 z-[1100]">
-      <span className="inline-flex max-w-[min(100%,16rem)] items-center gap-1.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-sm text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
+      <span className="inline-flex max-w-[min(100%,16rem)] items-center gap-1.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
         <span>{houseCount} בתים</span>
         {stopCount != null ? <span>· {stopCount} עצירות</span> : null}
         {stale ? (
@@ -791,7 +791,7 @@ function Toggle({
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm",
+        "inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-base",
         active ? "bg-orange-500 text-black" : "text-orange-100",
       )}
     >

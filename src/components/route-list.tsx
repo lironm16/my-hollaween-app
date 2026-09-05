@@ -30,7 +30,7 @@ export function RouteList({
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center text-violet-200">
         <p className="font-display text-2xl text-orange-300">אין עצירות במסלול</p>
-        <p className="mt-2 text-sm">
+        <p className="mt-2 text-base">
           שנו סינון כדי לראות בתים במסלול. «לא ביקרתי» מסתיר בתים שכבר סימנתם.
         </p>
       </div>
@@ -40,8 +40,8 @@ export function RouteList({
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-3 px-3 py-3">
       <div className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
-        <p className="text-sm font-medium text-orange-100">{formatRouteSummary(route)}</p>
-        <p className="mt-1 text-sm text-violet-300">
+        <p className="text-base font-medium text-orange-100">{formatRouteSummary(route)}</p>
+        <p className="mt-1 text-base text-violet-300">
           {route.startedFrom === "gps" ? "מהמיקום שלכם" : "ממרכז השכונה"}
           {prefsLabel ? ` · ${prefsLabel}` : ""}
         </p>
@@ -77,20 +77,20 @@ export function RouteList({
                 onClick={() => onSelectHouse(house.id)}
                 className="flex w-full items-start gap-3 text-start"
               >
-                <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-black">
+                <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-base font-bold text-black">
                   {stop.order}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium text-orange-100">
+                  <span className="block text-base font-medium text-orange-100">
                     {houseHeadline(house)}
                   </span>
-                  <span className="mt-0.5 block text-sm text-violet-300">
+                  <span className="mt-0.5 block text-base text-violet-300">
                     {formatDisplayAddress(house)}
                   </span>
                   {house.arrival ? (
-                    <span className="mt-0.5 block text-sm text-amber-200/90">{house.arrival}</span>
+                    <span className="mt-0.5 block text-base text-amber-200/90">{house.arrival}</span>
                   ) : null}
-                  <span className="mt-1 block text-sm text-violet-400">
+                  <span className="mt-1 block text-base text-violet-400">
                     {houseIndex > 0
                       ? "אותו בניין"
                       : `${stop.order === 1 ? "מההתחלה" : "מעצירה קודמת"}: ${formatDistance(stop.fromPreviousMeters)} · מצטבר ${formatDistance(stop.cumulativeMeters)}`}
