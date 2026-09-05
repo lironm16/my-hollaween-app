@@ -25,11 +25,11 @@ import {
   type VisitState,
 } from "@/lib/types";
 import { candyTone, CandySign, CANDY_TONES, type CandyTone } from "@/components/candy-glyphs";
-import { resolveDecorLevel } from "@/lib/house-state";
+import { freezeExpireIso, isOwnerFrozen, resolveDecorLevel } from "@/lib/house-state";
 import { StrollerSign } from "@/components/symbols";
 import { ScareSign } from "@/components/scare-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
-import { houseHoursWindows, MAX_HOUR_WINDOWS, syncHoursFields } from "@/lib/hours";
+import { houseHoursWindows, MAX_HOUR_WINDOWS, nightStatusControlsEnabled, syncHoursFields } from "@/lib/hours";
 import type { HoursWindow } from "@/lib/types";
 
 const empty: HouseInput = {
@@ -72,6 +72,7 @@ function initialDecorLevel(initial?: Partial<HouseInput>): DecorLevel {
 export type HouseFormExtras = {
   photoDataUrl?: string;
   clearPhoto?: boolean;
+  ownerFrozenUntil?: string | null;
 };
 
 export function HouseForm({
@@ -81,7 +82,7 @@ export function HouseForm({
   busy,
   extraActions,
 }: {
-  initial?: Partial<HouseInput> & { photoUrl?: string; visit?: VisitState };
+  initial?: Partial<HouseInput> & { photoUrl?: string; visit?: VisitState; ownerFrozenUntil?: string | null };
   submitLabel: string;
   onSubmit: (input: HouseInput, extras?: HouseFormExtras) => Promise<void> | void;
   busy?: boolean;
@@ -96,7 +97,11 @@ export function HouseForm({
     const windows = houseHoursWindows({ ...empty, ...initial });
     return windows.length ? windows : [{ from: "17:00", to: "21:00" }];
   });
-  const [closedNow, setClosedNow] = useState(() => initial?.visit === "closed");
+  const [nightStatus, setNightStatus] = useState<"open" | "pause" | "stop">(() => {
+    if (initial?.visit === "closed") return "stop";
+    if (isOwnerFrozen(initial ?? {})) return "pause";
+    return "open";
+  });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [clearPhoto, setClearPhoto] = useState(false);
@@ -137,6 +142,11 @@ export function HouseForm({
 
   const candyOffered = candy === "plenty" || candy === "low";
   const undecorated = decorLevel === "none";
+  const nightStatusEnabled = nightStatusControlsEnabled({
+    openHours: hourWindows,
+    openFrom: hourWindows[0]?.from,
+    openTo: hourWindows[0]?.to,
+  });
 
   function pickScare(level: ScareLevel) {
     setForm((f) => ({ ...f, scareLevel: level }));
@@ -222,7 +232,7 @@ export function HouseForm({
           toast.error("בחרו כתובת אמיתית מהרשימה, או גררו את הסיכה לבית.");
           return;
         }
-        if (decorLevel === "none" && candy !== "plenty" && candy !== "low" && !closedNow) {
+        if (decorLevel === "none" && candy !== "plenty" && candy !== "low" && !(nightStatusEnabled && nightStatus === "stop") && initial?.visit !== "closed") {
           toast.error("סמנו לפחות קישוטים או ממתקים — אחרת אין סיבה להוסיף את הבית למפה.");
           return;
         }
@@ -242,13 +252,27 @@ export function HouseForm({
             for (const id of SENSITIVITY_OPTIONS) delete treatStock[id];
           }
         }
-        const visit: VisitState = closedNow
-          ? "closed"
-          : candy === "plenty" || candy === "low" || candy === "out"
-            ? "come"
-            : decorLevel !== "none"
-              ? "decorOnly"
-              : "come";
+        const effectiveNight = nightStatusEnabled
+          ? nightStatus
+          : initial?.visit === "closed"
+            ? "stop"
+            : isOwnerFrozen(initial ?? {})
+              ? "pause"
+              : "open";
+        const visit: VisitState =
+          effectiveNight === "stop"
+            ? "closed"
+            : candy === "plenty" || candy === "low" || candy === "out"
+              ? "come"
+              : decorLevel !== "none"
+                ? "decorOnly"
+                : "come";
+        const ownerFrozenUntil =
+          effectiveNight === "pause"
+            ? nightStatusEnabled
+              ? freezeExpireIso()
+              : (initial?.ownerFrozenUntil ?? freezeExpireIso())
+            : null;
         const windows = hourWindows.map((window) => ({
           from: clock(window.from),
           to: clock(window.to),
@@ -288,6 +312,7 @@ export function HouseForm({
           await onSubmit(payload, {
             photoDataUrl,
             clearPhoto: clearPhoto && !photoFile,
+            ownerFrozenUntil,
           });
         })();
       }}
@@ -375,20 +400,6 @@ export function HouseForm({
             הבתים פתוחים רק בליל האלווין. אפשר כמה חלונות בערב (למשל 17:00–18:00, 19:00–20:00) אם
             יוצאים באמצע לטריק-אור-טריט.
           </p>
-          <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-base ring-1 ring-orange-500/20">
-            <input
-              type="checkbox"
-              className="mt-1 size-4 accent-orange-500"
-              checked={closedNow}
-              onChange={(e) => setClosedNow(e.target.checked)}
-            />
-            <span>
-              <span className="font-medium text-orange-100">סגור עכשיו</span>
-              <span className="block text-base text-violet-300">
-                הבית נשאר במפה עם סימן סגור. לביטול — הסירו את הסימון ושמרו.
-              </span>
-            </span>
-          </label>
           {hourWindows.map((window, index) => (
             <div
               key={`hours-${index}`}
@@ -440,9 +451,6 @@ export function HouseForm({
       <FormSection title="מה יפגשו בבית">
         <div>
           <p className="mb-2 text-base font-medium">רמת פחד</p>
-          <p className="mb-2 text-base text-violet-300">
-            לילדים, קצת מפחיד או מפחיד — ואם אין קישוט בחוץ, בחרו לא מקושט
-          </p>
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
@@ -475,9 +483,6 @@ export function HouseForm({
         </div>
         <div>
           <p className="mb-2 text-base font-medium">ממתקים</p>
-          <p className="mb-2 text-base text-violet-300">
-            ירוק יש, כתום מעט, אדום נגמר (עדיין במפה), אפור בלי ממתקים — מקושט להסתכל
-          </p>
           <div className="flex flex-wrap gap-1.5">
             {CANDY_TONES.map((tone) => (
               <button
@@ -494,6 +499,42 @@ export function HouseForm({
                 {tone.label}
               </button>
             ))}
+          </div>
+        </div>
+        <div className={nightStatusEnabled ? undefined : "opacity-45"}>
+          <p className="mb-2 text-base font-medium">הפסקה וסגירה</p>
+          {nightStatusEnabled ? null : (
+            <p className="mb-2 text-base text-violet-300">
+              נפתח בליל האלווין, משעת הפעילות של הבית. אז אפשר לסמן הפסקה זמנית או סגירה לערב.
+            </p>
+          )}
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              disabled={!nightStatusEnabled}
+              onClick={() => setNightStatus((current) => (current === "pause" ? "open" : "pause"))}
+              className={
+                nightStatus === "pause"
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
+              }
+            >
+              <span className="night-status-dot is-break" />
+              הפסקה
+            </button>
+            <button
+              type="button"
+              disabled={!nightStatusEnabled}
+              onClick={() => setNightStatus((current) => (current === "stop" ? "open" : "stop"))}
+              className={
+                nightStatus === "stop"
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
+              }
+            >
+              <span className="night-status-dot is-closed" />
+              סגור
+            </button>
           </div>
         </div>
         <div
@@ -532,66 +573,6 @@ export function HouseForm({
             className="min-h-24"
           />
         </Field>
-        <div>
-          <p className="mb-2 text-base font-medium">תמונת קישוט</p>
-          <p className="mb-2 text-base text-violet-300">מוצגת בכרטיס הבית במפה. לא חובה.</p>
-          {photoPreview || (existingPhoto && !clearPhoto) ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={photoPreview || existingPhoto}
-              alt=""
-              className="mb-2 h-36 w-full rounded-xl object-cover ring-1 ring-orange-500/25"
-            />
-          ) : (
-            <div className="mb-2 flex h-24 items-center justify-center rounded-xl bg-[#1d1028] text-base text-violet-400 ring-1 ring-orange-500/15">
-              אין תמונה עדיין
-            </div>
-          )}
-          <div className="flex flex-wrap gap-2">
-            <label className="inline-flex cursor-pointer">
-              <span
-                className={
-                  busy
-                    ? "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-base font-medium text-black opacity-60"
-                    : "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-base font-medium text-black"
-                }
-              >
-                <Camera className="size-3.5" />
-                {photoPreview || (existingPhoto && !clearPhoto) ? "החלפת תמונה" : "העלאת תמונה"}
-              </span>
-              <input
-                type="file"
-                accept="image/*"
-                className="sr-only"
-                disabled={busy}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  e.target.value = "";
-                  if (!file) return;
-                  setPhotoFile(file);
-                  setClearPhoto(false);
-                  const reader = new FileReader();
-                  reader.onload = () => setPhotoPreview(String(reader.result ?? ""));
-                  reader.readAsDataURL(file);
-                }}
-              />
-            </label>
-            {photoPreview || (existingPhoto && !clearPhoto) ? (
-              <button
-                type="button"
-                disabled={busy}
-                className="rounded-lg px-3 py-2 text-base text-violet-200 ring-1 ring-orange-500/30"
-                onClick={() => {
-                  setPhotoFile(null);
-                  setPhotoPreview(null);
-                  setClearPhoto(true);
-                }}
-              >
-                הסרת תמונה
-              </button>
-            ) : null}
-          </div>
-        </div>
       </FormSection>
       <FormSection title="הכניסה">
         <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-base ring-1 ring-orange-500/20">
@@ -617,6 +598,66 @@ export function HouseForm({
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
           />
         </Field>
+      </FormSection>
+      <FormSection title="תמונת קישוט">
+        <p className="text-base text-violet-300">אפשר גם להעלות אחרי שתקשטו את הבית או את העץ.</p>
+        {photoPreview || (existingPhoto && !clearPhoto) ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={photoPreview || existingPhoto}
+            alt=""
+            className="mb-2 h-36 w-full rounded-xl object-cover ring-1 ring-orange-500/25"
+          />
+        ) : (
+          <div className="mb-2 flex h-24 items-center justify-center rounded-xl bg-[#1d1028] text-base text-violet-400 ring-1 ring-orange-500/15">
+            אין תמונה עדיין
+          </div>
+        )}
+        <div className="flex flex-wrap gap-2">
+          <label className="inline-flex cursor-pointer">
+            <span
+              className={
+                busy
+                  ? "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-base font-medium text-black opacity-60"
+                  : "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-base font-medium text-black"
+              }
+            >
+              <Camera className="size-3.5" />
+              {photoPreview || (existingPhoto && !clearPhoto) ? "החלפת תמונה" : "העלאת תמונה"}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="sr-only"
+              disabled={busy}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (!file) return;
+                setPhotoFile(file);
+                setClearPhoto(false);
+                const reader = new FileReader();
+                reader.onload = () => setPhotoPreview(String(reader.result ?? ""));
+                reader.readAsDataURL(file);
+              }}
+            />
+          </label>
+          {photoPreview || (existingPhoto && !clearPhoto) ? (
+            <button
+              type="button"
+              disabled={busy}
+              className="rounded-lg px-3 py-2 text-base text-violet-200 ring-1 ring-orange-500/30"
+              onClick={() => {
+                setPhotoFile(null);
+                setPhotoPreview(null);
+                setClearPhoto(true);
+              }}
+            >
+              הסרת תמונה
+            </button>
+          ) : null}
+        </div>
       </FormSection>
       <Button
         type="submit"

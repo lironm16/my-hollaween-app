@@ -130,6 +130,16 @@ export function eventNightDateLabel() {
   return eventNightParts().labelHe;
 }
 
+/** Pause/stop chips: only after the house’s first window on Halloween night. */
+export function nightStatusControlsEnabled(house: HoursSource, now = new Date()) {
+  if (eventNightRelation(now) !== 0) return false;
+  const first = houseHoursWindows(house)[0];
+  if (!first) return false;
+  const from = parseClockMinutes(first.from);
+  if (from === null) return false;
+  return minutesNow(now) >= from;
+}
+
 /** Open / not-yet / closing-soon — only on the Halloween event night. */
 export function hoursStatus(
   house: HoursSource & {

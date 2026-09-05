@@ -20,7 +20,7 @@ import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
 import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
 import { distanceMeters } from "@/lib/geo";
-import { candyPinDot, effectiveVisit, isDecorated } from "@/lib/house-state";
+import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { isClosingSoon, isOnBreak, isOpeningSoon } from "@/lib/hours";
 import type { ScareLevel } from "@/lib/types";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
@@ -47,7 +47,7 @@ function wrapRoutePin(html: string, routeOrder?: number) {
   if (!routeOrder) return { html, extraH: 0 };
   return {
     extraH: ROUTE_BADGE_H,
-    html: `<div class="house-pin-route">${routeBadgeHtml(routeOrder)}${html}</div>`,
+    html: `<div class="house-pin-route">${html}${routeBadgeHtml(routeOrder)}</div>`,
   };
 }
 
@@ -66,7 +66,7 @@ const SCARE_SRC: Record<ScareLevel, string> = {
 
 function pinVisitKind(house: PublicHouse, now: Date): "closed" | "break" | null {
   if (effectiveVisit(house) === "closed") return "closed";
-  if (isOnBreak(house, now)) return "break";
+  if (isOwnerFrozen(house, now.getTime()) || isOnBreak(house, now)) return "break";
   return null;
 }
 
@@ -243,7 +243,7 @@ function clusterIcon(
   const badge = routeOrder ? routeBadgeHtml(routeOrder) : "";
   return L.divIcon({
     className: `pumpkin-pin-icon pumpkin-pin-fan${selectedClass}`,
-    html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" aria-hidden="true"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span></div>${badge}${apts}</div>`,
+    html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" aria-hidden="true"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span></div>${apts}${badge}</div>`,
     iconSize: [width, height],
     iconAnchor: [width / 2, height],
   });

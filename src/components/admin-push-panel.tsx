@@ -72,7 +72,7 @@ export function AdminPushPanel() {
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    void fetch("/api/admin/push/templates", { cache: "no-store" })
+    void fetch("/api/admin/push/templates", { cache: "no-store", credentials: "include" })
       .then((res) => res.json())
       .then((data: { templates?: PushTemplateMeta[] }) => {
         if (Array.isArray(data.templates)) setTemplates(data.templates);
@@ -87,6 +87,7 @@ export function AdminPushPanel() {
     try {
       const res = await fetch("/api/admin/push/templates", {
         method: "PUT",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           templates: next.map((item) => ({
@@ -133,7 +134,10 @@ export function AdminPushPanel() {
   async function saveEdit() {
     if (!expanded) return;
     const ok = await patch(expanded, { title: draftTitle, body: draftBody });
-    if (ok) cancelEdit();
+    if (ok) {
+      toast.success("התבנית נשמרה");
+      cancelEdit();
+    }
   }
 
   async function sendBroadcast() {

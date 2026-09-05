@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { HouseCard } from "@/components/house-card";
 import { distanceMeters } from "@/lib/geo";
-import { effectiveVisit, isFrozen } from "@/lib/house-state";
+import { effectiveVisit } from "@/lib/house-state";
 import type { PublicHouse } from "@/lib/types";
 
 export function HouseList({
@@ -39,7 +39,6 @@ export function HouseList({
         d: origin ? distanceMeters(origin, h) : undefined,
       }))
       .sort((a, b) => {
-        if (isFrozen(a.h) !== isFrozen(b.h)) return isFrozen(a.h) ? 1 : -1;
         const va = effectiveVisit(a.h) === "closed";
         const vb = effectiveVisit(b.h) === "closed";
         if (va !== vb) return va ? 1 : -1;

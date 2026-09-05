@@ -8,7 +8,6 @@ import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
 import { formatDistance } from "@/lib/geo";
 import { formatHoursLabel } from "@/lib/hours";
-import { isFrozen } from "@/lib/house-state";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
@@ -35,7 +34,6 @@ export function HouseCard({
       size="sm"
       className={cn(
         "cursor-pointer border-orange-500/15 bg-[#1d1028]/90 text-base transition hover:border-orange-400/50 hover:bg-[#261536]",
-        isFrozen(house) && "opacity-50",
       )}
       onClick={onOpen}
     >

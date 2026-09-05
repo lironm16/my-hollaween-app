@@ -162,6 +162,7 @@ export type DbFile = {
   pushSubscriptions?: PushSubscriptionRecord[];
   vapid?: VapidKeys;
   pushSettings?: {
+    updatedAt?: string;
     templates?: Partial<
       Record<
         | "onBreak"

@@ -22,11 +22,8 @@ export function isFrozen(
   return Boolean(house.adminFrozen) || isOwnerFrozen(house, now);
 }
 
-export function isPubliclyListed(house: House | PublicHouse, now = Date.now()) {
-  if (house.status !== "approved") return false;
-  // Rehearsal freeze stub stays on the public map so testers can open it.
-  if (house.id === "בית-9316") return true;
-  return !isFrozen(house, now);
+export function isPubliclyListed(house: House | PublicHouse) {
+  return house.status === "approved";
 }
 
 export function effectiveVisit(house: { visit?: VisitState; soldOut?: boolean }): VisitState {
