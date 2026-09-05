@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Heart, Navigation, Share2, X } from "lucide-react";
+import { CheckCircle2, Heart, Navigation, Pencil, Share2, X } from "lucide-react";
 import { toast } from "sonner";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
@@ -12,6 +12,8 @@ export function HouseActionBar({
   visited,
   onToggleLike,
   onToggleVisited,
+  onToggleEdit,
+  editing,
   onClose,
 }: {
   house: PublicHouse;
@@ -19,6 +21,8 @@ export function HouseActionBar({
   visited?: boolean;
   onToggleLike?: () => void;
   onToggleVisited?: () => void;
+  onToggleEdit?: () => void;
+  editing?: boolean;
   onClose?: () => void;
 }) {
   return (
@@ -69,6 +73,18 @@ export function HouseActionBar({
           onClick={onToggleVisited}
         >
           <CheckCircle2 className={cn("size-5", visited && "fill-current")} strokeWidth={2.2} />
+        </button>
+      ) : null}
+      {onToggleEdit ? (
+        <button
+          type="button"
+          className={cn("house-action-btn", editing && "is-edit")}
+          aria-label={editing ? "סגירת עריכה" : "עריכת הבית"}
+          aria-pressed={editing}
+          title="עריכה"
+          onClick={onToggleEdit}
+        >
+          <Pencil className="size-5" strokeWidth={2.2} />
         </button>
       ) : null}
       {onClose ? (

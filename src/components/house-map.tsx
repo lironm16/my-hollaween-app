@@ -13,15 +13,16 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import { LocateFixed } from "lucide-react";
+import { MapLegend } from "@/components/map-legend";
 import "leaflet/dist/leaflet.css";
 import { config, inNeighborhood } from "@/lib/config";
 import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
 import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
 import { distanceMeters } from "@/lib/geo";
-import { themeEmoji } from "@/lib/labels";
-import { pinNightStatus } from "@/lib/house-state";
-import { isClosingSoon } from "@/lib/hours";
+import { candyPinDot, effectiveVisit, isDecorated } from "@/lib/house-state";
+import { isClosingSoon, isOnBreak, isOpeningSoon } from "@/lib/hours";
+import type { ScareLevel } from "@/lib/types";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { cn } from "@/lib/utils";
 
@@ -45,32 +46,161 @@ function routeOrderIcon(order: number) {
   });
 }
 
-function pinStatusMark(houses: PublicHouse[]) {
-  const status = pinNightStatus(houses);
-  if (status === "ok") return "";
-  const label =
-    status === "closed"
-      ? "נגמר המלאי"
-      : status === "decor"
-        ? "מקושט בלי ממתקים"
-        : "חלק מהדירות נגמרו";
-  return `<b class="pin-status is-${status}" aria-label="${label}"></b>`;
+const PIN = 38;
+const FAN_R = 70;
+
+function attr(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
-function clusterIcon(cluster: HouseCluster, selected = false, closingSoon = false) {
-  const emoji = themeEmoji[cluster.houses[0].theme ?? "pumpkin"];
-  const count = cluster.houses.length;
-  const badge =
-    count > 1 ? `<b class="pin-count" aria-label="${count} דירות">×${count}</b>` : "";
-  const ring = closingSoon
-    ? `<i class="pin-closing-ring" aria-hidden="true"></i>`
-    : "";
-  const closingClass = closingSoon ? " is-closing-soon" : "";
+const SCARE_SRC: Record<ScareLevel, string> = {
+  mild: "/icons/pin-scare-mild.png",
+  medium: "/icons/pin-scare-medium.png",
+  spicy: "/icons/pin-scare-spicy.png",
+};
+
+function pinVisitKind(house: PublicHouse, now: Date): "closed" | "break" | null {
+  if (effectiveVisit(house) === "closed") return "closed";
+  if (isOnBreak(house, now)) return "break";
+  return null;
+}
+
+function pinFaceKind(house: PublicHouse): "bare" | "scare" {
+  return isDecorated(house) ? "scare" : "bare";
+}
+
+function pinStatusMark(house: PublicHouse, now: Date) {
+  const visit = pinVisitKind(house, now);
+  if (visit === "closed") {
+    return `<b class="pin-status is-closed" aria-label="סגור"></b>`;
+  }
+  if (visit === "break") {
+    return `<b class="pin-status is-break" aria-label="הפסקה"></b>`;
+  }
+  const dot = candyPinDot(house);
+  if (!dot) return "";
+  const label = dot === "low" ? "מעט ממתקים" : dot === "out" ? "נגמרו הממתקים" : "יש ממתקים";
+  return `<b class="pin-status is-${dot}" aria-label="${label}"></b>`;
+}
+
+function hoursRingHtml(house: PublicHouse, now: Date) {
+  if (pinVisitKind(house, now)) return "";
+  if (isClosingSoon(house, now)) {
+    return `<i class="pin-hours-ring is-closing" aria-hidden="true"></i>`;
+  }
+  if (isOpeningSoon(house, now)) {
+    return `<i class="pin-hours-ring is-opening" aria-hidden="true"></i>`;
+  }
+  return "";
+}
+
+function hoursPinClass(house: PublicHouse, now: Date) {
+  if (pinVisitKind(house, now)) return "";
+  if (isClosingSoon(house, now)) return " is-closing-soon";
+  if (isOpeningSoon(house, now)) return " is-opening-soon";
+  return "";
+}
+
+function pinFaceHtml(house: PublicHouse) {
+  if (pinFaceKind(house) !== "scare") return "";
+  const src = SCARE_SRC[house.scareLevel ?? "mild"];
+  return `<img class="pin-scare" src="${src}" alt="" />`;
+}
+
+function housePinHtml(
+  house: PublicHouse,
+  now: Date,
+  extras?: { selected?: boolean; houseId?: string; extraClass?: string; extraStyle?: string },
+) {
+  const selectedClass = extras?.selected ? " is-selected" : "";
+  const hoursClass = hoursPinClass(house, now);
+  const face = pinFaceKind(house);
+  const visit = pinVisitKind(house, now);
+  const bareClass = face === "bare" ? " is-undecorated" : "";
+  const extraClass = extras?.extraClass ? ` ${extras.extraClass}` : "";
+  const idAttr = extras?.houseId ? ` data-house-id="${attr(extras.houseId)}"` : "";
+  const fill = face === "bare" ? "#94a3b8" : "#6d28d9";
+  const style = extras?.extraStyle ? `${extras.extraStyle};background:${fill}` : `background:${fill}`;
+  const label =
+    visit === "closed"
+      ? 'aria-label="סגור"'
+      : visit === "break"
+        ? 'aria-label="הפסקה"'
+        : isClosingSoon(house, now)
+          ? 'aria-label="נסגר בקרוב"'
+          : isOpeningSoon(house, now)
+            ? 'aria-label="נפתח בקרוב"'
+            : face === "scare"
+              ? 'aria-label="מקושט"'
+              : 'aria-label="לא מקושט"';
+  return `<div class="house-pin${selectedClass}${hoursClass}${bareClass}${extraClass}" style="${style}" ${label}${idAttr}>${hoursRingHtml(house, now)}${pinStatusMark(house, now)}${pinFaceHtml(house)}</div>`;
+}
+
+function fanOffsets(count: number) {
+  const spread = Math.min(96, 32 * Math.max(1, count - 1));
+  return Array.from({ length: count }, (_, index) => {
+    const t = count === 1 ? 0.5 : index / (count - 1);
+    const rad = ((-spread / 2 + t * spread) * Math.PI) / 180;
+    return { x: Math.sin(rad) * FAN_R, y: Math.cos(rad) * FAN_R };
+  });
+}
+
+function clusterIcon(cluster: HouseCluster, selectedId: string | null | undefined, now: Date) {
+  const houses = cluster.houses;
+  const only = houses[0];
+  const selectedHere = Boolean(selectedId && houses.some((house) => house.id === selectedId));
+  const selectedClass = selectedHere ? " is-selected" : "";
+
+  if (!only || houses.length <= 1) {
+    const hoursClass = only ? hoursPinClass(only, now) : "";
+    return L.divIcon({
+      className: `pumpkin-pin-icon${selectedClass}${hoursClass}`,
+      html: only ? housePinHtml(only, now, { selected: selectedHere }) : "",
+      iconSize: [40, 44],
+      iconAnchor: [20, 42],
+    });
+  }
+
+  if (!selectedHere) {
+    return L.divIcon({
+      className: `pumpkin-pin-icon pumpkin-pin-building${selectedClass}`,
+      html: `<div class="house-pin is-building" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span></div>`,
+      iconSize: [44, 48],
+      iconAnchor: [22, 44],
+    });
+  }
+
+  const offsets = fanOffsets(houses.length);
+  const pad = 22;
+  const maxX = Math.max(...offsets.map((item) => Math.abs(item.x)));
+  const width = Math.ceil(Math.max(44, 2 * (maxX + PIN / 2 + pad)));
+  const height = Math.ceil(FAN_R + PIN / 2 + PIN + 8);
+  const cx = width / 2;
+  const lines = offsets
+    .map((item) => {
+      const x2 = cx + item.x;
+      const y2 = height - item.y;
+      return `<line x1="${cx}" y1="${height - PIN / 2}" x2="${x2}" y2="${y2}" />`;
+    })
+    .join("");
+  const apts = houses
+    .map((house, index) => {
+      const { x, y } = offsets[index]!;
+      const left = cx + x - PIN / 2;
+      const bottom = y - PIN / 2;
+      return housePinHtml(house, now, {
+        selected: house.id === selectedId,
+        houseId: house.id,
+        extraClass: "is-apt",
+        extraStyle: `left:${left}px;bottom:${bottom}px;z-index:${house.id === selectedId ? houses.length + 2 : index + 1}`,
+      });
+    })
+    .join("");
   return L.divIcon({
-    className: `pumpkin-pin-icon${selected ? " is-selected" : ""}${closingClass}`,
-    html: `<div class="house-pin${selected ? " is-selected" : ""}${closingClass}" style="background:#6d28d9" ${closingSoon ? 'aria-label="נסגר בקרוב"' : ""}>${ring}${badge}${pinStatusMark(cluster.houses)}<span>${emoji}</span></div>`,
-    iconSize: [40, 44],
-    iconAnchor: [20, 42],
+    className: `pumpkin-pin-icon pumpkin-pin-fan${selectedClass}`,
+    html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building" style="background:#6d28d9" aria-hidden="true"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span></div>${apts}</div>`,
+    iconSize: [width, height],
+    iconAnchor: [width / 2, height],
   });
 }
 
@@ -101,8 +231,8 @@ function SizeSync({ active }: { active: boolean }) {
 }
 
 /**
- * After a pin tap (and peek↔full snap), pan so the house stays in the map
- * above the detail sheet. Does not fly to GPS, filters, or the route.
+ * After a pin tap, pan so the house stays in the map above the detail sheet.
+ * Does not fly to GPS, filters, or the route.
  */
 function KeepSelectedVisible({
   lat,
@@ -128,10 +258,7 @@ function KeepSelectedVisible({
       if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
       map.panBy([dx, dy], { animate: true, duration: 0.28 });
     };
-    const onSheet = (event: Event) => {
-      const snap = (event as CustomEvent<{ snap?: string }>).detail?.snap;
-      if (snap === "peek" || snap === "full") pan();
-    };
+    const onSheet = () => pan();
     const timer = window.setTimeout(pan, 70);
     window.addEventListener("hw-map-sheet", onSheet);
     return () => {
@@ -168,14 +295,23 @@ function ClusterMarker({
   const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
   const now = new Date(tick * 15_000);
   const closingSoon = cluster.houses.some((house) => isClosingSoon(house, now));
+  const openingSoon = !closingSoon && cluster.houses.some((house) => isOpeningSoon(house, now));
 
   return (
     <Marker
+      key={`${cluster.key}-${selectedHere ? "open" : "shut"}`}
       position={[cluster.lat, cluster.lng]}
-      icon={clusterIcon(cluster, selectedHere, closingSoon)}
-      zIndexOffset={selectedHere ? 500 : closingSoon ? 350 : cluster.houses.length > 1 ? 200 : 0}
+      icon={clusterIcon(cluster, selectedId, now)}
+      zIndexOffset={selectedHere ? 500 : closingSoon ? 360 : openingSoon ? 320 : cluster.houses.length > 1 ? 200 : 0}
       eventHandlers={{
-        click: () => {
+        click: (event) => {
+          const hit = (event.originalEvent.target as Element | null)?.closest?.("[data-house-id]");
+          const id = hit?.getAttribute("data-house-id");
+          const fromPin = id ? cluster.houses.find((house) => house.id === id) : undefined;
+          if (fromPin) {
+            onSelect?.(fromPin);
+            return;
+          }
           const keep = selectedId
             ? cluster.houses.find((house) => house.id === selectedId)
             : undefined;
@@ -384,16 +520,21 @@ export function HouseMap({
           </>
         ) : null}
       </MapContainer>
-      {onLocate && !pickMode ? (
-        <button
-          type="button"
-          className="locate-me absolute right-3 z-[1100] flex size-11 items-center justify-center rounded-full bg-[#1d1028] text-sky-300 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-sky-400/40"
-          aria-label="המיקום שלי"
-          title="המיקום שלי"
-          onClick={onLocate}
-        >
-          <LocateFixed className={cn("size-5", locating && "animate-pulse")} />
-        </button>
+      {!pickMode ? (
+        <div className="map-fab-stack">
+          {onLocate ? (
+            <button
+              type="button"
+              className="locate-me flex size-11 items-center justify-center rounded-full bg-[#1d1028] text-sky-300 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-sky-400/40"
+              aria-label="המיקום שלי"
+              title="המיקום שלי"
+              onClick={onLocate}
+            >
+              <LocateFixed className={cn("size-5", locating && "animate-pulse")} />
+            </button>
+          ) : null}
+          <MapLegend />
+        </div>
       ) : null}
     </div>
   );

@@ -45,6 +45,16 @@ export function pinNightStatus(
   return "ok";
 }
 
+/** Map-pin candy dot: plenty / low / out, or none if this house never offers candy. */
+export function candyPinDot(
+  house: { treats?: TreatId[]; treatStock?: TreatStock },
+): "plenty" | "low" | "out" | null {
+  if (!markedCandy({ treats: house.treats ?? [] })) return null;
+  const level = candyLevel({ treats: house.treats ?? [], treatStock: house.treatStock });
+  if (level === "plenty" || level === "low" || level === "out") return level;
+  return null;
+}
+
 export function defaultTreatStock(treats: TreatId[]): TreatStock {
   const stock: TreatStock = {};
   for (const id of treats) stock[id] = "plenty";

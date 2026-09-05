@@ -16,6 +16,101 @@ export default function DecorPreviewPage() {
           <PreviewNav current="/preview/decor" />
         </header>
 
+        <section className="space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/20">
+          <h2 className="text-base font-medium text-orange-100">סיכות במפה — רוח לפחד, נקודה לממתקים</h2>
+          <p className="text-sm text-violet-200">
+            התמונה על הסיכה היא רמת הפחד. הסיכה הסגולה נשארת, לא מקושט הוא אפור. נקודת הממתקים
+            גדולה יותר: ירוק / כתום / אדום. סגור והפסקה הם נקודה על הסיכה, בלי רוח ובלי ממתקים.
+          </p>
+          <div className="flex flex-wrap items-end gap-8 pt-2">
+            <div className="flex flex-col items-center gap-2">
+              <div className="house-pin relative" style={{ background: "#6d28d9" }} aria-label="מקושט">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="pin-scare" src="/icons/pin-scare-mild.png" alt="" />
+                <b className="pin-status is-plenty" />
+              </div>
+              <span className="text-[11px] text-violet-300">מקושט</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <div className="house-pin is-undecorated relative" style={{ background: "#94a3b8" }}>
+                <b className="pin-status is-plenty" />
+              </div>
+              <span className="text-[11px] text-violet-300">בלי קישוט</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <div
+                className="house-pin is-building relative"
+                style={{ background: "#6d28d9" }}
+                aria-label="3 דירות"
+              >
+                <span>🎃</span>
+                <span className="pin-apt-dots">
+                  <i className="pin-apt-dot is-plenty" />
+                  <i className="pin-apt-dot is-low" />
+                </span>
+              </div>
+              <span className="text-[11px] text-violet-300">לפני הקשה</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <div
+                className="house-pin-fan relative"
+                style={{ width: 156, height: 135 }}
+                aria-label="אחרי הקשה"
+              >
+                <svg className="pin-fan-lines" aria-hidden viewBox="0 0 156 135" width={156} height={135}>
+                  <line x1="78" y1="116" x2="41" y2="76" />
+                  <line x1="78" y1="116" x2="78" y2="65" />
+                  <line x1="78" y1="116" x2="115" y2="76" />
+                </svg>
+                <div className="house-pin is-base is-building" style={{ background: "#6d28d9" }} aria-hidden>
+                  <span>🎃</span>
+                  <span className="pin-apt-dots">
+                    <i className="pin-apt-dot is-plenty" />
+                    <i className="pin-apt-dot is-low" />
+                  </span>
+                </div>
+                <div
+                  className="house-pin is-apt"
+                  style={{ left: 22, bottom: 40, background: "#6d28d9" }}
+                  aria-label="מקושט"
+                >
+                  <i className="pin-sprinkles" aria-hidden>
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </i>
+                  <span>🎃</span>
+                  <b className="pin-status is-plenty" />
+                </div>
+                <div
+                  className="house-pin is-apt is-closing-soon"
+                  style={{ left: 59, bottom: 51, background: "#6d28d9" }}
+                  aria-label="נסגר בקרוב"
+                >
+                  <i className="pin-hours-ring is-closing" aria-hidden />
+                  <span>🍬</span>
+                  <b className="pin-status is-low" />
+                </div>
+                <div
+                  className="house-pin is-apt"
+                  style={{ left: 96, bottom: 40, background: "#6d28d9" }}
+                  aria-label="מקושט בלי ממתקים"
+                >
+                  <i className="pin-sprinkles" aria-hidden>
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </i>
+                  <span>💀</span>
+                </div>
+              </div>
+              <span className="text-[11px] text-violet-300">אחרי הקשה</span>
+            </div>
+          </div>
+        </section>
+
         <div className="space-y-3">
           {DECOR_OPTIONS.map((option) => {
             const Glyph = option.Glyph;

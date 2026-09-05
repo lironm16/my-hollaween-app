@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { CheckCircle2, Heart, Pencil, X } from "lucide-react";
+import { CheckCircle2, Heart, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { CodesCopy } from "@/components/codes-copy";
@@ -31,6 +31,7 @@ export function HouseDetails({
   editing = false,
   onToggleEdit,
   chrome = "page",
+  actions,
 }: {
   house: PublicHouse;
   extra?: ReactNode;
@@ -44,7 +45,9 @@ export function HouseDetails({
   canEdit?: boolean;
   editing?: boolean;
   onToggleEdit?: () => void;
-  /** Sheet chrome already has Maps / share / heart / visited. */
+  /** Rendered under the title, e.g. per-apartment map actions in the sheet. */
+  actions?: ReactNode;
+  /** Sheet cards have their own action bar; still show the title and details. */
   chrome?: "page" | "sheet";
 }) {
   const displayAddress = formatDisplayAddress(house);
@@ -68,38 +71,53 @@ export function HouseDetails({
   const sheet = chrome === "sheet";
   return (
     <div className="space-y-3">
-      {sheet ? null : (
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
           <p className="text-sm text-violet-200">{displayAddress}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-0.5">
-          {onToggleVisited ? (
-            <button
-              type="button"
-              aria-label={visited ? "סמנו כלא ביקרתי" : "סמנו שביקרתי"}
-              onClick={onToggleVisited}
-              className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
-            >
-              <CheckCircle2
-                className={cn("size-6", visited && "fill-emerald-500/30 text-emerald-400")}
-              />
-            </button>
-          ) : null}
-          {onToggleLike ? (
-            <button
-              type="button"
-              aria-label={liked ? "הסירו מהשמורים" : "שמרו את הבית"}
-              onClick={onToggleLike}
-              className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
-            >
-              <Heart className={cn("size-6", liked && "fill-orange-500 text-orange-500")} />
-            </button>
-          ) : null}
-        </div>
+        {sheet ? null : (
+          <div className="flex shrink-0 items-center gap-0.5">
+            {onToggleVisited ? (
+              <button
+                type="button"
+                aria-label={visited ? "סמנו כלא ביקרתי" : "סמנו שביקרתי"}
+                onClick={onToggleVisited}
+                className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
+              >
+                <CheckCircle2
+                  className={cn("size-6", visited && "fill-emerald-500/30 text-emerald-400")}
+                />
+              </button>
+            ) : null}
+            {onToggleLike ? (
+              <button
+                type="button"
+                aria-label={liked ? "הסירו מהשמורים" : "שמרו את הבית"}
+                onClick={onToggleLike}
+                className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
+              >
+                <Heart className={cn("size-6", liked && "fill-orange-500 text-orange-500")} />
+              </button>
+            ) : null}
+            {canEdit && onToggleEdit ? (
+              <button
+                type="button"
+                aria-label={editing ? "סגירת עריכה" : "עריכת הבית"}
+                aria-pressed={editing}
+                onClick={onToggleEdit}
+                className={cn(
+                  "rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15",
+                  editing && "bg-orange-500/20 text-orange-300",
+                )}
+              >
+                <Pencil className="size-6" />
+              </button>
+            ) : null}
+          </div>
+        )}
       </div>
-      )}
+      {actions}
       {house.photoUrl && !photoBroken ? (
         loadPhoto ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -174,23 +192,6 @@ export function HouseDetails({
         </Link>
       </div>
       )}
-      {canEdit && onToggleEdit ? (
-        <button
-          type="button"
-          aria-label={editing ? "סגירת עריכה" : "עריכה"}
-          aria-pressed={editing}
-          onClick={onToggleEdit}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition",
-            editing
-              ? "bg-orange-500 text-black hover:bg-orange-400"
-              : "text-orange-200 hover:bg-orange-500/15",
-          )}
-        >
-          {editing ? <X className="size-4 shrink-0" /> : <Pencil className="size-4 shrink-0" />}
-          <span>{editing ? "סגירה" : "עריכה"}</span>
-        </button>
-      ) : null}
       {extra}
     </div>
   );

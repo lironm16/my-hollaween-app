@@ -63,8 +63,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
         {/* Inlined: Cursor Preview is a different origin and Next.js 16 returns 403 for /_next CSS. */}
         {themeCss ? <style dangerouslySetInnerHTML={{ __html: themeCss }} /> : null}
-        <link rel="stylesheet" href="/app.css?v=42" />
-        <link rel="stylesheet" href="/shell.css?v=42" />
+        <link rel="stylesheet" href="/app.css?v=48" />
+        <link rel="stylesheet" href="/shell.css?v=47" />
       </head>
       <body className="relative h-full min-h-dvh font-sans">
         <Script src="/boot.js" strategy="beforeInteractive" />
