@@ -236,13 +236,20 @@ const youAreHereIcon = L.divIcon({
   popupAnchor: [0, -12],
 });
 
-/** One-shot size sync only — never pans/zooms the map. */
+/** Keep Leaflet sized to the visible viewport — never pans/zooms the map. */
 function SizeSync({ active }: { active: boolean }) {
   const map = useMap();
   useEffect(() => {
     if (!active) return;
-    const id = window.setTimeout(() => map.invalidateSize({ animate: false }), 40);
-    return () => window.clearTimeout(id);
+    const sync = () => map.invalidateSize({ animate: false });
+    const id = window.setTimeout(sync, 40);
+    window.addEventListener("resize", sync);
+    window.visualViewport?.addEventListener("resize", sync);
+    return () => {
+      window.clearTimeout(id);
+      window.removeEventListener("resize", sync);
+      window.visualViewport?.removeEventListener("resize", sync);
+    };
   }, [active, map]);
   return null;
 }

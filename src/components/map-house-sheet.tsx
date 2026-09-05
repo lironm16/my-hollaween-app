@@ -8,6 +8,7 @@ import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { visualViewportHeight } from "@/lib/viewport";
 
 const MAP_SHEET_PEEK_VH = 0.5;
 
@@ -101,16 +102,17 @@ export function MapHouseSheet({
   }, [clusterKey, house.id, editing, sheetH, overview]);
 
   function peekPx() {
-    return Math.round(window.innerHeight * MAP_SHEET_PEEK_VH);
+    return Math.round(visualViewportHeight() * MAP_SHEET_PEEK_VH);
   }
 
   function maxPx() {
-    return Math.max(peekPx(), window.innerHeight - 8);
+    return Math.max(peekPx(), visualViewportHeight() - 8);
   }
 
   function onSheetPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.button !== 0) return;
     if (isSheetInteractive(event.target)) return;
+    if (event.target instanceof Element && event.target.closest(".map-house-sheet-body")) return;
     const h = sheetRef.current?.getBoundingClientRect().height ?? peekPx();
     naturalH.current = h;
     liveH.current = h;

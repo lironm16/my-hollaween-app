@@ -439,8 +439,8 @@ export function NeighborhoodApp({
   return (
     <div
       id="neighborhood-shell"
-      className="relative isolate flex h-dvh flex-col overflow-hidden"
-      style={{ display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}
+      className="relative isolate flex flex-col overflow-hidden"
+      style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
       <AppHeader onMainTap={goToMainMap} onHomeTap={goHome} />
       <div
@@ -609,7 +609,7 @@ export function NeighborhoodApp({
           <>
             <div
               className={cn(
-                "map-stage absolute inset-0",
+                "map-stage absolute inset-0 z-0 isolate",
                 view !== "map" && "invisible pointer-events-none",
               )}
               style={{ position: "absolute", inset: 0 }}
@@ -793,7 +793,7 @@ function CatalogMetaChip({
 }) {
   const stale = offline || unreachable || source === "cache" || source === "snapshot";
   return (
-    <div className="pointer-events-none absolute top-2 start-2 z-[1100]">
+    <div className="pointer-events-none absolute top-2 start-2 z-10">
       <span className="inline-flex max-w-[min(100%,16rem)] items-center gap-1.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
         <span>{houseCount} בתים</span>
         {stopCount != null ? <span>· {stopCount} עצירות</span> : null}

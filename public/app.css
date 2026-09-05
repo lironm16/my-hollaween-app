@@ -356,9 +356,6 @@
   .z-50 {
     z-index: 50;
   }
-  .z-\[1100\] {
-    z-index: 1100;
-  }
   .z-\[1200\] {
     z-index: 1200;
   }
@@ -597,9 +594,6 @@
   .h-\[calc\(100\%-1px\)\] {
     height: calc(100% - 1px);
   }
-  .h-\[min\(92vh\,720px\)\] {
-    height: min(92vh, 720px);
-  }
   .h-auto {
     height: auto;
   }
@@ -620,9 +614,6 @@
   }
   .max-h-64 {
     max-height: calc(var(--spacing) * 64);
-  }
-  .max-h-\[92vh\] {
-    max-height: 92vh;
   }
   .max-h-\[min\(88dvh\,40rem\)\] {
     max-height: min(88dvh, 40rem);
@@ -754,6 +745,9 @@
   }
   .touch-none {
     touch-action: none;
+  }
+  .resize {
+    resize: both;
   }
   .scroll-my-1 {
     scroll-margin-block: var(--spacing);
@@ -3438,6 +3432,8 @@ svg.leaflet-zoom-animated {
 }
 :root,
 .dark {
+  --app-h: 100dvh;
+  --vv-bottom-inset: 0px;
   --background: oklch(0.17 0.04 310);
   --foreground: oklch(0.96 0.03 80);
   --card: oklch(0.23 0.05 310);
@@ -3481,6 +3477,12 @@ svg.leaflet-zoom-animated {
   }
   html {
     font-size: 18px;
+  }
+  @supports (height: 100svh) {
+    :root,
+    .dark {
+      --app-h: 100svh;
+    }
   }
   html,
   body {
@@ -4522,13 +4524,14 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   flex-direction: column;
   height: 50%;
   max-height: 50dvh;
+  max-height: calc(var(--app-h, 100svh) * 0.5);
   overflow: hidden;
   background: #160b20;
   border-radius: 22px 22px 0 0;
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(249, 115, 22, 0.28);
   border-bottom: 0;
-  touch-action: none;
+  touch-action: pan-y;
   user-select: none;
   transition: height 0.22s ease;
 }
@@ -4538,6 +4541,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .map-house-sheet.is-dragging,
 .map-house-sheet.is-raised {
   max-height: calc(100dvh - 8px);
+  max-height: calc(var(--app-h, 100svh) - 8px);
 }
 .map-house-sheet.is-cluster-overview {
   height: auto;
@@ -4564,6 +4568,10 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   width: 48px;
   height: 48px;
 }
+.map-house-sheet-chrome,
+.map-house-sheet-handle-hit {
+  touch-action: none;
+}
 .map-house-sheet-handle-hit {
   display: grid;
   place-items: center;
@@ -4582,7 +4590,11 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .map-house-sheet-body {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   padding: 0 16px calc(16px + env(safe-area-inset-bottom, 0px));
 }
 .map-house-sheet button,
@@ -4700,7 +4712,12 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   color: #e9d5ff;
 }
 [data-slot="sheet-content"][data-side="bottom"] {
+  bottom: var(--vv-bottom-inset, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.filters-sheet-panel {
+  height: min(720px, calc(var(--app-h, 100svh) * 0.92));
+  max-height: min(720px, calc(var(--app-h, 100svh) - var(--vv-bottom-inset, 0px)));
 }
 @property --tw-translate-x {
   syntax: "*";
