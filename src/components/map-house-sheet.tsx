@@ -43,6 +43,7 @@ export function MapHouseSheet({
   onClose: () => void;
   liked?: (id: string) => boolean;
   onToggleLike?: (id: string) => void;
+  visited?: (id: string) => boolean;
   onToggleVisited?: (id: string) => void;
   extra?: ReactNode;
   catalogSource?: string | null;
