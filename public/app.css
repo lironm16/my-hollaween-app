@@ -55,8 +55,6 @@
     --container-lg: 32rem;
     --container-3xl: 48rem;
     --container-6xl: 72rem;
-    --text-xs: 0.75rem;
-    --text-xs--line-height: calc(1 / 0.75);
     --text-sm: 0.875rem;
     --text-sm--line-height: calc(1.25 / 0.875);
     --text-base: 1rem;
@@ -605,17 +603,11 @@
   .max-h-\(--available-height\) {
     max-height: var(--available-height);
   }
-  .max-h-28 {
-    max-height: calc(var(--spacing) * 28);
-  }
   .max-h-56 {
     max-height: calc(var(--spacing) * 56);
   }
   .max-h-64 {
     max-height: calc(var(--spacing) * 64);
-  }
-  .max-h-80 {
-    max-height: calc(var(--spacing) * 80);
   }
   .max-h-\[92vh\] {
     max-height: 92vh;
@@ -969,12 +961,6 @@
     border-bottom-style: var(--tw-border-style);
     border-bottom-width: 1px;
   }
-  .border-amber-500\/25 {
-    border-color: color-mix(in srgb, oklch(76.9% 0.188 70.08) 25%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklab, var(--color-amber-500) 25%, transparent);
-    }
-  }
   .border-border {
     border-color: var(--border);
   }
@@ -1034,9 +1020,6 @@
   }
   .bg-\[\#2a1638\] {
     background-color: #2a1638;
-  }
-  .bg-\[\#2a1638\]\/95 {
-    background-color: color-mix(in oklab, #2a1638 95%, transparent);
   }
   .bg-\[\#3a2a48\]\/92 {
     background-color: color-mix(in oklab, #3a2a48 92%, transparent);
@@ -1398,9 +1381,6 @@
   .ps-5 {
     padding-inline-start: calc(var(--spacing) * 5);
   }
-  .pe-1 {
-    padding-inline-end: var(--spacing);
-  }
   .pe-2 {
     padding-inline-end: calc(var(--spacing) * 2);
   }
@@ -1418,6 +1398,9 @@
   }
   .pb-1 {
     padding-bottom: var(--spacing);
+  }
+  .pb-10 {
+    padding-bottom: calc(var(--spacing) * 10);
   }
   .text-center {
     text-align: center;
@@ -1467,27 +1450,8 @@
     font-size: var(--text-xl);
     line-height: var(--tw-leading, var(--text-xl--line-height));
   }
-  .text-xs {
-    font-size: var(--text-xs);
-    line-height: var(--tw-leading, var(--text-xs--line-height));
-  }
-  .text-\[0\.8rem\] {
-    font-size: 0.8rem;
-  }
   .text-\[1\.35rem\] {
     font-size: 1.35rem;
-  }
-  .text-\[10px\] {
-    font-size: 10px;
-  }
-  .text-\[11px\] {
-    font-size: 11px;
-  }
-  .text-\[12px\] {
-    font-size: 12px;
-  }
-  .text-\[13px\] {
-    font-size: 13px;
   }
   .text-\[15px\] {
     font-size: 15px;
@@ -4026,6 +3990,9 @@ svg.leaflet-zoom-animated {
   display: block;
   width: 22px;
   height: 16px;
+  font-size: 0;
+  line-height: 0;
+  transform: translateY(4px);
 }
 .pin-houses i {
   position: absolute;
@@ -4508,7 +4475,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   max-height: 92% !important;
 }
 .house-pin.is-legend .pin-houses {
-  transform: scale(0.78);
+  transform: translateY(4px) scale(0.78);
 }
 .house-pin.is-legend .pin-status.is-break {
   box-shadow: none;
@@ -4550,8 +4517,8 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   z-index: 50;
   display: flex;
   flex-direction: column;
-  height: auto;
-  max-height: min(33%, 33dvh);
+  height: 50%;
+  max-height: 50dvh;
   overflow: hidden;
   background: #160b20;
   border-radius: 22px 22px 0 0;
@@ -4571,32 +4538,28 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 }
 .map-house-sheet-chrome {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px 0;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 2px 8px 4px;
   flex-shrink: 0;
 }
 .map-house-sheet-chrome .house-action-bar {
-  flex-shrink: 0;
+  width: 100%;
+  justify-content: space-evenly;
+  gap: 0;
   flex-wrap: nowrap;
-  gap: 4px;
   margin-inline-start: 0;
 }
 .map-house-sheet-chrome .house-action-btn {
-  width: 40px;
-  height: 40px;
-}
-.map-house-sheet-chrome .house-action-btn.is-close {
-  margin-inline-start: 0;
-  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
 }
 .map-house-sheet-handle-hit {
   display: grid;
   place-items: center;
-  flex: 1;
-  min-width: 28px;
-  min-height: 44px;
-  padding: 8px 0;
+  width: 100%;
+  min-height: 28px;
+  padding: 8px 0 2px;
   touch-action: none;
   cursor: grab;
 }

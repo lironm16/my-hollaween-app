@@ -44,3 +44,14 @@ export function clusterHousesByAddress(houses: PublicHouse[]): HouseCluster[] {
 
   return [...byKey.entries()].map(([key, group]) => clusterFromHouses(key, group));
 }
+<<<<<<< HEAD
+=======
+
+/**
+ * Group houses that share the same street address into one map pin.
+ * Nearby houses on a different address keep their own pin.
+ */
+export function clusterHousesForMap(houses: PublicHouse[]): HouseCluster[] {
+  return clusterHousesByAddress(houses);
+}
+>>>>>>> 8f9c09c (Show the multi-house pin only for the same address)

@@ -9,7 +9,7 @@ import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const MAP_SHEET_PEEK_VH = 0.33;
+const MAP_SHEET_PEEK_VH = 0.5;
 
 function isSheetInteractive(target: EventTarget | null) {
   return (
@@ -43,6 +43,7 @@ export function MapHouseSheet({
   onClose: () => void;
   liked?: (id: string) => boolean;
   onToggleLike?: (id: string) => void;
+  visited?: (id: string) => boolean;
   onToggleVisited?: (id: string) => void;
   extra?: ReactNode;
   catalogSource?: string | null;
@@ -176,7 +177,6 @@ export function MapHouseSheet({
           onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
           onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
           editing={editing}
-          onClose={onClose}
         />
       </div>
       <div className="map-house-sheet-body">

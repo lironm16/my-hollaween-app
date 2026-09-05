@@ -4,7 +4,7 @@ import { CheckCircle2, Heart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HouseTags } from "@/components/house-tags";
 import { formatDisplayAddress } from "@/lib/config";
-import { houseHeadline } from "@/lib/labels";
+import { houseHeadline, visitLabels } from "@/lib/labels";
 import { formatDistance } from "@/lib/geo";
 import { formatHoursLabel } from "@/lib/hours";
 import { effectiveVisit, isFrozen } from "@/lib/house-state";
@@ -82,7 +82,7 @@ export function HouseCard({
         </p>
         <HoursStatusBanner house={house} className="text-sm" />
         {effectiveVisit(house) === "closed" ? (
-          <p className="text-base font-semibold text-red-500">נגמר המלאי</p>
+          <p className="text-base font-semibold text-red-500">{visitLabels.closed}</p>
         ) : null}
         <HouseTags house={house} />
         {house.status === "pending" ? (
