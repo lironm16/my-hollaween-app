@@ -26,13 +26,16 @@ export function CandyTwist() {
   );
 }
 
-/** 2 — Round wrapped sweet. */
+/** 2 — Same wrapped candy as the map pin (`/icons/pin-candy.png`). */
 export function CandyRound() {
   return (
-    <Icon>
-      <path fill="currentColor" d="M2.4 9.2 6.8 12 2.4 14.8V9.2Zm19.2 0v5.6L17.2 12l4.4-2.8Z" />
-      <circle cx="12" cy="12" r="5.4" fill="currentColor" />
-    </Icon>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/icons/pin-candy.png"
+      alt=""
+      aria-hidden
+      className="block h-full w-full object-contain object-center"
+    />
   );
 }
 
@@ -118,6 +121,8 @@ export function CandySign({
   tone: CandyTone;
   className?: string;
 }) {
+  const usePinCandy = !Glyph || Glyph === CandyRound;
+
   return (
     <span
       className={cn(
@@ -128,9 +133,15 @@ export function CandySign({
       title={candyToneLabel(tone)}
       aria-label={candyToneLabel(tone)}
     >
-      <span className="size-[62%]">
-        <Glyph />
-      </span>
+      {usePinCandy ? (
+        <span className="flex size-[86%] items-center justify-center">
+          <CandyRound />
+        </span>
+      ) : (
+        <span className="size-[62%]">
+          <Glyph />
+        </span>
+      )}
       {tone === "none" ? <DiscStrike /> : null}
     </span>
   );
