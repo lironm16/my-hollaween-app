@@ -70,24 +70,33 @@ function TopicSwitch({
   onChange: (next: boolean) => void;
 }) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      disabled={disabled}
-      onClick={() => onChange(!on)}
+    <div
       className={cn(
         "flex w-full items-center justify-between gap-3 rounded-xl bg-[#12081a] px-3 py-3 text-start ring-1 ring-orange-500/20",
-        disabled && "opacity-50",
+        disabled ? "opacity-50" : "cursor-pointer",
       )}
+      onClick={() => {
+        if (disabled) return;
+        onChange(!on);
+      }}
     >
       <span className="min-w-0">
         <span className="block text-base font-medium text-orange-50">{title}</span>
         <span className="mt-0.5 block text-base text-violet-300">{hint}</span>
       </span>
-      <span
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        aria-label={title}
+        disabled={disabled}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={(event) => {
+          event.stopPropagation();
+          onChange(!on);
+        }}
         className={cn(
-          "relative h-7 w-12 shrink-0 rounded-full transition",
+          "relative h-7 w-12 shrink-0 rounded-full outline-none transition focus:outline-none focus-visible:ring-0",
           on ? "bg-orange-500" : "bg-[#2a1638] ring-1 ring-orange-500/25",
         )}
       >
@@ -97,8 +106,8 @@ function TopicSwitch({
             on ? "start-5" : "start-0.5",
           )}
         />
-      </span>
-    </button>
+      </button>
+    </div>
   );
 }
 
@@ -276,6 +285,7 @@ export function PushAlertsButton() {
       <Dialog open={askOpen} onOpenChange={(open) => (open ? setAskOpen(true) : dismissPrompt())}>
         <DialogContent
           showCloseButton={false}
+          initialFocus={false}
           className="border border-orange-500/30 bg-[#1a0d24] text-orange-50 sm:max-w-md"
         >
           <DialogHeader>

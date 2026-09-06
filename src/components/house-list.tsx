@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { HouseCard } from "@/components/house-card";
 import { CsvExportButton } from "@/components/csv-export-button";
@@ -8,6 +8,14 @@ import { distanceMeters } from "@/lib/geo";
 import { effectiveVisit } from "@/lib/house-state";
 import type { HouseTraffic } from "@/lib/traffic";
 import type { PublicHouse } from "@/lib/types";
+
+function scrollParent(el: HTMLElement | null): HTMLElement | null {
+  for (let node = el?.parentElement ?? null; node; node = node.parentElement) {
+    const overflowY = getComputedStyle(node).overflowY;
+    if (overflowY === "auto" || overflowY === "scroll") return node;
+  }
+  return null;
+}
 
 export function HouseList({
   houses,
@@ -38,6 +46,36 @@ export function HouseList({
 }) {
   const [q, setQ] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const cardEls = useRef(new Map<string, HTMLElement>());
+  const collapseAnchor = useRef<{ id: string; scroller: HTMLElement } | null>(null);
+
+  useLayoutEffect(() => {
+    const pending = collapseAnchor.current;
+    collapseAnchor.current = null;
+    if (!pending) return;
+    const card = cardEls.current.get(pending.id);
+    if (!card) return;
+    const scrollerBox = pending.scroller.getBoundingClientRect();
+    const cardBox = card.getBoundingClientRect();
+    if (cardBox.top < scrollerBox.top + 8) {
+      pending.scroller.scrollTop += cardBox.top - scrollerBox.top - 8;
+    } else if (cardBox.bottom > scrollerBox.bottom - 8) {
+      pending.scroller.scrollTop += cardBox.bottom - scrollerBox.bottom + 8;
+    }
+  }, [expandedId]);
+
+  function onToggle(id: string) {
+    setExpandedId((current) => {
+      if (current === id) {
+        const card = cardEls.current.get(id);
+        const scroller = scrollParent(card ?? null);
+        collapseAnchor.current = scroller ? { id, scroller } : null;
+        return null;
+      }
+      collapseAnchor.current = null;
+      return id;
+    });
+  }
 
   const filtered = useMemo(() => {
     const needle = q.trim();
@@ -81,7 +119,7 @@ export function HouseList({
         <CsvExportButton houses={houses} traffic={traffic} kind={exportKind} />
         <span className="shrink-0 text-base text-violet-300">
           {houses.length} בתים
-          {admin && onlineDevices != null ? ` · ${onlineDevices} במכשירים` : ""}
+          {admin && onlineDevices != null ? ` · ${onlineDevices} עכשיו` : ""}
         </span>
       </div>
       {origin ? (
@@ -91,19 +129,26 @@ export function HouseList({
         <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לחיפוש.</p>
       ) : (
         filtered.map(({ h, d }) => (
-          <HouseCard
+          <div
             key={h.id}
-            house={h}
-            distanceM={d}
-            catalogSource={catalogSource}
-            expanded={expandedId === h.id}
-            onToggle={() => setExpandedId((id) => (id === h.id ? null : h.id))}
-            liked={likedIds?.includes(h.id)}
-            onToggleLike={onToggleLike ? () => onToggleLike(h.id) : undefined}
-            visited={visitedIds?.includes(h.id)}
-            onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
-            emphasizeTraffic={admin || ownedIds.includes(h.id)}
-          />
+            ref={(node) => {
+              if (node) cardEls.current.set(h.id, node);
+              else cardEls.current.delete(h.id);
+            }}
+          >
+            <HouseCard
+              house={h}
+              distanceM={d}
+              catalogSource={catalogSource}
+              expanded={expandedId === h.id}
+              onToggle={() => onToggle(h.id)}
+              liked={likedIds?.includes(h.id)}
+              onToggleLike={onToggleLike ? () => onToggleLike(h.id) : undefined}
+              visited={visitedIds?.includes(h.id)}
+              onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
+              emphasizeTraffic={admin || ownedIds.includes(h.id)}
+            />
+          </div>
         ))
       )}
     </div>

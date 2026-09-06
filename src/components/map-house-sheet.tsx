@@ -10,7 +10,7 @@ import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { visualViewportHeight } from "@/lib/viewport";
 
-const MAP_SHEET_PEEK_VH = 0.5;
+const MAP_SHEET_PEEK_VH = 0.7;
 
 function isSheetInteractive(target: EventTarget | null) {
   return (

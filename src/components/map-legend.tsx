@@ -40,10 +40,17 @@ function SwatchPin({
         <img className="pin-scare" src={`/icons/pin-scare-${scare ?? "mild"}.png`} alt="" />
       ) : null}
       {multi ? (
-        <span className="pin-houses">
-          <i />
-          <i />
-        </span>
+        <>
+          <span className="pin-houses">
+            <i />
+            <i />
+          </span>
+          <span className="pin-apt-dots" aria-hidden>
+            <i className="pin-apt-dot is-plenty" />
+            <i className="pin-apt-dot is-low" />
+            <i className="pin-apt-dot is-out" />
+          </span>
+        </>
       ) : null}
       {closed ? <b className="pin-status is-closed" /> : null}
       {onBreak ? <b className="pin-status is-break" /> : null}

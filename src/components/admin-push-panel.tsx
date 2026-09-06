@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { PushNotice } from "@/components/push-notice";
+import { AdminStatsCard, useAdminStats } from "@/components/admin-stats";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
 import { fillPushTemplate } from "@/lib/push-templates";
 import type { PushKind, PushTemplateMeta } from "@/lib/push-templates";
+import type { PublicHouse } from "@/lib/types";
 
 function Toggle({ on, onClick, disabled }: { on: boolean; onClick: () => void; disabled?: boolean }) {
   return (
@@ -43,6 +45,8 @@ async function showSenderNotice(title: string, body: string) {
 
 export function AdminPushPanel() {
   const [templates, setTemplates] = useState<PushTemplateMeta[]>([]);
+  const [houses, setHouses] = useState<PublicHouse[]>([]);
+  const [sendHouseId, setSendHouseId] = useState("");
   const [busy, setBusy] = useState(false);
   const [expanded, setExpanded] = useState<PushKind | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
@@ -50,6 +54,8 @@ export function AdminPushPanel() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
+  const [sendingKind, setSendingKind] = useState<PushKind | null>(null);
+  const stats = useAdminStats(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,6 +74,13 @@ export function AdminPushPanel() {
       }
     }
     void load();
+    void fetch("/api/catalog", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data: { houses?: PublicHouse[] }) => {
+        if (cancelled) return;
+        if (Array.isArray(data.houses)) setHouses(data.houses);
+      })
+      .catch(() => undefined);
     const onVis = () => {
       if (document.visibilityState === "visible") void load();
     };
@@ -141,12 +154,41 @@ export function AdminPushPanel() {
     }
   }
 
+  async function sendKind(kind: PushKind) {
+    if (!sendHouseId) {
+      toast.error("בחרו בית לשליחה");
+      return;
+    }
+    setSendingKind(kind);
+    try {
+      const includeEndpoint = await senderPushEndpoint();
+      const res = await fetch(`/api/houses/${encodeURIComponent(sendHouseId)}/notify`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind, includeEndpoint }),
+      });
+      const data = await readApiJson<{ error?: string; sent?: number; title?: string; body?: string }>(res);
+      if (!res.ok) {
+        toast.error(data.error ?? "השליחה נכשלה");
+        return;
+      }
+      toast.success(`נשלח ל־${data.sent ?? 0} מכשירים`);
+      await showSenderNotice(data.title ?? "", data.body ?? "");
+    } catch {
+      toast.error("אין קשר לשרת");
+    } finally {
+      setSendingKind(null);
+    }
+  }
+
   async function sendBroadcast() {
     setSending(true);
     try {
       const includeEndpoint = await senderPushEndpoint();
       const res = await fetch("/api/admin/push", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: title.trim(),
@@ -172,6 +214,7 @@ export function AdminPushPanel() {
 
   return (
     <div className="space-y-4">
+      {stats ? <AdminStatsCard stats={stats} /> : null}
       <form
         className="space-y-2 rounded-xl bg-black/25 p-3"
         onSubmit={(event) => {
@@ -209,8 +252,23 @@ export function AdminPushPanel() {
       <div className="space-y-2 rounded-xl bg-black/25 p-3">
         <p className="text-base font-medium text-amber-100">תבניות</p>
         <p className="text-base text-violet-300">
-          {`מציינים {nickname} {place} {backLine}. כבוי = לא נשלח בכלל. הפסקה, חזרה מההפסקה ובית חדש נשלחים אוטומטית.`}
+          {`מציינים {nickname} {place} {backLine}. כבוי = לא נשלח בכלל. בית חדש, הפסקה וחזרה נשלחים אוטומטית — אפשר גם לשלוח אותם ידנית לבית שנבחר.`}
         </p>
+        <label className="block space-y-1">
+          <span className="text-base text-violet-200">בית לשליחה ידנית</span>
+          <select
+            value={sendHouseId}
+            onChange={(event) => setSendHouseId(event.target.value)}
+            className="h-9 w-full rounded-md bg-[#12081a] px-2 text-base text-orange-50 ring-1 ring-orange-500/20"
+          >
+            <option value="">בחרו בית</option>
+            {houses.map((house) => (
+              <option key={house.id} value={house.id}>
+                {house.name} · {house.address}
+              </option>
+            ))}
+          </select>
+        </label>
 
         <div className="space-y-1.5">
           {templates.length === 0 ? (
@@ -250,6 +308,18 @@ export function AdminPushPanel() {
                       onClick={() => void patch(item.id, { enabled: !item.enabled })}
                     />
                   </div>
+                  {item.auto ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={!item.enabled || !sendHouseId || sendingKind !== null}
+                      className="border-orange-400/40 text-orange-100"
+                      onClick={() => void sendKind(item.id)}
+                    >
+                      {sendingKind === item.id ? "שולחים…" : "שליחה לבית שנבחר"}
+                    </Button>
+                  ) : null}
                   {open ? (
                     <>
                       <p className="text-base text-violet-400">{item.hint}</p>

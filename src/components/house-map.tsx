@@ -106,6 +106,17 @@ function pinFaceHtml(house: PublicHouse) {
   return `<img class="pin-scare" src="${src}" alt="" />`;
 }
 
+function clusterCandyDotsHtml(houses: PublicHouse[]) {
+  if (houses.length <= 1) return "";
+  const dots = houses
+    .map((house) => {
+      const dot = candyPinDot(house) ?? "out";
+      return `<i class="pin-apt-dot is-${dot}"></i>`;
+    })
+    .join("");
+  return `<span class="pin-apt-dots" aria-hidden="true">${dots}</span>`;
+}
+
 function housePinHtml(
   house: PublicHouse,
   now: Date,
@@ -190,7 +201,7 @@ function clusterIcon(
 
   if (!selectedHere) {
     const wrapped = wrapRoutePin(
-      `<div class="house-pin is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span></div>`,
+      `<div class="house-pin is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterCandyDotsHtml(houses)}</div>`,
       routeOrder,
     );
     return L.divIcon({
@@ -238,7 +249,7 @@ function clusterIcon(
   const badge = routeOrder ? routeBadgeHtml(routeOrder) : "";
   return L.divIcon({
     className: `pumpkin-pin-icon pumpkin-pin-fan${selectedClass}`,
-    html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" aria-hidden="true"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span></div>${apts}${badge}</div>`,
+    html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" aria-hidden="true"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterCandyDotsHtml(houses)}</div>${apts}${badge}</div>`,
     iconSize: [width, height],
     iconAnchor: [width / 2, height],
   });

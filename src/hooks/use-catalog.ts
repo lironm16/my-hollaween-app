@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Catalog } from "@/lib/types";
 import { syncCatalog } from "@/lib/catalog-sync";
-import { loadCatalogCache, loadCatalogCacheSync, saveCatalogCache } from "@/lib/offline-db";
+import { loadCatalogCache, loadCatalogCacheSync, saveCatalogCache, flushPendingHouseWrites, withDeviceHouseOverlays } from "@/lib/offline-db";
 import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
@@ -63,12 +63,13 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
   const refresh = async (force = false) => {
     const online = typeof navigator === "undefined" || navigator.onLine;
     setOffline(!online);
+    if (online) await flushPendingHouseWrites();
     try {
       if (readServerSimDown()) throw new Error("sim-down");
       const live = await fetchJson("/api/catalog", force);
       let next: Catalog = live;
       setCatalog((prev) => {
-        next = syncCatalog(prev, live);
+        next = withDeviceHouseOverlays(syncCatalog(prev, live));
         return next;
       });
       setSource("network");
@@ -82,7 +83,7 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
         const snap = await fetchJson("/catalog.json", force);
         let next: Catalog = snap;
         setCatalog((prev) => {
-          next = syncCatalog(prev, snap);
+          next = withDeviceHouseOverlays(syncCatalog(prev, snap));
           return next;
         });
         setSource("snapshot");
@@ -94,7 +95,8 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
         const cached = await readDeviceCatalog();
         let kept = false;
         setCatalog((prev) => {
-          const next = prev && cached ? syncCatalog(cached, prev) : (prev ?? cached);
+          const merged = prev && cached ? syncCatalog(cached, prev) : (prev ?? cached);
+          const next = merged ? withDeviceHouseOverlays(merged) : merged;
           kept = Boolean(next);
           if (next) void saveCatalogCache(next);
           return next ?? prev;
@@ -134,7 +136,12 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
       const nowOffline = !navigator.onLine;
       setOffline(nowOffline);
       if (nowOffline) setUnreachable(false);
-      else void refresh(false);
+      else {
+        void (async () => {
+          await flushPendingHouseWrites();
+          await refresh(true);
+        })();
+      }
     };
     window.addEventListener("online", onOff);
     window.addEventListener("offline", onOff);

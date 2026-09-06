@@ -635,37 +635,46 @@
 
 .pin-apt-dots {
   position: absolute;
-  right: -5px;
-  bottom: -4px;
+  inset-inline-start: -6px;
+  bottom: -6px;
   z-index: 4;
   display: flex;
-  flex-direction: row-reverse;
+  flex-direction: row;
   pointer-events: none;
 }
 
 .pin-apt-dot {
-  width: 16px;
-  height: 16px;
-  margin-right: -4px;
+  width: 24px;
+  height: 24px;
+  margin-inline-end: -8px;
   border-radius: 999px;
-  border: 3px solid #fff7ed;
+  border: 1.5px solid #fff7ed;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 86%;
 }
 
 .pin-apt-dot:last-child {
-  margin-right: 0;
+  margin-inline-end: 0;
+}
+
+.pin-apt-dot.is-plenty,
+.pin-apt-dot.is-low,
+.pin-apt-dot.is-out {
+  background-image: url("/icons/pin-candy.png");
 }
 
 .pin-apt-dot.is-plenty {
-  background: #047857;
+  background-color: #047857;
 }
 
 .pin-apt-dot.is-low {
-  background: #d97706;
+  background-color: #d97706;
 }
 
 .pin-apt-dot.is-out {
-  background: #b91c1c;
+  background-color: #b91c1c;
 }
 
 .pin-apt-dot.is-closed {
@@ -695,12 +704,13 @@
 
 .pin-houses {
   position: relative;
+  z-index: 5;
   display: block;
   width: 26px;
   height: 19px;
   font-size: 0;
   line-height: 0;
-  transform: translateY(4px);
+  transform: translate(4px, 4px);
 }
 
 .pin-houses i {
@@ -857,7 +867,7 @@
   width: 24px;
   height: 24px;
   border-radius: 999px;
-  border: 3px solid #fff7ed;
+  border: 1.5px solid #fff7ed;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
@@ -870,7 +880,7 @@
   background-image: url("/icons/pin-candy.png");
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 78%;
+  background-size: 86%;
 }
 
 .house-pin .pin-status.is-plenty,
@@ -1354,9 +1364,9 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   z-index: 50;
   display: flex;
   flex-direction: column;
-  height: 50%;
-  max-height: 50dvh;
-  max-height: calc(var(--app-h, 100svh) * 0.5);
+  height: 70%;
+  max-height: 70dvh;
+  max-height: calc(var(--app-h, 100svh) * 0.7);
   overflow: hidden;
   background: #160b20;
   border-radius: 22px 22px 0 0;

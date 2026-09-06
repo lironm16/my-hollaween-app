@@ -24,6 +24,7 @@ import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
+import { useAdminStats } from "@/components/admin-stats";
 import { readApiJson } from "@/lib/api-json";
 import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
 import { clusterHousesByAddress } from "@/lib/house-clusters";
@@ -42,6 +43,7 @@ import { reportHouseTraffic, useHouseTraffic } from "@/hooks/use-house-traffic";
 import { useOnlineDevices } from "@/hooks/use-presence";
 import {
   backupLooksNewer,
+  loadPendingWrites,
   loadServerDbBackup,
   notifyCatalogChanged,
   removeOwnedHouse,
@@ -65,6 +67,7 @@ export function NeighborhoodApp({
 }) {
   const { catalog, loading, offline, unreachable, error, source, refresh } = useCatalog(initialCatalog);
   const { admin } = useAdminSession();
+  const adminStats = useAdminStats(admin);
   const geo = useUserLocation();
   const origin = geo.location;
   const view = useSyncExternalStore(
@@ -227,7 +230,17 @@ export function NeighborhoodApp({
       : (catalog?.houses ?? []);
     const byId = new Map(listed.map((house) => [house.id, house]));
     for (const item of owned) {
-      if (item.preview && !byId.has(item.id)) byId.set(item.id, item.preview);
+      if (!item.preview) continue;
+      const current = byId.get(item.id);
+      if (!current || Date.parse(item.preview.updatedAt) >= Date.parse(current.updatedAt || "")) {
+        byId.set(item.id, item.preview);
+      }
+    }
+    for (const pending of loadPendingWrites()) {
+      const current = byId.get(pending.id);
+      if (!current || Date.parse(pending.house.updatedAt) >= Date.parse(current.updatedAt || "")) {
+        byId.set(pending.id, pending.house);
+      }
     }
     return [...byId.values()];
   }, [admin, adminHouses, catalog, owned]);
@@ -714,6 +727,7 @@ export function NeighborhoodApp({
                 unreachable={unreachable}
                 source={source}
                 onlineDevices={admin ? onlineDevices : null}
+                onBreak={admin ? adminStats?.onBreak : undefined}
               />
             </div>
             {view === "list" ? (
@@ -868,6 +882,7 @@ function CatalogMetaChip({
   unreachable,
   source,
   onlineDevices,
+  onBreak,
 }: {
   houseCount: number;
   stopCount?: number | null;
@@ -875,14 +890,16 @@ function CatalogMetaChip({
   unreachable: boolean;
   source: string | null;
   onlineDevices?: number | null;
+  onBreak?: number;
 }) {
   const stale = offline || unreachable || source === "cache" || source === "snapshot";
   return (
     <div className="pointer-events-none absolute top-2 start-2 z-10">
-      <span className="inline-flex max-w-[min(100%,18rem)] items-center gap-1.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
+      <span className="inline-flex max-w-[min(100%,18rem)] flex-wrap items-center gap-1.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
         <span>{houseCount} בתים</span>
+        {onlineDevices != null ? <span>· {onlineDevices} עכשיו</span> : null}
+        {onBreak != null && onBreak > 0 ? <span>· {onBreak} בהפסקה</span> : null}
         {stopCount != null ? <span>· {stopCount} עצירות</span> : null}
-        {onlineDevices != null ? <span>· {onlineDevices} במכשירים</span> : null}
         {stale ? (
           <>
             <WifiOff className="size-3 shrink-0" />

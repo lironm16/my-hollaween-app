@@ -142,7 +142,7 @@ export function CandySign({
           src={CANDY_ART[tone]}
           alt=""
           aria-hidden
-          className="h-auto w-[90%] object-contain"
+          className="h-[88%] w-auto max-w-none object-contain"
         />
       ) : (
         <span className="size-[86%]">

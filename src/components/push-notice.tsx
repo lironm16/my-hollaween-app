@@ -31,7 +31,7 @@ export function PushNotice({
       />
       <div className="min-w-0 flex-1 text-right">
         <div className="flex items-baseline justify-between gap-3">
-          <p className="text-base font-medium tracking-wide text-white/65">{config.appName}</p>
+          <p className="text-base font-medium tracking-wide text-white/65">{config.brandEn}</p>
           <p className="text-base text-white/40">{time}</p>
         </div>
         <p className="mt-0.5 text-[15px] font-semibold leading-snug text-white">{payload.title}</p>

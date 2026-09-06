@@ -53,10 +53,10 @@ export function AppHeader({
             router.push("/");
           }}
         >
-          {/* Static PWA icon; next/image is unnecessary for this tiny local asset. */}
+          {/* Static brand mark; next/image is unnecessary for this tiny local asset. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/icon-192.png"
+            src="/icons/brand-mark.png"
             alt=""
             width={40}
             height={40}

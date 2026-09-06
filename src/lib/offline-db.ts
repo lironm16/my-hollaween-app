@@ -1,21 +1,55 @@
 import type { NeighborhoodId } from "@/lib/config";
-import type { ScareLevel, SensitivityId } from "@/lib/types";
+import { syncDecorFields } from "@/lib/house-state";
+import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
+import type { HouseInput, ScareLevel, SensitivityId } from "@/lib/types";
 import type { Catalog, PublicHouse } from "@/lib/types";
 
 const DB_NAME = "halloween-neighborhood";
 const STORE = "catalog";
+const PENDING_STORE = "pending";
 const KEY = "latest";
 const CATALOG_LS_KEY = "hw-catalog-cache";
+const PENDING_LS_KEY = "hw-pending-writes";
 
 function openDb() {
   return new Promise<IDBDatabase>((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
+    const req = indexedDB.open(DB_NAME, 2);
     req.onupgradeneeded = () => {
-      req.result.createObjectStore(STORE);
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+      if (!db.objectStoreNames.contains(PENDING_STORE)) {
+        db.createObjectStore(PENDING_STORE, { keyPath: "id" });
+      }
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
+}
+
+function stamp(value: string) {
+  const n = Date.parse(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function overlayLocalHouses(catalog: Catalog): Catalog {
+  const byId = new Map(catalog.houses.map((house) => [house.id, house]));
+  const take = (house: PublicHouse) => {
+    const current = byId.get(house.id);
+    if (!current || stamp(house.updatedAt) >= stamp(current.updatedAt)) {
+      byId.set(house.id, current ? { ...current, ...house } : house);
+    }
+  };
+  for (const owned of loadOwnedHouses()) {
+    if (owned.preview) take(owned.preview);
+  }
+  for (const pending of loadPendingWritesSync()) {
+    take(pending.house);
+  }
+  return { ...catalog, houses: [...byId.values()] };
+}
+
+export function withDeviceHouseOverlays(catalog: Catalog): Catalog {
+  return overlayLocalHouses(catalog);
 }
 
 export function asCachedCatalog(value: unknown): Catalog | null {
@@ -35,7 +69,7 @@ export function asCachedCatalog(value: unknown): Catalog | null {
       ),
   );
   if (!houses.length) return null;
-  return { ...catalog, houses };
+  return overlayLocalHouses({ ...catalog, houses });
 }
 
 function readLocalCatalog(): Catalog | null {
@@ -239,11 +273,6 @@ export function saveServerDbBackup(db: ServerDbBackup) {
   }
 }
 
-function stamp(value: string) {
-  const n = Date.parse(value);
-  return Number.isFinite(n) ? n : 0;
-}
-
 export function backupLooksNewer(backup: ServerDbBackup, serverUpdatedAt: string, serverHouses: Array<{ status: string }>) {
   if (stamp(backup.updatedAt) > stamp(serverUpdatedAt)) return true;
   const backupApproved = backup.houses.filter((h) => h.status === "approved").length;
@@ -285,5 +314,129 @@ export function saveHouseFilters(filters: HouseFiltersState) {
     localStorage.setItem(FILTERS_KEY, JSON.stringify(filters));
   } catch {
     /* private mode */
+  }
+}
+
+export type PendingHouseWrite = {
+  id: string;
+  method: "PATCH" | "POST";
+  url: string;
+  body: Record<string, unknown>;
+  house: PublicHouse;
+  editCode?: string;
+  createdAt: string;
+};
+
+export function applyLocalHousePatch(
+  house: PublicHouse,
+  patch: Partial<HouseInput> & { photoUrl?: string; ownerFrozenUntil?: string | null },
+): PublicHouse {
+  const next: PublicHouse = {
+    ...house,
+    ...patch,
+    treats: patch.treats ?? house.treats,
+    treatStock: patch.treatStock ? { ...house.treatStock, ...patch.treatStock } : house.treatStock,
+    updatedAt: new Date().toISOString(),
+  };
+  if (patch.openHours !== undefined || patch.openFrom !== undefined || patch.openTo !== undefined) {
+    const hours = syncHoursFields(
+      patch.openHours?.length
+        ? patch.openHours
+        : houseHoursWindows({ ...house, ...patch }),
+    );
+    next.openHours = hours.openHours;
+    next.openFrom = hours.openFrom;
+    next.openTo = hours.openTo;
+    next.openFrom2 = hours.openFrom2;
+    next.openTo2 = hours.openTo2;
+  }
+  const decor = syncDecorFields(next);
+  next.decorLevel = decor.decorLevel;
+  next.decorated = decor.decorated;
+  if (patch.visit === "closed") next.soldOut = true;
+  else if (patch.visit) next.soldOut = false;
+  if (patch.ownerFrozenUntil !== undefined) next.ownerFrozenUntil = patch.ownerFrozenUntil;
+  return next;
+}
+
+function loadPendingWritesSync(): PendingHouseWrite[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(PENDING_LS_KEY);
+    const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item): item is PendingHouseWrite => {
+      return Boolean(
+        item &&
+          typeof item === "object" &&
+          typeof (item as PendingHouseWrite).id === "string" &&
+          (item as PendingHouseWrite).house &&
+          typeof (item as PendingHouseWrite).house === "object",
+      );
+    });
+  } catch {
+    return [];
+  }
+}
+
+function writePendingSync(items: PendingHouseWrite[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(PENDING_LS_KEY, JSON.stringify(items));
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+export function loadPendingWrites(): PendingHouseWrite[] {
+  return loadPendingWritesSync();
+}
+
+export function queueHouseWrite(write: PendingHouseWrite) {
+  const next = loadPendingWritesSync().filter((item) => item.id !== write.id);
+  next.push(write);
+  writePendingSync(next);
+  rememberPublishedHouse(write.house);
+  if (write.editCode) {
+    saveOwnedHouse({
+      id: write.house.id,
+      name: write.house.name,
+      editCode: write.editCode,
+      preview: write.house,
+    });
+  }
+}
+
+export function removePendingWrite(id: string) {
+  writePendingSync(loadPendingWritesSync().filter((item) => item.id !== id));
+}
+
+let flushing = false;
+
+export async function flushPendingHouseWrites(): Promise<number> {
+  if (flushing) return 0;
+  const pending = loadPendingWritesSync();
+  if (pending.length === 0) return 0;
+  flushing = true;
+  let flushed = 0;
+  try {
+    for (const item of pending) {
+      try {
+        const res = await fetch(item.url, {
+          method: item.method,
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item.body),
+        });
+        if (!res.ok) continue;
+        removePendingWrite(item.id);
+        flushed += 1;
+      } catch {
+        /* stay queued */
+      }
+    }
+    return flushed;
+  } finally {
+    flushing = false;
   }
 }

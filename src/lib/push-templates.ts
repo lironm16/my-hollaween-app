@@ -1,5 +1,6 @@
 import { formatDisplayAddress } from "@/lib/config";
 import { candyLevel, effectiveVisit, isOwnerFrozen, isPubliclyListed } from "@/lib/house-state";
+import { isOnBreak } from "@/lib/hours";
 import type { House } from "@/lib/types";
 
 export const PUSH_KINDS = [
@@ -179,6 +180,14 @@ export function housePushUrl(house: { id: string }) {
   return `/?focus=${encodeURIComponent(house.id)}`;
 }
 
+/** Candy / stock alerts stay silent while the house is still paused or closed. */
+export function stockAlertsBlocked(house: House): boolean {
+  if (isOwnerFrozen(house)) return true;
+  if (effectiveVisit(house) === "closed") return true;
+  if (isOnBreak(house)) return true;
+  return false;
+}
+
 /** Which alert this save would produce. Freeze wins over visit/stock. */
 export function classifyHouseAlert(prev: House, next: House): PushKind | null {
   const prevVisit = effectiveVisit(prev);
@@ -191,6 +200,8 @@ export function classifyHouseAlert(prev: House, next: House): PushKind | null {
     return "backFromBreak";
   }
   if (!isPubliclyListed(next) || nowPaused) return null;
+  if (wasPaused && nowPaused) return null;
+  if (prevVisit === "closed" && nextVisit === "closed") return null;
 
   if (prevVisit !== "closed" && nextVisit === "closed") return "closed";
   if (prevVisit !== "decorOnly" && nextVisit === "decorOnly") return "decorOnly";
@@ -199,6 +210,7 @@ export function classifyHouseAlert(prev: House, next: House): PushKind | null {
   }
 
   if (nextVisit === "come") {
+    if (stockAlertsBlocked(next)) return null;
     const prevCandy = candyLevel(prev);
     const nextCandy = candyLevel(next);
     if (prevCandy !== "out" && nextCandy === "out") return "candyOut";
@@ -213,16 +225,31 @@ export function houseMatchesNotifyKind(house: House, kind: PushKind): boolean {
   const visit = effectiveVisit(house);
   const paused = isOwnerFrozen(house);
   if (kind === "onBreak") return paused;
-  if (kind === "backFromBreak" || kind === "backActive" || kind === "houseAdded" || kind === "candyRestock") {
+  if (kind === "candyRestock") {
+    return isPubliclyListed(house) && !paused && visit === "come" && !isOnBreak(house);
+  }
+  if (kind === "backFromBreak" || kind === "backActive" || kind === "houseAdded") {
     return isPubliclyListed(house) && !paused && visit === "come";
   }
   if (kind === "closed") return visit === "closed";
   if (kind === "decorOnly") return visit === "decorOnly" && isPubliclyListed(house);
   if (kind === "candyLow") {
-    return isPubliclyListed(house) && !paused && visit === "come" && candyLevel(house) === "low";
+    return (
+      isPubliclyListed(house) &&
+      !paused &&
+      visit === "come" &&
+      !isOnBreak(house) &&
+      candyLevel(house) === "low"
+    );
   }
   if (kind === "candyOut") {
-    return isPubliclyListed(house) && !paused && visit === "come" && candyLevel(house) === "out";
+    return (
+      isPubliclyListed(house) &&
+      !paused &&
+      visit === "come" &&
+      !isOnBreak(house) &&
+      candyLevel(house) === "out"
+    );
   }
   return false;
 }
@@ -236,6 +263,7 @@ export function ownerOfferKindFromPatch(
   const keys = Object.keys(patch).filter((key) => (patch as Record<string, unknown>)[key] !== undefined);
   const allowed = new Set(["visit", "treatStock", "treats", "soldOut"]);
   if (keys.length === 0 || keys.some((key) => !allowed.has(key))) return null;
+  if (stockAlertsBlocked(next) && patch.visit !== "closed") return null;
   if (patch.visit === "closed" && houseMatchesNotifyKind(next, "closed")) return "closed";
   if (patch.visit === "decorOnly" && houseMatchesNotifyKind(next, "decorOnly")) return "decorOnly";
   const candy = patch.treatStock?.candy;

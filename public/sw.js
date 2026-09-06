@@ -1,4 +1,4 @@
-const CACHE = "hw-shell-v49";
+const CACHE = "hw-shell-v51";
 const TILE_CACHE = "hw-tiles-v3";
 const PRECACHE = [
   "/offline.html",
@@ -8,6 +8,7 @@ const PRECACHE = [
   "/app.css",
   "/icon-192.png",
   "/icon-512.png",
+  "/icons/brand-mark.png",
   "/images/banner.jpg",
   "/images/pumpkin-marker.png",
 ];
