@@ -287,9 +287,6 @@
   .start-1\/2 {
     inset-inline-start: calc(1/2 * 100%);
   }
-  .start-2 {
-    inset-inline-start: calc(var(--spacing) * 2);
-  }
   .start-5 {
     inset-inline-start: calc(var(--spacing) * 5);
   }
@@ -531,6 +528,10 @@
     width: 82%;
     height: 82%;
   }
+  .size-\[86\%\] {
+    width: 86%;
+    height: 86%;
+  }
   .size-\[108\%\] {
     width: 108%;
     height: 108%;
@@ -676,9 +677,6 @@
   }
   .max-w-\[calc\(100\%-2rem\)\] {
     max-width: calc(100% - 2rem);
-  }
-  .max-w-\[min\(100\%\,18rem\)\] {
-    max-width: min(100%, 18rem);
   }
   .max-w-full {
     max-width: 100%;
@@ -1063,9 +1061,6 @@
   .bg-\[\#12081a\]\/80 {
     background-color: color-mix(in oklab, #12081a 80%, transparent);
   }
-  .bg-\[\#12081a\]\/90 {
-    background-color: color-mix(in oklab, #12081a 90%, transparent);
-  }
   .bg-\[\#14091c\]\/80 {
     background-color: color-mix(in oklab, #14091c 80%, transparent);
   }
@@ -1263,12 +1258,6 @@
   }
   .bg-violet-900 {
     background-color: var(--color-violet-900);
-  }
-  .bg-violet-950\/50 {
-    background-color: color-mix(in srgb, oklch(28.3% 0.141 291.089) 50%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-violet-950) 50%, transparent);
-    }
   }
   .bg-violet-950\/70 {
     background-color: color-mix(in srgb, oklch(28.3% 0.141 291.089) 70%, transparent);
@@ -1880,11 +1869,6 @@
   }
   .backdrop-blur-md {
     --tw-backdrop-blur: blur(var(--blur-md));
-    -webkit-backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
-    backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
-  }
-  .backdrop-blur-sm {
-    --tw-backdrop-blur: blur(var(--blur-sm));
     -webkit-backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
     backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
   }
