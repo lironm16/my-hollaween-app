@@ -744,6 +744,8 @@ export function NeighborhoodApp({
                     onToggleVisited={onToggleVisited}
                     traffic={traffic}
                     exportKind={likedOnly ? "liked" : "list"}
+                    admin={admin}
+                    ownedIds={owned.map((item) => item.id)}
                   />
                 )}
               </div>

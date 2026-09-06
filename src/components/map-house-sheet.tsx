@@ -219,6 +219,7 @@ export function MapHouseSheet({
                     managerEditCode={editCodeFor?.(house.id) ?? managerEditCode}
                     extra={extra}
                     chrome="sheet"
+                    emphasizeTraffic={canEditSelected}
                   />
                 )}
               </section>

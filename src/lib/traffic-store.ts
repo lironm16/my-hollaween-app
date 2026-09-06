@@ -13,6 +13,7 @@ import {
 export type { TrafficDelta };
 
 const BLOB_PATH = "halloween-houses/traffic.json";
+const SEED_TRAFFIC_PATH = path.join(process.cwd(), "data", "seed-traffic.json");
 const MEM_GET_TTL_MS = 20_000;
 /** Shared blob is the expensive write — never persist it on every heart/visit. */
 const BLOB_PERSIST_MS = 20_000;
@@ -140,6 +141,28 @@ function withLock<T>(fn: () => Promise<T>): Promise<T> {
 
 let mem: TrafficFile | null = null;
 let memAt = 0;
+let seedTraffic: TrafficFile | null | undefined;
+
+function demoTrafficEnabled() {
+  return process.env.NODE_ENV !== "production" || process.env.DEMO_TRAFFIC === "1";
+}
+
+async function loadSeedTraffic(): Promise<TrafficFile | null> {
+  if (!demoTrafficEnabled()) return null;
+  if (seedTraffic !== undefined) return seedTraffic;
+  try {
+    const raw = await fs.readFile(SEED_TRAFFIC_PATH, "utf8");
+    seedTraffic = JSON.parse(raw) as TrafficFile;
+  } catch {
+    seedTraffic = null;
+  }
+  return seedTraffic;
+}
+
+function withSeedTraffic(file: TrafficFile, seed: TrafficFile | null): TrafficFile {
+  if (!seed) return file;
+  return mergeTraffic(file, seed);
+}
 
 function remember(file: TrafficFile) {
   mem = file;
@@ -148,7 +171,8 @@ function remember(file: TrafficFile) {
 }
 
 async function loadTrafficUnlocked(): Promise<TrafficFile> {
-  if (mem && Date.now() - memAt < MEM_GET_TTL_MS) return mem;
+  const seed = await loadSeedTraffic();
+  if (mem && Date.now() - memAt < MEM_GET_TTL_MS) return withSeedTraffic(mem, seed);
   const [local, blob, global] = await Promise.all([
     readLocal(),
     readBlob(),
@@ -157,7 +181,7 @@ async function loadTrafficUnlocked(): Promise<TrafficFile> {
   mem = mergeTraffic(mem, local, blob, global);
   memAt = Date.now();
   setGlobal(mem);
-  return mem;
+  return withSeedTraffic(mem, seed);
 }
 
 async function persistShared(file: TrafficFile) {
@@ -197,6 +221,7 @@ export async function applyTrafficDeltas(deltas: TrafficDelta[]): Promise<Record
     if (Date.now() - lastBlobAt() >= BLOB_PERSIST_MS) {
       await persistShared(file);
     }
-    return file.houses;
+    const seed = await loadSeedTraffic();
+    return withSeedTraffic(file, seed).houses;
   });
 }

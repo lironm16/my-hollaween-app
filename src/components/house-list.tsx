@@ -19,6 +19,8 @@ export function HouseList({
   onToggleVisited,
   traffic,
   exportKind = "list",
+  ownedIds = [],
+  admin = false,
 }: {
   houses: PublicHouse[];
   origin?: { lat: number; lng: number } | null;
@@ -29,6 +31,8 @@ export function HouseList({
   onToggleVisited?: (id: string) => void;
   traffic?: Record<string, HouseTraffic>;
   exportKind?: "liked" | "list";
+  ownedIds?: string[];
+  admin?: boolean;
 }) {
   const [q, setQ] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -93,6 +97,7 @@ export function HouseList({
             onToggleLike={onToggleLike ? () => onToggleLike(h.id) : undefined}
             visited={visitedIds?.includes(h.id)}
             onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
+            emphasizeTraffic={admin || ownedIds.includes(h.id)}
           />
         ))
       )}

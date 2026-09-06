@@ -110,6 +110,7 @@ export default function HousePage() {
               canEdit={canEdit}
               editing={editing}
               onToggleEdit={() => setEditing((v) => !v)}
+              emphasizeTraffic={canEdit && !editing}
               extra={extra}
             />
           </div>

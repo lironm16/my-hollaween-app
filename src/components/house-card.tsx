@@ -15,6 +15,7 @@ export function HouseCard({
   onToggleLike,
   visited,
   onToggleVisited,
+  emphasizeTraffic = false,
 }: {
   house: PublicHouse;
   expanded?: boolean;
@@ -25,6 +26,7 @@ export function HouseCard({
   onToggleLike?: () => void;
   visited?: boolean;
   onToggleVisited?: () => void;
+  emphasizeTraffic?: boolean;
 }) {
   return (
     <Card
@@ -48,6 +50,7 @@ export function HouseCard({
           onToggleLike={onToggleLike}
           visited={visited}
           onToggleVisited={onToggleVisited}
+          emphasizeTraffic={emphasizeTraffic}
         />
       </div>
     </Card>
