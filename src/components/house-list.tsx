@@ -3,8 +3,10 @@
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { HouseCard } from "@/components/house-card";
+import { CsvExportButton } from "@/components/csv-export-button";
 import { distanceMeters } from "@/lib/geo";
 import { effectiveVisit } from "@/lib/house-state";
+import type { HouseTraffic } from "@/lib/traffic";
 import type { PublicHouse } from "@/lib/types";
 
 export function HouseList({
@@ -15,6 +17,8 @@ export function HouseList({
   onToggleLike,
   visitedIds,
   onToggleVisited,
+  traffic,
+  exportKind = "list",
 }: {
   houses: PublicHouse[];
   origin?: { lat: number; lng: number } | null;
@@ -23,6 +27,8 @@ export function HouseList({
   onToggleLike?: (id: string) => void;
   visitedIds?: string[];
   onToggleVisited?: (id: string) => void;
+  traffic?: Record<string, HouseTraffic>;
+  exportKind?: "liked" | "list";
 }) {
   const [q, setQ] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -66,6 +72,7 @@ export function HouseList({
           placeholder="חיפוש לפי שם או רחוב…"
           className="h-10 min-w-0 flex-1 bg-[#1d1028] text-base"
         />
+        <CsvExportButton houses={houses} traffic={traffic} kind={exportKind} />
         <span className="shrink-0 text-base text-violet-300">{houses.length} בתים</span>
       </div>
       {origin ? (

@@ -16,6 +16,8 @@ import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl } from "@/lib/nav-links";
 import { loadOwnedHouses } from "@/lib/offline-db";
 import { shouldLoadHousePhoto } from "@/lib/photos";
+import { HouseTrafficLine } from "@/components/house-traffic-line";
+import { useHouseTraffic } from "@/hooks/use-house-traffic";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -57,6 +59,7 @@ export function HouseDetails({
   distanceM?: number;
 }) {
   const displayAddress = formatDisplayAddress(house);
+  const { trafficFor } = useHouseTraffic();
   const [ownedEditCode, setOwnedEditCode] = useState<string | undefined>(undefined);
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
@@ -179,6 +182,7 @@ export function HouseDetails({
           {house.notes ? (
             <p className="text-base text-amber-200/90">הערה: {house.notes}</p>
           ) : null}
+          <HouseTrafficLine traffic={trafficFor(house.id)} />
           <CodesCopy editCode={editCode} />
           {sheet ? null : (
             <div className="flex flex-wrap gap-2 pt-1">

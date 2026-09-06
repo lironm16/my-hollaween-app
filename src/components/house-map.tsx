@@ -1,5 +1,6 @@
 "use client";
 
+import { useAppNow } from "@/hooks/use-app-clock";
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import {
   Circle,
@@ -27,14 +28,8 @@ import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters"
 import { cn } from "@/lib/utils";
 
 function useMinuteTick() {
-  return useSyncExternalStore(
-    (onStoreChange) => {
-      const id = window.setInterval(onStoreChange, 15_000);
-      return () => window.clearInterval(id);
-    },
-    () => Math.floor(Date.now() / 15_000),
-    () => 0,
-  );
+  const now = useAppNow();
+  return Math.floor(now.getTime() / 15_000);
 }
 
 const ROUTE_BADGE_H = 32;

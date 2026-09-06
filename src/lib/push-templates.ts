@@ -142,15 +142,15 @@ export function mergePushTemplates(
   return out;
 }
 
-function nicknameOf(house: House) {
+function nicknameOf(house: { name: string }) {
   return house.name.trim() || "בית בשכונה";
 }
 
-function placeOf(house: House) {
+function placeOf(house: { address: string; lat?: number; lng?: number }) {
   return formatDisplayAddress(house);
 }
 
-function freezeBackClock(house: House) {
+function freezeBackClock(house: { ownerFrozenUntil?: string | null }) {
   const raw = house.ownerFrozenUntil;
   if (!raw) return null;
   const t = Date.parse(raw);
@@ -161,7 +161,7 @@ function freezeBackClock(house: House) {
 
 export function fillPushTemplate(
   template: { title: string; body: string },
-  house: House,
+  house: { name: string; address: string; lat?: number; lng?: number; ownerFrozenUntil?: string | null },
 ): { title: string; body: string } {
   const clock = freezeBackClock(house);
   const vars: Record<string, string> = {

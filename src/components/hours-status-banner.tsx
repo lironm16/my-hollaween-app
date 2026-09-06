@@ -1,3 +1,6 @@
+"use client";
+
+import { useAppNow } from "@/hooks/use-app-clock";
 import { cn } from "@/lib/utils";
 import {
   closingSoonAt,
@@ -40,7 +43,8 @@ export function HoursStatusBanner({
   /** Override clock for previews / tests. */
   now?: Date;
 }) {
-  const clock = now ?? new Date();
+  const rehearsed = useAppNow();
+  const clock = now ?? rehearsed;
 
   if (isOwnerFrozen(house, clock.getTime())) {
     return (

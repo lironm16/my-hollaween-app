@@ -36,6 +36,7 @@ yarn-error.log*
 
 # runtime house database (seed.json is committed)
 /data/db.json
+/data/traffic.json
 /data/.write-probe
 
 # optional house photos (generated locally)

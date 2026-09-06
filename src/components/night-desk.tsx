@@ -10,6 +10,8 @@ import { notifyCatalogChanged } from "@/lib/offline-db";
 import { publishHousePhoto } from "@/lib/house-photo";
 import { readApiJson } from "@/lib/api-json";
 import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
+import { HouseTrafficLine } from "@/components/house-traffic-line";
+import { useHouseTraffic } from "@/hooks/use-house-traffic";
 import type { HouseInput, PublicHouse } from "@/lib/types";
 import { DEFAULT_PUSH_TEMPLATES, type PushKind } from "@/lib/push-templates";
 
@@ -39,6 +41,7 @@ export function NightDesk({
   const [notice, setNotice] = useState<PushNoticeState | null>(null);
   const [offerBusy, setOfferBusy] = useState(false);
   const noticeRef = useRef<HTMLDivElement>(null);
+  const { trafficFor } = useHouseTraffic();
 
   useEffect(() => {
     if (!notice) return;
@@ -175,6 +178,7 @@ export function NightDesk({
 
   return (
     <div className="space-y-4">
+      <HouseTrafficLine traffic={trafficFor(house.id)} variant="owner" />
       {notice ? (
         <div
           ref={noticeRef}

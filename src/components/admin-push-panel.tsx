@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { PushNotice } from "@/components/push-notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { readApiJson } from "@/lib/api-json";
 import { cn } from "@/lib/utils";
 import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
+import { fillPushTemplate } from "@/lib/push-templates";
 import type { PushKind, PushTemplateMeta } from "@/lib/push-templates";
 
 function Toggle({ on, onClick, disabled }: { on: boolean; onClick: () => void; disabled?: boolean }) {
@@ -50,12 +52,30 @@ export function AdminPushPanel() {
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    void fetch("/api/admin/push/templates", { cache: "no-store", credentials: "include" })
-      .then((res) => res.json())
-      .then((data: { templates?: PushTemplateMeta[] }) => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const res = await fetch("/api/admin/push/templates", { cache: "no-store", credentials: "include" });
+        const data = (await res.json()) as { templates?: PushTemplateMeta[]; error?: string };
+        if (cancelled) return;
+        if (!res.ok) {
+          toast.error(data.error ?? "לא הצלחנו לטעון תבניות");
+          return;
+        }
         if (Array.isArray(data.templates)) setTemplates(data.templates);
-      })
-      .catch(() => undefined);
+      } catch {
+        if (!cancelled) toast.error("אין קשר לשרת");
+      }
+    }
+    void load();
+    const onVis = () => {
+      if (document.visibilityState === "visible") void load();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, []);
 
   async function persist(next: PushTemplateMeta[]) {
@@ -82,7 +102,10 @@ export function AdminPushPanel() {
         toast.error(data.error ?? "השמירה נכשלה");
         return false;
       }
-      if (data.templates) setTemplates(data.templates);
+      if (Array.isArray(data.templates) && data.templates.length > 0) {
+        const byId = new Map(data.templates.map((item) => [item.id, item]));
+        setTemplates(next.map((item) => byId.get(item.id) ?? item));
+      }
       return true;
     } catch {
       setTemplates(prev);
@@ -244,6 +267,21 @@ export function AdminPushPanel() {
                         disabled={busy}
                         className="min-h-[3.5rem] bg-[#0c0612] text-base"
                         onChange={(event) => setDraftBody(event.target.value)}
+                      />
+                      <PushNotice
+                        payload={{
+                          ...fillPushTemplate(
+                            { title: draftTitle, body: draftBody },
+                            {
+                              name: "בית הדלעת",
+                              address: "חרוזים 8, חרוזים",
+                              lat: 32.0916,
+                              lng: 34.8029,
+                              ownerFrozenUntil: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+                            },
+                          ),
+                          url: "/",
+                        }}
                       />
                       <div className="flex gap-2">
                         <Button

@@ -36,6 +36,8 @@ import { OpenNowMark } from "@/components/open-now-mark";
 import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
 import { ScareMark, ScareSign } from "@/components/scare-glyphs";
 import { isOpenNow } from "@/lib/hours";
+import { useAppNow } from "@/hooks/use-app-clock";
+import { reportHouseTraffic, reportRouteStops, useHouseTraffic } from "@/hooks/use-house-traffic";
 import {
   backupLooksNewer,
   loadServerDbBackup,
@@ -121,6 +123,8 @@ export function NeighborhoodApp({
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
   const owned = useOwnedHouses();
+  const now = useAppNow();
+  const { houses: traffic } = useHouseTraffic();
 
   useEffect(() => () => window.clearTimeout(cheerTimer.current), []);
 
@@ -227,7 +231,7 @@ export function NeighborhoodApp({
       if (accessibleOnly && !house.accessible) return false;
       if (candyOnly && !offersCandy(house)) return false;
       if (!includeUndecorated && !isDecorated(house)) return false;
-      if (openNowOnly && !isOpenNow(house)) return false;
+      if (openNowOnly && !isOpenNow(house, now)) return false;
       for (const sensitivity of sensitivityFilters) {
         if (!offersSensitivity(house, sensitivity)) return false;
       }
@@ -252,6 +256,7 @@ export function NeighborhoodApp({
     unvisitedOnly,
     likes.likedIds,
     visits.visitedIds,
+    now,
   ]);
 
   const moreFilterCount =
@@ -378,11 +383,21 @@ export function NeighborhoodApp({
     setEditing(false);
     setRouteMode(true);
     pinCurrentRoute(origin);
+    reportRouteStops(
+      visible.filter((house) => !visits.visitedIds.includes(house.id)).map((house) => house.id),
+    );
+  }
+
+  function onToggleLike(id: string) {
+    const nextOn = !likes.liked(id);
+    likes.toggle(id);
+    reportHouseTraffic(id, "saved", nextOn);
   }
 
   function onToggleVisited(id: string) {
     const marking = !visits.visited(id);
     visits.toggle(id);
+    reportHouseTraffic(id, "visited", marking);
     if (!marking) return;
     setVisitCheer(false);
     window.clearTimeout(cheerTimer.current);
@@ -720,9 +735,11 @@ export function NeighborhoodApp({
                     origin={origin}
                     catalogSource={source}
                     likedIds={likes.likedIds}
-                    onToggleLike={likes.toggle}
+                    onToggleLike={onToggleLike}
                     visitedIds={visits.visitedIds}
                     onToggleVisited={onToggleVisited}
+                    traffic={traffic}
+                    exportKind={likedOnly ? "liked" : "list"}
                   />
                 )}
               </div>
@@ -739,7 +756,7 @@ export function NeighborhoodApp({
             setSelectedId("closed");
           }}
           liked={likes.liked}
-          onToggleLike={likes.toggle}
+          onToggleLike={onToggleLike}
           visited={visits.visited}
           onToggleVisited={onToggleVisited}
           catalogSource={source}
