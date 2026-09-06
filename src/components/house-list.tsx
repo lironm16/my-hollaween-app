@@ -27,7 +27,6 @@ export function HouseList({
   onToggleLike,
   visitedIds,
   onToggleVisited,
-  ownedIds = [],
   admin = false,
   onlineDevices = null,
   canEditHouse,
@@ -42,7 +41,6 @@ export function HouseList({
   onToggleLike?: (id: string) => void;
   visitedIds?: string[];
   onToggleVisited?: (id: string) => void;
-  ownedIds?: string[];
   admin?: boolean;
   onlineDevices?: number | null;
   canEditHouse?: (id: string) => boolean;
@@ -158,7 +156,6 @@ export function HouseList({
               onToggleLike={onToggleLike ? () => onToggleLike(h.id) : undefined}
               visited={visitedIds?.includes(h.id)}
               onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
-              emphasizeTraffic={admin || ownedIds.includes(h.id)}
               canEdit={Boolean(canEditHouse?.(h.id))}
               editCode={editCodeFor?.(h.id)}
               admin={admin}

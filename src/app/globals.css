@@ -1482,6 +1482,12 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   height: 48px;
 }
 
+.map-house-sheet-chrome .house-action-btn.has-count {
+  width: auto;
+  min-width: 0;
+  padding-inline: 10px 12px;
+}
+
 .house-list-card-chrome {
   display: flex;
   flex-direction: column;
@@ -1499,6 +1505,12 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .house-list-card-chrome .house-action-btn {
   width: 48px;
   height: 48px;
+}
+
+.house-list-card-chrome .house-action-btn.has-count {
+  width: auto;
+  min-width: 0;
+  padding-inline: 10px 12px;
 }
 
 .map-house-sheet-chrome,
@@ -1668,6 +1680,29 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .house-action-btn.is-visited {
   background: #059669;
   color: #ffffff;
+}
+
+.house-action-btn.has-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: auto;
+  min-width: 0;
+  padding-inline: 10px 12px;
+}
+
+.house-action-btn.has-count > svg,
+.house-action-btn.has-count > .house-action-count {
+  flex-shrink: 0;
+}
+
+.house-action-count {
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.03em;
 }
 
 .visit-cheer {

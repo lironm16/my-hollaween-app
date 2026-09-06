@@ -929,7 +929,6 @@ export function NeighborhoodApp({
                     visitedIds={visits.visitedIds}
                     onToggleVisited={onToggleVisited}
                     admin={admin}
-                    ownedIds={owned.map((item) => item.id)}
                     onlineDevices={onlineDevices}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
                     editCodeFor={(id) =>

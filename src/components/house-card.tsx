@@ -18,7 +18,6 @@ export function HouseCard({
   onToggleLike,
   visited,
   onToggleVisited,
-  emphasizeTraffic = false,
   canEdit = false,
   editCode,
   admin = false,
@@ -34,7 +33,6 @@ export function HouseCard({
   onToggleLike?: () => void;
   visited?: boolean;
   onToggleVisited?: () => void;
-  emphasizeTraffic?: boolean;
   canEdit?: boolean;
   editCode?: string;
   admin?: boolean;
@@ -98,7 +96,6 @@ export function HouseCard({
             onToggleLike={onToggleLike}
             visited={visited}
             onToggleVisited={onToggleVisited}
-            emphasizeTraffic={emphasizeTraffic}
             chrome="sheet"
           />
         )}

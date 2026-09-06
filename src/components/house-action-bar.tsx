@@ -2,10 +2,25 @@
 
 import { Heart, Navigation, Pencil, Share2 } from "lucide-react";
 import { VisitedCheck } from "@/components/visited-check";
+import { useHouseTraffic } from "@/hooks/use-house-traffic";
 import { toast } from "sonner";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+export function formatActionCount(n: number) {
+  const value = Math.max(0, Math.floor(n) || 0);
+  return value > 999 ? "999+" : String(value);
+}
+
+/** Neighborhood count next to heart / check — no extra label. */
+export function HouseActionCount({ n }: { n: number }) {
+  return (
+    <span className="house-action-count" aria-hidden="true">
+      {formatActionCount(n)}
+    </span>
+  );
+}
 
 export function HouseActionBar({
   house,
@@ -28,6 +43,9 @@ export function HouseActionBar({
   navOnly?: boolean;
   showNav?: boolean;
 }) {
+  const { trafficFor } = useHouseTraffic();
+  const traffic = trafficFor(house.id);
+
   return (
     <div className="house-action-bar" dir="rtl">
       {showNav ? (
@@ -61,25 +79,35 @@ export function HouseActionBar({
           {onToggleLike ? (
             <button
               type="button"
-              className={cn("house-action-btn", liked && "is-on")}
-              aria-label={liked ? "הסירו מהשמורים" : "שמרו את הבית"}
+              className={cn("house-action-btn has-count", liked && "is-on")}
+              aria-label={
+                liked
+                  ? `הסירו מהשמורים, ${traffic.saved} שמרו`
+                  : `שמרו את הבית, ${traffic.saved} שמרו`
+              }
               aria-pressed={liked}
               title="אהבתי"
               onClick={onToggleLike}
             >
               <Heart className={cn("size-6", liked && "fill-current")} strokeWidth={2.2} />
+              <HouseActionCount n={traffic.saved} />
             </button>
           ) : null}
           {onToggleVisited ? (
             <button
               type="button"
-              className={cn("house-action-btn", visited && "is-visited")}
-              aria-label={visited ? "סמנו כלא ביקרתי" : "סמנו שביקרתי"}
+              className={cn("house-action-btn has-count", visited && "is-visited")}
+              aria-label={
+                visited
+                  ? `סמנו כלא ביקרתי, ${traffic.visited} ביקרו`
+                  : `סמנו שביקרתי, ${traffic.visited} ביקרו`
+              }
               aria-pressed={visited}
               title="ביקרתי"
               onClick={onToggleVisited}
             >
               <VisitedCheck visited={visited} inButton />
+              <HouseActionCount n={traffic.visited} />
             </button>
           ) : null}
           {onToggleEdit ? (
