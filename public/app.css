@@ -652,14 +652,14 @@
   .w-\[88\%\] {
     width: 88%;
   }
-  .w-\[90\%\] {
-    width: 90%;
-  }
   .w-\[min\(20rem\,88vw\)\] {
     width: min(20rem, 88vw);
   }
   .w-\[min\(38rem\,calc\(100vw-1\.5rem\)\)\] {
     width: min(38rem, calc(100vw - 1.5rem));
+  }
+  .w-auto {
+    width: auto;
   }
   .w-fit {
     width: fit-content;
@@ -690,6 +690,9 @@
   }
   .max-w-lg {
     max-width: var(--container-lg);
+  }
+  .max-w-none {
+    max-width: none;
   }
   .max-w-sm {
     max-width: var(--container-sm);
@@ -2103,6 +2106,10 @@
   .focus\:text-accent-foreground:focus {
     color: var(--accent-foreground);
   }
+  .focus\:outline-none:focus {
+    --tw-outline-style: none;
+    outline-style: none;
+  }
   :is(.not-data-\[variant\=destructive\]\:focus\:\*\*\:text-accent-foreground:not([data-variant="destructive"]):focus *) {
     color: var(--accent-foreground);
   }
@@ -2114,6 +2121,10 @@
   }
   .focus-visible\:border-ring:focus-visible {
     border-color: var(--ring);
+  }
+  .focus-visible\:ring-0:focus-visible {
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .focus-visible\:ring-3:focus-visible {
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
@@ -3920,26 +3931,26 @@ svg.leaflet-zoom-animated {
 }
 .pin-apt-dots {
   position: absolute;
-  right: -6px;
-  bottom: -5px;
+  inset-inline-start: -6px;
+  bottom: -6px;
   z-index: 4;
   display: flex;
-  flex-direction: row-reverse;
+  flex-direction: row;
   pointer-events: none;
 }
 .pin-apt-dot {
-  width: 16px;
-  height: 16px;
-  margin-right: -4px;
+  width: 24px;
+  height: 24px;
+  margin-inline-end: -8px;
   border-radius: 999px;
-  border: 3px solid #fff7ed;
+  border: 1.5px solid #fff7ed;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 78%;
+  background-size: 86%;
 }
 .pin-apt-dot:last-child {
-  margin-right: 0;
+  margin-inline-end: 0;
 }
 .pin-apt-dot.is-plenty,
 .pin-apt-dot.is-low,
@@ -3978,6 +3989,7 @@ svg.leaflet-zoom-animated {
 }
 .pin-houses {
   position: relative;
+  z-index: 5;
   display: block;
   width: 26px;
   height: 19px;
@@ -4121,7 +4133,7 @@ svg.leaflet-zoom-animated {
   width: 24px;
   height: 24px;
   border-radius: 999px;
-  border: 3px solid #fff7ed;
+  border: 1.5px solid #fff7ed;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 .house-pin .pin-status.is-plenty,
@@ -4133,7 +4145,7 @@ svg.leaflet-zoom-animated {
   background-image: url("/icons/pin-candy.png");
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 78%;
+  background-size: 86%;
 }
 .house-pin .pin-status.is-plenty,
 .pumpkin-pin .pin-status.is-plenty {
