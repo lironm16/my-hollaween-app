@@ -14,6 +14,7 @@ import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
+import { reportHouseTraffic } from "@/hooks/use-house-traffic";
 import { toPublicHouse } from "@/lib/ids";
 import type { House, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -94,13 +95,20 @@ export default function HousePage() {
               house={house}
               catalogSource={source}
               liked={likes.liked(house.id)}
-              onToggleLike={() => likes.toggle(house.id)}
+              onToggleLike={() => {
+                const ids = likes.toggle(house.id);
+                reportHouseTraffic(house.id, "saved", ids.includes(house.id));
+              }}
               visited={visits.visited(house.id)}
-              onToggleVisited={() => visits.toggle(house.id)}
+              onToggleVisited={() => {
+                const ids = visits.toggle(house.id);
+                reportHouseTraffic(house.id, "visited", ids.includes(house.id));
+              }}
               managerEditCode={admin ? editCode : undefined}
               canEdit={canEdit}
               editing={editing}
               onToggleEdit={() => setEditing((v) => !v)}
+              emphasizeTraffic={canEdit && !editing}
               extra={extra}
             />
           </div>

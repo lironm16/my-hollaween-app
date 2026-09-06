@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { Catalog } from "@/lib/types";
 import { syncCatalog } from "@/lib/catalog-sync";
 import { loadCatalogCache, loadCatalogCacheSync, saveCatalogCache, flushPendingHouseWrites, withDeviceHouseOverlays } from "@/lib/offline-db";
+import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
 
@@ -64,6 +65,7 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
     setOffline(!online);
     if (online) await flushPendingHouseWrites();
     try {
+      if (readServerSimDown()) throw new Error("sim-down");
       const live = await fetchJson("/api/catalog", force);
       let next: Catalog = live;
       setCatalog((prev) => {
@@ -77,6 +79,7 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
       return;
     } catch {
       try {
+        if (readServerSimDown()) throw new Error("sim-down");
         const snap = await fetchJson("/catalog.json", force);
         let next: Catalog = snap;
         setCatalog((prev) => {
@@ -148,6 +151,8 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
     document.addEventListener("visibilitychange", onVis);
     const onChanged = () => void refresh(true);
     window.addEventListener("hw-catalog-changed", onChanged);
+    const onSim = () => void refresh(true);
+    window.addEventListener(SERVER_SIM_EVENT, onSim);
     const poll = window.setInterval(() => {
       if (document.visibilityState === "visible") void refresh(false);
     }, 15_000);
@@ -158,6 +163,7 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
       window.removeEventListener("offline", onOff);
       document.removeEventListener("visibilitychange", onVis);
       window.removeEventListener("hw-catalog-changed", onChanged);
+      window.removeEventListener(SERVER_SIM_EVENT, onSim);
     };
     // initial is server-provided for this mount
     // eslint-disable-next-line react-hooks/exhaustive-deps

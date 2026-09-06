@@ -20,6 +20,10 @@ export function useVisitedHouses() {
   return {
     visitedIds: ids,
     visited: (id: string) => ids.includes(id),
-    toggle: (id: string) => setIds(toggleVisited(id)),
+    toggle: (id: string) => {
+      const next = toggleVisited(id);
+      setIds(next);
+      return next;
+    },
   };
 }

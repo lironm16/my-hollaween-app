@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { get as getBlob, put as putBlob } from "@vercel/blob";
+import { canonicalAddressForBuilding } from "@/lib/house-clusters";
 import { newEditCode, newPublicId, toPublicHouse } from "@/lib/ids";
 import { inNeighborhood } from "@/lib/config";
 import { config } from "@/lib/config";
@@ -43,6 +44,7 @@ import {
 
 const SEED_PATH = path.join(process.cwd(), "data", "seed.json");
 const BLOB_PATH = "halloween-houses/db.json";
+const PUSH_BLOB_PATH = "halloween-houses/push-settings.json";
 const MEM_TTL_MS = 1500;
 
 let chain: Promise<unknown> = Promise.resolve();
@@ -189,6 +191,39 @@ async function writeBlobDb(db: DbFile) {
   }
 }
 
+async function readPushSettingsBlob(): Promise<DbFile["pushSettings"] | null> {
+  if (!blobEnabled()) return null;
+  try {
+    const result = await getBlob(PUSH_BLOB_PATH, {
+      access: "private",
+      useCache: false,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    });
+    if (!result?.stream) return null;
+    const parsed = JSON.parse(await new Response(result.stream).text()) as DbFile["pushSettings"];
+    if (!parsed?.templates) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+async function writePushSettingsBlob(settings: DbFile["pushSettings"]) {
+  if (!blobEnabled() || !settings?.templates) return;
+  try {
+    await putBlob(PUSH_BLOB_PATH, JSON.stringify(settings), {
+      access: "private",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: "application/json",
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+      cacheControlMaxAge: 0,
+    });
+  } catch {
+    /* house db still holds a copy */
+  }
+}
+
 async function readLocalFileDb(): Promise<DbFile | null> {
   try {
     const file = await dbPath();
@@ -238,13 +273,21 @@ function pickNewest(...candidates: Array<DbFile | null | undefined>): DbFile | n
 }
 
 async function readFileDb(): Promise<DbFile> {
-  const [local, blob, global] = await Promise.all([
+  const [local, blob, global, pushBlob] = await Promise.all([
     readLocalFileDb(),
     readBlobDb(),
     Promise.resolve(getGlobalDb()),
+    readPushSettingsBlob(),
   ]);
   const newest = pickNewest(local, blob, global);
-  if (newest) return newest;
+  const pushSettings = pickPushSettings(
+    newest,
+    local,
+    blob,
+    global,
+    pushBlob ? { updatedAt: pushBlob.updatedAt ?? "", houses: [], pushSettings: pushBlob } : null,
+  );
+  if (newest) return pushSettings ? { ...newest, pushSettings } : newest;
   const seed = normalizeDb(await readSeed());
   try {
     await writeFileDb(seed);
@@ -267,7 +310,14 @@ function setMem(db: DbFile) {
 }
 
 async function persistDb(db: DbFile) {
-  if (!db.pushSettings && mem?.pushSettings) db.pushSettings = mem.pushSettings;
+  const pushBlob = await readPushSettingsBlob();
+  const mergedSettings = pickPushSettings(
+    db,
+    mem,
+    getGlobalDb(),
+    pushBlob ? { updatedAt: pushBlob.updatedAt ?? "", houses: [], pushSettings: pushBlob } : null,
+  );
+  if (mergedSettings) db.pushSettings = mergedSettings;
   setMem(db);
   try {
     await writeFileDb(db);
@@ -275,6 +325,7 @@ async function persistDb(db: DbFile) {
     /* memory/blob still hold the write */
   }
   await writeBlobDb(db);
+  if (db.pushSettings) await writePushSettingsBlob(db.pushSettings);
 }
 
 async function loadDb(fresh = false): Promise<DbFile> {
@@ -367,6 +418,7 @@ export async function submitHouse(
     const decor = syncDecorFields({ ...input, visit });
     const house: House = {
       ...input,
+      address: canonicalAddressForBuilding(input.address, db.houses),
       treats,
       treatStock,
       visit,

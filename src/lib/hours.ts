@@ -1,3 +1,4 @@
+import { appNow } from "@/lib/app-clock";
 import { config } from "@/lib/config";
 import type { VisitState } from "@/lib/types";
 import { effectiveVisit, isFrozen } from "@/lib/house-state";
@@ -114,7 +115,7 @@ function eventNightParts() {
 }
 
 /** -1 before event night, 0 on the night, 1 after. */
-export function eventNightRelation(now = new Date()): -1 | 0 | 1 {
+export function eventNightRelation(now = appNow()): -1 | 0 | 1 {
   const event = eventNightParts();
   const today = ymdLocal(now);
   if (today.year < event.year) return -1;
@@ -131,7 +132,7 @@ export function eventNightDateLabel() {
 }
 
 /** Pause/stop chips: only after the house’s first window on Halloween night. */
-export function nightStatusControlsEnabled(house: HoursSource, now = new Date()) {
+export function nightStatusControlsEnabled(house: HoursSource, now = appNow()) {
   if (eventNightRelation(now) !== 0) return false;
   const first = houseHoursWindows(house)[0];
   if (!first) return false;
@@ -147,7 +148,7 @@ export function hoursStatus(
     visit?: VisitState;
     soldOut?: boolean;
   },
-  now = new Date(),
+  now = appNow(),
 ): HoursStatus {
   house = withRehearsalPin(house, now);
   if (effectiveVisit(house) === "closed") return { kind: "closedVisit" };
@@ -262,7 +263,7 @@ function withRehearsalPin<T extends SoonHouse>(house: T, now: Date): T {
  * Last 30 minutes of an open clock window. Ignores the Halloween date so
  * rehearsal nights still mark pins and cards; sold-out / frozen houses do not.
  */
-export function closingSoonAt(house: SoonHouse, now = new Date()): string | null {
+export function closingSoonAt(house: SoonHouse, now = appNow()): string | null {
   house = withRehearsalPin(house, now);
   if (effectiveVisit(house) === "closed") return null;
   if (isFrozen(house, now.getTime())) return null;
@@ -279,7 +280,7 @@ export function closingSoonAt(house: SoonHouse, now = new Date()): string | null
 }
 
 /** Next 30 minutes before an open clock window. Same rehearsal rules as closing soon. */
-export function openingSoonAt(house: SoonHouse, now = new Date()): string | null {
+export function openingSoonAt(house: SoonHouse, now = appNow()): string | null {
   house = withRehearsalPin(house, now);
   if (effectiveVisit(house) === "closed") return null;
   if (isFrozen(house, now.getTime())) return null;
@@ -296,16 +297,16 @@ export function openingSoonAt(house: SoonHouse, now = new Date()): string | null
   return null;
 }
 
-export function isClosingSoon(house: SoonHouse, now = new Date()) {
+export function isClosingSoon(house: SoonHouse, now = appNow()) {
   return closingSoonAt(house, now) !== null;
 }
 
-export function isOpeningSoon(house: SoonHouse, now = new Date()) {
+export function isOpeningSoon(house: SoonHouse, now = appNow()) {
   return openingSoonAt(house, now) !== null;
 }
 
 /** Between two clock windows (not yet opening-soon). Same rehearsal rules. */
-export function onBreakAt(house: SoonHouse, now = new Date()): string | null {
+export function onBreakAt(house: SoonHouse, now = appNow()): string | null {
   house = withRehearsalPin(house, now);
   if (effectiveVisit(house) === "closed") return null;
   if (isFrozen(house, now.getTime())) return null;
@@ -324,7 +325,7 @@ export function onBreakAt(house: SoonHouse, now = new Date()): string | null {
   return null;
 }
 
-export function isOnBreak(house: SoonHouse, now = new Date()) {
+export function isOnBreak(house: SoonHouse, now = appNow()) {
   return onBreakAt(house, now) !== null;
 }
 
@@ -336,7 +337,7 @@ export function isOpenNow(
     adminFrozen?: boolean;
     ownerFrozenUntil?: string | null;
   },
-  now = new Date(),
+  now = appNow(),
 ) {
   if (isFrozen(house, now.getTime())) return false;
   const status = hoursStatus(house, now);

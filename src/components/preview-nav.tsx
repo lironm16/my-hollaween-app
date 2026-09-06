@@ -9,6 +9,7 @@ export const PREVIEW_LINKS = [
   { href: "/preview/decor", label: "קישוט" },
   { href: "/preview/strollers", label: "עגלות" },
   { href: "/preview/push", label: "התראות" },
+  { href: "/preview/hours", label: "שעות" },
 ] as const;
 
 export function PreviewNav({ current }: { current: string }) {

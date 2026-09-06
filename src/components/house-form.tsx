@@ -30,6 +30,7 @@ import { StrollerSign } from "@/components/symbols";
 import { ScareSign } from "@/components/scare-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
 import { houseHoursWindows, MAX_HOUR_WINDOWS, nightStatusControlsEnabled, syncHoursFields } from "@/lib/hours";
+import { useAppNow } from "@/hooks/use-app-clock";
 import type { HoursWindow } from "@/lib/types";
 
 const empty: HouseInput = {
@@ -106,6 +107,7 @@ export function HouseForm({
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [clearPhoto, setClearPhoto] = useState(false);
   const existingPhoto = initial?.photoUrl ?? "";
+  const now = useAppNow();
 
   function updateHourWindow(index: number, patch: Partial<HoursWindow>) {
     setHourWindows((current) =>
@@ -142,11 +144,14 @@ export function HouseForm({
 
   const candyOffered = candy === "plenty" || candy === "low";
   const undecorated = decorLevel === "none";
-  const nightStatusEnabled = nightStatusControlsEnabled({
-    openHours: hourWindows,
-    openFrom: hourWindows[0]?.from,
-    openTo: hourWindows[0]?.to,
-  });
+  const nightStatusEnabled = nightStatusControlsEnabled(
+    {
+      openHours: hourWindows,
+      openFrom: hourWindows[0]?.from,
+      openTo: hourWindows[0]?.to,
+    },
+    now,
+  );
 
   function pickScare(level: ScareLevel) {
     setForm((f) => ({ ...f, scareLevel: level }));
@@ -506,6 +511,7 @@ export function HouseForm({
           {nightStatusEnabled ? null : (
             <p className="mb-2 text-base text-violet-300">
               נפתח בליל האלווין, משעת הפעילות של הבית. אז אפשר לסמן הפסקה זמנית או סגירה לערב.
+              לחזרה כללית: תפריט מנהל → התראות לשכונה.
             </p>
           )}
           <div className="flex flex-wrap gap-1.5">

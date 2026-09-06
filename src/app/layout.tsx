@@ -3,6 +3,7 @@ import { Rubik, Creepster } from "next/font/google";
 import Script from "next/script";
 import { Providers } from "@/components/providers";
 import { HalloweenFx } from "@/components/halloween-fx";
+import { RehearsalBoot } from "@/components/rehearsal-boot";
 import { config } from "@/lib/config";
 import { getInlineThemeCss } from "@/lib/inline-css";
 import "./globals.css";
@@ -69,6 +70,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="relative h-full min-h-dvh font-sans">
         <Script src="/boot.js" strategy="beforeInteractive" />
         <HalloweenFx />
+        <RehearsalBoot />
         <Providers>{children}</Providers>
       </body>
     </html>

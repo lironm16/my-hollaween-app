@@ -37,6 +37,10 @@ import { OpenNowMark } from "@/components/open-now-mark";
 import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
 import { ScareMark, ScareSign } from "@/components/scare-glyphs";
 import { isOpenNow } from "@/lib/hours";
+import { applyClockSearchParams } from "@/lib/app-clock";
+import { useAppNow } from "@/hooks/use-app-clock";
+import { reportHouseTraffic, useHouseTraffic } from "@/hooks/use-house-traffic";
+import { useOnlineDevices } from "@/hooks/use-presence";
 import {
   backupLooksNewer,
   loadPendingWrites,
@@ -124,8 +128,14 @@ export function NeighborhoodApp({
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
   const owned = useOwnedHouses();
+  const now = useAppNow();
+  const { houses: traffic } = useHouseTraffic();
+  const onlineDevices = useOnlineDevices(admin);
 
   useEffect(() => () => window.clearTimeout(cheerTimer.current), []);
+  useEffect(() => {
+    applyClockSearchParams(window.location.search);
+  }, []);
 
   function setView(next: HomeView) {
     writeHomeView(next);
@@ -240,7 +250,7 @@ export function NeighborhoodApp({
       if (accessibleOnly && !house.accessible) return false;
       if (candyOnly && !offersCandy(house)) return false;
       if (!includeUndecorated && !isDecorated(house)) return false;
-      if (openNowOnly && !isOpenNow(house)) return false;
+      if (openNowOnly && !isOpenNow(house, now)) return false;
       for (const sensitivity of sensitivityFilters) {
         if (!offersSensitivity(house, sensitivity)) return false;
       }
@@ -265,6 +275,7 @@ export function NeighborhoodApp({
     unvisitedOnly,
     likes.likedIds,
     visits.visitedIds,
+    now,
   ]);
 
   const moreFilterCount =
@@ -378,6 +389,7 @@ export function NeighborhoodApp({
   }
 
   function enterRouteMode() {
+    if (routeMode) return;
     setAskedLocation(true);
     if (!origin) {
       pendingRouteGps.current = true;
@@ -393,9 +405,15 @@ export function NeighborhoodApp({
     pinCurrentRoute(origin);
   }
 
+  function onToggleLike(id: string) {
+    const ids = likes.toggle(id);
+    reportHouseTraffic(id, "saved", ids.includes(id));
+  }
+
   function onToggleVisited(id: string) {
-    const marking = !visits.visited(id);
-    visits.toggle(id);
+    const ids = visits.toggle(id);
+    const marking = ids.includes(id);
+    reportHouseTraffic(id, "visited", marking);
     if (!marking) return;
     setVisitCheer(false);
     window.clearTimeout(cheerTimer.current);
@@ -708,7 +726,7 @@ export function NeighborhoodApp({
                 offline={offline}
                 unreachable={unreachable}
                 source={source}
-                devices={admin ? adminStats?.devices : undefined}
+                onlineDevices={admin ? onlineDevices : null}
                 onBreak={admin ? adminStats?.onBreak : undefined}
               />
             </div>
@@ -735,9 +753,14 @@ export function NeighborhoodApp({
                     origin={origin}
                     catalogSource={source}
                     likedIds={likes.likedIds}
-                    onToggleLike={likes.toggle}
+                    onToggleLike={onToggleLike}
                     visitedIds={visits.visitedIds}
                     onToggleVisited={onToggleVisited}
+                    traffic={traffic}
+                    exportKind={likedOnly ? "liked" : "list"}
+                    admin={admin}
+                    ownedIds={owned.map((item) => item.id)}
+                    onlineDevices={admin ? onlineDevices : null}
                   />
                 )}
               </div>
@@ -754,7 +777,7 @@ export function NeighborhoodApp({
             setSelectedId("closed");
           }}
           liked={likes.liked}
-          onToggleLike={likes.toggle}
+          onToggleLike={onToggleLike}
           visited={visits.visited}
           onToggleVisited={onToggleVisited}
           catalogSource={source}
@@ -858,7 +881,7 @@ function CatalogMetaChip({
   offline,
   unreachable,
   source,
-  devices,
+  onlineDevices,
   onBreak,
 }: {
   houseCount: number;
@@ -866,7 +889,7 @@ function CatalogMetaChip({
   offline: boolean;
   unreachable: boolean;
   source: string | null;
-  devices?: number;
+  onlineDevices?: number | null;
   onBreak?: number;
 }) {
   const stale = offline || unreachable || source === "cache" || source === "snapshot";
@@ -874,7 +897,7 @@ function CatalogMetaChip({
     <div className="pointer-events-none absolute top-2 start-2 z-10">
       <span className="inline-flex max-w-[min(100%,18rem)] flex-wrap items-center gap-1.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
         <span>{houseCount} בתים</span>
-        {devices != null ? <span>· {devices} מכשירים</span> : null}
+        {onlineDevices != null ? <span>· {onlineDevices} עכשיו</span> : null}
         {onBreak != null && onBreak > 0 ? <span>· {onBreak} בהפסקה</span> : null}
         {stopCount != null ? <span>· {stopCount} עצירות</span> : null}
         {stale ? (

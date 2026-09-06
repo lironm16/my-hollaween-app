@@ -3,8 +3,10 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { HouseCard } from "@/components/house-card";
+import { CsvExportButton } from "@/components/csv-export-button";
 import { distanceMeters } from "@/lib/geo";
 import { effectiveVisit } from "@/lib/house-state";
+import type { HouseTraffic } from "@/lib/traffic";
 import type { PublicHouse } from "@/lib/types";
 
 function scrollParent(el: HTMLElement | null): HTMLElement | null {
@@ -23,6 +25,11 @@ export function HouseList({
   onToggleLike,
   visitedIds,
   onToggleVisited,
+  traffic,
+  exportKind = "list",
+  ownedIds = [],
+  admin = false,
+  onlineDevices = null,
 }: {
   houses: PublicHouse[];
   origin?: { lat: number; lng: number } | null;
@@ -31,6 +38,11 @@ export function HouseList({
   onToggleLike?: (id: string) => void;
   visitedIds?: string[];
   onToggleVisited?: (id: string) => void;
+  traffic?: Record<string, HouseTraffic>;
+  exportKind?: "liked" | "list";
+  ownedIds?: string[];
+  admin?: boolean;
+  onlineDevices?: number | null;
 }) {
   const [q, setQ] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -104,7 +116,11 @@ export function HouseList({
           placeholder="חיפוש לפי שם או רחוב…"
           className="h-10 min-w-0 flex-1 bg-[#1d1028] text-base"
         />
-        <span className="shrink-0 text-base text-violet-300">{houses.length} בתים</span>
+        <CsvExportButton houses={houses} traffic={traffic} kind={exportKind} />
+        <span className="shrink-0 text-base text-violet-300">
+          {houses.length} בתים
+          {admin && onlineDevices != null ? ` · ${onlineDevices} עכשיו` : ""}
+        </span>
       </div>
       {origin ? (
         <p className="text-base text-violet-300">ממוין לפי מרחק מכם</p>
@@ -130,6 +146,7 @@ export function HouseList({
               onToggleLike={onToggleLike ? () => onToggleLike(h.id) : undefined}
               visited={visitedIds?.includes(h.id)}
               onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
+              emphasizeTraffic={admin || ownedIds.includes(h.id)}
             />
           </div>
         ))
