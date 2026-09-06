@@ -4,7 +4,6 @@ import { useAppNow } from "@/hooks/use-app-clock";
 import { cn } from "@/lib/utils";
 import {
   closingSoonAt,
-  formatHoursLabel,
   hoursStatus,
   isHoursNightOver,
   onBreakAt,
@@ -47,17 +46,9 @@ export function HoursStatusBanner({
   const rehearsed = useAppNow();
   const clock = now ?? rehearsed;
 
-  if (effectiveVisit(house) === "closed") {
+  if (effectiveVisit(house) === "closed" || isHoursNightOver(house, clock)) {
     return (
       <p className={cn(BANNER, CLOSED_TONE, className)}>הבית סגור</p>
-    );
-  }
-
-  if (isHoursNightOver(house, clock)) {
-    return (
-      <p className={cn(BANNER, "bg-violet-950/50 text-violet-200", className)}>
-        כבר סגור ({formatHoursLabel(house) || "שעות הפעילות עברו"})
-      </p>
     );
   }
 
@@ -137,8 +128,6 @@ export function HoursStatusBanner({
     );
   }
   return (
-    <p className={cn(BANNER, "bg-violet-950/50 text-violet-200", className)}>
-      כבר סגור ({formatHoursLabel(house) || "שעות הפעילות עברו"})
-    </p>
+    <p className={cn(BANNER, CLOSED_TONE, className)}>הבית סגור</p>
   );
 }
