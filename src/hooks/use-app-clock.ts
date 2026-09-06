@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
-  appNow,
   CLOCK_EVENT,
+  clockSnapshot,
+  dateFromSnapshot,
   readRehearsalScene,
   readServerSimDown,
   SERVER_SIM_EVENT,
@@ -12,26 +13,20 @@ import {
   type RehearsalScene,
 } from "@/lib/app-clock";
 
-function subscribeClock(onStoreChange: () => void) {
-  const id = window.setInterval(onStoreChange, 15_000);
-  window.addEventListener(CLOCK_EVENT, onStoreChange);
-  return () => {
-    window.clearInterval(id);
-    window.removeEventListener(CLOCK_EVENT, onStoreChange);
-  };
-}
-
 /** Live app clock (rehearsal night when a dry-run scene is on). */
 export function useAppNow() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  const stamp = useSyncExternalStore(
-    subscribeClock,
-    () => appNow().getTime(),
-    () => Date.now(),
-  );
-  if (!mounted) return new Date();
-  return new Date(stamp);
+  const [stamp, setStamp] = useState(0);
+  useEffect(() => {
+    const tick = () => setStamp(clockSnapshot());
+    tick();
+    const id = window.setInterval(tick, 15_000);
+    window.addEventListener(CLOCK_EVENT, tick);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener(CLOCK_EVENT, tick);
+    };
+  }, []);
+  return dateFromSnapshot(stamp || clockSnapshot(new Date(), "off"));
 }
 
 export function useRehearsalScene() {

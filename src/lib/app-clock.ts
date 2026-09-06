@@ -28,6 +28,7 @@ const CLOCK_KEY = "hw-rehearsal-scene";
 const SERVER_KEY = "hw-sim-server";
 export const CLOCK_EVENT = "hw-clock-changed";
 export const SERVER_SIM_EVENT = "hw-server-sim-changed";
+const TICK_MS = 15_000;
 
 function isScene(value: string | null | undefined): value is RehearsalScene {
   return Boolean(value && (REHEARSAL_SCENES as readonly string[]).includes(value));
@@ -119,8 +120,36 @@ export function writeServerSimDown(down: boolean) {
 
 /** Wall clock, or the rehearsal Halloween instant when a dry-run scene is on. */
 export function appNow(): Date {
-  const scene = readRehearsalScene();
-  return dateForRehearsalScene(scene) ?? new Date();
+  return dateFromSnapshot(clockSnapshot());
+}
+
+/**
+ * Stable clock id for React: same value until the 15s tick or the rehearsal scene
+ * changes. Frozen Halloween scenes return a constant timestamp.
+ */
+export function clockSnapshot(wall = new Date(), scene: RehearsalScene = readRehearsalScene()): number {
+  if (scene !== "off" && scene !== "today") {
+    return dateForRehearsalScene(scene, wall)?.getTime() ?? 0;
+  }
+  const tick = Math.floor(wall.getTime() / TICK_MS) * TICK_MS;
+  if (scene === "today") {
+    return dateForRehearsalScene("today", new Date(tick))?.getTime() ?? tick;
+  }
+  return tick;
+}
+
+const snapshotDates = new Map<number, Date>();
+
+export function dateFromSnapshot(stamp: number) {
+  const cached = snapshotDates.get(stamp);
+  if (cached) return cached;
+  const date = new Date(stamp || Date.now());
+  snapshotDates.set(stamp, date);
+  if (snapshotDates.size > 8) {
+    const first = snapshotDates.keys().next().value;
+    if (first !== undefined) snapshotDates.delete(first);
+  }
+  return date;
 }
 
 export function applyClockSearchParams(search: string | URLSearchParams) {
