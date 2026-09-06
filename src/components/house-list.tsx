@@ -33,6 +33,7 @@ export function HouseList({
   editCodeFor,
   onHouseUpdated,
   onHouseDeleted,
+  setLabel,
 }: {
   houses: PublicHouse[];
   origin?: { lat: number; lng: number } | null;
@@ -47,6 +48,7 @@ export function HouseList({
   editCodeFor?: (id: string) => string | undefined;
   onHouseUpdated?: (house: PublicHouse) => void;
   onHouseDeleted?: (id: string) => void;
+  setLabel?: string;
 }) {
   const [q, setQ] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -105,6 +107,7 @@ export function HouseList({
   if (houses.length === 0) {
     return (
       <div className="px-4 py-16 text-center text-violet-200">
+        {setLabel ? <p className="mb-3 text-base text-violet-300">{setLabel}</p> : null}
         <p className="font-display text-2xl text-orange-300">אין בתים שמתאימים לסינון</p>
         <p className="mt-2 text-base">נסו לבטל סינון בתפריטי שכונה, רמת פחד, עוד או רגישויות.</p>
       </div>
@@ -134,6 +137,7 @@ export function HouseList({
       <p className="text-base text-violet-300">
         {houses.length} בתים
         {onlineDevices != null ? ` · ${onlineDevices} מבקרים` : ""}
+        {setLabel ? ` · ${setLabel}` : ""}
       </p>
       {filtered.length === 0 ? (
         <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לחיפוש.</p>

@@ -17,6 +17,7 @@ export function RouteList({
   onRequestLocation,
   onChangeOrigin,
   onSelectHouse,
+  setLabel,
 }: {
   route: WalkingRoute | null;
   prefsLabel: string;
@@ -25,10 +26,12 @@ export function RouteList({
   onRequestLocation?: () => void;
   onChangeOrigin?: () => void;
   onSelectHouse: (id: string) => void;
+  setLabel?: string;
 }) {
   if (!route) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center text-violet-200">
+        {setLabel ? <p className="mb-3 text-base text-violet-300">{setLabel}</p> : null}
         <p className="font-display text-2xl text-orange-300">אין עצירות במסלול</p>
         <p className="mt-2 text-base">
           שנו סינון כדי לראות בתים במסלול. «לא ביקרתי» מסתיר בתים שכבר סימנתם.
@@ -51,6 +54,7 @@ export function RouteList({
             {onChangeOrigin ? " · שינוי" : ""}
           </button>
           {prefsLabel ? ` · ${prefsLabel}` : ""}
+          {setLabel ? ` · ${setLabel}` : ""}
         </p>
         {!hasGps && onRequestLocation ? (
           <Button type="button" size="sm" variant="outline" className="mt-2" onClick={onRequestLocation}>
