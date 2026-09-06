@@ -692,6 +692,7 @@ export function NeighborhoodApp({
                     hasGps={Boolean(origin)}
                     onRequestLocation={goToMyLocation}
                     onSelectHouse={(id) => {
+                      setView("map");
                       setClusterOverview(false);
                       setSelectedId(id);
                     }}
@@ -699,11 +700,8 @@ export function NeighborhoodApp({
                 ) : (
                   <HouseList
                     houses={visible}
-                    onOpen={(house) => {
-                      setClusterOverview(false);
-                      setSelectedId(house.id);
-                    }}
                     origin={origin}
+                    catalogSource={source}
                     likedIds={likes.likedIds}
                     onToggleLike={likes.toggle}
                     visitedIds={visits.visitedIds}
@@ -714,7 +712,7 @@ export function NeighborhoodApp({
             ) : null}
           </>
         )}
-        {selected ? (
+        {selected && view === "map" ? (
         <MapHouseSheet
           house={selected}
           clusterHouses={view === "map" ? selectedCluster : [selected]}

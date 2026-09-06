@@ -9,22 +9,23 @@ import type { PublicHouse } from "@/lib/types";
 
 export function HouseList({
   houses,
-  onOpen,
   origin,
+  catalogSource,
   likedIds,
   onToggleLike,
   visitedIds,
   onToggleVisited,
 }: {
   houses: PublicHouse[];
-  onOpen: (house: PublicHouse) => void;
   origin?: { lat: number; lng: number } | null;
+  catalogSource?: string | null;
   likedIds?: string[];
   onToggleLike?: (id: string) => void;
   visitedIds?: string[];
   onToggleVisited?: (id: string) => void;
 }) {
   const [q, setQ] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const needle = q.trim();
@@ -78,7 +79,9 @@ export function HouseList({
             key={h.id}
             house={h}
             distanceM={d}
-            onOpen={() => onOpen(h)}
+            catalogSource={catalogSource}
+            expanded={expandedId === h.id}
+            onToggle={() => setExpandedId((id) => (id === h.id ? null : h.id))}
             liked={likedIds?.includes(h.id)}
             onToggleLike={onToggleLike ? () => onToggleLike(h.id) : undefined}
             visited={visitedIds?.includes(h.id)}

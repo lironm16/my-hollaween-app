@@ -56,6 +56,7 @@ export function MapHouseSheet({
 }) {
   const labelId = useId();
   const sheetRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const naturalH = useRef(0);
   const drag = useRef<{ y: number; h: number; moved: boolean } | null>(null);
   const liveH = useRef(0);
@@ -72,6 +73,7 @@ export function MapHouseSheet({
 
   useEffect(() => {
     setSheetH(null);
+    bodyRef.current?.scrollTo(0, 0);
   }, [clusterKey, house.id, overview]);
 
   useEffect(() => {
@@ -182,7 +184,7 @@ export function MapHouseSheet({
           editing={editing}
         />
       </div>
-      <div className="map-house-sheet-body">
+      <div ref={bodyRef} className="map-house-sheet-body">
         {overview ? (
           <div id={labelId}>
             <p className="map-house-sheet-kicker">{address}</p>

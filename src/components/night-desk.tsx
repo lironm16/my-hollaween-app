@@ -225,7 +225,7 @@ export function NightDesk({
       <HouseForm
         key={house.id}
         initial={house}
-        submitLabel="שמירת הבית"
+        submitLabel="שמירה"
         busy={busy}
         onSubmit={onSave}
         extraActions={

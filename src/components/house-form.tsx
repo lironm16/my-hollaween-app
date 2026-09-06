@@ -618,8 +618,8 @@ export function HouseForm({
             <span
               className={
                 busy
-                  ? "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-base font-medium text-black opacity-60"
-                  : "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-base font-medium text-black"
+                  ? "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-base font-medium text-white opacity-60"
+                  : "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-base font-medium text-white"
               }
             >
               <Camera className="size-3.5" />
@@ -628,7 +628,6 @@ export function HouseForm({
             <input
               type="file"
               accept="image/*"
-              capture="environment"
               className="sr-only"
               disabled={busy}
               onChange={(e) => {
