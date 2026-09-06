@@ -37,8 +37,8 @@ export function HouseTrafficLine({
       <div className={cn("rounded-xl bg-emerald-950/40 px-3 py-2 ring-1 ring-emerald-500/20", className)}>
         <p className="text-base font-medium text-emerald-100">תנועה לבית · {bits.join(" · ")}</p>
         <p className="mt-1 text-base text-emerald-50/90">
-          זה לא סופר ילדים בפתח — רק כמה טלפונים שמרו, בנו מסלול, או סימנו ביקור. עוזר להעריך מלאי
-          ממתקים בלי לעקוב אחרי מיקום.
+          זה לא סופר ילדים בפתח — רק כמה טלפונים שמרו, בנו מסלול, או סימנו ביקור. המספרים מתעדכנים
+          בערך כל דקה, לא בכל לחיצה, כדי לא להעמיס על השרת בלילה.
         </p>
       </div>
     );

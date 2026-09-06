@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { applyTrafficDeltas, getHouseTraffic, type TrafficDelta } from "@/lib/traffic-store";
-import type { TrafficKind } from "@/lib/traffic";
+import { clampTrafficDelta, type TrafficKind } from "@/lib/traffic";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,14 +14,15 @@ export async function GET() {
     { houses },
     {
       headers: {
-        "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=60",
+        "Cache-Control": "public, max-age=0, s-maxage=30, stale-while-revalidate=120",
       },
     },
   );
 }
 
 export async function POST(request: Request) {
-  if (!rateLimit(`traffic:${clientKey(request.headers)}`, 40, 60 * 1000)) {
+  // Clients batch ~45s, so a handful of POSTs per IP per minute is enough.
+  if (!rateLimit(`traffic:${clientKey(request.headers)}`, 8, 60 * 1000)) {
     return NextResponse.json({ error: "יותר מדי עדכונים." }, { status: 429 });
   }
   const json = (await request.json().catch(() => null)) as {
@@ -29,9 +30,10 @@ export async function POST(request: Request) {
   } | null;
   const events = Array.isArray(json?.events) ? json.events : [];
   const deltas: TrafficDelta[] = [];
-  for (const event of events.slice(0, 40)) {
+  for (const event of events.slice(0, 80)) {
     if (!event?.houseId || !KINDS.has(event.kind as TrafficKind)) continue;
-    const delta = event.delta === -1 ? -1 : 1;
+    const delta = clampTrafficDelta(event.delta ?? 1);
+    if (!delta) continue;
     deltas.push({ houseId: event.houseId.slice(0, 40), kind: event.kind as TrafficKind, delta });
   }
   if (deltas.length === 0) {

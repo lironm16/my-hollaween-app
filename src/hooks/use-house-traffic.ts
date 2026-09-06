@@ -1,33 +1,54 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { HouseTraffic } from "@/lib/traffic";
-import { EMPTY_TRAFFIC } from "@/lib/traffic";
+import {
+  EMPTY_TRAFFIC,
+  overlayTraffic,
+  pendingToEvents,
+  TRAFFIC_KINDS,
+  type HouseTraffic,
+  type TrafficDelta,
+  type TrafficKind,
+} from "@/lib/traffic";
 
-type Event = { houseId: string; kind: keyof HouseTraffic; delta: 1 | -1 };
+const FLUSH_MS = 45_000;
+const POLL_MS = 60_000;
+const PENDING_KEY = "hw-traffic-pending";
 
-const reported = {
+const reported: Record<TrafficKind, Set<string>> = {
   saved: new Set<string>(),
   visited: new Set<string>(),
   routed: new Set<string>(),
 };
 
 let bootstrapped = false;
+let lifecycleBound = false;
 let cache: Record<string, HouseTraffic> = {};
+const pending: Record<string, HouseTraffic> = {};
 const listeners = new Set<() => void>();
+let flushTimer: number | null = null;
+let inFlight = false;
 
 function emit() {
   for (const listener of listeners) listener();
 }
 
-function sessionKey(kind: keyof HouseTraffic) {
+function sessionKey(kind: TrafficKind) {
   return `hw-traffic-${kind}`;
+}
+
+function emptyPending(): HouseTraffic {
+  return { saved: 0, routed: 0, visited: 0 };
+}
+
+function isZero(row: HouseTraffic) {
+  return row.saved === 0 && row.routed === 0 && row.visited === 0;
 }
 
 function loadReported() {
   if (bootstrapped || typeof window === "undefined") return;
   bootstrapped = true;
-  for (const kind of ["saved", "visited", "routed"] as const) {
+  for (const kind of TRAFFIC_KINDS) {
     try {
       const raw = sessionStorage.getItem(sessionKey(kind));
       const ids = raw ? (JSON.parse(raw) as unknown) : [];
@@ -38,9 +59,27 @@ function loadReported() {
       /* ignore */
     }
   }
+  try {
+    const raw = sessionStorage.getItem(PENDING_KEY);
+    const stored = raw ? (JSON.parse(raw) as unknown) : null;
+    if (stored && typeof stored === "object") {
+      for (const [id, row] of Object.entries(stored as Record<string, Partial<HouseTraffic>>)) {
+        if (!id) continue;
+        pending[id] = {
+          saved: Number(row.saved) || 0,
+          routed: Number(row.routed) || 0,
+          visited: Number(row.visited) || 0,
+        };
+        if (isZero(pending[id])) delete pending[id];
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  if (pendingToEvents(pending).length > 0) scheduleFlush();
 }
 
-function persistReported(kind: keyof HouseTraffic) {
+function persistReported(kind: TrafficKind) {
   try {
     sessionStorage.setItem(sessionKey(kind), JSON.stringify([...reported[kind]]));
   } catch {
@@ -48,59 +87,169 @@ function persistReported(kind: keyof HouseTraffic) {
   }
 }
 
-async function postEvents(events: Event[]) {
-  if (events.length === 0) return;
+function persistPending() {
   try {
-    const res = await fetch("/api/traffic", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ events }),
-      keepalive: true,
-    });
-    if (!res.ok) return;
-    const data = (await res.json()) as { houses?: Record<string, HouseTraffic> };
-    if (data.houses) {
-      cache = data.houses;
-      emit();
-    }
+    sessionStorage.setItem(PENDING_KEY, JSON.stringify(pending));
   } catch {
-    /* counts are best-effort */
+    /* private mode */
   }
 }
 
-export function reportHouseTraffic(houseId: string, kind: keyof HouseTraffic, on: boolean) {
+function queueDelta(houseId: string, kind: TrafficKind, delta: 1 | -1) {
+  const row = pending[houseId] ?? emptyPending();
+  row[kind] += delta;
+  if (isZero(row)) delete pending[houseId];
+  else pending[houseId] = row;
+  persistPending();
+  emit();
+  scheduleFlush();
+}
+
+function consumeSent(events: TrafficDelta[]) {
+  for (const event of events) {
+    const row = pending[event.houseId] ?? emptyPending();
+    row[event.kind] -= event.delta;
+    if (isZero(row)) delete pending[event.houseId];
+    else pending[event.houseId] = row;
+  }
+  persistPending();
+  emit();
+}
+
+function scheduleFlush() {
+  if (typeof window === "undefined") return;
+  bindLifecycle();
+  if (flushTimer != null) return;
+  flushTimer = window.setTimeout(() => {
+    flushTimer = null;
+    void flush("fetch");
+  }, FLUSH_MS);
+}
+
+async function postEvents(events: TrafficDelta[]) {
+  const res = await fetch("/api/traffic", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ events }),
+    keepalive: true,
+  });
+  if (!res.ok) throw new Error("traffic post failed");
+  const data = (await res.json()) as { houses?: Record<string, HouseTraffic> };
+  if (data.houses) {
+    cache = data.houses;
+    emit();
+  }
+}
+
+function beaconEvents(events: TrafficDelta[]) {
+  const body = JSON.stringify({ events });
+  try {
+    if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+      const ok = navigator.sendBeacon("/api/traffic", new Blob([body], { type: "application/json" }));
+      if (ok) return true;
+    }
+  } catch {
+    /* fall through */
+  }
+  try {
+    void fetch("/api/traffic", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      keepalive: true,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function flush(mode: "fetch" | "beacon") {
   loadReported();
+  const events = pendingToEvents(pending);
+  if (events.length === 0) return;
+
+  if (mode === "beacon") {
+    if (inFlight) return;
+    if (beaconEvents(events)) consumeSent(events);
+    return;
+  }
+
+  if (inFlight) {
+    scheduleFlush();
+    return;
+  }
+  inFlight = true;
+  try {
+    await postEvents(events);
+    consumeSent(events);
+  } catch {
+    scheduleFlush();
+  } finally {
+    inFlight = false;
+    if (pendingToEvents(pending).length > 0) scheduleFlush();
+  }
+}
+
+function bindLifecycle() {
+  if (lifecycleBound || typeof window === "undefined") return;
+  lifecycleBound = true;
+  const onHide = () => {
+    if (flushTimer != null) {
+      window.clearTimeout(flushTimer);
+      flushTimer = null;
+    }
+    void flush("beacon");
+  };
+  window.addEventListener("pagehide", onHide);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") onHide();
+  });
+}
+
+export function reportHouseTraffic(houseId: string, kind: TrafficKind, on: boolean) {
+  loadReported();
+  bindLifecycle();
   const already = reported[kind].has(houseId);
   if (on && already) return;
   if (!on && !already) return;
   if (on) reported[kind].add(houseId);
   else reported[kind].delete(houseId);
   persistReported(kind);
-  void postEvents([{ houseId, kind, delta: on ? 1 : -1 }]);
+  queueDelta(houseId, kind, on ? 1 : -1);
 }
 
 export function reportRouteStops(houseIds: string[]) {
   loadReported();
-  const events: Event[] = [];
+  bindLifecycle();
+  let queued = false;
   for (const houseId of houseIds) {
     if (reported.routed.has(houseId)) continue;
     reported.routed.add(houseId);
-    events.push({ houseId, kind: "routed", delta: 1 });
+    queueDelta(houseId, "routed", 1);
+    queued = true;
   }
-  persistReported("routed");
-  void postEvents(events);
+  if (queued) persistReported("routed");
 }
 
 export function useHouseTraffic() {
   const [houses, setHouses] = useState<Record<string, HouseTraffic>>(() => cache);
+  const [queued, setQueued] = useState<Record<string, HouseTraffic>>(() => ({ ...pending }));
 
   useEffect(() => {
-    const onChange = () => setHouses({ ...cache });
+    loadReported();
+    bindLifecycle();
+    const onChange = () => {
+      setHouses({ ...cache });
+      setQueued({ ...pending });
+    };
     listeners.add(onChange);
+    onChange();
     let cancelled = false;
     async function refresh() {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
       try {
-        const res = await fetch("/api/traffic", { cache: "no-store" });
+        const res = await fetch("/api/traffic");
         if (!res.ok) return;
         const data = (await res.json()) as { houses?: Record<string, HouseTraffic> };
         if (!cancelled && data.houses) {
@@ -112,16 +261,21 @@ export function useHouseTraffic() {
       }
     }
     if (Object.keys(cache).length === 0) void refresh();
-    const poll = window.setInterval(refresh, 30_000);
+    const poll = window.setInterval(refresh, POLL_MS);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       cancelled = true;
       listeners.delete(onChange);
       window.clearInterval(poll);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 
   function trafficFor(id: string): HouseTraffic {
-    return houses[id] ?? EMPTY_TRAFFIC;
+    return overlayTraffic(houses[id] ?? EMPTY_TRAFFIC, queued[id]);
   }
 
   return { houses, trafficFor };

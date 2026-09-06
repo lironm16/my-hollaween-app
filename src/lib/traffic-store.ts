@@ -3,16 +3,24 @@ import path from "node:path";
 import { get as getBlob, put as putBlob } from "@vercel/blob";
 import {
   clampTraffic,
+  clampTrafficDelta,
   emptyTrafficFile,
   type HouseTraffic,
+  type TrafficDelta,
   type TrafficFile,
-  type TrafficKind,
 } from "@/lib/traffic";
 
-const BLOB_PATH = "halloween-houses/traffic.json";
-const MEM_TTL_MS = 800;
+export type { TrafficDelta };
 
-type GlobalBag = { __hwTraffic?: TrafficFile };
+const BLOB_PATH = "halloween-houses/traffic.json";
+const MEM_GET_TTL_MS = 20_000;
+/** Shared blob is the expensive write — never persist it on every heart/visit. */
+const BLOB_PERSIST_MS = 20_000;
+
+type GlobalBag = {
+  __hwTraffic?: TrafficFile;
+  __hwTrafficLastBlob?: number;
+};
 
 function getGlobal(): TrafficFile | null {
   const value = (globalThis as GlobalBag).__hwTraffic;
@@ -21,6 +29,14 @@ function getGlobal(): TrafficFile | null {
 
 function setGlobal(value: TrafficFile) {
   (globalThis as GlobalBag).__hwTraffic = structuredClone(value);
+}
+
+function lastBlobAt() {
+  return (globalThis as GlobalBag).__hwTrafficLastBlob ?? 0;
+}
+
+function setLastBlobAt(at: number) {
+  (globalThis as GlobalBag).__hwTrafficLastBlob = at;
 }
 
 function blobEnabled() {
@@ -125,60 +141,62 @@ function withLock<T>(fn: () => Promise<T>): Promise<T> {
 let mem: TrafficFile | null = null;
 let memAt = 0;
 
+function remember(file: TrafficFile) {
+  mem = file;
+  memAt = Date.now();
+  setGlobal(file);
+}
+
 async function loadTrafficUnlocked(): Promise<TrafficFile> {
-  if (mem && Date.now() - memAt < MEM_TTL_MS) return mem;
+  if (mem && Date.now() - memAt < MEM_GET_TTL_MS) return mem;
   const [local, blob, global] = await Promise.all([
     readLocal(),
     readBlob(),
     Promise.resolve(getGlobal()),
   ]);
-  mem = mergeTraffic(local, blob, global);
+  mem = mergeTraffic(mem, local, blob, global);
   memAt = Date.now();
   setGlobal(mem);
   return mem;
 }
 
-async function loadTraffic(fresh = false): Promise<TrafficFile> {
-  if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return mem;
-  return withLock(async () => {
-    if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return mem;
-    return loadTrafficUnlocked();
-  });
-}
-
-async function persistTraffic(file: TrafficFile) {
-  mem = file;
-  memAt = Date.now();
-  setGlobal(file);
+async function persistShared(file: TrafficFile) {
+  remember(file);
   try {
     await writeLocal(file);
   } catch {
     /* blob/memory still hold it */
   }
   await writeBlob(file);
+  setLastBlobAt(Date.now());
 }
 
 export async function getHouseTraffic(): Promise<Record<string, HouseTraffic>> {
-  const file = await loadTraffic();
-  return file.houses;
+  return withLock(async () => {
+    const file = await loadTrafficUnlocked();
+    return file.houses;
+  });
 }
-
-export type TrafficDelta = { houseId: string; kind: TrafficKind; delta: number };
 
 export async function applyTrafficDeltas(deltas: TrafficDelta[]): Promise<Record<string, HouseTraffic>> {
   return withLock(async () => {
-    const file = await loadTrafficUnlocked();
+    // Memory is the live counter. Do not re-read blob here — that would drop
+    // increments that have not been persisted yet.
+    const file = mem ?? (await loadTrafficUnlocked());
     for (const item of deltas) {
       if (!item.houseId || item.houseId.length > 40) continue;
       if (item.kind !== "saved" && item.kind !== "routed" && item.kind !== "visited") continue;
-      const delta = item.delta === -1 ? -1 : item.delta === 1 ? 1 : 0;
+      const delta = clampTrafficDelta(item.delta);
       if (!delta) continue;
       const current = file.houses[item.houseId] ?? { saved: 0, routed: 0, visited: 0 };
       current[item.kind] = Math.max(0, current[item.kind] + delta);
       file.houses[item.houseId] = clampTraffic(current);
     }
     file.updatedAt = new Date().toISOString();
-    await persistTraffic(file);
+    remember(file);
+    if (Date.now() - lastBlobAt() >= BLOB_PERSIST_MS) {
+      await persistShared(file);
+    }
     return file.houses;
   });
 }
