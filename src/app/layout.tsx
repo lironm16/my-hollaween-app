@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Rubik, Creepster } from "next/font/google";
 import Script from "next/script";
-import { Suspense } from "react";
 import { Providers } from "@/components/providers";
 import { HalloweenFx } from "@/components/halloween-fx";
 import { RehearsalBoot } from "@/components/rehearsal-boot";
@@ -71,9 +70,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="relative h-full min-h-dvh font-sans">
         <Script src="/boot.js" strategy="beforeInteractive" />
         <HalloweenFx />
-        <Suspense fallback={null}>
-          <RehearsalBoot />
-        </Suspense>
+        <RehearsalBoot />
         <Providers>{children}</Providers>
       </body>
     </html>

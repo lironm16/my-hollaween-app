@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import { applyClockSearchParams } from "@/lib/app-clock";
 
-/** Apply ?rehearsal=open and ?server=down from the URL. */
+/** Apply ?rehearsal=open and ?server=down from the URL without suspending the tree. */
 export function RehearsalBoot() {
-  const search = useSearchParams();
   useEffect(() => {
-    applyClockSearchParams(search);
-  }, [search]);
+    applyClockSearchParams(window.location.search);
+  }, []);
   return null;
 }

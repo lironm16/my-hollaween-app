@@ -85,6 +85,7 @@ export function readRehearsalScene(): RehearsalScene {
 
 export function writeRehearsalScene(scene: RehearsalScene) {
   if (typeof window === "undefined") return;
+  if (readRehearsalScene() === scene) return;
   try {
     if (scene === "off") localStorage.removeItem(CLOCK_KEY);
     else localStorage.setItem(CLOCK_KEY, scene);
@@ -109,6 +110,7 @@ export function readServerSimDown() {
 
 export function writeServerSimDown(down: boolean) {
   if (typeof window === "undefined") return;
+  if (readServerSimDown() === down) return;
   try {
     if (down) localStorage.setItem(SERVER_KEY, "down");
     else localStorage.removeItem(SERVER_KEY);

@@ -36,6 +36,7 @@ import { OpenNowMark } from "@/components/open-now-mark";
 import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
 import { ScareMark, ScareSign } from "@/components/scare-glyphs";
 import { isOpenNow } from "@/lib/hours";
+import { applyClockSearchParams } from "@/lib/app-clock";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { reportHouseTraffic, reportRouteStops, useHouseTraffic } from "@/hooks/use-house-traffic";
 import {
@@ -127,6 +128,9 @@ export function NeighborhoodApp({
   const { houses: traffic } = useHouseTraffic();
 
   useEffect(() => () => window.clearTimeout(cheerTimer.current), []);
+  useEffect(() => {
+    applyClockSearchParams(window.location.search);
+  }, []);
 
   function setView(next: HomeView) {
     writeHomeView(next);
