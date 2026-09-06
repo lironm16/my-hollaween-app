@@ -39,6 +39,7 @@ import { isOpenNow } from "@/lib/hours";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { reportHouseTraffic, reportRouteStops, useHouseTraffic } from "@/hooks/use-house-traffic";
+import { useOnlineDevices } from "@/hooks/use-presence";
 import {
   backupLooksNewer,
   loadServerDbBackup,
@@ -126,6 +127,7 @@ export function NeighborhoodApp({
   const owned = useOwnedHouses();
   const now = useAppNow();
   const { houses: traffic } = useHouseTraffic();
+  const onlineDevices = useOnlineDevices(admin);
 
   useEffect(() => () => window.clearTimeout(cheerTimer.current), []);
   useEffect(() => {
@@ -374,6 +376,7 @@ export function NeighborhoodApp({
   }
 
   function enterRouteMode() {
+    if (routeMode) return;
     setAskedLocation(true);
     if (!origin) {
       pendingRouteGps.current = true;
@@ -393,14 +396,13 @@ export function NeighborhoodApp({
   }
 
   function onToggleLike(id: string) {
-    const nextOn = !likes.liked(id);
-    likes.toggle(id);
-    reportHouseTraffic(id, "saved", nextOn);
+    const ids = likes.toggle(id);
+    reportHouseTraffic(id, "saved", ids.includes(id));
   }
 
   function onToggleVisited(id: string) {
-    const marking = !visits.visited(id);
-    visits.toggle(id);
+    const ids = visits.toggle(id);
+    const marking = ids.includes(id);
     reportHouseTraffic(id, "visited", marking);
     if (!marking) return;
     setVisitCheer(false);
@@ -714,6 +716,7 @@ export function NeighborhoodApp({
                 offline={offline}
                 unreachable={unreachable}
                 source={source}
+                onlineDevices={admin ? onlineDevices : null}
               />
             </div>
             {view === "list" ? (
@@ -746,6 +749,7 @@ export function NeighborhoodApp({
                     exportKind={likedOnly ? "liked" : "list"}
                     admin={admin}
                     ownedIds={owned.map((item) => item.id)}
+                    onlineDevices={admin ? onlineDevices : null}
                   />
                 )}
               </div>
@@ -866,19 +870,22 @@ function CatalogMetaChip({
   offline,
   unreachable,
   source,
+  onlineDevices,
 }: {
   houseCount: number;
   stopCount?: number | null;
   offline: boolean;
   unreachable: boolean;
   source: string | null;
+  onlineDevices?: number | null;
 }) {
   const stale = offline || unreachable || source === "cache" || source === "snapshot";
   return (
     <div className="pointer-events-none absolute top-2 start-2 z-10">
-      <span className="inline-flex max-w-[min(100%,16rem)] items-center gap-1.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
+      <span className="inline-flex max-w-[min(100%,18rem)] items-center gap-1.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
         <span>{houseCount} בתים</span>
         {stopCount != null ? <span>· {stopCount} עצירות</span> : null}
+        {onlineDevices != null ? <span>· {onlineDevices} במכשירים</span> : null}
         {stale ? (
           <>
             <WifiOff className="size-3 shrink-0" />

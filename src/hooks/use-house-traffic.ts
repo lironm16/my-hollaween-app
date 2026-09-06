@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { loadLikedIds, loadVisitedIds } from "@/lib/offline-db";
 import {
   EMPTY_TRAFFIC,
   overlayTraffic,
@@ -45,19 +46,28 @@ function isZero(row: HouseTraffic) {
   return row.saved === 0 && row.routed === 0 && row.visited === 0;
 }
 
+function readIdList(raw: string | null) {
+  const ids = raw ? (JSON.parse(raw) as unknown) : [];
+  return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === "string") : [];
+}
+
 function loadReported() {
   if (bootstrapped || typeof window === "undefined") return;
   bootstrapped = true;
   for (const kind of TRAFFIC_KINDS) {
     try {
-      const raw = sessionStorage.getItem(sessionKey(kind));
-      const ids = raw ? (JSON.parse(raw) as unknown) : [];
-      if (Array.isArray(ids)) {
-        for (const id of ids) if (typeof id === "string") reported[kind].add(id);
-      }
+      const local = readIdList(localStorage.getItem(sessionKey(kind)));
+      const session = readIdList(sessionStorage.getItem(sessionKey(kind)));
+      for (const id of [...local, ...session]) reported[kind].add(id);
     } catch {
       /* ignore */
     }
+  }
+  try {
+    for (const id of loadLikedIds()) reported.saved.add(id);
+    for (const id of loadVisitedIds()) reported.visited.add(id);
+  } catch {
+    /* ignore */
   }
   try {
     const raw = sessionStorage.getItem(PENDING_KEY);
@@ -66,9 +76,9 @@ function loadReported() {
       for (const [id, row] of Object.entries(stored as Record<string, Partial<HouseTraffic>>)) {
         if (!id) continue;
         pending[id] = {
-          saved: Number(row.saved) || 0,
-          routed: Number(row.routed) || 0,
-          visited: Number(row.visited) || 0,
+          saved: Math.max(-1, Math.min(1, Number(row.saved) || 0)),
+          routed: Math.max(-1, Math.min(1, Number(row.routed) || 0)),
+          visited: Math.max(-1, Math.min(1, Number(row.visited) || 0)),
         };
         if (isZero(pending[id])) delete pending[id];
       }
@@ -81,7 +91,7 @@ function loadReported() {
 
 function persistReported(kind: TrafficKind) {
   try {
-    sessionStorage.setItem(sessionKey(kind), JSON.stringify([...reported[kind]]));
+    localStorage.setItem(sessionKey(kind), JSON.stringify([...reported[kind]]));
   } catch {
     /* private mode */
   }
@@ -97,7 +107,7 @@ function persistPending() {
 
 function queueDelta(houseId: string, kind: TrafficKind, delta: 1 | -1) {
   const row = pending[houseId] ?? emptyPending();
-  row[kind] += delta;
+  row[kind] = Math.max(-1, Math.min(1, row[kind] + delta));
   if (isZero(row)) delete pending[houseId];
   else pending[houseId] = row;
   persistPending();
@@ -108,7 +118,7 @@ function queueDelta(houseId: string, kind: TrafficKind, delta: 1 | -1) {
 function consumeSent(events: TrafficDelta[]) {
   for (const event of events) {
     const row = pending[event.houseId] ?? emptyPending();
-    row[event.kind] -= event.delta;
+    row[event.kind] = Math.max(-1, Math.min(1, row[event.kind] - event.delta));
     if (isZero(row)) delete pending[event.houseId];
     else pending[event.houseId] = row;
   }
@@ -135,10 +145,9 @@ async function postEvents(events: TrafficDelta[]) {
   });
   if (!res.ok) throw new Error("traffic post failed");
   const data = (await res.json()) as { houses?: Record<string, HouseTraffic> };
-  if (data.houses) {
-    cache = data.houses;
-    emit();
-  }
+  consumeSent(events);
+  if (data.houses) cache = data.houses;
+  emit();
 }
 
 function beaconEvents(events: TrafficDelta[]) {
@@ -182,7 +191,6 @@ async function flush(mode: "fetch" | "beacon") {
   inFlight = true;
   try {
     await postEvents(events);
-    consumeSent(events);
   } catch {
     scheduleFlush();
   } finally {
@@ -211,8 +219,7 @@ export function reportHouseTraffic(houseId: string, kind: TrafficKind, on: boole
   loadReported();
   bindLifecycle();
   const already = reported[kind].has(houseId);
-  if (on && already) return;
-  if (!on && !already) return;
+  if (on === already) return;
   if (on) reported[kind].add(houseId);
   else reported[kind].delete(houseId);
   persistReported(kind);

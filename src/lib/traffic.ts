@@ -16,8 +16,8 @@ export type TrafficDelta = { houseId: string; kind: TrafficKind; delta: number }
 export const TRAFFIC_KINDS: TrafficKind[] = ["saved", "routed", "visited"];
 export const EMPTY_TRAFFIC: HouseTraffic = { saved: 0, routed: 0, visited: 0 };
 
-/** One POST may carry a net batch; keep each house/kind in a small range. */
-export const TRAFFIC_DELTA_MAX = 20;
+/** One device may send at most ±1 per house per kind in a batch. */
+export const TRAFFIC_DELTA_MAX = 1;
 
 export function clampTraffic(value: HouseTraffic): HouseTraffic {
   return {

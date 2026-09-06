@@ -96,15 +96,13 @@ export default function HousePage() {
               catalogSource={source}
               liked={likes.liked(house.id)}
               onToggleLike={() => {
-                const nextOn = !likes.liked(house.id);
-                likes.toggle(house.id);
-                reportHouseTraffic(house.id, "saved", nextOn);
+                const ids = likes.toggle(house.id);
+                reportHouseTraffic(house.id, "saved", ids.includes(house.id));
               }}
               visited={visits.visited(house.id)}
               onToggleVisited={() => {
-                const nextOn = !visits.visited(house.id);
-                visits.toggle(house.id);
-                reportHouseTraffic(house.id, "visited", nextOn);
+                const ids = visits.toggle(house.id);
+                reportHouseTraffic(house.id, "visited", ids.includes(house.id));
               }}
               managerEditCode={admin ? editCode : undefined}
               canEdit={canEdit}

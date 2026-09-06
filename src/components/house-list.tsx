@@ -21,6 +21,7 @@ export function HouseList({
   exportKind = "list",
   ownedIds = [],
   admin = false,
+  onlineDevices = null,
 }: {
   houses: PublicHouse[];
   origin?: { lat: number; lng: number } | null;
@@ -33,6 +34,7 @@ export function HouseList({
   exportKind?: "liked" | "list";
   ownedIds?: string[];
   admin?: boolean;
+  onlineDevices?: number | null;
 }) {
   const [q, setQ] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -77,7 +79,10 @@ export function HouseList({
           className="h-10 min-w-0 flex-1 bg-[#1d1028] text-base"
         />
         <CsvExportButton houses={houses} traffic={traffic} kind={exportKind} />
-        <span className="shrink-0 text-base text-violet-300">{houses.length} בתים</span>
+        <span className="shrink-0 text-base text-violet-300">
+          {houses.length} בתים
+          {admin && onlineDevices != null ? ` · ${onlineDevices} במכשירים` : ""}
+        </span>
       </div>
       {origin ? (
         <p className="text-base text-violet-300">ממוין לפי מרחק מכם</p>

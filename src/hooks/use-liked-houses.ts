@@ -20,6 +20,10 @@ export function useLikedHouses() {
   return {
     likedIds: ids,
     liked: (id: string) => ids.includes(id),
-    toggle: (id: string) => setIds(toggleLiked(id)),
+    toggle: (id: string) => {
+      const next = toggleLiked(id);
+      setIds(next);
+      return next;
+    },
   };
 }
