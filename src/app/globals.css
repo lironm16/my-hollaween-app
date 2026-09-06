@@ -782,6 +782,35 @@
   background: #6d28d9 !important;
 }
 
+.house-pin.is-origin {
+  background: #f97316 !important;
+}
+
+.is-origin-pick .pumpkin-pin-icon:not(.is-origin-pin) {
+  opacity: 0.38;
+  pointer-events: none;
+}
+
+.origin-pick-bar {
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 1rem;
+  background: #1d1028;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(249, 115, 22, 0.28);
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.is-origin-pick .map-fab-stack {
+  bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+}
+
 .house-pin.is-selected,
 .pumpkin-pin.is-selected {
   border-width: 6px;
@@ -1579,6 +1608,20 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   background: #2a1638;
   color: #fde68a;
   text-decoration: none;
+}
+
+.house-action-btn.is-labeled {
+  width: auto;
+  display: inline-flex;
+  gap: 6px;
+  padding: 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.house-action-btn.is-edit {
+  background: rgba(249, 115, 22, 0.22);
+  color: #fdba74;
 }
 
 .house-action-btn:active {

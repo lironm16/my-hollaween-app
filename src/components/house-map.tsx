@@ -272,6 +272,13 @@ const pickIcon = L.divIcon({
   iconAnchor: [25, 50],
 });
 
+const originIcon = L.divIcon({
+  className: "pumpkin-pin-icon is-origin-pin",
+  html: `<div class="house-pin is-origin" aria-label="נקודת התחלה"><span>📍</span></div>`,
+  iconSize: [50, 54],
+  iconAnchor: [25, 50],
+});
+
 const youAreHereIcon = L.divIcon({
   className: "you-are-here-wrap",
   html: `<div class="you-are-here" aria-hidden="true"><span class="you-are-here-pulse"></span><span class="you-are-here-dot"></span></div>`,
@@ -378,6 +385,28 @@ function FollowPick({ lat, lng }: { lat: number; lng: number }) {
     const timer = window.setTimeout(go, 60);
     return () => window.clearTimeout(timer);
   }, [map, lat, lng]);
+  return null;
+}
+
+/** Pan only when the parent increments tick (locate / saved origin). Never on list↔map. */
+function PanTo({
+  lat,
+  lng,
+  tick,
+}: {
+  lat: number;
+  lng: number;
+  tick: number;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    if (!tick || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    const id = window.setTimeout(() => {
+      map.invalidateSize({ animate: false });
+      map.panTo([lat, lng], { animate: true, duration: 0.4 });
+    }, 60);
+    return () => window.clearTimeout(id);
+  }, [map, lat, lng, tick]);
   return null;
 }
 
@@ -493,9 +522,17 @@ type Props = {
   onLocate?: () => void;
   routeLine?: LatLng[] | null;
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
+  /** Walking-route start (GPS / custom / neighborhood) for the dashed approach. */
+  routeStart?: LatLng | null;
   /** Increment only on route-button tap to fit the whole path. */
   routeFitTick?: number;
   visitedIds?: string[];
+  originMarker?: LatLng | null;
+  originPickActive?: boolean;
+  originPick?: LatLng | null;
+  onOriginPick?: (lat: number, lng: number) => void;
+  panTo?: LatLng | null;
+  panTick?: number;
 };
 
 export function HouseMap({
@@ -514,8 +551,15 @@ export function HouseMap({
   onLocate,
   routeLine = null,
   routeStops = null,
+  routeStart = null,
   routeFitTick = 0,
   visitedIds = [],
+  originMarker = null,
+  originPickActive = false,
+  originPick = null,
+  onOriginPick,
+  panTo = null,
+  panTick = 0,
 }: Props) {
   const clusters = useMemo(
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
@@ -551,13 +595,14 @@ export function HouseMap({
   );
   const approachPositions = useMemo(() => {
     const first = routeStops?.[0];
-    if (!userLocation || !first) return null;
-    if (distanceMeters(userLocation, first) <= ROUTE_INCLUDE_ORIGIN_METERS) return null;
+    const start = routeStart ?? userLocation;
+    if (!start || !first) return null;
+    if (distanceMeters(start, first) <= ROUTE_INCLUDE_ORIGIN_METERS) return null;
     return [
-      [userLocation.lat, userLocation.lng] as [number, number],
+      [start.lat, start.lng] as [number, number],
       [first.lat, first.lng] as [number, number],
     ];
-  }, [userLocation, routeStops]);
+  }, [routeStart, userLocation, routeStops]);
   const ready = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -581,6 +626,7 @@ export function HouseMap({
     <div
       className={cn(
         "relative z-0 isolate overflow-hidden",
+        originPickActive && "is-origin-pick",
         className ?? "h-full min-h-[280px] w-full",
       )}
       dir="ltr"
@@ -607,7 +653,8 @@ export function HouseMap({
         {routeFitTick > 0 && routePositions ? (
           <FitRoute positions={routePositions} tick={routeFitTick} />
         ) : null}
-        {focus ? (
+        {panTick > 0 && panTo ? <PanTo lat={panTo.lat} lng={panTo.lng} tick={panTick} /> : null}
+        {focus && !originPickActive ? (
           <KeepSelectedVisible
             lat={focus.lat}
             lng={focus.lng}
@@ -616,7 +663,7 @@ export function HouseMap({
             active={active}
           />
         ) : null}
-        {!pickMode ? (
+        {!pickMode && !originPickActive ? (
           <MapDismiss enabled={Boolean(selectedId)} onDismiss={onClose} />
         ) : null}
         {pickMode && pick ? <FollowPick lat={pick.lat} lng={pick.lng} /> : null}
@@ -632,6 +679,31 @@ export function HouseMap({
                 onPick?.(latlng.lat, latlng.lng);
               },
             }}
+          />
+        ) : null}
+        {originPickActive && originPick ? (
+          <FollowPick lat={originPick.lat} lng={originPick.lng} />
+        ) : null}
+        {originPickActive && onOriginPick ? <ClickCatcher onPick={onOriginPick} /> : null}
+        {originPickActive && originPick ? (
+          <Marker
+            position={[originPick.lat, originPick.lng]}
+            icon={originIcon}
+            draggable
+            zIndexOffset={9000}
+            eventHandlers={{
+              dragend: (event) => {
+                const latlng = event.target.getLatLng();
+                onOriginPick?.(latlng.lat, latlng.lng);
+              },
+            }}
+          />
+        ) : null}
+        {!originPickActive && originMarker ? (
+          <Marker
+            position={[originMarker.lat, originMarker.lng]}
+            icon={originIcon}
+            zIndexOffset={850}
           />
         ) : null}
         {!pickMode && approachPositions ? (

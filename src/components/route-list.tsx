@@ -12,14 +12,18 @@ import { cn } from "@/lib/utils";
 export function RouteList({
   route,
   prefsLabel,
+  originLabel,
   hasGps,
   onRequestLocation,
+  onChangeOrigin,
   onSelectHouse,
 }: {
   route: WalkingRoute | null;
   prefsLabel: string;
+  originLabel?: string;
   hasGps: boolean;
   onRequestLocation?: () => void;
+  onChangeOrigin?: () => void;
   onSelectHouse: (id: string) => void;
 }) {
   if (!route) {
@@ -38,7 +42,14 @@ export function RouteList({
       <div className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
         <p className="text-base font-medium text-orange-100">{formatRouteSummary(route)}</p>
         <p className="mt-1 text-base text-violet-300">
-          {route.startedFrom === "gps" ? "מהמיקום שלכם" : "ממרכז השכונה"}
+          <button
+            type="button"
+            className="text-start underline-offset-2 hover:underline"
+            onClick={onChangeOrigin}
+          >
+            {originLabel ?? (route.startedFrom === "gps" ? "מהמיקום שלכם" : route.startedFrom === "custom" ? "מנקודה במפה" : "ממרכז השכונה")}
+            {onChangeOrigin ? " · שינוי" : ""}
+          </button>
           {prefsLabel ? ` · ${prefsLabel}` : ""}
         </p>
         {!hasGps && onRequestLocation ? (

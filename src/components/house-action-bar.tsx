@@ -85,13 +85,14 @@ export function HouseActionBar({
           {onToggleEdit ? (
             <button
               type="button"
-              className={cn("house-action-btn", editing && "is-edit")}
+              className={cn("house-action-btn is-labeled", editing && "is-edit")}
               aria-label={editing ? "סגירת עריכה" : "עריכת הבית"}
               aria-pressed={editing}
               title="עריכה"
               onClick={onToggleEdit}
             >
-              <Pencil className="size-6" strokeWidth={2.2} />
+              <Pencil className="size-5" strokeWidth={2.2} />
+              <span>עריכה</span>
             </button>
           ) : null}
         </>

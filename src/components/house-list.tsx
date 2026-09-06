@@ -1,11 +1,15 @@
 "use client";
 
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { HousePlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { buttonVariants } from "@/components/ui/button";
 import { HouseCard } from "@/components/house-card";
 import { distanceMeters } from "@/lib/geo";
 import { effectiveVisit } from "@/lib/house-state";
 import type { PublicHouse } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 function scrollParent(el: HTMLElement | null): HTMLElement | null {
   for (let node = el?.parentElement ?? null; node; node = node.parentElement) {
@@ -118,6 +122,16 @@ export function HouseList({
           placeholder="חיפוש לפי שם או רחוב…"
           className="h-10 min-w-0 flex-1 bg-[#1d1028] text-base"
         />
+        <Link
+          href="/add"
+          className={cn(
+            buttonVariants({ size: "sm" }),
+            "h-10 shrink-0 bg-orange-500 text-black hover:bg-orange-400",
+          )}
+        >
+          <HousePlus className="size-3.5" />
+          הוסיפו בית
+        </Link>
       </div>
       <p className="text-base text-violet-300">
         {houses.length} בתים

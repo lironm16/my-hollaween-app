@@ -15,7 +15,9 @@ import { HouseList } from "@/components/house-list";
 import { CsvExportButton } from "@/components/csv-export-button";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { NightDesk } from "@/components/night-desk";
+import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
+import { reversePin } from "@/components/address-field";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -25,8 +27,10 @@ import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
+import { useDistanceOrigin } from "@/hooks/use-distance-origin";
+import { useHouseSet } from "@/hooks/use-house-set";
 import { readApiJson } from "@/lib/api-json";
-import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
+import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, config } from "@/lib/config";
 import { clusterHousesByAddress } from "@/lib/house-clusters";
 import { toPublicHouse } from "@/lib/ids";
 import { offersCandy, offersSensitivity, isDecorated } from "@/lib/house-state";
@@ -53,6 +57,7 @@ import {
 } from "@/lib/offline-db";
 import { scareShort, treatLabels, decorShort } from "@/lib/labels";
 import { readHomeView, writeHomeView, type HomeView } from "@/lib/home-view";
+import { HOUSE_SET_STATUS, houseMatchesSet } from "@/lib/house-set";
 import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
 import type { Catalog, House, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
@@ -68,7 +73,9 @@ export function NeighborhoodApp({
   const { catalog, loading, offline, unreachable, error, source, refresh } = useCatalog(initialCatalog);
   const { admin } = useAdminSession();
   const geo = useUserLocation();
-  const origin = geo.location;
+  const gps = geo.location;
+  const { choice: originChoice, resolved: origin, setChoice: setOriginChoice } = useDistanceOrigin(gps);
+  const { houseSet } = useHouseSet();
   const view = useSyncExternalStore(
     (onStoreChange) => {
       window.addEventListener("hw-home-view", onStoreChange);
@@ -111,9 +118,13 @@ export function NeighborhoodApp({
   const pendingRouteGps = useRef(false);
   const cheerTimer = useRef(0);
   const [visitCheer, setVisitCheer] = useState(false);
-  const [followTick, setFollowTick] = useState(0);
-  const [fitTick, setFitTick] = useState(0);
   const [askedLocation, setAskedLocation] = useState(false);
+  const [originPickerOpen, setOriginPickerOpen] = useState(false);
+  const [originPickActive, setOriginPickActive] = useState(false);
+  const [originDraft, setOriginDraft] = useState<{ lat: number; lng: number } | null>(null);
+  const [originDraftLabel, setOriginDraftLabel] = useState("נקודה במפה");
+  const [panTo, setPanTo] = useState<{ lat: number; lng: number } | null>(null);
+  const [panTick, setPanTick] = useState(0);
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
   const [adminLoading, setAdminLoading] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -245,6 +256,7 @@ export function NeighborhoodApp({
 
   const visible = useMemo(() => {
     return houses.filter((house) => {
+      if (!houseMatchesSet(house, houseSet)) return false;
       if (accessibleOnly && !house.accessible) return false;
       if (candyOnly && !offersCandy(house)) return false;
       if (!includeUndecorated && !isDecorated(house)) return false;
@@ -262,6 +274,7 @@ export function NeighborhoodApp({
     });
   }, [
     houses,
+    houseSet,
     accessibleOnly,
     candyOnly,
     includeUndecorated,
@@ -295,20 +308,41 @@ export function NeighborhoodApp({
   const activeFilterCount =
     neighborhoodActiveCount + sensitivityFilters.length + scareActiveCount + moreFilterCount;
 
-  const pinCurrentRoute = useCallback(
-    (gps: { lat: number; lng: number } | null | undefined) => {
-      const houses = visible.filter((house) => !visits.visitedIds.includes(house.id));
-      setPinnedRoute(buildWalkingRoute(houses, gps, { accessible: accessibleOnly }));
-      setRouteFitTick((n) => n + 1);
-    },
-    [visible, visits.visitedIds, accessibleOnly],
-  );
+  const pinCurrentRoute = useCallback(() => {
+    const houses = visible.filter((house) => !visits.visitedIds.includes(house.id));
+    setPinnedRoute(
+      buildWalkingRoute(houses, origin, {
+        accessible: accessibleOnly,
+        startedFrom: origin.kind,
+        originLabel: origin.label,
+      }),
+    );
+    setRouteFitTick((n) => n + 1);
+  }, [visible, visits.visitedIds, accessibleOnly, origin]);
 
   useEffect(() => {
-    if (!routeMode || !pendingRouteGps.current || !origin) return;
+    if (!routeMode || !pendingRouteGps.current || !gps) return;
     pendingRouteGps.current = false;
-    pinCurrentRoute(origin);
-  }, [routeMode, origin, pinCurrentRoute]);
+    pinCurrentRoute();
+  }, [routeMode, gps, pinCurrentRoute]);
+
+  useEffect(() => {
+    if (!routeMode || pendingRouteGps.current) return;
+    pinCurrentRoute();
+    // Rebuild when the start point changes, not on catalog ticks.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [origin.kind, origin.lat, origin.lng, origin.label, routeMode]);
+
+  useEffect(() => {
+    if (!originPickActive || !originDraft) return;
+    let cancelled = false;
+    void reversePin(originDraft.lat, originDraft.lng).then((hit) => {
+      if (!cancelled && hit?.label) setOriginDraftLabel(hit.label);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [originPickActive, originDraft]);
 
   const walkingRoute = routeMode ? pinnedRoute : null;
   const { line: routeLine } = useRouteGeometry(walkingRoute, routeMode);
@@ -356,13 +390,30 @@ export function NeighborhoodApp({
   const geoError =
     askedLocation && (geo.status === "denied" || geo.status === "error" || geo.status === "unavailable");
   const outsideNeighborhood = Boolean(
-    origin && askedLocation && followTick > 0 && !inNeighborhood(origin.lat, origin.lng),
+    gps && askedLocation && panTick > 0 && !inNeighborhood(gps.lat, gps.lng),
   );
+
+  function panMapTo(point: { lat: number; lng: number }) {
+    setPanTo(point);
+    setPanTick((n) => n + 1);
+  }
 
   function goToMyLocation() {
     setAskedLocation(true);
-    setFollowTick((n) => n + 1);
     geo.refresh();
+    if (originPickActive) {
+      if (gps) {
+        setOriginDraft({ lat: gps.lat, lng: gps.lng });
+        setOriginDraftLabel("המיקום שלכם");
+      }
+      return;
+    }
+    if (gps) panMapTo(gps);
+  }
+
+  function exitOriginPick() {
+    setOriginPickActive(false);
+    setOriginDraft(null);
   }
 
   function exitRouteMode() {
@@ -373,13 +424,14 @@ export function NeighborhoodApp({
 
   function goToMainMap() {
     setView("map");
+    exitOriginPick();
     exitRouteMode();
     setSelectedId("closed");
     setClusterOverview(false);
-    setFitTick((n) => n + 1);
   }
 
   function goHome() {
+    exitOriginPick();
     exitRouteMode();
     setSelectedId("closed");
     setClusterOverview(false);
@@ -388,19 +440,66 @@ export function NeighborhoodApp({
 
   function enterRouteMode() {
     if (routeMode) return;
-    setAskedLocation(true);
-    if (!origin) {
-      pendingRouteGps.current = true;
-      setFollowTick((n) => n + 1);
-      geo.refresh();
-    } else {
-      pendingRouteGps.current = false;
-    }
+    exitOriginPick();
     setSelectedId("closed");
     setClusterOverview(false);
     setEditing(false);
     setRouteMode(true);
-    pinCurrentRoute(origin);
+    if (originChoice.kind === "gps" && !gps) {
+      pendingRouteGps.current = true;
+      setAskedLocation(true);
+      geo.refresh();
+      return;
+    }
+    pendingRouteGps.current = false;
+    pinCurrentRoute();
+  }
+
+  function chooseGpsOrigin() {
+    setOriginPickerOpen(false);
+    exitOriginPick();
+    setOriginChoice({ kind: "gps" });
+    setAskedLocation(true);
+    geo.refresh();
+    if (gps) panMapTo(gps);
+  }
+
+  function chooseNeighborhoodOrigin() {
+    setOriginPickerOpen(false);
+    exitOriginPick();
+    setOriginChoice({ kind: "neighborhood" });
+    if (view === "map") panMapTo({ lat: config.map.center.lat, lng: config.map.center.lng });
+  }
+
+  function chooseCustomOrigin(lat: number, lng: number, label: string) {
+    setOriginPickerOpen(false);
+    exitOriginPick();
+    setOriginChoice({ kind: "custom", lat, lng, label });
+    if (view === "map") panMapTo({ lat, lng });
+  }
+
+  function startOriginPick() {
+    setOriginPickerOpen(false);
+    setView("map");
+    setSelectedId("closed");
+    setClusterOverview(false);
+    setEditing(false);
+    setOriginDraft({ lat: origin.lat, lng: origin.lng });
+    setOriginDraftLabel(origin.kind === "custom" ? origin.label : "נקודה במפה");
+    setOriginPickActive(true);
+  }
+
+  async function saveOriginPick() {
+    if (!originDraft) return;
+    let label = originDraftLabel;
+    try {
+      const hit = await reversePin(originDraft.lat, originDraft.lng);
+      if (hit?.label) label = hit.label;
+    } catch {
+      /* keep draft label */
+    }
+    setOriginChoice({ kind: "custom", lat: originDraft.lat, lng: originDraft.lng, label });
+    exitOriginPick();
   }
 
   function onToggleLike(id: string) {
@@ -597,16 +696,27 @@ export function NeighborhoodApp({
           </button>
           <CsvExportButton houses={visible} kind={likedOnly ? "liked" : "list"} includeTraffic={admin} />
         </div>
-        {geoError ? (
-          <p className="mt-1 text-base text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>
-        ) : outsideNeighborhood ? (
-          <p className="mt-1 text-base text-amber-200">המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.</p>
-        ) : routeMode ? (
-          <p className="mt-1 text-base text-violet-300">
-            מסלול לפי הסינון{routePrefsLabel ? ` · ${routePrefsLabel}` : ""} ·{" "}
-            {walkingRoute?.stops.length ?? 0} עצירות
-          </p>
-        ) : null}
+        <div className="mt-1 flex flex-col gap-0.5">
+          <p className="text-base text-violet-300">{HOUSE_SET_STATUS[houseSet]}</p>
+          {geoError ? (
+            <p className="text-base text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>
+          ) : outsideNeighborhood ? (
+            <p className="text-base text-amber-200">המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.</p>
+          ) : originPickActive ? (
+            <p className="text-base text-violet-300">לחצו על המפה כדי לקבוע נקודת התחלה</p>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setOriginPickerOpen(true)}
+              className="text-start text-base text-orange-100 underline-offset-2 hover:underline"
+            >
+              {routeMode
+                ? `מסלול${routePrefsLabel ? ` · ${routePrefsLabel}` : ""} · ${walkingRoute?.stops.length ?? 0} עצירות · ${origin.label}`
+                : `מיון לפי מרחק · ${origin.label}`}
+              <span className="text-violet-300"> · שינוי</span>
+            </button>
+          )}
+        </div>
       </div>
       <FiltersSheet
         open={filtersOpen}
@@ -724,9 +834,10 @@ export function NeighborhoodApp({
             >
               <HouseMapDynamic
                 houses={visible}
-                selectedId={selected?.id}
+                selectedId={originPickActive ? null : selected?.id}
                 clusterOverview={clusterOverview}
                 onSelect={(house, opts) => {
+                  if (originPickActive) return;
                   setClusterOverview(Boolean(opts?.clusterOverview));
                   setSelectedId(house.id);
                 }}
@@ -736,16 +847,24 @@ export function NeighborhoodApp({
                 }}
                 className="h-full w-full"
                 active={view === "map"}
-                userLocation={origin}
-                followTick={followTick}
-                fitTick={fitTick}
+                userLocation={gps}
                 locating={geo.status === "pending" && askedLocation}
                 onLocate={goToMyLocation}
-                routeLine={routeMode ? routeLine : null}
-                routeFitTick={routeMode ? routeFitTick : 0}
+                routeLine={routeMode && !originPickActive ? routeLine : null}
+                routeFitTick={routeMode && !originPickActive ? routeFitTick : 0}
+                routeStart={routeMode ? origin : null}
                 visitedIds={visits.visitedIds}
+                originMarker={origin.kind === "gps" ? null : origin}
+                originPickActive={originPickActive}
+                originPick={originDraft}
+                onOriginPick={(lat, lng) => {
+                  setOriginDraft({ lat, lng });
+                  setOriginDraftLabel("נקודה במפה");
+                }}
+                panTo={panTo}
+                panTick={panTick}
                 routeStops={
-                  routeMode && walkingRoute
+                  routeMode && walkingRoute && !originPickActive
                     ? walkingRoute.stops.map((stop) => ({
                         id: stop.house.id,
                         order: stop.order,
@@ -755,6 +874,23 @@ export function NeighborhoodApp({
                     : null
                 }
               />
+              {originPickActive ? (
+                <div className="origin-pick-bar">
+                  <p className="min-w-0 flex-1 truncate text-base text-orange-100">{originDraftLabel}</p>
+                  <Button type="button" variant="outline" size="sm" onClick={exitOriginPick}>
+                    ביטול
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="bg-orange-500 text-black hover:bg-orange-400"
+                    disabled={!originDraft}
+                    onClick={() => void saveOriginPick()}
+                  >
+                    שמירת התחלה
+                  </Button>
+                </div>
+              ) : null}
               <CatalogMetaChip
                 houseCount={visible.length}
                 stopCount={routeMode ? walkingRoute?.stops.length ?? 0 : null}
@@ -773,8 +909,10 @@ export function NeighborhoodApp({
                   <RouteList
                     route={walkingRoute}
                     prefsLabel={routePrefsLabel}
-                    hasGps={Boolean(origin)}
-                    onRequestLocation={goToMyLocation}
+                    originLabel={origin.label}
+                    hasGps={Boolean(gps)}
+                    onRequestLocation={chooseGpsOrigin}
+                    onChangeOrigin={() => setOriginPickerOpen(true)}
                     onSelectHouse={(id) => {
                       setView("map");
                       setClusterOverview(false);
@@ -784,7 +922,7 @@ export function NeighborhoodApp({
                 ) : (
                   <HouseList
                     houses={visible}
-                    origin={origin}
+                    origin={originChoice.kind === "gps" && !gps ? null : origin}
                     catalogSource={source}
                     likedIds={likes.likedIds}
                     onToggleLike={onToggleLike}
@@ -805,7 +943,7 @@ export function NeighborhoodApp({
             ) : null}
           </>
         )}
-        {selected && view === "map" ? (
+        {selected && view === "map" && !originPickActive ? (
         <MapHouseSheet
           house={selected}
           clusterHouses={view === "map" ? selectedCluster : [selected]}
@@ -870,6 +1008,15 @@ export function NeighborhoodApp({
         />
         ) : null}
       </main>
+      <OriginPickerSheet
+        open={originPickerOpen}
+        onOpenChange={setOriginPickerOpen}
+        choice={originChoice}
+        onChooseGps={chooseGpsOrigin}
+        onChooseNeighborhood={chooseNeighborhoodOrigin}
+        onChooseCustom={chooseCustomOrigin}
+        onPickOnMap={startOriginPick}
+      />
       {visitCheer ? (
         <div className="visit-cheer" role="status" aria-live="polite">
           <div className="visit-cheer-card">

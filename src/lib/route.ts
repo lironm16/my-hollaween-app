@@ -23,8 +23,9 @@ export type WalkingRoute = {
   totalMeters: number;
   /** Rough walking time including a short stop at each house. */
   totalMinutes: number;
-  startedFrom: "gps" | "neighborhood";
+  startedFrom: "gps" | "neighborhood" | "custom";
   origin: LatLng;
+  originLabel?: string;
   /** Route paced + linked for wheelchair / accessible prefs. */
   accessible: boolean;
 };
@@ -55,7 +56,7 @@ function clusterPoint(cluster: HouseCluster): LatLng {
 export function buildWalkingRoute(
   houses: PublicHouse[],
   gps: LatLng | null | undefined,
-  options?: { accessible?: boolean },
+  options?: { accessible?: boolean; startedFrom?: WalkingRoute["startedFrom"]; originLabel?: string },
 ): WalkingRoute | null {
   const accessible = Boolean(options?.accessible);
   const candidates = houses
@@ -65,10 +66,11 @@ export function buildWalkingRoute(
   if (candidates.length === 0) return null;
 
   const startedFrom: WalkingRoute["startedFrom"] =
-    gps && Number.isFinite(gps.lat) && Number.isFinite(gps.lng) ? "gps" : "neighborhood";
+    options?.startedFrom ??
+    (gps && Number.isFinite(gps.lat) && Number.isFinite(gps.lng) ? "gps" : "neighborhood");
   const origin: LatLng =
-    startedFrom === "gps"
-      ? { lat: gps!.lat, lng: gps!.lng }
+    gps && Number.isFinite(gps.lat) && Number.isFinite(gps.lng)
+      ? { lat: gps.lat, lng: gps.lng }
       : { lat: config.map.center.lat, lng: config.map.center.lng };
 
   const remaining = clusterHousesByAddress(candidates);
@@ -91,7 +93,7 @@ export function buildWalkingRoute(
   }
 
   const polished = ordered.length >= 4 ? twoOptClusters(ordered, origin) : ordered;
-  return summarizeRoute(polished, origin, startedFrom, accessible);
+  return summarizeRoute(polished, origin, startedFrom, accessible, options?.originLabel);
 }
 
 function twoOptClusters(clusters: HouseCluster[], origin: LatLng): HouseCluster[] {
@@ -131,6 +133,7 @@ function summarizeRoute(
   origin: LatLng,
   startedFrom: WalkingRoute["startedFrom"],
   accessible: boolean,
+  originLabel?: string,
 ): WalkingRoute {
   const stops: RouteStop[] = [];
   let prev = origin;
@@ -159,6 +162,7 @@ function summarizeRoute(
     totalMinutes: walkMinutes + stopMinutes,
     startedFrom,
     origin,
+    originLabel,
     accessible,
   };
 }
@@ -217,7 +221,7 @@ export function routePoints(route: WalkingRoute): LatLng[] {
   const stops = route.stops.map((stop) => pointOf(stop.house));
   if (stops.length === 0) return [];
   const includeOrigin =
-    route.startedFrom === "gps" &&
+    route.startedFrom !== "neighborhood" &&
     distanceMeters(route.origin, stops[0]!) <= ROUTE_INCLUDE_ORIGIN_METERS;
   return includeOrigin ? [route.origin, ...stops] : stops;
 }

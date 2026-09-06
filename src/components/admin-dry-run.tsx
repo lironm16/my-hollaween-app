@@ -1,7 +1,9 @@
 "use client";
 
 import { useRehearsalScene, useServerSim } from "@/hooks/use-app-clock";
+import { useHouseSet } from "@/hooks/use-house-set";
 import { REHEARSAL_LABELS, REHEARSAL_SCENES, type RehearsalScene } from "@/lib/app-clock";
+import { HOUSE_SETS, HOUSE_SET_LABELS, type HouseSet } from "@/lib/house-set";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +12,7 @@ const SCENES: RehearsalScene[] = REHEARSAL_SCENES.filter((scene) => scene !== "o
 export function AdminDryRunPanel() {
   const { scene, setScene } = useRehearsalScene();
   const { down, setDown } = useServerSim();
+  const { houseSet, setHouseSet } = useHouseSet();
 
   return (
     <div className="space-y-3 rounded-xl bg-black/25 p-3">
@@ -66,6 +69,29 @@ export function AdminDryRunPanel() {
         <p className="text-base text-violet-300">
           מציג את הבאנר «השרת לא עונה» עם הרשימה ששמורה בטלפון. פתחו את המפה פעם אחת ברשת לפני כן.
         </p>
+      </div>
+      <div className="space-y-2 border-t border-orange-500/15 pt-3">
+        <p className="text-base font-medium text-amber-100">איזה בתים להציג</p>
+        <p className="text-base text-violet-300">
+          סטאבים לחזרה או בתים אמיתיים. הבחירה נשמרת בטלפון הזה, והסטטוס מופיע במפה וברשימה.
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {HOUSE_SETS.map((id: HouseSet) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setHouseSet(id)}
+              className={cn(
+                "rounded-full px-3 py-1.5 text-base",
+                houseSet === id
+                  ? "bg-orange-500 text-black"
+                  : "bg-[#12081a] text-orange-100 ring-1 ring-orange-500/20",
+              )}
+            >
+              {HOUSE_SET_LABELS[id]}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
