@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { List, MapPinned, RefreshCw, Route } from "lucide-react";
+import { List, MapPinned, RefreshCw, Route, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { PingPongMarquee } from "@/components/neighborhood-marquee";
@@ -56,9 +56,9 @@ import {
   saveServerDbBackup,
   type ServerDbBackup,
 } from "@/lib/offline-db";
-import { scareShort, treatLabels, decorShort } from "@/lib/labels";
+import { decorShort } from "@/lib/labels";
 import { readHomeView, writeHomeView, type HomeView } from "@/lib/home-view";
-import { HOUSE_SET_STATUS, houseMatchesSet } from "@/lib/house-set";
+import { HOUSE_SET_LABELS, houseMatchesSet } from "@/lib/house-set";
 import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
 import type { Catalog, House, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
@@ -348,34 +348,6 @@ export function NeighborhoodApp({
   const walkingRoute = routeMode ? pinnedRoute : null;
   const { line: routeLine } = useRouteGeometry(walkingRoute, routeMode);
 
-  const routePrefsLabel = useMemo(() => {
-    const parts: string[] = [];
-    if (openNowOnly) parts.push("פתוח עכשיו");
-    if (candyOnly) parts.push("ממתקים");
-    if (!includeUndecorated) parts.push("מקושט");
-    if (accessibleOnly) parts.push("נגיש");
-    if (likedOnly) parts.push("אהבתי");
-    if (unvisitedOnly) parts.push("לא ביקרתי");
-    for (const id of sensitivityFilters) parts.push(treatLabels[id]);
-    if (scareActiveCount > 0) {
-      parts.push(scareFilters.map((level) => scareShort[level]).join("/"));
-    }
-    if (neighborhoodActiveCount > 0) parts.push(neighborhoodFilters.join(" · "));
-    return parts.slice(0, 4).join(" · ");
-  }, [
-    openNowOnly,
-    candyOnly,
-    includeUndecorated,
-    accessibleOnly,
-    likedOnly,
-    unvisitedOnly,
-    sensitivityFilters,
-    scareFilters,
-    scareActiveCount,
-    neighborhoodFilters,
-    neighborhoodActiveCount,
-  ]);
-
   const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const selected =
     visible.find((house) => house.id === activeId) ??
@@ -393,6 +365,16 @@ export function NeighborhoodApp({
   const outsideNeighborhood = Boolean(
     gps && askedLocation && panTick > 0 && !inNeighborhood(gps.lat, gps.lng),
   );
+  const routeTicker = geoError
+    ? "לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן."
+    : outsideNeighborhood
+      ? "המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב."
+      : originPickActive
+        ? "לחצו על המפה כדי לקבוע נקודת התחלה"
+        : routeMode
+          ? `מסלול · ${walkingRoute?.stops.length ?? 0} עצירות · ${origin.label}`
+          : null;
+  const canChangeOrigin = Boolean(routeMode && !geoError && !outsideNeighborhood && !originPickActive);
 
   function panMapTo(point: { lat: number; lng: number }) {
     setPanTo(point);
@@ -697,39 +679,13 @@ export function NeighborhoodApp({
           </button>
           <CsvExportButton houses={visible} kind={likedOnly ? "liked" : "list"} includeTraffic={admin} />
         </div>
-        <StatusTicker
-          text={[
-            geoError
-              ? "לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן."
-              : outsideNeighborhood
-                ? "המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב."
-                : originPickActive
-                  ? "לחצו על המפה כדי לקבוע נקודת התחלה"
-                  : routeMode
-                    ? `מסלול${routePrefsLabel ? ` · ${routePrefsLabel}` : ""} · ${walkingRoute?.stops.length ?? 0} עצירות · ${origin.label}`
-                    : `מיון לפי מרחק · ${origin.label}`,
-            `${visible.length} בתים`,
-            onlineDevices != null ? `${onlineDevices} מבקרים` : null,
-            HOUSE_SET_STATUS[houseSet],
-            offline
-              ? "לא מקוון"
-              : unreachable
-                ? "השרת לא עונה"
-                : source === "snapshot"
-                  ? "עותק סטטי"
-                  : source === "cache"
-                    ? "שמור בטלפון"
-                    : null,
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-          tone={geoError || outsideNeighborhood ? "warn" : "normal"}
-          onChange={
-            geoError || outsideNeighborhood || originPickActive
-              ? undefined
-              : () => setOriginPickerOpen(true)
-          }
-        />
+        {routeTicker ? (
+          <StatusTicker
+            text={routeTicker}
+            tone={geoError || outsideNeighborhood ? "warn" : "normal"}
+            onChange={canChangeOrigin ? () => setOriginPickerOpen(true) : undefined}
+          />
+        ) : null}
       </div>
       <FiltersSheet
         open={filtersOpen}
@@ -904,6 +860,14 @@ export function NeighborhoodApp({
                   </Button>
                 </div>
               ) : null}
+              <CatalogMetaChip
+                houseCount={visible.length}
+                offline={offline}
+                unreachable={unreachable}
+                source={source}
+                onlineDevices={onlineDevices}
+                houseSetLabel={HOUSE_SET_LABELS[houseSet]}
+              />
             </div>
             {view === "list" ? (
               <div
@@ -913,11 +877,8 @@ export function NeighborhoodApp({
                 {routeMode ? (
                   <RouteList
                     route={walkingRoute}
-                    prefsLabel={routePrefsLabel}
-                    originLabel={origin.label}
                     hasGps={Boolean(gps)}
                     onRequestLocation={chooseGpsOrigin}
-                    onChangeOrigin={() => setOriginPickerOpen(true)}
                     onSelectHouse={(id) => {
                       setView("map");
                       setClusterOverview(false);
@@ -1064,6 +1025,47 @@ function StatusTicker({
       {marquee}
       <span className="shrink-0 text-base text-violet-300 underline-offset-2 hover:underline">שינוי</span>
     </button>
+  );
+}
+
+function CatalogMetaChip({
+  houseCount,
+  offline,
+  unreachable,
+  source,
+  onlineDevices,
+  houseSetLabel,
+}: {
+  houseCount: number;
+  offline: boolean;
+  unreachable: boolean;
+  source: string | null;
+  onlineDevices?: number | null;
+  houseSetLabel: string;
+}) {
+  const stale = offline || unreachable || source === "cache" || source === "snapshot";
+  return (
+    <div className="pointer-events-none absolute top-2 start-2 z-10">
+      <span className="inline-flex max-w-[min(100%,18rem)] items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
+        <span>{houseCount} בתים</span>
+        {onlineDevices != null ? <span>· {onlineDevices} מבקרים</span> : null}
+        <span>· {houseSetLabel}</span>
+        {stale ? (
+          <>
+            <WifiOff className="size-3 shrink-0" />
+            <span>
+              {offline
+                ? "לא מקוון"
+                : unreachable
+                  ? "השרת לא עונה"
+                  : source === "snapshot"
+                    ? "עותק סטטי"
+                    : "שמור בטלפון"}
+            </span>
+          </>
+        ) : null}
+      </span>
+    </div>
   );
 }
 
