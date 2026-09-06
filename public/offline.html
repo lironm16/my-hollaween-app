@@ -16,36 +16,148 @@
       }
       h1 { font-size: 1.4rem; color: #fdba74; margin: 0 0 8px; }
       p { color: #ddd6fe; line-height: 1.45; }
-      a {
+      .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+      a, button.download {
         display: inline-block;
-        margin-top: 12px;
         background: #f97316;
         color: #1c0e24;
         font-weight: 800;
         text-decoration: none;
         border-radius: 12px;
         padding: 10px 14px;
+        border: 0;
+        font: inherit;
+        cursor: pointer;
       }
-      ul { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 8px; }
+      ul { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 10px; }
       li {
         background: #1d1028;
         border-radius: 14px;
         padding: 12px 14px;
         box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.25);
       }
+      .row-top { display: flex; align-items: flex-start; gap: 10px; }
+      .candy {
+        position: relative;
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+      }
+      .candy-face {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        background: #6d28d9;
+        box-shadow: 0 0 0 1.5px #fff7ed;
+        overflow: hidden;
+      }
+      .candy-face.is-none { background: #94a3b8; }
+      .candy-face img { width: 92%; height: 92%; margin: 4%; object-fit: contain; }
+      .candy-badge {
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        bottom: -4px;
+        inset-inline-start: -4px;
+        box-shadow: 0 0 0 1.5px #fff7ed;
+        background-image: url("/icons/pin-candy.png");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 86%;
+      }
+      .candy-badge.is-plenty { background-color: #047857; }
+      .candy-badge.is-low { background-color: #d97706; }
+      .candy-badge.is-out { background-color: #b91c1c; }
       strong { display: block; color: #ffedd5; }
-      span { display: block; margin-top: 4px; font-size: 13px; color: #c4b5fd; }
+      .meta { display: block; margin-top: 4px; font-size: 14px; color: #c4b5fd; }
+      .block {
+        margin-top: 8px;
+        font-size: 14px;
+        color: #ede9fe;
+        white-space: pre-wrap;
+      }
+      .notes { color: #fde68a; }
     </style>
   </head>
   <body>
     <h1>הרשימה שמורה בטלפון</h1>
     <p id="status">אין קשר לשרת או לאינטרנט. אם כבר פתחתם את האפליקציה פעם אחת, הבתים מופיעים כאן מהעותק המקומי.</p>
-    <a href="/">נסו שוב את המפה</a>
+    <div class="actions">
+      <a href="/">נסו שוב את המפה</a>
+      <button type="button" class="download" id="download" hidden>הורדת גיליון</button>
+    </div>
     <ul id="houses"></ul>
     <script>
       (function () {
         var status = document.getElementById("status");
         var list = document.getElementById("houses");
+        var downloadBtn = document.getElementById("download");
+        var scare = { mild: "לילדים", medium: "קצת מפחיד", spicy: "מפחיד" };
+
+        function xmlText(value) {
+          return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+        function xmlCell(value) {
+          return "<Cell><Data ss:Type=\"String\">" + xmlText(value) + "</Data></Cell>";
+        }
+        function hoursLabel(house) {
+          if (house.openHours && house.openHours.length) {
+            return house.openHours.map(function (w) { return (w.from || "") + "–" + (w.to || ""); }).join(" · ");
+          }
+          if (house.openFrom && house.openTo) return house.openFrom + "–" + house.openTo;
+          return "";
+        }
+        function candyTone(house) {
+          var treats = house.treats || [];
+          if (treats.indexOf("candy") < 0) return "none";
+          var level = house.treatStock && house.treatStock.candy;
+          if (level === "low" || level === "out" || level === "plenty") return level;
+          return "plenty";
+        }
+        function candyLabel(tone) {
+          if (tone === "none") return "בלי ממתקים";
+          if (tone === "plenty") return "יש";
+          if (tone === "low") return "מעט";
+          return "נגמר";
+        }
+        function yesNo(on) { return on ? "כן" : "לא"; }
+        function hasTreat(house, id) {
+          var treats = house.treats || [];
+          if (treats.indexOf(id) < 0) return false;
+          var level = house.treatStock && house.treatStock[id];
+          return level !== "out";
+        }
+        function rowCells(house) {
+          var tone = candyTone(house);
+          return [
+            house.name || "בית",
+            house.address || "",
+            house.arrival || "",
+            house.description || "",
+            house.notes || "",
+            hoursLabel(house),
+            candyLabel(tone),
+            scare[house.scareLevel] || "",
+            yesNo(Boolean(house.accessible)),
+            yesNo(hasTreat(house, "glutenFree")),
+            yesNo(hasTreat(house, "nutsFree")),
+            yesNo(hasTreat(house, "sesameFree")),
+          ];
+        }
+        function toExcel(houses) {
+          var headers = ["שם","כתובת","איך מגיעים / דירה","מה מחכה בבית","הערות","שעות","ממתקים","פחד","נגיש","ללא גלוטן","ללא אגוזים","ללא שומשום"];
+          var head = "<Row>" + headers.map(xmlCell).join("") + "</Row>";
+          var body = houses.map(function (house) {
+            return "<Row>" + rowCells(house).map(xmlCell).join("") + "</Row>";
+          }).join("");
+          return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<?mso-application progid=\"Excel.Sheet\"?>\n<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\"><Worksheet ss:Name=\"בתים\" ss:RightToLeft=\"1\"><Table>" + head + body + "</Table></Worksheet></Workbook>";
+        }
+
         try {
           var raw = localStorage.getItem("hw-catalog-cache");
           var catalog = raw ? JSON.parse(raw) : null;
@@ -54,15 +166,68 @@
             status.textContent = "אין עותק שמור בטלפון. פתחו את האפליקציה פעם אחת כשיש רשת, ואז הרשימה תישאר כאן.";
             return;
           }
-          status.textContent = houses.length + " בתים שמורים במכשיר. המפה המלאה תחזור כשיש קליטה.";
+          status.textContent = houses.length + " בתים שמורים במכשיר, עם אותם שדות כמו בגיליון. המפה המלאה תחזור כשיש קליטה.";
+          downloadBtn.hidden = false;
+          downloadBtn.addEventListener("click", function () {
+            var blob = new Blob([toExcel(houses)], { type: "application/vnd.ms-excel;charset=utf-8" });
+            var url = URL.createObjectURL(blob);
+            var link = document.createElement("a");
+            link.href = url;
+            link.download = "spookyhouzz-offline.xls";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+          });
           houses.forEach(function (house) {
             var li = document.createElement("li");
+            var top = document.createElement("div");
+            top.className = "row-top";
+            var candy = document.createElement("span");
+            candy.className = "candy";
+            var tone = candyTone(house);
+            var face = document.createElement("span");
+            face.className = "candy-face" + (tone === "none" ? " is-none" : "");
+            var img = document.createElement("img");
+            img.src = "/icons/pin-scare-mild.png";
+            img.alt = "";
+            face.appendChild(img);
+            candy.appendChild(face);
+            if (tone !== "none") {
+              var badge = document.createElement("span");
+              badge.className = "candy-badge is-" + tone;
+              candy.appendChild(badge);
+            }
+            var text = document.createElement("div");
             var title = document.createElement("strong");
             title.textContent = house.name || "בית";
             var meta = document.createElement("span");
-            meta.textContent = house.address || "";
-            li.appendChild(title);
-            li.appendChild(meta);
+            meta.className = "meta";
+            var bits = [house.address || "", hoursLabel(house), candyLabel(tone), scare[house.scareLevel] || ""].filter(Boolean);
+            meta.textContent = bits.join(" · ");
+            text.appendChild(title);
+            text.appendChild(meta);
+            top.appendChild(candy);
+            top.appendChild(text);
+            li.appendChild(top);
+            if (house.arrival) {
+              var arrival = document.createElement("div");
+              arrival.className = "block";
+              arrival.textContent = "איך מגיעים: " + house.arrival;
+              li.appendChild(arrival);
+            }
+            if (house.description) {
+              var desc = document.createElement("div");
+              desc.className = "block";
+              desc.textContent = house.description;
+              li.appendChild(desc);
+            }
+            if (house.notes) {
+              var notes = document.createElement("div");
+              notes.className = "block notes";
+              notes.textContent = "הערה: " + house.notes;
+              li.appendChild(notes);
+            }
             list.appendChild(li);
           });
         } catch (err) {

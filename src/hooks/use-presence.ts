@@ -4,9 +4,14 @@ import { useEffect, useState } from "react";
 
 const DEVICE_KEY = "hw-device-id";
 const HEARTBEAT_MS = 60_000;
-const POLL_MS = 30_000;
 
 let beating = false;
+let lastOnline: number | null = null;
+const listeners = new Set<() => void>();
+
+function emitOnline() {
+  for (const listener of listeners) listener();
+}
 
 function deviceId() {
   try {
@@ -28,12 +33,18 @@ async function beat() {
   const id = deviceId();
   if (!id) return;
   try {
-    await fetch("/api/presence", {
+    const res = await fetch("/api/presence", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
       keepalive: true,
     });
+    if (!res.ok) return;
+    const data = (await res.json()) as { online?: number };
+    if (typeof data.online === "number") {
+      lastOnline = data.online;
+      emitOnline();
+    }
   } catch {
     /* ignore */
   }
@@ -56,42 +67,20 @@ export function PresenceBeacon() {
   return null;
 }
 
-export function useOnlineDevices(enabled: boolean) {
-  const [online, setOnline] = useState<number | null>(null);
+export function useOnlineDevices(enabled = true) {
+  const [online, setOnline] = useState<number | null>(lastOnline);
 
   useEffect(() => {
     startHeartbeat();
   }, []);
 
   useEffect(() => {
-    if (!enabled) {
-      setOnline(null);
-      return;
-    }
-    let cancelled = false;
-    async function refresh() {
-      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
-      try {
-        const res = await fetch("/api/presence", { cache: "no-store", credentials: "include" });
-        if (!res.ok) return;
-        const data = (await res.json()) as { online?: number };
-        if (!cancelled && typeof data.online === "number") setOnline(data.online);
-      } catch {
-        /* keep last */
-      }
-    }
-    void refresh();
-    const poll = window.setInterval(() => void refresh(), POLL_MS);
-    const onVisible = () => {
-      if (document.visibilityState === "visible") void refresh();
-    };
-    document.addEventListener("visibilitychange", onVisible);
+    const onChange = () => setOnline(lastOnline);
+    listeners.add(onChange);
     return () => {
-      cancelled = true;
-      window.clearInterval(poll);
-      document.removeEventListener("visibilitychange", onVisible);
+      listeners.delete(onChange);
     };
-  }, [enabled]);
+  }, []);
 
-  return online;
+  return enabled ? online : null;
 }

@@ -42,7 +42,7 @@ export function HouseTags({
   const undecorated = resolveDecorLevel(house) === "none";
 
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex flex-wrap gap-1.5 pb-0.5 ps-0.5">
       <CandySign tone={candy} />
       <ScareSign level={undecorated ? "none" : scare} />
       {house.accessible ? (

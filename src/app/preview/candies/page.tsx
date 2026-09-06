@@ -10,11 +10,25 @@ export default function CandyPreviewPage() {
           <p className="text-base text-violet-300">{config.brandEn} · בחירת אייקון</p>
           <h1 className="text-2xl font-semibold text-orange-100">איזה ממתק יותר ברור?</h1>
           <p className="text-base text-violet-200">
-            ירוק = יש, כתום = מעט, אדום = נגמר, אפור עם קו = הבית בלי ממתקים מההתחלה. אותו קו דק מקצה
-            לקצה כמו ברגישויות.
+            ברשימה: רוח סגולה עם ממתק בפינה (ירוק / כתום / אדום), כמו במפה. אפור עם קו = בלי ממתקים
+            מההתחלה.
           </p>
           <PreviewNav current="/preview/candies" />
         </header>
+
+        <section className="space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/20">
+          <h2 className="text-base font-medium text-orange-100">ברשימה עכשיו</h2>
+          <div className="flex flex-wrap items-center gap-3">
+            {CANDY_TONES.map((tone) => (
+              <div key={tone.id} className="flex flex-col items-center gap-1">
+                <CandySign tone={tone.id} className="size-10" />
+                <span className="max-w-16 text-center text-base leading-tight text-violet-300">
+                  {tone.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <div className="space-y-3">
           {CANDY_OPTIONS.map((option) => {

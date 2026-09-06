@@ -128,7 +128,7 @@ export function NeighborhoodApp({
   const visits = useVisitedHouses();
   const owned = useOwnedHouses();
   const now = useAppNow();
-  const onlineDevices = useOnlineDevices(admin);
+  const onlineDevices = useOnlineDevices();
 
   useEffect(() => () => window.clearTimeout(cheerTimer.current), []);
   useEffect(() => {
@@ -561,7 +561,7 @@ export function NeighborhoodApp({
           >
             <RefreshCw className={cn("size-4", (loading || adminLoading) && "animate-spin")} />
           </button>
-          <CsvExportButton houses={visible} kind={likedOnly ? "liked" : "list"} />
+          <CsvExportButton houses={visible} kind={likedOnly ? "liked" : "list"} includeTraffic={admin} />
         </div>
         {geoError ? (
           <p className="mt-1 text-base text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>
@@ -727,7 +727,7 @@ export function NeighborhoodApp({
                 offline={offline}
                 unreachable={unreachable}
                 source={source}
-                onlineDevices={admin ? onlineDevices : null}
+                onlineDevices={onlineDevices}
               />
             </div>
             {view === "list" ? (
@@ -758,7 +758,7 @@ export function NeighborhoodApp({
                     onToggleVisited={onToggleVisited}
                     admin={admin}
                     ownedIds={owned.map((item) => item.id)}
-                    onlineDevices={admin ? onlineDevices : null}
+                    onlineDevices={onlineDevices}
                   />
                 )}
               </div>

@@ -109,8 +109,14 @@ export function candyToneLabel(tone: CandyTone) {
   return `ממתקים · ${stockLabels[tone]}`;
 }
 
+const CANDY_BADGE_BG: Record<Exclude<CandyTone, "none">, string> = {
+  plenty: "#047857",
+  low: "#d97706",
+  out: "#b91c1c",
+};
+
 export function CandySign({
-  Glyph = CandyRound,
+  Glyph,
   tone,
   className,
 }: {
@@ -118,20 +124,63 @@ export function CandySign({
   tone: CandyTone;
   className?: string;
 }) {
+  if (Glyph) {
+    return (
+      <span
+        className={cn(
+          "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full",
+          TONE_CLASS[tone],
+          className,
+        )}
+        title={candyToneLabel(tone)}
+        aria-label={candyToneLabel(tone)}
+      >
+        <span className="size-[86%]">
+          <Glyph />
+        </span>
+        {tone === "none" ? <DiscStrike /> : null}
+      </span>
+    );
+  }
+
   return (
     <span
-      className={cn(
-        "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full",
-        TONE_CLASS[tone],
-        className,
-      )}
+      className={cn("relative inline-block size-8 shrink-0", className)}
       title={candyToneLabel(tone)}
       aria-label={candyToneLabel(tone)}
     >
-      <span className="size-[86%]">
-        <Glyph />
+      <span
+        className={cn(
+          "relative flex size-full items-center justify-center overflow-hidden rounded-full ring-[1.5px] ring-[#fff7ed]",
+          tone === "none" ? "bg-[#94a3b8]" : "bg-[#6d28d9]",
+        )}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/icons/pin-scare-mild.png"
+          alt=""
+          aria-hidden
+          className={cn("size-[92%] object-contain object-center", tone === "none" && "grayscale")}
+        />
+        {tone === "none" ? <DiscStrike /> : null}
       </span>
-      {tone === "none" ? <DiscStrike /> : null}
+      {tone !== "none" ? (
+        <span
+          aria-hidden
+          className="absolute rounded-full ring-[1.5px] ring-[#fff7ed]"
+          style={{
+            width: "46%",
+            height: "46%",
+            bottom: "-10%",
+            insetInlineStart: "-10%",
+            backgroundColor: CANDY_BADGE_BG[tone],
+            backgroundImage: 'url("/icons/pin-candy.png")',
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundSize: "86%",
+          }}
+        />
+      ) : null}
     </span>
   );
 }

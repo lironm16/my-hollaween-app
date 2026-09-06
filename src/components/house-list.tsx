@@ -113,7 +113,7 @@ export function HouseList({
       </div>
       <p className="text-base text-violet-300">
         {houses.length} בתים
-        {admin && onlineDevices != null ? ` · ${onlineDevices} מבקרים` : ""}
+        {onlineDevices != null ? ` · ${onlineDevices} מבקרים` : ""}
       </p>
       {filtered.length === 0 ? (
         <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לחיפוש.</p>

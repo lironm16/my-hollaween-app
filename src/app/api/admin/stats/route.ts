@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { getDbSnapshot } from "@/lib/store";
+import { countSeenDevices } from "@/lib/device-store";
 import { candyLevel, effectiveVisit, isOwnerFrozen } from "@/lib/house-state";
 import { isOnBreak, isOpenNow } from "@/lib/hours";
+import { countPresence } from "@/lib/presence-store";
 import { subscriptionAllowsTopic } from "@/lib/push-topics";
 
 export const runtime = "nodejs";
@@ -16,8 +18,11 @@ export async function GET() {
   const subs = db.pushSubscriptions ?? [];
   const houses = db.houses.filter((house) => house.status !== "rejected");
   const approved = houses.filter((house) => house.status === "approved");
+  const [devicesSeen] = await Promise.all([countSeenDevices()]);
   return NextResponse.json({
     devices: subs.length,
+    devicesSeen,
+    online: countPresence(),
     devicesNewHouse: subs.filter((item) => subscriptionAllowsTopic(item, "newHouse")).length,
     devicesHouseStatus: subs.filter((item) => subscriptionAllowsTopic(item, "houseStatus")).length,
     devicesAdmin: subs.filter((item) => subscriptionAllowsTopic(item, "admin")).length,

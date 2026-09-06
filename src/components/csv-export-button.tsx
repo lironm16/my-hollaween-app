@@ -3,24 +3,38 @@
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { housesToSheetHtml, downloadSheet, sheetFilename } from "@/lib/house-csv";
+import { useHouseTraffic } from "@/hooks/use-house-traffic";
+import { housesToExcelXml, downloadSheet, sheetFilename } from "@/lib/house-csv";
+import { EMPTY_TRAFFIC, type HouseTraffic } from "@/lib/traffic";
 import type { PublicHouse } from "@/lib/types";
 
 export function CsvExportButton({
   houses,
   kind = "list",
   label,
+  includeTraffic = false,
 }: {
   houses: PublicHouse[];
   kind?: "liked" | "list" | "all";
   label?: string;
+  /** Managers get saved/visited columns on the same download. */
+  includeTraffic?: boolean;
 }) {
+  const { trafficFor } = useHouseTraffic();
+
   function onExport() {
     if (houses.length === 0) {
       toast.error("אין בתים לייצוא. סננו או שמרו בתים בלב קודם.");
       return;
     }
-    downloadSheet(sheetFilename(kind), housesToSheetHtml(houses));
+    let traffic: Record<string, HouseTraffic> | undefined;
+    if (includeTraffic) {
+      traffic = {};
+      for (const house of houses) {
+        traffic[house.id] = trafficFor(house.id) ?? EMPTY_TRAFFIC;
+      }
+    }
+    downloadSheet(sheetFilename(kind), housesToExcelXml(houses, traffic ? { traffic } : undefined));
     toast.success(`הורד קובץ עם ${houses.length} בתים`);
   }
 

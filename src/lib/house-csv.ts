@@ -2,12 +2,13 @@ import { formatDisplayAddress } from "@/lib/config";
 import { formatHoursLabel } from "@/lib/hours";
 import { candyLevel, offersSensitivity } from "@/lib/house-state";
 import { scareShort } from "@/lib/labels";
+import type { HouseTraffic } from "@/lib/traffic";
 import type { PublicHouse } from "@/lib/types";
 
-const HEADERS = [
+const PUBLIC_HEADERS = [
   "שם",
   "כתובת",
-  "דירה / איך מגיעים",
+  "איך מגיעים / דירה",
   "מה מחכה בבית",
   "הערות",
   "שעות",
@@ -19,13 +20,20 @@ const HEADERS = [
   "ללא שומשום",
 ] as const;
 
+const TRAFFIC_HEADERS = ["שמרו", "ביקרו"] as const;
+
+export type SheetOptions = {
+  /** Neighborhood saved/visited counts — included for managers using the same download. */
+  traffic?: Record<string, HouseTraffic>;
+};
+
 function csvCell(value: string | number) {
   const text = String(value ?? "");
   if (/[",\n\r]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
   return text;
 }
 
-function htmlCell(value: string | number) {
+function xmlText(value: string | number) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -41,8 +49,8 @@ function candyLabel(house: PublicHouse) {
   return "נגמר";
 }
 
-function houseRow(house: PublicHouse): string[] {
-  return [
+function houseRow(house: PublicHouse, traffic?: HouseTraffic): Array<string | number> {
+  const cells: Array<string | number> = [
     house.name,
     formatDisplayAddress(house),
     house.arrival || "",
@@ -56,63 +64,82 @@ function houseRow(house: PublicHouse): string[] {
     offersSensitivity(house, "nutsFree") ? "כן" : "לא",
     offersSensitivity(house, "sesameFree") ? "כן" : "לא",
   ];
+  if (traffic) {
+    cells.push(traffic.saved ?? 0, traffic.visited ?? 0);
+  }
+  return cells;
 }
 
-export function housesToCsv(houses: PublicHouse[]) {
-  const lines = [HEADERS.join(",")];
+function headersFor(options?: SheetOptions) {
+  return options?.traffic ? [...PUBLIC_HEADERS, ...TRAFFIC_HEADERS] : [...PUBLIC_HEADERS];
+}
+
+export function housesToCsv(houses: PublicHouse[], options?: SheetOptions) {
+  const lines = [headersFor(options).join(",")];
   for (const house of houses) {
-    lines.push(houseRow(house).map(csvCell).join(","));
+    lines.push(houseRow(house, options?.traffic?.[house.id]).map(csvCell).join(","));
   }
   return `\uFEFF${lines.join("\r\n")}\r\n`;
 }
 
-export function housesToSheetHtml(houses: PublicHouse[]) {
-  const head = HEADERS.map((header) => `<th>${htmlCell(header)}</th>`).join("");
+function xmlCell(value: string | number, header = false) {
+  const style = header ? ' ss:StyleID="header"' : "";
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return `<Cell${style}><Data ss:Type="Number">${value}</Data></Cell>`;
+  }
+  return `<Cell${style}><Data ss:Type="String">${xmlText(value)}</Data></Cell>`;
+}
+
+/** SpreadsheetML 2003 — real Excel XML, not HTML pretending to be .xls. */
+export function housesToExcelXml(houses: PublicHouse[], options?: SheetOptions) {
+  const headers = headersFor(options);
+  const head = `<Row>${headers.map((header) => xmlCell(header, true)).join("")}</Row>`;
   const body = houses
     .map((house) => {
-      const cells = houseRow(house)
-        .map((value) => `<td>${htmlCell(value)}</td>`)
+      const cells = houseRow(house, options?.traffic?.[house.id])
+        .map((value) => xmlCell(value))
         .join("");
-      return `<tr>${cells}</tr>`;
+      return `<Row>${cells}</Row>`;
     })
     .join("");
-  return `<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-<meta charset="utf-8" />
-<title>SpookyHouzz</title>
-<style>
-  body { font-family: Arial, sans-serif; }
-  table { border-collapse: collapse; direction: rtl; }
-  th, td { border: 1px solid #bbb; padding: 8px; text-align: right; vertical-align: top; white-space: pre-wrap; }
-  th { background: #f3e8ff; }
-</style>
-</head>
-<body>
-<table>
-<thead><tr>${head}</tr></thead>
-<tbody>${body}</tbody>
-</table>
-</body>
-</html>`;
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles>
+  <Style ss:ID="header">
+   <Font ss:Bold="1"/>
+   <Interior ss:Color="#F3E8FF" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Right" ss:Vertical="Top" ss:WrapText="1"/>
+  </Style>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Horizontal="Right" ss:Vertical="Top" ss:WrapText="1"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="בתים" ss:RightToLeft="1">
+  <Table>${head}${body}</Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <DisplayRightToLeft/>
+  </WorksheetOptions>
+ </Worksheet>
+</Workbook>`;
 }
 
 export function downloadCsv(filename: string, csv: string) {
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  triggerDownload(filename, blob);
 }
 
-export function downloadSheet(filename: string, html: string) {
-  const blob = new Blob([`\uFEFF${html}`], {
+export function downloadSheet(filename: string, xml: string) {
+  const blob = new Blob([xml], {
     type: "application/vnd.ms-excel;charset=utf-8",
   });
+  triggerDownload(filename, blob);
+}
+
+function triggerDownload(filename: string, blob: Blob) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;

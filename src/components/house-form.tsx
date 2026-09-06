@@ -511,7 +511,7 @@ export function HouseForm({
           {nightStatusEnabled ? null : (
             <p className="mb-2 text-base text-violet-300">
               נפתח בליל האלווין, משעת הפעילות של הבית. אז אפשר לסמן הפסקה זמנית או סגירה לערב.
-              לחזרה כללית: תפריט מנהל → התראות לשכונה.
+              לחזרה כללית: תפריט מנהל → חזרה כללית.
             </p>
           )}
           <div className="flex flex-wrap gap-1.5">

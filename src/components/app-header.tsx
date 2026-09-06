@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, Home, HousePlus, LogOut, Menu, Pencil, Shield } from "lucide-react";
+import { Bell, Home, HousePlus, LogOut, Menu, Pencil, Shield, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
 import { NeighborhoodMarquee } from "@/components/neighborhood-marquee";
@@ -140,6 +140,17 @@ export function AppHeader({
                 >
                   <Bell className="size-4" />
                   התראות לשכונה
+                </Link>
+                <Link
+                  href="/admin/rehearsal"
+                  onClick={() => setMenuOpen(false)}
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "lg" }),
+                    "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+                  )}
+                >
+                  <Sparkles className="size-4" />
+                  חזרה כללית
                 </Link>
                 <button
                   type="button"

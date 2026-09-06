@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { PushNotice } from "@/components/push-notice";
-import { AdminStatsCard, useAdminStats } from "@/components/admin-stats";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,7 +54,6 @@ export function AdminPushPanel() {
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [sendingKind, setSendingKind] = useState<PushKind | null>(null);
-  const stats = useAdminStats(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -214,7 +212,6 @@ export function AdminPushPanel() {
 
   return (
     <div className="space-y-4">
-      {stats ? <AdminStatsCard stats={stats} /> : null}
       <form
         className="space-y-2 rounded-xl bg-black/25 p-3"
         onSubmit={(event) => {

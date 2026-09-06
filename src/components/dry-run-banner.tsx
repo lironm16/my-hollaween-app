@@ -23,7 +23,7 @@ export function DryRunBanner() {
       <p>
         {down ? "חזרה כללית: השרת לא עונה" : `חזרה כללית: ${REHEARSAL_LABELS[scene]}`}
         {" · "}
-        <Link href="/admin/alerts" className="underline underline-offset-2">
+        <Link href="/admin/rehearsal" className="underline underline-offset-2">
           הגדרות
         </Link>
         {" · "}

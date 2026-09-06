@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 export type AdminStats = {
   devices: number;
+  devicesSeen?: number;
+  online?: number;
   devicesNewHouse: number;
   devicesHouseStatus: number;
   devicesAdmin: number;
@@ -49,9 +51,12 @@ export function AdminStatsCard({ stats }: { stats: AdminStats }) {
     <div className="space-y-2 rounded-xl bg-black/25 p-3">
       <p className="text-base font-medium text-amber-100">מכשירים ומפה</p>
       <p className="text-base text-violet-300">
-        סופרים מכשירים שהפעילו התראות. אין ספירת התקנות בלי התראות.
+        כל טלפון שנכנס לאפליקציה נספר, גם בלי התראות. מבקרים = האפליקציה פתוחה עכשיו. התראות = מי
+        שאישר קבלת הודעות.
       </p>
       <dl className="grid grid-cols-2 gap-2 text-base">
+        <Stat label="מכשירים שנכנסו" value={stats.devicesSeen ?? 0} />
+        <Stat label="מבקרים עכשיו" value={stats.online ?? 0} />
         <Stat label="מכשירים עם התראות" value={stats.devices} />
         <Stat label="בתים במפה" value={stats.houses} />
         <Stat label="פתוחים עכשיו" value={stats.openNow} />
