@@ -207,7 +207,7 @@ function clusterIcon(
     return L.divIcon({
       className: `pumpkin-pin-icon pumpkin-pin-building${selectedClass}`,
       html: wrapped.html,
-      iconSize: [54, 58 + wrapped.extraH],
+      iconSize: [54, 72 + wrapped.extraH],
       iconAnchor: [27, 54 + wrapped.extraH],
     });
   }

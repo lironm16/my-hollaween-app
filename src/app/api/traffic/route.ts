@@ -14,7 +14,7 @@ export async function GET() {
     { houses },
     {
       headers: {
-        "Cache-Control": "public, max-age=0, s-maxage=30, stale-while-revalidate=120",
+        "Cache-Control": "private, no-store",
       },
     },
   );

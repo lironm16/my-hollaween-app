@@ -1,6 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
+import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,16 @@ export function HouseCard({
         onToggle?.();
       }}
     >
+      <div className="house-list-card-chrome">
+        <HouseActionBar
+          house={house}
+          showNav={false}
+          liked={liked}
+          visited={visited}
+          onToggleLike={onToggleLike}
+          onToggleVisited={onToggleVisited}
+        />
+      </div>
       <div className="px-3 pb-1">
         <HouseDetails
           house={house}
@@ -51,6 +62,7 @@ export function HouseCard({
           visited={visited}
           onToggleVisited={onToggleVisited}
           emphasizeTraffic={emphasizeTraffic}
+          chrome="sheet"
         />
       </div>
     </Card>

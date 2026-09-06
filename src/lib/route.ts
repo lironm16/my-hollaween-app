@@ -203,16 +203,6 @@ export function googleMapsNavigateUrl(origin: LatLng, destination: LatLng) {
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
-/** Apple Maps walking (fallback when Google mishandles the link on iOS). */
-export function appleMapsWalkingUrl(origin: LatLng, destination: LatLng) {
-  const params = new URLSearchParams({
-    saddr: fmtLatLng(origin),
-    daddr: fmtLatLng(destination),
-    dirflg: "w",
-  });
-  return `https://maps.apple.com/?${params.toString()}`;
-}
-
 /** All-stop walking overview — GraphHopper Maps (no Google waypoint cap). */
 export function graphhopperWalkingUrl(route: WalkingRoute) {
   const stops = route.stops.slice(0, ROUTE_GRAPHHOPPER_MAX_STOPS);

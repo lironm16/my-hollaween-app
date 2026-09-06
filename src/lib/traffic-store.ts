@@ -15,8 +15,8 @@ export type { TrafficDelta };
 const BLOB_PATH = "halloween-houses/traffic.json";
 const SEED_TRAFFIC_PATH = path.join(process.cwd(), "data", "seed-traffic.json");
 const MEM_GET_TTL_MS = 20_000;
-/** Shared blob is the expensive write — never persist it on every heart/visit. */
-const BLOB_PERSIST_MS = 20_000;
+/** Shared blob is the expensive write — persist hearts immediately so a refresh keeps the count. */
+const BLOB_PERSIST_MS = 0;
 
 type GlobalBag = {
   __hwTraffic?: TrafficFile;

@@ -2,11 +2,16 @@
   "name": "SpookyHouzz",
   "short_name": "SpookyHouzz",
   "description": "מפת הבתים המפחידים של השכונה, גם בלי רשת.",
+  "id": "/",
   "dir": "rtl",
   "lang": "he",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
   "orientation": "portrait",
   "background_color": "#12081a",
   "theme_color": "#12081a",

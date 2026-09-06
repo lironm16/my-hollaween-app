@@ -12,7 +12,7 @@ import {
   type TrafficKind,
 } from "@/lib/traffic";
 
-const FLUSH_MS = 45_000;
+const FLUSH_MS = 800;
 const POLL_MS = 60_000;
 const PENDING_KEY = "hw-traffic-pending";
 
@@ -70,7 +70,7 @@ function loadReported() {
     /* ignore */
   }
   try {
-    const raw = sessionStorage.getItem(PENDING_KEY);
+    const raw = localStorage.getItem(PENDING_KEY) ?? sessionStorage.getItem(PENDING_KEY);
     const stored = raw ? (JSON.parse(raw) as unknown) : null;
     if (stored && typeof stored === "object") {
       for (const [id, row] of Object.entries(stored as Record<string, Partial<HouseTraffic>>)) {
@@ -99,7 +99,7 @@ function persistReported(kind: TrafficKind) {
 
 function persistPending() {
   try {
-    sessionStorage.setItem(PENDING_KEY, JSON.stringify(pending));
+    localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
   } catch {
     /* private mode */
   }
@@ -153,19 +153,13 @@ async function postEvents(events: TrafficDelta[]) {
 function beaconEvents(events: TrafficDelta[]) {
   const body = JSON.stringify({ events });
   try {
-    if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
-      const ok = navigator.sendBeacon("/api/traffic", new Blob([body], { type: "application/json" }));
-      if (ok) return true;
-    }
-  } catch {
-    /* fall through */
-  }
-  try {
     void fetch("/api/traffic", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body,
       keepalive: true,
+    }).then((res) => {
+      if (res.ok) consumeSent(events);
     });
     return true;
   } catch {
@@ -180,7 +174,7 @@ async function flush(mode: "fetch" | "beacon") {
 
   if (mode === "beacon") {
     if (inFlight) return;
-    if (beaconEvents(events)) consumeSent(events);
+    beaconEvents(events);
     return;
   }
 

@@ -3,10 +3,8 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { HouseCard } from "@/components/house-card";
-import { CsvExportButton } from "@/components/csv-export-button";
 import { distanceMeters } from "@/lib/geo";
 import { effectiveVisit } from "@/lib/house-state";
-import type { HouseTraffic } from "@/lib/traffic";
 import type { PublicHouse } from "@/lib/types";
 
 function scrollParent(el: HTMLElement | null): HTMLElement | null {
@@ -25,8 +23,6 @@ export function HouseList({
   onToggleLike,
   visitedIds,
   onToggleVisited,
-  traffic,
-  exportKind = "list",
   ownedIds = [],
   admin = false,
   onlineDevices = null,
@@ -38,8 +34,6 @@ export function HouseList({
   onToggleLike?: (id: string) => void;
   visitedIds?: string[];
   onToggleVisited?: (id: string) => void;
-  traffic?: Record<string, HouseTraffic>;
-  exportKind?: "liked" | "list";
   ownedIds?: string[];
   admin?: boolean;
   onlineDevices?: number | null;
@@ -116,15 +110,11 @@ export function HouseList({
           placeholder="חיפוש לפי שם או רחוב…"
           className="h-10 min-w-0 flex-1 bg-[#1d1028] text-base"
         />
-        <CsvExportButton houses={houses} traffic={traffic} kind={exportKind} />
-        <span className="shrink-0 text-base text-violet-300">
-          {houses.length} בתים
-          {admin && onlineDevices != null ? ` · ${onlineDevices} עכשיו` : ""}
-        </span>
       </div>
-      {origin ? (
-        <p className="text-base text-violet-300">ממוין לפי מרחק מכם</p>
-      ) : null}
+      <p className="text-base text-violet-300">
+        {houses.length} בתים
+        {admin && onlineDevices != null ? ` · ${onlineDevices} מבקרים` : ""}
+      </p>
       {filtered.length === 0 ? (
         <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לחיפוש.</p>
       ) : (

@@ -6,12 +6,7 @@ import { HoursStatusBanner } from "@/components/hours-status-banner";
 import { formatDisplayAddress } from "@/lib/config";
 import { formatDistance } from "@/lib/geo";
 import { houseHeadline } from "@/lib/labels";
-import {
-  appleMapsWalkingUrl,
-  formatRouteSummary,
-  googleMapsNavigateUrl,
-  type WalkingRoute,
-} from "@/lib/route";
+import { formatRouteSummary, googleMapsNavigateUrl, type WalkingRoute } from "@/lib/route";
 import { cn } from "@/lib/utils";
 
 export function RouteList({
@@ -67,10 +62,6 @@ export function RouteList({
             lat: stop.house.lat,
             lng: stop.house.lng,
           });
-          const appleUrl = appleMapsWalkingUrl(prev, {
-            lat: stop.house.lat,
-            lng: stop.house.lng,
-          });
           return stop.houses.map((house, houseIndex) => (
             <li key={house.id} className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/15">
               <HoursStatusBanner house={house} className="mb-2" />
@@ -108,14 +99,6 @@ export function RouteList({
                 >
                   <Navigation className="size-3.5" />
                   ניווט לכאן
-                </a>
-                <a
-                  href={appleUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={cn(buttonVariants({ size: "sm", variant: "ghost" }), "text-violet-200")}
-                >
-                  Apple Maps
                 </a>
               </div>
             </li>

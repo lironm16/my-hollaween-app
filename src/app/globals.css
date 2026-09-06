@@ -636,7 +636,7 @@
 .pin-apt-dots {
   position: absolute;
   inset-inline-start: -6px;
-  bottom: -6px;
+  bottom: -18px;
   z-index: 4;
   display: flex;
   flex-direction: row;
@@ -1413,6 +1413,25 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 }
 
 .map-house-sheet-chrome .house-action-btn {
+  width: 48px;
+  height: 48px;
+}
+
+.house-list-card-chrome {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 10px 8px 0;
+}
+
+.house-list-card-chrome .house-action-bar {
+  width: 100%;
+  justify-content: space-evenly;
+  gap: 0;
+  flex-wrap: nowrap;
+}
+
+.house-list-card-chrome .house-action-btn {
   width: 48px;
   height: 48px;
 }

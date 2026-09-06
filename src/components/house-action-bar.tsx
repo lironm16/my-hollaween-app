@@ -16,6 +16,7 @@ export function HouseActionBar({
   onToggleEdit,
   editing,
   navOnly,
+  showNav = true,
 }: {
   house: PublicHouse;
   liked?: boolean;
@@ -25,19 +26,22 @@ export function HouseActionBar({
   onToggleEdit?: () => void;
   editing?: boolean;
   navOnly?: boolean;
+  showNav?: boolean;
 }) {
   return (
     <div className="house-action-bar" dir="rtl">
-      <a
-        href={houseMapsUrl(house)}
-        target="_blank"
-        rel="noreferrer"
-        className="house-action-btn"
-        aria-label="ניווט ב-Google Maps"
-        title="Google Maps"
-      >
-        <Navigation className="size-6" strokeWidth={2.2} />
-      </a>
+      {showNav ? (
+        <a
+          href={houseMapsUrl(house)}
+          target="_blank"
+          rel="noreferrer"
+          className="house-action-btn"
+          aria-label="ניווט ב-Google Maps"
+          title="Google Maps"
+        >
+          <Navigation className="size-6" strokeWidth={2.2} />
+        </a>
+      ) : null}
       {navOnly ? null : (
         <>
           <button

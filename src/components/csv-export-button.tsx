@@ -3,18 +3,15 @@
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { csvFilename, downloadCsv, housesToCsv } from "@/lib/house-csv";
-import type { HouseTraffic } from "@/lib/traffic";
+import { housesToSheetHtml, downloadSheet, sheetFilename } from "@/lib/house-csv";
 import type { PublicHouse } from "@/lib/types";
 
 export function CsvExportButton({
   houses,
-  traffic,
   kind = "list",
   label,
 }: {
   houses: PublicHouse[];
-  traffic?: Record<string, HouseTraffic>;
   kind?: "liked" | "list" | "all";
   label?: string;
 }) {
@@ -23,8 +20,22 @@ export function CsvExportButton({
       toast.error("אין בתים לייצוא. סננו או שמרו בתים בלב קודם.");
       return;
     }
-    downloadCsv(csvFilename(kind), housesToCsv(houses, traffic));
+    downloadSheet(sheetFilename(kind), housesToSheetHtml(houses));
     toast.success(`הורד קובץ עם ${houses.length} בתים`);
+  }
+
+  if (!label) {
+    return (
+      <button
+        type="button"
+        aria-label="הורדה"
+        title="הורדה"
+        onClick={onExport}
+        className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25"
+      >
+        <Download className="size-4" />
+      </button>
+    );
   }
 
   return (
@@ -36,7 +47,7 @@ export function CsvExportButton({
       onClick={onExport}
     >
       <Download className="size-4" />
-      {label ?? "הורדה להדפסה"}
+      {label}
     </Button>
   );
 }

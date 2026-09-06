@@ -12,6 +12,7 @@ import {
 } from "@/components/filter-menu";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseList } from "@/components/house-list";
+import { CsvExportButton } from "@/components/csv-export-button";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { NightDesk } from "@/components/night-desk";
 import { RouteList } from "@/components/route-list";
@@ -24,7 +25,6 @@ import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
-import { useAdminStats } from "@/components/admin-stats";
 import { readApiJson } from "@/lib/api-json";
 import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
 import { clusterHousesByAddress } from "@/lib/house-clusters";
@@ -39,7 +39,7 @@ import { ScareMark, ScareSign } from "@/components/scare-glyphs";
 import { isOpenNow } from "@/lib/hours";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { useAppNow } from "@/hooks/use-app-clock";
-import { reportHouseTraffic, useHouseTraffic } from "@/hooks/use-house-traffic";
+import { reportHouseTraffic } from "@/hooks/use-house-traffic";
 import { useOnlineDevices } from "@/hooks/use-presence";
 import {
   backupLooksNewer,
@@ -67,7 +67,6 @@ export function NeighborhoodApp({
 }) {
   const { catalog, loading, offline, unreachable, error, source, refresh } = useCatalog(initialCatalog);
   const { admin } = useAdminSession();
-  const adminStats = useAdminStats(admin);
   const geo = useUserLocation();
   const origin = geo.location;
   const view = useSyncExternalStore(
@@ -129,7 +128,6 @@ export function NeighborhoodApp({
   const visits = useVisitedHouses();
   const owned = useOwnedHouses();
   const now = useAppNow();
-  const { houses: traffic } = useHouseTraffic();
   const onlineDevices = useOnlineDevices(admin);
 
   useEffect(() => () => window.clearTimeout(cheerTimer.current), []);
@@ -520,10 +518,13 @@ export function NeighborhoodApp({
         style={{ flexShrink: 0 }}
       >
         <div className="flex flex-nowrap items-center gap-2">
-          <div className="flex rounded-lg bg-[#1d1028] p-0.5 ring-1 ring-orange-500/20">
-            <Toggle active={view === "map"} onClick={() => setView("map")} icon={<MapPinned className="size-3.5" />}>
-              מפה
-            </Toggle>
+          <div className="flex rounded-xl bg-[#261536] p-0.5 ring-1 ring-orange-400/40">
+            <Toggle
+              active={view === "map"}
+              onClick={() => setView("map")}
+              icon={<MapPinned className="size-4" />}
+              label="מפה"
+            />
             <Toggle
               active={view === "list"}
               onClick={() => {
@@ -532,10 +533,9 @@ export function NeighborhoodApp({
                 setClusterOverview(false);
                 setEditing(false);
               }}
-              icon={<List className="size-3.5" />}
-            >
-              רשימה
-            </Toggle>
+              icon={<List className="size-4" />}
+              label="רשימה"
+            />
           </div>
           <FilterTrigger activeCount={activeFilterCount} onClick={() => setFiltersOpen(true)} />
           <button
@@ -561,6 +561,7 @@ export function NeighborhoodApp({
           >
             <RefreshCw className={cn("size-4", (loading || adminLoading) && "animate-spin")} />
           </button>
+          <CsvExportButton houses={visible} kind={likedOnly ? "liked" : "list"} />
         </div>
         {geoError ? (
           <p className="mt-1 text-base text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>
@@ -727,7 +728,6 @@ export function NeighborhoodApp({
                 unreachable={unreachable}
                 source={source}
                 onlineDevices={admin ? onlineDevices : null}
-                onBreak={admin ? adminStats?.onBreak : undefined}
               />
             </div>
             {view === "list" ? (
@@ -756,8 +756,6 @@ export function NeighborhoodApp({
                     onToggleLike={onToggleLike}
                     visitedIds={visits.visitedIds}
                     onToggleVisited={onToggleVisited}
-                    traffic={traffic}
-                    exportKind={likedOnly ? "liked" : "list"}
                     admin={admin}
                     ownedIds={owned.map((item) => item.id)}
                     onlineDevices={admin ? onlineDevices : null}
@@ -882,7 +880,6 @@ function CatalogMetaChip({
   unreachable,
   source,
   onlineDevices,
-  onBreak,
 }: {
   houseCount: number;
   stopCount?: number | null;
@@ -890,15 +887,13 @@ function CatalogMetaChip({
   unreachable: boolean;
   source: string | null;
   onlineDevices?: number | null;
-  onBreak?: number;
 }) {
   const stale = offline || unreachable || source === "cache" || source === "snapshot";
   return (
     <div className="pointer-events-none absolute top-2 start-2 z-10">
       <span className="inline-flex max-w-[min(100%,18rem)] flex-wrap items-center gap-1.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
         <span>{houseCount} בתים</span>
-        {onlineDevices != null ? <span>· {onlineDevices} עכשיו</span> : null}
-        {onBreak != null && onBreak > 0 ? <span>· {onBreak} בהפסקה</span> : null}
+        {onlineDevices != null ? <span>· {onlineDevices} מבקרים</span> : null}
         {stopCount != null ? <span>· {stopCount} עצירות</span> : null}
         {stale ? (
           <>
@@ -922,25 +917,27 @@ function CatalogMetaChip({
 function Toggle({
   active,
   onClick,
-  children,
   icon,
+  label,
 }: {
   active: boolean;
   onClick: () => void;
-  children: React.ReactNode;
   icon: React.ReactNode;
+  label: string;
 }) {
   return (
     <button
       type="button"
+      aria-label={label}
+      title={label}
+      aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-base",
-        active ? "bg-orange-500 text-black" : "text-orange-100",
+        "inline-flex h-9 w-11 items-center justify-center rounded-lg",
+        active ? "bg-orange-500 text-black" : "text-violet-200",
       )}
     >
       {icon}
-      {children}
     </button>
   );
 }

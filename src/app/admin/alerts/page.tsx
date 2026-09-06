@@ -7,7 +7,6 @@ import { AdminDryRunPanel } from "@/components/admin-dry-run";
 import { AppHeader } from "@/components/app-header";
 import { CsvExportButton } from "@/components/csv-export-button";
 import { useAdminSession } from "@/hooks/use-admin-session";
-import { useHouseTraffic } from "@/hooks/use-house-traffic";
 import { useOnlineDevices } from "@/hooks/use-presence";
 import { toPublicHouse } from "@/lib/ids";
 import type { House, PublicHouse } from "@/lib/types";
@@ -15,7 +14,6 @@ import type { House, PublicHouse } from "@/lib/types";
 export default function AdminAlertsPage() {
   const router = useRouter();
   const { ready, admin } = useAdminSession();
-  const { houses: traffic } = useHouseTraffic();
   const onlineDevices = useOnlineDevices(admin);
   const [houses, setHouses] = useState<PublicHouse[]>([]);
 
@@ -63,13 +61,13 @@ export default function AdminAlertsPage() {
           </div>
           <AdminDryRunPanel />
           <div className="space-y-2 rounded-xl bg-black/25 p-3">
-            <p className="text-base font-medium text-amber-100">הורדה להדפסה</p>
+            <p className="text-base font-medium text-amber-100">הורדה</p>
             <p className="text-base text-violet-300">
-              CSV עם שם, כתובת, שעות, ממתקים, פחד, קישוט, רגישויות, וכמה שמרו / ביקרו. נפתח
-              באקסל או Google Sheets, ואז אפשר להדפיס. ברשימה הראשית יש כפתור דומה לרשימה המסוננת
-              או לבתים ששמרתם בלב.
+              גיליון מימין לשמאל עם שם, כתובת, טקסטים שהוסיפו לבתים, שעות, ממתקים, פחד, נגישות
+              ורגישויות. נפתח באקסל. ברשימה הראשית יש כפתור דומה לרשימה המסוננת או לבתים ששמרתם
+              בלב.
             </p>
-            <CsvExportButton houses={houses} traffic={traffic} kind="all" label="כל הבתים (CSV)" />
+            <CsvExportButton houses={houses} kind="all" label="כל הבתים" />
           </div>
           <AdminPushPanel />
         </div>

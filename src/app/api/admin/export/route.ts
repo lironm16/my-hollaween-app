@@ -3,7 +3,6 @@ import { isAdmin } from "@/lib/admin";
 import { asCatalog, getAllHouses } from "@/lib/store";
 import { housesToCsv } from "@/lib/house-csv";
 import { toPublicHouse } from "@/lib/ids";
-import { getHouseTraffic } from "@/lib/traffic-store";
 
 export const runtime = "nodejs";
 
@@ -15,8 +14,7 @@ export async function GET(request: Request) {
   const format = new URL(request.url).searchParams.get("format");
   if (format === "csv") {
     const listed = houses.filter((house) => house.status !== "rejected").map(toPublicHouse);
-    const traffic = await getHouseTraffic();
-    const csv = housesToCsv(listed, traffic);
+    const csv = housesToCsv(listed);
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
