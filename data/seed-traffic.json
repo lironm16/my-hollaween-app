@@ -1,30 +1,130 @@
 {
   "updatedAt": "2026-09-06T00:00:00.000Z",
   "houses": {
-    "בית-1847": { "saved": 24, "routed": 11, "visited": 7 },
-    "בית-1848": { "saved": 18, "routed": 9, "visited": 4 },
-    "בית-1849": { "saved": 6, "routed": 2, "visited": 1 },
-    "בית-9310": { "saved": 31, "routed": 14, "visited": 12 },
-    "בית-9311": { "saved": 9, "routed": 3, "visited": 2 },
-    "בית-9312": { "saved": 15, "routed": 8, "visited": 5 },
-    "בית-9313": { "saved": 4, "routed": 1, "visited": 0 },
-    "בית-9314": { "saved": 22, "routed": 10, "visited": 8 },
-    "בית-9315": { "saved": 0, "routed": 0, "visited": 0 },
-    "בית-9317": { "saved": 13, "routed": 6, "visited": 3 },
-    "בית-2291": { "saved": 27, "routed": 12, "visited": 9 },
-    "בית-3304": { "saved": 8, "routed": 4, "visited": 2 },
-    "בית-4418": { "saved": 19, "routed": 7, "visited": 6 },
-    "בית-5520": { "saved": 11, "routed": 5, "visited": 3 },
-    "בית-5521": { "saved": 3, "routed": 0, "visited": 1 },
-    "בית-9124": { "saved": 16, "routed": 8, "visited": 4 },
-    "בית-8479": { "saved": 21, "routed": 9, "visited": 7 },
-    "בית-9201": { "saved": 14, "routed": 6, "visited": 5 },
-    "בית-9202": { "saved": 7, "routed": 2, "visited": 1 },
-    "בית-6637": { "saved": 5, "routed": 1, "visited": 0 },
-    "בית-7742": { "saved": 29, "routed": 13, "visited": 10 },
-    "בית-8859": { "saved": 10, "routed": 4, "visited": 2 },
-    "בית-9011": { "saved": 2, "routed": 1, "visited": 0 },
-    "בית-9203": { "saved": 17, "routed": 8, "visited": 6 },
-    "בית-9204": { "saved": 12, "routed": 5, "visited": 3 }
+    "בית-1847": {
+      "saved": 24,
+      "routed": 0,
+      "visited": 7
+    },
+    "בית-1848": {
+      "saved": 18,
+      "routed": 0,
+      "visited": 4
+    },
+    "בית-1849": {
+      "saved": 6,
+      "routed": 0,
+      "visited": 1
+    },
+    "בית-9310": {
+      "saved": 31,
+      "routed": 0,
+      "visited": 12
+    },
+    "בית-9311": {
+      "saved": 9,
+      "routed": 0,
+      "visited": 2
+    },
+    "בית-9312": {
+      "saved": 15,
+      "routed": 0,
+      "visited": 5
+    },
+    "בית-9313": {
+      "saved": 4,
+      "routed": 0,
+      "visited": 0
+    },
+    "בית-9314": {
+      "saved": 22,
+      "routed": 0,
+      "visited": 8
+    },
+    "בית-9315": {
+      "saved": 0,
+      "routed": 0,
+      "visited": 0
+    },
+    "בית-9317": {
+      "saved": 13,
+      "routed": 0,
+      "visited": 3
+    },
+    "בית-2291": {
+      "saved": 27,
+      "routed": 0,
+      "visited": 9
+    },
+    "בית-3304": {
+      "saved": 8,
+      "routed": 0,
+      "visited": 2
+    },
+    "בית-4418": {
+      "saved": 19,
+      "routed": 0,
+      "visited": 6
+    },
+    "בית-5520": {
+      "saved": 11,
+      "routed": 0,
+      "visited": 3
+    },
+    "בית-5521": {
+      "saved": 3,
+      "routed": 0,
+      "visited": 1
+    },
+    "בית-9124": {
+      "saved": 16,
+      "routed": 0,
+      "visited": 4
+    },
+    "בית-8479": {
+      "saved": 21,
+      "routed": 0,
+      "visited": 7
+    },
+    "בית-9201": {
+      "saved": 14,
+      "routed": 0,
+      "visited": 5
+    },
+    "בית-9202": {
+      "saved": 7,
+      "routed": 0,
+      "visited": 1
+    },
+    "בית-6637": {
+      "saved": 5,
+      "routed": 0,
+      "visited": 0
+    },
+    "בית-7742": {
+      "saved": 29,
+      "routed": 0,
+      "visited": 10
+    },
+    "בית-8859": {
+      "saved": 10,
+      "routed": 0,
+      "visited": 2
+    },
+    "בית-9011": {
+      "saved": 2,
+      "routed": 0,
+      "visited": 0
+    },
+    "בית-9203": {
+      "saved": 17,
+      "routed": 0,
+      "visited": 6
+    },
+    "בית-9204": {
+      "saved": 12,
+      "routed": 0,
+      "visited": 3
+    }
   }
 }

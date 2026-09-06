@@ -226,19 +226,6 @@ export function reportHouseTraffic(houseId: string, kind: TrafficKind, on: boole
   queueDelta(houseId, kind, on ? 1 : -1);
 }
 
-export function reportRouteStops(houseIds: string[]) {
-  loadReported();
-  bindLifecycle();
-  let queued = false;
-  for (const houseId of houseIds) {
-    if (reported.routed.has(houseId)) continue;
-    reported.routed.add(houseId);
-    queueDelta(houseId, "routed", 1);
-    queued = true;
-  }
-  if (queued) persistReported("routed");
-}
-
 export function useHouseTraffic() {
   const [houses, setHouses] = useState<Record<string, HouseTraffic>>(() => cache);
   const [queued, setQueued] = useState<Record<string, HouseTraffic>>(() => ({ ...pending }));

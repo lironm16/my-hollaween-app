@@ -65,7 +65,7 @@ export default function AdminAlertsPage() {
           <div className="space-y-2 rounded-xl bg-black/25 p-3">
             <p className="text-base font-medium text-amber-100">הורדה להדפסה</p>
             <p className="text-base text-violet-300">
-              CSV עם שם, כתובת, שעות, ממתקים, פחד, קישוט, רגישויות, וכמה שמרו / במסלול / ביקרו. נפתח
+              CSV עם שם, כתובת, שעות, ממתקים, פחד, קישוט, רגישויות, וכמה שמרו / ביקרו. נפתח
               באקסל או Google Sheets, ואז אפשר להדפיס. ברשימה הראשית יש כפתור דומה לרשימה המסוננת
               או לבתים ששמרתם בלב.
             </p>

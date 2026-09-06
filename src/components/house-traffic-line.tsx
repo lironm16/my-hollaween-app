@@ -15,13 +15,13 @@ export function HouseTrafficLine({
   className?: string;
 }) {
   const counts = traffic ?? EMPTY_TRAFFIC;
-  const total = counts.saved + counts.routed + counts.visited;
+  const total = counts.saved + counts.visited;
   if (total <= 0) {
     if (variant === "owner" && !compact) {
       return (
         <p className={cn("text-base text-violet-300", className)}>
-          עדיין אין סימונים מהשכונה לבית הזה. כשמשפחות ישמרו אותו, יוסיפו למסלול או יסמנו «ביקרתי» —
-          יופיע כאן כמה אנשים מתכננים להגיע.
+          עדיין אין סימונים מהשכונה לבית הזה. כשמשפחות ישמרו אותו או יסמנו «ביקרתי» — יופיע כאן כמה
+          אנשים מתכננים להגיע.
         </p>
       );
     }
@@ -30,7 +30,6 @@ export function HouseTrafficLine({
 
   const bits = [
     counts.saved > 0 ? `${counts.saved} שמרו` : null,
-    counts.routed > 0 ? `${counts.routed} במסלול` : null,
     counts.visited > 0 ? `${counts.visited} ביקרו` : null,
   ].filter(Boolean);
 
@@ -51,8 +50,8 @@ export function HouseTrafficLine({
       <div className={cn("rounded-xl bg-emerald-950/40 px-3 py-2 ring-1 ring-emerald-500/20", className)}>
         <p className="text-base font-medium text-emerald-100">תנועה לבית · {bits.join(" · ")}</p>
         <p className="mt-1 text-base text-emerald-50/90">
-          זה לא סופר ילדים בפתח — רק כמה טלפונים שמרו, בנו מסלול, או סימנו ביקור. המספרים מתעדכנים
-          בערך כל דקה, לא בכל לחיצה, כדי לא להעמיס על השרת בלילה.
+          זה לא סופר ילדים בפתח — רק כמה טלפונים שמרו את הבית או סימנו ביקור. פתיחת מסלול לא נספרת,
+          כי הרבה פותחים רק כדי לראות. המספרים מתעדכנים בערך כל דקה.
         </p>
       </div>
     );

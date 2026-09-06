@@ -25,7 +25,6 @@ const HEADERS = [
   "ללא שומשום",
   "הערות",
   "שמרו",
-  "במסלול",
   "ביקרו",
 ] as const;
 
@@ -66,7 +65,6 @@ export function housesToCsv(
         offersSensitivity(house, "sesameFree") ? "כן" : "לא",
         house.notes || "",
         stats?.saved ?? 0,
-        stats?.routed ?? 0,
         stats?.visited ?? 0,
       ]
         .map(csvCell)

@@ -38,7 +38,7 @@ import { ScareMark, ScareSign } from "@/components/scare-glyphs";
 import { isOpenNow } from "@/lib/hours";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { useAppNow } from "@/hooks/use-app-clock";
-import { reportHouseTraffic, reportRouteStops, useHouseTraffic } from "@/hooks/use-house-traffic";
+import { reportHouseTraffic, useHouseTraffic } from "@/hooks/use-house-traffic";
 import { useOnlineDevices } from "@/hooks/use-presence";
 import {
   backupLooksNewer,
@@ -390,9 +390,6 @@ export function NeighborhoodApp({
     setEditing(false);
     setRouteMode(true);
     pinCurrentRoute(origin);
-    reportRouteStops(
-      visible.filter((house) => !visits.visitedIds.includes(house.id)).map((house) => house.id),
-    );
   }
 
   function onToggleLike(id: string) {
