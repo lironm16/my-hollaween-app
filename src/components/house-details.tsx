@@ -10,6 +10,7 @@ import { CodesCopy } from "@/components/codes-copy";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
 import { HouseTags } from "@/components/house-tags";
 import { formatDisplayAddress } from "@/lib/config";
+import { formatDistance } from "@/lib/geo";
 import { formatHoursLabel } from "@/lib/hours";
 import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl } from "@/lib/nav-links";
@@ -32,6 +33,8 @@ export function HouseDetails({
   onToggleEdit,
   chrome = "page",
   actions,
+  compact = false,
+  distanceM,
 }: {
   house: PublicHouse;
   extra?: ReactNode;
@@ -49,6 +52,9 @@ export function HouseDetails({
   actions?: ReactNode;
   /** Sheet cards have their own action bar; still show the title and details. */
   chrome?: "page" | "sheet";
+  /** List collapsed state: same top block as the map card, without the long details. */
+  compact?: boolean;
+  distanceM?: number;
 }) {
   const displayAddress = formatDisplayAddress(house);
   const [ownedEditCode, setOwnedEditCode] = useState<string | undefined>(undefined);
@@ -70,14 +76,42 @@ export function HouseDetails({
   }, [house.id, house.photoUrl]);
   const sheet = chrome === "sheet";
   const hours = formatHoursLabel(house);
-  const addressLine = hours ? `${displayAddress} · ${hours}` : displayAddress;
+  const parts = [displayAddress, hours, distanceM !== undefined ? formatDistance(distanceM) : ""]
+    .filter(Boolean)
+    .join(" · ");
+  const photo =
+    !compact && house.photoUrl && !photoBroken ? (
+      loadPhoto ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={house.photoUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+          onError={() => setPhotoBroken(true)}
+          className="h-40 w-full rounded-xl object-cover ring-1 ring-orange-500/25"
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowPhoto(true);
+          }}
+          className="w-full rounded-xl bg-[#2a1638] px-3 py-3 text-base text-amber-100 ring-1 ring-orange-500/20"
+        >
+          יש תמונת קישוט — לחצו רק אם הרשת פנויה
+        </button>
+      )
+    ) : null;
   return (
     <div className="space-y-3">
       <HoursStatusBanner house={house} />
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
-          <p className="text-base text-violet-200">{addressLine}</p>
+          <p className="text-base text-violet-200">{parts}</p>
         </div>
         {sheet ? null : (
           <div className="flex shrink-0 items-center gap-0.5">
@@ -85,7 +119,10 @@ export function HouseDetails({
               <button
                 type="button"
                 aria-label={visited ? "סמנו כלא ביקרתי" : "סמנו שביקרתי"}
-                onClick={onToggleVisited}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleVisited();
+                }}
                 className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
               >
                 <VisitedCheck visited={visited} />
@@ -95,7 +132,10 @@ export function HouseDetails({
               <button
                 type="button"
                 aria-label={liked ? "הסירו מהשמורים" : "שמרו את הבית"}
-                onClick={onToggleLike}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleLike();
+                }}
                 className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
               >
                 <Heart className={cn("size-6", liked && "fill-orange-500 text-orange-500")} />
@@ -106,7 +146,10 @@ export function HouseDetails({
                 type="button"
                 aria-label={editing ? "סגירת עריכה" : "עריכת הבית"}
                 aria-pressed={editing}
-                onClick={onToggleEdit}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleEdit();
+                }}
                 className={cn(
                   "rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15",
                   editing && "bg-orange-500/20 text-orange-300",
@@ -119,28 +162,6 @@ export function HouseDetails({
         )}
       </div>
       {actions}
-      {house.photoUrl && !photoBroken ? (
-        loadPhoto ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={house.photoUrl}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            referrerPolicy="no-referrer"
-            onError={() => setPhotoBroken(true)}
-            className="h-40 w-full rounded-xl object-cover ring-1 ring-orange-500/25"
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowPhoto(true)}
-            className="w-full rounded-xl bg-[#2a1638] px-3 py-3 text-base text-amber-100 ring-1 ring-orange-500/20"
-          >
-            יש תמונת קישוט — לחצו רק אם הרשת פנויה
-          </button>
-        )
-      ) : null}
       <div className="flex flex-wrap items-center gap-1.5">
         <HouseTags house={house} />
         {house.status === "pending" ? <Badge variant="secondary">ממתין לאישור</Badge> : null}
@@ -150,32 +171,39 @@ export function HouseDetails({
           איך מגיעים: {house.arrival}
         </p>
       ) : null}
-      {house.description ? (
-        <p className="text-base leading-relaxed text-violet-50">{house.description}</p>
-      ) : null}
-      {house.notes ? (
-        <p className="text-base text-amber-200/90">הערה: {house.notes}</p>
-      ) : null}
-      <CodesCopy editCode={editCode} />
-      {sheet ? null : (
-      <div className="flex flex-wrap gap-2 pt-1">
-        <a
-          href={houseMapsUrl(house)}
-          target="_blank"
-          rel="noreferrer"
-          className={cn(buttonVariants({ size: "sm" }))}
-        >
-          ניווט ב־Google Maps
-        </a>
-        <Link
-          href={`/house/${encodeURIComponent(house.id)}`}
-          className={cn(buttonVariants({ size: "sm", variant: "ghost" }))}
-        >
-          קישור לבית
-        </Link>
-      </div>
+      {compact ? null : (
+        <>
+          {house.description ? (
+            <p className="text-base leading-relaxed text-violet-50">{house.description}</p>
+          ) : null}
+          {house.notes ? (
+            <p className="text-base text-amber-200/90">הערה: {house.notes}</p>
+          ) : null}
+          <CodesCopy editCode={editCode} />
+          {sheet ? null : (
+            <div className="flex flex-wrap gap-2 pt-1">
+              <a
+                href={houseMapsUrl(house)}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className={cn(buttonVariants({ size: "sm" }))}
+              >
+                ניווט ב־Google Maps
+              </a>
+              <Link
+                href={`/house/${encodeURIComponent(house.id)}`}
+                onClick={(e) => e.stopPropagation()}
+                className={cn(buttonVariants({ size: "sm", variant: "ghost" }))}
+              >
+                קישור לבית
+              </Link>
+            </div>
+          )}
+          {photo}
+          {extra}
+        </>
       )}
-      {extra}
     </div>
   );
 }

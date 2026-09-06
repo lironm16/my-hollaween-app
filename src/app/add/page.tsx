@@ -108,7 +108,7 @@ export default function AddPage() {
               בחרו שם וכתובת אמיתית מהרשימה. אחרי אישור השרת הבית מופיע במפה.
             </p>
             <PersistNote className="mb-4" />
-            <HouseForm submitLabel="הוסיפו למפה" onSubmit={onSubmit} busy={busy} />
+            <HouseForm submitLabel="שמירה" onSubmit={onSubmit} busy={busy} />
           </>
         )}
       </main>

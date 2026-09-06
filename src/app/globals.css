@@ -1361,8 +1361,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   background: #160b20;
   border-radius: 22px 22px 0 0;
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(249, 115, 22, 0.28);
-  border-bottom: 0;
+  border-inline: 1px solid rgba(249, 115, 22, 0.28);
   touch-action: pan-y;
   user-select: none;
   transition: height 0.22s ease;
