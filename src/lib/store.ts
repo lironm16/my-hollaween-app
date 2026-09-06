@@ -704,7 +704,7 @@ export async function notifyHouseKind(options: {
   if (!options.admin && !options.ownerSession && house.editCode !== options.editCode) {
     return { error: "forbidden" as const };
   }
-  if (AUTO_PUSH_KINDS.has(options.kind)) return { error: "auto" as const };
+  if (AUTO_PUSH_KINDS.has(options.kind) && !options.admin) return { error: "auto" as const };
   if (!houseMatchesNotifyKind(house, options.kind)) return { error: "mismatch" as const };
   const stored = (await loadDb()).pushSettings as StoredPushSettings | undefined;
   const payload = payloadForKind(options.kind, house, stored);

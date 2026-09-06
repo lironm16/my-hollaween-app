@@ -9,7 +9,7 @@ export function TabTitleCycle() {
   useEffect(() => {
     const words = config.titleWords;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      document.title = config.appName;
+      document.title = config.brandEn;
       return;
     }
 
@@ -22,7 +22,7 @@ export function TabTitleCycle() {
 
     return () => {
       window.clearInterval(timer);
-      document.title = config.appName;
+      document.title = config.brandEn;
     };
   }, []);
 

@@ -7,7 +7,7 @@ export default function DecorPreviewPage() {
     <div className="min-h-dvh bg-[#140a1c] px-4 py-6 text-orange-50" dir="rtl">
       <div className="mx-auto max-w-lg space-y-6">
         <header className="space-y-3">
-          <p className="text-base text-violet-300">{config.appName} · בחירת אייקון</p>
+          <p className="text-base text-violet-300">{config.brandEn} · בחירת אייקון</p>
           <h1 className="text-2xl font-semibold text-orange-100">איזה קישוט יותר ברור?</h1>
           <p className="text-base text-violet-200">
             ירוק = קריצה, כתום = חגיגה, אדום = פיצוץ, אפור עם קו = לא מקושט. בטופס ובדלפק: מספר 1,

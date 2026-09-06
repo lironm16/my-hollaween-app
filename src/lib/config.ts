@@ -31,11 +31,12 @@ const NEIGHBORHOOD_CENTERS: Record<NeighborhoodId, { lat: number; lng: number }>
 };
 
 export const config = {
+  /** Home-screen / PWA / OS notification name. In-app chrome uses brandEn. */
   appName: "SpookyHouzz",
-  brandEn: "SpookyHouzz",
+  brandEn: "Halloween",
   brandHe: "בשכונה",
-  /** Browser tab cycles these. Home-screen / PWA label is the English brand. */
-  titleWords: ["SpookyHouzz"] as const,
+  /** Browser tab cycles these. Home-screen / PWA label stays the app name. */
+  titleWords: ["Halloween"] as const,
   tagline: "מפת הבתים המפחידים של השכונה",
   neighborhood:
     process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שיכון ותיקים · חרוזים · נחלת גנים",

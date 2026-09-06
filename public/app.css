@@ -682,8 +682,8 @@
   .max-w-\[calc\(100\%-2rem\)\] {
     max-width: calc(100% - 2rem);
   }
-  .max-w-\[min\(100\%\,16rem\)\] {
-    max-width: min(100%, 16rem);
+  .max-w-\[min\(100\%\,18rem\)\] {
+    max-width: min(100%, 18rem);
   }
   .max-w-full {
     max-width: 100%;
@@ -755,6 +755,9 @@
   }
   .grid-cols-1 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .flex-col {
     flex-direction: column;
@@ -3917,8 +3920,8 @@ svg.leaflet-zoom-animated {
 }
 .pin-apt-dots {
   position: absolute;
-  right: -5px;
-  bottom: -4px;
+  right: -6px;
+  bottom: -5px;
   z-index: 4;
   display: flex;
   flex-direction: row-reverse;
@@ -3931,18 +3934,26 @@ svg.leaflet-zoom-animated {
   border-radius: 999px;
   border: 3px solid #fff7ed;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 78%;
 }
 .pin-apt-dot:last-child {
   margin-right: 0;
 }
+.pin-apt-dot.is-plenty,
+.pin-apt-dot.is-low,
+.pin-apt-dot.is-out {
+  background-image: url("/icons/pin-candy.png");
+}
 .pin-apt-dot.is-plenty {
-  background: #047857;
+  background-color: #047857;
 }
 .pin-apt-dot.is-low {
-  background: #d97706;
+  background-color: #d97706;
 }
 .pin-apt-dot.is-out {
-  background: #b91c1c;
+  background-color: #b91c1c;
 }
 .pin-apt-dot.is-closed {
   background: #e11d48;
@@ -3972,7 +3983,7 @@ svg.leaflet-zoom-animated {
   height: 19px;
   font-size: 0;
   line-height: 0;
-  transform: translateY(4px);
+  transform: translate(4px, 4px);
 }
 .pin-houses i {
   position: absolute;
@@ -4595,9 +4606,9 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   z-index: 50;
   display: flex;
   flex-direction: column;
-  height: 50%;
-  max-height: 50dvh;
-  max-height: calc(var(--app-h, 100svh) * 0.5);
+  height: 70%;
+  max-height: 70dvh;
+  max-height: calc(var(--app-h, 100svh) * 0.7);
   overflow: hidden;
   background: #160b20;
   border-radius: 22px 22px 0 0;

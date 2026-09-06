@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { HouseForm, type HouseFormExtras } from "@/components/house-form";
 import { PushNotice } from "@/components/push-notice";
 import { Button } from "@/components/ui/button";
-import { notifyCatalogChanged } from "@/lib/offline-db";
+import { notifyCatalogChanged, applyLocalHousePatch, queueHouseWrite, rememberPublishedHouse, saveOwnedHouse } from "@/lib/offline-db";
 import { publishHousePhoto } from "@/lib/house-photo";
 import { readApiJson } from "@/lib/api-json";
 import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
@@ -45,9 +45,33 @@ export function NightDesk({
     noticeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [notice]);
 
+  function keepLocal(patch: Partial<HouseInput> & { photoUrl?: string; ownerFrozenUntil?: string | null }) {
+    const next = applyLocalHousePatch(house, patch);
+    const url = admin
+      ? `/api/admin/houses/${encodeURIComponent(house.id)}`
+      : `/api/houses/${encodeURIComponent(house.id)}`;
+    queueHouseWrite({
+      id: house.id,
+      method: "PATCH",
+      url,
+      body: admin ? { ...patch } : { ...patch, editCode },
+      house: next,
+      editCode,
+      createdAt: new Date().toISOString(),
+    });
+    onUpdated(next);
+    notifyCatalogChanged();
+    setNotice(null);
+    toast.success("נשמר במכשיר · יישלח כשיש רשת");
+    return next;
+  }
+
   async function save(patch: Partial<HouseInput> & { photoUrl?: string; ownerFrozenUntil?: string | null }) {
     setBusy(true);
     try {
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        return keepLocal(patch);
+      }
       const includeEndpoint = await senderPushEndpoint();
       const url = admin
         ? `/api/admin/houses/${encodeURIComponent(house.id)}`
@@ -73,6 +97,15 @@ export function NightDesk({
         return null;
       }
       onUpdated(data.house);
+      rememberPublishedHouse(data.house);
+      if (editCode) {
+        saveOwnedHouse({
+          id: data.house.id,
+          name: data.house.name,
+          editCode,
+          preview: data.house,
+        });
+      }
       notifyCatalogChanged();
       if (data.push?.autoSent) {
         setNotice({
@@ -94,8 +127,7 @@ export function NightDesk({
       }
       return data.house;
     } catch {
-      toast.error("אין קשר לשרת");
-      return null;
+      return keepLocal(patch);
     } finally {
       setBusy(false);
     }
