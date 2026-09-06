@@ -107,10 +107,13 @@ function pinFaceHtml(house: PublicHouse) {
   return `<img class="pin-scare" src="${src}" alt="" />`;
 }
 
-function clusterCandyDotsHtml(houses: PublicHouse[]) {
+function clusterAptDotsHtml(houses: PublicHouse[], now: Date) {
   if (houses.length <= 1) return "";
   const dots = houses
     .map((house) => {
+      const visit = pinVisitKind(house, now);
+      if (visit === "closed") return `<i class="pin-apt-dot is-closed"></i>`;
+      if (visit === "break") return `<i class="pin-apt-dot is-break"></i>`;
       const dot = candyPinDot(house) ?? "out";
       return `<i class="pin-apt-dot is-${dot}"></i>`;
     })
@@ -211,7 +214,7 @@ function clusterIcon(
 
   if (!selectedHere) {
     const wrapped = wrapRoutePin(
-      `<div class="house-pin is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterCandyDotsHtml(houses)}</div>`,
+      `<div class="house-pin is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterAptDotsHtml(houses, now)}</div>`,
       routeOrder,
     );
     return L.divIcon({
@@ -259,7 +262,7 @@ function clusterIcon(
   const badge = routeOrder ? routeBadgeHtml(routeOrder) : "";
   return L.divIcon({
     className: `pumpkin-pin-icon pumpkin-pin-fan${selectedClass}`,
-    html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" aria-hidden="true"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterCandyDotsHtml(houses)}</div>${apts}${badge}</div>`,
+    html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" aria-hidden="true"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterAptDotsHtml(houses, now)}</div>${apts}${badge}</div>`,
     iconSize: [width, height],
     iconAnchor: [width / 2, height],
   });
@@ -462,10 +465,13 @@ function ClusterMarker({
   const openingSoon = !closingSoon && cluster.houses.some((house) => isOpeningSoon(house, now));
   const overview = Boolean(clusterOverview && selectedHere);
   const visitedKey = cluster.houses.map((house) => (visitedIds.includes(house.id) ? "1" : "0")).join("");
+  const statusKey = cluster.houses
+    .map((house) => pinVisitKind(house, now) ?? candyPinDot(house) ?? "x")
+    .join("");
 
   return (
     <Marker
-      key={`${cluster.key}-${selectedHere ? (overview ? "peek" : selectedId ?? "open") : "shut"}-${routeOrder ?? 0}-${visitedKey}`}
+      key={`${cluster.key}-${selectedHere ? (overview ? "peek" : selectedId ?? "open") : "shut"}-${routeOrder ?? 0}-${visitedKey}-${statusKey}`}
       position={[cluster.lat, cluster.lng]}
       icon={clusterIcon(cluster, selectedId, now, routeOrder, overview, visitedIds)}
       zIndexOffset={

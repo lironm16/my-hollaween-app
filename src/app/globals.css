@@ -644,6 +644,7 @@
 }
 
 .pin-apt-dot {
+  position: relative;
   width: 24px;
   height: 24px;
   margin-inline-end: -8px;
@@ -681,8 +682,39 @@
   background: #e11d48;
 }
 
+.pin-apt-dot.is-closed::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 50%;
+  height: 5px;
+  border-radius: 1px;
+  background: #fff;
+  transform: translateY(-50%);
+}
+
 .pin-apt-dot.is-break {
   background: #6b7280;
+}
+
+.pin-apt-dot.is-break::before,
+.pin-apt-dot.is-break::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  width: 4px;
+  height: 10px;
+  border-radius: 999px;
+  background: #fff;
+}
+
+.pin-apt-dot.is-break::before {
+  left: 4px;
+}
+
+.pin-apt-dot.is-break::after {
+  right: 4px;
 }
 
 .house-pin .pin-scare {

@@ -531,6 +531,10 @@
     width: 82%;
     height: 82%;
   }
+  .size-\[86\%\] {
+    width: 86%;
+    height: 86%;
+  }
   .size-\[108\%\] {
     width: 108%;
     height: 108%;
@@ -1263,12 +1267,6 @@
   }
   .bg-violet-900 {
     background-color: var(--color-violet-900);
-  }
-  .bg-violet-950\/50 {
-    background-color: color-mix(in srgb, oklch(28.3% 0.141 291.089) 50%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-violet-950) 50%, transparent);
-    }
   }
   .bg-violet-950\/70 {
     background-color: color-mix(in srgb, oklch(28.3% 0.141 291.089) 70%, transparent);
@@ -3976,6 +3974,7 @@ svg.leaflet-zoom-animated {
   pointer-events: none;
 }
 .pin-apt-dot {
+  position: relative;
   width: 24px;
   height: 24px;
   margin-inline-end: -8px;
@@ -4006,8 +4005,35 @@ svg.leaflet-zoom-animated {
 .pin-apt-dot.is-closed {
   background: #e11d48;
 }
+.pin-apt-dot.is-closed::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 50%;
+  height: 5px;
+  border-radius: 1px;
+  background: #fff;
+  transform: translateY(-50%);
+}
 .pin-apt-dot.is-break {
   background: #6b7280;
+}
+.pin-apt-dot.is-break::before,
+.pin-apt-dot.is-break::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  width: 4px;
+  height: 10px;
+  border-radius: 999px;
+  background: #fff;
+}
+.pin-apt-dot.is-break::before {
+  left: 4px;
+}
+.pin-apt-dot.is-break::after {
+  right: 4px;
 }
 .house-pin .pin-scare {
   display: block;
