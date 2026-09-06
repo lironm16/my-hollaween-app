@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { notifyCatalogChanged } from "@/lib/offline-db";
 import { publishHousePhoto } from "@/lib/house-photo";
 import { readApiJson } from "@/lib/api-json";
+import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
 import type { HouseInput, PublicHouse } from "@/lib/types";
 import { DEFAULT_PUSH_TEMPLATES, type PushKind } from "@/lib/push-templates";
 
@@ -47,13 +48,14 @@ export function NightDesk({
   async function save(patch: Partial<HouseInput> & { photoUrl?: string; ownerFrozenUntil?: string | null }) {
     setBusy(true);
     try {
+      const includeEndpoint = await senderPushEndpoint();
       const url = admin
         ? `/api/admin/houses/${encodeURIComponent(house.id)}`
         : `/api/houses/${encodeURIComponent(house.id)}`;
       const res = await fetch(url, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(admin ? patch : { ...patch, editCode }),
+        body: JSON.stringify(admin ? { ...patch, includeEndpoint } : { ...patch, editCode, includeEndpoint }),
       });
       const data = await readApiJson<{
         error?: string;
@@ -78,6 +80,7 @@ export function NightDesk({
           title: data.push.title ?? "",
           body: data.push.body ?? "",
         });
+        void showLocalPush(data.push.title ?? "", data.push.body ?? "", `/?focus=${encodeURIComponent(house.id)}`);
         toast.success("נשמר · התראה נשלחה לשכונה");
       } else if (data.push?.offer) {
         setNotice({ mode: "offer", offer: data.push.offer });
@@ -103,10 +106,11 @@ export function NightDesk({
     const offer = notice.offer;
     setOfferBusy(true);
     try {
+      const includeEndpoint = await senderPushEndpoint();
       const res = await fetch(`/api/houses/${encodeURIComponent(house.id)}/notify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ editCode, kind: offer.kind }),
+        body: JSON.stringify({ editCode, kind: offer.kind, includeEndpoint }),
       });
       const data = await readApiJson<{ error?: string; sent?: number }>(res);
       if (!res.ok) {
@@ -115,6 +119,7 @@ export function NightDesk({
       }
       toast.success(`התראה נשלחה ל־${data.sent ?? 0} מכשירים`);
       setNotice({ mode: "sent", title: offer.title, body: offer.body });
+      void showLocalPush(offer.title, offer.body, `/?focus=${encodeURIComponent(house.id)}`);
     } catch {
       toast.error("אין קשר לשרת");
     } finally {

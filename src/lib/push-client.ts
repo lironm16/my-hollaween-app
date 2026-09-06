@@ -207,3 +207,30 @@ export async function disablePushAlerts(): Promise<"off"> {
   }
   return "off";
 }
+
+export async function senderPushEndpoint() {
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    return (await reg.pushManager.getSubscription())?.endpoint;
+  } catch {
+    return undefined;
+  }
+}
+
+export async function showLocalPush(title: string, body: string, url = "/") {
+  try {
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    const reg = await navigator.serviceWorker.ready;
+    await reg.showNotification(title, {
+      body,
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      lang: "he",
+      dir: "rtl",
+      data: { url },
+    });
+  } catch {
+    /* ignore */
+  }
+}
+

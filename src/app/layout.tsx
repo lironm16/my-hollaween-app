@@ -22,11 +22,11 @@ const creepster = Creepster({
 export const metadata: Metadata = {
   title: config.appName,
   description: `${config.tagline} — ${config.neighborhood}`,
-  applicationName: config.brandHe,
+  applicationName: config.appName,
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: config.brandHe,
+    title: config.appName,
     statusBarStyle: "black-translucent",
   },
   icons: {

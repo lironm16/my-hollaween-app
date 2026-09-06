@@ -600,7 +600,7 @@ export function HouseForm({
         </Field>
       </FormSection>
       <FormSection title="תמונת קישוט">
-        <p className="text-base text-violet-300">אפשר גם להעלות אחרי שתקשטו את הבית או את העץ.</p>
+        <p className="text-base text-violet-300">אפשר גם להעלות אחרי שתקשטו את הבית.</p>
         {photoPreview || (existingPhoto && !clearPhoto) ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

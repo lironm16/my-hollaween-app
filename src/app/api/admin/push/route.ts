@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
-import { sanitizePushPayload } from "@/lib/push";
+import { sanitizePushPayload, readIncludeEndpoint } from "@/lib/push";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { broadcastPush } from "@/lib/store";
 
@@ -25,11 +25,7 @@ export async function POST(request: Request) {
   }
   try {
     const payload = sanitizePushPayload({ title, body, url: "/", topic: "admin" });
-    const includeEndpoint =
-      typeof json?.includeEndpoint === "string" && json.includeEndpoint.length > 20
-        ? json.includeEndpoint
-        : undefined;
-    const result = await broadcastPush(payload, includeEndpoint);
+    const result = await broadcastPush(payload, readIncludeEndpoint(json));
     return NextResponse.json({ ok: true, ...result, title: payload.title, body: payload.body });
   } catch {
     return NextResponse.json({ error: "השליחה נכשלה." }, { status: 500 });

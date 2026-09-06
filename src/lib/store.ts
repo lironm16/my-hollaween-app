@@ -336,7 +336,10 @@ export async function getHouse(id: string): Promise<House | undefined> {
   return db.houses.find((h) => h.id === id);
 }
 
-export async function submitHouse(input: HouseInput) {
+export async function submitHouse(
+  input: HouseInput,
+  options?: { includeEndpoint?: string },
+) {
   await assertRealAddress(input);
   let id = "";
   let editCode = "";
@@ -384,7 +387,7 @@ export async function submitHouse(input: HouseInput) {
     db.updatedAt = now;
     return house;
   });
-  const push = await dispatchHousePush(null, house, "houseAdded");
+  const push = await dispatchHousePush(null, house, "houseAdded", undefined, options?.includeEndpoint);
   return { house, push };
 }
 
@@ -392,9 +395,11 @@ export async function updateByEditCode(
   id: string,
   editCode: string,
   patch: Partial<HouseInput> & NightPatch,
+  options?: { includeEndpoint?: string },
 ) {
   const current = await getHouse(id);
-  if (!current || current.editCode !== editCode) return null;
+  if (!current) return { error: "missing" as const };
+  if (current.editCode !== editCode) return { error: "forbidden" as const };
   const prev = snapshotHouse(current);
   if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
     await assertRealAddress({
@@ -429,8 +434,8 @@ export async function updateByEditCode(
     db.updatedAt = house.updatedAt;
     return house;
   });
-  if (!updated) return null;
-  const push = await dispatchHousePush(prev, updated, undefined, patch);
+  if (!updated) return { error: "missing" as const };
+  const push = await dispatchHousePush(prev, updated, undefined, patch, options?.includeEndpoint);
   return { house: updated, push };
 }
 
@@ -486,6 +491,7 @@ export async function adminUpdate(
     status?: HouseStatus;
     rejectionReason?: string;
   },
+  options?: { includeEndpoint?: string },
 ) {
   const current = await getHouse(id);
   if (!current) return null;
@@ -572,7 +578,7 @@ export async function adminUpdate(
     return house;
   });
   if (!updated) return null;
-  const push = await dispatchHousePush(prev, updated, undefined, patch);
+  const push = await dispatchHousePush(prev, updated, undefined, patch, options?.includeEndpoint);
   return { house: updated, push };
 }
 
@@ -641,6 +647,7 @@ async function dispatchHousePush(
   next: House,
   forcedKind?: PushKind,
   patch?: { visit?: VisitState; treatStock?: TreatStock },
+  includeEndpoint?: string,
 ): Promise<HousePushResult | undefined> {
   const kind =
     forcedKind ??
@@ -651,7 +658,7 @@ async function dispatchHousePush(
   const payload = payloadForKind(kind, next, stored);
   if (!payload) return { kind };
   if (AUTO_PUSH_KINDS.has(kind)) {
-    void broadcastPush(payload).catch(() => undefined);
+    void broadcastPush(payload, includeEndpoint).catch(() => undefined);
     return { kind, autoSent: true, title: payload.title, body: payload.body };
   }
   return { kind, offer: { kind, title: payload.title, body: payload.body } };
@@ -689,16 +696,20 @@ export async function notifyHouseKind(options: {
   kind: PushKind;
   editCode?: string;
   admin?: boolean;
+  ownerSession?: boolean;
+  includeEndpoint?: string;
 }) {
   const house = await getHouse(options.id);
   if (!house) return { error: "missing" as const };
-  if (!options.admin && house.editCode !== options.editCode) return { error: "forbidden" as const };
+  if (!options.admin && !options.ownerSession && house.editCode !== options.editCode) {
+    return { error: "forbidden" as const };
+  }
   if (AUTO_PUSH_KINDS.has(options.kind)) return { error: "auto" as const };
   if (!houseMatchesNotifyKind(house, options.kind)) return { error: "mismatch" as const };
   const stored = (await loadDb()).pushSettings as StoredPushSettings | undefined;
   const payload = payloadForKind(options.kind, house, stored);
   if (!payload) return { error: "disabled" as const };
-  const result = await broadcastPush(payload);
+  const result = await broadcastPush(payload, options.includeEndpoint);
   return { ok: true as const, ...result, title: payload.title, body: payload.body };
 }
 

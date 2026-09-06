@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { readApiJson } from "@/lib/api-json";
 import { cn } from "@/lib/utils";
+import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
 import type { PushKind, PushTemplateMeta } from "@/lib/push-templates";
 
 function Toggle({ on, onClick, disabled }: { on: boolean; onClick: () => void; disabled?: boolean }) {
@@ -34,31 +35,8 @@ function Toggle({ on, onClick, disabled }: { on: boolean; onClick: () => void; d
   );
 }
 
-async function senderPushEndpoint() {
-  try {
-    const reg = await navigator.serviceWorker.ready;
-    return (await reg.pushManager.getSubscription())?.endpoint;
-  } catch {
-    return undefined;
-  }
-}
-
 async function showSenderNotice(title: string, body: string) {
-  try {
-    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
-    const reg = await navigator.serviceWorker.ready;
-    await reg.showNotification(title, {
-      body,
-      icon: "/icon-192.png",
-      badge: "/icon-192.png",
-      lang: "he",
-      dir: "rtl",
-      tag: "admin-broadcast",
-      data: { url: "/" },
-    });
-  } catch {
-    /* ignore */
-  }
+  await showLocalPush(title, body);
 }
 
 export function AdminPushPanel() {

@@ -141,6 +141,16 @@ export function removeOwnedHouse(id: string) {
   }
 }
 
+export function rememberPublishedHouse(house: PublicHouse) {
+  const cached = loadCatalogCacheSync();
+  const next: Catalog = {
+    updatedAt: house.updatedAt || new Date().toISOString(),
+    neighborhood: cached?.neighborhood ?? "",
+    houses: [...(cached?.houses ?? []).filter((item) => item.id !== house.id), house],
+  };
+  void saveCatalogCache(next);
+}
+
 export function notifyCatalogChanged() {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new Event("hw-catalog-changed"));

@@ -6,6 +6,8 @@ export type PublishResult = {
   house: PublicHouse;
   editCode: string;
   autoPush?: boolean;
+  pushTitle?: string;
+  pushBody?: string;
 };
 
 function clock(value: string) {
@@ -43,14 +45,17 @@ export function readyHouseInput(input: HouseInput): HouseInput {
 }
 
 /** Always posts to the server. Never keeps a house only on the phone. */
-export async function publishHouse(input: HouseInput): Promise<PublishResult> {
+export async function publishHouse(
+  input: HouseInput,
+  options?: { includeEndpoint?: string },
+): Promise<PublishResult> {
   const body = readyHouseInput(input);
   let res: Response;
   try {
     res = await fetch("/api/houses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ ...body, includeEndpoint: options?.includeEndpoint }),
     });
   } catch {
     throw new Error("אין חיבור לשרת. בדקו את הרשת ונסו שוב.");
@@ -59,10 +64,16 @@ export async function publishHouse(input: HouseInput): Promise<PublishResult> {
     error?: string;
     house?: PublicHouse;
     editCode?: string;
-    push?: { autoSent?: boolean };
+    push?: { autoSent?: boolean; title?: string; body?: string };
   }>(res);
   if (res.ok && data.house && data.editCode) {
-    return { house: data.house, editCode: data.editCode, autoPush: Boolean(data.push?.autoSent) };
+    return {
+      house: data.house,
+      editCode: data.editCode,
+      autoPush: Boolean(data.push?.autoSent),
+      pushTitle: data.push?.title,
+      pushBody: data.push?.body,
+    };
   }
   throw new Error(data.error || "לא הצלחנו לשמור את הבית בשרת. נסו שוב.");
 }

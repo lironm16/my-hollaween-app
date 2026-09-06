@@ -3,6 +3,7 @@ import { isAdmin } from "@/lib/admin";
 import { adminPatchSchema } from "@/lib/schema";
 import { adminDeleteHouse, adminUpdate } from "@/lib/store";
 import { geocodeHttpError } from "@/lib/geocode";
+import { readIncludeEndpoint } from "@/lib/push";
 
 export const runtime = "nodejs";
 
@@ -20,7 +21,9 @@ export async function PATCH(
     return NextResponse.json({ error: "נתונים לא תקינים." }, { status: 400 });
   }
   try {
-    const result = await adminUpdate(id, parsed.data);
+    const result = await adminUpdate(id, parsed.data, {
+      includeEndpoint: readIncludeEndpoint(json),
+    });
     if (!result) {
       return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404 });
     }

@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import { getHouse, updateByEditCode } from "@/lib/store";
 import { toPublicHouse } from "@/lib/ids";
 import { uploadPublicPhoto } from "@/lib/photo-host";
+import { grantOwnerHouse, ownerMayEdit } from "@/lib/owner-session";
+import { isAdmin } from "@/lib/admin";
 
 export const runtime = "nodejs";
 
@@ -18,10 +20,16 @@ export async function POST(
     | { editCode?: string; image?: string }
     | null;
   const house = await getHouse(id);
-  if (!house || !body?.editCode || house.editCode !== body.editCode) {
+  if (!house) {
+    return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404 });
+  }
+  const admin = await isAdmin();
+  const ownerOk = await ownerMayEdit(id);
+  const code = admin || ownerOk ? house.editCode : (body?.editCode?.trim() || "");
+  if (!code || house.editCode !== code) {
     return NextResponse.json({ error: "קוד העריכה שגוי." }, { status: 403 });
   }
-  const image = body.image ?? "";
+  const image = body?.image ?? "";
   const match = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(image);
   if (!match) {
     return NextResponse.json({ error: "צריך תמונת JPEG דחוסה." }, { status: 400 });
@@ -56,9 +64,13 @@ export async function POST(
     }
   }
 
-  const updated = await updateByEditCode(id, body.editCode, { photoUrl });
-  if (!updated) {
-    return NextResponse.json({ error: "השמירה נכשלה." }, { status: 500 });
+  const updated = await updateByEditCode(id, house.editCode, { photoUrl });
+  if ("error" in updated) {
+    return NextResponse.json(
+      { error: updated.error === "missing" ? "הבית לא נמצא." : "קוד העריכה שגוי." },
+      { status: updated.error === "missing" ? 404 : 403 },
+    );
   }
+  await grantOwnerHouse(id);
   return NextResponse.json({ house: toPublicHouse(updated.house) });
 }

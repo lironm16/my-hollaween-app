@@ -1,6 +1,8 @@
+import { put as putBlob } from "@vercel/blob";
+
 const LITTERBOX = "https://litterbox.catbox.moe/resources/internals/api.php";
 const CATBOX = "https://catbox.moe/user/api.php";
-const UA = "HalloweenNeighborhood/1.0 (neighborhood candy map)";
+const UA = "SpookyHouzz/1.0 (neighborhood candy map)";
 
 function asBlob(buf: Buffer) {
   const bytes = new Uint8Array(buf);
@@ -24,7 +26,28 @@ async function postFile(url: string, fields: Record<string, string>, file: Blob)
   return text.split(/\s+/)[0];
 }
 
+async function uploadToBlob(buf: Buffer): Promise<{ url: string; host: string } | null> {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) return null;
+  const blob = await putBlob(`halloween-houses/photos/${Date.now()}.jpg`, buf, {
+    access: "public",
+    addRandomSuffix: true,
+    allowOverwrite: false,
+    contentType: "image/jpeg",
+    token,
+    cacheControlMaxAge: 60 * 60 * 24 * 365,
+  });
+  return blob.url ? { url: blob.url, host: "blob" } : null;
+}
+
+/**
+ * Durable first: Vercel Blob (same token as the house list), then Cloudinary,
+ * then Catbox (permanent, no account). Litterbox 72h is last resort only.
+ */
 export async function uploadPublicPhoto(buf: Buffer): Promise<{ url: string; host: string }> {
+  const fromBlob = await uploadToBlob(buf).catch(() => null);
+  if (fromBlob) return fromBlob;
+
   const file = asBlob(buf);
   const cloud = process.env.CLOUDINARY_CLOUD_NAME ?? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const preset = process.env.CLOUDINARY_UPLOAD_PRESET ?? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;

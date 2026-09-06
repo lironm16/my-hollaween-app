@@ -57,6 +57,17 @@ export async function hostJpegFromBrowser(dataUrl: string): Promise<string> {
     if (json.secure_url) return json.secure_url;
   }
 
+  const catbox = new FormData();
+  catbox.append("reqtype", "fileupload");
+  catbox.append("fileToUpload", blob, "house.jpg");
+  const catboxRes = await fetch("https://catbox.moe/user/api.php", {
+    method: "POST",
+    body: catbox,
+    signal: AbortSignal.timeout(20_000),
+  });
+  const catboxText = (await catboxRes.text()).trim();
+  if (/^https?:\/\//i.test(catboxText)) return catboxText.split(/\s+/)[0];
+
   const body = new FormData();
   body.append("reqtype", "fileupload");
   body.append("time", "72h");

@@ -71,8 +71,14 @@ export function NeighborhoodApp({
     readHomeView,
     () => "map" as HomeView,
   );
-  const [selectedId, setSelectedId] = useState<string | "closed" | null>(null);
+  const [selectedId, setSelectedId] = useState<string | "closed" | null>(focusId);
+  const [focusSeen, setFocusSeen] = useState(focusId);
   const [clusterOverview, setClusterOverview] = useState(false);
+  if (focusId && focusId !== focusSeen) {
+    setFocusSeen(focusId);
+    setSelectedId(focusId);
+    setClusterOverview(false);
+  }
   const {
     filters,
     update: updateFilters,
@@ -105,6 +111,11 @@ export function NeighborhoodApp({
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
   const [adminLoading, setAdminLoading] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [editForId, setEditForId] = useState(selectedId);
+  if (selectedId !== editForId) {
+    setEditForId(selectedId);
+    setEditing(false);
+  }
   const [busyAction, setBusyAction] = useState(false);
 
   const likes = useLikedHouses();
@@ -117,10 +128,11 @@ export function NeighborhoodApp({
     writeHomeView(next);
   }
 
+  const editHouseId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const ownedEditCode = useMemo(() => {
-    if (!selectedId || selectedId === "closed") return undefined;
-    return owned.find((item) => item.id === selectedId)?.editCode;
-  }, [owned, selectedId]);
+    if (!editHouseId) return undefined;
+    return owned.find((item) => item.id === editHouseId)?.editCode;
+  }, [owned, editHouseId]);
   const canEditSelected = Boolean(admin || ownedEditCode);
 
   const rememberAdminDb = useCallback((houses: House[], updatedAt: string) => {
@@ -187,8 +199,9 @@ export function NeighborhoodApp({
   }, [admin, refresh]);
 
   useEffect(() => {
-    setEditing(false);
-  }, [selectedId]);
+    if (!focusId) return;
+    writeHomeView("map");
+  }, [focusId]);
 
   const editCodeById = useMemo(() => {
     const map = new Map<string, string>();
@@ -197,13 +210,17 @@ export function NeighborhoodApp({
   }, [adminHouses]);
 
   const houses = useMemo(() => {
-    if (admin) {
-      return adminHouses
-        .filter((house) => house.status !== "rejected")
-        .map((house) => toPublicHouse(house) as PublicHouse);
+    const listed = admin
+      ? adminHouses
+          .filter((house) => house.status !== "rejected")
+          .map((house) => toPublicHouse(house) as PublicHouse)
+      : (catalog?.houses ?? []);
+    const byId = new Map(listed.map((house) => [house.id, house]));
+    for (const item of owned) {
+      if (item.preview && !byId.has(item.id)) byId.set(item.id, item.preview);
     }
-    return catalog?.houses ?? [];
-  }, [admin, adminHouses, catalog]);
+    return [...byId.values()];
+  }, [admin, adminHouses, catalog, owned]);
 
   const visible = useMemo(() => {
     return houses.filter((house) => {

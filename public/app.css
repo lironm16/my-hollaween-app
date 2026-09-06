@@ -1451,8 +1451,8 @@
     font-size: var(--text-xl);
     line-height: var(--tw-leading, var(--text-xl--line-height));
   }
-  .text-\[1\.35rem\] {
-    font-size: 1.35rem;
+  .text-\[1\.2rem\] {
+    font-size: 1.2rem;
   }
   .text-\[15px\] {
     font-size: 15px;
@@ -2418,8 +2418,8 @@
       font-size: var(--text-5xl);
       line-height: var(--tw-leading, var(--text-5xl--line-height));
     }
-    .sm\:text-\[1\.55rem\] {
-      font-size: 1.55rem;
+    .sm\:text-\[1\.4rem\] {
+      font-size: 1.4rem;
     }
     .data-\[side\=left\]\:sm\:max-w-sm[data-side="left"] {
       max-width: var(--container-sm);
@@ -3841,11 +3841,11 @@ svg.leaflet-zoom-animated {
   position: relative;
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 46px;
+  height: 46px;
   border-radius: 999px;
   background: #6d28d9 !important;
-  border: 2.5px solid #fff7ed;
+  border: 4px solid #fff7ed;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
   opacity: 1;
   overflow: visible;
@@ -3856,9 +3856,9 @@ svg.leaflet-zoom-animated {
 }
 .house-pin.house-pin-dot {
   top: 0;
-  width: 24px;
-  height: 24px;
-  border-width: 2px;
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
 }
 .house-pin.is-base {
   position: absolute;
@@ -3925,11 +3925,11 @@ svg.leaflet-zoom-animated {
   pointer-events: none;
 }
 .pin-apt-dot {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   margin-right: -4px;
   border-radius: 999px;
-  border: 2px solid #fff7ed;
+  border: 3px solid #fff7ed;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 .pin-apt-dot:last-child {
@@ -3968,8 +3968,8 @@ svg.leaflet-zoom-animated {
 .pin-houses {
   position: relative;
   display: block;
-  width: 22px;
-  height: 16px;
+  width: 26px;
+  height: 19px;
   font-size: 0;
   line-height: 0;
   transform: translateY(4px);
@@ -4004,7 +4004,7 @@ svg.leaflet-zoom-animated {
 }
 .house-pin span,
 .pumpkin-pin span {
-  font-size: 22px;
+  font-size: 26px;
   line-height: 1;
   filter: none;
 }
@@ -4067,16 +4067,16 @@ svg.leaflet-zoom-animated {
 }
 .house-pin.house-pin-dot .pin-hours-ring {
   inset: -5px;
-  border-width: 2px;
+  border-width: 3px;
 }
 .house-pin .pin-hours-ring.is-closing,
 .pumpkin-pin .pin-hours-ring.is-closing {
-  border: 3px solid #f97316;
+  border: 4px solid #f97316;
   box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.28), 0 0 12px rgba(249, 115, 22, 0.4);
 }
 .house-pin .pin-hours-ring.is-opening,
 .pumpkin-pin .pin-hours-ring.is-opening {
-  border: 3px solid #22d3ee;
+  border: 4px solid #22d3ee;
   box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.28), 0 0 12px rgba(34, 211, 238, 0.4);
 }
 .house-pin.is-closing-soon span,
@@ -4107,10 +4107,10 @@ svg.leaflet-zoom-animated {
   bottom: -6px;
   inset-inline-start: -6px;
   z-index: 2;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 999px;
-  border: 2px solid #fff7ed;
+  border: 3px solid #fff7ed;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 .house-pin .pin-status.is-plenty,
@@ -4581,8 +4581,8 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   border: 0;
 }
 .house-pin.is-legend {
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
 }
 .house-pin.is-legend .pin-houses {
   transform: scale(1.2);

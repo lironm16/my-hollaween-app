@@ -51,8 +51,8 @@ function wrapRoutePin(html: string, routeOrder?: number) {
   };
 }
 
-const PIN = 38;
-const FAN_R = 70;
+const PIN = 46;
+const FAN_R = 82;
 
 function attr(value: string) {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -148,7 +148,7 @@ function housePinHtml(
 }
 
 function fanLayout(count: number) {
-  const spread = count <= 4 ? Math.min(120, 38 * Math.max(1, count - 1)) : Math.min(220, 26 * (count - 1));
+  const spread = count <= 4 ? Math.min(120, PIN * Math.max(1, count - 1)) : Math.min(220, 26 * (count - 1));
   const gap = PIN + 16;
   const arc = gap * Math.max(1, count - 1);
   const r = Math.max(FAN_R, arc / ((Math.max(spread, 1) * Math.PI) / 180));
@@ -188,8 +188,8 @@ function clusterIcon(
     return L.divIcon({
       className: `pumpkin-pin-icon${selectedClass}${hoursClass}`,
       html: wrapped.html,
-      iconSize: [40, 44 + wrapped.extraH],
-      iconAnchor: [20, 42 + wrapped.extraH],
+      iconSize: [50, 54 + wrapped.extraH],
+      iconAnchor: [25, 50 + wrapped.extraH],
     });
   }
 
@@ -201,8 +201,8 @@ function clusterIcon(
     return L.divIcon({
       className: `pumpkin-pin-icon pumpkin-pin-building${selectedClass}`,
       html: wrapped.html,
-      iconSize: [44, 48 + wrapped.extraH],
-      iconAnchor: [22, 44 + wrapped.extraH],
+      iconSize: [54, 58 + wrapped.extraH],
+      iconAnchor: [27, 54 + wrapped.extraH],
     });
   }
 
@@ -252,8 +252,8 @@ function clusterIcon(
 const pickIcon = L.divIcon({
   className: "pumpkin-pin-icon",
   html: `<div class="house-pin is-pick" style="background:#6d28d9"><span>📍</span></div>`,
-  iconSize: [40, 44],
-  iconAnchor: [20, 42],
+  iconSize: [50, 54],
+  iconAnchor: [25, 50],
 });
 
 const youAreHereIcon = L.divIcon({
@@ -342,6 +342,20 @@ function KeepSelectedVisible({
       window.removeEventListener("hw-map-sheet", onSheet);
     };
   }, [map, lat, lng, active]);
+  return null;
+}
+
+function FollowPick({ lat, lng }: { lat: number; lng: number }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    const go = () => {
+      map.invalidateSize();
+      map.panTo([lat, lng], { animate: true, duration: 0.4 });
+    };
+    const timer = window.setTimeout(go, 60);
+    return () => window.clearTimeout(timer);
+  }, [map, lat, lng]);
   return null;
 }
 
@@ -566,6 +580,7 @@ export function HouseMap({
         {!pickMode ? (
           <MapDismiss enabled={Boolean(selectedId)} onDismiss={onClose} />
         ) : null}
+        {pickMode && pick ? <FollowPick lat={pick.lat} lng={pick.lng} /> : null}
         {pickMode && onPick ? <ClickCatcher onPick={onPick} /> : null}
         {pickMode && pick ? (
           <Marker

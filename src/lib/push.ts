@@ -36,7 +36,7 @@ export function sanitizePushPayload(input: {
   topic?: PushTopic;
 }): PushPayload {
   return {
-    title: clipPushText(input.title, MAX_TITLE) || "בשכונה",
+    title: clipPushText(input.title, MAX_TITLE) || "SpookyHouzz",
     body: clipPushText(input.body, MAX_BODY),
     url: input.url?.startsWith("/") ? input.url : "/",
     ...(input.topic ? { topic: input.topic } : {}),
@@ -148,6 +148,12 @@ export async function sendPushToSubscriptions(options: {
     }
   });
   return dead;
+}
+
+export function readIncludeEndpoint(input: unknown): string | undefined {
+  if (!input || typeof input !== "object") return undefined;
+  const value = (input as { includeEndpoint?: unknown }).includeEndpoint;
+  return typeof value === "string" && value.length > 20 ? value : undefined;
 }
 
 export function parseSubscription(input: unknown): Omit<PushSubscriptionRecord, "createdAt"> | null {

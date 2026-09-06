@@ -3,6 +3,8 @@ import { houseInputSchema } from "@/lib/schema";
 import { submitHouse } from "@/lib/store";
 import { toPublicHouse } from "@/lib/ids";
 import { geocodeHttpError } from "@/lib/geocode";
+import { grantOwnerHouse } from "@/lib/owner-session";
+import { readIncludeEndpoint } from "@/lib/push";
 
 export const runtime = "nodejs";
 
@@ -21,7 +23,10 @@ export async function POST(request: Request) {
     );
   }
   try {
-    const house = await submitHouse(parsed.data);
+    const house = await submitHouse(parsed.data, {
+      includeEndpoint: readIncludeEndpoint(json),
+    });
+    await grantOwnerHouse(house.house.id);
     return NextResponse.json({
       house: toPublicHouse(house.house),
       editCode: house.house.editCode,

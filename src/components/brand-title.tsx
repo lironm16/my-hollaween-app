@@ -27,7 +27,7 @@ export function BrandTitle({
           dir="ltr"
           className={cn(
             "font-creepster tracking-wide text-orange-400 [text-shadow:0_0_14px_rgba(251,146,60,0.45)]",
-            size === "header" ? "text-[1.35rem] sm:text-[1.55rem]" : "text-4xl sm:text-5xl",
+            size === "header" ? "text-[1.2rem] sm:text-[1.4rem]" : "text-4xl sm:text-5xl",
           )}
         >
           {config.brandEn}
