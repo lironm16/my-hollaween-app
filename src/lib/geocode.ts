@@ -394,5 +394,8 @@ export function geocodeHttpError(error: unknown): { error: string; status: numbe
   if (error.message === "GEOCODER_UNAVAILABLE") {
     return { error: "לא הצלחנו לאמת את הכתובת עכשיו. נסו שוב בעוד רגע.", status: 503 };
   }
+  if (error.message === "PERSIST_FAILED") {
+    return { error: "לא הצלחנו לשמור את הבית בשרת. נסו שוב.", status: 503 };
+  }
   return null;
 }

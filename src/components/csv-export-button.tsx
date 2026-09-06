@@ -4,7 +4,7 @@ import { Download } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useHouseTraffic } from "@/hooks/use-house-traffic";
-import { housesToExcelXml, downloadSheet, sheetFilename } from "@/lib/house-csv";
+import { housesToXlsx, downloadSheet, sheetFilename } from "@/lib/house-csv";
 import { EMPTY_TRAFFIC, type HouseTraffic } from "@/lib/traffic";
 import type { PublicHouse } from "@/lib/types";
 
@@ -34,7 +34,7 @@ export function CsvExportButton({
         traffic[house.id] = trafficFor(house.id) ?? EMPTY_TRAFFIC;
       }
     }
-    downloadSheet(sheetFilename(kind), housesToExcelXml(houses, traffic ? { traffic } : undefined));
+    downloadSheet(sheetFilename(kind), housesToXlsx(houses, traffic ? { traffic } : undefined));
     toast.success(`הורד קובץ עם ${houses.length} בתים`);
   }
 

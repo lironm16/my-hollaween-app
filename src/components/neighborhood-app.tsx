@@ -445,6 +445,40 @@ export function NeighborhoodApp({
     void refresh(true);
   }
 
+  function handleHouseUpdated(next: PublicHouse) {
+    if (admin) {
+      applyAdminHouse(next);
+      return;
+    }
+    const code = owned.find((item) => item.id === next.id)?.editCode;
+    if (code) {
+      saveOwnedHouse({
+        id: next.id,
+        name: next.name,
+        editCode: code,
+        preview: next,
+      });
+    }
+    notifyCatalogChanged();
+    void refresh(true);
+  }
+
+  function handleHouseDeleted(id: string) {
+    setAdminHouses((list) => {
+      const next = list.filter((house) => house.id !== id);
+      rememberAdminDb(next, new Date().toISOString());
+      return next;
+    });
+    removeOwnedHouse(id);
+    if (selectedId === id) {
+      setSelectedId("closed");
+      setClusterOverview(false);
+      setEditing(false);
+    }
+    notifyCatalogChanged();
+    void refresh(true);
+  }
+
   async function patchAdmin(id: string, patch: Record<string, unknown>) {
     setBusyAction(true);
     try {
@@ -759,6 +793,12 @@ export function NeighborhoodApp({
                     admin={admin}
                     ownedIds={owned.map((item) => item.id)}
                     onlineDevices={onlineDevices}
+                    canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
+                    editCodeFor={(id) =>
+                      admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode
+                    }
+                    onHouseUpdated={handleHouseUpdated}
+                    onHouseDeleted={handleHouseDeleted}
                   />
                 )}
               </div>
@@ -821,36 +861,8 @@ export function NeighborhoodApp({
                   admin={admin}
                   allowDelete
                   editCode={admin ? editCodeById.get(selected.id) : ownedEditCode}
-                  onDeleted={() => {
-                    const id = selected.id;
-                    setAdminHouses((list) => {
-                      const next = list.filter((house) => house.id !== id);
-                      rememberAdminDb(next, new Date().toISOString());
-                      return next;
-                    });
-                    removeOwnedHouse(id);
-                    setSelectedId("closed");
-                    setClusterOverview(false);
-                    setEditing(false);
-                    void refresh(true);
-                  }}
-                  onUpdated={(next) => {
-                    if (admin) {
-                      applyAdminHouse(next);
-                      return;
-                    }
-                    const code = ownedEditCode;
-                    if (code) {
-                      saveOwnedHouse({
-                        id: next.id,
-                        name: next.name,
-                        editCode: code,
-                        preview: next,
-                      });
-                    }
-                    notifyCatalogChanged();
-                    void refresh(true);
-                  }}
+                  onDeleted={() => handleHouseDeleted(selected.id)}
+                  onUpdated={handleHouseUpdated}
                 />
               ) : null}
             </div>

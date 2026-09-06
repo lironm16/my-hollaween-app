@@ -10,8 +10,8 @@ export default function CandyPreviewPage() {
           <p className="text-base text-violet-300">{config.brandEn} · בחירת אייקון</p>
           <h1 className="text-2xl font-semibold text-orange-100">איזה ממתק יותר ברור?</h1>
           <p className="text-base text-violet-200">
-            ברשימה: רוח סגולה עם ממתק בפינה (ירוק / כתום / אדום), כמו במפה. אפור עם קו = בלי ממתקים
-            מההתחלה.
+            ירוק = יש, כתום = מעט, אדום = נגמר, אפור עם קו = הבית בלי ממתקים מההתחלה. אותו ממתק כמו
+            בשאר המסכים, בלי רוח.
           </p>
           <PreviewNav current="/preview/candies" />
         </header>

@@ -120,7 +120,7 @@ export default function HoursPreviewPage() {
             <span className="font-medium text-orange-100" dir="ltr">
               {formatHoursLabel(demoHouse)}
             </span>
-            . כל כרטיס מדמה שעון אחר — בלי לחכות ל־31 באוקטובר. לחזרה כללית על המפה החיה:{" "}
+            . כל כרטיס מדמה שעון אחר — בלי לחכות ל־31 באוקטובר. לבדיקות על המפה החיה:{" "}
             <Link href="/?rehearsal=open" className="text-orange-300 underline-offset-2 hover:underline">
               /?rehearsal=open
             </Link>

@@ -13,7 +13,7 @@ export function AdminDryRunPanel() {
 
   return (
     <div className="space-y-3 rounded-xl bg-black/25 p-3">
-      <p className="text-base font-medium text-amber-100">חזרה כללית</p>
+      <p className="text-base font-medium text-amber-100">בדיקות</p>
       <p className="text-base text-violet-300">
         בלי לחכות ל־31 באוקטובר: בחרו רגע בלילה כדי לראות באנרים, סיכות «נפתח/נסגר בקרוב», ואת כפתורי
         ההפסקה בטופס. נשמר בטלפון הזה בלבד.

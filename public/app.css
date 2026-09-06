@@ -441,9 +441,6 @@
   .inline-flex {
     display: inline-flex;
   }
-  .table {
-    display: table;
-  }
   .field-sizing-content {
     field-sizing: content;
   }
@@ -664,6 +661,9 @@
   .w-\[min\(38rem\,calc\(100vw-1\.5rem\)\)\] {
     width: min(38rem, calc(100vw - 1.5rem));
   }
+  .w-auto {
+    width: auto;
+  }
   .w-fit {
     width: fit-content;
   }
@@ -694,6 +694,9 @@
   .max-w-lg {
     max-width: var(--container-lg);
   }
+  .max-w-none {
+    max-width: none;
+  }
   .max-w-sm {
     max-width: var(--container-sm);
   }
@@ -714,9 +717,6 @@
   }
   .shrink-0 {
     flex-shrink: 0;
-  }
-  .border-collapse {
-    border-collapse: collapse;
   }
   .origin-\(--transform-origin\) {
     transform-origin: var(--transform-origin);
@@ -1398,6 +1398,9 @@
   .py-16 {
     padding-block: calc(var(--spacing) * 16);
   }
+  .ps-0\.5 {
+    padding-inline-start: calc(var(--spacing) * 0.5);
+  }
   .ps-1\.5 {
     padding-inline-start: calc(var(--spacing) * 1.5);
   }
@@ -1424,6 +1427,9 @@
   }
   .pt-\[env\(safe-area-inset-top\,0px\)\] {
     padding-top: env(safe-area-inset-top,0px);
+  }
+  .pb-0\.5 {
+    padding-bottom: calc(var(--spacing) * 0.5);
   }
   .pb-1 {
     padding-bottom: var(--spacing);
@@ -1564,12 +1570,6 @@
   }
   .text-destructive {
     color: var(--destructive);
-  }
-  .text-emerald-50\/90 {
-    color: color-mix(in srgb, oklch(97.9% 0.021 166.113) 90%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      color: color-mix(in oklab, var(--color-emerald-50) 90%, transparent);
-    }
   }
   .text-emerald-100 {
     color: var(--color-emerald-100);
@@ -1765,12 +1765,6 @@
     --tw-ring-color: color-mix(in srgb, oklch(76.9% 0.188 70.08) 25%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       --tw-ring-color: color-mix(in oklab, var(--color-amber-500) 25%, transparent);
-    }
-  }
-  .ring-emerald-500\/20 {
-    --tw-ring-color: color-mix(in srgb, oklch(69.6% 0.17 162.48) 20%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      --tw-ring-color: color-mix(in oklab, var(--color-emerald-500) 20%, transparent);
     }
   }
   .ring-emerald-500\/25 {
@@ -4098,7 +4092,9 @@ svg.leaflet-zoom-animated {
 }
 .house-pin.is-selected,
 .pumpkin-pin.is-selected {
-  box-shadow: 0 0 0 2px #fdba74, 0 2px 6px rgba(0, 0, 0, 0.55);
+  border-width: 6px;
+  border-color: #22d3ee;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.55), 0 2px 8px rgba(0, 0, 0, 0.55);
 }
 .house-pin.is-visited,
 .pumpkin-pin.is-visited {
@@ -4113,8 +4109,10 @@ svg.leaflet-zoom-animated {
     0 2px 6px rgba(0, 0, 0, 0.55);
 }
 .house-pin.is-apt.is-selected {
-  box-shadow: 0 0 0 4px #fdba74,
-    0 0 28px 12px rgba(251, 146, 60, 1),
+  border-width: 6px;
+  border-color: #22d3ee;
+  box-shadow: 0 0 0 5px #22d3ee,
+    0 0 26px 8px rgba(34, 211, 238, 0.55),
     0 2px 6px rgba(0, 0, 0, 0.55);
 }
 .house-pin .pin-hours-ring,

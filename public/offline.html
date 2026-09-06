@@ -39,36 +39,25 @@
       .row-top { display: flex; align-items: flex-start; gap: 10px; }
       .candy {
         position: relative;
-        width: 40px;
-        height: 40px;
-        flex: 0 0 40px;
-      }
-      .candy-face {
-        width: 40px;
-        height: 40px;
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
         border-radius: 999px;
-        background: #6d28d9;
-        box-shadow: 0 0 0 1.5px #fff7ed;
         overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
-      .candy-face.is-none { background: #94a3b8; }
-      .candy-face img { width: 92%; height: 92%; margin: 4%; object-fit: contain; }
-      .candy-badge {
+      .candy.is-plenty { background: #047857; }
+      .candy.is-low { background: #d97706; }
+      .candy.is-out { background: #b91c1c; }
+      .candy.is-none { background: #94a3b8; }
+      .candy img { height: 88%; width: auto; }
+      .candy-strike {
         position: absolute;
-        width: 18px;
-        height: 18px;
-        border-radius: 999px;
-        bottom: -4px;
-        inset-inline-start: -4px;
-        box-shadow: 0 0 0 1.5px #fff7ed;
-        background-image: url("/icons/pin-candy.png");
-        background-repeat: no-repeat;
-        background-position: center;
-        background-size: 86%;
+        inset: 0;
+        background: linear-gradient(to top left, transparent calc(50% - 0.7px), #1c0e24 0, #1c0e24 calc(50% + 0.7px), transparent 0);
       }
-      .candy-badge.is-plenty { background-color: #047857; }
-      .candy-badge.is-low { background-color: #d97706; }
-      .candy-badge.is-out { background-color: #b91c1c; }
       strong { display: block; color: #ffedd5; }
       .meta { display: block; margin-top: 4px; font-size: 14px; color: #c4b5fd; }
       .block {
@@ -95,15 +84,18 @@
         var downloadBtn = document.getElementById("download");
         var scare = { mild: "לילדים", medium: "קצת מפחיד", spicy: "מפחיד" };
 
-        function xmlText(value) {
-          return String(value == null ? "" : value)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;");
+        function csvCell(value) {
+          var text = String(value == null ? "" : value);
+          if (/[",\n\r]/.test(text)) return '"' + text.replace(/"/g, '""') + '"';
+          return text;
         }
-        function xmlCell(value) {
-          return "<Cell><Data ss:Type=\"String\">" + xmlText(value) + "</Data></Cell>";
+        function toCsv(houses) {
+          var headers = ["שם","כתובת","איך מגיעים / דירה","מה מחכה בבית","הערות","שעות","ממתקים","פחד","נגיש","ללא גלוטן","ללא אגוזים","ללא שומשום"];
+          var lines = [headers.join(",")];
+          houses.forEach(function (house) {
+            lines.push(rowCells(house).map(csvCell).join(","));
+          });
+          return "\uFEFF" + lines.join("\r\n") + "\r\n";
         }
         function hoursLabel(house) {
           if (house.openHours && house.openHours.length) {
@@ -149,14 +141,6 @@
             yesNo(hasTreat(house, "sesameFree")),
           ];
         }
-        function toExcel(houses) {
-          var headers = ["שם","כתובת","איך מגיעים / דירה","מה מחכה בבית","הערות","שעות","ממתקים","פחד","נגיש","ללא גלוטן","ללא אגוזים","ללא שומשום"];
-          var head = "<Row>" + headers.map(xmlCell).join("") + "</Row>";
-          var body = houses.map(function (house) {
-            return "<Row>" + rowCells(house).map(xmlCell).join("") + "</Row>";
-          }).join("");
-          return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<?mso-application progid=\"Excel.Sheet\"?>\n<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\"><Worksheet ss:Name=\"בתים\" ss:RightToLeft=\"1\"><Table>" + head + body + "</Table></Worksheet></Workbook>";
-        }
 
         try {
           var raw = localStorage.getItem("hw-catalog-cache");
@@ -169,11 +153,11 @@
           status.textContent = houses.length + " בתים שמורים במכשיר, עם אותם שדות כמו בגיליון. המפה המלאה תחזור כשיש קליטה.";
           downloadBtn.hidden = false;
           downloadBtn.addEventListener("click", function () {
-            var blob = new Blob([toExcel(houses)], { type: "application/vnd.ms-excel;charset=utf-8" });
+            var blob = new Blob([toCsv(houses)], { type: "text/csv;charset=utf-8" });
             var url = URL.createObjectURL(blob);
             var link = document.createElement("a");
             link.href = url;
-            link.download = "spookyhouzz-offline.xls";
+            link.download = "spookyhouzz-offline.csv";
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -183,20 +167,17 @@
             var li = document.createElement("li");
             var top = document.createElement("div");
             top.className = "row-top";
-            var candy = document.createElement("span");
-            candy.className = "candy";
             var tone = candyTone(house);
-            var face = document.createElement("span");
-            face.className = "candy-face" + (tone === "none" ? " is-none" : "");
+            var candy = document.createElement("span");
+            candy.className = "candy is-" + tone;
             var img = document.createElement("img");
-            img.src = "/icons/pin-scare-mild.png";
+            img.src = tone === "low" ? "/icons/candy-round-dark.png" : "/icons/candy-round-cream.png";
             img.alt = "";
-            face.appendChild(img);
-            candy.appendChild(face);
-            if (tone !== "none") {
-              var badge = document.createElement("span");
-              badge.className = "candy-badge is-" + tone;
-              candy.appendChild(badge);
+            candy.appendChild(img);
+            if (tone === "none") {
+              var strike = document.createElement("span");
+              strike.className = "candy-strike";
+              candy.appendChild(strike);
             }
             var text = document.createElement("div");
             var title = document.createElement("strong");

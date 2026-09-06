@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
+import { NightDesk } from "@/components/night-desk";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +19,11 @@ export function HouseCard({
   visited,
   onToggleVisited,
   emphasizeTraffic = false,
+  canEdit = false,
+  editCode,
+  admin = false,
+  onUpdated,
+  onDeleted,
 }: {
   house: PublicHouse;
   expanded?: boolean;
@@ -28,7 +35,18 @@ export function HouseCard({
   visited?: boolean;
   onToggleVisited?: () => void;
   emphasizeTraffic?: boolean;
+  canEdit?: boolean;
+  editCode?: string;
+  admin?: boolean;
+  onUpdated?: (house: PublicHouse) => void;
+  onDeleted?: (id: string) => void;
 }) {
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    if (!expanded) setEditing(false);
+  }, [expanded]);
+
   return (
     <Card
       size="sm"
@@ -37,7 +55,7 @@ export function HouseCard({
         "cursor-pointer border-orange-500/15 bg-[#1d1028]/90 text-base transition hover:border-orange-400/50 hover:bg-[#261536]",
       )}
       onClick={(event) => {
-        if ((event.target as HTMLElement).closest("button, a, input, label, textarea")) return;
+        if ((event.target as HTMLElement).closest("button, a, input, label, textarea, select, form")) return;
         onToggle?.();
       }}
     >
@@ -49,21 +67,41 @@ export function HouseCard({
           visited={visited}
           onToggleLike={onToggleLike}
           onToggleVisited={onToggleVisited}
+          onToggleEdit={
+            canEdit
+              ? () => {
+                  if (!expanded) onToggle?.();
+                  setEditing((value) => !value);
+                }
+              : undefined
+          }
+          editing={editing}
         />
       </div>
       <div className="px-3 pb-1">
-        <HouseDetails
-          house={house}
-          compact={!expanded}
-          distanceM={distanceM}
-          catalogSource={catalogSource}
-          liked={liked}
-          onToggleLike={onToggleLike}
-          visited={visited}
-          onToggleVisited={onToggleVisited}
-          emphasizeTraffic={emphasizeTraffic}
-          chrome="sheet"
-        />
+        {editing && canEdit ? (
+          <NightDesk
+            house={house}
+            admin={admin}
+            allowDelete
+            editCode={editCode}
+            onUpdated={(next) => onUpdated?.(next)}
+            onDeleted={() => onDeleted?.(house.id)}
+          />
+        ) : (
+          <HouseDetails
+            house={house}
+            compact={!expanded}
+            distanceM={distanceM}
+            catalogSource={catalogSource}
+            liked={liked}
+            onToggleLike={onToggleLike}
+            visited={visited}
+            onToggleVisited={onToggleVisited}
+            emphasizeTraffic={emphasizeTraffic}
+            chrome="sheet"
+          />
+        )}
       </div>
     </Card>
   );

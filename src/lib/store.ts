@@ -177,18 +177,14 @@ async function readBlobDb(): Promise<DbFile | null> {
 
 async function writeBlobDb(db: DbFile) {
   if (!blobEnabled()) return;
-  try {
-    await putBlob(BLOB_PATH, JSON.stringify(db), {
-      access: "private",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-      cacheControlMaxAge: 0,
-    });
-  } catch {
-    /* keep file/memory copy even if blob write fails */
-  }
+  await putBlob(BLOB_PATH, JSON.stringify(db), {
+    access: "private",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: "application/json",
+    token: process.env.BLOB_READ_WRITE_TOKEN,
+    cacheControlMaxAge: 0,
+  });
 }
 
 async function readPushSettingsBlob(): Promise<DbFile["pushSettings"] | null> {
@@ -294,7 +290,7 @@ async function readFileDb(): Promise<DbFile> {
   } catch {
     /* /tmp may still work later */
   }
-  void writeBlobDb(seed);
+  void writeBlobDb(seed).catch(() => undefined);
   return seed;
 }
 
@@ -318,14 +314,32 @@ async function persistDb(db: DbFile) {
     pushBlob ? { updatedAt: pushBlob.updatedAt ?? "", houses: [], pushSettings: pushBlob } : null,
   );
   if (mergedSettings) db.pushSettings = mergedSettings;
-  setMem(db);
-  try {
-    await writeFileDb(db);
-  } catch {
-    /* memory/blob still hold the write */
+  if (blobEnabled()) {
+    try {
+      await writeBlobDb(db);
+    } catch {
+      throw new Error("PERSIST_FAILED");
+    }
+    try {
+      await writeFileDb(db);
+    } catch {
+      /* blob already holds the write */
+    }
+  } else {
+    try {
+      await writeFileDb(db);
+    } catch {
+      throw new Error("PERSIST_FAILED");
+    }
   }
-  await writeBlobDb(db);
-  if (db.pushSettings) await writePushSettingsBlob(db.pushSettings);
+  setMem(db);
+  if (db.pushSettings) {
+    try {
+      await writePushSettingsBlob(db.pushSettings);
+    } catch {
+      /* house data already saved */
+    }
+  }
 }
 
 async function loadDb(fresh = false): Promise<DbFile> {

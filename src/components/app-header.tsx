@@ -150,7 +150,7 @@ export function AppHeader({
                   )}
                 >
                   <Sparkles className="size-4" />
-                  חזרה כללית
+                  בדיקות
                 </Link>
                 <button
                   type="button"

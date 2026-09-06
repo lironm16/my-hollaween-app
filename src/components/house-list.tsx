@@ -26,6 +26,10 @@ export function HouseList({
   ownedIds = [],
   admin = false,
   onlineDevices = null,
+  canEditHouse,
+  editCodeFor,
+  onHouseUpdated,
+  onHouseDeleted,
 }: {
   houses: PublicHouse[];
   origin?: { lat: number; lng: number } | null;
@@ -37,6 +41,10 @@ export function HouseList({
   ownedIds?: string[];
   admin?: boolean;
   onlineDevices?: number | null;
+  canEditHouse?: (id: string) => boolean;
+  editCodeFor?: (id: string) => string | undefined;
+  onHouseUpdated?: (house: PublicHouse) => void;
+  onHouseDeleted?: (id: string) => void;
 }) {
   const [q, setQ] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -137,6 +145,11 @@ export function HouseList({
               visited={visitedIds?.includes(h.id)}
               onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
               emphasizeTraffic={admin || ownedIds.includes(h.id)}
+              canEdit={Boolean(canEditHouse?.(h.id))}
+              editCode={editCodeFor?.(h.id)}
+              admin={admin}
+              onUpdated={onHouseUpdated}
+              onDeleted={onHouseDeleted}
             />
           </div>
         ))

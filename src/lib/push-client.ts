@@ -210,8 +210,12 @@ export async function disablePushAlerts(): Promise<"off"> {
 
 export async function senderPushEndpoint() {
   try {
-    const reg = await navigator.serviceWorker.ready;
-    return (await reg.pushManager.getSubscription())?.endpoint;
+    if (typeof navigator === "undefined" || !navigator.serviceWorker) return undefined;
+    const ready = Promise.race([
+      navigator.serviceWorker.ready.then((reg) => reg.pushManager.getSubscription()),
+      new Promise<null>((resolve) => window.setTimeout(() => resolve(null), 600)),
+    ]);
+    return (await ready)?.endpoint;
   } catch {
     return undefined;
   }

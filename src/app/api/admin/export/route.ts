@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { asCatalog, getAllHouses } from "@/lib/store";
-import { housesToCsv, housesToExcelXml } from "@/lib/house-csv";
+import { housesToCsv, housesToXlsx } from "@/lib/house-csv";
 import { toPublicHouse } from "@/lib/ids";
 import { getHouseTraffic } from "@/lib/traffic-store";
 
@@ -13,15 +13,15 @@ export async function GET(request: Request) {
   }
   const houses = await getAllHouses();
   const format = new URL(request.url).searchParams.get("format");
-  if (format === "csv" || format === "xls") {
+  if (format === "csv" || format === "xls" || format === "xlsx") {
     const listed = houses.filter((house) => house.status !== "rejected").map(toPublicHouse);
     const traffic = await getHouseTraffic();
-    if (format === "xls") {
-      const xml = housesToExcelXml(listed, { traffic });
-      return new NextResponse(xml, {
+    if (format === "xls" || format === "xlsx") {
+      const xlsx = housesToXlsx(listed, { traffic });
+      return new NextResponse(Buffer.from(xlsx), {
         headers: {
-          "Content-Type": "application/vnd.ms-excel; charset=utf-8",
-          "Content-Disposition": "attachment; filename=spookyhouzz-houses.xls",
+          "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": "attachment; filename=spookyhouzz-houses.xlsx",
           "Cache-Control": "no-store",
         },
       });

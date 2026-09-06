@@ -106,8 +106,10 @@ export function HouseForm({
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [clearPhoto, setClearPhoto] = useState(false);
+  const [saving, setSaving] = useState(false);
   const existingPhoto = initial?.photoUrl ?? "";
   const now = useAppNow();
+  const blocked = Boolean(busy || saving);
 
   function updateHourWindow(index: number, patch: Partial<HoursWindow>) {
     setHourWindows((current) =>
@@ -233,6 +235,7 @@ export function HouseForm({
       className="space-y-6"
       onSubmit={(e) => {
         e.preventDefault();
+        if (blocked) return;
         if (!addressOk) {
           toast.error("בחרו כתובת אמיתית מהרשימה, או גררו את הסיכה לבית.");
           return;
@@ -304,21 +307,26 @@ export function HouseForm({
           openFrom2: hours.openFrom2,
           openTo2: hours.openTo2,
         };
+        setSaving(true);
         void (async () => {
-          let photoDataUrl: string | undefined;
-          if (photoFile) {
-            try {
-              photoDataUrl = await compressJpegFile(photoFile);
-            } catch {
-              toast.error("לא הצלחנו לעבד את התמונה");
-              return;
+          try {
+            let photoDataUrl: string | undefined;
+            if (photoFile) {
+              try {
+                photoDataUrl = await compressJpegFile(photoFile);
+              } catch {
+                toast.error("לא הצלחנו לעבד את התמונה");
+                return;
+              }
             }
+            await onSubmit(payload, {
+              photoDataUrl,
+              clearPhoto: clearPhoto && !photoFile,
+              ownerFrozenUntil,
+            });
+          } finally {
+            setSaving(false);
           }
-          await onSubmit(payload, {
-            photoDataUrl,
-            clearPhoto: clearPhoto && !photoFile,
-            ownerFrozenUntil,
-          });
         })();
       }}
     >
@@ -366,7 +374,7 @@ export function HouseForm({
             onChange={onAddressTyped}
             onSelect={onAddressSelect}
             confirmed={addressOk}
-            disabled={busy}
+            disabled={blocked}
           />
         </Field>
         <div>
@@ -511,7 +519,7 @@ export function HouseForm({
           {nightStatusEnabled ? null : (
             <p className="mb-2 text-base text-violet-300">
               נפתח בליל האלווין, משעת הפעילות של הבית. אז אפשר לסמן הפסקה זמנית או סגירה לערב.
-              לחזרה כללית: תפריט מנהל → חזרה כללית.
+              לבדיקות: תפריט מנהל → בדיקות.
             </p>
           )}
           <div className="flex flex-wrap gap-1.5">
@@ -623,7 +631,7 @@ export function HouseForm({
           <label className="inline-flex cursor-pointer">
             <span
               className={
-                busy
+                blocked
                   ? "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-base font-medium text-white opacity-60"
                   : "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-base font-medium text-white"
               }
@@ -635,7 +643,7 @@ export function HouseForm({
               type="file"
               accept="image/*"
               className="sr-only"
-              disabled={busy}
+              disabled={blocked}
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 e.target.value = "";
@@ -651,7 +659,7 @@ export function HouseForm({
           {photoPreview || (existingPhoto && !clearPhoto) ? (
             <button
               type="button"
-              disabled={busy}
+              disabled={blocked}
               className="rounded-lg px-3 py-2 text-base text-violet-200 ring-1 ring-orange-500/30"
               onClick={() => {
                 setPhotoFile(null);
@@ -666,10 +674,10 @@ export function HouseForm({
       </FormSection>
       <Button
         type="submit"
-        disabled={busy}
+        disabled={blocked}
         className="h-10 w-full bg-orange-500 text-black hover:bg-orange-400"
       >
-        {busy ? "שולחים…" : submitLabel}
+        {blocked ? "שומרים בשרת…" : submitLabel}
       </Button>
       {extraActions}
     </form>

@@ -21,7 +21,7 @@ export function DryRunBanner() {
       )}
     >
       <p>
-        {down ? "חזרה כללית: השרת לא עונה" : `חזרה כללית: ${REHEARSAL_LABELS[scene]}`}
+        {down ? "בדיקות: השרת לא עונה" : `בדיקות: ${REHEARSAL_LABELS[scene]}`}
         {" · "}
         <Link href="/admin/rehearsal" className="underline underline-offset-2">
           הגדרות
