@@ -22,7 +22,7 @@ import type { PublicHouse } from "@/lib/types";
 import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
 import { distanceMeters } from "@/lib/geo";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
-import { isClosingSoon, isOnBreak, isOpeningSoon } from "@/lib/hours";
+import { isClosingSoon, isHoursNightOver, isOnBreak, isOpeningSoon } from "@/lib/hours";
 import type { ScareLevel } from "@/lib/types";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { cn } from "@/lib/utils";
@@ -61,6 +61,7 @@ const SCARE_SRC: Record<ScareLevel, string> = {
 
 function pinVisitKind(house: PublicHouse, now: Date): "closed" | "break" | null {
   if (effectiveVisit(house) === "closed") return "closed";
+  if (isHoursNightOver(house, now)) return "closed";
   if (isOwnerFrozen(house, now.getTime()) || isOnBreak(house, now)) return "break";
   return null;
 }
@@ -164,6 +165,15 @@ function fanLayout(count: number) {
     return { x: Math.sin(rad) * r, y: Math.cos(rad) * r };
   });
   return { offsets, r };
+}
+
+/** Screen offset from the building pin (cluster latlng) to an inner house icon center. */
+function fanPinScreenOffset(count: number, index: number) {
+  if (count <= 1 || index < 0 || index >= count) return { x: 0, y: 0 };
+  const { offsets } = fanLayout(count);
+  const off = offsets[index];
+  if (!off) return { x: 0, y: 0 };
+  return { x: off.x, y: -off.y };
 }
 
 function clusterIcon(
@@ -319,10 +329,14 @@ function SizeSync({ active }: { active: boolean }) {
 function KeepSelectedVisible({
   lat,
   lng,
+  offsetX = 0,
+  offsetY = 0,
   active,
 }: {
   lat: number;
   lng: number;
+  offsetX?: number;
+  offsetY?: number;
   active: boolean;
 }) {
   const map = useMap();
@@ -335,6 +349,8 @@ function KeepSelectedVisible({
       const size = map.getSize();
       const visibleMidY = Math.max(56, (size.y - sheetH) / 2);
       const point = map.latLngToContainerPoint(L.latLng(lat, lng));
+      point.x += offsetX;
+      point.y += offsetY;
       const dx = point.x - size.x / 2;
       const dy = point.y - visibleMidY;
       if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
@@ -347,7 +363,7 @@ function KeepSelectedVisible({
       window.clearTimeout(timer);
       window.removeEventListener("hw-map-sheet", onSheet);
     };
-  }, [map, lat, lng, active]);
+  }, [map, lat, lng, offsetX, offsetY, active]);
   return null;
 }
 
@@ -513,10 +529,19 @@ export function HouseMap({
   const focus = useMemo(() => {
     if (pickMode || !selectedId) return null;
     const cluster = clusters.find((item) => item.houses.some((house) => house.id === selectedId));
-    if (cluster) return { lat: cluster.lat, lng: cluster.lng };
-    const house = houses.find((item) => item.id === selectedId);
-    return house ? { lat: house.lat, lng: house.lng } : null;
-  }, [clusters, houses, pickMode, selectedId]);
+    if (!cluster) {
+      const house = houses.find((item) => item.id === selectedId);
+      return house ? { lat: house.lat, lng: house.lng, offsetX: 0, offsetY: 0 } : null;
+    }
+    const inner =
+      !clusterOverview && cluster.houses.length > 1
+        ? fanPinScreenOffset(
+            cluster.houses.length,
+            cluster.houses.findIndex((house) => house.id === selectedId),
+          )
+        : { x: 0, y: 0 };
+    return { lat: cluster.lat, lng: cluster.lng, offsetX: inner.x, offsetY: inner.y };
+  }, [clusterOverview, clusters, houses, pickMode, selectedId]);
   const routePositions = useMemo(
     () =>
       routeLine && routeLine.length >= 2
@@ -582,7 +607,15 @@ export function HouseMap({
         {routeFitTick > 0 && routePositions ? (
           <FitRoute positions={routePositions} tick={routeFitTick} />
         ) : null}
-        {focus ? <KeepSelectedVisible lat={focus.lat} lng={focus.lng} active={active} /> : null}
+        {focus ? (
+          <KeepSelectedVisible
+            lat={focus.lat}
+            lng={focus.lng}
+            offsetX={focus.offsetX}
+            offsetY={focus.offsetY}
+            active={active}
+          />
+        ) : null}
         {!pickMode ? (
           <MapDismiss enabled={Boolean(selectedId)} onDismiss={onClose} />
         ) : null}

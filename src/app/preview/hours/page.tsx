@@ -173,6 +173,21 @@ export default function HoursPreviewPage() {
                         </p>
                       </div>
                     ) : null}
+                    {item.id === "after" ? (
+                      <div className="mt-3 flex items-center gap-3">
+                        <div
+                          className="house-pin relative"
+                          style={{ background: "#6d28d9" }}
+                          aria-label="סגור"
+                        >
+                          <b className="pin-status is-closed" />
+                          <span>🎃</span>
+                        </div>
+                        <p className="text-base text-violet-200">
+                          על המפה: נקודה אדומה של סגור — הערב של הבית נגמר. בכרטיס: ״כבר סגור״, לא הפסקה.
+                        </p>
+                      </div>
+                    ) : null}
                     {item.id === "opens-soon-1" || item.id === "opens-soon-2" ? (
                       <div className="mt-3 flex items-center gap-3">
                         <div

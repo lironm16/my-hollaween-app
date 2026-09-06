@@ -1,11 +1,12 @@
 import { formatDisplayAddress } from "@/lib/config";
 import { formatHoursLabel } from "@/lib/hours";
-import { candyLevel, offersSensitivity } from "@/lib/house-state";
-import { scareShort } from "@/lib/labels";
+import { candyLevel, offersSensitivity, resolveDecorLevel } from "@/lib/house-state";
+import { decorShort, scareShort } from "@/lib/labels";
 import type { HouseTraffic } from "@/lib/traffic";
 import type { PublicHouse } from "@/lib/types";
 
 const PUBLIC_HEADERS = [
+  "מס'",
   "שם",
   "כתובת",
   "איך מגיעים / דירה",
@@ -50,8 +51,19 @@ function candyLabel(house: PublicHouse) {
   return "נגמר";
 }
 
-function houseRow(house: PublicHouse, traffic?: HouseTraffic): Array<string | number> {
+/** Same scale as the form: לא מקושט → לילדים → קצת מפחיד → מפחיד. */
+function scareDecorLabel(house: PublicHouse) {
+  if (resolveDecorLevel(house) === "none") return decorShort.none;
+  return scareShort[house.scareLevel];
+}
+
+function houseRow(
+  house: PublicHouse,
+  index: number,
+  traffic?: HouseTraffic,
+): Array<string | number> {
   const cells: Array<string | number> = [
+    index + 1,
     house.name,
     formatDisplayAddress(house),
     house.arrival || "",
@@ -59,7 +71,7 @@ function houseRow(house: PublicHouse, traffic?: HouseTraffic): Array<string | nu
     house.notes || "",
     formatHoursLabel(house),
     candyLabel(house),
-    scareShort[house.scareLevel],
+    scareDecorLabel(house),
     house.accessible ? "כן" : "לא",
     offersSensitivity(house, "glutenFree") ? "כן" : "לא",
     offersSensitivity(house, "nutsFree") ? "כן" : "לא",
@@ -77,9 +89,9 @@ function headersFor(options?: SheetOptions) {
 
 export function housesToCsv(houses: PublicHouse[], options?: SheetOptions) {
   const lines = [headersFor(options).join(",")];
-  for (const house of houses) {
-    lines.push(houseRow(house, options?.traffic?.[house.id]).map(csvCell).join(","));
-  }
+  houses.forEach((house, index) => {
+    lines.push(houseRow(house, index, options?.traffic?.[house.id]).map(csvCell).join(","));
+  });
   return `\uFEFF${lines.join("\r\n")}\r\n`;
 }
 
@@ -201,7 +213,10 @@ function xlsxCell(value: string | number, ref: string, header = false) {
 /** Real Office Open XML workbook — Excel opens this without a corrupt-file warning. */
 export function housesToXlsx(houses: PublicHouse[], options?: SheetOptions): Uint8Array {
   const headers = headersFor(options);
-  const rows = [headers as Array<string | number>, ...houses.map((house) => houseRow(house, options?.traffic?.[house.id]))];
+  const rows = [
+    headers as Array<string | number>,
+    ...houses.map((house, index) => houseRow(house, index, options?.traffic?.[house.id])),
+  ];
   const lastCol = colLetter(headers.length - 1);
   const sheetRows = rows
     .map((row, rowIndex) => {
@@ -210,7 +225,7 @@ export function housesToXlsx(houses: PublicHouse[], options?: SheetOptions): Uin
       return `<row r="${r}" ht="28" customHeight="1">${cells}</row>`;
     })
     .join("");
-  const colWidths = [22, 28, 26, 36, 24, 16, 14, 16, 10, 14, 14, 14, 10, 10];
+  const colWidths = [8, 22, 28, 26, 36, 24, 16, 14, 16, 10, 14, 14, 14, 10, 10];
   const cols = headers
     .map((_, index) => `<col min="${index + 1}" max="${index + 1}" width="${colWidths[index] ?? 14}" customWidth="1"/>`)
     .join("");

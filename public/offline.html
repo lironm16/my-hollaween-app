@@ -52,7 +52,7 @@
       .candy.is-low { background: #d97706; }
       .candy.is-out { background: #b91c1c; }
       .candy.is-none { background: #94a3b8; }
-      .candy img { height: 88%; width: auto; }
+      .candy img { max-height: 62%; max-width: 70%; object-fit: contain; }
       .candy-strike {
         position: absolute;
         inset: 0;
@@ -83,6 +83,7 @@
         var list = document.getElementById("houses");
         var downloadBtn = document.getElementById("download");
         var scare = { mild: "לילדים", medium: "קצת מפחיד", spicy: "מפחיד" };
+        var decorNone = "לא מקושט";
 
         function csvCell(value) {
           var text = String(value == null ? "" : value);
@@ -90,10 +91,10 @@
           return text;
         }
         function toCsv(houses) {
-          var headers = ["שם","כתובת","איך מגיעים / דירה","מה מחכה בבית","הערות","שעות","ממתקים","פחד","נגיש","ללא גלוטן","ללא אגוזים","ללא שומשום"];
+          var headers = ["מס'","שם","כתובת","איך מגיעים / דירה","מה מחכה בבית","הערות","שעות","ממתקים","פחד","נגיש","ללא גלוטן","ללא אגוזים","ללא שומשום"];
           var lines = [headers.join(",")];
-          houses.forEach(function (house) {
-            lines.push(rowCells(house).map(csvCell).join(","));
+          houses.forEach(function (house, index) {
+            lines.push(rowCells(house, index).map(csvCell).join(","));
           });
           return "\uFEFF" + lines.join("\r\n") + "\r\n";
         }
@@ -124,9 +125,14 @@
           var level = house.treatStock && house.treatStock[id];
           return level !== "out";
         }
-        function rowCells(house) {
+        function scareDecorLabel(house) {
+          if (house.decorLevel === "none" || house.decorated === false) return decorNone;
+          return scare[house.scareLevel] || "";
+        }
+        function rowCells(house, index) {
           var tone = candyTone(house);
           return [
+            index + 1,
             house.name || "בית",
             house.address || "",
             house.arrival || "",
@@ -134,7 +140,7 @@
             house.notes || "",
             hoursLabel(house),
             candyLabel(tone),
-            scare[house.scareLevel] || "",
+            scareDecorLabel(house),
             yesNo(Boolean(house.accessible)),
             yesNo(hasTreat(house, "glutenFree")),
             yesNo(hasTreat(house, "nutsFree")),

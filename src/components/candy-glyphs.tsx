@@ -109,15 +109,8 @@ export function candyToneLabel(tone: CandyTone) {
   return `ממתקים · ${stockLabels[tone]}`;
 }
 
-const CANDY_ART: Record<CandyTone, string> = {
-  plenty: "/icons/candy-round-cream.png",
-  low: "/icons/candy-round-dark.png",
-  out: "/icons/candy-round-cream.png",
-  none: "/icons/candy-round-cream.png",
-};
-
 export function CandySign({
-  Glyph,
+  Glyph = CandyRound,
   tone,
   className,
 }: {
@@ -125,7 +118,6 @@ export function CandySign({
   tone: CandyTone;
   className?: string;
 }) {
-  const usePhoto = !Glyph || Glyph === CandyRound;
   return (
     <span
       className={cn(
@@ -136,19 +128,9 @@ export function CandySign({
       title={candyToneLabel(tone)}
       aria-label={candyToneLabel(tone)}
     >
-      {usePhoto || !Glyph ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={CANDY_ART[tone]}
-          alt=""
-          aria-hidden
-          className="h-[88%] w-auto max-w-none object-contain"
-        />
-      ) : (
-        <span className="size-[86%]">
-          <Glyph />
-        </span>
-      )}
+      <span className="size-[62%]">
+        <Glyph />
+      </span>
       {tone === "none" ? <DiscStrike /> : null}
     </span>
   );

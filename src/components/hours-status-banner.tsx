@@ -6,6 +6,7 @@ import {
   closingSoonAt,
   formatHoursLabel,
   hoursStatus,
+  isHoursNightOver,
   onBreakAt,
   openingSoonAt,
 } from "@/lib/hours";
@@ -46,17 +47,25 @@ export function HoursStatusBanner({
   const rehearsed = useAppNow();
   const clock = now ?? rehearsed;
 
+  if (effectiveVisit(house) === "closed") {
+    return (
+      <p className={cn(BANNER, CLOSED_TONE, className)}>הבית סגור</p>
+    );
+  }
+
+  if (isHoursNightOver(house, clock)) {
+    return (
+      <p className={cn(BANNER, "bg-violet-950/50 text-violet-200", className)}>
+        כבר סגור ({formatHoursLabel(house) || "שעות הפעילות עברו"})
+      </p>
+    );
+  }
+
   if (isOwnerFrozen(house, clock.getTime())) {
     return (
       <p className={cn(BANNER, "bg-slate-900/70 text-slate-100", className)}>
         הפסקה עכשיו
       </p>
-    );
-  }
-
-  if (effectiveVisit(house) === "closed") {
-    return (
-      <p className={cn(BANNER, CLOSED_TONE, className)}>הבית סגור</p>
     );
   }
 

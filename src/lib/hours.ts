@@ -141,6 +141,20 @@ export function nightStatusControlsEnabled(house: HoursSource, now = appNow()) {
   return minutesNow(now) >= from;
 }
 
+/** True after the last listed window on event night (or on a later calendar day). Uses the house’s real hours, not rehearsal stubs. */
+export function isHoursNightOver(house: HoursSource, now = appNow()) {
+  const day = eventNightRelation(now);
+  if (day > 0) return true;
+  if (day < 0) return false;
+  const windows = houseHoursWindows(house);
+  if (windows.length === 0) return false;
+  const nowMin = minutesNow(now);
+  return windows.every((window) => {
+    const to = parseClockMinutes(window.to);
+    return to !== null && nowMin >= to;
+  });
+}
+
 /** Open / not-yet / closing-soon — only on the Halloween event night. */
 export function hoursStatus(
   house: HoursSource & {
@@ -153,16 +167,16 @@ export function hoursStatus(
   house = withRehearsalPin(house, now);
   if (effectiveVisit(house) === "closed") return { kind: "closedVisit" };
   if (house.id && REHEARSAL_PIN[house.id] === "break") {
-    const opensAt = onBreakAt(house, now) ?? houseHoursWindows(house)[1]?.from ?? "";
-    return { kind: "between", opensAt };
+    const opensAt = onBreakAt(house, now);
+    if (opensAt) return { kind: "between", opensAt };
   }
   if (house.id && REHEARSAL_PIN[house.id] === "opensSoon") {
-    const opensAt = openingSoonAt(house, now) ?? houseHoursWindows(house)[0]?.from ?? "";
-    return { kind: "opensSoon", opensAt };
+    const opensAt = openingSoonAt(house, now);
+    if (opensAt) return { kind: "opensSoon", opensAt };
   }
   if (house.id && REHEARSAL_PIN[house.id] === "closingSoon") {
-    const closesAt = closingSoonAt(house, now) ?? houseHoursWindows(house)[0]?.to ?? "";
-    return { kind: "closingSoon", closesAt };
+    const closesAt = closingSoonAt(house, now);
+    if (closesAt) return { kind: "closingSoon", closesAt };
   }
 
   const windows = houseHoursWindows(house);
@@ -256,6 +270,8 @@ function withRehearsalPin<T extends SoonHouse>(house: T, now: Date): T {
   const kind = house.id ? REHEARSAL_PIN[house.id] : undefined;
   if (!kind) return house;
   if (kind === "closed") return { ...house, visit: "closed" };
+  // After the real last window the night is over — do not invent a later reopen.
+  if (isHoursNightOver(house, now)) return house;
   return { ...house, ...syncHoursFields(rehearsalWindows(kind, now)), visit: "come" };
 }
 
@@ -307,6 +323,7 @@ export function isOpeningSoon(house: SoonHouse, now = appNow()) {
 
 /** Between two clock windows (not yet opening-soon). Same rehearsal rules. */
 export function onBreakAt(house: SoonHouse, now = appNow()): string | null {
+  if (isHoursNightOver(house, now)) return null;
   house = withRehearsalPin(house, now);
   if (effectiveVisit(house) === "closed") return null;
   if (isFrozen(house, now.getTime())) return null;
