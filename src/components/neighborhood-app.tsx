@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { List, MapPinned, RefreshCw, Route, WifiOff } from "lucide-react";
+import { List, MapPinned, RefreshCw, Route } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
+import { PingPongMarquee } from "@/components/neighborhood-marquee";
 import {
   FilterOption,
   FilterSection,
@@ -696,27 +697,39 @@ export function NeighborhoodApp({
           </button>
           <CsvExportButton houses={visible} kind={likedOnly ? "liked" : "list"} includeTraffic={admin} />
         </div>
-        <div className="mt-1 flex flex-col gap-0.5">
-          <p className="text-base text-violet-300">{HOUSE_SET_STATUS[houseSet]}</p>
-          {geoError ? (
-            <p className="text-base text-amber-200">לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.</p>
-          ) : outsideNeighborhood ? (
-            <p className="text-base text-amber-200">המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.</p>
-          ) : originPickActive ? (
-            <p className="text-base text-violet-300">לחצו על המפה כדי לקבוע נקודת התחלה</p>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setOriginPickerOpen(true)}
-              className="text-start text-base text-orange-100 underline-offset-2 hover:underline"
-            >
-              {routeMode
-                ? `מסלול${routePrefsLabel ? ` · ${routePrefsLabel}` : ""} · ${walkingRoute?.stops.length ?? 0} עצירות · ${origin.label}`
-                : `מיון לפי מרחק · ${origin.label}`}
-              <span className="text-violet-300"> · שינוי</span>
-            </button>
-          )}
-        </div>
+        <StatusTicker
+          text={[
+            geoError
+              ? "לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן."
+              : outsideNeighborhood
+                ? "המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב."
+                : originPickActive
+                  ? "לחצו על המפה כדי לקבוע נקודת התחלה"
+                  : routeMode
+                    ? `מסלול${routePrefsLabel ? ` · ${routePrefsLabel}` : ""} · ${walkingRoute?.stops.length ?? 0} עצירות · ${origin.label}`
+                    : `מיון לפי מרחק · ${origin.label}`,
+            `${visible.length} בתים`,
+            onlineDevices != null ? `${onlineDevices} מבקרים` : null,
+            HOUSE_SET_STATUS[houseSet],
+            offline
+              ? "לא מקוון"
+              : unreachable
+                ? "השרת לא עונה"
+                : source === "snapshot"
+                  ? "עותק סטטי"
+                  : source === "cache"
+                    ? "שמור בטלפון"
+                    : null,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+          tone={geoError || outsideNeighborhood ? "warn" : "normal"}
+          onChange={
+            geoError || outsideNeighborhood || originPickActive
+              ? undefined
+              : () => setOriginPickerOpen(true)
+          }
+        />
       </div>
       <FiltersSheet
         open={filtersOpen}
@@ -891,14 +904,6 @@ export function NeighborhoodApp({
                   </Button>
                 </div>
               ) : null}
-              <CatalogMetaChip
-                houseCount={visible.length}
-                stopCount={routeMode ? walkingRoute?.stops.length ?? 0 : null}
-                offline={offline}
-                unreachable={unreachable}
-                source={source}
-                onlineDevices={onlineDevices}
-              />
             </div>
             {view === "list" ? (
               <div
@@ -1032,44 +1037,33 @@ export function NeighborhoodApp({
   );
 }
 
-function CatalogMetaChip({
-  houseCount,
-  stopCount,
-  offline,
-  unreachable,
-  source,
-  onlineDevices,
+function StatusTicker({
+  text,
+  tone,
+  onChange,
 }: {
-  houseCount: number;
-  stopCount?: number | null;
-  offline: boolean;
-  unreachable: boolean;
-  source: string | null;
-  onlineDevices?: number | null;
+  text: string;
+  tone: "normal" | "warn";
+  onChange?: () => void;
 }) {
-  const stale = offline || unreachable || source === "cache" || source === "snapshot";
+  const marquee = (
+    <PingPongMarquee
+      text={text}
+      className={cn("flex-1 text-base", tone === "warn" ? "text-amber-200" : "text-orange-100")}
+    />
+  );
+  if (!onChange) {
+    return <div className="mt-1 flex min-w-0 items-center">{marquee}</div>;
+  }
   return (
-    <div className="pointer-events-none absolute top-2 start-2 z-10">
-      <span className="inline-flex max-w-[min(100%,18rem)] flex-wrap items-center gap-1.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
-        <span>{houseCount} בתים</span>
-        {onlineDevices != null ? <span>· {onlineDevices} מבקרים</span> : null}
-        {stopCount != null ? <span>· {stopCount} עצירות</span> : null}
-        {stale ? (
-          <>
-            <WifiOff className="size-3 shrink-0" />
-            <span>
-              {offline
-                ? "לא מקוון"
-                : unreachable
-                  ? "השרת לא עונה"
-                  : source === "snapshot"
-                    ? "עותק סטטי"
-                    : "שמור בטלפון"}
-            </span>
-          </>
-        ) : null}
-      </span>
-    </div>
+    <button
+      type="button"
+      onClick={onChange}
+      className="mt-1 flex w-full min-w-0 items-center gap-2 text-start"
+    >
+      {marquee}
+      <span className="shrink-0 text-base text-violet-300 underline-offset-2 hover:underline">שינוי</span>
+    </button>
   );
 }
 
