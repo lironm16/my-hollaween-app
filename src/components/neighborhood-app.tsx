@@ -59,8 +59,8 @@ import {
 } from "@/lib/offline-db";
 import { decorShort } from "@/lib/labels";
 import { readHomeView, writeHomeView, type HomeView } from "@/lib/home-view";
-import { HOUSE_SET_LABELS, HOUSE_SET_STATUS, houseMatchesSet } from "@/lib/house-set";
-import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
+import { HOUSE_SET_LABELS, houseMatchesSet } from "@/lib/house-set";
+import { buildWalkingRoute, formatRouteSummary, type WalkingRoute } from "@/lib/route";
 import type { Catalog, House, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -359,6 +359,13 @@ export function NeighborhoodApp({
 
   const walkingRoute = routeMode ? pinnedRoute : null;
   const { line: routeLine } = useRouteGeometry(walkingRoute, routeMode);
+  const listStatusText = useMemo(() => {
+    const parts = [`${visible.length} בתים`];
+    if (onlineDevices != null) parts.push(`${onlineDevices} מבקרים`);
+    if (routeMode && walkingRoute) parts.push(formatRouteSummary(walkingRoute));
+    parts.push(HOUSE_SET_LABELS[houseSet]);
+    return parts.join(" · ");
+  }, [houseSet, onlineDevices, routeMode, visible.length, walkingRoute]);
 
   const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const selected =
@@ -382,7 +389,6 @@ export function NeighborhoodApp({
     : originPickActive
       ? "לחצו על המפה כדי לקבוע נקודת התחלה"
       : null;
-  const houseSetStatus = admin ? HOUSE_SET_STATUS[houseSet] : undefined;
 
   useEffect(() => {
     if (!geoError) {
@@ -901,7 +907,7 @@ export function NeighborhoodApp({
                     route={walkingRoute}
                     hasGps={Boolean(gps)}
                     onRequestLocation={gpsAllowed ? chooseGpsOrigin : undefined}
-                    setLabel={houseSetStatus}
+                    statusText={listStatusText}
                     onSelectHouse={(id) => {
                       setView("map");
                       setClusterOverview(false);
@@ -913,13 +919,12 @@ export function NeighborhoodApp({
                     houses={visible}
                     origin={origin}
                     catalogSource={source}
-                    setLabel={houseSetStatus}
+                    statusText={listStatusText}
                     likedIds={likes.likedIds}
                     onToggleLike={onToggleLike}
                     visitedIds={visits.visitedIds}
                     onToggleVisited={onToggleVisited}
                     admin={admin}
-                    onlineDevices={onlineDevices}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
                     editCodeFor={(id) =>
                       admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode
