@@ -82,7 +82,7 @@ export function OriginPickerSheet({
             disabled={!gpsAllowed}
             icon={<Navigation className="size-4" />}
             label="המיקום שלי"
-            hint={gpsAllowed ? "GPS" : "אשרו גישה למיקום בדפדפן"}
+            hint={gpsAllowed ? "GPS" : "אשרו גישה למיקום בהגדרות"}
             onClick={onChooseGps}
           />
           <OriginOption

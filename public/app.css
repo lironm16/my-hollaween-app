@@ -1101,6 +1101,9 @@
   .bg-\[\#b91c1c\] {
     background-color: #b91c1c;
   }
+  .bg-\[\#d6d3d1\] {
+    background-color: #d6d3d1;
+  }
   .bg-\[\#d97706\] {
     background-color: #d97706;
   }
@@ -1446,6 +1449,9 @@
   .pb-10 {
     padding-bottom: calc(var(--spacing) * 10);
   }
+  .pb-\[max\(1rem\,env\(safe-area-inset-bottom\,0px\)\)\] {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom,0px));
+  }
   .text-center {
     text-align: center;
   }
@@ -1490,6 +1496,9 @@
     font-size: var(--text-xl);
     line-height: var(--tw-leading, var(--text-xl--line-height));
   }
+  .text-\[0\.65rem\] {
+    font-size: 0.65rem;
+  }
   .text-\[1\.2rem\] {
     font-size: 1.2rem;
   }
@@ -1526,6 +1535,10 @@
   .font-semibold {
     --tw-font-weight: var(--font-weight-semibold);
     font-weight: var(--font-weight-semibold);
+  }
+  .tracking-\[0\.28em\] {
+    --tw-tracking: 0.28em;
+    letter-spacing: 0.28em;
   }
   .tracking-wide {
     --tw-tracking: var(--tracking-wide);
@@ -1622,6 +1635,12 @@
   .text-orange-200 {
     color: var(--color-orange-200);
   }
+  .text-orange-200\/90 {
+    color: color-mix(in srgb, oklch(90.1% 0.076 70.697) 90%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-orange-200) 90%, transparent);
+    }
+  }
   .text-orange-300 {
     color: var(--color-orange-300);
   }
@@ -1687,6 +1706,12 @@
   }
   .text-violet-400 {
     color: var(--color-violet-400);
+  }
+  .text-violet-400\/80 {
+    color: color-mix(in srgb, oklch(70.2% 0.183 293.541) 80%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-violet-400) 80%, transparent);
+    }
   }
   .text-white {
     color: var(--color-white);
@@ -3548,14 +3573,20 @@ svg.leaflet-zoom-animated {
   z-index: 0;
   isolation: isolate;
 }
-.leaflet-container.is-osm-dark .leaflet-tile-pane {
+.leaflet-container.is-osm-dark .leaflet-tile-pane,
+.is-osm-dark .leaflet-tile-pane {
   filter: invert(1) hue-rotate(180deg) saturate(0.35) brightness(0.82) contrast(1.05);
 }
 .leaflet-container.is-osm-dark .leaflet-overlay-pane,
 .leaflet-container.is-osm-dark .leaflet-shadow-pane,
 .leaflet-container.is-osm-dark .leaflet-marker-pane,
 .leaflet-container.is-osm-dark .leaflet-tooltip-pane,
-.leaflet-container.is-osm-dark .leaflet-popup-pane {
+.leaflet-container.is-osm-dark .leaflet-popup-pane,
+.is-osm-dark .leaflet-overlay-pane,
+.is-osm-dark .leaflet-shadow-pane,
+.is-osm-dark .leaflet-marker-pane,
+.is-osm-dark .leaflet-tooltip-pane,
+.is-osm-dark .leaflet-popup-pane {
   filter: none;
   isolation: isolate;
 }
