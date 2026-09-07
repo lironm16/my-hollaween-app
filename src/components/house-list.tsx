@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { HousePlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -12,11 +12,20 @@ import { effectiveVisit } from "@/lib/house-state";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function ListStatusLabels({ statusText }: { statusText: string }) {
+export function ListStatusLabels({
+  statusText,
+  extra,
+}: {
+  statusText: string;
+  extra?: ReactNode;
+}) {
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 space-y-2">
       <p className="text-base text-violet-300">ממוין לפי מרחק</p>
-      <PingPongMarquee text={statusText} className="text-base text-violet-300" />
+      <div className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
+        <PingPongMarquee text={statusText} className="text-base font-medium text-orange-100" />
+        {extra}
+      </div>
     </div>
   );
 }

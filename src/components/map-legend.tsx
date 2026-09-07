@@ -131,38 +131,45 @@ export function MapLegend() {
                 aria-modal="true"
                 aria-labelledby={titleId}
                 dir="rtl"
-                className="map-legend-panel relative max-h-[min(88dvh,40rem)] w-[min(38rem,calc(100vw-1.5rem))] overflow-y-auto overscroll-contain rounded-2xl bg-[#160b20] px-3 pb-3 pt-11 text-right shadow-[0_16px_48px_rgba(0,0,0,0.55)] ring-1 ring-orange-500/30"
-                onClick={(event) => event.stopPropagation()}
+                className="map-legend-panel relative flex max-h-[min(88dvh,40rem)] w-[min(38rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl bg-[#160b20] text-right shadow-[0_16px_48px_rgba(0,0,0,0.55)] ring-1 ring-orange-500/30"
+                onClick={() => setOpen(false)}
               >
-                <button
-                  type="button"
-                  className="absolute top-2 left-2 inline-flex size-9 items-center justify-center rounded-full text-violet-200 hover:bg-orange-500/15 hover:text-orange-100"
-                  aria-label="סגירת המקרא"
-                  onClick={() => setOpen(false)}
-                >
-                  <X className="size-5" />
-                </button>
-                <h2 id={titleId} className="absolute top-3 right-4 text-base font-semibold text-orange-100">
-                  מקרא
-                </h2>
-                <div className="flex flex-col gap-3">
-                  {GROUPS.map((group) => (
-                    <section key={group.title}>
-                      <h3 className="mb-1.5 text-base font-semibold text-orange-200">{group.title}</h3>
-                      <ul className="flex flex-wrap justify-start gap-x-1 gap-y-2">
-                        {group.items.map((item) => (
-                          <li key={item.key} className="flex w-[4.75rem] min-w-0 flex-col items-center gap-1">
-                            <div className="grid size-16 shrink-0 place-items-center overflow-visible" dir="ltr">
-                              {item.node}
-                            </div>
-                            <span className="w-full text-center text-base leading-tight text-violet-100">
-                              {item.label}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </section>
-                  ))}
+                <div className="flex shrink-0 items-center justify-between gap-2 px-3 pt-2 pb-1">
+                  <h2 id={titleId} className="text-base font-semibold text-orange-100">
+                    מקרא
+                  </h2>
+                  <button
+                    type="button"
+                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-violet-200 hover:bg-orange-500/15 hover:text-orange-100"
+                    aria-label="סגירת המקרא"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setOpen(false);
+                    }}
+                  >
+                    <X className="size-5" />
+                  </button>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-3">
+                  <div className="flex flex-col gap-3">
+                    {GROUPS.map((group) => (
+                      <section key={group.title}>
+                        <h3 className="mb-1.5 text-base font-semibold text-orange-200">{group.title}</h3>
+                        <ul className="flex flex-wrap justify-start gap-x-1 gap-y-2">
+                          {group.items.map((item) => (
+                            <li key={item.key} className="flex w-[4.75rem] min-w-0 flex-col items-center gap-1">
+                              <div className="grid size-16 shrink-0 place-items-center overflow-visible" dir="ltr">
+                                {item.node}
+                              </div>
+                              <span className="w-full text-center text-base leading-tight text-violet-100">
+                                {item.label}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>,
