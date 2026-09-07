@@ -4,7 +4,6 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Check, WifiOff, X } from "lucide-react";
 import { ScarePumpkin } from "@/components/scare-glyphs";
-import { LikedSign } from "@/components/visit-marks";
 import type { WalkingRoute } from "@/lib/route";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +12,7 @@ function HouseIcon() {
     <svg viewBox="0 0 24 24" aria-hidden className="h-full w-full">
       <path
         fill="currentColor"
-        d="M4.2 11.4 12 4.2l7.8 7.2v8.1c0 .7-.6 1.3-1.3 1.3h-4.1v-5.4h-4.8v5.4H5.5c-.7 0-1.3-.6-1.3-1.3z"
+        d="M3.6 11.2 12 3.6l8.4 7.6v8.6c0 .8-.7 1.5-1.5 1.5h-4.4v-5.8H9.5v5.8H5.1c-.8 0-1.5-.7-1.5-1.5z"
       />
     </svg>
   );
@@ -22,22 +21,36 @@ function HouseIcon() {
 function PeopleIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden className="h-full w-full">
-      <circle cx="8.2" cy="7.2" r="3.1" fill="#a78bfa" />
-      <path fill="#a78bfa" d="M2.4 19.6c.2-3.4 2.6-5.6 5.8-5.6s5.6 2.2 5.8 5.6z" />
-      <circle cx="15.6" cy="7.4" r="3.1" fill="#f97316" />
-      <path fill="#f97316" d="M10.2 19.6c.3-3.2 2.6-5.2 5.4-5.2 3 0 5.4 2.1 5.6 5.2z" />
+      <circle cx="8" cy="7" r="3.2" fill="#c4b5fd" />
+      <path fill="#c4b5fd" d="M1.8 20c.3-3.6 2.8-6 6.2-6s5.9 2.4 6.2 6z" />
+      <circle cx="15.8" cy="7.2" r="3.2" fill="#fb923c" />
+      <path fill="#fb923c" d="M9.8 20c.3-3.4 2.8-5.6 5.8-5.6 3.2 0 5.8 2.3 6 5.6z" />
     </svg>
   );
 }
 
-function PinIcon() {
+function PinIcon({ mark }: { mark?: string }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden className="h-full w-full">
       <path
-        fill="currentColor"
-        d="M12 2.4c3.7 0 6.6 2.8 6.6 6.4 0 4.6-6.6 12.8-6.6 12.8S5.4 13.4 5.4 8.8C5.4 5.2 8.3 2.4 12 2.4z"
+        fill="#f97316"
+        d="M12 1.8c4 0 7.2 3 7.2 6.8 0 5.2-7.2 13.6-7.2 13.6S4.8 13.8 4.8 8.6C4.8 4.8 8 1.8 12 1.8z"
       />
-      <circle cx="12" cy="8.6" r="2.2" fill="#1c0e24" />
+      <circle cx="12" cy="8.5" r="3.2" fill="#fff7ed" />
+      {mark ? (
+        <text
+          x="12"
+          y="10.2"
+          textAnchor="middle"
+          fill="#9a3412"
+          fontSize="5.2"
+          fontWeight="700"
+        >
+          {mark}
+        </text>
+      ) : (
+        <circle cx="12" cy="8.5" r="1.4" fill="#9a3412" />
+      )}
     </svg>
   );
 }
@@ -46,14 +59,14 @@ function PathIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden className="h-full w-full">
       <path
-        d="M5 17.5c2.8-1.2 3.2-4.8 6.2-6.2 2.6-1.2 4.2.8 7.4.2"
+        d="M4.5 18c3.2-1.4 3.4-5.4 7-7 2.8-1.2 4.6 1.2 8 0.4"
         fill="none"
-        stroke="currentColor"
-        strokeWidth="2.4"
+        stroke="#fb923c"
+        strokeWidth="2.6"
         strokeLinecap="round"
       />
-      <circle cx="5" cy="18" r="2.1" fill="#a78bfa" />
-      <circle cx="19" cy="11.2" r="2.1" fill="#a78bfa" />
+      <circle cx="4.5" cy="18.2" r="2.3" fill="#c4b5fd" />
+      <circle cx="19.6" cy="11.2" r="2.3" fill="#c4b5fd" />
     </svg>
   );
 }
@@ -61,14 +74,25 @@ function PathIcon() {
 function ClockIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden className="h-full w-full">
-      <circle cx="12" cy="12" r="8.2" fill="currentColor" />
-      <circle cx="12" cy="12" r="6.4" fill="#1c0e24" />
+      <circle cx="12" cy="12" r="8.6" fill="#c4b5fd" />
+      <circle cx="12" cy="12" r="6.6" fill="#1c0e24" />
       <path
-        d="M12 7.4v5l3.2 2"
+        d="M12 7.2v5.1l3.4 2.1"
         fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
+        stroke="#fb923c"
+        strokeWidth="1.9"
         strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function HeartIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="h-full w-full">
+      <path
+        fill="#e11d48"
+        d="M12 20.8 4.5 13.4C2.1 11 2.3 7.2 5.4 5.4c2.2-1.3 5-.6 6.6 1.6 1.6-2.2 4.4-2.9 6.6-1.6 3.1 1.8 3.3 5.6.9 8z"
       />
     </svg>
   );
@@ -79,31 +103,67 @@ function distanceParts(meters: number) {
   return { value: (meters / 1000).toFixed(1), unit: "ק״מ" };
 }
 
-function Stat({
+function Tile({
   icon,
   value,
   label,
-  compact = false,
+  className,
 }: {
   icon: ReactNode;
   value: string;
   label: string;
-  compact?: boolean;
+  className?: string;
 }) {
   return (
-    <div className={cn("flex min-w-0 items-center gap-2.5", compact ? "flex-1" : "flex-1 justify-center")}>
-      <span className={cn("shrink-0", compact ? "size-10" : "size-14")}>{icon}</span>
+    <div className={cn("flex min-w-0 items-center gap-2.5 rounded-xl bg-[#14081c] px-2.5 py-2.5", className)}>
+      <span className="size-12 shrink-0">{icon}</span>
       <span className="min-w-0 text-right">
-        <span className={cn("block font-bold leading-none text-orange-50", compact ? "text-xl" : "text-2xl")}>
-          {value}
-        </span>
-        <span className="mt-0.5 block text-base leading-tight text-violet-200">{label}</span>
+        <span className="block text-2xl font-bold leading-none text-white">{value}</span>
+        <span className="mt-1 block text-base leading-none text-white/80">{label}</span>
       </span>
     </div>
   );
 }
 
-function Panel({
+function RouteChip({
+  icon,
+  value,
+  label,
+}: {
+  icon: ReactNode;
+  value: string;
+  label: string;
+}) {
+  return (
+    <div className="flex min-w-0 items-center gap-1.5 rounded-xl bg-[#14081c] px-1.5 py-2">
+      <span className="size-9 shrink-0">{icon}</span>
+      <span className="min-w-0 text-right">
+        <span className="block text-lg font-bold leading-none text-white">{value}</span>
+        <span className="mt-0.5 block text-base leading-none text-white/80">{label}</span>
+      </span>
+    </div>
+  );
+}
+
+function Stack({
+  icon,
+  value,
+  label,
+}: {
+  icon: ReactNode;
+  value: string;
+  label: string;
+}) {
+  return (
+    <div className="flex min-w-0 flex-1 flex-col items-center gap-1">
+      <span className="size-9">{icon}</span>
+      <span className="text-xl font-bold leading-none text-white">{value}</span>
+      <span className="text-base leading-none text-white/80">{label}</span>
+    </div>
+  );
+}
+
+function Section({
   title,
   children,
   className,
@@ -113,8 +173,8 @@ function Panel({
   className?: string;
 }) {
   return (
-    <section className={cn("rounded-2xl bg-[#2a1638] p-3 ring-1 ring-orange-500/20", className)}>
-      <h3 className="mb-2.5 text-right text-base font-semibold text-orange-200">{title}:</h3>
+    <section className={cn("rounded-2xl bg-[#241332] p-2.5 ring-1 ring-white/10", className)}>
+      <h3 className="mb-2 text-right text-base font-semibold text-orange-400">{title}:</h3>
       {children}
     </section>
   );
@@ -162,6 +222,7 @@ export function MapStats({
 
   const badge = filteredHouses > 99 ? "99+" : String(filteredHouses);
   const walk = route ? distanceParts(route.totalMeters) : null;
+  const stopMark = route && route.stops.length < 100 ? String(route.stops.length) : undefined;
 
   return (
     <div className="relative">
@@ -177,13 +238,13 @@ export function MapStats({
                 aria-modal="true"
                 aria-labelledby={titleId}
                 dir="rtl"
-                className="relative w-[min(24rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl bg-[#160b20] text-right shadow-[0_16px_48px_rgba(0,0,0,0.55)] ring-1 ring-orange-500/35"
+                className="relative w-[min(24rem,calc(100vw-1.5rem))] rounded-3xl bg-[#12081a] p-3 text-right shadow-[0_16px_48px_rgba(0,0,0,0.55)] ring-1 ring-orange-500/40"
                 onClick={(event) => event.stopPropagation()}
               >
-                <div className="flex items-center justify-between gap-2 px-3 pt-2.5 pb-1">
+                <div className="mb-2 flex items-center justify-between gap-2">
                   <h2
                     id={titleId}
-                    className="flex items-center gap-2 text-lg font-semibold text-orange-100"
+                    className="flex items-center gap-1.5 text-xl font-bold text-orange-400"
                   >
                     <span className="inline-flex size-7 text-orange-500">
                       <ScarePumpkin />
@@ -192,17 +253,17 @@ export function MapStats({
                   </h2>
                   <button
                     type="button"
-                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-[#2a1638] text-violet-200 ring-1 ring-orange-500/25 hover:bg-orange-500/15 hover:text-orange-100"
+                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-orange-500 text-black hover:bg-orange-400"
                     aria-label="סגירת הסיכום"
                     onClick={() => setOpen(false)}
                   >
-                    <X className="size-5" />
+                    <X className="size-5" strokeWidth={3} />
                   </button>
                 </div>
-                <div className="flex flex-col gap-2.5 px-3 pb-3 pt-1">
-                  <Panel title="השכונה">
-                    <div className="flex items-center gap-3">
-                      <Stat
+                <div className="flex flex-col gap-2.5">
+                  <Section title="השכונה">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Tile
                         icon={
                           <span className="text-orange-500">
                             <HouseIcon />
@@ -211,16 +272,17 @@ export function MapStats({
                         value={String(totalHouses)}
                         label="בתים"
                       />
-                      <Stat
+                      <Tile
                         icon={<PeopleIcon />}
                         value={onlineDevices == null ? "—" : String(onlineDevices)}
                         label="מבקרים"
                       />
                     </div>
-                  </Panel>
+                  </Section>
                   <div className="grid grid-cols-2 gap-2.5">
-                    <Panel title="לפי הסינון">
-                      <Stat
+                    <Section title="לפי הסינון">
+                      <Tile
+                        className="bg-transparent px-1 py-1 ring-0"
                         icon={
                           <span className="text-orange-500">
                             <ScarePumpkin />
@@ -229,19 +291,13 @@ export function MapStats({
                         value={String(filteredHouses)}
                         label="בתים"
                       />
-                    </Panel>
-                    <Panel title="שלכם">
-                      <div className="flex items-center gap-2">
-                        <Stat
-                          compact
-                          icon={<LikedSign className="size-10" />}
-                          value={String(likedCount)}
-                          label="שמורים"
-                        />
-                        <Stat
-                          compact
+                    </Section>
+                    <Section title="שלכם">
+                      <div className="flex items-start justify-around gap-1 pt-1">
+                        <Stack icon={<HeartIcon />} value={String(likedCount)} label="שמורים" />
+                        <Stack
                           icon={
-                            <span className="inline-flex size-10 items-center justify-center rounded-full bg-emerald-600 text-white">
+                            <span className="inline-flex size-9 items-center justify-center rounded-full bg-emerald-500 text-black">
                               <Check className="size-5" strokeWidth={3} />
                             </span>
                           }
@@ -249,37 +305,27 @@ export function MapStats({
                           label="ביקרתי"
                         />
                       </div>
-                    </Panel>
+                    </Section>
                   </div>
                   {route && walk ? (
-                    <Panel
+                    <Section
                       title={route.accessible ? "מסלול נגיש" : "מסלול"}
-                      className="bg-[#3a2010] ring-orange-400/40"
+                      className="bg-[#2c1a12] ring-orange-500/25"
                     >
                       <div className="grid grid-cols-3 gap-2">
-                        <div className="flex flex-col items-center gap-1 rounded-xl bg-[#160b20]/70 px-1 py-2">
-                          <span className="size-9 text-orange-500">
-                            <PinIcon />
-                          </span>
-                          <span className="text-lg font-bold leading-none text-orange-50">{route.stops.length}</span>
-                          <span className="text-base text-violet-200">עצירות</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1 rounded-xl bg-[#160b20]/70 px-1 py-2">
-                          <span className="size-9 text-orange-400">
-                            <PathIcon />
-                          </span>
-                          <span className="text-lg font-bold leading-none text-orange-50">{walk.value}</span>
-                          <span className="text-base text-violet-200">{walk.unit}</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1 rounded-xl bg-[#160b20]/70 px-1 py-2">
-                          <span className="size-9 text-violet-400">
-                            <ClockIcon />
-                          </span>
-                          <span className="text-lg font-bold leading-none text-orange-50">כ־{route.totalMinutes}</span>
-                          <span className="text-base text-violet-200">דק׳</span>
-                        </div>
+                        <RouteChip
+                          icon={<PinIcon mark={stopMark} />}
+                          value={String(route.stops.length)}
+                          label="עצירות"
+                        />
+                        <RouteChip icon={<PathIcon />} value={walk.value} label={walk.unit} />
+                        <RouteChip
+                          icon={<ClockIcon />}
+                          value={`כ־${route.totalMinutes}`}
+                          label="דק׳"
+                        />
                       </div>
-                    </Panel>
+                    </Section>
                   ) : null}
                   {staleLabel ? (
                     <p className="flex items-center gap-2 text-base text-amber-100">
