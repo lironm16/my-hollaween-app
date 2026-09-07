@@ -876,6 +876,7 @@ export function NeighborhoodApp({
                 </div>
               ) : null}
               <CatalogMetaChip
+                hidden={Boolean(selected) && !originPickActive}
                 houseCount={visible.length}
                 offline={offline}
                 unreachable={unreachable}
@@ -1038,6 +1039,7 @@ function StatusTicker({
 }
 
 function CatalogMetaChip({
+  hidden = false,
   houseCount,
   offline,
   unreachable,
@@ -1046,6 +1048,7 @@ function CatalogMetaChip({
   houseSetLabel,
   routeStops = null,
 }: {
+  hidden?: boolean;
   houseCount: number;
   offline: boolean;
   unreachable: boolean;
@@ -1071,7 +1074,13 @@ function CatalogMetaChip({
     );
   }
   return (
-    <div className="pointer-events-none absolute top-2 start-2 z-10 max-w-[min(calc(100%-1rem),22rem)]">
+    <div
+      className={cn(
+        "pointer-events-none absolute top-2 start-2 z-10 max-w-[min(calc(100%-1rem),22rem)] transition-[opacity,transform] duration-[220ms] ease-out motion-reduce:transition-none",
+        hidden ? "-translate-y-2 opacity-0" : "translate-y-0 opacity-100",
+      )}
+      aria-hidden={hidden}
+    >
       <PingPongMarquee
         text={parts.join(" · ")}
         className="inline-block max-w-full rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm"
