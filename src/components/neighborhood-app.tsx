@@ -60,7 +60,7 @@ import {
 import { decorShort } from "@/lib/labels";
 import { readHomeView, writeHomeView, type HomeView } from "@/lib/home-view";
 import { HOUSE_SET_LABELS, HOUSE_SET_STATUS, houseMatchesSet } from "@/lib/house-set";
-import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
+import { buildWalkingRoute, formatRouteSummary, type WalkingRoute } from "@/lib/route";
 import type { Catalog, House, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -882,7 +882,7 @@ export function NeighborhoodApp({
                 source={source}
                 onlineDevices={onlineDevices}
                 houseSetLabel={HOUSE_SET_LABELS[houseSet]}
-                routeStops={routeMode && walkingRoute ? walkingRoute.stops.length : null}
+                routeSummary={routeMode && walkingRoute ? formatRouteSummary(walkingRoute) : null}
               />
             </div>
             <PullToRefresh
@@ -1044,7 +1044,7 @@ function CatalogMetaChip({
   source,
   onlineDevices,
   houseSetLabel,
-  routeStops = null,
+  routeSummary = null,
 }: {
   houseCount: number;
   offline: boolean;
@@ -1052,7 +1052,7 @@ function CatalogMetaChip({
   source: string | null;
   onlineDevices?: number | null;
   houseSetLabel: string;
-  routeStops?: number | null;
+  routeSummary?: string | null;
 }) {
   const stale = offline || unreachable || source === "cache" || source === "snapshot";
   return (
@@ -1060,7 +1060,7 @@ function CatalogMetaChip({
       <span className="inline-flex max-w-[min(100%-1rem,26rem)] flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
         <span>{houseCount} בתים</span>
         {onlineDevices != null ? <span>· {onlineDevices} מבקרים</span> : null}
-        {routeStops != null ? <span>· מסלול · {routeStops} עצירות</span> : null}
+        {routeSummary != null ? <span>· מסלול · {routeSummary}</span> : null}
         <span>· {houseSetLabel}</span>
         {stale ? (
           <>
