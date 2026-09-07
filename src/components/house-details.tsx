@@ -131,7 +131,7 @@ export function HouseDetails({
                   e.stopPropagation();
                   onToggleVisited();
                 }}
-                className="inline-flex items-center gap-[2px] rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
+                className="inline-flex items-center gap-2 rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
               >
                 <VisitedCheck visited={visited} />
                 <HouseActionCount n={traffic.visited} />
@@ -149,7 +149,7 @@ export function HouseDetails({
                   e.stopPropagation();
                   onToggleLike();
                 }}
-                className="inline-flex items-center gap-[2px] rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
+                className="inline-flex items-center gap-2 rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
               >
                 <Heart className={cn("size-6", liked && "fill-orange-500 text-orange-500")} />
                 <HouseActionCount n={traffic.saved} />

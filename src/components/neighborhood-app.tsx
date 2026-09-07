@@ -890,9 +890,6 @@ export function NeighborhoodApp({
                 <div className="origin-pick-bar">
                   <p className="origin-pick-label">{originDraftLabel}</p>
                   <div className="origin-pick-actions">
-                    <Button type="button" variant="outline" size="sm" onClick={exitOriginPick}>
-                      ביטול
-                    </Button>
                     <Button
                       type="button"
                       size="sm"
@@ -901,6 +898,9 @@ export function NeighborhoodApp({
                       onClick={() => void saveOriginPick()}
                     >
                       שמירת התחלה
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={exitOriginPick}>
+                      ביטול
                     </Button>
                   </div>
                 </div>
@@ -913,7 +913,7 @@ export function NeighborhoodApp({
                 source={source}
                 onlineDevices={onlineDevices}
                 houseSetLabel={HOUSE_SET_LABELS[houseSet]}
-                routeStops={routeMode && walkingRoute ? walkingRoute.stops.length : null}
+                routeSummary={routeMode && walkingRoute ? formatRouteSummary(walkingRoute) : null}
               />
             </div>
             <PullToRefresh
@@ -1066,7 +1066,7 @@ function CatalogMetaChip({
   source,
   onlineDevices,
   houseSetLabel,
-  routeStops = null,
+  routeSummary = null,
 }: {
   hidden?: boolean;
   houseCount: number;
@@ -1075,12 +1075,12 @@ function CatalogMetaChip({
   source: string | null;
   onlineDevices?: number | null;
   houseSetLabel: string;
-  routeStops?: number | null;
+  routeSummary?: string | null;
 }) {
   const stale = offline || unreachable || source === "cache" || source === "snapshot";
   const parts = [`${houseCount} בתים`];
   if (onlineDevices != null) parts.push(`${onlineDevices} מבקרים`);
-  if (routeStops != null) parts.push(`מסלול · ${routeStops} עצירות`);
+  if (routeSummary != null) parts.push(`מסלול · ${routeSummary}`);
   parts.push(houseSetLabel);
   if (stale) {
     parts.push(
