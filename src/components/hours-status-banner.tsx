@@ -17,7 +17,7 @@ import {
 } from "@/lib/house-state";
 import type { TreatStock, TreatId, VisitState } from "@/lib/types";
 
-const BANNER = "rounded-lg px-3 py-2 text-base font-medium";
+const BANNER = "rounded-lg px-3 py-2 text-sm font-medium leading-snug break-words";
 const CLOSED_TONE = "bg-red-900/80 text-red-50";
 
 export function HoursStatusBanner({

@@ -114,8 +114,8 @@ export function HouseDetails({
       <HoursStatusBanner house={house} />
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
-          <p className="text-base text-violet-200">{parts}</p>
+          <p className="font-display text-xl text-orange-300 break-words">{houseHeadline(house)}</p>
+          <p className="text-sm leading-snug text-violet-200 break-words">{parts}</p>
         </div>
         {sheet ? null : (
           <div className="flex shrink-0 items-center gap-0.5">

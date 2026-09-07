@@ -1532,20 +1532,32 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 
 .house-list-card-chrome .house-action-bar {
   width: 100%;
-  justify-content: space-evenly;
+  min-width: 0;
+  justify-content: space-between;
   gap: 0;
   flex-wrap: nowrap;
 }
 
 .house-list-card-chrome .house-action-btn {
-  width: 48px;
-  height: 48px;
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  max-width: 48px;
+  height: 40px;
+}
+
+.house-list-card-chrome .house-action-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 .house-list-card-chrome .house-action-btn.has-count {
+  flex: 1.15 1 0;
   width: auto;
   min-width: 0;
-  padding-inline: 10px 12px;
+  max-width: 4.25rem;
+  padding-inline: 4px 6px;
+  gap: 4px;
 }
 
 .map-house-sheet-chrome,

@@ -193,12 +193,14 @@ function CompactCell({
 }) {
   return (
     <div
-      className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl bg-[#14081c] px-1 py-1.5"
+      className="flex min-w-0 max-w-full flex-col items-center gap-0.5 overflow-hidden rounded-xl bg-[#14081c] px-0.5 py-1"
       aria-label={ariaLabel ?? (label ? `${value} ${label}` : value)}
     >
-      <span className="size-6 shrink-0">{icon}</span>
-      <span className="text-base font-bold leading-none text-white">{value}</span>
-      {label ? <span className="text-[11px] leading-none text-white/80">{label}</span> : null}
+      <span className="size-5 shrink-0">{icon}</span>
+      <span className="max-w-full truncate text-sm font-bold leading-none text-white">{value}</span>
+      {label ? (
+        <span className="max-w-full truncate text-[10px] leading-none text-white/80">{label}</span>
+      ) : null}
     </div>
   );
 }
@@ -247,8 +249,8 @@ export function StatsSummary({
 
   if (compact) {
     return (
-      <div className="flex flex-col gap-1.5 text-right" dir="rtl">
-        <div className="grid grid-cols-4 gap-1 rounded-2xl bg-[#241332] p-1.5 ring-1 ring-white/10">
+      <div className="flex min-w-0 w-full flex-col gap-1.5 overflow-hidden text-right" dir="rtl">
+        <div className="grid min-w-0 grid-cols-4 gap-1 rounded-2xl bg-[#241332] p-1 ring-1 ring-white/10">
           <CompactCell icon={houseIcon} value={String(totalHouses)} label="בתים" />
           <CompactCell
             icon={<PeopleIcon />}
@@ -261,16 +263,16 @@ export function StatsSummary({
             ariaLabel={`${likedCount} שמורים`}
           />
           <CompactCell
-            icon={<VisitedMark className="size-6" />}
+            icon={<VisitedMark className="size-5" />}
             value={String(visitedCount)}
             ariaLabel={`${visitedCount} ביקרתי`}
           />
         </div>
-        <section className="rounded-2xl bg-[#2c1a12] p-1.5 ring-1 ring-orange-500/25">
-          <h3 className="mb-1 text-right text-xs font-semibold text-orange-400">
+        <section className="min-w-0 rounded-2xl bg-[#2c1a12] p-1 ring-1 ring-orange-500/25">
+          <h3 className="mb-1 truncate text-right text-xs font-semibold text-orange-400">
             {route?.accessible ? "מסלול נגיש" : "מסלול"}
           </h3>
-          <div className="grid grid-cols-4 gap-1">
+          <div className="grid min-w-0 grid-cols-4 gap-1">
             <CompactCell icon={houseIcon} value={String(filteredHouses)} label="בתים" />
             <CompactCell
               icon={<PinIcon mark={stopMark} />}

@@ -73,8 +73,8 @@ export function HouseList({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-3 py-3">
-      <div className="flex items-center gap-2">
+    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3">
+      <div className="flex min-w-0 items-center gap-2">
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}

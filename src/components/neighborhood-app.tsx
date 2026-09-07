@@ -698,8 +698,8 @@ export function NeighborhoodApp({
         className="app-toolbar relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2"
         style={{ flexShrink: 0 }}
       >
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto">
-          <div className="flex rounded-xl bg-[#261536] p-0.5 ring-1 ring-orange-400/40">
+        <div className="flex w-full min-w-0 items-center gap-1.5 overflow-hidden">
+          <div className="flex min-w-0 shrink rounded-xl bg-[#261536] p-0.5 ring-1 ring-orange-400/40">
             <Toggle
               active={view === "map"}
               onClick={() => setView("map")}
@@ -944,8 +944,8 @@ export function NeighborhoodApp({
               style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#12081a" }}
               aria-hidden={view !== "list"}
             >
-                <div className="mx-auto max-w-3xl px-3 pt-3">
-                  <div className="rounded-3xl bg-[#160b20] p-2 ring-1 ring-orange-500/40">
+                <div className="mx-auto w-full min-w-0 max-w-3xl px-3 pt-3">
+                  <div className="min-w-0 overflow-hidden rounded-3xl bg-[#160b20] p-1.5 ring-1 ring-orange-500/40">
                     <StatsSummary {...summaryProps} compact />
                   </div>
                 </div>
@@ -1127,7 +1127,7 @@ function Toggle({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "inline-flex h-9 w-11 items-center justify-center rounded-lg",
+        "inline-flex h-9 w-9 items-center justify-center rounded-lg",
         active ? "bg-orange-500 text-black" : "text-violet-200",
       )}
     >
