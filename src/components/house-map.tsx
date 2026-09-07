@@ -364,7 +364,7 @@ function SizeSync({ active }: { active: boolean }) {
 
 /**
  * After a pin tap, pan so the house stays in the map above the detail sheet
- * and below the top status chip. On close, undo that pan.
+ * and below the top status chip. Closing the sheet leaves the map where it is.
  */
 function KeepSelectedVisible({
   lat,
@@ -380,27 +380,9 @@ function KeepSelectedVisible({
   active: boolean;
 }) {
   const map = useMap();
-  const mapRef = useRef(map);
-  mapRef.current = map;
-  const accum = useRef<[number, number]>([0, 0]);
-
-  function revertPan() {
-    const [dx, dy] = accum.current;
-    accum.current = [0, 0];
-    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
-    mapRef.current.panBy([-dx, -dy], { animate: true, duration: 0.28 });
-  }
 
   useEffect(() => {
-    return () => revertPan();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!active) {
-      revertPan();
-      return;
-    }
+    if (!active) return;
     const pan = () => {
       const raw = getComputedStyle(document.documentElement).getPropertyValue("--map-sheet-h");
       const sheetH = Number.parseFloat(raw);
@@ -417,7 +399,6 @@ function KeepSelectedVisible({
       const dx = point.x - size.x / 2;
       const dy = point.y - visibleMidY;
       if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-      accum.current = [accum.current[0] + dx, accum.current[1] + dy];
       map.panBy([dx, dy], { animate: true, duration: 0.28 });
     };
     const onSheet = () => pan();

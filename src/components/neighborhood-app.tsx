@@ -464,7 +464,6 @@ export function NeighborhoodApp({
   function goToMainMap() {
     setView("map");
     exitOriginPick();
-    exitRouteMode();
     setSelectedId("closed");
     setClusterOverview(false);
   }

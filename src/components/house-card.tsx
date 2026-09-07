@@ -60,7 +60,6 @@ export function HouseCard({
       <div className="house-list-card-chrome">
         <HouseActionBar
           house={house}
-          showNav={false}
           liked={liked}
           visited={visited}
           onToggleLike={onToggleLike}
