@@ -85,7 +85,7 @@ const SCARE_SRC: Record<ScareLevel, string> = {
 function pinVisitKind(house: PublicHouse, now: Date): "closed" | "break" | null {
   if (effectiveVisit(house) === "closed") return "closed";
   if (isHoursNightOver(house, now)) return "closed";
-  if (isHoursNotYetOpen(house, now) && !isOpeningSoon(house, now)) return "closed";
+  if (isHoursNotYetOpen(house, now)) return "closed";
   if (isOwnerFrozen(house, now.getTime()) || isOnBreak(house, now)) return "break";
   return null;
 }
@@ -109,20 +109,28 @@ function pinStatusMark(house: PublicHouse, now: Date) {
 }
 
 function hoursRingHtml(house: PublicHouse, now: Date) {
-  if (pinVisitKind(house, now)) return "";
-  if (isClosingSoon(house, now)) {
+  if (isClosingSoon(house, now) && !pinVisitKind(house, now)) {
     return `<i class="pin-hours-ring is-closing" aria-hidden="true"></i>`;
   }
-  if (isOpeningSoon(house, now)) {
+  if (
+    isOpeningSoon(house, now) &&
+    effectiveVisit(house) !== "closed" &&
+    !isHoursNightOver(house, now)
+  ) {
     return `<i class="pin-hours-ring is-opening" aria-hidden="true"></i>`;
   }
   return "";
 }
 
 function hoursPinClass(house: PublicHouse, now: Date) {
-  if (pinVisitKind(house, now)) return "";
-  if (isClosingSoon(house, now)) return " is-closing-soon";
-  if (isOpeningSoon(house, now)) return " is-opening-soon";
+  if (isClosingSoon(house, now) && !pinVisitKind(house, now)) return " is-closing-soon";
+  if (
+    isOpeningSoon(house, now) &&
+    effectiveVisit(house) !== "closed" &&
+    !isHoursNightOver(house, now)
+  ) {
+    return " is-opening-soon";
+  }
   return "";
 }
 
