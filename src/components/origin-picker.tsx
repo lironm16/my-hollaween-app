@@ -37,7 +37,9 @@ export function OriginTrigger({
     >
       <MapPin className="size-4" />
       {shifted ? (
-        <span className="absolute -top-1 -start-1 size-2.5 rounded-full bg-black ring-2 ring-orange-300" />
+        <span className="absolute -top-1 -start-1 inline-flex min-w-4 items-center justify-center rounded-full bg-black px-1 text-base font-bold text-orange-300">
+          <span className="size-2 rounded-full bg-orange-300" />
+        </span>
       ) : null}
     </button>
   );
@@ -106,6 +108,7 @@ export function OriginPickerSheet({
             <AddressField
               value={address}
               confirmed={addressOk}
+              emptyHint={false}
               onChange={(value) => {
                 setAddress(value);
                 setAddressOk(false);
