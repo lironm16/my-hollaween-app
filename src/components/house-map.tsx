@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppNow } from "@/hooks/use-app-clock";
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   Circle,
   MapContainer,
@@ -13,7 +13,7 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import L from "leaflet";
-import { LocateFixed } from "lucide-react";
+import { LocateFixed, Moon, Sun } from "lucide-react";
 import { MapLegend } from "@/components/map-legend";
 import "leaflet/dist/leaflet.css";
 import { config, inNeighborhood } from "@/lib/config";
@@ -30,6 +30,29 @@ import { cn } from "@/lib/utils";
 function useMinuteTick() {
   const now = useAppNow();
   return Math.floor(now.getTime() / 15_000);
+}
+
+const MAP_THEME_KEY = "hw-map-theme";
+
+function readMapTheme(): "dark" | "light" {
+  try {
+    return localStorage.getItem(MAP_THEME_KEY) === "light" ? "light" : "dark";
+  } catch {
+    return "dark";
+  }
+}
+
+function saveMapTheme(theme: "dark" | "light") {
+  try {
+    localStorage.setItem(MAP_THEME_KEY, theme);
+  } catch {
+    /* private mode */
+  }
+}
+
+function tileUrlFor(theme: "dark" | "light") {
+  if (config.tiles.invert) return config.tiles.url;
+  return theme === "light" ? config.tiles.url.replace("/dark_all/", "/light_all/") : config.tiles.url;
 }
 
 const ROUTE_BADGE_H = 32;
@@ -620,6 +643,22 @@ export function HouseMap({
     () => true,
     () => false,
   );
+  const [mapTheme, setMapTheme] = useState<"dark" | "light">("dark");
+
+  useEffect(() => {
+    setMapTheme(readMapTheme());
+  }, []);
+
+  function toggleMapTheme() {
+    setMapTheme((current) => {
+      const next = current === "dark" ? "light" : "dark";
+      saveMapTheme(next);
+      return next;
+    });
+  }
+
+  const tileUrl = tileUrlFor(mapTheme);
+  const osmDark = mapTheme === "dark" && config.tiles.invert;
 
   if (!ready) {
     return (
@@ -651,15 +690,16 @@ export function HouseMap({
         maxZoom={config.map.maxZoom}
         scrollWheelZoom
         className={cn(
-          "h-full w-full rounded-none bg-[#1a1024]",
-          config.tiles.invert && "is-osm-dark",
+          "h-full w-full rounded-none",
+          mapTheme === "dark" ? "bg-[#1a1024]" : "bg-[#d6d3d1]",
+          osmDark && "is-osm-dark",
         )}
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
           attribution={config.tiles.attribution}
-          url={config.tiles.url}
-          key={config.tiles.url}
+          url={tileUrl}
+          key={tileUrl}
         />
         <SizeSync active={active} />
         {routeFitTick > 0 && fitPositions ? (
@@ -789,9 +829,17 @@ export function HouseMap({
           </>
         ) : null}
       </MapContainer>
-      {!pickMode ? (
-        <div className="map-fab-stack">
-          {onLocate ? (
+      <div className="map-fab-stack">
+          <button
+            type="button"
+            className="locate-me flex size-11 items-center justify-center rounded-full bg-[#1d1028] text-amber-200 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-orange-400/40"
+            aria-label={mapTheme === "dark" ? "מפה בהירה" : "מפה כהה"}
+            title={mapTheme === "dark" ? "מפה בהירה" : "מפה כהה"}
+            onClick={toggleMapTheme}
+          >
+            {mapTheme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
+          </button>
+          {!pickMode && onLocate ? (
             <button
               type="button"
               className="locate-me flex size-11 items-center justify-center rounded-full bg-[#1d1028] text-sky-300 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-sky-400/40"
@@ -802,9 +850,8 @@ export function HouseMap({
               <LocateFixed className={cn("size-5", locating && "animate-pulse")} />
             </button>
           ) : null}
-          <MapLegend />
+          {!pickMode ? <MapLegend /> : null}
         </div>
-      ) : null}
     </div>
   );
 }

@@ -17,19 +17,11 @@ export const DEFAULT_HOUSE_FILTERS: HouseFiltersState = {
   includeUndecorated: true,
 };
 
-const LEGACY_ALL_NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים"] as const;
-
 function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
   if (!raw) return { ...DEFAULT_HOUSE_FILTERS, scareFilters: [...SCARE_LEVELS], neighborhoodFilters: [...NEIGHBORHOODS] };
-  let neighborhoods = (raw.neighborhoodFilters ?? []).filter((item): item is NeighborhoodId =>
+  const neighborhoods = (raw.neighborhoodFilters ?? []).filter((item): item is NeighborhoodId =>
     (NEIGHBORHOODS as readonly string[]).includes(item),
   );
-  if (
-    neighborhoods.length === LEGACY_ALL_NEIGHBORHOODS.length &&
-    LEGACY_ALL_NEIGHBORHOODS.every((name) => neighborhoods.includes(name as NeighborhoodId))
-  ) {
-    neighborhoods = [...NEIGHBORHOODS];
-  }
   const scares = (raw.scareFilters ?? []).filter((item): item is ScareLevel =>
     (SCARE_LEVELS as readonly string[]).includes(item),
   );
