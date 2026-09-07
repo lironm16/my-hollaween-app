@@ -871,7 +871,6 @@ export function NeighborhoodApp({
                 source={source}
                 onlineDevices={onlineDevices}
                 houseSetLabel={HOUSE_SET_LABELS[houseSet]}
-                sortByDistance={!routeMode}
               />
             </div>
             {view === "list" ? (
@@ -1040,7 +1039,6 @@ function CatalogMetaChip({
   source,
   onlineDevices,
   houseSetLabel,
-  sortByDistance,
 }: {
   houseCount: number;
   offline: boolean;
@@ -1048,7 +1046,6 @@ function CatalogMetaChip({
   source: string | null;
   onlineDevices?: number | null;
   houseSetLabel: string;
-  sortByDistance?: boolean;
 }) {
   const stale = offline || unreachable || source === "cache" || source === "snapshot";
   return (
@@ -1056,7 +1053,6 @@ function CatalogMetaChip({
       <span className="inline-flex max-w-[min(100%,18rem)] items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
         <span>{houseCount} בתים</span>
         {onlineDevices != null ? <span>· {onlineDevices} מבקרים</span> : null}
-        {sortByDistance ? <span>· מיון לפי מרחק</span> : null}
         <span>· {houseSetLabel}</span>
         {stale ? (
           <>

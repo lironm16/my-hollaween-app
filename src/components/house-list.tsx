@@ -136,6 +136,7 @@ export function HouseList({
       <p className="text-base text-violet-300">
         {houses.length} בתים
         {onlineDevices != null ? ` · ${onlineDevices} מבקרים` : ""}
+        {" · מיון לפי מרחק"}
       </p>
       {filtered.length === 0 ? (
         <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לחיפוש.</p>
