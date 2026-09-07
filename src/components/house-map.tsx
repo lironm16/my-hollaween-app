@@ -19,7 +19,7 @@ import "leaflet/dist/leaflet.css";
 import { config, inNeighborhood } from "@/lib/config";
 import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
-import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
+import { type LatLng } from "@/lib/route";
 import { distanceMeters } from "@/lib/geo";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { isClosingSoon, isHoursNightOver, isOnBreak, isOpeningSoon } from "@/lib/hours";
@@ -603,12 +603,18 @@ export function HouseMap({
     const first = routeStops?.[0];
     const start = routeStart ?? userLocation;
     if (!start || !first) return null;
-    if (distanceMeters(start, first) <= ROUTE_INCLUDE_ORIGIN_METERS) return null;
+    if (distanceMeters(start, first) < 12) return null;
     return [
       [start.lat, start.lng] as [number, number],
       [first.lat, first.lng] as [number, number],
     ];
   }, [routeStart, userLocation, routeStops]);
+  const fitPositions = useMemo(() => {
+    const parts: [number, number][] = [];
+    if (approachPositions) parts.push(...approachPositions);
+    if (routePositions) parts.push(...routePositions);
+    return parts.length >= 2 ? parts : null;
+  }, [approachPositions, routePositions]);
   const ready = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -656,8 +662,8 @@ export function HouseMap({
           key={config.tiles.url}
         />
         <SizeSync active={active} />
-        {routeFitTick > 0 && routePositions ? (
-          <FitRoute positions={routePositions} tick={routeFitTick} />
+        {routeFitTick > 0 && fitPositions ? (
+          <FitRoute positions={fitPositions} tick={routeFitTick} />
         ) : null}
         {panTick > 0 && panTo ? <PanTo lat={panTo.lat} lng={panTo.lng} tick={panTick} /> : null}
         {focus && !originPickActive ? (

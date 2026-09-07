@@ -89,7 +89,7 @@ export function AppHeader({
           <SheetHeader className="border-b border-orange-500/15 px-4 py-3">
             <SheetTitle className="text-lg font-semibold text-orange-50">תפריט</SheetTitle>
           </SheetHeader>
-          <nav className="flex flex-col gap-2 p-4">
+          <nav className="flex flex-1 flex-col gap-2 overflow-y-auto p-4">
             <Link
               href="/"
               onClick={(event) => {
@@ -178,6 +178,14 @@ export function AppHeader({
               </Link>
             )}
           </nav>
+          <div className="mt-auto border-t border-orange-500/15 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+            <p className="text-center text-[0.7rem] font-medium tracking-[0.22em] text-violet-400/80">
+              יצירה
+            </p>
+            <p className="mt-1 text-center font-display text-base text-orange-200/90">
+              Liron Matityahu
+            </p>
+          </div>
         </SheetContent>
       </Sheet>
     </header>

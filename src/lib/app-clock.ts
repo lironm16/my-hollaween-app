@@ -9,9 +9,12 @@ export const REHEARSAL_SCENES = [
   "closing",
   "between",
   "after",
+  "custom",
 ] as const;
 
 export type RehearsalScene = (typeof REHEARSAL_SCENES)[number];
+
+export type CustomRehearsalClock = { hours: number; minutes: number };
 
 export const REHEARSAL_LABELS: Record<RehearsalScene, string> = {
   off: "שעון אמיתי",
@@ -22,13 +25,17 @@ export const REHEARSAL_LABELS: Record<RehearsalScene, string> = {
   closing: "31 באוקטובר · 20:40 (נסגר בקרוב)",
   between: "31 באוקטובר · 18:30 (הפסקה בין חלונות)",
   after: "31 באוקטובר · 21:30 (אחרי הסגירה)",
+  custom: "שעה מותאמת",
 };
 
 const CLOCK_KEY = "hw-rehearsal-scene";
+const LAST_CLOCK_KEY = "hw-rehearsal-last";
+const CUSTOM_CLOCK_KEY = "hw-rehearsal-custom";
 const SERVER_KEY = "hw-sim-server";
 export const CLOCK_EVENT = "hw-clock-changed";
 export const SERVER_SIM_EVENT = "hw-server-sim-changed";
 const TICK_MS = 15_000;
+const DEFAULT_CUSTOM: CustomRehearsalClock = { hours: 18, minutes: 0 };
 
 function isScene(value: string | null | undefined): value is RehearsalScene {
   return Boolean(value && (REHEARSAL_SCENES as readonly string[]).includes(value));
@@ -67,9 +74,70 @@ export function dateForRehearsalScene(scene: RehearsalScene, wall = new Date()):
       return eventNightAt(18, 30);
     case "after":
       return eventNightAt(21, 30);
+    case "custom": {
+      const clock = readCustomRehearsalClock();
+      return eventNightAt(clock.hours, clock.minutes);
+    }
     default:
       return null;
   }
+}
+
+function padClock(n: number) {
+  return String(n).padStart(2, "0");
+}
+
+export function formatCustomRehearsalClock(clock: CustomRehearsalClock) {
+  return `${padClock(clock.hours)}:${padClock(clock.minutes)}`;
+}
+
+export function rehearsalSceneLabel(scene: RehearsalScene): string {
+  if (scene === "custom") {
+    return `31 באוקטובר · ${formatCustomRehearsalClock(readCustomRehearsalClock())} (מותאם)`;
+  }
+  return REHEARSAL_LABELS[scene];
+}
+
+function parseCustomClock(raw: string | null | undefined): CustomRehearsalClock | null {
+  if (!raw) return null;
+  const match = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(raw.trim());
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (!Number.isInteger(hours) || hours < 0 || hours > 23) return null;
+  if (!Number.isInteger(minutes) || minutes < 0 || minutes > 59) return null;
+  return { hours, minutes };
+}
+
+export function readCustomRehearsalClock(): CustomRehearsalClock {
+  if (typeof window === "undefined") return DEFAULT_CUSTOM;
+  try {
+    return parseCustomClock(localStorage.getItem(CUSTOM_CLOCK_KEY)) ?? DEFAULT_CUSTOM;
+  } catch {
+    return DEFAULT_CUSTOM;
+  }
+}
+
+export function writeCustomRehearsalClock(clock: CustomRehearsalClock) {
+  if (typeof window === "undefined") return;
+  const next = parseCustomClock(formatCustomRehearsalClock(clock)) ?? DEFAULT_CUSTOM;
+  try {
+    localStorage.setItem(CUSTOM_CLOCK_KEY, formatCustomRehearsalClock(next));
+  } catch {
+    /* private mode */
+  }
+  window.dispatchEvent(new Event(CLOCK_EVENT));
+}
+
+export function readLastRehearsalScene(): RehearsalScene {
+  if (typeof window === "undefined") return "open";
+  try {
+    const stored = localStorage.getItem(LAST_CLOCK_KEY);
+    if (isScene(stored) && stored !== "off") return stored;
+  } catch {
+    /* private mode */
+  }
+  return "open";
 }
 
 export function readRehearsalScene(): RehearsalScene {
@@ -88,7 +156,10 @@ export function writeRehearsalScene(scene: RehearsalScene) {
   if (readRehearsalScene() === scene) return;
   try {
     if (scene === "off") localStorage.removeItem(CLOCK_KEY);
-    else localStorage.setItem(CLOCK_KEY, scene);
+    else {
+      localStorage.setItem(CLOCK_KEY, scene);
+      localStorage.setItem(LAST_CLOCK_KEY, scene);
+    }
   } catch {
     /* private mode */
   }
