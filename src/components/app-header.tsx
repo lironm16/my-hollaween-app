@@ -179,8 +179,8 @@ export function AppHeader({
             )}
           </nav>
           <div className="mt-auto border-t border-orange-500/15 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
-            <p className="text-center text-[0.7rem] font-medium tracking-[0.22em] text-violet-400/80">
-              יצירה
+            <p className="text-center text-[0.65rem] font-medium tracking-[0.28em] text-violet-400/80">
+              Created by
             </p>
             <p className="mt-1 text-center font-display text-base text-orange-200/90">
               Liron Matityahu
