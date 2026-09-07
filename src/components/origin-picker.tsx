@@ -37,7 +37,11 @@ export function OriginTrigger({
       )}
     >
       <MapPin className="size-4" />
-      {shifted ? <ToolbarBadge /> : null}
+      {shifted ? (
+        <ToolbarBadge>
+          <MapPin strokeWidth={2.8} aria-hidden="true" />
+        </ToolbarBadge>
+      ) : null}
     </button>
   );
 }

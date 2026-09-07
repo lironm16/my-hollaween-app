@@ -12,11 +12,11 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
-/** Same corner chip as the filter count — pass a digit, or omit for a blank black disc. */
+/** Same corner chip as the filter count — a digit, or a small icon of the same weight. */
 export function ToolbarBadge({ children }: { children?: ReactNode }) {
   return (
-    <span className="absolute -top-1 -start-1 inline-flex min-w-4 items-center justify-center rounded-full bg-black px-1 text-base font-bold leading-none text-orange-300">
-      {children ?? <span className="opacity-0 select-none">0</span>}
+    <span className="absolute -top-1 -start-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-black px-1 text-base font-bold leading-none text-orange-300 [&_svg]:size-2.5">
+      {children}
     </span>
   );
 }
