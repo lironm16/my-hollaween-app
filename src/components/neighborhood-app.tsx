@@ -80,6 +80,7 @@ export function NeighborhoodApp({
     geo.status === "idle" || geo.status === "pending" || geo.status === "ready";
   const { choice: originChoice, resolved: origin, setChoice: setOriginChoice } = useDistanceOrigin(gps);
   const { houseSet } = useHouseSet();
+  const activeHouseSet = admin ? houseSet : "real";
   const view = useSyncExternalStore(
     (onStoreChange) => {
       window.addEventListener("hw-home-view", onStoreChange);
@@ -270,7 +271,7 @@ export function NeighborhoodApp({
 
   const visible = useMemo(() => {
     return houses.filter((house) => {
-      if (!houseMatchesSet(house, houseSet)) return false;
+      if (!houseMatchesSet(house, activeHouseSet)) return false;
       if (accessibleOnly && !house.accessible) return false;
       if (candyOnly && !offersCandy(house)) return false;
       if (!includeUndecorated && !isDecorated(house)) return false;
@@ -288,7 +289,7 @@ export function NeighborhoodApp({
     });
   }, [
     houses,
-    houseSet,
+    activeHouseSet,
     accessibleOnly,
     candyOnly,
     includeUndecorated,
@@ -372,9 +373,9 @@ export function NeighborhoodApp({
     const parts = [`${visible.length} בתים`];
     if (onlineDevices != null) parts.push(`${onlineDevices} מבקרים`);
     if (routeMode && walkingRoute) parts.push(formatRouteSummary(walkingRoute));
-    parts.push(HOUSE_SET_LABELS[houseSet]);
+    if (admin) parts.push(HOUSE_SET_LABELS[activeHouseSet]);
     return parts.join(" · ");
-  }, [houseSet, onlineDevices, routeMode, visible.length, walkingRoute]);
+  }, [activeHouseSet, admin, onlineDevices, routeMode, visible.length, walkingRoute]);
 
   const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const selected =
@@ -912,7 +913,7 @@ export function NeighborhoodApp({
                 unreachable={unreachable}
                 source={source}
                 onlineDevices={onlineDevices}
-                houseSetLabel={HOUSE_SET_LABELS[houseSet]}
+                houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
                 routeSummary={routeMode && walkingRoute ? formatRouteSummary(walkingRoute) : null}
               />
             </div>
@@ -1074,14 +1075,14 @@ function CatalogMetaChip({
   unreachable: boolean;
   source: string | null;
   onlineDevices?: number | null;
-  houseSetLabel: string;
+  houseSetLabel?: string | null;
   routeSummary?: string | null;
 }) {
   const stale = offline || unreachable || source === "cache" || source === "snapshot";
   const parts = [`${houseCount} בתים`];
   if (onlineDevices != null) parts.push(`${onlineDevices} מבקרים`);
   if (routeSummary != null) parts.push(`מסלול · ${routeSummary}`);
-  parts.push(houseSetLabel);
+  if (houseSetLabel) parts.push(houseSetLabel);
   if (stale) {
     parts.push(
       offline

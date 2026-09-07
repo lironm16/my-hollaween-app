@@ -7,7 +7,7 @@ import { ListStatusLabels } from "@/components/house-list";
 import { formatDisplayAddress } from "@/lib/config";
 import { formatDistance } from "@/lib/geo";
 import { houseHeadline } from "@/lib/labels";
-import { formatRouteSummary, googleMapsNavigateUrl, type WalkingRoute } from "@/lib/route";
+import { googleMapsNavigateUrl, type WalkingRoute } from "@/lib/route";
 import { cn } from "@/lib/utils";
 
 export function RouteList({
@@ -23,11 +23,19 @@ export function RouteList({
   onSelectHouse: (id: string) => void;
   statusText: string;
 }) {
+  const gpsAction =
+    !hasGps && onRequestLocation ? (
+      <Button type="button" size="sm" variant="outline" className="mt-2" onClick={onRequestLocation}>
+        <Navigation className="size-3.5" />
+        הפעילו מיקום
+      </Button>
+    ) : null;
+
   if (!route) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center text-violet-200">
         <div className="mb-3">
-          <ListStatusLabels statusText={statusText} />
+          <ListStatusLabels statusText={statusText} extra={gpsAction} />
         </div>
         <p className="font-display text-2xl text-orange-300">אין עצירות במסלול</p>
         <p className="mt-2 text-base">
@@ -39,16 +47,7 @@ export function RouteList({
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-3 px-3 py-3">
-      <ListStatusLabels statusText={statusText} />
-      <div className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
-        <p className="text-base font-medium text-orange-100">{formatRouteSummary(route)}</p>
-        {!hasGps && onRequestLocation ? (
-          <Button type="button" size="sm" variant="outline" className="mt-2" onClick={onRequestLocation}>
-            <Navigation className="size-3.5" />
-            הפעילו מיקום
-          </Button>
-        ) : null}
-      </div>
+      <ListStatusLabels statusText={statusText} extra={gpsAction} />
 
       <ol className="space-y-2">
         {route.stops.flatMap((stop, index) => {
