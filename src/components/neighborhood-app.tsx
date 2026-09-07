@@ -945,8 +945,8 @@ export function NeighborhoodApp({
               aria-hidden={view !== "list"}
             >
                 <div className="mx-auto max-w-3xl px-3 pt-3">
-                  <div className="rounded-3xl bg-[#160b20] p-3 ring-1 ring-orange-500/40">
-                    <StatsSummary {...summaryProps} heading />
+                  <div className="rounded-3xl bg-[#160b20] p-2 ring-1 ring-orange-500/40">
+                    <StatsSummary {...summaryProps} compact />
                   </div>
                 </div>
                 {routeMode ? (
