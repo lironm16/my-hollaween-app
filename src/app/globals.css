@@ -134,7 +134,8 @@
 
 /* Black Halloween basemap (inverted OSM). Keep this look — do not grayscale.
    Invert the tile pane only so house pins stay their own color. */
-.leaflet-container.is-osm-dark .leaflet-tile-pane {
+.leaflet-container.is-osm-dark .leaflet-tile-pane,
+.is-osm-dark .leaflet-tile-pane {
   filter: invert(1) hue-rotate(180deg) saturate(0.35) brightness(0.82) contrast(1.05);
 }
 
@@ -142,7 +143,12 @@
 .leaflet-container.is-osm-dark .leaflet-shadow-pane,
 .leaflet-container.is-osm-dark .leaflet-marker-pane,
 .leaflet-container.is-osm-dark .leaflet-tooltip-pane,
-.leaflet-container.is-osm-dark .leaflet-popup-pane {
+.leaflet-container.is-osm-dark .leaflet-popup-pane,
+.is-osm-dark .leaflet-overlay-pane,
+.is-osm-dark .leaflet-shadow-pane,
+.is-osm-dark .leaflet-marker-pane,
+.is-osm-dark .leaflet-tooltip-pane,
+.is-osm-dark .leaflet-popup-pane {
   filter: none;
   isolation: isolate;
 }
