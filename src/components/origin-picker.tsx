@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import type { DistanceOriginChoice } from "@/lib/distance-origin";
 import { originLabel } from "@/lib/distance-origin";
+import { ToolbarBadge } from "@/components/filter-menu";
 import { inNeighborhood } from "@/lib/config";
 import { cn } from "@/lib/utils";
 
@@ -36,11 +37,7 @@ export function OriginTrigger({
       )}
     >
       <MapPin className="size-4" />
-      {shifted ? (
-        <span className="absolute -top-1 -start-1 inline-flex min-w-4 items-center justify-center rounded-full bg-black px-1 text-base font-bold text-orange-300">
-          <span className="size-2 rounded-full bg-orange-300" />
-        </span>
-      ) : null}
+      {shifted ? <ToolbarBadge /> : null}
     </button>
   );
 }

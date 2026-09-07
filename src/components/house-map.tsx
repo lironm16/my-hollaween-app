@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppNow } from "@/hooks/use-app-clock";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   Circle,
   MapContainer,
@@ -313,7 +313,7 @@ const youAreHereIcon = L.divIcon({
   popupAnchor: [0, -12],
 });
 
-/** Fit the walking path only after a route-button tap (tick). */
+/** Fit the walking path only after a route-button tap (tick). Never again if the user zooms. */
 function FitRoute({
   positions,
   tick,
@@ -322,8 +322,11 @@ function FitRoute({
   tick: number;
 }) {
   const map = useMap();
+  const fittedTick = useRef(0);
   useEffect(() => {
-    if (!tick || !positions || positions.length < 2) return;
+    if (!tick || tick === fittedTick.current) return;
+    if (!positions || positions.length < 2) return;
+    fittedTick.current = tick;
     const id = window.setTimeout(() => {
       map.invalidateSize({ animate: false });
       map.fitBounds(L.latLngBounds(positions), {
@@ -359,8 +362,8 @@ function SizeSync({ active }: { active: boolean }) {
 }
 
 /**
- * After a pin tap, pan so the house stays in the map above the detail sheet.
- * Does not fly to GPS, filters, or the route.
+ * After a pin tap, pan so the house stays in the map above the detail sheet
+ * and below the top status chip. On close, undo that pan.
  */
 function KeepSelectedVisible({
   lat,
@@ -376,20 +379,44 @@ function KeepSelectedVisible({
   active: boolean;
 }) {
   const map = useMap();
+  const mapRef = useRef(map);
+  mapRef.current = map;
+  const accum = useRef<[number, number]>([0, 0]);
+
+  function revertPan() {
+    const [dx, dy] = accum.current;
+    accum.current = [0, 0];
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+    mapRef.current.panBy([-dx, -dy], { animate: true, duration: 0.28 });
+  }
+
   useEffect(() => {
-    if (!active) return;
+    return () => revertPan();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!active) {
+      revertPan();
+      return;
+    }
     const pan = () => {
       const raw = getComputedStyle(document.documentElement).getPropertyValue("--map-sheet-h");
       const sheetH = Number.parseFloat(raw);
       if (!Number.isFinite(sheetH) || sheetH < 80) return;
       const size = map.getSize();
-      const visibleMidY = Math.max(56, (size.y - sheetH) / 2);
+      const topChrome = 72;
+      const visibleBottom = size.y - sheetH;
+      const usable = visibleBottom - topChrome;
+      if (usable < 40) return;
+      const visibleMidY = topChrome + usable * 0.62;
       const point = map.latLngToContainerPoint(L.latLng(lat, lng));
       point.x += offsetX;
       point.y += offsetY;
       const dx = point.x - size.x / 2;
       const dy = point.y - visibleMidY;
       if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      accum.current = [accum.current[0] + dx, accum.current[1] + dy];
       map.panBy([dx, dy], { animate: true, duration: 0.28 });
     };
     const onSheet = () => pan();
@@ -520,10 +547,14 @@ function ClusterMarker({
           const id = hit?.getAttribute("data-house-id");
           const fromPin = id ? cluster.houses.find((house) => house.id === id) : undefined;
           if (fromPin) {
+            if (fromPin.id === selectedId && !overview) {
+              onClose?.();
+              return;
+            }
             onSelect?.(fromPin);
             return;
           }
-          if (selectedHere && cluster.houses.length > 1) {
+          if (selectedHere) {
             onClose?.();
             return;
           }

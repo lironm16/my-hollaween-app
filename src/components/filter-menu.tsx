@@ -12,6 +12,15 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
+/** Same corner chip as the filter count — pass a digit, or omit for a blank black disc. */
+export function ToolbarBadge({ children }: { children?: ReactNode }) {
+  return (
+    <span className="absolute -top-1 -start-1 inline-flex min-w-4 items-center justify-center rounded-full bg-black px-1 text-base font-bold leading-none text-orange-300">
+      {children ?? <span className="opacity-0 select-none">0</span>}
+    </span>
+  );
+}
+
 export function FilterTrigger({
   activeCount,
   onClick,
@@ -32,11 +41,7 @@ export function FilterTrigger({
       )}
     >
       <Filter className="size-4" />
-      {activeCount > 0 ? (
-        <span className="absolute -top-1 -start-1 inline-flex min-w-4 items-center justify-center rounded-full bg-black px-1 text-base font-bold text-orange-300">
-          {activeCount}
-        </span>
-      ) : null}
+      {activeCount > 0 ? <ToolbarBadge>{activeCount}</ToolbarBadge> : null}
     </button>
   );
 }

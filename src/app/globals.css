@@ -845,7 +845,8 @@
   right: 0.75rem;
   z-index: 1200;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   gap: 0.5rem;
   padding: 0.65rem 0.75rem;
   border-radius: 1rem;
@@ -855,8 +856,26 @@
   bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
 }
 
+.origin-pick-label {
+  min-width: 0;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+  color: #ffedd5;
+  overflow-wrap: anywhere;
+}
+
+.origin-pick-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.origin-pick-actions > button {
+  flex: 1;
+}
+
 .is-origin-pick .map-fab-stack {
-  bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(8.25rem + env(safe-area-inset-bottom, 0px));
 }
 
 .house-pin.is-selected,
