@@ -13,9 +13,10 @@ type Props = {
   onSelect: (hit: AddressHit) => void;
   confirmed: boolean;
   disabled?: boolean;
+  emptyHint?: boolean;
 };
 
-export function AddressField({ value, onChange, onSelect, confirmed, disabled }: Props) {
+export function AddressField({ value, onChange, onSelect, confirmed, disabled, emptyHint = true }: Props) {
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -165,9 +166,9 @@ export function AddressField({ value, onChange, onSelect, confirmed, disabled }:
         <p className="mt-1 text-base text-emerald-300">כתובת מאומתת על המפה</p>
       ) : value.trim().length >= 3 ? (
         <p className="mt-1 text-base text-amber-200">בחרו כתובת מהרשימה, או גררו את הסיכה לבית הנכון</p>
-      ) : (
+      ) : emptyHint ? (
         <p className="mt-1 text-base text-violet-300">הכתובת חייבת להיות כתובת אמיתית בשכונה</p>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -304,9 +304,7 @@ export function NeighborhoodApp({
   const neighborhoodActiveCount =
     neighborhoodFilters.length === NEIGHBORHOODS.length
       ? 0
-      : neighborhoodFilters.length === 0
-        ? NEIGHBORHOODS.length
-        : neighborhoodFilters.length;
+      : NEIGHBORHOODS.length - neighborhoodFilters.length;
   const scareLevelsActive =
     scareFilters.length === 0 || scareFilters.length === SCARE_LEVELS.length
       ? 0
