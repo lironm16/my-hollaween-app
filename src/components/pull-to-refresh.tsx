@@ -45,8 +45,10 @@ export function PullToRefresh({
   }, [edgeOnly]);
 
   useEffect(() => {
+    if (disabled) return;
     const el = rootRef.current;
-    if (!el || disabled) return;
+    if (!el) return;
+    const node = el;
 
     function ignoreTarget(target: EventTarget | null) {
       if (!(target instanceof Element)) return false;
@@ -61,14 +63,14 @@ export function PullToRefresh({
         armed.current = false;
         return;
       }
-      const atTop = el.scrollTop <= 0;
+      const atTop = node.scrollTop <= 0;
       if (!atTop) {
         armed.current = false;
         return;
       }
-      const scrollable = el.scrollHeight - el.clientHeight > 4;
+      const scrollable = node.scrollHeight - node.clientHeight > 4;
       const y = event.touches[0]!.clientY;
-      if (!scrollable && edgeOnlyRef.current && y - el.getBoundingClientRect().top > MAP_EDGE) {
+      if (!scrollable && edgeOnlyRef.current && y - node.getBoundingClientRect().top > MAP_EDGE) {
         armed.current = false;
         return;
       }
@@ -117,15 +119,15 @@ export function PullToRefresh({
       });
     }
 
-    el.addEventListener("touchstart", onStart, { passive: true });
-    el.addEventListener("touchmove", onMove, { passive: false });
-    el.addEventListener("touchend", onEnd);
-    el.addEventListener("touchcancel", onEnd);
+    node.addEventListener("touchstart", onStart, { passive: true });
+    node.addEventListener("touchmove", onMove, { passive: false });
+    node.addEventListener("touchend", onEnd);
+    node.addEventListener("touchcancel", onEnd);
     return () => {
-      el.removeEventListener("touchstart", onStart);
-      el.removeEventListener("touchmove", onMove);
-      el.removeEventListener("touchend", onEnd);
-      el.removeEventListener("touchcancel", onEnd);
+      node.removeEventListener("touchstart", onStart);
+      node.removeEventListener("touchmove", onMove);
+      node.removeEventListener("touchend", onEnd);
+      node.removeEventListener("touchcancel", onEnd);
     };
   }, [disabled]);
 
