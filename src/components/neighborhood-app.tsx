@@ -149,7 +149,13 @@ export function NeighborhoodApp({
   const now = useAppNow();
   const onlineDevices = useOnlineDevices();
 
-  useEffect(() => () => window.clearTimeout(cheerTimer.current), []);
+  useEffect(
+    () => () => {
+      window.clearTimeout(cheerTimer.current);
+      window.clearTimeout(outsideBannerTimer.current);
+    },
+    [],
+  );
   useEffect(() => {
     applyClockSearchParams(window.location.search);
   }, []);
