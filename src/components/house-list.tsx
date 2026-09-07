@@ -6,10 +6,20 @@ import { HousePlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button";
 import { HouseCard } from "@/components/house-card";
+import { PingPongMarquee } from "@/components/neighborhood-marquee";
 import { distanceMeters } from "@/lib/geo";
 import { effectiveVisit } from "@/lib/house-state";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+export function ListStatusLabels({ statusText }: { statusText: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-base text-violet-300">ממוין לפי מרחק</p>
+      <PingPongMarquee text={statusText} className="text-base text-violet-300" />
+    </div>
+  );
+}
 
 function scrollParent(el: HTMLElement | null): HTMLElement | null {
   for (let node = el?.parentElement ?? null; node; node = node.parentElement) {
@@ -28,12 +38,11 @@ export function HouseList({
   visitedIds,
   onToggleVisited,
   admin = false,
-  onlineDevices = null,
   canEditHouse,
   editCodeFor,
   onHouseUpdated,
   onHouseDeleted,
-  setLabel,
+  statusText,
 }: {
   houses: PublicHouse[];
   origin?: { lat: number; lng: number } | null;
@@ -43,12 +52,11 @@ export function HouseList({
   visitedIds?: string[];
   onToggleVisited?: (id: string) => void;
   admin?: boolean;
-  onlineDevices?: number | null;
   canEditHouse?: (id: string) => boolean;
   editCodeFor?: (id: string) => string | undefined;
   onHouseUpdated?: (house: PublicHouse) => void;
   onHouseDeleted?: (id: string) => void;
-  setLabel?: string;
+  statusText: string;
 }) {
   const [q, setQ] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -107,7 +115,9 @@ export function HouseList({
   if (houses.length === 0) {
     return (
       <div className="px-4 py-16 text-center text-violet-200">
-        {setLabel ? <p className="mb-3 text-base text-violet-300">{setLabel}</p> : null}
+        <div className="mb-3">
+          <ListStatusLabels statusText={statusText} />
+        </div>
         <p className="font-display text-2xl text-orange-300">אין בתים שמתאימים לסינון</p>
         <p className="mt-2 text-base">נסו לבטל סינון בתפריטי שכונה, רמת פחד, עוד או רגישויות.</p>
       </div>
@@ -134,12 +144,7 @@ export function HouseList({
           הוסיפו בית
         </Link>
       </div>
-      <p className="text-base text-violet-300">
-        {houses.length} בתים
-        {onlineDevices != null ? ` · ${onlineDevices} מבקרים` : ""}
-        {" · מיון לפי מרחק"}
-        {setLabel ? ` · ${setLabel}` : ""}
-      </p>
+      <ListStatusLabels statusText={statusText} />
       {filtered.length === 0 ? (
         <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לחיפוש.</p>
       ) : (

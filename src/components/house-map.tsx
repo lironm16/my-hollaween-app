@@ -22,7 +22,7 @@ import type { PublicHouse } from "@/lib/types";
 import { type LatLng } from "@/lib/route";
 import { distanceMeters } from "@/lib/geo";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
-import { isClosingSoon, isHoursNightOver, isOnBreak, isOpeningSoon } from "@/lib/hours";
+import { isClosingSoon, isHoursNightOver, isHoursNotYetOpen, isOnBreak, isOpeningSoon } from "@/lib/hours";
 import type { ScareLevel } from "@/lib/types";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { cn } from "@/lib/utils";
@@ -85,6 +85,7 @@ const SCARE_SRC: Record<ScareLevel, string> = {
 function pinVisitKind(house: PublicHouse, now: Date): "closed" | "break" | null {
   if (effectiveVisit(house) === "closed") return "closed";
   if (isHoursNightOver(house, now)) return "closed";
+  if (isHoursNotYetOpen(house, now) && !isOpeningSoon(house, now)) return "closed";
   if (isOwnerFrozen(house, now.getTime()) || isOnBreak(house, now)) return "break";
   return null;
 }
