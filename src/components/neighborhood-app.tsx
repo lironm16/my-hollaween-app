@@ -860,9 +860,6 @@ export function NeighborhoodApp({
                 <div className="origin-pick-bar">
                   <p className="origin-pick-label">{originDraftLabel}</p>
                   <div className="origin-pick-actions">
-                    <Button type="button" variant="outline" size="sm" onClick={exitOriginPick}>
-                      ביטול
-                    </Button>
                     <Button
                       type="button"
                       size="sm"
@@ -871,6 +868,9 @@ export function NeighborhoodApp({
                       onClick={() => void saveOriginPick()}
                     >
                       שמירת התחלה
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={exitOriginPick}>
+                      ביטול
                     </Button>
                   </div>
                 </div>
