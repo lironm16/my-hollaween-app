@@ -15,6 +15,34 @@ import { originLabel } from "@/lib/distance-origin";
 import { inNeighborhood } from "@/lib/config";
 import { cn } from "@/lib/utils";
 
+export function OriginTrigger({
+  shifted,
+  onClick,
+}: {
+  shifted: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={shifted ? "נקודת מדידה שונה מהמיקום הנוכחי" : "מאיפה למדוד מרחק"}
+      title={shifted ? "נקודת מדידה שונה מהמיקום הנוכחי" : "מאיפה למדוד מרחק"}
+      onClick={onClick}
+      className={cn(
+        "relative inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
+        shifted
+          ? "bg-orange-500 text-black"
+          : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
+      )}
+    >
+      <MapPin className="size-4" />
+      {shifted ? (
+        <span className="absolute -top-1 -start-1 size-2.5 rounded-full bg-black ring-2 ring-orange-300" />
+      ) : null}
+    </button>
+  );
+}
+
 export function OriginPickerSheet({
   open,
   onOpenChange,
