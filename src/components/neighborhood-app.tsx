@@ -313,22 +313,25 @@ export function NeighborhoodApp({
   const activeFilterCount =
     neighborhoodActiveCount + sensitivityFilters.length + scareActiveCount + moreFilterCount;
 
-  const pinCurrentRoute = useCallback(() => {
-    const houses = visible.filter((house) => !visits.visitedIds.includes(house.id));
-    setPinnedRoute(
-      buildWalkingRoute(houses, origin, {
-        accessible: accessibleOnly,
-        startedFrom: origin.kind,
-        originLabel: origin.label,
-      }),
-    );
-    setRouteFitTick((n) => n + 1);
-  }, [visible, visits.visitedIds, accessibleOnly, origin]);
+  const pinCurrentRoute = useCallback(
+    (fit = false) => {
+      const houses = visible.filter((house) => !visits.visitedIds.includes(house.id));
+      setPinnedRoute(
+        buildWalkingRoute(houses, origin, {
+          accessible: accessibleOnly,
+          startedFrom: origin.kind,
+          originLabel: origin.label,
+        }),
+      );
+      if (fit) setRouteFitTick((n) => n + 1);
+    },
+    [visible, visits.visitedIds, accessibleOnly, origin],
+  );
 
   useEffect(() => {
     if (!routeMode || !pendingRouteGps.current || !gps) return;
     pendingRouteGps.current = false;
-    pinCurrentRoute();
+    pinCurrentRoute(true);
   }, [routeMode, gps, pinCurrentRoute]);
 
   useEffect(() => {
@@ -378,9 +381,7 @@ export function NeighborhoodApp({
     ? "המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב."
     : originPickActive
       ? "לחצו על המפה כדי לקבוע נקודת התחלה"
-      : routeMode
-        ? `מסלול · ${walkingRoute?.stops.length ?? 0} עצירות`
-        : null;
+      : null;
   const houseSetStatus = admin ? HOUSE_SET_STATUS[houseSet] : undefined;
 
   useEffect(() => {
@@ -390,7 +391,7 @@ export function NeighborhoodApp({
     }
     if (pendingRouteGps.current) {
       pendingRouteGps.current = false;
-      pinCurrentRoute();
+      pinCurrentRoute(true);
     }
     if (geoErrorToasted.current) return;
     geoErrorToasted.current = true;
@@ -456,7 +457,7 @@ export function NeighborhoodApp({
       return;
     }
     pendingRouteGps.current = false;
-    pinCurrentRoute();
+    pinCurrentRoute(true);
   }
 
   function chooseGpsOrigin() {
@@ -857,19 +858,21 @@ export function NeighborhoodApp({
               />
               {originPickActive ? (
                 <div className="origin-pick-bar">
-                  <p className="min-w-0 flex-1 truncate text-base text-orange-100">{originDraftLabel}</p>
-                  <Button type="button" variant="outline" size="sm" onClick={exitOriginPick}>
-                    ביטול
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="bg-orange-500 text-black hover:bg-orange-400"
-                    disabled={!originDraft}
-                    onClick={() => void saveOriginPick()}
-                  >
-                    שמירת התחלה
-                  </Button>
+                  <p className="origin-pick-label">{originDraftLabel}</p>
+                  <div className="origin-pick-actions">
+                    <Button type="button" variant="outline" size="sm" onClick={exitOriginPick}>
+                      ביטול
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="bg-orange-500 text-black hover:bg-orange-400"
+                      disabled={!originDraft}
+                      onClick={() => void saveOriginPick()}
+                    >
+                      שמירת התחלה
+                    </Button>
+                  </div>
                 </div>
               ) : null}
               <CatalogMetaChip
@@ -879,6 +882,7 @@ export function NeighborhoodApp({
                 source={source}
                 onlineDevices={onlineDevices}
                 houseSetLabel={HOUSE_SET_LABELS[houseSet]}
+                routeStops={routeMode && walkingRoute ? walkingRoute.stops.length : null}
               />
             </div>
             <PullToRefresh
@@ -1040,6 +1044,7 @@ function CatalogMetaChip({
   source,
   onlineDevices,
   houseSetLabel,
+  routeStops = null,
 }: {
   houseCount: number;
   offline: boolean;
@@ -1047,13 +1052,15 @@ function CatalogMetaChip({
   source: string | null;
   onlineDevices?: number | null;
   houseSetLabel: string;
+  routeStops?: number | null;
 }) {
   const stale = offline || unreachable || source === "cache" || source === "snapshot";
   return (
     <div className="pointer-events-none absolute top-2 start-2 z-10">
-      <span className="inline-flex max-w-[min(100%,18rem)] items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
+      <span className="inline-flex max-w-[min(100%-1rem,26rem)] flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
         <span>{houseCount} בתים</span>
         {onlineDevices != null ? <span>· {onlineDevices} מבקרים</span> : null}
+        {routeStops != null ? <span>· מסלול · {routeStops} עצירות</span> : null}
         <span>· {houseSetLabel}</span>
         {stale ? (
           <>
