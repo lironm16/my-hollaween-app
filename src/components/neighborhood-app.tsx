@@ -13,7 +13,7 @@ import {
 } from "@/components/filter-menu";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseList } from "@/components/house-list";
-import { MapStats } from "@/components/map-stats";
+import { MapStats, StatsSummary } from "@/components/map-stats";
 import { CsvExportButton } from "@/components/csv-export-button";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { NightDesk } from "@/components/night-desk";
@@ -61,7 +61,7 @@ import {
 import { decorShort } from "@/lib/labels";
 import { readHomeView, writeHomeView, type HomeView } from "@/lib/home-view";
 import { HOUSE_SET_LABELS, houseMatchesSet } from "@/lib/house-set";
-import { buildWalkingRoute, formatRouteSummary, type WalkingRoute } from "@/lib/route";
+import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
 import type { Catalog, House, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -332,19 +332,21 @@ export function NeighborhoodApp({
   const activeFilterCount =
     neighborhoodActiveCount + sensitivityFilters.length + scareActiveCount + moreFilterCount;
 
+  const filterRoute = useMemo(() => {
+    const houses = visible.filter((house) => !visits.visitedIds.includes(house.id));
+    return buildWalkingRoute(houses, origin, {
+      accessible: accessibleOnly,
+      startedFrom: origin.kind,
+      originLabel: origin.label,
+    });
+  }, [visible, visits.visitedIds, accessibleOnly, origin]);
+
   const pinCurrentRoute = useCallback(
     (fit = false) => {
-      const houses = visible.filter((house) => !visits.visitedIds.includes(house.id));
-      setPinnedRoute(
-        buildWalkingRoute(houses, origin, {
-          accessible: accessibleOnly,
-          startedFrom: origin.kind,
-          originLabel: origin.label,
-        }),
-      );
+      setPinnedRoute(filterRoute);
       if (fit) setRouteFitTick((n) => n + 1);
     },
-    [visible, visits.visitedIds, accessibleOnly, origin],
+    [filterRoute],
   );
 
   useEffect(() => {
@@ -360,10 +362,8 @@ export function NeighborhoodApp({
 
   useEffect(() => {
     if (!routeMode || pendingRouteGps.current) return;
-    pinCurrentRoute();
-    // Rebuild when the start point changes, not on catalog ticks.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [origin.kind, origin.lat, origin.lng, origin.label, routeMode]);
+    setPinnedRoute(filterRoute);
+  }, [routeMode, filterRoute]);
 
   useEffect(() => {
     if (!originPickActive || !originDraft) return;
@@ -378,13 +378,23 @@ export function NeighborhoodApp({
 
   const walkingRoute = routeMode ? pinnedRoute : null;
   const { line: routeLine } = useRouteGeometry(walkingRoute, routeMode);
-  const listStatusText = useMemo(() => {
-    const parts = [`${visible.length} בתים`];
-    if (onlineDevices != null) parts.push(`${onlineDevices} מבקרים`);
-    if (routeMode && walkingRoute) parts.push(formatRouteSummary(walkingRoute));
-    if (admin) parts.push(HOUSE_SET_LABELS[activeHouseSet]);
-    return parts.join(" · ");
-  }, [activeHouseSet, admin, onlineDevices, routeMode, visible.length, walkingRoute]);
+  const summaryProps = {
+    totalHouses: setHouses.length,
+    filteredHouses: visible.length,
+    onlineDevices,
+    likedCount: likedInSet,
+    visitedCount: visitedInSet,
+    route: filterRoute,
+    staleLabel: offline
+      ? "לא מקוון"
+      : unreachable
+        ? "השרת לא עונה"
+        : source === "snapshot"
+          ? "עותק סטטי"
+          : source === "cache"
+            ? "שמור בטלפון"
+            : null,
+  };
 
   const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const selected =
@@ -886,25 +896,7 @@ export function NeighborhoodApp({
                 panTick={panTick}
                 statsFab={
                   originPickActive ? null : (
-                    <MapStats
-                      totalHouses={setHouses.length}
-                      filteredHouses={visible.length}
-                      onlineDevices={onlineDevices}
-                      likedCount={likedInSet}
-                      visitedCount={visitedInSet}
-                      route={routeMode ? walkingRoute : null}
-                      staleLabel={
-                        offline
-                          ? "לא מקוון"
-                          : unreachable
-                            ? "השרת לא עונה"
-                            : source === "snapshot"
-                              ? "עותק סטטי"
-                              : source === "cache"
-                                ? "שמור בטלפון"
-                                : null
-                      }
-                    />
+                    <MapStats {...summaryProps} />
                   )
                 }
                 routeStops={
@@ -952,12 +944,16 @@ export function NeighborhoodApp({
               style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#12081a" }}
               aria-hidden={view !== "list"}
             >
+                <div className="mx-auto max-w-3xl px-3 pt-3">
+                  <div className="rounded-3xl bg-[#160b20] p-3 ring-1 ring-orange-500/40">
+                    <StatsSummary {...summaryProps} heading />
+                  </div>
+                </div>
                 {routeMode ? (
                   <RouteList
                     route={walkingRoute}
                     hasGps={Boolean(gps)}
                     onRequestLocation={gpsAllowed ? chooseGpsOrigin : undefined}
-                    statusText={listStatusText}
                     onSelectHouse={(id) => {
                       setView("map");
                       setClusterOverview(false);
@@ -969,7 +965,6 @@ export function NeighborhoodApp({
                     houses={visible}
                     origin={origin}
                     catalogSource={source}
-                    statusText={listStatusText}
                     likedIds={likes.likedIds}
                     onToggleLike={onToggleLike}
                     visitedIds={visits.visitedIds}

@@ -180,7 +180,7 @@ function Section({
   );
 }
 
-export function MapStats({
+export function StatsSummary({
   totalHouses,
   filteredHouses,
   onlineDevices = null,
@@ -188,7 +188,100 @@ export function MapStats({
   visitedCount,
   route = null,
   staleLabel = null,
+  heading = false,
 }: {
+  totalHouses: number;
+  filteredHouses: number;
+  onlineDevices?: number | null;
+  likedCount: number;
+  visitedCount: number;
+  route?: WalkingRoute | null;
+  staleLabel?: string | null;
+  heading?: boolean;
+}) {
+  const walk = route ? distanceParts(route.totalMeters) : null;
+  const stopMark = route && route.stops.length < 100 ? String(route.stops.length) : undefined;
+
+  return (
+    <div className="flex flex-col gap-2.5 text-right" dir="rtl">
+      {heading ? (
+        <p className="flex items-center gap-1.5 text-xl font-bold text-orange-400">
+          <span className="inline-flex size-7 text-orange-500">
+            <ScarePumpkin />
+          </span>
+          סיכום
+        </p>
+      ) : null}
+      <Section title="השכונה">
+        <div className="grid grid-cols-2 gap-2">
+          <Tile
+            icon={
+              <span className="text-orange-500">
+                <HouseIcon />
+              </span>
+            }
+            value={String(totalHouses)}
+            label="בתים"
+          />
+          <Tile
+            icon={<PeopleIcon />}
+            value={onlineDevices == null ? "—" : String(onlineDevices)}
+            label="מבקרים"
+          />
+        </div>
+      </Section>
+      <Section title="שלכם">
+        <div className="flex items-start justify-around gap-1 pt-1">
+          <Stack icon={<HeartIcon />} value={String(likedCount)} label="שמורים" />
+          <Stack
+            icon={
+              <span className="inline-flex size-9 items-center justify-center rounded-full bg-emerald-500 text-black">
+                <Check className="size-5" strokeWidth={3} />
+              </span>
+            }
+            value={String(visitedCount)}
+            label="ביקרתי"
+          />
+        </div>
+      </Section>
+      <Section
+        title={route?.accessible ? "מסלול נגיש" : "מסלול"}
+        className="bg-[#2c1a12] ring-orange-500/25"
+      >
+        <div className="grid grid-cols-2 gap-2">
+          <RouteChip
+            icon={
+              <span className="text-orange-500">
+                <HouseIcon />
+              </span>
+            }
+            value={String(filteredHouses)}
+            label="בתים"
+          />
+          <RouteChip
+            icon={<PinIcon mark={stopMark} />}
+            value={route ? String(route.stops.length) : "—"}
+            label="עצירות"
+          />
+          <RouteChip icon={<PathIcon />} value={walk ? walk.value : "—"} label={walk ? walk.unit : "ק״מ"} />
+          <RouteChip
+            icon={<ClockIcon />}
+            value={route ? `כ־${route.totalMinutes}` : "—"}
+            label="דק׳"
+          />
+        </div>
+      </Section>
+      {staleLabel ? (
+        <p className="flex items-center gap-2 text-base text-amber-100">
+          <WifiOff className="size-4 shrink-0" />
+          {staleLabel}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export function MapStats(props: {
   totalHouses: number;
   filteredHouses: number;
   onlineDevices?: number | null;
@@ -201,6 +294,7 @@ export function MapStats({
   const [mounted, setMounted] = useState(false);
   const titleId = useId();
   const panelId = useId();
+  const badge = props.filteredHouses > 99 ? "99+" : String(props.filteredHouses);
 
   useEffect(() => {
     setMounted(true);
@@ -219,10 +313,6 @@ export function MapStats({
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
-
-  const badge = filteredHouses > 99 ? "99+" : String(filteredHouses);
-  const walk = route ? distanceParts(route.totalMeters) : null;
-  const stopMark = route && route.stops.length < 100 ? String(route.stops.length) : undefined;
 
   return (
     <div className="relative">
@@ -260,91 +350,7 @@ export function MapStats({
                     <X className="size-5" strokeWidth={3} />
                   </button>
                 </div>
-                <div className="flex flex-col gap-2.5">
-                  <Section title="השכונה">
-                    <div className="grid grid-cols-2 gap-2">
-                      <Tile
-                        icon={
-                          <span className="text-orange-500">
-                            <HouseIcon />
-                          </span>
-                        }
-                        value={String(totalHouses)}
-                        label="בתים"
-                      />
-                      <Tile
-                        icon={<PeopleIcon />}
-                        value={onlineDevices == null ? "—" : String(onlineDevices)}
-                        label="מבקרים"
-                      />
-                    </div>
-                  </Section>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <Section title="לפי הסינון">
-                      <Tile
-                        className="bg-transparent px-1 py-1 ring-0"
-                        icon={
-                          <span className="text-orange-500">
-                            <ScarePumpkin />
-                          </span>
-                        }
-                        value={String(filteredHouses)}
-                        label="בתים"
-                      />
-                    </Section>
-                    <Section title="שלכם">
-                      <div className="flex items-start justify-around gap-1 pt-1">
-                        <Stack icon={<HeartIcon />} value={String(likedCount)} label="שמורים" />
-                        <Stack
-                          icon={
-                            <span className="inline-flex size-9 items-center justify-center rounded-full bg-emerald-500 text-black">
-                              <Check className="size-5" strokeWidth={3} />
-                            </span>
-                          }
-                          value={String(visitedCount)}
-                          label="ביקרתי"
-                        />
-                      </div>
-                    </Section>
-                  </div>
-                  <Section
-                    title={route?.accessible ? "מסלול נגיש" : "מסלול"}
-                    className="bg-[#2c1a12] ring-orange-500/25"
-                  >
-                    <div className={cn("grid gap-2", route && walk ? "grid-cols-2" : "grid-cols-1")}>
-                      <RouteChip
-                        icon={
-                          <span className="text-orange-500">
-                            <HouseIcon />
-                          </span>
-                        }
-                        value={String(filteredHouses)}
-                        label="בתים"
-                      />
-                      {route && walk ? (
-                        <>
-                          <RouteChip
-                            icon={<PinIcon mark={stopMark} />}
-                            value={String(route.stops.length)}
-                            label="עצירות"
-                          />
-                          <RouteChip icon={<PathIcon />} value={walk.value} label={walk.unit} />
-                          <RouteChip
-                            icon={<ClockIcon />}
-                            value={`כ־${route.totalMinutes}`}
-                            label="דק׳"
-                          />
-                        </>
-                      ) : null}
-                    </div>
-                  </Section>
-                  {staleLabel ? (
-                    <p className="flex items-center gap-2 text-base text-amber-100">
-                      <WifiOff className="size-4 shrink-0" />
-                      {staleLabel}
-                    </p>
-                  ) : null}
-                </div>
+                <StatsSummary {...props} />
               </div>
             </div>,
             document.body,
@@ -353,7 +359,7 @@ export function MapStats({
       <button
         type="button"
         className="relative inline-flex size-11 items-center justify-center rounded-full bg-[#1d1028] text-orange-100 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-orange-500/35 hover:bg-orange-500/10"
-        aria-label={`סיכום המפה · ${filteredHouses} בתים בסינון`}
+        aria-label={`סיכום המפה · ${props.filteredHouses} בתים בסינון`}
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         title="סיכום"

@@ -1,34 +1,15 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { HousePlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button";
 import { HouseCard } from "@/components/house-card";
-import { PingPongMarquee } from "@/components/neighborhood-marquee";
 import { distanceMeters } from "@/lib/geo";
 import { effectiveVisit } from "@/lib/house-state";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
-
-export function ListStatusLabels({
-  statusText,
-  extra,
-}: {
-  statusText: string;
-  extra?: ReactNode;
-}) {
-  return (
-    <div className="min-w-0 space-y-2">
-      <p className="text-base text-violet-300">ממוין לפי מרחק</p>
-      <div className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
-        <PingPongMarquee text={statusText} className="text-base font-medium text-orange-100" />
-        {extra}
-      </div>
-    </div>
-  );
-}
 
 function scrollParent(el: HTMLElement | null): HTMLElement | null {
   for (let node = el?.parentElement ?? null; node; node = node.parentElement) {
@@ -51,7 +32,6 @@ export function HouseList({
   editCodeFor,
   onHouseUpdated,
   onHouseDeleted,
-  statusText,
 }: {
   houses: PublicHouse[];
   origin?: { lat: number; lng: number } | null;
@@ -65,7 +45,6 @@ export function HouseList({
   editCodeFor?: (id: string) => string | undefined;
   onHouseUpdated?: (house: PublicHouse) => void;
   onHouseDeleted?: (id: string) => void;
-  statusText: string;
 }) {
   const [q, setQ] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -124,9 +103,6 @@ export function HouseList({
   if (houses.length === 0) {
     return (
       <div className="px-4 py-16 text-center text-violet-200">
-        <div className="mb-3">
-          <ListStatusLabels statusText={statusText} />
-        </div>
         <p className="font-display text-2xl text-orange-300">אין בתים שמתאימים לסינון</p>
         <p className="mt-2 text-base">נסו לבטל סינון בתפריטי שכונה, רמת פחד, עוד או רגישויות.</p>
       </div>
@@ -153,7 +129,6 @@ export function HouseList({
           הוסיפו בית
         </Link>
       </div>
-      <ListStatusLabels statusText={statusText} />
       {filtered.length === 0 ? (
         <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לחיפוש.</p>
       ) : (
