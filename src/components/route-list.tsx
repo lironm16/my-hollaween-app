@@ -3,7 +3,6 @@
 import { Navigation } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
-import { ListStatusLabels } from "@/components/house-list";
 import { formatDisplayAddress } from "@/lib/config";
 import { formatDistance } from "@/lib/geo";
 import { houseHeadline } from "@/lib/labels";
@@ -15,13 +14,11 @@ export function RouteList({
   hasGps,
   onRequestLocation,
   onSelectHouse,
-  statusText,
 }: {
   route: WalkingRoute | null;
   hasGps: boolean;
   onRequestLocation?: () => void;
   onSelectHouse: (id: string) => void;
-  statusText: string;
 }) {
   const gpsAction =
     !hasGps && onRequestLocation ? (
@@ -34,9 +31,7 @@ export function RouteList({
   if (!route) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center text-violet-200">
-        <div className="mb-3">
-          <ListStatusLabels statusText={statusText} extra={gpsAction} />
-        </div>
+        {gpsAction}
         <p className="font-display text-2xl text-orange-300">אין עצירות במסלול</p>
         <p className="mt-2 text-base">
           שנו סינון כדי לראות בתים במסלול. «לא ביקרתי» מסתיר בתים שכבר סימנתם.
@@ -47,7 +42,7 @@ export function RouteList({
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-3 px-3 py-3">
-      <ListStatusLabels statusText={statusText} extra={gpsAction} />
+      {gpsAction}
 
       <ol className="space-y-2">
         {route.stops.flatMap((stop, index) => {
