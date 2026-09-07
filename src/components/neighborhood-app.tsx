@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { List, MapPinned, RefreshCw, Route, WifiOff } from "lucide-react";
+import { List, MapPinned, Route, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { PingPongMarquee } from "@/components/neighborhood-marquee";
@@ -17,6 +17,7 @@ import { CsvExportButton } from "@/components/csv-export-button";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { NightDesk } from "@/components/night-desk";
 import { OriginPickerSheet, OriginTrigger } from "@/components/origin-picker";
+import { PullToRefresh } from "@/components/pull-to-refresh";
 import { RouteList } from "@/components/route-list";
 import { reversePin } from "@/components/address-field";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
@@ -692,15 +693,6 @@ export function NeighborhoodApp({
           >
             <Route className="size-4" />
           </button>
-          <button
-            type="button"
-            aria-label="רענון"
-            title="רענון"
-            onClick={() => void onRefresh()}
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25"
-          >
-            <RefreshCw className={cn("size-4", (loading || adminLoading) && "animate-spin")} />
-          </button>
           <CsvExportButton houses={visible} kind={likedOnly ? "liked" : "list"} includeTraffic={admin} />
         </div>
         {routeTicker ? (
@@ -813,7 +805,10 @@ export function NeighborhoodApp({
           </div>
         ) : (
           <>
-            <div
+            <PullToRefresh
+              onRefresh={onRefresh}
+              disabled={view !== "map" || originPickActive || loading || adminLoading}
+              edgeOnly
               className={cn(
                 "map-stage absolute inset-0 z-0 isolate",
                 view !== "map" && "invisible pointer-events-none",
@@ -888,9 +883,11 @@ export function NeighborhoodApp({
                 onlineDevices={onlineDevices}
                 houseSetLabel={HOUSE_SET_LABELS[houseSet]}
               />
-            </div>
+            </PullToRefresh>
             {view === "list" ? (
-              <div
+              <PullToRefresh
+                onRefresh={onRefresh}
+                disabled={loading || adminLoading}
                 className="absolute inset-0 overflow-y-auto bg-[#12081a]"
                 style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#12081a" }}
               >
@@ -926,7 +923,7 @@ export function NeighborhoodApp({
                     onHouseDeleted={handleHouseDeleted}
                   />
                 )}
-              </div>
+              </PullToRefresh>
             ) : null}
           </>
         )}
