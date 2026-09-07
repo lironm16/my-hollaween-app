@@ -307,26 +307,37 @@ export function MapStats({
                       </div>
                     </Section>
                   </div>
-                  {route && walk ? (
-                    <Section
-                      title={route.accessible ? "מסלול נגיש" : "מסלול"}
-                      className="bg-[#2c1a12] ring-orange-500/25"
-                    >
-                      <div className="grid grid-cols-3 gap-2">
-                        <RouteChip
-                          icon={<PinIcon mark={stopMark} />}
-                          value={String(route.stops.length)}
-                          label="עצירות"
-                        />
-                        <RouteChip icon={<PathIcon />} value={walk.value} label={walk.unit} />
-                        <RouteChip
-                          icon={<ClockIcon />}
-                          value={`כ־${route.totalMinutes}`}
-                          label="דק׳"
-                        />
-                      </div>
-                    </Section>
-                  ) : null}
+                  <Section
+                    title={route?.accessible ? "מסלול נגיש" : "מסלול"}
+                    className="bg-[#2c1a12] ring-orange-500/25"
+                  >
+                    <div className={cn("grid gap-2", route && walk ? "grid-cols-2" : "grid-cols-1")}>
+                      <RouteChip
+                        icon={
+                          <span className="text-orange-500">
+                            <HouseIcon />
+                          </span>
+                        }
+                        value={String(filteredHouses)}
+                        label="בתים"
+                      />
+                      {route && walk ? (
+                        <>
+                          <RouteChip
+                            icon={<PinIcon mark={stopMark} />}
+                            value={String(route.stops.length)}
+                            label="עצירות"
+                          />
+                          <RouteChip icon={<PathIcon />} value={walk.value} label={walk.unit} />
+                          <RouteChip
+                            icon={<ClockIcon />}
+                            value={`כ־${route.totalMinutes}`}
+                            label="דק׳"
+                          />
+                        </>
+                      ) : null}
+                    </div>
+                  </Section>
                   {staleLabel ? (
                     <p className="flex items-center gap-2 text-base text-amber-100">
                       <WifiOff className="size-4 shrink-0" />
