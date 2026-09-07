@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { List, MapPinned, Route, WifiOff } from "lucide-react";
+import { List, MapPinned, Route } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { PingPongMarquee } from "@/components/neighborhood-marquee";
@@ -1055,28 +1055,27 @@ function CatalogMetaChip({
   routeStops?: number | null;
 }) {
   const stale = offline || unreachable || source === "cache" || source === "snapshot";
+  const parts = [`${houseCount} בתים`];
+  if (onlineDevices != null) parts.push(`${onlineDevices} מבקרים`);
+  if (routeStops != null) parts.push(`מסלול · ${routeStops} עצירות`);
+  parts.push(houseSetLabel);
+  if (stale) {
+    parts.push(
+      offline
+        ? "לא מקוון"
+        : unreachable
+          ? "השרת לא עונה"
+          : source === "snapshot"
+            ? "עותק סטטי"
+            : "שמור בטלפון",
+    );
+  }
   return (
-    <div className="pointer-events-none absolute top-2 start-2 z-10">
-      <span className="inline-flex max-w-[min(100%-1rem,26rem)] flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
-        <span>{houseCount} בתים</span>
-        {onlineDevices != null ? <span>· {onlineDevices} מבקרים</span> : null}
-        {routeStops != null ? <span>· מסלול · {routeStops} עצירות</span> : null}
-        <span>· {houseSetLabel}</span>
-        {stale ? (
-          <>
-            <WifiOff className="size-3 shrink-0" />
-            <span>
-              {offline
-                ? "לא מקוון"
-                : unreachable
-                  ? "השרת לא עונה"
-                  : source === "snapshot"
-                    ? "עותק סטטי"
-                    : "שמור בטלפון"}
-            </span>
-          </>
-        ) : null}
-      </span>
+    <div className="pointer-events-none absolute top-2 start-2 z-10 max-w-[min(calc(100%-1rem),22rem)]">
+      <PingPongMarquee
+        text={parts.join(" · ")}
+        className="inline-block max-w-full rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm"
+      />
     </div>
   );
 }
