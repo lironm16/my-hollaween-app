@@ -155,6 +155,16 @@ export function isHoursNightOver(house: HoursSource, now = appNow()) {
   });
 }
 
+/** True on event night before the first listed window. Uses the house’s real hours, not rehearsal stubs. */
+export function isHoursNotYetOpen(house: HoursSource, now = appNow()) {
+  if (eventNightRelation(now) !== 0) return false;
+  const windows = houseHoursWindows(house);
+  if (windows.length === 0) return false;
+  const from = parseClockMinutes(windows[0]!.from);
+  if (from === null) return false;
+  return minutesNow(now) < from;
+}
+
 /** Open / not-yet / closing-soon — only on the Halloween event night. */
 export function hoursStatus(
   house: HoursSource & {
