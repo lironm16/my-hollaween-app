@@ -13,6 +13,7 @@ function SwatchPin({
   onBreak,
   bare,
   multi,
+  visited,
 }: {
   scare?: "mild" | "medium" | "spicy";
   candy?: "plenty" | "low" | "out";
@@ -21,6 +22,7 @@ function SwatchPin({
   onBreak?: boolean;
   bare?: boolean;
   multi?: boolean;
+  visited?: boolean;
 }) {
   return (
     <div
@@ -29,6 +31,7 @@ function SwatchPin({
         hours === "closing" && "is-closing-soon",
         hours === "opening" && "is-opening-soon",
         bare && "is-undecorated",
+        visited && "is-visited",
       )}
       style={{ background: bare ? "#94a3b8" : "#6d28d9" }}
       aria-hidden
@@ -85,6 +88,7 @@ const GROUPS: { title: string; items: { key: string; label: string; node: ReactN
       { key: "close", label: "נסגר בקרוב", node: <SwatchPin scare="mild" hours="closing" /> },
       { key: "open", label: "נפתח בקרוב", node: <SwatchPin scare="mild" hours="opening" /> },
       { key: "multi", label: "כמה בתים", node: <SwatchPin multi /> },
+      { key: "visited", label: "ביקרתי", node: <SwatchPin scare="mild" visited /> },
     ],
   },
 ];
