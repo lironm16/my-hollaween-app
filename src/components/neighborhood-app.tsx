@@ -13,6 +13,7 @@ import {
 } from "@/components/filter-menu";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseList } from "@/components/house-list";
+import { MapStats } from "@/components/map-stats";
 import { CsvExportButton } from "@/components/csv-export-button";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { NightDesk } from "@/components/night-desk";
@@ -876,6 +877,26 @@ export function NeighborhoodApp({
                 }}
                 panTo={panTo}
                 panTick={panTick}
+                statsFab={
+                  originPickActive ? null : (
+                    <MapStats
+                      houseCount={visible.length}
+                      onlineDevices={onlineDevices}
+                      route={routeMode ? walkingRoute : null}
+                      staleLabel={
+                        offline
+                          ? "לא מקוון"
+                          : unreachable
+                            ? "השרת לא עונה"
+                            : source === "snapshot"
+                              ? "עותק סטטי"
+                              : source === "cache"
+                                ? "שמור בטלפון"
+                                : null
+                      }
+                    />
+                  )
+                }
                 routeStops={
                   routeMode && walkingRoute && !originPickActive
                     ? walkingRoute.stops.map((stop) => ({
@@ -908,13 +929,7 @@ export function NeighborhoodApp({
               ) : null}
               <CatalogMetaChip
                 hidden={Boolean(selected) && !originPickActive}
-                houseCount={visible.length}
-                offline={offline}
-                unreachable={unreachable}
-                source={source}
-                onlineDevices={onlineDevices}
                 houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
-                routeSummary={routeMode && walkingRoute ? formatRouteSummary(walkingRoute) : null}
               />
             </div>
             <PullToRefresh
@@ -1061,51 +1076,23 @@ function StatusTicker({ text }: { text: string }) {
 
 function CatalogMetaChip({
   hidden = false,
-  houseCount,
-  offline,
-  unreachable,
-  source,
-  onlineDevices,
   houseSetLabel,
-  routeSummary = null,
 }: {
   hidden?: boolean;
-  houseCount: number;
-  offline: boolean;
-  unreachable: boolean;
-  source: string | null;
-  onlineDevices?: number | null;
   houseSetLabel?: string | null;
-  routeSummary?: string | null;
 }) {
-  const stale = offline || unreachable || source === "cache" || source === "snapshot";
-  const parts = [`${houseCount} בתים`];
-  if (onlineDevices != null) parts.push(`${onlineDevices} מבקרים`);
-  if (routeSummary != null) parts.push(`מסלול · ${routeSummary}`);
-  if (houseSetLabel) parts.push(houseSetLabel);
-  if (stale) {
-    parts.push(
-      offline
-        ? "לא מקוון"
-        : unreachable
-          ? "השרת לא עונה"
-          : source === "snapshot"
-            ? "עותק סטטי"
-            : "שמור בטלפון",
-    );
-  }
+  if (!houseSetLabel) return null;
   return (
     <div
       className={cn(
-        "pointer-events-none absolute top-2 start-2 z-10 max-w-[min(calc(100%-1rem),22rem)] transition-[opacity,transform] duration-[220ms] ease-out motion-reduce:transition-none",
+        "pointer-events-none absolute top-2 start-2 z-10 max-w-[min(calc(100%-1rem),12rem)] transition-[opacity,transform] duration-[220ms] ease-out motion-reduce:transition-none",
         hidden ? "-translate-y-2 opacity-0" : "translate-y-0 opacity-100",
       )}
       aria-hidden={hidden}
     >
-      <PingPongMarquee
-        text={parts.join(" · ")}
-        className="inline-block max-w-full rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm"
-      />
+      <span className="inline-block max-w-full rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
+        {houseSetLabel}
+      </span>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppNow } from "@/hooks/use-app-clock";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import {
   Circle,
   MapContainer,
@@ -597,6 +597,7 @@ type Props = {
   onOriginPick?: (lat: number, lng: number) => void;
   panTo?: LatLng | null;
   panTick?: number;
+  statsFab?: ReactNode;
 };
 
 export function HouseMap({
@@ -624,6 +625,7 @@ export function HouseMap({
   onOriginPick,
   panTo = null,
   panTick = 0,
+  statsFab = null,
 }: Props) {
   const clusters = useMemo(
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
@@ -878,6 +880,7 @@ export function HouseMap({
               <LocateFixed className={cn("size-5", locating && "animate-pulse")} />
             </button>
           ) : null}
+          {!pickMode ? statsFab : null}
           {!pickMode ? <MapLegend /> : null}
         </div>
     </div>
