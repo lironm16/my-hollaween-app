@@ -1,4 +1,4 @@
-import { config, inNeighborhood, neighborhoodFromCoords } from "@/lib/config";
+import { config, inNeighborhood, neighborhoodFromCoords, NEIGHBORHOODS } from "@/lib/config";
 import { houseNumberFromHit, parseStreetAndNumber } from "@/lib/address-text";
 import type { AddressHit } from "@/lib/types";
 
@@ -23,7 +23,7 @@ function isCityName(value: string) {
 }
 
 function areaLabelFor(hit: { lat: number; lng: number }) {
-  // OSM/Esri tag many הגפן buildings as נחלת גנים. Our neighborhood centers win.
+  // Only append one of the 3 neighborhoods. Pins nearer to הגפן stay unlabeled.
   return neighborhoodFromCoords(hit.lat, hit.lng);
 }
 
@@ -104,7 +104,13 @@ function formatLabel(hit: NominatimHit): string | null {
   const lat = Number(hit.lat);
   const lng = Number(hit.lon);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-    const area = suburb && suburb !== road && !isCityName(suburb) ? suburb : null;
+    const area =
+      suburb &&
+      suburb !== road &&
+      !isCityName(suburb) &&
+      (NEIGHBORHOODS as readonly string[]).includes(suburb)
+        ? suburb
+        : null;
     return area && !street.includes(area) ? `${street}, ${area}` : street;
   }
   const area = areaLabelFor({ lat, lng });
