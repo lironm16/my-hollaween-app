@@ -838,7 +838,7 @@ export function NeighborhoodApp({
                 routeFitTick={routeMode && !originPickActive ? routeFitTick : 0}
                 routeStart={routeMode ? origin : null}
                 visitedIds={visits.visitedIds}
-                originMarker={origin.kind === "gps" ? null : origin}
+                originMarker={origin.fromGps ? null : origin}
                 originPickActive={originPickActive}
                 originPick={originDraft}
                 onOriginPick={(lat, lng) => {
@@ -884,13 +884,16 @@ export function NeighborhoodApp({
                 houseSetLabel={HOUSE_SET_LABELS[houseSet]}
               />
             </PullToRefresh>
-            {view === "list" ? (
-              <PullToRefresh
-                onRefresh={onRefresh}
-                disabled={loading || adminLoading}
-                className="absolute inset-0 overflow-y-auto bg-[#12081a]"
-                style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#12081a" }}
-              >
+            <PullToRefresh
+              onRefresh={onRefresh}
+              disabled={view !== "list" || loading || adminLoading}
+              className={cn(
+                "absolute inset-0 overflow-y-auto bg-[#12081a]",
+                view === "list" ? "z-10" : "invisible pointer-events-none z-0",
+              )}
+              style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#12081a" }}
+              aria-hidden={view !== "list"}
+            >
                 {routeMode ? (
                   <RouteList
                     route={walkingRoute}
@@ -923,8 +926,7 @@ export function NeighborhoodApp({
                     onHouseDeleted={handleHouseDeleted}
                   />
                 )}
-              </PullToRefresh>
-            ) : null}
+            </PullToRefresh>
           </>
         )}
         {selected && view === "map" && !originPickActive ? (

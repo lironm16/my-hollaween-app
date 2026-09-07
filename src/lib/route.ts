@@ -218,12 +218,7 @@ export function graphhopperWalkingUrl(route: WalkingRoute) {
 }
 
 export function routePoints(route: WalkingRoute): LatLng[] {
-  const stops = route.stops.map((stop) => pointOf(stop.house));
-  if (stops.length === 0) return [];
-  const includeOrigin =
-    route.startedFrom !== "neighborhood" &&
-    distanceMeters(route.origin, stops[0]!) <= ROUTE_INCLUDE_ORIGIN_METERS;
-  return includeOrigin ? [route.origin, ...stops] : stops;
+  return route.stops.map((stop) => pointOf(stop.house));
 }
 
 export function routeStopLabel(house: PublicHouse) {

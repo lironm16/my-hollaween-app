@@ -20,16 +20,20 @@ const tiles = cartoKey
       invert: true,
     };
 
-export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "הגפן", "נחלת גנים"] as const;
+export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים"] as const;
 export type NeighborhoodId = (typeof NEIGHBORHOODS)[number];
+
+/** OSM often tags הגפן as נחלת גנים — keep the center so we do not relabel it. */
+const GEFEN_CENTER = { lat: 32.08925, lng: 34.81205 };
 
 /** Approximate centers used when address text has no neighborhood name. */
 const NEIGHBORHOOD_CENTERS: Record<NeighborhoodId, { lat: number; lng: number }> = {
   חרוזים: { lat: 32.0908, lng: 34.8038 },
   "שיכון ותיקים": { lat: 32.0939, lng: 34.8133 },
-  הגפן: { lat: 32.08925, lng: 34.81205 },
   "נחלת גנים": { lat: 32.0928, lng: 34.8188 },
 };
+
+const ADDRESS_AREA_NAMES = [...NEIGHBORHOODS, "הגפן"] as const;
 
 export const config = {
   /** Home-screen / PWA / OS notification name. In-app chrome uses brandEn. */
@@ -40,7 +44,7 @@ export const config = {
   titleWords: ["Halloween"] as const,
   tagline: "מפת הבתים המפחידים של השכונה",
   neighborhood:
-    process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שיכון ותיקים · חרוזים · הגפן · נחלת גנים",
+    process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שיכון ותיקים · חרוזים · נחלת גנים",
   neighborhoods: NEIGHBORHOODS,
   map: {
     center: {
@@ -79,6 +83,7 @@ export function inNeighborhood(lat: number, lng: number) {
 /** Detect which area a house belongs to from its address text. */
 export function neighborhoodFromAddress(address: string): NeighborhoodId | null {
   const text = address.trim();
+  if (text.includes("הגפן")) return null;
   for (const name of NEIGHBORHOODS) {
     const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     if (new RegExp(`(?:^|,)\\s*${escaped}\\s*$`, "u").test(text)) return name;
@@ -89,10 +94,10 @@ export function neighborhoodFromAddress(address: string): NeighborhoodId | null 
   return null;
 }
 
-/** Nearest neighborhood center (for labels that only say רמת גן). */
-export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId {
-  let best: NeighborhoodId = NEIGHBORHOODS[0];
-  let bestDist = Number.POSITIVE_INFINITY;
+/** Nearest of the 3 neighborhoods, or null when the pin is in הגפן (or closer to it). */
+export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId | null {
+  let best: NeighborhoodId | null = null;
+  let bestDist = (lat - GEFEN_CENTER.lat) ** 2 + (lng - GEFEN_CENTER.lng) ** 2;
   for (const name of NEIGHBORHOODS) {
     const c = NEIGHBORHOOD_CENTERS[name];
     const d = (lat - c.lat) ** 2 + (lng - c.lng) ** 2;
@@ -109,19 +114,18 @@ export function resolveNeighborhood(house: {
   lat?: number;
   lng?: number;
 }): NeighborhoodId | null {
+  const lat = house.lat;
+  const lng = house.lng;
+  const hasCoords =
+    typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng);
+  const fromCoords = hasCoords ? neighborhoodFromCoords(lat, lng) : null;
+  // Map pin outside the 3 neighborhoods: do not keep a typed/OSM area label.
+  if (hasCoords && fromCoords === null) return null;
   if (house.address) {
     const fromText = neighborhoodFromAddress(house.address);
     if (fromText) return fromText;
   }
-  if (
-    typeof house.lat === "number" &&
-    typeof house.lng === "number" &&
-    Number.isFinite(house.lat) &&
-    Number.isFinite(house.lng)
-  ) {
-    return neighborhoodFromCoords(house.lat, house.lng);
-  }
-  return null;
+  return fromCoords;
 }
 
 /** Street + neighborhood for UI (never city / רמת גן). */
@@ -144,7 +148,7 @@ function streetPartForDisplay(address: string): string {
     .replace(/,?\s*Ramat\s*Gan\s*$/iu, "")
     .replace(/,?\s*ישראל\s*$/iu, "")
     .trim();
-  for (const name of NEIGHBORHOODS) {
+  for (const name of ADDRESS_AREA_NAMES) {
     const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     text = text.replace(new RegExp(`,?\\s*${escaped}\\s*$`, "u"), "").trim();
   }
@@ -155,7 +159,7 @@ export function houseInNeighborhoods(
   house: { address: string; lat?: number; lng?: number },
   selected: readonly NeighborhoodId[],
 ) {
-  if (selected.length === 0) return true;
+  if (selected.length === 0 || selected.length === NEIGHBORHOODS.length) return true;
   const area = resolveNeighborhood(house);
   return area !== null && selected.includes(area);
 }

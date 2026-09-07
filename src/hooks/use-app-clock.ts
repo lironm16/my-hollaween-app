@@ -31,15 +31,20 @@ export function useAppNow() {
 
 export function useRehearsalScene() {
   const [scene, setSceneState] = useState<RehearsalScene>("off");
+  const [, bump] = useState(0);
   useEffect(() => {
-    setSceneState(readRehearsalScene());
-    const onChange = () => setSceneState(readRehearsalScene());
+    const onChange = () => {
+      setSceneState(readRehearsalScene());
+      bump((n) => n + 1);
+    };
+    onChange();
     window.addEventListener(CLOCK_EVENT, onChange);
     return () => window.removeEventListener(CLOCK_EVENT, onChange);
   }, []);
   const setScene = useCallback((next: RehearsalScene) => {
     writeRehearsalScene(next);
     setSceneState(next);
+    bump((n) => n + 1);
   }, []);
   return { scene, setScene };
 }

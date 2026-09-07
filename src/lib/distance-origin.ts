@@ -80,7 +80,8 @@ let cachedChoice: DistanceOriginChoice = DEFAULT_GPS;
 export function readDistanceOrigin(): DistanceOriginChoice {
   if (typeof window === "undefined") return DEFAULT_GPS;
   try {
-    const raw = sessionStorage.getItem(DISTANCE_ORIGIN_KEY);
+    const raw =
+      sessionStorage.getItem(DISTANCE_ORIGIN_KEY) ?? localStorage.getItem(DISTANCE_ORIGIN_KEY);
     if (raw === cachedRaw) return cachedChoice;
     cachedRaw = raw;
     if (!raw) {
@@ -102,10 +103,14 @@ export function readDistanceOrigin(): DistanceOriginChoice {
 
 export function writeDistanceOrigin(choice: DistanceOriginChoice) {
   if (typeof window === "undefined") return;
+  const raw = JSON.stringify(choice);
   try {
-    sessionStorage.setItem(DISTANCE_ORIGIN_KEY, JSON.stringify(choice));
+    sessionStorage.setItem(DISTANCE_ORIGIN_KEY, raw);
+    localStorage.setItem(DISTANCE_ORIGIN_KEY, raw);
   } catch {
     /* private mode */
   }
+  cachedRaw = raw;
+  cachedChoice = choice;
   window.dispatchEvent(new Event(DISTANCE_ORIGIN_EVENT));
 }
