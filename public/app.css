@@ -833,6 +833,9 @@
   .gap-8 {
     gap: calc(var(--spacing) * 8);
   }
+  .gap-\[2px\] {
+    gap: 2px;
+  }
   :where(.space-y-0\.5 > :not(:last-child)) {
     --tw-space-y-reverse: 0;
     margin-block-start: calc(calc(var(--spacing) * 0.5) * var(--tw-space-y-reverse));
@@ -1179,12 +1182,6 @@
     background-color: color-mix(in srgb, oklch(26.2% 0.051 172.552) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-emerald-950) 40%, transparent);
-    }
-  }
-  .bg-emerald-950\/50 {
-    background-color: color-mix(in srgb, oklch(26.2% 0.051 172.552) 50%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-emerald-950) 50%, transparent);
     }
   }
   .bg-emerald-950\/70 {
@@ -3974,6 +3971,7 @@ svg.leaflet-zoom-animated {
   pointer-events: none;
 }
 .pin-apt-dot {
+  position: relative;
   width: 24px;
   height: 24px;
   margin-inline-end: -8px;
@@ -4004,8 +4002,35 @@ svg.leaflet-zoom-animated {
 .pin-apt-dot.is-closed {
   background: #e11d48;
 }
+.pin-apt-dot.is-closed::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 50%;
+  height: 5px;
+  border-radius: 1px;
+  background: #fff;
+  transform: translateY(-50%);
+}
 .pin-apt-dot.is-break {
   background: #6b7280;
+}
+.pin-apt-dot.is-break::before,
+.pin-apt-dot.is-break::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  width: 4px;
+  height: 10px;
+  border-radius: 999px;
+  background: #fff;
+}
+.pin-apt-dot.is-break::before {
+  left: 4px;
+}
+.pin-apt-dot.is-break::after {
+  right: 4px;
 }
 .house-pin .pin-scare {
   display: block;
@@ -4727,6 +4752,11 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   width: 48px;
   height: 48px;
 }
+.map-house-sheet-chrome .house-action-btn.has-count {
+  width: auto;
+  min-width: 0;
+  padding-inline: 10px 12px;
+}
 .house-list-card-chrome {
   display: flex;
   flex-direction: column;
@@ -4742,6 +4772,11 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .house-list-card-chrome .house-action-btn {
   width: 48px;
   height: 48px;
+}
+.house-list-card-chrome .house-action-btn.has-count {
+  width: auto;
+  min-width: 0;
+  padding-inline: 10px 12px;
 }
 .map-house-sheet-chrome,
 .map-house-sheet-handle-hit {
@@ -4888,6 +4923,26 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .house-action-btn.is-visited {
   background: #059669;
   color: #ffffff;
+}
+.house-action-btn.has-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: auto;
+  min-width: 0;
+  padding-inline: 10px 12px;
+}
+.house-action-btn.has-count > svg,
+.house-action-btn.has-count > .house-action-count {
+  flex-shrink: 0;
+}
+.house-action-count {
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.03em;
 }
 .visit-cheer {
   position: fixed;

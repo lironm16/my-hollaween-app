@@ -16,7 +16,7 @@ import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl } from "@/lib/nav-links";
 import { loadOwnedHouses } from "@/lib/offline-db";
 import { shouldLoadHousePhoto } from "@/lib/photos";
-import { HouseTrafficLine } from "@/components/house-traffic-line";
+import { HouseActionCount } from "@/components/house-action-bar";
 import { useHouseTraffic } from "@/hooks/use-house-traffic";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,6 @@ export function HouseDetails({
   actions,
   compact = false,
   distanceM,
-  emphasizeTraffic = false,
 }: {
   house: PublicHouse;
   extra?: ReactNode;
@@ -58,11 +57,10 @@ export function HouseDetails({
   /** List collapsed state: same top block as the map card, without the long details. */
   compact?: boolean;
   distanceM?: number;
-  /** Owner or manager: show neighborhood traffic on this house, including collapsed list rows. */
-  emphasizeTraffic?: boolean;
 }) {
   const displayAddress = formatDisplayAddress(house);
   const { trafficFor } = useHouseTraffic();
+  const traffic = trafficFor(house.id);
   const [ownedEditCode, setOwnedEditCode] = useState<string | undefined>(undefined);
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
@@ -124,27 +122,37 @@ export function HouseDetails({
             {onToggleVisited ? (
               <button
                 type="button"
-                aria-label={visited ? "סמנו כלא ביקרתי" : "סמנו שביקרתי"}
+                aria-label={
+                  visited
+                    ? `סמנו כלא ביקרתי, ${traffic.visited} ביקרו`
+                    : `סמנו שביקרתי, ${traffic.visited} ביקרו`
+                }
                 onClick={(e) => {
                   e.stopPropagation();
                   onToggleVisited();
                 }}
-                className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
+                className="inline-flex items-center gap-[2px] rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
               >
                 <VisitedCheck visited={visited} />
+                <HouseActionCount n={traffic.visited} />
               </button>
             ) : null}
             {onToggleLike ? (
               <button
                 type="button"
-                aria-label={liked ? "הסירו מהשמורים" : "שמרו את הבית"}
+                aria-label={
+                  liked
+                    ? `הסירו מהשמורים, ${traffic.saved} שמרו`
+                    : `שמרו את הבית, ${traffic.saved} שמרו`
+                }
                 onClick={(e) => {
                   e.stopPropagation();
                   onToggleLike();
                 }}
-                className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
+                className="inline-flex items-center gap-[2px] rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
               >
                 <Heart className={cn("size-6", liked && "fill-orange-500 text-orange-500")} />
+                <HouseActionCount n={traffic.saved} />
               </button>
             ) : null}
             {canEdit && onToggleEdit ? (
@@ -177,9 +185,6 @@ export function HouseDetails({
           איך מגיעים: {house.arrival}
         </p>
       ) : null}
-      {compact && emphasizeTraffic ? (
-        <HouseTrafficLine traffic={trafficFor(house.id)} variant="owner" compact />
-      ) : null}
       {compact ? null : (
         <>
           {house.description ? (
@@ -188,10 +193,6 @@ export function HouseDetails({
           {house.notes ? (
             <p className="text-base text-amber-200/90">הערה: {house.notes}</p>
           ) : null}
-          <HouseTrafficLine
-            traffic={trafficFor(house.id)}
-            variant={emphasizeTraffic ? "owner" : "public"}
-          />
           <CodesCopy editCode={editCode} />
           {sheet ? null : (
             <div className="flex flex-wrap gap-2 pt-1">

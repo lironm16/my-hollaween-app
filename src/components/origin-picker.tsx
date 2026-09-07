@@ -19,6 +19,7 @@ export function OriginPickerSheet({
   open,
   onOpenChange,
   choice,
+  gpsAllowed = true,
   onChooseGps,
   onChooseNeighborhood,
   onChooseCustom,
@@ -27,6 +28,7 @@ export function OriginPickerSheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   choice: DistanceOriginChoice;
+  gpsAllowed?: boolean;
   onChooseGps: () => void;
   onChooseNeighborhood: () => void;
   onChooseCustom: (lat: number, lng: number, label: string) => void;
@@ -47,13 +49,15 @@ export function OriginPickerSheet({
           <p className="text-base text-violet-300">למיון ברשימה, למפה, ולמסלול</p>
         </SheetHeader>
         <div className="space-y-2 px-4 py-3">
-          <OriginOption
-            active={choice.kind === "gps"}
-            icon={<Navigation className="size-4" />}
-            label="המיקום שלי"
-            hint="GPS"
-            onClick={onChooseGps}
-          />
+          {gpsAllowed ? (
+            <OriginOption
+              active={choice.kind === "gps"}
+              icon={<Navigation className="size-4" />}
+              label="המיקום שלי"
+              hint="GPS"
+              onClick={onChooseGps}
+            />
+          ) : null}
           <OriginOption
             active={choice.kind === "neighborhood"}
             icon={<MapPin className="size-4" />}

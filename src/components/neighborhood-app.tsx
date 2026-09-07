@@ -58,7 +58,7 @@ import {
 } from "@/lib/offline-db";
 import { decorShort } from "@/lib/labels";
 import { readHomeView, writeHomeView, type HomeView } from "@/lib/home-view";
-import { HOUSE_SET_LABELS, houseMatchesSet } from "@/lib/house-set";
+import { HOUSE_SET_LABELS, HOUSE_SET_STATUS, houseMatchesSet } from "@/lib/house-set";
 import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
 import type { Catalog, House, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
@@ -75,6 +75,8 @@ export function NeighborhoodApp({
   const { admin } = useAdminSession();
   const geo = useUserLocation();
   const gps = geo.location;
+  const gpsAllowed =
+    geo.status === "idle" || geo.status === "pending" || geo.status === "ready";
   const { choice: originChoice, resolved: origin, setChoice: setOriginChoice } = useDistanceOrigin(gps);
   const { houseSet } = useHouseSet();
   const view = useSyncExternalStore(
@@ -117,6 +119,7 @@ export function NeighborhoodApp({
   const [pinnedRoute, setPinnedRoute] = useState<WalkingRoute | null>(null);
   const [routeFitTick, setRouteFitTick] = useState(0);
   const pendingRouteGps = useRef(false);
+  const geoErrorToasted = useRef(false);
   const cheerTimer = useRef(0);
   const [visitCheer, setVisitCheer] = useState(false);
   const [askedLocation, setAskedLocation] = useState(false);
@@ -328,6 +331,11 @@ export function NeighborhoodApp({
   }, [routeMode, gps, pinCurrentRoute]);
 
   useEffect(() => {
+    if (gpsAllowed || originChoice.kind !== "gps") return;
+    setOriginChoice({ kind: "neighborhood" });
+  }, [gpsAllowed, originChoice.kind, setOriginChoice]);
+
+  useEffect(() => {
     if (!routeMode || pendingRouteGps.current) return;
     pinCurrentRoute();
     // Rebuild when the start point changes, not on catalog ticks.
@@ -367,18 +375,31 @@ export function NeighborhoodApp({
   );
   const hasOriginPoint =
     origin.fromGps || origin.kind === "custom" || origin.kind === "neighborhood";
-  const routeTicker = geoError
-    ? "לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן."
-    : outsideNeighborhood
-      ? "המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב."
-      : originPickActive
-        ? "לחצו על המפה כדי לקבוע נקודת התחלה"
-        : routeMode
-          ? `מסלול · ${walkingRoute?.stops.length ?? 0} עצירות · ${origin.label}`
-          : hasOriginPoint
-            ? origin.label
-            : null;
-  const canChangeOrigin = Boolean(hasOriginPoint && !geoError && !outsideNeighborhood && !originPickActive);
+  const routeTicker = outsideNeighborhood
+    ? "המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב."
+    : originPickActive
+      ? "לחצו על המפה כדי לקבוע נקודת התחלה"
+      : routeMode
+        ? `מסלול · ${walkingRoute?.stops.length ?? 0} עצירות · ${origin.label}`
+        : hasOriginPoint
+          ? origin.label
+          : null;
+  const canChangeOrigin = Boolean(hasOriginPoint && !outsideNeighborhood && !originPickActive);
+  const houseSetStatus = admin ? HOUSE_SET_STATUS[houseSet] : undefined;
+
+  useEffect(() => {
+    if (!geoError) {
+      geoErrorToasted.current = false;
+      return;
+    }
+    if (pendingRouteGps.current) {
+      pendingRouteGps.current = false;
+      pinCurrentRoute();
+    }
+    if (geoErrorToasted.current) return;
+    geoErrorToasted.current = true;
+    toast.warning("לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.");
+  }, [geoError, pinCurrentRoute]);
 
   function panMapTo(point: { lat: number; lng: number }) {
     setPanTo(point);
@@ -686,7 +707,7 @@ export function NeighborhoodApp({
         {routeTicker ? (
           <StatusTicker
             text={routeTicker}
-            tone={geoError || outsideNeighborhood ? "warn" : "normal"}
+            tone={outsideNeighborhood ? "warn" : "normal"}
             onChange={canChangeOrigin ? () => setOriginPickerOpen(true) : undefined}
           />
         ) : null}
@@ -882,7 +903,8 @@ export function NeighborhoodApp({
                   <RouteList
                     route={walkingRoute}
                     hasGps={Boolean(gps)}
-                    onRequestLocation={chooseGpsOrigin}
+                    onRequestLocation={gpsAllowed ? chooseGpsOrigin : undefined}
+                    setLabel={houseSetStatus}
                     onSelectHouse={(id) => {
                       setView("map");
                       setClusterOverview(false);
@@ -892,14 +914,14 @@ export function NeighborhoodApp({
                 ) : (
                   <HouseList
                     houses={visible}
-                    origin={originChoice.kind === "gps" && !gps ? null : origin}
+                    origin={origin}
                     catalogSource={source}
+                    setLabel={houseSetStatus}
                     likedIds={likes.likedIds}
                     onToggleLike={onToggleLike}
                     visitedIds={visits.visitedIds}
                     onToggleVisited={onToggleVisited}
                     admin={admin}
-                    ownedIds={owned.map((item) => item.id)}
                     onlineDevices={onlineDevices}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
                     editCodeFor={(id) =>
@@ -982,6 +1004,7 @@ export function NeighborhoodApp({
         open={originPickerOpen}
         onOpenChange={setOriginPickerOpen}
         choice={originChoice}
+        gpsAllowed={gpsAllowed}
         onChooseGps={chooseGpsOrigin}
         onChooseNeighborhood={chooseNeighborhoodOrigin}
         onChooseCustom={chooseCustomOrigin}

@@ -14,15 +14,18 @@ export function RouteList({
   hasGps,
   onRequestLocation,
   onSelectHouse,
+  setLabel,
 }: {
   route: WalkingRoute | null;
   hasGps: boolean;
   onRequestLocation?: () => void;
   onSelectHouse: (id: string) => void;
+  setLabel?: string;
 }) {
   if (!route) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center text-violet-200">
+        {setLabel ? <p className="mb-3 text-base text-violet-300">{setLabel}</p> : null}
         <p className="font-display text-2xl text-orange-300">אין עצירות במסלול</p>
         <p className="mt-2 text-base">
           שנו סינון כדי לראות בתים במסלול. «לא ביקרתי» מסתיר בתים שכבר סימנתם.
@@ -33,6 +36,7 @@ export function RouteList({
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-3 px-3 py-3">
+      {setLabel ? <p className="text-base text-violet-300">{setLabel}</p> : null}
       <div className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
         <p className="text-base font-medium text-orange-100">{formatRouteSummary(route)}</p>
         {!hasGps && onRequestLocation ? (

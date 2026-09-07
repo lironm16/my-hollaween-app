@@ -27,13 +27,13 @@ export function HouseList({
   onToggleLike,
   visitedIds,
   onToggleVisited,
-  ownedIds = [],
   admin = false,
   onlineDevices = null,
   canEditHouse,
   editCodeFor,
   onHouseUpdated,
   onHouseDeleted,
+  setLabel,
 }: {
   houses: PublicHouse[];
   origin?: { lat: number; lng: number } | null;
@@ -42,13 +42,13 @@ export function HouseList({
   onToggleLike?: (id: string) => void;
   visitedIds?: string[];
   onToggleVisited?: (id: string) => void;
-  ownedIds?: string[];
   admin?: boolean;
   onlineDevices?: number | null;
   canEditHouse?: (id: string) => boolean;
   editCodeFor?: (id: string) => string | undefined;
   onHouseUpdated?: (house: PublicHouse) => void;
   onHouseDeleted?: (id: string) => void;
+  setLabel?: string;
 }) {
   const [q, setQ] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -107,6 +107,7 @@ export function HouseList({
   if (houses.length === 0) {
     return (
       <div className="px-4 py-16 text-center text-violet-200">
+        {setLabel ? <p className="mb-3 text-base text-violet-300">{setLabel}</p> : null}
         <p className="font-display text-2xl text-orange-300">אין בתים שמתאימים לסינון</p>
         <p className="mt-2 text-base">נסו לבטל סינון בתפריטי שכונה, רמת פחד, עוד או רגישויות.</p>
       </div>
@@ -137,6 +138,7 @@ export function HouseList({
         {houses.length} בתים
         {onlineDevices != null ? ` · ${onlineDevices} מבקרים` : ""}
         {" · מיון לפי מרחק"}
+        {setLabel ? ` · ${setLabel}` : ""}
       </p>
       {filtered.length === 0 ? (
         <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לחיפוש.</p>
@@ -159,7 +161,6 @@ export function HouseList({
               onToggleLike={onToggleLike ? () => onToggleLike(h.id) : undefined}
               visited={visitedIds?.includes(h.id)}
               onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
-              emphasizeTraffic={admin || ownedIds.includes(h.id)}
               canEdit={Boolean(canEditHouse?.(h.id))}
               editCode={editCodeFor?.(h.id)}
               admin={admin}
