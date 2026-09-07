@@ -122,7 +122,10 @@ export function NeighborhoodApp({
   const pendingRouteGps = useRef(false);
   const geoErrorToasted = useRef(false);
   const cheerTimer = useRef(0);
+  const outsideBannerTimer = useRef(0);
+  const outsideBannerFor = useRef(0);
   const [visitCheer, setVisitCheer] = useState(false);
+  const [outsideBanner, setOutsideBanner] = useState(false);
   const [askedLocation, setAskedLocation] = useState(false);
   const [originPickerOpen, setOriginPickerOpen] = useState(false);
   const [originPickActive, setOriginPickActive] = useState(false);
@@ -384,11 +387,20 @@ export function NeighborhoodApp({
   const outsideNeighborhood = Boolean(
     gps && askedLocation && panTick > 0 && !inNeighborhood(gps.lat, gps.lng),
   );
-  const routeTicker = outsideNeighborhood
-    ? "המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב."
-    : originPickActive
-      ? "לחצו על המפה כדי לקבוע נקודת התחלה"
-      : null;
+  const routeTicker = originPickActive ? "לחצו על המפה כדי לקבוע נקודת התחלה" : null;
+
+  useEffect(() => {
+    if (!outsideNeighborhood) {
+      setOutsideBanner(false);
+      return;
+    }
+    if (outsideBannerFor.current === panTick) return;
+    outsideBannerFor.current = panTick;
+    setOutsideBanner(true);
+    window.clearTimeout(outsideBannerTimer.current);
+    outsideBannerTimer.current = window.setTimeout(() => setOutsideBanner(false), 4000);
+    return () => window.clearTimeout(outsideBannerTimer.current);
+  }, [outsideNeighborhood, panTick]);
 
   useEffect(() => {
     if (!geoError) {
@@ -702,9 +714,7 @@ export function NeighborhoodApp({
           </button>
           <CsvExportButton houses={visible} kind={likedOnly ? "liked" : "list"} includeTraffic={admin} />
         </div>
-        {routeTicker ? (
-          <StatusTicker text={routeTicker} tone={outsideNeighborhood ? "warn" : "normal"} />
-        ) : null}
+        {routeTicker ? <StatusTicker text={routeTicker} /> : null}
       </div>
       <FiltersSheet
         open={filtersOpen}
@@ -787,6 +797,14 @@ export function NeighborhoodApp({
           ))}
         </FilterSection>
       </FiltersSheet>
+      {outsideBanner ? (
+        <div
+          role="status"
+          className="relative z-30 bg-amber-950 px-3 py-2 text-center text-base text-amber-50"
+        >
+          המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.
+        </div>
+      ) : null}
       {offline || unreachable ? (
         <div className="relative z-30 bg-[#2a1638] px-3 py-2 text-center text-base text-amber-100 ring-1 ring-inset ring-amber-500/20">
           {offline
@@ -1026,19 +1044,10 @@ export function NeighborhoodApp({
   );
 }
 
-function StatusTicker({
-  text,
-  tone,
-}: {
-  text: string;
-  tone: "normal" | "warn";
-}) {
+function StatusTicker({ text }: { text: string }) {
   return (
     <div className="mt-1 flex min-w-0 items-center">
-      <PingPongMarquee
-        text={text}
-        className={cn("flex-1 text-base", tone === "warn" ? "text-amber-200" : "text-orange-100")}
-      />
+      <PingPongMarquee text={text} className="flex-1 text-base text-orange-100" />
     </div>
   );
 }
