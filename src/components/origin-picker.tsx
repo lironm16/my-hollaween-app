@@ -15,6 +15,34 @@ import { originLabel } from "@/lib/distance-origin";
 import { inNeighborhood } from "@/lib/config";
 import { cn } from "@/lib/utils";
 
+export function OriginTrigger({
+  shifted,
+  onClick,
+}: {
+  shifted: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={shifted ? "נקודת מדידה שונה מהמיקום הנוכחי" : "מאיפה למדוד מרחק"}
+      title={shifted ? "נקודת מדידה שונה מהמיקום הנוכחי" : "מאיפה למדוד מרחק"}
+      onClick={onClick}
+      className={cn(
+        "relative inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
+        shifted
+          ? "bg-orange-500 text-black"
+          : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
+      )}
+    >
+      <MapPin className="size-4" />
+      {shifted ? (
+        <span className="absolute -top-1 -start-1 size-2.5 rounded-full bg-black ring-2 ring-orange-300" />
+      ) : null}
+    </button>
+  );
+}
+
 export function OriginPickerSheet({
   open,
   onOpenChange,
@@ -49,15 +77,14 @@ export function OriginPickerSheet({
           <p className="text-base text-violet-300">למיון ברשימה, למפה, ולמסלול</p>
         </SheetHeader>
         <div className="space-y-2 px-4 py-3">
-          {gpsAllowed ? (
-            <OriginOption
-              active={choice.kind === "gps"}
-              icon={<Navigation className="size-4" />}
-              label="המיקום שלי"
-              hint="GPS"
-              onClick={onChooseGps}
-            />
-          ) : null}
+          <OriginOption
+            active={gpsAllowed && choice.kind === "gps"}
+            disabled={!gpsAllowed}
+            icon={<Navigation className="size-4" />}
+            label="המיקום שלי"
+            hint={gpsAllowed ? "GPS" : "אשרו גישה למיקום בדפדפן"}
+            onClick={onChooseGps}
+          />
           <OriginOption
             active={choice.kind === "neighborhood"}
             icon={<MapPin className="size-4" />}
@@ -104,12 +131,14 @@ export function OriginPickerSheet({
 
 function OriginOption({
   active,
+  disabled,
   icon,
   label,
   hint,
   onClick,
 }: {
   active: boolean;
+  disabled?: boolean;
   icon: ReactNode;
   label: string;
   hint?: string;
@@ -118,19 +147,29 @@ function OriginOption({
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={onClick}
       className={cn(
         "flex w-full items-center gap-3 rounded-xl px-3 py-3 text-start ring-1",
-        active
-          ? "bg-orange-500 text-black ring-orange-400"
-          : "bg-[#1d1028] text-orange-100 ring-orange-500/20",
+        disabled
+          ? "cursor-not-allowed bg-[#1d1028] text-orange-100/45 ring-orange-500/15"
+          : active
+            ? "bg-orange-500 text-black ring-orange-400"
+            : "bg-[#1d1028] text-orange-100 ring-orange-500/20",
       )}
     >
       <span className="inline-flex size-9 items-center justify-center rounded-lg bg-black/15">{icon}</span>
       <span className="min-w-0 flex-1">
         <span className="block text-base font-medium">{label}</span>
         {hint ? (
-          <span className={cn("block text-base", active ? "text-black/70" : "text-violet-300")}>{hint}</span>
+          <span
+            className={cn(
+              "block text-base",
+              disabled ? "text-amber-200" : active ? "text-black/70" : "text-violet-300",
+            )}
+          >
+            {hint}
+          </span>
         ) : null}
       </span>
     </button>

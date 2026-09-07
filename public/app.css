@@ -275,6 +275,9 @@
   .inset-0 {
     inset: 0px;
   }
+  .inset-x-0 {
+    inset-inline: 0px;
+  }
   .-start-0\.5 {
     inset-inline-start: calc(var(--spacing) * -0.5);
   }
@@ -442,6 +445,10 @@
   }
   .field-sizing-content {
     field-sizing: content;
+  }
+  .size-2\.5 {
+    width: calc(var(--spacing) * 2.5);
+    height: calc(var(--spacing) * 2.5);
   }
   .size-3 {
     width: calc(var(--spacing) * 3);
@@ -734,6 +741,9 @@
   .cursor-default {
     cursor: default;
   }
+  .cursor-not-allowed {
+    cursor: not-allowed;
+  }
   .cursor-pointer {
     cursor: pointer;
   }
@@ -907,6 +917,9 @@
   }
   .overflow-visible {
     overflow: visible;
+  }
+  .overflow-x-auto {
+    overflow-x: auto;
   }
   .overflow-x-hidden {
     overflow-x: hidden;
@@ -1600,6 +1613,12 @@
   .text-orange-100 {
     color: var(--color-orange-100);
   }
+  .text-orange-100\/45 {
+    color: color-mix(in srgb, oklch(95.4% 0.038 75.164) 45%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-orange-100) 45%, transparent);
+    }
+  }
   .text-orange-200 {
     color: var(--color-orange-200);
   }
@@ -1706,6 +1725,9 @@
   .accent-orange-500 {
     accent-color: var(--color-orange-500);
   }
+  .opacity-0 {
+    opacity: 0%;
+  }
   .opacity-45 {
     opacity: 45%;
   }
@@ -1747,6 +1769,10 @@
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
+  .ring-2 {
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
   .ring-\[2\.5px\] {
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2.5px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
@@ -1777,6 +1803,9 @@
     @supports (color: color-mix(in lab, red, red)) {
       --tw-ring-color: color-mix(in oklab, var(--foreground) 10%, transparent);
     }
+  }
+  .ring-orange-300 {
+    --tw-ring-color: var(--color-orange-300);
   }
   .ring-orange-400 {
     --tw-ring-color: var(--color-orange-400);

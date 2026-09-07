@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { List, MapPinned, RefreshCw, Route, WifiOff } from "lucide-react";
+import { List, MapPinned, Route, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { PingPongMarquee } from "@/components/neighborhood-marquee";
@@ -16,7 +16,8 @@ import { HouseList } from "@/components/house-list";
 import { CsvExportButton } from "@/components/csv-export-button";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { NightDesk } from "@/components/night-desk";
-import { OriginPickerSheet } from "@/components/origin-picker";
+import { OriginPickerSheet, OriginTrigger } from "@/components/origin-picker";
+import { PullToRefresh } from "@/components/pull-to-refresh";
 import { RouteList } from "@/components/route-list";
 import { reversePin } from "@/components/address-field";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
@@ -373,18 +374,13 @@ export function NeighborhoodApp({
   const outsideNeighborhood = Boolean(
     gps && askedLocation && panTick > 0 && !inNeighborhood(gps.lat, gps.lng),
   );
-  const hasOriginPoint =
-    origin.fromGps || origin.kind === "custom" || origin.kind === "neighborhood";
   const routeTicker = outsideNeighborhood
     ? "המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב."
     : originPickActive
       ? "לחצו על המפה כדי לקבוע נקודת התחלה"
       : routeMode
-        ? `מסלול · ${walkingRoute?.stops.length ?? 0} עצירות · ${origin.label}`
-        : hasOriginPoint
-          ? origin.label
-          : null;
-  const canChangeOrigin = Boolean(hasOriginPoint && !outsideNeighborhood && !originPickActive);
+        ? `מסלול · ${walkingRoute?.stops.length ?? 0} עצירות`
+        : null;
   const houseSetStatus = admin ? HOUSE_SET_STATUS[houseSet] : undefined;
 
   useEffect(() => {
@@ -658,7 +654,7 @@ export function NeighborhoodApp({
         className="app-toolbar relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2"
         style={{ flexShrink: 0 }}
       >
-        <div className="flex flex-nowrap items-center gap-2">
+        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto">
           <div className="flex rounded-xl bg-[#261536] p-0.5 ring-1 ring-orange-400/40">
             <Toggle
               active={view === "map"}
@@ -679,6 +675,10 @@ export function NeighborhoodApp({
             />
           </div>
           <FilterTrigger activeCount={activeFilterCount} onClick={() => setFiltersOpen(true)} />
+          <OriginTrigger
+            shifted={originChoice.kind !== "gps"}
+            onClick={() => setOriginPickerOpen(true)}
+          />
           <button
             type="button"
             aria-label={routeMode ? "יציאה מהמסלול" : "מסלול"}
@@ -693,23 +693,10 @@ export function NeighborhoodApp({
           >
             <Route className="size-4" />
           </button>
-          <button
-            type="button"
-            aria-label="רענון"
-            title="רענון"
-            onClick={() => void onRefresh()}
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25"
-          >
-            <RefreshCw className={cn("size-4", (loading || adminLoading) && "animate-spin")} />
-          </button>
           <CsvExportButton houses={visible} kind={likedOnly ? "liked" : "list"} includeTraffic={admin} />
         </div>
         {routeTicker ? (
-          <StatusTicker
-            text={routeTicker}
-            tone={outsideNeighborhood ? "warn" : "normal"}
-            onChange={canChangeOrigin ? () => setOriginPickerOpen(true) : undefined}
-          />
+          <StatusTicker text={routeTicker} tone={outsideNeighborhood ? "warn" : "normal"} />
         ) : null}
       </div>
       <FiltersSheet
@@ -818,7 +805,10 @@ export function NeighborhoodApp({
           </div>
         ) : (
           <>
-            <div
+            <PullToRefresh
+              onRefresh={onRefresh}
+              disabled={view !== "map" || originPickActive || loading || adminLoading}
+              edgeOnly
               className={cn(
                 "map-stage absolute inset-0 z-0 isolate",
                 view !== "map" && "invisible pointer-events-none",
@@ -893,8 +883,10 @@ export function NeighborhoodApp({
                 onlineDevices={onlineDevices}
                 houseSetLabel={HOUSE_SET_LABELS[houseSet]}
               />
-            </div>
-            <div
+            </PullToRefresh>
+            <PullToRefresh
+              onRefresh={onRefresh}
+              disabled={view !== "list" || loading || adminLoading}
               className={cn(
                 "absolute inset-0 overflow-y-auto bg-[#12081a]",
                 view === "list" ? "z-10" : "invisible pointer-events-none z-0",
@@ -934,7 +926,7 @@ export function NeighborhoodApp({
                     onHouseDeleted={handleHouseDeleted}
                   />
                 )}
-              </div>
+            </PullToRefresh>
           </>
         )}
         {selected && view === "map" && !originPickActive ? (
@@ -1030,30 +1022,17 @@ export function NeighborhoodApp({
 function StatusTicker({
   text,
   tone,
-  onChange,
 }: {
   text: string;
   tone: "normal" | "warn";
-  onChange?: () => void;
 }) {
-  const marquee = (
-    <PingPongMarquee
-      text={text}
-      className={cn("flex-1 text-base", tone === "warn" ? "text-amber-200" : "text-orange-100")}
-    />
-  );
-  if (!onChange) {
-    return <div className="mt-1 flex min-w-0 items-center">{marquee}</div>;
-  }
   return (
-    <button
-      type="button"
-      onClick={onChange}
-      className="mt-1 flex w-full min-w-0 items-center gap-2 text-start"
-    >
-      {marquee}
-      <span className="shrink-0 text-base text-violet-300 underline-offset-2 hover:underline">שינוי</span>
-    </button>
+    <div className="mt-1 flex min-w-0 items-center">
+      <PingPongMarquee
+        text={text}
+        className={cn("flex-1 text-base", tone === "warn" ? "text-amber-200" : "text-orange-100")}
+      />
+    </div>
   );
 }
 
