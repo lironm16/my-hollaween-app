@@ -6,7 +6,6 @@ import { Heart, Pencil } from "lucide-react";
 import { VisitedCheck } from "@/components/visited-check";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { CodesCopy } from "@/components/codes-copy";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
 import { HouseTags } from "@/components/house-tags";
 import { formatDisplayAddress } from "@/lib/config";
@@ -14,7 +13,6 @@ import { formatDistance } from "@/lib/geo";
 import { formatHoursLabel } from "@/lib/hours";
 import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl } from "@/lib/nav-links";
-import { loadOwnedHouses } from "@/lib/offline-db";
 import { shouldLoadHousePhoto } from "@/lib/photos";
 import { HouseActionCount } from "@/components/house-action-bar";
 import { useHouseTraffic } from "@/hooks/use-house-traffic";
@@ -29,7 +27,6 @@ export function HouseDetails({
   onToggleLike,
   visited,
   onToggleVisited,
-  managerEditCode,
   canEdit = false,
   editing = false,
   onToggleEdit,
@@ -45,8 +42,6 @@ export function HouseDetails({
   onToggleLike?: () => void;
   visited?: boolean;
   onToggleVisited?: () => void;
-  /** When set (manager session), always show this edit code for resend. */
-  managerEditCode?: string;
   canEdit?: boolean;
   editing?: boolean;
   onToggleEdit?: () => void;
@@ -61,20 +56,16 @@ export function HouseDetails({
   const displayAddress = formatDisplayAddress(house);
   const { trafficFor } = useHouseTraffic();
   const traffic = trafficFor(house.id);
-  const [ownedEditCode, setOwnedEditCode] = useState<string | undefined>(undefined);
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
   const [photoReady, setPhotoReady] = useState(false);
   const loadPhoto = photoReady && (showPhoto || shouldLoadHousePhoto(catalogSource));
-  const editCode = managerEditCode ?? ownedEditCode;
 
   useEffect(() => {
     setPhotoReady(true);
   }, []);
 
   useEffect(() => {
-    const owned = loadOwnedHouses().find((item) => item.id === house.id);
-    setOwnedEditCode(owned?.editCode);
     setShowPhoto(false);
     setPhotoBroken(false);
   }, [house.id, house.photoUrl]);
@@ -134,7 +125,7 @@ export function HouseDetails({
                 className="inline-flex items-center gap-2 rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
               >
                 <VisitedCheck visited={visited} />
-                <HouseActionCount n={traffic.visited} />
+                <HouseActionCount n={Math.max(traffic.visited, visited ? 1 : 0)} />
               </button>
             ) : null}
             {onToggleLike ? (
@@ -152,7 +143,7 @@ export function HouseDetails({
                 className="inline-flex items-center gap-2 rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
               >
                 <Heart className={cn("size-6", liked && "fill-orange-500 text-orange-500")} />
-                <HouseActionCount n={traffic.saved} />
+                <HouseActionCount n={Math.max(traffic.saved, liked ? 1 : 0)} />
               </button>
             ) : null}
             {canEdit && onToggleEdit ? (
@@ -193,7 +184,6 @@ export function HouseDetails({
           {house.notes ? (
             <p className="text-base text-amber-200/90">הערה: {house.notes}</p>
           ) : null}
-          <CodesCopy editCode={editCode} />
           {sheet ? null : (
             <div className="flex flex-wrap gap-2 pt-1">
               <a

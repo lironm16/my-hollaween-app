@@ -8,10 +8,14 @@ function mapsQueryFor(house: PublicHouse) {
 }
 
 export function houseMapsUrl(house: PublicHouse) {
+  const query = mapsQueryFor(house).trim();
+  if (query) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}&travelmode=walking`;
+  }
   if (Number.isFinite(house.lat) && Number.isFinite(house.lng)) {
     return `https://www.google.com/maps/dir/?api=1&destination=${house.lat},${house.lng}&travelmode=walking`;
   }
-  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapsQueryFor(house))}&travelmode=walking`;
+  return `https://www.google.com/maps/dir/?api=1&travelmode=walking`;
 }
 
 export function houseSharePath(house: PublicHouse) {

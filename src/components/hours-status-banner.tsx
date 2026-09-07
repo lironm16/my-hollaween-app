@@ -109,14 +109,14 @@ export function HoursStatusBanner({
   if (status.kind === "beforeEvent") {
     return (
       <p className={cn(BANNER, "bg-sky-950/50 text-sky-100", className)}>
-        עדיין סגור — נפתח ב־{status.dateLabel} בשעה {status.opensAt}
+        נפתח ב־{status.dateLabel} בשעה {status.opensAt}
       </p>
     );
   }
   if (status.kind === "before") {
     return (
       <p className={cn(BANNER, "bg-sky-950/50 text-sky-100", className)}>
-        עדיין סגור — נפתח ב־{status.opensAt}
+        נפתח ב־{status.opensAt}
       </p>
     );
   }

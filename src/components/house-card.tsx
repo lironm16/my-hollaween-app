@@ -92,7 +92,6 @@ export function HouseCard({
             onToggleLike={onToggleLike}
             visited={visited}
             onToggleVisited={onToggleVisited}
-            managerEditCode={editCode}
             chrome="sheet"
           />
         )}
