@@ -47,6 +47,7 @@ export function AdminPushPanel() {
   const [houses, setHouses] = useState<PublicHouse[]>([]);
   const [sendHouseId, setSendHouseId] = useState("");
   const [busy, setBusy] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
   const [expanded, setExpanded] = useState<PushKind | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
   const [draftBody, setDraftBody] = useState("");
@@ -145,10 +146,19 @@ export function AdminPushPanel() {
 
   async function saveEdit() {
     if (!expanded) return;
-    const ok = await patch(expanded, { title: draftTitle, body: draftBody });
-    if (ok) {
-      toast.success("התבנית נשמרה");
-      cancelEdit();
+    setSavingEdit(true);
+    try {
+      const ok = await persist(
+        templates.map((item) =>
+          item.id === expanded ? { ...item, title: draftTitle, body: draftBody } : item,
+        ),
+      );
+      if (ok) {
+        toast.success("התבנית נשמרה");
+        cancelEdit();
+      }
+    } finally {
+      setSavingEdit(false);
     }
   }
 
@@ -318,12 +328,18 @@ export function AdminPushPanel() {
                     </Button>
                   ) : null}
                   {open ? (
-                    <>
+                    <form
+                      className="space-y-1.5"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        void saveEdit();
+                      }}
+                    >
                       <p className="text-base text-violet-400">{item.hint}</p>
                       <Input
                         value={draftTitle}
                         maxLength={80}
-                        disabled={busy}
+                        disabled={savingEdit}
                         className="h-8 bg-[#0c0612] text-base"
                         onChange={(event) => setDraftTitle(event.target.value)}
                       />
@@ -331,7 +347,7 @@ export function AdminPushPanel() {
                         value={draftBody}
                         maxLength={280}
                         rows={2}
-                        disabled={busy}
+                        disabled={savingEdit}
                         className="min-h-[3.5rem] bg-[#0c0612] text-base"
                         onChange={(event) => setDraftBody(event.target.value)}
                       />
@@ -355,23 +371,22 @@ export function AdminPushPanel() {
                           type="button"
                           size="sm"
                           variant="ghost"
-                          disabled={busy}
+                          disabled={savingEdit}
                           className="text-violet-200"
                           onClick={cancelEdit}
                         >
                           ביטול
                         </Button>
                         <Button
-                          type="button"
+                          type="submit"
                           size="sm"
-                          disabled={busy || !draftTitle.trim() || !draftBody.trim()}
+                          disabled={savingEdit || !draftTitle.trim() || !draftBody.trim()}
                           className="bg-orange-500 text-black hover:bg-orange-400"
-                          onClick={() => void saveEdit()}
                         >
-                          {busy ? "שומרים…" : "שמירה"}
+                          {savingEdit ? "שומרים…" : "שמירה"}
                         </Button>
                       </div>
-                    </>
+                    </form>
                   ) : (
                     <div className="rounded-md bg-[#0c0612]/80 px-2 py-1.5 ring-1 ring-orange-500/10">
                       <p className="text-base font-medium text-orange-50">{item.title}</p>

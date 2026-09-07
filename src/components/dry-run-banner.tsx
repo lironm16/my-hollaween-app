@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRehearsalScene, useServerSim } from "@/hooks/use-app-clock";
-import { REHEARSAL_LABELS } from "@/lib/app-clock";
+import { rehearsalSceneLabel } from "@/lib/app-clock";
 import { cn } from "@/lib/utils";
 
 export function DryRunBanner() {
@@ -21,7 +21,7 @@ export function DryRunBanner() {
       )}
     >
       <p>
-        {down ? "בדיקות: השרת לא עונה" : `בדיקות: ${REHEARSAL_LABELS[scene]}`}
+        {down ? "בדיקות: השרת לא עונה" : `בדיקות: ${rehearsalSceneLabel(scene)}`}
         {" · "}
         <Link href="/admin/rehearsal" className="underline underline-offset-2">
           הגדרות

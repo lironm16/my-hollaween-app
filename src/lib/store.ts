@@ -237,8 +237,8 @@ async function writeFileDb(db: DbFile) {
   await fs.rename(tmp, file);
 }
 
-function pushSettingsStamp(settings?: DbFile["pushSettings"], fallbackUpdatedAt?: string) {
-  const raw = settings?.updatedAt ?? fallbackUpdatedAt ?? "";
+function pushSettingsStamp(settings?: DbFile["pushSettings"]) {
+  const raw = settings?.updatedAt ?? "";
   const n = Date.parse(raw);
   return Number.isFinite(n) ? n : 0;
 }
@@ -248,8 +248,8 @@ function pickPushSettings(...candidates: Array<DbFile | null | undefined>): DbFi
   let bestStamp = -1;
   for (const candidate of candidates) {
     if (!candidate?.pushSettings?.templates) continue;
-    const t = pushSettingsStamp(candidate.pushSettings, candidate.updatedAt);
-    if (t >= bestStamp) {
+    const t = pushSettingsStamp(candidate.pushSettings);
+    if (t > bestStamp) {
       bestStamp = t;
       best = candidate.pushSettings;
     }
@@ -307,13 +307,17 @@ function setMem(db: DbFile) {
 
 async function persistDb(db: DbFile) {
   const pushBlob = await readPushSettingsBlob();
-  const mergedSettings = pickPushSettings(
-    db,
-    mem,
-    getGlobalDb(),
-    pushBlob ? { updatedAt: pushBlob.updatedAt ?? "", houses: [], pushSettings: pushBlob } : null,
-  );
-  if (mergedSettings) db.pushSettings = mergedSettings;
+  const blobWrapper = pushBlob
+    ? { updatedAt: pushBlob.updatedAt ?? "", houses: [] as DbFile["houses"], pushSettings: pushBlob }
+    : null;
+  const incomingStamp = pushSettingsStamp(db.pushSettings);
+  const stored = pickPushSettings(mem, getGlobalDb(), blobWrapper);
+  const storedStamp = pushSettingsStamp(stored);
+  if (!db.pushSettings?.templates) {
+    if (stored) db.pushSettings = stored;
+  } else if (stored && storedStamp > incomingStamp) {
+    db.pushSettings = stored;
+  }
   if (blobEnabled()) {
     try {
       await writeBlobDb(db);
