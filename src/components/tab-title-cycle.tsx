@@ -8,8 +8,8 @@ const INTERVAL_MS = 2200;
 export function TabTitleCycle() {
   useEffect(() => {
     const words = config.titleWords;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      document.title = config.brandEn;
+    if (words.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.title = config.tabTitle;
       return;
     }
 
@@ -22,7 +22,7 @@ export function TabTitleCycle() {
 
     return () => {
       window.clearInterval(timer);
-      document.title = config.brandEn;
+      document.title = config.tabTitle;
     };
   }, []);
 

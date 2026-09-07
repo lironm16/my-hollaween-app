@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { HousePlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -10,14 +10,6 @@ import { distanceMeters } from "@/lib/geo";
 import { effectiveVisit } from "@/lib/house-state";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
-
-function scrollParent(el: HTMLElement | null): HTMLElement | null {
-  for (let node = el?.parentElement ?? null; node; node = node.parentElement) {
-    const overflowY = getComputedStyle(node).overflowY;
-    if (overflowY === "auto" || overflowY === "scroll") return node;
-  }
-  return null;
-}
 
 export function HouseList({
   houses,
@@ -32,6 +24,7 @@ export function HouseList({
   editCodeFor,
   onHouseUpdated,
   onHouseDeleted,
+  onShowOnMap,
 }: {
   houses: PublicHouse[];
   origin?: { lat: number; lng: number } | null;
@@ -45,39 +38,9 @@ export function HouseList({
   editCodeFor?: (id: string) => string | undefined;
   onHouseUpdated?: (house: PublicHouse) => void;
   onHouseDeleted?: (id: string) => void;
+  onShowOnMap?: (id: string) => void;
 }) {
   const [q, setQ] = useState("");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const cardEls = useRef(new Map<string, HTMLElement>());
-  const collapseAnchor = useRef<{ id: string; scroller: HTMLElement } | null>(null);
-
-  useLayoutEffect(() => {
-    const pending = collapseAnchor.current;
-    collapseAnchor.current = null;
-    if (!pending) return;
-    const card = cardEls.current.get(pending.id);
-    if (!card) return;
-    const scrollerBox = pending.scroller.getBoundingClientRect();
-    const cardBox = card.getBoundingClientRect();
-    if (cardBox.top < scrollerBox.top + 8) {
-      pending.scroller.scrollTop += cardBox.top - scrollerBox.top - 8;
-    } else if (cardBox.bottom > scrollerBox.bottom - 8) {
-      pending.scroller.scrollTop += cardBox.bottom - scrollerBox.bottom + 8;
-    }
-  }, [expandedId]);
-
-  function onToggle(id: string) {
-    setExpandedId((current) => {
-      if (current === id) {
-        const card = cardEls.current.get(id);
-        const scroller = scrollParent(card ?? null);
-        collapseAnchor.current = scroller ? { id, scroller } : null;
-        return null;
-      }
-      collapseAnchor.current = null;
-      return id;
-    });
-  }
 
   const filtered = useMemo(() => {
     const needle = q.trim();
@@ -133,30 +96,22 @@ export function HouseList({
         <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לחיפוש.</p>
       ) : (
         filtered.map(({ h, d }) => (
-          <div
+          <HouseCard
             key={h.id}
-            ref={(node) => {
-              if (node) cardEls.current.set(h.id, node);
-              else cardEls.current.delete(h.id);
-            }}
-          >
-            <HouseCard
-              house={h}
-              distanceM={d}
-              catalogSource={catalogSource}
-              expanded={expandedId === h.id}
-              onToggle={() => onToggle(h.id)}
-              liked={likedIds?.includes(h.id)}
-              onToggleLike={onToggleLike ? () => onToggleLike(h.id) : undefined}
-              visited={visitedIds?.includes(h.id)}
-              onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
-              canEdit={Boolean(canEditHouse?.(h.id))}
-              editCode={editCodeFor?.(h.id)}
-              admin={admin}
-              onUpdated={onHouseUpdated}
-              onDeleted={onHouseDeleted}
-            />
-          </div>
+            house={h}
+            distanceM={d}
+            catalogSource={catalogSource}
+            liked={likedIds?.includes(h.id)}
+            onToggleLike={onToggleLike ? () => onToggleLike(h.id) : undefined}
+            visited={visitedIds?.includes(h.id)}
+            onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
+            canEdit={Boolean(canEditHouse?.(h.id))}
+            editCode={editCodeFor?.(h.id)}
+            admin={admin}
+            onUpdated={onHouseUpdated}
+            onDeleted={onHouseDeleted}
+            onShowOnMap={onShowOnMap ? () => onShowOnMap(h.id) : undefined}
+          />
         ))
       )}
     </div>

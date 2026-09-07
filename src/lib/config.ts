@@ -41,8 +41,9 @@ export const config = {
   appName: "SpookyHouzz",
   brandEn: "Halloween",
   brandHe: "בשכונה",
-  /** Browser tab cycles these. Home-screen / PWA label stays the app name. */
-  titleWords: ["Halloween"] as const,
+  /** Browser tab label. Home-screen / PWA stays the app name. */
+  tabTitle: "Halloween בשכונה",
+  titleWords: ["Halloween בשכונה"] as const,
   tagline: "מפת הבתים המפחידים של השכונה",
   neighborhood:
     process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שיכון ותיקים · חרוזים · נחלת גנים",
