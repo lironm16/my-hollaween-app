@@ -304,7 +304,7 @@ export function NeighborhoodApp({
   const neighborhoodActiveCount =
     neighborhoodFilters.length === 0 || neighborhoodFilters.length === NEIGHBORHOODS.length
       ? 0
-      : neighborhoodFilters.length;
+      : NEIGHBORHOODS.length - neighborhoodFilters.length;
   const scareLevelsActive =
     scareFilters.length === 0 || scareFilters.length === SCARE_LEVELS.length
       ? 0
@@ -394,7 +394,7 @@ export function NeighborhoodApp({
     }
     if (geoErrorToasted.current) return;
     geoErrorToasted.current = true;
-    toast.warning("לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בדפדפן.");
+    toast.warning("לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בהגדרות.");
   }, [geoError, pinCurrentRoute]);
 
   function panMapTo(point: { lat: number; lng: number }) {
@@ -805,10 +805,7 @@ export function NeighborhoodApp({
           </div>
         ) : (
           <>
-            <PullToRefresh
-              onRefresh={onRefresh}
-              disabled={view !== "map" || originPickActive || loading || adminLoading}
-              edgeOnly
+            <div
               className={cn(
                 "map-stage absolute inset-0 z-0 isolate",
                 view !== "map" && "invisible pointer-events-none",
@@ -883,7 +880,7 @@ export function NeighborhoodApp({
                 onlineDevices={onlineDevices}
                 houseSetLabel={HOUSE_SET_LABELS[houseSet]}
               />
-            </PullToRefresh>
+            </div>
             <PullToRefresh
               onRefresh={onRefresh}
               disabled={view !== "list" || loading || adminLoading}

@@ -346,10 +346,13 @@ function SizeSync({ active }: { active: boolean }) {
     const id = window.setTimeout(sync, 40);
     window.addEventListener("resize", sync);
     window.visualViewport?.addEventListener("resize", sync);
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sync) : null;
+    ro?.observe(map.getContainer());
     return () => {
       window.clearTimeout(id);
       window.removeEventListener("resize", sync);
       window.visualViewport?.removeEventListener("resize", sync);
+      ro?.disconnect();
     };
   }, [active, map]);
   return null;
@@ -643,11 +646,9 @@ export function HouseMap({
     () => true,
     () => false,
   );
-  const [mapTheme, setMapTheme] = useState<"dark" | "light">("dark");
-
-  useEffect(() => {
-    setMapTheme(readMapTheme());
-  }, []);
+  const [mapTheme, setMapTheme] = useState<"dark" | "light">(readMapTheme);
+  const tileUrl = tileUrlFor(mapTheme);
+  const osmDark = mapTheme === "dark" && config.tiles.invert;
 
   function toggleMapTheme() {
     setMapTheme((current) => {
@@ -656,9 +657,6 @@ export function HouseMap({
       return next;
     });
   }
-
-  const tileUrl = tileUrlFor(mapTheme);
-  const osmDark = mapTheme === "dark" && config.tiles.invert;
 
   if (!ready) {
     return (
@@ -678,6 +676,8 @@ export function HouseMap({
       className={cn(
         "relative z-0 isolate overflow-hidden",
         originPickActive && "is-origin-pick",
+        osmDark && "is-osm-dark",
+        mapTheme === "dark" ? "bg-[#1a1024]" : "bg-[#d6d3d1]",
         className ?? "h-full min-h-[280px] w-full",
       )}
       dir="ltr"
@@ -689,11 +689,7 @@ export function HouseMap({
         minZoom={config.map.minZoom}
         maxZoom={config.map.maxZoom}
         scrollWheelZoom
-        className={cn(
-          "h-full w-full rounded-none",
-          mapTheme === "dark" ? "bg-[#1a1024]" : "bg-[#d6d3d1]",
-          osmDark && "is-osm-dark",
-        )}
+        className="h-full w-full rounded-none"
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
