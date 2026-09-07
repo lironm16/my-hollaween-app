@@ -981,6 +981,12 @@ export function NeighborhoodApp({
                     }
                     onHouseUpdated={handleHouseUpdated}
                     onHouseDeleted={handleHouseDeleted}
+                    onShowOnMap={(id) => {
+                      setView("map");
+                      setClusterOverview(false);
+                      setEditing(false);
+                      setSelectedId(id);
+                    }}
                   />
                 )}
             </PullToRefresh>

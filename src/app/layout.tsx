@@ -21,7 +21,7 @@ const creepster = Creepster({
 });
 
 export const metadata: Metadata = {
-  title: config.appName,
+  title: config.tabTitle,
   description: `${config.tagline} — ${config.neighborhood}`,
   applicationName: config.appName,
   manifest: "/manifest.webmanifest",
