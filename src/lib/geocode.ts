@@ -1,4 +1,4 @@
-import { config, inNeighborhood, neighborhoodFromCoords, resolveNeighborhood } from "@/lib/config";
+import { config, inNeighborhood, neighborhoodFromCoords } from "@/lib/config";
 import { houseNumberFromHit, parseStreetAndNumber } from "@/lib/address-text";
 import type { AddressHit } from "@/lib/types";
 
@@ -22,19 +22,8 @@ function isCityName(value: string) {
   return /רמת\s*גן/u.test(value) || /ramat\s*gan/i.test(value);
 }
 
-function areaLabelFor(hit: {
-  suburb?: string;
-  city?: string;
-  lat: number;
-  lng: number;
-  road?: string;
-}) {
-  const suburb = hit.suburb?.trim() || "";
-  if (suburb && suburb !== hit.road && !isCityName(suburb)) {
-    const known = resolveNeighborhood({ address: suburb, lat: hit.lat, lng: hit.lng });
-    if (known) return known;
-    return suburb;
-  }
+function areaLabelFor(hit: { lat: number; lng: number }) {
+  // OSM/Esri tag many הגפן buildings as נחלת גנים. Our neighborhood centers win.
   return neighborhoodFromCoords(hit.lat, hit.lng);
 }
 
@@ -118,7 +107,7 @@ function formatLabel(hit: NominatimHit): string | null {
     const area = suburb && suburb !== road && !isCityName(suburb) ? suburb : null;
     return area && !street.includes(area) ? `${street}, ${area}` : street;
   }
-  const area = areaLabelFor({ suburb, city: cityOf(address), lat, lng, road });
+  const area = areaLabelFor({ lat, lng });
   return area && !street.includes(area) ? `${street}, ${area}` : street;
 }
 
@@ -249,13 +238,7 @@ function attachTypedNumber(hit: AddressHit, num: string): AddressHit {
     new RegExp(`\\s+${num}$`, "u"),
     "",
   );
-  const area = areaLabelFor({
-    suburb: hit.suburb,
-    city: hit.city,
-    lat: hit.lat,
-    lng: hit.lng,
-    road,
-  });
+  const area = areaLabelFor({ lat: hit.lat, lng: hit.lng });
   const label = area ? `${road} ${num}, ${area}` : `${road} ${num}`;
   return { ...hit, road, houseNumber: num, label, precise: hit.precise && already === num };
 }

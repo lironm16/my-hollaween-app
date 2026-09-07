@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { List, MapPinned, RefreshCw, Route, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
+import { PingPongMarquee } from "@/components/neighborhood-marquee";
 import {
   FilterOption,
   FilterSection,
@@ -55,9 +56,9 @@ import {
   saveServerDbBackup,
   type ServerDbBackup,
 } from "@/lib/offline-db";
-import { scareShort, treatLabels, decorShort } from "@/lib/labels";
+import { decorShort } from "@/lib/labels";
 import { readHomeView, writeHomeView, type HomeView } from "@/lib/home-view";
-import { HOUSE_SET_STATUS, houseMatchesSet } from "@/lib/house-set";
+import { HOUSE_SET_LABELS, HOUSE_SET_STATUS, houseMatchesSet } from "@/lib/house-set";
 import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
 import type { Catalog, House, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
@@ -355,34 +356,6 @@ export function NeighborhoodApp({
   const walkingRoute = routeMode ? pinnedRoute : null;
   const { line: routeLine } = useRouteGeometry(walkingRoute, routeMode);
 
-  const routePrefsLabel = useMemo(() => {
-    const parts: string[] = [];
-    if (openNowOnly) parts.push("פתוח עכשיו");
-    if (candyOnly) parts.push("ממתקים");
-    if (!includeUndecorated) parts.push("מקושט");
-    if (accessibleOnly) parts.push("נגיש");
-    if (likedOnly) parts.push("אהבתי");
-    if (unvisitedOnly) parts.push("לא ביקרתי");
-    for (const id of sensitivityFilters) parts.push(treatLabels[id]);
-    if (scareActiveCount > 0) {
-      parts.push(scareFilters.map((level) => scareShort[level]).join("/"));
-    }
-    if (neighborhoodActiveCount > 0) parts.push(neighborhoodFilters.join(" · "));
-    return parts.slice(0, 4).join(" · ");
-  }, [
-    openNowOnly,
-    candyOnly,
-    includeUndecorated,
-    accessibleOnly,
-    likedOnly,
-    unvisitedOnly,
-    sensitivityFilters,
-    scareFilters,
-    scareActiveCount,
-    neighborhoodFilters,
-    neighborhoodActiveCount,
-  ]);
-
   const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const selected =
     visible.find((house) => house.id === activeId) ??
@@ -400,6 +373,18 @@ export function NeighborhoodApp({
   const outsideNeighborhood = Boolean(
     gps && askedLocation && panTick > 0 && !inNeighborhood(gps.lat, gps.lng),
   );
+  const hasOriginPoint =
+    origin.fromGps || origin.kind === "custom" || origin.kind === "neighborhood";
+  const routeTicker = outsideNeighborhood
+    ? "המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב."
+    : originPickActive
+      ? "לחצו על המפה כדי לקבוע נקודת התחלה"
+      : routeMode
+        ? `מסלול · ${walkingRoute?.stops.length ?? 0} עצירות · ${origin.label}`
+        : hasOriginPoint
+          ? origin.label
+          : null;
+  const canChangeOrigin = Boolean(hasOriginPoint && !outsideNeighborhood && !originPickActive);
   const houseSetStatus = admin ? HOUSE_SET_STATUS[houseSet] : undefined;
 
   useEffect(() => {
@@ -719,24 +704,13 @@ export function NeighborhoodApp({
           </button>
           <CsvExportButton houses={visible} kind={likedOnly ? "liked" : "list"} includeTraffic={admin} />
         </div>
-        <div className="mt-1 flex flex-col gap-0.5">
-          {outsideNeighborhood ? (
-            <p className="text-base text-amber-200">המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.</p>
-          ) : originPickActive ? (
-            <p className="text-base text-violet-300">לחצו על המפה כדי לקבוע נקודת התחלה</p>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setOriginPickerOpen(true)}
-              className="text-start text-base text-orange-100 underline-offset-2 hover:underline"
-            >
-              {routeMode
-                ? `מסלול${routePrefsLabel ? ` · ${routePrefsLabel}` : ""} · ${walkingRoute?.stops.length ?? 0} עצירות · ${origin.label}`
-                : `מיון לפי מרחק · ${origin.label}`}
-              <span className="text-violet-300"> · שינוי</span>
-            </button>
-          )}
-        </div>
+        {routeTicker ? (
+          <StatusTicker
+            text={routeTicker}
+            tone={outsideNeighborhood ? "warn" : "normal"}
+            onChange={canChangeOrigin ? () => setOriginPickerOpen(true) : undefined}
+          />
+        ) : null}
       </div>
       <FiltersSheet
         open={filtersOpen}
@@ -913,12 +887,11 @@ export function NeighborhoodApp({
               ) : null}
               <CatalogMetaChip
                 houseCount={visible.length}
-                stopCount={routeMode ? walkingRoute?.stops.length ?? 0 : null}
                 offline={offline}
                 unreachable={unreachable}
                 source={source}
                 onlineDevices={onlineDevices}
-                setLabel={houseSetStatus}
+                houseSetLabel={HOUSE_SET_LABELS[houseSet]}
               />
             </div>
             {view === "list" ? (
@@ -929,11 +902,8 @@ export function NeighborhoodApp({
                 {routeMode ? (
                   <RouteList
                     route={walkingRoute}
-                    prefsLabel={routePrefsLabel}
-                    originLabel={origin.label}
                     hasGps={Boolean(gps)}
                     onRequestLocation={gpsAllowed ? chooseGpsOrigin : undefined}
-                    onChangeOrigin={() => setOriginPickerOpen(true)}
                     setLabel={houseSetStatus}
                     onSelectHouse={(id) => {
                       setView("map");
@@ -1055,31 +1025,58 @@ export function NeighborhoodApp({
   );
 }
 
+function StatusTicker({
+  text,
+  tone,
+  onChange,
+}: {
+  text: string;
+  tone: "normal" | "warn";
+  onChange?: () => void;
+}) {
+  const marquee = (
+    <PingPongMarquee
+      text={text}
+      className={cn("flex-1 text-base", tone === "warn" ? "text-amber-200" : "text-orange-100")}
+    />
+  );
+  if (!onChange) {
+    return <div className="mt-1 flex min-w-0 items-center">{marquee}</div>;
+  }
+  return (
+    <button
+      type="button"
+      onClick={onChange}
+      className="mt-1 flex w-full min-w-0 items-center gap-2 text-start"
+    >
+      {marquee}
+      <span className="shrink-0 text-base text-violet-300 underline-offset-2 hover:underline">שינוי</span>
+    </button>
+  );
+}
+
 function CatalogMetaChip({
   houseCount,
-  stopCount,
   offline,
   unreachable,
   source,
   onlineDevices,
-  setLabel,
+  houseSetLabel,
 }: {
   houseCount: number;
-  stopCount?: number | null;
   offline: boolean;
   unreachable: boolean;
   source: string | null;
   onlineDevices?: number | null;
-  setLabel?: string;
+  houseSetLabel: string;
 }) {
   const stale = offline || unreachable || source === "cache" || source === "snapshot";
   return (
     <div className="pointer-events-none absolute top-2 start-2 z-10">
-      <span className="inline-flex max-w-[min(100%,18rem)] flex-wrap items-center gap-1.5 rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
+      <span className="inline-flex max-w-[min(100%,18rem)] items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
         <span>{houseCount} בתים</span>
         {onlineDevices != null ? <span>· {onlineDevices} מבקרים</span> : null}
-        {stopCount != null ? <span>· {stopCount} עצירות</span> : null}
-        {setLabel ? <span>· {setLabel}</span> : null}
+        <span>· {houseSetLabel}</span>
         {stale ? (
           <>
             <WifiOff className="size-3 shrink-0" />

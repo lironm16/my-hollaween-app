@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { scareShort, decorShort, suggestedHouseName, nameMatchesTheme, themeFromName } from "@/lib/labels";
-import { config, inNeighborhood } from "@/lib/config";
+import { config, inNeighborhood, NEIGHBORHOODS } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
 import {
@@ -182,7 +182,9 @@ export function HouseForm({
 
   function onAddressSelect(hit: AddressHit) {
     if (!inNeighborhood(hit.lat, hit.lng)) {
-      toast.error("הכתובת מחוץ לשכונה. בחרו בית בשיכון ותיקים, חרוזים או נחלת גנים.");
+      toast.error(
+        `הכתובת מחוץ לשכונה. בחרו בית ב${NEIGHBORHOODS.slice(0, -1).join(", ")} או ${NEIGHBORHOODS[NEIGHBORHOODS.length - 1]}.`,
+      );
       setAddressOk(false);
       setForm((f) => ({ ...f, address: hit.label }));
       return;

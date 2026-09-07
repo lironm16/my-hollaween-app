@@ -20,13 +20,14 @@ const tiles = cartoKey
       invert: true,
     };
 
-export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים"] as const;
+export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "הגפן", "נחלת גנים"] as const;
 export type NeighborhoodId = (typeof NEIGHBORHOODS)[number];
 
 /** Approximate centers used when address text has no neighborhood name. */
 const NEIGHBORHOOD_CENTERS: Record<NeighborhoodId, { lat: number; lng: number }> = {
   חרוזים: { lat: 32.0908, lng: 34.8038 },
   "שיכון ותיקים": { lat: 32.0939, lng: 34.8133 },
+  הגפן: { lat: 32.08925, lng: 34.81205 },
   "נחלת גנים": { lat: 32.0928, lng: 34.8188 },
 };
 
@@ -39,7 +40,7 @@ export const config = {
   titleWords: ["Halloween"] as const,
   tagline: "מפת הבתים המפחידים של השכונה",
   neighborhood:
-    process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שיכון ותיקים · חרוזים · נחלת גנים",
+    process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שיכון ותיקים · חרוזים · הגפן · נחלת גנים",
   neighborhoods: NEIGHBORHOODS,
   map: {
     center: {
@@ -75,16 +76,20 @@ export function inNeighborhood(lat: number, lng: number) {
   return lat >= b.south && lat <= b.north && lng >= b.west && lng <= b.east;
 }
 
-/** Detect which of the three areas a house belongs to from its address text. */
+/** Detect which area a house belongs to from its address text. */
 export function neighborhoodFromAddress(address: string): NeighborhoodId | null {
   const text = address.trim();
+  for (const name of NEIGHBORHOODS) {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (new RegExp(`(?:^|,)\\s*${escaped}\\s*$`, "u").test(text)) return name;
+  }
   for (const name of NEIGHBORHOODS) {
     if (text.includes(name)) return name;
   }
   return null;
 }
 
-/** Nearest of the three neighborhood centers (for labels that only say רמת גן). */
+/** Nearest neighborhood center (for labels that only say רמת גן). */
 export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId {
   let best: NeighborhoodId = NEIGHBORHOODS[0];
   let bestDist = Number.POSITIVE_INFINITY;

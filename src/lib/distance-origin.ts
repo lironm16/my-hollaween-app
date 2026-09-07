@@ -34,7 +34,7 @@ export function neighborhoodOrigin(): ResolvedOrigin {
 export function originLabel(choice: DistanceOriginChoice): string {
   if (choice.kind === "custom") return choice.label || "מנקודה במפה";
   if (choice.kind === "neighborhood") return "ממרכז השכונה";
-  return "מהמיקום שלכם";
+  return "מיקום נוכחי";
 }
 
 export function resolveDistanceOrigin(
@@ -56,7 +56,7 @@ export function resolveDistanceOrigin(
       kind: "gps",
       lat: gps.lat,
       lng: gps.lng,
-      label: "מהמיקום שלכם",
+      label: "מיקום נוכחי",
       fromGps: true,
     };
   }

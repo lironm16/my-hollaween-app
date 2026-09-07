@@ -11,20 +11,14 @@ import { cn } from "@/lib/utils";
 
 export function RouteList({
   route,
-  prefsLabel,
-  originLabel,
   hasGps,
   onRequestLocation,
-  onChangeOrigin,
   onSelectHouse,
   setLabel,
 }: {
   route: WalkingRoute | null;
-  prefsLabel: string;
-  originLabel?: string;
   hasGps: boolean;
   onRequestLocation?: () => void;
-  onChangeOrigin?: () => void;
   onSelectHouse: (id: string) => void;
   setLabel?: string;
 }) {
@@ -42,20 +36,9 @@ export function RouteList({
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-3 px-3 py-3">
+      {setLabel ? <p className="text-base text-violet-300">{setLabel}</p> : null}
       <div className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
         <p className="text-base font-medium text-orange-100">{formatRouteSummary(route)}</p>
-        <p className="mt-1 text-base text-violet-300">
-          <button
-            type="button"
-            className="text-start underline-offset-2 hover:underline"
-            onClick={onChangeOrigin}
-          >
-            {originLabel ?? (route.startedFrom === "gps" ? "מהמיקום שלכם" : route.startedFrom === "custom" ? "מנקודה במפה" : "ממרכז השכונה")}
-            {onChangeOrigin ? " · שינוי" : ""}
-          </button>
-          {prefsLabel ? ` · ${prefsLabel}` : ""}
-          {setLabel ? ` · ${setLabel}` : ""}
-        </p>
         {!hasGps && onRequestLocation ? (
           <Button type="button" size="sm" variant="outline" className="mt-2" onClick={onRequestLocation}>
             <Navigation className="size-3.5" />

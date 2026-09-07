@@ -137,6 +137,7 @@ export function HouseList({
       <p className="text-base text-violet-300">
         {houses.length} בתים
         {onlineDevices != null ? ` · ${onlineDevices} מבקרים` : ""}
+        {" · מיון לפי מרחק"}
         {setLabel ? ` · ${setLabel}` : ""}
       </p>
       {filtered.length === 0 ? (
