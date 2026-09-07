@@ -40,7 +40,7 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
     likedOnly: Boolean(raw.likedOnly),
     unvisitedOnly: Boolean(raw.unvisitedOnly),
     includeUndecorated,
-    neighborhoodFilters: neighborhoods.length > 0 ? neighborhoods : [...NEIGHBORHOODS],
+    neighborhoodFilters: Array.isArray(raw.neighborhoodFilters) ? neighborhoods : [...NEIGHBORHOODS],
     scareFilters: scares.length > 0 ? scares : [...SCARE_LEVELS],
     sensitivityFilters: sensitivities,
   };

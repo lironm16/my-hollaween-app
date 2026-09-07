@@ -13,8 +13,9 @@ const tiles = cartoKey
       invert: false,
     }
   : {
-      // Carto now watermarks raster tiles with "API key required" unless a key is passed.
-      url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      // tile.openstreetmap.org serves empty tiles to many clients. OSM France
+      // still has streets; CSS invert (not grayscale) is the dark Halloween look.
+      url: "https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png",
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       invert: true,
@@ -159,7 +160,8 @@ export function houseInNeighborhoods(
   house: { address: string; lat?: number; lng?: number },
   selected: readonly NeighborhoodId[],
 ) {
-  if (selected.length === 0 || selected.length === NEIGHBORHOODS.length) return true;
+  if (selected.length === 0) return false;
+  if (selected.length === NEIGHBORHOODS.length) return true;
   const area = resolveNeighborhood(house);
   return area !== null && selected.includes(area);
 }

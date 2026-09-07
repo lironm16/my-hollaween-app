@@ -300,9 +300,9 @@ export function NeighborhoodApp({
     Number(openNowOnly) +
     Number(likedOnly) +
     Number(unvisitedOnly);
-  // Empty or fully selected category = show all (not an active restriction).
+  // All 3 selected = no neighborhood restriction. Empty = exclude every area.
   const neighborhoodActiveCount =
-    neighborhoodFilters.length === 0 || neighborhoodFilters.length === NEIGHBORHOODS.length
+    neighborhoodFilters.length === NEIGHBORHOODS.length
       ? 0
       : NEIGHBORHOODS.length - neighborhoodFilters.length;
   const scareLevelsActive =
