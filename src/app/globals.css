@@ -133,10 +133,20 @@
 }
 
 /* Black Halloween basemap (inverted OSM). Keep this look — do not grayscale.
-   Invert the tile pane only so house pins stay their own color. */
+   Invert each tile, not the pane: Safari + Leaflet 3D transforms blank the
+   pane when a CSS filter is on it. Leaflet also sets mix-blend-mode:
+   plus-lighter (tile-seam fix), which hides inverted dark tiles. */
 .leaflet-container.is-osm-dark .leaflet-tile-pane,
 .is-osm-dark .leaflet-tile-pane {
+  filter: none;
+}
+
+.leaflet-container.is-osm-dark .leaflet-tile,
+.leaflet-container.is-osm-dark img.leaflet-tile,
+.is-osm-dark .leaflet-tile,
+.is-osm-dark img.leaflet-tile {
   filter: invert(1) hue-rotate(180deg) saturate(0.35) brightness(0.82) contrast(1.05);
+  mix-blend-mode: normal;
 }
 
 .leaflet-container.is-osm-dark .leaflet-overlay-pane,
