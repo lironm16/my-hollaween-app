@@ -270,6 +270,14 @@ export function NeighborhoodApp({
     return [...byId.values()];
   }, [admin, adminHouses, catalog, owned]);
 
+  const setHouses = useMemo(
+    () => houses.filter((house) => houseMatchesSet(house, activeHouseSet)),
+    [houses, activeHouseSet],
+  );
+  const setHouseIds = useMemo(() => new Set(setHouses.map((house) => house.id)), [setHouses]);
+  const likedInSet = likes.likedIds.filter((id) => setHouseIds.has(id)).length;
+  const visitedInSet = visits.visitedIds.filter((id) => setHouseIds.has(id)).length;
+
   const visible = useMemo(() => {
     return houses.filter((house) => {
       if (!houseMatchesSet(house, activeHouseSet)) return false;
@@ -880,8 +888,11 @@ export function NeighborhoodApp({
                 statsFab={
                   originPickActive ? null : (
                     <MapStats
-                      houseCount={visible.length}
+                      totalHouses={setHouses.length}
+                      filteredHouses={visible.length}
                       onlineDevices={onlineDevices}
+                      likedCount={likedInSet}
+                      visitedCount={visitedInSet}
                       route={routeMode ? walkingRoute : null}
                       staleLabel={
                         offline

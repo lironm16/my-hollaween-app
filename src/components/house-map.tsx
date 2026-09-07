@@ -880,8 +880,8 @@ export function HouseMap({
               <LocateFixed className={cn("size-5", locating && "animate-pulse")} />
             </button>
           ) : null}
-          {!pickMode ? statsFab : null}
           {!pickMode ? <MapLegend /> : null}
+          {!pickMode ? statsFab : null}
         </div>
     </div>
   );
