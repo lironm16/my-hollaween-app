@@ -24,6 +24,7 @@ export async function GET() {
       devicesSeen,
       online: countPresence(),
       traffic,
+      houseSet: "real",
     }),
   );
 }

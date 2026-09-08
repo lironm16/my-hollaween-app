@@ -64,9 +64,6 @@ export function useAdminStats(enabled: boolean) {
 export function AlertStatsCard({ stats }: { stats: AdminStats }) {
   return (
     <Section title="התראות">
-      <p className="mb-2 text-base text-violet-300">
-        כמה טלפונים אישרו כל סוג — אותם שלושה כמו בחלון ההתראות. אותו טלפון יכול להיות ביותר מסוג אחד. נספר רק אחרי «הפעילו» והרשאת הדפדפן.
-      </p>
       <div className="grid grid-cols-1 gap-2">
         {PUSH_TOPIC_ROWS.map((row) => (
           <Tile
@@ -95,7 +92,6 @@ export function AdminStatsCard({
   return (
     <div className="space-y-3" dir="rtl">
       <Section title="מפה">
-        <p className="mb-2 text-base text-violet-300">ספירות יכולות לחפוף — בית יכול להיות פתוח וגם עם מעט ממתקים.</p>
         <div className="mb-2 grid grid-cols-2 gap-2">
           <Tile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} />
           <Tile
@@ -189,7 +185,6 @@ export function AdminStatsCard({
           />
         </div>
         <Subhead>במכשיר הזה</Subhead>
-        <p className="mb-1.5 text-sm text-violet-400">השמורים והביקורים שסימנתם בטלפון הזה.</p>
         <div className="grid grid-cols-2 gap-2">
           <Tile
             icon={<LikedSign className="size-8" />}
@@ -207,11 +202,10 @@ export function AdminStatsCard({
           />
         </div>
         <Subhead>סימונים בשכונה</Subhead>
-        <p className="mb-1.5 text-sm text-violet-400">סך הסימונים בטלפונים, לא מספר אנשים.</p>
         <div className="grid grid-cols-2 gap-2">
           <Tile
             icon={<LikedSign className="size-8" />}
-            label="אהבתי"
+            label="שמורים"
             value={stats.hearts}
             valueClass={stats.hearts ? "text-rose-300" : undefined}
             plain

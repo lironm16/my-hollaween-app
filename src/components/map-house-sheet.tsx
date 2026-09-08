@@ -81,6 +81,13 @@ export function MapHouseSheet({
   }, [clusterKey, house.id, overview]);
 
   useEffect(() => {
+    if (!editing) return;
+    const max = maxPx();
+    setSheetH(max);
+    liveH.current = max;
+  }, [editing, clusterKey, house.id]);
+
+  useEffect(() => {
     const el = sheetRef.current;
     if (!el) return;
 

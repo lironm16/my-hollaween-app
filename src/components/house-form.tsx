@@ -39,6 +39,7 @@ import {
   syncHoursFields,
 } from "@/lib/hours";
 import { useAppNow } from "@/hooks/use-app-clock";
+import { useAdminSession } from "@/hooks/use-admin-session";
 import type { HoursWindow } from "@/lib/types";
 
 const empty: HouseInput = {
@@ -52,8 +53,8 @@ const empty: HouseInput = {
   treats: ["candy"],
   scareLevel: "mild",
   openFrom: "17:00",
-  openTo: "21:00",
-  openHours: [{ from: "17:00", to: "21:00" }],
+  openTo: "20:00",
+  openHours: [{ from: "17:00", to: "20:00" }],
   openFrom2: "",
   openTo2: "",
   notes: "",
@@ -104,7 +105,7 @@ export function HouseForm({
   const [candy, setCandy] = useState<CandyTone>(() => initialCandyTone(initial));
   const [hourWindows, setHourWindows] = useState<HoursWindow[]>(() => {
     const windows = houseHoursWindows({ ...empty, ...initial });
-    return windows.length ? windows : [{ from: "17:00", to: "21:00" }];
+    return windows.length ? windows : [{ from: "17:00", to: "20:00" }];
   });
   const [nightStatus, setNightStatus] = useState<"open" | "pause" | "stop">(() => {
     if (initial?.visit === "closed") return "stop";
@@ -118,6 +119,7 @@ export function HouseForm({
   const [saving, setSaving] = useState(false);
   const existingPhoto = initial?.photoUrl ?? "";
   const now = useAppNow();
+  const { admin } = useAdminSession();
   const blocked = Boolean(busy || saving);
 
   function updateHourWindow(index: number, patch: Partial<HoursWindow>) {
@@ -538,7 +540,7 @@ export function HouseForm({
           {nightStatusEnabled ? null : (
             <p className="mb-2 text-base text-violet-300">
               נפתח בליל האלווין, משעת הפעילות של הבית. אז אפשר לסמן הפסקה זמנית או סגירה לערב.
-              לבדיקות: תפריט מנהל → בדיקות.
+              {admin ? " לבדיקות: תפריט מנהל → בדיקות." : ""}
             </p>
           )}
           <div className="flex flex-wrap gap-1.5">

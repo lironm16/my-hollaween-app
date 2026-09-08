@@ -24,6 +24,7 @@ export function RouteList({
   route,
   hasGps,
   onRequestLocation,
+  onChangeOrigin,
   onSelectHouse,
   selectedId,
   catalogSource,
@@ -40,6 +41,7 @@ export function RouteList({
   route: WalkingRoute | null;
   hasGps: boolean;
   onRequestLocation?: () => void;
+  onChangeOrigin?: () => void;
   onSelectHouse: (id: string, index: number) => void;
   selectedId?: string | null;
   catalogSource?: string | null;
@@ -95,7 +97,14 @@ export function RouteList({
               <MapPin className="size-4" strokeWidth={2.4} />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-base font-medium text-orange-100">נקודת התחלה</p>
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-base font-medium text-orange-100">נקודת התחלה</p>
+                {onChangeOrigin ? (
+                  <Button type="button" size="sm" variant="outline" onClick={onChangeOrigin}>
+                    שינוי
+                  </Button>
+                ) : null}
+              </div>
               <p className="mt-0.5 text-base text-violet-300">{startLabel}</p>
               {gpsAction}
             </div>

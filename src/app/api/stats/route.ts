@@ -15,6 +15,7 @@ export async function GET() {
     devicesSeen: 0,
     online: countPresence(),
     traffic,
+    houseSet: "real",
   });
   return NextResponse.json({
     houses: snapshot.houses,

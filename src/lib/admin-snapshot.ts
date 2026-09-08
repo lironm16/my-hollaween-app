@@ -1,3 +1,4 @@
+import { houseMatchesSet, type HouseSet } from "@/lib/house-set";
 import { isOpeningSoon, isClosingSoon, isOnBreak, isOpenNow } from "@/lib/hours";
 import {
   candyLevel,
@@ -52,9 +53,12 @@ export function buildAdminSnapshot(input: {
   online: number;
   traffic: Record<string, HouseTraffic>;
   now?: Date;
+  /** Public תמונת מצב should count real houses only — not rehearsal stubs. */
+  houseSet?: HouseSet;
 }): AdminSnapshot {
   const now = input.now ?? new Date();
-  const listed = input.houses.filter(isPubliclyListed);
+  const houseSet = input.houseSet ?? "real";
+  const listed = input.houses.filter(isPubliclyListed).filter((house) => houseMatchesSet(house, houseSet));
   const listedTraffic: Record<string, HouseTraffic> = {};
   for (const house of listed) {
     const row = input.traffic[house.id];
