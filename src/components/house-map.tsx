@@ -218,12 +218,14 @@ function clusterIcon(
   routeOrder?: number,
   overview?: boolean,
   visitedIds: string[] = [],
+  expanded = false,
 ) {
   const houses = cluster.houses;
   const only = houses[0];
   const selectedHere = Boolean(selectedId && houses.some((house) => house.id === selectedId));
   const selectedClass = selectedHere ? " is-selected" : "";
   const allVisited = houses.length > 0 && houses.every((house) => visitedIds.includes(house.id));
+  const fanOpen = expanded && houses.length > 1;
 
   if (!only || houses.length <= 1) {
     const hoursClass = only ? hoursPinClass(only, now) : "";
@@ -244,7 +246,7 @@ function clusterIcon(
     });
   }
 
-  if (!selectedHere) {
+  if (!fanOpen) {
     const wrapped = wrapRoutePin(
       `<div class="house-pin is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterAptDotsHtml(houses, now)}</div>`,
       routeOrder,
@@ -488,16 +490,20 @@ function ClusterMarker({
   cluster,
   selectedId,
   clusterOverview,
+  expanded,
   onSelect,
   onClose,
+  onCollapse,
   routeOrder,
   visitedIds,
 }: {
   cluster: HouseCluster;
   selectedId?: string | null;
   clusterOverview?: boolean;
+  expanded?: boolean;
   onSelect?: (house: PublicHouse, opts?: { clusterOverview?: boolean }) => void;
   onClose?: () => void;
+  onCollapse?: () => void;
   routeOrder?: number;
   visitedIds: string[];
 }) {
@@ -506,7 +512,8 @@ function ClusterMarker({
   const now = new Date(tick * 15_000);
   const closingSoon = cluster.houses.some((house) => isClosingSoon(house, now));
   const openingSoon = !closingSoon && cluster.houses.some((house) => isOpeningSoon(house, now));
-  const overview = Boolean(clusterOverview && selectedHere);
+  const fanOpen = Boolean(expanded && cluster.houses.length > 1);
+  const overview = Boolean(clusterOverview && fanOpen);
   const visitedKey = cluster.houses.map((house) => (visitedIds.includes(house.id) ? "1" : "0")).join("");
   const statusKey = cluster.houses
     .map((house) => pinVisitKind(house, now) ?? candyPinDot(house) ?? "x")
@@ -514,11 +521,11 @@ function ClusterMarker({
 
   return (
     <Marker
-      key={`${cluster.key}-${selectedHere ? (overview ? "peek" : selectedId ?? "open") : "shut"}-${routeOrder ?? 0}-${visitedKey}-${statusKey}`}
+      key={`${cluster.key}-${fanOpen ? (overview ? "peek" : selectedId ?? "open") : "shut"}-${routeOrder ?? 0}-${visitedKey}-${statusKey}`}
       position={[cluster.lat, cluster.lng]}
-      icon={clusterIcon(cluster, selectedId, now, routeOrder, overview, visitedIds)}
+      icon={clusterIcon(cluster, selectedId, now, routeOrder, overview, visitedIds, fanOpen)}
       zIndexOffset={
-        selectedHere
+        fanOpen || selectedHere
           ? 10000
           : routeOrder
             ? 700
@@ -544,8 +551,8 @@ function ClusterMarker({
             onSelect?.(fromPin);
             return;
           }
-          if (selectedHere) {
-            onClose?.();
+          if (fanOpen) {
+            onCollapse?.();
             return;
           }
           onSelect?.(cluster.houses[0], cluster.houses.length > 1 ? { clusterOverview: true } : undefined);
@@ -559,8 +566,10 @@ type Props = {
   houses?: PublicHouse[];
   selectedId?: string | null;
   clusterOverview?: boolean;
+  expandedClusterKey?: string | null;
   onSelect?: (house: PublicHouse, opts?: { clusterOverview?: boolean }) => void;
   onClose?: () => void;
+  onCollapseCluster?: () => void;
   pickMode?: boolean;
   pick?: { lat: number; lng: number } | null;
   onPick?: (lat: number, lng: number) => void;
@@ -593,8 +602,10 @@ export function HouseMap({
   houses = [],
   selectedId,
   clusterOverview,
+  expandedClusterKey,
   onSelect,
   onClose,
+  onCollapseCluster,
   pickMode,
   pick,
   onPick,
@@ -809,8 +820,10 @@ export function HouseMap({
               cluster={cluster}
               selectedId={selectedId}
               clusterOverview={clusterOverview}
+              expanded={expandedClusterKey === cluster.key}
               onSelect={onSelect}
               onClose={onClose}
+              onCollapse={onCollapseCluster}
               visitedIds={visitedIds}
               routeOrder={cluster.houses.reduce<number | undefined>(
                 (found, house) => found ?? routeOrderById.get(house.id),

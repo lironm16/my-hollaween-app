@@ -99,10 +99,12 @@ export function NeighborhoodApp({
   const [selectedId, setSelectedId] = useState<string | "closed" | null>(focusId);
   const [focusSeen, setFocusSeen] = useState(focusId);
   const [clusterOverview, setClusterOverview] = useState(false);
+  const [expandedClusterKey, setExpandedClusterKey] = useState<string | null>(null);
   if (focusId && focusId !== focusSeen) {
     setFocusSeen(focusId);
     setSelectedId(focusId);
     setClusterOverview(false);
+    setExpandedClusterKey(null);
   }
   const {
     filters,
@@ -245,6 +247,7 @@ export function NeighborhoodApp({
     if (wasAdmin.current && !admin) {
       setSelectedId("closed");
       setClusterOverview(false);
+      setExpandedClusterKey(null);
       void refresh(true);
     }
     wasAdmin.current = admin;
@@ -533,6 +536,7 @@ export function NeighborhoodApp({
     exitRouteMode();
     setSelectedId("closed");
     setClusterOverview(false);
+    setExpandedClusterKey(null);
     setEditing(false);
   }
 
@@ -547,6 +551,7 @@ export function NeighborhoodApp({
     exitOriginPick();
     setSelectedId("closed");
     setClusterOverview(false);
+    setExpandedClusterKey(null);
     setEditing(false);
     setRouteMode(true);
     if (originChoice.kind === "gps" && !gps) {
@@ -587,6 +592,7 @@ export function NeighborhoodApp({
     setView("map");
     setSelectedId("closed");
     setClusterOverview(false);
+    setExpandedClusterKey(null);
     setEditing(false);
     setOriginDraft({ lat: origin.lat, lng: origin.lng });
     setOriginDraftLabel(origin.kind === "custom" ? origin.label : "נקודה במפה");
@@ -957,12 +963,31 @@ export function NeighborhoodApp({
                 houses={visible}
                 selectedId={originPickActive ? null : selected?.id}
                 clusterOverview={clusterOverview}
+                expandedClusterKey={expandedClusterKey}
                 onSelect={(house, opts) => {
                   if (originPickActive) return;
-                  setClusterOverview(Boolean(opts?.clusterOverview));
+                  const cluster = clusterHousesByAddress(visible).find((item) =>
+                    item.houses.some((itemHouse) => itemHouse.id === house.id),
+                  );
+                  const isMulti = (cluster?.houses.length ?? 0) > 1;
+                  if (opts?.clusterOverview) {
+                    setExpandedClusterKey(cluster?.key ?? null);
+                    setClusterOverview(true);
+                  } else if (isMulti) {
+                    setExpandedClusterKey(cluster?.key ?? null);
+                    setClusterOverview(false);
+                  } else {
+                    setExpandedClusterKey(null);
+                    setClusterOverview(false);
+                  }
                   setSelectedId(house.id);
                 }}
                 onClose={() => {
+                  setClusterOverview(false);
+                  setSelectedId("closed");
+                }}
+                onCollapseCluster={() => {
+                  setExpandedClusterKey(null);
                   setClusterOverview(false);
                   setSelectedId("closed");
                 }}
@@ -1042,9 +1067,10 @@ export function NeighborhoodApp({
                     route={walkingRoute}
                     hasGps={Boolean(gps)}
                     onRequestLocation={gpsAllowed ? chooseGpsOrigin : undefined}
+                    selectedId={selected?.id ?? null}
                     onSelectHouse={(id) => {
-                      setView("map");
                       setClusterOverview(false);
+                      if (selectedId !== id) setEditing(false);
                       setSelectedId(id);
                     }}
                   />
@@ -1063,6 +1089,7 @@ export function NeighborhoodApp({
                     onShowOnMap={(id) => {
                       setView("map");
                       setClusterOverview(false);
+                      setExpandedClusterKey(null);
                       setEditing(false);
                       setSelectedId(id);
                     }}
@@ -1109,6 +1136,7 @@ export function NeighborhoodApp({
               ? () => {
                   setView("map");
                   setClusterOverview(false);
+                  setExpandedClusterKey(null);
                 }
               : undefined
           }

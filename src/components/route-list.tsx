@@ -3,6 +3,7 @@
 import { Navigation } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
+import { HouseTags } from "@/components/house-tags";
 import { formatDisplayAddress } from "@/lib/config";
 import { formatDistance } from "@/lib/geo";
 import { houseHeadline } from "@/lib/labels";
@@ -14,11 +15,13 @@ export function RouteList({
   hasGps,
   onRequestLocation,
   onSelectHouse,
+  selectedId,
 }: {
   route: WalkingRoute | null;
   hasGps: boolean;
   onRequestLocation?: () => void;
   onSelectHouse: (id: string) => void;
+  selectedId?: string | null;
 }) {
   const gpsAction =
     !hasGps && onRequestLocation ? (
@@ -41,7 +44,10 @@ export function RouteList({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col gap-3 px-3 py-3">
+    <div
+      className="mx-auto flex w-full max-w-lg flex-col gap-3 px-3 py-3"
+      style={selectedId ? { paddingBottom: "calc(var(--map-sheet-h, 70dvh) + 1rem)" } : undefined}
+    >
       {gpsAction}
 
       <ol className="space-y-2">
@@ -82,6 +88,9 @@ export function RouteList({
                     {houseIndex > 0
                       ? "אותו בניין"
                       : `${stop.order === 1 ? "מההתחלה" : "מעצירה קודמת"}: ${formatDistance(stop.fromPreviousMeters)} · מצטבר ${formatDistance(stop.cumulativeMeters)}`}
+                  </span>
+                  <span className="mt-2 block">
+                    <HouseTags house={house} large />
                   </span>
                 </span>
               </button>

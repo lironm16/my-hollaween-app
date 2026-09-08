@@ -161,7 +161,7 @@ export function AppHeader({
                   )}
                 >
                   <Activity className="size-4" />
-                  מכשירים ומפה
+                  תמונת מצב
                 </Link>
                 <Link
                   href="/admin/rehearsal"
