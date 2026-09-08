@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { List, MapPinned, Route } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
+import { Input } from "@/components/ui/input";
 import { PingPongMarquee } from "@/components/neighborhood-marquee";
 import {
   FilterOption,
@@ -59,7 +60,13 @@ import {
   type ServerDbBackup,
 } from "@/lib/offline-db";
 import { decorShort } from "@/lib/labels";
-import { readHomeView, writeHomeView, type HomeView } from "@/lib/home-view";
+import {
+  consumeHouseSearchFocus,
+  HOUSE_SEARCH_FOCUS_KEY,
+  readHomeView,
+  writeHomeView,
+  type HomeView,
+} from "@/lib/home-view";
 import { HOUSE_SET_LABELS, houseMatchesSet } from "@/lib/house-set";
 import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
 import type { Catalog, House, PublicHouse, ScareLevel, SensitivityId } from "@/lib/types";
@@ -144,6 +151,15 @@ export function NeighborhoodApp({
     setEditing(false);
   }
   const [busyAction, setBusyAction] = useState(false);
+  const [listQuery, setListQuery] = useState("");
+  const [searchFocusTick, setSearchFocusTick] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    try {
+      return sessionStorage.getItem(HOUSE_SEARCH_FOCUS_KEY) === "1" ? 1 : 0;
+    } catch {
+      return 0;
+    }
+  });
 
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
@@ -240,6 +256,20 @@ export function NeighborhoodApp({
     if (!focusId) return;
     writeHomeView("map");
   }, [focusId]);
+
+  useEffect(() => {
+    if (!searchFocusTick) return;
+    if (view !== "list") {
+      writeHomeView("list");
+      return;
+    }
+    if (routeMode) return;
+    const timer = window.setTimeout(() => {
+      document.getElementById("house-search")?.focus();
+      consumeHouseSearchFocus();
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [searchFocusTick, view, routeMode]);
 
   const editCodeById = useMemo(() => {
     const map = new Map<string, string>();
@@ -486,6 +516,12 @@ export function NeighborhoodApp({
     setEditing(false);
   }
 
+  function goSearchHouses() {
+    goHome();
+    setView("list");
+    setSearchFocusTick((n) => n + 1);
+  }
+
   function enterRouteMode() {
     if (routeMode) return;
     exitOriginPick();
@@ -693,7 +729,7 @@ export function NeighborhoodApp({
       className="relative isolate flex flex-col overflow-hidden"
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
-      <AppHeader onMainTap={goToMainMap} onHomeTap={goHome} />
+      <AppHeader onMainTap={goToMainMap} onHomeTap={goHome} onSearchHouses={goSearchHouses} />
       <div
         className="app-toolbar relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2"
         style={{ flexShrink: 0 }}
@@ -740,6 +776,21 @@ export function NeighborhoodApp({
           <CsvExportButton houses={visible} kind={likedOnly ? "liked" : "list"} includeTraffic={admin} />
         </div>
         {routeTicker ? <StatusTicker text={routeTicker} /> : null}
+        {view === "list" && !routeMode ? (
+          <div className="mt-2 min-w-0">
+            <Input
+              id="house-search"
+              type="search"
+              value={listQuery}
+              onChange={(e) => setListQuery(e.target.value)}
+              placeholder="חיפוש לפי שם או רחוב…"
+              aria-label="חיפוש בית"
+              autoComplete="off"
+              enterKeyHint="search"
+              className="h-10 min-w-0 bg-[#1d1028] text-base"
+            />
+          </div>
+        ) : null}
       </div>
       <FiltersSheet
         open={filtersOpen}
@@ -963,6 +1014,7 @@ export function NeighborhoodApp({
                 ) : (
                   <HouseList
                     houses={visible}
+                    query={listQuery}
                     origin={origin}
                     catalogSource={source}
                     likedIds={likes.likedIds}

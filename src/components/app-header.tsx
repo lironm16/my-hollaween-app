@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, Home, HousePlus, LogOut, Menu, Pencil, Shield, Sparkles } from "lucide-react";
+import { Bell, Home, HousePlus, LogOut, Menu, Pencil, Search, Shield, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
 import { NeighborhoodMarquee } from "@/components/neighborhood-marquee";
@@ -16,16 +16,20 @@ import {
 } from "@/components/ui/sheet";
 import { buttonVariants } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { requestHouseSearchFocus, writeHomeView } from "@/lib/home-view";
 import { cn } from "@/lib/utils";
 
 export function AppHeader({
   onMainTap,
   onHomeTap,
+  onSearchHouses,
 }: {
   /** When set, tapping the brand resets to the main map overview. */
   onMainTap?: () => void;
   /** Side-menu Home: return to the last map/list home screen. */
   onHomeTap?: () => void;
+  /** Side-menu Search: open the house list and focus the search field. */
+  onSearchHouses?: () => void;
 }) {
   const router = useRouter();
   const { admin, logout } = useAdminSession();
@@ -105,6 +109,27 @@ export function AppHeader({
             >
               <Home className="size-4" />
               מסך הבית
+            </Link>
+            <Link
+              href="/"
+              onClick={(event) => {
+                event.preventDefault();
+                setMenuOpen(false);
+                if (onSearchHouses) {
+                  onSearchHouses();
+                  return;
+                }
+                writeHomeView("list");
+                requestHouseSearchFocus();
+                router.push("/");
+              }}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "lg" }),
+                "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+              )}
+            >
+              <Search className="size-4" />
+              חיפוש בית
             </Link>
             <Link
               href="/add"

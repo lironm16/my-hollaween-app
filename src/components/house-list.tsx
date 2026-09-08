@@ -1,18 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
-import { HousePlus } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { buttonVariants } from "@/components/ui/button";
+import { useMemo } from "react";
 import { HouseCard } from "@/components/house-card";
 import { distanceMeters } from "@/lib/geo";
 import { effectiveVisit } from "@/lib/house-state";
 import type { PublicHouse } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
 export function HouseList({
   houses,
+  query = "",
   origin,
   catalogSource,
   likedIds,
@@ -28,6 +24,7 @@ export function HouseList({
   editingId,
 }: {
   houses: PublicHouse[];
+  query?: string;
   origin?: { lat: number; lng: number } | null;
   catalogSource?: string | null;
   likedIds?: string[];
@@ -42,10 +39,8 @@ export function HouseList({
   selectedId?: string | null;
   editingId?: string | null;
 }) {
-  const [q, setQ] = useState("");
-
   const filtered = useMemo(() => {
-    const needle = q.trim();
+    const needle = query.trim();
     return houses
       .filter((h) => {
         if (!needle) return true;
@@ -63,7 +58,7 @@ export function HouseList({
         if (a.d !== undefined && b.d !== undefined) return a.d - b.d;
         return a.h.name.localeCompare(b.h.name, "he");
       });
-  }, [houses, q, origin]);
+  }, [houses, query, origin]);
 
   if (houses.length === 0) {
     return (
@@ -79,24 +74,6 @@ export function HouseList({
       className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3"
       style={selectedId ? { paddingBottom: "calc(var(--map-sheet-h, 70dvh) + 1rem)" } : undefined}
     >
-      <div className="flex min-w-0 items-center gap-2">
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="חיפוש לפי שם או רחוב…"
-          className="h-10 min-w-0 flex-1 bg-[#1d1028] text-base"
-        />
-        <Link
-          href="/add"
-          className={cn(
-            buttonVariants({ size: "sm" }),
-            "h-10 shrink-0 bg-orange-500 text-black hover:bg-orange-400",
-          )}
-        >
-          <HousePlus className="size-3.5" />
-          הוסיפו בית
-        </Link>
-      </div>
       {filtered.length === 0 ? (
         <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לחיפוש.</p>
       ) : (
