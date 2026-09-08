@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { PushNotice } from "@/components/push-notice";
@@ -55,21 +55,27 @@ export function AdminPushPanel() {
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [sendingKind, setSendingKind] = useState<PushKind | null>(null);
+  const loadGen = useRef(0);
+  const savingRef = useRef(false);
+  const expandedRef = useRef<PushKind | null>(null);
+  expandedRef.current = expanded;
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
+      if (savingRef.current || expandedRef.current) return;
+      const gen = ++loadGen.current;
       try {
         const res = await fetch("/api/admin/push/templates", { cache: "no-store", credentials: "include" });
         const data = (await res.json()) as { templates?: PushTemplateMeta[]; error?: string };
-        if (cancelled) return;
+        if (cancelled || gen !== loadGen.current || savingRef.current) return;
         if (!res.ok) {
           toast.error(data.error ?? "לא הצלחנו לטעון תבניות");
           return;
         }
         if (Array.isArray(data.templates)) setTemplates(data.templates);
       } catch {
-        if (!cancelled) toast.error("אין קשר לשרת");
+        if (!cancelled && gen === loadGen.current) toast.error("אין קשר לשרת");
       }
     }
     void load();
@@ -92,6 +98,8 @@ export function AdminPushPanel() {
 
   async function persist(next: PushTemplateMeta[]) {
     const prev = templates;
+    savingRef.current = true;
+    loadGen.current += 1;
     setTemplates(next);
     setBusy(true);
     try {
@@ -124,6 +132,7 @@ export function AdminPushPanel() {
       toast.error("אין קשר לשרת");
       return false;
     } finally {
+      savingRef.current = false;
       setBusy(false);
     }
   }
