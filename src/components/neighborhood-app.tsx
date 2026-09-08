@@ -19,7 +19,6 @@ import { CsvExportButton } from "@/components/csv-export-button";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { NightDesk } from "@/components/night-desk";
 import { OriginPickerSheet, OriginTrigger } from "@/components/origin-picker";
-import { PullToRefresh } from "@/components/pull-to-refresh";
 import { RouteList } from "@/components/route-list";
 import { reversePin } from "@/components/address-field";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
@@ -143,7 +142,6 @@ export function NeighborhoodApp({
   const [panTo, setPanTo] = useState<{ lat: number; lng: number } | null>(null);
   const [panTick, setPanTick] = useState(0);
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
-  const [adminLoading, setAdminLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editForId, setEditForId] = useState(selectedId);
   if (selectedId !== editForId) {
@@ -198,7 +196,6 @@ export function NeighborhoodApp({
 
   const loadAdminHouses = useCallback(async () => {
     if (!admin) return;
-    setAdminLoading(true);
     try {
       const res = await fetch("/api/admin/houses", { cache: "no-store" });
       if (!res.ok) return;
@@ -226,8 +223,6 @@ export function NeighborhoodApp({
       rememberAdminDb(houses, updatedAt);
     } catch {
       /* keep last list */
-    } finally {
-      setAdminLoading(false);
     }
   }, [admin, rememberAdminDb]);
 
@@ -730,11 +725,6 @@ export function NeighborhoodApp({
     }
   }
 
-  async function onRefresh() {
-    if (admin) await loadAdminHouses();
-    await refresh(true);
-  }
-
   return (
     <div
       id="neighborhood-shell"
@@ -997,9 +987,7 @@ export function NeighborhoodApp({
                 houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
               />
             </div>
-            <PullToRefresh
-              onRefresh={onRefresh}
-              disabled={view !== "list" || loading || adminLoading}
+            <div
               className={cn(
                 "absolute inset-0 overflow-y-auto bg-[#12081a]",
                 view === "list" ? "z-10" : "invisible pointer-events-none z-0",
@@ -1055,7 +1043,7 @@ export function NeighborhoodApp({
                     editingId={editing ? selected?.id ?? null : null}
                   />
                 )}
-            </PullToRefresh>
+            </div>
           </>
         )}
         {selected && !originPickActive ? (
