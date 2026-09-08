@@ -92,17 +92,14 @@ export function HouseTags({
     !closedInsteadOfCandy &&
     (isOwnerFrozen(house, now.getTime()) || isOnBreak(house, now));
   const signSize = large ? "size-10" : undefined;
-  const statusSign = closedInsteadOfCandy ? (
-    <ClosedSign className={signSize} />
-  ) : pausedInsteadOfCandy ? (
-    <PauseSign className={signSize} />
-  ) : (
-    <CandySign tone={candy} className={signSize} />
-  );
+  const showCandy =
+    (!closedInsteadOfCandy && !pausedInsteadOfCandy) || candy !== "none";
 
   return (
     <div className={cn("flex flex-wrap gap-1.5 pb-0.5 ps-0.5", large && "gap-2")}>
-      {statusSign}
+      {closedInsteadOfCandy ? <ClosedSign className={signSize} /> : null}
+      {pausedInsteadOfCandy ? <PauseSign className={signSize} /> : null}
+      {showCandy ? <CandySign tone={candy} className={signSize} /> : null}
       <ScareSign level={undecorated ? "none" : scare} className={signSize} />
       {house.accessible ? (
         <span title="נגיש" aria-label="נגיש">
