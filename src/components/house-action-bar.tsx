@@ -99,7 +99,7 @@ export function HouseActionBar({
                   : `שמרו את הבית, ${traffic.saved} שמרו`
               }
               aria-pressed={liked}
-              title="אהבתי"
+              title="שמורים"
               onClick={onToggleLike}
             >
               <Heart className={cn("size-6", liked && "fill-current")} strokeWidth={2.2} />

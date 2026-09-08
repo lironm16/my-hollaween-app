@@ -54,7 +54,7 @@ export function HoursStatusBanner({
 
   if (isOwnerFrozen(house, clock.getTime())) {
     return (
-      <p className={cn(BANNER, "bg-slate-900/70 text-slate-100", className)}>
+      <p className={cn(BANNER, "bg-red-950/85 text-red-50", className)}>
         הפסקה עכשיו
       </p>
     );
@@ -90,7 +90,7 @@ export function HoursStatusBanner({
   const breakOpens = onBreakAt(house, clock);
   if (breakOpens) {
     return (
-      <p className={cn(BANNER, "bg-slate-900/70 text-slate-100", className)}>
+      <p className={cn(BANNER, "bg-red-950/85 text-red-50", className)}>
         הפסקה עכשיו — נפתח שוב ב־{breakOpens}
       </p>
     );
@@ -122,7 +122,7 @@ export function HoursStatusBanner({
   }
   if (status.kind === "between") {
     return (
-      <p className={cn(BANNER, "bg-sky-950/50 text-sky-100", className)}>
+      <p className={cn(BANNER, "bg-red-950/85 text-red-50", className)}>
         הפסקה עכשיו — נפתח שוב ב־{status.opensAt}
       </p>
     );

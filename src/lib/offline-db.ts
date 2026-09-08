@@ -1,4 +1,5 @@
 import type { NeighborhoodId } from "@/lib/config";
+import { tombstoneHouse, loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { syncDecorFields } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import type { CandyTone, HouseInput, ScareLevel, SensitivityId } from "@/lib/types";
@@ -32,8 +33,12 @@ function stamp(value: string) {
 }
 
 function overlayLocalHouses(catalog: Catalog): Catalog {
-  const byId = new Map(catalog.houses.map((house) => [house.id, house]));
+  const deleted = new Set(loadDeletedHouseIds());
+  const byId = new Map(
+    catalog.houses.filter((house) => !deleted.has(house.id)).map((house) => [house.id, house]),
+  );
   const take = (house: PublicHouse) => {
+    if (deleted.has(house.id)) return;
     const current = byId.get(house.id);
     if (!current || stamp(house.updatedAt) >= stamp(current.updatedAt)) {
       byId.set(house.id, current ? { ...current, ...house } : house);
@@ -187,6 +192,7 @@ export function rememberPublishedHouse(house: PublicHouse) {
 
 export function forgetPublishedHouse(id: string) {
   if (typeof window === "undefined" || !id) return;
+  tombstoneHouse(id);
   const cached = loadCatalogCacheSync();
   if (cached?.houses.some((item) => item.id === id)) {
     void saveCatalogCache({

@@ -20,12 +20,13 @@ import { MapHouseSheet } from "@/components/map-house-sheet";
 import { NightDesk } from "@/components/night-desk";
 import { OriginPickerSheet, OriginTrigger } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
+import { RouteConfirmDialog } from "@/components/route-confirm-dialog";
 import { reversePin } from "@/components/address-field";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
-import { useHouseFilters } from "@/hooks/use-house-filters";
+import { useHouseFilters, DEFAULT_HOUSE_FILTERS } from "@/hooks/use-house-filters";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
@@ -33,18 +34,16 @@ import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useDistanceOrigin } from "@/hooks/use-distance-origin";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { readApiJson } from "@/lib/api-json";
-import { houseInNeighborhoods, inNeighborhood, NEIGHBORHOODS, config } from "@/lib/config";
+import { inNeighborhood, NEIGHBORHOODS, config } from "@/lib/config";
 import { clusterHousesByAddress } from "@/lib/house-clusters";
 import { toPublicHouse } from "@/lib/ids";
-import { offersSensitivity, isDecorated } from "@/lib/house-state";
 import { AccessibleMark } from "@/components/symbols";
-import { candyTone, CandySign, CANDY_TONES } from "@/components/candy-glyphs";
+import { CandySign, CANDY_TONES } from "@/components/candy-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
 import { OpenNowMark, ClosingSoonMark, OpeningSoonMark } from "@/components/open-now-mark";
 import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
 import { ScareMark, ScareSign } from "@/components/scare-glyphs";
 import { decorShort } from "@/lib/labels";
-import { isClosingSoon, isOpenNow, isOpeningSoon } from "@/lib/hours";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { reportHouseTraffic } from "@/hooks/use-house-traffic";
@@ -64,8 +63,12 @@ import {
   writeHomeView,
   type HomeView,
 } from "@/lib/home-view";
-import { HOUSE_SET_LABELS, houseMatchesSet } from "@/lib/house-set";
+import { HOUSE_SET_LABELS } from "@/lib/house-set";
 import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
+import { filterHouses, routeHouseIds } from "@/lib/filter-houses";
+import { loadDeletedHouseIds } from "@/lib/deleted-houses";
+import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
+import type { HouseFiltersState } from "@/lib/offline-db";
 import type { Catalog, House, PublicHouse } from "@/lib/types";
 import { CANDY_TONE_IDS, SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -109,10 +112,6 @@ export function NeighborhoodApp({
     filters,
     update: updateFilters,
     clear: clearAllFilters,
-    toggleNeighborhood,
-    toggleScare,
-    toggleCandy,
-    toggleSensitivity,
   } = useHouseFilters();
   const {
     accessibleOnly,
@@ -155,6 +154,15 @@ export function NeighborhoodApp({
   }
   const [busyAction, setBusyAction] = useState(false);
   const [listQuery, setListQuery] = useState("");
+  const [routePrompt, setRoutePrompt] = useState<{
+    kind: "enter-route" | "filter-change" | "add-houses" | "remove-houses";
+    title: string;
+    description: string;
+    houses?: string[];
+    onConfirm: () => void;
+  } | null>(null);
+  const pendingRouteAddsRef = useRef<PublicHouse[]>([]);
+  const [routeAddPrompt, setRouteAddPrompt] = useState<PublicHouse[] | null>(null);
 
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
@@ -256,6 +264,7 @@ export function NeighborhoodApp({
   }, [adminHouses]);
 
   const houses = useMemo(() => {
+    const deleted = new Set(loadDeletedHouseIds());
     const listed = admin
       ? adminHouses
           .filter((house) => house.status !== "rejected")
@@ -263,63 +272,33 @@ export function NeighborhoodApp({
       : (catalog?.houses ?? []);
     const byId = new Map(listed.map((house) => [house.id, house]));
     for (const item of owned) {
-      if (!item.preview) continue;
+      if (!item.preview || deleted.has(item.id)) continue;
       const current = byId.get(item.id);
       if (!current || Date.parse(item.preview.updatedAt) >= Date.parse(current.updatedAt || "")) {
         byId.set(item.id, item.preview);
       }
     }
     for (const pending of loadPendingWrites()) {
+      if (deleted.has(pending.id)) continue;
       const current = byId.get(pending.id);
       if (!current || Date.parse(pending.house.updatedAt) >= Date.parse(current.updatedAt || "")) {
         byId.set(pending.id, pending.house);
       }
     }
-    return [...byId.values()];
+    return [...byId.values()].filter((house) => !deleted.has(house.id));
   }, [admin, adminHouses, catalog, owned]);
 
-  const visible = useMemo(() => {
-    return houses.filter((house) => {
-      if (!houseMatchesSet(house, activeHouseSet)) return false;
-      if (accessibleOnly && !house.accessible) return false;
-      if (candyFilters.length > 0 && !candyFilters.includes(candyTone(house))) return false;
-      if (!includeUndecorated && !isDecorated(house)) return false;
-      if (openNowOnly || closingSoonOnly || openingSoonOnly) {
-        const hoursHit =
-          (openNowOnly && isOpenNow(house, now)) ||
-          (closingSoonOnly && isClosingSoon(house, now)) ||
-          (openingSoonOnly && isOpeningSoon(house, now));
-        if (!hoursHit) return false;
-      }
-      for (const sensitivity of sensitivityFilters) {
-        if (!offersSensitivity(house, sensitivity)) return false;
-      }
-      if (isDecorated(house) && scareFilters.length > 0 && !scareFilters.includes(house.scareLevel)) {
-        return false;
-      }
-      if (!houseInNeighborhoods(house, neighborhoodFilters)) return false;
-      if (likedOnly && !likes.likedIds.includes(house.id)) return false;
-      if (unvisitedOnly && visits.visitedIds.includes(house.id)) return false;
-      return true;
-    });
-  }, [
-    houses,
-    activeHouseSet,
-    accessibleOnly,
-    candyFilters,
-    includeUndecorated,
-    openNowOnly,
-    closingSoonOnly,
-    openingSoonOnly,
-    sensitivityFilters,
-    scareFilters,
-    neighborhoodFilters,
-    likedOnly,
-    unvisitedOnly,
-    likes.likedIds,
-    visits.visitedIds,
-    now,
-  ]);
+  const filterContext = useMemo(
+    () => ({
+      houseSet: activeHouseSet,
+      likedIds: likes.likedIds,
+      visitedIds: visits.visitedIds,
+      now,
+    }),
+    [activeHouseSet, likes.likedIds, visits.visitedIds, now],
+  );
+
+  const visible = useMemo(() => filterHouses(houses, filters, filterContext), [houses, filters, filterContext]);
 
   const moreFilterCount =
     Number(accessibleOnly) +
@@ -383,27 +362,35 @@ export function NeighborhoodApp({
   useEffect(() => {
     if (!routeMode || pendingRouteGps.current) return;
     setPinnedRoute((current) => {
-      const keepIds = new Set(
-        (current?.stops ?? []).flatMap((stop) => stop.houses.map((house) => house.id)),
-      );
+      if (!current) return current;
+      const onRoute = routeHouseIds(current);
       const visitedIds = visitedIdsRef.current;
+      const visibleIds = new Set(visible.map((house) => house.id));
       const houses: PublicHouse[] = [];
       const seen = new Set<string>();
-      for (const house of visible) {
-        if (keepIds.has(house.id) || !visitedIds.includes(house.id)) {
-          houses.push(house);
+
+      for (const stop of current.stops) {
+        for (const house of stop.houses) {
+          const fresh = visible.find((item) => item.id === house.id);
+          if (!fresh || !visibleIds.has(house.id)) continue;
+          houses.push(fresh);
           seen.add(house.id);
         }
       }
-      if (current) {
-        for (const stop of current.stops) {
-          for (const house of stop.houses) {
-            if (seen.has(house.id)) continue;
-            houses.push(house);
-            seen.add(house.id);
-          }
+
+      const newEligible = visible.filter(
+        (house) => !seen.has(house.id) && !visitedIds.includes(house.id),
+      );
+      if (newEligible.length > 0) {
+        const pending = newEligible.filter(
+          (house) => !pendingRouteAddsRef.current.some((item) => item.id === house.id),
+        );
+        if (pending.length > 0) {
+          pendingRouteAddsRef.current = [...pendingRouteAddsRef.current, ...pending];
+          setRouteAddPrompt((currentPrompt) => currentPrompt ?? pending);
         }
       }
+
       return buildWalkingRoute(houses, origin, {
         accessible: accessibleOnly,
         startedFrom: origin.kind,
@@ -411,6 +398,124 @@ export function NeighborhoodApp({
       });
     });
   }, [routeMode, visible, origin, accessibleOnly]);
+
+  function rebuildPinnedRoute(nextFilters = filters) {
+    const nextVisible = filterHouses(houses, nextFilters, filterContext);
+    const visitedIds = visits.visitedIds;
+    const keepIds = routeHouseIds(pinnedRoute);
+    const routeHouses: PublicHouse[] = [];
+    const seen = new Set<string>();
+    for (const house of nextVisible) {
+      if (keepIds.has(house.id) || !visitedIds.includes(house.id)) {
+        routeHouses.push(house);
+        seen.add(house.id);
+      }
+    }
+    if (pinnedRoute) {
+      for (const stop of pinnedRoute.stops) {
+        for (const house of stop.houses) {
+          if (seen.has(house.id)) continue;
+          const fresh = nextVisible.find((item) => item.id === house.id);
+          if (fresh) {
+            routeHouses.push(fresh);
+            seen.add(house.id);
+          }
+        }
+      }
+    }
+    setPinnedRoute(
+      buildWalkingRoute(routeHouses, origin, {
+        accessible: nextFilters.accessibleOnly,
+        startedFrom: origin.kind,
+        originLabel: origin.label,
+      }),
+    );
+  }
+
+  function requestFilterUpdate(
+    patch: Partial<HouseFiltersState> | ((current: HouseFiltersState) => HouseFiltersState),
+  ) {
+    const nextFilters =
+      typeof patch === "function" ? patch(filters) : { ...filters, ...patch };
+    if (!routeMode || shouldSkipRoutePrompt("filter-change")) {
+      updateFilters(patch);
+      if (routeMode) rebuildPinnedRoute(nextFilters);
+      return;
+    }
+    const nextVisible = filterHouses(houses, nextFilters, filterContext);
+    const currentIds = routeHouseIds(pinnedRoute);
+    const removed = [...currentIds].filter(
+      (id) => !nextVisible.some((house) => house.id === id),
+    );
+    const added = nextVisible.filter(
+      (house) =>
+        !currentIds.has(house.id) && !visits.visitedIds.includes(house.id),
+    );
+    if (removed.length === 0 && added.length === 0) {
+      updateFilters(patch);
+      rebuildPinnedRoute(nextFilters);
+      return;
+    }
+    const names = [
+      ...removed.map((id) => houses.find((house) => house.id === id)?.name ?? id),
+      ...added.map((house) => house.name),
+    ];
+    setRoutePrompt({
+      kind: "filter-change",
+      title: "שינוי הסינון משנה את המסלול",
+      description: "שמירת הסינון החדש יכולה להוסיף או להסיר בתים מהמסלול. להמשיך?",
+      houses: names.length ? names : undefined,
+      onConfirm: () => {
+        updateFilters(patch);
+        rebuildPinnedRoute(nextFilters);
+      },
+    });
+  }
+
+  function requestFilterClear() {
+    const nextFilters = {
+      ...DEFAULT_HOUSE_FILTERS,
+      scareFilters: [...SCARE_LEVELS],
+      candyFilters: [...CANDY_TONE_IDS],
+      neighborhoodFilters: [...NEIGHBORHOODS],
+      sensitivityFilters: [] as typeof sensitivityFilters,
+    };
+    if (!routeMode || shouldSkipRoutePrompt("filter-change")) {
+      clearAllFilters();
+      if (routeMode) rebuildPinnedRoute(nextFilters);
+      return;
+    }
+    setRoutePrompt({
+      kind: "filter-change",
+      title: "שינוי הסינון משנה את המסלול",
+      description: "איפוס הסינון ישנה את המסלול. להמשיך?",
+      onConfirm: () => {
+        clearAllFilters();
+        rebuildPinnedRoute(nextFilters);
+      },
+    });
+  }
+
+  function confirmRouteAdds(housesToAdd: PublicHouse[]) {
+    setPinnedRoute((current) => {
+      const seen = routeHouseIds(current);
+      const merged = [...(current?.stops.flatMap((stop) => stop.houses) ?? [])];
+      for (const house of housesToAdd) {
+        if (seen.has(house.id)) continue;
+        merged.push(house);
+        seen.add(house.id);
+      }
+      pendingRouteAddsRef.current = pendingRouteAddsRef.current.filter(
+        (house) => !housesToAdd.some((item) => item.id === house.id),
+      );
+      return buildWalkingRoute(merged, origin, {
+        accessible: accessibleOnly,
+        startedFrom: origin.kind,
+        originLabel: origin.label,
+      });
+    });
+    setRouteAddPrompt(null);
+  }
 
   useEffect(() => {
     if (!originPickActive || !originDraft) return;
@@ -528,20 +633,52 @@ export function NeighborhoodApp({
 
   function enterRouteMode() {
     if (routeMode) return;
-    exitOriginPick();
-    setSelectedId("closed");
-    setClusterOverview(false);
-    setExpandedClusterKey(null);
-    setEditing(false);
-    setRouteMode(true);
-    if (originChoice.kind === "gps" && !gps) {
-      pendingRouteGps.current = true;
-      setAskedLocation(true);
-      geo.refresh();
+    const proceed = () => {
+      exitOriginPick();
+      setSelectedId("closed");
+      setClusterOverview(false);
+      setExpandedClusterKey(null);
+      setEditing(false);
+      setRouteMode(true);
+      if (originChoice.kind === "gps" && !gps) {
+        pendingRouteGps.current = true;
+        setAskedLocation(true);
+        geo.refresh();
+        return;
+      }
+      pendingRouteGps.current = false;
+      pinCurrentRoute(true);
+    };
+    if (shouldSkipRoutePrompt("enter-route")) {
+      proceed();
       return;
     }
-    pendingRouteGps.current = false;
-    pinCurrentRoute(true);
+    const onRoute = routeHouseIds(pinnedRoute);
+    const visitedOnRouteIds = [...onRoute].filter((id) => visits.visitedIds.includes(id));
+    const visitedExcluded =
+      unvisitedOnly
+        ? filterHouses(houses, { ...filters, unvisitedOnly: false }, filterContext).filter((house) =>
+            visits.visitedIds.includes(house.id),
+          )
+        : [];
+    const wouldDropVisited = visitedOnRouteIds.length > 0 || visitedExcluded.length > 0;
+    const dropNames = [
+      ...visitedOnRouteIds.map((id) => houses.find((house) => house.id === id)?.name ?? id),
+      ...visitedExcluded
+        .filter((house) => !visitedOnRouteIds.includes(house.id))
+        .map((house) => house.name),
+    ];
+    const description =
+      "המסלול מוצמד לרשימה המסוננת. הוספת מסלול יכולה להוסיף או להסיר בתים לפי הסינון.";
+    setRoutePrompt({
+      kind: "enter-route",
+      title: wouldDropVisited ? "בתים שביקרתם יוסרו מהמסלול" : "התחלת מסלול",
+      description: wouldDropVisited
+        ? `הסינון «לא ביקרתי» פעיל — ${dropNames.length} בתים שכבר ביקרתם לא ייכללו במסלול. ${description}`
+        : description,
+      houses: wouldDropVisited ? dropNames : undefined,
+      onConfirm: proceed,
+    });
   }
 
   function chooseGpsOrigin() {
@@ -801,24 +938,24 @@ export function NeighborhoodApp({
         open={filtersOpen}
         onOpenChange={setFiltersOpen}
         activeCount={activeFilterCount}
-        onClear={clearAllFilters}
+        onClear={requestFilterClear}
       >
         <FilterSection title="שעות">
           <FilterOption
             checked={openNowOnly}
-            onChange={() => updateFilters({ openNowOnly: !openNowOnly })}
+            onChange={() => requestFilterUpdate({ openNowOnly: !openNowOnly })}
           >
             <OpenNowMark labeled />
           </FilterOption>
           <FilterOption
             checked={closingSoonOnly}
-            onChange={() => updateFilters({ closingSoonOnly: !closingSoonOnly })}
+            onChange={() => requestFilterUpdate({ closingSoonOnly: !closingSoonOnly })}
           >
             <ClosingSoonMark labeled />
           </FilterOption>
           <FilterOption
             checked={openingSoonOnly}
-            onChange={() => updateFilters({ openingSoonOnly: !openingSoonOnly })}
+            onChange={() => requestFilterUpdate({ openingSoonOnly: !openingSoonOnly })}
           >
             <OpeningSoonMark labeled />
           </FilterOption>
@@ -828,7 +965,14 @@ export function NeighborhoodApp({
             <FilterOption
               key={area}
               checked={neighborhoodFilters.includes(area)}
-              onChange={() => toggleNeighborhood(area)}
+              onChange={() =>
+                requestFilterUpdate((current) => ({
+                  ...current,
+                  neighborhoodFilters: current.neighborhoodFilters.includes(area)
+                    ? current.neighborhoodFilters.filter((item) => item !== area)
+                    : [...current.neighborhoodFilters, area],
+                }))
+              }
             >
               {area}
             </FilterOption>
@@ -837,7 +981,7 @@ export function NeighborhoodApp({
         <FilterSection title="רמת פחד">
           <FilterOption
             checked={includeUndecorated}
-            onChange={() => updateFilters({ includeUndecorated: !includeUndecorated })}
+            onChange={() => requestFilterUpdate({ includeUndecorated: !includeUndecorated })}
           >
             <span className="inline-flex items-center gap-2">
               <ScareSign level="none" />
@@ -848,7 +992,14 @@ export function NeighborhoodApp({
             <FilterOption
               key={level}
               checked={scareFilters.includes(level)}
-              onChange={() => toggleScare(level)}
+              onChange={() =>
+                requestFilterUpdate((current) => ({
+                  ...current,
+                  scareFilters: current.scareFilters.includes(level)
+                    ? current.scareFilters.filter((item) => item !== level)
+                    : [...current.scareFilters, level],
+                }))
+              }
             >
               <ScareMark labeled level={level} />
             </FilterOption>
@@ -859,7 +1010,14 @@ export function NeighborhoodApp({
             <FilterOption
               key={tone.id}
               checked={candyFilters.includes(tone.id)}
-              onChange={() => toggleCandy(tone.id)}
+              onChange={() =>
+                requestFilterUpdate((current) => ({
+                  ...current,
+                  candyFilters: current.candyFilters.includes(tone.id)
+                    ? current.candyFilters.filter((item) => item !== tone.id)
+                    : [...current.candyFilters, tone.id],
+                }))
+              }
             >
               <span className="inline-flex items-center gap-2">
                 <CandySign tone={tone.id} />
@@ -871,19 +1029,19 @@ export function NeighborhoodApp({
         <FilterSection title="עוד">
           <FilterOption
             checked={accessibleOnly}
-            onChange={() => updateFilters({ accessibleOnly: !accessibleOnly })}
+            onChange={() => requestFilterUpdate({ accessibleOnly: !accessibleOnly })}
           >
             <AccessibleMark labeled />
           </FilterOption>
           <FilterOption
             checked={likedOnly}
-            onChange={() => updateFilters({ likedOnly: !likedOnly })}
+            onChange={() => requestFilterUpdate({ likedOnly: !likedOnly })}
           >
             <LikedMark labeled />
           </FilterOption>
           <FilterOption
             checked={unvisitedOnly}
-            onChange={() => updateFilters({ unvisitedOnly: !unvisitedOnly })}
+            onChange={() => requestFilterUpdate({ unvisitedOnly: !unvisitedOnly })}
           >
             <UnvisitedMark labeled />
           </FilterOption>
@@ -893,7 +1051,14 @@ export function NeighborhoodApp({
             <FilterOption
               key={id}
               checked={sensitivityFilters.includes(id)}
-              onChange={() => toggleSensitivity(id)}
+              onChange={() =>
+                requestFilterUpdate((current) => ({
+                  ...current,
+                  sensitivityFilters: current.sensitivityFilters.includes(id)
+                    ? current.sensitivityFilters.filter((item) => item !== id)
+                    : [...current.sensitivityFilters, id],
+                }))
+              }
             >
               <SensitivityMark labeled kind={id} />
             </FilterOption>
@@ -1041,15 +1206,18 @@ export function NeighborhoodApp({
               aria-hidden={view !== "list"}
             >
                 <div className="mx-auto w-full min-w-0 max-w-3xl px-3 pt-3">
-                  <div className="min-w-0 rounded-3xl bg-[#160b20] p-2 ring-1 ring-orange-500/40">
-                    <StatsSummary {...summaryProps} compact />
-                  </div>
+                  {routeMode ? (
+                    <div className="min-w-0 rounded-3xl bg-[#160b20] p-2 ring-1 ring-orange-500/40">
+                      <StatsSummary {...summaryProps} compact />
+                    </div>
+                  ) : null}
                 </div>
                 {routeMode ? (
                   <RouteList
                     route={walkingRoute}
                     hasGps={Boolean(gps)}
                     onRequestLocation={gpsAllowed ? chooseGpsOrigin : undefined}
+                    onChangeOrigin={() => setOriginPickerOpen(true)}
                     selectedId={selected?.id ?? null}
                     catalogSource={source}
                     likedIds={likes.likedIds}
@@ -1215,6 +1383,39 @@ export function NeighborhoodApp({
         onChooseNeighborhood={chooseNeighborhoodOrigin}
         onChooseCustom={chooseCustomOrigin}
         onPickOnMap={startOriginPick}
+      />
+      <RouteConfirmDialog
+        open={Boolean(routePrompt)}
+        title={routePrompt?.title ?? ""}
+        description={routePrompt?.description ?? ""}
+        houses={routePrompt?.houses}
+        promptKind={routePrompt?.kind ?? "enter-route"}
+        confirmLabel="שמירה והמשך"
+        onConfirm={() => {
+          routePrompt?.onConfirm();
+          setRoutePrompt(null);
+        }}
+        onCancel={() => setRoutePrompt(null)}
+      />
+      <RouteConfirmDialog
+        open={Boolean(routeAddPrompt?.length)}
+        title="להוסיף בתים למסלול?"
+        description="בתים חדשים מתאימים לסינון ולא נוספו אוטומטית למסלול."
+        houses={routeAddPrompt?.map((house) => house.name)}
+        promptKind="add-houses"
+        confirmLabel="הוספה למסלול"
+        cancelLabel="לא עכשיו"
+        onConfirm={() => {
+          if (routeAddPrompt) confirmRouteAdds(routeAddPrompt);
+        }}
+        onCancel={() => {
+          if (routeAddPrompt) {
+            pendingRouteAddsRef.current = pendingRouteAddsRef.current.filter(
+              (house) => !routeAddPrompt.some((item) => item.id === house.id),
+            );
+          }
+          setRouteAddPrompt(null);
+        }}
       />
       {visitCheer ? (
         <div className="visit-cheer" role="status" aria-live="polite">

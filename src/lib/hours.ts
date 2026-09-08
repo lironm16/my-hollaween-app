@@ -106,7 +106,7 @@ export function syncHoursFields(windows: HoursWindow[]): {
   openTo2: string;
 } {
   const openHours = normalizeHoursWindows(windows);
-  const first = openHours[0] ?? { from: "17:00", to: "21:00" };
+  const first = openHours[0] ?? { from: "17:00", to: "20:00" };
   const second = openHours[1];
   return {
     openHours,
@@ -117,13 +117,18 @@ export function syncHoursFields(windows: HoursWindow[]): {
   };
 }
 
+/** LTR-isolated range so RTL layout shows opening time before closing time. */
+export function formatHoursRange(from: string, to: string): string {
+  return `\u2066${from}\u2069–\u2066${to}\u2069`;
+}
+
 export function formatHoursLabel(house: HoursSource): string {
   const windows = houseHoursWindows(house);
   if (windows.length === 0) {
-    if (house.openFrom && house.openTo) return `${house.openFrom}–${house.openTo}`;
+    if (house.openFrom && house.openTo) return formatHoursRange(house.openFrom, house.openTo);
     return "";
   }
-  return windows.map((window) => `${window.from}–${window.to}`).join(" · ");
+  return windows.map((window) => formatHoursRange(window.from, window.to)).join(" · ");
 }
 
 function minutesNow(now: Date) {

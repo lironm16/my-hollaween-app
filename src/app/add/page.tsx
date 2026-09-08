@@ -12,7 +12,7 @@ import { saveOwnedHouse, notifyCatalogChanged, rememberPublishedHouse } from "@/
 import { PersistNote } from "@/components/persist-note";
 import { publishHouse } from "@/lib/publish-house";
 import { publishHousePhoto } from "@/lib/house-photo";
-import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
+import { senderPushEndpoint } from "@/lib/push-client";
 import type { HouseInput } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import type { HouseFormExtras } from "@/components/house-form";
@@ -23,14 +23,13 @@ export default function AddPage() {
     id: string;
     editCode: string;
     name: string;
-    autoPush?: boolean;
   } | null>(null);
 
   async function onSubmit(input: HouseInput, extras?: HouseFormExtras) {
     setBusy(true);
     try {
       const includeEndpoint = await senderPushEndpoint();
-      const { house, editCode, autoPush, pushTitle, pushBody } = await publishHouse(input, { includeEndpoint });
+      const { house, editCode } = await publishHouse(input, { includeEndpoint });
       let preview = house;
       if (extras?.photoDataUrl) {
         try {
@@ -48,15 +47,8 @@ export default function AddPage() {
       rememberPublishedHouse(preview);
       notifyCatalogChanged();
       // Success UI only after the server confirmed the house.
-      setDone({ id: preview.id, editCode, name: preview.name, autoPush });
-      if (autoPush && pushTitle) {
-        void showLocalPush(
-          pushTitle,
-          pushBody ?? "",
-          `/?focus=${encodeURIComponent(preview.id)}`,
-        );
-      }
-      toast.success(autoPush ? "הבית נוסף למפה · נשלחה התראה לשכונה" : "הבית נוסף למפה");
+      setDone({ id: preview.id, editCode, name: preview.name });
+      toast.success("הבית נוסף למפה");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "השליחה נכשלה");
     } finally {
@@ -87,11 +79,6 @@ export default function AddPage() {
               <p className="text-base text-violet-100">
                 {done.name} נשמר ומופיע במפה הציבורית של השכונה.
               </p>
-              {done.autoPush ? (
-                <p className="rounded-xl bg-emerald-950/70 px-3 py-2 text-base text-emerald-100 ring-1 ring-emerald-500/25">
-                  שלחנו התראה אוטומטית לשכונה על הבית החדש.
-                </p>
-              ) : null}
             </div>
             <PersistNote />
             <CodesCopy editCode={done.editCode} />

@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
-import { saveOwnedHouse, removeOwnedHouse } from "@/lib/offline-db";
+import { saveOwnedHouse, removeOwnedHouse, forgetPublishedHouse, notifyCatalogChanged } from "@/lib/offline-db";
 import { toPublicHouse } from "@/lib/ids";
 import type { House, PublicHouse } from "@/lib/types";
 import { NightDesk } from "@/components/night-desk";
@@ -21,7 +21,7 @@ import { readApiJson } from "@/lib/api-json";
 
 export default function EditPage() {
   const owned = useOwnedHouses();
-  const { catalog, loading: catalogLoading } = useCatalog();
+  const { catalog, loading: catalogLoading, refresh } = useCatalog();
   const { admin, ready: adminReady } = useAdminSession();
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
   const [picked, setPicked] = useState<PublicHouse | null>(null);
@@ -218,7 +218,10 @@ export default function EditPage() {
               allowDelete
               editCode={admin ? adminEditCode : editCode}
               onDeleted={() => {
+                forgetPublishedHouse(house.id);
                 removeOwnedHouse(house.id);
+                notifyCatalogChanged();
+                void refresh(true);
                 setHouse(null);
                 setPicked(null);
               }}
