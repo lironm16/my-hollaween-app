@@ -2,9 +2,8 @@
 
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Heart, WifiOff, X } from "lucide-react";
+import { WifiOff, X } from "lucide-react";
 import { ScarePumpkin } from "@/components/scare-glyphs";
-import { VisitedCheck } from "@/components/visited-check";
 import type { WalkingRoute } from "@/lib/route";
 import { cn } from "@/lib/utils";
 
@@ -15,17 +14,6 @@ function HouseIcon() {
         fill="currentColor"
         d="M3.6 11.2 12 3.6l8.4 7.6v8.6c0 .8-.7 1.5-1.5 1.5h-4.4v-5.8H9.5v5.8H5.1c-.8 0-1.5-.7-1.5-1.5z"
       />
-    </svg>
-  );
-}
-
-function PeopleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden className="size-full">
-      <circle cx="8" cy="7" r="3.2" fill="#c4b5fd" />
-      <path fill="#c4b5fd" d="M1.8 20c.3-3.6 2.8-6 6.2-6s5.9 2.4 6.2 6z" />
-      <circle cx="15.8" cy="7.2" r="3.2" fill="#fb923c" />
-      <path fill="#fb923c" d="M9.8 20c.3-3.4 2.8-5.6 5.8-5.6 3.2 0 5.8 2.3 6 5.6z" />
     </svg>
   );
 }
@@ -92,28 +80,6 @@ function IconWell({ children, className }: { children: ReactNode; className?: st
   );
 }
 
-function Tile({
-  icon,
-  value,
-  label,
-  className,
-}: {
-  icon: ReactNode;
-  value: string;
-  label: string;
-  className?: string;
-}) {
-  return (
-    <div className={cn("flex min-w-0 items-center gap-2.5 rounded-xl bg-[#14081c] px-2.5 py-2.5", className)}>
-      <IconWell className="size-12">{icon}</IconWell>
-      <span className="flex min-w-0 flex-col justify-center text-right">
-        <span className="text-2xl font-bold leading-none text-white">{value}</span>
-        <span className="mt-1 text-base leading-none text-white/80">{label}</span>
-      </span>
-    </div>
-  );
-}
-
 function RouteChip({
   icon,
   value,
@@ -131,41 +97,6 @@ function RouteChip({
         <span className="mt-0.5 text-base leading-none text-white/80">{label}</span>
       </span>
     </div>
-  );
-}
-
-function Stack({
-  icon,
-  value,
-  label,
-}: {
-  icon: ReactNode;
-  value: string;
-  label: string;
-}) {
-  return (
-    <div className="flex min-w-0 flex-1 flex-col items-center gap-1">
-      <IconWell className="size-9">{icon}</IconWell>
-      <span className="text-xl font-bold leading-none text-white">{value}</span>
-      <span className="text-base leading-none text-white/80">{label}</span>
-    </div>
-  );
-}
-
-function Section({
-  title,
-  children,
-  className,
-}: {
-  title: string;
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <section className={cn("rounded-2xl bg-[#241332] p-2.5 ring-1 ring-white/10", className)}>
-      <h3 className="mb-2 text-right text-base font-semibold text-orange-400">{title}:</h3>
-      {children}
-    </section>
   );
 }
 
@@ -187,28 +118,14 @@ function CompactChip({
   );
 }
 
-function SavedHeart({ className }: { className?: string }) {
-  return (
-    <Heart className={cn("fill-current text-[#fb7185]", className)} strokeWidth={2.2} />
-  );
-}
-
 export function StatsSummary({
-  totalHouses,
   filteredHouses,
-  onlineDevices = null,
-  likedCount,
-  visitedCount,
   route = null,
   staleLabel = null,
   heading = false,
   compact = false,
 }: {
-  totalHouses: number;
   filteredHouses: number;
-  onlineDevices?: number | null;
-  likedCount: number;
-  visitedCount: number;
   route?: WalkingRoute | null;
   staleLabel?: string | null;
   heading?: boolean;
@@ -216,29 +133,11 @@ export function StatsSummary({
 }) {
   const walk = route ? distanceParts(route.totalMeters) : null;
   const houseIcon = <HouseIcon />;
+  const routeTitle = route?.accessible ? "מסלול נגיש" : "מסלול";
 
   if (compact) {
-    const routeTitle = route?.accessible ? "מסלול נגיש" : "מסלול";
     return (
       <div className="flex min-w-0 w-full flex-col gap-1.5 text-right" dir="rtl">
-        <div className="grid min-w-0 grid-cols-2 gap-1.5">
-          <CompactChip icon={houseIcon} value={String(totalHouses)} label="בתים" />
-          <CompactChip
-            icon={<PeopleIcon />}
-            value={onlineDevices == null ? "—" : String(onlineDevices)}
-            label="מבקרים"
-          />
-          <CompactChip
-            icon={<SavedHeart className="size-7" />}
-            value={String(likedCount)}
-            label="שמורים"
-          />
-          <CompactChip
-            icon={<VisitedCheck visited size="sm" className="size-7" />}
-            value={String(visitedCount)}
-            label="ביקרתי"
-          />
-        </div>
         <section className="min-w-0 rounded-2xl bg-[#2c1a12] p-1.5 ring-1 ring-orange-500/25">
           <h3 className="mb-1 text-right text-sm font-semibold text-orange-400">{routeTitle}</h3>
           <div className="grid min-w-0 grid-cols-2 gap-1.5">
@@ -280,26 +179,8 @@ export function StatsSummary({
           סיכום
         </p>
       ) : null}
-      <Section title="השכונה">
-        <div className="grid grid-cols-2 gap-2">
-          <Tile icon={houseIcon} value={String(totalHouses)} label="בתים" />
-          <Tile
-            icon={<PeopleIcon />}
-            value={onlineDevices == null ? "—" : String(onlineDevices)}
-            label="מבקרים"
-          />
-        </div>
-      </Section>
-      <Section title="שלכם">
-        <div className="flex items-start justify-around gap-1 pt-1">
-          <Stack icon={<SavedHeart className="size-9" />} value={String(likedCount)} label="שמורים" />
-          <Stack icon={<VisitedCheck visited size="lg" />} value={String(visitedCount)} label="ביקרתי" />
-        </div>
-      </Section>
-      <Section
-        title={route?.accessible ? "מסלול נגיש" : "מסלול"}
-        className="bg-[#2c1a12] ring-orange-500/25"
-      >
+      <section className="rounded-2xl bg-[#2c1a12] p-2.5 ring-1 ring-orange-500/25">
+        <h3 className="mb-2 text-right text-base font-semibold text-orange-400">{routeTitle}:</h3>
         <div className="grid grid-cols-2 gap-2">
           <RouteChip icon={houseIcon} value={String(filteredHouses)} label="בתים" />
           <RouteChip
@@ -314,7 +195,7 @@ export function StatsSummary({
             label="דק׳"
           />
         </div>
-      </Section>
+      </section>
       {staleLabel ? (
         <p className="flex items-center gap-2 text-base text-amber-100">
           <WifiOff className="size-4 shrink-0" />
@@ -326,11 +207,7 @@ export function StatsSummary({
 }
 
 export function MapStats(props: {
-  totalHouses: number;
   filteredHouses: number;
-  onlineDevices?: number | null;
-  likedCount: number;
-  visitedCount: number;
   route?: WalkingRoute | null;
   staleLabel?: string | null;
 }) {

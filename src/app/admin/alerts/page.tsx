@@ -3,12 +3,14 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AdminPushPanel } from "@/components/admin-push-panel";
+import { AlertStatsCard, useAdminStats } from "@/components/admin-stats";
 import { AppHeader } from "@/components/app-header";
 import { useAdminSession } from "@/hooks/use-admin-session";
 
 export default function AdminAlertsPage() {
   const router = useRouter();
   const { ready, admin } = useAdminSession();
+  const stats = useAdminStats(admin);
 
   useEffect(() => {
     if (ready && !admin) router.replace("/admin");
@@ -28,6 +30,7 @@ export default function AdminAlertsPage() {
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-5">
         <div className="mx-auto w-full max-w-lg space-y-4 pb-10">
           <h1 className="font-display text-2xl text-orange-300">התראות לשכונה</h1>
+          {stats ? <AlertStatsCard stats={stats} /> : null}
           <AdminPushPanel />
         </div>
       </main>
