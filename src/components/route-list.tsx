@@ -11,8 +11,8 @@ import { googleMapsNavigateUrl, type WalkingRoute } from "@/lib/route";
 
 function RouteLeg({ label }: { label: string }) {
   return (
-    <div className="route-list-leg" aria-hidden="true">
-      <span className="route-list-leg-line" />
+    <div className="route-list-leg">
+      <span className="route-list-leg-line" aria-hidden="true" />
       <span className="route-list-leg-label">{label}</span>
     </div>
   );
