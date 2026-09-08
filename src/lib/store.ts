@@ -237,7 +237,7 @@ async function writeFileDb(db: DbFile) {
   await fs.rename(tmp, file);
 }
 
-function pushSettingsStamp(settings?: DbFile["pushSettings"]) {
+function pushSettingsStamp(settings?: DbFile["pushSettings"] | null) {
   const raw = settings?.updatedAt ?? "";
   const n = Date.parse(raw);
   return Number.isFinite(n) ? n : 0;
@@ -255,6 +255,25 @@ function pickPushSettings(...candidates: Array<DbFile | null | undefined>): DbFi
     }
   }
   return best;
+}
+
+function asPushCandidate(settings?: DbFile["pushSettings"] | null): DbFile | null {
+  if (!settings?.templates) return null;
+  return { updatedAt: settings.updatedAt ?? "", houses: [], pushSettings: settings };
+}
+
+function foldPushSettings(db: DbFile, ...candidates: Array<DbFile | null | undefined>) {
+  const newest = pickPushSettings(db, ...candidates);
+  if (newest) db.pushSettings = newest;
+}
+
+function liveDb(): DbFile | null {
+  return mem ?? getGlobalDb();
+}
+
+function isStaleSnapshot(db: DbFile) {
+  const live = liveDb();
+  return Boolean(live && stamp(live) > stamp(db));
 }
 
 function pickNewest(...candidates: Array<DbFile | null | undefined>): DbFile | null {
@@ -305,19 +324,52 @@ function setMem(db: DbFile) {
   setGlobalDb(db);
 }
 
+async function persistPushSettings(
+  settings: DbFile["pushSettings"],
+  existingStamp: number,
+) {
+  if (!settings?.templates) return;
+  if (pushSettingsStamp(settings) < existingStamp) return;
+  await writePushSettingsBlob(settings);
+}
+
 async function persistDb(db: DbFile) {
   const pushBlob = await readPushSettingsBlob();
-  const blobWrapper = pushBlob
-    ? { updatedAt: pushBlob.updatedAt ?? "", houses: [] as DbFile["houses"], pushSettings: pushBlob }
-    : null;
-  const incomingStamp = pushSettingsStamp(db.pushSettings);
-  const stored = pickPushSettings(mem, getGlobalDb(), blobWrapper);
-  const storedStamp = pushSettingsStamp(stored);
-  if (!db.pushSettings?.templates) {
-    if (stored) db.pushSettings = stored;
-  } else if (stored && storedStamp > incomingStamp) {
-    db.pushSettings = stored;
+  const blobWrapper = asPushCandidate(pushBlob);
+  const blobStamp = pushSettingsStamp(pushBlob);
+  foldPushSettings(db, mem, getGlobalDb(), blobWrapper);
+
+  if (isStaleSnapshot(db)) {
+    const live = liveDb();
+    if (live) {
+      foldPushSettings(live, db, blobWrapper);
+      if (mem) mem.pushSettings = live.pushSettings;
+      setGlobalDb(live);
+      try {
+        await persistPushSettings(live.pushSettings, blobStamp);
+      } catch {
+        /* live house data stays in memory */
+      }
+    }
+    return;
   }
+
+  try {
+    await persistPushSettings(db.pushSettings, blobStamp);
+  } catch {
+    /* house db still stores a copy */
+  }
+
+  if (isStaleSnapshot(db)) {
+    const live = liveDb();
+    if (live) {
+      foldPushSettings(live, db);
+      if (mem) mem.pushSettings = live.pushSettings;
+      setGlobalDb(live);
+    }
+    return;
+  }
+
   if (blobEnabled()) {
     try {
       await writeBlobDb(db);
@@ -336,14 +388,18 @@ async function persistDb(db: DbFile) {
       throw new Error("PERSIST_FAILED");
     }
   }
-  setMem(db);
-  if (db.pushSettings) {
-    try {
-      await writePushSettingsBlob(db.pushSettings);
-    } catch {
-      /* house data already saved */
+
+  if (isStaleSnapshot(db)) {
+    const live = liveDb();
+    if (live) {
+      foldPushSettings(live, db);
+      if (mem) mem.pushSettings = live.pushSettings;
+      setGlobalDb(live);
     }
+    return;
   }
+
+  setMem(db);
 }
 
 async function loadDb(fresh = false): Promise<DbFile> {
@@ -354,9 +410,6 @@ async function loadDb(fresh = false): Promise<DbFile> {
     const global = getGlobalDb();
     const chosen = pickNewest(db, global) ?? db;
     setMem(chosen);
-    if (global && stamp(global) > stamp(db)) {
-      void persistDb(chosen);
-    }
     return chosen;
   });
 }
@@ -364,10 +417,12 @@ async function loadDb(fresh = false): Promise<DbFile> {
 async function runSyncedWrite<T>(fn: (db: DbFile) => T | Promise<T>): Promise<T> {
   return withLock(async () => {
     const db = normalizeDb(cloneDb(await readFileDb()));
+    const keptPush = db.pushSettings;
     const global = getGlobalDb();
     if (global && stamp(global) > stamp(db)) {
       Object.assign(db, normalizeDb(cloneDb(global)));
     }
+    foldPushSettings(db, asPushCandidate(keptPush), mem, global);
     const result = await fn(db);
     await persistDb(db);
     return result;
@@ -740,7 +795,7 @@ export async function getPushTemplateList() {
 }
 
 export async function savePushTemplates(input: StoredPushSettings) {
-  return runSyncedWrite((db) => {
+  await runSyncedWrite((db) => {
     const merged = mergePushTemplates({
       templates: {
         ...db.pushSettings?.templates,
@@ -757,8 +812,8 @@ export async function savePushTemplates(input: StoredPushSettings) {
     }
     db.pushSettings = { updatedAt: new Date().toISOString(), templates };
     db.updatedAt = new Date().toISOString();
-    return Object.values(mergePushTemplates(db.pushSettings));
   });
+  return getPushTemplateList();
 }
 
 export async function notifyHouseKind(options: {

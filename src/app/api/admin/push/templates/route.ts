@@ -4,18 +4,21 @@ import { PUSH_KINDS, type PushKind, type StoredPushSettings } from "@/lib/push-t
 import { getPushTemplateList, savePushTemplates } from "@/lib/store";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const NO_STORE = { "Cache-Control": "private, no-store" };
 
 export async function GET() {
   if (!(await isAdmin())) {
-    return NextResponse.json({ error: "נדרשת הרשאת מנהל." }, { status: 401 });
+    return NextResponse.json({ error: "נדרשת הרשאת מנהל." }, { status: 401, headers: NO_STORE });
   }
   const templates = await getPushTemplateList();
-  return NextResponse.json({ templates });
+  return NextResponse.json({ templates }, { headers: NO_STORE });
 }
 
 export async function PUT(request: Request) {
   if (!(await isAdmin())) {
-    return NextResponse.json({ error: "נדרשת הרשאת מנהל." }, { status: 401 });
+    return NextResponse.json({ error: "נדרשת הרשאת מנהל." }, { status: 401, headers: NO_STORE });
   }
   const json = (await request.json().catch(() => null)) as {
     templates?: Array<{ id?: string; enabled?: boolean; title?: string; body?: string }>;
@@ -29,6 +32,9 @@ export async function PUT(request: Request) {
       body: (row.body ?? "").slice(0, 280),
     };
   }
+  if (!incoming.templates || Object.keys(incoming.templates).length === 0) {
+    return NextResponse.json({ error: "אין תבניות לשמירה." }, { status: 400, headers: NO_STORE });
+  }
   const templates = await savePushTemplates(incoming);
-  return NextResponse.json({ ok: true, templates });
+  return NextResponse.json({ ok: true, templates }, { headers: NO_STORE });
 }
