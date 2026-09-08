@@ -3,47 +3,83 @@
 import { useCallback, useEffect, useState } from "react";
 import { NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
 import { loadHouseFilters, saveHouseFilters, type HouseFiltersState } from "@/lib/offline-db";
-import { SCARE_LEVELS, SENSITIVITY_OPTIONS, type ScareLevel, type SensitivityId } from "@/lib/types";
+import {
+  CANDY_TONE_IDS,
+  DECOR_LEVELS,
+  SCARE_LEVELS,
+  SENSITIVITY_OPTIONS,
+  type CandyTone,
+  type DecorLevel,
+  type ScareLevel,
+  type SensitivityId,
+} from "@/lib/types";
 
 export const DEFAULT_HOUSE_FILTERS: HouseFiltersState = {
   accessibleOnly: false,
-  candyOnly: false,
   openNowOnly: false,
   sensitivityFilters: [],
   scareFilters: [...SCARE_LEVELS],
+  candyFilters: [...CANDY_TONE_IDS],
   neighborhoodFilters: [...NEIGHBORHOODS],
   likedOnly: false,
   unvisitedOnly: false,
   includeUndecorated: true,
 };
 
+type LegacyFilters = HouseFiltersState & {
+  candyOnly?: boolean;
+  decoratedOnly?: boolean;
+  decorFilters?: DecorLevel[];
+};
+
+function pickKnown<T extends string>(raw: unknown, allowed: readonly T[]): T[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((item): item is T => (allowed as readonly string[]).includes(item));
+}
+
 function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
-  if (!raw) return { ...DEFAULT_HOUSE_FILTERS, scareFilters: [...SCARE_LEVELS], neighborhoodFilters: [...NEIGHBORHOODS] };
-  const neighborhoods = (raw.neighborhoodFilters ?? []).filter((item): item is NeighborhoodId =>
-    (NEIGHBORHOODS as readonly string[]).includes(item),
-  );
-  const scares = (raw.scareFilters ?? []).filter((item): item is ScareLevel =>
-    (SCARE_LEVELS as readonly string[]).includes(item),
-  );
-  const sensitivities = (raw.sensitivityFilters ?? []).filter((item): item is SensitivityId =>
-    (SENSITIVITY_OPTIONS as readonly string[]).includes(item),
-  );
-  const legacy = raw as HouseFiltersState & { decoratedOnly?: boolean };
+  const empty = {
+    ...DEFAULT_HOUSE_FILTERS,
+    scareFilters: [...SCARE_LEVELS],
+    candyFilters: [...CANDY_TONE_IDS],
+    neighborhoodFilters: [...NEIGHBORHOODS],
+  };
+  if (!raw) return empty;
+  const legacy = raw as LegacyFilters;
+  const neighborhoods = pickKnown(raw.neighborhoodFilters, NEIGHBORHOODS);
+  const scares = pickKnown(raw.scareFilters, SCARE_LEVELS);
+  const sensitivities = pickKnown(raw.sensitivityFilters, SENSITIVITY_OPTIONS);
+  const candies = pickKnown(raw.candyFilters, CANDY_TONE_IDS);
+  const candyFilters =
+    candies.length > 0
+      ? candies
+      : legacy.candyOnly
+        ? (["plenty", "low"] as CandyTone[])
+        : [...CANDY_TONE_IDS];
+  const decors = pickKnown(legacy.decorFilters, DECOR_LEVELS);
   const includeUndecorated =
-    legacy.includeUndecorated !== undefined
-      ? Boolean(legacy.includeUndecorated)
-      : !Boolean(legacy.decoratedOnly);
+    raw.includeUndecorated !== undefined
+      ? Boolean(raw.includeUndecorated)
+      : legacy.decoratedOnly !== undefined
+        ? !Boolean(legacy.decoratedOnly)
+        : decors.length > 0
+          ? decors.includes("none")
+          : true;
   return {
     accessibleOnly: Boolean(raw.accessibleOnly),
-    candyOnly: Boolean(raw.candyOnly),
     openNowOnly: Boolean(raw.openNowOnly),
     likedOnly: Boolean(raw.likedOnly),
     unvisitedOnly: Boolean(raw.unvisitedOnly),
     includeUndecorated,
     neighborhoodFilters: Array.isArray(raw.neighborhoodFilters) ? neighborhoods : [...NEIGHBORHOODS],
     scareFilters: scares.length > 0 ? scares : [...SCARE_LEVELS],
+    candyFilters,
     sensitivityFilters: sensitivities,
   };
+}
+
+function toggleItem<T>(list: T[], item: T): T[] {
+  return list.includes(item) ? list.filter((value) => value !== item) : [...list, item];
 }
 
 export function useHouseFilters() {
@@ -67,6 +103,7 @@ export function useHouseFilters() {
     const next = {
       ...DEFAULT_HOUSE_FILTERS,
       scareFilters: [...SCARE_LEVELS],
+      candyFilters: [...CANDY_TONE_IDS],
       neighborhoodFilters: [...NEIGHBORHOODS],
       sensitivityFilters: [] as SensitivityId[],
     };
@@ -77,27 +114,28 @@ export function useHouseFilters() {
   function toggleNeighborhood(area: NeighborhoodId) {
     update((current) => ({
       ...current,
-      neighborhoodFilters: current.neighborhoodFilters.includes(area)
-        ? current.neighborhoodFilters.filter((item) => item !== area)
-        : [...current.neighborhoodFilters, area],
+      neighborhoodFilters: toggleItem(current.neighborhoodFilters, area),
     }));
   }
 
   function toggleScare(level: ScareLevel) {
     update((current) => ({
       ...current,
-      scareFilters: current.scareFilters.includes(level)
-        ? current.scareFilters.filter((item) => item !== level)
-        : [...current.scareFilters, level],
+      scareFilters: toggleItem(current.scareFilters, level),
+    }));
+  }
+
+  function toggleCandy(tone: CandyTone) {
+    update((current) => ({
+      ...current,
+      candyFilters: toggleItem(current.candyFilters, tone),
     }));
   }
 
   function toggleSensitivity(id: SensitivityId) {
     update((current) => ({
       ...current,
-      sensitivityFilters: current.sensitivityFilters.includes(id)
-        ? current.sensitivityFilters.filter((item) => item !== id)
-        : [...current.sensitivityFilters, id],
+      sensitivityFilters: toggleItem(current.sensitivityFilters, id),
     }));
   }
 
@@ -108,6 +146,7 @@ export function useHouseFilters() {
     clear,
     toggleNeighborhood,
     toggleScare,
+    toggleCandy,
     toggleSensitivity,
   };
 }
