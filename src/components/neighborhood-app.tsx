@@ -508,13 +508,6 @@ export function NeighborhoodApp({
     setPinnedRoute(null);
   }
 
-  function goToMainMap() {
-    setView("map");
-    exitOriginPick();
-    setSelectedId("closed");
-    setClusterOverview(false);
-  }
-
   function goHome() {
     exitOriginPick();
     exitRouteMode();
@@ -731,7 +724,7 @@ export function NeighborhoodApp({
       className="relative isolate flex flex-col overflow-hidden"
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
-      <AppHeader onMainTap={goToMainMap} onHomeTap={goHome} onSearchHouses={goSearchHouses} />
+      <AppHeader onHomeTap={goHome} onSearchHouses={goSearchHouses} />
       <div
         className="app-toolbar relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2"
         style={{ flexShrink: 0 }}
