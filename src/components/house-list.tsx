@@ -1,18 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
-import { HousePlus } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { buttonVariants } from "@/components/ui/button";
+import { useMemo } from "react";
 import { HouseCard } from "@/components/house-card";
 import { distanceMeters } from "@/lib/geo";
 import { effectiveVisit } from "@/lib/house-state";
 import type { PublicHouse } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
 export function HouseList({
   houses,
+  query = "",
   origin,
   catalogSource,
   likedIds,
@@ -21,12 +17,14 @@ export function HouseList({
   onToggleVisited,
   admin = false,
   canEditHouse,
-  editCodeFor,
-  onHouseUpdated,
-  onHouseDeleted,
   onShowOnMap,
+  onSelectHouse,
+  onEditHouse,
+  selectedId,
+  editingId,
 }: {
   houses: PublicHouse[];
+  query?: string;
   origin?: { lat: number; lng: number } | null;
   catalogSource?: string | null;
   likedIds?: string[];
@@ -35,15 +33,14 @@ export function HouseList({
   onToggleVisited?: (id: string) => void;
   admin?: boolean;
   canEditHouse?: (id: string) => boolean;
-  editCodeFor?: (id: string) => string | undefined;
-  onHouseUpdated?: (house: PublicHouse) => void;
-  onHouseDeleted?: (id: string) => void;
   onShowOnMap?: (id: string) => void;
+  onSelectHouse?: (id: string) => void;
+  onEditHouse?: (id: string) => void;
+  selectedId?: string | null;
+  editingId?: string | null;
 }) {
-  const [q, setQ] = useState("");
-
   const filtered = useMemo(() => {
-    const needle = q.trim();
+    const needle = query.trim();
     return houses
       .filter((h) => {
         if (!needle) return true;
@@ -61,7 +58,7 @@ export function HouseList({
         if (a.d !== undefined && b.d !== undefined) return a.d - b.d;
         return a.h.name.localeCompare(b.h.name, "he");
       });
-  }, [houses, q, origin]);
+  }, [houses, query, origin]);
 
   if (houses.length === 0) {
     return (
@@ -73,25 +70,10 @@ export function HouseList({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-3 py-3">
-      <div className="flex items-center gap-2">
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="חיפוש לפי שם או רחוב…"
-          className="h-10 min-w-0 flex-1 bg-[#1d1028] text-base"
-        />
-        <Link
-          href="/add"
-          className={cn(
-            buttonVariants({ size: "sm" }),
-            "h-10 shrink-0 bg-orange-500 text-black hover:bg-orange-400",
-          )}
-        >
-          <HousePlus className="size-3.5" />
-          הוסיפו בית
-        </Link>
-      </div>
+    <div
+      className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3"
+      style={selectedId ? { paddingBottom: "calc(var(--map-sheet-h, 70dvh) + 1rem)" } : undefined}
+    >
       {filtered.length === 0 ? (
         <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לחיפוש.</p>
       ) : (
@@ -106,11 +88,11 @@ export function HouseList({
             visited={visitedIds?.includes(h.id)}
             onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
             canEdit={Boolean(canEditHouse?.(h.id))}
-            editCode={editCodeFor?.(h.id)}
             admin={admin}
-            onUpdated={onHouseUpdated}
-            onDeleted={onHouseDeleted}
             onShowOnMap={onShowOnMap ? () => onShowOnMap(h.id) : undefined}
+            onOpen={onSelectHouse ? () => onSelectHouse(h.id) : undefined}
+            onToggleEdit={onEditHouse ? () => onEditHouse(h.id) : undefined}
+            editing={editingId === h.id}
           />
         ))
       )}

@@ -36,6 +36,7 @@ export function MapHouseSheet({
   editing,
   onToggleEdit,
   pendingNote,
+  onShowOnMap,
 }: {
   house: PublicHouse;
   clusterHouses: PublicHouse[];
@@ -53,6 +54,7 @@ export function MapHouseSheet({
   editing?: boolean;
   onToggleEdit?: () => void;
   pendingNote?: ReactNode;
+  onShowOnMap?: () => void;
 }) {
   const labelId = useId();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -181,6 +183,7 @@ export function MapHouseSheet({
           onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
           onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
           onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
+          onShowOnMap={onShowOnMap}
           editing={editing}
         />
       </div>

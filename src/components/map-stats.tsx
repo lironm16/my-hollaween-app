@@ -2,8 +2,9 @@
 
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Check, WifiOff, X } from "lucide-react";
+import { Heart, WifiOff, X } from "lucide-react";
 import { ScarePumpkin } from "@/components/scare-glyphs";
+import { VisitedCheck } from "@/components/visited-check";
 import type { WalkingRoute } from "@/lib/route";
 import { cn } from "@/lib/utils";
 
@@ -82,17 +83,6 @@ function ClockIcon() {
         stroke="#fb923c"
         strokeWidth="1.9"
         strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function HeartIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden className="h-full w-full">
-      <path
-        fill="#e11d48"
-        d="M12 20.8 4.5 13.4C2.1 11 2.3 7.2 5.4 5.4c2.2-1.3 5-.6 6.6 1.6 1.6-2.2 4.4-2.9 6.6-1.6 3.1 1.8 3.3 5.6.9 8z"
       />
     </svg>
   );
@@ -180,6 +170,37 @@ function Section({
   );
 }
 
+function SavedHeart({ className }: { className?: string }) {
+  return (
+    <Heart className={cn("fill-current text-[#fb7185]", className)} strokeWidth={2.2} />
+  );
+}
+
+function CompactCell({
+  icon,
+  value,
+  label,
+  ariaLabel,
+}: {
+  icon: ReactNode;
+  value: string;
+  label?: string;
+  ariaLabel?: string;
+}) {
+  return (
+    <div
+      className="flex min-w-0 max-w-full flex-col items-center gap-0.5 overflow-hidden rounded-xl bg-[#14081c] px-0.5 py-1"
+      aria-label={ariaLabel ?? (label ? `${value} ${label}` : value)}
+    >
+      <span className="size-5 shrink-0">{icon}</span>
+      <span className="max-w-full truncate text-sm font-bold leading-none text-white">{value}</span>
+      {label ? (
+        <span className="max-w-full truncate text-[10px] leading-none text-white/80">{label}</span>
+      ) : null}
+    </div>
+  );
+}
+
 export function StatsSummary({
   totalHouses,
   filteredHouses,
@@ -189,6 +210,7 @@ export function StatsSummary({
   route = null,
   staleLabel = null,
   heading = false,
+  compact = false,
 }: {
   totalHouses: number;
   filteredHouses: number;
@@ -198,9 +220,69 @@ export function StatsSummary({
   route?: WalkingRoute | null;
   staleLabel?: string | null;
   heading?: boolean;
+  compact?: boolean;
 }) {
   const walk = route ? distanceParts(route.totalMeters) : null;
   const stopMark = route && route.stops.length < 100 ? String(route.stops.length) : undefined;
+  const houseIcon = (
+    <span className="text-orange-500">
+      <HouseIcon />
+    </span>
+  );
+
+  if (compact) {
+    return (
+      <div className="flex min-w-0 w-full flex-col gap-1.5 overflow-hidden text-right" dir="rtl">
+        <div className="grid min-w-0 grid-cols-4 gap-1 rounded-2xl bg-[#241332] p-1 ring-1 ring-white/10">
+          <CompactCell icon={houseIcon} value={String(totalHouses)} label="בתים" />
+          <CompactCell
+            icon={<PeopleIcon />}
+            value={onlineDevices == null ? "—" : String(onlineDevices)}
+            label="מבקרים"
+          />
+          <CompactCell
+            icon={<SavedHeart className="size-5" />}
+            value={String(likedCount)}
+            ariaLabel={`${likedCount} שמורים`}
+          />
+          <CompactCell
+            icon={<VisitedCheck visited size="sm" />}
+            value={String(visitedCount)}
+            ariaLabel={`${visitedCount} ביקרתי`}
+          />
+        </div>
+        <section className="min-w-0 rounded-2xl bg-[#2c1a12] p-1 ring-1 ring-orange-500/25">
+          <h3 className="mb-1 truncate text-right text-xs font-semibold text-orange-400">
+            {route?.accessible ? "מסלול נגיש" : "מסלול"}
+          </h3>
+          <div className="grid min-w-0 grid-cols-4 gap-1">
+            <CompactCell icon={houseIcon} value={String(filteredHouses)} label="בתים" />
+            <CompactCell
+              icon={<PinIcon mark={stopMark} />}
+              value={route ? String(route.stops.length) : "—"}
+              label="עצירות"
+            />
+            <CompactCell
+              icon={<PathIcon />}
+              value={walk ? walk.value : "—"}
+              label={walk ? walk.unit : "ק״מ"}
+            />
+            <CompactCell
+              icon={<ClockIcon />}
+              value={route ? String(route.totalMinutes) : "—"}
+              label="דק׳"
+            />
+          </div>
+        </section>
+        {staleLabel ? (
+          <p className="flex items-center gap-2 text-sm text-amber-100">
+            <WifiOff className="size-4 shrink-0" />
+            {staleLabel}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2.5 text-right" dir="rtl">
@@ -214,15 +296,7 @@ export function StatsSummary({
       ) : null}
       <Section title="השכונה">
         <div className="grid grid-cols-2 gap-2">
-          <Tile
-            icon={
-              <span className="text-orange-500">
-                <HouseIcon />
-              </span>
-            }
-            value={String(totalHouses)}
-            label="בתים"
-          />
+          <Tile icon={houseIcon} value={String(totalHouses)} label="בתים" />
           <Tile
             icon={<PeopleIcon />}
             value={onlineDevices == null ? "—" : String(onlineDevices)}
@@ -232,16 +306,8 @@ export function StatsSummary({
       </Section>
       <Section title="שלכם">
         <div className="flex items-start justify-around gap-1 pt-1">
-          <Stack icon={<HeartIcon />} value={String(likedCount)} label="שמורים" />
-          <Stack
-            icon={
-              <span className="inline-flex size-9 items-center justify-center rounded-full bg-emerald-500 text-black">
-                <Check className="size-5" strokeWidth={3} />
-              </span>
-            }
-            value={String(visitedCount)}
-            label="ביקרתי"
-          />
+          <Stack icon={<SavedHeart className="size-9" />} value={String(likedCount)} label="שמורים" />
+          <Stack icon={<VisitedCheck visited />} value={String(visitedCount)} label="ביקרתי" />
         </div>
       </Section>
       <Section
@@ -249,15 +315,7 @@ export function StatsSummary({
         className="bg-[#2c1a12] ring-orange-500/25"
       >
         <div className="grid grid-cols-2 gap-2">
-          <RouteChip
-            icon={
-              <span className="text-orange-500">
-                <HouseIcon />
-              </span>
-            }
-            value={String(filteredHouses)}
-            label="בתים"
-          />
+          <RouteChip icon={houseIcon} value={String(filteredHouses)} label="בתים" />
           <RouteChip
             icon={<PinIcon mark={stopMark} />}
             value={route ? String(route.stops.length) : "—"}

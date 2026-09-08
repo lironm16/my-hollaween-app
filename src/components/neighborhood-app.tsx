@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { List, MapPinned, Route } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
+import { Input } from "@/components/ui/input";
 import { PingPongMarquee } from "@/components/neighborhood-marquee";
 import {
   FilterOption,
@@ -18,7 +19,6 @@ import { CsvExportButton } from "@/components/csv-export-button";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { NightDesk } from "@/components/night-desk";
 import { OriginPickerSheet, OriginTrigger } from "@/components/origin-picker";
-import { PullToRefresh } from "@/components/pull-to-refresh";
 import { RouteList } from "@/components/route-list";
 import { reversePin } from "@/components/address-field";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
@@ -59,7 +59,13 @@ import {
   saveServerDbBackup,
   type ServerDbBackup,
 } from "@/lib/offline-db";
-import { readHomeView, writeHomeView, type HomeView } from "@/lib/home-view";
+import {
+  consumeHouseSearchFocus,
+  HOUSE_SEARCH_FOCUS_KEY,
+  readHomeView,
+  writeHomeView,
+  type HomeView,
+} from "@/lib/home-view";
 import { HOUSE_SET_LABELS, houseMatchesSet } from "@/lib/house-set";
 import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
 import type { Catalog, House, PublicHouse } from "@/lib/types";
@@ -139,7 +145,6 @@ export function NeighborhoodApp({
   const [panTo, setPanTo] = useState<{ lat: number; lng: number } | null>(null);
   const [panTick, setPanTick] = useState(0);
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
-  const [adminLoading, setAdminLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editForId, setEditForId] = useState(selectedId);
   if (selectedId !== editForId) {
@@ -147,6 +152,15 @@ export function NeighborhoodApp({
     setEditing(false);
   }
   const [busyAction, setBusyAction] = useState(false);
+  const [listQuery, setListQuery] = useState("");
+  const [searchFocusTick, setSearchFocusTick] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    try {
+      return sessionStorage.getItem(HOUSE_SEARCH_FOCUS_KEY) === "1" ? 1 : 0;
+    } catch {
+      return 0;
+    }
+  });
 
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
@@ -185,7 +199,6 @@ export function NeighborhoodApp({
 
   const loadAdminHouses = useCallback(async () => {
     if (!admin) return;
-    setAdminLoading(true);
     try {
       const res = await fetch("/api/admin/houses", { cache: "no-store" });
       if (!res.ok) return;
@@ -213,8 +226,6 @@ export function NeighborhoodApp({
       rememberAdminDb(houses, updatedAt);
     } catch {
       /* keep last list */
-    } finally {
-      setAdminLoading(false);
     }
   }, [admin, rememberAdminDb]);
 
@@ -243,6 +254,32 @@ export function NeighborhoodApp({
     if (!focusId) return;
     writeHomeView("map");
   }, [focusId]);
+
+  useEffect(() => {
+    if (!searchFocusTick) return;
+    if (view !== "list") {
+      writeHomeView("list");
+      return;
+    }
+    if (routeMode) return;
+    let attempts = 0;
+    const tryFocus = () => {
+      const el = document.getElementById("house-search");
+      if (!(el instanceof HTMLElement)) return false;
+      el.focus();
+      if (document.activeElement === el) {
+        consumeHouseSearchFocus();
+        return true;
+      }
+      return false;
+    };
+    if (tryFocus()) return;
+    const timer = window.setInterval(() => {
+      attempts += 1;
+      if (tryFocus() || attempts >= 12) window.clearInterval(timer);
+    }, 80);
+    return () => window.clearInterval(timer);
+  }, [searchFocusTick, view, routeMode]);
 
   const editCodeById = useMemo(() => {
     const map = new Map<string, string>();
@@ -491,19 +528,18 @@ export function NeighborhoodApp({
     setPinnedRoute(null);
   }
 
-  function goToMainMap() {
-    setView("map");
-    exitOriginPick();
-    setSelectedId("closed");
-    setClusterOverview(false);
-  }
-
   function goHome() {
     exitOriginPick();
     exitRouteMode();
     setSelectedId("closed");
     setClusterOverview(false);
     setEditing(false);
+  }
+
+  function goSearchHouses() {
+    goHome();
+    setView("list");
+    setSearchFocusTick((n) => n + 1);
   }
 
   function enterRouteMode() {
@@ -704,24 +740,19 @@ export function NeighborhoodApp({
     }
   }
 
-  async function onRefresh() {
-    if (admin) await loadAdminHouses();
-    await refresh(true);
-  }
-
   return (
     <div
       id="neighborhood-shell"
       className="relative isolate flex flex-col overflow-hidden"
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
-      <AppHeader onMainTap={goToMainMap} onHomeTap={goHome} />
+      <AppHeader onHomeTap={goHome} onSearchHouses={goSearchHouses} />
       <div
         className="app-toolbar relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2"
         style={{ flexShrink: 0 }}
       >
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto">
-          <div className="flex rounded-xl bg-[#261536] p-0.5 ring-1 ring-orange-400/40">
+        <div className="flex w-full min-w-0 items-center gap-1.5 overflow-hidden">
+          <div className="flex min-w-0 shrink rounded-xl bg-[#261536] p-0.5 ring-1 ring-orange-400/40">
             <Toggle
               active={view === "map"}
               onClick={() => setView("map")}
@@ -762,6 +793,21 @@ export function NeighborhoodApp({
           <CsvExportButton houses={visible} kind={likedOnly ? "liked" : "list"} includeTraffic={admin} />
         </div>
         {routeTicker ? <StatusTicker text={routeTicker} /> : null}
+        {view === "list" && !routeMode ? (
+          <div className="mt-2 w-full min-w-0">
+            <Input
+              id="house-search"
+              type="search"
+              value={listQuery}
+              onChange={(e) => setListQuery(e.target.value)}
+              placeholder="חיפוש לפי שם או רחוב…"
+              aria-label="חיפוש בית"
+              autoComplete="off"
+              enterKeyHint="search"
+              className="h-10 w-full min-w-0 bg-[#1d1028] text-base"
+            />
+          </div>
+        ) : null}
       </div>
       <FiltersSheet
         open={filtersOpen}
@@ -978,9 +1024,7 @@ export function NeighborhoodApp({
                 houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
               />
             </div>
-            <PullToRefresh
-              onRefresh={onRefresh}
-              disabled={view !== "list" || loading || adminLoading}
+            <div
               className={cn(
                 "absolute inset-0 overflow-y-auto bg-[#12081a]",
                 view === "list" ? "z-10" : "invisible pointer-events-none z-0",
@@ -988,9 +1032,9 @@ export function NeighborhoodApp({
               style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#12081a" }}
               aria-hidden={view !== "list"}
             >
-                <div className="mx-auto max-w-3xl px-3 pt-3">
-                  <div className="rounded-3xl bg-[#160b20] p-3 ring-1 ring-orange-500/40">
-                    <StatsSummary {...summaryProps} heading />
+                <div className="mx-auto w-full min-w-0 max-w-3xl px-3 pt-3">
+                  <div className="min-w-0 overflow-hidden rounded-3xl bg-[#160b20] p-1.5 ring-1 ring-orange-500/40">
+                    <StatsSummary {...summaryProps} compact />
                   </div>
                 </div>
                 {routeMode ? (
@@ -1007,6 +1051,7 @@ export function NeighborhoodApp({
                 ) : (
                   <HouseList
                     houses={visible}
+                    query={listQuery}
                     origin={origin}
                     catalogSource={source}
                     likedIds={likes.likedIds}
@@ -1015,23 +1060,30 @@ export function NeighborhoodApp({
                     onToggleVisited={onToggleVisited}
                     admin={admin}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-                    editCodeFor={(id) =>
-                      admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode
-                    }
-                    onHouseUpdated={handleHouseUpdated}
-                    onHouseDeleted={handleHouseDeleted}
                     onShowOnMap={(id) => {
                       setView("map");
                       setClusterOverview(false);
                       setEditing(false);
                       setSelectedId(id);
                     }}
+                    onSelectHouse={(id) => {
+                      setClusterOverview(false);
+                      if (selectedId !== id) setEditing(false);
+                      setSelectedId(id);
+                    }}
+                    onEditHouse={(id) => {
+                      setClusterOverview(false);
+                      setSelectedId(id);
+                      setEditing(true);
+                    }}
+                    selectedId={selected?.id ?? null}
+                    editingId={editing ? selected?.id ?? null : null}
                   />
                 )}
-            </PullToRefresh>
+            </div>
           </>
         )}
-        {selected && view === "map" && !originPickActive ? (
+        {selected && !originPickActive ? (
         <MapHouseSheet
           house={selected}
           clusterHouses={view === "map" ? selectedCluster : [selected]}
@@ -1052,6 +1104,14 @@ export function NeighborhoodApp({
           canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
           editing={editing}
           onToggleEdit={() => setEditing((v) => !v)}
+          onShowOnMap={
+            view === "list"
+              ? () => {
+                  setView("map");
+                  setClusterOverview(false);
+                }
+              : undefined
+          }
           pendingNote={
             selected.status === "pending" ? (
               <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
@@ -1171,7 +1231,7 @@ function Toggle({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "inline-flex h-9 w-11 items-center justify-center rounded-lg",
+        "inline-flex h-9 w-9 items-center justify-center rounded-lg",
         active ? "bg-orange-500 text-black" : "text-violet-200",
       )}
     >
