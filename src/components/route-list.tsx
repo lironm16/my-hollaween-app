@@ -2,12 +2,14 @@
 
 import { MapPin, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { HoursStatusBanner } from "@/components/hours-status-banner";
-import { HouseTags } from "@/components/house-tags";
-import { formatDisplayAddress } from "@/lib/config";
+import { HouseCard } from "@/components/house-card";
 import { formatDistance } from "@/lib/geo";
-import { houseHeadline } from "@/lib/labels";
-import { googleMapsNavigateUrl, type WalkingRoute } from "@/lib/route";
+import type { WalkingRoute } from "@/lib/route";
+
+function hopLabel(houseIndex: number, fromPreviousMeters: number) {
+  if (houseIndex > 0) return "אותו בניין";
+  return formatDistance(fromPreviousMeters);
+}
 
 function RouteLeg({ label }: { label: string }) {
   return (
@@ -24,12 +26,32 @@ export function RouteList({
   onRequestLocation,
   onSelectHouse,
   selectedId,
+  catalogSource,
+  likedIds,
+  onToggleLike,
+  visitedIds,
+  onToggleVisited,
+  admin = false,
+  canEditHouse,
+  onShowOnMap,
+  onEditHouse,
+  editingId,
 }: {
   route: WalkingRoute | null;
   hasGps: boolean;
   onRequestLocation?: () => void;
-  onSelectHouse: (id: string) => void;
+  onSelectHouse: (id: string, index: number) => void;
   selectedId?: string | null;
+  catalogSource?: string | null;
+  likedIds?: string[];
+  onToggleLike?: (id: string) => void;
+  visitedIds?: string[];
+  onToggleVisited?: (id: string) => void;
+  admin?: boolean;
+  canEditHouse?: (id: string) => boolean;
+  onShowOnMap?: (id: string) => void;
+  onEditHouse?: (id: string, index: number) => void;
+  editingId?: string | null;
 }) {
   const gpsAction =
     !hasGps && onRequestLocation ? (
@@ -51,11 +73,19 @@ export function RouteList({
     );
   }
 
-  const startLabel = route.originLabel || (route.startedFrom === "gps" ? "מיקום נוכחי" : "ממרכז השכונה");
+  const startLabel =
+    route.originLabel || (route.startedFrom === "gps" ? "מיקום נוכחי" : "ממרכז השכונה");
+  const cards = route.stops.flatMap((stop) =>
+    stop.houses.map((house, houseIndex) => ({
+      house,
+      order: stop.order,
+      hop: hopLabel(houseIndex, stop.fromPreviousMeters),
+    })),
+  );
 
   return (
     <div
-      className="mx-auto flex w-full max-w-lg flex-col px-3 py-3"
+      className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-3 py-3"
       style={selectedId ? { paddingBottom: "calc(var(--map-sheet-h, 70dvh) + 1rem)" } : undefined}
     >
       <ol className="route-list">
@@ -71,69 +101,28 @@ export function RouteList({
             </div>
           </div>
         </li>
-        {route.stops.flatMap((stop, index) => {
-          const prev =
-            index === 0
-              ? route.origin
-              : {
-                  lat: route.stops[index - 1]!.house.lat,
-                  lng: route.stops[index - 1]!.house.lng,
-                };
-          const walkUrl = googleMapsNavigateUrl(prev, {
-            lat: stop.house.lat,
-            lng: stop.house.lng,
-          });
-          return stop.houses.map((house, houseIndex) => (
-            <li key={house.id}>
-              <RouteLeg
-                label={
-                  houseIndex > 0
-                    ? "אותו בניין"
-                    : formatDistance(stop.fromPreviousMeters)
-                }
+        {cards.map(({ house, order, hop }, i) => (
+          <li key={house.id}>
+            <RouteLeg label={hop} />
+            <div className="route-list-house">
+              <HouseCard
+                house={house}
+                catalogSource={catalogSource}
+                liked={likedIds?.includes(house.id)}
+                onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
+                visited={visitedIds?.includes(house.id)}
+                onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
+                canEdit={Boolean(canEditHouse?.(house.id))}
+                admin={admin}
+                onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
+                onOpen={() => onSelectHouse(house.id, i + 1)}
+                onToggleEdit={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
+                editing={editingId === house.id}
+                index={order}
               />
-              <div className="route-list-card">
-                <HoursStatusBanner house={house} className="mb-2" />
-                <div className="flex items-start gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onSelectHouse(house.id)}
-                    className="flex min-w-0 flex-1 items-start gap-3 text-start"
-                  >
-                    <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-base font-bold text-black">
-                      {stop.order}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-base font-medium text-orange-100">
-                        {houseHeadline(house)}
-                      </span>
-                      <span className="mt-0.5 block text-base text-violet-300">
-                        {formatDisplayAddress(house)}
-                      </span>
-                      {house.arrival ? (
-                        <span className="mt-0.5 block text-base text-amber-200/90">{house.arrival}</span>
-                      ) : null}
-                      <span className="mt-2 block">
-                        <HouseTags house={house} large />
-                      </span>
-                    </span>
-                  </button>
-                  <a
-                    href={walkUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="house-action-btn shrink-0"
-                    aria-label="ניווט לכאן"
-                    title="ניווט לכאן"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <Navigation className="size-6" strokeWidth={2.2} />
-                  </a>
-                </div>
-              </div>
-            </li>
-          ));
-        })}
+            </div>
+          </li>
+        ))}
       </ol>
     </div>
   );

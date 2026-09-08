@@ -1905,6 +1905,10 @@
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
+  .ring-0 {
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
   .ring-1 {
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
@@ -4612,6 +4616,60 @@ svg.leaflet-zoom-animated {
   transform: translateX(-50%);
   pointer-events: none;
 }
+.house-list-card.is-visited {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 4px #059669 !important;
+}
+.route-card-spine {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  padding-inline-start: 2.25rem;
+}
+.route-card-spine::before {
+  content: "";
+  position: absolute;
+  top: 1.1rem;
+  bottom: 1.75rem;
+  inset-inline-start: 1.05rem;
+  width: 3px;
+  background: #f97316;
+  opacity: 0.85;
+  pointer-events: none;
+}
+.route-card-stop {
+  position: relative;
+}
+.route-card-hop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+}
+.route-card-hop-label {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  padding: 0.15rem 0.65rem;
+  border-radius: 999px;
+  background: #12081a;
+  color: #fdba74;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  box-shadow: 0 0 0 1px rgba(234, 88, 12, 0.35);
+}
+.route-card-frame {
+  position: relative;
+  isolation: isolate;
+}
+.route-card-frame > .route-stop-pin {
+  position: absolute;
+  z-index: 5;
+  inset-inline-start: -2rem;
+  top: 0.55rem;
+  pointer-events: none;
+}
 .night-status-dot {
   position: relative;
   display: inline-block;
@@ -5374,6 +5432,10 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   border-radius: 1rem;
   background: #1d1028;
   padding: 0.75rem;
+  box-shadow: 0 0 0 2px #f97316;
+}
+.route-list-house {
+  border-radius: 1.1rem;
   box-shadow: 0 0 0 2px #f97316;
 }
 .route-list-leg {

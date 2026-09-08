@@ -1049,10 +1049,34 @@ export function NeighborhoodApp({
                     hasGps={Boolean(gps)}
                     onRequestLocation={gpsAllowed ? chooseGpsOrigin : undefined}
                     selectedId={selected?.id ?? null}
-                    onSelectHouse={(id) => {
+                    catalogSource={source}
+                    likedIds={likes.likedIds}
+                    onToggleLike={onToggleLike}
+                    visitedIds={visits.visitedIds}
+                    onToggleVisited={onToggleVisited}
+                    admin={admin}
+                    canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
+                    onShowOnMap={(id) => {
+                      setView("map");
                       setClusterOverview(false);
+                      setExpandedClusterKey(null);
+                      setEditing(false);
+                      setSelectedListIndex(undefined);
                       setSelectedId(id);
                     }}
+                    onSelectHouse={(id, index) => {
+                      setClusterOverview(false);
+                      setSelectedListIndex(index);
+                      setSelectedId(id);
+                    }}
+                    onEditHouse={(id, index) => {
+                      setClusterOverview(false);
+                      setEditForId(id);
+                      setSelectedListIndex(index);
+                      setSelectedId(id);
+                      setEditing(true);
+                    }}
+                    editingId={editing ? selected?.id ?? null : null}
                   />
                 ) : (
                   <HouseList

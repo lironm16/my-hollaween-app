@@ -24,6 +24,7 @@ export async function GET() {
     closingSoon: snapshot.closingSoon,
     onBreak: snapshot.onBreak,
     closed: snapshot.closed,
+    candyNone: snapshot.candyNone,
     candyPlenty: snapshot.candyPlenty,
     candyLow: snapshot.candyLow,
     candyOut: snapshot.candyOut,
