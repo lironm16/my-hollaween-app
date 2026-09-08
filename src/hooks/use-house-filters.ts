@@ -82,6 +82,60 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
   };
 }
 
+export function cloneHouseFilters(state: HouseFiltersState): HouseFiltersState {
+  return {
+    ...state,
+    scareFilters: [...state.scareFilters],
+    candyFilters: [...state.candyFilters],
+    neighborhoodFilters: [...state.neighborhoodFilters],
+    sensitivityFilters: [...state.sensitivityFilters],
+  };
+}
+
+export function emptyHouseFilters(): HouseFiltersState {
+  return {
+    ...DEFAULT_HOUSE_FILTERS,
+    scareFilters: [...SCARE_LEVELS],
+    candyFilters: [...CANDY_TONE_IDS],
+    neighborhoodFilters: [...NEIGHBORHOODS],
+    sensitivityFilters: [],
+  };
+}
+
+export function countActiveFilters(filters: HouseFiltersState): number {
+  const moreFilterCount =
+    Number(filters.accessibleOnly) +
+    Number(filters.openNowOnly) +
+    Number(filters.closingSoonOnly) +
+    Number(filters.openingSoonOnly) +
+    Number(filters.likedOnly) +
+    Number(filters.unvisitedOnly);
+  const neighborhoodActiveCount =
+    filters.neighborhoodFilters.length === NEIGHBORHOODS.length
+      ? 0
+      : NEIGHBORHOODS.length - filters.neighborhoodFilters.length;
+  const scareLevelsActive =
+    filters.scareFilters.length === 0 || filters.scareFilters.length === SCARE_LEVELS.length
+      ? 0
+      : filters.scareFilters.length;
+  const scareActiveCount = scareLevelsActive + Number(!filters.includeUndecorated);
+  const candyActiveCount =
+    filters.candyFilters.length === 0 || filters.candyFilters.length === CANDY_TONE_IDS.length
+      ? 0
+      : filters.candyFilters.length;
+  return (
+    neighborhoodActiveCount +
+    filters.sensitivityFilters.length +
+    scareActiveCount +
+    candyActiveCount +
+    moreFilterCount
+  );
+}
+
+export function filtersEqual(a: HouseFiltersState, b: HouseFiltersState) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
 function toggleItem<T>(list: T[], item: T): T[] {
   return list.includes(item) ? list.filter((value) => value !== item) : [...list, item];
 }

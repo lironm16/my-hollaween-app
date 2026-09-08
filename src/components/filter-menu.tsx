@@ -51,12 +51,14 @@ export function FiltersSheet({
   onOpenChange,
   activeCount,
   onClear,
+  onSave,
   children,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   activeCount: number;
   onClear: () => void;
+  onSave: () => void;
   children: ReactNode;
 }) {
   return (
@@ -102,7 +104,7 @@ export function FiltersSheet({
           <Button
             type="button"
             className="flex-1 bg-orange-500 text-black hover:bg-orange-400"
-            onClick={() => onOpenChange(false)}
+            onClick={onSave}
           >
             הצג תוצאות
           </Button>
