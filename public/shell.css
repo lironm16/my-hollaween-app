@@ -74,17 +74,12 @@ button {
   padding: 0.65rem 0.75rem;
 }
 
-.app-header img {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-}
-
 .app-header > div > a:first-child {
   display: flex;
+  flex-direction: column;
   min-width: 0;
-  align-items: center;
-  gap: 0.65rem;
+  align-items: stretch;
+  gap: 0;
 }
 
 .neighborhood-marquee {

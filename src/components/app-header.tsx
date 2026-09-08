@@ -47,7 +47,7 @@ export function AppHeader({
         <Link
           href="/"
           aria-label="מסך הבית"
-          className="min-w-0"
+          className="flex min-w-0 flex-1 flex-col"
           onClick={(event) => {
             if (!onHomeTap) return;
             event.preventDefault();
