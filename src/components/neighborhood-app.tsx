@@ -60,8 +60,6 @@ import {
   type ServerDbBackup,
 } from "@/lib/offline-db";
 import {
-  consumeHouseSearchFocus,
-  HOUSE_SEARCH_FOCUS_KEY,
   readHomeView,
   writeHomeView,
   type HomeView,
@@ -155,14 +153,6 @@ export function NeighborhoodApp({
   }
   const [busyAction, setBusyAction] = useState(false);
   const [listQuery, setListQuery] = useState("");
-  const [searchFocusTick, setSearchFocusTick] = useState(() => {
-    if (typeof window === "undefined") return 0;
-    try {
-      return sessionStorage.getItem(HOUSE_SEARCH_FOCUS_KEY) === "1" ? 1 : 0;
-    } catch {
-      return 0;
-    }
-  });
 
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
@@ -257,32 +247,6 @@ export function NeighborhoodApp({
     if (!focusId) return;
     writeHomeView("map");
   }, [focusId]);
-
-  useEffect(() => {
-    if (!searchFocusTick) return;
-    if (view !== "list") {
-      writeHomeView("list");
-      return;
-    }
-    if (routeMode) return;
-    let attempts = 0;
-    const tryFocus = () => {
-      const el = document.getElementById("house-search");
-      if (!(el instanceof HTMLElement)) return false;
-      el.focus();
-      if (document.activeElement === el) {
-        consumeHouseSearchFocus();
-        return true;
-      }
-      return false;
-    };
-    if (tryFocus()) return;
-    const timer = window.setInterval(() => {
-      attempts += 1;
-      if (tryFocus() || attempts >= 12) window.clearInterval(timer);
-    }, 80);
-    return () => window.clearInterval(timer);
-  }, [searchFocusTick, view, routeMode]);
 
   const editCodeById = useMemo(() => {
     const map = new Map<string, string>();
@@ -540,12 +504,6 @@ export function NeighborhoodApp({
     setEditing(false);
   }
 
-  function goSearchHouses() {
-    goHome();
-    setView("list");
-    setSearchFocusTick((n) => n + 1);
-  }
-
   function enterRouteMode() {
     if (routeMode) return;
     exitOriginPick();
@@ -752,7 +710,7 @@ export function NeighborhoodApp({
       className="relative isolate flex flex-col overflow-hidden"
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
-      <AppHeader onHomeTap={goHome} onSearchHouses={goSearchHouses} />
+      <AppHeader onHomeTap={goHome} />
       <div
         className="app-toolbar relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2"
         style={{ flexShrink: 0 }}

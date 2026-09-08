@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Activity, Bell, Home, HousePlus, LogOut, Menu, Pencil, Search, Shield, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
@@ -16,19 +15,14 @@ import {
 } from "@/components/ui/sheet";
 import { buttonVariants } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
-import { requestHouseSearchFocus, writeHomeView } from "@/lib/home-view";
 import { cn } from "@/lib/utils";
 
 export function AppHeader({
   onHomeTap,
-  onSearchHouses,
 }: {
   /** Brand title and side-menu Home: return to the last map/list home screen. */
   onHomeTap?: () => void;
-  /** Side-menu Search: open the house list and focus the search field. */
-  onSearchHouses?: () => void;
 }) {
-  const router = useRouter();
   const { admin, logout } = useAdminSession();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -97,18 +91,8 @@ export function AppHeader({
               מסך הבית
             </Link>
             <Link
-              href="/"
-              onClick={(event) => {
-                event.preventDefault();
-                setMenuOpen(false);
-                if (onSearchHouses) {
-                  onSearchHouses();
-                  return;
-                }
-                writeHomeView("list");
-                requestHouseSearchFocus();
-                router.push("/");
-              }}
+              href="/search"
+              onClick={() => setMenuOpen(false)}
               className={cn(
                 buttonVariants({ variant: "ghost", size: "lg" }),
                 "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
