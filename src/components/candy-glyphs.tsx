@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { BADGE_TONE_CLASS } from "@/lib/badge-tones";
 import { candyLevel, markedCandy } from "@/lib/house-state";
-import type { TreatId, TreatStock } from "@/lib/types";
+import type { CandyTone, TreatId, TreatStock } from "@/lib/types";
 import { stockLabels } from "@/lib/labels";
 import { DiscStrike } from "@/components/disc-strike";
 
@@ -89,7 +89,7 @@ export function CandyPair() {
   );
 }
 
-export type CandyTone = "plenty" | "low" | "out" | "none";
+export type { CandyTone };
 
 const TONE_CLASS: Record<CandyTone, string> = {
   plenty: BADGE_TONE_CLASS.green,
