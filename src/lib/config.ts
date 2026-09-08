@@ -4,8 +4,8 @@ const latPad = 0.0075;
 const lngPad = 0.014;
 
 const tiles = {
-  // OSM France / Carto label streets in English. Israel Hiking Map is Hebrew
-  // through zoom 16; Leaflet upscales past that for house-level zoom.
+  // Hebrew street names (Israel Hiking Map). Dark look is the older OSM invert,
+  // not the extra crush added when these tiles replaced OSM France.
   url: "https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png",
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://israelhiking.osm.org.il/">Israel Hiking Map</a>',

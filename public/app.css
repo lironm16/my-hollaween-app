@@ -3758,7 +3758,7 @@ svg.leaflet-zoom-animated {
 .leaflet-container.is-osm-dark img.leaflet-tile,
 .is-osm-dark .leaflet-tile,
 .is-osm-dark img.leaflet-tile {
-  filter: invert(1) hue-rotate(180deg) saturate(0.14) brightness(0.74) contrast(1.32);
+  filter: invert(1) hue-rotate(180deg) saturate(0.35) brightness(0.82) contrast(1.05);
   mix-blend-mode: normal;
   image-rendering: auto;
 }
