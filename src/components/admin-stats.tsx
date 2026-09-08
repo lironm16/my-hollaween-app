@@ -44,9 +44,12 @@ function useStats(url: string, enabled: boolean) {
     };
     load();
     const timer = window.setInterval(load, 20_000);
+    const onRefresh = () => load();
+    window.addEventListener("hw-admin-stats-refresh", onRefresh);
     return () => {
       cancelled = true;
       window.clearInterval(timer);
+      window.removeEventListener("hw-admin-stats-refresh", onRefresh);
     };
   }, [enabled, url]);
 

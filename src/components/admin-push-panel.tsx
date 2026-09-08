@@ -192,6 +192,7 @@ export function AdminPushPanel() {
       }
       toast.success(`נשלח ל־${data.sent ?? 0} מכשירים`);
       await showSenderNotice(data.title ?? "", data.body ?? "");
+      window.dispatchEvent(new Event("hw-admin-stats-refresh"));
     } catch {
       toast.error("אין קשר לשרת");
     } finally {
@@ -220,6 +221,7 @@ export function AdminPushPanel() {
       }
       toast.success(`נשלח ל־${data.sent ?? 0} מכשירים`);
       await showSenderNotice(data.title ?? title.trim(), data.body ?? body.trim());
+      window.dispatchEvent(new Event("hw-admin-stats-refresh"));
       setTitle("");
       setBody("");
     } catch {

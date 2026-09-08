@@ -278,17 +278,15 @@ function isStaleSnapshot(db: DbFile) {
 
 function pickNewest(...candidates: Array<DbFile | null | undefined>): DbFile | null {
   let best: DbFile | null = null;
-  const sameStamp: DbFile[] = [];
+  const present: DbFile[] = [];
   for (const candidate of candidates) {
     if (!candidate) continue;
+    present.push(candidate);
     if (!best || stamp(candidate) > stamp(best)) {
       best = candidate;
-      sameStamp.length = 0;
-      sameStamp.push(candidate);
       continue;
     }
     if (stamp(candidate) === stamp(best)) {
-      sameStamp.push(candidate);
       const nextSubs = candidate.pushSubscriptions?.length ?? 0;
       const bestSubs = best.pushSubscriptions?.length ?? 0;
       if (nextSubs > bestSubs) best = candidate;
@@ -296,8 +294,10 @@ function pickNewest(...candidates: Array<DbFile | null | undefined>): DbFile | n
   }
   if (!best) return null;
   const pushSettings = pickPushSettings(...candidates) ?? best.pushSettings;
+  // Keep every subscription across overlapping writes — a newer house save must not
+  // drop push subscribers that lived in an older snapshot.
   const pushSubscriptions = mergePushSubscriptions(
-    ...sameStamp.map((item) => item.pushSubscriptions),
+    ...present.map((item) => item.pushSubscriptions),
   );
   return {
     ...best,
@@ -474,6 +474,7 @@ async function loadDb(fresh = false): Promise<DbFile> {
     const db = await readFileDb();
     const global = getGlobalDb();
     const chosen = pickNewest(db, global) ?? db;
+    foldPushSubscriptions(chosen, mem, global);
     setMem(chosen);
     return chosen;
   });
