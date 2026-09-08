@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 function HouseIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="h-full w-full">
+    <svg viewBox="0 0 24 24" aria-hidden className="size-full text-orange-500">
       <path
         fill="currentColor"
         d="M3.6 11.2 12 3.6l8.4 7.6v8.6c0 .8-.7 1.5-1.5 1.5h-4.4v-5.8H9.5v5.8H5.1c-.8 0-1.5-.7-1.5-1.5z"
@@ -21,7 +21,7 @@ function HouseIcon() {
 
 function PeopleIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="h-full w-full">
+    <svg viewBox="0 0 24 24" aria-hidden className="size-full">
       <circle cx="8" cy="7" r="3.2" fill="#c4b5fd" />
       <path fill="#c4b5fd" d="M1.8 20c.3-3.6 2.8-6 6.2-6s5.9 2.4 6.2 6z" />
       <circle cx="15.8" cy="7.2" r="3.2" fill="#fb923c" />
@@ -32,35 +32,35 @@ function PeopleIcon() {
 
 function PinIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="h-full w-full">
+    <svg viewBox="0 0 24 24" aria-hidden className="size-full">
       <path
         fill="#f97316"
-        d="M12 1.8c4 0 7.2 3 7.2 6.8 0 5.2-7.2 13.6-7.2 13.6S4.8 13.8 4.8 8.6C4.8 4.8 8 1.8 12 1.8z"
+        d="M12 2.4c3.6 0 6.4 2.7 6.4 6.1 0 4.6-6.4 12.2-6.4 12.2S5.6 13.1 5.6 8.5C5.6 5.1 8.4 2.4 12 2.4z"
       />
-      <circle cx="12" cy="8.5" r="3.2" fill="#fff7ed" />
+      <circle cx="12" cy="8.6" r="2.9" fill="#fff7ed" />
     </svg>
   );
 }
 
 function PathIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="h-full w-full">
+    <svg viewBox="0 0 24 24" aria-hidden className="size-full">
       <path
-        d="M4.5 18c3.2-1.4 3.4-5.4 7-7 2.8-1.2 4.6 1.2 8 0.4"
+        d="M4.6 15.2c3.2-1.4 3.4-5.4 7-7 2.8-1.2 4.6 1.2 8 0.4"
         fill="none"
         stroke="#fb923c"
         strokeWidth="2.6"
         strokeLinecap="round"
       />
-      <circle cx="4.5" cy="18.2" r="2.3" fill="#c4b5fd" />
-      <circle cx="19.6" cy="11.2" r="2.3" fill="#c4b5fd" />
+      <circle cx="4.6" cy="15.4" r="2.3" fill="#c4b5fd" />
+      <circle cx="19.7" cy="8.4" r="2.3" fill="#c4b5fd" />
     </svg>
   );
 }
 
 function ClockIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="h-full w-full">
+    <svg viewBox="0 0 24 24" aria-hidden className="size-full">
       <circle cx="12" cy="12" r="8.6" fill="#c4b5fd" />
       <circle cx="12" cy="12" r="6.6" fill="#1c0e24" />
       <path
@@ -79,6 +79,19 @@ function distanceParts(meters: number) {
   return { value: (meters / 1000).toFixed(1), unit: "ק״מ" };
 }
 
+function IconWell({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center [&_svg]:block [&_svg]:size-full",
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
 function Tile({
   icon,
   value,
@@ -92,10 +105,10 @@ function Tile({
 }) {
   return (
     <div className={cn("flex min-w-0 items-center gap-2.5 rounded-xl bg-[#14081c] px-2.5 py-2.5", className)}>
-      <span className="size-12 shrink-0">{icon}</span>
-      <span className="min-w-0 text-right">
-        <span className="block text-2xl font-bold leading-none text-white">{value}</span>
-        <span className="mt-1 block text-base leading-none text-white/80">{label}</span>
+      <IconWell className="size-12">{icon}</IconWell>
+      <span className="flex min-w-0 flex-col justify-center text-right">
+        <span className="text-2xl font-bold leading-none text-white">{value}</span>
+        <span className="mt-1 text-base leading-none text-white/80">{label}</span>
       </span>
     </div>
   );
@@ -111,11 +124,11 @@ function RouteChip({
   label: string;
 }) {
   return (
-    <div className="flex min-w-0 items-center gap-1.5 rounded-xl bg-[#14081c] px-1.5 py-2">
-      <span className="size-9 shrink-0">{icon}</span>
-      <span className="min-w-0 text-right">
-        <span className="block text-lg font-bold leading-none text-white">{value}</span>
-        <span className="mt-0.5 block text-base leading-none text-white/80">{label}</span>
+    <div className="flex min-h-14 min-w-0 items-center gap-1.5 rounded-xl bg-[#14081c] px-2 py-2">
+      <IconWell className="size-9">{icon}</IconWell>
+      <span className="flex min-w-0 flex-col justify-center text-right">
+        <span className="text-lg font-bold leading-none text-white">{value}</span>
+        <span className="mt-0.5 text-base leading-none text-white/80">{label}</span>
       </span>
     </div>
   );
@@ -132,7 +145,7 @@ function Stack({
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col items-center gap-1">
-      <span className="size-9">{icon}</span>
+      <IconWell className="size-9">{icon}</IconWell>
       <span className="text-xl font-bold leading-none text-white">{value}</span>
       <span className="text-base leading-none text-white/80">{label}</span>
     </div>
@@ -175,10 +188,10 @@ function CompactCell({
 }) {
   return (
     <div
-      className="flex min-w-0 max-w-full flex-col items-center gap-0.5 overflow-hidden rounded-xl bg-[#14081c] px-0.5 py-1"
+      className="flex min-w-0 max-w-full flex-col items-center justify-center gap-0.5 overflow-hidden rounded-xl bg-[#14081c] px-0.5 py-1"
       aria-label={ariaLabel ?? (label ? `${value} ${label}` : value)}
     >
-      <span className="size-7 shrink-0">{icon}</span>
+      <IconWell className="size-7">{icon}</IconWell>
       <span className="max-w-full truncate text-sm font-bold leading-none text-white">{value}</span>
       {label ? (
         <span className="max-w-full truncate text-[10px] leading-none text-white/80">{label}</span>
@@ -209,11 +222,7 @@ export function StatsSummary({
   compact?: boolean;
 }) {
   const walk = route ? distanceParts(route.totalMeters) : null;
-  const houseIcon = (
-    <span className="text-orange-500">
-      <HouseIcon />
-    </span>
-  );
+  const houseIcon = <HouseIcon />;
 
   if (compact) {
     return (
@@ -408,7 +417,7 @@ export function MapStats(props: {
         title="סיכום"
         onClick={() => setOpen((value) => !value)}
       >
-        <span className="size-6 text-orange-400">
+        <span className="inline-flex size-6 items-center justify-center text-orange-400">
           <HouseIcon />
         </span>
         <span className="absolute -top-1 -right-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-xs font-bold leading-none text-black">
