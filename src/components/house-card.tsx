@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { CodesCopy } from "@/components/codes-copy";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
-import { NightDesk } from "@/components/night-desk";
-import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+function isCardInteractive(target: EventTarget | null) {
+  return (
+    target instanceof Element &&
+    Boolean(target.closest("button, a, input, label, textarea, select, form"))
+  );
+}
 
 export function HouseCard({
   house,
@@ -19,11 +22,11 @@ export function HouseCard({
   visited,
   onToggleVisited,
   canEdit = false,
-  editCode,
   admin = false,
-  onUpdated,
-  onDeleted,
   onShowOnMap,
+  onOpen,
+  editing = false,
+  onToggleEdit,
 }: {
   house: PublicHouse;
   distanceM?: number;
@@ -33,18 +36,37 @@ export function HouseCard({
   visited?: boolean;
   onToggleVisited?: () => void;
   canEdit?: boolean;
-  editCode?: string;
   admin?: boolean;
-  onUpdated?: (house: PublicHouse) => void;
-  onDeleted?: (id: string) => void;
   onShowOnMap?: () => void;
+  onOpen?: () => void;
+  editing?: boolean;
+  onToggleEdit?: () => void;
 }) {
-  const [editing, setEditing] = useState(false);
+  function open() {
+    onOpen?.();
+  }
 
   return (
     <Card
       size="sm"
-      className={cn("border-orange-500/15 bg-[#1d1028]/90 text-base")}
+      role={onOpen ? "button" : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      aria-label={onOpen ? "פתיחת פרטי הבית" : undefined}
+      className={cn(
+        "border-orange-500/15 bg-[#1d1028]/90 text-base",
+        onOpen && "cursor-pointer transition hover:border-orange-400/50 hover:bg-[#261536]",
+      )}
+      onClick={(event) => {
+        if (!onOpen || isCardInteractive(event.target)) return;
+        open();
+      }}
+      onKeyDown={(event) => {
+        if (!onOpen) return;
+        if (event.key !== "Enter" && event.key !== " ") return;
+        if (isCardInteractive(event.target)) return;
+        event.preventDefault();
+        open();
+      }}
     >
       <div className="house-list-card-chrome">
         <HouseActionBar
@@ -53,7 +75,7 @@ export function HouseCard({
           visited={visited}
           onToggleLike={onToggleLike}
           onToggleVisited={onToggleVisited}
-          onToggleEdit={canEdit ? () => setEditing((value) => !value) : undefined}
+          onToggleEdit={canEdit ? onToggleEdit : undefined}
           onShowOnMap={onShowOnMap}
           editing={editing}
         />
@@ -66,36 +88,17 @@ export function HouseCard({
               : "הבית הזה עדיין לא במפה הציבורית. אם זה הבית שלכם, מנהל יכול לאשר אותו."}
           </p>
         ) : null}
-        {editing && canEdit ? (
-          <>
-            <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
-            <div className="mt-3">
-              <CodesCopy editCode={editCode} />
-            </div>
-            <div className="mt-3">
-              <NightDesk
-                house={house}
-                admin={admin}
-                allowDelete
-                editCode={editCode}
-                onUpdated={(next) => onUpdated?.(next)}
-                onDeleted={() => onDeleted?.(house.id)}
-              />
-            </div>
-          </>
-        ) : (
-          <HouseDetails
-            house={house}
-            distanceM={distanceM}
-            catalogSource={catalogSource}
-            liked={liked}
-            onToggleLike={onToggleLike}
-            visited={visited}
-            onToggleVisited={onToggleVisited}
-            managerEditCode={editCode}
-            chrome="sheet"
-          />
-        )}
+        <HouseDetails
+          house={house}
+          distanceM={distanceM}
+          catalogSource={catalogSource}
+          liked={liked}
+          onToggleLike={onToggleLike}
+          visited={visited}
+          onToggleVisited={onToggleVisited}
+          chrome="sheet"
+          compact
+        />
       </div>
     </Card>
   );

@@ -21,10 +21,11 @@ export function HouseList({
   onToggleVisited,
   admin = false,
   canEditHouse,
-  editCodeFor,
-  onHouseUpdated,
-  onHouseDeleted,
   onShowOnMap,
+  onSelectHouse,
+  onEditHouse,
+  selectedId,
+  editingId,
 }: {
   houses: PublicHouse[];
   origin?: { lat: number; lng: number } | null;
@@ -35,10 +36,11 @@ export function HouseList({
   onToggleVisited?: (id: string) => void;
   admin?: boolean;
   canEditHouse?: (id: string) => boolean;
-  editCodeFor?: (id: string) => string | undefined;
-  onHouseUpdated?: (house: PublicHouse) => void;
-  onHouseDeleted?: (id: string) => void;
   onShowOnMap?: (id: string) => void;
+  onSelectHouse?: (id: string) => void;
+  onEditHouse?: (id: string) => void;
+  selectedId?: string | null;
+  editingId?: string | null;
 }) {
   const [q, setQ] = useState("");
 
@@ -73,7 +75,10 @@ export function HouseList({
   }
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3">
+    <div
+      className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3"
+      style={selectedId ? { paddingBottom: "calc(var(--map-sheet-h, 70dvh) + 1rem)" } : undefined}
+    >
       <div className="flex min-w-0 items-center gap-2">
         <Input
           value={q}
@@ -106,11 +111,11 @@ export function HouseList({
             visited={visitedIds?.includes(h.id)}
             onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
             canEdit={Boolean(canEditHouse?.(h.id))}
-            editCode={editCodeFor?.(h.id)}
             admin={admin}
-            onUpdated={onHouseUpdated}
-            onDeleted={onHouseDeleted}
             onShowOnMap={onShowOnMap ? () => onShowOnMap(h.id) : undefined}
+            onOpen={onSelectHouse ? () => onSelectHouse(h.id) : undefined}
+            onToggleEdit={onEditHouse ? () => onEditHouse(h.id) : undefined}
+            editing={editingId === h.id}
           />
         ))
       )}

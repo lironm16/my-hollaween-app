@@ -971,23 +971,30 @@ export function NeighborhoodApp({
                     onToggleVisited={onToggleVisited}
                     admin={admin}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-                    editCodeFor={(id) =>
-                      admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode
-                    }
-                    onHouseUpdated={handleHouseUpdated}
-                    onHouseDeleted={handleHouseDeleted}
                     onShowOnMap={(id) => {
                       setView("map");
                       setClusterOverview(false);
                       setEditing(false);
                       setSelectedId(id);
                     }}
+                    onSelectHouse={(id) => {
+                      setClusterOverview(false);
+                      if (selectedId !== id) setEditing(false);
+                      setSelectedId(id);
+                    }}
+                    onEditHouse={(id) => {
+                      setClusterOverview(false);
+                      setSelectedId(id);
+                      setEditing(true);
+                    }}
+                    selectedId={selected?.id ?? null}
+                    editingId={editing ? selected?.id ?? null : null}
                   />
                 )}
             </PullToRefresh>
           </>
         )}
-        {selected && view === "map" && !originPickActive ? (
+        {selected && !originPickActive ? (
         <MapHouseSheet
           house={selected}
           clusterHouses={view === "map" ? selectedCluster : [selected]}
