@@ -94,14 +94,15 @@ export function AdminStatsCard({ stats }: { stats: AdminStats }) {
         <p className="mb-2 text-base text-violet-300">ספירות יכולות לחפוף — בית יכול להיות פתוח וגם עם מעט ממתקים.</p>
         <Tile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} wide />
         <Subhead>שעות</Subhead>
-        <div className="grid grid-cols-2 gap-2">
-          <Tile
-            icon={<OpenNowSign className="size-8" />}
-            label="פתוחים עכשיו"
-            value={stats.openNow}
-            valueClass="text-emerald-300"
-            plain
-          />
+        <Tile
+          icon={<OpenNowSign className="size-8" />}
+          label="פתוחים עכשיו"
+          value={stats.openNow}
+          valueClass="text-emerald-300"
+          wide
+          plain
+        />
+        <div className="mt-2 grid grid-cols-2 gap-2">
           <Tile
             icon={<OpeningSoonSign className="size-8" />}
             label="נפתחים בקרוב"
@@ -127,6 +128,12 @@ export function AdminStatsCard({ stats }: { stats: AdminStats }) {
         <Subhead>ממתקים</Subhead>
         <div className="grid grid-cols-2 gap-2">
           <Tile
+            icon={<CandySign tone="none" className="size-8" />}
+            label="בלי ממתקים"
+            value={stats.candyNone}
+            plain
+          />
+          <Tile
             icon={<CandySign tone="plenty" className="size-8" />}
             label="יש ממתקים"
             value={stats.candyPlenty}
@@ -145,6 +152,27 @@ export function AdminStatsCard({ stats }: { stats: AdminStats }) {
             label="נגמרו הממתקים"
             value={stats.candyOut}
             valueClass={stats.candyOut ? "text-rose-300" : undefined}
+            plain
+          />
+        </div>
+        <Subhead>רגישויות</Subhead>
+        <div className="grid grid-cols-2 gap-2">
+          <Tile
+            icon={<SensitivitySign kind="glutenFree" className="size-8" />}
+            label={treatLabels.glutenFree}
+            value={stats.glutenFree}
+            plain
+          />
+          <Tile
+            icon={<SensitivitySign kind="nutsFree" className="size-8" />}
+            label={treatLabels.nutsFree}
+            value={stats.nutsFree}
+            plain
+          />
+          <Tile
+            icon={<SensitivitySign kind="sesameFree" className="size-8" />}
+            label={treatLabels.sesameFree}
+            value={stats.sesameFree}
             plain
           />
         </div>
@@ -196,27 +224,6 @@ export function AdminStatsCard({ stats }: { stats: AdminStats }) {
             icon={<StrollerSign className="size-8" />}
             label="נגיש"
             value={stats.accessible}
-            plain
-          />
-        </div>
-        <Subhead>רגישויות — יש עכשיו</Subhead>
-        <div className="grid grid-cols-1 gap-2">
-          <Tile
-            icon={<SensitivitySign kind="glutenFree" className="size-8" />}
-            label={treatLabels.glutenFree}
-            value={stats.glutenFree}
-            plain
-          />
-          <Tile
-            icon={<SensitivitySign kind="nutsFree" className="size-8" />}
-            label={treatLabels.nutsFree}
-            value={stats.nutsFree}
-            plain
-          />
-          <Tile
-            icon={<SensitivitySign kind="sesameFree" className="size-8" />}
-            label={treatLabels.sesameFree}
-            value={stats.sesameFree}
             plain
           />
         </div>
