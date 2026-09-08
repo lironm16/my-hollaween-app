@@ -54,6 +54,7 @@ import {
   loadServerDbBackup,
   notifyCatalogChanged,
   removeOwnedHouse,
+  forgetPublishedHouse,
   saveOwnedHouse,
   saveServerDbBackup,
   type ServerDbBackup,
@@ -661,6 +662,7 @@ export function NeighborhoodApp({
       return next;
     });
     removeOwnedHouse(id);
+    forgetPublishedHouse(id);
     if (selectedId === id) {
       setSelectedId("closed");
       setClusterOverview(false);
@@ -922,7 +924,7 @@ export function NeighborhoodApp({
         </div>
       ) : null}
       <main
-        className="relative z-0 min-h-0 flex-1 isolate"
+        className="relative z-0 min-h-0 flex-1 isolate overflow-hidden"
         style={{ flex: 1, minHeight: 0, position: "relative" }}
       >
         {loading && houses.length === 0 ? (

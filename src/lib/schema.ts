@@ -7,6 +7,7 @@ import {
   TREAT_OPTIONS,
   VISIT_STATES,
 } from "@/lib/types";
+import { hoursWindowsOverlap, isValidHoursWindow } from "@/lib/hours";
 import { parsePhotoUrl } from "@/lib/photos";
 
 const treatStockSchema = z.partialRecord(z.enum(TREAT_OPTIONS), z.enum(STOCK_LEVELS));
@@ -30,10 +31,25 @@ const optionalClockField = z.preprocess(
   z.union([z.literal(""), z.string().regex(/^\d{2}:\d{2}$/)]),
 );
 
-const hoursWindowSchema = z.object({
-  from: clockField,
-  to: clockField,
-});
+const hoursWindowSchema = z
+  .object({
+    from: clockField,
+    to: clockField,
+  })
+  .refine((window) => isValidHoursWindow({ from: String(window.from), to: String(window.to) }), {
+    message: "שעת הסגירה חייבת להיות אחרי שעת הפתיחה",
+  });
+
+const hoursWindowsSchema = z
+  .array(hoursWindowSchema)
+  .max(6)
+  .refine(
+    (windows) =>
+      !hoursWindowsOverlap(
+        windows.map((window) => ({ from: String(window.from), to: String(window.to) })),
+      ),
+    { message: "חלונות השעות חופפים" },
+  );
 
 const houseFields = z.object({
   name: z.string().trim().min(2).max(80),
@@ -49,7 +65,7 @@ const houseFields = z.object({
   scareLevel: z.enum(SCARE_LEVELS),
   openFrom: clockField,
   openTo: clockField,
-  openHours: z.array(hoursWindowSchema).max(6).optional(),
+  openHours: hoursWindowsSchema.optional(),
   openFrom2: optionalClockField,
   openTo2: optionalClockField,
   notes: z.string().trim().max(240),
@@ -65,7 +81,7 @@ export const houseInputSchema = houseFields.extend({
   treats: z.array(z.enum(TREAT_OPTIONS)).max(12).default([]),
   treatStock: treatStockSchema.default({}),
   visit: z.enum(VISIT_STATES).default("come"),
-  openHours: z.array(hoursWindowSchema).max(6).optional().default([]),
+  openHours: hoursWindowsSchema.optional().default([]),
   openFrom2: optionalClockField.default(""),
   openTo2: optionalClockField.default(""),
   notes: z.string().trim().max(240).default(""),

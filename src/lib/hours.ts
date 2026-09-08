@@ -35,6 +35,35 @@ export function isValidHoursWindow(window: HoursWindow): boolean {
   return from !== null && to !== null && to > from;
 }
 
+/** True when two or more windows share any open minute (adjacent is fine). */
+export function hoursWindowsOverlap(windows: HoursWindow[]): boolean {
+  const parsed = windows
+    .map((window) => ({
+      from: parseClockMinutes(window.from),
+      to: parseClockMinutes(window.to),
+    }))
+    .filter((window): window is { from: number; to: number } => window.from !== null && window.to !== null)
+    .sort((a, b) => a.from - b.from);
+  for (let i = 1; i < parsed.length; i++) {
+    if (parsed[i]!.from < parsed[i - 1]!.to) return true;
+  }
+  return false;
+}
+
+export function hoursWindowsIssue(windows: HoursWindow[]): string | null {
+  if (windows.length === 0) return "מלאו לפחות חלון שעות אחד.";
+  for (const window of windows) {
+    const from = parseClockMinutes(window.from);
+    const to = parseClockMinutes(window.to);
+    if (from === null || to === null) return "מלאו את כל חלונות השעות, או הסירו חלון ריק.";
+    if (to <= from) return "שעת הסגירה חייבת להיות אחרי שעת הפתיחה.";
+  }
+  if (hoursWindowsOverlap(windows)) {
+    return "חלונות השעות חופפים. בחרו טווחים שלא נחתכים.";
+  }
+  return null;
+}
+
 export function normalizeHoursWindows(windows: HoursWindow[]): HoursWindow[] {
   const cleaned = windows
     .map((window) => ({

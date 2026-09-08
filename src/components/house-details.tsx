@@ -18,6 +18,7 @@ import { shouldLoadHousePhoto } from "@/lib/photos";
 import { HouseActionCount } from "@/components/house-action-bar";
 import { useHouseTraffic } from "@/hooks/use-house-traffic";
 import type { PublicHouse } from "@/lib/types";
+import { HOUSE_CARD_PHOTO_BOX } from "@/components/house-photo-frame";
 import { cn } from "@/lib/utils";
 
 export function HouseDetails({
@@ -98,7 +99,7 @@ export function HouseDetails({
             e.stopPropagation();
             setPhotoOpen(true);
           }}
-          className="block shrink-0 overflow-hidden rounded-xl ring-1 ring-orange-500/25"
+          className={HOUSE_CARD_PHOTO_BOX}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -108,7 +109,7 @@ export function HouseDetails({
             decoding="async"
             referrerPolicy="no-referrer"
             onError={() => setPhotoBroken(true)}
-            className="h-32 w-32 object-cover"
+            className="h-full w-full object-cover"
           />
         </button>
       ) : (
@@ -118,7 +119,7 @@ export function HouseDetails({
             e.stopPropagation();
             setShowPhoto(true);
           }}
-          className="h-32 w-32 shrink-0 rounded-xl bg-[#2a1638] px-2 py-2 text-sm text-amber-100 ring-1 ring-orange-500/20"
+          className={`${HOUSE_CARD_PHOTO_BOX} flex items-center justify-center bg-[#2a1638] px-2 py-2 text-center text-sm text-amber-100`}
         >
           יש תמונת קישוט — לחצו רק אם הרשת פנויה
         </button>
@@ -209,11 +210,11 @@ export function HouseDetails({
             <button
               type="button"
               aria-label="סגירת התמונה"
-              className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4"
               onClick={(e) => {
                 e.stopPropagation();
                 setPhotoOpen(false);
               }}
+              className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img

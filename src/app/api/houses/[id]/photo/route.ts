@@ -2,7 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { getHouse, updateByEditCode } from "@/lib/store";
-import { toPublicHouse } from "@/lib/ids";
+import { canonicalHouseId, toPublicHouse } from "@/lib/ids";
 import { uploadPublicPhoto } from "@/lib/photo-host";
 import { grantOwnerHouse, ownerMayEdit } from "@/lib/owner-session";
 import { isAdmin } from "@/lib/admin";
@@ -15,7 +15,8 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await context.params;
+  const { id: rawId } = await context.params;
+  const id = canonicalHouseId(rawId);
   const body = (await request.json().catch(() => null)) as
     | { editCode?: string; image?: string }
     | null;

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getHouse } from "@/lib/store";
-import { toPublicHouse } from "@/lib/ids";
+import { canonicalHouseId, toPublicHouse } from "@/lib/ids";
 import { grantOwnerHouse } from "@/lib/owner-session";
 
 export const runtime = "nodejs";
@@ -9,7 +9,8 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await context.params;
+  const { id: rawId } = await context.params;
+  const id = canonicalHouseId(rawId);
   const body = (await request.json().catch(() => null)) as { editCode?: string } | null;
   const house = await getHouse(id);
   if (!house) {

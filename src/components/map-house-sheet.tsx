@@ -105,12 +105,19 @@ export function MapHouseSheet({
     };
   }, [clusterKey, house.id, editing, sheetH, overview]);
 
+  function parentH() {
+    const el = sheetRef.current;
+    const parent =
+      el?.offsetParent instanceof HTMLElement ? el.offsetParent : el?.parentElement;
+    return parent?.clientHeight || visualViewportHeight();
+  }
+
   function peekPx() {
-    return Math.round(visualViewportHeight() * MAP_SHEET_PEEK_VH);
+    return Math.round(parentH() * MAP_SHEET_PEEK_VH);
   }
 
   function maxPx() {
-    return Math.max(peekPx(), visualViewportHeight() - 8);
+    return Math.max(72, parentH() - 8);
   }
 
   function onSheetPointerDown(event: React.PointerEvent<HTMLDivElement>) {
