@@ -25,10 +25,7 @@ export function useAdminStats(enabled: boolean) {
   const [stats, setStats] = useState<AdminStats | null>(null);
 
   useEffect(() => {
-    if (!enabled) {
-      setStats(null);
-      return;
-    }
+    if (!enabled) return;
     let cancelled = false;
     const load = () => {
       void fetch("/api/admin/stats", { cache: "no-store", credentials: "include" })
