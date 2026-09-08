@@ -4,13 +4,12 @@ const latPad = 0.0075;
 const lngPad = 0.014;
 
 const tiles = {
-  // OSM France / Carto label streets in English. Israel Hiking Map is Hebrew
-  // through zoom 16; Leaflet upscales past that for house-level zoom.
-  url: "https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png",
+  // OSM France streets (English names). CSS invert is the dark Halloween look.
+  url: "https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png",
   attribution:
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://israelhiking.osm.org.il/">Israel Hiking Map</a>',
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   invert: true,
-  maxNativeZoom: 16,
+  maxNativeZoom: 19,
 } as const;
 
 export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים"] as const;
