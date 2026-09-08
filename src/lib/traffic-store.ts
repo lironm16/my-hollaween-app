@@ -144,7 +144,7 @@ let memAt = 0;
 let seedTraffic: TrafficFile | null | undefined;
 
 function demoTrafficEnabled() {
-  return process.env.NODE_ENV !== "production" || process.env.DEMO_TRAFFIC === "1";
+  return process.env.DEMO_TRAFFIC !== "0";
 }
 
 async function loadSeedTraffic(): Promise<TrafficFile | null> {
