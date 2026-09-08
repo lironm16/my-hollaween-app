@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { BellRing, HousePlus, MapPinned, Moon, Pause, Shield, Smartphone, Users } from "lucide-react";
+import { BellRing, HousePlus, MapPinned, Moon, Pause, Shield, Users } from "lucide-react";
 import { CandySign } from "@/components/candy-glyphs";
 import { OpenNowSign, ClosingSoonSign, OpeningSoonSign } from "@/components/open-now-mark";
 import { ScareSign } from "@/components/scare-glyphs";
@@ -28,14 +28,14 @@ function alertCount(stats: AdminStats, id: PushTopic) {
   return stats.devicesAdmin;
 }
 
-export function useAdminStats(enabled: boolean) {
+function useStats(url: string, enabled: boolean) {
   const [stats, setStats] = useState<AdminStats | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
     const load = () => {
-      void fetch("/api/admin/stats", { cache: "no-store", credentials: "include" })
+      void fetch(url, { cache: "no-store", credentials: "include" })
         .then((res) => (res.ok ? res.json() : null))
         .then((data: AdminStats | null) => {
           if (!cancelled && data && typeof data.houses === "number") setStats(data);
@@ -48,51 +48,63 @@ export function useAdminStats(enabled: boolean) {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [enabled]);
+  }, [enabled, url]);
 
   return stats;
 }
 
-export function AdminStatsCard({ stats }: { stats: AdminStats }) {
+export function useSnapshotStats(enabled = true) {
+  return useStats("/api/stats", enabled);
+}
+
+export function useAdminStats(enabled: boolean) {
+  return useStats("/api/admin/stats", enabled);
+}
+
+export function AlertStatsCard({ stats }: { stats: AdminStats }) {
+  return (
+    <Section title="התראות">
+      <p className="mb-2 text-base text-violet-300">
+        כמה טלפונים אישרו כל סוג — אותם שלושה כמו בחלון ההתראות. אותו טלפון יכול להיות ביותר מסוג אחד. נספר רק אחרי «הפעילו» והרשאת הדפדפן.
+      </p>
+      <div className="grid grid-cols-1 gap-2">
+        {PUSH_TOPIC_ROWS.map((row) => (
+          <Tile
+            key={row.id}
+            icon={ALERT_ICONS[row.id]}
+            label={row.title}
+            value={alertCount(stats, row.id)}
+            hint={row.hint}
+            valueClass={alertCount(stats, row.id) ? "text-orange-200" : undefined}
+          />
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+export function AdminStatsCard({
+  stats,
+  likedCount,
+  visitedCount,
+}: {
+  stats: AdminStats;
+  likedCount?: number;
+  visitedCount?: number;
+}) {
   return (
     <div className="space-y-3" dir="rtl">
-      <Section title="מכשירים">
-        <p className="mb-2 text-base text-violet-300">
-          סקרנים = כל טלפון שנפתחה בו האפליקציה, פעם אחת. כניסה חוזרת לא מוסיפה.
-          צופים במפה כלולים בסקרנים, ומופיעים גם כאן אם האפליקציה פתוחה עכשיו.
-        </p>
-        <div className="grid grid-cols-2 gap-2">
-          <Tile icon={<Smartphone className="size-5" />} label="סקרנים" value={stats.devicesSeen} />
+      <Section title="מפה">
+        <p className="mb-2 text-base text-violet-300">ספירות יכולות לחפוף — בית יכול להיות פתוח וגם עם מעט ממתקים.</p>
+        <div className="mb-2 grid grid-cols-2 gap-2">
+          <Tile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} />
           <Tile
             icon={<Users className="size-5" />}
-            label="צופים במפה"
+            label="משתמשים פעילים"
             value={stats.online}
             valueClass={stats.online ? "text-emerald-300" : undefined}
           />
         </div>
-      </Section>
-
-      <Section title="התראות">
-        <p className="mb-2 text-base text-violet-300">
-          כמה טלפונים אישרו כל סוג — אותם שלושה כמו בחלון ההתראות. אותו טלפון יכול להיות ביותר מסוג אחד. נספר רק אחרי «הפעילו» והרשאת הדפדפן.
-        </p>
-        <div className="grid grid-cols-1 gap-2">
-          {PUSH_TOPIC_ROWS.map((row) => (
-            <Tile
-              key={row.id}
-              icon={ALERT_ICONS[row.id]}
-              label={row.title}
-              value={alertCount(stats, row.id)}
-              hint={row.hint}
-              valueClass={alertCount(stats, row.id) ? "text-orange-200" : undefined}
-            />
-          ))}
-        </div>
-      </Section>
-
-      <Section title="מפה">
-        <p className="mb-2 text-base text-violet-300">ספירות יכולות לחפוף — בית יכול להיות פתוח וגם עם מעט ממתקים.</p>
-        <Tile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} wide />
         <Subhead>שעות</Subhead>
         <Tile
           icon={<OpenNowSign className="size-8" />}
@@ -173,6 +185,24 @@ export function AdminStatsCard({ stats }: { stats: AdminStats }) {
             icon={<SensitivitySign kind="sesameFree" className="size-8" />}
             label={treatLabels.sesameFree}
             value={stats.sesameFree}
+            plain
+          />
+        </div>
+        <Subhead>במכשיר הזה</Subhead>
+        <p className="mb-1.5 text-sm text-violet-400">השמורים והביקורים שסימנתם בטלפון הזה.</p>
+        <div className="grid grid-cols-2 gap-2">
+          <Tile
+            icon={<LikedSign className="size-8" />}
+            label="שמורים"
+            value={likedCount ?? 0}
+            valueClass={likedCount ? "text-rose-300" : undefined}
+            plain
+          />
+          <Tile
+            icon={<VisitedCheck visited className="size-8" />}
+            label="ביקרתי"
+            value={visitedCount ?? 0}
+            valueClass={visitedCount ? "text-emerald-300" : undefined}
             plain
           />
         </div>

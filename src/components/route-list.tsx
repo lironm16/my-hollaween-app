@@ -1,17 +1,23 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { Navigation } from "lucide-react";
+import { MapPin, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HouseCard } from "@/components/house-card";
 import { formatDistance } from "@/lib/geo";
-import type { PublicHouse } from "@/lib/types";
 import type { WalkingRoute } from "@/lib/route";
 
-function hopLabel(order: number, houseIndex: number, fromPreviousMeters: number) {
+function hopLabel(houseIndex: number, fromPreviousMeters: number) {
   if (houseIndex > 0) return "אותו בניין";
-  if (order === 1) return `מההתחלה · ${formatDistance(fromPreviousMeters)}`;
   return formatDistance(fromPreviousMeters);
+}
+
+function RouteLeg({ label }: { label: string }) {
+  return (
+    <div className="route-list-leg">
+      <span className="route-list-leg-line" aria-hidden="true" />
+      <span className="route-list-leg-label">{label}</span>
+    </div>
+  );
 }
 
 export function RouteList({
@@ -67,28 +73,38 @@ export function RouteList({
     );
   }
 
+  const startLabel =
+    route.originLabel || (route.startedFrom === "gps" ? "מיקום נוכחי" : "ממרכז השכונה");
   const cards = route.stops.flatMap((stop) =>
     stop.houses.map((house, houseIndex) => ({
       house,
       order: stop.order,
-      hop: hopLabel(stop.order, houseIndex, stop.fromPreviousMeters),
+      hop: hopLabel(houseIndex, stop.fromPreviousMeters),
     })),
   );
 
   return (
     <div
-      className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3"
+      className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-3 py-3"
       style={selectedId ? { paddingBottom: "calc(var(--map-sheet-h, 70dvh) + 1rem)" } : undefined}
     >
-      {gpsAction}
-
-      <ol className="route-card-spine">
-        {cards.map(({ house, order, hop }, i) => (
-          <li key={house.id} className="route-card-stop">
-            <div className="route-card-hop">
-              <span className="route-card-hop-label">{hop}</span>
+      <ol className="route-list">
+        <li className="route-list-card">
+          <div className="flex items-start gap-3">
+            <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-black">
+              <MapPin className="size-4" strokeWidth={2.4} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-medium text-orange-100">נקודת התחלה</p>
+              <p className="mt-0.5 text-base text-violet-300">{startLabel}</p>
+              {gpsAction}
             </div>
-            <RouteCardFrame order={order} house={house}>
+          </div>
+        </li>
+        {cards.map(({ house, order, hop }, i) => (
+          <li key={house.id}>
+            <RouteLeg label={hop} />
+            <div className="route-list-house">
               <HouseCard
                 house={house}
                 catalogSource={catalogSource}
@@ -102,30 +118,12 @@ export function RouteList({
                 onOpen={() => onSelectHouse(house.id, i + 1)}
                 onToggleEdit={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
                 editing={editingId === house.id}
+                index={order}
               />
-            </RouteCardFrame>
+            </div>
           </li>
         ))}
       </ol>
-    </div>
-  );
-}
-
-function RouteCardFrame({
-  order,
-  house,
-  children,
-}: {
-  order: number;
-  house: PublicHouse;
-  children: ReactNode;
-}) {
-  return (
-    <div className="route-card-frame">
-      <span className="route-stop-pin" aria-label={`עצירה ${order}, ${house.name}`}>
-        <b className="route-stop-num">{order}</b>
-      </span>
-      {children}
     </div>
   );
 }

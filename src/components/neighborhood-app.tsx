@@ -48,7 +48,6 @@ import { isClosingSoon, isOpenNow, isOpeningSoon } from "@/lib/hours";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { reportHouseTraffic } from "@/hooks/use-house-traffic";
-import { useOnlineDevices } from "@/hooks/use-presence";
 import {
   backupLooksNewer,
   loadPendingWrites,
@@ -161,7 +160,6 @@ export function NeighborhoodApp({
   const visits = useVisitedHouses();
   const owned = useOwnedHouses();
   const now = useAppNow();
-  const onlineDevices = useOnlineDevices();
 
   useEffect(
     () => () => {
@@ -280,14 +278,6 @@ export function NeighborhoodApp({
     return [...byId.values()];
   }, [admin, adminHouses, catalog, owned]);
 
-  const setHouses = useMemo(
-    () => houses.filter((house) => houseMatchesSet(house, activeHouseSet)),
-    [houses, activeHouseSet],
-  );
-  const setHouseIds = useMemo(() => new Set(setHouses.map((house) => house.id)), [setHouses]);
-  const likedInSet = likes.likedIds.filter((id) => setHouseIds.has(id)).length;
-  const visitedInSet = visits.visitedIds.filter((id) => setHouseIds.has(id)).length;
-
   const visible = useMemo(() => {
     return houses.filter((house) => {
       if (!houseMatchesSet(house, activeHouseSet)) return false;
@@ -359,6 +349,9 @@ export function NeighborhoodApp({
     candyActiveCount +
     moreFilterCount;
 
+  const visitedIdsRef = useRef(visits.visitedIds);
+  visitedIdsRef.current = visits.visitedIds;
+
   const filterRoute = useMemo(() => {
     const houses = visible.filter((house) => !visits.visitedIds.includes(house.id));
     return buildWalkingRoute(houses, origin, {
@@ -389,8 +382,35 @@ export function NeighborhoodApp({
 
   useEffect(() => {
     if (!routeMode || pendingRouteGps.current) return;
-    setPinnedRoute(filterRoute);
-  }, [routeMode, filterRoute]);
+    setPinnedRoute((current) => {
+      const keepIds = new Set(
+        (current?.stops ?? []).flatMap((stop) => stop.houses.map((house) => house.id)),
+      );
+      const visitedIds = visitedIdsRef.current;
+      const houses: PublicHouse[] = [];
+      const seen = new Set<string>();
+      for (const house of visible) {
+        if (keepIds.has(house.id) || !visitedIds.includes(house.id)) {
+          houses.push(house);
+          seen.add(house.id);
+        }
+      }
+      if (current) {
+        for (const stop of current.stops) {
+          for (const house of stop.houses) {
+            if (seen.has(house.id)) continue;
+            houses.push(house);
+            seen.add(house.id);
+          }
+        }
+      }
+      return buildWalkingRoute(houses, origin, {
+        accessible: accessibleOnly,
+        startedFrom: origin.kind,
+        originLabel: origin.label,
+      });
+    });
+  }, [routeMode, visible, origin, accessibleOnly]);
 
   useEffect(() => {
     if (!originPickActive || !originDraft) return;
@@ -406,11 +426,7 @@ export function NeighborhoodApp({
   const walkingRoute = routeMode ? pinnedRoute : null;
   const { line: routeLine } = useRouteGeometry(walkingRoute, routeMode);
   const summaryProps = {
-    totalHouses: setHouses.length,
     filteredHouses: visible.length,
-    onlineDevices,
-    likedCount: likedInSet,
-    visitedCount: visitedInSet,
     route: filterRoute,
     staleLabel: offline
       ? "לא מקוון"

@@ -123,6 +123,17 @@ export function AppHeader({
               <Pencil className="size-4" />
               עריכת בית
             </Link>
+            <Link
+              href="/stats"
+              onClick={() => setMenuOpen(false)}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "lg" }),
+                "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+              )}
+            >
+              <Activity className="size-4" />
+              תמונת מצב
+            </Link>
             {admin ? (
               <>
                 <Link
@@ -135,17 +146,6 @@ export function AppHeader({
                 >
                   <Bell className="size-4" />
                   התראות לשכונה
-                </Link>
-                <Link
-                  href="/admin/stats"
-                  onClick={() => setMenuOpen(false)}
-                  className={cn(
-                    buttonVariants({ variant: "ghost", size: "lg" }),
-                    "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
-                  )}
-                >
-                  <Activity className="size-4" />
-                  תמונת מצב
                 </Link>
                 <Link
                   href="/admin/rehearsal"

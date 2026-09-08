@@ -77,11 +77,12 @@ export function HouseDetails({
   }, [house.id, house.photoUrl]);
   const sheet = chrome === "sheet";
   const hours = formatHoursLabel(house);
-  const parts = [displayAddress, hours, distanceM !== undefined ? formatDistance(distanceM) : ""]
-    .filter(Boolean)
-    .join(" · ");
+  const metaLines = [
+    displayAddress,
+    hours,
+    distanceM !== undefined ? formatDistance(distanceM) : "",
+  ].filter(Boolean);
   const hasPhoto = Boolean(house.photoUrl && !photoBroken);
-  const photoBesideTitle = Boolean(hasPhoto && (compact || sheet));
   const indexBadge =
     index != null ? (
       <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 font-sans text-base font-bold text-black">
@@ -98,11 +99,7 @@ export function HouseDetails({
             e.stopPropagation();
             setPhotoOpen(true);
           }}
-          className={cn(
-            photoBesideTitle
-              ? HOUSE_CARD_PHOTO_BOX
-              : "block w-full overflow-hidden rounded-xl ring-1 ring-orange-500/25",
-          )}
+          className={HOUSE_CARD_PHOTO_BOX}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -112,10 +109,7 @@ export function HouseDetails({
             decoding="async"
             referrerPolicy="no-referrer"
             onError={() => setPhotoBroken(true)}
-            className={cn(
-              "object-cover",
-              photoBesideTitle ? "h-full w-full" : "h-56 w-full",
-            )}
+            className="h-full w-full object-cover"
           />
         </button>
       ) : (
@@ -125,16 +119,90 @@ export function HouseDetails({
             e.stopPropagation();
             setShowPhoto(true);
           }}
-          className={cn(
-            "rounded-xl bg-[#2a1638] px-3 py-3 text-base text-amber-100 ring-1 ring-orange-500/20",
-            photoBesideTitle ? "h-32 w-32 shrink-0" : "w-full",
-          )}
+          className={`${HOUSE_CARD_PHOTO_BOX} flex items-center justify-center bg-[#2a1638] px-2 py-2 text-center text-sm text-amber-100`}
         >
           יש תמונת קישוט — לחצו רק אם הרשת פנויה
         </button>
       )
     ) : null;
-  const indexByPhoto = Boolean(indexBadge && photoBesideTitle);
+  const pageActions = sheet ? null : (
+    <div className="flex shrink-0 items-center gap-0.5">
+      {onToggleVisited ? (
+        <button
+          type="button"
+          aria-label={
+            visited
+              ? `סמנו כלא ביקרתי, ${traffic.visited} ביקרו`
+              : `סמנו שביקרתי, ${traffic.visited} ביקרו`
+          }
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleVisited();
+          }}
+          className="inline-flex items-center gap-2 rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
+        >
+          <VisitedCheck visited={visited} />
+          <HouseActionCount n={Math.max(traffic.visited, visited ? 1 : 0)} />
+        </button>
+      ) : null}
+      {onToggleLike ? (
+        <button
+          type="button"
+          aria-label={
+            liked
+              ? `הסירו מהשמורים, ${traffic.saved} שמרו`
+              : `שמרו את הבית, ${traffic.saved} שמרו`
+          }
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleLike();
+          }}
+          className="inline-flex items-center gap-2 rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
+        >
+          <Heart
+            className={cn("size-6", liked ? "fill-current text-[#fb7185]" : "text-[#fde68a]")}
+            strokeWidth={2.2}
+          />
+          <HouseActionCount n={Math.max(traffic.saved, liked ? 1 : 0)} />
+        </button>
+      ) : null}
+      {canEdit && onToggleEdit ? (
+        <button
+          type="button"
+          aria-label={editing ? "סגירת עריכה" : "עריכת הבית"}
+          aria-pressed={editing}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleEdit();
+          }}
+          className={cn(
+            "rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15",
+            editing && "bg-orange-500/20 text-orange-300",
+          )}
+        >
+          <Pencil className="size-6" />
+        </button>
+      ) : null}
+    </div>
+  );
+  const meta = (
+    <div
+      className={cn(
+        "min-w-0 leading-snug text-violet-200 break-words",
+        compact ? "text-base" : "text-sm",
+      )}
+    >
+      {photo ? (
+        metaLines.map((line) => (
+          <p key={line} className="break-words">
+            {line}
+          </p>
+        ))
+      ) : (
+        <p>{metaLines.join(" · ")}</p>
+      )}
+    </div>
+  );
   return (
     <div className="space-y-3">
       {photoOpen && house.photoUrl && typeof document !== "undefined"
@@ -142,11 +210,11 @@ export function HouseDetails({
             <button
               type="button"
               aria-label="סגירת התמונה"
-              className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4"
               onClick={(e) => {
                 e.stopPropagation();
                 setPhotoOpen(false);
               }}
+              className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -159,24 +227,15 @@ export function HouseDetails({
           )
         : null}
       <HoursStatusBanner house={house} />
-      <div className={cn("flex items-start gap-3", photoBesideTitle && "flex-row")}>
-        {photoBesideTitle ? (
-          <div className="flex shrink-0 items-start gap-1.5">
-            {indexBadge}
-            {photo}
-          </div>
-        ) : null}
-        <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          {indexBadge}
           <p
             className={cn(
-              "font-display text-orange-300 break-words",
+              "min-w-0 font-display text-orange-300 break-words",
               compact ? "text-2xl" : "text-xl",
             )}
           >
-            {index != null && !indexByPhoto ? (
-              <span className="me-2 font-sans font-bold text-orange-400">{index}</span>
-            ) : null}
             {liked && !compact ? (
               <Heart
                 className="mb-0.5 me-1.5 inline size-5 fill-current text-[#fb7185]"
@@ -186,77 +245,17 @@ export function HouseDetails({
             ) : null}
             {houseHeadline(house)}
           </p>
-          <p
-            className={cn(
-              "leading-snug text-violet-200 break-words",
-              compact ? "text-base" : "text-sm",
-            )}
-          >
-            {parts}
-          </p>
         </div>
-        {sheet ? null : (
-          <div className="flex shrink-0 items-center gap-0.5">
-            {onToggleVisited ? (
-              <button
-                type="button"
-                aria-label={
-                  visited
-                    ? `סמנו כלא ביקרתי, ${traffic.visited} ביקרו`
-                    : `סמנו שביקרתי, ${traffic.visited} ביקרו`
-                }
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleVisited();
-                }}
-                className="inline-flex items-center gap-2 rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
-              >
-                <VisitedCheck visited={visited} />
-                <HouseActionCount n={Math.max(traffic.visited, visited ? 1 : 0)} />
-              </button>
-            ) : null}
-            {onToggleLike ? (
-              <button
-                type="button"
-                aria-label={
-                  liked
-                    ? `הסירו מהשמורים, ${traffic.saved} שמרו`
-                    : `שמרו את הבית, ${traffic.saved} שמרו`
-                }
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleLike();
-                }}
-                className="inline-flex items-center gap-2 rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
-              >
-                <Heart
-                  className={cn("size-6", liked ? "fill-current text-[#fb7185]" : "text-[#fde68a]")}
-                  strokeWidth={2.2}
-                />
-                <HouseActionCount n={Math.max(traffic.saved, liked ? 1 : 0)} />
-              </button>
-            ) : null}
-            {canEdit && onToggleEdit ? (
-              <button
-                type="button"
-                aria-label={editing ? "סגירת עריכה" : "עריכת הבית"}
-                aria-pressed={editing}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleEdit();
-                }}
-                className={cn(
-                  "rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15",
-                  editing && "bg-orange-500/20 text-orange-300",
-                )}
-              >
-                <Pencil className="size-6" />
-              </button>
-            ) : null}
-          </div>
-        )}
-        </div>
+        {pageActions}
       </div>
+      {photo ? (
+        <div className="flex items-start gap-3">
+          {photo}
+          {meta}
+        </div>
+      ) : (
+        meta
+      )}
       {actions}
       <div className="flex flex-wrap items-center gap-1.5">
         <HouseTags house={house} large={compact} />
@@ -295,12 +294,6 @@ export function HouseDetails({
               </Link>
             </div>
           )}
-          {photo && !photoBesideTitle ? (
-            <div className="flex items-start gap-2">
-              {indexBadge}
-              <div className="min-w-0 flex-1">{photo}</div>
-            </div>
-          ) : null}
           {extra}
         </>
       )}
