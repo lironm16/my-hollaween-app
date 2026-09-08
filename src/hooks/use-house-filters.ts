@@ -17,6 +17,8 @@ import {
 export const DEFAULT_HOUSE_FILTERS: HouseFiltersState = {
   accessibleOnly: false,
   openNowOnly: false,
+  closingSoonOnly: false,
+  openingSoonOnly: false,
   sensitivityFilters: [],
   scareFilters: [...SCARE_LEVELS],
   candyFilters: [...CANDY_TONE_IDS],
@@ -68,6 +70,8 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
   return {
     accessibleOnly: Boolean(raw.accessibleOnly),
     openNowOnly: Boolean(raw.openNowOnly),
+    closingSoonOnly: Boolean(raw.closingSoonOnly),
+    openingSoonOnly: Boolean(raw.openingSoonOnly),
     likedOnly: Boolean(raw.likedOnly),
     unvisitedOnly: Boolean(raw.unvisitedOnly),
     includeUndecorated,
