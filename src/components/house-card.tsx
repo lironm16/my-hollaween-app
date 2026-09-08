@@ -27,6 +27,7 @@ export function HouseCard({
   onOpen,
   editing = false,
   onToggleEdit,
+  index,
 }: {
   house: PublicHouse;
   distanceM?: number;
@@ -41,6 +42,7 @@ export function HouseCard({
   onOpen?: () => void;
   editing?: boolean;
   onToggleEdit?: () => void;
+  index?: number;
 }) {
   function open() {
     onOpen?.();
@@ -101,6 +103,7 @@ export function HouseCard({
           onToggleVisited={onToggleVisited}
           chrome="sheet"
           compact
+          index={index}
         />
       </div>
     </Card>

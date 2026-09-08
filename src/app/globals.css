@@ -145,7 +145,9 @@
 .leaflet-container.is-osm-dark img.leaflet-tile,
 .is-osm-dark .leaflet-tile,
 .is-osm-dark img.leaflet-tile {
-  filter: invert(1) hue-rotate(180deg) saturate(0.35) brightness(0.82) contrast(1.05);
+  /* Israel Hiking greens survive the OSM invert; crush saturation so the
+     basemap stays the old dark Halloween look while labels stay Hebrew. */
+  filter: invert(1) hue-rotate(180deg) saturate(0.12) brightness(0.7) contrast(1.18);
   mix-blend-mode: normal;
 }
 
@@ -720,17 +722,17 @@
   position: absolute;
   top: 5px;
   width: 4px;
-  height: 10px;
+  height: 12px;
   border-radius: 999px;
   background: #fff;
 }
 
 .pin-apt-dot.is-break::before {
-  left: 4px;
+  left: 7px;
 }
 
 .pin-apt-dot.is-break::after {
-  right: 4px;
+  left: 13px;
 }
 
 .house-pin .pin-scare {
@@ -1032,19 +1034,19 @@
   position: absolute;
   top: 5px;
   width: 4px;
-  height: 10px;
+  height: 12px;
   border-radius: 999px;
   background: #fff;
 }
 
 .house-pin .pin-status.is-break::before,
 .pumpkin-pin .pin-status.is-break::before {
-  left: 4px;
+  left: 7px;
 }
 
 .house-pin .pin-status.is-break::after,
 .pumpkin-pin .pin-status.is-break::after {
-  right: 4px;
+  left: 13px;
 }
 
 .house-pin.house-pin-dot .pin-status {
@@ -1174,19 +1176,19 @@
 .night-status-dot.is-break::after {
   content: "";
   position: absolute;
-  top: 5px;
+  top: 4px;
   width: 4px;
-  height: 10px;
+  height: 11px;
   border-radius: 999px;
   background: #fff;
 }
 
 .night-status-dot.is-break::before {
-  left: 4px;
+  left: 6px;
 }
 
 .night-status-dot.is-break::after {
-  right: 4px;
+  left: 12px;
 }
 
 .neighborhood-marquee {
@@ -1542,22 +1544,26 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   flex: 1 1 0;
   width: auto;
   min-width: 0;
-  max-width: 48px;
-  height: 40px;
+  max-width: 52px;
+  height: 44px;
 }
 
 .house-list-card-chrome .house-action-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
 }
 
 .house-list-card-chrome .house-action-btn.has-count {
   flex: 1.15 1 0;
   width: auto;
   min-width: 0;
-  max-width: 4.25rem;
+  max-width: 5rem;
   padding-inline: 4px 6px;
-  gap: 4px;
+  gap: 5px;
+}
+
+.house-list-card-chrome .house-action-count {
+  font-size: 0.95rem;
 }
 
 .map-house-sheet-chrome,

@@ -34,6 +34,7 @@ function ClosedSign({ className }: { className?: string }) {
 
 export function HouseTags({
   house,
+  large = false,
 }: {
   house: {
     address?: string;
@@ -53,6 +54,7 @@ export function HouseTags({
     openTo2?: string;
     openHours?: { from: string; to: string }[];
   };
+  large?: boolean;
 }) {
   const now = useAppNow();
   const treats = house.treats ?? [];
@@ -67,19 +69,20 @@ export function HouseTags({
     effectiveVisit(house) === "closed" ||
     isHoursNightOver(house, now) ||
     (eveningMin >= 17 * 60 && isHoursNotYetOpen(house, now));
+  const signSize = large ? "size-10" : undefined;
 
   return (
-    <div className="flex flex-wrap gap-1.5 pb-0.5 ps-0.5">
-      {closedInsteadOfCandy ? <ClosedSign /> : <CandySign tone={candy} />}
-      <ScareSign level={undecorated ? "none" : scare} />
+    <div className={cn("flex flex-wrap gap-1.5 pb-0.5 ps-0.5", large && "gap-2")}>
+      {closedInsteadOfCandy ? <ClosedSign className={signSize} /> : <CandySign tone={candy} className={signSize} />}
+      <ScareSign level={undecorated ? "none" : scare} className={signSize} />
       {house.accessible ? (
         <span title="נגיש" aria-label="נגיש">
-          <StrollerSign />
+          <StrollerSign className={signSize} />
         </span>
       ) : null}
-      {gluten ? <SensitivitySign kind="glutenFree" out={glutenOut} /> : null}
-      {offersNutsFree(withTreats) ? <SensitivitySign kind="nutsFree" /> : null}
-      {offersSesameFree(withTreats) ? <SensitivitySign kind="sesameFree" /> : null}
+      {gluten ? <SensitivitySign kind="glutenFree" out={glutenOut} className={signSize} /> : null}
+      {offersNutsFree(withTreats) ? <SensitivitySign kind="nutsFree" className={signSize} /> : null}
+      {offersSesameFree(withTreats) ? <SensitivitySign kind="sesameFree" className={signSize} /> : null}
     </div>
   );
 }

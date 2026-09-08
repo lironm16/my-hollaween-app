@@ -77,9 +77,10 @@ export function HouseList({
       {filtered.length === 0 ? (
         <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לחיפוש.</p>
       ) : (
-        filtered.map(({ h, d }) => (
+        filtered.map(({ h, d }, i) => (
           <HouseCard
             key={h.id}
+            index={i + 1}
             house={h}
             distanceM={d}
             catalogSource={catalogSource}

@@ -34,6 +34,7 @@ export function HouseDetails({
   actions,
   compact = false,
   distanceM,
+  index,
 }: {
   house: PublicHouse;
   extra?: ReactNode;
@@ -52,6 +53,7 @@ export function HouseDetails({
   /** List collapsed state: same top block as the map card, without the long details. */
   compact?: boolean;
   distanceM?: number;
+  index?: number;
 }) {
   const displayAddress = formatDisplayAddress(house);
   const { trafficFor } = useHouseTraffic();
@@ -105,7 +107,15 @@ export function HouseDetails({
       <HoursStatusBanner house={house} />
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="font-display text-xl text-orange-300 break-words">
+          <p
+            className={cn(
+              "font-display text-orange-300 break-words",
+              compact ? "text-2xl" : "text-xl",
+            )}
+          >
+            {index != null ? (
+              <span className="me-2 font-sans font-bold text-orange-400">{index}</span>
+            ) : null}
             {liked && !compact ? (
               <Heart
                 className="mb-0.5 me-1.5 inline size-5 fill-current text-[#fb7185]"
@@ -115,7 +125,14 @@ export function HouseDetails({
             ) : null}
             {houseHeadline(house)}
           </p>
-          <p className="text-sm leading-snug text-violet-200 break-words">{parts}</p>
+          <p
+            className={cn(
+              "leading-snug text-violet-200 break-words",
+              compact ? "text-base" : "text-sm",
+            )}
+          >
+            {parts}
+          </p>
         </div>
         {sheet ? null : (
           <div className="flex shrink-0 items-center gap-0.5">
@@ -180,7 +197,7 @@ export function HouseDetails({
       </div>
       {actions}
       <div className="flex flex-wrap items-center gap-1.5">
-        <HouseTags house={house} />
+        <HouseTags house={house} large={compact} />
         {house.status === "pending" ? <Badge variant="secondary">ממתין לאישור</Badge> : null}
       </div>
       {house.arrival ? (

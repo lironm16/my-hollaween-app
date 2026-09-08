@@ -30,7 +30,7 @@ function PeopleIcon() {
   );
 }
 
-function PinIcon({ mark }: { mark?: string }) {
+function PinIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden className="h-full w-full">
       <path
@@ -38,20 +38,6 @@ function PinIcon({ mark }: { mark?: string }) {
         d="M12 1.8c4 0 7.2 3 7.2 6.8 0 5.2-7.2 13.6-7.2 13.6S4.8 13.8 4.8 8.6C4.8 4.8 8 1.8 12 1.8z"
       />
       <circle cx="12" cy="8.5" r="3.2" fill="#fff7ed" />
-      {mark ? (
-        <text
-          x="12"
-          y="10.2"
-          textAnchor="middle"
-          fill="#9a3412"
-          fontSize="5.2"
-          fontWeight="700"
-        >
-          {mark}
-        </text>
-      ) : (
-        <circle cx="12" cy="8.5" r="1.4" fill="#9a3412" />
-      )}
     </svg>
   );
 }
@@ -192,7 +178,7 @@ function CompactCell({
       className="flex min-w-0 max-w-full flex-col items-center gap-0.5 overflow-hidden rounded-xl bg-[#14081c] px-0.5 py-1"
       aria-label={ariaLabel ?? (label ? `${value} ${label}` : value)}
     >
-      <span className="size-5 shrink-0">{icon}</span>
+      <span className="size-7 shrink-0">{icon}</span>
       <span className="max-w-full truncate text-sm font-bold leading-none text-white">{value}</span>
       {label ? (
         <span className="max-w-full truncate text-[10px] leading-none text-white/80">{label}</span>
@@ -223,7 +209,6 @@ export function StatsSummary({
   compact?: boolean;
 }) {
   const walk = route ? distanceParts(route.totalMeters) : null;
-  const stopMark = route && route.stops.length < 100 ? String(route.stops.length) : undefined;
   const houseIcon = (
     <span className="text-orange-500">
       <HouseIcon />
@@ -241,12 +226,12 @@ export function StatsSummary({
             label="מבקרים"
           />
           <CompactCell
-            icon={<SavedHeart className="size-5" />}
+            icon={<SavedHeart className="size-7" />}
             value={String(likedCount)}
             ariaLabel={`${likedCount} שמורים`}
           />
           <CompactCell
-            icon={<VisitedCheck visited size="sm" />}
+            icon={<VisitedCheck visited size="sm" className="size-7" />}
             value={String(visitedCount)}
             ariaLabel={`${visitedCount} ביקרתי`}
           />
@@ -258,7 +243,7 @@ export function StatsSummary({
           <div className="grid min-w-0 grid-cols-4 gap-1">
             <CompactCell icon={houseIcon} value={String(filteredHouses)} label="בתים" />
             <CompactCell
-              icon={<PinIcon mark={stopMark} />}
+              icon={<PinIcon />}
               value={route ? String(route.stops.length) : "—"}
               label="עצירות"
             />
@@ -307,7 +292,7 @@ export function StatsSummary({
       <Section title="שלכם">
         <div className="flex items-start justify-around gap-1 pt-1">
           <Stack icon={<SavedHeart className="size-9" />} value={String(likedCount)} label="שמורים" />
-          <Stack icon={<VisitedCheck visited />} value={String(visitedCount)} label="ביקרתי" />
+          <Stack icon={<VisitedCheck visited size="lg" />} value={String(visitedCount)} label="ביקרתי" />
         </div>
       </Section>
       <Section
@@ -317,7 +302,7 @@ export function StatsSummary({
         <div className="grid grid-cols-2 gap-2">
           <RouteChip icon={houseIcon} value={String(filteredHouses)} label="בתים" />
           <RouteChip
-            icon={<PinIcon mark={stopMark} />}
+            icon={<PinIcon />}
             value={route ? String(route.stops.length) : "—"}
             label="עצירות"
           />
