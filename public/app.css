@@ -284,9 +284,6 @@
   .inset-0 {
     inset: 0px;
   }
-  .inset-x-0 {
-    inset-inline: 0px;
-  }
   .inset-x-1\.5 {
     inset-inline: calc(var(--spacing) * 1.5);
   }
@@ -479,10 +476,6 @@
   .field-sizing-content {
     field-sizing: content;
   }
-  .size-2\.5 {
-    width: calc(var(--spacing) * 2.5);
-    height: calc(var(--spacing) * 2.5);
-  }
   .size-3\.5 {
     width: calc(var(--spacing) * 3.5);
     height: calc(var(--spacing) * 3.5);
@@ -579,9 +572,6 @@
     width: 100%;
     height: 100%;
   }
-  .h-0\.5 {
-    height: calc(var(--spacing) * 0.5);
-  }
   .h-1\.5 {
     height: calc(var(--spacing) * 1.5);
   }
@@ -668,6 +658,12 @@
   }
   .min-h-0 {
     min-height: 0px;
+  }
+  .min-h-10 {
+    min-height: calc(var(--spacing) * 10);
+  }
+  .min-h-14 {
+    min-height: calc(var(--spacing) * 14);
   }
   .min-h-16 {
     min-height: calc(var(--spacing) * 16);
@@ -796,9 +792,6 @@
     --tw-translate-y: 0px;
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
-  .-rotate-12 {
-    rotate: calc(12deg * -1);
-  }
   .transform {
     transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
   }
@@ -837,12 +830,6 @@
   }
   .grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .grid-cols-4 {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .flex-col {
     flex-direction: column;
@@ -1294,9 +1281,6 @@
       background-color: color-mix(in oklab, var(--destructive) 10%, transparent);
     }
   }
-  .bg-emerald-400 {
-    background-color: var(--color-emerald-400);
-  }
   .bg-emerald-600 {
     background-color: var(--color-emerald-600);
   }
@@ -1359,9 +1343,6 @@
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-red-950) 70%, transparent);
     }
-  }
-  .bg-rose-400 {
-    background-color: var(--color-rose-400);
   }
   .bg-secondary {
     background-color: var(--secondary);
@@ -1458,9 +1439,6 @@
   }
   .px-\(--card-spacing\) {
     padding-inline: var(--card-spacing);
-  }
-  .px-0\.5 {
-    padding-inline: calc(var(--spacing) * 0.5);
   }
   .px-1 {
     padding-inline: var(--spacing);
@@ -1618,9 +1596,6 @@
   }
   .text-\[1\.2rem\] {
     font-size: 1.2rem;
-  }
-  .text-\[10px\] {
-    font-size: 10px;
   }
   .text-\[15px\] {
     font-size: 15px;
@@ -1935,6 +1910,10 @@
   }
   .ring {
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+  .ring-0 {
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .ring-1 {
@@ -2903,9 +2882,16 @@
   .\[\&_svg\]\:pointer-events-none svg {
     pointer-events: none;
   }
+  .\[\&_svg\]\:block svg {
+    display: block;
+  }
   .\[\&_svg\]\:size-2\.5 svg {
     width: calc(var(--spacing) * 2.5);
     height: calc(var(--spacing) * 2.5);
+  }
+  .\[\&_svg\]\:size-full svg {
+    width: 100%;
+    height: 100%;
   }
   .\[\&_svg\]\:shrink-0 svg {
     flex-shrink: 0;
@@ -4635,6 +4621,59 @@ svg.leaflet-zoom-animated {
   bottom: 38px;
   z-index: 20;
   transform: translateX(-50%);
+  pointer-events: none;
+}
+.house-list-card.is-visited {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 4px #059669 !important;
+}
+.route-card-spine {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  padding-inline-start: 1.25rem;
+}
+.route-card-spine::before {
+  content: "";
+  position: absolute;
+  top: 1.1rem;
+  bottom: 1.75rem;
+  inset-inline-start: 0.875rem;
+  width: 2px;
+  background: #ea580c;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.route-card-stop {
+  position: relative;
+}
+.route-card-hop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+}
+.route-card-hop-label {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  padding: 0.15rem 0.65rem;
+  border-radius: 999px;
+  background: #12081a;
+  color: #fdba74;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  box-shadow: 0 0 0 1px rgba(234, 88, 12, 0.35);
+}
+.route-card-frame {
+  position: relative;
+}
+.route-card-frame > .route-stop-pin {
+  position: absolute;
+  z-index: 3;
+  inset-inline-start: -1.25rem;
+  top: 0.65rem;
   pointer-events: none;
 }
 .night-status-dot {

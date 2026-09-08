@@ -55,8 +55,10 @@ export function HouseCard({
       tabIndex={onOpen ? 0 : undefined}
       aria-label={onOpen ? "פתיחת פרטי הבית" : undefined}
       className={cn(
-        "overflow-visible border-orange-500/15 bg-[#1d1028]/90 text-base",
-        onOpen && "cursor-pointer transition hover:border-orange-400/50 hover:bg-[#261536]",
+        "house-list-card overflow-visible bg-[#1d1028]/90 text-base",
+        visited ? "is-visited ring-0" : "border-orange-500/15",
+        onOpen && "cursor-pointer transition hover:bg-[#261536]",
+        onOpen && !visited && "hover:border-orange-400/50",
       )}
       onClick={(event) => {
         if (!onOpen || isCardInteractive(event.target)) return;

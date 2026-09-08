@@ -1,13 +1,18 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { HoursStatusBanner } from "@/components/hours-status-banner";
-import { HouseTags } from "@/components/house-tags";
-import { formatDisplayAddress } from "@/lib/config";
+import { HouseCard } from "@/components/house-card";
 import { formatDistance } from "@/lib/geo";
-import { houseHeadline } from "@/lib/labels";
-import { googleMapsNavigateUrl, type WalkingRoute } from "@/lib/route";
+import type { PublicHouse } from "@/lib/types";
+import type { WalkingRoute } from "@/lib/route";
+
+function hopLabel(order: number, houseIndex: number, fromPreviousMeters: number) {
+  if (houseIndex > 0) return "אותו בניין";
+  if (order === 1) return `מההתחלה · ${formatDistance(fromPreviousMeters)}`;
+  return formatDistance(fromPreviousMeters);
+}
 
 export function RouteList({
   route,
@@ -15,12 +20,32 @@ export function RouteList({
   onRequestLocation,
   onSelectHouse,
   selectedId,
+  catalogSource,
+  likedIds,
+  onToggleLike,
+  visitedIds,
+  onToggleVisited,
+  admin = false,
+  canEditHouse,
+  onShowOnMap,
+  onEditHouse,
+  editingId,
 }: {
   route: WalkingRoute | null;
   hasGps: boolean;
   onRequestLocation?: () => void;
-  onSelectHouse: (id: string) => void;
+  onSelectHouse: (id: string, index: number) => void;
   selectedId?: string | null;
+  catalogSource?: string | null;
+  likedIds?: string[];
+  onToggleLike?: (id: string) => void;
+  visitedIds?: string[];
+  onToggleVisited?: (id: string) => void;
+  admin?: boolean;
+  canEditHouse?: (id: string) => boolean;
+  onShowOnMap?: (id: string) => void;
+  onEditHouse?: (id: string, index: number) => void;
+  editingId?: string | null;
 }) {
   const gpsAction =
     !hasGps && onRequestLocation ? (
@@ -42,74 +67,65 @@ export function RouteList({
     );
   }
 
+  const cards = route.stops.flatMap((stop) =>
+    stop.houses.map((house, houseIndex) => ({
+      house,
+      order: stop.order,
+      hop: hopLabel(stop.order, houseIndex, stop.fromPreviousMeters),
+    })),
+  );
+
   return (
     <div
-      className="mx-auto flex w-full max-w-lg flex-col gap-3 px-3 py-3"
+      className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3"
       style={selectedId ? { paddingBottom: "calc(var(--map-sheet-h, 70dvh) + 1rem)" } : undefined}
     >
       {gpsAction}
 
-      <ol className="space-y-2">
-        {route.stops.flatMap((stop, index) => {
-          const prev =
-            index === 0
-              ? route.origin
-              : {
-                  lat: route.stops[index - 1]!.house.lat,
-                  lng: route.stops[index - 1]!.house.lng,
-                };
-          const walkUrl = googleMapsNavigateUrl(prev, {
-            lat: stop.house.lat,
-            lng: stop.house.lng,
-          });
-          return stop.houses.map((house, houseIndex) => (
-            <li key={house.id} className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/15">
-              <HoursStatusBanner house={house} className="mb-2" />
-              <div className="flex items-start gap-2">
-                <button
-                  type="button"
-                  onClick={() => onSelectHouse(house.id)}
-                  className="flex min-w-0 flex-1 items-start gap-3 text-start"
-                >
-                  <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-base font-bold text-black">
-                    {stop.order}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-base font-medium text-orange-100">
-                      {houseHeadline(house)}
-                    </span>
-                    <span className="mt-0.5 block text-base text-violet-300">
-                      {formatDisplayAddress(house)}
-                    </span>
-                    {house.arrival ? (
-                      <span className="mt-0.5 block text-base text-amber-200/90">{house.arrival}</span>
-                    ) : null}
-                    <span className="mt-1 block text-base text-violet-400">
-                      {houseIndex > 0
-                        ? "אותו בניין"
-                        : `${stop.order === 1 ? "מההתחלה" : "מעצירה קודמת"}: ${formatDistance(stop.fromPreviousMeters)} · מצטבר ${formatDistance(stop.cumulativeMeters)}`}
-                    </span>
-                    <span className="mt-2 block">
-                      <HouseTags house={house} large />
-                    </span>
-                  </span>
-                </button>
-                <a
-                  href={walkUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="house-action-btn shrink-0"
-                  aria-label="ניווט לכאן"
-                  title="ניווט לכאן"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <Navigation className="size-6" strokeWidth={2.2} />
-                </a>
-              </div>
-            </li>
-          ));
-        })}
+      <ol className="route-card-spine">
+        {cards.map(({ house, order, hop }, i) => (
+          <li key={house.id} className="route-card-stop">
+            <div className="route-card-hop">
+              <span className="route-card-hop-label">{hop}</span>
+            </div>
+            <RouteCardFrame order={order} house={house}>
+              <HouseCard
+                house={house}
+                catalogSource={catalogSource}
+                liked={likedIds?.includes(house.id)}
+                onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
+                visited={visitedIds?.includes(house.id)}
+                onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
+                canEdit={Boolean(canEditHouse?.(house.id))}
+                admin={admin}
+                onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
+                onOpen={() => onSelectHouse(house.id, i + 1)}
+                onToggleEdit={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
+                editing={editingId === house.id}
+              />
+            </RouteCardFrame>
+          </li>
+        ))}
       </ol>
+    </div>
+  );
+}
+
+function RouteCardFrame({
+  order,
+  house,
+  children,
+}: {
+  order: number;
+  house: PublicHouse;
+  children: ReactNode;
+}) {
+  return (
+    <div className="route-card-frame">
+      <span className="route-stop-pin" aria-label={`עצירה ${order}, ${house.name}`}>
+        <b className="route-stop-num">{order}</b>
+      </span>
+      {children}
     </div>
   );
 }

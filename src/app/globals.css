@@ -1140,6 +1140,67 @@
   pointer-events: none;
 }
 
+.house-list-card.is-visited {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 4px #059669 !important;
+}
+
+.route-card-spine {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  padding-inline-start: 1.25rem;
+}
+
+.route-card-spine::before {
+  content: "";
+  position: absolute;
+  top: 1.1rem;
+  bottom: 1.75rem;
+  inset-inline-start: 0.875rem;
+  width: 2px;
+  background: #ea580c;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.route-card-stop {
+  position: relative;
+}
+
+.route-card-hop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+}
+
+.route-card-hop-label {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  padding: 0.15rem 0.65rem;
+  border-radius: 999px;
+  background: #12081a;
+  color: #fdba74;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  box-shadow: 0 0 0 1px rgba(234, 88, 12, 0.35);
+}
+
+.route-card-frame {
+  position: relative;
+}
+
+.route-card-frame > .route-stop-pin {
+  position: absolute;
+  z-index: 3;
+  inset-inline-start: -1.25rem;
+  top: 0.65rem;
+  pointer-events: none;
+}
+
 .night-status-dot {
   position: relative;
   display: inline-block;
