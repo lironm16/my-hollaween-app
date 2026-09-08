@@ -4,13 +4,12 @@ const latPad = 0.0075;
 const lngPad = 0.014;
 
 const tiles = {
-  // Hebrew street names (Israel Hiking Map). Dark look is the older OSM invert,
-  // not the extra crush added when these tiles replaced OSM France.
-  url: "https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png",
-  attribution:
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://israelhiking.osm.org.il/">Israel Hiking Map</a>',
+  // OSM Standard: classic street drawing, Hebrew names where OSM has them.
+  // Dark look is the older invert (same recipe as the OSM France era).
+  url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   invert: true,
-  maxNativeZoom: 16,
+  maxNativeZoom: 19,
 } as const;
 
 export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים"] as const;
