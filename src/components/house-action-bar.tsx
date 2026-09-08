@@ -103,7 +103,7 @@ export function HouseActionBar({
               onClick={onToggleLike}
             >
               <Heart className={cn("size-6", liked && "fill-current")} strokeWidth={2.2} />
-              <HouseActionCount n={traffic.saved} />
+              <HouseActionCount n={Math.max(traffic.saved, liked ? 1 : 0)} />
             </button>
           ) : null}
           {onToggleVisited ? (
@@ -120,7 +120,7 @@ export function HouseActionBar({
               onClick={onToggleVisited}
             >
               <VisitedCheck visited={visited} inButton />
-              <HouseActionCount n={traffic.visited} />
+              <HouseActionCount n={Math.max(traffic.visited, visited ? 1 : 0)} />
             </button>
           ) : null}
           {onToggleEdit ? (

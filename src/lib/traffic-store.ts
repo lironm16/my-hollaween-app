@@ -144,7 +144,7 @@ let memAt = 0;
 let seedTraffic: TrafficFile | null | undefined;
 
 function demoTrafficEnabled() {
-  return process.env.NODE_ENV !== "production" || process.env.DEMO_TRAFFIC === "1";
+  return process.env.DEMO_TRAFFIC !== "0";
 }
 
 async function loadSeedTraffic(): Promise<TrafficFile | null> {
@@ -161,7 +161,19 @@ async function loadSeedTraffic(): Promise<TrafficFile | null> {
 
 function withSeedTraffic(file: TrafficFile, seed: TrafficFile | null): TrafficFile {
   if (!seed) return file;
-  return mergeTraffic(file, seed);
+  const out: TrafficFile = {
+    updatedAt: stamp(file.updatedAt) >= stamp(seed.updatedAt) ? file.updatedAt : seed.updatedAt,
+    houses: { ...file.houses },
+  };
+  for (const [id, row] of Object.entries(seed.houses ?? {})) {
+    const live = out.houses[id] ?? { saved: 0, routed: 0, visited: 0 };
+    out.houses[id] = {
+      saved: live.saved + (row.saved ?? 0),
+      routed: live.routed + (row.routed ?? 0),
+      visited: live.visited + (row.visited ?? 0),
+    };
+  }
+  return out;
 }
 
 function remember(file: TrafficFile) {

@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { loadLikedIds, toggleLiked } from "@/lib/offline-db";
 
 export function useLikedHouses() {
-  const [ids, setIds] = useState<string[]>([]);
+  const [ids, setIds] = useState<string[]>(() =>
+    typeof window === "undefined" ? [] : loadLikedIds(),
+  );
 
   useEffect(() => {
     const read = () => setIds(loadLikedIds());

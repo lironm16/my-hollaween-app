@@ -551,14 +551,16 @@ export function NeighborhoodApp({
   }
 
   function onToggleLike(id: string) {
-    const ids = likes.toggle(id);
-    reportHouseTraffic(id, "saved", ids.includes(id));
+    const nextOn = !likes.liked(id);
+    reportHouseTraffic(id, "saved", nextOn);
+    likes.toggle(id);
   }
 
   function onToggleVisited(id: string) {
+    const nextOn = !visits.visited(id);
+    reportHouseTraffic(id, "visited", nextOn);
     const ids = visits.toggle(id);
     const marking = ids.includes(id);
-    reportHouseTraffic(id, "visited", marking);
     if (!marking) return;
     setVisitCheer(false);
     window.clearTimeout(cheerTimer.current);

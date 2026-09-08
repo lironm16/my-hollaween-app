@@ -44,7 +44,7 @@ export function HouseCard({
   return (
     <Card
       size="sm"
-      className={cn("border-orange-500/15 bg-[#1d1028]/90 text-base")}
+      className={cn("overflow-visible border-orange-500/15 bg-[#1d1028]/90 text-base")}
     >
       <div className="house-list-card-chrome">
         <HouseActionBar
@@ -92,7 +92,6 @@ export function HouseCard({
             onToggleLike={onToggleLike}
             visited={visited}
             onToggleVisited={onToggleVisited}
-            managerEditCode={editCode}
             chrome="sheet"
           />
         )}
