@@ -264,11 +264,23 @@ export function NeighborhoodApp({
       return;
     }
     if (routeMode) return;
-    const timer = window.setTimeout(() => {
-      document.getElementById("house-search")?.focus();
-      consumeHouseSearchFocus();
-    }, 250);
-    return () => window.clearTimeout(timer);
+    let attempts = 0;
+    const tryFocus = () => {
+      const el = document.getElementById("house-search");
+      if (!(el instanceof HTMLElement)) return false;
+      el.focus();
+      if (document.activeElement === el) {
+        consumeHouseSearchFocus();
+        return true;
+      }
+      return false;
+    };
+    if (tryFocus()) return;
+    const timer = window.setInterval(() => {
+      attempts += 1;
+      if (tryFocus() || attempts >= 12) window.clearInterval(timer);
+    }, 80);
+    return () => window.clearInterval(timer);
   }, [searchFocusTick, view, routeMode]);
 
   const editCodeById = useMemo(() => {
@@ -777,7 +789,7 @@ export function NeighborhoodApp({
         </div>
         {routeTicker ? <StatusTicker text={routeTicker} /> : null}
         {view === "list" && !routeMode ? (
-          <div className="mt-2 min-w-0">
+          <div className="mt-2 w-full min-w-0">
             <Input
               id="house-search"
               type="search"
@@ -787,7 +799,7 @@ export function NeighborhoodApp({
               aria-label="חיפוש בית"
               autoComplete="off"
               enterKeyHint="search"
-              className="h-10 min-w-0 bg-[#1d1028] text-base"
+              className="h-10 w-full min-w-0 bg-[#1d1028] text-base"
             />
           </div>
         ) : null}
