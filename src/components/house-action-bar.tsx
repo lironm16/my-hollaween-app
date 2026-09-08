@@ -130,7 +130,10 @@ export function HouseActionBar({
               aria-label={editing ? "סגירת עריכה" : "עריכת הבית"}
               aria-pressed={editing}
               title="עריכה"
-              onClick={onToggleEdit}
+              onClick={(event) => {
+                event.stopPropagation();
+                onToggleEdit();
+              }}
             >
               <Pencil className="size-6" strokeWidth={2.2} />
             </button>

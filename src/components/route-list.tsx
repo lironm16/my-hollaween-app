@@ -1,14 +1,13 @@
 "use client";
 
 import { Navigation } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
 import { HouseTags } from "@/components/house-tags";
 import { formatDisplayAddress } from "@/lib/config";
 import { formatDistance } from "@/lib/geo";
 import { houseHeadline } from "@/lib/labels";
 import { googleMapsNavigateUrl, type WalkingRoute } from "@/lib/route";
-import { cn } from "@/lib/utils";
 
 export function RouteList({
   route,
@@ -66,43 +65,45 @@ export function RouteList({
           return stop.houses.map((house, houseIndex) => (
             <li key={house.id} className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/15">
               <HoursStatusBanner house={house} className="mb-2" />
-              <button
-                type="button"
-                onClick={() => onSelectHouse(house.id)}
-                className="flex w-full items-start gap-3 text-start"
-              >
-                <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-base font-bold text-black">
-                  {stop.order}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-base font-medium text-orange-100">
-                    {houseHeadline(house)}
+              <div className="flex items-start gap-2">
+                <button
+                  type="button"
+                  onClick={() => onSelectHouse(house.id)}
+                  className="flex min-w-0 flex-1 items-start gap-3 text-start"
+                >
+                  <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-base font-bold text-black">
+                    {stop.order}
                   </span>
-                  <span className="mt-0.5 block text-base text-violet-300">
-                    {formatDisplayAddress(house)}
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-base font-medium text-orange-100">
+                      {houseHeadline(house)}
+                    </span>
+                    <span className="mt-0.5 block text-base text-violet-300">
+                      {formatDisplayAddress(house)}
+                    </span>
+                    {house.arrival ? (
+                      <span className="mt-0.5 block text-base text-amber-200/90">{house.arrival}</span>
+                    ) : null}
+                    <span className="mt-1 block text-base text-violet-400">
+                      {houseIndex > 0
+                        ? "אותו בניין"
+                        : `${stop.order === 1 ? "מההתחלה" : "מעצירה קודמת"}: ${formatDistance(stop.fromPreviousMeters)} · מצטבר ${formatDistance(stop.cumulativeMeters)}`}
+                    </span>
+                    <span className="mt-2 block">
+                      <HouseTags house={house} large />
+                    </span>
                   </span>
-                  {house.arrival ? (
-                    <span className="mt-0.5 block text-base text-amber-200/90">{house.arrival}</span>
-                  ) : null}
-                  <span className="mt-1 block text-base text-violet-400">
-                    {houseIndex > 0
-                      ? "אותו בניין"
-                      : `${stop.order === 1 ? "מההתחלה" : "מעצירה קודמת"}: ${formatDistance(stop.fromPreviousMeters)} · מצטבר ${formatDistance(stop.cumulativeMeters)}`}
-                  </span>
-                  <span className="mt-2 block">
-                    <HouseTags house={house} large />
-                  </span>
-                </span>
-              </button>
-              <div className="mt-2 flex flex-wrap gap-2">
+                </button>
                 <a
                   href={walkUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className={cn(buttonVariants({ size: "sm" }), "bg-orange-500 text-black hover:bg-orange-400")}
+                  className="house-action-btn shrink-0"
+                  aria-label="ניווט לכאן"
+                  title="ניווט לכאן"
+                  onClick={(event) => event.stopPropagation()}
                 >
-                  <Navigation className="size-3.5" />
-                  ניווט לכאן
+                  <Navigation className="size-6" strokeWidth={2.2} />
                 </a>
               </div>
             </li>

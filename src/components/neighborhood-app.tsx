@@ -1023,7 +1023,7 @@ export function NeighborhoodApp({
               aria-hidden={view !== "list"}
             >
                 <div className="mx-auto w-full min-w-0 max-w-3xl px-3 pt-3">
-                  <div className="min-w-0 overflow-hidden rounded-3xl bg-[#160b20] p-1.5 ring-1 ring-orange-500/40">
+                  <div className="min-w-0 rounded-3xl bg-[#160b20] p-2 ring-1 ring-orange-500/40">
                     <StatsSummary {...summaryProps} compact />
                   </div>
                 </div>
@@ -1035,7 +1035,6 @@ export function NeighborhoodApp({
                     selectedId={selected?.id ?? null}
                     onSelectHouse={(id) => {
                       setClusterOverview(false);
-                      if (selectedId !== id) setEditing(false);
                       setSelectedId(id);
                     }}
                   />
@@ -1061,12 +1060,13 @@ export function NeighborhoodApp({
                     }}
                     onSelectHouse={(id, index) => {
                       setClusterOverview(false);
-                      if (selectedId !== id) setEditing(false);
                       setSelectedListIndex(index);
                       setSelectedId(id);
                     }}
-                    onEditHouse={(id) => {
+                    onEditHouse={(id, index) => {
                       setClusterOverview(false);
+                      setEditForId(id);
+                      setSelectedListIndex(index);
                       setSelectedId(id);
                       setEditing(true);
                     }}

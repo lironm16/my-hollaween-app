@@ -55,16 +55,16 @@ function tileUrlFor(theme: "dark" | "light") {
   return theme === "light" ? config.tiles.url.replace("/dark_all/", "/light_all/") : config.tiles.url;
 }
 
-const ROUTE_BADGE_W = 30;
+const ROUTE_BADGE_H = 32;
 
 function routeBadgeHtml(order: number) {
   return `<span class="route-stop-pin" aria-label="עצירה ${order}"><b class="route-stop-num">${order}</b></span>`;
 }
 
 function wrapRoutePin(html: string, routeOrder?: number) {
-  if (!routeOrder) return { html, extraW: 0 };
+  if (!routeOrder) return { html, extraH: 0 };
   return {
-    extraW: ROUTE_BADGE_W,
+    extraH: ROUTE_BADGE_H,
     html: `<div class="house-pin-route">${html}${routeBadgeHtml(routeOrder)}</div>`,
   };
 }
@@ -242,8 +242,8 @@ function clusterIcon(
     return L.divIcon({
       className: `pumpkin-pin-icon${selectedClass}${hoursClass}`,
       html: wrapped.html,
-      iconSize: [PIN_BOX + wrapped.extraW, PIN_BOX + 4],
-      iconAnchor: [PIN_BOX / 2, PIN_BOX],
+      iconSize: [PIN_BOX, PIN_BOX + 4 + wrapped.extraH],
+      iconAnchor: [PIN_BOX / 2, PIN_BOX + wrapped.extraH],
     });
   }
 
@@ -255,8 +255,8 @@ function clusterIcon(
     return L.divIcon({
       className: `pumpkin-pin-icon pumpkin-pin-building${selectedClass}`,
       html: wrapped.html,
-      iconSize: [PIN_BOX + wrapped.extraW, 80],
-      iconAnchor: [PIN_BOX / 2, 76],
+      iconSize: [PIN_BOX, 80 + wrapped.extraH],
+      iconAnchor: [PIN_BOX / 2, 76 + wrapped.extraH],
     });
   }
 

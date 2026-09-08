@@ -169,34 +169,27 @@ function Section({
   );
 }
 
-function SavedHeart({ className }: { className?: string }) {
-  return (
-    <Heart className={cn("fill-current text-[#fb7185]", className)} strokeWidth={2.2} />
-  );
-}
-
-function CompactCell({
+function CompactChip({
   icon,
   value,
   label,
-  ariaLabel,
 }: {
   icon: ReactNode;
   value: string;
-  label?: string;
-  ariaLabel?: string;
+  label: string;
 }) {
   return (
-    <div
-      className="flex min-w-0 max-w-full flex-col items-center justify-center gap-0.5 overflow-hidden rounded-xl bg-[#14081c] px-0.5 py-1"
-      aria-label={ariaLabel ?? (label ? `${value} ${label}` : value)}
-    >
+    <div className="flex min-h-10 min-w-0 items-center gap-1.5 rounded-xl bg-[#14081c] px-2 py-1.5">
       <IconWell className="size-7">{icon}</IconWell>
-      <span className="max-w-full truncate text-sm font-bold leading-none text-white">{value}</span>
-      {label ? (
-        <span className="max-w-full truncate text-[10px] leading-none text-white/80">{label}</span>
-      ) : null}
+      <span className="shrink-0 text-base font-bold leading-none text-white">{value}</span>
+      <span className="min-w-0 truncate text-sm leading-none text-white/80">{label}</span>
     </div>
+  );
+}
+
+function SavedHeart({ className }: { className?: string }) {
+  return (
+    <Heart className={cn("fill-current text-[#fb7185]", className)} strokeWidth={2.2} />
   );
 }
 
@@ -225,45 +218,44 @@ export function StatsSummary({
   const houseIcon = <HouseIcon />;
 
   if (compact) {
+    const routeTitle = route?.accessible ? "מסלול נגיש" : "מסלול";
     return (
-      <div className="flex min-w-0 w-full flex-col gap-1.5 overflow-hidden text-right" dir="rtl">
-        <div className="grid min-w-0 grid-cols-4 gap-1 rounded-2xl bg-[#241332] p-1 ring-1 ring-white/10">
-          <CompactCell icon={houseIcon} value={String(totalHouses)} label="בתים" />
-          <CompactCell
+      <div className="flex min-w-0 w-full flex-col gap-1.5 text-right" dir="rtl">
+        <div className="grid min-w-0 grid-cols-2 gap-1.5">
+          <CompactChip icon={houseIcon} value={String(totalHouses)} label="בתים" />
+          <CompactChip
             icon={<PeopleIcon />}
             value={onlineDevices == null ? "—" : String(onlineDevices)}
             label="מבקרים"
           />
-          <CompactCell
+          <CompactChip
             icon={<SavedHeart className="size-7" />}
             value={String(likedCount)}
-            ariaLabel={`${likedCount} שמורים`}
+            label="שמורים"
           />
-          <CompactCell
+          <CompactChip
             icon={<VisitedCheck visited size="sm" className="size-7" />}
             value={String(visitedCount)}
-            ariaLabel={`${visitedCount} ביקרתי`}
+            label="ביקרתי"
           />
         </div>
-        <section className="min-w-0 rounded-2xl bg-[#2c1a12] p-1 ring-1 ring-orange-500/25">
-          <h3 className="mb-1 truncate text-right text-xs font-semibold text-orange-400">
-            {route?.accessible ? "מסלול נגיש" : "מסלול"}
-          </h3>
-          <div className="grid min-w-0 grid-cols-4 gap-1">
-            <CompactCell icon={houseIcon} value={String(filteredHouses)} label="בתים" />
-            <CompactCell
+        <section className="min-w-0 rounded-2xl bg-[#2c1a12] p-1.5 ring-1 ring-orange-500/25">
+          <h3 className="mb-1 text-right text-sm font-semibold text-orange-400">{routeTitle}</h3>
+          <div className="grid min-w-0 grid-cols-2 gap-1.5">
+            <CompactChip icon={houseIcon} value={String(filteredHouses)} label="בתים" />
+            <CompactChip
               icon={<PinIcon />}
               value={route ? String(route.stops.length) : "—"}
               label="עצירות"
             />
-            <CompactCell
+            <CompactChip
               icon={<PathIcon />}
               value={walk ? walk.value : "—"}
               label={walk ? walk.unit : "ק״מ"}
             />
-            <CompactCell
+            <CompactChip
               icon={<ClockIcon />}
-              value={route ? String(route.totalMinutes) : "—"}
+              value={route ? `כ־${route.totalMinutes}` : "—"}
               label="דק׳"
             />
           </div>
