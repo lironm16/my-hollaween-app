@@ -41,6 +41,10 @@ export type HouseStatus = (typeof HOUSE_STATUSES)[number];
 export const STOCK_LEVELS = ["plenty", "low", "out"] as const;
 export type StockLevel = (typeof STOCK_LEVELS)[number];
 
+/** Candy disc tones on the map / list / filters (stock plus "never offered"). */
+export const CANDY_TONE_IDS = ["none", "plenty", "low", "out"] as const;
+export type CandyTone = (typeof CANDY_TONE_IDS)[number];
+
 export const VISIT_STATES = ["come", "decorOnly", "closed"] as const;
 export type VisitState = (typeof VISIT_STATES)[number];
 

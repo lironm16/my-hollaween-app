@@ -1507,8 +1507,8 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .map-house-sheet-chrome .house-action-bar {
   width: 100%;
   justify-content: space-evenly;
-  gap: 0;
-  flex-wrap: nowrap;
+  gap: 4px 0;
+  flex-wrap: wrap;
   margin-inline-start: 0;
 }
 

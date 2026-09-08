@@ -219,7 +219,6 @@ export function MapHouseSheet({
                     onToggleVisited={
                       onToggleVisited ? () => onToggleVisited(house.id) : undefined
                     }
-                    managerEditCode={editCodeFor?.(house.id) ?? managerEditCode}
                     extra={extra}
                     chrome="sheet"
                   />

@@ -1,5 +1,5 @@
 const CACHE = "hw-shell-v59";
-const TILE_CACHE = "hw-tiles-v4";
+const TILE_CACHE = "hw-tiles-v5";
 const PRECACHE = [
   "/offline.html",
   "/catalog.json",
@@ -67,6 +67,7 @@ self.addEventListener("fetch", (event) => {
     url.hostname.includes("basemaps.cartocdn.com") ||
     url.hostname.includes("tile.openstreetmap.org") ||
     url.hostname.includes("openstreetmap.fr") ||
+    url.hostname.includes("israelhiking.osm.org.il") ||
     url.hostname.includes("arcgisonline.com")
   ) {
     event.respondWith(cacheFirst(req, TILE_CACHE));

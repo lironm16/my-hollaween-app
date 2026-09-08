@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { loadLikedIds, loadVisitedIds } from "@/lib/offline-db";
 import {
   EMPTY_TRAFFIC,
   overlayTraffic,
@@ -64,12 +63,6 @@ function loadReported() {
     }
   }
   try {
-    for (const id of loadLikedIds()) reported.saved.add(id);
-    for (const id of loadVisitedIds()) reported.visited.add(id);
-  } catch {
-    /* ignore */
-  }
-  try {
     const raw = localStorage.getItem(PENDING_KEY) ?? sessionStorage.getItem(PENDING_KEY);
     const stored = raw ? (JSON.parse(raw) as unknown) : null;
     if (stored && typeof stored === "object") {
@@ -106,7 +99,7 @@ function persistPending() {
 }
 
 function queueDelta(houseId: string, kind: TrafficKind, delta: 1 | -1) {
-  const row = pending[houseId] ?? emptyPending();
+  const row = { ...(pending[houseId] ?? emptyPending()) };
   row[kind] = Math.max(-1, Math.min(1, row[kind] + delta));
   if (isZero(row)) delete pending[houseId];
   else pending[houseId] = row;
@@ -117,7 +110,8 @@ function queueDelta(houseId: string, kind: TrafficKind, delta: 1 | -1) {
 
 function consumeSent(events: TrafficDelta[]) {
   for (const event of events) {
-    const row = pending[event.houseId] ?? emptyPending();
+    const row = pending[event.houseId];
+    if (!row) continue;
     row[event.kind] = Math.max(-1, Math.min(1, row[event.kind] - event.delta));
     if (isZero(row)) delete pending[event.houseId];
     else pending[event.houseId] = row;
@@ -248,7 +242,7 @@ export function useHouseTraffic() {
         /* keep last */
       }
     }
-    if (Object.keys(cache).length === 0) void refresh();
+    void refresh();
     const poll = window.setInterval(refresh, POLL_MS);
     const onVisible = () => {
       if (document.visibilityState === "visible") void refresh();

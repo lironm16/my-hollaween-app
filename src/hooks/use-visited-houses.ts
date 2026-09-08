@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { loadVisitedIds, toggleVisited } from "@/lib/offline-db";
 
 export function useVisitedHouses() {
-  const [ids, setIds] = useState<string[]>([]);
+  const [ids, setIds] = useState<string[]>(() =>
+    typeof window === "undefined" ? [] : loadVisitedIds(),
+  );
 
   useEffect(() => {
     const read = () => setIds(loadVisitedIds());

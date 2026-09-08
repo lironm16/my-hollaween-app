@@ -53,7 +53,7 @@ export function HouseCard({
       tabIndex={onOpen ? 0 : undefined}
       aria-label={onOpen ? "פתיחת פרטי הבית" : undefined}
       className={cn(
-        "border-orange-500/15 bg-[#1d1028]/90 text-base",
+        "overflow-visible border-orange-500/15 bg-[#1d1028]/90 text-base",
         onOpen && "cursor-pointer transition hover:border-orange-400/50 hover:bg-[#261536]",
       )}
       onClick={(event) => {

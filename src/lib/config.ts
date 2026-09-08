@@ -3,23 +3,15 @@ const centerLng = Number(process.env.NEXT_PUBLIC_MAP_CENTER_LNG ?? 34.8112);
 const latPad = 0.0075;
 const lngPad = 0.014;
 
-const cartoKey = process.env.NEXT_PUBLIC_CARTO_API_KEY?.trim() ?? "";
-
-const tiles = cartoKey
-  ? {
-      url: `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${cartoKey}`,
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      invert: false,
-    }
-  : {
-      // tile.openstreetmap.org serves empty tiles to many clients. OSM France
-      // still has streets; CSS invert (not grayscale) is the dark Halloween look.
-      url: "https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png",
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      invert: true,
-    };
+const tiles = {
+  // OSM France / Carto label streets in English. Israel Hiking Map is Hebrew
+  // through zoom 16; Leaflet upscales past that for house-level zoom.
+  url: "https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png",
+  attribution:
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://israelhiking.osm.org.il/">Israel Hiking Map</a>',
+  invert: true,
+  maxNativeZoom: 16,
+} as const;
 
 export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים"] as const;
 export type NeighborhoodId = (typeof NEIGHBORHOODS)[number];
