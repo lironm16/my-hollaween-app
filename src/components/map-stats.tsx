@@ -2,8 +2,9 @@
 
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Check, WifiOff, X } from "lucide-react";
+import { Heart, WifiOff, X } from "lucide-react";
 import { ScarePumpkin } from "@/components/scare-glyphs";
+import { VisitedCheck } from "@/components/visited-check";
 import type { WalkingRoute } from "@/lib/route";
 import { cn } from "@/lib/utils";
 
@@ -82,17 +83,6 @@ function ClockIcon() {
         stroke="#fb923c"
         strokeWidth="1.9"
         strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function HeartIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden className="h-full w-full">
-      <path
-        fill="#e11d48"
-        d="M12 20.8 4.5 13.4C2.1 11 2.3 7.2 5.4 5.4c2.2-1.3 5-.6 6.6 1.6 1.6-2.2 4.4-2.9 6.6-1.6 3.1 1.8 3.3 5.6.9 8z"
       />
     </svg>
   );
@@ -180,6 +170,12 @@ function Section({
   );
 }
 
+function SavedHeart({ className }: { className?: string }) {
+  return (
+    <Heart className={cn("fill-current text-[#fb7185]", className)} strokeWidth={2.2} />
+  );
+}
+
 function CompactCell({
   icon,
   value,
@@ -202,19 +198,6 @@ function CompactCell({
         <span className="max-w-full truncate text-[10px] leading-none text-white/80">{label}</span>
       ) : null}
     </div>
-  );
-}
-
-function VisitedMark({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center justify-center rounded-full bg-emerald-500 text-black",
-        className ?? "size-9",
-      )}
-    >
-      <Check className={className ? "size-3.5" : "size-5"} strokeWidth={3} />
-    </span>
   );
 }
 
@@ -258,12 +241,12 @@ export function StatsSummary({
             label="מבקרים"
           />
           <CompactCell
-            icon={<HeartIcon />}
+            icon={<SavedHeart className="size-5" />}
             value={String(likedCount)}
             ariaLabel={`${likedCount} שמורים`}
           />
           <CompactCell
-            icon={<VisitedMark className="size-5" />}
+            icon={<VisitedCheck visited size="sm" />}
             value={String(visitedCount)}
             ariaLabel={`${visitedCount} ביקרתי`}
           />
@@ -323,8 +306,8 @@ export function StatsSummary({
       </Section>
       <Section title="שלכם">
         <div className="flex items-start justify-around gap-1 pt-1">
-          <Stack icon={<HeartIcon />} value={String(likedCount)} label="שמורים" />
-          <Stack icon={<VisitedMark />} value={String(visitedCount)} label="ביקרתי" />
+          <Stack icon={<SavedHeart className="size-9" />} value={String(likedCount)} label="שמורים" />
+          <Stack icon={<VisitedCheck visited />} value={String(visitedCount)} label="ביקרתי" />
         </div>
       </Section>
       <Section

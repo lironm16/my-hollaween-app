@@ -151,7 +151,10 @@ export function HouseDetails({
                 }}
                 className="inline-flex items-center gap-2 rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
               >
-                <Heart className={cn("size-6", liked && "fill-orange-500 text-orange-500")} />
+                <Heart
+                  className={cn("size-6", liked ? "fill-current text-[#fb7185]" : "text-[#fde68a]")}
+                  strokeWidth={2.2}
+                />
                 <HouseActionCount n={traffic.saved} />
               </button>
             ) : null}
