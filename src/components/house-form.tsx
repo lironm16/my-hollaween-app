@@ -3,7 +3,8 @@
 import { useState, type ReactNode } from "react";
 import { Camera } from "lucide-react";
 import { toast } from "sonner";
-import { compressJpegFile } from "@/lib/compress-image";
+import { compressJpegFile, type PhotoFocus } from "@/lib/compress-image";
+import { HOUSE_CARD_PHOTO_BOX, HousePhotoFrame } from "@/components/house-photo-frame";
 import { AddressField, reversePin } from "@/components/address-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,14 @@ import { freezeExpireIso, isOwnerFrozen, resolveDecorLevel } from "@/lib/house-s
 import { StrollerSign } from "@/components/symbols";
 import { ScareSign } from "@/components/scare-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
-import { houseHoursWindows, MAX_HOUR_WINDOWS, nightStatusControlsEnabled, syncHoursFields } from "@/lib/hours";
+import {
+  houseHoursWindows,
+  hoursWindowsIssue,
+  MAX_HOUR_WINDOWS,
+  nightStatusControlsEnabled,
+  parseClockMinutes,
+  syncHoursFields,
+} from "@/lib/hours";
 import { useAppNow } from "@/hooks/use-app-clock";
 import type { HoursWindow } from "@/lib/types";
 
@@ -105,6 +113,7 @@ export function HouseForm({
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoFocus, setPhotoFocus] = useState<PhotoFocus>({ x: 50, y: 50 });
   const [clearPhoto, setClearPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
   const existingPhoto = initial?.photoUrl ?? "";
@@ -122,7 +131,13 @@ export function HouseForm({
       if (current.length >= MAX_HOUR_WINDOWS) return current;
       const last = current[current.length - 1];
       const nextFrom = last?.to || "20:00";
-      return [...current, { from: nextFrom, to: "21:00" }];
+      const fromMin = parseClockMinutes(clock(nextFrom));
+      const toMin = fromMin === null ? 21 * 60 : Math.min(23 * 60 + 59, fromMin + 60);
+      if (fromMin !== null && toMin <= fromMin) return current;
+      const hours = Math.floor(toMin / 60);
+      const minutes = toMin % 60;
+      const nextTo = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+      return [...current, { from: nextFrom, to: nextTo }];
     });
   }
 
@@ -146,6 +161,9 @@ export function HouseForm({
 
   const candyOffered = candy === "plenty" || candy === "low";
   const undecorated = decorLevel === "none";
+  const hoursIssue = hoursWindowsIssue(
+    hourWindows.map((window) => ({ from: clock(window.from), to: clock(window.to) })),
+  );
   const nightStatusEnabled = nightStatusControlsEnabled(
     {
       openHours: hourWindows,
@@ -287,11 +305,9 @@ export function HouseForm({
           from: clock(window.from),
           to: clock(window.to),
         }));
-        if (
-          windows.length === 0 ||
-          windows.some((window) => !/^\d{2}:\d{2}$/.test(window.from) || !/^\d{2}:\d{2}$/.test(window.to))
-        ) {
-          toast.error("מלאו את כל חלונות השעות, או הסירו חלון ריק.");
+        const hoursIssue = hoursWindowsIssue(windows);
+        if (hoursIssue) {
+          toast.error(hoursIssue);
           return;
         }
         const hours = syncHoursFields(windows);
@@ -315,7 +331,7 @@ export function HouseForm({
             let photoDataUrl: string | undefined;
             if (photoFile) {
               try {
-                photoDataUrl = await compressJpegFile(photoFile);
+                photoDataUrl = await compressJpegFile(photoFile, photoFocus);
               } catch {
                 toast.error("לא הצלחנו לעבד את התמונה");
                 return;
@@ -461,6 +477,7 @@ export function HouseForm({
               + הוספת חלון שעות
             </button>
           ) : null}
+          {hoursIssue ? <p className="text-base text-red-300">{hoursIssue}</p> : null}
         </div>
       </FormSection>
       <FormSection title="מה יפגשו בבית">
@@ -618,14 +635,20 @@ export function HouseForm({
       <FormSection title="תמונת קישוט">
         <p className="text-base text-violet-300">אפשר גם להעלות אחרי שתקשטו את הבית.</p>
         {photoPreview || (existingPhoto && !clearPhoto) ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={photoPreview || existingPhoto}
-            alt=""
-            className="mb-2 h-36 w-full rounded-xl object-cover ring-1 ring-orange-500/25"
-          />
+          <div className="mb-2 space-y-2">
+            <HousePhotoFrame
+              src={photoPreview || existingPhoto}
+              focus={photoPreview ? photoFocus : { x: 50, y: 50 }}
+              onFocusChange={photoPreview ? setPhotoFocus : undefined}
+            />
+            {photoPreview ? (
+              <p className="text-base text-violet-300">גררו את התמונה כדי לבחור את המרכז שיופיע בכרטיס</p>
+            ) : null}
+          </div>
         ) : (
-          <div className="mb-2 flex h-24 items-center justify-center rounded-xl bg-[#1d1028] text-base text-violet-400 ring-1 ring-orange-500/15">
+          <div
+            className={`${HOUSE_CARD_PHOTO_BOX} mb-2 flex items-center justify-center bg-[#1d1028] text-center text-sm text-violet-400`}
+          >
             אין תמונה עדיין
           </div>
         )}
@@ -651,6 +674,7 @@ export function HouseForm({
                 e.target.value = "";
                 if (!file) return;
                 setPhotoFile(file);
+                setPhotoFocus({ x: 50, y: 50 });
                 setClearPhoto(false);
                 const reader = new FileReader();
                 reader.onload = () => setPhotoPreview(String(reader.result ?? ""));
@@ -666,6 +690,7 @@ export function HouseForm({
               onClick={() => {
                 setPhotoFile(null);
                 setPhotoPreview(null);
+                setPhotoFocus({ x: 50, y: 50 });
                 setClearPhoto(true);
               }}
             >

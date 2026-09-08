@@ -6,6 +6,7 @@
     --color-red-50: oklch(97.1% 0.013 17.38);
     --color-red-100: oklch(93.6% 0.032 17.717);
     --color-red-200: oklch(88.5% 0.062 18.334);
+    --color-red-300: oklch(80.8% 0.114 19.571);
     --color-red-900: oklch(39.6% 0.141 25.723);
     --color-red-950: oklch(25.8% 0.092 26.042);
     --color-orange-50: oklch(98% 0.016 73.684);
@@ -598,17 +599,11 @@
   .h-11 {
     height: calc(var(--spacing) * 11);
   }
-  .h-24 {
-    height: calc(var(--spacing) * 24);
-  }
   .h-28 {
     height: calc(var(--spacing) * 28);
   }
   .h-32 {
     height: calc(var(--spacing) * 32);
-  }
-  .h-36 {
-    height: calc(var(--spacing) * 36);
   }
   .h-56 {
     height: calc(var(--spacing) * 56);
@@ -802,6 +797,9 @@
   }
   .cursor-default {
     cursor: default;
+  }
+  .cursor-grab {
+    cursor: grab;
   }
   .cursor-not-allowed {
     cursor: not-allowed;
@@ -1777,6 +1775,9 @@
   .text-red-200 {
     color: var(--color-red-200);
   }
+  .text-red-300 {
+    color: var(--color-red-300);
+  }
   .text-rose-300 {
     color: var(--color-rose-300);
   }
@@ -2384,6 +2385,9 @@
   }
   .focus-visible\:outline-ring:focus-visible {
     outline-color: var(--ring);
+  }
+  .active\:cursor-grabbing:active {
+    cursor: grabbing;
   }
   .active\:not-aria-\[haspopup\]\:translate-y-px:active:not([aria-haspopup]) {
     --tw-translate-y: 1px;
@@ -5008,8 +5012,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   display: flex;
   flex-direction: column;
   height: 70%;
-  max-height: 70dvh;
-  max-height: calc(var(--app-h, 100svh) * 0.7);
+  max-height: 70%;
   overflow: hidden;
   background: #160b20;
   border-radius: 22px 22px 0 0;
@@ -5024,8 +5027,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 }
 .map-house-sheet.is-dragging,
 .map-house-sheet.is-raised {
-  max-height: calc(100dvh - 8px);
-  max-height: calc(var(--app-h, 100svh) - 8px);
+  max-height: calc(100% - 8px);
 }
 .map-house-sheet.is-cluster-overview {
   height: auto;

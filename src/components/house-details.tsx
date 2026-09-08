@@ -18,6 +18,7 @@ import { shouldLoadHousePhoto } from "@/lib/photos";
 import { HouseActionCount } from "@/components/house-action-bar";
 import { useHouseTraffic } from "@/hooks/use-house-traffic";
 import type { PublicHouse } from "@/lib/types";
+import { HOUSE_CARD_PHOTO_BOX } from "@/components/house-photo-frame";
 import { cn } from "@/lib/utils";
 
 export function HouseDetails({
@@ -80,6 +81,7 @@ export function HouseDetails({
     .filter(Boolean)
     .join(" · ");
   const hasPhoto = Boolean(house.photoUrl && !photoBroken);
+  const photoBesideTitle = Boolean(hasPhoto && (compact || sheet));
   const indexBadge =
     index != null ? (
       <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 font-sans text-base font-bold text-black">
@@ -96,7 +98,11 @@ export function HouseDetails({
             e.stopPropagation();
             setPhotoOpen(true);
           }}
-          className={cn("block overflow-hidden rounded-xl ring-1 ring-orange-500/25", compact ? "shrink-0" : "w-full")}
+          className={cn(
+            photoBesideTitle
+              ? HOUSE_CARD_PHOTO_BOX
+              : "block w-full overflow-hidden rounded-xl ring-1 ring-orange-500/25",
+          )}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -108,7 +114,7 @@ export function HouseDetails({
             onError={() => setPhotoBroken(true)}
             className={cn(
               "object-cover",
-              compact ? "h-32 w-32" : "h-56 w-full",
+              photoBesideTitle ? "h-full w-full" : "h-56 w-full",
             )}
           />
         </button>
@@ -121,14 +127,14 @@ export function HouseDetails({
           }}
           className={cn(
             "rounded-xl bg-[#2a1638] px-3 py-3 text-base text-amber-100 ring-1 ring-orange-500/20",
-            compact ? "h-32 w-32 shrink-0" : "w-full",
+            photoBesideTitle ? "h-32 w-32 shrink-0" : "w-full",
           )}
         >
           יש תמונת קישוט — לחצו רק אם הרשת פנויה
         </button>
       )
     ) : null;
-  const indexByPhoto = Boolean(indexBadge && photo);
+  const indexByPhoto = Boolean(indexBadge && photoBesideTitle);
   return (
     <div className="space-y-3">
       {photoOpen && house.photoUrl && typeof document !== "undefined"
@@ -153,8 +159,8 @@ export function HouseDetails({
           )
         : null}
       <HoursStatusBanner house={house} />
-      <div className={cn("flex items-start gap-3", compact && photo && "flex-row")}>
-        {compact && photo ? (
+      <div className={cn("flex items-start gap-3", photoBesideTitle && "flex-row")}>
+        {photoBesideTitle ? (
           <div className="flex shrink-0 items-start gap-1.5">
             {indexBadge}
             {photo}
@@ -289,7 +295,7 @@ export function HouseDetails({
               </Link>
             </div>
           )}
-          {photo ? (
+          {photo && !photoBesideTitle ? (
             <div className="flex items-start gap-2">
               {indexBadge}
               <div className="min-w-0 flex-1">{photo}</div>

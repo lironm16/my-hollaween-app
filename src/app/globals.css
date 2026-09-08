@@ -1523,8 +1523,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   display: flex;
   flex-direction: column;
   height: 70%;
-  max-height: 70dvh;
-  max-height: calc(var(--app-h, 100svh) * 0.7);
+  max-height: 70%;
   overflow: hidden;
   background: #160b20;
   border-radius: 22px 22px 0 0;
@@ -1541,8 +1540,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 
 .map-house-sheet.is-dragging,
 .map-house-sheet.is-raised {
-  max-height: calc(100dvh - 8px);
-  max-height: calc(var(--app-h, 100svh) - 8px);
+  max-height: calc(100% - 8px);
 }
 
 .map-house-sheet.is-cluster-overview {
