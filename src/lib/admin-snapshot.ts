@@ -24,6 +24,7 @@ export type AdminSnapshot = {
   closingSoon: number;
   onBreak: number;
   closed: number;
+  candyNone: number;
   candyPlenty: number;
   candyLow: number;
   candyOut: number;
@@ -81,6 +82,7 @@ export function buildAdminSnapshot(input: {
     closingSoon: listed.filter((house) => isClosingSoon(house, now)).length,
     onBreak: listed.filter((house) => isOwnerFrozen(house) || isOnBreak(house, now)).length,
     closed: listed.filter((house) => effectiveVisit(house) === "closed").length,
+    candyNone: listed.filter((house) => candyOf(house) === null).length,
     candyPlenty: listed.filter((house) => candyOf(house) === "plenty").length,
     candyLow: listed.filter((house) => candyOf(house) === "low").length,
     candyOut: listed.filter((house) => candyOf(house) === "out").length,
