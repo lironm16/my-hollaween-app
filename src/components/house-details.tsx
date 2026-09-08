@@ -105,7 +105,15 @@ export function HouseDetails({
       <HoursStatusBanner house={house} />
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="font-display text-xl text-orange-300">{houseHeadline(house)}</p>
+          <p className="font-display text-xl text-orange-300">
+            {liked ? (
+              <Heart
+                className="mb-0.5 me-1.5 inline size-5 fill-orange-500 text-orange-500"
+                aria-label="שמור"
+              />
+            ) : null}
+            {houseHeadline(house)}
+          </p>
           <p className="text-base text-violet-200">{parts}</p>
         </div>
         {sheet ? null : (

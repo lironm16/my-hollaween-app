@@ -242,7 +242,7 @@ export function useHouseTraffic() {
         /* keep last */
       }
     }
-    if (Object.keys(cache).length === 0) void refresh();
+    void refresh();
     const poll = window.setInterval(refresh, POLL_MS);
     const onVisible = () => {
       if (document.visibilityState === "visible") void refresh();
