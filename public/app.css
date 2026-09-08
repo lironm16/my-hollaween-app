@@ -403,9 +403,6 @@
   .me-1\.5 {
     margin-inline-end: calc(var(--spacing) * 1.5);
   }
-  .me-2 {
-    margin-inline-end: calc(var(--spacing) * 2);
-  }
   .mt-0\.5 {
     margin-top: calc(var(--spacing) * 0.5);
   }
@@ -856,9 +853,6 @@
   }
   .items-start {
     align-items: flex-start;
-  }
-  .justify-around {
-    justify-content: space-around;
   }
   .justify-between {
     justify-content: space-between;
@@ -5429,6 +5423,40 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .filters-sheet-panel {
   height: min(720px, calc(var(--app-h, 100svh) * 0.92));
   max-height: min(720px, calc(var(--app-h, 100svh) - var(--vv-bottom-inset, 0px)));
+}
+.route-list {
+  display: flex;
+  flex-direction: column;
+}
+.route-list-card {
+  border-radius: 1rem;
+  background: #1d1028;
+  padding: 0.75rem;
+  box-shadow: 0 0 0 2px #f97316;
+}
+.route-list-house {
+  border-radius: 1.1rem;
+  box-shadow: 0 0 0 2px #f97316;
+}
+.route-list-leg {
+  display: flex;
+  align-items: stretch;
+  gap: 0.55rem;
+  min-height: 2.4rem;
+  padding-block: 0.1rem;
+  padding-inline-start: 1.65rem;
+}
+.route-list-leg-line {
+  width: 3px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #f97316;
+}
+.route-list-leg-label {
+  align-self: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fdba74;
 }
 @property --tw-translate-x {
   syntax: "*";
