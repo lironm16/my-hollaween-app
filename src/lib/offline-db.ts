@@ -285,6 +285,8 @@ const FILTERS_KEY = "hw-house-filters";
 export type HouseFiltersState = {
   accessibleOnly: boolean;
   openNowOnly: boolean;
+  closingSoonOnly: boolean;
+  openingSoonOnly: boolean;
   sensitivityFilters: SensitivityId[];
   scareFilters: ScareLevel[];
   candyFilters: CandyTone[];

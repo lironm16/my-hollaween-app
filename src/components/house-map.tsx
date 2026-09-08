@@ -719,6 +719,8 @@ export function HouseMap({
           attribution={config.tiles.attribution}
           url={tileUrl}
           key={tileUrl}
+          maxZoom={config.map.maxZoom}
+          maxNativeZoom={config.tiles.maxNativeZoom}
         />
         <SizeSync active={active} />
         {routeFitTick > 0 && fitPositions ? (

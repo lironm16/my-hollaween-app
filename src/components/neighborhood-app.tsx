@@ -40,11 +40,11 @@ import { offersSensitivity, isDecorated } from "@/lib/house-state";
 import { AccessibleMark } from "@/components/symbols";
 import { candyTone, CandySign, CANDY_TONES } from "@/components/candy-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
-import { OpenNowMark } from "@/components/open-now-mark";
+import { OpenNowMark, ClosingSoonMark, OpeningSoonMark } from "@/components/open-now-mark";
 import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
 import { ScareMark, ScareSign } from "@/components/scare-glyphs";
 import { decorShort } from "@/lib/labels";
-import { isOpenNow } from "@/lib/hours";
+import { isClosingSoon, isOpenNow, isOpeningSoon } from "@/lib/hours";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { reportHouseTraffic } from "@/hooks/use-house-traffic";
@@ -110,6 +110,8 @@ export function NeighborhoodApp({
   const {
     accessibleOnly,
     openNowOnly,
+    closingSoonOnly,
+    openingSoonOnly,
     sensitivityFilters,
     scareFilters,
     candyFilters,
@@ -285,7 +287,13 @@ export function NeighborhoodApp({
       if (accessibleOnly && !house.accessible) return false;
       if (candyFilters.length > 0 && !candyFilters.includes(candyTone(house))) return false;
       if (!includeUndecorated && !isDecorated(house)) return false;
-      if (openNowOnly && !isOpenNow(house, now)) return false;
+      if (openNowOnly || closingSoonOnly || openingSoonOnly) {
+        const hoursHit =
+          (openNowOnly && isOpenNow(house, now)) ||
+          (closingSoonOnly && isClosingSoon(house, now)) ||
+          (openingSoonOnly && isOpeningSoon(house, now));
+        if (!hoursHit) return false;
+      }
       for (const sensitivity of sensitivityFilters) {
         if (!offersSensitivity(house, sensitivity)) return false;
       }
@@ -304,6 +312,8 @@ export function NeighborhoodApp({
     candyFilters,
     includeUndecorated,
     openNowOnly,
+    closingSoonOnly,
+    openingSoonOnly,
     sensitivityFilters,
     scareFilters,
     neighborhoodFilters,
@@ -317,6 +327,8 @@ export function NeighborhoodApp({
   const moreFilterCount =
     Number(accessibleOnly) +
     Number(openNowOnly) +
+    Number(closingSoonOnly) +
+    Number(openingSoonOnly) +
     Number(likedOnly) +
     Number(unvisitedOnly);
   // All 3 selected = no neighborhood restriction. Empty = exclude every area.
@@ -757,6 +769,26 @@ export function NeighborhoodApp({
         activeCount={activeFilterCount}
         onClear={clearAllFilters}
       >
+        <FilterSection title="שעות">
+          <FilterOption
+            checked={openNowOnly}
+            onChange={() => updateFilters({ openNowOnly: !openNowOnly })}
+          >
+            <OpenNowMark labeled />
+          </FilterOption>
+          <FilterOption
+            checked={closingSoonOnly}
+            onChange={() => updateFilters({ closingSoonOnly: !closingSoonOnly })}
+          >
+            <ClosingSoonMark labeled />
+          </FilterOption>
+          <FilterOption
+            checked={openingSoonOnly}
+            onChange={() => updateFilters({ openingSoonOnly: !openingSoonOnly })}
+          >
+            <OpeningSoonMark labeled />
+          </FilterOption>
+        </FilterSection>
         <FilterSection title="שכונה">
           {NEIGHBORHOODS.map((area) => (
             <FilterOption
@@ -803,12 +835,6 @@ export function NeighborhoodApp({
           ))}
         </FilterSection>
         <FilterSection title="עוד">
-          <FilterOption
-            checked={openNowOnly}
-            onChange={() => updateFilters({ openNowOnly: !openNowOnly })}
-          >
-            <OpenNowMark labeled />
-          </FilterOption>
           <FilterOption
             checked={accessibleOnly}
             onChange={() => updateFilters({ accessibleOnly: !accessibleOnly })}
