@@ -55,21 +55,22 @@ function tileUrlFor(theme: "dark" | "light") {
   return theme === "light" ? config.tiles.url.replace("/dark_all/", "/light_all/") : config.tiles.url;
 }
 
-const ROUTE_BADGE_H = 32;
+const ROUTE_BADGE_W = 30;
 
 function routeBadgeHtml(order: number) {
   return `<span class="route-stop-pin" aria-label="עצירה ${order}"><b class="route-stop-num">${order}</b></span>`;
 }
 
 function wrapRoutePin(html: string, routeOrder?: number) {
-  if (!routeOrder) return { html, extraH: 0 };
+  if (!routeOrder) return { html, extraW: 0 };
   return {
-    extraH: ROUTE_BADGE_H,
+    extraW: ROUTE_BADGE_W,
     html: `<div class="house-pin-route">${html}${routeBadgeHtml(routeOrder)}</div>`,
   };
 }
 
-const PIN = 46;
+const PIN = 56;
+const PIN_BOX = 62;
 const FAN_R = 82;
 
 function attr(value: string) {
@@ -241,8 +242,8 @@ function clusterIcon(
     return L.divIcon({
       className: `pumpkin-pin-icon${selectedClass}${hoursClass}`,
       html: wrapped.html,
-      iconSize: [50, 54 + wrapped.extraH],
-      iconAnchor: [25, 50 + wrapped.extraH],
+      iconSize: [PIN_BOX + wrapped.extraW, PIN_BOX + 4],
+      iconAnchor: [PIN_BOX / 2, PIN_BOX],
     });
   }
 
@@ -254,8 +255,8 @@ function clusterIcon(
     return L.divIcon({
       className: `pumpkin-pin-icon pumpkin-pin-building${selectedClass}`,
       html: wrapped.html,
-      iconSize: [54, 72 + wrapped.extraH],
-      iconAnchor: [27, 54 + wrapped.extraH],
+      iconSize: [PIN_BOX + wrapped.extraW, 80],
+      iconAnchor: [PIN_BOX / 2, 76],
     });
   }
 
@@ -305,15 +306,15 @@ function clusterIcon(
 const pickIcon = L.divIcon({
   className: "pumpkin-pin-icon",
   html: `<div class="house-pin is-pick" style="background:#6d28d9"><span>📍</span></div>`,
-  iconSize: [50, 54],
-  iconAnchor: [25, 50],
+  iconSize: [PIN_BOX, PIN_BOX + 4],
+  iconAnchor: [PIN_BOX / 2, PIN_BOX],
 });
 
 const originIcon = L.divIcon({
   className: "pumpkin-pin-icon is-origin-pin",
   html: `<div class="house-pin is-origin" aria-label="נקודת התחלה"><span>📍</span></div>`,
-  iconSize: [50, 54],
-  iconAnchor: [25, 50],
+  iconSize: [PIN_BOX, PIN_BOX + 4],
+  iconAnchor: [PIN_BOX / 2, PIN_BOX],
 });
 
 const youAreHereIcon = L.divIcon({
@@ -636,6 +637,7 @@ export function HouseMap({
     for (const stop of routeStops ?? []) map.set(stop.id, stop.order);
     return map;
   }, [routeStops]);
+  const lineRenderer = useMemo(() => L.svg({ padding: 0.5 }), []);
   const focus = useMemo(() => {
     if (pickMode || !selectedId) return null;
     const cluster = clusters.find((item) => item.houses.some((house) => house.id === selectedId));
@@ -723,6 +725,7 @@ export function HouseMap({
         minZoom={config.map.minZoom}
         maxZoom={config.map.maxZoom}
         scrollWheelZoom
+        renderer={lineRenderer}
         className="h-full w-full rounded-none"
         style={{ height: "100%", width: "100%" }}
       >
@@ -732,6 +735,8 @@ export function HouseMap({
           key={tileUrl}
           maxZoom={config.map.maxZoom}
           maxNativeZoom={config.tiles.maxNativeZoom}
+          updateWhenZooming={false}
+          className="hw-basemap"
         />
         <SizeSync active={active} />
         {routeFitTick > 0 && fitPositions ? (
@@ -791,27 +796,62 @@ export function HouseMap({
           />
         ) : null}
         {!pickMode && approachPositions ? (
-          <Polyline
-            positions={approachPositions}
-            pathOptions={{
-              color: "#fdba74",
-              weight: 3,
-              opacity: 0.7,
-              dashArray: "7 8",
-            }}
-            interactive={false}
-          />
+          <>
+            <Polyline
+              positions={approachPositions}
+              pathOptions={{
+                color: "#7c2d12",
+                weight: 6,
+                opacity: 0.35,
+                dashArray: "8 9",
+                lineCap: "round",
+                lineJoin: "round",
+              }}
+              smoothFactor={0}
+              interactive={false}
+            />
+            <Polyline
+              positions={approachPositions}
+              pathOptions={{
+                color: "#fdba74",
+                weight: 4,
+                opacity: 0.9,
+                dashArray: "8 9",
+                lineCap: "round",
+                lineJoin: "round",
+              }}
+              smoothFactor={0}
+              interactive={false}
+            />
+          </>
         ) : null}
         {!pickMode && routePositions ? (
-          <Polyline
-            positions={routePositions}
-            pathOptions={{
-              color: "#f97316",
-              weight: 4,
-              opacity: 0.9,
-            }}
-            interactive={false}
-          />
+          <>
+            <Polyline
+              positions={routePositions}
+              pathOptions={{
+                color: "#9a3412",
+                weight: 8,
+                opacity: 0.4,
+                lineCap: "round",
+                lineJoin: "round",
+              }}
+              smoothFactor={0}
+              interactive={false}
+            />
+            <Polyline
+              positions={routePositions}
+              pathOptions={{
+                color: "#f97316",
+                weight: 5,
+                opacity: 1,
+                lineCap: "round",
+                lineJoin: "round",
+              }}
+              smoothFactor={0}
+              interactive={false}
+            />
+          </>
         ) : null}
         {!pickMode &&
           clusters.map((cluster) => (

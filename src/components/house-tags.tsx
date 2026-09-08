@@ -6,9 +6,10 @@ import { ScareSign } from "@/components/scare-glyphs";
 import { SensitivitySign } from "@/components/sensitivity-glyphs";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { cn } from "@/lib/utils";
-import { isHoursNightOver, isHoursNotYetOpen } from "@/lib/hours";
+import { isHoursNightOver, isHoursNotYetOpen, isOnBreak } from "@/lib/hours";
 import {
   effectiveVisit,
+  isOwnerFrozen,
   markedGlutenFree,
   offersNutsFree,
   offersSesameFree,
@@ -32,6 +33,22 @@ function ClosedSign({ className }: { className?: string }) {
   );
 }
 
+function PauseSign({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "relative inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#6b7280]",
+        className,
+      )}
+      title="הפסקה"
+      aria-label="הפסקה"
+    >
+      <span className="absolute start-[28%] top-[22%] h-[56%] w-[13%] rounded-full bg-white" />
+      <span className="absolute end-[28%] top-[22%] h-[56%] w-[13%] rounded-full bg-white" />
+    </span>
+  );
+}
+
 export function HouseTags({
   house,
   large = false,
@@ -48,6 +65,8 @@ export function HouseTags({
     decorLevel?: DecorLevel;
     decorated?: boolean;
     soldOut?: boolean;
+    adminFrozen?: boolean;
+    ownerFrozenUntil?: string | null;
     openFrom?: string;
     openTo?: string;
     openFrom2?: string;
@@ -69,11 +88,21 @@ export function HouseTags({
     effectiveVisit(house) === "closed" ||
     isHoursNightOver(house, now) ||
     (eveningMin >= 17 * 60 && isHoursNotYetOpen(house, now));
+  const pausedInsteadOfCandy =
+    !closedInsteadOfCandy &&
+    (isOwnerFrozen(house, now.getTime()) || isOnBreak(house, now));
   const signSize = large ? "size-10" : undefined;
+  const statusSign = closedInsteadOfCandy ? (
+    <ClosedSign className={signSize} />
+  ) : pausedInsteadOfCandy ? (
+    <PauseSign className={signSize} />
+  ) : (
+    <CandySign tone={candy} className={signSize} />
+  );
 
   return (
     <div className={cn("flex flex-wrap gap-1.5 pb-0.5 ps-0.5", large && "gap-2")}>
-      {closedInsteadOfCandy ? <ClosedSign className={signSize} /> : <CandySign tone={candy} className={signSize} />}
+      {statusSign}
       <ScareSign level={undecorated ? "none" : scare} className={signSize} />
       {house.accessible ? (
         <span title="נגיש" aria-label="נגיש">

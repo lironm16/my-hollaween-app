@@ -34,7 +34,7 @@ export function HouseList({
   admin?: boolean;
   canEditHouse?: (id: string) => boolean;
   onShowOnMap?: (id: string) => void;
-  onSelectHouse?: (id: string) => void;
+  onSelectHouse?: (id: string, index: number) => void;
   onEditHouse?: (id: string) => void;
   selectedId?: string | null;
   editingId?: string | null;
@@ -91,7 +91,7 @@ export function HouseList({
             canEdit={Boolean(canEditHouse?.(h.id))}
             admin={admin}
             onShowOnMap={onShowOnMap ? () => onShowOnMap(h.id) : undefined}
-            onOpen={onSelectHouse ? () => onSelectHouse(h.id) : undefined}
+            onOpen={onSelectHouse ? () => onSelectHouse(h.id, i + 1) : undefined}
             onToggleEdit={onEditHouse ? () => onEditHouse(h.id) : undefined}
             editing={editingId === h.id}
           />

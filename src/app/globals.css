@@ -147,8 +147,14 @@
 .is-osm-dark img.leaflet-tile {
   /* Israel Hiking greens survive the OSM invert; crush saturation so the
      basemap stays the old dark Halloween look while labels stay Hebrew. */
-  filter: invert(1) hue-rotate(180deg) saturate(0.12) brightness(0.7) contrast(1.18);
+  filter: invert(1) hue-rotate(180deg) saturate(0.14) brightness(0.74) contrast(1.32);
   mix-blend-mode: normal;
+  image-rendering: auto;
+}
+
+.leaflet-overlay-pane svg,
+.leaflet-overlay-pane svg path {
+  shape-rendering: geometricPrecision;
 }
 
 .leaflet-container.is-osm-dark .leaflet-overlay-pane,
@@ -583,8 +589,8 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 46px;
+  width: 56px;
+  height: 56px;
   border-radius: 999px;
   background: #6d28d9 !important;
   border: 4px solid #fff7ed;
@@ -627,7 +633,9 @@
 
 .pin-fan-lines line {
   stroke: rgba(196, 181, 214, 0.55);
-  stroke-width: 1.5;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .pin-sprinkles {
@@ -1100,35 +1108,38 @@
 .house-pin-route {
   position: relative;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  padding-top: 24px;
-  gap: 0;
+  justify-content: flex-start;
+  padding-top: 0;
+  gap: 2px;
   overflow: visible;
   isolation: isolate;
 }
 
 .house-pin-route .house-pin {
   z-index: 1;
+  flex-shrink: 0;
 }
 
 .house-pin-route .route-stop-pin {
-  position: absolute;
-  top: 0;
-  left: 50%;
+  position: relative;
+  top: auto;
+  left: auto;
   z-index: 8;
   flex-shrink: 0;
   margin: 0;
-  transform: translateX(-50%);
+  transform: none;
   pointer-events: none;
 }
 
 .house-pin-fan > .route-stop-pin {
   position: absolute;
-  left: 50%;
-  bottom: 30px;
+  left: auto;
+  right: 2px;
+  bottom: 6px;
   z-index: 20;
-  transform: translateX(-50%);
+  transform: none;
   pointer-events: none;
 }
 
@@ -1436,8 +1447,8 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 }
 
 .house-pin.is-legend {
-  width: 54px;
-  height: 54px;
+  width: 60px;
+  height: 60px;
 }
 
 .house-pin.is-legend .pin-houses {
