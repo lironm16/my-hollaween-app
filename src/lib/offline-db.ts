@@ -1,7 +1,7 @@
 import type { NeighborhoodId } from "@/lib/config";
 import { syncDecorFields } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
-import type { CandyTone, DecorLevel, HouseInput, ScareLevel, SensitivityId } from "@/lib/types";
+import type { CandyTone, HouseInput, ScareLevel, SensitivityId } from "@/lib/types";
 import type { Catalog, PublicHouse } from "@/lib/types";
 
 const DB_NAME = "halloween-neighborhood";
@@ -288,10 +288,11 @@ export type HouseFiltersState = {
   sensitivityFilters: SensitivityId[];
   scareFilters: ScareLevel[];
   candyFilters: CandyTone[];
-  decorFilters: DecorLevel[];
   neighborhoodFilters: NeighborhoodId[];
   likedOnly: boolean;
   unvisitedOnly: boolean;
+  /** Include houses with no outdoor decoration (gray struck lights). */
+  includeUndecorated: boolean;
 };
 
 export function loadHouseFilters(): HouseFiltersState | null {
