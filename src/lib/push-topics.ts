@@ -4,6 +4,22 @@ export const PUSH_TOPICS = ["newHouse", "houseStatus", "admin"] as const;
 export type PushTopic = (typeof PUSH_TOPICS)[number];
 export type PushTopicPrefs = Record<PushTopic, boolean>;
 
+export const PUSH_TOPIC_ROWS: { id: PushTopic; title: string; hint: string }[] = [
+  { id: "newHouse", title: "בית חדש נוסף", hint: "כשבית חדש נכנס למפה" },
+  {
+    id: "houseStatus",
+    title: "נגמר מלאי או בית שנסגר",
+    hint: "עדכונים שוטפים בלילה",
+  },
+  { id: "admin", title: "הודעות מהמנהלים", hint: "מסרים לכל השכונה" },
+];
+
+export const PUSH_TOPIC_LABELS: Record<PushTopic, string> = {
+  newHouse: PUSH_TOPIC_ROWS[0]!.title,
+  houseStatus: PUSH_TOPIC_ROWS[1]!.title,
+  admin: PUSH_TOPIC_ROWS[2]!.title,
+};
+
 export const DEFAULT_PUSH_TOPIC_PREFS: PushTopicPrefs = {
   newHouse: true,
   houseStatus: true,

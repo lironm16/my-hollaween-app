@@ -59,3 +59,16 @@ export function pendingToEvents(pending: Record<string, HouseTraffic>): TrafficD
 export function emptyTrafficFile(): TrafficFile {
   return { updatedAt: new Date(0).toISOString(), houses: {} };
 }
+
+export function sumTrafficMarks(houses: Record<string, HouseTraffic>): {
+  saved: number;
+  visited: number;
+} {
+  let saved = 0;
+  let visited = 0;
+  for (const row of Object.values(houses)) {
+    saved += row.saved ?? 0;
+    visited += row.visited ?? 0;
+  }
+  return { saved, visited };
+}

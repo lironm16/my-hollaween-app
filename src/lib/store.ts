@@ -8,7 +8,7 @@ import { config } from "@/lib/config";
 import { assertRealAddress } from "@/lib/geocode";
 import { defaultTreatStock, effectiveVisit, isPubliclyListed, syncDecorFields } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
-import { cloneDb, mergeHouses } from "@/lib/catalog-sync";
+import { cloneDb, mergeHouses, mergePushSubscriptions } from "@/lib/catalog-sync";
 import { parsePhotoUrl } from "@/lib/photos";
 import {
   HOUSE_THEMES,
@@ -278,13 +278,39 @@ function isStaleSnapshot(db: DbFile) {
 
 function pickNewest(...candidates: Array<DbFile | null | undefined>): DbFile | null {
   let best: DbFile | null = null;
+  const sameStamp: DbFile[] = [];
   for (const candidate of candidates) {
     if (!candidate) continue;
-    if (!best || stamp(candidate) >= stamp(best)) best = candidate;
+    if (!best || stamp(candidate) > stamp(best)) {
+      best = candidate;
+      sameStamp.length = 0;
+      sameStamp.push(candidate);
+      continue;
+    }
+    if (stamp(candidate) === stamp(best)) {
+      sameStamp.push(candidate);
+      const nextSubs = candidate.pushSubscriptions?.length ?? 0;
+      const bestSubs = best.pushSubscriptions?.length ?? 0;
+      if (nextSubs > bestSubs) best = candidate;
+    }
   }
   if (!best) return null;
   const pushSettings = pickPushSettings(...candidates) ?? best.pushSettings;
-  return pushSettings ? { ...best, pushSettings } : best;
+  const pushSubscriptions = mergePushSubscriptions(
+    ...sameStamp.map((item) => item.pushSubscriptions),
+  );
+  return {
+    ...best,
+    pushSubscriptions,
+    ...(pushSettings ? { pushSettings } : {}),
+  };
+}
+
+function foldPushSubscriptions(target: DbFile, ...candidates: Array<DbFile | null | undefined>) {
+  target.pushSubscriptions = mergePushSubscriptions(
+    target.pushSubscriptions,
+    ...candidates.map((item) => item?.pushSubscriptions),
+  );
 }
 
 async function readFileDb(): Promise<DbFile> {
@@ -343,12 +369,26 @@ async function persistDb(db: DbFile) {
     const live = liveDb();
     if (live) {
       foldPushSettings(live, db, blobWrapper);
-      if (mem) mem.pushSettings = live.pushSettings;
+      const had = live.pushSubscriptions?.length ?? 0;
+      foldPushSubscriptions(live, db);
+      if (mem) {
+        mem.pushSettings = live.pushSettings;
+        mem.pushSubscriptions = live.pushSubscriptions;
+      }
       setGlobalDb(live);
       try {
         await persistPushSettings(live.pushSettings, blobStamp);
       } catch {
         /* live house data stays in memory */
+      }
+      if ((live.pushSubscriptions?.length ?? 0) !== had) {
+        try {
+          if (blobEnabled()) await writeBlobDb(live);
+          else await writeFileDb(live);
+        } catch {
+          /* memory still holds the merged subscriptions */
+        }
+        setMem(live);
       }
     }
     return;
@@ -364,7 +404,11 @@ async function persistDb(db: DbFile) {
     const live = liveDb();
     if (live) {
       foldPushSettings(live, db);
-      if (mem) mem.pushSettings = live.pushSettings;
+      foldPushSubscriptions(live, db);
+      if (mem) {
+        mem.pushSettings = live.pushSettings;
+        mem.pushSubscriptions = live.pushSubscriptions;
+      }
       setGlobalDb(live);
     }
     return;
@@ -393,7 +437,11 @@ async function persistDb(db: DbFile) {
     const live = liveDb();
     if (live) {
       foldPushSettings(live, db);
-      if (mem) mem.pushSettings = live.pushSettings;
+      foldPushSubscriptions(live, db);
+      if (mem) {
+        mem.pushSettings = live.pushSettings;
+        mem.pushSubscriptions = live.pushSubscriptions;
+      }
       setGlobalDb(live);
     }
     return;
@@ -423,6 +471,7 @@ async function runSyncedWrite<T>(fn: (db: DbFile) => T | Promise<T>): Promise<T>
       Object.assign(db, normalizeDb(cloneDb(global)));
     }
     foldPushSettings(db, asPushCandidate(keptPush), mem, global);
+    foldPushSubscriptions(db, mem, global);
     const result = await fn(db);
     await persistDb(db);
     return result;
@@ -872,6 +921,7 @@ export async function savePushSubscription(sub: Omit<PushSubscriptionRecord, "cr
       list.push(next);
     }
     db.pushSubscriptions = list;
+    db.updatedAt = new Date().toISOString();
     return list.length;
   });
 }
@@ -879,6 +929,7 @@ export async function savePushSubscription(sub: Omit<PushSubscriptionRecord, "cr
 export async function removePushSubscription(endpoint: string) {
   return runSyncedWrite((db) => {
     db.pushSubscriptions = (db.pushSubscriptions ?? []).filter((item) => item.endpoint !== endpoint);
+    db.updatedAt = new Date().toISOString();
     return db.pushSubscriptions.length;
   });
 }

@@ -17,6 +17,7 @@ import {
   type PushTopic,
   type PushTopicPrefs,
 } from "@/lib/push-client";
+import { anyPushTopicOn, PUSH_TOPIC_ROWS } from "@/lib/push-topics";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,16 +30,6 @@ import {
 import { cn } from "@/lib/utils";
 
 type Status = "loading" | PushEnableResult;
-
-const TOPIC_ROWS: { id: PushTopic; title: string; hint: string }[] = [
-  { id: "newHouse", title: "בית חדש נוסף", hint: "כשבית חדש נכנס למפה" },
-  {
-    id: "houseStatus",
-    title: "נגמר מלאי או בית שנסגר",
-    hint: "עדכונים שוטפים בלילה",
-  },
-  { id: "admin", title: "הודעות מהמנהלים", hint: "מסרים לכל השכונה" },
-];
 
 function skipPromptThisSession() {
   try {
@@ -129,16 +120,19 @@ export function PushAlertsButton() {
     let cancelled = false;
 
     async function boot() {
-      setTopics(readPushTopicPrefs());
+      const stored = readPushTopicPrefs();
+      setTopics(anyPushTopicOn(stored) ? stored : { ...DEFAULT_PUSH_TOPIC_PREFS });
       const current = await readPushStatus();
       if (cancelled) return;
       setStatus(current);
 
-      if (readPushPref() === "off") return;
       if (current === "denied" || current === "unsupported") return;
       if (current === "on") return;
 
-      if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+      const pref = readPushPref();
+      if (pref === "off") return;
+
+      if (pref === "on" && typeof Notification !== "undefined" && Notification.permission === "granted") {
         try {
           const result = await enablePushAlerts(readPushTopicPrefs());
           if (cancelled) return;
@@ -164,15 +158,17 @@ export function PushAlertsButton() {
 
   const subscribed = status === "on";
   const locked = status === "denied" || status === "unsupported";
+  const ios = status === "ios-install";
+  const canEnable = anyPushTopicOn(topics);
 
-  async function enable(fromPrompt = false) {
+  async function enable() {
+    if (!canEnable) return;
     setBusy(true);
     try {
       const result = await enablePushAlerts(topics);
       setStatus(result);
       if (result === "on") {
-        setAskOpen(false);
-        toast.success("התראות פועלות. אפשר לשנות מהפעמון.");
+        toast.success("נרשמתם. אפשר לכבות סוג, או לכבות הכל.");
         return;
       }
       if (result === "denied") {
@@ -181,11 +177,9 @@ export function PushAlertsButton() {
         return;
       }
       if (result === "ios-install") {
-        setAskOpen(true);
         toast.message("באייפון ההתראות עובדות אחרי «הוספה למסך הבית».");
         return;
       }
-      if (!fromPrompt) setAskOpen(true);
       toast.message("בלי הרשאה לא נשלח התראות לטלפון.");
     } catch {
       toast.error("הדפדפן חסם התראות.");
@@ -198,7 +192,6 @@ export function PushAlertsButton() {
     setBusy(true);
     try {
       setStatus(await disablePushAlerts());
-      setTopics({ newHouse: false, houseStatus: false, admin: false });
       setAskOpen(false);
       skipPromptThisSession();
       toast.message("התראות כבויות במכשיר הזה.");
@@ -218,6 +211,10 @@ export function PushAlertsButton() {
     try {
       const result = await syncPushTopicPrefs(next);
       setStatus(result);
+      if (result !== "on") {
+        skipPromptThisSession();
+        toast.message("התראות כבויות במכשיר הזה.");
+      }
     } catch {
       toast.error("לא הצלחנו לשמור את ההעדפה.");
       setTopics(readPushTopicPrefs());
@@ -227,27 +224,28 @@ export function PushAlertsButton() {
   }
 
   function openSettings() {
-    setTopics(readPushTopicPrefs());
+    const stored = readPushTopicPrefs();
+    setTopics(
+      subscribed || anyPushTopicOn(stored) ? stored : { ...DEFAULT_PUSH_TOPIC_PREFS },
+    );
     setAskOpen(true);
   }
 
-  function dismissPrompt() {
-    skipPromptThisSession();
+  function closeDialog() {
     setAskOpen(false);
+    if (!subscribed) skipPromptThisSession();
   }
 
   const title =
     status === "on"
-      ? "הגדרות התראות"
+      ? "התראות פועלות"
       : status === "denied"
         ? "התראות חסומות בהגדרות הדפדפן"
         : status === "ios-install"
-          ? "באייפון: הוסיפו למסך הבית ואז הפעילו התראות"
+          ? "באייפון: הוסיפו למסך הבית ואז הפעילו"
           : status === "unsupported"
             ? "הדפדפן לא תומך בהתראות"
             : "הפעילו התראות מהשכונה";
-
-  const ios = status === "ios-install";
 
   return (
     <>
@@ -282,7 +280,7 @@ export function PushAlertsButton() {
         </button>
       ) : null}
 
-      <Dialog open={askOpen} onOpenChange={(open) => (open ? setAskOpen(true) : dismissPrompt())}>
+      <Dialog open={askOpen} onOpenChange={(open) => (open ? setAskOpen(true) : closeDialog())}>
         <DialogContent
           showCloseButton={false}
           initialFocus={false}
@@ -290,32 +288,43 @@ export function PushAlertsButton() {
         >
           <DialogHeader>
             <DialogTitle className="text-lg text-orange-100">
-              {ios ? "התראות באייפון" : "קבלו התראות מהשכונה"}
+              {ios ? "התראות באייפון" : subscribed ? "התראות פועלות" : "קבלו התראות מהשכונה"}
             </DialogTitle>
             <DialogDescription className="text-violet-200/90">
               {ios
-                ? "באייפון צריך קודם «הוספה למסך הבית», ואז נפתח חלון ההרשאה אוטומטית."
-                : "נדליק התראות כברירת מחדל"}
+                ? "באייפון צריך קודם «הוספה למסך הבית», ואז נפתח חלון ההרשאה."
+                : subscribed
+                  ? "שינוי מתג נשמר מיד. «כבו הכל» מבטל את ההרשמה."
+                  : "המתגים רק בוחרים מה לקבל. נרשמים רק ב«הפעילו»."}
             </DialogDescription>
           </DialogHeader>
           {ios ? null : (
-            <div className="grid gap-2">
-              {TOPIC_ROWS.map((row) => (
-                <TopicSwitch
-                  key={row.id}
-                  title={row.title}
-                  hint={row.hint}
-                  on={topics[row.id]}
-                  disabled={busy || locked}
-                  onChange={(on) => void toggleTopic(row.id, on)}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid gap-2">
+                {PUSH_TOPIC_ROWS.map((row) => (
+                  <TopicSwitch
+                    key={row.id}
+                    title={row.title}
+                    hint={row.hint}
+                    on={topics[row.id]}
+                    disabled={busy || locked}
+                    onChange={(next) => void toggleTopic(row.id, next)}
+                  />
+                ))}
+              </div>
+              {subscribed || canEnable ? null : (
+                <p className="text-base text-amber-200">סמנו לפחות סוג אחד, ואז «הפעילו».</p>
+              )}
+            </>
           )}
           <DialogFooter className="border-orange-500/15 bg-[#14091c]/80">
             {ios ? (
-              <Button className="bg-orange-500 text-black hover:bg-orange-400" onClick={dismissPrompt}>
+              <Button className="bg-orange-500 text-black hover:bg-orange-400" onClick={closeDialog}>
                 הבנתי
+              </Button>
+            ) : locked ? (
+              <Button className="bg-orange-500 text-black hover:bg-orange-400" onClick={closeDialog}>
+                סגירה
               </Button>
             ) : subscribed ? (
               <>
@@ -324,22 +333,22 @@ export function PushAlertsButton() {
                   disabled={busy}
                   onClick={() => setAskOpen(false)}
                 >
-                  סגירה
+                  סיום
                 </Button>
                 <Button variant="ghost" className="text-violet-200" disabled={busy} onClick={() => void disable()}>
-                  כבו התראות
+                  כבו הכל
                 </Button>
               </>
             ) : (
               <>
                 <Button
                   className="bg-orange-500 text-black hover:bg-orange-400"
-                  disabled={busy || locked}
-                  onClick={() => void enable(true)}
+                  disabled={busy || !canEnable}
+                  onClick={() => void enable()}
                 >
-                  הפעילו התראות
+                  הפעילו
                 </Button>
-                <Button variant="ghost" className="text-violet-200" disabled={busy} onClick={dismissPrompt}>
+                <Button variant="ghost" className="text-violet-200" disabled={busy} onClick={closeDialog}>
                   לא עכשיו
                 </Button>
               </>

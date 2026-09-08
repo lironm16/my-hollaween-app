@@ -65,20 +65,21 @@ export function readPushTopicPrefs(): PushTopicPrefs {
 export function writePushTopicPrefs(prefs: PushTopicPrefs) {
   try {
     localStorage.setItem(PUSH_TOPICS_KEY, JSON.stringify(prefs));
-    localStorage.setItem(PUSH_PREF_KEY, anyPushTopicOn(prefs) ? "on" : "off");
   } catch {
     /* ignore */
   }
 }
 
-/** Notifications default to on unless the user turned them off on this device. */
-export function readPushPref(): PushPref {
+/** `on` = this phone subscribed. `off` = they turned alerts off. `null` = not decided yet. */
+export function readPushPref(): PushPref | null {
   try {
-    if (localStorage.getItem(PUSH_PREF_KEY) === "off") return "off";
+    const raw = localStorage.getItem(PUSH_PREF_KEY);
+    if (raw === "off") return "off";
+    if (raw === "on") return "on";
   } catch {
     /* ignore */
   }
-  return anyPushTopicOn(readPushTopicPrefs()) ? "on" : "off";
+  return null;
 }
 
 export function writePushPref(value: PushPref) {

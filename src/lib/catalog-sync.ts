@@ -1,4 +1,4 @@
-import type { Catalog, DbFile, House, PublicHouse } from "@/lib/types";
+import type { Catalog, DbFile, PublicHouse, PushSubscriptionRecord } from "@/lib/types";
 
 function stamp(value: { updatedAt: string }) {
   const n = Date.parse(value.updatedAt);
@@ -44,6 +44,25 @@ export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
   prev.houses.forEach(take);
   incoming.houses.forEach(take);
   return { ...prev, houses: [...byId.values()] };
+}
+
+/** Same endpoint keeps the newer record. Used so a subscribe is not dropped by a same-stamp house write. */
+export function mergePushSubscriptions(
+  ...lists: Array<PushSubscriptionRecord[] | undefined>
+): PushSubscriptionRecord[] {
+  const byEndpoint = new Map<string, PushSubscriptionRecord>();
+  for (const list of lists) {
+    for (const item of list ?? []) {
+      if (!item?.endpoint) continue;
+      const current = byEndpoint.get(item.endpoint);
+      const nextStamp = Date.parse(item.createdAt);
+      const currentStamp = current ? Date.parse(current.createdAt) : -1;
+      if (!current || (Number.isFinite(nextStamp) && nextStamp >= currentStamp)) {
+        byEndpoint.set(item.endpoint, item);
+      }
+    }
+  }
+  return [...byEndpoint.values()];
 }
 
 export function cloneDb(db: DbFile): DbFile {

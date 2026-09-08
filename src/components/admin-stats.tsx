@@ -1,25 +1,32 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { BellRing, Clock3, MapPinned, Moon, Pause, Smartphone, Users } from "lucide-react";
-import { CandyTwist } from "@/components/candy-glyphs";
+import { BellRing, HousePlus, MapPinned, Moon, Pause, Shield, Smartphone, Users } from "lucide-react";
+import { CandySign } from "@/components/candy-glyphs";
+import { OpenNowSign, ClosingSoonSign, OpeningSoonSign } from "@/components/open-now-mark";
+import { ScareSign } from "@/components/scare-glyphs";
+import { SensitivitySign } from "@/components/sensitivity-glyphs";
+import { StrollerSign } from "@/components/symbols";
+import { LikedSign } from "@/components/visit-marks";
+import { VisitedCheck } from "@/components/visited-check";
+import { PUSH_TOPIC_ROWS, type PushTopic } from "@/lib/push-topics";
+import { scareShort, decorShort, treatLabels } from "@/lib/labels";
 import { cn } from "@/lib/utils";
+import type { AdminSnapshot } from "@/lib/admin-snapshot";
 
-export type AdminStats = {
-  devices: number;
-  devicesSeen?: number;
-  online?: number;
-  devicesNewHouse: number;
-  devicesHouseStatus: number;
-  devicesAdmin: number;
-  houses: number;
-  pending: number;
-  openNow: number;
-  onBreak: number;
-  closed: number;
-  candyLow: number;
-  candyOut: number;
+export type AdminStats = AdminSnapshot;
+
+const ALERT_ICONS: Record<PushTopic, ReactNode> = {
+  newHouse: <HousePlus className="size-5" />,
+  houseStatus: <BellRing className="size-5" />,
+  admin: <Shield className="size-5" />,
 };
+
+function alertCount(stats: AdminStats, id: PushTopic) {
+  if (id === "newHouse") return stats.devicesNewHouse;
+  if (id === "houseStatus") return stats.devicesHouseStatus;
+  return stats.devicesAdmin;
+}
 
 export function useAdminStats(enabled: boolean) {
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -31,7 +38,7 @@ export function useAdminStats(enabled: boolean) {
       void fetch("/api/admin/stats", { cache: "no-store", credentials: "include" })
         .then((res) => (res.ok ? res.json() : null))
         .then((data: AdminStats | null) => {
-          if (!cancelled && data && typeof data.devices === "number") setStats(data);
+          if (!cancelled && data && typeof data.houses === "number") setStats(data);
         })
         .catch(() => undefined);
     };
@@ -49,46 +56,65 @@ export function useAdminStats(enabled: boolean) {
 export function AdminStatsCard({ stats }: { stats: AdminStats }) {
   return (
     <div className="space-y-3" dir="rtl">
-      <p className="text-base text-violet-300">
-        כל טלפון שנכנס נספר, גם בלי התראות. מבקרים = האפליקציה פתוחה עכשיו.
-      </p>
-
       <Section title="מכשירים">
-        <div className="grid grid-cols-3 gap-2">
-          <Tile icon={<Smartphone className="size-5" />} label="נכנסו" value={stats.devicesSeen ?? 0} />
+        <p className="mb-2 text-base text-violet-300">
+          סקרנים = כל טלפון שנפתחה בו האפליקציה, פעם אחת. כניסה חוזרת לא מוסיפה.
+          צופים במפה כלולים בסקרנים, ומופיעים גם כאן אם האפליקציה פתוחה עכשיו.
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <Tile icon={<Smartphone className="size-5" />} label="סקרנים" value={stats.devicesSeen} />
           <Tile
             icon={<Users className="size-5" />}
-            label="מבקרים"
-            value={stats.online ?? 0}
+            label="צופים במפה"
+            value={stats.online}
             valueClass={stats.online ? "text-emerald-300" : undefined}
           />
-          <Tile
-            icon={<BellRing className="size-5" />}
-            label="התראות"
-            value={stats.devices}
-            valueClass={stats.devices ? "text-orange-200" : undefined}
-          />
         </div>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          <Chip label="בית חדש" value={stats.devicesNewHouse} />
-          <Chip label="מצב בית" value={stats.devicesHouseStatus} />
-          <Chip label="מנהלים" value={stats.devicesAdmin} />
+      </Section>
+
+      <Section title="התראות">
+        <p className="mb-2 text-base text-violet-300">
+          כמה טלפונים אישרו כל סוג — אותם שלושה כמו בחלון ההתראות. אותו טלפון יכול להיות ביותר מסוג אחד. נספר רק אחרי «הפעילו» והרשאת הדפדפן.
+        </p>
+        <div className="grid grid-cols-1 gap-2">
+          {PUSH_TOPIC_ROWS.map((row) => (
+            <Tile
+              key={row.id}
+              icon={ALERT_ICONS[row.id]}
+              label={row.title}
+              value={alertCount(stats, row.id)}
+              hint={row.hint}
+              valueClass={alertCount(stats, row.id) ? "text-orange-200" : undefined}
+            />
+          ))}
         </div>
       </Section>
 
       <Section title="מפה">
-        <Tile
-          icon={<MapPinned className="size-5" />}
-          label="בתים במפה"
-          value={stats.houses}
-          wide
-        />
-        <div className="mt-2 grid grid-cols-2 gap-2">
+        <p className="mb-2 text-base text-violet-300">ספירות יכולות לחפוף — בית יכול להיות פתוח וגם עם מעט ממתקים.</p>
+        <Tile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} wide />
+        <Subhead>שעות</Subhead>
+        <div className="grid grid-cols-2 gap-2">
           <Tile
-            icon={<span className="size-2.5 rounded-full bg-emerald-400" />}
+            icon={<OpenNowSign className="size-8" />}
             label="פתוחים עכשיו"
             value={stats.openNow}
             valueClass="text-emerald-300"
+            plain
+          />
+          <Tile
+            icon={<OpeningSoonSign className="size-8" />}
+            label="נפתחים בקרוב"
+            value={stats.openingSoon}
+            valueClass={stats.openingSoon ? "text-cyan-300" : undefined}
+            plain
+          />
+          <Tile
+            icon={<ClosingSoonSign className="size-8" />}
+            label="נסגרים בקרוב"
+            value={stats.closingSoon}
+            valueClass={stats.closingSoon ? "text-orange-300" : undefined}
+            plain
           />
           <Tile
             icon={<Pause className="size-4" />}
@@ -97,34 +123,101 @@ export function AdminStatsCard({ stats }: { stats: AdminStats }) {
             valueClass={stats.onBreak ? "text-amber-300" : undefined}
           />
           <Tile icon={<Moon className="size-4" />} label="סגורים" value={stats.closed} />
-          <Tile
-            icon={<Clock3 className="size-4" />}
-            label="ממתינים לאישור"
-            value={stats.pending}
-            valueClass={stats.pending ? "text-cyan-300" : undefined}
-          />
         </div>
-        <div className="mt-2 grid grid-cols-2 gap-2">
+        <Subhead>ממתקים</Subhead>
+        <div className="grid grid-cols-2 gap-2">
           <Tile
-            icon={
-              <span className="size-5 text-amber-300">
-                <CandyTwist />
-              </span>
-            }
+            icon={<CandySign tone="plenty" className="size-8" />}
+            label="יש ממתקים"
+            value={stats.candyPlenty}
+            valueClass={stats.candyPlenty ? "text-emerald-300" : undefined}
+            plain
+          />
+          <Tile
+            icon={<CandySign tone="low" className="size-8" />}
             label="מעט ממתקים"
             value={stats.candyLow}
             valueClass={stats.candyLow ? "text-amber-300" : undefined}
+            plain
           />
           <Tile
-            icon={
-              <span className="relative size-5 text-rose-300">
-                <CandyTwist />
-                <span className="absolute inset-x-0 top-1/2 h-0.5 -rotate-12 bg-rose-400" />
-              </span>
-            }
+            icon={<CandySign tone="out" className="size-8" />}
             label="נגמרו הממתקים"
             value={stats.candyOut}
             valueClass={stats.candyOut ? "text-rose-300" : undefined}
+            plain
+          />
+        </div>
+        <Subhead>סימונים בשכונה</Subhead>
+        <p className="mb-1.5 text-sm text-violet-400">סך הסימונים בטלפונים, לא מספר אנשים.</p>
+        <div className="grid grid-cols-2 gap-2">
+          <Tile
+            icon={<LikedSign className="size-8" />}
+            label="אהבתי"
+            value={stats.hearts}
+            valueClass={stats.hearts ? "text-rose-300" : undefined}
+            plain
+          />
+          <Tile
+            icon={<VisitedCheck visited className="size-8" />}
+            label="ביקרתי"
+            value={stats.visited}
+            valueClass={stats.visited ? "text-emerald-300" : undefined}
+            plain
+          />
+        </div>
+        <Subhead>אופי</Subhead>
+        <div className="grid grid-cols-2 gap-2">
+          <Tile
+            icon={<ScareSign level="none" className="size-8" />}
+            label={decorShort.none}
+            value={stats.notDecorated}
+            plain
+          />
+          <Tile
+            icon={<ScareSign level="mild" className="size-8" />}
+            label={scareShort.mild}
+            value={stats.scareMild}
+            plain
+          />
+          <Tile
+            icon={<ScareSign level="medium" className="size-8" />}
+            label={scareShort.medium}
+            value={stats.scareMedium}
+            plain
+          />
+          <Tile
+            icon={<ScareSign level="spicy" className="size-8" />}
+            label={scareShort.spicy}
+            value={stats.scareSpicy}
+            plain
+          />
+          <Tile
+            icon={<StrollerSign className="size-8" />}
+            label="נגיש"
+            value={stats.accessible}
+            plain
+          />
+        </div>
+        <Subhead>רגישויות — יש עכשיו</Subhead>
+        <div className="grid grid-cols-1 gap-2">
+          <Tile
+            icon={<SensitivitySign kind="glutenFree" className="size-8" />}
+            label={treatLabels.glutenFree}
+            value={stats.glutenFree}
+            plain
+          />
+          <Tile
+            icon={<SensitivitySign kind="nutsFree" className="size-8" />}
+            label={treatLabels.nutsFree}
+            value={stats.nutsFree}
+            plain
+          />
+          <Tile
+            icon={<SensitivitySign kind="sesameFree" className="size-8" />}
+            label={treatLabels.sesameFree}
+            value={stats.sesameFree}
+            plain
           />
         </div>
       </Section>
@@ -141,18 +234,26 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
+function Subhead({ children }: { children: ReactNode }) {
+  return <h3 className="mb-1.5 mt-3 text-sm font-semibold text-violet-200">{children}</h3>;
+}
+
 function Tile({
   icon,
   label,
   value,
+  hint,
   valueClass,
   wide = false,
+  plain = false,
 }: {
   icon: ReactNode;
   label: string;
   value: number;
+  hint?: string;
   valueClass?: string;
   wide?: boolean;
+  plain?: boolean;
 }) {
   return (
     <div
@@ -161,24 +262,21 @@ function Tile({
         wide && "w-full",
       )}
     >
-      <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-orange-300">
+      <span
+        className={cn(
+          "inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-orange-300",
+          plain ? "bg-transparent" : "bg-white/5",
+        )}
+      >
         {icon}
       </span>
       <span className="min-w-0 text-right">
         <span className="block text-sm leading-tight text-violet-300">{label}</span>
+        {hint ? <span className="block text-xs leading-tight text-violet-400">{hint}</span> : null}
         <span className={cn("block text-2xl font-bold leading-none text-orange-50", valueClass)}>
           {value}
         </span>
       </span>
     </div>
-  );
-}
-
-function Chip({ label, value }: { label: string; value: number }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-[#14081c] px-2.5 py-1 text-sm text-violet-200">
-      {label}
-      <span className="font-semibold text-orange-100">{value}</span>
-    </span>
   );
 }
