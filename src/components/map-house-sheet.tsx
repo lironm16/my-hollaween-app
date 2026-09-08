@@ -37,6 +37,7 @@ export function MapHouseSheet({
   onToggleEdit,
   pendingNote,
   onShowOnMap,
+  index,
 }: {
   house: PublicHouse;
   clusterHouses: PublicHouse[];
@@ -55,6 +56,7 @@ export function MapHouseSheet({
   onToggleEdit?: () => void;
   pendingNote?: ReactNode;
   onShowOnMap?: () => void;
+  index?: number;
 }) {
   const labelId = useId();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -221,6 +223,7 @@ export function MapHouseSheet({
                     }
                     extra={extra}
                     chrome="sheet"
+                    index={index}
                   />
                 )}
               </section>

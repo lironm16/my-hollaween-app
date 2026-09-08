@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Heart, Pencil } from "lucide-react";
 import { VisitedCheck } from "@/components/visited-check";
@@ -61,6 +62,7 @@ export function HouseDetails({
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
   const [photoReady, setPhotoReady] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
   const loadPhoto = photoReady && (showPhoto || shouldLoadHousePhoto(catalogSource));
 
   useEffect(() => {
@@ -70,25 +72,46 @@ export function HouseDetails({
   useEffect(() => {
     setShowPhoto(false);
     setPhotoBroken(false);
+    setPhotoOpen(false);
   }, [house.id, house.photoUrl]);
   const sheet = chrome === "sheet";
   const hours = formatHoursLabel(house);
   const parts = [displayAddress, hours, distanceM !== undefined ? formatDistance(distanceM) : ""]
     .filter(Boolean)
     .join(" · ");
+  const hasPhoto = Boolean(house.photoUrl && !photoBroken);
+  const indexBadge =
+    index != null ? (
+      <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 font-sans text-base font-bold text-black">
+        {index}
+      </span>
+    ) : null;
   const photo =
-    !compact && house.photoUrl && !photoBroken ? (
+    hasPhoto ? (
       loadPhoto ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={house.photoUrl}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          referrerPolicy="no-referrer"
-          onError={() => setPhotoBroken(true)}
-          className="h-40 w-full rounded-xl object-cover ring-1 ring-orange-500/25"
-        />
+        <button
+          type="button"
+          aria-label="הגדלת התמונה"
+          onClick={(e) => {
+            e.stopPropagation();
+            setPhotoOpen(true);
+          }}
+          className={cn("block overflow-hidden rounded-xl ring-1 ring-orange-500/25", compact ? "shrink-0" : "w-full")}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={house.photoUrl}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            onError={() => setPhotoBroken(true)}
+            className={cn(
+              "object-cover",
+              compact ? "h-32 w-32" : "h-56 w-full",
+            )}
+          />
+        </button>
       ) : (
         <button
           type="button"
@@ -96,16 +119,48 @@ export function HouseDetails({
             e.stopPropagation();
             setShowPhoto(true);
           }}
-          className="w-full rounded-xl bg-[#2a1638] px-3 py-3 text-base text-amber-100 ring-1 ring-orange-500/20"
+          className={cn(
+            "rounded-xl bg-[#2a1638] px-3 py-3 text-base text-amber-100 ring-1 ring-orange-500/20",
+            compact ? "h-32 w-32 shrink-0" : "w-full",
+          )}
         >
           יש תמונת קישוט — לחצו רק אם הרשת פנויה
         </button>
       )
     ) : null;
+  const indexByPhoto = Boolean(indexBadge && photo);
   return (
     <div className="space-y-3">
+      {photoOpen && house.photoUrl && typeof document !== "undefined"
+        ? createPortal(
+            <button
+              type="button"
+              aria-label="סגירת התמונה"
+              className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPhotoOpen(false);
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={house.photoUrl}
+                alt=""
+                className="max-h-full max-w-full rounded-xl object-contain"
+              />
+            </button>,
+            document.body,
+          )
+        : null}
       <HoursStatusBanner house={house} />
-      <div className="flex items-start justify-between gap-2">
+      <div className={cn("flex items-start gap-3", compact && photo && "flex-row")}>
+        {compact && photo ? (
+          <div className="flex shrink-0 items-start gap-1.5">
+            {indexBadge}
+            {photo}
+          </div>
+        ) : null}
+        <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p
             className={cn(
@@ -113,7 +168,7 @@ export function HouseDetails({
               compact ? "text-2xl" : "text-xl",
             )}
           >
-            {index != null ? (
+            {index != null && !indexByPhoto ? (
               <span className="me-2 font-sans font-bold text-orange-400">{index}</span>
             ) : null}
             {liked && !compact ? (
@@ -194,6 +249,7 @@ export function HouseDetails({
             ) : null}
           </div>
         )}
+        </div>
       </div>
       {actions}
       <div className="flex flex-wrap items-center gap-1.5">
@@ -233,7 +289,12 @@ export function HouseDetails({
               </Link>
             </div>
           )}
-          {photo}
+          {photo ? (
+            <div className="flex items-start gap-2">
+              {indexBadge}
+              <div className="min-w-0 flex-1">{photo}</div>
+            </div>
+          ) : null}
           {extra}
         </>
       )}

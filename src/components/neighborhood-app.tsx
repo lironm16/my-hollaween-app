@@ -97,6 +97,7 @@ export function NeighborhoodApp({
     () => "map" as HomeView,
   );
   const [selectedId, setSelectedId] = useState<string | "closed" | null>(focusId);
+  const [selectedListIndex, setSelectedListIndex] = useState<number | undefined>();
   const [focusSeen, setFocusSeen] = useState(focusId);
   const [clusterOverview, setClusterOverview] = useState(false);
   if (focusId && focusId !== focusSeen) {
@@ -131,6 +132,7 @@ export function NeighborhoodApp({
   const [pinnedRoute, setPinnedRoute] = useState<WalkingRoute | null>(null);
   const [routeFitTick, setRouteFitTick] = useState(0);
   const pendingRouteGps = useRef(false);
+  const originPickResumeView = useRef<HomeView | null>(null);
   const geoErrorToasted = useRef(false);
   const cheerTimer = useRef(0);
   const outsideBannerTimer = useRef(0);
@@ -520,6 +522,9 @@ export function NeighborhoodApp({
   function exitOriginPick() {
     setOriginPickActive(false);
     setOriginDraft(null);
+    const resume = originPickResumeView.current;
+    originPickResumeView.current = null;
+    if (resume === "list") setView("list");
   }
 
   function exitRouteMode() {
@@ -584,6 +589,7 @@ export function NeighborhoodApp({
 
   function startOriginPick() {
     setOriginPickerOpen(false);
+    originPickResumeView.current = view;
     setView("map");
     setSelectedId("closed");
     setClusterOverview(false);
@@ -960,6 +966,7 @@ export function NeighborhoodApp({
                 onSelect={(house, opts) => {
                   if (originPickActive) return;
                   setClusterOverview(Boolean(opts?.clusterOverview));
+                  setSelectedListIndex(undefined);
                   setSelectedId(house.id);
                 }}
                 onClose={() => {
@@ -1064,11 +1071,13 @@ export function NeighborhoodApp({
                       setView("map");
                       setClusterOverview(false);
                       setEditing(false);
+                      setSelectedListIndex(undefined);
                       setSelectedId(id);
                     }}
-                    onSelectHouse={(id) => {
+                    onSelectHouse={(id, index) => {
                       setClusterOverview(false);
                       if (selectedId !== id) setEditing(false);
+                      setSelectedListIndex(index);
                       setSelectedId(id);
                     }}
                     onEditHouse={(id) => {
@@ -1083,11 +1092,24 @@ export function NeighborhoodApp({
             </div>
           </>
         )}
+        {selected && view === "list" && !originPickActive ? (
+          <button
+            type="button"
+            aria-label="סגירת פרטי הבית"
+            className="absolute inset-0 z-40 bg-black/40"
+            onClick={() => {
+              setEditing(false);
+              setClusterOverview(false);
+              setSelectedId("closed");
+            }}
+          />
+        ) : null}
         {selected && !originPickActive ? (
         <MapHouseSheet
           house={selected}
           clusterHouses={view === "map" ? selectedCluster : [selected]}
           clusterOverview={view === "map" && clusterOverview}
+          index={view === "list" ? selectedListIndex : undefined}
           onClose={() => {
             setClusterOverview(false);
             setSelectedId("closed");
