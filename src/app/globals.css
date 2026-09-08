@@ -1150,7 +1150,7 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  padding-inline-start: 1.25rem;
+  padding-inline-start: 2.25rem;
 }
 
 .route-card-spine::before {
@@ -1158,10 +1158,10 @@
   position: absolute;
   top: 1.1rem;
   bottom: 1.75rem;
-  inset-inline-start: 0.875rem;
-  width: 2px;
-  background: #ea580c;
-  opacity: 0.55;
+  inset-inline-start: 1.05rem;
+  width: 3px;
+  background: #f97316;
+  opacity: 0.85;
   pointer-events: none;
 }
 
@@ -1191,13 +1191,14 @@
 
 .route-card-frame {
   position: relative;
+  isolation: isolate;
 }
 
 .route-card-frame > .route-stop-pin {
   position: absolute;
-  z-index: 3;
-  inset-inline-start: -1.25rem;
-  top: 0.65rem;
+  z-index: 5;
+  inset-inline-start: -2rem;
+  top: 0.55rem;
   pointer-events: none;
 }
 

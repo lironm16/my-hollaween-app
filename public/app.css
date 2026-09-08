@@ -46,7 +46,6 @@
     --color-violet-900: oklch(38% 0.189 293.745);
     --color-violet-950: oklch(28.3% 0.141 291.089);
     --color-rose-300: oklch(81% 0.117 11.638);
-    --color-rose-400: oklch(71.2% 0.194 13.428);
     --color-slate-100: oklch(96.8% 0.007 247.896);
     --color-slate-900: oklch(20.8% 0.042 265.755);
     --color-black: #000;
@@ -4632,17 +4631,17 @@ svg.leaflet-zoom-animated {
   margin: 0;
   padding: 0;
   list-style: none;
-  padding-inline-start: 1.25rem;
+  padding-inline-start: 2.25rem;
 }
 .route-card-spine::before {
   content: "";
   position: absolute;
   top: 1.1rem;
   bottom: 1.75rem;
-  inset-inline-start: 0.875rem;
-  width: 2px;
-  background: #ea580c;
-  opacity: 0.55;
+  inset-inline-start: 1.05rem;
+  width: 3px;
+  background: #f97316;
+  opacity: 0.85;
   pointer-events: none;
 }
 .route-card-stop {
@@ -4668,12 +4667,13 @@ svg.leaflet-zoom-animated {
 }
 .route-card-frame {
   position: relative;
+  isolation: isolate;
 }
 .route-card-frame > .route-stop-pin {
   position: absolute;
-  z-index: 3;
-  inset-inline-start: -1.25rem;
-  top: 0.65rem;
+  z-index: 5;
+  inset-inline-start: -2rem;
+  top: 0.55rem;
   pointer-events: none;
 }
 .night-status-dot {
