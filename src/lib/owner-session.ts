@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { adminPassword } from "@/lib/admin";
+import { canonicalHouseId, sameHouseId } from "@/lib/ids";
 
 const COOKIE = "hw_owner";
 const MAX_HOUSES = 20;
@@ -35,10 +36,14 @@ function parseCookie(value: string | undefined): string[] {
 }
 
 export async function grantOwnerHouse(id: string) {
-  if (!id) return;
+  const canonical = canonicalHouseId(id);
+  if (!canonical) return;
   const jar = await cookies();
   const current = parseCookie(jar.get(COOKIE)?.value);
-  const ids = [id, ...current.filter((item) => item !== id)].slice(0, MAX_HOUSES);
+  const ids = [canonical, ...current.filter((item) => !sameHouseId(item, canonical))].slice(
+    0,
+    MAX_HOUSES,
+  );
   jar.set(COOKIE, `${sign(ids)}.${encodeURIComponent(ids.join(","))}`, {
     httpOnly: true,
     sameSite: "lax",
@@ -49,7 +54,8 @@ export async function grantOwnerHouse(id: string) {
 }
 
 export async function ownerMayEdit(id: string) {
-  if (!id) return false;
+  const needle = canonicalHouseId(id);
+  if (!needle) return false;
   const jar = await cookies();
-  return parseCookie(jar.get(COOKIE)?.value).includes(id);
+  return parseCookie(jar.get(COOKIE)?.value).some((item) => sameHouseId(item, needle));
 }

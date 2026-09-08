@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ownerPatchSchema } from "@/lib/schema";
 import { deleteByEditCode, getCatalog, getHouse, updateByEditCode } from "@/lib/store";
-import { toPublicHouse } from "@/lib/ids";
+import { canonicalHouseId, toPublicHouse } from "@/lib/ids";
 import { config } from "@/lib/config";
 import { geocodeHttpError } from "@/lib/geocode";
 import { grantOwnerHouse, ownerMayEdit } from "@/lib/owner-session";
@@ -14,9 +14,10 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await context.params;
+  const { id: rawId } = await context.params;
+  const id = canonicalHouseId(rawId);
   const catalog = await getCatalog();
-  const house = catalog.houses.find((h) => h.id === id);
+  const house = catalog.houses.find((h) => canonicalHouseId(h.id) === id);
   if (!house) {
     const hidden = await getHouse(id);
     if (hidden) {
@@ -41,7 +42,8 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await context.params;
+  const { id: rawId } = await context.params;
+  const id = canonicalHouseId(rawId);
   let json: unknown;
   try {
     json = await request.json();
@@ -89,12 +91,14 @@ export async function DELETE(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await context.params;
-  let json: unknown;
+  const { id: rawId } = await context.params;
+  const id = canonicalHouseId(rawId);
+  let json: unknown = {};
   try {
-    json = await request.json();
+    const text = await request.text();
+    json = text ? JSON.parse(text) : {};
   } catch {
-    return NextResponse.json({ error: "גוף הבקשה אינו תקין." }, { status: 400 });
+    json = {};
   }
   const existing = await getHouse(id);
   if (!existing) {
@@ -110,7 +114,7 @@ export async function DELETE(
   if (code.length < 4 || code.length > 12 || existing.editCode !== code) {
     return NextResponse.json({ error: "קוד העריכה שגוי." }, { status: 403 });
   }
-  const removed = await deleteByEditCode(id, existing.editCode);
+  const removed = await deleteByEditCode(existing.id, existing.editCode);
   if (!removed) {
     return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404 });
   }

@@ -185,6 +185,18 @@ export function rememberPublishedHouse(house: PublicHouse) {
   void saveCatalogCache(next);
 }
 
+export function forgetPublishedHouse(id: string) {
+  if (typeof window === "undefined" || !id) return;
+  const cached = loadCatalogCacheSync();
+  if (cached?.houses.some((item) => item.id === id)) {
+    void saveCatalogCache({
+      ...cached,
+      houses: cached.houses.filter((item) => item.id !== id),
+    });
+  }
+  removePendingWrite(id);
+}
+
 export function notifyCatalogChanged() {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new Event("hw-catalog-changed"));

@@ -2,7 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { get as getBlob, put as putBlob } from "@vercel/blob";
 import { canonicalAddressForBuilding } from "@/lib/house-clusters";
-import { newEditCode, newPublicId, toPublicHouse } from "@/lib/ids";
+import { canonicalHouseId, newEditCode, newPublicId, sameHouseId, toPublicHouse } from "@/lib/ids";
 import { inNeighborhood } from "@/lib/config";
 import { config } from "@/lib/config";
 import { assertRealAddress } from "@/lib/geocode";
@@ -368,10 +368,13 @@ async function persistDb(db: DbFile) {
   if (isStaleSnapshot(db)) {
     const live = liveDb();
     if (live) {
+      live.houses = mergeHouses(live.houses, db.houses);
+      if (stamp(db) > stamp(live)) live.updatedAt = db.updatedAt;
       foldPushSettings(live, db, blobWrapper);
-      const had = live.pushSubscriptions?.length ?? 0;
       foldPushSubscriptions(live, db);
       if (mem) {
+        mem.houses = live.houses;
+        mem.updatedAt = live.updatedAt;
         mem.pushSettings = live.pushSettings;
         mem.pushSubscriptions = live.pushSubscriptions;
       }
@@ -381,15 +384,13 @@ async function persistDb(db: DbFile) {
       } catch {
         /* live house data stays in memory */
       }
-      if ((live.pushSubscriptions?.length ?? 0) !== had) {
-        try {
-          if (blobEnabled()) await writeBlobDb(live);
-          else await writeFileDb(live);
-        } catch {
-          /* memory still holds the merged subscriptions */
-        }
-        setMem(live);
+      try {
+        if (blobEnabled()) await writeBlobDb(live);
+        else await writeFileDb(live);
+      } catch {
+        /* memory still holds the merged houses */
       }
+      setMem(live);
     }
     return;
   }
@@ -403,13 +404,24 @@ async function persistDb(db: DbFile) {
   if (isStaleSnapshot(db)) {
     const live = liveDb();
     if (live) {
+      live.houses = mergeHouses(live.houses, db.houses);
+      if (stamp(db) > stamp(live)) live.updatedAt = db.updatedAt;
       foldPushSettings(live, db);
       foldPushSubscriptions(live, db);
       if (mem) {
+        mem.houses = live.houses;
+        mem.updatedAt = live.updatedAt;
         mem.pushSettings = live.pushSettings;
         mem.pushSubscriptions = live.pushSubscriptions;
       }
       setGlobalDb(live);
+      try {
+        if (blobEnabled()) await writeBlobDb(live);
+        else await writeFileDb(live);
+      } catch {
+        /* memory still holds the merged houses */
+      }
+      setMem(live);
     }
     return;
   }
@@ -436,13 +448,18 @@ async function persistDb(db: DbFile) {
   if (isStaleSnapshot(db)) {
     const live = liveDb();
     if (live) {
+      live.houses = mergeHouses(live.houses, db.houses);
+      if (stamp(db) > stamp(live)) live.updatedAt = db.updatedAt;
       foldPushSettings(live, db);
       foldPushSubscriptions(live, db);
       if (mem) {
+        mem.houses = live.houses;
+        mem.updatedAt = live.updatedAt;
         mem.pushSettings = live.pushSettings;
         mem.pushSubscriptions = live.pushSubscriptions;
       }
       setGlobalDb(live);
+      setMem(live);
     }
     return;
   }
@@ -504,9 +521,16 @@ export async function getDbSnapshot(): Promise<DbFile> {
   return loadDb(true);
 }
 
+function findHouseIn(houses: House[], id: string): House | undefined {
+  const needle = canonicalHouseId(id);
+  if (!needle) return undefined;
+  return houses.find((house) => sameHouseId(house.id, needle));
+}
+
 export async function getHouse(id: string): Promise<House | undefined> {
-  const db = await loadDb();
-  return db.houses.find((h) => h.id === id);
+  const found = findHouseIn((await loadDb()).houses, id);
+  if (found) return found;
+  return findHouseIn((await loadDb(true)).houses, id);
 }
 
 export async function submitHouse(
@@ -519,10 +543,10 @@ export async function submitHouse(
   const house = await runSyncedWrite((db) => {
     if (!id) {
       id = newPublicId();
-      while (db.houses.some((h) => h.id === id)) id = newPublicId();
+      while (db.houses.some((h) => sameHouseId(h.id, id))) id = newPublicId();
       editCode = newEditCode();
     }
-    const already = db.houses.find((h) => h.id === id);
+    const already = findHouseIn(db.houses, id);
     if (already) return already;
     const now = new Date().toISOString();
     const visit: VisitState = input.visit ?? "come";
@@ -583,7 +607,7 @@ export async function updateByEditCode(
     });
   }
   const updated = await runSyncedWrite((db) => {
-    const house = db.houses.find((h) => h.id === id);
+    const house = findHouseIn(db.houses, id);
     if (!house || house.editCode !== editCode) return null;
     if (patch.lat !== undefined && patch.lng !== undefined) {
       if (!inNeighborhood(patch.lat, patch.lng)) {
@@ -615,7 +639,7 @@ export async function updateByEditCode(
 
 export async function deleteByEditCode(id: string, editCode: string) {
   return runSyncedWrite((db) => {
-    const idx = db.houses.findIndex((h) => h.id === id && h.editCode === editCode);
+    const idx = db.houses.findIndex((h) => sameHouseId(h.id, id) && h.editCode === editCode);
     if (idx < 0) return false;
     db.houses.splice(idx, 1);
     db.updatedAt = new Date().toISOString();
@@ -625,7 +649,7 @@ export async function deleteByEditCode(id: string, editCode: string) {
 
 export async function adminDeleteHouse(id: string) {
   return runSyncedWrite((db) => {
-    const idx = db.houses.findIndex((h) => h.id === id);
+    const idx = db.houses.findIndex((h) => sameHouseId(h.id, id));
     if (idx < 0) return false;
     db.houses.splice(idx, 1);
     db.updatedAt = new Date().toISOString();
@@ -678,7 +702,7 @@ export async function adminUpdate(
     });
   }
   const updated = await runSyncedWrite((db) => {
-    const house = db.houses.find((h) => h.id === id);
+    const house = findHouseIn(db.houses, id);
     if (!house) return null;
     if (patch.lat !== undefined && patch.lng !== undefined) {
       if (!inNeighborhood(patch.lat, patch.lng)) {

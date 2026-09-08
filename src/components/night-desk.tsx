@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { HouseForm, type HouseFormExtras } from "@/components/house-form";
 import { PushNotice } from "@/components/push-notice";
 import { Button } from "@/components/ui/button";
-import { notifyCatalogChanged, applyLocalHousePatch, queueHouseWrite, rememberPublishedHouse, saveOwnedHouse } from "@/lib/offline-db";
+import { notifyCatalogChanged, applyLocalHousePatch, queueHouseWrite, rememberPublishedHouse, forgetPublishedHouse, saveOwnedHouse } from "@/lib/offline-db";
 import { publishHousePhoto } from "@/lib/house-photo";
 import { readApiJson } from "@/lib/api-json";
 import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
@@ -191,10 +191,18 @@ export function NightDesk({
             body: JSON.stringify({ editCode }),
           });
       const data = await readApiJson<{ error?: string; ok?: boolean }>(res);
+      if (res.status === 404) {
+        forgetPublishedHouse(house.id);
+        notifyCatalogChanged();
+        toast.success("הבית נמחק מהמפה");
+        onDeleted?.();
+        return;
+      }
       if (!res.ok || !data.ok) {
         toast.error(data.error ?? "המחיקה נכשלה");
         return;
       }
+      forgetPublishedHouse(house.id);
       notifyCatalogChanged();
       toast.success("הבית נמחק מהמפה");
       onDeleted?.();

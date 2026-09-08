@@ -3,6 +3,7 @@ import { isAdmin } from "@/lib/admin";
 import { PUSH_KINDS, type PushKind } from "@/lib/push-templates";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { notifyHouseKind } from "@/lib/store";
+import { canonicalHouseId } from "@/lib/ids";
 import { ownerMayEdit } from "@/lib/owner-session";
 import { readIncludeEndpoint } from "@/lib/push";
 
@@ -12,7 +13,8 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await context.params;
+  const { id: rawId } = await context.params;
+  const id = canonicalHouseId(rawId);
   const json = (await request.json().catch(() => null)) as {
     editCode?: string;
     kind?: string;

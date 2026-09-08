@@ -55,6 +55,7 @@ import {
   loadServerDbBackup,
   notifyCatalogChanged,
   removeOwnedHouse,
+  forgetPublishedHouse,
   saveOwnedHouse,
   saveServerDbBackup,
   type ServerDbBackup,
@@ -645,6 +646,7 @@ export function NeighborhoodApp({
       return next;
     });
     removeOwnedHouse(id);
+    forgetPublishedHouse(id);
     if (selectedId === id) {
       setSelectedId("closed");
       setClusterOverview(false);

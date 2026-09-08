@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { adminPatchSchema } from "@/lib/schema";
-import { adminDeleteHouse, adminUpdate } from "@/lib/store";
+import { adminDeleteHouse, adminUpdate, getHouse } from "@/lib/store";
+import { canonicalHouseId } from "@/lib/ids";
 import { geocodeHttpError } from "@/lib/geocode";
 import { readIncludeEndpoint } from "@/lib/push";
 
@@ -14,7 +15,8 @@ export async function PATCH(
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "נדרשת הרשאת מנהל." }, { status: 401 });
   }
-  const { id } = await context.params;
+  const { id: rawId } = await context.params;
+  const id = canonicalHouseId(rawId);
   const json = await request.json().catch(() => null);
   const parsed = adminPatchSchema.safeParse(json);
   if (!parsed.success) {
@@ -45,8 +47,13 @@ export async function DELETE(
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "נדרשת הרשאת מנהל." }, { status: 401 });
   }
-  const { id } = await context.params;
-  const removed = await adminDeleteHouse(id);
+  const { id: rawId } = await context.params;
+  const id = canonicalHouseId(rawId);
+  const existing = await getHouse(id);
+  if (!existing) {
+    return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404 });
+  }
+  const removed = await adminDeleteHouse(existing.id);
   if (!removed) {
     return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404 });
   }
