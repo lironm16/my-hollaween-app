@@ -1616,9 +1616,6 @@
     font-size: var(--text-xs);
     line-height: var(--tw-leading, var(--text-xs--line-height));
   }
-  .text-\[0\.65rem\] {
-    font-size: 0.65rem;
-  }
   .text-\[1\.2rem\] {
     font-size: 1.2rem;
   }
@@ -1659,9 +1656,9 @@
     --tw-font-weight: var(--font-weight-semibold);
     font-weight: var(--font-weight-semibold);
   }
-  .tracking-\[0\.28em\] {
-    --tw-tracking: 0.28em;
-    letter-spacing: 0.28em;
+  .tracking-\[0\.2em\] {
+    --tw-tracking: 0.2em;
+    letter-spacing: 0.2em;
   }
   .tracking-wide {
     --tw-tracking: var(--tracking-wide);
@@ -4268,23 +4265,21 @@ svg.leaflet-zoom-animated {
   transform: translateY(-50%);
 }
 .pin-apt-dot.is-break {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
   background: #6b7280;
 }
 .pin-apt-dot.is-break::before,
 .pin-apt-dot.is-break::after {
   content: "";
-  position: absolute;
-  top: 5px;
+  position: static;
   width: 4px;
   height: 12px;
   border-radius: 999px;
   background: #fff;
-}
-.pin-apt-dot.is-break::before {
-  left: 7px;
-}
-.pin-apt-dot.is-break::after {
-  left: 13px;
+  flex-shrink: 0;
 }
 .house-pin .pin-scare {
   display: block;
@@ -4537,6 +4532,10 @@ svg.leaflet-zoom-animated {
 }
 .house-pin .pin-status.is-break,
 .pumpkin-pin .pin-status.is-break {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
   background: #6b7280;
   border-color: #fff;
   box-shadow: none;
@@ -4546,20 +4545,12 @@ svg.leaflet-zoom-animated {
 .pumpkin-pin .pin-status.is-break::before,
 .pumpkin-pin .pin-status.is-break::after {
   content: "";
-  position: absolute;
-  top: 5px;
+  position: static;
   width: 4px;
   height: 12px;
   border-radius: 999px;
   background: #fff;
-}
-.house-pin .pin-status.is-break::before,
-.pumpkin-pin .pin-status.is-break::before {
-  left: 7px;
-}
-.house-pin .pin-status.is-break::after,
-.pumpkin-pin .pin-status.is-break::after {
-  left: 13px;
+  flex-shrink: 0;
 }
 .house-pin.house-pin-dot .pin-status {
   width: 14px;
@@ -4671,23 +4662,21 @@ svg.leaflet-zoom-animated {
   transform: translateY(-50%);
 }
 .night-status-dot.is-break {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
   background: #6b7280;
 }
 .night-status-dot.is-break::before,
 .night-status-dot.is-break::after {
   content: "";
-  position: absolute;
-  top: 4px;
+  position: static;
   width: 4px;
   height: 11px;
   border-radius: 999px;
   background: #fff;
-}
-.night-status-dot.is-break::before {
-  left: 6px;
-}
-.night-status-dot.is-break::after {
-  left: 12px;
+  flex-shrink: 0;
 }
 .neighborhood-marquee {
   overflow: hidden;

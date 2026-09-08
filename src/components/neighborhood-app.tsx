@@ -60,8 +60,6 @@ import {
   type ServerDbBackup,
 } from "@/lib/offline-db";
 import {
-  consumeHouseSearchFocus,
-  HOUSE_SEARCH_FOCUS_KEY,
   readHomeView,
   writeHomeView,
   type HomeView,
@@ -100,10 +98,12 @@ export function NeighborhoodApp({
   const [selectedListIndex, setSelectedListIndex] = useState<number | undefined>();
   const [focusSeen, setFocusSeen] = useState(focusId);
   const [clusterOverview, setClusterOverview] = useState(false);
+  const [expandedClusterKey, setExpandedClusterKey] = useState<string | null>(null);
   if (focusId && focusId !== focusSeen) {
     setFocusSeen(focusId);
     setSelectedId(focusId);
     setClusterOverview(false);
+    setExpandedClusterKey(null);
   }
   const {
     filters,
@@ -155,14 +155,6 @@ export function NeighborhoodApp({
   }
   const [busyAction, setBusyAction] = useState(false);
   const [listQuery, setListQuery] = useState("");
-  const [searchFocusTick, setSearchFocusTick] = useState(() => {
-    if (typeof window === "undefined") return 0;
-    try {
-      return sessionStorage.getItem(HOUSE_SEARCH_FOCUS_KEY) === "1" ? 1 : 0;
-    } catch {
-      return 0;
-    }
-  });
 
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
@@ -247,6 +239,7 @@ export function NeighborhoodApp({
     if (wasAdmin.current && !admin) {
       setSelectedId("closed");
       setClusterOverview(false);
+      setExpandedClusterKey(null);
       void refresh(true);
     }
     wasAdmin.current = admin;
@@ -256,32 +249,6 @@ export function NeighborhoodApp({
     if (!focusId) return;
     writeHomeView("map");
   }, [focusId]);
-
-  useEffect(() => {
-    if (!searchFocusTick) return;
-    if (view !== "list") {
-      writeHomeView("list");
-      return;
-    }
-    if (routeMode) return;
-    let attempts = 0;
-    const tryFocus = () => {
-      const el = document.getElementById("house-search");
-      if (!(el instanceof HTMLElement)) return false;
-      el.focus();
-      if (document.activeElement === el) {
-        consumeHouseSearchFocus();
-        return true;
-      }
-      return false;
-    };
-    if (tryFocus()) return;
-    const timer = window.setInterval(() => {
-      attempts += 1;
-      if (tryFocus() || attempts >= 12) window.clearInterval(timer);
-    }, 80);
-    return () => window.clearInterval(timer);
-  }, [searchFocusTick, view, routeMode]);
 
   const editCodeById = useMemo(() => {
     const map = new Map<string, string>();
@@ -538,13 +505,8 @@ export function NeighborhoodApp({
     exitRouteMode();
     setSelectedId("closed");
     setClusterOverview(false);
+    setExpandedClusterKey(null);
     setEditing(false);
-  }
-
-  function goSearchHouses() {
-    goHome();
-    setView("list");
-    setSearchFocusTick((n) => n + 1);
   }
 
   function enterRouteMode() {
@@ -552,6 +514,7 @@ export function NeighborhoodApp({
     exitOriginPick();
     setSelectedId("closed");
     setClusterOverview(false);
+    setExpandedClusterKey(null);
     setEditing(false);
     setRouteMode(true);
     if (originChoice.kind === "gps" && !gps) {
@@ -593,6 +556,7 @@ export function NeighborhoodApp({
     setView("map");
     setSelectedId("closed");
     setClusterOverview(false);
+    setExpandedClusterKey(null);
     setEditing(false);
     setOriginDraft({ lat: origin.lat, lng: origin.lng });
     setOriginDraftLabel(origin.kind === "custom" ? origin.label : "נקודה במפה");
@@ -752,7 +716,7 @@ export function NeighborhoodApp({
       className="relative isolate flex flex-col overflow-hidden"
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
-      <AppHeader onHomeTap={goHome} onSearchHouses={goSearchHouses} />
+      <AppHeader onHomeTap={goHome} />
       <div
         className="app-toolbar relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2"
         style={{ flexShrink: 0 }}
@@ -963,13 +927,32 @@ export function NeighborhoodApp({
                 houses={visible}
                 selectedId={originPickActive ? null : selected?.id}
                 clusterOverview={clusterOverview}
+                expandedClusterKey={expandedClusterKey}
                 onSelect={(house, opts) => {
                   if (originPickActive) return;
-                  setClusterOverview(Boolean(opts?.clusterOverview));
+                  const cluster = clusterHousesByAddress(visible).find((item) =>
+                    item.houses.some((itemHouse) => itemHouse.id === house.id),
+                  );
+                  const isMulti = (cluster?.houses.length ?? 0) > 1;
+                  if (opts?.clusterOverview) {
+                    setExpandedClusterKey(cluster?.key ?? null);
+                    setClusterOverview(true);
+                  } else if (isMulti) {
+                    setExpandedClusterKey(cluster?.key ?? null);
+                    setClusterOverview(false);
+                  } else {
+                    setExpandedClusterKey(null);
+                    setClusterOverview(false);
+                  }
                   setSelectedListIndex(undefined);
                   setSelectedId(house.id);
                 }}
                 onClose={() => {
+                  setClusterOverview(false);
+                  setSelectedId("closed");
+                }}
+                onCollapseCluster={() => {
+                  setExpandedClusterKey(null);
                   setClusterOverview(false);
                   setSelectedId("closed");
                 }}
@@ -1049,9 +1032,10 @@ export function NeighborhoodApp({
                     route={walkingRoute}
                     hasGps={Boolean(gps)}
                     onRequestLocation={gpsAllowed ? chooseGpsOrigin : undefined}
+                    selectedId={selected?.id ?? null}
                     onSelectHouse={(id) => {
-                      setView("map");
                       setClusterOverview(false);
+                      if (selectedId !== id) setEditing(false);
                       setSelectedId(id);
                     }}
                   />
@@ -1070,6 +1054,7 @@ export function NeighborhoodApp({
                     onShowOnMap={(id) => {
                       setView("map");
                       setClusterOverview(false);
+                      setExpandedClusterKey(null);
                       setEditing(false);
                       setSelectedListIndex(undefined);
                       setSelectedId(id);
@@ -1131,6 +1116,7 @@ export function NeighborhoodApp({
               ? () => {
                   setView("map");
                   setClusterOverview(false);
+                  setExpandedClusterKey(null);
                 }
               : undefined
           }
