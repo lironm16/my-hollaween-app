@@ -1015,6 +1015,14 @@ export function NeighborhoodApp({
           canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
           editing={editing}
           onToggleEdit={() => setEditing((v) => !v)}
+          onShowOnMap={
+            view === "list"
+              ? () => {
+                  setView("map");
+                  setClusterOverview(false);
+                }
+              : undefined
+          }
           pendingNote={
             selected.status === "pending" ? (
               <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">

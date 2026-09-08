@@ -68,7 +68,10 @@ export function HouseCard({
         open();
       }}
     >
-      <div className="house-list-card-chrome">
+      <div
+        className="house-list-card-chrome"
+        onClick={(event) => event.stopPropagation()}
+      >
         <HouseActionBar
           house={house}
           liked={liked}
