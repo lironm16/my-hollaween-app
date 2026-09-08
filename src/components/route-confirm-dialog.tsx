@@ -72,7 +72,7 @@ export function RouteConfirmDialog({
           />
           לא להציג שוב
         </label>
-        <DialogFooter className="border-0 bg-transparent p-0 sm:flex-row-reverse sm:justify-start">
+        <DialogFooter className="flex flex-row justify-start gap-3 border-0 bg-transparent px-1 pt-2 pb-1">
           <Button
             type="button"
             className="bg-orange-500 text-black hover:bg-orange-400"

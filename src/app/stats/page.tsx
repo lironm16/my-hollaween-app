@@ -2,11 +2,15 @@
 
 import { AdminStatsCard, useSnapshotStats } from "@/components/admin-stats";
 import { AppHeader } from "@/components/app-header";
+import { useAdminSession } from "@/hooks/use-admin-session";
+import { useHouseSet } from "@/hooks/use-house-set";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 
 export default function StatsPage() {
-  const stats = useSnapshotStats(true);
+  const { admin } = useAdminSession();
+  const { houseSet } = useHouseSet();
+  const stats = useSnapshotStats(true, admin ? houseSet : "real");
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
 

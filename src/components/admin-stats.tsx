@@ -13,6 +13,7 @@ import { PUSH_TOPIC_ROWS, type PushTopic } from "@/lib/push-topics";
 import { scareShort, decorShort, treatLabels } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import type { AdminSnapshot } from "@/lib/admin-snapshot";
+import type { HouseSet } from "@/lib/house-set";
 
 export type AdminStats = AdminSnapshot;
 
@@ -53,12 +54,14 @@ function useStats(url: string, enabled: boolean) {
   return stats;
 }
 
-export function useSnapshotStats(enabled = true) {
-  return useStats("/api/stats", enabled);
+export function useSnapshotStats(enabled = true, houseSet: HouseSet = "real") {
+  const query = houseSet === "real" ? "" : `?houseSet=${encodeURIComponent(houseSet)}`;
+  return useStats(`/api/stats${query}`, enabled);
 }
 
-export function useAdminStats(enabled: boolean) {
-  return useStats("/api/admin/stats", enabled);
+export function useAdminStats(enabled: boolean, houseSet: HouseSet = "real") {
+  const query = houseSet === "real" ? "" : `?houseSet=${encodeURIComponent(houseSet)}`;
+  return useStats(`/api/admin/stats${query}`, enabled);
 }
 
 export function AlertStatsCard({ stats }: { stats: AdminStats }) {

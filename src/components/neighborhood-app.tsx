@@ -669,7 +669,7 @@ export function NeighborhoodApp({
         .map((house) => house.name),
     ];
     const description =
-      "המסלול מוצמד לרשימה המסוננת. הוספת מסלול יכולה להוסיף או להסיר בתים לפי הסינון.";
+      "המסלול ייבנה מהבתים שמופיעים ברשימה עכשיו, לפי הסינון הנוכחי. שינוי סינון יעדכן את המסלול.";
     setRoutePrompt({
       kind: "enter-route",
       title: wouldDropVisited ? "בתים שביקרתם יוסרו מהמסלול" : "התחלת מסלול",
@@ -1083,7 +1083,7 @@ export function NeighborhoodApp({
               ? "השרת לא עונה · מוצגת הרשימה ששמורה בטלפון"
               : "השרת לא עונה, ואין עותק שמור בטלפון"}
         </div>
-      ) : error ? (
+      ) : error && houses.length === 0 ? (
         <div className="relative z-30 bg-red-950/70 px-3 py-2 text-center text-base text-red-100">
           {error}
         </div>
@@ -1390,7 +1390,6 @@ export function NeighborhoodApp({
         description={routePrompt?.description ?? ""}
         houses={routePrompt?.houses}
         promptKind={routePrompt?.kind ?? "enter-route"}
-        confirmLabel="שמירה והמשך"
         onConfirm={() => {
           routePrompt?.onConfirm();
           setRoutePrompt(null);

@@ -1385,22 +1385,21 @@ input[type="time"].house-time-input {
   direction: ltr;
   position: relative;
   padding-inline: 0.625rem;
-  -webkit-appearance: none;
-  appearance: none;
   color-scheme: dark;
   color: transparent;
   caret-color: transparent;
+  cursor: pointer;
 }
 
 input[type="time"].house-time-input::-webkit-calendar-picker-indicator {
   position: absolute;
-  inset-inline-start: 0.55rem;
-  inset-inline-end: auto;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   margin: 0;
   cursor: pointer;
-  opacity: 0.9;
-  z-index: 2;
-  filter: invert(0.85) sepia(1) saturate(5) hue-rotate(0deg);
+  opacity: 0;
+  z-index: 3;
 }
 
 input[type="time"].house-time-input::-webkit-datetime-edit,

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { buildAdminSnapshot } from "@/lib/admin-snapshot";
+import { HOUSE_SETS, type HouseSet } from "@/lib/house-set";
 import { countPresence } from "@/lib/presence-store";
 import { getDbSnapshot } from "@/lib/store";
 import { getHouseTraffic } from "@/lib/traffic-store";
@@ -7,7 +8,13 @@ import { getHouseTraffic } from "@/lib/traffic-store";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+function parseHouseSet(value: string | null): HouseSet {
+  if (value && (HOUSE_SETS as readonly string[]).includes(value)) return value as HouseSet;
+  return "real";
+}
+
+export async function GET(request: Request) {
+  const houseSet = parseHouseSet(new URL(request.url).searchParams.get("houseSet"));
   const [db, traffic] = await Promise.all([getDbSnapshot(), getHouseTraffic()]);
   const snapshot = buildAdminSnapshot({
     houses: db.houses,
@@ -15,7 +22,7 @@ export async function GET() {
     devicesSeen: 0,
     online: countPresence(),
     traffic,
-    houseSet: "real",
+    houseSet,
   });
   return NextResponse.json({
     houses: snapshot.houses,

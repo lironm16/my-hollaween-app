@@ -27,6 +27,7 @@ export function HouseCard({
   onOpen,
   editing = false,
   onToggleEdit,
+  expanded = false,
   index,
 }: {
   house: PublicHouse;
@@ -42,30 +43,34 @@ export function HouseCard({
   onOpen?: () => void;
   editing?: boolean;
   onToggleEdit?: () => void;
+  /** Show full details inline without opening a sheet. */
+  expanded?: boolean;
   index?: number;
 }) {
   function open() {
     onOpen?.();
   }
 
+  const interactive = Boolean(onOpen) && !expanded;
+
   return (
     <Card
       size="sm"
-      role={onOpen ? "button" : undefined}
-      tabIndex={onOpen ? 0 : undefined}
-      aria-label={onOpen ? "פתיחת פרטי הבית" : undefined}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-label={interactive ? "פתיחת פרטי הבית" : undefined}
       className={cn(
         "house-list-card overflow-visible bg-[#1d1028]/90 text-base",
         visited ? "is-visited ring-0" : "border-orange-500/15",
-        onOpen && "cursor-pointer transition hover:bg-[#261536]",
-        onOpen && !visited && "hover:border-orange-400/50",
+        interactive && "cursor-pointer transition hover:bg-[#261536]",
+        interactive && !visited && "hover:border-orange-400/50",
       )}
       onClick={(event) => {
-        if (!onOpen || isCardInteractive(event.target)) return;
+        if (!interactive || isCardInteractive(event.target)) return;
         open();
       }}
       onKeyDown={(event) => {
-        if (!onOpen) return;
+        if (!interactive) return;
         if (event.key !== "Enter" && event.key !== " ") return;
         if (isCardInteractive(event.target)) return;
         event.preventDefault();
@@ -104,7 +109,7 @@ export function HouseCard({
           visited={visited}
           onToggleVisited={onToggleVisited}
           chrome="sheet"
-          compact
+          compact={!expanded}
           index={index}
         />
       </div>
