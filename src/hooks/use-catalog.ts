@@ -63,6 +63,20 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
   const refresh = async (force = false) => {
     const online = typeof navigator === "undefined" || navigator.onLine;
     setOffline(!online);
+    if (!online) {
+      const cached = await readDeviceCatalog();
+      if (cached) {
+        let next: Catalog = cached;
+        setCatalog((prev) => {
+          next = withDeviceHouseOverlays(syncCatalog(cached, prev ?? cached));
+          return next;
+        });
+        setSource("cache");
+        setUnreachable(false);
+        setError(null);
+        return;
+      }
+    }
     if (online) await flushPendingHouseWrites();
     try {
       if (readServerSimDown()) throw new Error("sim-down");

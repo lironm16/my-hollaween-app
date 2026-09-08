@@ -1,4 +1,4 @@
-const CACHE = "hw-shell-v61";
+const CACHE = "hw-shell-v62";
 const TILE_CACHE = "hw-tiles-v7";
 const PRECACHE = [
   "/offline.html",
@@ -47,6 +47,11 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (url.pathname === "/sw.js" || url.pathname === "/boot.js") {
+    return;
+  }
+
+  if (url.pathname.startsWith("/_next/static/")) {
+    event.respondWith(cacheFirst(req, CACHE));
     return;
   }
 
@@ -138,7 +143,6 @@ async function navigation(request) {
     return (
       (await cache.match(request)) ||
       (await cache.match("/")) ||
-      (await cache.match("/offline.html")) ||
       new Response(
         "<!doctype html><meta charset=utf-8><title>לא מקוון</title><p dir=rtl>אין קשר לשרת. פתחו את האפליקציה פעם אחת כשיש רשת כדי לשמור את רשימת הבתים בטלפון.</p>",
         { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } },

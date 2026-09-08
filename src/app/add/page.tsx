@@ -48,7 +48,6 @@ export default function AddPage() {
       notifyCatalogChanged();
       // Success UI only after the server confirmed the house.
       setDone({ id: preview.id, editCode, name: preview.name });
-      toast.success("הבית נוסף למפה");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "השליחה נכשלה");
     } finally {

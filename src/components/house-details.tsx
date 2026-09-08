@@ -188,8 +188,7 @@ export function HouseDetails({
   const meta = (
     <div
       className={cn(
-        "min-w-0 leading-snug text-violet-200 break-words",
-        compact ? "text-base" : "text-sm",
+        "min-w-0 text-sm leading-snug text-violet-200 break-words",
       )}
     >
       {photo ? (
@@ -232,8 +231,7 @@ export function HouseDetails({
           {indexBadge}
           <p
             className={cn(
-              "min-w-0 font-display text-orange-300 break-words",
-              compact ? "text-2xl" : "text-xl",
+              "min-w-0 font-display text-xl text-orange-300 break-words",
             )}
           >
             {liked && !compact ? (

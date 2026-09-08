@@ -1,16 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
-import { HouseList } from "@/components/house-list";
-import { MapHouseSheet } from "@/components/map-house-sheet";
+import { HouseCard } from "@/components/house-card";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useDistanceOrigin } from "@/hooks/use-distance-origin";
 import { useUserLocation } from "@/hooks/use-user-location";
+import { distanceMeters } from "@/lib/geo";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { PublicHouse } from "@/lib/types";
@@ -22,8 +22,6 @@ export default function MyHousesPage() {
   const visits = useVisitedHouses();
   const geo = useUserLocation();
   const { resolved: origin } = useDistanceOrigin(geo.location);
-  const [selectedId, setSelectedId] = useState<string | "closed" | null>(null);
-  const [selectedListIndex, setSelectedListIndex] = useState<number | undefined>();
 
   const houses = useMemo(
     () =>
@@ -32,11 +30,17 @@ export default function MyHousesPage() {
           const fromCatalog = catalog?.houses.find((house) => house.id === item.id);
           return item.preview ?? fromCatalog ?? null;
         })
-        .filter((house): house is PublicHouse => Boolean(house)),
-    [catalog?.houses, owned],
+        .filter((house): house is PublicHouse => Boolean(house))
+        .map((house) => ({
+          house,
+          distanceM: origin ? distanceMeters(origin, house) : undefined,
+        }))
+        .sort((a, b) => {
+          if (a.distanceM !== undefined && b.distanceM !== undefined) return a.distanceM - b.distanceM;
+          return a.house.name.localeCompare(b.house.name, "he");
+        }),
+    [catalog?.houses, owned, origin],
   );
-
-  const selected = houses.find((house) => house.id === selectedId) ?? null;
 
   if (owned.length === 0) {
     return (
@@ -60,41 +64,27 @@ export default function MyHousesPage() {
         <div className="mx-auto w-full max-w-3xl px-3 pt-3">
           <h1 className="font-display mb-2 text-2xl text-orange-300">הבתים שלי</h1>
         </div>
-        <HouseList
-          houses={houses}
-          origin={origin}
-          catalogSource={catalog ? "network" : null}
-          likedIds={likes.likedIds}
-          onToggleLike={(id) => likes.toggle(id)}
-          visitedIds={visits.visitedIds}
-          onToggleVisited={(id) => visits.toggle(id)}
-          canEditHouse={(id) => owned.some((item) => item.id === id)}
-          onSelectHouse={(id, index) => {
-            setSelectedListIndex(index);
-            setSelectedId(id);
-          }}
-          onEditHouse={(id, index) => {
-            window.location.href = `/edit?focus=${encodeURIComponent(id)}`;
-            setSelectedListIndex(index);
-            setSelectedId(id);
-          }}
-          selectedId={selected?.id ?? null}
-        />
+        <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3 pb-8">
+          {houses.map(({ house, distanceM }, index) => (
+            <HouseCard
+              key={house.id}
+              index={index + 1}
+              house={house}
+              distanceM={distanceM}
+              catalogSource={catalog ? "network" : null}
+              liked={likes.likedIds.includes(house.id)}
+              onToggleLike={() => likes.toggle(house.id)}
+              visited={visits.visitedIds.includes(house.id)}
+              onToggleVisited={() => visits.toggle(house.id)}
+              canEdit
+              expanded
+              onToggleEdit={() => {
+                window.location.href = `/edit?focus=${encodeURIComponent(house.id)}`;
+              }}
+            />
+          ))}
+        </div>
       </main>
-      {selected ? (
-        <MapHouseSheet
-          house={selected}
-          clusterHouses={[selected]}
-          onClose={() => setSelectedId("closed")}
-          liked={likes.liked}
-          onToggleLike={likes.toggle}
-          visited={visits.visited}
-          onToggleVisited={visits.toggle}
-          canEditHouse={(id) => owned.some((item) => item.id === id)}
-          editCodeFor={(id) => owned.find((item) => item.id === id)?.editCode}
-          index={selectedListIndex}
-        />
-      ) : null}
     </div>
   );
 }
