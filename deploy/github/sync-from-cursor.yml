@@ -20,19 +20,27 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Fetch Cursor main
         env:
-          ORIGIN_GIT_TOKEN: ${{ secrets.ORIGIN_GIT_TOKEN }}
+          CURSOR_API_KEY: ${{ secrets.ORIGIN_GIT_TOKEN }}
           ORIGIN_REPO: liron-matitiyahu/halloween-house-map
         run: |
           set -euo pipefail
-          if [ -z "${ORIGIN_GIT_TOKEN:-}" ]; then
-            echo "Missing ORIGIN_GIT_TOKEN secret on this GitHub repo."
-            echo "Create a Cursor git read token and add it at Settings → Secrets → Actions."
+          if [ -z "${CURSOR_API_KEY:-}" ]; then
+            echo "Missing ORIGIN_GIT_TOKEN on this GitHub repo."
+            echo "Add a Cursor User API key from cursor.com/dashboard/api as ORIGIN_GIT_TOKEN."
             exit 1
           fi
-          git remote add cursor "https://x-access-token:${ORIGIN_GIT_TOKEN}@origin.cursor.com/git/${ORIGIN_REPO}.git" 2>/dev/null || \
-            git remote set-url cursor "https://x-access-token:${ORIGIN_GIT_TOKEN}@origin.cursor.com/git/${ORIGIN_REPO}.git"
+          curl -fsSL https://downloads.cursor.com/origin/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          origin auth login --api-key "$CURSOR_API_KEY"
+          git remote add cursor "https://origin.cursor.com/git/${ORIGIN_REPO}.git" 2>/dev/null || \
+            git remote set-url cursor "https://origin.cursor.com/git/${ORIGIN_REPO}.git"
           git fetch cursor main
           git reset --hard cursor/main
           node scripts/prepare-github-mirror.mjs

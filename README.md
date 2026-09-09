@@ -121,7 +121,7 @@ GitHub Actions (`.github/workflows/ci.yml`) מריץ בדיקות יחידה, bu
 - **Vercel (חינם):** הפריסה מחוברת ל־GitHub `lironm16/my-hollaween-app`. מיזוג ל־`main` ב־Cursor **לא** מפרסם לבד — צריך סנכרון ל־GitHub.
 - **סנכרון אוטומטי (מומלץ):** אחרי הגדרה חד־פעמית, GitHub Actions מושך מ־Cursor כל 5 דקות ו־Vercel נפרס אוטומטית.
   1. ב־GitHub → `my-hollaween-app` → הוסיפו קובץ `.github/workflows/sync-from-cursor.yml` (העתיקו מ־`deploy/github/sync-from-cursor.yml` במאגר).
-  2. Settings → Secrets → Actions: הוסיפו `ORIGIN_GIT_TOKEN` (טוקן קריאה ל־Cursor git).
+  2. Settings → Secrets → Actions: הוסיפו `ORIGIN_GIT_TOKEN` (User API Key מ־[cursor.com/dashboard/api](https://cursor.com/dashboard/api)).
   3. מעכשיו: כל merge ל־Cursor `main` מגיע ל־Vercel תוך כ~5 דקות (בלי `npm run sync:github` ידני).
 - **סנכרון ידני (מיידי):** `GITHUB_TOKEN=ghp_... npm run sync:github` — מעדכן קוד באפליקציה, לא נוגע ב־`.github/` שכבר על GitHub.
 - בתים חדשים נשמרים על שרת האפליקציה בתור אחד-אחד.
