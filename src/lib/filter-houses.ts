@@ -1,4 +1,5 @@
 import { houseInNeighborhoods } from "@/lib/config";
+import { resolveVisitWindow } from "@/lib/visit-window";
 import {
   hasValidVisitWindow,
   houseOpenDuringVisitWindow,
@@ -61,11 +62,10 @@ export function filterHouses(
     likedOnly,
     unvisitedOnly,
     visitedOnly,
-    visitWindowFrom,
-    visitWindowTo,
     includeUndecorated,
   } = filters;
   const { houseSet, likedIds, visitedIds, now } = options;
+  const { from: visitWindowFrom, to: visitWindowTo } = resolveVisitWindow(filters, now);
   return houses.filter((house) => {
     if (!houseMatchesSet(house, houseSet)) return false;
     if (accessibleOnly && !house.accessible) return false;

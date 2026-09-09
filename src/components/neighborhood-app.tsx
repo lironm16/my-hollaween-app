@@ -6,12 +6,11 @@ import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { Input } from "@/components/ui/input";
 import { PingPongMarquee } from "@/components/neighborhood-marquee";
+import { FilterTrigger, FiltersSheet } from "@/components/filter-menu";
 import {
-  FilterOption,
-  FilterSection,
-  FilterTrigger,
-  FiltersSheet,
-} from "@/components/filter-menu";
+  HouseFiltersContent,
+  houseFiltersDraftInvalid,
+} from "@/components/house-filters-content";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseList } from "@/components/house-list";
 import { MapStats, StatsSummary } from "@/components/map-stats";
@@ -34,32 +33,12 @@ import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useDistanceOrigin } from "@/hooks/use-distance-origin";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { readApiJson } from "@/lib/api-json";
-import { inNeighborhood, NEIGHBORHOODS, config } from "@/lib/config";
+import { inNeighborhood, config } from "@/lib/config";
 import { clusterHousesByAddress } from "@/lib/house-clusters";
 import { toPublicHouse } from "@/lib/ids";
-import { AccessibleMark } from "@/components/symbols";
-import { CandySign, CANDY_TONES } from "@/components/candy-glyphs";
-import { SensitivityMark } from "@/components/sensitivity-glyphs";
-import {
-  AfterHoursMark,
-  ClosingSoonMark,
-  NotYetOpenMark,
-  OpenNowMark,
-  OpeningSoonMark,
-} from "@/components/open-now-mark";
-import { VisitWindowFields } from "@/components/visit-window-fields";
-import {
-  ClosedMark,
-  DecorOnlyMark,
-  LikedMark,
-  OnBreakMark,
-  UnvisitedMark,
-  VisitedMark,
-} from "@/components/visit-marks";
-import { ScareMark, ScareSign } from "@/components/scare-glyphs";
-import { decorShort } from "@/lib/labels";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { visitWindowIssue } from "@/lib/hours";
+import { formatClockFromDate, defaultVisitWindowEnd } from "@/lib/visit-window";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { reportHouseTraffic } from "@/hooks/use-house-traffic";
 import {
@@ -85,7 +64,6 @@ import { loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { Catalog, House, PublicHouse } from "@/lib/types";
-import { CANDY_TONE_IDS, SCARE_LEVELS, SENSITIVITY_OPTIONS } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function NeighborhoodApp({
@@ -315,27 +293,10 @@ export function NeighborhoodApp({
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
   const sheetFilters = filterDraft ?? filters;
   const sheetActiveCount = useMemo(() => countActiveFilters(sheetFilters), [sheetFilters]);
-  const {
-    accessibleOnly: sheetAccessibleOnly,
-    openNowOnly: sheetOpenNowOnly,
-    closingSoonOnly: sheetClosingSoonOnly,
-    openingSoonOnly: sheetOpeningSoonOnly,
-    notYetOpenOnly: sheetNotYetOpenOnly,
-    onBreakOnly: sheetOnBreakOnly,
-    afterHoursOnly: sheetAfterHoursOnly,
-    visitWindowFrom: sheetVisitWindowFrom,
-    visitWindowTo: sheetVisitWindowTo,
-    closedOnly: sheetClosedOnly,
-    decorOnlyOnly: sheetDecorOnlyOnly,
-    sensitivityFilters: sheetSensitivityFilters,
-    scareFilters: sheetScareFilters,
-    candyFilters: sheetCandyFilters,
-    neighborhoodFilters: sheetNeighborhoodFilters,
-    likedOnly: sheetLikedOnly,
-    unvisitedOnly: sheetUnvisitedOnly,
-    visitedOnly: sheetVisitedOnly,
-    includeUndecorated: sheetIncludeUndecorated,
-  } = sheetFilters;
+  const sheetResultCount = useMemo(
+    () => filterHouses(houses, sheetFilters, filterContext).length,
+    [houses, sheetFilters, filterContext],
+  );
 
   const visitedIdsRef = useRef(visits.visitedIds);
   visitedIdsRef.current = visits.visitedIds;
@@ -471,12 +432,15 @@ export function NeighborhoodApp({
     setFilterDraft(emptyHouseFilters());
   }
 
-  const visitWindowInvalid = visitWindowIssue(sheetVisitWindowFrom, sheetVisitWindowTo);
+  const visitWindowInvalid = houseFiltersDraftInvalid(sheetFilters, now);
 
   function commitFilterDraft() {
     const nextFilters = filterDraft ?? filters;
-    if (visitWindowIssue(nextFilters.visitWindowFrom, nextFilters.visitWindowTo)) {
-      toast.error(visitWindowIssue(nextFilters.visitWindowFrom, nextFilters.visitWindowTo)!);
+    if (houseFiltersDraftInvalid(nextFilters, now)) {
+      const from =
+        nextFilters.visitWindowFrom || formatClockFromDate(now);
+      const to = nextFilters.visitWindowTo || defaultVisitWindowEnd(now);
+      toast.error(visitWindowIssue(from, to)!);
       return;
     }
     if (filtersEqual(nextFilters, filters)) {
@@ -919,189 +883,12 @@ export function NeighborhoodApp({
         open={filtersOpen}
         onOpenChange={setFiltersOpen}
         activeCount={sheetActiveCount}
+        resultCount={sheetResultCount}
         onClear={resetFilterDraft}
         onSave={commitFilterDraft}
         saveDisabled={Boolean(visitWindowInvalid)}
       >
-        <FilterSection title="שעות">
-          <VisitWindowFields
-            from={sheetVisitWindowFrom}
-            to={sheetVisitWindowTo}
-            onChangeFrom={(value) => patchFilterDraft({ visitWindowFrom: value })}
-            onChangeTo={(value) => patchFilterDraft({ visitWindowTo: value })}
-            className="px-3 py-2"
-          />
-          <FilterOption
-            checked={sheetOpenNowOnly}
-            onChange={() => patchFilterDraft({ openNowOnly: !sheetOpenNowOnly })}
-          >
-            <OpenNowMark labeled />
-          </FilterOption>
-          <FilterOption
-            checked={sheetClosingSoonOnly}
-            onChange={() => patchFilterDraft({ closingSoonOnly: !sheetClosingSoonOnly })}
-          >
-            <ClosingSoonMark labeled />
-          </FilterOption>
-          <FilterOption
-            checked={sheetOpeningSoonOnly}
-            onChange={() => patchFilterDraft({ openingSoonOnly: !sheetOpeningSoonOnly })}
-          >
-            <OpeningSoonMark labeled />
-          </FilterOption>
-          <FilterOption
-            checked={sheetNotYetOpenOnly}
-            onChange={() => patchFilterDraft({ notYetOpenOnly: !sheetNotYetOpenOnly })}
-          >
-            <NotYetOpenMark labeled />
-          </FilterOption>
-          <FilterOption
-            checked={sheetOnBreakOnly}
-            onChange={() => patchFilterDraft({ onBreakOnly: !sheetOnBreakOnly })}
-          >
-            <OnBreakMark labeled />
-          </FilterOption>
-          <FilterOption
-            checked={sheetAfterHoursOnly}
-            onChange={() => patchFilterDraft({ afterHoursOnly: !sheetAfterHoursOnly })}
-          >
-            <AfterHoursMark labeled />
-          </FilterOption>
-        </FilterSection>
-        <FilterSection title="סטטוס בית">
-          <FilterOption
-            checked={sheetClosedOnly}
-            onChange={() => patchFilterDraft({ closedOnly: !sheetClosedOnly })}
-          >
-            <ClosedMark labeled />
-          </FilterOption>
-          <FilterOption
-            checked={sheetDecorOnlyOnly}
-            onChange={() => patchFilterDraft({ decorOnlyOnly: !sheetDecorOnlyOnly })}
-          >
-            <DecorOnlyMark labeled />
-          </FilterOption>
-        </FilterSection>
-        <FilterSection title="שכונה">
-          {NEIGHBORHOODS.map((area) => (
-            <FilterOption
-              key={area}
-              checked={sheetNeighborhoodFilters.includes(area)}
-              onChange={() =>
-                patchFilterDraft((current) => ({
-                  ...current,
-                  neighborhoodFilters: current.neighborhoodFilters.includes(area)
-                    ? current.neighborhoodFilters.filter((item) => item !== area)
-                    : [...current.neighborhoodFilters, area],
-                }))
-              }
-            >
-              {area}
-            </FilterOption>
-          ))}
-        </FilterSection>
-        <FilterSection title="רמת פחד">
-          <FilterOption
-            checked={sheetIncludeUndecorated}
-            onChange={() => patchFilterDraft({ includeUndecorated: !sheetIncludeUndecorated })}
-          >
-            <span className="inline-flex items-center gap-2">
-              <ScareSign level="none" />
-              <span>{decorShort.none}</span>
-            </span>
-          </FilterOption>
-          {SCARE_LEVELS.map((level) => (
-            <FilterOption
-              key={level}
-              checked={sheetScareFilters.includes(level)}
-              onChange={() =>
-                patchFilterDraft((current) => ({
-                  ...current,
-                  scareFilters: current.scareFilters.includes(level)
-                    ? current.scareFilters.filter((item) => item !== level)
-                    : [...current.scareFilters, level],
-                }))
-              }
-            >
-              <ScareMark labeled level={level} />
-            </FilterOption>
-          ))}
-        </FilterSection>
-        <FilterSection title="ממתקים">
-          {CANDY_TONES.map((tone) => (
-            <FilterOption
-              key={tone.id}
-              checked={sheetCandyFilters.includes(tone.id)}
-              onChange={() =>
-                patchFilterDraft((current) => ({
-                  ...current,
-                  candyFilters: current.candyFilters.includes(tone.id)
-                    ? current.candyFilters.filter((item) => item !== tone.id)
-                    : [...current.candyFilters, tone.id],
-                }))
-              }
-            >
-              <span className="inline-flex items-center gap-2">
-                <CandySign tone={tone.id} />
-                <span>{tone.label}</span>
-              </span>
-            </FilterOption>
-          ))}
-        </FilterSection>
-        <FilterSection title="עוד">
-          <FilterOption
-            checked={sheetAccessibleOnly}
-            onChange={() => patchFilterDraft({ accessibleOnly: !sheetAccessibleOnly })}
-          >
-            <AccessibleMark labeled />
-          </FilterOption>
-          <FilterOption
-            checked={sheetLikedOnly}
-            onChange={() => patchFilterDraft({ likedOnly: !sheetLikedOnly })}
-          >
-            <LikedMark labeled />
-          </FilterOption>
-          <FilterOption
-            checked={sheetUnvisitedOnly}
-            onChange={() =>
-              patchFilterDraft({
-                unvisitedOnly: !sheetUnvisitedOnly,
-                visitedOnly: sheetUnvisitedOnly ? sheetVisitedOnly : false,
-              })
-            }
-          >
-            <UnvisitedMark labeled />
-          </FilterOption>
-          <FilterOption
-            checked={sheetVisitedOnly}
-            onChange={() =>
-              patchFilterDraft({
-                visitedOnly: !sheetVisitedOnly,
-                unvisitedOnly: sheetVisitedOnly ? sheetUnvisitedOnly : false,
-              })
-            }
-          >
-            <VisitedMark labeled />
-          </FilterOption>
-        </FilterSection>
-        <FilterSection title="רגישויות">
-          {SENSITIVITY_OPTIONS.map((id) => (
-            <FilterOption
-              key={id}
-              checked={sheetSensitivityFilters.includes(id)}
-              onChange={() =>
-                patchFilterDraft((current) => ({
-                  ...current,
-                  sensitivityFilters: current.sensitivityFilters.includes(id)
-                    ? current.sensitivityFilters.filter((item) => item !== id)
-                    : [...current.sensitivityFilters, id],
-                }))
-              }
-            >
-              <SensitivityMark labeled kind={id} />
-            </FilterOption>
-          ))}
-        </FilterSection>
+        <HouseFiltersContent filters={sheetFilters} now={now} onPatch={patchFilterDraft} />
       </FiltersSheet>
       {outsideBanner ? (
         <div
