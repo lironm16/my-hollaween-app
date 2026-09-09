@@ -89,12 +89,14 @@ export function HouseForm({
   initial,
   submitLabel,
   onSubmit,
+  onCancel,
   busy,
   extraActions,
 }: {
   initial?: Partial<HouseInput> & { photoUrl?: string; visit?: VisitState; ownerFrozenUntil?: string | null };
   submitLabel: string;
   onSubmit: (input: HouseInput, extras?: HouseFormExtras) => Promise<void> | void;
+  onCancel?: () => void;
   busy?: boolean;
   extraActions?: ReactNode;
 }) {
@@ -701,13 +703,30 @@ export function HouseForm({
           ) : null}
         </div>
       </FormSection>
-      <Button
-        type="submit"
-        disabled={blocked}
-        className="h-10 w-full bg-orange-500 text-black hover:bg-orange-400"
-      >
-        {blocked ? "שומרים בשרת…" : submitLabel}
-      </Button>
+      <div className={onCancel ? "flex gap-2" : undefined}>
+        {onCancel ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={blocked}
+            className="h-10 flex-1"
+            onClick={onCancel}
+          >
+            ביטול
+          </Button>
+        ) : null}
+        <Button
+          type="submit"
+          disabled={blocked}
+          className={
+            onCancel
+              ? "h-10 flex-1 bg-orange-500 text-black hover:bg-orange-400"
+              : "h-10 w-full bg-orange-500 text-black hover:bg-orange-400"
+          }
+        >
+          {blocked ? "שומרים בשרת…" : submitLabel}
+        </Button>
+      </div>
       {extraActions}
     </form>
   );

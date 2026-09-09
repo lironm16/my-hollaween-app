@@ -40,11 +40,26 @@ import { toPublicHouse } from "@/lib/ids";
 import { AccessibleMark } from "@/components/symbols";
 import { CandySign, CANDY_TONES } from "@/components/candy-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
-import { OpenNowMark, ClosingSoonMark, OpeningSoonMark } from "@/components/open-now-mark";
-import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
+import {
+  AfterHoursMark,
+  ClosingSoonMark,
+  NotYetOpenMark,
+  OpenNowMark,
+  OpeningSoonMark,
+} from "@/components/open-now-mark";
+import { VisitWindowFields } from "@/components/visit-window-fields";
+import {
+  ClosedMark,
+  DecorOnlyMark,
+  LikedMark,
+  OnBreakMark,
+  UnvisitedMark,
+  VisitedMark,
+} from "@/components/visit-marks";
 import { ScareMark, ScareSign } from "@/components/scare-glyphs";
 import { decorShort } from "@/lib/labels";
 import { applyClockSearchParams } from "@/lib/app-clock";
+import { visitWindowIssue } from "@/lib/hours";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { reportHouseTraffic } from "@/hooks/use-house-traffic";
 import {
@@ -147,6 +162,7 @@ export function NeighborhoodApp({
     kind: "enter-route" | "filter-change";
     title: string;
     description: string;
+    confirmLabel: string;
     removedHouses?: string[];
     addedHouses?: string[];
     onConfirm: (includeNewHouses: boolean) => void;
@@ -304,12 +320,20 @@ export function NeighborhoodApp({
     openNowOnly: sheetOpenNowOnly,
     closingSoonOnly: sheetClosingSoonOnly,
     openingSoonOnly: sheetOpeningSoonOnly,
+    notYetOpenOnly: sheetNotYetOpenOnly,
+    onBreakOnly: sheetOnBreakOnly,
+    afterHoursOnly: sheetAfterHoursOnly,
+    visitWindowFrom: sheetVisitWindowFrom,
+    visitWindowTo: sheetVisitWindowTo,
+    closedOnly: sheetClosedOnly,
+    decorOnlyOnly: sheetDecorOnlyOnly,
     sensitivityFilters: sheetSensitivityFilters,
     scareFilters: sheetScareFilters,
     candyFilters: sheetCandyFilters,
     neighborhoodFilters: sheetNeighborhoodFilters,
     likedOnly: sheetLikedOnly,
     unvisitedOnly: sheetUnvisitedOnly,
+    visitedOnly: sheetVisitedOnly,
     includeUndecorated: sheetIncludeUndecorated,
   } = sheetFilters;
 
@@ -447,8 +471,14 @@ export function NeighborhoodApp({
     setFilterDraft(emptyHouseFilters());
   }
 
+  const visitWindowInvalid = visitWindowIssue(sheetVisitWindowFrom, sheetVisitWindowTo);
+
   function commitFilterDraft() {
     const nextFilters = filterDraft ?? filters;
+    if (visitWindowIssue(nextFilters.visitWindowFrom, nextFilters.visitWindowTo)) {
+      toast.error(visitWindowIssue(nextFilters.visitWindowFrom, nextFilters.visitWindowTo)!);
+      return;
+    }
     if (filtersEqual(nextFilters, filters)) {
       setFiltersOpen(false);
       return;
@@ -469,8 +499,10 @@ export function NeighborhoodApp({
     }
     setRoutePrompt({
       kind: "filter-change",
-      title: "שינוי הסינון משנה את המסלול",
-      description: "שמירת הסינון תעדכן את המסלול. בדקו מה משתנה:",
+      title: "לעדכן את הסינון?",
+      description:
+        "המסלול יתאים לרשימה החדשה. «ביטול» משאיר את הסינון והמסלול כמו שהם.",
+      confirmLabel: "עדכון הסינון",
       removedHouses,
       addedHouses,
       onConfirm: (includeNew) => applyFiltersWithRoute(nextFilters, includeNew),
@@ -621,8 +653,10 @@ export function NeighborhoodApp({
     }
     setRoutePrompt({
       kind: "enter-route",
-      title: "בתים שביקרתם לא ייכנסו למסלול",
-      description: "הסינון «לא ביקרתי» פעיל — הבתים הבאים לא ייכללו במסלול:",
+      title: "להתחיל מסלול?",
+      description:
+        "הסינון «לא ביקרתי» פעיל — בתים שכבר ביקרתם לא ייכללו. «ביטול» לא יפתח מסלול.",
+      confirmLabel: "התחלת מסלול",
       removedHouses: visitedExcluded.map((house) => house.name),
       onConfirm: () => proceed(),
     });
@@ -887,8 +921,16 @@ export function NeighborhoodApp({
         activeCount={sheetActiveCount}
         onClear={resetFilterDraft}
         onSave={commitFilterDraft}
+        saveDisabled={Boolean(visitWindowInvalid)}
       >
         <FilterSection title="שעות">
+          <VisitWindowFields
+            from={sheetVisitWindowFrom}
+            to={sheetVisitWindowTo}
+            onChangeFrom={(value) => patchFilterDraft({ visitWindowFrom: value })}
+            onChangeTo={(value) => patchFilterDraft({ visitWindowTo: value })}
+            className="px-3 py-2"
+          />
           <FilterOption
             checked={sheetOpenNowOnly}
             onChange={() => patchFilterDraft({ openNowOnly: !sheetOpenNowOnly })}
@@ -906,6 +948,38 @@ export function NeighborhoodApp({
             onChange={() => patchFilterDraft({ openingSoonOnly: !sheetOpeningSoonOnly })}
           >
             <OpeningSoonMark labeled />
+          </FilterOption>
+          <FilterOption
+            checked={sheetNotYetOpenOnly}
+            onChange={() => patchFilterDraft({ notYetOpenOnly: !sheetNotYetOpenOnly })}
+          >
+            <NotYetOpenMark labeled />
+          </FilterOption>
+          <FilterOption
+            checked={sheetOnBreakOnly}
+            onChange={() => patchFilterDraft({ onBreakOnly: !sheetOnBreakOnly })}
+          >
+            <OnBreakMark labeled />
+          </FilterOption>
+          <FilterOption
+            checked={sheetAfterHoursOnly}
+            onChange={() => patchFilterDraft({ afterHoursOnly: !sheetAfterHoursOnly })}
+          >
+            <AfterHoursMark labeled />
+          </FilterOption>
+        </FilterSection>
+        <FilterSection title="סטטוס בית">
+          <FilterOption
+            checked={sheetClosedOnly}
+            onChange={() => patchFilterDraft({ closedOnly: !sheetClosedOnly })}
+          >
+            <ClosedMark labeled />
+          </FilterOption>
+          <FilterOption
+            checked={sheetDecorOnlyOnly}
+            onChange={() => patchFilterDraft({ decorOnlyOnly: !sheetDecorOnlyOnly })}
+          >
+            <DecorOnlyMark labeled />
           </FilterOption>
         </FilterSection>
         <FilterSection title="שכונה">
@@ -989,9 +1063,25 @@ export function NeighborhoodApp({
           </FilterOption>
           <FilterOption
             checked={sheetUnvisitedOnly}
-            onChange={() => patchFilterDraft({ unvisitedOnly: !sheetUnvisitedOnly })}
+            onChange={() =>
+              patchFilterDraft({
+                unvisitedOnly: !sheetUnvisitedOnly,
+                visitedOnly: sheetUnvisitedOnly ? sheetVisitedOnly : false,
+              })
+            }
           >
             <UnvisitedMark labeled />
+          </FilterOption>
+          <FilterOption
+            checked={sheetVisitedOnly}
+            onChange={() =>
+              patchFilterDraft({
+                visitedOnly: !sheetVisitedOnly,
+                unvisitedOnly: sheetVisitedOnly ? sheetUnvisitedOnly : false,
+              })
+            }
+          >
+            <VisitedMark labeled />
           </FilterOption>
         </FilterSection>
         <FilterSection title="רגישויות">
@@ -1278,6 +1368,17 @@ export function NeighborhoodApp({
                 }
               : undefined
           }
+          onShowInList={
+            view === "map" && selected
+              ? () => {
+                  const index = visible.findIndex((house) => house.id === selected.id);
+                  setView("list");
+                  setClusterOverview(false);
+                  setExpandedClusterKey(null);
+                  setSelectedListIndex(index >= 0 ? index + 1 : undefined);
+                }
+              : undefined
+          }
           pendingNote={
             selected.status === "pending" ? (
               <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
@@ -1313,6 +1414,7 @@ export function NeighborhoodApp({
                   admin={admin}
                   allowDelete
                   editCode={admin ? editCodeById.get(selected.id) : ownedEditCode}
+                  onCancel={() => setEditing(false)}
                   onDeleted={() => handleHouseDeleted(selected.id)}
                   onUpdated={handleHouseUpdated}
                 />
@@ -1339,7 +1441,7 @@ export function NeighborhoodApp({
         removedHouses={routePrompt?.removedHouses}
         addedHouses={routePrompt?.addedHouses}
         promptKind={routePrompt?.kind ?? "enter-route"}
-        confirmLabel={routePrompt?.kind === "filter-change" ? "שמירה והמשך" : "המשך"}
+        confirmLabel={routePrompt?.confirmLabel ?? "המשך"}
         onConfirm={(includeNew) => {
           routePrompt?.onConfirm(includeNew);
           setRoutePrompt(null);

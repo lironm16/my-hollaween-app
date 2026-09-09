@@ -96,7 +96,7 @@ export function RouteConfirmDialog({
     <Dialog open={open} onOpenChange={(next) => !next && close()}>
       <DialogContent
         showCloseButton={false}
-        className="gap-4 border-orange-500/30 bg-[#160b1f] px-5 py-5 text-orange-50 sm:max-w-md"
+        className="gap-5 border-orange-500/30 bg-[#160b1f] px-6 py-6 text-orange-50 sm:max-w-md"
         dir="rtl"
       >
         <DialogHeader className="gap-2 text-right">
@@ -106,7 +106,7 @@ export function RouteConfirmDialog({
         {(removedHouses?.length ?? 0) > 0 || hasAdds ? (
           <div className="space-y-3">
             <HouseListSection title="יוסרו מהמסלול" names={removedHouses ?? []} tone="remove" />
-            <HouseListSection title="בתים חדשים לסינון" names={addedHouses ?? []} tone="add" />
+            <HouseListSection title="יתווספו למסלול" names={addedHouses ?? []} tone="add" />
           </div>
         ) : null}
         <div className="space-y-2 px-0.5">
@@ -118,7 +118,7 @@ export function RouteConfirmDialog({
                 onChange={(event) => setIncludeAdds(event.target.checked)}
                 className="size-4 rounded border-orange-500/40"
               />
-              הוסיפו את הבתים החדשים למסלול
+              הוסיפו אותם למסלול
             </label>
           ) : null}
           <label className="flex items-center gap-2 text-base text-violet-300">
@@ -131,8 +131,8 @@ export function RouteConfirmDialog({
             לא להציג שוב
           </label>
         </div>
-        <DialogFooter className="mt-1 border-0 bg-transparent p-0">
-          <div className="flex w-full flex-col-reverse gap-3 sm:flex-row-reverse sm:justify-end">
+        <DialogFooter className="mx-0 mb-0 mt-2 border-0 bg-transparent p-0">
+          <div className="flex w-full flex-col-reverse gap-3 px-0.5 pb-0.5 sm:flex-row-reverse sm:justify-stretch">
             <Button
               type="button"
               className="min-h-11 w-full bg-orange-500 px-5 text-black hover:bg-orange-400 sm:w-auto"

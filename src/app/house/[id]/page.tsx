@@ -66,6 +66,7 @@ export default function HousePage() {
         house={house}
         admin={admin}
         editCode={editCode}
+        onCancel={() => setEditing(false)}
         onUpdated={(next) => {
           if (!admin && editCode) {
             saveOwnedHouse({

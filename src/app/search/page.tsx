@@ -143,6 +143,7 @@ export default function SearchPage() {
                     admin={admin}
                     allowDelete
                     editCode={editCode}
+                    onCancel={() => setEditing(false)}
                     onDeleted={() => {
                       removeOwnedHouse(picked.id);
                       selectHouse(null);

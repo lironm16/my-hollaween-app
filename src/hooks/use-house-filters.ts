@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
+import { hasVisitWindow, parseClockMinutes } from "@/lib/hours";
 import { loadHouseFilters, saveHouseFilters, type HouseFiltersState } from "@/lib/offline-db";
 import {
   CANDY_TONE_IDS,
@@ -19,12 +20,20 @@ export const DEFAULT_HOUSE_FILTERS: HouseFiltersState = {
   openNowOnly: false,
   closingSoonOnly: false,
   openingSoonOnly: false,
+  notYetOpenOnly: false,
+  onBreakOnly: false,
+  afterHoursOnly: false,
+  visitWindowFrom: "",
+  visitWindowTo: "",
+  closedOnly: false,
+  decorOnlyOnly: false,
   sensitivityFilters: [],
   scareFilters: [...SCARE_LEVELS],
   candyFilters: [...CANDY_TONE_IDS],
   neighborhoodFilters: [...NEIGHBORHOODS],
   likedOnly: false,
   unvisitedOnly: false,
+  visitedOnly: false,
   includeUndecorated: true,
 };
 
@@ -33,6 +42,12 @@ type LegacyFilters = HouseFiltersState & {
   decoratedOnly?: boolean;
   decorFilters?: DecorLevel[];
 };
+
+function sanitizeClock(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const trimmed = value.trim().slice(0, 5);
+  return parseClockMinutes(trimmed) !== null ? trimmed : "";
+}
 
 function pickKnown<T extends string>(raw: unknown, allowed: readonly T[]): T[] {
   if (!Array.isArray(raw)) return [];
@@ -72,8 +87,16 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
     openNowOnly: Boolean(raw.openNowOnly),
     closingSoonOnly: Boolean(raw.closingSoonOnly),
     openingSoonOnly: Boolean(raw.openingSoonOnly),
+    notYetOpenOnly: Boolean(raw.notYetOpenOnly),
+    onBreakOnly: Boolean(raw.onBreakOnly),
+    afterHoursOnly: Boolean(raw.afterHoursOnly),
+    visitWindowFrom: sanitizeClock(raw.visitWindowFrom),
+    visitWindowTo: sanitizeClock(raw.visitWindowTo),
+    closedOnly: Boolean(raw.closedOnly),
+    decorOnlyOnly: Boolean(raw.decorOnlyOnly),
     likedOnly: Boolean(raw.likedOnly),
     unvisitedOnly: Boolean(raw.unvisitedOnly),
+    visitedOnly: Boolean(raw.visitedOnly),
     includeUndecorated,
     neighborhoodFilters: Array.isArray(raw.neighborhoodFilters) ? neighborhoods : [...NEIGHBORHOODS],
     scareFilters: scares.length > 0 ? scares : [...SCARE_LEVELS],
@@ -108,8 +131,15 @@ export function countActiveFilters(filters: HouseFiltersState): number {
     Number(filters.openNowOnly) +
     Number(filters.closingSoonOnly) +
     Number(filters.openingSoonOnly) +
+    Number(filters.notYetOpenOnly) +
+    Number(filters.onBreakOnly) +
+    Number(filters.afterHoursOnly) +
+    Number(hasVisitWindow(filters.visitWindowFrom, filters.visitWindowTo)) +
+    Number(filters.closedOnly) +
+    Number(filters.decorOnlyOnly) +
     Number(filters.likedOnly) +
-    Number(filters.unvisitedOnly);
+    Number(filters.unvisitedOnly) +
+    Number(filters.visitedOnly);
   const neighborhoodActiveCount =
     filters.neighborhoodFilters.length === NEIGHBORHOODS.length
       ? 0

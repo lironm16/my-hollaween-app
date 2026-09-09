@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { CodesCopy } from "@/components/codes-copy";
@@ -20,6 +21,7 @@ import { PersistNote } from "@/components/persist-note";
 import { readApiJson } from "@/lib/api-json";
 
 export default function EditPage() {
+  const router = useRouter();
   const owned = useOwnedHouses();
   const { catalog, loading: catalogLoading, refresh } = useCatalog();
   const { admin, ready: adminReady } = useAdminSession();
@@ -217,6 +219,7 @@ export default function EditPage() {
               admin={admin}
               allowDelete
               editCode={admin ? adminEditCode : editCode}
+              onCancel={() => router.push("/")}
               onDeleted={() => {
                 forgetPublishedHouse(house.id);
                 removeOwnedHouse(house.id);

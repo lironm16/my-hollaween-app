@@ -18,7 +18,7 @@ import {
 } from "@/lib/house-state";
 import type { DecorLevel, ScareLevel, TreatId, TreatStock } from "@/lib/types";
 
-function ClosedSign({ className }: { className?: string }) {
+export function ClosedSign({ className }: { className?: string }) {
   return (
     <span
       className={cn(
@@ -33,7 +33,7 @@ function ClosedSign({ className }: { className?: string }) {
   );
 }
 
-function PauseSign({ className }: { className?: string }) {
+export function PauseSign({ className }: { className?: string }) {
   return (
     <span
       className={cn(

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
 import type { HouseFormExtras } from "@/components/house-form";
 
 export default function AddPage() {
+  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{
     id: string;
@@ -104,7 +106,12 @@ export default function AddPage() {
               בחרו שם וכתובת אמיתית מהרשימה. אחרי אישור השרת הבית מופיע במפה.
             </p>
             <PersistNote className="mb-4" />
-            <HouseForm submitLabel="שמירה" onSubmit={onSubmit} busy={busy} />
+            <HouseForm
+              submitLabel="שמירה"
+              onSubmit={onSubmit}
+              onCancel={() => router.push("/")}
+              busy={busy}
+            />
           </>
         )}
       </main>

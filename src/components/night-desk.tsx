@@ -21,6 +21,7 @@ type PushNoticeState =
 type Props = {
   house: PublicHouse;
   onUpdated: (house: PublicHouse) => void;
+  onCancel?: () => void;
   editCode?: string;
   admin?: boolean;
   allowDelete?: boolean;
@@ -30,6 +31,7 @@ type Props = {
 export function NightDesk({
   house,
   onUpdated,
+  onCancel,
   editCode,
   admin,
   allowDelete = false,
@@ -273,6 +275,7 @@ export function NightDesk({
         submitLabel="שמירה"
         busy={busy}
         onSubmit={onSave}
+        onCancel={onCancel}
         extraActions={
           allowDelete ? (
             <Button

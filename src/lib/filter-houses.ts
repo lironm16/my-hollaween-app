@@ -1,10 +1,38 @@
 import { houseInNeighborhoods } from "@/lib/config";
-import { isClosingSoon, isOpenNow, isOpeningSoon } from "@/lib/hours";
+import {
+  hasValidVisitWindow,
+  houseOpenDuringVisitWindow,
+  isAfterHoursForFilter,
+  isClosingSoonForFilter,
+  isHoursNightOver,
+  isHoursNotYetOpen,
+  isNotYetOpenForFilter,
+  isOnBreakForFilter,
+  isOpenNowForFilter,
+  isOpeningSoonForFilter,
+} from "@/lib/hours";
 import { candyTone } from "@/components/candy-glyphs";
-import { isDecorated, offersSensitivity } from "@/lib/house-state";
+import { effectiveVisit, isDecorated, offersSensitivity } from "@/lib/house-state";
 import { houseMatchesSet, type HouseSet } from "@/lib/house-set";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
+
+export function isHouseOwnerClosed(house: PublicHouse) {
+  return effectiveVisit(house) === "closed";
+}
+
+export function isHouseClosedForDisplay(house: PublicHouse, now: Date) {
+  return (
+    isHouseOwnerClosed(house) ||
+    isHoursNightOver(house, now) ||
+    isHoursNotYetOpen(house, now)
+  );
+}
+
+
+export function isHouseDecorOnly(house: PublicHouse) {
+  return effectiveVisit(house) === "decorOnly";
+}
 
 export function filterHouses(
   houses: PublicHouse[],
@@ -21,12 +49,20 @@ export function filterHouses(
     openNowOnly,
     closingSoonOnly,
     openingSoonOnly,
+    notYetOpenOnly,
+    onBreakOnly,
+    afterHoursOnly,
+    closedOnly,
+    decorOnlyOnly,
     sensitivityFilters,
     scareFilters,
     candyFilters,
     neighborhoodFilters,
     likedOnly,
     unvisitedOnly,
+    visitedOnly,
+    visitWindowFrom,
+    visitWindowTo,
     includeUndecorated,
   } = filters;
   const { houseSet, likedIds, visitedIds, now } = options;
@@ -35,12 +71,31 @@ export function filterHouses(
     if (accessibleOnly && !house.accessible) return false;
     if (candyFilters.length > 0 && !candyFilters.includes(candyTone(house))) return false;
     if (!includeUndecorated && !isDecorated(house)) return false;
-    if (openNowOnly || closingSoonOnly || openingSoonOnly) {
+    if (hasValidVisitWindow(visitWindowFrom, visitWindowTo)) {
+      if (!houseOpenDuringVisitWindow(house, visitWindowFrom, visitWindowTo)) return false;
+    }
+    if (
+      openNowOnly ||
+      closingSoonOnly ||
+      openingSoonOnly ||
+      notYetOpenOnly ||
+      onBreakOnly ||
+      afterHoursOnly
+    ) {
       const hoursHit =
-        (openNowOnly && isOpenNow(house, now)) ||
-        (closingSoonOnly && isClosingSoon(house, now)) ||
-        (openingSoonOnly && isOpeningSoon(house, now));
+        (openNowOnly && isOpenNowForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+        (closingSoonOnly && isClosingSoonForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+        (openingSoonOnly && isOpeningSoonForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+        (notYetOpenOnly && isNotYetOpenForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+        (onBreakOnly && isOnBreakForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+        (afterHoursOnly && isAfterHoursForFilter(house, visitWindowFrom, visitWindowTo, now));
       if (!hoursHit) return false;
+    }
+    if (closedOnly || decorOnlyOnly) {
+      const statusHit =
+        (closedOnly && isHouseOwnerClosed(house)) ||
+        (decorOnlyOnly && isHouseDecorOnly(house));
+      if (!statusHit) return false;
     }
     for (const sensitivity of sensitivityFilters) {
       if (!offersSensitivity(house, sensitivity)) return false;
@@ -51,6 +106,7 @@ export function filterHouses(
     if (!houseInNeighborhoods(house, neighborhoodFilters)) return false;
     if (likedOnly && !likedIds.includes(house.id)) return false;
     if (unvisitedOnly && visitedIds.includes(house.id)) return false;
+    if (visitedOnly && !visitedIds.includes(house.id)) return false;
     return true;
   });
 }
