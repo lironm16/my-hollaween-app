@@ -209,6 +209,23 @@ export async function disablePushAlerts(): Promise<"off"> {
   return "off";
 }
 
+/** Re-post the local subscription so the server always has this device. */
+export async function refreshPushSubscriptionIfEnabled() {
+  if (!pushSupported()) return;
+  if (readPushPref() !== "on") return;
+  if (Notification.permission !== "granted") return;
+  const prefs = readPushTopicPrefs();
+  if (!anyPushTopicOn(prefs)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) return;
+    await postSubscription(sub, prefs);
+  } catch {
+    /* ignore — user can re-enable from the bell */
+  }
+}
+
 export async function senderPushEndpoint() {
   try {
     if (typeof navigator === "undefined" || !navigator.serviceWorker) return undefined;

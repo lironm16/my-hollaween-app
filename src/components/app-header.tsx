@@ -70,12 +70,12 @@ export function AppHeader({
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
         <SheetContent
           side="left"
-          className="w-[min(20rem,88vw)] border-orange-500/25 bg-[#160b1f] p-0 pt-[env(safe-area-inset-top,0px)]"
+          className="w-[min(20rem,88vw)] border-orange-500/25 bg-[#160b1f] p-0"
         >
-          <SheetHeader className="border-b border-orange-500/15 px-4 py-3">
+          <SheetHeader className="border-b border-orange-500/15 px-4 py-2 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
             <SheetTitle className="text-lg font-semibold text-orange-50">תפריט</SheetTitle>
           </SheetHeader>
-          <nav className="flex flex-1 flex-col gap-2 overflow-y-auto p-4">
+          <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pb-3 pt-2">
             <Link
               href="/"
               onClick={(event) => {
@@ -135,7 +135,7 @@ export function AppHeader({
                 )}
               >
                 <Home className="size-4" />
-                הבתים שלי
+                הבתים שלי ({owned.length})
               </Link>
             ) : null}
             <Link

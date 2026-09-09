@@ -1,5 +1,8 @@
 "use client";
 
+import { Heart } from "lucide-react";
+import { formatActionCount } from "@/components/house-action-bar";
+import { VisitedCheck } from "@/components/visited-check";
 import { StrollerSign } from "@/components/symbols";
 import { CandySign, candyTone } from "@/components/candy-glyphs";
 import { ScareSign } from "@/components/scare-glyphs";
@@ -49,9 +52,45 @@ export function PauseSign({ className }: { className?: string }) {
   );
 }
 
+function TrafficCountSign({
+  kind,
+  count,
+  large,
+}: {
+  kind: "saved" | "visited";
+  count: number;
+  large?: boolean;
+}) {
+  const value = Math.max(0, Math.floor(count) || 0);
+  if (value <= 0) return null;
+  const label = kind === "saved" ? `${value} שמרו` : `${value} ביקרו`;
+  const size = large ? "h-10 min-w-10 px-2" : "h-8 min-w-8 px-1.5";
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center gap-1 rounded-full bg-[#2a1638] text-orange-100 ring-1 ring-orange-500/25",
+        size,
+      )}
+      title={label}
+      aria-label={label}
+    >
+      {kind === "saved" ? (
+        <Heart className={cn(large ? "size-5" : "size-4")} strokeWidth={2.2} />
+      ) : (
+        <VisitedCheck visited size={large ? "md" : "sm"} />
+      )}
+      <span className={cn("font-bold tabular-nums", large ? "text-base" : "text-sm")}>
+        {formatActionCount(value)}
+      </span>
+    </span>
+  );
+}
+
 export function HouseTags({
   house,
   large = false,
+  savedCount,
+  visitedCount,
 }: {
   house: {
     address?: string;
@@ -74,6 +113,8 @@ export function HouseTags({
     openHours?: { from: string; to: string }[];
   };
   large?: boolean;
+  savedCount?: number;
+  visitedCount?: number;
 }) {
   const now = useAppNow();
   const treats = house.treats ?? [];
@@ -109,6 +150,12 @@ export function HouseTags({
       {gluten ? <SensitivitySign kind="glutenFree" out={glutenOut} className={signSize} /> : null}
       {offersNutsFree(withTreats) ? <SensitivitySign kind="nutsFree" className={signSize} /> : null}
       {offersSesameFree(withTreats) ? <SensitivitySign kind="sesameFree" className={signSize} /> : null}
+      {savedCount !== undefined ? (
+        <TrafficCountSign kind="saved" count={savedCount} large={large} />
+      ) : null}
+      {visitedCount !== undefined ? (
+        <TrafficCountSign kind="visited" count={visitedCount} large={large} />
+      ) : null}
     </div>
   );
 }

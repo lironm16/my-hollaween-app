@@ -16,7 +16,6 @@ import { formatHoursLabel } from "@/lib/hours";
 import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl } from "@/lib/nav-links";
 import { shouldLoadHousePhoto } from "@/lib/photos";
-import { HouseActionCount } from "@/components/house-action-bar";
 import { useHouseTraffic } from "@/hooks/use-house-traffic";
 import type { PublicHouse } from "@/lib/types";
 import { HOUSE_CARD_PHOTO_BOX } from "@/components/house-photo-frame";
@@ -135,10 +134,9 @@ export function HouseDetails({
             e.stopPropagation();
             onToggleVisited();
           }}
-          className="inline-flex items-center gap-2 rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
+          className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
         >
           <VisitedCheck visited={visited} />
-          <HouseActionCount n={Math.max(traffic.visited, visited ? 1 : 0)} />
         </button>
       ) : null}
       {onToggleLike ? (
@@ -153,13 +151,12 @@ export function HouseDetails({
             e.stopPropagation();
             onToggleLike();
           }}
-          className="inline-flex items-center gap-2 rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
+          className="rounded-full p-1.5 text-orange-200 hover:bg-orange-500/15"
         >
           <Heart
             className={cn("size-6", liked ? "fill-current text-[#fb7185]" : "text-[#fde68a]")}
             strokeWidth={2.2}
           />
-          <HouseActionCount n={Math.max(traffic.saved, liked ? 1 : 0)} />
         </button>
       ) : null}
       {canEdit && onToggleEdit ? (
@@ -183,7 +180,7 @@ export function HouseDetails({
   );
   const metaSep = " · ";
   const meta = (
-    <div className="min-w-0 text-base leading-snug text-violet-200 break-words">
+    <div className="min-w-0 text-lg leading-relaxed text-violet-200 break-words">
       {photo ? (
         <>
           {displayAddress ? <p className="break-words">{displayAddress}</p> : null}
@@ -259,7 +256,12 @@ export function HouseDetails({
       )}
       {actions}
       <div className="flex flex-wrap items-center gap-1.5">
-        <HouseTags house={house} large={compact} />
+        <HouseTags
+          house={house}
+          large={compact}
+          savedCount={Math.max(traffic.saved, liked ? 1 : 0)}
+          visitedCount={Math.max(traffic.visited, visited ? 1 : 0)}
+        />
         {house.status === "pending" ? <Badge variant="secondary">ממתין לאישור</Badge> : null}
       </div>
       {house.arrival ? (

@@ -34,6 +34,7 @@ describe("push-topics", () => {
 
   it("subscriptionAllowsTopic defaults to true for legacy records", () => {
     assert.equal(subscriptionAllowsTopic({}, "admin"), true);
+    assert.equal(subscriptionAllowsTopic({ topics: [] }, "admin"), true);
     assert.equal(subscriptionAllowsTopic({ topics: ["newHouse"] }, "admin"), false);
   });
 });

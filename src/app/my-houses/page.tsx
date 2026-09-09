@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { HouseCard } from "@/components/house-card";
+import { HouseDetailOverlay } from "@/components/house-detail-overlay";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
@@ -22,6 +23,7 @@ export default function MyHousesPage() {
   const visits = useVisitedHouses();
   const geo = useUserLocation();
   const { resolved: origin } = useDistanceOrigin(geo.location);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const houses = useMemo(
     () =>
@@ -41,6 +43,11 @@ export default function MyHousesPage() {
         }),
     [catalog?.houses, owned, origin],
   );
+
+  const selected = houses.find((item) => item.house.id === selectedId)?.house ?? null;
+  const selectedIndex = selected
+    ? houses.findIndex((item) => item.house.id === selectedId) + 1
+    : undefined;
 
   if (owned.length === 0) {
     return (
@@ -77,7 +84,7 @@ export default function MyHousesPage() {
               visited={visits.visitedIds.includes(house.id)}
               onToggleVisited={() => visits.toggle(house.id)}
               canEdit
-              expanded
+              onOpen={() => setSelectedId(house.id)}
               onToggleEdit={() => {
                 window.location.href = `/edit?focus=${encodeURIComponent(house.id)}`;
               }}
@@ -85,6 +92,22 @@ export default function MyHousesPage() {
           ))}
         </div>
       </main>
+      {selected ? (
+        <HouseDetailOverlay
+          house={selected}
+          index={selectedIndex}
+          onClose={() => setSelectedId(null)}
+          liked={likes.liked}
+          onToggleLike={(id) => likes.toggle(id)}
+          visited={visits.visited}
+          onToggleVisited={(id) => visits.toggle(id)}
+          catalogSource={catalog ? "network" : null}
+          canEditHouse={() => true}
+          onToggleEdit={() => {
+            window.location.href = `/edit?focus=${encodeURIComponent(selected.id)}`;
+          }}
+        />
+      ) : null}
     </div>
   );
 }

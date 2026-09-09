@@ -971,7 +971,7 @@ export async function broadcastPush(payload: PushPayload, includeEndpoint?: stri
       ),
     };
   });
-  const dead = await sendPushToSubscriptions({ vapid, subscriptions, payload });
+  const { dead, delivered } = await sendPushToSubscriptions({ vapid, subscriptions, payload });
   if (dead.length > 0) {
     const deadSet = new Set(dead);
     await runSyncedWrite((db) => {
@@ -979,7 +979,8 @@ export async function broadcastPush(payload: PushPayload, includeEndpoint?: stri
     });
   }
   return {
-    sent: Math.max(0, subscriptions.length - dead.length),
+    sent: delivered,
     failed: dead.length,
+    attempted: subscriptions.length,
   };
 }

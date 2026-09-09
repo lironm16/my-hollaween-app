@@ -105,7 +105,7 @@ export function HouseActionBar({
           {onToggleLike ? (
             <button
               type="button"
-              className={cn("house-action-btn has-count", liked && "is-on")}
+              className={cn("house-action-btn", liked && "is-on")}
               aria-label={
                 liked
                   ? `הסירו מהשמורים, ${traffic.saved} שמרו`
@@ -116,13 +116,12 @@ export function HouseActionBar({
               onClick={onToggleLike}
             >
               <Heart className={cn("size-6", liked && "fill-current")} strokeWidth={2.2} />
-              <HouseActionCount n={Math.max(traffic.saved, liked ? 1 : 0)} />
             </button>
           ) : null}
           {onToggleVisited ? (
             <button
               type="button"
-              className={cn("house-action-btn has-count", visited && "is-visited")}
+              className={cn("house-action-btn", visited && "is-visited")}
               aria-label={
                 visited
                   ? `סמנו כלא ביקרתי, ${traffic.visited} ביקרו`
@@ -133,7 +132,6 @@ export function HouseActionBar({
               onClick={onToggleVisited}
             >
               <VisitedCheck visited={visited} inButton />
-              <HouseActionCount n={Math.max(traffic.visited, visited ? 1 : 0)} />
             </button>
           ) : null}
           {onToggleEdit ? (

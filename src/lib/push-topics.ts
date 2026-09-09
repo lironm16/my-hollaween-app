@@ -56,6 +56,6 @@ export function subscriptionAllowsTopic(
   topic: PushTopic | undefined,
 ) {
   if (!topic) return true;
-  if (!sub.topics) return true;
+  if (!sub.topics || sub.topics.length === 0) return true;
   return sub.topics.includes(topic);
 }

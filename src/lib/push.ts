@@ -124,11 +124,12 @@ export async function sendPushToSubscriptions(options: {
   vapid: VapidKeys;
   subscriptions: PushSubscriptionRecord[];
   payload: PushPayload;
-}): Promise<string[]> {
+}): Promise<{ dead: string[]; delivered: number }> {
   const payload = sanitizePushPayload(options.payload);
   webpush.setVapidDetails(options.vapid.subject, options.vapid.publicKey, options.vapid.privateKey);
   const body = JSON.stringify(payload);
   const dead: string[] = [];
+  let delivered = 0;
   await mapPool(options.subscriptions, 20, async (sub) => {
     try {
       await webpush.sendNotification(
@@ -139,6 +140,7 @@ export async function sendPushToSubscriptions(options: {
         body,
         { TTL: 60 * 60, urgency: "high" },
       );
+      delivered += 1;
     } catch (error) {
       const statusCode =
         error && typeof error === "object" && "statusCode" in error
@@ -147,7 +149,7 @@ export async function sendPushToSubscriptions(options: {
       if (isGoneStatus(statusCode)) dead.push(sub.endpoint);
     }
   });
-  return dead;
+  return { dead, delivered };
 }
 
 export function readIncludeEndpoint(input: unknown): string | undefined {
