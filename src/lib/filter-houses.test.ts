@@ -94,4 +94,19 @@ describe("filterHouses", () => {
     });
     assert.deepEqual(result.map((item) => item.id), ["b"]);
   });
+
+  it("filters to houses open right now, not merely overlapping later hours", () => {
+    const houses = [
+      house("open", { openFrom: "17:00", openTo: "21:00", visit: "come" }),
+      house("later", { openFrom: "19:00", openTo: "21:00", visit: "come" }),
+      house("closed", { openFrom: "17:00", openTo: "21:00", visit: "closed" }),
+    ];
+    const result = filterHouses(houses, baseFilters({ visitWindowMode: "now" }), {
+      houseSet: "real",
+      likedIds: [],
+      visitedIds: [],
+      now,
+    });
+    assert.deepEqual(result.map((item) => item.id), ["open"]);
+  });
 });

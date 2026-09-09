@@ -2,7 +2,6 @@ import { houseInNeighborhoods } from "@/lib/config";
 import { resolveVisitWindow } from "@/lib/visit-window";
 import {
   hasValidVisitWindow,
-  houseOpenDuringVisitWindow,
   isAfterHoursForFilter,
   isClosingSoonForFilter,
   isHoursNightOver,
@@ -65,14 +64,23 @@ export function filterHouses(
     includeUndecorated,
   } = filters;
   const { houseSet, likedIds, visitedIds, now } = options;
-  const { from: visitWindowFrom, to: visitWindowTo } = resolveVisitWindow(filters, now);
+  const {
+    from: visitWindowFrom,
+    to: visitWindowTo,
+    mode: visitWindowMode,
+  } = resolveVisitWindow(filters, now);
   return houses.filter((house) => {
     if (!houseMatchesSet(house, houseSet)) return false;
     if (accessibleOnly && !house.accessible) return false;
     if (candyFilters.length > 0 && !candyFilters.includes(candyTone(house))) return false;
     if (!includeUndecorated && !isDecorated(house)) return false;
-    if (hasValidVisitWindow(visitWindowFrom, visitWindowTo)) {
-      if (!houseOpenDuringVisitWindow(house, visitWindowFrom, visitWindowTo)) return false;
+    if (visitWindowMode === "now") {
+      if (!isOpenNowForFilter(house, "", "", now)) return false;
+    } else if (
+      visitWindowMode === "custom" &&
+      hasValidVisitWindow(visitWindowFrom, visitWindowTo)
+    ) {
+      if (!isOpenNowForFilter(house, visitWindowFrom, visitWindowTo, now)) return false;
     }
     if (
       openNowOnly ||
