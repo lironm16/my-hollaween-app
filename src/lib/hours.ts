@@ -75,7 +75,7 @@ export function normalizeHoursWindows(windows: HoursWindow[]): HoursWindow[] {
   return cleaned.slice(0, MAX_WINDOWS);
 }
 
-type HoursSource = {
+export type HoursSource = {
   openFrom?: string;
   openTo?: string;
   openFrom2?: string;
@@ -117,9 +117,8 @@ export function syncHoursFields(windows: HoursWindow[]): {
   };
 }
 
-/** LTR-isolated range so RTL layout shows opening time before closing time. */
 export function formatHoursRange(from: string, to: string): string {
-  return `\u2066${from}\u2069–\u2066${to}\u2069`;
+  return `${from}–${to}`;
 }
 
 export function formatHoursLabel(house: HoursSource): string {

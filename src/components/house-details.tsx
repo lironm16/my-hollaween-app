@@ -11,6 +11,7 @@ import { HoursStatusBanner } from "@/components/hours-status-banner";
 import { HouseTags } from "@/components/house-tags";
 import { formatDisplayAddress } from "@/lib/config";
 import { formatDistance } from "@/lib/geo";
+import { HoursLabel } from "@/components/clock-time";
 import { formatHoursLabel } from "@/lib/hours";
 import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl } from "@/lib/nav-links";
@@ -77,11 +78,6 @@ export function HouseDetails({
   }, [house.id, house.photoUrl]);
   const sheet = chrome === "sheet";
   const hours = formatHoursLabel(house);
-  const metaLines = [
-    displayAddress,
-    hours,
-    distanceM !== undefined ? formatDistance(distanceM) : "",
-  ].filter(Boolean);
   const hasPhoto = Boolean(house.photoUrl && !photoBroken);
   const indexBadge =
     index != null ? (
@@ -119,7 +115,7 @@ export function HouseDetails({
             e.stopPropagation();
             setShowPhoto(true);
           }}
-          className={`${HOUSE_CARD_PHOTO_BOX} flex items-center justify-center bg-[#2a1638] px-2 py-2 text-center text-sm text-amber-100`}
+          className={`${HOUSE_CARD_PHOTO_BOX} flex items-center justify-center bg-[#2a1638] px-2 py-2 text-center text-base text-amber-100`}
         >
           יש תמונת קישוט — לחצו רק אם הרשת פנויה
         </button>
@@ -185,20 +181,27 @@ export function HouseDetails({
       ) : null}
     </div>
   );
+  const metaSep = " · ";
   const meta = (
-    <div
-      className={cn(
-        "min-w-0 text-sm leading-snug text-violet-200 break-words",
-      )}
-    >
+    <div className="min-w-0 text-base leading-snug text-violet-200 break-words">
       {photo ? (
-        metaLines.map((line) => (
-          <p key={line} className="break-words">
-            {line}
-          </p>
-        ))
+        <>
+          {displayAddress ? <p className="break-words">{displayAddress}</p> : null}
+          {hours ? (
+            <p>
+              <HoursLabel house={house} />
+            </p>
+          ) : null}
+          {distanceM !== undefined ? <p>{formatDistance(distanceM)}</p> : null}
+        </>
       ) : (
-        <p>{metaLines.join(" · ")}</p>
+        <p className="break-words">
+          {displayAddress}
+          {displayAddress && hours ? metaSep : null}
+          {hours ? <HoursLabel house={house} /> : null}
+          {(displayAddress || hours) && distanceM !== undefined ? metaSep : null}
+          {distanceM !== undefined ? formatDistance(distanceM) : null}
+        </p>
       )}
     </div>
   );

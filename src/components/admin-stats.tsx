@@ -272,7 +272,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 function Subhead({ children }: { children: ReactNode }) {
-  return <h3 className="mb-1.5 mt-3 text-sm font-semibold text-violet-200">{children}</h3>;
+  return <h3 className="mb-1.5 mt-3 text-base font-semibold text-violet-200">{children}</h3>;
 }
 
 function Tile({
@@ -308,8 +308,8 @@ function Tile({
         {icon}
       </span>
       <span className="min-w-0 text-right">
-        <span className="block text-sm leading-tight text-violet-300">{label}</span>
-        {hint ? <span className="block text-xs leading-tight text-violet-400">{hint}</span> : null}
+        <span className="block text-base leading-tight text-violet-300">{label}</span>
+        {hint ? <span className="block text-sm leading-tight text-violet-400">{hint}</span> : null}
         <span className={cn("block text-2xl font-bold leading-none text-orange-50", valueClass)}>
           {value}
         </span>

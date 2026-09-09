@@ -7,6 +7,7 @@
     --color-red-100: oklch(93.6% 0.032 17.717);
     --color-red-200: oklch(88.5% 0.062 18.334);
     --color-red-300: oklch(80.8% 0.114 19.571);
+    --color-red-500: oklch(63.7% 0.237 25.331);
     --color-red-900: oklch(39.6% 0.141 25.723);
     --color-red-950: oklch(25.8% 0.092 26.042);
     --color-orange-50: oklch(98% 0.016 73.684);
@@ -23,6 +24,7 @@
     --color-amber-400: oklch(82.8% 0.189 84.429);
     --color-amber-500: oklch(76.9% 0.188 70.08);
     --color-amber-950: oklch(27.9% 0.077 45.635);
+    --color-emerald-50: oklch(97.9% 0.021 166.113);
     --color-emerald-100: oklch(95% 0.052 163.051);
     --color-emerald-200: oklch(90.5% 0.093 164.15);
     --color-emerald-300: oklch(84.5% 0.143 164.978);
@@ -635,6 +637,9 @@
   .max-h-\(--available-height\) {
     max-height: var(--available-height);
   }
+  .max-h-32 {
+    max-height: calc(var(--spacing) * 32);
+  }
   .max-h-56 {
     max-height: calc(var(--spacing) * 56);
   }
@@ -652,6 +657,9 @@
   }
   .min-h-10 {
     min-height: calc(var(--spacing) * 10);
+  }
+  .min-h-11 {
+    min-height: calc(var(--spacing) * 11);
   }
   .min-h-14 {
     min-height: calc(var(--spacing) * 14);
@@ -749,8 +757,8 @@
   .min-w-4 {
     min-width: calc(var(--spacing) * 4);
   }
-  .min-w-5 {
-    min-width: calc(var(--spacing) * 5);
+  .min-w-6 {
+    min-width: calc(var(--spacing) * 6);
   }
   .min-w-36 {
     min-width: calc(var(--spacing) * 36);
@@ -978,6 +986,9 @@
   .overscroll-contain {
     overscroll-behavior: contain;
   }
+  .rounded {
+    border-radius: 0.25rem;
+  }
   .rounded-2xl {
     border-radius: calc(var(--radius) * 1.8);
   }
@@ -1036,6 +1047,10 @@
     border-style: var(--tw-border-style);
     border-width: 1px;
   }
+  .border-0 {
+    border-style: var(--tw-border-style);
+    border-width: 0px;
+  }
   .border-t {
     border-top-style: var(--tw-border-style);
     border-top-width: 1px;
@@ -1078,6 +1093,12 @@
     border-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 30%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       border-color: color-mix(in oklab, var(--color-orange-500) 30%, transparent);
+    }
+  }
+  .border-orange-500\/40 {
+    border-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 40%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-orange-500) 40%, transparent);
     }
   }
   .border-transparent {
@@ -1275,16 +1296,16 @@
   .bg-emerald-600 {
     background-color: var(--color-emerald-600);
   }
+  .bg-emerald-950\/30 {
+    background-color: color-mix(in srgb, oklch(26.2% 0.051 172.552) 30%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-emerald-950) 30%, transparent);
+    }
+  }
   .bg-emerald-950\/40 {
     background-color: color-mix(in srgb, oklch(26.2% 0.051 172.552) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-emerald-950) 40%, transparent);
-    }
-  }
-  .bg-emerald-950\/70 {
-    background-color: color-mix(in srgb, oklch(26.2% 0.051 172.552) 70%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-emerald-950) 70%, transparent);
     }
   }
   .bg-muted {
@@ -1329,10 +1350,22 @@
       background-color: color-mix(in oklab, var(--color-red-900) 80%, transparent);
     }
   }
+  .bg-red-950\/30 {
+    background-color: color-mix(in srgb, oklch(25.8% 0.092 26.042) 30%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-red-950) 30%, transparent);
+    }
+  }
   .bg-red-950\/70 {
     background-color: color-mix(in srgb, oklch(25.8% 0.092 26.042) 70%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-red-950) 70%, transparent);
+    }
+  }
+  .bg-red-950\/85 {
+    background-color: color-mix(in srgb, oklch(25.8% 0.092 26.042) 85%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-red-950) 85%, transparent);
     }
   }
   .bg-secondary {
@@ -1342,12 +1375,6 @@
     background-color: color-mix(in srgb, oklch(29.3% 0.066 243.157) 50%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-sky-950) 50%, transparent);
-    }
-  }
-  .bg-slate-900\/70 {
-    background-color: color-mix(in srgb, oklch(20.8% 0.042 265.755) 70%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-slate-900) 70%, transparent);
     }
   }
   .bg-transparent {
@@ -1431,6 +1458,9 @@
   .px-\(--card-spacing\) {
     padding-inline: var(--card-spacing);
   }
+  .px-0\.5 {
+    padding-inline: calc(var(--spacing) * 0.5);
+  }
   .px-1 {
     padding-inline: var(--spacing);
   }
@@ -1448,6 +1478,9 @@
   }
   .px-4 {
     padding-inline: calc(var(--spacing) * 4);
+  }
+  .px-5 {
+    padding-inline: calc(var(--spacing) * 5);
   }
   .py-\(--card-spacing\) {
     padding-block: var(--card-spacing);
@@ -1527,6 +1560,9 @@
   .pb-3 {
     padding-bottom: calc(var(--spacing) * 3);
   }
+  .pb-8 {
+    padding-bottom: calc(var(--spacing) * 8);
+  }
   .pb-10 {
     padding-bottom: calc(var(--spacing) * 10);
   }
@@ -1581,15 +1617,8 @@
     font-size: var(--text-xl);
     line-height: var(--tw-leading, var(--text-xl--line-height));
   }
-  .text-xs {
-    font-size: var(--text-xs);
-    line-height: var(--tw-leading, var(--text-xs--line-height));
-  }
   .text-\[1\.2rem\] {
     font-size: 1.2rem;
-  }
-  .text-\[15px\] {
-    font-size: 15px;
   }
   .text-\[22px\] {
     font-size: 22px;
@@ -1697,8 +1726,8 @@
   .text-destructive {
     color: var(--destructive);
   }
-  .text-emerald-100 {
-    color: var(--color-emerald-100);
+  .text-emerald-50 {
+    color: var(--color-emerald-50);
   }
   .text-emerald-200 {
     color: var(--color-emerald-200);
@@ -1783,9 +1812,6 @@
   }
   .text-sky-300 {
     color: var(--color-sky-300);
-  }
-  .text-slate-100 {
-    color: var(--color-slate-100);
   }
   .text-violet-50 {
     color: var(--color-violet-50);
@@ -2008,6 +2034,12 @@
       --tw-ring-color: color-mix(in oklab, var(--color-orange-500) 40%, transparent);
     }
   }
+  .ring-red-500\/25 {
+    --tw-ring-color: color-mix(in srgb, oklch(63.7% 0.237 25.331) 25%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--color-red-500) 25%, transparent);
+    }
+  }
   .ring-sky-400\/40 {
     --tw-ring-color: color-mix(in srgb, oklch(74.6% 0.16 232.661) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -2140,6 +2172,9 @@
   }
   .\[text-shadow\:0_0_14px_rgba\(251\,146\,60\,0\.45\)\] {
     text-shadow: 0 0 14px rgba(251,146,60,0.45);
+  }
+  .\[unicode-bidi\:isolate\] {
+    unicode-bidi: isolate;
   }
   .paused {
     animation-play-state: paused;
@@ -2638,6 +2673,9 @@
     }
   }
   @media (width >= 40rem) {
+    .sm\:w-auto {
+      width: auto;
+    }
     .sm\:max-w-md {
       max-width: var(--container-md);
     }
@@ -2649,6 +2687,9 @@
     }
     .sm\:flex-row {
       flex-direction: row;
+    }
+    .sm\:flex-row-reverse {
+      flex-direction: row-reverse;
     }
     .sm\:justify-end {
       justify-content: flex-end;
@@ -3927,7 +3968,7 @@ svg.leaflet-zoom-animated {
   color: inherit;
 }
 .house-map-popup-item-title {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 800;
   color: #f8f5ef;
 }
@@ -3999,7 +4040,7 @@ svg.leaflet-zoom-animated {
 }
 .house-map-popup-meta {
   margin-top: 4px;
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1.4;
   color: #c4b5d6;
 }
@@ -4324,7 +4365,7 @@ svg.leaflet-zoom-animated {
   filter: none;
 }
 .house-pin.house-pin-dot span {
-  font-size: 13px;
+  font-size: 15px;
 }
 .house-pin .pin-count,
 .pumpkin-pin .pin-count {
@@ -4338,7 +4379,7 @@ svg.leaflet-zoom-animated {
   border-radius: 5px;
   background: #ea580c;
   color: #fff;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   line-height: 16px;
   text-align: center;
@@ -4583,7 +4624,7 @@ svg.leaflet-zoom-animated {
   width: 26px;
   height: 26px;
   color: #9a3412;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 900;
   line-height: 1;
 }
@@ -4659,7 +4700,7 @@ svg.leaflet-zoom-animated {
   border-radius: 999px;
   background: #12081a;
   color: #fdba74;
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1.3;
   box-shadow: 0 0 0 1px rgba(234, 88, 12, 0.35);
 }
@@ -4862,21 +4903,20 @@ input[type="time"].house-time-input {
   direction: ltr;
   position: relative;
   padding-inline: 0.625rem;
-  -webkit-appearance: none;
-  appearance: none;
   color-scheme: dark;
   color: transparent;
   caret-color: transparent;
+  cursor: pointer;
 }
 input[type="time"].house-time-input::-webkit-calendar-picker-indicator {
   position: absolute;
-  inset-inline-start: 0.55rem;
-  inset-inline-end: auto;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   margin: 0;
   cursor: pointer;
-  opacity: 0.9;
-  z-index: 2;
-  filter: invert(0.85) sepia(1) saturate(5) hue-rotate(0deg);
+  opacity: 0;
+  z-index: 3;
 }
 input[type="time"].house-time-input::-webkit-datetime-edit,
 input[type="time"].house-time-input::-webkit-datetime-edit-fields-wrapper,
@@ -5086,7 +5126,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   gap: 5px;
 }
 .house-list-card-chrome .house-action-count {
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 .map-house-sheet-chrome,
 .map-house-sheet-handle-hit {
@@ -5129,7 +5169,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .map-house-sheet-title {
   margin: 0;
   font-family: var(--font-display), sans-serif;
-  font-size: 1.05rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: #fdba74;
   line-height: 1.3;
@@ -5171,7 +5211,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   border-radius: 12px;
   background: #2a1638;
   color: #fdba74;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 .map-house-sheet-edit.is-on {
@@ -5248,7 +5288,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   flex-shrink: 0;
 }
 .house-action-count {
-  font-size: 0.78rem;
+  font-size: 0.95rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   line-height: 1;

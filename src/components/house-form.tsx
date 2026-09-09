@@ -649,7 +649,7 @@ export function HouseForm({
           </div>
         ) : (
           <div
-            className={`${HOUSE_CARD_PHOTO_BOX} mb-2 flex items-center justify-center bg-[#1d1028] text-center text-sm text-violet-400`}
+            className={`${HOUSE_CARD_PHOTO_BOX} mb-2 flex items-center justify-center bg-[#1d1028] text-center text-base text-violet-400`}
           >
             אין תמונה עדיין
           </div>
