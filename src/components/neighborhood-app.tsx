@@ -162,6 +162,7 @@ export function NeighborhoodApp({
     kind: "enter-route" | "filter-change";
     title: string;
     description: string;
+    confirmLabel: string;
     removedHouses?: string[];
     addedHouses?: string[];
     onConfirm: (includeNewHouses: boolean) => void;
@@ -498,8 +499,10 @@ export function NeighborhoodApp({
     }
     setRoutePrompt({
       kind: "filter-change",
-      title: "שינוי הסינון משנה את המסלול",
-      description: "שמירת הסינון תעדכן את המסלול. בדקו מה משתנה:",
+      title: "לעדכן את הסינון?",
+      description:
+        "המסלול יתאים לרשימה החדשה. «ביטול» משאיר את הסינון והמסלול כמו שהם.",
+      confirmLabel: "עדכון הסינון",
       removedHouses,
       addedHouses,
       onConfirm: (includeNew) => applyFiltersWithRoute(nextFilters, includeNew),
@@ -650,8 +653,10 @@ export function NeighborhoodApp({
     }
     setRoutePrompt({
       kind: "enter-route",
-      title: "בתים שביקרתם לא ייכנסו למסלול",
-      description: "הסינון «לא ביקרתי» פעיל — הבתים הבאים לא ייכללו במסלול:",
+      title: "להתחיל מסלול?",
+      description:
+        "הסינון «לא ביקרתי» פעיל — בתים שכבר ביקרתם לא ייכללו. «ביטול» לא יפתח מסלול.",
+      confirmLabel: "התחלת מסלול",
       removedHouses: visitedExcluded.map((house) => house.name),
       onConfirm: () => proceed(),
     });
@@ -1436,7 +1441,7 @@ export function NeighborhoodApp({
         removedHouses={routePrompt?.removedHouses}
         addedHouses={routePrompt?.addedHouses}
         promptKind={routePrompt?.kind ?? "enter-route"}
-        confirmLabel={routePrompt?.kind === "filter-change" ? "שמירה והמשך" : "המשך"}
+        confirmLabel={routePrompt?.confirmLabel ?? "המשך"}
         onConfirm={(includeNew) => {
           routePrompt?.onConfirm(includeNew);
           setRoutePrompt(null);
