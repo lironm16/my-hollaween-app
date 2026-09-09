@@ -44,6 +44,8 @@ jobs:
           git fetch cursor main
           git reset --hard cursor/main
           node scripts/prepare-github-mirror.mjs
+          git config user.email "lironm16@gmail.com"
+          git config user.name "Liron Matitiyahu"
           git add -A
           if git diff --staged --quiet; then
             echo "Already up to date with Cursor main."
