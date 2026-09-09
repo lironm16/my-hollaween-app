@@ -1,0 +1,60 @@
+name: Sync from Cursor
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: sync-from-cursor
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: Mirror Cursor main → GitHub
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout GitHub mirror
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Fetch Cursor main
+        env:
+          CURSOR_API_KEY: ${{ secrets.ORIGIN_GIT_TOKEN }}
+          ORIGIN_REPO: liron-matitiyahu/halloween-house-map
+        run: |
+          set -euo pipefail
+          if [ -z "${CURSOR_API_KEY:-}" ]; then
+            echo "Missing ORIGIN_GIT_TOKEN on this GitHub repo."
+            echo "Add a Cursor User API key from cursor.com/dashboard/api as ORIGIN_GIT_TOKEN."
+            exit 1
+          fi
+          curl -fsSL https://downloads.cursor.com/origin/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          origin auth login --api-key "$CURSOR_API_KEY"
+          git remote add cursor "https://origin.cursor.com/git/${ORIGIN_REPO}.git" 2>/dev/null || \
+            git remote set-url cursor "https://origin.cursor.com/git/${ORIGIN_REPO}.git"
+          git fetch cursor main
+          git reset --hard cursor/main
+          node scripts/prepare-github-mirror.mjs
+          git config user.email "lironm16@gmail.com"
+          git config user.name "Liron Matitiyahu"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "Already up to date with Cursor main."
+            echo "changed=false" >> "$GITHUB_ENV"
+          else
+            git commit -m "Sync from Cursor $(git rev-parse --short cursor/main)"
+            echo "changed=true" >> "$GITHUB_ENV"
+          fi
+
+      - name: Push to GitHub (triggers Vercel)
+        if: env.changed == 'true'
+        run: git push --force-with-lease origin HEAD:main
