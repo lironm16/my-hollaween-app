@@ -1409,6 +1409,7 @@ export function NeighborhoodApp({
                   admin={admin}
                   allowDelete
                   editCode={admin ? editCodeById.get(selected.id) : ownedEditCode}
+                  onCancel={() => setEditing(false)}
                   onDeleted={() => handleHouseDeleted(selected.id)}
                   onUpdated={handleHouseUpdated}
                 />
