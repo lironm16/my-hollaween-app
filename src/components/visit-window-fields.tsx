@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { visitWindowIssue } from "@/lib/hours";
 import { cn } from "@/lib/utils";
 
 function ClockInput({
@@ -68,6 +69,7 @@ export function VisitWindowFields({
   className?: string;
 }) {
   const active = Boolean(from || to);
+  const issue = visitWindowIssue(from, to);
 
   return (
     <div className={cn("space-y-2", className)}>
@@ -78,11 +80,15 @@ export function VisitWindowFields({
         <ClockInput label="מ־" value={from} onChange={onChangeFrom} />
         <ClockInput label="עד" value={to} onChange={onChangeTo} />
       </div>
-      <p className="text-base leading-snug text-violet-400">
-        {active
-          ? "מציגים בתים שפתוחים בזמן הטיול שלכם. סימוני השעות למטה נבדקים לפי שעת ההתחלה."
-          : "ריק = עכשיו. מלאו שעת יציאה, סיום, או שתיהן."}
-      </p>
+      {issue ? (
+        <p className="text-base leading-snug text-red-300" role="alert">{issue}</p>
+      ) : (
+        <p className="text-base leading-snug text-violet-400">
+          {active
+            ? "מציגים בתים שפתוחים בזמן הטיול שלכם. סימוני השעות למטה נבדקים לפי שעת ההתחלה."
+            : "ריק = עכשיו. מלאו שעת יציאה, סיום, או שתיהן."}
+        </p>
+      )}
     </div>
   );
 }

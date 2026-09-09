@@ -59,6 +59,7 @@ import {
 import { ScareMark, ScareSign } from "@/components/scare-glyphs";
 import { decorShort } from "@/lib/labels";
 import { applyClockSearchParams } from "@/lib/app-clock";
+import { visitWindowIssue } from "@/lib/hours";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { reportHouseTraffic } from "@/hooks/use-house-traffic";
 import {
@@ -469,8 +470,14 @@ export function NeighborhoodApp({
     setFilterDraft(emptyHouseFilters());
   }
 
+  const visitWindowInvalid = visitWindowIssue(sheetVisitWindowFrom, sheetVisitWindowTo);
+
   function commitFilterDraft() {
     const nextFilters = filterDraft ?? filters;
+    if (visitWindowIssue(nextFilters.visitWindowFrom, nextFilters.visitWindowTo)) {
+      toast.error(visitWindowIssue(nextFilters.visitWindowFrom, nextFilters.visitWindowTo)!);
+      return;
+    }
     if (filtersEqual(nextFilters, filters)) {
       setFiltersOpen(false);
       return;
@@ -909,6 +916,7 @@ export function NeighborhoodApp({
         activeCount={sheetActiveCount}
         onClear={resetFilterDraft}
         onSave={commitFilterDraft}
+        saveDisabled={Boolean(visitWindowInvalid)}
       >
         <FilterSection title="שעות">
           <VisitWindowFields

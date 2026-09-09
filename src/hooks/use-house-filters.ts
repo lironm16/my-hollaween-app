@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
-import { hasVisitWindow } from "@/lib/hours";
+import { hasVisitWindow, parseClockMinutes } from "@/lib/hours";
 import { loadHouseFilters, saveHouseFilters, type HouseFiltersState } from "@/lib/offline-db";
 import {
   CANDY_TONE_IDS,
@@ -46,7 +46,7 @@ type LegacyFilters = HouseFiltersState & {
 function sanitizeClock(value: unknown): string {
   if (typeof value !== "string") return "";
   const trimmed = value.trim().slice(0, 5);
-  return /^\d{2}:\d{2}$/.test(trimmed) ? trimmed : "";
+  return parseClockMinutes(trimmed) !== null ? trimmed : "";
 }
 
 function pickKnown<T extends string>(raw: unknown, allowed: readonly T[]): T[] {

@@ -1,6 +1,6 @@
 import { houseInNeighborhoods } from "@/lib/config";
 import {
-  hasVisitWindow,
+  hasValidVisitWindow,
   houseOpenDuringVisitWindow,
   isClosingSoon,
   isHoursNightOver,
@@ -87,7 +87,7 @@ export function filterHouses(
     if (accessibleOnly && !house.accessible) return false;
     if (candyFilters.length > 0 && !candyFilters.includes(candyTone(house))) return false;
     if (!includeUndecorated && !isDecorated(house)) return false;
-    if (hasVisitWindow(visitWindowFrom, visitWindowTo)) {
+    if (hasValidVisitWindow(visitWindowFrom, visitWindowTo)) {
       if (!houseOpenDuringVisitWindow(house, visitWindowFrom, visitWindowTo)) return false;
     }
     if (

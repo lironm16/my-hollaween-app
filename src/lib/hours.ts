@@ -143,6 +143,25 @@ export function hasVisitWindow(visitWindowFrom?: string, visitWindowTo?: string)
   return from !== null || to !== null;
 }
 
+export function visitWindowIssue(visitWindowFrom = "", visitWindowTo = ""): string | null {
+  const fromSet = Boolean(visitWindowFrom.trim());
+  const toSet = Boolean(visitWindowTo.trim());
+  if (!fromSet && !toSet) return null;
+
+  const vf = fromSet ? parseClockMinutes(visitWindowFrom) : null;
+  const vt = toSet ? parseClockMinutes(visitWindowTo) : null;
+  if (fromSet && vf === null) return "שעת ההתחלה לא תקינה.";
+  if (toSet && vt === null) return "שעת הסיום לא תקינה.";
+  if (vf !== null && vt !== null && vt <= vf) {
+    return "שעת הסיום חייבת להיות אחרי שעת ההתחלה.";
+  }
+  return null;
+}
+
+export function hasValidVisitWindow(visitWindowFrom = "", visitWindowTo = "") {
+  return hasVisitWindow(visitWindowFrom, visitWindowTo) && visitWindowIssue(visitWindowFrom, visitWindowTo) === null;
+}
+
 /** Clock used for hour-status filters — visitor start, else end, else wall clock. */
 export function resolveFilterNow(
   visitWindowFrom: string | undefined,
@@ -175,9 +194,8 @@ export function houseOpenDuringVisitWindow(
   if (windows.length === 0) return false;
 
   if (vf !== null && vt !== null) {
-    const start = Math.min(vf, vt);
-    const end = Math.max(vf, vt);
-    return windows.some((window) => window.from < end && start < window.to);
+    if (vt <= vf) return false;
+    return windows.some((window) => window.from < vt && vf < window.to);
   }
   if (vf !== null) {
     return windows.some((window) => vf >= window.from && vf < window.to);

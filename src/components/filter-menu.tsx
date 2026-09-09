@@ -52,6 +52,7 @@ export function FiltersSheet({
   activeCount,
   onClear,
   onSave,
+  saveDisabled = false,
   children,
 }: {
   open: boolean;
@@ -59,6 +60,7 @@ export function FiltersSheet({
   activeCount: number;
   onClear: () => void;
   onSave: () => void;
+  saveDisabled?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -104,6 +106,7 @@ export function FiltersSheet({
           <Button
             type="button"
             className="flex-1 bg-orange-500 text-black hover:bg-orange-400"
+            disabled={saveDisabled}
             onClick={onSave}
           >
             הצג תוצאות
