@@ -1,16 +1,15 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Home, SlidersHorizontal } from "lucide-react";
+import { Clock, SlidersHorizontal } from "lucide-react";
 import { AccessibleMark } from "@/components/symbols";
-import { CandySign } from "@/components/candy-glyphs";
+import { CandySign, CANDY_TONES } from "@/components/candy-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
 import { ScareSign } from "@/components/scare-glyphs";
 import { FilterOption, FilterSection } from "@/components/filter-menu";
 import { CustomVisitWindowFields } from "@/components/visit-window-fields";
 import { OpenNowSign } from "@/components/open-now-mark";
 import { NEIGHBORHOODS } from "@/lib/config";
-import { hasStockCandySelection } from "@/lib/filter-presets";
 import { visitWindowIssue } from "@/lib/hours";
 import { decorShort, scareShort } from "@/lib/labels";
 import type { HouseFiltersState } from "@/lib/offline-db";
@@ -22,10 +21,8 @@ import {
   type VisitWindowMode,
 } from "@/lib/visit-window";
 import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
-import { SCARE_LEVELS, SENSITIVITY_OPTIONS, type CandyTone, type ScareLevel } from "@/lib/types";
+import { SCARE_LEVELS, SENSITIVITY_OPTIONS, type ScareLevel } from "@/lib/types";
 import { cn } from "@/lib/utils";
-
-const STOCK_CANDY_TONES: CandyTone[] = ["plenty", "low"];
 
 function FilterToggle({
   checked,
@@ -94,23 +91,23 @@ export function HouseFiltersContent({
   ) => void;
 }) {
   const visitMode = effectiveVisitWindowMode(filters);
-  const stockCandy = hasStockCandySelection(filters);
+  const candySensitivityEnabled = filters.candyFilters.some((tone) => tone !== "none");
   const useFrom = filters.visitWindowUseFrom ?? true;
   const useTo = filters.visitWindowUseTo ?? false;
   const customFrom = filters.visitWindowFrom || formatClockFromDate(now);
   const customTo =
     filters.visitWindowTo || defaultVisitWindowEndFromStart(customFrom);
 
-  function toggleCandyTone(tone: CandyTone) {
+  function toggleCandyTone(tone: (typeof CANDY_TONES)[number]["id"]) {
     onPatch((current) => {
-      const nextTones = current.candyFilters.includes(tone)
+      const nextCandy = current.candyFilters.includes(tone)
         ? current.candyFilters.filter((item) => item !== tone)
         : [...current.candyFilters, tone];
-      const stillStock = STOCK_CANDY_TONES.some((item) => nextTones.includes(item));
+      const hasCandyStock = nextCandy.some((item) => item !== "none");
       return {
         ...current,
-        candyFilters: nextTones,
-        sensitivityFilters: stillStock ? current.sensitivityFilters : [],
+        candyFilters: nextCandy,
+        sensitivityFilters: hasCandyStock ? current.sensitivityFilters : [],
       };
     });
   }
@@ -126,29 +123,17 @@ export function HouseFiltersContent({
 
   function setVisitMode(mode: VisitWindowMode) {
     if (mode === "all") {
-      onPatch({
-        visitWindowMode: "all",
-        visitWindowFrom: "",
-        visitWindowTo: "",
-        visitWindowUseFrom: false,
-        visitWindowUseTo: false,
-      });
+      onPatch({ visitWindowMode: "all" });
       return;
     }
     if (mode === "now") {
-      onPatch({
-        visitWindowMode: "now",
-        visitWindowFrom: "",
-        visitWindowTo: "",
-        visitWindowUseFrom: true,
-        visitWindowUseTo: false,
-      });
+      onPatch({ visitWindowMode: "now" });
       return;
     }
     const from = filters.visitWindowFrom || formatClockFromDate(now);
     onPatch({
       visitWindowMode: "custom",
-      visitWindowUseFrom: true,
+      visitWindowUseFrom: filters.visitWindowUseFrom ?? true,
       visitWindowUseTo: filters.visitWindowUseTo ?? false,
       visitWindowFrom: from,
       visitWindowTo: filters.visitWindowTo || defaultVisitWindowEndFromStart(from),
@@ -158,15 +143,15 @@ export function HouseFiltersContent({
   return (
     <>
       <FilterSection title="שעות">
-        <VisitWindowRadio checked={visitMode === "now"} onChange={() => setVisitMode("now")}>
-          <OpenNowSign className="size-7" />
-          <span>עכשיו</span>
-        </VisitWindowRadio>
         <VisitWindowRadio checked={visitMode === "all"} onChange={() => setVisitMode("all")}>
           <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-violet-500/25 text-violet-100 ring-1 ring-violet-400/30">
-            <Home className="size-4" aria-hidden="true" />
+            <Clock className="size-4" aria-hidden="true" />
           </span>
-          <span>כל הבתים</span>
+          <span>כל שעה</span>
+        </VisitWindowRadio>
+        <VisitWindowRadio checked={visitMode === "now"} onChange={() => setVisitMode("now")}>
+          <OpenNowSign className="size-7" />
+          <span>פתוחים עכשיו</span>
         </VisitWindowRadio>
         <VisitWindowRadio checked={visitMode === "custom"} onChange={() => setVisitMode("custom")}>
           <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-orange-500/20 text-orange-100 ring-1 ring-orange-400/30">
@@ -181,20 +166,8 @@ export function HouseFiltersContent({
               useTo={useTo}
               from={customFrom}
               to={customTo}
-              onToggleFrom={(next) =>
-                onPatch({
-                  visitWindowUseFrom: next,
-                  visitWindowFrom: next ? customFrom : "",
-                })
-              }
-              onToggleTo={(next) =>
-                onPatch({
-                  visitWindowUseTo: next,
-                  visitWindowTo: next
-                    ? filters.visitWindowTo || defaultVisitWindowEndFromStart(customFrom)
-                    : "",
-                })
-              }
+              onToggleFrom={(next) => onPatch({ visitWindowUseFrom: next })}
+              onToggleTo={(next) => onPatch({ visitWindowUseTo: next })}
               onChangeFrom={(value) => onPatch({ visitWindowFrom: value, visitWindowUseFrom: true })}
               onChangeTo={(value) => onPatch({ visitWindowTo: value, visitWindowUseTo: true })}
             />
@@ -224,16 +197,36 @@ export function HouseFiltersContent({
       </FilterSection>
 
       <FilterSection title="ממתקים">
-        {STOCK_CANDY_TONES.map((tone) => (
+        {CANDY_TONES.map(({ id, label }) => (
           <FilterOption
-            key={tone}
-            checked={filters.candyFilters.includes(tone)}
-            onChange={() => toggleCandyTone(tone)}
+            key={id}
+            checked={filters.candyFilters.includes(id)}
+            onChange={() => toggleCandyTone(id)}
           >
             <span className="inline-flex items-center gap-2">
-              <CandySign tone={tone} className="size-7" />
-              <span>{tone === "plenty" ? "יש ממתקים" : "מעט ממתקים"}</span>
+              <CandySign tone={id} />
+              <span>{label}</span>
             </span>
+          </FilterOption>
+        ))}
+      </FilterSection>
+
+      <FilterSection title="רגישויות">
+        {SENSITIVITY_OPTIONS.map((id) => (
+          <FilterOption
+            key={id}
+            checked={filters.sensitivityFilters.includes(id)}
+            disabled={!candySensitivityEnabled}
+            onChange={() =>
+              onPatch((current) => ({
+                ...current,
+                sensitivityFilters: current.sensitivityFilters.includes(id)
+                  ? current.sensitivityFilters.filter((item) => item !== id)
+                  : [...current.sensitivityFilters, id],
+              }))
+            }
+          >
+            <SensitivityMark labeled kind={id} />
           </FilterOption>
         ))}
       </FilterSection>
@@ -258,31 +251,6 @@ export function HouseFiltersContent({
               <ScareSign level={level} />
               <span>{scareShort[level]}</span>
             </span>
-          </FilterOption>
-        ))}
-      </FilterSection>
-
-      <FilterSection title="רגישויות">
-        <p className="px-3 pb-1 text-sm text-violet-400">
-          {stockCandy
-            ? "בתים עם ממתקים שמתאימים לרגישות שבחרתם"
-            : "סמנו ירוק או צהוב בממתקים כדי לסנן רגישויות"}
-        </p>
-        {SENSITIVITY_OPTIONS.map((id) => (
-          <FilterOption
-            key={id}
-            checked={filters.sensitivityFilters.includes(id)}
-            disabled={!stockCandy}
-            onChange={() =>
-              onPatch((current) => ({
-                ...current,
-                sensitivityFilters: current.sensitivityFilters.includes(id)
-                  ? current.sensitivityFilters.filter((item) => item !== id)
-                  : [...current.sensitivityFilters, id],
-              }))
-            }
-          >
-            <SensitivityMark labeled kind={id} />
           </FilterOption>
         ))}
       </FilterSection>
