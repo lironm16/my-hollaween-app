@@ -57,4 +57,4 @@ jobs:
 
       - name: Push to GitHub (triggers Vercel)
         if: env.changed == 'true'
-        run: git push origin HEAD:main
+        run: git push --force-with-lease origin HEAD:main
