@@ -268,7 +268,15 @@ export function houseMatchesNotifyKind(house: House, kind: PushKind): boolean {
 
 /** Re-saving the same visit/stock still offers a send (owner clicked the same chip again). */
 export function ownerOfferKindFromPatch(
-  patch: { visit?: House["visit"]; treatStock?: House["treatStock"]; treats?: House["treats"]; soldOut?: boolean } | undefined,
+  patch:
+    | {
+        visit?: House["visit"];
+        treatStock?: House["treatStock"];
+        treats?: House["treats"];
+        soldOut?: boolean;
+        ownerFrozenUntil?: string | null;
+      }
+    | undefined,
   next: House,
 ): PushKind | null {
   if (!patch) return null;
