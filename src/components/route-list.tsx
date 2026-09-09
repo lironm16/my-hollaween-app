@@ -69,7 +69,7 @@ export function RouteList({
         {gpsAction}
         <p className="font-display text-2xl text-orange-300">אין עצירות במסלול</p>
         <p className="mt-2 text-base">
-          שנו סינון כדי לראות בתים במסלול. «לא ביקרתי» מסתיר בתים שכבר סימנתם.
+          שנו סינון כדי לראות בתים במסלול. בתים שכבר סימנתם כביקור לא נכללים במסלול.
         </p>
       </div>
     );
@@ -86,10 +86,7 @@ export function RouteList({
   );
 
   return (
-    <div
-      className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-3 py-3"
-      style={selectedId ? { paddingBottom: "calc(var(--map-sheet-h, 70dvh) + 1rem)" } : undefined}
-    >
+    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-3 py-3">
       <ol className="route-list">
         <li className="route-list-card">
           <div className="flex items-start gap-3">

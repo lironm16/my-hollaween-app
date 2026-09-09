@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
 import { CodesCopy } from "@/components/codes-copy";
+import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 
@@ -25,6 +26,10 @@ export function HouseDetailOverlay({
   onToggleEdit,
   pendingNote,
   onShowOnMap,
+  onShowInList,
+  clusterOverview,
+  clusterHouses,
+  onSelectClusterHouse,
   index,
 }: {
   house: PublicHouse;
@@ -42,10 +47,16 @@ export function HouseDetailOverlay({
   onToggleEdit?: () => void;
   pendingNote?: ReactNode;
   onShowOnMap?: () => void;
+  onShowInList?: () => void;
+  clusterOverview?: boolean;
+  clusterHouses?: PublicHouse[];
+  onSelectClusterHouse?: (id: string) => void;
   index?: number;
 }) {
   const labelId = useId();
   const canEditSelected = Boolean(canEditHouse?.(house.id) && onToggleEdit);
+  const multi = (clusterHouses?.length ?? 0) > 1;
+  const overview = Boolean(multi && clusterOverview);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -83,11 +94,32 @@ export function HouseDetailOverlay({
             onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
             onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
             onShowOnMap={onShowOnMap}
+            onShowInList={onShowInList}
             editing={editing}
           />
         </div>
       </div>
       <div className="house-detail-overlay-body min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+        {overview ? (
+          <div id={labelId}>
+            <p className="map-house-sheet-kicker">{formatDisplayAddress(house)}</p>
+            <p className="map-house-sheet-sub mb-4">{clusterHouses!.length} בתים בכתובת זו</p>
+            <ul className="space-y-2">
+              {clusterHouses!.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    className="w-full rounded-xl bg-[#1d1028] px-4 py-3 text-start text-base text-orange-50 ring-1 ring-orange-500/25 hover:bg-[#261536]"
+                    onClick={() => onSelectClusterHouse?.(item.id)}
+                  >
+                    {houseHeadline(item)}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <>
         <span id={labelId} className="sr-only">
           {houseHeadline(house)}
         </span>
@@ -110,6 +142,8 @@ export function HouseDetailOverlay({
             chrome="sheet"
             index={index}
           />
+        )}
+          </>
         )}
       </div>
     </div>

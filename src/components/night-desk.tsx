@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Bell, CheckCircle2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { HouseForm, type HouseFormExtras } from "@/components/house-form";
+import { HouseQuickStatus } from "@/components/house-quick-status";
 import { PushNotice } from "@/components/push-notice";
 import { Button } from "@/components/ui/button";
 import { notifyCatalogChanged, applyLocalHousePatch, queueHouseWrite, rememberPublishedHouse, forgetPublishedHouse, saveOwnedHouse } from "@/lib/offline-db";
@@ -268,6 +269,8 @@ export function NightDesk({
           )}
         </div>
       ) : null}
+
+      <HouseQuickStatus house={house} busy={busy} onSave={save} />
 
       <HouseForm
         key={house.id}

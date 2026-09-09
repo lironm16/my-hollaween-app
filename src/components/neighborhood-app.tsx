@@ -9,7 +9,6 @@ import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseList } from "@/components/house-list";
 import { MapStats, StatsSummary } from "@/components/map-stats";
 import { HouseDetailOverlay } from "@/components/house-detail-overlay";
-import { MapHouseSheet } from "@/components/map-house-sheet";
 import { NightDesk } from "@/components/night-desk";
 import { NeighborhoodStatusBanners } from "@/components/neighborhood-status-banners";
 import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
@@ -122,10 +121,6 @@ export function NeighborhoodApp({
   } = useAdminHouses({ admin, refresh });
 
   const wasAdmin = useRef(false);
-  useEffect(() => {
-    if (!focusId) return;
-    writeHomeView("map");
-  }, [focusId]);
 
   const editCodeById = useMemo(() => {
     const map = new Map<string, string>();
@@ -286,6 +281,11 @@ export function NeighborhoodApp({
     }
     notifyCatalogChanged();
     void refresh(true);
+  }
+
+  function openOnMap(id: string) {
+    selection.showOnMap(id);
+    setView("map");
   }
 
   function handleHouseDeleted(id: string) {
@@ -473,7 +473,7 @@ export function NeighborhoodApp({
                     onToggleVisited={onToggleVisited}
                     admin={admin}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-                    onShowOnMap={selection.showOnMap}
+                    onShowOnMap={openOnMap}
                     onSelectHouse={selection.selectInList}
                     onEditHouse={selection.editInList}
                     editingId={selection.editing ? selection.selected?.id ?? null : null}
@@ -490,7 +490,7 @@ export function NeighborhoodApp({
                     onToggleVisited={onToggleVisited}
                     admin={admin}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-                    onShowOnMap={selection.showOnMap}
+                    onShowOnMap={openOnMap}
                     onSelectHouse={selection.selectInList}
                     onEditHouse={selection.editInList}
                     selectedId={selection.selected?.id ?? null}
@@ -501,150 +501,92 @@ export function NeighborhoodApp({
           </>
         )}
         {selection.selected && !originPick.originPickActive ? (
-          view === "list" ? (
-            <HouseDetailOverlay
-              house={selection.selected}
-              index={selection.selectedListIndex}
-              onClose={selection.closeSelection}
-              liked={likes.liked}
-              onToggleLike={onToggleLike}
-              visited={visits.visited}
-              onToggleVisited={onToggleVisited}
-              catalogSource={source}
-              managerEditCode={admin ? editCodeById.get(selection.selected.id) : undefined}
-              editCodeFor={(id) =>
-                admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode
-              }
-              canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-              editing={selection.editing}
-              onToggleEdit={() => selection.setEditing((v) => !v)}
-              onShowOnMap={() => {
-                setView("map");
-                selection.clearCluster();
-              }}
-              pendingNote={
-                selection.selected.status === "pending" ? (
-                  <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
-                    {admin
-                      ? "בית ממתין לאישור — עדיין לא במפה הציבורית."
-                      : "הבית הזה עדיין לא במפה הציבורית. אם זה הבית שלכם, מנהל יכול לאשר אותו."}
-                  </p>
-                ) : null
-              }
-              extra={
-                <div className="mt-4 space-y-3">
-                  {admin && selection.selected.status === "pending" ? (
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        className="bg-emerald-600 text-white hover:bg-emerald-500"
-                        disabled={busyAction}
-                        onClick={() => void approveHouse(selection.selected!.id)}
-                      >
-                        אישור למפה
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        disabled={busyAction}
-                        onClick={() => {
-                          void rejectHouse(selection.selected!.id).then((ok) => {
-                            if (!ok) return;
-                            selection.closeSelection();
-                          });
-                        }}
-                      >
-                        דחייה ומחיקה
-                      </Button>
-                    </div>
-                  ) : null}
-                  {selection.editing && canEditSelected ? (
-                    <NightDesk
-                      house={selection.selected}
-                      admin={admin}
-                      allowDelete
-                      editCode={admin ? editCodeById.get(selection.selected.id) : ownedEditCode}
-                      onCancel={() => selection.setEditing(false)}
-                      onDeleted={() => handleHouseDeleted(selection.selected!.id)}
-                      onUpdated={handleHouseUpdated}
-                    />
-                  ) : null}
-                </div>
-              }
-            />
-          ) : (
-            <MapHouseSheet
-              house={selection.selected}
-              clusterHouses={selection.selectedCluster}
-              clusterOverview={selection.clusterOverview}
-              onClose={selection.closeSelection}
-              liked={likes.liked}
-              onToggleLike={onToggleLike}
-              visited={visits.visited}
-              onToggleVisited={onToggleVisited}
-              catalogSource={source}
-              managerEditCode={admin ? editCodeById.get(selection.selected.id) : undefined}
-              editCodeFor={(id) =>
-                admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode
-              }
-              canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-              editing={selection.editing}
-              onToggleEdit={() => selection.setEditing((v) => !v)}
-              onShowInList={
-                selection.selected
-                  ? () => {
-                      selection.showInListFromMap(selection.selected!.id);
-                      setView("list");
-                    }
-                  : undefined
-              }
-              pendingNote={
-                selection.selected.status === "pending" ? (
-                  <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
-                    {admin
-                      ? "בית ממתין לאישור — עדיין לא במפה הציבורית."
-                      : "הבית הזה עדיין לא במפה הציבורית. אם זה הבית שלכם, מנהל יכול לאשר אותו."}
-                  </p>
-                ) : null
-              }
-              extra={
-                <div className="mt-4 space-y-3">
-                  {admin && selection.selected.status === "pending" ? (
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        className="bg-emerald-600 text-white hover:bg-emerald-500"
-                        disabled={busyAction}
-                        onClick={() => void approveHouse(selection.selected!.id)}
-                      >
-                        אישור למפה
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        disabled={busyAction}
-                        onClick={() => {
-                          void rejectHouse(selection.selected!.id).then((ok) => {
-                            if (!ok) return;
-                            selection.closeSelection();
-                          });
-                        }}
-                      >
-                        דחייה ומחיקה
-                      </Button>
-                    </div>
-                  ) : null}
-                  {selection.editing && canEditSelected ? (
-                    <NightDesk
-                      house={selection.selected}
-                      admin={admin}
-                      allowDelete
-                      editCode={admin ? editCodeById.get(selection.selected.id) : ownedEditCode}
-                      onCancel={() => selection.setEditing(false)}
-                      onDeleted={() => handleHouseDeleted(selection.selected!.id)}
-                      onUpdated={handleHouseUpdated}
-                    />
-                  ) : null}
-                </div>
-              }
-            />
-          )
+          <HouseDetailOverlay
+            house={selection.selected}
+            index={selection.selectedListIndex}
+            onClose={selection.closeSelection}
+            liked={likes.liked}
+            onToggleLike={onToggleLike}
+            visited={visits.visited}
+            onToggleVisited={onToggleVisited}
+            catalogSource={source}
+            managerEditCode={admin ? editCodeById.get(selection.selected.id) : undefined}
+            editCodeFor={(id) =>
+              admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode
+            }
+            canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
+            editing={selection.editing}
+            onToggleEdit={() => selection.setEditing((v) => !v)}
+            onShowOnMap={
+              view === "list"
+                ? () => {
+                    setView("map");
+                    selection.clearCluster();
+                  }
+                : undefined
+            }
+            onShowInList={
+              view === "map"
+                ? () => {
+                    selection.showInListFromMap(selection.selected!.id);
+                    setView("list");
+                  }
+                : undefined
+            }
+            clusterOverview={selection.clusterOverview}
+            clusterHouses={selection.selectedCluster}
+            onSelectClusterHouse={(id) => {
+              const house = houses.find((item) => item.id === id);
+              if (house) selection.selectOnMap(house);
+            }}
+            pendingNote={
+              selection.selected.status === "pending" ? (
+                <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
+                  {admin
+                    ? "בית ממתין לאישור — עדיין לא במפה הציבורית."
+                    : "הבית הזה עדיין לא במפה הציבורית. אם זה הבית שלכם, מנהל יכול לאשר אותו."}
+                </p>
+              ) : null
+            }
+            extra={
+              <div className="mt-4 space-y-3">
+                {admin && selection.selected.status === "pending" ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      className="bg-emerald-600 text-white hover:bg-emerald-500"
+                      disabled={busyAction}
+                      onClick={() => void approveHouse(selection.selected!.id)}
+                    >
+                      אישור למפה
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      disabled={busyAction}
+                      onClick={() => {
+                        void rejectHouse(selection.selected!.id).then((ok) => {
+                          if (!ok) return;
+                          selection.closeSelection();
+                        });
+                      }}
+                    >
+                      דחייה ומחיקה
+                    </Button>
+                  </div>
+                ) : null}
+                {selection.editing && canEditSelected ? (
+                  <NightDesk
+                    house={selection.selected}
+                    admin={admin}
+                    allowDelete
+                    editCode={admin ? editCodeById.get(selection.selected.id) : ownedEditCode}
+                    onCancel={() => selection.setEditing(false)}
+                    onDeleted={() => handleHouseDeleted(selection.selected!.id)}
+                    onUpdated={handleHouseUpdated}
+                  />
+                ) : null}
+              </div>
+            }
+          />
         ) : null}
       </main>
       <OriginPickerSheet
