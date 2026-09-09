@@ -1,46 +1,42 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { Heart, List, MapPinned, Route } from "lucide-react";
-import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
-import { Input } from "@/components/ui/input";
-import { PingPongMarquee } from "@/components/neighborhood-marquee";
-import { FilterTrigger, FiltersSheet } from "@/components/filter-menu";
-import {
-  HouseFiltersContent,
-  houseFiltersDraftInvalid,
-} from "@/components/house-filters-content";
+import { CatalogMetaChip } from "@/components/catalog-meta-chip";
+import { FiltersSheet } from "@/components/filter-menu";
+import { HouseFiltersContent } from "@/components/house-filters-content";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseList } from "@/components/house-list";
 import { MapStats, StatsSummary } from "@/components/map-stats";
-import { CsvExportButton } from "@/components/csv-export-button";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { NightDesk } from "@/components/night-desk";
-import { OriginPickerSheet, OriginTrigger } from "@/components/origin-picker";
+import { NeighborhoodStatusBanners } from "@/components/neighborhood-status-banners";
+import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
+import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
 import { RouteConfirmDialog } from "@/components/route-confirm-dialog";
-import { reversePin } from "@/components/address-field";
+import { VisitCheer } from "@/components/visit-cheer";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAdminHouses } from "@/hooks/use-admin-houses";
 import { useFilterDraft } from "@/hooks/use-filter-draft";
+import { useHouseActions } from "@/hooks/use-house-actions";
 import { useHouseFilters, countActiveFilters } from "@/hooks/use-house-filters";
+import { useHouseSelection } from "@/hooks/use-house-selection";
 import { useMergedHouses } from "@/hooks/use-merged-houses";
 import { useNeighborhoodRoute } from "@/hooks/use-neighborhood-route";
+import { useOriginPick } from "@/hooks/use-origin-pick";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useDistanceOrigin } from "@/hooks/use-distance-origin";
 import { useHouseSet } from "@/hooks/use-house-set";
-import { inNeighborhood, config } from "@/lib/config";
-import { clusterHousesByAddress } from "@/lib/house-clusters";
+import { config } from "@/lib/config";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { useAppNow } from "@/hooks/use-app-clock";
-import { reportHouseTraffic } from "@/hooks/use-house-traffic";
 import {
   notifyCatalogChanged,
   removeOwnedHouse,
@@ -54,7 +50,6 @@ import {
 } from "@/lib/home-view";
 import { HOUSE_SET_LABELS } from "@/lib/house-set";
 import { filterHouses } from "@/lib/filter-houses";
-import { UnvisitedSign } from "@/components/visit-marks";
 import type { Catalog, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -82,19 +77,7 @@ export function NeighborhoodApp({
     readHomeView,
     () => "map" as HomeView,
   );
-  const [selectedId, setSelectedId] = useState<string | "closed" | null>(focusId);
-  const [selectedListIndex, setSelectedListIndex] = useState<number | undefined>();
-  const [focusSeen, setFocusSeen] = useState(focusId);
-  const [clusterOverview, setClusterOverview] = useState(false);
-  const [expandedClusterKey, setExpandedClusterKey] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!focusId || focusId === focusSeen) return;
-    setFocusSeen(focusId);
-    setSelectedId(focusId);
-    setClusterOverview(false);
-    setExpandedClusterKey(null);
-  }, [focusId, focusSeen]);
   const {
     filters,
     update: updateFilters,
@@ -103,28 +86,8 @@ export function NeighborhoodApp({
   const toggleUnvisitedFilter = () =>
     updateFilters({ unvisitedOnly: !filters.unvisitedOnly });
   const { accessibleOnly, likedOnly, unvisitedOnly } = filters;
-  const originPickResumeView = useRef<HomeView | null>(null);
-  const geoErrorToasted = useRef(false);
-  const cheerTimer = useRef(0);
-  const outsideBannerTimer = useRef(0);
-  const outsideBannerFor = useRef(0);
-  const [visitCheer, setVisitCheer] = useState(false);
-  const [outsideBanner, setOutsideBanner] = useState(false);
-  const [askedLocation, setAskedLocation] = useState(false);
-  const [originPickerOpen, setOriginPickerOpen] = useState(false);
-  const [originPickActive, setOriginPickActive] = useState(false);
-  const [originDraft, setOriginDraft] = useState<{ lat: number; lng: number } | null>(null);
-  const [originDraftLabel, setOriginDraftLabel] = useState("נקודה במפה");
-  const [panTo, setPanTo] = useState<{ lat: number; lng: number } | null>(null);
-  const [panTick, setPanTick] = useState(0);
-  const [editing, setEditing] = useState(false);
-  const [editForId, setEditForId] = useState(selectedId);
 
-  useEffect(() => {
-    if (selectedId === editForId) return;
-    setEditForId(selectedId);
-    setEditing(false);
-  }, [selectedId, editForId]);
+  const [askedLocation, setAskedLocation] = useState(false);
   const [listQuery, setListQuery] = useState("");
   const [routePrompt, setRoutePrompt] = useState<{
     kind: "enter-route" | "filter-change";
@@ -140,14 +103,8 @@ export function NeighborhoodApp({
   const visits = useVisitedHouses();
   const owned = useOwnedHouses();
   const now = useAppNow();
+  const { onToggleLike, onToggleVisited, visitCheer } = useHouseActions(likes, visits);
 
-  useEffect(
-    () => () => {
-      window.clearTimeout(cheerTimer.current);
-      window.clearTimeout(outsideBannerTimer.current);
-    },
-    [],
-  );
   useEffect(() => {
     applyClockSearchParams(window.location.search);
   }, []);
@@ -155,13 +112,6 @@ export function NeighborhoodApp({
   function setView(next: HomeView) {
     writeHomeView(next);
   }
-
-  const editHouseId = selectedId === "closed" ? null : (selectedId ?? focusId);
-  const ownedEditCode = useMemo(() => {
-    if (!editHouseId) return undefined;
-    return owned.find((item) => item.id === editHouseId)?.editCode;
-  }, [owned, editHouseId]);
-  const canEditSelected = Boolean(admin || ownedEditCode);
 
   const {
     adminHouses,
@@ -172,21 +122,7 @@ export function NeighborhoodApp({
     removeAdminHouse,
   } = useAdminHouses({ admin, refresh });
 
-  useEffect(() => {
-    if (!admin) setEditing(false);
-  }, [admin]);
-
   const wasAdmin = useRef(false);
-  useEffect(() => {
-    if (wasAdmin.current && !admin) {
-      setSelectedId("closed");
-      setClusterOverview(false);
-      setExpandedClusterKey(null);
-      void refresh(true);
-    }
-    wasAdmin.current = admin;
-  }, [admin, refresh]);
-
   useEffect(() => {
     if (!focusId) return;
     writeHomeView("map");
@@ -216,8 +152,20 @@ export function NeighborhoodApp({
   );
 
   const visible = useMemo(() => filterHouses(houses, filters, filterContext), [houses, filters, filterContext]);
-
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
+
+  const selection = useHouseSelection({ focusId, visible, houses });
+  const { setEditing: setHouseEditing, resetForNavigation } = selection;
+
+  useEffect(() => {
+    if (!admin) setHouseEditing(false);
+  }, [admin, setHouseEditing]);
+
+  const ownedEditCode = useMemo(() => {
+    if (!selection.editHouseId) return undefined;
+    return owned.find((item) => item.id === selection.editHouseId)?.editCode;
+  }, [owned, selection.editHouseId]);
+  const canEditSelected = Boolean(admin || ownedEditCode);
 
   const {
     routeMode,
@@ -241,12 +189,7 @@ export function NeighborhoodApp({
     geoRefresh: geo.refresh,
     setAskedLocation,
     setRoutePrompt,
-    onBeforeEnter: () => {
-      setSelectedId("closed");
-      setClusterOverview(false);
-      setExpandedClusterKey(null);
-      setEditing(false);
-    },
+    onBeforeEnter: resetForNavigation,
   });
 
   const {
@@ -273,21 +216,33 @@ export function NeighborhoodApp({
     setRoutePrompt,
   });
 
+  const originPick = useOriginPick({
+    view,
+    origin,
+    originChoice,
+    setOriginChoice,
+    gps,
+    gpsAllowed,
+    geo,
+    askedLocation,
+    setAskedLocation,
+    pendingRouteGps,
+    pinCurrentRoute,
+    onBeforePick: resetForNavigation,
+  });
+
   useEffect(() => {
     if (gpsAllowed || originChoice.kind !== "gps") return;
     setOriginChoice({ kind: "neighborhood" });
   }, [gpsAllowed, originChoice.kind, setOriginChoice]);
 
   useEffect(() => {
-    if (!originPickActive || !originDraft) return;
-    let cancelled = false;
-    void reversePin(originDraft.lat, originDraft.lng).then((hit) => {
-      if (!cancelled && hit?.label) setOriginDraftLabel(hit.label);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [originPickActive, originDraft]);
+    if (wasAdmin.current && !admin) {
+      resetForNavigation();
+      void refresh(true);
+    }
+    wasAdmin.current = admin;
+  }, [admin, refresh, resetForNavigation]);
 
   const walkingRoute = routeMode ? pinnedRoute : null;
   const { line: routeLine } = useRouteGeometry(walkingRoute, routeMode);
@@ -305,159 +260,15 @@ export function NeighborhoodApp({
             : null,
   };
 
-  const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
-  const selected =
-    visible.find((house) => house.id === activeId) ??
-    houses.find((house) => house.id === activeId) ??
-    null;
-  const selectedCluster = useMemo(() => {
-    if (!selected) return [];
-    const cluster = clusterHousesByAddress(visible).find((item) =>
-      item.houses.some((house) => house.id === selected.id),
-    );
-    return cluster?.houses ?? [selected];
-  }, [selected, visible]);
-  const geoError =
-    askedLocation && (geo.status === "denied" || geo.status === "error" || geo.status === "unavailable");
-  const outsideNeighborhood = Boolean(
-    gps && askedLocation && panTick > 0 && !inNeighborhood(gps.lat, gps.lng),
-  );
-  const routeTicker = originPickActive ? "לחצו על המפה כדי לקבוע נקודת התחלה" : null;
-
-  useEffect(() => {
-    if (!outsideNeighborhood) {
-      setOutsideBanner(false);
-      return;
-    }
-    if (outsideBannerFor.current === panTick) return;
-    outsideBannerFor.current = panTick;
-    setOutsideBanner(true);
-    window.clearTimeout(outsideBannerTimer.current);
-    outsideBannerTimer.current = window.setTimeout(() => setOutsideBanner(false), 4000);
-    return () => window.clearTimeout(outsideBannerTimer.current);
-  }, [outsideNeighborhood, panTick]);
-
-  useEffect(() => {
-    if (!geoError) {
-      geoErrorToasted.current = false;
-      return;
-    }
-    if (pendingRouteGps.current) {
-      pendingRouteGps.current = false;
-      pinCurrentRoute(true);
-    }
-    if (geoErrorToasted.current) return;
-    geoErrorToasted.current = true;
-    toast.warning("לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בהגדרות.");
-  }, [geoError, pinCurrentRoute]);
-
-  function panMapTo(point: { lat: number; lng: number }) {
-    setPanTo(point);
-    setPanTick((n) => n + 1);
-  }
-
-  function goToMyLocation() {
-    setAskedLocation(true);
-    geo.refresh();
-    if (originPickActive) {
-      if (gps) {
-        setOriginDraft({ lat: gps.lat, lng: gps.lng });
-        setOriginDraftLabel("המיקום שלכם");
-      }
-      return;
-    }
-    if (gps) panMapTo(gps);
-  }
-
-  function exitOriginPick() {
-    setOriginPickActive(false);
-    setOriginDraft(null);
-    const resume = originPickResumeView.current;
-    originPickResumeView.current = null;
-    if (resume === "list") setView("list");
-  }
-
   function enterRouteMode() {
-    exitOriginPick();
+    originPick.exitOriginPick();
     startRouteMode();
   }
 
   function goHome() {
-    exitOriginPick();
+    originPick.exitOriginPick();
     exitRouteMode();
-    setSelectedId("closed");
-    setClusterOverview(false);
-    setExpandedClusterKey(null);
-    setEditing(false);
-  }
-
-  function chooseGpsOrigin() {
-    setOriginPickerOpen(false);
-    exitOriginPick();
-    setOriginChoice({ kind: "gps" });
-    setAskedLocation(true);
-    geo.refresh();
-    if (gps) panMapTo(gps);
-  }
-
-  function chooseNeighborhoodOrigin() {
-    setOriginPickerOpen(false);
-    exitOriginPick();
-    setOriginChoice({ kind: "neighborhood" });
-    if (view === "map") panMapTo({ lat: config.map.center.lat, lng: config.map.center.lng });
-  }
-
-  function chooseCustomOrigin(lat: number, lng: number, label: string) {
-    setOriginPickerOpen(false);
-    exitOriginPick();
-    setOriginChoice({ kind: "custom", lat, lng, label });
-    if (view === "map") panMapTo({ lat, lng });
-  }
-
-  function startOriginPick() {
-    setOriginPickerOpen(false);
-    originPickResumeView.current = view;
-    setView("map");
-    setSelectedId("closed");
-    setClusterOverview(false);
-    setExpandedClusterKey(null);
-    setEditing(false);
-    setOriginDraft({ lat: origin.lat, lng: origin.lng });
-    setOriginDraftLabel(origin.kind === "custom" ? origin.label : "נקודה במפה");
-    setOriginPickActive(true);
-  }
-
-  async function saveOriginPick() {
-    if (!originDraft) return;
-    let label = originDraftLabel;
-    try {
-      const hit = await reversePin(originDraft.lat, originDraft.lng);
-      if (hit?.label) label = hit.label;
-    } catch {
-      /* keep draft label */
-    }
-    setOriginChoice({ kind: "custom", lat: originDraft.lat, lng: originDraft.lng, label });
-    exitOriginPick();
-  }
-
-  function onToggleLike(id: string) {
-    const nextOn = !likes.liked(id);
-    reportHouseTraffic(id, "saved", nextOn);
-    likes.toggle(id);
-  }
-
-  function onToggleVisited(id: string) {
-    const nextOn = !visits.visited(id);
-    reportHouseTraffic(id, "visited", nextOn);
-    const ids = visits.toggle(id);
-    const marking = ids.includes(id);
-    if (!marking) return;
-    setVisitCheer(false);
-    window.clearTimeout(cheerTimer.current);
-    window.requestAnimationFrame(() => {
-      setVisitCheer(true);
-      cheerTimer.current = window.setTimeout(() => setVisitCheer(false), 1600);
-    });
+    selection.resetForNavigation();
   }
 
   function handleHouseUpdated(next: PublicHouse) {
@@ -482,10 +293,8 @@ export function NeighborhoodApp({
     removeAdminHouse(id);
     removeOwnedHouse(id);
     forgetPublishedHouse(id);
-    if (selectedId === id) {
-      setSelectedId("closed");
-      setClusterOverview(false);
-      setEditing(false);
+    if (selection.selectedId === id) {
+      selection.closeSelection();
     }
     notifyCatalogChanged();
     void refresh(true);
@@ -499,98 +308,31 @@ export function NeighborhoodApp({
     >
       <AppHeader onHomeTap={goHome} />
       <div className="sr-only" aria-live="polite" aria-atomic="true">
-        {selected ? `נבחר: ${selected.name}` : ""}
+        {selection.selected ? `נבחר: ${selection.selected.name}` : ""}
       </div>
-      <div
-        className="app-toolbar relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2"
-        style={{ flexShrink: 0 }}
-      >
-        <div className="flex w-full min-w-0 items-center gap-1.5 overflow-hidden">
-          <div className="flex min-w-0 shrink rounded-xl bg-[#261536] p-0.5 ring-1 ring-orange-400/40">
-            <Toggle
-              active={view === "map"}
-              onClick={() => setView("map")}
-              icon={<MapPinned className="size-4" />}
-              label="מפה"
-            />
-            <Toggle
-              active={view === "list"}
-              onClick={() => {
-                setView("list");
-                setSelectedId("closed");
-                setClusterOverview(false);
-                setEditing(false);
-              }}
-              icon={<List className="size-4" />}
-              label="רשימה"
-            />
-          </div>
-          <button
-            type="button"
-            aria-label={likedOnly ? "מציגים שמורים בלבד" : "סינון שמורים"}
-            aria-pressed={likedOnly}
-            onClick={toggleLikedFilter}
-            className={cn(
-              "relative inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
-              likedOnly
-                ? "bg-orange-500 text-black"
-                : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
-            )}
-          >
-            <Heart className={cn("size-4", likedOnly && "fill-current")} />
-          </button>
-          <button
-            type="button"
-            aria-label={unvisitedOnly ? "מציגים לא ביקרתי בלבד" : "סינון לא ביקרתי"}
-            aria-pressed={unvisitedOnly}
-            onClick={toggleUnvisitedFilter}
-            className={cn(
-              "relative inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
-              unvisitedOnly
-                ? "bg-orange-500 text-black"
-                : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
-            )}
-          >
-            <UnvisitedSign className="size-4" />
-          </button>
-          <FilterTrigger activeCount={activeFilterCount} onClick={() => setFiltersOpen(true)} />
-          <OriginTrigger
-            shifted={originChoice.kind !== "gps"}
-            onClick={() => setOriginPickerOpen(true)}
-          />
-          <button
-            type="button"
-            aria-label={routeMode ? "יציאה מהמסלול" : "מסלול"}
-            aria-pressed={routeMode}
-            onClick={() => (routeMode ? exitRouteMode() : enterRouteMode())}
-            className={cn(
-              "inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
-              routeMode
-                ? "bg-orange-500 text-black"
-                : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
-            )}
-          >
-            <Route className="size-4" />
-          </button>
-          <CsvExportButton houses={visible} kind={likedOnly ? "liked" : "list"} includeTraffic={admin} />
-        </div>
-        {routeTicker ? <StatusTicker text={routeTicker} /> : null}
-        {view === "list" && !routeMode ? (
-          <div className="mt-2 w-full min-w-0">
-            <Input
-              id="house-search"
-              type="search"
-              value={listQuery}
-              onChange={(e) => setListQuery(e.target.value)}
-              placeholder="חיפוש לפי שם או רחוב…"
-              aria-label="חיפוש בית"
-              autoComplete="off"
-              enterKeyHint="search"
-              className="h-10 w-full min-w-0 bg-[#1d1028] text-base"
-            />
-          </div>
-        ) : null}
-      </div>
+      <NeighborhoodToolbar
+        view={view}
+        onViewChange={setView}
+        onListView={() => {
+          setView("list");
+          selection.closeSelection();
+        }}
+        likedOnly={likedOnly}
+        unvisitedOnly={unvisitedOnly}
+        onToggleLikedFilter={toggleLikedFilter}
+        onToggleUnvisitedFilter={toggleUnvisitedFilter}
+        activeFilterCount={activeFilterCount}
+        onOpenFilters={() => setFiltersOpen(true)}
+        originShifted={originChoice.kind !== "gps"}
+        onOpenOriginPicker={() => originPick.setOriginPickerOpen(true)}
+        routeMode={routeMode}
+        onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
+        houses={visible}
+        includeTraffic={admin}
+        listQuery={listQuery}
+        onListQueryChange={setListQuery}
+        routeTicker={originPick.routeTicker}
+      />
       <FiltersSheet
         open={filtersOpen}
         onOpenChange={setFiltersOpen}
@@ -602,29 +344,13 @@ export function NeighborhoodApp({
       >
         <HouseFiltersContent filters={sheetFilters} now={now} onPatch={patchFilterDraft} />
       </FiltersSheet>
-      {outsideBanner ? (
-        <div
-          role="status"
-          className="relative z-30 bg-amber-950 px-3 py-2 text-center text-base text-amber-50"
-        >
-          המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.
-        </div>
-      ) : null}
-      {offline || unreachable ? (
-        <div className="relative z-30 bg-[#2a1638] px-3 py-2 text-center text-base text-amber-100 ring-1 ring-inset ring-amber-500/20">
-          {offline
-            ? houses.length > 0
-              ? "אין אינטרנט · מוצגת הרשימה ששמורה בטלפון"
-              : "אין אינטרנט, ואין עותק שמור בטלפון"
-            : houses.length > 0
-              ? "השרת לא עונה · מוצגת הרשימה ששמורה בטלפון"
-              : "השרת לא עונה, ואין עותק שמור בטלפון"}
-        </div>
-      ) : error ? (
-        <div className="relative z-30 bg-red-950/70 px-3 py-2 text-center text-base text-red-100">
-          {error}
-        </div>
-      ) : null}
+      <NeighborhoodStatusBanners
+        outsideBanner={originPick.outsideBanner}
+        offline={offline}
+        unreachable={unreachable}
+        error={error}
+        hasCachedHouses={houses.length > 0}
+      />
       <main
         className="relative z-0 min-h-0 flex-1 isolate overflow-hidden"
         style={{ flex: 1, minHeight: 0, position: "relative" }}
@@ -645,62 +371,37 @@ export function NeighborhoodApp({
             >
               <HouseMapDynamic
                 houses={visible}
-                selectedId={originPickActive ? null : selected?.id}
-                clusterOverview={clusterOverview}
-                expandedClusterKey={expandedClusterKey}
+                selectedId={originPick.originPickActive ? null : selection.selected?.id}
+                clusterOverview={selection.clusterOverview}
+                expandedClusterKey={selection.expandedClusterKey}
                 onSelect={(house, opts) => {
-                  if (originPickActive) return;
-                  const cluster = clusterHousesByAddress(visible).find((item) =>
-                    item.houses.some((itemHouse) => itemHouse.id === house.id),
-                  );
-                  const isMulti = (cluster?.houses.length ?? 0) > 1;
-                  if (opts?.clusterOverview) {
-                    setExpandedClusterKey(cluster?.key ?? null);
-                    setClusterOverview(true);
-                  } else if (isMulti) {
-                    setExpandedClusterKey(cluster?.key ?? null);
-                    setClusterOverview(false);
-                  } else {
-                    setExpandedClusterKey(null);
-                    setClusterOverview(false);
-                  }
-                  setSelectedListIndex(undefined);
-                  setSelectedId(house.id);
+                  if (originPick.originPickActive) return;
+                  selection.selectOnMap(house, opts);
                 }}
-                onClose={() => {
-                  setClusterOverview(false);
-                  setSelectedId("closed");
-                }}
-                onCollapseCluster={() => {
-                  setExpandedClusterKey(null);
-                  setClusterOverview(false);
-                  setSelectedId("closed");
-                }}
+                onClose={selection.closeSelection}
+                onCollapseCluster={selection.collapseCluster}
                 className="h-full w-full"
                 active={view === "map"}
                 userLocation={gps}
                 locating={geo.status === "pending" && askedLocation}
-                onLocate={goToMyLocation}
-                routeLine={routeMode && !originPickActive ? routeLine : null}
-                routeFitTick={routeMode && !originPickActive ? routeFitTick : 0}
+                onLocate={originPick.goToMyLocation}
+                routeLine={routeMode && !originPick.originPickActive ? routeLine : null}
+                routeFitTick={routeMode && !originPick.originPickActive ? routeFitTick : 0}
                 routeStart={routeMode ? origin : null}
                 visitedIds={visits.visitedIds}
                 originMarker={origin.fromGps ? null : origin}
-                originPickActive={originPickActive}
-                originPick={originDraft}
-                onOriginPick={(lat, lng) => {
-                  setOriginDraft({ lat, lng });
-                  setOriginDraftLabel("נקודה במפה");
-                }}
-                panTo={panTo}
-                panTick={panTick}
+                originPickActive={originPick.originPickActive}
+                originPick={originPick.originDraft}
+                onOriginPick={originPick.onOriginMapPick}
+                panTo={originPick.panTo}
+                panTick={originPick.panTick}
                 statsFab={
-                  originPickActive ? null : (
+                  originPick.originPickActive ? null : (
                     <MapStats {...summaryProps} />
                   )
                 }
                 routeStops={
-                  routeMode && walkingRoute && !originPickActive
+                  routeMode && walkingRoute && !originPick.originPickActive
                     ? walkingRoute.stops.map((stop) => ({
                         id: stop.house.id,
                         order: stop.order,
@@ -710,27 +411,27 @@ export function NeighborhoodApp({
                     : null
                 }
               />
-              {originPickActive ? (
+              {originPick.originPickActive ? (
                 <div className="origin-pick-bar">
-                  <p className="origin-pick-label">{originDraftLabel}</p>
+                  <p className="origin-pick-label">{originPick.originDraftLabel}</p>
                   <div className="origin-pick-actions">
                     <Button
                       type="button"
                       size="sm"
                       className="bg-orange-500 text-black hover:bg-orange-400"
-                      disabled={!originDraft}
-                      onClick={() => void saveOriginPick()}
+                      disabled={!originPick.originDraft}
+                      onClick={() => void originPick.saveOriginPick()}
                     >
                       שמירת התחלה
                     </Button>
-                    <Button type="button" variant="outline" size="sm" onClick={exitOriginPick}>
+                    <Button type="button" variant="outline" size="sm" onClick={originPick.exitOriginPick}>
                       ביטול
                     </Button>
                   </div>
                 </div>
               ) : null}
               <CatalogMetaChip
-                hidden={Boolean(selected) && !originPickActive}
+                hidden={Boolean(selection.selected) && !originPick.originPickActive}
                 houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
               />
             </div>
@@ -753,9 +454,9 @@ export function NeighborhoodApp({
                   <RouteList
                     route={walkingRoute}
                     hasGps={Boolean(gps)}
-                    onRequestLocation={gpsAllowed ? chooseGpsOrigin : undefined}
-                    onChangeOrigin={() => setOriginPickerOpen(true)}
-                    selectedId={selected?.id ?? null}
+                    onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
+                    onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
+                    selectedId={selection.selected?.id ?? null}
                     catalogSource={source}
                     likedIds={likes.likedIds}
                     onToggleLike={onToggleLike}
@@ -763,27 +464,10 @@ export function NeighborhoodApp({
                     onToggleVisited={onToggleVisited}
                     admin={admin}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-                    onShowOnMap={(id) => {
-                      setView("map");
-                      setClusterOverview(false);
-                      setExpandedClusterKey(null);
-                      setEditing(false);
-                      setSelectedListIndex(undefined);
-                      setSelectedId(id);
-                    }}
-                    onSelectHouse={(id, index) => {
-                      setClusterOverview(false);
-                      setSelectedListIndex(index);
-                      setSelectedId(id);
-                    }}
-                    onEditHouse={(id, index) => {
-                      setClusterOverview(false);
-                      setEditForId(id);
-                      setSelectedListIndex(index);
-                      setSelectedId(id);
-                      setEditing(true);
-                    }}
-                    editingId={editing ? selected?.id ?? null : null}
+                    onShowOnMap={selection.showOnMap}
+                    onSelectHouse={selection.selectInList}
+                    onEditHouse={selection.editInList}
+                    editingId={selection.editing ? selection.selected?.id ?? null : null}
                   />
                 ) : (
                   <HouseList
@@ -797,89 +481,61 @@ export function NeighborhoodApp({
                     onToggleVisited={onToggleVisited}
                     admin={admin}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-                    onShowOnMap={(id) => {
-                      setView("map");
-                      setClusterOverview(false);
-                      setExpandedClusterKey(null);
-                      setEditing(false);
-                      setSelectedListIndex(undefined);
-                      setSelectedId(id);
-                    }}
-                    onSelectHouse={(id, index) => {
-                      setClusterOverview(false);
-                      setSelectedListIndex(index);
-                      setSelectedId(id);
-                    }}
-                    onEditHouse={(id, index) => {
-                      setClusterOverview(false);
-                      setEditForId(id);
-                      setSelectedListIndex(index);
-                      setSelectedId(id);
-                      setEditing(true);
-                    }}
-                    selectedId={selected?.id ?? null}
-                    editingId={editing ? selected?.id ?? null : null}
+                    onShowOnMap={selection.showOnMap}
+                    onSelectHouse={selection.selectInList}
+                    onEditHouse={selection.editInList}
+                    selectedId={selection.selected?.id ?? null}
+                    editingId={selection.editing ? selection.selected?.id ?? null : null}
                   />
                 )}
             </div>
           </>
         )}
-        {selected && view === "list" && !originPickActive ? (
+        {selection.selected && view === "list" && !originPick.originPickActive ? (
           <button
             type="button"
             aria-label="סגירת פרטי הבית"
             className="absolute inset-0 z-40 bg-black/40"
-            onClick={() => {
-              setEditing(false);
-              setClusterOverview(false);
-              setSelectedId("closed");
-            }}
+            onClick={selection.dismissForOverlay}
           />
         ) : null}
-        {selected && !originPickActive ? (
+        {selection.selected && !originPick.originPickActive ? (
         <MapHouseSheet
-          house={selected}
-          clusterHouses={view === "map" ? selectedCluster : [selected]}
-          clusterOverview={view === "map" && clusterOverview}
-          index={view === "list" ? selectedListIndex : undefined}
-          onClose={() => {
-            setClusterOverview(false);
-            setSelectedId("closed");
-          }}
+          house={selection.selected}
+          clusterHouses={view === "map" ? selection.selectedCluster : [selection.selected]}
+          clusterOverview={view === "map" && selection.clusterOverview}
+          index={view === "list" ? selection.selectedListIndex : undefined}
+          onClose={selection.closeSelection}
           liked={likes.liked}
           onToggleLike={onToggleLike}
           visited={visits.visited}
           onToggleVisited={onToggleVisited}
           catalogSource={source}
-          managerEditCode={admin ? editCodeById.get(selected.id) : undefined}
+          managerEditCode={admin ? editCodeById.get(selection.selected.id) : undefined}
           editCodeFor={(id) =>
             admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode
           }
           canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-          editing={editing}
-          onToggleEdit={() => setEditing((v) => !v)}
+          editing={selection.editing}
+          onToggleEdit={() => selection.setEditing((v) => !v)}
           onShowOnMap={
             view === "list"
               ? () => {
                   setView("map");
-                  setClusterOverview(false);
-                  setExpandedClusterKey(null);
+                  selection.clearCluster();
                 }
               : undefined
           }
           onShowInList={
-            view === "map" && selected
+            view === "map" && selection.selected
               ? () => {
-                  const index = visible.findIndex((house) => house.id === selected.id);
+                  selection.showInListFromMap(selection.selected!.id);
                   setView("list");
-                  setClusterOverview(false);
-                  setExpandedClusterKey(null);
-                  setSelectedListIndex(index >= 0 ? index + 1 : undefined);
                 }
               : undefined
           }
           pendingNote={
-            selected.status === "pending" ? (
+            selection.selected.status === "pending" ? (
               <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
                 {admin
                   ? "בית ממתין לאישור — עדיין לא במפה הציבורית."
@@ -889,12 +545,12 @@ export function NeighborhoodApp({
           }
           extra={
             <div className="mt-4 space-y-3">
-              {admin && selected.status === "pending" ? (
+              {admin && selection.selected.status === "pending" ? (
                 <div className="flex flex-wrap gap-2">
                   <Button
                     className="bg-emerald-600 text-white hover:bg-emerald-500"
                     disabled={busyAction}
-                    onClick={() => void approveHouse(selected.id)}
+                    onClick={() => void approveHouse(selection.selected!.id)}
                   >
                     אישור למפה
                   </Button>
@@ -902,10 +558,9 @@ export function NeighborhoodApp({
                     variant="destructive"
                     disabled={busyAction}
                     onClick={() => {
-                      void rejectHouse(selected.id).then((ok) => {
+                      void rejectHouse(selection.selected!.id).then((ok) => {
                         if (!ok) return;
-                        setSelectedId("closed");
-                        setClusterOverview(false);
+                        selection.closeSelection();
                       });
                     }}
                   >
@@ -913,14 +568,14 @@ export function NeighborhoodApp({
                   </Button>
                 </div>
               ) : null}
-              {editing && canEditSelected ? (
+              {selection.editing && canEditSelected ? (
                 <NightDesk
-                  house={selected}
+                  house={selection.selected}
                   admin={admin}
                   allowDelete
-                  editCode={admin ? editCodeById.get(selected.id) : ownedEditCode}
-                  onCancel={() => setEditing(false)}
-                  onDeleted={() => handleHouseDeleted(selected.id)}
+                  editCode={admin ? editCodeById.get(selection.selected.id) : ownedEditCode}
+                  onCancel={() => selection.setEditing(false)}
+                  onDeleted={() => handleHouseDeleted(selection.selected!.id)}
                   onUpdated={handleHouseUpdated}
                 />
               ) : null}
@@ -930,14 +585,14 @@ export function NeighborhoodApp({
         ) : null}
       </main>
       <OriginPickerSheet
-        open={originPickerOpen}
-        onOpenChange={setOriginPickerOpen}
+        open={originPick.originPickerOpen}
+        onOpenChange={originPick.setOriginPickerOpen}
         choice={originChoice}
         gpsAllowed={gpsAllowed}
-        onChooseGps={chooseGpsOrigin}
-        onChooseNeighborhood={chooseNeighborhoodOrigin}
-        onChooseCustom={chooseCustomOrigin}
-        onPickOnMap={startOriginPick}
+        onChooseGps={originPick.chooseGpsOrigin}
+        onChooseNeighborhood={originPick.chooseNeighborhoodOrigin}
+        onChooseCustom={originPick.chooseCustomOrigin}
+        onPickOnMap={originPick.startOriginPick}
       />
       <RouteConfirmDialog
         open={Boolean(routePrompt)}
@@ -953,76 +608,7 @@ export function NeighborhoodApp({
         }}
         onCancel={() => setRoutePrompt(null)}
       />
-      {visitCheer ? (
-        <div className="visit-cheer" role="status" aria-live="polite">
-          <div className="visit-cheer-card">
-            <span className="visit-cheer-burst" aria-hidden="true">
-              <i /><i /><i /><i /><i /><i />
-            </span>
-            <span className="visit-cheer-check" aria-hidden="true" />
-            כל הכבוד!
-          </div>
-        </div>
-      ) : null}
+      <VisitCheer show={visitCheer} />
     </div>
-  );
-}
-
-function StatusTicker({ text }: { text: string }) {
-  return (
-    <div className="mt-1 flex min-w-0 items-center">
-      <PingPongMarquee text={text} className="flex-1 text-base text-orange-100" />
-    </div>
-  );
-}
-
-function CatalogMetaChip({
-  hidden = false,
-  houseSetLabel,
-}: {
-  hidden?: boolean;
-  houseSetLabel?: string | null;
-}) {
-  if (!houseSetLabel) return null;
-  return (
-    <div
-      className={cn(
-        "pointer-events-none absolute top-2 start-2 z-10 max-w-[min(calc(100%-1rem),12rem)] transition-[opacity,transform] duration-[220ms] ease-out motion-reduce:transition-none",
-        hidden ? "-translate-y-2 opacity-0" : "translate-y-0 opacity-100",
-      )}
-      aria-hidden={hidden}
-    >
-      <span className="inline-block max-w-full rounded-lg bg-[#12081a]/90 px-2 py-1 text-base text-violet-200 ring-1 ring-orange-500/25 backdrop-blur-sm">
-        {houseSetLabel}
-      </span>
-    </div>
-  );
-}
-
-function Toggle({
-  active,
-  onClick,
-  icon,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      aria-pressed={active}
-      onClick={onClick}
-      className={cn(
-        "inline-flex h-9 w-9 items-center justify-center rounded-lg",
-        active ? "bg-orange-500 text-black" : "text-violet-200",
-      )}
-    >
-      {icon}
-    </button>
   );
 }
