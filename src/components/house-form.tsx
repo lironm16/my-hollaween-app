@@ -554,7 +554,7 @@ export function HouseForm({
             <button
               type="button"
               disabled={!nightStatusEnabled}
-              onClick={() => setNightStatus((current) => (current === "pause" ? "open" : "pause"))}
+              onClick={() => setNightStatus("pause")}
               className={
                 nightStatus === "pause"
                   ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
@@ -567,7 +567,7 @@ export function HouseForm({
             <button
               type="button"
               disabled={!nightStatusEnabled}
-              onClick={() => setNightStatus((current) => (current === "stop" ? "open" : "stop"))}
+              onClick={() => setNightStatus("stop")}
               className={
                 nightStatus === "stop" && !outAndClosed
                   ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
@@ -581,10 +581,6 @@ export function HouseForm({
               type="button"
               disabled={!nightStatusEnabled}
               onClick={() => {
-                if (outAndClosed) {
-                  setNightStatus("open");
-                  return;
-                }
                 pickCandy("out");
                 setNightStatus("stop");
               }}
@@ -599,6 +595,23 @@ export function HouseForm({
               נגמר — סגור
             </button>
           </div>
+          {nightStatusEnabled && (nightStatus === "pause" || nightStatus === "stop") ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="mt-2 border-emerald-400/50 text-emerald-200"
+              onClick={() => {
+                if (outAndClosed) {
+                  setNightStatus("open");
+                  return;
+                }
+                setNightStatus("open");
+              }}
+            >
+              פתיחה מחדש
+            </Button>
+          ) : null}
         </div>
         <div
           className={

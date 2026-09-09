@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { HousePicker } from "@/components/house-picker";
 import { PushNotice } from "@/components/push-notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +46,8 @@ async function showSenderNotice(title: string, body: string) {
 export function AdminPushPanel() {
   const [templates, setTemplates] = useState<PushTemplateMeta[]>([]);
   const [houses, setHouses] = useState<PublicHouse[]>([]);
-  const [sendHouseId, setSendHouseId] = useState("");
+  const [sendHouse, setSendHouse] = useState<PublicHouse | null>(null);
+  const sendHouseId = sendHouse?.id ?? "";
   const [busy, setBusy] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [expanded, setExpanded] = useState<PushKind | null>(null);
@@ -389,9 +391,6 @@ export function AdminPushPanel() {
         }}
       >
         <p className="text-base font-medium text-amber-100">הודעה חד־פעמית לכולם</p>
-        <p className="text-base text-violet-300">
-          גם אתם תקבלו את ההתראה במכשיר הזה. אם רואים «1 מתוך 1» — רק המכשיר שלכם רשום; הפעילו התראות גם בטלפון השני.
-        </p>
         <Input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
@@ -429,8 +428,8 @@ export function AdminPushPanel() {
               <span className="font-mono text-orange-200">{`{place}`}</span> — כתובת מקוצרת
             </li>
             <li>
-              <span className="font-mono text-orange-200">{`{backLine}`}</span> — שורה על חזרה מההפסקה:
-              «נחזור ב־20:00» אם נקבעה שעה, אחרת «נחזור בקרוב». רלוונטי רק להתראת הפסקה.
+              <span className="font-mono text-orange-200">{`{backLine}`}</span> — שורה על חזרה מההפסקה
+              («נחזור ב־20:00») רק אם נקבעה שעה. בלי שעה — השורה לא מופיעה.
             </li>
           </ul>
         </div>
@@ -442,7 +441,7 @@ export function AdminPushPanel() {
               הממתקים»
             </li>
             <li>
-              <span className="text-orange-100">בלי ממתקים</span> + קישוטים — אפשר לבוא לראות את הבית המקושט →
+              <span className="text-orange-100">בלי ממתקים</span> + קישוטים — הבית מקושט בלי חלוקת ממתקים →
               «מקושט בלי ממתקים»
             </li>
             <li>
@@ -454,39 +453,35 @@ export function AdminPushPanel() {
               לביקור»
             </li>
             <li>
-              <span className="text-orange-100">הפסקה</span> — הקפאה זמנית מהמפה → «הפסקה» (אוטומטי)
+              <span className="text-orange-100">הפסקה</span> — הקפאה זמנית מהמפה → «הפסקה» (בעל הבית מאשר שליחה)
             </li>
           </ul>
         </div>
         <p className="text-base text-violet-300">
-          כבוי = התבנית לא נשלחת. אחרי שמירת סטטוס, בעל הבית יכול לאשר שליחה — חוץ מהתראות אוטומטיות.
+          כבוי = התבנית לא נשלחת. אחרי שמירת סטטוס, בעל הבית יכול לאשר שליחה — חוץ מ«בית חדש במפה».
         </p>
-        <label className="block space-y-1">
+        <div className="space-y-1">
           <span className="text-base text-violet-200">בית לשליחה ידנית (בדיקה)</span>
-          <select
-            value={sendHouseId}
-            onChange={(event) => setSendHouseId(event.target.value)}
-            className="h-9 w-full rounded-md bg-[#12081a] px-2 text-base text-orange-50 ring-1 ring-orange-500/20"
-          >
-            <option value="">בחרו בית</option>
-            {houses.map((house) => (
-              <option key={house.id} value={house.id}>
-                {house.name} · {house.address}
-              </option>
-            ))}
-          </select>
-        </label>
+          <HousePicker
+            houses={houses}
+            selected={sendHouse}
+            onSelect={setSendHouse}
+            placeholder="הקלידו שם או כתובת"
+          />
+        </div>
 
         {templates.length === 0 ? (
           <p className="text-base text-violet-400">טוענים תבניות…</p>
         ) : (
           <>
+            {autoTemplates.length > 0 ? (
+              <div className="space-y-1.5">
+                <p className="text-base font-medium text-amber-100/90">אוטומטיות</p>
+                {autoTemplates.map(renderTemplate)}
+              </div>
+            ) : null}
             <div className="space-y-1.5">
-              <p className="text-base font-medium text-amber-100/90">אוטומטיות</p>
-              {autoTemplates.map(renderTemplate)}
-            </div>
-            <div className="space-y-1.5">
-              <p className="text-base font-medium text-amber-100/90">אחרי שמירה על ידי בעל הבית</p>
+              <p className="text-base font-medium text-amber-100/90">אחרי שמירה — בעל הבית מאשר שליחה</p>
               {ownerTemplates.map(renderTemplate)}
             </div>
           </>

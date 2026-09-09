@@ -73,6 +73,16 @@ describe("fillPushTemplate", () => {
     assert.match(filled.body, /חרוזים/);
     assert.match(filled.body, /נחזור ב־/);
   });
+
+  it("omits back line when no return time is set", () => {
+    const filled = fillPushTemplate(
+      { title: "הפסקה: {nickname}", body: "{backLine}\n{place}" },
+      { name: "בית", address: "חרוזים" },
+    );
+    assert.doesNotMatch(filled.body, /בקרוב/);
+    assert.doesNotMatch(filled.body, /נחזור/);
+    assert.match(filled.body, /חרוזים/);
+  });
 });
 
 describe("classifyHouseAlert", () => {

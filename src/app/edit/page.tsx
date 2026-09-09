@@ -4,11 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMergedHouses } from "@/hooks/use-merged-houses";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { CodesCopy } from "@/components/codes-copy";
 import { HousePicker } from "@/components/house-picker";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -21,6 +22,7 @@ import type { House, PublicHouse } from "@/lib/types";
 import { NightDesk } from "@/components/night-desk";
 import { PersistNote } from "@/components/persist-note";
 import { readApiJson } from "@/lib/api-json";
+import { cn } from "@/lib/utils";
 
 export default function EditPage() {
   const router = useRouter();
@@ -144,8 +146,6 @@ export default function EditPage() {
     return () => {
       cancelled = true;
     };
-    // Intentionally only when the chosen house or admin session changes.
-    // Saving the house as owned after unlock must not remount the editor.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [picked?.id, admin]);
 
@@ -165,13 +165,14 @@ export default function EditPage() {
         />
         <h1 className="font-display mb-1 text-2xl text-orange-300">עריכת בית</h1>
         <p className="mb-4 text-base text-violet-200">
-          בחרו בית מהרשימה. מנהל או מי שהבית שמור אצלו במכשיר נכנסים ישר לעריכה, בלי קוד.
-          מישהו אחר מזין את קוד העריכה שקיבל מי שהוסיף את הבית.
+          בחרו בית מהרשימה, עדכנו מהיר בליל האלווין, ואז שמרו פרטים מלאים. מנהל או מי שהבית שמור
+          במכשיר נכנסים ישר לעריכה.
         </p>
         <PersistNote className="mb-4" />
-        <div className="mb-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
+
+        <section className="mb-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
           <div className="space-y-1.5">
-            <Label htmlFor="house-pick">בית</Label>
+            <Label htmlFor="house-pick">איזה בית לערוך?</Label>
             <HousePicker
               houses={houses}
               selected={picked}
@@ -183,9 +184,25 @@ export default function EditPage() {
               loading={catalogLoading || (admin && !adminReady)}
             />
           </div>
+          <div className="flex flex-wrap items-center gap-2 border-t border-orange-500/15 pt-3">
+            <Link
+              href="/add"
+              className={cn(
+                buttonVariants({ size: "sm", variant: "outline" }),
+                "inline-flex items-center gap-1.5 border-orange-400/40 text-orange-100",
+              )}
+            >
+              <Plus className="size-4" />
+              הוספת בית חדש
+            </Link>
+            <span className="text-base text-violet-400">או חפשו בית קיים למעלה</span>
+          </div>
           {needsCode ? (
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 border-t border-orange-500/15 pt-3">
               <Label htmlFor="edit-code">קוד עריכה</Label>
+              <p className="text-base text-violet-300">
+                מישהו אחר מזין את קוד העריכה שקיבל מי שהוסיף את הבית.
+              </p>
               <Input
                 id="edit-code"
                 value={editCode}
@@ -207,13 +224,18 @@ export default function EditPage() {
               </Button>
             </div>
           ) : picked && admin ? (
-            <p className="text-base text-emerald-300">מצב מנהל — אפשר לערוך בלי קוד.</p>
+            <p className="border-t border-orange-500/15 pt-3 text-base text-emerald-300">
+              מצב מנהל — אפשר לערוך בלי קוד.
+            </p>
           ) : picked && ownedMatch ? (
-            <p className="text-base text-emerald-300">הבית שמור במכשיר הזה — נפתח לעריכה.</p>
+            <p className="border-t border-orange-500/15 pt-3 text-base text-emerald-300">
+              הבית שמור במכשיר הזה — נפתח לעריכה.
+            </p>
           ) : null}
-        </div>
+        </section>
+
         {house ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <CodesCopy editCode={admin ? adminEditCode : editCode} />
             <NightDesk
               house={house}
@@ -244,11 +266,8 @@ export default function EditPage() {
             />
           </div>
         ) : (
-          <p className="text-base text-violet-300">
-            הבית לא ברשימה?{" "}
-            <Link href="/add" className="text-orange-300 underline">
-              הוסיפו בית חדש
-            </Link>
+          <p className="rounded-xl bg-[#1d1028]/60 px-3 py-4 text-center text-base text-violet-300 ring-1 ring-orange-500/15">
+            בחרו בית מהרשימה כדי לערוך, או הוסיפו בית חדש.
           </p>
         )}
       </main>
