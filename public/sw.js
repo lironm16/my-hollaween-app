@@ -1,4 +1,4 @@
-const CACHE = "hw-shell-v63";
+const CACHE = "hw-shell-v64";
 const TILE_CACHE = "hw-tiles-v7";
 const PRECACHE = [
   "/offline.html",
@@ -104,7 +104,9 @@ self.addEventListener("push", (event) => {
       badge: "/icon-192.png",
       lang: "he",
       dir: "rtl",
-      tag: data.topic === "admin" ? "admin-broadcast" : undefined,
+      tag: data.topic === "admin" ? "admin-broadcast" : "hw-alert",
+      renotify: true,
+      vibrate: [180, 90, 180],
       data: { url: data.url || "/" },
     }),
   );

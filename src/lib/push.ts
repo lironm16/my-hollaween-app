@@ -103,8 +103,9 @@ export function ensureVapid(db: DbFile): VapidKeys {
   return db.vapid;
 }
 
+/** Only drop subscriptions FCM/APNs report as gone — not 401/403 (often VAPID mismatch). */
 function isDeadSubscription(statusCode: number) {
-  return statusCode === 401 || statusCode === 403 || statusCode === 404 || statusCode === 410;
+  return statusCode === 404 || statusCode === 410;
 }
 
 async function mapPool<T>(items: T[], limit: number, fn: (item: T) => Promise<void>) {

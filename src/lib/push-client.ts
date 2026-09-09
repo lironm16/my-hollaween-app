@@ -172,21 +172,7 @@ async function postSubscription(sub: PushSubscription, prefs: PushTopicPrefs) {
   return data.count ?? 0;
 }
 
-export async function sendSelfPushTest(): Promise<{
-  ok: boolean;
-  registered: boolean;
-  delivered?: boolean;
-  total?: number;
-  error?: string;
-}> {
-  let endpoint = await senderPushEndpoint();
-  if (!endpoint && Notification.permission === "granted") {
-    await refreshPushSubscriptionIfEnabled();
-    endpoint = await senderPushEndpoint();
-  }
-  if (!endpoint) {
-    return { ok: false, registered: false, error: "אין הרשמה מקומית במכשיר." };
-  }
+async function callPushTest(endpoint: string) {
   const res = await fetch("/api/push/test", {
     method: "POST",
     credentials: "same-origin",
@@ -200,19 +186,89 @@ export async function sendSelfPushTest(): Promise<{
     total?: number;
     error?: string;
   } | null;
+  return { res, data };
+}
+
+/** Drop local push subscription and register fresh with the server's current VAPID key. */
+export async function forceRefreshPushSubscription(): Promise<PushEnableResult> {
+  if (!pushSupported()) return "unsupported";
+  if (Notification.permission !== "granted") return "denied";
+  try {
+    const reg = await waitForServiceWorkerRegistration();
+    const sub = reg ? await reg.pushManager.getSubscription() : null;
+    if (sub) {
+      try {
+        await fetch("/api/push/unsubscribe", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint: sub.endpoint }),
+        });
+      } catch {
+        /* ignore */
+      }
+      await sub.unsubscribe();
+    }
+  } catch {
+    /* ignore */
+  }
+  return enablePushAlerts();
+}
+
+export async function sendSelfPushTest(): Promise<{
+  ok: boolean;
+  registered: boolean;
+  delivered?: boolean;
+  total?: number;
+  local?: boolean;
+  error?: string;
+}> {
+  let endpoint = await senderPushEndpoint();
+  if (!endpoint) {
+    await forceRefreshPushSubscription();
+    endpoint = await senderPushEndpoint();
+  }
+  if (!endpoint) {
+    return { ok: false, registered: false, error: "אין הרשמה מקומית במכשיר." };
+  }
+
+  let { res, data } = await callPushTest(endpoint);
+  const delivered = Boolean(res.ok && data?.ok && data?.delivered);
+
+  if (!delivered) {
+    await forceRefreshPushSubscription();
+    endpoint = await senderPushEndpoint();
+    if (endpoint) {
+      ({ res, data } = await callPushTest(endpoint));
+    }
+  }
+
+  const serverDelivered = Boolean(res.ok && data?.ok && data?.delivered);
+  if (!serverDelivered) {
+    await showLocalPush(
+      "בדיקת התראות",
+      data?.registered
+        ? "המכשיר רשום בשרת — זו התראה מקומית. השליחה מהשרת עדיין לא עובדת."
+        : "התראות במכשיר עובדות. עדיין מסנכרנים רישום לשרת.",
+    );
+  }
+
   if (!res.ok) {
     return {
       ok: false,
       registered: Boolean(data?.registered),
       total: data?.total,
+      local: !serverDelivered,
       error: data?.error ?? "הבדיקה נכשלה.",
     };
   }
   return {
-    ok: Boolean(data?.ok),
-    registered: true,
+    ok: serverDelivered,
+    registered: Boolean(data?.registered),
     delivered: data?.delivered,
     total: data?.total,
+    local: !serverDelivered,
+    error: serverDelivered ? undefined : data?.error,
   };
 }
 

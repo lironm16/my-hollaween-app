@@ -212,7 +212,15 @@ export function PushAlertsButton() {
     try {
       const result = await sendSelfPushTest();
       if (result.ok) {
-        toast.success(`התראת בדיקה נשלחה! (${result.total ?? 1} מכשירים רשומים)`);
+        toast.success(`התראה מהשרת הגיעה! (${result.total ?? 1} מכשירים רשומים)`);
+        return;
+      }
+      if (result.local) {
+        toast.message(
+          result.registered
+            ? "הראינו התראה מקומית. הרישום בשרת קיים — נסו שוב בעוד כמה שניות."
+            : "הראינו התראה מקומית. מסנכרנים רישום לשרת — נסו שוב.",
+        );
         return;
       }
       if (!result.registered) {
