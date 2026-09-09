@@ -246,7 +246,7 @@ async function readLocalPushSubsBlob(): Promise<PushSubscriptionRecord[] | null>
   }
 }
 
-async function readPushSubsBlob(): Promise<PushSubscriptionRecord[] | null> {
+async function readPushSubsBlob(): Promise<PushSubscriptionRecord[]> {
   const [local, remote] = await Promise.all([
     readLocalPushSubsBlob(),
     blobEnabled()
@@ -256,16 +256,16 @@ async function readPushSubsBlob(): Promise<PushSubscriptionRecord[] | null> {
           token: process.env.BLOB_READ_WRITE_TOKEN,
         })
           .then(async (result) => {
-            if (!result?.stream) return null;
+            if (!result?.stream) return undefined;
             const parsed = JSON.parse(await new Response(result.stream).text()) as {
               subscriptions?: PushSubscriptionRecord[];
             };
-            return Array.isArray(parsed.subscriptions) ? parsed.subscriptions : null;
+            return Array.isArray(parsed.subscriptions) ? parsed.subscriptions : undefined;
           })
-          .catch(() => null)
-      : Promise.resolve(null),
+          .catch(() => undefined)
+      : Promise.resolve(undefined),
   ]);
-  return mergePushSubscriptions(local, remote);
+  return mergePushSubscriptions(local ?? undefined, remote);
 }
 
 async function writePushSubsBlob(subscriptions: PushSubscriptionRecord[]) {
