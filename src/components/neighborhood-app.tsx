@@ -50,6 +50,7 @@ import {
 } from "@/lib/home-view";
 import { HOUSE_SET_LABELS } from "@/lib/house-set";
 import { filterHouses } from "@/lib/filter-houses";
+import { houseSelectionAnnouncement } from "@/lib/map-a11y";
 import type { Catalog, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -307,8 +308,18 @@ export function NeighborhoodApp({
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
       <AppHeader onHomeTap={goHome} />
+      <button
+        type="button"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-2 focus:rounded-lg focus:bg-orange-500 focus:px-3 focus:py-2 focus:text-black"
+        onClick={() => setView("list")}
+      >
+        דלג לרשימת הבתים
+      </button>
       <div className="sr-only" aria-live="polite" aria-atomic="true">
-        {selection.selected ? `נבחר: ${selection.selected.name}` : ""}
+        {selection.selected ? houseSelectionAnnouncement(selection.selected) : ""}
+        {routeMode && walkingRoute
+          ? ` מסלול עם ${walkingRoute.stops.length} עצירות.`
+          : ""}
       </div>
       <NeighborhoodToolbar
         view={view}
@@ -436,12 +447,15 @@ export function NeighborhoodApp({
               />
             </div>
             <div
+              id="house-list-skip"
               className={cn(
                 "absolute inset-0 overflow-y-auto bg-[#12081a]",
                 view === "list" ? "z-10" : "invisible pointer-events-none z-0",
               )}
               style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#12081a" }}
               aria-hidden={view !== "list"}
+              role="region"
+              aria-label="רשימת בתים"
             >
                 <div className="mx-auto w-full min-w-0 max-w-3xl px-3 pt-3">
                   {routeMode ? (

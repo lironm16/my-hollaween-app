@@ -319,7 +319,7 @@ const originIcon = L.divIcon({
 
 const youAreHereIcon = L.divIcon({
   className: "you-are-here-wrap",
-  html: `<div class="you-are-here" aria-hidden="true"><span class="you-are-here-pulse"></span><span class="you-are-here-dot"></span></div>`,
+  html: `<div class="you-are-here" role="img" aria-label="אתם כאן"><span class="you-are-here-pulse" aria-hidden="true"></span><span class="you-are-here-dot" aria-hidden="true"></span></div>`,
   iconSize: [22, 22],
   iconAnchor: [11, 11],
   popupAnchor: [0, -12],
@@ -697,6 +697,8 @@ export function HouseMap({
   if (!ready) {
     return (
       <div
+        role="status"
+        aria-live="polite"
         className={cn(
           "relative z-0 isolate flex items-center justify-center overflow-hidden bg-[#1a1024] text-orange-200",
           className ?? "h-full min-h-[280px] w-full",
@@ -709,6 +711,8 @@ export function HouseMap({
 
   return (
     <div
+      role="region"
+      aria-label="מפת השכונה"
       className={cn(
         "relative z-0 isolate overflow-hidden",
         originPickActive && "is-origin-pick",

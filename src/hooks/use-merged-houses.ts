@@ -12,19 +12,28 @@ export function mergeVisibleHouses({
   owned,
   admin,
   adminHouses,
+  includeCatalogWhenAdmin = false,
 }: {
   catalogHouses: PublicHouse[];
   owned: OwnedHouse[];
   admin: boolean;
   adminHouses: House[];
+  /** Edit page needs catalog + admin API houses; the map uses admin houses only. */
+  includeCatalogWhenAdmin?: boolean;
 }): PublicHouse[] {
   const deleted = new Set(loadDeletedHouseIds());
-  const listed = admin
-    ? adminHouses
-        .filter((house) => house.status !== "rejected")
-        .map((house) => toPublicHouse(house) as PublicHouse)
-    : catalogHouses;
-  const byId = new Map(listed.map((house) => [house.id, house]));
+  const byId = new Map<string, PublicHouse>();
+  if (!admin || includeCatalogWhenAdmin) {
+    for (const house of catalogHouses) {
+      if (!deleted.has(house.id)) byId.set(house.id, house);
+    }
+  }
+  if (admin) {
+    for (const house of adminHouses) {
+      if (house.status === "rejected" || deleted.has(house.id)) continue;
+      byId.set(house.id, toPublicHouse(house) as PublicHouse);
+    }
+  }
   for (const item of owned) {
     if (!item.preview || deleted.has(item.id)) continue;
     const current = byId.get(item.id);
@@ -47,14 +56,23 @@ export function useMergedHouses({
   owned,
   admin,
   adminHouses,
+  includeCatalogWhenAdmin = false,
 }: {
   catalogHouses: PublicHouse[];
   owned: OwnedHouse[];
   admin: boolean;
   adminHouses: House[];
+  includeCatalogWhenAdmin?: boolean;
 }) {
   return useMemo(
-    () => mergeVisibleHouses({ catalogHouses, owned, admin, adminHouses }),
-    [catalogHouses, owned, admin, adminHouses],
+    () =>
+      mergeVisibleHouses({
+        catalogHouses,
+        owned,
+        admin,
+        adminHouses,
+        includeCatalogWhenAdmin,
+      }),
+    [catalogHouses, owned, admin, adminHouses, includeCatalogWhenAdmin],
   );
 }

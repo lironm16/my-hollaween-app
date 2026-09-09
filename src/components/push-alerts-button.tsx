@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import {
   DEFAULT_PUSH_TOPIC_PREFS,
   PUSH_PROMPT_SKIP_KEY,
+  disablePushAlerts,
   enablePushAlerts,
   readPushPref,
   readPushStatus,
@@ -220,6 +221,23 @@ export function PushAlertsButton() {
     }
   }
 
+  async function disableAll() {
+    const off = { newHouse: false, houseStatus: false, admin: false };
+    setTopics(off);
+    setBusy(true);
+    try {
+      await disablePushAlerts();
+      setStatus("off");
+      closeDialog();
+      toast.message("התראות כבויות במכשיר הזה.", { closeButton: true });
+    } catch {
+      toast.error("לא הצלחנו לכבות את ההתראות.");
+      setTopics(readPushTopicPrefs());
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function openSettings() {
     const stored = readPushTopicPrefs();
     setTopics(
@@ -320,6 +338,13 @@ export function PushAlertsButton() {
                   onChange={(next) => void toggleTopic(row.id, next)}
                 />
               ))}
+              {subscribed ? (
+                <p className="px-1 text-base text-violet-300/90">
+                  כדי לכבות לגמרי במכשיר, כבו את כל הסוגים או לחצו «כבו התראות».
+                </p>
+              ) : !canEnable ? (
+                <p className="px-1 text-base text-amber-200/90">סמנו לפחות סוג אחד, ואז «הפעילו».</p>
+              ) : null}
             </div>
           )}
           <DialogFooter className="border-orange-500/15 bg-[#14091c]/80">
@@ -336,6 +361,16 @@ export function PushAlertsButton() {
                 >
                   {primaryLabel}
                 </Button>
+                {subscribed ? (
+                  <Button
+                    variant="ghost"
+                    className="text-amber-200"
+                    disabled={busy}
+                    onClick={() => void disableAll()}
+                  >
+                    כבו התראות
+                  </Button>
+                ) : null}
                 <Button variant="ghost" className="text-violet-200" disabled={busy} onClick={closeDialog}>
                   ביטול
                 </Button>

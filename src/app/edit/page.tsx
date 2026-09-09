@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useMergedHouses } from "@/hooks/use-merged-houses";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -16,7 +17,6 @@ import { useHouseSet } from "@/hooks/use-house-set";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { houseMatchesSet } from "@/lib/house-set";
 import { saveOwnedHouse, removeOwnedHouse, forgetPublishedHouse, notifyCatalogChanged } from "@/lib/offline-db";
-import { toPublicHouse } from "@/lib/ids";
 import type { House, PublicHouse } from "@/lib/types";
 import { NightDesk } from "@/components/night-desk";
 import { PersistNote } from "@/components/persist-note";
@@ -57,20 +57,17 @@ export default function EditPage() {
     };
   }, [admin]);
 
-  const houses = useMemo(() => {
-    const byId = new Map<string, PublicHouse>();
-    for (const item of catalog?.houses ?? []) byId.set(item.id, item);
-    for (const item of owned) {
-      if (item.preview) byId.set(item.id, item.preview);
-    }
-    if (admin) {
-      for (const item of adminHouses) {
-        if (item.status === "rejected") continue;
-        byId.set(item.id, toPublicHouse(item) as PublicHouse);
-      }
-    }
-    return [...byId.values()].filter((house) => houseMatchesSet(house, activeHouseSet));
-  }, [activeHouseSet, admin, adminHouses, catalog?.houses, owned]);
+  const merged = useMergedHouses({
+    catalogHouses: catalog?.houses ?? [],
+    owned,
+    admin,
+    adminHouses,
+    includeCatalogWhenAdmin: true,
+  });
+  const houses = useMemo(
+    () => merged.filter((house) => houseMatchesSet(house, activeHouseSet)),
+    [merged, activeHouseSet],
+  );
 
   const ownedMatch = picked ? owned.find((item) => item.id === picked.id) : undefined;
   const adminEditCode = picked && admin ? adminHouses.find((item) => item.id === picked.id)?.editCode : undefined;
