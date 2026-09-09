@@ -1,5 +1,11 @@
 import { formatDisplayAddress } from "@/lib/config";
-import { candyLevel, effectiveVisit, isOwnerFrozen, isPubliclyListed } from "@/lib/house-state";
+import {
+  candyLevel,
+  effectiveVisit,
+  isOwnerFrozen,
+  isPubliclyListed,
+  markedCandy,
+} from "@/lib/house-state";
 import { isOnBreak } from "@/lib/hours";
 import type { House } from "@/lib/types";
 
@@ -31,29 +37,25 @@ export type PushTemplateMeta = PushTemplateFields & {
   auto: boolean;
 };
 
-export const AUTO_PUSH_KINDS: ReadonlySet<PushKind> = new Set([
-  "onBreak",
-  "backFromBreak",
-  "houseAdded",
-]);
+export const AUTO_PUSH_KINDS: ReadonlySet<PushKind> = new Set(["houseAdded"]);
 
 export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
   onBreak: {
     id: "onBreak",
-    auto: true,
+    auto: false,
     enabled: true,
     label: "הפסקה",
-    hint: "נשלח אוטומטית כשבעל הבית מקפיא מהמפה. {backLine} = «נחזור ב־20:00» או «נחזור בקרוב».",
-    title: "{nickname} יוצא להפסקה",
+    hint: "אחרי שמירה — כשבעל הבית מקפיא מהמפה. {backLine} = «נחזור ב־20:00» רק אם נקבעה שעה.",
+    title: "הפסקה: {nickname}",
     body: "{backLine}\n{place}",
   },
   backFromBreak: {
     id: "backFromBreak",
-    auto: true,
+    auto: false,
     enabled: true,
     label: "חזרה מההפסקה",
-    hint: "נשלח אוטומטית כשמבטלים את ההקפאה והבית שוב פתוח.",
-    title: "{nickname} חזרת לפעילות!",
+    hint: "אחרי שמירה — כשמבטלים הקפאה והבית שוב פתוח.",
+    title: "חזרה לפתוח: {nickname}",
     body: "מוזמנים להגיע\n{place}",
   },
   houseAdded: {
@@ -62,7 +64,7 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     enabled: true,
     label: "בית חדש במפה",
     hint: "נשלח אוטומטית אחרי הוספת בית.",
-    title: "{nickname} הצטרף למפה!",
+    title: "בית חדש: {nickname}",
     body: "מוזמנים להגיע\n{place}",
   },
   closed: {
@@ -70,8 +72,8 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     auto: false,
     enabled: true,
     label: "נסגר לביקור",
-    hint: "אחרי שמירה בעל הבית יכול לשלוח. כשבוחרים «נגמר».",
-    title: "{nickname} נסגר לביקור",
+    hint: "אחרי שמירה בעל הבית יכול לשלוח — כשבוחרים «סגור» או «נגמר — סגור».",
+    title: "נסגר לערב: {nickname}",
     body: "מקווים שנהניתם!\n{place}",
   },
   decorOnly: {
@@ -79,9 +81,9 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     auto: false,
     enabled: true,
     label: "מקושט בלי ממתקים",
-    hint: "אחרי שמירה — כשבוחרים «מקושט».",
-    title: "{nickname} - כל הממתקים אזלו...",
-    body: "מוזמנים עדיין לבוא לראות את הבית המקושט\n{place}",
+    hint: "אחרי שמירה — כשבוחרים «בלי ממתקים» והבית מקושט.",
+    title: "מקושט בלי ממתקים: {nickname}",
+    body: "מוזמנים להסתכל\n{place}",
   },
   candyLow: {
     id: "candyLow",
@@ -89,7 +91,7 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     enabled: true,
     label: "מעט ממתקים",
     hint: "אחרי שמירה כשמלאי הממתקים יורד ל«מעט».",
-    title: "{nickname} — נשאר מעט!",
+    title: "נשאר מעט: {nickname}",
     body: "{place}",
   },
   candyOut: {
@@ -97,8 +99,8 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     auto: false,
     enabled: true,
     label: "נגמרו הממתקים",
-    hint: "כשהמלאי נגמר והבית עדיין מסומן «בואו» (בלי סגירה).",
-    title: "{nickname} — נגמרו הממתקים",
+    hint: "אחרי שמירה כשהממתקים נגמרו והבית עדיין פתוח לביקור.",
+    title: "נגמרו הממתקים: {nickname}",
     body: "{place}",
   },
   candyRestock: {
@@ -107,7 +109,7 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     enabled: true,
     label: "חזרו למלאי",
     hint: "אחרי שמירה כשהבית פתוח והממתקים חוזרים.",
-    title: "{nickname} — חזרו למלאי!",
+    title: "חזרו למלאי: {nickname}",
     body: "{place}",
   },
   backActive: {
@@ -115,8 +117,8 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     auto: false,
     enabled: true,
     label: "חזרה לפעילות",
-    hint: "אחרי שמירה כשחוזרים מ«נסגר» או «מקושט» ל«בואו». הקפאה חוזרת אוטומטית.",
-    title: "{nickname} חזרת לפעילות!",
+    hint: "אחרי שמירה כשחוזרים מ«סגור» או «מקושט» לפתוח.",
+    title: "שוב פתוח: {nickname}",
     body: "מוזמנים להגיע\n{place}",
   },
 };
@@ -160,6 +162,13 @@ function freezeBackClock(house: { ownerFrozenUntil?: string | null }) {
   return new Date(t).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
 }
 
+function collapsePushText(text: string) {
+  return text
+    .replace(/\n{2,}/g, "\n")
+    .replace(/^\n+|\n+$/g, "")
+    .trim();
+}
+
 export function fillPushTemplate(
   template: { title: string; body: string },
   house: { name: string; address: string; lat?: number; lng?: number; ownerFrozenUntil?: string | null },
@@ -168,12 +177,15 @@ export function fillPushTemplate(
   const vars: Record<string, string> = {
     nickname: nicknameOf(house),
     place: placeOf(house),
-    backAt: clock || "בקרוב",
-    backLine: clock ? `נחזור ב־${clock}` : "נחזור בקרוב",
+    backAt: clock ?? "",
+    backLine: clock ? `נחזור ב־${clock}` : "",
   };
   const apply = (text: string) =>
     text.replace(/\{(nickname|place|backAt|backLine)\}/g, (_, key: string) => vars[key] ?? "");
-  return { title: apply(template.title), body: apply(template.body) };
+  return {
+    title: collapsePushText(apply(template.title)),
+    body: collapsePushText(apply(template.body)),
+  };
 }
 
 export function housePushUrl(house: { id: string }) {
@@ -209,11 +221,11 @@ export function classifyHouseAlert(prev: House, next: House): PushKind | null {
     return "backActive";
   }
 
-  if (nextVisit === "come") {
+  if (nextVisit === "come" && markedCandy(next)) {
     if (stockAlertsBlocked(next)) return null;
-    const prevCandy = candyLevel(prev);
+    const prevCandy = markedCandy(prev) ? candyLevel(prev) : null;
     const nextCandy = candyLevel(next);
-    if (prevCandy !== "out" && nextCandy === "out") return "candyOut";
+    if (prevCandy && prevCandy !== "out" && nextCandy === "out") return "candyOut";
     if (prevCandy === "plenty" && nextCandy === "low") return "candyLow";
     if (prevCandy === "out" && nextCandy !== "out") return "candyRestock";
   }
@@ -261,13 +273,18 @@ export function ownerOfferKindFromPatch(
 ): PushKind | null {
   if (!patch) return null;
   const keys = Object.keys(patch).filter((key) => (patch as Record<string, unknown>)[key] !== undefined);
-  const allowed = new Set(["visit", "treatStock", "treats", "soldOut"]);
+  const allowed = new Set(["visit", "treatStock", "treats", "soldOut", "ownerFrozenUntil"]);
   if (keys.length === 0 || keys.some((key) => !allowed.has(key))) return null;
+  if (patch.ownerFrozenUntil !== undefined) {
+    if (isOwnerFrozen(next) && houseMatchesNotifyKind(next, "onBreak")) return "onBreak";
+    if (!isOwnerFrozen(next) && houseMatchesNotifyKind(next, "backFromBreak")) return "backFromBreak";
+  }
   if (stockAlertsBlocked(next) && patch.visit !== "closed") return null;
   if (patch.visit === "closed" && houseMatchesNotifyKind(next, "closed")) return "closed";
   if (patch.visit === "decorOnly" && houseMatchesNotifyKind(next, "decorOnly")) return "decorOnly";
+  if (patch.visit === "come" && houseMatchesNotifyKind(next, "backActive")) return "backActive";
   const candy = patch.treatStock?.candy;
-  if (candy === "low" && houseMatchesNotifyKind(next, "candyLow")) return "candyLow";
-  if (candy === "out" && houseMatchesNotifyKind(next, "candyOut")) return "candyOut";
+  if (candy === "low" && markedCandy(next) && houseMatchesNotifyKind(next, "candyLow")) return "candyLow";
+  if (candy === "out" && markedCandy(next) && houseMatchesNotifyKind(next, "candyOut")) return "candyOut";
   return null;
 }
