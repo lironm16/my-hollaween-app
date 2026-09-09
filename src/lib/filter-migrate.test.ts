@@ -36,6 +36,7 @@ describe("migrateHouseFilters", () => {
     assert.equal(next.openNowOnly, false);
     assert.equal(next.closedOnly, false);
     assert.equal(next.visitedOnly, false);
+    assert.equal(next.unvisitedOnly, false);
     assert.equal(next.likedOnly, true);
   });
 

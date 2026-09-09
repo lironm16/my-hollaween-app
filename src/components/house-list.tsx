@@ -70,10 +70,7 @@ export function HouseList({
   }
 
   return (
-    <div
-      className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3"
-      style={selectedId ? { paddingBottom: "calc(var(--map-sheet-h, 70dvh) + 1rem)" } : undefined}
-    >
+    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3">
       {filtered.length === 0 ? (
         <p className="py-10 text-center text-violet-300">אין בתים שמתאימים לחיפוש.</p>
       ) : (

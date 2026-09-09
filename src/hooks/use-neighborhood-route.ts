@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { filterHouses } from "@/lib/filter-houses";
 import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
 import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
 import type { HouseFiltersState } from "@/lib/offline-db";
@@ -119,13 +118,12 @@ export function useNeighborhoodRoute({
       pendingRouteGps.current = false;
       pinCurrentRoute(true);
     };
-    const visitedExcluded =
-      filters.unvisitedOnly
-        ? filterHouses(houses, { ...filters, unvisitedOnly: false }, filterContext).filter((house) =>
-            visitedIds.includes(house.id),
-          )
-        : [];
-    if (visitedExcluded.length === 0 || shouldSkipRoutePrompt("enter-route")) {
+    if (shouldSkipRoutePrompt("enter-route")) {
+      proceed();
+      return;
+    }
+    const visitedExcluded = visible.filter((house) => visitedIds.includes(house.id));
+    if (visitedExcluded.length === 0) {
       proceed();
       return;
     }
@@ -133,7 +131,7 @@ export function useNeighborhoodRoute({
       kind: "enter-route",
       title: "להתחיל מסלול?",
       description:
-        "הסינון «לא ביקרתי» פעיל — בתים שכבר ביקרתם לא ייכללו. «ביטול» לא יפתח מסלול.",
+        "בתים שכבר סימנתם כביקור לא ייכללו במסלול. «ביטול» לא יפתח מסלול.",
       confirmLabel: "התחלת מסלול",
       removedHouses: visitedExcluded.map((house) => house.name),
       onConfirm: () => proceed(),

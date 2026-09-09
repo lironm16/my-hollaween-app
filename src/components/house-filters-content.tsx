@@ -21,7 +21,7 @@ import {
   resolveVisitWindow,
   type VisitWindowMode,
 } from "@/lib/visit-window";
-import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
+import { LikedMark } from "@/components/visit-marks";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS, type ScareLevel } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -188,12 +188,6 @@ export function HouseFiltersContent({
           onChange={() => onPatch({ likedOnly: !filters.likedOnly })}
         >
           <LikedMark labeled />
-        </FilterToggle>
-        <FilterToggle
-          checked={filters.unvisitedOnly}
-          onChange={() => onPatch({ unvisitedOnly: !filters.unvisitedOnly })}
-        >
-          <UnvisitedMark labeled />
         </FilterToggle>
       </FilterSection>
 
