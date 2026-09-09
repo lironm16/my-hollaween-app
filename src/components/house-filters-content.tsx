@@ -134,6 +134,11 @@ export function HouseFiltersContent({
           onChange={() => setVisitMode("custom")}
           label="מותאם אישית"
         />
+        {visitMode === "now" ? (
+          <p className="px-3 pb-2 text-sm text-violet-400">
+            מציגים בתים שפתוחים בין עכשיו ל־{defaultVisitWindowEnd(now)}.
+          </p>
+        ) : null}
         {visitMode === "custom" ? (
           <div className="px-3 py-2">
             <VisitWindowFields

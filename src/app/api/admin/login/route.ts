@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
-import { passwordMatches, setAdminCookie } from "@/lib/admin";
+import { adminLoginEnabled, passwordMatches, setAdminCookie } from "@/lib/admin";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  if (!adminLoginEnabled()) {
+    return NextResponse.json({ error: "כניסת מנהל לא מוגדרת בשרת." }, { status: 503 });
+  }
   if (!rateLimit(`admin:${clientKey(request.headers)}`, 12, 15 * 60 * 1000)) {
     return NextResponse.json({ error: "יותר מדי ניסיונות." }, { status: 429 });
   }

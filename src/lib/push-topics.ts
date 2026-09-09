@@ -8,8 +8,8 @@ export const PUSH_TOPIC_ROWS: { id: PushTopic; title: string; hint: string }[] =
   { id: "newHouse", title: "בית חדש נוסף", hint: "כשבית חדש נכנס למפה" },
   {
     id: "houseStatus",
-    title: "נגמר מלאי או בית שנסגר",
-    hint: "עדכונים שוטפים בלילה",
+    title: "עדכונים שוטפים בלילה",
+    hint: "למשל כשנגמר מלאי הממתקים או בית שנסגר",
   },
   { id: "admin", title: "הודעות מהמנהלים", hint: "מסרים לכל השכונה" },
 ];

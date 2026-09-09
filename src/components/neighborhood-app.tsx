@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { List, MapPinned, Route } from "lucide-react";
+import { Heart, List, MapPinned, Route } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useHouseFilters, cloneHouseFilters, countActiveFilters, emptyHouseFilters, filtersEqual } from "@/hooks/use-house-filters";
+import { useMergedHouses } from "@/hooks/use-merged-houses";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
@@ -35,7 +36,6 @@ import { useHouseSet } from "@/hooks/use-house-set";
 import { readApiJson } from "@/lib/api-json";
 import { inNeighborhood, config } from "@/lib/config";
 import { clusterHousesByAddress } from "@/lib/house-clusters";
-import { toPublicHouse } from "@/lib/ids";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { visitWindowIssue } from "@/lib/hours";
 import { formatClockFromDate, defaultVisitWindowEnd } from "@/lib/visit-window";
@@ -43,7 +43,6 @@ import { useAppNow } from "@/hooks/use-app-clock";
 import { reportHouseTraffic } from "@/hooks/use-house-traffic";
 import {
   backupLooksNewer,
-  loadPendingWrites,
   loadServerDbBackup,
   notifyCatalogChanged,
   removeOwnedHouse,
@@ -60,8 +59,8 @@ import {
 import { HOUSE_SET_LABELS } from "@/lib/house-set";
 import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
 import { filterHouses, routeHouseIds } from "@/lib/filter-houses";
-import { loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
+import { UnvisitedSign } from "@/components/visit-marks";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { Catalog, House, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -95,17 +94,22 @@ export function NeighborhoodApp({
   const [focusSeen, setFocusSeen] = useState(focusId);
   const [clusterOverview, setClusterOverview] = useState(false);
   const [expandedClusterKey, setExpandedClusterKey] = useState<string | null>(null);
-  if (focusId && focusId !== focusSeen) {
+
+  useEffect(() => {
+    if (!focusId || focusId === focusSeen) return;
     setFocusSeen(focusId);
     setSelectedId(focusId);
     setClusterOverview(false);
     setExpandedClusterKey(null);
-  }
+  }, [focusId, focusSeen]);
   const {
     filters,
     update: updateFilters,
   } = useHouseFilters();
-  const { accessibleOnly, likedOnly } = filters;
+  const toggleLikedFilter = () => updateFilters({ likedOnly: !filters.likedOnly });
+  const toggleUnvisitedFilter = () =>
+    updateFilters({ unvisitedOnly: !filters.unvisitedOnly });
+  const { accessibleOnly, likedOnly, unvisitedOnly } = filters;
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filterDraft, setFilterDraft] = useState<HouseFiltersState | null>(null);
   const filtersOpenRef = useRef(false);
@@ -130,10 +134,12 @@ export function NeighborhoodApp({
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
   const [editing, setEditing] = useState(false);
   const [editForId, setEditForId] = useState(selectedId);
-  if (selectedId !== editForId) {
+
+  useEffect(() => {
+    if (selectedId === editForId) return;
     setEditForId(selectedId);
     setEditing(false);
-  }
+  }, [selectedId, editForId]);
   const [busyAction, setBusyAction] = useState(false);
   const [listQuery, setListQuery] = useState("");
   const [routePrompt, setRoutePrompt] = useState<{
@@ -253,30 +259,12 @@ export function NeighborhoodApp({
     return map;
   }, [adminHouses]);
 
-  const houses = useMemo(() => {
-    const deleted = new Set(loadDeletedHouseIds());
-    const listed = admin
-      ? adminHouses
-          .filter((house) => house.status !== "rejected")
-          .map((house) => toPublicHouse(house) as PublicHouse)
-      : (catalog?.houses ?? []);
-    const byId = new Map(listed.map((house) => [house.id, house]));
-    for (const item of owned) {
-      if (!item.preview || deleted.has(item.id)) continue;
-      const current = byId.get(item.id);
-      if (!current || Date.parse(item.preview.updatedAt) >= Date.parse(current.updatedAt || "")) {
-        byId.set(item.id, item.preview);
-      }
-    }
-    for (const pending of loadPendingWrites()) {
-      if (deleted.has(pending.id)) continue;
-      const current = byId.get(pending.id);
-      if (!current || Date.parse(pending.house.updatedAt) >= Date.parse(current.updatedAt || "")) {
-        byId.set(pending.id, pending.house);
-      }
-    }
-    return [...byId.values()].filter((house) => !deleted.has(house.id));
-  }, [admin, adminHouses, catalog, owned]);
+  const houses = useMergedHouses({
+    catalogHouses: catalog?.houses ?? [],
+    owned,
+    admin,
+    adminHouses,
+  });
 
   const filterContext = useMemo(
     () => ({
@@ -817,6 +805,9 @@ export function NeighborhoodApp({
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
       <AppHeader onHomeTap={goHome} />
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {selected ? `נבחר: ${selected.name}` : ""}
+      </div>
       <div
         className="app-toolbar relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2"
         style={{ flexShrink: 0 }}
@@ -841,6 +832,34 @@ export function NeighborhoodApp({
               label="רשימה"
             />
           </div>
+          <button
+            type="button"
+            aria-label={likedOnly ? "מציגים שמורים בלבד" : "סינון שמורים"}
+            aria-pressed={likedOnly}
+            onClick={toggleLikedFilter}
+            className={cn(
+              "relative inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
+              likedOnly
+                ? "bg-orange-500 text-black"
+                : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
+            )}
+          >
+            <Heart className={cn("size-4", likedOnly && "fill-current")} />
+          </button>
+          <button
+            type="button"
+            aria-label={unvisitedOnly ? "מציגים לא ביקרתי בלבד" : "סינון לא ביקרתי"}
+            aria-pressed={unvisitedOnly}
+            onClick={toggleUnvisitedFilter}
+            className={cn(
+              "relative inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
+              unvisitedOnly
+                ? "bg-orange-500 text-black"
+                : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
+            )}
+          >
+            <UnvisitedSign className="size-4" />
+          </button>
           <FilterTrigger activeCount={activeFilterCount} onClick={() => setFiltersOpen(true)} />
           <OriginTrigger
             shifted={originChoice.kind !== "gps"}
