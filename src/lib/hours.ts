@@ -162,6 +162,40 @@ export function hasValidVisitWindow(visitWindowFrom = "", visitWindowTo = "") {
   return hasVisitWindow(visitWindowFrom, visitWindowTo) && visitWindowIssue(visitWindowFrom, visitWindowTo) === null;
 }
 
+export function visitWindowMinuteRange(visitWindowFrom = "", visitWindowTo = "") {
+  if (visitWindowIssue(visitWindowFrom, visitWindowTo)) return null;
+  const vf = visitWindowFrom ? parseClockMinutes(visitWindowFrom) : null;
+  const vt = visitWindowTo ? parseClockMinutes(visitWindowTo) : null;
+  if (vf === null && vt === null) return null;
+  if (vf !== null && vt !== null) return { start: vf, end: vt };
+  const point = vf ?? vt!;
+  return { start: point, end: point };
+}
+
+function visitRangeIsSpan(range: { start: number; end: number }) {
+  return range.start < range.end;
+}
+
+function minuteRangesOverlap(a0: number, a1: number, b0: number, b1: number) {
+  return a0 < b1 && b0 < a1;
+}
+
+type FilterHouse = HoursSource & {
+  id?: string;
+  visit?: VisitState;
+  soldOut?: boolean;
+  adminFrozen?: boolean;
+  ownerFrozenUntil?: string | null;
+};
+
+function filterProbeAt(minutes: number) {
+  return eventNightAtMinutes(minutes);
+}
+
+function preparedFilterHouse(house: FilterHouse, probe: Date) {
+  return withRehearsalPin(house, probe);
+}
+
 /** Clock used for hour-status filters — visitor start, else end, else wall clock. */
 export function resolveFilterNow(
   visitWindowFrom: string | undefined,
@@ -435,6 +469,133 @@ export function isClosingSoon(house: SoonHouse, now = appNow()) {
 
 export function isOpeningSoon(house: SoonHouse, now = appNow()) {
   return openingSoonAt(house, now) !== null;
+}
+
+/** Opening-soon interval overlaps the visitor outing window (or a single probe time). */
+export function isOpeningSoonForFilter(
+  house: FilterHouse,
+  visitWindowFrom = "",
+  visitWindowTo = "",
+  wallNow = appNow(),
+) {
+  const range = visitWindowMinuteRange(visitWindowFrom, visitWindowTo);
+  if (!range || !visitRangeIsSpan(range)) {
+    const probe = range ? filterProbeAt(range.start) : wallNow;
+    return isOpeningSoon(house, probe);
+  }
+  const probe = filterProbeAt(range.start);
+  const prepared = preparedFilterHouse(house, probe);
+  if (effectiveVisit(prepared) === "closed" || isFrozen(prepared, probe.getTime())) return false;
+  return houseHoursWindows(prepared).some((window) => {
+    const from = parseClockMinutes(window.from);
+    if (from === null) return false;
+    return minuteRangesOverlap(from - OPENS_SOON_MINUTES, from, range.start, range.end);
+  });
+}
+
+/** Closing-soon interval overlaps the visitor outing window (or a single probe time). */
+export function isClosingSoonForFilter(
+  house: FilterHouse,
+  visitWindowFrom = "",
+  visitWindowTo = "",
+  wallNow = appNow(),
+) {
+  const range = visitWindowMinuteRange(visitWindowFrom, visitWindowTo);
+  if (!range || !visitRangeIsSpan(range)) {
+    const probe = range ? filterProbeAt(range.start) : wallNow;
+    return isClosingSoon(house, probe);
+  }
+  const probe = filterProbeAt(range.start);
+  const prepared = preparedFilterHouse(house, probe);
+  if (effectiveVisit(prepared) === "closed" || isFrozen(prepared, probe.getTime())) return false;
+  return houseHoursWindows(prepared).some((window) => {
+    const to = parseClockMinutes(window.to);
+    if (to === null) return false;
+    return minuteRangesOverlap(to - CLOSING_SOON_MINUTES, to, range.start, range.end);
+  });
+}
+
+/** Open during the visitor outing window (or at a single probe time). */
+export function isOpenNowForFilter(
+  house: FilterHouse,
+  visitWindowFrom = "",
+  visitWindowTo = "",
+  wallNow = appNow(),
+) {
+  const range = visitWindowMinuteRange(visitWindowFrom, visitWindowTo);
+  if (!range || !visitRangeIsSpan(range)) {
+    const probe = range ? filterProbeAt(range.start) : wallNow;
+    return isOpenNow(house, probe);
+  }
+  const probe = filterProbeAt(range.start);
+  const prepared = preparedFilterHouse(house, probe);
+  if (effectiveVisit(prepared) === "closed" || isFrozen(prepared, probe.getTime())) return false;
+  return houseHoursWindows(prepared).some((window) => {
+    const from = parseClockMinutes(window.from);
+    const to = parseClockMinutes(window.to);
+    if (from === null || to === null) return false;
+    return minuteRangesOverlap(from, to, range.start, range.end);
+  });
+}
+
+/** On break between hour windows during the visitor outing window. */
+export function isOnBreakForFilter(
+  house: FilterHouse,
+  visitWindowFrom = "",
+  visitWindowTo = "",
+  wallNow = appNow(),
+) {
+  const range = visitWindowMinuteRange(visitWindowFrom, visitWindowTo);
+  if (!range || !visitRangeIsSpan(range)) {
+    const probe = range ? filterProbeAt(range.start) : wallNow;
+    return isOnBreak(house, probe) || isFrozen(house, probe.getTime());
+  }
+  const probe = filterProbeAt(range.start);
+  const prepared = preparedFilterHouse(house, probe);
+  if (effectiveVisit(prepared) === "closed") return false;
+  if (isFrozen(prepared, probe.getTime())) return true;
+  const windows = houseHoursWindows(prepared)
+    .flatMap((window) => {
+      const from = parseClockMinutes(window.from);
+      const to = parseClockMinutes(window.to);
+      if (from === null || to === null) return [];
+      return [{ from, to }];
+    })
+    .sort((a, b) => a.from - b.from);
+  for (let i = 0; i < windows.length - 1; i++) {
+    const gapStart = windows[i]!.to;
+    const gapEnd = windows[i + 1]!.from;
+    if (minuteRangesOverlap(gapStart, gapEnd, range.start, range.end)) return true;
+  }
+  return false;
+}
+
+/** Not yet open at the start of the visitor window (or probe time). */
+export function isNotYetOpenForFilter(
+  house: FilterHouse,
+  visitWindowFrom = "",
+  visitWindowTo = "",
+  wallNow = appNow(),
+) {
+  const range = visitWindowMinuteRange(visitWindowFrom, visitWindowTo);
+  const probe = range ? filterProbeAt(range.start) : wallNow;
+  if (effectiveVisit(house) === "closed") return false;
+  return isHoursNotYetOpen(house, probe);
+}
+
+/** After hours at the end of the visitor window (or probe time). */
+export function isAfterHoursForFilter(
+  house: FilterHouse,
+  visitWindowFrom = "",
+  visitWindowTo = "",
+  wallNow = appNow(),
+) {
+  const range = visitWindowMinuteRange(visitWindowFrom, visitWindowTo);
+  const probe = range
+    ? filterProbeAt(visitRangeIsSpan(range) ? range.end : range.start)
+    : wallNow;
+  if (effectiveVisit(house) === "closed") return false;
+  return isHoursNightOver(house, probe);
 }
 
 /** Between two clock windows (not yet opening-soon). Same rehearsal rules. */
