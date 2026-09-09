@@ -24,7 +24,7 @@ export function CsvExportButton({
 
   function onExport() {
     if (houses.length === 0) {
-      toast.error("אין בתים לייצוא. סננו או שמרו בתים בלב קודם.");
+      toast.error("אין בתים לייצוא — המפה ריקה");
       return;
     }
     let traffic: Record<string, HouseTraffic> | undefined;

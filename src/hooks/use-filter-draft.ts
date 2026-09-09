@@ -14,7 +14,6 @@ import { visitWindowIssue } from "@/lib/hours";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
 import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
-import { defaultVisitWindowEnd, formatClockFromDate } from "@/lib/visit-window";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
@@ -79,7 +78,7 @@ export function useFilterDraft({
     () => filterHouses(houses, sheetFilters, filterContext).length,
     [houses, sheetFilters, filterContext],
   );
-  const visitWindowInvalid = houseFiltersDraftInvalid(sheetFilters, now);
+  const visitWindowInvalid = houseFiltersDraftInvalid(sheetFilters);
 
   function routeHousesForFilters(nextFilters: HouseFiltersState) {
     const nextVisible = filterHouses(houses, nextFilters, filterContext);
@@ -165,10 +164,8 @@ export function useFilterDraft({
 
   function commitFilterDraft() {
     const nextFilters = filterDraft ?? filters;
-    if (houseFiltersDraftInvalid(nextFilters, now)) {
-      const from = nextFilters.visitWindowFrom || formatClockFromDate(now);
-      const to = nextFilters.visitWindowTo || defaultVisitWindowEnd(now);
-      toast.error(visitWindowIssue(from, to)!);
+    if (houseFiltersDraftInvalid(nextFilters)) {
+      toast.error(visitWindowIssue(nextFilters.visitWindowFrom, nextFilters.visitWindowTo)!);
       return;
     }
     if (filtersEqual(nextFilters, filters)) {

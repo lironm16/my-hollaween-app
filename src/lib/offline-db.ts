@@ -310,7 +310,7 @@ export type HouseFiltersState = {
   onBreakOnly: boolean;
   afterHoursOnly: boolean;
   /** When "now", from/to are resolved from the wall clock at filter time. */
-  visitWindowMode?: "now" | "custom";
+  visitWindowMode?: "all" | "now" | "custom";
   /** Optional visitor outing window on event night (HH:MM, empty = unset). */
   visitWindowFrom: string;
   visitWindowTo: string;

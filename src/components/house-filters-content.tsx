@@ -1,26 +1,23 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { CANDY_TONES, CandySign } from "@/components/candy-glyphs";
 import { AccessibleMark } from "@/components/symbols";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
+import { ScareSign } from "@/components/scare-glyphs";
 import { FilterOption, FilterSection } from "@/components/filter-menu";
 import { VisitWindowFields } from "@/components/visit-window-fields";
 import { NEIGHBORHOODS } from "@/lib/config";
-import {
-  isKidsFriendlyFilter,
-  isWithCandyFilter,
-  kidsFriendlyPatch,
-  withCandyPatch,
-} from "@/lib/filter-presets";
 import { visitWindowIssue } from "@/lib/hours";
+import { decorShort, scareShort } from "@/lib/labels";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import {
   defaultVisitWindowEnd,
   effectiveVisitWindowMode,
-  formatClockFromDate,
   type VisitWindowMode,
 } from "@/lib/visit-window";
-import { SENSITIVITY_OPTIONS } from "@/lib/types";
+import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
+import { SCARE_LEVELS, SENSITIVITY_OPTIONS, type ScareLevel } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 function FilterToggle({
@@ -90,15 +87,42 @@ export function HouseFiltersContent({
   ) => void;
 }) {
   const visitMode = effectiveVisitWindowMode(filters);
-  const withCandy = isWithCandyFilter(filters);
-  const kidsFriendly = isKidsFriendlyFilter(filters);
-  const customFrom =
-    filters.visitWindowFrom || formatClockFromDate(now);
-  const customTo = filters.visitWindowTo || defaultVisitWindowEnd(now);
-  const customInvalid =
-    visitMode === "custom" ? visitWindowIssue(customFrom, customTo) : null;
+  const candySensitivityEnabled = filters.candyFilters.some((tone) => tone !== "none");
+  const customFrom = filters.visitWindowFrom;
+  const customTo = filters.visitWindowTo;
+
+  function toggleCandyTone(tone: (typeof CANDY_TONES)[number]["id"]) {
+    onPatch((current) => {
+      const nextCandy = current.candyFilters.includes(tone)
+        ? current.candyFilters.filter((item) => item !== tone)
+        : [...current.candyFilters, tone];
+      const hasCandyStock = nextCandy.some((item) => item !== "none");
+      return {
+        ...current,
+        candyFilters: nextCandy,
+        sensitivityFilters: hasCandyStock ? current.sensitivityFilters : [],
+      };
+    });
+  }
+
+  function toggleScareLevel(level: ScareLevel) {
+    onPatch((current) => ({
+      ...current,
+      scareFilters: current.scareFilters.includes(level)
+        ? current.scareFilters.filter((item) => item !== level)
+        : [...current.scareFilters, level],
+    }));
+  }
 
   function setVisitMode(mode: VisitWindowMode) {
+    if (mode === "all") {
+      onPatch({
+        visitWindowMode: "all",
+        visitWindowFrom: "",
+        visitWindowTo: "",
+      });
+      return;
+    }
     if (mode === "now") {
       onPatch({
         visitWindowMode: "now",
@@ -109,25 +133,23 @@ export function HouseFiltersContent({
     }
     onPatch({
       visitWindowMode: "custom",
-      visitWindowFrom: customFrom,
-      visitWindowTo: customTo,
+      visitWindowFrom: filters.visitWindowFrom,
+      visitWindowTo: filters.visitWindowTo,
     });
-  }
-
-  function setWithCandy(on: boolean) {
-    onPatch((current) => ({
-      ...current,
-      ...withCandyPatch(on),
-    }));
   }
 
   return (
     <>
-      <FilterSection title="שעת התחלה">
+      <FilterSection title="בתים">
+        <VisitWindowRadio
+          checked={visitMode === "all"}
+          onChange={() => setVisitMode("all")}
+          label="הכל"
+        />
         <VisitWindowRadio
           checked={visitMode === "now"}
           onChange={() => setVisitMode("now")}
-          label="עכשיו"
+          label="פתוחים עכשיו"
         />
         <VisitWindowRadio
           checked={visitMode === "custom"}
@@ -147,23 +169,62 @@ export function HouseFiltersContent({
               onChangeFrom={(value) => onPatch({ visitWindowFrom: value })}
               onChangeTo={(value) => onPatch({ visitWindowTo: value })}
             />
-            {customInvalid ? (
-              <p className="mt-2 text-base text-red-300" role="alert">{customInvalid}</p>
-            ) : null}
           </div>
         ) : null}
+        <FilterToggle
+          checked={filters.likedOnly}
+          onChange={() => onPatch({ likedOnly: !filters.likedOnly })}
+        >
+          <LikedMark labeled />
+        </FilterToggle>
+        <FilterToggle
+          checked={filters.unvisitedOnly}
+          onChange={() => onPatch({ unvisitedOnly: !filters.unvisitedOnly })}
+        >
+          <UnvisitedMark labeled />
+        </FilterToggle>
+      </FilterSection>
+
+      <FilterSection title="ממתקים">
+        {CANDY_TONES.map(({ id, label }) => (
+          <FilterOption
+            key={id}
+            checked={filters.candyFilters.includes(id)}
+            onChange={() => toggleCandyTone(id)}
+          >
+            <span className="inline-flex items-center gap-2">
+              <CandySign tone={id} />
+              <span>{label}</span>
+            </span>
+          </FilterOption>
+        ))}
+      </FilterSection>
+
+      <FilterSection title="רמת פחד">
+        <FilterOption
+          checked={filters.includeUndecorated}
+          onChange={() => onPatch({ includeUndecorated: !filters.includeUndecorated })}
+        >
+          <span className="inline-flex items-center gap-2">
+            <ScareSign level="none" />
+            <span>{decorShort.none}</span>
+          </span>
+        </FilterOption>
+        {SCARE_LEVELS.map((level) => (
+          <FilterOption
+            key={level}
+            checked={filters.scareFilters.includes(level)}
+            onChange={() => toggleScareLevel(level)}
+          >
+            <span className="inline-flex items-center gap-2">
+              <ScareSign level={level} />
+              <span>{scareShort[level]}</span>
+            </span>
+          </FilterOption>
+        ))}
       </FilterSection>
 
       <FilterSection title="מה חשוב">
-        <FilterToggle checked={withCandy} onChange={() => setWithCandy(!withCandy)}>
-          <span className="inline-flex items-center gap-2">עם ממתקים</span>
-        </FilterToggle>
-        <FilterToggle
-          checked={kidsFriendly}
-          onChange={() => onPatch((current) => ({ ...current, ...kidsFriendlyPatch(!kidsFriendly) }))}
-        >
-          מתאים לילדים
-        </FilterToggle>
         <FilterToggle
           checked={filters.accessibleOnly}
           onChange={() => onPatch({ accessibleOnly: !filters.accessibleOnly })}
@@ -174,13 +235,15 @@ export function HouseFiltersContent({
 
       <FilterSection title="רגישויות">
         <p className="px-3 pb-1 text-sm text-violet-400">
-          {withCandy ? "בתים עם ממתקים שמתאימים לרגישות שבחרתם" : "סמנו «עם ממתקים» כדי לסנן רגישויות"}
+          {candySensitivityEnabled
+            ? "בתים עם ממתקים שמתאימים לרגישות שבחרתם"
+            : "סמנו לפחות אחת מקטגוריות הממתקים (לא «בלי ממתקים») כדי לסנן רגישויות"}
         </p>
         {SENSITIVITY_OPTIONS.map((id) => (
           <FilterOption
             key={id}
             checked={filters.sensitivityFilters.includes(id)}
-            disabled={!withCandy}
+            disabled={!candySensitivityEnabled}
             onChange={() =>
               onPatch((current) => ({
                 ...current,
@@ -217,9 +280,7 @@ export function HouseFiltersContent({
   );
 }
 
-export function houseFiltersDraftInvalid(filters: HouseFiltersState, now: Date) {
+export function houseFiltersDraftInvalid(filters: HouseFiltersState) {
   if (effectiveVisitWindowMode(filters) !== "custom") return false;
-  const from = filters.visitWindowFrom || formatClockFromDate(now);
-  const to = filters.visitWindowTo || defaultVisitWindowEnd(now);
-  return Boolean(visitWindowIssue(from, to));
+  return Boolean(visitWindowIssue(filters.visitWindowFrom, filters.visitWindowTo));
 }

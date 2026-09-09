@@ -83,10 +83,7 @@ export function NeighborhoodApp({
     filters,
     update: updateFilters,
   } = useHouseFilters();
-  const toggleLikedFilter = () => updateFilters({ likedOnly: !filters.likedOnly });
-  const toggleUnvisitedFilter = () =>
-    updateFilters({ unvisitedOnly: !filters.unvisitedOnly });
-  const { accessibleOnly, likedOnly, unvisitedOnly } = filters;
+  const { accessibleOnly, likedOnly } = filters;
 
   const [askedLocation, setAskedLocation] = useState(false);
   const [listQuery, setListQuery] = useState("");
@@ -329,9 +326,6 @@ export function NeighborhoodApp({
           selection.closeSelection();
         }}
         likedOnly={likedOnly}
-        unvisitedOnly={unvisitedOnly}
-        onToggleLikedFilter={toggleLikedFilter}
-        onToggleUnvisitedFilter={toggleUnvisitedFilter}
         activeFilterCount={activeFilterCount}
         onOpenFilters={() => setFiltersOpen(true)}
         originShifted={originChoice.kind !== "gps"}

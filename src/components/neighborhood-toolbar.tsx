@@ -1,12 +1,11 @@
 "use client";
 
-import { Heart, List, MapPinned, Route } from "lucide-react";
+import { List, MapPinned, Route } from "lucide-react";
 import { FilterTrigger } from "@/components/filter-menu";
 import { OriginTrigger } from "@/components/origin-picker";
 import { CsvExportButton } from "@/components/csv-export-button";
 import { PingPongMarquee } from "@/components/neighborhood-marquee";
 import { Input } from "@/components/ui/input";
-import { UnvisitedSign } from "@/components/visit-marks";
 import type { HomeView } from "@/lib/home-view";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -52,9 +51,6 @@ export function NeighborhoodToolbar({
   onViewChange,
   onListView,
   likedOnly,
-  unvisitedOnly,
-  onToggleLikedFilter,
-  onToggleUnvisitedFilter,
   activeFilterCount,
   onOpenFilters,
   originShifted,
@@ -71,9 +67,6 @@ export function NeighborhoodToolbar({
   onViewChange: (view: HomeView) => void;
   onListView: () => void;
   likedOnly: boolean;
-  unvisitedOnly: boolean;
-  onToggleLikedFilter: () => void;
-  onToggleUnvisitedFilter: () => void;
   activeFilterCount: number;
   onOpenFilters: () => void;
   originShifted: boolean;
@@ -106,34 +99,6 @@ export function NeighborhoodToolbar({
             label="רשימה"
           />
         </div>
-        <button
-          type="button"
-          aria-label={likedOnly ? "מציגים שמורים בלבד" : "סינון שמורים"}
-          aria-pressed={likedOnly}
-          onClick={onToggleLikedFilter}
-          className={cn(
-            "relative inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
-            likedOnly
-              ? "bg-orange-500 text-black"
-              : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
-          )}
-        >
-          <Heart className={cn("size-4", likedOnly && "fill-current")} />
-        </button>
-        <button
-          type="button"
-          aria-label={unvisitedOnly ? "מציגים לא ביקרתי בלבד" : "סינון לא ביקרתי"}
-          aria-pressed={unvisitedOnly}
-          onClick={onToggleUnvisitedFilter}
-          className={cn(
-            "relative inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
-            unvisitedOnly
-              ? "bg-orange-500 text-black"
-              : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
-          )}
-        >
-          <UnvisitedSign className="size-4" />
-        </button>
         <FilterTrigger activeCount={activeFilterCount} onClick={onOpenFilters} />
         <OriginTrigger shifted={originShifted} onClick={onOpenOriginPicker} />
         <button

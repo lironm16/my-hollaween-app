@@ -5,13 +5,13 @@ import { visitWindowIssue } from "@/lib/hours";
 import { cn } from "@/lib/utils";
 
 function ClockInput({
+  label,
   value,
   onChange,
-  label,
 }: {
+  label: string;
   value: string;
   onChange: (value: string) => void;
-  label: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -72,9 +72,9 @@ export function VisitWindowFields({
 
   return (
     <div className={cn("space-y-2", className)}>
-      <div className="flex gap-3">
-        <ClockInput label="מ־" value={from} onChange={onChangeFrom} />
-        <ClockInput label="עד" value={to} onChange={onChangeTo} />
+      <div className="flex gap-3" dir="ltr">
+        <ClockInput label="התחלה" value={from} onChange={onChangeFrom} />
+        <ClockInput label="סיום" value={to} onChange={onChangeTo} />
       </div>
       {issue ? (
         <p className="text-base leading-snug text-red-300" role="alert">{issue}</p>
