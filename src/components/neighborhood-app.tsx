@@ -40,7 +40,14 @@ import { toPublicHouse } from "@/lib/ids";
 import { AccessibleMark } from "@/components/symbols";
 import { CandySign, CANDY_TONES } from "@/components/candy-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
-import { OpenNowMark, ClosingSoonMark, OpeningSoonMark } from "@/components/open-now-mark";
+import {
+  AfterHoursMark,
+  ClosingSoonMark,
+  NotYetOpenMark,
+  OpenNowMark,
+  OpeningSoonMark,
+} from "@/components/open-now-mark";
+import { VisitWindowFields } from "@/components/visit-window-fields";
 import {
   ClosedMark,
   DecorOnlyMark,
@@ -311,8 +318,12 @@ export function NeighborhoodApp({
     openNowOnly: sheetOpenNowOnly,
     closingSoonOnly: sheetClosingSoonOnly,
     openingSoonOnly: sheetOpeningSoonOnly,
-    closedOnly: sheetClosedOnly,
+    notYetOpenOnly: sheetNotYetOpenOnly,
     onBreakOnly: sheetOnBreakOnly,
+    afterHoursOnly: sheetAfterHoursOnly,
+    visitWindowFrom: sheetVisitWindowFrom,
+    visitWindowTo: sheetVisitWindowTo,
+    closedOnly: sheetClosedOnly,
     decorOnlyOnly: sheetDecorOnlyOnly,
     sensitivityFilters: sheetSensitivityFilters,
     scareFilters: sheetScareFilters,
@@ -900,6 +911,13 @@ export function NeighborhoodApp({
         onSave={commitFilterDraft}
       >
         <FilterSection title="שעות">
+          <VisitWindowFields
+            from={sheetVisitWindowFrom}
+            to={sheetVisitWindowTo}
+            onChangeFrom={(value) => patchFilterDraft({ visitWindowFrom: value })}
+            onChangeTo={(value) => patchFilterDraft({ visitWindowTo: value })}
+            className="px-3 py-2"
+          />
           <FilterOption
             checked={sheetOpenNowOnly}
             onChange={() => patchFilterDraft({ openNowOnly: !sheetOpenNowOnly })}
@@ -918,6 +936,24 @@ export function NeighborhoodApp({
           >
             <OpeningSoonMark labeled />
           </FilterOption>
+          <FilterOption
+            checked={sheetNotYetOpenOnly}
+            onChange={() => patchFilterDraft({ notYetOpenOnly: !sheetNotYetOpenOnly })}
+          >
+            <NotYetOpenMark labeled />
+          </FilterOption>
+          <FilterOption
+            checked={sheetOnBreakOnly}
+            onChange={() => patchFilterDraft({ onBreakOnly: !sheetOnBreakOnly })}
+          >
+            <OnBreakMark labeled />
+          </FilterOption>
+          <FilterOption
+            checked={sheetAfterHoursOnly}
+            onChange={() => patchFilterDraft({ afterHoursOnly: !sheetAfterHoursOnly })}
+          >
+            <AfterHoursMark labeled />
+          </FilterOption>
         </FilterSection>
         <FilterSection title="סטטוס בית">
           <FilterOption
@@ -925,12 +961,6 @@ export function NeighborhoodApp({
             onChange={() => patchFilterDraft({ closedOnly: !sheetClosedOnly })}
           >
             <ClosedMark labeled />
-          </FilterOption>
-          <FilterOption
-            checked={sheetOnBreakOnly}
-            onChange={() => patchFilterDraft({ onBreakOnly: !sheetOnBreakOnly })}
-          >
-            <OnBreakMark labeled />
           </FilterOption>
           <FilterOption
             checked={sheetDecorOnlyOnly}

@@ -130,6 +130,61 @@ export function formatHoursLabel(house: HoursSource): string {
   return windows.map((window) => formatHoursRange(window.from, window.to)).join(" · ");
 }
 
+export function eventNightAtMinutes(totalMin: number) {
+  const { year, month, day } = config.eventNight;
+  const hours = Math.floor(totalMin / 60);
+  const minutes = totalMin % 60;
+  return new Date(year, month - 1, day, hours, minutes, 0, 0);
+}
+
+export function hasVisitWindow(visitWindowFrom?: string, visitWindowTo?: string) {
+  const from = visitWindowFrom ? parseClockMinutes(visitWindowFrom) : null;
+  const to = visitWindowTo ? parseClockMinutes(visitWindowTo) : null;
+  return from !== null || to !== null;
+}
+
+/** Clock used for hour-status filters — visitor start, else end, else wall clock. */
+export function resolveFilterNow(
+  visitWindowFrom: string | undefined,
+  visitWindowTo: string | undefined,
+  wallNow: Date,
+) {
+  const from = visitWindowFrom ? parseClockMinutes(visitWindowFrom) : null;
+  const to = visitWindowTo ? parseClockMinutes(visitWindowTo) : null;
+  if (from !== null) return eventNightAtMinutes(from);
+  if (to !== null) return eventNightAtMinutes(to);
+  return wallNow;
+}
+
+/** True when any house window overlaps the visitor's optional from/to bounds. */
+export function houseOpenDuringVisitWindow(
+  house: HoursSource,
+  visitWindowFrom = "",
+  visitWindowTo = "",
+) {
+  const vf = visitWindowFrom ? parseClockMinutes(visitWindowFrom) : null;
+  const vt = visitWindowTo ? parseClockMinutes(visitWindowTo) : null;
+  if (vf === null && vt === null) return true;
+
+  const windows = houseHoursWindows(house).flatMap((window) => {
+    const from = parseClockMinutes(window.from);
+    const to = parseClockMinutes(window.to);
+    if (from === null || to === null) return [];
+    return [{ from, to }];
+  });
+  if (windows.length === 0) return false;
+
+  if (vf !== null && vt !== null) {
+    const start = Math.min(vf, vt);
+    const end = Math.max(vf, vt);
+    return windows.some((window) => window.from < end && start < window.to);
+  }
+  if (vf !== null) {
+    return windows.some((window) => vf >= window.from && vf < window.to);
+  }
+  return windows.some((window) => vt! >= window.from && vt! < window.to);
+}
+
 function minutesNow(now: Date) {
   return now.getHours() * 60 + now.getMinutes();
 }

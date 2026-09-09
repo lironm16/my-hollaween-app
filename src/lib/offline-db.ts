@@ -305,8 +305,13 @@ export type HouseFiltersState = {
   openNowOnly: boolean;
   closingSoonOnly: boolean;
   openingSoonOnly: boolean;
-  closedOnly: boolean;
+  notYetOpenOnly: boolean;
   onBreakOnly: boolean;
+  afterHoursOnly: boolean;
+  /** Optional visitor outing window on event night (HH:MM, empty = unset). */
+  visitWindowFrom: string;
+  visitWindowTo: string;
+  closedOnly: boolean;
   decorOnlyOnly: boolean;
   sensitivityFilters: SensitivityId[];
   scareFilters: ScareLevel[];

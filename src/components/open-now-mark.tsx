@@ -23,14 +23,18 @@ function HoursSign({
 }: {
   className?: string;
   label: string;
-  tone: "open" | "closing" | "opening";
+  tone: "open" | "closing" | "opening" | "waiting" | "ended";
 }) {
   const toneClass =
     tone === "closing"
       ? "bg-[#f97316] text-[#fff7ed]"
       : tone === "opening"
         ? "bg-[#22d3ee] text-[#1c0e24]"
-        : "bg-[#fbbf24] text-[#1c0e24]";
+        : tone === "waiting"
+          ? "bg-[#38bdf8] text-[#1c0e24]"
+          : tone === "ended"
+            ? "bg-[#64748b] text-[#fff7ed]"
+            : "bg-[#fbbf24] text-[#1c0e24]";
   return (
     <span
       className={cn(
@@ -57,7 +61,7 @@ function HoursMark({
   labeled?: boolean;
   className?: string;
   label: string;
-  tone: "open" | "closing" | "opening";
+  tone: "open" | "closing" | "opening" | "waiting" | "ended";
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
@@ -108,4 +112,24 @@ export function OpeningSoonMark({
   className?: string;
 }) {
   return <HoursMark labeled={labeled} className={className} label="נפתח בקרוב" tone="opening" />;
+}
+
+export function NotYetOpenMark({
+  labeled = false,
+  className,
+}: {
+  labeled?: boolean;
+  className?: string;
+}) {
+  return <HoursMark labeled={labeled} className={className} label="עוד לא נפתח" tone="waiting" />;
+}
+
+export function AfterHoursMark({
+  labeled = false,
+  className,
+}: {
+  labeled?: boolean;
+  className?: string;
+}) {
+  return <HoursMark labeled={labeled} className={className} label="אחרי השעות" tone="ended" />;
 }
