@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/allow-preview-origin.mjs && node scripts/build-css.mjs && next dev --webpack --hostname 0.0.0.0 --port 43127",
-    "postinstall": "node scripts/allow-preview-origin.mjs",
+    "postinstall": "node scripts/allow-preview-origin.mjs && node scripts/ensure-git-author.mjs",
     "build": "node scripts/build-css.mjs && node scripts/build-catalog.mjs && next build",
     "start": "next start --hostname 0.0.0.0 --port 43127",
     "lint": "eslint",
@@ -14,7 +14,8 @@
     "test:all": "npm run test:unit && npm run test:stress",
     "ci": "node scripts/ci.mjs",
     "catalog": "node scripts/build-catalog.mjs",
-    "stress": "node scripts/stress-test.mjs"
+    "stress": "node scripts/stress-test.mjs",
+    "sync:github": "node scripts/sync-github.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
