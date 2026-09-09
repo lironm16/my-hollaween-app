@@ -9,7 +9,7 @@
  *   GITHUB_TOKEN=ghp_... npm run sync:github
  */
 import { execSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -50,17 +50,6 @@ try {
 
   console.log(`Copying ${sourceBranch} app files (keeping GitHub .github/ as-is)…`);
   copyTree(sourceRoot, tmp);
-
-  const deployWorkflows = join(sourceRoot, "deploy/github");
-  if (existsSync(deployWorkflows)) {
-    const targetWorkflows = join(tmp, ".github/workflows");
-    mkdirSync(targetWorkflows, { recursive: true });
-    for (const name of readdirSync(deployWorkflows)) {
-      if (!name.endsWith(".yml") && !name.endsWith(".yaml")) continue;
-      cpSync(join(deployWorkflows, name), join(targetWorkflows, name));
-    }
-    console.log("Updated deploy/github workflows on the GitHub mirror.");
-  }
 
   run(`git -C "${tmp}" add -A`);
   try {
