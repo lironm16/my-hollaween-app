@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   defaultVisitWindowEnd,
+  defaultVisitWindowEndFromStart,
   formatClockFromDate,
   resolveVisitWindow,
 } from "@/lib/visit-window";
@@ -19,6 +20,17 @@ describe("defaultVisitWindowEnd", () => {
   it("extends late starts up to 23:00", () => {
     assert.equal(defaultVisitWindowEnd(at(21, 30)), "23:00");
     assert.equal(defaultVisitWindowEnd(at(22, 30)), "23:00");
+  });
+});
+
+describe("defaultVisitWindowEndFromStart", () => {
+  it("uses 20:00 for an early start clock", () => {
+    assert.equal(defaultVisitWindowEndFromStart("18:30"), "20:00");
+  });
+
+  it("extends a late start clock up to 23:00", () => {
+    assert.equal(defaultVisitWindowEndFromStart("21:15"), "22:45");
+    assert.equal(defaultVisitWindowEndFromStart("22:30"), "23:00");
   });
 });
 

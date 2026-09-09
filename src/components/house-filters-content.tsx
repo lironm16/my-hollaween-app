@@ -1,24 +1,31 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { CANDY_TONES, CandySign } from "@/components/candy-glyphs";
+import { Home, SlidersHorizontal } from "lucide-react";
 import { AccessibleMark } from "@/components/symbols";
+import { CandySign } from "@/components/candy-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
 import { ScareSign } from "@/components/scare-glyphs";
 import { FilterOption, FilterSection } from "@/components/filter-menu";
-import { VisitWindowFields } from "@/components/visit-window-fields";
+import { CustomVisitWindowFields } from "@/components/visit-window-fields";
+import { OpenNowSign } from "@/components/open-now-mark";
 import { NEIGHBORHOODS } from "@/lib/config";
+import { hasStockCandySelection } from "@/lib/filter-presets";
 import { visitWindowIssue } from "@/lib/hours";
 import { decorShort, scareShort } from "@/lib/labels";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import {
-  defaultVisitWindowEnd,
+  defaultVisitWindowEndFromStart,
   effectiveVisitWindowMode,
+  formatClockFromDate,
+  resolveVisitWindow,
   type VisitWindowMode,
 } from "@/lib/visit-window";
 import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
-import { SCARE_LEVELS, SENSITIVITY_OPTIONS, type ScareLevel } from "@/lib/types";
+import { SCARE_LEVELS, SENSITIVITY_OPTIONS, type CandyTone, type ScareLevel } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+const STOCK_CANDY_TONES: CandyTone[] = ["plenty", "low"];
 
 function FilterToggle({
   checked,
@@ -50,11 +57,11 @@ function FilterToggle({
 function VisitWindowRadio({
   checked,
   onChange,
-  label,
+  children,
 }: {
   checked: boolean;
   onChange: () => void;
-  label: string;
+  children: ReactNode;
 }) {
   return (
     <label
@@ -70,7 +77,7 @@ function VisitWindowRadio({
         checked={checked}
         onChange={onChange}
       />
-      <span>{label}</span>
+      <span className="inline-flex min-w-0 flex-1 items-center gap-2">{children}</span>
     </label>
   );
 }
@@ -87,20 +94,23 @@ export function HouseFiltersContent({
   ) => void;
 }) {
   const visitMode = effectiveVisitWindowMode(filters);
-  const candySensitivityEnabled = filters.candyFilters.some((tone) => tone !== "none");
-  const customFrom = filters.visitWindowFrom;
-  const customTo = filters.visitWindowTo;
+  const stockCandy = hasStockCandySelection(filters);
+  const useFrom = filters.visitWindowUseFrom ?? true;
+  const useTo = filters.visitWindowUseTo ?? false;
+  const customFrom = filters.visitWindowFrom || formatClockFromDate(now);
+  const customTo =
+    filters.visitWindowTo || defaultVisitWindowEndFromStart(customFrom);
 
-  function toggleCandyTone(tone: (typeof CANDY_TONES)[number]["id"]) {
+  function toggleCandyTone(tone: CandyTone) {
     onPatch((current) => {
-      const nextCandy = current.candyFilters.includes(tone)
+      const nextTones = current.candyFilters.includes(tone)
         ? current.candyFilters.filter((item) => item !== tone)
         : [...current.candyFilters, tone];
-      const hasCandyStock = nextCandy.some((item) => item !== "none");
+      const stillStock = STOCK_CANDY_TONES.some((item) => nextTones.includes(item));
       return {
         ...current,
-        candyFilters: nextCandy,
-        sensitivityFilters: hasCandyStock ? current.sensitivityFilters : [],
+        candyFilters: nextTones,
+        sensitivityFilters: stillStock ? current.sensitivityFilters : [],
       };
     });
   }
@@ -120,6 +130,8 @@ export function HouseFiltersContent({
         visitWindowMode: "all",
         visitWindowFrom: "",
         visitWindowTo: "",
+        visitWindowUseFrom: false,
+        visitWindowUseTo: false,
       });
       return;
     }
@@ -128,46 +140,63 @@ export function HouseFiltersContent({
         visitWindowMode: "now",
         visitWindowFrom: "",
         visitWindowTo: "",
+        visitWindowUseFrom: true,
+        visitWindowUseTo: false,
       });
       return;
     }
+    const from = filters.visitWindowFrom || formatClockFromDate(now);
     onPatch({
       visitWindowMode: "custom",
-      visitWindowFrom: filters.visitWindowFrom,
-      visitWindowTo: filters.visitWindowTo,
+      visitWindowUseFrom: true,
+      visitWindowUseTo: filters.visitWindowUseTo ?? false,
+      visitWindowFrom: from,
+      visitWindowTo: filters.visitWindowTo || defaultVisitWindowEndFromStart(from),
     });
   }
 
   return (
     <>
       <FilterSection title="בתים">
-        <VisitWindowRadio
-          checked={visitMode === "all"}
-          onChange={() => setVisitMode("all")}
-          label="הכל"
-        />
-        <VisitWindowRadio
-          checked={visitMode === "now"}
-          onChange={() => setVisitMode("now")}
-          label="פתוחים עכשיו"
-        />
-        <VisitWindowRadio
-          checked={visitMode === "custom"}
-          onChange={() => setVisitMode("custom")}
-          label="מותאם אישית"
-        />
-        {visitMode === "now" ? (
-          <p className="px-3 pb-2 text-sm text-violet-400">
-            מציגים בתים שפתוחים בין עכשיו ל־{defaultVisitWindowEnd(now)}.
-          </p>
-        ) : null}
+        <VisitWindowRadio checked={visitMode === "now"} onChange={() => setVisitMode("now")}>
+          <OpenNowSign className="size-7" />
+          <span>עכשיו</span>
+        </VisitWindowRadio>
+        <VisitWindowRadio checked={visitMode === "all"} onChange={() => setVisitMode("all")}>
+          <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-violet-500/25 text-violet-100 ring-1 ring-violet-400/30">
+            <Home className="size-4" aria-hidden="true" />
+          </span>
+          <span>כל הבתים</span>
+        </VisitWindowRadio>
+        <VisitWindowRadio checked={visitMode === "custom"} onChange={() => setVisitMode("custom")}>
+          <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-orange-500/20 text-orange-100 ring-1 ring-orange-400/30">
+            <SlidersHorizontal className="size-4" aria-hidden="true" />
+          </span>
+          <span>מותאם אישית</span>
+        </VisitWindowRadio>
         {visitMode === "custom" ? (
           <div className="px-3 py-2">
-            <VisitWindowFields
+            <CustomVisitWindowFields
+              useFrom={useFrom}
+              useTo={useTo}
               from={customFrom}
               to={customTo}
-              onChangeFrom={(value) => onPatch({ visitWindowFrom: value })}
-              onChangeTo={(value) => onPatch({ visitWindowTo: value })}
+              onToggleFrom={(next) =>
+                onPatch({
+                  visitWindowUseFrom: next,
+                  visitWindowFrom: next ? customFrom : "",
+                })
+              }
+              onToggleTo={(next) =>
+                onPatch({
+                  visitWindowUseTo: next,
+                  visitWindowTo: next
+                    ? filters.visitWindowTo || defaultVisitWindowEndFromStart(customFrom)
+                    : "",
+                })
+              }
+              onChangeFrom={(value) => onPatch({ visitWindowFrom: value, visitWindowUseFrom: true })}
+              onChangeTo={(value) => onPatch({ visitWindowTo: value, visitWindowUseTo: true })}
             />
           </div>
         ) : null}
@@ -186,15 +215,15 @@ export function HouseFiltersContent({
       </FilterSection>
 
       <FilterSection title="ממתקים">
-        {CANDY_TONES.map(({ id, label }) => (
+        {STOCK_CANDY_TONES.map((tone) => (
           <FilterOption
-            key={id}
-            checked={filters.candyFilters.includes(id)}
-            onChange={() => toggleCandyTone(id)}
+            key={tone}
+            checked={filters.candyFilters.includes(tone)}
+            onChange={() => toggleCandyTone(tone)}
           >
             <span className="inline-flex items-center gap-2">
-              <CandySign tone={id} />
-              <span>{label}</span>
+              <CandySign tone={tone} className="size-7" />
+              <span>{tone === "plenty" ? "יש ממתקים" : "מעט ממתקים"}</span>
             </span>
           </FilterOption>
         ))}
@@ -235,15 +264,15 @@ export function HouseFiltersContent({
 
       <FilterSection title="רגישויות">
         <p className="px-3 pb-1 text-sm text-violet-400">
-          {candySensitivityEnabled
+          {stockCandy
             ? "בתים עם ממתקים שמתאימים לרגישות שבחרתם"
-            : "סמנו לפחות אחת מקטגוריות הממתקים (לא «בלי ממתקים») כדי לסנן רגישויות"}
+            : "סמנו ירוק או צהוב בממתקים כדי לסנן רגישויות"}
         </p>
         {SENSITIVITY_OPTIONS.map((id) => (
           <FilterOption
             key={id}
             checked={filters.sensitivityFilters.includes(id)}
-            disabled={!candySensitivityEnabled}
+            disabled={!stockCandy}
             onChange={() =>
               onPatch((current) => ({
                 ...current,
@@ -280,7 +309,11 @@ export function HouseFiltersContent({
   );
 }
 
-export function houseFiltersDraftInvalid(filters: HouseFiltersState) {
+export function houseFiltersDraftInvalid(filters: HouseFiltersState, now: Date = new Date()) {
   if (effectiveVisitWindowMode(filters) !== "custom") return false;
-  return Boolean(visitWindowIssue(filters.visitWindowFrom, filters.visitWindowTo));
+  const useFrom = filters.visitWindowUseFrom ?? true;
+  const useTo = filters.visitWindowUseTo ?? false;
+  if (!useFrom && !useTo) return false;
+  const { from, to } = resolveVisitWindow(filters, now);
+  return Boolean(visitWindowIssue(from, to));
 }

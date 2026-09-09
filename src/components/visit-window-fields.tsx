@@ -1,81 +1,121 @@
 "use client";
 
-import { useRef } from "react";
 import { visitWindowIssue } from "@/lib/hours";
 import { cn } from "@/lib/utils";
 
 function ClockInput({
-  label,
+  id,
   value,
   onChange,
+  disabled = false,
 }: {
-  label: string;
+  id: string;
   value: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  function openPicker() {
-    const input = inputRef.current;
-    if (!input) return;
-    input.focus();
-    if (typeof input.showPicker === "function") {
-      try {
-        input.showPicker();
-      } catch {
-        /* Safari may reject showPicker without a user gesture */
-      }
-    }
-  }
-
   return (
-    <label className="block min-w-0 flex-1 space-y-1">
-      <span className="text-base text-violet-300">{label}</span>
-      <div
-        className="house-time-wrap relative w-full"
-        onClick={openPicker}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") openPicker();
-        }}
-      >
-        <input
-          ref={inputRef}
-          type="time"
-          dir="ltr"
-          lang="he-IL"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className="house-time-input h-11 w-full min-w-0 rounded-lg border border-input bg-[#1d1028] px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-        />
-        <span className="house-time-value" aria-hidden="true">
-          {value || "--:--"}
-        </span>
-      </div>
-    </label>
+    <input
+      id={id}
+      type="time"
+      dir="ltr"
+      lang="he-IL"
+      value={value}
+      disabled={disabled}
+      onChange={(event) => onChange(event.target.value)}
+      className={cn(
+        "filter-time-input h-11 min-w-0 min-h-11 flex-1 rounded-lg border border-input bg-[#1d1028] px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+        disabled && "pointer-events-none opacity-50",
+      )}
+    />
   );
 }
 
-export function VisitWindowFields({
+function VisitWindowRow({
+  checked,
+  onToggle,
+  label,
+  timeId,
+  timeValue,
+  onTimeChange,
+}: {
+  checked: boolean;
+  onToggle: (next: boolean) => void;
+  label: string;
+  timeId: string;
+  timeValue: string;
+  onTimeChange: (value: string) => void;
+}) {
+  const checkboxId = `${timeId}-enabled`;
+
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3 rounded-lg px-1 py-1",
+        checked ? "text-orange-50" : "text-violet-300",
+      )}
+    >
+      <input
+        id={checkboxId}
+        type="checkbox"
+        className="size-4 shrink-0 accent-orange-500"
+        checked={checked}
+        onChange={() => onToggle(!checked)}
+      />
+      <label htmlFor={checkboxId} className="w-14 shrink-0 cursor-pointer text-base">
+        {label}
+      </label>
+      <ClockInput
+        id={timeId}
+        value={timeValue}
+        disabled={!checked}
+        onChange={onTimeChange}
+      />
+    </div>
+  );
+}
+
+export function CustomVisitWindowFields({
+  useFrom,
+  useTo,
   from,
   to,
+  onToggleFrom,
+  onToggleTo,
   onChangeFrom,
   onChangeTo,
   className,
 }: {
+  useFrom: boolean;
+  useTo: boolean;
   from: string;
   to: string;
+  onToggleFrom: (next: boolean) => void;
+  onToggleTo: (next: boolean) => void;
   onChangeFrom: (value: string) => void;
   onChangeTo: (value: string) => void;
   className?: string;
 }) {
-  const issue = visitWindowIssue(from, to);
+  const issue = visitWindowIssue(useFrom ? from : "", useTo ? to : "");
 
   return (
     <div className={cn("space-y-2", className)}>
-      <div className="flex gap-3" dir="ltr">
-        <ClockInput label="התחלה" value={from} onChange={onChangeFrom} />
-        <ClockInput label="סיום" value={to} onChange={onChangeTo} />
-      </div>
+      <VisitWindowRow
+        checked={useFrom}
+        onToggle={onToggleFrom}
+        label="התחלה"
+        timeId="visit-window-from"
+        timeValue={from}
+        onTimeChange={onChangeFrom}
+      />
+      <VisitWindowRow
+        checked={useTo}
+        onToggle={onToggleTo}
+        label="סיום"
+        timeId="visit-window-to"
+        timeValue={to}
+        onTimeChange={onChangeTo}
+      />
       {issue ? (
         <p className="text-base leading-snug text-red-300" role="alert">{issue}</p>
       ) : null}

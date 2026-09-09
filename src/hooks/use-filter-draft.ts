@@ -11,6 +11,7 @@ import {
 } from "@/hooks/use-house-filters";
 import { filterHouses, routeHouseIds } from "@/lib/filter-houses";
 import { visitWindowIssue } from "@/lib/hours";
+import { resolveVisitWindow } from "@/lib/visit-window";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
 import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
@@ -78,7 +79,7 @@ export function useFilterDraft({
     () => filterHouses(houses, sheetFilters, filterContext).length,
     [houses, sheetFilters, filterContext],
   );
-  const visitWindowInvalid = houseFiltersDraftInvalid(sheetFilters);
+  const visitWindowInvalid = houseFiltersDraftInvalid(sheetFilters, now);
 
   function routeHousesForFilters(nextFilters: HouseFiltersState) {
     const nextVisible = filterHouses(houses, nextFilters, filterContext);
@@ -164,8 +165,9 @@ export function useFilterDraft({
 
   function commitFilterDraft() {
     const nextFilters = filterDraft ?? filters;
-    if (houseFiltersDraftInvalid(nextFilters)) {
-      toast.error(visitWindowIssue(nextFilters.visitWindowFrom, nextFilters.visitWindowTo)!);
+    if (houseFiltersDraftInvalid(nextFilters, now)) {
+      const { from, to } = resolveVisitWindow(nextFilters, now);
+      toast.error(visitWindowIssue(from, to)!);
       return;
     }
     if (filtersEqual(nextFilters, filters)) {

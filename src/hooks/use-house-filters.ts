@@ -107,6 +107,8 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
         : hasVisitWindow(raw.visitWindowFrom, raw.visitWindowTo)
           ? "custom"
           : "all",
+    visitWindowUseFrom: raw.visitWindowUseFrom ?? true,
+    visitWindowUseTo: raw.visitWindowUseTo ?? false,
     visitWindowFrom: sanitizeClock(raw.visitWindowFrom),
     visitWindowTo: sanitizeClock(raw.visitWindowTo),
     closedOnly: Boolean(raw.closedOnly),
