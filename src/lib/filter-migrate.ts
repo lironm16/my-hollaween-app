@@ -1,4 +1,8 @@
-import { isKidsFriendlyFilter, isWithCandyFilter } from "@/lib/filter-presets";
+import {
+  hasStockCandySelection,
+  isKidsFriendlyFilter,
+  isWithCandyFilter,
+} from "@/lib/filter-presets";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import { CANDY_TONE_IDS, SCARE_LEVELS } from "@/lib/types";
 
@@ -42,7 +46,7 @@ export function migrateHouseFilters(filters: HouseFiltersState): HouseFiltersSta
     next.includeUndecorated = true;
   }
 
-  if (!withCandy) {
+  if (!hasStockCandySelection(next)) {
     next.sensitivityFilters = [];
   }
 

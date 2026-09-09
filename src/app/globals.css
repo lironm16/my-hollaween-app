@@ -1373,6 +1373,17 @@
   100% { inset-inline-start: 110%; transform: translateY(-8px) rotate(-8deg); }
 }
 
+/* Filter sheet time fields — visible native input (Safari-friendly). */
+input[type="time"].filter-time-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  direction: ltr;
+  text-align: center;
+  color-scheme: dark;
+  cursor: pointer;
+}
+
 /* Hours: full-width border; native value hidden; overlay shows RTL-aligned time */
 .house-time-wrap {
   width: 100%;

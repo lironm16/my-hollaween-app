@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
 import { HOUSE_FILTERS_VERSION, migrateHouseFilters } from "@/lib/filter-migrate";
-import { isKidsFriendlyFilter, isWithCandyFilter } from "@/lib/filter-presets";
+import { isKidsFriendlyFilter } from "@/lib/filter-presets";
 import { hasVisitWindow, parseClockMinutes } from "@/lib/hours";
 import { effectiveVisitWindowMode } from "@/lib/visit-window";
 import {
@@ -101,11 +101,15 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
     onBreakOnly: Boolean(raw.onBreakOnly),
     afterHoursOnly: Boolean(raw.afterHoursOnly),
     visitWindowMode:
-      raw.visitWindowMode === "custom" || raw.visitWindowMode === "now"
+      raw.visitWindowMode === "custom" ||
+      raw.visitWindowMode === "now" ||
+      raw.visitWindowMode === "all"
         ? raw.visitWindowMode
         : hasVisitWindow(raw.visitWindowFrom, raw.visitWindowTo)
           ? "custom"
           : "now",
+    visitWindowUseFrom: raw.visitWindowUseFrom ?? true,
+    visitWindowUseTo: raw.visitWindowUseTo ?? false,
     visitWindowFrom: sanitizeClock(raw.visitWindowFrom),
     visitWindowTo: sanitizeClock(raw.visitWindowTo),
     closedOnly: Boolean(raw.closedOnly),
@@ -175,8 +179,11 @@ export function countActiveFilters(filters: HouseFiltersState): number {
       : NEIGHBORHOODS.length - filters.neighborhoodFilters.length;
   return (
     neighborhoodActiveCount +
-    Number(effectiveVisitWindowMode(filters) === "custom") +
-    Number(isWithCandyFilter(filters)) +
+    Number(effectiveVisitWindowMode(filters) !== "now") +
+    Number(
+      filters.candyFilters.length < CANDY_TONE_IDS.length ||
+        !CANDY_TONE_IDS.every((tone) => filters.candyFilters.includes(tone)),
+    ) +
     Number(isKidsFriendlyFilter(filters)) +
     Number(filters.accessibleOnly) +
     Number(filters.likedOnly) +

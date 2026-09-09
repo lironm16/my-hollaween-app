@@ -6,7 +6,7 @@ export const STANDARD_VISIT_END = "20:00";
 /** Latest default end when the visitor starts after STANDARD_VISIT_END. */
 export const LATE_VISIT_END = "23:00";
 
-export type VisitWindowMode = "now" | "custom";
+export type VisitWindowMode = "now" | "all" | "custom";
 
 export function formatClockMinutes(totalMin: number): string {
   const hours = Math.floor(totalMin / 60);
@@ -27,11 +27,17 @@ export function formatClockFromDate(now: Date): string {
  * After 20:00, extend to at least 90 more minutes but never past 23:00.
  */
 export function defaultVisitWindowEnd(now: Date): string {
-  const current = clockMinutesFromDate(now);
+  return defaultVisitWindowEndFromStart(formatClockFromDate(now));
+}
+
+/** Default trip end for a chosen start clock on event night. */
+export function defaultVisitWindowEndFromStart(startClock: string): string {
+  const startMin = parseClockMinutes(startClock);
   const standardEnd = parseClockMinutes(STANDARD_VISIT_END)!;
   const lateCap = parseClockMinutes(LATE_VISIT_END)!;
-  if (current >= standardEnd) {
-    return formatClockMinutes(Math.min(current + 90, lateCap));
+  if (startMin === null) return STANDARD_VISIT_END;
+  if (startMin >= standardEnd) {
+    return formatClockMinutes(Math.min(startMin + 90, lateCap));
   }
   return STANDARD_VISIT_END;
 }
@@ -46,6 +52,9 @@ export function resolveVisitWindow(
   now: Date,
 ): { from: string; to: string; mode: VisitWindowMode } {
   const mode = effectiveVisitWindowMode(filters);
+  if (mode === "all") {
+    return { mode, from: "", to: "" };
+  }
   if (mode === "now") {
     return {
       mode,
@@ -53,9 +62,11 @@ export function resolveVisitWindow(
       to: defaultVisitWindowEnd(now),
     };
   }
-  return {
-    mode,
-    from: filters.visitWindowFrom,
-    to: filters.visitWindowTo,
-  };
+  const useFrom = filters.visitWindowUseFrom ?? true;
+  const useTo = filters.visitWindowUseTo ?? false;
+  const from = useFrom ? filters.visitWindowFrom || formatClockFromDate(now) : "";
+  const to = useTo
+    ? filters.visitWindowTo || defaultVisitWindowEndFromStart(from || formatClockFromDate(now))
+    : "";
+  return { mode, from, to };
 }

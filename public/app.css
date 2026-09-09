@@ -695,6 +695,9 @@
   .w-12 {
     width: calc(var(--spacing) * 12);
   }
+  .w-14 {
+    width: calc(var(--spacing) * 14);
+  }
   .w-32 {
     width: calc(var(--spacing) * 32);
   }
@@ -1396,6 +1399,12 @@
       background-color: color-mix(in oklab, var(--color-violet-500) 20%, transparent);
     }
   }
+  .bg-violet-500\/25 {
+    background-color: color-mix(in srgb, oklch(60.6% 0.25 292.717) 25%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-violet-500) 25%, transparent);
+    }
+  }
   .bg-violet-900 {
     background-color: var(--color-violet-900);
   }
@@ -1569,9 +1578,6 @@
   }
   .pb-1 {
     padding-bottom: var(--spacing);
-  }
-  .pb-2 {
-    padding-bottom: calc(var(--spacing) * 2);
   }
   .pb-3 {
     padding-bottom: calc(var(--spacing) * 3);
@@ -2066,6 +2072,12 @@
     --tw-ring-color: color-mix(in srgb, oklch(74.6% 0.16 232.661) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       --tw-ring-color: color-mix(in oklab, var(--color-sky-400) 40%, transparent);
+    }
+  }
+  .ring-violet-400\/30 {
+    --tw-ring-color: color-mix(in srgb, oklch(70.2% 0.183 293.541) 30%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--color-violet-400) 30%, transparent);
     }
   }
   .ring-white\/8 {
@@ -4954,6 +4966,15 @@ svg.leaflet-zoom-animated {
     inset-inline-start: 110%;
     transform: translateY(-8px) rotate(-8deg);
   }
+}
+input[type="time"].filter-time-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  direction: ltr;
+  text-align: center;
+  color-scheme: dark;
+  cursor: pointer;
 }
 .house-time-wrap {
   width: 100%;

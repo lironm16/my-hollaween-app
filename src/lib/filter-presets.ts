@@ -9,6 +9,11 @@ export function isWithCandyFilter(filters: HouseFiltersState): boolean {
   return WITH_CANDY_TONES.every((tone) => filters.candyFilters.includes(tone));
 }
 
+/** Green or yellow candy stock selected — required before sensitivity filters apply. */
+export function hasStockCandySelection(filters: HouseFiltersState): boolean {
+  return WITH_CANDY_TONES.some((tone) => filters.candyFilters.includes(tone));
+}
+
 export function withCandyPatch(on: boolean): Partial<HouseFiltersState> {
   if (on) {
     return {
