@@ -1,8 +1,7 @@
 "use client";
 
-import { Heart } from "lucide-react";
+import { Check, Heart } from "lucide-react";
 import { formatActionCount } from "@/components/house-action-bar";
-import { VisitedCheck } from "@/components/visited-check";
 import { StrollerSign } from "@/components/symbols";
 import { CandySign, candyTone } from "@/components/candy-glyphs";
 import { ScareSign } from "@/components/scare-glyphs";
@@ -64,25 +63,37 @@ function TrafficCountSign({
   const value = Math.max(0, Math.floor(count) || 0);
   if (value <= 0) return null;
   const label = kind === "saved" ? `${value} שמרו` : `${value} ביקרו`;
-  const size = large ? "h-10 min-w-10 px-2" : "h-8 min-w-8 px-1.5";
+  const iconBox = large ? "size-10" : "size-8";
+  const mark = large ? "size-5" : "size-4";
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center justify-center gap-1 rounded-full bg-[#2a1638] text-orange-100 ring-1 ring-orange-500/25",
-        size,
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#2a1638] text-orange-100 ring-1 ring-orange-500/25",
+        large ? "h-10 pe-2.5 ps-1" : "h-8 pe-2 ps-0.5",
       )}
       title={label}
       aria-label={label}
     >
       {kind === "saved" ? (
-        <Heart
-          className={cn(large ? "size-5" : "size-4", "fill-current text-[#fb7185]")}
-          strokeWidth={2.2}
-        />
+        <span
+          className={cn(
+            "inline-flex shrink-0 items-center justify-center rounded-full bg-[#fb7185]/20 ring-1 ring-[#fb7185]/35",
+            iconBox,
+          )}
+        >
+          <Heart className={cn(mark, "fill-current text-[#fb7185]")} strokeWidth={2.2} />
+        </span>
       ) : (
-        <VisitedCheck visited size={large ? "md" : "sm"} />
+        <span
+          className={cn(
+            "inline-flex shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white",
+            iconBox,
+          )}
+        >
+          <Check className={mark} strokeWidth={3} />
+        </span>
       )}
-      <span className={cn("font-bold tabular-nums", large ? "text-base" : "text-sm")}>
+      <span className={cn("font-bold tabular-nums", large ? "text-lg" : "text-base")}>
         {formatActionCount(value)}
       </span>
     </span>
