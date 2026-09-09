@@ -523,19 +523,12 @@ export function isOpenNowForFilter(
   wallNow = appNow(),
 ) {
   const range = visitWindowMinuteRange(visitWindowFrom, visitWindowTo);
-  if (!range || !visitRangeIsSpan(range)) {
-    const probe = range ? filterProbeAt(range.start) : wallNow;
-    return isOpenNow(house, probe);
+  if (!range) {
+    return isOpenNow(house, wallNow);
   }
+  // Departure time (start bound) decides what is open; an end bound only frames the outing.
   const probe = filterProbeAt(range.start);
-  const prepared = preparedFilterHouse(house, probe);
-  if (effectiveVisit(prepared) === "closed" || isFrozen(prepared, probe.getTime())) return false;
-  return houseHoursWindows(prepared).some((window) => {
-    const from = parseClockMinutes(window.from);
-    const to = parseClockMinutes(window.to);
-    if (from === null || to === null) return false;
-    return minuteRangesOverlap(from, to, range.start, range.end);
-  });
+  return isOpenNow(house, probe);
 }
 
 /** On break between hour windows during the visitor outing window. */

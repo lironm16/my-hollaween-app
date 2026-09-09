@@ -109,4 +109,36 @@ describe("filterHouses", () => {
     });
     assert.deepEqual(result.map((item) => item.id), ["open"]);
   });
+
+  it("custom start-only and start+end use the same open-at-departure filter", () => {
+    const houses = [
+      house("open", { openFrom: "17:00", openTo: "21:00", visit: "come" }),
+      house("later", { openFrom: "19:00", openTo: "21:00", visit: "come" }),
+    ];
+    const context = { houseSet: "real" as const, likedIds: [], visitedIds: [], now };
+    const startOnly = filterHouses(
+      houses,
+      baseFilters({
+        visitWindowMode: "custom",
+        visitWindowUseFrom: true,
+        visitWindowUseTo: false,
+        visitWindowFrom: "18:30",
+        visitWindowTo: "",
+      }),
+      context,
+    );
+    const startAndEnd = filterHouses(
+      houses,
+      baseFilters({
+        visitWindowMode: "custom",
+        visitWindowUseFrom: true,
+        visitWindowUseTo: true,
+        visitWindowFrom: "18:30",
+        visitWindowTo: "20:00",
+      }),
+      context,
+    );
+    assert.deepEqual(startOnly.map((item) => item.id), ["open"]);
+    assert.deepEqual(startAndEnd.map((item) => item.id), startOnly.map((item) => item.id));
+  });
 });

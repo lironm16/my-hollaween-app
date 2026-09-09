@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { houseOpenDuringVisitWindow, visitWindowIssue } from "@/lib/hours";
+import { houseOpenDuringVisitWindow, isOpenNowForFilter, visitWindowIssue } from "@/lib/hours";
 
 describe("visitWindowIssue", () => {
   it("rejects end before start", () => {
@@ -29,5 +29,25 @@ describe("houseOpenDuringVisitWindow", () => {
       "20:00",
     );
     assert.equal(open, false);
+  });
+});
+
+describe("isOpenNowForFilter", () => {
+  const eveningHouse = { id: "בית-1847", openFrom: "17:00", openTo: "21:00", visit: "come" as const };
+  const probe = new Date(2026, 9, 31, 18, 30, 0, 0);
+
+  it("matches a house open at the start bound only", () => {
+    assert.equal(isOpenNowForFilter(eveningHouse, "18:30", "", probe), true);
+  });
+
+  it("does not expand results when an end bound is added", () => {
+    const startOnly = isOpenNowForFilter(eveningHouse, "18:30", "", probe);
+    const withEnd = isOpenNowForFilter(eveningHouse, "18:30", "20:00", probe);
+    assert.equal(startOnly, withEnd);
+  });
+
+  it("rejects houses that only open later", () => {
+    const later = { openFrom: "19:00", openTo: "21:00", visit: "come" as const };
+    assert.equal(isOpenNowForFilter(later, "18:30", "20:00", probe), false);
   });
 });
