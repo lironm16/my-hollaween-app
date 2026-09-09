@@ -1,0 +1,50 @@
+name: Sync from Cursor
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: sync-from-cursor
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: Mirror Cursor main → GitHub
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout GitHub mirror
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch Cursor main
+        env:
+          ORIGIN_GIT_TOKEN: ${{ secrets.ORIGIN_GIT_TOKEN }}
+          ORIGIN_REPO: liron-matitiyahu/halloween-house-map
+        run: |
+          set -euo pipefail
+          if [ -z "${ORIGIN_GIT_TOKEN:-}" ]; then
+            echo "Missing ORIGIN_GIT_TOKEN secret on this GitHub repo."
+            echo "Create a Cursor git read token and add it at Settings → Secrets → Actions."
+            exit 1
+          fi
+          git remote add cursor "https://x-access-token:${ORIGIN_GIT_TOKEN}@origin.cursor.com/git/${ORIGIN_REPO}.git" 2>/dev/null || \
+            git remote set-url cursor "https://x-access-token:${ORIGIN_GIT_TOKEN}@origin.cursor.com/git/${ORIGIN_REPO}.git"
+          git fetch cursor main
+          git reset --hard cursor/main
+          node scripts/prepare-github-mirror.mjs
+          git add -A
+          if git diff --staged --quiet; then
+            echo "Already up to date with Cursor main."
+            echo "changed=false" >> "$GITHUB_ENV"
+          else
+            git commit -m "Sync from Cursor $(git rev-parse --short cursor/main)"
+            echo "changed=true" >> "$GITHUB_ENV"
+          fi
+
+      - name: Push to GitHub (triggers Vercel)
+        if: env.changed == 'true'
+        run: git push origin HEAD:main
