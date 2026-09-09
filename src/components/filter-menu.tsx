@@ -50,6 +50,7 @@ export function FiltersSheet({
   open,
   onOpenChange,
   activeCount,
+  resultCount,
   onClear,
   onSave,
   saveDisabled = false,
@@ -58,6 +59,7 @@ export function FiltersSheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   activeCount: number;
+  resultCount?: number;
   onClear: () => void;
   onSave: () => void;
   saveDisabled?: boolean;
@@ -109,7 +111,7 @@ export function FiltersSheet({
             disabled={saveDisabled}
             onClick={onSave}
           >
-            הצג תוצאות
+            {resultCount !== undefined ? `הצג תוצאות (${resultCount})` : "הצג תוצאות"}
           </Button>
         </SheetFooter>
       </SheetContent>
@@ -137,23 +139,29 @@ export function FilterSection({
 export function FilterOption({
   checked,
   onChange,
+  disabled = false,
   children,
 }: {
   checked: boolean;
   onChange: () => void;
+  disabled?: boolean;
   children: ReactNode;
 }) {
   return (
     <label
       className={cn(
-        "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-base transition",
-        checked ? "bg-orange-500/15 text-orange-50" : "text-orange-50 hover:bg-orange-500/10",
+        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-base transition",
+        disabled
+          ? "cursor-not-allowed opacity-45"
+          : "cursor-pointer",
+        !disabled && (checked ? "bg-orange-500/15 text-orange-50" : "text-orange-50 hover:bg-orange-500/10"),
       )}
     >
       <input
         type="checkbox"
         className="size-4 accent-orange-500"
         checked={checked}
+        disabled={disabled}
         onChange={onChange}
       />
       <span className="min-w-0 flex-1 text-start">{children}</span>

@@ -68,27 +68,17 @@ export function VisitWindowFields({
   onChangeTo: (value: string) => void;
   className?: string;
 }) {
-  const active = Boolean(from || to);
   const issue = visitWindowIssue(from, to);
 
   return (
     <div className={cn("space-y-2", className)}>
-      <p className="text-base text-violet-200">
-        מתי אתם יוצאים? <span className="text-violet-400">(אופציונלי)</span>
-      </p>
       <div className="flex gap-3">
         <ClockInput label="מ־" value={from} onChange={onChangeFrom} />
         <ClockInput label="עד" value={to} onChange={onChangeTo} />
       </div>
       {issue ? (
         <p className="text-base leading-snug text-red-300" role="alert">{issue}</p>
-      ) : (
-        <p className="text-base leading-snug text-violet-400">
-          {active
-            ? "מציגים בתים שפתוחים בזמן הטיול שלכם. סימוני השעות למטה נבדקים לפי חלון הטיול (למשל נפתח בקרוב בכל זמן בטווח)."
-            : "ריק = עכשיו. מלאו שעת יציאה, סיום, או שתיהן."}
-        </p>
-      )}
+      ) : null}
     </div>
   );
 }

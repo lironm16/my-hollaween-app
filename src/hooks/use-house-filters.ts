@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
+import { isKidsFriendlyFilter, isWithCandyFilter } from "@/lib/filter-presets";
 import { hasVisitWindow, parseClockMinutes } from "@/lib/hours";
+import { effectiveVisitWindowMode } from "@/lib/visit-window";
 import { loadHouseFilters, saveHouseFilters, type HouseFiltersState } from "@/lib/offline-db";
 import {
   CANDY_TONE_IDS,
@@ -23,6 +25,7 @@ export const DEFAULT_HOUSE_FILTERS: HouseFiltersState = {
   notYetOpenOnly: false,
   onBreakOnly: false,
   afterHoursOnly: false,
+  visitWindowMode: "now",
   visitWindowFrom: "",
   visitWindowTo: "",
   closedOnly: false,
@@ -90,6 +93,12 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
     notYetOpenOnly: Boolean(raw.notYetOpenOnly),
     onBreakOnly: Boolean(raw.onBreakOnly),
     afterHoursOnly: Boolean(raw.afterHoursOnly),
+    visitWindowMode:
+      raw.visitWindowMode === "custom" || raw.visitWindowMode === "now"
+        ? raw.visitWindowMode
+        : hasVisitWindow(raw.visitWindowFrom, raw.visitWindowTo)
+          ? "custom"
+          : "now",
     visitWindowFrom: sanitizeClock(raw.visitWindowFrom),
     visitWindowTo: sanitizeClock(raw.visitWindowTo),
     closedOnly: Boolean(raw.closedOnly),
@@ -118,47 +127,41 @@ export function cloneHouseFilters(state: HouseFiltersState): HouseFiltersState {
 export function emptyHouseFilters(): HouseFiltersState {
   return {
     ...DEFAULT_HOUSE_FILTERS,
+    visitWindowMode: "now",
+    visitWindowFrom: "",
+    visitWindowTo: "",
+    openNowOnly: false,
+    closingSoonOnly: false,
+    openingSoonOnly: false,
+    notYetOpenOnly: false,
+    onBreakOnly: false,
+    afterHoursOnly: false,
+    closedOnly: false,
+    decorOnlyOnly: false,
+    likedOnly: false,
+    unvisitedOnly: false,
+    visitedOnly: false,
+    accessibleOnly: false,
     scareFilters: [...SCARE_LEVELS],
     candyFilters: [...CANDY_TONE_IDS],
     neighborhoodFilters: [...NEIGHBORHOODS],
     sensitivityFilters: [],
+    includeUndecorated: true,
   };
 }
 
 export function countActiveFilters(filters: HouseFiltersState): number {
-  const moreFilterCount =
-    Number(filters.accessibleOnly) +
-    Number(filters.openNowOnly) +
-    Number(filters.closingSoonOnly) +
-    Number(filters.openingSoonOnly) +
-    Number(filters.notYetOpenOnly) +
-    Number(filters.onBreakOnly) +
-    Number(filters.afterHoursOnly) +
-    Number(hasVisitWindow(filters.visitWindowFrom, filters.visitWindowTo)) +
-    Number(filters.closedOnly) +
-    Number(filters.decorOnlyOnly) +
-    Number(filters.likedOnly) +
-    Number(filters.unvisitedOnly) +
-    Number(filters.visitedOnly);
   const neighborhoodActiveCount =
     filters.neighborhoodFilters.length === NEIGHBORHOODS.length
       ? 0
       : NEIGHBORHOODS.length - filters.neighborhoodFilters.length;
-  const scareLevelsActive =
-    filters.scareFilters.length === 0 || filters.scareFilters.length === SCARE_LEVELS.length
-      ? 0
-      : filters.scareFilters.length;
-  const scareActiveCount = scareLevelsActive + Number(!filters.includeUndecorated);
-  const candyActiveCount =
-    filters.candyFilters.length === 0 || filters.candyFilters.length === CANDY_TONE_IDS.length
-      ? 0
-      : filters.candyFilters.length;
   return (
     neighborhoodActiveCount +
-    filters.sensitivityFilters.length +
-    scareActiveCount +
-    candyActiveCount +
-    moreFilterCount
+    Number(effectiveVisitWindowMode(filters) === "custom") +
+    Number(isWithCandyFilter(filters)) +
+    Number(isKidsFriendlyFilter(filters)) +
+    Number(filters.accessibleOnly) +
+    filters.sensitivityFilters.length
   );
 }
 
