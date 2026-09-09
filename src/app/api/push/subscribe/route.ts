@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { parseSubscription } from "@/lib/push";
+import { parseSubscription, readIncludeEndpoint } from "@/lib/push";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
-import { savePushSubscription } from "@/lib/store";
+import { countPushSubscriptions, isPushEndpointRegistered, savePushSubscription } from "@/lib/store";
 
 export const runtime = "nodejs";
 
@@ -16,8 +16,21 @@ export async function POST(request: Request) {
   }
   try {
     const count = await savePushSubscription(parsed);
-    return NextResponse.json({ ok: true, count });
+    const registered = await isPushEndpointRegistered(parsed.endpoint);
+    return NextResponse.json({ ok: true, count, registered });
   } catch {
     return NextResponse.json({ error: "לא הצלחנו לשמור את ההתראות." }, { status: 500 });
   }
+}
+
+export async function GET(request: Request) {
+  const endpoint = readIncludeEndpoint({
+    includeEndpoint: new URL(request.url).searchParams.get("endpoint"),
+  });
+  const total = await countPushSubscriptions();
+  if (!endpoint) {
+    return NextResponse.json({ total });
+  }
+  const registered = await isPushEndpointRegistered(endpoint);
+  return NextResponse.json({ total, registered });
 }

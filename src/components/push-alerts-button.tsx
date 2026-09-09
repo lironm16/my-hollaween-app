@@ -13,6 +13,7 @@ import {
   isAndroidDevice,
   readPushTopicPrefs,
   refreshPushSubscriptionIfEnabled,
+  sendSelfPushTest,
   syncPushTopicPrefs,
   writePushTopicPrefs,
   type PushEnableResult,
@@ -199,8 +200,28 @@ export function PushAlertsButton() {
         return;
       }
       toast.message("בלי הרשאה לא נשלח התראות לטלפון.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "הדפדפן חסם התראות.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function runSelfTest() {
+    setBusy(true);
+    try {
+      const result = await sendSelfPushTest();
+      if (result.ok) {
+        toast.success(`התראת בדיקה נשלחה! (${result.total ?? 1} מכשירים רשומים)`);
+        return;
+      }
+      if (!result.registered) {
+        toast.error(result.error ?? "המכשיר לא רשום בשרת. כבו והפעילו התראות שוב.");
+        return;
+      }
+      toast.error(result.error ?? "השליחה נכשלה. כבו והפעילו התראות שוב.");
     } catch {
-      toast.error("הדפדפן חסם התראות.");
+      toast.error("לא הצלחנו לשלוח בדיקה.");
     } finally {
       setBusy(false);
     }
@@ -349,9 +370,20 @@ export function PushAlertsButton() {
                 />
               ))}
               {subscribed ? (
-                <p className="px-1 text-base text-violet-300/90">
-                  כדי לכבות לגמרי במכשיר, כבו את כל הסוגים או לחצו «כבו התראות».
-                </p>
+                <>
+                  <p className="px-1 text-base text-violet-300/90">
+                    כדי לכבות לגמרי במכשיר, כבו את כל הסוגים או לחצו «כבו התראות».
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-orange-400/40 text-orange-100"
+                    disabled={busy}
+                    onClick={() => void runSelfTest()}
+                  >
+                    שלחו לי התראת בדיקה
+                  </Button>
+                </>
               ) : !canEnable ? (
                 <p className="px-1 text-base text-amber-200/90">סמנו לפחות סוג אחד, ואז «הפעילו».</p>
               ) : null}

@@ -267,7 +267,9 @@ export function AdminPushPanel() {
         }}
       >
         <p className="text-base font-medium text-amber-100">הודעה חד־פעמית לכולם</p>
-        <p className="text-base text-violet-300">גם אתם תקבלו את ההתראה במכשיר הזה.</p>
+        <p className="text-base text-violet-300">
+          גם אתם תקבלו את ההתראה במכשיר הזה. אם רואים «1 מתוך 1» — רק המכשיר שלכם רשום; הפעילו התראות גם בטלפון השני.
+        </p>
         <Input
           value={title}
           onChange={(event) => setTitle(event.target.value)}

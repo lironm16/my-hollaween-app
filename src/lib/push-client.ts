@@ -144,7 +144,8 @@ export async function readPushStatus(): Promise<PushEnableResult> {
 export function applicationServerKeyMatches(sub: PushSubscription, publicKey: string) {
   const expected = urlBase64ToUint8Array(publicKey);
   const raw = sub.options?.applicationServerKey;
-  if (!raw) return false;
+  // Some Android builds omit the key on existing subscriptions — don't force resubscribe.
+  if (!raw) return true;
   const actual = raw instanceof Uint8Array ? raw : new Uint8Array(raw as ArrayBuffer);
   if (actual.length !== expected.length) return false;
   return actual.every((byte, index) => byte === expected[index]);
@@ -157,9 +158,58 @@ async function postSubscription(sub: PushSubscription, prefs: PushTopicPrefs) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...sub.toJSON(), topics: topicsFromPrefs(prefs) }),
   });
+  const data = (await res.json().catch(() => null)) as {
+    error?: string;
+    registered?: boolean;
+    count?: number;
+  } | null;
   if (!res.ok) {
-    throw new Error("לא הצלחנו לשמור את ההתראות.");
+    throw new Error(data?.error ?? "לא הצלחנו לשמור את ההתראות.");
   }
+  if (!data?.registered) {
+    throw new Error("השרת לא אישר את ההרשמה. נסו שוב בעוד רגע.");
+  }
+  return data.count ?? 0;
+}
+
+export async function sendSelfPushTest(): Promise<{
+  ok: boolean;
+  registered: boolean;
+  delivered?: boolean;
+  total?: number;
+  error?: string;
+}> {
+  const endpoint = await senderPushEndpoint();
+  if (!endpoint) {
+    return { ok: false, registered: false, error: "אין הרשמה מקומית במכשיר." };
+  }
+  const res = await fetch("/api/push/test", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ endpoint }),
+  });
+  const data = (await res.json().catch(() => null)) as {
+    ok?: boolean;
+    registered?: boolean;
+    delivered?: boolean;
+    total?: number;
+    error?: string;
+  } | null;
+  if (!res.ok) {
+    return {
+      ok: false,
+      registered: Boolean(data?.registered),
+      total: data?.total,
+      error: data?.error ?? "הבדיקה נכשלה.",
+    };
+  }
+  return {
+    ok: Boolean(data?.ok),
+    registered: true,
+    delivered: data?.delivered,
+    total: data?.total,
+  };
 }
 
 async function obtainPushSubscription(
@@ -206,10 +256,10 @@ export async function enablePushAlerts(prefs?: PushTopicPrefs): Promise<PushEnab
   const reg = await waitForServiceWorkerRegistration();
   if (!reg) throw new Error("Service worker לא מוכן. נסו שוב בעוד רגע.");
   const sub = await obtainPushSubscription(reg, keyData.publicKey);
-  await postSubscription(sub, nextPrefs);
+  const count = await postSubscription(sub, nextPrefs);
   writePushPref("on");
   notifyPushStatusChanged();
-  return "on";
+  return count > 0 ? "on" : "off";
 }
 
 export async function syncPushTopicPrefs(prefs: PushTopicPrefs): Promise<PushEnableResult> {

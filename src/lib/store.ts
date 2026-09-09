@@ -27,6 +27,7 @@ import {
 import {
   ensureVapid,
   payloadForKind,
+  sanitizePushPayload,
   sendPushToSubscriptions,
   type PushPayload,
 } from "@/lib/push";
@@ -45,6 +46,7 @@ import {
 const SEED_PATH = path.join(process.cwd(), "data", "seed.json");
 const BLOB_PATH = "halloween-houses/db.json";
 const PUSH_BLOB_PATH = "halloween-houses/push-settings.json";
+const PUSH_SUBS_BLOB_PATH = "halloween-houses/push-subscriptions.json";
 const MEM_TTL_MS = 1500;
 
 let chain: Promise<unknown> = Promise.resolve();
@@ -220,6 +222,80 @@ async function writePushSettingsBlob(settings: DbFile["pushSettings"]) {
   }
 }
 
+async function pushSubsFilePath() {
+  if (process.env.DATA_DIR) {
+    await fs.mkdir(process.env.DATA_DIR, { recursive: true });
+    return path.join(process.env.DATA_DIR, "push-subscriptions.json");
+  }
+  const localDir = path.join(process.cwd(), "data");
+  if (await canWrite(localDir)) {
+    return path.join(localDir, "push-subscriptions.json");
+  }
+  const tmp = "/tmp/halloween-houses";
+  await fs.mkdir(tmp, { recursive: true });
+  return path.join(tmp, "push-subscriptions.json");
+}
+
+async function readLocalPushSubsBlob(): Promise<PushSubscriptionRecord[] | null> {
+  try {
+    const raw = await fs.readFile(await pushSubsFilePath(), "utf8");
+    const parsed = JSON.parse(raw) as { subscriptions?: PushSubscriptionRecord[] };
+    return Array.isArray(parsed.subscriptions) ? parsed.subscriptions : null;
+  } catch {
+    return null;
+  }
+}
+
+async function readPushSubsBlob(): Promise<PushSubscriptionRecord[] | null> {
+  const [local, remote] = await Promise.all([
+    readLocalPushSubsBlob(),
+    blobEnabled()
+      ? getBlob(PUSH_SUBS_BLOB_PATH, {
+          access: "private",
+          useCache: false,
+          token: process.env.BLOB_READ_WRITE_TOKEN,
+        })
+          .then(async (result) => {
+            if (!result?.stream) return null;
+            const parsed = JSON.parse(await new Response(result.stream).text()) as {
+              subscriptions?: PushSubscriptionRecord[];
+            };
+            return Array.isArray(parsed.subscriptions) ? parsed.subscriptions : null;
+          })
+          .catch(() => null)
+      : Promise.resolve(null),
+  ]);
+  return mergePushSubscriptions(local, remote);
+}
+
+async function writePushSubsBlob(subscriptions: PushSubscriptionRecord[]) {
+  const payload = JSON.stringify({
+    updatedAt: new Date().toISOString(),
+    subscriptions,
+  });
+  try {
+    const file = await pushSubsFilePath();
+    const tmp = `${file}.${process.pid}.tmp`;
+    await fs.writeFile(tmp, payload);
+    await fs.rename(tmp, file);
+  } catch {
+    /* blob/memory may still hold it */
+  }
+  if (!blobEnabled()) return;
+  try {
+    await putBlob(PUSH_SUBS_BLOB_PATH, payload, {
+      access: "private",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: "application/json",
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+      cacheControlMaxAge: 0,
+    });
+  } catch {
+    /* local file still holds it */
+  }
+}
+
 async function readLocalFileDb(): Promise<DbFile | null> {
   try {
     const file = await dbPath();
@@ -314,11 +390,12 @@ function foldPushSubscriptions(target: DbFile, ...candidates: Array<DbFile | nul
 }
 
 async function readFileDb(): Promise<DbFile> {
-  const [local, blob, global, pushBlob] = await Promise.all([
+  const [local, blob, global, pushBlob, pushSubsBlob] = await Promise.all([
     readLocalFileDb(),
     readBlobDb(),
     Promise.resolve(getGlobalDb()),
     readPushSettingsBlob(),
+    readPushSubsBlob(),
   ]);
   const newest = pickNewest(local, blob, global);
   const pushSettings = pickPushSettings(
@@ -328,7 +405,11 @@ async function readFileDb(): Promise<DbFile> {
     global,
     pushBlob ? { updatedAt: pushBlob.updatedAt ?? "", houses: [], pushSettings: pushBlob } : null,
   );
-  if (newest) return pushSettings ? { ...newest, pushSettings } : newest;
+  if (newest) {
+    const merged = pushSettings ? { ...newest, pushSettings } : newest;
+    merged.pushSubscriptions = mergePushSubscriptions(merged.pushSubscriptions, pushSubsBlob);
+    return merged;
+  }
   const seed = normalizeDb(await readSeed());
   try {
     await writeFileDb(seed);
@@ -925,7 +1006,7 @@ export async function getVapidPublicKey() {
 }
 
 export async function savePushSubscription(sub: Omit<PushSubscriptionRecord, "createdAt">) {
-  return runSyncedWrite((db) => {
+  const count = await runSyncedWrite((db) => {
     ensureVapid(db);
     const list = db.pushSubscriptions ?? [];
     const idx = list.findIndex((item) => item.endpoint === sub.endpoint);
@@ -949,14 +1030,67 @@ export async function savePushSubscription(sub: Omit<PushSubscriptionRecord, "cr
     db.updatedAt = new Date().toISOString();
     return list.length;
   });
+  const list = mem?.pushSubscriptions ?? [];
+  await writePushSubsBlob(list);
+  return count;
+}
+
+export async function isPushEndpointRegistered(endpoint: string) {
+  const db = await loadDb(true);
+  return (db.pushSubscriptions ?? []).some((item) => item.endpoint === endpoint);
+}
+
+export async function countPushSubscriptions() {
+  const db = await loadDb(true);
+  return db.pushSubscriptions?.length ?? 0;
+}
+
+export async function sendPushTestToEndpoint(endpoint: string) {
+  const db = await loadDb(true);
+  const sub = (db.pushSubscriptions ?? []).find((item) => item.endpoint === endpoint);
+  if (!sub) {
+    return {
+      registered: false as const,
+      total: db.pushSubscriptions?.length ?? 0,
+    };
+  }
+  const vapid = ensureVapid(db);
+  const payload = sanitizePushPayload({
+    title: "בדיקת התראות",
+    body: "אם אתם רואים את זה — ההתראות עובדות!",
+    url: "/",
+  });
+  const { dead, delivered, errors } = await sendPushToSubscriptions({
+    vapid,
+    subscriptions: [sub],
+    payload,
+  });
+  if (dead.length > 0) {
+    const deadSet = new Set(dead);
+    await runSyncedWrite((inner) => {
+      inner.pushSubscriptions = (inner.pushSubscriptions ?? []).filter(
+        (item) => !deadSet.has(item.endpoint),
+      );
+      inner.updatedAt = new Date().toISOString();
+    });
+    await writePushSubsBlob(mem?.pushSubscriptions ?? []);
+  }
+  return {
+    registered: true as const,
+    delivered: delivered > 0,
+    errors,
+    total: db.pushSubscriptions?.length ?? 0,
+  };
 }
 
 export async function removePushSubscription(endpoint: string) {
-  return runSyncedWrite((db) => {
+  const count = await runSyncedWrite((db) => {
     db.pushSubscriptions = (db.pushSubscriptions ?? []).filter((item) => item.endpoint !== endpoint);
     db.updatedAt = new Date().toISOString();
     return db.pushSubscriptions.length;
   });
+  await writePushSubsBlob(mem?.pushSubscriptions ?? []);
+  return count;
 }
 
 export async function broadcastPush(
@@ -982,6 +1116,7 @@ export async function broadcastPush(
     await runSyncedWrite((db) => {
       db.pushSubscriptions = (db.pushSubscriptions ?? []).filter((item) => !deadSet.has(item.endpoint));
     });
+    await writePushSubsBlob(mem?.pushSubscriptions ?? []);
   }
   return {
     sent: delivered,
