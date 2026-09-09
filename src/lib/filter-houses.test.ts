@@ -110,13 +110,14 @@ describe("filterHouses", () => {
     assert.deepEqual(result.map((item) => item.id), ["open"]);
   });
 
-  it("custom start-only and start+end use the same open-at-departure filter", () => {
+  it("custom hours include later openings but not houses already closed", () => {
     const houses = [
       house("open", { openFrom: "17:00", openTo: "21:00", visit: "come" }),
       house("later", { openFrom: "19:00", openTo: "21:00", visit: "come" }),
+      house("early", { openFrom: "17:00", openTo: "18:00", visit: "come" }),
     ];
     const context = { houseSet: "real" as const, likedIds: [], visitedIds: [], now };
-    const startOnly = filterHouses(
+    const result = filterHouses(
       houses,
       baseFilters({
         visitWindowMode: "custom",
@@ -127,18 +128,25 @@ describe("filterHouses", () => {
       }),
       context,
     );
-    const startAndEnd = filterHouses(
+    assert.deepEqual(result.map((item) => item.id).sort(), ["later", "open"]);
+  });
+
+  it("now mode stays stricter than custom departure hours", () => {
+    const houses = [house("later", { openFrom: "19:00", openTo: "21:00", visit: "come" })];
+    const context = { houseSet: "real" as const, likedIds: [], visitedIds: [], now };
+    const nowMode = filterHouses(houses, baseFilters({ visitWindowMode: "now" }), context);
+    const customMode = filterHouses(
       houses,
       baseFilters({
         visitWindowMode: "custom",
         visitWindowUseFrom: true,
-        visitWindowUseTo: true,
+        visitWindowUseTo: false,
         visitWindowFrom: "18:30",
-        visitWindowTo: "20:00",
+        visitWindowTo: "",
       }),
       context,
     );
-    assert.deepEqual(startOnly.map((item) => item.id), ["open"]);
-    assert.deepEqual(startAndEnd.map((item) => item.id), startOnly.map((item) => item.id));
+    assert.deepEqual(nowMode.map((item) => item.id), []);
+    assert.deepEqual(customMode.map((item) => item.id), ["later"]);
   });
 });

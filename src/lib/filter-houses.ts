@@ -8,6 +8,7 @@ import {
   isHoursNotYetOpen,
   isNotYetOpenForFilter,
   isOnBreakForFilter,
+  isOpenDuringCustomVisitForFilter,
   isOpenNowForFilter,
   isOpeningSoonForFilter,
 } from "@/lib/hours";
@@ -80,7 +81,9 @@ export function filterHouses(
       visitWindowMode === "custom" &&
       hasValidVisitWindow(visitWindowFrom, visitWindowTo)
     ) {
-      if (!isOpenNowForFilter(house, visitWindowFrom, visitWindowTo, now)) return false;
+      if (!isOpenDuringCustomVisitForFilter(house, visitWindowFrom, visitWindowTo, now)) {
+        return false;
+      }
     }
     if (
       openNowOnly ||

@@ -526,9 +526,45 @@ export function isOpenNowForFilter(
   if (!range) {
     return isOpenNow(house, wallNow);
   }
-  // Departure time (start bound) decides what is open; an end bound only frames the outing.
   const probe = filterProbeAt(range.start);
   return isOpenNow(house, probe);
+}
+
+/**
+ * Custom visit hours: from the departure time onward, include houses that still
+ * open later; with an end bound, require overlap across the full outing window.
+ */
+export function isOpenDuringCustomVisitForFilter(
+  house: FilterHouse,
+  visitWindowFrom = "",
+  visitWindowTo = "",
+  wallNow = appNow(),
+) {
+  const vf = visitWindowFrom ? parseClockMinutes(visitWindowFrom) : null;
+  const vt = visitWindowTo ? parseClockMinutes(visitWindowTo) : null;
+  if (vf === null && vt === null) return true;
+
+  const probeMin = vf ?? vt!;
+  const probe = filterProbeAt(probeMin);
+  const prepared = preparedFilterHouse(house, probe);
+  if (effectiveVisit(prepared) === "closed" || isFrozen(prepared, probe.getTime())) return false;
+
+  const windows = houseHoursWindows(prepared).flatMap((window) => {
+    const from = parseClockMinutes(window.from);
+    const to = parseClockMinutes(window.to);
+    if (from === null || to === null) return [];
+    return [{ from, to }];
+  });
+  if (windows.length === 0) return false;
+
+  if (vf !== null && vt !== null) {
+    if (vt <= vf) return false;
+    return windows.some((window) => window.from < vt && vf < window.to);
+  }
+  if (vf !== null) {
+    return windows.some((window) => window.to > vf);
+  }
+  return windows.some((window) => vt! >= window.from && vt! < window.to);
 }
 
 /** On break between hour windows during the visitor outing window. */
