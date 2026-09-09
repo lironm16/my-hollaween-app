@@ -299,12 +299,10 @@
       "lat": 32.0917,
       "lng": 34.8022,
       "treats": [
-        "candy",
-        "chocolate"
+        "candy"
       ],
       "treatStock": {
-        "candy": "plenty",
-        "chocolate": "plenty"
+        "candy": "plenty"
       },
       "visit": "come",
       "scareLevel": "medium",

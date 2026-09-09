@@ -10,7 +10,7 @@ import {
 import { hoursWindowsOverlap, isValidHoursWindow } from "@/lib/hours";
 import { parsePhotoUrl } from "@/lib/photos";
 
-const treatStockSchema = z.partialRecord(z.enum(TREAT_OPTIONS), z.enum(STOCK_LEVELS));
+const treatStockSchema = z.object({ candy: z.enum(STOCK_LEVELS).optional() });
 
 const photoUrlSchema = z
   .string()

@@ -16,7 +16,7 @@ const houseSchema = z.object({
   lat: z.number(),
   lng: z.number(),
   treats: z.array(z.enum(TREAT_OPTIONS)).default([]),
-  treatStock: z.record(z.string(), z.enum(STOCK_LEVELS)).optional(),
+  treatStock: z.object({ candy: z.enum(STOCK_LEVELS).optional() }).optional(),
   visit: z.enum(VISIT_STATES).optional(),
   scareLevel: z.enum(SCARE_LEVELS),
   openFrom: z.string(),

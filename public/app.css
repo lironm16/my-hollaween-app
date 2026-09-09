@@ -278,6 +278,9 @@
   .static {
     position: static;
   }
+  .sticky {
+    position: sticky;
+  }
   .inset-0 {
     inset: 0px;
   }
@@ -367,6 +370,9 @@
   }
   .z-50 {
     z-index: 50;
+  }
+  .z-\[60\] {
+    z-index: 60;
   }
   .z-\[120\] {
     z-index: 120;
@@ -1069,6 +1075,12 @@
   .border-border {
     border-color: var(--border);
   }
+  .border-emerald-400\/50 {
+    border-color: color-mix(in srgb, oklch(76.5% 0.177 163.223) 50%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-emerald-400) 50%, transparent);
+    }
+  }
   .border-input {
     border-color: var(--input);
   }
@@ -1126,6 +1138,9 @@
   .bg-\[\#1d1028\] {
     background-color: #1d1028;
   }
+  .bg-\[\#1d1028\]\/60 {
+    background-color: color-mix(in oklab, #1d1028 60%, transparent);
+  }
   .bg-\[\#1d1028\]\/90 {
     background-color: color-mix(in oklab, #1d1028 90%, transparent);
   }
@@ -1171,6 +1186,9 @@
   .bg-\[\#12081a\] {
     background-color: #12081a;
   }
+  .bg-\[\#12081a\]\/60 {
+    background-color: color-mix(in oklab, #12081a 60%, transparent);
+  }
   .bg-\[\#12081a\]\/80 {
     background-color: color-mix(in oklab, #12081a 80%, transparent);
   }
@@ -1212,6 +1230,9 @@
   }
   .bg-\[\#f97316\] {
     background-color: #f97316;
+  }
+  .bg-\[\#fb7185\]\/20 {
+    background-color: color-mix(in oklab, #fb7185 20%, transparent);
   }
   .bg-\[\#fbbf24\] {
     background-color: #fbbf24;
@@ -1259,12 +1280,6 @@
     background-color: color-mix(in srgb, #000 35%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-black) 35%, transparent);
-    }
-  }
-  .bg-black\/40 {
-    background-color: color-mix(in srgb, #000 40%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-black) 40%, transparent);
     }
   }
   .bg-black\/50 {
@@ -1546,6 +1561,9 @@
   .ps-0\.5 {
     padding-inline-start: calc(var(--spacing) * 0.5);
   }
+  .ps-1 {
+    padding-inline-start: var(--spacing);
+  }
   .ps-1\.5 {
     padding-inline-start: calc(var(--spacing) * 1.5);
   }
@@ -1557,6 +1575,9 @@
   }
   .pe-2 {
     padding-inline-end: calc(var(--spacing) * 2);
+  }
+  .pe-2\.5 {
+    padding-inline-end: calc(var(--spacing) * 2.5);
   }
   .pe-8 {
     padding-inline-end: calc(var(--spacing) * 8);
@@ -1572,6 +1593,9 @@
   }
   .pt-\[env\(safe-area-inset-top\,0px\)\] {
     padding-top: env(safe-area-inset-top,0px);
+  }
+  .pt-\[max\(0\.5rem\,env\(safe-area-inset-top\,0px\)\)\] {
+    padding-top: max(0.5rem, env(safe-area-inset-top,0px));
   }
   .pb-0\.5 {
     padding-bottom: calc(var(--spacing) * 0.5);
@@ -1711,6 +1735,12 @@
   }
   .text-amber-100 {
     color: var(--color-amber-100);
+  }
+  .text-amber-100\/90 {
+    color: color-mix(in srgb, oklch(96.2% 0.059 95.617) 90%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-amber-100) 90%, transparent);
+    }
   }
   .text-amber-200 {
     color: var(--color-amber-200);
@@ -1859,12 +1889,6 @@
   .text-violet-300 {
     color: var(--color-violet-300);
   }
-  .text-violet-300\/90 {
-    color: color-mix(in srgb, oklch(81.1% 0.111 293.571) 90%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      color: color-mix(in oklab, var(--color-violet-300) 90%, transparent);
-    }
-  }
   .text-violet-400 {
     color: var(--color-violet-400);
   }
@@ -1900,6 +1924,10 @@
     @supports (color: color-mix(in lab, red, red)) {
       color: color-mix(in oklab, var(--color-white) 80%, transparent);
     }
+  }
+  .tabular-nums {
+    --tw-numeric-spacing: tabular-nums;
+    font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);
   }
   .underline {
     text-decoration-line: underline;
@@ -1971,6 +1999,9 @@
   .ring-\[2\.5px\] {
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2.5px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+  .ring-\[\#fb7185\]\/35 {
+    --tw-ring-color: color-mix(in oklab, #fb7185 35%, transparent);
   }
   .ring-\[\#fff7ed\] {
     --tw-ring-color: #fff7ed;
@@ -5649,6 +5680,26 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   syntax: "*";
   inherits: false;
 }
+@property --tw-ordinal {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-slashed-zero {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-numeric-figure {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-numeric-spacing {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-numeric-fraction {
+  syntax: "*";
+  inherits: false;
+}
 @property --tw-shadow {
   syntax: "*";
   inherits: false;
@@ -5864,6 +5915,11 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
       --tw-leading: initial;
       --tw-font-weight: initial;
       --tw-tracking: initial;
+      --tw-ordinal: initial;
+      --tw-slashed-zero: initial;
+      --tw-numeric-figure: initial;
+      --tw-numeric-spacing: initial;
+      --tw-numeric-fraction: initial;
       --tw-shadow: 0 0 #0000;
       --tw-shadow-color: initial;
       --tw-shadow-alpha: 100%;

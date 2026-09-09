@@ -6,7 +6,13 @@ import { canonicalHouseId, newEditCode, newPublicId, sameHouseId, toPublicHouse 
 import { inNeighborhood } from "@/lib/config";
 import { config } from "@/lib/config";
 import { assertRealAddress } from "@/lib/geocode";
-import { defaultTreatStock, effectiveVisit, isPubliclyListed, syncDecorFields } from "@/lib/house-state";
+import {
+  defaultTreatStock,
+  effectiveVisit,
+  isPubliclyListed,
+  normalizeTreats,
+  syncDecorFields,
+} from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import { cloneDb, mergeHouses, mergePushSubscriptions } from "@/lib/catalog-sync";
 import { parsePhotoUrl } from "@/lib/photos";
@@ -111,13 +117,8 @@ function normalizeHouse(house: House): House {
   const theme = HOUSE_THEMES.includes(house.theme as HouseTheme)
     ? (house.theme as HouseTheme)
     : "pumpkin";
-  const treats = Array.isArray(house.treats) ? house.treats : [];
   const visit = effectiveVisit(house);
-  const treatStock: TreatStock = {
-    ...defaultTreatStock(treats),
-    ...(house.treatStock ?? {}),
-  };
-  if (treats.includes("candy") && !treatStock.candy) treatStock.candy = "plenty";
+  const { treats, treatStock } = normalizeTreats(house.treats, house.treatStock);
   const hours = syncHoursFields(houseHoursWindows(house));
   const decor = syncDecorFields(house);
   return {

@@ -4,22 +4,22 @@ export type ScareLevel = (typeof SCARE_LEVELS)[number];
 export const DECOR_LEVELS = ["none", "mild", "medium", "heavy"] as const;
 export type DecorLevel = (typeof DECOR_LEVELS)[number];
 
-export const TREAT_OPTIONS = [
-  "candy",
+export const SENSITIVITY_OPTIONS = ["glutenFree", "nutsFree", "sesameFree"] as const;
+export type SensitivityId = (typeof SENSITIVITY_OPTIONS)[number];
+
+/** Candy plus optional sensitivity flags — no per-item stock beyond candy. */
+export const TREAT_OPTIONS = ["candy", ...SENSITIVITY_OPTIONS] as const;
+export type TreatId = (typeof TREAT_OPTIONS)[number];
+
+/** Legacy treat ids stripped on load (older seed / catalog records). */
+export const LEGACY_TREAT_IDS = [
   "chocolate",
-  "glutenFree",
-  "nutsFree",
-  "sesameFree",
   "vegan",
   "fruit",
   "toys",
   "drinks",
   "allergenFriendly",
 ] as const;
-export type TreatId = (typeof TREAT_OPTIONS)[number];
-
-export const SENSITIVITY_OPTIONS = ["glutenFree", "nutsFree", "sesameFree"] as const;
-export type SensitivityId = (typeof SENSITIVITY_OPTIONS)[number];
 
 export const HOUSE_THEMES = [
   "ghost",
@@ -48,7 +48,9 @@ export type CandyTone = (typeof CANDY_TONE_IDS)[number];
 export const VISIT_STATES = ["come", "decorOnly", "closed"] as const;
 export type VisitState = (typeof VISIT_STATES)[number];
 
-export type TreatStock = Partial<Record<TreatId, StockLevel>>;
+export type TreatStock = {
+  candy?: StockLevel;
+};
 
 export type HoursWindow = { from: string; to: string };
 

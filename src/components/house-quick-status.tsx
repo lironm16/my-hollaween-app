@@ -54,12 +54,8 @@ export function buildQuickPatch(
   const treatStock = { ...(house.treatStock ?? {}) };
   if (candy === "none") {
     delete treatStock.candy;
-    for (const id of SENSITIVITY_OPTIONS) delete treatStock[id];
   } else {
     treatStock.candy = candy;
-    if (candy === "out") {
-      for (const id of SENSITIVITY_OPTIONS) delete treatStock[id];
-    }
   }
   const visit: VisitState =
     nightStatus === "stop"

@@ -11,15 +11,9 @@ import {
 
 export const treatLabels: Record<TreatId, string> = {
   candy: "ממתקים",
-  chocolate: "שוקולד",
   glutenFree: "ללא גלוטן",
   nutsFree: "ללא אגוזים",
   sesameFree: "ללא שומשום",
-  vegan: "טבעוני",
-  fruit: "פירות",
-  toys: "צעצועים",
-  drinks: "שתייה",
-  allergenFriendly: "ידידותי לאלרגיות",
 };
 
 export const scareLabels: Record<ScareLevel, string> = {

@@ -1,5 +1,6 @@
 import {
   DECOR_LEVELS,
+  TREAT_OPTIONS,
   type DecorLevel,
   type House,
   type PublicHouse,
@@ -8,6 +9,24 @@ import {
   type TreatStock,
   type VisitState,
 } from "@/lib/types";
+
+export function normalizeTreats(
+  treats: unknown,
+  treatStock?: TreatStock | Record<string, StockLevel | undefined> | null,
+): { treats: TreatId[]; treatStock: TreatStock } {
+  const allowed = new Set<string>(TREAT_OPTIONS);
+  const cleaned = (Array.isArray(treats) ? treats : []).filter(
+    (id): id is TreatId => typeof id === "string" && allowed.has(id),
+  );
+  const stock: TreatStock = {};
+  const rawCandy = treatStock && typeof treatStock === "object" ? treatStock.candy : undefined;
+  if (rawCandy === "plenty" || rawCandy === "low" || rawCandy === "out") {
+    stock.candy = rawCandy;
+  } else if (cleaned.includes("candy")) {
+    stock.candy = "plenty";
+  }
+  return { treats: cleaned, treatStock: stock };
+}
 
 export function isOwnerFrozen(house: { ownerFrozenUntil?: string | null }, now = Date.now()) {
   if (!house.ownerFrozenUntil) return false;
@@ -56,16 +75,14 @@ export function candyPinDot(
 }
 
 export function defaultTreatStock(treats: TreatId[]): TreatStock {
-  const stock: TreatStock = {};
-  for (const id of treats) stock[id] = "plenty";
-  return stock;
+  return treats.includes("candy") ? { candy: "plenty" } : {};
 }
 
 export function treatLevel(
   house: { treats: TreatId[]; treatStock?: TreatStock },
   id: TreatId,
 ): StockLevel {
-  if (house.treatStock?.[id]) return house.treatStock[id] as StockLevel;
+  if (id === "candy") return candyLevel(house);
   return house.treats.includes(id) ? "plenty" : "out";
 }
 

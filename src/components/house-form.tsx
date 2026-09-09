@@ -156,9 +156,7 @@ export function HouseForm({
     if (tone !== "plenty" && tone !== "low") {
       setForm((f) => {
         const treats = f.treats.filter((id) => !SENSITIVITY_OPTIONS.includes(id as SensitivityId));
-        const treatStock = { ...(f.treatStock ?? {}) };
-        for (const id of SENSITIVITY_OPTIONS) delete treatStock[id];
-        return { ...f, treats, treatStock };
+        return { ...f, treats };
       });
     }
   }
@@ -183,14 +181,11 @@ export function HouseForm({
     setDecorLevel((current) => (current === "none" ? "mild" : current));
   }
 
-  function setTreat(id: TreatId, on: boolean) {
+  function setTreat(id: SensitivityId, on: boolean) {
     setForm((f) => {
       const rest = f.treats.filter((t) => t !== id);
       const treats = on ? [...rest, id] : rest;
-      const treatStock = { ...(f.treatStock ?? {}) };
-      if (on) treatStock[id] = treatStock[id] ?? "plenty";
-      else delete treatStock[id];
-      return { ...f, treats, treatStock };
+      return { ...f, treats };
     });
   }
 
@@ -278,12 +273,8 @@ export function HouseForm({
         const treatStock = { ...(form.treatStock ?? {}) };
         if (candy === "none") {
           delete treatStock.candy;
-          for (const id of SENSITIVITY_OPTIONS) delete treatStock[id];
         } else {
           treatStock.candy = candy;
-          if (candy === "out") {
-            for (const id of SENSITIVITY_OPTIONS) delete treatStock[id];
-          }
         }
         const effectiveNight = nightStatusEnabled
           ? nightStatus
