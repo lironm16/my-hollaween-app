@@ -11,10 +11,10 @@ import {
 } from "@/hooks/use-house-filters";
 import { filterHouses, routeHouseIds } from "@/lib/filter-houses";
 import { visitWindowIssue } from "@/lib/hours";
+import { resolveVisitWindow } from "@/lib/visit-window";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
 import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
-import { defaultVisitWindowEnd, formatClockFromDate } from "@/lib/visit-window";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
@@ -166,8 +166,7 @@ export function useFilterDraft({
   function commitFilterDraft() {
     const nextFilters = filterDraft ?? filters;
     if (houseFiltersDraftInvalid(nextFilters, now)) {
-      const from = nextFilters.visitWindowFrom || formatClockFromDate(now);
-      const to = nextFilters.visitWindowTo || defaultVisitWindowEnd(now);
+      const { from, to } = resolveVisitWindow(nextFilters, now);
       toast.error(visitWindowIssue(from, to)!);
       return;
     }

@@ -6,7 +6,7 @@ export const STANDARD_VISIT_END = "20:00";
 /** Latest default end when the visitor starts after STANDARD_VISIT_END. */
 export const LATE_VISIT_END = "23:00";
 
-export type VisitWindowMode = "now" | "all" | "custom";
+export type VisitWindowMode = "all" | "now" | "custom";
 
 export function formatClockMinutes(totalMin: number): string {
   const hours = Math.floor(totalMin / 60);
@@ -44,7 +44,7 @@ export function defaultVisitWindowEndFromStart(startClock: string): string {
 
 export function effectiveVisitWindowMode(filters: HouseFiltersState): VisitWindowMode {
   if (filters.visitWindowMode) return filters.visitWindowMode;
-  return hasVisitWindow(filters.visitWindowFrom, filters.visitWindowTo) ? "custom" : "now";
+  return hasVisitWindow(filters.visitWindowFrom, filters.visitWindowTo) ? "custom" : "all";
 }
 
 export function resolveVisitWindow(

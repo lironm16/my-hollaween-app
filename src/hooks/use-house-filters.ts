@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
 import { HOUSE_FILTERS_VERSION, migrateHouseFilters } from "@/lib/filter-migrate";
-import { isKidsFriendlyFilter } from "@/lib/filter-presets";
 import { hasVisitWindow, parseClockMinutes } from "@/lib/hours";
 import { effectiveVisitWindowMode } from "@/lib/visit-window";
 import {
@@ -32,7 +31,7 @@ export const DEFAULT_HOUSE_FILTERS: HouseFiltersState = {
   notYetOpenOnly: false,
   onBreakOnly: false,
   afterHoursOnly: false,
-  visitWindowMode: "now",
+  visitWindowMode: "all",
   visitWindowFrom: "",
   visitWindowTo: "",
   closedOnly: false,
@@ -107,7 +106,7 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
         ? raw.visitWindowMode
         : hasVisitWindow(raw.visitWindowFrom, raw.visitWindowTo)
           ? "custom"
-          : "now",
+          : "all",
     visitWindowUseFrom: raw.visitWindowUseFrom ?? true,
     visitWindowUseTo: raw.visitWindowUseTo ?? false,
     visitWindowFrom: sanitizeClock(raw.visitWindowFrom),
@@ -149,7 +148,7 @@ export function cloneHouseFilters(state: HouseFiltersState): HouseFiltersState {
 export function emptyHouseFilters(): HouseFiltersState {
   return {
     ...DEFAULT_HOUSE_FILTERS,
-    visitWindowMode: "now",
+    visitWindowMode: "all",
     visitWindowFrom: "",
     visitWindowTo: "",
     openNowOnly: false,
@@ -177,14 +176,19 @@ export function countActiveFilters(filters: HouseFiltersState): number {
     filters.neighborhoodFilters.length === NEIGHBORHOODS.length
       ? 0
       : NEIGHBORHOODS.length - filters.neighborhoodFilters.length;
+  const candyDefault =
+    filters.candyFilters.length === CANDY_TONE_IDS.length &&
+    CANDY_TONE_IDS.every((tone) => filters.candyFilters.includes(tone));
+  const scareDefault =
+    filters.includeUndecorated &&
+    filters.scareFilters.length === SCARE_LEVELS.length &&
+    SCARE_LEVELS.every((level) => filters.scareFilters.includes(level));
+
   return (
     neighborhoodActiveCount +
-    Number(effectiveVisitWindowMode(filters) !== "now") +
-    Number(
-      filters.candyFilters.length < CANDY_TONE_IDS.length ||
-        !CANDY_TONE_IDS.every((tone) => filters.candyFilters.includes(tone)),
-    ) +
-    Number(isKidsFriendlyFilter(filters)) +
+    Number(effectiveVisitWindowMode(filters) !== "all") +
+    Number(!candyDefault) +
+    Number(!scareDefault) +
     Number(filters.accessibleOnly) +
     Number(filters.likedOnly) +
     Number(filters.unvisitedOnly) +

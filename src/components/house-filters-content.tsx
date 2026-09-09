@@ -5,24 +5,24 @@ import { Home, SlidersHorizontal } from "lucide-react";
 import { AccessibleMark } from "@/components/symbols";
 import { CandySign } from "@/components/candy-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
+import { ScareSign } from "@/components/scare-glyphs";
 import { FilterOption, FilterSection } from "@/components/filter-menu";
 import { CustomVisitWindowFields } from "@/components/visit-window-fields";
 import { OpenNowSign } from "@/components/open-now-mark";
 import { NEIGHBORHOODS } from "@/lib/config";
-import {
-  hasStockCandySelection,
-  isKidsFriendlyFilter,
-  kidsFriendlyPatch,
-} from "@/lib/filter-presets";
+import { hasStockCandySelection } from "@/lib/filter-presets";
 import { visitWindowIssue } from "@/lib/hours";
+import { decorShort, scareShort } from "@/lib/labels";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import {
   defaultVisitWindowEndFromStart,
   effectiveVisitWindowMode,
   formatClockFromDate,
+  resolveVisitWindow,
   type VisitWindowMode,
 } from "@/lib/visit-window";
-import { SENSITIVITY_OPTIONS, type CandyTone } from "@/lib/types";
+import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
+import { SCARE_LEVELS, SENSITIVITY_OPTIONS, type CandyTone, type ScareLevel } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const STOCK_CANDY_TONES: CandyTone[] = ["plenty", "low"];
@@ -94,43 +94,12 @@ export function HouseFiltersContent({
   ) => void;
 }) {
   const visitMode = effectiveVisitWindowMode(filters);
-  const kidsFriendly = isKidsFriendlyFilter(filters);
   const stockCandy = hasStockCandySelection(filters);
   const useFrom = filters.visitWindowUseFrom ?? true;
   const useTo = filters.visitWindowUseTo ?? false;
   const customFrom = filters.visitWindowFrom || formatClockFromDate(now);
   const customTo =
     filters.visitWindowTo || defaultVisitWindowEndFromStart(customFrom);
-  function setVisitMode(mode: VisitWindowMode) {
-    if (mode === "now") {
-      onPatch({
-        visitWindowMode: "now",
-        visitWindowFrom: "",
-        visitWindowTo: "",
-        visitWindowUseFrom: true,
-        visitWindowUseTo: false,
-      });
-      return;
-    }
-    if (mode === "all") {
-      onPatch({
-        visitWindowMode: "all",
-        visitWindowFrom: "",
-        visitWindowTo: "",
-        visitWindowUseFrom: false,
-        visitWindowUseTo: false,
-      });
-      return;
-    }
-    const from = filters.visitWindowFrom || formatClockFromDate(now);
-    onPatch({
-      visitWindowMode: "custom",
-      visitWindowUseFrom: true,
-      visitWindowUseTo: filters.visitWindowUseTo ?? false,
-      visitWindowFrom: from,
-      visitWindowTo: filters.visitWindowTo || defaultVisitWindowEndFromStart(from),
-    });
-  }
 
   function toggleCandyTone(tone: CandyTone) {
     onPatch((current) => {
@@ -146,9 +115,49 @@ export function HouseFiltersContent({
     });
   }
 
+  function toggleScareLevel(level: ScareLevel) {
+    onPatch((current) => ({
+      ...current,
+      scareFilters: current.scareFilters.includes(level)
+        ? current.scareFilters.filter((item) => item !== level)
+        : [...current.scareFilters, level],
+    }));
+  }
+
+  function setVisitMode(mode: VisitWindowMode) {
+    if (mode === "all") {
+      onPatch({
+        visitWindowMode: "all",
+        visitWindowFrom: "",
+        visitWindowTo: "",
+        visitWindowUseFrom: false,
+        visitWindowUseTo: false,
+      });
+      return;
+    }
+    if (mode === "now") {
+      onPatch({
+        visitWindowMode: "now",
+        visitWindowFrom: "",
+        visitWindowTo: "",
+        visitWindowUseFrom: true,
+        visitWindowUseTo: false,
+      });
+      return;
+    }
+    const from = filters.visitWindowFrom || formatClockFromDate(now);
+    onPatch({
+      visitWindowMode: "custom",
+      visitWindowUseFrom: true,
+      visitWindowUseTo: filters.visitWindowUseTo ?? false,
+      visitWindowFrom: from,
+      visitWindowTo: filters.visitWindowTo || defaultVisitWindowEndFromStart(from),
+    });
+  }
+
   return (
     <>
-      <FilterSection title="שעת התחלה">
+      <FilterSection title="בתים">
         <VisitWindowRadio checked={visitMode === "now"} onChange={() => setVisitMode("now")}>
           <OpenNowSign className="size-7" />
           <span>עכשיו</span>
@@ -191,20 +200,17 @@ export function HouseFiltersContent({
             />
           </div>
         ) : null}
-      </FilterSection>
-
-      <FilterSection title="מה חשוב">
         <FilterToggle
-          checked={kidsFriendly}
-          onChange={() => onPatch((current) => ({ ...current, ...kidsFriendlyPatch(!kidsFriendly) }))}
+          checked={filters.likedOnly}
+          onChange={() => onPatch({ likedOnly: !filters.likedOnly })}
         >
-          מתאים לילדים
+          <LikedMark labeled />
         </FilterToggle>
         <FilterToggle
-          checked={filters.accessibleOnly}
-          onChange={() => onPatch({ accessibleOnly: !filters.accessibleOnly })}
+          checked={filters.unvisitedOnly}
+          onChange={() => onPatch({ unvisitedOnly: !filters.unvisitedOnly })}
         >
-          <AccessibleMark labeled />
+          <UnvisitedMark labeled />
         </FilterToggle>
       </FilterSection>
 
@@ -221,6 +227,39 @@ export function HouseFiltersContent({
             </span>
           </FilterOption>
         ))}
+      </FilterSection>
+
+      <FilterSection title="רמת פחד">
+        <FilterOption
+          checked={filters.includeUndecorated}
+          onChange={() => onPatch({ includeUndecorated: !filters.includeUndecorated })}
+        >
+          <span className="inline-flex items-center gap-2">
+            <ScareSign level="none" />
+            <span>{decorShort.none}</span>
+          </span>
+        </FilterOption>
+        {SCARE_LEVELS.map((level) => (
+          <FilterOption
+            key={level}
+            checked={filters.scareFilters.includes(level)}
+            onChange={() => toggleScareLevel(level)}
+          >
+            <span className="inline-flex items-center gap-2">
+              <ScareSign level={level} />
+              <span>{scareShort[level]}</span>
+            </span>
+          </FilterOption>
+        ))}
+      </FilterSection>
+
+      <FilterSection title="מה חשוב">
+        <FilterToggle
+          checked={filters.accessibleOnly}
+          onChange={() => onPatch({ accessibleOnly: !filters.accessibleOnly })}
+        >
+          <AccessibleMark labeled />
+        </FilterToggle>
       </FilterSection>
 
       <FilterSection title="רגישויות">
@@ -270,14 +309,11 @@ export function HouseFiltersContent({
   );
 }
 
-export function houseFiltersDraftInvalid(filters: HouseFiltersState, now: Date) {
+export function houseFiltersDraftInvalid(filters: HouseFiltersState, now: Date = new Date()) {
   if (effectiveVisitWindowMode(filters) !== "custom") return false;
   const useFrom = filters.visitWindowUseFrom ?? true;
   const useTo = filters.visitWindowUseTo ?? false;
   if (!useFrom && !useTo) return false;
-  const from = useFrom ? filters.visitWindowFrom || formatClockFromDate(now) : "";
-  const to = useTo
-    ? filters.visitWindowTo || defaultVisitWindowEndFromStart(from || formatClockFromDate(now))
-    : "";
+  const { from, to } = resolveVisitWindow(filters, now);
   return Boolean(visitWindowIssue(from, to));
 }
