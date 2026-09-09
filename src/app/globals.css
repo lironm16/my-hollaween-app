@@ -1377,11 +1377,22 @@
 input[type="time"].filter-time-input {
   display: block;
   width: 100%;
+  min-height: 2.75rem;
   box-sizing: border-box;
   direction: ltr;
   text-align: center;
   color-scheme: dark;
   cursor: pointer;
+  -webkit-appearance: auto;
+  appearance: auto;
+}
+
+/* Keep Safari/iOS native time controls visible and tappable (no overlay trick). */
+input[type="time"].filter-time-input::-webkit-datetime-edit,
+input[type="time"].filter-time-input::-webkit-datetime-edit-fields-wrapper,
+input[type="time"].filter-time-input::-webkit-datetime-edit-hour-field,
+input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
+  text-align: center;
 }
 
 /* Hours: full-width border; native value hidden; overlay shows RTL-aligned time */
