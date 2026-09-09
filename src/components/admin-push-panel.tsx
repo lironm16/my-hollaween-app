@@ -185,12 +185,25 @@ export function AdminPushPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ kind, includeEndpoint }),
       });
-      const data = await readApiJson<{ error?: string; sent?: number; title?: string; body?: string }>(res);
+      const data = await readApiJson<{
+        error?: string;
+        sent?: number;
+        attempted?: number;
+        failed?: number;
+        title?: string;
+        body?: string;
+      }>(res);
       if (!res.ok) {
         toast.error(data.error ?? "השליחה נכשלה");
         return;
       }
-      toast.success(`נשלח ל־${data.sent ?? 0} מכשירים`);
+      const sent = data.sent ?? 0;
+      const attempted = data.attempted ?? sent;
+      if (sent < attempted) {
+        toast.warning(`נשלח ל־${sent} מתוך ${attempted} מכשירים (${data.failed ?? attempted - sent} נכשלו)`);
+      } else {
+        toast.success(`נשלח ל־${sent} מכשירים`);
+      }
       await showSenderNotice(data.title ?? "", data.body ?? "");
       window.dispatchEvent(new Event("hw-admin-stats-refresh"));
     } catch {
@@ -214,12 +227,25 @@ export function AdminPushPanel() {
           includeEndpoint,
         }),
       });
-      const data = await readApiJson<{ error?: string; sent?: number; title?: string; body?: string }>(res);
+      const data = await readApiJson<{
+        error?: string;
+        sent?: number;
+        attempted?: number;
+        failed?: number;
+        title?: string;
+        body?: string;
+      }>(res);
       if (!res.ok) {
         toast.error(data.error ?? "השליחה נכשלה");
         return;
       }
-      toast.success(`נשלח ל־${data.sent ?? 0} מכשירים`);
+      const sent = data.sent ?? 0;
+      const attempted = data.attempted ?? sent;
+      if (sent < attempted) {
+        toast.warning(`נשלח ל־${sent} מתוך ${attempted} מכשירים (${data.failed ?? attempted - sent} נכשלו)`);
+      } else {
+        toast.success(`נשלח ל־${sent} מכשירים`);
+      }
       await showSenderNotice(data.title ?? title.trim(), data.body ?? body.trim());
       window.dispatchEvent(new Event("hw-admin-stats-refresh"));
       setTitle("");

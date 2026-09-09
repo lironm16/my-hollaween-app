@@ -120,6 +120,15 @@ export async function readPushStatus(): Promise<PushEnableResult> {
   }
 }
 
+export function applicationServerKeyMatches(sub: PushSubscription, publicKey: string) {
+  const expected = urlBase64ToUint8Array(publicKey);
+  const raw = sub.options?.applicationServerKey;
+  if (!raw) return false;
+  const actual = raw instanceof Uint8Array ? raw : new Uint8Array(raw as ArrayBuffer);
+  if (actual.length !== expected.length) return false;
+  return actual.every((byte, index) => byte === expected[index]);
+}
+
 async function postSubscription(sub: PushSubscription, prefs: PushTopicPrefs) {
   const res = await fetch("/api/push/subscribe", {
     method: "POST",
@@ -129,6 +138,24 @@ async function postSubscription(sub: PushSubscription, prefs: PushTopicPrefs) {
   if (!res.ok) {
     throw new Error("לא הצלחנו לשמור את ההתראות.");
   }
+}
+
+async function obtainPushSubscription(
+  reg: ServiceWorkerRegistration,
+  publicKey: string,
+): Promise<PushSubscription> {
+  let sub = await reg.pushManager.getSubscription();
+  if (sub && !applicationServerKeyMatches(sub, publicKey)) {
+    await sub.unsubscribe();
+    sub = null;
+  }
+  if (!sub) {
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(publicKey),
+    });
+  }
+  return sub;
 }
 
 export async function enablePushAlerts(prefs?: PushTopicPrefs): Promise<PushEnableResult> {
@@ -156,12 +183,7 @@ export async function enablePushAlerts(prefs?: PushTopicPrefs): Promise<PushEnab
 
   await navigator.serviceWorker.register("/sw.js", { scope: "/" });
   const reg = await navigator.serviceWorker.ready;
-  const sub =
-    (await reg.pushManager.getSubscription()) ??
-    (await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(keyData.publicKey),
-    }));
+  const sub = await obtainPushSubscription(reg, keyData.publicKey);
   await postSubscription(sub, nextPrefs);
   writePushPref("on");
   notifyPushStatusChanged();
@@ -209,18 +231,25 @@ export async function disablePushAlerts(): Promise<"off"> {
   return "off";
 }
 
-/** Re-post the local subscription so the server always has this device. */
+/** Re-post (and re-key if needed) so the server always has this device. */
 export async function refreshPushSubscriptionIfEnabled() {
   if (!pushSupported()) return;
-  if (readPushPref() !== "on") return;
   if (Notification.permission !== "granted") return;
   const prefs = readPushTopicPrefs();
   if (!anyPushTopicOn(prefs)) return;
+  const pref = readPushPref();
+  const status = await readPushStatus();
+  if (pref !== "on" && status !== "on") return;
   try {
+    const keyRes = await fetch("/api/push/public-key", { cache: "no-store" });
+    const keyData = (await keyRes.json()) as { publicKey?: string };
+    if (!keyRes.ok || !keyData.publicKey) return;
+    await navigator.serviceWorker.register("/sw.js", { scope: "/" });
     const reg = await navigator.serviceWorker.ready;
-    const sub = await reg.pushManager.getSubscription();
-    if (!sub) return;
+    const sub = await obtainPushSubscription(reg, keyData.publicKey);
     await postSubscription(sub, prefs);
+    writePushPref("on");
+    notifyPushStatusChanged();
   } catch {
     /* ignore — user can re-enable from the bell */
   }

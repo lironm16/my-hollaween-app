@@ -959,19 +959,24 @@ export async function removePushSubscription(endpoint: string) {
   });
 }
 
-export async function broadcastPush(payload: PushPayload, includeEndpoint?: string) {
+export async function broadcastPush(
+  payload: PushPayload,
+  includeEndpoint?: string,
+  options?: { allSubscriptions?: boolean },
+) {
   const { vapid, subscriptions } = await runSyncedWrite((db) => {
     const vapid = ensureVapid(db);
     return {
       vapid,
       subscriptions: (db.pushSubscriptions ?? []).filter(
         (item) =>
+          options?.allSubscriptions ||
           subscriptionAllowsTopic(item, payload.topic) ||
           (includeEndpoint !== undefined && item.endpoint === includeEndpoint),
       ),
     };
   });
-  const { dead, delivered } = await sendPushToSubscriptions({ vapid, subscriptions, payload });
+  const { dead, delivered, errors } = await sendPushToSubscriptions({ vapid, subscriptions, payload });
   if (dead.length > 0) {
     const deadSet = new Set(dead);
     await runSyncedWrite((db) => {
@@ -980,7 +985,8 @@ export async function broadcastPush(payload: PushPayload, includeEndpoint?: stri
   }
   return {
     sent: delivered,
-    failed: dead.length,
+    failed: dead.length + errors,
     attempted: subscriptions.length,
+    errors,
   };
 }

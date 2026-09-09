@@ -103,8 +103,8 @@ export function ensureVapid(db: DbFile): VapidKeys {
   return db.vapid;
 }
 
-function isGoneStatus(statusCode: number) {
-  return statusCode === 404 || statusCode === 410;
+function isDeadSubscription(statusCode: number) {
+  return statusCode === 401 || statusCode === 403 || statusCode === 404 || statusCode === 410;
 }
 
 async function mapPool<T>(items: T[], limit: number, fn: (item: T) => Promise<void>) {
@@ -124,12 +124,13 @@ export async function sendPushToSubscriptions(options: {
   vapid: VapidKeys;
   subscriptions: PushSubscriptionRecord[];
   payload: PushPayload;
-}): Promise<{ dead: string[]; delivered: number }> {
+}): Promise<{ dead: string[]; delivered: number; errors: number }> {
   const payload = sanitizePushPayload(options.payload);
   webpush.setVapidDetails(options.vapid.subject, options.vapid.publicKey, options.vapid.privateKey);
   const body = JSON.stringify(payload);
   const dead: string[] = [];
   let delivered = 0;
+  let errors = 0;
   await mapPool(options.subscriptions, 20, async (sub) => {
     try {
       await webpush.sendNotification(
@@ -146,10 +147,11 @@ export async function sendPushToSubscriptions(options: {
         error && typeof error === "object" && "statusCode" in error
           ? Number((error as { statusCode?: number }).statusCode)
           : 0;
-      if (isGoneStatus(statusCode)) dead.push(sub.endpoint);
+      if (isDeadSubscription(statusCode)) dead.push(sub.endpoint);
+      else errors += 1;
     }
   });
-  return { dead, delivered };
+  return { dead, delivered, errors };
 }
 
 export function readIncludeEndpoint(input: unknown): string | undefined {
