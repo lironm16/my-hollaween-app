@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
@@ -54,9 +55,9 @@ export function HouseDetailOverlay({
     };
   }, [house.id]);
 
-  return (
+  const overlay = (
     <div
-      className="house-detail-overlay fixed inset-0 z-50 flex flex-col bg-[#160b20]"
+      className="house-detail-overlay fixed inset-0 z-[60] flex flex-col bg-[#160b20]"
       role="dialog"
       aria-labelledby={labelId}
       tabIndex={-1}
@@ -113,4 +114,7 @@ export function HouseDetailOverlay({
       </div>
     </div>
   );
+
+  if (typeof document === "undefined") return overlay;
+  return createPortal(overlay, document.body);
 }

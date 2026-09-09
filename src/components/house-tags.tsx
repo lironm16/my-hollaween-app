@@ -75,7 +75,10 @@ function TrafficCountSign({
       aria-label={label}
     >
       {kind === "saved" ? (
-        <Heart className={cn(large ? "size-5" : "size-4")} strokeWidth={2.2} />
+        <Heart
+          className={cn(large ? "size-5" : "size-4", "fill-current text-[#fb7185]")}
+          strokeWidth={2.2}
+        />
       ) : (
         <VisitedCheck visited size={large ? "md" : "sm"} />
       )}
