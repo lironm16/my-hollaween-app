@@ -19,12 +19,16 @@ export const DEFAULT_HOUSE_FILTERS: HouseFiltersState = {
   openNowOnly: false,
   closingSoonOnly: false,
   openingSoonOnly: false,
+  closedOnly: false,
+  onBreakOnly: false,
+  decorOnlyOnly: false,
   sensitivityFilters: [],
   scareFilters: [...SCARE_LEVELS],
   candyFilters: [...CANDY_TONE_IDS],
   neighborhoodFilters: [...NEIGHBORHOODS],
   likedOnly: false,
   unvisitedOnly: false,
+  visitedOnly: false,
   includeUndecorated: true,
 };
 
@@ -72,8 +76,12 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
     openNowOnly: Boolean(raw.openNowOnly),
     closingSoonOnly: Boolean(raw.closingSoonOnly),
     openingSoonOnly: Boolean(raw.openingSoonOnly),
+    closedOnly: Boolean(raw.closedOnly),
+    onBreakOnly: Boolean(raw.onBreakOnly),
+    decorOnlyOnly: Boolean(raw.decorOnlyOnly),
     likedOnly: Boolean(raw.likedOnly),
     unvisitedOnly: Boolean(raw.unvisitedOnly),
+    visitedOnly: Boolean(raw.visitedOnly),
     includeUndecorated,
     neighborhoodFilters: Array.isArray(raw.neighborhoodFilters) ? neighborhoods : [...NEIGHBORHOODS],
     scareFilters: scares.length > 0 ? scares : [...SCARE_LEVELS],
@@ -108,8 +116,12 @@ export function countActiveFilters(filters: HouseFiltersState): number {
     Number(filters.openNowOnly) +
     Number(filters.closingSoonOnly) +
     Number(filters.openingSoonOnly) +
+    Number(filters.closedOnly) +
+    Number(filters.onBreakOnly) +
+    Number(filters.decorOnlyOnly) +
     Number(filters.likedOnly) +
-    Number(filters.unvisitedOnly);
+    Number(filters.unvisitedOnly) +
+    Number(filters.visitedOnly);
   const neighborhoodActiveCount =
     filters.neighborhoodFilters.length === NEIGHBORHOODS.length
       ? 0

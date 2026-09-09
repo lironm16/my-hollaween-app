@@ -1,3 +1,7 @@
+import { DecorMark } from "@/components/decor-glyphs";
+import { ClosedSign, PauseSign } from "@/components/house-tags";
+import { VisitedCheck } from "@/components/visited-check";
+import { visitShort } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 
 function HeartGlyph() {
@@ -84,6 +88,66 @@ export function UnvisitedMark({
     <span className={cn("inline-flex items-center gap-2", className)}>
       <UnvisitedSign />
       {labeled ? <span>לא ביקרתי</span> : <span className="sr-only">לא ביקרתי</span>}
+    </span>
+  );
+}
+
+export function ClosedMark({
+  labeled = false,
+  className,
+}: {
+  labeled?: boolean;
+  className?: string;
+}) {
+  return (
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <ClosedSign />
+      {labeled ? <span>סגור</span> : <span className="sr-only">סגור</span>}
+    </span>
+  );
+}
+
+export function OnBreakMark({
+  labeled = false,
+  className,
+}: {
+  labeled?: boolean;
+  className?: string;
+}) {
+  return (
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <PauseSign />
+      {labeled ? <span>הפסקה</span> : <span className="sr-only">הפסקה</span>}
+    </span>
+  );
+}
+
+export function DecorOnlyMark({
+  labeled = false,
+  className,
+}: {
+  labeled?: boolean;
+  className?: string;
+}) {
+  return (
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <DecorMark level="mild" />
+      {labeled ? <span>{visitShort.decorOnly}</span> : <span className="sr-only">{visitShort.decorOnly}</span>}
+    </span>
+  );
+}
+
+export function VisitedMark({
+  labeled = false,
+  className,
+}: {
+  labeled?: boolean;
+  className?: string;
+}) {
+  return (
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <VisitedCheck visited />
+      {labeled ? <span>ביקרתי</span> : <span className="sr-only">ביקרתי</span>}
     </span>
   );
 }

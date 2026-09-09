@@ -1,10 +1,34 @@
 import { houseInNeighborhoods } from "@/lib/config";
-import { isClosingSoon, isOpenNow, isOpeningSoon } from "@/lib/hours";
+import {
+  isClosingSoon,
+  isHoursNightOver,
+  isHoursNotYetOpen,
+  isOnBreak,
+  isOpenNow,
+  isOpeningSoon,
+} from "@/lib/hours";
 import { candyTone } from "@/components/candy-glyphs";
-import { isDecorated, offersSensitivity } from "@/lib/house-state";
+import { effectiveVisit, isDecorated, isFrozen, offersSensitivity } from "@/lib/house-state";
 import { houseMatchesSet, type HouseSet } from "@/lib/house-set";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
+
+export function isHouseClosedForDisplay(house: PublicHouse, now: Date) {
+  return (
+    effectiveVisit(house) === "closed" ||
+    isHoursNightOver(house, now) ||
+    isHoursNotYetOpen(house, now)
+  );
+}
+
+export function isHouseOnBreakForDisplay(house: PublicHouse, now: Date) {
+  if (isHouseClosedForDisplay(house, now)) return false;
+  return isFrozen(house, now.getTime()) || isOnBreak(house, now);
+}
+
+export function isHouseDecorOnly(house: PublicHouse) {
+  return effectiveVisit(house) === "decorOnly";
+}
 
 export function filterHouses(
   houses: PublicHouse[],
@@ -21,12 +45,16 @@ export function filterHouses(
     openNowOnly,
     closingSoonOnly,
     openingSoonOnly,
+    closedOnly,
+    onBreakOnly,
+    decorOnlyOnly,
     sensitivityFilters,
     scareFilters,
     candyFilters,
     neighborhoodFilters,
     likedOnly,
     unvisitedOnly,
+    visitedOnly,
     includeUndecorated,
   } = filters;
   const { houseSet, likedIds, visitedIds, now } = options;
@@ -42,6 +70,13 @@ export function filterHouses(
         (openingSoonOnly && isOpeningSoon(house, now));
       if (!hoursHit) return false;
     }
+    if (closedOnly || onBreakOnly || decorOnlyOnly) {
+      const statusHit =
+        (closedOnly && isHouseClosedForDisplay(house, now)) ||
+        (onBreakOnly && isHouseOnBreakForDisplay(house, now)) ||
+        (decorOnlyOnly && isHouseDecorOnly(house));
+      if (!statusHit) return false;
+    }
     for (const sensitivity of sensitivityFilters) {
       if (!offersSensitivity(house, sensitivity)) return false;
     }
@@ -51,6 +86,7 @@ export function filterHouses(
     if (!houseInNeighborhoods(house, neighborhoodFilters)) return false;
     if (likedOnly && !likedIds.includes(house.id)) return false;
     if (unvisitedOnly && visitedIds.includes(house.id)) return false;
+    if (visitedOnly && !visitedIds.includes(house.id)) return false;
     return true;
   });
 }

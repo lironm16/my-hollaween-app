@@ -305,12 +305,16 @@ export type HouseFiltersState = {
   openNowOnly: boolean;
   closingSoonOnly: boolean;
   openingSoonOnly: boolean;
+  closedOnly: boolean;
+  onBreakOnly: boolean;
+  decorOnlyOnly: boolean;
   sensitivityFilters: SensitivityId[];
   scareFilters: ScareLevel[];
   candyFilters: CandyTone[];
   neighborhoodFilters: NeighborhoodId[];
   likedOnly: boolean;
   unvisitedOnly: boolean;
+  visitedOnly: boolean;
   /** Include houses with no outdoor decoration (gray struck lights). */
   includeUndecorated: boolean;
 };

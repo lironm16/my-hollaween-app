@@ -41,7 +41,14 @@ import { AccessibleMark } from "@/components/symbols";
 import { CandySign, CANDY_TONES } from "@/components/candy-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
 import { OpenNowMark, ClosingSoonMark, OpeningSoonMark } from "@/components/open-now-mark";
-import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
+import {
+  ClosedMark,
+  DecorOnlyMark,
+  LikedMark,
+  OnBreakMark,
+  UnvisitedMark,
+  VisitedMark,
+} from "@/components/visit-marks";
 import { ScareMark, ScareSign } from "@/components/scare-glyphs";
 import { decorShort } from "@/lib/labels";
 import { applyClockSearchParams } from "@/lib/app-clock";
@@ -304,12 +311,16 @@ export function NeighborhoodApp({
     openNowOnly: sheetOpenNowOnly,
     closingSoonOnly: sheetClosingSoonOnly,
     openingSoonOnly: sheetOpeningSoonOnly,
+    closedOnly: sheetClosedOnly,
+    onBreakOnly: sheetOnBreakOnly,
+    decorOnlyOnly: sheetDecorOnlyOnly,
     sensitivityFilters: sheetSensitivityFilters,
     scareFilters: sheetScareFilters,
     candyFilters: sheetCandyFilters,
     neighborhoodFilters: sheetNeighborhoodFilters,
     likedOnly: sheetLikedOnly,
     unvisitedOnly: sheetUnvisitedOnly,
+    visitedOnly: sheetVisitedOnly,
     includeUndecorated: sheetIncludeUndecorated,
   } = sheetFilters;
 
@@ -908,6 +919,26 @@ export function NeighborhoodApp({
             <OpeningSoonMark labeled />
           </FilterOption>
         </FilterSection>
+        <FilterSection title="סטטוס בית">
+          <FilterOption
+            checked={sheetClosedOnly}
+            onChange={() => patchFilterDraft({ closedOnly: !sheetClosedOnly })}
+          >
+            <ClosedMark labeled />
+          </FilterOption>
+          <FilterOption
+            checked={sheetOnBreakOnly}
+            onChange={() => patchFilterDraft({ onBreakOnly: !sheetOnBreakOnly })}
+          >
+            <OnBreakMark labeled />
+          </FilterOption>
+          <FilterOption
+            checked={sheetDecorOnlyOnly}
+            onChange={() => patchFilterDraft({ decorOnlyOnly: !sheetDecorOnlyOnly })}
+          >
+            <DecorOnlyMark labeled />
+          </FilterOption>
+        </FilterSection>
         <FilterSection title="שכונה">
           {NEIGHBORHOODS.map((area) => (
             <FilterOption
@@ -989,9 +1020,25 @@ export function NeighborhoodApp({
           </FilterOption>
           <FilterOption
             checked={sheetUnvisitedOnly}
-            onChange={() => patchFilterDraft({ unvisitedOnly: !sheetUnvisitedOnly })}
+            onChange={() =>
+              patchFilterDraft({
+                unvisitedOnly: !sheetUnvisitedOnly,
+                visitedOnly: sheetUnvisitedOnly ? sheetVisitedOnly : false,
+              })
+            }
           >
             <UnvisitedMark labeled />
+          </FilterOption>
+          <FilterOption
+            checked={sheetVisitedOnly}
+            onChange={() =>
+              patchFilterDraft({
+                visitedOnly: !sheetVisitedOnly,
+                unvisitedOnly: sheetVisitedOnly ? sheetUnvisitedOnly : false,
+              })
+            }
+          >
+            <VisitedMark labeled />
           </FilterOption>
         </FilterSection>
         <FilterSection title="רגישויות">
