@@ -179,7 +179,11 @@ export async function sendSelfPushTest(): Promise<{
   total?: number;
   error?: string;
 }> {
-  const endpoint = await senderPushEndpoint();
+  let endpoint = await senderPushEndpoint();
+  if (!endpoint && Notification.permission === "granted") {
+    await refreshPushSubscriptionIfEnabled();
+    endpoint = await senderPushEndpoint();
+  }
   if (!endpoint) {
     return { ok: false, registered: false, error: "אין הרשמה מקומית במכשיר." };
   }

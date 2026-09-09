@@ -156,7 +156,8 @@ export async function sendPushToSubscriptions(options: {
 
 export function readIncludeEndpoint(input: unknown): string | undefined {
   if (!input || typeof input !== "object") return undefined;
-  const value = (input as { includeEndpoint?: unknown }).includeEndpoint;
+  const rec = input as { includeEndpoint?: unknown; endpoint?: unknown };
+  const value = rec.includeEndpoint ?? rec.endpoint;
   return typeof value === "string" && value.length > 20 ? value : undefined;
 }
 
