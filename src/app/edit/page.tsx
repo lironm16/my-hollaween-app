@@ -12,7 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
+import { useHouseSet } from "@/hooks/use-house-set";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
+import { houseMatchesSet } from "@/lib/house-set";
 import { saveOwnedHouse, removeOwnedHouse, forgetPublishedHouse, notifyCatalogChanged } from "@/lib/offline-db";
 import { toPublicHouse } from "@/lib/ids";
 import type { House, PublicHouse } from "@/lib/types";
@@ -25,6 +27,8 @@ export default function EditPage() {
   const owned = useOwnedHouses();
   const { catalog, loading: catalogLoading, refresh } = useCatalog();
   const { admin, ready: adminReady } = useAdminSession();
+  const { houseSet } = useHouseSet();
+  const activeHouseSet = admin ? houseSet : "real";
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
   const [picked, setPicked] = useState<PublicHouse | null>(null);
   const [editCode, setEditCode] = useState("");
@@ -65,8 +69,8 @@ export default function EditPage() {
         byId.set(item.id, toPublicHouse(item) as PublicHouse);
       }
     }
-    return [...byId.values()];
-  }, [admin, adminHouses, catalog?.houses, owned]);
+    return [...byId.values()].filter((house) => houseMatchesSet(house, activeHouseSet));
+  }, [activeHouseSet, admin, adminHouses, catalog?.houses, owned]);
 
   const ownedMatch = picked ? owned.find((item) => item.id === picked.id) : undefined;
   const adminEditCode = picked && admin ? adminHouses.find((item) => item.id === picked.id)?.editCode : undefined;
