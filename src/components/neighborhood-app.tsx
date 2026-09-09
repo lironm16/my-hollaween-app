@@ -1363,6 +1363,17 @@ export function NeighborhoodApp({
                 }
               : undefined
           }
+          onShowInList={
+            view === "map" && selected
+              ? () => {
+                  const index = visible.findIndex((house) => house.id === selected.id);
+                  setView("list");
+                  setClusterOverview(false);
+                  setExpandedClusterKey(null);
+                  setSelectedListIndex(index >= 0 ? index + 1 : undefined);
+                }
+              : undefined
+          }
           pendingNote={
             selected.status === "pending" ? (
               <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">

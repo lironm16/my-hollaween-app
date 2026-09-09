@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, MapPinned, Navigation, Pencil, Share2 } from "lucide-react";
+import { Heart, List, MapPinned, Navigation, Pencil, Share2 } from "lucide-react";
 import { VisitedCheck } from "@/components/visited-check";
 import { useHouseTraffic } from "@/hooks/use-house-traffic";
 import { toast } from "sonner";
@@ -30,6 +30,7 @@ export function HouseActionBar({
   onToggleVisited,
   onToggleEdit,
   onShowOnMap,
+  onShowInList,
   editing,
   navOnly,
   showNav = true,
@@ -41,6 +42,7 @@ export function HouseActionBar({
   onToggleVisited?: () => void;
   onToggleEdit?: () => void;
   onShowOnMap?: () => void;
+  onShowInList?: () => void;
   editing?: boolean;
   navOnly?: boolean;
   showNav?: boolean;
@@ -71,6 +73,17 @@ export function HouseActionBar({
           onClick={onShowOnMap}
         >
           <MapPinned className="size-6" strokeWidth={2.2} />
+        </button>
+      ) : null}
+      {onShowInList ? (
+        <button
+          type="button"
+          className="house-action-btn"
+          aria-label="פתיחה ברשימה"
+          title="רשימה"
+          onClick={onShowInList}
+        >
+          <List className="size-6" strokeWidth={2.2} />
         </button>
       ) : null}
       {navOnly ? null : (
