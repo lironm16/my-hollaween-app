@@ -10,6 +10,7 @@ import { FilterOption, FilterSection } from "@/components/filter-menu";
 import { CustomVisitWindowFields } from "@/components/visit-window-fields";
 import { OpenNowSign } from "@/components/open-now-mark";
 import { NEIGHBORHOODS } from "@/lib/config";
+import { hasStockCandySelection } from "@/lib/filter-presets";
 import { visitWindowIssue } from "@/lib/hours";
 import { decorShort, scareShort } from "@/lib/labels";
 import type { HouseFiltersState } from "@/lib/offline-db";
@@ -91,7 +92,7 @@ export function HouseFiltersContent({
   ) => void;
 }) {
   const visitMode = effectiveVisitWindowMode(filters);
-  const candySensitivityEnabled = filters.candyFilters.some((tone) => tone !== "none");
+  const candySensitivityEnabled = hasStockCandySelection(filters);
   const useFrom = filters.visitWindowUseFrom ?? true;
   const useTo = filters.visitWindowUseTo ?? false;
   const customFrom = filters.visitWindowFrom || formatClockFromDate(now);
@@ -103,7 +104,7 @@ export function HouseFiltersContent({
       const nextCandy = current.candyFilters.includes(tone)
         ? current.candyFilters.filter((item) => item !== tone)
         : [...current.candyFilters, tone];
-      const hasCandyStock = nextCandy.some((item) => item !== "none");
+      const hasCandyStock = nextCandy.some((item) => item === "plenty" || item === "low");
       return {
         ...current,
         candyFilters: nextCandy,
