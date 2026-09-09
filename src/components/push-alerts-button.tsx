@@ -20,7 +20,7 @@ import {
   type PushTopic,
   type PushTopicPrefs,
 } from "@/lib/push-client";
-import { anyPushTopicOn, PUSH_TOPIC_ROWS } from "@/lib/push-topics";
+import { anyPushTopicOn, PUSH_TOPIC_ROWS, PUSH_TOPICS } from "@/lib/push-topics";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -48,6 +48,10 @@ function promptSkippedThisSession() {
   } catch {
     return false;
   }
+}
+
+function topicsEqual(a: PushTopicPrefs, b: PushTopicPrefs) {
+  return PUSH_TOPICS.every((topic) => a[topic] === b[topic]);
 }
 
 function TopicSwitch({
@@ -110,6 +114,7 @@ export function PushAlertsButton() {
   const [busy, setBusy] = useState(false);
   const [askOpen, setAskOpen] = useState(false);
   const [topics, setTopics] = useState<PushTopicPrefs>(DEFAULT_PUSH_TOPIC_PREFS);
+  const [savedTopics, setSavedTopics] = useState<PushTopicPrefs>(DEFAULT_PUSH_TOPIC_PREFS);
 
   useEffect(() => {
     const onChange = () => {
@@ -124,7 +129,9 @@ export function PushAlertsButton() {
 
     async function boot() {
       const stored = readPushTopicPrefs();
-      setTopics(anyPushTopicOn(stored) ? stored : { ...DEFAULT_PUSH_TOPIC_PREFS });
+      const initial = anyPushTopicOn(stored) ? stored : { ...DEFAULT_PUSH_TOPIC_PREFS };
+      setTopics(initial);
+      setSavedTopics(initial);
       const current = await readPushStatus();
       if (cancelled) return;
       setStatus(current);
@@ -169,15 +176,39 @@ export function PushAlertsButton() {
   const ios = status === "ios-install";
   const android = isAndroidDevice();
   const canEnable = anyPushTopicOn(topics);
+  const hasTopicChanges = !topicsEqual(topics, savedTopics);
 
   function closeDialog() {
+    if (subscribed && hasTopicChanges) {
+      setTopics(savedTopics);
+    }
     setAskOpen(false);
     if (!subscribed) skipPromptThisSession();
   }
 
   async function save() {
     if (subscribed) {
-      closeDialog();
+      if (!hasTopicChanges) return;
+      setBusy(true);
+      try {
+        const result = await syncPushTopicPrefs(topics);
+        setStatus(result);
+        if (result !== "on") {
+          skipPromptThisSession();
+          toast.message("התראות כבויות במכשיר הזה.");
+          setAskOpen(false);
+          return;
+        }
+        writePushTopicPrefs(topics);
+        setSavedTopics(topics);
+        setAskOpen(false);
+        toast.success("ההעדפות נשמרו.", { closeButton: true });
+      } catch {
+        toast.error("לא הצלחנו לשמור את ההעדפה.");
+        setTopics(savedTopics);
+      } finally {
+        setBusy(false);
+      }
       return;
     }
     if (!canEnable) return;
@@ -235,39 +266,28 @@ export function PushAlertsButton() {
     }
   }
 
-  async function toggleTopic(id: PushTopic, on: boolean) {
+  function toggleTopic(id: PushTopic, on: boolean) {
     const next = { ...topics, [id]: on };
     setTopics(next);
-    writePushTopicPrefs(next);
-    if (!subscribed) return;
-    setBusy(true);
-    try {
-      const result = await syncPushTopicPrefs(next);
-      setStatus(result);
-      if (result !== "on") {
-        skipPromptThisSession();
-        toast.message("התראות כבויות במכשיר הזה.");
-      }
-    } catch {
-      toast.error("לא הצלחנו לשמור את ההעדפה.");
-      setTopics(readPushTopicPrefs());
-    } finally {
-      setBusy(false);
-    }
+    if (!subscribed) writePushTopicPrefs(next);
   }
 
   async function disableAll() {
     const off = { newHouse: false, houseStatus: false, admin: false };
     setTopics(off);
+    setSavedTopics(off);
     setBusy(true);
     try {
       await disablePushAlerts();
       setStatus("off");
-      closeDialog();
+      writePushTopicPrefs(off);
+      setAskOpen(false);
       toast.message("התראות כבויות במכשיר הזה.", { closeButton: true });
     } catch {
       toast.error("לא הצלחנו לכבות את ההתראות.");
-      setTopics(readPushTopicPrefs());
+      const stored = readPushTopicPrefs();
+      setTopics(stored);
+      setSavedTopics(stored);
     } finally {
       setBusy(false);
     }
@@ -275,9 +295,10 @@ export function PushAlertsButton() {
 
   function openSettings() {
     const stored = readPushTopicPrefs();
-    setTopics(
-      subscribed || anyPushTopicOn(stored) ? stored : { ...DEFAULT_PUSH_TOPIC_PREFS },
-    );
+    const initial =
+      subscribed || anyPushTopicOn(stored) ? stored : { ...DEFAULT_PUSH_TOPIC_PREFS };
+    setTopics(initial);
+    setSavedTopics(initial);
     setAskOpen(true);
   }
 
@@ -287,24 +308,25 @@ export function PushAlertsButton() {
       : status === "denied"
         ? "התראות חסומות בהגדרות הדפדפן"
         : status === "ios-install"
-          ? "באייפון: הוסיפו למסך הבית ואז הפעילו"
+          ? "באייפון: הוסיפו למסך הבית ואז הפעל"
           : status === "unsupported"
             ? "הדפדפן לא תומך בהתראות"
-            : "הפעילו התראות מהשכונה";
+            : "הפעל התראות מהשכונה";
 
   const helpDescription = ios
     ? "באייפון צריך קודם «הוספה למסך הבית», ואז נפתח חלון ההרשאה."
     : denied
       ? android
         ? "באנדרואיד: הגדרות → אפליקציות → Chrome → התראות → אפשר. ואז ב-Chrome: סמל המנעול ליד הכתובת → התראות → אפשר."
-        : "כדי לקבל התראות: לחצו על סמל המנעול או «i» ליד הכתובת, בחרו «התראות» → «אפשר», ואז חזרו לכאן ולחצו «הפעילו»."
+        : "כדי לקבל התראות: לחצו על סמל המנעול או «i» ליד הכתובת, בחרו «התראות» → «אפשר», ואז חזרו לכאן ולחצו «הפעל»."
       : unsupported
         ? "דפדפן זה לא תומך בהתראות דחיפה. נסו Chrome, Firefox, או Safari אחרי «הוספה למסך הבית»."
         : android && !subscribed
           ? "באנדרואיד (כולל Pixel): השתמשו ב-Chrome, אפשרו התראות לאתר, וודאו ש-Chrome לא מוגבל בסוללה (הגדרות → אפליקציות → Chrome → סוללה → ללא הגבלה)."
           : null;
 
-  const primaryLabel = subscribed ? "שמירה" : "הפעילו";
+  const primaryLabel = subscribed ? "שמירה" : "הפעל";
+  const primaryDisabled = busy || (subscribed ? !hasTopicChanges : !canEnable);
 
   return (
     <>
@@ -378,22 +400,17 @@ export function PushAlertsButton() {
                 />
               ))}
               {subscribed ? (
-                <>
-                  <p className="px-1 text-base text-violet-300/90">
-                    כדי לכבות לגמרי במכשיר, כבו את כל הסוגים או לחצו «כבו התראות».
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-orange-400/40 text-orange-100"
-                    disabled={busy}
-                    onClick={() => void runSelfTest()}
-                  >
-                    שלחו לי התראת בדיקה
-                  </Button>
-                </>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-orange-400/40 text-orange-100"
+                  disabled={busy}
+                  onClick={() => void runSelfTest()}
+                >
+                  שלחו לי התראת בדיקה
+                </Button>
               ) : !canEnable ? (
-                <p className="px-1 text-base text-amber-200/90">סמנו לפחות סוג אחד, ואז «הפעילו».</p>
+                <p className="px-1 text-base text-amber-200/90">סמנו לפחות סוג אחד, ואז «הפעל».</p>
               ) : null}
             </div>
           )}
@@ -406,7 +423,7 @@ export function PushAlertsButton() {
               <>
                 <Button
                   className="bg-orange-500 text-black hover:bg-orange-400"
-                  disabled={busy || (!subscribed && !canEnable)}
+                  disabled={primaryDisabled}
                   onClick={() => void save()}
                 >
                   {primaryLabel}
@@ -422,7 +439,7 @@ export function PushAlertsButton() {
                   </Button>
                 ) : null}
                 <Button variant="ghost" className="text-violet-200" disabled={busy} onClick={closeDialog}>
-                  ביטול
+                  סגור
                 </Button>
               </>
             )}

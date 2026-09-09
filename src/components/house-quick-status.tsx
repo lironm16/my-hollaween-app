@@ -15,16 +15,17 @@ export type QuickStatusPatch = Partial<HouseInput> & { ownerFrozenUntil?: string
 
 function buildQuickPatch(
   house: PublicHouse,
-  opts: { candy?: CandyTone; nightStatus?: "open" | "pause" | "stop" },
+  opts: { candy?: CandyTone; nightStatus?: "open" | "pause" | "stop"; outAndClosed?: boolean },
 ): QuickStatusPatch {
-  const candy = opts.candy ?? candyTone(house);
   const currentNight =
     house.visit === "closed"
       ? "stop"
       : isOwnerFrozen(house)
         ? "pause"
         : "open";
-  const nightStatus = opts.nightStatus ?? currentNight;
+  const outAndClosed = opts.outAndClosed === true;
+  const candy = outAndClosed ? "out" : (opts.candy ?? candyTone(house));
+  const nightStatus = outAndClosed ? "stop" : (opts.nightStatus ?? currentNight);
   const withoutCandy = house.treats.filter((id) => id !== "candy");
   const treats =
     candy === "none"
@@ -68,6 +69,7 @@ export function HouseQuickStatus({
   const candy = candyTone(house);
   const nightStatus: "open" | "pause" | "stop" =
     house.visit === "closed" ? "stop" : isOwnerFrozen(house) ? "pause" : "open";
+  const outAndClosed = nightStatus === "stop" && candy === "out";
   const nightStatusEnabled = nightStatusControlsEnabled(
     {
       openHours: houseHoursWindows(house),
@@ -98,6 +100,10 @@ export function HouseQuickStatus({
       <p className="text-base font-semibold text-orange-100">עדכון מהיר</p>
       <div>
         <p className="mb-2 text-base font-medium text-violet-200">ממתקים</p>
+        <p className="mb-2 text-base text-violet-400">
+          «נגמר» = הממתקים אזלו, הבית עדיין פתוח. «נגמר — סגור» = אזלו הממתקים ולא מקבלים עוד
+          ביקורים.
+        </p>
         <div className="flex flex-wrap gap-1.5">
           {CANDY_TONES.map((tone) => (
             <button
@@ -159,13 +165,34 @@ export function HouseQuickStatus({
             }
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-base font-medium",
-              nightStatus === "stop"
+              nightStatus === "stop" && !outAndClosed
                 ? "bg-orange-500 text-black"
                 : "bg-[#261536] text-orange-100 ring-1 ring-orange-500/30",
             )}
           >
             <span className="night-status-dot is-closed" />
             סגור
+          </button>
+          <button
+            type="button"
+            disabled={blocked || !nightStatusEnabled}
+            onClick={() =>
+              void apply(
+                outAndClosed
+                  ? buildQuickPatch(house, { nightStatus: "open", candy: "out" })
+                  : buildQuickPatch(house, { outAndClosed: true }),
+              )
+            }
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-base font-medium",
+              outAndClosed
+                ? "bg-orange-500 text-black"
+                : "bg-[#261536] text-orange-100 ring-1 ring-orange-500/30",
+            )}
+          >
+            <CandySign tone="out" className="size-6" />
+            <span className="night-status-dot is-closed" />
+            נגמר — סגור
           </button>
         </div>
       </div>

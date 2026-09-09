@@ -164,6 +164,7 @@ export function HouseForm({
   }
 
   const candyOffered = candy === "plenty" || candy === "low";
+  const outAndClosed = nightStatus === "stop" && candy === "out";
   const undecorated = decorLevel === "none";
   const hoursIssue = hoursWindowsIssue(
     hourWindows.map((window) => ({ from: clock(window.from), to: clock(window.to) })),
@@ -519,6 +520,10 @@ export function HouseForm({
         </div>
         <div>
           <p className="mb-2 text-base font-medium">ממתקים</p>
+          <p className="mb-2 text-base text-violet-300">
+            «נגמר» = הממתקים אזלו, הבית עדיין פתוח. «נגמר — סגור» = אזלו הממתקים ולא מקבלים עוד
+            ביקורים.
+          </p>
           <div className="flex flex-wrap gap-1.5">
             {CANDY_TONES.map((tone) => (
               <button
@@ -564,13 +569,34 @@ export function HouseForm({
               disabled={!nightStatusEnabled}
               onClick={() => setNightStatus((current) => (current === "stop" ? "open" : "stop"))}
               className={
-                nightStatus === "stop"
+                nightStatus === "stop" && !outAndClosed
                   ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
                   : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
               }
             >
               <span className="night-status-dot is-closed" />
               סגור
+            </button>
+            <button
+              type="button"
+              disabled={!nightStatusEnabled}
+              onClick={() => {
+                if (outAndClosed) {
+                  setNightStatus("open");
+                  return;
+                }
+                pickCandy("out");
+                setNightStatus("stop");
+              }}
+              className={
+                outAndClosed
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
+              }
+            >
+              <CandySign tone="out" className="size-6" />
+              <span className="night-status-dot is-closed" />
+              נגמר — סגור
             </button>
           </div>
         </div>

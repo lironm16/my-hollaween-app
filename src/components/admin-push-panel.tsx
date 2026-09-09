@@ -257,6 +257,128 @@ export function AdminPushPanel() {
     }
   }
 
+  const autoTemplates = templates.filter((item) => item.auto);
+  const ownerTemplates = templates.filter((item) => !item.auto);
+
+  function renderTemplate(item: PushTemplateMeta) {
+    const open = expanded === item.id;
+    const draftChanged =
+      open &&
+      (draftTitle.trim() !== item.title.trim() || draftBody.trim() !== item.body.trim());
+
+    return (
+      <article
+        key={item.id}
+        className="space-y-1.5 rounded-lg bg-[#12081a]/80 p-2 ring-1 ring-orange-500/15"
+      >
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                aria-label={open ? "סגירת עריכה" : `עריכת ${item.label}`}
+                aria-pressed={open}
+                className={cn(
+                  "inline-flex size-7 shrink-0 items-center justify-center rounded-md text-orange-200 ring-1 ring-orange-500/20 hover:bg-orange-500/15",
+                  open && "bg-orange-500 text-black ring-orange-400",
+                )}
+                onClick={() => (open ? cancelEdit() : openEdit(item))}
+              >
+                <Pencil className="size-3.5" />
+              </button>
+              <p className="min-w-0 flex-1 text-base font-medium text-orange-100">{item.label}</p>
+            </div>
+            <p className="text-base text-violet-300">{item.hint}</p>
+          </div>
+          <Toggle
+            on={item.enabled}
+            disabled={busy}
+            onClick={() => void patch(item.id, { enabled: !item.enabled })}
+          />
+        </div>
+        {item.auto ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={!item.enabled || !sendHouseId || sendingKind !== null}
+            className="border-orange-400/40 text-orange-100"
+            onClick={() => void sendKind(item.id)}
+          >
+            {sendingKind === item.id ? "שולחים…" : "שליחה לבית שנבחר"}
+          </Button>
+        ) : null}
+        {open ? (
+          <form
+            className="space-y-1.5"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void saveEdit();
+            }}
+          >
+            <Input
+              value={draftTitle}
+              maxLength={80}
+              disabled={savingEdit}
+              className="h-8 bg-[#0c0612] text-base"
+              onChange={(event) => setDraftTitle(event.target.value)}
+            />
+            <Textarea
+              value={draftBody}
+              maxLength={280}
+              rows={2}
+              disabled={savingEdit}
+              className="min-h-[3.5rem] bg-[#0c0612] text-base"
+              onChange={(event) => setDraftBody(event.target.value)}
+            />
+            <PushNotice
+              payload={{
+                ...fillPushTemplate(
+                  { title: draftTitle, body: draftBody },
+                  {
+                    name: "בית הדלעת",
+                    address: "חרוזים 8, חרוזים",
+                    lat: 32.0916,
+                    lng: 34.8029,
+                    ownerFrozenUntil: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+                  },
+                ),
+                url: "/",
+              }}
+            />
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                disabled={savingEdit}
+                className="text-violet-200"
+                onClick={cancelEdit}
+              >
+                סגור
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={savingEdit || !draftTitle.trim() || !draftBody.trim() || !draftChanged}
+                className="bg-orange-500 text-black hover:bg-orange-400"
+              >
+                {savingEdit ? "שומרים…" : "שמירה"}
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <div className="rounded-md bg-[#0c0612]/80 px-2 py-1.5 ring-1 ring-orange-500/10">
+            <p className="text-base font-medium text-orange-50">{item.title}</p>
+            <p className="mt-0.5 whitespace-pre-line text-base leading-snug text-violet-200">
+              {item.body}
+            </p>
+          </div>
+        )}
+      </article>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <form
@@ -296,12 +418,51 @@ export function AdminPushPanel() {
       </form>
 
       <div className="space-y-2 rounded-xl bg-black/25 p-3">
-        <p className="text-base font-medium text-amber-100">תבניות</p>
+        <p className="text-base font-medium text-amber-100">מקרא ותבניות</p>
+        <div className="space-y-2 rounded-lg bg-[#12081a]/60 p-2.5 ring-1 ring-orange-500/10">
+          <p className="text-base font-medium text-orange-100">שדות בתבנית</p>
+          <ul className="space-y-1 text-base text-violet-300">
+            <li>
+              <span className="font-mono text-orange-200">{`{nickname}`}</span> — שם הבית
+            </li>
+            <li>
+              <span className="font-mono text-orange-200">{`{place}`}</span> — כתובת מקוצרת
+            </li>
+            <li>
+              <span className="font-mono text-orange-200">{`{backLine}`}</span> — שורה על חזרה מההפסקה:
+              «נחזור ב־20:00» אם נקבעה שעה, אחרת «נחזור בקרוב». רלוונטי רק להתראת הפסקה.
+            </li>
+          </ul>
+        </div>
+        <div className="space-y-2 rounded-lg bg-[#12081a]/60 p-2.5 ring-1 ring-orange-500/10">
+          <p className="text-base font-medium text-orange-100">מה בעל הבית בוחר — ואיזו התראה נשלחת</p>
+          <ul className="space-y-1 text-base text-violet-300">
+            <li>
+              <span className="text-orange-100">נגמר</span> — הממתקים אזלו, הבית עדיין פתוח לביקור → «נגמרו
+              הממתקים»
+            </li>
+            <li>
+              <span className="text-orange-100">בלי ממתקים</span> + קישוטים — אפשר לבוא לראות את הבית המקושט →
+              «מקושט בלי ממתקים»
+            </li>
+            <li>
+              <span className="text-orange-100">נגמר — סגור</span> — הממתקים אזלו והבית נסגר לערב → «נסגר
+              לביקור» (מלאי נשמר כ«נגמר» בנתונים)
+            </li>
+            <li>
+              <span className="text-orange-100">סגור</span> — הבית נסגר לערב בלי לסמן «נגמר» → «נסגר
+              לביקור»
+            </li>
+            <li>
+              <span className="text-orange-100">הפסקה</span> — הקפאה זמנית מהמפה → «הפסקה» (אוטומטי)
+            </li>
+          </ul>
+        </div>
         <p className="text-base text-violet-300">
-          {`מציינים {nickname} {place} {backLine}. כבוי = לא נשלח בכלל. בית חדש, הפסקה וחזרה נשלחים אוטומטית — אפשר גם לשלוח אותם ידנית לבית שנבחר.`}
+          כבוי = התבנית לא נשלחת. אחרי שמירת סטטוס, בעל הבית יכול לאשר שליחה — חוץ מהתראות אוטומטיות.
         </p>
         <label className="block space-y-1">
-          <span className="text-base text-violet-200">בית לשליחה ידנית</span>
+          <span className="text-base text-violet-200">בית לשליחה ידנית (בדיקה)</span>
           <select
             value={sendHouseId}
             onChange={(event) => setSendHouseId(event.target.value)}
@@ -316,129 +477,20 @@ export function AdminPushPanel() {
           </select>
         </label>
 
-        <div className="space-y-1.5">
-          {templates.length === 0 ? (
-            <p className="text-base text-violet-400">טוענים תבניות…</p>
-          ) : (
-            templates.map((item) => {
-              const open = expanded === item.id;
-              return (
-                <article
-                  key={item.id}
-                  className="space-y-1.5 rounded-lg bg-[#12081a]/80 p-2 ring-1 ring-orange-500/15"
-                >
-                  <div className="flex items-start gap-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          aria-label={open ? "סגירת עריכה" : `עריכת ${item.label}`}
-                          aria-pressed={open}
-                          className={cn(
-                            "inline-flex size-7 shrink-0 items-center justify-center rounded-md text-orange-200 ring-1 ring-orange-500/20 hover:bg-orange-500/15",
-                            open && "bg-orange-500 text-black ring-orange-400",
-                          )}
-                          onClick={() => (open ? cancelEdit() : openEdit(item))}
-                        >
-                          <Pencil className="size-3.5" />
-                        </button>
-                        <p className="min-w-0 flex-1 text-base font-medium text-orange-100">{item.label}</p>
-                      </div>
-                      <p className="text-base text-violet-300">
-                        {item.auto ? "אוטומטי" : "בעל הבית שולח אחרי שמירה"}
-                      </p>
-                    </div>
-                    <Toggle
-                      on={item.enabled}
-                      disabled={busy}
-                      onClick={() => void patch(item.id, { enabled: !item.enabled })}
-                    />
-                  </div>
-                  {item.auto ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={!item.enabled || !sendHouseId || sendingKind !== null}
-                      className="border-orange-400/40 text-orange-100"
-                      onClick={() => void sendKind(item.id)}
-                    >
-                      {sendingKind === item.id ? "שולחים…" : "שליחה לבית שנבחר"}
-                    </Button>
-                  ) : null}
-                  {open ? (
-                    <form
-                      className="space-y-1.5"
-                      onSubmit={(event) => {
-                        event.preventDefault();
-                        void saveEdit();
-                      }}
-                    >
-                      <p className="text-base text-violet-400">{item.hint}</p>
-                      <Input
-                        value={draftTitle}
-                        maxLength={80}
-                        disabled={savingEdit}
-                        className="h-8 bg-[#0c0612] text-base"
-                        onChange={(event) => setDraftTitle(event.target.value)}
-                      />
-                      <Textarea
-                        value={draftBody}
-                        maxLength={280}
-                        rows={2}
-                        disabled={savingEdit}
-                        className="min-h-[3.5rem] bg-[#0c0612] text-base"
-                        onChange={(event) => setDraftBody(event.target.value)}
-                      />
-                      <PushNotice
-                        payload={{
-                          ...fillPushTemplate(
-                            { title: draftTitle, body: draftBody },
-                            {
-                              name: "בית הדלעת",
-                              address: "חרוזים 8, חרוזים",
-                              lat: 32.0916,
-                              lng: 34.8029,
-                              ownerFrozenUntil: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-                            },
-                          ),
-                          url: "/",
-                        }}
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          disabled={savingEdit}
-                          className="text-violet-200"
-                          onClick={cancelEdit}
-                        >
-                          ביטול
-                        </Button>
-                        <Button
-                          type="submit"
-                          size="sm"
-                          disabled={savingEdit || !draftTitle.trim() || !draftBody.trim()}
-                          className="bg-orange-500 text-black hover:bg-orange-400"
-                        >
-                          {savingEdit ? "שומרים…" : "שמירה"}
-                        </Button>
-                      </div>
-                    </form>
-                  ) : (
-                    <div className="rounded-md bg-[#0c0612]/80 px-2 py-1.5 ring-1 ring-orange-500/10">
-                      <p className="text-base font-medium text-orange-50">{item.title}</p>
-                      <p className="mt-0.5 whitespace-pre-line text-base leading-snug text-violet-200">
-                        {item.body}
-                      </p>
-                    </div>
-                  )}
-                </article>
-              );
-            })
-          )}
-        </div>
+        {templates.length === 0 ? (
+          <p className="text-base text-violet-400">טוענים תבניות…</p>
+        ) : (
+          <>
+            <div className="space-y-1.5">
+              <p className="text-base font-medium text-amber-100/90">אוטומטיות</p>
+              {autoTemplates.map(renderTemplate)}
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-base font-medium text-amber-100/90">אחרי שמירה על ידי בעל הבית</p>
+              {ownerTemplates.map(renderTemplate)}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
