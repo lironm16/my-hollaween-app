@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Heart, List, MapPinned, Route } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
@@ -25,31 +25,27 @@ import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
-import { useHouseFilters, cloneHouseFilters, countActiveFilters, emptyHouseFilters, filtersEqual } from "@/hooks/use-house-filters";
+import { useAdminHouses } from "@/hooks/use-admin-houses";
+import { useFilterDraft } from "@/hooks/use-filter-draft";
+import { useHouseFilters, countActiveFilters } from "@/hooks/use-house-filters";
 import { useMergedHouses } from "@/hooks/use-merged-houses";
+import { useNeighborhoodRoute } from "@/hooks/use-neighborhood-route";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useDistanceOrigin } from "@/hooks/use-distance-origin";
 import { useHouseSet } from "@/hooks/use-house-set";
-import { readApiJson } from "@/lib/api-json";
 import { inNeighborhood, config } from "@/lib/config";
 import { clusterHousesByAddress } from "@/lib/house-clusters";
 import { applyClockSearchParams } from "@/lib/app-clock";
-import { visitWindowIssue } from "@/lib/hours";
-import { formatClockFromDate, defaultVisitWindowEnd } from "@/lib/visit-window";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { reportHouseTraffic } from "@/hooks/use-house-traffic";
 import {
-  backupLooksNewer,
-  loadServerDbBackup,
   notifyCatalogChanged,
   removeOwnedHouse,
   forgetPublishedHouse,
   saveOwnedHouse,
-  saveServerDbBackup,
-  type ServerDbBackup,
 } from "@/lib/offline-db";
 import {
   readHomeView,
@@ -57,12 +53,9 @@ import {
   type HomeView,
 } from "@/lib/home-view";
 import { HOUSE_SET_LABELS } from "@/lib/house-set";
-import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
-import { filterHouses, routeHouseIds } from "@/lib/filter-houses";
-import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
+import { filterHouses } from "@/lib/filter-houses";
 import { UnvisitedSign } from "@/components/visit-marks";
-import type { HouseFiltersState } from "@/lib/offline-db";
-import type { Catalog, House, PublicHouse } from "@/lib/types";
+import type { Catalog, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function NeighborhoodApp({
@@ -110,13 +103,6 @@ export function NeighborhoodApp({
   const toggleUnvisitedFilter = () =>
     updateFilters({ unvisitedOnly: !filters.unvisitedOnly });
   const { accessibleOnly, likedOnly, unvisitedOnly } = filters;
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filterDraft, setFilterDraft] = useState<HouseFiltersState | null>(null);
-  const filtersOpenRef = useRef(false);
-  const [routeMode, setRouteMode] = useState(false);
-  const [pinnedRoute, setPinnedRoute] = useState<WalkingRoute | null>(null);
-  const [routeFitTick, setRouteFitTick] = useState(0);
-  const pendingRouteGps = useRef(false);
   const originPickResumeView = useRef<HomeView | null>(null);
   const geoErrorToasted = useRef(false);
   const cheerTimer = useRef(0);
@@ -131,7 +117,6 @@ export function NeighborhoodApp({
   const [originDraftLabel, setOriginDraftLabel] = useState("נקודה במפה");
   const [panTo, setPanTo] = useState<{ lat: number; lng: number } | null>(null);
   const [panTick, setPanTick] = useState(0);
-  const [adminHouses, setAdminHouses] = useState<House[]>([]);
   const [editing, setEditing] = useState(false);
   const [editForId, setEditForId] = useState(selectedId);
 
@@ -140,7 +125,6 @@ export function NeighborhoodApp({
     setEditForId(selectedId);
     setEditing(false);
   }, [selectedId, editForId]);
-  const [busyAction, setBusyAction] = useState(false);
   const [listQuery, setListQuery] = useState("");
   const [routePrompt, setRoutePrompt] = useState<{
     kind: "enter-route" | "filter-change";
@@ -168,14 +152,6 @@ export function NeighborhoodApp({
     applyClockSearchParams(window.location.search);
   }, []);
 
-  useEffect(() => {
-    if (filtersOpen && !filtersOpenRef.current) {
-      setFilterDraft(cloneHouseFilters(filters));
-    }
-    if (!filtersOpen) setFilterDraft(null);
-    filtersOpenRef.current = filtersOpen;
-  }, [filtersOpen, filters]);
-
   function setView(next: HomeView) {
     writeHomeView(next);
   }
@@ -187,55 +163,18 @@ export function NeighborhoodApp({
   }, [owned, editHouseId]);
   const canEditSelected = Boolean(admin || ownedEditCode);
 
-  const rememberAdminDb = useCallback((houses: House[], updatedAt: string) => {
-    saveServerDbBackup({
-      updatedAt,
-      houses: houses as ServerDbBackup["houses"],
-    });
-  }, []);
-
-  const loadAdminHouses = useCallback(async () => {
-    if (!admin) return;
-    try {
-      const res = await fetch("/api/admin/houses", { cache: "no-store" });
-      if (!res.ok) return;
-      const data = (await res.json()) as { houses?: House[]; updatedAt?: string };
-      let houses = data.houses ?? [];
-      let updatedAt = data.updatedAt ?? new Date().toISOString();
-      const backup = loadServerDbBackup();
-      if (backup && backupLooksNewer(backup, updatedAt, houses)) {
-        const restoreRes = await fetch("/api/admin/restore", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(backup),
-        });
-        if (restoreRes.ok) {
-          const restored = (await restoreRes.json()) as {
-            houses?: House[];
-            updatedAt?: string;
-          };
-          houses = restored.houses ?? houses;
-          updatedAt = restored.updatedAt ?? updatedAt;
-          notifyCatalogChanged();
-        }
-      }
-      setAdminHouses(houses);
-      rememberAdminDb(houses, updatedAt);
-    } catch {
-      /* keep last list */
-    }
-  }, [admin, rememberAdminDb]);
+  const {
+    adminHouses,
+    busyAction,
+    applyAdminHouse,
+    approveHouse,
+    rejectHouse,
+    removeAdminHouse,
+  } = useAdminHouses({ admin, refresh });
 
   useEffect(() => {
-    if (!admin) {
-      setAdminHouses([]);
-      setEditing(false);
-      return;
-    }
-    void loadAdminHouses();
-    const timer = window.setInterval(() => void loadAdminHouses(), 15_000);
-    return () => window.clearInterval(timer);
-  }, [admin, loadAdminHouses]);
+    if (!admin) setEditing(false);
+  }, [admin]);
 
   const wasAdmin = useRef(false);
   useEffect(() => {
@@ -279,187 +218,65 @@ export function NeighborhoodApp({
   const visible = useMemo(() => filterHouses(houses, filters, filterContext), [houses, filters, filterContext]);
 
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
-  const sheetFilters = filterDraft ?? filters;
-  const sheetActiveCount = useMemo(() => countActiveFilters(sheetFilters), [sheetFilters]);
-  const sheetResultCount = useMemo(
-    () => filterHouses(houses, sheetFilters, filterContext).length,
-    [houses, sheetFilters, filterContext],
-  );
 
-  const visitedIdsRef = useRef(visits.visitedIds);
-  visitedIdsRef.current = visits.visitedIds;
-
-  const filterRoute = useMemo(() => {
-    const houses = visible.filter((house) => !visits.visitedIds.includes(house.id));
-    return buildWalkingRoute(houses, origin, {
-      accessible: accessibleOnly,
-      startedFrom: origin.kind,
-      originLabel: origin.label,
-    });
-  }, [visible, visits.visitedIds, accessibleOnly, origin]);
-
-  const pinCurrentRoute = useCallback(
-    (fit = false) => {
-      setPinnedRoute(filterRoute);
-      if (fit) setRouteFitTick((n) => n + 1);
+  const {
+    routeMode,
+    pinnedRoute,
+    setPinnedRoute,
+    routeFitTick,
+    filterRoute,
+    pinCurrentRoute,
+    enterRouteMode: startRouteMode,
+    exitRouteMode,
+    pendingRouteGps,
+  } = useNeighborhoodRoute({
+    visible,
+    houses,
+    filters,
+    filterContext,
+    visitedIds: visits.visitedIds,
+    origin,
+    accessibleOnly,
+    gps,
+    geoRefresh: geo.refresh,
+    setAskedLocation,
+    setRoutePrompt,
+    onBeforeEnter: () => {
+      setSelectedId("closed");
+      setClusterOverview(false);
+      setExpandedClusterKey(null);
+      setEditing(false);
     },
-    [filterRoute],
-  );
+  });
 
-  useEffect(() => {
-    if (!routeMode || !pendingRouteGps.current || !gps) return;
-    pendingRouteGps.current = false;
-    pinCurrentRoute(true);
-  }, [routeMode, gps, pinCurrentRoute]);
+  const {
+    filtersOpen,
+    setFiltersOpen,
+    sheetFilters,
+    sheetActiveCount,
+    sheetResultCount,
+    visitWindowInvalid,
+    patchFilterDraft,
+    resetFilterDraft,
+    commitFilterDraft,
+  } = useFilterDraft({
+    filters,
+    updateFilters,
+    houses,
+    filterContext,
+    routeMode,
+    pinnedRoute,
+    setPinnedRoute,
+    origin,
+    visitedIds: visits.visitedIds,
+    now,
+    setRoutePrompt,
+  });
 
   useEffect(() => {
     if (gpsAllowed || originChoice.kind !== "gps") return;
     setOriginChoice({ kind: "neighborhood" });
   }, [gpsAllowed, originChoice.kind, setOriginChoice]);
-
-  useEffect(() => {
-    if (!routeMode || pendingRouteGps.current) return;
-    setPinnedRoute((current) => {
-      if (!current) return current;
-      const visibleIds = new Set(visible.map((house) => house.id));
-      const routeHouses: PublicHouse[] = [];
-      for (const stop of current.stops) {
-        for (const house of stop.houses) {
-          const fresh = visible.find((item) => item.id === house.id);
-          if (fresh && visibleIds.has(house.id)) routeHouses.push(fresh);
-        }
-      }
-      return buildWalkingRoute(routeHouses, origin, {
-        accessible: accessibleOnly,
-        startedFrom: origin.kind,
-        originLabel: origin.label,
-      });
-    });
-  }, [routeMode, visible, origin, accessibleOnly]);
-
-  function routeHousesForFilters(nextFilters: HouseFiltersState) {
-    const nextVisible = filterHouses(houses, nextFilters, filterContext);
-    const visitedIds = visits.visitedIds;
-    const keepIds = routeHouseIds(pinnedRoute);
-    const routeHouses: PublicHouse[] = [];
-    const seen = new Set<string>();
-    for (const house of nextVisible) {
-      if (keepIds.has(house.id) || !visitedIds.includes(house.id)) {
-        routeHouses.push(house);
-        seen.add(house.id);
-      }
-    }
-    if (pinnedRoute) {
-      for (const stop of pinnedRoute.stops) {
-        for (const house of stop.houses) {
-          if (seen.has(house.id)) continue;
-          const fresh = nextVisible.find((item) => item.id === house.id);
-          if (fresh) {
-            routeHouses.push(fresh);
-            seen.add(house.id);
-          }
-        }
-      }
-    }
-    return routeHouses;
-  }
-
-  function trimRouteToFilter(nextFilters: HouseFiltersState) {
-    const nextVisible = filterHouses(houses, nextFilters, filterContext);
-    const visibleIds = new Set(nextVisible.map((house) => house.id));
-    const routeHouses: PublicHouse[] = [];
-    for (const stop of pinnedRoute?.stops ?? []) {
-      for (const house of stop.houses) {
-        const fresh = nextVisible.find((item) => item.id === house.id);
-        if (fresh && visibleIds.has(house.id)) routeHouses.push(fresh);
-      }
-    }
-    return routeHouses;
-  }
-
-  function previewRouteDiff(nextFilters: HouseFiltersState) {
-    const currentIds = routeHouseIds(pinnedRoute);
-    const nextVisible = filterHouses(houses, nextFilters, filterContext);
-    const removedHouses = [...currentIds]
-      .filter((id) => !nextVisible.some((house) => house.id === id))
-      .map((id) => houses.find((house) => house.id === id)?.name ?? id);
-    const addedHouses = nextVisible
-      .filter((house) => !currentIds.has(house.id) && !visits.visitedIds.includes(house.id))
-      .map((house) => house.name);
-    return { removedHouses, addedHouses };
-  }
-
-  function applyFiltersWithRoute(nextFilters: HouseFiltersState, includeNew: boolean) {
-    updateFilters(() => cloneHouseFilters(nextFilters));
-    if (routeMode) {
-      const routeHouses = includeNew
-        ? routeHousesForFilters(nextFilters)
-        : trimRouteToFilter(nextFilters);
-      setPinnedRoute(
-        buildWalkingRoute(routeHouses, origin, {
-          accessible: nextFilters.accessibleOnly,
-          startedFrom: origin.kind,
-          originLabel: origin.label,
-        }),
-      );
-    }
-    setFiltersOpen(false);
-  }
-
-  function patchFilterDraft(
-    patch: Partial<HouseFiltersState> | ((current: HouseFiltersState) => HouseFiltersState),
-  ) {
-    setFilterDraft((current) => {
-      const base = current ?? cloneHouseFilters(filters);
-      const next = typeof patch === "function" ? patch(base) : { ...base, ...patch };
-      return cloneHouseFilters(next);
-    });
-  }
-
-  function resetFilterDraft() {
-    setFilterDraft(emptyHouseFilters());
-  }
-
-  const visitWindowInvalid = houseFiltersDraftInvalid(sheetFilters, now);
-
-  function commitFilterDraft() {
-    const nextFilters = filterDraft ?? filters;
-    if (houseFiltersDraftInvalid(nextFilters, now)) {
-      const from =
-        nextFilters.visitWindowFrom || formatClockFromDate(now);
-      const to = nextFilters.visitWindowTo || defaultVisitWindowEnd(now);
-      toast.error(visitWindowIssue(from, to)!);
-      return;
-    }
-    if (filtersEqual(nextFilters, filters)) {
-      setFiltersOpen(false);
-      return;
-    }
-    if (!routeMode) {
-      applyFiltersWithRoute(nextFilters, false);
-      return;
-    }
-    const { removedHouses, addedHouses } = previewRouteDiff(nextFilters);
-    const hasRouteChange = removedHouses.length > 0 || addedHouses.length > 0;
-    if (!hasRouteChange) {
-      applyFiltersWithRoute(nextFilters, false);
-      return;
-    }
-    if (shouldSkipRoutePrompt("filter-change")) {
-      applyFiltersWithRoute(nextFilters, addedHouses.length > 0);
-      return;
-    }
-    setRoutePrompt({
-      kind: "filter-change",
-      title: "לעדכן את הסינון?",
-      description:
-        "המסלול יתאים לרשימה החדשה. «ביטול» משאיר את הסינון והמסלול כמו שהם.",
-      confirmLabel: "עדכון הסינון",
-      removedHouses,
-      addedHouses,
-      onConfirm: (includeNew) => applyFiltersWithRoute(nextFilters, includeNew),
-    });
-  }
 
   useEffect(() => {
     if (!originPickActive || !originDraft) return;
@@ -560,10 +377,9 @@ export function NeighborhoodApp({
     if (resume === "list") setView("list");
   }
 
-  function exitRouteMode() {
-    pendingRouteGps.current = false;
-    setRouteMode(false);
-    setPinnedRoute(null);
+  function enterRouteMode() {
+    exitOriginPick();
+    startRouteMode();
   }
 
   function goHome() {
@@ -573,45 +389,6 @@ export function NeighborhoodApp({
     setClusterOverview(false);
     setExpandedClusterKey(null);
     setEditing(false);
-  }
-
-  function enterRouteMode() {
-    if (routeMode) return;
-    const proceed = () => {
-      exitOriginPick();
-      setSelectedId("closed");
-      setClusterOverview(false);
-      setExpandedClusterKey(null);
-      setEditing(false);
-      setRouteMode(true);
-      if (originChoice.kind === "gps" && !gps) {
-        pendingRouteGps.current = true;
-        setAskedLocation(true);
-        geo.refresh();
-        return;
-      }
-      pendingRouteGps.current = false;
-      pinCurrentRoute(true);
-    };
-    const visitedExcluded =
-      filters.unvisitedOnly
-        ? filterHouses(houses, { ...filters, unvisitedOnly: false }, filterContext).filter((house) =>
-            visits.visitedIds.includes(house.id),
-          )
-        : [];
-    if (visitedExcluded.length === 0 || shouldSkipRoutePrompt("enter-route")) {
-      proceed();
-      return;
-    }
-    setRoutePrompt({
-      kind: "enter-route",
-      title: "להתחיל מסלול?",
-      description:
-        "הסינון «לא ביקרתי» פעיל — בתים שכבר ביקרתם לא ייכללו. «ביטול» לא יפתח מסלול.",
-      confirmLabel: "התחלת מסלול",
-      removedHouses: visitedExcluded.map((house) => house.name),
-      onConfirm: () => proceed(),
-    });
   }
 
   function chooseGpsOrigin() {
@@ -683,30 +460,6 @@ export function NeighborhoodApp({
     });
   }
 
-  function applyAdminHouse(next: House | PublicHouse) {
-    const full = "editCode" in next && typeof next.editCode === "string"
-      ? (next as House)
-      : null;
-    setAdminHouses((list) => {
-      let nextList: House[];
-      if (full) {
-        const idx = list.findIndex((h) => h.id === full.id);
-        if (idx < 0) nextList = [...list, full];
-        else {
-          nextList = [...list];
-          nextList[idx] = full;
-        }
-      } else {
-        nextList = list.map((h) => (h.id === next.id ? { ...h, ...next } : h));
-      }
-      const updatedAt = new Date().toISOString();
-      rememberAdminDb(nextList, updatedAt);
-      return nextList;
-    });
-    notifyCatalogChanged();
-    void refresh(true);
-  }
-
   function handleHouseUpdated(next: PublicHouse) {
     if (admin) {
       applyAdminHouse(next);
@@ -726,11 +479,7 @@ export function NeighborhoodApp({
   }
 
   function handleHouseDeleted(id: string) {
-    setAdminHouses((list) => {
-      const next = list.filter((house) => house.id !== id);
-      rememberAdminDb(next, new Date().toISOString());
-      return next;
-    });
+    removeAdminHouse(id);
     removeOwnedHouse(id);
     forgetPublishedHouse(id);
     if (selectedId === id) {
@@ -740,62 +489,6 @@ export function NeighborhoodApp({
     }
     notifyCatalogChanged();
     void refresh(true);
-  }
-
-  async function patchAdmin(id: string, patch: Record<string, unknown>) {
-    setBusyAction(true);
-    try {
-      const res = await fetch(`/api/admin/houses/${encodeURIComponent(id)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patch),
-      });
-      const data = await readApiJson<{ error?: string; house?: House }>(res);
-      if (!res.ok || !data.house) {
-        toast.error(data.error ?? "העדכון נכשל");
-        return false;
-      }
-      applyAdminHouse(data.house);
-      return true;
-    } catch {
-      toast.error("אין קשר לשרת");
-      return false;
-    } finally {
-      setBusyAction(false);
-    }
-  }
-
-  async function approveHouse(id: string) {
-    const ok = await patchAdmin(id, { status: "approved" });
-    if (ok) toast.success("הבית אושר ונכנס למפה הציבורית");
-  }
-
-  async function rejectHouse(id: string) {
-    setBusyAction(true);
-    try {
-      const res = await fetch(`/api/admin/houses/${encodeURIComponent(id)}`, {
-        method: "DELETE",
-      });
-      const data = await readApiJson<{ error?: string; ok?: boolean }>(res);
-      if (!res.ok || !data.ok) {
-        toast.error(data.error ?? "המחיקה נכשלה");
-        return;
-      }
-      setAdminHouses((list) => {
-        const next = list.filter((house) => house.id !== id);
-        rememberAdminDb(next, new Date().toISOString());
-        return next;
-      });
-      notifyCatalogChanged();
-      void refresh(true);
-      toast.success("הבית נדחה ונמחק");
-      setSelectedId("closed");
-      setClusterOverview(false);
-    } catch {
-      toast.error("אין קשר לשרת");
-    } finally {
-      setBusyAction(false);
-    }
   }
 
   return (
@@ -1208,7 +901,13 @@ export function NeighborhoodApp({
                   <Button
                     variant="destructive"
                     disabled={busyAction}
-                    onClick={() => void rejectHouse(selected.id)}
+                    onClick={() => {
+                      void rejectHouse(selected.id).then((ok) => {
+                        if (!ok) return;
+                        setSelectedId("closed");
+                        setClusterOverview(false);
+                      });
+                    }}
                   >
                     דחייה ומחיקה
                   </Button>

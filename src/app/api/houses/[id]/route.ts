@@ -7,7 +7,8 @@ import { geocodeHttpError } from "@/lib/geocode";
 import { grantOwnerHouse, ownerMayEdit } from "@/lib/owner-session";
 import { isAdmin } from "@/lib/admin";
 import { readIncludeEndpoint } from "@/lib/push";
-import { clientKey, rateLimit } from "@/lib/rate-limit";
+import { clientKey } from "@/lib/rate-limit";
+import { rateLimitShared } from "@/lib/rate-limit-store";
 
 export const runtime = "nodejs";
 
@@ -65,10 +66,10 @@ export async function PATCH(
   const code = admin || ownerOk ? existing.editCode : (editCode?.trim() || "");
   if (!code || existing.editCode !== code) {
     const ip = clientKey(request.headers);
-    if (!rateLimit(`edit-code:${ip}`, 40, 15 * 60 * 1000)) {
+    if (!(await rateLimitShared(`edit-code:${ip}`, 40, 15 * 60 * 1000))) {
       return NextResponse.json({ error: "יותר מדי ניסיונות. נסו שוב בעוד כמה דקות." }, { status: 429 });
     }
-    if (!rateLimit(`edit-code:${ip}:${id}`, 12, 15 * 60 * 1000)) {
+    if (!(await rateLimitShared(`edit-code:${ip}:${id}`, 12, 15 * 60 * 1000))) {
       return NextResponse.json({ error: "יותר מדי ניסיונות לבית הזה." }, { status: 429 });
     }
     return NextResponse.json({ error: "קוד העריכה שגוי." }, { status: 403 });
@@ -121,10 +122,10 @@ export async function DELETE(
   const code = admin || ownerOk ? existing.editCode : editCode;
   if (code.length < 4 || code.length > 12 || existing.editCode !== code) {
     const ip = clientKey(request.headers);
-    if (!rateLimit(`edit-code:${ip}`, 40, 15 * 60 * 1000)) {
+    if (!(await rateLimitShared(`edit-code:${ip}`, 40, 15 * 60 * 1000))) {
       return NextResponse.json({ error: "יותר מדי ניסיונות. נסו שוב בעוד כמה דקות." }, { status: 429 });
     }
-    if (!rateLimit(`edit-code:${ip}:${id}`, 12, 15 * 60 * 1000)) {
+    if (!(await rateLimitShared(`edit-code:${ip}:${id}`, 12, 15 * 60 * 1000))) {
       return NextResponse.json({ error: "יותר מדי ניסיונות לבית הזה." }, { status: 429 });
     }
     return NextResponse.json({ error: "קוד העריכה שגוי." }, { status: 403 });
