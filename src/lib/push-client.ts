@@ -32,6 +32,31 @@ export function isIosDevice() {
   return /iphone|ipad|ipod/i.test(navigator.userAgent);
 }
 
+export function isAndroidDevice() {
+  if (typeof navigator === "undefined") return false;
+  return /android/i.test(navigator.userAgent);
+}
+
+function serviceWorkerTimeoutMs() {
+  return isAndroidDevice() ? 12_000 : 4_000;
+}
+
+async function waitForServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
+  try {
+    const registration = await navigator.serviceWorker.register("/sw.js", {
+      scope: "/",
+      updateViaCache: "none",
+    });
+    void registration.update();
+    const timeout = new Promise<null>((resolve) => {
+      window.setTimeout(() => resolve(null), serviceWorkerTimeoutMs());
+    });
+    return await Promise.race([navigator.serviceWorker.ready, timeout]);
+  } catch {
+    return null;
+  }
+}
+
 export function isStandaloneDisplay() {
   if (typeof window === "undefined") return false;
   const nav = navigator as Navigator & { standalone?: boolean };
@@ -107,13 +132,9 @@ export async function readPushStatus(): Promise<PushEnableResult> {
   if (isIosDevice() && !isStandaloneDisplay()) return "ios-install";
   if (Notification.permission === "denied") return "denied";
   try {
-    const ready = navigator.serviceWorker.ready;
-    const timeout = new Promise<"timeout">((resolve) => {
-      window.setTimeout(() => resolve("timeout"), 2500);
-    });
-    const raced = await Promise.race([ready, timeout]);
-    if (raced === "timeout") return "off";
-    const sub = await raced.pushManager.getSubscription();
+    const reg = await waitForServiceWorkerRegistration();
+    if (!reg) return "off";
+    const sub = await reg.pushManager.getSubscription();
     return sub ? "on" : "off";
   } catch {
     return "off";
@@ -132,6 +153,7 @@ export function applicationServerKeyMatches(sub: PushSubscription, publicKey: st
 async function postSubscription(sub: PushSubscription, prefs: PushTopicPrefs) {
   const res = await fetch("/api/push/subscribe", {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...sub.toJSON(), topics: topicsFromPrefs(prefs) }),
   });
@@ -181,8 +203,8 @@ export async function enablePushAlerts(prefs?: PushTopicPrefs): Promise<PushEnab
     }
   }
 
-  await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-  const reg = await navigator.serviceWorker.ready;
+  const reg = await waitForServiceWorkerRegistration();
+  if (!reg) throw new Error("Service worker לא מוכן. נסו שוב בעוד רגע.");
   const sub = await obtainPushSubscription(reg, keyData.publicKey);
   await postSubscription(sub, nextPrefs);
   writePushPref("on");
@@ -198,9 +220,11 @@ export async function syncPushTopicPrefs(prefs: PushTopicPrefs): Promise<PushEna
   const status = await readPushStatus();
   if (status === "on") {
     try {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.getSubscription();
-      if (sub) {
+      const keyRes = await fetch("/api/push/public-key", { cache: "no-store" });
+      const keyData = (await keyRes.json()) as { publicKey?: string };
+      const reg = await waitForServiceWorkerRegistration();
+      if (keyRes.ok && keyData.publicKey && reg) {
+        const sub = await obtainPushSubscription(reg, keyData.publicKey);
         await postSubscription(sub, prefs);
         notifyPushStatusChanged();
         return "on";
@@ -244,8 +268,8 @@ export async function refreshPushSubscriptionIfEnabled() {
     const keyRes = await fetch("/api/push/public-key", { cache: "no-store" });
     const keyData = (await keyRes.json()) as { publicKey?: string };
     if (!keyRes.ok || !keyData.publicKey) return;
-    await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-    const reg = await navigator.serviceWorker.ready;
+    const reg = await waitForServiceWorkerRegistration();
+    if (!reg) return;
     const sub = await obtainPushSubscription(reg, keyData.publicKey);
     await postSubscription(sub, prefs);
     writePushPref("on");
@@ -258,10 +282,9 @@ export async function refreshPushSubscriptionIfEnabled() {
 export async function senderPushEndpoint() {
   try {
     if (typeof navigator === "undefined" || !navigator.serviceWorker) return undefined;
-    const ready = Promise.race([
-      navigator.serviceWorker.ready.then((reg) => reg.pushManager.getSubscription()),
-      new Promise<null>((resolve) => window.setTimeout(() => resolve(null), 600)),
-    ]);
+    const ready = waitForServiceWorkerRegistration().then((reg) =>
+      reg ? reg.pushManager.getSubscription() : null,
+    );
     return (await ready)?.endpoint;
   } catch {
     return undefined;

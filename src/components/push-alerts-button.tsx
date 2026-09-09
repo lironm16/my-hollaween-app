@@ -10,7 +10,9 @@ import {
   enablePushAlerts,
   readPushPref,
   readPushStatus,
+  isAndroidDevice,
   readPushTopicPrefs,
+  refreshPushSubscriptionIfEnabled,
   syncPushTopicPrefs,
   writePushTopicPrefs,
   type PushEnableResult,
@@ -127,7 +129,10 @@ export function PushAlertsButton() {
       setStatus(current);
 
       if (current === "denied" || current === "unsupported") return;
-      if (current === "on") return;
+      if (current === "on") {
+        void refreshPushSubscriptionIfEnabled();
+        return;
+      }
 
       const pref = readPushPref();
       if (pref === "off") return;
@@ -161,6 +166,7 @@ export function PushAlertsButton() {
   const unsupported = status === "unsupported";
   const locked = denied || unsupported;
   const ios = status === "ios-install";
+  const android = isAndroidDevice();
   const canEnable = anyPushTopicOn(topics);
 
   function closeDialog() {
@@ -260,10 +266,14 @@ export function PushAlertsButton() {
   const helpDescription = ios
     ? "באייפון צריך קודם «הוספה למסך הבית», ואז נפתח חלון ההרשאה."
     : denied
-      ? "כדי לקבל התראות: לחצו על סמל המנעול או «i» ליד הכתובת, בחרו «התראות» → «אפשר», ואז חזרו לכאן ולחצו «הפעילו»."
+      ? android
+        ? "באנדרואיד: הגדרות → אפליקציות → Chrome → התראות → אפשר. ואז ב-Chrome: סמל המנעול ליד הכתובת → התראות → אפשר."
+        : "כדי לקבל התראות: לחצו על סמל המנעול או «i» ליד הכתובת, בחרו «התראות» → «אפשר», ואז חזרו לכאן ולחצו «הפעילו»."
       : unsupported
         ? "דפדפן זה לא תומך בהתראות דחיפה. נסו Chrome, Firefox, או Safari אחרי «הוספה למסך הבית»."
-        : null;
+        : android && !subscribed
+          ? "באנדרואיד (כולל Pixel): השתמשו ב-Chrome, אפשרו התראות לאתר, וודאו ש-Chrome לא מוגבל בסוללה (הגדרות → אפליקציות → Chrome → סוללה → ללא הגבלה)."
+          : null;
 
   const primaryLabel = subscribed ? "שמירה" : "הפעילו";
 
