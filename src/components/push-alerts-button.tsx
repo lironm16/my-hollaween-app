@@ -157,7 +157,9 @@ export function PushAlertsButton() {
   }, []);
 
   const subscribed = status === "on";
-  const locked = status === "denied" || status === "unsupported";
+  const denied = status === "denied";
+  const unsupported = status === "unsupported";
+  const locked = denied || unsupported;
   const ios = status === "ios-install";
   const canEnable = anyPushTopicOn(topics);
 
@@ -260,11 +262,19 @@ export function PushAlertsButton() {
           )}
           aria-label={title}
           title={title}
-          disabled={busy || status === "denied" || status === "unsupported"}
+          disabled={busy}
           onClick={() => {
-            if (status === "ios-install") {
+            if (ios) {
               setAskOpen(true);
               toast.message("באייפון ההתראות עובדות אחרי «הוספה למסך הבית».");
+              return;
+            }
+            if (denied) {
+              setAskOpen(true);
+              return;
+            }
+            if (unsupported) {
+              setAskOpen(true);
               return;
             }
             openSettings();
@@ -272,7 +282,7 @@ export function PushAlertsButton() {
         >
           {status === "on" ? (
             <BellRing className="size-4" />
-          ) : status === "denied" || status === "unsupported" ? (
+          ) : denied || unsupported ? (
             <BellOff className="size-4" />
           ) : (
             <Bell className="size-4" />
@@ -288,17 +298,29 @@ export function PushAlertsButton() {
         >
           <DialogHeader>
             <DialogTitle className="text-lg text-orange-100">
-              {ios ? "התראות באייפון" : subscribed ? "התראות פועלות" : "קבלו התראות מהשכונה"}
+              {ios
+                ? "התראות באייפון"
+                : denied
+                  ? "התראות חסומות בדפדפן"
+                  : unsupported
+                    ? "הדפדפן לא תומך בהתראות"
+                    : subscribed
+                      ? "התראות פועלות"
+                      : "קבלו התראות מהשכונה"}
             </DialogTitle>
             <DialogDescription className="text-violet-200/90">
               {ios
                 ? "באייפון צריך קודם «הוספה למסך הבית», ואז נפתח חלון ההרשאה."
-                : subscribed
-                  ? "שינוי מתג נשמר מיד. «כבו הכל» מבטל את ההרשמה."
-                  : "המתגים רק בוחרים מה לקבל. נרשמים רק ב«הפעילו»."}
+                : denied
+                  ? "כדי לקבל התראות: לחצו על סמל המנעול או «i» ליד הכתובת, בחרו «התראות» → «אפשר», ואז חזרו לכאן ולחצו «הפעילו»."
+                  : unsupported
+                    ? "דפדפן זה לא תומך בהתראות דחיפה. נסו Chrome, Firefox, או Safari אחרי «הוספה למסך הבית»."
+                    : subscribed
+                      ? "שינוי מתג נשמר מיד. «כבו הכל» מבטל את ההרשמה."
+                      : "המתגים רק בוחרים מה לקבל. נרשמים רק ב«הפעילו»."}
             </DialogDescription>
           </DialogHeader>
-          {ios ? null : (
+          {ios || locked ? null : (
             <>
               <div className="grid gap-2">
                 {PUSH_TOPIC_ROWS.map((row) => (
@@ -322,9 +344,22 @@ export function PushAlertsButton() {
               <Button className="bg-orange-500 text-black hover:bg-orange-400" onClick={closeDialog}>
                 הבנתי
               </Button>
-            ) : locked ? (
+            ) : denied ? (
+              <>
+                <Button
+                  className="bg-orange-500 text-black hover:bg-orange-400"
+                  disabled={busy}
+                  onClick={() => void enable()}
+                >
+                  הפעילו
+                </Button>
+                <Button variant="ghost" className="text-violet-200" onClick={closeDialog}>
+                  סגירה
+                </Button>
+              </>
+            ) : unsupported ? (
               <Button className="bg-orange-500 text-black hover:bg-orange-400" onClick={closeDialog}>
-                סגירה
+                הבנתי
               </Button>
             ) : subscribed ? (
               <>
