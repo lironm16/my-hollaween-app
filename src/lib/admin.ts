@@ -2,8 +2,16 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { config } from "@/lib/config";
 
+const DEV_ADMIN_PASSWORD = "pumpkin2026";
+
 export function adminPassword() {
-  return process.env.ADMIN_PASSWORD ?? "pumpkin2026";
+  return process.env.ADMIN_PASSWORD ?? DEV_ADMIN_PASSWORD;
+}
+
+/** Production must set ADMIN_PASSWORD explicitly. */
+export function adminLoginEnabled() {
+  if (process.env.NODE_ENV !== "production") return true;
+  return Boolean(process.env.ADMIN_PASSWORD?.trim());
 }
 
 function sign() {

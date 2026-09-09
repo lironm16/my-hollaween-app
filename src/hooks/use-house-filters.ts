@@ -2,10 +2,17 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
+import { HOUSE_FILTERS_VERSION, migrateHouseFilters } from "@/lib/filter-migrate";
 import { isKidsFriendlyFilter, isWithCandyFilter } from "@/lib/filter-presets";
 import { hasVisitWindow, parseClockMinutes } from "@/lib/hours";
 import { effectiveVisitWindowMode } from "@/lib/visit-window";
-import { loadHouseFilters, saveHouseFilters, type HouseFiltersState } from "@/lib/offline-db";
+import {
+  loadHouseFilters,
+  loadHouseFiltersVersion,
+  saveHouseFilters,
+  saveHouseFiltersVersion,
+  type HouseFiltersState,
+} from "@/lib/offline-db";
 import {
   CANDY_TONE_IDS,
   DECOR_LEVELS,
@@ -114,6 +121,17 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
   };
 }
 
+export function loadSanitizedHouseFilters(): HouseFiltersState {
+  const storedVersion = loadHouseFiltersVersion();
+  let next = sanitize(loadHouseFilters());
+  if (storedVersion < HOUSE_FILTERS_VERSION) {
+    next = migrateHouseFilters(next);
+    saveHouseFilters(next);
+    saveHouseFiltersVersion(HOUSE_FILTERS_VERSION);
+  }
+  return next;
+}
+
 export function cloneHouseFilters(state: HouseFiltersState): HouseFiltersState {
   return {
     ...state,
@@ -161,6 +179,8 @@ export function countActiveFilters(filters: HouseFiltersState): number {
     Number(isWithCandyFilter(filters)) +
     Number(isKidsFriendlyFilter(filters)) +
     Number(filters.accessibleOnly) +
+    Number(filters.likedOnly) +
+    Number(filters.unvisitedOnly) +
     filters.sensitivityFilters.length
   );
 }
@@ -178,7 +198,7 @@ export function useHouseFilters() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setFilters(sanitize(loadHouseFilters()));
+    setFilters(loadSanitizedHouseFilters());
     setReady(true);
   }, []);
 
@@ -191,14 +211,9 @@ export function useHouseFilters() {
   }, []);
 
   const clear = useCallback(() => {
-    const next = {
-      ...DEFAULT_HOUSE_FILTERS,
-      scareFilters: [...SCARE_LEVELS],
-      candyFilters: [...CANDY_TONE_IDS],
-      neighborhoodFilters: [...NEIGHBORHOODS],
-      sensitivityFilters: [] as SensitivityId[],
-    };
+    const next = emptyHouseFilters();
     saveHouseFilters(next);
+    saveHouseFiltersVersion(HOUSE_FILTERS_VERSION);
     setFilters(next);
   }, []);
 
@@ -206,20 +221,6 @@ export function useHouseFilters() {
     update((current) => ({
       ...current,
       neighborhoodFilters: toggleItem(current.neighborhoodFilters, area),
-    }));
-  }
-
-  function toggleScare(level: ScareLevel) {
-    update((current) => ({
-      ...current,
-      scareFilters: toggleItem(current.scareFilters, level),
-    }));
-  }
-
-  function toggleCandy(tone: CandyTone) {
-    update((current) => ({
-      ...current,
-      candyFilters: toggleItem(current.candyFilters, tone),
     }));
   }
 
@@ -236,8 +237,6 @@ export function useHouseFilters() {
     update,
     clear,
     toggleNeighborhood,
-    toggleScare,
-    toggleCandy,
     toggleSensitivity,
   };
 }

@@ -299,6 +299,7 @@ export function backupLooksNewer(backup: ServerDbBackup, serverUpdatedAt: string
 }
 
 const FILTERS_KEY = "hw-house-filters";
+const FILTERS_VERSION_KEY = "hw-house-filters-version";
 
 export type HouseFiltersState = {
   accessibleOnly: boolean;
@@ -336,6 +337,26 @@ export function loadHouseFilters(): HouseFiltersState | null {
     return parsed as HouseFiltersState;
   } catch {
     return null;
+  }
+}
+
+export function loadHouseFiltersVersion(): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const raw = localStorage.getItem(FILTERS_VERSION_KEY);
+    const version = raw ? Number.parseInt(raw, 10) : 0;
+    return Number.isFinite(version) ? version : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function saveHouseFiltersVersion(version: number) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(FILTERS_VERSION_KEY, String(version));
+  } catch {
+    /* private mode */
   }
 }
 

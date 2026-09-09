@@ -163,14 +163,24 @@ export function PushAlertsButton() {
   const ios = status === "ios-install";
   const canEnable = anyPushTopicOn(topics);
 
-  async function enable() {
+  function closeDialog() {
+    setAskOpen(false);
+    if (!subscribed) skipPromptThisSession();
+  }
+
+  async function save() {
+    if (subscribed) {
+      closeDialog();
+      return;
+    }
     if (!canEnable) return;
     setBusy(true);
     try {
       const result = await enablePushAlerts(topics);
       setStatus(result);
       if (result === "on") {
-        toast.success("נרשמתם. אפשר לכבות סוג, או לכבות הכל.");
+        setAskOpen(false);
+        toast.success("נרשמתם! אפשר לערוך בכל עת דרך סמל הפעמון.", { closeButton: true });
         return;
       }
       if (result === "denied") {
@@ -185,20 +195,6 @@ export function PushAlertsButton() {
       toast.message("בלי הרשאה לא נשלח התראות לטלפון.");
     } catch {
       toast.error("הדפדפן חסם התראות.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function disable() {
-    setBusy(true);
-    try {
-      setStatus(await disablePushAlerts());
-      setAskOpen(false);
-      skipPromptThisSession();
-      toast.message("התראות כבויות במכשיר הזה.");
-    } catch {
-      toast.error("לא הצלחנו לכבות התראות.");
     } finally {
       setBusy(false);
     }
@@ -225,17 +221,29 @@ export function PushAlertsButton() {
     }
   }
 
+  async function disableAll() {
+    const off = { newHouse: false, houseStatus: false, admin: false };
+    setTopics(off);
+    setBusy(true);
+    try {
+      await disablePushAlerts();
+      setStatus("off");
+      closeDialog();
+      toast.message("התראות כבויות במכשיר הזה.", { closeButton: true });
+    } catch {
+      toast.error("לא הצלחנו לכבות את ההתראות.");
+      setTopics(readPushTopicPrefs());
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function openSettings() {
     const stored = readPushTopicPrefs();
     setTopics(
       subscribed || anyPushTopicOn(stored) ? stored : { ...DEFAULT_PUSH_TOPIC_PREFS },
     );
     setAskOpen(true);
-  }
-
-  function closeDialog() {
-    setAskOpen(false);
-    if (!subscribed) skipPromptThisSession();
   }
 
   const title =
@@ -248,6 +256,16 @@ export function PushAlertsButton() {
           : status === "unsupported"
             ? "הדפדפן לא תומך בהתראות"
             : "הפעילו התראות מהשכונה";
+
+  const helpDescription = ios
+    ? "באייפון צריך קודם «הוספה למסך הבית», ואז נפתח חלון ההרשאה."
+    : denied
+      ? "כדי לקבל התראות: לחצו על סמל המנעול או «i» ליד הכתובת, בחרו «התראות» → «אפשר», ואז חזרו לכאן ולחצו «הפעילו»."
+      : unsupported
+        ? "דפדפן זה לא תומך בהתראות דחיפה. נסו Chrome, Firefox, או Safari אחרי «הוספה למסך הבית»."
+        : null;
+
+  const primaryLabel = subscribed ? "שמירה" : "הפעילו";
 
   return (
     <>
@@ -269,11 +287,7 @@ export function PushAlertsButton() {
               toast.message("באייפון ההתראות עובדות אחרי «הוספה למסך הבית».");
               return;
             }
-            if (denied) {
-              setAskOpen(true);
-              return;
-            }
-            if (unsupported) {
+            if (denied || unsupported) {
               setAskOpen(true);
               return;
             }
@@ -292,7 +306,7 @@ export function PushAlertsButton() {
 
       <Dialog open={askOpen} onOpenChange={(open) => (open ? setAskOpen(true) : closeDialog())}>
         <DialogContent
-          showCloseButton={false}
+          showCloseButton
           initialFocus={false}
           className="border border-orange-500/30 bg-[#1a0d24] text-orange-50 sm:max-w-md"
         >
@@ -308,83 +322,57 @@ export function PushAlertsButton() {
                       ? "התראות פועלות"
                       : "קבלו התראות מהשכונה"}
             </DialogTitle>
-            <DialogDescription className="text-violet-200/90">
-              {ios
-                ? "באייפון צריך קודם «הוספה למסך הבית», ואז נפתח חלון ההרשאה."
-                : denied
-                  ? "כדי לקבל התראות: לחצו על סמל המנעול או «i» ליד הכתובת, בחרו «התראות» → «אפשר», ואז חזרו לכאן ולחצו «הפעילו»."
-                  : unsupported
-                    ? "דפדפן זה לא תומך בהתראות דחיפה. נסו Chrome, Firefox, או Safari אחרי «הוספה למסך הבית»."
-                    : subscribed
-                      ? "שינוי מתג נשמר מיד. «כבו הכל» מבטל את ההרשמה."
-                      : "המתגים רק בוחרים מה לקבל. נרשמים רק ב«הפעילו»."}
-            </DialogDescription>
+            {helpDescription ? (
+              <DialogDescription className="text-violet-200/90">{helpDescription}</DialogDescription>
+            ) : null}
           </DialogHeader>
           {ios || locked ? null : (
-            <>
-              <div className="grid gap-2">
-                {PUSH_TOPIC_ROWS.map((row) => (
-                  <TopicSwitch
-                    key={row.id}
-                    title={row.title}
-                    hint={row.hint}
-                    on={topics[row.id]}
-                    disabled={busy || locked}
-                    onChange={(next) => void toggleTopic(row.id, next)}
-                  />
-                ))}
-              </div>
-              {subscribed || canEnable ? null : (
-                <p className="text-base text-amber-200">סמנו לפחות סוג אחד, ואז «הפעילו».</p>
-              )}
-            </>
+            <div className="grid gap-2">
+              {PUSH_TOPIC_ROWS.map((row) => (
+                <TopicSwitch
+                  key={row.id}
+                  title={row.title}
+                  hint={row.hint}
+                  on={topics[row.id]}
+                  disabled={busy || locked}
+                  onChange={(next) => void toggleTopic(row.id, next)}
+                />
+              ))}
+              {subscribed ? (
+                <p className="px-1 text-base text-violet-300/90">
+                  כדי לכבות לגמרי במכשיר, כבו את כל הסוגים או לחצו «כבו התראות».
+                </p>
+              ) : !canEnable ? (
+                <p className="px-1 text-base text-amber-200/90">סמנו לפחות סוג אחד, ואז «הפעילו».</p>
+              ) : null}
+            </div>
           )}
           <DialogFooter className="border-orange-500/15 bg-[#14091c]/80">
-            {ios ? (
+            {ios || unsupported ? (
               <Button className="bg-orange-500 text-black hover:bg-orange-400" onClick={closeDialog}>
                 הבנתי
               </Button>
-            ) : denied ? (
-              <>
-                <Button
-                  className="bg-orange-500 text-black hover:bg-orange-400"
-                  disabled={busy}
-                  onClick={() => void enable()}
-                >
-                  הפעילו
-                </Button>
-                <Button variant="ghost" className="text-violet-200" onClick={closeDialog}>
-                  סגירה
-                </Button>
-              </>
-            ) : unsupported ? (
-              <Button className="bg-orange-500 text-black hover:bg-orange-400" onClick={closeDialog}>
-                הבנתי
-              </Button>
-            ) : subscribed ? (
-              <>
-                <Button
-                  className="bg-orange-500 text-black hover:bg-orange-400"
-                  disabled={busy}
-                  onClick={() => setAskOpen(false)}
-                >
-                  סיום
-                </Button>
-                <Button variant="ghost" className="text-violet-200" disabled={busy} onClick={() => void disable()}>
-                  כבו הכל
-                </Button>
-              </>
             ) : (
               <>
                 <Button
                   className="bg-orange-500 text-black hover:bg-orange-400"
-                  disabled={busy || !canEnable}
-                  onClick={() => void enable()}
+                  disabled={busy || (!subscribed && !canEnable)}
+                  onClick={() => void save()}
                 >
-                  הפעילו
+                  {primaryLabel}
                 </Button>
+                {subscribed ? (
+                  <Button
+                    variant="ghost"
+                    className="text-amber-200"
+                    disabled={busy}
+                    onClick={() => void disableAll()}
+                  >
+                    כבו התראות
+                  </Button>
+                ) : null}
                 <Button variant="ghost" className="text-violet-200" disabled={busy} onClick={closeDialog}>
-                  לא עכשיו
+                  ביטול
                 </Button>
               </>
             )}

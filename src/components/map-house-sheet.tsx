@@ -83,6 +83,10 @@ export function MapHouseSheet({
   }, [clusterKey, house.id, overview]);
 
   useEffect(() => {
+    sheetRef.current?.focus({ preventScroll: true });
+  }, [house.id]);
+
+  useEffect(() => {
     if (!editing) return;
     const max = maxPx();
     setSheetH(max);
@@ -177,6 +181,7 @@ export function MapHouseSheet({
       )}
       role="dialog"
       aria-labelledby={labelId}
+      tabIndex={-1}
       style={height != null ? { height } : undefined}
       dir="rtl"
       onPointerDown={onSheetPointerDown}
