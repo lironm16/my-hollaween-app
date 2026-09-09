@@ -157,7 +157,7 @@ export function HouseFiltersContent({
 
   return (
     <>
-      <FilterSection title="בתים">
+      <FilterSection title="שעות">
         <VisitWindowRadio checked={visitMode === "now"} onChange={() => setVisitMode("now")}>
           <OpenNowSign className="size-7" />
           <span>עכשיו</span>
@@ -200,6 +200,15 @@ export function HouseFiltersContent({
             />
           </div>
         ) : null}
+      </FilterSection>
+
+      <FilterSection title="העדפות">
+        <FilterToggle
+          checked={filters.accessibleOnly}
+          onChange={() => onPatch({ accessibleOnly: !filters.accessibleOnly })}
+        >
+          <AccessibleMark labeled />
+        </FilterToggle>
         <FilterToggle
           checked={filters.likedOnly}
           onChange={() => onPatch({ likedOnly: !filters.likedOnly })}
@@ -251,15 +260,6 @@ export function HouseFiltersContent({
             </span>
           </FilterOption>
         ))}
-      </FilterSection>
-
-      <FilterSection title="מה חשוב">
-        <FilterToggle
-          checked={filters.accessibleOnly}
-          onChange={() => onPatch({ accessibleOnly: !filters.accessibleOnly })}
-        >
-          <AccessibleMark labeled />
-        </FilterToggle>
       </FilterSection>
 
       <FilterSection title="רגישויות">
