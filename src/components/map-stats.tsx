@@ -113,7 +113,7 @@ function CompactChip({
     <div className="flex min-h-10 min-w-0 items-center gap-1.5 rounded-xl bg-[#14081c] px-2 py-1.5">
       <IconWell className="size-7">{icon}</IconWell>
       <span className="shrink-0 text-base font-bold leading-none text-white">{value}</span>
-      <span className="min-w-0 truncate text-sm leading-none text-white/80">{label}</span>
+      <span className="min-w-0 truncate text-base leading-none text-white/80">{label}</span>
     </div>
   );
 }
@@ -139,7 +139,7 @@ export function StatsSummary({
     return (
       <div className="flex min-w-0 w-full flex-col gap-1.5 text-right" dir="rtl">
         <section className="min-w-0 rounded-2xl bg-[#2c1a12] p-1.5 ring-1 ring-orange-500/25">
-          <h3 className="mb-1 text-right text-sm font-semibold text-orange-400">{routeTitle}</h3>
+          <h3 className="mb-1 text-right text-base font-semibold text-orange-400">{routeTitle}</h3>
           <div className="grid min-w-0 grid-cols-2 gap-1.5">
             <CompactChip icon={houseIcon} value={String(filteredHouses)} label="בתים" />
             <CompactChip
@@ -160,7 +160,7 @@ export function StatsSummary({
           </div>
         </section>
         {staleLabel ? (
-          <p className="flex items-center gap-2 text-sm text-amber-100">
+          <p className="flex items-center gap-2 text-base text-amber-100">
             <WifiOff className="size-4 shrink-0" />
             {staleLabel}
           </p>
@@ -289,7 +289,7 @@ export function MapStats(props: {
         <span className="inline-flex size-6 items-center justify-center text-orange-400">
           <HouseIcon />
         </span>
-        <span className="absolute -top-1 -right-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-xs font-bold leading-none text-black">
+        <span className="absolute -top-1 -right-1 inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-orange-500 px-1 text-sm font-bold leading-none text-black">
           {badge}
         </span>
       </button>

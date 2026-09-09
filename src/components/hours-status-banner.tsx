@@ -2,6 +2,7 @@
 
 import { useAppNow } from "@/hooks/use-app-clock";
 import { cn } from "@/lib/utils";
+import { ClockTime } from "@/components/clock-time";
 import {
   closingSoonAt,
   hoursStatus,
@@ -17,7 +18,7 @@ import {
 } from "@/lib/house-state";
 import type { TreatStock, TreatId, VisitState } from "@/lib/types";
 
-const BANNER = "rounded-lg px-3 py-2 text-sm font-medium leading-snug break-words";
+const BANNER = "rounded-lg px-3 py-2 text-base font-medium leading-snug break-words";
 const CLOSED_TONE = "bg-red-900/80 text-red-50";
 
 export function HoursStatusBanner({
@@ -75,7 +76,7 @@ export function HoursStatusBanner({
   if (closesAt) {
     return (
       <p className={cn(BANNER, "bg-orange-950/55 text-orange-200", className)}>
-        נסגר בקרוב ב־{closesAt}
+        נסגר בקרוב ב־<ClockTime>{closesAt}</ClockTime>
       </p>
     );
   }
@@ -83,7 +84,7 @@ export function HoursStatusBanner({
   if (opensSoonAt) {
     return (
       <p className={cn(BANNER, "bg-cyan-950/55 text-cyan-100", className)}>
-        נפתח בקרוב ב־{opensSoonAt}
+        נפתח בקרוב ב־<ClockTime>{opensSoonAt}</ClockTime>
       </p>
     );
   }
@@ -91,7 +92,7 @@ export function HoursStatusBanner({
   if (breakOpens) {
     return (
       <p className={cn(BANNER, "bg-red-950/85 text-red-50", className)}>
-        הפסקה עכשיו — נפתח שוב ב־{breakOpens}
+        הפסקה עכשיו — נפתח שוב ב־<ClockTime>{breakOpens}</ClockTime>
       </p>
     );
   }
@@ -109,21 +110,21 @@ export function HoursStatusBanner({
   if (status.kind === "beforeEvent") {
     return (
       <p className={cn(BANNER, "bg-sky-950/50 text-sky-100", className)}>
-        נפתח ב־{status.dateLabel} בשעה {status.opensAt}
+        נפתח ב־{status.dateLabel} בשעה <ClockTime>{status.opensAt}</ClockTime>
       </p>
     );
   }
   if (status.kind === "before") {
     return (
       <p className={cn(BANNER, "bg-sky-950/50 text-sky-100", className)}>
-        נפתח ב־{status.opensAt}
+        נפתח ב־<ClockTime>{status.opensAt}</ClockTime>
       </p>
     );
   }
   if (status.kind === "between") {
     return (
       <p className={cn(BANNER, "bg-red-950/85 text-red-50", className)}>
-        הפסקה עכשיו — נפתח שוב ב־{status.opensAt}
+        הפסקה עכשיו — נפתח שוב ב־<ClockTime>{status.opensAt}</ClockTime>
       </p>
     );
   }

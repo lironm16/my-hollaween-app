@@ -34,7 +34,7 @@ export function PushNotice({
           <p className="text-base font-medium tracking-wide text-white/65">{config.brandEn}</p>
           <p className="text-base text-white/40">{time}</p>
         </div>
-        <p className="mt-0.5 text-[15px] font-semibold leading-snug text-white">{payload.title}</p>
+        <p className="mt-0.5 text-base font-semibold leading-snug text-white">{payload.title}</p>
         {payload.body ? (
           <p className="mt-0.5 whitespace-pre-line text-base leading-snug text-white/78">{payload.body}</p>
         ) : null}
