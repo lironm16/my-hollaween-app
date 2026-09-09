@@ -1853,6 +1853,12 @@
   .text-violet-300 {
     color: var(--color-violet-300);
   }
+  .text-violet-300\/90 {
+    color: color-mix(in srgb, oklch(81.1% 0.111 293.571) 90%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-violet-300) 90%, transparent);
+    }
+  }
   .text-violet-400 {
     color: var(--color-violet-400);
   }
@@ -2381,11 +2387,45 @@
       text-decoration-line: underline;
     }
   }
+  .focus\:not-sr-only:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
+  .focus\:absolute:focus {
+    position: absolute;
+  }
+  .focus\:z-50:focus {
+    z-index: 50;
+  }
+  .focus\:m-2:focus {
+    margin: calc(var(--spacing) * 2);
+  }
+  .focus\:rounded-lg:focus {
+    border-radius: var(--radius);
+  }
   .focus\:bg-accent:focus {
     background-color: var(--accent);
   }
+  .focus\:bg-orange-500:focus {
+    background-color: var(--color-orange-500);
+  }
+  .focus\:px-3:focus {
+    padding-inline: calc(var(--spacing) * 3);
+  }
+  .focus\:py-2:focus {
+    padding-block: calc(var(--spacing) * 2);
+  }
   .focus\:text-accent-foreground:focus {
     color: var(--accent-foreground);
+  }
+  .focus\:text-black:focus {
+    color: var(--color-black);
   }
   .focus\:outline-none:focus {
     --tw-outline-style: none;

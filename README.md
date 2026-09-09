@@ -70,18 +70,37 @@ npm run dev
 
 ברשימה: כפתור ההורדה (גיליון Excel מימין לשמאל). סננו או סמנו לב קודם כדי לקבל רק את הבתים הרצויים. מנהל לוחץ על אותו כפתור ומקבל גם עמודות «שמרו» ו«ביקרו». אותו עותק של הבתים נשמר בטלפון לרשימה בלי קליטה.
 
+### בדיקות אוטומטיות
+
+```bash
+npm test              # בדיקות יחידה בלבד (מהיר)
+npm run test:all      # יחידה + עומס (בונה שרת אם צריך)
+npm run ci            # כמו CI: יחידה, build, עומס
+```
+
+בדיקות היחידה רצות עם Node test runner על `src/**/*.test.ts`.
+
 ### בדיקת עומס (1,000 במקביל)
 
 ```bash
-npm run dev
-npm run stress
+npm run dev           # או: npm run build && npm run start
+npm run stress        # דורש שרת שכבר רץ
 ```
 
-הסקריפט יורה 1,000 בקשות במקביל אל `/api/catalog` ו-`/catalog.json` ומדווח p50/p95/p99. נכשל אם יותר מ-1% שגיאות או p95 מעל 3 שניות.
+או אוטומטית (מעלה `npm run start` אם אין שרת):
+
+```bash
+npm run build
+npm run test:stress
+```
+
+הסקריפט יורה 1,000 בקשות במקביל אל `/api/catalog` ו-`/catalog.json` ומדווח p50/p95/p99. נכשל אם יותר מ-1% שגיאות או p95 מעל 3 שניות. ב־CI רצים 200 במקביל.
 
 ```bash
 CONCURRENCY=1000 BASE_URL=http://127.0.0.1:43127 npm run stress
 ```
+
+GitHub Actions מריץ `npm run ci` על כל PR ועל `main`.
 
 ## איך משתמשים
 
