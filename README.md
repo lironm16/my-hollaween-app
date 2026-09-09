@@ -100,7 +100,7 @@ npm run test:stress
 CONCURRENCY=1000 BASE_URL=http://127.0.0.1:43127 npm run stress
 ```
 
-GitHub Actions מריץ `npm run ci` על כל PR ועל `main`.
+GitHub Actions (`.github/workflows/ci.yml`) מריץ בדיקות יחידה, build, ועומס על כל PR ועל `main`.
 
 ## איך משתמשים
 
