@@ -56,7 +56,7 @@ try {
     run(`git -C "${tmp}" diff --staged --quiet`);
     console.log("GitHub mirror already matches Cursor branch — nothing to push.");
   } catch {
-    run(`git -C "${tmp}" commit -m "Sync SpookyHouzz from Cursor (${sourceBranch})"`);
+    run(`git -C "${tmp}" commit -m "Sync HallowHood from Cursor (${sourceBranch})"`);
     console.log(`Pushing ${branch} to github.com/${repo}…`);
     run(`git -C "${tmp}" push origin HEAD:${branch}`);
     console.log("Done. Vercel should start a production deploy from the GitHub push.");

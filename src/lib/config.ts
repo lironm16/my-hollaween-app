@@ -29,7 +29,7 @@ const ADDRESS_AREA_NAMES = [...NEIGHBORHOODS, "הגפן"] as const;
 
 export const config = {
   /** Home-screen / PWA / OS notification name. In-app chrome uses brandEn. */
-  appName: "SpookyHouzz",
+  appName: "HallowHood",
   brandEn: "Halloween",
   brandHe: "בשכונה",
   /** Browser tab label. Home-screen / PWA stays the app name. */

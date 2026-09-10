@@ -36,7 +36,7 @@ export function sanitizePushPayload(input: {
   topic?: PushTopic;
 }): PushPayload {
   return {
-    title: clipPushText(input.title, MAX_TITLE) || "SpookyHouzz",
+    title: clipPushText(input.title, MAX_TITLE) || "HallowHood",
     body: clipPushText(input.body, MAX_BODY),
     url: input.url?.startsWith("/") ? input.url : "/",
     ...(input.topic ? { topic: input.topic } : {}),
