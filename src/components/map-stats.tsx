@@ -2,7 +2,8 @@
 
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { WifiOff, X } from "lucide-react";
+import { WifiOff } from "lucide-react";
+import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { ScarePumpkin } from "@/components/scare-glyphs";
 import type { WalkingRoute } from "@/lib/route";
 import { cn } from "@/lib/utils";
@@ -252,25 +253,16 @@ export function MapStats(props: {
                 className="relative w-[min(24rem,calc(100vw-1.5rem))] rounded-3xl bg-[#12081a] p-3 text-right shadow-[0_16px_48px_rgba(0,0,0,0.55)] ring-1 ring-orange-500/40"
                 onClick={(event) => event.stopPropagation()}
               >
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <h2
-                    id={titleId}
-                    className="flex items-center gap-1.5 text-xl font-bold text-orange-400"
-                  >
-                    <span className="inline-flex size-7 text-orange-500">
-                      <ScarePumpkin />
-                    </span>
-                    סיכום
-                  </h2>
-                  <button
-                    type="button"
-                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-orange-500 text-black hover:bg-orange-400"
-                    aria-label="סגירת הסיכום"
-                    onClick={() => setOpen(false)}
-                  >
-                    <X className="size-5" strokeWidth={3} />
-                  </button>
-                </div>
+                <OverlayCloseBar onClose={() => setOpen(false)} label="סגירת הסיכום" className="pb-1" />
+                <h2
+                  id={titleId}
+                  className="mb-2 flex items-center gap-1.5 text-xl font-bold text-orange-400"
+                >
+                  <span className="inline-flex size-7 text-orange-500">
+                    <ScarePumpkin />
+                  </span>
+                  סיכום
+                </h2>
                 <StatsSummary {...props} />
               </div>
             </div>,

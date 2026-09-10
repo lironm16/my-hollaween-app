@@ -63,12 +63,9 @@ function DialogContent({
           <DialogPrimitive.Close
             data-slot="dialog-close"
             nativeButton
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "icon-sm" }),
-              "absolute top-2 end-2",
-            )}
+            className="hw-overlay-close absolute top-[calc(0.75rem+env(safe-area-inset-top,0px))] start-3"
           >
-            <XIcon />
+            <XIcon className="size-5" />
             <span className="sr-only">סגירה</span>
           </DialogPrimitive.Close>
         )}

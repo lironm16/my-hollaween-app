@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Filter, X } from "lucide-react";
+import { Filter } from "lucide-react";
+import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -72,7 +73,8 @@ export function FiltersSheet({
         showCloseButton={false}
         className="filters-sheet-panel flex flex-col gap-0 overflow-hidden rounded-t-2xl border-orange-500/25 bg-[#160b1f] p-0 sm:max-w-none"
       >
-        <SheetHeader className="shrink-0 border-b border-orange-500/15 px-4 py-3">
+        <OverlayCloseBar onClose={() => onOpenChange(false)} className="border-b border-orange-500/15 pb-2" />
+        <SheetHeader className="shrink-0 px-4 py-3">
           <div className="flex items-center gap-2">
             <SheetTitle className="text-lg font-semibold text-orange-50">סינון</SheetTitle>
             {activeCount > 0 ? (
@@ -80,14 +82,6 @@ export function FiltersSheet({
                 {activeCount} פעילים
               </span>
             ) : null}
-            <button
-              type="button"
-              aria-label="סגירה"
-              onClick={() => onOpenChange(false)}
-              className="ms-auto inline-flex size-9 items-center justify-center rounded-lg text-orange-100 hover:bg-orange-500/10"
-            >
-              <X className="size-5" />
-            </button>
           </div>
         </SheetHeader>
 

@@ -2,8 +2,8 @@
 
 import { useEffect, useId, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
 import { HouseActionBar } from "@/components/house-action-bar";
+import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { HouseDetails } from "@/components/house-details";
 import { CodesCopy } from "@/components/codes-copy";
 import { formatDisplayAddress } from "@/lib/config";
@@ -74,17 +74,8 @@ export function HouseDetailOverlay({
       tabIndex={-1}
       dir="rtl"
     >
-      <div className="house-detail-overlay-top shrink-0 pt-[env(safe-area-inset-top,0px)]">
-        <div className="flex items-center justify-end px-2 py-1">
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="סגירה"
-            className="inline-flex size-10 items-center justify-center rounded-lg text-orange-100 hover:bg-orange-500/15"
-          >
-            <X className="size-6" strokeWidth={2.2} />
-          </button>
-        </div>
+      <div className="house-detail-overlay-top shrink-0">
+        <OverlayCloseBar onClose={onClose} className="pb-1" />
         <div className="px-2 pb-1">
           <HouseActionBar
             house={house}

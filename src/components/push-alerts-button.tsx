@@ -22,6 +22,7 @@ import {
 } from "@/lib/push-client";
 import { anyPushTopicOn, PUSH_TOPIC_ROWS, PUSH_TOPICS } from "@/lib/push-topics";
 import { Button } from "@/components/ui/button";
+import { OverlayCloseBar } from "@/components/overlay-close-button";
 import {
   Dialog,
   DialogContent,
@@ -367,11 +368,12 @@ export function PushAlertsButton() {
 
       <Dialog open={askOpen} onOpenChange={(open) => (open ? setAskOpen(true) : closeDialog())}>
         <DialogContent
-          showCloseButton
+          showCloseButton={false}
           initialFocus={false}
-          className="border border-orange-500/30 bg-[#1a0d24] text-orange-50 sm:max-w-md"
+          className="gap-0 border border-orange-500/30 bg-[#1a0d24] p-0 text-orange-50 sm:max-w-md"
         >
-          <DialogHeader>
+          <OverlayCloseBar onClose={closeDialog} className="border-b border-orange-500/15 pb-2" />
+          <DialogHeader className="px-4 pt-4">
             <DialogTitle className="text-lg text-orange-100">
               {ios
                 ? "התראות באייפון"
@@ -388,7 +390,7 @@ export function PushAlertsButton() {
             ) : null}
           </DialogHeader>
           {ios || locked ? null : (
-            <div className="grid gap-2">
+            <div className="grid gap-2 px-4">
               {PUSH_TOPIC_ROWS.map((row) => (
                 <TopicSwitch
                   key={row.id}
@@ -414,7 +416,7 @@ export function PushAlertsButton() {
               ) : null}
             </div>
           )}
-          <DialogFooter className="border-orange-500/15 bg-[#14091c]/80">
+          <DialogFooter className="border-orange-500/15 bg-[#14091c]/80 px-4 pb-4">
             {ios || unsupported ? (
               <Button className="bg-orange-500 text-black hover:bg-orange-400" onClick={closeDialog}>
                 הבנתי
