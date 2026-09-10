@@ -19,6 +19,13 @@ describe("pwaManifestForUserAgent", () => {
     assert.equal((manifest as { handle_links?: string }).handle_links, "preferred");
   });
 
+  it("includes maskable icons for Android launchers", () => {
+    const manifest = pwaManifestForUserAgent("Android 14");
+    const purposes = manifest.icons?.map((icon) => icon.purpose) ?? [];
+    assert.ok(purposes.includes("any"));
+    assert.ok(purposes.includes("maskable"));
+  });
+
   it("detects Android user agents", () => {
     assert.equal(isAndroidUserAgent("Android 14"), true);
     assert.equal(isAndroidUserAgent("iPhone"), false);
