@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { isLocalPhotoUrl, parsePhotoUrl, shouldLoadHousePhoto } from "@/lib/photos";
+import { isLitePhotoMode, isLocalPhotoUrl, parsePhotoUrl, shouldLoadHousePhoto } from "@/lib/photos";
 
 describe("parsePhotoUrl", () => {
   it("accepts local stub and house photo paths", () => {
@@ -18,13 +18,16 @@ describe("parsePhotoUrl", () => {
 });
 
 describe("shouldLoadHousePhoto", () => {
-  it("always loads local photos even from cache", () => {
+  it("always loads local photos", () => {
     assert.equal(shouldLoadHousePhoto("cache", "/images/stubs/pumpkin-porch.jpg"), true);
-    assert.equal(shouldLoadHousePhoto("snapshot", "/images/stubs/pumpkin-porch.jpg"), true);
+    assert.equal(shouldLoadHousePhoto("network", "/house-photos/abc.jpg?v=1"), true);
   });
 
-  it("skips remote photos from cache", () => {
-    assert.equal(shouldLoadHousePhoto("cache", "https://example.com/a.jpg"), false);
+  it("loads remote photos when not in lite mode", () => {
+    assert.equal(
+      shouldLoadHousePhoto("cache", "https://example.com/a.jpg"),
+      !isLitePhotoMode(),
+    );
   });
 });
 
