@@ -220,11 +220,13 @@ function clusterIcon(
   overview?: boolean,
   visitedIds: string[] = [],
   expanded = false,
+  filteredOut = false,
 ) {
   const houses = cluster.houses;
   const only = houses[0];
   const selectedHere = Boolean(selectedId && houses.some((house) => house.id === selectedId));
   const selectedClass = selectedHere ? " is-selected" : "";
+  const filterClass = filteredOut ? " is-filtered-out" : "";
   const allVisited = houses.length > 0 && houses.every((house) => visitedIds.includes(house.id));
   const fanOpen = expanded && houses.length > 1;
 
@@ -240,7 +242,7 @@ function clusterIcon(
       routeOrder,
     );
     return L.divIcon({
-      className: `pumpkin-pin-icon${selectedClass}${hoursClass}`,
+      className: `pumpkin-pin-icon${selectedClass}${filterClass}${hoursClass}`,
       html: wrapped.html,
       iconSize: [PIN_BOX, PIN_BOX + 4 + wrapped.extraH],
       iconAnchor: [PIN_BOX / 2, PIN_BOX + wrapped.extraH],
@@ -253,7 +255,7 @@ function clusterIcon(
       routeOrder,
     );
     return L.divIcon({
-      className: `pumpkin-pin-icon pumpkin-pin-building${selectedClass}`,
+      className: `pumpkin-pin-icon pumpkin-pin-building${selectedClass}${filterClass}`,
       html: wrapped.html,
       iconSize: [PIN_BOX, 80 + wrapped.extraH],
       iconAnchor: [PIN_BOX / 2, 76 + wrapped.extraH],
@@ -296,7 +298,7 @@ function clusterIcon(
     .join("");
   const badge = routeOrder ? routeBadgeHtml(routeOrder) : "";
   return L.divIcon({
-    className: `pumpkin-pin-icon pumpkin-pin-fan${selectedClass}`,
+    className: `pumpkin-pin-icon pumpkin-pin-fan${selectedClass}${filterClass}`,
     html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" aria-hidden="true"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterAptDotsHtml(houses, now)}</div>${apts}${badge}</div>`,
     iconSize: [width, height],
     iconAnchor: [width / 2, height],
@@ -497,6 +499,7 @@ function ClusterMarker({
   onCollapse,
   routeOrder,
   visitedIds,
+  filteredOut,
 }: {
   cluster: HouseCluster;
   selectedId?: string | null;
@@ -507,6 +510,7 @@ function ClusterMarker({
   onCollapse?: () => void;
   routeOrder?: number;
   visitedIds: string[];
+  filteredOut?: boolean;
 }) {
   const tick = useMinuteTick();
   const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
@@ -524,7 +528,7 @@ function ClusterMarker({
     <Marker
       key={`${cluster.key}-${fanOpen ? (overview ? "peek" : selectedId ?? "open") : "shut"}-${routeOrder ?? 0}-${visitedKey}-${statusKey}`}
       position={[cluster.lat, cluster.lng]}
-      icon={clusterIcon(cluster, selectedId, now, routeOrder, overview, visitedIds, fanOpen)}
+      icon={clusterIcon(cluster, selectedId, now, routeOrder, overview, visitedIds, fanOpen, filteredOut)}
       zIndexOffset={
         fanOpen || selectedHere
           ? 10000
@@ -597,6 +601,9 @@ type Props = {
   panTo?: LatLng | null;
   panTick?: number;
   statsFab?: ReactNode;
+  /** House ids that pass the current filter — others render faded on the map. */
+  matchedIds?: ReadonlySet<string>;
+  filterDimActive?: boolean;
 };
 
 export function HouseMap({
@@ -627,11 +634,14 @@ export function HouseMap({
   panTo = null,
   panTick = 0,
   statsFab = null,
+  matchedIds,
+  filterDimActive = false,
 }: Props) {
   const clusters = useMemo(
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
     [houses, pickMode],
   );
+  const dimActive = filterDimActive && Boolean(matchedIds);
   const routeOrderById = useMemo(() => {
     const map = new Map<string, number>();
     for (const stop of routeStops ?? []) map.set(stop.id, stop.order);
@@ -716,6 +726,7 @@ export function HouseMap({
       className={cn(
         "relative z-0 isolate overflow-hidden",
         originPickActive && "is-origin-pick",
+        dimActive && "is-filter-dim",
         osmDark && "is-osm-dark",
         mapTheme === "dark" ? "bg-[#1a1024]" : "bg-[#d6d3d1]",
         className ?? "h-full min-h-[280px] w-full",
@@ -858,23 +869,27 @@ export function HouseMap({
           </>
         ) : null}
         {!pickMode &&
-          clusters.map((cluster) => (
-            <ClusterMarker
-              key={cluster.key}
-              cluster={cluster}
-              selectedId={selectedId}
-              clusterOverview={clusterOverview}
-              expanded={expandedClusterKey === cluster.key}
-              onSelect={onSelect}
-              onClose={onClose}
-              onCollapse={onCollapseCluster}
-              visitedIds={visitedIds}
-              routeOrder={cluster.houses.reduce<number | undefined>(
-                (found, house) => found ?? routeOrderById.get(house.id),
-                undefined,
-              )}
-            />
-          ))}
+          clusters.map((cluster) => {
+            const clusterMatched = !dimActive || cluster.houses.some((house) => matchedIds?.has(house.id));
+            return (
+              <ClusterMarker
+                key={cluster.key}
+                cluster={cluster}
+                selectedId={selectedId}
+                clusterOverview={clusterOverview}
+                expanded={expandedClusterKey === cluster.key}
+                onSelect={onSelect}
+                onClose={onClose}
+                onCollapse={onCollapseCluster}
+                visitedIds={visitedIds}
+                filteredOut={!clusterMatched}
+                routeOrder={cluster.houses.reduce<number | undefined>(
+                  (found, house) => found ?? routeOrderById.get(house.id),
+                  undefined,
+                )}
+              />
+            );
+          })}
         {!pickMode && userLocation ? (
           <>
             {userLocation.accuracy > 8 && userLocation.accuracy < 120 ? (
