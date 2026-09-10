@@ -243,6 +243,8 @@ export function NeighborhoodApp({
   const { line: routeLine } = useRouteGeometry(walkingRoute, routeMode);
   const routeTravel = useRouteTravel(walkingRoute, routeMode);
 
+  const routeTravelAnimating = routeTravel.sweepIndex !== null;
+
   function handleToggleVisited(id: string) {
     const marking = !visits.visited(id);
     onToggleVisited(id);
@@ -250,6 +252,12 @@ export function NeighborhoodApp({
       routeTravel.advanceAfterVisit(id);
     }
   }
+
+  function handleSkipRouteStop(id: string) {
+    if (!routeMode || !routeTravel.started) return;
+    routeTravel.skipStop(id);
+  }
+
   const summaryProps = {
     filteredHouses: visible.length,
     route: filterRoute,
@@ -378,6 +386,11 @@ export function NeighborhoodApp({
     selected && !matchedIds.has(selected.id)
       ? houseFilterMismatchReasons(selected, filters, filterContext)
       : undefined;
+  const selectedRouteCurrent =
+    routeMode &&
+    routeTravel.started &&
+    selected &&
+    routeTravel.currentStopId === selected.id;
   const houseDetailCommon = selected
     ? {
         house: selected,
@@ -398,6 +411,11 @@ export function NeighborhoodApp({
         extra: houseDetailExtra,
         clusterOverview: selection.clusterOverview,
         clusterHouses: selection.selectedCluster,
+        routeCurrentStop: selectedRouteCurrent,
+        onSkipRouteStop: selectedRouteCurrent
+          ? () => handleSkipRouteStop(selected.id)
+          : undefined,
+        routeTravelAnimating,
       }
     : null;
 
@@ -604,6 +622,8 @@ export function NeighborhoodApp({
                     travelSweepIndex={routeTravel.sweepIndex}
                     travelLineReveal={routeTravel.lineReveal}
                     stopTravelState={routeTravel.stopState}
+                    onSkipStop={handleSkipRouteStop}
+                    travelAnimating={routeTravelAnimating}
                     selectedId={selection.selected?.id ?? null}
                     catalogSource={source}
                     likedIds={likes.likedIds}

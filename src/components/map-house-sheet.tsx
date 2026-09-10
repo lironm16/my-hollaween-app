@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { HouseActionBar } from "@/components/house-action-bar";
+import { RouteSkipBar } from "@/components/route-skip-bar";
 import { HouseDetails } from "@/components/house-details";
 import { CodesCopy } from "@/components/codes-copy";
 import { formatDisplayAddress } from "@/lib/config";
@@ -40,6 +41,9 @@ export function MapHouseSheet({
   onShowInList,
   index,
   filterMismatchReasons,
+  routeCurrentStop = false,
+  onSkipRouteStop,
+  routeTravelAnimating = false,
 }: {
   house: PublicHouse;
   clusterHouses: PublicHouse[];
@@ -61,6 +65,9 @@ export function MapHouseSheet({
   onShowInList?: () => void;
   index?: number;
   filterMismatchReasons?: string[];
+  routeCurrentStop?: boolean;
+  onSkipRouteStop?: () => void;
+  routeTravelAnimating?: boolean;
 }) {
   const labelId = useId();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -226,6 +233,9 @@ export function MapHouseSheet({
             </span>
             <div className="map-house-sheet-cards">
               <section className="map-house-sheet-card is-on">
+                {routeCurrentStop && onSkipRouteStop ? (
+                  <RouteSkipBar disabled={routeTravelAnimating} onSkip={onSkipRouteStop} />
+                ) : null}
                 {filterMismatchReasons && filterMismatchReasons.length > 0 ? (
                   <p className="filter-mismatch-banner" role="status">
                     מסונן: {filterMismatchReasons.join(" · ")}
