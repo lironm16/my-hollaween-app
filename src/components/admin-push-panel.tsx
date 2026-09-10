@@ -441,6 +441,10 @@ export function AdminPushPanel() {
               הממתקים»
             </li>
             <li>
+              <span className="text-orange-100">נגמר + סגור</span> — הממתקים אזלו והבית כבר סגור לביקורים →
+              «נגמרו הממתקים (סגור)»
+            </li>
+            <li>
               <span className="text-orange-100">בלי ממתקים</span> + קישוטים — הבית מקושט בלי חלוקת ממתקים →
               «מקושט בלי ממתקים»
             </li>
