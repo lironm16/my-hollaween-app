@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  applyStreetDistances,
   buildWalkingRoute,
   buildWalkingRouteOrdered,
   refreshWalkingRoute,
@@ -9,6 +10,7 @@ import {
   shouldShowRouteApproach,
   stripApproachFromRouteLine,
   shouldIncludeOriginInRoute,
+  streetLegMeters,
   trimWalkingRouteToVisible,
 } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
@@ -131,6 +133,36 @@ describe("trimWalkingRouteToVisible", () => {
     const trimmed = trimWalkingRouteToVisible(route!, new Set(["a"]));
     assert.ok(trimmed);
     assert.deepEqual(trimmed!.stops.map((stop) => stop.house.id), ["a"]);
+  });
+});
+
+describe("streetLegMeters", () => {
+  it("measures hops along a street line instead of straight-line distance", () => {
+    const c10 = { lat: 32.0919, lng: 34.8031 };
+    const m28 = { lat: 32.093459, lng: 34.809422 };
+    const line = [
+      c10,
+      { lat: 32.09195, lng: 34.8045 },
+      { lat: 32.0922, lng: 34.806 },
+      { lat: 32.0928, lng: 34.808 },
+      m28,
+    ];
+    const legs = streetLegMeters([c10, m28], line);
+    assert.equal(legs.length, 1);
+    assert.ok(legs[0]! > 400);
+  });
+});
+
+describe("applyStreetDistances", () => {
+  it("replaces stop hop distances with street leg meters", () => {
+    const origin = { lat: 32.0919, lng: 34.8112 };
+    const a = stub("a", 32.0919, 34.8031, "חרוזים 10, חרוזים");
+    const b = stub("b", 32.093459, 34.809422, "המרגנית 28, שיכון ותיקים");
+    const route = buildWalkingRouteOrdered([a, b], origin);
+    assert.ok(route);
+    const updated = applyStreetDistances(route!, [900], { includesOrigin: false });
+    assert.equal(updated.stops[1]!.fromPreviousMeters, 900);
+    assert.equal(updated.totalMeters, route!.stops[0]!.fromPreviousMeters + 900);
   });
 });
 
