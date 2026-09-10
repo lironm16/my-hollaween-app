@@ -1,9 +1,8 @@
-const CACHE = "hw-shell-v80";
+const CACHE = "hw-shell-v81";
 const TILE_CACHE = "hw-tiles-v7";
 const PRECACHE = [
   "/offline.html",
   "/catalog.json",
-  "/manifest.webmanifest",
   "/shell.css",
   "/app.css",
   "/icon-192.png",
@@ -79,7 +78,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (url.pathname.startsWith("/api/catalog") || url.pathname === "/catalog.json") {
+  if (
+    url.pathname.startsWith("/api/catalog") ||
+    url.pathname === "/catalog.json" ||
+    url.pathname === "/manifest.webmanifest"
+  ) {
     event.respondWith(networkFirst(req, CACHE));
     return;
   }

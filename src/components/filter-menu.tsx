@@ -8,8 +8,6 @@ import {
   Sheet,
   SheetContent,
   SheetFooter,
-  SheetHeader,
-  SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
@@ -73,17 +71,21 @@ export function FiltersSheet({
         showCloseButton={false}
         className="filters-sheet-panel flex flex-col gap-0 overflow-hidden rounded-t-2xl border-orange-500/25 bg-[#160b1f] p-0 sm:max-w-none"
       >
-        <OverlayCloseBar compact onClose={() => onOpenChange(false)} className="border-b border-orange-500/15 pb-2" />
-        <SheetHeader className="shrink-0 px-4 py-3">
-          <div className="flex items-center gap-2">
-            <SheetTitle className="text-lg font-semibold text-orange-50">סינון</SheetTitle>
-            {activeCount > 0 ? (
-              <span className="rounded-full bg-orange-500/20 px-2 py-0.5 text-base font-medium text-orange-200">
-                {activeCount} פעילים
-              </span>
-            ) : null}
-          </div>
-        </SheetHeader>
+        <OverlayCloseBar
+          compact
+          title={
+            <span className="inline-flex items-center justify-center gap-2">
+              סינון
+              {activeCount > 0 ? (
+                <span className="rounded-full bg-orange-500/20 px-2 py-0.5 text-base font-medium text-orange-200">
+                  {activeCount} פעילים
+                </span>
+              ) : null}
+            </span>
+          }
+          onClose={() => onOpenChange(false)}
+          className="border-b border-orange-500/15 pb-2"
+        />
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
           <div className="mx-auto flex w-full max-w-lg flex-col gap-6">{children}</div>

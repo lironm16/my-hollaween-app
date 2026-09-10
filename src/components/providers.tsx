@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
+import { AndroidInstallGuard } from "@/components/android-install-guard";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { TabTitleCycle } from "@/components/tab-title-cycle";
 import { PresenceBeacon } from "@/hooks/use-presence";
@@ -21,6 +22,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <TabTitleCycle />
       {children}
       <Toaster dir="rtl" position="top-center" theme="dark" />
+      <AndroidInstallGuard />
       <ServiceWorkerRegister />
     </ThemeProvider>
   );
