@@ -260,8 +260,24 @@ export function NeighborhoodApp({
   function goHome() {
     originPick.exitOriginPick();
     exitRouteMode();
+    editFlow.close();
     selection.resetForNavigation();
   }
+
+  useEffect(() => {
+    const reset = () => {
+      editFlow.close();
+      resetForNavigation();
+    };
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) reset();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      window.removeEventListener("pageshow", onPageShow);
+      reset();
+    };
+  }, [editFlow.close, resetForNavigation]);
 
   function handleHouseUpdated(next: PublicHouse) {
     editFlow.setFlow((current) =>
