@@ -346,13 +346,38 @@ export function routeGeometryPoints(route: WalkingRoute): LatLng[] {
   return [route.origin, ...stops];
 }
 
-/** Straight-line preview for the map — always ties origin to stop 1 when they differ. */
+/** Straight-line preview for the map — stops only; dashed approach is drawn separately. */
 export function routePreviewPoints(route: WalkingRoute): LatLng[] {
-  const stops = routePoints(route);
-  if (stops.length === 0) return [];
-  const gap = distanceMeters(route.origin, stops[0]!);
-  if (gap < 12) return stops;
-  return [route.origin, ...stops];
+  return routePoints(route);
+}
+
+/** Whether to draw a dashed spur from the route start to stop 1. */
+export function shouldShowRouteApproach(
+  start: LatLng,
+  firstStop: LatLng,
+  startedFrom?: WalkingRoute["startedFrom"] | null,
+): boolean {
+  const gap = distanceMeters(start, firstStop);
+  if (gap < 12) return false;
+  if (startedFrom === "neighborhood" && gap > ROUTE_INCLUDE_ORIGIN_METERS) return false;
+  return true;
+}
+
+/** Drop the origin leg from a street line — shown as a dashed approach instead. */
+export function stripApproachFromRouteLine(line: LatLng[], firstStop: LatLng, origin: LatLng): LatLng[] {
+  if (line.length < 2) return line;
+  if (distanceMeters(line[0], origin) > 30) return line;
+  let bestIdx = 0;
+  let bestDist = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < line.length; i++) {
+    const d = distanceMeters(line[i], firstStop);
+    if (d < bestDist) {
+      bestDist = d;
+      bestIdx = i;
+    }
+  }
+  const sliced = line.slice(bestIdx);
+  return sliced.length >= 2 ? sliced : line;
 }
 
 export function routeStopLabel(house: PublicHouse) {
