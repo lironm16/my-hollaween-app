@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Bell, BellOff, BellRing } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -23,14 +23,7 @@ import {
 import { anyPushTopicOn, PUSH_TOPIC_ROWS, PUSH_TOPICS } from "@/lib/push-topics";
 import { Button } from "@/components/ui/button";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 type Status = "loading" | PushEnableResult;
@@ -328,6 +321,16 @@ export function PushAlertsButton() {
 
   const primaryLabel = subscribed ? "שמירה" : "הפעל";
   const primaryDisabled = busy || (subscribed ? !hasTopicChanges : !canEnable);
+  const titleId = useId();
+  const dialogTitle = ios
+    ? "התראות באייפון"
+    : denied
+      ? "התראות חסומות בדפדפן"
+      : unsupported
+        ? "הדפדפן לא תומך בהתראות"
+        : subscribed
+          ? "התראות פועלות"
+          : "קבלו התראות מהשכונה";
 
   return (
     <>
@@ -370,25 +373,23 @@ export function PushAlertsButton() {
         <DialogContent
           showCloseButton={false}
           initialFocus={false}
+          dir="rtl"
+          aria-labelledby={titleId}
           className="gap-0 border border-orange-500/30 bg-[#1a0d24] p-0 text-orange-50 sm:max-w-md"
         >
-          <OverlayCloseBar compact onClose={closeDialog} className="border-b border-orange-500/15 pb-2" />
-          <DialogHeader className="px-4 pt-4">
-            <DialogTitle className="text-lg text-orange-100">
-              {ios
-                ? "התראות באייפון"
-                : denied
-                  ? "התראות חסומות בדפדפן"
-                  : unsupported
-                    ? "הדפדפן לא תומך בהתראות"
-                    : subscribed
-                      ? "התראות פועלות"
-                      : "קבלו התראות מהשכונה"}
-            </DialogTitle>
-            {helpDescription ? (
-              <DialogDescription className="text-violet-200/90">{helpDescription}</DialogDescription>
-            ) : null}
-          </DialogHeader>
+          <OverlayCloseBar
+            compact
+            onClose={closeDialog}
+            title={
+              <span id={titleId} className="text-lg font-semibold text-orange-100">
+                {dialogTitle}
+              </span>
+            }
+            className="border-b border-orange-500/15 pb-2"
+          />
+          {helpDescription ? (
+            <DialogDescription className="px-4 pt-3 text-violet-200/90">{helpDescription}</DialogDescription>
+          ) : null}
           {ios || locked ? null : (
             <div className="grid gap-2 px-4">
               {PUSH_TOPIC_ROWS.map((row) => (
@@ -416,36 +417,53 @@ export function PushAlertsButton() {
               ) : null}
             </div>
           )}
-          <DialogFooter className="border-orange-500/15 bg-[#14091c]/80 px-4 pb-4">
+          <div className="space-y-2 border-t border-orange-500/15 bg-[#14091c]/80 px-4 py-3">
             {ios || unsupported ? (
-              <Button className="bg-orange-500 text-black hover:bg-orange-400" onClick={closeDialog}>
+              <Button
+                size="sm"
+                className="h-10 w-full bg-orange-500 text-black hover:bg-orange-400"
+                onClick={closeDialog}
+              >
                 הבנתי
               </Button>
             ) : (
               <>
-                <Button
-                  className="bg-orange-500 text-black hover:bg-orange-400"
-                  disabled={primaryDisabled}
-                  onClick={() => void save()}
-                >
-                  {primaryLabel}
-                </Button>
                 {subscribed ? (
                   <Button
+                    type="button"
                     variant="ghost"
-                    className="text-amber-200"
+                    size="sm"
+                    className="h-9 w-full text-amber-200"
                     disabled={busy}
                     onClick={() => void disableAll()}
                   >
                     כבו התראות
                   </Button>
                 ) : null}
-                <Button variant="ghost" className="text-violet-200" disabled={busy} onClick={closeDialog}>
-                  סגור
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-10 bg-orange-500 text-black hover:bg-orange-400"
+                    disabled={primaryDisabled}
+                    onClick={() => void save()}
+                  >
+                    {primaryLabel}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-10 border-orange-400/40 text-violet-200"
+                    disabled={busy}
+                    onClick={closeDialog}
+                  >
+                    סגור
+                  </Button>
+                </div>
               </>
             )}
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </>
