@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { routePoints, type LatLng, type WalkingRoute } from "@/lib/route";
+import { routeGeometryPoints, type LatLng, type WalkingRoute } from "@/lib/route";
 
 function geometryKey(route: WalkingRoute) {
   const origin = `${route.origin.lat.toFixed(4)},${route.origin.lng.toFixed(4)}`;
   const stops = route.stops.map((stop) => stop.house.id).join(",");
-  return `${origin}|${route.accessible ? "a" : "w"}|${stops}`;
+  return `${origin}|${route.accessible ? "a" : "w"}|${route.startedFrom}|${stops}`;
 }
 
 export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
@@ -26,10 +26,10 @@ export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
       setStatus("idle");
       return;
     }
-    const points = routePoints(current);
+    const points = routeGeometryPoints(current);
     let cancelled = false;
     setStatus("loading");
-    setLine(null);
+    setLine(points.length >= 2 ? points : null);
     void fetch("/api/walk-route", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

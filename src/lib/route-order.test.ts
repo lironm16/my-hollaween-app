@@ -4,6 +4,8 @@ import {
   buildWalkingRoute,
   buildWalkingRouteOrdered,
   refreshWalkingRoute,
+  routeGeometryPoints,
+  shouldIncludeOriginInRoute,
   trimWalkingRouteToVisible,
 } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
@@ -95,5 +97,30 @@ describe("trimWalkingRouteToVisible", () => {
     const trimmed = trimWalkingRouteToVisible(route!, new Set(["a"]));
     assert.ok(trimmed);
     assert.deepEqual(trimmed!.stops.map((stop) => stop.house.id), ["a"]);
+  });
+});
+
+describe("routeGeometryPoints", () => {
+  it("prepends GPS origin for street routing", () => {
+    const origin = { lat: 32.0919, lng: 34.8112 };
+    const near = stub("near", 32.0925, 34.812, "חרוזים 8, חרוזים");
+    const route = buildWalkingRoute([near], origin, { startedFrom: "gps" });
+    assert.ok(route);
+    assert.equal(shouldIncludeOriginInRoute(route!), true);
+    const points = routeGeometryPoints(route!);
+    assert.deepEqual(points[0], origin);
+    assert.equal(points.length, 2);
+  });
+
+  it("skips distant neighborhood center spurs", () => {
+    const origin = { lat: 32.0919, lng: 34.8112 };
+    const far = stub("far", 32.094, 34.818, "נחלת גנים 1, נחלת גנים");
+    const route = buildWalkingRoute([far], origin, { startedFrom: "neighborhood" });
+    assert.ok(route);
+    assert.equal(shouldIncludeOriginInRoute(route!), false);
+    assert.deepEqual(routeGeometryPoints(route!), route!.stops.map((stop) => ({
+      lat: stop.house.lat,
+      lng: stop.house.lng,
+    })));
   });
 });

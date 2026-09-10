@@ -514,7 +514,9 @@ export function NeighborhoodApp({
                 onLocate={originPick.goToMyLocation}
                 routeLine={routeMode && !originPick.originPickActive ? routeLine : null}
                 routeFitTick={routeMode && !originPick.originPickActive ? routeFitTick : 0}
+                routeStartFocusTick={routeTravel.focusTick}
                 routeStart={routeMode ? origin : null}
+                routeStartedFrom={routeMode && walkingRoute ? walkingRoute.startedFrom : null}
                 routeTravelStarted={routeMode ? routeTravel.started : false}
                 routeTravelCompletedCount={routeTravel.completedCount}
                 routeTravelSweepIndex={routeTravel.sweepIndex}

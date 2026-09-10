@@ -632,6 +632,7 @@ type Props = {
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
   /** Walking-route start (GPS / custom / neighborhood) for the dashed approach. */
   routeStart?: LatLng | null;
+  routeStartedFrom?: "gps" | "neighborhood" | "custom" | null;
   routeTravelStarted?: boolean;
   routeTravelCompletedCount?: number;
   routeTravelSweepIndex?: number | null;
@@ -639,6 +640,8 @@ type Props = {
   routeStopTravelState?: (houseId: string) => RouteStopTravelState;
   /** Increment only on route-button tap to fit the whole path. */
   routeFitTick?: number;
+  /** Zoom to origin + first stop when the journey starts. */
+  routeStartFocusTick?: number;
   visitedIds?: string[];
   originMarker?: LatLng | null;
   originPickActive?: boolean;
@@ -671,12 +674,14 @@ export function HouseMap({
   routeLine = null,
   routeStops = null,
   routeStart = null,
+  routeStartedFrom = null,
   routeTravelStarted = false,
   routeTravelCompletedCount = 0,
   routeTravelSweepIndex = null,
   routeTravelLineReveal = 1,
   routeStopTravelState,
   routeFitTick = 0,
+  routeStartFocusTick = 0,
   visitedIds = [],
   originMarker = null,
   originPickActive = false,
@@ -726,15 +731,17 @@ export function HouseMap({
     const first = routeStops?.[0];
     const start = routeStart ?? userLocation;
     if (!start || !first) return null;
+    if (routeLine && routeLine.length >= 2 && distanceMeters(start, routeLine[0]) < 12) {
+      return null;
+    }
     const gap = distanceMeters(start, first);
     if (gap < 12) return null;
-    // Skip long straight spurs from neighborhood center — they cross the street route.
-    if (gap > ROUTE_INCLUDE_ORIGIN_METERS) return null;
+    if (routeStartedFrom === "neighborhood" && gap > ROUTE_INCLUDE_ORIGIN_METERS) return null;
     return [
       [start.lat, start.lng] as [number, number],
       [first.lat, first.lng] as [number, number],
     ];
-  }, [routeStart, userLocation, routeStops]);
+  }, [routeStart, userLocation, routeStops, routeLine, routeStartedFrom]);
   const fitPositions = useMemo(() => {
     let positions: [number, number][] | null = null;
     if (routePositions && routePositions.length >= 2) positions = routePositions;
@@ -744,10 +751,21 @@ export function HouseMap({
     if (!routeStart) return positions;
     const originPos = [routeStart.lat, routeStart.lng] as [number, number];
     if (!positions || positions.length === 0) return [originPos];
-    const nearOrigin =
-      distanceMeters(routeStart, { lat: positions[0][0], lng: positions[0][1] }) < 12;
-    return nearOrigin ? positions : [originPos, ...positions];
+    const first = { lat: positions[0][0], lng: positions[0][1] };
+    const gap = distanceMeters(routeStart, first);
+    if (gap > ROUTE_INCLUDE_ORIGIN_METERS) {
+      return [originPos, first];
+    }
+    if (gap < 12) return positions;
+    return [originPos, ...positions];
   }, [routePositions, routeStops, routeStart]);
+  const startFocusPositions = useMemo(() => {
+    if (!routeStart || !routeStops?.[0]) return null;
+    return [
+      [routeStart.lat, routeStart.lng] as [number, number],
+      [routeStops[0].lat, routeStops[0].lng] as [number, number],
+    ];
+  }, [routeStart, routeStops]);
   const stopCoords = useMemo(
     () => (routeStops ?? []).map((stop) => ({ lat: stop.lat, lng: stop.lng })),
     [routeStops],
@@ -764,6 +782,7 @@ export function HouseMap({
       stopCoords,
       routeTravelCompletedCount - 1,
       travelOrigin,
+      routeStartedFrom ?? undefined,
     );
     return slice.map((point) => [point.lat, point.lng] as [number, number]);
   }, [
@@ -773,13 +792,20 @@ export function HouseMap({
     routeTravelSweepIndex,
     stopCoords,
     travelOrigin,
+    routeStartedFrom,
   ]);
   const drawingLine = useMemo(() => {
     if (!routeLine || routeTravelSweepIndex === null) return null;
-    const slice = travelLineToStop(routeLine, stopCoords, routeTravelSweepIndex, travelOrigin);
+    const slice = travelLineToStop(
+      routeLine,
+      stopCoords,
+      routeTravelSweepIndex,
+      travelOrigin,
+      routeStartedFrom ?? undefined,
+    );
     const revealed = revealRouteLineSlice(slice, routeTravelLineReveal);
     return revealed.map((point) => [point.lat, point.lng] as [number, number]);
-  }, [routeLine, routeTravelSweepIndex, routeTravelLineReveal, stopCoords, travelOrigin]);
+  }, [routeLine, routeTravelSweepIndex, routeTravelLineReveal, stopCoords, travelOrigin, routeStartedFrom]);
   const originIcon = useMemo(
     () => makeOriginIcon(routeTravelStarted, Boolean(routeStart) && !routeTravelStarted),
     [routeTravelStarted, routeStart],
@@ -857,6 +883,9 @@ export function HouseMap({
         <SizeSync active={active} />
         {routeFitTick > 0 && fitPositions ? (
           <FitRoute positions={fitPositions} tick={routeFitTick} />
+        ) : null}
+        {routeStartFocusTick > 0 && startFocusPositions ? (
+          <FitRoute positions={startFocusPositions} tick={routeStartFocusTick} />
         ) : null}
         {panTick > 0 && panTo ? <PanTo lat={panTo.lat} lng={panTo.lng} tick={panTick} /> : null}
         {focus && !originPickActive ? (
