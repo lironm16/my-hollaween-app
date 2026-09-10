@@ -39,10 +39,13 @@ export function isLitePhotoMode() {
   return false;
 }
 
-/** Skip remote house photos on cache/snapshot/constrained networks; local files always load. */
-export function shouldLoadHousePhoto(source?: string | null, photoUrl?: string | null) {
+/**
+ * Local files (stub art + uploaded /house-photos) always load — they ship with the app
+ * or live on our origin. Remote owner photos load when the network allows; users can
+ * still tap to load on a slow/offline catalog via showPhoto in HouseDetails.
+ */
+export function shouldLoadHousePhoto(_source?: string | null, photoUrl?: string | null) {
   if (isLocalPhotoUrl(photoUrl)) return true;
-  if (source === "snapshot" || source === "cache") return false;
   return !isLitePhotoMode();
 }
 
