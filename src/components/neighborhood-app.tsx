@@ -488,6 +488,7 @@ export function NeighborhoodApp({
             <div
               className={cn(
                 "map-stage absolute inset-0 z-0 isolate",
+                routeMode && "is-route-active",
                 view !== "map" && "invisible pointer-events-none",
               )}
               style={{ position: "absolute", inset: 0 }}
@@ -514,13 +515,14 @@ export function NeighborhoodApp({
                 routeLine={routeMode && !originPick.originPickActive ? routeLine : null}
                 routeFitTick={routeMode && !originPick.originPickActive ? routeFitTick : 0}
                 routeStart={routeMode ? origin : null}
+                routeOriginIsGps={routeMode && origin.fromGps}
                 routeTravelStarted={routeMode ? routeTravel.started : false}
                 routeTravelCompletedCount={routeTravel.completedCount}
                 routeTravelSweepIndex={routeTravel.sweepIndex}
                 routeTravelLineReveal={routeTravel.lineReveal}
                 routeStopTravelState={routeTravel.stopState}
                 visitedIds={visits.visitedIds}
-                originMarker={origin.fromGps ? null : origin}
+                originMarker={routeMode || !origin.fromGps ? origin : null}
                 originPickActive={originPick.originPickActive}
                 originPick={originPick.originDraft}
                 onOriginPick={originPick.onOriginMapPick}

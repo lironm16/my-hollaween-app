@@ -337,9 +337,9 @@ function originIconHtml(started: boolean) {
   return `<div class="house-pin is-origin${started ? " is-route-started" : ""}" aria-label="נקודת התחלה"><span>📍</span></div>`;
 }
 
-function makeOriginIcon(started: boolean) {
+function makeOriginIcon(started: boolean, pending = false) {
   return L.divIcon({
-    className: `pumpkin-pin-icon is-origin-pin${started ? " is-route-started" : ""}`,
+    className: `pumpkin-pin-icon is-origin-pin${started ? " is-route-started" : ""}${pending ? " is-route-pending" : ""}`,
     html: originIconHtml(started),
     iconSize: [PIN_BOX, PIN_BOX + 4],
     iconAnchor: [PIN_BOX / 2, PIN_BOX],
@@ -632,6 +632,8 @@ type Props = {
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
   /** Walking-route start (GPS / custom / neighborhood) for the dashed approach. */
   routeStart?: LatLng | null;
+  /** Hide the blue GPS dot when the route origin pin replaces it. */
+  routeOriginIsGps?: boolean;
   routeTravelStarted?: boolean;
   routeTravelCompletedCount?: number;
   routeTravelSweepIndex?: number | null;
@@ -671,6 +673,7 @@ export function HouseMap({
   routeLine = null,
   routeStops = null,
   routeStart = null,
+  routeOriginIsGps = false,
   routeTravelStarted = false,
   routeTravelCompletedCount = 0,
   routeTravelSweepIndex = null,
@@ -736,10 +739,18 @@ export function HouseMap({
     ];
   }, [routeStart, userLocation, routeStops]);
   const fitPositions = useMemo(() => {
-    if (routePositions && routePositions.length >= 2) return routePositions;
-    if (!routeStops || routeStops.length < 2) return null;
-    return routeStops.map((stop) => [stop.lat, stop.lng] as [number, number]);
-  }, [routePositions, routeStops]);
+    let positions: [number, number][] | null = null;
+    if (routePositions && routePositions.length >= 2) positions = routePositions;
+    else if (routeStops && routeStops.length >= 2) {
+      positions = routeStops.map((stop) => [stop.lat, stop.lng] as [number, number]);
+    }
+    if (!routeStart) return positions;
+    const originPos = [routeStart.lat, routeStart.lng] as [number, number];
+    if (!positions || positions.length === 0) return [originPos];
+    const nearOrigin =
+      distanceMeters(routeStart, { lat: positions[0][0], lng: positions[0][1] }) < 12;
+    return nearOrigin ? positions : [originPos, ...positions];
+  }, [routePositions, routeStops, routeStart]);
   const stopCoords = useMemo(
     () => (routeStops ?? []).map((stop) => ({ lat: stop.lat, lng: stop.lng })),
     [routeStops],
@@ -772,7 +783,10 @@ export function HouseMap({
     const revealed = revealRouteLineSlice(slice, routeTravelLineReveal);
     return revealed.map((point) => [point.lat, point.lng] as [number, number]);
   }, [routeLine, routeTravelSweepIndex, routeTravelLineReveal, stopCoords, travelOrigin]);
-  const originIcon = useMemo(() => makeOriginIcon(routeTravelStarted), [routeTravelStarted]);
+  const originIcon = useMemo(
+    () => makeOriginIcon(routeTravelStarted, Boolean(routeStart) && !routeTravelStarted),
+    [routeTravelStarted, routeStart],
+  );
   const youAreHereIcon = useMemo(
     () => makeYouAreHereIcon(routeTravelStarted),
     [routeTravelStarted],
@@ -1014,7 +1028,7 @@ export function HouseMap({
               />
             );
           })}
-        {!pickMode && userLocation ? (
+        {!pickMode && userLocation && !routeOriginIsGps ? (
           <>
             {userLocation.accuracy > 8 && userLocation.accuracy < 120 ? (
               <Circle
