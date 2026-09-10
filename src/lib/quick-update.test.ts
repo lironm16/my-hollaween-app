@@ -64,4 +64,11 @@ describe("quick-update", () => {
     assert.ok(preview);
     assert.match(preview!.payload.title, /בית בדיקה/);
   });
+
+  it("previews candy out while house stays open", () => {
+    const base = house({ decorLevel: "mild", decorated: true });
+    const preview = previewQuickUpdatePush(base, "out", "open");
+    assert.ok(preview);
+    assert.equal(preview!.kind, "candyOut");
+  });
 });

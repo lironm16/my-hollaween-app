@@ -35,6 +35,7 @@ import {
 import type { StoredPushSettings } from "@/lib/push-templates";
 import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
 import type { PushKind } from "@/lib/push-templates";
+import { isDecorated } from "@/lib/house-state";
 import type { Catalog, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -53,18 +54,16 @@ export function QuickUpdateOverlay({
   onClose: () => void;
   onUpdated: (house: PublicHouse) => void;
 }) {
-  const currentCandy = currentQuickCandy(house);
-  const currentHouse = currentQuickHouse(house);
-  const [candyPick, setCandyPick] = useState<QuickCandyChoice | "">("");
-  const [housePick, setHousePick] = useState<QuickHouseChoice | "">("");
+  const [candyPick, setCandyPick] = useState<QuickCandyChoice>(() => currentQuickCandy(house));
+  const [housePick, setHousePick] = useState<QuickHouseChoice>(() => currentQuickHouse(house));
   const [sendPush, setSendPush] = useState(true);
   const [busy, setBusy] = useState(false);
   const [pushStored, setPushStored] = useState<StoredPushSettings | null>(null);
 
   useEffect(() => {
     if (!open) return;
-    setCandyPick("");
-    setHousePick("");
+    setCandyPick(currentQuickCandy(house));
+    setHousePick(currentQuickHouse(house));
     setSendPush(true);
     void fetch("/api/catalog", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
@@ -74,18 +73,23 @@ export function QuickUpdateOverlay({
       .catch(() => setPushStored(null));
   }, [open, house.id]);
 
-  const effectiveCandy = candyPick || currentCandy;
-  const effectiveHouse = housePick || currentHouse;
-  const dirty = quickUpdateChanged(house, effectiveCandy, effectiveHouse);
+  const dirty = quickUpdateChanged(house, candyPick, housePick);
   const preview = useMemo(
-    () =>
-      dirty ? previewQuickUpdatePush(house, effectiveCandy, effectiveHouse, pushStored) : null,
-    [dirty, effectiveCandy, effectiveHouse, house, pushStored],
+    () => (dirty ? previewQuickUpdatePush(house, candyPick, housePick, pushStored) : null),
+    [dirty, candyPick, housePick, house, pushStored],
   );
+  const previewNote =
+    preview &&
+    preview.kind === "candyOut" &&
+    candyPick === "out" &&
+    housePick === "open" &&
+    isDecorated(house)
+      ? "הממתקים נגמרו — הבית עדיין פתוח לביקורים."
+      : null;
 
   async function save() {
     if (!dirty || busy) return;
-    const patch = buildQuickUpdatePatch(house, effectiveCandy, effectiveHouse);
+    const patch = buildQuickUpdatePatch(house, candyPick, housePick);
     setBusy(true);
     try {
       if (typeof navigator !== "undefined" && !navigator.onLine) {
@@ -195,12 +199,10 @@ export function QuickUpdateOverlay({
         <QuickSelectField
           label="ממתקים"
           value={candyPick}
-          currentValue={currentCandy}
           onChange={setCandyPick}
           options={QUICK_CANDY_OPTIONS.map((option) => ({
             value: option.id,
             label: option.label,
-            disabled: option.id === currentCandy,
             danger: option.tone === "danger",
             icon: <CandySign tone={option.id} className="size-7" />,
           }))}
@@ -208,12 +210,10 @@ export function QuickUpdateOverlay({
         <QuickSelectField
           label="סטטוס הבית"
           value={housePick}
-          currentValue={currentHouse}
           onChange={setHousePick}
           options={QUICK_HOUSE_OPTIONS.map((option) => ({
             value: option.id,
             label: option.label,
-            disabled: option.id === currentHouse,
             icon: <span className={cn("night-status-dot size-6 border-2", option.dotClass)} />,
           }))}
         />
@@ -229,7 +229,17 @@ export function QuickUpdateOverlay({
               />
               <span className="text-lg text-orange-100">שלחו התראה לשכונה</span>
             </label>
-            <PushNotice payload={preview.payload} />
+            <PushNotice
+              payload={preview.payload}
+              time=""
+              className={cn(
+                "transition-opacity",
+                !sendPush && "pointer-events-none opacity-40 saturate-[0.65]",
+              )}
+            />
+            {previewNote ? (
+              <p className="text-center text-base leading-snug text-violet-300">{previewNote}</p>
+            ) : null}
           </div>
         ) : null}
 
@@ -249,48 +259,37 @@ export function QuickUpdateOverlay({
 function QuickSelectField<T extends string>({
   label,
   value,
-  currentValue,
   onChange,
   options,
 }: {
   label: string;
-  value: T | "";
-  currentValue: T;
-  onChange: (value: T | "") => void;
+  value: T;
+  onChange: (value: T) => void;
   options: {
     value: T;
     label: string;
-    disabled?: boolean;
     danger?: boolean;
     icon: ReactNode;
   }[];
 }) {
-  const picked = value ? options.find((option) => option.value === value) : undefined;
-  const current = options.find((option) => option.value === currentValue);
-  const display = picked ?? current;
+  const selected = options.find((option) => option.value === value);
 
   return (
     <div className="space-y-2">
       <p className="text-lg font-medium text-orange-100">{label}</p>
-      <Select
-        value={value || undefined}
-        onValueChange={(next) => onChange(next as T)}
-      >
+      <Select value={value} onValueChange={(next) => onChange(next as T)}>
         <SelectTrigger
           className={cn(
             "h-14 min-h-14 w-full rounded-xl border-orange-500/30 bg-[#12081a] px-3 text-lg text-orange-50 shadow-none",
-            "data-placeholder:text-violet-300 [&_[data-slot=select-value]]:flex [&_[data-slot=select-value]]:items-center [&_[data-slot=select-value]]:gap-3",
+            "[&_[data-slot=select-value]]:flex [&_[data-slot=select-value]]:items-center [&_[data-slot=select-value]]:gap-3",
           )}
           size="default"
         >
-          <SelectValue placeholder="בחרו ערך חדש…">
-            {display ? (
+          <SelectValue>
+            {selected ? (
               <span className="inline-flex items-center gap-3">
-                {display.icon}
-                <span className={cn(picked?.danger && "text-red-300")}>{display.label}</span>
-                {!picked && current ? (
-                  <span className="text-base text-violet-400">· עכשיו</span>
-                ) : null}
+                {selected.icon}
+                <span className={cn(selected.danger && "text-red-300")}>{selected.label}</span>
               </span>
             ) : null}
           </SelectValue>
@@ -304,16 +303,14 @@ function QuickSelectField<T extends string>({
             <SelectItem
               key={option.value}
               value={option.value}
-              disabled={option.disabled}
               className={cn(
                 "py-3.5 ps-2.5 text-lg focus:bg-orange-500/15 focus:text-orange-50",
-                option.danger && !option.disabled && "text-red-300",
+                option.danger && "text-red-300",
               )}
             >
               <span className="inline-flex items-center gap-3">
                 {option.icon}
                 <span>{option.label}</span>
-                {option.disabled ? <span className="text-base text-violet-400">(עכשיו)</span> : null}
               </span>
             </SelectItem>
           ))}
