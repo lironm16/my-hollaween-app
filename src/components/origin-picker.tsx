@@ -31,13 +31,13 @@ export function OriginTrigger({
       title={shifted ? "נקודת מדידה שונה מהמיקום הנוכחי" : "מאיפה למדוד מרחק"}
       onClick={onClick}
       className={cn(
-        "relative inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
+        "relative inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
         shifted
           ? "bg-orange-500 text-black"
           : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
       )}
     >
-      <MapPin className="size-4" />
+      <MapPin className="size-5" />
       {shifted ? (
         <ToolbarBadge>
           <MapPin strokeWidth={2.8} aria-hidden="true" />
