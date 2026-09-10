@@ -5706,6 +5706,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   justify-content: flex-start;
   padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 0.75rem 0.5rem;
 }
+.hw-overlay-close-bar--compact {
+  padding: 0.5rem 0.75rem 0.25rem;
+}
 .hw-overlay-close,
 .house-edit-overlay-close {
   display: grid;

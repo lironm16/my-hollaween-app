@@ -36,7 +36,7 @@ export function HouseEditModal({
           className,
         )}
       >
-        <OverlayCloseBar onClose={onClose} className="border-b border-orange-500/20 pb-2" />
+        <OverlayCloseBar compact onClose={onClose} className="border-b border-orange-500/20" />
         <DialogHeader className="shrink-0 px-4 pb-3 pt-1 text-center">
           <DialogTitle className="font-display text-xl text-orange-200">{title}</DialogTitle>
           {subtitle ? <p className="mt-0.5 truncate text-base text-violet-200">{subtitle}</p> : null}

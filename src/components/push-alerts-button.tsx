@@ -372,7 +372,7 @@ export function PushAlertsButton() {
           initialFocus={false}
           className="gap-0 border border-orange-500/30 bg-[#1a0d24] p-0 text-orange-50 sm:max-w-md"
         >
-          <OverlayCloseBar onClose={closeDialog} className="border-b border-orange-500/15 pb-2" />
+          <OverlayCloseBar compact onClose={closeDialog} className="border-b border-orange-500/15 pb-2" />
           <DialogHeader className="px-4 pt-4">
             <DialogTitle className="text-lg text-orange-100">
               {ios

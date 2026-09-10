@@ -28,13 +28,16 @@ export function OverlayCloseBar({
   onClose,
   className,
   label,
+  compact = false,
 }: {
   onClose: () => void;
   className?: string;
   label?: string;
+  /** Drop safe-area top inset — for centered modals and bottom sheets. */
+  compact?: boolean;
 }) {
   return (
-    <div className={cn("hw-overlay-close-bar", className)}>
+    <div className={cn("hw-overlay-close-bar", compact && "hw-overlay-close-bar--compact", className)}>
       <OverlayCloseButton onClick={onClose} label={label} />
     </div>
   );
