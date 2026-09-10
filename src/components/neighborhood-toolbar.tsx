@@ -5,7 +5,6 @@ import { FilterTrigger } from "@/components/filter-menu";
 import { OriginTrigger } from "@/components/origin-picker";
 import { CsvExportButton } from "@/components/csv-export-button";
 import { PingPongMarquee } from "@/components/neighborhood-marquee";
-import { Input } from "@/components/ui/input";
 import type { HomeView } from "@/lib/home-view";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -59,8 +58,6 @@ export function NeighborhoodToolbar({
   onToggleRoute,
   houses,
   includeTraffic,
-  listQuery,
-  onListQueryChange,
   routeTicker,
 }: {
   view: HomeView;
@@ -75,8 +72,6 @@ export function NeighborhoodToolbar({
   onToggleRoute: () => void;
   houses: PublicHouse[];
   includeTraffic?: boolean;
-  listQuery: string;
-  onListQueryChange: (value: string) => void;
   routeTicker: string | null;
 }) {
   return (
@@ -122,21 +117,6 @@ export function NeighborhoodToolbar({
         />
       </div>
       {routeTicker ? <StatusTicker text={routeTicker} /> : null}
-      {view === "list" && !routeMode ? (
-        <div className="mt-2 w-full min-w-0">
-          <Input
-            id="house-search"
-            type="search"
-            value={listQuery}
-            onChange={(e) => onListQueryChange(e.target.value)}
-            placeholder="חיפוש לפי שם או רחוב…"
-            aria-label="חיפוש בית"
-            autoComplete="off"
-            enterKeyHint="search"
-            className="h-10 w-full min-w-0 bg-[#1d1028] text-base"
-          />
-        </div>
-      ) : null}
     </div>
   );
 }
