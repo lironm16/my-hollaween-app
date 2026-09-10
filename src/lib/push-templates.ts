@@ -198,6 +198,39 @@ export function housePushUrl(house: { id: string }) {
   return `/?focus=${encodeURIComponent(house.id)}`;
 }
 
+/** Same kind resolution as the server after an owner save. */
+export function resolveHouseNotifyKind(
+  prev: House,
+  next: House,
+  patch?: OwnerNotifyPatch,
+): PushKind | null {
+  return classifyHouseAlert(prev, next) ?? (patch ? ownerOfferKindFromPatch(patch, next, prev) : null);
+}
+
+/** Filled owner-alert copy from the active templates (defaults or stored). */
+export function filledPushForKind(
+  kind: PushKind,
+  house: House,
+  stored?: StoredPushSettings | null,
+): { title: string; body: string; url: string } | null {
+  const templates = mergePushTemplates(stored);
+  const template = templates[kind];
+  if (!template.enabled) return null;
+  const filled = fillPushTemplate(template, house);
+  return {
+    title: filled.title.trim() || "SpookyHouzz",
+    body: filled.body.trim(),
+    url: housePushUrl(house),
+  };
+}
+
+/** Quick-edit / owner view: house is not open for visits (closed or owner pause). */
+export function isHouseOffAir(house: House): boolean {
+  if (effectiveVisit(house) === "closed") return true;
+  if (isOwnerFrozen(house)) return true;
+  return false;
+}
+
 /** Candy / stock alerts stay silent while the house is still paused or closed. */
 export function stockAlertsBlocked(house: House): boolean {
   if (isOwnerFrozen(house)) return true;
@@ -213,7 +246,7 @@ export function classifyHouseAlert(prev: House, next: House): PushKind | null {
   const wasPaused = isOwnerFrozen(prev);
   const nowPaused = isOwnerFrozen(next);
 
-  if (!wasPaused && nowPaused) return "onBreak";
+  if (!wasPaused && nowPaused && !isHouseOffAir(prev)) return "onBreak";
   if (wasPaused && !nowPaused && isPubliclyListed(next) && nextVisit === "come") {
     return "backFromBreak";
   }
@@ -221,7 +254,7 @@ export function classifyHouseAlert(prev: House, next: House): PushKind | null {
   if (wasPaused && nowPaused) return null;
   if (prevVisit === "closed" && nextVisit === "closed") return null;
 
-  if (prevVisit !== "closed" && nextVisit === "closed") return "closed";
+  if (prevVisit !== "closed" && nextVisit === "closed" && !isHouseOffAir(prev)) return "closed";
   if (prevVisit !== "decorOnly" && nextVisit === "decorOnly") return "decorOnly";
   if ((prevVisit === "closed" || prevVisit === "decorOnly") && nextVisit === "come") {
     return "backActive";
@@ -276,19 +309,32 @@ export function houseMatchesNotifyKind(house: House, kind: PushKind): boolean {
 export function ownerOfferKindFromPatch(
   patch: OwnerNotifyPatch | undefined,
   next: House,
+  prev?: House,
 ): PushKind | null {
   if (!patch) return null;
   const keys = Object.keys(patch).filter((key) => (patch as Record<string, unknown>)[key] !== undefined);
   const allowed = new Set(["visit", "treatStock", "treats", "soldOut", "ownerFrozenUntil"]);
   if (keys.length === 0 || keys.some((key) => !allowed.has(key))) return null;
   if (patch.ownerFrozenUntil !== undefined) {
-    if (isOwnerFrozen(next) && houseMatchesNotifyKind(next, "onBreak")) return "onBreak";
+    if (
+      isOwnerFrozen(next) &&
+      houseMatchesNotifyKind(next, "onBreak") &&
+      !(prev && isHouseOffAir(prev) && isHouseOffAir(next))
+    ) {
+      return "onBreak";
+    }
     if (!isOwnerFrozen(next) && houseMatchesNotifyKind(next, "backFromBreak")) return "backFromBreak";
   }
-  if (stockAlertsBlocked(next) && patch.visit !== "closed") return null;
-  if (patch.visit === "closed" && houseMatchesNotifyKind(next, "closed")) return "closed";
+  if (
+    patch.visit === "closed" &&
+    houseMatchesNotifyKind(next, "closed") &&
+    !(prev && isHouseOffAir(prev))
+  ) {
+    return "closed";
+  }
   if (patch.visit === "decorOnly" && houseMatchesNotifyKind(next, "decorOnly")) return "decorOnly";
   if (patch.visit === "come" && houseMatchesNotifyKind(next, "backActive")) return "backActive";
+  if (stockAlertsBlocked(next)) return null;
   const candy = patch.treatStock?.candy;
   if (candy === "low" && markedCandy(next) && houseMatchesNotifyKind(next, "candyLow")) return "candyLow";
   if (candy === "out" && markedCandy(next) && houseMatchesNotifyKind(next, "candyOut")) return "candyOut";

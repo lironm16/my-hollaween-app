@@ -3,14 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRehearsalScene, useServerSim } from "@/hooks/use-app-clock";
+import { useAdminSession } from "@/hooks/use-admin-session";
 import { rehearsalSceneLabel } from "@/lib/app-clock";
 import { cn } from "@/lib/utils";
 
 export function DryRunBanner() {
   const pathname = usePathname();
+  const { admin, ready: adminReady } = useAdminSession();
   const { scene, setScene } = useRehearsalScene();
   const { down, setDown } = useServerSim();
   if (pathname?.startsWith("/admin")) return null;
+  if (adminReady && admin) return null;
   if (scene === "off" && !down) return null;
 
   return (

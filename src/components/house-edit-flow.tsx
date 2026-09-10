@@ -75,25 +75,27 @@ export function HouseEditFlowPanels({
   if (!flow) return null;
 
   const { house, editCode, admin, allowDelete } = flow;
+  const now = useAppNow();
+  const quickAvailable = quickUpdateAvailable(house, now);
 
   return (
     <>
       <EditChoiceDialog
         open={flow.step === "choice"}
         houseName={house.name}
+        quickAvailable={quickAvailable}
         onClose={onClose}
         onQuick={() => setFlow((current) => (current ? { ...current, step: "quick" } : current))}
         onFull={() => setFlow((current) => (current ? { ...current, step: "full" } : current))}
       />
-      {flow.step === "quick" ? (
-        <QuickUpdateOverlay
-          house={house}
-          editCode={editCode}
-          admin={admin}
-          onClose={onClose}
-          onUpdated={onUpdated}
-        />
-      ) : null}
+      <QuickUpdateOverlay
+        house={house}
+        editCode={editCode}
+        admin={admin}
+        open={flow.step === "quick"}
+        onClose={onClose}
+        onUpdated={onUpdated}
+      />
       {flow.step === "full" ? (
         <HouseEditOverlay
           house={house}

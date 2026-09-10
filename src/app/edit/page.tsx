@@ -166,10 +166,7 @@ export default function EditPage() {
           className="mb-4 h-28 w-full rounded-2xl object-cover ring-1 ring-orange-500/30"
         />
         <h1 className="font-display mb-1 text-2xl text-orange-300">עריכת בית</h1>
-        <p className="mb-4 text-base text-violet-200">
-          בחרו בית מהרשימה. בליל האלווין, משעת הפתיחה של הבית, אפשר עדכון מהיר או עריכה מלאה.
-          מנהל או מי שהבית שמור במכשיר נכנסים ישר לעריכה.
-        </p>
+        <p className="mb-4 text-base text-violet-200">בחרו בית מהרשימה לעריכה.</p>
         <PersistNote className="mb-4" />
 
         <section className="mb-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">

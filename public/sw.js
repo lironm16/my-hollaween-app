@@ -1,4 +1,4 @@
-const CACHE = "hw-shell-v64";
+const CACHE = "hw-shell-v65";
 const TILE_CACHE = "hw-tiles-v7";
 const PRECACHE = [
   "/offline.html",
@@ -14,6 +14,10 @@ const PRECACHE = [
   "/images/banner.jpg",
   "/images/pumpkin-marker.png",
 ];
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
