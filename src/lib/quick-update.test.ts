@@ -80,8 +80,10 @@ describe("quick-update", () => {
     assert.equal(previewQuickUpdatePush(onBreak, "plenty", "closed"), null);
   });
 
-  it("skips candy push while house stays closed", () => {
+  it("previews candy-out-closed while house stays closed", () => {
     const closed = house({ visit: "closed", treatStock: { candy: "plenty" } });
-    assert.equal(previewQuickUpdatePush(closed, "out", "closed"), null);
+    const preview = previewQuickUpdatePush(closed, "out", "closed");
+    assert.ok(preview);
+    assert.equal(preview!.kind, "candyOutClosed");
   });
 });

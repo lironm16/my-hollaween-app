@@ -214,7 +214,7 @@ export function QuickUpdateOverlay({
           options={QUICK_HOUSE_OPTIONS.map((option) => ({
             value: option.id,
             label: option.label,
-            icon: <span className={cn("night-status-dot size-6 border-2", option.dotClass)} />,
+            icon: <span className={cn("night-status-dot night-status-dot--lg border-2", option.dotClass)} />,
           }))}
         />
 
