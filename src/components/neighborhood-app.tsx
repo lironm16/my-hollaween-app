@@ -241,7 +241,8 @@ export function NeighborhoodApp({
   }, [admin, refresh, resetForNavigation]);
 
   const walkingRoute = routeMode ? pinnedRoute : null;
-  const { line: routeLine } = useRouteGeometry(walkingRoute, routeMode);
+  const activeRoute = routeMode ? (walkingRoute ?? filterRoute) : null;
+  const { line: routeLine } = useRouteGeometry(activeRoute, routeMode);
   const summaryProps = {
     filteredHouses: visible.length,
     route: filterRoute,
@@ -488,6 +489,7 @@ export function NeighborhoodApp({
                 routeLine={routeMode && !originPick.originPickActive ? routeLine : null}
                 routeFitTick={routeMode && !originPick.originPickActive ? routeFitTick : 0}
                 routeStart={routeMode ? origin : null}
+                routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}
                 visitedIds={visits.visitedIds}
                 originMarker={origin.fromGps ? null : origin}
                 originPickActive={originPick.originPickActive}
@@ -501,8 +503,8 @@ export function NeighborhoodApp({
                   )
                 }
                 routeStops={
-                  routeMode && walkingRoute && !originPick.originPickActive
-                    ? walkingRoute.stops.map((stop) => ({
+                  routeMode && activeRoute && !originPick.originPickActive
+                    ? activeRoute.stops.map((stop) => ({
                         id: stop.house.id,
                         order: stop.order,
                         lat: stop.house.lat,

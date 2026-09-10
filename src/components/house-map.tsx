@@ -591,6 +591,7 @@ type Props = {
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
   /** Walking-route start (GPS / custom / neighborhood) for the dashed approach. */
   routeStart?: LatLng | null;
+  routeStartedFrom?: "gps" | "neighborhood" | "custom" | null;
   /** Increment only on route-button tap to fit the whole path. */
   routeFitTick?: number;
   visitedIds?: string[];
@@ -625,6 +626,7 @@ export function HouseMap({
   routeLine = null,
   routeStops = null,
   routeStart = null,
+  routeStartedFrom = null,
   routeFitTick = 0,
   visitedIds = [],
   originMarker = null,
@@ -675,15 +677,17 @@ export function HouseMap({
     const first = routeStops?.[0];
     const start = routeStart ?? userLocation;
     if (!start || !first) return null;
+    if (routeLine && routeLine.length >= 2 && distanceMeters(start, routeLine[0]) < 12) {
+      return null;
+    }
     const gap = distanceMeters(start, first);
     if (gap < 12) return null;
-    // Skip long straight spurs from neighborhood center — they cross the street route.
-    if (gap > ROUTE_INCLUDE_ORIGIN_METERS) return null;
+    if (routeStartedFrom === "neighborhood" && gap > ROUTE_INCLUDE_ORIGIN_METERS) return null;
     return [
       [start.lat, start.lng] as [number, number],
       [first.lat, first.lng] as [number, number],
     ];
-  }, [routeStart, userLocation, routeStops]);
+  }, [routeStart, userLocation, routeStops, routeLine, routeStartedFrom]);
   const fitPositions = useMemo(() => {
     if (routePositions && routePositions.length >= 2) return routePositions;
     if (!routeStops || routeStops.length < 2) return null;
@@ -914,8 +918,8 @@ export function HouseMap({
               icon={youAreHereIcon}
               zIndexOffset={800}
             >
-              <Popup autoPan={false} keepInView={false}>
-                <div dir="rtl" className="text-right">
+              <Popup autoPan={false} keepInView={false} closeButton={false} className="you-are-here-popup">
+                <div dir="rtl" className="you-are-here-popup-body">
                   <strong>אתם כאן</strong>
                   {!inNeighborhood(userLocation.lat, userLocation.lng) ? (
                     <div>מחוץ לגבול המפה של השכונה</div>
