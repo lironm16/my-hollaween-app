@@ -32,7 +32,7 @@ export function migrateHouseFilters(filters: HouseFiltersState): HouseFiltersSta
   const allCandy =
     next.candyFilters.length === CANDY_TONE_IDS.length &&
     CANDY_TONE_IDS.every((tone) => next.candyFilters.includes(tone));
-  if (!withCandy && !allCandy) {
+  if (!withCandy && !allCandy && next.candyFilters.length > 0) {
     next.candyFilters = [...CANDY_TONE_IDS];
     next.sensitivityFilters = [];
   }
@@ -42,7 +42,7 @@ export function migrateHouseFilters(filters: HouseFiltersState): HouseFiltersSta
     next.scareFilters.length === SCARE_LEVELS.length &&
     SCARE_LEVELS.every((level) => next.scareFilters.includes(level)) &&
     next.includeUndecorated;
-  if (!kids && !allScare) {
+  if (!kids && !allScare && (next.scareFilters.length > 0 || next.includeUndecorated)) {
     next.scareFilters = [...SCARE_LEVELS];
     next.includeUndecorated = true;
   }

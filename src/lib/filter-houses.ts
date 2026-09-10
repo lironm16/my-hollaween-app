@@ -104,8 +104,9 @@ export function houseFilterMismatchReasons(
     reasons.push(isStubHouse(house) ? "סטאב" : "בית אמיתי");
   }
   if (accessibleOnly && !house.accessible) reasons.push("לא נגיש");
-  if (candyFilterActive(filters) && candyFilters.length > 0 && !candyFilters.includes(candyTone(house))) {
-    reasons.push(candyToneLabel(candyTone(house)));
+  if (candyFilterActive(filters)) {
+    if (candyFilters.length === 0) reasons.push("ממתקים");
+    else if (!candyFilters.includes(candyTone(house))) reasons.push(candyToneLabel(candyTone(house)));
   }
   if (!includeUndecorated && !isDecorated(house)) reasons.push("לא מקושט");
   if (visitWindowMode === "now" && !isOpenNowForFilter(house, "", "", now)) {
@@ -148,13 +149,9 @@ export function houseFilterMismatchReasons(
       reasons.push(treatLabels[sensitivity]);
     }
   }
-  if (
-    scareFilterActive(filters) &&
-    isDecorated(house) &&
-    scareFilters.length > 0 &&
-    !scareFilters.includes(house.scareLevel)
-  ) {
-    reasons.push(scareShort[house.scareLevel]);
+  if (scareFilterActive(filters) && isDecorated(house)) {
+    if (scareFilters.length === 0) reasons.push("רמת פחד");
+    else if (!scareFilters.includes(house.scareLevel)) reasons.push(scareShort[house.scareLevel]);
   }
   if (neighborhoodFilterActive(filters) && !houseInNeighborhoods(house, neighborhoodFilters)) {
     const area =
@@ -207,7 +204,9 @@ export function filterHouses(
   return houses.filter((house) => {
     if (!houseMatchesSet(house, houseSet)) return false;
     if (accessibleOnly && !house.accessible) return false;
-    if (candyFilters.length > 0 && !candyFilters.includes(candyTone(house))) return false;
+    if (candyFilterActive(filters)) {
+      if (candyFilters.length === 0 || !candyFilters.includes(candyTone(house))) return false;
+    }
     if (!includeUndecorated && !isDecorated(house)) return false;
     if (visitWindowMode === "now") {
       if (!isOpenNowForFilter(house, "", "", now)) return false;
@@ -245,8 +244,8 @@ export function filterHouses(
     for (const sensitivity of sensitivityFilters) {
       if (!offersSensitivity(house, sensitivity)) return false;
     }
-    if (isDecorated(house) && scareFilters.length > 0 && !scareFilters.includes(house.scareLevel)) {
-      return false;
+    if (scareFilterActive(filters) && isDecorated(house)) {
+      if (scareFilters.length === 0 || !scareFilters.includes(house.scareLevel)) return false;
     }
     if (!houseInNeighborhoods(house, neighborhoodFilters)) return false;
     if (likedOnly && !likedIds.includes(house.id)) return false;
