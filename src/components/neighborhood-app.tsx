@@ -577,6 +577,7 @@ export function NeighborhoodApp({
                     onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
                     onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
                     selectedId={selection.selected?.id ?? null}
+                    focusId={selection.listFocusId}
                     catalogSource={source}
                     likedIds={likes.likedIds}
                     onToggleLike={onToggleLike}
@@ -612,6 +613,7 @@ export function NeighborhoodApp({
                       if (house) requestHouseEdit(house, true);
                     }}
                     selectedId={selection.selected?.id ?? null}
+                    focusId={selection.listFocusId}
                     editingId={null}
                   />
                 )}

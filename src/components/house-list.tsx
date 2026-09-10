@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { HouseCard } from "@/components/house-card";
 import { distanceMeters } from "@/lib/geo";
 import { effectiveVisit } from "@/lib/house-state";
@@ -20,6 +20,7 @@ export function HouseList({
   onSelectHouse,
   onEditHouse,
   selectedId,
+  focusId,
   editingId,
 }: {
   houses: PublicHouse[];
@@ -35,8 +36,10 @@ export function HouseList({
   onSelectHouse?: (id: string, index: number) => void;
   onEditHouse?: (id: string, index: number) => void;
   selectedId?: string | null;
+  focusId?: string | null;
   editingId?: string | null;
 }) {
+  const focusRef = useRef<HTMLDivElement | null>(null);
   const filtered = useMemo(() => {
     return houses
       .map((h) => ({
@@ -52,6 +55,11 @@ export function HouseList({
       });
   }, [houses, origin]);
 
+  useEffect(() => {
+    if (!focusId) return;
+    focusRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusId]);
+
   if (houses.length === 0) {
     return (
       <div className="px-4 py-16 text-center text-violet-200">
@@ -64,8 +72,12 @@ export function HouseList({
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3">
       {filtered.map(({ h, d }, i) => (
-        <HouseCard
+        <div
           key={h.id}
+          ref={h.id === focusId ? focusRef : undefined}
+          className={h.id === focusId ? "house-list-focus" : undefined}
+        >
+        <HouseCard
           index={i + 1}
           house={h}
           distanceM={d}
@@ -81,6 +93,7 @@ export function HouseList({
           onToggleEdit={onEditHouse ? () => onEditHouse(h.id, i + 1) : undefined}
           editing={editingId === h.id}
         />
+        </div>
       ))}
     </div>
   );

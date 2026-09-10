@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { MapPin, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HouseCard } from "@/components/house-card";
@@ -27,6 +28,7 @@ export function RouteList({
   onChangeOrigin,
   onSelectHouse,
   selectedId,
+  focusId,
   catalogSource,
   likedIds,
   onToggleLike,
@@ -44,6 +46,7 @@ export function RouteList({
   onChangeOrigin?: () => void;
   onSelectHouse: (id: string, index: number) => void;
   selectedId?: string | null;
+  focusId?: string | null;
   catalogSource?: string | null;
   likedIds?: string[];
   onToggleLike?: (id: string) => void;
@@ -55,6 +58,13 @@ export function RouteList({
   onEditHouse?: (id: string, index: number) => void;
   editingId?: string | null;
 }) {
+  const focusRef = useRef<HTMLLIElement | null>(null);
+
+  useEffect(() => {
+    if (!focusId) return;
+    focusRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusId]);
+
   const gpsAction =
     !hasGps && onRequestLocation ? (
       <Button type="button" size="sm" variant="outline" className="mt-2" onClick={onRequestLocation}>
@@ -108,7 +118,11 @@ export function RouteList({
           </div>
         </li>
         {cards.map(({ house, order, hop }, i) => (
-          <li key={house.id}>
+          <li
+            key={house.id}
+            ref={house.id === focusId ? focusRef : undefined}
+            className={house.id === focusId ? "house-list-focus" : undefined}
+          >
             <RouteLeg label={hop} />
             <div className="route-list-house">
               <HouseCard
