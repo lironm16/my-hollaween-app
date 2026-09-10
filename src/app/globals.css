@@ -2228,7 +2228,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   border: 1px solid rgba(249, 115, 22, 0.35);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(8px);
-  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  top: calc(0.65rem + env(safe-area-inset-top, 0px));
+}
+
+.is-route-active .map-fab-stack {
+  top: calc(6.5rem + env(safe-area-inset-top, 0px));
+  bottom: auto;
 }
 
 .route-start-card.is-started {
@@ -2317,6 +2322,16 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .house-pin.is-origin.is-route-started {
   background: #10b981 !important;
   box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.45), 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.is-origin-pin.is-route-pending .house-pin.is-origin {
+  animation: route-origin-pulse 1.6s ease-in-out infinite;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.55), 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+@keyframes route-origin-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.45), 0 2px 8px rgba(0, 0, 0, 0.45); }
+  50% { box-shadow: 0 0 0 8px rgba(249, 115, 22, 0.28), 0 2px 12px rgba(0, 0, 0, 0.45); }
 }
 
 .route-stop-pin.is-route-done::before {
