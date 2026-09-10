@@ -103,7 +103,7 @@ export function QuickUpdateOverlay({
           url,
           body: admin ? { ...patch } : { ...patch, editCode },
           house: next,
-          editCode,
+          editCode: admin ? undefined : editCode,
           createdAt: new Date().toISOString(),
         });
         onUpdated(next);
@@ -142,7 +142,7 @@ export function QuickUpdateOverlay({
 
       onUpdated(data.house);
       rememberPublishedHouse(data.house);
-      if (editCode) {
+      if (!admin && editCode) {
         saveOwnedHouse({
           id: data.house.id,
           name: data.house.name,

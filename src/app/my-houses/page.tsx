@@ -106,20 +106,31 @@ export default function MyHousesPage() {
         </div>
         <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3 pb-8">
           {houses.map(({ house, distanceM }, index) => (
-            <HouseCard
-              key={house.id}
-              index={index + 1}
-              house={house}
-              distanceM={distanceM}
-              catalogSource={catalog ? "network" : null}
-              liked={likes.likedIds.includes(house.id)}
-              onToggleLike={() => likes.toggle(house.id)}
-              visited={visits.visitedIds.includes(house.id)}
-              onToggleVisited={() => visits.toggle(house.id)}
-              canEdit
-              onOpen={() => setSelectedId(house.id)}
-              onToggleEdit={() => requestEdit(house)}
-            />
+            <div key={house.id} className="space-y-1">
+              <HouseCard
+                index={index + 1}
+                house={house}
+                distanceM={distanceM}
+                catalogSource={catalog ? "network" : null}
+                liked={likes.likedIds.includes(house.id)}
+                onToggleLike={() => likes.toggle(house.id)}
+                visited={visits.visitedIds.includes(house.id)}
+                onToggleVisited={() => visits.toggle(house.id)}
+                canEdit
+                onOpen={() => setSelectedId(house.id)}
+                onToggleEdit={() => requestEdit(house)}
+              />
+              <button
+                type="button"
+                className="px-1 text-sm text-violet-400 underline-offset-2 hover:text-violet-200 hover:underline"
+                onClick={() => {
+                  removeOwnedHouse(house.id);
+                  notifyCatalogChanged();
+                }}
+              >
+                הסרה מהרשימה
+              </button>
+            </div>
           ))}
         </div>
       </main>
