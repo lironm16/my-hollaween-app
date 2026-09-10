@@ -35,7 +35,11 @@ export const metadata: Metadata = {
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: "/icon-192.png",
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/apple-touch-icon-167.png", sizes: "167x167", type: "image/png" },
+      { url: "/apple-touch-icon-152.png", sizes: "152x152", type: "image/png" },
+    ],
   },
 };
 
@@ -65,7 +69,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* Inlined: Cursor Preview is a different origin and Next.js 16 returns 403 for /_next CSS. */}
         {themeCss ? <style dangerouslySetInnerHTML={{ __html: themeCss }} /> : null}
         <link rel="stylesheet" href="/app.css?v=97" />
-        <meta name="hw-build" content="2026-09-10-maskable-icons-v85" />
+        <meta name="hw-build" content="2026-09-10-ios-cute-icon-v86" />
         <link rel="stylesheet" href="/shell.css?v=55" />
       </head>
       <body className="relative h-full min-h-dvh font-sans">

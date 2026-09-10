@@ -17,6 +17,9 @@ describe("pwaManifestForUserAgent", () => {
     );
     assert.equal(manifest.display, "standalone");
     assert.equal((manifest as { handle_links?: string }).handle_links, "preferred");
+    const srcs = manifest.icons?.map((icon) => icon.src) ?? [];
+    assert.ok(srcs.includes("/icon-ios-192.png"));
+    assert.ok(srcs.includes("/apple-touch-icon.png"));
   });
 
   it("includes maskable icons for Android launchers", () => {
