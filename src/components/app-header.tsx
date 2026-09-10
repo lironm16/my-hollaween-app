@@ -70,6 +70,7 @@ export function AppHeader({
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
         <SheetContent
           side="left"
+          showCloseButton={false}
           className="w-[min(20rem,88vw)] border-orange-500/25 bg-[#160b1f] p-0"
         >
           <SheetHeader className="border-b border-orange-500/15 px-4 py-2 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
