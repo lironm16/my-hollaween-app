@@ -346,6 +346,15 @@ export function routeGeometryPoints(route: WalkingRoute): LatLng[] {
   return [route.origin, ...stops];
 }
 
+/** Straight-line preview for the map — always ties origin to stop 1 when they differ. */
+export function routePreviewPoints(route: WalkingRoute): LatLng[] {
+  const stops = routePoints(route);
+  if (stops.length === 0) return [];
+  const gap = distanceMeters(route.origin, stops[0]!);
+  if (gap < 12) return stops;
+  return [route.origin, ...stops];
+}
+
 export function routeStopLabel(house: PublicHouse) {
   return `${houseHeadline(house)} · ${formatDisplayAddress(house)}`;
 }

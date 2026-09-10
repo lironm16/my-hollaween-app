@@ -2245,12 +2245,32 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   border: 1px solid rgba(249, 115, 22, 0.35);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(8px);
-  top: calc(0.65rem + env(safe-area-inset-top, 0px));
+  bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px) + var(--map-sheet-h, 0px));
+  pointer-events: auto;
 }
 
-.is-route-active .map-fab-stack {
-  top: calc(6.5rem + env(safe-area-inset-top, 0px));
-  bottom: auto;
+.route-origin-popup {
+  min-width: 10rem;
+}
+
+.route-origin-popup-hint {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: #fdba74;
+}
+
+.route-origin-popup-start {
+  margin-top: 0.5rem;
+  width: 100%;
+  min-height: 2.5rem;
+  border: 0;
+  border-radius: 0.65rem;
+  background: #10b981;
+  color: #000;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .route-start-card.is-started {

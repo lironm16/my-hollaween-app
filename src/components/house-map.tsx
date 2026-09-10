@@ -632,6 +632,8 @@ type Props = {
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
   /** Walking-route start (GPS / custom / neighborhood) for the dashed approach. */
   routeStart?: LatLng | null;
+  routeOriginLabel?: string;
+  onRouteStart?: () => void;
   routeStartedFrom?: "gps" | "neighborhood" | "custom" | null;
   routeTravelStarted?: boolean;
   routeTravelCompletedCount?: number;
@@ -674,6 +676,8 @@ export function HouseMap({
   routeLine = null,
   routeStops = null,
   routeStart = null,
+  routeOriginLabel,
+  onRouteStart,
   routeStartedFrom = null,
   routeTravelStarted = false,
   routeTravelCompletedCount = 0,
@@ -753,9 +757,6 @@ export function HouseMap({
     if (!positions || positions.length === 0) return [originPos];
     const first = { lat: positions[0][0], lng: positions[0][1] };
     const gap = distanceMeters(routeStart, first);
-    if (gap > ROUTE_INCLUDE_ORIGIN_METERS) {
-      return [originPos, first];
-    }
     if (gap < 12) return positions;
     return [originPos, ...positions];
   }, [routePositions, routeStops, routeStart]);
@@ -938,7 +939,26 @@ export function HouseMap({
             position={[originMarker.lat, originMarker.lng]}
             icon={originIcon}
             zIndexOffset={850}
-          />
+          >
+            {routeStops && routeStops.length > 0 ? (
+              <Popup>
+                <div dir="rtl" className="route-origin-popup text-right">
+                  <strong>נקודת התחלה</strong>
+                  {routeOriginLabel ? <div>{routeOriginLabel}</div> : null}
+                  <div className="route-origin-popup-hint">
+                    {routeTravelStarted
+                      ? "המסלול פעיל"
+                      : `${routeStops.length} עצירות — לחצו התחלה כדי לצאת לדרך`}
+                  </div>
+                  {!routeTravelStarted && onRouteStart ? (
+                    <button type="button" className="route-origin-popup-start" onClick={onRouteStart}>
+                      התחלה
+                    </button>
+                  ) : null}
+                </div>
+              </Popup>
+            ) : null}
+          </Marker>
         ) : null}
         {!pickMode && approachPositions ? (
           <>
@@ -1076,9 +1096,24 @@ export function HouseMap({
             >
               <Popup autoPan={false} keepInView={false}>
                 <div dir="rtl" className="text-right">
-                  <strong>אתם כאן</strong>
+                  <strong>{routeStops && routeStops.length > 0 ? "נקודת התחלה" : "אתם כאן"}</strong>
+                  {routeStops && routeStops.length > 0 && routeOriginLabel ? (
+                    <div>{routeOriginLabel}</div>
+                  ) : null}
                   {!inNeighborhood(userLocation.lat, userLocation.lng) ? (
                     <div>מחוץ לגבול המפה של השכונה</div>
+                  ) : null}
+                  {routeStops && routeStops.length > 0 ? (
+                    <div className="route-origin-popup-hint">
+                      {routeTravelStarted
+                        ? "המסלול פעיל"
+                        : `${routeStops.length} עצירות — לחצו התחלה כדי לצאת לדרך`}
+                    </div>
+                  ) : null}
+                  {routeStops && routeStops.length > 0 && !routeTravelStarted && onRouteStart ? (
+                    <button type="button" className="route-origin-popup-start" onClick={onRouteStart}>
+                      התחלה
+                    </button>
                   ) : null}
                 </div>
               </Popup>
