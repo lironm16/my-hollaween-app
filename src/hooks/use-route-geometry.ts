@@ -29,7 +29,7 @@ export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
     const points = routePoints(current);
     let cancelled = false;
     setStatus("loading");
-    setLine(points);
+    setLine(null);
     void fetch("/api/walk-route", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

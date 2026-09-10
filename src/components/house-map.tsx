@@ -19,7 +19,7 @@ import "leaflet/dist/leaflet.css";
 import { config, inNeighborhood } from "@/lib/config";
 import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
-import { type LatLng } from "@/lib/route";
+import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
 import { distanceMeters } from "@/lib/geo";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { isClosingSoon, isHoursNightOver, isHoursNotYetOpen, isOnBreak, isOpeningSoon } from "@/lib/hours";
@@ -647,7 +647,7 @@ export function HouseMap({
     for (const stop of routeStops ?? []) map.set(stop.id, stop.order);
     return map;
   }, [routeStops]);
-  const lineRenderer = useMemo(() => L.svg({ padding: 0.5 }), []);
+  const lineRenderer = useMemo(() => L.canvas({ padding: 0.5 }), []);
   const focus = useMemo(() => {
     if (pickMode || !selectedId) return null;
     const cluster = clusters.find((item) => item.houses.some((house) => house.id === selectedId));
@@ -675,18 +675,20 @@ export function HouseMap({
     const first = routeStops?.[0];
     const start = routeStart ?? userLocation;
     if (!start || !first) return null;
-    if (distanceMeters(start, first) < 12) return null;
+    const gap = distanceMeters(start, first);
+    if (gap < 12) return null;
+    // Skip long straight spurs from neighborhood center — they cross the street route.
+    if (gap > ROUTE_INCLUDE_ORIGIN_METERS) return null;
     return [
       [start.lat, start.lng] as [number, number],
       [first.lat, first.lng] as [number, number],
     ];
   }, [routeStart, userLocation, routeStops]);
   const fitPositions = useMemo(() => {
-    const parts: [number, number][] = [];
-    if (approachPositions) parts.push(...approachPositions);
-    if (routePositions) parts.push(...routePositions);
-    return parts.length >= 2 ? parts : null;
-  }, [approachPositions, routePositions]);
+    if (routePositions && routePositions.length >= 2) return routePositions;
+    if (!routeStops || routeStops.length < 2) return null;
+    return routeStops.map((stop) => [stop.lat, stop.lng] as [number, number]);
+  }, [routePositions, routeStops]);
   const ready = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -843,6 +845,7 @@ export function HouseMap({
         {!pickMode && routePositions ? (
           <>
             <Polyline
+              key={`route-shadow-${routePositions.length}-${routePositions[0]?.join(",")}`}
               positions={routePositions}
               pathOptions={{
                 color: "#9a3412",
@@ -855,6 +858,7 @@ export function HouseMap({
               interactive={false}
             />
             <Polyline
+              key={`route-line-${routePositions.length}-${routePositions[0]?.join(",")}`}
               positions={routePositions}
               pathOptions={{
                 color: "#f97316",
