@@ -17,6 +17,7 @@ export function useHouseSelection({
 }) {
   const [selectedId, setSelectedId] = useState<SelectedId>(focusId);
   const [selectedListIndex, setSelectedListIndex] = useState<number | undefined>();
+  const [listFocusId, setListFocusId] = useState<string | null>(null);
   const [focusSeen, setFocusSeen] = useState(focusId);
   const [clusterOverview, setClusterOverview] = useState(false);
   const [expandedClusterKey, setExpandedClusterKey] = useState<string | null>(null);
@@ -61,12 +62,14 @@ export function useHouseSelection({
   const closeSelection = useCallback(() => {
     setClusterOverview(false);
     setSelectedId("closed");
+    setListFocusId(null);
     setEditing(false);
   }, []);
 
   const dismissForOverlay = useCallback(() => {
     setEditing(false);
     setClusterOverview(false);
+    setListFocusId(null);
     setSelectedId("closed");
   }, []);
 
@@ -74,11 +77,13 @@ export function useHouseSelection({
     setSelectedId("closed");
     setClusterOverview(false);
     setExpandedClusterKey(null);
+    setListFocusId(null);
     setEditing(false);
   }, []);
 
   const selectOnMap = useCallback(
     (house: PublicHouse, opts?: { clusterOverview?: boolean }) => {
+      setListFocusId(null);
       const cluster = clusterHousesByAddress(houses).find((item) =>
         item.houses.some((itemHouse) => itemHouse.id === house.id),
       );
@@ -109,18 +114,21 @@ export function useHouseSelection({
     setClusterOverview(false);
     setExpandedClusterKey(null);
     setEditing(false);
+    setListFocusId(null);
     setSelectedListIndex(undefined);
     setSelectedId(id);
   }, []);
 
   const selectInList = useCallback((id: string, index: number) => {
     setClusterOverview(false);
+    setListFocusId(null);
     setSelectedListIndex(index);
     setSelectedId(id);
   }, []);
 
   const editInList = useCallback((id: string, index: number) => {
     setClusterOverview(false);
+    setListFocusId(null);
     setEditForId(id);
     setSelectedListIndex(index);
     setSelectedId(id);
@@ -133,6 +141,9 @@ export function useHouseSelection({
       setClusterOverview(false);
       setExpandedClusterKey(null);
       setSelectedListIndex(index >= 0 ? index + 1 : undefined);
+      setListFocusId(houseId);
+      setSelectedId("closed");
+      setEditing(false);
     },
     [visible],
   );
@@ -160,5 +171,6 @@ export function useHouseSelection({
     selectInList,
     editInList,
     showInListFromMap,
+    listFocusId,
   };
 }
