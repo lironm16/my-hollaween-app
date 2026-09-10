@@ -2462,6 +2462,9 @@
     .hover\:text-muted-foreground:hover {
       color: var(--muted-foreground);
     }
+    .hover\:text-violet-200:hover {
+      color: var(--color-violet-200);
+    }
     .hover\:underline:hover {
       text-decoration-line: underline;
     }

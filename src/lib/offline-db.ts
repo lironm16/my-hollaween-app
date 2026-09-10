@@ -453,7 +453,7 @@ export function queueHouseWrite(write: PendingHouseWrite) {
   next.push(write);
   writePendingSync(next);
   rememberPublishedHouse(write.house);
-  if (write.editCode) {
+  if (write.editCode && !write.url.includes("/api/admin/")) {
     saveOwnedHouse({
       id: write.house.id,
       name: write.house.name,
