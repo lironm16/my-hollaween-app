@@ -242,10 +242,11 @@ export function NeighborhoodApp({
 
   const walkingRoute = routeMode ? pinnedRoute : null;
   const activeRoute = routeMode ? (walkingRoute ?? filterRoute) : null;
-  const { line: routeLine } = useRouteGeometry(activeRoute, routeMode);
+  const { line: routeLine, streetRoute } = useRouteGeometry(activeRoute, routeMode);
+  const displayRoute = routeMode ? (streetRoute ?? activeRoute) : null;
   const summaryProps = {
     filteredHouses: visible.length,
-    route: filterRoute,
+    route: displayRoute ?? filterRoute,
     staleLabel: offline
       ? "לא מקוון"
       : unreachable
@@ -571,7 +572,7 @@ export function NeighborhoodApp({
                 </div>
                 {routeMode ? (
                   <RouteList
-                    route={walkingRoute}
+                    route={displayRoute}
                     hasGps={Boolean(gps)}
                     onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
                     onChangeOrigin={() => originPick.setOriginPickerOpen(true)}

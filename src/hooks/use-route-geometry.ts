@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { routeGeometryPoints, routePreviewPoints, type LatLng, type WalkingRoute } from "@/lib/route";
+import {
+  applyStreetDistances,
+  routeGeometryPoints,
+  routePreviewPoints,
+  shouldIncludeOriginInRoute,
+  streetLegMeters,
+  type LatLng,
+  type WalkingRoute,
+} from "@/lib/route";
 
 function geometryKey(route: WalkingRoute) {
   const origin = `${route.origin.lat.toFixed(4)},${route.origin.lng.toFixed(4)}`;
@@ -11,6 +19,7 @@ function geometryKey(route: WalkingRoute) {
 
 export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
   const [line, setLine] = useState<LatLng[] | null>(null);
+  const [streetRoute, setStreetRoute] = useState<WalkingRoute | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "fallback">("idle");
   const routeRef = useRef(route);
   routeRef.current = route;
@@ -23,6 +32,7 @@ export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
     const current = routeRef.current;
     if (!key || !current) {
       setLine(null);
+      setStreetRoute(null);
       setStatus("idle");
       return;
     }
@@ -30,7 +40,8 @@ export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
     const preview = routePreviewPoints(current);
     let cancelled = false;
     setStatus("loading");
-    setLine(preview.length >= 2 ? preview : null);
+    setLine(null);
+    setStreetRoute(null);
     void fetch("/api/walk-route", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -44,16 +55,23 @@ export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
       .then((street) => {
         if (cancelled) return;
         if (street && street.length >= 2) {
+          const legs = streetLegMeters(waypoints, street);
+          const withStreet = applyStreetDistances(current, legs, {
+            includesOrigin: shouldIncludeOriginInRoute(current),
+          });
           setLine(street);
+          setStreetRoute(withStreet);
           setStatus("ready");
         } else {
-          setLine(preview);
+          setLine(preview.length >= 2 ? preview : null);
+          setStreetRoute(null);
           setStatus("fallback");
         }
       })
       .catch(() => {
         if (cancelled) return;
-        setLine(preview);
+        setLine(preview.length >= 2 ? preview : null);
+        setStreetRoute(null);
         setStatus("fallback");
       });
     return () => {
@@ -61,5 +79,5 @@ export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
     };
   }, [key]);
 
-  return { line, status };
+  return { line, streetRoute, status };
 }
