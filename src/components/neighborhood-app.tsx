@@ -10,7 +10,7 @@ import { HouseList } from "@/components/house-list";
 import { MapStats, StatsSummary } from "@/components/map-stats";
 import { HouseDetailOverlay } from "@/components/house-detail-overlay";
 import { MapHouseSheet } from "@/components/map-house-sheet";
-import { NightDesk } from "@/components/night-desk";
+import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { NeighborhoodStatusBanners } from "@/components/neighborhood-status-banners";
 import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
 import { OriginPickerSheet } from "@/components/origin-picker";
@@ -150,11 +150,8 @@ export function NeighborhoodApp({
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
   const selection = useHouseSelection({ focusId, visible, houses });
-  const { setEditing: setHouseEditing, resetForNavigation } = selection;
-
-  useEffect(() => {
-    if (!admin) setHouseEditing(false);
-  }, [admin, setHouseEditing]);
+  const { resetForNavigation } = selection;
+  const editFlow = useHouseEditFlow();
 
   const ownedEditCode = useMemo(() => {
     if (!selection.editHouseId) return undefined;
@@ -267,6 +264,9 @@ export function NeighborhoodApp({
   }
 
   function handleHouseUpdated(next: PublicHouse) {
+    editFlow.setFlow((current) =>
+      current?.house.id === next.id ? { ...current, house: next } : current,
+    );
     if (admin) {
       applyAdminHouse(next);
       return;
@@ -284,12 +284,22 @@ export function NeighborhoodApp({
     void refresh(true);
   }
 
+  function requestHouseEdit(house: PublicHouse, allowDelete = false) {
+    selection.setEditing(false);
+    editFlow.openEdit(house, {
+      editCode: admin ? editCodeById.get(house.id) : owned.find((item) => item.id === house.id)?.editCode,
+      admin,
+      allowDelete: allowDelete || Boolean(admin || owned.some((item) => item.id === house.id)),
+    });
+  }
+
   function openOnMap(id: string) {
     selection.showOnMap(id);
     setView("map");
   }
 
   function handleHouseDeleted(id: string) {
+    editFlow.close();
     removeAdminHouse(id);
     removeOwnedHouse(id);
     forgetPublishedHouse(id);
@@ -334,17 +344,6 @@ export function NeighborhoodApp({
           </Button>
         </div>
       ) : null}
-      {selection.editing && canEditSelected ? (
-        <NightDesk
-          house={selected}
-          admin={admin}
-          allowDelete
-          editCode={admin ? editCodeById.get(selected.id) : ownedEditCode}
-          onCancel={() => selection.setEditing(false)}
-          onDeleted={() => handleHouseDeleted(selected.id)}
-          onUpdated={handleHouseUpdated}
-        />
-      ) : null}
     </div>
   ) : null;
   const houseDetailCommon = selected
@@ -361,8 +360,8 @@ export function NeighborhoodApp({
         editCodeFor: (id: string) =>
           admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode,
         canEditHouse: (id: string) => Boolean(admin || owned.some((item) => item.id === id)),
-        editing: selection.editing,
-        onToggleEdit: () => selection.setEditing((value) => !value),
+        editing: false,
+        onToggleEdit: canEditSelected ? () => requestHouseEdit(selected, true) : undefined,
         pendingNote: housePendingNote,
         extra: houseDetailExtra,
         clusterOverview: selection.clusterOverview,
@@ -555,8 +554,12 @@ export function NeighborhoodApp({
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
                     onShowOnMap={openOnMap}
                     onSelectHouse={selection.selectInList}
-                    onEditHouse={selection.editInList}
-                    editingId={selection.editing ? selection.selected?.id ?? null : null}
+                    onEditHouse={(id, index) => {
+                      selection.selectInList(id, index);
+                      const house = visible.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
+                      if (house) requestHouseEdit(house, true);
+                    }}
+                    editingId={null}
                   />
                 ) : (
                   <HouseList
@@ -572,9 +575,13 @@ export function NeighborhoodApp({
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
                     onShowOnMap={openOnMap}
                     onSelectHouse={selection.selectInList}
-                    onEditHouse={selection.editInList}
+                    onEditHouse={(id, index) => {
+                      selection.selectInList(id, index);
+                      const house = visible.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
+                      if (house) requestHouseEdit(house, true);
+                    }}
                     selectedId={selection.selected?.id ?? null}
-                    editingId={selection.editing ? selection.selected?.id ?? null : null}
+                    editingId={null}
                   />
                 )}
             </div>
@@ -619,6 +626,13 @@ export function NeighborhoodApp({
         onCancel={() => setRoutePrompt(null)}
       />
       <VisitCheer show={visitCheer} />
+      <HouseEditFlowPanels
+        flow={editFlow.flow}
+        setFlow={editFlow.setFlow}
+        onClose={editFlow.close}
+        onUpdated={handleHouseUpdated}
+        onDeleted={handleHouseDeleted}
+      />
     </div>
   );
 }

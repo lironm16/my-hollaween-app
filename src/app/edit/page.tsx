@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMergedHouses } from "@/hooks/use-merged-houses";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { CodesCopy } from "@/components/codes-copy";
@@ -19,13 +17,15 @@ import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { houseMatchesSet } from "@/lib/house-set";
 import { saveOwnedHouse, removeOwnedHouse, forgetPublishedHouse, notifyCatalogChanged } from "@/lib/offline-db";
 import type { House, PublicHouse } from "@/lib/types";
-import { NightDesk } from "@/components/night-desk";
+import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
+import { useAppNow } from "@/hooks/use-app-clock";
+import { quickUpdateAvailable } from "@/lib/quick-update";
+import { Plus, Zap } from "lucide-react";
 import { PersistNote } from "@/components/persist-note";
 import { readApiJson } from "@/lib/api-json";
 import { cn } from "@/lib/utils";
 
 export default function EditPage() {
-  const router = useRouter();
   const owned = useOwnedHouses();
   const { catalog, loading: catalogLoading, refresh } = useCatalog();
   const { admin, ready: adminReady } = useAdminSession();
@@ -37,6 +37,8 @@ export default function EditPage() {
   const [house, setHouse] = useState<PublicHouse | null>(null);
   const [busy, setBusy] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
+  const editFlow = useHouseEditFlow();
+  const now = useAppNow();
   const pickedIdRef = useRef<string | null>(null);
   pickedIdRef.current = picked?.id ?? null;
 
@@ -165,8 +167,8 @@ export default function EditPage() {
         />
         <h1 className="font-display mb-1 text-2xl text-orange-300">עריכת בית</h1>
         <p className="mb-4 text-base text-violet-200">
-          בחרו בית מהרשימה, עדכנו מהיר בליל האלווין, ואז שמרו פרטים מלאים. מנהל או מי שהבית שמור
-          במכשיר נכנסים ישר לעריכה.
+          בחרו בית מהרשימה. בליל האלווין, משעת הפתיחה של הבית, אפשר עדכון מהיר או עריכה מלאה.
+          מנהל או מי שהבית שמור במכשיר נכנסים ישר לעריכה.
         </p>
         <PersistNote className="mb-4" />
 
@@ -237,33 +239,38 @@ export default function EditPage() {
         {house ? (
           <div className="space-y-4">
             <CodesCopy editCode={admin ? adminEditCode : editCode} />
-            <NightDesk
-              house={house}
-              admin={admin}
-              allowDelete
-              editCode={admin ? adminEditCode : editCode}
-              onCancel={() => router.push("/")}
-              onDeleted={() => {
-                forgetPublishedHouse(house.id);
-                removeOwnedHouse(house.id);
-                notifyCatalogChanged();
-                void refresh(true);
-                setHouse(null);
-                setPicked(null);
-              }}
-              onUpdated={(next) => {
-                setHouse(next);
-                setPicked(next);
-                if (!admin && editCode) {
-                  saveOwnedHouse({
-                    id: next.id,
-                    name: next.name,
-                    editCode,
-                    preview: next,
-                  });
+            <div className="flex flex-wrap gap-2">
+              {quickUpdateAvailable(house, now) ? (
+                <Button
+                  type="button"
+                  className="bg-orange-500 text-black hover:bg-orange-400"
+                  onClick={() =>
+                    editFlow.openQuick(house, {
+                      editCode: admin ? adminEditCode : editCode,
+                      admin,
+                    })
+                  }
+                >
+                  <Zap className="size-4" />
+                  עדכון מהיר
+                </Button>
+              ) : null}
+              <Button
+                type="button"
+                variant="outline"
+                className="border-orange-400/40 text-orange-100"
+                onClick={() =>
+                  editFlow.openEdit(house, {
+                    editCode: admin ? adminEditCode : editCode,
+                    admin,
+                    allowDelete: true,
+                    forceFull: true,
+                  })
                 }
-              }}
-            />
+              >
+                עריכה מלאה
+              </Button>
+            </div>
           </div>
         ) : (
           <p className="rounded-xl bg-[#1d1028]/60 px-3 py-4 text-center text-base text-violet-300 ring-1 ring-orange-500/15">
@@ -271,6 +278,37 @@ export default function EditPage() {
           </p>
         )}
       </main>
+      <HouseEditFlowPanels
+        flow={editFlow.flow}
+        setFlow={editFlow.setFlow}
+        onClose={editFlow.close}
+        onUpdated={(next) => {
+          setHouse(next);
+          setPicked(next);
+          editFlow.setFlow((current) =>
+            current?.house.id === next.id ? { ...current, house: next } : current,
+          );
+          if (!admin && editCode) {
+            saveOwnedHouse({
+              id: next.id,
+              name: next.name,
+              editCode,
+              preview: next,
+            });
+          }
+          notifyCatalogChanged();
+          void refresh(true);
+        }}
+        onDeleted={(id) => {
+          forgetPublishedHouse(id);
+          removeOwnedHouse(id);
+          notifyCatalogChanged();
+          void refresh(true);
+          setHouse(null);
+          setPicked(null);
+          editFlow.close();
+        }}
+      />
     </div>
   );
 }

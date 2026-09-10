@@ -3,11 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
-import { CodesCopy } from "@/components/codes-copy";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
 import { HousePicker } from "@/components/house-picker";
-import { NightDesk } from "@/components/night-desk";
+import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -30,7 +29,7 @@ export default function SearchPage() {
   const visits = useVisitedHouses();
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
   const [picked, setPicked] = useState<PublicHouse | null>(null);
-  const [editing, setEditing] = useState(false);
+  const editFlow = useHouseEditFlow();
 
   useEffect(() => {
     if (!admin) return;
@@ -72,7 +71,7 @@ export default function SearchPage() {
 
   function selectHouse(next: PublicHouse | null) {
     setPicked(next);
-    setEditing(false);
+    editFlow.close();
   }
 
   return (
@@ -119,12 +118,21 @@ export default function SearchPage() {
                   reportHouseTraffic(picked.id, "visited", nextOn);
                   visits.toggle(picked.id);
                 }}
-                onToggleEdit={canEdit ? () => setEditing((v) => !v) : undefined}
+                onToggleEdit={
+                  canEdit && picked
+                    ? () =>
+                        editFlow.openEdit(picked, {
+                          editCode,
+                          admin,
+                          allowDelete: true,
+                        })
+                    : undefined
+                }
                 onShowOnMap={() => {
                   writeHomeView("map");
                   router.push(`/?focus=${encodeURIComponent(picked.id)}`);
                 }}
-                editing={editing}
+                editing={false}
               />
             </div>
             <div className="px-3 pb-3">
@@ -135,38 +143,7 @@ export default function SearchPage() {
                     : "הבית הזה עדיין לא במפה הציבורית. אם זה הבית שלכם, מנהל יכול לאשר אותו."}
                 </p>
               ) : null}
-              {editing && canEdit ? (
-                <>
-                  <CodesCopy editCode={editCode} />
-                  <NightDesk
-                    house={picked}
-                    admin={admin}
-                    allowDelete
-                    editCode={editCode}
-                    onCancel={() => setEditing(false)}
-                    onDeleted={() => {
-                      removeOwnedHouse(picked.id);
-                      selectHouse(null);
-                      notifyCatalogChanged();
-                      void refresh(true);
-                    }}
-                    onUpdated={(next) => {
-                      setPicked(next);
-                      if (!admin && editCode) {
-                        saveOwnedHouse({
-                          id: next.id,
-                          name: next.name,
-                          editCode,
-                          preview: next,
-                        });
-                      }
-                      notifyCatalogChanged();
-                      void refresh(true);
-                    }}
-                  />
-                </>
-              ) : (
-                <HouseDetails
+              <HouseDetails
                   house={picked}
                   catalogSource={source}
                   liked={likes.liked(picked.id)}
@@ -183,13 +160,42 @@ export default function SearchPage() {
                   }}
                   chrome="sheet"
                 />
-              )}
             </div>
           </Card>
         ) : (
           <p className="text-base text-violet-300">הקלידו שם משפחה או כתובת ובחרו בית.</p>
         )}
       </main>
+      {picked ? (
+        <HouseEditFlowPanels
+          flow={editFlow.flow}
+          setFlow={editFlow.setFlow}
+          onClose={editFlow.close}
+          onUpdated={(next) => {
+            setPicked(next);
+            editFlow.setFlow((current) =>
+              current?.house.id === next.id ? { ...current, house: next } : current,
+            );
+            if (!admin && editCode) {
+              saveOwnedHouse({
+                id: next.id,
+                name: next.name,
+                editCode,
+                preview: next,
+              });
+            }
+            notifyCatalogChanged();
+            void refresh(true);
+          }}
+          onDeleted={(id) => {
+            removeOwnedHouse(id);
+            selectHouse(null);
+            notifyCatalogChanged();
+            void refresh(true);
+            editFlow.close();
+          }}
+        />
+      ) : null}
     </div>
   );
 }
