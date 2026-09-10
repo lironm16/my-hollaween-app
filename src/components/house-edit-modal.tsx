@@ -1,12 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { cn } from "@/lib/utils";
 
@@ -36,11 +31,13 @@ export function HouseEditModal({
           className,
         )}
       >
-        <OverlayCloseBar compact onClose={onClose} className="border-b border-orange-500/20" />
-        <DialogHeader className="shrink-0 px-4 pb-3 pt-1 text-center">
-          <DialogTitle className="font-display text-xl text-orange-200">{title}</DialogTitle>
-          {subtitle ? <p className="mt-0.5 truncate text-base text-violet-200">{subtitle}</p> : null}
-        </DialogHeader>
+        <OverlayCloseBar
+          compact
+          onClose={onClose}
+          title={title}
+          subtitle={subtitle}
+          className="border-b border-orange-500/20 pb-2"
+        />
         <div className="house-edit-modal-body min-h-0 overflow-y-auto overscroll-contain px-4 py-4">
           {children}
         </div>
