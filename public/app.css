@@ -1328,9 +1328,6 @@
   .bg-card {
     background-color: var(--card);
   }
-  .bg-cyan-950 {
-    background-color: var(--color-cyan-950);
-  }
   .bg-cyan-950\/55 {
     background-color: color-mix(in srgb, oklch(30.2% 0.056 229.695) 55%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1800,9 +1797,6 @@
   .text-card-foreground {
     color: var(--card-foreground);
   }
-  .text-cyan-50 {
-    color: var(--color-cyan-50);
-  }
   .text-cyan-100 {
     color: var(--color-cyan-100);
   }
@@ -1962,9 +1956,6 @@
   .tabular-nums {
     --tw-numeric-spacing: tabular-nums;
     font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);
-  }
-  .underline {
-    text-decoration-line: underline;
   }
   .underline-offset-2 {
     text-underline-offset: 2px;
