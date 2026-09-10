@@ -632,8 +632,6 @@ type Props = {
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
   /** Walking-route start (GPS / custom / neighborhood) for the dashed approach. */
   routeStart?: LatLng | null;
-  /** Hide the blue GPS dot when the route origin pin replaces it. */
-  routeOriginIsGps?: boolean;
   routeTravelStarted?: boolean;
   routeTravelCompletedCount?: number;
   routeTravelSweepIndex?: number | null;
@@ -673,7 +671,6 @@ export function HouseMap({
   routeLine = null,
   routeStops = null,
   routeStart = null,
-  routeOriginIsGps = false,
   routeTravelStarted = false,
   routeTravelCompletedCount = 0,
   routeTravelSweepIndex = null,
@@ -1028,7 +1025,7 @@ export function HouseMap({
               />
             );
           })}
-        {!pickMode && userLocation && !routeOriginIsGps ? (
+        {!pickMode && userLocation ? (
           <>
             {userLocation.accuracy > 8 && userLocation.accuracy < 120 ? (
               <Circle

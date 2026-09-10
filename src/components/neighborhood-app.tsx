@@ -515,14 +515,13 @@ export function NeighborhoodApp({
                 routeLine={routeMode && !originPick.originPickActive ? routeLine : null}
                 routeFitTick={routeMode && !originPick.originPickActive ? routeFitTick : 0}
                 routeStart={routeMode ? origin : null}
-                routeOriginIsGps={routeMode && origin.fromGps}
                 routeTravelStarted={routeMode ? routeTravel.started : false}
                 routeTravelCompletedCount={routeTravel.completedCount}
                 routeTravelSweepIndex={routeTravel.sweepIndex}
                 routeTravelLineReveal={routeTravel.lineReveal}
                 routeStopTravelState={routeTravel.stopState}
                 visitedIds={visits.visitedIds}
-                originMarker={routeMode || !origin.fromGps ? origin : null}
+                originMarker={origin.fromGps ? null : origin}
                 originPickActive={originPick.originPickActive}
                 originPick={originPick.originDraft}
                 onOriginPick={originPick.onOriginMapPick}
