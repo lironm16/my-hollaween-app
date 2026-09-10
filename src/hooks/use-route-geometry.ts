@@ -1,15 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  applyStreetDistances,
-  routeGeometryPoints,
-  routePreviewPoints,
-  shouldIncludeOriginInRoute,
-  streetLegMeters,
-  type LatLng,
-  type WalkingRoute,
-} from "@/lib/route";
+import { routeGeometryPoints, routePreviewPoints, type LatLng, type WalkingRoute } from "@/lib/route";
 
 function geometryKey(route: WalkingRoute) {
   const origin = `${route.origin.lat.toFixed(4)},${route.origin.lng.toFixed(4)}`;
@@ -19,7 +11,6 @@ function geometryKey(route: WalkingRoute) {
 
 export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
   const [line, setLine] = useState<LatLng[] | null>(null);
-  const [streetRoute, setStreetRoute] = useState<WalkingRoute | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "fallback">("idle");
   const routeRef = useRef(route);
   routeRef.current = route;
@@ -32,7 +23,6 @@ export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
     const current = routeRef.current;
     if (!key || !current) {
       setLine(null);
-      setStreetRoute(null);
       setStatus("idle");
       return;
     }
@@ -40,8 +30,7 @@ export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
     const preview = routePreviewPoints(current);
     let cancelled = false;
     setStatus("loading");
-    setLine(null);
-    setStreetRoute(null);
+    setLine(preview.length >= 2 ? preview : null);
     void fetch("/api/walk-route", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -49,41 +38,22 @@ export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
     })
       .then(async (res) => {
         if (!res.ok) return null;
-        const data = (await res.json()) as { line?: LatLng[] | null; legMeters?: number[] | null };
-        return data;
+        const data = (await res.json()) as { line?: LatLng[] | null };
+        return data.line ?? null;
       })
-      .then((data) => {
+      .then((street) => {
         if (cancelled) return;
-        const street = data?.line ?? null;
-        const includesOrigin = shouldIncludeOriginInRoute(current);
-        const legs =
-          data?.legMeters && data.legMeters.length > 0
-            ? data.legMeters
-            : street && street.length >= 2
-              ? streetLegMeters(waypoints, street)
-              : null;
-        const withStreet =
-          legs && legs.length > 0
-            ? applyStreetDistances(current, legs, { includesOrigin })
-            : null;
         if (street && street.length >= 2) {
           setLine(street);
-          setStreetRoute(withStreet ?? current);
-          setStatus("ready");
-        } else if (withStreet) {
-          setLine(preview.length >= 2 ? preview : null);
-          setStreetRoute(withStreet);
           setStatus("ready");
         } else {
           setLine(preview.length >= 2 ? preview : null);
-          setStreetRoute(null);
           setStatus("fallback");
         }
       })
       .catch(() => {
         if (cancelled) return;
         setLine(preview.length >= 2 ? preview : null);
-        setStreetRoute(null);
         setStatus("fallback");
       });
     return () => {
@@ -91,5 +61,5 @@ export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
     };
   }, [key]);
 
-  return { line, streetRoute, status };
+  return { line, status };
 }
