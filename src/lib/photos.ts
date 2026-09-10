@@ -1,7 +1,13 @@
+export function isLocalPhotoUrl(raw?: string | null) {
+  if (!raw) return false;
+  const value = raw.trim();
+  return value.startsWith("/house-photos/") || value.startsWith("/images/");
+}
+
 export function parsePhotoUrl(raw: string): string | null {
   const value = raw.trim();
   if (!value) return "";
-  if (value.startsWith("/house-photos/")) {
+  if (isLocalPhotoUrl(value)) {
     return value.length > 500 ? null : value;
   }
   try {
@@ -33,8 +39,9 @@ export function isLitePhotoMode() {
   return false;
 }
 
-/** Skip fetching house photos on the frozen night catalog, cache, or a constrained network. */
-export function shouldLoadHousePhoto(source?: string | null) {
+/** Skip remote house photos on cache/snapshot/constrained networks; local files always load. */
+export function shouldLoadHousePhoto(source?: string | null, photoUrl?: string | null) {
+  if (isLocalPhotoUrl(photoUrl)) return true;
   if (source === "snapshot" || source === "cache") return false;
   return !isLitePhotoMode();
 }

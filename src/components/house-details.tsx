@@ -64,7 +64,7 @@ export function HouseDetails({
   const [photoBroken, setPhotoBroken] = useState(false);
   const [photoReady, setPhotoReady] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
-  const loadPhoto = photoReady && (showPhoto || shouldLoadHousePhoto(catalogSource));
+  const loadPhoto = photoReady && (showPhoto || shouldLoadHousePhoto(catalogSource, house.photoUrl));
 
   useEffect(() => {
     setPhotoReady(true);
