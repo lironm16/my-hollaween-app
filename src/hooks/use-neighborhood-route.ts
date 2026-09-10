@@ -108,16 +108,7 @@ export function useNeighborhoodRoute({
         originLabel: origin.label,
       });
     });
-  }, [
-    routeMode,
-    visibleKey,
-    origin.lat,
-    origin.lng,
-    origin.kind,
-    origin.label,
-    accessibleOnly,
-    visible,
-  ]);
+  }, [routeMode, visibleKey, origin.lat, origin.lng, origin.kind, origin.label, accessibleOnly]);
 
   function exitRouteMode() {
     pendingRouteGps.current = false;
