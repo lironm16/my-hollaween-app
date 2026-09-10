@@ -346,13 +346,16 @@ function makeOriginIcon(started: boolean, pending = false) {
   });
 }
 
-function makeYouAreHereIcon(routeStarted: boolean) {
+function makeYouAreHereIcon(routeStarted: boolean, routePending = false) {
+  const pendingLabel = routePending
+    ? `<span class="you-are-here-badge" aria-hidden="true">התחלה</span>`
+    : "";
   return L.divIcon({
-    className: `you-are-here-wrap${routeStarted ? " is-route-started" : ""}`,
-    html: `<div class="you-are-here" role="img" aria-label="אתם כאן"><span class="you-are-here-pulse" aria-hidden="true"></span><span class="you-are-here-dot" aria-hidden="true"></span></div>`,
-    iconSize: [22, 22],
-    iconAnchor: [11, 11],
-    popupAnchor: [0, -12],
+    className: `you-are-here-wrap${routeStarted ? " is-route-started" : ""}${routePending ? " is-route-pending" : ""}`,
+    html: `<div class="you-are-here" role="img" aria-label="${routePending ? "נקודת התחלה" : "אתם כאן"}">${pendingLabel}<span class="you-are-here-pulse" aria-hidden="true"></span><span class="you-are-here-dot" aria-hidden="true"></span></div>`,
+    iconSize: routePending ? [72, 42] : [22, 22],
+    iconAnchor: routePending ? [36, 34] : [11, 11],
+    popupAnchor: [0, routePending ? -28 : -12],
   });
 }
 
@@ -811,9 +814,10 @@ export function HouseMap({
     () => makeOriginIcon(routeTravelStarted, Boolean(routeStart) && !routeTravelStarted),
     [routeTravelStarted, routeStart],
   );
+  const routePending = Boolean(routeStops && routeStops.length > 0 && !routeTravelStarted);
   const youAreHereIcon = useMemo(
-    () => makeYouAreHereIcon(routeTravelStarted),
-    [routeTravelStarted],
+    () => makeYouAreHereIcon(routeTravelStarted, routePending),
+    [routeTravelStarted, routePending],
   );
   const ready = useSyncExternalStore(
     () => () => {},
@@ -1092,7 +1096,16 @@ export function HouseMap({
             <Marker
               position={[userLocation.lat, userLocation.lng]}
               icon={youAreHereIcon}
-              zIndexOffset={800}
+              zIndexOffset={routePending ? 9200 : 800}
+              eventHandlers={
+                routePending
+                  ? {
+                      add: (event) => {
+                        window.setTimeout(() => event.target.openPopup(), 120);
+                      },
+                    }
+                  : undefined
+              }
             >
               <Popup autoPan={false} keepInView={false}>
                 <div dir="rtl" className="text-right">
