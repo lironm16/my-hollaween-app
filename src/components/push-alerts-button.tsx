@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { Bell, BellOff, BellRing } from "lucide-react";
+import { Bell, BellOff, BellRing, Info } from "lucide-react";
 import { toast } from "sonner";
 import {
   DEFAULT_PUSH_TOPIC_PREFS,
@@ -22,11 +22,14 @@ import {
 } from "@/lib/push-client";
 import { anyPushTopicOn, PUSH_TOPIC_ROWS, PUSH_TOPICS } from "@/lib/push-topics";
 import { Button } from "@/components/ui/button";
-import { OverlayCloseBar } from "@/components/overlay-close-button";
+import { OverlayCloseBar, OverlayCloseButton } from "@/components/overlay-close-button";
 import { Dialog, DialogContent, DialogDescription } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 type Status = "loading" | PushEnableResult;
+
+const ANDROID_ALERTS_HELP =
+  "באנדרואיד: השתמשו ב-Chrome, אפשרו התראות לאתר, וודאו ש-Chrome לא מוגבל בסוללה (הגדרות → אפליקציות → Chrome → סוללה → ללא הגבלה).";
 
 function skipPromptThisSession() {
   try {
@@ -107,6 +110,7 @@ export function PushAlertsButton() {
   const [status, setStatus] = useState<Status>("loading");
   const [busy, setBusy] = useState(false);
   const [askOpen, setAskOpen] = useState(false);
+  const [androidHelpOpen, setAndroidHelpOpen] = useState(false);
   const [topics, setTopics] = useState<PushTopicPrefs>(DEFAULT_PUSH_TOPIC_PREFS);
   const [savedTopics, setSavedTopics] = useState<PushTopicPrefs>(DEFAULT_PUSH_TOPIC_PREFS);
 
@@ -176,6 +180,7 @@ export function PushAlertsButton() {
     if (subscribed && hasTopicChanges) {
       setTopics(savedTopics);
     }
+    setAndroidHelpOpen(false);
     setAskOpen(false);
     if (!subscribed) skipPromptThisSession();
   }
@@ -315,9 +320,9 @@ export function PushAlertsButton() {
         : "כדי לקבל התראות: לחצו על סמל המנעול או «i» ליד הכתובת, בחרו «התראות» → «אפשר», ואז חזרו לכאן ולחצו «הפעל»."
       : unsupported
         ? "דפדפן זה לא תומך בהתראות דחיפה. נסו Chrome, Firefox, או Safari אחרי «הוספה למסך הבית»."
-        : android && !subscribed
-          ? "באנדרואיד (כולל Pixel): השתמשו ב-Chrome, אפשרו התראות לאתר, וודאו ש-Chrome לא מוגבל בסוללה (הגדרות → אפליקציות → Chrome → סוללה → ללא הגבלה)."
-          : null;
+        : null;
+
+  const showAndroidHelp = android && !ios && !unsupported && !subscribed && !denied;
 
   const primaryLabel = subscribed ? "שמירה" : "הפעל";
   const primaryDisabled = busy || (subscribed ? !hasTopicChanges : !canEnable);
@@ -377,21 +382,36 @@ export function PushAlertsButton() {
           aria-labelledby={titleId}
           className="gap-0 border border-orange-500/30 bg-[#1a0d24] p-0 text-orange-50 sm:max-w-md"
         >
-          <OverlayCloseBar
-            compact
-            onClose={closeDialog}
-            title={
-              <span id={titleId} className="text-lg font-semibold text-orange-100">
+          <div
+            className={cn(
+              "hw-overlay-close-bar hw-overlay-close-bar--compact hw-overlay-close-bar--titled",
+              "border-b border-orange-500/15 pb-2",
+            )}
+          >
+            <OverlayCloseButton onClick={closeDialog} />
+            <div className="hw-overlay-close-bar-title">
+              <div id={titleId} className="font-display text-xl leading-tight text-orange-200">
                 {dialogTitle}
-              </span>
-            }
-            className="border-b border-orange-500/15 pb-2"
-          />
+              </div>
+            </div>
+            {showAndroidHelp ? (
+              <button
+                type="button"
+                className="hw-overlay-close text-violet-200 hover:text-orange-200"
+                aria-label="עזרה להפעלת התראות באנדרואיד"
+                onClick={() => setAndroidHelpOpen(true)}
+              >
+                <Info className="size-5" />
+              </button>
+            ) : (
+              <div className="hw-overlay-close-bar-spacer" aria-hidden />
+            )}
+          </div>
           {helpDescription ? (
             <DialogDescription className="px-4 pt-3 text-violet-200/90">{helpDescription}</DialogDescription>
           ) : null}
           {ios || locked ? null : (
-            <div className="grid gap-2 px-4">
+            <div className="grid gap-2 px-4 pt-3">
               {PUSH_TOPIC_ROWS.map((row) => (
                 <TopicSwitch
                   key={row.id}
@@ -463,6 +483,31 @@ export function PushAlertsButton() {
                 </div>
               </>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={androidHelpOpen} onOpenChange={setAndroidHelpOpen}>
+        <DialogContent
+          showCloseButton={false}
+          dir="rtl"
+          className="gap-0 border border-orange-500/30 bg-[#1a0d24] p-0 text-orange-50 sm:max-w-sm"
+        >
+          <OverlayCloseBar
+            compact
+            onClose={() => setAndroidHelpOpen(false)}
+            title="התראות באנדרואיד"
+            className="border-b border-orange-500/15 pb-2"
+          />
+          <p className="px-4 py-4 text-base leading-relaxed text-violet-200">{ANDROID_ALERTS_HELP}</p>
+          <div className="border-t border-orange-500/15 px-4 py-3">
+            <Button
+              type="button"
+              className="h-10 w-full bg-orange-500 text-black hover:bg-orange-400"
+              onClick={() => setAndroidHelpOpen(false)}
+            >
+              הבנתי
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
