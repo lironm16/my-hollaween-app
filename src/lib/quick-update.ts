@@ -2,18 +2,13 @@ import { applyLocalHousePatch } from "@/lib/offline-db";
 import { candyLevel, freezeExpireIso, isOwnerFrozen, markedCandy } from "@/lib/house-state";
 import { houseHoursWindows, nightStatusControlsEnabled } from "@/lib/hours";
 import {
-  classifyHouseAlert,
-  fillPushTemplate,
-  housePushUrl,
-  mergePushTemplates,
+  filledPushForKind,
+  resolveHouseNotifyKind,
   type PushKind,
+  type StoredPushSettings,
 } from "@/lib/push-templates";
 import type { PushPayload } from "@/lib/push";
 import type { House, HouseInput, PublicHouse, TreatId, VisitState } from "@/lib/types";
-
-function previewPayload(title: string, body: string, url: string): PushPayload {
-  return { title: title.trim() || "SpookyHouzz", body: body.trim(), url };
-}
 
 export type QuickCandyChoice = "plenty" | "low" | "out";
 export type QuickHouseChoice = "open" | "pause" | "closed";
@@ -106,15 +101,14 @@ export function previewQuickUpdatePush(
   house: PublicHouse,
   candy: QuickCandyChoice,
   houseStatus: QuickHouseChoice,
+  stored?: StoredPushSettings | null,
 ): { kind: PushKind; payload: PushPayload } | null {
   if (!quickUpdateChanged(house, candy, houseStatus)) return null;
   const patch = buildQuickUpdatePatch(house, candy, houseStatus);
   const next = applyLocalHousePatch(house, patch);
-  const kind = classifyHouseAlert(house as House, next as House);
+  const kind = resolveHouseNotifyKind(house as House, next as House, patch);
   if (!kind) return null;
-  const template = mergePushTemplates(null)[kind];
-  if (!template.enabled) return null;
-  const filled = fillPushTemplate(template, next as House);
-  const payload = previewPayload(filled.title, filled.body, housePushUrl(next));
-  return { kind, payload };
+  const filled = filledPushForKind(kind, next as House, stored);
+  if (!filled) return null;
+  return { kind, payload: filled };
 }

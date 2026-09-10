@@ -130,10 +130,18 @@ export type NightPatch = {
 
 export type PublicHouse = Omit<House, "editCode" | "rejectionReason" | "storeId">;
 
+export type CatalogPushTemplate = {
+  enabled: boolean;
+  title: string;
+  body: string;
+};
+
 export type Catalog = {
   updatedAt: string;
   neighborhood: string;
   houses: PublicHouse[];
+  /** Merged owner-alert templates so quick-update preview matches the server. */
+  pushTemplates?: Partial<Record<string, CatalogPushTemplate>>;
 };
 
 export type AddressHit = {

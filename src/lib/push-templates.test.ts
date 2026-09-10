@@ -3,9 +3,11 @@ import { describe, it } from "node:test";
 import {
   classifyHouseAlert,
   fillPushTemplate,
+  filledPushForKind,
   houseMatchesNotifyKind,
   mergePushTemplates,
   ownerOfferKindFromPatch,
+  resolveHouseNotifyKind,
   stockAlertsBlocked,
 } from "@/lib/push-templates";
 import type { House } from "@/lib/types";
@@ -129,5 +131,24 @@ describe("ownerOfferKindFromPatch", () => {
   it("offers closed send when visit patch matches", () => {
     const next = baseHouse({ visit: "closed" });
     assert.equal(ownerOfferKindFromPatch({ visit: "closed" }, next), "closed");
+  });
+});
+
+describe("resolveHouseNotifyKind", () => {
+  it("uses classifyHouseAlert before ownerOfferKindFromPatch", () => {
+    const prev = baseHouse({ visit: "come", treatStock: { candy: "plenty" } });
+    const next = baseHouse({ visit: "closed", treatStock: { candy: "out" } });
+    const patch = { visit: "closed" as const, treatStock: { candy: "out" as const } };
+    assert.equal(resolveHouseNotifyKind(prev, next, patch), "closed");
+  });
+});
+
+describe("filledPushForKind", () => {
+  it("fills the default candy-low template", () => {
+    const house = baseHouse({ treatStock: { candy: "low" } });
+    const filled = filledPushForKind("candyLow", house, null);
+    assert.ok(filled);
+    assert.match(filled!.title, /בית הדלעת/);
+    assert.match(filled!.body, /חרוזים/);
   });
 });
