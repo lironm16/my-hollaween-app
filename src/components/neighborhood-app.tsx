@@ -554,8 +554,8 @@ export function NeighborhoodApp({
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
                     onShowOnMap={openOnMap}
                     onSelectHouse={selection.selectInList}
-                    onEditHouse={(id, index) => {
-                      selection.selectInList(id, index);
+                    onEditHouse={(id) => {
+                      selection.dismissForOverlay();
                       const house = visible.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
                       if (house) requestHouseEdit(house, true);
                     }}
@@ -575,8 +575,8 @@ export function NeighborhoodApp({
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
                     onShowOnMap={openOnMap}
                     onSelectHouse={selection.selectInList}
-                    onEditHouse={(id, index) => {
-                      selection.selectInList(id, index);
+                    onEditHouse={(id) => {
+                      selection.dismissForOverlay();
                       const house = visible.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
                       if (house) requestHouseEdit(house, true);
                     }}
@@ -587,7 +587,7 @@ export function NeighborhoodApp({
             </div>
           </>
         )}
-        {houseDetailCommon && view === "list" && !originPick.originPickActive ? (
+        {houseDetailCommon && view === "list" && !originPick.originPickActive && !editFlow.flow ? (
           <HouseDetailOverlay
             {...houseDetailCommon}
             onShowOnMap={() => {
