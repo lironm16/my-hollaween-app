@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 export function EditChoiceDialog({
   open,
   houseName,
+  quickAvailable,
   onQuick,
   onFull,
   onClose,
 }: {
   open: boolean;
   houseName: string;
+  quickAvailable: boolean;
   onQuick: () => void;
   onFull: () => void;
   onClose: () => void;
@@ -20,14 +22,16 @@ export function EditChoiceDialog({
   return (
     <HouseEditModal open={open} onClose={onClose} title="עדכון הבית" subtitle={houseName}>
       <div className="space-y-2">
-        <Button
-          type="button"
-          className="h-11 w-full justify-center gap-2 bg-orange-500 text-base text-black hover:bg-orange-400"
-          onClick={onQuick}
-        >
-          <Zap className="size-4" />
-          עדכון מהיר
-        </Button>
+        {quickAvailable ? (
+          <Button
+            type="button"
+            className="h-11 w-full justify-center gap-2 bg-orange-500 text-base text-black hover:bg-orange-400"
+            onClick={onQuick}
+          >
+            <Zap className="size-4" />
+            עדכון מהיר
+          </Button>
+        ) : null}
         <Button
           type="button"
           variant="outline"
