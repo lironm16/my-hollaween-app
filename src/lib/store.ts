@@ -1017,8 +1017,10 @@ function snapshotHouse(house: House): House {
   };
 }
 
+/** Read-only — does not require a disk write (avoids failing on cold Vercel boots). */
 export async function getVapidPublicKey() {
-  return runSyncedWrite((db) => ensureVapid(db).publicKey);
+  const db = await loadDb();
+  return ensureVapid(db).publicKey;
 }
 
 export async function savePushSubscription(sub: Omit<PushSubscriptionRecord, "createdAt">) {

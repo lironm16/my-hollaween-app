@@ -301,9 +301,14 @@ export async function enablePushAlerts(prefs?: PushTopicPrefs): Promise<PushEnab
   if (Notification.permission === "denied") return "denied";
 
   const keyRes = await fetch("/api/push/public-key", { cache: "no-store" });
-  const keyData = (await keyRes.json()) as { publicKey?: string; error?: string };
+  const keyData = (await keyRes.json()) as { publicKey?: string; error?: string; code?: string };
   if (!keyRes.ok || !keyData.publicKey) {
-    throw new Error(keyData.error ?? "לא הצלחנו להפעיל התראות.");
+    throw new Error(
+      keyData.error ??
+        (keyData.code === "SERVER_KEY"
+          ? "בעיה בשרת — לא קשור להרשאת הדפדפן. נסו שוב בעוד רגע."
+          : "לא הצלחנו להפעיל התראות."),
+    );
   }
 
   if (Notification.permission !== "granted") {
