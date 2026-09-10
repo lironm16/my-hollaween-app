@@ -29,10 +29,9 @@ export function useHouseEditFlow() {
       house: PublicHouse,
       options?: { editCode?: string; admin?: boolean; allowDelete?: boolean; forceFull?: boolean },
     ) => {
-      const canQuick = !options?.forceFull && quickUpdateAvailable(house, now);
       setFlow({
         house,
-        step: canQuick ? "choice" : "full",
+        step: options?.forceFull ? "full" : "choice",
         editCode: options?.editCode,
         admin: options?.admin,
         allowDelete: options?.allowDelete,
@@ -75,12 +74,15 @@ export function HouseEditFlowPanels({
   if (!flow) return null;
 
   const { house, editCode, admin, allowDelete } = flow;
+  const now = useAppNow();
+  const quickAvailable = quickUpdateAvailable(house, now);
 
   return (
     <>
       <EditChoiceDialog
         open={flow.step === "choice"}
         houseName={house.name}
+        quickAvailable={quickAvailable}
         onClose={onClose}
         onQuick={() => setFlow((current) => (current ? { ...current, step: "quick" } : current))}
         onFull={() => setFlow((current) => (current ? { ...current, step: "full" } : current))}
