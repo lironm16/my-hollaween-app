@@ -6,7 +6,7 @@ import {
   resolveNeighborhood,
 } from "@/lib/config";
 import { isStubHouse } from "@/lib/house-set";
-import { scareShort } from "@/lib/labels";
+import { scareShort, treatLabels } from "@/lib/labels";
 import { resolveVisitWindow } from "@/lib/visit-window";
 import {
   hasValidVisitWindow,
@@ -24,7 +24,7 @@ import { candyTone } from "@/components/candy-glyphs";
 import { effectiveVisit, isDecorated, offersSensitivity } from "@/lib/house-state";
 import { houseMatchesSet, type HouseSet } from "@/lib/house-set";
 import type { HouseFiltersState } from "@/lib/offline-db";
-import { CANDY_TONE_IDS, SCARE_LEVELS, treatLabels, type PublicHouse } from "@/lib/types";
+import { CANDY_TONE_IDS, SCARE_LEVELS, type PublicHouse } from "@/lib/types";
 
 export function isHouseOwnerClosed(house: PublicHouse) {
   return effectiveVisit(house) === "closed";
