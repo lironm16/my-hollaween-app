@@ -198,6 +198,32 @@ export function housePushUrl(house: { id: string }) {
   return `/?focus=${encodeURIComponent(house.id)}`;
 }
 
+/** Same kind resolution as the server after an owner save. */
+export function resolveHouseNotifyKind(
+  prev: House,
+  next: House,
+  patch?: OwnerNotifyPatch,
+): PushKind | null {
+  return classifyHouseAlert(prev, next) ?? (patch ? ownerOfferKindFromPatch(patch, next) : null);
+}
+
+/** Filled owner-alert copy from the active templates (defaults or stored). */
+export function filledPushForKind(
+  kind: PushKind,
+  house: House,
+  stored?: StoredPushSettings | null,
+): { title: string; body: string; url: string } | null {
+  const templates = mergePushTemplates(stored);
+  const template = templates[kind];
+  if (!template.enabled) return null;
+  const filled = fillPushTemplate(template, house);
+  return {
+    title: filled.title.trim() || "SpookyHouzz",
+    body: filled.body.trim(),
+    url: housePushUrl(house),
+  };
+}
+
 /** Candy / stock alerts stay silent while the house is still paused or closed. */
 export function stockAlertsBlocked(house: House): boolean {
   if (isOwnerFrozen(house)) return true;

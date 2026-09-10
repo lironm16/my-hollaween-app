@@ -579,20 +579,34 @@ async function runSyncedWrite<T>(fn: (db: DbFile) => T | Promise<T>): Promise<T>
   });
 }
 
-export function asCatalog(houses: House[], updatedAt: string): Catalog {
+export function asCatalog(
+  houses: House[],
+  updatedAt: string,
+  pushSettings?: DbFile["pushSettings"],
+): Catalog {
   const published: PublicHouse[] = houses
     .filter((h) => isPubliclyListed(h))
     .map((h) => toPublicHouse(h));
+  const merged = mergePushTemplates(pushSettings);
+  const pushTemplates: Catalog["pushTemplates"] = {};
+  for (const id of PUSH_KINDS) {
+    pushTemplates[id] = {
+      enabled: merged[id].enabled,
+      title: merged[id].title,
+      body: merged[id].body,
+    };
+  }
   return {
     updatedAt,
     neighborhood: config.neighborhood,
     houses: published,
+    pushTemplates,
   };
 }
 
 export async function getCatalog(): Promise<Catalog> {
   const db = await loadDb();
-  catalogMem = asCatalog(db.houses, db.updatedAt);
+  catalogMem = asCatalog(db.houses, db.updatedAt, db.pushSettings);
   return catalogMem;
 }
 
