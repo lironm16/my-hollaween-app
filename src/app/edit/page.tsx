@@ -98,14 +98,6 @@ function EditPageContent() {
     }
   }, [focusId, houses, picked]);
 
-  useEffect(() => {
-    if (prefilled || owned.length === 0 || picked) return;
-    const first = houses.find((item) => item.id === owned[0].id) ?? owned[0].preview ?? null;
-    if (!first) return;
-    setPicked(first);
-    setPrefilled(true);
-  }, [houses, owned, picked, prefilled]);
-
   async function unlockWith(
     target: PublicHouse,
     code: string,
@@ -186,12 +178,23 @@ function EditPageContent() {
   }
 
   useEffect(() => {
-    if (!house || editFlow.flow) return;
-    if (autoOpenedIdRef.current === house.id) return;
-    autoOpenedIdRef.current = house.id;
-    openHouseEdit(house);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [house?.id, editFlow.flow]);
+    const reset = () => {
+      editFlow.close();
+      setPicked(null);
+      setHouse(null);
+      setEditCode("");
+      setPrefilled(false);
+      autoOpenedIdRef.current = null;
+    };
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) reset();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      window.removeEventListener("pageshow", onPageShow);
+      reset();
+    };
+  }, [editFlow.close]);
 
   return (
     <div className="relative flex min-h-dvh flex-col">
