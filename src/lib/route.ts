@@ -5,6 +5,7 @@ import {
   type HouseCluster,
 } from "@/lib/house-clusters";
 import { distanceMeters, formatDistance } from "@/lib/geo";
+import { estimateWalkingMeters } from "@/lib/walk-distance-estimate";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 
@@ -85,7 +86,7 @@ export function buildWalkingRoute(
     let bestIdx = 0;
     let bestDist = Number.POSITIVE_INFINITY;
     for (let i = 0; i < remaining.length; i++) {
-      const d = distanceMeters(cursor, clusterPoint(remaining[i]!));
+      const d = estimateWalkingMeters(cursor, clusterPoint(remaining[i]!));
       if (d < bestDist) {
         bestDist = d;
         bestIdx = i;
@@ -229,7 +230,7 @@ function pathLengthClusters(clusters: HouseCluster[], origin: LatLng) {
   let prev = origin;
   for (const cluster of clusters) {
     const point = clusterPoint(cluster);
-    total += distanceMeters(prev, point);
+    total += estimateWalkingMeters(prev, point);
     prev = point;
   }
   return total;

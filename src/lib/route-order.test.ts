@@ -46,6 +46,37 @@ function stub(id: string, lat: number, lng: number, address: string): PublicHous
   };
 }
 
+describe("buildWalkingRoute hill skirt ordering", () => {
+  it("visits the southern east-cluster stop before the northern one from the west", () => {
+    const origin = { lat: 32.0919, lng: 34.8112 };
+    const west = (id: string, lat: number, lng: number) => stub(id, lat, lng, `west ${id}`);
+    const east = (id: string, lat: number, lng: number) => stub(id, lat, lng, `east ${id}`);
+    const houses = [
+      west("1", 32.0940, 34.8075),
+      west("2", 32.0943, 34.8078),
+      west("3", 32.0946, 34.8080),
+      west("4", 32.0949, 34.8083),
+      west("5", 32.0952, 34.8085),
+      west("6", 32.0955, 34.8088),
+      west("7", 32.0958, 34.8090),
+      west("8", 32.0961, 34.8093),
+      west("9", 32.0964, 34.8095),
+      west("10", 32.0967, 34.8098),
+      west("11", 32.0970, 34.8100),
+      west("12", 32.0973, 34.8103),
+      west("13", 32.0976, 34.8105),
+      east("14", 32.0985, 34.8140),
+      east("15", 32.0978, 34.8145),
+      east("16", 32.0988, 34.8155),
+      east("17", 32.0992, 34.8162),
+    ];
+    const route = buildWalkingRoute(houses, origin, { startedFrom: "neighborhood" });
+    assert.ok(route);
+    const order = route!.stops.map((stop) => stop.house.id);
+    assert.ok(order.indexOf("15") < order.indexOf("14"), `expected 15 before 14, got ${order.join(",")}`);
+  });
+});
+
 describe("buildWalkingRouteOrdered", () => {
   it("keeps list order instead of nearest-neighbor shuffle", () => {
     const origin = { lat: 32.0919, lng: 34.8112 };
