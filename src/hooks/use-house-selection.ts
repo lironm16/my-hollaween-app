@@ -47,11 +47,11 @@ export function useHouseSelection({
 
   const selectedCluster = useMemo(() => {
     if (!selected) return [];
-    const cluster = clusterHousesByAddress(visible).find((item) =>
+    const cluster = clusterHousesByAddress(houses).find((item) =>
       item.houses.some((house) => house.id === selected.id),
     );
     return cluster?.houses ?? [selected];
-  }, [selected, visible]);
+  }, [selected, houses]);
 
   const clearCluster = useCallback(() => {
     setClusterOverview(false);
@@ -79,7 +79,7 @@ export function useHouseSelection({
 
   const selectOnMap = useCallback(
     (house: PublicHouse, opts?: { clusterOverview?: boolean }) => {
-      const cluster = clusterHousesByAddress(visible).find((item) =>
+      const cluster = clusterHousesByAddress(houses).find((item) =>
         item.houses.some((itemHouse) => itemHouse.id === house.id),
       );
       const isMulti = (cluster?.houses.length ?? 0) > 1;
@@ -96,7 +96,7 @@ export function useHouseSelection({
       setSelectedListIndex(undefined);
       setSelectedId(house.id);
     },
-    [visible],
+    [houses],
   );
 
   const collapseCluster = useCallback(() => {

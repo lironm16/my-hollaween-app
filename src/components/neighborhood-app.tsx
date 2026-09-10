@@ -146,6 +146,8 @@ export function NeighborhoodApp({
   );
 
   const visible = useMemo(() => filterHouses(houses, filters, filterContext), [houses, filters, filterContext]);
+  const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
+  const filterDimActive = matchedIds.size < houses.length;
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
   const selection = useHouseSelection({ focusId, visible, houses });
@@ -458,7 +460,9 @@ export function NeighborhoodApp({
               aria-hidden={view !== "map"}
             >
               <HouseMapDynamic
-                houses={visible}
+                houses={houses}
+                matchedIds={matchedIds}
+                filterDimActive={filterDimActive}
                 selectedId={originPick.originPickActive ? null : selection.selected?.id}
                 clusterOverview={selection.clusterOverview}
                 expandedClusterKey={selection.expandedClusterKey}
@@ -521,10 +525,15 @@ export function NeighborhoodApp({
               {houseDetailCommon && view === "map" && !originPick.originPickActive ? (
                 <MapHouseSheet
                   {...houseDetailCommon}
-                  onShowInList={() => {
-                    selection.showInListFromMap(selected!.id);
-                    setView("list");
-                  }}
+                  filterMismatch={Boolean(selected && !matchedIds.has(selected.id))}
+                  onShowInList={
+                    selected && matchedIds.has(selected.id)
+                      ? () => {
+                          selection.showInListFromMap(selected.id);
+                          setView("list");
+                        }
+                      : undefined
+                  }
                 />
               ) : null}
               <CatalogMetaChip

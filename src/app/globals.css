@@ -843,6 +843,22 @@
   pointer-events: none;
 }
 
+/* Filtered-out houses stay visible for context; still tappable (unlike origin pick). */
+.is-filter-dim .pumpkin-pin-icon.is-filtered-out {
+  opacity: 0.38;
+}
+
+.filter-mismatch-banner {
+  margin-bottom: 0.75rem;
+  border-radius: 0.75rem;
+  background: rgba(76, 29, 149, 0.35);
+  padding: 0.65rem 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #ddd6fe;
+  border: 1px solid rgba(167, 139, 250, 0.25);
+}
+
 .origin-pick-bar {
   position: absolute;
   left: 0.75rem;

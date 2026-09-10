@@ -39,6 +39,7 @@ export function MapHouseSheet({
   onShowOnMap,
   onShowInList,
   index,
+  filterMismatch = false,
 }: {
   house: PublicHouse;
   clusterHouses: PublicHouse[];
@@ -59,6 +60,7 @@ export function MapHouseSheet({
   onShowOnMap?: () => void;
   onShowInList?: () => void;
   index?: number;
+  filterMismatch?: boolean;
 }) {
   const labelId = useId();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -224,6 +226,11 @@ export function MapHouseSheet({
             </span>
             <div className="map-house-sheet-cards">
               <section className="map-house-sheet-card is-on">
+                {filterMismatch ? (
+                  <p className="filter-mismatch-banner" role="status">
+                    לא עובר את הסינון הנוכחי — מוצג לצורך הקשר במפה. שינוי סינון יחזיר אותו לרשימה.
+                  </p>
+                ) : null}
                 {pendingNote}
                 {editing ? (
                   <>
