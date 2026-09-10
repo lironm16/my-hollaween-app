@@ -1,11 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
+import {
+  buildWalkingRoute,
+  refreshWalkingRoute,
+  trimWalkingRouteToVisible,
+  type WalkingRoute,
+} from "@/lib/route";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
+
+function originPoint(origin: ResolvedOrigin) {
+  return { lat: origin.lat, lng: origin.lng };
+}
 
 export function useNeighborhoodRoute({
   visible,
@@ -41,12 +50,16 @@ export function useNeighborhoodRoute({
   const [pinnedRoute, setPinnedRoute] = useState<WalkingRoute | null>(null);
   const [routeFitTick, setRouteFitTick] = useState(0);
   const pendingRouteGps = useRef(false);
+  const visibleKey = useMemo(
+    () => visible.map((house) => house.id).sort().join("\0"),
+    [visible],
+  );
 
   const filterRoute = useMemo(() => {
     const routeHouses = filters.unvisitedOnly
       ? visible.filter((house) => !visitedIds.includes(house.id))
       : visible;
-    return buildWalkingRoute(routeHouses, origin, {
+    return buildWalkingRoute(routeHouses, originPoint(origin), {
       accessible: accessibleOnly,
       startedFrom: origin.kind,
       originLabel: origin.label,
@@ -64,28 +77,47 @@ export function useNeighborhoodRoute({
   useEffect(() => {
     if (!routeMode || !pendingRouteGps.current || !gps) return;
     pendingRouteGps.current = false;
-    pinCurrentRoute(true);
-  }, [routeMode, gps, pinCurrentRoute]);
+    setPinnedRoute((current) => {
+      const base = current ?? filterRoute;
+      if (!base) return filterRoute;
+      return refreshWalkingRoute(base, { lat: gps.lat, lng: gps.lng }, {
+        startedFrom: "gps",
+        accessible: accessibleOnly,
+        originLabel: origin.label,
+      });
+    });
+  }, [routeMode, gps, filterRoute, accessibleOnly, origin.label]);
 
   useEffect(() => {
     if (!routeMode || pendingRouteGps.current) return;
     setPinnedRoute((current) => {
       if (!current) return current;
       const visibleIds = new Set(visible.map((house) => house.id));
-      const routeHouses: PublicHouse[] = [];
-      for (const stop of current.stops) {
-        for (const house of stop.houses) {
-          const fresh = visible.find((item) => item.id === house.id);
-          if (fresh && visibleIds.has(house.id)) routeHouses.push(fresh);
-        }
+      const trimmed = trimWalkingRouteToVisible(current, visibleIds);
+      if (!trimmed) return null;
+      const stopIds = trimmed.stops.map((stop) => stop.house.id).join("\0");
+      const currentIds = current.stops.map((stop) => stop.house.id).join("\0");
+      const originUnchanged =
+        current.origin.lat === origin.lat && current.origin.lng === origin.lng;
+      if (stopIds === currentIds && originUnchanged && current.accessible === accessibleOnly) {
+        return current;
       }
-      return buildWalkingRoute(routeHouses, origin, {
-        accessible: accessibleOnly,
+      return refreshWalkingRoute(trimmed, originPoint(origin), {
         startedFrom: origin.kind,
+        accessible: accessibleOnly,
         originLabel: origin.label,
       });
     });
-  }, [routeMode, visible, origin, accessibleOnly]);
+  }, [
+    routeMode,
+    visibleKey,
+    origin.lat,
+    origin.lng,
+    origin.kind,
+    origin.label,
+    accessibleOnly,
+    visible,
+  ]);
 
   function exitRouteMode() {
     pendingRouteGps.current = false;

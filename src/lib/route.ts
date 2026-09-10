@@ -1,5 +1,9 @@
 import { config, formatDisplayAddress } from "@/lib/config";
-import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
+import {
+  clusterAddressKey,
+  clusterHousesByAddress,
+  type HouseCluster,
+} from "@/lib/house-clusters";
 import { distanceMeters, formatDistance } from "@/lib/geo";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
@@ -94,6 +98,109 @@ export function buildWalkingRoute(
 
   const polished = ordered.length >= 4 ? twoOptClusters(ordered, origin) : ordered;
   return summarizeRoute(polished, origin, startedFrom, accessible, options?.originLabel);
+}
+
+/** Cluster in first-seen order — no nearest-neighbor re-sort (pinned / filtered routes). */
+export function clusterHousesInOrder(houses: PublicHouse[]): HouseCluster[] {
+  const clusters: HouseCluster[] = [];
+  const indexByKey = new Map<string, number>();
+  for (const house of houses) {
+    if (!Number.isFinite(house.lat) || !Number.isFinite(house.lng)) continue;
+    const key = clusterAddressKey(house.address);
+    const idx = indexByKey.get(key);
+    if (idx !== undefined) {
+      clusters[idx]!.houses.push(house);
+    } else {
+      indexByKey.set(key, clusters.length);
+      clusters.push({
+        key,
+        address: house.address,
+        lat: house.lat,
+        lng: house.lng,
+        houses: [house],
+      });
+    }
+  }
+  return clusters.map((cluster) => {
+    const housesSorted = [...cluster.houses].sort((a, b) =>
+      (a.arrival || a.name).localeCompare(b.arrival || b.name, "he"),
+    );
+    const lat = housesSorted.reduce((sum, house) => sum + house.lat, 0) / housesSorted.length;
+    const lng = housesSorted.reduce((sum, house) => sum + house.lng, 0) / housesSorted.length;
+    return {
+      key: cluster.key,
+      address: housesSorted[0]!.address,
+      lat,
+      lng,
+      houses: housesSorted,
+    };
+  });
+}
+
+/** Build a route from houses in list order (no TSP shuffle). */
+export function buildWalkingRouteOrdered(
+  houses: PublicHouse[],
+  origin: LatLng,
+  options?: {
+    accessible?: boolean;
+    startedFrom?: WalkingRoute["startedFrom"];
+    originLabel?: string;
+  },
+): WalkingRoute | null {
+  const accessible = Boolean(options?.accessible);
+  const candidates = houses
+    .filter((house) => Number.isFinite(house.lat) && Number.isFinite(house.lng))
+    .filter((house) => (accessible ? house.accessible : true));
+  const clusters = clusterHousesInOrder(candidates);
+  if (clusters.length === 0) return null;
+  const startedFrom = options?.startedFrom ?? "neighborhood";
+  return summarizeRoute(clusters, origin, startedFrom, accessible, options?.originLabel);
+}
+
+/** Recompute legs for an existing stop order (e.g. after filter trim or GPS origin update). */
+export function refreshWalkingRoute(
+  route: WalkingRoute,
+  origin: LatLng,
+  options?: {
+    startedFrom?: WalkingRoute["startedFrom"];
+    originLabel?: string;
+    accessible?: boolean;
+  },
+): WalkingRoute {
+  const clusters: HouseCluster[] = route.stops.map((stop) => ({
+    key: clusterAddressKey(stop.house.address),
+    address: stop.house.address,
+    lat: stop.house.lat,
+    lng: stop.house.lng,
+    houses: stop.houses,
+  }));
+  return summarizeRoute(
+    clusters,
+    origin,
+    options?.startedFrom ?? route.startedFrom,
+    options?.accessible ?? route.accessible,
+    options?.originLabel ?? route.originLabel,
+  );
+}
+
+/** Drop stops that no longer match the visible house set. */
+export function trimWalkingRouteToVisible(
+  route: WalkingRoute,
+  visibleIds: Set<string>,
+): WalkingRoute | null {
+  const stops: RouteStop[] = [];
+  for (const stop of route.stops) {
+    const houses = stop.houses.filter((house) => visibleIds.has(house.id));
+    if (houses.length === 0) continue;
+    const lead = houses[0]!;
+    stops.push({
+      ...stop,
+      houses,
+      house: { ...lead, lat: stop.house.lat, lng: stop.house.lng },
+    });
+  }
+  if (stops.length === 0) return null;
+  return { ...route, stops };
 }
 
 function twoOptClusters(clusters: HouseCluster[], origin: LatLng): HouseCluster[] {
