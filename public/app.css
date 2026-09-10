@@ -608,6 +608,9 @@
   .h-12 {
     height: calc(var(--spacing) * 12);
   }
+  .h-14 {
+    height: calc(var(--spacing) * 14);
+  }
   .h-28 {
     height: calc(var(--spacing) * 28);
   }
@@ -655,6 +658,9 @@
   }
   .max-h-64 {
     max-height: calc(var(--spacing) * 64);
+  }
+  .max-h-72 {
+    max-height: calc(var(--spacing) * 72);
   }
   .max-h-\[min\(88dvh\,40rem\)\] {
     max-height: min(88dvh, 40rem);
@@ -736,6 +742,9 @@
   }
   .w-\[min\(100\%-2rem\,24rem\)\] {
     width: min(100% - 2rem, 24rem);
+  }
+  .w-\[min\(100\%-2rem\,26rem\)\] {
+    width: min(100% - 2rem, 26rem);
   }
   .w-fit {
     width: fit-content;
@@ -1076,9 +1085,9 @@
     border-style: var(--tw-border-style);
     border-width: 0px;
   }
-  .border-\[1\.5px\] {
+  .border-2 {
     border-style: var(--tw-border-style);
-    border-width: 1.5px;
+    border-width: 2px;
   }
   .border-t {
     border-top-style: var(--tw-border-style);
@@ -1556,6 +1565,9 @@
   .py-3 {
     padding-block: calc(var(--spacing) * 3);
   }
+  .py-3\.5 {
+    padding-block: calc(var(--spacing) * 3.5);
+  }
   .py-4 {
     padding-block: calc(var(--spacing) * 4);
   }
@@ -1582,9 +1594,6 @@
   }
   .ps-1\.5 {
     padding-inline-start: calc(var(--spacing) * 1.5);
-  }
-  .ps-2 {
-    padding-inline-start: calc(var(--spacing) * 2);
   }
   .ps-2\.5 {
     padding-inline-start: calc(var(--spacing) * 2.5);
@@ -3067,8 +3076,8 @@
   .\[\&_\[data-slot\=select-value\]\]\:items-center [data-slot=select-value] {
     align-items: center;
   }
-  .\[\&_\[data-slot\=select-value\]\]\:gap-2\.5 [data-slot=select-value] {
-    gap: calc(var(--spacing) * 2.5);
+  .\[\&_\[data-slot\=select-value\]\]\:gap-3 [data-slot=select-value] {
+    gap: calc(var(--spacing) * 3);
   }
   .\[\&_svg\]\:pointer-events-none svg {
     pointer-events: none;
@@ -5636,6 +5645,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 [data-slot="dialog-content"].house-edit-modal {
   z-index: 2000;
+}
+.house-quick-select-layer {
+  z-index: 2100 !important;
 }
 .house-edit-modal-body {
   -webkit-overflow-scrolling: touch;
