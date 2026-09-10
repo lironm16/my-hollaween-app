@@ -340,12 +340,12 @@ function FitRoute({
     if (!positions || positions.length < 2) return;
     fittedTick.current = tick;
     const id = window.setTimeout(() => {
-      map.invalidateSize({ animate: false });
       map.fitBounds(L.latLngBounds(positions), {
         padding: [48, 48],
         maxZoom: 17,
-        animate: true,
+        animate: false,
       });
+      window.setTimeout(() => map.invalidateSize({ animate: false }), 0);
     }, 60);
     return () => window.clearTimeout(id);
   }, [map, positions, tick]);
