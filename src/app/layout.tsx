@@ -64,8 +64,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
         {/* Inlined: Cursor Preview is a different origin and Next.js 16 returns 403 for /_next CSS. */}
         {themeCss ? <style dangerouslySetInnerHTML={{ __html: themeCss }} /> : null}
-        <link rel="stylesheet" href="/app.css?v=93" />
-        <meta name="hw-build" content="2026-09-10-route-v76" />
+        <link rel="stylesheet" href="/app.css?v=94" />
+        <meta name="hw-build" content="2026-09-10-map-set-v77" />
         <link rel="stylesheet" href="/shell.css?v=55" />
       </head>
       <body className="relative h-full min-h-dvh font-sans">
