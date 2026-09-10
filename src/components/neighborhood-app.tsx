@@ -50,7 +50,7 @@ import {
   type HomeView,
 } from "@/lib/home-view";
 import { HOUSE_SET_LABELS } from "@/lib/house-set";
-import { filterHouses } from "@/lib/filter-houses";
+import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
 import { houseSelectionAnnouncement } from "@/lib/map-a11y";
 import type { Catalog, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -362,6 +362,10 @@ export function NeighborhoodApp({
       ) : null}
     </div>
   ) : null;
+  const selectedFilterReasons =
+    selected && !matchedIds.has(selected.id)
+      ? houseFilterMismatchReasons(selected, filters, filterContext)
+      : undefined;
   const houseDetailCommon = selected
     ? {
         house: selected,
@@ -525,7 +529,7 @@ export function NeighborhoodApp({
               {houseDetailCommon && view === "map" && !originPick.originPickActive ? (
                 <MapHouseSheet
                   {...houseDetailCommon}
-                  filterMismatch={Boolean(selected && !matchedIds.has(selected.id))}
+                  filterMismatchReasons={selectedFilterReasons}
                   onShowInList={
                     selected && matchedIds.has(selected.id)
                       ? () => {

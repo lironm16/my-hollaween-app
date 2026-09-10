@@ -1,4 +1,12 @@
-import { houseInNeighborhoods } from "@/lib/config";
+import { candyToneLabel } from "@/components/candy-glyphs";
+import {
+  houseInNeighborhoods,
+  NEIGHBORHOODS,
+  neighborhoodFromAddress,
+  resolveNeighborhood,
+} from "@/lib/config";
+import { isStubHouse } from "@/lib/house-set";
+import { scareShort } from "@/lib/labels";
 import { resolveVisitWindow } from "@/lib/visit-window";
 import {
   hasValidVisitWindow,
@@ -16,7 +24,7 @@ import { candyTone } from "@/components/candy-glyphs";
 import { effectiveVisit, isDecorated, offersSensitivity } from "@/lib/house-state";
 import { houseMatchesSet, type HouseSet } from "@/lib/house-set";
 import type { HouseFiltersState } from "@/lib/offline-db";
-import type { PublicHouse } from "@/lib/types";
+import { CANDY_TONE_IDS, SCARE_LEVELS, treatLabels, type PublicHouse } from "@/lib/types";
 
 export function isHouseOwnerClosed(house: PublicHouse) {
   return effectiveVisit(house) === "closed";
@@ -33,6 +41,132 @@ export function isHouseClosedForDisplay(house: PublicHouse, now: Date) {
 
 export function isHouseDecorOnly(house: PublicHouse) {
   return effectiveVisit(house) === "decorOnly";
+}
+
+function candyFilterActive(filters: HouseFiltersState) {
+  return !(
+    filters.candyFilters.length === CANDY_TONE_IDS.length &&
+    CANDY_TONE_IDS.every((tone) => filters.candyFilters.includes(tone))
+  );
+}
+
+function scareFilterActive(filters: HouseFiltersState) {
+  return !(
+    filters.includeUndecorated &&
+    filters.scareFilters.length === SCARE_LEVELS.length &&
+    SCARE_LEVELS.every((level) => filters.scareFilters.includes(level))
+  );
+}
+
+function neighborhoodFilterActive(filters: HouseFiltersState) {
+  return filters.neighborhoodFilters.length !== NEIGHBORHOODS.length;
+}
+
+/** Short Hebrew labels for why a house is faded on the map (not in the active filter). */
+export function houseFilterMismatchReasons(
+  house: PublicHouse,
+  filters: HouseFiltersState,
+  options: {
+    houseSet: HouseSet;
+    likedIds: string[];
+    visitedIds: string[];
+    now: Date;
+  },
+): string[] {
+  const reasons: string[] = [];
+  const { houseSet, likedIds, visitedIds, now } = options;
+  const {
+    accessibleOnly,
+    openNowOnly,
+    closingSoonOnly,
+    openingSoonOnly,
+    notYetOpenOnly,
+    onBreakOnly,
+    afterHoursOnly,
+    closedOnly,
+    decorOnlyOnly,
+    sensitivityFilters,
+    scareFilters,
+    candyFilters,
+    neighborhoodFilters,
+    likedOnly,
+    unvisitedOnly,
+    visitedOnly,
+    includeUndecorated,
+  } = filters;
+  const {
+    from: visitWindowFrom,
+    to: visitWindowTo,
+    mode: visitWindowMode,
+  } = resolveVisitWindow(filters, now);
+
+  if (!houseMatchesSet(house, houseSet)) {
+    reasons.push(isStubHouse(house) ? "סטאב" : "בית אמיתי");
+  }
+  if (accessibleOnly && !house.accessible) reasons.push("לא נגיש");
+  if (candyFilterActive(filters) && candyFilters.length > 0 && !candyFilters.includes(candyTone(house))) {
+    reasons.push(candyToneLabel(candyTone(house)));
+  }
+  if (!includeUndecorated && !isDecorated(house)) reasons.push("לא מקושט");
+  if (visitWindowMode === "now" && !isOpenNowForFilter(house, "", "", now)) {
+    reasons.push("לא פתוח עכשיו");
+  } else if (
+    visitWindowMode === "custom" &&
+    hasValidVisitWindow(visitWindowFrom, visitWindowTo) &&
+    !isOpenDuringCustomVisitForFilter(house, visitWindowFrom, visitWindowTo, now)
+  ) {
+    reasons.push("מחוץ לשעות");
+  }
+  if (
+    openNowOnly ||
+    closingSoonOnly ||
+    openingSoonOnly ||
+    notYetOpenOnly ||
+    onBreakOnly ||
+    afterHoursOnly
+  ) {
+    const hoursHit =
+      (openNowOnly && isOpenNowForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+      (closingSoonOnly && isClosingSoonForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+      (openingSoonOnly && isOpeningSoonForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+      (notYetOpenOnly && isNotYetOpenForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+      (onBreakOnly && isOnBreakForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+      (afterHoursOnly && isAfterHoursForFilter(house, visitWindowFrom, visitWindowTo, now));
+    if (!hoursHit) {
+      if (closingSoonOnly) reasons.push("לא נסגר בקרוב");
+      else if (openingSoonOnly) reasons.push("לא נפתח בקרוב");
+      else if (notYetOpenOnly) reasons.push("כבר פתוח");
+      else if (onBreakOnly) reasons.push("לא בהפסקה");
+      else if (afterHoursOnly) reasons.push("לא אחרי שעות");
+      else reasons.push("לא פתוח עכשיו");
+    }
+  }
+  if (closedOnly && !isHouseOwnerClosed(house)) reasons.push("לא סגור");
+  if (decorOnlyOnly && !isHouseDecorOnly(house)) reasons.push("לא קישוט בלבד");
+  for (const sensitivity of sensitivityFilters) {
+    if (!offersSensitivity(house, sensitivity)) {
+      reasons.push(treatLabels[sensitivity]);
+    }
+  }
+  if (
+    scareFilterActive(filters) &&
+    isDecorated(house) &&
+    scareFilters.length > 0 &&
+    !scareFilters.includes(house.scareLevel)
+  ) {
+    reasons.push(scareShort[house.scareLevel]);
+  }
+  if (neighborhoodFilterActive(filters) && !houseInNeighborhoods(house, neighborhoodFilters)) {
+    const area =
+      resolveNeighborhood(house) ??
+      (house.address ? neighborhoodFromAddress(house.address) : null);
+    reasons.push(area ?? "שכונה אחרת");
+  }
+  if (likedOnly && !likedIds.includes(house.id)) reasons.push("לא בשמורים");
+  if (unvisitedOnly && visitedIds.includes(house.id)) reasons.push("כבר ביקרת");
+  if (visitedOnly && !visitedIds.includes(house.id)) reasons.push("לא ביקרת");
+
+  return reasons;
 }
 
 export function filterHouses(
