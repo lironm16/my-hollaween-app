@@ -2137,6 +2137,23 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   box-shadow: 0 0 0 2px #f97316;
 }
 
+.route-list-start-btn {
+  min-height: 3rem;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.45);
+}
+
+.route-list-start-bar {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  margin: 0.5rem 0.75rem 0;
+  padding: 0.5rem;
+  border-radius: 1rem;
+  background: rgba(18, 8, 26, 0.96);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
 .route-list-house {
   border-radius: 1.1rem;
   box-shadow: 0 0 0 2px #f97316;
@@ -2290,6 +2307,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   flex-shrink: 0;
   flex-direction: column;
   gap: 0.35rem;
+}
+
+.route-start-card-btn {
+  min-width: 5.5rem;
+  min-height: 2.75rem;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.45);
 }
 
 .route-skip-bar {
