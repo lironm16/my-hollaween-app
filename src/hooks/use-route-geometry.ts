@@ -47,13 +47,13 @@ export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
           setLine(street);
           setStatus("ready");
         } else {
-          setLine(preview.length >= 2 ? preview : null);
+          setLine(preview);
           setStatus("fallback");
         }
       })
       .catch(() => {
         if (cancelled) return;
-        setLine(preview.length >= 2 ? preview : null);
+        setLine(preview);
         setStatus("fallback");
       });
     return () => {

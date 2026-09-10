@@ -248,7 +248,7 @@ function summarizeRoute(
   let cumulative = 0;
   clusters.forEach((cluster, index) => {
     const point = clusterPoint(cluster);
-    const leg = estimateWalkingMeters(prev, point);
+    const leg = distanceMeters(prev, point);
     cumulative += leg;
     const lead = cluster.houses[0]!;
     stops.push({
@@ -365,72 +365,6 @@ export function shouldShowRouteApproach(
 }
 
 /** Drop the origin leg from a street line — shown as a dashed approach instead. */
-function closestLineIndex(line: LatLng[], point: LatLng) {
-  let bestIdx = 0;
-  let bestDist = Number.POSITIVE_INFINITY;
-  for (let i = 0; i < line.length; i++) {
-    const d = distanceMeters(line[i], point);
-    if (d < bestDist) {
-      bestDist = d;
-      bestIdx = i;
-    }
-  }
-  return bestIdx;
-}
-
-function pathLengthAlongLine(line: LatLng[], fromIdx: number, toIdx: number) {
-  if (fromIdx === toIdx) return 0;
-  const start = Math.min(fromIdx, toIdx);
-  const end = Math.max(fromIdx, toIdx);
-  let total = 0;
-  for (let i = start + 1; i <= end; i++) total += distanceMeters(line[i - 1]!, line[i]!);
-  return total;
-}
-
-/** Walking meters per waypoint hop along a street geometry line. */
-export function streetLegMeters(waypoints: LatLng[], line: LatLng[]) {
-  if (waypoints.length < 2 || line.length < 2) return [];
-  const indices = waypoints.map((point) => closestLineIndex(line, point));
-  const legs: number[] = [];
-  for (let i = 0; i < indices.length - 1; i++) {
-    legs.push(pathLengthAlongLine(line, indices[i]!, indices[i + 1]!));
-  }
-  return legs;
-}
-
-/** Replace straight-line hop distances with street distances from OSRM geometry. */
-export function applyStreetDistances(
-  route: WalkingRoute,
-  legMeters: number[],
-  options?: { includesOrigin?: boolean },
-): WalkingRoute {
-  if (legMeters.length === 0 || route.stops.length === 0) return route;
-  const includesOrigin = options?.includesOrigin ?? shouldIncludeOriginInRoute(route);
-  const expectedLegs = includesOrigin ? route.stops.length : Math.max(0, route.stops.length - 1);
-  if (legMeters.length !== expectedLegs) return route;
-
-  let cumulative = 0;
-  const stops = route.stops.map((stop, index) => {
-    const leg = includesOrigin
-      ? legMeters[index]!
-      : index === 0
-        ? stop.fromPreviousMeters
-        : legMeters[index - 1]!;
-    cumulative += leg;
-    return { ...stop, fromPreviousMeters: leg, cumulativeMeters: cumulative };
-  });
-  const pace = route.accessible ? ACCESSIBLE_METERS_PER_MIN : WALK_METERS_PER_MIN;
-  const perStop = route.accessible ? ACCESSIBLE_MINUTES_PER_STOP : MINUTES_PER_STOP;
-  const walkMinutes = Math.ceil(cumulative / pace);
-  const stopMinutes = stops.length * perStop;
-  return {
-    ...route,
-    stops,
-    totalMeters: cumulative,
-    totalMinutes: walkMinutes + stopMinutes,
-  };
-}
-
 export function stripApproachFromRouteLine(line: LatLng[], firstStop: LatLng, origin: LatLng): LatLng[] {
   if (line.length < 2) return line;
   if (distanceMeters(line[0], origin) > 30) return line;
