@@ -240,8 +240,9 @@ export function NeighborhoodApp({
   }, [admin, refresh, resetForNavigation]);
 
   const walkingRoute = routeMode ? pinnedRoute : null;
-  const { line: routeLine } = useRouteGeometry(walkingRoute, routeMode);
-  const routeTravel = useRouteTravel(walkingRoute, routeMode);
+  const activeRoute = routeMode ? (walkingRoute ?? filterRoute) : null;
+  const { line: routeLine } = useRouteGeometry(activeRoute, routeMode);
+  const routeTravel = useRouteTravel(activeRoute, routeMode);
 
   const routeTravelAnimating = routeTravel.sweepIndex !== null;
 
@@ -435,8 +436,8 @@ export function NeighborhoodApp({
       </button>
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {selection.selected ? houseSelectionAnnouncement(selection.selected) : ""}
-        {routeMode && walkingRoute
-          ? ` מסלול עם ${walkingRoute.stops.length} עצירות.`
+        {routeMode && activeRoute
+          ? ` מסלול עם ${activeRoute.stops.length} עצירות.`
           : ""}
       </div>
       <NeighborhoodToolbar
@@ -516,7 +517,7 @@ export function NeighborhoodApp({
                 routeFitTick={routeMode && !originPick.originPickActive ? routeFitTick : 0}
                 routeStartFocusTick={routeTravel.focusTick}
                 routeStart={routeMode ? origin : null}
-                routeStartedFrom={routeMode && walkingRoute ? walkingRoute.startedFrom : null}
+                routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}
                 routeTravelStarted={routeMode ? routeTravel.started : false}
                 routeTravelCompletedCount={routeTravel.completedCount}
                 routeTravelSweepIndex={routeTravel.sweepIndex}
@@ -535,8 +536,8 @@ export function NeighborhoodApp({
                   )
                 }
                 routeStops={
-                  routeMode && walkingRoute && !originPick.originPickActive
-                    ? walkingRoute.stops.map((stop) => ({
+                  routeMode && activeRoute && !originPick.originPickActive
+                    ? activeRoute.stops.map((stop) => ({
                         id: stop.house.id,
                         order: stop.order,
                         lat: stop.house.lat,
@@ -545,14 +546,14 @@ export function NeighborhoodApp({
                     : null
                 }
               />
-              {routeMode && walkingRoute && !originPick.originPickActive && view === "map" ? (
+              {routeMode && activeRoute && !originPick.originPickActive && view === "map" ? (
                 <RouteStartCard
                   label={
-                    walkingRoute.originLabel ||
-                    (walkingRoute.startedFrom === "gps" ? "מיקום נוכחי" : "ממרכז השכונה")
+                    activeRoute.originLabel ||
+                    (activeRoute.startedFrom === "gps" ? "מיקום נוכחי" : "ממרכז השכונה")
                   }
                   started={routeTravel.started}
-                  stopCount={walkingRoute.stops.length}
+                  stopCount={activeRoute.stops.length}
                   onStart={routeTravel.startTravel}
                   onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
                 />
@@ -613,9 +614,21 @@ export function NeighborhoodApp({
                     </div>
                   ) : null}
                 </div>
+                {routeMode && !routeTravel.started && activeRoute && activeRoute.stops.length > 0 ? (
+                  <div className="route-list-start-bar" dir="rtl">
+                    <Button
+                      type="button"
+                      size="lg"
+                      className="w-full bg-emerald-500 text-lg font-bold text-black hover:bg-emerald-400"
+                      onClick={routeTravel.startTravel}
+                    >
+                      התחלה — יוצאים לדרך
+                    </Button>
+                  </div>
+                ) : null}
                 {routeMode ? (
                   <RouteList
-                    route={walkingRoute}
+                    route={activeRoute}
                     hasGps={Boolean(gps)}
                     onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
                     onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
@@ -710,7 +723,7 @@ export function NeighborhoodApp({
       <VisitCheer show={visitCheer} />
       <RouteCompleteOverlay
         show={routeMode && routeTravel.showComplete}
-        stopCount={walkingRoute?.stops.length ?? 0}
+        stopCount={activeRoute?.stops.length ?? 0}
         onDismiss={routeTravel.dismissComplete}
       />
       <HouseEditFlowPanels

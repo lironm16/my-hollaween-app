@@ -50,11 +50,11 @@ export function RouteStartCard({
         {!started && stopCount > 0 ? (
           <Button
             type="button"
-            size="sm"
-            className="bg-emerald-500 text-black hover:bg-emerald-400"
+            size="lg"
+            className="route-start-card-btn bg-emerald-500 text-base font-bold text-black hover:bg-emerald-400"
             onClick={onStart}
           >
-            <Play className="size-3.5" />
+            <Play className="size-4" />
             התחלה
           </Button>
         ) : null}

@@ -138,30 +138,28 @@ export function RouteList({
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
                 <p className="text-base font-medium text-orange-100">נקודת התחלה</p>
-                <div className="flex shrink-0 items-center gap-2">
-                  {onChangeOrigin ? (
-                    <Button type="button" size="sm" variant="outline" onClick={onChangeOrigin}>
-                      שינוי
-                    </Button>
-                  ) : null}
-                  {!travelStarted && onStartTravel && route.stops.length > 0 ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="bg-emerald-500 text-black hover:bg-emerald-400"
-                      onClick={onStartTravel}
-                    >
-                      <Play className="size-3.5" />
-                      התחלה
-                    </Button>
-                  ) : null}
-                </div>
+                {onChangeOrigin ? (
+                  <Button type="button" size="sm" variant="outline" onClick={onChangeOrigin}>
+                    שינוי
+                  </Button>
+                ) : null}
               </div>
               <p className="mt-0.5 text-base text-violet-300">{startLabel}</p>
               {travelStarted ? (
                 <p className="mt-1 text-sm text-emerald-300">המסלול פעיל — יוצאים מכאן</p>
               ) : null}
               {gpsAction}
+              {!travelStarted && onStartTravel && route.stops.length > 0 ? (
+                <Button
+                  type="button"
+                  size="lg"
+                  className="route-list-start-btn mt-3 w-full bg-emerald-500 text-lg font-bold text-black hover:bg-emerald-400"
+                  onClick={onStartTravel}
+                >
+                  <Play className="size-5" />
+                  התחלה — יוצאים לדרך
+                </Button>
+              ) : null}
             </div>
           </div>
         </li>
