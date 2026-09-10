@@ -1,4 +1,4 @@
-const CACHE = "hw-shell-v67";
+const CACHE = "hw-shell-v68";
 const TILE_CACHE = "hw-tiles-v7";
 const PRECACHE = [
   "/offline.html",
@@ -13,6 +13,18 @@ const PRECACHE = [
   "/icons/pin-scare-mild.png",
   "/images/banner.jpg",
   "/images/pumpkin-marker.png",
+  "/images/stubs/pumpkin-porch.jpg",
+  "/images/stubs/purple-lights.jpg",
+  "/images/stubs/skeleton-yard.jpg",
+  "/images/stubs/spider-door.jpg",
+  "/images/stubs/graveyard-lawn.jpg",
+  "/images/stubs/witch-cauldron.jpg",
+  "/images/stubs/candy-bowl.jpg",
+  "/images/stubs/green-monster.jpg",
+  "/images/stubs/ghost-trees.jpg",
+  "/images/stubs/lantern-path.jpg",
+  "/images/stubs/black-cat.jpg",
+  "/images/stubs/bats-moon.jpg",
 ];
 
 self.addEventListener("message", (event) => {
