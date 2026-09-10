@@ -87,7 +87,6 @@ export function NeighborhoodApp({
   const { accessibleOnly, likedOnly } = filters;
 
   const [askedLocation, setAskedLocation] = useState(false);
-  const [listQuery, setListQuery] = useState("");
   const [routePrompt, setRoutePrompt] = useState<{
     kind: "enter-route" | "filter-change";
     title: string;
@@ -421,8 +420,6 @@ export function NeighborhoodApp({
         onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
         houses={visible}
         includeTraffic={admin}
-        listQuery={listQuery}
-        onListQueryChange={setListQuery}
         routeTicker={originPick.routeTicker}
       />
       <FiltersSheet
@@ -580,7 +577,6 @@ export function NeighborhoodApp({
                 ) : (
                   <HouseList
                     houses={visible}
-                    query={listQuery}
                     origin={origin}
                     catalogSource={source}
                     likedIds={likes.likedIds}
