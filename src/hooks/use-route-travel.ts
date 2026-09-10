@@ -57,11 +57,8 @@ export function useRouteTravel(route: WalkingRoute | null, routeMode: boolean) {
     setSweepIndex(null);
     setLineReveal(1);
     setShowComplete(false);
-    const first = route.stops[0]?.house;
-    if (first) {
-      setPanTarget({ lat: first.lat, lng: first.lng });
-      setPanTick((n) => n + 1);
-    }
+    setPanTarget({ lat: route.origin.lat, lng: route.origin.lng });
+    setPanTick((n) => n + 1);
   }, [route]);
 
   const dismissComplete = useCallback(() => {
