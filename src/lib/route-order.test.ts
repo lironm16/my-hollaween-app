@@ -6,6 +6,8 @@ import {
   refreshWalkingRoute,
   routeGeometryPoints,
   routePreviewPoints,
+  shouldShowRouteApproach,
+  stripApproachFromRouteLine,
   shouldIncludeOriginInRoute,
   trimWalkingRouteToVisible,
 } from "@/lib/route";
@@ -125,13 +127,16 @@ describe("routeGeometryPoints", () => {
     })));
   });
 
-  it("preview line still ties origin to stop 1 for map display", () => {
+  it("preview line lists stops only — approach is dashed on the map", () => {
     const origin = { lat: 32.0919, lng: 34.8112 };
     const far = stub("far", 32.094, 34.818, "נחלת גנים 1, נחלת גנים");
-    const route = buildWalkingRoute([far], origin, { startedFrom: "neighborhood" });
+    const route = buildWalkingRoute([far], origin, { startedFrom: "gps" });
     assert.ok(route);
     const preview = routePreviewPoints(route!);
-    assert.deepEqual(preview[0], origin);
-    assert.equal(preview.length, 2);
+    assert.equal(preview.length, 1);
+    assert.deepEqual(preview[0], { lat: far.lat, lng: far.lng });
+    assert.equal(shouldShowRouteApproach(origin, preview[0]!, "gps"), true);
+    const line = stripApproachFromRouteLine([origin, preview[0]!, { lat: 32.093, lng: 34.815 }], preview[0]!, origin);
+    assert.equal(line[0], preview[0]);
   });
 });

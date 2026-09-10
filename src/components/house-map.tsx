@@ -19,7 +19,11 @@ import "leaflet/dist/leaflet.css";
 import { config, inNeighborhood } from "@/lib/config";
 import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
-import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
+import {
+  shouldShowRouteApproach,
+  stripApproachFromRouteLine,
+  type LatLng,
+} from "@/lib/route";
 import { distanceMeters } from "@/lib/geo";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { isClosingSoon, isHoursNightOver, isHoursNotYetOpen, isOnBreak, isOpeningSoon } from "@/lib/hours";
@@ -666,28 +670,31 @@ export function HouseMap({
         : { x: 0, y: 0 };
     return { lat: cluster.lat, lng: cluster.lng, offsetX: inner.x, offsetY: inner.y };
   }, [clusterOverview, clusters, houses, pickMode, selectedId]);
+  const displayRouteLine = useMemo(() => {
+    if (!routeLine || routeLine.length < 2) return null;
+    const first = routeStops?.[0];
+    const start = routeStart ?? userLocation;
+    if (!first || !start) return routeLine;
+    if (!shouldShowRouteApproach(start, first, routeStartedFrom)) return routeLine;
+    return stripApproachFromRouteLine(routeLine, first, start);
+  }, [routeLine, routeStops, routeStart, userLocation, routeStartedFrom]);
   const routePositions = useMemo(
     () =>
-      routeLine && routeLine.length >= 2
-        ? routeLine.map((point) => [point.lat, point.lng] as [number, number])
+      displayRouteLine && displayRouteLine.length >= 2
+        ? displayRouteLine.map((point) => [point.lat, point.lng] as [number, number])
         : null,
-    [routeLine],
+    [displayRouteLine],
   );
   const approachPositions = useMemo(() => {
     const first = routeStops?.[0];
     const start = routeStart ?? userLocation;
     if (!start || !first) return null;
-    if (routeLine && routeLine.length >= 2 && distanceMeters(start, routeLine[0]) < 12) {
-      return null;
-    }
-    const gap = distanceMeters(start, first);
-    if (gap < 12) return null;
-    if (routeStartedFrom === "neighborhood" && gap > ROUTE_INCLUDE_ORIGIN_METERS) return null;
+    if (!shouldShowRouteApproach(start, first, routeStartedFrom)) return null;
     return [
       [start.lat, start.lng] as [number, number],
       [first.lat, first.lng] as [number, number],
     ];
-  }, [routeStart, userLocation, routeStops, routeLine, routeStartedFrom]);
+  }, [routeStart, userLocation, routeStops, routeStartedFrom]);
   const fitPositions = useMemo(() => {
     if (routePositions && routePositions.length >= 2) return routePositions;
     if (!routeStops || routeStops.length < 2) return null;
