@@ -1,18 +1,11 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
-import { X } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { CandySign } from "@/components/candy-glyphs";
+import { HouseEditModal } from "@/components/house-edit-modal";
 import { PushNotice } from "@/components/push-notice";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { readApiJson } from "@/lib/api-json";
 import {
   applyLocalHousePatch,
@@ -41,24 +34,33 @@ export function QuickUpdateOverlay({
   house,
   editCode,
   admin,
+  open,
   onClose,
   onUpdated,
 }: {
   house: PublicHouse;
   editCode?: string;
   admin?: boolean;
+  open: boolean;
   onClose: () => void;
   onUpdated: (house: PublicHouse) => void;
 }) {
   const currentCandy = currentQuickCandy(house);
   const currentHouse = currentQuickHouse(house);
-  const [candyPick, setCandyPick] = useState<QuickCandyChoice | null>(null);
-  const [housePick, setHousePick] = useState<QuickHouseChoice | null>(null);
+  const [candyPick, setCandyPick] = useState<QuickCandyChoice | "">("");
+  const [housePick, setHousePick] = useState<QuickHouseChoice | "">("");
   const [sendPush, setSendPush] = useState(true);
   const [busy, setBusy] = useState(false);
 
-  const effectiveCandy = candyPick ?? currentCandy;
-  const effectiveHouse = housePick ?? currentHouse;
+  useEffect(() => {
+    if (!open) return;
+    setCandyPick("");
+    setHousePick("");
+    setSendPush(true);
+  }, [open, house.id]);
+
+  const effectiveCandy = candyPick || currentCandy;
+  const effectiveHouse = housePick || currentHouse;
   const dirty = quickUpdateChanged(house, effectiveCandy, effectiveHouse);
   const preview = useMemo(
     () => (dirty ? previewQuickUpdatePush(house, effectiveCandy, effectiveHouse) : null),
@@ -166,78 +168,64 @@ export function QuickUpdateOverlay({
   }
 
   return (
-    <div className="house-edit-overlay" dir="rtl" role="dialog" aria-modal="true" aria-label="עדכון מהיר">
-      <div className="house-edit-overlay-bar">
-        <button
+    <HouseEditModal
+      open={open}
+      onClose={onClose}
+      title="עדכון מהיר"
+      subtitle={house.name}
+    >
+      <div className="space-y-4">
+        <QuickSelectField
+          label="ממתקים"
+          value={candyPick}
+          placeholder="בחרו…"
+          onChange={setCandyPick}
+          options={QUICK_CANDY_OPTIONS.map((option) => ({
+            value: option.id,
+            label: option.label,
+            disabled: option.id === currentCandy,
+            danger: option.tone === "danger",
+            icon: <CandySign tone={option.id} className="size-5" />,
+          }))}
+        />
+        <QuickSelectField
+          label="סטטוס הבית"
+          value={housePick}
+          placeholder="בחרו…"
+          onChange={setHousePick}
+          options={QUICK_HOUSE_OPTIONS.map((option) => ({
+            value: option.id,
+            label: option.label,
+            disabled: option.id === currentHouse,
+            icon: <span className={cn("night-status-dot", option.dotClass)} />,
+          }))}
+        />
+
+        {preview ? (
+          <div className="space-y-3">
+            <PushNotice payload={preview.payload} />
+            <label className="flex items-center gap-2 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20">
+              <input
+                type="checkbox"
+                className="size-4 accent-orange-500"
+                checked={sendPush}
+                onChange={(event) => setSendPush(event.target.checked)}
+              />
+              <span className="text-base text-orange-100">שלחו התראה לשכונה</span>
+            </label>
+          </div>
+        ) : null}
+
+        <Button
           type="button"
-          className="house-edit-overlay-close"
-          aria-label="סגירה"
-          onClick={onClose}
+          disabled={!dirty || busy}
+          className="h-11 w-full bg-orange-500 text-base text-black hover:bg-orange-400"
+          onClick={() => void save()}
         >
-          <X className="size-5" />
-        </button>
+          {busy ? "שומרים…" : "שמירה"}
+        </Button>
       </div>
-      <div className="house-edit-overlay-body">
-        <div className="mx-auto w-full max-w-lg space-y-5 px-4 pb-8">
-          <div>
-            <h1 className="font-display text-2xl text-orange-300">עדכון מהיר</h1>
-            <p className="mt-1 text-base text-violet-200">{house.name}</p>
-          </div>
-
-          <div className="space-y-4">
-            <QuickSelectField
-              label="ממתקים"
-              value={candyPick}
-              placeholder="בחרו…"
-              onChange={setCandyPick}
-              options={QUICK_CANDY_OPTIONS.map((option) => ({
-                value: option.id,
-                label: option.label,
-                disabled: option.id === currentCandy,
-                danger: option.tone === "danger",
-                icon: <CandySign tone={option.id} className="size-5" />,
-              }))}
-            />
-            <QuickSelectField
-              label="סטטוס הבית"
-              value={housePick}
-              placeholder="בחרו…"
-              onChange={setHousePick}
-              options={QUICK_HOUSE_OPTIONS.map((option) => ({
-                value: option.id,
-                label: option.label,
-                disabled: option.id === currentHouse,
-                icon: <span className={cn("night-status-dot", option.dotClass)} />,
-              }))}
-            />
-          </div>
-
-          {preview ? (
-            <div className="space-y-3">
-              <PushNotice payload={preview.payload} />
-              <label className="flex items-center gap-2 rounded-xl bg-[#1d1028] px-3 py-2.5 ring-1 ring-orange-500/20">
-                <input
-                  type="checkbox"
-                  className="size-4 accent-orange-500"
-                  checked={sendPush}
-                  onChange={(event) => setSendPush(event.target.checked)}
-                />
-                <span className="text-base text-orange-100">שלחו התראה לשכונה</span>
-              </label>
-            </div>
-          ) : null}
-
-          <Button
-            type="button"
-            disabled={!dirty || busy}
-            className="h-11 w-full bg-orange-500 text-base text-black hover:bg-orange-400"
-            onClick={() => void save()}
-          >
-            {busy ? "שומרים…" : "שמירה"}
-          </Button>
-        </div>
-      </div>
-    </div>
+    </HouseEditModal>
   );
 }
 
@@ -249,9 +237,9 @@ function QuickSelectField<T extends string>({
   options,
 }: {
   label: string;
-  value: T | null;
+  value: T | "";
   placeholder: string;
-  onChange: (value: T | null) => void;
+  onChange: (value: T | "") => void;
   options: {
     value: T;
     label: string;
@@ -265,42 +253,32 @@ function QuickSelectField<T extends string>({
   return (
     <div className="space-y-1.5">
       <p className="text-base font-medium text-orange-100">{label}</p>
-      <Select
-        value={value ?? ""}
-        onValueChange={(next) => onChange((next as T) || null)}
-      >
-        <SelectTrigger
-          className="h-11 w-full border-orange-500/30 bg-[#1d1028] text-orange-50 data-placeholder:text-violet-400"
-          size="default"
+      <div className="relative">
+        {selected ? (
+          <span className="pointer-events-none absolute start-3 top-1/2 z-10 -translate-y-1/2">
+            {selected.icon}
+          </span>
+        ) : null}
+        <select
+          value={value}
+          onChange={(event) => onChange(event.target.value as T | "")}
+          className={cn(
+            "house-quick-select h-11 w-full appearance-none rounded-lg border border-orange-500/30 bg-[#12081a] py-2 text-base text-orange-50 outline-none focus-visible:border-orange-400 focus-visible:ring-2 focus-visible:ring-orange-400/30",
+            selected ? "ps-11 pe-10" : "px-3 pe-10",
+            selected?.danger && "text-red-300",
+          )}
         >
-          <SelectValue placeholder={placeholder}>
-            {selected ? (
-              <span className="inline-flex items-center gap-2">
-                {selected.icon}
-                <span className={selected.danger ? "text-red-300" : undefined}>{selected.label}</span>
-              </span>
-            ) : (
-              placeholder
-            )}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent className="border-orange-500/30 bg-[#1d1028] text-orange-50">
+          <option value="" disabled hidden>{placeholder}</option>
           {options.map((option) => (
-            <SelectItem
-              key={option.value}
-              value={option.value}
-              disabled={option.disabled}
-              className={cn(option.danger && !option.disabled && "text-red-300")}
-            >
-              <span className="inline-flex items-center gap-2">
-                {option.icon}
-                <span>{option.label}</span>
-                {option.disabled ? <span className="text-violet-400">(עכשיו)</span> : null}
-              </span>
-            </SelectItem>
+            <option key={option.value} value={option.value} disabled={option.disabled}>
+              {option.label}
+            </option>
           ))}
-        </SelectContent>
-      </Select>
+        </select>
+        <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-violet-300" aria-hidden="true">
+          ▾
+        </span>
+      </div>
     </div>
   );
 }

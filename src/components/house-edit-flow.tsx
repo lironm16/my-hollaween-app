@@ -85,15 +85,14 @@ export function HouseEditFlowPanels({
         onQuick={() => setFlow((current) => (current ? { ...current, step: "quick" } : current))}
         onFull={() => setFlow((current) => (current ? { ...current, step: "full" } : current))}
       />
-      {flow.step === "quick" ? (
-        <QuickUpdateOverlay
-          house={house}
-          editCode={editCode}
-          admin={admin}
-          onClose={onClose}
-          onUpdated={onUpdated}
-        />
-      ) : null}
+      <QuickUpdateOverlay
+        house={house}
+        editCode={editCode}
+        admin={admin}
+        open={flow.step === "quick"}
+        onClose={onClose}
+        onUpdated={onUpdated}
+      />
       {flow.step === "full" ? (
         <HouseEditOverlay
           house={house}

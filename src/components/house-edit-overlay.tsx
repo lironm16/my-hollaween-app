@@ -1,7 +1,6 @@
 "use client";
 
 import { X } from "lucide-react";
-import { CodesCopy } from "@/components/codes-copy";
 import { NightDesk } from "@/components/night-desk";
 import type { PublicHouse } from "@/lib/types";
 
@@ -40,7 +39,6 @@ export function HouseEditOverlay({
             <h1 className="font-display text-2xl text-orange-300">עריכת בית</h1>
             <p className="mt-1 text-base text-violet-200">{house.name}</p>
           </div>
-          <CodesCopy editCode={editCode} />
           <NightDesk
             house={house}
             admin={admin}
