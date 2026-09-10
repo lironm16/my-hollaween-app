@@ -15,6 +15,7 @@
     "ci": "node scripts/ci.mjs",
     "catalog": "node scripts/build-catalog.mjs",
     "stub-images": "node scripts/generate-stub-images.mjs",
+    "app-icons": "node scripts/generate-app-icons.mjs",
     "stress": "node scripts/stress-test.mjs",
     "sync:github": "node scripts/sync-github.mjs",
     "deploy:vercel": "node scripts/trigger-vercel.mjs"
