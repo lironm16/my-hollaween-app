@@ -6,8 +6,6 @@ import {
   DialogContent,
   DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
@@ -100,20 +98,17 @@ export function RouteConfirmDialog({
         className="gap-0 border-orange-500/30 bg-[#160b1f] p-0 text-orange-50 sm:max-w-md"
         dir="rtl"
       >
-        <OverlayCloseBar compact onClose={close} className="border-b border-orange-500/15 pb-2" />
-        <DialogHeader className="gap-2 px-6 pt-4 text-right">
-          <DialogTitle className="text-orange-200">{title}</DialogTitle>
-          <DialogDescription className="text-violet-200">{description}</DialogDescription>
-        </DialogHeader>
-        {(removedHouses?.length ?? 0) > 0 || hasAdds ? (
-          <div className="space-y-3 px-6">
-            <HouseListSection title="יוסרו מהמסלול" names={removedHouses ?? []} tone="remove" />
-            <HouseListSection title="יתווספו למסלול" names={addedHouses ?? []} tone="add" />
-          </div>
-        ) : null}
-        <div className="space-y-2 px-6">
+        <OverlayCloseBar compact title={title} onClose={close} className="border-b border-orange-500/15 pb-2" />
+        <div className="space-y-3 px-6 pt-4">
+          <DialogDescription className="text-right text-violet-200">{description}</DialogDescription>
+          {(removedHouses?.length ?? 0) > 0 || hasAdds ? (
+            <div className="space-y-3">
+              <HouseListSection title="יוסרו מהמסלול" names={removedHouses ?? []} tone="remove" />
+              <HouseListSection title="יתווספו למסלול" names={addedHouses ?? []} tone="add" />
+            </div>
+          ) : null}
           {hasAdds ? (
-            <label className="flex items-center gap-2 text-base text-violet-200">
+            <label className="flex items-center gap-2 px-1 py-2 text-base text-violet-200">
               <input
                 type="checkbox"
                 checked={includeAdds}
@@ -123,7 +118,7 @@ export function RouteConfirmDialog({
               הוסיפו אותם למסלול
             </label>
           ) : null}
-          <label className="flex items-center gap-2 text-base text-violet-300">
+          <label className="flex items-center gap-2 px-1 py-3 text-base text-violet-300">
             <input
               type="checkbox"
               checked={dontShowAgain}
@@ -134,10 +129,10 @@ export function RouteConfirmDialog({
           </label>
         </div>
         <DialogFooter className="mx-0 mb-0 mt-2 border-0 bg-transparent p-0 px-6 pb-6">
-          <div className="flex w-full flex-col-reverse gap-3 sm:flex-row-reverse sm:justify-stretch">
+          <div className="grid w-full grid-cols-2 gap-2">
             <Button
               type="button"
-              className="min-h-11 w-full bg-orange-500 px-5 text-black hover:bg-orange-400 sm:w-auto"
+              className="min-h-11 bg-orange-500 px-5 text-black hover:bg-orange-400"
               onClick={confirm}
             >
               {confirmLabel}
@@ -145,7 +140,7 @@ export function RouteConfirmDialog({
             <Button
               type="button"
               variant="outline"
-              className="min-h-11 w-full px-5 sm:w-auto"
+              className="min-h-11 px-5"
               onClick={close}
             >
               {cancelLabel}

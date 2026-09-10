@@ -191,6 +191,8 @@ export function countActiveFilters(filters: HouseFiltersState): number {
     Number(!scareDefault) +
     Number(filters.accessibleOnly) +
     Number(filters.likedOnly) +
+    Number(filters.unvisitedOnly) +
+    Number(filters.visitedOnly) +
     filters.sensitivityFilters.length
   );
 }
