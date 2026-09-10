@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { filterHouses } from "@/lib/filter-houses";
+import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 
@@ -129,6 +129,23 @@ describe("filterHouses", () => {
       context,
     );
     assert.deepEqual(result.map((item) => item.id).sort(), ["later", "open"]);
+  });
+
+  it("lists short mismatch reasons for filtered-out houses", () => {
+    const houses = [
+      house("a", { address: "נחלת גנים 1, נחלת גנים", lat: 32.0928, lng: 34.8188 }),
+      house("b", { address: "חרוזים 8, חרוזים", lat: 32.0916, lng: 34.8028 }),
+    ];
+    const context = { houseSet: "real" as const, likedIds: [], visitedIds: ["b"], now };
+    const filters = baseFilters({
+      visitWindowMode: "all",
+      neighborhoodFilters: ["חרוזים"],
+      unvisitedOnly: true,
+    });
+    const reasons = houseFilterMismatchReasons(houses[0]!, filters, context);
+    assert.deepEqual(reasons, ["נחלת גנים"]);
+    const visitedReasons = houseFilterMismatchReasons(houses[1]!, filters, context);
+    assert.deepEqual(visitedReasons, ["כבר ביקרת"]);
   });
 
   it("now mode stays stricter than custom departure hours", () => {

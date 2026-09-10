@@ -852,9 +852,9 @@
   margin-bottom: 0.75rem;
   border-radius: 0.75rem;
   background: rgba(76, 29, 149, 0.35);
-  padding: 0.65rem 0.75rem;
-  font-size: 0.95rem;
-  line-height: 1.45;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.9rem;
+  line-height: 1.35;
   color: #ddd6fe;
   border: 1px solid rgba(167, 139, 250, 0.25);
 }
