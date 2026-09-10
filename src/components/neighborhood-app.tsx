@@ -15,11 +15,8 @@ import { NeighborhoodStatusBanners } from "@/components/neighborhood-status-bann
 import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
-import { RouteStartCard } from "@/components/route-start-card";
-import { RouteCompleteOverlay } from "@/components/route-complete-overlay";
 import { RouteConfirmDialog } from "@/components/route-confirm-dialog";
 import { VisitCheer } from "@/components/visit-cheer";
-import { useRouteTravel } from "@/hooks/use-route-travel";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -244,25 +241,7 @@ export function NeighborhoodApp({
   }, [admin, refresh, resetForNavigation]);
 
   const walkingRoute = routeMode ? pinnedRoute : null;
-  const activeRoute = routeMode ? (walkingRoute ?? filterRoute) : null;
-  const { line: routeLine } = useRouteGeometry(activeRoute, routeMode);
-  const routeTravel = useRouteTravel(activeRoute, routeMode);
-
-  const routeTravelAnimating = routeTravel.sweepIndex !== null;
-
-  function handleToggleVisited(id: string) {
-    const marking = !visits.visited(id);
-    onToggleVisited(id);
-    if (routeMode && routeTravel.started && marking) {
-      routeTravel.advanceAfterVisit(id);
-    }
-  }
-
-  function handleSkipRouteStop(id: string) {
-    if (!routeMode || !routeTravel.started) return;
-    routeTravel.skipStop(id);
-  }
-
+  const { line: routeLine } = useRouteGeometry(walkingRoute, routeMode);
   const summaryProps = {
     filteredHouses: visible.length,
     route: filterRoute,
@@ -391,11 +370,6 @@ export function NeighborhoodApp({
     selected && !matchedIds.has(selected.id)
       ? houseFilterMismatchReasons(selected, filters, filterContext)
       : undefined;
-  const selectedRouteCurrent =
-    routeMode &&
-    routeTravel.started &&
-    selected &&
-    routeTravel.currentStopId === selected.id;
   const houseDetailCommon = selected
     ? {
         house: selected,
@@ -404,7 +378,7 @@ export function NeighborhoodApp({
         liked: likes.liked,
         onToggleLike,
         visited: visits.visited,
-        onToggleVisited: handleToggleVisited,
+        onToggleVisited,
         catalogSource: source,
         managerEditCode: admin ? editCodeById.get(selected.id) : undefined,
         editCodeFor: (id: string) =>
@@ -416,11 +390,6 @@ export function NeighborhoodApp({
         extra: houseDetailExtra,
         clusterOverview: selection.clusterOverview,
         clusterHouses: selection.selectedCluster,
-        routeCurrentStop: Boolean(selectedRouteCurrent),
-        onSkipRouteStop: selectedRouteCurrent
-          ? () => handleSkipRouteStop(selected.id)
-          : undefined,
-        routeTravelAnimating,
       }
     : null;
 
@@ -440,8 +409,8 @@ export function NeighborhoodApp({
       </button>
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {selection.selected ? houseSelectionAnnouncement(selection.selected) : ""}
-        {routeMode && activeRoute
-          ? ` מסלול עם ${activeRoute.stops.length} עצירות.`
+        {routeMode && walkingRoute
+          ? ` מסלול עם ${walkingRoute.stops.length} עצירות.`
           : ""}
       </div>
       <NeighborhoodToolbar
@@ -493,7 +462,6 @@ export function NeighborhoodApp({
             <div
               className={cn(
                 "map-stage absolute inset-0 z-0 isolate",
-                routeMode && "is-route-active",
                 view !== "map" && "invisible pointer-events-none",
               )}
               style={{ position: "absolute", inset: 0 }}
@@ -519,36 +487,22 @@ export function NeighborhoodApp({
                 onLocate={originPick.goToMyLocation}
                 routeLine={routeMode && !originPick.originPickActive ? routeLine : null}
                 routeFitTick={routeMode && !originPick.originPickActive ? routeFitTick : 0}
-                routeStartFocusTick={routeTravel.focusTick}
                 routeStart={routeMode ? origin : null}
-                routeOriginLabel={
-                  routeMode && activeRoute
-                    ? activeRoute.originLabel ||
-                      (activeRoute.startedFrom === "gps" ? "מיקום נוכחי" : "ממרכז השכונה")
-                    : undefined
-                }
-                onRouteStart={routeMode && !routeTravel.started ? routeTravel.startTravel : undefined}
-                routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}
-                routeTravelStarted={routeMode ? routeTravel.started : false}
-                routeTravelCompletedCount={routeTravel.completedCount}
-                routeTravelSweepIndex={routeTravel.sweepIndex}
-                routeTravelLineReveal={routeTravel.lineReveal}
-                routeStopTravelState={routeTravel.stopState}
                 visitedIds={visits.visitedIds}
                 originMarker={origin.fromGps ? null : origin}
                 originPickActive={originPick.originPickActive}
                 originPick={originPick.originDraft}
                 onOriginPick={originPick.onOriginMapPick}
-                panTo={routeTravel.panTarget ?? originPick.panTo}
-                panTick={routeTravel.panTick > 0 ? routeTravel.panTick : originPick.panTick}
+                panTo={originPick.panTo}
+                panTick={originPick.panTick}
                 statsFab={
                   originPick.originPickActive ? null : (
                     <MapStats {...summaryProps} />
                   )
                 }
                 routeStops={
-                  routeMode && activeRoute && !originPick.originPickActive
-                    ? activeRoute.stops.map((stop) => ({
+                  routeMode && walkingRoute && !originPick.originPickActive
+                    ? walkingRoute.stops.map((stop) => ({
                         id: stop.house.id,
                         order: stop.order,
                         lat: stop.house.lat,
@@ -557,35 +511,6 @@ export function NeighborhoodApp({
                     : null
                 }
               />
-              {routeMode &&
-              activeRoute &&
-              !originPick.originPickActive &&
-              view === "map" &&
-              !routeTravel.started &&
-              activeRoute.stops.length > 0 ? (
-                <div className="route-map-start-bar" dir="rtl">
-                  <Button
-                    type="button"
-                    size="lg"
-                    className="w-full bg-emerald-500 text-lg font-bold text-black hover:bg-emerald-400"
-                    onClick={routeTravel.startTravel}
-                  >
-                    התחלה — יוצאים לדרך
-                  </Button>
-                </div>
-              ) : null}
-              {routeMode && activeRoute && !originPick.originPickActive && view === "map" ? (
-                <RouteStartCard
-                  label={
-                    activeRoute.originLabel ||
-                    (activeRoute.startedFrom === "gps" ? "מיקום נוכחי" : "ממרכז השכונה")
-                  }
-                  started={routeTravel.started}
-                  stopCount={activeRoute.stops.length}
-                  onStart={routeTravel.startTravel}
-                  onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
-                />
-              ) : null}
               {originPick.originPickActive ? (
                 <div className="origin-pick-bar">
                   <p className="origin-pick-label">{originPick.originDraftLabel}</p>
@@ -642,38 +567,18 @@ export function NeighborhoodApp({
                     </div>
                   ) : null}
                 </div>
-                {routeMode && !routeTravel.started && activeRoute && activeRoute.stops.length > 0 ? (
-                  <div className="route-list-start-bar" dir="rtl">
-                    <Button
-                      type="button"
-                      size="lg"
-                      className="w-full bg-emerald-500 text-lg font-bold text-black hover:bg-emerald-400"
-                      onClick={routeTravel.startTravel}
-                    >
-                      התחלה — יוצאים לדרך
-                    </Button>
-                  </div>
-                ) : null}
                 {routeMode ? (
                   <RouteList
-                    route={activeRoute}
+                    route={walkingRoute}
                     hasGps={Boolean(gps)}
                     onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
                     onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
-                    onStartTravel={routeTravel.startTravel}
-                    travelStarted={routeTravel.started}
-                    travelCompletedCount={routeTravel.completedCount}
-                    travelSweepIndex={routeTravel.sweepIndex}
-                    travelLineReveal={routeTravel.lineReveal}
-                    stopTravelState={routeTravel.stopState}
-                    onSkipStop={handleSkipRouteStop}
-                    travelAnimating={routeTravelAnimating}
                     selectedId={selection.selected?.id ?? null}
                     catalogSource={source}
                     likedIds={likes.likedIds}
                     onToggleLike={onToggleLike}
                     visitedIds={visits.visitedIds}
-                    onToggleVisited={handleToggleVisited}
+                    onToggleVisited={onToggleVisited}
                     admin={admin}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
                     onShowOnMap={openOnMap}
@@ -693,7 +598,7 @@ export function NeighborhoodApp({
                     likedIds={likes.likedIds}
                     onToggleLike={onToggleLike}
                     visitedIds={visits.visitedIds}
-                    onToggleVisited={handleToggleVisited}
+                    onToggleVisited={onToggleVisited}
                     admin={admin}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
                     onShowOnMap={openOnMap}
@@ -749,11 +654,6 @@ export function NeighborhoodApp({
         onCancel={() => setRoutePrompt(null)}
       />
       <VisitCheer show={visitCheer} />
-      <RouteCompleteOverlay
-        show={routeMode && routeTravel.showComplete}
-        stopCount={activeRoute?.stops.length ?? 0}
-        onDismiss={routeTravel.dismissComplete}
-      />
       <HouseEditFlowPanels
         flow={editFlow.flow}
         setFlow={editFlow.setFlow}

@@ -20,8 +20,6 @@ import { config, inNeighborhood } from "@/lib/config";
 import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
 import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
-import { revealRouteLineSlice, travelLineToStop } from "@/lib/route-line";
-import type { RouteStopTravelState } from "@/hooks/use-route-travel";
 import { distanceMeters } from "@/lib/geo";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { isClosingSoon, isHoursNightOver, isHoursNotYetOpen, isOnBreak, isOpeningSoon } from "@/lib/hours";
@@ -59,23 +57,15 @@ function tileUrlFor(theme: "dark" | "light") {
 
 const ROUTE_BADGE_H = 32;
 
-function routeBadgeHtml(order: number, travelState?: RouteStopTravelState) {
-  const travelClass =
-    travelState === "done"
-      ? " is-route-done"
-      : travelState === "current"
-        ? " is-route-current"
-        : travelState === "sweep"
-          ? " is-route-sweep"
-          : "";
-  return `<span class="route-stop-pin${travelClass}" aria-label="עצירה ${order}"><b class="route-stop-num">${order}</b></span>`;
+function routeBadgeHtml(order: number) {
+  return `<span class="route-stop-pin" aria-label="עצירה ${order}"><b class="route-stop-num">${order}</b></span>`;
 }
 
-function wrapRoutePin(html: string, routeOrder?: number, travelState?: RouteStopTravelState) {
+function wrapRoutePin(html: string, routeOrder?: number) {
   if (!routeOrder) return { html, extraH: 0 };
   return {
     extraH: ROUTE_BADGE_H,
-    html: `<div class="house-pin-route">${html}${routeBadgeHtml(routeOrder, travelState)}</div>`,
+    html: `<div class="house-pin-route">${html}${routeBadgeHtml(routeOrder)}</div>`,
   };
 }
 
@@ -231,7 +221,6 @@ function clusterIcon(
   visitedIds: string[] = [],
   expanded = false,
   filteredOut = false,
-  routeTravelState?: RouteStopTravelState,
 ) {
   const houses = cluster.houses;
   const only = houses[0];
@@ -248,18 +237,9 @@ function clusterIcon(
         ? housePinHtml(only, now, {
             selected: selectedHere,
             visited: visitedIds.includes(only.id),
-            extraClass:
-              routeTravelState === "done"
-                ? "is-route-done"
-                : routeTravelState === "current"
-                  ? "is-route-current"
-                  : routeTravelState === "sweep"
-                    ? "is-route-sweep"
-                    : undefined,
           })
         : "",
       routeOrder,
-      routeTravelState,
     );
     return L.divIcon({
       className: `pumpkin-pin-icon${selectedClass}${filterClass}${hoursClass}`,
@@ -273,7 +253,6 @@ function clusterIcon(
     const wrapped = wrapRoutePin(
       `<div class="house-pin is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterAptDotsHtml(houses, now)}</div>`,
       routeOrder,
-      routeTravelState,
     );
     return L.divIcon({
       className: `pumpkin-pin-icon pumpkin-pin-building${selectedClass}${filterClass}`,
@@ -317,7 +296,7 @@ function clusterIcon(
       });
     })
     .join("");
-  const badge = routeOrder ? routeBadgeHtml(routeOrder, routeTravelState) : "";
+  const badge = routeOrder ? routeBadgeHtml(routeOrder) : "";
   return L.divIcon({
     className: `pumpkin-pin-icon pumpkin-pin-fan${selectedClass}${filterClass}`,
     html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" aria-hidden="true"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterAptDotsHtml(houses, now)}</div>${apts}${badge}</div>`,
@@ -333,31 +312,20 @@ const pickIcon = L.divIcon({
   iconAnchor: [PIN_BOX / 2, PIN_BOX],
 });
 
-function originIconHtml(started: boolean) {
-  return `<div class="house-pin is-origin${started ? " is-route-started" : ""}" aria-label="נקודת התחלה"><span>📍</span></div>`;
-}
+const originIcon = L.divIcon({
+  className: "pumpkin-pin-icon is-origin-pin",
+  html: `<div class="house-pin is-origin" aria-label="נקודת התחלה"><span>📍</span></div>`,
+  iconSize: [PIN_BOX, PIN_BOX + 4],
+  iconAnchor: [PIN_BOX / 2, PIN_BOX],
+});
 
-function makeOriginIcon(started: boolean, pending = false) {
-  return L.divIcon({
-    className: `pumpkin-pin-icon is-origin-pin${started ? " is-route-started" : ""}${pending ? " is-route-pending" : ""}`,
-    html: originIconHtml(started),
-    iconSize: [PIN_BOX, PIN_BOX + 4],
-    iconAnchor: [PIN_BOX / 2, PIN_BOX],
-  });
-}
-
-function makeYouAreHereIcon(routeStarted: boolean, routePending = false) {
-  const pendingLabel = routePending
-    ? `<span class="you-are-here-badge" aria-hidden="true">התחלה</span>`
-    : "";
-  return L.divIcon({
-    className: `you-are-here-wrap${routeStarted ? " is-route-started" : ""}${routePending ? " is-route-pending" : ""}`,
-    html: `<div class="you-are-here" role="img" aria-label="${routePending ? "נקודת התחלה" : "אתם כאן"}">${pendingLabel}<span class="you-are-here-pulse" aria-hidden="true"></span><span class="you-are-here-dot" aria-hidden="true"></span></div>`,
-    iconSize: routePending ? [72, 42] : [22, 22],
-    iconAnchor: routePending ? [36, 34] : [11, 11],
-    popupAnchor: [0, routePending ? -28 : -12],
-  });
-}
+const youAreHereIcon = L.divIcon({
+  className: "you-are-here-wrap",
+  html: `<div class="you-are-here" role="img" aria-label="אתם כאן"><span class="you-are-here-pulse" aria-hidden="true"></span><span class="you-are-here-dot" aria-hidden="true"></span></div>`,
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
+  popupAnchor: [0, -12],
+});
 
 /** Fit the walking path only after a route-button tap (tick). Never again if the user zooms. */
 function FitRoute({
@@ -530,7 +498,6 @@ function ClusterMarker({
   onClose,
   onCollapse,
   routeOrder,
-  routeTravelState,
   visitedIds,
   filteredOut,
 }: {
@@ -542,7 +509,6 @@ function ClusterMarker({
   onClose?: () => void;
   onCollapse?: () => void;
   routeOrder?: number;
-  routeTravelState?: RouteStopTravelState;
   visitedIds: string[];
   filteredOut?: boolean;
 }) {
@@ -560,19 +526,9 @@ function ClusterMarker({
 
   return (
     <Marker
-      key={`${cluster.key}-${fanOpen ? (overview ? "peek" : selectedId ?? "open") : "shut"}-${routeOrder ?? 0}-${routeTravelState ?? "u"}-${visitedKey}-${statusKey}`}
+      key={`${cluster.key}-${fanOpen ? (overview ? "peek" : selectedId ?? "open") : "shut"}-${routeOrder ?? 0}-${visitedKey}-${statusKey}`}
       position={[cluster.lat, cluster.lng]}
-      icon={clusterIcon(
-        cluster,
-        selectedId,
-        now,
-        routeOrder,
-        overview,
-        visitedIds,
-        fanOpen,
-        filteredOut,
-        routeTravelState,
-      )}
+      icon={clusterIcon(cluster, selectedId, now, routeOrder, overview, visitedIds, fanOpen, filteredOut)}
       zIndexOffset={
         fanOpen || selectedHere
           ? 10000
@@ -635,18 +591,8 @@ type Props = {
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
   /** Walking-route start (GPS / custom / neighborhood) for the dashed approach. */
   routeStart?: LatLng | null;
-  routeOriginLabel?: string;
-  onRouteStart?: () => void;
-  routeStartedFrom?: "gps" | "neighborhood" | "custom" | null;
-  routeTravelStarted?: boolean;
-  routeTravelCompletedCount?: number;
-  routeTravelSweepIndex?: number | null;
-  routeTravelLineReveal?: number;
-  routeStopTravelState?: (houseId: string) => RouteStopTravelState;
   /** Increment only on route-button tap to fit the whole path. */
   routeFitTick?: number;
-  /** Zoom to origin + first stop when the journey starts. */
-  routeStartFocusTick?: number;
   visitedIds?: string[];
   originMarker?: LatLng | null;
   originPickActive?: boolean;
@@ -679,16 +625,7 @@ export function HouseMap({
   routeLine = null,
   routeStops = null,
   routeStart = null,
-  routeOriginLabel,
-  onRouteStart,
-  routeStartedFrom = null,
-  routeTravelStarted = false,
-  routeTravelCompletedCount = 0,
-  routeTravelSweepIndex = null,
-  routeTravelLineReveal = 1,
-  routeStopTravelState,
   routeFitTick = 0,
-  routeStartFocusTick = 0,
   visitedIds = [],
   originMarker = null,
   originPickActive = false,
@@ -738,87 +675,20 @@ export function HouseMap({
     const first = routeStops?.[0];
     const start = routeStart ?? userLocation;
     if (!start || !first) return null;
-    if (routeLine && routeLine.length >= 2 && distanceMeters(start, routeLine[0]) < 12) {
-      return null;
-    }
     const gap = distanceMeters(start, first);
     if (gap < 12) return null;
-    if (routeStartedFrom === "neighborhood" && gap > ROUTE_INCLUDE_ORIGIN_METERS) return null;
+    // Skip long straight spurs from neighborhood center — they cross the street route.
+    if (gap > ROUTE_INCLUDE_ORIGIN_METERS) return null;
     return [
       [start.lat, start.lng] as [number, number],
       [first.lat, first.lng] as [number, number],
     ];
-  }, [routeStart, userLocation, routeStops, routeLine, routeStartedFrom]);
+  }, [routeStart, userLocation, routeStops]);
   const fitPositions = useMemo(() => {
-    let positions: [number, number][] | null = null;
-    if (routePositions && routePositions.length >= 2) positions = routePositions;
-    else if (routeStops && routeStops.length >= 2) {
-      positions = routeStops.map((stop) => [stop.lat, stop.lng] as [number, number]);
-    }
-    if (!routeStart) return positions;
-    const originPos = [routeStart.lat, routeStart.lng] as [number, number];
-    if (!positions || positions.length === 0) return [originPos];
-    const first = { lat: positions[0][0], lng: positions[0][1] };
-    const gap = distanceMeters(routeStart, first);
-    if (gap < 12) return positions;
-    return [originPos, ...positions];
-  }, [routePositions, routeStops, routeStart]);
-  const startFocusPositions = useMemo(() => {
-    if (!routeStart || !routeStops?.[0]) return null;
-    return [
-      [routeStart.lat, routeStart.lng] as [number, number],
-      [routeStops[0].lat, routeStops[0].lng] as [number, number],
-    ];
-  }, [routeStart, routeStops]);
-  const stopCoords = useMemo(
-    () => (routeStops ?? []).map((stop) => ({ lat: stop.lat, lng: stop.lng })),
-    [routeStops],
-  );
-  const travelOrigin = useMemo(
-    () => (routeStart ? { lat: routeStart.lat, lng: routeStart.lng } : null),
-    [routeStart],
-  );
-  const travelledLine = useMemo(() => {
-    if (!routeLine || !routeTravelStarted || routeTravelSweepIndex !== null) return null;
-    if (routeTravelCompletedCount <= 0) return null;
-    const slice = travelLineToStop(
-      routeLine,
-      stopCoords,
-      routeTravelCompletedCount - 1,
-      travelOrigin,
-      routeStartedFrom ?? undefined,
-    );
-    return slice.map((point) => [point.lat, point.lng] as [number, number]);
-  }, [
-    routeLine,
-    routeTravelStarted,
-    routeTravelCompletedCount,
-    routeTravelSweepIndex,
-    stopCoords,
-    travelOrigin,
-    routeStartedFrom,
-  ]);
-  const drawingLine = useMemo(() => {
-    if (!routeLine || routeTravelSweepIndex === null) return null;
-    const slice = travelLineToStop(
-      routeLine,
-      stopCoords,
-      routeTravelSweepIndex,
-      travelOrigin,
-      routeStartedFrom ?? undefined,
-    );
-    const revealed = revealRouteLineSlice(slice, routeTravelLineReveal);
-    return revealed.map((point) => [point.lat, point.lng] as [number, number]);
-  }, [routeLine, routeTravelSweepIndex, routeTravelLineReveal, stopCoords, travelOrigin, routeStartedFrom]);
-  const originIcon = useMemo(
-    () => makeOriginIcon(routeTravelStarted, Boolean(routeStart) && !routeTravelStarted),
-    [routeTravelStarted, routeStart],
-  );
-  const routePending = Boolean(routeStops && routeStops.length > 0 && !routeTravelStarted);
-  const youAreHereIcon = useMemo(
-    () => makeYouAreHereIcon(routeTravelStarted, routePending),
-    [routeTravelStarted, routePending],
-  );
+    if (routePositions && routePositions.length >= 2) return routePositions;
+    if (!routeStops || routeStops.length < 2) return null;
+    return routeStops.map((stop) => [stop.lat, stop.lng] as [number, number]);
+  }, [routePositions, routeStops]);
   const ready = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -889,9 +759,6 @@ export function HouseMap({
         {routeFitTick > 0 && fitPositions ? (
           <FitRoute positions={fitPositions} tick={routeFitTick} />
         ) : null}
-        {routeStartFocusTick > 0 && startFocusPositions ? (
-          <FitRoute positions={startFocusPositions} tick={routeStartFocusTick} />
-        ) : null}
         {panTick > 0 && panTo ? <PanTo lat={panTo.lat} lng={panTo.lng} tick={panTick} /> : null}
         {focus && !originPickActive ? (
           <KeepSelectedVisible
@@ -943,26 +810,7 @@ export function HouseMap({
             position={[originMarker.lat, originMarker.lng]}
             icon={originIcon}
             zIndexOffset={850}
-          >
-            {routeStops && routeStops.length > 0 ? (
-              <Popup>
-                <div dir="rtl" className="route-origin-popup text-right">
-                  <strong>נקודת התחלה</strong>
-                  {routeOriginLabel ? <div>{routeOriginLabel}</div> : null}
-                  <div className="route-origin-popup-hint">
-                    {routeTravelStarted
-                      ? "המסלול פעיל"
-                      : `${routeStops.length} עצירות — לחצו התחלה כדי לצאת לדרך`}
-                  </div>
-                  {!routeTravelStarted && onRouteStart ? (
-                    <button type="button" className="route-origin-popup-start" onClick={onRouteStart}>
-                      התחלה
-                    </button>
-                  ) : null}
-                </div>
-              </Popup>
-            ) : null}
-          </Marker>
+          />
         ) : null}
         {!pickMode && approachPositions ? (
           <>
@@ -1022,34 +870,6 @@ export function HouseMap({
               smoothFactor={0}
               interactive={false}
             />
-            {travelledLine && travelledLine.length >= 2 ? (
-              <Polyline
-                positions={travelledLine}
-                pathOptions={{
-                  color: "#047857",
-                  weight: 6,
-                  opacity: 1,
-                  lineCap: "round",
-                  lineJoin: "round",
-                }}
-                smoothFactor={0}
-                interactive={false}
-              />
-            ) : null}
-            {drawingLine && drawingLine.length >= 2 ? (
-              <Polyline
-                positions={drawingLine}
-                pathOptions={{
-                  color: "#10b981",
-                  weight: 6,
-                  opacity: 1,
-                  lineCap: "round",
-                  lineJoin: "round",
-                }}
-                smoothFactor={0}
-                interactive={false}
-              />
-            ) : null}
           </>
         ) : null}
         {!pickMode &&
@@ -1069,10 +889,6 @@ export function HouseMap({
                 filteredOut={!clusterMatched}
                 routeOrder={cluster.houses.reduce<number | undefined>(
                   (found, house) => found ?? routeOrderById.get(house.id),
-                  undefined,
-                )}
-                routeTravelState={cluster.houses.reduce<RouteStopTravelState | undefined>(
-                  (found, house) => found ?? routeStopTravelState?.(house.id),
                   undefined,
                 )}
               />
@@ -1096,37 +912,13 @@ export function HouseMap({
             <Marker
               position={[userLocation.lat, userLocation.lng]}
               icon={youAreHereIcon}
-              zIndexOffset={routePending ? 9200 : 800}
-              eventHandlers={
-                routePending
-                  ? {
-                      add: (event) => {
-                        window.setTimeout(() => event.target.openPopup(), 120);
-                      },
-                    }
-                  : undefined
-              }
+              zIndexOffset={800}
             >
               <Popup autoPan={false} keepInView={false}>
                 <div dir="rtl" className="text-right">
-                  <strong>{routeStops && routeStops.length > 0 ? "נקודת התחלה" : "אתם כאן"}</strong>
-                  {routeStops && routeStops.length > 0 && routeOriginLabel ? (
-                    <div>{routeOriginLabel}</div>
-                  ) : null}
+                  <strong>אתם כאן</strong>
                   {!inNeighborhood(userLocation.lat, userLocation.lng) ? (
                     <div>מחוץ לגבול המפה של השכונה</div>
-                  ) : null}
-                  {routeStops && routeStops.length > 0 ? (
-                    <div className="route-origin-popup-hint">
-                      {routeTravelStarted
-                        ? "המסלול פעיל"
-                        : `${routeStops.length} עצירות — לחצו התחלה כדי לצאת לדרך`}
-                    </div>
-                  ) : null}
-                  {routeStops && routeStops.length > 0 && !routeTravelStarted && onRouteStart ? (
-                    <button type="button" className="route-origin-popup-start" onClick={onRouteStart}>
-                      התחלה
-                    </button>
                   ) : null}
                 </div>
               </Popup>
