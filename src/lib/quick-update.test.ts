@@ -71,4 +71,19 @@ describe("quick-update", () => {
     assert.ok(preview);
     assert.equal(preview!.kind, "candyOut");
   });
+
+  it("skips push when moving between closed and break", () => {
+    const frozenUntil = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const closed = house({ visit: "closed" });
+    assert.equal(previewQuickUpdatePush(closed, "plenty", "pause"), null);
+    const onBreak = house({ visit: "come", ownerFrozenUntil: frozenUntil });
+    assert.equal(previewQuickUpdatePush(onBreak, "plenty", "closed"), null);
+  });
+
+  it("previews candy-out-closed while house stays closed", () => {
+    const closed = house({ visit: "closed", treatStock: { candy: "plenty" } });
+    const preview = previewQuickUpdatePush(closed, "out", "closed");
+    assert.ok(preview);
+    assert.equal(preview!.kind, "candyOutClosed");
+  });
 });

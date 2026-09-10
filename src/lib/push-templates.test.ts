@@ -5,6 +5,7 @@ import {
   fillPushTemplate,
   filledPushForKind,
   houseMatchesNotifyKind,
+  isHouseOffAir,
   mergePushTemplates,
   ownerOfferKindFromPatch,
   resolveHouseNotifyKind,
@@ -108,6 +109,35 @@ describe("classifyHouseAlert", () => {
     const next = baseHouse({ treatStock: { candy: "out" } });
     assert.equal(classifyHouseAlert(prev, next), "candyOut");
   });
+
+  it("detects candy running out while house stays closed", () => {
+    const prev = baseHouse({ visit: "closed", treatStock: { candy: "plenty" } });
+    const next = baseHouse({ visit: "closed", treatStock: { candy: "out" } });
+    assert.equal(classifyHouseAlert(prev, next), "candyOutClosed");
+  });
+
+  it("skips break push when switching between closed and break", () => {
+    const frozenUntil = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const closed = baseHouse({ visit: "closed" });
+    const onBreak = baseHouse({ visit: "come", ownerFrozenUntil: frozenUntil });
+    assert.equal(classifyHouseAlert(closed, onBreak), null);
+    assert.equal(classifyHouseAlert(onBreak, baseHouse({ visit: "closed", ownerFrozenUntil: null })), null);
+  });
+});
+
+describe("isHouseOffAir", () => {
+  it("treats closed and owner pause as off-air", () => {
+    assert.equal(isHouseOffAir(baseHouse({ visit: "closed" })), true);
+    assert.equal(
+      isHouseOffAir(
+        baseHouse({
+          ownerFrozenUntil: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        }),
+      ),
+      true,
+    );
+    assert.equal(isHouseOffAir(baseHouse()), false);
+  });
 });
 
 describe("stockAlertsBlocked", () => {
@@ -129,8 +159,24 @@ describe("houseMatchesNotifyKind", () => {
 
 describe("ownerOfferKindFromPatch", () => {
   it("offers closed send when visit patch matches", () => {
+    const prev = baseHouse({ visit: "come" });
     const next = baseHouse({ visit: "closed" });
-    assert.equal(ownerOfferKindFromPatch({ visit: "closed" }, next), "closed");
+    assert.equal(ownerOfferKindFromPatch({ visit: "closed" }, next, prev), "closed");
+  });
+
+  it("offers candy-out-closed when stock runs out while house stays closed", () => {
+    const prev = baseHouse({ visit: "closed", treatStock: { candy: "plenty" } });
+    const next = baseHouse({ visit: "closed", treatStock: { candy: "out" } });
+    const patch = { visit: "closed" as const, treatStock: { candy: "out" as const } };
+    assert.equal(ownerOfferKindFromPatch(patch, next, prev), "candyOutClosed");
+    assert.equal(resolveHouseNotifyKind(prev, next, patch), "candyOutClosed");
+  });
+
+  it("skips closed offer when switching from break to closed", () => {
+    const frozenUntil = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const prev = baseHouse({ visit: "come", ownerFrozenUntil: frozenUntil });
+    const next = baseHouse({ visit: "closed", ownerFrozenUntil: null });
+    assert.equal(ownerOfferKindFromPatch({ visit: "closed" }, next, prev), null);
   });
 });
 

@@ -1212,6 +1212,11 @@
   border: 2px solid #fff;
 }
 
+.night-status-dot--lg {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
 .night-status-dot.is-closed {
   background: #e11d48;
 }
@@ -1245,6 +1250,16 @@
   border-radius: 999px;
   background: #fff;
   flex-shrink: 0;
+}
+
+.night-status-dot--lg.is-closed::after {
+  height: 6px;
+}
+
+.night-status-dot--lg.is-break::before,
+.night-status-dot--lg.is-break::after {
+  width: 5px;
+  height: 14px;
 }
 
 .neighborhood-marquee {
