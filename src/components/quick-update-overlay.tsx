@@ -189,8 +189,9 @@ export function QuickUpdateOverlay({
       onClose={onClose}
       title="עדכון מהיר"
       subtitle={house.name}
+      className="w-[min(100%-2rem,26rem)]"
     >
-      <div className="space-y-4">
+      <div className="space-y-5">
         <QuickSelectField
           label="ממתקים"
           value={candyPick}
@@ -201,7 +202,7 @@ export function QuickUpdateOverlay({
             label: option.label,
             disabled: option.id === currentCandy,
             danger: option.tone === "danger",
-            icon: <CandySign tone={option.id} className="size-6" />,
+            icon: <CandySign tone={option.id} className="size-7" />,
           }))}
         />
         <QuickSelectField
@@ -213,20 +214,20 @@ export function QuickUpdateOverlay({
             value: option.id,
             label: option.label,
             disabled: option.id === currentHouse,
-            icon: <span className={cn("night-status-dot size-5 border-[1.5px]", option.dotClass)} />,
+            icon: <span className={cn("night-status-dot size-6 border-2", option.dotClass)} />,
           }))}
         />
 
         {preview ? (
           <div className="space-y-3">
-            <label className="flex items-center gap-2 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20">
+            <label className="flex items-center gap-2.5 rounded-xl bg-[#12081a] px-3 py-3 ring-1 ring-orange-500/20">
               <input
                 type="checkbox"
-                className="size-4 accent-orange-500"
+                className="size-5 accent-orange-500"
                 checked={sendPush}
                 onChange={(event) => setSendPush(event.target.checked)}
               />
-              <span className="text-base text-orange-100">שלחו התראה לשכונה</span>
+              <span className="text-lg text-orange-100">שלחו התראה לשכונה</span>
             </label>
             <PushNotice payload={preview.payload} />
           </div>
@@ -235,7 +236,7 @@ export function QuickUpdateOverlay({
         <Button
           type="button"
           disabled={!dirty || busy}
-          className="h-11 w-full bg-orange-500 text-base text-black hover:bg-orange-400"
+          className="h-12 w-full bg-orange-500 text-lg text-black hover:bg-orange-400"
           onClick={() => void save()}
         >
           {busy ? "שומרים…" : "שמירה"}
@@ -269,33 +270,34 @@ function QuickSelectField<T extends string>({
   const display = picked ?? current;
 
   return (
-    <div className="space-y-1.5">
-      <p className="text-base font-medium text-orange-100">{label}</p>
+    <div className="space-y-2">
+      <p className="text-lg font-medium text-orange-100">{label}</p>
       <Select
         value={value || undefined}
         onValueChange={(next) => onChange(next as T)}
       >
         <SelectTrigger
           className={cn(
-            "h-12 w-full border-orange-500/30 bg-[#12081a] text-base text-orange-50 shadow-none",
-            "data-placeholder:text-violet-300 [&_[data-slot=select-value]]:flex [&_[data-slot=select-value]]:items-center [&_[data-slot=select-value]]:gap-2.5",
+            "h-14 min-h-14 w-full rounded-xl border-orange-500/30 bg-[#12081a] px-3 text-lg text-orange-50 shadow-none",
+            "data-placeholder:text-violet-300 [&_[data-slot=select-value]]:flex [&_[data-slot=select-value]]:items-center [&_[data-slot=select-value]]:gap-3",
           )}
           size="default"
         >
           <SelectValue placeholder="בחרו ערך חדש…">
             {display ? (
-              <span className="inline-flex items-center gap-2.5">
+              <span className="inline-flex items-center gap-3">
                 {display.icon}
                 <span className={cn(picked?.danger && "text-red-300")}>{display.label}</span>
                 {!picked && current ? (
-                  <span className="text-sm text-violet-400">· עכשיו</span>
+                  <span className="text-base text-violet-400">· עכשיו</span>
                 ) : null}
               </span>
             ) : null}
           </SelectValue>
         </SelectTrigger>
         <SelectContent
-          className="z-[2100] max-h-64 border-orange-500/30 bg-[#1d1028] text-orange-50 shadow-xl ring-orange-500/20"
+          positionerClassName="house-quick-select-layer"
+          className="z-[2100] max-h-72 border-orange-500/30 bg-[#1d1028] text-lg text-orange-50 shadow-xl ring-orange-500/20"
           alignItemWithTrigger={true}
         >
           {options.map((option) => (
@@ -304,14 +306,14 @@ function QuickSelectField<T extends string>({
               value={option.value}
               disabled={option.disabled}
               className={cn(
-                "py-2.5 ps-2 focus:bg-orange-500/15 focus:text-orange-50",
+                "py-3.5 ps-2.5 text-lg focus:bg-orange-500/15 focus:text-orange-50",
                 option.danger && !option.disabled && "text-red-300",
               )}
             >
-              <span className="inline-flex items-center gap-2.5">
+              <span className="inline-flex items-center gap-3">
                 {option.icon}
                 <span>{option.label}</span>
-                {option.disabled ? <span className="text-sm text-violet-400">(עכשיו)</span> : null}
+                {option.disabled ? <span className="text-base text-violet-400">(עכשיו)</span> : null}
               </span>
             </SelectItem>
           ))}

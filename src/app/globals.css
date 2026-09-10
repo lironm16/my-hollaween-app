@@ -1976,6 +1976,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   z-index: 2000;
 }
 
+.house-quick-select-layer {
+  z-index: 2100 !important;
+}
+
 .house-edit-modal-body {
   -webkit-overflow-scrolling: touch;
 }
