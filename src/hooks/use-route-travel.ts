@@ -81,7 +81,7 @@ export function useRouteTravel(route: WalkingRoute | null, routeMode: boolean) {
     [started, stopIds, sweepIndex, completedCount, currentIndex],
   );
 
-  const advanceAfterVisit = useCallback(
+  const advanceStop = useCallback(
     (houseId: string) => {
       if (!route || !started || animating.current) return false;
       const idx = stopIds.indexOf(houseId);
@@ -127,6 +127,9 @@ export function useRouteTravel(route: WalkingRoute | null, routeMode: boolean) {
     [route, started, stopIds, completedCount, totalStops],
   );
 
+  const advanceAfterVisit = advanceStop;
+  const skipStop = advanceStop;
+
   useEffect(() => () => clearTimers(), []);
 
   return {
@@ -142,6 +145,7 @@ export function useRouteTravel(route: WalkingRoute | null, routeMode: boolean) {
     panTick,
     startTravel,
     advanceAfterVisit,
+    skipStop,
     dismissComplete,
     stopState,
     originStarted: started,

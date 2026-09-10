@@ -3,6 +3,7 @@
 import { MapPin, Navigation, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HouseCard } from "@/components/house-card";
+import { RouteSkipBar } from "@/components/route-skip-bar";
 import { formatDistance } from "@/lib/geo";
 import type { RouteStopTravelState } from "@/hooks/use-route-travel";
 import type { WalkingRoute } from "@/lib/route";
@@ -51,6 +52,8 @@ export function RouteList({
   travelSweepIndex = null,
   travelLineReveal = 1,
   stopTravelState,
+  onSkipStop,
+  travelAnimating = false,
   onSelectHouse,
   selectedId,
   catalogSource,
@@ -74,6 +77,8 @@ export function RouteList({
   travelSweepIndex?: number | null;
   travelLineReveal?: number;
   stopTravelState?: (houseId: string) => RouteStopTravelState;
+  onSkipStop?: (id: string) => void;
+  travelAnimating?: boolean;
   onSelectHouse: (id: string, index: number) => void;
   selectedId?: string | null;
   catalogSource?: string | null;
@@ -180,6 +185,13 @@ export function RouteList({
                   state === "sweep" && "is-route-sweep",
                 )}
               >
+                {state === "current" && onSkipStop ? (
+                  <RouteSkipBar
+                    compact
+                    disabled={travelAnimating}
+                    onSkip={() => onSkipStop(house.id)}
+                  />
+                ) : null}
                 <HouseCard
                   house={house}
                   catalogSource={catalogSource}

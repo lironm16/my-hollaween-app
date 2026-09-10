@@ -2278,6 +2278,33 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   gap: 0.35rem;
 }
 
+.route-skip-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 0.55rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.75rem;
+  background: rgba(76, 29, 149, 0.28);
+  border: 1px solid rgba(167, 139, 250, 0.22);
+}
+
+.route-skip-bar.is-compact {
+  margin: 0.45rem 0.55rem 0;
+}
+
+.route-skip-bar-text {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: #ddd6fe;
+}
+
+.route-skip-bar-btn {
+  flex-shrink: 0;
+}
+
 .house-pin.is-origin.is-route-started {
   background: #10b981 !important;
   box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.45), 0 2px 8px rgba(0, 0, 0, 0.45);
