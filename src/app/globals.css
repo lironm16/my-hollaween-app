@@ -1313,6 +1313,17 @@
   }
 }
 
+.you-are-here-popup .leaflet-popup-close-button {
+  display: none !important;
+}
+
+.you-are-here-popup-body {
+  padding: 0.15rem 0.25rem;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
 .you-are-here-wrap {
   background: transparent !important;
   border: none !important;
