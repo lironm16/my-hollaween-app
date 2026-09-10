@@ -136,6 +136,7 @@ export function MapLegend() {
                 onClick={() => setOpen(false)}
               >
                 <OverlayCloseBar
+                  compact
                   onClose={() => setOpen(false)}
                   label="סגירת המקרא"
                   className="px-3 pb-1"

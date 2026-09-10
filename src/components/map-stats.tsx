@@ -253,7 +253,7 @@ export function MapStats(props: {
                 className="relative w-[min(24rem,calc(100vw-1.5rem))] rounded-3xl bg-[#12081a] p-3 text-right shadow-[0_16px_48px_rgba(0,0,0,0.55)] ring-1 ring-orange-500/40"
                 onClick={(event) => event.stopPropagation()}
               >
-                <OverlayCloseBar onClose={() => setOpen(false)} label="סגירת הסיכום" className="pb-1" />
+                <OverlayCloseBar compact onClose={() => setOpen(false)} label="סגירת הסיכום" className="pb-1" />
                 <h2
                   id={titleId}
                   className="mb-2 flex items-center gap-1.5 text-xl font-bold text-orange-400"

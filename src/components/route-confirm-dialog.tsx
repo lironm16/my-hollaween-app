@@ -100,7 +100,7 @@ export function RouteConfirmDialog({
         className="gap-0 border-orange-500/30 bg-[#160b1f] p-0 text-orange-50 sm:max-w-md"
         dir="rtl"
       >
-        <OverlayCloseBar onClose={close} className="border-b border-orange-500/15 pb-2" />
+        <OverlayCloseBar compact onClose={close} className="border-b border-orange-500/15 pb-2" />
         <DialogHeader className="gap-2 px-6 pt-4 text-right">
           <DialogTitle className="text-orange-200">{title}</DialogTitle>
           <DialogDescription className="text-violet-200">{description}</DialogDescription>
