@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useMergedHouses } from "@/hooks/use-merged-houses";
 import Link from "next/link";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
-import { CodesCopy } from "@/components/codes-copy";
 import { HousePicker } from "@/components/house-picker";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,14 +18,26 @@ import { houseMatchesSet } from "@/lib/house-set";
 import { saveOwnedHouse, removeOwnedHouse, forgetPublishedHouse, notifyCatalogChanged } from "@/lib/offline-db";
 import type { House, PublicHouse } from "@/lib/types";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
-import { useAppNow } from "@/hooks/use-app-clock";
-import { quickUpdateAvailable } from "@/lib/quick-update";
-import { Plus, Zap } from "lucide-react";
+import { Plus } from "lucide-react";
 import { PersistNote } from "@/components/persist-note";
 import { readApiJson } from "@/lib/api-json";
 import { cn } from "@/lib/utils";
 
 export default function EditPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-dvh items-center justify-center text-orange-200">טוענים…</div>
+      }
+    >
+      <EditPageContent />
+    </Suspense>
+  );
+}
+
+function EditPageContent() {
+  const searchParams = useSearchParams();
+  const focusId = searchParams.get("focus");
   const owned = useOwnedHouses();
   const { catalog, loading: catalogLoading, refresh } = useCatalog();
   const { admin, ready: adminReady } = useAdminSession();
@@ -38,8 +50,8 @@ export default function EditPage() {
   const [busy, setBusy] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
   const editFlow = useHouseEditFlow();
-  const now = useAppNow();
   const pickedIdRef = useRef<string | null>(null);
+  const autoOpenedIdRef = useRef<string | null>(null);
   pickedIdRef.current = picked?.id ?? null;
 
   useEffect(() => {
@@ -76,6 +88,15 @@ export default function EditPage() {
   const ownedMatch = picked ? owned.find((item) => item.id === picked.id) : undefined;
   const adminEditCode = picked && admin ? adminHouses.find((item) => item.id === picked.id)?.editCode : undefined;
   const needsCode = Boolean(picked) && !admin && !ownedMatch && !house;
+
+  useEffect(() => {
+    if (!focusId || picked) return;
+    const target = houses.find((item) => item.id === focusId);
+    if (target) {
+      setPicked(target);
+      setPrefilled(true);
+    }
+  }, [focusId, houses, picked]);
 
   useEffect(() => {
     if (prefilled || owned.length === 0 || picked) return;
@@ -124,6 +145,7 @@ export default function EditPage() {
 
   useEffect(() => {
     setHouse(null);
+    autoOpenedIdRef.current = null;
     if (!picked) {
       setEditCode("");
       return;
@@ -155,6 +177,22 @@ export default function EditPage() {
     if (admin && adminEditCode) setEditCode(adminEditCode);
   }, [admin, adminEditCode]);
 
+  function openHouseEdit(target: PublicHouse) {
+    editFlow.openEdit(target, {
+      editCode: admin ? adminEditCode : editCode,
+      admin,
+      allowDelete: true,
+    });
+  }
+
+  useEffect(() => {
+    if (!house || editFlow.flow) return;
+    if (autoOpenedIdRef.current === house.id) return;
+    autoOpenedIdRef.current = house.id;
+    openHouseEdit(house);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [house?.id, editFlow.flow]);
+
   return (
     <div className="relative flex min-h-dvh flex-col">
       <AppHeader />
@@ -178,6 +216,7 @@ export default function EditPage() {
               onSelect={(next) => {
                 setPicked(next);
                 setHouse(null);
+                editFlow.close();
               }}
               ownedIds={owned.map((item) => item.id)}
               loading={catalogLoading || (admin && !adminReady)}
@@ -233,47 +272,19 @@ export default function EditPage() {
           ) : null}
         </section>
 
-        {house ? (
-          <div className="space-y-4">
-            <CodesCopy editCode={admin ? adminEditCode : editCode} />
-            <div className="flex flex-wrap gap-2">
-              {quickUpdateAvailable(house, now) ? (
-                <Button
-                  type="button"
-                  className="bg-orange-500 text-black hover:bg-orange-400"
-                  onClick={() =>
-                    editFlow.openQuick(house, {
-                      editCode: admin ? adminEditCode : editCode,
-                      admin,
-                    })
-                  }
-                >
-                  <Zap className="size-4" />
-                  עדכון מהיר
-                </Button>
-              ) : null}
-              <Button
-                type="button"
-                variant="outline"
-                className="border-orange-400/40 text-orange-100"
-                onClick={() =>
-                  editFlow.openEdit(house, {
-                    editCode: admin ? adminEditCode : editCode,
-                    admin,
-                    allowDelete: true,
-                    forceFull: true,
-                  })
-                }
-              >
-                עריכה מלאה
-              </Button>
-            </div>
-          </div>
-        ) : (
+        {house && !editFlow.flow ? (
+          <Button
+            type="button"
+            className="w-full bg-orange-500 text-black hover:bg-orange-400"
+            onClick={() => openHouseEdit(house)}
+          >
+            עריכת הבית
+          </Button>
+        ) : !house ? (
           <p className="rounded-xl bg-[#1d1028]/60 px-3 py-4 text-center text-base text-violet-300 ring-1 ring-orange-500/15">
             בחרו בית מהרשימה כדי לערוך, או הוסיפו בית חדש.
           </p>
-        )}
+        ) : null}
       </main>
       <HouseEditFlowPanels
         flow={editFlow.flow}
@@ -303,6 +314,7 @@ export default function EditPage() {
           void refresh(true);
           setHouse(null);
           setPicked(null);
+          autoOpenedIdRef.current = null;
           editFlow.close();
         }}
       />
