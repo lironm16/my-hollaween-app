@@ -13,8 +13,8 @@ const OSRM_ENDPOINTS = [
   "https://router.project-osrm.org/route/v1/foot",
 ];
 const UA = "bashchona-halloween/1.0 (neighborhood walking map)";
-const OSRM_TIMEOUT_MS = 4000;
-const LEG_POOL_SIZE = 4;
+const OSRM_TIMEOUT_MS = 3000;
+const LEG_POOL_SIZE = 8;
 const PARK_FRACTION_MAX = 0.08;
 /** Accept a hill cut when going around would add more than this. */
 const HILL_DETOUR_MAX = 1.2;
@@ -235,63 +235,37 @@ async function runPool<T>(size: number, tasks: Array<() => Promise<T>>) {
   return results;
 }
 
+function goingEastAcrossHill(from: LatLng, to: LatLng) {
+  return to.lng > from.lng + 0.0015 && distanceMeters(from, to) >= 300;
+}
+
+function eastAroundHillSkirt(from: LatLng, to: LatLng): LatLng[] {
+  if (from.lng >= to.lng) return [from, KRINITZI_EAST, KRINITZI_MID, HARMARGANIT_MID, to];
+  return [from, KRINITZI_WEST, KRINITZI_MID, HARMARGANIT_MID, to];
+}
+
+function skirtCandidates(from: LatLng, to: LatLng): LatLng[][] {
+  const skirts: LatLng[][] = [];
+  if (goingEastAcrossHill(from, to)) skirts.push(eastAroundHillSkirt(from, to));
+  skirts.push(rokachSkirt(from, to));
+  if (wantSouthSkirt(from, to)) skirts.push(southSkirt(from, to));
+  if (wantNorthSkirt(from, to)) skirts.push(northSkirt(from, to));
+  return skirts;
+}
+
+function acceptableStreetLine(line: LatLng[] | null) {
+  if (!line || line.length < 2) return false;
+  return farmFraction(line) <= PARK_FRACTION_MAX && parkFraction(line) <= PARK_FRACTION_MAX;
+}
+
 async function fetchWalkLeg(from: LatLng, to: LatLng): Promise<LatLng[] | null> {
   const direct = await fetchOsrm([from, to]);
-  if (!direct || direct.length < 2) return null;
-  const directFarm = farmFraction(direct);
-  const directPark = parkFraction(direct);
-  const directMeters = pathMeters(direct);
-  if (directFarm <= PARK_FRACTION_MAX && directPark <= PARK_FRACTION_MAX) return direct;
-
-  const viaLines = viaAroundPark(from, to, direct)
-    .slice(0, 5)
-    .map((via) => fetchOsrm([from, via, to]));
-  const extra: Promise<LatLng[] | null>[] = [fetchOsrm(rokachSkirt(from, to))];
-  if (wantSouthSkirt(from, to)) extra.push(fetchOsrm(southSkirt(from, to)));
-  if (wantNorthSkirt(from, to)) extra.push(fetchOsrm(northSkirt(from, to)));
-  const candidates = await Promise.all([...extra, ...viaLines]);
-  const ranked = candidates
-    .filter((line): line is LatLng[] => Boolean(line && line.length >= 2))
-    .map((line) => ({
-      line,
-      farm: farmFraction(line),
-      frac: parkFraction(line),
-      meters: pathMeters(line),
-    }))
-    .filter((item) => item.farm <= PARK_FRACTION_MAX)
-    .sort((a, b) => a.meters - b.meters || a.frac - b.frac);
-
-  const around = ranked.find((item) => item.frac <= PARK_FRACTION_MAX);
-  if (directFarm > PARK_FRACTION_MAX) {
-    if (around) return around.line;
-    return ranked[0]?.line ?? direct;
+  if (acceptableStreetLine(direct)) return direct;
+  for (const skirt of skirtCandidates(from, to)) {
+    const line = await fetchOsrm(skirt);
+    if (acceptableStreetLine(line)) return line;
   }
-
-  if (around && around.meters <= directMeters * HILL_DETOUR_MAX) return around.line;
-  return direct;
-}
-
-async function fetchWalkLegDistance(from: LatLng, to: LatLng): Promise<number | null> {
-  const line = await fetchWalkLeg(from, to);
-  if (line && line.length >= 2) return pathMeters(line);
-  const route = await fetchOsrmRoute([from, to], false);
-  return route?.distance ?? null;
-}
-
-/** Street walking meters for each hop between points (lightweight OSRM). */
-export async function fetchWalkingLegDistances(points: LatLng[]): Promise<number[] | null> {
-  const unique = dedupeNearby(points);
-  if (unique.length < 2) return null;
-  try {
-    const tasks = unique
-      .slice(0, -1)
-      .map((from, index) => () => fetchWalkLegDistance(from, unique[index + 1]!));
-    const legs = await runPool(LEG_POOL_SIZE, tasks);
-    if (legs.some((leg) => leg == null)) return null;
-    return legs as number[];
-  } catch {
-    return null;
-  }
+  return direct && direct.length >= 2 ? direct : null;
 }
 
 /** Walking line that visits points in order, staying on streets around parks. */

@@ -136,6 +136,18 @@ describe("trimWalkingRouteToVisible", () => {
   });
 });
 
+describe("summarizeRoute walking estimates", () => {
+  it("uses street-style distance for חרוזים west to המרגנית east", () => {
+    const origin = { lat: 32.0919, lng: 34.8112 };
+    const a = stub("a", 32.0919, 34.8031, "חרוזים 10, חרוזים");
+    const b = stub("b", 32.093459, 34.809422, "המרגנית 28, שיכון ותיקים");
+    const route = buildWalkingRouteOrdered([a, b], origin);
+    assert.ok(route);
+    assert.ok(route!.stops[1]!.fromPreviousMeters > 700);
+    assert.ok(route!.stops[1]!.fromPreviousMeters > 620);
+  });
+});
+
 describe("streetLegMeters", () => {
   it("measures hops along a street line instead of straight-line distance", () => {
     const c10 = { lat: 32.0919, lng: 34.8031 };
