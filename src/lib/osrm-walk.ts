@@ -8,8 +8,13 @@ import type { LatLng } from "@/lib/route";
  * If the street loop is much longer (the old 4→5 U on אבא הלל), keep the short
  * named walk along שדרת הנרקיסים / רוקח.
  */
-const OSRM_FOOT = "https://routing.openstreetmap.de/routed-foot/route/v1/foot";
+const OSRM_ENDPOINTS = [
+  "https://routing.openstreetmap.de/routed-foot/route/v1/foot",
+  "https://router.project-osrm.org/route/v1/foot",
+];
 const UA = "bashchona-halloween/1.0 (neighborhood walking map)";
+const OSRM_TIMEOUT_MS = 4000;
+const LEG_POOL_SIZE = 4;
 const PARK_FRACTION_MAX = 0.08;
 /** Accept a hill cut when going around would add more than this. */
 const HILL_DETOUR_MAX = 1.2;
@@ -176,19 +181,58 @@ function wantNorthSkirt(from: LatLng, to: LatLng) {
   return from.lat > 32.0918 || to.lat > 32.0918;
 }
 
-async function fetchOsrm(points: LatLng[]): Promise<LatLng[] | null> {
+type OsrmRoute = {
+  distance: number;
+  line: LatLng[] | null;
+};
+
+async function fetchOsrmRoute(points: LatLng[], withGeometry: boolean): Promise<OsrmRoute | null> {
   if (points.length < 2) return null;
-  const url = `${OSRM_FOOT}/${encodePoints(points)}?overview=full&geometries=geojson&steps=false`;
-  const res = await fetch(url, {
-    headers: { Accept: "application/json", "User-Agent": UA },
-  });
-  if (!res.ok) return null;
-  const data = (await res.json()) as {
-    routes?: { geometry?: { coordinates?: [number, number][] } }[];
-  };
-  const coords = data.routes?.[0]?.geometry?.coordinates;
-  if (!coords?.length) return null;
-  return coords.map(([lng, lat]) => ({ lat, lng }));
+  const query = withGeometry
+    ? "overview=full&geometries=geojson&steps=false"
+    : "overview=false&steps=false";
+  for (const base of OSRM_ENDPOINTS) {
+    try {
+      const url = `${base}/${encodePoints(points)}?${query}`;
+      const res = await fetch(url, {
+        headers: { Accept: "application/json", "User-Agent": UA },
+        signal: AbortSignal.timeout(OSRM_TIMEOUT_MS),
+      });
+      if (!res.ok) continue;
+      const data = (await res.json()) as {
+        routes?: { distance?: number; geometry?: { coordinates?: [number, number][] } }[];
+      };
+      const route = data.routes?.[0];
+      if (!route?.distance) continue;
+      const coords = route.geometry?.coordinates;
+      const line =
+        withGeometry && coords?.length
+          ? coords.map(([lng, lat]) => ({ lat, lng }))
+          : null;
+      return { distance: route.distance, line };
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+async function fetchOsrm(points: LatLng[]): Promise<LatLng[] | null> {
+  const route = await fetchOsrmRoute(points, true);
+  return route?.line ?? null;
+}
+
+async function runPool<T>(size: number, tasks: Array<() => Promise<T>>) {
+  const results: T[] = new Array(tasks.length);
+  let next = 0;
+  async function worker() {
+    while (next < tasks.length) {
+      const index = next++;
+      results[index] = await tasks[index]!();
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(size, tasks.length) }, () => worker()));
+  return results;
 }
 
 async function fetchWalkLeg(from: LatLng, to: LatLng): Promise<LatLng[] | null> {
@@ -199,7 +243,9 @@ async function fetchWalkLeg(from: LatLng, to: LatLng): Promise<LatLng[] | null> 
   const directMeters = pathMeters(direct);
   if (directFarm <= PARK_FRACTION_MAX && directPark <= PARK_FRACTION_MAX) return direct;
 
-  const viaLines = viaAroundPark(from, to, direct).map((via) => fetchOsrm([from, via, to]));
+  const viaLines = viaAroundPark(from, to, direct)
+    .slice(0, 5)
+    .map((via) => fetchOsrm([from, via, to]));
   const extra: Promise<LatLng[] | null>[] = [fetchOsrm(rokachSkirt(from, to))];
   if (wantSouthSkirt(from, to)) extra.push(fetchOsrm(southSkirt(from, to)));
   if (wantNorthSkirt(from, to)) extra.push(fetchOsrm(northSkirt(from, to)));
@@ -225,6 +271,29 @@ async function fetchWalkLeg(from: LatLng, to: LatLng): Promise<LatLng[] | null> 
   return direct;
 }
 
+async function fetchWalkLegDistance(from: LatLng, to: LatLng): Promise<number | null> {
+  const line = await fetchWalkLeg(from, to);
+  if (line && line.length >= 2) return pathMeters(line);
+  const route = await fetchOsrmRoute([from, to], false);
+  return route?.distance ?? null;
+}
+
+/** Street walking meters for each hop between points (lightweight OSRM). */
+export async function fetchWalkingLegDistances(points: LatLng[]): Promise<number[] | null> {
+  const unique = dedupeNearby(points);
+  if (unique.length < 2) return null;
+  try {
+    const tasks = unique
+      .slice(0, -1)
+      .map((from, index) => () => fetchWalkLegDistance(from, unique[index + 1]!));
+    const legs = await runPool(LEG_POOL_SIZE, tasks);
+    if (legs.some((leg) => leg == null)) return null;
+    return legs as number[];
+  } catch {
+    return null;
+  }
+}
+
 /** Walking line that visits points in order, staying on streets around parks. */
 export async function fetchWalkingGeometry(points: LatLng[]): Promise<LatLng[] | null> {
   const unique = dedupeNearby(points);
@@ -237,9 +306,10 @@ export async function fetchWalkingGeometry(points: LatLng[]): Promise<LatLng[] |
       if (farm <= PARK_FRACTION_MAX && park <= PARK_FRACTION_MAX) return directAll;
     }
 
-    const legs = await Promise.all(
-      unique.slice(0, -1).map((from, index) => fetchWalkLeg(from, unique[index + 1]!)),
-    );
+    const legTasks = unique
+      .slice(0, -1)
+      .map((from, index) => () => fetchWalkLeg(from, unique[index + 1]!));
+    const legs = await runPool(LEG_POOL_SIZE, legTasks);
     if (legs.some((leg) => !leg || leg.length < 2)) return null;
     const line: LatLng[] = [];
     for (const part of legs) {
