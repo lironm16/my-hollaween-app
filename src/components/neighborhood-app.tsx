@@ -179,7 +179,6 @@ export function NeighborhoodApp({
     gps,
     geoRefresh: geo.refresh,
     setAskedLocation,
-    setRoutePrompt,
     onBeforeEnter: resetForNavigation,
   });
 

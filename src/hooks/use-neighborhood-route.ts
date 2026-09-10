@@ -1,22 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
 import { buildWalkingRoute, type WalkingRoute } from "@/lib/route";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
-
-type RoutePrompt = {
-  kind: "enter-route" | "filter-change";
-  title: string;
-  description: string;
-  confirmLabel: string;
-  removedHouses?: string[];
-  addedHouses?: string[];
-  onConfirm: (includeNewHouses: boolean) => void;
-};
 
 export function useNeighborhoodRoute({
   visible,
@@ -29,7 +18,6 @@ export function useNeighborhoodRoute({
   gps,
   geoRefresh,
   setAskedLocation,
-  setRoutePrompt,
   onBeforeEnter,
 }: {
   visible: PublicHouse[];
@@ -47,7 +35,6 @@ export function useNeighborhoodRoute({
   gps: { lat: number; lng: number } | null;
   geoRefresh: () => void;
   setAskedLocation: (value: boolean) => void;
-  setRoutePrompt: (prompt: RoutePrompt | null) => void;
   onBeforeEnter: () => void;
 }) {
   const [routeMode, setRouteMode] = useState(false);
@@ -56,13 +43,15 @@ export function useNeighborhoodRoute({
   const pendingRouteGps = useRef(false);
 
   const filterRoute = useMemo(() => {
-    const routeHouses = visible.filter((house) => !visitedIds.includes(house.id));
+    const routeHouses = filters.unvisitedOnly
+      ? visible.filter((house) => !visitedIds.includes(house.id))
+      : visible;
     return buildWalkingRoute(routeHouses, origin, {
       accessible: accessibleOnly,
       startedFrom: origin.kind,
       originLabel: origin.label,
     });
-  }, [visible, visitedIds, accessibleOnly, origin]);
+  }, [visible, visitedIds, accessibleOnly, origin, filters.unvisitedOnly]);
 
   const pinCurrentRoute = useCallback(
     (fit = false) => {
@@ -118,24 +107,7 @@ export function useNeighborhoodRoute({
       pendingRouteGps.current = false;
       pinCurrentRoute(true);
     };
-    if (shouldSkipRoutePrompt("enter-route")) {
-      proceed();
-      return;
-    }
-    const visitedExcluded = visible.filter((house) => visitedIds.includes(house.id));
-    if (visitedExcluded.length === 0) {
-      proceed();
-      return;
-    }
-    setRoutePrompt({
-      kind: "enter-route",
-      title: "להתחיל מסלול?",
-      description:
-        "בתים שכבר סימנתם כביקור לא ייכללו במסלול. «ביטול» לא יפתח מסלול.",
-      confirmLabel: "התחלת מסלול",
-      removedHouses: visitedExcluded.map((house) => house.name),
-      onConfirm: () => proceed(),
-    });
+    proceed();
   }
 
   return {
@@ -150,5 +122,3 @@ export function useNeighborhoodRoute({
     pendingRouteGps,
   };
 }
-
-export type { RoutePrompt };

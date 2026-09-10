@@ -87,7 +87,11 @@ export function useFilterDraft({
     const routeHouses: PublicHouse[] = [];
     const seen = new Set<string>();
     for (const house of nextVisible) {
-      if (keepIds.has(house.id) || !visitedIds.includes(house.id)) {
+      if (
+        keepIds.has(house.id) ||
+        !nextFilters.unvisitedOnly ||
+        !visitedIds.includes(house.id)
+      ) {
         routeHouses.push(house);
         seen.add(house.id);
       }
@@ -127,7 +131,7 @@ export function useFilterDraft({
       .filter((id) => !nextVisible.some((house) => house.id === id))
       .map((id) => houses.find((house) => house.id === id)?.name ?? id);
     const addedHouses = nextVisible
-      .filter((house) => !currentIds.has(house.id) && !visitedIds.includes(house.id))
+      .filter((house) => !currentIds.has(house.id))
       .map((house) => house.name);
     return { removedHouses, addedHouses };
   }
