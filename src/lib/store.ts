@@ -563,16 +563,33 @@ async function loadDb(fresh = false): Promise<DbFile> {
   });
 }
 
+async function prepareDbFromSources(): Promise<DbFile> {
+  const db = normalizeDb(cloneDb(await readFileDb()));
+  const keptPush = db.pushSettings;
+  const global = getGlobalDb();
+  if (global && stamp(global) > stamp(db)) {
+    Object.assign(db, normalizeDb(cloneDb(global)));
+  }
+  foldPushSettings(db, asPushCandidate(keptPush), mem, global);
+  foldPushSubscriptions(db, mem, global);
+  return db;
+}
+
+/** Best-effort house db write — never blocks push registration on blob hiccups. */
+async function softPersistDb(db: DbFile) {
+  setMem(db);
+  setGlobalDb(db);
+  try {
+    if (blobEnabled()) await writeBlobDb(db);
+    else await writeFileDb(db);
+  } catch {
+    /* memory + dedicated push blob still hold subscriptions */
+  }
+}
+
 async function runSyncedWrite<T>(fn: (db: DbFile) => T | Promise<T>): Promise<T> {
   return withLock(async () => {
-    const db = normalizeDb(cloneDb(await readFileDb()));
-    const keptPush = db.pushSettings;
-    const global = getGlobalDb();
-    if (global && stamp(global) > stamp(db)) {
-      Object.assign(db, normalizeDb(cloneDb(global)));
-    }
-    foldPushSettings(db, asPushCandidate(keptPush), mem, global);
-    foldPushSubscriptions(db, mem, global);
+    const db = await prepareDbFromSources();
     const result = await fn(db);
     await persistDb(db);
     return result;
@@ -1017,16 +1034,20 @@ function snapshotHouse(house: House): House {
   };
 }
 
-/** Read-only — does not require a disk write (avoids failing on cold Vercel boots). */
 export async function getVapidPublicKey() {
-  const db = await loadDb();
-  return ensureVapid(db).publicKey;
+  return withLock(async () => {
+    const db = await prepareDbFromSources();
+    const key = ensureVapid(db).publicKey;
+    await softPersistDb(db);
+    return key;
+  });
 }
 
 export async function savePushSubscription(sub: Omit<PushSubscriptionRecord, "createdAt">) {
-  const count = await runSyncedWrite((db) => {
+  return withLock(async () => {
+    const db = await prepareDbFromSources();
     ensureVapid(db);
-    const list = db.pushSubscriptions ?? [];
+    const list = [...(db.pushSubscriptions ?? [])];
     const idx = list.findIndex((item) => item.endpoint === sub.endpoint);
     const existing = idx >= 0 ? list[idx] : undefined;
     const next: PushSubscriptionRecord = {
@@ -1046,11 +1067,12 @@ export async function savePushSubscription(sub: Omit<PushSubscriptionRecord, "cr
     }
     db.pushSubscriptions = list;
     db.updatedAt = new Date().toISOString();
+    setMem(db);
+    setGlobalDb(db);
+    await writePushSubsBlob(list);
+    await softPersistDb(db);
     return list.length;
   });
-  const list = mem?.pushSubscriptions ?? [];
-  await writePushSubsBlob(list);
-  return count;
 }
 
 export async function isPushEndpointRegistered(endpoint: string) {

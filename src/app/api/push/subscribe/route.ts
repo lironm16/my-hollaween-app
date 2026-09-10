@@ -19,7 +19,13 @@ export async function POST(request: Request) {
     const registered = await isPushEndpointRegistered(parsed.endpoint);
     return NextResponse.json({ ok: true, count, registered });
   } catch {
-    return NextResponse.json({ error: "לא הצלחנו לשמור את ההתראות." }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "השרת לא הצליח לשמור ההרשמה. זה לא קשור להרשאת הדפדפן — נסו שוב בעוד רגע.",
+        code: "SAVE_FAILED",
+      },
+      { status: 500 },
+    );
   }
 }
 
