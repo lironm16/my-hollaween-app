@@ -29,9 +29,10 @@ export function useHouseEditFlow() {
       house: PublicHouse,
       options?: { editCode?: string; admin?: boolean; allowDelete?: boolean; forceFull?: boolean },
     ) => {
+      const canQuick = !options?.forceFull && quickUpdateAvailable(house, now);
       setFlow({
         house,
-        step: options?.forceFull ? "full" : "choice",
+        step: canQuick ? "choice" : "full",
         editCode: options?.editCode,
         admin: options?.admin,
         allowDelete: options?.allowDelete,
