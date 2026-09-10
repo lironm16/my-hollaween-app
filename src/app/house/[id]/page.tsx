@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { HouseDetails } from "@/components/house-details";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
-import { NightDesk } from "@/components/night-desk";
+import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { buttonVariants } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
@@ -27,7 +27,7 @@ export default function HousePage() {
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
   const { admin } = useAdminSession();
-  const [editing, setEditing] = useState(false);
+  const editFlow = useHouseEditFlow();
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
 
   useEffect(() => {
@@ -59,30 +59,6 @@ export default function HousePage() {
   const editCode = admin ? adminHouse?.editCode : ownedItem?.editCode;
   const missing = !loading && Boolean(catalog) && !house;
 
-  const extra = useMemo(() => {
-    if (!house || !editing || !canEdit) return undefined;
-    return (
-      <NightDesk
-        house={house}
-        admin={admin}
-        editCode={editCode}
-        onCancel={() => setEditing(false)}
-        onUpdated={(next) => {
-          if (!admin && editCode) {
-            saveOwnedHouse({
-              id: next.id,
-              name: next.name,
-              editCode,
-              preview: next,
-            });
-          }
-          notifyCatalogChanged();
-          void refresh(true);
-        }}
-      />
-    );
-  }, [admin, canEdit, editCode, editing, house, refresh]);
-
   return (
     <div className="relative flex min-h-dvh flex-col">
       <AppHeader />
@@ -108,9 +84,16 @@ export default function HousePage() {
                 visits.toggle(house.id);
               }}
               canEdit={canEdit}
-              editing={editing}
-              onToggleEdit={() => setEditing((v) => !v)}
-              extra={extra}
+              editing={false}
+              onToggleEdit={
+                canEdit
+                  ? () =>
+                      editFlow.openEdit(house, {
+                        editCode,
+                        admin,
+                      })
+                  : undefined
+              }
             />
           </div>
         ) : loading ? (
@@ -129,6 +112,28 @@ export default function HousePage() {
           </div>
         )}
       </main>
+      {house ? (
+        <HouseEditFlowPanels
+          flow={editFlow.flow}
+          setFlow={editFlow.setFlow}
+          onClose={editFlow.close}
+          onUpdated={(next) => {
+            editFlow.setFlow((current) =>
+              current?.house.id === next.id ? { ...current, house: next } : current,
+            );
+            if (!admin && editCode) {
+              saveOwnedHouse({
+                id: next.id,
+                name: next.name,
+                editCode,
+                preview: next,
+              });
+            }
+            notifyCatalogChanged();
+            void refresh(true);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

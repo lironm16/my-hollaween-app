@@ -1966,6 +1966,62 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   color: #e9d5ff;
 }
 
+body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overlay"] {
+  z-index: 1999;
+  background: rgba(8, 4, 12, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+[data-slot="dialog-content"].house-edit-modal {
+  z-index: 2000;
+}
+
+.house-edit-modal-body {
+  -webkit-overflow-scrolling: touch;
+}
+
+.house-quick-select {
+  background-image: none;
+}
+
+.house-edit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  background: #12081a;
+}
+
+.house-edit-overlay-bar {
+  display: flex;
+  justify-content: flex-start;
+  padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 0.75rem 0.5rem;
+}
+
+.house-edit-overlay-close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: #2a1638;
+  color: #fde68a;
+}
+
+.house-edit-overlay-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.night-status-dot.is-open {
+  background: #34d399;
+}
+
 [data-slot="sheet-content"][data-side="bottom"] {
   bottom: var(--vv-bottom-inset, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);

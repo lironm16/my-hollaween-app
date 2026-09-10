@@ -7,7 +7,13 @@ import {
   markedCandy,
 } from "@/lib/house-state";
 import { isOnBreak } from "@/lib/hours";
-import type { House } from "@/lib/types";
+import type { House, NightPatch } from "@/lib/types";
+
+/** Fields from an owner save that can trigger a neighborhood push offer. */
+export type OwnerNotifyPatch = Pick<
+  NightPatch,
+  "visit" | "treatStock" | "treats" | "soldOut" | "ownerFrozenUntil"
+>;
 
 export const PUSH_KINDS = [
   "onBreak",
@@ -268,15 +274,7 @@ export function houseMatchesNotifyKind(house: House, kind: PushKind): boolean {
 
 /** Re-saving the same visit/stock still offers a send (owner clicked the same chip again). */
 export function ownerOfferKindFromPatch(
-  patch:
-    | {
-        visit?: House["visit"];
-        treatStock?: House["treatStock"];
-        treats?: House["treats"];
-        soldOut?: boolean;
-        ownerFrozenUntil?: string | null;
-      }
-    | undefined,
+  patch: OwnerNotifyPatch | undefined,
   next: House,
 ): PushKind | null {
   if (!patch) return null;

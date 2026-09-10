@@ -278,9 +278,6 @@
   .static {
     position: static;
   }
-  .sticky {
-    position: sticky;
-  }
   .inset-0 {
     inset: 0px;
   }
@@ -301,6 +298,9 @@
   }
   .start-2 {
     inset-inline-start: calc(var(--spacing) * 2);
+  }
+  .start-3 {
+    inset-inline-start: calc(var(--spacing) * 3);
   }
   .start-5 {
     inset-inline-start: calc(var(--spacing) * 5);
@@ -656,6 +656,9 @@
   .max-h-\[min\(88dvh\,40rem\)\] {
     max-height: min(88dvh, 40rem);
   }
+  .max-h-\[min\(90dvh\,720px\)\] {
+    max-height: min(90dvh, 720px);
+  }
   .max-h-full {
     max-height: 100%;
   }
@@ -727,6 +730,9 @@
   }
   .w-\[min\(38rem\,calc\(100vw-1\.5rem\)\)\] {
     width: min(38rem, calc(100vw - 1.5rem));
+  }
+  .w-\[min\(100\%-2rem\,24rem\)\] {
+    width: min(100% - 2rem, 24rem);
   }
   .w-fit {
     width: fit-content;
@@ -834,6 +840,9 @@
   .list-disc {
     list-style-type: disc;
   }
+  .appearance-none {
+    appearance: none;
+  }
   .auto-rows-min {
     grid-auto-rows: min-content;
   }
@@ -842,6 +851,9 @@
   }
   .grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .grid-rows-\[auto_minmax\(0\,1fr\)\] {
+    grid-template-rows: auto minmax(0,1fr);
   }
   .flex-col {
     flex-direction: column;
@@ -1573,6 +1585,9 @@
   .ps-5 {
     padding-inline-start: calc(var(--spacing) * 5);
   }
+  .ps-11 {
+    padding-inline-start: calc(var(--spacing) * 11);
+  }
   .pe-2 {
     padding-inline-end: calc(var(--spacing) * 2);
   }
@@ -1581,6 +1596,9 @@
   }
   .pe-8 {
     padding-inline-end: calc(var(--spacing) * 8);
+  }
+  .pe-10 {
+    padding-inline-end: calc(var(--spacing) * 10);
   }
   .pt-1 {
     padding-top: var(--spacing);
@@ -2483,11 +2501,18 @@
       border-color: color-mix(in oklab, var(--destructive) 40%, transparent);
     }
   }
+  .focus-visible\:border-orange-400:focus-visible {
+    border-color: var(--color-orange-400);
+  }
   .focus-visible\:border-ring:focus-visible {
     border-color: var(--ring);
   }
   .focus-visible\:ring-0:focus-visible {
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+  .focus-visible\:ring-2:focus-visible {
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .focus-visible\:ring-3:focus-visible {
@@ -2502,6 +2527,12 @@
     --tw-ring-color: var(--destructive);
     @supports (color: color-mix(in lab, red, red)) {
       --tw-ring-color: color-mix(in oklab, var(--destructive) 20%, transparent);
+    }
+  }
+  .focus-visible\:ring-orange-400\/30:focus-visible {
+    --tw-ring-color: color-mix(in srgb, oklch(75% 0.183 55.934) 30%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--color-orange-400) 30%, transparent);
     }
   }
   .focus-visible\:ring-ring\/50:focus-visible {
@@ -5580,6 +5611,53 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   margin-inline-start: auto;
   background: #1a1024;
   color: #e9d5ff;
+}
+body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overlay"] {
+  z-index: 1999;
+  background: rgba(8, 4, 12, 0.72);
+  backdrop-filter: blur(4px);
+}
+[data-slot="dialog-content"].house-edit-modal {
+  z-index: 2000;
+}
+.house-edit-modal-body {
+  -webkit-overflow-scrolling: touch;
+}
+.house-quick-select {
+  background-image: none;
+}
+.house-edit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  background: #12081a;
+}
+.house-edit-overlay-bar {
+  display: flex;
+  justify-content: flex-start;
+  padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 0.75rem 0.5rem;
+}
+.house-edit-overlay-close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: #2a1638;
+  color: #fde68a;
+}
+.house-edit-overlay-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.night-status-dot.is-open {
+  background: #34d399;
 }
 [data-slot="sheet-content"][data-side="bottom"] {
   bottom: var(--vv-bottom-inset, 0px);
