@@ -62,14 +62,18 @@ async function saveBuckets(buckets: Buckets) {
   memoryBuckets = buckets;
   memoryLoadedAt = Date.now();
   if (!blobEnabled()) return;
-  await putBlob(RATE_BLOB_PATH, JSON.stringify(buckets), {
-    access: "private",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json",
-    token: process.env.BLOB_READ_WRITE_TOKEN,
-    cacheControlMaxAge: 0,
-  });
+  try {
+    await putBlob(RATE_BLOB_PATH, JSON.stringify(buckets), {
+      access: "private",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: "application/json",
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+      cacheControlMaxAge: 0,
+    });
+  } catch {
+    // Keep in-memory buckets; blob is best-effort for rate limits.
+  }
 }
 
 /** Shared rate limiter — uses Vercel Blob when configured, otherwise per-instance memory. */

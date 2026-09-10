@@ -28,7 +28,8 @@ export default function AdminPage() {
         body: JSON.stringify({ password }),
       });
       if (!res.ok) {
-        toast.error("סיסמה שגויה");
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        toast.error(data?.error || (res.status === 401 ? "סיסמה שגויה" : "לא הצלחנו להיכנס. נסו שוב."));
         return;
       }
       setPassword("");
