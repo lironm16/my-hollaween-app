@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { HouseCard } from "@/components/house-card";
 import { HouseDetailOverlay } from "@/components/house-detail-overlay";
+import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
@@ -12,17 +13,24 @@ import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useDistanceOrigin } from "@/hooks/use-distance-origin";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { distanceMeters } from "@/lib/geo";
+import {
+  forgetPublishedHouse,
+  notifyCatalogChanged,
+  removeOwnedHouse,
+  saveOwnedHouse,
+} from "@/lib/offline-db";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { PublicHouse } from "@/lib/types";
 
 export default function MyHousesPage() {
   const owned = useOwnedHouses();
-  const { catalog } = useCatalog();
+  const { catalog, refresh } = useCatalog();
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
   const geo = useUserLocation();
   const { resolved: origin } = useDistanceOrigin(geo.location);
+  const editFlow = useHouseEditFlow();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const houses = useMemo(
@@ -48,6 +56,31 @@ export default function MyHousesPage() {
   const selectedIndex = selected
     ? houses.findIndex((item) => item.house.id === selectedId) + 1
     : undefined;
+
+  function requestEdit(house: PublicHouse) {
+    setSelectedId(null);
+    editFlow.openEdit(house, {
+      editCode: owned.find((item) => item.id === house.id)?.editCode,
+      allowDelete: true,
+    });
+  }
+
+  function handleUpdated(next: PublicHouse) {
+    editFlow.setFlow((current) =>
+      current?.house.id === next.id ? { ...current, house: next } : current,
+    );
+    const code = owned.find((item) => item.id === next.id)?.editCode;
+    if (code) {
+      saveOwnedHouse({
+        id: next.id,
+        name: next.name,
+        editCode: code,
+        preview: next,
+      });
+    }
+    notifyCatalogChanged();
+    void refresh(true);
+  }
 
   if (owned.length === 0) {
     return (
@@ -85,14 +118,12 @@ export default function MyHousesPage() {
               onToggleVisited={() => visits.toggle(house.id)}
               canEdit
               onOpen={() => setSelectedId(house.id)}
-              onToggleEdit={() => {
-                window.location.href = `/edit?focus=${encodeURIComponent(house.id)}`;
-              }}
+              onToggleEdit={() => requestEdit(house)}
             />
           ))}
         </div>
       </main>
-      {selected ? (
+      {selected && !editFlow.flow ? (
         <HouseDetailOverlay
           house={selected}
           index={selectedIndex}
@@ -103,11 +134,23 @@ export default function MyHousesPage() {
           onToggleVisited={(id) => visits.toggle(id)}
           catalogSource={catalog ? "network" : null}
           canEditHouse={() => true}
-          onToggleEdit={() => {
-            window.location.href = `/edit?focus=${encodeURIComponent(selected.id)}`;
-          }}
+          onToggleEdit={() => requestEdit(selected)}
         />
       ) : null}
+      <HouseEditFlowPanels
+        flow={editFlow.flow}
+        setFlow={editFlow.setFlow}
+        onClose={editFlow.close}
+        onUpdated={handleUpdated}
+        onDeleted={(id) => {
+          forgetPublishedHouse(id);
+          removeOwnedHouse(id);
+          editFlow.close();
+          setSelectedId(null);
+          notifyCatalogChanged();
+          void refresh(true);
+        }}
+      />
     </div>
   );
 }
