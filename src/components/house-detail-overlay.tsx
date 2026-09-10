@@ -3,6 +3,7 @@
 import { useEffect, useId, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { HouseActionBar } from "@/components/house-action-bar";
+import { RouteSkipBar } from "@/components/route-skip-bar";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { HouseDetails } from "@/components/house-details";
 import { CodesCopy } from "@/components/codes-copy";
@@ -31,6 +32,9 @@ export function HouseDetailOverlay({
   clusterHouses,
   onSelectClusterHouse,
   index,
+  routeCurrentStop = false,
+  onSkipRouteStop,
+  routeTravelAnimating = false,
 }: {
   house: PublicHouse;
   onClose: () => void;
@@ -52,6 +56,9 @@ export function HouseDetailOverlay({
   clusterHouses?: PublicHouse[];
   onSelectClusterHouse?: (id: string) => void;
   index?: number;
+  routeCurrentStop?: boolean;
+  onSkipRouteStop?: () => void;
+  routeTravelAnimating?: boolean;
 }) {
   const labelId = useId();
   const canEditSelected = Boolean(canEditHouse?.(house.id) && onToggleEdit);
@@ -114,6 +121,9 @@ export function HouseDetailOverlay({
         <span id={labelId} className="sr-only">
           {houseHeadline(house)}
         </span>
+        {routeCurrentStop && onSkipRouteStop ? (
+          <RouteSkipBar disabled={routeTravelAnimating} onSkip={onSkipRouteStop} />
+        ) : null}
         {pendingNote}
         {editing ? (
           <>
