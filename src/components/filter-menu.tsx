@@ -33,13 +33,13 @@ export function FilterTrigger({
       aria-label={activeCount > 0 ? `סינון (${activeCount})` : "סינון"}
       onClick={onClick}
       className={cn(
-        "relative inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
+        "relative inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
         activeCount > 0
           ? "bg-orange-500 text-black"
           : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
       )}
     >
-      <Filter className="size-4" />
+      <Filter className="size-5" />
       {activeCount > 0 ? <ToolbarBadge>{activeCount}</ToolbarBadge> : null}
     </button>
   );

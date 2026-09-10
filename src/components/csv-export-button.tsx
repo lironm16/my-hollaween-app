@@ -45,9 +45,9 @@ export function CsvExportButton({
         aria-label="הורדה"
         title="הורדה"
         onClick={onExport}
-        className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25"
+        className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25"
       >
-        <Download className="size-4" />
+        <Download className="size-5" />
       </button>
     );
   }

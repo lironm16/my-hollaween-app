@@ -28,11 +28,11 @@ function ViewToggle({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "inline-flex h-9 w-9 items-center justify-center rounded-lg",
+        "inline-flex h-10 w-10 items-center justify-center rounded-lg",
         active ? "bg-orange-500 text-black" : "text-violet-200",
       )}
     >
-      {icon}
+      <span className="[&_svg]:size-5">{icon}</span>
     </button>
   );
 }
@@ -79,18 +79,18 @@ export function NeighborhoodToolbar({
       className="app-toolbar relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2"
       style={{ flexShrink: 0 }}
     >
-      <div className="flex w-full min-w-0 items-center gap-1.5 overflow-hidden">
-        <div className="flex min-w-0 shrink rounded-xl bg-[#261536] p-0.5 ring-1 ring-orange-400/40">
+      <div className="flex w-full min-w-0 items-center justify-between gap-2">
+        <div className="flex shrink-0 rounded-xl bg-[#261536] p-1 ring-1 ring-orange-400/40">
           <ViewToggle
             active={view === "map"}
             onClick={() => onViewChange("map")}
-            icon={<MapPinned className="size-4" />}
+            icon={<MapPinned />}
             label="מפה"
           />
           <ViewToggle
             active={view === "list"}
             onClick={onListView}
-            icon={<List className="size-4" />}
+            icon={<List />}
             label="רשימה"
           />
         </div>
@@ -102,13 +102,13 @@ export function NeighborhoodToolbar({
           aria-pressed={routeMode}
           onClick={onToggleRoute}
           className={cn(
-            "inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
+            "inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
             routeMode
               ? "bg-orange-500 text-black"
               : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
           )}
         >
-          <Route className="size-4" />
+          <Route className="size-5" />
         </button>
         <CsvExportButton
           houses={houses}
