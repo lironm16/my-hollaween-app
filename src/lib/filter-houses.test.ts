@@ -81,6 +81,13 @@ describe("filterHouses", () => {
     assert.deepEqual(result.map((item) => item.id), ["b"]);
   });
 
+  it("shows no houses when all candy options are unchecked", () => {
+    const houses = [house("a"), house("b")];
+    const context = { houseSet: "stubs" as const, likedIds: [], visitedIds: [], now };
+    const result = filterHouses(houses, baseFilters({ candyFilters: [] }), context);
+    assert.deepEqual(result.map((item) => item.id), []);
+  });
+
   it("filters to houses with candy stock when candy filter is restricted", () => {
     const houses = [
       house("a", { treatStock: { candy: "out" } }),

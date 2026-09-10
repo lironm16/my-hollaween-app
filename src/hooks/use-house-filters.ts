@@ -76,8 +76,9 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
   const scares = pickKnown(raw.scareFilters, SCARE_LEVELS);
   const sensitivities = pickKnown(raw.sensitivityFilters, SENSITIVITY_OPTIONS);
   const candies = pickKnown(raw.candyFilters, CANDY_TONE_IDS);
-  const candyFilters =
-    candies.length > 0
+  const candyFilters = Array.isArray(raw.candyFilters) && raw.candyFilters.length === 0
+    ? []
+    : candies.length > 0
       ? candies
       : legacy.candyOnly
         ? (["plenty", "low"] as CandyTone[])
@@ -118,7 +119,11 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
     visitedOnly: Boolean(raw.visitedOnly),
     includeUndecorated,
     neighborhoodFilters: Array.isArray(raw.neighborhoodFilters) ? neighborhoods : [...NEIGHBORHOODS],
-    scareFilters: scares.length > 0 ? scares : [...SCARE_LEVELS],
+    scareFilters: Array.isArray(raw.scareFilters) && raw.scareFilters.length === 0
+      ? []
+      : scares.length > 0
+        ? scares
+        : [...SCARE_LEVELS],
     candyFilters,
     sensitivityFilters: sensitivities,
   };
