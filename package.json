@@ -16,7 +16,8 @@
     "catalog": "node scripts/build-catalog.mjs",
     "stub-images": "node scripts/generate-stub-images.mjs",
     "stress": "node scripts/stress-test.mjs",
-    "sync:github": "node scripts/sync-github.mjs"
+    "sync:github": "node scripts/sync-github.mjs",
+    "deploy:vercel": "node scripts/trigger-vercel.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
