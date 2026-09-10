@@ -553,6 +553,23 @@ export function NeighborhoodApp({
                     : null
                 }
               />
+              {routeMode &&
+              activeRoute &&
+              !originPick.originPickActive &&
+              view === "map" &&
+              !routeTravel.started &&
+              activeRoute.stops.length > 0 ? (
+                <div className="route-map-start-bar" dir="rtl">
+                  <Button
+                    type="button"
+                    size="lg"
+                    className="w-full bg-emerald-500 text-lg font-bold text-black hover:bg-emerald-400"
+                    onClick={routeTravel.startTravel}
+                  >
+                    התחלה — יוצאים לדרך
+                  </Button>
+                </div>
+              ) : null}
               {routeMode && activeRoute && !originPick.originPickActive && view === "map" ? (
                 <RouteStartCard
                   label={
