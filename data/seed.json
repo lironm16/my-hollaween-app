@@ -36,7 +36,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "https://litter.catbox.moe/l2f7b1.jpg",
+      "photoUrl": "/images/stubs/pumpkin-porch.jpg",
       "editCode": "184701",
       "createdAt": "2026-09-01T10:00:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -78,7 +78,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/purple-lights.jpg",
       "editCode": "184802",
       "createdAt": "2026-09-01T10:02:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -120,7 +120,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/skeleton-yard.jpg",
       "editCode": "184903",
       "createdAt": "2026-09-03T13:00:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -160,7 +160,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/spider-door.jpg",
       "editCode": "931016",
       "createdAt": "2026-09-05T05:50:00.000Z",
       "updatedAt": "2026-09-05T05:50:00.000Z"
@@ -200,7 +200,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/graveyard-lawn.jpg",
       "editCode": "931117",
       "createdAt": "2026-09-05T05:50:00.000Z",
       "updatedAt": "2026-09-05T05:50:00.000Z"
@@ -244,7 +244,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/witch-cauldron.jpg",
       "editCode": "931218",
       "createdAt": "2026-09-05T05:50:00.000Z",
       "updatedAt": "2026-09-05T05:50:00.000Z"
@@ -284,7 +284,7 @@
       "soldOut": true,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/candy-bowl.jpg",
       "editCode": "931319",
       "createdAt": "2026-09-05T05:50:00.000Z",
       "updatedAt": "2026-09-05T05:50:00.000Z"
@@ -324,7 +324,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/green-monster.jpg",
       "editCode": "931420",
       "createdAt": "2026-09-05T16:30:00.000Z",
       "updatedAt": "2026-09-05T16:30:00.000Z"
@@ -364,7 +364,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "/images/stub-house.png",
+      "photoUrl": "/images/stubs/ghost-trees.jpg",
       "editCode": "931521",
       "createdAt": "2026-09-05T16:30:00.000Z",
       "updatedAt": "2026-09-05T16:30:00.000Z"
@@ -404,7 +404,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/lantern-path.jpg",
       "editCode": "931723",
       "createdAt": "2026-09-05T16:30:00.000Z",
       "updatedAt": "2026-09-05T16:30:00.000Z"
@@ -444,7 +444,7 @@
       "soldOut": true,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/black-cat.jpg",
       "editCode": "229102",
       "createdAt": "2026-09-01T10:05:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -486,7 +486,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/bats-moon.jpg",
       "editCode": "330403",
       "createdAt": "2026-09-01T10:10:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -526,7 +526,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/pumpkin-porch.jpg",
       "editCode": "441804",
       "createdAt": "2026-09-01T10:15:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -566,7 +566,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/purple-lights.jpg",
       "editCode": "552005",
       "createdAt": "2026-09-01T10:20:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -606,7 +606,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/skeleton-yard.jpg",
       "editCode": "552106",
       "createdAt": "2026-09-03T13:01:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -646,7 +646,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/spider-door.jpg",
       "editCode": "912410",
       "createdAt": "2026-09-02T07:40:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -692,7 +692,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/graveyard-lawn.jpg",
       "editCode": "847911",
       "createdAt": "2026-09-03T12:03:18.573Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -732,7 +732,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/witch-cauldron.jpg",
       "editCode": "920112",
       "createdAt": "2026-09-03T13:02:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -774,7 +774,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/candy-bowl.jpg",
       "editCode": "920213",
       "createdAt": "2026-09-03T13:03:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -810,7 +810,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/green-monster.jpg",
       "editCode": "663706",
       "createdAt": "2026-09-01T10:25:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -854,7 +854,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/ghost-trees.jpg",
       "editCode": "774207",
       "createdAt": "2026-09-01T10:30:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -896,7 +896,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/lantern-path.jpg",
       "editCode": "885908",
       "createdAt": "2026-09-01T10:35:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -936,7 +936,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/black-cat.jpg",
       "editCode": "901109",
       "createdAt": "2026-09-02T07:10:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -976,7 +976,7 @@
       "soldOut": false,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/bats-moon.jpg",
       "editCode": "920314",
       "createdAt": "2026-09-03T13:04:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
@@ -1016,7 +1016,7 @@
       "soldOut": true,
       "adminFrozen": false,
       "ownerFrozenUntil": null,
-      "photoUrl": "",
+      "photoUrl": "/images/stubs/pumpkin-porch.jpg",
       "editCode": "920415",
       "createdAt": "2026-09-03T13:05:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z"
