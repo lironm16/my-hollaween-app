@@ -1,21 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <rect width="512" height="512" fill="#12081a"/>
   <g transform="translate(46.08000000000001 46.08000000000001) scale(0.82)">
-    <ellipse cx="256" cy="290" rx="200" ry="185" fill="#f97316"/>
-    <ellipse cx="256" cy="290" rx="200" ry="185" fill="url(#shade)"/>
-    <path d="M156 180 Q256 120 356 180 Q340 130 256 95 Q172 130 156 180" fill="#7c2d12"/>
-    <path d="M196 95 Q256 55 316 95 L306 118 Q256 88 206 118 Z" fill="#5c1f0c"/>
-    <path d="M120 290 Q256 470 392 290" fill="none" stroke="#c2410c" stroke-width="10" opacity="0.35"/>
-    <path d="M170 210 L210 250 L190 175 Z" fill="#fde047"/>
-    <path d="M302 210 L342 250 L322 175 Z" fill="#fde047"/>
-    <path d="M236 268 L256 308 L276 268 Z" fill="#fde047"/>
-    <path d="M188 330 Q256 390 324 330 Q300 360 256 368 Q212 360 188 330 Z" fill="#fde047"/>
-    <ellipse cx="256" cy="300" rx="175" ry="160" fill="none" stroke="#ea580c" stroke-width="6" opacity="0.25"/>
-  </g>
   <defs>
     <radialGradient id="shade" cx="40%" cy="35%" r="65%">
       <stop offset="0%" stop-color="#fb923c"/>
       <stop offset="100%" stop-color="#c2410c"/>
     </radialGradient>
   </defs>
+  <ellipse cx="256" cy="290" rx="200" ry="185" fill="#f97316"/>
+  <ellipse cx="256" cy="290" rx="200" ry="185" fill="url(#shade)"/>
+  <path d="M156 180 Q256 120 356 180 Q340 130 256 95 Q172 130 156 180" fill="#7c2d12"/>
+  <path d="M196 95 Q256 55 316 95 L306 118 Q256 88 206 118 Z" fill="#5c1f0c"/>
+  <path d="M120 290 Q256 470 392 290" fill="none" stroke="#c2410c" stroke-width="10" opacity="0.35"/>
+  <path d="M170 210 L210 250 L190 175 Z" fill="#fde047"/>
+  <path d="M302 210 L342 250 L322 175 Z" fill="#fde047"/>
+  <path d="M236 268 L256 308 L276 268 Z" fill="#fde047"/>
+  <path d="M188 330 Q256 390 324 330 Q300 360 256 368 Q212 360 188 330 Z" fill="#fde047"/>
+  <ellipse cx="256" cy="300" rx="175" ry="160" fill="none" stroke="#ea580c" stroke-width="6" opacity="0.25"/>
+</g>
 </svg>

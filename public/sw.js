@@ -1,4 +1,4 @@
-const CACHE = "hw-shell-v82";
+const CACHE = "hw-shell-v83";
 const TILE_CACHE = "hw-tiles-v7";
 const PRECACHE = [
   "/offline.html",
@@ -9,6 +9,11 @@ const PRECACHE = [
   "/icon-512.png",
   "/icon-192-maskable.png",
   "/icon-512-maskable.png",
+  "/icon-ios-192.png",
+  "/icon-ios-512.png",
+  "/apple-touch-icon.png",
+  "/apple-touch-icon-167.png",
+  "/apple-touch-icon-152.png",
   "/icons/brand-mark.png",
   "/icons/pin-candy.png",
   "/icons/pin-scare-mild.png",
