@@ -2044,6 +2044,22 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   padding: 0.5rem 0.75rem 0.25rem;
 }
 
+.hw-overlay-close-bar--titled {
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hw-overlay-close-bar-title {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.hw-overlay-close-bar-spacer {
+  width: 44px;
+  flex-shrink: 0;
+}
+
 .hw-overlay-close,
 .house-edit-overlay-close {
   display: grid;
