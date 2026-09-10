@@ -1656,6 +1656,27 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   font-size: 1rem;
 }
 
+.house-detail-overlay-top .house-action-bar {
+  width: 100%;
+  min-width: 0;
+  justify-content: space-between;
+  gap: 0;
+  flex-wrap: nowrap;
+}
+
+.house-detail-overlay-top .house-action-btn {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  max-width: 56px;
+  height: 48px;
+}
+
+.house-detail-overlay-top .house-action-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
 .map-house-sheet-chrome,
 .map-house-sheet-handle-hit {
   touch-action: none;
