@@ -149,26 +149,31 @@ export function HouseTags({
   const signSize = large ? "size-10" : undefined;
   const showCandy =
     (!closedInsteadOfCandy && !pausedInsteadOfCandy) || candy !== "none";
+  const showSaved = savedCount !== undefined && Math.max(0, Math.floor(savedCount) || 0) > 0;
+  const showVisited = visitedCount !== undefined && Math.max(0, Math.floor(visitedCount) || 0) > 0;
+  const showTrafficRow = showSaved || showVisited;
 
   return (
-    <div className={cn("flex flex-wrap gap-1.5 pb-0.5 ps-0.5", large && "gap-2")}>
-      {closedInsteadOfCandy ? <ClosedSign className={signSize} /> : null}
-      {pausedInsteadOfCandy ? <PauseSign className={signSize} /> : null}
-      {showCandy ? <CandySign tone={candy} className={signSize} /> : null}
-      <ScareSign level={undecorated ? "none" : scare} className={signSize} />
-      {house.accessible ? (
-        <span title="נגיש" aria-label="נגיש">
-          <StrollerSign className={signSize} />
-        </span>
-      ) : null}
-      {gluten ? <SensitivitySign kind="glutenFree" out={glutenOut} className={signSize} /> : null}
-      {offersNutsFree(withTreats) ? <SensitivitySign kind="nutsFree" className={signSize} /> : null}
-      {offersSesameFree(withTreats) ? <SensitivitySign kind="sesameFree" className={signSize} /> : null}
-      {savedCount !== undefined ? (
-        <TrafficCountSign kind="saved" count={savedCount} large={large} />
-      ) : null}
-      {visitedCount !== undefined ? (
-        <TrafficCountSign kind="visited" count={visitedCount} large={large} />
+    <div className={cn("space-y-1.5", large && "space-y-2")}>
+      <div className={cn("flex flex-wrap gap-1.5 pb-0.5 ps-0.5", large && "gap-2")}>
+        {closedInsteadOfCandy ? <ClosedSign className={signSize} /> : null}
+        {pausedInsteadOfCandy ? <PauseSign className={signSize} /> : null}
+        {showCandy ? <CandySign tone={candy} className={signSize} /> : null}
+        <ScareSign level={undecorated ? "none" : scare} className={signSize} />
+        {house.accessible ? (
+          <span title="נגיש" aria-label="נגיש">
+            <StrollerSign className={signSize} />
+          </span>
+        ) : null}
+        {gluten ? <SensitivitySign kind="glutenFree" out={glutenOut} className={signSize} /> : null}
+        {offersNutsFree(withTreats) ? <SensitivitySign kind="nutsFree" className={signSize} /> : null}
+        {offersSesameFree(withTreats) ? <SensitivitySign kind="sesameFree" className={signSize} /> : null}
+      </div>
+      {showTrafficRow ? (
+        <div className={cn("flex flex-wrap gap-1.5 ps-0.5", large && "gap-2")}>
+          {showSaved ? <TrafficCountSign kind="saved" count={savedCount!} large={large} /> : null}
+          {showVisited ? <TrafficCountSign kind="visited" count={visitedCount!} large={large} /> : null}
+        </div>
       ) : null}
     </div>
   );

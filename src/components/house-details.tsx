@@ -226,12 +226,12 @@ export function HouseDetails({
           )
         : null}
       <HoursStatusBanner house={house} />
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
+      <div className="space-y-2">
+        <div className="flex min-w-0 items-center gap-2">
           {indexBadge}
           <p
             className={cn(
-              "min-w-0 font-display text-xl text-orange-300 break-words",
+              "min-w-0 flex-1 font-display text-xl text-orange-300 break-words",
             )}
           >
             {liked && !compact ? (
