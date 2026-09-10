@@ -228,7 +228,7 @@ export function filledPushForKind(
   if (!template.enabled) return null;
   const filled = fillPushTemplate(template, house);
   return {
-    title: filled.title.trim() || "SpookyHouzz",
+    title: filled.title.trim() || "HallowHood",
     body: filled.body.trim(),
     url: housePushUrl(house),
   };

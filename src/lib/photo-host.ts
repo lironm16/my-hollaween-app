@@ -2,7 +2,7 @@ import { put as putBlob } from "@vercel/blob";
 
 const LITTERBOX = "https://litterbox.catbox.moe/resources/internals/api.php";
 const CATBOX = "https://catbox.moe/user/api.php";
-const UA = "SpookyHouzz/1.0 (neighborhood candy map)";
+const UA = "HallowHood/1.0 (neighborhood candy map)";
 
 function asBlob(buf: Buffer) {
   const bytes = new Uint8Array(buf);

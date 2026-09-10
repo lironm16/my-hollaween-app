@@ -1,4 +1,4 @@
-const CACHE = "hw-shell-v66";
+const CACHE = "hw-shell-v67";
 const TILE_CACHE = "hw-tiles-v7";
 const PRECACHE = [
   "/offline.html",
@@ -89,7 +89,7 @@ self.addEventListener("fetch", (event) => {
 });
 
 self.addEventListener("push", (event) => {
-  let data = { title: "SpookyHouzz", body: "", url: "/" };
+  let data = { title: "HallowHood", body: "", url: "/" };
   try {
     if (event.data) data = { ...data, ...event.data.json() };
   } catch (_) {
@@ -100,7 +100,7 @@ self.addEventListener("push", (event) => {
       /* ignore */
     }
   }
-  const title = data.title || "SpookyHouzz";
+  const title = data.title || "HallowHood";
   event.waitUntil(
     self.registration.showNotification(title, {
       body: data.body || "",
