@@ -2,7 +2,8 @@
 
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Info, X } from "lucide-react";
+import { Info } from "lucide-react";
+import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -134,22 +135,14 @@ export function MapLegend() {
                 className="map-legend-panel relative flex max-h-[min(88dvh,40rem)] w-[min(38rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl bg-[#160b20] text-right shadow-[0_16px_48px_rgba(0,0,0,0.55)] ring-1 ring-orange-500/30"
                 onClick={() => setOpen(false)}
               >
-                <div className="flex shrink-0 items-center justify-between gap-2 px-3 pt-2 pb-1">
-                  <h2 id={titleId} className="text-base font-semibold text-orange-100">
-                    מקרא
-                  </h2>
-                  <button
-                    type="button"
-                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-violet-200 hover:bg-orange-500/15 hover:text-orange-100"
-                    aria-label="סגירת המקרא"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setOpen(false);
-                    }}
-                  >
-                    <X className="size-5" />
-                  </button>
-                </div>
+                <OverlayCloseBar
+                  onClose={() => setOpen(false)}
+                  label="סגירת המקרא"
+                  className="px-3 pb-1"
+                />
+                <h2 id={titleId} className="shrink-0 px-3 pb-1 text-base font-semibold text-orange-100">
+                  מקרא
+                </h2>
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-3">
                   <div className="flex flex-col gap-3">
                     {GROUPS.map((group) => (

@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { OverlayCloseBar } from "@/components/overlay-close-button";
 import {
   setSkipRoutePrompt,
   type RoutePromptKind,
@@ -96,20 +97,21 @@ export function RouteConfirmDialog({
     <Dialog open={open} onOpenChange={(next) => !next && close()}>
       <DialogContent
         showCloseButton={false}
-        className="gap-5 border-orange-500/30 bg-[#160b1f] px-6 py-6 text-orange-50 sm:max-w-md"
+        className="gap-0 border-orange-500/30 bg-[#160b1f] p-0 text-orange-50 sm:max-w-md"
         dir="rtl"
       >
-        <DialogHeader className="gap-2 text-right">
+        <OverlayCloseBar onClose={close} className="border-b border-orange-500/15 pb-2" />
+        <DialogHeader className="gap-2 px-6 pt-4 text-right">
           <DialogTitle className="text-orange-200">{title}</DialogTitle>
           <DialogDescription className="text-violet-200">{description}</DialogDescription>
         </DialogHeader>
         {(removedHouses?.length ?? 0) > 0 || hasAdds ? (
-          <div className="space-y-3">
+          <div className="space-y-3 px-6">
             <HouseListSection title="יוסרו מהמסלול" names={removedHouses ?? []} tone="remove" />
             <HouseListSection title="יתווספו למסלול" names={addedHouses ?? []} tone="add" />
           </div>
         ) : null}
-        <div className="space-y-2 px-0.5">
+        <div className="space-y-2 px-6">
           {hasAdds ? (
             <label className="flex items-center gap-2 text-base text-violet-200">
               <input
@@ -131,8 +133,8 @@ export function RouteConfirmDialog({
             לא להציג שוב
           </label>
         </div>
-        <DialogFooter className="mx-0 mb-0 mt-2 border-0 bg-transparent p-0">
-          <div className="flex w-full flex-col-reverse gap-3 px-0.5 pb-0.5 sm:flex-row-reverse sm:justify-stretch">
+        <DialogFooter className="mx-0 mb-0 mt-2 border-0 bg-transparent p-0 px-6 pb-6">
+          <div className="flex w-full flex-col-reverse gap-3 sm:flex-row-reverse sm:justify-stretch">
             <Button
               type="button"
               className="min-h-11 w-full bg-orange-500 px-5 text-black hover:bg-orange-400 sm:w-auto"

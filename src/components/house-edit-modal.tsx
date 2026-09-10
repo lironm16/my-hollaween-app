@@ -1,13 +1,13 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { cn } from "@/lib/utils";
 
 /** Centered house-owner modal above the map sheet and other UI. */
@@ -36,21 +36,10 @@ export function HouseEditModal({
           className,
         )}
       >
-        <DialogHeader className="shrink-0 border-b border-orange-500/20 px-4 py-3 text-center">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1 text-center">
-              <DialogTitle className="font-display text-xl text-orange-200">{title}</DialogTitle>
-              {subtitle ? <p className="mt-0.5 truncate text-base text-violet-200">{subtitle}</p> : null}
-            </div>
-            <button
-              type="button"
-              className="house-edit-overlay-close shrink-0"
-              aria-label="סגירה"
-              onClick={onClose}
-            >
-              <X className="size-5" />
-            </button>
-          </div>
+        <OverlayCloseBar onClose={onClose} className="border-b border-orange-500/20 pb-2" />
+        <DialogHeader className="shrink-0 px-4 pb-3 pt-1 text-center">
+          <DialogTitle className="font-display text-xl text-orange-200">{title}</DialogTitle>
+          {subtitle ? <p className="mt-0.5 truncate text-base text-violet-200">{subtitle}</p> : null}
         </DialogHeader>
         <div className="house-edit-modal-body min-h-0 overflow-y-auto overscroll-contain px-4 py-4">
           {children}

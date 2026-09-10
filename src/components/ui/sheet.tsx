@@ -4,7 +4,6 @@ import * as React from "react"
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
 
 import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
@@ -63,12 +62,9 @@ function SheetContent({
           <SheetPrimitive.Close
             data-slot="sheet-close"
             nativeButton
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "icon-sm" }),
-              "absolute top-3 end-3",
-            )}
+            className="hw-overlay-close absolute top-[calc(0.75rem+env(safe-area-inset-top,0px))] start-3"
           >
-            <XIcon />
+            <XIcon className="size-5" />
             <span className="sr-only">סגירה</span>
           </SheetPrimitive.Close>
         )}

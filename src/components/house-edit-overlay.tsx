@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { NightDesk } from "@/components/night-desk";
 import type { PublicHouse } from "@/lib/types";
 
@@ -23,16 +23,7 @@ export function HouseEditOverlay({
 }) {
   return (
     <div className="house-edit-overlay" dir="rtl" role="dialog" aria-modal="true" aria-label="עריכת בית">
-      <div className="house-edit-overlay-bar">
-        <button
-          type="button"
-          className="house-edit-overlay-close"
-          aria-label="סגירה"
-          onClick={onClose}
-        >
-          <X className="size-5" />
-        </button>
-      </div>
+      <OverlayCloseBar onClose={onClose} />
       <div className="house-edit-overlay-body">
         <div className="mx-auto w-full max-w-lg space-y-4 px-4 pb-8">
           <div>

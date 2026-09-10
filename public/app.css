@@ -299,6 +299,9 @@
   .start-2 {
     inset-inline-start: calc(var(--spacing) * 2);
   }
+  .start-3 {
+    inset-inline-start: calc(var(--spacing) * 3);
+  }
   .start-5 {
     inset-inline-start: calc(var(--spacing) * 5);
   }
@@ -310,9 +313,6 @@
   }
   .end-2 {
     inset-inline-end: calc(var(--spacing) * 2);
-  }
-  .end-3 {
-    inset-inline-end: calc(var(--spacing) * 3);
   }
   .end-\[28\%\] {
     inset-inline-end: 28%;
@@ -335,14 +335,14 @@
   .top-2 {
     top: calc(var(--spacing) * 2);
   }
-  .top-3 {
-    top: calc(var(--spacing) * 3);
-  }
   .top-\[10px\] {
     top: 10px;
   }
   .top-\[22\%\] {
     top: 22%;
+  }
+  .top-\[calc\(0\.75rem\+env\(safe-area-inset-top\,0px\)\)\] {
+    top: calc(0.75rem + env(safe-area-inset-top,0px));
   }
   .-right-1 {
     right: calc(var(--spacing) * -1);
@@ -930,9 +930,6 @@
   .gap-4 {
     gap: calc(var(--spacing) * 4);
   }
-  .gap-5 {
-    gap: calc(var(--spacing) * 5);
-  }
   .gap-6 {
     gap: calc(var(--spacing) * 6);
   }
@@ -1517,9 +1514,6 @@
   .px-\(--card-spacing\) {
     padding-inline: var(--card-spacing);
   }
-  .px-0\.5 {
-    padding-inline: calc(var(--spacing) * 0.5);
-  }
   .px-1 {
     padding-inline: var(--spacing);
   }
@@ -1619,6 +1613,9 @@
   .pt-3 {
     padding-top: calc(var(--spacing) * 3);
   }
+  .pt-4 {
+    padding-top: calc(var(--spacing) * 4);
+  }
   .pt-\[env\(safe-area-inset-top\,0px\)\] {
     padding-top: env(safe-area-inset-top,0px);
   }
@@ -1631,8 +1628,17 @@
   .pb-1 {
     padding-bottom: var(--spacing);
   }
+  .pb-2 {
+    padding-bottom: calc(var(--spacing) * 2);
+  }
   .pb-3 {
     padding-bottom: calc(var(--spacing) * 3);
+  }
+  .pb-4 {
+    padding-bottom: calc(var(--spacing) * 4);
+  }
+  .pb-6 {
+    padding-bottom: calc(var(--spacing) * 6);
   }
   .pb-8 {
     padding-bottom: calc(var(--spacing) * 8);
@@ -2465,9 +2471,6 @@
     }
     .hover\:text-muted-foreground:hover {
       color: var(--muted-foreground);
-    }
-    .hover\:text-orange-100:hover {
-      color: var(--color-orange-100);
     }
     .hover\:underline:hover {
       text-decoration-line: underline;
@@ -4890,6 +4893,10 @@ svg.leaflet-zoom-animated {
   border-radius: 999px;
   border: 2px solid #fff;
 }
+.night-status-dot--lg {
+  width: 1.75rem;
+  height: 1.75rem;
+}
 .night-status-dot.is-closed {
   background: #e11d48;
 }
@@ -4920,6 +4927,14 @@ svg.leaflet-zoom-animated {
   border-radius: 999px;
   background: #fff;
   flex-shrink: 0;
+}
+.night-status-dot--lg.is-closed::after {
+  height: 6px;
+}
+.night-status-dot--lg.is-break::before,
+.night-status-dot--lg.is-break::after {
+  width: 5px;
+  height: 14px;
 }
 .neighborhood-marquee {
   overflow: hidden;
@@ -5667,11 +5682,13 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   flex-direction: column;
   background: #12081a;
 }
+.hw-overlay-close-bar,
 .house-edit-overlay-bar {
   display: flex;
   justify-content: flex-start;
   padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 0.75rem 0.5rem;
 }
+.hw-overlay-close,
 .house-edit-overlay-close {
   display: grid;
   place-items: center;
@@ -5681,6 +5698,11 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   border-radius: 999px;
   background: #2a1638;
   color: #fde68a;
+  flex-shrink: 0;
+}
+.hw-overlay-close:hover,
+.house-edit-overlay-close:hover {
+  background: #3a1f4d;
 }
 .house-edit-overlay-body {
   flex: 1;
