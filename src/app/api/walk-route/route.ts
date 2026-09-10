@@ -15,5 +15,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ line: null }, { status: 400 });
   }
   const line = await fetchWalkingGeometry(points.slice(0, 80));
-  return NextResponse.json({ line });
+  return NextResponse.json({ line: line ?? null });
 }

@@ -6,6 +6,7 @@ const HILL_NORTH_EDGE = 32.09285;
 
 const KRINITZI_LAT = 32.09022;
 const KRINITZI_EAST = { lat: KRINITZI_LAT, lng: 34.81185 };
+const KRINITZI_MID = { lat: KRINITZI_LAT, lng: 34.80915 };
 const KRINITZI_WEST = { lat: KRINITZI_LAT, lng: 34.80615 };
 const ROKACH_SOUTH = { lat: 32.0902, lng: 34.8097 };
 const ROKACH_EAST = { lat: 32.0928, lng: 34.8122 };
@@ -65,6 +66,36 @@ function rokachSkirt(from: LatLng, to: LatLng): LatLng[] {
   return [from, ROKACH_SOUTH, ROKACH_EAST, to];
 }
 
+/** West → east through גבעת נפוליאון — stay on קריניצי / המרגנית, not the park. */
+function eastAroundHillSkirt(from: LatLng, to: LatLng): LatLng[] {
+  if (from.lng >= to.lng) return [from, KRINITZI_EAST, KRINITZI_MID, HARMARGANIT_MID, to];
+  return [from, KRINITZI_WEST, KRINITZI_MID, HARMARGANIT_MID, to];
+}
+
+/** Straight segment cuts through the hill corridor (e.g. חרוזים → המרגנית). */
+function segmentCrossesHillCorridor(from: LatLng, to: LatLng) {
+  const direct = distanceMeters(from, to);
+  if (direct < 300) return false;
+  if (to.lng <= from.lng + 0.0015) return false;
+  const steps = Math.max(6, Math.ceil(direct / 50));
+  for (let i = 1; i < steps; i++) {
+    const t = i / steps;
+    const sample = {
+      lat: from.lat + (to.lat - from.lat) * t,
+      lng: from.lng + (to.lng - from.lng) * t,
+    };
+    if (
+      sample.lat >= 32.091 &&
+      sample.lat <= 32.094 &&
+      sample.lng >= 34.8035 &&
+      sample.lng <= 34.8105
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /** West cluster to east cluster above the hill — straight line crosses the park. */
 function crossesHillBarrier(from: LatLng, to: LatLng) {
   const direct = distanceMeters(from, to);
@@ -90,6 +121,7 @@ function segmentCrossesHill(from: LatLng, to: LatLng) {
 
 function skirtMeters(from: LatLng, to: LatLng) {
   const skirts = [rokachSkirt(from, to), southSkirt(from, to)];
+  if (segmentCrossesHillCorridor(from, to)) skirts.push(eastAroundHillSkirt(from, to));
   if (from.lat > 32.0918 || to.lat > 32.0918) skirts.push(northSkirt(from, to));
   let best = Number.POSITIVE_INFINITY;
   for (const skirt of skirts) {
@@ -106,7 +138,11 @@ function skirtMeters(from: LatLng, to: LatLng) {
 export function estimateWalkingMeters(from: LatLng, to: LatLng) {
   const direct = distanceMeters(from, to);
   if (direct < 120) return direct;
-  if (crossesHillBarrier(from, to) || segmentCrossesHill(from, to)) {
+  if (
+    crossesHillBarrier(from, to) ||
+    segmentCrossesHill(from, to) ||
+    segmentCrossesHillCorridor(from, to)
+  ) {
     return skirtMeters(from, to);
   }
   return direct;
