@@ -416,7 +416,7 @@ export function NeighborhoodApp({
         extra: houseDetailExtra,
         clusterOverview: selection.clusterOverview,
         clusterHouses: selection.selectedCluster,
-        routeCurrentStop: selectedRouteCurrent,
+        routeCurrentStop: Boolean(selectedRouteCurrent),
         onSkipRouteStop: selectedRouteCurrent
           ? () => handleSkipRouteStop(selected.id)
           : undefined,
