@@ -45,6 +45,7 @@ import {
   houseMatchesNotifyKind,
   mergePushTemplates,
   ownerOfferKindFromPatch,
+  type OwnerNotifyPatch,
   type PushKind,
   type StoredPushSettings,
 } from "@/lib/push-templates";
@@ -927,7 +928,7 @@ async function dispatchHousePush(
   prev: House | null,
   next: House,
   forcedKind?: PushKind,
-  patch?: { visit?: VisitState; treatStock?: TreatStock },
+  patch?: OwnerNotifyPatch,
   includeEndpoint?: string,
 ): Promise<HousePushResult | undefined> {
   const kind =
