@@ -159,7 +159,7 @@ export function RouteList({
               </div>
               <p className="mt-0.5 text-base text-violet-300">{startLabel}</p>
               {travelStarted ? (
-                <p className="mt-1 text-sm text-emerald-300">המסלול פעיל — בדרך!</p>
+                <p className="mt-1 text-sm text-emerald-300">המסלול פעיל — יוצאים מכאן</p>
               ) : null}
               {gpsAction}
             </div>

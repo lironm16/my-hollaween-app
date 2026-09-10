@@ -20,7 +20,7 @@ import { config, inNeighborhood } from "@/lib/config";
 import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
 import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
-import { revealRouteLineSlice, sliceRouteLineToStop } from "@/lib/route-line";
+import { revealRouteLineSlice, travelLineToStop } from "@/lib/route-line";
 import type { RouteStopTravelState } from "@/hooks/use-route-travel";
 import { distanceMeters } from "@/lib/geo";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
@@ -346,13 +346,15 @@ function makeOriginIcon(started: boolean) {
   });
 }
 
-const youAreHereIcon = L.divIcon({
-  className: "you-are-here-wrap",
-  html: `<div class="you-are-here" role="img" aria-label="אתם כאן"><span class="you-are-here-pulse" aria-hidden="true"></span><span class="you-are-here-dot" aria-hidden="true"></span></div>`,
-  iconSize: [22, 22],
-  iconAnchor: [11, 11],
-  popupAnchor: [0, -12],
-});
+function makeYouAreHereIcon(routeStarted: boolean) {
+  return L.divIcon({
+    className: `you-are-here-wrap${routeStarted ? " is-route-started" : ""}`,
+    html: `<div class="you-are-here" role="img" aria-label="אתם כאן"><span class="you-are-here-pulse" aria-hidden="true"></span><span class="you-are-here-dot" aria-hidden="true"></span></div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+    popupAnchor: [0, -12],
+  });
+}
 
 /** Fit the walking path only after a route-button tap (tick). Never again if the user zooms. */
 function FitRoute({
@@ -742,19 +744,39 @@ export function HouseMap({
     () => (routeStops ?? []).map((stop) => ({ lat: stop.lat, lng: stop.lng })),
     [routeStops],
   );
+  const travelOrigin = useMemo(
+    () => (routeStart ? { lat: routeStart.lat, lng: routeStart.lng } : null),
+    [routeStart],
+  );
   const travelledLine = useMemo(() => {
     if (!routeLine || !routeTravelStarted || routeTravelSweepIndex !== null) return null;
     if (routeTravelCompletedCount <= 0) return null;
-    const slice = sliceRouteLineToStop(routeLine, stopCoords, routeTravelCompletedCount - 1);
+    const slice = travelLineToStop(
+      routeLine,
+      stopCoords,
+      routeTravelCompletedCount - 1,
+      travelOrigin,
+    );
     return slice.map((point) => [point.lat, point.lng] as [number, number]);
-  }, [routeLine, routeTravelStarted, routeTravelCompletedCount, routeTravelSweepIndex, stopCoords]);
+  }, [
+    routeLine,
+    routeTravelStarted,
+    routeTravelCompletedCount,
+    routeTravelSweepIndex,
+    stopCoords,
+    travelOrigin,
+  ]);
   const drawingLine = useMemo(() => {
     if (!routeLine || routeTravelSweepIndex === null) return null;
-    const slice = sliceRouteLineToStop(routeLine, stopCoords, routeTravelSweepIndex);
+    const slice = travelLineToStop(routeLine, stopCoords, routeTravelSweepIndex, travelOrigin);
     const revealed = revealRouteLineSlice(slice, routeTravelLineReveal);
     return revealed.map((point) => [point.lat, point.lng] as [number, number]);
-  }, [routeLine, routeTravelSweepIndex, routeTravelLineReveal, stopCoords]);
+  }, [routeLine, routeTravelSweepIndex, routeTravelLineReveal, stopCoords, travelOrigin]);
   const originIcon = useMemo(() => makeOriginIcon(routeTravelStarted), [routeTravelStarted]);
+  const youAreHereIcon = useMemo(
+    () => makeYouAreHereIcon(routeTravelStarted),
+    [routeTravelStarted],
+  );
   const ready = useSyncExternalStore(
     () => () => {},
     () => true,

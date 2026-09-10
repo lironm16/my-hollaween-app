@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { revealRouteLineSlice, sliceRouteLineToStop } from "@/lib/route-line";
+import {
+  revealRouteLineSlice,
+  sliceRouteLineToStop,
+  travelLineToStop,
+  withApproachPrefix,
+} from "@/lib/route-line";
 
 const line = [
   { lat: 0, lng: 0 },
@@ -23,6 +28,26 @@ describe("sliceRouteLineToStop", () => {
     const slice = sliceRouteLineToStop(line, stops, 0);
     assert.ok(slice.length > 1);
     assert.deepEqual(slice.at(-1), line[1]);
+  });
+});
+
+describe("withApproachPrefix", () => {
+  it("prepends origin when the street line does not already start there", () => {
+    const origin = { lat: 0, lng: -0.00025 };
+    const firstStop = { lat: 0, lng: 0.0015 };
+    const prefixed = withApproachPrefix(line, origin, firstStop, 200);
+    assert.deepEqual(prefixed[0], origin);
+    assert.equal(prefixed.length, line.length + 1);
+  });
+});
+
+describe("travelLineToStop", () => {
+  it("includes approach on the first stop only", () => {
+    const origin = { lat: 0, lng: -0.00025 };
+    const firstLeg = travelLineToStop(line, stops, 0, origin);
+    assert.deepEqual(firstLeg[0], origin);
+    const secondLeg = travelLineToStop(line, stops, 1, origin);
+    assert.notDeepEqual(secondLeg[0], origin);
   });
 });
 

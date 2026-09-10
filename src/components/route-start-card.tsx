@@ -38,7 +38,7 @@ export function RouteStartCard({
               : "אין עצירות במסלול"}
           </p>
         ) : (
-          <p className="route-start-card-hint is-active">המסלול פעיל — בדרך לעצירה הראשונה</p>
+          <p className="route-start-card-hint is-active">המסלול פעיל — יוצאים מנקודת ההתחלה</p>
         )}
       </div>
       <div className="route-start-card-actions">

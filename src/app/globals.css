@@ -1345,6 +1345,15 @@
   transform: translate(-50%, -50%);
 }
 
+.you-are-here-wrap.is-route-started .you-are-here-pulse {
+  background: rgba(16, 185, 129, 0.45);
+}
+
+.you-are-here-wrap.is-route-started .you-are-here-dot {
+  background: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.45), 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
 @keyframes you-are-here-pulse {
   0% { transform: scale(0.55); opacity: 0.7; }
   100% { transform: scale(1.85); opacity: 0; }

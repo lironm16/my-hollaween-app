@@ -1,5 +1,5 @@
 import { distanceMeters } from "@/lib/geo";
-import type { LatLng } from "@/lib/route";
+import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
 
 function closestIndexOnLine(line: LatLng[], point: LatLng): number {
   let best = 0;
@@ -14,6 +14,20 @@ function closestIndexOnLine(line: LatLng[], point: LatLng): number {
   return best;
 }
 
+/** Prepend origin→first-stop when the approach spur is shown on the map. */
+export function withApproachPrefix(
+  line: LatLng[],
+  origin: LatLng | null | undefined,
+  firstStop: LatLng | null | undefined,
+  maxGap = ROUTE_INCLUDE_ORIGIN_METERS,
+): LatLng[] {
+  if (!line.length || !origin || !firstStop) return line;
+  const gap = distanceMeters(origin, firstStop);
+  if (gap < 12 || gap > maxGap) return line;
+  if (distanceMeters(line[0], origin) < 12) return line;
+  return [origin, ...line];
+}
+
 /** Walking path from route start through the given stop index (inclusive). */
 export function sliceRouteLineToStop(line: LatLng[], stops: LatLng[], stopIndex: number): LatLng[] {
   if (!line.length || stopIndex < 0) return [];
@@ -21,6 +35,18 @@ export function sliceRouteLineToStop(line: LatLng[], stops: LatLng[], stopIndex:
   if (!target) return line.slice(0, 1);
   const endIdx = closestIndexOnLine(line, target);
   return line.slice(0, Math.max(1, endIdx + 1));
+}
+
+/** Route line slice for travel progress, including origin approach on the first leg. */
+export function travelLineToStop(
+  line: LatLng[],
+  stops: LatLng[],
+  stopIndex: number,
+  origin?: LatLng | null,
+): LatLng[] {
+  const slice = sliceRouteLineToStop(line, stops, stopIndex);
+  if (stopIndex !== 0) return slice;
+  return withApproachPrefix(slice, origin, stops[0]);
 }
 
 function lineLengthMeters(line: LatLng[]): number {
