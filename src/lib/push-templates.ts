@@ -23,6 +23,7 @@ export const PUSH_KINDS = [
   "decorOnly",
   "candyLow",
   "candyOut",
+  "candyOutClosed",
   "candyRestock",
   "backActive",
 ] as const;
@@ -108,6 +109,15 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     hint: "אחרי שמירה כשהממתקים נגמרו והבית עדיין פתוח לביקור.",
     title: "נגמרו הממתקים: {nickname}",
     body: "{place}",
+  },
+  candyOutClosed: {
+    id: "candyOutClosed",
+    auto: false,
+    enabled: true,
+    label: "נגמרו הממתקים (סגור)",
+    hint: "אחרי שמירה כשהממתקים נגמרו והבית סגור לביקורים.",
+    title: "נגמרו הממתקים: {nickname}",
+    body: "הבית סגור לביקורים\n{place}",
   },
   candyRestock: {
     id: "candyRestock",
@@ -252,7 +262,14 @@ export function classifyHouseAlert(prev: House, next: House): PushKind | null {
   }
   if (!isPubliclyListed(next) || nowPaused) return null;
   if (wasPaused && nowPaused) return null;
-  if (prevVisit === "closed" && nextVisit === "closed") return null;
+  if (prevVisit === "closed" && nextVisit === "closed") {
+    if (markedCandy(next)) {
+      const prevCandy = markedCandy(prev) ? candyLevel(prev) : null;
+      const nextCandy = candyLevel(next);
+      if (prevCandy && prevCandy !== "out" && nextCandy === "out") return "candyOutClosed";
+    }
+    return null;
+  }
 
   if (prevVisit !== "closed" && nextVisit === "closed" && !isHouseOffAir(prev)) return "closed";
   if (prevVisit !== "decorOnly" && nextVisit === "decorOnly") return "decorOnly";
@@ -302,6 +319,14 @@ export function houseMatchesNotifyKind(house: House, kind: PushKind): boolean {
       candyLevel(house) === "out"
     );
   }
+  if (kind === "candyOutClosed") {
+    return (
+      isPubliclyListed(house) &&
+      !paused &&
+      visit === "closed" &&
+      candyLevel(house) === "out"
+    );
+  }
   return false;
 }
 
@@ -334,8 +359,15 @@ export function ownerOfferKindFromPatch(
   }
   if (patch.visit === "decorOnly" && houseMatchesNotifyKind(next, "decorOnly")) return "decorOnly";
   if (patch.visit === "come" && houseMatchesNotifyKind(next, "backActive")) return "backActive";
-  if (stockAlertsBlocked(next)) return null;
   const candy = patch.treatStock?.candy;
+  if (
+    candy === "out" &&
+    markedCandy(next) &&
+    houseMatchesNotifyKind(next, "candyOutClosed")
+  ) {
+    return "candyOutClosed";
+  }
+  if (stockAlertsBlocked(next)) return null;
   if (candy === "low" && markedCandy(next) && houseMatchesNotifyKind(next, "candyLow")) return "candyLow";
   if (candy === "out" && markedCandy(next) && houseMatchesNotifyKind(next, "candyOut")) return "candyOut";
   return null;

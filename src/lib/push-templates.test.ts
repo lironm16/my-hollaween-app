@@ -110,6 +110,12 @@ describe("classifyHouseAlert", () => {
     assert.equal(classifyHouseAlert(prev, next), "candyOut");
   });
 
+  it("detects candy running out while house stays closed", () => {
+    const prev = baseHouse({ visit: "closed", treatStock: { candy: "plenty" } });
+    const next = baseHouse({ visit: "closed", treatStock: { candy: "out" } });
+    assert.equal(classifyHouseAlert(prev, next), "candyOutClosed");
+  });
+
   it("skips break push when switching between closed and break", () => {
     const frozenUntil = new Date(Date.now() + 60 * 60 * 1000).toISOString();
     const closed = baseHouse({ visit: "closed" });
@@ -158,12 +164,12 @@ describe("ownerOfferKindFromPatch", () => {
     assert.equal(ownerOfferKindFromPatch({ visit: "closed" }, next, prev), "closed");
   });
 
-  it("skips closed and candy offers when house stays closed", () => {
+  it("offers candy-out-closed when stock runs out while house stays closed", () => {
     const prev = baseHouse({ visit: "closed", treatStock: { candy: "plenty" } });
     const next = baseHouse({ visit: "closed", treatStock: { candy: "out" } });
     const patch = { visit: "closed" as const, treatStock: { candy: "out" as const } };
-    assert.equal(ownerOfferKindFromPatch(patch, next, prev), null);
-    assert.equal(resolveHouseNotifyKind(prev, next, patch), null);
+    assert.equal(ownerOfferKindFromPatch(patch, next, prev), "candyOutClosed");
+    assert.equal(resolveHouseNotifyKind(prev, next, patch), "candyOutClosed");
   });
 
   it("skips closed offer when switching from break to closed", () => {
