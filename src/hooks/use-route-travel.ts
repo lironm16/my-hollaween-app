@@ -16,6 +16,7 @@ export function useRouteTravel(route: WalkingRoute | null, routeMode: boolean) {
   const [showComplete, setShowComplete] = useState(false);
   const [panTarget, setPanTarget] = useState<LatLng | null>(null);
   const [panTick, setPanTick] = useState(0);
+  const [focusTick, setFocusTick] = useState(0);
   const animating = useRef(false);
   const timers = useRef<number[]>([]);
 
@@ -40,6 +41,7 @@ export function useRouteTravel(route: WalkingRoute | null, routeMode: boolean) {
     setShowComplete(false);
     setPanTarget(null);
     setPanTick(0);
+    setFocusTick(0);
   }
 
   useEffect(() => {
@@ -59,6 +61,7 @@ export function useRouteTravel(route: WalkingRoute | null, routeMode: boolean) {
     setShowComplete(false);
     setPanTarget({ lat: route.origin.lat, lng: route.origin.lng });
     setPanTick((n) => n + 1);
+    setFocusTick((n) => n + 1);
   }, [route]);
 
   const dismissComplete = useCallback(() => {
@@ -140,6 +143,7 @@ export function useRouteTravel(route: WalkingRoute | null, routeMode: boolean) {
     showComplete,
     panTarget,
     panTick,
+    focusTick,
     startTravel,
     advanceAfterVisit,
     skipStop,

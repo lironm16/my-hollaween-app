@@ -328,6 +328,24 @@ export function routePoints(route: WalkingRoute): LatLng[] {
   return route.stops.map((stop) => pointOf(stop.house));
 }
 
+/** Whether the walking line should begin at the route origin (not only at stop 1). */
+export function shouldIncludeOriginInRoute(route: WalkingRoute): boolean {
+  const first = route.stops[0]?.house;
+  if (!first) return false;
+  const gap = distanceMeters(route.origin, pointOf(first));
+  if (gap < 12) return false;
+  if (route.startedFrom === "neighborhood") return gap <= ROUTE_INCLUDE_ORIGIN_METERS;
+  return true;
+}
+
+/** Waypoints for map geometry — includes origin for GPS/custom (and nearby neighborhood). */
+export function routeGeometryPoints(route: WalkingRoute): LatLng[] {
+  const stops = routePoints(route);
+  if (stops.length === 0) return [];
+  if (!shouldIncludeOriginInRoute(route)) return stops;
+  return [route.origin, ...stops];
+}
+
 export function routeStopLabel(house: PublicHouse) {
   return `${houseHeadline(house)} · ${formatDisplayAddress(house)}`;
 }

@@ -35,7 +35,7 @@ describe("withApproachPrefix", () => {
   it("prepends origin when the street line does not already start there", () => {
     const origin = { lat: 0, lng: -0.00025 };
     const firstStop = { lat: 0, lng: 0.0015 };
-    const prefixed = withApproachPrefix(line, origin, firstStop, 200);
+    const prefixed = withApproachPrefix(line, origin, firstStop, "gps");
     assert.deepEqual(prefixed[0], origin);
     assert.equal(prefixed.length, line.length + 1);
   });

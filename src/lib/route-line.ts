@@ -1,5 +1,7 @@
 import { distanceMeters } from "@/lib/geo";
-import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng } from "@/lib/route";
+import { ROUTE_INCLUDE_ORIGIN_METERS, type LatLng, type WalkingRoute } from "@/lib/route";
+
+const GPS_ORIGIN_MAX_METERS = 5000;
 
 function closestIndexOnLine(line: LatLng[], point: LatLng): number {
   let best = 0;
@@ -19,11 +21,16 @@ export function withApproachPrefix(
   line: LatLng[],
   origin: LatLng | null | undefined,
   firstStop: LatLng | null | undefined,
-  maxGap = ROUTE_INCLUDE_ORIGIN_METERS,
+  startedFrom?: WalkingRoute["startedFrom"],
 ): LatLng[] {
   if (!line.length || !origin || !firstStop) return line;
   const gap = distanceMeters(origin, firstStop);
-  if (gap < 12 || gap > maxGap) return line;
+  if (gap < 12) return line;
+  const maxGap =
+    startedFrom === "gps" || startedFrom === "custom"
+      ? GPS_ORIGIN_MAX_METERS
+      : ROUTE_INCLUDE_ORIGIN_METERS;
+  if (gap > maxGap) return line;
   if (distanceMeters(line[0], origin) < 12) return line;
   return [origin, ...line];
 }
@@ -43,10 +50,11 @@ export function travelLineToStop(
   stops: LatLng[],
   stopIndex: number,
   origin?: LatLng | null,
+  startedFrom?: WalkingRoute["startedFrom"],
 ): LatLng[] {
   const slice = sliceRouteLineToStop(line, stops, stopIndex);
   if (stopIndex !== 0) return slice;
-  return withApproachPrefix(slice, origin, stops[0]);
+  return withApproachPrefix(slice, origin, stops[0], startedFrom);
 }
 
 function lineLengthMeters(line: LatLng[]): number {
