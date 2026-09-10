@@ -517,6 +517,13 @@ export function NeighborhoodApp({
                 routeFitTick={routeMode && !originPick.originPickActive ? routeFitTick : 0}
                 routeStartFocusTick={routeTravel.focusTick}
                 routeStart={routeMode ? origin : null}
+                routeOriginLabel={
+                  routeMode && activeRoute
+                    ? activeRoute.originLabel ||
+                      (activeRoute.startedFrom === "gps" ? "מיקום נוכחי" : "ממרכז השכונה")
+                    : undefined
+                }
+                onRouteStart={routeMode && !routeTravel.started ? routeTravel.startTravel : undefined}
                 routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}
                 routeTravelStarted={routeMode ? routeTravel.started : false}
                 routeTravelCompletedCount={routeTravel.completedCount}

@@ -5,6 +5,7 @@ import {
   buildWalkingRouteOrdered,
   refreshWalkingRoute,
   routeGeometryPoints,
+  routePreviewPoints,
   shouldIncludeOriginInRoute,
   trimWalkingRouteToVisible,
 } from "@/lib/route";
@@ -122,5 +123,15 @@ describe("routeGeometryPoints", () => {
       lat: stop.house.lat,
       lng: stop.house.lng,
     })));
+  });
+
+  it("preview line still ties origin to stop 1 for map display", () => {
+    const origin = { lat: 32.0919, lng: 34.8112 };
+    const far = stub("far", 32.094, 34.818, "נחלת גנים 1, נחלת גנים");
+    const route = buildWalkingRoute([far], origin, { startedFrom: "neighborhood" });
+    assert.ok(route);
+    const preview = routePreviewPoints(route!);
+    assert.deepEqual(preview[0], origin);
+    assert.equal(preview.length, 2);
   });
 });

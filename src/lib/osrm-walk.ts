@@ -230,6 +230,13 @@ export async function fetchWalkingGeometry(points: LatLng[]): Promise<LatLng[] |
   const unique = dedupeNearby(points);
   if (unique.length < 2) return unique.length ? unique : null;
   try {
+    const directAll = await fetchOsrm(unique);
+    if (directAll && directAll.length >= 2) {
+      const farm = farmFraction(directAll);
+      const park = parkFraction(directAll);
+      if (farm <= PARK_FRACTION_MAX && park <= PARK_FRACTION_MAX) return directAll;
+    }
+
     const legs = await Promise.all(
       unique.slice(0, -1).map((from, index) => fetchWalkLeg(from, unique[index + 1]!)),
     );

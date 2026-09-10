@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { routeGeometryPoints, type LatLng, type WalkingRoute } from "@/lib/route";
+import { routeGeometryPoints, routePreviewPoints, type LatLng, type WalkingRoute } from "@/lib/route";
 
 function geometryKey(route: WalkingRoute) {
   const origin = `${route.origin.lat.toFixed(4)},${route.origin.lng.toFixed(4)}`;
@@ -26,14 +26,15 @@ export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
       setStatus("idle");
       return;
     }
-    const points = routeGeometryPoints(current);
+    const waypoints = routeGeometryPoints(current);
+    const preview = routePreviewPoints(current);
     let cancelled = false;
     setStatus("loading");
-    setLine(points.length >= 2 ? points : null);
+    setLine(preview.length >= 2 ? preview : null);
     void fetch("/api/walk-route", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ points }),
+      body: JSON.stringify({ points: waypoints }),
     })
       .then(async (res) => {
         if (!res.ok) return null;
@@ -46,13 +47,13 @@ export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
           setLine(street);
           setStatus("ready");
         } else {
-          setLine(points);
+          setLine(preview);
           setStatus("fallback");
         }
       })
       .catch(() => {
         if (cancelled) return;
-        setLine(points);
+        setLine(preview);
         setStatus("fallback");
       });
     return () => {
