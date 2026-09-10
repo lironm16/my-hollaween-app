@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "node scripts/allow-preview-origin.mjs && node scripts/build-css.mjs && next dev --webpack --hostname 0.0.0.0 --port 43127",
     "postinstall": "node scripts/allow-preview-origin.mjs && node scripts/ensure-git-author.mjs",
-    "build": "node scripts/build-css.mjs && node scripts/generate-stub-images.mjs && node scripts/build-catalog.mjs && next build",
+    "build": "node scripts/build-css.mjs && node scripts/build-catalog.mjs && next build",
     "start": "next start --hostname 0.0.0.0 --port 43127",
     "lint": "eslint",
     "test": "npm run test:unit",
