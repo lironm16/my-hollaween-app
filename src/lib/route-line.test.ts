@@ -1,0 +1,39 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import { revealRouteLineSlice, sliceRouteLineToStop } from "@/lib/route-line";
+
+const line = [
+  { lat: 0, lng: 0 },
+  { lat: 0, lng: 0.001 },
+  { lat: 0, lng: 0.002 },
+  { lat: 0, lng: 0.003 },
+];
+
+const stops = [
+  { lat: 0, lng: 0.0015 },
+  { lat: 0, lng: 0.003 },
+];
+
+describe("sliceRouteLineToStop", () => {
+  it("returns empty for negative index", () => {
+    assert.deepEqual(sliceRouteLineToStop(line, stops, -1), []);
+  });
+
+  it("slices to closest point on line for a stop", () => {
+    const slice = sliceRouteLineToStop(line, stops, 0);
+    assert.ok(slice.length > 1);
+    assert.deepEqual(slice.at(-1), line[1]);
+  });
+});
+
+describe("revealRouteLineSlice", () => {
+  it("returns full line at progress 1", () => {
+    assert.deepEqual(revealRouteLineSlice(line, 1), line);
+  });
+
+  it("returns partial line at progress 0.5", () => {
+    const partial = revealRouteLineSlice(line, 0.5);
+    assert.ok(partial.length > 1);
+    assert.ok(partial.length < line.length);
+  });
+});
