@@ -76,7 +76,7 @@ export function HouseDetailOverlay({
     >
       <div className="house-detail-overlay-top shrink-0">
         <OverlayCloseBar onClose={onClose} className="pb-1" />
-        <div className="px-2 pb-1">
+        <div className="house-detail-overlay-chrome px-2 pb-1">
           <HouseActionBar
             house={house}
             liked={liked?.(house.id)}
