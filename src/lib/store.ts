@@ -948,7 +948,7 @@ async function dispatchHousePush(
   const kind =
     forcedKind ??
     (prev ? classifyHouseAlert(prev, next) : "houseAdded") ??
-    ownerOfferKindFromPatch(patch, next);
+    ownerOfferKindFromPatch(patch, next, prev ?? undefined);
   if (!kind) return;
   const stored = (await loadDb()).pushSettings as StoredPushSettings | undefined;
   const payload = payloadForKind(kind, next, stored);
