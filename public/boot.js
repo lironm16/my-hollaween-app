@@ -18,7 +18,7 @@
 })();
 
 (function () {
-  var flag = "hw-sw-bust-v76";
+  var flag = "hw-sw-bust-v77";
   try {
     if (sessionStorage.getItem(flag)) return;
   } catch (e) {}

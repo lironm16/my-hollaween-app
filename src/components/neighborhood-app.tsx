@@ -52,7 +52,7 @@ import {
   writeHomeView,
   type HomeView,
 } from "@/lib/home-view";
-import { HOUSE_SET_LABELS } from "@/lib/house-set";
+import { HOUSE_SET_LABELS, houseMatchesSet } from "@/lib/house-set";
 import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
 import { houseSelectionAnnouncement } from "@/lib/map-a11y";
 import type { Catalog, PublicHouse } from "@/lib/types";
@@ -148,9 +148,13 @@ export function NeighborhoodApp({
     [activeHouseSet, likes.likedIds, visits.visitedIds, now],
   );
 
+  const mapHouses = useMemo(
+    () => houses.filter((house) => houseMatchesSet(house, activeHouseSet)),
+    [houses, activeHouseSet],
+  );
   const visible = useMemo(() => filterHouses(houses, filters, filterContext), [houses, filters, filterContext]);
   const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
-  const filterDimActive = matchedIds.size < houses.length;
+  const filterDimActive = matchedIds.size < mapHouses.length;
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
   const selection = useHouseSelection({ focusId, visible, houses });
@@ -496,7 +500,7 @@ export function NeighborhoodApp({
               aria-hidden={view !== "map"}
             >
               <HouseMapDynamic
-                houses={houses}
+                houses={mapHouses}
                 matchedIds={matchedIds}
                 filterDimActive={filterDimActive}
                 selectedId={originPick.originPickActive ? null : selection.selected?.id}
