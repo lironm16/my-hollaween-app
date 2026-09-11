@@ -1045,7 +1045,8 @@ export async function resetPushTemplates() {
 }
 
 export async function savePushTemplates(input: StoredPushSettings) {
-  await runSyncedWrite((db) => {
+  return withLock(async () => {
+    const db = await prepareDbFromSources();
     const merged = mergePushTemplates({
       templates: {
         ...db.pushSettings?.templates,
@@ -1066,9 +1067,10 @@ export async function savePushTemplates(input: StoredPushSettings) {
       templates,
     };
     db.updatedAt = new Date().toISOString();
+    pushSettingsGenerationChecked = true;
+    await persistPushSettingsMigration(db);
+    return Object.values(mergePushTemplates(db.pushSettings));
   });
-  pushSettingsGenerationChecked = true;
-  return getPushTemplateList();
 }
 
 export async function notifyHouseKind(options: {

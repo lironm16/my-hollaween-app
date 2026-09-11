@@ -175,7 +175,7 @@ export function migratePushSettings(stored?: StoredPushSettings | null): {
     const base = DEFAULT_PUSH_TEMPLATES[id];
     const overlay = stored?.templates?.[id];
     templates[id] = {
-      enabled: overlay?.enabled ?? base.enabled,
+      enabled: overlay && "enabled" in overlay ? overlay.enabled : base.enabled,
       title: base.title,
       body: base.body,
     };
@@ -199,7 +199,7 @@ export function mergePushTemplates(
     const overlay = stored?.templates?.[id];
     out[id] = {
       ...base,
-      enabled: overlay?.enabled ?? base.enabled,
+      enabled: overlay && "enabled" in overlay ? overlay.enabled : base.enabled,
       title: overlay?.title?.trim() || base.title,
       body: overlay?.body?.trim() || base.body,
     };
