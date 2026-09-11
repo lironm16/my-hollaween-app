@@ -4467,15 +4467,21 @@ svg.leaflet-zoom-animated {
 .house-pin.is-undecorated {
   background: #94a3b8 !important;
 }
+.house-pin.is-building {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
 .pin-houses {
   position: relative;
   z-index: 5;
   display: block;
   width: 26px;
   height: 19px;
+  flex-shrink: 0;
   font-size: 0;
   line-height: 0;
-  transform: translate(4px, 4px);
 }
 .pin-houses i {
   position: absolute;

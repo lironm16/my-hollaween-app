@@ -242,7 +242,9 @@ export function NeighborhoodApp({
 
   const walkingRoute = routeMode ? pinnedRoute : null;
   const activeRoute = routeMode ? (walkingRoute ?? filterRoute) : null;
-  const { line: routeLine } = useRouteGeometry(activeRoute, routeMode);
+  const { line: routeLine } = useRouteGeometry(activeRoute, routeMode, {
+    straightOnly: activeHouseSet === "stubs",
+  });
   const summaryProps = {
     filteredHouses: visible.length,
     route: activeRoute ?? filterRoute,
@@ -487,6 +489,7 @@ export function NeighborhoodApp({
                 locating={geo.status === "pending" && askedLocation}
                 onLocate={originPick.goToMyLocation}
                 routeLine={routeMode && !originPick.originPickActive ? routeLine : null}
+                routeStraightPreview={activeHouseSet === "stubs"}
                 routeFitTick={routeMode && !originPick.originPickActive ? routeFitTick : 0}
                 routeStart={routeMode ? origin : null}
                 routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}

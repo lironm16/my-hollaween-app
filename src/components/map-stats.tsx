@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 function HouseIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="size-full text-orange-500">
+    <svg viewBox="0 0 24 24" aria-hidden className="mx-auto block size-full text-orange-500">
       <path
         fill="currentColor"
         d="M3.6 11.2 12 3.6l8.4 7.6v8.6c0 .8-.7 1.5-1.5 1.5h-4.4v-5.8H9.5v5.8H5.1c-.8 0-1.5-.7-1.5-1.5z"

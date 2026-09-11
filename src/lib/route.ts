@@ -349,7 +349,18 @@ export function routeGeometryPoints(route: WalkingRoute): LatLng[] {
 
 /** Straight-line preview for the map — stops only; dashed approach is drawn separately. */
 export function routePreviewPoints(route: WalkingRoute): LatLng[] {
-  return routePoints(route);
+  return dedupeRoutePoints(routePoints(route));
+}
+
+/** Drop consecutive stops at the same building — keeps stub/rehearsal lines clean. */
+export function dedupeRoutePoints(points: LatLng[], meters = 12): LatLng[] {
+  const unique: LatLng[] = [];
+  for (const point of points) {
+    const last = unique[unique.length - 1];
+    if (last && distanceMeters(last, point) < meters) continue;
+    unique.push(point);
+  }
+  return unique;
 }
 
 /** Whether to draw a dashed spur from the route start to stop 1. */
