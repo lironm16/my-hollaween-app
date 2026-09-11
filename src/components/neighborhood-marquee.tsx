@@ -36,7 +36,11 @@ export function PingPongMarquee({
       ref={wrapRef}
       title={text}
       aria-label={text}
-      className={cn("neighborhood-marquee block min-w-0", shift > 0 && "is-overflow", className)}
+      className={cn(
+        "neighborhood-marquee block w-full min-w-0 text-right",
+        shift > 0 && "is-overflow",
+        className,
+      )}
     >
       <span
         ref={textRef}

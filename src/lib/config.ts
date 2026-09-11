@@ -30,11 +30,11 @@ const ADDRESS_AREA_NAMES = [...NEIGHBORHOODS, "הגפן"] as const;
 export const config = {
   /** Home-screen / PWA / OS notification name. In-app chrome uses brandEn. */
   appName: "HallowHood",
-  brandEn: "Halloween",
-  brandHe: "בשכונה",
+  brandEn: "HallowHood",
+  brandHe: "הלואין בשכונה",
   /** Browser tab label. Home-screen / PWA stays the app name. */
-  tabTitle: "Halloween בשכונה",
-  titleWords: ["Halloween בשכונה"] as const,
+  tabTitle: "HallowHood הלואין בשכונה",
+  titleWords: ["HallowHood הלואין בשכונה"] as const,
   tagline: "מפת הבתים המפחידים של השכונה",
   neighborhood:
     process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שיכון ותיקים · חרוזים · נחלת גנים",

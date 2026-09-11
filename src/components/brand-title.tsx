@@ -9,10 +9,10 @@ export function BrandTitle({
   size?: "header" | "hero";
 }) {
   return (
-    <span className={cn("block min-w-0 leading-none", className)}>
+    <span className={cn("block w-full min-w-0 text-right leading-none", className)}>
       <span
-        dir="ltr"
-        className="inline-flex max-w-full flex-wrap items-baseline gap-x-[0.4em] gap-y-0.5 align-baseline"
+        dir="rtl"
+        className="inline-flex max-w-full flex-wrap items-baseline justify-end gap-x-[0.4em] gap-y-0.5 text-right"
       >
         <span
           className={cn(
@@ -22,7 +22,6 @@ export function BrandTitle({
         >
           {config.brandHe}
         </span>
-        <span aria-hidden="true"> </span>
         <span
           dir="ltr"
           className={cn(
