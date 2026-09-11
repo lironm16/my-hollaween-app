@@ -76,6 +76,15 @@ describe("mergePushTemplates", () => {
     assert.equal(merged.candyLow.title, "מותאם");
     assert.match(merged.candyLow.body, /place/);
   });
+
+  it("keeps enabled false when explicitly disabled", () => {
+    const merged = mergePushTemplates({
+      templates: {
+        onBreak: { enabled: false, title: "{nickname}", body: "בהפסקה ⏸️ {backLine}\n{place}" },
+      },
+    });
+    assert.equal(merged.onBreak.enabled, false);
+  });
 });
 
 describe("fillPushTemplate", () => {

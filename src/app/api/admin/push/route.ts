@@ -26,8 +26,21 @@ export async function POST(request: Request) {
   try {
     const payload = sanitizePushPayload({ title, body, url: "/", topic: "admin" });
     const result = await broadcastPush(payload, readIncludeEndpoint(json), { allSubscriptions: true });
+    if (result.attempted === 0) {
+      return NextResponse.json({
+        ok: true,
+        ...result,
+        title: payload.title,
+        body: payload.body,
+        warning: "אין מנויי התראות רשומים.",
+      });
+    }
     return NextResponse.json({ ok: true, ...result, title: payload.title, body: payload.body });
-  } catch {
-    return NextResponse.json({ error: "השליחה נכשלה." }, { status: 500 });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "";
+    return NextResponse.json(
+      { error: detail ? `השליחה נכשלה: ${detail}` : "השליחה נכשלה." },
+      { status: 500 },
+    );
   }
 }

@@ -24,25 +24,28 @@ const PREVIEW_HOUSE = {
 
 function Toggle({ on, onClick, disabled }: { on: boolean; onClick: () => void; disabled?: boolean }) {
   return (
-    <span className="flex shrink-0 items-center gap-1.5">
+    <button
+      type="button"
+      dir="ltr"
+      role="switch"
+      aria-checked={on}
+      disabled={disabled}
+      onClick={onClick}
+      className="flex shrink-0 items-center gap-1.5 disabled:opacity-60"
+    >
       <span className={cn("text-base", on ? "text-orange-200" : "text-violet-400")}>
         {on ? "פועל" : "כבוי"}
       </span>
-      <button
-        type="button"
-        dir="ltr"
-        role="switch"
-        aria-checked={on}
-        disabled={disabled}
-        onClick={onClick}
+      <span
+        aria-hidden
         className={cn(
           "flex h-6 w-11 items-center rounded-full p-0.5 transition",
           on ? "justify-end bg-orange-500" : "justify-start bg-violet-900 ring-1 ring-orange-500/20",
         )}
       >
         <span className="size-5 rounded-full bg-white shadow" />
-      </button>
-    </span>
+      </span>
+    </button>
   );
 }
 
@@ -59,13 +62,14 @@ export function AdminPushPanel() {
   const [sending, setSending] = useState(false);
   const loadGen = useRef(0);
   const savingRef = useRef(false);
+  const savedAtRef = useRef(0);
   const expandedRef = useRef<PushKind | null>(null);
   expandedRef.current = expanded;
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      if (savingRef.current || expandedRef.current) return;
+      if (savingRef.current || expandedRef.current || Date.now() - savedAtRef.current < 2500) return;
       const gen = ++loadGen.current;
       try {
         const res = await fetch("/api/admin/push/templates", { cache: "no-store", credentials: "include" });
@@ -118,8 +122,12 @@ export function AdminPushPanel() {
         return false;
       }
       if (Array.isArray(data.templates) && data.templates.length > 0) {
-        const byId = new Map(data.templates.map((item) => [item.id, item]));
-        setTemplates(next.map((item) => byId.get(item.id) ?? item));
+        setTemplates(
+          [...data.templates].sort(
+            (a, b) => PUSH_TEMPLATE_DISPLAY_ORDER.indexOf(a.id) - PUSH_TEMPLATE_DISPLAY_ORDER.indexOf(b.id),
+          ),
+        );
+        savedAtRef.current = Date.now();
       }
       return true;
     } catch {
@@ -199,7 +207,11 @@ export function AdminPushPanel() {
       }
       const sent = data.sent ?? 0;
       const attempted = data.attempted ?? sent;
-      if (sent < attempted) {
+      if (attempted === 0) {
+        toast.warning("אין מנויי התראות רשומים — ההודעה לא נשלחה.");
+      } else if (sent === 0) {
+        toast.error("השליחה נכשלה לכל המנויים. בדקו הגדרות VAPID או הרשאות התראות.");
+      } else if (sent < attempted) {
         toast.warning(`נשלח ל־${sent} מתוך ${attempted} מכשירים (${data.failed ?? attempted - sent} נכשלו)`);
       } else {
         toast.success(`נשלח ל־${sent} מכשירים`);

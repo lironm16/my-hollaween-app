@@ -40,6 +40,7 @@ import { subscriptionAllowsTopic } from "@/lib/push-topics";
 import {
   AUTO_PUSH_KINDS,
   PUSH_KINDS,
+  PUSH_TEMPLATES_STORAGE_GENERATION,
   buildDefaultPushSettings,
   classifyHouseAlert,
   houseMatchesNotifyKind,
@@ -154,6 +155,7 @@ function normalizeDb(db: DbFile): DbFile {
     pushSettings: db.pushSettings?.templates
       ? {
           updatedAt: db.pushSettings.updatedAt,
+          ...(db.pushSettings.generation !== undefined ? { generation: db.pushSettings.generation } : {}),
           templates: { ...db.pushSettings.templates },
         }
       : undefined,
@@ -1058,9 +1060,14 @@ export async function savePushTemplates(input: StoredPushSettings) {
         body: merged[id].body,
       };
     }
-    db.pushSettings = { updatedAt: new Date().toISOString(), templates };
+    db.pushSettings = {
+      updatedAt: new Date().toISOString(),
+      generation: PUSH_TEMPLATES_STORAGE_GENERATION,
+      templates,
+    };
     db.updatedAt = new Date().toISOString();
   });
+  pushSettingsGenerationChecked = true;
   return getPushTemplateList();
 }
 
