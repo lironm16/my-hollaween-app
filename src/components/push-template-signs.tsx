@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import { CandySign } from "@/components/candy-glyphs";
-import { DecorSign } from "@/components/decor-glyphs";
 import { ClosedSign, PauseSign } from "@/components/house-tags";
 import type { PushKind } from "@/lib/push-templates";
 import { cn } from "@/lib/utils";
@@ -86,17 +85,22 @@ function signForKind(kind: PushKind): ReactNode {
     case "backFromBreak":
       return <Transition from={<PauseSign className={SIGN} />} to={<OpenSign />} />;
     case "closed":
-      return <Transition from={<OpenSign />} to={<ClosedSign className={SIGN} />} />;
+      return (
+        <Transition
+          from={
+            <>
+              <OpenSign />
+              <PauseSign className={SIGN} />
+            </>
+          }
+          to={<ClosedSign className={SIGN} />}
+        />
+      );
     case "decorOnly":
       return (
         <Transition
           from={<CandySign tone="plenty" className={SIGN} />}
-          to={
-            <>
-              <DecorSign level="medium" className={SIGN} />
-              <CandySign tone="none" className={SIGN} />
-            </>
-          }
+          to={<CandySign tone="none" className={SIGN} />}
         />
       );
     case "backActive":
