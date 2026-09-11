@@ -24,28 +24,25 @@ const PREVIEW_HOUSE = {
 
 function Toggle({ on, onClick, disabled }: { on: boolean; onClick: () => void; disabled?: boolean }) {
   return (
-    <button
-      type="button"
-      dir="ltr"
-      role="switch"
-      aria-checked={on}
-      disabled={disabled}
-      onClick={onClick}
-      className="flex shrink-0 items-center gap-1.5 disabled:opacity-60"
-    >
+    <span className="flex shrink-0 items-center gap-1.5">
       <span className={cn("text-base", on ? "text-orange-200" : "text-violet-400")}>
         {on ? "פועל" : "כבוי"}
       </span>
-      <span
-        aria-hidden
+      <button
+        type="button"
+        dir="ltr"
+        role="switch"
+        aria-checked={on}
+        disabled={disabled}
+        onClick={onClick}
         className={cn(
-          "flex h-6 w-11 items-center rounded-full p-0.5 transition",
+          "flex h-6 w-11 items-center rounded-full p-0.5 transition disabled:opacity-60",
           on ? "justify-end bg-orange-500" : "justify-start bg-violet-900 ring-1 ring-orange-500/20",
         )}
       >
         <span className="size-5 rounded-full bg-white shadow" />
-      </span>
-    </button>
+      </button>
+    </span>
   );
 }
 
@@ -95,8 +92,8 @@ export function AdminPushPanel() {
     };
   }, []);
 
-  async function persist(next: PushTemplateMeta[]) {
-    const prev = templates;
+  async function persist(next: PushTemplateMeta[], rollback?: PushTemplateMeta[]) {
+    const prev = rollback ?? templates;
     savingRef.current = true;
     loadGen.current += 1;
     setTemplates(next);
@@ -141,7 +138,8 @@ export function AdminPushPanel() {
   }
 
   function patch(id: PushKind, fields: Partial<Pick<PushTemplateMeta, "enabled" | "title" | "body">>) {
-    return persist(templates.map((item) => (item.id === id ? { ...item, ...fields } : item)));
+    const next = templates.map((item) => (item.id === id ? { ...item, ...fields } : item));
+    void persist(next, templates);
   }
 
   function openEdit(item: PushTemplateMeta) {
