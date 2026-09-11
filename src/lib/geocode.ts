@@ -22,9 +22,15 @@ function isCityName(value: string) {
   return /רמת\s*גן/u.test(value) || /ramat\s*gan/i.test(value);
 }
 
-function areaLabelFor(hit: { lat: number; lng: number }) {
+function areaLabelFor(hit: { lat: number; lng: number; suburb?: string }) {
   // Only append one of the 3 neighborhoods. Pins nearer to הגפן stay unlabeled.
-  return neighborhoodFromCoords(hit.lat, hit.lng);
+  const fromCoords = neighborhoodFromCoords(hit.lat, hit.lng);
+  if (fromCoords) return fromCoords;
+  const suburb = hit.suburb?.trim() ?? "";
+  if (suburb && !isCityName(suburb) && (NEIGHBORHOODS as readonly string[]).includes(suburb)) {
+    return suburb as (typeof NEIGHBORHOODS)[number];
+  }
+  return null;
 }
 
 type NominatimHit = {
@@ -113,7 +119,7 @@ function formatLabel(hit: NominatimHit): string | null {
         : null;
     return area && !street.includes(area) ? `${street}, ${area}` : street;
   }
-  const area = areaLabelFor({ lat, lng });
+  const area = areaLabelFor({ lat, lng, suburb });
   return area && !street.includes(area) ? `${street}, ${area}` : street;
 }
 
@@ -244,7 +250,7 @@ function attachTypedNumber(hit: AddressHit, num: string): AddressHit {
     new RegExp(`\\s+${num}$`, "u"),
     "",
   );
-  const area = areaLabelFor({ lat: hit.lat, lng: hit.lng });
+  const area = areaLabelFor({ lat: hit.lat, lng: hit.lng, suburb: hit.suburb });
   const label = area ? `${road} ${num}, ${area}` : `${road} ${num}`;
   return { ...hit, road, houseNumber: num, label, precise: hit.precise && already === num };
 }
