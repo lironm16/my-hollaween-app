@@ -27,7 +27,7 @@ export async function PUT(request: Request) {
   for (const row of json?.templates ?? []) {
     if (!PUSH_KINDS.includes(row.id as PushKind)) continue;
     incoming.templates![row.id as PushKind] = {
-      enabled: row.enabled !== false,
+      enabled: typeof row.enabled === "boolean" ? row.enabled : true,
       title: (row.title ?? "").slice(0, 80),
       body: (row.body ?? "").slice(0, 280),
     };
