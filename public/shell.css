@@ -65,21 +65,31 @@ button {
   }
 }
 
-.app-header > div {
+.app-header__bar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
+  width: 100%;
   max-width: 72rem;
   margin: 0 auto;
   padding: 0.65rem 0.75rem;
 }
 
-.app-header > div > a:first-child {
+.app-header__brand {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  align-items: stretch;
+  align-items: flex-end;
+  text-align: right;
   gap: 0;
+}
+
+.app-header__actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .neighborhood-marquee {
@@ -91,13 +101,6 @@ button {
   display: inline-block;
   max-width: 100%;
   white-space: nowrap;
-}
-
-.app-header > div > div {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-inline-start: auto;
 }
 
 html:has(#neighborhood-shell),

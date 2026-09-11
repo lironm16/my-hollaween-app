@@ -70,7 +70,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {themeCss ? <style dangerouslySetInnerHTML={{ __html: themeCss }} /> : null}
         <link rel="stylesheet" href="/app.css?v=97" />
         <meta name="hw-build" content="2026-09-10-route-fast-v94" />
-        <link rel="stylesheet" href="/shell.css?v=55" />
+        <link rel="stylesheet" href="/shell.css?v=56" />
       </head>
       <body className="relative h-full min-h-dvh font-sans">
         <Script src="/boot.js" strategy="beforeInteractive" />
