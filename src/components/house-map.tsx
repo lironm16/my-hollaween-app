@@ -592,7 +592,6 @@ type Props = {
   locating?: boolean;
   onLocate?: () => void;
   routeLine?: LatLng[] | null;
-  routeStraightPreview?: boolean;
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
   /** Walking-route start (GPS / custom / neighborhood) for the dashed approach. */
   routeStart?: LatLng | null;
@@ -629,7 +628,6 @@ export function HouseMap({
   locating = false,
   onLocate,
   routeLine = null,
-  routeStraightPreview = false,
   routeStops = null,
   routeStart = null,
   routeStartedFrom = null,
@@ -862,13 +860,12 @@ export function HouseMap({
               positions={routePositions}
               pathOptions={{
                 color: "#9a3412",
-                weight: routeStraightPreview ? 6 : 8,
-                opacity: routeStraightPreview ? 0.28 : 0.4,
-                dashArray: routeStraightPreview ? "10 12" : undefined,
+                weight: 8,
+                opacity: 0.4,
                 lineCap: "round",
                 lineJoin: "round",
               }}
-              smoothFactor={routeStraightPreview ? 1.2 : 0}
+              smoothFactor={0}
               interactive={false}
             />
             <Polyline
@@ -876,13 +873,12 @@ export function HouseMap({
               positions={routePositions}
               pathOptions={{
                 color: "#f97316",
-                weight: routeStraightPreview ? 4 : 5,
-                opacity: routeStraightPreview ? 0.92 : 1,
-                dashArray: routeStraightPreview ? "10 12" : undefined,
+                weight: 5,
+                opacity: 1,
                 lineCap: "round",
                 lineJoin: "round",
               }}
-              smoothFactor={routeStraightPreview ? 1.2 : 0}
+              smoothFactor={0}
               interactive={false}
             />
           </>
