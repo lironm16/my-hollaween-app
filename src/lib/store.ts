@@ -37,6 +37,7 @@ import {
   type PushPayload,
 } from "@/lib/push";
 import { subscriptionAllowsTopic } from "@/lib/push-topics";
+import { neighborhoodPushBroadcastAllowed } from "@/lib/push-policy";
 import {
   AUTO_PUSH_KINDS,
   PUSH_KINDS,
@@ -982,6 +983,7 @@ async function dispatchHousePush(
     (prev ? classifyHouseAlert(prev, next) : "houseAdded") ??
     ownerOfferKindFromPatch(patch, next, prev ?? undefined);
   if (!kind) return;
+  if (!neighborhoodPushBroadcastAllowed(kind)) return;
   const stored = (await loadDb()).pushSettings as StoredPushSettings | undefined;
   const payload = payloadForKind(kind, next, stored);
   if (!payload) return { kind };
@@ -1088,6 +1090,7 @@ export async function notifyHouseKind(options: {
   }
   if (AUTO_PUSH_KINDS.has(options.kind) && !options.admin) return { error: "auto" as const };
   if (!houseMatchesNotifyKind(house, options.kind)) return { error: "mismatch" as const };
+  if (!neighborhoodPushBroadcastAllowed(options.kind)) return { error: "mapOnly" as const };
   const stored = (await loadDb()).pushSettings as StoredPushSettings | undefined;
   const payload = payloadForKind(options.kind, house, stored);
   if (!payload) return { error: "disabled" as const };
