@@ -39,22 +39,8 @@ export function AppHeader({
       className="app-header relative z-50 border-b border-orange-500/20 bg-[#14091c]/90 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md"
       style={{ flexShrink: 0 }}
     >
-      <div className="mx-auto flex max-w-6xl items-center gap-3 px-3 py-2.5 sm:px-4">
-        <Link
-          href="/"
-          aria-label="מסך הבית"
-          className="flex min-w-0 flex-1 flex-col"
-          onClick={(event) => {
-            if (!onHomeTap) return;
-            event.preventDefault();
-            onHomeTap();
-          }}
-        >
-          <BrandTitle />
-          <NeighborhoodMarquee />
-        </Link>
-        <div className="ms-auto flex items-center gap-1.5 sm:gap-2">
-          <PushAlertsButton />
+      <div className="app-header__bar mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-3 py-2.5 sm:px-4" dir="ltr">
+        <div className="app-header__actions flex shrink-0 items-center gap-1.5 sm:gap-2">
           <button
             type="button"
             aria-label="תפריט"
@@ -64,7 +50,22 @@ export function AppHeader({
           >
             <Menu className="size-5" />
           </button>
+          <PushAlertsButton />
         </div>
+        <Link
+          href="/"
+          aria-label="מסך הבית"
+          className="app-header__brand flex min-w-0 flex-col items-end text-right"
+          dir="rtl"
+          onClick={(event) => {
+            if (!onHomeTap) return;
+            event.preventDefault();
+            onHomeTap();
+          }}
+        >
+          <BrandTitle />
+          <NeighborhoodMarquee />
+        </Link>
       </div>
 
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
