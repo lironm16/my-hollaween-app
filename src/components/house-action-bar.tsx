@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, List, MapPinned, Navigation, Pencil, Share2 } from "lucide-react";
+import { Heart, List, MapPinned, Navigation, Pencil, Share2, Undo2, SkipForward } from "lucide-react";
 import { VisitedCheck } from "@/components/visited-check";
 import { useHouseTraffic } from "@/hooks/use-house-traffic";
 import { toast } from "sonner";
@@ -31,6 +31,9 @@ export function HouseActionBar({
   onToggleEdit,
   onShowOnMap,
   onShowInList,
+  onSkip,
+  onRestoreRoute,
+  skipped,
   editing,
   navOnly,
   showNav = true,
@@ -43,6 +46,9 @@ export function HouseActionBar({
   onToggleEdit?: () => void;
   onShowOnMap?: () => void;
   onShowInList?: () => void;
+  onSkip?: () => void;
+  onRestoreRoute?: () => void;
+  skipped?: boolean;
   editing?: boolean;
   navOnly?: boolean;
   showNav?: boolean;
@@ -132,6 +138,34 @@ export function HouseActionBar({
               onClick={onToggleVisited}
             >
               <VisitedCheck visited={visited} inButton />
+            </button>
+          ) : null}
+          {onSkip ? (
+            <button
+              type="button"
+              className="house-action-btn"
+              aria-label="דילוג על הבית במסלול"
+              title="דילוג"
+              onClick={(event) => {
+                event.stopPropagation();
+                onSkip();
+              }}
+            >
+              <SkipForward className="size-6" strokeWidth={2.2} />
+            </button>
+          ) : null}
+          {onRestoreRoute ? (
+            <button
+              type="button"
+              className={cn("house-action-btn", skipped && "is-on")}
+              aria-label="החזרה למסלול"
+              title="החזר למסלול"
+              onClick={(event) => {
+                event.stopPropagation();
+                onRestoreRoute();
+              }}
+            >
+              <Undo2 className="size-6" strokeWidth={2.2} />
             </button>
           ) : null}
           {onToggleEdit ? (

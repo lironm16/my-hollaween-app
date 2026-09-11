@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { HouseCard } from "@/components/house-card";
 import { formatDistance } from "@/lib/geo";
 import type { WalkingRoute } from "@/lib/route";
+import type { PublicHouse } from "@/lib/types";
 
 function hopLabel(houseIndex: number, fromPreviousMeters: number) {
   if (houseIndex > 0) return "אותו בניין";
@@ -23,6 +24,7 @@ function RouteLeg({ label }: { label: string }) {
 
 export function RouteList({
   route,
+  skippedHouses = [],
   hasGps,
   onRequestLocation,
   onChangeOrigin,
@@ -34,6 +36,9 @@ export function RouteList({
   onToggleLike,
   visitedIds,
   onToggleVisited,
+  skippedIds,
+  onSkipHouse,
+  onRestoreHouse,
   admin = false,
   canEditHouse,
   onShowOnMap,
@@ -41,6 +46,7 @@ export function RouteList({
   editingId,
 }: {
   route: WalkingRoute | null;
+  skippedHouses?: PublicHouse[];
   hasGps: boolean;
   onRequestLocation?: () => void;
   onChangeOrigin?: () => void;
@@ -52,6 +58,9 @@ export function RouteList({
   onToggleLike?: (id: string) => void;
   visitedIds?: string[];
   onToggleVisited?: (id: string) => void;
+  skippedIds?: string[];
+  onSkipHouse?: (id: string) => void;
+  onRestoreHouse?: (id: string) => void;
   admin?: boolean;
   canEditHouse?: (id: string) => boolean;
   onShowOnMap?: (id: string) => void;
@@ -73,7 +82,7 @@ export function RouteList({
       </Button>
     ) : null;
 
-  if (!route) {
+  if (!route && skippedHouses.length === 0) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center text-violet-200">
         {gpsAction}
@@ -86,8 +95,8 @@ export function RouteList({
   }
 
   const startLabel =
-    route.originLabel || (route.startedFrom === "gps" ? "מיקום נוכחי" : "ממרכז השכונה");
-  const cards = route.stops.flatMap((stop) =>
+    route?.originLabel || (route?.startedFrom === "gps" ? "מיקום נוכחי" : "ממרכז השכונה");
+  const cards = (route?.stops ?? []).flatMap((stop) =>
     stop.houses.map((house, houseIndex) => ({
       house,
       order: stop.order,
@@ -98,25 +107,27 @@ export function RouteList({
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-3 py-3">
       <ol className="route-list">
-        <li className="route-list-card">
-          <div className="flex items-start gap-3">
-            <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-black">
-              <MapPin className="size-4" strokeWidth={2.4} />
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-base font-medium text-orange-100">נקודת התחלה</p>
-                {onChangeOrigin ? (
-                  <Button type="button" size="sm" variant="outline" onClick={onChangeOrigin}>
-                    שינוי
-                  </Button>
-                ) : null}
+        {route ? (
+          <li className="route-list-card">
+            <div className="flex items-start gap-3">
+              <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-black">
+                <MapPin className="size-4" strokeWidth={2.4} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-base font-medium text-orange-100">נקודת התחלה</p>
+                  {onChangeOrigin ? (
+                    <Button type="button" size="sm" variant="outline" onClick={onChangeOrigin}>
+                      שינוי
+                    </Button>
+                  ) : null}
+                </div>
+                <p className="mt-0.5 text-base text-violet-300">{startLabel}</p>
+                {gpsAction}
               </div>
-              <p className="mt-0.5 text-base text-violet-300">{startLabel}</p>
-              {gpsAction}
             </div>
-          </div>
-        </li>
+          </li>
+        ) : null}
         {cards.map(({ house, order, hop }, i) => (
           <li
             key={house.id}
@@ -132,6 +143,7 @@ export function RouteList({
                 onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
                 visited={visitedIds?.includes(house.id)}
                 onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
+                onSkip={onSkipHouse ? () => onSkipHouse(house.id) : undefined}
                 canEdit={Boolean(canEditHouse?.(house.id))}
                 admin={admin}
                 onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
@@ -144,6 +156,38 @@ export function RouteList({
           </li>
         ))}
       </ol>
+      {skippedHouses.length > 0 ? (
+        <section className="mt-6 space-y-3">
+          <div className="px-1">
+            <h2 className="text-lg font-semibold text-violet-200">דילגתי ({skippedHouses.length})</h2>
+            <p className="mt-1 text-sm text-violet-400">בתים שדילגתם עליהם במסלול — עדיין על המפה, שקופים.</p>
+          </div>
+          <ol className="route-list">
+            {skippedHouses.map((house) => (
+              <li key={`skipped-${house.id}`}>
+                <div className="route-list-house">
+                  <HouseCard
+                    house={house}
+                    catalogSource={catalogSource}
+                    liked={likedIds?.includes(house.id)}
+                    onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
+                    visited={visitedIds?.includes(house.id)}
+                    onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
+                    skipped
+                    onRestoreRoute={onRestoreHouse ? () => onRestoreHouse(house.id) : undefined}
+                    canEdit={Boolean(canEditHouse?.(house.id))}
+                    admin={admin}
+                    onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
+                    onOpen={() => onSelectHouse(house.id, 0)}
+                    onToggleEdit={onEditHouse ? () => onEditHouse(house.id, 0) : undefined}
+                    editing={editingId === house.id}
+                  />
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
     </div>
   );
 }
