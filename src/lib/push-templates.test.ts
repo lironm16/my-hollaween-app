@@ -53,7 +53,8 @@ describe("migratePushSettings", () => {
     });
     assert.equal(changed, true);
     assert.equal(settings.templates?.candyLow?.enabled, false);
-    assert.match(settings.templates?.candyLow?.title ?? "", /מעט|🍬/);
+    assert.equal(settings.templates?.candyLow?.title, "{nickname}");
+    assert.match(settings.templates?.candyLow?.body ?? "", /🟠/);
     assert.doesNotMatch(settings.templates?.candyLow?.title ?? "", /מותאם/);
   });
 });
@@ -209,7 +210,16 @@ describe("filledPushForKind", () => {
     const house = baseHouse({ treatStock: { candy: "low" } });
     const filled = filledPushForKind("candyLow", house, null);
     assert.ok(filled);
-    assert.match(filled!.title, /בית הדלעת/);
+    assert.equal(filled!.title, "בית הדלעת");
+    assert.match(filled!.body, /🟠/);
     assert.match(filled!.body, /חרוזים/);
+  });
+
+  it("uses fixed title for house-added alerts", () => {
+    const house = baseHouse();
+    const filled = filledPushForKind("houseAdded", house, null);
+    assert.ok(filled);
+    assert.match(filled!.title, /בית אימה נוסף למפה/);
+    assert.match(filled!.body, /בית הדלעת/);
   });
 });
