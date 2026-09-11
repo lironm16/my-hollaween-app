@@ -11,6 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { readApiJson } from "@/lib/api-json";
 import { cn } from "@/lib/utils";
 import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
+import {
+  PUSH_TEMPLATE_DISPLAY_ORDER,
+  PushOwnerChoiceLegend,
+  PushTemplateSign,
+} from "@/components/push-template-signs";
 import { fillPushTemplate } from "@/lib/push-templates";
 import type { PushKind, PushTemplateMeta } from "@/lib/push-templates";
 import type { PublicHouse } from "@/lib/types";
@@ -259,8 +264,10 @@ export function AdminPushPanel() {
     }
   }
 
-  const autoTemplates = templates.filter((item) => item.auto);
-  const ownerTemplates = templates.filter((item) => !item.auto);
+  const sortedTemplates = [...templates].sort(
+    (a, b) => PUSH_TEMPLATE_DISPLAY_ORDER.indexOf(a.id) - PUSH_TEMPLATE_DISPLAY_ORDER.indexOf(b.id),
+  );
+  const templatesByKind = new Map(sortedTemplates.map((item) => [item.id, item]));
 
   function renderTemplate(item: PushTemplateMeta) {
     const open = expanded === item.id;
@@ -275,7 +282,7 @@ export function AdminPushPanel() {
       >
         <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 aria-label={open ? "סגירת עריכה" : `עריכת ${item.label}`}
@@ -288,9 +295,14 @@ export function AdminPushPanel() {
               >
                 <Pencil className="size-3.5" />
               </button>
-              <p className="min-w-0 flex-1 text-base font-medium text-orange-100">{item.label}</p>
+              <PushTemplateSign kind={item.id} />
+              {item.auto ? (
+                <span className="rounded-full bg-orange-500/20 px-2 py-0.5 text-base font-medium text-orange-200">
+                  אוטומטי
+                </span>
+              ) : null}
             </div>
-            <p className="text-base text-violet-300">{item.hint}</p>
+            {open ? <p className="mt-1 text-base text-violet-300">{item.hint}</p> : null}
           </div>
           <Toggle
             on={item.enabled}
@@ -433,36 +445,9 @@ export function AdminPushPanel() {
             </li>
           </ul>
         </div>
-        <div className="space-y-2 rounded-lg bg-[#12081a]/60 p-2.5 ring-1 ring-orange-500/10">
-          <p className="text-base font-medium text-orange-100">מה בעל הבית בוחר — ואיזו התראה נשלחת</p>
-          <ul className="space-y-1 text-base text-violet-300">
-            <li>
-              <span className="text-orange-100">נגמר</span> — הממתקים אזלו, הבית עדיין פתוח לביקור → «נגמרו
-              הממתקים»
-            </li>
-            <li>
-              <span className="text-orange-100">נגמר + סגור</span> — הממתקים אזלו והבית כבר סגור לביקורים →
-              «נגמרו הממתקים (סגור)»
-            </li>
-            <li>
-              <span className="text-orange-100">בלי ממתקים</span> + קישוטים — הבית מקושט בלי חלוקת ממתקים →
-              «מקושט בלי ממתקים»
-            </li>
-            <li>
-              <span className="text-orange-100">נגמר — סגור</span> — הממתקים אזלו והבית נסגר לערב → «נסגר
-              לביקור» (מלאי נשמר כ«נגמר» בנתונים)
-            </li>
-            <li>
-              <span className="text-orange-100">סגור</span> — הבית נסגר לערב בלי לסמן «נגמר» → «נסגר
-              לביקור»
-            </li>
-            <li>
-              <span className="text-orange-100">הפסקה</span> — הקפאה זמנית מהמפה → «הפסקה» (בעל הבית מאשר שליחה)
-            </li>
-          </ul>
-        </div>
+        <PushOwnerChoiceLegend templatesByKind={templatesByKind} />
         <p className="text-base text-violet-300">
-          כבוי = התבנית לא נשלחת. אחרי שמירת סטטוס, בעל הבית יכול לאשר שליחה — חוץ מ«בית חדש במפה».
+          כבוי = התבנית לא נשלחת. אחרי שמירת סטטוס, בעל הבית יכול לאשר שליחה — חוץ מבית חדש (אוטומטי).
         </p>
         <div className="space-y-1">
           <span className="text-base text-violet-200">בית לשליחה ידנית (בדיקה)</span>
@@ -477,18 +462,7 @@ export function AdminPushPanel() {
         {templates.length === 0 ? (
           <p className="text-base text-violet-400">טוענים תבניות…</p>
         ) : (
-          <>
-            {autoTemplates.length > 0 ? (
-              <div className="space-y-1.5">
-                <p className="text-base font-medium text-amber-100/90">אוטומטיות</p>
-                {autoTemplates.map(renderTemplate)}
-              </div>
-            ) : null}
-            <div className="space-y-1.5">
-              <p className="text-base font-medium text-amber-100/90">אחרי שמירה — בעל הבית מאשר שליחה</p>
-              {ownerTemplates.map(renderTemplate)}
-            </div>
-          </>
+          <div className="space-y-1.5">{sortedTemplates.map(renderTemplate)}</div>
         )}
       </div>
     </div>

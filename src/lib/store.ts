@@ -3,8 +3,7 @@ import path from "node:path";
 import { get as getBlob, put as putBlob } from "@vercel/blob";
 import { canonicalAddressForBuilding } from "@/lib/house-clusters";
 import { canonicalHouseId, newEditCode, newPublicId, sameHouseId, toPublicHouse } from "@/lib/ids";
-import { inNeighborhood } from "@/lib/config";
-import { config } from "@/lib/config";
+import { config, formatDisplayAddress, inNeighborhood } from "@/lib/config";
 import { assertRealAddress } from "@/lib/geocode";
 import {
   defaultTreatStock,
@@ -677,9 +676,14 @@ export async function submitHouse(
         : houseHoursWindows(input),
     );
     const decor = syncDecorFields({ ...input, visit });
+    const canonical = canonicalAddressForBuilding(input.address, db.houses);
     const house: House = {
       ...input,
-      address: canonicalAddressForBuilding(input.address, db.houses),
+      address: formatDisplayAddress({
+        address: canonical,
+        lat: input.lat,
+        lng: input.lng,
+      }),
       treats,
       treatStock,
       visit,
@@ -735,6 +739,9 @@ export async function updateByEditCode(
       delete clean.treatStock;
     }
     Object.assign(house, clean);
+    if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
+      house.address = formatDisplayAddress(house);
+    }
     if (house.photoUrl) {
       const parsed = parsePhotoUrl(house.photoUrl);
       if (parsed !== null) house.photoUrl = parsed;
@@ -831,6 +838,9 @@ export async function adminUpdate(
     if (patch.description !== undefined) house.description = patch.description;
     if (patch.lat !== undefined) house.lat = patch.lat;
     if (patch.lng !== undefined) house.lng = patch.lng;
+    if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
+      house.address = formatDisplayAddress(house);
+    }
     if (patch.treats !== undefined) house.treats = patch.treats;
     if (patch.treatStock !== undefined) house.treatStock = { ...house.treatStock, ...patch.treatStock };
     if (patch.visit !== undefined) house.visit = patch.visit;

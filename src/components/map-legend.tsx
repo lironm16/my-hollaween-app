@@ -139,11 +139,13 @@ export function MapLegend() {
                   compact
                   onClose={() => setOpen(false)}
                   label="סגירת המקרא"
-                  className="px-3 pb-1"
+                  title={
+                    <span id={titleId} className="text-base font-semibold text-orange-100">
+                      מקרא
+                    </span>
+                  }
+                  className="border-b border-orange-500/15 px-3 pb-2"
                 />
-                <h2 id={titleId} className="shrink-0 px-3 pb-1 text-base font-semibold text-orange-100">
-                  מקרא
-                </h2>
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-3">
                   <div className="flex flex-col gap-3">
                     {GROUPS.map((group) => (
