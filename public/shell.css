@@ -101,6 +101,7 @@ button {
   display: inline-block;
   max-width: 100%;
   white-space: nowrap;
+  text-align: right;
 }
 
 html:has(#neighborhood-shell),
