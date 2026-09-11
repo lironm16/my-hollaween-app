@@ -79,7 +79,7 @@ export function readPushTopicPrefs(): PushTopicPrefs {
     const parsed = JSON.parse(raw) as Partial<PushTopicPrefs>;
     return {
       newHouse: parsed.newHouse !== false,
-      houseStatus: parsed.houseStatus !== false,
+      houseStatus: parsed.houseStatus === true,
       admin: parsed.admin !== false,
     };
   } catch {
