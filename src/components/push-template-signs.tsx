@@ -31,7 +31,7 @@ export const PUSH_KIND_LABEL: Record<PushKind, string> = {
   backActive: "שוב פתוח",
   candyLow: "מעט ממתקים",
   candyOut: "נגמרו הממתקים",
-  candyOutClosed: "נגמרו הממתקים (סגור)",
+  candyOutClosed: "נגמרו (סגור)",
   candyRestock: "חזרו למלאי",
 };
 

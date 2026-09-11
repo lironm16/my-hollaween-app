@@ -54,7 +54,7 @@ describe("migratePushSettings", () => {
     assert.equal(changed, true);
     assert.equal(settings.templates?.candyLow?.enabled, false);
     assert.equal(settings.templates?.candyLow?.title, "{nickname}");
-    assert.match(settings.templates?.candyLow?.body ?? "", /🟠/);
+    assert.match(settings.templates?.candyLow?.body ?? "", /🟠🍬/);
     assert.doesNotMatch(settings.templates?.candyLow?.title ?? "", /מותאם/);
   });
 });
@@ -211,7 +211,7 @@ describe("filledPushForKind", () => {
     const filled = filledPushForKind("candyLow", house, null);
     assert.ok(filled);
     assert.equal(filled!.title, "בית הדלעת");
-    assert.match(filled!.body, /🟠/);
+    assert.match(filled!.body, /🟠🍬/);
     assert.match(filled!.body, /חרוזים/);
   });
 
@@ -221,5 +221,6 @@ describe("filledPushForKind", () => {
     assert.ok(filled);
     assert.match(filled!.title, /בית אימה נוסף למפה/);
     assert.match(filled!.body, /בית הדלעת/);
+    assert.doesNotMatch(filled!.body, /מוזמנים להגיע/);
   });
 });

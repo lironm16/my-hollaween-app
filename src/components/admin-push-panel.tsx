@@ -236,8 +236,8 @@ export function AdminPushPanel() {
         key={item.id}
         className="space-y-2 rounded-lg bg-[#12081a]/80 p-2 ring-1 ring-orange-500/15"
       >
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+        <div className="flex items-center justify-between gap-1.5">
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
             <button
               type="button"
               aria-label={open ? "סגירת עריכה" : `עריכת ${item.label}`}
@@ -250,10 +250,10 @@ export function AdminPushPanel() {
             >
               <Pencil className="size-3.5" />
             </button>
-            <p className="text-base font-medium text-orange-100">
-              {item.label}
+            <p className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-base font-medium text-orange-100">
+              <span className="truncate">{item.label}</span>
               {item.auto ? (
-                <span className="ms-1.5 rounded-full bg-orange-500/20 px-2 py-0.5 text-base font-medium text-orange-200">
+                <span className="shrink-0 rounded-full bg-orange-500/20 px-1.5 py-0.5 text-sm font-medium text-orange-200">
                   אוטומטי
                 </span>
               ) : null}
