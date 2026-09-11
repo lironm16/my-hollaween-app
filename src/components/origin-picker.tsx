@@ -8,7 +8,6 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle,
 } from "@/components/ui/sheet";
 import type { DistanceOriginChoice } from "@/lib/distance-origin";
 import { originLabel } from "@/lib/distance-origin";
@@ -76,9 +75,13 @@ export function OriginPickerSheet({
         showCloseButton={false}
         className="flex flex-col gap-0 overflow-hidden rounded-t-2xl border-orange-500/25 bg-[#160b1f] p-0 sm:max-w-none"
       >
-        <OverlayCloseBar compact onClose={() => onOpenChange(false)} className="border-b border-orange-500/15 pb-2" />
-        <SheetHeader className="shrink-0 px-4 py-3">
-          <SheetTitle className="text-lg font-semibold text-orange-50">מאיפה למדוד מרחק</SheetTitle>
+        <OverlayCloseBar
+          compact
+          onClose={() => onOpenChange(false)}
+          title={<span className="text-lg font-semibold text-orange-50">מאיפה למדוד מרחק</span>}
+          className="border-b border-orange-500/15 pb-2"
+        />
+        <SheetHeader className="shrink-0 px-4 pb-2 pt-3">
           <p className="text-base text-violet-300">למיון ברשימה, למפה, ולמסלול</p>
         </SheetHeader>
         <div className="space-y-2 px-4 py-3">
