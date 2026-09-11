@@ -14,6 +14,14 @@ import { PUSH_TEMPLATE_DISPLAY_ORDER, PushTemplateSign } from "@/components/push
 import { fillPushTemplate } from "@/lib/push-templates";
 import type { PushKind, PushTemplateMeta } from "@/lib/push-templates";
 
+const PREVIEW_HOUSE = {
+  name: "בית הדלעת",
+  address: "חרוזים 8, חרוזים",
+  lat: 32.0916,
+  lng: 34.8029,
+  ownerFrozenUntil: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+};
+
 function Toggle({ on, onClick, disabled }: { on: boolean; onClick: () => void; disabled?: boolean }) {
   return (
     <span className="flex shrink-0 items-center gap-1.5">
@@ -211,12 +219,36 @@ export function AdminPushPanel() {
       open &&
       (draftTitle.trim() !== item.title.trim() || draftBody.trim() !== item.body.trim());
 
+    const previewPayload = {
+      ...fillPushTemplate({ title: open ? draftTitle : item.title, body: open ? draftBody : item.body }, PREVIEW_HOUSE),
+      url: "/",
+    };
+
     return (
       <article
         key={item.id}
-        className="space-y-1.5 rounded-lg bg-[#12081a]/80 p-2 ring-1 ring-orange-500/15"
+        className="space-y-2 rounded-lg bg-[#12081a]/80 p-2 ring-1 ring-orange-500/15"
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1 space-y-1">
+            <p className="text-base font-medium text-orange-100">
+              {item.label}
+              {item.auto ? (
+                <span className="ms-1.5 rounded-full bg-orange-500/20 px-2 py-0.5 text-base font-medium text-orange-200">
+                  אוטומטי
+                </span>
+              ) : null}
+            </p>
+            <p className="text-base leading-snug text-violet-300">{item.hint}</p>
+          </div>
+          <Toggle
+            on={item.enabled}
+            disabled={busy}
+            onClick={() => void patch(item.id, { enabled: !item.enabled })}
+          />
+        </div>
+
+        <div className="flex items-center gap-2" dir="ltr">
           <button
             type="button"
             aria-label={open ? "סגירת עריכה" : `עריכת ${item.label}`}
@@ -229,24 +261,11 @@ export function AdminPushPanel() {
           >
             <Pencil className="size-3.5" />
           </button>
-          <PushTemplateSign kind={item.id} className="shrink-0" />
-          <div className="min-w-0 flex-1">
-            <p className="text-base font-medium text-orange-100">
-              {item.label}
-              {item.auto ? (
-                <span className="ms-1.5 rounded-full bg-orange-500/20 px-2 py-0.5 text-base font-medium text-orange-200">
-                  אוטומטי
-                </span>
-              ) : null}
-            </p>
+          <div className="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-2">
+            <PushTemplateSign kind={item.id} />
           </div>
-          <Toggle
-            on={item.enabled}
-            disabled={busy}
-            onClick={() => void patch(item.id, { enabled: !item.enabled })}
-          />
         </div>
-        {open ? <p className="text-base text-violet-300">{item.hint}</p> : null}
+
         {open ? (
           <form
             className="space-y-1.5"
@@ -270,21 +289,7 @@ export function AdminPushPanel() {
               className="min-h-[3.5rem] bg-[#0c0612] text-base"
               onChange={(event) => setDraftBody(event.target.value)}
             />
-            <PushNotice
-              payload={{
-                ...fillPushTemplate(
-                  { title: draftTitle, body: draftBody },
-                  {
-                    name: "בית הדלעת",
-                    address: "חרוזים 8, חרוזים",
-                    lat: 32.0916,
-                    lng: 34.8029,
-                    ownerFrozenUntil: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-                  },
-                ),
-                url: "/",
-              }}
-            />
+            <PushNotice payload={previewPayload} />
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -307,12 +312,7 @@ export function AdminPushPanel() {
             </div>
           </form>
         ) : (
-          <div className="rounded-md bg-[#0c0612]/80 px-2 py-1.5 ring-1 ring-orange-500/10">
-            <p className="text-base font-medium text-orange-50">{item.title}</p>
-            <p className="mt-0.5 whitespace-pre-line text-base leading-snug text-violet-200">
-              {item.body}
-            </p>
-          </div>
+          <PushNotice payload={previewPayload} />
         )}
       </article>
     );
