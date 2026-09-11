@@ -54,7 +54,7 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     label: "הפסקה",
     hint: "אחרי שמירה — כשבעל הבית מקפיא מהמפה. כותרת = כינוי; {backLine} = «נחזור ב־20:00» רק אם נקבעה שעה.",
     title: "{nickname}",
-    body: "⏸️ הפסקה\n{backLine}\n{place}",
+    body: "{backLine} ⏸️ בהפסקה\n{place}",
   },
   backFromBreak: {
     id: "backFromBreak",
@@ -81,7 +81,7 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     label: "נסגר לביקור",
     hint: "אחרי שמירה בעל הבית יכול לשלוח — כשבוחרים «סגור» או «נגמר — סגור».",
     title: "{nickname}",
-    body: "⛔️ נסגר לערב\nמקווים שנהניתם! 👋\n{place}",
+    body: "⛔️ נסגר\nמקווים שנהניתם! 👋\n{place}",
   },
   decorOnly: {
     id: "decorOnly",
@@ -147,7 +147,7 @@ export type StoredPushSettings = {
 };
 
 /** Bump to reset stored template text back to DEFAULT_PUSH_TEMPLATES (enabled flags kept). */
-export const PUSH_TEMPLATES_STORAGE_GENERATION = 3;
+export const PUSH_TEMPLATES_STORAGE_GENERATION = 4;
 
 export function buildDefaultPushSettings(): StoredPushSettings {
   const templates: Partial<Record<PushKind, PushTemplateFields>> = {};

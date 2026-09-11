@@ -236,48 +236,50 @@ export function AdminPushPanel() {
         key={item.id}
         className="space-y-2 rounded-lg bg-[#12081a]/80 p-2 ring-1 ring-orange-500/15"
       >
-        <div className="flex items-center justify-between gap-1.5">
-          <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-            <button
-              type="button"
-              aria-label={open ? "סגירת עריכה" : `עריכת ${item.label}`}
-              aria-pressed={open}
-              className={cn(
-                "inline-flex size-7 shrink-0 items-center justify-center rounded-md text-orange-200 ring-1 ring-orange-500/20 hover:bg-orange-500/15",
-                open && "bg-orange-500 text-black ring-orange-400",
-              )}
-              onClick={() => (open ? cancelEdit() : openEdit(item))}
-            >
-              <Pencil className="size-3.5" />
-            </button>
-            <p className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-base font-medium text-orange-100">
-              <span className="truncate">{item.label}</span>
-              {item.auto ? (
-                <span className="shrink-0 rounded-full bg-orange-500/20 px-1.5 py-0.5 text-sm font-medium text-orange-200">
-                  אוטומטי
-                </span>
-              ) : null}
-            </p>
-            <button
-              type="button"
-              onClick={() => toggleInfo(item.id)}
-              className={cn(
-                "inline-flex size-7 shrink-0 items-center justify-center rounded-md ring-1 transition",
-                isInfoOpen
-                  ? "bg-orange-500/20 text-orange-100 ring-orange-400/50"
-                  : "text-violet-300 ring-orange-500/20 hover:bg-orange-500/10 hover:text-orange-100",
-              )}
-              aria-label="הסבר"
-              title="הסבר"
-            >
-              <Info className="size-3.5" />
-            </button>
+        <div className="space-y-1.5">
+          <p className="flex items-center gap-1.5 text-base font-medium text-orange-100">
+            <span>{item.label}</span>
+            {item.auto ? (
+              <span className="shrink-0 rounded-full bg-orange-500/20 px-1.5 py-0.5 text-sm font-medium text-orange-200">
+                אוטומטי
+              </span>
+            ) : null}
+          </p>
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                aria-label={open ? "סגירת עריכה" : `עריכת ${item.label}`}
+                aria-pressed={open}
+                className={cn(
+                  "inline-flex size-7 shrink-0 items-center justify-center rounded-md text-orange-200 ring-1 ring-orange-500/20 hover:bg-orange-500/15",
+                  open && "bg-orange-500 text-black ring-orange-400",
+                )}
+                onClick={() => (open ? cancelEdit() : openEdit(item))}
+              >
+                <Pencil className="size-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleInfo(item.id)}
+                className={cn(
+                  "inline-flex size-7 shrink-0 items-center justify-center rounded-md ring-1 transition",
+                  isInfoOpen
+                    ? "bg-orange-500/20 text-orange-100 ring-orange-400/50"
+                    : "text-violet-300 ring-orange-500/20 hover:bg-orange-500/10 hover:text-orange-100",
+                )}
+                aria-label="הסבר"
+                title="הסבר"
+              >
+                <Info className="size-3.5" />
+              </button>
+            </div>
+            <Toggle
+              on={item.enabled}
+              disabled={busy}
+              onClick={() => void patch(item.id, { enabled: !item.enabled })}
+            />
           </div>
-          <Toggle
-            on={item.enabled}
-            disabled={busy}
-            onClick={() => void patch(item.id, { enabled: !item.enabled })}
-          />
         </div>
 
         {isInfoOpen ? (
