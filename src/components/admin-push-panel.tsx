@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { HousePicker } from "@/components/house-picker";
 import { PushNotice } from "@/components/push-notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,14 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { readApiJson } from "@/lib/api-json";
 import { cn } from "@/lib/utils";
 import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
-import {
-  PUSH_TEMPLATE_DISPLAY_ORDER,
-  PushOwnerChoiceLegend,
-  PushTemplateSign,
-} from "@/components/push-template-signs";
+import { PUSH_TEMPLATE_DISPLAY_ORDER, PushTemplateSign } from "@/components/push-template-signs";
 import { fillPushTemplate } from "@/lib/push-templates";
 import type { PushKind, PushTemplateMeta } from "@/lib/push-templates";
-import type { PublicHouse } from "@/lib/types";
 
 function Toggle({ on, onClick, disabled }: { on: boolean; onClick: () => void; disabled?: boolean }) {
   return (
@@ -44,15 +38,8 @@ function Toggle({ on, onClick, disabled }: { on: boolean; onClick: () => void; d
   );
 }
 
-async function showSenderNotice(title: string, body: string) {
-  await showLocalPush(title, body);
-}
-
 export function AdminPushPanel() {
   const [templates, setTemplates] = useState<PushTemplateMeta[]>([]);
-  const [houses, setHouses] = useState<PublicHouse[]>([]);
-  const [sendHouse, setSendHouse] = useState<PublicHouse | null>(null);
-  const sendHouseId = sendHouse?.id ?? "";
   const [busy, setBusy] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [expanded, setExpanded] = useState<PushKind | null>(null);
@@ -61,7 +48,6 @@ export function AdminPushPanel() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
-  const [sendingKind, setSendingKind] = useState<PushKind | null>(null);
   const loadGen = useRef(0);
   const savingRef = useRef(false);
   const expandedRef = useRef<PushKind | null>(null);
@@ -86,13 +72,6 @@ export function AdminPushPanel() {
       }
     }
     void load();
-    void fetch("/api/catalog", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data: { houses?: PublicHouse[] }) => {
-        if (cancelled) return;
-        if (Array.isArray(data.houses)) setHouses(data.houses);
-      })
-      .catch(() => undefined);
     const onVis = () => {
       if (document.visibilityState === "visible") void load();
     };
@@ -178,48 +157,6 @@ export function AdminPushPanel() {
     }
   }
 
-  async function sendKind(kind: PushKind) {
-    if (!sendHouseId) {
-      toast.error("בחרו בית לשליחה");
-      return;
-    }
-    setSendingKind(kind);
-    try {
-      const includeEndpoint = await senderPushEndpoint();
-      const res = await fetch(`/api/houses/${encodeURIComponent(sendHouseId)}/notify`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, includeEndpoint }),
-      });
-      const data = await readApiJson<{
-        error?: string;
-        sent?: number;
-        attempted?: number;
-        failed?: number;
-        title?: string;
-        body?: string;
-      }>(res);
-      if (!res.ok) {
-        toast.error(data.error ?? "השליחה נכשלה");
-        return;
-      }
-      const sent = data.sent ?? 0;
-      const attempted = data.attempted ?? sent;
-      if (sent < attempted) {
-        toast.warning(`נשלח ל־${sent} מתוך ${attempted} מכשירים (${data.failed ?? attempted - sent} נכשלו)`);
-      } else {
-        toast.success(`נשלח ל־${sent} מכשירים`);
-      }
-      await showSenderNotice(data.title ?? "", data.body ?? "");
-      window.dispatchEvent(new Event("hw-admin-stats-refresh"));
-    } catch {
-      toast.error("אין קשר לשרת");
-    } finally {
-      setSendingKind(null);
-    }
-  }
-
   async function sendBroadcast() {
     setSending(true);
     try {
@@ -253,7 +190,7 @@ export function AdminPushPanel() {
       } else {
         toast.success(`נשלח ל־${sent} מכשירים`);
       }
-      await showSenderNotice(data.title ?? title.trim(), data.body ?? body.trim());
+      await showLocalPush(data.title ?? title.trim(), data.body ?? body.trim());
       window.dispatchEvent(new Event("hw-admin-stats-refresh"));
       setTitle("");
       setBody("");
@@ -267,7 +204,6 @@ export function AdminPushPanel() {
   const sortedTemplates = [...templates].sort(
     (a, b) => PUSH_TEMPLATE_DISPLAY_ORDER.indexOf(a.id) - PUSH_TEMPLATE_DISPLAY_ORDER.indexOf(b.id),
   );
-  const templatesByKind = new Map(sortedTemplates.map((item) => [item.id, item]));
 
   function renderTemplate(item: PushTemplateMeta) {
     const open = expanded === item.id;
@@ -280,29 +216,29 @@ export function AdminPushPanel() {
         key={item.id}
         className="space-y-1.5 rounded-lg bg-[#12081a]/80 p-2 ring-1 ring-orange-500/15"
       >
-        <div className="flex items-start gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label={open ? "סגירת עריכה" : `עריכת ${item.label}`}
+            aria-pressed={open}
+            className={cn(
+              "inline-flex size-7 shrink-0 items-center justify-center rounded-md text-orange-200 ring-1 ring-orange-500/20 hover:bg-orange-500/15",
+              open && "bg-orange-500 text-black ring-orange-400",
+            )}
+            onClick={() => (open ? cancelEdit() : openEdit(item))}
+          >
+            <Pencil className="size-3.5" />
+          </button>
+          <PushTemplateSign kind={item.id} className="shrink-0" />
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                aria-label={open ? "סגירת עריכה" : `עריכת ${item.label}`}
-                aria-pressed={open}
-                className={cn(
-                  "inline-flex size-7 shrink-0 items-center justify-center rounded-md text-orange-200 ring-1 ring-orange-500/20 hover:bg-orange-500/15",
-                  open && "bg-orange-500 text-black ring-orange-400",
-                )}
-                onClick={() => (open ? cancelEdit() : openEdit(item))}
-              >
-                <Pencil className="size-3.5" />
-              </button>
-              <PushTemplateSign kind={item.id} />
+            <p className="text-base font-medium text-orange-100">
+              {item.label}
               {item.auto ? (
-                <span className="rounded-full bg-orange-500/20 px-2 py-0.5 text-base font-medium text-orange-200">
+                <span className="ms-1.5 rounded-full bg-orange-500/20 px-2 py-0.5 text-base font-medium text-orange-200">
                   אוטומטי
                 </span>
               ) : null}
-            </div>
-            {open ? <p className="mt-1 text-base text-violet-300">{item.hint}</p> : null}
+            </p>
           </div>
           <Toggle
             on={item.enabled}
@@ -310,18 +246,7 @@ export function AdminPushPanel() {
             onClick={() => void patch(item.id, { enabled: !item.enabled })}
           />
         </div>
-        {item.auto ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={!item.enabled || !sendHouseId || sendingKind !== null}
-            className="border-orange-400/40 text-orange-100"
-            onClick={() => void sendKind(item.id)}
-          >
-            {sendingKind === item.id ? "שולחים…" : "שליחה לבית שנבחר"}
-          </Button>
-        ) : null}
+        {open ? <p className="text-base text-violet-300">{item.hint}</p> : null}
         {open ? (
           <form
             className="space-y-1.5"
@@ -429,36 +354,7 @@ export function AdminPushPanel() {
       </form>
 
       <div className="space-y-2 rounded-xl bg-black/25 p-3">
-        <p className="text-base font-medium text-amber-100">מקרא ותבניות</p>
-        <div className="space-y-2 rounded-lg bg-[#12081a]/60 p-2.5 ring-1 ring-orange-500/10">
-          <p className="text-base font-medium text-orange-100">שדות בתבנית</p>
-          <ul className="space-y-1 text-base text-violet-300">
-            <li>
-              <span className="font-mono text-orange-200">{`{nickname}`}</span> — שם הבית
-            </li>
-            <li>
-              <span className="font-mono text-orange-200">{`{place}`}</span> — כתובת מקוצרת
-            </li>
-            <li>
-              <span className="font-mono text-orange-200">{`{backLine}`}</span> — שורה על חזרה מההפסקה
-              («נחזור ב־20:00») רק אם נקבעה שעה. בלי שעה — השורה לא מופיעה.
-            </li>
-          </ul>
-        </div>
-        <PushOwnerChoiceLegend templatesByKind={templatesByKind} />
-        <p className="text-base text-violet-300">
-          כבוי = התבנית לא נשלחת. אחרי שמירת סטטוס, בעל הבית יכול לאשר שליחה — חוץ מבית חדש (אוטומטי).
-        </p>
-        <div className="space-y-1">
-          <span className="text-base text-violet-200">בית לשליחה ידנית (בדיקה)</span>
-          <HousePicker
-            houses={houses}
-            selected={sendHouse}
-            onSelect={setSendHouse}
-            placeholder="הקלידו שם או כתובת"
-          />
-        </div>
-
+        <p className="text-base font-medium text-amber-100">תבניות התראות</p>
         {templates.length === 0 ? (
           <p className="text-base text-violet-400">טוענים תבניות…</p>
         ) : (
