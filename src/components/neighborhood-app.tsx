@@ -489,7 +489,6 @@ export function NeighborhoodApp({
                 locating={geo.status === "pending" && askedLocation}
                 onLocate={originPick.goToMyLocation}
                 routeLine={routeMode && !originPick.originPickActive ? routeLine : null}
-                routeStraightPreview={activeHouseSet === "stubs"}
                 routeFitTick={routeMode && !originPick.originPickActive ? routeFitTick : 0}
                 routeStart={routeMode ? origin : null}
                 routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}

@@ -23,13 +23,9 @@ export function HouseEditOverlay({
 }) {
   return (
     <div className="house-edit-overlay" dir="rtl" role="dialog" aria-modal="true" aria-label="עריכת בית">
-      <OverlayCloseBar onClose={onClose} />
+      <OverlayCloseBar onClose={onClose} title="עריכת בית" subtitle={house.name} />
       <div className="house-edit-overlay-body">
         <div className="mx-auto w-full max-w-lg space-y-4 px-4 pb-8">
-          <div>
-            <h1 className="font-display text-2xl text-orange-300">עריכת בית</h1>
-            <p className="mt-1 text-base text-violet-200">{house.name}</p>
-          </div>
           <NightDesk
             house={house}
             admin={admin}

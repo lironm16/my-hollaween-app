@@ -3,12 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
-import { HouseActionBar } from "@/components/house-action-bar";
-import { HouseDetails } from "@/components/house-details";
+import { HouseDetailOverlay } from "@/components/house-detail-overlay";
 import { HousePicker } from "@/components/house-picker";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
@@ -86,7 +84,7 @@ export default function SearchPage() {
         />
         <h1 className="font-display mb-1 text-2xl text-orange-300">חיפוש בית</h1>
         <p className="mb-4 text-base text-violet-200">
-          בחרו בית מהרשימה. נפתח כרטיס הפרטים, כמו בלחיצה במפה או ברשימה.
+          בחרו בית מהרשימה — נפתח מסך מלא עם פרטי הבית, כמו במפה או ברשימה.
         </p>
         <div className="mb-4 space-y-1.5 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
           <Label htmlFor="house-pick">בית</Label>
@@ -98,74 +96,59 @@ export default function SearchPage() {
             loading={catalogLoading || (admin && !adminReady)}
           />
         </div>
-        {picked ? (
-          <Card
-            size="sm"
-            className="overflow-visible border-orange-500/15 bg-[#1d1028]/90 text-base"
-          >
-            <div className="house-list-card-chrome">
-              <HouseActionBar
-                house={picked}
-                liked={likes.liked(picked.id)}
-                visited={visits.visited(picked.id)}
-                onToggleLike={() => {
-                  const nextOn = !likes.liked(picked.id);
-                  reportHouseTraffic(picked.id, "saved", nextOn);
-                  likes.toggle(picked.id);
-                }}
-                onToggleVisited={() => {
-                  const nextOn = !visits.visited(picked.id);
-                  reportHouseTraffic(picked.id, "visited", nextOn);
-                  visits.toggle(picked.id);
-                }}
-                onToggleEdit={
-                  canEdit && picked
-                    ? () =>
-                        editFlow.openEdit(picked, {
-                          editCode,
-                          admin,
-                          allowDelete: true,
-                        })
-                    : undefined
-                }
-                onShowOnMap={() => {
-                  writeHomeView("map");
-                  router.push(`/?focus=${encodeURIComponent(picked.id)}`);
-                }}
-                editing={false}
-              />
-            </div>
-            <div className="px-3 pb-3">
-              {picked.status === "pending" ? (
-                <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
-                  {admin
-                    ? "בית ממתין לאישור — עדיין לא במפה הציבורית."
-                    : "הבית הזה עדיין לא במפה הציבורית. אם זה הבית שלכם, מנהל יכול לאשר אותו."}
-                </p>
-              ) : null}
-              <HouseDetails
-                  house={picked}
-                  catalogSource={source}
-                  liked={likes.liked(picked.id)}
-                  onToggleLike={() => {
-                    const nextOn = !likes.liked(picked.id);
-                    reportHouseTraffic(picked.id, "saved", nextOn);
-                    likes.toggle(picked.id);
-                  }}
-                  visited={visits.visited(picked.id)}
-                  onToggleVisited={() => {
-                    const nextOn = !visits.visited(picked.id);
-                    reportHouseTraffic(picked.id, "visited", nextOn);
-                    visits.toggle(picked.id);
-                  }}
-                  chrome="sheet"
-                />
-            </div>
-          </Card>
-        ) : (
+        {!picked ? (
           <p className="text-base text-violet-300">הקלידו שם משפחה או כתובת ובחרו בית.</p>
-        )}
+        ) : null}
       </main>
+      {picked ? (
+        <HouseDetailOverlay
+          house={picked}
+          onClose={() => selectHouse(null)}
+          liked={likes.liked}
+          onToggleLike={(id) => {
+            const nextOn = !likes.liked(id);
+            reportHouseTraffic(id, "saved", nextOn);
+            likes.toggle(id);
+          }}
+          visited={visits.visited}
+          onToggleVisited={(id) => {
+            const nextOn = !visits.visited(id);
+            reportHouseTraffic(id, "visited", nextOn);
+            visits.toggle(id);
+          }}
+          catalogSource={source}
+          managerEditCode={admin ? editCode : undefined}
+          editCodeFor={(id) =>
+            admin
+              ? adminHouses.find((item) => item.id === id)?.editCode
+              : owned.find((item) => item.id === id)?.editCode
+          }
+          canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
+          onToggleEdit={
+            canEdit
+              ? () =>
+                  editFlow.openEdit(picked, {
+                    editCode,
+                    admin,
+                    allowDelete: true,
+                  })
+              : undefined
+          }
+          onShowOnMap={() => {
+            writeHomeView("map");
+            router.push(`/?focus=${encodeURIComponent(picked.id)}`);
+          }}
+          pendingNote={
+            picked.status === "pending" ? (
+              <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
+                {admin
+                  ? "בית ממתין לאישור — עדיין לא במפה הציבורית."
+                  : "הבית הזה עדיין לא במפה הציבורית. אם זה הבית שלכם, מנהל יכול לאשר אותו."}
+              </p>
+            ) : undefined
+          }
+        />
+      ) : null}
       {picked ? (
         <HouseEditFlowPanels
           flow={editFlow.flow}
