@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Pencil } from "lucide-react";
+import { Info, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { PushNotice } from "@/components/push-notice";
 import { Button } from "@/components/ui/button";
@@ -51,6 +51,7 @@ export function AdminPushPanel() {
   const [busy, setBusy] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [expanded, setExpanded] = useState<PushKind | null>(null);
+  const [infoOpen, setInfoOpen] = useState<PushKind | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
   const [draftBody, setDraftBody] = useState("");
   const [title, setTitle] = useState("");
@@ -137,6 +138,7 @@ export function AdminPushPanel() {
 
   function openEdit(item: PushTemplateMeta) {
     setExpanded(item.id);
+    setInfoOpen(null);
     setDraftTitle(item.title);
     setDraftBody(item.body);
   }
@@ -145,6 +147,10 @@ export function AdminPushPanel() {
     setExpanded(null);
     setDraftTitle("");
     setDraftBody("");
+  }
+
+  function toggleInfo(kind: PushKind) {
+    setInfoOpen((prev) => (prev === kind ? null : kind));
   }
 
   async function saveEdit() {
@@ -219,6 +225,7 @@ export function AdminPushPanel() {
       open &&
       (draftTitle.trim() !== item.title.trim() || draftBody.trim() !== item.body.trim());
 
+    const isInfoOpen = infoOpen === item.id;
     const previewPayload = {
       ...fillPushTemplate({ title: open ? draftTitle : item.title, body: open ? draftBody : item.body }, PREVIEW_HOUSE),
       url: "/",
@@ -229,8 +236,8 @@ export function AdminPushPanel() {
         key={item.id}
         className="space-y-2 rounded-lg bg-[#12081a]/80 p-2 ring-1 ring-orange-500/15"
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1 space-y-1">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
             <p className="text-base font-medium text-orange-100">
               {item.label}
               {item.auto ? (
@@ -239,7 +246,32 @@ export function AdminPushPanel() {
                 </span>
               ) : null}
             </p>
-            <p className="text-base leading-snug text-violet-300">{item.hint}</p>
+            <button
+              type="button"
+              aria-label={open ? "סגירת עריכה" : `עריכת ${item.label}`}
+              aria-pressed={open}
+              className={cn(
+                "inline-flex size-7 shrink-0 items-center justify-center rounded-md text-orange-200 ring-1 ring-orange-500/20 hover:bg-orange-500/15",
+                open && "bg-orange-500 text-black ring-orange-400",
+              )}
+              onClick={() => (open ? cancelEdit() : openEdit(item))}
+            >
+              <Pencil className="size-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleInfo(item.id)}
+              className={cn(
+                "inline-flex size-7 shrink-0 items-center justify-center rounded-md ring-1 transition",
+                isInfoOpen
+                  ? "bg-orange-500/20 text-orange-100 ring-orange-400/50"
+                  : "text-violet-300 ring-orange-500/20 hover:bg-orange-500/10 hover:text-orange-100",
+              )}
+              aria-label="הסבר"
+              title="הסבר"
+            >
+              <Info className="size-3.5" />
+            </button>
           </div>
           <Toggle
             on={item.enabled}
@@ -248,22 +280,14 @@ export function AdminPushPanel() {
           />
         </div>
 
-        <div className="flex items-center gap-2" dir="ltr">
-          <button
-            type="button"
-            aria-label={open ? "סגירת עריכה" : `עריכת ${item.label}`}
-            aria-pressed={open}
-            className={cn(
-              "inline-flex size-7 shrink-0 items-center justify-center rounded-md text-orange-200 ring-1 ring-orange-500/20 hover:bg-orange-500/15",
-              open && "bg-orange-500 text-black ring-orange-400",
-            )}
-            onClick={() => (open ? cancelEdit() : openEdit(item))}
-          >
-            <Pencil className="size-3.5" />
-          </button>
-          <div className="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-2">
-            <PushTemplateSign kind={item.id} />
-          </div>
+        {isInfoOpen ? (
+          <p className="rounded-md bg-[#0c0612]/80 px-2 py-1.5 text-base leading-snug text-violet-300 ring-1 ring-orange-500/10">
+            {item.hint}
+          </p>
+        ) : null}
+
+        <div className="flex flex-wrap items-center justify-center gap-2" dir="ltr">
+          <PushTemplateSign kind={item.id} />
         </div>
 
         {open ? (
