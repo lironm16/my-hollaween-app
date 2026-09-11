@@ -68,9 +68,9 @@ export function OpenSign({ className }: { className?: string }) {
 
 function Transition({ from, to }: { from: ReactNode; to: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1.5" dir="ltr">
+    <span className="inline-flex items-center gap-3" dir="ltr">
       <span className="inline-flex items-center gap-1">{from}</span>
-      <ArrowRight className="size-4 shrink-0 text-violet-400" aria-hidden />
+      <ArrowRight className="size-5 shrink-0 text-violet-400" strokeWidth={2.75} aria-hidden />
       <span className="inline-flex items-center gap-1">{to}</span>
     </span>
   );
