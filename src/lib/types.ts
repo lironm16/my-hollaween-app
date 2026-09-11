@@ -188,8 +188,7 @@ export type DbFile = {
         | "candyLow"
         | "candyOut"
         | "candyOutClosed"
-        | "candyRestock"
-        | "backActive",
+        | "candyRestock",
         { enabled: boolean; title: string; body: string }
       >
     >;

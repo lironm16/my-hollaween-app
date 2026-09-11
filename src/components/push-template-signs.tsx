@@ -15,7 +15,6 @@ export const PUSH_TEMPLATE_DISPLAY_ORDER: PushKind[] = [
   "backFromBreak",
   "closed",
   "decorOnly",
-  "backActive",
   "candyLow",
   "candyOut",
   "candyOutClosed",
@@ -25,10 +24,9 @@ export const PUSH_TEMPLATE_DISPLAY_ORDER: PushKind[] = [
 export const PUSH_KIND_LABEL: Record<PushKind, string> = {
   houseAdded: "בית חדש במפה",
   onBreak: "הפסקה",
-  backFromBreak: "חזרה מההפסקה",
+  backFromBreak: "חזרה לפעילות",
   closed: "נסגר לביקור",
   decorOnly: "מקושט בלי ממתקים",
-  backActive: "שוב פתוח",
   candyLow: "מעט ממתקים",
   candyOut: "נגמרו הממתקים",
   candyOutClosed: "נגמרו (סגור)",
@@ -83,7 +81,17 @@ function signForKind(kind: PushKind): ReactNode {
     case "onBreak":
       return <Transition from={<OpenSign />} to={<PauseSign className={SIGN} />} />;
     case "backFromBreak":
-      return <Transition from={<PauseSign className={SIGN} />} to={<OpenSign />} />;
+      return (
+        <Transition
+          from={
+            <>
+              <ClosedSign className={SIGN} />
+              <PauseSign className={SIGN} />
+            </>
+          }
+          to={<OpenSign />}
+        />
+      );
     case "closed":
       return (
         <Transition
@@ -101,18 +109,6 @@ function signForKind(kind: PushKind): ReactNode {
         <Transition
           from={<CandySign tone="plenty" className={SIGN} />}
           to={<CandySign tone="none" className={SIGN} />}
-        />
-      );
-    case "backActive":
-      return (
-        <Transition
-          from={
-            <>
-              <ClosedSign className={SIGN} />
-              <PauseSign className={SIGN} />
-            </>
-          }
-          to={<OpenSign />}
         />
       );
     case "candyLow":
