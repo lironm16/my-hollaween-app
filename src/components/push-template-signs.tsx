@@ -104,11 +104,31 @@ function signForKind(kind: PushKind): ReactNode {
         />
       );
     case "backActive":
-      return <Transition from={<ClosedSign className={SIGN} />} to={<OpenSign />} />;
+      return (
+        <Transition
+          from={
+            <>
+              <ClosedSign className={SIGN} />
+              <PauseSign className={SIGN} />
+            </>
+          }
+          to={<OpenSign />}
+        />
+      );
     case "candyLow":
       return <Transition from={<CandySign tone="plenty" className={SIGN} />} to={<CandySign tone="low" className={SIGN} />} />;
     case "candyOut":
-      return <Transition from={<CandySign tone="plenty" className={SIGN} />} to={<CandySign tone="out" className={SIGN} />} />;
+      return (
+        <Transition
+          from={
+            <>
+              <CandySign tone="plenty" className={SIGN} />
+              <CandySign tone="low" className={SIGN} />
+            </>
+          }
+          to={<CandySign tone="out" className={SIGN} />}
+        />
+      );
     case "candyOutClosed":
       return (
         <Transition
