@@ -4,6 +4,7 @@ import {
   applyStreetDistances,
   buildWalkingRoute,
   buildWalkingRouteOrdered,
+  dedupeRoutePoints,
   refreshWalkingRoute,
   routeGeometryPoints,
   routePreviewPoints,
@@ -175,6 +176,15 @@ describe("applyStreetDistances", () => {
     const updated = applyStreetDistances(route!, [900], { includesOrigin: false });
     assert.equal(updated.stops[1]!.fromPreviousMeters, 900);
     assert.equal(updated.totalMeters, route!.stops[0]!.fromPreviousMeters + 900);
+  });
+});
+
+describe("dedupeRoutePoints", () => {
+  it("drops consecutive stops at the same building", () => {
+    const point = { lat: 32.0916, lng: 34.8028 };
+    const nearby = { lat: 32.0916004, lng: 34.8028003 };
+    const far = { lat: 32.092, lng: 34.81 };
+    assert.deepEqual(dedupeRoutePoints([point, nearby, far]), [point, far]);
   });
 });
 
