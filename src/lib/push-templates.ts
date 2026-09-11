@@ -25,7 +25,6 @@ export const PUSH_KINDS = [
   "candyOut",
   "candyOutClosed",
   "candyRestock",
-  "backActive",
 ] as const;
 
 export type PushKind = (typeof PUSH_KINDS)[number];
@@ -60,8 +59,8 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     id: "backFromBreak",
     auto: false,
     enabled: true,
-    label: "חזרה מההפסקה",
-    hint: "אחרי שמירה — כשמבטלים הקפאה והבית שוב פתוח.",
+    label: "חזרה לפעילות",
+    hint: "אחרי שמירה — כשחוזרים מ«הפסקה», «סגור» או «מקושט» לפתוח.",
     title: "{nickname}",
     body: "עכשיו פתוח!\nמוזמנים להגיע 👋\n{place}",
   },
@@ -128,15 +127,6 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     title: "{nickname}",
     body: "🟢🍬 חזרו למלאי\n{place}",
   },
-  backActive: {
-    id: "backActive",
-    auto: false,
-    enabled: true,
-    label: "חזרה לפעילות",
-    hint: "אחרי שמירה כשחוזרים מ«סגור», «הפסקה» או «מקושט» לפתוח.",
-    title: "{nickname}",
-    body: "✅ שוב פתוח\nמוזמנים להגיע 👋\n{place}",
-  },
 };
 
 export type StoredPushSettings = {
@@ -147,7 +137,7 @@ export type StoredPushSettings = {
 };
 
 /** Bump to reset stored template text back to DEFAULT_PUSH_TEMPLATES (enabled flags kept). */
-export const PUSH_TEMPLATES_STORAGE_GENERATION = 5;
+export const PUSH_TEMPLATES_STORAGE_GENERATION = 6;
 
 export function buildDefaultPushSettings(): StoredPushSettings {
   const templates: Partial<Record<PushKind, PushTemplateFields>> = {};
@@ -320,7 +310,7 @@ export function classifyHouseAlert(prev: House, next: House): PushKind | null {
   if (prevVisit !== "closed" && nextVisit === "closed" && !isHouseOffAir(prev)) return "closed";
   if (prevVisit !== "decorOnly" && nextVisit === "decorOnly") return "decorOnly";
   if ((prevVisit === "closed" || prevVisit === "decorOnly") && nextVisit === "come") {
-    return "backActive";
+    return "backFromBreak";
   }
 
   if (nextVisit === "come" && markedCandy(next)) {
@@ -342,7 +332,7 @@ export function houseMatchesNotifyKind(house: House, kind: PushKind): boolean {
   if (kind === "candyRestock") {
     return isPubliclyListed(house) && !paused && visit === "come" && !isOnBreak(house);
   }
-  if (kind === "backFromBreak" || kind === "backActive" || kind === "houseAdded") {
+  if (kind === "backFromBreak" || kind === "houseAdded") {
     return isPubliclyListed(house) && !paused && visit === "come";
   }
   if (kind === "closed") return visit === "closed";
@@ -404,7 +394,7 @@ export function ownerOfferKindFromPatch(
     return "closed";
   }
   if (patch.visit === "decorOnly" && houseMatchesNotifyKind(next, "decorOnly")) return "decorOnly";
-  if (patch.visit === "come" && houseMatchesNotifyKind(next, "backActive")) return "backActive";
+  if (patch.visit === "come" && houseMatchesNotifyKind(next, "backFromBreak")) return "backFromBreak";
   const candy = patch.treatStock?.candy;
   if (
     candy === "out" &&

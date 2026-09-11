@@ -129,6 +129,12 @@ describe("classifyHouseAlert", () => {
     assert.equal(classifyHouseAlert(prev, next), "closed");
   });
 
+  it("detects returning to open from closed as back to activity", () => {
+    const prev = baseHouse({ visit: "closed" });
+    const next = baseHouse({ visit: "come" });
+    assert.equal(classifyHouseAlert(prev, next), "backFromBreak");
+  });
+
   it("detects candy running out", () => {
     const prev = baseHouse({ treatStock: { candy: "plenty" } });
     const next = baseHouse({ treatStock: { candy: "out" } });
