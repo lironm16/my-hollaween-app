@@ -238,14 +238,6 @@ export function AdminPushPanel() {
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-            <p className="text-base font-medium text-orange-100">
-              {item.label}
-              {item.auto ? (
-                <span className="ms-1.5 rounded-full bg-orange-500/20 px-2 py-0.5 text-base font-medium text-orange-200">
-                  אוטומטי
-                </span>
-              ) : null}
-            </p>
             <button
               type="button"
               aria-label={open ? "סגירת עריכה" : `עריכת ${item.label}`}
@@ -258,6 +250,14 @@ export function AdminPushPanel() {
             >
               <Pencil className="size-3.5" />
             </button>
+            <p className="text-base font-medium text-orange-100">
+              {item.label}
+              {item.auto ? (
+                <span className="ms-1.5 rounded-full bg-orange-500/20 px-2 py-0.5 text-base font-medium text-orange-200">
+                  אוטומטי
+                </span>
+              ) : null}
+            </p>
             <button
               type="button"
               onClick={() => toggleInfo(item.id)}
