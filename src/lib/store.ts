@@ -40,9 +40,11 @@ import { subscriptionAllowsTopic } from "@/lib/push-topics";
 import {
   AUTO_PUSH_KINDS,
   PUSH_KINDS,
+  buildDefaultPushSettings,
   classifyHouseAlert,
   houseMatchesNotifyKind,
   mergePushTemplates,
+  migratePushSettings,
   ownerOfferKindFromPatch,
   type OwnerNotifyPatch,
   type PushKind,
@@ -621,6 +623,7 @@ export function asCatalog(
 }
 
 export async function getCatalog(): Promise<Catalog> {
+  await ensurePushSettingsGeneration();
   const db = await loadDb();
   catalogMem = asCatalog(db.houses, db.updatedAt, db.pushSettings);
   return catalogMem;
@@ -987,9 +990,56 @@ async function dispatchHousePush(
   return { kind, offer: { kind, title: payload.title, body: payload.body } };
 }
 
+let pushSettingsGenerationChecked = false;
+
+async function persistPushSettingsMigration(db: DbFile) {
+  setMem(db);
+  setGlobalDb(db);
+  try {
+    await writePushSettingsBlob(db.pushSettings);
+  } catch {
+    /* house db still holds a copy */
+  }
+  try {
+    if (blobEnabled()) await writeBlobDb(db);
+    await writeFileDb(db);
+  } catch {
+    /* memory still holds migrated templates */
+  }
+}
+
+async function ensurePushSettingsGeneration() {
+  if (pushSettingsGenerationChecked) return;
+  await withLock(async () => {
+    if (pushSettingsGenerationChecked) return;
+    const db = normalizeDb(cloneDb(await readFileDb()));
+    foldPushSettings(db, mem, getGlobalDb());
+    const { settings, changed } = migratePushSettings(db.pushSettings);
+    if (!changed) {
+      pushSettingsGenerationChecked = true;
+      return;
+    }
+    db.pushSettings = settings;
+    db.updatedAt = new Date().toISOString();
+    await persistPushSettingsMigration(db);
+    pushSettingsGenerationChecked = true;
+  });
+}
+
 export async function getPushTemplateList() {
+  await ensurePushSettingsGeneration();
   const db = await loadDb();
   return Object.values(mergePushTemplates(db.pushSettings));
+}
+
+export async function resetPushTemplates() {
+  pushSettingsGenerationChecked = false;
+  await runSyncedWrite((db) => {
+    db.pushSettings = buildDefaultPushSettings();
+    db.updatedAt = new Date().toISOString();
+  });
+  pushSettingsGenerationChecked = true;
+  return getPushTemplateList();
 }
 
 export async function savePushTemplates(input: StoredPushSettings) {

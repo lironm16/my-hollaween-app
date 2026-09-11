@@ -177,6 +177,7 @@ export type DbFile = {
   vapid?: VapidKeys;
   pushSettings?: {
     updatedAt?: string;
+    generation?: number;
     templates?: Partial<
       Record<
         | "onBreak"

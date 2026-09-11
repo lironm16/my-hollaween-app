@@ -141,8 +141,54 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
 
 export type StoredPushSettings = {
   updatedAt?: string;
+  /** Bump PUSH_TEMPLATES_STORAGE_GENERATION to reset stored title/body to defaults. */
+  generation?: number;
   templates?: Partial<Record<PushKind, PushTemplateFields>>;
 };
+
+/** Bump to reset stored template text back to DEFAULT_PUSH_TEMPLATES (enabled flags kept). */
+export const PUSH_TEMPLATES_STORAGE_GENERATION = 1;
+
+export function buildDefaultPushSettings(): StoredPushSettings {
+  const templates: Partial<Record<PushKind, PushTemplateFields>> = {};
+  for (const id of PUSH_KINDS) {
+    const base = DEFAULT_PUSH_TEMPLATES[id];
+    templates[id] = { enabled: base.enabled, title: base.title, body: base.body };
+  }
+  return {
+    updatedAt: new Date().toISOString(),
+    generation: PUSH_TEMPLATES_STORAGE_GENERATION,
+    templates,
+  };
+}
+
+export function migratePushSettings(stored?: StoredPushSettings | null): {
+  settings: StoredPushSettings;
+  changed: boolean;
+} {
+  const generation = stored?.generation ?? 0;
+  if (generation >= PUSH_TEMPLATES_STORAGE_GENERATION && stored?.templates) {
+    return { settings: stored, changed: false };
+  }
+  const templates: Partial<Record<PushKind, PushTemplateFields>> = {};
+  for (const id of PUSH_KINDS) {
+    const base = DEFAULT_PUSH_TEMPLATES[id];
+    const overlay = stored?.templates?.[id];
+    templates[id] = {
+      enabled: overlay?.enabled ?? base.enabled,
+      title: base.title,
+      body: base.body,
+    };
+  }
+  return {
+    settings: {
+      updatedAt: new Date().toISOString(),
+      generation: PUSH_TEMPLATES_STORAGE_GENERATION,
+      templates,
+    },
+    changed: true,
+  };
+}
 
 export function mergePushTemplates(
   stored?: StoredPushSettings | null,

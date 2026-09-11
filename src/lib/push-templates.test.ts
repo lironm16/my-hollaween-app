@@ -7,6 +7,7 @@ import {
   houseMatchesNotifyKind,
   isHouseOffAir,
   mergePushTemplates,
+  migratePushSettings,
   ownerOfferKindFromPatch,
   resolveHouseNotifyKind,
   stockAlertsBlocked,
@@ -42,6 +43,20 @@ function baseHouse(patch: Partial<House> = {}): House {
     ...patch,
   };
 }
+
+describe("migratePushSettings", () => {
+  it("resets stored title and body while keeping enabled flags", () => {
+    const { settings, changed } = migratePushSettings({
+      templates: {
+        candyLow: { enabled: false, title: "מותאם", body: "גוף מותאם" },
+      },
+    });
+    assert.equal(changed, true);
+    assert.equal(settings.templates?.candyLow?.enabled, false);
+    assert.match(settings.templates?.candyLow?.title ?? "", /מעט|🍬/);
+    assert.doesNotMatch(settings.templates?.candyLow?.title ?? "", /מותאם/);
+  });
+});
 
 describe("mergePushTemplates", () => {
   it("keeps defaults when storage is empty", () => {
