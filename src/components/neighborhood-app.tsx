@@ -16,6 +16,7 @@ import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
 import { RouteConfirmDialog } from "@/components/route-confirm-dialog";
+import { SkipHouseDialog } from "@/components/skip-house-dialog";
 import { LikeCheer } from "@/components/like-cheer";
 import { VisitCheer } from "@/components/visit-cheer";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
@@ -58,6 +59,7 @@ import { formatDistance } from "@/lib/geo";
 import { buildWalkingRoute } from "@/lib/route";
 import { diffRouteBySkippedIds, rebuildRouteAfterSkipChange } from "@/lib/route-changes";
 import { drainPendingRouteRestores } from "@/lib/route-mode";
+import { skipStatusSnapshot, type SkipReasonId } from "@/lib/skip-reasons";
 import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
 import { houseSelectionAnnouncement } from "@/lib/map-a11y";
 import type { Catalog, PublicHouse } from "@/lib/types";
@@ -95,6 +97,7 @@ export function NeighborhoodApp({
   const { accessibleOnly, likedOnly } = filters;
 
   const [askedLocation, setAskedLocation] = useState(false);
+  const [skipDialogHouse, setSkipDialogHouse] = useState<PublicHouse | null>(null);
   const [routePrompt, setRoutePrompt] = useState<{
     kind: "enter-route" | "filter-change" | "status-change";
     title: string;
@@ -315,41 +318,42 @@ export function NeighborhoodApp({
     applyRouteAfterSkipChange(skips.skippedIds, true);
   }, [routeMode, houses.length, skips.skippedIds.join("\0")]);
 
+  useEffect(() => {
+    if (!routeMode) return;
+    const toRestore = skips.skippedIds.filter((id) => {
+      const meta = skips.meta(id);
+      if (!meta?.temporary) return false;
+      const house = houses.find((item) => item.id === id);
+      if (!house) return false;
+      return skipStatusSnapshot(house, now, filters) !== meta.statusKey;
+    });
+    if (toRestore.length === 0) return;
+    const nextSkippedIds = skips.skippedIds.filter((id) => !toRestore.includes(id));
+    for (const id of toRestore) skips.unskip(id);
+    applyRouteAfterSkipChange(nextSkippedIds, true);
+  }, [routeMode, houses, now, filters, skips.skippedIds.join("\0")]);
+
   function handleSkipHouse(id: string) {
     if (skips.skipped(id)) return;
-    const nextSkippedIds = [id, ...skips.skippedIds.filter((item) => item !== id)];
-    if (!routeMode) {
-      skips.skip(id);
-      return;
-    }
-    const { removed, added } = diffRouteBySkippedIds(
-      pinnedRoute,
-      houses,
-      filters,
-      filterContext,
-      nextSkippedIds,
-    );
-    if (removed.length === 0 && added.length === 0) {
-      skips.skip(id);
-      return;
-    }
-    if (shouldSkipRoutePrompt("filter-change")) {
-      skips.skip(id);
-      applyRouteAfterSkipChange(nextSkippedIds, false);
-      return;
-    }
-    setRoutePrompt({
-      kind: "filter-change",
-      title: "לעדכן את המסלול?",
-      description: "הבית יוסר מהמסלול. «ביטול» משאיר את המסלול כמו שהוא.",
-      confirmLabel: "דילוג והסרה מהמסלול",
-      removedHouses: removed,
-      addedHouses: added,
-      onConfirm: () => {
-        skips.skip(id);
-        applyRouteAfterSkipChange(nextSkippedIds, false);
-      },
+    const house = houses.find((item) => item.id === id);
+    if (!house) return;
+    setSkipDialogHouse(house);
+  }
+
+  function confirmSkipHouse(reason: SkipReasonId, temporary: boolean) {
+    const house = skipDialogHouse;
+    if (!house) return;
+    setSkipDialogHouse(null);
+    const nextSkippedIds = [house.id, ...skips.skippedIds.filter((item) => item !== house.id)];
+    skips.skip(house.id, {
+      reason,
+      temporary,
+      statusKey: skipStatusSnapshot(house, now, filters),
+      skippedAt: new Date().toISOString(),
     });
+    if (routeMode) {
+      applyRouteAfterSkipChange(nextSkippedIds, false);
+    }
   }
 
   function handleRestoreHouse(id: string, opts?: { direct?: boolean }) {
@@ -823,6 +827,14 @@ export function NeighborhoodApp({
         onChooseNeighborhood={originPick.chooseNeighborhoodOrigin}
         onChooseCustom={originPick.chooseCustomOrigin}
         onPickOnMap={originPick.startOriginPick}
+      />
+      <SkipHouseDialog
+        open={Boolean(skipDialogHouse)}
+        house={skipDialogHouse}
+        filters={filters}
+        now={now}
+        onConfirm={confirmSkipHouse}
+        onCancel={() => setSkipDialogHouse(null)}
       />
       <RouteConfirmDialog
         open={Boolean(routePrompt)}

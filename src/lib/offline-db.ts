@@ -263,6 +263,22 @@ export function toggleVisited(id: string): string[] {
 }
 
 const SKIPPED_KEY = "hw-skipped-houses";
+const SKIPPED_META_KEY = "hw-skipped-meta";
+
+export type SkippedHouseMeta = {
+  reason: string;
+  temporary: boolean;
+  statusKey: string;
+  skippedAt: string;
+};
+
+export function listTemporarySkippedMeta(): Array<{ id: string; meta: SkippedHouseMeta }> {
+  const ids = loadSkippedIds();
+  const meta = loadSkippedMeta();
+  return ids
+    .filter((id) => meta[id]?.temporary)
+    .map((id) => ({ id, meta: meta[id]! }));
+}
 
 export function loadSkippedIds(): string[] {
   if (typeof window === "undefined") return [];
@@ -279,11 +295,38 @@ export function isSkipped(id: string) {
   return loadSkippedIds().includes(id);
 }
 
-export function skipHouse(id: string): string[] {
+export function loadSkippedMeta(): Record<string, SkippedHouseMeta> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(SKIPPED_META_KEY);
+    const parsed = raw ? (JSON.parse(raw) as unknown) : {};
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, SkippedHouseMeta>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveSkippedMeta(meta: Record<string, SkippedHouseMeta>) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(SKIPPED_META_KEY, JSON.stringify(meta));
+}
+
+export function getSkippedMeta(id: string): SkippedHouseMeta | undefined {
+  return loadSkippedMeta()[id];
+}
+
+export function skipHouse(id: string, meta?: SkippedHouseMeta): string[] {
   const current = loadSkippedIds();
   if (current.includes(id)) return current;
   const next = [id, ...current];
   localStorage.setItem(SKIPPED_KEY, JSON.stringify(next.slice(0, 200)));
+  if (meta) {
+    const all = loadSkippedMeta();
+    all[id] = meta;
+    saveSkippedMeta(all);
+  }
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("hw-skipped-changed"));
   }
@@ -294,6 +337,11 @@ export function unskipHouse(id: string): string[] {
   const current = loadSkippedIds();
   const next = current.filter((item) => item !== id);
   localStorage.setItem(SKIPPED_KEY, JSON.stringify(next));
+  const all = loadSkippedMeta();
+  if (all[id]) {
+    delete all[id];
+    saveSkippedMeta(all);
+  }
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("hw-skipped-changed"));
   }
