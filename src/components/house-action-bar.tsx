@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { SkipIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
+import { LikedSign, VisitedSign } from "@/components/visit-marks";
 import { toast } from "sonner";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
@@ -149,7 +150,11 @@ export function HouseActionBar({
       items.push({
         id: "like",
         label: "אהבתי",
-        icon: <Heart className={cn(MENU_ICON_CLASS, liked && "fill-current")} strokeWidth={2.2} />,
+        icon: liked ? (
+          <LikedSign className="size-7" />
+        ) : (
+          <Heart className={MENU_ICON_CLASS} strokeWidth={2.2} />
+        ),
         onClick: onToggleLike,
         active: liked,
       });
@@ -158,7 +163,11 @@ export function HouseActionBar({
       items.push({
         id: "visited",
         label: "ביקרתי",
-        icon: <VisitedCheck visited={visited} size="lg" />,
+        icon: visited ? (
+          <VisitedSign className="size-7" />
+        ) : (
+          <VisitedCheck visited={false} size="lg" />
+        ),
         onClick: onToggleVisited,
         active: visited,
       });
@@ -174,10 +183,9 @@ export function HouseActionBar({
     if (onRestoreRoute) {
       items.push({
         id: "restore",
-        label: "החזרה למסלול",
+        label: "החזרה",
         icon: <Undo2 className={MENU_ICON_CLASS} strokeWidth={2.2} />,
         onClick: onRestoreRoute,
-        active: skipped,
       });
     }
     if (onToggleEdit) {

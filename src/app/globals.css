@@ -1933,7 +1933,6 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 }
 
 .house-action-menu-item.is-active {
-  background: rgba(249, 115, 22, 0.16);
   color: #fdba74;
 }
 
