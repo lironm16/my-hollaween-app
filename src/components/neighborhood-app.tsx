@@ -586,7 +586,6 @@ export function NeighborhoodApp({
         routeMode={routeMode}
         onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
         houses={visible}
-        includeTraffic={admin}
         routeTicker={originPick.routeTicker}
       />
       <FiltersSheet

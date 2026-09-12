@@ -16,7 +16,6 @@ import { formatHoursLabel } from "@/lib/hours";
 import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl } from "@/lib/nav-links";
 import { shouldLoadHousePhoto } from "@/lib/photos";
-import { useHouseTraffic } from "@/hooks/use-house-traffic";
 import type { PublicHouse } from "@/lib/types";
 import { HOUSE_CARD_PHOTO_BOX } from "@/components/house-photo-frame";
 import { cn } from "@/lib/utils";
@@ -60,8 +59,6 @@ export function HouseDetails({
   index?: number;
 }) {
   const displayAddress = formatDisplayAddress(house);
-  const { trafficFor } = useHouseTraffic();
-  const traffic = trafficFor(house.id);
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
   const [photoReady, setPhotoReady] = useState(false);
@@ -127,11 +124,7 @@ export function HouseDetails({
       {onToggleVisited ? (
         <button
           type="button"
-          aria-label={
-            visited
-              ? `סמנו כלא ביקרתי, ${traffic.visited} ביקרו`
-              : `סמנו שביקרתי, ${traffic.visited} ביקרו`
-          }
+          aria-label={visited ? "סמנו כלא ביקרתי" : "סמנו שביקרתי"}
           onClick={(e) => {
             e.stopPropagation();
             onToggleVisited();
@@ -144,11 +137,7 @@ export function HouseDetails({
       {onToggleLike ? (
         <button
           type="button"
-          aria-label={
-            liked
-              ? `הסירו מהשמורים, ${traffic.saved} שמרו`
-              : `שמרו את הבית, ${traffic.saved} שמרו`
-          }
+          aria-label={liked ? "הסירו מהשמורים" : "שמרו את הבית"}
           onClick={(e) => {
             e.stopPropagation();
             onToggleLike();
@@ -259,12 +248,7 @@ export function HouseDetails({
       )}
       {actions}
       <div className="flex flex-wrap items-center gap-1.5">
-        <HouseTags
-          house={house}
-          large={compact}
-          savedCount={Math.max(traffic.saved, liked ? 1 : 0)}
-          visitedCount={Math.max(traffic.visited, visited ? 1 : 0)}
-        />
+        <HouseTags house={house} large={compact} />
         {house.status === "pending" ? <Badge variant="secondary">ממתין לאישור</Badge> : null}
       </div>
       {house.arrival ? (

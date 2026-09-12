@@ -12,7 +12,6 @@ import { useCatalog } from "@/hooks/use-catalog";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
-import { reportHouseTraffic } from "@/hooks/use-house-traffic";
 import { notifyCatalogChanged, removeOwnedHouse, saveOwnedHouse } from "@/lib/offline-db";
 import { toPublicHouse } from "@/lib/ids";
 import { writeHomeView } from "@/lib/home-view";
@@ -105,17 +104,9 @@ export default function SearchPage() {
           house={picked}
           onClose={() => selectHouse(null)}
           liked={likes.liked}
-          onToggleLike={(id) => {
-            const nextOn = !likes.liked(id);
-            reportHouseTraffic(id, "saved", nextOn);
-            likes.toggle(id);
-          }}
+          onToggleLike={(id) => likes.toggle(id)}
           visited={visits.visited}
-          onToggleVisited={(id) => {
-            const nextOn = !visits.visited(id);
-            reportHouseTraffic(id, "visited", nextOn);
-            visits.toggle(id);
-          }}
+          onToggleVisited={(id) => visits.toggle(id)}
           catalogSource={source}
           managerEditCode={admin ? editCode : undefined}
           editCodeFor={(id) =>

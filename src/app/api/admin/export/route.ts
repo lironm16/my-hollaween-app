@@ -3,8 +3,6 @@ import { isAdmin } from "@/lib/admin";
 import { asCatalog, getAllHouses } from "@/lib/store";
 import { housesToCsv, housesToXlsx } from "@/lib/house-csv";
 import { toPublicHouse } from "@/lib/ids";
-import { getHouseTraffic } from "@/lib/traffic-store";
-
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
@@ -15,9 +13,8 @@ export async function GET(request: Request) {
   const format = new URL(request.url).searchParams.get("format");
   if (format === "csv" || format === "xls" || format === "xlsx") {
     const listed = houses.filter((house) => house.status !== "rejected").map(toPublicHouse);
-    const traffic = await getHouseTraffic();
     if (format === "xls" || format === "xlsx") {
-      const xlsx = housesToXlsx(listed, { traffic });
+      const xlsx = housesToXlsx(listed);
       return new NextResponse(Buffer.from(xlsx), {
         headers: {
           "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -26,7 +23,7 @@ export async function GET(request: Request) {
         },
       });
     }
-    const csv = housesToCsv(listed, { traffic });
+    const csv = housesToCsv(listed);
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
