@@ -202,11 +202,12 @@ export function MapHouseSheet({
         event.stopPropagation();
       }}
     >
-      <div className="map-house-sheet-chrome">
+      <div className="map-house-sheet-chrome map-house-sheet-chrome--compact">
         <div className="map-house-sheet-handle-hit">
           <div className="map-house-sheet-handle" />
         </div>
         <HouseActionBar
+          className="map-house-sheet-menu"
           house={house}
           navOnly={overview}
           liked={liked?.(house.id)}
@@ -220,6 +221,7 @@ export function MapHouseSheet({
           onRestoreRoute={onRestoreRoute}
           skipped={skipped}
           editing={editing}
+          menuPlacement="top"
         />
       </div>
       <div ref={bodyRef} className="map-house-sheet-body">

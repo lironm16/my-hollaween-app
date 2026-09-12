@@ -83,25 +83,7 @@ export function HouseCard({
         open();
       }}
     >
-      <div
-        className="house-list-card-chrome"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <HouseActionBar
-          house={house}
-          liked={liked}
-          visited={visited}
-          onToggleLike={onToggleLike}
-          onToggleVisited={onToggleVisited}
-          onSkip={onSkip}
-          onRestoreRoute={onRestoreRoute}
-          skipped={skipped}
-          onToggleEdit={canEdit ? onToggleEdit : undefined}
-          onShowOnMap={onShowOnMap}
-          editing={editing}
-        />
-      </div>
-      <div className="px-3 pb-1">
+      <div className="px-3 pb-1 pt-2">
         {house.status === "pending" ? (
           <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
             {admin
@@ -120,6 +102,22 @@ export function HouseCard({
           chrome="sheet"
           compact={!expanded}
           index={index}
+          headerMenu={
+            <HouseActionBar
+              house={house}
+              liked={liked}
+              visited={visited}
+              onToggleLike={onToggleLike}
+              onToggleVisited={onToggleVisited}
+              onSkip={onSkip}
+              onRestoreRoute={onRestoreRoute}
+              skipped={skipped}
+              onToggleEdit={canEdit ? onToggleEdit : undefined}
+              onShowOnMap={onShowOnMap}
+              editing={editing}
+              menuPlacement="top"
+            />
+          }
         />
       </div>
     </Card>
