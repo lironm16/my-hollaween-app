@@ -13,9 +13,9 @@ import {
   Pencil,
   Search,
   Shield,
-  SkipForward,
   Sparkles,
 } from "lucide-react";
+import { SkipIcon } from "@/components/skip-icon";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
 import { NeighborhoodMarquee } from "@/components/neighborhood-marquee";
@@ -166,7 +166,7 @@ export function AppHeader({
                   ) : null}
                   {skips.skippedIds.length > 0 ? (
                     <Link href="/skipped-houses" onClick={closeMenu} className={houseSubLinkClass}>
-                      <SkipForward className="size-4" />
+                      <SkipIcon className="size-4" />
                       דילגתי ({skips.skippedIds.length})
                     </Link>
                   ) : null}
