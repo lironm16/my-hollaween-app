@@ -144,15 +144,21 @@ function pinFaceHtml(house: PublicHouse) {
   return `<img class="pin-scare" src="${src}" alt="" />`;
 }
 
-function clusterAptDotsHtml(houses: PublicHouse[], now: Date) {
+function clusterAptDotsHtml(
+  houses: PublicHouse[],
+  now: Date,
+  matchedIds?: ReadonlySet<string>,
+) {
   if (houses.length <= 1) return "";
   const dots = houses
     .map((house) => {
       const visit = pinVisitKind(house, now);
-      if (visit === "closed") return `<i class="pin-apt-dot is-closed"></i>`;
-      if (visit === "break") return `<i class="pin-apt-dot is-break"></i>`;
+      const filteredClass =
+        matchedIds && !matchedIds.has(house.id) ? " is-filtered-out" : "";
+      if (visit === "closed") return `<i class="pin-apt-dot is-closed${filteredClass}"></i>`;
+      if (visit === "break") return `<i class="pin-apt-dot is-break${filteredClass}"></i>`;
       const dot = candyPinDot(house) ?? "out";
-      return `<i class="pin-apt-dot is-${dot}"></i>`;
+      return `<i class="pin-apt-dot is-${dot}${filteredClass}"></i>`;
     })
     .join("");
   return `<span class="pin-apt-dots" aria-hidden="true">${dots}</span>`;
@@ -167,9 +173,11 @@ function housePinHtml(
     extraClass?: string;
     extraStyle?: string;
     visited?: boolean;
+    filteredOut?: boolean;
   },
 ) {
   const selectedClass = extras?.selected ? " is-selected" : "";
+  const filteredClass = extras?.filteredOut ? " is-filtered-out" : "";
   const hoursClass = hoursPinClass(house, now);
   const face = pinFaceKind(house);
   const visit = pinVisitKind(house, now);
@@ -191,7 +199,7 @@ function housePinHtml(
             : face === "scare"
               ? 'aria-label="מקושט"'
               : 'aria-label="לא מקושט"';
-  return `<div class="house-pin${selectedClass}${hoursClass}${bareClass}${visitedClass}${extraClass}" style="${style}" ${label}${idAttr}>${hoursRingHtml(house, now)}${pinStatusMark(house, now)}${pinFaceHtml(house)}</div>`;
+  return `<div class="house-pin${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}" style="${style}" ${label}${idAttr}>${hoursRingHtml(house, now)}${pinStatusMark(house, now)}${pinFaceHtml(house)}</div>`;
 }
 
 function fanLayout(count: number) {
@@ -225,6 +233,7 @@ function clusterIcon(
   visitedIds: string[] = [],
   expanded = false,
   filteredOut = false,
+  matchedIds?: ReadonlySet<string>,
 ) {
   const houses = cluster.houses;
   const only = houses[0];
@@ -241,6 +250,7 @@ function clusterIcon(
         ? housePinHtml(only, now, {
             selected: selectedHere,
             visited: visitedIds.includes(only.id),
+            filteredOut: matchedIds ? !matchedIds.has(only.id) : false,
           })
         : "",
       routeOrder,
@@ -255,7 +265,7 @@ function clusterIcon(
 
   if (!fanOpen) {
     const wrapped = wrapRoutePin(
-      `<div class="house-pin is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterAptDotsHtml(houses, now)}</div>`,
+      `<div class="house-pin is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterAptDotsHtml(houses, now, matchedIds)}</div>`,
       routeOrder,
     );
     return L.divIcon({
@@ -295,6 +305,7 @@ function clusterIcon(
         selected: !overview && house.id === selectedId,
         houseId: house.id,
         visited: visitedIds.includes(house.id),
+        filteredOut: matchedIds ? !matchedIds.has(house.id) : false,
         extraClass: "is-apt",
         extraStyle: `left:${left}px;bottom:${bottom}px;z-index:${house.id === selectedId ? houses.length + 3 : index + 2}`,
       });
@@ -303,7 +314,7 @@ function clusterIcon(
   const badge = routeOrder ? routeBadgeHtml(routeOrder) : "";
   return L.divIcon({
     className: `pumpkin-pin-icon pumpkin-pin-fan${selectedClass}${filterClass}`,
-    html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" aria-hidden="true"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterAptDotsHtml(houses, now)}</div>${apts}${badge}</div>`,
+      html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" aria-hidden="true"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterAptDotsHtml(houses, now, matchedIds)}</div>${apts}${badge}</div>`,
     iconSize: [width, height],
     iconAnchor: [width / 2, height],
   });
@@ -504,6 +515,7 @@ function ClusterMarker({
   routeOrder,
   visitedIds,
   filteredOut,
+  matchedIds,
 }: {
   cluster: HouseCluster;
   selectedId?: string | null;
@@ -515,6 +527,7 @@ function ClusterMarker({
   routeOrder?: number;
   visitedIds: string[];
   filteredOut?: boolean;
+  matchedIds?: ReadonlySet<string>;
 }) {
   const tick = useMinuteTick();
   const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
@@ -532,7 +545,17 @@ function ClusterMarker({
     <Marker
       key={`${cluster.key}-${fanOpen ? (overview ? "peek" : selectedId ?? "open") : "shut"}-${routeOrder ?? 0}-${visitedKey}-${statusKey}`}
       position={[cluster.lat, cluster.lng]}
-      icon={clusterIcon(cluster, selectedId, now, routeOrder, overview, visitedIds, fanOpen, filteredOut)}
+      icon={clusterIcon(
+        cluster,
+        selectedId,
+        now,
+        routeOrder,
+        overview,
+        visitedIds,
+        fanOpen,
+        filteredOut,
+        matchedIds,
+      )}
       zIndexOffset={
         fanOpen || selectedHere
           ? 10000
@@ -902,6 +925,7 @@ export function HouseMap({
                 onCollapse={onCollapseCluster}
                 visitedIds={visitedIds}
                 filteredOut={clusterFilteredOut}
+                matchedIds={matchedIds}
                 routeOrder={cluster.houses.reduce<number | undefined>(
                   (found, house) => found ?? routeOrderById.get(house.id),
                   undefined,

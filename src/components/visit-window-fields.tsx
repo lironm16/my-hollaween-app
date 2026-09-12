@@ -51,7 +51,7 @@ function VisitWindowRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-lg px-1 py-1",
+        "grid grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-3 rounded-lg px-1 py-1",
         checked ? "text-orange-50" : "text-violet-300",
       )}
     >
@@ -62,7 +62,7 @@ function VisitWindowRow({
         checked={checked}
         onChange={() => onToggle(!checked)}
       />
-      <label htmlFor={checkboxId} className="w-14 shrink-0 cursor-pointer text-base">
+      <label htmlFor={checkboxId} className="w-14 shrink-0 cursor-pointer self-center text-base leading-none">
         {label}
       </label>
       <ClockInput
