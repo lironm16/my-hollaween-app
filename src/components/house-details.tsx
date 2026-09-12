@@ -34,6 +34,7 @@ export function HouseDetails({
   onToggleEdit,
   chrome = "page",
   actions,
+  headerMenu,
   compact = false,
   distanceM,
   index,
@@ -50,6 +51,7 @@ export function HouseDetails({
   onToggleEdit?: () => void;
   /** Rendered under the title, e.g. per-apartment map actions in the sheet. */
   actions?: ReactNode;
+  headerMenu?: ReactNode;
   /** Sheet cards have their own action bar; still show the title and details. */
   chrome?: "page" | "sheet";
   /** List collapsed state: same top block as the map card, without the long details. */
@@ -227,7 +229,7 @@ export function HouseDetails({
         : null}
       <HoursStatusBanner house={house} />
       <div className="space-y-2">
-        <div className="flex min-w-0 items-center gap-2">
+        <div className="flex min-w-0 items-start gap-2">
           {indexBadge}
           <p
             className={cn(
@@ -243,6 +245,7 @@ export function HouseDetails({
             ) : null}
             {houseHeadline(house)}
           </p>
+          {headerMenu ? <div className="house-details-menu shrink-0">{headerMenu}</div> : null}
         </div>
         {pageActions}
       </div>

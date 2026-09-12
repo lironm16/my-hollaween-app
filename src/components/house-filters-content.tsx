@@ -21,7 +21,7 @@ import {
   resolveVisitWindow,
   type VisitWindowMode,
 } from "@/lib/visit-window";
-import { LikedMark, SkippedMark, UnvisitedMark } from "@/components/visit-marks";
+import { LikedMark, SkippedMark, VisitedMark } from "@/components/visit-marks";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS, type ScareLevel } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -176,13 +176,7 @@ export function HouseFiltersContent({
         ) : null}
       </FilterSection>
 
-      <FilterSection title="העדפות">
-        <FilterToggle
-          checked={filters.accessibleOnly}
-          onChange={() => onPatch({ accessibleOnly: !filters.accessibleOnly })}
-        >
-          <AccessibleMark labeled />
-        </FilterToggle>
+      <FilterSection title="סימונים שלי">
         <FilterToggle
           checked={filters.likedOnly}
           onChange={() => onPatch({ likedOnly: !filters.likedOnly })}
@@ -190,16 +184,16 @@ export function HouseFiltersContent({
           <LikedMark labeled />
         </FilterToggle>
         <FilterToggle
-          checked={filters.unvisitedOnly}
+          checked={filters.visitedOnly}
           onChange={() =>
             onPatch((current) => ({
               ...current,
-              unvisitedOnly: !current.unvisitedOnly,
-              visitedOnly: !current.unvisitedOnly ? false : current.visitedOnly,
+              visitedOnly: !current.visitedOnly,
+              unvisitedOnly: !current.visitedOnly ? false : current.unvisitedOnly,
             }))
           }
         >
-          <UnvisitedMark labeled />
+          <VisitedMark labeled />
         </FilterToggle>
         <FilterToggle
           checked={filters.skippedOnly}
@@ -285,6 +279,15 @@ export function HouseFiltersContent({
             {area}
           </FilterOption>
         ))}
+      </FilterSection>
+
+      <FilterSection title="נגישות">
+        <FilterToggle
+          checked={filters.accessibleOnly}
+          onChange={() => onPatch({ accessibleOnly: !filters.accessibleOnly })}
+        >
+          <AccessibleMark labeled />
+        </FilterToggle>
       </FilterSection>
     </>
   );
