@@ -29,6 +29,7 @@ import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/h
 import { isClosingSoon, isHoursNightOver, isHoursNotYetOpen, isOnBreak, isOpeningSoon } from "@/lib/hours";
 import type { ScareLevel } from "@/lib/types";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
+import { SKIP_ICON_SVG } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
 
 function useMinuteTick() {
@@ -99,11 +100,8 @@ function pinFaceKind(house: PublicHouse): "bare" | "scare" {
   return isDecorated(house) ? "scare" : "bare";
 }
 
-const PIN_SKIP_ICON =
-  '<svg class="pin-skip-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 12h12"/><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="m13 6 6 6-6 6"/></svg>';
-
 function pinSkippedMark() {
-  return `<b class="pin-status is-skipped" aria-label="דילגתי">${PIN_SKIP_ICON}</b>`;
+  return `<b class="pin-status is-skipped" aria-label="דילגתי">${SKIP_ICON_SVG}</b>`;
 }
 
 function pinStatusMark(house: PublicHouse, now: Date, skipped = false) {

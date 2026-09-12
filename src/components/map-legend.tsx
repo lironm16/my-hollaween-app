@@ -4,6 +4,7 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Info } from "lucide-react";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
+import { SkipIcon } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -60,10 +61,7 @@ function SwatchPin({
       ) : null}
       {skipped ? (
         <b className="pin-status is-skipped" aria-hidden>
-          <svg className="pin-skip-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-            <path fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" d="M5 12h12" />
-            <path fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" d="m13 6 6 6-6 6" />
-          </svg>
+          <SkipIcon className="pin-skip-icon" />
         </b>
       ) : null}
       {!skipped && closed ? <b className="pin-status is-closed" /> : null}

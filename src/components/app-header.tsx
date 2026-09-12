@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Activity, Bell, Home, HousePlus, LogOut, Menu, Pencil, Search, Shield, Sparkles } from "lucide-react";
+import { SkipPinBadge } from "@/components/visit-marks";
+import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
 import { NeighborhoodMarquee } from "@/components/neighborhood-marquee";
@@ -20,12 +22,16 @@ import { cn } from "@/lib/utils";
 
 export function AppHeader({
   onHomeTap,
+  onOpenSkipped,
 }: {
   /** Brand title and side-menu Home: return to the last map/list home screen. */
   onHomeTap?: () => void;
+  /** Open the skipped-houses list on the home screen. */
+  onOpenSkipped?: () => void;
 }) {
   const { admin, logout } = useAdminSession();
   const owned = useOwnedHouses();
+  const skips = useSkippedHouses();
   const [menuOpen, setMenuOpen] = useState(false);
 
   async function onLogout() {
@@ -139,6 +145,22 @@ export function AppHeader({
                 <Home className="size-4" />
                 הבתים שלי ({owned.length})
               </Link>
+            ) : null}
+            {skips.skippedIds.length > 0 && onOpenSkipped ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onOpenSkipped();
+                }}
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "lg" }),
+                  "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+                )}
+              >
+                <SkipPinBadge size="map" />
+                דילגתי ({skips.skippedIds.length})
+              </button>
             ) : null}
             <Link
               href="/stats"

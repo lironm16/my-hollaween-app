@@ -1,7 +1,7 @@
 import { DecorMark } from "@/components/decor-glyphs";
 import { ClosedSign, PauseSign } from "@/components/house-tags";
 import { VisitedCheck } from "@/components/visited-check";
-import { SkipForward } from "lucide-react";
+import { SkipIcon } from "@/components/skip-icon";
 import { visitShort } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 
@@ -150,7 +150,7 @@ export function SkipPinBadge({
       className={cn("skip-pin-badge", size === "list" && "is-list", className)}
       aria-hidden="true"
     >
-      <SkipForward className="skip-pin-badge-icon" strokeWidth={2.4} />
+      <SkipIcon className="skip-pin-badge-icon" />
     </span>
   );
 }
