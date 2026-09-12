@@ -1,4 +1,5 @@
 import { get as getBlob, put as putBlob } from "@vercel/blob";
+import { blobConfigured, privateBlobGetOptions, privateBlobPutOptions } from "@/lib/blob-auth";
 
 const RATE_BLOB_PATH = "halloween-houses/rate-limits.json";
 const MEM_TTL_MS = 30_000;
@@ -18,10 +19,6 @@ function withLock<T>(fn: () => Promise<T>): Promise<T> {
   return run;
 }
 
-function blobEnabled() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
-}
-
 function pruneBuckets(buckets: Buckets, now: number, maxAgeMs: number) {
   for (const key of Object.keys(buckets)) {
     const recent = buckets[key]!.filter((stamp) => now - stamp < maxAgeMs);
@@ -35,16 +32,12 @@ async function loadBuckets(): Promise<Buckets> {
   if (now - memoryLoadedAt < MEM_TTL_MS) {
     return { ...memoryBuckets };
   }
-  if (!blobEnabled()) {
+  if (!blobConfigured()) {
     memoryLoadedAt = now;
     return { ...memoryBuckets };
   }
   try {
-    const result = await getBlob(RATE_BLOB_PATH, {
-      access: "private",
-      useCache: false,
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-    });
+    const result = await getBlob(RATE_BLOB_PATH, privateBlobGetOptions());
     if (!result?.stream) {
       memoryBuckets = {};
     } else {
@@ -61,16 +54,9 @@ async function loadBuckets(): Promise<Buckets> {
 async function saveBuckets(buckets: Buckets) {
   memoryBuckets = buckets;
   memoryLoadedAt = Date.now();
-  if (!blobEnabled()) return;
+  if (!blobConfigured()) return;
   try {
-    await putBlob(RATE_BLOB_PATH, JSON.stringify(buckets), {
-      access: "private",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-      cacheControlMaxAge: 0,
-    });
+    await putBlob(RATE_BLOB_PATH, JSON.stringify(buckets), privateBlobPutOptions("application/json"));
   } catch {
     // Keep in-memory buckets; blob is best-effort for rate limits.
   }

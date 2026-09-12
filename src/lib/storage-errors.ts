@@ -15,6 +15,11 @@ function blobErrorMessage(error: unknown) {
   return String((error as { message?: string }).message ?? "");
 }
 
+function blobBody(error: unknown) {
+  const message = blobErrorMessage(error);
+  return message.replace(/^Vercel Blob:\s*/i, "");
+}
+
 export function isRetryableBlobError(error: unknown) {
   const name = blobErrorName(error);
   return (
@@ -28,16 +33,28 @@ export function isRetryableBlobError(error: unknown) {
 export function storageErrorCodeFromBlob(error: unknown): StorageErrorCode {
   const name = blobErrorName(error);
   const message = blobErrorMessage(error);
+  const body = blobBody(error);
   if (
     name === "BlobStoreNotFoundError" ||
     name === "BlobClientTokenExpiredError" ||
     name === "BlobStoreSuspendedError" ||
+    name === "BlobAccessError" ||
+    name === "BlobOidcEnvironmentNotAllowedError" ||
     /no blob credentials found/i.test(message) ||
-    /no read-write token found/i.test(message)
+    /no read-write token found/i.test(message) ||
+    /access denied/i.test(body) ||
+    /valid token/i.test(body) ||
+    /this store does not exist/i.test(body) ||
+    /client token has expired/i.test(body) ||
+    /this store has been suspended/i.test(body) ||
+    /oidc is enabled/i.test(body) ||
+    (/client token/i.test(body) && /not available/i.test(body))
   ) {
     return "BLOB_NOT_CONFIGURED";
   }
   if (isRetryableBlobError(error)) return "BLOB_WRITE_FAILED";
+  if (/blob service is currently not available/i.test(body)) return "BLOB_WRITE_FAILED";
+  if (/too many requests/i.test(body)) return "BLOB_WRITE_FAILED";
   return "PERSIST_FAILED";
 }
 
