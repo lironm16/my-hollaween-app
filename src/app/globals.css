@@ -855,7 +855,11 @@
 .is-filter-dim .pumpkin-pin-icon.is-filtered-out,
 .is-filter-dim .house-pin.is-filtered-out,
 .is-filter-dim .pin-apt-dot.is-filtered-out {
-  opacity: 0.38;
+  opacity: 0.62;
+}
+
+.house-skipped-banner {
+  margin-bottom: 0.75rem;
 }
 
 .filter-mismatch-banner {

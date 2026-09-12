@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { MapPin, Navigation, Undo2 } from "lucide-react";
-import { SkipPinBadge } from "@/components/visit-marks";
+import { SkipSign } from "@/components/visit-marks";
 import { Button } from "@/components/ui/button";
 import { HouseCard } from "@/components/house-card";
 import { houseHeadline } from "@/lib/labels";
@@ -42,7 +42,7 @@ function RouteSkippedRow({
         onClick={onOpen}
         aria-label={`${houseHeadline(house)} — דילגתי`}
       >
-        <SkipPinBadge size="list" />
+        <SkipSign />
         <span className="route-skipped-name">{houseHeadline(house)}</span>
       </button>
       {onRestore ? (

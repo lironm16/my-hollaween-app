@@ -792,6 +792,7 @@ export function NeighborhoodApp({
                 ? () => handleRestoreHouse(houseDetailCommon.house.id)
                 : undefined
             }
+            filterMismatchReasons={selectedFilterReasons}
             onShowOnMap={() => {
               setView("map");
               selection.clearCluster();
