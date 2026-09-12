@@ -56,7 +56,7 @@ export function AppHeader({
 
   const houseSubLinkClass = cn(
     buttonVariants({ variant: "ghost", size: "lg" }),
-    "h-10 justify-start gap-2 ps-9 text-base text-orange-50 hover:bg-orange-500/10",
+    "h-10 justify-start gap-2 ps-12 text-base text-orange-50 hover:bg-orange-500/10",
   );
 
   return (
@@ -138,13 +138,13 @@ export function AppHeader({
                 />
               </button>
               {houseOpen ? (
-                <div className="flex flex-col gap-0.5">
+                <div className="mr-2 flex flex-col gap-0.5 border-s border-orange-500/20 ps-1">
                   <Link
                     href="/add"
                     onClick={closeMenu}
                     className={cn(
                       buttonVariants({ size: "lg" }),
-                      "h-10 justify-start gap-2 ps-9 text-base bg-orange-500 text-black hover:bg-orange-400",
+                      "h-10 justify-start gap-2 ps-12 text-base bg-orange-500 text-black hover:bg-orange-400",
                     )}
                   >
                     <HousePlus className="size-4" />
