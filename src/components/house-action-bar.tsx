@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
   Heart,
   List,
@@ -13,7 +14,6 @@ import {
 } from "lucide-react";
 import { SkipIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
-import { useHouseTraffic } from "@/hooks/use-house-traffic";
 import { toast } from "sonner";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
@@ -42,6 +42,8 @@ type MenuItem = {
   external?: boolean;
   active?: boolean;
 };
+
+const MENU_ICON_CLASS = "size-6";
 
 export function HouseActionBar({
   house,
@@ -75,19 +77,22 @@ export function HouseActionBar({
   editing?: boolean;
   navOnly?: boolean;
   showNav?: boolean;
-  /** Open menu above the trigger (for bottom sheets). */
+  /** Preferred menu direction; flips automatically if there is not enough room. */
   menuPlacement?: "top" | "bottom";
   className?: string;
 }) {
-  const { trafficFor } = useHouseTraffic();
-  const traffic = trafficFor(house.id);
   const [open, setOpen] = useState(false);
+  const [panelStyle, setPanelStyle] = useState<CSSProperties>({ visibility: "hidden" });
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (rootRef.current?.contains(target) || panelRef.current?.contains(target)) return;
+      setOpen(false);
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
@@ -105,8 +110,8 @@ export function HouseActionBar({
   if (showNav) {
     items.push({
       id: "nav",
-      label: "ניווט ב-Google Maps",
-      icon: <Navigation className="size-5" strokeWidth={2.2} />,
+      label: "ניווט",
+      icon: <Navigation className={MENU_ICON_CLASS} strokeWidth={2.2} />,
       href: houseMapsUrl(house),
       external: true,
     });
@@ -114,8 +119,8 @@ export function HouseActionBar({
   if (onShowOnMap) {
     items.push({
       id: "map",
-      label: "הצגה במפה",
-      icon: <MapPinned className="size-5" strokeWidth={2.2} />,
+      label: "הצג במפה",
+      icon: <MapPinned className={MENU_ICON_CLASS} strokeWidth={2.2} />,
       onClick: onShowOnMap,
     });
   }
@@ -123,7 +128,7 @@ export function HouseActionBar({
     items.push({
       id: "list",
       label: "הצגה ברשימה",
-      icon: <List className="size-5" strokeWidth={2.2} />,
+      icon: <List className={MENU_ICON_CLASS} strokeWidth={2.2} />,
       onClick: onShowInList,
     });
   }
@@ -131,8 +136,8 @@ export function HouseActionBar({
   if (!navOnly) {
     items.push({
       id: "share",
-      label: "שיתוף הבית",
-      icon: <Share2 className="size-5" strokeWidth={2.2} />,
+      label: "שתף",
+      icon: <Share2 className={MENU_ICON_CLASS} strokeWidth={2.2} />,
       onClick: () => {
         void shareHouse(house).then((result) => {
           if (result === "copied") toast.success("הקישור הועתק");
@@ -143,8 +148,8 @@ export function HouseActionBar({
     if (onToggleLike) {
       items.push({
         id: "like",
-        label: liked ? `הסרה משמורים (${formatActionCount(traffic.saved)})` : `שמירה (${formatActionCount(traffic.saved)})`,
-        icon: <Heart className={cn("size-5", liked && "fill-current")} strokeWidth={2.2} />,
+        label: "אהבתי",
+        icon: <Heart className={cn(MENU_ICON_CLASS, liked && "fill-current")} strokeWidth={2.2} />,
         onClick: onToggleLike,
         active: liked,
       });
@@ -152,10 +157,8 @@ export function HouseActionBar({
     if (onToggleVisited) {
       items.push({
         id: "visited",
-        label: visited
-          ? `ביטול ביקור (${formatActionCount(traffic.visited)})`
-          : `סימון ביקור (${formatActionCount(traffic.visited)})`,
-        icon: <VisitedCheck visited={visited} inButton />,
+        label: "ביקרתי",
+        icon: <VisitedCheck visited={visited} size="lg" />,
         onClick: onToggleVisited,
         active: visited,
       });
@@ -164,7 +167,7 @@ export function HouseActionBar({
       items.push({
         id: "skip",
         label: "דילוג במסלול",
-        icon: <SkipIcon className="size-5" />,
+        icon: <SkipIcon className={MENU_ICON_CLASS} />,
         onClick: onSkip,
       });
     }
@@ -172,7 +175,7 @@ export function HouseActionBar({
       items.push({
         id: "restore",
         label: "החזרה למסלול",
-        icon: <Undo2 className="size-5" strokeWidth={2.2} />,
+        icon: <Undo2 className={MENU_ICON_CLASS} strokeWidth={2.2} />,
         onClick: onRestoreRoute,
         active: skipped,
       });
@@ -180,13 +183,64 @@ export function HouseActionBar({
     if (onToggleEdit) {
       items.push({
         id: "edit",
-        label: editing ? "סגירת עריכה" : "עריכת הבית",
-        icon: <Pencil className="size-5" strokeWidth={2.2} />,
+        label: editing ? "סגירת עריכה" : "ערוך בית",
+        icon: <Pencil className={MENU_ICON_CLASS} strokeWidth={2.2} />,
         onClick: onToggleEdit,
         active: editing,
       });
     }
   }
+
+  useLayoutEffect(() => {
+    if (!open) return;
+
+    const updatePosition = () => {
+      const trigger = triggerRef.current;
+      const panel = panelRef.current;
+      if (!trigger || !panel) return;
+
+      const margin = 10;
+      const gap = 8;
+      const triggerRect = trigger.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      const panelWidth = panelRect.width || panel.offsetWidth;
+      const panelHeight = panelRect.height || panel.offsetHeight;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      let placeAbove = menuPlacement === "top";
+      const spaceAbove = triggerRect.top;
+      const spaceBelow = viewportHeight - triggerRect.bottom;
+      if (placeAbove && spaceAbove < panelHeight + gap + margin && spaceBelow > spaceAbove) {
+        placeAbove = false;
+      } else if (!placeAbove && spaceBelow < panelHeight + gap + margin && spaceAbove > spaceBelow) {
+        placeAbove = true;
+      }
+
+      let top = placeAbove ? triggerRect.top - panelHeight - gap : triggerRect.bottom + gap;
+      let left = triggerRect.right - panelWidth;
+      left = Math.max(margin, Math.min(left, viewportWidth - panelWidth - margin));
+      top = Math.max(margin, Math.min(top, viewportHeight - panelHeight - margin));
+
+      setPanelStyle({
+        position: "fixed",
+        top,
+        left,
+        zIndex: 120,
+        visibility: "visible",
+      });
+    };
+
+    updatePosition();
+    const frame = window.requestAnimationFrame(updatePosition);
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, menuPlacement, items.length]);
 
   if (items.length === 0) return null;
 
@@ -195,28 +249,14 @@ export function HouseActionBar({
     item.onClick?.();
   }
 
-  return (
-    <div ref={rootRef} className={cn("house-action-menu", className)} dir="rtl">
-      <button
-        type="button"
-        className="house-action-menu-trigger"
-        aria-label="פעולות"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={(event) => {
-          event.stopPropagation();
-          setOpen((value) => !value);
-        }}
-      >
-        <MoreVertical className="size-5" strokeWidth={2.2} />
-      </button>
-      {open ? (
+  const panel = open
+    ? createPortal(
         <div
-          className={cn(
-            "house-action-menu-panel",
-            menuPlacement === "top" ? "is-above" : "is-below",
-          )}
+          ref={panelRef}
+          className="house-action-menu-panel house-action-menu-panel--floating"
+          style={panelStyle}
           role="menu"
+          dir="rtl"
         >
           {items.map((item) =>
             item.href ? (
@@ -251,8 +291,28 @@ export function HouseActionBar({
               </button>
             ),
           )}
-        </div>
-      ) : null}
+        </div>,
+        document.body,
+      )
+    : null;
+
+  return (
+    <div ref={rootRef} className={cn("house-action-menu", className)} dir="rtl">
+      <button
+        ref={triggerRef}
+        type="button"
+        className="house-action-menu-trigger"
+        aria-label="פעולות"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={(event) => {
+          event.stopPropagation();
+          setOpen((value) => !value);
+        }}
+      >
+        <MoreVertical className="size-6" strokeWidth={2.2} />
+      </button>
+      {panel}
     </div>
   );
 }
