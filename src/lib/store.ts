@@ -52,6 +52,12 @@ import {
   type PushKind,
   type StoredPushSettings,
 } from "@/lib/push-templates";
+import {
+  isRetryableBlobError,
+  productionRequiresBlob,
+  storageErrorCodeFromBlob,
+  storageErrorFromCode,
+} from "@/lib/storage-errors";
 
 const SEED_PATH = path.join(process.cwd(), "data", "seed.json");
 const BLOB_PATH = "halloween-houses/db.json";
@@ -164,7 +170,11 @@ function normalizeDb(db: DbFile): DbFile {
 }
 
 function blobEnabled() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function readBlobDb(): Promise<DbFile | null> {
@@ -184,15 +194,34 @@ async function readBlobDb(): Promise<DbFile | null> {
 }
 
 async function writeBlobDb(db: DbFile) {
-  if (!blobEnabled()) return;
-  await putBlob(BLOB_PATH, JSON.stringify(db), {
-    access: "private",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json",
-    token: process.env.BLOB_READ_WRITE_TOKEN,
-    cacheControlMaxAge: 0,
-  });
+  if (!blobEnabled()) {
+    throw storageErrorFromCode("BLOB_NOT_CONFIGURED");
+  }
+  const payload = JSON.stringify(db);
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await putBlob(BLOB_PATH, payload, {
+        access: "private",
+        addRandomSuffix: false,
+        allowOverwrite: true,
+        contentType: "application/json",
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+        cacheControlMaxAge: 0,
+      });
+      return;
+    } catch (error) {
+      lastError = error;
+      console.error("[store] blob write failed", {
+        attempt: attempt + 1,
+        name: error instanceof Error ? error.name : "unknown",
+        message: error instanceof Error ? error.message : String(error),
+      });
+      if (!isRetryableBlobError(error) || attempt === 2) break;
+      await sleep(300 * (attempt + 1));
+    }
+  }
+  throw storageErrorFromCode(storageErrorCodeFromBlob(lastError), lastError);
 }
 
 async function readPushSettingsBlob(): Promise<DbFile["pushSettings"] | null> {
@@ -514,25 +543,20 @@ async function persistDb(db: DbFile) {
   }
 
   if (blobEnabled()) {
-    let persisted = false;
-    try {
-      await writeBlobDb(db);
-      persisted = true;
-    } catch {
-      /* fall back to local file */
-    }
+    await writeBlobDb(db);
     try {
       await writeFileDb(db);
-      persisted = true;
     } catch {
-      /* blob or memory may still hold the write */
+      /* Vercel Blob is the durable source of truth in production */
     }
-    if (!persisted) throw new Error("PERSIST_FAILED");
+  } else if (productionRequiresBlob()) {
+    throw storageErrorFromCode("BLOB_NOT_CONFIGURED");
   } else {
     try {
       await writeFileDb(db);
-    } catch {
-      throw new Error("PERSIST_FAILED");
+    } catch (error) {
+      console.error("[store] local db write failed", error);
+      throw storageErrorFromCode("PERSIST_FAILED", error);
     }
   }
 

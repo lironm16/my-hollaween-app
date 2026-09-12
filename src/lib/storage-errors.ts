@@ -1,0 +1,78 @@
+/** Map durable-storage failures to stable API error codes. */
+
+export type StorageErrorCode =
+  | "BLOB_NOT_CONFIGURED"
+  | "BLOB_WRITE_FAILED"
+  | "PERSIST_FAILED";
+
+function blobErrorName(error: unknown) {
+  if (!error || typeof error !== "object" || !("name" in error)) return "";
+  return String((error as { name?: string }).name ?? "");
+}
+
+function blobErrorMessage(error: unknown) {
+  if (!error || typeof error !== "object" || !("message" in error)) return "";
+  return String((error as { message?: string }).message ?? "");
+}
+
+export function isRetryableBlobError(error: unknown) {
+  const name = blobErrorName(error);
+  return (
+    name === "BlobServiceRateLimited" ||
+    name === "BlobServiceNotAvailable" ||
+    name === "BlobRequestAbortedError" ||
+    name === "BlobUnknownError"
+  );
+}
+
+export function storageErrorCodeFromBlob(error: unknown): StorageErrorCode {
+  const name = blobErrorName(error);
+  const message = blobErrorMessage(error);
+  if (
+    name === "BlobStoreNotFoundError" ||
+    name === "BlobClientTokenExpiredError" ||
+    name === "BlobStoreSuspendedError" ||
+    /no blob credentials found/i.test(message) ||
+    /no read-write token found/i.test(message)
+  ) {
+    return "BLOB_NOT_CONFIGURED";
+  }
+  if (isRetryableBlobError(error)) return "BLOB_WRITE_FAILED";
+  return "PERSIST_FAILED";
+}
+
+export function storageErrorFromCode(code: StorageErrorCode, cause?: unknown) {
+  const error = new Error(code);
+  if (cause !== undefined) (error as Error & { cause?: unknown }).cause = cause;
+  return error;
+}
+
+export function storageHttpError(error: unknown): { error: string; status: number; code: string } | null {
+  if (!(error instanceof Error)) return null;
+  if (error.message === "BLOB_NOT_CONFIGURED") {
+    return {
+      code: "BLOB_NOT_CONFIGURED",
+      error: "אחסון השרת לא מוגדר. פנו למנהל האפליקציה.",
+      status: 503,
+    };
+  }
+  if (error.message === "BLOB_WRITE_FAILED") {
+    return {
+      code: "BLOB_WRITE_FAILED",
+      error: "השרת עמוס כרגע. נסו לשמור שוב בעוד כמה שניות.",
+      status: 503,
+    };
+  }
+  if (error.message === "PERSIST_FAILED") {
+    return {
+      code: "PERSIST_FAILED",
+      error: "לא הצלחנו לשמור את הבית בשרת. נסו שוב.",
+      status: 503,
+    };
+  }
+  return null;
+}
+
+export function productionRequiresBlob() {
+  return process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
+}

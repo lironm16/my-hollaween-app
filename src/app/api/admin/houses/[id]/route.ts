@@ -4,6 +4,7 @@ import { adminPatchSchema } from "@/lib/schema";
 import { adminDeleteHouse, adminUpdate, getHouse } from "@/lib/store";
 import { canonicalHouseId } from "@/lib/ids";
 import { geocodeHttpError } from "@/lib/geocode";
+import { storageHttpError } from "@/lib/storage-errors";
 import { readIncludeEndpoint } from "@/lib/push";
 
 export const runtime = "nodejs";
@@ -31,6 +32,11 @@ export async function PATCH(
     }
     return NextResponse.json({ house: result.house, push: result.push });
   } catch (error) {
+    console.error("[admin/houses] update failed", error);
+    const storage = storageHttpError(error);
+    if (storage) {
+      return NextResponse.json({ error: storage.error, code: storage.code }, { status: storage.status });
+    }
     const geo = geocodeHttpError(error);
     if (geo) return NextResponse.json({ error: geo.error }, { status: geo.status });
     return NextResponse.json(
