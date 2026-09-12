@@ -148,13 +148,13 @@ export function SkippedMark({
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <span
-        className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-violet-500/25 text-violet-100 ring-1 ring-violet-400/30"
-        title="דילגתי"
-        aria-label="דילגתי"
+        className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-500 text-white ring-1 ring-slate-400/40"
+        title="לניסיון הבא"
+        aria-label="לניסיון הבא"
       >
         <SkipForward className="size-4" strokeWidth={2.4} />
       </span>
-      {labeled ? <span>דילגתי</span> : <span className="sr-only">דילגתי</span>}
+      {labeled ? <span>לניסיון הבא</span> : <span className="sr-only">לניסיון הבא</span>}
     </span>
   );
 }

@@ -15,6 +15,7 @@ function SwatchPin({
   bare,
   multi,
   visited,
+  skipped,
 }: {
   scare?: "mild" | "medium" | "spicy";
   candy?: "plenty" | "low" | "out";
@@ -24,6 +25,7 @@ function SwatchPin({
   bare?: boolean;
   multi?: boolean;
   visited?: boolean;
+  skipped?: boolean;
 }) {
   return (
     <div
@@ -56,9 +58,17 @@ function SwatchPin({
           </span>
         </>
       ) : null}
-      {closed ? <b className="pin-status is-closed" /> : null}
-      {onBreak ? <b className="pin-status is-break" /> : null}
-      {candy ? <b className={`pin-status is-${candy}`} /> : null}
+      {skipped ? (
+        <b className="pin-status is-skipped" aria-hidden>
+          <svg className="pin-skip-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+            <path fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" d="M5 12h12" />
+            <path fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" d="m13 6 6 6-6 6" />
+          </svg>
+        </b>
+      ) : null}
+      {!skipped && closed ? <b className="pin-status is-closed" /> : null}
+      {!skipped && onBreak ? <b className="pin-status is-break" /> : null}
+      {!skipped && candy ? <b className={`pin-status is-${candy}`} /> : null}
     </div>
   );
 }
@@ -90,6 +100,7 @@ const GROUPS: { title: string; items: { key: string; label: string; node: ReactN
       { key: "open", label: "נפתח בקרוב", node: <SwatchPin scare="mild" hours="opening" /> },
       { key: "multi", label: "כמה בתים", node: <SwatchPin multi /> },
       { key: "visited", label: "ביקרתי", node: <SwatchPin scare="mild" visited /> },
+      { key: "skipped", label: "לניסיון הבא", node: <SwatchPin scare="mild" skipped /> },
     ],
   },
 ];

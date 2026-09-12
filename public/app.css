@@ -47,6 +47,8 @@
     --color-violet-900: oklch(38% 0.189 293.745);
     --color-violet-950: oklch(28.3% 0.141 291.089);
     --color-rose-300: oklch(81% 0.117 11.638);
+    --color-slate-400: oklch(70.4% 0.04 256.788);
+    --color-slate-500: oklch(55.4% 0.046 257.417);
     --color-black: #000;
     --color-white: #fff;
     --spacing: 0.25rem;
@@ -1429,6 +1431,9 @@
       background-color: color-mix(in oklab, var(--color-sky-950) 50%, transparent);
     }
   }
+  .bg-slate-500 {
+    background-color: var(--color-slate-500);
+  }
   .bg-transparent {
     background-color: transparent;
   }
@@ -2138,6 +2143,12 @@
     --tw-ring-color: color-mix(in srgb, oklch(74.6% 0.16 232.661) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       --tw-ring-color: color-mix(in oklab, var(--color-sky-400) 40%, transparent);
+    }
+  }
+  .ring-slate-400\/40 {
+    --tw-ring-color: color-mix(in srgb, oklch(70.4% 0.04 256.788) 40%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--color-slate-400) 40%, transparent);
     }
   }
   .ring-violet-400\/30 {
@@ -4404,12 +4415,13 @@ svg.leaflet-zoom-animated {
 }
 .pin-apt-dots {
   position: absolute;
-  inset-inline-start: -6px;
+  left: 50%;
   bottom: -18px;
   z-index: 4;
   display: flex;
   flex-direction: row;
   pointer-events: none;
+  transform: translateX(-50%);
 }
 .pin-apt-dot {
   position: relative;
@@ -4763,6 +4775,35 @@ svg.leaflet-zoom-animated {
   background: #fff;
   flex-shrink: 0;
 }
+.house-pin .pin-status.is-skipped,
+.pumpkin-pin .pin-status.is-skipped {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #64748b;
+  border-color: #fff;
+}
+.house-pin .pin-status.is-skipped .pin-skip-icon,
+.pumpkin-pin .pin-status.is-skipped .pin-skip-icon {
+  display: block;
+  flex-shrink: 0;
+}
+.pin-apt-dot.is-skipped {
+  background-color: #64748b;
+  background-image: none;
+}
+.pin-apt-dot.is-skipped::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 6px solid #fff;
+  transform: translate(-20%, -50%);
+}
 .house-pin.house-pin-dot .pin-status {
   width: 14px;
   height: 14px;
@@ -5106,22 +5147,82 @@ svg.leaflet-zoom-animated {
   }
 }
 input[type="time"].filter-time-input {
-  display: block;
+  display: flex;
   width: 100%;
   min-height: 2.75rem;
   box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  padding-block: 0;
   direction: ltr;
   text-align: center;
+  line-height: 1;
   color-scheme: dark;
   cursor: pointer;
   -webkit-appearance: auto;
   appearance: auto;
 }
 input[type="time"].filter-time-input::-webkit-datetime-edit,
-input[type="time"].filter-time-input::-webkit-datetime-edit-fields-wrapper,
+input[type="time"].filter-time-input::-webkit-datetime-edit-fields-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+}
 input[type="time"].filter-time-input::-webkit-datetime-edit-hour-field,
 input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
-  text-align: center;
+  padding: 0;
+  line-height: 1;
+}
+.route-skipped-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.9rem;
+  border: 1px dashed rgba(148, 163, 184, 0.45);
+  background: rgba(51, 65, 85, 0.28);
+}
+.route-skipped-main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.15rem 0.25rem;
+  border: 0;
+  background: transparent;
+  color: #ddd6fe;
+  text-align: start;
+  cursor: pointer;
+}
+.route-skipped-badge {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 999px;
+  background: #64748b;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+.route-skipped-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.95rem;
+}
+.route-skipped-restore {
+  min-height: 2rem;
+  padding-inline: 0.65rem;
 }
 .house-time-wrap {
   width: 100%;

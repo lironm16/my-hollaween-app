@@ -548,6 +548,7 @@ export function NeighborhoodApp({
                 routeStart={routeMode ? origin : null}
                 routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}
                 visitedIds={visits.visitedIds}
+                skippedIds={skips.skippedIds}
                 originMarker={origin.fromGps ? null : origin}
                 originPickActive={originPick.originPickActive}
                 originPick={originPick.originDraft}
