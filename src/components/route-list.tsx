@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { MapPin, Navigation, SkipForward, Undo2 } from "lucide-react";
+import { MapPin, Navigation, Undo2 } from "lucide-react";
+import { SkipPinBadge } from "@/components/visit-marks";
 import { Button } from "@/components/ui/button";
 import { HouseCard } from "@/components/house-card";
 import { houseHeadline } from "@/lib/labels";
@@ -39,12 +40,9 @@ function RouteSkippedRow({
         type="button"
         className="route-skipped-main"
         onClick={onOpen}
-        aria-label={`${houseHeadline(house)} — לניסיון הבא`}
+        aria-label={`${houseHeadline(house)} — דילגתי`}
       >
-        <span className="route-skipped-badge">
-          <SkipForward className="size-3.5" strokeWidth={2.4} aria-hidden />
-          לניסיון הבא
-        </span>
+        <SkipPinBadge size="list" />
         <span className="route-skipped-name">{houseHeadline(house)}</span>
       </button>
       {onRestore ? (

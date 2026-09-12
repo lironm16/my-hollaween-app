@@ -138,6 +138,23 @@ export function DecorOnlyMark({
   );
 }
 
+export function SkipPinBadge({
+  className,
+  size = "map",
+}: {
+  className?: string;
+  size?: "map" | "list";
+}) {
+  return (
+    <span
+      className={cn("skip-pin-badge", size === "list" && "is-list", className)}
+      aria-hidden="true"
+    >
+      <SkipForward className="skip-pin-badge-icon" strokeWidth={2.4} />
+    </span>
+  );
+}
+
 export function SkippedMark({
   labeled = false,
   className,
@@ -147,14 +164,8 @@ export function SkippedMark({
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <span
-        className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-500 text-white ring-1 ring-slate-400/40"
-        title="לניסיון הבא"
-        aria-label="לניסיון הבא"
-      >
-        <SkipForward className="size-4" strokeWidth={2.4} />
-      </span>
-      {labeled ? <span>לניסיון הבא</span> : <span className="sr-only">לניסיון הבא</span>}
+      <SkipPinBadge size="list" />
+      {labeled ? <span>דילגתי</span> : <span className="sr-only">דילגתי</span>}
     </span>
   );
 }
