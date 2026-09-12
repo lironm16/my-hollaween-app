@@ -1,4 +1,6 @@
-/** Shared Vercel Blob auth — prefer OIDC on Vercel, then env read-write token. */
+import type { PutCommandOptions } from "@vercel/blob";
+
+/** Shared Vercel Blob auth — try OIDC on Vercel, then env read-write token. */
 
 function blobStoreId() {
   const fromEnv = process.env.BLOB_STORE_ID?.trim();
@@ -26,20 +28,34 @@ export function privateBlobGetOptions() {
   };
 }
 
-export function privateBlobPutOptions(
-  contentType: string,
-  extra?: {
-    addRandomSuffix?: boolean;
-    allowOverwrite?: boolean;
-    cacheControlMaxAge?: number;
-  },
-) {
+type PutExtra = {
+  addRandomSuffix?: boolean;
+  allowOverwrite?: boolean;
+  cacheControlMaxAge?: number;
+};
+
+function privateBlobPutBase(contentType: string, extra?: PutExtra) {
   return {
     access: "private" as const,
     addRandomSuffix: extra?.addRandomSuffix ?? false,
     allowOverwrite: extra?.allowOverwrite ?? true,
     contentType,
     cacheControlMaxAge: extra?.cacheControlMaxAge ?? 0,
-    ...blobStoreOptions(),
   };
+}
+
+/** Try OIDC (storeId) first, then the static read-write token. */
+export function privateBlobPutAttempts(contentType: string, extra?: PutExtra): PutCommandOptions[] {
+  const base = privateBlobPutBase(contentType, extra);
+  const storeId = blobStoreId();
+  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
+  const attempts: PutCommandOptions[] = [];
+  if (storeId) attempts.push({ ...base, storeId });
+  if (token) attempts.push({ ...base, token });
+  if (attempts.length === 0) attempts.push(base);
+  return attempts;
+}
+
+export function privateBlobPutOptions(contentType: string, extra?: PutExtra) {
+  return privateBlobPutAttempts(contentType, extra)[0]!;
 }

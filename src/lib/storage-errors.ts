@@ -69,7 +69,8 @@ export function storageHttpError(error: unknown): { error: string; status: numbe
   if (error.message === "BLOB_NOT_CONFIGURED") {
     return {
       code: "BLOB_NOT_CONFIGURED",
-      error: "אחסון השרת לא מוגדר. פנו למנהל האפליקציה.",
+      error:
+        "אחסון השרת לא מוגדר. מנהל האפליקציה צריך לחבר Vercel Blob לפרויקט (Storage → Blob) ולפרוס מחדש.",
       status: 503,
     };
   }
