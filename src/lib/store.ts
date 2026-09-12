@@ -52,6 +52,7 @@ import {
   type PushKind,
   type StoredPushSettings,
 } from "@/lib/push-templates";
+import { blobConfigured, privateBlobGetOptions, privateBlobPutOptions } from "@/lib/blob-auth";
 import {
   isRetryableBlobError,
   productionRequiresBlob,
@@ -169,22 +170,14 @@ function normalizeDb(db: DbFile): DbFile {
   };
 }
 
-function blobEnabled() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
-}
-
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function readBlobDb(): Promise<DbFile | null> {
-  if (!blobEnabled()) return null;
+  if (!blobConfigured()) return null;
   try {
-    const result = await getBlob(BLOB_PATH, {
-      access: "private",
-      useCache: false,
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-    });
+    const result = await getBlob(BLOB_PATH, privateBlobGetOptions());
     if (!result?.stream) return null;
     const text = await new Response(result.stream).text();
     return normalizeDb(JSON.parse(text) as DbFile);
@@ -194,21 +187,14 @@ async function readBlobDb(): Promise<DbFile | null> {
 }
 
 async function writeBlobDb(db: DbFile) {
-  if (!blobEnabled()) {
+  if (!blobConfigured()) {
     throw storageErrorFromCode("BLOB_NOT_CONFIGURED");
   }
   const payload = JSON.stringify(db);
   let lastError: unknown;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      await putBlob(BLOB_PATH, payload, {
-        access: "private",
-        addRandomSuffix: false,
-        allowOverwrite: true,
-        contentType: "application/json",
-        token: process.env.BLOB_READ_WRITE_TOKEN,
-        cacheControlMaxAge: 0,
-      });
+      await putBlob(BLOB_PATH, payload, privateBlobPutOptions("application/json"));
       return;
     } catch (error) {
       lastError = error;
@@ -225,13 +211,9 @@ async function writeBlobDb(db: DbFile) {
 }
 
 async function readPushSettingsBlob(): Promise<DbFile["pushSettings"] | null> {
-  if (!blobEnabled()) return null;
+  if (!blobConfigured()) return null;
   try {
-    const result = await getBlob(PUSH_BLOB_PATH, {
-      access: "private",
-      useCache: false,
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-    });
+    const result = await getBlob(PUSH_BLOB_PATH, privateBlobGetOptions());
     if (!result?.stream) return null;
     const parsed = JSON.parse(await new Response(result.stream).text()) as DbFile["pushSettings"];
     if (!parsed?.templates) return null;
@@ -242,16 +224,9 @@ async function readPushSettingsBlob(): Promise<DbFile["pushSettings"] | null> {
 }
 
 async function writePushSettingsBlob(settings: DbFile["pushSettings"]) {
-  if (!blobEnabled() || !settings?.templates) return;
+  if (!blobConfigured() || !settings?.templates) return;
   try {
-    await putBlob(PUSH_BLOB_PATH, JSON.stringify(settings), {
-      access: "private",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-      cacheControlMaxAge: 0,
-    });
+    await putBlob(PUSH_BLOB_PATH, JSON.stringify(settings), privateBlobPutOptions("application/json"));
   } catch {
     /* house db still holds a copy */
   }
@@ -284,12 +259,8 @@ async function readLocalPushSubsBlob(): Promise<PushSubscriptionRecord[] | null>
 async function readPushSubsBlob(): Promise<PushSubscriptionRecord[]> {
   const [local, remote] = await Promise.all([
     readLocalPushSubsBlob(),
-    blobEnabled()
-      ? getBlob(PUSH_SUBS_BLOB_PATH, {
-          access: "private",
-          useCache: false,
-          token: process.env.BLOB_READ_WRITE_TOKEN,
-        })
+    blobConfigured()
+      ? getBlob(PUSH_SUBS_BLOB_PATH, privateBlobGetOptions())
           .then(async (result) => {
             if (!result?.stream) return undefined;
             const parsed = JSON.parse(await new Response(result.stream).text()) as {
@@ -316,16 +287,9 @@ async function writePushSubsBlob(subscriptions: PushSubscriptionRecord[]) {
   } catch {
     /* blob/memory may still hold it */
   }
-  if (!blobEnabled()) return;
+  if (!blobConfigured()) return;
   try {
-    await putBlob(PUSH_SUBS_BLOB_PATH, payload, {
-      access: "private",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-      cacheControlMaxAge: 0,
-    });
+    await putBlob(PUSH_SUBS_BLOB_PATH, payload, privateBlobPutOptions("application/json"));
   } catch {
     /* local file still holds it */
   }
@@ -501,7 +465,7 @@ async function persistDb(db: DbFile) {
         /* live house data stays in memory */
       }
       try {
-        if (blobEnabled()) await writeBlobDb(live);
+        if (blobConfigured()) await writeBlobDb(live);
         else await writeFileDb(live);
       } catch {
         /* memory still holds the merged houses */
@@ -532,7 +496,7 @@ async function persistDb(db: DbFile) {
       }
       setGlobalDb(live);
       try {
-        if (blobEnabled()) await writeBlobDb(live);
+        if (blobConfigured()) await writeBlobDb(live);
         else await writeFileDb(live);
       } catch {
         /* memory still holds the merged houses */
@@ -542,7 +506,7 @@ async function persistDb(db: DbFile) {
     return;
   }
 
-  if (blobEnabled()) {
+  if (blobConfigured()) {
     await writeBlobDb(db);
     try {
       await writeFileDb(db);
@@ -612,7 +576,7 @@ async function softPersistDb(db: DbFile) {
   setMem(db);
   setGlobalDb(db);
   try {
-    if (blobEnabled()) await writeBlobDb(db);
+    if (blobConfigured()) await writeBlobDb(db);
     else await writeFileDb(db);
   } catch {
     /* memory + dedicated push blob still hold subscriptions */
@@ -1033,7 +997,7 @@ async function persistPushSettingsMigration(db: DbFile) {
     /* house db still holds a copy */
   }
   try {
-    if (blobEnabled()) await writeBlobDb(db);
+    if (blobConfigured()) await writeBlobDb(db);
     await writeFileDb(db);
   } catch {
     /* memory still holds migrated templates */

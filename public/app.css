@@ -47,7 +47,6 @@
     --color-violet-900: oklch(38% 0.189 293.745);
     --color-violet-950: oklch(28.3% 0.141 291.089);
     --color-rose-300: oklch(81% 0.117 11.638);
-    --color-slate-300: oklch(86.9% 0.022 252.894);
     --color-black: #000;
     --color-white: #fff;
     --spacing: 0.25rem;
@@ -533,6 +532,10 @@
   .size-20 {
     width: calc(var(--spacing) * 20);
     height: calc(var(--spacing) * 20);
+  }
+  .size-\[1\.35rem\] {
+    width: 1.35rem;
+    height: 1.35rem;
   }
   .size-\[38px\] {
     width: 38px;
@@ -1095,10 +1098,6 @@
     border-style: var(--tw-border-style);
     border-width: 2px;
   }
-  .border-\[1\.5px\] {
-    border-style: var(--tw-border-style);
-    border-width: 1.5px;
-  }
   .border-s {
     border-inline-start-style: var(--tw-border-style);
     border-inline-start-width: 1px;
@@ -1110,9 +1109,6 @@
   .border-b {
     border-bottom-style: var(--tw-border-style);
     border-bottom-width: 1px;
-  }
-  .border-\[\#fff7ed\] {
-    border-color: #fff7ed;
   }
   .border-border {
     border-color: var(--border);
@@ -1130,6 +1126,12 @@
     border-color: color-mix(in srgb, oklch(75% 0.183 55.934) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       border-color: color-mix(in oklab, var(--color-orange-400) 40%, transparent);
+    }
+  }
+  .border-orange-400\/50 {
+    border-color: color-mix(in srgb, oklch(75% 0.183 55.934) 50%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-orange-400) 50%, transparent);
     }
   }
   .border-orange-500\/15 {
@@ -1176,6 +1178,9 @@
   }
   .bg-\[\#1a1024\] {
     background-color: #1a1024;
+  }
+  .bg-\[\#1a1028\] {
+    background-color: #1a1028;
   }
   .bg-\[\#1d1028\] {
     background-color: #1d1028;
@@ -1383,6 +1388,12 @@
   }
   .bg-orange-500 {
     background-color: var(--color-orange-500);
+  }
+  .bg-orange-500\/10 {
+    background-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 10%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-orange-500) 10%, transparent);
+    }
   }
   .bg-orange-500\/15 {
     background-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 15%, transparent);
@@ -1906,9 +1917,6 @@
   }
   .text-sky-300 {
     color: var(--color-sky-300);
-  }
-  .text-slate-300 {
-    color: var(--color-slate-300);
   }
   .text-violet-50 {
     color: var(--color-violet-50);
@@ -4440,19 +4448,22 @@ svg.leaflet-zoom-animated {
 }
 .pin-apt-dots {
   position: absolute;
-  left: 50%;
+  left: 0;
+  right: 0;
   bottom: -18px;
   z-index: 4;
   display: flex;
   flex-direction: row;
+  justify-content: center;
+  direction: ltr;
   pointer-events: none;
-  transform: translateX(-50%);
 }
 .pin-apt-dot {
   position: relative;
+  flex: 0 0 auto;
   width: 24px;
   height: 24px;
-  margin-inline-end: -8px;
+  margin-right: -8px;
   border-radius: 999px;
   border: 1.5px solid #fff7ed;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
@@ -4461,7 +4472,7 @@ svg.leaflet-zoom-animated {
   background-size: 86%;
 }
 .pin-apt-dot:last-child {
-  margin-inline-end: 0;
+  margin-right: 0;
 }
 .pin-apt-dot.is-plenty,
 .pin-apt-dot.is-low,
@@ -4524,25 +4535,26 @@ svg.leaflet-zoom-animated {
   background: #94a3b8 !important;
 }
 .house-pin.is-building {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
 }
 .pin-houses {
-  position: relative;
+  position: absolute;
+  left: 50%;
+  top: 42%;
   z-index: 5;
   display: block;
-  width: 34px;
-  height: 25px;
+  width: 40px;
+  height: 30px;
   flex-shrink: 0;
   font-size: 0;
   line-height: 0;
+  transform: translate(-50%, -50%);
 }
 .pin-houses i {
   position: absolute;
-  width: 17px;
-  height: 12px;
+  width: 20px;
+  height: 14px;
   background: #fb923c;
   border-radius: 1px;
 }
@@ -4550,22 +4562,22 @@ svg.leaflet-zoom-animated {
   content: "";
   position: absolute;
   left: -2px;
-  top: -8px;
-  border-left: 10.5px solid transparent;
-  border-right: 10.5px solid transparent;
-  border-bottom: 8px solid #fb923c;
+  top: -9px;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 9px solid #fb923c;
 }
 .pin-houses i:first-child {
-  left: 10px;
-  top: 0;
+  left: 13px;
+  top: 2px;
   background: #ffedd5;
 }
 .pin-houses i:first-child:before {
   border-bottom-color: #ffedd5;
 }
 .pin-houses i:last-child {
-  left: 0;
-  top: 7px;
+  left: 3px;
+  top: 12px;
 }
 .house-pin span,
 .pumpkin-pin span {
@@ -4609,7 +4621,11 @@ svg.leaflet-zoom-animated {
 .is-filter-dim .pumpkin-pin-icon.is-filtered-out,
 .is-filter-dim .house-pin.is-filtered-out,
 .is-filter-dim .pin-apt-dot.is-filtered-out {
-  opacity: 0.62;
+  opacity: 0.75;
+}
+.is-filter-dim .pumpkin-pin-icon.is-filtered-out .house-pin.is-filtered-out,
+.is-filter-dim .pumpkin-pin-icon.is-filtered-out .pin-apt-dot.is-filtered-out {
+  opacity: 1;
 }
 .house-skipped-banner {
   margin-bottom: 0.75rem;
@@ -4818,6 +4834,13 @@ svg.leaflet-zoom-animated {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
   flex-shrink: 0;
 }
+.house-pin .pin-status.is-skipped,
+.pumpkin-pin .pin-status.is-skipped {
+  position: absolute;
+  bottom: -6px;
+  inset-inline-start: -6px;
+  z-index: 2;
+}
 .skip-pin-badge.is-list {
   width: 32px;
   height: 32px;
@@ -4826,8 +4849,8 @@ svg.leaflet-zoom-animated {
 .house-pin .pin-status.is-skipped .pin-skip-icon,
 .pumpkin-pin .pin-status.is-skipped .pin-skip-icon {
   display: block;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
 }
 .skip-pin-badge.is-list .skip-pin-badge-icon {
@@ -4836,10 +4859,10 @@ svg.leaflet-zoom-animated {
 }
 .pin-apt-dot.is-skipped {
   background-color: #64748b;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M2.5 3.5 13 12 2.5 20.5Z'/%3E%3Crect fill='%23fff' x='14' y='3.5' width='5' height='17' rx='2.5'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M3.75 3.5 14.25 12 3.75 20.5Z'/%3E%3Crect fill='%23fff' x='15.25' y='3.5' width='5' height='17' rx='2.5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 88%;
+  background-size: 72%;
 }
 .house-pin.house-pin-dot .pin-status {
   width: 14px;
@@ -5391,7 +5414,26 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   height: 60px;
 }
 .house-pin.is-legend .pin-houses {
-  transform: scale(1.35);
+  width: 44px;
+  height: 33px;
+}
+.house-pin.is-legend .pin-houses i {
+  width: 22px;
+  height: 15px;
+}
+.house-pin.is-legend .pin-houses i:before {
+  top: -10px;
+  border-left-width: 13px;
+  border-right-width: 13px;
+  border-bottom-width: 10px;
+}
+.house-pin.is-legend .pin-houses i:first-child {
+  left: 14px;
+  top: 2px;
+}
+.house-pin.is-legend .pin-houses i:last-child {
+  left: 3px;
+  top: 13px;
 }
 .map-house-sheet {
   position: absolute;
@@ -5559,8 +5601,8 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .house-action-menu-trigger {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border: 0;
   border-radius: 999px;
   background: #2a1638;
@@ -5570,14 +5612,14 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   background: #3b1d4e;
 }
 .house-action-menu-panel {
-  min-width: 13.5rem;
-  max-width: min(20rem, calc(100vw - 1.5rem));
+  min-width: 16rem;
+  max-width: min(22rem, calc(100vw - 1.5rem));
   overflow: hidden;
-  border-radius: 0.9rem;
+  border-radius: 1rem;
   border: 1px solid rgba(249, 115, 22, 0.25);
   background: #1d1028;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
-  padding: 0.45rem;
+  padding: 0.55rem;
 }
 .house-action-menu-panel--floating {
   position: fixed;
@@ -5586,29 +5628,31 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   display: flex;
   width: 100%;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.875rem;
   border: 0;
-  border-radius: 0.65rem;
+  border-radius: 0.7rem;
   background: transparent;
-  padding: 0.7rem 0.8rem;
+  padding: 0.85rem 1rem;
   color: #ffedd5;
   text-align: start;
   text-decoration: none;
-  font-size: 1.0625rem;
-  line-height: 1.3;
+  font-size: 1.125rem;
+  line-height: 1.35;
 }
 .house-action-menu-item:hover,
 .house-action-menu-item:focus-visible {
   background: rgba(249, 115, 22, 0.12);
   outline: none;
 }
-.house-action-menu-item.is-active {
-  background: rgba(249, 115, 22, 0.16);
-  color: #fdba74;
+.house-action-menu-item.is-active-visited {
+  color: #6ee7b7;
+}
+.house-action-menu-item.is-active-saved {
+  color: #fb7185;
 }
 .house-action-menu-icon {
   display: inline-flex;
-  width: 1.75rem;
+  width: 2rem;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
@@ -5782,6 +5826,153 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
     transform: scale(1);
   }
 }
+.like-cheer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.like-cheer-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 26px 16px;
+  border-radius: 24px;
+  background: #e11d48;
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 800;
+  box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.45), 0 16px 44px rgba(225, 29, 72, 0.5);
+  animation: like-cheer-pop 1.55s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+}
+.like-cheer-heart {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #fff;
+  color: #fb7185;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.28);
+  animation: like-cheer-heart 1.55s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+}
+.like-cheer-burst {
+  position: absolute;
+  inset: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.like-cheer-burst i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  opacity: 0;
+  animation: like-cheer-spark 1.15s ease-out forwards;
+}
+.like-cheer-burst i:nth-child(1) {
+  --dx: -42px;
+  --dy: -28px;
+  background: #fda4af;
+}
+.like-cheer-burst i:nth-child(2) {
+  --dx: 40px;
+  --dy: -26px;
+  background: #fb7185;
+  animation-delay: 0.04s;
+}
+.like-cheer-burst i:nth-child(3) {
+  --dx: -36px;
+  --dy: 24px;
+  background: #fde68a;
+  animation-delay: 0.08s;
+}
+.like-cheer-burst i:nth-child(4) {
+  --dx: 38px;
+  --dy: 22px;
+  background: #f472b6;
+  animation-delay: 0.05s;
+}
+.like-cheer-burst i:nth-child(5) {
+  --dx: 0;
+  --dy: -40px;
+  width: 6px;
+  height: 6px;
+  background: #fff;
+  animation-delay: 0.02s;
+}
+.like-cheer-burst i:nth-child(6) {
+  --dx: 8px;
+  --dy: 36px;
+  width: 6px;
+  height: 6px;
+  background: #fecdd3;
+  animation-delay: 0.1s;
+}
+@keyframes like-cheer-pop {
+  0% {
+    transform: scale(0.4) rotate(-6deg);
+    opacity: 0;
+    box-shadow: 0 0 0 0 rgba(225, 29, 72, 0);
+  }
+  16% {
+    transform: scale(1.14) rotate(2deg);
+    opacity: 1;
+    box-shadow: 0 0 0 14px rgba(225, 29, 72, 0.22), 0 16px 44px rgba(225, 29, 72, 0.5);
+  }
+  30% {
+    transform: scale(0.96) rotate(-1deg);
+  }
+  42% {
+    transform: scale(1.04) rotate(0deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) translateY(-18px);
+  }
+}
+@keyframes like-cheer-heart {
+  0% {
+    transform: scale(0);
+  }
+  18% {
+    transform: scale(1.25);
+  }
+  32% {
+    transform: scale(0.92);
+  }
+  46% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes like-cheer-spark {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx, 0px) * 1.15), calc(-50% + var(--dy, 0px) * 1.15)) scale(0.4);
+  }
+}
 @keyframes visit-cheer-spark {
   0% {
     opacity: 0;
@@ -5789,6 +5980,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   }
   18% {
     opacity: 1;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1);
   }
   100% {
     opacity: 0;

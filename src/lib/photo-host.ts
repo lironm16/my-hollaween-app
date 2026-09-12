@@ -1,4 +1,5 @@
 import { put as putBlob } from "@vercel/blob";
+import { blobConfigured } from "@/lib/blob-auth";
 
 const LITTERBOX = "https://litterbox.catbox.moe/resources/internals/api.php";
 const CATBOX = "https://catbox.moe/user/api.php";
@@ -27,14 +28,12 @@ async function postFile(url: string, fields: Record<string, string>, file: Blob)
 }
 
 async function uploadToBlob(buf: Buffer): Promise<{ url: string; host: string } | null> {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token) return null;
+  if (!blobConfigured()) return null;
   const blob = await putBlob(`halloween-houses/photos/${Date.now()}.jpg`, buf, {
     access: "public",
     addRandomSuffix: true,
     allowOverwrite: false,
     contentType: "image/jpeg",
-    token,
     cacheControlMaxAge: 60 * 60 * 24 * 365,
   });
   return blob.url ? { url: blob.url, host: "blob" } : null;

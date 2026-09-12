@@ -26,4 +26,13 @@ describe("storage-errors", () => {
     assert.equal(mapped.code, "BLOB_NOT_CONFIGURED");
     assert.match(mapped.error, /אחסון השרת/);
   });
+
+  it("maps Vercel Blob access errors from message text", () => {
+    assert.equal(
+      storageErrorCodeFromBlob(
+        new Error("Vercel Blob: Access denied, please provide a valid token for this resource."),
+      ),
+      "BLOB_NOT_CONFIGURED",
+    );
+  });
 });

@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { get as getBlob, put as putBlob } from "@vercel/blob";
+import { blobConfigured, privateBlobGetOptions, privateBlobPutOptions } from "@/lib/blob-auth";
 import {
   clampTraffic,
   clampTrafficDelta,
@@ -40,10 +41,6 @@ function setLastBlobAt(at: number) {
   (globalThis as GlobalBag).__hwTrafficLastBlob = at;
 }
 
-function blobEnabled() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
-}
-
 async function filePath() {
   if (process.env.DATA_DIR) {
     await fs.mkdir(process.env.DATA_DIR, { recursive: true });
@@ -77,13 +74,9 @@ async function writeLocal(file: TrafficFile) {
 }
 
 async function readBlob(): Promise<TrafficFile | null> {
-  if (!blobEnabled()) return null;
+  if (!blobConfigured()) return null;
   try {
-    const result = await getBlob(BLOB_PATH, {
-      access: "private",
-      useCache: false,
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-    });
+    const result = await getBlob(BLOB_PATH, privateBlobGetOptions());
     if (!result?.stream) return null;
     return JSON.parse(await new Response(result.stream).text()) as TrafficFile;
   } catch {
@@ -92,16 +85,9 @@ async function readBlob(): Promise<TrafficFile | null> {
 }
 
 async function writeBlob(file: TrafficFile) {
-  if (!blobEnabled()) return;
+  if (!blobConfigured()) return;
   try {
-    await putBlob(BLOB_PATH, JSON.stringify(file), {
-      access: "private",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-      cacheControlMaxAge: 0,
-    });
+    await putBlob(BLOB_PATH, JSON.stringify(file), privateBlobPutOptions("application/json"));
   } catch {
     /* keep memory/file */
   }
