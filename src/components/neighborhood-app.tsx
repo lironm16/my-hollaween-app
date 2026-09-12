@@ -54,7 +54,9 @@ import {
 import { HOUSE_SET_LABELS, houseMatchesSet } from "@/lib/house-set";
 import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
 import { formatDistance } from "@/lib/geo";
-import { buildWalkingRoute } from "@/lib/route";
+import { buildWalkingRoute, buildWalkingRouteOrdered } from "@/lib/route";
+import { diffRouteBySkippedIds, routeHousesAfterSkipChange } from "@/lib/route-changes";
+import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
 import { houseSelectionAnnouncement } from "@/lib/map-a11y";
 import type { Catalog, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -294,14 +296,97 @@ export function NeighborhoodApp({
     visits.visitedIds,
   ]);
 
+  function applyRouteAfterSkipChange(nextSkippedIds: string[], includeNew: boolean) {
+    const routeHouses = routeHousesAfterSkipChange(
+      pinnedRoute,
+      houses,
+      filters,
+      filterContext,
+      nextSkippedIds,
+      includeNew,
+    );
+    setPinnedRoute(
+      buildWalkingRouteOrdered(routeHouses, { lat: origin.lat, lng: origin.lng }, {
+        accessible: accessibleOnly,
+        startedFrom: origin.kind,
+        originLabel: origin.label,
+      }),
+    );
+  }
+
   function handleSkipHouse(id: string) {
-    skips.skip(id);
-    if (routeMode) rebuildPinnedRoute(false);
+    if (skips.skipped(id)) return;
+    const nextSkippedIds = [id, ...skips.skippedIds.filter((item) => item !== id)];
+    if (!routeMode) {
+      skips.skip(id);
+      return;
+    }
+    const { removed, added } = diffRouteBySkippedIds(
+      pinnedRoute,
+      houses,
+      filters,
+      filterContext,
+      nextSkippedIds,
+    );
+    if (removed.length === 0 && added.length === 0) {
+      skips.skip(id);
+      return;
+    }
+    if (shouldSkipRoutePrompt("filter-change")) {
+      skips.skip(id);
+      applyRouteAfterSkipChange(nextSkippedIds, false);
+      return;
+    }
+    setRoutePrompt({
+      kind: "filter-change",
+      title: "לעדכן את המסלול?",
+      description: "הבית יוסר מהמסלול. «ביטול» משאיר את המסלול כמו שהוא.",
+      confirmLabel: "דילוג והסרה מהמסלול",
+      removedHouses: removed,
+      addedHouses: added,
+      onConfirm: () => {
+        skips.skip(id);
+        applyRouteAfterSkipChange(nextSkippedIds, false);
+      },
+    });
   }
 
   function handleRestoreHouse(id: string) {
-    skips.unskip(id);
-    if (routeMode) rebuildPinnedRoute(false);
+    if (!skips.skipped(id)) return;
+    const nextSkippedIds = skips.skippedIds.filter((item) => item !== id);
+    if (!routeMode) {
+      skips.unskip(id);
+      return;
+    }
+    const { removed, added } = diffRouteBySkippedIds(
+      pinnedRoute,
+      houses,
+      filters,
+      filterContext,
+      nextSkippedIds,
+    );
+    if (removed.length === 0 && added.length === 0) {
+      skips.unskip(id);
+      return;
+    }
+    if (shouldSkipRoutePrompt("filter-change")) {
+      skips.unskip(id);
+      applyRouteAfterSkipChange(nextSkippedIds, added.length > 0);
+      return;
+    }
+    setRoutePrompt({
+      kind: "filter-change",
+      title: "להחזיר למסלול?",
+      description:
+        "«ביטול» משאיר את הבית בדילוג. «החזרה למסלול» מוסיף אותו שוב למסלול.",
+      confirmLabel: "החזרה למסלול",
+      removedHouses: removed,
+      addedHouses: added,
+      onConfirm: (includeNew) => {
+        skips.unskip(id);
+        applyRouteAfterSkipChange(nextSkippedIds, includeNew);
+      },
+    });
   }
   const { line: routeLine } = useRouteGeometry(activeRoute, routeMode, {
     straightOnly: activeHouseSet === "stubs",
