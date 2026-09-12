@@ -26,6 +26,7 @@ function base(): HouseFiltersState {
     likedOnly: true,
     unvisitedOnly: false,
     visitedOnly: true,
+    skippedOnly: false,
     includeUndecorated: false,
   };
 }

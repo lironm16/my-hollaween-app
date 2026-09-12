@@ -70,11 +70,12 @@ export function houseFilterMismatchReasons(
     houseSet: HouseSet;
     likedIds: string[];
     visitedIds: string[];
+    skippedIds?: string[];
     now: Date;
   },
 ): string[] {
   const reasons: string[] = [];
-  const { houseSet, likedIds, visitedIds, now } = options;
+  const { houseSet, likedIds, visitedIds, skippedIds = [], now } = options;
   const {
     accessibleOnly,
     openNowOnly,
@@ -92,6 +93,7 @@ export function houseFilterMismatchReasons(
     likedOnly,
     unvisitedOnly,
     visitedOnly,
+    skippedOnly,
     includeUndecorated,
   } = filters;
   const {
@@ -162,6 +164,8 @@ export function houseFilterMismatchReasons(
   if (likedOnly && !likedIds.includes(house.id)) reasons.push("לא בשמורים");
   if (unvisitedOnly && visitedIds.includes(house.id)) reasons.push("כבר ביקרת");
   if (visitedOnly && !visitedIds.includes(house.id)) reasons.push("לא ביקרת");
+  if (skippedIds.includes(house.id)) reasons.push("דילגתם על הבית");
+  if (skippedOnly && !skippedIds.includes(house.id)) reasons.push("לא דילגתם");
 
   return reasons;
 }
@@ -173,6 +177,7 @@ export function filterHouses(
     houseSet: HouseSet;
     likedIds: string[];
     visitedIds: string[];
+    skippedIds?: string[];
     now: Date;
   },
 ): PublicHouse[] {
@@ -193,9 +198,10 @@ export function filterHouses(
     likedOnly,
     unvisitedOnly,
     visitedOnly,
+    skippedOnly,
     includeUndecorated,
   } = filters;
-  const { houseSet, likedIds, visitedIds, now } = options;
+  const { houseSet, likedIds, visitedIds, skippedIds = [], now } = options;
   const {
     from: visitWindowFrom,
     to: visitWindowTo,
@@ -251,6 +257,7 @@ export function filterHouses(
     if (likedOnly && !likedIds.includes(house.id)) return false;
     if (unvisitedOnly && visitedIds.includes(house.id)) return false;
     if (visitedOnly && !visitedIds.includes(house.id)) return false;
+    if (skippedOnly && !skippedIds.includes(house.id)) return false;
     return true;
   });
 }

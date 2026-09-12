@@ -5,8 +5,6 @@ import {
   type HouseCluster,
 } from "@/lib/house-clusters";
 import { distanceMeters, formatDistance } from "@/lib/geo";
-import { effectiveVisit } from "@/lib/house-state";
-import { houseHoursWindows, parseClockMinutes } from "@/lib/hours";
 import { estimateWalkingMeters } from "@/lib/walk-distance-estimate";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
@@ -43,8 +41,6 @@ const WALK_METERS_PER_MIN = 70;
 const ACCESSIBLE_METERS_PER_MIN = 45;
 const MINUTES_PER_STOP = 2;
 const ACCESSIBLE_MINUTES_PER_STOP = 3;
-/** Rough meters of detour we accept to avoid waiting one minute for a house to open. */
-const WAIT_MINUTE_PENALTY_METERS = 35;
 /**
  * Google Maps on phones only honors walking with a short waypoint list.
  * The in-app route includes every matching house — no cap.
@@ -61,127 +57,11 @@ function clusterPoint(cluster: HouseCluster): LatLng {
   return { lat: cluster.lat, lng: cluster.lng };
 }
 
-function clusterLeadHouse(cluster: HouseCluster) {
-  return cluster.houses[0]!;
-}
-
-export function houseHasOpenHours(house: PublicHouse) {
-  return houseHoursWindows(house).length > 0;
-}
-
-export function housesSupportTimeAwareRoute(houses: PublicHouse[]) {
-  const eligible = houses.filter(
-    (house) => Number.isFinite(house.lat) && Number.isFinite(house.lng) && houseHasOpenHours(house),
-  );
-  return eligible.length > 0 && eligible.length === houses.length;
-}
-
-function walkMinutes(meters: number, accessible: boolean) {
-  const pace = accessible ? ACCESSIBLE_METERS_PER_MIN : WALK_METERS_PER_MIN;
-  return meters / pace;
-}
-
-function stopMinutes(accessible: boolean) {
-  return accessible ? ACCESSIBLE_MINUTES_PER_STOP : MINUTES_PER_STOP;
-}
-
-function parsedHouseWindows(house: PublicHouse) {
-  return houseHoursWindows(house).flatMap((window) => {
-    const from = parseClockMinutes(window.from);
-    const to = parseClockMinutes(window.to);
-    if (from === null || to === null) return [];
-    return [{ from, to }];
-  });
-}
-
-function minutesUntilOpen(house: PublicHouse, atMinutes: number) {
-  const windows = parsedHouseWindows(house);
-  if (windows.length === 0) return 0;
-  for (const window of windows) {
-    if (atMinutes >= window.from && atMinutes < window.to) return 0;
-  }
-  const next = windows.find((window) => atMinutes < window.from);
-  if (next) return next.from - atMinutes;
-  return Number.POSITIVE_INFINITY;
-}
-
-function canVisitAtMinutes(house: PublicHouse, atMinutes: number) {
-  if (effectiveVisit(house) === "closed") return false;
-  const windows = parsedHouseWindows(house);
-  if (windows.length === 0) return true;
-  return windows.some((window) => atMinutes >= window.from && atMinutes < window.to);
-}
-
-function pickNextCluster(
-  remaining: HouseCluster[],
-  cursor: LatLng,
-  accessible: boolean,
-  currentMinutes?: number,
-) {
-  let bestIdx = 0;
-  let bestScore = Number.POSITIVE_INFINITY;
-  for (let i = 0; i < remaining.length; i++) {
-    const cluster = remaining[i]!;
-    const lead = clusterLeadHouse(cluster);
-    const dist = estimateWalkingMeters(cursor, clusterPoint(cluster));
-    let score = dist;
-    if (currentMinutes !== undefined) {
-      const arrival = currentMinutes + walkMinutes(dist, accessible);
-      const wait = minutesUntilOpen(lead, Math.floor(arrival));
-      if (!canVisitAtMinutes(lead, Math.floor(arrival + wait))) {
-        score = Number.POSITIVE_INFINITY;
-      } else {
-        score = dist + wait * WAIT_MINUTE_PENALTY_METERS;
-      }
-    }
-    if (score < bestScore) {
-      bestScore = score;
-      bestIdx = i;
-    }
-  }
-  const next = remaining.splice(bestIdx, 1)[0]!;
-  let nextMinutes = currentMinutes;
-  if (currentMinutes !== undefined) {
-    const lead = clusterLeadHouse(next);
-    const dist = estimateWalkingMeters(cursor, clusterPoint(next));
-    let arrival = currentMinutes + walkMinutes(dist, accessible);
-    arrival += minutesUntilOpen(lead, Math.floor(arrival));
-    nextMinutes = arrival + stopMinutes(accessible);
-  }
-  return { next, nextMinutes };
-}
-
-function orderClustersByDistance(
-  clusters: HouseCluster[],
-  origin: LatLng,
-  accessible: boolean,
-  now?: Date,
-) {
-  const remaining = clusters.slice();
-  const ordered: HouseCluster[] = [];
-  let cursor = origin;
-  const timeAware = now !== undefined && clusters.every((cluster) => houseHasOpenHours(clusterLeadHouse(cluster)));
-  let currentMinutes = timeAware ? now.getHours() * 60 + now.getMinutes() : undefined;
-
-  while (remaining.length > 0) {
-    const picked = pickNextCluster(remaining, cursor, accessible, currentMinutes);
-    ordered.push(picked.next);
-    cursor = clusterPoint(picked.next);
-    currentMinutes = picked.nextMinutes;
-  }
-  return ordered;
-}
-
 /** One stop per building, nearest-neighbor, then a light 2-opt polish. */
 export function buildWalkingRoute(
   houses: PublicHouse[],
   gps: LatLng | null | undefined,
-  options?: {
-    accessible?: boolean;
-    startedFrom?: WalkingRoute["startedFrom"];
-    originLabel?: string;
-    now?: Date;
-  },
+  options?: { accessible?: boolean; startedFrom?: WalkingRoute["startedFrom"]; originLabel?: string },
 ): WalkingRoute | null {
   const accessible = Boolean(options?.accessible);
   const candidates = houses
@@ -198,15 +78,26 @@ export function buildWalkingRoute(
       ? { lat: gps.lat, lng: gps.lng }
       : { lat: config.map.center.lat, lng: config.map.center.lng };
 
-  const timeAware = housesSupportTimeAwareRoute(candidates);
-  const clusters = clusterHousesByAddress(candidates);
-  const ordered = orderClustersByDistance(
-    clusters,
-    origin,
-    accessible,
-    timeAware ? options?.now : undefined,
-  );
-  const polished = !timeAware && ordered.length >= 4 ? twoOptClusters(ordered, origin) : ordered;
+  const remaining = clusterHousesByAddress(candidates);
+  const ordered: HouseCluster[] = [];
+  let cursor = origin;
+
+  while (remaining.length > 0) {
+    let bestIdx = 0;
+    let bestDist = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < remaining.length; i++) {
+      const d = estimateWalkingMeters(cursor, clusterPoint(remaining[i]!));
+      if (d < bestDist) {
+        bestDist = d;
+        bestIdx = i;
+      }
+    }
+    const next = remaining.splice(bestIdx, 1)[0]!;
+    ordered.push(next);
+    cursor = clusterPoint(next);
+  }
+
+  const polished = ordered.length >= 4 ? twoOptClusters(ordered, origin) : ordered;
   return summarizeRoute(polished, origin, startedFrom, accessible, options?.originLabel);
 }
 

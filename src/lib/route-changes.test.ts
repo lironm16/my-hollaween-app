@@ -64,6 +64,7 @@ const baseFilters: HouseFiltersState = {
   likedOnly: false,
   unvisitedOnly: false,
   visitedOnly: false,
+  skippedOnly: false,
   includeUndecorated: true,
 };
 

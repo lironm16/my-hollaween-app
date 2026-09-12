@@ -57,6 +57,7 @@ describe("resolveVisitWindow", () => {
       likedOnly: false,
       unvisitedOnly: false,
       visitedOnly: false,
+      skippedOnly: false,
       includeUndecorated: true,
     };
     const resolved = resolveVisitWindow(filters, now);
