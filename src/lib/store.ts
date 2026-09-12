@@ -59,6 +59,13 @@ import {
   privateBlobPutOptions,
 } from "@/lib/blob-auth";
 import {
+  firestoreConfigured,
+  readFirestoreCatalog,
+  readFirestoreDb,
+  writeFirestoreDb,
+  writeFirestorePushSettings,
+} from "@/lib/firestore-db";
+import {
   isRetryableBlobError,
   productionRequiresBlob,
   storageErrorCodeFromBlob,
@@ -398,6 +405,26 @@ function foldPushSubscriptions(target: DbFile, ...candidates: Array<DbFile | nul
 }
 
 async function readFileDb(): Promise<DbFile> {
+  if (firestoreConfigured()) {
+    const [remote, global] = await Promise.all([
+      readFirestoreDb(),
+      Promise.resolve(getGlobalDb()),
+    ]);
+    if (remote) {
+      const merged = pickNewest(remote, global) ?? remote;
+      foldPushSubscriptions(merged, mem, global);
+      return merged;
+    }
+    const blob = await readBlobDb();
+    const seed = normalizeDb(blob ?? (await readSeed()));
+    const catalog = asCatalog(seed.houses, seed.updatedAt, seed.pushSettings);
+    try {
+      await writeFirestoreDb({ db: seed, catalog, prev: null });
+    } catch (error) {
+      console.error("[store] firestore bootstrap failed", error);
+    }
+    return seed;
+  }
   const [local, blob, global, pushBlob, pushSubsBlob] = await Promise.all([
     readLocalFileDb(),
     readBlobDb(),
@@ -445,10 +472,43 @@ async function persistPushSettings(
 ) {
   if (!settings?.templates) return;
   if (pushSettingsStamp(settings) < existingStamp) return;
+  if (firestoreConfigured()) {
+    await writeFirestorePushSettings(settings);
+    return;
+  }
   await writePushSettingsBlob(settings);
 }
 
-async function persistDb(db: DbFile) {
+async function writeDurableDb(db: DbFile, prev?: DbFile | null) {
+  if (firestoreConfigured()) {
+    await writeFirestoreDb({
+      db,
+      catalog: asCatalog(db.houses, db.updatedAt, db.pushSettings),
+      prev,
+    });
+    return;
+  }
+  if (blobConfigured()) {
+    await writeBlobDb(db);
+    try {
+      await writeFileDb(db);
+    } catch {
+      /* Vercel Blob is the durable source of truth in production */
+    }
+    return;
+  }
+  if (productionRequiresBlob()) {
+    throw storageErrorFromCode("BLOB_NOT_CONFIGURED");
+  }
+  try {
+    await writeFileDb(db);
+  } catch (error) {
+    console.error("[store] local db write failed", error);
+    throw storageErrorFromCode("PERSIST_FAILED", error);
+  }
+}
+
+async function persistDb(db: DbFile, prev?: DbFile | null) {
   const cachedPush = pickPushSettings(db, mem, getGlobalDb());
   const pushBlob = cachedPush?.templates ? null : await readPushSettingsBlob();
   const blobWrapper = asPushCandidate(cachedPush ?? pushBlob);
@@ -475,8 +535,7 @@ async function persistDb(db: DbFile) {
         /* live house data stays in memory */
       }
       try {
-        if (blobConfigured()) await writeBlobDb(live);
-        else await writeFileDb(live);
+        await writeDurableDb(live, mem);
       } catch {
         /* memory still holds the merged houses */
       }
@@ -506,8 +565,7 @@ async function persistDb(db: DbFile) {
       }
       setGlobalDb(live);
       try {
-        if (blobConfigured()) await writeBlobDb(live);
-        else await writeFileDb(live);
+        await writeDurableDb(live, mem);
       } catch {
         /* memory still holds the merged houses */
       }
@@ -516,23 +574,7 @@ async function persistDb(db: DbFile) {
     return;
   }
 
-  if (blobConfigured()) {
-    await writeBlobDb(db);
-    try {
-      await writeFileDb(db);
-    } catch {
-      /* Vercel Blob is the durable source of truth in production */
-    }
-  } else if (productionRequiresBlob()) {
-    throw storageErrorFromCode("BLOB_NOT_CONFIGURED");
-  } else {
-    try {
-      await writeFileDb(db);
-    } catch (error) {
-      console.error("[store] local db write failed", error);
-      throw storageErrorFromCode("PERSIST_FAILED", error);
-    }
-  }
+  await writeDurableDb(db, prev);
 
   if (isStaleSnapshot(db)) {
     const live = liveDb();
@@ -586,18 +628,25 @@ async function softPersistDb(db: DbFile) {
   setMem(db);
   setGlobalDb(db);
   try {
-    if (blobConfigured()) await writeBlobDb(db);
+    if (firestoreConfigured()) {
+      await writeFirestoreDb({
+        db,
+        catalog: asCatalog(db.houses, db.updatedAt, db.pushSettings),
+        prev: mem,
+      });
+    } else if (blobConfigured()) await writeBlobDb(db);
     else await writeFileDb(db);
   } catch {
-    /* memory + dedicated push blob still hold subscriptions */
+    /* memory still holds subscriptions */
   }
 }
 
 async function runSyncedWrite<T>(fn: (db: DbFile) => T | Promise<T>): Promise<T> {
   return withLock(async () => {
     const db = await prepareDbFromSources();
+    const prev = mem ? cloneDb(mem) : null;
     const result = await fn(db);
-    await persistDb(db);
+    await persistDb(db, prev);
     return result;
   });
 }
@@ -629,6 +678,13 @@ export function asCatalog(
 
 export async function getCatalog(): Promise<Catalog> {
   await ensurePushSettingsGeneration();
+  if (firestoreConfigured()) {
+    const direct = await readFirestoreCatalog();
+    if (direct) {
+      catalogMem = direct;
+      return direct;
+    }
+  }
   const db = await loadDb();
   catalogMem = asCatalog(db.houses, db.updatedAt, db.pushSettings);
   return catalogMem;
