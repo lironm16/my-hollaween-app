@@ -35,4 +35,13 @@ describe("storage-errors", () => {
       "BLOB_NOT_CONFIGURED",
     );
   });
+
+  it("maps suspended stores to quota exceeded", () => {
+    assert.equal(
+      storageErrorCodeFromBlob(
+        new Error("Vercel Blob: This store has been suspended."),
+      ),
+      "BLOB_QUOTA_EXCEEDED",
+    );
+  });
 });

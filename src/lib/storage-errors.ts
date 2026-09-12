@@ -2,6 +2,7 @@
 
 export type StorageErrorCode =
   | "BLOB_NOT_CONFIGURED"
+  | "BLOB_QUOTA_EXCEEDED"
   | "BLOB_WRITE_FAILED"
   | "PERSIST_FAILED";
 
@@ -35,9 +36,16 @@ export function storageErrorCodeFromBlob(error: unknown): StorageErrorCode {
   const message = blobErrorMessage(error);
   const body = blobBody(error);
   if (
+    name === "BlobStoreSuspendedError" ||
+    /this store has been suspended/i.test(body) ||
+    /usage limits/i.test(body) ||
+    /reached your usage/i.test(body)
+  ) {
+    return "BLOB_QUOTA_EXCEEDED";
+  }
+  if (
     name === "BlobStoreNotFoundError" ||
     name === "BlobClientTokenExpiredError" ||
-    name === "BlobStoreSuspendedError" ||
     name === "BlobAccessError" ||
     name === "BlobOidcEnvironmentNotAllowedError" ||
     /no blob credentials found/i.test(message) ||
@@ -46,7 +54,6 @@ export function storageErrorCodeFromBlob(error: unknown): StorageErrorCode {
     /valid token/i.test(body) ||
     /this store does not exist/i.test(body) ||
     /client token has expired/i.test(body) ||
-    /this store has been suspended/i.test(body) ||
     /oidc is enabled/i.test(body) ||
     (/client token/i.test(body) && /not available/i.test(body))
   ) {
@@ -71,6 +78,14 @@ export function storageHttpError(error: unknown): { error: string; status: numbe
       code: "BLOB_NOT_CONFIGURED",
       error:
         "אחסון השרת לא מוגדר. מנהל האפליקציה צריך לחבר Vercel Blob לפרויקט (Storage → Blob) ולפרוס מחדש.",
+      status: 503,
+    };
+  }
+  if (error.message === "BLOB_QUOTA_EXCEEDED") {
+    return {
+      code: "BLOB_QUOTA_EXCEEDED",
+      error:
+        "אחסון השרת מלא (מגבלת Vercel Hobby — 10,000 פעולות). שדרוג ל-Pro ב-Vercel או המתנה עד איפוס המכסה. בינתיים לא ניתן לשמור בתים חדשים.",
       status: 503,
     };
   }

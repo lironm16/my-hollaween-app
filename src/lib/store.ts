@@ -69,7 +69,8 @@ const SEED_PATH = path.join(process.cwd(), "data", "seed.json");
 const BLOB_PATH = "halloween-houses/db.json";
 const PUSH_BLOB_PATH = "halloween-houses/push-settings.json";
 const PUSH_SUBS_BLOB_PATH = "halloween-houses/push-subscriptions.json";
-const MEM_TTL_MS = 1500;
+/** Cache house db reads — each miss fans out to several Blob GETs. */
+const MEM_TTL_MS = 120_000;
 
 let chain: Promise<unknown> = Promise.resolve();
 
@@ -448,9 +449,10 @@ async function persistPushSettings(
 }
 
 async function persistDb(db: DbFile) {
-  const pushBlob = await readPushSettingsBlob();
-  const blobWrapper = asPushCandidate(pushBlob);
-  const blobStamp = pushSettingsStamp(pushBlob);
+  const cachedPush = pickPushSettings(db, mem, getGlobalDb());
+  const pushBlob = cachedPush?.templates ? null : await readPushSettingsBlob();
+  const blobWrapper = asPushCandidate(cachedPush ?? pushBlob);
+  const blobStamp = pushSettingsStamp(cachedPush ?? pushBlob);
   foldPushSettings(db, mem, getGlobalDb(), blobWrapper);
 
   if (isStaleSnapshot(db)) {
