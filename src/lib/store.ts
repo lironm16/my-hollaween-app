@@ -52,7 +52,12 @@ import {
   type PushKind,
   type StoredPushSettings,
 } from "@/lib/push-templates";
-import { blobConfigured, privateBlobGetOptions, privateBlobPutOptions } from "@/lib/blob-auth";
+import {
+  blobConfigured,
+  privateBlobGetOptions,
+  privateBlobPutAttempts,
+  privateBlobPutOptions,
+} from "@/lib/blob-auth";
 import {
   isRetryableBlobError,
   productionRequiresBlob,
@@ -192,19 +197,22 @@ async function writeBlobDb(db: DbFile) {
   }
   const payload = JSON.stringify(db);
   let lastError: unknown;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    try {
-      await putBlob(BLOB_PATH, payload, privateBlobPutOptions("application/json"));
-      return;
-    } catch (error) {
-      lastError = error;
-      console.error("[store] blob write failed", {
-        attempt: attempt + 1,
-        name: error instanceof Error ? error.name : "unknown",
-        message: error instanceof Error ? error.message : String(error),
-      });
-      if (!isRetryableBlobError(error) || attempt === 2) break;
-      await sleep(300 * (attempt + 1));
+  for (const putOptions of privateBlobPutAttempts("application/json")) {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        await putBlob(BLOB_PATH, payload, putOptions);
+        return;
+      } catch (error) {
+        lastError = error;
+        console.error("[store] blob write failed", {
+          auth: putOptions.token ? "token" : putOptions.storeId ? "oidc" : "auto",
+          attempt: attempt + 1,
+          name: error instanceof Error ? error.name : "unknown",
+          message: error instanceof Error ? error.message : String(error),
+        });
+        if (!isRetryableBlobError(error) || attempt === 2) break;
+        await sleep(300 * (attempt + 1));
+      }
     }
   }
   throw storageErrorFromCode(storageErrorCodeFromBlob(lastError), lastError);
