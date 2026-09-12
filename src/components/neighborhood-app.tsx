@@ -33,6 +33,8 @@ import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
+import { useSkippedHouses } from "@/hooks/use-skipped-houses";
+import type { RouteChangeEntry } from "@/lib/route-changes";
 import { useDistanceOrigin } from "@/hooks/use-distance-origin";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { config } from "@/lib/config";
@@ -88,17 +90,18 @@ export function NeighborhoodApp({
 
   const [askedLocation, setAskedLocation] = useState(false);
   const [routePrompt, setRoutePrompt] = useState<{
-    kind: "enter-route" | "filter-change";
+    kind: "enter-route" | "filter-change" | "status-change";
     title: string;
     description: string;
     confirmLabel: string;
-    removedHouses?: string[];
-    addedHouses?: string[];
+    removedHouses?: RouteChangeEntry[];
+    addedHouses?: RouteChangeEntry[];
     onConfirm: (includeNewHouses: boolean) => void;
   } | null>(null);
 
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
+  const skips = useSkippedHouses();
   const owned = useOwnedHouses();
   const now = useAppNow();
   const { onToggleLike, onToggleVisited, visitCheer } = useHouseActions(likes, visits);
@@ -174,18 +177,23 @@ export function NeighborhoodApp({
     enterRouteMode: startRouteMode,
     exitRouteMode,
     pendingRouteGps,
+    rebuildPinnedRoute,
+    acknowledgeRouteSnapshot,
   } = useNeighborhoodRoute({
     visible,
     houses,
     filters,
     filterContext,
     visitedIds: visits.visitedIds,
+    skippedIds: skips.skippedIds,
     origin,
     accessibleOnly,
     gps,
     geoRefresh: geo.refresh,
     setAskedLocation,
     onBeforeEnter: resetForNavigation,
+    now,
+    setRoutePrompt,
   });
 
   const {
@@ -208,6 +216,7 @@ export function NeighborhoodApp({
     setPinnedRoute,
     origin,
     visitedIds: visits.visitedIds,
+    skippedIds: skips.skippedIds,
     now,
     setRoutePrompt,
   });
@@ -242,6 +251,23 @@ export function NeighborhoodApp({
 
   const walkingRoute = routeMode ? pinnedRoute : null;
   const activeRoute = routeMode ? (walkingRoute ?? filterRoute) : null;
+  const skippedRouteHouses = useMemo(
+    () =>
+      routeMode
+        ? visible.filter((house) => skips.skippedIds.includes(house.id))
+        : [],
+    [routeMode, visible, skips.skippedIds],
+  );
+
+  function handleSkipHouse(id: string) {
+    skips.skip(id);
+    if (routeMode) rebuildPinnedRoute(false);
+  }
+
+  function handleRestoreHouse(id: string) {
+    skips.unskip(id);
+    if (routeMode) rebuildPinnedRoute(false);
+  }
   const { line: routeLine } = useRouteGeometry(activeRoute, routeMode, {
     straightOnly: activeHouseSet === "stubs",
   });
@@ -334,6 +360,7 @@ export function NeighborhoodApp({
   }
 
   const selected = selection.selected;
+  const mapSheetHouse = selection.selected;
   const housePendingNote =
     selected?.status === "pending" ? (
       <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
@@ -493,6 +520,8 @@ export function NeighborhoodApp({
                 routeStart={routeMode ? origin : null}
                 routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}
                 visitedIds={visits.visitedIds}
+                skippedIds={skips.skippedIds}
+                routeMode={routeMode}
                 originMarker={origin.fromGps ? null : origin}
                 originPickActive={originPick.originPickActive}
                 originPick={originPick.originDraft}
@@ -534,14 +563,25 @@ export function NeighborhoodApp({
                   </div>
                 </div>
               ) : null}
-              {houseDetailCommon && view === "map" && !originPick.originPickActive ? (
+              {mapSheetHouse && houseDetailCommon && view === "map" && !originPick.originPickActive ? (
                 <MapHouseSheet
                   {...houseDetailCommon}
+                  skipped={routeMode && skips.skipped(mapSheetHouse.id)}
+                  onSkip={
+                    routeMode && !skips.skipped(mapSheetHouse.id)
+                      ? () => handleSkipHouse(mapSheetHouse.id)
+                      : undefined
+                  }
+                  onRestoreRoute={
+                    routeMode && skips.skipped(mapSheetHouse.id)
+                      ? () => handleRestoreHouse(mapSheetHouse.id)
+                      : undefined
+                  }
                   filterMismatchReasons={selectedFilterReasons}
                   onShowInList={
-                    selected && matchedIds.has(selected.id)
+                    matchedIds.has(mapSheetHouse.id)
                       ? () => {
-                          selection.showInListFromMap(selected.id);
+                          selection.showInListFromMap(mapSheetHouse.id);
                           setView("list");
                         }
                       : undefined
@@ -574,6 +614,7 @@ export function NeighborhoodApp({
                 {routeMode ? (
                   <RouteList
                     route={activeRoute}
+                    skippedHouses={skippedRouteHouses}
                     hasGps={Boolean(gps)}
                     onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
                     onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
@@ -584,6 +625,9 @@ export function NeighborhoodApp({
                     onToggleLike={onToggleLike}
                     visitedIds={visits.visitedIds}
                     onToggleVisited={onToggleVisited}
+                    skippedIds={skips.skippedIds}
+                    onSkipHouse={handleSkipHouse}
+                    onRestoreHouse={handleRestoreHouse}
                     admin={admin}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
                     onShowOnMap={openOnMap}
@@ -657,7 +701,10 @@ export function NeighborhoodApp({
           routePrompt?.onConfirm(includeNew);
           setRoutePrompt(null);
         }}
-        onCancel={() => setRoutePrompt(null)}
+        onCancel={() => {
+          acknowledgeRouteSnapshot();
+          setRoutePrompt(null);
+        }}
       />
       <VisitCheer show={visitCheer} />
       <HouseEditFlowPanels

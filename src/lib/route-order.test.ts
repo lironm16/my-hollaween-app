@@ -5,6 +5,7 @@ import {
   buildWalkingRoute,
   buildWalkingRouteOrdered,
   dedupeRoutePoints,
+  housesSupportTimeAwareRoute,
   refreshWalkingRoute,
   routeGeometryPoints,
   routePreviewPoints,
@@ -97,6 +98,18 @@ describe("buildWalkingRouteOrdered", () => {
       shuffled!.stops.map((stop) => stop.house.id),
       ["near", "far"],
     );
+  });
+});
+
+describe("time-aware buildWalkingRoute", () => {
+  it("uses open hours only when every house has hours", () => {
+    const withHours = stub("with", 32.091, 34.803, "חרוזים 8, חרוזים");
+    const noHours = stub("no", 32.092, 34.804, "חרוזים 10, חרוזים");
+    noHours.openHours = [];
+    noHours.openFrom = "";
+    noHours.openTo = "";
+    assert.equal(housesSupportTimeAwareRoute([withHours]), true);
+    assert.equal(housesSupportTimeAwareRoute([withHours, noHours]), false);
   });
 });
 
