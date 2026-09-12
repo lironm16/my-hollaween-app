@@ -15,7 +15,12 @@ import { resolveVisitWindow } from "@/lib/visit-window";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { HouseSet } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
-import type { WalkingRoute } from "@/lib/route";
+import {
+  buildWalkingRoute,
+  buildWalkingRouteOrdered,
+  type LatLng,
+  type WalkingRoute,
+} from "@/lib/route";
 
 export type RouteChangeEntry = {
   name: string;
@@ -169,6 +174,35 @@ export function routeHousesAfterSkipChange(
     seen.add(house.id);
   }
   return routeHouses;
+}
+
+/** Rebuild route after skip/restore — re-optimizes stop order when houses are added back. */
+export function rebuildRouteAfterSkipChange(
+  route: WalkingRoute | null,
+  houses: PublicHouse[],
+  filters: HouseFiltersState,
+  context: RouteChangeContext,
+  nextSkippedIds: string[],
+  includeNew: boolean,
+  origin: LatLng,
+  options?: {
+    accessible?: boolean;
+    startedFrom?: WalkingRoute["startedFrom"];
+    originLabel?: string;
+  },
+): WalkingRoute | null {
+  const routeHouses = routeHousesAfterSkipChange(
+    route,
+    houses,
+    filters,
+    context,
+    nextSkippedIds,
+    includeNew,
+  );
+  if (includeNew) {
+    return buildWalkingRoute(routeHouses, origin, options);
+  }
+  return buildWalkingRouteOrdered(routeHouses, origin, options);
 }
 
 export function diffRouteByFilters(

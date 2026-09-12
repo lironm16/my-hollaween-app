@@ -55,8 +55,8 @@ import {
 import { HOUSE_SET_LABELS, houseMatchesSet } from "@/lib/house-set";
 import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
 import { formatDistance } from "@/lib/geo";
-import { buildWalkingRoute, buildWalkingRouteOrdered } from "@/lib/route";
-import { diffRouteBySkippedIds, routeHousesAfterSkipChange } from "@/lib/route-changes";
+import { buildWalkingRoute } from "@/lib/route";
+import { diffRouteBySkippedIds, rebuildRouteAfterSkipChange } from "@/lib/route-changes";
 import { drainPendingRouteRestores } from "@/lib/route-mode";
 import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
 import { houseSelectionAnnouncement } from "@/lib/map-a11y";
@@ -290,20 +290,21 @@ export function NeighborhoodApp({
   ]);
 
   function applyRouteAfterSkipChange(nextSkippedIds: string[], includeNew: boolean) {
-    const routeHouses = routeHousesAfterSkipChange(
-      pinnedRoute,
-      houses,
-      filters,
-      filterContext,
-      nextSkippedIds,
-      includeNew,
-    );
     setPinnedRoute(
-      buildWalkingRouteOrdered(routeHouses, { lat: origin.lat, lng: origin.lng }, {
-        accessible: accessibleOnly,
-        startedFrom: origin.kind,
-        originLabel: origin.label,
-      }),
+      rebuildRouteAfterSkipChange(
+        pinnedRoute,
+        houses,
+        filters,
+        filterContext,
+        nextSkippedIds,
+        includeNew,
+        { lat: origin.lat, lng: origin.lng },
+        {
+          accessible: accessibleOnly,
+          startedFrom: origin.kind,
+          originLabel: origin.label,
+        },
+      ),
     );
   }
 
