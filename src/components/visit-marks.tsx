@@ -155,18 +155,18 @@ export function VisitedSign({ className }: { className?: string }) {
   );
 }
 
-/** Skipped / דילגתי — filter row size. */
+/** Slate disc — skipped / דילגתי (filter row size). */
 export function SkipSign({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-violet-500/20 text-orange-400 ring-1 ring-orange-500/30",
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full border-[1.5px] border-[#fff7ed] bg-[#64748b] text-white shadow-[0_1px_2px_rgba(0,0,0,0.45)]",
         className,
       )}
       title="דילגתי"
       aria-label="דילגתי"
     >
-      <SkipIcon className="size-[1.125rem]" />
+      <SkipIcon className="size-5" />
     </span>
   );
 }
