@@ -21,6 +21,9 @@ export function HouseCard({
   onToggleLike,
   visited,
   onToggleVisited,
+  onSkip,
+  onRestoreRoute,
+  skipped = false,
   canEdit = false,
   admin = false,
   onShowOnMap,
@@ -37,6 +40,9 @@ export function HouseCard({
   onToggleLike?: () => void;
   visited?: boolean;
   onToggleVisited?: () => void;
+  onSkip?: () => void;
+  onRestoreRoute?: () => void;
+  skipped?: boolean;
   canEdit?: boolean;
   admin?: boolean;
   onShowOnMap?: () => void;
@@ -61,6 +67,7 @@ export function HouseCard({
       aria-label={interactive ? "פתיחת פרטי הבית" : undefined}
       className={cn(
         "house-list-card overflow-visible bg-[#1d1028]/90 text-base",
+        skipped && "is-skipped opacity-70",
         visited ? "is-visited ring-0" : "border-orange-500/15",
         interactive && "cursor-pointer transition hover:bg-[#261536]",
         interactive && !visited && "hover:border-orange-400/50",
@@ -87,6 +94,9 @@ export function HouseCard({
           visited={visited}
           onToggleLike={onToggleLike}
           onToggleVisited={onToggleVisited}
+          onSkip={onSkip}
+          onRestoreRoute={onRestoreRoute}
+          skipped={skipped}
           onToggleEdit={canEdit ? onToggleEdit : undefined}
           onShowOnMap={onShowOnMap}
           editing={editing}

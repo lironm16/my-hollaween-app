@@ -9,10 +9,11 @@ import {
   emptyHouseFilters,
   filtersEqual,
 } from "@/hooks/use-house-filters";
-import { filterHouses, routeHouseIds } from "@/lib/filter-houses";
+import { filterHouses } from "@/lib/filter-houses";
 import { visitWindowIssue } from "@/lib/hours";
 import { resolveVisitWindow } from "@/lib/visit-window";
 import type { HouseFiltersState } from "@/lib/offline-db";
+import { diffRouteByFilters } from "@/lib/route-changes";
 import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
 import { buildWalkingRouteOrdered, type WalkingRoute } from "@/lib/route";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
@@ -20,12 +21,12 @@ import type { HouseSet } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
 
 type RoutePrompt = {
-  kind: "enter-route" | "filter-change";
+  kind: "enter-route" | "filter-change" | "status-change";
   title: string;
   description: string;
   confirmLabel: string;
-  removedHouses?: string[];
-  addedHouses?: string[];
+  removedHouses?: { name: string; reason: string }[];
+  addedHouses?: { name: string; reason: string }[];
   onConfirm: (includeNewHouses: boolean) => void;
 };
 
@@ -39,6 +40,7 @@ export function useFilterDraft({
   setPinnedRoute,
   origin,
   visitedIds,
+  skippedIds,
   now,
   setRoutePrompt,
 }: {
@@ -58,6 +60,7 @@ export function useFilterDraft({
   setPinnedRoute: (route: WalkingRoute | null) => void;
   origin: ResolvedOrigin;
   visitedIds: string[];
+  skippedIds: string[];
   now: Date;
   setRoutePrompt: (prompt: RoutePrompt | null) => void;
 }) {
@@ -84,12 +87,14 @@ export function useFilterDraft({
   function routeHousesForFilters(nextFilters: HouseFiltersState) {
     const nextVisible = filterHouses(houses, nextFilters, filterContext);
     const visibleIds = new Set(nextVisible.map((house) => house.id));
+    const skipped = new Set(skippedIds);
     const routeHouses: PublicHouse[] = [];
     const seen = new Set<string>();
     for (const stop of pinnedRoute?.stops ?? []) {
       for (const house of stop.houses) {
         const fresh = nextVisible.find((item) => item.id === house.id);
         if (!fresh || !visibleIds.has(house.id) || seen.has(house.id)) continue;
+        if (skipped.has(house.id)) continue;
         if (nextFilters.unvisitedOnly && visitedIds.includes(house.id)) continue;
         routeHouses.push(fresh);
         seen.add(house.id);
@@ -97,6 +102,7 @@ export function useFilterDraft({
     }
     for (const house of nextVisible) {
       if (seen.has(house.id)) continue;
+      if (skipped.has(house.id)) continue;
       if (nextFilters.unvisitedOnly && visitedIds.includes(house.id)) continue;
       routeHouses.push(house);
       seen.add(house.id);
@@ -118,15 +124,10 @@ export function useFilterDraft({
   }
 
   function previewRouteDiff(nextFilters: HouseFiltersState) {
-    const currentIds = routeHouseIds(pinnedRoute);
-    const nextVisible = filterHouses(houses, nextFilters, filterContext);
-    const removedHouses = [...currentIds]
-      .filter((id) => !nextVisible.some((house) => house.id === id))
-      .map((id) => houses.find((house) => house.id === id)?.name ?? id);
-    const addedHouses = nextVisible
-      .filter((house) => !currentIds.has(house.id))
-      .map((house) => house.name);
-    return { removedHouses, addedHouses };
+    return diffRouteByFilters(pinnedRoute, houses, nextFilters, {
+      ...filterContext,
+      skippedIds,
+    });
   }
 
   function applyFiltersWithRoute(nextFilters: HouseFiltersState, includeNew: boolean) {
@@ -175,7 +176,7 @@ export function useFilterDraft({
       applyFiltersWithRoute(nextFilters, false);
       return;
     }
-    const { removedHouses, addedHouses } = previewRouteDiff(nextFilters);
+    const { removed: removedHouses, added: addedHouses } = previewRouteDiff(nextFilters);
     const hasRouteChange = removedHouses.length > 0 || addedHouses.length > 0;
     if (!hasRouteChange) {
       applyFiltersWithRoute(nextFilters, false);

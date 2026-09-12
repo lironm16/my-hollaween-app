@@ -1,6 +1,6 @@
 const PREFIX = "hw-route-skip-";
 
-export type RoutePromptKind = "enter-route" | "filter-change";
+export type RoutePromptKind = "enter-route" | "filter-change" | "status-change";
 
 function key(kind: RoutePromptKind) {
   return `${PREFIX}${kind}`;

@@ -38,6 +38,9 @@ export function MapHouseSheet({
   pendingNote,
   onShowOnMap,
   onShowInList,
+  onSkip,
+  onRestoreRoute,
+  skipped,
   index,
   filterMismatchReasons,
 }: {
@@ -59,6 +62,9 @@ export function MapHouseSheet({
   pendingNote?: ReactNode;
   onShowOnMap?: () => void;
   onShowInList?: () => void;
+  onSkip?: () => void;
+  onRestoreRoute?: () => void;
+  skipped?: boolean;
   index?: number;
   filterMismatchReasons?: string[];
 }) {
@@ -210,6 +216,9 @@ export function MapHouseSheet({
           onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
           onShowOnMap={onShowOnMap}
           onShowInList={onShowInList}
+          onSkip={onSkip}
+          onRestoreRoute={onRestoreRoute}
+          skipped={skipped}
           editing={editing}
         />
       </div>
@@ -226,6 +235,11 @@ export function MapHouseSheet({
             </span>
             <div className="map-house-sheet-cards">
               <section className="map-house-sheet-card is-on">
+                {skipped ? (
+                  <p className="filter-mismatch-banner" role="status">
+                    דילגתם על הבית במסלול — הוא נשאר על המפה בשקיפות.
+                  </p>
+                ) : null}
                 {filterMismatchReasons && filterMismatchReasons.length > 0 ? (
                   <p className="filter-mismatch-banner" role="status">
                     מסונן: {filterMismatchReasons.join(" · ")}
