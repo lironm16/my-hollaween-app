@@ -1,7 +1,5 @@
 "use client";
 
-import { formatActionCount } from "@/components/house-action-bar";
-import { SavedTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
 import { StrollerSign } from "@/components/symbols";
 import { CandySign, candyTone } from "@/components/candy-glyphs";
 import { ScareSign } from "@/components/scare-glyphs";
@@ -51,46 +49,9 @@ export function PauseSign({ className }: { className?: string }) {
   );
 }
 
-function TrafficCountSign({
-  kind,
-  count,
-  large,
-}: {
-  kind: "saved" | "visited";
-  count: number;
-  large?: boolean;
-}) {
-  const value = Math.max(0, Math.floor(count) || 0);
-  if (value <= 0) return null;
-  const label = kind === "saved" ? `${value} שמרו` : `${value} ביקרו`;
-  const iconBox = large ? "size-10" : undefined;
-  const mark = large ? "size-5" : undefined;
-  return (
-    <span
-      className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#2a1638] text-orange-100 ring-1 ring-orange-500/25",
-        large ? "h-10 pe-2.5 ps-1" : "h-8 pe-2 ps-0.5",
-      )}
-      title={label}
-      aria-label={label}
-    >
-      {kind === "saved" ? (
-        <SavedTrafficIcon className={iconBox} markClassName={mark} />
-      ) : (
-        <VisitedTrafficIcon className={iconBox} markClassName={mark} />
-      )}
-      <span className={cn("font-bold tabular-nums", large ? "text-lg" : "text-base")}>
-        {formatActionCount(value)}
-      </span>
-    </span>
-  );
-}
-
 export function HouseTags({
   house,
   large = false,
-  savedCount,
-  visitedCount,
 }: {
   house: {
     address?: string;
@@ -113,8 +74,6 @@ export function HouseTags({
     openHours?: { from: string; to: string }[];
   };
   large?: boolean;
-  savedCount?: number;
-  visitedCount?: number;
 }) {
   const now = useAppNow();
   const treats = house.treats ?? [];
@@ -135,10 +94,6 @@ export function HouseTags({
   const signSize = large ? "size-10" : undefined;
   const showCandy =
     (!closedInsteadOfCandy && !pausedInsteadOfCandy) || candy !== "none";
-  const showSaved = savedCount !== undefined && Math.max(0, Math.floor(savedCount) || 0) > 0;
-  const showVisited = visitedCount !== undefined && Math.max(0, Math.floor(visitedCount) || 0) > 0;
-  const showTrafficRow = showSaved || showVisited;
-
   return (
     <div className={cn("space-y-1.5", large && "space-y-2")}>
       <div className={cn("flex flex-wrap gap-1.5 pb-0.5 ps-0.5", large && "gap-2")}>
@@ -155,12 +110,6 @@ export function HouseTags({
         {offersNutsFree(withTreats) ? <SensitivitySign kind="nutsFree" className={signSize} /> : null}
         {offersSesameFree(withTreats) ? <SensitivitySign kind="sesameFree" className={signSize} /> : null}
       </div>
-      {showTrafficRow ? (
-        <div className={cn("flex flex-wrap gap-1.5 ps-0.5", large && "gap-2")}>
-          {showSaved ? <TrafficCountSign kind="saved" count={savedCount!} large={large} /> : null}
-          {showVisited ? <TrafficCountSign kind="visited" count={visitedCount!} large={large} /> : null}
-        </div>
-      ) : null}
     </div>
   );
 }

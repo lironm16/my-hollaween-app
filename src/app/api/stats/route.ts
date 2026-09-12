@@ -3,8 +3,6 @@ import { buildAdminSnapshot } from "@/lib/admin-snapshot";
 import { HOUSE_SETS, type HouseSet } from "@/lib/house-set";
 import { countPresence } from "@/lib/presence-store";
 import { getDbSnapshot } from "@/lib/store";
-import { getHouseTraffic } from "@/lib/traffic-store";
-
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -15,13 +13,12 @@ function parseHouseSet(value: string | null): HouseSet {
 
 export async function GET(request: Request) {
   const houseSet = parseHouseSet(new URL(request.url).searchParams.get("houseSet"));
-  const [db, traffic] = await Promise.all([getDbSnapshot(), getHouseTraffic()]);
+  const db = await getDbSnapshot();
   const snapshot = buildAdminSnapshot({
     houses: db.houses,
     subscriptions: [],
     devicesSeen: 0,
     online: countPresence(),
-    traffic,
     houseSet,
   });
   return NextResponse.json({
@@ -36,8 +33,6 @@ export async function GET(request: Request) {
     candyPlenty: snapshot.candyPlenty,
     candyLow: snapshot.candyLow,
     candyOut: snapshot.candyOut,
-    hearts: snapshot.hearts,
-    visited: snapshot.visited,
     notDecorated: snapshot.notDecorated,
     scareMild: snapshot.scareMild,
     scareMedium: snapshot.scareMedium,

@@ -207,23 +207,6 @@ export function AdminStatsCard({
             plain
           />
         </div>
-        <Subhead>סימונים בשכונה</Subhead>
-        <div className="grid grid-cols-2 gap-2">
-          <Tile
-            icon={<LikedSign className="size-8" />}
-            label="שמורים"
-            value={stats.hearts}
-            valueClass={stats.hearts ? "text-rose-300" : undefined}
-            plain
-          />
-          <Tile
-            icon={<VisitedCheck visited className="size-8" />}
-            label="ביקרתי"
-            value={stats.visited}
-            valueClass={stats.visited ? "text-emerald-300" : undefined}
-            plain
-          />
-        </div>
         <Subhead>אופי</Subhead>
         <div className="grid grid-cols-2 gap-2">
           <Tile

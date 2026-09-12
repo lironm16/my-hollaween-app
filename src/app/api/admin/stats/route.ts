@@ -5,8 +5,6 @@ import { HOUSE_SETS, type HouseSet } from "@/lib/house-set";
 import { countSeenDevices } from "@/lib/device-store";
 import { countPresence } from "@/lib/presence-store";
 import { getDbSnapshot } from "@/lib/store";
-import { getHouseTraffic } from "@/lib/traffic-store";
-
 export const runtime = "nodejs";
 
 function parseHouseSet(value: string | null): HouseSet {
@@ -19,18 +17,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "נדרשת הרשאת מנהל." }, { status: 401 });
   }
   const houseSet = parseHouseSet(new URL(request.url).searchParams.get("houseSet"));
-  const [db, devicesSeen, traffic] = await Promise.all([
-    getDbSnapshot(),
-    countSeenDevices(),
-    getHouseTraffic(),
-  ]);
+  const [db, devicesSeen] = await Promise.all([getDbSnapshot(), countSeenDevices()]);
   return NextResponse.json(
     buildAdminSnapshot({
       houses: db.houses,
       subscriptions: db.pushSubscriptions ?? [],
       devicesSeen,
       online: countPresence(),
-      traffic,
       houseSet,
     }),
   );

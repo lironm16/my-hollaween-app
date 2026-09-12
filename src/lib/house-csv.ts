@@ -2,7 +2,6 @@ import { formatDisplayAddress } from "@/lib/config";
 import { formatHoursLabel } from "@/lib/hours";
 import { candyLevel, offersSensitivity, resolveDecorLevel } from "@/lib/house-state";
 import { decorShort, scareShort } from "@/lib/labels";
-import type { HouseTraffic } from "@/lib/traffic";
 import type { PublicHouse } from "@/lib/types";
 
 const PUBLIC_HEADERS = [
@@ -20,13 +19,6 @@ const PUBLIC_HEADERS = [
   "ללא אגוזים",
   "ללא שומשום",
 ] as const;
-
-const TRAFFIC_HEADERS = ["שמרו", "ביקרו"] as const;
-
-export type SheetOptions = {
-  /** Neighborhood saved/visited counts — included for managers using the same download. */
-  traffic?: Record<string, HouseTraffic>;
-};
 
 function csvCell(value: string | number) {
   const text = String(value ?? "");
@@ -57,12 +49,8 @@ function scareDecorLabel(house: PublicHouse) {
   return scareShort[house.scareLevel];
 }
 
-function houseRow(
-  house: PublicHouse,
-  index: number,
-  traffic?: HouseTraffic,
-): Array<string | number> {
-  const cells: Array<string | number> = [
+function houseRow(house: PublicHouse, index: number): Array<string | number> {
+  return [
     index + 1,
     house.name,
     formatDisplayAddress(house),
@@ -77,20 +65,12 @@ function houseRow(
     offersSensitivity(house, "nutsFree") ? "כן" : "לא",
     offersSensitivity(house, "sesameFree") ? "כן" : "לא",
   ];
-  if (traffic) {
-    cells.push(traffic.saved ?? 0, traffic.visited ?? 0);
-  }
-  return cells;
 }
 
-function headersFor(options?: SheetOptions) {
-  return options?.traffic ? [...PUBLIC_HEADERS, ...TRAFFIC_HEADERS] : [...PUBLIC_HEADERS];
-}
-
-export function housesToCsv(houses: PublicHouse[], options?: SheetOptions) {
-  const lines = [headersFor(options).join(",")];
+export function housesToCsv(houses: PublicHouse[]) {
+  const lines = [[...PUBLIC_HEADERS].join(",")];
   houses.forEach((house, index) => {
-    lines.push(houseRow(house, index, options?.traffic?.[house.id]).map(csvCell).join(","));
+    lines.push(houseRow(house, index).map(csvCell).join(","));
   });
   return `\uFEFF${lines.join("\r\n")}\r\n`;
 }
@@ -211,11 +191,11 @@ function xlsxCell(value: string | number, ref: string, header = false) {
 }
 
 /** Real Office Open XML workbook — Excel opens this without a corrupt-file warning. */
-export function housesToXlsx(houses: PublicHouse[], options?: SheetOptions): Uint8Array {
-  const headers = headersFor(options);
+export function housesToXlsx(houses: PublicHouse[]): Uint8Array {
+  const headers = [...PUBLIC_HEADERS];
   const rows = [
     headers as Array<string | number>,
-    ...houses.map((house, index) => houseRow(house, index, options?.traffic?.[house.id])),
+    ...houses.map((house, index) => houseRow(house, index)),
   ];
   const lastCol = colLetter(headers.length - 1);
   const sheetRows = rows
