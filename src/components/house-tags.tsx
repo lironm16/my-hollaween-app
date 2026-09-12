@@ -1,7 +1,7 @@
 "use client";
 
-import { Check, Heart } from "lucide-react";
 import { formatActionCount } from "@/components/house-action-bar";
+import { SavedTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
 import { StrollerSign } from "@/components/symbols";
 import { CandySign, candyTone } from "@/components/candy-glyphs";
 import { ScareSign } from "@/components/scare-glyphs";
@@ -63,8 +63,8 @@ function TrafficCountSign({
   const value = Math.max(0, Math.floor(count) || 0);
   if (value <= 0) return null;
   const label = kind === "saved" ? `${value} שמרו` : `${value} ביקרו`;
-  const iconBox = large ? "size-10" : "size-8";
-  const mark = large ? "size-5" : "size-4";
+  const iconBox = large ? "size-10" : undefined;
+  const mark = large ? "size-5" : undefined;
   return (
     <span
       className={cn(
@@ -75,23 +75,9 @@ function TrafficCountSign({
       aria-label={label}
     >
       {kind === "saved" ? (
-        <span
-          className={cn(
-            "inline-flex shrink-0 items-center justify-center rounded-full bg-[#fb7185]/20 ring-1 ring-[#fb7185]/35",
-            iconBox,
-          )}
-        >
-          <Heart className={cn(mark, "fill-current text-[#fb7185]")} strokeWidth={2.2} />
-        </span>
+        <SavedTrafficIcon className={iconBox} markClassName={mark} />
       ) : (
-        <span
-          className={cn(
-            "inline-flex shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white",
-            iconBox,
-          )}
-        >
-          <Check className={mark} strokeWidth={3} />
-        </span>
+        <VisitedTrafficIcon className={iconBox} markClassName={mark} />
       )}
       <span className={cn("font-bold tabular-nums", large ? "text-lg" : "text-base")}>
         {formatActionCount(value)}

@@ -12,9 +12,9 @@ import {
   Share2,
   Undo2,
 } from "lucide-react";
+import { SavedTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
 import { SkipIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
-import { LikedSign, VisitedSign } from "@/components/visit-marks";
 import { toast } from "sonner";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
@@ -151,7 +151,7 @@ export function HouseActionBar({
         id: "like",
         label: "אהבתי",
         icon: liked ? (
-          <LikedSign className="size-7" />
+          <SavedTrafficIcon className="size-7" markClassName="size-3.5" />
         ) : (
           <Heart className={MENU_ICON_CLASS} strokeWidth={2.2} />
         ),
@@ -164,7 +164,7 @@ export function HouseActionBar({
         id: "visited",
         label: "ביקרתי",
         icon: visited ? (
-          <VisitedSign className="size-7" />
+          <VisitedTrafficIcon className="size-7" markClassName="size-3.5" />
         ) : (
           <VisitedCheck visited={false} size="lg" />
         ),
