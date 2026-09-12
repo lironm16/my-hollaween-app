@@ -18,7 +18,7 @@ export function SavedTrafficIcon({
       title="שמורים"
       aria-label="שמורים"
     >
-      <Heart className={cn("size-4 fill-current text-[#fb7185]", markClassName)} strokeWidth={2.2} />
+      <Heart className={cn("size-5 fill-current text-[#fb7185]", markClassName)} strokeWidth={2.2} />
     </span>
   );
 }
@@ -27,9 +27,11 @@ export function SavedTrafficIcon({
 export function VisitedTrafficIcon({
   className,
   markClassName,
+  markStrokeWidth = 3.5,
 }: {
   className?: string;
   markClassName?: string;
+  markStrokeWidth?: number;
 }) {
   return (
     <span
@@ -40,7 +42,7 @@ export function VisitedTrafficIcon({
       title="ביקרתי"
       aria-label="ביקרתי"
     >
-      <Check className={cn("size-4", markClassName)} strokeWidth={3} />
+      <Check className={cn("size-5", markClassName)} strokeWidth={markStrokeWidth} />
     </span>
   );
 }

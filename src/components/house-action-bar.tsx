@@ -152,7 +152,7 @@ export function HouseActionBar({
         id: "like",
         label: "אהבתי",
         icon: liked ? (
-          <SavedTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-4" />
+          <SavedTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.35rem]" />
         ) : (
           <Heart className={MENU_ICON_CLASS} strokeWidth={2.2} />
         ),
@@ -165,7 +165,11 @@ export function HouseActionBar({
         id: "visited",
         label: "ביקרתי",
         icon: visited ? (
-          <VisitedTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-4" />
+          <VisitedTrafficIcon
+            className={MENU_ACTIVE_ICON_CLASS}
+            markClassName="size-[1.35rem]"
+            markStrokeWidth={4}
+          />
         ) : (
           <VisitedCheck visited={false} size="lg" />
         ),
@@ -253,11 +257,18 @@ export function HouseActionBar({
 
   if (items.length === 0) return null;
 
-  const KEEP_OPEN_ITEM_IDS = new Set(["like", "visited"]);
-
   function runItem(item: MenuItem) {
-    if (!KEEP_OPEN_ITEM_IDS.has(item.id)) setOpen(false);
+    setOpen(false);
     item.onClick?.();
+  }
+
+  function menuItemClass(item: MenuItem) {
+    return cn(
+      "house-action-menu-item",
+      item.active && "is-active",
+      item.active && item.id === "like" && "is-active-saved",
+      item.active && item.id === "visited" && "is-active-visited",
+    );
   }
 
   const panel = open
@@ -277,7 +288,7 @@ export function HouseActionBar({
                 href={item.href}
                 target={item.external ? "_blank" : undefined}
                 rel={item.external ? "noreferrer" : undefined}
-                className={cn("house-action-menu-item", item.active && "is-active")}
+                className={menuItemClass(item)}
                 onClick={(event) => {
                   event.stopPropagation();
                   setOpen(false);
@@ -291,7 +302,7 @@ export function HouseActionBar({
                 key={item.id}
                 type="button"
                 role="menuitem"
-                className={cn("house-action-menu-item", item.active && "is-active")}
+                className={menuItemClass(item)}
                 onClick={(event) => {
                   event.stopPropagation();
                   runItem(item);
