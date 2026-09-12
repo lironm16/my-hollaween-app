@@ -660,10 +660,12 @@
 .pin-apt-dots {
   position: absolute;
   left: 50%;
-  bottom: -18px;
+  right: auto;
+  bottom: -15px;
   z-index: 4;
   display: flex;
   flex-direction: row;
+  direction: ltr;
   pointer-events: none;
   transform: translateX(-50%);
 }
@@ -756,18 +758,16 @@
 }
 
 .house-pin.is-building {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
 }
 
 .pin-houses {
   position: relative;
   z-index: 5;
   display: block;
-  width: 34px;
-  height: 25px;
+  width: 42px;
+  height: 32px;
   flex-shrink: 0;
   font-size: 0;
   line-height: 0;
@@ -775,8 +775,8 @@
 
 .pin-houses i {
   position: absolute;
-  width: 17px;
-  height: 12px;
+  width: 21px;
+  height: 15px;
   background: #fb923c;
   border-radius: 1px;
 }
@@ -785,14 +785,14 @@
   content: "";
   position: absolute;
   left: -2px;
-  top: -8px;
-  border-left: 10.5px solid transparent;
-  border-right: 10.5px solid transparent;
-  border-bottom: 8px solid #fb923c;
+  top: -10px;
+  border-left: 12.5px solid transparent;
+  border-right: 12.5px solid transparent;
+  border-bottom: 10px solid #fb923c;
 }
 
 .pin-houses i:first-child {
-  left: 10px;
+  left: 12px;
   top: 0;
   background: #ffedd5;
 }
@@ -802,8 +802,8 @@
 }
 
 .pin-houses i:last-child {
-  left: 0;
-  top: 7px;
+  left: 1px;
+  top: 10px;
 }
 
 .house-pin span,
@@ -1095,6 +1095,14 @@
   color: #fff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
   flex-shrink: 0;
+}
+
+.house-pin .pin-status.is-skipped,
+.pumpkin-pin .pin-status.is-skipped {
+  position: absolute;
+  bottom: -6px;
+  inset-inline-start: -6px;
+  z-index: 2;
 }
 
 .skip-pin-badge.is-list {
@@ -1695,7 +1703,40 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 }
 
 .house-pin.is-legend .pin-houses {
-  transform: scale(1.35);
+  width: 46px;
+  height: 35px;
+}
+
+.house-pin.is-legend .pin-houses i {
+  width: 23px;
+  height: 16px;
+}
+
+.house-pin.is-legend .pin-houses i:before {
+  top: -11px;
+  border-left-width: 13.5px;
+  border-right-width: 13.5px;
+  border-bottom-width: 11px;
+}
+
+.house-pin.is-legend .pin-houses i:first-child {
+  left: 13px;
+}
+
+.house-pin.is-legend .pin-houses i:last-child {
+  left: 1px;
+  top: 11px;
+}
+
+.house-pin.is-legend .pin-apt-dots {
+  bottom: 3px;
+}
+
+.house-pin.is-legend .pin-apt-dot {
+  width: 17px;
+  height: 17px;
+  margin-inline-end: -6px;
+  border-width: 1.25px;
 }
 
 .map-house-sheet {

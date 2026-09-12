@@ -32,6 +32,7 @@ function SwatchPin({
     <div
       className={cn(
         "house-pin is-legend relative",
+        multi && "is-building",
         hours === "closing" && "is-closing-soon",
         hours === "opening" && "is-opening-soon",
         bare && "is-undecorated",
