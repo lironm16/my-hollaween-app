@@ -47,6 +47,16 @@ function PathIcon() {
   );
 }
 
+function SkipSummaryIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="size-full text-slate-300">
+      <circle cx="12" cy="12" r="10" fill="#64748b" />
+      <path fill="#fff" d="M7 10.5h5.5v3H7z" />
+      <path fill="#fff" d="M13.2 8.2 18.5 12 13.2 15.8Z" />
+    </svg>
+  );
+}
+
 function ClockIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden className="size-full">
@@ -122,12 +132,14 @@ function CompactChip({
 export function StatsSummary({
   filteredHouses,
   route = null,
+  skippedCount = 0,
   staleLabel = null,
   heading = false,
   compact = false,
 }: {
   filteredHouses: number;
   route?: WalkingRoute | null;
+  skippedCount?: number;
   staleLabel?: string | null;
   heading?: boolean;
   compact?: boolean;
@@ -158,6 +170,13 @@ export function StatsSummary({
               value={route ? `כ־${route.totalMinutes}` : "—"}
               label="דק׳"
             />
+            {route ? (
+              <CompactChip
+                icon={<SkipSummaryIcon />}
+                value={String(skippedCount)}
+                label="דילגתי"
+              />
+            ) : null}
           </div>
         </section>
         {staleLabel ? (
@@ -195,6 +214,9 @@ export function StatsSummary({
             value={route ? `כ־${route.totalMinutes}` : "—"}
             label="דק׳"
           />
+          {route ? (
+            <RouteChip icon={<SkipSummaryIcon />} value={String(skippedCount)} label="דילגתי" />
+          ) : null}
         </div>
       </section>
       {staleLabel ? (
@@ -210,6 +232,7 @@ export function StatsSummary({
 export function MapStats(props: {
   filteredHouses: number;
   route?: WalkingRoute | null;
+  skippedCount?: number;
   staleLabel?: string | null;
 }) {
   const [open, setOpen] = useState(false);

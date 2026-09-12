@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <rect width="120" height="120" rx="60" fill="#64748b"/>
+  <g transform="translate(28,28) scale(2.7)">
+    <path fill="#fff" d="M5 7a2 2 0 0 1 2-2h7v14H7a2 2 0 0 1-2-2V7Z"/>
+    <path fill="#fff" d="M14.2 5.1a1.35 1.35 0 0 1 2.1.35l6.2 5.4a1.35 1.35 0 0 1 0 2.05l-6.2 5.4a1.35 1.35 0 0 1-2.1.35V5.1Z"/>
+  </g>
+  <text x="60" y="112" text-anchor="middle" fill="#fff" font-size="10" font-family="sans-serif">current (broken)</text>
+</svg>

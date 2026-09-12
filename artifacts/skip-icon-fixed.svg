@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <rect width="120" height="120" rx="60" fill="#64748b"/>
+  <g transform="translate(28,28) scale(2.7)">
+    <path fill="#fff" d="M5 10h8v4H5z"/>
+    <path fill="#fff" d="M14 7.5 21 12 14 16.5Z"/>
+  </g>
+  <text x="60" y="112" text-anchor="middle" fill="#fff" font-size="10" font-family="sans-serif">fixed (line + triangle)</text>
+</svg>

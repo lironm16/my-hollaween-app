@@ -394,6 +394,7 @@ export function NeighborhoodApp({
   const summaryProps = {
     filteredHouses: visible.length,
     route: activeRoute ?? filterRoute,
+    skippedCount: routeMode ? skips.skippedIds.length : 0,
     staleLabel: offline
       ? "לא מקוון"
       : unreachable
