@@ -94,6 +94,83 @@ export function whyAddedToRoute(
   return "בית חדש בסינון";
 }
 
+export function diffRouteBySkippedIds(
+  route: WalkingRoute | null,
+  houses: PublicHouse[],
+  filters: HouseFiltersState,
+  context: RouteChangeContext,
+  nextSkippedIds: string[],
+): { removed: RouteChangeEntry[]; added: RouteChangeEntry[] } {
+  const currentIds = routeHouseIds(route);
+  const prevSkipped = new Set(context.skippedIds);
+  const nextSkipped = new Set(nextSkippedIds);
+  const newlySkipped = nextSkippedIds.filter((id) => !prevSkipped.has(id));
+  const restored = context.skippedIds.filter((id) => !nextSkipped.has(id));
+  const nextContext = { ...context, skippedIds: nextSkippedIds };
+  const nextCandidateIds = new Set(
+    routeCandidateHouses(houses, filters, nextContext).map((house) => house.id),
+  );
+
+  const removed: RouteChangeEntry[] = [];
+  for (const id of newlySkipped) {
+    if (!currentIds.has(id)) continue;
+    const house = houses.find((item) => item.id === id);
+    removed.push({
+      name: houseLabel(house, id),
+      reason: "דילגתם על הבית",
+    });
+  }
+
+  const added: RouteChangeEntry[] = [];
+  for (const id of restored) {
+    if (currentIds.has(id)) continue;
+    const house = houses.find((item) => item.id === id);
+    if (!house || !nextCandidateIds.has(id)) continue;
+    added.push({
+      name: house.name,
+      reason: whyAddedToRoute(house, filters, nextContext),
+    });
+  }
+
+  return { removed, added };
+}
+
+export function routeHousesAfterSkipChange(
+  route: WalkingRoute | null,
+  houses: PublicHouse[],
+  filters: HouseFiltersState,
+  context: RouteChangeContext,
+  nextSkippedIds: string[],
+  includeNew: boolean,
+): PublicHouse[] {
+  const nextContext = { ...context, skippedIds: nextSkippedIds };
+  const nextVisible = filterHouses(houses, filters, context);
+  const visibleIds = new Set(nextVisible.map((house) => house.id));
+  const skipped = new Set(nextSkippedIds);
+  const routeHouses: PublicHouse[] = [];
+  const seen = new Set<string>();
+
+  for (const stop of route?.stops ?? []) {
+    for (const house of stop.houses) {
+      const fresh = nextVisible.find((item) => item.id === house.id);
+      if (!fresh || !visibleIds.has(house.id) || seen.has(house.id)) continue;
+      if (skipped.has(house.id)) continue;
+      if (filters.unvisitedOnly && context.visitedIds.includes(house.id)) continue;
+      routeHouses.push(fresh);
+      seen.add(house.id);
+    }
+  }
+
+  if (!includeNew) return routeHouses;
+
+  for (const house of routeCandidateHouses(houses, filters, nextContext)) {
+    if (seen.has(house.id)) continue;
+    routeHouses.push(house);
+    seen.add(house.id);
+  }
+  return routeHouses;
+}
+
 export function diffRouteByFilters(
   route: WalkingRoute | null,
   houses: PublicHouse[],

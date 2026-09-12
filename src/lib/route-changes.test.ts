@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   diffRouteByFilters,
+  diffRouteBySkippedIds,
   routeCandidateHouses,
   whyAddedToRoute,
   whyRemovedFromRoute,
@@ -80,6 +81,39 @@ describe("routeCandidateHouses", () => {
     };
     const candidates = routeCandidateHouses(houses, baseFilters, context);
     assert.deepEqual(candidates.map((house) => house.id), ["b"]);
+  });
+});
+
+describe("diffRouteBySkippedIds", () => {
+  it("marks restored houses as added to the route", () => {
+    const house = stub("a");
+    const open = stub("b");
+    const route = buildWalkingRouteOrdered([open], { lat: 32.0919, lng: 34.8112 });
+    const context = {
+      houseSet: "real" as const,
+      likedIds: [],
+      visitedIds: [],
+      skippedIds: ["a"],
+      now: new Date("2026-10-31T18:00:00"),
+    };
+    const { added } = diffRouteBySkippedIds(route, [house, open], baseFilters, context, []);
+    assert.equal(added.length, 1);
+    assert.equal(added[0]?.name, "a");
+  });
+
+  it("marks newly skipped route houses as removed", () => {
+    const house = stub("a");
+    const route = buildWalkingRouteOrdered([house], { lat: 32.0919, lng: 34.8112 });
+    const context = {
+      houseSet: "real" as const,
+      likedIds: [],
+      visitedIds: [],
+      skippedIds: [],
+      now: new Date("2026-10-31T18:00:00"),
+    };
+    const { removed } = diffRouteBySkippedIds(route, [house], baseFilters, context, ["a"]);
+    assert.equal(removed.length, 1);
+    assert.equal(removed[0]?.reason, "דילגתם על הבית");
   });
 });
 
