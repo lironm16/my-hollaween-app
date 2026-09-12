@@ -15,14 +15,6 @@ export function BrandTitle({
         className="inline-flex max-w-full flex-wrap items-baseline justify-end gap-x-[0.4em] gap-y-0.5 text-right"
       >
         <span
-          className={cn(
-            "font-sans font-semibold text-orange-300",
-            size === "header" ? "text-base" : "text-xl sm:text-2xl",
-          )}
-        >
-          {config.brandHe}
-        </span>
-        <span
           dir="ltr"
           className={cn(
             "font-creepster tracking-wide text-orange-400 [text-shadow:0_0_14px_rgba(251,146,60,0.45)]",
@@ -30,6 +22,14 @@ export function BrandTitle({
           )}
         >
           {config.brandEn}
+        </span>
+        <span
+          className={cn(
+            "font-sans font-semibold text-orange-300",
+            size === "header" ? "text-base" : "text-xl sm:text-2xl",
+          )}
+        >
+          {config.brandHe}
         </span>
       </span>
     </span>

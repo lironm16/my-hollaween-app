@@ -514,16 +514,20 @@ async function persistDb(db: DbFile) {
   }
 
   if (blobEnabled()) {
+    let persisted = false;
     try {
       await writeBlobDb(db);
+      persisted = true;
     } catch {
-      throw new Error("PERSIST_FAILED");
+      /* fall back to local file */
     }
     try {
       await writeFileDb(db);
+      persisted = true;
     } catch {
-      /* blob already holds the write */
+      /* blob or memory may still hold the write */
     }
+    if (!persisted) throw new Error("PERSIST_FAILED");
   } else {
     try {
       await writeFileDb(db);

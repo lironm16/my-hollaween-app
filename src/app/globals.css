@@ -1096,22 +1096,22 @@
 .house-pin .pin-status.is-skipped .pin-skip-icon,
 .pumpkin-pin .pin-status.is-skipped .pin-skip-icon {
   display: block;
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
 }
 
 .skip-pin-badge.is-list .skip-pin-badge-icon {
-  width: 16px;
-  height: 16px;
+  width: 22px;
+  height: 22px;
 }
 
 .pin-apt-dot.is-skipped {
   background-color: #64748b;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M3.5 5 12.5 12 3.5 19Z'/%3E%3Crect fill='%23fff' x='13.75' y='5' width='4.25' height='14' rx='2.125'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M2.5 3.5 13 12 2.5 20.5Z'/%3E%3Crect fill='%23fff' x='14' y='3.5' width='5' height='17' rx='2.5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 72%;
+  background-size: 88%;
 }
 
 .house-pin.house-pin-dot .pin-status {

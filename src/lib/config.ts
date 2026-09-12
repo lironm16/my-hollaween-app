@@ -33,8 +33,8 @@ export const config = {
   brandEn: "HallowHood",
   brandHe: "הלואין בשכונה",
   /** Browser tab label. Home-screen / PWA stays the app name. */
-  tabTitle: "HallowHood הלואין בשכונה",
-  titleWords: ["HallowHood הלואין בשכונה"] as const,
+  tabTitle: "הלואין בשכונה HallowHood",
+  titleWords: ["הלואין בשכונה HallowHood"] as const,
   tagline: "מפת הבתים המפחידים של השכונה",
   neighborhood:
     process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שיכון ותיקים · חרוזים · נחלת גנים",

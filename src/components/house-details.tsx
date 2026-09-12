@@ -229,7 +229,7 @@ export function HouseDetails({
         : null}
       <HoursStatusBanner house={house} />
       <div className="space-y-2">
-        <div className="flex min-w-0 items-start gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           {indexBadge}
           <p
             className={cn(
