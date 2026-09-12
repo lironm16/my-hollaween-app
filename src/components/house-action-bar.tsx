@@ -227,6 +227,7 @@ export function HouseActionBar({
         top,
         left,
         zIndex: 120,
+        visibility: "visible",
       });
     };
 
