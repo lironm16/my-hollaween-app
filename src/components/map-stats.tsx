@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { WifiOff } from "lucide-react";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { ScarePumpkin } from "@/components/scare-glyphs";
+import { SkipGlyph } from "@/components/skip-icon";
 import type { WalkingRoute } from "@/lib/route";
 import { cn } from "@/lib/utils";
 
@@ -49,10 +50,12 @@ function PathIcon() {
 
 function SkipSummaryIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="size-full text-slate-300">
-      <circle cx="12" cy="12" r="10" fill="#64748b" />
-      <path fill="#fff" d="M2.5 3.5 13 12 2.5 20.5Z" />
-      <rect fill="#fff" x="14" y="3.5" width="5" height="17" rx="2.5" />
+    <svg viewBox="0 0 24 24" aria-hidden className="size-full">
+      <circle cx="12" cy="12" r="8.6" fill="#c4b5fd" />
+      <circle cx="12" cy="12" r="6.6" fill="#1c0e24" />
+      <g transform="translate(12 12) scale(0.58) translate(-12 -12)">
+        <SkipGlyph fill="#fb923c" />
+      </g>
     </svg>
   );
 }
