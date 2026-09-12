@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { loadSkippedIds, skipHouse, toggleSkipped, unskipHouse } from "@/lib/offline-db";
+import {
+  getSkippedMeta,
+  loadSkippedIds,
+  skipHouse,
+  toggleSkipped,
+  unskipHouse,
+  type SkippedHouseMeta,
+} from "@/lib/offline-db";
 
 export function useSkippedHouses() {
   const [ids, setIds] = useState<string[]>(() =>
@@ -22,11 +29,12 @@ export function useSkippedHouses() {
   return {
     skippedIds: ids,
     skipped: (id: string) => ids.includes(id),
-    skip: (id: string) => {
-      const next = skipHouse(id);
+    skip: (id: string, meta?: SkippedHouseMeta) => {
+      const next = skipHouse(id, meta);
       setIds(next);
       return next;
     },
+    meta: (id: string) => getSkippedMeta(id),
     unskip: (id: string) => {
       const next = unskipHouse(id);
       setIds(next);
