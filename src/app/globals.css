@@ -1889,8 +1889,8 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 .house-action-menu-trigger {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border: 0;
   border-radius: 999px;
   background: #2a1638;
@@ -1902,14 +1902,14 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 }
 
 .house-action-menu-panel {
-  min-width: 13.5rem;
-  max-width: min(20rem, calc(100vw - 1.5rem));
+  min-width: 16rem;
+  max-width: min(22rem, calc(100vw - 1.5rem));
   overflow: hidden;
-  border-radius: 0.9rem;
+  border-radius: 1rem;
   border: 1px solid rgba(249, 115, 22, 0.25);
   background: #1d1028;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
-  padding: 0.45rem;
+  padding: 0.55rem;
 }
 
 .house-action-menu-panel--floating {
@@ -1920,16 +1920,16 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   display: flex;
   width: 100%;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.875rem;
   border: 0;
-  border-radius: 0.65rem;
+  border-radius: 0.7rem;
   background: transparent;
-  padding: 0.7rem 0.8rem;
+  padding: 0.85rem 1rem;
   color: #ffedd5;
   text-align: start;
   text-decoration: none;
-  font-size: 1.0625rem;
-  line-height: 1.3;
+  font-size: 1.125rem;
+  line-height: 1.35;
 }
 
 .house-action-menu-item:hover,
@@ -1944,7 +1944,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 
 .house-action-menu-icon {
   display: inline-flex;
-  width: 1.75rem;
+  width: 2rem;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;

@@ -44,7 +44,8 @@ type MenuItem = {
   active?: boolean;
 };
 
-const MENU_ICON_CLASS = "size-6";
+const MENU_ICON_CLASS = "size-7";
+const MENU_ACTIVE_ICON_CLASS = "size-8";
 
 export function HouseActionBar({
   house,
@@ -151,7 +152,7 @@ export function HouseActionBar({
         id: "like",
         label: "אהבתי",
         icon: liked ? (
-          <SavedTrafficIcon className="size-7" markClassName="size-3.5" />
+          <SavedTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-4" />
         ) : (
           <Heart className={MENU_ICON_CLASS} strokeWidth={2.2} />
         ),
@@ -164,7 +165,7 @@ export function HouseActionBar({
         id: "visited",
         label: "ביקרתי",
         icon: visited ? (
-          <VisitedTrafficIcon className="size-7" markClassName="size-3.5" />
+          <VisitedTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-4" />
         ) : (
           <VisitedCheck visited={false} size="lg" />
         ),
@@ -252,8 +253,10 @@ export function HouseActionBar({
 
   if (items.length === 0) return null;
 
+  const KEEP_OPEN_ITEM_IDS = new Set(["like", "visited"]);
+
   function runItem(item: MenuItem) {
-    setOpen(false);
+    if (!KEEP_OPEN_ITEM_IDS.has(item.id)) setOpen(false);
     item.onClick?.();
   }
 
@@ -318,7 +321,7 @@ export function HouseActionBar({
           setOpen((value) => !value);
         }}
       >
-        <MoreVertical className="size-6" strokeWidth={2.2} />
+        <MoreVertical className="size-7" strokeWidth={2.2} />
       </button>
       {panel}
     </div>
