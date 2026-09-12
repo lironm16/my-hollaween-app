@@ -679,14 +679,14 @@ export function NeighborhoodApp({
               {mapSheetHouse && houseDetailCommon && view === "map" && !originPick.originPickActive ? (
                 <MapHouseSheet
                   {...houseDetailCommon}
-                  skipped={routeMode && skips.skipped(mapSheetHouse.id)}
+                  skipped={skips.skipped(mapSheetHouse.id)}
                   onSkip={
                     routeMode && !skips.skipped(mapSheetHouse.id)
                       ? () => handleSkipHouse(mapSheetHouse.id)
                       : undefined
                   }
                   onRestoreRoute={
-                    routeMode && skips.skipped(mapSheetHouse.id)
+                    skips.skipped(mapSheetHouse.id)
                       ? () => handleRestoreHouse(mapSheetHouse.id)
                       : undefined
                   }
