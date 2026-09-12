@@ -1,7 +1,11 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { get as getBlob, put as putBlob } from "@vercel/blob";
-import { blobConfigured, privateBlobGetOptions, privateBlobPutOptions } from "@/lib/blob-auth";
+import {
+  blobForEphemeralCounters,
+  privateBlobGetOptions,
+  privateBlobPutOptions,
+} from "@/lib/blob-auth";
 import {
   clampTraffic,
   clampTrafficDelta,
@@ -15,9 +19,9 @@ export type { TrafficDelta };
 
 const BLOB_PATH = "halloween-houses/traffic.json";
 const SEED_TRAFFIC_PATH = path.join(process.cwd(), "data", "seed-traffic.json");
-const MEM_GET_TTL_MS = 20_000;
-/** Batch blob writes — Hobby plan allows only 10k simple ops/month. */
-const BLOB_PERSIST_MS = 60_000;
+const MEM_GET_TTL_MS = 120_000;
+/** Off-Vercel only — on Vercel traffic stays in memory to save Blob quota. */
+const BLOB_PERSIST_MS = 300_000;
 
 type GlobalBag = {
   __hwTraffic?: TrafficFile;
@@ -74,7 +78,7 @@ async function writeLocal(file: TrafficFile) {
 }
 
 async function readBlob(): Promise<TrafficFile | null> {
-  if (!blobConfigured()) return null;
+  if (!blobForEphemeralCounters()) return null;
   try {
     const result = await getBlob(BLOB_PATH, privateBlobGetOptions());
     if (!result?.stream) return null;
@@ -85,7 +89,7 @@ async function readBlob(): Promise<TrafficFile | null> {
 }
 
 async function writeBlob(file: TrafficFile) {
-  if (!blobConfigured()) return;
+  if (!blobForEphemeralCounters()) return;
   try {
     await putBlob(BLOB_PATH, JSON.stringify(file), privateBlobPutOptions("application/json"));
   } catch {
@@ -170,11 +174,16 @@ function remember(file: TrafficFile) {
 
 async function loadTrafficUnlocked(): Promise<TrafficFile> {
   const seed = await loadSeedTraffic();
+  const global = getGlobal();
+  if (global) {
+    mem = global;
+    memAt = Date.now();
+    return withSeedTraffic(mem, seed);
+  }
   if (mem && Date.now() - memAt < MEM_GET_TTL_MS) return withSeedTraffic(mem, seed);
-  const [local, blob, global] = await Promise.all([
-    readLocal(),
+  const [local, blob] = await Promise.all([
+    blobForEphemeralCounters() ? readLocal() : Promise.resolve(null),
     readBlob(),
-    Promise.resolve(getGlobal()),
   ]);
   mem = mergeTraffic(mem, local, blob, global);
   memAt = Date.now();
@@ -184,6 +193,7 @@ async function loadTrafficUnlocked(): Promise<TrafficFile> {
 
 async function persistShared(file: TrafficFile) {
   remember(file);
+  if (!blobForEphemeralCounters()) return;
   try {
     await writeLocal(file);
   } catch {
@@ -216,7 +226,7 @@ export async function applyTrafficDeltas(deltas: TrafficDelta[]): Promise<Record
     }
     file.updatedAt = new Date().toISOString();
     remember(file);
-    if (Date.now() - lastBlobAt() >= BLOB_PERSIST_MS) {
+    if (blobForEphemeralCounters() && Date.now() - lastBlobAt() >= BLOB_PERSIST_MS) {
       await persistShared(file);
     }
     const seed = await loadSeedTraffic();

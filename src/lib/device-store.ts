@@ -1,7 +1,11 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { get as getBlob, put as putBlob } from "@vercel/blob";
-import { blobConfigured, privateBlobGetOptions, privateBlobPutOptions } from "@/lib/blob-auth";
+import {
+  blobForEphemeralCounters,
+  privateBlobGetOptions,
+  privateBlobPutOptions,
+} from "@/lib/blob-auth";
 
 const BLOB_PATH = "halloween-houses/devices.json";
 const MAX_DEVICES = 5000;
@@ -72,7 +76,7 @@ async function writeLocal(file: DeviceFile) {
 }
 
 async function readBlob(): Promise<DeviceFile | null> {
-  if (!blobConfigured()) return null;
+  if (!blobForEphemeralCounters()) return null;
   try {
     const result = await getBlob(BLOB_PATH, privateBlobGetOptions());
     if (!result?.stream) return null;
@@ -83,7 +87,7 @@ async function readBlob(): Promise<DeviceFile | null> {
 }
 
 async function writeBlob(file: DeviceFile) {
-  if (!blobConfigured()) return;
+  if (!blobForEphemeralCounters()) return;
   try {
     await putBlob(BLOB_PATH, JSON.stringify(file), privateBlobPutOptions("application/json"));
   } catch {
@@ -164,7 +168,7 @@ export async function rememberDevice(id: string): Promise<number> {
     prune(file);
     file.updatedAt = new Date().toISOString();
     remember(file);
-    if (now - lastBlobAt() >= BLOB_PERSIST_MS) {
+    if (blobForEphemeralCounters() && now - lastBlobAt() >= BLOB_PERSIST_MS) {
       await persist(file);
     }
     return Object.keys(file.ids).length;

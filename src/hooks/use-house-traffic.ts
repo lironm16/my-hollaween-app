@@ -12,7 +12,8 @@ import {
 } from "@/lib/traffic";
 
 const FLUSH_MS = 800;
-const POLL_MS = 60_000;
+/** Poll server counts infrequently — hearts/visited on this phone are always local. */
+const POLL_MS = 300_000;
 const PENDING_KEY = "hw-traffic-pending";
 
 const reported: Record<TrafficKind, Set<string>> = {
