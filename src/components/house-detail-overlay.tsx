@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { HouseDetails } from "@/components/house-details";
+import { FilterMismatchNotice } from "@/components/house-skipped-banner";
 import { CodesCopy } from "@/components/codes-copy";
 import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
@@ -30,6 +31,7 @@ export function HouseDetailOverlay({
   onSkip,
   onRestoreRoute,
   skipped,
+  filterMismatchReasons,
   clusterOverview,
   clusterHouses,
   onSelectClusterHouse,
@@ -54,6 +56,7 @@ export function HouseDetailOverlay({
   onSkip?: () => void;
   onRestoreRoute?: () => void;
   skipped?: boolean;
+  filterMismatchReasons?: string[];
   clusterOverview?: boolean;
   clusterHouses?: PublicHouse[];
   onSelectClusterHouse?: (id: string) => void;
@@ -128,6 +131,7 @@ export function HouseDetailOverlay({
           {houseHeadline(house)}
         </span>
         {pendingNote}
+        <FilterMismatchNotice reasons={filterMismatchReasons} onRestoreRoute={onRestoreRoute} />
         {editing ? (
           <>
             <p className="map-house-sheet-kicker">{houseHeadline(house)}</p>

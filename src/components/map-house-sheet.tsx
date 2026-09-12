@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
+import { FilterMismatchNotice } from "@/components/house-skipped-banner";
 import { CodesCopy } from "@/components/codes-copy";
 import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
@@ -241,11 +242,10 @@ export function MapHouseSheet({
             </span>
             <div className="map-house-sheet-cards">
               <section className="map-house-sheet-card is-on">
-                {filterMismatchReasons && filterMismatchReasons.length > 0 ? (
-                  <p className="filter-mismatch-banner" role="status">
-                    מסונן: {filterMismatchReasons.join(" · ")}
-                  </p>
-                ) : null}
+                <FilterMismatchNotice
+                  reasons={filterMismatchReasons}
+                  onRestoreRoute={onRestoreRoute}
+                />
                 {pendingNote}
                 {editing ? (
                   <>

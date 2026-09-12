@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import { DecorMark } from "@/components/decor-glyphs";
 import { ClosedSign, PauseSign } from "@/components/house-tags";
 import { VisitedCheck } from "@/components/visited-check";
@@ -138,6 +139,38 @@ export function DecorOnlyMark({
   );
 }
 
+/** Green disc — visited / ביקרתי (filter row size). */
+export function VisitedSign({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white",
+        className,
+      )}
+      title="ביקרתי"
+      aria-label="ביקרתי"
+    >
+      <Check className="size-5" strokeWidth={3} />
+    </span>
+  );
+}
+
+/** Slate disc — skipped / דילגתי (filter row size). */
+export function SkipSign({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full border-[1.5px] border-[#fff7ed] bg-[#64748b] text-white shadow-[0_1px_2px_rgba(0,0,0,0.45)]",
+        className,
+      )}
+      title="דילגתי"
+      aria-label="דילגתי"
+    >
+      <SkipIcon className="size-5" />
+    </span>
+  );
+}
+
 export function SkipPinBadge({
   className,
   size = "map",
@@ -164,7 +197,7 @@ export function SkippedMark({
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <SkipPinBadge size="list" />
+      <SkipSign />
       {labeled ? <span>דילגתי</span> : <span className="sr-only">דילגתי</span>}
     </span>
   );
@@ -179,7 +212,7 @@ export function VisitedMark({
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <VisitedCheck visited />
+      <VisitedSign />
       {labeled ? <span>ביקרתי</span> : <span className="sr-only">ביקרתי</span>}
     </span>
   );
