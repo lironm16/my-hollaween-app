@@ -160,7 +160,7 @@ export function SkipSign({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-full border-[1.5px] border-[#fff7ed] bg-[#64748b] text-white shadow-[0_1px_2px_rgba(0,0,0,0.45)]",
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#64748b] text-white shadow-[0_1px_2px_rgba(0,0,0,0.45)]",
         className,
       )}
       title="דילגתי"

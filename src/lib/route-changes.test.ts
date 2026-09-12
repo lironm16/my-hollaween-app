@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   diffRouteByFilters,
   diffRouteBySkippedIds,
+  rebuildRouteAfterSkipChange,
   routeCandidateHouses,
   whyAddedToRoute,
   whyRemovedFromRoute,
@@ -114,6 +115,36 @@ describe("diffRouteBySkippedIds", () => {
     const { removed } = diffRouteBySkippedIds(route, [house], baseFilters, context, ["a"]);
     assert.equal(removed.length, 1);
     assert.equal(removed[0]?.reason, "דילגתם על הבית");
+  });
+});
+
+describe("rebuildRouteAfterSkipChange", () => {
+  it("inserts restored houses at the best stop order, not always last", () => {
+    const origin = { lat: 32.0919, lng: 34.8112 };
+    const near = stub("near", { lat: 32.09195, lng: 34.81125, address: "חרוזים 8, חרוזים" });
+    const far = stub("far", { lat: 32.094, lng: 34.818, address: "נחלת גנים 1, נחלת גנים" });
+    const route = buildWalkingRouteOrdered([far], origin);
+    const context = {
+      houseSet: "real" as const,
+      likedIds: [],
+      visitedIds: [],
+      skippedIds: ["near"],
+      now: new Date("2026-10-31T18:00:00"),
+    };
+    const rebuilt = rebuildRouteAfterSkipChange(
+      route,
+      [near, far],
+      baseFilters,
+      context,
+      [],
+      true,
+      origin,
+    );
+    assert.ok(rebuilt);
+    assert.deepEqual(
+      rebuilt!.stops.map((stop) => stop.house.id),
+      ["near", "far"],
+    );
   });
 });
 
