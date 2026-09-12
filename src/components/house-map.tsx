@@ -99,7 +99,15 @@ function pinFaceKind(house: PublicHouse): "bare" | "scare" {
   return isDecorated(house) ? "scare" : "bare";
 }
 
-function pinStatusMark(house: PublicHouse, now: Date) {
+const PIN_SKIP_ICON =
+  '<svg class="pin-skip-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 12h12"/><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="m13 6 6 6-6 6"/></svg>';
+
+function pinSkippedMark() {
+  return `<b class="pin-status is-skipped" aria-label="לניסיון הבא">${PIN_SKIP_ICON}</b>`;
+}
+
+function pinStatusMark(house: PublicHouse, now: Date, skipped = false) {
+  if (skipped) return pinSkippedMark();
   const visit = pinVisitKind(house, now);
   if (visit === "closed") {
     return `<b class="pin-status is-closed" aria-label="סגור"></b>`;
@@ -148,13 +156,17 @@ function clusterAptDotsHtml(
   houses: PublicHouse[],
   now: Date,
   matchedIds?: ReadonlySet<string>,
+  skippedIds?: ReadonlySet<string>,
 ) {
   if (houses.length <= 1) return "";
   const dots = houses
     .map((house) => {
-      const visit = pinVisitKind(house, now);
       const filteredClass =
         matchedIds && !matchedIds.has(house.id) ? " is-filtered-out" : "";
+      if (skippedIds?.has(house.id)) {
+        return `<i class="pin-apt-dot is-skipped${filteredClass}"></i>`;
+      }
+      const visit = pinVisitKind(house, now);
       if (visit === "closed") return `<i class="pin-apt-dot is-closed${filteredClass}"></i>`;
       if (visit === "break") return `<i class="pin-apt-dot is-break${filteredClass}"></i>`;
       const dot = candyPinDot(house) ?? "out";
@@ -174,6 +186,7 @@ function housePinHtml(
     extraStyle?: string;
     visited?: boolean;
     filteredOut?: boolean;
+    skipped?: boolean;
   },
 ) {
   const selectedClass = extras?.selected ? " is-selected" : "";
@@ -199,7 +212,7 @@ function housePinHtml(
             : face === "scare"
               ? 'aria-label="מקושט"'
               : 'aria-label="לא מקושט"';
-  return `<div class="house-pin${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}" style="${style}" ${label}${idAttr}>${hoursRingHtml(house, now)}${pinStatusMark(house, now)}${pinFaceHtml(house)}</div>`;
+  return `<div class="house-pin${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}" style="${style}" ${label}${idAttr}>${hoursRingHtml(house, now)}${pinStatusMark(house, now, extras?.skipped)}${pinFaceHtml(house)}</div>`;
 }
 
 function fanLayout(count: number) {
@@ -234,6 +247,7 @@ function clusterIcon(
   expanded = false,
   filteredOut = false,
   matchedIds?: ReadonlySet<string>,
+  skippedIds?: ReadonlySet<string>,
 ) {
   const houses = cluster.houses;
   const only = houses[0];
@@ -241,6 +255,7 @@ function clusterIcon(
   const selectedClass = selectedHere ? " is-selected" : "";
   const filterClass = filteredOut ? " is-filtered-out" : "";
   const allVisited = houses.length > 0 && houses.every((house) => visitedIds.includes(house.id));
+  const allSkipped = houses.length > 0 && houses.every((house) => skippedIds?.has(house.id));
   const fanOpen = expanded && houses.length > 1;
 
   if (!only || houses.length <= 1) {
@@ -251,6 +266,7 @@ function clusterIcon(
             selected: selectedHere,
             visited: visitedIds.includes(only.id),
             filteredOut: matchedIds ? !matchedIds.has(only.id) : false,
+            skipped: skippedIds?.has(only.id),
           })
         : "",
       routeOrder,
@@ -265,7 +281,7 @@ function clusterIcon(
 
   if (!fanOpen) {
     const wrapped = wrapRoutePin(
-      `<div class="house-pin is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterAptDotsHtml(houses, now, matchedIds)}</div>`,
+      `<div class="house-pin is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות">${allSkipped ? pinSkippedMark() : ""}<span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>`,
       routeOrder,
     );
     return L.divIcon({
@@ -306,6 +322,7 @@ function clusterIcon(
         houseId: house.id,
         visited: visitedIds.includes(house.id),
         filteredOut: matchedIds ? !matchedIds.has(house.id) : false,
+        skipped: skippedIds?.has(house.id),
         extraClass: "is-apt",
         extraStyle: `left:${left}px;bottom:${bottom}px;z-index:${house.id === selectedId ? houses.length + 3 : index + 2}`,
       });
@@ -314,7 +331,7 @@ function clusterIcon(
   const badge = routeOrder ? routeBadgeHtml(routeOrder) : "";
   return L.divIcon({
     className: `pumpkin-pin-icon pumpkin-pin-fan${selectedClass}${filterClass}`,
-      html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" aria-hidden="true"><span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterAptDotsHtml(houses, now, matchedIds)}</div>${apts}${badge}</div>`,
+      html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" aria-hidden="true">${allSkipped ? pinSkippedMark() : ""}<span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>${apts}${badge}</div>`,
     iconSize: [width, height],
     iconAnchor: [width / 2, height],
   });
@@ -514,6 +531,7 @@ function ClusterMarker({
   onCollapse,
   routeOrder,
   visitedIds,
+  skippedIds,
   filteredOut,
   matchedIds,
 }: {
@@ -526,6 +544,7 @@ function ClusterMarker({
   onCollapse?: () => void;
   routeOrder?: number;
   visitedIds: string[];
+  skippedIds?: ReadonlySet<string>;
   filteredOut?: boolean;
   matchedIds?: ReadonlySet<string>;
 }) {
@@ -537,13 +556,14 @@ function ClusterMarker({
   const fanOpen = Boolean(expanded && cluster.houses.length > 1);
   const overview = Boolean(clusterOverview && fanOpen);
   const visitedKey = cluster.houses.map((house) => (visitedIds.includes(house.id) ? "1" : "0")).join("");
+  const skippedKey = cluster.houses.map((house) => (skippedIds?.has(house.id) ? "1" : "0")).join("");
   const statusKey = cluster.houses
     .map((house) => pinVisitKind(house, now) ?? candyPinDot(house) ?? "x")
     .join("");
 
   return (
     <Marker
-      key={`${cluster.key}-${fanOpen ? (overview ? "peek" : selectedId ?? "open") : "shut"}-${routeOrder ?? 0}-${visitedKey}-${statusKey}`}
+      key={`${cluster.key}-${fanOpen ? (overview ? "peek" : selectedId ?? "open") : "shut"}-${routeOrder ?? 0}-${visitedKey}-${skippedKey}-${statusKey}`}
       position={[cluster.lat, cluster.lng]}
       icon={clusterIcon(
         cluster,
@@ -555,6 +575,7 @@ function ClusterMarker({
         fanOpen,
         filteredOut,
         matchedIds,
+        skippedIds,
       )}
       zIndexOffset={
         fanOpen || selectedHere
@@ -622,6 +643,7 @@ type Props = {
   /** Increment only on route-button tap to fit the whole path. */
   routeFitTick?: number;
   visitedIds?: string[];
+  skippedIds?: string[];
   originMarker?: LatLng | null;
   originPickActive?: boolean;
   originPick?: LatLng | null;
@@ -656,6 +678,7 @@ export function HouseMap({
   routeStartedFrom = null,
   routeFitTick = 0,
   visitedIds = [],
+  skippedIds = [],
   originMarker = null,
   originPickActive = false,
   originPick = null,
@@ -676,6 +699,7 @@ export function HouseMap({
     for (const stop of routeStops ?? []) map.set(stop.id, stop.order);
     return map;
   }, [routeStops]);
+  const skippedIdSet = useMemo(() => new Set(skippedIds), [skippedIds]);
   const lineRenderer = useMemo(() => L.canvas({ padding: 0.5 }), []);
   const focus = useMemo(() => {
     if (pickMode || !selectedId) return null;
@@ -924,6 +948,7 @@ export function HouseMap({
                 onClose={onClose}
                 onCollapse={onCollapseCluster}
                 visitedIds={visitedIds}
+                skippedIds={skippedIdSet}
                 filteredOut={clusterFilteredOut}
                 matchedIds={matchedIds}
                 routeOrder={cluster.houses.reduce<number | undefined>(
