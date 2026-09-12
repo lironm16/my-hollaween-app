@@ -30,7 +30,10 @@ export default function AddPage() {
   async function onSubmit(input: HouseInput, extras?: HouseFormExtras) {
     setBusy(true);
     try {
-      const includeEndpoint = await senderPushEndpoint();
+      const includeEndpoint = await Promise.race([
+        senderPushEndpoint(),
+        new Promise<undefined>((resolve) => window.setTimeout(() => resolve(undefined), 2000)),
+      ]);
       const { house, editCode } = await publishHouse(input, { includeEndpoint });
       let preview = house;
       if (extras?.photoDataUrl) {
