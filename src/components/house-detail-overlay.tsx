@@ -27,6 +27,9 @@ export function HouseDetailOverlay({
   pendingNote,
   onShowOnMap,
   onShowInList,
+  onSkip,
+  onRestoreRoute,
+  skipped,
   clusterOverview,
   clusterHouses,
   onSelectClusterHouse,
@@ -48,6 +51,9 @@ export function HouseDetailOverlay({
   pendingNote?: ReactNode;
   onShowOnMap?: () => void;
   onShowInList?: () => void;
+  onSkip?: () => void;
+  onRestoreRoute?: () => void;
+  skipped?: boolean;
   clusterOverview?: boolean;
   clusterHouses?: PublicHouse[];
   onSelectClusterHouse?: (id: string) => void;
@@ -86,6 +92,9 @@ export function HouseDetailOverlay({
             onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
             onShowOnMap={onShowOnMap}
             onShowInList={onShowInList}
+            onSkip={onSkip}
+            onRestoreRoute={onRestoreRoute}
+            skipped={skipped}
             editing={editing}
           />
         </div>
