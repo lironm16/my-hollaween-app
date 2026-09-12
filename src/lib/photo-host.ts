@@ -1,5 +1,5 @@
 import { put as putBlob } from "@vercel/blob";
-import { blobConfigured } from "@/lib/blob-auth";
+import { blobConfigured, blobStoreOptions } from "@/lib/blob-auth";
 
 const LITTERBOX = "https://litterbox.catbox.moe/resources/internals/api.php";
 const CATBOX = "https://catbox.moe/user/api.php";
@@ -35,6 +35,7 @@ async function uploadToBlob(buf: Buffer): Promise<{ url: string; host: string } 
     allowOverwrite: false,
     contentType: "image/jpeg",
     cacheControlMaxAge: 60 * 60 * 24 * 365,
+    ...blobStoreOptions(),
   });
   return blob.url ? { url: blob.url, host: "blob" } : null;
 }
