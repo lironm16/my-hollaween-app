@@ -262,6 +262,48 @@ export function toggleVisited(id: string): string[] {
   return next;
 }
 
+const SKIPPED_KEY = "hw-skipped-houses";
+
+export function loadSkippedIds(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(SKIPPED_KEY);
+    const ids = raw ? (JSON.parse(raw) as unknown) : [];
+    return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+export function isSkipped(id: string) {
+  return loadSkippedIds().includes(id);
+}
+
+export function skipHouse(id: string): string[] {
+  const current = loadSkippedIds();
+  if (current.includes(id)) return current;
+  const next = [id, ...current];
+  localStorage.setItem(SKIPPED_KEY, JSON.stringify(next.slice(0, 200)));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("hw-skipped-changed"));
+  }
+  return next;
+}
+
+export function unskipHouse(id: string): string[] {
+  const current = loadSkippedIds();
+  const next = current.filter((item) => item !== id);
+  localStorage.setItem(SKIPPED_KEY, JSON.stringify(next));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("hw-skipped-changed"));
+  }
+  return next;
+}
+
+export function toggleSkipped(id: string): string[] {
+  return isSkipped(id) ? unskipHouse(id) : skipHouse(id);
+}
+
 const SERVER_DB_KEY = "hw-server-db-backup";
 
 export type ServerDbBackup = {
