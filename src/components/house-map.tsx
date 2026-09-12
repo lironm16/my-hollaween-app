@@ -609,8 +609,6 @@ type Props = {
   /** House ids that pass the current filter — others render faded on the map. */
   matchedIds?: ReadonlySet<string>;
   filterDimActive?: boolean;
-  skippedIds?: string[];
-  routeMode?: boolean;
 };
 
 export function HouseMap({
@@ -644,15 +642,12 @@ export function HouseMap({
   statsFab = null,
   matchedIds,
   filterDimActive = false,
-  skippedIds = [],
-  routeMode = false,
 }: Props) {
   const clusters = useMemo(
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
     [houses, pickMode],
   );
-  const dimActive =
-    (filterDimActive && Boolean(matchedIds)) || (routeMode && skippedIds.length > 0);
+  const dimActive = filterDimActive && Boolean(matchedIds);
   const routeOrderById = useMemo(() => {
     const map = new Map<string, number>();
     for (const stop of routeStops ?? []) map.set(stop.id, stop.order);
@@ -890,10 +885,11 @@ export function HouseMap({
         ) : null}
         {!pickMode &&
           clusters.map((cluster) => {
-            const clusterMatched =
-              !filterDimActive || cluster.houses.some((house) => matchedIds?.has(house.id));
-            const clusterSkipped =
-              routeMode && cluster.houses.some((house) => skippedIds.includes(house.id));
+            const clusterFilteredOut =
+              dimActive &&
+              (cluster.houses.length > 1
+                ? cluster.houses.every((house) => !matchedIds?.has(house.id))
+                : !matchedIds?.has(cluster.houses[0]!.id));
             return (
               <ClusterMarker
                 key={cluster.key}
@@ -905,7 +901,7 @@ export function HouseMap({
                 onClose={onClose}
                 onCollapse={onCollapseCluster}
                 visitedIds={visitedIds}
-                filteredOut={!clusterMatched || clusterSkipped}
+                filteredOut={clusterFilteredOut}
                 routeOrder={cluster.houses.reduce<number | undefined>(
                   (found, house) => found ?? routeOrderById.get(house.id),
                   undefined,

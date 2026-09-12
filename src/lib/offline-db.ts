@@ -369,6 +369,8 @@ export type HouseFiltersState = {
   likedOnly: boolean;
   unvisitedOnly: boolean;
   visitedOnly: boolean;
+  /** Show only houses skipped on the route. */
+  skippedOnly: boolean;
   /** Include houses with no outdoor decoration (gray struck lights). */
   includeUndecorated: boolean;
 };

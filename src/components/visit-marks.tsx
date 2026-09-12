@@ -1,6 +1,7 @@
 import { DecorMark } from "@/components/decor-glyphs";
 import { ClosedSign, PauseSign } from "@/components/house-tags";
 import { VisitedCheck } from "@/components/visited-check";
+import { SkipForward } from "lucide-react";
 import { visitShort } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 
@@ -133,6 +134,27 @@ export function DecorOnlyMark({
     <span className={cn("inline-flex items-center gap-2", className)}>
       <DecorMark level="mild" />
       {labeled ? <span>{visitShort.decorOnly}</span> : <span className="sr-only">{visitShort.decorOnly}</span>}
+    </span>
+  );
+}
+
+export function SkippedMark({
+  labeled = false,
+  className,
+}: {
+  labeled?: boolean;
+  className?: string;
+}) {
+  return (
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <span
+        className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-violet-500/25 text-violet-100 ring-1 ring-violet-400/30"
+        title="דילגתי"
+        aria-label="דילגתי"
+      >
+        <SkipForward className="size-4" strokeWidth={2.4} />
+      </span>
+      {labeled ? <span>דילגתי</span> : <span className="sr-only">דילגתי</span>}
     </span>
   );
 }

@@ -7,30 +7,15 @@ import {
   trimWalkingRouteToVisible,
   type WalkingRoute,
 } from "@/lib/route";
-import {
-  diffRouteByStatus,
-  routeCandidateHouses,
-  snapshotRouteHouses,
-} from "@/lib/route-changes";
+import { routeCandidateHouses } from "@/lib/route-changes";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
-import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
 import type { PublicHouse } from "@/lib/types";
 
 function originPoint(origin: ResolvedOrigin) {
   return { lat: origin.lat, lng: origin.lng };
 }
-
-type RoutePrompt = {
-  kind: "enter-route" | "filter-change" | "status-change";
-  title: string;
-  description: string;
-  confirmLabel: string;
-  removedHouses?: { name: string; reason: string }[];
-  addedHouses?: { name: string; reason: string }[];
-  onConfirm: (includeNewHouses: boolean) => void;
-};
 
 export function useNeighborhoodRoute({
   visible,
@@ -45,8 +30,6 @@ export function useNeighborhoodRoute({
   geoRefresh,
   setAskedLocation,
   onBeforeEnter,
-  now,
-  setRoutePrompt,
 }: {
   visible: PublicHouse[];
   houses: PublicHouse[];
@@ -55,6 +38,7 @@ export function useNeighborhoodRoute({
     houseSet: HouseSet;
     likedIds: string[];
     visitedIds: string[];
+    skippedIds: string[];
     now: Date;
   };
   visitedIds: string[];
@@ -65,26 +49,14 @@ export function useNeighborhoodRoute({
   geoRefresh: () => void;
   setAskedLocation: (value: boolean) => void;
   onBeforeEnter: () => void;
-  now: Date;
-  setRoutePrompt: (prompt: RoutePrompt | null) => void;
 }) {
   const [routeMode, setRouteMode] = useState(false);
   const [pinnedRoute, setPinnedRoute] = useState<WalkingRoute | null>(null);
   const [routeFitTick, setRouteFitTick] = useState(0);
   const pendingRouteGps = useRef(false);
-  const routeSnapshotRef = useRef<Map<string, PublicHouse>>(new Map());
-  const statusPromptOpenRef = useRef(false);
   const visibleKey = useMemo(
     () => visible.map((house) => house.id).sort().join("\0"),
     [visible],
-  );
-  const housesKey = useMemo(
-    () =>
-      houses
-        .map((house) => `${house.id}:${house.updatedAt}:${house.visit}:${house.ownerFrozenUntil ?? ""}`)
-        .sort()
-        .join("\0"),
-    [houses],
   );
 
   const routeCandidates = useMemo(
@@ -101,17 +73,15 @@ export function useNeighborhoodRoute({
       accessible: accessibleOnly,
       startedFrom: origin.kind,
       originLabel: origin.label,
-      now,
     });
-  }, [routeCandidates, accessibleOnly, origin, now]);
+  }, [routeCandidates, accessibleOnly, origin]);
 
   const rebuildPinnedRoute = useCallback(
     (fit = false) => {
       setPinnedRoute(filterRoute);
-      routeSnapshotRef.current = snapshotRouteHouses(filterRoute, houses);
       if (fit) setRouteFitTick((n) => n + 1);
     },
-    [filterRoute, houses],
+    [filterRoute],
   );
 
   const pinCurrentRoute = useCallback(
@@ -121,57 +91,19 @@ export function useNeighborhoodRoute({
     [rebuildPinnedRoute],
   );
 
-  const applyStatusRouteChange = useCallback(
-    (includeNewHouses: boolean) => {
-      if (!filterRoute) {
-        setPinnedRoute(null);
-        routeSnapshotRef.current = new Map();
-        return;
-      }
-      if (includeNewHouses) {
-        rebuildPinnedRoute(false);
-        return;
-      }
-      setPinnedRoute((current) => {
-        if (!current) return filterRoute;
-        const candidateIds = new Set(routeCandidates.map((house) => house.id));
-        const trimmed = trimWalkingRouteToVisible(current, candidateIds);
-        const next =
-          trimmed &&
-          refreshWalkingRoute(trimmed, originPoint(origin), {
-            startedFrom: origin.kind,
-            accessible: accessibleOnly,
-            originLabel: origin.label,
-          });
-        routeSnapshotRef.current = snapshotRouteHouses(next, houses);
-        return next;
-      });
-    },
-    [
-      accessibleOnly,
-      filterRoute,
-      houses,
-      origin,
-      rebuildPinnedRoute,
-      routeCandidates,
-    ],
-  );
-
   useEffect(() => {
     if (!routeMode || !pendingRouteGps.current || !gps) return;
     pendingRouteGps.current = false;
     setPinnedRoute((current) => {
       const base = current ?? filterRoute;
       if (!base) return filterRoute;
-      const next = refreshWalkingRoute(base, { lat: gps.lat, lng: gps.lng }, {
+      return refreshWalkingRoute(base, { lat: gps.lat, lng: gps.lng }, {
         startedFrom: "gps",
         accessible: accessibleOnly,
         originLabel: origin.label,
       });
-      routeSnapshotRef.current = snapshotRouteHouses(next, houses);
-      return next;
     });
-  }, [routeMode, gps, filterRoute, accessibleOnly, origin.label, houses]);
+  }, [routeMode, gps, filterRoute, accessibleOnly, origin.label]);
 
   useEffect(() => {
     if (!routeMode || pendingRouteGps.current) return;
@@ -187,13 +119,11 @@ export function useNeighborhoodRoute({
       if (stopIds === currentIds && originUnchanged && current.accessible === accessibleOnly) {
         return current;
       }
-      const next = refreshWalkingRoute(trimmed, originPoint(origin), {
+      return refreshWalkingRoute(trimmed, originPoint(origin), {
         startedFrom: origin.kind,
         accessible: accessibleOnly,
         originLabel: origin.label,
       });
-      routeSnapshotRef.current = snapshotRouteHouses(next, houses);
-      return next;
     });
   }, [
     routeMode,
@@ -205,66 +135,12 @@ export function useNeighborhoodRoute({
     origin.label,
     accessibleOnly,
     routeCandidates,
-    houses,
   ]);
-
-  useEffect(() => {
-    if (!routeMode || !pinnedRoute || statusPromptOpenRef.current) return;
-    const diff = diffRouteByStatus(
-      pinnedRoute,
-      houses,
-      filters,
-      { ...filterContext, skippedIds },
-      routeSnapshotRef.current,
-    );
-    if (!diff) return;
-    if (shouldSkipRoutePrompt("status-change")) {
-      applyStatusRouteChange(diff.added.length > 0);
-      return;
-    }
-    statusPromptOpenRef.current = true;
-    setRoutePrompt({
-      kind: "status-change",
-      title: "לעדכן את המסלול?",
-      description:
-        "מצב הבתים השתנה. «ביטול» משאיר את המסלול כמו שהוא; «עדכון» מתאים את הרשימה.",
-      confirmLabel: "עדכון המסלול",
-      removedHouses: diff.removed,
-      addedHouses: diff.added,
-      onConfirm: (includeNew) => {
-        statusPromptOpenRef.current = false;
-        applyStatusRouteChange(includeNew);
-      },
-    });
-  }, [
-    routeMode,
-    pinnedRoute,
-    housesKey,
-    filters,
-    filterContext,
-    skippedIds.join("\0"),
-    houses,
-    Math.floor(now.getTime() / 60_000),
-    setRoutePrompt,
-    applyStatusRouteChange,
-  ]);
-
-  useEffect(() => {
-    if (!routeMode) {
-      statusPromptOpenRef.current = false;
-      return;
-    }
-    if (pinnedRoute) {
-      routeSnapshotRef.current = snapshotRouteHouses(pinnedRoute, houses);
-    }
-  }, [routeMode, pinnedRoute, housesKey, houses]);
 
   function exitRouteMode() {
     pendingRouteGps.current = false;
     setRouteMode(false);
     setPinnedRoute(null);
-    routeSnapshotRef.current = new Map();
-    statusPromptOpenRef.current = false;
   }
 
   function enterRouteMode() {
@@ -284,15 +160,6 @@ export function useNeighborhoodRoute({
     proceed();
   }
 
-  function acknowledgeRouteSnapshot() {
-    if (!pinnedRoute) {
-      routeSnapshotRef.current = new Map();
-      return;
-    }
-    routeSnapshotRef.current = snapshotRouteHouses(pinnedRoute, houses);
-    statusPromptOpenRef.current = false;
-  }
-
   return {
     routeMode,
     pinnedRoute,
@@ -305,6 +172,5 @@ export function useNeighborhoodRoute({
     exitRouteMode,
     pendingRouteGps,
     rebuildPinnedRoute,
-    acknowledgeRouteSnapshot,
   };
 }

@@ -143,9 +143,10 @@ export function NeighborhoodApp({
       houseSet: activeHouseSet,
       likedIds: likes.likedIds,
       visitedIds: visits.visitedIds,
+      skippedIds: skips.skippedIds,
       now,
     }),
-    [activeHouseSet, likes.likedIds, visits.visitedIds, now],
+    [activeHouseSet, likes.likedIds, visits.visitedIds, skips.skippedIds, now],
   );
 
   const mapHouses = useMemo(
@@ -153,7 +154,11 @@ export function NeighborhoodApp({
     [houses, activeHouseSet],
   );
   const visible = useMemo(() => filterHouses(houses, filters, filterContext), [houses, filters, filterContext]);
-  const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
+  const matchedIds = useMemo(() => {
+    const ids = new Set(visible.map((house) => house.id));
+    for (const id of skips.skippedIds) ids.delete(id);
+    return ids;
+  }, [visible, skips.skippedIds]);
   const filterDimActive = matchedIds.size < mapHouses.length;
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
@@ -178,7 +183,6 @@ export function NeighborhoodApp({
     exitRouteMode,
     pendingRouteGps,
     rebuildPinnedRoute,
-    acknowledgeRouteSnapshot,
   } = useNeighborhoodRoute({
     visible,
     houses,
@@ -192,8 +196,6 @@ export function NeighborhoodApp({
     geoRefresh: geo.refresh,
     setAskedLocation,
     onBeforeEnter: resetForNavigation,
-    now,
-    setRoutePrompt,
   });
 
   const {
@@ -396,10 +398,12 @@ export function NeighborhoodApp({
       ) : null}
     </div>
   ) : null;
-  const selectedFilterReasons =
-    selected && !matchedIds.has(selected.id)
-      ? houseFilterMismatchReasons(selected, filters, filterContext)
-      : undefined;
+  const selectedFilterReasons = selected
+    ? (() => {
+        const reasons = houseFilterMismatchReasons(selected, filters, filterContext);
+        return reasons.length > 0 ? reasons : undefined;
+      })()
+    : undefined;
   const houseDetailCommon = selected
     ? {
         house: selected,
@@ -520,8 +524,6 @@ export function NeighborhoodApp({
                 routeStart={routeMode ? origin : null}
                 routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}
                 visitedIds={visits.visitedIds}
-                skippedIds={skips.skippedIds}
-                routeMode={routeMode}
                 originMarker={origin.fromGps ? null : origin}
                 originPickActive={originPick.originPickActive}
                 originPick={originPick.originDraft}
@@ -701,10 +703,7 @@ export function NeighborhoodApp({
           routePrompt?.onConfirm(includeNew);
           setRoutePrompt(null);
         }}
-        onCancel={() => {
-          acknowledgeRouteSnapshot();
-          setRoutePrompt(null);
-        }}
+        onCancel={() => setRoutePrompt(null)}
       />
       <VisitCheer show={visitCheer} />
       <HouseEditFlowPanels
