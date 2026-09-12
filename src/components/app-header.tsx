@@ -2,14 +2,26 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Activity, Bell, Home, HousePlus, LogOut, Menu, Pencil, Search, Shield, Sparkles } from "lucide-react";
-import { SkipPinBadge } from "@/components/visit-marks";
-import { useSkippedHouses } from "@/hooks/use-skipped-houses";
+import {
+  Activity,
+  Bell,
+  ChevronDown,
+  Home,
+  HousePlus,
+  LogOut,
+  Menu,
+  Pencil,
+  Search,
+  Shield,
+  Sparkles,
+} from "lucide-react";
+import { SkipIcon } from "@/components/skip-icon";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
 import { NeighborhoodMarquee } from "@/components/neighborhood-marquee";
 import { PushAlertsButton } from "@/components/push-alerts-button";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
+import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import {
   Sheet,
   SheetContent,
@@ -22,23 +34,30 @@ import { cn } from "@/lib/utils";
 
 export function AppHeader({
   onHomeTap,
-  onOpenSkipped,
 }: {
   /** Brand title and side-menu Home: return to the last map/list home screen. */
   onHomeTap?: () => void;
-  /** Open the skipped-houses list on the home screen. */
-  onOpenSkipped?: () => void;
 }) {
   const { admin, logout } = useAdminSession();
   const owned = useOwnedHouses();
   const skips = useSkippedHouses();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [houseOpen, setHouseOpen] = useState(true);
 
   async function onLogout() {
     setMenuOpen(false);
     await logout();
     toast.message("יצאתם ממצב מנהל");
   }
+
+  function closeMenu() {
+    setMenuOpen(false);
+  }
+
+  const houseSubLinkClass = cn(
+    buttonVariants({ variant: "ghost", size: "lg" }),
+    "h-10 justify-start gap-2 ps-9 text-base text-orange-50 hover:bg-orange-500/10",
+  );
 
   return (
     <header
@@ -87,7 +106,7 @@ export function AppHeader({
             <Link
               href="/"
               onClick={(event) => {
-                setMenuOpen(false);
+                closeMenu();
                 if (!onHomeTap) return;
                 event.preventDefault();
                 onHomeTap();
@@ -100,71 +119,64 @@ export function AppHeader({
               <Home className="size-4" />
               מסך הבית
             </Link>
-            <Link
-              href="/search"
-              onClick={() => setMenuOpen(false)}
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "lg" }),
-                "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
-              )}
-            >
-              <Search className="size-4" />
-              חיפוש בית
-            </Link>
-            <Link
-              href="/add"
-              onClick={() => setMenuOpen(false)}
-              className={cn(
-                buttonVariants({ size: "lg" }),
-                "h-11 justify-start gap-2 bg-orange-500 text-base text-black hover:bg-orange-400",
-              )}
-            >
-              <HousePlus className="size-4" />
-              הוסיפו בית
-            </Link>
-            <Link
-              href="/edit"
-              onClick={() => setMenuOpen(false)}
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "lg" }),
-                "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
-              )}
-            >
-              <Pencil className="size-4" />
-              עריכת בית
-            </Link>
-            {owned.length > 0 ? (
-              <Link
-                href="/my-houses"
-                onClick={() => setMenuOpen(false)}
+
+            <div className="flex flex-col gap-0.5">
+              <button
+                type="button"
+                aria-expanded={houseOpen}
+                onClick={() => setHouseOpen((open) => !open)}
                 className={cn(
                   buttonVariants({ variant: "ghost", size: "lg" }),
                   "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
                 )}
               >
                 <Home className="size-4" />
-                הבתים שלי ({owned.length})
-              </Link>
-            ) : null}
-            {skips.skippedIds.length > 0 && onOpenSkipped ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  onOpenSkipped();
-                }}
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: "lg" }),
-                  "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
-                )}
-              >
-                <SkipPinBadge size="map" />
-                דילגתי ({skips.skippedIds.length})
+                <span className="flex-1 text-start">בית</span>
+                <ChevronDown
+                  className={cn("size-4 shrink-0 text-violet-400 transition-transform", houseOpen && "rotate-180")}
+                  aria-hidden
+                />
               </button>
-            ) : null}
+              {houseOpen ? (
+                <div className="flex flex-col gap-0.5">
+                  <Link
+                    href="/add"
+                    onClick={closeMenu}
+                    className={cn(
+                      buttonVariants({ size: "lg" }),
+                      "h-10 justify-start gap-2 ps-9 text-base bg-orange-500 text-black hover:bg-orange-400",
+                    )}
+                  >
+                    <HousePlus className="size-4" />
+                    הוספה
+                  </Link>
+                  <Link href="/edit" onClick={closeMenu} className={houseSubLinkClass}>
+                    <Pencil className="size-4" />
+                    עריכה
+                  </Link>
+                  <Link href="/search" onClick={closeMenu} className={houseSubLinkClass}>
+                    <Search className="size-4" />
+                    חיפוש
+                  </Link>
+                  {owned.length > 0 ? (
+                    <Link href="/my-houses" onClick={closeMenu} className={houseSubLinkClass}>
+                      <Home className="size-4" />
+                      שלי ({owned.length})
+                    </Link>
+                  ) : null}
+                  {skips.skippedIds.length > 0 ? (
+                    <Link href="/skipped-houses" onClick={closeMenu} className={houseSubLinkClass}>
+                      <SkipIcon className="size-4" />
+                      דילגתי ({skips.skippedIds.length})
+                    </Link>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+
             <Link
               href="/stats"
-              onClick={() => setMenuOpen(false)}
+              onClick={closeMenu}
               className={cn(
                 buttonVariants({ variant: "ghost", size: "lg" }),
                 "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
@@ -177,7 +189,7 @@ export function AppHeader({
               <>
                 <Link
                   href="/admin/alerts"
-                  onClick={() => setMenuOpen(false)}
+                  onClick={closeMenu}
                   className={cn(
                     buttonVariants({ variant: "ghost", size: "lg" }),
                     "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
@@ -188,7 +200,7 @@ export function AppHeader({
                 </Link>
                 <Link
                   href="/admin/rehearsal"
-                  onClick={() => setMenuOpen(false)}
+                  onClick={closeMenu}
                   className={cn(
                     buttonVariants({ variant: "ghost", size: "lg" }),
                     "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
@@ -212,7 +224,7 @@ export function AppHeader({
             ) : (
               <Link
                 href="/admin"
-                onClick={() => setMenuOpen(false)}
+                onClick={closeMenu}
                 className={cn(
                   buttonVariants({ variant: "ghost", size: "lg" }),
                   "h-11 justify-start gap-2 text-base text-violet-200 hover:bg-orange-500/10",

@@ -93,7 +93,6 @@ export function NeighborhoodApp({
   const { accessibleOnly, likedOnly } = filters;
 
   const [askedLocation, setAskedLocation] = useState(false);
-  const [skippedListOnly, setSkippedListOnly] = useState(false);
   const [routePrompt, setRoutePrompt] = useState<{
     kind: "enter-route" | "filter-change" | "status-change";
     title: string;
@@ -114,10 +113,6 @@ export function NeighborhoodApp({
   useEffect(() => {
     applyClockSearchParams(window.location.search);
   }, []);
-
-  useEffect(() => {
-    if (skippedListOnly && skips.skippedIds.length === 0) setSkippedListOnly(false);
-  }, [skippedListOnly, skips.skippedIds.length]);
 
   function setView(next: HomeView) {
     writeHomeView(next);
@@ -162,10 +157,6 @@ export function NeighborhoodApp({
     () => houses.filter((house) => houseMatchesSet(house, activeHouseSet)),
     [houses, activeHouseSet],
   );
-  const skippedHouses = useMemo(() => {
-    const ids = new Set(skips.skippedIds);
-    return houses.filter((house) => ids.has(house.id));
-  }, [houses, skips.skippedIds]);
   const visible = useMemo(() => filterHouses(houses, filters, filterContext), [houses, filters, filterContext]);
   const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
   const filterDimActive = matchedIds.size < mapHouses.length;
@@ -416,14 +407,6 @@ export function NeighborhoodApp({
     exitRouteMode();
     editFlow.close();
     selection.resetForNavigation();
-    setSkippedListOnly(false);
-  }
-
-  function openSkippedHouses() {
-    originPick.exitOriginPick();
-    selection.resetForNavigation();
-    setSkippedListOnly(true);
-    setView("list");
   }
 
   useEffect(() => {
@@ -560,7 +543,7 @@ export function NeighborhoodApp({
       className="relative isolate flex flex-col overflow-hidden"
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
-      <AppHeader onHomeTap={goHome} onOpenSkipped={openSkippedHouses} />
+      <AppHeader onHomeTap={goHome} />
       <button
         type="button"
         className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-2 focus:rounded-lg focus:bg-orange-500 focus:px-3 focus:py-2 focus:text-black"
@@ -578,7 +561,6 @@ export function NeighborhoodApp({
         view={view}
         onViewChange={setView}
         onListView={() => {
-          setSkippedListOnly(false);
           setView("list");
           selection.closeSelection();
         }}
@@ -770,44 +752,6 @@ export function NeighborhoodApp({
                     }}
                     editingId={null}
                   />
-                ) : skippedListOnly ? (
-                  <>
-                    <div className="mx-auto flex w-full min-w-0 max-w-3xl items-center justify-between gap-2 px-3 pb-1 pt-2">
-                      <h2 className="font-display text-xl text-orange-300">דילגתי</h2>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setSkippedListOnly(false)}
-                      >
-                        כל הבתים
-                      </Button>
-                    </div>
-                    <HouseList
-                      houses={skippedHouses}
-                      origin={origin}
-                      catalogSource={source}
-                      likedIds={likes.likedIds}
-                      onToggleLike={onToggleLike}
-                      visitedIds={visits.visitedIds}
-                      onToggleVisited={onToggleVisited}
-                      skippedIds={skips.skippedIds}
-                      onRestoreHouse={handleRestoreHouse}
-                      emptyKind="skipped"
-                      admin={admin}
-                      canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-                      onShowOnMap={openOnMap}
-                      onSelectHouse={selection.selectInList}
-                      onEditHouse={(id) => {
-                        selection.dismissForOverlay();
-                        const house = skippedHouses.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
-                        if (house) requestHouseEdit(house, true);
-                      }}
-                      selectedId={selection.selected?.id ?? null}
-                      focusId={selection.listFocusId}
-                      editingId={null}
-                    />
-                  </>
                 ) : (
                   <HouseList
                     houses={visible}

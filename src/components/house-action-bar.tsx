@@ -9,9 +9,9 @@ import {
   Navigation,
   Pencil,
   Share2,
-  SkipForward,
   Undo2,
 } from "lucide-react";
+import { SkipIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
 import { useHouseTraffic } from "@/hooks/use-house-traffic";
 import { toast } from "sonner";
@@ -164,7 +164,7 @@ export function HouseActionBar({
       items.push({
         id: "skip",
         label: "דילוג במסלול",
-        icon: <SkipForward className="size-5" strokeWidth={2.2} />,
+        icon: <SkipIcon className="size-5" />,
         onClick: onSkip,
       });
     }
