@@ -53,6 +53,8 @@ import {
 } from "@/lib/home-view";
 import { HOUSE_SET_LABELS, houseMatchesSet } from "@/lib/house-set";
 import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
+import { formatDistance } from "@/lib/geo";
+import { buildWalkingRoute } from "@/lib/route";
 import { houseSelectionAnnouncement } from "@/lib/map-a11y";
 import type { Catalog, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -154,11 +156,7 @@ export function NeighborhoodApp({
     [houses, activeHouseSet],
   );
   const visible = useMemo(() => filterHouses(houses, filters, filterContext), [houses, filters, filterContext]);
-  const matchedIds = useMemo(() => {
-    const ids = new Set(visible.map((house) => house.id));
-    for (const id of skips.skippedIds) ids.delete(id);
-    return ids;
-  }, [visible, skips.skippedIds]);
+  const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
   const filterDimActive = matchedIds.size < mapHouses.length;
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
@@ -253,13 +251,39 @@ export function NeighborhoodApp({
 
   const walkingRoute = routeMode ? pinnedRoute : null;
   const activeRoute = routeMode ? (walkingRoute ?? filterRoute) : null;
-  const skippedRouteHouses = useMemo(
-    () =>
-      routeMode
-        ? visible.filter((house) => skips.skippedIds.includes(house.id))
-        : [],
-    [routeMode, visible, skips.skippedIds],
-  );
+  const routeListItems = useMemo(() => {
+    if (!routeMode) return [];
+    const skippedSet = new Set(skips.skippedIds);
+    const eligible = filters.unvisitedOnly
+      ? visible.filter((house) => !visits.visitedIds.includes(house.id))
+      : visible;
+    const orderRoute = buildWalkingRoute(
+      eligible,
+      { lat: origin.lat, lng: origin.lng },
+      {
+        accessible: accessibleOnly,
+        startedFrom: origin.kind,
+        originLabel: origin.label,
+      },
+    );
+    if (!orderRoute) return [];
+    return orderRoute.stops.flatMap((stop) =>
+      stop.houses.map((house, houseIndex) => ({
+        house,
+        order: stop.order,
+        hop: houseIndex > 0 ? "אותו בניין" : formatDistance(stop.fromPreviousMeters),
+        skipped: skippedSet.has(house.id),
+      })),
+    );
+  }, [
+    routeMode,
+    visible,
+    skips.skippedIds,
+    origin,
+    accessibleOnly,
+    filters.unvisitedOnly,
+    visits.visitedIds,
+  ]);
 
   function handleSkipHouse(id: string) {
     skips.skip(id);
@@ -615,8 +639,9 @@ export function NeighborhoodApp({
                 </div>
                 {routeMode ? (
                   <RouteList
-                    route={activeRoute}
-                    skippedHouses={skippedRouteHouses}
+                    items={routeListItems}
+                    originLabel={activeRoute?.originLabel}
+                    startedFrom={activeRoute?.startedFrom}
                     hasGps={Boolean(gps)}
                     onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
                     onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
@@ -627,7 +652,6 @@ export function NeighborhoodApp({
                     onToggleLike={onToggleLike}
                     visitedIds={visits.visitedIds}
                     onToggleVisited={onToggleVisited}
-                    skippedIds={skips.skippedIds}
                     onSkipHouse={handleSkipHouse}
                     onRestoreHouse={handleRestoreHouse}
                     admin={admin}

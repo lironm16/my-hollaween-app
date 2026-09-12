@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { MapPin, Navigation } from "lucide-react";
+import { MapPin, Navigation, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HouseCard } from "@/components/house-card";
-import { formatDistance } from "@/lib/geo";
-import type { WalkingRoute } from "@/lib/route";
+import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
-function hopLabel(houseIndex: number, fromPreviousMeters: number) {
-  if (houseIndex > 0) return "אותו בניין";
-  return formatDistance(fromPreviousMeters);
-}
+export type RouteListItem = {
+  house: PublicHouse;
+  order: number;
+  hop: string;
+  skipped: boolean;
+};
 
 function RouteLeg({ label }: { label: string }) {
   return (
@@ -22,9 +24,46 @@ function RouteLeg({ label }: { label: string }) {
   );
 }
 
+function RouteSkippedRow({
+  house,
+  onRestore,
+  onOpen,
+}: {
+  house: PublicHouse;
+  onRestore?: () => void;
+  onOpen?: () => void;
+}) {
+  return (
+    <div className="route-skipped-row">
+      <button
+        type="button"
+        className="route-skipped-main"
+        onClick={onOpen}
+        aria-label={`${houseHeadline(house)} — דילגתם`}
+      >
+        <span className="route-skipped-badge">דילגתי</span>
+        <span className="route-skipped-name">{houseHeadline(house)}</span>
+      </button>
+      {onRestore ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="route-skipped-restore shrink-0"
+          onClick={onRestore}
+        >
+          <Undo2 className="size-3.5" />
+          החזרה
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
 export function RouteList({
-  route,
-  skippedHouses = [],
+  items,
+  originLabel,
+  startedFrom,
   hasGps,
   onRequestLocation,
   onChangeOrigin,
@@ -36,7 +75,6 @@ export function RouteList({
   onToggleLike,
   visitedIds,
   onToggleVisited,
-  skippedIds,
   onSkipHouse,
   onRestoreHouse,
   admin = false,
@@ -45,8 +83,9 @@ export function RouteList({
   onEditHouse,
   editingId,
 }: {
-  route: WalkingRoute | null;
-  skippedHouses?: PublicHouse[];
+  items: RouteListItem[];
+  originLabel?: string;
+  startedFrom?: "gps" | "neighborhood" | "custom";
   hasGps: boolean;
   onRequestLocation?: () => void;
   onChangeOrigin?: () => void;
@@ -58,7 +97,6 @@ export function RouteList({
   onToggleLike?: (id: string) => void;
   visitedIds?: string[];
   onToggleVisited?: (id: string) => void;
-  skippedIds?: string[];
   onSkipHouse?: (id: string) => void;
   onRestoreHouse?: (id: string) => void;
   admin?: boolean;
@@ -82,7 +120,7 @@ export function RouteList({
       </Button>
     ) : null;
 
-  if (!route && skippedHouses.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center text-violet-200">
         {gpsAction}
@@ -94,100 +132,66 @@ export function RouteList({
     );
   }
 
-  const startLabel =
-    route?.originLabel || (route?.startedFrom === "gps" ? "מיקום נוכחי" : "ממרכז השכונה");
-  const cards = (route?.stops ?? []).flatMap((stop) =>
-    stop.houses.map((house, houseIndex) => ({
-      house,
-      order: stop.order,
-      hop: hopLabel(houseIndex, stop.fromPreviousMeters),
-    })),
-  );
+  const startLabel = originLabel || (startedFrom === "gps" ? "מיקום נוכחי" : "ממרכז השכונה");
 
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-3 py-3">
       <ol className="route-list">
-        {route ? (
-          <li className="route-list-card">
-            <div className="flex items-start gap-3">
-              <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-black">
-                <MapPin className="size-4" strokeWidth={2.4} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-base font-medium text-orange-100">נקודת התחלה</p>
-                  {onChangeOrigin ? (
-                    <Button type="button" size="sm" variant="outline" onClick={onChangeOrigin}>
-                      שינוי
-                    </Button>
-                  ) : null}
-                </div>
-                <p className="mt-0.5 text-base text-violet-300">{startLabel}</p>
-                {gpsAction}
+        <li className="route-list-card">
+          <div className="flex items-start gap-3">
+            <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-black">
+              <MapPin className="size-4" strokeWidth={2.4} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-base font-medium text-orange-100">נקודת התחלה</p>
+                {onChangeOrigin ? (
+                  <Button type="button" size="sm" variant="outline" onClick={onChangeOrigin}>
+                    שינוי
+                  </Button>
+                ) : null}
               </div>
+              <p className="mt-0.5 text-base text-violet-300">{startLabel}</p>
+              {gpsAction}
             </div>
-          </li>
-        ) : null}
-        {cards.map(({ house, order, hop }, i) => (
+          </div>
+        </li>
+        {items.map(({ house, order, hop, skipped }, i) => (
           <li
             key={house.id}
             ref={house.id === focusId ? focusRef : undefined}
-            className={house.id === focusId ? "house-list-focus" : undefined}
+            className={cn(house.id === focusId && "house-list-focus", skipped && "route-list-skipped")}
           >
             <RouteLeg label={hop} />
-            <div className="route-list-house">
-              <HouseCard
+            {skipped ? (
+              <RouteSkippedRow
                 house={house}
-                catalogSource={catalogSource}
-                liked={likedIds?.includes(house.id)}
-                onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-                visited={visitedIds?.includes(house.id)}
-                onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
-                onSkip={onSkipHouse ? () => onSkipHouse(house.id) : undefined}
-                canEdit={Boolean(canEditHouse?.(house.id))}
-                admin={admin}
-                onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
+                onRestore={onRestoreHouse ? () => onRestoreHouse(house.id) : undefined}
                 onOpen={() => onSelectHouse(house.id, i + 1)}
-                onToggleEdit={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
-                editing={editingId === house.id}
-                index={order}
               />
-            </div>
+            ) : (
+              <div className="route-list-house">
+                <HouseCard
+                  house={house}
+                  catalogSource={catalogSource}
+                  liked={likedIds?.includes(house.id)}
+                  onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
+                  visited={visitedIds?.includes(house.id)}
+                  onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
+                  onSkip={onSkipHouse ? () => onSkipHouse(house.id) : undefined}
+                  canEdit={Boolean(canEditHouse?.(house.id))}
+                  admin={admin}
+                  onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
+                  onOpen={() => onSelectHouse(house.id, i + 1)}
+                  onToggleEdit={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
+                  editing={editingId === house.id}
+                  index={order}
+                />
+              </div>
+            )}
           </li>
         ))}
       </ol>
-      {skippedHouses.length > 0 ? (
-        <section className="mt-6 space-y-3">
-          <div className="px-1">
-            <h2 className="text-lg font-semibold text-violet-200">דילגתי ({skippedHouses.length})</h2>
-            <p className="mt-1 text-sm text-violet-400">בתים שדילגתם עליהם במסלול — עדיין על המפה, שקופים.</p>
-          </div>
-          <ol className="route-list">
-            {skippedHouses.map((house) => (
-              <li key={`skipped-${house.id}`}>
-                <div className="route-list-house">
-                  <HouseCard
-                    house={house}
-                    catalogSource={catalogSource}
-                    liked={likedIds?.includes(house.id)}
-                    onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-                    visited={visitedIds?.includes(house.id)}
-                    onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
-                    skipped
-                    onRestoreRoute={onRestoreHouse ? () => onRestoreHouse(house.id) : undefined}
-                    canEdit={Boolean(canEditHouse?.(house.id))}
-                    admin={admin}
-                    onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
-                    onOpen={() => onSelectHouse(house.id, 0)}
-                    onToggleEdit={onEditHouse ? () => onEditHouse(house.id, 0) : undefined}
-                    editing={editingId === house.id}
-                  />
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
-      ) : null}
     </div>
   );
 }

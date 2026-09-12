@@ -851,7 +851,9 @@
 }
 
 /* Filtered-out houses stay visible for context; still tappable (unlike origin pick). */
-.is-filter-dim .pumpkin-pin-icon.is-filtered-out {
+.is-filter-dim .pumpkin-pin-icon.is-filtered-out,
+.is-filter-dim .house-pin.is-filtered-out,
+.is-filter-dim .pin-apt-dot.is-filtered-out {
   opacity: 0.38;
 }
 
@@ -1429,12 +1431,16 @@
 
 /* Filter sheet time fields — visible native input (Safari-friendly). */
 input[type="time"].filter-time-input {
-  display: block;
+  display: flex;
   width: 100%;
   min-height: 2.75rem;
   box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  padding-block: 0;
   direction: ltr;
   text-align: center;
+  line-height: 1;
   color-scheme: dark;
   cursor: pointer;
   -webkit-appearance: auto;
@@ -1443,10 +1449,69 @@ input[type="time"].filter-time-input {
 
 /* Keep Safari/iOS native time controls visible and tappable (no overlay trick). */
 input[type="time"].filter-time-input::-webkit-datetime-edit,
-input[type="time"].filter-time-input::-webkit-datetime-edit-fields-wrapper,
+input[type="time"].filter-time-input::-webkit-datetime-edit-fields-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+}
+
 input[type="time"].filter-time-input::-webkit-datetime-edit-hour-field,
 input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
-  text-align: center;
+  padding: 0;
+  line-height: 1;
+}
+
+.route-skipped-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.9rem;
+  border: 1px dashed rgba(167, 139, 250, 0.45);
+  background: rgba(76, 29, 149, 0.22);
+}
+
+.route-skipped-main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.15rem 0.25rem;
+  border: 0;
+  background: transparent;
+  color: #ddd6fe;
+  text-align: start;
+  cursor: pointer;
+}
+
+.route-skipped-badge {
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.35);
+  padding: 0.1rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e9d5ff;
+}
+
+.route-skipped-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.95rem;
+}
+
+.route-skipped-restore {
+  min-height: 2rem;
+  padding-inline: 0.65rem;
 }
 
 /* Hours: full-width border; native value hidden; overlay shows RTL-aligned time */

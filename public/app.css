@@ -403,9 +403,6 @@
   .my-1 {
     margin-block: var(--spacing);
   }
-  .ms-auto {
-    margin-inline-start: auto;
-  }
   .me-1\.5 {
     margin-inline-end: calc(var(--spacing) * 1.5);
   }
@@ -649,8 +646,8 @@
   .max-h-\(--available-height\) {
     max-height: var(--available-height);
   }
-  .max-h-32 {
-    max-height: calc(var(--spacing) * 32);
+  .max-h-40 {
+    max-height: calc(var(--spacing) * 40);
   }
   .max-h-56 {
     max-height: calc(var(--spacing) * 56);
@@ -703,8 +700,8 @@
   .w-\(--anchor-width\) {
     width: var(--anchor-width);
   }
-  .w-9 {
-    width: calc(var(--spacing) * 9);
+  .w-10 {
+    width: calc(var(--spacing) * 10);
   }
   .w-11 {
     width: calc(var(--spacing) * 11);
@@ -860,6 +857,9 @@
   .grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .grid-cols-\[auto_auto_minmax\(0\,1fr\)\] {
+    grid-template-columns: auto auto minmax(0,1fr);
+  }
   .grid-rows-\[auto_minmax\(0\,1fr\)\] {
     grid-template-rows: auto minmax(0,1fr);
   }
@@ -986,6 +986,9 @@
   }
   .gap-y-2 {
     row-gap: calc(var(--spacing) * 2);
+  }
+  .self-center {
+    align-self: center;
   }
   .self-start {
     align-self: flex-start;
@@ -1207,9 +1210,6 @@
   .bg-\[\#12081a\] {
     background-color: #12081a;
   }
-  .bg-\[\#12081a\]\/60 {
-    background-color: color-mix(in oklab, #12081a 60%, transparent);
-  }
   .bg-\[\#12081a\]\/80 {
     background-color: color-mix(in oklab, #12081a 80%, transparent);
   }
@@ -1376,6 +1376,12 @@
     background-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 20%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-orange-500) 20%, transparent);
+    }
+  }
+  .bg-orange-500\/25 {
+    background-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 25%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-orange-500) 25%, transparent);
     }
   }
   .bg-orange-950\/55 {
@@ -1648,9 +1654,6 @@
   .text-start {
     text-align: start;
   }
-  .align-baseline {
-    vertical-align: baseline;
-  }
   .font-display {
     font-family: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
   }
@@ -1759,12 +1762,6 @@
   }
   .text-amber-100 {
     color: var(--color-amber-100);
-  }
-  .text-amber-100\/90 {
-    color: color-mix(in srgb, oklch(96.2% 0.059 95.617) 90%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      color: color-mix(in oklab, var(--color-amber-100) 90%, transparent);
-    }
   }
   .text-amber-200 {
     color: var(--color-amber-200);
@@ -1978,6 +1975,9 @@
   .opacity-60 {
     opacity: 60%;
   }
+  .opacity-80 {
+    opacity: 80%;
+  }
   .opacity-100 {
     opacity: 100%;
   }
@@ -2078,6 +2078,12 @@
     --tw-ring-color: color-mix(in srgb, oklch(75% 0.183 55.934) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       --tw-ring-color: color-mix(in oklab, var(--color-orange-400) 40%, transparent);
+    }
+  }
+  .ring-orange-400\/50 {
+    --tw-ring-color: color-mix(in srgb, oklch(75% 0.183 55.934) 50%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--color-orange-400) 50%, transparent);
     }
   }
   .ring-orange-500\/10 {
@@ -2456,6 +2462,12 @@
     .hover\:text-muted-foreground:hover {
       color: var(--muted-foreground);
     }
+    .hover\:text-orange-100:hover {
+      color: var(--color-orange-100);
+    }
+    .hover\:text-orange-200:hover {
+      color: var(--color-orange-200);
+    }
     .hover\:text-violet-200:hover {
       color: var(--color-violet-200);
     }
@@ -2580,6 +2592,9 @@
   }
   .disabled\:opacity-50:disabled {
     opacity: 50%;
+  }
+  .disabled\:opacity-60:disabled {
+    opacity: 60%;
   }
   :where([data-slot="button-group"]) .in-data-\[slot\=button-group\]\:rounded-lg {
     border-radius: var(--radius);
@@ -3073,6 +3088,10 @@
   .\[\&_svg\]\:size-2\.5 svg {
     width: calc(var(--spacing) * 2.5);
     height: calc(var(--spacing) * 2.5);
+  }
+  .\[\&_svg\]\:size-5 svg {
+    width: calc(var(--spacing) * 5);
+    height: calc(var(--spacing) * 5);
   }
   .\[\&_svg\]\:size-full svg {
     width: 100%;
@@ -4550,7 +4569,9 @@ svg.leaflet-zoom-animated {
   opacity: 0.38;
   pointer-events: none;
 }
-.is-filter-dim .pumpkin-pin-icon.is-filtered-out {
+.is-filter-dim .pumpkin-pin-icon.is-filtered-out,
+.is-filter-dim .house-pin.is-filtered-out,
+.is-filter-dim .pin-apt-dot.is-filtered-out {
   opacity: 0.38;
 }
 .filter-mismatch-banner {
@@ -4830,6 +4851,10 @@ svg.leaflet-zoom-animated {
 .house-list-card.is-visited {
   border-color: #059669 !important;
   box-shadow: 0 0 0 4px #059669 !important;
+}
+.house-list-focus .house-list-card {
+  border-color: rgba(249, 115, 22, 0.75) !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.45) !important;
 }
 .route-card-spine {
   position: relative;

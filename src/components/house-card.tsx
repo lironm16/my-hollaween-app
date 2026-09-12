@@ -67,7 +67,6 @@ export function HouseCard({
       aria-label={interactive ? "פתיחת פרטי הבית" : undefined}
       className={cn(
         "house-list-card overflow-visible bg-[#1d1028]/90 text-base",
-        skipped && "is-skipped opacity-70",
         visited ? "is-visited ring-0" : "border-orange-500/15",
         interactive && "cursor-pointer transition hover:bg-[#261536]",
         interactive && !visited && "hover:border-orange-400/50",
