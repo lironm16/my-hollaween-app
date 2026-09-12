@@ -56,6 +56,7 @@ import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
 import { formatDistance } from "@/lib/geo";
 import { buildWalkingRoute, buildWalkingRouteOrdered } from "@/lib/route";
 import { diffRouteBySkippedIds, routeHousesAfterSkipChange } from "@/lib/route-changes";
+import { drainPendingRouteRestores } from "@/lib/route-mode";
 import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
 import { houseSelectionAnnouncement } from "@/lib/map-a11y";
 import type { Catalog, PublicHouse } from "@/lib/types";
@@ -305,6 +306,13 @@ export function NeighborhoodApp({
     );
   }
 
+  useEffect(() => {
+    if (!routeMode || houses.length === 0) return;
+    const pending = drainPendingRouteRestores();
+    if (pending.length === 0) return;
+    applyRouteAfterSkipChange(skips.skippedIds, true);
+  }, [routeMode, houses.length, skips.skippedIds.join("\0")]);
+
   function handleSkipHouse(id: string) {
     if (skips.skipped(id)) return;
     const nextSkippedIds = [id, ...skips.skippedIds.filter((item) => item !== id)];
@@ -342,7 +350,7 @@ export function NeighborhoodApp({
     });
   }
 
-  function handleRestoreHouse(id: string) {
+  function handleRestoreHouse(id: string, opts?: { direct?: boolean }) {
     if (!skips.skipped(id)) return;
     const nextSkippedIds = skips.skippedIds.filter((item) => item !== id);
     if (!routeMode) {
@@ -360,7 +368,7 @@ export function NeighborhoodApp({
       skips.unskip(id);
       return;
     }
-    if (shouldSkipRoutePrompt("filter-change")) {
+    if (opts?.direct || shouldSkipRoutePrompt("filter-change")) {
       skips.unskip(id);
       applyRouteAfterSkipChange(nextSkippedIds, added.length > 0);
       return;
@@ -687,7 +695,7 @@ export function NeighborhoodApp({
                   }
                   onRestoreRoute={
                     skips.skipped(mapSheetHouse.id)
-                      ? () => handleRestoreHouse(mapSheetHouse.id)
+                      ? () => handleRestoreHouse(mapSheetHouse.id, { direct: true })
                       : undefined
                   }
                   filterMismatchReasons={selectedFilterReasons}

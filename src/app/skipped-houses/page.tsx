@@ -13,6 +13,7 @@ import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useDistanceOrigin } from "@/hooks/use-distance-origin";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { buttonVariants } from "@/components/ui/button";
+import { queueRouteRestore, readRouteMode } from "@/lib/route-mode";
 import { cn } from "@/lib/utils";
 
 export default function SkippedHousesPage() {
@@ -37,6 +38,7 @@ export default function SkippedHousesPage() {
 
   function handleRestore(id: string) {
     skips.unskip(id);
+    if (readRouteMode()) queueRouteRestore(id);
     if (selectedId === id) setSelectedId(null);
   }
 

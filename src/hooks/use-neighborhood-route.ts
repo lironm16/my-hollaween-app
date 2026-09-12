@@ -11,6 +11,7 @@ import { routeCandidateHouses } from "@/lib/route-changes";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
+import { readRouteMode, writeRouteMode } from "@/lib/route-mode";
 import type { PublicHouse } from "@/lib/types";
 
 function originPoint(origin: ResolvedOrigin) {
@@ -50,7 +51,7 @@ export function useNeighborhoodRoute({
   setAskedLocation: (value: boolean) => void;
   onBeforeEnter: () => void;
 }) {
-  const [routeMode, setRouteMode] = useState(false);
+  const [routeMode, setRouteMode] = useState(() => readRouteMode());
   const [pinnedRoute, setPinnedRoute] = useState<WalkingRoute | null>(null);
   const [routeFitTick, setRouteFitTick] = useState(0);
   const pendingRouteGps = useRef(false);
@@ -137,8 +138,14 @@ export function useNeighborhoodRoute({
     routeCandidates,
   ]);
 
+  useEffect(() => {
+    if (!routeMode || pinnedRoute) return;
+    pinCurrentRoute(false);
+  }, [routeMode, pinnedRoute, pinCurrentRoute]);
+
   function exitRouteMode() {
     pendingRouteGps.current = false;
+    writeRouteMode(false);
     setRouteMode(false);
     setPinnedRoute(null);
   }
@@ -147,6 +154,7 @@ export function useNeighborhoodRoute({
     if (routeMode) return;
     const proceed = () => {
       onBeforeEnter();
+      writeRouteMode(true);
       setRouteMode(true);
       if (origin.kind === "gps" && !gps) {
         pendingRouteGps.current = true;
