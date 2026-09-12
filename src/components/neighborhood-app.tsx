@@ -16,6 +16,7 @@ import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
 import { RouteConfirmDialog } from "@/components/route-confirm-dialog";
+import { LikeCheer } from "@/components/like-cheer";
 import { VisitCheer } from "@/components/visit-cheer";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
@@ -109,7 +110,7 @@ export function NeighborhoodApp({
   const skips = useSkippedHouses();
   const owned = useOwnedHouses();
   const now = useAppNow();
-  const { onToggleLike, onToggleVisited, visitCheer } = useHouseActions(likes, visits);
+  const { onToggleLike, onToggleVisited, visitCheer, likeCheer } = useHouseActions(likes, visits);
 
   useEffect(() => {
     applyClockSearchParams(window.location.search);
@@ -837,6 +838,7 @@ export function NeighborhoodApp({
         onCancel={() => setRoutePrompt(null)}
       />
       <VisitCheer show={visitCheer} />
+      <LikeCheer show={likeCheer} />
       <HouseEditFlowPanels
         flow={editFlow.flow}
         setFlow={editFlow.setFlow}
