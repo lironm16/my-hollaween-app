@@ -84,6 +84,24 @@ export function MapHouseSheet({
   const clusterKey = clusterHouses.map((item) => item.id).join(",");
   const canEditSelected = Boolean(canEditHouse?.(house.id) && onToggleEdit);
   const height = dragH ?? sheetH;
+  const actionMenu = (
+    <HouseActionBar
+      house={house}
+      navOnly={overview}
+      liked={liked?.(house.id)}
+      visited={visited?.(house.id)}
+      onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
+      onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
+      onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
+      onShowOnMap={onShowOnMap}
+      onShowInList={onShowInList}
+      onSkip={onSkip}
+      onRestoreRoute={onRestoreRoute}
+      skipped={skipped}
+      editing={editing}
+      menuPlacement="top"
+    />
+  );
 
   useEffect(() => {
     setSheetH(null);
@@ -206,29 +224,15 @@ export function MapHouseSheet({
         <div className="map-house-sheet-handle-hit">
           <div className="map-house-sheet-handle" />
         </div>
-        <HouseActionBar
-          className="map-house-sheet-menu"
-          house={house}
-          navOnly={overview}
-          liked={liked?.(house.id)}
-          visited={visited?.(house.id)}
-          onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-          onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
-          onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
-          onShowOnMap={onShowOnMap}
-          onShowInList={onShowInList}
-          onSkip={onSkip}
-          onRestoreRoute={onRestoreRoute}
-          skipped={skipped}
-          editing={editing}
-          menuPlacement="top"
-        />
       </div>
       <div ref={bodyRef} className="map-house-sheet-body">
         {overview ? (
-          <div id={labelId}>
-            <p className="map-house-sheet-kicker">{address}</p>
-            <p className="map-house-sheet-sub">{clusterHouses.length} בתים</p>
+          <div id={labelId} className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="map-house-sheet-kicker">{address}</p>
+              <p className="map-house-sheet-sub">{clusterHouses.length} בתים</p>
+            </div>
+            {actionMenu}
           </div>
         ) : (
           <>
@@ -264,6 +268,7 @@ export function MapHouseSheet({
                     extra={extra}
                     chrome="sheet"
                     index={index}
+                    headerMenu={actionMenu}
                   />
                 )}
               </section>

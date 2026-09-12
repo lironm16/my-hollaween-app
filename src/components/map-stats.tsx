@@ -51,8 +51,8 @@ function SkipSummaryIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden className="size-full text-slate-300">
       <circle cx="12" cy="12" r="10" fill="#64748b" />
-      <path fill="#fff" d="M3.5 5 12.5 12 3.5 19Z" />
-      <rect fill="#fff" x="13.75" y="5" width="4.25" height="14" rx="2.125" />
+      <path fill="#fff" d="M2.5 3.5 13 12 2.5 20.5Z" />
+      <rect fill="#fff" x="14" y="3.5" width="5" height="17" rx="2.5" />
     </svg>
   );
 }

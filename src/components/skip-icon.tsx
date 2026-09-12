@@ -1,7 +1,7 @@
 /** Skip-forward icon: filled triangle + thick bar with rounded caps (⏭ style). */
 export const skipIconPaths = {
-  triangle: "M3.5 5 12.5 12 3.5 19Z",
-  bar: { x: 13.75, y: 5, width: 4.25, height: 14, rx: 2.125 },
+  triangle: "M2.5 3.5 13 12 2.5 20.5Z",
+  bar: { x: 14, y: 3.5, width: 5, height: 17, rx: 2.5 },
 } as const;
 
 function skipIconMarkup(fill: string) {
@@ -19,7 +19,7 @@ export function SkipIcon({ className }: { className?: string }) {
   );
 }
 
-export const SKIP_ICON_SVG = `<svg class="pin-skip-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">${skipIconMarkup("#fff")}</svg>`;
+export const SKIP_ICON_SVG = `<svg class="pin-skip-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">${skipIconMarkup("#fff")}</svg>`;
 
 export const SKIP_ICON_DATA_URI = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${skipIconMarkup("#fff")}</svg>`,

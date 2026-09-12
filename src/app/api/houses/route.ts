@@ -26,7 +26,11 @@ export async function POST(request: Request) {
     const house = await submitHouse(parsed.data, {
       includeEndpoint: readIncludeEndpoint(json),
     });
-    await grantOwnerHouse(house.house.id);
+    try {
+      await grantOwnerHouse(house.house.id);
+    } catch {
+      /* owner cookie is optional — house is already saved */
+    }
     return NextResponse.json({
       house: toPublicHouse(house.house),
       editCode: house.house.editCode,
