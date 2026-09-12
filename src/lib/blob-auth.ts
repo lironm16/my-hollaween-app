@@ -15,6 +15,11 @@ export function blobConfigured() {
   return Boolean(blobStoreId() || process.env.BLOB_READ_WRITE_TOKEN?.trim());
 }
 
+/** Reserve Vercel Blob quota for houses/photos — not hearts/visited counters. */
+export function blobForEphemeralCounters() {
+  return blobConfigured() && process.env.VERCEL !== "1";
+}
+
 export function blobStoreOptions() {
   const storeId = blobStoreId();
   return storeId ? { storeId } : {};
