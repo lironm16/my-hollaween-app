@@ -659,22 +659,23 @@
 
 .pin-apt-dots {
   position: absolute;
-  left: 50%;
-  right: auto;
-  bottom: -15px;
+  left: 0;
+  right: 0;
+  bottom: -18px;
   z-index: 4;
   display: flex;
   flex-direction: row;
+  justify-content: center;
   direction: ltr;
   pointer-events: none;
-  transform: translateX(-50%);
 }
 
 .pin-apt-dot {
   position: relative;
+  flex: 0 0 auto;
   width: 24px;
   height: 24px;
-  margin-inline-end: -8px;
+  margin-right: -8px;
   border-radius: 999px;
   border: 1.5px solid #fff7ed;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
@@ -684,7 +685,7 @@
 }
 
 .pin-apt-dot:last-child {
-  margin-inline-end: 0;
+  margin-right: 0;
 }
 
 .pin-apt-dot.is-plenty,
@@ -763,20 +764,23 @@
 }
 
 .pin-houses {
-  position: relative;
+  position: absolute;
+  left: 50%;
+  top: 42%;
   z-index: 5;
   display: block;
-  width: 42px;
-  height: 32px;
+  width: 40px;
+  height: 30px;
   flex-shrink: 0;
   font-size: 0;
   line-height: 0;
+  transform: translate(-50%, -50%);
 }
 
 .pin-houses i {
   position: absolute;
-  width: 21px;
-  height: 15px;
+  width: 20px;
+  height: 14px;
   background: #fb923c;
   border-radius: 1px;
 }
@@ -785,15 +789,15 @@
   content: "";
   position: absolute;
   left: -2px;
-  top: -10px;
-  border-left: 12.5px solid transparent;
-  border-right: 12.5px solid transparent;
-  border-bottom: 10px solid #fb923c;
+  top: -9px;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 9px solid #fb923c;
 }
 
 .pin-houses i:first-child {
-  left: 12px;
-  top: 0;
+  left: 13px;
+  top: 2px;
   background: #ffedd5;
 }
 
@@ -802,8 +806,8 @@
 }
 
 .pin-houses i:last-child {
-  left: 1px;
-  top: 10px;
+  left: 3px;
+  top: 12px;
 }
 
 .house-pin span,
@@ -1703,40 +1707,30 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 }
 
 .house-pin.is-legend .pin-houses {
-  width: 46px;
-  height: 35px;
+  width: 44px;
+  height: 33px;
 }
 
 .house-pin.is-legend .pin-houses i {
-  width: 23px;
-  height: 16px;
+  width: 22px;
+  height: 15px;
 }
 
 .house-pin.is-legend .pin-houses i:before {
-  top: -11px;
-  border-left-width: 13.5px;
-  border-right-width: 13.5px;
-  border-bottom-width: 11px;
+  top: -10px;
+  border-left-width: 13px;
+  border-right-width: 13px;
+  border-bottom-width: 10px;
 }
 
 .house-pin.is-legend .pin-houses i:first-child {
-  left: 13px;
+  left: 14px;
+  top: 2px;
 }
 
 .house-pin.is-legend .pin-houses i:last-child {
-  left: 1px;
-  top: 11px;
-}
-
-.house-pin.is-legend .pin-apt-dots {
-  bottom: 3px;
-}
-
-.house-pin.is-legend .pin-apt-dot {
-  width: 17px;
-  height: 17px;
-  margin-inline-end: -6px;
-  border-width: 1.25px;
+  left: 3px;
+  top: 13px;
 }
 
 .map-house-sheet {
