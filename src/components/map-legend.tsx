@@ -100,7 +100,7 @@ const GROUPS: { title: string; items: { key: string; label: string; node: ReactN
       { key: "open", label: "נפתח בקרוב", node: <SwatchPin scare="mild" hours="opening" /> },
       { key: "multi", label: "כמה בתים", node: <SwatchPin multi /> },
       { key: "visited", label: "ביקרתי", node: <SwatchPin scare="mild" visited /> },
-      { key: "skipped", label: "לניסיון הבא", node: <SwatchPin scare="mild" skipped /> },
+      { key: "skipped", label: "דילגתי", node: <SwatchPin scare="mild" skipped /> },
     ],
   },
 ];

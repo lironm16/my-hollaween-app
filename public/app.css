@@ -1431,9 +1431,6 @@
       background-color: color-mix(in oklab, var(--color-sky-950) 50%, transparent);
     }
   }
-  .bg-slate-500 {
-    background-color: var(--color-slate-500);
-  }
   .bg-transparent {
     background-color: transparent;
   }
@@ -2143,12 +2140,6 @@
     --tw-ring-color: color-mix(in srgb, oklch(74.6% 0.16 232.661) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       --tw-ring-color: color-mix(in oklab, var(--color-sky-400) 40%, transparent);
-    }
-  }
-  .ring-slate-400\/40 {
-    --tw-ring-color: color-mix(in srgb, oklch(70.4% 0.04 256.788) 40%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      --tw-ring-color: color-mix(in oklab, var(--color-slate-400) 40%, transparent);
     }
   }
   .ring-violet-400\/30 {
@@ -4775,18 +4766,36 @@ svg.leaflet-zoom-animated {
   background: #fff;
   flex-shrink: 0;
 }
+.skip-pin-badge,
 .house-pin .pin-status.is-skipped,
 .pumpkin-pin .pin-status.is-skipped {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1.5px solid #fff7ed;
   background: #64748b;
-  border-color: #fff;
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  flex-shrink: 0;
 }
+.skip-pin-badge.is-list {
+  width: 32px;
+  height: 32px;
+}
+.skip-pin-badge-icon,
 .house-pin .pin-status.is-skipped .pin-skip-icon,
 .pumpkin-pin .pin-status.is-skipped .pin-skip-icon {
   display: block;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
+}
+.skip-pin-badge.is-list .skip-pin-badge-icon {
+  width: 16px;
+  height: 16px;
 }
 .pin-apt-dot.is-skipped {
   background-color: #64748b;
@@ -5200,18 +5209,6 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   color: #ddd6fe;
   text-align: start;
   cursor: pointer;
-}
-.route-skipped-badge {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 0.25rem;
-  border-radius: 999px;
-  background: #64748b;
-  padding: 0.15rem 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #f8fafc;
 }
 .route-skipped-name {
   min-width: 0;
