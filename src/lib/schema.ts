@@ -102,6 +102,4 @@ export const adminPatchSchema = houseFields.partial().extend({
   ownerFrozenUntil: z.string().nullable().optional(),
   adminFrozen: z.boolean().optional(),
   photoUrl: z.union([photoUrlSchema, z.literal("")]).optional(),
-  status: z.enum(["pending", "approved", "rejected"]).optional(),
-  rejectionReason: z.string().max(240).optional(),
 });

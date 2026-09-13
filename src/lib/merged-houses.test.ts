@@ -21,7 +21,6 @@ function publicHouse(id: string, updatedAt: string): PublicHouse {
     openTo: "21:00",
     notes: "",
     accessible: false,
-    status: "approved",
     soldOut: false,
     adminFrozen: false,
     ownerFrozenUntil: null,
@@ -31,11 +30,10 @@ function publicHouse(id: string, updatedAt: string): PublicHouse {
   } as PublicHouse;
 }
 
-function adminHouse(id: string, updatedAt: string, status: House["status"] = "approved"): House {
+function adminHouse(id: string, updatedAt: string): House {
   return {
     ...publicHouse(id, updatedAt),
     editCode: "123456",
-    status,
   } as House;
 }
 

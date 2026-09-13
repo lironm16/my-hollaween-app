@@ -36,7 +36,6 @@ export function MapHouseSheet({
   canEditHouse,
   editing,
   onToggleEdit,
-  pendingNote,
   onShowOnMap,
   onShowInList,
   onSkip,
@@ -60,7 +59,6 @@ export function MapHouseSheet({
   canEditHouse?: (id: string) => boolean;
   editing?: boolean;
   onToggleEdit?: () => void;
-  pendingNote?: ReactNode;
   onShowOnMap?: () => void;
   onShowInList?: () => void;
   onSkip?: () => void;
@@ -246,7 +244,6 @@ export function MapHouseSheet({
                   reasons={filterMismatchReasons}
                   onRestoreRoute={onRestoreRoute}
                 />
-                {pendingNote}
                 {editing ? (
                   <>
                     <p className="map-house-sheet-kicker">{houseHeadline(house)}</p>

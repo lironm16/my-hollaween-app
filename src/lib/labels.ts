@@ -1,7 +1,6 @@
 import {
   HOUSE_THEMES,
   type DecorLevel,
-  type HouseStatus,
   type HouseTheme,
   type ScareLevel,
   type StockLevel,
@@ -119,10 +118,4 @@ export const stockLabels: Record<StockLevel, string> = {
   plenty: "יש",
   low: "מעט",
   out: "נגמר",
-};
-
-export const statusLabels: Record<HouseStatus, string> = {
-  pending: "ממתין לאישור",
-  approved: "מאושר",
-  rejected: "נדחה",
 };

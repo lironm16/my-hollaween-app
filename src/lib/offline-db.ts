@@ -356,7 +356,7 @@ const SERVER_DB_KEY = "hw-server-db-backup";
 
 export type ServerDbBackup = {
   updatedAt: string;
-  houses: Array<Record<string, unknown> & { id: string; status: string; updatedAt: string }>;
+  houses: Array<Record<string, unknown> & { id: string; updatedAt: string }>;
 };
 
 export function loadServerDbBackup(): ServerDbBackup | null {
@@ -381,11 +381,9 @@ export function saveServerDbBackup(db: ServerDbBackup) {
   }
 }
 
-export function backupLooksNewer(backup: ServerDbBackup, serverUpdatedAt: string, serverHouses: Array<{ status: string }>) {
+export function backupLooksNewer(backup: ServerDbBackup, serverUpdatedAt: string, serverHouses: unknown[]) {
   if (stamp(backup.updatedAt) > stamp(serverUpdatedAt)) return true;
-  const backupApproved = backup.houses.filter((h) => h.status === "approved").length;
-  const serverApproved = serverHouses.filter((h) => h.status === "approved").length;
-  return backupApproved > serverApproved;
+  return backup.houses.length > serverHouses.length;
 }
 
 const FILTERS_KEY = "hw-house-filters";

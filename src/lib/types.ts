@@ -35,9 +35,6 @@ export const HOUSE_THEMES = [
 ] as const;
 export type HouseTheme = (typeof HOUSE_THEMES)[number];
 
-export const HOUSE_STATUSES = ["pending", "approved", "rejected"] as const;
-export type HouseStatus = (typeof HOUSE_STATUSES)[number];
-
 export const STOCK_LEVELS = ["plenty", "low", "out"] as const;
 export type StockLevel = (typeof STOCK_LEVELS)[number];
 
@@ -79,7 +76,6 @@ export type House = {
   /** Four-level outdoor decoration. `decorated` is kept in sync for older records. */
   decorLevel?: DecorLevel;
   decorated?: boolean;
-  status: HouseStatus;
   soldOut: boolean;
   adminFrozen: boolean;
   ownerFrozenUntil: string | null;
@@ -87,7 +83,6 @@ export type House = {
   editCode: string;
   createdAt: string;
   updatedAt: string;
-  rejectionReason?: string;
   /** Remote document id; never sent to the public catalog. */
   storeId?: string;
 };
@@ -128,7 +123,7 @@ export type NightPatch = {
   photoUrl?: string;
 };
 
-export type PublicHouse = Omit<House, "editCode" | "rejectionReason" | "storeId">;
+export type PublicHouse = Omit<House, "editCode" | "storeId">;
 
 export type CatalogPushTemplate = {
   enabled: boolean;
