@@ -3,7 +3,7 @@ import path from "node:path";
 import { get as getBlob, put as putBlob } from "@vercel/blob";
 import { canonicalAddressForBuilding } from "@/lib/house-clusters";
 import { canonicalHouseId, newEditCode, newPublicId, sameHouseId, toPublicHouse } from "@/lib/ids";
-import { config, formatDisplayAddress, inNeighborhood } from "@/lib/config";
+import { config, formatDisplayAddress } from "@/lib/config";
 import { assertRealAddress } from "@/lib/geocode";
 import {
   defaultTreatStock,
@@ -804,58 +804,23 @@ export async function submitHouse(
   return { house, push };
 }
 
-export async function updateByEditCode(
-  id: string,
-  editCode: string,
-  patch: Partial<HouseInput> & NightPatch,
-  options?: { includeEndpoint?: string },
-) {
-  const current = await getHouse(id);
-  if (!current) return { error: "missing" as const };
-  if (current.editCode !== editCode) return { error: "forbidden" as const };
-  const prev = snapshotHouse(current);
-  if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
-    await assertRealAddress({
-      address: patch.address ?? current.address,
-      lat: patch.lat ?? current.lat,
-      lng: patch.lng ?? current.lng,
-    });
-  }
-  const updated = await runSyncedWrite((db) => {
-    const house = findHouseIn(db.houses, id);
-    if (!house || house.editCode !== editCode) return null;
-    if (patch.lat !== undefined && patch.lng !== undefined) {
-      if (!inNeighborhood(patch.lat, patch.lng)) {
-        throw new Error("OUT_OF_BOUNDS");
-      }
-    }
-    const clean = sanitizeOwnerPatch(patch);
-    if (clean.treatStock) {
-      house.treatStock = { ...house.treatStock, ...clean.treatStock };
-      delete clean.treatStock;
-    }
-    Object.assign(house, clean);
-    if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
-      house.address = formatDisplayAddress(house);
-    }
-    if (house.photoUrl) {
-      const parsed = parsePhotoUrl(house.photoUrl);
-      if (parsed !== null) house.photoUrl = parsed;
-    }
-    const decor = syncDecorFields(house);
-    house.decorLevel = decor.decorLevel;
-    house.decorated = decor.decorated;
-    house.updatedAt = new Date().toISOString();
-    if (house.status === "rejected") house.status = "approved";
-    db.updatedAt = house.updatedAt;
-    return house;
-  });
-  if (!updated) return { error: "missing" as const };
-  const push = await dispatchHousePush(prev, updated, undefined, patch, options?.includeEndpoint);
-  return { house: updated, push };
+function ownerAddressChanged(current: House, patch: Partial<HouseInput> & NightPatch) {
+  if (patch.address !== undefined && patch.address.trim() !== current.address.trim()) return true;
+  if (patch.lat !== undefined && patch.lat !== current.lat) return true;
+  if (patch.lng !== undefined && patch.lng !== current.lng) return true;
+  return false;
 }
 
-function applyQuickPatch(house: House, patch: Partial<HouseInput> & NightPatch) {
+async function validateOwnerAddressChange(current: House, patch: Partial<HouseInput> & NightPatch) {
+  if (!ownerAddressChanged(current, patch)) return;
+  await assertRealAddress({
+    address: patch.address ?? current.address,
+    lat: patch.lat ?? current.lat,
+    lng: patch.lng ?? current.lng,
+  });
+}
+
+function applyOwnerPatch(house: House, patch: Partial<HouseInput> & NightPatch) {
   const clean = sanitizeOwnerPatch(patch);
   if (clean.treatStock) {
     house.treatStock = { ...house.treatStock, ...clean.treatStock };
@@ -863,11 +828,19 @@ function applyQuickPatch(house: House, patch: Partial<HouseInput> & NightPatch) 
   }
   Object.assign(house, clean);
   if (patch.ownerFrozenUntil !== undefined) house.ownerFrozenUntil = patch.ownerFrozenUntil;
+  if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
+    house.address = formatDisplayAddress(house);
+  }
+  if (house.photoUrl) {
+    const parsed = parsePhotoUrl(house.photoUrl);
+    if (parsed !== null) house.photoUrl = parsed;
+  }
   const decor = syncDecorFields(house);
   house.decorLevel = decor.decorLevel;
   house.decorated = decor.decorated;
   house.updatedAt = new Date().toISOString();
   house.soldOut = house.visit === "closed";
+  if (house.status === "rejected") house.status = "approved";
 }
 
 function upsertMemHouse(house: House, updatedAt: string) {
@@ -879,32 +852,55 @@ function upsertMemHouse(house: House, updatedAt: string) {
   setMem(db);
 }
 
-/** Candy / visit / pause — one house doc read+write on Firestore instead of loading the full db. */
-export async function quickUpdateByEditCode(
+async function patchHouseDoc(
+  docId: string,
+  editCode: string,
+  patch: Partial<HouseInput> & NightPatch,
+  options?: { includeEndpoint?: string },
+) {
+  const existing =
+    (firestoreConfigured() ? await readFirestoreHouse(docId) : null) ??
+    findHouseIn(mem?.houses ?? [], docId) ??
+    (await getHouse(docId));
+  if (!existing) return { error: "missing" as const };
+  if (existing.editCode !== editCode) return { error: "forbidden" as const };
+
+  await validateOwnerAddressChange(existing, patch);
+
+  const prev = snapshotHouse(existing);
+  const house = normalizeHouse({ ...existing });
+  applyOwnerPatch(house, patch);
+
+  if (firestoreConfigured()) {
+    await writeFirestoreHouse(house);
+    upsertMemHouse(house, house.updatedAt);
+  } else {
+    const updated = await runSyncedWrite((db) => {
+      const row = findHouseIn(db.houses, docId);
+      if (!row || row.editCode !== editCode) return null;
+      applyOwnerPatch(row, patch);
+      db.updatedAt = row.updatedAt;
+      return row;
+    });
+    if (!updated) return { error: "missing" as const };
+  }
+
+  const push = await dispatchHousePush(prev, house, undefined, patch, options?.includeEndpoint);
+  return { house, push };
+}
+
+/** Owner patch — partial fields merged onto one house doc (1 Firestore read + 1 write). */
+export async function updateByEditCode(
   id: string,
   editCode: string,
   patch: Partial<HouseInput> & NightPatch,
   options?: { includeEndpoint?: string },
 ) {
   const docId = canonicalHouseId(id);
-  if (!firestoreConfigured()) {
-    return updateByEditCode(docId, editCode, patch, options);
+  if (firestoreConfigured()) {
+    return withLock(() => patchHouseDoc(docId, editCode, patch, options));
   }
-
-  return withLock(async () => {
-    const existing = (await readFirestoreHouse(docId)) ?? findHouseIn(mem?.houses ?? [], docId);
-    if (!existing) return { error: "missing" as const };
-    if (existing.editCode !== editCode) return { error: "forbidden" as const };
-
-    const prev = snapshotHouse(existing);
-    const house = normalizeHouse({ ...existing });
-    applyQuickPatch(house, patch);
-    await writeFirestoreHouse(house);
-    upsertMemHouse(house, house.updatedAt);
-
-    const push = await dispatchHousePush(prev, house, undefined, patch, options?.includeEndpoint);
-    return { house, push };
-  });
+  return patchHouseDoc(docId, editCode, patch, options);
 }
 
 export async function deleteByEditCode(id: string, editCode: string) {
@@ -964,21 +960,10 @@ export async function adminUpdate(
   const current = await getHouse(id);
   if (!current) return null;
   const prev = snapshotHouse(current);
-  if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
-    await assertRealAddress({
-      address: patch.address ?? current.address,
-      lat: patch.lat ?? current.lat,
-      lng: patch.lng ?? current.lng,
-    });
-  }
+  await validateOwnerAddressChange(current, patch);
   const updated = await runSyncedWrite((db) => {
     const house = findHouseIn(db.houses, id);
     if (!house) return null;
-    if (patch.lat !== undefined && patch.lng !== undefined) {
-      if (!inNeighborhood(patch.lat, patch.lng)) {
-        throw new Error("OUT_OF_BOUNDS");
-      }
-    }
     if (patch.name !== undefined) house.name = patch.name;
     if (patch.theme !== undefined) house.theme = patch.theme;
     if (patch.address !== undefined) house.address = patch.address;
