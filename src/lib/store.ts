@@ -18,6 +18,7 @@ import { parsePhotoUrl } from "@/lib/photos";
 import {
   HOUSE_THEMES,
   type Catalog,
+  type CatalogDelta,
   type DbFile,
   type House,
   type HouseInput,
@@ -60,9 +61,12 @@ import {
 } from "@/lib/blob-auth";
 import {
   firestoreConfigured,
-  readFirestoreCatalog,
+  queryFirestoreHousesSince,
+  queryRemovedHouseIdsSince,
   readFirestoreDb,
+  readFirestoreHouse,
   writeFirestoreDb,
+  writeFirestoreHouse,
   writeFirestorePushSettings,
 } from "@/lib/firestore-db";
 import {
@@ -417,9 +421,8 @@ async function readFileDb(): Promise<DbFile> {
     }
     const blob = await readBlobDb();
     const seed = normalizeDb(blob ?? (await readSeed()));
-    const catalog = asCatalog(seed.houses, seed.updatedAt, seed.pushSettings);
     try {
-      await writeFirestoreDb({ db: seed, catalog, prev: null });
+      await writeFirestoreDb({ db: seed, prev: null });
     } catch (error) {
       console.error("[store] firestore bootstrap failed", error);
     }
@@ -481,11 +484,7 @@ async function persistPushSettings(
 
 async function writeDurableDb(db: DbFile, prev?: DbFile | null) {
   if (firestoreConfigured()) {
-    await writeFirestoreDb({
-      db,
-      catalog: asCatalog(db.houses, db.updatedAt, db.pushSettings),
-      prev,
-    });
+    await writeFirestoreDb({ db, prev });
     return;
   }
   if (blobConfigured()) {
@@ -612,6 +611,14 @@ async function loadDb(fresh = false): Promise<DbFile> {
 }
 
 async function prepareDbFromSources(): Promise<DbFile> {
+  if (firestoreConfigured() && mem && Date.now() - memAt < MEM_TTL_MS) {
+    const db = normalizeDb(cloneDb(mem));
+    const keptPush = db.pushSettings;
+    const global = getGlobalDb();
+    foldPushSettings(db, asPushCandidate(keptPush), global);
+    foldPushSubscriptions(db, global);
+    return db;
+  }
   const db = normalizeDb(cloneDb(await readFileDb()));
   const keptPush = db.pushSettings;
   const global = getGlobalDb();
@@ -629,11 +636,7 @@ async function softPersistDb(db: DbFile) {
   setGlobalDb(db);
   try {
     if (firestoreConfigured()) {
-      await writeFirestoreDb({
-        db,
-        catalog: asCatalog(db.houses, db.updatedAt, db.pushSettings),
-        prev: mem,
-      });
+      await writeFirestoreDb({ db, prev: mem });
     } else if (blobConfigured()) await writeBlobDb(db);
     else await writeFileDb(db);
   } catch {
@@ -678,16 +681,45 @@ export function asCatalog(
 
 export async function getCatalog(): Promise<Catalog> {
   await ensurePushSettingsGeneration();
-  if (firestoreConfigured()) {
-    const direct = await readFirestoreCatalog();
-    if (direct) {
-      catalogMem = direct;
-      return direct;
-    }
-  }
   const db = await loadDb();
   catalogMem = asCatalog(db.houses, db.updatedAt, db.pushSettings);
   return catalogMem;
+}
+
+export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
+  await ensurePushSettingsGeneration();
+  const sinceMs = Date.parse(since);
+  if (!Number.isFinite(sinceMs) || sinceMs <= 0) {
+    const full = await getCatalog();
+    return { ...full, full: true };
+  }
+
+  const db = await loadDb();
+  let houses: PublicHouse[];
+  let removed: string[];
+
+  if (firestoreConfigured()) {
+    [houses, removed] = await Promise.all([
+      queryFirestoreHousesSince(since),
+      queryRemovedHouseIdsSince(since),
+    ]);
+  } else {
+    houses = db.houses
+      .filter((house) => isPubliclyListed(house) && stamp(house) > sinceMs)
+      .map((house) => toPublicHouse(house) as PublicHouse);
+    removed = [];
+  }
+
+  const pushChanged = pushSettingsStamp(db.pushSettings) > sinceMs;
+  return {
+    updatedAt: db.updatedAt,
+    neighborhood: config.neighborhood,
+    houses,
+    removed,
+    ...(pushChanged
+      ? { pushTemplates: asCatalog(db.houses, db.updatedAt, db.pushSettings).pushTemplates }
+      : {}),
+  };
 }
 
 export async function getAllHouses(): Promise<House[]> {
@@ -821,6 +853,58 @@ export async function updateByEditCode(
   if (!updated) return { error: "missing" as const };
   const push = await dispatchHousePush(prev, updated, undefined, patch, options?.includeEndpoint);
   return { house: updated, push };
+}
+
+function applyQuickPatch(house: House, patch: Partial<HouseInput> & NightPatch) {
+  const clean = sanitizeOwnerPatch(patch);
+  if (clean.treatStock) {
+    house.treatStock = { ...house.treatStock, ...clean.treatStock };
+    delete clean.treatStock;
+  }
+  Object.assign(house, clean);
+  if (patch.ownerFrozenUntil !== undefined) house.ownerFrozenUntil = patch.ownerFrozenUntil;
+  const decor = syncDecorFields(house);
+  house.decorLevel = decor.decorLevel;
+  house.decorated = decor.decorated;
+  house.updatedAt = new Date().toISOString();
+  house.soldOut = house.visit === "closed";
+}
+
+function upsertMemHouse(house: House, updatedAt: string) {
+  const db = mem ? cloneDb(mem) : { updatedAt, houses: [] as House[] };
+  const idx = db.houses.findIndex((item) => sameHouseId(item.id, house.id));
+  if (idx >= 0) db.houses[idx] = house;
+  else db.houses.push(house);
+  db.updatedAt = updatedAt;
+  setMem(db);
+}
+
+/** Candy / visit / pause — one house doc read+write on Firestore instead of loading the full db. */
+export async function quickUpdateByEditCode(
+  id: string,
+  editCode: string,
+  patch: Partial<HouseInput> & NightPatch,
+  options?: { includeEndpoint?: string },
+) {
+  const docId = canonicalHouseId(id);
+  if (!firestoreConfigured()) {
+    return updateByEditCode(docId, editCode, patch, options);
+  }
+
+  return withLock(async () => {
+    const existing = (await readFirestoreHouse(docId)) ?? findHouseIn(mem?.houses ?? [], docId);
+    if (!existing) return { error: "missing" as const };
+    if (existing.editCode !== editCode) return { error: "forbidden" as const };
+
+    const prev = snapshotHouse(existing);
+    const house = normalizeHouse({ ...existing });
+    applyQuickPatch(house, patch);
+    await writeFirestoreHouse(house);
+    upsertMemHouse(house, house.updatedAt);
+
+    const push = await dispatchHousePush(prev, house, undefined, patch, options?.includeEndpoint);
+    return { house, push };
+  });
 }
 
 export async function deleteByEditCode(id: string, editCode: string) {

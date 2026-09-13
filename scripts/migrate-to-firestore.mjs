@@ -42,21 +42,6 @@ function pushEndpointDocId(endpoint) {
   return createHash("sha256").update(endpoint).digest("hex").slice(0, 40);
 }
 
-function asCatalog(db, neighborhood) {
-  const houses = (db.houses ?? [])
-    .filter((h) => h.status === "approved" || !h.status)
-    .map((h) => {
-      const { editCode, rejectionReason, ...rest } = h;
-      return rest;
-    });
-  return {
-    updatedAt: db.updatedAt ?? new Date().toISOString(),
-    neighborhood,
-    houses,
-    pushTemplates: db.pushSettings?.templates ?? {},
-  };
-}
-
 async function loadSource() {
   const source = process.env.MIGRATE_SOURCE?.trim() || join(root, "data", "seed.json");
   if (existsSync(source)) {
@@ -86,11 +71,6 @@ async function main() {
   const rootRef = db.collection("neighborhoods").doc(nId);
   const housesCol = rootRef.collection("houses");
   const data = await loadSource();
-  const neighborhood =
-    process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME?.trim() ||
-    "שיכון ותיקים · חרוזים · נחלת גנים";
-  const catalog = asCatalog(data, neighborhood);
-
   const houses = data.houses ?? [];
   console.log(`Writing ${houses.length} houses to neighborhoods/${nId}/houses`);
   for (let i = 0; i < houses.length; i += 400) {
@@ -103,7 +83,6 @@ async function main() {
     await batch.commit();
   }
 
-  await rootRef.collection("meta").doc("catalog").set(catalog, { merge: false });
   if (data.pushSettings?.templates) {
     await rootRef.collection("meta").doc("pushSettings").set(data.pushSettings, { merge: true });
   }
@@ -123,7 +102,8 @@ async function main() {
     console.log(`Wrote ${subs.length} push subscriptions`);
   }
 
-  console.log(`Done. Catalog has ${catalog.houses.length} public houses.`);
+  const publicCount = houses.filter((h) => h.status === "approved" || !h.status).length;
+  console.log(`Done. Wrote ${houses.length} houses (${publicCount} public).`);
 }
 
 main().catch((error) => {

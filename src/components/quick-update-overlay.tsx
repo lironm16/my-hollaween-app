@@ -96,7 +96,7 @@ export function QuickUpdateOverlay({
         const next = applyLocalHousePatch(house, patch);
         const url = admin
           ? `/api/admin/houses/${encodeURIComponent(house.id)}`
-          : `/api/houses/${encodeURIComponent(house.id)}`;
+          : `/api/houses/${encodeURIComponent(house.id)}/quick`;
         queueHouseWrite({
           id: house.id,
           method: "PATCH",
@@ -116,7 +116,7 @@ export function QuickUpdateOverlay({
       const includeEndpoint = sendPush && preview ? await senderPushEndpoint() : undefined;
       const url = admin
         ? `/api/admin/houses/${encodeURIComponent(house.id)}`
-        : `/api/houses/${encodeURIComponent(house.id)}`;
+        : `/api/houses/${encodeURIComponent(house.id)}/quick`;
       const res = await fetch(url, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

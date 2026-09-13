@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { Catalog } from "@/lib/types";
-import { syncCatalog } from "@/lib/catalog-sync";
+import { useEffect, useRef, useState } from "react";
+import type { Catalog, CatalogDelta } from "@/lib/types";
+import { mergeCatalogDelta, syncCatalog } from "@/lib/catalog-sync";
 import { loadCatalogCache, loadCatalogCacheSync, saveCatalogCache, flushPendingHouseWrites, withDeviceHouseOverlays } from "@/lib/offline-db";
 import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
 
@@ -19,14 +19,26 @@ export type CatalogState = {
   refresh: (force?: boolean) => Promise<void>;
 };
 
-async function fetchJson(url: string, force = false): Promise<Catalog> {
-  const href = force ? `${url}${url.includes("?") ? "&" : "?"}t=${Date.now()}` : url;
+async function fetchJson(url: string, force = false, since?: string): Promise<CatalogDelta> {
+  const params = new URLSearchParams();
+  if (force) params.set("t", String(Date.now()));
+  else if (since) params.set("since", since);
+  const qs = params.toString();
+  const href = qs ? `${url}?${qs}` : url;
   const res = await fetch(href, {
-    cache: force ? "no-store" : "default",
+    cache: force || since ? "no-store" : "default",
     signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) throw new Error("bad status");
-  return res.json() as Promise<Catalog>;
+  return res.json() as Promise<CatalogDelta>;
+}
+
+function applyCatalogResponse(prev: Catalog | null, live: CatalogDelta): Catalog {
+  if (!prev || live.full) return syncCatalog(prev, live);
+  if (live.houses.length || live.removed?.length || live.pushTemplates) {
+    return mergeCatalogDelta(prev, live);
+  }
+  return { ...prev, updatedAt: live.updatedAt };
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
@@ -59,6 +71,8 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
   const [source, setSource] = useState<Source | null>(() =>
     initial ? "ssr" : loadCatalogCacheSync() ? "cache" : null,
   );
+  const catalogRef = useRef(catalog);
+  catalogRef.current = catalog;
 
   const refresh = async (force = false) => {
     const online = typeof navigator === "undefined" || navigator.onLine;
@@ -80,10 +94,11 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
     if (online) await flushPendingHouseWrites();
     try {
       if (readServerSimDown()) throw new Error("sim-down");
-      const live = await fetchJson("/api/catalog", force);
+      const since = force ? undefined : catalogRef.current?.updatedAt;
+      const live = await fetchJson("/api/catalog", force, since);
       let next: Catalog = live;
       setCatalog((prev) => {
-        next = withDeviceHouseOverlays(syncCatalog(prev, live));
+        next = withDeviceHouseOverlays(applyCatalogResponse(prev, live));
         return next;
       });
       setSource("network");

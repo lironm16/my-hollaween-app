@@ -53,11 +53,15 @@ export function housesCollection() {
   return neighborhoodRoot().collection("houses");
 }
 
+export function removedHousesCollection() {
+  return neighborhoodRoot().collection("removed");
+}
+
 export function pushSubscriptionsCollection() {
   return neighborhoodRoot().collection("pushSubscriptions");
 }
 
-export function metaDoc(name: "catalog" | "pushSettings" | "vapid") {
+export function metaDoc(name: "pushSettings" | "vapid") {
   return neighborhoodRoot().collection("meta").doc(name);
 }
 

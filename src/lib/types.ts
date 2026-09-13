@@ -144,6 +144,12 @@ export type Catalog = {
   pushTemplates?: Partial<Record<string, CatalogPushTemplate>>;
 };
 
+/** Partial catalog from `GET /api/catalog?since=` — merge into the cached full list. */
+export type CatalogDelta = Catalog & {
+  full?: boolean;
+  removed?: string[];
+};
+
 export type AddressHit = {
   id: string;
   label: string;

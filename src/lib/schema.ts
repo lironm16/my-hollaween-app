@@ -97,6 +97,15 @@ export const ownerPatchSchema = houseFields.partial().extend({
   editCode: z.string().min(4).max(12).optional(),
 });
 
+/** Candy / visit / pause toggle — no address or hours validation. */
+export const quickPatchSchema = z.object({
+  treats: z.array(z.enum(TREAT_OPTIONS)).max(12).optional(),
+  treatStock: treatStockSchema.optional(),
+  visit: z.enum(VISIT_STATES).optional(),
+  ownerFrozenUntil: z.string().nullable().optional(),
+  editCode: z.string().min(4).max(12).optional(),
+});
+
 export const adminPatchSchema = houseFields.partial().extend({
   soldOut: z.boolean().optional(),
   ownerFrozenUntil: z.string().nullable().optional(),

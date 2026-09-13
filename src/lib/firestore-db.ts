@@ -4,9 +4,11 @@ import {
   metaDoc,
   pushEndpointDocId,
   pushSubscriptionsCollection,
+  removedHousesCollection,
 } from "@/lib/firestore-admin";
-import { canonicalHouseId } from "@/lib/ids";
-import type { Catalog, DbFile, House, PushSubscriptionRecord, VapidKeys } from "@/lib/types";
+import { canonicalHouseId, toPublicHouse } from "@/lib/ids";
+import { isPubliclyListed } from "@/lib/house-state";
+import type { DbFile, House, PublicHouse, PushSubscriptionRecord, VapidKeys } from "@/lib/types";
 
 export { firestoreConfigured };
 
@@ -15,17 +17,63 @@ function stamp(value?: string) {
   return Number.isFinite(n) ? n : 0;
 }
 
-export async function readFirestoreCatalog(): Promise<Catalog | null> {
+function rowToHouse(docId: string, row: House): House {
+  return { ...row, id: canonicalHouseId(row.id || docId), storeId: docId };
+}
+
+export async function readFirestoreHouse(id: string): Promise<House | null> {
   if (!firestoreConfigured()) return null;
   try {
-    const snap = await metaDoc("catalog").get();
+    const docId = canonicalHouseId(id);
+    const snap = await housesCollection().doc(docId).get();
     if (!snap.exists) return null;
-    const data = snap.data() as Catalog;
-    if (!data?.houses || !data.updatedAt) return null;
-    return data;
+    return rowToHouse(snap.id, snap.data() as House);
   } catch (error) {
-    console.error("[firestore] catalog read failed", error);
+    console.error("[firestore] house read failed", error);
     return null;
+  }
+}
+
+export async function writeFirestoreHouse(house: House) {
+  if (!firestoreConfigured()) {
+    throw new Error("FIRESTORE_NOT_CONFIGURED");
+  }
+  const id = canonicalHouseId(house.id);
+  await housesCollection().doc(id).set({ ...house, id, storeId: id }, { merge: true });
+}
+
+export async function deleteFirestoreHouse(id: string) {
+  if (!firestoreConfigured()) return;
+  const docId = canonicalHouseId(id);
+  const now = new Date().toISOString();
+  await housesCollection().doc(docId).delete();
+  await removedHousesCollection().doc(docId).set({ id: docId, deletedAt: now });
+}
+
+export async function queryFirestoreHousesSince(since: string): Promise<PublicHouse[]> {
+  if (!firestoreConfigured()) return [];
+  try {
+    const snap = await housesCollection().where("updatedAt", ">", since).get();
+    const houses: PublicHouse[] = [];
+    for (const doc of snap.docs) {
+      const row = rowToHouse(doc.id, doc.data() as House);
+      if (isPubliclyListed(row)) houses.push(toPublicHouse(row) as PublicHouse);
+    }
+    return houses;
+  } catch (error) {
+    console.error("[firestore] houses-since query failed", error);
+    return [];
+  }
+}
+
+export async function queryRemovedHouseIdsSince(since: string): Promise<string[]> {
+  if (!firestoreConfigured()) return [];
+  try {
+    const snap = await removedHousesCollection().where("deletedAt", ">", since).get();
+    return snap.docs.map((doc) => canonicalHouseId(doc.id));
+  } catch (error) {
+    console.error("[firestore] removed-since query failed", error);
+    return [];
   }
 }
 
@@ -42,8 +90,8 @@ export async function readFirestoreDb(): Promise<DbFile | null> {
     const houses: House[] = [];
     for (const doc of housesSnap.docs) {
       const row = doc.data() as House;
-      if (!row?.id) continue;
-      houses.push({ ...row, id: canonicalHouseId(row.id), storeId: doc.id });
+      if (!row?.id && !doc.id) continue;
+      houses.push(rowToHouse(doc.id, row));
     }
 
     const pushSubscriptions: PushSubscriptionRecord[] = subsSnap.docs
@@ -97,6 +145,13 @@ function changedHouses(prev: House[], next: House[]) {
   return out;
 }
 
+function removedHouseIds(prev: House[], next: House[]) {
+  const nextIds = new Set(next.map((house) => canonicalHouseId(house.id)));
+  return prev
+    .map((house) => canonicalHouseId(house.id))
+    .filter((id) => id && !nextIds.has(id));
+}
+
 function subsChanged(prev: PushSubscriptionRecord[] | undefined, next: PushSubscriptionRecord[] | undefined) {
   const a = prev ?? [];
   const b = next ?? [];
@@ -113,15 +168,11 @@ export async function writeFirestorePushSettings(settings: DbFile["pushSettings"
   await metaDoc("pushSettings").set(settings, { merge: true });
 }
 
-export async function writeFirestoreDb(input: {
-  db: DbFile;
-  catalog: Catalog;
-  prev?: DbFile | null;
-}) {
+export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null }) {
   if (!firestoreConfigured()) {
     throw new Error("FIRESTORE_NOT_CONFIGURED");
   }
-  const { db, catalog, prev } = input;
+  const { db, prev } = input;
   const firestore = housesCollection().firestore;
   const dirtyHouses = prev ? changedHouses(prev.houses, db.houses) : db.houses;
 
@@ -138,7 +189,11 @@ export async function writeFirestoreDb(input: {
     await batch.commit();
   }
 
-  await metaDoc("catalog").set(catalog, { merge: false });
+  if (prev) {
+    for (const id of removedHouseIds(prev.houses, db.houses)) {
+      await deleteFirestoreHouse(id);
+    }
+  }
 
   if (db.pushSettings?.templates) {
     await metaDoc("pushSettings").set(db.pushSettings, { merge: true });
