@@ -31,7 +31,6 @@ const houseSchema = z.object({
   accessible: z.boolean().optional(),
   decorLevel: z.enum(DECOR_LEVELS).optional(),
   decorated: z.boolean().optional(),
-  status: z.enum(["pending", "approved", "rejected"]),
   soldOut: z.boolean().optional(),
   adminFrozen: z.boolean().optional(),
   ownerFrozenUntil: z.string().nullable().optional(),
@@ -39,7 +38,6 @@ const houseSchema = z.object({
   editCode: z.string().min(4).max(12),
   createdAt: z.string(),
   updatedAt: z.string(),
-  rejectionReason: z.string().optional(),
 });
 
 const restoreSchema = z.object({

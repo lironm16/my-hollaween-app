@@ -39,7 +39,6 @@ function stub(id: string, lat: number, lng: number, address: string): PublicHous
     accessible: true,
     decorLevel: "medium",
     decorated: true,
-    status: "approved",
     soldOut: false,
     adminFrozen: false,
     ownerFrozenUntil: null,

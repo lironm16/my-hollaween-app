@@ -4,14 +4,13 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const seed = JSON.parse(readFileSync(join(root, "data/seed.json"), "utf8"));
-const houses = seed.houses
-  .filter((h) => h.status === "approved")
-  .map((h) => {
-    const house = { ...h };
-    delete house.editCode;
-    delete house.rejectionReason;
-    return house;
-  });
+const houses = seed.houses.map((h) => {
+  const house = { ...h };
+  delete house.editCode;
+  delete house.status;
+  delete house.rejectionReason;
+  return house;
+});
 
 const catalog = {
   updatedAt: seed.updatedAt,

@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const houses = await getAllHouses();
   const format = new URL(request.url).searchParams.get("format");
   if (format === "csv" || format === "xls" || format === "xlsx") {
-    const listed = houses.filter((house) => house.status !== "rejected").map(toPublicHouse);
+    const listed = houses.map(toPublicHouse);
     if (format === "xls" || format === "xlsx") {
       const xlsx = housesToXlsx(listed);
       return new NextResponse(Buffer.from(xlsx), {

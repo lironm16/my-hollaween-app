@@ -41,8 +41,8 @@ export function isFrozen(
   return Boolean(house.adminFrozen) || isOwnerFrozen(house, now);
 }
 
-export function isPubliclyListed(house: House | PublicHouse) {
-  return house.status === "approved";
+export function isPubliclyListed(_house: House | PublicHouse) {
+  return true;
 }
 
 export function effectiveVisit(house: { visit?: VisitState; soldOut?: boolean }): VisitState {

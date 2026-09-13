@@ -30,7 +30,7 @@ export function mergeVisibleHouses({
   }
   if (admin) {
     for (const house of adminHouses) {
-      if (house.status === "rejected" || deleted.has(house.id)) continue;
+      if (deleted.has(house.id)) continue;
       byId.set(house.id, toPublicHouse(house) as PublicHouse);
     }
   }

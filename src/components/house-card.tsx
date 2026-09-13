@@ -84,13 +84,6 @@ export function HouseCard({
       }}
     >
       <div className="px-3 pb-1 pt-2">
-        {house.status === "pending" ? (
-          <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
-            {admin
-              ? "בית ממתין לאישור — עדיין לא במפה הציבורית."
-              : "הבית הזה עדיין לא במפה הציבורית. אם זה הבית שלכם, מנהל יכול לאשר אותו."}
-          </p>
-        ) : null}
         <HouseDetails
           house={house}
           distanceM={distanceM}

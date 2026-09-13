@@ -5,7 +5,6 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Heart, Pencil } from "lucide-react";
 import { VisitedCheck } from "@/components/visited-check";
-import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
 import { HouseTags } from "@/components/house-tags";
@@ -249,7 +248,6 @@ export function HouseDetails({
       {actions}
       <div className="flex flex-wrap items-center gap-1.5">
         <HouseTags house={house} large={compact} />
-        {house.status === "pending" ? <Badge variant="secondary">ממתין לאישור</Badge> : null}
       </div>
       {house.arrival ? (
         <p className="rounded-lg bg-[#2a1638] px-3 py-2 text-base text-amber-100">

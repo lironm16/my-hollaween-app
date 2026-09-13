@@ -36,7 +36,6 @@ function demoHouse(overrides: Partial<House> = {}): House {
     accessible: false,
     decorLevel: "medium",
     decorated: true,
-    status: "approved",
     soldOut: false,
     adminFrozen: false,
     ownerFrozenUntil: null,
