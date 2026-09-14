@@ -44,9 +44,11 @@ function HouseListSection({
         }
       >
         {entries.map((entry) => (
-          <li key={`${tone}-${entry.name}`} className="min-w-0">
-            <p className="truncate font-medium">{entry.name}</p>
-            <p className="truncate text-sm opacity-80">{entry.reason}</p>
+          <li key={`${tone}-${entry.name}`} className="min-w-0 max-h-14 overflow-hidden">
+            <p className="line-clamp-2 font-medium leading-snug">{entry.name}</p>
+            {entry.reason ? (
+              <p className="truncate text-sm opacity-80">{entry.reason}</p>
+            ) : null}
           </li>
         ))}
       </ul>

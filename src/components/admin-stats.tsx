@@ -190,23 +190,6 @@ export function AdminStatsCard({
             plain
           />
         </div>
-        <Subhead>במכשיר הזה</Subhead>
-        <div className="grid grid-cols-2 gap-2">
-          <Tile
-            icon={<LikedSign className="size-8" />}
-            label="שמורים"
-            value={likedCount ?? 0}
-            valueClass={likedCount ? "text-rose-300" : undefined}
-            plain
-          />
-          <Tile
-            icon={<VisitedCheck visited className="size-8" />}
-            label="ביקרתי"
-            value={visitedCount ?? 0}
-            valueClass={visitedCount ? "text-emerald-300" : undefined}
-            plain
-          />
-        </div>
         <Subhead>אופי</Subhead>
         <div className="grid grid-cols-2 gap-2">
           <Tile
@@ -237,6 +220,23 @@ export function AdminStatsCard({
             icon={<StrollerSign className="size-8" />}
             label="נגיש"
             value={stats.accessible}
+            plain
+          />
+        </div>
+        <Subhead>במכשיר הזה</Subhead>
+        <div className="grid grid-cols-2 gap-2">
+          <Tile
+            icon={<LikedSign className="size-8" />}
+            label="שמורים"
+            value={likedCount ?? 0}
+            valueClass={likedCount ? "text-rose-300" : undefined}
+            plain
+          />
+          <Tile
+            icon={<VisitedCheck visited className="size-8" />}
+            label="ביקרתי"
+            value={visitedCount ?? 0}
+            valueClass={visitedCount ? "text-emerald-300" : undefined}
             plain
           />
         </div>
