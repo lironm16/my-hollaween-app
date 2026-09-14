@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
-import { rememberDevice } from "@/lib/device-store";
 import { countPresence, touchPresence } from "@/lib/presence-store";
 
 export const runtime = "nodejs";
@@ -13,7 +12,6 @@ export async function POST(request: Request) {
   const json = (await request.json().catch(() => null)) as { id?: string } | null;
   const id = typeof json?.id === "string" ? json.id : "";
   const online = touchPresence(id);
-  void rememberDevice(id).catch(() => undefined);
   return NextResponse.json(
     { ok: true, online },
     { headers: { "Cache-Control": "no-store" } },

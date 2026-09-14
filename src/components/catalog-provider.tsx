@@ -20,6 +20,7 @@ import {
   withDeviceHouseOverlays,
 } from "@/lib/offline-db";
 import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
+import { getDeviceId } from "@/lib/device-id";
 
 function catalogPollMs(seconds?: number) {
   const n = seconds ?? config.catalogPollSeconds;
@@ -55,9 +56,13 @@ async function fetchJson(url: string, force = false, since?: string): Promise<Ca
   else if (since) params.set("since", since);
   const qs = params.toString();
   const href = qs ? `${url}?${qs}` : url;
+  const headers: HeadersInit = {};
+  const deviceId = getDeviceId();
+  if (deviceId) headers["X-HW-Device-Id"] = deviceId;
   const res = await fetch(href, {
     cache: force || since ? "no-store" : "default",
     signal: AbortSignal.timeout(8000),
+    headers,
   });
   if (!res.ok) throw new Error("bad status");
   return res.json() as Promise<CatalogDelta>;

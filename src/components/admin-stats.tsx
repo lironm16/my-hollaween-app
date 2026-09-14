@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { BellRing, HousePlus, MapPinned, Moon, Pause, Shield } from "lucide-react";
+import { BellRing, HousePlus, MapPinned, Moon, Pause, Shield, Users } from "lucide-react";
 import { CandySign } from "@/components/candy-glyphs";
 import { OpenNowSign, ClosingSoonSign, OpeningSoonSign } from "@/components/open-now-mark";
 import { ScareSign } from "@/components/scare-glyphs";
@@ -14,6 +14,7 @@ import { scareShort, decorShort, treatLabels } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import { buildSnapshotStats, type AdminSnapshot, type SnapshotStats } from "@/lib/admin-snapshot";
 import { useCatalog } from "@/hooks/use-catalog";
+import { useOnlineDevices } from "@/hooks/use-presence";
 import { useAppNow } from "@/hooks/use-app-clock";
 import type { HouseSet } from "@/lib/house-set";
 
@@ -103,10 +104,20 @@ export function AdminStatsCard({
   likedCount?: number;
   visitedCount?: number;
 }) {
+  const online = useOnlineDevices();
+
   return (
     <div className="space-y-3" dir="rtl">
       <Section title="מפה">
-        <Tile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} wide />
+        <div className="mb-2 grid grid-cols-2 gap-2">
+          <Tile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} />
+          <Tile
+            icon={<Users className="size-5" />}
+            label="משתמשים פעילים"
+            value={online ?? 0}
+            valueClass={online ? "text-emerald-300" : undefined}
+          />
+        </div>
         <Subhead>שעות</Subhead>
         <Tile
           icon={<OpenNowSign className="size-8" />}
