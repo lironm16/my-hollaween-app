@@ -22,7 +22,6 @@ import {
   type DbFile,
   type House,
   type HouseInput,
-  type HouseStatus,
   type HouseTheme,
   type NightPatch,
   type PublicHouse,
@@ -141,28 +140,29 @@ async function readSeed(): Promise<DbFile> {
   return JSON.parse(raw) as DbFile;
 }
 
-function normalizeHouse(house: House): House {
-  const theme = HOUSE_THEMES.includes(house.theme as HouseTheme)
-    ? (house.theme as HouseTheme)
+function normalizeHouse(house: House & { status?: string; rejectionReason?: string }): House {
+  const { status: _status, rejectionReason: _reason, ...base } = house;
+  const theme = HOUSE_THEMES.includes(base.theme as HouseTheme)
+    ? (base.theme as HouseTheme)
     : "pumpkin";
-  const visit = effectiveVisit(house);
-  const { treats, treatStock } = normalizeTreats(house.treats, house.treatStock);
-  const hours = syncHoursFields(houseHoursWindows(house));
-  const decor = syncDecorFields(house);
+  const visit = effectiveVisit(base);
+  const { treats, treatStock } = normalizeTreats(base.treats, base.treatStock);
+  const hours = syncHoursFields(houseHoursWindows(base));
+  const decor = syncDecorFields(base);
   return {
-    ...house,
+    ...base,
     theme,
-    arrival: house.arrival ?? "",
-    accessible: Boolean(house.accessible),
+    arrival: base.arrival ?? "",
+    accessible: Boolean(base.accessible),
     decorLevel: decor.decorLevel,
     decorated: decor.decorated,
     treats,
     visit,
     treatStock,
     soldOut: visit === "closed",
-    adminFrozen: Boolean(house.adminFrozen),
-    ownerFrozenUntil: house.ownerFrozenUntil ?? null,
-    photoUrl: house.photoUrl ?? "",
+    adminFrozen: Boolean(base.adminFrozen),
+    ownerFrozenUntil: base.ownerFrozenUntil ?? null,
+    photoUrl: base.photoUrl ?? "",
     openHours: hours.openHours,
     openFrom: hours.openFrom,
     openTo: hours.openTo,
@@ -787,7 +787,6 @@ export async function submitHouse(
       id,
       decorLevel: decor.decorLevel,
       decorated: decor.decorated,
-      status: "approved",
       soldOut: visit === "closed",
       adminFrozen: false,
       ownerFrozenUntil: null,
@@ -840,7 +839,6 @@ function applyOwnerPatch(house: House, patch: Partial<HouseInput> & NightPatch) 
   house.decorated = decor.decorated;
   house.updatedAt = new Date().toISOString();
   house.soldOut = house.visit === "closed";
-  if (house.status === "rejected") house.status = "approved";
 }
 
 function upsertMemHouse(house: House, updatedAt: string) {
@@ -923,19 +921,10 @@ export async function adminDeleteHouse(id: string) {
   });
 }
 
-/** Merge a manager-device backup so approvals survive ephemeral serverless disks. */
+/** Merge a manager-device backup so edits survive ephemeral serverless disks. */
 export async function adminRestoreDb(incoming: DbFile) {
   return runSyncedWrite((db) => {
-    const mergedHouses = mergeHouses(db.houses, normalizeDb(incoming).houses).map((house) => {
-      const local = db.houses.find((h) => h.id === house.id);
-      const remote = incoming.houses.find((h) => h.id === house.id);
-      if (!local || !remote) return normalizeHouse(house);
-      if (remote.status === "approved" && local.status !== "approved") {
-        return normalizeHouse({ ...house, status: "approved", rejectionReason: undefined });
-      }
-      return normalizeHouse(house);
-    });
-    db.houses = mergedHouses;
+    db.houses = mergeHouses(db.houses, normalizeDb(incoming).houses).map(normalizeHouse);
     if (incoming.vapid?.publicKey && incoming.vapid?.privateKey) {
       db.vapid = incoming.vapid;
     }
@@ -951,10 +940,7 @@ export async function adminRestoreDb(incoming: DbFile) {
 
 export async function adminUpdate(
   id: string,
-  patch: Partial<HouseInput> & NightPatch & {
-    status?: HouseStatus;
-    rejectionReason?: string;
-  },
+  patch: Partial<HouseInput> & NightPatch,
   options?: { includeEndpoint?: string },
 ) {
   const current = await getHouse(id);
@@ -1024,11 +1010,6 @@ export async function adminUpdate(
       house.soldOut = patch.soldOut;
       house.visit = patch.soldOut ? "closed" : house.visit === "closed" ? "come" : house.visit;
     }
-    if (patch.status !== undefined) house.status = patch.status;
-    if (patch.rejectionReason !== undefined) {
-      house.rejectionReason = patch.rejectionReason;
-    }
-    if (patch.status === "approved") house.rejectionReason = undefined;
     house.updatedAt = new Date().toISOString();
     db.updatedAt = house.updatedAt;
     return house;

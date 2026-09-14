@@ -52,7 +52,6 @@ export default function SearchPage() {
     }
     if (admin) {
       for (const item of adminHouses) {
-        if (item.status === "rejected") continue;
         byId.set(item.id, toPublicHouse(item) as PublicHouse);
       }
     }
@@ -129,15 +128,6 @@ export default function SearchPage() {
             writeHomeView("map");
             router.push(`/?focus=${encodeURIComponent(picked.id)}`);
           }}
-          pendingNote={
-            picked.status === "pending" ? (
-              <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
-                {admin
-                  ? "בית ממתין לאישור — עדיין לא במפה הציבורית."
-                  : "הבית הזה עדיין לא במפה הציבורית. אם זה הבית שלכם, מנהל יכול לאשר אותו."}
-              </p>
-            ) : undefined
-          }
         />
       ) : null}
       {picked ? (

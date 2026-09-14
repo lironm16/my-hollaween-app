@@ -34,7 +34,6 @@ function house(partial: Partial<PublicHouse> = {}): PublicHouse {
     decorLevel: "mild",
     decorated: true,
     soldOut: false,
-    status: "approved",
     createdAt: now,
     updatedAt: now,
     adminFrozen: false,

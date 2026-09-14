@@ -125,10 +125,7 @@ export function NeighborhoodApp({
 
   const {
     adminHouses,
-    busyAction,
     applyAdminHouse,
-    approveHouse,
-    rejectHouse,
     removeAdminHouse,
   } = useAdminHouses({ admin, refresh });
 
@@ -487,41 +484,6 @@ export function NeighborhoodApp({
 
   const selected = selection.selected;
   const mapSheetHouse = selection.selected;
-  const housePendingNote =
-    selected?.status === "pending" ? (
-      <p className="mb-3 rounded-lg bg-violet-950/70 px-3 py-2 text-base text-violet-100">
-        {admin
-          ? "בית ממתין לאישור — עדיין לא במפה הציבורית."
-          : "הבית הזה עדיין לא במפה הציבורית. אם זה הבית שלכם, מנהל יכול לאשר אותו."}
-      </p>
-    ) : null;
-  const houseDetailExtra = selected ? (
-    <div className="mt-4 space-y-3">
-      {admin && selected.status === "pending" ? (
-        <div className="flex flex-wrap gap-2">
-          <Button
-            className="bg-emerald-600 text-white hover:bg-emerald-500"
-            disabled={busyAction}
-            onClick={() => void approveHouse(selected.id)}
-          >
-            אישור למפה
-          </Button>
-          <Button
-            variant="destructive"
-            disabled={busyAction}
-            onClick={() => {
-              void rejectHouse(selected.id).then((ok) => {
-                if (!ok) return;
-                selection.closeSelection();
-              });
-            }}
-          >
-            דחייה ומחיקה
-          </Button>
-        </div>
-      ) : null}
-    </div>
-  ) : null;
   const selectedFilterReasons = selected
     ? (() => {
         const reasons = houseFilterMismatchReasons(selected, filters, filterContext);
@@ -544,8 +506,6 @@ export function NeighborhoodApp({
         canEditHouse: (id: string) => Boolean(admin || owned.some((item) => item.id === id)),
         editing: false,
         onToggleEdit: canEditSelected ? () => requestHouseEdit(selected, true) : undefined,
-        pendingNote: housePendingNote,
-        extra: houseDetailExtra,
         clusterOverview: selection.clusterOverview,
         clusterHouses: selection.selectedCluster,
       }

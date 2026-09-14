@@ -32,7 +32,6 @@ function baseHouse(patch: Partial<House> = {}): House {
     openTo: "21:00",
     notes: "",
     accessible: false,
-    status: "approved",
     soldOut: false,
     adminFrozen: false,
     ownerFrozenUntil: null,

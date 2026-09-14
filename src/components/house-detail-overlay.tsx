@@ -25,7 +25,6 @@ export function HouseDetailOverlay({
   canEditHouse,
   editing,
   onToggleEdit,
-  pendingNote,
   onShowOnMap,
   onShowInList,
   onSkip,
@@ -50,7 +49,6 @@ export function HouseDetailOverlay({
   canEditHouse?: (id: string) => boolean;
   editing?: boolean;
   onToggleEdit?: () => void;
-  pendingNote?: ReactNode;
   onShowOnMap?: () => void;
   onShowInList?: () => void;
   onSkip?: () => void;
@@ -130,7 +128,6 @@ export function HouseDetailOverlay({
         <span id={labelId} className="sr-only">
           {houseHeadline(house)}
         </span>
-        {pendingNote}
         <FilterMismatchNotice reasons={filterMismatchReasons} onRestoreRoute={onRestoreRoute} />
         {editing ? (
           <>
