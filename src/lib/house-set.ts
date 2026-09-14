@@ -55,9 +55,22 @@ export function countSkippedInSet(
   set: HouseSet,
 ): number {
   const byId = new Map(houses.map((house) => [house.id, house]));
+
+  if (set === "real") {
+    return skippedIds.filter((id) => {
+      const house = byId.get(id);
+      return house ? !isStubHouse(house) : false;
+    }).length;
+  }
+
+  if (set === "all") {
+    return skippedIds.length;
+  }
+
+  // Stubs rehearsal: count every skipped stub, even when the id only exists in catalog.
   return skippedIds.filter((id) => {
     const house = byId.get(id);
-    return house ? houseMatchesSet(house, set) : false;
+    return house ? isStubHouse(house) : STUB_ID.test(id);
   }).length;
 }
 

@@ -22,4 +22,23 @@ describe("countSkippedInSet", () => {
       2,
     );
   });
+
+  it("counts stub skips in stubs mode from catalog-only lookup rows", () => {
+    const catalogStub = {
+      id: "בית-1847",
+      description: "סטאב לחזרה — דלעות על המדרגה.",
+    };
+    assert.equal(
+      countSkippedInSet(["בית-1847"], [catalogStub], "stubs"),
+      1,
+    );
+    assert.equal(
+      countSkippedInSet(["בית-1847"], [], "stubs"),
+      0,
+    );
+  });
+
+  it("counts rehearsal stub ids in stubs mode even without a house row", () => {
+    assert.equal(countSkippedInSet(["בית-9310"], [], "stubs"), 1);
+  });
 });
