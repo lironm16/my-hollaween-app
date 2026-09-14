@@ -18,30 +18,6 @@ export const HOUSE_SET_STATUS: Record<HouseSet, string> = {
 
 const STUB_ID = /^בית-931\d$/;
 
-/** Rehearsal scenario stubs (`בית-9310` …) shipped in seed.json for admin dry-run. */
-export function isRehearsalStubId(id: string) {
-  return STUB_ID.test(id);
-}
-
-export const DROPPED_REHEARSAL_STUB_IDS = ["בית-9316"] as const;
-
-export function mergeMissingRehearsalStubs<T extends { id: string }>(
-  live: readonly T[],
-  seed: readonly T[],
-): T[] {
-  const dropped = new Set<string>(DROPPED_REHEARSAL_STUB_IDS);
-  const byId = new Map(live.map((house) => [house.id, house]));
-  let added = false;
-  for (const house of seed) {
-    if (!house.id || dropped.has(house.id)) continue;
-    if (!isRehearsalStubId(house.id)) continue;
-    if (byId.has(house.id)) continue;
-    byId.set(house.id, house);
-    added = true;
-  }
-  return added ? [...byId.values()] : [...live];
-}
-
 export function isStubHouse(house: { id?: string; description?: string }) {
   if (house.id && STUB_ID.test(house.id)) return true;
   return Boolean(house.description?.includes("סטאב לחזרה"));

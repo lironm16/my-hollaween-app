@@ -7,8 +7,10 @@ import {
   removedHousesCollection,
   resolveAdminFirestore,
 } from "@/lib/firestore-admin";
+import { isStubHouse } from "@/lib/house-set";
 import { canonicalHouseId, toPublicHouse } from "@/lib/ids";
 import { isPubliclyListed } from "@/lib/house-state";
+import { stripStubHouses } from "@/lib/rehearsal-stubs";
 import type { DbFile, House, PublicHouse, PushSubscriptionRecord, VapidKeys } from "@/lib/types";
 
 export { firestoreConfigured };
@@ -29,7 +31,8 @@ export async function readFirestoreHouse(id: string): Promise<House | null> {
     const docId = canonicalHouseId(id);
     const snap = await housesCollection().doc(docId).get();
     if (!snap.exists) return null;
-    return rowToHouse(snap.id, snap.data() as House);
+    const house = rowToHouse(snap.id, snap.data() as House);
+    return isStubHouse(house) ? null : house;
   } catch (error) {
     console.error("[firestore] house read failed", error);
     return null;
@@ -40,6 +43,7 @@ export async function writeFirestoreHouse(house: House) {
   if (!firestoreConfigured()) {
     throw new Error("FIRESTORE_NOT_CONFIGURED");
   }
+  if (isStubHouse(house)) return;
   await resolveAdminFirestore();
   const id = canonicalHouseId(house.id);
   await housesCollection().doc(id).set({ ...house, id, storeId: id }, { merge: true });
@@ -62,7 +66,8 @@ export async function queryFirestoreHousesSince(since: string): Promise<PublicHo
     const houses: PublicHouse[] = [];
     for (const doc of snap.docs) {
       const row = rowToHouse(doc.id, doc.data() as House);
-      if (isPubliclyListed(row)) houses.push(toPublicHouse(row) as PublicHouse);
+      if (isStubHouse(row) || !isPubliclyListed(row)) continue;
+      houses.push(toPublicHouse(row) as PublicHouse);
     }
     return houses;
   } catch (error) {
@@ -98,7 +103,9 @@ export async function readFirestoreDb(): Promise<DbFile | null> {
     for (const doc of housesSnap.docs) {
       const row = doc.data() as House;
       if (!row?.id && !doc.id) continue;
-      houses.push(rowToHouse(doc.id, row));
+      const house = rowToHouse(doc.id, row);
+      if (isStubHouse(house)) continue;
+      houses.push(house);
     }
 
     const pushSubscriptions: PushSubscriptionRecord[] = subsSnap.docs
@@ -183,7 +190,9 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
   await resolveAdminFirestore();
   const { db, prev } = input;
   const firestore = housesCollection().firestore;
-  const dirtyHouses = prev ? changedHouses(prev.houses, db.houses) : db.houses;
+  const houses = stripStubHouses(db.houses);
+  const prevHouses = prev ? stripStubHouses(prev.houses) : null;
+  const dirtyHouses = prevHouses ? changedHouses(prevHouses, houses) : houses;
 
   for (let i = 0; i < dirtyHouses.length; i += 400) {
     const batch = firestore.batch();
@@ -198,8 +207,8 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
     await batch.commit();
   }
 
-  if (prev) {
-    for (const id of removedHouseIds(prev.houses, db.houses)) {
+  if (prevHouses) {
+    for (const id of removedHouseIds(prevHouses, houses)) {
       await deleteFirestoreHouse(id);
     }
   }

@@ -142,7 +142,6 @@ export function NeighborhoodApp({
     owned,
     admin,
     adminHouses,
-    includeCatalogWhenAdmin: admin && activeHouseSet !== "real",
   });
 
   const housesForSkipCount = useMemo(() => {
