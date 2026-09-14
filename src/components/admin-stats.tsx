@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { BellRing, HousePlus, MapPinned, Moon, Pause, Shield, Users } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { BellRing, HousePlus, MapPinned, Moon, Pause, Shield } from "lucide-react";
 import { CandySign } from "@/components/candy-glyphs";
 import { OpenNowSign, ClosingSoonSign, OpeningSoonSign } from "@/components/open-now-mark";
 import { ScareSign } from "@/components/scare-glyphs";
@@ -12,10 +12,13 @@ import { VisitedCheck } from "@/components/visited-check";
 import { PUSH_TOPIC_ROWS, type PushTopic } from "@/lib/push-topics";
 import { scareShort, decorShort, treatLabels } from "@/lib/labels";
 import { cn } from "@/lib/utils";
-import type { AdminSnapshot } from "@/lib/admin-snapshot";
+import { buildSnapshotStats, type AdminSnapshot, type SnapshotStats } from "@/lib/admin-snapshot";
+import { useCatalog } from "@/hooks/use-catalog";
+import { useAppNow } from "@/hooks/use-app-clock";
 import type { HouseSet } from "@/lib/house-set";
 
 export type AdminStats = AdminSnapshot;
+export type { SnapshotStats };
 
 const ALERT_ICONS: Record<PushTopic, ReactNode> = {
   newHouse: <HousePlus className="size-5" />,
@@ -57,9 +60,14 @@ function useStats(url: string, enabled: boolean) {
   return stats;
 }
 
-export function useSnapshotStats(enabled = true, houseSet: HouseSet = "real") {
-  const query = houseSet === "real" ? "" : `?houseSet=${encodeURIComponent(houseSet)}`;
-  return useStats(`/api/stats${query}`, enabled);
+export function useSnapshotStats(enabled = true, houseSet: HouseSet = "real"): SnapshotStats | null {
+  const { catalog } = useCatalog();
+  const now = useAppNow();
+
+  return useMemo(() => {
+    if (!enabled || !catalog) return null;
+    return buildSnapshotStats({ houses: catalog.houses, now, houseSet });
+  }, [enabled, catalog, now, houseSet]);
 }
 
 export function useAdminStats(enabled: boolean, houseSet: HouseSet = "real") {
@@ -91,22 +99,14 @@ export function AdminStatsCard({
   likedCount,
   visitedCount,
 }: {
-  stats: AdminStats;
+  stats: SnapshotStats;
   likedCount?: number;
   visitedCount?: number;
 }) {
   return (
     <div className="space-y-3" dir="rtl">
       <Section title="מפה">
-        <div className="mb-2 grid grid-cols-2 gap-2">
-          <Tile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} />
-          <Tile
-            icon={<Users className="size-5" />}
-            label="משתמשים פעילים"
-            value={stats.online}
-            valueClass={stats.online ? "text-emerald-300" : undefined}
-          />
-        </div>
+        <Tile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} wide />
         <Subhead>שעות</Subhead>
         <Tile
           icon={<OpenNowSign className="size-8" />}
