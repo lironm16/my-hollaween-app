@@ -13,18 +13,17 @@ import {
   setSkipRoutePrompt,
   type RoutePromptKind,
 } from "@/lib/route-prompts";
-import type { RouteChangeEntry } from "@/lib/route-changes";
 
 function HouseListSection({
   title,
-  entries,
+  names,
   tone,
 }: {
   title: string;
-  entries: RouteChangeEntry[];
+  names: string[];
   tone: "remove" | "add";
 }) {
-  if (entries.length === 0) return null;
+  if (names.length === 0) return null;
   return (
     <section className="space-y-1.5">
       <p
@@ -34,20 +33,17 @@ function HouseListSection({
             : "text-base font-semibold text-emerald-200"
         }
       >
-        {title} ({entries.length})
+        {title} ({names.length})
       </p>
       <ul
         className={
           tone === "remove"
-            ? "max-h-40 space-y-2 overflow-y-auto rounded-lg bg-red-950/30 px-3 py-2 text-base text-red-50 ring-1 ring-red-500/25"
-            : "max-h-40 space-y-2 overflow-y-auto rounded-lg bg-emerald-950/30 px-3 py-2 text-base text-emerald-50 ring-1 ring-emerald-500/25"
+            ? "max-h-32 space-y-1 overflow-y-auto rounded-lg bg-red-950/30 px-3 py-2 text-base text-red-50 ring-1 ring-red-500/25"
+            : "max-h-32 space-y-1 overflow-y-auto rounded-lg bg-emerald-950/30 px-3 py-2 text-base text-emerald-50 ring-1 ring-emerald-500/25"
         }
       >
-        {entries.map((entry) => (
-          <li key={`${tone}-${entry.name}`} className="min-w-0">
-            <p className="truncate font-medium">{entry.name}</p>
-            <p className="truncate text-sm opacity-80">{entry.reason}</p>
-          </li>
+        {names.map((name) => (
+          <li key={`${tone}-${name}`} className="truncate">{name}</li>
         ))}
       </ul>
     </section>
@@ -69,8 +65,8 @@ export function RouteConfirmDialog({
   open: boolean;
   title: string;
   description: string;
-  removedHouses?: RouteChangeEntry[];
-  addedHouses?: RouteChangeEntry[];
+  removedHouses?: string[];
+  addedHouses?: string[];
   promptKind: RoutePromptKind;
   confirmLabel?: string;
   cancelLabel?: string;
@@ -107,8 +103,8 @@ export function RouteConfirmDialog({
           <DialogDescription className="text-right text-violet-200">{description}</DialogDescription>
           {(removedHouses?.length ?? 0) > 0 || hasAdds ? (
             <div className="space-y-3">
-              <HouseListSection title="יוסרו מהמסלול" entries={removedHouses ?? []} tone="remove" />
-              <HouseListSection title="יתווספו למסלול" entries={addedHouses ?? []} tone="add" />
+              <HouseListSection title="יוסרו מהמסלול" names={removedHouses ?? []} tone="remove" />
+              <HouseListSection title="יתווספו למסלול" names={addedHouses ?? []} tone="add" />
             </div>
           ) : null}
           {hasAdds ? (

@@ -21,7 +21,7 @@ import {
   resolveVisitWindow,
   type VisitWindowMode,
 } from "@/lib/visit-window";
-import { LikedMark, SkippedMark, VisitedMark } from "@/components/visit-marks";
+import { LikedMark, UnvisitedMark } from "@/components/visit-marks";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS, type ScareLevel } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -176,7 +176,13 @@ export function HouseFiltersContent({
         ) : null}
       </FilterSection>
 
-      <FilterSection title="סימונים שלי">
+      <FilterSection title="העדפות">
+        <FilterToggle
+          checked={filters.accessibleOnly}
+          onChange={() => onPatch({ accessibleOnly: !filters.accessibleOnly })}
+        >
+          <AccessibleMark labeled />
+        </FilterToggle>
         <FilterToggle
           checked={filters.likedOnly}
           onChange={() => onPatch({ likedOnly: !filters.likedOnly })}
@@ -184,22 +190,16 @@ export function HouseFiltersContent({
           <LikedMark labeled />
         </FilterToggle>
         <FilterToggle
-          checked={filters.visitedOnly}
+          checked={filters.unvisitedOnly}
           onChange={() =>
             onPatch((current) => ({
               ...current,
-              visitedOnly: !current.visitedOnly,
-              unvisitedOnly: !current.visitedOnly ? false : current.unvisitedOnly,
+              unvisitedOnly: !current.unvisitedOnly,
+              visitedOnly: !current.unvisitedOnly ? false : current.visitedOnly,
             }))
           }
         >
-          <VisitedMark labeled />
-        </FilterToggle>
-        <FilterToggle
-          checked={filters.skippedOnly}
-          onChange={() => onPatch({ skippedOnly: !filters.skippedOnly })}
-        >
-          <SkippedMark labeled />
+          <UnvisitedMark labeled />
         </FilterToggle>
       </FilterSection>
 
@@ -279,15 +279,6 @@ export function HouseFiltersContent({
             {area}
           </FilterOption>
         ))}
-      </FilterSection>
-
-      <FilterSection title="נגישות">
-        <FilterToggle
-          checked={filters.accessibleOnly}
-          onChange={() => onPatch({ accessibleOnly: !filters.accessibleOnly })}
-        >
-          <AccessibleMark labeled />
-        </FilterToggle>
       </FilterSection>
     </>
   );

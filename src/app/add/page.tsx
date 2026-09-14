@@ -30,10 +30,7 @@ export default function AddPage() {
   async function onSubmit(input: HouseInput, extras?: HouseFormExtras) {
     setBusy(true);
     try {
-      const includeEndpoint = await Promise.race([
-        senderPushEndpoint(),
-        new Promise<undefined>((resolve) => window.setTimeout(() => resolve(undefined), 2000)),
-      ]);
+      const includeEndpoint = await senderPushEndpoint();
       const { house, editCode } = await publishHouse(input, { includeEndpoint });
       let preview = house;
       if (extras?.photoDataUrl) {
@@ -106,7 +103,7 @@ export default function AddPage() {
           <>
             <h1 className="font-display mb-1 text-2xl text-orange-300">הוספת בית אימה</h1>
             <p className="mb-4 text-base text-violet-200">
-              בחרו שם וכתובת אמיתית מהרשימה. אחרי שמירה מוצלחת הבית מופיע במפה.
+              בחרו שם וכתובת אמיתית מהרשימה. אחרי אישור השרת הבית מופיע במפה.
             </p>
             <PersistNote className="mb-4" />
             <HouseForm

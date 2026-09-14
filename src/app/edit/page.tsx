@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
+import { useAdminStubs } from "@/hooks/use-admin-stubs";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { houseMatchesSet } from "@/lib/house-set";
@@ -43,6 +44,8 @@ function EditPageContent() {
   const { admin, ready: adminReady } = useAdminSession();
   const { houseSet } = useHouseSet();
   const activeHouseSet = admin ? houseSet : "real";
+  const needsStubHouses = admin && (activeHouseSet === "stubs" || activeHouseSet === "all");
+  const { stubHouses: adminStubHouses } = useAdminStubs(needsStubHouses);
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
   const [picked, setPicked] = useState<PublicHouse | null>(null);
   const [editCode, setEditCode] = useState("");
@@ -78,6 +81,7 @@ function EditPageContent() {
     owned,
     admin,
     adminHouses,
+    adminStubHouses: needsStubHouses ? adminStubHouses : [],
     includeCatalogWhenAdmin: true,
   });
   const houses = useMemo(
@@ -86,7 +90,11 @@ function EditPageContent() {
   );
 
   const ownedMatch = picked ? owned.find((item) => item.id === picked.id) : undefined;
-  const adminEditCode = picked && admin ? adminHouses.find((item) => item.id === picked.id)?.editCode : undefined;
+  const adminEditCode =
+    picked && admin
+      ? adminHouses.find((item) => item.id === picked.id)?.editCode ??
+        adminStubHouses.find((item) => item.id === picked.id)?.editCode
+      : undefined;
   const needsCode = Boolean(picked) && !admin && !ownedMatch && !house;
 
   useEffect(() => {

@@ -19,10 +19,6 @@ export function HouseList({
   onShowOnMap,
   onSelectHouse,
   onEditHouse,
-  skippedIds,
-  onSkipHouse,
-  onRestoreHouse,
-  emptyKind = "default",
   selectedId,
   focusId,
   editingId,
@@ -39,10 +35,6 @@ export function HouseList({
   onShowOnMap?: (id: string) => void;
   onSelectHouse?: (id: string, index: number) => void;
   onEditHouse?: (id: string, index: number) => void;
-  skippedIds?: string[];
-  onSkipHouse?: (id: string) => void;
-  onRestoreHouse?: (id: string) => void;
-  emptyKind?: "default" | "skipped";
   selectedId?: string | null;
   focusId?: string | null;
   editingId?: string | null;
@@ -71,17 +63,8 @@ export function HouseList({
   if (houses.length === 0) {
     return (
       <div className="px-4 py-16 text-center text-violet-200">
-        {emptyKind === "skipped" ? (
-          <>
-            <p className="font-display text-2xl text-orange-300">אין בתים שדילגתם עליהם</p>
-            <p className="mt-2 text-base">בתים שתדלגו עליהם במסלול יופיעו כאן.</p>
-          </>
-        ) : (
-          <>
-            <p className="font-display text-2xl text-orange-300">אין בתים שמתאימים לסינון</p>
-            <p className="mt-2 text-base">נסו לבטל סינון בתפריטי שכונה, רמת פחד, עוד או רגישויות.</p>
-          </>
-        )}
+        <p className="font-display text-2xl text-orange-300">אין בתים שמתאימים לסינון</p>
+        <p className="mt-2 text-base">נסו לבטל סינון בתפריטי שכונה, רמת פחד, עוד או רגישויות.</p>
       </div>
     );
   }
@@ -103,9 +86,6 @@ export function HouseList({
           onToggleLike={onToggleLike ? () => onToggleLike(h.id) : undefined}
           visited={visitedIds?.includes(h.id)}
           onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
-          skipped={skippedIds?.includes(h.id)}
-          onSkip={onSkipHouse ? () => onSkipHouse(h.id) : undefined}
-          onRestoreRoute={onRestoreHouse ? () => onRestoreHouse(h.id) : undefined}
           canEdit={Boolean(canEditHouse?.(h.id))}
           admin={admin}
           onShowOnMap={onShowOnMap ? () => onShowOnMap(h.id) : undefined}

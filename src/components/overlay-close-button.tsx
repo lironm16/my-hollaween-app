@@ -32,7 +32,6 @@ export function OverlayCloseBar({
   compact = false,
   title,
   subtitle,
-  trailing,
 }: {
   onClose: () => void;
   className?: string;
@@ -41,7 +40,6 @@ export function OverlayCloseBar({
   compact?: boolean;
   title?: ReactNode;
   subtitle?: ReactNode;
-  trailing?: ReactNode;
 }) {
   return (
     <div
@@ -49,7 +47,6 @@ export function OverlayCloseBar({
         "hw-overlay-close-bar",
         compact && "hw-overlay-close-bar--compact",
         title && "hw-overlay-close-bar--titled",
-        trailing && "hw-overlay-close-bar--trailing",
         className,
       )}
     >
@@ -61,7 +58,6 @@ export function OverlayCloseBar({
         </div>
       ) : null}
       {title ? <div className="hw-overlay-close-bar-spacer" aria-hidden /> : null}
-      {trailing ? <div className="hw-overlay-close-bar-trailing">{trailing}</div> : null}
     </div>
   );
 }

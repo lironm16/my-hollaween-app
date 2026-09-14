@@ -1,20 +1,16 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { MapPin, Navigation, Undo2 } from "lucide-react";
-import { SkipSign } from "@/components/visit-marks";
+import { MapPin, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HouseCard } from "@/components/house-card";
-import { houseHeadline } from "@/lib/labels";
-import type { PublicHouse } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { formatDistance } from "@/lib/geo";
+import type { WalkingRoute } from "@/lib/route";
 
-export type RouteListItem = {
-  house: PublicHouse;
-  order: number;
-  hop: string;
-  skipped: boolean;
-};
+function hopLabel(houseIndex: number, fromPreviousMeters: number) {
+  if (houseIndex > 0) return "אותו בניין";
+  return formatDistance(fromPreviousMeters);
+}
 
 function RouteLeg({ label }: { label: string }) {
   return (
@@ -25,46 +21,8 @@ function RouteLeg({ label }: { label: string }) {
   );
 }
 
-function RouteSkippedRow({
-  house,
-  onRestore,
-  onOpen,
-}: {
-  house: PublicHouse;
-  onRestore?: () => void;
-  onOpen?: () => void;
-}) {
-  return (
-    <div className="route-skipped-row">
-      <button
-        type="button"
-        className="route-skipped-main"
-        onClick={onOpen}
-        aria-label={`${houseHeadline(house)} — דילגתי`}
-      >
-        <SkipSign />
-        <span className="route-skipped-name">{houseHeadline(house)}</span>
-      </button>
-      {onRestore ? (
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="route-skipped-restore shrink-0"
-          onClick={onRestore}
-        >
-          <Undo2 className="size-3.5" />
-          החזרה
-        </Button>
-      ) : null}
-    </div>
-  );
-}
-
 export function RouteList({
-  items,
-  originLabel,
-  startedFrom,
+  route,
   hasGps,
   onRequestLocation,
   onChangeOrigin,
@@ -76,17 +34,13 @@ export function RouteList({
   onToggleLike,
   visitedIds,
   onToggleVisited,
-  onSkipHouse,
-  onRestoreHouse,
   admin = false,
   canEditHouse,
   onShowOnMap,
   onEditHouse,
   editingId,
 }: {
-  items: RouteListItem[];
-  originLabel?: string;
-  startedFrom?: "gps" | "neighborhood" | "custom";
+  route: WalkingRoute | null;
   hasGps: boolean;
   onRequestLocation?: () => void;
   onChangeOrigin?: () => void;
@@ -98,8 +52,6 @@ export function RouteList({
   onToggleLike?: (id: string) => void;
   visitedIds?: string[];
   onToggleVisited?: (id: string) => void;
-  onSkipHouse?: (id: string) => void;
-  onRestoreHouse?: (id: string) => void;
   admin?: boolean;
   canEditHouse?: (id: string) => boolean;
   onShowOnMap?: (id: string) => void;
@@ -121,7 +73,7 @@ export function RouteList({
       </Button>
     ) : null;
 
-  if (items.length === 0) {
+  if (!route) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center text-violet-200">
         {gpsAction}
@@ -133,7 +85,15 @@ export function RouteList({
     );
   }
 
-  const startLabel = originLabel || (startedFrom === "gps" ? "מיקום נוכחי" : "ממרכז השכונה");
+  const startLabel =
+    route.originLabel || (route.startedFrom === "gps" ? "מיקום נוכחי" : "ממרכז השכונה");
+  const cards = route.stops.flatMap((stop) =>
+    stop.houses.map((house, houseIndex) => ({
+      house,
+      order: stop.order,
+      hop: hopLabel(houseIndex, stop.fromPreviousMeters),
+    })),
+  );
 
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-3 py-3">
@@ -157,39 +117,30 @@ export function RouteList({
             </div>
           </div>
         </li>
-        {items.map(({ house, order, hop, skipped }, i) => (
+        {cards.map(({ house, order, hop }, i) => (
           <li
             key={house.id}
             ref={house.id === focusId ? focusRef : undefined}
-            className={cn(house.id === focusId && "house-list-focus", skipped && "route-list-skipped")}
+            className={house.id === focusId ? "house-list-focus" : undefined}
           >
             <RouteLeg label={hop} />
-            {skipped ? (
-              <RouteSkippedRow
+            <div className="route-list-house">
+              <HouseCard
                 house={house}
-                onRestore={onRestoreHouse ? () => onRestoreHouse(house.id) : undefined}
+                catalogSource={catalogSource}
+                liked={likedIds?.includes(house.id)}
+                onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
+                visited={visitedIds?.includes(house.id)}
+                onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
+                canEdit={Boolean(canEditHouse?.(house.id))}
+                admin={admin}
+                onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
                 onOpen={() => onSelectHouse(house.id, i + 1)}
+                onToggleEdit={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
+                editing={editingId === house.id}
+                index={order}
               />
-            ) : (
-              <div className="route-list-house">
-                <HouseCard
-                  house={house}
-                  catalogSource={catalogSource}
-                  liked={likedIds?.includes(house.id)}
-                  onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-                  visited={visitedIds?.includes(house.id)}
-                  onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
-                  onSkip={onSkipHouse ? () => onSkipHouse(house.id) : undefined}
-                  canEdit={Boolean(canEditHouse?.(house.id))}
-                  admin={admin}
-                  onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
-                  onOpen={() => onSelectHouse(house.id, i + 1)}
-                  onToggleEdit={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
-                  editing={editingId === house.id}
-                  index={order}
-                />
-              </div>
-            )}
+            </div>
           </li>
         ))}
       </ol>

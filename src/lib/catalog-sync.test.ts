@@ -21,6 +21,7 @@ function publicHouse(id: string, updatedAt: string, patch: Partial<PublicHouse> 
     openTo: "21:00",
     notes: "",
     accessible: false,
+    status: "approved",
     soldOut: false,
     adminFrozen: false,
     ownerFrozenUntil: null,

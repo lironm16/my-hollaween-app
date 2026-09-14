@@ -57,6 +57,7 @@ export function NeighborhoodToolbar({
   routeMode,
   onToggleRoute,
   houses,
+  includeTraffic,
   routeTicker,
 }: {
   view: HomeView;
@@ -70,6 +71,7 @@ export function NeighborhoodToolbar({
   routeMode: boolean;
   onToggleRoute: () => void;
   houses: PublicHouse[];
+  includeTraffic?: boolean;
   routeTicker: string | null;
 }) {
   return (
@@ -108,7 +110,11 @@ export function NeighborhoodToolbar({
         >
           <Route className="size-5" />
         </button>
-        <CsvExportButton houses={houses} kind={likedOnly ? "liked" : "list"} />
+        <CsvExportButton
+          houses={houses}
+          kind={likedOnly ? "liked" : "list"}
+          includeTraffic={includeTraffic}
+        />
       </div>
       {routeTicker ? <StatusTicker text={routeTicker} /> : null}
     </div>

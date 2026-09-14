@@ -5,7 +5,6 @@ import { createPortal } from "react-dom";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { HouseDetails } from "@/components/house-details";
-import { FilterMismatchNotice } from "@/components/house-skipped-banner";
 import { CodesCopy } from "@/components/codes-copy";
 import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
@@ -25,12 +24,9 @@ export function HouseDetailOverlay({
   canEditHouse,
   editing,
   onToggleEdit,
+  pendingNote,
   onShowOnMap,
   onShowInList,
-  onSkip,
-  onRestoreRoute,
-  skipped,
-  filterMismatchReasons,
   clusterOverview,
   clusterHouses,
   onSelectClusterHouse,
@@ -49,12 +45,9 @@ export function HouseDetailOverlay({
   canEditHouse?: (id: string) => boolean;
   editing?: boolean;
   onToggleEdit?: () => void;
+  pendingNote?: ReactNode;
   onShowOnMap?: () => void;
   onShowInList?: () => void;
-  onSkip?: () => void;
-  onRestoreRoute?: () => void;
-  skipped?: boolean;
-  filterMismatchReasons?: string[];
   clusterOverview?: boolean;
   clusterHouses?: PublicHouse[];
   onSelectClusterHouse?: (id: string) => void;
@@ -82,27 +75,20 @@ export function HouseDetailOverlay({
       dir="rtl"
     >
       <div className="house-detail-overlay-top shrink-0">
-        <OverlayCloseBar
-          onClose={onClose}
-          className="pb-1"
-          trailing={
-            <HouseActionBar
-              house={house}
-              liked={liked?.(house.id)}
-              visited={visited?.(house.id)}
-              onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-              onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
-              onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
-              onShowOnMap={onShowOnMap}
-              onShowInList={onShowInList}
-              onSkip={onSkip}
-              onRestoreRoute={onRestoreRoute}
-              skipped={skipped}
-              editing={editing}
-              menuPlacement="bottom"
-            />
-          }
-        />
+        <OverlayCloseBar onClose={onClose} className="pb-1" />
+        <div className="house-detail-overlay-chrome px-2 pb-1">
+          <HouseActionBar
+            house={house}
+            liked={liked?.(house.id)}
+            visited={visited?.(house.id)}
+            onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
+            onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
+            onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
+            onShowOnMap={onShowOnMap}
+            onShowInList={onShowInList}
+            editing={editing}
+          />
+        </div>
       </div>
       <div className="house-detail-overlay-body min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
         {overview ? (
@@ -128,7 +114,7 @@ export function HouseDetailOverlay({
         <span id={labelId} className="sr-only">
           {houseHeadline(house)}
         </span>
-        <FilterMismatchNotice reasons={filterMismatchReasons} onRestoreRoute={onRestoreRoute} />
+        {pendingNote}
         {editing ? (
           <>
             <p className="map-house-sheet-kicker">{houseHeadline(house)}</p>

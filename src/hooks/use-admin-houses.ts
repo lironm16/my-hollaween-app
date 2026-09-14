@@ -121,6 +121,45 @@ export function useAdminHouses({
     [applyAdminHouse],
   );
 
+  const approveHouse = useCallback(
+    async (id: string) => {
+      const ok = await patchAdmin(id, { status: "approved" });
+      if (ok) toast.success("הבית אושר ונכנס למפה הציבורית");
+    },
+    [patchAdmin],
+  );
+
+  const rejectHouse = useCallback(
+    async (id: string) => {
+      setBusyAction(true);
+      try {
+        const res = await fetch(`/api/admin/houses/${encodeURIComponent(id)}`, {
+          method: "DELETE",
+        });
+        const data = await readApiJson<{ error?: string; ok?: boolean }>(res);
+        if (!res.ok || !data.ok) {
+          toast.error(data.error ?? "המחיקה נכשלה");
+          return false;
+        }
+        setAdminHouses((list) => {
+          const next = list.filter((house) => house.id !== id);
+          rememberAdminDb(next, new Date().toISOString());
+          return next;
+        });
+        notifyCatalogChanged();
+        void refresh(true);
+        toast.success("הבית נדחה ונמחק");
+        return true;
+      } catch {
+        toast.error("אין קשר לשרת");
+        return false;
+      } finally {
+        setBusyAction(false);
+      }
+    },
+    [rememberAdminDb, refresh],
+  );
+
   const removeAdminHouse = useCallback(
     (id: string) => {
       setAdminHouses((list) => {
@@ -138,6 +177,8 @@ export function useAdminHouses({
     loadAdminHouses,
     applyAdminHouse,
     patchAdmin,
+    approveHouse,
+    rejectHouse,
     removeAdminHouse,
   };
 }

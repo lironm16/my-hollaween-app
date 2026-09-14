@@ -35,9 +35,12 @@ export function sameHouseId(a: string, b: string) {
   return canonicalHouseId(a) === canonicalHouseId(b);
 }
 
-export function toPublicHouse<T extends { editCode?: string; storeId?: string }>(house: T) {
+export function toPublicHouse<T extends { editCode?: string; rejectionReason?: string; storeId?: string }>(
+  house: T,
+) {
   const rest = { ...house };
   delete rest.editCode;
+  delete rest.rejectionReason;
   delete rest.storeId;
-  return rest as Omit<T, "editCode" | "storeId">;
+  return rest as Omit<T, "editCode" | "rejectionReason" | "storeId">;
 }

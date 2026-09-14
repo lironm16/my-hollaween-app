@@ -21,6 +21,7 @@ function publicHouse(id: string, updatedAt: string): PublicHouse {
     openTo: "21:00",
     notes: "",
     accessible: false,
+    status: "approved",
     soldOut: false,
     adminFrozen: false,
     ownerFrozenUntil: null,
@@ -30,10 +31,11 @@ function publicHouse(id: string, updatedAt: string): PublicHouse {
   } as PublicHouse;
 }
 
-function adminHouse(id: string, updatedAt: string): House {
+function adminHouse(id: string, updatedAt: string, status: House["status"] = "approved"): House {
   return {
     ...publicHouse(id, updatedAt),
     editCode: "123456",
+    status,
   } as House;
 }
 
@@ -57,5 +59,16 @@ describe("mergeVisibleHouses", () => {
       adminHouses: [adminHouse("admin-only", "2026-10-31T10:00:00.000Z")],
     });
     assert.deepEqual(merged.map((house) => house.id), ["admin-only"]);
+  });
+
+  it("merges lazy-loaded admin stubs when provided", () => {
+    const merged = mergeVisibleHouses({
+      catalogHouses: [],
+      owned: [],
+      admin: true,
+      adminHouses: [adminHouse("real-house", "2026-10-31T10:00:00.000Z")],
+      adminStubHouses: [adminHouse("stub-house", "2026-10-31T10:00:00.000Z")],
+    });
+    assert.deepEqual(merged.map((house) => house.id).sort(), ["real-house", "stub-house"]);
   });
 });

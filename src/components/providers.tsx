@@ -6,7 +6,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { AndroidInstallGuard } from "@/components/android-install-guard";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { TabTitleCycle } from "@/components/tab-title-cycle";
-import { CatalogProvider } from "@/components/catalog-provider";
 import { PresenceBeacon } from "@/hooks/use-presence";
 import { subscribeAppViewport } from "@/lib/viewport";
 
@@ -18,15 +17,13 @@ function AppViewportSync() {
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark">
-      <CatalogProvider>
-        <AppViewportSync />
-        <PresenceBeacon />
-        <TabTitleCycle />
-        {children}
-        <Toaster dir="rtl" position="top-center" theme="dark" />
-        <AndroidInstallGuard />
-        <ServiceWorkerRegister />
-      </CatalogProvider>
+      <AppViewportSync />
+      <PresenceBeacon />
+      <TabTitleCycle />
+      {children}
+      <Toaster dir="rtl" position="top-center" theme="dark" />
+      <AndroidInstallGuard />
+      <ServiceWorkerRegister />
     </ThemeProvider>
   );
 }

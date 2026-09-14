@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Info, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { HousePicker } from "@/components/house-picker";
 import { PushNotice } from "@/components/push-notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,17 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { readApiJson } from "@/lib/api-json";
 import { cn } from "@/lib/utils";
 import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
-import { PUSH_TEMPLATE_DISPLAY_ORDER, PushTemplateSign } from "@/components/push-template-signs";
 import { fillPushTemplate } from "@/lib/push-templates";
 import type { PushKind, PushTemplateMeta } from "@/lib/push-templates";
-
-const PREVIEW_HOUSE = {
-  name: "בית הדלעת",
-  address: "חרוזים 8, חרוזים",
-  lat: 32.0916,
-  lng: 34.8029,
-  ownerFrozenUntil: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-};
+import type { PublicHouse } from "@/lib/types";
 
 function Toggle({ on, onClick, disabled }: { on: boolean; onClick: () => void; disabled?: boolean }) {
   return (
@@ -36,7 +29,7 @@ function Toggle({ on, onClick, disabled }: { on: boolean; onClick: () => void; d
         disabled={disabled}
         onClick={onClick}
         className={cn(
-          "flex h-6 w-11 items-center rounded-full p-0.5 transition disabled:opacity-60",
+          "flex h-6 w-11 items-center rounded-full p-0.5 transition",
           on ? "justify-end bg-orange-500" : "justify-start bg-violet-900 ring-1 ring-orange-500/20",
         )}
       >
@@ -46,27 +39,33 @@ function Toggle({ on, onClick, disabled }: { on: boolean; onClick: () => void; d
   );
 }
 
+async function showSenderNotice(title: string, body: string) {
+  await showLocalPush(title, body);
+}
+
 export function AdminPushPanel() {
   const [templates, setTemplates] = useState<PushTemplateMeta[]>([]);
+  const [houses, setHouses] = useState<PublicHouse[]>([]);
+  const [sendHouse, setSendHouse] = useState<PublicHouse | null>(null);
+  const sendHouseId = sendHouse?.id ?? "";
   const [busy, setBusy] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [expanded, setExpanded] = useState<PushKind | null>(null);
-  const [infoOpen, setInfoOpen] = useState<PushKind | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
   const [draftBody, setDraftBody] = useState("");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
+  const [sendingKind, setSendingKind] = useState<PushKind | null>(null);
   const loadGen = useRef(0);
   const savingRef = useRef(false);
-  const savedAtRef = useRef(0);
   const expandedRef = useRef<PushKind | null>(null);
   expandedRef.current = expanded;
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      if (savingRef.current || expandedRef.current || Date.now() - savedAtRef.current < 2500) return;
+      if (savingRef.current || expandedRef.current) return;
       const gen = ++loadGen.current;
       try {
         const res = await fetch("/api/admin/push/templates", { cache: "no-store", credentials: "include" });
@@ -82,6 +81,13 @@ export function AdminPushPanel() {
       }
     }
     void load();
+    void fetch("/api/catalog", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data: { houses?: PublicHouse[] }) => {
+        if (cancelled) return;
+        if (Array.isArray(data.houses)) setHouses(data.houses);
+      })
+      .catch(() => undefined);
     const onVis = () => {
       if (document.visibilityState === "visible") void load();
     };
@@ -92,8 +98,8 @@ export function AdminPushPanel() {
     };
   }, []);
 
-  async function persist(next: PushTemplateMeta[], rollback?: PushTemplateMeta[]) {
-    const prev = rollback ?? templates;
+  async function persist(next: PushTemplateMeta[]) {
+    const prev = templates;
     savingRef.current = true;
     loadGen.current += 1;
     setTemplates(next);
@@ -119,12 +125,8 @@ export function AdminPushPanel() {
         return false;
       }
       if (Array.isArray(data.templates) && data.templates.length > 0) {
-        setTemplates(
-          [...data.templates].sort(
-            (a, b) => PUSH_TEMPLATE_DISPLAY_ORDER.indexOf(a.id) - PUSH_TEMPLATE_DISPLAY_ORDER.indexOf(b.id),
-          ),
-        );
-        savedAtRef.current = Date.now();
+        const byId = new Map(data.templates.map((item) => [item.id, item]));
+        setTemplates(next.map((item) => byId.get(item.id) ?? item));
       }
       return true;
     } catch {
@@ -138,13 +140,11 @@ export function AdminPushPanel() {
   }
 
   function patch(id: PushKind, fields: Partial<Pick<PushTemplateMeta, "enabled" | "title" | "body">>) {
-    const next = templates.map((item) => (item.id === id ? { ...item, ...fields } : item));
-    void persist(next, templates);
+    return persist(templates.map((item) => (item.id === id ? { ...item, ...fields } : item)));
   }
 
   function openEdit(item: PushTemplateMeta) {
     setExpanded(item.id);
-    setInfoOpen(null);
     setDraftTitle(item.title);
     setDraftBody(item.body);
   }
@@ -153,10 +153,6 @@ export function AdminPushPanel() {
     setExpanded(null);
     setDraftTitle("");
     setDraftBody("");
-  }
-
-  function toggleInfo(kind: PushKind) {
-    setInfoOpen((prev) => (prev === kind ? null : kind));
   }
 
   async function saveEdit() {
@@ -174,6 +170,48 @@ export function AdminPushPanel() {
       }
     } finally {
       setSavingEdit(false);
+    }
+  }
+
+  async function sendKind(kind: PushKind) {
+    if (!sendHouseId) {
+      toast.error("בחרו בית לשליחה");
+      return;
+    }
+    setSendingKind(kind);
+    try {
+      const includeEndpoint = await senderPushEndpoint();
+      const res = await fetch(`/api/houses/${encodeURIComponent(sendHouseId)}/notify`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind, includeEndpoint }),
+      });
+      const data = await readApiJson<{
+        error?: string;
+        sent?: number;
+        attempted?: number;
+        failed?: number;
+        title?: string;
+        body?: string;
+      }>(res);
+      if (!res.ok) {
+        toast.error(data.error ?? "השליחה נכשלה");
+        return;
+      }
+      const sent = data.sent ?? 0;
+      const attempted = data.attempted ?? sent;
+      if (sent < attempted) {
+        toast.warning(`נשלח ל־${sent} מתוך ${attempted} מכשירים (${data.failed ?? attempted - sent} נכשלו)`);
+      } else {
+        toast.success(`נשלח ל־${sent} מכשירים`);
+      }
+      await showSenderNotice(data.title ?? "", data.body ?? "");
+      window.dispatchEvent(new Event("hw-admin-stats-refresh"));
+    } catch {
+      toast.error("אין קשר לשרת");
+    } finally {
+      setSendingKind(null);
     }
   }
 
@@ -205,16 +243,12 @@ export function AdminPushPanel() {
       }
       const sent = data.sent ?? 0;
       const attempted = data.attempted ?? sent;
-      if (attempted === 0) {
-        toast.warning("אין מנויי התראות רשומים — ההודעה לא נשלחה.");
-      } else if (sent === 0) {
-        toast.error("השליחה נכשלה לכל המנויים. בדקו הגדרות VAPID או הרשאות התראות.");
-      } else if (sent < attempted) {
+      if (sent < attempted) {
         toast.warning(`נשלח ל־${sent} מתוך ${attempted} מכשירים (${data.failed ?? attempted - sent} נכשלו)`);
       } else {
         toast.success(`נשלח ל־${sent} מכשירים`);
       }
-      await showLocalPush(data.title ?? title.trim(), data.body ?? body.trim());
+      await showSenderNotice(data.title ?? title.trim(), data.body ?? body.trim());
       window.dispatchEvent(new Event("hw-admin-stats-refresh"));
       setTitle("");
       setBody("");
@@ -225,9 +259,8 @@ export function AdminPushPanel() {
     }
   }
 
-  const sortedTemplates = [...templates].sort(
-    (a, b) => PUSH_TEMPLATE_DISPLAY_ORDER.indexOf(a.id) - PUSH_TEMPLATE_DISPLAY_ORDER.indexOf(b.id),
-  );
+  const autoTemplates = templates.filter((item) => item.auto);
+  const ownerTemplates = templates.filter((item) => !item.auto);
 
   function renderTemplate(item: PushTemplateMeta) {
     const open = expanded === item.id;
@@ -235,27 +268,13 @@ export function AdminPushPanel() {
       open &&
       (draftTitle.trim() !== item.title.trim() || draftBody.trim() !== item.body.trim());
 
-    const isInfoOpen = infoOpen === item.id;
-    const previewPayload = {
-      ...fillPushTemplate({ title: open ? draftTitle : item.title, body: open ? draftBody : item.body }, PREVIEW_HOUSE),
-      url: "/",
-    };
-
     return (
       <article
         key={item.id}
-        className="space-y-2 rounded-lg bg-[#12081a]/80 p-2 ring-1 ring-orange-500/15"
+        className="space-y-1.5 rounded-lg bg-[#12081a]/80 p-2 ring-1 ring-orange-500/15"
       >
-        <div className="space-y-1.5">
-          <p className="flex items-center gap-1.5 text-base font-medium text-orange-100">
-            <span>{item.label}</span>
-            {item.auto ? (
-              <span className="shrink-0 rounded-full bg-orange-500/20 px-1.5 py-0.5 text-sm font-medium text-orange-200">
-                אוטומטי
-              </span>
-            ) : null}
-          </p>
-          <div className="flex items-center justify-between gap-1.5">
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
@@ -269,39 +288,28 @@ export function AdminPushPanel() {
               >
                 <Pencil className="size-3.5" />
               </button>
-              <button
-                type="button"
-                onClick={() => toggleInfo(item.id)}
-                className={cn(
-                  "inline-flex size-7 shrink-0 items-center justify-center rounded-md ring-1 transition",
-                  isInfoOpen
-                    ? "bg-orange-500/20 text-orange-100 ring-orange-400/50"
-                    : "text-violet-300 ring-orange-500/20 hover:bg-orange-500/10 hover:text-orange-100",
-                )}
-                aria-label="הסבר"
-                title="הסבר"
-              >
-                <Info className="size-3.5" />
-              </button>
+              <p className="min-w-0 flex-1 text-base font-medium text-orange-100">{item.label}</p>
             </div>
-            <Toggle
-              on={item.enabled}
-              disabled={busy}
-              onClick={() => void patch(item.id, { enabled: !item.enabled })}
-            />
+            <p className="text-base text-violet-300">{item.hint}</p>
           </div>
+          <Toggle
+            on={item.enabled}
+            disabled={busy}
+            onClick={() => void patch(item.id, { enabled: !item.enabled })}
+          />
         </div>
-
-        {isInfoOpen ? (
-          <p className="rounded-md bg-[#0c0612]/80 px-2 py-1.5 text-base leading-snug text-violet-300 ring-1 ring-orange-500/10">
-            {item.hint}
-          </p>
+        {item.auto ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={!item.enabled || !sendHouseId || sendingKind !== null}
+            className="border-orange-400/40 text-orange-100"
+            onClick={() => void sendKind(item.id)}
+          >
+            {sendingKind === item.id ? "שולחים…" : "שליחה לבית שנבחר"}
+          </Button>
         ) : null}
-
-        <div className="flex flex-wrap items-center justify-center gap-2" dir="ltr">
-          <PushTemplateSign kind={item.id} />
-        </div>
-
         {open ? (
           <form
             className="space-y-1.5"
@@ -325,7 +333,21 @@ export function AdminPushPanel() {
               className="min-h-[3.5rem] bg-[#0c0612] text-base"
               onChange={(event) => setDraftBody(event.target.value)}
             />
-            <PushNotice payload={previewPayload} />
+            <PushNotice
+              payload={{
+                ...fillPushTemplate(
+                  { title: draftTitle, body: draftBody },
+                  {
+                    name: "בית הדלעת",
+                    address: "חרוזים 8, חרוזים",
+                    lat: 32.0916,
+                    lng: 34.8029,
+                    ownerFrozenUntil: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+                  },
+                ),
+                url: "/",
+              }}
+            />
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -348,7 +370,12 @@ export function AdminPushPanel() {
             </div>
           </form>
         ) : (
-          <PushNotice payload={previewPayload} />
+          <div className="rounded-md bg-[#0c0612]/80 px-2 py-1.5 ring-1 ring-orange-500/10">
+            <p className="text-base font-medium text-orange-50">{item.title}</p>
+            <p className="mt-0.5 whitespace-pre-line text-base leading-snug text-violet-200">
+              {item.body}
+            </p>
+          </div>
         )}
       </article>
     );
@@ -390,11 +417,78 @@ export function AdminPushPanel() {
       </form>
 
       <div className="space-y-2 rounded-xl bg-black/25 p-3">
-        <p className="text-base font-medium text-amber-100">תבניות התראות</p>
+        <p className="text-base font-medium text-amber-100">מקרא ותבניות</p>
+        <div className="space-y-2 rounded-lg bg-[#12081a]/60 p-2.5 ring-1 ring-orange-500/10">
+          <p className="text-base font-medium text-orange-100">שדות בתבנית</p>
+          <ul className="space-y-1 text-base text-violet-300">
+            <li>
+              <span className="font-mono text-orange-200">{`{nickname}`}</span> — שם הבית
+            </li>
+            <li>
+              <span className="font-mono text-orange-200">{`{place}`}</span> — כתובת מקוצרת
+            </li>
+            <li>
+              <span className="font-mono text-orange-200">{`{backLine}`}</span> — שורה על חזרה מההפסקה
+              («נחזור ב־20:00») רק אם נקבעה שעה. בלי שעה — השורה לא מופיעה.
+            </li>
+          </ul>
+        </div>
+        <div className="space-y-2 rounded-lg bg-[#12081a]/60 p-2.5 ring-1 ring-orange-500/10">
+          <p className="text-base font-medium text-orange-100">מה בעל הבית בוחר — ואיזו התראה נשלחת</p>
+          <ul className="space-y-1 text-base text-violet-300">
+            <li>
+              <span className="text-orange-100">נגמר</span> — הממתקים אזלו, הבית עדיין פתוח לביקור → «נגמרו
+              הממתקים»
+            </li>
+            <li>
+              <span className="text-orange-100">נגמר + סגור</span> — הממתקים אזלו והבית כבר סגור לביקורים →
+              «נגמרו הממתקים (סגור)»
+            </li>
+            <li>
+              <span className="text-orange-100">בלי ממתקים</span> + קישוטים — הבית מקושט בלי חלוקת ממתקים →
+              «מקושט בלי ממתקים»
+            </li>
+            <li>
+              <span className="text-orange-100">נגמר — סגור</span> — הממתקים אזלו והבית נסגר לערב → «נסגר
+              לביקור» (מלאי נשמר כ«נגמר» בנתונים)
+            </li>
+            <li>
+              <span className="text-orange-100">סגור</span> — הבית נסגר לערב בלי לסמן «נגמר» → «נסגר
+              לביקור»
+            </li>
+            <li>
+              <span className="text-orange-100">הפסקה</span> — הקפאה זמנית מהמפה → «הפסקה» (בעל הבית מאשר שליחה)
+            </li>
+          </ul>
+        </div>
+        <p className="text-base text-violet-300">
+          כבוי = התבנית לא נשלחת. אחרי שמירת סטטוס, בעל הבית יכול לאשר שליחה — חוץ מ«בית חדש במפה».
+        </p>
+        <div className="space-y-1">
+          <span className="text-base text-violet-200">בית לשליחה ידנית (בדיקה)</span>
+          <HousePicker
+            houses={houses}
+            selected={sendHouse}
+            onSelect={setSendHouse}
+            placeholder="הקלידו שם או כתובת"
+          />
+        </div>
+
         {templates.length === 0 ? (
           <p className="text-base text-violet-400">טוענים תבניות…</p>
         ) : (
-          <div className="space-y-1.5">{sortedTemplates.map(renderTemplate)}</div>
+          <>
+            {autoTemplates.length > 0 ? (
+              <div className="space-y-1.5">
+                <p className="text-base font-medium text-amber-100/90">אוטומטיות</p>
+                {autoTemplates.map(renderTemplate)}
+              </div>
+            ) : null}
+            <div className="space-y-1.5">
+              <p className="text-base font-medium text-amber-100/90">אחרי שמירה — בעל הבית מאשר שליחה</p>
+              {ownerTemplates.map(renderTemplate)}
+            </div>
+          </>
         )}
       </div>
     </div>

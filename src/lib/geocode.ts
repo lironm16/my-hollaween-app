@@ -22,15 +22,9 @@ function isCityName(value: string) {
   return /רמת\s*גן/u.test(value) || /ramat\s*gan/i.test(value);
 }
 
-function areaLabelFor(hit: { lat: number; lng: number; suburb?: string }) {
+function areaLabelFor(hit: { lat: number; lng: number }) {
   // Only append one of the 3 neighborhoods. Pins nearer to הגפן stay unlabeled.
-  const fromCoords = neighborhoodFromCoords(hit.lat, hit.lng);
-  if (fromCoords) return fromCoords;
-  const suburb = hit.suburb?.trim() ?? "";
-  if (suburb && !isCityName(suburb) && (NEIGHBORHOODS as readonly string[]).includes(suburb)) {
-    return suburb as (typeof NEIGHBORHOODS)[number];
-  }
-  return null;
+  return neighborhoodFromCoords(hit.lat, hit.lng);
 }
 
 type NominatimHit = {
@@ -119,7 +113,7 @@ function formatLabel(hit: NominatimHit): string | null {
         : null;
     return area && !street.includes(area) ? `${street}, ${area}` : street;
   }
-  const area = areaLabelFor({ lat, lng, suburb });
+  const area = areaLabelFor({ lat, lng });
   return area && !street.includes(area) ? `${street}, ${area}` : street;
 }
 
@@ -250,7 +244,7 @@ function attachTypedNumber(hit: AddressHit, num: string): AddressHit {
     new RegExp(`\\s+${num}$`, "u"),
     "",
   );
-  const area = areaLabelFor({ lat: hit.lat, lng: hit.lng, suburb: hit.suburb });
+  const area = areaLabelFor({ lat: hit.lat, lng: hit.lng });
   const label = area ? `${road} ${num}, ${area}` : `${road} ${num}`;
   return { ...hit, road, houseNumber: num, label, precise: hit.precise && already === num };
 }
@@ -388,6 +382,9 @@ export function geocodeHttpError(error: unknown): { error: string; status: numbe
   }
   if (error.message === "GEOCODER_UNAVAILABLE") {
     return { error: "לא הצלחנו לאמת את הכתובת עכשיו. נסו שוב בעוד רגע.", status: 503 };
+  }
+  if (error.message === "PERSIST_FAILED") {
+    return { error: "לא הצלחנו לשמור את הבית בשרת. נסו שוב.", status: 503 };
   }
   return null;
 }

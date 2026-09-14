@@ -7,11 +7,9 @@ import {
   trimWalkingRouteToVisible,
   type WalkingRoute,
 } from "@/lib/route";
-import { routeCandidateHouses } from "@/lib/route-changes";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
-import { readRouteMode, writeRouteMode } from "@/lib/route-mode";
 import type { PublicHouse } from "@/lib/types";
 
 function originPoint(origin: ResolvedOrigin) {
@@ -24,7 +22,6 @@ export function useNeighborhoodRoute({
   filters,
   filterContext,
   visitedIds,
-  skippedIds,
   origin,
   accessibleOnly,
   gps,
@@ -39,11 +36,9 @@ export function useNeighborhoodRoute({
     houseSet: HouseSet;
     likedIds: string[];
     visitedIds: string[];
-    skippedIds: string[];
     now: Date;
   };
   visitedIds: string[];
-  skippedIds: string[];
   origin: ResolvedOrigin;
   accessibleOnly: boolean;
   gps: { lat: number; lng: number } | null;
@@ -51,7 +46,7 @@ export function useNeighborhoodRoute({
   setAskedLocation: (value: boolean) => void;
   onBeforeEnter: () => void;
 }) {
-  const [routeMode, setRouteMode] = useState(() => readRouteMode());
+  const [routeMode, setRouteMode] = useState(false);
   const [pinnedRoute, setPinnedRoute] = useState<WalkingRoute | null>(null);
   const [routeFitTick, setRouteFitTick] = useState(0);
   const pendingRouteGps = useRef(false);
@@ -60,36 +55,23 @@ export function useNeighborhoodRoute({
     [visible],
   );
 
-  const routeCandidates = useMemo(
-    () =>
-      routeCandidateHouses(houses, filters, {
-        ...filterContext,
-        skippedIds,
-      }),
-    [houses, filters, filterContext, skippedIds],
-  );
-
   const filterRoute = useMemo(() => {
-    return buildWalkingRoute(routeCandidates, originPoint(origin), {
+    const routeHouses = filters.unvisitedOnly
+      ? visible.filter((house) => !visitedIds.includes(house.id))
+      : visible;
+    return buildWalkingRoute(routeHouses, originPoint(origin), {
       accessible: accessibleOnly,
       startedFrom: origin.kind,
       originLabel: origin.label,
     });
-  }, [routeCandidates, accessibleOnly, origin]);
+  }, [visible, visitedIds, accessibleOnly, origin, filters.unvisitedOnly]);
 
-  const rebuildPinnedRoute = useCallback(
+  const pinCurrentRoute = useCallback(
     (fit = false) => {
       setPinnedRoute(filterRoute);
       if (fit) setRouteFitTick((n) => n + 1);
     },
     [filterRoute],
-  );
-
-  const pinCurrentRoute = useCallback(
-    (fit = false) => {
-      rebuildPinnedRoute(fit);
-    },
-    [rebuildPinnedRoute],
   );
 
   useEffect(() => {
@@ -110,8 +92,8 @@ export function useNeighborhoodRoute({
     if (!routeMode || pendingRouteGps.current) return;
     setPinnedRoute((current) => {
       if (!current) return current;
-      const candidateIds = new Set(routeCandidates.map((house) => house.id));
-      const trimmed = trimWalkingRouteToVisible(current, candidateIds);
+      const visibleIds = new Set(visible.map((house) => house.id));
+      const trimmed = trimWalkingRouteToVisible(current, visibleIds);
       if (!trimmed) return null;
       const stopIds = trimmed.stops.map((stop) => stop.house.id).join("\0");
       const currentIds = current.stops.map((stop) => stop.house.id).join("\0");
@@ -126,26 +108,10 @@ export function useNeighborhoodRoute({
         originLabel: origin.label,
       });
     });
-  }, [
-    routeMode,
-    visibleKey,
-    skippedIds.join("\0"),
-    origin.lat,
-    origin.lng,
-    origin.kind,
-    origin.label,
-    accessibleOnly,
-    routeCandidates,
-  ]);
-
-  useEffect(() => {
-    if (!routeMode || pinnedRoute) return;
-    pinCurrentRoute(false);
-  }, [routeMode, pinnedRoute, pinCurrentRoute]);
+  }, [routeMode, visibleKey, origin.lat, origin.lng, origin.kind, origin.label, accessibleOnly]);
 
   function exitRouteMode() {
     pendingRouteGps.current = false;
-    writeRouteMode(false);
     setRouteMode(false);
     setPinnedRoute(null);
   }
@@ -154,7 +120,6 @@ export function useNeighborhoodRoute({
     if (routeMode) return;
     const proceed = () => {
       onBeforeEnter();
-      writeRouteMode(true);
       setRouteMode(true);
       if (origin.kind === "gps" && !gps) {
         pendingRouteGps.current = true;
@@ -174,11 +139,9 @@ export function useNeighborhoodRoute({
     setPinnedRoute,
     routeFitTick,
     filterRoute,
-    routeCandidates,
     pinCurrentRoute,
     enterRouteMode,
     exitRouteMode,
     pendingRouteGps,
-    rebuildPinnedRoute,
   };
 }

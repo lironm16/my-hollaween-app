@@ -30,11 +30,11 @@ const ADDRESS_AREA_NAMES = [...NEIGHBORHOODS, "הגפן"] as const;
 export const config = {
   /** Home-screen / PWA / OS notification name. In-app chrome uses brandEn. */
   appName: "HallowHood",
-  brandEn: "HallowHood",
-  brandHe: "הלואין בשכונה",
+  brandEn: "Halloween",
+  brandHe: "בשכונה",
   /** Browser tab label. Home-screen / PWA stays the app name. */
-  tabTitle: "הלואין בשכונה HallowHood",
-  titleWords: ["הלואין בשכונה HallowHood"] as const,
+  tabTitle: "Halloween בשכונה",
+  titleWords: ["Halloween בשכונה"] as const,
   tagline: "מפת הבתים המפחידים של השכונה",
   neighborhood:
     process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שיכון ותיקים · חרוזים · נחלת גנים",
@@ -56,11 +56,6 @@ export const config = {
   },
   tiles,
   catalogCacheSeconds: process.env.NODE_ENV === "production" ? 30 : 0,
-  /** Foreground catalog poll interval. Override live via CATALOG_POLL_SECONDS on the server. */
-  catalogPollSeconds: Math.max(
-    30,
-    Number(process.env.CATALOG_POLL_SECONDS ?? process.env.NEXT_PUBLIC_CATALOG_POLL_SECONDS ?? 180) || 180,
-  ),
   adminCookie: "hw_admin",
   // The neighborhood list lives on this app server. Writes are queued one at a time.
   durableWrites: process.env.NEXT_PUBLIC_DURABLE_WRITES !== "0",

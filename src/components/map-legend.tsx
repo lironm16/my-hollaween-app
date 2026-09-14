@@ -4,7 +4,6 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Info } from "lucide-react";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
-import { SkipIcon } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -16,7 +15,6 @@ function SwatchPin({
   bare,
   multi,
   visited,
-  skipped,
 }: {
   scare?: "mild" | "medium" | "spicy";
   candy?: "plenty" | "low" | "out";
@@ -26,13 +24,11 @@ function SwatchPin({
   bare?: boolean;
   multi?: boolean;
   visited?: boolean;
-  skipped?: boolean;
 }) {
   return (
     <div
       className={cn(
         "house-pin is-legend relative",
-        multi && "is-building",
         hours === "closing" && "is-closing-soon",
         hours === "opening" && "is-opening-soon",
         bare && "is-undecorated",
@@ -60,14 +56,9 @@ function SwatchPin({
           </span>
         </>
       ) : null}
-      {skipped ? (
-        <b className="pin-status is-skipped" aria-hidden>
-          <SkipIcon className="pin-skip-icon" />
-        </b>
-      ) : null}
-      {!skipped && closed ? <b className="pin-status is-closed" /> : null}
-      {!skipped && onBreak ? <b className="pin-status is-break" /> : null}
-      {!skipped && candy ? <b className={`pin-status is-${candy}`} /> : null}
+      {closed ? <b className="pin-status is-closed" /> : null}
+      {onBreak ? <b className="pin-status is-break" /> : null}
+      {candy ? <b className={`pin-status is-${candy}`} /> : null}
     </div>
   );
 }
@@ -99,7 +90,6 @@ const GROUPS: { title: string; items: { key: string; label: string; node: ReactN
       { key: "open", label: "נפתח בקרוב", node: <SwatchPin scare="mild" hours="opening" /> },
       { key: "multi", label: "כמה בתים", node: <SwatchPin multi /> },
       { key: "visited", label: "ביקרתי", node: <SwatchPin scare="mild" visited /> },
-      { key: "skipped", label: "דילגתי", node: <SwatchPin scare="mild" skipped /> },
     ],
   },
 ];
@@ -149,13 +139,11 @@ export function MapLegend() {
                   compact
                   onClose={() => setOpen(false)}
                   label="סגירת המקרא"
-                  title={
-                    <span id={titleId} className="text-base font-semibold text-orange-100">
-                      מקרא
-                    </span>
-                  }
-                  className="border-b border-orange-500/15 px-3 pb-2"
+                  className="px-3 pb-1"
                 />
+                <h2 id={titleId} className="shrink-0 px-3 pb-1 text-base font-semibold text-orange-100">
+                  מקרא
+                </h2>
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-3">
                   <div className="flex flex-col gap-3">
                     {GROUPS.map((group) => (

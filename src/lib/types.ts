@@ -35,6 +35,9 @@ export const HOUSE_THEMES = [
 ] as const;
 export type HouseTheme = (typeof HOUSE_THEMES)[number];
 
+export const HOUSE_STATUSES = ["pending", "approved", "rejected"] as const;
+export type HouseStatus = (typeof HOUSE_STATUSES)[number];
+
 export const STOCK_LEVELS = ["plenty", "low", "out"] as const;
 export type StockLevel = (typeof STOCK_LEVELS)[number];
 
@@ -76,6 +79,7 @@ export type House = {
   /** Four-level outdoor decoration. `decorated` is kept in sync for older records. */
   decorLevel?: DecorLevel;
   decorated?: boolean;
+  status: HouseStatus;
   soldOut: boolean;
   adminFrozen: boolean;
   ownerFrozenUntil: string | null;
@@ -83,6 +87,7 @@ export type House = {
   editCode: string;
   createdAt: string;
   updatedAt: string;
+  rejectionReason?: string;
   /** Remote document id; never sent to the public catalog. */
   storeId?: string;
 };
@@ -123,7 +128,7 @@ export type NightPatch = {
   photoUrl?: string;
 };
 
-export type PublicHouse = Omit<House, "editCode" | "storeId">;
+export type PublicHouse = Omit<House, "editCode" | "rejectionReason" | "storeId">;
 
 export type CatalogPushTemplate = {
   enabled: boolean;
@@ -137,14 +142,6 @@ export type Catalog = {
   houses: PublicHouse[];
   /** Merged owner-alert templates so quick-update preview matches the server. */
   pushTemplates?: Partial<Record<string, CatalogPushTemplate>>;
-};
-
-/** Partial catalog from `GET /api/catalog?since=` — merge into the cached full list. */
-export type CatalogDelta = Catalog & {
-  full?: boolean;
-  removed?: string[];
-  /** Server-suggested foreground poll interval (seconds). Change via CATALOG_POLL_SECONDS. */
-  pollSeconds?: number;
 };
 
 export type AddressHit = {
@@ -180,7 +177,6 @@ export type DbFile = {
   vapid?: VapidKeys;
   pushSettings?: {
     updatedAt?: string;
-    generation?: number;
     templates?: Partial<
       Record<
         | "onBreak"
@@ -191,7 +187,8 @@ export type DbFile = {
         | "candyLow"
         | "candyOut"
         | "candyOutClosed"
-        | "candyRestock",
+        | "candyRestock"
+        | "backActive",
         { enabled: boolean; title: string; body: string }
       >
     >;

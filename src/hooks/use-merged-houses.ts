@@ -12,12 +12,15 @@ export function mergeVisibleHouses({
   owned,
   admin,
   adminHouses,
+  adminStubHouses = [],
   includeCatalogWhenAdmin = false,
 }: {
   catalogHouses: PublicHouse[];
   owned: OwnedHouse[];
   admin: boolean;
   adminHouses: House[];
+  /** Loaded lazily from /api/admin/stubs when admin rehearses with stubs. */
+  adminStubHouses?: House[];
   /** Edit page needs catalog + admin API houses; the map uses admin houses only. */
   includeCatalogWhenAdmin?: boolean;
 }): PublicHouse[] {
@@ -30,7 +33,11 @@ export function mergeVisibleHouses({
   }
   if (admin) {
     for (const house of adminHouses) {
-      if (deleted.has(house.id)) continue;
+      if (house.status === "rejected" || deleted.has(house.id)) continue;
+      byId.set(house.id, toPublicHouse(house) as PublicHouse);
+    }
+    for (const house of adminStubHouses) {
+      if (house.status === "rejected" || deleted.has(house.id)) continue;
       byId.set(house.id, toPublicHouse(house) as PublicHouse);
     }
   }
@@ -56,12 +63,14 @@ export function useMergedHouses({
   owned,
   admin,
   adminHouses,
+  adminStubHouses = [],
   includeCatalogWhenAdmin = false,
 }: {
   catalogHouses: PublicHouse[];
   owned: OwnedHouse[];
   admin: boolean;
   adminHouses: House[];
+  adminStubHouses?: House[];
   includeCatalogWhenAdmin?: boolean;
 }) {
   return useMemo(
@@ -71,8 +80,9 @@ export function useMergedHouses({
         owned,
         admin,
         adminHouses,
+        adminStubHouses,
         includeCatalogWhenAdmin,
       }),
-    [catalogHouses, owned, admin, adminHouses, includeCatalogWhenAdmin],
+    [catalogHouses, owned, admin, adminHouses, adminStubHouses, includeCatalogWhenAdmin],
   );
 }

@@ -1,11 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { get as getBlob, put as putBlob } from "@vercel/blob";
-import {
-  blobForEphemeralCounters,
-  privateBlobGetOptions,
-  privateBlobPutOptions,
-} from "@/lib/blob-auth";
 
 const BLOB_PATH = "halloween-houses/devices.json";
 const MAX_DEVICES = 5000;
@@ -43,6 +38,10 @@ function setLastBlobAt(at: number) {
   (globalThis as GlobalBag).__hwDevicesLastBlob = at;
 }
 
+function blobEnabled() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+}
+
 async function filePath() {
   if (process.env.DATA_DIR) {
     await fs.mkdir(process.env.DATA_DIR, { recursive: true });
@@ -76,9 +75,13 @@ async function writeLocal(file: DeviceFile) {
 }
 
 async function readBlob(): Promise<DeviceFile | null> {
-  if (!blobForEphemeralCounters()) return null;
+  if (!blobEnabled()) return null;
   try {
-    const result = await getBlob(BLOB_PATH, privateBlobGetOptions());
+    const result = await getBlob(BLOB_PATH, {
+      access: "private",
+      useCache: false,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    });
     if (!result?.stream) return null;
     return JSON.parse(await new Response(result.stream).text()) as DeviceFile;
   } catch {
@@ -87,9 +90,16 @@ async function readBlob(): Promise<DeviceFile | null> {
 }
 
 async function writeBlob(file: DeviceFile) {
-  if (!blobForEphemeralCounters()) return;
+  if (!blobEnabled()) return;
   try {
-    await putBlob(BLOB_PATH, JSON.stringify(file), privateBlobPutOptions("application/json"));
+    await putBlob(BLOB_PATH, JSON.stringify(file), {
+      access: "private",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: "application/json",
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+      cacheControlMaxAge: 0,
+    });
   } catch {
     /* keep memory/file */
   }
@@ -168,7 +178,7 @@ export async function rememberDevice(id: string): Promise<number> {
     prune(file);
     file.updatedAt = new Date().toISOString();
     remember(file);
-    if (blobForEphemeralCounters() && now - lastBlobAt() >= BLOB_PERSIST_MS) {
+    if (now - lastBlobAt() >= BLOB_PERSIST_MS) {
       await persist(file);
     }
     return Object.keys(file.ids).length;
