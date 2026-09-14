@@ -144,6 +144,14 @@ export function NeighborhoodApp({
     adminHouses,
   });
 
+  const housesForSkipCount = useMemo(() => {
+    const byId = new Map(houses.map((house) => [house.id, house]));
+    for (const house of catalog?.houses ?? []) {
+      if (!byId.has(house.id)) byId.set(house.id, house);
+    }
+    return [...byId.values()];
+  }, [houses, catalog?.houses]);
+
   const filterContext = useMemo(
     () => ({
       houseSet: activeHouseSet,
@@ -396,7 +404,9 @@ export function NeighborhoodApp({
   const summaryProps = {
     filteredHouses: visible.length,
     route: activeRoute ?? filterRoute,
-    skippedCount: routeMode ? countSkippedInSet(skips.skippedIds, houses, activeHouseSet) : 0,
+    skippedCount: routeMode
+      ? countSkippedInSet(skips.skippedIds, housesForSkipCount, activeHouseSet)
+      : 0,
     staleLabel: offline
       ? "לא מקוון"
       : unreachable
