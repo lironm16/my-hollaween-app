@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { countSkippedInSet, isStubHouse } from "@/lib/house-set";
+import { countSkippedInSet, isStubHouse, mergeMissingRehearsalStubs } from "@/lib/house-set";
 
 describe("countSkippedInSet", () => {
   it("ignores rehearsal stubs when counting skips in real mode", () => {
@@ -40,5 +40,21 @@ describe("countSkippedInSet", () => {
 
   it("counts rehearsal stub ids in stubs mode even without a house row", () => {
     assert.equal(countSkippedInSet(["בית-9310"], [], "stubs"), 1);
+  });
+});
+
+describe("mergeMissingRehearsalStubs", () => {
+  it("adds missing seed rehearsal stubs without touching live houses", () => {
+    const live = [{ id: "בית-9310", name: "live" }];
+    const seed = [
+      { id: "בית-9310", name: "seed" },
+      { id: "בית-9318", name: "long title stub" },
+      { id: "בית-9316", name: "dropped" },
+      { id: "בית-1847", name: "general stub" },
+    ];
+    const merged = mergeMissingRehearsalStubs(live, seed);
+    assert.equal(merged.length, 2);
+    assert.equal(merged.find((house) => house.id === "בית-9310")?.name, "live");
+    assert.equal(merged.find((house) => house.id === "בית-9318")?.name, "long title stub");
   });
 });
