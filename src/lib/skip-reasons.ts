@@ -48,6 +48,50 @@ export function isTemporarySkipReason(reason: SkipReasonId) {
   return reason !== "other" && reason !== "scary";
 }
 
+/** Positive-framed restore triggers shown when temporary skip is enabled. */
+export function returnRestoreReasons(
+  house: PublicHouse,
+  now: Date,
+  filters: HouseFiltersState,
+): SkipReasonOption[] {
+  const { from, to } = resolveVisitWindow(filters, now);
+  const visit = effectiveVisit(house);
+  const candy = candyPinDot(house);
+  const seen = new Set<SkipReasonId>();
+  const options: SkipReasonOption[] = [];
+
+  const push = (id: SkipReasonId, label: string) => {
+    if (seen.has(id) || !isTemporarySkipReason(id)) return;
+    seen.add(id);
+    options.push({ id, label });
+  };
+
+  if (!isOpenNowForFilter(house, from, to, now) || visit === "closed") {
+    push("not-open", "בית פתוח");
+  }
+  if (visit === "closed") {
+    push("closed", "הבית פעיל שוב");
+  }
+  if (isOnBreak(house, now) || isOwnerFrozen(house, now.getTime())) {
+    push("break", "יצא מהפסקה");
+  }
+  if (candy === "out" || candy === "low" || candy === "none") {
+    push("candy-out", "יש ממתקים");
+  }
+  if (candy === "low") {
+    push("candy-low", "יש מספיק ממתקים");
+  }
+  if (visit === "decorOnly") {
+    push("decor-only", "קישוט בלבד");
+  }
+
+  push("not-open", "בית פתוח");
+  push("candy-out", "יש ממתקים");
+  push("break", "יצא מהפסקה");
+
+  return options;
+}
+
 export function suggestedSkipReasons(house: PublicHouse, now: Date, filters: HouseFiltersState) {
   const { from, to } = resolveVisitWindow(filters, now);
   const options: SkipReasonOption[] = [];

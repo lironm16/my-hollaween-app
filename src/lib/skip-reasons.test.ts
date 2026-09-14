@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   isTemporarySkipReason,
+  returnRestoreReasons,
   skipStatusSnapshot,
   suggestedSkipReasons,
 } from "@/lib/skip-reasons";
@@ -78,6 +79,28 @@ describe("suggestedSkipReasons", () => {
   it("marks status reasons as temporary-friendly", () => {
     assert.equal(isTemporarySkipReason("closed"), true);
     assert.equal(isTemporarySkipReason("other"), false);
+  });
+});
+
+describe("returnRestoreReasons", () => {
+  it("always offers open and candy restore triggers", () => {
+    const options = returnRestoreReasons(
+      stub(),
+      new Date("2026-10-31T18:00:00"),
+      baseFilters,
+    );
+    assert.ok(options.some((item) => item.id === "not-open" && item.label === "בית פתוח"));
+    assert.ok(options.some((item) => item.id === "candy-out" && item.label === "יש ממתקים"));
+  });
+
+  it("prioritizes closed-house restore when the house is closed", () => {
+    const options = returnRestoreReasons(
+      stub({ visit: "closed", soldOut: true }),
+      new Date("2026-10-31T18:00:00"),
+      baseFilters,
+    );
+    assert.equal(options[0]?.id, "not-open");
+    assert.ok(options.some((item) => item.id === "closed"));
   });
 });
 
