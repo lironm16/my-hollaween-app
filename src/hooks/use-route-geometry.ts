@@ -9,7 +9,12 @@ function geometryKey(route: WalkingRoute) {
   return `${origin}|${route.accessible ? "a" : "w"}|${route.startedFrom}|${stops}`;
 }
 
-export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
+export function useRouteGeometry(
+  route: WalkingRoute | null,
+  enabled: boolean,
+  options?: { straightOnly?: boolean },
+) {
+  const straightOnly = Boolean(options?.straightOnly);
   const [line, setLine] = useState<LatLng[] | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "fallback">("idle");
   const routeRef = useRef(route);
@@ -26,9 +31,14 @@ export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
       setStatus("idle");
       return;
     }
-    const waypoints = routeGeometryPoints(current);
     const preview = routePreviewPoints(current);
     let cancelled = false;
+    if (straightOnly) {
+      setLine(preview.length >= 2 ? preview : null);
+      setStatus("fallback");
+      return;
+    }
+    const waypoints = routeGeometryPoints(current);
     setStatus("loading");
     setLine(preview.length >= 2 ? preview : null);
     void fetch("/api/walk-route", {
@@ -59,7 +69,7 @@ export function useRouteGeometry(route: WalkingRoute | null, enabled: boolean) {
     return () => {
       cancelled = true;
     };
-  }, [key]);
+  }, [key, straightOnly]);
 
   return { line, status };
 }

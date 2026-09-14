@@ -49,7 +49,9 @@ export async function POST(
             ? 400
             : 409;
     const message =
-      result.error === "disabled"
+      result.error === "mapOnly"
+        ? "עדכוני בית בלילה מופיעים במפה בלבד — לא נשלחים כהתראה."
+        : result.error === "disabled"
         ? "סוג ההתראה כבוי אצל המנהלים."
         : result.error === "mismatch"
           ? "מצב הבית כבר לא מתאים להתראה הזו."

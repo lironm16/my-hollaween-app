@@ -262,11 +262,101 @@ export function toggleVisited(id: string): string[] {
   return next;
 }
 
+const SKIPPED_KEY = "hw-skipped-houses";
+const SKIPPED_META_KEY = "hw-skipped-meta";
+
+export type SkippedHouseMeta = {
+  reason: string;
+  temporary: boolean;
+  statusKey: string;
+  skippedAt: string;
+};
+
+export function listTemporarySkippedMeta(): Array<{ id: string; meta: SkippedHouseMeta }> {
+  const ids = loadSkippedIds();
+  const meta = loadSkippedMeta();
+  return ids
+    .filter((id) => meta[id]?.temporary)
+    .map((id) => ({ id, meta: meta[id]! }));
+}
+
+export function loadSkippedIds(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(SKIPPED_KEY);
+    const ids = raw ? (JSON.parse(raw) as unknown) : [];
+    return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+export function isSkipped(id: string) {
+  return loadSkippedIds().includes(id);
+}
+
+export function loadSkippedMeta(): Record<string, SkippedHouseMeta> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(SKIPPED_META_KEY);
+    const parsed = raw ? (JSON.parse(raw) as unknown) : {};
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, SkippedHouseMeta>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveSkippedMeta(meta: Record<string, SkippedHouseMeta>) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(SKIPPED_META_KEY, JSON.stringify(meta));
+}
+
+export function getSkippedMeta(id: string): SkippedHouseMeta | undefined {
+  return loadSkippedMeta()[id];
+}
+
+export function skipHouse(id: string, meta?: SkippedHouseMeta): string[] {
+  const current = loadSkippedIds();
+  if (current.includes(id)) return current;
+  const next = [id, ...current];
+  localStorage.setItem(SKIPPED_KEY, JSON.stringify(next.slice(0, 200)));
+  if (meta) {
+    const all = loadSkippedMeta();
+    all[id] = meta;
+    saveSkippedMeta(all);
+  }
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("hw-skipped-changed"));
+  }
+  return next;
+}
+
+export function unskipHouse(id: string): string[] {
+  const current = loadSkippedIds();
+  const next = current.filter((item) => item !== id);
+  localStorage.setItem(SKIPPED_KEY, JSON.stringify(next));
+  const all = loadSkippedMeta();
+  if (all[id]) {
+    delete all[id];
+    saveSkippedMeta(all);
+  }
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("hw-skipped-changed"));
+  }
+  return next;
+}
+
+export function toggleSkipped(id: string): string[] {
+  return isSkipped(id) ? unskipHouse(id) : skipHouse(id);
+}
+
 const SERVER_DB_KEY = "hw-server-db-backup";
 
 export type ServerDbBackup = {
   updatedAt: string;
-  houses: Array<Record<string, unknown> & { id: string; status: string; updatedAt: string }>;
+  houses: Array<Record<string, unknown> & { id: string; updatedAt: string }>;
 };
 
 export function loadServerDbBackup(): ServerDbBackup | null {
@@ -291,11 +381,9 @@ export function saveServerDbBackup(db: ServerDbBackup) {
   }
 }
 
-export function backupLooksNewer(backup: ServerDbBackup, serverUpdatedAt: string, serverHouses: Array<{ status: string }>) {
+export function backupLooksNewer(backup: ServerDbBackup, serverUpdatedAt: string, serverHouses: unknown[]) {
   if (stamp(backup.updatedAt) > stamp(serverUpdatedAt)) return true;
-  const backupApproved = backup.houses.filter((h) => h.status === "approved").length;
-  const serverApproved = serverHouses.filter((h) => h.status === "approved").length;
-  return backupApproved > serverApproved;
+  return backup.houses.length > serverHouses.length;
 }
 
 const FILTERS_KEY = "hw-house-filters";
@@ -327,6 +415,8 @@ export type HouseFiltersState = {
   likedOnly: boolean;
   unvisitedOnly: boolean;
   visitedOnly: boolean;
+  /** Show only houses skipped on the route. */
+  skippedOnly: boolean;
   /** Include houses with no outdoor decoration (gray struck lights). */
   includeUndecorated: boolean;
 };

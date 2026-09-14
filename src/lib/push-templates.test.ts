@@ -7,6 +7,7 @@ import {
   houseMatchesNotifyKind,
   isHouseOffAir,
   mergePushTemplates,
+  migratePushSettings,
   ownerOfferKindFromPatch,
   resolveHouseNotifyKind,
   stockAlertsBlocked,
@@ -31,7 +32,6 @@ function baseHouse(patch: Partial<House> = {}): House {
     openTo: "21:00",
     notes: "",
     accessible: false,
-    status: "approved",
     soldOut: false,
     adminFrozen: false,
     ownerFrozenUntil: null,
@@ -42,6 +42,21 @@ function baseHouse(patch: Partial<House> = {}): House {
     ...patch,
   };
 }
+
+describe("migratePushSettings", () => {
+  it("resets stored title and body while keeping enabled flags", () => {
+    const { settings, changed } = migratePushSettings({
+      templates: {
+        candyLow: { enabled: false, title: "מותאם", body: "גוף מותאם" },
+      },
+    });
+    assert.equal(changed, true);
+    assert.equal(settings.templates?.candyLow?.enabled, false);
+    assert.equal(settings.templates?.candyLow?.title, "{nickname}");
+    assert.match(settings.templates?.candyLow?.body ?? "", /🟠🍬/);
+    assert.doesNotMatch(settings.templates?.candyLow?.title ?? "", /מותאם/);
+  });
+});
 
 describe("mergePushTemplates", () => {
   it("keeps defaults when storage is empty", () => {
@@ -59,6 +74,15 @@ describe("mergePushTemplates", () => {
     assert.equal(merged.candyLow.enabled, false);
     assert.equal(merged.candyLow.title, "מותאם");
     assert.match(merged.candyLow.body, /place/);
+  });
+
+  it("keeps enabled false when explicitly disabled", () => {
+    const merged = mergePushTemplates({
+      templates: {
+        onBreak: { enabled: false, title: "{nickname}", body: "בהפסקה ⏸️ {backLine}\n{place}" },
+      },
+    });
+    assert.equal(merged.onBreak.enabled, false);
   });
 });
 
@@ -102,6 +126,12 @@ describe("classifyHouseAlert", () => {
     const prev = baseHouse({ visit: "come" });
     const next = baseHouse({ visit: "closed" });
     assert.equal(classifyHouseAlert(prev, next), "closed");
+  });
+
+  it("detects returning to open from closed as back to activity", () => {
+    const prev = baseHouse({ visit: "closed" });
+    const next = baseHouse({ visit: "come" });
+    assert.equal(classifyHouseAlert(prev, next), "backFromBreak");
   });
 
   it("detects candy running out", () => {
@@ -194,7 +224,17 @@ describe("filledPushForKind", () => {
     const house = baseHouse({ treatStock: { candy: "low" } });
     const filled = filledPushForKind("candyLow", house, null);
     assert.ok(filled);
-    assert.match(filled!.title, /בית הדלעת/);
+    assert.equal(filled!.title, "בית הדלעת");
+    assert.match(filled!.body, /🟠🍬/);
     assert.match(filled!.body, /חרוזים/);
+  });
+
+  it("uses fixed title for house-added alerts", () => {
+    const house = baseHouse();
+    const filled = filledPushForKind("houseAdded", house, null);
+    assert.ok(filled);
+    assert.match(filled!.title, /בית אימה נוסף למפה/);
+    assert.match(filled!.body, /בית הדלעת/);
+    assert.doesNotMatch(filled!.body, /מוזמנים להגיע/);
   });
 });

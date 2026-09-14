@@ -5,7 +5,6 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Heart, Pencil } from "lucide-react";
 import { VisitedCheck } from "@/components/visited-check";
-import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
 import { HouseTags } from "@/components/house-tags";
@@ -16,7 +15,6 @@ import { formatHoursLabel } from "@/lib/hours";
 import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl } from "@/lib/nav-links";
 import { shouldLoadHousePhoto } from "@/lib/photos";
-import { useHouseTraffic } from "@/hooks/use-house-traffic";
 import type { PublicHouse } from "@/lib/types";
 import { HOUSE_CARD_PHOTO_BOX } from "@/components/house-photo-frame";
 import { cn } from "@/lib/utils";
@@ -34,6 +32,7 @@ export function HouseDetails({
   onToggleEdit,
   chrome = "page",
   actions,
+  headerMenu,
   compact = false,
   distanceM,
   index,
@@ -50,6 +49,7 @@ export function HouseDetails({
   onToggleEdit?: () => void;
   /** Rendered under the title, e.g. per-apartment map actions in the sheet. */
   actions?: ReactNode;
+  headerMenu?: ReactNode;
   /** Sheet cards have their own action bar; still show the title and details. */
   chrome?: "page" | "sheet";
   /** List collapsed state: same top block as the map card, without the long details. */
@@ -58,8 +58,6 @@ export function HouseDetails({
   index?: number;
 }) {
   const displayAddress = formatDisplayAddress(house);
-  const { trafficFor } = useHouseTraffic();
-  const traffic = trafficFor(house.id);
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
   const [photoReady, setPhotoReady] = useState(false);
@@ -125,11 +123,7 @@ export function HouseDetails({
       {onToggleVisited ? (
         <button
           type="button"
-          aria-label={
-            visited
-              ? `סמנו כלא ביקרתי, ${traffic.visited} ביקרו`
-              : `סמנו שביקרתי, ${traffic.visited} ביקרו`
-          }
+          aria-label={visited ? "סמנו כלא ביקרתי" : "סמנו שביקרתי"}
           onClick={(e) => {
             e.stopPropagation();
             onToggleVisited();
@@ -142,11 +136,7 @@ export function HouseDetails({
       {onToggleLike ? (
         <button
           type="button"
-          aria-label={
-            liked
-              ? `הסירו מהשמורים, ${traffic.saved} שמרו`
-              : `שמרו את הבית, ${traffic.saved} שמרו`
-          }
+          aria-label={liked ? "הסירו מהשמורים" : "שמרו את הבית"}
           onClick={(e) => {
             e.stopPropagation();
             onToggleLike();
@@ -243,6 +233,7 @@ export function HouseDetails({
             ) : null}
             {houseHeadline(house)}
           </p>
+          {headerMenu ? <div className="house-details-menu shrink-0">{headerMenu}</div> : null}
         </div>
         {pageActions}
       </div>
@@ -256,13 +247,7 @@ export function HouseDetails({
       )}
       {actions}
       <div className="flex flex-wrap items-center gap-1.5">
-        <HouseTags
-          house={house}
-          large={compact}
-          savedCount={Math.max(traffic.saved, liked ? 1 : 0)}
-          visitedCount={Math.max(traffic.visited, visited ? 1 : 0)}
-        />
-        {house.status === "pending" ? <Badge variant="secondary">ממתין לאישור</Badge> : null}
+        <HouseTags house={house} large={compact} />
       </div>
       {house.arrival ? (
         <p className="rounded-lg bg-[#2a1638] px-3 py-2 text-base text-amber-100">

@@ -36,7 +36,6 @@ function demoHouse(overrides: Partial<House> = {}): House {
     accessible: false,
     decorLevel: "medium",
     decorated: true,
-    status: "approved",
     soldOut: false,
     adminFrozen: false,
     ownerFrozenUntil: null,
@@ -96,7 +95,7 @@ export function pushPreviewScenes(): PushScene[] {
     ),
     houseScene(
       "back-active",
-      "שוב פתוח",
+      "חזרה לפעילות",
       "בית שנסגר או היה מקושט בלבד חוזר לפתוח.",
       withVisit("closed"),
       withVisit("come", "plenty"),
@@ -110,8 +109,8 @@ export function pushPreviewScenes(): PushScene[] {
     ),
     houseScene(
       "back-from-break",
-      "חזרה מההפסקה",
-      "מבטלים את ההקפאה והבית שוב פתוח.",
+      "חזרה לפעילות",
+      "מבטלים הקפאה והבית שוב פתוח.",
       demoHouse({ ownerFrozenUntil: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString() }),
       withVisit("come"),
     ),

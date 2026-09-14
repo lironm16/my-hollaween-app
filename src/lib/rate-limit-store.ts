@@ -1,6 +1,3 @@
-import { get as getBlob, put as putBlob } from "@vercel/blob";
-
-const RATE_BLOB_PATH = "halloween-houses/rate-limits.json";
 const MEM_TTL_MS = 30_000;
 
 type Buckets = Record<string, number[]>;
@@ -18,10 +15,6 @@ function withLock<T>(fn: () => Promise<T>): Promise<T> {
   return run;
 }
 
-function blobEnabled() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
-}
-
 function pruneBuckets(buckets: Buckets, now: number, maxAgeMs: number) {
   for (const key of Object.keys(buckets)) {
     const recent = buckets[key]!.filter((stamp) => now - stamp < maxAgeMs);
@@ -35,25 +28,6 @@ async function loadBuckets(): Promise<Buckets> {
   if (now - memoryLoadedAt < MEM_TTL_MS) {
     return { ...memoryBuckets };
   }
-  if (!blobEnabled()) {
-    memoryLoadedAt = now;
-    return { ...memoryBuckets };
-  }
-  try {
-    const result = await getBlob(RATE_BLOB_PATH, {
-      access: "private",
-      useCache: false,
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-    });
-    if (!result?.stream) {
-      memoryBuckets = {};
-    } else {
-      const parsed = JSON.parse(await new Response(result.stream).text()) as Buckets;
-      memoryBuckets = parsed && typeof parsed === "object" ? parsed : {};
-    }
-  } catch {
-    memoryBuckets = {};
-  }
   memoryLoadedAt = now;
   return { ...memoryBuckets };
 }
@@ -61,22 +35,9 @@ async function loadBuckets(): Promise<Buckets> {
 async function saveBuckets(buckets: Buckets) {
   memoryBuckets = buckets;
   memoryLoadedAt = Date.now();
-  if (!blobEnabled()) return;
-  try {
-    await putBlob(RATE_BLOB_PATH, JSON.stringify(buckets), {
-      access: "private",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-      cacheControlMaxAge: 0,
-    });
-  } catch {
-    // Keep in-memory buckets; blob is best-effort for rate limits.
-  }
 }
 
-/** Shared rate limiter — uses Vercel Blob when configured, otherwise per-instance memory. */
+/** Per-instance rate limiter — avoids Blob ops that burned through Hobby quota. */
 export async function rateLimitShared(key: string, limit: number, windowMs: number) {
   return withLock(async () => {
     const now = Date.now();

@@ -25,7 +25,6 @@ export const PUSH_KINDS = [
   "candyOut",
   "candyOutClosed",
   "candyRestock",
-  "backActive",
 ] as const;
 
 export type PushKind = (typeof PUSH_KINDS)[number];
@@ -52,27 +51,27 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     auto: false,
     enabled: true,
     label: "הפסקה",
-    hint: "אחרי שמירה — כשבעל הבית מקפיא מהמפה. {backLine} = «נחזור ב־20:00» רק אם נקבעה שעה.",
-    title: "הפסקה: {nickname}",
-    body: "{backLine}\n{place}",
+    hint: "אחרי שמירה — כשבעל הבית מקפיא מהמפה. כותרת = כינוי; {backLine} = «נחזור ב־20:00» בסוף השורה רק אם נקבעה שעה.",
+    title: "{nickname}",
+    body: "בהפסקה ⏸️ {backLine}\n{place}",
   },
   backFromBreak: {
     id: "backFromBreak",
     auto: false,
     enabled: true,
-    label: "חזרה מההפסקה",
-    hint: "אחרי שמירה — כשמבטלים הקפאה והבית שוב פתוח.",
-    title: "חזרה לפתוח: {nickname}",
-    body: "מוזמנים להגיע\n{place}",
+    label: "חזרה לפעילות",
+    hint: "אחרי שמירה — כשחוזרים מ«הפסקה», «סגור» או «מקושט» לפתוח.",
+    title: "{nickname}",
+    body: "עכשיו פתוח!\nמוזמנים להגיע 👋\n{place}",
   },
   houseAdded: {
     id: "houseAdded",
     auto: true,
     enabled: true,
     label: "בית חדש במפה",
-    hint: "נשלח אוטומטית אחרי הוספת בית.",
-    title: "בית חדש: {nickname}",
-    body: "מוזמנים להגיע\n{place}",
+    hint: "נשלח אוטומטית אחרי הוספת בית. כותרת קבועה — הכינוי בגוף ההודעה.",
+    title: "🏠בית אימה נוסף למפה!",
+    body: "{nickname}\n{place}",
   },
   closed: {
     id: "closed",
@@ -80,8 +79,8 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     enabled: true,
     label: "נסגר לביקור",
     hint: "אחרי שמירה בעל הבית יכול לשלוח — כשבוחרים «סגור» או «נגמר — סגור».",
-    title: "נסגר לערב: {nickname}",
-    body: "מקווים שנהניתם!\n{place}",
+    title: "{nickname}",
+    body: "⛔️ נסגר\nמקווים שנהניתם! 👋\n{place}",
   },
   decorOnly: {
     id: "decorOnly",
@@ -89,8 +88,8 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     enabled: true,
     label: "מקושט בלי ממתקים",
     hint: "אחרי שמירה — כשבוחרים «בלי ממתקים» והבית מקושט.",
-    title: "מקושט בלי ממתקים: {nickname}",
-    body: "מוזמנים להסתכל\n{place}",
+    title: "{nickname}",
+    body: "🎨 מקושט בלי ממתקים\nמוזמנים להסתכל ✨\n{place}",
   },
   candyLow: {
     id: "candyLow",
@@ -98,8 +97,8 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     enabled: true,
     label: "מעט ממתקים",
     hint: "אחרי שמירה כשמלאי הממתקים יורד ל«מעט».",
-    title: "נשאר מעט: {nickname}",
-    body: "{place}",
+    title: "{nickname}",
+    body: "🟠🍬 נשאר מעט\n{place}",
   },
   candyOut: {
     id: "candyOut",
@@ -107,17 +106,17 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     enabled: true,
     label: "נגמרו הממתקים",
     hint: "אחרי שמירה כשהממתקים נגמרו והבית עדיין פתוח לביקור.",
-    title: "נגמרו הממתקים: {nickname}",
-    body: "{place}",
+    title: "{nickname}",
+    body: "🔴🍬 נגמרו הממתקים\n{place}",
   },
   candyOutClosed: {
     id: "candyOutClosed",
     auto: false,
     enabled: true,
-    label: "נגמרו הממתקים (סגור)",
+    label: "נגמרו (סגור)",
     hint: "אחרי שמירה כשהממתקים נגמרו והבית סגור לביקורים.",
-    title: "נגמרו הממתקים: {nickname}",
-    body: "הבית סגור לביקורים\n{place}",
+    title: "{nickname}",
+    body: "🔴🍬 נגמרו הממתקים\n⛔️ הבית סגור לביקורים\n{place}",
   },
   candyRestock: {
     id: "candyRestock",
@@ -125,24 +124,61 @@ export const DEFAULT_PUSH_TEMPLATES: Record<PushKind, PushTemplateMeta> = {
     enabled: true,
     label: "חזרו למלאי",
     hint: "אחרי שמירה כשהבית פתוח והממתקים חוזרים.",
-    title: "חזרו למלאי: {nickname}",
-    body: "{place}",
-  },
-  backActive: {
-    id: "backActive",
-    auto: false,
-    enabled: true,
-    label: "חזרה לפעילות",
-    hint: "אחרי שמירה כשחוזרים מ«סגור» או «מקושט» לפתוח.",
-    title: "שוב פתוח: {nickname}",
-    body: "מוזמנים להגיע\n{place}",
+    title: "{nickname}",
+    body: "🟢🍬 חזרו למלאי\n{place}",
   },
 };
 
 export type StoredPushSettings = {
   updatedAt?: string;
+  /** Bump PUSH_TEMPLATES_STORAGE_GENERATION to reset stored title/body to defaults. */
+  generation?: number;
   templates?: Partial<Record<PushKind, PushTemplateFields>>;
 };
+
+/** Bump to reset stored template text back to DEFAULT_PUSH_TEMPLATES (enabled flags kept). */
+export const PUSH_TEMPLATES_STORAGE_GENERATION = 6;
+
+export function buildDefaultPushSettings(): StoredPushSettings {
+  const templates: Partial<Record<PushKind, PushTemplateFields>> = {};
+  for (const id of PUSH_KINDS) {
+    const base = DEFAULT_PUSH_TEMPLATES[id];
+    templates[id] = { enabled: base.enabled, title: base.title, body: base.body };
+  }
+  return {
+    updatedAt: new Date().toISOString(),
+    generation: PUSH_TEMPLATES_STORAGE_GENERATION,
+    templates,
+  };
+}
+
+export function migratePushSettings(stored?: StoredPushSettings | null): {
+  settings: StoredPushSettings;
+  changed: boolean;
+} {
+  const generation = stored?.generation ?? 0;
+  if (generation >= PUSH_TEMPLATES_STORAGE_GENERATION && stored?.templates) {
+    return { settings: stored, changed: false };
+  }
+  const templates: Partial<Record<PushKind, PushTemplateFields>> = {};
+  for (const id of PUSH_KINDS) {
+    const base = DEFAULT_PUSH_TEMPLATES[id];
+    const overlay = stored?.templates?.[id];
+    templates[id] = {
+      enabled: overlay && "enabled" in overlay ? overlay.enabled : base.enabled,
+      title: base.title,
+      body: base.body,
+    };
+  }
+  return {
+    settings: {
+      updatedAt: new Date().toISOString(),
+      generation: PUSH_TEMPLATES_STORAGE_GENERATION,
+      templates,
+    },
+    changed: true,
+  };
+}
 
 export function mergePushTemplates(
   stored?: StoredPushSettings | null,
@@ -153,7 +189,7 @@ export function mergePushTemplates(
     const overlay = stored?.templates?.[id];
     out[id] = {
       ...base,
-      enabled: overlay?.enabled ?? base.enabled,
+      enabled: overlay && "enabled" in overlay ? overlay.enabled : base.enabled,
       title: overlay?.title?.trim() || base.title,
       body: overlay?.body?.trim() || base.body,
     };
@@ -274,7 +310,7 @@ export function classifyHouseAlert(prev: House, next: House): PushKind | null {
   if (prevVisit !== "closed" && nextVisit === "closed" && !isHouseOffAir(prev)) return "closed";
   if (prevVisit !== "decorOnly" && nextVisit === "decorOnly") return "decorOnly";
   if ((prevVisit === "closed" || prevVisit === "decorOnly") && nextVisit === "come") {
-    return "backActive";
+    return "backFromBreak";
   }
 
   if (nextVisit === "come" && markedCandy(next)) {
@@ -296,7 +332,7 @@ export function houseMatchesNotifyKind(house: House, kind: PushKind): boolean {
   if (kind === "candyRestock") {
     return isPubliclyListed(house) && !paused && visit === "come" && !isOnBreak(house);
   }
-  if (kind === "backFromBreak" || kind === "backActive" || kind === "houseAdded") {
+  if (kind === "backFromBreak" || kind === "houseAdded") {
     return isPubliclyListed(house) && !paused && visit === "come";
   }
   if (kind === "closed") return visit === "closed";
@@ -358,7 +394,7 @@ export function ownerOfferKindFromPatch(
     return "closed";
   }
   if (patch.visit === "decorOnly" && houseMatchesNotifyKind(next, "decorOnly")) return "decorOnly";
-  if (patch.visit === "come" && houseMatchesNotifyKind(next, "backActive")) return "backActive";
+  if (patch.visit === "come" && houseMatchesNotifyKind(next, "backFromBreak")) return "backFromBreak";
   const candy = patch.treatStock?.candy;
   if (
     candy === "out" &&

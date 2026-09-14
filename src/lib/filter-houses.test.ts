@@ -25,6 +25,7 @@ function baseFilters(overrides: Partial<HouseFiltersState> = {}): HouseFiltersSt
     likedOnly: false,
     unvisitedOnly: false,
     visitedOnly: false,
+    skippedOnly: false,
     includeUndecorated: true,
     ...overrides,
   };
@@ -48,7 +49,6 @@ function house(id: string, patch: Partial<PublicHouse> = {}): PublicHouse {
     openTo: "21:00",
     notes: "",
     accessible: false,
-    status: "approved",
     soldOut: false,
     adminFrozen: false,
     updatedAt: "2026-10-31T12:00:00.000Z",

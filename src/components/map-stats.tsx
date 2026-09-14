@@ -5,12 +5,13 @@ import { createPortal } from "react-dom";
 import { WifiOff } from "lucide-react";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { ScarePumpkin } from "@/components/scare-glyphs";
+import { SkipGlyph } from "@/components/skip-icon";
 import type { WalkingRoute } from "@/lib/route";
 import { cn } from "@/lib/utils";
 
 function HouseIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="size-full text-orange-500">
+    <svg viewBox="0 0 24 24" aria-hidden className="mx-auto block size-full text-orange-500">
       <path
         fill="currentColor"
         d="M3.6 11.2 12 3.6l8.4 7.6v8.6c0 .8-.7 1.5-1.5 1.5h-4.4v-5.8H9.5v5.8H5.1c-.8 0-1.5-.7-1.5-1.5z"
@@ -43,6 +44,18 @@ function PathIcon() {
       />
       <circle cx="4.6" cy="15.4" r="2.3" fill="#c4b5fd" />
       <circle cx="19.7" cy="8.4" r="2.3" fill="#c4b5fd" />
+    </svg>
+  );
+}
+
+function SkipSummaryIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="size-full">
+      <circle cx="12" cy="12" r="8.6" fill="#c4b5fd" />
+      <circle cx="12" cy="12" r="6.6" fill="#1c0e24" />
+      <g transform="translate(12 12) scale(0.58) translate(-12 -12)">
+        <SkipGlyph fill="#fb923c" />
+      </g>
     </svg>
   );
 }
@@ -122,12 +135,14 @@ function CompactChip({
 export function StatsSummary({
   filteredHouses,
   route = null,
+  skippedCount = 0,
   staleLabel = null,
   heading = false,
   compact = false,
 }: {
   filteredHouses: number;
   route?: WalkingRoute | null;
+  skippedCount?: number;
   staleLabel?: string | null;
   heading?: boolean;
   compact?: boolean;
@@ -158,6 +173,13 @@ export function StatsSummary({
               value={route ? `כ־${route.totalMinutes}` : "—"}
               label="דק׳"
             />
+            {route ? (
+              <CompactChip
+                icon={<SkipSummaryIcon />}
+                value={String(skippedCount)}
+                label="דילגתי"
+              />
+            ) : null}
           </div>
         </section>
         {staleLabel ? (
@@ -195,6 +217,9 @@ export function StatsSummary({
             value={route ? `כ־${route.totalMinutes}` : "—"}
             label="דק׳"
           />
+          {route ? (
+            <RouteChip icon={<SkipSummaryIcon />} value={String(skippedCount)} label="דילגתי" />
+          ) : null}
         </div>
       </section>
       {staleLabel ? (
@@ -210,6 +235,7 @@ export function StatsSummary({
 export function MapStats(props: {
   filteredHouses: number;
   route?: WalkingRoute | null;
+  skippedCount?: number;
   staleLabel?: string | null;
 }) {
   const [open, setOpen] = useState(false);

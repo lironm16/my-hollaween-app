@@ -4,6 +4,7 @@ import { deleteByEditCode, getCatalog, getHouse, updateByEditCode } from "@/lib/
 import { canonicalHouseId, toPublicHouse } from "@/lib/ids";
 import { config } from "@/lib/config";
 import { geocodeHttpError } from "@/lib/geocode";
+import { storageHttpError } from "@/lib/storage-errors";
 import { grantOwnerHouse, ownerMayEdit } from "@/lib/owner-session";
 import { isAdmin } from "@/lib/admin";
 import { readIncludeEndpoint } from "@/lib/push";
@@ -87,6 +88,11 @@ export async function PATCH(
     await grantOwnerHouse(id);
     return NextResponse.json({ house: toPublicHouse(result.house), push: result.push });
   } catch (error) {
+    console.error("[houses] update failed", error);
+    const storage = storageHttpError(error);
+    if (storage) {
+      return NextResponse.json({ error: storage.error, code: storage.code }, { status: storage.status });
+    }
     const geo = geocodeHttpError(error);
     if (geo) return NextResponse.json({ error: geo.error }, { status: geo.status });
     return NextResponse.json(

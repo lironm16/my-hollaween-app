@@ -3,8 +3,7 @@ import path from "node:path";
 import { get as getBlob, put as putBlob } from "@vercel/blob";
 import { canonicalAddressForBuilding } from "@/lib/house-clusters";
 import { canonicalHouseId, newEditCode, newPublicId, sameHouseId, toPublicHouse } from "@/lib/ids";
-import { inNeighborhood } from "@/lib/config";
-import { config } from "@/lib/config";
+import { config, formatDisplayAddress } from "@/lib/config";
 import { assertRealAddress } from "@/lib/geocode";
 import {
   defaultTreatStock,
@@ -15,16 +14,14 @@ import {
 } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import { cloneDb, mergeHouses, mergePushSubscriptions } from "@/lib/catalog-sync";
-import { isStubHouse } from "@/lib/house-set";
-import { housesForPublicCatalog } from "@/lib/public-catalog";
 import { parsePhotoUrl } from "@/lib/photos";
 import {
   HOUSE_THEMES,
   type Catalog,
+  type CatalogDelta,
   type DbFile,
   type House,
   type HouseInput,
-  type HouseStatus,
   type HouseTheme,
   type NightPatch,
   type PublicHouse,
@@ -40,23 +37,50 @@ import {
   type PushPayload,
 } from "@/lib/push";
 import { subscriptionAllowsTopic } from "@/lib/push-topics";
+import { neighborhoodPushBroadcastAllowed } from "@/lib/push-policy";
 import {
   AUTO_PUSH_KINDS,
   PUSH_KINDS,
+  PUSH_TEMPLATES_STORAGE_GENERATION,
+  buildDefaultPushSettings,
   classifyHouseAlert,
   houseMatchesNotifyKind,
   mergePushTemplates,
+  migratePushSettings,
   ownerOfferKindFromPatch,
   type OwnerNotifyPatch,
   type PushKind,
   type StoredPushSettings,
 } from "@/lib/push-templates";
+import {
+  blobConfigured,
+  privateBlobGetOptions,
+  privateBlobPutAttempts,
+  privateBlobPutOptions,
+} from "@/lib/blob-auth";
+import {
+  firestoreConfigured,
+  queryFirestoreHousesSince,
+  queryRemovedHouseIdsSince,
+  readFirestoreDb,
+  readFirestoreHouse,
+  writeFirestoreDb,
+  writeFirestoreHouse,
+  writeFirestorePushSettings,
+} from "@/lib/firestore-db";
+import {
+  isRetryableBlobError,
+  productionRequiresBlob,
+  storageErrorCodeFromBlob,
+  storageErrorFromCode,
+} from "@/lib/storage-errors";
 
 const SEED_PATH = path.join(process.cwd(), "data", "seed.json");
 const BLOB_PATH = "halloween-houses/db.json";
 const PUSH_BLOB_PATH = "halloween-houses/push-settings.json";
 const PUSH_SUBS_BLOB_PATH = "halloween-houses/push-subscriptions.json";
-const MEM_TTL_MS = 1500;
+/** Cache house db reads — each miss fans out to several Blob GETs. */
+const MEM_TTL_MS = 120_000;
 
 let chain: Promise<unknown> = Promise.resolve();
 
@@ -116,28 +140,29 @@ async function readSeed(): Promise<DbFile> {
   return JSON.parse(raw) as DbFile;
 }
 
-function normalizeHouse(house: House): House {
-  const theme = HOUSE_THEMES.includes(house.theme as HouseTheme)
-    ? (house.theme as HouseTheme)
+function normalizeHouse(house: House & { status?: string; rejectionReason?: string }): House {
+  const { status: _status, rejectionReason: _reason, ...base } = house;
+  const theme = HOUSE_THEMES.includes(base.theme as HouseTheme)
+    ? (base.theme as HouseTheme)
     : "pumpkin";
-  const visit = effectiveVisit(house);
-  const { treats, treatStock } = normalizeTreats(house.treats, house.treatStock);
-  const hours = syncHoursFields(houseHoursWindows(house));
-  const decor = syncDecorFields(house);
+  const visit = effectiveVisit(base);
+  const { treats, treatStock } = normalizeTreats(base.treats, base.treatStock);
+  const hours = syncHoursFields(houseHoursWindows(base));
+  const decor = syncDecorFields(base);
   return {
-    ...house,
+    ...base,
     theme,
-    arrival: house.arrival ?? "",
-    accessible: Boolean(house.accessible),
+    arrival: base.arrival ?? "",
+    accessible: Boolean(base.accessible),
     decorLevel: decor.decorLevel,
     decorated: decor.decorated,
     treats,
     visit,
     treatStock,
     soldOut: visit === "closed",
-    adminFrozen: Boolean(house.adminFrozen),
-    ownerFrozenUntil: house.ownerFrozenUntil ?? null,
-    photoUrl: house.photoUrl ?? "",
+    adminFrozen: Boolean(base.adminFrozen),
+    ownerFrozenUntil: base.ownerFrozenUntil ?? null,
+    photoUrl: base.photoUrl ?? "",
     openHours: hours.openHours,
     openFrom: hours.openFrom,
     openTo: hours.openTo,
@@ -155,24 +180,21 @@ function normalizeDb(db: DbFile): DbFile {
     pushSettings: db.pushSettings?.templates
       ? {
           updatedAt: db.pushSettings.updatedAt,
+          ...(db.pushSettings.generation !== undefined ? { generation: db.pushSettings.generation } : {}),
           templates: { ...db.pushSettings.templates },
         }
       : undefined,
   };
 }
 
-function blobEnabled() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function readBlobDb(): Promise<DbFile | null> {
-  if (!blobEnabled()) return null;
+  if (!blobConfigured()) return null;
   try {
-    const result = await getBlob(BLOB_PATH, {
-      access: "private",
-      useCache: false,
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-    });
+    const result = await getBlob(BLOB_PATH, privateBlobGetOptions());
     if (!result?.stream) return null;
     const text = await new Response(result.stream).text();
     return normalizeDb(JSON.parse(text) as DbFile);
@@ -182,25 +204,36 @@ async function readBlobDb(): Promise<DbFile | null> {
 }
 
 async function writeBlobDb(db: DbFile) {
-  if (!blobEnabled()) return;
-  await putBlob(BLOB_PATH, JSON.stringify(db), {
-    access: "private",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json",
-    token: process.env.BLOB_READ_WRITE_TOKEN,
-    cacheControlMaxAge: 0,
-  });
+  if (!blobConfigured()) {
+    throw storageErrorFromCode("BLOB_NOT_CONFIGURED");
+  }
+  const payload = JSON.stringify(db);
+  let lastError: unknown;
+  for (const putOptions of privateBlobPutAttempts("application/json")) {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        await putBlob(BLOB_PATH, payload, putOptions);
+        return;
+      } catch (error) {
+        lastError = error;
+        console.error("[store] blob write failed", {
+          auth: putOptions.token ? "token" : putOptions.storeId ? "oidc" : "auto",
+          attempt: attempt + 1,
+          name: error instanceof Error ? error.name : "unknown",
+          message: error instanceof Error ? error.message : String(error),
+        });
+        if (!isRetryableBlobError(error) || attempt === 2) break;
+        await sleep(300 * (attempt + 1));
+      }
+    }
+  }
+  throw storageErrorFromCode(storageErrorCodeFromBlob(lastError), lastError);
 }
 
 async function readPushSettingsBlob(): Promise<DbFile["pushSettings"] | null> {
-  if (!blobEnabled()) return null;
+  if (!blobConfigured()) return null;
   try {
-    const result = await getBlob(PUSH_BLOB_PATH, {
-      access: "private",
-      useCache: false,
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-    });
+    const result = await getBlob(PUSH_BLOB_PATH, privateBlobGetOptions());
     if (!result?.stream) return null;
     const parsed = JSON.parse(await new Response(result.stream).text()) as DbFile["pushSettings"];
     if (!parsed?.templates) return null;
@@ -211,16 +244,9 @@ async function readPushSettingsBlob(): Promise<DbFile["pushSettings"] | null> {
 }
 
 async function writePushSettingsBlob(settings: DbFile["pushSettings"]) {
-  if (!blobEnabled() || !settings?.templates) return;
+  if (!blobConfigured() || !settings?.templates) return;
   try {
-    await putBlob(PUSH_BLOB_PATH, JSON.stringify(settings), {
-      access: "private",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-      cacheControlMaxAge: 0,
-    });
+    await putBlob(PUSH_BLOB_PATH, JSON.stringify(settings), privateBlobPutOptions("application/json"));
   } catch {
     /* house db still holds a copy */
   }
@@ -253,12 +279,8 @@ async function readLocalPushSubsBlob(): Promise<PushSubscriptionRecord[] | null>
 async function readPushSubsBlob(): Promise<PushSubscriptionRecord[]> {
   const [local, remote] = await Promise.all([
     readLocalPushSubsBlob(),
-    blobEnabled()
-      ? getBlob(PUSH_SUBS_BLOB_PATH, {
-          access: "private",
-          useCache: false,
-          token: process.env.BLOB_READ_WRITE_TOKEN,
-        })
+    blobConfigured()
+      ? getBlob(PUSH_SUBS_BLOB_PATH, privateBlobGetOptions())
           .then(async (result) => {
             if (!result?.stream) return undefined;
             const parsed = JSON.parse(await new Response(result.stream).text()) as {
@@ -285,16 +307,9 @@ async function writePushSubsBlob(subscriptions: PushSubscriptionRecord[]) {
   } catch {
     /* blob/memory may still hold it */
   }
-  if (!blobEnabled()) return;
+  if (!blobConfigured()) return;
   try {
-    await putBlob(PUSH_SUBS_BLOB_PATH, payload, {
-      access: "private",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-      cacheControlMaxAge: 0,
-    });
+    await putBlob(PUSH_SUBS_BLOB_PATH, payload, privateBlobPutOptions("application/json"));
   } catch {
     /* local file still holds it */
   }
@@ -394,6 +409,25 @@ function foldPushSubscriptions(target: DbFile, ...candidates: Array<DbFile | nul
 }
 
 async function readFileDb(): Promise<DbFile> {
+  if (firestoreConfigured()) {
+    const [remote, global] = await Promise.all([
+      readFirestoreDb(),
+      Promise.resolve(getGlobalDb()),
+    ]);
+    if (remote) {
+      const merged = pickNewest(remote, global) ?? remote;
+      foldPushSubscriptions(merged, mem, global);
+      return merged;
+    }
+    const blob = await readBlobDb();
+    const seed = normalizeDb(blob ?? (await readSeed()));
+    try {
+      await writeFirestoreDb({ db: seed, prev: null });
+    } catch (error) {
+      console.error("[store] firestore bootstrap failed", error);
+    }
+    return seed;
+  }
   const [local, blob, global, pushBlob, pushSubsBlob] = await Promise.all([
     readLocalFileDb(),
     readBlobDb(),
@@ -441,13 +475,43 @@ async function persistPushSettings(
 ) {
   if (!settings?.templates) return;
   if (pushSettingsStamp(settings) < existingStamp) return;
+  if (firestoreConfigured()) {
+    await writeFirestorePushSettings(settings);
+    return;
+  }
   await writePushSettingsBlob(settings);
 }
 
-async function persistDb(db: DbFile) {
-  const pushBlob = await readPushSettingsBlob();
-  const blobWrapper = asPushCandidate(pushBlob);
-  const blobStamp = pushSettingsStamp(pushBlob);
+async function writeDurableDb(db: DbFile, prev?: DbFile | null) {
+  if (firestoreConfigured()) {
+    await writeFirestoreDb({ db, prev });
+    return;
+  }
+  if (blobConfigured()) {
+    await writeBlobDb(db);
+    try {
+      await writeFileDb(db);
+    } catch {
+      /* Vercel Blob is the durable source of truth in production */
+    }
+    return;
+  }
+  if (productionRequiresBlob()) {
+    throw storageErrorFromCode("BLOB_NOT_CONFIGURED");
+  }
+  try {
+    await writeFileDb(db);
+  } catch (error) {
+    console.error("[store] local db write failed", error);
+    throw storageErrorFromCode("PERSIST_FAILED", error);
+  }
+}
+
+async function persistDb(db: DbFile, prev?: DbFile | null) {
+  const cachedPush = pickPushSettings(db, mem, getGlobalDb());
+  const pushBlob = cachedPush?.templates ? null : await readPushSettingsBlob();
+  const blobWrapper = asPushCandidate(cachedPush ?? pushBlob);
+  const blobStamp = pushSettingsStamp(cachedPush ?? pushBlob);
   foldPushSettings(db, mem, getGlobalDb(), blobWrapper);
 
   if (isStaleSnapshot(db)) {
@@ -470,8 +534,7 @@ async function persistDb(db: DbFile) {
         /* live house data stays in memory */
       }
       try {
-        if (blobEnabled()) await writeBlobDb(live);
-        else await writeFileDb(live);
+        await writeDurableDb(live, mem);
       } catch {
         /* memory still holds the merged houses */
       }
@@ -501,8 +564,7 @@ async function persistDb(db: DbFile) {
       }
       setGlobalDb(live);
       try {
-        if (blobEnabled()) await writeBlobDb(live);
-        else await writeFileDb(live);
+        await writeDurableDb(live, mem);
       } catch {
         /* memory still holds the merged houses */
       }
@@ -511,24 +573,7 @@ async function persistDb(db: DbFile) {
     return;
   }
 
-  if (blobEnabled()) {
-    try {
-      await writeBlobDb(db);
-    } catch {
-      throw new Error("PERSIST_FAILED");
-    }
-    try {
-      await writeFileDb(db);
-    } catch {
-      /* blob already holds the write */
-    }
-  } else {
-    try {
-      await writeFileDb(db);
-    } catch {
-      throw new Error("PERSIST_FAILED");
-    }
-  }
+  await writeDurableDb(db, prev);
 
   if (isStaleSnapshot(db)) {
     const live = liveDb();
@@ -566,6 +611,14 @@ async function loadDb(fresh = false): Promise<DbFile> {
 }
 
 async function prepareDbFromSources(): Promise<DbFile> {
+  if (firestoreConfigured() && mem && Date.now() - memAt < MEM_TTL_MS) {
+    const db = normalizeDb(cloneDb(mem));
+    const keptPush = db.pushSettings;
+    const global = getGlobalDb();
+    foldPushSettings(db, asPushCandidate(keptPush), global);
+    foldPushSubscriptions(db, global);
+    return db;
+  }
   const db = normalizeDb(cloneDb(await readFileDb()));
   const keptPush = db.pushSettings;
   const global = getGlobalDb();
@@ -582,18 +635,21 @@ async function softPersistDb(db: DbFile) {
   setMem(db);
   setGlobalDb(db);
   try {
-    if (blobEnabled()) await writeBlobDb(db);
+    if (firestoreConfigured()) {
+      await writeFirestoreDb({ db, prev: mem });
+    } else if (blobConfigured()) await writeBlobDb(db);
     else await writeFileDb(db);
   } catch {
-    /* memory + dedicated push blob still hold subscriptions */
+    /* memory still holds subscriptions */
   }
 }
 
 async function runSyncedWrite<T>(fn: (db: DbFile) => T | Promise<T>): Promise<T> {
   return withLock(async () => {
     const db = await prepareDbFromSources();
+    const prev = mem ? cloneDb(mem) : null;
     const result = await fn(db);
-    await persistDb(db);
+    await persistDb(db, prev);
     return result;
   });
 }
@@ -602,9 +658,10 @@ export function asCatalog(
   houses: House[],
   updatedAt: string,
   pushSettings?: DbFile["pushSettings"],
-  options?: { includeStubs?: boolean },
 ): Catalog {
-  const published = housesForPublicCatalog(houses, options?.includeStubs ?? false);
+  const published: PublicHouse[] = houses
+    .filter((h) => isPubliclyListed(h))
+    .map((h) => toPublicHouse(h));
   const merged = mergePushTemplates(pushSettings);
   const pushTemplates: Catalog["pushTemplates"] = {};
   for (const id of PUSH_KINDS) {
@@ -623,32 +680,51 @@ export function asCatalog(
 }
 
 export async function getCatalog(): Promise<Catalog> {
+  await ensurePushSettingsGeneration();
   const db = await loadDb();
   catalogMem = asCatalog(db.houses, db.updatedAt, db.pushSettings);
   return catalogMem;
 }
 
+export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
+  await ensurePushSettingsGeneration();
+  const sinceMs = Date.parse(since);
+  if (!Number.isFinite(sinceMs) || sinceMs <= 0) {
+    const full = await getCatalog();
+    return { ...full, full: true };
+  }
+
+  const db = await loadDb();
+  let houses: PublicHouse[];
+  let removed: string[];
+
+  if (firestoreConfigured()) {
+    [houses, removed] = await Promise.all([
+      queryFirestoreHousesSince(since),
+      queryRemovedHouseIdsSince(since),
+    ]);
+  } else {
+    houses = db.houses
+      .filter((house) => isPubliclyListed(house) && stamp(house) > sinceMs)
+      .map((house) => toPublicHouse(house) as PublicHouse);
+    removed = [];
+  }
+
+  const pushChanged = pushSettingsStamp(db.pushSettings) > sinceMs;
+  return {
+    updatedAt: db.updatedAt,
+    neighborhood: config.neighborhood,
+    houses,
+    removed,
+    ...(pushChanged
+      ? { pushTemplates: asCatalog(db.houses, db.updatedAt, db.pushSettings).pushTemplates }
+      : {}),
+  };
+}
+
 export async function getAllHouses(): Promise<House[]> {
   const db = await loadDb(true);
   return db.houses;
-}
-
-/** Real + pending houses for admin management — rehearsal stubs are loaded separately. */
-export async function getAdminHouses(): Promise<{ houses: House[]; updatedAt: string }> {
-  const db = await loadDb(true);
-  return {
-    houses: db.houses.filter((house) => !isStubHouse(house)),
-    updatedAt: db.updatedAt,
-  };
-}
-
-/** Rehearsal stubs only — admin auth required before exposing. */
-export async function getAdminStubHouses(): Promise<{ houses: House[]; updatedAt: string }> {
-  const db = await loadDb(true);
-  return {
-    houses: db.houses.filter((house) => isStubHouse(house)),
-    updatedAt: db.updatedAt,
-  };
 }
 
 export async function getDbSnapshot(): Promise<DbFile> {
@@ -696,9 +772,14 @@ export async function submitHouse(
         : houseHoursWindows(input),
     );
     const decor = syncDecorFields({ ...input, visit });
+    const canonical = canonicalAddressForBuilding(input.address, db.houses);
     const house: House = {
       ...input,
-      address: canonicalAddressForBuilding(input.address, db.houses),
+      address: formatDisplayAddress({
+        address: canonical,
+        lat: input.lat,
+        lng: input.lng,
+      }),
       treats,
       treatStock,
       visit,
@@ -706,7 +787,6 @@ export async function submitHouse(
       id,
       decorLevel: decor.decorLevel,
       decorated: decor.decorated,
-      status: "approved",
       soldOut: visit === "closed",
       adminFrozen: false,
       ownerFrozenUntil: null,
@@ -723,52 +803,102 @@ export async function submitHouse(
   return { house, push };
 }
 
+function ownerAddressChanged(current: House, patch: Partial<HouseInput> & NightPatch) {
+  if (patch.address !== undefined && patch.address.trim() !== current.address.trim()) return true;
+  if (patch.lat !== undefined && patch.lat !== current.lat) return true;
+  if (patch.lng !== undefined && patch.lng !== current.lng) return true;
+  return false;
+}
+
+async function validateOwnerAddressChange(current: House, patch: Partial<HouseInput> & NightPatch) {
+  if (!ownerAddressChanged(current, patch)) return;
+  await assertRealAddress({
+    address: patch.address ?? current.address,
+    lat: patch.lat ?? current.lat,
+    lng: patch.lng ?? current.lng,
+  });
+}
+
+function applyOwnerPatch(house: House, patch: Partial<HouseInput> & NightPatch) {
+  const clean = sanitizeOwnerPatch(patch);
+  if (clean.treatStock) {
+    house.treatStock = { ...house.treatStock, ...clean.treatStock };
+    delete clean.treatStock;
+  }
+  Object.assign(house, clean);
+  if (patch.ownerFrozenUntil !== undefined) house.ownerFrozenUntil = patch.ownerFrozenUntil;
+  if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
+    house.address = formatDisplayAddress(house);
+  }
+  if (house.photoUrl) {
+    const parsed = parsePhotoUrl(house.photoUrl);
+    if (parsed !== null) house.photoUrl = parsed;
+  }
+  const decor = syncDecorFields(house);
+  house.decorLevel = decor.decorLevel;
+  house.decorated = decor.decorated;
+  house.updatedAt = new Date().toISOString();
+  house.soldOut = house.visit === "closed";
+}
+
+function upsertMemHouse(house: House, updatedAt: string) {
+  const db = mem ? cloneDb(mem) : { updatedAt, houses: [] as House[] };
+  const idx = db.houses.findIndex((item) => sameHouseId(item.id, house.id));
+  if (idx >= 0) db.houses[idx] = house;
+  else db.houses.push(house);
+  db.updatedAt = updatedAt;
+  setMem(db);
+}
+
+async function patchHouseDoc(
+  docId: string,
+  editCode: string,
+  patch: Partial<HouseInput> & NightPatch,
+  options?: { includeEndpoint?: string },
+) {
+  const existing =
+    (firestoreConfigured() ? await readFirestoreHouse(docId) : null) ??
+    findHouseIn(mem?.houses ?? [], docId) ??
+    (await getHouse(docId));
+  if (!existing) return { error: "missing" as const };
+  if (existing.editCode !== editCode) return { error: "forbidden" as const };
+
+  await validateOwnerAddressChange(existing, patch);
+
+  const prev = snapshotHouse(existing);
+  const house = normalizeHouse({ ...existing });
+  applyOwnerPatch(house, patch);
+
+  if (firestoreConfigured()) {
+    await writeFirestoreHouse(house);
+    upsertMemHouse(house, house.updatedAt);
+  } else {
+    const updated = await runSyncedWrite((db) => {
+      const row = findHouseIn(db.houses, docId);
+      if (!row || row.editCode !== editCode) return null;
+      applyOwnerPatch(row, patch);
+      db.updatedAt = row.updatedAt;
+      return row;
+    });
+    if (!updated) return { error: "missing" as const };
+  }
+
+  const push = await dispatchHousePush(prev, house, undefined, patch, options?.includeEndpoint);
+  return { house, push };
+}
+
+/** Owner patch — partial fields merged onto one house doc (1 Firestore read + 1 write). */
 export async function updateByEditCode(
   id: string,
   editCode: string,
   patch: Partial<HouseInput> & NightPatch,
   options?: { includeEndpoint?: string },
 ) {
-  const current = await getHouse(id);
-  if (!current) return { error: "missing" as const };
-  if (current.editCode !== editCode) return { error: "forbidden" as const };
-  const prev = snapshotHouse(current);
-  if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
-    await assertRealAddress({
-      address: patch.address ?? current.address,
-      lat: patch.lat ?? current.lat,
-      lng: patch.lng ?? current.lng,
-    });
+  const docId = canonicalHouseId(id);
+  if (firestoreConfigured()) {
+    return withLock(() => patchHouseDoc(docId, editCode, patch, options));
   }
-  const updated = await runSyncedWrite((db) => {
-    const house = findHouseIn(db.houses, id);
-    if (!house || house.editCode !== editCode) return null;
-    if (patch.lat !== undefined && patch.lng !== undefined) {
-      if (!inNeighborhood(patch.lat, patch.lng)) {
-        throw new Error("OUT_OF_BOUNDS");
-      }
-    }
-    const clean = sanitizeOwnerPatch(patch);
-    if (clean.treatStock) {
-      house.treatStock = { ...house.treatStock, ...clean.treatStock };
-      delete clean.treatStock;
-    }
-    Object.assign(house, clean);
-    if (house.photoUrl) {
-      const parsed = parsePhotoUrl(house.photoUrl);
-      if (parsed !== null) house.photoUrl = parsed;
-    }
-    const decor = syncDecorFields(house);
-    house.decorLevel = decor.decorLevel;
-    house.decorated = decor.decorated;
-    house.updatedAt = new Date().toISOString();
-    if (house.status === "rejected") house.status = "approved";
-    db.updatedAt = house.updatedAt;
-    return house;
-  });
-  if (!updated) return { error: "missing" as const };
-  const push = await dispatchHousePush(prev, updated, undefined, patch, options?.includeEndpoint);
-  return { house: updated, push };
+  return patchHouseDoc(docId, editCode, patch, options);
 }
 
 export async function deleteByEditCode(id: string, editCode: string) {
@@ -791,19 +921,10 @@ export async function adminDeleteHouse(id: string) {
   });
 }
 
-/** Merge a manager-device backup so approvals survive ephemeral serverless disks. */
+/** Merge a manager-device backup so edits survive ephemeral serverless disks. */
 export async function adminRestoreDb(incoming: DbFile) {
   return runSyncedWrite((db) => {
-    const mergedHouses = mergeHouses(db.houses, normalizeDb(incoming).houses).map((house) => {
-      const local = db.houses.find((h) => h.id === house.id);
-      const remote = incoming.houses.find((h) => h.id === house.id);
-      if (!local || !remote) return normalizeHouse(house);
-      if (remote.status === "approved" && local.status !== "approved") {
-        return normalizeHouse({ ...house, status: "approved", rejectionReason: undefined });
-      }
-      return normalizeHouse(house);
-    });
-    db.houses = mergedHouses;
+    db.houses = mergeHouses(db.houses, normalizeDb(incoming).houses).map(normalizeHouse);
     if (incoming.vapid?.publicKey && incoming.vapid?.privateKey) {
       db.vapid = incoming.vapid;
     }
@@ -819,30 +940,16 @@ export async function adminRestoreDb(incoming: DbFile) {
 
 export async function adminUpdate(
   id: string,
-  patch: Partial<HouseInput> & NightPatch & {
-    status?: HouseStatus;
-    rejectionReason?: string;
-  },
+  patch: Partial<HouseInput> & NightPatch,
   options?: { includeEndpoint?: string },
 ) {
   const current = await getHouse(id);
   if (!current) return null;
   const prev = snapshotHouse(current);
-  if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
-    await assertRealAddress({
-      address: patch.address ?? current.address,
-      lat: patch.lat ?? current.lat,
-      lng: patch.lng ?? current.lng,
-    });
-  }
+  await validateOwnerAddressChange(current, patch);
   const updated = await runSyncedWrite((db) => {
     const house = findHouseIn(db.houses, id);
     if (!house) return null;
-    if (patch.lat !== undefined && patch.lng !== undefined) {
-      if (!inNeighborhood(patch.lat, patch.lng)) {
-        throw new Error("OUT_OF_BOUNDS");
-      }
-    }
     if (patch.name !== undefined) house.name = patch.name;
     if (patch.theme !== undefined) house.theme = patch.theme;
     if (patch.address !== undefined) house.address = patch.address;
@@ -850,6 +957,9 @@ export async function adminUpdate(
     if (patch.description !== undefined) house.description = patch.description;
     if (patch.lat !== undefined) house.lat = patch.lat;
     if (patch.lng !== undefined) house.lng = patch.lng;
+    if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
+      house.address = formatDisplayAddress(house);
+    }
     if (patch.treats !== undefined) house.treats = patch.treats;
     if (patch.treatStock !== undefined) house.treatStock = { ...house.treatStock, ...patch.treatStock };
     if (patch.visit !== undefined) house.visit = patch.visit;
@@ -900,11 +1010,6 @@ export async function adminUpdate(
       house.soldOut = patch.soldOut;
       house.visit = patch.soldOut ? "closed" : house.visit === "closed" ? "come" : house.visit;
     }
-    if (patch.status !== undefined) house.status = patch.status;
-    if (patch.rejectionReason !== undefined) {
-      house.rejectionReason = patch.rejectionReason;
-    }
-    if (patch.status === "approved") house.rejectionReason = undefined;
     house.updatedAt = new Date().toISOString();
     db.updatedAt = house.updatedAt;
     return house;
@@ -986,6 +1091,7 @@ async function dispatchHousePush(
     (prev ? classifyHouseAlert(prev, next) : "houseAdded") ??
     ownerOfferKindFromPatch(patch, next, prev ?? undefined);
   if (!kind) return;
+  if (!neighborhoodPushBroadcastAllowed(kind)) return;
   const stored = (await loadDb()).pushSettings as StoredPushSettings | undefined;
   const payload = payloadForKind(kind, next, stored);
   if (!payload) return { kind };
@@ -996,13 +1102,61 @@ async function dispatchHousePush(
   return { kind, offer: { kind, title: payload.title, body: payload.body } };
 }
 
+let pushSettingsGenerationChecked = false;
+
+async function persistPushSettingsMigration(db: DbFile) {
+  setMem(db);
+  setGlobalDb(db);
+  try {
+    await writePushSettingsBlob(db.pushSettings);
+  } catch {
+    /* house db still holds a copy */
+  }
+  try {
+    if (blobConfigured()) await writeBlobDb(db);
+    await writeFileDb(db);
+  } catch {
+    /* memory still holds migrated templates */
+  }
+}
+
+async function ensurePushSettingsGeneration() {
+  if (pushSettingsGenerationChecked) return;
+  await withLock(async () => {
+    if (pushSettingsGenerationChecked) return;
+    const db = normalizeDb(cloneDb(await readFileDb()));
+    foldPushSettings(db, mem, getGlobalDb());
+    const { settings, changed } = migratePushSettings(db.pushSettings);
+    if (!changed) {
+      pushSettingsGenerationChecked = true;
+      return;
+    }
+    db.pushSettings = settings;
+    db.updatedAt = new Date().toISOString();
+    await persistPushSettingsMigration(db);
+    pushSettingsGenerationChecked = true;
+  });
+}
+
 export async function getPushTemplateList() {
+  await ensurePushSettingsGeneration();
   const db = await loadDb();
   return Object.values(mergePushTemplates(db.pushSettings));
 }
 
-export async function savePushTemplates(input: StoredPushSettings) {
+export async function resetPushTemplates() {
+  pushSettingsGenerationChecked = false;
   await runSyncedWrite((db) => {
+    db.pushSettings = buildDefaultPushSettings();
+    db.updatedAt = new Date().toISOString();
+  });
+  pushSettingsGenerationChecked = true;
+  return getPushTemplateList();
+}
+
+export async function savePushTemplates(input: StoredPushSettings) {
+  return withLock(async () => {
+    const db = await prepareDbFromSources();
     const merged = mergePushTemplates({
       templates: {
         ...db.pushSettings?.templates,
@@ -1017,10 +1171,16 @@ export async function savePushTemplates(input: StoredPushSettings) {
         body: merged[id].body,
       };
     }
-    db.pushSettings = { updatedAt: new Date().toISOString(), templates };
+    db.pushSettings = {
+      updatedAt: new Date().toISOString(),
+      generation: PUSH_TEMPLATES_STORAGE_GENERATION,
+      templates,
+    };
     db.updatedAt = new Date().toISOString();
+    pushSettingsGenerationChecked = true;
+    await persistPushSettingsMigration(db);
+    return Object.values(mergePushTemplates(db.pushSettings));
   });
-  return getPushTemplateList();
 }
 
 export async function notifyHouseKind(options: {
@@ -1038,6 +1198,7 @@ export async function notifyHouseKind(options: {
   }
   if (AUTO_PUSH_KINDS.has(options.kind) && !options.admin) return { error: "auto" as const };
   if (!houseMatchesNotifyKind(house, options.kind)) return { error: "mismatch" as const };
+  if (!neighborhoodPushBroadcastAllowed(options.kind)) return { error: "mapOnly" as const };
   const stored = (await loadDb()).pushSettings as StoredPushSettings | undefined;
   const payload = payloadForKind(options.kind, house, stored);
   if (!payload) return { error: "disabled" as const };

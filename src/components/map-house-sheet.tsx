@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
+import { FilterMismatchNotice } from "@/components/house-skipped-banner";
 import { CodesCopy } from "@/components/codes-copy";
 import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
@@ -35,9 +36,11 @@ export function MapHouseSheet({
   canEditHouse,
   editing,
   onToggleEdit,
-  pendingNote,
   onShowOnMap,
   onShowInList,
+  onSkip,
+  onRestoreRoute,
+  skipped,
   index,
   filterMismatchReasons,
 }: {
@@ -56,9 +59,11 @@ export function MapHouseSheet({
   canEditHouse?: (id: string) => boolean;
   editing?: boolean;
   onToggleEdit?: () => void;
-  pendingNote?: ReactNode;
   onShowOnMap?: () => void;
   onShowInList?: () => void;
+  onSkip?: () => void;
+  onRestoreRoute?: () => void;
+  skipped?: boolean;
   index?: number;
   filterMismatchReasons?: string[];
 }) {
@@ -72,15 +77,35 @@ export function MapHouseSheet({
   const draggingRef = useRef(false);
   const [dragH, setDragH] = useState<number | null>(null);
   const [sheetH, setSheetH] = useState<number | null>(null);
+  const [fitH, setFitH] = useState<number | null>(null);
   const multi = clusterHouses.length > 1;
   const overview = multi && clusterOverview;
   const address = formatDisplayAddress(house);
   const clusterKey = clusterHouses.map((item) => item.id).join(",");
   const canEditSelected = Boolean(canEditHouse?.(house.id) && onToggleEdit);
-  const height = dragH ?? sheetH;
+  const height = overview ? (dragH ?? sheetH) : (dragH ?? sheetH ?? fitH);
+  const actionMenu = (
+    <HouseActionBar
+      house={house}
+      navOnly={overview}
+      liked={liked?.(house.id)}
+      visited={visited?.(house.id)}
+      onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
+      onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
+      onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
+      onShowOnMap={onShowOnMap}
+      onShowInList={onShowInList}
+      onSkip={onSkip}
+      onRestoreRoute={onRestoreRoute}
+      skipped={skipped}
+      editing={editing}
+      menuPlacement="top"
+    />
+  );
 
   useEffect(() => {
     setSheetH(null);
+    setFitH(null);
     bodyRef.current?.scrollTo(0, 0);
   }, [clusterKey, house.id, overview]);
 
@@ -97,22 +122,51 @@ export function MapHouseSheet({
 
   useEffect(() => {
     const el = sheetRef.current;
-    if (!el) return;
+    const body = bodyRef.current;
+    if (!el || !body) return;
 
     const publish = (h: number) => {
       document.documentElement.style.setProperty("--map-sheet-h", `${h}px`);
       window.dispatchEvent(new CustomEvent("hw-map-sheet", { detail: { height: h } }));
     };
 
-    const measure = () => {
+    const publishCurrent = () => {
       if (draggingRef.current) return;
       const h = el.getBoundingClientRect().height;
-      naturalH.current = h;
-      publish(h);
+      if (h > 0) {
+        naturalH.current = h;
+        publish(h);
+      }
     };
+
+    const measure = () => {
+      if (draggingRef.current || editing || sheetH !== null) return;
+      if (overview) {
+        publishCurrent();
+        return;
+      }
+      const chrome = el.querySelector(".map-house-sheet-chrome");
+      const chromeH = chrome instanceof HTMLElement ? chrome.offsetHeight : 0;
+      const contentH = body.scrollHeight;
+      const next = Math.min(peekPx(), Math.max(72, Math.ceil(chromeH + contentH)));
+      naturalH.current = next;
+      setFitH(next);
+      publish(next);
+    };
+
+    if (editing || sheetH !== null) {
+      publishCurrent();
+      const ro = new ResizeObserver(publishCurrent);
+      ro.observe(el);
+      return () => {
+        ro.disconnect();
+        document.documentElement.style.removeProperty("--map-sheet-h");
+      };
+    }
 
     measure();
     const ro = new ResizeObserver(measure);
+    ro.observe(body);
     ro.observe(el);
     return () => {
       ro.disconnect();
@@ -164,8 +218,10 @@ export function MapHouseSheet({
     setDragH(null);
     if (!moved) return;
     skipClick.current = true;
-    if (h < peekPx() * 0.5) {
+    const closeBelow = Math.min(peekPx(), naturalH.current || peekPx()) * 0.5;
+    if (h < closeBelow) {
       setSheetH(null);
+      setFitH(null);
       onClose();
       return;
     }
@@ -196,28 +252,19 @@ export function MapHouseSheet({
         event.stopPropagation();
       }}
     >
-      <div className="map-house-sheet-chrome">
+      <div className="map-house-sheet-chrome map-house-sheet-chrome--compact">
         <div className="map-house-sheet-handle-hit">
           <div className="map-house-sheet-handle" />
         </div>
-        <HouseActionBar
-          house={house}
-          navOnly={overview}
-          liked={liked?.(house.id)}
-          visited={visited?.(house.id)}
-          onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-          onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
-          onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
-          onShowOnMap={onShowOnMap}
-          onShowInList={onShowInList}
-          editing={editing}
-        />
       </div>
       <div ref={bodyRef} className="map-house-sheet-body">
         {overview ? (
-          <div id={labelId}>
-            <p className="map-house-sheet-kicker">{address}</p>
-            <p className="map-house-sheet-sub">{clusterHouses.length} בתים</p>
+          <div id={labelId} className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="map-house-sheet-kicker">{address}</p>
+              <p className="map-house-sheet-sub">{clusterHouses.length} בתים</p>
+            </div>
+            {actionMenu}
           </div>
         ) : (
           <>
@@ -226,12 +273,10 @@ export function MapHouseSheet({
             </span>
             <div className="map-house-sheet-cards">
               <section className="map-house-sheet-card is-on">
-                {filterMismatchReasons && filterMismatchReasons.length > 0 ? (
-                  <p className="filter-mismatch-banner" role="status">
-                    מסונן: {filterMismatchReasons.join(" · ")}
-                  </p>
-                ) : null}
-                {pendingNote}
+                <FilterMismatchNotice
+                  reasons={filterMismatchReasons}
+                  onRestoreRoute={onRestoreRoute}
+                />
                 {editing ? (
                   <>
                     <p className="map-house-sheet-kicker">{houseHeadline(house)}</p>
@@ -253,6 +298,7 @@ export function MapHouseSheet({
                     extra={extra}
                     chrome="sheet"
                     index={index}
+                    headerMenu={actionMenu}
                   />
                 )}
               </section>

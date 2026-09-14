@@ -49,6 +49,18 @@ export function writeHouseSet(next: HouseSet) {
   window.dispatchEvent(new Event(HOUSE_SET_EVENT));
 }
 
+export function countSkippedInSet(
+  skippedIds: readonly string[],
+  houses: readonly { id: string; description?: string }[],
+  set: HouseSet,
+): number {
+  const byId = new Map(houses.map((house) => [house.id, house]));
+  return skippedIds.filter((id) => {
+    const house = byId.get(id);
+    return house ? houseMatchesSet(house, set) : false;
+  }).length;
+}
+
 export function houseMatchesSet(house: { id?: string; description?: string }, set: HouseSet) {
   if (set === "all") return true;
   const stub = isStubHouse(house);

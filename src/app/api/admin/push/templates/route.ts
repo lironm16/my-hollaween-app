@@ -27,7 +27,7 @@ export async function PUT(request: Request) {
   for (const row of json?.templates ?? []) {
     if (!PUSH_KINDS.includes(row.id as PushKind)) continue;
     incoming.templates![row.id as PushKind] = {
-      enabled: row.enabled !== false,
+      enabled: typeof row.enabled === "boolean" ? row.enabled : true,
       title: (row.title ?? "").slice(0, 80),
       body: (row.body ?? "").slice(0, 280),
     };
@@ -35,6 +35,14 @@ export async function PUT(request: Request) {
   if (!incoming.templates || Object.keys(incoming.templates).length === 0) {
     return NextResponse.json({ error: "אין תבניות לשמירה." }, { status: 400, headers: NO_STORE });
   }
-  const templates = await savePushTemplates(incoming);
-  return NextResponse.json({ ok: true, templates }, { headers: NO_STORE });
+  try {
+    const templates = await savePushTemplates(incoming);
+    return NextResponse.json({ ok: true, templates }, { headers: NO_STORE });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "";
+    return NextResponse.json(
+      { error: detail ? `שמירת התבניות נכשלה: ${detail}` : "שמירת התבניות נכשלה." },
+      { status: 500, headers: NO_STORE },
+    );
+  }
 }

@@ -43,6 +43,7 @@ export const DEFAULT_HOUSE_FILTERS: HouseFiltersState = {
   likedOnly: false,
   unvisitedOnly: false,
   visitedOnly: false,
+  skippedOnly: false,
   includeUndecorated: true,
 };
 
@@ -117,6 +118,7 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
     likedOnly: Boolean(raw.likedOnly),
     unvisitedOnly: Boolean(raw.unvisitedOnly),
     visitedOnly: Boolean(raw.visitedOnly),
+    skippedOnly: Boolean(raw.skippedOnly),
     includeUndecorated,
     neighborhoodFilters: Array.isArray(raw.neighborhoodFilters) ? neighborhoods : [...NEIGHBORHOODS],
     scareFilters: Array.isArray(raw.scareFilters) && raw.scareFilters.length === 0
@@ -167,6 +169,7 @@ export function emptyHouseFilters(): HouseFiltersState {
     likedOnly: false,
     unvisitedOnly: false,
     visitedOnly: false,
+    skippedOnly: false,
     accessibleOnly: false,
     scareFilters: [...SCARE_LEVELS],
     candyFilters: [...CANDY_TONE_IDS],
@@ -177,27 +180,24 @@ export function emptyHouseFilters(): HouseFiltersState {
 }
 
 export function countActiveFilters(filters: HouseFiltersState): number {
-  const neighborhoodActiveCount =
-    filters.neighborhoodFilters.length === NEIGHBORHOODS.length
-      ? 0
-      : NEIGHBORHOODS.length - filters.neighborhoodFilters.length;
-  const candyDefault =
-    filters.candyFilters.length === CANDY_TONE_IDS.length &&
-    CANDY_TONE_IDS.every((tone) => filters.candyFilters.includes(tone));
-  const scareDefault =
-    filters.includeUndecorated &&
-    filters.scareFilters.length === SCARE_LEVELS.length &&
-    SCARE_LEVELS.every((level) => filters.scareFilters.includes(level));
+  const neighborhoodActive = NEIGHBORHOODS.filter(
+    (area) => !filters.neighborhoodFilters.includes(area),
+  ).length;
+  const candyActive = CANDY_TONE_IDS.filter((tone) => !filters.candyFilters.includes(tone)).length;
+  const scareActive =
+    SCARE_LEVELS.filter((level) => !filters.scareFilters.includes(level)).length +
+    Number(!filters.includeUndecorated);
 
   return (
-    neighborhoodActiveCount +
+    neighborhoodActive +
     Number(effectiveVisitWindowMode(filters) !== "all") +
-    Number(!candyDefault) +
-    Number(!scareDefault) +
+    candyActive +
+    scareActive +
     Number(filters.accessibleOnly) +
     Number(filters.likedOnly) +
     Number(filters.unvisitedOnly) +
     Number(filters.visitedOnly) +
+    Number(filters.skippedOnly) +
     filters.sensitivityFilters.length
   );
 }

@@ -20,13 +20,6 @@ const PARK_FRACTION_MAX = 0.08;
 const HILL_DETOUR_MAX = 1.2;
 /** North of this, footpaths are the farm / Yarkon — not neighborhood streets. */
 const NORTH_STREET_EDGE = 32.0948;
-/**
- * OSRM snaps north-cluster houses onto campus footpaths and loops through the farm.
- * Cap routing queries here; map pins stay at the real coordinates.
- */
-const ROUTING_NORTH_CAP = 32.097;
-/** Reject a leg that climbs more than this above its endpoints (forest belt detours). */
-const MAX_NORTH_OVERSHOOT = 0.0012;
 
 /** Interior of the hill — west of רוקח, south of המרגנית, north of קריניצי. */
 const HILL_RING: LatLng[] = [
@@ -119,33 +112,6 @@ function parkFraction(line: LatLng[]) {
 
 function farmFraction(line: LatLng[]) {
   return fractionOn(line, inFarm);
-}
-
-function lineMaxLat(line: LatLng[]) {
-  return line.reduce((max, point) => Math.max(max, point.lat), -Infinity);
-}
-
-/** Keep OSRM off Shenkar / ראש ציפור footpaths north of the neighborhood grid. */
-function snapForRouting(point: LatLng): LatLng {
-  if (point.lat <= ROUTING_NORTH_CAP) return point;
-  return { lat: ROUTING_NORTH_CAP, lng: point.lng };
-}
-
-function snapRoutePoints(points: LatLng[]) {
-  return points.map(snapForRouting);
-}
-
-function northOvershootMeters(line: LatLng[], endpoints: LatLng[]) {
-  const cap = Math.max(...endpoints.map((point) => point.lat)) + MAX_NORTH_OVERSHOOT;
-  const overshoot = lineMaxLat(line) - cap;
-  return overshoot > 0 ? overshoot * 111_000 : 0;
-}
-
-function finishLegAtTrueStop(line: LatLng[], trueStop: LatLng, snappedStop: LatLng) {
-  if (distanceMeters(trueStop, snappedStop) < 8) return line;
-  const last = line[line.length - 1];
-  if (last && distanceMeters(last, trueStop) < 8) return line;
-  return [...line, trueStop];
 }
 
 function pathMeters(line: LatLng[]) {
@@ -287,36 +253,19 @@ function skirtCandidates(from: LatLng, to: LatLng): LatLng[][] {
   return skirts;
 }
 
-function acceptableStreetLine(line: LatLng[] | null, endpoints?: LatLng[]) {
+function acceptableStreetLine(line: LatLng[] | null) {
   if (!line || line.length < 2) return false;
-  if (farmFraction(line) > PARK_FRACTION_MAX || parkFraction(line) > PARK_FRACTION_MAX) return false;
-  if (endpoints && endpoints.length >= 2 && northOvershootMeters(line, endpoints) > 0) return false;
-  return true;
+  return farmFraction(line) <= PARK_FRACTION_MAX && parkFraction(line) <= PARK_FRACTION_MAX;
 }
 
-function skirtPolylineFallback(from: LatLng, to: LatLng, trueTo: LatLng): LatLng[] {
-  const skirts = skirtCandidates(from, to);
-  const best = skirts[0] ?? [from, to];
-  return finishLegAtTrueStop(best, trueTo, to);
-}
-
-async function fetchWalkLeg(trueFrom: LatLng, trueTo: LatLng): Promise<LatLng[] | null> {
-  const from = snapForRouting(trueFrom);
-  const to = snapForRouting(trueTo);
-  const endpoints = [trueFrom, trueTo];
-
+async function fetchWalkLeg(from: LatLng, to: LatLng): Promise<LatLng[] | null> {
   const direct = await fetchOsrm([from, to]);
-  if (acceptableStreetLine(direct, endpoints)) {
-    return finishLegAtTrueStop(direct!, trueTo, to);
-  }
+  if (acceptableStreetLine(direct)) return direct;
   for (const skirt of skirtCandidates(from, to)) {
     const line = await fetchOsrm(skirt);
-    if (acceptableStreetLine(line, endpoints)) {
-      return finishLegAtTrueStop(line!, trueTo, to);
-    }
+    if (acceptableStreetLine(line)) return line;
   }
-  const fallback = skirtPolylineFallback(from, to, trueTo);
-  return fallback.length >= 2 ? fallback : null;
+  return direct && direct.length >= 2 ? direct : null;
 }
 
 /** Walking line that visits points in order, staying on streets around parks. */
@@ -324,9 +273,12 @@ export async function fetchWalkingGeometry(points: LatLng[]): Promise<LatLng[] |
   const unique = dedupeNearby(points);
   if (unique.length < 2) return unique.length ? unique : null;
   try {
-    const snapped = snapRoutePoints(unique);
-    const directAll = await fetchOsrm(snapped);
-    if (acceptableStreetLine(directAll, unique)) return directAll;
+    const directAll = await fetchOsrm(unique);
+    if (directAll && directAll.length >= 2) {
+      const farm = farmFraction(directAll);
+      const park = parkFraction(directAll);
+      if (farm <= PARK_FRACTION_MAX && park <= PARK_FRACTION_MAX) return directAll;
+    }
 
     const legTasks = unique
       .slice(0, -1)

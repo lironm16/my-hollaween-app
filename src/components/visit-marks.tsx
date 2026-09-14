@@ -1,6 +1,8 @@
+import { Check } from "lucide-react";
 import { DecorMark } from "@/components/decor-glyphs";
 import { ClosedSign, PauseSign } from "@/components/house-tags";
 import { VisitedCheck } from "@/components/visited-check";
+import { SkipIcon } from "@/components/skip-icon";
 import { visitShort } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 
@@ -137,6 +139,70 @@ export function DecorOnlyMark({
   );
 }
 
+/** Green disc — visited / ביקרתי (filter row size). */
+export function VisitedSign({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white",
+        className,
+      )}
+      title="ביקרתי"
+      aria-label="ביקרתי"
+    >
+      <Check className="size-5" strokeWidth={3} />
+    </span>
+  );
+}
+
+/** Slate disc — skipped / דילגתי (filter row size). */
+export function SkipSign({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#64748b] text-white shadow-[0_1px_2px_rgba(0,0,0,0.45)]",
+        className,
+      )}
+      title="דילגתי"
+      aria-label="דילגתי"
+    >
+      <SkipIcon className="size-5" />
+    </span>
+  );
+}
+
+export function SkipPinBadge({
+  className,
+  size = "map",
+}: {
+  className?: string;
+  size?: "map" | "list";
+}) {
+  return (
+    <span
+      className={cn("skip-pin-badge", size === "list" && "is-list", className)}
+      aria-hidden="true"
+    >
+      <SkipIcon className="skip-pin-badge-icon" />
+    </span>
+  );
+}
+
+export function SkippedMark({
+  labeled = false,
+  className,
+}: {
+  labeled?: boolean;
+  className?: string;
+}) {
+  return (
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <SkipSign />
+      {labeled ? <span>דילגתי</span> : <span className="sr-only">דילגתי</span>}
+    </span>
+  );
+}
+
 export function VisitedMark({
   labeled = false,
   className,
@@ -146,7 +212,7 @@ export function VisitedMark({
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <VisitedCheck visited />
+      <VisitedSign />
       {labeled ? <span>ביקרתי</span> : <span className="sr-only">ביקרתי</span>}
     </span>
   );
