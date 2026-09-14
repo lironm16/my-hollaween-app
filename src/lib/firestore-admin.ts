@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
-import { cert, getApps, initializeApp, type ServiceAccount } from "firebase-admin/app";
+import { cert, getApp, getApps, initializeApp, type ServiceAccount } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
 
 let firestore: Firestore | null = null;
+let resolvePromise: Promise<Firestore> | null = null;
 
 function parseServiceAccount(): ServiceAccount | null {
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
@@ -24,6 +25,22 @@ function parseServiceAccount(): ServiceAccount | null {
   };
 }
 
+function ensureFirebaseApp() {
+  const account = parseServiceAccount();
+  if (!account) {
+    throw new Error("FIRESTORE_NOT_CONFIGURED");
+  }
+  if (!getApps().length) {
+    initializeApp({ credential: cert(account) });
+  }
+}
+
+function candidateDatabaseIds(): string[] {
+  const explicit = process.env.FIRESTORE_DATABASE_ID?.trim();
+  if (explicit) return [explicit];
+  return ["(default)", "default"];
+}
+
 export function firestoreConfigured() {
   return parseServiceAccount() !== null;
 }
@@ -32,23 +49,45 @@ export function neighborhoodDocId() {
   return process.env.FIRESTORE_NEIGHBORHOOD_ID?.trim() || "default";
 }
 
-/** Firestore database id — usually `(default)`; some projects use `default`. */
+/** Firestore database id — set FIRESTORE_DATABASE_ID if auto-detect is wrong. */
 export function firestoreDatabaseId() {
-  const raw = process.env.FIRESTORE_DATABASE_ID?.trim();
-  if (raw) return raw;
-  return "(default)";
+  return candidateDatabaseIds()[0];
+}
+
+function isNotFoundError(error: unknown) {
+  const code = (error as { code?: number | string })?.code;
+  return code === 5 || code === "not-found" || code === "NOT_FOUND";
+}
+
+async function probeDatabase(): Promise<Firestore> {
+  ensureFirebaseApp();
+  for (const id of candidateDatabaseIds()) {
+    const db = getFirestore(getApp(), id);
+    try {
+      await db.collection("_hw_firestore_probe").limit(1).get();
+      if (id !== candidateDatabaseIds()[0]) {
+        console.info("[firestore] connected using database id", id);
+      }
+      firestore = db;
+      return db;
+    } catch (error) {
+      if (!isNotFoundError(error)) throw error;
+    }
+  }
+  throw new Error("FIRESTORE_NOT_FOUND");
+}
+
+/** Resolve and cache the Firestore handle (tries `(default)` then `default`). */
+export async function resolveAdminFirestore(): Promise<Firestore> {
+  if (firestore) return firestore;
+  if (!resolvePromise) resolvePromise = probeDatabase();
+  return resolvePromise;
 }
 
 export function getAdminFirestore(): Firestore {
   if (firestore) return firestore;
-  const account = parseServiceAccount();
-  if (!account) {
-    throw new Error("FIRESTORE_NOT_CONFIGURED");
-  }
-  if (!getApps().length) {
-    initializeApp({ credential: cert(account) });
-  }
-  firestore = getFirestore(undefined, firestoreDatabaseId());
+  ensureFirebaseApp();
+  firestore = getFirestore(getApp(), firestoreDatabaseId());
   return firestore;
 }
 
