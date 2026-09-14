@@ -14,7 +14,7 @@ import {
 } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import { cloneDb, mergeHouses, mergePushSubscriptions } from "@/lib/catalog-sync";
-import { mergeMissingRehearsalStubs } from "@/lib/house-set";
+import { loadStaticRehearsalStubRows, stripStubHouses } from "@/lib/rehearsal-stubs";
 import { parsePhotoUrl } from "@/lib/photos";
 import {
   HOUSE_THEMES,
@@ -418,16 +418,17 @@ async function readFileDb(): Promise<DbFile> {
     if (remote) {
       const merged = pickNewest(remote, global) ?? remote;
       foldPushSubscriptions(merged, mem, global);
-      return merged;
+      return withStaticRehearsalStubs(merged);
     }
     const blob = await readBlobDb();
     const seed = normalizeDb(blob ?? (await readSeed()));
+    const realSeed = { ...seed, houses: stripStubHouses(seed.houses) };
     try {
-      await writeFirestoreDb({ db: seed, prev: null });
+      await writeFirestoreDb({ db: realSeed, prev: null });
     } catch (error) {
       console.error("[store] firestore bootstrap failed", error);
     }
-    return seed;
+    return withStaticRehearsalStubs(realSeed);
   }
   const [local, blob, global, pushBlob, pushSubsBlob] = await Promise.all([
     readLocalFileDb(),
@@ -447,16 +448,16 @@ async function readFileDb(): Promise<DbFile> {
   if (newest) {
     const merged = pushSettings ? { ...newest, pushSettings } : newest;
     merged.pushSubscriptions = mergePushSubscriptions(merged.pushSubscriptions, pushSubsBlob);
-    return merged;
+    return withStaticRehearsalStubs(merged);
   }
   const seed = normalizeDb(await readSeed());
   try {
-    await writeFileDb(seed);
+    await writeFileDb({ ...seed, houses: stripStubHouses(seed.houses) });
   } catch {
     /* /tmp may still work later */
   }
-  void writeBlobDb(seed).catch(() => undefined);
-  return seed;
+  void writeBlobDb({ ...seed, houses: stripStubHouses(seed.houses) }).catch(() => undefined);
+  return withStaticRehearsalStubs(seed);
 }
 
 let mem: DbFile | null = null;
@@ -598,18 +599,20 @@ async function persistDb(db: DbFile, prev?: DbFile | null) {
   setMem(db);
 }
 
-async function attachSeedRehearsalStubs(db: DbFile): Promise<DbFile> {
-  const seed = normalizeDb(await readSeed());
-  const houses = mergeMissingRehearsalStubs(db.houses, seed.houses);
-  if (houses.length === db.houses.length) return db;
-  return { ...db, houses: houses.map(normalizeHouse) };
+async function withStaticRehearsalStubs(db: DbFile): Promise<DbFile> {
+  const rows = await loadStaticRehearsalStubRows();
+  const stubs = rows.map((row) => normalizeHouse(row as House & { status?: string }));
+  const real = stripStubHouses(db.houses).map(normalizeHouse);
+  const byId = new Map(real.map((house) => [house.id, house]));
+  for (const stub of stubs) byId.set(stub.id, stub);
+  return { ...db, houses: [...byId.values()] };
 }
 
 async function loadDb(fresh = false): Promise<DbFile> {
   if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return mem;
   return withLock(async () => {
     if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return mem;
-    const db = await attachSeedRehearsalStubs(await readFileDb());
+    const db = await readFileDb();
     const global = getGlobalDb();
     const chosen = pickNewest(db, global) ?? db;
     foldPushSubscriptions(chosen, mem, global);

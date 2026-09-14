@@ -18,6 +18,7 @@
     "app-icons": "node scripts/generate-app-icons.mjs",
     "stress": "node scripts/stress-test.mjs",
     "migrate:firestore": "node scripts/migrate-to-firestore.mjs",
+    "purge:firestore-stubs": "node scripts/purge-firestore-stubs.mjs",
     "sync:github": "node scripts/sync-github.mjs",
     "deploy:vercel": "node scripts/trigger-vercel.mjs"
   },

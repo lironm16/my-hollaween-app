@@ -19,6 +19,16 @@ import { getFirestore } from "firebase-admin/firestore";
 import { get as getBlob } from "@vercel/blob";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const STUB_ID = /^בית-931\d$/;
+
+function isStubHouse(house) {
+  if (house?.id && STUB_ID.test(String(house.id))) return true;
+  return Boolean(house?.description?.includes("סטאב לחזרה"));
+}
+
+function stripStubHouses(houses) {
+  return houses.filter((house) => !isStubHouse(house));
+}
 
 function parseServiceAccount() {
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
@@ -91,7 +101,9 @@ async function main() {
   const rootRef = db.collection("neighborhoods").doc(nId);
   const housesCol = rootRef.collection("houses");
   const data = await loadSource();
-  const houses = data.houses ?? [];
+  const houses = stripStubHouses(data.houses ?? []);
+  const skipped = (data.houses?.length ?? 0) - houses.length;
+  if (skipped) console.log(`Skipping ${skipped} rehearsal stub houses (served from seed.json)`);
   console.log(`Writing ${houses.length} houses to neighborhoods/${nId}/houses`);
   for (let i = 0; i < houses.length; i += 400) {
     const batch = db.batch();
