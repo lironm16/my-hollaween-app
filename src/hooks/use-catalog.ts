@@ -3,8 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import type { Catalog, CatalogDelta } from "@/lib/types";
 import { mergeCatalogDelta, syncCatalog } from "@/lib/catalog-sync";
+import { config } from "@/lib/config";
 import { loadCatalogCache, loadCatalogCacheSync, saveCatalogCache, flushPendingHouseWrites, withDeviceHouseOverlays } from "@/lib/offline-db";
 import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
+
+function catalogPollMs(seconds?: number) {
+  const n = seconds ?? config.catalogPollSeconds;
+  return Math.max(30, n) * 1000;
+}
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
 
@@ -73,6 +79,7 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
   );
   const catalogRef = useRef(catalog);
   catalogRef.current = catalog;
+  const pollMsRef = useRef(catalogPollMs());
 
   const refresh = async (force = false) => {
     const online = typeof navigator === "undefined" || navigator.onLine;
@@ -96,6 +103,7 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
       if (readServerSimDown()) throw new Error("sim-down");
       const since = force ? undefined : catalogRef.current?.updatedAt;
       const live = await fetchJson("/api/catalog", force, since);
+      if (live.pollSeconds) pollMsRef.current = catalogPollMs(live.pollSeconds);
       let next: Catalog = live;
       setCatalog((prev) => {
         next = withDeviceHouseOverlays(applyCatalogResponse(prev, live));
@@ -182,12 +190,17 @@ export function useCatalog(initial?: Catalog | null): CatalogState {
     window.addEventListener("hw-catalog-changed", onChanged);
     const onSim = () => void refresh(true);
     window.addEventListener(SERVER_SIM_EVENT, onSim);
-    const poll = window.setInterval(() => {
-      if (document.visibilityState === "visible") void refresh(false);
-    }, 15_000);
+    let pollTimer: number | undefined;
+    const schedulePoll = () => {
+      pollTimer = window.setTimeout(() => {
+        if (!cancelled && document.visibilityState === "visible") void refresh(false);
+        if (!cancelled) schedulePoll();
+      }, pollMsRef.current);
+    };
+    schedulePoll();
     return () => {
       cancelled = true;
-      window.clearInterval(poll);
+      if (pollTimer !== undefined) window.clearTimeout(pollTimer);
       window.removeEventListener("online", onOff);
       window.removeEventListener("offline", onOff);
       document.removeEventListener("visibilitychange", onVis);

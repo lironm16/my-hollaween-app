@@ -148,6 +148,8 @@ export type Catalog = {
 export type CatalogDelta = Catalog & {
   full?: boolean;
   removed?: string[];
+  /** Server-suggested foreground poll interval (seconds). Change via CATALOG_POLL_SECONDS. */
+  pollSeconds?: number;
 };
 
 export type AddressHit = {
