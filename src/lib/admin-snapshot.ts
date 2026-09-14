@@ -10,7 +10,9 @@ import {
   resolveDecorLevel,
 } from "@/lib/house-state";
 import { subscriptionAllowsTopic } from "@/lib/push-topics";
-import type { House, PushSubscriptionRecord, ScareLevel } from "@/lib/types";
+import type { House, PublicHouse, PushSubscriptionRecord, ScareLevel } from "@/lib/types";
+
+export type SnapshotHouse = House | PublicHouse;
 
 export type AdminSnapshot = {
   devicesSeen: number;
@@ -38,13 +40,90 @@ export type AdminSnapshot = {
   sesameFree: number;
 };
 
-function scareOf(house: House): ScareLevel | "none" {
+function scareOf(house: SnapshotHouse): ScareLevel | "none" {
   if (resolveDecorLevel(house) === "none") return "none";
   return house.scareLevel ?? "mild";
 }
 
+export type SnapshotStats = Pick<
+  AdminSnapshot,
+  | "houses"
+  | "openNow"
+  | "openingSoon"
+  | "closingSoon"
+  | "onBreak"
+  | "closed"
+  | "candyNone"
+  | "candyPlenty"
+  | "candyLow"
+  | "candyOut"
+  | "notDecorated"
+  | "scareMild"
+  | "scareMedium"
+  | "scareSpicy"
+  | "accessible"
+  | "glutenFree"
+  | "nutsFree"
+  | "sesameFree"
+>;
+
+export function buildSnapshotStats(input: {
+  houses: SnapshotHouse[];
+  now?: Date;
+  houseSet?: HouseSet;
+}): SnapshotStats {
+  const snapshot = buildAdminSnapshot({
+    houses: input.houses,
+    subscriptions: [],
+    devicesSeen: 0,
+    online: 0,
+    now: input.now,
+    houseSet: input.houseSet,
+  });
+  const {
+    houses,
+    openNow,
+    openingSoon,
+    closingSoon,
+    onBreak,
+    closed,
+    candyNone,
+    candyPlenty,
+    candyLow,
+    candyOut,
+    notDecorated,
+    scareMild,
+    scareMedium,
+    scareSpicy,
+    accessible,
+    glutenFree,
+    nutsFree,
+    sesameFree,
+  } = snapshot;
+  return {
+    houses,
+    openNow,
+    openingSoon,
+    closingSoon,
+    onBreak,
+    closed,
+    candyNone,
+    candyPlenty,
+    candyLow,
+    candyOut,
+    notDecorated,
+    scareMild,
+    scareMedium,
+    scareSpicy,
+    accessible,
+    glutenFree,
+    nutsFree,
+    sesameFree,
+  };
+}
+
 export function buildAdminSnapshot(input: {
-  houses: House[];
+  houses: SnapshotHouse[];
   subscriptions: PushSubscriptionRecord[];
   devicesSeen: number;
   online: number;
@@ -55,7 +134,7 @@ export function buildAdminSnapshot(input: {
   const now = input.now ?? new Date();
   const houseSet = input.houseSet ?? "real";
   const listed = input.houses.filter(isPubliclyListed).filter((house) => houseMatchesSet(house, houseSet));
-  const candyOf = (house: House) =>
+  const candyOf = (house: SnapshotHouse) =>
     markedCandy(house) ? candyLevel(house) : null;
 
   return {
