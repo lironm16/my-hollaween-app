@@ -163,7 +163,7 @@ export function useNeighborhoodRoute({
         return;
       }
       pendingRouteGps.current = false;
-      pinCurrentRoute(true);
+      pinCurrentRoute(false);
     };
     proceed();
   }

@@ -6,7 +6,6 @@ import {
 } from "@/lib/filter-houses";
 import { effectiveVisit } from "@/lib/house-state";
 import {
-  houseHoursWindows,
   hoursStatus,
   isOnBreak,
   isOpenNowForFilter,
@@ -24,7 +23,7 @@ import {
 
 export type RouteChangeEntry = {
   name: string;
-  reason: string;
+  reason?: string;
 };
 
 export type RouteChangeContext = {
@@ -81,7 +80,7 @@ export function whyAddedToRoute(
   filters: HouseFiltersState,
   context: RouteChangeContext,
   previous?: PublicHouse,
-): string {
+): string | undefined {
   if (previous) {
     const wasClosed = isHouseOwnerClosed(previous);
     const nowOpen = !isHouseOwnerClosed(house);
@@ -95,8 +94,7 @@ export function whyAddedToRoute(
   }
   const { from, to } = resolveVisitWindow(filters, context.now);
   if (isOpenNowForFilter(house, from, to, context.now)) return "פתוח עכשיו";
-  if (houseHoursWindows(house).length > 0) return "מתאים לסינון";
-  return "בית חדש בסינון";
+  return undefined;
 }
 
 export function diffRouteBySkippedIds(

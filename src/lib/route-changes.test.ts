@@ -206,4 +206,20 @@ describe("route change reasons", () => {
     }, previous);
     assert.equal(reason, "חזר לפתוח");
   });
+
+  it("omits generic filter-match reason when adding", () => {
+    const house = stub("a", {
+      openFrom: "20:00",
+      openTo: "22:00",
+      openHours: [{ from: "20:00", to: "22:00" }],
+    });
+    const reason = whyAddedToRoute(house, baseFilters, {
+      houseSet: "real",
+      likedIds: [],
+      visitedIds: [],
+      skippedIds: [],
+      now: new Date("2026-10-31T18:00:00"),
+    });
+    assert.equal(reason, undefined);
+  });
 });
