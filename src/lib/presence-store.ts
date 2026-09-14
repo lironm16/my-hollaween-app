@@ -1,4 +1,5 @@
-const DEVICE_TTL_MS = 2.5 * 60 * 1000;
+/** Must exceed default catalog poll (180s) so foreground users stay counted between polls. */
+const DEVICE_TTL_MS = 4 * 60 * 1000;
 const MAX_DEVICES = 2500;
 
 type GlobalBag = { __hwPresence?: Map<string, number> };
