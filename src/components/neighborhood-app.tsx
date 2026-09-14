@@ -53,7 +53,7 @@ import {
   writeHomeView,
   type HomeView,
 } from "@/lib/home-view";
-import { HOUSE_SET_LABELS, houseMatchesSet } from "@/lib/house-set";
+import { HOUSE_SET_LABELS, countSkippedInSet, houseMatchesSet } from "@/lib/house-set";
 import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
 import { formatDistance } from "@/lib/geo";
 import { buildWalkingRoute } from "@/lib/route";
@@ -396,7 +396,7 @@ export function NeighborhoodApp({
   const summaryProps = {
     filteredHouses: visible.length,
     route: activeRoute ?? filterRoute,
-    skippedCount: routeMode ? skips.skippedIds.length : 0,
+    skippedCount: routeMode ? countSkippedInSet(skips.skippedIds, houses, activeHouseSet) : 0,
     staleLabel: offline
       ? "לא מקוון"
       : unreachable

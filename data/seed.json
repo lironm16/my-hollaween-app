@@ -410,6 +410,46 @@
       "updatedAt": "2026-09-05T16:30:00.000Z"
     },
     {
+      "id": "בית-9318",
+      "name": "הבית עם השם הארוך מאוד שצריך להישבר בשורות בכרטיס המפה ובגיליון האקסל בלי לזלוג מעבר למסגרת",
+      "theme": "ghost",
+      "address": "חרוזים 28, חרוזים",
+      "arrival": "קומה 1, דירה 4, ליד הדלת עם הכתר",
+      "description": "סטאב לחזרה — שם ארוך מאוד כדי לבדוק גלישת כותרת בכרטיס.",
+      "lat": 32.091,
+      "lng": 34.804,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/ghost-trees.jpg",
+      "editCode": "931824",
+      "createdAt": "2026-09-05T16:30:00.000Z",
+      "updatedAt": "2026-09-05T16:30:00.000Z"
+    },
+    {
       "id": "בית-2291",
       "name": "וילה הדלעת",
       "theme": "haunted",

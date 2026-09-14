@@ -1196,11 +1196,7 @@
 
 .house-pin-route {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 24px;
-  gap: 0;
+  display: block;
   overflow: visible;
   isolation: isolate;
 }
@@ -1212,10 +1208,9 @@
 
 .house-pin-route .route-stop-pin {
   position: absolute;
-  top: 0;
   left: 50%;
+  bottom: calc(100% + 2px);
   z-index: 8;
-  flex-shrink: 0;
   margin: 0;
   transform: translateX(-50%);
   pointer-events: none;
@@ -1741,7 +1736,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   z-index: 50;
   display: flex;
   flex-direction: column;
-  height: 70%;
+  height: auto;
   max-height: 70%;
   overflow: hidden;
   background: #160b20;
@@ -1811,6 +1806,10 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   height: 5px;
   border-radius: 999px;
   background: #6b4a7a;
+}
+
+.map-house-sheet:not(.is-raised):not(.is-dragging):not(.is-cluster-overview) .map-house-sheet-body {
+  flex: 0 1 auto;
 }
 
 .map-house-sheet-body {

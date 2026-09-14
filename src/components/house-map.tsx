@@ -60,8 +60,6 @@ function tileUrlFor(theme: "dark" | "light") {
   return theme === "light" ? config.tiles.url.replace("/dark_all/", "/light_all/") : config.tiles.url;
 }
 
-const ROUTE_BADGE_H = 32;
-
 function routeBadgeHtml(order: number) {
   return `<span class="route-stop-pin" aria-label="עצירה ${order}"><b class="route-stop-num">${order}</b></span>`;
 }
@@ -69,7 +67,7 @@ function routeBadgeHtml(order: number) {
 function wrapRoutePin(html: string, routeOrder?: number) {
   if (!routeOrder) return { html, extraH: 0 };
   return {
-    extraH: ROUTE_BADGE_H,
+    extraH: 0,
     html: `<div class="house-pin-route">${html}${routeBadgeHtml(routeOrder)}</div>`,
   };
 }
