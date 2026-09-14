@@ -14,6 +14,7 @@ import {
 } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import { cloneDb, mergeHouses, mergePushSubscriptions } from "@/lib/catalog-sync";
+import { mergeMissingRehearsalStubs } from "@/lib/house-set";
 import { parsePhotoUrl } from "@/lib/photos";
 import {
   HOUSE_THEMES,
@@ -597,11 +598,18 @@ async function persistDb(db: DbFile, prev?: DbFile | null) {
   setMem(db);
 }
 
+async function attachSeedRehearsalStubs(db: DbFile): Promise<DbFile> {
+  const seed = normalizeDb(await readSeed());
+  const houses = mergeMissingRehearsalStubs(db.houses, seed.houses);
+  if (houses.length === db.houses.length) return db;
+  return { ...db, houses: houses.map(normalizeHouse) };
+}
+
 async function loadDb(fresh = false): Promise<DbFile> {
   if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return mem;
   return withLock(async () => {
     if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return mem;
-    const db = await readFileDb();
+    const db = await attachSeedRehearsalStubs(await readFileDb());
     const global = getGlobalDb();
     const chosen = pickNewest(db, global) ?? db;
     foldPushSubscriptions(chosen, mem, global);
