@@ -32,6 +32,13 @@ export function neighborhoodDocId() {
   return process.env.FIRESTORE_NEIGHBORHOOD_ID?.trim() || "default";
 }
 
+/** Firestore database id — usually `(default)`; some projects use `default`. */
+export function firestoreDatabaseId() {
+  const raw = process.env.FIRESTORE_DATABASE_ID?.trim();
+  if (raw) return raw;
+  return "(default)";
+}
+
 export function getAdminFirestore(): Firestore {
   if (firestore) return firestore;
   const account = parseServiceAccount();
@@ -41,7 +48,7 @@ export function getAdminFirestore(): Firestore {
   if (!getApps().length) {
     initializeApp({ credential: cert(account) });
   }
-  firestore = getFirestore();
+  firestore = getFirestore(undefined, firestoreDatabaseId());
   return firestore;
 }
 
