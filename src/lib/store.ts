@@ -3,7 +3,7 @@ import path from "node:path";
 import { get as getBlob, put as putBlob } from "@vercel/blob";
 import { canonicalAddressForBuilding } from "@/lib/house-clusters";
 import { canonicalHouseId, newEditCode, newPublicId, sameHouseId, toPublicHouse } from "@/lib/ids";
-import { config, formatDisplayAddress, inNeighborhood } from "@/lib/config";
+import { config, formatDisplayAddress } from "@/lib/config";
 import { assertRealAddress } from "@/lib/geocode";
 import {
   defaultTreatStock,
@@ -18,6 +18,7 @@ import { parsePhotoUrl } from "@/lib/photos";
 import {
   HOUSE_THEMES,
   type Catalog,
+  type CatalogDelta,
   type DbFile,
   type House,
   type HouseInput,
@@ -57,6 +58,16 @@ import {
   privateBlobPutAttempts,
   privateBlobPutOptions,
 } from "@/lib/blob-auth";
+import {
+  firestoreConfigured,
+  queryFirestoreHousesSince,
+  queryRemovedHouseIdsSince,
+  readFirestoreDb,
+  readFirestoreHouse,
+  writeFirestoreDb,
+  writeFirestoreHouse,
+  writeFirestorePushSettings,
+} from "@/lib/firestore-db";
 import {
   isRetryableBlobError,
   productionRequiresBlob,
@@ -398,6 +409,25 @@ function foldPushSubscriptions(target: DbFile, ...candidates: Array<DbFile | nul
 }
 
 async function readFileDb(): Promise<DbFile> {
+  if (firestoreConfigured()) {
+    const [remote, global] = await Promise.all([
+      readFirestoreDb(),
+      Promise.resolve(getGlobalDb()),
+    ]);
+    if (remote) {
+      const merged = pickNewest(remote, global) ?? remote;
+      foldPushSubscriptions(merged, mem, global);
+      return merged;
+    }
+    const blob = await readBlobDb();
+    const seed = normalizeDb(blob ?? (await readSeed()));
+    try {
+      await writeFirestoreDb({ db: seed, prev: null });
+    } catch (error) {
+      console.error("[store] firestore bootstrap failed", error);
+    }
+    return seed;
+  }
   const [local, blob, global, pushBlob, pushSubsBlob] = await Promise.all([
     readLocalFileDb(),
     readBlobDb(),
@@ -445,10 +475,39 @@ async function persistPushSettings(
 ) {
   if (!settings?.templates) return;
   if (pushSettingsStamp(settings) < existingStamp) return;
+  if (firestoreConfigured()) {
+    await writeFirestorePushSettings(settings);
+    return;
+  }
   await writePushSettingsBlob(settings);
 }
 
-async function persistDb(db: DbFile) {
+async function writeDurableDb(db: DbFile, prev?: DbFile | null) {
+  if (firestoreConfigured()) {
+    await writeFirestoreDb({ db, prev });
+    return;
+  }
+  if (blobConfigured()) {
+    await writeBlobDb(db);
+    try {
+      await writeFileDb(db);
+    } catch {
+      /* Vercel Blob is the durable source of truth in production */
+    }
+    return;
+  }
+  if (productionRequiresBlob()) {
+    throw storageErrorFromCode("BLOB_NOT_CONFIGURED");
+  }
+  try {
+    await writeFileDb(db);
+  } catch (error) {
+    console.error("[store] local db write failed", error);
+    throw storageErrorFromCode("PERSIST_FAILED", error);
+  }
+}
+
+async function persistDb(db: DbFile, prev?: DbFile | null) {
   const cachedPush = pickPushSettings(db, mem, getGlobalDb());
   const pushBlob = cachedPush?.templates ? null : await readPushSettingsBlob();
   const blobWrapper = asPushCandidate(cachedPush ?? pushBlob);
@@ -475,8 +534,7 @@ async function persistDb(db: DbFile) {
         /* live house data stays in memory */
       }
       try {
-        if (blobConfigured()) await writeBlobDb(live);
-        else await writeFileDb(live);
+        await writeDurableDb(live, mem);
       } catch {
         /* memory still holds the merged houses */
       }
@@ -506,8 +564,7 @@ async function persistDb(db: DbFile) {
       }
       setGlobalDb(live);
       try {
-        if (blobConfigured()) await writeBlobDb(live);
-        else await writeFileDb(live);
+        await writeDurableDb(live, mem);
       } catch {
         /* memory still holds the merged houses */
       }
@@ -516,23 +573,7 @@ async function persistDb(db: DbFile) {
     return;
   }
 
-  if (blobConfigured()) {
-    await writeBlobDb(db);
-    try {
-      await writeFileDb(db);
-    } catch {
-      /* Vercel Blob is the durable source of truth in production */
-    }
-  } else if (productionRequiresBlob()) {
-    throw storageErrorFromCode("BLOB_NOT_CONFIGURED");
-  } else {
-    try {
-      await writeFileDb(db);
-    } catch (error) {
-      console.error("[store] local db write failed", error);
-      throw storageErrorFromCode("PERSIST_FAILED", error);
-    }
-  }
+  await writeDurableDb(db, prev);
 
   if (isStaleSnapshot(db)) {
     const live = liveDb();
@@ -570,6 +611,14 @@ async function loadDb(fresh = false): Promise<DbFile> {
 }
 
 async function prepareDbFromSources(): Promise<DbFile> {
+  if (firestoreConfigured() && mem && Date.now() - memAt < MEM_TTL_MS) {
+    const db = normalizeDb(cloneDb(mem));
+    const keptPush = db.pushSettings;
+    const global = getGlobalDb();
+    foldPushSettings(db, asPushCandidate(keptPush), global);
+    foldPushSubscriptions(db, global);
+    return db;
+  }
   const db = normalizeDb(cloneDb(await readFileDb()));
   const keptPush = db.pushSettings;
   const global = getGlobalDb();
@@ -586,18 +635,21 @@ async function softPersistDb(db: DbFile) {
   setMem(db);
   setGlobalDb(db);
   try {
-    if (blobConfigured()) await writeBlobDb(db);
+    if (firestoreConfigured()) {
+      await writeFirestoreDb({ db, prev: mem });
+    } else if (blobConfigured()) await writeBlobDb(db);
     else await writeFileDb(db);
   } catch {
-    /* memory + dedicated push blob still hold subscriptions */
+    /* memory still holds subscriptions */
   }
 }
 
 async function runSyncedWrite<T>(fn: (db: DbFile) => T | Promise<T>): Promise<T> {
   return withLock(async () => {
     const db = await prepareDbFromSources();
+    const prev = mem ? cloneDb(mem) : null;
     const result = await fn(db);
-    await persistDb(db);
+    await persistDb(db, prev);
     return result;
   });
 }
@@ -632,6 +684,42 @@ export async function getCatalog(): Promise<Catalog> {
   const db = await loadDb();
   catalogMem = asCatalog(db.houses, db.updatedAt, db.pushSettings);
   return catalogMem;
+}
+
+export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
+  await ensurePushSettingsGeneration();
+  const sinceMs = Date.parse(since);
+  if (!Number.isFinite(sinceMs) || sinceMs <= 0) {
+    const full = await getCatalog();
+    return { ...full, full: true };
+  }
+
+  const db = await loadDb();
+  let houses: PublicHouse[];
+  let removed: string[];
+
+  if (firestoreConfigured()) {
+    [houses, removed] = await Promise.all([
+      queryFirestoreHousesSince(since),
+      queryRemovedHouseIdsSince(since),
+    ]);
+  } else {
+    houses = db.houses
+      .filter((house) => isPubliclyListed(house) && stamp(house) > sinceMs)
+      .map((house) => toPublicHouse(house) as PublicHouse);
+    removed = [];
+  }
+
+  const pushChanged = pushSettingsStamp(db.pushSettings) > sinceMs;
+  return {
+    updatedAt: db.updatedAt,
+    neighborhood: config.neighborhood,
+    houses,
+    removed,
+    ...(pushChanged
+      ? { pushTemplates: asCatalog(db.houses, db.updatedAt, db.pushSettings).pushTemplates }
+      : {}),
+  };
 }
 
 export async function getAllHouses(): Promise<House[]> {
@@ -715,54 +803,102 @@ export async function submitHouse(
   return { house, push };
 }
 
+function ownerAddressChanged(current: House, patch: Partial<HouseInput> & NightPatch) {
+  if (patch.address !== undefined && patch.address.trim() !== current.address.trim()) return true;
+  if (patch.lat !== undefined && patch.lat !== current.lat) return true;
+  if (patch.lng !== undefined && patch.lng !== current.lng) return true;
+  return false;
+}
+
+async function validateOwnerAddressChange(current: House, patch: Partial<HouseInput> & NightPatch) {
+  if (!ownerAddressChanged(current, patch)) return;
+  await assertRealAddress({
+    address: patch.address ?? current.address,
+    lat: patch.lat ?? current.lat,
+    lng: patch.lng ?? current.lng,
+  });
+}
+
+function applyOwnerPatch(house: House, patch: Partial<HouseInput> & NightPatch) {
+  const clean = sanitizeOwnerPatch(patch);
+  if (clean.treatStock) {
+    house.treatStock = { ...house.treatStock, ...clean.treatStock };
+    delete clean.treatStock;
+  }
+  Object.assign(house, clean);
+  if (patch.ownerFrozenUntil !== undefined) house.ownerFrozenUntil = patch.ownerFrozenUntil;
+  if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
+    house.address = formatDisplayAddress(house);
+  }
+  if (house.photoUrl) {
+    const parsed = parsePhotoUrl(house.photoUrl);
+    if (parsed !== null) house.photoUrl = parsed;
+  }
+  const decor = syncDecorFields(house);
+  house.decorLevel = decor.decorLevel;
+  house.decorated = decor.decorated;
+  house.updatedAt = new Date().toISOString();
+  house.soldOut = house.visit === "closed";
+}
+
+function upsertMemHouse(house: House, updatedAt: string) {
+  const db = mem ? cloneDb(mem) : { updatedAt, houses: [] as House[] };
+  const idx = db.houses.findIndex((item) => sameHouseId(item.id, house.id));
+  if (idx >= 0) db.houses[idx] = house;
+  else db.houses.push(house);
+  db.updatedAt = updatedAt;
+  setMem(db);
+}
+
+async function patchHouseDoc(
+  docId: string,
+  editCode: string,
+  patch: Partial<HouseInput> & NightPatch,
+  options?: { includeEndpoint?: string },
+) {
+  const existing =
+    (firestoreConfigured() ? await readFirestoreHouse(docId) : null) ??
+    findHouseIn(mem?.houses ?? [], docId) ??
+    (await getHouse(docId));
+  if (!existing) return { error: "missing" as const };
+  if (existing.editCode !== editCode) return { error: "forbidden" as const };
+
+  await validateOwnerAddressChange(existing, patch);
+
+  const prev = snapshotHouse(existing);
+  const house = normalizeHouse({ ...existing });
+  applyOwnerPatch(house, patch);
+
+  if (firestoreConfigured()) {
+    await writeFirestoreHouse(house);
+    upsertMemHouse(house, house.updatedAt);
+  } else {
+    const updated = await runSyncedWrite((db) => {
+      const row = findHouseIn(db.houses, docId);
+      if (!row || row.editCode !== editCode) return null;
+      applyOwnerPatch(row, patch);
+      db.updatedAt = row.updatedAt;
+      return row;
+    });
+    if (!updated) return { error: "missing" as const };
+  }
+
+  const push = await dispatchHousePush(prev, house, undefined, patch, options?.includeEndpoint);
+  return { house, push };
+}
+
+/** Owner patch — partial fields merged onto one house doc (1 Firestore read + 1 write). */
 export async function updateByEditCode(
   id: string,
   editCode: string,
   patch: Partial<HouseInput> & NightPatch,
   options?: { includeEndpoint?: string },
 ) {
-  const current = await getHouse(id);
-  if (!current) return { error: "missing" as const };
-  if (current.editCode !== editCode) return { error: "forbidden" as const };
-  const prev = snapshotHouse(current);
-  if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
-    await assertRealAddress({
-      address: patch.address ?? current.address,
-      lat: patch.lat ?? current.lat,
-      lng: patch.lng ?? current.lng,
-    });
+  const docId = canonicalHouseId(id);
+  if (firestoreConfigured()) {
+    return withLock(() => patchHouseDoc(docId, editCode, patch, options));
   }
-  const updated = await runSyncedWrite((db) => {
-    const house = findHouseIn(db.houses, id);
-    if (!house || house.editCode !== editCode) return null;
-    if (patch.lat !== undefined && patch.lng !== undefined) {
-      if (!inNeighborhood(patch.lat, patch.lng)) {
-        throw new Error("OUT_OF_BOUNDS");
-      }
-    }
-    const clean = sanitizeOwnerPatch(patch);
-    if (clean.treatStock) {
-      house.treatStock = { ...house.treatStock, ...clean.treatStock };
-      delete clean.treatStock;
-    }
-    Object.assign(house, clean);
-    if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
-      house.address = formatDisplayAddress(house);
-    }
-    if (house.photoUrl) {
-      const parsed = parsePhotoUrl(house.photoUrl);
-      if (parsed !== null) house.photoUrl = parsed;
-    }
-    const decor = syncDecorFields(house);
-    house.decorLevel = decor.decorLevel;
-    house.decorated = decor.decorated;
-    house.updatedAt = new Date().toISOString();
-    db.updatedAt = house.updatedAt;
-    return house;
-  });
-  if (!updated) return { error: "missing" as const };
-  const push = await dispatchHousePush(prev, updated, undefined, patch, options?.includeEndpoint);
-  return { house: updated, push };
+  return patchHouseDoc(docId, editCode, patch, options);
 }
 
 export async function deleteByEditCode(id: string, editCode: string) {
@@ -810,21 +946,10 @@ export async function adminUpdate(
   const current = await getHouse(id);
   if (!current) return null;
   const prev = snapshotHouse(current);
-  if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
-    await assertRealAddress({
-      address: patch.address ?? current.address,
-      lat: patch.lat ?? current.lat,
-      lng: patch.lng ?? current.lng,
-    });
-  }
+  await validateOwnerAddressChange(current, patch);
   const updated = await runSyncedWrite((db) => {
     const house = findHouseIn(db.houses, id);
     if (!house) return null;
-    if (patch.lat !== undefined && patch.lng !== undefined) {
-      if (!inNeighborhood(patch.lat, patch.lng)) {
-        throw new Error("OUT_OF_BOUNDS");
-      }
-    }
     if (patch.name !== undefined) house.name = patch.name;
     if (patch.theme !== undefined) house.theme = patch.theme;
     if (patch.address !== undefined) house.address = patch.address;

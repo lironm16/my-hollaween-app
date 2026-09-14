@@ -1,4 +1,4 @@
-import type { Catalog, DbFile, PublicHouse, PushSubscriptionRecord } from "@/lib/types";
+import type { Catalog, CatalogDelta, DbFile, PublicHouse, PushSubscriptionRecord } from "@/lib/types";
 import { loadDeletedHouseIds } from "@/lib/deleted-houses";
 
 function stamp(value: { updatedAt: string }) {
@@ -47,6 +47,30 @@ export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
   prev.houses.forEach(take);
   incoming.houses.forEach(take);
   return { ...prev, houses: [...byId.values()] };
+}
+
+/** Apply a delta poll (`?since=`) onto the catalog already on the device. */
+export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta): Catalog {
+  if (!prev || incoming.full) {
+    return {
+      updatedAt: incoming.updatedAt,
+      neighborhood: incoming.neighborhood,
+      houses: incoming.houses,
+      pushTemplates: incoming.pushTemplates ?? prev?.pushTemplates,
+    };
+  }
+  const byId = new Map(prev.houses.map((house) => [house.id, house]));
+  for (const id of incoming.removed ?? []) byId.delete(id);
+  for (const house of incoming.houses) {
+    const current = byId.get(house.id);
+    if (!current || stamp(house) >= stamp(current)) byId.set(house.id, house);
+  }
+  return {
+    updatedAt: incoming.updatedAt,
+    neighborhood: incoming.neighborhood || prev.neighborhood,
+    houses: [...byId.values()],
+    pushTemplates: incoming.pushTemplates ?? prev.pushTemplates,
+  };
 }
 
 /** Same endpoint keeps the newer record. Used so a subscribe is not dropped by a same-stamp house write. */

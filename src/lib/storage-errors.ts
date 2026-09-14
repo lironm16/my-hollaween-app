@@ -4,6 +4,7 @@ export type StorageErrorCode =
   | "BLOB_NOT_CONFIGURED"
   | "BLOB_QUOTA_EXCEEDED"
   | "BLOB_WRITE_FAILED"
+  | "FIRESTORE_NOT_CONFIGURED"
   | "PERSIST_FAILED";
 
 function blobErrorName(error: unknown) {
@@ -77,7 +78,7 @@ export function storageHttpError(error: unknown): { error: string; status: numbe
     return {
       code: "BLOB_NOT_CONFIGURED",
       error:
-        "אחסון השרת לא מוגדר. מנהל האפליקציה צריך לחבר Vercel Blob לפרויקט (Storage → Blob) ולפרוס מחדש.",
+        "אחסון השרת לא מוגדר. מנהל האפליקציה צריך לחבר Firestore או Vercel Blob לפרויקט ולפרוס מחדש.",
       status: 503,
     };
   }
@@ -86,6 +87,13 @@ export function storageHttpError(error: unknown): { error: string; status: numbe
       code: "BLOB_QUOTA_EXCEEDED",
       error:
         "אחסון השרת מלא (מגבלת Vercel Hobby — 10,000 פעולות). שדרוג ל-Pro ב-Vercel או המתנה עד איפוס המכסה. בינתיים לא ניתן לשמור בתים חדשים.",
+      status: 503,
+    };
+  }
+  if (error.message === "FIRESTORE_NOT_CONFIGURED") {
+    return {
+      code: "FIRESTORE_NOT_CONFIGURED",
+      error: "מסד הנתונים (Firestore) לא מוגדר. פנו למנהל האפליקציה.",
       status: 503,
     };
   }
