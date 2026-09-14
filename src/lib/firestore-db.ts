@@ -5,6 +5,7 @@ import {
   pushEndpointDocId,
   pushSubscriptionsCollection,
   removedHousesCollection,
+  resolveAdminFirestore,
 } from "@/lib/firestore-admin";
 import { canonicalHouseId, toPublicHouse } from "@/lib/ids";
 import { isPubliclyListed } from "@/lib/house-state";
@@ -24,6 +25,7 @@ function rowToHouse(docId: string, row: House): House {
 export async function readFirestoreHouse(id: string): Promise<House | null> {
   if (!firestoreConfigured()) return null;
   try {
+    await resolveAdminFirestore();
     const docId = canonicalHouseId(id);
     const snap = await housesCollection().doc(docId).get();
     if (!snap.exists) return null;
@@ -38,12 +40,14 @@ export async function writeFirestoreHouse(house: House) {
   if (!firestoreConfigured()) {
     throw new Error("FIRESTORE_NOT_CONFIGURED");
   }
+  await resolveAdminFirestore();
   const id = canonicalHouseId(house.id);
   await housesCollection().doc(id).set({ ...house, id, storeId: id }, { merge: true });
 }
 
 export async function deleteFirestoreHouse(id: string) {
   if (!firestoreConfigured()) return;
+  await resolveAdminFirestore();
   const docId = canonicalHouseId(id);
   const now = new Date().toISOString();
   await housesCollection().doc(docId).delete();
@@ -53,6 +57,7 @@ export async function deleteFirestoreHouse(id: string) {
 export async function queryFirestoreHousesSince(since: string): Promise<PublicHouse[]> {
   if (!firestoreConfigured()) return [];
   try {
+    await resolveAdminFirestore();
     const snap = await housesCollection().where("updatedAt", ">", since).get();
     const houses: PublicHouse[] = [];
     for (const doc of snap.docs) {
@@ -69,6 +74,7 @@ export async function queryFirestoreHousesSince(since: string): Promise<PublicHo
 export async function queryRemovedHouseIdsSince(since: string): Promise<string[]> {
   if (!firestoreConfigured()) return [];
   try {
+    await resolveAdminFirestore();
     const snap = await removedHousesCollection().where("deletedAt", ">", since).get();
     return snap.docs.map((doc) => canonicalHouseId(doc.id));
   } catch (error) {
@@ -80,6 +86,7 @@ export async function queryRemovedHouseIdsSince(since: string): Promise<string[]
 export async function readFirestoreDb(): Promise<DbFile | null> {
   if (!firestoreConfigured()) return null;
   try {
+    await resolveAdminFirestore();
     const [housesSnap, pushSettingsSnap, vapidSnap, subsSnap] = await Promise.all([
       housesCollection().get(),
       metaDoc("pushSettings").get(),
@@ -165,6 +172,7 @@ function subsChanged(prev: PushSubscriptionRecord[] | undefined, next: PushSubsc
 
 export async function writeFirestorePushSettings(settings: DbFile["pushSettings"]) {
   if (!firestoreConfigured() || !settings?.templates) return;
+  await resolveAdminFirestore();
   await metaDoc("pushSettings").set(settings, { merge: true });
 }
 
@@ -172,6 +180,7 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
   if (!firestoreConfigured()) {
     throw new Error("FIRESTORE_NOT_CONFIGURED");
   }
+  await resolveAdminFirestore();
   const { db, prev } = input;
   const firestore = housesCollection().firestore;
   const dirtyHouses = prev ? changedHouses(prev.houses, db.houses) : db.houses;

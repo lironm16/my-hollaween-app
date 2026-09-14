@@ -38,10 +38,10 @@ function neighborhoodId() {
   return process.env.FIRESTORE_NEIGHBORHOOD_ID?.trim() || "default";
 }
 
-function firestoreDatabaseId() {
+function candidateDatabaseIds() {
   const raw = process.env.FIRESTORE_DATABASE_ID?.trim();
-  if (raw) return raw;
-  return "(default)";
+  if (raw) return [raw];
+  return ["(default)", "default"];
 }
 
 function pushEndpointDocId(endpoint) {
@@ -69,10 +69,24 @@ async function loadSource() {
   throw new Error(`No source at ${source} and Blob not configured`);
 }
 
+async function resolveDb() {
+  for (const id of candidateDatabaseIds()) {
+    const db = getFirestore(undefined, id);
+    try {
+      await db.collection("_hw_firestore_probe").limit(1).get();
+      if (id !== candidateDatabaseIds()[0]) console.log(`Using Firestore database id: ${id}`);
+      return db;
+    } catch (error) {
+      if (error?.code !== 5) throw error;
+    }
+  }
+  throw new Error("FIRESTORE_NOT_FOUND — create a database in Firebase Console");
+}
+
 async function main() {
   const account = parseServiceAccount();
   if (!getApps().length) initializeApp({ credential: cert(account) });
-  const db = getFirestore(undefined, firestoreDatabaseId());
+  const db = await resolveDb();
   const nId = neighborhoodId();
   const rootRef = db.collection("neighborhoods").doc(nId);
   const housesCol = rootRef.collection("houses");
