@@ -38,6 +38,12 @@ function neighborhoodId() {
   return process.env.FIRESTORE_NEIGHBORHOOD_ID?.trim() || "default";
 }
 
+function firestoreDatabaseId() {
+  const raw = process.env.FIRESTORE_DATABASE_ID?.trim();
+  if (raw) return raw;
+  return "(default)";
+}
+
 function pushEndpointDocId(endpoint) {
   return createHash("sha256").update(endpoint).digest("hex").slice(0, 40);
 }
@@ -66,7 +72,7 @@ async function loadSource() {
 async function main() {
   const account = parseServiceAccount();
   if (!getApps().length) initializeApp({ credential: cert(account) });
-  const db = getFirestore();
+  const db = getFirestore(undefined, firestoreDatabaseId());
   const nId = neighborhoodId();
   const rootRef = db.collection("neighborhoods").doc(nId);
   const housesCol = rootRef.collection("houses");
