@@ -55,7 +55,6 @@
     --container-md: 28rem;
     --container-lg: 32rem;
     --container-3xl: 48rem;
-    --container-6xl: 72rem;
     --text-sm: 0.875rem;
     --text-sm--line-height: calc(1.25 / 0.875);
     --text-base: 1rem;
@@ -779,9 +778,6 @@
   }
   .max-w-3xl {
     max-width: var(--container-3xl);
-  }
-  .max-w-6xl {
-    max-width: var(--container-6xl);
   }
   .max-w-16 {
     max-width: calc(var(--spacing) * 16);
@@ -2035,6 +2031,10 @@
     --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
+  .shadow-\[0_1px_2px_rgba\(0\,0\,0\,0\.35\)\] {
+    --tw-shadow: 0 1px 2px var(--tw-shadow-color, rgba(0,0,0,0.35));
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
   .shadow-\[0_1px_2px_rgba\(0\,0\,0\,0\.45\)\] {
     --tw-shadow: 0 1px 2px var(--tw-shadow-color, rgba(0,0,0,0.45));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
@@ -2928,12 +2928,6 @@
     }
     .sm\:justify-end {
       justify-content: flex-end;
-    }
-    .sm\:gap-2 {
-      gap: calc(var(--spacing) * 2);
-    }
-    .sm\:px-4 {
-      padding-inline: calc(var(--spacing) * 4);
     }
     .sm\:text-2xl {
       font-size: var(--text-2xl);
@@ -4644,6 +4638,9 @@ svg.leaflet-zoom-animated {
   margin-bottom: 0.75rem;
 }
 .filter-mismatch-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-bottom: 0.75rem;
   border-radius: 0.75rem;
   background: rgba(76, 29, 149, 0.35);
@@ -4652,6 +4649,10 @@ svg.leaflet-zoom-animated {
   line-height: 1.35;
   color: #ddd6fe;
   border: 1px solid rgba(167, 139, 250, 0.25);
+}
+.filter-mismatch-banner-text {
+  min-width: 0;
+  flex: 1;
 }
 .origin-pick-bar {
   position: absolute;
@@ -5908,6 +5909,187 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   }
 }
 @keyframes visit-cheer-spark {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2);
+  }
+}
+.route-complete-cheer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.route-complete-cheer-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px 30px 18px;
+  border-radius: 26px;
+  background: linear-gradient(145deg, #7c3aed 0%, #5b21b6 55%, #4c1d95 100%);
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4), 0 18px 48px rgba(76, 29, 149, 0.55);
+  animation: route-complete-pop 2.35s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+}
+.route-complete-cheer-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.route-complete-cheer-sub {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ede9fe;
+}
+.route-complete-cheer-flag {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: #fde68a;
+  box-shadow: 0 0 0 4px rgba(253, 230, 138, 0.28);
+  animation: route-complete-flag 2.35s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+}
+.route-complete-cheer-flag::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 14px;
+  height: 10px;
+  border-radius: 2px 6px 2px 2px;
+  background: #7c3aed;
+  transform: translateX(1px);
+}
+.route-complete-cheer-burst {
+  position: absolute;
+  inset: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.route-complete-cheer-burst i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  opacity: 0;
+  animation: route-complete-spark 1.45s ease-out forwards;
+}
+.route-complete-cheer-burst i:nth-child(1) {
+  --dx: -52px;
+  --dy: -34px;
+  background: #fde68a;
+}
+.route-complete-cheer-burst i:nth-child(2) {
+  --dx: 50px;
+  --dy: -30px;
+  background: #fdba74;
+  animation-delay: 0.05s;
+}
+.route-complete-cheer-burst i:nth-child(3) {
+  --dx: -44px;
+  --dy: 30px;
+  background: #6ee7b7;
+  animation-delay: 0.1s;
+}
+.route-complete-cheer-burst i:nth-child(4) {
+  --dx: 46px;
+  --dy: 28px;
+  background: #facc15;
+  animation-delay: 0.07s;
+}
+.route-complete-cheer-burst i:nth-child(5) {
+  --dx: 0;
+  --dy: -48px;
+  width: 7px;
+  height: 7px;
+  background: #fff;
+  animation-delay: 0.02s;
+}
+.route-complete-cheer-burst i:nth-child(6) {
+  --dx: 10px;
+  --dy: 42px;
+  width: 7px;
+  height: 7px;
+  background: #bbf7d0;
+  animation-delay: 0.12s;
+}
+.route-complete-cheer-burst i:nth-child(7) {
+  --dx: -18px;
+  --dy: -8px;
+  width: 6px;
+  height: 6px;
+  background: #f472b6;
+  animation-delay: 0.04s;
+}
+.route-complete-cheer-burst i:nth-child(8) {
+  --dx: 22px;
+  --dy: -6px;
+  width: 6px;
+  height: 6px;
+  background: #a78bfa;
+  animation-delay: 0.09s;
+}
+@keyframes route-complete-pop {
+  0% {
+    transform: scale(0.35) rotate(-8deg);
+    opacity: 0;
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, 0);
+  }
+  14% {
+    transform: scale(1.16) rotate(3deg);
+    opacity: 1;
+    box-shadow: 0 0 0 16px rgba(124, 58, 237, 0.2), 0 18px 48px rgba(76, 29, 149, 0.55);
+  }
+  28% {
+    transform: scale(0.95) rotate(-1deg);
+  }
+  40% {
+    transform: scale(1.05) rotate(0deg);
+  }
+  72% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.92) translateY(-22px);
+  }
+}
+@keyframes route-complete-flag {
+  0% {
+    transform: scale(0) rotate(-20deg);
+  }
+  16% {
+    transform: scale(1.28) rotate(8deg);
+  }
+  30% {
+    transform: scale(0.94) rotate(-4deg);
+  }
+  44% {
+    transform: scale(1) rotate(0deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+@keyframes route-complete-spark {
   0% {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.3);

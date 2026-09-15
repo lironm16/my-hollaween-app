@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { AppHeader } from "@/components/app-header";
 import { CatalogMetaChip } from "@/components/catalog-meta-chip";
 import { FiltersSheet } from "@/components/filter-menu";
@@ -23,6 +23,7 @@ import { RouteList } from "@/components/route-list";
 import { RouteConfirmDialog } from "@/components/route-confirm-dialog";
 import { SkipHouseDialog } from "@/components/skip-house-dialog";
 import { LikeCheer } from "@/components/like-cheer";
+import { RouteCompleteCheer } from "@/components/route-complete-cheer";
 import { VisitCheer } from "@/components/visit-cheer";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,7 @@ import {
 import { HOUSE_SET_LABELS, countSkippedInSet, houseMatchesSet } from "@/lib/house-set";
 import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
 import { formatDistance } from "@/lib/geo";
+import { isRouteFullyVisited } from "@/lib/route-completion";
 import { buildWalkingRoute } from "@/lib/route";
 import { diffRouteBySkippedIds, rebuildRouteAfterSkipChange } from "@/lib/route-changes";
 import { drainPendingRouteRestores } from "@/lib/route-mode";
@@ -114,6 +116,8 @@ export function NeighborhoodApp({
     title: string;
     description: string;
     confirmLabel: string;
+    includeAddsLabel?: string;
+    updatesOnlyLabel?: string;
     removedHouses?: RouteChangeEntry[];
     addedHouses?: RouteChangeEntry[];
     onConfirm: (includeNewHouses: boolean) => void;
@@ -124,8 +128,6 @@ export function NeighborhoodApp({
   const skips = useSkippedHouses();
   const owned = useOwnedHouses();
   const now = useAppNow();
-  const { onToggleLike, onToggleVisited, visitCheer, likeCheer } = useHouseActions(likes, visits);
-
   useEffect(() => {
     applyClockSearchParams(window.location.search);
   }, []);
@@ -274,6 +276,20 @@ export function NeighborhoodApp({
 
   const walkingRoute = routeMode ? pinnedRoute : null;
   const activeRoute = routeMode ? (walkingRoute ?? filterRoute) : null;
+  const visitCelebration = useCallback(
+    (_id: string, nextVisitedIds: string[]) => {
+      if (!routeMode || !walkingRoute) return "visit";
+      return isRouteFullyVisited(walkingRoute, skips.skippedIds, nextVisitedIds)
+        ? "route-complete"
+        : "visit";
+    },
+    [routeMode, walkingRoute, skips.skippedIds],
+  );
+  const { onToggleLike, onToggleVisited, visitCheer, routeCompleteCheer, likeCheer } = useHouseActions(
+    likes,
+    visits,
+    { visitCelebration },
+  );
   const routeListItems = useMemo(() => {
     if (!routeMode) return [];
     const skippedSet = new Set(skips.skippedIds);
@@ -427,6 +443,8 @@ export function NeighborhoodApp({
       description:
         "«ביטול» משאיר את הבית בדילוג. «החזרה למסלול» מוסיף אותו שוב למסלול.",
       confirmLabel: "החזרה למסלול",
+      includeAddsLabel: "החזרה + הוספה למסלול",
+      updatesOnlyLabel: "החזרה בלבד",
       removedHouses: removed,
       addedHouses: added,
       onConfirm: (includeNew) => {
@@ -765,6 +783,7 @@ export function NeighborhoodApp({
                     onToggleVisited={onToggleVisited}
                     onSkipHouse={handleSkipHouse}
                     onRestoreHouse={handleRestoreHouse}
+                    skipMetaFor={(id) => skips.meta(id)}
                     admin={admin}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
                     onShowOnMap={openOnMap}
@@ -861,6 +880,8 @@ export function NeighborhoodApp({
         addedHouses={routePrompt?.addedHouses}
         promptKind={routePrompt?.kind ?? "enter-route"}
         confirmLabel={routePrompt?.confirmLabel ?? "המשך"}
+        includeAddsLabel={routePrompt?.includeAddsLabel}
+        updatesOnlyLabel={routePrompt?.updatesOnlyLabel}
         onConfirm={(includeNew) => {
           routePrompt?.onConfirm(includeNew);
           setRoutePrompt(null);
@@ -868,6 +889,7 @@ export function NeighborhoodApp({
         onCancel={() => setRoutePrompt(null)}
       />
       <VisitCheer show={visitCheer} />
+      <RouteCompleteCheer show={routeCompleteCheer} />
       <LikeCheer show={likeCheer} />
       <HouseEditFlowPanels
         flow={editFlow.flow}

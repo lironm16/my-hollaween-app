@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { MapPin, Navigation, Undo2 } from "lucide-react";
-import { SkipSign } from "@/components/visit-marks";
-import { Button } from "@/components/ui/button";
+import { MapPin, Navigation } from "lucide-react";
+import { HouseSkippedBanner } from "@/components/house-skipped-banner";
 import { HouseCard } from "@/components/house-card";
+import { Button } from "@/components/ui/button";
 import { houseHeadline } from "@/lib/labels";
+import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -27,37 +28,22 @@ function RouteLeg({ label }: { label: string }) {
 
 function RouteSkippedRow({
   house,
+  skipMeta,
   onRestore,
   onOpen,
 }: {
   house: PublicHouse;
+  skipMeta?: SkippedHouseMeta;
   onRestore?: () => void;
   onOpen?: () => void;
 }) {
   return (
-    <div className="route-skipped-row">
-      <button
-        type="button"
-        className="route-skipped-main"
-        onClick={onOpen}
-        aria-label={`${houseHeadline(house)} — דילגתי`}
-      >
-        <SkipSign />
-        <span className="route-skipped-name">{houseHeadline(house)}</span>
-      </button>
-      {onRestore ? (
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="route-skipped-restore shrink-0"
-          onClick={onRestore}
-        >
-          <Undo2 className="size-3.5" />
-          החזרה
-        </Button>
-      ) : null}
-    </div>
+    <HouseSkippedBanner
+      meta={skipMeta}
+      onRestore={onRestore}
+      onMainClick={onOpen}
+      mainAriaLabel={`${houseHeadline(house)} — דילגתי`}
+    />
   );
 }
 
@@ -78,6 +64,7 @@ export function RouteList({
   onToggleVisited,
   onSkipHouse,
   onRestoreHouse,
+  skipMetaFor,
   admin = false,
   canEditHouse,
   onShowOnMap,
@@ -100,6 +87,7 @@ export function RouteList({
   onToggleVisited?: (id: string) => void;
   onSkipHouse?: (id: string) => void;
   onRestoreHouse?: (id: string) => void;
+  skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
   admin?: boolean;
   canEditHouse?: (id: string) => boolean;
   onShowOnMap?: (id: string) => void;
@@ -167,6 +155,7 @@ export function RouteList({
             {skipped ? (
               <RouteSkippedRow
                 house={house}
+                skipMeta={skipMetaFor?.(house.id)}
                 onRestore={onRestoreHouse ? () => onRestoreHouse(house.id) : undefined}
                 onOpen={() => onSelectHouse(house.id, i + 1)}
               />

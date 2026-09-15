@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, Filter } from "lucide-react";
 import { DecorMark } from "@/components/decor-glyphs";
 import { ClosedSign, PauseSign } from "@/components/house-tags";
 import { VisitedCheck } from "@/components/visited-check";
@@ -151,6 +151,22 @@ export function VisitedSign({ className }: { className?: string }) {
       aria-label="ביקרתי"
     >
       <Check className="size-5" strokeWidth={3} />
+    </span>
+  );
+}
+
+/** Orange disc — filtered / מסונן (filter row size). */
+export function FilterSign({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-black shadow-[0_1px_2px_rgba(0,0,0,0.35)]",
+        className,
+      )}
+      title="מסונן"
+      aria-label="מסונן"
+    >
+      <Filter className="size-4" strokeWidth={2.5} />
     </span>
   );
 }

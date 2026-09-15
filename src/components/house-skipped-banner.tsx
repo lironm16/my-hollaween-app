@@ -1,23 +1,41 @@
 import { Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SkipSign } from "@/components/visit-marks";
+import { FilterSign, SkipSign } from "@/components/visit-marks";
 import { skipMetaSummary } from "@/lib/skip-reasons";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 
 export function HouseSkippedBanner({
   meta,
   onRestore,
+  onMainClick,
+  mainAriaLabel,
 }: {
   meta?: SkippedHouseMeta;
   onRestore?: () => void;
+  onMainClick?: () => void;
+  mainAriaLabel?: string;
 }) {
   const summary = meta ? skipMetaSummary(meta) : "דילגתם על הבית";
+  const mainContent = (
+    <>
+      <SkipSign />
+      <span className="route-skipped-name">{summary}</span>
+    </>
+  );
   return (
     <div className="route-skipped-row house-skipped-banner" role="status">
-      <div className="route-skipped-main">
-        <SkipSign />
-        <span className="route-skipped-name">{summary}</span>
-      </div>
+      {onMainClick ? (
+        <button
+          type="button"
+          className="route-skipped-main"
+          onClick={onMainClick}
+          aria-label={mainAriaLabel ?? summary}
+        >
+          {mainContent}
+        </button>
+      ) : (
+        <div className="route-skipped-main">{mainContent}</div>
+      )}
       {onRestore ? (
         <Button
           type="button"
@@ -51,7 +69,10 @@ export function FilterMismatchNotice({
       {skipped ? <HouseSkippedBanner meta={skipMeta} onRestore={onRestoreRoute} /> : null}
       {other.length > 0 ? (
         <p className="filter-mismatch-banner" role="status">
-          מסונן: {other.join(" · ")}
+          <FilterSign />
+          <span className="filter-mismatch-banner-text">
+            מסונן: {other.join(" · ")}
+          </span>
         </p>
       ) : null}
     </>

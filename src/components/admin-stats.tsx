@@ -110,8 +110,51 @@ export function AdminStatsCard({
 }) {
   const online = useOnlineDevices();
 
+  const personalMarks = (
+    <>
+      <div className="grid grid-cols-2 gap-2">
+        <Tile
+          icon={<LikedSign className="size-8" />}
+          label="שמורים"
+          value={likedCount ?? 0}
+          valueClass={likedCount ? "text-rose-300" : undefined}
+          plain
+        />
+        <Tile
+          icon={<VisitedCheck visited className="size-8" />}
+          label="ביקרתי"
+          value={visitedCount ?? 0}
+          valueClass={visitedCount ? "text-emerald-300" : undefined}
+          plain
+        />
+      </div>
+      {aggregateLiked != null || aggregateVisited != null ? (
+        <>
+          <Subhead>סה״כ בשכונה</Subhead>
+          <div className="grid grid-cols-2 gap-2">
+            <Tile
+              icon={<LikedSign className="size-8" />}
+              label="שמורים"
+              value={aggregateLiked ?? 0}
+              valueClass={aggregateLiked ? "text-rose-300" : undefined}
+              plain
+            />
+            <Tile
+              icon={<VisitedCheck visited className="size-8" />}
+              label="ביקורים"
+              value={aggregateVisited ?? 0}
+              valueClass={aggregateVisited ? "text-emerald-300" : undefined}
+              plain
+            />
+          </div>
+        </>
+      ) : null}
+    </>
+  );
+
   return (
     <div className="space-y-3" dir="rtl">
+      <Section title="סימונים שלי">{personalMarks}</Section>
       <Section title="מפה">
         <div className="mb-2 grid grid-cols-2 gap-2">
           <Tile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} />
@@ -238,44 +281,6 @@ export function AdminStatsCard({
             plain
           />
         </div>
-        <Subhead>במכשיר הזה</Subhead>
-        <div className="grid grid-cols-2 gap-2">
-          <Tile
-            icon={<LikedSign className="size-8" />}
-            label="שמורים"
-            value={likedCount ?? 0}
-            valueClass={likedCount ? "text-rose-300" : undefined}
-            plain
-          />
-          <Tile
-            icon={<VisitedCheck visited className="size-8" />}
-            label="ביקרתי"
-            value={visitedCount ?? 0}
-            valueClass={visitedCount ? "text-emerald-300" : undefined}
-            plain
-          />
-        </div>
-        {aggregateLiked != null || aggregateVisited != null ? (
-          <>
-            <Subhead>סה״כ בשכונה</Subhead>
-            <div className="grid grid-cols-2 gap-2">
-              <Tile
-                icon={<LikedSign className="size-8" />}
-                label="סה״כ לייקים"
-                value={aggregateLiked ?? 0}
-                valueClass={aggregateLiked ? "text-rose-300" : undefined}
-                plain
-              />
-              <Tile
-                icon={<VisitedCheck visited className="size-8" />}
-                label="סה״כ ביקורים"
-                value={aggregateVisited ?? 0}
-                valueClass={aggregateVisited ? "text-emerald-300" : undefined}
-                plain
-              />
-            </div>
-          </>
-        ) : null}
       </Section>
     </div>
   );

@@ -64,6 +64,8 @@ export function RouteConfirmDialog({
   addedHouses,
   promptKind,
   confirmLabel = "המשך",
+  includeAddsLabel = "עדכון + הוספה למסלול",
+  updatesOnlyLabel = "עדכון בלבד",
   cancelLabel = "ביטול",
   onConfirm,
   onCancel,
@@ -75,26 +77,27 @@ export function RouteConfirmDialog({
   addedHouses?: RouteChangeEntry[];
   promptKind: RoutePromptKind;
   confirmLabel?: string;
+  /** Shown when new houses may join the route. */
+  includeAddsLabel?: string;
+  /** Shown when applying changes without adding new route stops. */
+  updatesOnlyLabel?: string;
   cancelLabel?: string;
   /** When adds are listed, pass whether to include them. Otherwise ignored. */
   onConfirm: (includeNewHouses: boolean) => void;
   onCancel: () => void;
 }) {
   const [dontShowAgain, setDontShowAgain] = useState(false);
-  const [includeAdds, setIncludeAdds] = useState(true);
   const hasAdds = (addedHouses?.length ?? 0) > 0;
 
   function close() {
     setDontShowAgain(false);
-    setIncludeAdds(true);
     onCancel();
   }
 
-  function confirm() {
+  function confirm(includeNewHouses: boolean) {
     if (dontShowAgain) setSkipRoutePrompt(promptKind, true);
     setDontShowAgain(false);
-    onConfirm(hasAdds ? includeAdds : false);
-    setIncludeAdds(true);
+    onConfirm(includeNewHouses);
   }
 
   return (
@@ -113,17 +116,6 @@ export function RouteConfirmDialog({
               <HouseListSection title="יתווספו למסלול" entries={addedHouses ?? []} tone="add" />
             </div>
           ) : null}
-          {hasAdds ? (
-            <label className="flex items-center gap-2 px-1 py-2 text-base text-violet-200">
-              <input
-                type="checkbox"
-                checked={includeAdds}
-                onChange={(event) => setIncludeAdds(event.target.checked)}
-                className="size-4 rounded border-orange-500/40"
-              />
-              הוסיפו אותם למסלול
-            </label>
-          ) : null}
           <label className="flex items-center gap-2 px-1 py-3 text-base text-violet-300">
             <input
               type="checkbox"
@@ -135,23 +127,43 @@ export function RouteConfirmDialog({
           </label>
         </div>
         <DialogFooter className="mx-0 mb-0 mt-2 shrink-0 border-0 bg-transparent p-0 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-          <div className="grid w-full grid-cols-2 gap-2">
-            <Button
-              type="button"
-              className="min-h-11 bg-orange-500 px-5 text-black hover:bg-orange-400"
-              onClick={confirm}
-            >
-              {confirmLabel}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="min-h-11 px-5"
-              onClick={close}
-            >
-              {cancelLabel}
-            </Button>
-          </div>
+          {hasAdds ? (
+            <div className="grid w-full gap-2">
+              <Button
+                type="button"
+                className="min-h-11 bg-orange-500 px-5 text-black hover:bg-orange-400"
+                onClick={() => confirm(true)}
+              >
+                {includeAddsLabel}
+              </Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-11 px-3"
+                  onClick={() => confirm(false)}
+                >
+                  {updatesOnlyLabel}
+                </Button>
+                <Button type="button" variant="outline" className="min-h-11 px-3" onClick={close}>
+                  {cancelLabel}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid w-full grid-cols-2 gap-2">
+              <Button
+                type="button"
+                className="min-h-11 bg-orange-500 px-5 text-black hover:bg-orange-400"
+                onClick={() => confirm(false)}
+              >
+                {confirmLabel}
+              </Button>
+              <Button type="button" variant="outline" className="min-h-11 px-5" onClick={close}>
+                {cancelLabel}
+              </Button>
+            </div>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
