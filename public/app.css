@@ -4926,7 +4926,7 @@ svg.leaflet-zoom-animated {
 .house-pin-route .route-stop-pin {
   position: absolute;
   left: 50%;
-  bottom: calc(100% + 2px);
+  bottom: calc(100% - 14px);
   z-index: 8;
   margin: 0;
   transform: translateX(-50%);
@@ -4936,7 +4936,7 @@ svg.leaflet-zoom-animated {
   position: absolute;
   left: 50%;
   right: auto;
-  bottom: 38px;
+  bottom: 42px;
   z-index: 20;
   transform: translateX(-50%);
   pointer-events: none;
