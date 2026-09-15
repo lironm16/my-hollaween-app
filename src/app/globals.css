@@ -1190,37 +1190,13 @@
   line-height: 1;
 }
 
-.house-pin-route {
-  position: relative;
-  display: block;
-  width: 56px;
-  height: 56px;
-  overflow: visible;
-  isolation: isolate;
-}
-
-.house-pin-route .house-pin {
-  z-index: 1;
-  flex-shrink: 0;
-}
-
-.house-pin-route .route-stop-pin {
+/* Route tear-drop overlaps house graphic — fixed px on 56px pin, not %-bottom (iOS Safari). */
+.house-pin > .route-stop-pin {
   position: absolute;
   left: 50%;
-  /* Fixed overlap onto 56px pin circle — avoids iOS height quirks from apt dots */
-  bottom: 42px;
+  top: -22px;
   z-index: 8;
   margin: 0;
-  transform: translateX(-50%);
-  pointer-events: none;
-}
-
-.house-pin-fan > .route-stop-pin {
-  position: absolute;
-  left: 50%;
-  right: auto;
-  bottom: 32px;
-  z-index: 20;
   transform: translateX(-50%);
   pointer-events: none;
 }
