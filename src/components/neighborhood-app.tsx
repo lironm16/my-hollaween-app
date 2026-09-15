@@ -72,7 +72,6 @@ import {
   temporaryRestoreReasonMet,
   type SkipReasonId,
 } from "@/lib/skip-reasons";
-import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
 import { houseSelectionAnnouncement } from "@/lib/map-a11y";
 import type { Catalog, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -411,47 +410,23 @@ export function NeighborhoodApp({
     const house = skipDialogHouse;
     if (!house) return;
     setSkipDialogHouse(null);
-    handleRestoreHouse(house.id, { direct: true });
+    handleRestoreHouse(house.id);
   }
 
-  function handleRestoreHouse(id: string, opts?: { direct?: boolean }) {
+  /** Restore one skipped house — no route-change prompt (explicit user action). */
+  function handleRestoreHouse(id: string) {
     if (!skips.skipped(id)) return;
     const nextSkippedIds = skips.skippedIds.filter((item) => item !== id);
-    if (!routeMode) {
-      skips.unskip(id);
-      return;
-    }
-    const { removed, added } = diffRouteBySkippedIds(
+    skips.unskip(id);
+    if (!routeMode) return;
+    const { added } = diffRouteBySkippedIds(
       pinnedRoute,
       houses,
       filters,
       filterContext,
       nextSkippedIds,
     );
-    if (removed.length === 0 && added.length === 0) {
-      skips.unskip(id);
-      return;
-    }
-    if (opts?.direct || shouldSkipRoutePrompt("filter-change")) {
-      skips.unskip(id);
-      applyRouteAfterSkipChange(nextSkippedIds, added.length > 0);
-      return;
-    }
-    setRoutePrompt({
-      kind: "filter-change",
-      title: "להחזיר למסלול?",
-      description:
-        "«ביטול» משאיר את הבית בדילוג. «החזרה למסלול» מוסיף אותו שוב למסלול.",
-      confirmLabel: "החזרה למסלול",
-      includeAddsLabel: "החזרה + הוספה למסלול",
-      updatesOnlyLabel: "החזרה בלבד",
-      removedHouses: removed,
-      addedHouses: added,
-      onConfirm: (includeNew) => {
-        skips.unskip(id);
-        applyRouteAfterSkipChange(nextSkippedIds, includeNew);
-      },
-    });
+    applyRouteAfterSkipChange(nextSkippedIds, added.length > 0);
   }
   const { line: routeLine } = useRouteGeometry(activeRoute, routeMode, {
     straightOnly: activeHouseSet === "stubs",
@@ -726,7 +701,7 @@ export function NeighborhoodApp({
                   }
                   onRestoreRoute={
                     skips.skipped(mapSheetHouse.id)
-                      ? () => handleRestoreHouse(mapSheetHouse.id, { direct: true })
+                      ? () => handleRestoreHouse(mapSheetHouse.id)
                       : undefined
                   }
                   filterMismatchReasons={selectedFilterReasons}
