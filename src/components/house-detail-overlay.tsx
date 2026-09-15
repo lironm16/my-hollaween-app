@@ -9,6 +9,7 @@ import { FilterMismatchNotice } from "@/components/house-skipped-banner";
 import { CodesCopy } from "@/components/codes-copy";
 import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
+import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 
 export function HouseDetailOverlay({
@@ -30,6 +31,7 @@ export function HouseDetailOverlay({
   onSkip,
   onRestoreRoute,
   skipped,
+  skipMeta,
   filterMismatchReasons,
   clusterOverview,
   clusterHouses,
@@ -54,6 +56,7 @@ export function HouseDetailOverlay({
   onSkip?: () => void;
   onRestoreRoute?: () => void;
   skipped?: boolean;
+  skipMeta?: SkippedHouseMeta;
   filterMismatchReasons?: string[];
   clusterOverview?: boolean;
   clusterHouses?: PublicHouse[];
@@ -128,7 +131,11 @@ export function HouseDetailOverlay({
         <span id={labelId} className="sr-only">
           {houseHeadline(house)}
         </span>
-        <FilterMismatchNotice reasons={filterMismatchReasons} onRestoreRoute={onRestoreRoute} />
+        <FilterMismatchNotice
+          reasons={filterMismatchReasons}
+          skipMeta={skipMeta}
+          onRestoreRoute={onRestoreRoute}
+        />
         {editing ? (
           <>
             <p className="map-house-sheet-kicker">{houseHeadline(house)}</p>

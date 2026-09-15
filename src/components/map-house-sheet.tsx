@@ -7,6 +7,7 @@ import { FilterMismatchNotice } from "@/components/house-skipped-banner";
 import { CodesCopy } from "@/components/codes-copy";
 import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
+import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { visualViewportHeight } from "@/lib/viewport";
@@ -41,6 +42,7 @@ export function MapHouseSheet({
   onSkip,
   onRestoreRoute,
   skipped,
+  skipMeta,
   index,
   filterMismatchReasons,
 }: {
@@ -64,6 +66,7 @@ export function MapHouseSheet({
   onSkip?: () => void;
   onRestoreRoute?: () => void;
   skipped?: boolean;
+  skipMeta?: SkippedHouseMeta;
   index?: number;
   filterMismatchReasons?: string[];
 }) {
@@ -275,6 +278,7 @@ export function MapHouseSheet({
               <section className="map-house-sheet-card is-on">
                 <FilterMismatchNotice
                   reasons={filterMismatchReasons}
+                  skipMeta={skipMeta}
                   onRestoreRoute={onRestoreRoute}
                 />
                 {editing ? (

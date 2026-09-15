@@ -69,6 +69,7 @@ export default function SkippedHousesPage() {
               visitedIds={visits.visitedIds}
               onToggleVisited={(id) => visits.toggle(id)}
               skippedIds={skips.skippedIds}
+              skipMetaFor={(id) => skips.meta(id)}
               onRestoreHouse={handleRestore}
               emptyKind="skipped"
               onShowOnMap={(id) => router.push(`/?focus=${encodeURIComponent(id)}`)}
@@ -89,6 +90,7 @@ export default function SkippedHousesPage() {
           onToggleVisited={(id) => visits.toggle(id)}
           catalogSource={catalog ? "network" : null}
           skipped
+          skipMeta={skips.meta(selected.id)}
           onRestoreRoute={() => handleRestore(selected.id)}
           onShowOnMap={() => router.push(`/?focus=${encodeURIComponent(selected.id)}`)}
         />

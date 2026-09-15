@@ -26,7 +26,13 @@ export type SkippedHouseMeta = {
   skippedAt: string;
 };
 
-/** Snapshot house status at skip time — used for temporary skip auto-restore. */
+/** Fixed restore triggers shown in the skip dialog. */
+export const TEMPORARY_RESTORE_OPTIONS: SkipReasonOption[] = [
+  { id: "not-open", label: "הבית פתוח" },
+  { id: "candy-out", label: "יש ממתקים" },
+];
+
+/** Snapshot house status at skip time — kept for debugging and future use. */
 export function skipStatusSnapshot(
   house: PublicHouse,
   now: Date,
@@ -45,57 +51,78 @@ export function skipStatusSnapshot(
 }
 
 export function isTemporarySkipReason(reason: SkipReasonId) {
-  return reason !== "other" && reason !== "scary";
+  return reason === "not-open" || reason === "candy-out";
 }
 
-/** Fixed restore triggers shown in the skip dialog. */
-export const TEMPORARY_RESTORE_OPTIONS: SkipReasonOption[] = [
-  { id: "not-open", label: "הבית פתוח" },
-  { id: "candy-out", label: "יש ממתקים" },
-];
+/** Whether the house is open enough to visit right now. */
+export function isHouseOpenForSkip(house: PublicHouse, now: Date, filters: HouseFiltersState) {
+  const { from, to } = resolveVisitWindow(filters, now);
+  const visit = effectiveVisit(house);
+  if (visit === "closed") return false;
+  if (isOnBreak(house, now) || isOwnerFrozen(house, now.getTime())) return false;
+  return isOpenNowForFilter(house, from, to, now);
+}
 
-/** Positive-framed restore triggers shown when temporary skip is enabled. */
+/** Whether the house currently lacks candy (out or low). */
+export function houseLacksCandy(house: PublicHouse) {
+  const candy = candyPinDot(house);
+  return candy === "out" || candy === "low";
+}
+
+/** Whether the house currently has candy available. */
+export function houseHasCandy(house: PublicHouse) {
+  const candy = candyPinDot(house);
+  return candy === "plenty" || candy === "low";
+}
+
+/** Restore triggers that make sense for the house's current state. */
+export function availableTemporaryRestoreOptions(
+  house: PublicHouse,
+  now: Date,
+  filters: HouseFiltersState,
+): SkipReasonOption[] {
+  const options: SkipReasonOption[] = [];
+  if (!isHouseOpenForSkip(house, now, filters)) {
+    options.push({ id: "not-open", label: "הבית פתוח" });
+  }
+  if (houseLacksCandy(house)) {
+    options.push({ id: "candy-out", label: "יש ממתקים" });
+  }
+  return options;
+}
+
+/** Whether a temporary skip's chosen restore condition is now met. */
+export function temporaryRestoreReasonMet(
+  house: PublicHouse,
+  reason: SkipReasonId,
+  now: Date,
+  filters: HouseFiltersState,
+) {
+  if (reason === "not-open") return isHouseOpenForSkip(house, now, filters);
+  if (reason === "candy-out") return houseHasCandy(house);
+  return false;
+}
+
+export function temporaryRestoreReasonLabel(reason: SkipReasonId) {
+  const match = TEMPORARY_RESTORE_OPTIONS.find((item) => item.id === reason);
+  return match?.label ?? "";
+}
+
+export function skipMetaSummary(meta: SkippedHouseMeta) {
+  if (meta.temporary && isTemporarySkipReason(meta.reason)) {
+    const trigger = temporaryRestoreReasonLabel(meta.reason);
+    return trigger ? `דילוג זמני · החזרה כש${trigger}` : "דילוג זמני";
+  }
+  return "דילוג קבוע";
+}
+
+/** @deprecated Use availableTemporaryRestoreOptions instead. */
 export function returnRestoreReasons(
   house: PublicHouse,
   now: Date,
   filters: HouseFiltersState,
 ): SkipReasonOption[] {
-  const { from, to } = resolveVisitWindow(filters, now);
-  const visit = effectiveVisit(house);
-  const candy = candyPinDot(house);
-  const seen = new Set<SkipReasonId>();
-  const options: SkipReasonOption[] = [];
-
-  const push = (id: SkipReasonId, label: string) => {
-    if (seen.has(id) || !isTemporarySkipReason(id)) return;
-    seen.add(id);
-    options.push({ id, label });
-  };
-
-  if (!isOpenNowForFilter(house, from, to, now) || visit === "closed") {
-    push("not-open", "בית פתוח");
-  }
-  if (visit === "closed") {
-    push("closed", "הבית פעיל שוב");
-  }
-  if (isOnBreak(house, now) || isOwnerFrozen(house, now.getTime())) {
-    push("break", "יצא מהפסקה");
-  }
-  if (candy === "out" || candy === "low") {
-    push("candy-out", "יש ממתקים");
-  }
-  if (candy === "low") {
-    push("candy-low", "יש מספיק ממתקים");
-  }
-  if (visit === "decorOnly") {
-    push("decor-only", "קישוט בלבד");
-  }
-
-  push("not-open", "בית פתוח");
-  push("candy-out", "יש ממתקים");
-  push("break", "יצא מהפסקה");
-
-  return options;
+  return availableTemporaryRestoreOptions(house, now, filters);
 }
 
 export function suggestedSkipReasons(house: PublicHouse, now: Date, filters: HouseFiltersState) {
