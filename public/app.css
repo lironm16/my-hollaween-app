@@ -4535,9 +4535,7 @@ svg.leaflet-zoom-animated {
   place-items: center;
 }
 .pin-houses {
-  position: absolute;
-  left: 8px;
-  top: 13px;
+  position: relative;
   z-index: 5;
   display: block;
   width: 40px;
@@ -4914,6 +4912,8 @@ svg.leaflet-zoom-animated {
 .house-pin-route {
   position: relative;
   display: block;
+  width: 56px;
+  height: 56px;
   overflow: visible;
   isolation: isolate;
 }
@@ -4924,7 +4924,7 @@ svg.leaflet-zoom-animated {
 .house-pin-route .route-stop-pin {
   position: absolute;
   left: 50%;
-  bottom: calc(100% - 14px);
+  bottom: 42px;
   z-index: 8;
   margin: 0;
   transform: translateX(-50%);
@@ -5345,8 +5345,6 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   height: 60px;
 }
 .house-pin.is-legend .pin-houses {
-  left: 8px;
-  top: 14px;
   width: 44px;
   height: 33px;
 }
