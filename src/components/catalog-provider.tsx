@@ -11,6 +11,7 @@ import {
 } from "react";
 import type { Catalog, CatalogDelta } from "@/lib/types";
 import { mergeCatalogDelta, syncCatalog } from "@/lib/catalog-sync";
+import { syncActivityCounts } from "@/lib/activity-sync";
 import { config } from "@/lib/config";
 import {
   loadCatalogCache,
@@ -150,6 +151,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       setUnreachable(false);
       setError(null);
       await saveCatalogCache(next);
+      void syncActivityCounts();
       return;
     } catch {
       try {

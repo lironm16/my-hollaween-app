@@ -10,10 +10,7 @@ export type ActivityTotals = {
 let lastSent = "";
 let inflight: Promise<ActivityTotals | null> | null = null;
 
-/**
- * One POST per catalog poll at most; skips when counts unchanged since last send.
- * Not wired in catalog-provider on Vercel — cross-device totals need durable storage.
- */
+/** One POST per catalog poll at most; skips when counts unchanged since last send. */
 export function syncActivityCounts(): Promise<ActivityTotals | null> {
   if (typeof window === "undefined") return Promise.resolve(null);
   if (inflight) return inflight;

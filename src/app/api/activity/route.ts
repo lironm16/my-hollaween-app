@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
-import { getActivityTotals, reportDeviceActivity } from "@/lib/activity-store";
+import {
+  activityBackendEnabled,
+  getActivityTotals,
+  reportDeviceActivity,
+} from "@/lib/activity-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Vercel Hobby: no durable cross-device totals — hearts/visited stay on each phone. */
 function activityDisabled() {
-  return process.env.VERCEL === "1";
+  return !activityBackendEnabled();
 }
 
 const disabledTotals = {
