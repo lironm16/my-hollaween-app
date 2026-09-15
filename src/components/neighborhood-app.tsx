@@ -59,7 +59,11 @@ import { formatDistance } from "@/lib/geo";
 import { buildWalkingRoute } from "@/lib/route";
 import { diffRouteBySkippedIds, rebuildRouteAfterSkipChange } from "@/lib/route-changes";
 import { drainPendingRouteRestores } from "@/lib/route-mode";
-import { skipStatusSnapshot, type SkipReasonId } from "@/lib/skip-reasons";
+import {
+  skipStatusSnapshot,
+  temporaryRestoreReasonMet,
+  type SkipReasonId,
+} from "@/lib/skip-reasons";
 import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
 import { houseSelectionAnnouncement } from "@/lib/map-a11y";
 import type { Catalog, PublicHouse } from "@/lib/types";
@@ -330,7 +334,7 @@ export function NeighborhoodApp({
       if (!meta?.temporary) return false;
       const house = houses.find((item) => item.id === id);
       if (!house) return false;
-      return skipStatusSnapshot(house, now, filters) !== meta.statusKey;
+      return temporaryRestoreReasonMet(house, meta.reason as SkipReasonId, now, filters);
     });
     if (toRestore.length === 0) return;
     const nextSkippedIds = skips.skippedIds.filter((id) => !toRestore.includes(id));
@@ -344,7 +348,7 @@ export function NeighborhoodApp({
     setSkipDialogHouse(house);
   }
 
-  function confirmSkipHouse(reason: SkipReasonId, temporary: boolean, note: string) {
+  function confirmSkipHouse(reason: SkipReasonId, temporary: boolean) {
     const house = skipDialogHouse;
     if (!house) return;
     const wasSkipped = skips.skipped(house.id);
@@ -363,8 +367,7 @@ export function NeighborhoodApp({
     } else {
       skips.skip(house.id, meta);
     }
-    if (note) skips.saveNote(house.id, note);
-    else skips.clearNote(house.id);
+    skips.clearNote(house.id);
     if (routeMode && !wasSkipped) {
       applyRouteAfterSkipChange(nextSkippedIds, false);
     }
@@ -690,6 +693,9 @@ export function NeighborhoodApp({
                       : undefined
                   }
                   filterMismatchReasons={selectedFilterReasons}
+                  skipMeta={
+                    skips.skipped(mapSheetHouse.id) ? skips.meta(mapSheetHouse.id) : undefined
+                  }
                   onShowInList={
                     matchedIds.has(mapSheetHouse.id)
                       ? () => {
@@ -792,6 +798,11 @@ export function NeighborhoodApp({
                 : undefined
             }
             filterMismatchReasons={selectedFilterReasons}
+            skipMeta={
+              skips.skipped(houseDetailCommon.house.id)
+                ? skips.meta(houseDetailCommon.house.id)
+                : undefined
+            }
             onShowOnMap={() => {
               setView("map");
               selection.clearCluster();
@@ -819,7 +830,6 @@ export function NeighborhoodApp({
         filters={filters}
         now={now}
         existingMeta={skipDialogHouse ? skips.meta(skipDialogHouse.id) : undefined}
-        existingNote={skipDialogHouse ? (skips.note(skipDialogHouse.id) ?? "") : ""}
         onConfirm={confirmSkipHouse}
         onUnskip={skipDialogHouse && skips.skipped(skipDialogHouse.id) ? unskipFromDialog : undefined}
         onCancel={() => setSkipDialogHouse(null)}

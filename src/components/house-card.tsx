@@ -3,6 +3,8 @@
 import { Card } from "@/components/ui/card";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
+import { skipMetaSummary } from "@/lib/skip-reasons";
+import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +26,7 @@ export function HouseCard({
   onSkip,
   onRestoreRoute,
   skipped = false,
+  skipMeta,
   canEdit = false,
   admin = false,
   onShowOnMap,
@@ -43,6 +46,7 @@ export function HouseCard({
   onSkip?: () => void;
   onRestoreRoute?: () => void;
   skipped?: boolean;
+  skipMeta?: SkippedHouseMeta;
   canEdit?: boolean;
   admin?: boolean;
   onShowOnMap?: () => void;
@@ -84,6 +88,9 @@ export function HouseCard({
       }}
     >
       <div className="px-3 pb-1 pt-2">
+        {skipped && skipMeta ? (
+          <p className="mb-2 text-sm text-violet-300">{skipMetaSummary(skipMeta)}</p>
+        ) : null}
         <HouseDetails
           house={house}
           distanceM={distanceM}

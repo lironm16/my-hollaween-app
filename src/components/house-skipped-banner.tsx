@@ -1,13 +1,22 @@
 import { Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SkipSign } from "@/components/visit-marks";
+import { skipMetaSummary } from "@/lib/skip-reasons";
+import type { SkippedHouseMeta } from "@/lib/offline-db";
 
-export function HouseSkippedBanner({ onRestore }: { onRestore?: () => void }) {
+export function HouseSkippedBanner({
+  meta,
+  onRestore,
+}: {
+  meta?: SkippedHouseMeta;
+  onRestore?: () => void;
+}) {
+  const summary = meta ? skipMetaSummary(meta) : "דילגתם על הבית";
   return (
     <div className="route-skipped-row house-skipped-banner" role="status">
       <div className="route-skipped-main">
         <SkipSign />
-        <span className="route-skipped-name">דילגתם על הבית</span>
+        <span className="route-skipped-name">{summary}</span>
       </div>
       {onRestore ? (
         <Button
@@ -27,17 +36,19 @@ export function HouseSkippedBanner({ onRestore }: { onRestore?: () => void }) {
 
 export function FilterMismatchNotice({
   reasons,
+  skipMeta,
   onRestoreRoute,
 }: {
   reasons?: string[];
+  skipMeta?: SkippedHouseMeta;
   onRestoreRoute?: () => void;
 }) {
-  if (!reasons?.length) return null;
-  const skipped = reasons.includes("דילגתם על הבית");
-  const other = reasons.filter((reason) => reason !== "דילגתם על הבית");
+  if (!reasons?.length && !skipMeta) return null;
+  const skipped = reasons?.includes("דילגתם על הבית") || Boolean(skipMeta);
+  const other = (reasons ?? []).filter((reason) => reason !== "דילגתם על הבית");
   return (
     <>
-      {skipped ? <HouseSkippedBanner onRestore={onRestoreRoute} /> : null}
+      {skipped ? <HouseSkippedBanner meta={skipMeta} onRestore={onRestoreRoute} /> : null}
       {other.length > 0 ? (
         <p className="filter-mismatch-banner" role="status">
           מסונן: {other.join(" · ")}

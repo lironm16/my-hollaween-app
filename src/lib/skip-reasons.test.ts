@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  availableTemporaryRestoreOptions,
+  houseLacksCandy,
+  isHouseOpenForSkip,
   isTemporarySkipReason,
-  returnRestoreReasons,
+  skipMetaSummary,
   skipStatusSnapshot,
   suggestedSkipReasons,
+  temporaryRestoreReasonMet,
 } from "@/lib/skip-reasons";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
@@ -66,52 +70,101 @@ const baseFilters: HouseFiltersState = {
   includeUndecorated: true,
 };
 
+const evening = new Date("2026-10-31T18:00:00");
+
 describe("suggestedSkipReasons", () => {
   it("suggests closed when the house is closed", () => {
     const options = suggestedSkipReasons(
       stub({ visit: "closed", soldOut: true }),
-      new Date("2026-10-31T18:00:00"),
+      evening,
       baseFilters,
     );
     assert.equal(options[0]?.id, "closed");
   });
 
-  it("marks status reasons as temporary-friendly", () => {
-    assert.equal(isTemporarySkipReason("closed"), true);
+  it("marks dialog restore reasons as temporary-friendly", () => {
+    assert.equal(isTemporarySkipReason("not-open"), true);
+    assert.equal(isTemporarySkipReason("candy-out"), true);
+    assert.equal(isTemporarySkipReason("closed"), false);
     assert.equal(isTemporarySkipReason("other"), false);
   });
 });
 
-describe("returnRestoreReasons", () => {
-  it("always offers open and candy restore triggers", () => {
-    const options = returnRestoreReasons(
-      stub(),
-      new Date("2026-10-31T18:00:00"),
-      baseFilters,
-    );
-    assert.ok(options.some((item) => item.id === "not-open" && item.label === "בית פתוח"));
-    assert.ok(options.some((item) => item.id === "candy-out" && item.label === "יש ממתקים"));
+describe("availableTemporaryRestoreOptions", () => {
+  it("offers no temp skip when the house is open and has candy", () => {
+    const options = availableTemporaryRestoreOptions(stub(), evening, baseFilters);
+    assert.equal(options.length, 0);
+    assert.equal(isHouseOpenForSkip(stub(), evening, baseFilters), true);
+    assert.equal(houseLacksCandy(stub()), false);
   });
 
-  it("prioritizes closed-house restore when the house is closed", () => {
-    const options = returnRestoreReasons(
+  it("offers open restore only when the house is closed", () => {
+    const options = availableTemporaryRestoreOptions(
       stub({ visit: "closed", soldOut: true }),
-      new Date("2026-10-31T18:00:00"),
+      evening,
       baseFilters,
     );
-    assert.equal(options[0]?.id, "not-open");
-    assert.ok(options.some((item) => item.id === "closed"));
+    assert.deepEqual(options, [{ id: "not-open", label: "הבית פתוח" }]);
+  });
+
+  it("offers candy restore only when candy is out", () => {
+    const options = availableTemporaryRestoreOptions(
+      stub({ treatStock: { candy: "out" } }),
+      evening,
+      baseFilters,
+    );
+    assert.deepEqual(options, [{ id: "candy-out", label: "יש ממתקים" }]);
+  });
+});
+
+describe("temporaryRestoreReasonMet", () => {
+  it("restores on open only for not-open skips", () => {
+    const closed = stub({ visit: "closed", soldOut: true });
+    const open = stub({ visit: "come", soldOut: false });
+    assert.equal(temporaryRestoreReasonMet(closed, "not-open", evening, baseFilters), false);
+    assert.equal(temporaryRestoreReasonMet(open, "not-open", evening, baseFilters), true);
+    assert.equal(temporaryRestoreReasonMet(open, "candy-out", evening, baseFilters), true);
+  });
+
+  it("restores on candy only for candy-out skips", () => {
+    const out = stub({ treatStock: { candy: "out" } });
+    const plenty = stub({ treatStock: { candy: "plenty" } });
+    assert.equal(temporaryRestoreReasonMet(out, "candy-out", evening, baseFilters), false);
+    assert.equal(temporaryRestoreReasonMet(plenty, "candy-out", evening, baseFilters), true);
+    assert.equal(temporaryRestoreReasonMet(plenty, "not-open", evening, baseFilters), true);
+  });
+});
+
+describe("skipMetaSummary", () => {
+  it("describes temporary and permanent skips", () => {
+    assert.equal(
+      skipMetaSummary({
+        reason: "not-open",
+        temporary: true,
+        statusKey: "x",
+        skippedAt: "2026-01-01T00:00:00.000Z",
+      }),
+      "דילוג זמני · החזרה כשהבית פתוח",
+    );
+    assert.equal(
+      skipMetaSummary({
+        reason: "other",
+        temporary: false,
+        statusKey: "x",
+        skippedAt: "2026-01-01T00:00:00.000Z",
+      }),
+      "דילוג קבוע",
+    );
   });
 });
 
 describe("skipStatusSnapshot", () => {
   it("changes when visit state changes", () => {
-    const now = new Date("2026-10-31T18:00:00");
     const closed = stub({ visit: "closed", soldOut: true });
     const open = stub({ visit: "come", soldOut: false });
     assert.notEqual(
-      skipStatusSnapshot(closed, now, baseFilters),
-      skipStatusSnapshot(open, now, baseFilters),
+      skipStatusSnapshot(closed, evening, baseFilters),
+      skipStatusSnapshot(open, evening, baseFilters),
     );
   });
 });
