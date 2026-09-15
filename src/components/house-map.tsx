@@ -65,19 +65,16 @@ function routeBadgeHtml(order: number) {
 }
 
 function wrapRoutePin(html: string, routeOrder?: number) {
-  if (!routeOrder || !html) return { html, extraH: 0 };
-  const badge = routeBadgeHtml(routeOrder);
+  if (!routeOrder) return { html, extraH: 0 };
   return {
     extraH: 0,
-    html: html.replace(/<\/div>\s*$/, `${badge}</div>`),
+    html: `<div class="house-pin-route">${html}${routeBadgeHtml(routeOrder)}</div>`,
   };
 }
 
 const PIN = 56;
 const PIN_BOX = 62;
-const FAN_R = 82;
-/** Room below multi-house pin for apt-status dots (.pin-apt-dots { bottom: -18px }). */
-const PIN_APT_DOTS_EXTEND = 18;
+const FAN_R = 64;
 
 function attr(value: string) {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -151,6 +148,10 @@ function pinFaceHtml(house: PublicHouse) {
   return `<img class="pin-scare" src="${src}" alt="" />`;
 }
 
+function pinClusterIconHtml() {
+  return `<span class="pin-cluster-icon" aria-hidden="true"><svg viewBox="0 0 32 28" width="32" height="28" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="12" width="13" height="15" rx="1.5" fill="#ffedd5"/><path d="M1 12 L7.5 5.5 L14 12 Z" fill="#ffedd5"/><rect x="14" y="8" width="13" height="19" rx="1.5" fill="#fb923c"/><path d="M14 8 L20.5 1.5 L27 8 Z" fill="#fb923c"/></svg></span>`;
+}
+
 function clusterAptDotsHtml(
   houses: PublicHouse[],
   now: Date,
@@ -215,10 +216,8 @@ function housePinHtml(
 }
 
 function fanLayout(count: number) {
-  const spread = count <= 4 ? Math.min(120, PIN * Math.max(1, count - 1)) : Math.min(220, 26 * (count - 1));
-  const gap = PIN + 16;
-  const arc = gap * Math.max(1, count - 1);
-  const r = Math.max(FAN_R, arc / ((Math.max(spread, 1) * Math.PI) / 180));
+  const spread = count <= 3 ? 80 : count <= 5 ? 100 : 120;
+  const r = FAN_R;
   const offsets = Array.from({ length: count }, (_, index) => {
     const t = count === 1 ? 0.5 : index / (count - 1);
     const rad = ((-spread / 2 + t * spread) * Math.PI) / 180;
@@ -280,14 +279,14 @@ function clusterIcon(
 
   if (!fanOpen) {
     const wrapped = wrapRoutePin(
-      `<div class="house-pin is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות">${allSkipped ? pinSkippedMark() : ""}<span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>`,
+      `<div class="house-pin is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות">${allSkipped ? pinSkippedMark() : ""}${pinClusterIconHtml()}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>`,
       routeOrder,
     );
     return L.divIcon({
       className: `pumpkin-pin-icon pumpkin-pin-building${selectedClass}${filterClass}`,
       html: wrapped.html,
-      iconSize: [PIN_BOX, PIN_BOX + PIN_APT_DOTS_EXTEND + wrapped.extraH],
-      iconAnchor: [PIN_BOX / 2, PIN_BOX + wrapped.extraH],
+      iconSize: [PIN_BOX, PIN_BOX + 20 + wrapped.extraH],
+      iconAnchor: [PIN_BOX / 2, PIN_BOX + 16 + wrapped.extraH],
     });
   }
 
@@ -330,7 +329,7 @@ function clusterIcon(
   const badge = routeOrder ? routeBadgeHtml(routeOrder) : "";
   return L.divIcon({
     className: `pumpkin-pin-icon pumpkin-pin-fan${selectedClass}${filterClass}`,
-      html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" aria-hidden="true">${allSkipped ? pinSkippedMark() : ""}<span class="pin-houses" aria-hidden="true"><i></i><i></i></span>${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}${badge}</div>${apts}</div>`,
+      html: `<div class="house-pin-fan" dir="ltr" style="width:${width}px;height:${height}px"><svg class="pin-fan-lines" aria-hidden="true" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${lines}</svg><div class="house-pin is-base is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" aria-hidden="true">${allSkipped ? pinSkippedMark() : ""}${pinClusterIconHtml()}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>${apts}${badge}</div>`,
     iconSize: [width, height],
     iconAnchor: [width / 2, height],
   });
