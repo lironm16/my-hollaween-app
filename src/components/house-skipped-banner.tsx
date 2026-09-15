@@ -1,6 +1,6 @@
 import { Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SkipSign } from "@/components/visit-marks";
+import { FilterSign, SkipSign } from "@/components/visit-marks";
 import { skipMetaSummary } from "@/lib/skip-reasons";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 
@@ -69,7 +69,10 @@ export function FilterMismatchNotice({
       {skipped ? <HouseSkippedBanner meta={skipMeta} onRestore={onRestoreRoute} /> : null}
       {other.length > 0 ? (
         <p className="filter-mismatch-banner" role="status">
-          מסונן: {other.join(" · ")}
+          <FilterSign />
+          <span className="filter-mismatch-banner-text">
+            מסונן: {other.join(" · ")}
+          </span>
         </p>
       ) : null}
     </>
