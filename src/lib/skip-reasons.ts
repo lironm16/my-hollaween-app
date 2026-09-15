@@ -75,7 +75,7 @@ export function returnRestoreReasons(
   if (isOnBreak(house, now) || isOwnerFrozen(house, now.getTime())) {
     push("break", "יצא מהפסקה");
   }
-  if (candy === "out" || candy === "low" || candy === "none") {
+  if (candy === "out" || candy === "low") {
     push("candy-out", "יש ממתקים");
   }
   if (candy === "low") {
