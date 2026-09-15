@@ -13,7 +13,7 @@ import { filterHouses } from "@/lib/filter-houses";
 import { visitWindowIssue } from "@/lib/hours";
 import { resolveVisitWindow } from "@/lib/visit-window";
 import type { HouseFiltersState } from "@/lib/offline-db";
-import { diffRouteByFilters } from "@/lib/route-changes";
+import { diffRouteByFilters, type RouteChangeEntry } from "@/lib/route-changes";
 import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
 import { buildWalkingRouteOrdered, type WalkingRoute } from "@/lib/route";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
@@ -25,8 +25,8 @@ type RoutePrompt = {
   title: string;
   description: string;
   confirmLabel: string;
-  removedHouses?: { name: string; reason: string }[];
-  addedHouses?: { name: string; reason: string }[];
+  removedHouses?: RouteChangeEntry[];
+  addedHouses?: RouteChangeEntry[];
   onConfirm: (includeNewHouses: boolean) => void;
 };
 
