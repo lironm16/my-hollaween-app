@@ -12,10 +12,11 @@ import { HouseDetailOverlay } from "@/components/house-detail-overlay";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { NeighborhoodStatusBanners } from "@/components/neighborhood-status-banners";
+import { TempSkipRestoreAlerts } from "@/components/temp-skip-restore-alert";
 import {
-  TempSkipRestoreAlerts,
-  type TempSkipRestoreAlert,
-} from "@/components/temp-skip-restore-alert";
+  emitTempSkipRestoreAlert,
+  useTempSkipRestoreAlerts,
+} from "@/hooks/use-temp-skip-restore-alerts";
 import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
@@ -107,7 +108,7 @@ export function NeighborhoodApp({
 
   const [askedLocation, setAskedLocation] = useState(false);
   const [skipDialogHouse, setSkipDialogHouse] = useState<PublicHouse | null>(null);
-  const [tempRestoreAlerts, setTempRestoreAlerts] = useState<TempSkipRestoreAlert[]>([]);
+  const { alerts: tempRestoreAlerts, dismiss: dismissTempRestoreAlert } = useTempSkipRestoreAlerts();
   const [routePrompt, setRoutePrompt] = useState<{
     kind: "enter-route" | "filter-change" | "status-change";
     title: string;
@@ -334,45 +335,30 @@ export function NeighborhoodApp({
   }, [routeMode, houses.length, skips.skippedIds.join("\0")]);
 
   useEffect(() => {
-    if (!routeMode) return;
+    const houseById = new Map(housesForSkipCount.map((house) => [house.id, house]));
     const toRestore = skips.skippedIds.filter((id) => {
       const meta = skips.meta(id);
       if (!meta?.temporary) return false;
-      const house = houses.find((item) => item.id === id);
+      const house = houseById.get(id);
       if (!house) return false;
       return temporaryRestoreReasonMet(house, meta.reason as SkipReasonId, now, filters);
     });
     if (toRestore.length === 0) return;
-    const newAlerts: TempSkipRestoreAlert[] = [];
     for (const id of toRestore) {
-      const house = houses.find((item) => item.id === id);
+      const house = houseById.get(id);
       const meta = skips.meta(id);
       if (!house || !meta) continue;
-      newAlerts.push({
+      emitTempSkipRestoreAlert({
         id,
         message: temporaryRestoreAlertText(house, meta.reason),
       });
     }
-    if (newAlerts.length > 0) {
-      setTempRestoreAlerts((prev) => {
-        const seen = new Set(prev.map((item) => item.id));
-        const merged = [...prev];
-        for (const alert of newAlerts) {
-          if (!seen.has(alert.id)) merged.push(alert);
-        }
-        return merged;
-      });
-    }
     const nextSkippedIds = skips.skippedIds.filter((id) => !toRestore.includes(id));
     for (const id of toRestore) skips.unskip(id);
-    applyRouteAfterSkipChange(nextSkippedIds, true);
-  }, [routeMode, houses, now, filters, skips.skippedIds.join("\0")]);
-
-  useEffect(() => {
-    if (tempRestoreAlerts.length === 0) return;
-    const timer = window.setTimeout(() => setTempRestoreAlerts([]), 7000);
-    return () => window.clearTimeout(timer);
-  }, [tempRestoreAlerts]);
+    if (routeMode) {
+      applyRouteAfterSkipChange(nextSkippedIds, true);
+    }
+  }, [routeMode, housesForSkipCount, now, filters, skips.skippedIds.join("\0")]);
 
   function handleSkipHouse(id: string) {
     const house = houses.find((item) => item.id === id);
@@ -627,10 +613,7 @@ export function NeighborhoodApp({
         error={error}
         hasCachedHouses={houses.length > 0}
       />
-      <TempSkipRestoreAlerts
-        alerts={tempRestoreAlerts}
-        onDismiss={(id) => setTempRestoreAlerts((prev) => prev.filter((item) => item.id !== id))}
-      />
+      <TempSkipRestoreAlerts alerts={tempRestoreAlerts} onDismiss={dismissTempRestoreAlert} />
       <main
         className="relative z-0 min-h-0 flex-1 isolate overflow-hidden"
         style={{ flex: 1, minHeight: 0, position: "relative" }}
