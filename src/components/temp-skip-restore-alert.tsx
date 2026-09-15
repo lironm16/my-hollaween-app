@@ -1,11 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-
-export type TempSkipRestoreAlert = {
-  id: string;
-  message: string;
-};
+import type { TempSkipRestoreAlert } from "@/lib/temp-skip-restore-alerts";
 
 export function TempSkipRestoreAlerts({
   alerts,
@@ -14,14 +12,24 @@ export function TempSkipRestoreAlerts({
   alerts: TempSkipRestoreAlert[];
   onDismiss: (id: string) => void;
 }) {
-  if (alerts.length === 0) return null;
-  return (
-    <div className="relative z-30 space-y-1">
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || alerts.length === 0) return null;
+
+  return createPortal(
+    <div
+      className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top,0px)+7.25rem)] z-[55] space-y-1 px-3"
+      dir="rtl"
+    >
       {alerts.map((alert) => (
         <div
           key={alert.id}
           role="status"
-          className="flex items-center justify-between gap-3 bg-emerald-950/90 px-3 py-2 text-base text-emerald-50 ring-1 ring-inset ring-emerald-500/25"
+          className="pointer-events-auto flex items-center justify-between gap-3 rounded-xl bg-emerald-950/95 px-3 py-2.5 text-base text-emerald-50 shadow-[0_10px_30px_rgba(0,0,0,0.45)] ring-1 ring-emerald-500/30 backdrop-blur-sm"
         >
           <span className="min-w-0 flex-1 text-right leading-snug">{alert.message}</span>
           <button
@@ -34,6 +42,7 @@ export function TempSkipRestoreAlerts({
           </button>
         </div>
       ))}
-    </div>
+    </div>,
+    document.body,
   );
 }

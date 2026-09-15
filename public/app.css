@@ -246,6 +246,9 @@
     container-type: inline-size;
     container-name: card-header;
   }
+  .pointer-events-auto {
+    pointer-events: auto;
+  }
   .pointer-events-none {
     pointer-events: none;
   }
@@ -280,6 +283,9 @@
   }
   .inset-0 {
     inset: 0px;
+  }
+  .inset-x-0 {
+    inset-inline: 0px;
   }
   .inset-x-1\.5 {
     inset-inline: calc(var(--spacing) * 1.5);
@@ -344,6 +350,9 @@
   .top-\[calc\(0\.75rem\+env\(safe-area-inset-top\,0px\)\)\] {
     top: calc(0.75rem + env(safe-area-inset-top,0px));
   }
+  .top-\[calc\(env\(safe-area-inset-top\,0px\)\+7\.25rem\)\] {
+    top: calc(env(safe-area-inset-top,0px) + 7.25rem);
+  }
   .-right-1 {
     right: calc(var(--spacing) * -1);
   }
@@ -367,6 +376,9 @@
   }
   .z-50 {
     z-index: 50;
+  }
+  .z-\[55\] {
+    z-index: 55;
   }
   .z-\[60\] {
     z-index: 60;
@@ -1390,10 +1402,10 @@
       background-color: color-mix(in oklab, var(--color-emerald-950) 40%, transparent);
     }
   }
-  .bg-emerald-950\/90 {
-    background-color: color-mix(in srgb, oklch(26.2% 0.051 172.552) 90%, transparent);
+  .bg-emerald-950\/95 {
+    background-color: color-mix(in srgb, oklch(26.2% 0.051 172.552) 95%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-emerald-950) 90%, transparent);
+      background-color: color-mix(in oklab, var(--color-emerald-950) 95%, transparent);
     }
   }
   .bg-muted {
@@ -2031,6 +2043,10 @@
     --tw-shadow: 0 8px 24px var(--tw-shadow-color, rgba(0,0,0,0.45));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
+  .shadow-\[0_10px_30px_rgba\(0\,0\,0\,0\.45\)\] {
+    --tw-shadow: 0 10px 30px var(--tw-shadow-color, rgba(0,0,0,0.45));
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
   .shadow-\[0_12px_40px_rgba\(0\,0\,0\,0\.45\)\] {
     --tw-shadow: 0 12px 40px var(--tw-shadow-color, rgba(0,0,0,0.45));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
@@ -2093,6 +2109,12 @@
     --tw-ring-color: color-mix(in srgb, oklch(69.6% 0.17 162.48) 25%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       --tw-ring-color: color-mix(in oklab, var(--color-emerald-500) 25%, transparent);
+    }
+  }
+  .ring-emerald-500\/30 {
+    --tw-ring-color: color-mix(in srgb, oklch(69.6% 0.17 162.48) 30%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--color-emerald-500) 30%, transparent);
     }
   }
   .ring-foreground\/10 {
