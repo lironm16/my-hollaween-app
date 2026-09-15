@@ -44,18 +44,17 @@ export function SkipHouseDialog({
     if (!open || !house) return;
     const options = availableTemporaryRestoreOptions(house, now, filters);
     if (existingMeta) {
-      const wantsTemp = existingMeta.temporary && canTempSkip;
-      setTemporary(wantsTemp);
+      setTemporary(canTempSkip);
       const reason = existingMeta.reason as SkipReasonId;
       setReturnReason(
-        wantsTemp && options.some((item) => item.id === reason)
+        canTempSkip && options.some((item) => item.id === reason)
           ? reason
           : (options[0]?.id ?? "other"),
       );
       return;
     }
     setReturnReason(options[0]?.id ?? "other");
-    setTemporary(false);
+    setTemporary(canTempSkip);
   }, [open, house, now, filters, existingMeta, canTempSkip]);
 
   function close() {
