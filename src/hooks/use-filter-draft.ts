@@ -25,6 +25,8 @@ type RoutePrompt = {
   title: string;
   description: string;
   confirmLabel: string;
+  includeAddsLabel?: string;
+  updatesOnlyLabel?: string;
   removedHouses?: RouteChangeEntry[];
   addedHouses?: RouteChangeEntry[];
   onConfirm: (includeNewHouses: boolean) => void;
