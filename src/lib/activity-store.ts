@@ -2,10 +2,15 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { get as getBlob, put as putBlob } from "@vercel/blob";
 import {
+  getFirestoreActivityTotals,
+  reportFirestoreDeviceActivity,
+} from "@/lib/activity-firestore";
+import {
   blobForEphemeralCounters,
   privateBlobGetOptions,
   privateBlobPutOptions,
 } from "@/lib/blob-auth";
+import { firestoreConfigured } from "@/lib/firestore-admin";
 
 const BLOB_PATH = "halloween-houses/activity.json";
 const MAX_DEVICES = 5000;
@@ -196,6 +201,11 @@ function cleanCount(value: unknown) {
   return Math.min(n, 500);
 }
 
+/** Firestore on Vercel; local file/memory off Vercel. */
+export function activityBackendEnabled() {
+  return firestoreConfigured() || process.env.VERCEL !== "1";
+}
+
 export async function reportDeviceActivity(
   deviceId: string,
   likedCount: number,
@@ -205,6 +215,9 @@ export async function reportDeviceActivity(
   if (!clean || clean.length < 8) return getActivityTotals();
   const liked = cleanCount(likedCount);
   const visited = cleanCount(visitedCount);
+  if (firestoreConfigured()) {
+    return reportFirestoreDeviceActivity(clean, liked, visited);
+  }
   return withLock(async () => {
     const file = mem ?? (await loadUnlocked());
     const now = Date.now();
@@ -224,6 +237,9 @@ export async function reportDeviceActivity(
 }
 
 export async function getActivityTotals(): Promise<ActivityTotals> {
+  if (firestoreConfigured()) {
+    return getFirestoreActivityTotals();
+  }
   return withLock(async () => {
     const file = await loadUnlocked();
     return aggregateActivityTotals(file);

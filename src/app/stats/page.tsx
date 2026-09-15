@@ -17,8 +17,10 @@ function useActivityTotals() {
     const load = () => {
       void fetch("/api/activity", { cache: "no-store" })
         .then((res) => (res.ok ? res.json() : null))
-        .then((data: ActivityTotals | null) => {
-          if (!cancelled && data && typeof data.totalLiked === "number") setTotals(data);
+        .then((data: ActivityTotals & { disabled?: boolean } | null) => {
+          if (!cancelled && data && !data.disabled && typeof data.totalLiked === "number") {
+            setTotals(data);
+          }
         })
         .catch(() => undefined);
     };
