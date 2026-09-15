@@ -26,7 +26,7 @@ function HouseListSection({
 }) {
   if (entries.length === 0) return null;
   return (
-    <section className="space-y-1.5">
+    <section className="min-w-0 space-y-1.5">
       <p
         className={
           tone === "remove"
@@ -39,13 +39,13 @@ function HouseListSection({
       <ul
         className={
           tone === "remove"
-            ? "max-h-40 space-y-2 overflow-y-auto rounded-lg bg-red-950/30 px-3 py-2 text-base text-red-50 ring-1 ring-red-500/25"
-            : "max-h-40 space-y-2 overflow-y-auto rounded-lg bg-emerald-950/30 px-3 py-2 text-base text-emerald-50 ring-1 ring-emerald-500/25"
+            ? "max-h-36 space-y-2 overflow-y-auto overscroll-contain rounded-lg bg-red-950/30 px-3 py-2 text-base text-red-50 ring-1 ring-red-500/25"
+            : "max-h-36 space-y-2 overflow-y-auto overscroll-contain rounded-lg bg-emerald-950/30 px-3 py-2 text-base text-emerald-50 ring-1 ring-emerald-500/25"
         }
       >
         {entries.map((entry) => (
-          <li key={`${tone}-${entry.name}`} className="min-w-0 max-h-14 overflow-hidden">
-            <p className="line-clamp-2 font-medium leading-snug">{entry.name}</p>
+          <li key={`${tone}-${entry.name}`} className="min-w-0">
+            <p className="line-clamp-2 break-words font-medium leading-snug">{entry.name}</p>
             {entry.reason ? (
               <p className="truncate text-sm opacity-80">{entry.reason}</p>
             ) : null}
@@ -101,11 +101,11 @@ export function RouteConfirmDialog({
     <Dialog open={open} onOpenChange={(next) => !next && close()}>
       <DialogContent
         showCloseButton={false}
-        className="gap-0 border-orange-500/30 bg-[#160b1f] p-0 text-orange-50 sm:max-w-md"
+        className="flex max-h-[min(92dvh,calc(100dvh-1rem))] w-full max-w-[calc(100%-1rem)] flex-col gap-0 overflow-hidden border-orange-500/30 bg-[#160b1f] p-0 text-orange-50 sm:max-w-md"
         dir="rtl"
       >
-        <OverlayCloseBar compact title={title} onClose={close} className="border-b border-orange-500/15 pb-2" />
-        <div className="space-y-3 px-6 pt-4">
+        <OverlayCloseBar compact title={title} onClose={close} className="shrink-0 border-b border-orange-500/15 pb-2" />
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-6 pt-4">
           <DialogDescription className="text-right text-violet-200">{description}</DialogDescription>
           {(removedHouses?.length ?? 0) > 0 || hasAdds ? (
             <div className="space-y-3">
@@ -134,7 +134,7 @@ export function RouteConfirmDialog({
             לא להציג שוב
           </label>
         </div>
-        <DialogFooter className="mx-0 mb-0 mt-2 border-0 bg-transparent p-0 px-6 pb-6">
+        <DialogFooter className="mx-0 mb-0 mt-2 shrink-0 border-0 bg-transparent p-0 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
           <div className="grid w-full grid-cols-2 gap-2">
             <Button
               type="button"

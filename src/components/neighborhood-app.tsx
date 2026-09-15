@@ -339,26 +339,42 @@ export function NeighborhoodApp({
   }, [routeMode, houses, now, filters, skips.skippedIds.join("\0")]);
 
   function handleSkipHouse(id: string) {
-    if (skips.skipped(id)) return;
     const house = houses.find((item) => item.id === id);
     if (!house) return;
     setSkipDialogHouse(house);
   }
 
-  function confirmSkipHouse(reason: SkipReasonId, temporary: boolean) {
+  function confirmSkipHouse(reason: SkipReasonId, temporary: boolean, note: string) {
     const house = skipDialogHouse;
     if (!house) return;
+    const wasSkipped = skips.skipped(house.id);
     setSkipDialogHouse(null);
-    const nextSkippedIds = [house.id, ...skips.skippedIds.filter((item) => item !== house.id)];
-    skips.skip(house.id, {
+    const meta = {
       reason,
       temporary,
       statusKey: skipStatusSnapshot(house, now, filters),
-      skippedAt: new Date().toISOString(),
-    });
-    if (routeMode) {
+      skippedAt: wasSkipped ? (skips.meta(house.id)?.skippedAt ?? new Date().toISOString()) : new Date().toISOString(),
+    };
+    const nextSkippedIds = wasSkipped
+      ? skips.skippedIds
+      : [house.id, ...skips.skippedIds.filter((item) => item !== house.id)];
+    if (wasSkipped) {
+      skips.update(house.id, meta);
+    } else {
+      skips.skip(house.id, meta);
+    }
+    if (note) skips.saveNote(house.id, note);
+    else skips.clearNote(house.id);
+    if (routeMode && !wasSkipped) {
       applyRouteAfterSkipChange(nextSkippedIds, false);
     }
+  }
+
+  function unskipFromDialog() {
+    const house = skipDialogHouse;
+    if (!house) return;
+    setSkipDialogHouse(null);
+    handleRestoreHouse(house.id, { direct: true });
   }
 
   function handleRestoreHouse(id: string, opts?: { direct?: boolean }) {
@@ -802,7 +818,10 @@ export function NeighborhoodApp({
         house={skipDialogHouse}
         filters={filters}
         now={now}
+        existingMeta={skipDialogHouse ? skips.meta(skipDialogHouse.id) : undefined}
+        existingNote={skipDialogHouse ? (skips.note(skipDialogHouse.id) ?? "") : ""}
         onConfirm={confirmSkipHouse}
+        onUnskip={skipDialogHouse && skips.skipped(skipDialogHouse.id) ? unskipFromDialog : undefined}
         onCancel={() => setSkipDialogHouse(null)}
       />
       <RouteConfirmDialog

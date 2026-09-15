@@ -2,11 +2,15 @@
 
 import { useEffect, useState } from "react";
 import {
+  clearSkipNote,
+  getSkipNote,
   getSkippedMeta,
   loadSkippedIds,
+  saveSkipNote,
   skipHouse,
   toggleSkipped,
   unskipHouse,
+  updateSkipHouse,
   type SkippedHouseMeta,
 } from "@/lib/offline-db";
 
@@ -34,7 +38,15 @@ export function useSkippedHouses() {
       setIds(next);
       return next;
     },
+    update: (id: string, meta: SkippedHouseMeta) => {
+      const next = updateSkipHouse(id, meta);
+      setIds(next);
+      return next;
+    },
     meta: (id: string) => getSkippedMeta(id),
+    note: (id: string) => getSkipNote(id),
+    saveNote: (id: string, note: string) => saveSkipNote(id, note),
+    clearNote: (id: string) => clearSkipNote(id),
     unskip: (id: string) => {
       const next = unskipHouse(id);
       setIds(next);
