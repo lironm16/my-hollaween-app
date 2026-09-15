@@ -4936,7 +4936,7 @@ svg.leaflet-zoom-animated {
   position: absolute;
   left: 50%;
   right: auto;
-  bottom: 42px;
+  bottom: 32px;
   z-index: 20;
   transform: translateX(-50%);
   pointer-events: none;
