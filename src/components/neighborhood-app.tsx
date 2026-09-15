@@ -114,6 +114,8 @@ export function NeighborhoodApp({
     title: string;
     description: string;
     confirmLabel: string;
+    includeAddsLabel?: string;
+    updatesOnlyLabel?: string;
     removedHouses?: RouteChangeEntry[];
     addedHouses?: RouteChangeEntry[];
     onConfirm: (includeNewHouses: boolean) => void;
@@ -427,6 +429,8 @@ export function NeighborhoodApp({
       description:
         "«ביטול» משאיר את הבית בדילוג. «החזרה למסלול» מוסיף אותו שוב למסלול.",
       confirmLabel: "החזרה למסלול",
+      includeAddsLabel: "החזרה + הוספה למסלול",
+      updatesOnlyLabel: "החזרה בלבד",
       removedHouses: removed,
       addedHouses: added,
       onConfirm: (includeNew) => {
@@ -861,6 +865,8 @@ export function NeighborhoodApp({
         addedHouses={routePrompt?.addedHouses}
         promptKind={routePrompt?.kind ?? "enter-route"}
         confirmLabel={routePrompt?.confirmLabel ?? "המשך"}
+        includeAddsLabel={routePrompt?.includeAddsLabel}
+        updatesOnlyLabel={routePrompt?.updatesOnlyLabel}
         onConfirm={(includeNew) => {
           routePrompt?.onConfirm(includeNew);
           setRoutePrompt(null);
