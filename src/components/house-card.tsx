@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
-import { skipMetaSummary } from "@/lib/skip-reasons";
+import { HouseSkippedBanner } from "@/components/house-skipped-banner";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -88,8 +88,8 @@ export function HouseCard({
       }}
     >
       <div className="px-3 pb-1 pt-2">
-        {skipped && skipMeta ? (
-          <p className="mb-2 text-sm text-violet-300">{skipMetaSummary(skipMeta)}</p>
+        {skipped ? (
+          <HouseSkippedBanner meta={skipMeta} onRestore={onRestoreRoute} />
         ) : null}
         <HouseDetails
           house={house}
