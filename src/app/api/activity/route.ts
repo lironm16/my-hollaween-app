@@ -4,7 +4,24 @@ import { getActivityTotals, reportDeviceActivity } from "@/lib/activity-store";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/** Vercel Hobby: no durable cross-device totals — hearts/visited stay on each phone. */
+function activityDisabled() {
+  return process.env.VERCEL === "1";
+}
+
+const disabledTotals = {
+  totalLiked: 0,
+  totalVisited: 0,
+  devicesReporting: 0,
+  disabled: true,
+};
+
 export async function GET() {
+  if (activityDisabled()) {
+    return NextResponse.json(disabledTotals, {
+      headers: { "Cache-Control": "no-store" },
+    });
+  }
   const totals = await getActivityTotals();
   return NextResponse.json(totals, {
     headers: { "Cache-Control": "no-store" },
@@ -12,6 +29,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (activityDisabled()) {
+    return NextResponse.json(disabledTotals, {
+      headers: { "Cache-Control": "no-store" },
+    });
+  }
   let body: unknown;
   try {
     body = await request.json();
