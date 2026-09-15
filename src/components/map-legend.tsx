@@ -49,9 +49,13 @@ function SwatchPin({
       ) : null}
       {multi ? (
         <>
-          <span className="pin-houses">
-            <i />
-            <i />
+          <span className="pin-cluster-icon" aria-hidden>
+            <svg viewBox="0 0 32 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="1" y="12" width="13" height="15" rx="1.5" fill="#ffedd5" />
+              <path d="M1 12 L7.5 5.5 L14 12 Z" fill="#ffedd5" />
+              <rect x="14" y="8" width="13" height="19" rx="1.5" fill="#fb923c" />
+              <path d="M14 8 L20.5 1.5 L27 8 Z" fill="#fb923c" />
+            </svg>
           </span>
           <span className="pin-apt-dots" aria-hidden>
             <i className="pin-apt-dot is-plenty" />
