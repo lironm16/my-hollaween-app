@@ -8,6 +8,7 @@ import {
   skipMetaSummary,
   skipStatusSnapshot,
   suggestedSkipReasons,
+  temporaryRestoreAlertText,
   temporaryRestoreReasonMet,
 } from "@/lib/skip-reasons";
 import type { HouseFiltersState } from "@/lib/offline-db";
@@ -132,6 +133,19 @@ describe("temporaryRestoreReasonMet", () => {
     assert.equal(temporaryRestoreReasonMet(out, "candy-out", evening, baseFilters), false);
     assert.equal(temporaryRestoreReasonMet(plenty, "candy-out", evening, baseFilters), true);
     assert.equal(temporaryRestoreReasonMet(plenty, "not-open", evening, baseFilters), true);
+  });
+});
+
+describe("temporaryRestoreAlertText", () => {
+  it("mentions the house and restore trigger", () => {
+    assert.match(
+      temporaryRestoreAlertText(stub({ name: "משפחת לוין" }), "not-open"),
+      /משפחת לוין חזר למסלול — הבית פתוח/,
+    );
+    assert.match(
+      temporaryRestoreAlertText(stub({ name: "משפחת לוין" }), "candy-out"),
+      /משפחת לוין חזר למסלול — יש ממתקים/,
+    );
   });
 });
 

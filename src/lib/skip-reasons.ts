@@ -1,5 +1,6 @@
 import { candyPinDot, effectiveVisit, isOwnerFrozen } from "@/lib/house-state";
 import { isOnBreak, isOpenNowForFilter } from "@/lib/hours";
+import { houseHeadline } from "@/lib/labels";
 import type { HouseFiltersState, SkippedHouseMeta } from "@/lib/offline-db";
 import { resolveVisitWindow } from "@/lib/visit-window";
 import type { PublicHouse } from "@/lib/types";
@@ -108,6 +109,13 @@ export function skipMetaSummary(meta: SkippedHouseMeta) {
     return trigger ? `דילוג זמני · החזרה כש${trigger}` : "דילוג זמני";
   }
   return "דילוג קבוע";
+}
+
+export function temporaryRestoreAlertText(house: PublicHouse, reason: SkipReasonId) {
+  const name = houseHeadline(house);
+  if (reason === "not-open") return `${name} חזר למסלול — הבית פתוח`;
+  if (reason === "candy-out") return `${name} חזר למסלול — יש ממתקים`;
+  return `${name} חזר למסלול`;
 }
 
 /** @deprecated Use availableTemporaryRestoreOptions instead. */
