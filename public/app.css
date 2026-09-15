@@ -697,9 +697,6 @@
   .min-h-16 {
     min-height: calc(var(--spacing) * 16);
   }
-  .min-h-20 {
-    min-height: calc(var(--spacing) * 20);
-  }
   .min-h-24 {
     min-height: calc(var(--spacing) * 24);
   }
@@ -865,9 +862,6 @@
   }
   .resize {
     resize: both;
-  }
-  .resize-none {
-    resize: none;
   }
   .scroll-my-1 {
     scroll-margin-block: var(--spacing);
