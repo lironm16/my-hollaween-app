@@ -611,10 +611,9 @@
 
 .house-pin.is-base {
   position: absolute;
-  left: 50%;
+  left: calc(50% - 28px);
   bottom: 0;
   z-index: 1;
-  transform: translateX(-50%);
 }
 
 .house-pin.is-apt {
@@ -765,8 +764,8 @@
 
 .pin-houses {
   position: absolute;
-  left: 50%;
-  top: 42%;
+  left: 8px;
+  top: 13px;
   z-index: 5;
   display: block;
   width: 40px;
@@ -774,7 +773,6 @@
   flex-shrink: 0;
   font-size: 0;
   line-height: 0;
-  transform: translate(-50%, -50%);
 }
 
 .pin-houses i {
@@ -859,13 +857,13 @@
 .is-filter-dim .pumpkin-pin-icon.is-filtered-out,
 .is-filter-dim .house-pin.is-filtered-out,
 .is-filter-dim .pin-apt-dot.is-filtered-out {
-  opacity: 0.38;
+  filter: brightness(0.55) saturate(0.7);
 }
 
 /* Wrapper + inner pin both carry is-filtered-out — apply dim once, not stacked. */
 .is-filter-dim .pumpkin-pin-icon.is-filtered-out .house-pin.is-filtered-out,
 .is-filter-dim .pumpkin-pin-icon.is-filtered-out .pin-apt-dot.is-filtered-out {
-  opacity: 1;
+  filter: none;
 }
 
 .house-skipped-banner {
@@ -1491,7 +1489,7 @@
   100% { inset-inline-start: 110%; transform: translateY(-8px) rotate(-8deg); }
 }
 
-/* Filter sheet time fields — visible native input (Safari-friendly). */
+/* Shared time fields — visible native input (Safari-friendly). */
 input[type="time"].filter-time-input {
   display: flex;
   width: 100%;
@@ -1566,59 +1564,6 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   padding-inline: 0.65rem;
 }
 
-/* Hours: full-width border; native value hidden; overlay shows RTL-aligned time */
-.house-time-wrap {
-  width: 100%;
-}
-
-input[type="time"].house-time-input {
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
-  direction: ltr;
-  position: relative;
-  padding-inline: 0.625rem;
-  color-scheme: dark;
-  color: transparent;
-  caret-color: transparent;
-  cursor: pointer;
-}
-
-input[type="time"].house-time-input::-webkit-calendar-picker-indicator {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  cursor: pointer;
-  opacity: 0;
-  z-index: 3;
-}
-
-input[type="time"].house-time-input::-webkit-datetime-edit,
-input[type="time"].house-time-input::-webkit-datetime-edit-fields-wrapper,
-input[type="time"].house-time-input::-webkit-datetime-edit-text,
-input[type="time"].house-time-input::-webkit-datetime-edit-hour-field,
-input[type="time"].house-time-input::-webkit-datetime-edit-minute-field,
-input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
-  color: transparent;
-}
-
-.house-time-value {
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: right; /* physical right — matches RTL field text */
-  padding-inline: 0.625rem;
-  padding-inline-start: 2.25rem;
-  font-size: 1rem;
-  line-height: 1.25;
-  color: var(--foreground);
-  z-index: 1;
-}
-
 .house-added-success {
   animation: house-added-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -1662,21 +1607,7 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 
 /* iOS PWA / notch: keep the header below the clock and system icons. */
 .app-header {
-  padding-top: constant(safe-area-inset-top);
   padding-top: env(safe-area-inset-top, 0px);
-}
-
-/* Keep toasts below the phone status bar (and the app header on small screens). */
-[data-sonner-toaster][data-y-position="top"] {
-  top: calc(constant(safe-area-inset-top) + 1.5rem) !important;
-  top: calc(env(safe-area-inset-top, 0px) + 1.5rem) !important;
-}
-
-@media (max-width: 600px) {
-  [data-sonner-toaster][data-y-position="top"] {
-    top: calc(constant(safe-area-inset-top) + 4rem) !important;
-    top: calc(env(safe-area-inset-top, 0px) + 4rem) !important;
-  }
 }
 
 .map-fab-stack {
@@ -1687,7 +1618,6 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
   flex-direction: column-reverse;
   align-items: flex-end;
   gap: 0.5rem;
-  bottom: calc(1.5rem + constant(safe-area-inset-bottom) + var(--map-sheet-h, 0px));
   bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--map-sheet-h, 0px));
   transition: bottom 0.2s ease;
 }
@@ -1703,6 +1633,8 @@ input[type="time"].house-time-input::-webkit-datetime-edit-ampm-field {
 }
 
 .house-pin.is-legend .pin-houses {
+  left: 8px;
+  top: 14px;
   width: 44px;
   height: 33px;
 }
