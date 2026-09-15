@@ -189,8 +189,7 @@ export function useFilterDraft({
     setRoutePrompt({
       kind: "filter-change",
       title: "לעדכן את הסינון?",
-      description:
-        "המסלול יתאים לרשימה החדשה. «ביטול» משאיר את הסינון והמסלול כמו שהם.",
+      description: "ערכת שינויים בסינון שישנו את המסלול",
       confirmLabel: "עדכון הסינון",
       removedHouses,
       addedHouses,

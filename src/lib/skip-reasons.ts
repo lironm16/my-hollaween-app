@@ -48,6 +48,12 @@ export function isTemporarySkipReason(reason: SkipReasonId) {
   return reason !== "other" && reason !== "scary";
 }
 
+/** Fixed restore triggers shown in the skip dialog. */
+export const TEMPORARY_RESTORE_OPTIONS: SkipReasonOption[] = [
+  { id: "not-open", label: "הבית פתוח" },
+  { id: "candy-out", label: "יש ממתקים" },
+];
+
 /** Positive-framed restore triggers shown when temporary skip is enabled. */
 export function returnRestoreReasons(
   house: PublicHouse,

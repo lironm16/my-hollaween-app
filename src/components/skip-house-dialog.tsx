@@ -8,19 +8,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { houseHeadline } from "@/lib/labels";
 import {
-  returnRestoreReasons,
   skipReasonLabel,
+  TEMPORARY_RESTORE_OPTIONS,
   type SkipReasonId,
 } from "@/lib/skip-reasons";
 import type { HouseFiltersState, SkippedHouseMeta } from "@/lib/offline-db";
@@ -29,8 +22,8 @@ import type { PublicHouse } from "@/lib/types";
 export function SkipHouseDialog({
   open,
   house,
-  filters,
-  now,
+  filters: _filters,
+  now: _now,
   existingMeta,
   existingNote = "",
   onConfirm,
@@ -48,7 +41,6 @@ export function SkipHouseDialog({
   onCancel: () => void;
 }) {
   const editing = Boolean(existingMeta);
-  const restoreOptions = house ? returnRestoreReasons(house, now, filters) : [];
   const [returnReason, setReturnReason] = useState<SkipReasonId>("not-open");
   const [temporary, setTemporary] = useState(true);
   const [note, setNote] = useState("");
@@ -59,19 +51,19 @@ export function SkipHouseDialog({
       setTemporary(existingMeta.temporary);
       const reason = existingMeta.reason as SkipReasonId;
       if (existingMeta.temporary) {
-        const next = returnRestoreReasons(house, now, filters);
-        setReturnReason(next.some((item) => item.id === reason) ? reason : (next[0]?.id ?? "not-open"));
+        setReturnReason(
+          TEMPORARY_RESTORE_OPTIONS.some((item) => item.id === reason) ? reason : "not-open",
+        );
       } else {
-        setReturnReason(reason === "other" ? "other" : "other");
+        setReturnReason("other");
       }
       setNote(existingNote);
       return;
     }
-    const next = returnRestoreReasons(house, now, filters);
-    setReturnReason(next[0]?.id ?? "not-open");
+    setReturnReason("not-open");
     setTemporary(true);
     setNote("");
-  }, [open, house, now, filters, existingMeta, existingNote]);
+  }, [open, house, existingMeta, existingNote]);
 
   function close() {
     onCancel();
@@ -119,45 +111,40 @@ export function SkipHouseDialog({
               ? "אפשר לשנות את סוג הדילוג, סיבת החזרה, או להסיר את הדילוג."
               : "הבית יוסר מהמסלול. אפשר לדלג זמנית ולהחזיר אוטומטית כשמצב הבית משתנה."}
           </DialogDescription>
-          <label className="flex items-start gap-2 rounded-xl border border-orange-500/15 bg-[#1a1028] px-3 py-3 text-base text-violet-100">
-            <input
-              type="checkbox"
-              checked={temporary}
-              onChange={(event) => setTemporary(event.target.checked)}
-              className="mt-0.5 size-4 shrink-0 rounded border-orange-500/40 accent-orange-500"
-            />
-            <span>
-              דילוג זמני — החזירו למסלול אם מצב הבית משתנה
-              <span className="mt-0.5 block text-sm text-violet-300">
-                למשל נפתח שוב, חזר מהפסקה, או חזרו ממתקים
-              </span>
-            </span>
-          </label>
-          {temporary ? (
-            <div className="space-y-1.5 rounded-xl border border-orange-500/15 bg-[#1a1028] px-3 py-3">
-              <label htmlFor="skip-return-reason" className="block text-right text-sm text-violet-300">
-                החזירו למסלול כש…
-              </label>
-              <Select
-                value={returnReason}
-                onValueChange={(value) => setReturnReason(value as SkipReasonId)}
-              >
-                <SelectTrigger
-                  id="skip-return-reason"
-                  className="h-11 w-full border-orange-500/20 bg-[#14081c] text-base text-orange-50"
+          <div className="space-y-2 rounded-xl border border-orange-500/15 bg-[#1a1028] px-3 py-3">
+            <label className="flex items-start gap-2 text-base text-violet-100">
+              <input
+                type="checkbox"
+                checked={temporary}
+                onChange={(event) => setTemporary(event.target.checked)}
+                className="mt-0.5 size-4 shrink-0 rounded border-orange-500/40 accent-orange-500"
+              />
+              <span>דילוג זמני — החזירו למסלול אם מצב הבית משתנה</span>
+            </label>
+            <div
+              className={`mr-6 space-y-2 ${temporary ? "" : "pointer-events-none opacity-45"}`}
+              role="radiogroup"
+              aria-label="החזירו למסלול כש"
+            >
+              {TEMPORARY_RESTORE_OPTIONS.map((option) => (
+                <label
+                  key={option.id}
+                  className="flex items-center gap-2 text-base text-violet-100"
                 >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="border-orange-500/20 bg-[#1a1028] text-orange-50">
-                  {restoreOptions.map((option) => (
-                    <SelectItem key={option.id} value={option.id} className="text-base">
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <input
+                    type="radio"
+                    name="skip-return-reason"
+                    value={option.id}
+                    checked={returnReason === option.id}
+                    disabled={!temporary}
+                    onChange={() => setReturnReason(option.id)}
+                    className="size-4 shrink-0 accent-orange-500"
+                  />
+                  <span>{option.label}</span>
+                </label>
+              ))}
             </div>
-          ) : null}
+          </div>
           {showNoteField ? (
             <div className="space-y-1.5 rounded-xl border border-orange-500/15 bg-[#1a1028] px-3 py-3">
               <label htmlFor="skip-personal-note" className="block text-right text-sm text-violet-300">
