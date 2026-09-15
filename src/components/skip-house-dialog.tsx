@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { HouseSkippedBanner } from "@/components/house-skipped-banner";
 import { HouseEditModal } from "@/components/house-edit-modal";
 import { houseHeadline } from "@/lib/labels";
 import {
   availableTemporaryRestoreOptions,
-  skipMetaSummary,
   type SkipReasonId,
 } from "@/lib/skip-reasons";
 import type { HouseFiltersState, SkippedHouseMeta } from "@/lib/offline-db";
@@ -77,14 +77,12 @@ export function SkipHouseDialog({
     <HouseEditModal
       open={open}
       onClose={close}
-      title={editing ? "עריכת דילוג" : "למה לדלג על הבית?"}
+      title={editing ? "עריכת דילוג" : "דילוג מהמסלול"}
       subtitle={house ? houseHeadline(house) : undefined}
     >
       <div className="space-y-3">
         {editing && existingMeta ? (
-          <p className="rounded-xl border border-orange-500/15 bg-[#1a1028] px-3 py-2 text-right text-sm text-violet-200">
-            {skipMetaSummary(existingMeta)}
-          </p>
+          <HouseSkippedBanner meta={existingMeta} />
         ) : null}
         <p className="text-right text-base text-violet-200">
           {editing ? "אפשר לשנות את סוג הדילוג או להסיר את הדילוג." : "הבית יוסר מהמסלול"}

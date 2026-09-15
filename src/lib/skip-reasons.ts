@@ -108,7 +108,7 @@ export function skipMetaSummary(meta: SkippedHouseMeta) {
     const trigger = temporaryRestoreReasonLabel(reason);
     return trigger ? `דילוג זמני · החזרה כש${trigger}` : "דילוג זמני";
   }
-  return "דילוג קבוע";
+  return "דילוג · החזרה ידנית";
 }
 
 export function temporaryRestoreAlertText(house: PublicHouse, reason: SkipReasonId) {
