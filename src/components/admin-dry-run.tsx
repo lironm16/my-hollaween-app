@@ -132,7 +132,7 @@ export function AdminDryRunPanel() {
               writeCustomRehearsalClock({ hours: hours ?? 18, minutes: minutes ?? 0 });
               if (scene !== "custom") setScene("custom");
             }}
-            className="h-10 w-full rounded-md bg-[#12081a] px-2 text-base text-orange-50 ring-1 ring-orange-500/20 disabled:cursor-not-allowed"
+            className="filter-time-input h-10 w-full min-h-10 rounded-md bg-[#12081a] px-2 text-base text-orange-50 ring-1 ring-orange-500/20 disabled:cursor-not-allowed"
           />
         </label>
       ) : null}

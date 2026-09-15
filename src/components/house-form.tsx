@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Camera } from "lucide-react";
 import { toast } from "sonner";
 import { compressJpegFile, type PhotoFocus } from "@/lib/compress-image";
@@ -776,7 +776,6 @@ function Field({
   );
 }
 
-/** Native time inputs ignore RTL text-align; overlay pins the value to the end. */
 function TimeField({
   value,
   onChange,
@@ -786,42 +785,15 @@ function TimeField({
   onChange: (value: string) => void;
   required?: boolean;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  function openPicker() {
-    const input = inputRef.current;
-    if (!input) return;
-    input.focus();
-    if (typeof input.showPicker === "function") {
-      try {
-        input.showPicker();
-      } catch {
-        /* Safari may reject showPicker without a user gesture */
-      }
-    }
-  }
-
   return (
-    <div
-      className="house-time-wrap relative w-full"
-      onClick={openPicker}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") openPicker();
-      }}
-    >
-      <input
-        ref={inputRef}
-        type="time"
-        required={required}
-        dir="ltr"
-        lang="he-IL"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="house-time-input h-11 w-full min-w-0 rounded-lg border border-input bg-[#1d1028] px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-      />
-      <span className="house-time-value" aria-hidden="true">
-        {value || "--:--"}
-      </span>
-    </div>
+    <input
+      type="time"
+      required={required}
+      dir="ltr"
+      lang="he-IL"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="filter-time-input h-11 w-full min-w-0 min-h-11 rounded-lg border border-input bg-[#1d1028] px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+    />
   );
 }

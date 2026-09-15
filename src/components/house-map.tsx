@@ -75,6 +75,11 @@ function wrapRoutePin(html: string, routeOrder?: number) {
 const PIN = 56;
 const PIN_BOX = 62;
 const FAN_R = 82;
+/** Room below multi-house pin for apt-status dots (.pin-apt-dots { bottom: -18px }). */
+const PIN_APT_DOTS_EXTEND = 18;
+const BUILDING_ICON_BOTTOM_PAD = 4;
+const BUILDING_ICON_HEIGHT = PIN_BOX + PIN_APT_DOTS_EXTEND;
+const BUILDING_ICON_ANCHOR_Y = BUILDING_ICON_HEIGHT - BUILDING_ICON_BOTTOM_PAD;
 
 function attr(value: string) {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -283,8 +288,8 @@ function clusterIcon(
     return L.divIcon({
       className: `pumpkin-pin-icon pumpkin-pin-building${selectedClass}${filterClass}`,
       html: wrapped.html,
-      iconSize: [PIN_BOX, 80 + wrapped.extraH],
-      iconAnchor: [PIN_BOX / 2, 76 + wrapped.extraH],
+      iconSize: [PIN_BOX, BUILDING_ICON_HEIGHT + wrapped.extraH],
+      iconAnchor: [PIN_BOX / 2, BUILDING_ICON_ANCHOR_Y + wrapped.extraH],
     });
   }
 
