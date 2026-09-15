@@ -41,6 +41,12 @@ describe("migrateHouseFilters", () => {
     assert.equal(next.likedOnly, true);
   });
 
+  it("preserves unvisitedOnly and clears legacy visitedOnly", () => {
+    const next = migrateHouseFilters({ ...base(), unvisitedOnly: true, visitedOnly: true });
+    assert.equal(next.visitedOnly, false);
+    assert.equal(next.unvisitedOnly, true);
+  });
+
   it("normalizes partial candy and scare selections", () => {
     const next = migrateHouseFilters(base());
     assert.equal(isWithCandyFilter(next), false);
