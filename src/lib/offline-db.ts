@@ -264,6 +264,7 @@ export function toggleVisited(id: string): string[] {
 
 const SKIPPED_KEY = "hw-skipped-houses";
 const SKIPPED_META_KEY = "hw-skipped-meta";
+const SKIP_NOTES_KEY = "hw-skip-notes";
 
 export type SkippedHouseMeta = {
   reason: string;
@@ -317,10 +318,52 @@ export function getSkippedMeta(id: string): SkippedHouseMeta | undefined {
   return loadSkippedMeta()[id];
 }
 
+export function loadSkipNotes(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(SKIP_NOTES_KEY);
+    const parsed = raw ? (JSON.parse(raw) as unknown) : {};
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const out: Record<string, string> = {};
+    for (const [id, note] of Object.entries(parsed as Record<string, unknown>)) {
+      if (typeof note === "string" && note.trim()) out[id] = note.trim().slice(0, 240);
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+function saveSkipNotes(notes: Record<string, string>) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(SKIP_NOTES_KEY, JSON.stringify(notes));
+}
+
+export function getSkipNote(id: string): string | undefined {
+  return loadSkipNotes()[id];
+}
+
+export function saveSkipNote(id: string, note: string) {
+  const clean = note.trim().slice(0, 240);
+  const notes = loadSkipNotes();
+  if (!clean) {
+    if (notes[id]) {
+      delete notes[id];
+      saveSkipNotes(notes);
+    }
+    return;
+  }
+  notes[id] = clean;
+  saveSkipNotes(notes);
+}
+
+export function clearSkipNote(id: string) {
+  saveSkipNote(id, "");
+}
+
 export function skipHouse(id: string, meta?: SkippedHouseMeta): string[] {
   const current = loadSkippedIds();
-  if (current.includes(id)) return current;
-  const next = [id, ...current];
+  const next = current.includes(id) ? current : [id, ...current];
   localStorage.setItem(SKIPPED_KEY, JSON.stringify(next.slice(0, 200)));
   if (meta) {
     const all = loadSkippedMeta();
@@ -333,6 +376,17 @@ export function skipHouse(id: string, meta?: SkippedHouseMeta): string[] {
   return next;
 }
 
+export function updateSkipHouse(id: string, meta: SkippedHouseMeta): string[] {
+  if (!isSkipped(id)) return skipHouse(id, meta);
+  const all = loadSkippedMeta();
+  all[id] = meta;
+  saveSkippedMeta(all);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("hw-skipped-changed"));
+  }
+  return loadSkippedIds();
+}
+
 export function unskipHouse(id: string): string[] {
   const current = loadSkippedIds();
   const next = current.filter((item) => item !== id);
@@ -342,6 +396,7 @@ export function unskipHouse(id: string): string[] {
     delete all[id];
     saveSkippedMeta(all);
   }
+  clearSkipNote(id);
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("hw-skipped-changed"));
   }

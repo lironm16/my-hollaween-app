@@ -15,13 +15,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { houseHeadline } from "@/lib/labels";
 import {
   returnRestoreReasons,
+  skipReasonLabel,
   type SkipReasonId,
 } from "@/lib/skip-reasons";
-import type { HouseFiltersState } from "@/lib/offline-db";
+import type { HouseFiltersState, SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 
 export function SkipHouseDialog({
@@ -29,54 +31,93 @@ export function SkipHouseDialog({
   house,
   filters,
   now,
+  existingMeta,
+  existingNote = "",
   onConfirm,
+  onUnskip,
   onCancel,
 }: {
   open: boolean;
   house: PublicHouse | null;
   filters: HouseFiltersState;
   now: Date;
-  onConfirm: (reason: SkipReasonId, temporary: boolean) => void;
+  existingMeta?: SkippedHouseMeta;
+  existingNote?: string;
+  onConfirm: (reason: SkipReasonId, temporary: boolean, note: string) => void;
+  onUnskip?: () => void;
   onCancel: () => void;
 }) {
+  const editing = Boolean(existingMeta);
   const restoreOptions = house ? returnRestoreReasons(house, now, filters) : [];
   const [returnReason, setReturnReason] = useState<SkipReasonId>("not-open");
   const [temporary, setTemporary] = useState(true);
+  const [note, setNote] = useState("");
 
   useEffect(() => {
     if (!open || !house) return;
+    if (existingMeta) {
+      setTemporary(existingMeta.temporary);
+      const reason = existingMeta.reason as SkipReasonId;
+      if (existingMeta.temporary) {
+        const next = returnRestoreReasons(house, now, filters);
+        setReturnReason(next.some((item) => item.id === reason) ? reason : (next[0]?.id ?? "not-open"));
+      } else {
+        setReturnReason(reason === "other" ? "other" : "other");
+      }
+      setNote(existingNote);
+      return;
+    }
     const next = returnRestoreReasons(house, now, filters);
     setReturnReason(next[0]?.id ?? "not-open");
     setTemporary(true);
-  }, [open, house, now, filters]);
+    setNote("");
+  }, [open, house, now, filters, existingMeta, existingNote]);
 
   function close() {
     onCancel();
   }
 
   function confirm() {
-    onConfirm(temporary ? returnReason : "other", temporary);
+    let reason: SkipReasonId;
+    if (temporary) {
+      reason = returnReason;
+    } else if (existingMeta && !existingMeta.temporary) {
+      reason = existingMeta.reason as SkipReasonId;
+    } else {
+      reason = "other";
+    }
+    onConfirm(reason, temporary, note.trim());
   }
+
+  const showNoteField = !temporary || returnReason === "other";
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && close()}>
       <DialogContent
         showCloseButton={false}
-        className="gap-0 border-orange-500/30 bg-[#160b1f] p-0 text-orange-50 sm:max-w-md"
+        className="flex max-h-[min(92dvh,calc(100dvh-1rem))] w-full max-w-[calc(100%-1rem)] flex-col gap-0 overflow-hidden border-orange-500/30 bg-[#160b1f] p-0 text-orange-50 sm:max-w-md"
         dir="rtl"
       >
         <OverlayCloseBar
           compact
-          title="למה לדלג על הבית?"
+          title={editing ? "עריכת דילוג" : "למה לדלג על הבית?"}
           onClose={close}
-          className="border-b border-orange-500/15 pb-2"
+          className="shrink-0 border-b border-orange-500/15 pb-2"
         />
-        <div className="space-y-3 px-6 pt-4">
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-6 pt-4">
           {house ? (
             <p className="text-right text-base font-medium text-orange-100">{houseHeadline(house)}</p>
           ) : null}
+          {editing && existingMeta ? (
+            <p className="rounded-xl border border-orange-500/15 bg-[#1a1028] px-3 py-2 text-right text-sm text-violet-200">
+              מצב נוכחי: {existingMeta.temporary ? "דילוג זמני" : "דילוג לצמיתות"}
+              {!existingMeta.temporary ? ` · ${skipReasonLabel(existingMeta.reason as SkipReasonId)}` : null}
+            </p>
+          ) : null}
           <DialogDescription className="text-right text-violet-200">
-            הבית יוסר מהמסלול. אפשר לדלג זמנית ולהחזיר אוטומטית כשמצב הבית משתנה.
+            {editing
+              ? "אפשר לשנות את סוג הדילוג, סיבת החזרה, או להסיר את הדילוג."
+              : "הבית יוסר מהמסלול. אפשר לדלג זמנית ולהחזיר אוטומטית כשמצב הבית משתנה."}
           </DialogDescription>
           <label className="flex items-start gap-2 rounded-xl border border-orange-500/15 bg-[#1a1028] px-3 py-3 text-base text-violet-100">
             <input
@@ -117,19 +158,47 @@ export function SkipHouseDialog({
               </Select>
             </div>
           ) : null}
+          {showNoteField ? (
+            <div className="space-y-1.5 rounded-xl border border-orange-500/15 bg-[#1a1028] px-3 py-3">
+              <label htmlFor="skip-personal-note" className="block text-right text-sm text-violet-300">
+                הערה אישית (רק במכשיר הזה)
+              </label>
+              <Textarea
+                id="skip-personal-note"
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                rows={3}
+                maxLength={240}
+                placeholder="למה דילגתם? (אופציונלי)"
+                className="min-h-20 resize-none border-orange-500/20 bg-[#14081c] text-base text-orange-50"
+              />
+            </div>
+          ) : null}
         </div>
-        <DialogFooter className="mx-0 mb-0 mt-2 border-0 bg-transparent p-0 px-6 pb-6">
-          <div className="grid w-full grid-cols-2 gap-2">
-            <Button
-              type="button"
-              className="min-h-11 bg-orange-500 px-5 text-black hover:bg-orange-400"
-              onClick={confirm}
-            >
-              דילוג מהמסלול
-            </Button>
-            <Button type="button" variant="outline" className="min-h-11 px-5" onClick={close}>
-              ביטול
-            </Button>
+        <DialogFooter className="mx-0 mb-0 mt-2 shrink-0 border-0 bg-transparent p-0 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+          <div className="grid w-full gap-2">
+            <div className="grid w-full grid-cols-2 gap-2">
+              <Button
+                type="button"
+                className="min-h-11 bg-orange-500 px-5 text-black hover:bg-orange-400"
+                onClick={confirm}
+              >
+                {editing ? "שמירת שינויים" : "דילוג מהמסלול"}
+              </Button>
+              <Button type="button" variant="outline" className="min-h-11 px-5" onClick={close}>
+                ביטול
+              </Button>
+            </div>
+            {editing && onUnskip ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-11 border-red-500/35 text-red-200 hover:bg-red-950/40"
+                onClick={onUnskip}
+              >
+                הסרת דילוג
+              </Button>
+            ) : null}
           </div>
         </DialogFooter>
       </DialogContent>

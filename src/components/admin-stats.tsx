@@ -99,10 +99,14 @@ export function AdminStatsCard({
   stats,
   likedCount,
   visitedCount,
+  aggregateLiked,
+  aggregateVisited,
 }: {
   stats: SnapshotStats;
   likedCount?: number;
   visitedCount?: number;
+  aggregateLiked?: number;
+  aggregateVisited?: number;
 }) {
   const online = useOnlineDevices();
 
@@ -251,6 +255,27 @@ export function AdminStatsCard({
             plain
           />
         </div>
+        {aggregateLiked != null || aggregateVisited != null ? (
+          <>
+            <Subhead>סה״כ בשכונה</Subhead>
+            <div className="grid grid-cols-2 gap-2">
+              <Tile
+                icon={<LikedSign className="size-8" />}
+                label="סה״כ לייקים"
+                value={aggregateLiked ?? 0}
+                valueClass={aggregateLiked ? "text-rose-300" : undefined}
+                plain
+              />
+              <Tile
+                icon={<VisitedCheck visited className="size-8" />}
+                label="סה״כ ביקורים"
+                value={aggregateVisited ?? 0}
+                valueClass={aggregateVisited ? "text-emerald-300" : undefined}
+                plain
+              />
+            </div>
+          </>
+        ) : null}
       </Section>
     </div>
   );
