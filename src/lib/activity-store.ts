@@ -10,7 +10,8 @@ import {
 const BLOB_PATH = "halloween-houses/activity.json";
 const MAX_DEVICES = 5000;
 const MEM_TTL_MS = 20_000;
-const BLOB_PERSIST_MS = 20_000;
+/** Max one blob write per interval when counts change (off Vercel only). */
+const BLOB_PERSIST_MS = 5 * 60_000;
 
 export type DeviceActivity = {
   liked: number;
