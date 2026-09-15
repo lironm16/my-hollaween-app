@@ -1,6 +1,6 @@
 import { candyPinDot, effectiveVisit, isOwnerFrozen } from "@/lib/house-state";
 import { isOnBreak, isOpenNowForFilter } from "@/lib/hours";
-import type { HouseFiltersState } from "@/lib/offline-db";
+import type { HouseFiltersState, SkippedHouseMeta } from "@/lib/offline-db";
 import { resolveVisitWindow } from "@/lib/visit-window";
 import type { PublicHouse } from "@/lib/types";
 
@@ -17,13 +17,6 @@ export type SkipReasonId =
 export type SkipReasonOption = {
   id: SkipReasonId;
   label: string;
-};
-
-export type SkippedHouseMeta = {
-  reason: SkipReasonId;
-  temporary: boolean;
-  statusKey: string;
-  skippedAt: string;
 };
 
 /** Fixed restore triggers shown in the skip dialog. */
@@ -109,8 +102,9 @@ export function temporaryRestoreReasonLabel(reason: SkipReasonId) {
 }
 
 export function skipMetaSummary(meta: SkippedHouseMeta) {
-  if (meta.temporary && isTemporarySkipReason(meta.reason)) {
-    const trigger = temporaryRestoreReasonLabel(meta.reason);
+  const reason = meta.reason;
+  if (meta.temporary && isTemporarySkipReason(reason)) {
+    const trigger = temporaryRestoreReasonLabel(reason);
     return trigger ? `דילוג זמני · החזרה כש${trigger}` : "דילוג זמני";
   }
   return "דילוג קבוע";

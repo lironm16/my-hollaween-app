@@ -1,4 +1,5 @@
 import type { NeighborhoodId } from "@/lib/config";
+import type { SkipReasonId } from "@/lib/skip-reasons";
 import { tombstoneHouse, loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { syncDecorFields } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
@@ -267,7 +268,7 @@ const SKIPPED_META_KEY = "hw-skipped-meta";
 const SKIP_NOTES_KEY = "hw-skip-notes";
 
 export type SkippedHouseMeta = {
-  reason: string;
+  reason: SkipReasonId;
   temporary: boolean;
   statusKey: string;
   skippedAt: string;
