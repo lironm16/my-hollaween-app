@@ -1,7 +1,7 @@
 import { formatDisplayAddress } from "@/lib/config";
 import { formatHoursLabel } from "@/lib/hours";
-import { candyLevel, offersSensitivity, resolveDecorLevel } from "@/lib/house-state";
-import { decorShort, scareShort } from "@/lib/labels";
+import { candyLevel, isDecorated, offersSensitivity } from "@/lib/house-state";
+import { scareShort, undecoratedLabel } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 
 const PUBLIC_HEADERS = [
@@ -45,7 +45,7 @@ function candyLabel(house: PublicHouse) {
 
 /** Same scale as the form: לא מקושט → לילדים → קצת מפחיד → מפחיד. */
 function scareDecorLabel(house: PublicHouse) {
-  if (resolveDecorLevel(house) === "none") return decorShort.none;
+  if (!isDecorated(house)) return undecoratedLabel;
   return scareShort[house.scareLevel];
 }
 

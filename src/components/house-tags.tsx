@@ -13,10 +13,10 @@ import {
   markedGlutenFree,
   offersNutsFree,
   offersSesameFree,
-  resolveDecorLevel,
+  isDecorated,
   treatLevel,
 } from "@/lib/house-state";
-import type { DecorLevel, ScareLevel, TreatId, TreatStock } from "@/lib/types";
+import type { ScareLevel, TreatId, TreatStock } from "@/lib/types";
 
 export function ClosedSign({ className }: { className?: string }) {
   return (
@@ -62,7 +62,6 @@ export function HouseTags({
     treatStock?: TreatStock;
     scareLevel?: ScareLevel;
     visit?: "come" | "decorOnly" | "closed";
-    decorLevel?: DecorLevel;
     decorated?: boolean;
     soldOut?: boolean;
     adminFrozen?: boolean;
@@ -82,7 +81,7 @@ export function HouseTags({
   const candy = candyTone(withTreats);
   const gluten = markedGlutenFree(withTreats);
   const glutenOut = gluten && treatLevel(withTreats, "glutenFree") === "out";
-  const undecorated = resolveDecorLevel(house) === "none";
+  const undecorated = !isDecorated(house);
   const eveningMin = now.getHours() * 60 + now.getMinutes();
   const closedInsteadOfCandy =
     effectiveVisit(house) === "closed" ||

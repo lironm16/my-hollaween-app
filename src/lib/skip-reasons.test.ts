@@ -35,7 +35,6 @@ function stub(overrides: Partial<PublicHouse> = {}): PublicHouse {
     openTo2: "",
     notes: "",
     accessible: true,
-    decorLevel: "medium",
     decorated: true,
     soldOut: false,
     adminFrozen: false,

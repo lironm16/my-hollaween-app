@@ -1,7 +1,7 @@
 import type { NeighborhoodId } from "@/lib/config";
 import type { SkipReasonId } from "@/lib/skip-reasons";
 import { tombstoneHouse, loadDeletedHouseIds } from "@/lib/deleted-houses";
-import { syncDecorFields } from "@/lib/house-state";
+import { syncDecorated } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import type { CandyTone, HouseInput, ScareLevel, SensitivityId } from "@/lib/types";
 import type { Catalog, PublicHouse } from "@/lib/types";
@@ -552,9 +552,7 @@ export function applyLocalHousePatch(
     next.openFrom2 = hours.openFrom2;
     next.openTo2 = hours.openTo2;
   }
-  const decor = syncDecorFields(next);
-  next.decorLevel = decor.decorLevel;
-  next.decorated = decor.decorated;
+  next.decorated = syncDecorated(next);
   if (patch.visit === "closed") next.soldOut = true;
   else if (patch.visit) next.soldOut = false;
   if (patch.ownerFrozenUntil !== undefined) next.ownerFrozenUntil = patch.ownerFrozenUntil;

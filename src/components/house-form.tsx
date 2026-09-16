@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
-import { scareShort, decorShort, suggestedHouseName, nameMatchesTheme, themeFromName } from "@/lib/labels";
+import { scareShort, undecoratedLabel, suggestedHouseName, nameMatchesTheme, themeFromName } from "@/lib/labels";
 import { neighborhoodFromAddressHit, streetFromAddressHit } from "@/lib/address-fields";
 import { config, inNeighborhood, NEIGHBORHOODS } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
@@ -19,7 +19,6 @@ import { streetPinHint } from "@/lib/address-text";
 import {
   HOUSE_THEMES,
   SENSITIVITY_OPTIONS,
-  type DecorLevel,
   type HouseInput,
   type ScareLevel,
   type SensitivityId,
@@ -27,7 +26,7 @@ import {
   type VisitState,
 } from "@/lib/types";
 import { candyTone, CandySign, CANDY_TONES, type CandyTone } from "@/components/candy-glyphs";
-import { freezeExpireIso, isOwnerFrozen, resolveDecorLevel } from "@/lib/house-state";
+import { freezeExpireIso, isOwnerFrozen, resolveDecorated } from "@/lib/house-state";
 import { StrollerSign } from "@/components/symbols";
 import { ScareSign } from "@/components/scare-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
@@ -62,7 +61,6 @@ const empty: HouseInput = {
   accessible: false,
   visit: "come",
   treatStock: { candy: "plenty" },
-  decorLevel: "mild",
   decorated: true,
 };
 
@@ -73,11 +71,6 @@ function clock(value: string) {
 function initialCandyTone(initial?: Partial<HouseInput>): CandyTone {
   if (!initial) return "plenty";
   return candyTone({ treats: initial.treats ?? ["candy"], treatStock: initial.treatStock });
-}
-
-function initialDecorLevel(initial?: Partial<HouseInput>): DecorLevel {
-  if (!initial) return "mild";
-  return resolveDecorLevel(initial);
 }
 
 export type HouseFormExtras = {
@@ -104,7 +97,7 @@ export function HouseForm({
   const [form, setForm] = useState<HouseInput>({ ...empty, ...initial });
   const [locating, setLocating] = useState(false);
   const [addressOk, setAddressOk] = useState(Boolean(initial?.address && initial.lat && initial.lng));
-  const [decorLevel, setDecorLevel] = useState<DecorLevel>(() => initialDecorLevel(initial));
+  const [decorated, setDecorated] = useState(() => resolveDecorated(initial ?? {}));
   const [candy, setCandy] = useState<CandyTone>(() => initialCandyTone(initial));
   const [hourWindows, setHourWindows] = useState<HoursWindow[]>(() => {
     const windows = houseHoursWindows({ ...empty, ...initial });
@@ -163,7 +156,7 @@ export function HouseForm({
   }
 
   const candyOffered = candy === "plenty" || candy === "low";
-  const undecorated = decorLevel === "none";
+  const undecorated = !decorated;
   const hoursIssue = hoursWindowsIssue(
     hourWindows.map((window) => ({ from: clock(window.from), to: clock(window.to) })),
   );
@@ -178,7 +171,7 @@ export function HouseForm({
 
   function pickScare(level: ScareLevel) {
     setForm((f) => ({ ...f, scareLevel: level }));
-    setDecorLevel((current) => (current === "none" ? "mild" : current));
+    setDecorated(true);
   }
 
   function setTreat(id: SensitivityId, on: boolean) {
@@ -272,7 +265,7 @@ export function HouseForm({
           toast.error("בחרו כתובת אמיתית מהרשימה, או גררו את הסיכה לבית.");
           return;
         }
-        if (decorLevel === "none" && candy !== "plenty" && candy !== "low" && !(nightStatusEnabled && nightStatus === "stop") && initial?.visit !== "closed") {
+        if (!decorated && candy !== "plenty" && candy !== "low" && !(nightStatusEnabled && nightStatus === "stop") && initial?.visit !== "closed") {
           toast.error("סמנו לפחות קישוטים או ממתקים — אחרת אין סיבה להוסיף את הבית למפה.");
           return;
         }
@@ -300,7 +293,7 @@ export function HouseForm({
             ? "closed"
             : candy === "plenty" || candy === "low" || candy === "out"
               ? "come"
-              : decorLevel !== "none"
+              : decorated
                 ? "decorOnly"
                 : "come";
         const ownerFrozenUntil =
@@ -325,8 +318,7 @@ export function HouseForm({
           treats,
           treatStock,
           visit,
-          decorLevel,
-          decorated: decorLevel !== "none",
+          decorated,
           openHours: hours.openHours,
           openFrom: hours.openFrom,
           openTo: hours.openTo,
@@ -494,7 +486,7 @@ export function HouseForm({
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
-              onClick={() => setDecorLevel("none")}
+              onClick={() => setDecorated(false)}
               className={
                 undecorated
                   ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
@@ -502,7 +494,7 @@ export function HouseForm({
               }
             >
               <ScareSign level="none" className="size-6" />
-              {decorShort.none}
+              {undecoratedLabel}
             </button>
             {(["mild", "medium", "spicy"] as ScareLevel[]).map((level) => (
               <button
