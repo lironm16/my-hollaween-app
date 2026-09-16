@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
 import { FilterMismatchNotice } from "@/components/house-skipped-banner";
@@ -81,12 +81,13 @@ export function MapHouseSheet({
   const [dragH, setDragH] = useState<number | null>(null);
   const [sheetH, setSheetH] = useState<number | null>(null);
   const [fitH, setFitH] = useState<number | null>(null);
+  const [openH, setOpenH] = useState(0);
   const multi = clusterHouses.length > 1;
   const overview = multi && clusterOverview;
   const address = formatDisplayAddress(house);
   const clusterKey = clusterHouses.map((item) => item.id).join(",");
   const canEditSelected = Boolean(canEditHouse?.(house.id) && onToggleEdit);
-  const height = overview ? (dragH ?? sheetH) : (dragH ?? sheetH ?? fitH);
+  const displayH = overview ? (dragH ?? sheetH) : (dragH ?? sheetH ?? openH);
   const actionMenu = (
     <HouseActionBar
       house={house}
@@ -106,11 +107,65 @@ export function MapHouseSheet({
     />
   );
 
-  useEffect(() => {
+  function parentH() {
+    const el = sheetRef.current;
+    const parent =
+      el?.offsetParent instanceof HTMLElement ? el.offsetParent : el?.parentElement;
+    return parent?.clientHeight || visualViewportHeight();
+  }
+
+  function peekPx() {
+    return Math.round(parentH() * MAP_SHEET_PEEK_VH);
+  }
+
+  function maxPx() {
+    return Math.max(72, parentH() - 8);
+  }
+
+  function measureFitHeight() {
+    const el = sheetRef.current;
+    const body = bodyRef.current;
+    if (!el || !body) return null;
+    const chrome = el.querySelector(".map-house-sheet-chrome");
+    const chromeH = chrome instanceof HTMLElement ? chrome.offsetHeight : 0;
+    const contentH = body.scrollHeight;
+    return Math.min(peekPx(), Math.max(72, Math.ceil(chromeH + contentH)));
+  }
+
+  function publishSheetHeight(h: number) {
+    document.documentElement.style.setProperty("--map-sheet-h", `${h}px`);
+    window.dispatchEvent(new CustomEvent("hw-map-sheet", { detail: { height: h } }));
+  }
+
+  useLayoutEffect(() => {
     setSheetH(null);
+    setDragH(null);
     setFitH(null);
+    setOpenH(0);
     bodyRef.current?.scrollTo(0, 0);
   }, [clusterKey, house.id, overview]);
+
+  useLayoutEffect(() => {
+    if (overview) return;
+    const next = measureFitHeight();
+    if (next == null) return;
+    naturalH.current = next;
+    setFitH(next);
+  }, [
+    clusterKey,
+    house.id,
+    overview,
+    editing,
+    skipped,
+    filterMismatchReasons?.join("\0"),
+  ]);
+
+  useEffect(() => {
+    if (overview || editing || sheetH !== null || dragH !== null) return;
+    if (fitH == null) return;
+    const id = requestAnimationFrame(() => setOpenH(fitH));
+    return () => cancelAnimationFrame(id);
+  }, [fitH, overview, editing, sheetH, dragH]);
 
   useEffect(() => {
     sheetRef.current?.focus({ preventScroll: true });
@@ -128,36 +183,24 @@ export function MapHouseSheet({
     const body = bodyRef.current;
     if (!el || !body) return;
 
-    const publish = (h: number) => {
-      document.documentElement.style.setProperty("--map-sheet-h", `${h}px`);
-      window.dispatchEvent(new CustomEvent("hw-map-sheet", { detail: { height: h } }));
-    };
-
     const publishCurrent = () => {
       if (draggingRef.current) return;
       const h = el.getBoundingClientRect().height;
       if (h > 0) {
         naturalH.current = h;
-        publish(h);
+        publishSheetHeight(h);
       }
     };
 
-    const measure = () => {
-      if (draggingRef.current || editing || sheetH !== null) return;
-      if (overview) {
-        publishCurrent();
-        return;
-      }
-      const chrome = el.querySelector(".map-house-sheet-chrome");
-      const chromeH = chrome instanceof HTMLElement ? chrome.offsetHeight : 0;
-      const contentH = body.scrollHeight;
-      const next = Math.min(peekPx(), Math.max(72, Math.ceil(chromeH + contentH)));
+    const remeasure = () => {
+      if (draggingRef.current || editing || sheetH !== null || overview) return;
+      const next = measureFitHeight();
+      if (next == null) return;
       naturalH.current = next;
       setFitH(next);
-      publish(next);
     };
 
-    if (editing || sheetH !== null) {
+    if (overview || editing || sheetH !== null) {
       publishCurrent();
       const ro = new ResizeObserver(publishCurrent);
       ro.observe(el);
@@ -167,30 +210,18 @@ export function MapHouseSheet({
       };
     }
 
-    measure();
-    const ro = new ResizeObserver(measure);
+    const ro = new ResizeObserver(() => {
+      remeasure();
+      publishCurrent();
+    });
     ro.observe(body);
     ro.observe(el);
+    publishCurrent();
     return () => {
       ro.disconnect();
       document.documentElement.style.removeProperty("--map-sheet-h");
     };
   }, [clusterKey, house.id, editing, sheetH, overview]);
-
-  function parentH() {
-    const el = sheetRef.current;
-    const parent =
-      el?.offsetParent instanceof HTMLElement ? el.offsetParent : el?.parentElement;
-    return parent?.clientHeight || visualViewportHeight();
-  }
-
-  function peekPx() {
-    return Math.round(parentH() * MAP_SHEET_PEEK_VH);
-  }
-
-  function maxPx() {
-    return Math.max(72, parentH() - 8);
-  }
 
   function onSheetPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.button !== 0) return;
@@ -225,10 +256,17 @@ export function MapHouseSheet({
     if (h < closeBelow) {
       setSheetH(null);
       setFitH(null);
+      setOpenH(0);
       onClose();
       return;
     }
     setSheetH(h);
+  }
+
+  function onHeightTransitionEnd(event: React.TransitionEvent<HTMLDivElement>) {
+    if (event.propertyName !== "height") return;
+    const h = sheetRef.current?.getBoundingClientRect().height ?? 0;
+    if (h > 0) publishSheetHeight(h);
   }
 
   return (
@@ -239,16 +277,24 @@ export function MapHouseSheet({
         overview && "is-cluster-overview",
         dragH !== null && "is-dragging",
         sheetH !== null && "is-raised",
+        !overview && openH > 0 && "is-open",
       )}
       role="dialog"
       aria-labelledby={labelId}
       tabIndex={-1}
-      style={height != null ? { height } : undefined}
+      style={
+        overview
+          ? displayH != null
+            ? { height: displayH }
+            : undefined
+          : { height: displayH ?? 0 }
+      }
       dir="rtl"
       onPointerDown={onSheetPointerDown}
       onPointerMove={onSheetPointerMove}
       onPointerUp={onSheetPointerUp}
       onPointerCancel={onSheetPointerUp}
+      onTransitionEnd={onHeightTransitionEnd}
       onClickCapture={(event) => {
         if (!skipClick.current) return;
         skipClick.current = false;
