@@ -10,8 +10,10 @@ import {
   skipSnapshotHadCandyOutOrClosed,
   skipStatusSnapshot,
   suggestedSkipReasons,
+  metaRestoreTriggers,
   temporaryRestoreAlertText,
   temporaryRestoreReasonMet,
+  temporarySkipRestoreMet,
 } from "@/lib/skip-reasons";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
@@ -107,7 +109,9 @@ describe("availableTemporaryRestoreOptions", () => {
       evening,
       baseFilters,
     );
-    assert.deepEqual(options, [{ id: "not-open", label: "הבית פתוח" }]);
+    assert.deepEqual(options, [
+      { id: "not-open", label: "הבית יחזור כאשר הוא פתוח" },
+    ]);
   });
 
   it("offers candy restore only when candy is out", () => {
@@ -116,7 +120,9 @@ describe("availableTemporaryRestoreOptions", () => {
       evening,
       baseFilters,
     );
-    assert.deepEqual(options, [{ id: "candy-out", label: "יש ממתקים" }]);
+    assert.deepEqual(options, [
+      { id: "candy-out", label: "הבית יחזור כאשר יש ממתקים" },
+    ]);
   });
 });
 
@@ -138,15 +144,67 @@ describe("temporaryRestoreReasonMet", () => {
   });
 });
 
+describe("temporarySkipRestoreMet", () => {
+  it("waits for every selected restore trigger", () => {
+    const closedNoCandy = stub({ visit: "closed", soldOut: true, treatStock: { candy: "out" } });
+    const openNoCandy = stub({ visit: "come", soldOut: false, treatStock: { candy: "out" } });
+    const openWithCandy = stub({ visit: "come", soldOut: false, treatStock: { candy: "plenty" } });
+    const dualMeta = {
+      reason: "not-open" as const,
+      temporary: true,
+      restoreTriggers: ["not-open", "candy-out"] as const,
+      statusKey: "x",
+      skippedAt: "2026-01-01T00:00:00.000Z",
+    };
+    assert.equal(temporarySkipRestoreMet(closedNoCandy, dualMeta, evening, baseFilters), false);
+    assert.equal(temporarySkipRestoreMet(openNoCandy, dualMeta, evening, baseFilters), false);
+    assert.equal(temporarySkipRestoreMet(openWithCandy, dualMeta, evening, baseFilters), true);
+  });
+});
+
 describe("temporaryRestoreAlertText", () => {
   it("mentions the house and restore trigger", () => {
     assert.match(
-      temporaryRestoreAlertText(stub({ name: "משפחת לוין" }), "not-open"),
+      temporaryRestoreAlertText(stub({ name: "משפחת לוין" }), {
+        reason: "not-open",
+        temporary: true,
+        statusKey: "x",
+        skippedAt: "2026-01-01T00:00:00.000Z",
+      }),
       /משפחת לוין חזר לרשימה — הבית פתוח/,
     );
     assert.match(
-      temporaryRestoreAlertText(stub({ name: "משפחת לוין" }), "candy-out"),
+      temporaryRestoreAlertText(stub({ name: "משפחת לוין" }), {
+        reason: "candy-out",
+        temporary: true,
+        statusKey: "x",
+        skippedAt: "2026-01-01T00:00:00.000Z",
+      }),
       /משפחת לוין חזר לרשימה — יש ממתקים/,
+    );
+    assert.match(
+      temporaryRestoreAlertText(stub({ name: "משפחת לוין" }), {
+        reason: "not-open",
+        temporary: true,
+        restoreTriggers: ["not-open", "candy-out"],
+        statusKey: "x",
+        skippedAt: "2026-01-01T00:00:00.000Z",
+      }),
+      /משפחת לוין חזר לרשימה — הבית פתוח ויש ממתקים/,
+    );
+  });
+});
+
+describe("metaRestoreTriggers", () => {
+  it("falls back to reason for older skips", () => {
+    assert.deepEqual(
+      metaRestoreTriggers({
+        reason: "candy-out",
+        temporary: true,
+        statusKey: "x",
+        skippedAt: "2026-01-01T00:00:00.000Z",
+      }),
+      ["candy-out"],
     );
   });
 });

@@ -20,10 +20,12 @@ export type SkipReasonOption = {
   label: string;
 };
 
+export type TemporaryRestoreTriggerId = "not-open" | "candy-out";
+
 /** Fixed restore triggers shown in the skip dialog. */
 export const TEMPORARY_RESTORE_OPTIONS: SkipReasonOption[] = [
-  { id: "not-open", label: "הבית פתוח" },
-  { id: "candy-out", label: "יש ממתקים" },
+  { id: "not-open", label: "הבית יחזור כאשר הוא פתוח" },
+  { id: "candy-out", label: "הבית יחזור כאשר יש ממתקים" },
 ];
 
 /** Snapshot house status at skip time — kept for debugging and future use. */
@@ -44,8 +46,16 @@ export function skipStatusSnapshot(
   ].join("|");
 }
 
-export function isTemporarySkipReason(reason: SkipReasonId) {
+export function isTemporarySkipReason(reason: SkipReasonId): reason is TemporaryRestoreTriggerId {
   return reason === "not-open" || reason === "candy-out";
+}
+
+export function metaRestoreTriggers(meta: SkippedHouseMeta): TemporaryRestoreTriggerId[] {
+  if (meta.restoreTriggers?.length) {
+    return meta.restoreTriggers.filter(isTemporarySkipReason);
+  }
+  if (meta.temporary && isTemporarySkipReason(meta.reason)) return [meta.reason];
+  return [];
 }
 
 /** Whether the house is open enough to visit right now. */
@@ -77,15 +87,15 @@ export function availableTemporaryRestoreOptions(
 ): SkipReasonOption[] {
   const options: SkipReasonOption[] = [];
   if (!isHouseOpenForSkip(house, now, filters)) {
-    options.push({ id: "not-open", label: "הבית פתוח" });
+    options.push(TEMPORARY_RESTORE_OPTIONS[0]);
   }
   if (houseLacksCandy(house)) {
-    options.push({ id: "candy-out", label: "יש ממתקים" });
+    options.push(TEMPORARY_RESTORE_OPTIONS[1]);
   }
   return options;
 }
 
-/** Whether a temporary skip's chosen restore condition is now met. */
+/** Whether one temporary restore trigger is now met. */
 export function temporaryRestoreReasonMet(
   house: PublicHouse,
   reason: SkipReasonId,
@@ -97,24 +107,41 @@ export function temporaryRestoreReasonMet(
   return false;
 }
 
+/** Whether every selected restore trigger for a temporary skip is now met. */
+export function temporarySkipRestoreMet(
+  house: PublicHouse,
+  meta: SkippedHouseMeta,
+  now: Date,
+  filters: HouseFiltersState,
+) {
+  const triggers = metaRestoreTriggers(meta);
+  if (!meta.temporary || triggers.length === 0) return false;
+  return triggers.every((trigger) => temporaryRestoreReasonMet(house, trigger, now, filters));
+}
+
 export function temporaryRestoreReasonLabel(reason: SkipReasonId) {
-  const match = TEMPORARY_RESTORE_OPTIONS.find((item) => item.id === reason);
-  return match?.label ?? "";
+  if (reason === "not-open") return "הבית פתוח";
+  if (reason === "candy-out") return "יש ממתקים";
+  return "";
 }
 
 export function skipMetaSummary(meta: SkippedHouseMeta) {
-  const reason = meta.reason;
-  if (meta.temporary && isTemporarySkipReason(reason)) {
-    const trigger = temporaryRestoreReasonLabel(reason);
-    return trigger ? `דילוג זמני · החזרה כש${trigger}` : "דילוג זמני";
+  const triggers = metaRestoreTriggers(meta);
+  if (meta.temporary && triggers.length > 0) {
+    const parts = triggers.map((trigger) => temporaryRestoreReasonLabel(trigger));
+    return `דילוג זמני · החזרה כש${parts.join(" ו")}`;
   }
   return "דילגתם על הבית";
 }
 
-export function temporaryRestoreAlertText(house: PublicHouse, reason: SkipReasonId) {
+export function temporaryRestoreAlertText(house: PublicHouse, meta: SkippedHouseMeta) {
   const name = houseHeadline(house);
-  if (reason === "not-open") return `${name} חזר לרשימה — הבית פתוח`;
-  if (reason === "candy-out") return `${name} חזר לרשימה — יש ממתקים`;
+  const triggers = metaRestoreTriggers(meta);
+  if (triggers.includes("not-open") && triggers.includes("candy-out")) {
+    return `${name} חזר לרשימה — הבית פתוח ויש ממתקים`;
+  }
+  if (triggers.includes("not-open")) return `${name} חזר לרשימה — הבית פתוח`;
+  if (triggers.includes("candy-out")) return `${name} חזר לרשימה — יש ממתקים`;
   return `${name} חזר לרשימה`;
 }
 

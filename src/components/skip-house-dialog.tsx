@@ -7,7 +7,9 @@ import { HouseEditModal } from "@/components/house-edit-modal";
 import { houseHeadline } from "@/lib/labels";
 import {
   availableTemporaryRestoreOptions,
+  metaRestoreTriggers,
   type SkipReasonId,
+  type TemporaryRestoreTriggerId,
 } from "@/lib/skip-reasons";
 import type { HouseFiltersState, SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
@@ -27,7 +29,11 @@ export function SkipHouseDialog({
   filters: HouseFiltersState;
   now: Date;
   existingMeta?: SkippedHouseMeta;
-  onConfirm: (reason: SkipReasonId, temporary: boolean) => void;
+  onConfirm: (
+    reason: SkipReasonId,
+    temporary: boolean,
+    restoreTriggers: TemporaryRestoreTriggerId[],
+  ) => void;
   onUnskip?: () => void;
   onCancel: () => void;
 }) {
@@ -37,40 +43,49 @@ export function SkipHouseDialog({
     [house, now, filters],
   );
   const canTempSkip = restoreOptions.length > 0;
-  const [returnReason, setReturnReason] = useState<SkipReasonId>("not-open");
-  const [temporary, setTemporary] = useState(false);
+  const [selectedTriggers, setSelectedTriggers] = useState<Set<TemporaryRestoreTriggerId>>(
+    () => new Set(),
+  );
 
   useEffect(() => {
     if (!open || !house) return;
     const options = availableTemporaryRestoreOptions(house, now, filters);
+    const optionIds = options.map((option) => option.id as TemporaryRestoreTriggerId);
     if (existingMeta) {
-      setTemporary(canTempSkip);
-      const reason = existingMeta.reason as SkipReasonId;
-      setReturnReason(
-        canTempSkip && options.some((item) => item.id === reason)
-          ? reason
-          : (options[0]?.id ?? "other"),
-      );
+      const saved = metaRestoreTriggers(existingMeta).filter((id) => optionIds.includes(id));
+      setSelectedTriggers(new Set(saved.length > 0 ? saved : optionIds));
       return;
     }
-    setReturnReason(options[0]?.id ?? "other");
-    setTemporary(canTempSkip);
-  }, [open, house, now, filters, existingMeta, canTempSkip]);
+    setSelectedTriggers(new Set(optionIds));
+  }, [open, house, now, filters, existingMeta]);
 
   function close() {
     onCancel();
   }
 
+  function toggleTrigger(id: TemporaryRestoreTriggerId) {
+    setSelectedTriggers((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
   function confirm() {
+    const triggers = restoreOptions
+      .map((option) => option.id as TemporaryRestoreTriggerId)
+      .filter((id) => selectedTriggers.has(id));
+    const temporary = triggers.length > 0;
     let reason: SkipReasonId;
-    if (temporary && canTempSkip) {
-      reason = returnReason;
+    if (temporary) {
+      reason = triggers[0]!;
     } else if (existingMeta && !existingMeta.temporary) {
       reason = existingMeta.reason as SkipReasonId;
     } else {
       reason = "other";
     }
-    onConfirm(reason, temporary && canTempSkip);
+    onConfirm(reason, temporary, triggers);
   }
 
   return (
@@ -89,38 +104,23 @@ export function SkipHouseDialog({
         </p>
         {canTempSkip ? (
           <div className="space-y-2 rounded-xl border border-orange-500/15 bg-[#1a1028] px-3 py-3">
-            <label className="flex items-start gap-2 text-base text-violet-100">
-              <input
-                type="checkbox"
-                checked={temporary}
-                onChange={(event) => setTemporary(event.target.checked)}
-                className="mt-0.5 size-4 shrink-0 rounded border-orange-500/40 accent-orange-500"
-              />
-              <span>הבית יחזור לרשימה כאשר</span>
-            </label>
-            <div
-              className={`mr-6 space-y-2 ${temporary ? "" : "pointer-events-none opacity-45"}`}
-              role="radiogroup"
-              aria-label="הבית יחזור לרשימה כאשר"
-            >
-              {restoreOptions.map((option) => (
+            {restoreOptions.map((option) => {
+              const id = option.id as TemporaryRestoreTriggerId;
+              return (
                 <label
                   key={option.id}
-                  className="flex items-center gap-2 text-base text-violet-100"
+                  className="flex items-start gap-2 text-base text-violet-100"
                 >
                   <input
-                    type="radio"
-                    name="skip-return-reason"
-                    value={option.id}
-                    checked={returnReason === option.id}
-                    disabled={!temporary}
-                    onChange={() => setReturnReason(option.id)}
-                    className="size-4 shrink-0 accent-orange-500"
+                    type="checkbox"
+                    checked={selectedTriggers.has(id)}
+                    onChange={() => toggleTrigger(id)}
+                    className="mt-0.5 size-4 shrink-0 rounded border-orange-500/40 accent-orange-500"
                   />
                   <span>{option.label}</span>
                 </label>
-              ))}
-            </div>
+              );
+            })}
           </div>
         ) : null}
         <div className="grid grid-cols-2 gap-2 pt-1">

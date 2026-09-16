@@ -69,7 +69,8 @@ import {
   skipStatusSnapshot,
   shouldEmitTemporarySkipRestoreAlert,
   temporaryRestoreAlertText,
-  temporaryRestoreReasonMet,
+  temporarySkipRestoreMet,
+  type TemporaryRestoreTriggerId,
   type SkipReasonId,
 } from "@/lib/skip-reasons";
 import { houseSelectionAnnouncement } from "@/lib/map-a11y";
@@ -342,7 +343,7 @@ export function NeighborhoodApp({
       if (!meta?.temporary) return false;
       const house = houseById.get(id);
       if (!house) return false;
-      return temporaryRestoreReasonMet(house, meta.reason as SkipReasonId, now, filters);
+      return temporarySkipRestoreMet(house, meta, now, filters);
     });
     if (toRestore.length === 0) return;
     for (const id of toRestore) {
@@ -352,7 +353,7 @@ export function NeighborhoodApp({
       if (shouldEmitTemporarySkipRestoreAlert(meta)) {
         emitTempSkipRestoreAlert({
           id,
-          message: temporaryRestoreAlertText(house, meta.reason as SkipReasonId),
+          message: temporaryRestoreAlertText(house, meta),
         });
       }
     }
@@ -363,11 +364,17 @@ export function NeighborhoodApp({
     }
   }, [routeMode, housesForSkipCount, now, filters, skips.skippedIds.join("\0")]);
 
-  function applySkipHouse(house: PublicHouse, reason: SkipReasonId, temporary: boolean) {
+  function applySkipHouse(
+    house: PublicHouse,
+    reason: SkipReasonId,
+    temporary: boolean,
+    restoreTriggers: TemporaryRestoreTriggerId[] = [],
+  ) {
     const wasSkipped = skips.skipped(house.id);
     const meta = {
       reason,
       temporary,
+      restoreTriggers: temporary && restoreTriggers.length > 0 ? restoreTriggers : undefined,
       statusKey: skipStatusSnapshot(house, now, filters),
       skippedAt: wasSkipped ? (skips.meta(house.id)?.skippedAt ?? new Date().toISOString()) : new Date().toISOString(),
     };
@@ -397,11 +404,15 @@ export function NeighborhoodApp({
     setSkipDialogHouse(house);
   }
 
-  function confirmSkipHouse(reason: SkipReasonId, temporary: boolean) {
+  function confirmSkipHouse(
+    reason: SkipReasonId,
+    temporary: boolean,
+    restoreTriggers: TemporaryRestoreTriggerId[],
+  ) {
     const house = skipDialogHouse;
     if (!house) return;
     setSkipDialogHouse(null);
-    applySkipHouse(house, reason, temporary);
+    applySkipHouse(house, reason, temporary, restoreTriggers);
   }
 
   function unskipFromDialog() {
