@@ -8,12 +8,14 @@ function mapsQueryFor(house: PublicHouse) {
 }
 
 export function houseMapsUrl(house: PublicHouse) {
+  // Prefer stored coordinates — text geocoding often confuses parallel streets
+  // (e.g. "יהודית 15, חרוזים" resolves to חרוזים 15 in Google Maps).
+  if (Number.isFinite(house.lat) && Number.isFinite(house.lng)) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${house.lat},${house.lng}&travelmode=walking`;
+  }
   const query = mapsQueryFor(house).trim();
   if (query) {
     return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}&travelmode=walking`;
-  }
-  if (Number.isFinite(house.lat) && Number.isFinite(house.lng)) {
-    return `https://www.google.com/maps/dir/?api=1&destination=${house.lat},${house.lng}&travelmode=walking`;
   }
   return `https://www.google.com/maps/dir/?api=1&travelmode=walking`;
 }
