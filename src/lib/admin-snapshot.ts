@@ -9,16 +9,11 @@ import {
   offersSensitivity,
   resolveDecorLevel,
 } from "@/lib/house-state";
-import { subscriptionAllowsTopic } from "@/lib/push-topics";
-import type { House, PublicHouse, PushSubscriptionRecord, ScareLevel } from "@/lib/types";
+import type { House, PublicHouse, ScareLevel } from "@/lib/types";
 
 export type SnapshotHouse = House | PublicHouse;
 
 export type AdminSnapshot = {
-  devicesSeen: number;
-  devicesNewHouse: number;
-  devicesHouseStatus: number;
-  devicesAdmin: number;
   houses: number;
   openNow: number;
   openingSoon: number;
@@ -73,8 +68,6 @@ export function buildSnapshotStats(input: {
 }): SnapshotStats {
   const snapshot = buildAdminSnapshot({
     houses: input.houses,
-    subscriptions: [],
-    devicesSeen: 0,
     now: input.now,
     houseSet: input.houseSet,
   });
@@ -122,8 +115,6 @@ export function buildSnapshotStats(input: {
 
 export function buildAdminSnapshot(input: {
   houses: SnapshotHouse[];
-  subscriptions: PushSubscriptionRecord[];
-  devicesSeen: number;
   now?: Date;
   /** Public תמונת מצב should count real houses only — not rehearsal stubs. */
   houseSet?: HouseSet;
@@ -135,16 +126,6 @@ export function buildAdminSnapshot(input: {
     markedCandy(house) ? candyLevel(house) : null;
 
   return {
-    devicesSeen: input.devicesSeen,
-    devicesNewHouse: input.subscriptions.filter((item) =>
-      subscriptionAllowsTopic(item, "newHouse"),
-    ).length,
-    devicesHouseStatus: input.subscriptions.filter((item) =>
-      subscriptionAllowsTopic(item, "houseStatus"),
-    ).length,
-    devicesAdmin: input.subscriptions.filter((item) =>
-      subscriptionAllowsTopic(item, "admin"),
-    ).length,
     houses: listed.length,
     openNow: listed.filter((house) => isOpenNow(house, now)).length,
     openingSoon: listed.filter((house) => isOpeningSoon(house, now)).length,

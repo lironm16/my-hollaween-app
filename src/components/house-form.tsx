@@ -40,6 +40,7 @@ import {
   syncHoursFields,
 } from "@/lib/hours";
 import { useAppNow } from "@/hooks/use-app-clock";
+import { useAdminSession } from "@/hooks/use-admin-session";
 import type { HoursWindow } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -127,6 +128,7 @@ export function HouseForm({
   const [saving, setSaving] = useState(false);
   const existingPhoto = initial?.photoUrl ?? "";
   const now = useAppNow();
+  const { admin } = useAdminSession();
   const blocked = Boolean(busy || saving);
 
   function updateHourWindow(index: number, patch: Partial<HoursWindow>) {

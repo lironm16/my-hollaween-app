@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { BellRing, HousePlus, MapPinned, Moon, Pause, Shield } from "lucide-react";
+import { useMemo, type ReactNode } from "react";
+import { MapPinned, Moon, Pause } from "lucide-react";
 import { CandySign } from "@/components/candy-glyphs";
 import { OpenNowSign, ClosingSoonSign, OpeningSoonSign } from "@/components/open-now-mark";
 import { ScareSign } from "@/components/scare-glyphs";
@@ -9,56 +9,14 @@ import { SensitivitySign } from "@/components/sensitivity-glyphs";
 import { StrollerSign } from "@/components/symbols";
 import { LikedSign } from "@/components/visit-marks";
 import { VisitedCheck } from "@/components/visited-check";
-import { PUSH_TOPIC_ROWS, type PushTopic } from "@/lib/push-topics";
 import { scareShort, decorShort, treatLabels } from "@/lib/labels";
 import { cn } from "@/lib/utils";
-import { buildSnapshotStats, type AdminSnapshot, type SnapshotStats } from "@/lib/admin-snapshot";
+import { buildSnapshotStats, type SnapshotStats } from "@/lib/admin-snapshot";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAppNow } from "@/hooks/use-app-clock";
 import type { HouseSet } from "@/lib/house-set";
 
-export type AdminStats = AdminSnapshot;
 export type { SnapshotStats };
-
-const ALERT_ICONS: Record<PushTopic, ReactNode> = {
-  newHouse: <HousePlus className="size-5" />,
-  houseStatus: <BellRing className="size-5" />,
-  admin: <Shield className="size-5" />,
-};
-
-function alertCount(stats: AdminStats, id: PushTopic) {
-  if (id === "newHouse") return stats.devicesNewHouse;
-  if (id === "houseStatus") return stats.devicesHouseStatus;
-  return stats.devicesAdmin;
-}
-
-function useStats(url: string, enabled: boolean) {
-  const [stats, setStats] = useState<AdminStats | null>(null);
-
-  useEffect(() => {
-    if (!enabled) return;
-    let cancelled = false;
-    const load = () => {
-      void fetch(url, { cache: "no-store", credentials: "include" })
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data: AdminStats | null) => {
-          if (!cancelled && data && typeof data.houses === "number") setStats(data);
-        })
-        .catch(() => undefined);
-    };
-    load();
-    const timer = window.setInterval(load, 20_000);
-    const onRefresh = () => load();
-    window.addEventListener("hw-admin-stats-refresh", onRefresh);
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
-      window.removeEventListener("hw-admin-stats-refresh", onRefresh);
-    };
-  }, [enabled, url]);
-
-  return stats;
-}
 
 export function useSnapshotStats(enabled = true, houseSet: HouseSet = "real"): SnapshotStats | null {
   const { catalog } = useCatalog();
@@ -68,30 +26,6 @@ export function useSnapshotStats(enabled = true, houseSet: HouseSet = "real"): S
     if (!enabled || !catalog) return null;
     return buildSnapshotStats({ houses: catalog.houses, now, houseSet });
   }, [enabled, catalog, now, houseSet]);
-}
-
-export function useAdminStats(enabled: boolean, houseSet: HouseSet = "real") {
-  const query = houseSet === "real" ? "" : `?houseSet=${encodeURIComponent(houseSet)}`;
-  return useStats(`/api/admin/stats${query}`, enabled);
-}
-
-export function AlertStatsCard({ stats }: { stats: AdminStats }) {
-  return (
-    <Section title="התראות">
-      <div className="grid grid-cols-1 gap-2">
-        {PUSH_TOPIC_ROWS.map((row) => (
-          <Tile
-            key={row.id}
-            icon={ALERT_ICONS[row.id]}
-            label={row.title}
-            value={alertCount(stats, row.id)}
-            hint={row.hint}
-            valueClass={alertCount(stats, row.id) ? "text-orange-200" : undefined}
-          />
-        ))}
-      </div>
-    </Section>
-  );
 }
 
 export function AdminStatsCard({

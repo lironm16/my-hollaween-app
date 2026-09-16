@@ -1106,6 +1106,12 @@
   .border-border {
     border-color: var(--border);
   }
+  .border-emerald-400\/50 {
+    border-color: color-mix(in srgb, oklch(76.5% 0.177 163.223) 50%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-emerald-400) 50%, transparent);
+    }
+  }
   .border-input {
     border-color: var(--input);
   }
@@ -5202,10 +5208,8 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 .route-skipped-name {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-size: 0.95rem;
+  line-height: 1.35;
 }
 .route-skipped-restore {
   min-height: 2rem;
