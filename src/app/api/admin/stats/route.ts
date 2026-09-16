@@ -3,7 +3,6 @@ import { isAdmin } from "@/lib/admin";
 import { buildAdminSnapshot } from "@/lib/admin-snapshot";
 import { HOUSE_SETS, type HouseSet } from "@/lib/house-set";
 import { countSeenDevices } from "@/lib/device-store";
-import { countPresence } from "@/lib/presence-store";
 import { getDbSnapshot } from "@/lib/store";
 export const runtime = "nodejs";
 
@@ -23,7 +22,6 @@ export async function GET(request: Request) {
       houses: db.houses,
       subscriptions: db.pushSubscriptions ?? [],
       devicesSeen,
-      online: countPresence(),
       houseSet,
     }),
   );

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { config } from "@/lib/config";
-import { touchPresence } from "@/lib/presence-store";
 import { getCatalog, getCatalogDelta } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -11,9 +10,6 @@ function withPollSeconds<T extends object>(body: T) {
 }
 
 export async function GET(request: Request) {
-  const deviceId = request.headers.get("x-hw-device-id")?.trim() ?? "";
-  if (deviceId) touchPresence(deviceId);
-
   const since = new URL(request.url).searchParams.get("since")?.trim();
   const headers = new Headers();
   headers.set("Content-Type", "application/json; charset=utf-8");
