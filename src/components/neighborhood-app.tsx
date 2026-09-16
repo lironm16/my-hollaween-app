@@ -68,6 +68,7 @@ import { diffRouteBySkippedIds, rebuildRouteAfterSkipChange } from "@/lib/route-
 import { drainPendingRouteRestores } from "@/lib/route-mode";
 import {
   skipStatusSnapshot,
+  shouldEmitTemporarySkipRestoreAlert,
   temporaryRestoreAlertText,
   temporaryRestoreReasonMet,
   type SkipReasonId,
@@ -363,10 +364,12 @@ export function NeighborhoodApp({
       const house = houseById.get(id);
       const meta = skips.meta(id);
       if (!house || !meta) continue;
-      emitTempSkipRestoreAlert({
-        id,
-        message: temporaryRestoreAlertText(house, meta.reason),
-      });
+      if (shouldEmitTemporarySkipRestoreAlert(meta)) {
+        emitTempSkipRestoreAlert({
+          id,
+          message: temporaryRestoreAlertText(house, meta.reason as SkipReasonId),
+        });
+      }
     }
     const nextSkippedIds = skips.skippedIds.filter((id) => !toRestore.includes(id));
     for (const id of toRestore) skips.unskip(id);

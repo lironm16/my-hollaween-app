@@ -5,7 +5,9 @@ import {
   houseLacksCandy,
   isHouseOpenForSkip,
   isTemporarySkipReason,
+  shouldEmitTemporarySkipRestoreAlert,
   skipMetaSummary,
+  skipSnapshotHadCandyOutOrClosed,
   skipStatusSnapshot,
   suggestedSkipReasons,
   temporaryRestoreAlertText,
@@ -145,6 +147,48 @@ describe("temporaryRestoreAlertText", () => {
     assert.match(
       temporaryRestoreAlertText(stub({ name: "משפחת לוין" }), "candy-out"),
       /משפחת לוין חזר לרשימה — יש ממתקים/,
+    );
+  });
+});
+
+describe("skipSnapshotHadCandyOutOrClosed", () => {
+  it("detects closed visit, break, and candy out", () => {
+    assert.equal(skipSnapshotHadCandyOutOrClosed("closed|active|active|open|plenty|mild"), true);
+    assert.equal(skipSnapshotHadCandyOutOrClosed("come|active|break|open|plenty|mild"), true);
+    assert.equal(skipSnapshotHadCandyOutOrClosed("come|active|active|closed-hours|plenty|mild"), true);
+    assert.equal(skipSnapshotHadCandyOutOrClosed("come|active|active|open|out|mild"), true);
+    assert.equal(skipSnapshotHadCandyOutOrClosed("come|active|active|open|plenty|mild"), false);
+  });
+});
+
+describe("shouldEmitTemporarySkipRestoreAlert", () => {
+  it("alerts only for temporary candy/closed skips", () => {
+    assert.equal(
+      shouldEmitTemporarySkipRestoreAlert({
+        reason: "not-open",
+        temporary: true,
+        statusKey: "closed|active|active|open|plenty|mild",
+        skippedAt: "2026-01-01T00:00:00.000Z",
+      }),
+      true,
+    );
+    assert.equal(
+      shouldEmitTemporarySkipRestoreAlert({
+        reason: "not-open",
+        temporary: true,
+        statusKey: "come|active|active|open|plenty|mild",
+        skippedAt: "2026-01-01T00:00:00.000Z",
+      }),
+      false,
+    );
+    assert.equal(
+      shouldEmitTemporarySkipRestoreAlert({
+        reason: "other",
+        temporary: false,
+        statusKey: "come|active|active|open|plenty|mild",
+        skippedAt: "2026-01-01T00:00:00.000Z",
+      }),
+      false,
     );
   });
 });
