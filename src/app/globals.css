@@ -2398,8 +2398,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 
 .filters-sheet-panel {
-  height: min(720px, calc(var(--app-h, 100svh) * 0.92));
-  max-height: min(720px, calc(var(--app-h, 100svh) - var(--vv-bottom-inset, 0px)));
+  height: calc(var(--app-h, 100svh) - max(2rem, env(safe-area-inset-top, 0px) + 1.25rem));
+  max-height: calc(var(--app-h, 100svh) - var(--vv-bottom-inset, 0px) - max(2rem, env(safe-area-inset-top, 0px) + 1.25rem));
 }
 
 .route-list {

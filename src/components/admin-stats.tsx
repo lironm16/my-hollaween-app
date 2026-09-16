@@ -238,13 +238,16 @@ export function AdminStatsCard({
             value={stats.scareSpicy}
             plain
           />
-          <Tile
-            icon={<StrollerSign className="size-8" />}
-            label="נגיש"
-            value={stats.accessible}
-            plain
-          />
         </div>
+      </Section>
+      <Section title="נגישות">
+        <Tile
+          icon={<StrollerSign className="size-8" />}
+          label="נגיש"
+          value={stats.accessible}
+          plain
+          wide
+        />
       </Section>
     </div>
   );
