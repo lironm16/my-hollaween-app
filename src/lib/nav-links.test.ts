@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { formatMapsAddress } from "@/lib/config";
 import { houseMapsUrl } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
 
@@ -36,16 +37,23 @@ function stub(overrides: Partial<PublicHouse> = {}): PublicHouse {
   };
 }
 
+describe("formatMapsAddress", () => {
+  it("omits neighborhood name from maps destination", () => {
+    assert.equal(formatMapsAddress(stub()), "יהודית 15, רמת גן");
+  });
+});
+
 describe("houseMapsUrl", () => {
-  it("uses stored coordinates when available", () => {
-    const url = houseMapsUrl(stub());
-    assert.match(url, /destination=32\.089223,34\.804374/);
-    assert.doesNotMatch(url, /יהודית/);
+  it("navigates with street and city only", () => {
+    const destination = decodeURIComponent(
+      new URL(houseMapsUrl(stub())).searchParams.get("destination") ?? "",
+    );
+    assert.equal(destination, "יהודית 15, רמת גן");
+    assert.doesNotMatch(destination, /חרוזים/);
   });
 
-  it("falls back to address text when coordinates are missing", () => {
-    const url = houseMapsUrl(stub({ lat: NaN, lng: NaN }));
-    const destination = decodeURIComponent(new URL(url).searchParams.get("destination") ?? "");
-    assert.match(destination, /יהודית 15/);
+  it("falls back to coordinates when maps address is empty", () => {
+    const url = houseMapsUrl(stub({ address: "", lat: 32.09, lng: 34.8 }));
+    assert.match(url, /destination=32\.09,34\.8/);
   });
 });

@@ -139,6 +139,14 @@ export function formatDisplayAddress(house: {
   return `${street}, ${area}`;
 }
 
+/** Street + city for maps links — neighborhood names confuse geocoders (e.g. חרוזים). */
+export function formatMapsAddress(house: { address: string }): string {
+  const street = streetPartForDisplay(house.address).trim();
+  if (!street) return "";
+  if (/רמת\s*גן/u.test(street)) return street;
+  return `${street}, רמת גן`;
+}
+
 function streetPartForDisplay(address: string): string {
   let text = address.trim();
   text = text
