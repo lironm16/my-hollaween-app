@@ -52,7 +52,7 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 
 ## 2. Automated coverage map
 
-### Unit tests (`src/lib/*.test.ts` — 25 files, ~143 cases)
+### Unit tests (`src/lib/*.test.ts` — 28 files, 145 cases)
 
 | Domain | Covered |
 |--------|---------|
@@ -66,6 +66,8 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | Admin snapshot, rehearsal stubs, quick-update logic | ✅ |
 | Map a11y announcements (logic) | ✅ |
 | CSV export (`house-csv.test.ts`) | ✅ EXP-01 |
+| Search matching (`house-search.test.ts`) | ✅ EXP-02 logic |
+| Add-form minimum rule (`house-submit-minimum.test.ts`) | ✅ ADD-03 client rule |
 
 ### Load test (`scripts/stress-test.mjs`)
 
@@ -80,9 +82,13 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 |----------|-----------|----------|
 | GET `/api/catalog` JSON + poll headers | — | ✅ |
 | GET `/api/catalog?since=…` delta | — | ✅ |
-| Admin login reject / accept + session | ADM-01 | ✅ |
+| Admin login reject / accept + session + logout | ADM-01, ADM-09 | ✅ |
 | POST `/api/houses` out of bounds | ADD-02 | ✅ |
+| POST `/api/houses` decor-only / candy-only | ADD-01 | ✅ |
 | POST `/api/houses` create + catalog + admin delete | ADD-01 | ✅ |
+| POST `/api/houses/[id]/unlock` wrong / correct code | ADD-04, ADD-05 | ✅ |
+| Admin PATCH freeze (`adminFrozen`) | ADM-03 | ✅ |
+| Admin CSV export Hebrew headers | ADM-08 | ✅ |
 
 ### E2E — offline (`scripts/check-offline-catalog.mjs`)
 
@@ -101,8 +107,13 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | Map loads with houses (rehearsal) | MAP-01 | ✅ |
 | Map ↔ list toggle | MAP-04 | ✅ |
 | List row opens house detail | MAP-02 | ✅ |
+| Like / visit via actions menu → localStorage | MAP-07, MAP-08 | ✅ |
+| Liked-only quick filter | MAP-09 | ✅ |
 | Open-now filter in rehearsal | MAP-06 | ✅ |
+| Route empty when all visited + “לא ביקרתי” filter (list view) | ROUTE-03 | ✅ |
 | Route mode controls | ROUTE-01 | ✅ |
+| Skip link → list view | A11Y-01 | ✅ |
+| Search page opens house | EXP-02 | ✅ |
 | `/offline.html` empty state (no cache) | OFF-04 | ✅ |
 
 ### Not automated
@@ -217,9 +228,11 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | Manual ID | Auto test |
 |-----------|-----------|
 | OFF-01–05 | `npm run test:e2e` |
-| MAP-01, MAP-02, MAP-04, MAP-06 | `e2e-visitor-flows.mjs` |
-| ROUTE-01 | `e2e-visitor-flows.mjs` |
-| ADD-01, ADD-02, ADM-01 | `npm run test:api` |
+| MAP-01, MAP-02, MAP-04, MAP-06–09, MAP-07–08 | `e2e-visitor-flows.mjs` |
+| ROUTE-01, ROUTE-03 | `e2e-visitor-flows.mjs` |
+| A11Y-01, EXP-02 | `e2e-visitor-flows.mjs` |
+| ADD-01, ADD-02, ADD-04, ADD-05, ADM-01, ADM-03, ADM-08, ADM-09 | `npm run test:api` |
+| ADD-03 (client rule) | `house-submit-minimum.test.ts` |
 | EXP-01 (CSV logic) | `house-csv.test.ts` |
 | Filter logic | `filter-houses.test.ts` |
 | Route ordering | `route-order.test.ts` |
@@ -231,10 +244,9 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | Manual ID | Proposed test | Framework |
 |-----------|---------------|-----------|
 | MAP-05 | Filter dimmed pins on map | Playwright |
-| ROUTE-03, ROUTE-04 | Empty route / completion cheer | Playwright |
-| MAP-07–11 | Like, visit, skip flows | Playwright + localStorage asserts |
-| EXP-02 | Search house page | Playwright |
-| ADM-03–04 | Freeze / delete via admin API | API integration |
+| ROUTE-04 | Route completion cheer | Playwright |
+| MAP-10–11 | Skip / restore flows | Playwright + localStorage asserts |
+| ADM-04 | Admin delete via UI | API integration (delete covered in ADD-01) |
 | SW precache | SW install + cached shell | Playwright |
 
 ### Must stay manual
@@ -254,7 +266,7 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 
 | When | What | Where |
 |------|------|-------|
-| Every PR | Unit + build + stress + E2E | GitHub Actions |
+| Every PR | Unit + build + API + stress + E2E | GitHub Actions |
 | Weekly pre-event | Full manual P0 on iPhone A2HS + Android | Physical devices |
 | 1 week before event | 10-phone load smoke | Staging/production |
 | Event night T-2h | OFF-01–07 on 3 devices; PUSH-03 | Production |

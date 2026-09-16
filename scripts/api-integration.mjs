@@ -38,10 +38,10 @@ async function json(method, path, body, headers = {}) {
   } catch {
     data = text;
   }
-  return { res, data };
+  return { res, data, text };
 }
 
-function validHousePayload(name = "בית אינטגרציה") {
+function validHousePayload(name = "בית אינטגרציה", patch = {}) {
   return {
     name,
     theme: "pumpkin",
@@ -61,7 +61,26 @@ function validHousePayload(name = "בית אינטגרציה") {
     accessible: false,
     decorLevel: "medium",
     decorated: true,
+    ...patch,
   };
+}
+
+async function createHouse(patch = {}) {
+  const created = await json("POST", "/api/houses", validHousePayload(undefined, patch));
+  if (!created.res.ok || !created.data.house?.id || !created.data.editCode) {
+    fail("POST /api/houses valid payload should return house + editCode");
+    return null;
+  }
+  return created.data;
+}
+
+async function deleteHouse(adminCookie, id) {
+  const removed = await json("DELETE", `/api/admin/houses/${encodeURIComponent(id)}`, null, {
+    Cookie: adminCookie,
+  });
+  if (!removed.res.ok || removed.data.ok !== true) {
+    fail(`admin DELETE should remove test house ${id}`);
+  }
 }
 
 async function testCatalog() {
@@ -113,7 +132,17 @@ async function testAdminAuth() {
   }
   pass("admin session is true after login");
 
-  return adminCookie;
+  const logout = await json("POST", "/api/admin/logout", null, { Cookie: adminCookie });
+  if (!logout.res.ok || logout.data.ok !== true) return fail("admin logout should succeed");
+  const afterLogout = await json("GET", "/api/admin/session");
+  if (!afterLogout.res.ok || afterLogout.data.admin !== false) {
+    return fail("admin session should be false after logout");
+  }
+  pass("admin logout clears session");
+
+  const loginAgain = await json("POST", "/api/admin/login", { password: ADMIN_PASSWORD });
+  if (!loginAgain.res.ok) return fail("admin re-login should succeed after logout");
+  return cookieHeader(loginAgain.res);
 }
 
 async function testHouseCreate(adminCookie) {
@@ -127,31 +156,113 @@ async function testHouseCreate(adminCookie) {
   }
   pass("POST /api/houses rejects out-of-bounds coordinates");
 
-  const created = await json("POST", "/api/houses", validHousePayload());
-  if (!created.res.ok || !created.data.house?.id || !created.data.editCode) {
-    return fail("POST /api/houses valid payload should return house + editCode");
+  const decorOnly = await createHouse({
+    treats: [],
+    treatStock: {},
+    decorLevel: "medium",
+    decorated: true,
+  });
+  if (decorOnly) {
+    pass("POST /api/houses accepts decor-only house");
+    await deleteHouse(adminCookie, decorOnly.house.id);
   }
-  pass(`POST /api/houses creates ${created.data.house.id}`);
+
+  const candyOnly = await createHouse({
+    decorLevel: "none",
+    decorated: false,
+    treats: ["candy"],
+    treatStock: { candy: "plenty" },
+  });
+  if (candyOnly) {
+    pass("POST /api/houses accepts candy-only house");
+    await deleteHouse(adminCookie, candyOnly.house.id);
+  }
+
+  const created = await createHouse();
+  if (!created) return null;
+  pass(`POST /api/houses creates ${created.house.id}`);
 
   const listed = await json("GET", "/api/catalog");
-  const found = listed.data.houses?.some((house) => house.id === created.data.house.id);
+  const found = listed.data.houses?.some((house) => house.id === created.house.id);
   if (!found) return fail("created house should appear in catalog");
   pass("created house appears in catalog");
 
-  const removed = await json("DELETE", `/api/admin/houses/${encodeURIComponent(created.data.house.id)}`, null, {
-    Cookie: adminCookie,
-  });
-  if (!removed.res.ok || removed.data.ok !== true) {
-    return fail("admin DELETE should remove created test house");
-  }
+  await deleteHouse(adminCookie, created.house.id);
   pass("admin deletes created test house");
+  return created;
+}
+
+async function testHouseUnlock(adminCookie) {
+  const created = await createHouse();
+  if (!created) return;
+  const id = created.house.id;
+
+  const wrong = await json("POST", `/api/houses/${encodeURIComponent(id)}/unlock`, {
+    editCode: "000000",
+  });
+  if (wrong.res.status !== 403) return fail("unlock with wrong edit code should return 403");
+  pass("unlock rejects wrong edit code");
+
+  const right = await json("POST", `/api/houses/${encodeURIComponent(id)}/unlock`, {
+    editCode: created.editCode,
+  });
+  if (!right.res.ok || right.data.house?.id !== id) {
+    return fail("unlock with correct edit code should return the house");
+  }
+  pass("unlock accepts correct edit code");
+
+  await deleteHouse(adminCookie, id);
+}
+
+async function testAdminFreeze(adminCookie) {
+  const created = await createHouse();
+  if (!created) return;
+  const id = created.house.id;
+
+  const frozen = await json(
+    "PATCH",
+    `/api/admin/houses/${encodeURIComponent(id)}`,
+    { adminFrozen: true },
+    { Cookie: adminCookie },
+  );
+  if (!frozen.res.ok || frozen.data.house?.adminFrozen !== true) {
+    return fail("admin PATCH should freeze a house");
+  }
+  pass("admin freeze sets adminFrozen on house");
+
+  const adminList = await json("GET", "/api/admin/houses", null, { Cookie: adminCookie });
+  const listed = adminList.data.houses?.find((house) => house.id === id);
+  if (!listed?.adminFrozen) return fail("frozen house should appear as adminFrozen in admin list");
+  pass("admin list shows frozen house");
+
+  await deleteHouse(adminCookie, id);
+}
+
+async function testAdminExport(adminCookie) {
+  const csv = await fetch(`${BASE}/api/admin/export?format=csv`, {
+    headers: { Cookie: adminCookie },
+    cache: "no-store",
+  });
+  if (!csv.ok) return fail("admin CSV export should return 200");
+  const type = csv.headers.get("content-type") ?? "";
+  if (!type.includes("text/csv")) return fail("admin CSV export should use text/csv content-type");
+  const body = await csv.text();
+  if (!body.includes("שם") || !body.includes("ממתקים")) {
+    return fail("admin CSV export should include Hebrew headers");
+  }
+  pass("admin CSV export returns Hebrew CSV");
 }
 
 async function main() {
   mkdirSync("artifacts", { recursive: true });
   await testCatalog();
   const adminCookie = await testAdminAuth();
-  if (adminCookie) await testHouseCreate(adminCookie);
+  if (adminCookie) {
+    await testHouseCreate(adminCookie);
+    await testHouseUnlock(adminCookie);
+    await testAdminFreeze(adminCookie);
+    await testAdminExport(adminCookie);
+  }
 
   if (failures) {
     console.error(`API integration failed (${failures} checks)`);

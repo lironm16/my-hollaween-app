@@ -24,6 +24,39 @@ async function launchBrowser() {
   });
 }
 
+async function waitForCatalog(page) {
+  await page.getByText(/בתים/).first().waitFor();
+  await page.waitForFunction(() => {
+    try {
+      const raw = localStorage.getItem("hw-catalog-cache");
+      const catalog = raw ? JSON.parse(raw) : null;
+      return Array.isArray(catalog?.houses) && catalog.houses.length > 0;
+    } catch {
+      return false;
+    }
+  });
+}
+
+async function catalogHouseIds(page) {
+  return page.evaluate(() => {
+    const raw = localStorage.getItem("hw-catalog-cache");
+    const catalog = raw ? JSON.parse(raw) : null;
+    return (catalog?.houses ?? []).map((house) => house.id);
+  });
+}
+
+async function readStorageIds(page, key) {
+  return page.evaluate((storageKey) => {
+    const raw = localStorage.getItem(storageKey);
+    const ids = raw ? JSON.parse(raw) : [];
+    return Array.isArray(ids) ? ids : [];
+  }, key);
+}
+
+async function openFilterSheet(page) {
+  await page.getByRole("button", { name: /^סינון/ }).first().click();
+}
+
 async function main() {
   mkdirSync(OUT, { recursive: true });
   const browser = await launchBrowser();
@@ -36,23 +69,15 @@ async function main() {
   page.setDefaultTimeout(20_000);
 
   await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
-  await page.getByText(/בתים/).first().waitFor();
-  await page.waitForFunction(() => {
-    try {
-      const raw = localStorage.getItem("hw-catalog-cache");
-      const catalog = raw ? JSON.parse(raw) : null;
-      return Array.isArray(catalog?.houses) && catalog.houses.length > 0;
-    } catch {
-      return false;
-    }
-  });
+  await waitForCatalog(page);
 
-  const firstName = await page.evaluate(() => {
+  const firstHouse = await page.evaluate(() => {
     const raw = localStorage.getItem("hw-catalog-cache");
     const catalog = raw ? JSON.parse(raw) : null;
-    return catalog?.houses?.[0]?.name ?? null;
+    const house = catalog?.houses?.[0];
+    return house ? { id: house.id, name: house.name } : null;
   });
-  if (!firstName) fail("MAP-01 catalog should include at least one house");
+  if (!firstHouse) fail("MAP-01 catalog should include at least one house");
   else pass("MAP-01 map loads with cached houses");
 
   await page.getByRole("button", { name: "רשימה" }).click();
@@ -62,28 +87,84 @@ async function main() {
   pass("MAP-04 toggles between list and map views");
 
   await page.getByRole("button", { name: "רשימה" }).click();
-  if (firstName) {
-    await page.getByRole("button", { name: "פתיחת פרטי הבית" }).first().click();
-    try {
-      await page.getByRole("button", { name: "פעולות" }).first().waitFor({ timeout: 5_000 });
-      pass("MAP-02 list row opens house detail overlay");
-    } catch {
-      fail("MAP-02 house selection should open a house card with actions");
-    }
-    await page.getByRole("button", { name: "סגירה" }).click();
+  await page.getByRole("button", { name: "פתיחת פרטי הבית" }).first().click();
+  const detail = page.getByRole("dialog");
+  try {
+    await detail.getByRole("button", { name: "פעולות" }).waitFor({ timeout: 5_000 });
+    pass("MAP-02 list row opens house detail overlay");
+  } catch {
+    fail("MAP-02 house selection should open a house card with actions");
   }
 
-  await page.getByRole("button", { name: "סינון" }).click();
+  const likedBefore = await readStorageIds(page, "hw-liked-houses");
+  await detail.getByRole("button", { name: "פעולות" }).click();
+  await page.getByRole("menuitem", { name: "אהבתי" }).click();
+  await page.getByText("שמרתם!").waitFor();
+  const likedAfter = await readStorageIds(page, "hw-liked-houses");
+  const newlyLiked = likedAfter.some((id) => !likedBefore.includes(id));
+  if (!newlyLiked) fail("MAP-07 like should persist in localStorage");
+  else pass("MAP-07 like saves to localStorage");
+
+  const visitedBefore = await readStorageIds(page, "hw-visited-houses");
+  await detail.getByRole("button", { name: "פעולות" }).click();
+  await page.getByRole("menuitem", { name: "ביקרתי" }).click();
+  await page.getByText("כל הכבוד!").waitFor();
+  const visitedAfter = await readStorageIds(page, "hw-visited-houses");
+  const newlyVisited = visitedAfter.some((id) => !visitedBefore.includes(id));
+  if (!newlyVisited) fail("MAP-08 visit should persist in localStorage");
+  else pass("MAP-08 visit saves to localStorage");
+
+  await detail.getByRole("button", { name: "סגירה" }).click();
+
+  await openFilterSheet(page);
+  await page.getByText("שמורים", { exact: true }).click();
+  await page.getByRole("button", { name: /הצג תוצאות/ }).click();
+  await page.getByRole("button", { name: /סינון \(1\)/ }).first().waitFor();
+  pass("MAP-09 liked-only quick filter can be applied");
+
+  await openFilterSheet(page);
   await page.getByText("פתוחים עכשיו").click();
   await page.getByRole("button", { name: /הצג תוצאות/ }).click();
-  await page.getByRole("button", { name: /סינון \(1\)|סינון/ }).first().waitFor();
+  await page.getByRole("button", { name: /סינון/ }).first().waitFor();
   pass("MAP-06 open-now filter can be applied in rehearsal mode");
+
+  await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
+  await waitForCatalog(page);
+  const allIds = await catalogHouseIds(page);
+  await page.evaluate((ids) => {
+    localStorage.setItem("hw-visited-houses", JSON.stringify(ids));
+    window.dispatchEvent(new Event("hw-visited-changed"));
+  }, allIds);
+  await openFilterSheet(page);
+  await page.getByText("לא ביקרתי", { exact: true }).click();
+  await page.getByRole("button", { name: /הצג תוצאות/ }).click();
+  await page.getByRole("button", { name: "מסלול" }).click();
+  await page.getByRole("button", { name: "רשימה" }).click();
+  await page.getByText("אין עצירות במסלול").waitFor();
+  pass("ROUTE-03 route is empty when every house is visited");
+  await page.getByRole("button", { name: "יציאה מהמסלול" }).click();
 
   await page.getByRole("button", { name: "מסלול" }).click();
   await page.getByRole("button", { name: "יציאה מהמסלול", pressed: true }).waitFor();
   await page.getByText(/נקודת התחלה|עצירות/).first().waitFor();
   pass("ROUTE-01 route mode shows route controls");
   await page.getByRole("button", { name: "יציאה מהמסלול" }).click();
+
+  await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+  await waitForCatalog(page);
+  const skipLink = page.getByRole("button", { name: "דלג לרשימת הבתים" });
+  await skipLink.focus();
+  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "רשימה", pressed: true }).waitFor();
+  pass("A11Y-01 skip link opens list view");
+
+  if (firstHouse?.name) {
+    await page.goto(`${BASE}/search`, { waitUntil: "domcontentloaded" });
+    await page.getByPlaceholder("הקלידו שם משפחה או כתובת").fill(firstHouse.name.slice(0, 6));
+    await page.getByText(firstHouse.name).first().click();
+    await page.getByRole("button", { name: "פעולות" }).first().waitFor();
+    pass("EXP-02 search page opens selected house");
+  }
 
   await page.screenshot({ path: `${OUT}/visitor-flows.png`, fullPage: true });
   await context.close();

@@ -62,16 +62,15 @@ async function main() {
   console.log("saved", saved);
   if (!saved || saved.count < 1) fail("catalog was not written to localStorage");
 
-  const firstName = saved.names[0];
   await page.getByRole("button", { name: "רשימה" }).click();
   await page.getByRole("button", { name: "רשימה", pressed: true }).waitFor();
-  if (firstName) await page.getByText(firstName).first().waitFor();
+  await page.getByRole("button", { name: "פתיחת פרטי הבית" }).first().waitFor();
   await page.screenshot({ path: `${OUT}/houses-saved-on-device.png`, fullPage: true });
 
   await setServerSimDown(page, true);
   await refreshCatalog(page);
   await page.getByText(/השרת לא עונה/).first().waitFor();
-  if (firstName) await page.getByText(firstName).first().waitFor();
+  await page.getByRole("button", { name: "פתיחת פרטי הבית" }).first().waitFor();
   await page.screenshot({ path: `${OUT}/server-down-keeps-houses.png`, fullPage: true });
   console.log("server-down still showing", saved.count, "houses");
 
@@ -82,7 +81,7 @@ async function main() {
   });
   await refreshCatalog(page);
   await page.getByText(/אין אינטרנט/).first().waitFor();
-  if (firstName) await page.getByText(firstName).first().waitFor();
+  await page.getByRole("button", { name: "פתיחת פרטי הבית" }).first().waitFor();
   await page.screenshot({ path: `${OUT}/no-internet-keeps-houses.png`, fullPage: true });
   console.log("no-internet still showing the saved list");
 
