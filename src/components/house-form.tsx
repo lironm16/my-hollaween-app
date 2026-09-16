@@ -35,6 +35,7 @@ import {
   houseHoursWindows,
   hoursWindowsIssue,
   MAX_HOUR_WINDOWS,
+  eventNightDateLabel,
   nightStatusControlsEnabled,
   nightStatusPauseCloseHint,
   parseClockMinutes,
@@ -96,7 +97,12 @@ export function HouseForm({
   busy,
   extraActions,
 }: {
-  initial?: Partial<HouseInput> & { photoUrl?: string; visit?: VisitState; ownerFrozenUntil?: string | null };
+  initial?: Partial<HouseInput> & {
+    id?: string;
+    photoUrl?: string;
+    visit?: VisitState;
+    ownerFrozenUntil?: string | null;
+  };
   submitLabel: string;
   onSubmit: (input: HouseInput, extras?: HouseFormExtras) => Promise<void> | void;
   onCancel?: () => void;
@@ -174,8 +180,14 @@ export function HouseForm({
     openFrom: hourWindows[0]?.from,
     openTo: hourWindows[0]?.to,
   };
-  const pauseCloseEnabled = nightStatusControlsEnabled(hoursSource, now);
-  const pauseCloseHint = nightStatusPauseCloseHint(hoursSource, now);
+  const editingExisting = Boolean(initial?.id);
+  const pauseCloseEnabled =
+    editingExisting && nightStatusControlsEnabled(hoursSource, now);
+  const pauseCloseHint = pauseCloseEnabled
+    ? null
+    : editingExisting
+      ? nightStatusPauseCloseHint(hoursSource, now)
+      : newHousePauseCloseHint(hoursSource);
 
   useEffect(() => {
     if (!pauseCloseEnabled && nightStatus !== "open") setNightStatus("open");
@@ -740,6 +752,19 @@ export function HouseForm({
       {extraActions}
     </form>
   );
+}
+
+function newHousePauseCloseHint(house: {
+  openHours?: HoursWindow[];
+  openFrom?: string;
+  openTo?: string;
+}) {
+  const first = houseHoursWindows(house)[0];
+  const opensAt = first?.from?.trim() || "";
+  const dateLabel = eventNightDateLabel();
+  return opensAt
+    ? `בהוספת בית הבית נשמר כפתוח. הפסקה וסגירה יהיו זמינות ב${dateLabel}, משעת הפתיחה (${opensAt}).`
+    : `בהוספת בית הבית נשמר כפתוח. הפסקה וסגירה יהיו זמינות ב${dateLabel}, משעת הפתיחה שמוגדרת למעלה.`;
 }
 
 function NightStatusChip({
