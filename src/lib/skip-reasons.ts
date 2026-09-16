@@ -108,14 +108,14 @@ export function skipMetaSummary(meta: SkippedHouseMeta) {
     const trigger = temporaryRestoreReasonLabel(reason);
     return trigger ? `דילוג זמני · החזרה כש${trigger}` : "דילוג זמני";
   }
-  return "דילוג · החזרה ידנית";
+  return "דילגתם על הבית";
 }
 
 export function temporaryRestoreAlertText(house: PublicHouse, reason: SkipReasonId) {
   const name = houseHeadline(house);
-  if (reason === "not-open") return `${name} חזר למסלול — הבית פתוח`;
-  if (reason === "candy-out") return `${name} חזר למסלול — יש ממתקים`;
-  return `${name} חזר למסלול`;
+  if (reason === "not-open") return `${name} חזר לרשימה — הבית פתוח`;
+  if (reason === "candy-out") return `${name} חזר לרשימה — יש ממתקים`;
+  return `${name} חזר לרשימה`;
 }
 
 /** @deprecated Use availableTemporaryRestoreOptions instead. */

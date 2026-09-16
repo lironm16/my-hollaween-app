@@ -695,7 +695,7 @@ export function NeighborhoodApp({
                   {...houseDetailCommon}
                   skipped={skips.skipped(mapSheetHouse.id)}
                   onSkip={
-                    routeMode && !skips.skipped(mapSheetHouse.id)
+                    !skips.skipped(mapSheetHouse.id)
                       ? () => handleSkipHouse(mapSheetHouse.id)
                       : undefined
                   }
@@ -779,6 +779,10 @@ export function NeighborhoodApp({
                     onToggleLike={onToggleLike}
                     visitedIds={visits.visitedIds}
                     onToggleVisited={onToggleVisited}
+                    skippedIds={skips.skippedIds}
+                    skipMetaFor={(id) => skips.meta(id)}
+                    onSkipHouse={handleSkipHouse}
+                    onRestoreHouse={handleRestoreHouse}
                     admin={admin}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
                     onShowOnMap={openOnMap}
@@ -801,7 +805,7 @@ export function NeighborhoodApp({
             {...houseDetailCommon}
             skipped={skips.skipped(houseDetailCommon.house.id)}
             onSkip={
-              routeMode && !skips.skipped(houseDetailCommon.house.id)
+              !skips.skipped(houseDetailCommon.house.id)
                 ? () => handleSkipHouse(houseDetailCommon.house.id)
                 : undefined
             }
