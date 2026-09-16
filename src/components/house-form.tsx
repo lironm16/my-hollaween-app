@@ -35,9 +35,7 @@ import {
   houseHoursWindows,
   hoursWindowsIssue,
   MAX_HOUR_WINDOWS,
-  eventNightDateLabel,
   nightStatusControlsEnabled,
-  nightStatusPauseCloseHint,
   parseClockMinutes,
   syncHoursFields,
 } from "@/lib/hours";
@@ -180,14 +178,7 @@ export function HouseForm({
     openFrom: hourWindows[0]?.from,
     openTo: hourWindows[0]?.to,
   };
-  const editingExisting = Boolean(initial?.id);
-  const pauseCloseEnabled =
-    editingExisting && nightStatusControlsEnabled(hoursSource, now);
-  const pauseCloseHint = pauseCloseEnabled
-    ? null
-    : editingExisting
-      ? nightStatusPauseCloseHint(hoursSource, now)
-      : newHousePauseCloseHint(hoursSource);
+  const pauseCloseEnabled = nightStatusControlsEnabled(hoursSource, now);
 
   useEffect(() => {
     if (!pauseCloseEnabled && nightStatus !== "open") setNightStatus("open");
@@ -495,18 +486,10 @@ export function HouseForm({
           {hoursIssue ? <p className="text-base text-red-300">{hoursIssue}</p> : null}
         </div>
         <div className="space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
-          <p className="text-base font-medium text-orange-100">
-            סגירה או הפסקה ידנית — לא חלונות השעות
-          </p>
-          {pauseCloseEnabled ? (
+          <p className="text-base font-medium text-orange-100">סגירה או הפסקה ידנית בערב האירוע</p>
+          {!pauseCloseEnabled ? (
             <p className="text-base text-violet-300">
-              לסמן שעכשיו לא מקבלים מבקרים, בלי לשנות השעות למעלה — הפסקה זמנית או סגור לערב.
-            </p>
-          ) : null}
-          {pauseCloseHint ? (
-            <p className="rounded-lg bg-amber-500/10 px-2.5 py-2 text-base text-amber-100 ring-1 ring-amber-400/25">
-              {pauseCloseHint}
-              {admin ? " לבדיקות: תפריט מנהל → בדיקות." : ""}
+              האפשרות לסמן סגירה או הפסקה תתאפשר בערב האירוע
             </p>
           ) : null}
           <div className="flex flex-wrap items-center gap-1.5">
@@ -752,19 +735,6 @@ export function HouseForm({
       {extraActions}
     </form>
   );
-}
-
-function newHousePauseCloseHint(house: {
-  openHours?: HoursWindow[];
-  openFrom?: string;
-  openTo?: string;
-}) {
-  const first = houseHoursWindows(house)[0];
-  const opensAt = first?.from?.trim() || "";
-  const dateLabel = eventNightDateLabel();
-  return opensAt
-    ? `בהוספת בית הבית נשמר כפתוח. הפסקה וסגירה יהיו זמינות ב${dateLabel}, משעת הפתיחה (${opensAt}).`
-    : `בהוספת בית הבית נשמר כפתוח. הפסקה וסגירה יהיו זמינות ב${dateLabel}, משעת הפתיחה שמוגדרת למעלה.`;
 }
 
 function NightStatusChip({
