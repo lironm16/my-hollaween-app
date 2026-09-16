@@ -36,6 +36,7 @@ import {
   hoursWindowsIssue,
   MAX_HOUR_WINDOWS,
   nightStatusControlsEnabled,
+  nightStatusPauseCloseHint,
   parseClockMinutes,
   syncHoursFields,
 } from "@/lib/hours";
@@ -167,14 +168,13 @@ export function HouseForm({
   const hoursIssue = hoursWindowsIssue(
     hourWindows.map((window) => ({ from: clock(window.from), to: clock(window.to) })),
   );
-  const nightStatusEnabled = nightStatusControlsEnabled(
-    {
-      openHours: hourWindows,
-      openFrom: hourWindows[0]?.from,
-      openTo: hourWindows[0]?.to,
-    },
-    now,
-  );
+  const hoursSource = {
+    openHours: hourWindows,
+    openFrom: hourWindows[0]?.from,
+    openTo: hourWindows[0]?.to,
+  };
+  const pauseCloseEnabled = nightStatusControlsEnabled(hoursSource, now);
+  const pauseCloseHint = nightStatusPauseCloseHint(hoursSource, now);
 
   function pickScare(level: ScareLevel) {
     setForm((f) => ({ ...f, scareLevel: level }));
@@ -272,7 +272,7 @@ export function HouseForm({
           toast.error("בחרו כתובת אמיתית מהרשימה, או גררו את הסיכה לבית.");
           return;
         }
-        if (decorLevel === "none" && candy !== "plenty" && candy !== "low" && !(nightStatusEnabled && nightStatus === "stop") && initial?.visit !== "closed") {
+        if (decorLevel === "none" && candy !== "plenty" && candy !== "low" && !(pauseCloseEnabled && nightStatus === "stop") && initial?.visit !== "closed") {
           toast.error("סמנו לפחות קישוטים או ממתקים — אחרת אין סיבה להוסיף את הבית למפה.");
           return;
         }
@@ -288,13 +288,8 @@ export function HouseForm({
         } else {
           treatStock.candy = candy;
         }
-        const effectiveNight = nightStatusEnabled
-          ? nightStatus
-          : initial?.visit === "closed"
-            ? "stop"
-            : isOwnerFrozen(initial ?? {})
-              ? "pause"
-              : "open";
+        const effectiveNight =
+          pauseCloseEnabled && nightStatus !== "open" ? nightStatus : "open";
         const visit: VisitState =
           effectiveNight === "stop"
             ? "closed"
@@ -303,12 +298,7 @@ export function HouseForm({
               : decorLevel !== "none"
                 ? "decorOnly"
                 : "come";
-        const ownerFrozenUntil =
-          effectiveNight === "pause"
-            ? nightStatusEnabled
-              ? freezeExpireIso()
-              : (initial?.ownerFrozenUntil ?? freezeExpireIso())
-            : null;
+        const ownerFrozenUntil = effectiveNight === "pause" ? freezeExpireIso() : null;
         const windows = hourWindows.map((window) => ({
           from: clock(window.from),
           to: clock(window.to),
@@ -487,27 +477,24 @@ export function HouseForm({
           ) : null}
           {hoursIssue ? <p className="text-base text-red-300">{hoursIssue}</p> : null}
         </div>
-        <div
-          className={
-            nightStatusEnabled
-              ? "space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20"
-              : "space-y-2 rounded-xl bg-[#1d1028] p-3 opacity-45 ring-1 ring-orange-500/20"
-          }
-        >
+        <div className="space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
           <p className="text-base font-medium text-orange-100">
             סגירה או הפסקה ידנית — לא חלונות השעות
           </p>
-          <p className="text-base text-violet-300">
-            {nightStatusEnabled
-              ? "לסמן שעכשיו לא מקבלים מבקרים, בלי לשנות השעות למעלה — הפסקה זמנית או סגור לערב."
-              : `נפתח בליל האלווין, בזמן שמוגדר למעלה. אז אפשר לסמן הפסקה זמנית או סגירה לערב.${
-                  admin ? " לבדיקות: תפריט מנהל → בדיקות." : ""
-                }`}
-          </p>
+          {pauseCloseEnabled ? (
+            <p className="text-base text-violet-300">
+              לסמן שעכשיו לא מקבלים מבקרים, בלי לשנות השעות למעלה — הפסקה זמנית או סגור לערב.
+            </p>
+          ) : null}
+          {pauseCloseHint ? (
+            <p className="text-base text-amber-200/90">
+              {pauseCloseHint}
+              {admin ? " לבדיקות: תפריט מנהל → בדיקות." : ""}
+            </p>
+          ) : null}
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
-              disabled={!nightStatusEnabled}
               onClick={() => setNightStatus("open")}
               className={
                 nightStatus === "open"
@@ -520,12 +507,12 @@ export function HouseForm({
             </button>
             <button
               type="button"
-              disabled={!nightStatusEnabled}
+              disabled={!pauseCloseEnabled}
               onClick={() => setNightStatus("pause")}
               className={
                 nightStatus === "pause"
                   ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
-                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30 disabled:opacity-45"
               }
             >
               <span className="night-status-dot is-break" />
@@ -533,12 +520,12 @@ export function HouseForm({
             </button>
             <button
               type="button"
-              disabled={!nightStatusEnabled}
+              disabled={!pauseCloseEnabled}
               onClick={() => setNightStatus("stop")}
               className={
                 nightStatus === "stop"
                   ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
-                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30 disabled:opacity-45"
               }
             >
               <span className="night-status-dot is-closed" />
