@@ -3,7 +3,8 @@ import path from "node:path";
 import { get as getBlob, put as putBlob } from "@vercel/blob";
 import { canonicalAddressForBuilding } from "@/lib/house-clusters";
 import { canonicalHouseId, newEditCode, newPublicId, sameHouseId, toPublicHouse } from "@/lib/ids";
-import { config, formatDisplayAddress } from "@/lib/config";
+import { normalizeAddressFields } from "@/lib/address-fields";
+import { config } from "@/lib/config";
 import { assertRealAddress } from "@/lib/geocode";
 import {
   defaultTreatStock,
@@ -150,8 +151,11 @@ function normalizeHouse(house: House & { status?: string; rejectionReason?: stri
   const { treats, treatStock } = normalizeTreats(base.treats, base.treatStock);
   const hours = syncHoursFields(houseHoursWindows(base));
   const decor = syncDecorFields(base);
+  const addressFields = normalizeAddressFields(base);
   return {
     ...base,
+    address: addressFields.address,
+    neighborhood: addressFields.neighborhood,
     theme,
     arrival: base.arrival ?? "",
     accessible: Boolean(base.accessible),
@@ -784,13 +788,16 @@ export async function submitHouse(
     );
     const decor = syncDecorFields({ ...input, visit });
     const canonical = canonicalAddressForBuilding(input.address, db.houses);
+    const addressFields = normalizeAddressFields({
+      address: canonical,
+      neighborhood: input.neighborhood,
+      lat: input.lat,
+      lng: input.lng,
+    });
     const house: House = {
       ...input,
-      address: formatDisplayAddress({
-        address: canonical,
-        lat: input.lat,
-        lng: input.lng,
-      }),
+      address: addressFields.address,
+      neighborhood: addressFields.neighborhood,
       treats,
       treatStock,
       visit,
@@ -816,6 +823,7 @@ export async function submitHouse(
 
 function ownerAddressChanged(current: House, patch: Partial<HouseInput> & NightPatch) {
   if (patch.address !== undefined && patch.address.trim() !== current.address.trim()) return true;
+  if (patch.neighborhood !== undefined && patch.neighborhood !== current.neighborhood) return true;
   if (patch.lat !== undefined && patch.lat !== current.lat) return true;
   if (patch.lng !== undefined && patch.lng !== current.lng) return true;
   return false;
@@ -838,8 +846,15 @@ function applyOwnerPatch(house: House, patch: Partial<HouseInput> & NightPatch) 
   }
   Object.assign(house, clean);
   if (patch.ownerFrozenUntil !== undefined) house.ownerFrozenUntil = patch.ownerFrozenUntil;
-  if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
-    house.address = formatDisplayAddress(house);
+  if (
+    patch.address !== undefined ||
+    patch.neighborhood !== undefined ||
+    patch.lat !== undefined ||
+    patch.lng !== undefined
+  ) {
+    const fields = normalizeAddressFields(house);
+    house.address = fields.address;
+    house.neighborhood = fields.neighborhood;
   }
   if (house.photoUrl) {
     const parsed = parsePhotoUrl(house.photoUrl);
@@ -964,12 +979,20 @@ export async function adminUpdate(
     if (patch.name !== undefined) house.name = patch.name;
     if (patch.theme !== undefined) house.theme = patch.theme;
     if (patch.address !== undefined) house.address = patch.address;
+    if (patch.neighborhood !== undefined) house.neighborhood = patch.neighborhood;
     if (patch.arrival !== undefined) house.arrival = patch.arrival;
     if (patch.description !== undefined) house.description = patch.description;
     if (patch.lat !== undefined) house.lat = patch.lat;
     if (patch.lng !== undefined) house.lng = patch.lng;
-    if (patch.address !== undefined || patch.lat !== undefined || patch.lng !== undefined) {
-      house.address = formatDisplayAddress(house);
+    if (
+      patch.address !== undefined ||
+      patch.neighborhood !== undefined ||
+      patch.lat !== undefined ||
+      patch.lng !== undefined
+    ) {
+      const fields = normalizeAddressFields(house);
+      house.address = fields.address;
+      house.neighborhood = fields.neighborhood;
     }
     if (patch.treats !== undefined) house.treats = patch.treats;
     if (patch.treatStock !== undefined) house.treatStock = { ...house.treatStock, ...patch.treatStock };

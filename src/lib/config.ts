@@ -25,8 +25,6 @@ const NEIGHBORHOOD_CENTERS: Record<NeighborhoodId, { lat: number; lng: number }>
   "נחלת גנים": { lat: 32.0928, lng: 34.8188 },
 };
 
-const ADDRESS_AREA_NAMES = [...NEIGHBORHOODS, "הגפן"] as const;
-
 export const config = {
   /** Home-screen / PWA / OS notification name. In-app chrome uses brandEn. */
   appName: "HallowHood",
@@ -109,9 +107,11 @@ export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId
 
 export function resolveNeighborhood(house: {
   address?: string;
+  neighborhood?: NeighborhoodId | null;
   lat?: number;
   lng?: number;
 }): NeighborhoodId | null {
+  if (house.neighborhood !== undefined) return house.neighborhood;
   const lat = house.lat;
   const lng = house.lng;
   const hasCoords =
@@ -129,40 +129,27 @@ export function resolveNeighborhood(house: {
 /** Street + neighborhood for UI (never city / רמת גן). */
 export function formatDisplayAddress(house: {
   address: string;
+  neighborhood?: NeighborhoodId | null;
   lat?: number;
   lng?: number;
 }): string {
-  const street = streetPartForDisplay(house.address);
+  const street = house.address.trim();
   const area = resolveNeighborhood(house);
-  if (!street) return area ?? house.address.trim();
+  if (!street) return area ?? "";
   if (!area) return street;
   return `${street}, ${area}`;
 }
 
 /** Street + city for maps links — neighborhood names confuse geocoders (e.g. חרוזים). */
 export function formatMapsAddress(house: { address: string }): string {
-  const street = streetPartForDisplay(house.address).trim();
+  const street = house.address.trim();
   if (!street) return "";
   if (/רמת\s*גן/u.test(street)) return street;
   return `${street}, רמת גן`;
 }
 
-function streetPartForDisplay(address: string): string {
-  let text = address.trim();
-  text = text
-    .replace(/,?\s*רמת\s*גן\s*$/iu, "")
-    .replace(/,?\s*Ramat\s*Gan\s*$/iu, "")
-    .replace(/,?\s*ישראל\s*$/iu, "")
-    .trim();
-  for (const name of ADDRESS_AREA_NAMES) {
-    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    text = text.replace(new RegExp(`,?\\s*${escaped}\\s*$`, "u"), "").trim();
-  }
-  return text;
-}
-
 export function houseInNeighborhoods(
-  house: { address: string; lat?: number; lng?: number },
+  house: { address: string; neighborhood?: NeighborhoodId | null; lat?: number; lng?: number },
   selected: readonly NeighborhoodId[],
 ) {
   if (selected.length === 0) return false;

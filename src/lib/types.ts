@@ -42,6 +42,8 @@ export type StockLevel = (typeof STOCK_LEVELS)[number];
 export const CANDY_TONE_IDS = ["none", "plenty", "low", "out"] as const;
 export type CandyTone = (typeof CANDY_TONE_IDS)[number];
 
+import type { NeighborhoodId } from "@/lib/config";
+
 export const VISIT_STATES = ["come", "decorOnly", "closed"] as const;
 export type VisitState = (typeof VISIT_STATES)[number];
 
@@ -55,7 +57,10 @@ export type House = {
   id: string;
   name: string;
   theme: HouseTheme;
+  /** Street + house number only (e.g. יהודית 15). */
   address: string;
+  /** One of the three map neighborhoods; joined for display only. */
+  neighborhood?: NeighborhoodId | null;
   arrival: string;
   description: string;
   lat: number;
@@ -91,6 +96,7 @@ export type HouseInput = {
   name: string;
   theme: HouseTheme;
   address: string;
+  neighborhood?: NeighborhoodId | null;
   arrival: string;
   description: string;
   lat: number;

@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { scareShort, decorShort, suggestedHouseName, nameMatchesTheme, themeFromName } from "@/lib/labels";
-import { config, formatDisplayAddress, inNeighborhood, NEIGHBORHOODS } from "@/lib/config";
+import { neighborhoodFromAddressHit, streetFromAddressHit } from "@/lib/address-fields";
+import { config, inNeighborhood, NEIGHBORHOODS } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
 import {
@@ -194,7 +195,7 @@ export function HouseForm({
 
   function onAddressTyped(value: string) {
     setAddressOk(false);
-    setForm((f) => ({ ...f, address: value }));
+    setForm((f) => ({ ...f, address: value, neighborhood: undefined }));
   }
 
   function onAddressSelect(hit: AddressHit) {
@@ -208,7 +209,8 @@ export function HouseForm({
     }
     setForm((f) => ({
       ...f,
-      address: formatDisplayAddress({ address: hit.label, lat: hit.lat, lng: hit.lng }),
+      address: streetFromAddressHit(hit),
+      neighborhood: neighborhoodFromAddressHit(hit),
       lat: hit.lat,
       lng: hit.lng,
     }));
@@ -240,7 +242,8 @@ export function HouseForm({
       ...f,
       lat,
       lng,
-      address: formatDisplayAddress({ address: hit.label, lat, lng }),
+      address: streetFromAddressHit(hit),
+      neighborhood: neighborhoodFromAddressHit(hit),
     }));
     setAddressOk(true);
   }
