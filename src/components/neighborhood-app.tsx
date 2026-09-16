@@ -65,6 +65,7 @@ import { buildWalkingRoute } from "@/lib/route";
 import { diffRouteBySkippedIds, rebuildRouteAfterSkipChange } from "@/lib/route-changes";
 import { drainPendingRouteRestores } from "@/lib/route-mode";
 import {
+  availableTemporaryRestoreOptions,
   skipStatusSnapshot,
   shouldEmitTemporarySkipRestoreAlert,
   temporaryRestoreAlertText,
