@@ -161,6 +161,14 @@ export function AdminStatsCard({
           />
           <Tile icon={<Moon className="size-4" />} label="סגורים" value={stats.closed} />
         </div>
+        <Subhead>נגישות</Subhead>
+        <Tile
+          icon={<StrollerSign className="size-8" />}
+          label="נגיש"
+          value={stats.accessible}
+          plain
+          wide
+        />
         <Subhead>ממתקים</Subhead>
         <div className="grid grid-cols-2 gap-2">
           <Tile
@@ -239,15 +247,6 @@ export function AdminStatsCard({
             plain
           />
         </div>
-      </Section>
-      <Section title="נגישות">
-        <Tile
-          icon={<StrollerSign className="size-8" />}
-          label="נגיש"
-          value={stats.accessible}
-          plain
-          wide
-        />
       </Section>
     </div>
   );
