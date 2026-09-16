@@ -194,7 +194,6 @@ export function NeighborhoodApp({
     pendingRouteGps,
     rebuildPinnedRoute,
   } = useNeighborhoodRoute({
-    visible,
     houses,
     filters,
     filterContext,
@@ -364,17 +363,8 @@ export function NeighborhoodApp({
     }
   }, [routeMode, housesForSkipCount, now, filters, skips.skippedIds.join("\0")]);
 
-  function handleSkipHouse(id: string) {
-    const house = houses.find((item) => item.id === id);
-    if (!house) return;
-    setSkipDialogHouse(house);
-  }
-
-  function confirmSkipHouse(reason: SkipReasonId, temporary: boolean) {
-    const house = skipDialogHouse;
-    if (!house) return;
+  function applySkipHouse(house: PublicHouse, reason: SkipReasonId, temporary: boolean) {
     const wasSkipped = skips.skipped(house.id);
-    setSkipDialogHouse(null);
     const meta = {
       reason,
       temporary,
@@ -393,6 +383,25 @@ export function NeighborhoodApp({
     if (routeMode && !wasSkipped) {
       applyRouteAfterSkipChange(nextSkippedIds, false);
     }
+  }
+
+  function handleSkipHouse(id: string) {
+    const house = houses.find((item) => item.id === id);
+    if (!house) return;
+    const editing = skips.skipped(id);
+    const canTempSkip = availableTemporaryRestoreOptions(house, now, filters).length > 0;
+    if (!editing && !canTempSkip) {
+      applySkipHouse(house, "other", false);
+      return;
+    }
+    setSkipDialogHouse(house);
+  }
+
+  function confirmSkipHouse(reason: SkipReasonId, temporary: boolean) {
+    const house = skipDialogHouse;
+    if (!house) return;
+    setSkipDialogHouse(null);
+    applySkipHouse(house, reason, temporary);
   }
 
   function unskipFromDialog() {

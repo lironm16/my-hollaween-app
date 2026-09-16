@@ -7,7 +7,7 @@ import {
   trimWalkingRouteToVisible,
   type WalkingRoute,
 } from "@/lib/route";
-import { routeCandidateHouses } from "@/lib/route-changes";
+import { rebuildRouteAfterSkipChange, routeCandidateHouses } from "@/lib/route-changes";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
@@ -19,7 +19,6 @@ function originPoint(origin: ResolvedOrigin) {
 }
 
 export function useNeighborhoodRoute({
-  visible,
   houses,
   filters,
   filterContext,
@@ -32,7 +31,6 @@ export function useNeighborhoodRoute({
   setAskedLocation,
   onBeforeEnter,
 }: {
-  visible: PublicHouse[];
   houses: PublicHouse[];
   filters: HouseFiltersState;
   filterContext: {
@@ -55,11 +53,6 @@ export function useNeighborhoodRoute({
   const [pinnedRoute, setPinnedRoute] = useState<WalkingRoute | null>(null);
   const [routeFitTick, setRouteFitTick] = useState(0);
   const pendingRouteGps = useRef(false);
-  const visibleKey = useMemo(
-    () => visible.map((house) => house.id).sort().join("\0"),
-    [visible],
-  );
-
   const routeCandidates = useMemo(
     () =>
       routeCandidateHouses(houses, filters, {
@@ -110,26 +103,43 @@ export function useNeighborhoodRoute({
     if (!routeMode || pendingRouteGps.current) return;
     setPinnedRoute((current) => {
       if (!current) return current;
+      const context = { ...filterContext, skippedIds };
       const candidateIds = new Set(routeCandidates.map((house) => house.id));
-      const trimmed = trimWalkingRouteToVisible(current, candidateIds);
-      if (!trimmed) return null;
-      const stopIds = trimmed.stops.map((stop) => stop.house.id).join("\0");
-      const currentIds = current.stops.map((stop) => stop.house.id).join("\0");
+      const currentStopIds = current.stops.map((stop) => stop.house.id);
+      const hasNewCandidates = routeCandidates.some((house) => !currentStopIds.includes(house.id));
+      const hasRemovedStops = currentStopIds.some((id) => !candidateIds.has(id));
       const originUnchanged =
         current.origin.lat === origin.lat && current.origin.lng === origin.lng;
-      if (stopIds === currentIds && originUnchanged && current.accessible === accessibleOnly) {
-        return current;
-      }
-      return refreshWalkingRoute(trimmed, originPoint(origin), {
-        startedFrom: origin.kind,
+      const routeOptions = {
         accessible: accessibleOnly,
+        startedFrom: origin.kind,
         originLabel: origin.label,
-      });
+      };
+
+      if (!hasNewCandidates && !hasRemovedStops) {
+        if (originUnchanged && current.accessible === accessibleOnly) return current;
+        const trimmed = trimWalkingRouteToVisible(current, candidateIds);
+        if (!trimmed) return null;
+        return refreshWalkingRoute(trimmed, originPoint(origin), routeOptions);
+      }
+
+      return rebuildRouteAfterSkipChange(
+        current,
+        houses,
+        filters,
+        context,
+        skippedIds,
+        hasNewCandidates,
+        originPoint(origin),
+        routeOptions,
+      );
     });
   }, [
     routeMode,
-    visibleKey,
-    skippedIds.join("\0"),
+    houses,
+    filters,
+    filterContext,
+    skippedIds,
     origin.lat,
     origin.lng,
     origin.kind,
