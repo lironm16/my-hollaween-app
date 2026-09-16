@@ -487,6 +487,65 @@ export function HouseForm({
           ) : null}
           {hoursIssue ? <p className="text-base text-red-300">{hoursIssue}</p> : null}
         </div>
+        <div
+          className={
+            nightStatusEnabled
+              ? "space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20"
+              : "space-y-2 rounded-xl bg-[#1d1028] p-3 opacity-45 ring-1 ring-orange-500/20"
+          }
+        >
+          <p className="text-base font-medium text-orange-100">
+            סגירה או הפסקה ידנית — לא חלונות השעות
+          </p>
+          <p className="text-base text-violet-300">
+            {nightStatusEnabled
+              ? "לסמן שעכשיו לא מקבלים מבקרים, בלי לשנות השעות למעלה — הפסקה זמנית או סגור לערב."
+              : `נפתח בליל האלווין, בזמן שמוגדר למעלה. אז אפשר לסמן הפסקה זמנית או סגירה לערב.${
+                  admin ? " לבדיקות: תפריט מנהל → בדיקות." : ""
+                }`}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              disabled={!nightStatusEnabled}
+              onClick={() => setNightStatus("open")}
+              className={
+                nightStatus === "open"
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
+              }
+            >
+              <span className="night-status-dot is-open" />
+              פתוח
+            </button>
+            <button
+              type="button"
+              disabled={!nightStatusEnabled}
+              onClick={() => setNightStatus("pause")}
+              className={
+                nightStatus === "pause"
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
+              }
+            >
+              <span className="night-status-dot is-break" />
+              הפסקה
+            </button>
+            <button
+              type="button"
+              disabled={!nightStatusEnabled}
+              onClick={() => setNightStatus("stop")}
+              className={
+                nightStatus === "stop"
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
+              }
+            >
+              <span className="night-status-dot is-closed" />
+              סגור
+            </button>
+          </div>
+        </div>
       </FormSection>
       <FormSection title="מה יפגשו בבית">
         <div>
@@ -539,56 +598,6 @@ export function HouseForm({
                 {tone.label}
               </button>
             ))}
-          </div>
-        </div>
-        <div className={nightStatusEnabled ? undefined : "opacity-45"}>
-          <p className="mb-2 text-base font-medium">הפסקה וסגירה</p>
-          {nightStatusEnabled ? null : (
-            <p className="mb-2 text-base text-violet-300">
-              נפתח בליל האלווין, משעת הפעילות של הבית. אז אפשר לסמן הפסקה זמנית או סגירה לערב.
-              {admin ? " לבדיקות: תפריט מנהל → בדיקות." : ""}
-            </p>
-          )}
-          <div className="flex flex-wrap gap-1.5">
-            <button
-              type="button"
-              disabled={!nightStatusEnabled}
-              onClick={() => setNightStatus("open")}
-              className={
-                nightStatus === "open"
-                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
-                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
-              }
-            >
-              <span className="night-status-dot is-open" />
-              פתוח
-            </button>
-            <button
-              type="button"
-              disabled={!nightStatusEnabled}
-              onClick={() => setNightStatus("pause")}
-              className={
-                nightStatus === "pause"
-                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
-                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
-              }
-            >
-              <span className="night-status-dot is-break" />
-              הפסקה
-            </button>
-            <button
-              type="button"
-              disabled={!nightStatusEnabled}
-              onClick={() => setNightStatus("stop")}
-              className={
-                nightStatus === "stop"
-                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
-                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
-              }
-            >
-              <span className="night-status-dot is-closed" />
-              סגור
-            </button>
           </div>
         </div>
         <div
