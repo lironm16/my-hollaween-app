@@ -36,13 +36,16 @@ jobs:
       - name: Production build
         run: npm run build
 
+      - name: API integration
+        run: npm run test:api
+
       - name: Stress test
         run: npm run test:stress
         env:
           CI: true
           CONCURRENCY: 200
 
-      - name: Offline catalog E2E
+      - name: Browser E2E
         run: npm run test:e2e
         env:
           CI: true

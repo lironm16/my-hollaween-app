@@ -74,9 +74,10 @@ npm run dev
 
 ```bash
 npm test              # בדיקות יחידה בלבד (מהיר)
-npm run test:e2e      # E2E לא מקוון (Playwright — דורש build)
-npm run test:all      # יחידה + עומס + E2E
-npm run ci            # כמו CI: יחידה, build, עומס, E2E
+npm run test:api      # אינטגרציה API (שרת מבודד)
+npm run test:e2e      # E2E בדפדפן (Playwright — דורש build)
+npm run test:all      # יחידה + API + עומס + E2E
+npm run ci            # כמו CI: יחידה, build, API, עומס, E2E
 ```
 
 בדיקות היחידה רצות עם Node test runner על `src/**/*.test.ts`.  

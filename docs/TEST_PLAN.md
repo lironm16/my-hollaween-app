@@ -10,14 +10,15 @@
 
 ```bash
 npm test              # Unit tests only (src/lib/*.test.ts)
+npm run test:api      # API integration (isolated server, port auto-picked)
 npm run test:stress   # Load test — GET /api/catalog + /catalog.json
-npm run test:e2e      # Playwright offline catalog E2E
-npm run test:all      # Unit + stress + E2E
-npm run ci            # Unit + build + stress + E2E (local CI mirror)
+npm run test:e2e      # Playwright E2E (offline + visitor flows)
+npm run test:all      # Unit + API + stress + E2E
+npm run ci            # Unit + build + API + stress + E2E (local CI mirror)
 npm run lint          # ESLint (not in CI yet — 36 existing errors)
 ```
 
-**CI** (`.github/workflows/ci.yml`): unit → build → stress (200 concurrent) → offline E2E on every PR and `main` push.
+**CI** (`.github/workflows/ci.yml`): unit → build → API integration → stress (200 concurrent) → browser E2E on every PR and `main` push.
 
 **Rehearsal mode** for time-sensitive manual tests: `/?rehearsal=open` or Admin → חזרה כללית.
 
@@ -51,7 +52,7 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 
 ## 2. Automated coverage map
 
-### Unit tests (`src/lib/*.test.ts` — 24 files, ~140 cases)
+### Unit tests (`src/lib/*.test.ts` — 25 files, ~143 cases)
 
 | Domain | Covered |
 |--------|---------|
@@ -64,6 +65,7 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | Address fields, photos, nav links, storage errors | ✅ |
 | Admin snapshot, rehearsal stubs, quick-update logic | ✅ |
 | Map a11y announcements (logic) | ✅ |
+| CSV export (`house-csv.test.ts`) | ✅ EXP-01 |
 
 ### Load test (`scripts/stress-test.mjs`)
 
@@ -72,15 +74,36 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | GET `/api/catalog` | ✅ p50/p95/p99, error rate |
 | GET `/catalog.json` | ✅ same |
 
-### E2E (`scripts/check-offline-catalog.mjs`)
+### API integration (`scripts/api-integration.mjs`)
 
-| Scenario | Coverage |
-|----------|----------|
-| Catalog saved to localStorage after first load | ✅ |
-| List view shows cached houses | ✅ |
-| Server-down banner with cached list (sim-server) | ✅ |
-| Offline banner with cached list | ✅ |
-| `/offline.html` lists saved houses | ✅ |
+| Scenario | Manual ID | Coverage |
+|----------|-----------|----------|
+| GET `/api/catalog` JSON + poll headers | — | ✅ |
+| GET `/api/catalog?since=…` delta | — | ✅ |
+| Admin login reject / accept + session | ADM-01 | ✅ |
+| POST `/api/houses` out of bounds | ADD-02 | ✅ |
+| POST `/api/houses` create + catalog + admin delete | ADD-01 | ✅ |
+
+### E2E — offline (`scripts/check-offline-catalog.mjs`)
+
+| Scenario | Manual ID | Coverage |
+|----------|-----------|----------|
+| Catalog saved to localStorage after first load | OFF-01 | ✅ |
+| List view shows cached houses | MAP-04 | ✅ |
+| Server-down banner with cached list (sim-server) | OFF-02 | ✅ |
+| Offline banner with cached list | OFF-03 | ✅ |
+| `/offline.html` lists saved houses | OFF-05 | ✅ |
+
+### E2E — visitor flows (`scripts/e2e-visitor-flows.mjs`)
+
+| Scenario | Manual ID | Coverage |
+|----------|-----------|----------|
+| Map loads with houses (rehearsal) | MAP-01 | ✅ |
+| Map ↔ list toggle | MAP-04 | ✅ |
+| List row opens house detail | MAP-02 | ✅ |
+| Open-now filter in rehearsal | MAP-06 | ✅ |
+| Route mode controls | ROUTE-01 | ✅ |
+| `/offline.html` empty state (no cache) | OFF-04 | ✅ |
 
 ### Not automated
 
@@ -88,14 +111,16 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 |------|-------|-------|
 | React components | 87 files | UI/visual |
 | Hooks | 20 files | Client state |
-| Pages/routes | 22 pages | Navigation flows |
-| API routes | 23 routes | CRUD, admin, push, walk-route |
+| Most pages/routes | 22 pages | search, add form UI, admin UI |
+| Remaining API routes | push, walk-route, photo upload | Partial CRUD covered |
 | Service Worker | `public/sw.js` | Precache, tile cache |
-| Push delivery E2E | — | Real device + permission |
-| Photo upload | — | Cloudinary/Blob |
+| Push delivery E2E | PUSH-01–07 | Real device + permission |
+| PWA install (A2HS) | INS-02–06 | OS-level UX |
+| Photo upload | EDIT-03 | Cloudinary/Blob |
 | Firestore activity totals | — | Production integration |
-| Excel export UI | — | Download flow |
+| Excel download button | EXP-01 UI | CSV logic unit-tested |
 | Cross-browser visual | — | Hebrew RTL, map tiles |
+| GPS / real location | ORIGIN-02 | Device permission |
 
 ---
 
@@ -147,7 +172,7 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | OFF-01 | First visit online | Catalog cached | ✅ E2E |
 | OFF-02 | Server down | "השרת לא עונה" + saved list | ✅ E2E |
 | OFF-03 | No internet | "אין אינטרנט" + saved list | ✅ E2E |
-| OFF-04 | First visit offline (no cache) | "אין עותק שמור" | Manual |
+| OFF-04 | First visit offline (no cache) | "אין עותק שמור" | ✅ E2E (`offline.html`) |
 | OFF-05 | `/offline.html` | Saved houses list | ✅ E2E |
 | OFF-06 | Auto-refresh (~3 min) | Catalog updates when online | Manual |
 | OFF-07 | Owner offline queue | Syncs when network returns | Manual |
@@ -191,7 +216,11 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 
 | Manual ID | Auto test |
 |-----------|-----------|
-| OFF-01, OFF-02, OFF-03, OFF-05 | `npm run test:e2e` |
+| OFF-01–05 | `npm run test:e2e` |
+| MAP-01, MAP-02, MAP-04, MAP-06 | `e2e-visitor-flows.mjs` |
+| ROUTE-01 | `e2e-visitor-flows.mjs` |
+| ADD-01, ADD-02, ADM-01 | `npm run test:api` |
+| EXP-01 (CSV logic) | `house-csv.test.ts` |
 | Filter logic | `filter-houses.test.ts` |
 | Route ordering | `route-order.test.ts` |
 | PWA manifest | `pwa-manifest.test.ts` |
@@ -201,12 +230,11 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 
 | Manual ID | Proposed test | Framework |
 |-----------|---------------|-----------|
-| MAP-02, MAP-04 | Pin click → sheet; map/list toggle | Playwright |
-| MAP-05, MAP-06 | Filter count + dimmed pins | Playwright + rehearsal URL |
-| ROUTE-01, ROUTE-03 | Route line / empty state | Playwright |
-| ADD-01, ADD-02 | POST `/api/houses` | API integration (`node:test`) |
-| ADM-01 | Login session cookie | API test |
-| EXP-01 | Excel headers + row count | Unit test on `house-csv.ts` |
+| MAP-05 | Filter dimmed pins on map | Playwright |
+| ROUTE-03, ROUTE-04 | Empty route / completion cheer | Playwright |
+| MAP-07–11 | Like, visit, skip flows | Playwright + localStorage asserts |
+| EXP-02 | Search house page | Playwright |
+| ADM-03–04 | Freeze / delete via admin API | API integration |
 | SW precache | SW install + cached shell | Playwright |
 
 ### Must stay manual
@@ -237,14 +265,14 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 ## 6. Coverage summary
 
 ```
-Automated:     ~35% business logic (lib layer)
-               ~10% total surface (E2E offline + stress)
+Automated:     ~40% business logic (lib layer)
+               ~25% total surface (API + E2E + stress)
 
-Manual P0:     ~40% (visitor + offline edge cases + install)
+Manual P0:     ~25% (install, push, GPS, photo upload)
 
-Convertible:   ~20% of manual → Playwright + API tests
+Convertible:   ~15% of remaining manual → Playwright + API
 
-Must stay manual: ~15% (A2HS, push, GPS, multi-device)
+Must stay manual: ~15% (A2HS, push permissions, multi-device)
 ```
 
 ---
