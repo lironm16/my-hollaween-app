@@ -10,7 +10,12 @@
 import { spawnSync } from "node:child_process";
 import { createTestServerManager } from "./lib/test-server.mjs";
 
-const E2E_SCRIPTS = ["scripts/check-offline-catalog.mjs", "scripts/e2e-visitor-flows.mjs"];
+const E2E_SCRIPTS = [
+  "scripts/check-offline-catalog.mjs",
+  "scripts/e2e-visitor-flows.mjs",
+  "scripts/e2e-batch3.mjs",
+  "scripts/check-sw-precache.mjs",
+];
 const server = createTestServerManager({ label: "e2e" });
 
 function onSignal(code) {

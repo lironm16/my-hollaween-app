@@ -189,6 +189,14 @@ async function testHouseCreate(adminCookie) {
 
   await deleteHouse(adminCookie, created.house.id);
   pass("admin deletes created test house");
+
+  const afterDelete = await json("GET", "/api/catalog");
+  if (afterDelete.data.houses?.some((house) => house.id === created.house.id)) {
+    fail("ADM-04 deleted house should not appear in public catalog");
+  } else {
+    pass("ADM-04 admin delete removes house from catalog");
+  }
+
   return created;
 }
 

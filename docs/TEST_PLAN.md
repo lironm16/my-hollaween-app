@@ -52,7 +52,7 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 
 ## 2. Automated coverage map
 
-### Unit tests (`src/lib/*.test.ts` — 28 files, 145 cases)
+### Unit tests (`src/lib/*.test.ts` — 29 files, 147 cases)
 
 | Domain | Covered |
 |--------|---------|
@@ -68,6 +68,7 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | CSV export (`house-csv.test.ts`) | ✅ EXP-01 |
 | Search matching (`house-search.test.ts`) | ✅ EXP-02 logic |
 | Add-form minimum rule (`house-submit-minimum.test.ts`) | ✅ ADD-03 client rule |
+| Multi-unit cluster grouping (`house-clusters.test.ts`) | ✅ MAP-03 logic |
 
 ### Load test (`scripts/stress-test.mjs`)
 
@@ -88,6 +89,7 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | POST `/api/houses` create + catalog + admin delete | ADD-01 | ✅ |
 | POST `/api/houses/[id]/unlock` wrong / correct code | ADD-04, ADD-05 | ✅ |
 | Admin PATCH freeze (`adminFrozen`) | ADM-03 | ✅ |
+| Admin DELETE removes house from catalog | ADM-04 | ✅ |
 | Admin CSV export Hebrew headers | ADM-08 | ✅ |
 
 ### E2E — offline (`scripts/check-offline-catalog.mjs`)
@@ -114,6 +116,13 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | Route mode controls | ROUTE-01 | ✅ |
 | Skip link → list view | A11Y-01 | ✅ |
 | Search page opens house | EXP-02 | ✅ |
+| Filter dims non-matching pins | MAP-05 | ✅ |
+| Multi-unit address data in catalog | MAP-03 | ✅ (logic in unit test) |
+| Skip house + skipped page restore | MAP-10, EXP-03 | ✅ |
+| Temp skip restore alert | MAP-11 | ✅ |
+| Route respects filters / completion cheer | ROUTE-02, ROUTE-04 | ✅ |
+| My houses page | MY-01 | ✅ |
+| Service worker shell precache | SW precache | ✅ |
 | `/offline.html` empty state (no cache) | OFF-04 | ✅ |
 
 ### Not automated
@@ -229,9 +238,12 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 |-----------|-----------|
 | OFF-01–05 | `npm run test:e2e` |
 | MAP-01, MAP-02, MAP-04, MAP-06–09, MAP-07–08 | `e2e-visitor-flows.mjs` |
+| MAP-03, MAP-05, MAP-10–11, ROUTE-02, ROUTE-04, EXP-03, MY-01 | `e2e-batch3.mjs` |
 | ROUTE-01, ROUTE-03 | `e2e-visitor-flows.mjs` |
 | A11Y-01, EXP-02 | `e2e-visitor-flows.mjs` |
-| ADD-01, ADD-02, ADD-04, ADD-05, ADM-01, ADM-03, ADM-08, ADM-09 | `npm run test:api` |
+| SW precache | `check-sw-precache.mjs` |
+| ADD-01, ADD-02, ADD-04, ADD-05, ADM-01, ADM-03, ADM-04, ADM-08, ADM-09 | `npm run test:api` |
+| MAP-03 cluster grouping | `house-clusters.test.ts` |
 | ADD-03 (client rule) | `house-submit-minimum.test.ts` |
 | EXP-01 (CSV logic) | `house-csv.test.ts` |
 | Filter logic | `filter-houses.test.ts` |
@@ -243,11 +255,9 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 
 | Manual ID | Proposed test | Framework |
 |-----------|---------------|-----------|
-| MAP-05 | Filter dimmed pins on map | Playwright |
-| ROUTE-04 | Route completion cheer | Playwright |
-| MAP-10–11 | Skip / restore flows | Playwright + localStorage asserts |
-| ADM-04 | Admin delete via UI | API integration (delete covered in ADD-01) |
-| SW precache | SW install + cached shell | Playwright |
+| MAP-03 | Cluster pin tap → address overview UI | Playwright (needs map viewport) |
+| PUSH API | `/api/push/public-key`, subscribe | API integration |
+| Walk route API | `/api/walk-route` | API integration |
 
 ### Must stay manual
 
