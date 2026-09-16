@@ -16,7 +16,6 @@ export type SnapshotHouse = House | PublicHouse;
 
 export type AdminSnapshot = {
   devicesSeen: number;
-  online: number;
   devicesNewHouse: number;
   devicesHouseStatus: number;
   devicesAdmin: number;
@@ -76,7 +75,6 @@ export function buildSnapshotStats(input: {
     houses: input.houses,
     subscriptions: [],
     devicesSeen: 0,
-    online: 0,
     now: input.now,
     houseSet: input.houseSet,
   });
@@ -126,7 +124,6 @@ export function buildAdminSnapshot(input: {
   houses: SnapshotHouse[];
   subscriptions: PushSubscriptionRecord[];
   devicesSeen: number;
-  online: number;
   now?: Date;
   /** Public תמונת מצב should count real houses only — not rehearsal stubs. */
   houseSet?: HouseSet;
@@ -139,7 +136,6 @@ export function buildAdminSnapshot(input: {
 
   return {
     devicesSeen: input.devicesSeen,
-    online: input.online,
     devicesNewHouse: input.subscriptions.filter((item) =>
       subscriptionAllowsTopic(item, "newHouse"),
     ).length,
