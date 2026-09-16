@@ -1,14 +1,9 @@
-import { formatDisplayAddress } from "@/lib/config";
+import { formatDisplayAddress, formatMapsAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 
-function mapsQueryFor(house: PublicHouse) {
-  const displayAddress = formatDisplayAddress(house);
-  return /רמת\s*גן/u.test(displayAddress) ? displayAddress : `${displayAddress}, רמת גן`;
-}
-
 export function houseMapsUrl(house: PublicHouse) {
-  const query = mapsQueryFor(house).trim();
+  const query = formatMapsAddress(house).trim();
   if (query) {
     return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}&travelmode=walking`;
   }

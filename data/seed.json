@@ -5,7 +5,7 @@
       "id": "בית-1847",
       "name": "בית משפחת לוי",
       "theme": "pumpkin",
-      "address": "חרוזים 8, חרוזים",
+      "address": "חרוזים 8",
       "arrival": "קומה 1, דירה 3, ימינה אחרי הדואר",
       "description": "סטאב לחזרה — דלעות על המדרגה ושקית ממתקים לכל ילד. הכלב בפנים.",
       "lat": 32.0916477,
@@ -39,13 +39,14 @@
       "photoUrl": "/images/stubs/pumpkin-porch.jpg",
       "editCode": "184701",
       "createdAt": "2026-09-01T10:00:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "חרוזים"
     },
     {
       "id": "בית-1848",
       "name": "הפמקין שלי",
       "theme": "candy",
-      "address": "חרוזים 8, חרוזים",
+      "address": "חרוזים 8",
       "arrival": "קומה 7, דירה 34, מעלית עד הסוף",
       "description": "סטאב לחזרה — אותו בניין — דלעות בחלון וממתקים בלי אגוזים ליד הדלת.",
       "lat": 32.0916477,
@@ -81,13 +82,14 @@
       "photoUrl": "/images/stubs/purple-lights.jpg",
       "editCode": "184802",
       "createdAt": "2026-09-01T10:02:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "חרוזים"
     },
     {
       "id": "בית-1849",
       "name": "בית משפחת אזולאי",
       "theme": "skeleton",
-      "address": "חרוזים 8, חרוזים",
+      "address": "חרוזים 8",
       "arrival": "קומה 4, דירה 16, דלת ירוקה",
       "description": "סטאב לחזרה — שלדים במסדרון ומעט ממתקים בלי שומשום. שלוש דירות באותו בניין.",
       "lat": 32.0916477,
@@ -123,13 +125,14 @@
       "photoUrl": "/images/stubs/skeleton-yard.jpg",
       "editCode": "184903",
       "createdAt": "2026-09-03T13:00:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "חרוזים"
     },
     {
       "id": "בית-9310",
       "name": "הבית שנפתח בקרוב",
       "theme": "ghost",
-      "address": "חרוזים 10, חרוזים",
+      "address": "חרוזים 10",
       "arrival": "קומה קרקע, דלת כתומה",
       "description": "סטאב לחזרה — נפתח בקרוב.",
       "lat": 32.0919,
@@ -163,13 +166,14 @@
       "photoUrl": "/images/stubs/spider-door.jpg",
       "editCode": "931016",
       "createdAt": "2026-09-05T05:50:00.000Z",
-      "updatedAt": "2026-09-05T05:50:00.000Z"
+      "updatedAt": "2026-09-05T05:50:00.000Z",
+      "neighborhood": "חרוזים"
     },
     {
       "id": "בית-9311",
       "name": "הבית שנסגר בקרוב",
       "theme": "pumpkin",
-      "address": "חרוזים 14, חרוזים",
+      "address": "חרוזים 14",
       "arrival": "קומה 1, דירה 2",
       "description": "סטאב לחזרה — נסגר בקרוב.",
       "lat": 32.0914,
@@ -203,13 +207,14 @@
       "photoUrl": "/images/stubs/graveyard-lawn.jpg",
       "editCode": "931117",
       "createdAt": "2026-09-05T05:50:00.000Z",
-      "updatedAt": "2026-09-05T05:50:00.000Z"
+      "updatedAt": "2026-09-05T05:50:00.000Z",
+      "neighborhood": "חרוזים"
     },
     {
       "id": "בית-9312",
       "name": "בית בהפסקה",
       "theme": "witch",
-      "address": "חרוזים 16, חרוזים",
+      "address": "חרוזים 16",
       "arrival": "השער הקטן מהסמטה",
       "description": "סטאב לחזרה — הפסקה בין חלונות.",
       "lat": 32.091,
@@ -247,13 +252,14 @@
       "photoUrl": "/images/stubs/witch-cauldron.jpg",
       "editCode": "931218",
       "createdAt": "2026-09-05T05:50:00.000Z",
-      "updatedAt": "2026-09-05T05:50:00.000Z"
+      "updatedAt": "2026-09-05T05:50:00.000Z",
+      "neighborhood": "חרוזים"
     },
     {
       "id": "בית-9313",
       "name": "הבית הסגור",
       "theme": "skeleton",
-      "address": "חרוזים 18, חרוזים",
+      "address": "חרוזים 18",
       "arrival": "דירה 5",
       "description": "סטאב לחזרה — סגור הערב.",
       "lat": 32.092,
@@ -287,13 +293,14 @@
       "photoUrl": "/images/stubs/candy-bowl.jpg",
       "editCode": "931319",
       "createdAt": "2026-09-05T05:50:00.000Z",
-      "updatedAt": "2026-09-05T05:50:00.000Z"
+      "updatedAt": "2026-09-05T05:50:00.000Z",
+      "neighborhood": "חרוזים"
     },
     {
       "id": "בית-9314",
       "name": "הבית עם ההערות הארוכות",
       "theme": "monster",
-      "address": "חרוזים 20, חרוזים",
+      "address": "חרוזים 20",
       "arrival": "קומה 2, דירה 9, אחרי דלת המתכת הירוקה ואז שמאלה במסדרון הצר עד הסוף",
       "description": "סטאב לחזרה — הערות ארוכות מאוד כדי לבדוק גלילה בכרטיס ובגיליון.",
       "lat": 32.0917,
@@ -327,13 +334,14 @@
       "photoUrl": "/images/stubs/green-monster.jpg",
       "editCode": "931420",
       "createdAt": "2026-09-05T16:30:00.000Z",
-      "updatedAt": "2026-09-05T16:30:00.000Z"
+      "updatedAt": "2026-09-05T16:30:00.000Z",
+      "neighborhood": "חרוזים"
     },
     {
       "id": "בית-9315",
       "name": "הבית עם התמונה",
       "theme": "pumpkin",
-      "address": "חרוזים 22, חרוזים",
+      "address": "חרוזים 22",
       "arrival": "הכניסה עם הדלעות על המדרגות",
       "description": "סטאב לחזרה — בית עם תמונת קישוט.",
       "lat": 32.0908,
@@ -367,13 +375,14 @@
       "photoUrl": "/images/stubs/ghost-trees.jpg",
       "editCode": "931521",
       "createdAt": "2026-09-05T16:30:00.000Z",
-      "updatedAt": "2026-09-05T16:30:00.000Z"
+      "updatedAt": "2026-09-05T16:30:00.000Z",
+      "neighborhood": "חרוזים"
     },
     {
       "id": "בית-9317",
       "name": "הבית בלי מלאי",
       "theme": "candy",
-      "address": "חרוזים 26, חרוזים",
+      "address": "חרוזים 26",
       "arrival": "קומה קרקע",
       "description": "סטאב לחזרה — נגמר המלאי, הבית עדיין פתוח לביקור.",
       "lat": 32.0912,
@@ -407,13 +416,14 @@
       "photoUrl": "/images/stubs/lantern-path.jpg",
       "editCode": "931723",
       "createdAt": "2026-09-05T16:30:00.000Z",
-      "updatedAt": "2026-09-05T16:30:00.000Z"
+      "updatedAt": "2026-09-05T16:30:00.000Z",
+      "neighborhood": "חרוזים"
     },
     {
       "id": "בית-9318",
       "name": "הבית עם השם הארוך מאוד שצריך להישבר בשורות בכרטיס המפה ובגיליון האקסל בלי לזלוג מעבר למסגרת",
       "theme": "ghost",
-      "address": "חרוזים 28, חרוזים",
+      "address": "חרוזים 28",
       "arrival": "קומה 1, דירה 4, ליד הדלת עם הכתר",
       "description": "סטאב לחזרה — שם ארוך מאוד כדי לבדוק גלישת כותרת בכרטיס.",
       "lat": 32.091,
@@ -447,13 +457,14 @@
       "photoUrl": "/images/stubs/ghost-trees.jpg",
       "editCode": "931824",
       "createdAt": "2026-09-05T16:30:00.000Z",
-      "updatedAt": "2026-09-05T16:30:00.000Z"
+      "updatedAt": "2026-09-05T16:30:00.000Z",
+      "neighborhood": "חרוזים"
     },
     {
       "id": "בית-2291",
       "name": "וילה הדלעת",
       "theme": "haunted",
-      "address": "חרוזים 12, חרוזים",
+      "address": "חרוזים 12",
       "arrival": "השער הגדול בחזית, לא החצר האחורית",
       "description": "סטאב לחזרה — בית רדוף: ערפל ומוזיקת אימה. הממתקים נגמרו — עדיין אפשר לראות את הקישוט מהרחוב.",
       "lat": 32.0911258,
@@ -487,13 +498,14 @@
       "photoUrl": "/images/stubs/black-cat.jpg",
       "editCode": "229102",
       "createdAt": "2026-09-01T10:05:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "חרוזים"
     },
     {
       "id": "בית-3304",
       "name": "בית סבתא רחל",
       "theme": "candy",
-      "address": "חביבה רייק 3, חרוזים",
+      "address": "חביבה רייק 3",
       "arrival": "דירה 1, כניסה שטוחה מימין לשביל",
       "description": "סטאב לחזרה — קישוט עדין, שוקולד ביתי, וממתקים בלי גלוטן לפי בקשה.",
       "lat": 32.0903646,
@@ -529,13 +541,14 @@
       "photoUrl": "/images/stubs/bats-moon.jpg",
       "editCode": "330403",
       "createdAt": "2026-09-01T10:10:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "חרוזים"
     },
     {
       "id": "בית-4418",
       "name": "בית משפחת אוחנה",
       "theme": "spider",
-      "address": "חביבה רייק 9, חרוזים",
+      "address": "חביבה רייק 9",
       "arrival": "קומה קרקע. הכלב קשור בחצר — להיכנס מהשער",
       "description": "סטאב לחזרה — מכונת ערפל ועכבישים תלויים. הממתקים נגמרו, הקישוט בחוץ נשאר.",
       "lat": 32.0902303,
@@ -569,13 +582,14 @@
       "photoUrl": "/images/stubs/pumpkin-porch.jpg",
       "editCode": "441804",
       "createdAt": "2026-09-01T10:15:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "חרוזים"
     },
     {
       "id": "בית-5520",
       "name": "הבית הסגול",
       "theme": "witch",
-      "address": "יהודית 9, חרוזים",
+      "address": "יהודית 9",
       "arrival": "קומה 2, דירה 8. מעלית בצד ימין",
       "description": "סטאב לחזרה — תאורה סגולה ושלדים על הגדר. יש ממתקים.",
       "lat": 32.0897422,
@@ -609,13 +623,14 @@
       "photoUrl": "/images/stubs/purple-lights.jpg",
       "editCode": "552005",
       "createdAt": "2026-09-01T10:20:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "חרוזים"
     },
     {
       "id": "בית-5521",
       "name": "משפחת גולן",
       "theme": "blackCat",
-      "address": "יהודית 15, חרוזים",
+      "address": "יהודית 15",
       "arrival": "קומה קרקע, הדלת עם החתול השחור",
       "description": "סטאב לחזרה — חתולים מנייר על החלונות וממתקים רגילים. בלי קישוט גדול בחוץ.",
       "lat": 32.089223,
@@ -649,13 +664,14 @@
       "photoUrl": "/images/stubs/skeleton-yard.jpg",
       "editCode": "552106",
       "createdAt": "2026-09-03T13:01:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "חרוזים"
     },
     {
       "id": "בית-9124",
       "name": "הבית בכניסה לפארק",
       "theme": "blackCat",
-      "address": "המרגנית 10, שיכון ותיקים",
+      "address": "המרגנית 10",
       "arrival": "השער הימני ליד הפארק",
       "description": "סטאב לחזרה — דלעות בשער ושקית ממתקים. כניסה שטוחה מהמדרכה.",
       "lat": 32.0939393,
@@ -689,13 +705,14 @@
       "photoUrl": "/images/stubs/spider-door.jpg",
       "editCode": "912410",
       "createdAt": "2026-09-02T07:40:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "שיכון ותיקים"
     },
     {
       "id": "בית-8479",
       "name": "בית הערפד",
       "theme": "vampire",
-      "address": "המרגנית 28, שיכון ותיקים",
+      "address": "המרגנית 28",
       "arrival": "קומה 1, דירה 5",
       "description": "סטאב לחזרה — גלימות ושיניים על הדלת. מפחיד, עם ממתקים בלי אגוזים.",
       "lat": 32.093459,
@@ -735,13 +752,14 @@
       "photoUrl": "/images/stubs/graveyard-lawn.jpg",
       "editCode": "847911",
       "createdAt": "2026-09-03T12:03:18.573Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "שיכון ותיקים"
     },
     {
       "id": "בית-9201",
       "name": "בית משפחת מזרחי",
       "theme": "pumpkin",
-      "address": "אבא הלל סילבר 70, שיכון ותיקים",
+      "address": "אבא הלל סילבר 70",
       "arrival": "דירה 2, אחרי בית הקפה פינה",
       "description": "סטאב לחזרה — דלעת אחת בחלון ומעט ממתקים. מתאים לעצירה בדרך.",
       "lat": 32.090277,
@@ -775,13 +793,14 @@
       "photoUrl": "/images/stubs/witch-cauldron.jpg",
       "editCode": "920112",
       "createdAt": "2026-09-03T13:02:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "שיכון ותיקים"
     },
     {
       "id": "בית-9202",
       "name": "שדרת הרוחות",
       "theme": "ghost",
-      "address": "שדרות העם הצרפתי 5, שיכון ותיקים",
+      "address": "שדרות העם הצרפתי 5",
       "arrival": "קומה קרקע, כניסה משדרות העם הצרפתי",
       "description": "סטאב לחזרה — סדינים לבנים על העצים וממתקים בלי גלוטן.",
       "lat": 32.092548,
@@ -817,13 +836,14 @@
       "photoUrl": "/images/stubs/candy-bowl.jpg",
       "editCode": "920213",
       "createdAt": "2026-09-03T13:03:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "שיכון ותיקים"
     },
     {
       "id": "בית-6637",
       "name": "בית משפחת שטרן",
       "theme": "ghost",
-      "address": "העמל 18, נחלת גנים",
+      "address": "העמל 18",
       "arrival": "קומה 1. לצלצל פעם אחת",
       "description": "סטאב לחזרה — בלי ממתקים — רק קישוט בחוץ ומדבקות לילדים עם אלרגיות.",
       "lat": 32.0933735,
@@ -853,13 +873,14 @@
       "photoUrl": "/images/stubs/green-monster.jpg",
       "editCode": "663706",
       "createdAt": "2026-09-01T10:25:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "נחלת גנים"
     },
     {
       "id": "בית-7742",
       "name": "הילדים ברחוב האלונים",
       "theme": "monster",
-      "address": "העמל 10, נחלת גנים",
+      "address": "העמל 10",
       "arrival": "חצר משותפת מאחורי הבניין. לא מהרחוב הראשי",
       "description": "סטאב לחזרה — שלוש משפחות בחצר. מסלול קטן עם הפתעות, וממתקים בסוף.",
       "lat": 32.0929438,
@@ -897,13 +918,14 @@
       "photoUrl": "/images/stubs/ghost-trees.jpg",
       "editCode": "774207",
       "createdAt": "2026-09-01T10:30:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "נחלת גנים"
     },
     {
       "id": "בית-8859",
       "name": "בית משפחת כהן",
       "theme": "pumpkin",
-      "address": "רש\"י 34, נחלת גנים",
+      "address": "רש\"י 34",
       "arrival": "דירה 3, ימינה אחרי הדלת הכחולה",
       "description": "סטאב לחזרה — קישוט קלאסי של האלווין ושקית לכל תחפושת. יש גם בלי גלוטן.",
       "lat": 32.0930869,
@@ -939,13 +961,14 @@
       "photoUrl": "/images/stubs/lantern-path.jpg",
       "editCode": "885908",
       "createdAt": "2026-09-01T10:35:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "נחלת גנים"
     },
     {
       "id": "בית-9011",
       "name": "משפחת ברק",
       "theme": "spider",
-      "address": "האלוף אלברט מנדלר 9, נחלת גנים",
+      "address": "האלוף אלברט מנדלר 9",
       "arrival": "קומה קרקע, הכניסה השמאלית",
       "description": "סטאב לחזרה — קורי עכביש על הגדר וממתקים רגילים.",
       "lat": 32.0920125,
@@ -979,13 +1002,14 @@
       "photoUrl": "/images/stubs/black-cat.jpg",
       "editCode": "901109",
       "createdAt": "2026-09-02T07:10:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "נחלת גנים"
     },
     {
       "id": "בית-9203",
       "name": "בית המפלצת הירוקה",
       "theme": "monster",
-      "address": "העמל 6, נחלת גנים",
+      "address": "העמל 6",
       "arrival": "דירה 7, קומה 2",
       "description": "סטאב לחזרה — מפלצת ירוקה על המרפסת. מפחיד, עם הרבה ממתקים.",
       "lat": 32.092747,
@@ -1019,13 +1043,14 @@
       "photoUrl": "/images/stubs/bats-moon.jpg",
       "editCode": "920314",
       "createdAt": "2026-09-03T13:04:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "נחלת גנים"
     },
     {
       "id": "בית-9204",
       "name": "משפחת לוין",
       "theme": "candy",
-      "address": "רש\"י 12, נחלת גנים",
+      "address": "רש\"י 12",
       "arrival": "קומה קרקע",
       "description": "סטאב לחזרה — נגמר המלאי מוקדם. הבית סגור לביקור הערב.",
       "lat": 32.08997,
@@ -1059,7 +1084,8 @@
       "photoUrl": "/images/stubs/pumpkin-porch.jpg",
       "editCode": "920415",
       "createdAt": "2026-09-03T13:05:00.000Z",
-      "updatedAt": "2026-09-03T13:15:00.000Z"
+      "updatedAt": "2026-09-03T13:15:00.000Z",
+      "neighborhood": "נחלת גנים"
     }
   ]
 }

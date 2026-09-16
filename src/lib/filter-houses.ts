@@ -2,7 +2,6 @@ import { candyToneLabel } from "@/components/candy-glyphs";
 import {
   houseInNeighborhoods,
   NEIGHBORHOODS,
-  neighborhoodFromAddress,
   resolveNeighborhood,
 } from "@/lib/config";
 import { isStubHouse } from "@/lib/house-set";
@@ -156,9 +155,7 @@ export function houseFilterMismatchReasons(
     else if (!scareFilters.includes(house.scareLevel)) reasons.push(scareShort[house.scareLevel]);
   }
   if (neighborhoodFilterActive(filters) && !houseInNeighborhoods(house, neighborhoodFilters)) {
-    const area =
-      resolveNeighborhood(house) ??
-      (house.address ? neighborhoodFromAddress(house.address) : null);
+    const area = resolveNeighborhood(house);
     reasons.push(area ?? "שכונה אחרת");
   }
   if (likedOnly && !likedIds.includes(house.id)) reasons.push("לא בשמורים");
