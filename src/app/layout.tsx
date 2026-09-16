@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Rubik, Creepster } from "next/font/google";
 import Script from "next/script";
 import { Providers } from "@/components/providers";
@@ -77,6 +78,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <HalloweenFx />
         <RehearsalBoot />
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   );
