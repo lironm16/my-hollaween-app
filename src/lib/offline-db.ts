@@ -270,6 +270,8 @@ const SKIP_NOTES_KEY = "hw-skip-notes";
 export type SkippedHouseMeta = {
   reason: SkipReasonId;
   temporary: boolean;
+  /** When set, the house returns only after every listed trigger is met. */
+  restoreTriggers?: Array<"not-open" | "candy-out">;
   statusKey: string;
   skippedAt: string;
 };
