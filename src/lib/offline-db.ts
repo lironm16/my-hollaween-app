@@ -404,6 +404,15 @@ export function unskipHouse(id: string): string[] {
   return next;
 }
 
+export function unskipAllHouses(): string[] {
+  if (typeof window === "undefined") return [];
+  localStorage.setItem(SKIPPED_KEY, JSON.stringify([]));
+  saveSkippedMeta({});
+  saveSkipNotes({});
+  window.dispatchEvent(new Event("hw-skipped-changed"));
+  return [];
+}
+
 export function toggleSkipped(id: string): string[] {
   return isSkipped(id) ? unskipHouse(id) : skipHouse(id);
 }
