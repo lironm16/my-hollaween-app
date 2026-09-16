@@ -4,6 +4,7 @@
  *   1. unit tests (src test files)
  *   2. production build
  *   3. stress test (starts server if needed)
+ *   4. offline catalog E2E (starts server if needed)
  */
 
 import { spawnSync } from "node:child_process";
@@ -24,5 +25,6 @@ run("Production build", "npm", ["run", "build"]);
 run("Stress test", "node", ["scripts/run-stress.mjs"], {
   CONCURRENCY: process.env.CONCURRENCY ?? (process.env.CI ? "200" : "1000"),
 });
+run("Offline catalog E2E", "node", ["scripts/run-e2e.mjs"]);
 
 console.log("\nAll CI checks passed.");

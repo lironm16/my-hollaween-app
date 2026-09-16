@@ -74,11 +74,13 @@ npm run dev
 
 ```bash
 npm test              # בדיקות יחידה בלבד (מהיר)
-npm run test:all      # יחידה + עומס (בונה שרת אם צריך)
-npm run ci            # כמו CI: יחידה, build, עומס
+npm run test:e2e      # E2E לא מקוון (Playwright — דורש build)
+npm run test:all      # יחידה + עומס + E2E
+npm run ci            # כמו CI: יחידה, build, עומס, E2E
 ```
 
-בדיקות היחידה רצות עם Node test runner על `src/**/*.test.ts`.
+בדיקות היחידה רצות עם Node test runner על `src/**/*.test.ts`.  
+תוכנית בדיקות מלאה (ידני + אוטומטי): `docs/TEST_PLAN.md`.
 
 ### בדיקת עומס (1,000 במקביל)
 
@@ -100,7 +102,7 @@ npm run test:stress
 CONCURRENCY=1000 BASE_URL=http://127.0.0.1:43127 npm run stress
 ```
 
-GitHub Actions (`.github/workflows/ci.yml`) מריץ בדיקות יחידה, build, ועומס על כל PR ועל `main`.
+GitHub Actions (`.github/workflows/ci.yml`) מריץ בדיקות יחידה, build, עומס, ו-E2E לא מקוון על כל PR ועל `main`.
 
 ## איך משתמשים
 
