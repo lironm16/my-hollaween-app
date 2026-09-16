@@ -86,7 +86,7 @@ const GROUPS: { title: string; items: { key: string; label: string; node: ReactN
     ],
   },
   {
-    title: "רמת פחד",
+    title: "קישוט",
     items: [
       { key: "bare", label: "ללא", node: <SwatchPin bare /> },
       { key: "mild", label: "לילדים", node: <SwatchPin scare="mild" /> },

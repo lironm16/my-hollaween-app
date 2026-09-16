@@ -1,6 +1,9 @@
 export const SCARE_LEVELS = ["mild", "medium", "spicy"] as const;
 export type ScareLevel = (typeof SCARE_LEVELS)[number];
 
+export const DECOR_LEVELS = ["none", "mild", "medium", "heavy"] as const;
+export type DecorLevel = (typeof DECOR_LEVELS)[number];
+
 export const SENSITIVITY_OPTIONS = ["glutenFree", "nutsFree", "sesameFree"] as const;
 export type SensitivityId = (typeof SENSITIVITY_OPTIONS)[number];
 
@@ -75,7 +78,8 @@ export type House = {
   openTo2?: string;
   notes: string;
   accessible: boolean;
-  /** Outdoor Halloween decoration visible from the street. */
+  /** Four-level outdoor decoration. `decorated` is kept in sync for older records. */
+  decorLevel?: DecorLevel;
   decorated?: boolean;
   soldOut: boolean;
   adminFrozen: boolean;
@@ -108,12 +112,14 @@ export type HouseInput = {
   openTo2?: string;
   notes: string;
   accessible: boolean;
+  decorLevel?: DecorLevel;
   decorated?: boolean;
 };
 
 export type NightPatch = {
   visit?: VisitState;
   scareLevel?: ScareLevel;
+  decorLevel?: DecorLevel;
   decorated?: boolean;
   treatStock?: TreatStock;
   treats?: TreatId[];

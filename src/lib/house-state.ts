@@ -1,5 +1,7 @@
 import {
+  DECOR_LEVELS,
   TREAT_OPTIONS,
+  type DecorLevel,
   type House,
   type PublicHouse,
   type StockLevel,
@@ -125,38 +127,40 @@ export function offersCandy(house: { treats: TreatId[]; treatStock?: TreatStock 
   return candyLevel(house) !== "out";
 }
 
-type DecorHouse = {
+/** Outdoor Halloween decorations you can look at. */
+export function isDecorated(house: {
+  decorLevel?: DecorLevel;
   decorated?: boolean;
-  /** @deprecated Legacy four-level field — read only for migration. */
-  decorLevel?: string;
   visit?: VisitState;
   soldOut?: boolean;
-};
-
-/** Outdoor Halloween decorations visible from the street. */
-export function isDecorated(house: DecorHouse) {
-  return resolveDecorated(house);
+}) {
+  return resolveDecorLevel(house) !== "none";
 }
 
-export function resolveDecorated(house: DecorHouse): boolean {
-  if (house.decorated === false) return false;
-  if (house.decorated === true) return true;
-  if (house.decorLevel === "none") return false;
-  if (
-    house.decorLevel === "mild" ||
-    house.decorLevel === "medium" ||
-    house.decorLevel === "heavy"
-  ) {
-    return true;
+export function resolveDecorLevel(house: {
+  decorLevel?: DecorLevel;
+  decorated?: boolean;
+  visit?: VisitState;
+  soldOut?: boolean;
+}): DecorLevel {
+  if (house.decorLevel && (DECOR_LEVELS as readonly string[]).includes(house.decorLevel)) {
+    return house.decorLevel;
   }
-  return effectiveVisit(house) !== "closed";
+  if (house.decorated === false) return "none";
+  if (house.decorated === true) return "medium";
+  return effectiveVisit(house) !== "closed" ? "mild" : "none";
 }
 
-/** Normalize decorated flag; decor-only houses must stay marked as decorated. */
-export function syncDecorated(input: DecorHouse): boolean {
-  let decorated = resolveDecorated(input);
-  if (input.visit === "decorOnly" && !decorated) decorated = true;
-  return decorated;
+/** Keep `decorLevel` and the older `decorated` boolean in lockstep. */
+export function syncDecorFields(input: {
+  decorLevel?: DecorLevel;
+  decorated?: boolean;
+  visit?: VisitState;
+  soldOut?: boolean;
+}): { decorLevel: DecorLevel; decorated: boolean } {
+  let level = resolveDecorLevel(input);
+  if (input.visit === "decorOnly" && level === "none") level = "mild";
+  return { decorLevel: level, decorated: level !== "none" };
 }
 
 export function ownerFreezeUntil(msFromNow: number) {

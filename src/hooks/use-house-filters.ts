@@ -14,9 +14,11 @@ import {
 } from "@/lib/offline-db";
 import {
   CANDY_TONE_IDS,
+  DECOR_LEVELS,
   SCARE_LEVELS,
   SENSITIVITY_OPTIONS,
   type CandyTone,
+  type DecorLevel,
   type ScareLevel,
   type SensitivityId,
 } from "@/lib/types";
@@ -48,6 +50,7 @@ export const DEFAULT_HOUSE_FILTERS: HouseFiltersState = {
 type LegacyFilters = HouseFiltersState & {
   candyOnly?: boolean;
   decoratedOnly?: boolean;
+  decorFilters?: DecorLevel[];
 };
 
 function sanitizeClock(value: unknown): string {
@@ -81,12 +84,15 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
       : legacy.candyOnly
         ? (["plenty", "low"] as CandyTone[])
         : [...CANDY_TONE_IDS];
+  const decors = pickKnown(legacy.decorFilters, DECOR_LEVELS);
   const includeUndecorated =
     raw.includeUndecorated !== undefined
       ? Boolean(raw.includeUndecorated)
       : legacy.decoratedOnly !== undefined
         ? !Boolean(legacy.decoratedOnly)
-        : true;
+        : decors.length > 0
+          ? decors.includes("none")
+          : true;
   return {
     accessibleOnly: Boolean(raw.accessibleOnly),
     openNowOnly: Boolean(raw.openNowOnly),

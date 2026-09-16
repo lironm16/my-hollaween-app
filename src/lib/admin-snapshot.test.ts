@@ -66,7 +66,7 @@ describe("buildSnapshotStats", () => {
       houses: [
         house("a", { treatStock: { candy: "plenty" }, treats: ["candy", "glutenFree"] }),
         house("b", { treatStock: { candy: "low" }, treats: ["candy", "nutsFree"] }),
-        house("c", { visit: "decorOnly", decorated: false, treats: [] }),
+        house("c", { visit: "decorOnly", decorLevel: "none", treats: [] }),
       ],
       now: openEvening,
     });

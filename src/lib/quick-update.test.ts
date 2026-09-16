@@ -31,6 +31,7 @@ function house(partial: Partial<PublicHouse> = {}): PublicHouse {
     notes: "",
     accessible: false,
     visit: "come",
+    decorLevel: "mild",
     decorated: true,
     soldOut: false,
     createdAt: now,
@@ -64,7 +65,7 @@ describe("quick-update", () => {
   });
 
   it("previews candy out while house stays open", () => {
-    const base = house({ decorated: true });
+    const base = house({ decorLevel: "mild", decorated: true });
     const preview = previewQuickUpdatePush(base, "out", "open");
     assert.ok(preview);
     assert.equal(preview!.kind, "candyOut");

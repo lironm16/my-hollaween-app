@@ -7,7 +7,7 @@ import {
   isPubliclyListed,
   markedCandy,
   offersSensitivity,
-  isDecorated,
+  resolveDecorLevel,
 } from "@/lib/house-state";
 import { subscriptionAllowsTopic } from "@/lib/push-topics";
 import type { House, PublicHouse, PushSubscriptionRecord, ScareLevel } from "@/lib/types";
@@ -41,7 +41,7 @@ export type AdminSnapshot = {
 };
 
 function scareOf(house: SnapshotHouse): ScareLevel | "none" {
-  if (!isDecorated(house)) return "none";
+  if (resolveDecorLevel(house) === "none") return "none";
   return house.scareLevel ?? "mild";
 }
 

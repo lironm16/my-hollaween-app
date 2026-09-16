@@ -37,6 +37,7 @@ function stub(id: string, lat: number, lng: number, address: string): PublicHous
     openTo2: "",
     notes: "",
     accessible: true,
+    decorLevel: "medium",
     decorated: true,
     soldOut: false,
     adminFrozen: false,

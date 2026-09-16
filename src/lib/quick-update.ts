@@ -75,7 +75,7 @@ export function buildQuickUpdatePatch(
     const visit: VisitState =
       candy === "plenty" || candy === "low" || candy === "out"
         ? "come"
-        : house.decorated !== false
+        : house.decorLevel && house.decorLevel !== "none"
           ? "decorOnly"
           : "come";
     return { treats, treatStock, visit, ownerFrozenUntil: freezeExpireIso() };
@@ -84,7 +84,7 @@ export function buildQuickUpdatePatch(
   const visit: VisitState =
     candy === "plenty" || candy === "low" || candy === "out"
       ? "come"
-      : house.decorated !== false
+      : house.decorLevel && house.decorLevel !== "none"
         ? "decorOnly"
         : "come";
   return { treats, treatStock, visit, ownerFrozenUntil: null };
