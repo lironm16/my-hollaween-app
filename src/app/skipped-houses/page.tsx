@@ -12,7 +12,7 @@ import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useDistanceOrigin } from "@/hooks/use-distance-origin";
 import { useUserLocation } from "@/hooks/use-user-location";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { queueRouteRestore, readRouteMode } from "@/lib/route-mode";
 import { cn } from "@/lib/utils";
 
@@ -42,12 +42,33 @@ export default function SkippedHousesPage() {
     if (selectedId === id) setSelectedId(null);
   }
 
+  function handleRestoreAll() {
+    if (skips.skippedIds.length === 0) return;
+    if (readRouteMode()) {
+      for (const id of skips.skippedIds) queueRouteRestore(id);
+    }
+    skips.unskipAll();
+    setSelectedId(null);
+  }
+
   return (
     <div className="relative flex min-h-dvh flex-col">
       <AppHeader />
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto bg-[#12081a]">
         <div className="mx-auto w-full max-w-3xl px-3 pt-3">
-          <h1 className="font-display mb-2 text-2xl text-orange-300">דילגתי</h1>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <h1 className="font-display text-2xl text-orange-300">דילגתי</h1>
+            {skips.skippedIds.length > 0 ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="border-orange-400/40 text-orange-100 hover:bg-orange-500/10"
+                onClick={handleRestoreAll}
+              >
+                החזרת כל הבתים
+              </Button>
+            ) : null}
+          </div>
           {skips.skippedIds.length === 0 ? (
             <div className="px-1 py-8">
               <p className="text-base text-violet-200">אין בתים שדילגתם עליהם.</p>

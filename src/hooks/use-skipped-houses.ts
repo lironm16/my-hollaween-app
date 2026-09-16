@@ -9,6 +9,7 @@ import {
   saveSkipNote,
   skipHouse,
   toggleSkipped,
+  unskipAllHouses,
   unskipHouse,
   updateSkipHouse,
   type SkippedHouseMeta,
@@ -49,6 +50,11 @@ export function useSkippedHouses() {
     clearNote: (id: string) => clearSkipNote(id),
     unskip: (id: string) => {
       const next = unskipHouse(id);
+      setIds(next);
+      return next;
+    },
+    unskipAll: () => {
+      const next = unskipAllHouses();
       setIds(next);
       return next;
     },
