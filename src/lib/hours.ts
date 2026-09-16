@@ -281,6 +281,24 @@ export function nightStatusControlsEnabled(house: HoursSource, now = appNow()) {
   return minutesNow(now) >= from;
 }
 
+/** Why pause/close are disabled — null when they are available. */
+export function nightStatusPauseCloseHint(house: HoursSource, now = appNow()): string | null {
+  if (nightStatusControlsEnabled(house, now)) return null;
+  const relation = eventNightRelation(now);
+  const first = houseHoursWindows(house)[0];
+  const opensAt = first?.from?.trim() || "";
+  if (relation < 0) {
+    const dateLabel = eventNightDateLabel();
+    return opensAt
+      ? `הפסקה וסגירה יהיו זמינות ב${dateLabel}, משעת הפתיחה (${opensAt}).`
+      : `הפסקה וסגירה יהיו זמינות ב${dateLabel}, משעת הפתיחה שמוגדרת למעלה.`;
+  }
+  if (relation > 0) return "הערב הסתיים — הפסקה וסגירה לא זמינות יותר.";
+  return opensAt
+    ? `הפסקה וסגירה יהיו זמינות משעת הפתיחה — ${opensAt}.`
+    : "הפסקה וסגירה יהיו זמינות משעת הפתיחה שמוגדרת למעלה.";
+}
+
 /** True after the last listed window on event night (or on a later calendar day). Uses the house’s real hours, not rehearsal stubs. */
 export function isHoursNightOver(house: HoursSource, now = appNow()) {
   const day = eventNightRelation(now);
