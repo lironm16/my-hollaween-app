@@ -10,7 +10,7 @@ export default function DecorPreviewPage() {
           <p className="text-base text-violet-300">{config.brandEn} · בחירת אייקון</p>
           <h1 className="text-2xl font-semibold text-orange-100">איזה קישוט יותר ברור?</h1>
           <p className="text-base text-violet-200">
-            ירוק = קריצה, כתום = חגיגה, אדום = פיצוץ, אפור עם קו = לא מקושט. בטופס ובדלפק: מספר 1,
+            ירוק = לילדים, כתום = קצת מפחיד, אדום = מפחיד, אפור עם קו = לא מקושט. בטופס ובדלפק: מספר 1,
             שלוש מנורות — לא רוח הרפאים של רמת הפחד.
           </p>
           <PreviewNav current="/preview/decor" />
