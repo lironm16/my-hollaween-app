@@ -15,7 +15,9 @@ import {
 
 /** Live app clock (rehearsal night when a dry-run scene is on). */
 export function useAppNow() {
-  const [stamp, setStamp] = useState(0);
+  const [stamp, setStamp] = useState(() =>
+    typeof window === "undefined" ? 0 : clockSnapshot(),
+  );
   useEffect(() => {
     const tick = () => setStamp(clockSnapshot());
     tick();
@@ -26,7 +28,7 @@ export function useAppNow() {
       window.removeEventListener(CLOCK_EVENT, tick);
     };
   }, []);
-  return dateFromSnapshot(stamp || clockSnapshot(new Date(), "off"));
+  return dateFromSnapshot(stamp || clockSnapshot());
 }
 
 export function useRehearsalScene() {
