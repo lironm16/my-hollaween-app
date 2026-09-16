@@ -215,7 +215,6 @@ export function AdminPushPanel() {
         toast.success(`נשלח ל־${sent} מכשירים`);
       }
       await showLocalPush(data.title ?? title.trim(), data.body ?? body.trim());
-      window.dispatchEvent(new Event("hw-admin-stats-refresh"));
       setTitle("");
       setBody("");
     } catch {

@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef } from "react";
 import { HouseCard } from "@/components/house-card";
 import { distanceMeters } from "@/lib/geo";
 import { effectiveVisit } from "@/lib/house-state";
-import { skipMetaSummary } from "@/lib/skip-reasons";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 
@@ -109,8 +108,12 @@ export function HouseList({
           onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
           skipped={skippedIds?.includes(h.id)}
           skipMeta={skipMetaFor?.(h.id)}
-          onSkip={onSkipHouse ? () => onSkipHouse(h.id) : undefined}
-          onRestoreRoute={onRestoreHouse ? () => onRestoreHouse(h.id) : undefined}
+          onSkip={
+            onSkipHouse && !skippedIds?.includes(h.id) ? () => onSkipHouse(h.id) : undefined
+          }
+          onRestoreRoute={
+            onRestoreHouse && skippedIds?.includes(h.id) ? () => onRestoreHouse(h.id) : undefined
+          }
           canEdit={Boolean(canEditHouse?.(h.id))}
           admin={admin}
           onShowOnMap={onShowOnMap ? () => onShowOnMap(h.id) : undefined}

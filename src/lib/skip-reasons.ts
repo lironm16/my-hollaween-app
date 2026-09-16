@@ -134,7 +134,7 @@ export function skipMetaSummary(meta: SkippedHouseMeta) {
   const triggers = metaRestoreTriggers(meta);
   if (meta.temporary && triggers.length > 0) {
     const parts = triggers.map((trigger) => temporaryRestoreReasonLabel(trigger));
-    return `דילוג זמני · החזרה כש${parts.join(" ו")}`;
+    return `דילוג זמני · כש${parts.join(" ו")}`;
   }
   return "דילגתם על הבית";
 }

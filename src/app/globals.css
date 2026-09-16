@@ -1534,10 +1534,8 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 
 .route-skipped-name {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-size: 0.95rem;
+  line-height: 1.35;
 }
 
 .route-skipped-restore {

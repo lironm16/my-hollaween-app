@@ -177,7 +177,7 @@ export function HouseActionBar({
         active: visited,
       });
     }
-    if (onSkip) {
+    if (onSkip && !skipped) {
       items.push({
         id: "skip",
         label: "דילוג על בית",
@@ -185,7 +185,7 @@ export function HouseActionBar({
         onClick: onSkip,
       });
     }
-    if (onRestoreRoute) {
+    if (onRestoreRoute && skipped) {
       items.push({
         id: "restore",
         label: "החזרה",

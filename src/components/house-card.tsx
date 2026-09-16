@@ -109,8 +109,8 @@ export function HouseCard({
               visited={visited}
               onToggleLike={onToggleLike}
               onToggleVisited={onToggleVisited}
-              onSkip={onSkip}
-              onRestoreRoute={onRestoreRoute}
+              onSkip={skipped ? undefined : onSkip}
+              onRestoreRoute={skipped ? onRestoreRoute : undefined}
               skipped={skipped}
               onToggleEdit={canEdit ? onToggleEdit : undefined}
               onShowOnMap={onShowOnMap}

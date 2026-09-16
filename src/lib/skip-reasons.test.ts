@@ -273,7 +273,7 @@ describe("skipMetaSummary", () => {
         statusKey: "x",
         skippedAt: "2026-01-01T00:00:00.000Z",
       }),
-      "דילוג זמני · החזרה כשהבית פתוח",
+      "דילוג זמני · כשהבית פתוח",
     );
     assert.equal(
       skipMetaSummary({
