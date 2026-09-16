@@ -84,9 +84,11 @@ export function SkipHouseDialog({
         {editing && existingMeta ? (
           <HouseSkippedBanner meta={existingMeta} />
         ) : null}
-        <p className="text-right text-base text-violet-200">
-          {editing ? "אפשר לשנות את סוג הדילוג או להסיר את הדילוג." : "דילגתם על הבית — הוא לא יופיע ברשימה הרגילה."}
-        </p>
+        {editing ? (
+          <p className="text-right text-base text-violet-200">
+            אפשר לשנות את סוג הדילוג או להסיר את הדילוג.
+          </p>
+        ) : null}
         {canTempSkip ? (
           <div className="space-y-2 rounded-xl border border-orange-500/15 bg-[#1a1028] px-3 py-3">
             <label className="flex items-start gap-2 text-base text-violet-100">
