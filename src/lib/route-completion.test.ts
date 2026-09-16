@@ -25,6 +25,7 @@ function stub(id: string): PublicHouse {
     openTo2: "",
     notes: "",
     accessible: true,
+    decorLevel: "medium",
     decorated: true,
     soldOut: false,
     adminFrozen: false,

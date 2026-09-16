@@ -126,7 +126,7 @@
           return level !== "out";
         }
         function scareDecorLabel(house) {
-          if (house.decorated === false) return decorNone;
+          if (house.decorLevel === "none" || house.decorated === false) return decorNone;
           return scare[house.scareLevel] || "";
         }
         function rowCells(house, index) {

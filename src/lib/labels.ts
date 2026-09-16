@@ -1,5 +1,6 @@
 import {
   HOUSE_THEMES,
+  type DecorLevel,
   type HouseTheme,
   type ScareLevel,
   type StockLevel,
@@ -26,7 +27,19 @@ export const scareShort: Record<ScareLevel, string> = {
   spicy: "מפחיד",
 };
 
-export const undecoratedLabel = "לא מקושט";
+export const decorLabels: Record<DecorLevel, string> = {
+  none: "לא מקושט — בלי קישוט בחוץ",
+  mild: scareLabels.mild,
+  medium: scareLabels.medium,
+  heavy: scareLabels.spicy,
+};
+
+export const decorShort: Record<DecorLevel, string> = {
+  none: "לא מקושט",
+  mild: scareShort.mild,
+  medium: scareShort.medium,
+  heavy: scareShort.spicy,
+};
 
 export const themeLabels: Record<HouseTheme, string> = {
   ghost: "בית רפאים",

@@ -12,7 +12,7 @@ import { OpenNowSign } from "@/components/open-now-mark";
 import { NEIGHBORHOODS } from "@/lib/config";
 import { hasStockCandySelection } from "@/lib/filter-presets";
 import { visitWindowIssue } from "@/lib/hours";
-import { scareShort, undecoratedLabel } from "@/lib/labels";
+import { decorShort, scareShort } from "@/lib/labels";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import {
   defaultVisitWindowEndFromStart,
@@ -245,7 +245,7 @@ export function HouseFiltersContent({
         >
           <span className="inline-flex items-center gap-2">
             <ScareSign level="none" />
-            <span>{undecoratedLabel}</span>
+            <span>{decorShort.none}</span>
           </span>
         </FilterOption>
         {SCARE_LEVELS.map((level) => (

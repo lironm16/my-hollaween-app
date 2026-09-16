@@ -10,7 +10,7 @@ import { StrollerSign } from "@/components/symbols";
 import { LikedSign } from "@/components/visit-marks";
 import { VisitedCheck } from "@/components/visited-check";
 import { PUSH_TOPIC_ROWS, type PushTopic } from "@/lib/push-topics";
-import { scareShort, treatLabels, undecoratedLabel } from "@/lib/labels";
+import { scareShort, decorShort, treatLabels } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import { buildSnapshotStats, type AdminSnapshot, type SnapshotStats } from "@/lib/admin-snapshot";
 import { useCatalog } from "@/hooks/use-catalog";
@@ -252,7 +252,7 @@ export function AdminStatsCard({
         <div className="grid grid-cols-2 gap-2">
           <Tile
             icon={<ScareSign level="none" className="size-8" />}
-            label={undecoratedLabel}
+            label={decorShort.none}
             value={stats.notDecorated}
             plain
           />

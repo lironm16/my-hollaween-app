@@ -1,5 +1,5 @@
 import { Check, Filter } from "lucide-react";
-import { DecorGlyph } from "@/components/decor-glyphs";
+import { DecorMark } from "@/components/decor-glyphs";
 import { ClosedSign, PauseSign } from "@/components/house-tags";
 import { VisitedCheck } from "@/components/visited-check";
 import { SkipIcon } from "@/components/skip-icon";
@@ -133,11 +133,7 @@ export function DecorOnlyMark({
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white">
-        <span className="size-[82%] text-white">
-          <DecorGlyph />
-        </span>
-      </span>
+      <DecorMark level="mild" />
       {labeled ? <span>{visitShort.decorOnly}</span> : <span className="sr-only">{visitShort.decorOnly}</span>}
     </span>
   );

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  DECOR_LEVELS,
   HOUSE_THEMES,
   SCARE_LEVELS,
   STOCK_LEVELS,
@@ -69,6 +70,7 @@ const houseFields = z.object({
   openTo2: optionalClockField,
   notes: z.string().trim().max(240),
   accessible: z.boolean(),
+  decorLevel: z.enum(DECOR_LEVELS).optional(),
   decorated: z.boolean().optional(),
 });
 
@@ -84,6 +86,7 @@ export const houseInputSchema = houseFields.extend({
   openTo2: optionalClockField.default(""),
   notes: z.string().trim().max(240).default(""),
   accessible: z.boolean().default(false),
+  decorLevel: z.enum(DECOR_LEVELS).optional(),
   decorated: z.boolean().optional(),
 });
 
