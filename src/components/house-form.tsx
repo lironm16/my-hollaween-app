@@ -553,6 +553,19 @@ export function HouseForm({
             <button
               type="button"
               disabled={!nightStatusEnabled}
+              onClick={() => setNightStatus("open")}
+              className={
+                nightStatus === "open"
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
+              }
+            >
+              <span className="night-status-dot is-open" />
+              פתוח
+            </button>
+            <button
+              type="button"
+              disabled={!nightStatusEnabled}
               onClick={() => setNightStatus("pause")}
               className={
                 nightStatus === "pause"
@@ -577,17 +590,6 @@ export function HouseForm({
               סגור
             </button>
           </div>
-          {nightStatusEnabled && (nightStatus === "pause" || nightStatus === "stop") ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="mt-2 border-emerald-400/50 text-emerald-200"
-              onClick={() => setNightStatus("open")}
-            >
-              פתיחה מחדש
-            </Button>
-          ) : null}
         </div>
         <div
           className={
