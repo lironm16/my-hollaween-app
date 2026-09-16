@@ -194,7 +194,6 @@ export function NeighborhoodApp({
     pendingRouteGps,
     rebuildPinnedRoute,
   } = useNeighborhoodRoute({
-    visible,
     houses,
     filters,
     filterContext,
