@@ -11,7 +11,7 @@ import {
   effectiveVisit,
   isPubliclyListed,
   normalizeTreats,
-  syncDecorFields,
+  syncDecorated,
 } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import { cloneDb, mergeHouses, mergePushSubscriptions } from "@/lib/catalog-sync";
@@ -150,7 +150,7 @@ function normalizeHouse(house: House & { status?: string; rejectionReason?: stri
   const visit = effectiveVisit(base);
   const { treats, treatStock } = normalizeTreats(base.treats, base.treatStock);
   const hours = syncHoursFields(houseHoursWindows(base));
-  const decor = syncDecorFields(base);
+  const decorated = syncDecorated(base);
   const addressFields = normalizeAddressFields(base);
   return {
     ...base,
@@ -159,8 +159,7 @@ function normalizeHouse(house: House & { status?: string; rejectionReason?: stri
     theme,
     arrival: base.arrival ?? "",
     accessible: Boolean(base.accessible),
-    decorLevel: decor.decorLevel,
-    decorated: decor.decorated,
+    decorated,
     treats,
     visit,
     treatStock,
@@ -786,7 +785,7 @@ export async function submitHouse(
         ? input.openHours
         : houseHoursWindows(input),
     );
-    const decor = syncDecorFields({ ...input, visit });
+    const decorated = syncDecorated({ ...input, visit });
     const canonical = canonicalAddressForBuilding(input.address, db.houses);
     const addressFields = normalizeAddressFields({
       address: canonical,
@@ -803,8 +802,7 @@ export async function submitHouse(
       visit,
       ...hours,
       id,
-      decorLevel: decor.decorLevel,
-      decorated: decor.decorated,
+      decorated,
       soldOut: visit === "closed",
       adminFrozen: false,
       ownerFrozenUntil: null,
@@ -860,9 +858,7 @@ function applyOwnerPatch(house: House, patch: Partial<HouseInput> & NightPatch) 
     const parsed = parsePhotoUrl(house.photoUrl);
     if (parsed !== null) house.photoUrl = parsed;
   }
-  const decor = syncDecorFields(house);
-  house.decorLevel = decor.decorLevel;
-  house.decorated = decor.decorated;
+  house.decorated = syncDecorated(house);
   house.updatedAt = new Date().toISOString();
   house.soldOut = house.visit === "closed";
 }
@@ -1022,19 +1018,12 @@ export async function adminUpdate(
     }
     if (patch.notes !== undefined) house.notes = patch.notes;
     if (patch.accessible !== undefined) house.accessible = patch.accessible;
-    if (
-      patch.decorLevel !== undefined ||
-      patch.decorated !== undefined ||
-      patch.visit === "decorOnly"
-    ) {
-      const decor = syncDecorFields({
+    if (patch.decorated !== undefined || patch.visit === "decorOnly") {
+      house.decorated = syncDecorated({
         ...house,
-        decorLevel: patch.decorLevel ?? house.decorLevel,
         decorated: patch.decorated ?? house.decorated,
         visit: patch.visit ?? house.visit,
       });
-      house.decorLevel = decor.decorLevel;
-      house.decorated = decor.decorated;
     }
     if (patch.adminFrozen !== undefined) house.adminFrozen = patch.adminFrozen;
     if (patch.ownerFrozenUntil !== undefined) house.ownerFrozenUntil = patch.ownerFrozenUntil;
@@ -1098,7 +1087,6 @@ function sanitizeOwnerPatch(
   }
   if (patch.notes !== undefined) next.notes = patch.notes;
   if (patch.accessible !== undefined) next.accessible = patch.accessible;
-  if (patch.decorLevel !== undefined) next.decorLevel = patch.decorLevel;
   if (patch.decorated !== undefined) next.decorated = patch.decorated;
   if (patch.ownerFrozenUntil !== undefined) next.ownerFrozenUntil = patch.ownerFrozenUntil;
   if (patch.photoUrl !== undefined) next.photoUrl = patch.photoUrl;

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { BADGE_TONE_CLASS } from "@/lib/badge-tones";
-import { decorShort, scareShort } from "@/lib/labels";
+import { scareShort, undecoratedLabel } from "@/lib/labels";
 import type { ScareLevel } from "@/lib/types";
 import { DiscStrike } from "@/components/disc-strike";
 
@@ -101,7 +101,7 @@ export function ScareSign({
 }) {
   const struck = level === "none";
   const useOfferedGhost = !Glyph || Glyph === ScareGhost;
-  const label = struck ? decorShort.none : scareShort[level];
+  const label = struck ? undecoratedLabel : scareShort[level];
 
   return (
     <span
