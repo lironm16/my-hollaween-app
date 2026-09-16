@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Camera } from "lucide-react";
 import { toast } from "sonner";
 import { compressJpegFile, type PhotoFocus } from "@/lib/compress-image";
@@ -43,6 +43,7 @@ import {
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import type { HoursWindow } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 const empty: HouseInput = {
   name: "",
@@ -175,6 +176,10 @@ export function HouseForm({
   };
   const pauseCloseEnabled = nightStatusControlsEnabled(hoursSource, now);
   const pauseCloseHint = nightStatusPauseCloseHint(hoursSource, now);
+
+  useEffect(() => {
+    if (!pauseCloseEnabled && nightStatus !== "open") setNightStatus("open");
+  }, [pauseCloseEnabled, nightStatus]);
 
   function pickScare(level: ScareLevel) {
     setForm((f) => ({ ...f, scareLevel: level }));
@@ -487,50 +492,42 @@ export function HouseForm({
             </p>
           ) : null}
           {pauseCloseHint ? (
-            <p className="text-base text-amber-200/90">
+            <p className="rounded-lg bg-amber-500/10 px-2.5 py-2 text-base text-amber-100 ring-1 ring-amber-400/25">
               {pauseCloseHint}
               {admin ? " לבדיקות: תפריט מנהל → בדיקות." : ""}
             </p>
           ) : null}
-          <div className="flex flex-wrap gap-1.5">
-            <button
-              type="button"
+          <div className="flex flex-wrap items-center gap-1.5">
+            <NightStatusChip
+              label="פתוח"
+              dotClass="is-open"
+              selected={nightStatus === "open"}
               onClick={() => setNightStatus("open")}
-              className={
-                nightStatus === "open"
-                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
-                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
-              }
-            >
-              <span className="night-status-dot is-open" />
-              פתוח
-            </button>
-            <button
-              type="button"
-              disabled={!pauseCloseEnabled}
-              onClick={() => setNightStatus("pause")}
-              className={
-                nightStatus === "pause"
-                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
-                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30 disabled:opacity-45"
-              }
-            >
-              <span className="night-status-dot is-break" />
-              הפסקה
-            </button>
-            <button
-              type="button"
-              disabled={!pauseCloseEnabled}
-              onClick={() => setNightStatus("stop")}
-              className={
-                nightStatus === "stop"
-                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
-                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30 disabled:opacity-45"
-              }
-            >
-              <span className="night-status-dot is-closed" />
-              סגור
-            </button>
+            />
+            {pauseCloseEnabled ? (
+              <>
+                <NightStatusChip
+                  label="הפסקה"
+                  dotClass="is-break"
+                  selected={nightStatus === "pause"}
+                  onClick={() => setNightStatus("pause")}
+                />
+                <NightStatusChip
+                  label="סגור"
+                  dotClass="is-closed"
+                  selected={nightStatus === "stop"}
+                  onClick={() => setNightStatus("stop")}
+                />
+              </>
+            ) : (
+              <div
+                className="flex flex-wrap items-center gap-1.5 rounded-xl border border-dashed border-white/15 bg-black/25 px-2 py-1.5"
+                aria-hidden
+              >
+                <NightStatusChip label="הפסקה" dotClass="is-break" locked />
+                <NightStatusChip label="סגור" dotClass="is-closed" locked />
+              </div>
+            )}
           </div>
         </div>
       </FormSection>
@@ -742,6 +739,45 @@ export function HouseForm({
       </div>
       {extraActions}
     </form>
+  );
+}
+
+function NightStatusChip({
+  label,
+  dotClass,
+  selected = false,
+  locked = false,
+  onClick,
+}: {
+  label: string;
+  dotClass: string;
+  selected?: boolean;
+  locked?: boolean;
+  onClick?: () => void;
+}) {
+  const className = cn(
+    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-base font-medium",
+    locked
+      ? "cursor-not-allowed text-violet-400/55 ring-1 ring-white/10"
+      : selected
+        ? "bg-orange-500 text-black"
+        : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/30",
+  );
+
+  if (locked) {
+    return (
+      <span className={className}>
+        <span className={cn("night-status-dot opacity-40", dotClass)} />
+        {label}
+      </span>
+    );
+  }
+
+  return (
+    <button type="button" onClick={onClick} className={className}>
+      <span className={cn("night-status-dot", dotClass)} />
+      {label}
+    </button>
   );
 }
 
