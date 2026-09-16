@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   availableTemporaryRestoreOptions,
+  primaryTemporaryRestoreOption,
   houseLacksCandy,
   isHouseOpenForSkip,
   isTemporarySkipReason,
@@ -110,7 +111,7 @@ describe("availableTemporaryRestoreOptions", () => {
       baseFilters,
     );
     assert.deepEqual(options, [
-      { id: "not-open", label: "הבית יחזור כאשר הוא פתוח" },
+      { id: "not-open", label: "החזר את הבית כאשר הוא פתוח" },
     ]);
   });
 
@@ -121,8 +122,20 @@ describe("availableTemporaryRestoreOptions", () => {
       baseFilters,
     );
     assert.deepEqual(options, [
-      { id: "candy-out", label: "הבית יחזור כאשר יש ממתקים" },
+      { id: "candy-out", label: "החזר את הבית כאשר יש ממתקים" },
     ]);
+  });
+
+  it("prefers candy restore when the house is closed and out of candy", () => {
+    const option = primaryTemporaryRestoreOption(
+      stub({ visit: "closed", soldOut: true, treatStock: { candy: "out" } }),
+      evening,
+      baseFilters,
+    );
+    assert.deepEqual(option, {
+      id: "candy-out",
+      label: "החזר את הבית כאשר יש ממתקים",
+    });
   });
 });
 
