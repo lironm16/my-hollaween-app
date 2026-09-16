@@ -6,8 +6,7 @@ import { HouseSkippedBanner } from "@/components/house-skipped-banner";
 import { HouseEditModal } from "@/components/house-edit-modal";
 import { houseHeadline } from "@/lib/labels";
 import {
-  availableTemporaryRestoreOptions,
-  metaRestoreTriggers,
+  primaryTemporaryRestoreOption,
   type SkipReasonId,
   type TemporaryRestoreTriggerId,
 } from "@/lib/skip-reasons";
@@ -38,54 +37,41 @@ export function SkipHouseDialog({
   onCancel: () => void;
 }) {
   const editing = Boolean(existingMeta);
-  const restoreOptions = useMemo(
-    () => (house ? availableTemporaryRestoreOptions(house, now, filters) : []),
+  const restoreOption = useMemo(
+    () => (house ? primaryTemporaryRestoreOption(house, now, filters) : null),
     [house, now, filters],
   );
-  const canTempSkip = restoreOptions.length > 0;
-  const [selectedTriggers, setSelectedTriggers] = useState<Set<TemporaryRestoreTriggerId>>(
-    () => new Set(),
-  );
+  const canTempSkip = restoreOption != null;
+  const [temporary, setTemporary] = useState(true);
 
   useEffect(() => {
     if (!open || !house) return;
-    const options = availableTemporaryRestoreOptions(house, now, filters);
-    const optionIds = options.map((option) => option.id as TemporaryRestoreTriggerId);
-    if (existingMeta) {
-      const saved = metaRestoreTriggers(existingMeta).filter((id) => optionIds.includes(id));
-      setSelectedTriggers(new Set(saved.length > 0 ? saved : optionIds));
+    if (existingMeta?.temporary) {
+      setTemporary(true);
       return;
     }
-    setSelectedTriggers(new Set(optionIds));
-  }, [open, house, now, filters, existingMeta]);
+    setTemporary(canTempSkip);
+  }, [open, house, existingMeta, canTempSkip]);
 
   function close() {
     onCancel();
   }
 
-  function toggleTrigger(id: TemporaryRestoreTriggerId) {
-    setSelectedTriggers((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
   function confirm() {
-    const triggers = restoreOptions
-      .map((option) => option.id as TemporaryRestoreTriggerId)
-      .filter((id) => selectedTriggers.has(id));
-    const temporary = triggers.length > 0;
+    const triggers: TemporaryRestoreTriggerId[] =
+      temporary && restoreOption && restoreOption.id !== "other"
+        ? [restoreOption.id as TemporaryRestoreTriggerId]
+        : [];
+    const isTemporary = triggers.length > 0;
     let reason: SkipReasonId;
-    if (temporary) {
+    if (isTemporary) {
       reason = triggers[0]!;
     } else if (existingMeta && !existingMeta.temporary) {
       reason = existingMeta.reason as SkipReasonId;
     } else {
       reason = "other";
     }
-    onConfirm(reason, temporary, triggers);
+    onConfirm(reason, isTemporary, triggers);
   }
 
   return (
@@ -102,25 +88,17 @@ export function SkipHouseDialog({
         <p className="text-right text-base text-violet-200">
           {editing ? "אפשר לשנות את סוג הדילוג או להסיר את הדילוג." : "דילגתם על הבית"}
         </p>
-        {canTempSkip ? (
-          <div className="space-y-2 rounded-xl border border-orange-500/15 bg-[#1a1028] px-3 py-3">
-            {restoreOptions.map((option) => {
-              const id = option.id as TemporaryRestoreTriggerId;
-              return (
-                <label
-                  key={option.id}
-                  className="flex items-start gap-2 text-base text-violet-100"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedTriggers.has(id)}
-                    onChange={() => toggleTrigger(id)}
-                    className="mt-0.5 size-4 shrink-0 rounded border-orange-500/40 accent-orange-500"
-                  />
-                  <span>{option.label}</span>
-                </label>
-              );
-            })}
+        {canTempSkip && restoreOption ? (
+          <div className="rounded-xl border border-orange-500/15 bg-[#1a1028] px-3 py-3">
+            <label className="flex items-start gap-2 text-base text-violet-100">
+              <input
+                type="checkbox"
+                checked={temporary}
+                onChange={(event) => setTemporary(event.target.checked)}
+                className="mt-0.5 size-4 shrink-0 rounded border-orange-500/40 accent-orange-500"
+              />
+              <span>{restoreOption.label}</span>
+            </label>
           </div>
         ) : null}
         <div className="grid grid-cols-2 gap-2 pt-1">
@@ -129,7 +107,7 @@ export function SkipHouseDialog({
             className="h-11 bg-orange-500 px-5 text-black hover:bg-orange-400"
             onClick={confirm}
           >
-            {editing ? "שמירת שינויים" : "דילוג על בית"}
+            {editing ? "שמירת שינויים" : "אישור"}
           </Button>
           <Button type="button" variant="outline" className="h-11 px-5" onClick={close}>
             ביטול
