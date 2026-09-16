@@ -52,6 +52,8 @@ export function RouteList({
   originLabel,
   startedFrom,
   hasGps,
+  mapsSegmentRemaining = 0,
+  onContinueInGoogleMaps,
   onRequestLocation,
   onChangeOrigin,
   onSelectHouse,
@@ -75,6 +77,8 @@ export function RouteList({
   originLabel?: string;
   startedFrom?: "gps" | "neighborhood" | "custom";
   hasGps: boolean;
+  mapsSegmentRemaining?: number;
+  onContinueInGoogleMaps?: () => void;
   onRequestLocation?: () => void;
   onChangeOrigin?: () => void;
   onSelectHouse: (id: string, index: number) => void;
@@ -125,6 +129,22 @@ export function RouteList({
 
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-3 py-3">
+      {mapsSegmentRemaining > 0 && onContinueInGoogleMaps ? (
+        <div className="mb-3 rounded-2xl bg-[#160b20] p-3 ring-1 ring-orange-500/30">
+          <p className="text-base text-violet-200">
+            Google Maps מגביל ל־9 עצירות בכל פעם. נשארו עוד {mapsSegmentRemaining} בתים באפליקציה.
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            className="mt-2"
+            onClick={onContinueInGoogleMaps}
+          >
+            <Navigation className="size-3.5" />
+            המשך ב-Google Maps
+          </Button>
+        </div>
+      ) : null}
       <ol className="route-list">
         <li className="route-list-card">
           <div className="flex items-start gap-3">

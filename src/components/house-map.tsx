@@ -27,6 +27,12 @@ import {
 import { distanceMeters } from "@/lib/geo";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { isClosingSoon, isHoursNightOver, isHoursNotYetOpen, isOnBreak, isOpeningSoon } from "@/lib/hours";
+import {
+  pinHoursLaneClass,
+  pinHoursLaneExtraWidth,
+  pinHoursTime,
+  pinHoursTimeLabelHtml,
+} from "@/lib/pin-hours-time";
 import type { ScareLevel } from "@/lib/types";
 import { clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { SKIP_ICON_SVG } from "@/components/skip-icon";
@@ -117,30 +123,8 @@ function pinStatusMark(house: PublicHouse, now: Date, skipped = false) {
   return `<b class="pin-status is-${dot}" aria-label="${label}"></b>`;
 }
 
-function hoursRingHtml(house: PublicHouse, now: Date) {
-  if (isClosingSoon(house, now) && !pinVisitKind(house, now)) {
-    return `<i class="pin-hours-ring is-closing" aria-hidden="true"></i>`;
-  }
-  if (
-    isOpeningSoon(house, now) &&
-    effectiveVisit(house) !== "closed" &&
-    !isHoursNightOver(house, now)
-  ) {
-    return `<i class="pin-hours-ring is-opening" aria-hidden="true"></i>`;
-  }
-  return "";
-}
-
-function hoursPinClass(house: PublicHouse, now: Date) {
-  if (isClosingSoon(house, now) && !pinVisitKind(house, now)) return " is-closing-soon";
-  if (
-    isOpeningSoon(house, now) &&
-    effectiveVisit(house) !== "closed" &&
-    !isHoursNightOver(house, now)
-  ) {
-    return " is-opening-soon";
-  }
-  return "";
+function pinHoursMeta(house: PublicHouse, now: Date) {
+  return pinHoursTime(house, now, Boolean(pinVisitKind(house, now)));
 }
 
 function pinFaceHtml(house: PublicHouse) {
@@ -191,7 +175,8 @@ function housePinHtml(
 ) {
   const selectedClass = extras?.selected ? " is-selected" : "";
   const filteredClass = extras?.filteredOut ? " is-filtered-out" : "";
-  const hoursClass = hoursPinClass(house, now);
+  const hoursMeta = pinHoursMeta(house, now);
+  const laneClass = pinHoursLaneClass(hoursMeta);
   const face = pinFaceKind(house);
   const visit = pinVisitKind(house, now);
   const bareClass = face === "bare" ? " is-undecorated" : "";
@@ -212,7 +197,9 @@ function housePinHtml(
             : face === "scare"
               ? 'aria-label="מקושט"'
               : 'aria-label="לא מקושט"';
-  return `<div class="house-pin${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}" style="${style}" ${label}${idAttr}>${hoursRingHtml(house, now)}${pinStatusMark(house, now, extras?.skipped)}${pinFaceHtml(house)}</div>`;
+  const timeLabel = hoursMeta ? pinHoursTimeLabelHtml(hoursMeta) : "";
+  const pin = `<div class="house-pin${selectedClass}${filteredClass}${bareClass}${visitedClass}${extraClass}" style="${style}" ${label}${idAttr}>${pinStatusMark(house, now, extras?.skipped)}${pinFaceHtml(house)}</div>${timeLabel}`;
+  return `<div class="house-pin-lane${laneClass}">${pin}</div>`;
 }
 
 function fanLayout(count: number) {
@@ -257,7 +244,7 @@ function clusterIcon(
   const fanOpen = expanded && houses.length > 1;
 
   if (!only || houses.length <= 1) {
-    const hoursClass = only ? hoursPinClass(only, now) : "";
+    const hoursExtraW = only ? pinHoursLaneExtraWidth(Boolean(pinHoursMeta(only, now))) : 0;
     const wrapped = wrapRoutePin(
       only
         ? housePinHtml(only, now, {
@@ -270,9 +257,9 @@ function clusterIcon(
       routeOrder,
     );
     return L.divIcon({
-      className: `pumpkin-pin-icon${selectedClass}${filterClass}${hoursClass}`,
+      className: `pumpkin-pin-icon${selectedClass}${filterClass}`,
       html: wrapped.html,
-      iconSize: [PIN_BOX, PIN_BOX + 4 + wrapped.extraH],
+      iconSize: [PIN_BOX + hoursExtraW, PIN_BOX + 4 + wrapped.extraH],
       iconAnchor: [PIN_BOX / 2, PIN_BOX + wrapped.extraH],
     });
   }

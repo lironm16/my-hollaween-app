@@ -42,12 +42,23 @@ const ACCESSIBLE_METERS_PER_MIN = 45;
 const MINUTES_PER_STOP = 2;
 const ACCESSIBLE_MINUTES_PER_STOP = 3;
 /**
- * Google Maps on phones only honors walking with a short waypoint list.
- * The in-app route includes every matching house — no cap.
+ * Google Maps URLs allow up to 9 waypoints between origin and destination.
+ * We cap each handoff at 9 house stops (8 waypoints + final destination).
  */
-export const ROUTE_MAPS_MAX_STOPS = 4;
+export const GOOGLE_MAPS_MAX_STOPS = 9;
+/** @deprecated Use GOOGLE_MAPS_MAX_STOPS */
+export const ROUTE_MAPS_MAX_STOPS = GOOGLE_MAPS_MAX_STOPS;
 /** GraphHopper Maps accepts many walking points (all in-app stops). */
 export const ROUTE_GRAPHHOPPER_MAX_STOPS = 80;
+
+export type GoogleMapsRouteSegment = {
+  url: string;
+  includedStops: number;
+  startIndex: number;
+  totalStops: number;
+  hasMore: boolean;
+  nextStartIndex: number | null;
+};
 
 function pointOf(house: PublicHouse): LatLng {
   return { lat: house.lat, lng: house.lng };
@@ -287,10 +298,10 @@ function fmtLatLng(point: LatLng) {
 /**
  * Official Maps URLs directions (api=1). Without api=1, mobile Maps often
  * ignores travelmode and opens the car route editor — which is what broke walking.
- * Mobile supports only a few waypoints, so we cap stops.
+ * Caller should pass a pre-chunked route (see googleMapsRouteSegment).
  */
 export function googleMapsWalkingUrl(route: WalkingRoute) {
-  const stops = route.stops.slice(0, ROUTE_MAPS_MAX_STOPS);
+  const stops = route.stops;
   if (stops.length === 0) return null;
   const params = new URLSearchParams({
     api: "1",
@@ -301,6 +312,39 @@ export function googleMapsWalkingUrl(route: WalkingRoute) {
   const via = stops.slice(0, -1).map((stop) => fmtLatLng(pointOf(stop.house)));
   if (via.length > 0) params.set("waypoints", via.join("|"));
   return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
+
+/** One Google Maps handoff chunk — at most GOOGLE_MAPS_MAX_STOPS houses. */
+export function googleMapsRouteSegment(
+  route: WalkingRoute,
+  startIndex = 0,
+): GoogleMapsRouteSegment | null {
+  const totalStops = route.stops.length;
+  if (totalStops === 0 || startIndex >= totalStops) return null;
+
+  const chunkStops = route.stops.slice(startIndex, startIndex + GOOGLE_MAPS_MAX_STOPS);
+  const segmentOrigin =
+    startIndex === 0
+      ? route.origin
+      : pointOf(route.stops[startIndex - 1]!.house);
+  const segmentRoute: WalkingRoute = {
+    ...route,
+    origin: segmentOrigin,
+    stops: chunkStops,
+  };
+  const url = googleMapsWalkingUrl(segmentRoute);
+  if (!url) return null;
+
+  const includedStops = chunkStops.length;
+  const nextStart = startIndex + includedStops;
+  return {
+    url,
+    includedStops,
+    startIndex,
+    totalStops,
+    hasMore: nextStart < totalStops,
+    nextStartIndex: nextStart < totalStops ? nextStart : null,
+  };
 }
 
 /** Turn-by-turn walking to one stop — most reliable on iPhone. */

@@ -4,6 +4,7 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Info } from "lucide-react";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
+import { PinHoursTimeLabel } from "@/components/pin-hours-time-label";
 import { SkipIcon } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
 
@@ -28,21 +29,17 @@ function SwatchPin({
   visited?: boolean;
   skipped?: boolean;
 }) {
-  return (
+  const pin = (
     <div
       className={cn(
         "house-pin is-legend relative",
         multi && "is-building",
-        hours === "closing" && "is-closing-soon",
-        hours === "opening" && "is-opening-soon",
         bare && "is-undecorated",
         visited && "is-visited",
       )}
       style={{ background: bare ? "#94a3b8" : "#6d28d9" }}
       aria-hidden
     >
-      {hours === "closing" ? <i className="pin-hours-ring is-closing" /> : null}
-      {hours === "opening" ? <i className="pin-hours-ring is-opening" /> : null}
       {scare || bare ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img className="pin-scare" src={`/icons/pin-scare-${scare ?? "mild"}.png`} alt="" />
@@ -74,6 +71,26 @@ function SwatchPin({
       {!skipped && candy ? <b className={`pin-status is-${candy}`} /> : null}
     </div>
   );
+
+  if (hours === "closing" || hours === "opening") {
+    return (
+      <div
+        className={cn(
+          "house-pin-lane has-hours-time",
+          hours === "closing" ? "is-closing-soon" : "is-opening-soon",
+        )}
+        aria-hidden
+      >
+        {pin}
+        <PinHoursTimeLabel
+          kind={hours === "closing" ? "closing" : "opening"}
+          time={hours === "closing" ? "21:00" : "20:00"}
+        />
+      </div>
+    );
+  }
+
+  return pin;
 }
 
 const GROUPS: { title: string; items: { key: string; label: string; node: ReactNode }[] }[] = [
@@ -99,8 +116,8 @@ const GROUPS: { title: string; items: { key: string; label: string; node: ReactN
     items: [
       { key: "closed", label: "סגור", node: <SwatchPin scare="mild" closed /> },
       { key: "break", label: "הפסקה", node: <SwatchPin scare="mild" onBreak /> },
-      { key: "close", label: "נסגר בקרוב", node: <SwatchPin scare="mild" hours="closing" /> },
-      { key: "open", label: "נפתח בקרוב", node: <SwatchPin scare="mild" hours="opening" /> },
+      { key: "close", label: "סגירה", node: <SwatchPin scare="mild" hours="closing" /> },
+      { key: "open", label: "פתיחה", node: <SwatchPin scare="mild" hours="opening" /> },
       { key: "multi", label: "כמה בתים", node: <SwatchPin multi /> },
       { key: "visited", label: "ביקרתי", node: <SwatchPin scare="mild" visited /> },
       { key: "skipped", label: "דילגתי", node: <SwatchPin scare="mild" skipped /> },
@@ -167,8 +184,14 @@ export function MapLegend() {
                         <h3 className="mb-1.5 text-base font-semibold text-orange-200">{group.title}</h3>
                         <ul className="flex flex-wrap justify-start gap-x-1 gap-y-2">
                           {group.items.map((item) => (
-                            <li key={item.key} className="flex w-[4.75rem] min-w-0 flex-col items-center gap-1">
-                              <div className="grid size-16 shrink-0 place-items-center overflow-visible" dir="ltr">
+                            <li
+                              key={item.key}
+                              className={cn(
+                                "flex min-w-0 flex-col items-center gap-1",
+                                item.key === "close" || item.key === "open" ? "w-[7.5rem]" : "w-[4.75rem]",
+                              )}
+                            >
+                              <div className="grid h-16 w-full shrink-0 place-items-center overflow-visible" dir="ltr">
                                 {item.node}
                               </div>
                               <span className="w-full text-center text-base leading-tight text-violet-100">

@@ -63,9 +63,11 @@ import { HOUSE_SET_LABELS, countSkippedInSet, houseMatchesSet } from "@/lib/hous
 import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
 import { formatDistance } from "@/lib/geo";
 import { isRouteFullyVisited } from "@/lib/route-completion";
-import { buildWalkingRoute } from "@/lib/route";
+import { openGoogleMapsRouteSegment } from "@/lib/open-google-maps";
+import { buildWalkingRoute, googleMapsRouteSegment, type WalkingRoute } from "@/lib/route";
 import { diffRouteBySkippedIds, rebuildRouteAfterSkipChange } from "@/lib/route-changes";
 import { drainPendingRouteRestores } from "@/lib/route-mode";
+import { toast } from "sonner";
 import {
   skipStatusSnapshot,
   temporaryRestoreAlertText,
@@ -74,6 +76,7 @@ import {
 } from "@/lib/skip-reasons";
 import { houseSelectionAnnouncement } from "@/lib/map-a11y";
 import type { Catalog, PublicHouse } from "@/lib/types";
+import { previewTestModeEnabled } from "@/lib/preview-deploy";
 import { cn } from "@/lib/utils";
 
 export function NeighborhoodApp({
@@ -91,7 +94,8 @@ export function NeighborhoodApp({
     geo.status === "idle" || geo.status === "pending" || geo.status === "ready";
   const { choice: originChoice, resolved: origin, setChoice: setOriginChoice } = useDistanceOrigin(gps);
   const { houseSet } = useHouseSet();
-  const activeHouseSet = admin ? houseSet : "real";
+  const previewTestMode = previewTestModeEnabled();
+  const activeHouseSet = admin || previewTestMode ? houseSet : "real";
   const view = useSyncExternalStore(
     (onStoreChange) => {
       window.addEventListener("hw-home-view", onStoreChange);
@@ -121,6 +125,8 @@ export function NeighborhoodApp({
     addedHouses?: RouteChangeEntry[];
     onConfirm: (includeNewHouses: boolean) => void;
   } | null>(null);
+  const [mapsSegmentStart, setMapsSegmentStart] = useState<number | null>(null);
+  const pendingMapsHandoff = useRef(false);
 
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
@@ -448,13 +454,59 @@ export function NeighborhoodApp({
             : null,
   };
 
+  const handoffRouteToGoogleMaps = useCallback((route: WalkingRoute, startIndex = 0) => {
+      const segment = googleMapsRouteSegment(route, startIndex);
+      if (!segment) {
+        toast.message("אין עצירות לפתיחה ב-Google Maps");
+        return;
+      }
+      openGoogleMapsRouteSegment(segment);
+      setMapsSegmentStart(segment.nextStartIndex);
+      if (segment.hasMore) {
+        const remaining = segment.totalStops - (segment.startIndex + segment.includedStops);
+        toast.message(
+          `נפתחו ${segment.includedStops} עצירות ב-Google Maps. עוד ${remaining} נשארו באפליקציה.`,
+        );
+      }
+    },
+    [],
+  );
+
   function enterRouteMode() {
+    if (routeMode) {
+      originPick.exitOriginPick();
+      setMapsSegmentStart(null);
+      exitRouteMode();
+      return;
+    }
     originPick.exitOriginPick();
+    pendingMapsHandoff.current = true;
     startRouteMode();
+  }
+
+  useEffect(() => {
+    if (!pendingMapsHandoff.current || !routeMode) return;
+    const route = pinnedRoute ?? filterRoute;
+    if (!route) return;
+    if (route.stops.length === 0) {
+      pendingMapsHandoff.current = false;
+      toast.message("אין עצירות במסלול — שנו סינון ונסו שוב");
+      return;
+    }
+    if (origin.kind === "gps" && !gps && pendingRouteGps.current) return;
+    pendingMapsHandoff.current = false;
+    handoffRouteToGoogleMaps(route, 0);
+  }, [routeMode, pinnedRoute, filterRoute, gps, origin.kind, handoffRouteToGoogleMaps, pendingRouteGps]);
+
+  function continueRouteInGoogleMaps() {
+    const route = walkingRoute ?? filterRoute;
+    if (!route || mapsSegmentStart == null) return;
+    handoffRouteToGoogleMaps(route, mapsSegmentStart);
   }
 
   function goHome() {
     originPick.exitOriginPick();
+    setMapsSegmentStart(null);
     exitRouteMode();
     editFlow.close();
     selection.resetForNavigation();
@@ -584,7 +636,7 @@ export function NeighborhoodApp({
         originShifted={originChoice.kind !== "gps"}
         onOpenOriginPicker={() => originPick.setOriginPickerOpen(true)}
         routeMode={routeMode}
-        onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
+        onToggleRoute={enterRouteMode}
         houses={visible}
         routeTicker={originPick.routeTicker}
       />
@@ -720,7 +772,9 @@ export function NeighborhoodApp({
               ) : null}
               <CatalogMetaChip
                 hidden={Boolean(selection.selected) && !originPick.originPickActive}
-                houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
+                houseSetLabel={
+                  admin || previewTestMode ? HOUSE_SET_LABELS[activeHouseSet] : null
+                }
               />
             </div>
             <div
@@ -747,6 +801,14 @@ export function NeighborhoodApp({
                     originLabel={activeRoute?.originLabel}
                     startedFrom={activeRoute?.startedFrom}
                     hasGps={Boolean(gps)}
+                    mapsSegmentRemaining={
+                      mapsSegmentStart != null && activeRoute
+                        ? activeRoute.stops.length - mapsSegmentStart
+                        : 0
+                    }
+                    onContinueInGoogleMaps={
+                      mapsSegmentStart != null ? continueRouteInGoogleMaps : undefined
+                    }
                     onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
                     onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
                     selectedId={selection.selected?.id ?? null}

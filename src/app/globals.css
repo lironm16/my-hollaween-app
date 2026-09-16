@@ -933,6 +933,51 @@
     0 2px 6px rgba(0, 0, 0, 0.55);
 }
 
+.house-pin-lane {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-direction: row;
+  pointer-events: none;
+}
+
+.house-pin-lane .house-pin {
+  flex-shrink: 0;
+  pointer-events: auto;
+}
+
+.pin-hours-time {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  padding: 2px 7px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.45);
+}
+
+.pin-hours-time.is-closing {
+  background: #f97316;
+  color: #1c0e24;
+}
+
+.pin-hours-time.is-opening {
+  background: #22d3ee;
+  color: #1c0e24;
+}
+
+.house-pin-lane.has-hours-time .pin-hours-time {
+  position: relative;
+  z-index: 3;
+}
+
 .house-pin .pin-hours-ring,
 .pumpkin-pin .pin-hours-ring {
   position: absolute;

@@ -27,6 +27,14 @@ function isHouseSet(value: string | null | undefined): value is HouseSet {
   return Boolean(value && (HOUSE_SETS as readonly string[]).includes(value));
 }
 
+function previewHouseSetDefault(): HouseSet {
+  if (typeof window === "undefined") return "real";
+  return process.env.NEXT_PUBLIC_VERCEL_ENV === "preview" ||
+    process.env.NEXT_PUBLIC_PREVIEW_DEPLOY === "1"
+    ? "all"
+    : "real";
+}
+
 export function readHouseSet(): HouseSet {
   if (typeof window === "undefined") return "real";
   try {
@@ -35,7 +43,7 @@ export function readHouseSet(): HouseSet {
   } catch {
     /* private mode */
   }
-  return "real";
+  return previewHouseSetDefault();
 }
 
 export function writeHouseSet(next: HouseSet) {

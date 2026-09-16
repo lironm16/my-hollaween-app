@@ -96,7 +96,8 @@ export function NeighborhoodToolbar({
         <OriginTrigger shifted={originShifted} onClick={onOpenOriginPicker} />
         <button
           type="button"
-          aria-label={routeMode ? "יציאה מהמסלול" : "מסלול"}
+          aria-label={routeMode ? "יציאה מהמסלול" : "מסלול ב-Google Maps"}
+          title={routeMode ? "יציאה מהמסלול" : "מסלול ב-Google Maps"}
           aria-pressed={routeMode}
           onClick={onToggleRoute}
           className={cn(

@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { applyClockSearchParams } from "@/lib/app-clock";
+import { bootstrapPreviewDeploy } from "@/lib/preview-deploy";
 
-/** Apply ?rehearsal=open and ?server=down from the URL without suspending the tree. */
+/** Apply ?rehearsal=open, preview defaults, and ?server=down from the URL. */
 export function RehearsalBoot() {
-  useEffect(() => {
+  useLayoutEffect(() => {
+    bootstrapPreviewDeploy();
     applyClockSearchParams(window.location.search);
   }, []);
   return null;

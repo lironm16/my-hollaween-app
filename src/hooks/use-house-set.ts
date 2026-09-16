@@ -13,7 +13,15 @@ function subscribe(onStoreChange: () => void) {
 }
 
 export function useHouseSet() {
-  const houseSet = useSyncExternalStore(subscribe, readHouseSet, () => "real" as HouseSet);
+  const houseSet = useSyncExternalStore(
+    subscribe,
+    readHouseSet,
+    () =>
+      (process.env.NEXT_PUBLIC_VERCEL_ENV === "preview" ||
+      process.env.NEXT_PUBLIC_PREVIEW_DEPLOY === "1"
+        ? "all"
+        : "real") as HouseSet,
+  );
   const setHouseSet = useCallback((next: HouseSet) => {
     writeHouseSet(next);
   }, []);

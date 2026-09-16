@@ -169,7 +169,7 @@ export default function HoursPreviewPage() {
                           <span>🎃</span>
                         </div>
                         <p className="text-base text-orange-200">
-                          על המפה: עיגול כתום שנמוג לאט סביב הסיכה בחצי השעה האחרונה. בכרטיס: ״נסגר בקרוב ב־…״ בלי אייקון.
+                          על המפה: תווית כתומה עם שעת הסגירה ליד הסיכה. בכרטיס: ״נסגר בקרוב ב־…״.
                         </p>
                       </div>
                     ) : null}
@@ -199,7 +199,7 @@ export default function HoursPreviewPage() {
                           <span>🎃</span>
                         </div>
                         <p className="text-base text-cyan-100">
-                          על המפה: עיגול טורקיז שנמוג לאט סביב הסיכה בחצי השעה שלפני הפתיחה. בכרטיס: ״נפתח בקרוב ב־…״ בלי אייקון.
+                          על המפה: תווית טורקיז עם שעת הפתיחה ליד הסיכה. בכרטיס: ״נפתח בקרוב ב־…״.
                         </p>
                       </div>
                     ) : null}
