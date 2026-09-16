@@ -13,24 +13,11 @@ import { filterHouses } from "@/lib/filter-houses";
 import { visitWindowIssue } from "@/lib/hours";
 import { resolveVisitWindow } from "@/lib/visit-window";
 import type { HouseFiltersState } from "@/lib/offline-db";
-import { diffRouteByFilters, type RouteChangeEntry } from "@/lib/route-changes";
-import { shouldSkipRoutePrompt } from "@/lib/route-prompts";
+import { diffRouteByFilters } from "@/lib/route-changes";
 import { buildWalkingRouteOrdered, type WalkingRoute } from "@/lib/route";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
-
-type RoutePrompt = {
-  kind: "enter-route" | "filter-change" | "status-change";
-  title: string;
-  description: string;
-  confirmLabel: string;
-  includeAddsLabel?: string;
-  updatesOnlyLabel?: string;
-  removedHouses?: RouteChangeEntry[];
-  addedHouses?: RouteChangeEntry[];
-  onConfirm: (includeNewHouses: boolean) => void;
-};
 
 export function useFilterDraft({
   filters,
@@ -44,7 +31,6 @@ export function useFilterDraft({
   visitedIds,
   skippedIds,
   now,
-  setRoutePrompt,
 }: {
   filters: HouseFiltersState;
   updateFilters: (
@@ -64,7 +50,6 @@ export function useFilterDraft({
   visitedIds: string[];
   skippedIds: string[];
   now: Date;
-  setRoutePrompt: (prompt: RoutePrompt | null) => void;
 }) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filterDraft, setFilterDraft] = useState<HouseFiltersState | null>(null);
@@ -178,25 +163,8 @@ export function useFilterDraft({
       applyFiltersWithRoute(nextFilters, false);
       return;
     }
-    const { removed: removedHouses, added: addedHouses } = previewRouteDiff(nextFilters);
-    const hasRouteChange = removedHouses.length > 0 || addedHouses.length > 0;
-    if (!hasRouteChange) {
-      applyFiltersWithRoute(nextFilters, false);
-      return;
-    }
-    if (shouldSkipRoutePrompt("filter-change")) {
-      applyFiltersWithRoute(nextFilters, addedHouses.length > 0);
-      return;
-    }
-    setRoutePrompt({
-      kind: "filter-change",
-      title: "לעדכן את הסינון?",
-      description: "ערכת שינויים בסינון שישנו את המסלול",
-      confirmLabel: "עדכון הסינון",
-      removedHouses,
-      addedHouses,
-      onConfirm: (includeNew) => applyFiltersWithRoute(nextFilters, includeNew),
-    });
+    const { added: addedHouses } = previewRouteDiff(nextFilters);
+    applyFiltersWithRoute(nextFilters, addedHouses.length > 0);
   }
 
   return {

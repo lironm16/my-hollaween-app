@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
   DEFAULT_PUSH_TOPIC_PREFS,
@@ -13,24 +13,7 @@ import {
   type PushTopicPrefs,
 } from "@/lib/push-client";
 import { anyPushTopicOn, PUSH_TOPIC_ROWS, PUSH_TOPICS } from "@/lib/push-topics";
-import {
-  ROUTE_PROMPT_EVENT,
-  ROUTE_PROMPT_KINDS,
-  ROUTE_PROMPT_LABELS,
-  setSkipRoutePrompt,
-  shouldSkipRoutePrompt,
-  type RoutePromptKind,
-} from "@/lib/route-prompts";
 import { cn } from "@/lib/utils";
-
-function subscribeRoutePrompts(onStoreChange: () => void) {
-  window.addEventListener(ROUTE_PROMPT_EVENT, onStoreChange);
-  return () => window.removeEventListener(ROUTE_PROMPT_EVENT, onStoreChange);
-}
-
-function readRoutePromptSnapshot() {
-  return ROUTE_PROMPT_KINDS.map((kind) => !shouldSkipRoutePrompt(kind)).join("\0");
-}
 
 function SettingSwitch({
   on,
@@ -97,11 +80,6 @@ function SettingsSection({ title, children }: { title: string; children: ReactNo
 }
 
 export function DeviceSettings() {
-  const routePromptSnapshot = useSyncExternalStore(
-    subscribeRoutePrompts,
-    readRoutePromptSnapshot,
-    () => "",
-  );
   const [topics, setTopics] = useState<PushTopicPrefs>(DEFAULT_PUSH_TOPIC_PREFS);
   const [savedTopics, setSavedTopics] = useState<PushTopicPrefs>(DEFAULT_PUSH_TOPIC_PREFS);
   const [pushBusy, setPushBusy] = useState(false);
@@ -119,16 +97,6 @@ export function DeviceSettings() {
     window.addEventListener("hw-push-changed", onPushChange);
     return () => window.removeEventListener("hw-push-changed", onPushChange);
   }, []);
-
-  const routePrompts = ROUTE_PROMPT_KINDS.map((kind) => ({
-    kind,
-    show: !shouldSkipRoutePrompt(kind),
-  }));
-  void routePromptSnapshot;
-
-  function setRoutePromptVisible(kind: RoutePromptKind, show: boolean) {
-    setSkipRoutePrompt(kind, !show);
-  }
 
   async function savePushTopics(next: PushTopicPrefs) {
     setTopics(next);
@@ -165,24 +133,6 @@ export function DeviceSettings() {
 
   return (
     <div className="space-y-3" dir="rtl">
-      <SettingsSection title="אישורי מסלול וסינון">
-        <p className="px-1 text-sm text-violet-300">
-          ההגדרות נשמרות רק במכשיר הזה. כיבוי «לא להציג שוב» בחלון האישור אפשר לבטל כאן.
-        </p>
-        {routePrompts.map(({ kind, show }) => {
-          const labels = ROUTE_PROMPT_LABELS[kind];
-          return (
-            <SettingSwitch
-              key={kind}
-              title={labels.title}
-              hint={labels.hint}
-              on={show}
-              onChange={(next) => setRoutePromptVisible(kind, next)}
-            />
-          );
-        })}
-      </SettingsSection>
-
       <SettingsSection title="התראות">
         <p className="px-1 text-sm text-violet-300">
           סוגי ההתראות שיישלחו למכשיר. הפעלה/כיבוי מלא דרך סמל הפעמון בראש המסך.

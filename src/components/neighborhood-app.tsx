@@ -20,7 +20,6 @@ import {
 import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
-import { RouteConfirmDialog } from "@/components/route-confirm-dialog";
 import { SkipHouseDialog } from "@/components/skip-house-dialog";
 import { LikeCheer } from "@/components/like-cheer";
 import { RouteCompleteCheer } from "@/components/route-complete-cheer";
@@ -42,7 +41,6 @@ import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useSkippedHouses } from "@/hooks/use-skipped-houses";
-import type { RouteChangeEntry } from "@/lib/route-changes";
 import { useDistanceOrigin } from "@/hooks/use-distance-origin";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { config } from "@/lib/config";
@@ -111,18 +109,6 @@ export function NeighborhoodApp({
   const [askedLocation, setAskedLocation] = useState(false);
   const [skipDialogHouse, setSkipDialogHouse] = useState<PublicHouse | null>(null);
   const { alerts: tempRestoreAlerts, dismiss: dismissTempRestoreAlert } = useTempSkipRestoreAlerts();
-  const [routePrompt, setRoutePrompt] = useState<{
-    kind: "enter-route" | "filter-change" | "status-change";
-    title: string;
-    description: string;
-    confirmLabel: string;
-    includeAddsLabel?: string;
-    updatesOnlyLabel?: string;
-    removedHouses?: RouteChangeEntry[];
-    addedHouses?: RouteChangeEntry[];
-    onConfirm: (includeNewHouses: boolean) => void;
-  } | null>(null);
-
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
   const skips = useSkippedHouses();
@@ -243,7 +229,6 @@ export function NeighborhoodApp({
     visitedIds: visits.visitedIds,
     skippedIds: skips.skippedIds,
     now,
-    setRoutePrompt,
   });
 
   const originPick = useOriginPick({
@@ -853,22 +838,6 @@ export function NeighborhoodApp({
         onConfirm={confirmSkipHouse}
         onUnskip={skipDialogHouse && skips.skipped(skipDialogHouse.id) ? unskipFromDialog : undefined}
         onCancel={() => setSkipDialogHouse(null)}
-      />
-      <RouteConfirmDialog
-        open={Boolean(routePrompt)}
-        title={routePrompt?.title ?? ""}
-        description={routePrompt?.description ?? ""}
-        removedHouses={routePrompt?.removedHouses}
-        addedHouses={routePrompt?.addedHouses}
-        promptKind={routePrompt?.kind ?? "enter-route"}
-        confirmLabel={routePrompt?.confirmLabel ?? "המשך"}
-        includeAddsLabel={routePrompt?.includeAddsLabel}
-        updatesOnlyLabel={routePrompt?.updatesOnlyLabel}
-        onConfirm={(includeNew) => {
-          routePrompt?.onConfirm(includeNew);
-          setRoutePrompt(null);
-        }}
-        onCancel={() => setRoutePrompt(null)}
       />
       <VisitCheer show={visitCheer} />
       <RouteCompleteCheer show={routeCompleteCheer} />
