@@ -1,42 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { AdminStatsCard, useSnapshotStats } from "@/components/admin-stats";
 import { AppHeader } from "@/components/app-header";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
-import type { ActivityTotals } from "@/lib/activity-sync";
-
-function useActivityTotals() {
-  const [totals, setTotals] = useState<ActivityTotals | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = () => {
-      void fetch("/api/activity", { cache: "no-store" })
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data: ActivityTotals & { disabled?: boolean } | null) => {
-          if (!cancelled && data && !data.disabled && typeof data.totalLiked === "number") {
-            setTotals(data);
-          }
-        })
-        .catch(() => undefined);
-    };
-    load();
-    const timer = window.setInterval(load, 20_000);
-    const onRefresh = () => load();
-    window.addEventListener("hw-activity-synced", onRefresh);
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
-      window.removeEventListener("hw-activity-synced", onRefresh);
-    };
-  }, []);
-
-  return totals;
-}
 
 export default function StatsPage() {
   const { admin } = useAdminSession();
@@ -44,7 +13,6 @@ export default function StatsPage() {
   const stats = useSnapshotStats(true, admin ? houseSet : "real");
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
-  const activity = useActivityTotals();
 
   return (
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
@@ -57,8 +25,6 @@ export default function StatsPage() {
               stats={stats}
               likedCount={likes.likedIds.length}
               visitedCount={visits.visitedIds.length}
-              aggregateLiked={activity?.totalLiked}
-              aggregateVisited={activity?.totalVisited}
             />
           ) : (
             <p className="text-base text-violet-300">טוענים נתונים…</p>
