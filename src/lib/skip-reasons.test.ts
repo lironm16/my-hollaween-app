@@ -140,11 +140,11 @@ describe("temporaryRestoreAlertText", () => {
   it("mentions the house and restore trigger", () => {
     assert.match(
       temporaryRestoreAlertText(stub({ name: "משפחת לוין" }), "not-open"),
-      /משפחת לוין חזר למסלול — הבית פתוח/,
+      /משפחת לוין חזר לרשימה — הבית פתוח/,
     );
     assert.match(
       temporaryRestoreAlertText(stub({ name: "משפחת לוין" }), "candy-out"),
-      /משפחת לוין חזר למסלול — יש ממתקים/,
+      /משפחת לוין חזר לרשימה — יש ממתקים/,
     );
   });
 });
@@ -167,7 +167,7 @@ describe("skipMetaSummary", () => {
         statusKey: "x",
         skippedAt: "2026-01-01T00:00:00.000Z",
       }),
-      "דילוג · החזרה ידנית",
+      "דילגתם על הבית",
     );
   });
 });

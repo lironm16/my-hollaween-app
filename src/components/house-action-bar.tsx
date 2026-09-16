@@ -180,7 +180,7 @@ export function HouseActionBar({
     if (onSkip) {
       items.push({
         id: "skip",
-        label: "דילוג במסלול",
+        label: "דילוג על בית",
         icon: <SkipIcon className={MENU_ICON_CLASS} />,
         onClick: onSkip,
       });

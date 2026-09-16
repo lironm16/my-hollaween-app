@@ -51,7 +51,7 @@ export default function SkippedHousesPage() {
           {skips.skippedIds.length === 0 ? (
             <div className="px-1 py-8">
               <p className="text-base text-violet-200">אין בתים שדילגתם עליהם.</p>
-              <p className="mt-2 text-sm text-violet-400">בתים שתדלגו עליהם במסלול יופיעו כאן.</p>
+              <p className="mt-2 text-sm text-violet-400">בתים שדילגתם עליהם יופיעו כאן.</p>
               <Link
                 href="/"
                 className={cn(buttonVariants({ variant: "outline" }), "mt-4 inline-flex border-orange-400/40 text-orange-100")}

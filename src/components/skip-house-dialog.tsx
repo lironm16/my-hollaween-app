@@ -77,7 +77,7 @@ export function SkipHouseDialog({
     <HouseEditModal
       open={open}
       onClose={close}
-      title={editing ? "עריכת דילוג" : "דילוג מהמסלול"}
+      title={editing ? "עריכת דילוג" : "דילוג על בית"}
       subtitle={house ? houseHeadline(house) : undefined}
     >
       <div className="space-y-3">
@@ -85,7 +85,7 @@ export function SkipHouseDialog({
           <HouseSkippedBanner meta={existingMeta} />
         ) : null}
         <p className="text-right text-base text-violet-200">
-          {editing ? "אפשר לשנות את סוג הדילוג או להסיר את הדילוג." : "הבית יוסר מהמסלול"}
+          {editing ? "אפשר לשנות את סוג הדילוג או להסיר את הדילוג." : "דילגתם על הבית — הוא לא יופיע ברשימה הרגילה."}
         </p>
         {canTempSkip ? (
           <div className="space-y-2 rounded-xl border border-orange-500/15 bg-[#1a1028] px-3 py-3">
@@ -96,12 +96,12 @@ export function SkipHouseDialog({
                 onChange={(event) => setTemporary(event.target.checked)}
                 className="mt-0.5 size-4 shrink-0 rounded border-orange-500/40 accent-orange-500"
               />
-              <span>הבית יחזור למסלול כאשר</span>
+              <span>הבית יחזור לרשימה כאשר</span>
             </label>
             <div
               className={`mr-6 space-y-2 ${temporary ? "" : "pointer-events-none opacity-45"}`}
               role="radiogroup"
-              aria-label="הבית יחזור למסלול כאשר"
+              aria-label="הבית יחזור לרשימה כאשר"
             >
               {restoreOptions.map((option) => (
                 <label
@@ -129,7 +129,7 @@ export function SkipHouseDialog({
             className="h-11 bg-orange-500 px-5 text-black hover:bg-orange-400"
             onClick={confirm}
           >
-            {editing ? "שמירת שינויים" : "הסר מהמסלול"}
+            {editing ? "שמירת שינויים" : "דילוג על בית"}
           </Button>
           <Button type="button" variant="outline" className="h-11 px-5" onClick={close}>
             ביטול
