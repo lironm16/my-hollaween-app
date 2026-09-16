@@ -203,6 +203,15 @@ export function HouseFiltersContent({
         </FilterToggle>
       </FilterSection>
 
+      <FilterSection title="נגישות">
+        <FilterToggle
+          checked={filters.accessibleOnly}
+          onChange={() => onPatch({ accessibleOnly: !filters.accessibleOnly })}
+        >
+          <AccessibleMark labeled />
+        </FilterToggle>
+      </FilterSection>
+
       <FilterSection title="ממתקים">
         {CANDY_TONES.map(({ id, label }) => (
           <FilterOption
@@ -279,15 +288,6 @@ export function HouseFiltersContent({
             {area}
           </FilterOption>
         ))}
-      </FilterSection>
-
-      <FilterSection title="נגישות">
-        <FilterToggle
-          checked={filters.accessibleOnly}
-          onChange={() => onPatch({ accessibleOnly: !filters.accessibleOnly })}
-        >
-          <AccessibleMark labeled />
-        </FilterToggle>
       </FilterSection>
     </>
   );
