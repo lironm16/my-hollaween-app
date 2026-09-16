@@ -118,6 +118,22 @@ export function temporaryRestoreAlertText(house: PublicHouse, reason: SkipReason
   return `${name} חזר לרשימה`;
 }
 
+/** Whether the house was closed or out of candy when the skip was recorded. */
+export function skipSnapshotHadCandyOutOrClosed(statusKey: string) {
+  const [visit, frozen, breakStatus, hoursOpen, candy] = statusKey.split("|");
+  if (visit === "closed") return true;
+  if (frozen === "frozen" || breakStatus === "break") return true;
+  if (hoursOpen === "closed-hours") return true;
+  if (candy === "out") return true;
+  return false;
+}
+
+/** Temporary auto-restore still runs silently unless candy or closed status triggered the skip. */
+export function shouldEmitTemporarySkipRestoreAlert(meta: SkippedHouseMeta) {
+  if (!meta.temporary || !isTemporarySkipReason(meta.reason)) return false;
+  return skipSnapshotHadCandyOutOrClosed(meta.statusKey);
+}
+
 /** @deprecated Use availableTemporaryRestoreOptions instead. */
 export function returnRestoreReasons(
   house: PublicHouse,
