@@ -15,7 +15,7 @@ import {
   temporaryRestoreReasonMet,
   temporarySkipRestoreMet,
 } from "@/lib/skip-reasons";
-import type { HouseFiltersState } from "@/lib/offline-db";
+import type { HouseFiltersState, SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 
 function stub(overrides: Partial<PublicHouse> = {}): PublicHouse {
@@ -149,10 +149,10 @@ describe("temporarySkipRestoreMet", () => {
     const closedNoCandy = stub({ visit: "closed", soldOut: true, treatStock: { candy: "out" } });
     const openNoCandy = stub({ visit: "come", soldOut: false, treatStock: { candy: "out" } });
     const openWithCandy = stub({ visit: "come", soldOut: false, treatStock: { candy: "plenty" } });
-    const dualMeta = {
-      reason: "not-open" as const,
+    const dualMeta: SkippedHouseMeta = {
+      reason: "not-open",
       temporary: true,
-      restoreTriggers: ["not-open", "candy-out"] as const,
+      restoreTriggers: ["not-open", "candy-out"],
       statusKey: "x",
       skippedAt: "2026-01-01T00:00:00.000Z",
     };
