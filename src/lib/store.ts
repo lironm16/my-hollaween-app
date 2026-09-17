@@ -66,7 +66,6 @@ import {
 } from "@/lib/blob-auth";
 import {
   firestoreConfigured,
-  queryFirestoreHousesSince,
   queryRemovedHouseIdsSince,
   readFirestoreDb,
   readFirestoreHouse,
@@ -477,6 +476,45 @@ let mem: DbFile | null = null;
 let memAt = 0;
 let catalogMem: Catalog | null = null;
 
+type RemovalTombstone = { id: string; deletedAt: string };
+const REMOVAL_MEM_MAX = 200;
+let recentRemovals: RemovalTombstone[] = [];
+
+function isMemWarm() {
+  return Boolean(mem && Date.now() - memAt < MEM_TTL_MS);
+}
+
+/** Tombstone deletes on this instance so warm delta polls skip Firestore. */
+export function recordCatalogRemoval(id: string, deletedAt = new Date().toISOString()) {
+  const docId = canonicalHouseId(id);
+  if (!docId) return;
+  recentRemovals = [
+    { id: docId, deletedAt },
+    ...recentRemovals.filter((entry) => entry.id !== docId),
+  ].slice(0, REMOVAL_MEM_MAX);
+}
+
+function syncRemovalMem(prev: DbFile, db: DbFile) {
+  const nextIds = new Set(db.houses.map((house) => canonicalHouseId(house.id)));
+  for (const house of prev.houses) {
+    const id = canonicalHouseId(house.id);
+    if (id && !nextIds.has(id)) recordCatalogRemoval(id, db.updatedAt);
+  }
+}
+
+function catalogRemovalsSince(sinceMs: number) {
+  return recentRemovals
+    .filter((entry) => stamp({ updatedAt: entry.deletedAt }) > sinceMs)
+    .map((entry) => entry.id);
+}
+
+/** Used by warm delta polls; exported for tests. */
+export function catalogRemovalsSinceIso(since: string) {
+  const sinceMs = Date.parse(since);
+  if (!Number.isFinite(sinceMs)) return [];
+  return catalogRemovalsSince(sinceMs);
+}
+
 function setMem(db: DbFile) {
   mem = db;
   memAt = Date.now();
@@ -523,6 +561,7 @@ async function writeDurableDb(db: DbFile, prev?: DbFile | null) {
 }
 
 async function persistDb(db: DbFile, prev?: DbFile | null) {
+  if (prev) syncRemovalMem(prev, db);
   const cachedPush = pickPushSettings(db, mem, getGlobalDb());
   const pushBlob = cachedPush?.templates ? null : await readPushSettingsBlob();
   const blobWrapper = asPushCandidate(cachedPush ?? pushBlob);
@@ -711,30 +750,16 @@ export async function getCatalog(): Promise<Catalog> {
   return catalogMem;
 }
 
-export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
-  await ensurePushSettingsGeneration();
+/** Build a catalog delta from the in-memory db (no Firestore house queries). */
+export function buildCatalogDeltaFromDb(
+  db: DbFile,
+  since: string,
+  removed: string[] = [],
+): CatalogDelta {
   const sinceMs = Date.parse(since);
-  if (!Number.isFinite(sinceMs) || sinceMs <= 0) {
-    const full = await getCatalog();
-    return { ...full, full: true };
-  }
-
-  const db = await loadDb();
-  let houses: PublicHouse[];
-  let removed: string[];
-
-  if (firestoreConfigured()) {
-    [houses, removed] = await Promise.all([
-      queryFirestoreHousesSince(since),
-      queryRemovedHouseIdsSince(since),
-    ]);
-  } else {
-    houses = db.houses
-      .filter((house) => isPubliclyListed(house) && stamp(house) > sinceMs)
-      .map((house) => toPublicHouse(house) as PublicHouse);
-    removed = [];
-  }
-
+  const houses = db.houses
+    .filter((house) => isPubliclyListed(house) && stamp(house) > sinceMs)
+    .map((house) => toPublicHouse(house) as PublicHouse);
   const pushChanged = pushSettingsStamp(db.pushSettings) > sinceMs;
   return {
     updatedAt: db.updatedAt,
@@ -745,6 +770,25 @@ export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
       ? { pushTemplates: asCatalog(db.houses, db.updatedAt, db.pushSettings).pushTemplates }
       : {}),
   };
+}
+
+export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
+  await ensurePushSettingsGeneration();
+  const sinceMs = Date.parse(since);
+  if (!Number.isFinite(sinceMs) || sinceMs <= 0) {
+    const full = await getCatalog();
+    return { ...full, full: true };
+  }
+
+  const warm = isMemWarm();
+  const db = await loadDb();
+
+  let removed: string[] = [];
+  if (firestoreConfigured()) {
+    removed = warm ? catalogRemovalsSince(sinceMs) : await queryRemovedHouseIdsSince(since);
+  }
+
+  return buildCatalogDeltaFromDb(db, since, removed);
 }
 
 export async function getAllHouses(): Promise<House[]> {
