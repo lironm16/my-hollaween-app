@@ -126,15 +126,46 @@ describe("availableTemporaryRestoreOptions", () => {
     ]);
   });
 
-  it("prefers candy restore when the house is closed and out of candy", () => {
+  it("offers no candy restore when candy is only low", () => {
+    const low = stub({ treatStock: { candy: "low" } });
+    const options = availableTemporaryRestoreOptions(low, evening, baseFilters);
+    assert.equal(options.length, 0);
+    assert.equal(houseLacksCandy(low), false);
+  });
+
+  it("prefers open restore when the house is closed and out of candy", () => {
     const option = primaryTemporaryRestoreOption(
       stub({ visit: "closed", soldOut: true, treatStock: { candy: "out" } }),
       evening,
       baseFilters,
     );
     assert.deepEqual(option, {
-      id: "candy-out",
-      label: "החזר את הבית כאשר יש ממתקים",
+      id: "not-open",
+      label: "החזר את הבית כאשר הוא פתוח",
+    });
+  });
+
+  it("prefers open restore when the house is on break with low candy", () => {
+    const onBreakLow = stub({
+      treatStock: { candy: "low" },
+      ownerFrozenUntil: new Date("2026-10-31T20:00:00").toISOString(),
+    });
+    const option = primaryTemporaryRestoreOption(onBreakLow, evening, baseFilters);
+    assert.deepEqual(option, {
+      id: "not-open",
+      label: "החזר את הבית כאשר הוא פתוח",
+    });
+  });
+
+  it("prefers open restore when the house is on break and out of candy", () => {
+    const onBreakOut = stub({
+      treatStock: { candy: "out" },
+      ownerFrozenUntil: new Date("2026-10-31T20:00:00").toISOString(),
+    });
+    const option = primaryTemporaryRestoreOption(onBreakOut, evening, baseFilters);
+    assert.deepEqual(option, {
+      id: "not-open",
+      label: "החזר את הבית כאשר הוא פתוח",
     });
   });
 });
