@@ -117,7 +117,8 @@ async function main() {
   },
     {
       baseUrl: BASE,
-      housePayload: e2eHousePayload("בית בדיקה — תור offline", {
+      housePayload: e2eHousePayload("סטאב E2E — תור offline", {
+        theme: "monster",
         arrival: "קומה 3, דירה 7",
         description: "בדיקת תור offline",
       }),

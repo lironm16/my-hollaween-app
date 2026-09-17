@@ -68,7 +68,7 @@ async function main() {
     const houses = JSON.parse(localStorage.getItem("hw-catalog-cache") ?? "{}").houses ?? [];
     const house =
       houses.find((item) => item.name?.includes("דלעת")) ??
-      houses.find((item) => !/batch5|E2E|אינטגרציה/i.test(item.name ?? "")) ??
+      houses.find((item) => !/batch5|E2E|אינטגרציה|סטאב E2E/i.test(item.name ?? "")) ??
       houses[0];
     return house ? { id: house.id, name: house.name } : null;
   });
@@ -86,7 +86,10 @@ async function main() {
     pass("SHARE-02 focus link opens house detail overlay");
   }
 
-  const owned = await createE2eHouse(BASE, "בית בדיקה — עדכון מהיר", { arrival: "קומה 1, דירה 1" });
+  const owned = await createE2eHouse(BASE, "סטאב E2E — עדכון מהיר", {
+    theme: "pumpkin",
+    arrival: "קומה 1, דירה 1",
+  });
   if (!owned) fail("EDIT-02 could not create a test house");
   else {
     await gotoPage(page, `${BASE}/my-houses?rehearsal=open`);
@@ -199,7 +202,8 @@ async function main() {
     await pollPage.clock.install();
     await gotoPage(pollPage, `${BASE}/?rehearsal=open`);
     await waitForCatalog(pollPage);
-    const pollHouse = await createE2eHouse(BASE, "בית בדיקה — סנכרון קטלוג", {
+    const pollHouse = await createE2eHouse(BASE, "סטאב E2E — סנכרון קטלוג", {
+      theme: "ghost",
       arrival: "קומה 2, דירה 4",
     });
     if (!pollHouse) {

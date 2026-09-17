@@ -318,19 +318,23 @@ export function MapHouseSheet({
       </div>
       <div ref={bodyRef} className="map-house-sheet-body">
         {overview ? (
-          <div id={labelId}>
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="map-house-sheet-kicker">{address}</p>
-                <p className="map-house-sheet-sub">{clusterHouses.length} בתים בכתובת זו</p>
+          <div id={labelId} className="map-house-sheet-cluster flex min-h-0 flex-1 flex-col">
+            <div className="map-house-sheet-cluster-head shrink-0">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="map-house-sheet-kicker">{address}</p>
+                  <p className="map-house-sheet-sub">{clusterHouses.length} בתים בכתובת זו</p>
+                </div>
+                {actionMenu}
               </div>
-              {actionMenu}
             </div>
-            <ClusterHouseList
-              houses={clusterHouses}
-              selectedId={house.id}
-              onSelect={(id) => onSelectClusterHouse?.(id)}
-            />
+            <div className="map-house-sheet-cluster-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <ClusterHouseList
+                houses={clusterHouses}
+                selectedId={house.id}
+                onSelect={(id) => onSelectClusterHouse?.(id)}
+              />
+            </div>
           </div>
         ) : (
           <>
