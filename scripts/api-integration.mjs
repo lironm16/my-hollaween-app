@@ -297,6 +297,35 @@ async function testPushApi() {
     return fail("GET /api/push/subscribe?endpoint=… should report registered subscription");
   }
   pass("GET /api/push/subscribe reports registered endpoint");
+
+  const unsub = await json("POST", "/api/push/unsubscribe", { endpoint: sub.endpoint });
+  if (!unsub.res.ok || unsub.data.ok !== true) {
+    return fail("POST /api/push/unsubscribe should remove a subscription");
+  }
+  pass("POST /api/push/unsubscribe removes subscription");
+
+  const afterUnsub = await json(
+    "GET",
+    `/api/push/subscribe?endpoint=${encodeURIComponent(sub.endpoint)}`,
+  );
+  if (!afterUnsub.res.ok || afterUnsub.data.registered !== false) {
+    return fail("GET /api/push/subscribe should report unregistered endpoint after unsubscribe");
+  }
+  pass("GET /api/push/subscribe reports unregistered endpoint");
+
+  const missingEndpoint = await json("POST", "/api/push/test", {});
+  if (missingEndpoint.res.status !== 400) {
+    return fail("POST /api/push/test without endpoint should return 400");
+  }
+  pass("POST /api/push/test rejects missing endpoint");
+
+  const unknownEndpoint = await json("POST", "/api/push/test", {
+    endpoint: "https://fcm.googleapis.com/fcm/send/not-registered-batch5",
+  });
+  if (unknownEndpoint.res.status !== 404 || unknownEndpoint.data.registered !== false) {
+    return fail("POST /api/push/test should return 404 for unknown endpoint");
+  }
+  pass("POST /api/push/test reports unknown endpoint");
 }
 
 async function testWalkRouteApi() {
@@ -362,18 +391,176 @@ async function testOwnerEdit(adminCookie) {
   pass("EDIT-04 owner delete removes house from catalog");
 }
 
+async function testAddressApi() {
+  const short = await json("GET", "/api/address?q=a");
+  if (!short.res.ok || !Array.isArray(short.data.hits) || short.data.hits.length !== 0) {
+    return fail("GET /api/address?q=… with short query should return hits:[]");
+  }
+  pass("GET /api/address returns empty hits for short query");
+
+  const search = await json("GET", `/api/address?q=${encodeURIComponent("חרוזים")}`);
+  if (search.res.status === 503) {
+    pass("GET /api/address degrades gracefully when geocoder is unavailable");
+    return;
+  }
+  if (!search.res.ok || !Array.isArray(search.data.hits)) {
+    return fail("GET /api/address should return hits[] when geocoder is available");
+  }
+  pass("GET /api/address returns hits array for neighborhood query");
+}
+
+async function testHouseNotify(adminCookie) {
+  const created = await createHouse();
+  if (!created) return;
+  const { house, editCode } = created;
+  const id = house.id;
+
+  const badKind = await json("POST", `/api/houses/${encodeURIComponent(id)}/notify`, {
+    editCode,
+    kind: "not-a-kind",
+  });
+  if (badKind.res.status !== 400) return fail("house notify should reject unknown kind");
+  pass("house notify rejects unknown kind");
+
+  const noCode = await json("POST", `/api/houses/${encodeURIComponent(id)}/notify`, {
+    kind: "candyLow",
+  });
+  if (noCode.res.status !== 401) return fail("house notify should require edit code for guests");
+  pass("house notify requires edit code for guests");
+
+  const autoKind = await json("POST", `/api/houses/${encodeURIComponent(id)}/notify`, {
+    editCode,
+    kind: "houseAdded",
+  });
+  if (autoKind.res.status !== 400) return fail("house notify should reject auto-only kinds");
+  pass("house notify rejects auto-only kinds");
+
+  await deleteHouse(adminCookie, id);
+}
+
+async function testPhotoApi(adminCookie) {
+  const created = await createHouse();
+  if (!created) return;
+  const { house, editCode } = created;
+  const id = house.id;
+
+  const badImage = await json("POST", `/api/houses/${encodeURIComponent(id)}/photo`, {
+    editCode,
+    image: "not-a-jpeg",
+  });
+  if (badImage.res.status !== 400) return fail("photo upload should reject non-JPEG data URLs");
+  pass("photo upload rejects invalid image payload");
+
+  const wrongCode = await json("POST", `/api/houses/${encodeURIComponent(id)}/photo`, {
+    editCode: "000000",
+    image: "data:image/jpeg;base64,abcd",
+  });
+  if (wrongCode.res.status !== 400 && wrongCode.res.status !== 403) {
+    return fail("photo upload should reject wrong edit code or invalid JPEG");
+  }
+  pass("photo upload validates edit code / payload");
+
+  await deleteHouse(adminCookie, id);
+}
+
+async function testAdminExtended(adminCookie) {
+  const guestStats = await json("GET", "/api/admin/stats");
+  if (guestStats.res.status !== 401) return fail("GET /api/admin/stats without cookie should return 401");
+  pass("ADM-07 guest cannot read admin stats");
+
+  const stats = await json("GET", "/api/admin/stats", null, { Cookie: adminCookie });
+  if (!stats.res.ok || typeof stats.data.houses !== "number") {
+    return fail("GET /api/admin/stats should return snapshot counts");
+  }
+  pass("ADM-07 admin stats returns snapshot counts");
+
+  const guestList = await json("GET", "/api/admin/houses");
+  if (guestList.res.status !== 401) return fail("GET /api/admin/houses without cookie should return 401");
+  const list = await json("GET", "/api/admin/houses", null, { Cookie: adminCookie });
+  if (!list.res.ok || !Array.isArray(list.data.houses)) {
+    return fail("GET /api/admin/houses should return houses[]");
+  }
+  pass("admin houses list returns full house records");
+
+  const created = await createHouse();
+  if (!created) return;
+  const id = created.house.id;
+
+  const adminPatch = await json(
+    "PATCH",
+    `/api/admin/houses/${encodeURIComponent(id)}`,
+    { treatStock: { candy: "low" } },
+    { Cookie: adminCookie },
+  );
+  if (!adminPatch.res.ok || adminPatch.data.house?.treatStock?.candy !== "low") {
+    return fail("ADM-02 admin PATCH should update without edit code");
+  }
+  pass("ADM-02 admin PATCH updates house without edit code");
+
+  const badPush = await json(
+    "POST",
+    "/api/admin/push",
+    { title: "", body: "" },
+    { Cookie: adminCookie },
+  );
+  if (badPush.res.status !== 400) return fail("admin broadcast push should require title and body");
+  pass("admin broadcast push rejects empty payload");
+
+  const push = await json(
+    "POST",
+    "/api/admin/push",
+    { title: "בדיקה", body: "הודעת בדיקה" },
+    { Cookie: adminCookie },
+  );
+  if (!push.res.ok || push.data.ok !== true) return fail("admin broadcast push should accept title and body");
+  pass("admin broadcast push accepts title and body");
+
+  const templates = await json("GET", "/api/admin/push/templates", null, { Cookie: adminCookie });
+  if (!templates.res.ok || !Array.isArray(templates.data.templates)) {
+    return fail("GET /api/admin/push/templates should return templates[]");
+  }
+  pass("admin push templates list returns templates");
+
+  const saveTemplates = await json(
+    "PUT",
+    "/api/admin/push/templates",
+    {
+      templates: [{ id: "candyLow", enabled: true, title: "מעט ממתקים", body: "בדיקה" }],
+    },
+    { Cookie: adminCookie },
+  );
+  if (!saveTemplates.res.ok || saveTemplates.data.ok !== true) {
+    return fail("PUT /api/admin/push/templates should save template changes");
+  }
+  pass("admin push templates PUT saves changes");
+
+  const resetTemplates = await json("POST", "/api/admin/push/templates/reset", null, {
+    Cookie: adminCookie,
+  });
+  if (!resetTemplates.res.ok || resetTemplates.data.ok !== true) {
+    return fail("POST /api/admin/push/templates/reset should restore defaults");
+  }
+  pass("admin push templates reset restores defaults");
+
+  await deleteHouse(adminCookie, id);
+}
+
 async function main() {
   mkdirSync("artifacts", { recursive: true });
   await testCatalog();
   const adminCookie = await testAdminAuth();
   await testPushApi();
   await testWalkRouteApi();
+  await testAddressApi();
   if (adminCookie) {
     await testHouseCreate(adminCookie);
     await testHouseUnlock(adminCookie);
     await testAdminFreeze(adminCookie);
     await testAdminExport(adminCookie);
     await testOwnerEdit(adminCookie);
+    await testHouseNotify(adminCookie);
+    await testPhotoApi(adminCookie);
+    await testAdminExtended(adminCookie);
   }
 
   if (failures) {

@@ -180,7 +180,7 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | ADD-03 | No decor AND no candy | Validation error |
 | ADD-04–05 | Edit with/without code | Code gate or direct edit |
 | EDIT-01 | Quick update (rehearsal open) | Stock/status saves |
-| EDIT-02 | Quick update offline | Queued locally |
+| EDIT-02 | Quick update offline | Queued locally (`e2e-batch5.mjs`) |
 | EDIT-03 | Photo upload | Compressed; tap-to-load on slow network |
 | EDIT-04 | Delete house | Removed from public map |
 | MY-01 | My houses page | Device-owned houses listed |
@@ -194,7 +194,7 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | OFF-03 | No internet | "אין אינטרנט" + saved list | ✅ E2E |
 | OFF-04 | First visit offline (no cache) | "אין עותק שמור" | ✅ E2E (`offline.html`) |
 | OFF-05 | `/offline.html` | Saved houses list | ✅ E2E |
-| OFF-06 | Auto-refresh (~3 min) | Catalog updates when online | Manual |
+| OFF-06 | Auto-refresh (~3 min) | Catalog updates when online | `e2e-batch5.mjs` |
 | OFF-07 | Owner offline queue | Syncs when network returns | `e2e-batch4.mjs` |
 
 ### D. Push notifications (P0 on real devices)
@@ -240,12 +240,15 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | MAP-01, MAP-02, MAP-04, MAP-06–09, MAP-07–08 | `e2e-visitor-flows.mjs` |
 | MAP-03, MAP-05, MAP-10–11, ROUTE-02, ROUTE-04, EXP-03, MY-01 | `e2e-batch3.mjs` |
 | STATS-01, ORIGIN-01, OFF-07 | `e2e-batch4.mjs` |
+| SHARE-02, EDIT-02, ORIGIN-02–03, MAP-03 UI, OFF-06 | `e2e-batch5.mjs` |
 | ROUTE-01, ROUTE-03 | `e2e-visitor-flows.mjs` |
 | A11Y-01, EXP-02 | `e2e-visitor-flows.mjs` |
 | SW precache | `check-sw-precache.mjs` |
 | ADD-01, ADD-02, ADD-04, ADD-05, ADM-01, ADM-03, ADM-04, ADM-08, ADM-09 | `npm run test:api` |
 | EDIT-01, EDIT-04, PUSH API, walk-route API | `npm run test:api` |
-| SHARE-01 (share URL path) | `nav-links.test.ts` |
+| PUSH unsubscribe/test, address API, photo validation, house notify, ADM-02/07, admin push | `npm run test:api` |
+| SHARE-01 (share URL path), ROUTE-05 (Maps walking URL) | `nav-links.test.ts` |
+| ORIGIN-02–03 resolution, OFF-06 poll interval | `distance-origin.test.ts`, `catalog-poll.test.ts` |
 | MAP-03 cluster grouping | `house-clusters.test.ts` |
 | ADD-03 (client rule) | `house-submit-minimum.test.ts` |
 | EXP-01 (CSV logic) | `house-csv.test.ts` |
@@ -254,13 +257,13 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | PWA manifest | `pwa-manifest.test.ts` |
 | Load at scale | `npm run test:stress` |
 
-### Next candidates (medium effort)
+### Next candidates (low priority)
 
 | Manual ID | Proposed test | Framework |
 |-----------|---------------|-----------|
-| MAP-03 | Cluster pin tap → address overview UI | Playwright (needs map viewport) |
-| ORIGIN-02–03 | GPS + map-pick origin | Playwright (needs geolocation / map) |
-| SHARE-02 | Focus link opens house detail | Playwright |
+| ROUTE-05 | Google Maps handoff in browser | Manual device check |
+| EDIT-03 | Photo upload on slow network | Manual / staging |
+| ADM-05/06 | Rehearsal scene UI | Playwright visual |
 
 ### Must stay manual
 

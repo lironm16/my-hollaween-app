@@ -53,6 +53,13 @@ describe("houseMapsUrl", () => {
     assert.doesNotMatch(destination, /חרוזים/);
   });
 
+  it("ROUTE-05 opens Google Maps walking directions", () => {
+    const url = new URL(houseMapsUrl(stub()));
+    assert.equal(url.hostname, "www.google.com");
+    assert.equal(url.searchParams.get("travelmode"), "walking");
+    assert.ok(url.pathname.includes("/maps/dir"));
+  });
+
   it("falls back to coordinates when maps address is empty", () => {
     const url = houseMapsUrl(stub({ address: "", lat: 32.09, lng: 34.8 }));
     assert.match(url, /destination=32\.09,34\.8/);
