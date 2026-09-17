@@ -117,7 +117,7 @@ Automated in CI; confirm **feel** on at least one phone.
 |---|-----|------|----------|
 | ☐ | ADD-01 | Add house happy path | On map; 6-digit edit code |
 | ☐ | ADD-02 | Address outside neighborhood | Validation error |
-| ☐ | ADD-04 | Edit with wrong code | Blocked |
+| ☐ | ADD-04 | Edit with wrong code | Shows error; edit denied |
 | ☐ | ADD-05 | Edit with correct code | Opens edit |
 | ☐ | EDIT-01 | Quick update (`/?rehearsal=open`) | Stock/status saves |
 | ☐ | EDIT-02 | Quick update offline | Queued; syncs when online |
