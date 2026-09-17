@@ -243,6 +243,8 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | MAP-03, MAP-05, MAP-10–11, ROUTE-02, ROUTE-04, EXP-03, MY-01 | `e2e-batch3.mjs` |
 | STATS-01, ORIGIN-01, OFF-07 | `e2e-batch4.mjs` |
 | SHARE-02, EDIT-02, ORIGIN-02–03, MAP-03 UI, OFF-06 | `e2e-batch5.mjs` |
+| ADD-01–02, EDIT-01/04 UI, ADM-01/08/09, SHARE-01, EXP-01, MAP-04, CLUSTER-01 | `e2e-batch6.mjs` |
+| ADD-03 UI, EDIT-03 preview, ROUTE-05 UI, ADM-05/06 | `e2e-batch7.mjs` |
 | ROUTE-01, ROUTE-03 | `e2e-visitor-flows.mjs` |
 | A11Y-01, EXP-02 | `e2e-visitor-flows.mjs` |
 | SW precache | `check-sw-precache.mjs` |
@@ -263,9 +265,9 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 
 | Manual ID | Proposed test | Framework |
 |-----------|---------------|-----------|
-| ROUTE-05 | Google Maps handoff in browser | Manual device check |
-| EDIT-03 | Photo upload on slow network | Manual / staging |
-| ADM-05/06 | Rehearsal scene UI | Playwright visual |
+| ADM-03 | Admin freeze via API only (no UI) | Already in `api-integration.mjs` |
+| EDIT-03 | Photo upload on slow network / server persist | Manual / staging |
+| ROUTE-05 | Google Maps handoff on a physical device | Manual device check (URL logic in `e2e-batch7.mjs`) |
 
 ### Must stay manual
 

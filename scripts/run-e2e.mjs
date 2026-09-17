@@ -20,6 +20,8 @@ const E2E_SCRIPTS = [
   "scripts/e2e-batch3.mjs",
   "scripts/e2e-batch4.mjs",
   "scripts/e2e-batch5.mjs",
+  "scripts/e2e-batch6.mjs",
+  "scripts/e2e-batch7.mjs",
   "scripts/check-sw-precache.mjs",
 ];
 const e2ePort = Number(process.env.E2E_TEST_PORT ?? (await pickFreePort()));

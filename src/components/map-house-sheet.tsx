@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils";
 import { visualViewportHeight } from "@/lib/viewport";
 
 const MAP_SHEET_PEEK_VH = 0.7;
-const MAP_CLUSTER_SHEET_PEEK_VH = 0.62;
 
 function isSheetInteractive(target: EventTarget | null) {
   return (
@@ -129,8 +128,9 @@ export function MapHouseSheet({
     return Math.round(parentH() * fraction);
   }
 
+  /** Cluster overview always opens to the same 70% map cap as other sheets; list scrolls inside. */
   function measureOverviewHeight() {
-    return Math.min(peekPx(MAP_CLUSTER_SHEET_PEEK_VH), maxPx());
+    return peekPx();
   }
 
   function maxPx() {
@@ -308,7 +308,7 @@ export function MapHouseSheet({
       aria-labelledby={labelId}
       tabIndex={-1}
       style={{
-        height: overview ? (displayH ?? "var(--map-cluster-sheet-h, 65%)") : (displayH ?? 0),
+        height: overview ? (displayH ?? "var(--map-cluster-sheet-h, 70%)") : (displayH ?? 0),
       }}
       dir="rtl"
       onPointerDown={onSheetPointerDown}
