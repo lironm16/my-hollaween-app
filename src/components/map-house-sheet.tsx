@@ -25,6 +25,7 @@ export function MapHouseSheet({
   house,
   clusterHouses,
   clusterOverview = false,
+  onSelectClusterHouse,
   onClose,
   liked,
   onToggleLike,
@@ -49,6 +50,7 @@ export function MapHouseSheet({
   house: PublicHouse;
   clusterHouses: PublicHouse[];
   clusterOverview?: boolean;
+  onSelectClusterHouse?: (id: string) => void;
   onClose: () => void;
   liked?: (id: string) => boolean;
   onToggleLike?: (id: string) => void;
@@ -308,12 +310,27 @@ export function MapHouseSheet({
       </div>
       <div ref={bodyRef} className="map-house-sheet-body">
         {overview ? (
-          <div id={labelId} className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <p className="map-house-sheet-kicker">{address}</p>
-              <p className="map-house-sheet-sub">{clusterHouses.length} בתים</p>
+          <div id={labelId}>
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="map-house-sheet-kicker">{address}</p>
+                <p className="map-house-sheet-sub">{clusterHouses.length} בתים בכתובת זו</p>
+              </div>
+              {actionMenu}
             </div>
-            {actionMenu}
+            <ul className="space-y-2">
+              {clusterHouses.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    className="w-full rounded-xl bg-[#1d1028] px-4 py-3 text-start text-base text-orange-50 ring-1 ring-orange-500/25 hover:bg-[#261536]"
+                    onClick={() => onSelectClusterHouse?.(item.id)}
+                  >
+                    {houseHeadline(item)}
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         ) : (
           <>

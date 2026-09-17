@@ -55,20 +55,16 @@ describe("quick-update", () => {
     assert.equal(patch.ownerFrozenUntil, null);
   });
 
-  it("detects changes and previews push", () => {
+  it("detects changes but blocks neighborhood push for house status", () => {
     const base = house();
     assert.equal(quickUpdateChanged(base, "plenty", "open"), false);
     assert.equal(quickUpdateChanged(base, "low", "open"), true);
-    const preview = previewQuickUpdatePush(base, "low", "open");
-    assert.ok(preview);
-    assert.match(preview!.payload.title, /בית בדיקה/);
+    assert.equal(previewQuickUpdatePush(base, "low", "open"), null);
   });
 
-  it("previews candy out while house stays open", () => {
+  it("blocks candy-out preview while house stays open", () => {
     const base = house({ decorLevel: "mild", decorated: true });
-    const preview = previewQuickUpdatePush(base, "out", "open");
-    assert.ok(preview);
-    assert.equal(preview!.kind, "candyOut");
+    assert.equal(previewQuickUpdatePush(base, "out", "open"), null);
   });
 
   it("skips push when moving between closed and break", () => {
@@ -79,10 +75,8 @@ describe("quick-update", () => {
     assert.equal(previewQuickUpdatePush(onBreak, "plenty", "closed"), null);
   });
 
-  it("previews candy-out-closed while house stays closed", () => {
+  it("blocks candy-out-closed preview while house stays closed", () => {
     const closed = house({ visit: "closed", treatStock: { candy: "plenty" } });
-    const preview = previewQuickUpdatePush(closed, "out", "closed");
-    assert.ok(preview);
-    assert.equal(preview!.kind, "candyOutClosed");
+    assert.equal(previewQuickUpdatePush(closed, "out", "closed"), null);
   });
 });

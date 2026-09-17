@@ -173,7 +173,7 @@ export function NeighborhoodApp({
   const filterDimActive = matchedIds.size < mapHouses.length;
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
-  const selection = useHouseSelection({ focusId, visible, houses });
+  const selection = useHouseSelection({ focusId, visible, houses, clusterHouses: mapHouses });
   const { resetForNavigation } = selection;
   const editFlow = useHouseEditFlow();
 
@@ -640,13 +640,11 @@ export function NeighborhoodApp({
                 filterDimActive={filterDimActive}
                 selectedId={originPick.originPickActive ? null : selection.selected?.id}
                 clusterOverview={selection.clusterOverview}
-                expandedClusterKey={selection.expandedClusterKey}
                 onSelect={(house, opts) => {
                   if (originPick.originPickActive) return;
                   selection.selectOnMap(house, opts);
                 }}
                 onClose={selection.closeSelection}
-                onCollapseCluster={selection.collapseCluster}
                 className="h-full w-full"
                 active={view === "map"}
                 userLocation={gps}
@@ -725,6 +723,12 @@ export function NeighborhoodApp({
                         }
                       : undefined
                   }
+                  onSelectClusterHouse={(id) => {
+                    const house =
+                      selection.selectedCluster.find((item) => item.id === id) ??
+                      houses.find((item) => item.id === id);
+                    if (house) selection.selectOnMap(house);
+                  }}
                 />
               ) : null}
               <CatalogMetaChip

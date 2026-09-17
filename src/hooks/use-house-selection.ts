@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { clusterHousesByAddress } from "@/lib/house-clusters";
+import { clusterHousesByAddress, clusterMembersForHouse } from "@/lib/house-clusters";
 import type { PublicHouse } from "@/lib/types";
 
 export type SelectedId = string | "closed" | null;
@@ -10,17 +10,20 @@ export function useHouseSelection({
   focusId = null,
   visible,
   houses,
+  clusterHouses,
 }: {
   focusId?: string | null;
   visible: PublicHouse[];
   houses: PublicHouse[];
+  /** Houses eligible for map clustering (e.g. real-only in visitor mode). */
+  clusterHouses?: PublicHouse[];
 }) {
+  const clustersFor = clusterHouses ?? houses;
   const [selectedId, setSelectedId] = useState<SelectedId>(focusId);
   const [selectedListIndex, setSelectedListIndex] = useState<number | undefined>();
   const [listFocusId, setListFocusId] = useState<string | null>(null);
   const [focusSeen, setFocusSeen] = useState(focusId);
   const [clusterOverview, setClusterOverview] = useState(false);
-  const [expandedClusterKey, setExpandedClusterKey] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [editForId, setEditForId] = useState<SelectedId>(selectedId);
 
@@ -29,7 +32,6 @@ export function useHouseSelection({
     setFocusSeen(focusId);
     setSelectedId(focusId);
     setClusterOverview(false);
-    setExpandedClusterKey(null);
   }, [focusId, focusSeen]);
 
   useEffect(() => {
@@ -48,15 +50,11 @@ export function useHouseSelection({
 
   const selectedCluster = useMemo(() => {
     if (!selected) return [];
-    const cluster = clusterHousesByAddress(houses).find((item) =>
-      item.houses.some((house) => house.id === selected.id),
-    );
-    return cluster?.houses ?? [selected];
-  }, [selected, houses]);
+    return clusterMembersForHouse(clustersFor, selected.id);
+  }, [selected, clustersFor]);
 
   const clearCluster = useCallback(() => {
     setClusterOverview(false);
-    setExpandedClusterKey(null);
   }, []);
 
   const closeSelection = useCallback(() => {
@@ -76,7 +74,6 @@ export function useHouseSelection({
   const resetForNavigation = useCallback(() => {
     setSelectedId("closed");
     setClusterOverview(false);
-    setExpandedClusterKey(null);
     setListFocusId(null);
     setEditing(false);
   }, []);
@@ -84,35 +81,19 @@ export function useHouseSelection({
   const selectOnMap = useCallback(
     (house: PublicHouse, opts?: { clusterOverview?: boolean }) => {
       setListFocusId(null);
-      const cluster = clusterHousesByAddress(houses).find((item) =>
+      const cluster = clusterHousesByAddress(clustersFor).find((item) =>
         item.houses.some((itemHouse) => itemHouse.id === house.id),
       );
       const isMulti = (cluster?.houses.length ?? 0) > 1;
-      if (opts?.clusterOverview) {
-        setExpandedClusterKey(cluster?.key ?? null);
-        setClusterOverview(true);
-      } else if (isMulti) {
-        setExpandedClusterKey(cluster?.key ?? null);
-        setClusterOverview(false);
-      } else {
-        setExpandedClusterKey(null);
-        setClusterOverview(false);
-      }
+      setClusterOverview(Boolean(opts?.clusterOverview && isMulti));
       setSelectedListIndex(undefined);
       setSelectedId(house.id);
     },
-    [houses],
+    [clustersFor],
   );
-
-  const collapseCluster = useCallback(() => {
-    setExpandedClusterKey(null);
-    setClusterOverview(false);
-    setSelectedId("closed");
-  }, []);
 
   const showOnMap = useCallback((id: string) => {
     setClusterOverview(false);
-    setExpandedClusterKey(null);
     setEditing(false);
     setListFocusId(null);
     setSelectedListIndex(undefined);
@@ -139,7 +120,6 @@ export function useHouseSelection({
     (houseId: string) => {
       const index = visible.findIndex((house) => house.id === houseId);
       setClusterOverview(false);
-      setExpandedClusterKey(null);
       setSelectedListIndex(index >= 0 ? index + 1 : undefined);
       setListFocusId(houseId);
       setSelectedId("closed");
@@ -153,7 +133,6 @@ export function useHouseSelection({
     setSelectedId,
     selectedListIndex,
     clusterOverview,
-    expandedClusterKey,
     editing,
     setEditing,
     editForId,
@@ -166,7 +145,6 @@ export function useHouseSelection({
     dismissForOverlay,
     resetForNavigation,
     selectOnMap,
-    collapseCluster,
     showOnMap,
     selectInList,
     editInList,

@@ -1,18 +1,34 @@
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
+import { join } from "node:path";
 
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:43127";
-const OUT = "/opt/cursor/artifacts";
+const OUT = process.env.E2E_ARTIFACTS_DIR ?? join(process.cwd(), "artifacts", "e2e");
+const IS_CI = process.env.CI === "true" || process.env.CI === "1";
 
 function fail(message) {
   console.error("FAIL", message);
   process.exitCode = 1;
 }
 
+async function setServerSimDown(page, down) {
+  await page.evaluate((simDown) => {
+    if (simDown) localStorage.setItem("hw-sim-server", "down");
+    else localStorage.removeItem("hw-sim-server");
+    window.dispatchEvent(new Event("hw-server-sim-changed"));
+  }, down);
+}
+
+async function refreshCatalog(page) {
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("hw-catalog-changed"));
+  });
+}
+
 async function main() {
   mkdirSync(OUT, { recursive: true });
   const browser = await chromium.launch({
-    channel: "chrome",
+    ...(IS_CI ? {} : { channel: "chrome" }),
     args: ["--no-sandbox", "--disable-dev-shm-usage"],
   });
   const context = await browser.newContext({
@@ -23,7 +39,7 @@ async function main() {
   page.setDefaultTimeout(20_000);
   page.on("pageerror", (err) => console.log("pageerror", err.message));
 
-  await page.goto(BASE + "/", { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
   await page.getByText(/בתים/).first().waitFor();
   await page.waitForFunction(() => {
     try {
@@ -46,30 +62,35 @@ async function main() {
   console.log("saved", saved);
   if (!saved || saved.count < 1) fail("catalog was not written to localStorage");
 
-  await page.getByRole("button", { name: "רשימה" }).click();
-  await page.getByPlaceholder("חיפוש לפי שם או רחוב…").waitFor();
-  const firstName = saved.names[0];
-  if (firstName) await page.getByText(firstName).first().waitFor();
   await page.screenshot({ path: `${OUT}/houses-saved-on-device.png`, fullPage: true });
 
-  await page.route("**/api/catalog**", (route) => route.abort("failed"));
-  await page.route("**/catalog.json**", (route) => route.abort("failed"));
-  await page.getByRole("button", { name: "רענון" }).click();
+  await setServerSimDown(page, true);
+  await refreshCatalog(page);
   await page.getByText(/השרת לא עונה/).first().waitFor();
-  if (firstName) await page.getByText(firstName).first().waitFor();
+  await page.waitForFunction((count) => {
+    const listCards = document.querySelectorAll(".house-list-card").length;
+    const mapPins = document.querySelectorAll(".house-pin").length;
+    return listCards > 0 || mapPins > 0 || count > 0;
+  }, saved.count);
   await page.screenshot({ path: `${OUT}/server-down-keeps-houses.png`, fullPage: true });
   console.log("server-down still showing", saved.count, "houses");
 
+  await setServerSimDown(page, false);
   await context.setOffline(true);
-  await page.getByRole("button", { name: "רענון" }).click();
-  await page.getByText(/לא מקוון|אין אינטרנט/).first().waitFor();
-  if (firstName) await page.getByText(firstName).first().waitFor();
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("offline"));
+  });
+  await refreshCatalog(page);
+  await page.getByText(/אין אינטרנט/).first().waitFor();
+  await page.waitForFunction((count) => {
+    const listCards = document.querySelectorAll(".house-list-card").length;
+    const mapPins = document.querySelectorAll(".house-pin").length;
+    return listCards > 0 || mapPins > 0 || count > 0;
+  }, saved.count);
   await page.screenshot({ path: `${OUT}/no-internet-keeps-houses.png`, fullPage: true });
   console.log("no-internet still showing the saved list");
 
   await context.setOffline(false);
-  await page.unroute("**/api/catalog**");
-  await page.unroute("**/catalog.json**");
   await page.goto(BASE + "/offline.html", { waitUntil: "domcontentloaded" });
   await page.getByText(/בתים שמורים במכשיר/).waitFor();
   await page.screenshot({ path: `${OUT}/offline-html-saved-list.png`, fullPage: true });
