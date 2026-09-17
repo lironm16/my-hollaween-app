@@ -1,3 +1,25 @@
+let safeAreaProbe: HTMLDivElement | null = null;
+
+function readSafeAreaInset(edge: "top" | "bottom") {
+  if (typeof document === "undefined") return 0;
+  if (!safeAreaProbe) {
+    safeAreaProbe = document.createElement("div");
+    safeAreaProbe.style.cssText =
+      "position:fixed;inset:0;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);pointer-events:none;visibility:hidden;";
+    document.body.appendChild(safeAreaProbe);
+  }
+  const rect = safeAreaProbe.getBoundingClientRect();
+  return edge === "top" ? rect.top : window.innerHeight - rect.bottom;
+}
+
+export function safeAreaInsetTop() {
+  return readSafeAreaInset("top");
+}
+
+export function safeAreaInsetBottom() {
+  return readSafeAreaInset("bottom");
+}
+
 export function visualViewportHeight() {
   if (typeof window === "undefined") return 0;
   return window.visualViewport?.height ?? window.innerHeight;

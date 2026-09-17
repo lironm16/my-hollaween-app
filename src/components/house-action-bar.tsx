@@ -18,6 +18,7 @@ import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
+import { safeAreaInsetBottom, safeAreaInsetTop } from "@/lib/viewport";
 import { cn } from "@/lib/utils";
 
 export function formatActionCount(n: number) {
@@ -214,26 +215,29 @@ export function HouseActionBar({
 
       const margin = 10;
       const gap = 8;
+      const safeTop = safeAreaInsetTop();
+      const safeBottom = safeAreaInsetBottom();
+      const minTop = safeTop + margin;
+      const maxBottom = window.innerHeight - safeBottom - margin;
       const triggerRect = trigger.getBoundingClientRect();
       const panelRect = panel.getBoundingClientRect();
       const panelWidth = panelRect.width || panel.offsetWidth;
       const panelHeight = panelRect.height || panel.offsetHeight;
       const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
 
       let placeAbove = menuPlacement === "top";
-      const spaceAbove = triggerRect.top;
-      const spaceBelow = viewportHeight - triggerRect.bottom;
-      if (placeAbove && spaceAbove < panelHeight + gap + margin && spaceBelow > spaceAbove) {
+      const spaceAbove = triggerRect.top - minTop;
+      const spaceBelow = maxBottom - triggerRect.bottom;
+      if (placeAbove && spaceAbove < panelHeight + gap && spaceBelow > spaceAbove) {
         placeAbove = false;
-      } else if (!placeAbove && spaceBelow < panelHeight + gap + margin && spaceAbove > spaceBelow) {
+      } else if (!placeAbove && spaceBelow < panelHeight + gap && spaceAbove > spaceBelow) {
         placeAbove = true;
       }
 
       let top = placeAbove ? triggerRect.top - panelHeight - gap : triggerRect.bottom + gap;
       let left = triggerRect.right - panelWidth;
       left = Math.max(margin, Math.min(left, viewportWidth - panelWidth - margin));
-      top = Math.max(margin, Math.min(top, viewportHeight - panelHeight - margin));
+      top = Math.max(minTop, Math.min(top, maxBottom - panelHeight));
 
       setPanelStyle({
         position: "fixed",
