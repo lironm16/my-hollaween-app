@@ -484,7 +484,7 @@ function ClusterMarker({
 
   return (
     <Marker
-      key={`${cluster.key}-${selectedId ?? "none"}-${clusterOverview ? "overview" : "detail"}-${routeOrder ?? 0}-${visitedKey}-${skippedKey}-${statusKey}`}
+      key={`${cluster.key}-${routeOrder ?? 0}-${visitedKey}-${skippedKey}-${statusKey}`}
       position={[cluster.lat, cluster.lng]}
       icon={clusterIcon(
         cluster,
