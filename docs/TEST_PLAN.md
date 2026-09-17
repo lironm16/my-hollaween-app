@@ -195,7 +195,7 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | OFF-04 | First visit offline (no cache) | "אין עותק שמור" | ✅ E2E (`offline.html`) |
 | OFF-05 | `/offline.html` | Saved houses list | ✅ E2E |
 | OFF-06 | Auto-refresh (~3 min) | Catalog updates when online | Manual |
-| OFF-07 | Owner offline queue | Syncs when network returns | Manual |
+| OFF-07 | Owner offline queue | Syncs when network returns | `e2e-batch4.mjs` |
 
 ### D. Push notifications (P0 on real devices)
 
@@ -239,10 +239,13 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | OFF-01–05 | `npm run test:e2e` |
 | MAP-01, MAP-02, MAP-04, MAP-06–09, MAP-07–08 | `e2e-visitor-flows.mjs` |
 | MAP-03, MAP-05, MAP-10–11, ROUTE-02, ROUTE-04, EXP-03, MY-01 | `e2e-batch3.mjs` |
+| STATS-01, ORIGIN-01, OFF-07 | `e2e-batch4.mjs` |
 | ROUTE-01, ROUTE-03 | `e2e-visitor-flows.mjs` |
 | A11Y-01, EXP-02 | `e2e-visitor-flows.mjs` |
 | SW precache | `check-sw-precache.mjs` |
 | ADD-01, ADD-02, ADD-04, ADD-05, ADM-01, ADM-03, ADM-04, ADM-08, ADM-09 | `npm run test:api` |
+| EDIT-01, EDIT-04, PUSH API, walk-route API | `npm run test:api` |
+| SHARE-01 (share URL path) | `nav-links.test.ts` |
 | MAP-03 cluster grouping | `house-clusters.test.ts` |
 | ADD-03 (client rule) | `house-submit-minimum.test.ts` |
 | EXP-01 (CSV logic) | `house-csv.test.ts` |
@@ -256,8 +259,8 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | Manual ID | Proposed test | Framework |
 |-----------|---------------|-----------|
 | MAP-03 | Cluster pin tap → address overview UI | Playwright (needs map viewport) |
-| PUSH API | `/api/push/public-key`, subscribe | API integration |
-| Walk route API | `/api/walk-route` | API integration |
+| ORIGIN-02–03 | GPS + map-pick origin | Playwright (needs geolocation / map) |
+| SHARE-02 | Focus link opens house detail | Playwright |
 
 ### Must stay manual
 

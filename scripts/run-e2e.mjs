@@ -14,6 +14,7 @@ const E2E_SCRIPTS = [
   "scripts/check-offline-catalog.mjs",
   "scripts/e2e-visitor-flows.mjs",
   "scripts/e2e-batch3.mjs",
+  "scripts/e2e-batch4.mjs",
   "scripts/check-sw-precache.mjs",
 ];
 const server = createTestServerManager({ label: "e2e" });

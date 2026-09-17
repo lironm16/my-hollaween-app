@@ -261,15 +261,119 @@ async function testAdminExport(adminCookie) {
   pass("admin CSV export returns Hebrew CSV");
 }
 
+function fakePushSubscription(endpoint = "https://fcm.googleapis.com/fcm/send/test-e2e-endpoint") {
+  return {
+    endpoint,
+    keys: {
+      p256dh: "BEl62iUYgUivxIkv69yViEuiBIa-Ib37g8",
+      auth: "tBHIOTTzQAmpzlnb",
+    },
+  };
+}
+
+async function testPushApi() {
+  const key = await json("GET", "/api/push/public-key");
+  if (!key.res.ok || typeof key.data.publicKey !== "string" || key.data.publicKey.length < 20) {
+    return fail("GET /api/push/public-key should return a VAPID publicKey");
+  }
+  pass("GET /api/push/public-key returns VAPID key");
+
+  const bad = await json("POST", "/api/push/subscribe", { endpoint: "not-valid" });
+  if (bad.res.status !== 400) return fail("POST /api/push/subscribe invalid body should return 400");
+  pass("POST /api/push/subscribe rejects invalid subscription");
+
+  const sub = fakePushSubscription();
+  const saved = await json("POST", "/api/push/subscribe", sub);
+  if (!saved.res.ok || saved.data.ok !== true || typeof saved.data.count !== "number") {
+    return fail("POST /api/push/subscribe should save a valid subscription");
+  }
+  pass("POST /api/push/subscribe saves subscription");
+
+  const status = await json(
+    "GET",
+    `/api/push/subscribe?endpoint=${encodeURIComponent(sub.endpoint)}`,
+  );
+  if (!status.res.ok || status.data.registered !== true || typeof status.data.total !== "number") {
+    return fail("GET /api/push/subscribe?endpoint=… should report registered subscription");
+  }
+  pass("GET /api/push/subscribe reports registered endpoint");
+}
+
+async function testWalkRouteApi() {
+  const tooFew = await json("POST", "/api/walk-route", {
+    points: [{ lat: 32.09, lng: 34.8 }],
+  });
+  if (tooFew.res.status !== 400) return fail("POST /api/walk-route with <2 points should return 400");
+  pass("POST /api/walk-route rejects fewer than two points");
+
+  const route = await json("POST", "/api/walk-route", {
+    points: [
+      { lat: 32.0916477, lng: 34.8028691 },
+      { lat: 32.089223, lng: 34.804374 },
+    ],
+  });
+  if (!route.res.ok) return fail("POST /api/walk-route with two points should return 200");
+  const line = route.data.line;
+  if (line !== null && !Array.isArray(line)) {
+    return fail("POST /api/walk-route should return line null or coordinate array");
+  }
+  pass("POST /api/walk-route accepts two points (line null or geometry array)");
+}
+
+async function testOwnerEdit(adminCookie) {
+  const created = await createHouse();
+  if (!created) return;
+  const { house, editCode } = created;
+  const id = house.id;
+
+  const wrongPatch = await json("PATCH", `/api/houses/${encodeURIComponent(id)}`, {
+    editCode: "000000",
+    visit: "closed",
+  });
+  if (wrongPatch.res.status !== 403) return fail("EDIT-01 PATCH with wrong edit code should return 403");
+  pass("EDIT-01 owner PATCH rejects wrong edit code");
+
+  const patched = await json("PATCH", `/api/houses/${encodeURIComponent(id)}`, {
+    editCode,
+    treatStock: { candy: "low" },
+    visit: "come",
+  });
+  if (!patched.res.ok || patched.data.house?.treatStock?.candy !== "low") {
+    return fail("EDIT-01 owner PATCH with edit code should update treat stock");
+  }
+  pass("EDIT-01 owner quick update saves with edit code");
+
+  const wrongDelete = await json("DELETE", `/api/houses/${encodeURIComponent(id)}`, {
+    editCode: "000000",
+  });
+  if (wrongDelete.res.status !== 403) return fail("EDIT-04 owner DELETE with wrong edit code should return 403");
+  pass("EDIT-04 owner DELETE rejects wrong edit code");
+
+  const removed = await json("DELETE", `/api/houses/${encodeURIComponent(id)}`, { editCode });
+  if (!removed.res.ok || removed.data.ok !== true) {
+    return fail("EDIT-04 owner DELETE with edit code should remove the house");
+  }
+  pass("EDIT-04 owner DELETE removes house with edit code");
+
+  const catalog = await json("GET", "/api/catalog");
+  if (catalog.data.houses?.some((item) => item.id === id)) {
+    return fail("EDIT-04 deleted house should not appear in catalog");
+  }
+  pass("EDIT-04 owner delete removes house from catalog");
+}
+
 async function main() {
   mkdirSync("artifacts", { recursive: true });
   await testCatalog();
   const adminCookie = await testAdminAuth();
+  await testPushApi();
+  await testWalkRouteApi();
   if (adminCookie) {
     await testHouseCreate(adminCookie);
     await testHouseUnlock(adminCookie);
     await testAdminFreeze(adminCookie);
     await testAdminExport(adminCookie);
+    await testOwnerEdit(adminCookie);
   }
 
   if (failures) {
