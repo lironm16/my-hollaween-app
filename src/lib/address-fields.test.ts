@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  displayAddressFromHit,
   normalizeAddressFields,
   splitLegacyAddress,
   streetFromLegacyAddress,
 } from "@/lib/address-fields";
+import type { AddressHit } from "@/lib/types";
 import { formatDisplayAddress, formatMapsAddress } from "@/lib/config";
 
 describe("address fields", () => {
@@ -29,6 +31,21 @@ describe("address fields", () => {
     const house = { address: "יהודית 15", neighborhood: "חרוזים" as const };
     assert.equal(formatDisplayAddress(house), "יהודית 15, חרוזים");
     assert.equal(formatMapsAddress(house), "יהודית 15, רמת גן");
+  });
+
+  it("formats pin/autocomplete address with neighborhood for the input field", () => {
+    const hit: AddressHit = {
+      id: "test-1",
+      label: "יהודית 15, חרוזים",
+      lat: 32.089223,
+      lng: 34.804374,
+      road: "יהודית",
+      houseNumber: "15",
+      suburb: "חרוזים",
+      city: "רמת גן",
+      precise: true,
+    };
+    assert.equal(displayAddressFromHit(hit), "יהודית 15, חרוזים");
   });
 
   it("strips neighborhood suffix from legacy street field on normalize", () => {

@@ -1,4 +1,10 @@
-import { NEIGHBORHOODS, neighborhoodFromAddress, neighborhoodFromCoords, type NeighborhoodId } from "@/lib/config";
+import {
+  formatDisplayAddress,
+  NEIGHBORHOODS,
+  neighborhoodFromAddress,
+  neighborhoodFromCoords,
+  type NeighborhoodId,
+} from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 
 const ADDRESS_AREA_NAMES = [...NEIGHBORHOODS, "הגפן"] as const;
@@ -61,4 +67,14 @@ export function neighborhoodFromAddressHit(hit: AddressHit): NeighborhoodId | nu
     return suburb as NeighborhoodId;
   }
   return neighborhoodFromCoords(hit.lat, hit.lng);
+}
+
+/** Street + neighborhood for the address input after pin drag or autocomplete pick. */
+export function displayAddressFromHit(hit: AddressHit): string {
+  return formatDisplayAddress({
+    address: streetFromAddressHit(hit),
+    neighborhood: neighborhoodFromAddressHit(hit),
+    lat: hit.lat,
+    lng: hit.lng,
+  });
 }

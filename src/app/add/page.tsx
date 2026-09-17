@@ -8,23 +8,26 @@ import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { HouseForm } from "@/components/house-form";
 import { CodesCopy } from "@/components/codes-copy";
-import { buttonVariants } from "@/components/ui/button";
+import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { saveOwnedHouse, notifyCatalogChanged, rememberPublishedHouse } from "@/lib/offline-db";
 import { PersistNote } from "@/components/persist-note";
 import { publishHouse } from "@/lib/publish-house";
 import { publishHousePhoto } from "@/lib/house-photo";
 import { senderPushEndpoint } from "@/lib/push-client";
-import type { HouseInput } from "@/lib/types";
+import type { HouseInput, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import type { HouseFormExtras } from "@/components/house-form";
 
 export default function AddPage() {
   const router = useRouter();
+  const editFlow = useHouseEditFlow();
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{
     id: string;
     editCode: string;
     name: string;
+    house: PublicHouse;
   } | null>(null);
 
   async function onSubmit(input: HouseInput, extras?: HouseFormExtras) {
@@ -52,7 +55,7 @@ export default function AddPage() {
       rememberPublishedHouse(preview);
       notifyCatalogChanged();
       // Success UI only after the server confirmed the house.
-      setDone({ id: preview.id, editCode, name: preview.name });
+      setDone({ id: preview.id, editCode, name: preview.name, house: preview });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "השליחה נכשלה");
     } finally {
@@ -97,9 +100,19 @@ export default function AddPage() {
               >
                 צפו בבית במפה
               </Link>
-              <Link href="/edit" className={cn(buttonVariants({ variant: "outline" }))}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  editFlow.openEdit(done.house, {
+                    editCode: done.editCode,
+                    allowDelete: true,
+                    forceFull: true,
+                  })
+                }
+              >
                 לעריכה
-              </Link>
+              </Button>
             </div>
           </div>
         ) : (
@@ -118,6 +131,29 @@ export default function AddPage() {
           </>
         )}
       </main>
+      {done ? (
+        <HouseEditFlowPanels
+          flow={editFlow.flow}
+          setFlow={editFlow.setFlow}
+          onClose={editFlow.close}
+          onUpdated={(next) => {
+            setDone((current) =>
+              current ? { ...current, id: next.id, name: next.name, house: next } : current,
+            );
+            saveOwnedHouse({
+              id: next.id,
+              name: next.name,
+              editCode: done.editCode,
+              preview: next,
+            });
+            notifyCatalogChanged();
+          }}
+          onDeleted={() => {
+            editFlow.close();
+            router.push("/");
+          }}
+        />
+      ) : null}
     </div>
   );
 }

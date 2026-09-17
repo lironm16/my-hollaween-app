@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { CandySign } from "@/components/candy-glyphs";
 import { HouseEditModal } from "@/components/house-edit-modal";
@@ -45,6 +46,7 @@ export function QuickUpdateOverlay({
   admin,
   open,
   onClose,
+  onOpenFull,
   onUpdated,
 }: {
   house: PublicHouse;
@@ -52,6 +54,7 @@ export function QuickUpdateOverlay({
   admin?: boolean;
   open: boolean;
   onClose: () => void;
+  onOpenFull?: () => void;
   onUpdated: (house: PublicHouse) => void;
 }) {
   const [candyPick, setCandyPick] = useState<QuickCandyChoice>(() => currentQuickCandy(house));
@@ -251,6 +254,17 @@ export function QuickUpdateOverlay({
         >
           {busy ? "שומרים…" : "שמירה"}
         </Button>
+        {onOpenFull ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 w-full justify-center gap-2 border-orange-400/40 text-orange-100"
+            onClick={onOpenFull}
+          >
+            <Pencil className="size-4" />
+            עריכה מלאה
+          </Button>
+        ) : null}
       </div>
     </HouseEditModal>
   );

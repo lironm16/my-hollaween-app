@@ -338,17 +338,90 @@ export async function searchAddress(query: string): Promise<AddressHit[]> {
   return hits.slice(0, 8);
 }
 
+async function reverseEsri(lat: number, lng: number): Promise<AddressHit | null> {
+  const url = new URL(
+    "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode",
+  );
+  url.searchParams.set("f", "json");
+  url.searchParams.set("location", `${lng},${lat}`);
+  url.searchParams.set("langCode", "he");
+  url.searchParams.set("outFields", "AddNum,StName,StAddr,Nbrhd,City,Addr_type,LongLabel");
+  const res = await fetch(url, {
+    headers: { Accept: "application/json", "User-Agent": USER_AGENT },
+    cache: "no-store",
+    signal: AbortSignal.timeout(6000),
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { address?: EsriCandidate["attributes"] & { Match_addr?: string } };
+  const attrs = data.address;
+  if (!attrs) return null;
+  const city = attrs.City || "";
+  if (city && !city.includes("רמת גן") && !city.toLowerCase().includes("ramat gan")) return null;
+  const road = (attrs.StName || parseStreetAndNumber(attrs.StAddr || attrs.LongLabel || "").road || "")
+    .replace(/^רחוב\s+/u, "")
+    .trim();
+  const num =
+    attrs.AddNum ||
+    parseStreetAndNumber(attrs.StAddr || "").num ||
+    parseStreetAndNumber(attrs.LongLabel || "").num ||
+    undefined;
+  const point =
+    attrs.Addr_type === "PointAddress" ||
+    attrs.Addr_type === "Subaddress" ||
+    (attrs.Addr_type === "StreetAddress" && Boolean(num));
+  const fake: NominatimHit = {
+    lat: String(lat),
+    lon: String(lng),
+    addresstype: point ? "house" : "road",
+    address: {
+      house_number: point ? num : undefined,
+      road,
+      suburb: attrs.Nbrhd,
+      city: city || "רמת גן",
+    },
+  };
+  const hit = toHit(fake);
+  if (hit && num && !hit.houseNumber) hit.houseNumber = num;
+  return hit;
+}
+
+function preferPreciseHit(primary: AddressHit | null, fallback: AddressHit | null): AddressHit | null {
+  if (!primary) return fallback;
+  if (!fallback) return primary;
+  if (fallback.precise && !primary.precise) return fallback;
+  if (fallback.houseNumber && !primary.houseNumber) {
+    return {
+      ...primary,
+      houseNumber: fallback.houseNumber,
+      road: fallback.road || primary.road,
+      label: fallback.label,
+      precise: true,
+    };
+  }
+  return primary;
+}
+
 export async function reverseAddress(lat: number, lng: number): Promise<AddressHit | null> {
   const raw = await nominatim<NominatimHit>("reverse", {
     format: "jsonv2",
     lat: String(lat),
     lon: String(lng),
-    zoom: "18",
+    zoom: "19",
     addressdetails: "1",
     "accept-language": "he",
   });
-  if (!raw || typeof raw !== "object") return null;
-  return toHit(raw);
+  const nominatimHit = raw && typeof raw === "object" ? toHit(raw) : null;
+
+  let esriHit: AddressHit | null = null;
+  if (!nominatimHit?.precise) {
+    try {
+      esriHit = await reverseEsri(lat, lng);
+    } catch {
+      // Nominatim result is still usable when Esri reverse fails.
+    }
+  }
+
+  return preferPreciseHit(nominatimHit, esriHit);
 }
 
 export function haversineMeters(
