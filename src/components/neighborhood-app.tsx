@@ -173,7 +173,7 @@ export function NeighborhoodApp({
   const filterDimActive = matchedIds.size < mapHouses.length;
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
-  const selection = useHouseSelection({ focusId, visible, houses });
+  const selection = useHouseSelection({ focusId, visible, houses, clusterHouses: mapHouses });
   const { resetForNavigation } = selection;
   const editFlow = useHouseEditFlow();
 

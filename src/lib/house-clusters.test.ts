@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { clusterAddressKey, clusterHousesByAddress } from "@/lib/house-clusters";
+import { clusterAddressKey, clusterHousesByAddress, clusterMembersForHouse } from "@/lib/house-clusters";
+import { isStubHouse } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
 
 function house(id: string, address: string, patch: Partial<PublicHouse> = {}): PublicHouse {
@@ -51,5 +52,21 @@ describe("clusterHousesByAddress", () => {
     const building = clusters.find((cluster) => cluster.houses.length === 2);
     assert.ok(building);
     assert.equal(building.address, "חרוזים 8");
+  });
+});
+
+describe("clusterMembersForHouse", () => {
+  it("counts only houses in the supplied set (real mode excludes rehearsal stubs)", () => {
+    const all = [
+      house("r1", "חרוזים 8"),
+      house("r2", "חרוזים 8"),
+      house("r3", "חרוזים 8"),
+      house("בית-9310", "חרוזים 8", { description: "סטאב לחזרה" }),
+      house("בית-9311", "חרוזים 8", { description: "סטאב לחזרה" }),
+      house("בית-9312", "חרוזים 8", { description: "סטאב לחזרה" }),
+    ];
+    const realOnly = all.filter((item) => !isStubHouse(item));
+    assert.equal(clusterMembersForHouse(all, "r1").length, 6);
+    assert.equal(clusterMembersForHouse(realOnly, "r1").length, 3);
   });
 });

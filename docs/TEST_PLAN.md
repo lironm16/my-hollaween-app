@@ -20,6 +20,8 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 
 **CI** (`.github/workflows/ci.yml`): unit → build → API integration → stress (200 concurrent) → browser E2E on every PR and `main` push.
 
+**E2E data isolation:** `npm run test:e2e` starts a fresh server with `DATA_DIR=artifacts/e2e-test-data` (file-backed, never Firestore). E2E house creates use address `העמל 99`, not seed addresses like `חרוזים 8`. If test houses leaked into production Firestore before this fix, run `node scripts/purge-e2e-test-houses.mjs`.
+
 **Rehearsal mode** for time-sensitive manual tests: `/?rehearsal=open` or Admin → חזרה כללית.
 
 ---

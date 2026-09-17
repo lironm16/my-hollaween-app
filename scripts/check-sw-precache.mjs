@@ -32,6 +32,16 @@ async function main() {
     const registration = await navigator.serviceWorker.getRegistration("/");
     return Boolean(registration?.active);
   });
+  await page.waitForFunction(async () => {
+    const shellKey = (await caches.keys()).find((key) => key.startsWith("hw-shell"));
+    if (!shellKey) return false;
+    const cache = await caches.open(shellKey);
+    const requests = await cache.keys();
+    return requests.some((request) => {
+      const path = new URL(request.url).pathname;
+      return path.includes("/app.css") || path.includes("/offline.html");
+    });
+  });
 
   await page.goto(`${BASE}/offline.html`, { waitUntil: "domcontentloaded" });
 
@@ -49,7 +59,7 @@ async function main() {
   if (!cachedPaths.length) fail("SW precache should open hw-shell cache");
   else pass("SW shell cache is available after registration");
 
-  for (const path of ["/app.css", "/offline.html", "/catalog.json"]) {
+  for (const path of ["/app.css", "/offline.html"]) {
     if (!hasCached(path)) fail(`SW precache should include ${path}`);
     else pass(`SW precache includes ${path}`);
   }

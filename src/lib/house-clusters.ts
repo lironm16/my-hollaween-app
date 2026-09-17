@@ -80,6 +80,14 @@ export function clusterHousesForMap(houses: PublicHouse[]): HouseCluster[] {
   return clusterHousesByAddress(houses);
 }
 
+/** Apartments sharing a pin with the given house (from the supplied house list only). */
+export function clusterMembersForHouse(houses: PublicHouse[], houseId: string): PublicHouse[] {
+  const cluster = clusterHousesByAddress(houses).find((item) =>
+    item.houses.some((house) => house.id === houseId),
+  );
+  return cluster?.houses ?? houses.filter((house) => house.id === houseId);
+}
+
 /** Reuse the label already stored for this building so a new apartment joins the pin. */
 export function canonicalAddressForBuilding<T extends { address: string }>(
   address: string,

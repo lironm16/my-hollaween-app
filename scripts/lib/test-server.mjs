@@ -102,3 +102,7 @@ export function createTestServerManager({
 export function defaultApiDataDir() {
   return join(process.cwd(), "artifacts", "api-test-data");
 }
+
+export function defaultE2eDataDir() {
+  return join(process.cwd(), "artifacts", "e2e-test-data");
+}

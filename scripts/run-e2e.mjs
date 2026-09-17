@@ -8,7 +8,11 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { createTestServerManager } from "./lib/test-server.mjs";
+import {
+  createTestServerManager,
+  defaultE2eDataDir,
+  pickFreePort,
+} from "./lib/test-server.mjs";
 
 const E2E_SCRIPTS = [
   "scripts/check-offline-catalog.mjs",
@@ -18,7 +22,17 @@ const E2E_SCRIPTS = [
   "scripts/e2e-batch5.mjs",
   "scripts/check-sw-precache.mjs",
 ];
-const server = createTestServerManager({ label: "e2e" });
+const e2ePort = Number(process.env.E2E_TEST_PORT ?? (await pickFreePort()));
+const dataDir = process.env.DATA_DIR ?? defaultE2eDataDir();
+const server = createTestServerManager({
+  port: e2ePort,
+  dataDir,
+  label: "e2e",
+  forceFresh: true,
+  extraEnv: {
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ?? "pumpkin2026",
+  },
+});
 
 function onSignal(code) {
   server.shutdown();

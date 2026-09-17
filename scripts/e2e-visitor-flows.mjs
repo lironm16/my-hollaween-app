@@ -86,12 +86,14 @@ async function main() {
   await page.getByRole("button", { name: "מפה", pressed: true }).waitFor();
   pass("MAP-04 toggles between list and map views");
 
-  await page.getByRole("button", { name: "רשימה" }).click();
-  await page.getByRole("button", { name: "פתיחת פרטי הבית" }).first().click();
+  await page.goto(`${BASE}/?focus=${encodeURIComponent(firstHouse.id)}&rehearsal=open`, {
+    waitUntil: "domcontentloaded",
+  });
+  await waitForCatalog(page);
   const detail = page.getByRole("dialog");
   try {
     await detail.getByRole("button", { name: "פעולות" }).waitFor({ timeout: 5_000 });
-    pass("MAP-02 list row opens house detail overlay");
+    pass("MAP-02 focus selection opens house detail overlay");
   } catch {
     fail("MAP-02 house selection should open a house card with actions");
   }
@@ -114,7 +116,8 @@ async function main() {
   if (!newlyVisited) fail("MAP-08 visit should persist in localStorage");
   else pass("MAP-08 visit saves to localStorage");
 
-  await detail.getByRole("button", { name: "סגירה" }).click();
+  await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
+  await waitForCatalog(page);
 
   await openFilterSheet(page);
   await page.getByText("שמורים", { exact: true }).click();

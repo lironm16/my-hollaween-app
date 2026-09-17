@@ -15,7 +15,11 @@ import {
 } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import { cloneDb, mergeHouses, mergePushSubscriptions } from "@/lib/catalog-sync";
-import { loadStaticRehearsalStubRows, stripStubHouses } from "@/lib/rehearsal-stubs";
+import {
+  housesForIsolatedTestDb,
+  loadStaticRehearsalStubRows,
+  stripStubHouses,
+} from "@/lib/rehearsal-stubs";
 import { parsePhotoUrl } from "@/lib/photos";
 import {
   HOUSE_THEMES,
@@ -455,13 +459,18 @@ async function readFileDb(): Promise<DbFile> {
     return withStaticRehearsalStubs(merged);
   }
   const seed = normalizeDb(await readSeed());
+  const seedForDisk = process.env.DATA_DIR
+    ? { ...seed, houses: housesForIsolatedTestDb(seed.houses) }
+    : { ...seed, houses: stripStubHouses(seed.houses) };
   try {
-    await writeFileDb({ ...seed, houses: stripStubHouses(seed.houses) });
+    await writeFileDb(seedForDisk);
   } catch {
     /* /tmp may still work later */
   }
-  void writeBlobDb({ ...seed, houses: stripStubHouses(seed.houses) }).catch(() => undefined);
-  return withStaticRehearsalStubs(seed);
+  if (!process.env.DATA_DIR) {
+    void writeBlobDb({ ...seed, houses: stripStubHouses(seed.houses) }).catch(() => undefined);
+  }
+  return withStaticRehearsalStubs(seedForDisk);
 }
 
 let mem: DbFile | null = null;
@@ -502,7 +511,7 @@ async function writeDurableDb(db: DbFile, prev?: DbFile | null) {
     }
     return;
   }
-  if (productionRequiresBlob()) {
+  if (productionRequiresBlob() && !process.env.DATA_DIR?.trim()) {
     throw storageErrorFromCode("BLOB_NOT_CONFIGURED");
   }
   try {
@@ -604,6 +613,7 @@ async function persistDb(db: DbFile, prev?: DbFile | null) {
 }
 
 async function withStaticRehearsalStubs(db: DbFile): Promise<DbFile> {
+  if (process.env.DATA_DIR?.trim()) return db;
   const rows = await loadStaticRehearsalStubRows();
   const stubs = rows.map((row) => normalizeHouse(row as House & { status?: string }));
   const real = stripStubHouses(db.houses).map(normalizeHouse);

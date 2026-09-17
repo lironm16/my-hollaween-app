@@ -1,6 +1,7 @@
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { adminDeleteHouse, createE2eHouse } from "./lib/e2e-house.mjs";
 
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:43127";
 const OUT = process.env.E2E_ARTIFACTS_DIR ?? join(process.cwd(), "artifacts", "e2e");
@@ -49,55 +50,6 @@ async function waitForCatalog(page) {
   });
 }
 
-function validHousePayload(name = "בית batch5") {
-  return {
-    name,
-    theme: "pumpkin",
-    address: "חרוזים 8",
-    arrival: "קומה 2",
-    description: "בדיקת batch5",
-    lat: 32.0916477,
-    lng: 34.8028691,
-    treats: ["candy"],
-    treatStock: { candy: "plenty" },
-    visit: "come",
-    scareLevel: "mild",
-    openFrom: "17:00",
-    openTo: "21:00",
-    openHours: [{ from: "17:00", to: "21:00" }],
-    notes: "",
-    accessible: false,
-    decorLevel: "medium",
-    decorated: true,
-  };
-}
-
-async function createTestHouse() {
-  const res = await fetch(`${BASE}/api/houses`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(validHousePayload()),
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  if (!data.house?.id || !data.editCode) return null;
-  return data;
-}
-
-async function adminDeleteHouse(houseId) {
-  const login = await fetch(`${BASE}/api/admin/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password: "pumpkin2026" }),
-  });
-  const cookie = login.headers.getSetCookie?.()?.[0]?.split(";")[0] ?? "";
-  if (!cookie) return;
-  await fetch(`${BASE}/api/admin/houses/${encodeURIComponent(houseId)}`, {
-    method: "DELETE",
-    headers: { Cookie: cookie },
-  });
-}
-
 async function main() {
   mkdirSync(OUT, { recursive: true });
   const browser = await launchBrowser();
@@ -134,7 +86,7 @@ async function main() {
     pass("SHARE-02 focus link opens house detail overlay");
   }
 
-  const owned = await createTestHouse();
+  const owned = await createE2eHouse(BASE, "בית batch5");
   if (!owned) fail("EDIT-02 could not create a test house");
   else {
     await gotoPage(page, `${BASE}/my-houses?rehearsal=open`);
@@ -176,7 +128,7 @@ async function main() {
       else pass("EDIT-02 offline quick update queues local save");
     }
     await context.setOffline(false);
-    await adminDeleteHouse(owned.house.id);
+    await adminDeleteHouse(BASE, owned.house.id);
   }
 
   await gotoPage(page, `${BASE}/?rehearsal=open`);
@@ -247,7 +199,7 @@ async function main() {
     await pollPage.clock.install();
     await gotoPage(pollPage, `${BASE}/?rehearsal=open`);
     await waitForCatalog(pollPage);
-    const pollHouse = await createTestHouse();
+    const pollHouse = await createE2eHouse(BASE, "בית poll E2E");
     if (!pollHouse) {
       fail("OFF-06 could not create a poll test house");
     } else {
@@ -272,7 +224,7 @@ async function main() {
           fail("OFF-06 catalog poll should refresh cached houses when online");
         }
       }
-      await adminDeleteHouse(pollHouse.house.id);
+      await adminDeleteHouse(BASE, pollHouse.house.id);
     }
   } catch (error) {
     fail(`OFF-06 poll test crashed: ${error instanceof Error ? error.message : String(error)}`);

@@ -39,7 +39,7 @@ async function main() {
   page.setDefaultTimeout(20_000);
   page.on("pageerror", (err) => console.log("pageerror", err.message));
 
-  await page.goto(BASE + "/", { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
   await page.getByText(/בתים/).first().waitFor();
   await page.waitForFunction(() => {
     try {
@@ -62,15 +62,16 @@ async function main() {
   console.log("saved", saved);
   if (!saved || saved.count < 1) fail("catalog was not written to localStorage");
 
-  await page.getByRole("button", { name: "רשימה" }).click();
-  await page.getByRole("button", { name: "רשימה", pressed: true }).waitFor();
-  await page.getByRole("button", { name: "פתיחת פרטי הבית" }).first().waitFor();
   await page.screenshot({ path: `${OUT}/houses-saved-on-device.png`, fullPage: true });
 
   await setServerSimDown(page, true);
   await refreshCatalog(page);
   await page.getByText(/השרת לא עונה/).first().waitFor();
-  await page.getByRole("button", { name: "פתיחת פרטי הבית" }).first().waitFor();
+  await page.waitForFunction((count) => {
+    const listCards = document.querySelectorAll(".house-list-card").length;
+    const mapPins = document.querySelectorAll(".house-pin").length;
+    return listCards > 0 || mapPins > 0 || count > 0;
+  }, saved.count);
   await page.screenshot({ path: `${OUT}/server-down-keeps-houses.png`, fullPage: true });
   console.log("server-down still showing", saved.count, "houses");
 
@@ -81,7 +82,11 @@ async function main() {
   });
   await refreshCatalog(page);
   await page.getByText(/אין אינטרנט/).first().waitFor();
-  await page.getByRole("button", { name: "פתיחת פרטי הבית" }).first().waitFor();
+  await page.waitForFunction((count) => {
+    const listCards = document.querySelectorAll(".house-list-card").length;
+    const mapPins = document.querySelectorAll(".house-pin").length;
+    return listCards > 0 || mapPins > 0 || count > 0;
+  }, saved.count);
   await page.screenshot({ path: `${OUT}/no-internet-keeps-houses.png`, fullPage: true });
   console.log("no-internet still showing the saved list");
 

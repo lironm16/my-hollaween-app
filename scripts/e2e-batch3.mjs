@@ -1,6 +1,12 @@
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
+import {
+  firstRealHouseId,
+  openHouseByFocus,
+  skipHouseFromDetail,
+  waitForCatalog,
+} from "./lib/e2e-helpers.mjs";
 
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:43127";
 const OUT = process.env.E2E_ARTIFACTS_DIR ?? join(process.cwd(), "artifacts", "e2e");
@@ -24,27 +30,6 @@ async function launchBrowser() {
   });
 }
 
-async function waitForCatalog(page) {
-  await page.getByText(/בתים/).first().waitFor();
-  await page.waitForFunction(() => {
-    try {
-      const raw = localStorage.getItem("hw-catalog-cache");
-      const catalog = raw ? JSON.parse(raw) : null;
-      return Array.isArray(catalog?.houses) && catalog.houses.length > 0;
-    } catch {
-      return false;
-    }
-  });
-}
-
-async function readStorageIds(page, key) {
-  return page.evaluate((storageKey) => {
-    const raw = localStorage.getItem(storageKey);
-    const ids = raw ? JSON.parse(raw) : [];
-    return Array.isArray(ids) ? ids : [];
-  }, key);
-}
-
 async function openFilterSheet(page) {
   await page.getByRole("button", { name: /^סינון/ }).first().click();
 }
@@ -61,14 +46,14 @@ async function main() {
 
   await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
   await waitForCatalog(page);
-
-  await page.getByRole("button", { name: "רשימה" }).click();
-  await page.getByRole("button", { name: "פתיחת פרטי הבית" }).first().click();
-  const detail = page.getByRole("dialog");
+  const likeHouseId = await firstRealHouseId(page);
+  const detail = await openHouseByFocus(page, BASE, likeHouseId);
   await detail.getByRole("button", { name: "פעולות" }).click();
   await page.getByRole("menuitem", { name: "אהבתי" }).click();
   await page.getByText("שמרתם!").waitFor();
-  await detail.getByRole("button", { name: "סגירה" }).click();
+  await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
+  await waitForCatalog(page);
+  await page.getByRole("button", { name: "מפה", exact: true }).click();
 
   const dimBefore = await page.locator(".is-filter-dim .is-filtered-out").count();
   await openFilterSheet(page);
@@ -90,28 +75,10 @@ async function main() {
   if (multiUnitCount < 2) fail("MAP-03 catalog should include a multi-unit address");
   else pass("MAP-03 catalog includes multi-unit address data");
 
-  await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
-  await waitForCatalog(page);
-  await page.getByRole("button", { name: "רשימה" }).click();
-  await page.getByRole("button", { name: "פתיחת פרטי הבית" }).first().click();
-  const skipDetail = page.getByRole("dialog");
+  const skipHouseId = await firstRealHouseId(page);
+  const skipDetail = await openHouseByFocus(page, BASE, skipHouseId);
   const skippedName = await skipDetail.locator(".sr-only").first().innerText().catch(() => "");
-  const skippedBefore = await readStorageIds(page, "hw-skipped-houses");
-  await skipDetail.getByRole("button", { name: "פעולות" }).click();
-  await page.getByRole("menuitem", { name: "דילוג על בית" }).click();
-  await page.locator(".house-edit-modal").getByText("דילגתם על הבית").waitFor();
-  const tempSkip = page.locator(".house-edit-modal input[type='checkbox']");
-  if (await tempSkip.isVisible()) await tempSkip.uncheck();
-  await page.locator(".house-edit-modal").getByRole("button", { name: /^אישור$/ }).click();
-  await page.waitForFunction(
-    (before) => {
-      const raw = localStorage.getItem("hw-skipped-houses");
-      const ids = raw ? JSON.parse(raw) : [];
-      return ids.some((id) => !before.includes(id));
-    },
-    skippedBefore,
-  );
-  const skippedAfter = await readStorageIds(page, "hw-skipped-houses");
+  const { skippedBefore, skippedAfter } = await skipHouseFromDetail(page, skipDetail);
   const newlySkipped = skippedAfter.some((id) => !skippedBefore.includes(id));
   if (!newlySkipped) fail("MAP-10 skip should persist in localStorage");
   else pass("MAP-10 skip saves to localStorage");
@@ -165,11 +132,8 @@ async function main() {
   });
   await page.reload({ waitUntil: "domcontentloaded" });
   await waitForCatalog(page);
-  await page.getByRole("button", { name: "רשימה" }).click();
-  await page.getByRole("button", { name: "רשימה", pressed: true }).waitFor();
-  await page.getByRole("button", { name: "פתיחת פרטי הבית" }).first().waitFor();
-  await page.getByRole("button", { name: "פתיחת פרטי הבית" }).first().click();
-  const routeDetail = page.getByRole("dialog");
+  const routeHouseId = await firstRealHouseId(page);
+  const routeDetail = await openHouseByFocus(page, BASE, routeHouseId);
   const routeHouseName = await routeDetail.locator(".sr-only").first().innerText().catch(() => "");
   await routeDetail.getByRole("button", { name: "פעולות" }).click();
   await page.getByRole("menuitem", { name: "אהבתי" }).click();
@@ -191,14 +155,13 @@ async function main() {
       fail("ROUTE-02 route list should include the filtered liked house");
     }
   }
-  await page.getByRole("button", { name: "פתיחת פרטי הבית" }).first().click();
+  await page.locator(".route-list-house").first().click();
   const visitDetail = page.getByRole("dialog");
   await visitDetail.getByRole("button", { name: "פעולות" }).click();
   await page.getByRole("menuitem", { name: "ביקרתי" }).click();
   await page.getByText("סיימתם את המסלול!").waitFor();
   pass("ROUTE-04 route completion cheer appears after visiting all stops");
-  await visitDetail.getByRole("button", { name: "סגירה" }).click();
-  await page.getByRole("button", { name: "יציאה מהמסלול" }).click();
+  await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
 
   const ownedHouse = await page.evaluate(() => {
     const raw = localStorage.getItem("hw-catalog-cache");

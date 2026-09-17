@@ -1,6 +1,7 @@
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { adminDeleteHouse, e2eHousePayload } from "./lib/e2e-house.mjs";
 
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:43127";
 const OUT = process.env.E2E_ARTIFACTS_DIR ?? join(process.cwd(), "artifacts", "e2e");
@@ -63,35 +64,17 @@ async function main() {
   if (origin?.kind !== "neighborhood") fail("ORIGIN-01 should persist neighborhood origin choice");
   else pass("ORIGIN-01 origin picker saves מרכז השכונה");
 
-  const flushResult = await page.evaluate(async (baseUrl) => {
+  const flushResult = await page.evaluate(
+    async ({ baseUrl, housePayload }) => {
     const created = await fetch(`${baseUrl}/api/houses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: "בית תור E2E",
-        theme: "pumpkin",
-        address: "חרוזים 8",
-        arrival: "קומה 1",
-        description: "בדיקת תור offline",
-        lat: 32.0916477,
-        lng: 34.8028691,
-        treats: ["candy"],
-        treatStock: { candy: "plenty" },
-        visit: "come",
-        scareLevel: "mild",
-        openFrom: "17:00",
-        openTo: "21:00",
-        openHours: [{ from: "17:00", to: "21:00" }],
-        notes: "",
-        accessible: false,
-        decorLevel: "medium",
-        decorated: true,
-      }),
+      body: JSON.stringify(housePayload),
     });
     if (!created.ok) return { error: "create-failed" };
-    const payload = await created.json();
-    const house = payload.house;
-    const editCode = payload.editCode;
+    const body = await created.json();
+    const house = body.house;
+    const editCode = body.editCode;
     if (!house?.id || !editCode) return { error: "missing-house" };
 
     const nextHouse = {
@@ -131,7 +114,12 @@ async function main() {
       soldOut: liveHouse?.soldOut === true,
       houseId: house.id,
     };
-  }, BASE);
+  },
+    {
+      baseUrl: BASE,
+      housePayload: e2eHousePayload("בית תור E2E", { description: "בדיקת תור offline" }),
+    },
+  );
 
   if (flushResult.error) fail(`OFF-07 setup failed: ${flushResult.error}`);
   else if (flushResult.queueLength !== 0) fail("OFF-07 pending write queue should flush when online");
@@ -139,21 +127,7 @@ async function main() {
   else pass("OFF-07 offline write queue syncs to server when network is available");
 
   if (flushResult.houseId) {
-    await page.evaluate(
-      async ({ baseUrl, houseId }) => {
-        await fetch(`${baseUrl}/api/admin/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password: "pumpkin2026" }),
-          credentials: "include",
-        });
-        await fetch(`${baseUrl}/api/admin/houses/${encodeURIComponent(houseId)}`, {
-          method: "DELETE",
-          credentials: "include",
-        });
-      },
-      { baseUrl: BASE, houseId: flushResult.houseId },
-    );
+    await adminDeleteHouse(BASE, flushResult.houseId);
   }
 
   await page.screenshot({ path: `${OUT}/batch4.png`, fullPage: true });
