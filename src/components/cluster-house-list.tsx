@@ -56,70 +56,15 @@ export function ClusterHouseStatusDot({
   );
 }
 
-export function ClusterHouseStatusStrip({
-  houses,
-  selectedId,
-  now,
-  skipped,
-  filteredOut,
-  onSelect,
-}: {
-  houses: PublicHouse[];
-  selectedId: string;
-  now: Date;
-  skipped?: (id: string) => boolean;
-  filteredOut?: (id: string) => boolean;
-  onSelect: (id: string) => void;
-}) {
-  return (
-    <div
-      className="cluster-house-status-strip"
-      role="tablist"
-      aria-label="סטטוס בתים בכתובת"
-    >
-      {houses.map((item, index) => {
-        const active = item.id === selectedId;
-        const status = clusterPinStatus(item, now, { skipped: skipped?.(item.id) });
-        return (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            aria-label={`${index + 1}. ${houseHeadline(item)}`}
-            className={cn(
-              "cluster-house-status-chip",
-              active && "is-active",
-              filteredOut?.(item.id) && "is-filtered-out",
-            )}
-            onClick={() => onSelect(item.id)}
-          >
-            <ClusterHouseStatusDot status={status} />
-            <span className="cluster-house-status-num tabular-nums">{index + 1}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 export function ClusterHouseNav({
   houses,
   selectedId,
-  now,
-  skipped,
-  filteredOut,
-  onSelect,
   onPrev,
   onNext,
   onBack,
 }: {
   houses: PublicHouse[];
   selectedId: string;
-  now: Date;
-  skipped?: (id: string) => boolean;
-  filteredOut?: (id: string) => boolean;
-  onSelect: (id: string) => void;
   onPrev: () => void;
   onNext: () => void;
   onBack: () => void;
@@ -164,14 +109,6 @@ export function ClusterHouseNav({
           </button>
         </div>
       </div>
-      <ClusterHouseStatusStrip
-        houses={houses}
-        selectedId={selectedId}
-        now={now}
-        skipped={skipped}
-        filteredOut={filteredOut}
-        onSelect={onSelect}
-      />
       <p className="cluster-house-nav-hint">החלקה לצדדים לבית הקודם או הבא</p>
     </div>
   );
@@ -211,7 +148,9 @@ export function ClusterHouseSwipeArea({
       if (!swipe.current?.active) return;
       const start = swipe.current;
       swipe.current = null;
-      event.currentTarget.releasePointerCapture(event.pointerId);
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
       const dx = event.clientX - start.x;
       const dy = event.clientY - start.y;
       if (Math.abs(dx) < SWIPE_THRESHOLD_PX || Math.abs(dx) <= Math.abs(dy)) return;
@@ -228,7 +167,9 @@ export function ClusterHouseSwipeArea({
 
   const onPointerCancel = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
     swipe.current = null;
-    event.currentTarget.releasePointerCapture(event.pointerId);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
   }, []);
 
   return (

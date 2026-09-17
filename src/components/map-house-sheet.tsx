@@ -8,7 +8,6 @@ import { CodesCopy } from "@/components/codes-copy";
 import {
   ClusterHouseList,
   ClusterHouseNav,
-  ClusterHouseStatusStrip,
   ClusterHouseSwipeArea,
   clusterHouseIndex,
 } from "@/components/cluster-house-list";
@@ -97,6 +96,7 @@ export function MapHouseSheet({
   const liveH = useRef(0);
   const skipClick = useRef(false);
   const draggingRef = useRef(false);
+  const sheetOpenRef = useRef(false);
   const [dragH, setDragH] = useState<number | null>(null);
   const [sheetH, setSheetH] = useState<number | null>(null);
   const [fitH, setFitH] = useState<number | null>(null);
@@ -172,6 +172,7 @@ export function MapHouseSheet({
     setDragH(null);
     setFitH(null);
     setOpenH(0);
+    sheetOpenRef.current = false;
     bodyRef.current?.scrollTo(0, 0);
     if (overview) {
       const cap = measureOverviewHeight();
@@ -183,14 +184,19 @@ export function MapHouseSheet({
     }
     setSheetH(null);
     document.documentElement.style.removeProperty("--map-cluster-sheet-h");
-  }, [clusterKey, house.id, overview, clusterHouses.length]);
+  }, [clusterKey, overview, clusterHouses.length]);
 
   useLayoutEffect(() => {
     if (overview) return;
+    bodyRef.current?.scrollTo(0, 0);
     const next = measureFitHeight();
     if (next == null) return;
     naturalH.current = next;
     setFitH(next);
+    if (sheetOpenRef.current) {
+      setOpenH(next);
+      publishSheetHeight(next);
+    }
   }, [
     clusterKey,
     house.id,
@@ -199,6 +205,10 @@ export function MapHouseSheet({
     skipped,
     filterMismatchReasons?.join("\0"),
   ]);
+
+  useEffect(() => {
+    sheetOpenRef.current = (dragH ?? sheetH ?? openH) > 0;
+  }, [dragH, sheetH, openH]);
 
   useEffect(() => {
     if (overview || editing || sheetH !== null || dragH !== null) return;
@@ -355,14 +365,6 @@ export function MapHouseSheet({
                 {actionMenu}
               </div>
             </div>
-            <ClusterHouseStatusStrip
-              houses={clusterHouses}
-              selectedId={house.id}
-              now={clusterNow}
-              skipped={isSkipped}
-              filteredOut={isFilteredOut}
-              onSelect={(id) => onSelectClusterHouse?.(id)}
-            />
             <div className="map-house-sheet-cluster-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
               <ClusterHouseList
                 houses={clusterHouses}
@@ -391,10 +393,6 @@ export function MapHouseSheet({
                     <ClusterHouseNav
                       houses={clusterHouses}
                       selectedId={house.id}
-                      now={clusterNow}
-                      skipped={isSkipped}
-                      filteredOut={isFilteredOut}
-                      onSelect={(id) => onSelectClusterHouse?.(id)}
                       onPrev={() => onAdjacentClusterHouse?.(-1)}
                       onNext={() => onAdjacentClusterHouse?.(1)}
                       onBack={() => onBackToClusterOverview?.()}

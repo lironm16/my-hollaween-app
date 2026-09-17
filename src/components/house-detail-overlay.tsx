@@ -10,7 +10,6 @@ import { CodesCopy } from "@/components/codes-copy";
 import {
   ClusterHouseList,
   ClusterHouseNav,
-  ClusterHouseStatusStrip,
   ClusterHouseSwipeArea,
   clusterHouseIndex,
 } from "@/components/cluster-house-list";
@@ -135,16 +134,8 @@ export function HouseDetailOverlay({
         {overview ? (
           <div id={labelId}>
             <p className="map-house-sheet-kicker">{formatDisplayAddress(house)}</p>
-            <p className="map-house-sheet-sub mb-3">{clusterHouses!.length} בתים בכתובת זו</p>
-            <ClusterHouseStatusStrip
-              houses={clusterHouses!}
-              selectedId={house.id}
-              now={clusterNow}
-              skipped={isSkipped}
-              filteredOut={isFilteredOut}
-              onSelect={(id) => onSelectClusterHouse?.(id)}
-            />
-            <div className="mt-3 max-h-[min(52dvh,28rem)] overflow-y-auto overscroll-contain pe-0.5">
+            <p className="map-house-sheet-sub mb-4">{clusterHouses!.length} בתים בכתובת זו</p>
+            <div className="max-h-[min(52dvh,28rem)] overflow-y-auto overscroll-contain pe-0.5">
               <ClusterHouseList
                 houses={clusterHouses!}
                 selectedId={house.id}
@@ -169,10 +160,6 @@ export function HouseDetailOverlay({
               <ClusterHouseNav
                 houses={clusterHouses!}
                 selectedId={house.id}
-                now={clusterNow}
-                skipped={isSkipped}
-                filteredOut={isFilteredOut}
-                onSelect={(id) => onSelectClusterHouse?.(id)}
                 onPrev={() => onAdjacentClusterHouse?.(-1)}
                 onNext={() => onAdjacentClusterHouse?.(1)}
                 onBack={() => onBackToClusterOverview?.()}

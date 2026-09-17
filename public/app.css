@@ -5549,43 +5549,12 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   font-weight: 600;
   color: rgba(254, 215, 170, 0.95);
 }
-.cluster-house-status-strip {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 8px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  padding: 2px 1px 4px;
-  -webkit-overflow-scrolling: touch;
-}
-.cluster-house-status-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex: 0 0 auto;
-  padding: 4px 10px 4px 6px;
-  border-radius: 999px;
-  background: rgba(29, 16, 40, 0.92);
-  box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.22);
-}
-.cluster-house-status-chip.is-active {
-  background: rgba(38, 21, 54, 0.98);
-  box-shadow: inset 0 0 0 1.5px rgba(251, 146, 60, 0.75);
-}
-.cluster-house-status-chip.is-filtered-out {
-  opacity: 0.55;
-}
 .cluster-house-status-dot {
   position: static;
   width: 18px;
   height: 18px;
   margin: 0;
   flex-shrink: 0;
-}
-.cluster-house-status-num {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #ffedd5;
 }
 .cluster-house-nav-hint {
   margin: 0;
