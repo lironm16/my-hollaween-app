@@ -97,6 +97,20 @@ export function useHouseSelection({
     setEditing(false);
   }, []);
 
+  const selectAdjacentClusterHouse = useCallback(
+    (delta: -1 | 1) => {
+      if (!selected || selectedCluster.length <= 1) return;
+      const index = selectedCluster.findIndex((item) => item.id === selected.id);
+      if (index < 0) return;
+      const next = selectedCluster[index + delta];
+      if (!next) return;
+      setClusterOverview(false);
+      setEditing(false);
+      setSelectedId(next.id);
+    },
+    [selected, selectedCluster],
+  );
+
   const showOnMap = useCallback((id: string) => {
     setClusterOverview(false);
     setEditing(false);
@@ -151,6 +165,7 @@ export function useHouseSelection({
     resetForNavigation,
     selectOnMap,
     backToClusterOverview,
+    selectAdjacentClusterHouse,
     showOnMap,
     selectInList,
     editInList,
