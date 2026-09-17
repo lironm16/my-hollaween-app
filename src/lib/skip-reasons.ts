@@ -67,10 +67,10 @@ export function isHouseOpenForSkip(house: PublicHouse, now: Date, filters: House
   return isOpenNowForFilter(house, from, to, now);
 }
 
-/** Whether the house currently lacks candy (out or low). */
+/** Whether the house is completely out of candy (not merely low). */
 export function houseLacksCandy(house: PublicHouse) {
   const candy = candyPinDot(house);
-  return candy === "out" || candy === "low";
+  return candy === "out";
 }
 
 /** Whether the house currently has candy available. */
@@ -79,14 +79,14 @@ export function houseHasCandy(house: PublicHouse) {
   return candy === "plenty" || candy === "low";
 }
 
-/** One restore trigger for the skip dialog — candy wins when both candy and closed apply. */
+/** One restore trigger for the skip dialog — open/break wins over candy when both apply. */
 export function primaryTemporaryRestoreOption(
   house: PublicHouse,
   now: Date,
   filters: HouseFiltersState,
 ): SkipReasonOption | null {
-  if (houseLacksCandy(house)) return TEMPORARY_RESTORE_OPTIONS[1];
   if (!isHouseOpenForSkip(house, now, filters)) return TEMPORARY_RESTORE_OPTIONS[0];
+  if (houseLacksCandy(house)) return TEMPORARY_RESTORE_OPTIONS[1];
   return null;
 }
 
