@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { visualViewportHeight } from "@/lib/viewport";
 
 const MAP_SHEET_PEEK_VH = 0.7;
+const MAP_CLUSTER_SHEET_PEEK_VH = 0.62;
 
 function isSheetInteractive(target: EventTarget | null) {
   return (
@@ -124,8 +125,12 @@ export function MapHouseSheet({
     return parent?.clientHeight || visualViewportHeight();
   }
 
-  function peekPx() {
-    return Math.round(parentH() * MAP_SHEET_PEEK_VH);
+  function peekPx(fraction = MAP_SHEET_PEEK_VH) {
+    return Math.round(parentH() * fraction);
+  }
+
+  function measureOverviewHeight() {
+    return Math.min(peekPx(MAP_CLUSTER_SHEET_PEEK_VH), maxPx());
   }
 
   function maxPx() {
@@ -148,12 +153,21 @@ export function MapHouseSheet({
   }
 
   useLayoutEffect(() => {
-    setSheetH(null);
     setDragH(null);
     setFitH(null);
     setOpenH(0);
     bodyRef.current?.scrollTo(0, 0);
-  }, [clusterKey, house.id, overview]);
+    if (overview) {
+      const cap = measureOverviewHeight();
+      naturalH.current = cap;
+      setSheetH(cap);
+      document.documentElement.style.setProperty("--map-cluster-sheet-h", `${cap}px`);
+      publishSheetHeight(cap);
+      return;
+    }
+    setSheetH(null);
+    document.documentElement.style.removeProperty("--map-cluster-sheet-h");
+  }, [clusterKey, house.id, overview, clusterHouses.length]);
 
   useLayoutEffect(() => {
     if (overview) return;
@@ -217,6 +231,7 @@ export function MapHouseSheet({
       return () => {
         ro.disconnect();
         document.documentElement.style.removeProperty("--map-sheet-h");
+        document.documentElement.style.removeProperty("--map-cluster-sheet-h");
       };
     }
 
@@ -292,13 +307,9 @@ export function MapHouseSheet({
       role="dialog"
       aria-labelledby={labelId}
       tabIndex={-1}
-      style={
-        overview
-          ? displayH != null
-            ? { height: displayH }
-            : undefined
-          : { height: displayH ?? 0 }
-      }
+      style={{
+        height: overview ? (displayH ?? "var(--map-cluster-sheet-h, 65%)") : (displayH ?? 0),
+      }}
       dir="rtl"
       onPointerDown={onSheetPointerDown}
       onPointerMove={onSheetPointerMove}
