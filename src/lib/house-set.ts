@@ -1,3 +1,5 @@
+import { isE2eTestHouse } from "@/lib/e2e-houses";
+
 export const HOUSE_SET_KEY = "hw-house-set";
 export const HOUSE_SET_EVENT = "hw-house-set";
 
@@ -18,8 +20,14 @@ export const HOUSE_SET_STATUS: Record<HouseSet, string> = {
 
 const STUB_ID = /^בית-931\d$/;
 
-export function isStubHouse(house: { id?: string; description?: string }) {
+export function isStubHouse(house: {
+  id?: string;
+  name?: string;
+  description?: string;
+  address?: string;
+}) {
   if (house.id && STUB_ID.test(house.id)) return true;
+  if (isE2eTestHouse(house)) return true;
   return Boolean(house.description?.includes("סטאב לחזרה"));
 }
 

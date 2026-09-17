@@ -92,6 +92,11 @@ export function useHouseSelection({
     [clustersFor],
   );
 
+  const backToClusterOverview = useCallback(() => {
+    setClusterOverview(true);
+    setEditing(false);
+  }, []);
+
   const showOnMap = useCallback((id: string) => {
     setClusterOverview(false);
     setEditing(false);
@@ -145,6 +150,7 @@ export function useHouseSelection({
     dismissForOverlay,
     resetForNavigation,
     selectOnMap,
+    backToClusterOverview,
     showOnMap,
     selectInList,
     editInList,

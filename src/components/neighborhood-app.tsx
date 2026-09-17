@@ -729,6 +729,7 @@ export function NeighborhoodApp({
                       houses.find((item) => item.id === id);
                     if (house) selection.selectOnMap(house);
                   }}
+                  onBackToClusterOverview={selection.backToClusterOverview}
                 />
               ) : null}
               <CatalogMetaChip
@@ -841,6 +842,7 @@ export function NeighborhoodApp({
               const house = houses.find((item) => item.id === id);
               if (house) selection.selectOnMap(house);
             }}
+            onBackToClusterOverview={selection.backToClusterOverview}
           />
         ) : null}
       </main>
