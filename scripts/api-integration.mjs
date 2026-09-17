@@ -1,4 +1,5 @@
 import { mkdirSync } from "node:fs";
+import { e2eHousePayload } from "./lib/e2e-house.mjs";
 
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:43128";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "pumpkin2026";
@@ -41,32 +42,16 @@ async function json(method, path, body, headers = {}) {
   return { res, data, text };
 }
 
-function validHousePayload(name = "בית אינטגרציה", patch = {}) {
-  return {
-    name,
-    theme: "pumpkin",
-    address: "חרוזים 8",
-    arrival: "קומה 1",
+function validHousePayload(name = "אינטגרציה — כללי", patch = {}) {
+  const { name: _ignored, ...rest } = patch;
+  return e2eHousePayload(name, {
     description: "בדיקת API",
-    lat: 32.0916477,
-    lng: 34.8028691,
-    treats: ["candy"],
-    treatStock: { candy: "plenty" },
-    visit: "come",
-    scareLevel: "mild",
-    openFrom: "17:00",
-    openTo: "21:00",
-    openHours: [{ from: "17:00", to: "21:00" }],
-    notes: "",
-    accessible: false,
-    decorLevel: "medium",
-    decorated: true,
-    ...patch,
-  };
+    ...rest,
+  });
 }
 
-async function createHouse(patch = {}) {
-  const created = await json("POST", "/api/houses", validHousePayload(undefined, patch));
+async function createHouse(name = "אינטגרציה — כללי", patch = {}) {
+  const created = await json("POST", "/api/houses", validHousePayload(name, patch));
   if (!created.res.ok || !created.data.house?.id || !created.data.editCode) {
     fail("POST /api/houses valid payload should return house + editCode");
     return null;
@@ -156,29 +141,31 @@ async function testHouseCreate(adminCookie) {
   }
   pass("POST /api/houses rejects out-of-bounds coordinates");
 
-  const decorOnly = await createHouse({
+  const decorOnly = await createHouse("אינטגרציה — קישוט בלבד", {
     treats: [],
     treatStock: {},
     decorLevel: "medium",
     decorated: true,
+    arrival: "קומה 2, דירה 5",
   });
   if (decorOnly) {
     pass("POST /api/houses accepts decor-only house");
     await deleteHouse(adminCookie, decorOnly.house.id);
   }
 
-  const candyOnly = await createHouse({
+  const candyOnly = await createHouse("אינטגרציה — ממתקים בלבד", {
     decorLevel: "none",
     decorated: false,
     treats: ["candy"],
     treatStock: { candy: "plenty" },
+    arrival: "קומה 3, דירה 8",
   });
   if (candyOnly) {
     pass("POST /api/houses accepts candy-only house");
     await deleteHouse(adminCookie, candyOnly.house.id);
   }
 
-  const created = await createHouse();
+  const created = await createHouse("אינטגרציה — יצירה", { arrival: "קומה 1, דירה 1" });
   if (!created) return null;
   pass(`POST /api/houses creates ${created.house.id}`);
 
@@ -201,7 +188,7 @@ async function testHouseCreate(adminCookie) {
 }
 
 async function testHouseUnlock(adminCookie) {
-  const created = await createHouse();
+  const created = await createHouse("אינטגרציה — פתיחה", { arrival: "קומה 4, דירה 11" });
   if (!created) return;
   const id = created.house.id;
 
@@ -223,7 +210,7 @@ async function testHouseUnlock(adminCookie) {
 }
 
 async function testAdminFreeze(adminCookie) {
-  const created = await createHouse();
+  const created = await createHouse("אינטגרציה — הקפאה", { arrival: "קומה 5, דירה 14" });
   if (!created) return;
   const id = created.house.id;
 
@@ -350,7 +337,7 @@ async function testWalkRouteApi() {
 }
 
 async function testOwnerEdit(adminCookie) {
-  const created = await createHouse();
+  const created = await createHouse("אינטגרציה — עריכה", { arrival: "קומה 6, דירה 18" });
   if (!created) return;
   const { house, editCode } = created;
   const id = house.id;
@@ -410,7 +397,7 @@ async function testAddressApi() {
 }
 
 async function testHouseNotify(adminCookie) {
-  const created = await createHouse();
+  const created = await createHouse("אינטגרציה — התראות", { arrival: "קומה 7, דירה 21" });
   if (!created) return;
   const { house, editCode } = created;
   const id = house.id;
@@ -439,7 +426,7 @@ async function testHouseNotify(adminCookie) {
 }
 
 async function testPhotoApi(adminCookie) {
-  const created = await createHouse();
+  const created = await createHouse("אינטגרציה — תמונה", { arrival: "קומה 8, דירה 24" });
   if (!created) return;
   const { house, editCode } = created;
   const id = house.id;
@@ -482,7 +469,7 @@ async function testAdminExtended(adminCookie) {
   }
   pass("admin houses list returns full house records");
 
-  const created = await createHouse();
+  const created = await createHouse("אינטגרציה — ניהול", { arrival: "קומה 9, דירה 27" });
   if (!created) return;
   const id = created.house.id;
 

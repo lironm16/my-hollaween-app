@@ -7,9 +7,14 @@ describe("isE2eTestHouse", () => {
   it("matches E2E names, descriptions, and the isolated test address", () => {
     assert.equal(isE2eTestHouse({ name: "בית batch5", description: "x" }), true);
     assert.equal(
-      isE2eTestHouse({ name: "בית בדיקה — עדכון מהיר", description: "בדיקת E2E" }),
+      isE2eTestHouse({ name: "סטאב E2E — עדכון מהיר", description: "בדיקת E2E" }),
       true,
     );
+    assert.equal(
+      isE2eTestHouse({ name: "אינטגרציה — יצירה", description: "בדיקת API" }),
+      true,
+    );
+    assert.equal(isE2eTestHouse({ name: "בית אינטגרציה", description: "בדיקת API" }), true);
     assert.equal(
       isE2eTestHouse({ name: "בית אמיתי", address: E2E_HOUSE_ADDRESS }),
       true,

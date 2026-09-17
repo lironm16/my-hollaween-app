@@ -668,6 +668,9 @@
   .max-h-72 {
     max-height: calc(var(--spacing) * 72);
   }
+  .max-h-\[min\(52dvh\,28rem\)\] {
+    max-height: min(52dvh, 28rem);
+  }
   .max-h-\[min\(88dvh\,40rem\)\] {
     max-height: min(88dvh, 40rem);
   }
@@ -1605,6 +1608,9 @@
   .ps-14 {
     padding-inline-start: calc(var(--spacing) * 14);
   }
+  .pe-0\.5 {
+    padding-inline-end: calc(var(--spacing) * 0.5);
+  }
   .pe-2 {
     padding-inline-end: calc(var(--spacing) * 2);
   }
@@ -1920,6 +1926,12 @@
   }
   .text-violet-300 {
     color: var(--color-violet-300);
+  }
+  .text-violet-300\/90 {
+    color: color-mix(in srgb, oklch(81.1% 0.111 293.571) 90%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-violet-300) 90%, transparent);
+    }
   }
   .text-violet-400 {
     color: var(--color-violet-400);
@@ -5357,10 +5369,23 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 .map-house-sheet.is-cluster-overview {
   height: auto;
-  max-height: none;
+  max-height: min(70%, calc(100% - 5.5rem));
 }
 .map-house-sheet.is-cluster-overview .map-house-sheet-sub {
   margin-top: 0.25rem;
+}
+.map-house-sheet.is-cluster-overview .map-house-sheet-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.map-house-sheet-cluster {
+  min-height: 0;
+}
+.map-house-sheet-cluster-scroll {
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
 }
 .map-house-sheet-chrome {
   display: flex;

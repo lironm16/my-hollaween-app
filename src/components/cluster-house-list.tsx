@@ -39,7 +39,14 @@ export function ClusterHouseList({
             >
               {index + 1}
             </span>
-            <span className="min-w-0">{houseHeadline(item)}</span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-medium">{houseHeadline(item)}</span>
+              {item.arrival?.trim() ? (
+                <span className="mt-0.5 block truncate text-sm text-violet-300/90">
+                  {item.arrival.trim()}
+                </span>
+              ) : null}
+            </span>
           </button>
         </li>
       ))}

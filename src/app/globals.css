@@ -1649,11 +1649,27 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 
 .map-house-sheet.is-cluster-overview {
   height: auto;
-  max-height: none;
+  max-height: min(70%, calc(100% - 5.5rem));
 }
 
 .map-house-sheet.is-cluster-overview .map-house-sheet-sub {
   margin-top: 0.25rem;
+}
+
+.map-house-sheet.is-cluster-overview .map-house-sheet-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.map-house-sheet-cluster {
+  min-height: 0;
+}
+
+.map-house-sheet-cluster-scroll {
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
 }
 
 .map-house-sheet-chrome {

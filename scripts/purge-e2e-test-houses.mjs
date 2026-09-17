@@ -14,7 +14,7 @@ import { E2E_HOUSE_ADDRESS } from "./lib/e2e-house.mjs";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const TEST_NAME =
-  /בית (?:בדיקה(?:\s*[—–-]\s*.+)?|תור E2E|batch5|poll E2E|בדיקה E2E|אינטגרציה)/;
+  /(?:^בית אינטגרציה$|בית (?:בדיקה(?:\s*[—–-]\s*.+)?|תור E2E|batch5|poll E2E|בדיקה E2E|אינטגרציה)|(?:אינטגרציה|סטאב E2E)(?:\s*[—–-]\s*.+)?)/;
 const TEST_DESCRIPTION = /בדיק(?:ה|ת)\s+(?:E2E|batch5|תור offline|API)/i;
 
 function isE2eTestHouse(house) {

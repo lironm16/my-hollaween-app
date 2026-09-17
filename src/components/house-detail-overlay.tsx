@@ -120,11 +120,13 @@ export function HouseDetailOverlay({
           <div id={labelId}>
             <p className="map-house-sheet-kicker">{formatDisplayAddress(house)}</p>
             <p className="map-house-sheet-sub mb-4">{clusterHouses!.length} בתים בכתובת זו</p>
-            <ClusterHouseList
-              houses={clusterHouses!}
-              selectedId={house.id}
-              onSelect={(id) => onSelectClusterHouse?.(id)}
-            />
+            <div className="max-h-[min(52dvh,28rem)] overflow-y-auto overscroll-contain pe-0.5">
+              <ClusterHouseList
+                houses={clusterHouses!}
+                selectedId={house.id}
+                onSelect={(id) => onSelectClusterHouse?.(id)}
+              />
+            </div>
           </div>
         ) : (
           <>
