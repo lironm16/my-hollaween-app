@@ -697,7 +697,13 @@ export function NeighborhoodApp({
                   </div>
                 </div>
               ) : null}
-              {mapSheetHouse && houseDetailCommon && view === "map" && !originPick.originPickActive ? (
+              <CatalogMetaChip
+                hidden={Boolean(selection.selected) && !originPick.originPickActive}
+                houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
+              />
+            </div>
+            {mapSheetHouse && houseDetailCommon && view === "map" && !originPick.originPickActive ? (
+              <div className="map-sheet-host" aria-hidden={false}>
                 <MapHouseSheet
                   {...houseDetailCommon}
                   skipped={skips.skipped(mapSheetHouse.id)}
@@ -731,12 +737,8 @@ export function NeighborhoodApp({
                   }}
                   onBackToClusterOverview={selection.backToClusterOverview}
                 />
-              ) : null}
-              <CatalogMetaChip
-                hidden={Boolean(selection.selected) && !originPick.originPickActive}
-                houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
-              />
-            </div>
+              </div>
+            ) : null}
             <div
               id="house-list-skip"
               className={cn(

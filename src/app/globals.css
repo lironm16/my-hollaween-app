@@ -1648,8 +1648,13 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 
 .map-house-sheet.is-cluster-overview {
-  height: auto;
-  max-height: min(70%, calc(100% - 5.5rem));
+  height: var(--map-cluster-sheet-h, 65%);
+  max-height: 100%;
+}
+
+.map-house-sheet.is-cluster-overview.is-dragging,
+.map-house-sheet.is-cluster-overview.is-raised {
+  max-height: 100%;
 }
 
 .map-house-sheet.is-cluster-overview .map-house-sheet-sub {
@@ -1657,19 +1662,39 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 
 .map-house-sheet.is-cluster-overview .map-house-sheet-body {
+  flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+  overflow-y: hidden;
 }
 
 .map-house-sheet-cluster {
+  flex: 1;
   min-height: 0;
 }
 
+.map-house-sheet-cluster-head {
+  flex-shrink: 0;
+}
+
 .map-house-sheet-cluster-scroll {
+  flex: 1;
+  min-height: 0;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 2px;
+}
+
+.map-sheet-host {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.map-sheet-host .map-house-sheet {
+  pointer-events: auto;
 }
 
 .map-house-sheet-chrome {
