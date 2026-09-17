@@ -1023,6 +1023,9 @@
   .overflow-visible {
     overflow: visible;
   }
+  .overflow-x-auto {
+    overflow-x: auto;
+  }
   .overflow-x-hidden {
     overflow-x: hidden;
   }
@@ -5384,6 +5387,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   min-height: 0;
   overflow: hidden;
   overflow-y: hidden;
+  padding-bottom: 0;
 }
 .map-house-sheet-cluster {
   flex: 1;
@@ -5396,7 +5400,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   flex: 1;
   min-height: 0;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 2px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 }
 .map-sheet-host {
   position: absolute;
@@ -5549,12 +5553,21 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   font-weight: 600;
   color: rgba(254, 215, 170, 0.95);
 }
-.cluster-house-status-dot {
-  position: static;
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  flex-shrink: 0;
+.cluster-house-list-row {
+  min-height: 4.5rem;
+  overflow: visible;
+}
+.cluster-house-list-pin-wrap {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  overflow: visible;
+}
+.cluster-list-pin {
+  width: 56px;
+  height: 56px;
+  overflow: visible;
 }
 .cluster-house-nav-hint {
   margin: 0;

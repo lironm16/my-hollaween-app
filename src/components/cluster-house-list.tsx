@@ -7,12 +7,8 @@ import {
   type ReactNode,
 } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { HouseMapPinIcon } from "@/components/house-map-pin-icon";
 import { houseHeadline } from "@/lib/labels";
-import {
-  clusterPinStatus,
-  clusterPinStatusClass,
-  type ClusterPinStatus,
-} from "@/lib/cluster-pin-status";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -31,29 +27,6 @@ export function adjacentClusterHouseId(
   const index = houses.findIndex((item) => item.id === houseId);
   if (index < 0) return null;
   return houses[index + delta]?.id ?? null;
-}
-
-export function ClusterHouseStatusDot({
-  status,
-  filteredOut = false,
-  className,
-}: {
-  status: ClusterPinStatus;
-  filteredOut?: boolean;
-  className?: string;
-}) {
-  if (status === "none") return null;
-  return (
-    <i
-      className={cn(
-        "pin-apt-dot cluster-house-status-dot",
-        clusterPinStatusClass(status),
-        filteredOut && "is-filtered-out",
-        className,
-      )}
-      aria-hidden
-    />
-  );
 }
 
 export function ClusterHouseNav({
@@ -215,6 +188,7 @@ export function ClusterHouseList({
   now,
   skipped,
   filteredOut,
+  visited,
   onSelect,
 }: {
   houses: PublicHouse[];
@@ -222,52 +196,51 @@ export function ClusterHouseList({
   now?: Date;
   skipped?: (id: string) => boolean;
   filteredOut?: (id: string) => boolean;
+  visited?: (id: string) => boolean;
   onSelect: (id: string) => void;
 }) {
+  const clusterNow = now ?? new Date();
   return (
-    <ul className="space-y-2">
-      {houses.map((item, index) => {
-        const status =
-          now != null
-            ? clusterPinStatus(item, now, { skipped: skipped?.(item.id) })
-            : null;
-        return (
-          <li key={item.id}>
-            <button
-              type="button"
-              className={cn(
-                "flex w-full items-center gap-3 rounded-xl px-4 py-3 text-start text-base ring-1 transition-colors",
-                item.id === selectedId
-                  ? "bg-[#261536] text-orange-50 ring-orange-400/50"
-                  : "bg-[#1d1028] text-orange-50 ring-orange-500/25 hover:bg-[#261536]",
-                filteredOut?.(item.id) && "opacity-60",
-              )}
-              onClick={() => onSelect(item.id)}
+    <ul className="cluster-house-list space-y-2">
+      {houses.map((item, index) => (
+        <li key={item.id}>
+          <button
+            type="button"
+            className={cn(
+              "cluster-house-list-row flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-base ring-1 transition-colors",
+              item.id === selectedId
+                ? "bg-[#261536] text-orange-50 ring-orange-400/50"
+                : "bg-[#1d1028] text-orange-50 ring-orange-500/25 hover:bg-[#261536]",
+              filteredOut?.(item.id) && "opacity-60",
+            )}
+            onClick={() => onSelect(item.id)}
+          >
+            <span
+              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500/20 text-sm font-semibold text-orange-200 tabular-nums"
+              aria-hidden
             >
-              <span
-                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500/20 text-sm font-semibold text-orange-200 tabular-nums"
-                aria-hidden
-              >
-                {index + 1}
-              </span>
-              {status ? (
-                <ClusterHouseStatusDot
-                  status={status}
-                  filteredOut={filteredOut?.(item.id)}
-                />
+              {index + 1}
+            </span>
+            <span className="cluster-house-list-pin-wrap shrink-0" dir="ltr">
+              <HouseMapPinIcon
+                house={item}
+                now={clusterNow}
+                skipped={skipped?.(item.id)}
+                filteredOut={filteredOut?.(item.id)}
+                visited={visited?.(item.id)}
+              />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-medium">{houseHeadline(item)}</span>
+              {item.arrival?.trim() ? (
+                <span className="mt-0.5 block truncate text-sm text-violet-300/90">
+                  {item.arrival.trim()}
+                </span>
               ) : null}
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-medium">{houseHeadline(item)}</span>
-                {item.arrival?.trim() ? (
-                  <span className="mt-0.5 block truncate text-sm text-violet-300/90">
-                    {item.arrival.trim()}
-                  </span>
-                ) : null}
-              </span>
-            </button>
-          </li>
-        );
-      })}
+            </span>
+          </button>
+        </li>
+      ))}
     </ul>
   );
 }
