@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { clusterAddressKey, clusterHousesByAddress, clusterMembersForHouse } from "@/lib/house-clusters";
+import {
+  clusterAddressKey,
+  clusterBadgeHouses,
+  clusterHousesByAddress,
+  clusterMembersForHouse,
+  MAX_CLUSTER_BADGE_DOTS,
+} from "@/lib/house-clusters";
 import { isStubHouse } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
 
@@ -52,6 +58,14 @@ describe("clusterHousesByAddress", () => {
     const building = clusters.find((cluster) => cluster.houses.length === 2);
     assert.ok(building);
     assert.equal(building.address, "חרוזים 8");
+  });
+});
+
+describe("clusterBadgeHouses", () => {
+  it("caps apartment status badges at three", () => {
+    const members = Array.from({ length: 5 }, (_, index) => house(`h${index}`, "חרוזים 8"));
+    assert.equal(clusterBadgeHouses(members).length, MAX_CLUSTER_BADGE_DOTS);
+    assert.equal(clusterBadgeHouses(members, 2).length, 2);
   });
 });
 
