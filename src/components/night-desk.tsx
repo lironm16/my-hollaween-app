@@ -17,6 +17,7 @@ type PushOffer = { kind: PushKind; title: string; body: string };
 type PushNoticeState =
   | { mode: "offer"; offer: PushOffer }
   | { mode: "auto" | "sent"; title: string; body: string };
+type SaveResult = { house: PublicHouse; pendingPushOffer: boolean };
 
 type Props = {
   house: PublicHouse;
@@ -65,10 +66,12 @@ export function NightDesk({
     notifyCatalogChanged();
     setNotice(null);
     toast.success("נשמר במכשיר · יישלח כשיש רשת");
-    return next;
+    return { house: next, pendingPushOffer: false };
   }
 
-  async function save(patch: Partial<HouseInput> & { photoUrl?: string; ownerFrozenUntil?: string | null }) {
+  async function save(
+    patch: Partial<HouseInput> & { photoUrl?: string; ownerFrozenUntil?: string | null },
+  ): Promise<SaveResult | null> {
     setBusy(true);
     try {
       if (typeof navigator !== "undefined" && !navigator.onLine) {
@@ -127,7 +130,7 @@ export function NightDesk({
         setNotice(null);
         toast.success("נשמר");
       }
-      return data.house;
+      return { house: data.house, pendingPushOffer: Boolean(data.push?.offer) };
     } catch {
       return keepLocal(patch);
     } finally {
@@ -154,6 +157,7 @@ export function NightDesk({
       toast.success(`התראה נשלחה ל־${data.sent ?? 0} מכשירים`);
       setNotice({ mode: "sent", title: offer.title, body: offer.body });
       void showLocalPush(offer.title, offer.body, `/?focus=${encodeURIComponent(house.id)}`);
+      onCancel?.();
     } catch {
       toast.error("אין קשר לשרת");
     } finally {
@@ -178,6 +182,7 @@ export function NightDesk({
         toast.error(error instanceof Error ? error.message : "העלאת התמונה נכשלה");
       }
     }
+    if (!saved.pendingPushOffer) onCancel?.();
   }
 
   async function onDelete() {
@@ -246,7 +251,15 @@ export function NightDesk({
                   <Bell className="size-4" />
                   {offerBusy ? "שולחים…" : "שלחו התראה לשכונה"}
                 </Button>
-                <Button type="button" variant="outline" disabled={offerBusy} onClick={() => setNotice(null)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={offerBusy}
+                  onClick={() => {
+                    setNotice(null);
+                    onCancel?.();
+                  }}
+                >
                   לא עכשיו
                 </Button>
               </div>
