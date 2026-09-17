@@ -209,6 +209,17 @@ export function AppHeader({
                   <Sparkles className="size-4" />
                   בדיקות
                 </Link>
+                <Link
+                  href="/checklist"
+                  onClick={closeMenu}
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "lg" }),
+                    "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+                  )}
+                >
+                  <Sparkles className="size-4" />
+                  רשימת בדיקות ידניות
+                </Link>
                 <button
                   type="button"
                   onClick={() => void onLogout()}
