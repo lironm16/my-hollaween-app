@@ -42,6 +42,8 @@ function candidateDatabaseIds(): string[] {
 }
 
 export function firestoreConfigured() {
+  // Isolated API/E2E servers use DATA_DIR file storage — never touch production Firestore.
+  if (process.env.DATA_DIR?.trim()) return false;
   return parseServiceAccount() !== null;
 }
 

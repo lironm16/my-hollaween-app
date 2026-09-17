@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { clusterHousesByAddress } from "@/lib/house-clusters";
+import { clusterHousesByAddress, clusterMembersForHouse } from "@/lib/house-clusters";
 import type { PublicHouse } from "@/lib/types";
 
 export type SelectedId = string | "closed" | null;
@@ -10,11 +10,15 @@ export function useHouseSelection({
   focusId = null,
   visible,
   houses,
+  clusterHouses,
 }: {
   focusId?: string | null;
   visible: PublicHouse[];
   houses: PublicHouse[];
+  /** Houses eligible for map clustering (e.g. real-only in visitor mode). */
+  clusterHouses?: PublicHouse[];
 }) {
+  const clustersFor = clusterHouses ?? houses;
   const [selectedId, setSelectedId] = useState<SelectedId>(focusId);
   const [selectedListIndex, setSelectedListIndex] = useState<number | undefined>();
   const [listFocusId, setListFocusId] = useState<string | null>(null);
@@ -48,11 +52,8 @@ export function useHouseSelection({
 
   const selectedCluster = useMemo(() => {
     if (!selected) return [];
-    const cluster = clusterHousesByAddress(houses).find((item) =>
-      item.houses.some((house) => house.id === selected.id),
-    );
-    return cluster?.houses ?? [selected];
-  }, [selected, houses]);
+    return clusterMembersForHouse(clustersFor, selected.id);
+  }, [selected, clustersFor]);
 
   const clearCluster = useCallback(() => {
     setClusterOverview(false);
@@ -84,7 +85,7 @@ export function useHouseSelection({
   const selectOnMap = useCallback(
     (house: PublicHouse, opts?: { clusterOverview?: boolean }) => {
       setListFocusId(null);
-      const cluster = clusterHousesByAddress(houses).find((item) =>
+      const cluster = clusterHousesByAddress(clustersFor).find((item) =>
         item.houses.some((itemHouse) => itemHouse.id === house.id),
       );
       const isMulti = (cluster?.houses.length ?? 0) > 1;
@@ -101,7 +102,7 @@ export function useHouseSelection({
       setSelectedListIndex(undefined);
       setSelectedId(house.id);
     },
-    [houses],
+    [clustersFor],
   );
 
   const collapseCluster = useCallback(() => {
