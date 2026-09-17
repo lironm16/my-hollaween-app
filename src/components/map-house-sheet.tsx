@@ -97,6 +97,7 @@ export function MapHouseSheet({
   const skipClick = useRef(false);
   const draggingRef = useRef(false);
   const sheetOpenRef = useRef(false);
+  const detailHeightLockedRef = useRef(false);
   const [dragH, setDragH] = useState<number | null>(null);
   const [sheetH, setSheetH] = useState<number | null>(null);
   const [fitH, setFitH] = useState<number | null>(null);
@@ -173,6 +174,7 @@ export function MapHouseSheet({
     setFitH(null);
     setOpenH(0);
     sheetOpenRef.current = false;
+    detailHeightLockedRef.current = false;
     bodyRef.current?.scrollTo(0, 0);
     if (overview) {
       const cap = measureOverviewHeight();
@@ -188,6 +190,10 @@ export function MapHouseSheet({
 
   useLayoutEffect(() => {
     if (overview) return;
+    if (detailHeightLockedRef.current) {
+      bodyRef.current?.scrollTo(0, 0);
+      return;
+    }
     bodyRef.current?.scrollTo(0, 0);
     const next = measureFitHeight();
     if (next == null) return;
@@ -199,23 +205,31 @@ export function MapHouseSheet({
     }
   }, [
     clusterKey,
-    house.id,
     overview,
     editing,
     skipped,
     filterMismatchReasons?.join("\0"),
   ]);
 
+  useLayoutEffect(() => {
+    if (overview || !detailHeightLockedRef.current) return;
+    bodyRef.current?.scrollTo(0, 0);
+  }, [house.id, overview]);
+
   useEffect(() => {
     sheetOpenRef.current = (dragH ?? sheetH ?? openH) > 0;
-  }, [dragH, sheetH, openH]);
+    if (multi && !overview && (dragH ?? sheetH ?? openH) > 0) {
+      detailHeightLockedRef.current = true;
+    }
+  }, [dragH, sheetH, openH, multi, overview]);
 
   useEffect(() => {
     if (overview || editing || sheetH !== null || dragH !== null) return;
     if (fitH == null) return;
+    if (detailHeightLockedRef.current && openH > 0) return;
     const id = requestAnimationFrame(() => setOpenH(fitH));
     return () => cancelAnimationFrame(id);
-  }, [fitH, overview, editing, sheetH, dragH]);
+  }, [fitH, overview, editing, sheetH, dragH, openH]);
 
   useEffect(() => {
     sheetRef.current?.focus({ preventScroll: true });
@@ -244,6 +258,7 @@ export function MapHouseSheet({
 
     const remeasure = () => {
       if (draggingRef.current || editing || sheetH !== null || overview) return;
+      if (detailHeightLockedRef.current) return;
       const next = measureFitHeight();
       if (next == null) return;
       naturalH.current = next;
@@ -272,7 +287,7 @@ export function MapHouseSheet({
       ro.disconnect();
       document.documentElement.style.removeProperty("--map-sheet-h");
     };
-  }, [clusterKey, house.id, editing, sheetH, overview]);
+  }, [clusterKey, editing, sheetH, overview]);
 
   function onSheetPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.button !== 0) return;
