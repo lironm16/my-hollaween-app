@@ -86,7 +86,7 @@ async function main() {
     pass("SHARE-02 focus link opens house detail overlay");
   }
 
-  const owned = await createE2eHouse(BASE, "בית batch5");
+  const owned = await createE2eHouse(BASE, "בית בדיקה — עדכון מהיר", { arrival: "קומה 1, דירה 1" });
   if (!owned) fail("EDIT-02 could not create a test house");
   else {
     await gotoPage(page, `${BASE}/my-houses?rehearsal=open`);
@@ -199,7 +199,9 @@ async function main() {
     await pollPage.clock.install();
     await gotoPage(pollPage, `${BASE}/?rehearsal=open`);
     await waitForCatalog(pollPage);
-    const pollHouse = await createE2eHouse(BASE, "בית poll E2E");
+    const pollHouse = await createE2eHouse(BASE, "בית בדיקה — סנכרון קטלוג", {
+      arrival: "קומה 2, דירה 4",
+    });
     if (!pollHouse) {
       fail("OFF-06 could not create a poll test house");
     } else {

@@ -41,4 +41,11 @@ describe("countSkippedInSet", () => {
   it("counts rehearsal stub ids in stubs mode even without a house row", () => {
     assert.equal(countSkippedInSet(["בית-9310"], [], "stubs"), 1);
   });
+
+  it("treats leaked E2E houses as stubs hidden from real mode", () => {
+    const e2e = { id: "e2e-1", name: "בית batch5", description: "בדיקת E2E — לא בית אמיתי" };
+    assert.equal(isStubHouse(e2e), true);
+    assert.equal(countSkippedInSet(["e2e-1"], [e2e], "real"), 0);
+    assert.equal(countSkippedInSet(["e2e-1"], [e2e], "stubs"), 1);
+  });
 });

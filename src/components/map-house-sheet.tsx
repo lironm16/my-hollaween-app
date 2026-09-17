@@ -5,6 +5,11 @@ import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
 import { FilterMismatchNotice } from "@/components/house-skipped-banner";
 import { CodesCopy } from "@/components/codes-copy";
+import {
+  ClusterHouseBackLink,
+  ClusterHouseList,
+  clusterHouseIndex,
+} from "@/components/cluster-house-list";
 import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
@@ -26,6 +31,7 @@ export function MapHouseSheet({
   clusterHouses,
   clusterOverview = false,
   onSelectClusterHouse,
+  onBackToClusterOverview,
   onClose,
   liked,
   onToggleLike,
@@ -51,6 +57,7 @@ export function MapHouseSheet({
   clusterHouses: PublicHouse[];
   clusterOverview?: boolean;
   onSelectClusterHouse?: (id: string) => void;
+  onBackToClusterOverview?: () => void;
   onClose: () => void;
   liked?: (id: string) => boolean;
   onToggleLike?: (id: string) => void;
@@ -89,6 +96,7 @@ export function MapHouseSheet({
   const address = formatDisplayAddress(house);
   const clusterKey = clusterHouses.map((item) => item.id).join(",");
   const canEditSelected = Boolean(canEditHouse?.(house.id) && onToggleEdit);
+  const clusterIndex = clusterHouseIndex(clusterHouses, house.id);
   const displayH = overview ? (dragH ?? sheetH) : (dragH ?? sheetH ?? openH);
   const actionMenu = (
     <HouseActionBar
@@ -318,19 +326,11 @@ export function MapHouseSheet({
               </div>
               {actionMenu}
             </div>
-            <ul className="space-y-2">
-              {clusterHouses.map((item) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    className="w-full rounded-xl bg-[#1d1028] px-4 py-3 text-start text-base text-orange-50 ring-1 ring-orange-500/25 hover:bg-[#261536]"
-                    onClick={() => onSelectClusterHouse?.(item.id)}
-                  >
-                    {houseHeadline(item)}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <ClusterHouseList
+              houses={clusterHouses}
+              selectedId={house.id}
+              onSelect={(id) => onSelectClusterHouse?.(id)}
+            />
           </div>
         ) : (
           <>
@@ -339,6 +339,13 @@ export function MapHouseSheet({
             </span>
             <div className="map-house-sheet-cards">
               <section className="map-house-sheet-card is-on">
+                {multi && clusterIndex != null ? (
+                  <ClusterHouseBackLink
+                    index={clusterIndex}
+                    total={clusterHouses.length}
+                    onBack={() => onBackToClusterOverview?.()}
+                  />
+                ) : null}
                 <FilterMismatchNotice
                   reasons={filterMismatchReasons}
                   skipMeta={skipMeta}

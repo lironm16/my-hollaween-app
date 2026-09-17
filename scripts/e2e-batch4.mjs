@@ -117,7 +117,10 @@ async function main() {
   },
     {
       baseUrl: BASE,
-      housePayload: e2eHousePayload("בית תור E2E", { description: "בדיקת תור offline" }),
+      housePayload: e2eHousePayload("בית בדיקה — תור offline", {
+        arrival: "קומה 3, דירה 7",
+        description: "בדיקת תור offline",
+      }),
     },
   );
 
