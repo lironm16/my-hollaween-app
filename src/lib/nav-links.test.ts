@@ -51,6 +51,8 @@ describe("houseMapsUrl", () => {
     );
     assert.equal(destination, "יהודית 15, רמת גן");
     assert.doesNotMatch(destination, /חרוזים/);
+    assert.match(destination, /[א-ת]/);
+    assert.doesNotMatch(destination, /^-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?$/);
   });
 
   it("ROUTE-05 opens Google Maps walking directions", () => {
