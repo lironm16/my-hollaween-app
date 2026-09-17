@@ -169,6 +169,14 @@ function EditPageContent() {
     if (admin && adminEditCode) setEditCode(adminEditCode);
   }, [admin, adminEditCode]);
 
+  useEffect(() => {
+    if (!focusId || !house || editFlow.flow) return;
+    if (autoOpenedIdRef.current === house.id) return;
+    autoOpenedIdRef.current = house.id;
+    openHouseEdit(house);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusId, house, editFlow.flow]);
+
   function openHouseEdit(target: PublicHouse) {
     editFlow.openEdit(target, {
       editCode: admin ? adminEditCode : editCode,

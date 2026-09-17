@@ -1,14 +1,13 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { EditChoiceDialog } from "@/components/edit-choice-dialog";
 import { HouseEditOverlay } from "@/components/house-edit-overlay";
 import { QuickUpdateOverlay } from "@/components/quick-update-overlay";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { quickUpdateAvailable } from "@/lib/quick-update";
 import type { PublicHouse } from "@/lib/types";
 
-type EditStep = "choice" | "quick" | "full";
+type EditStep = "quick" | "full";
 
 export type HouseEditFlowState = {
   house: PublicHouse;
@@ -32,7 +31,7 @@ export function useHouseEditFlow() {
       const canQuick = !options?.forceFull && quickUpdateAvailable(house, now);
       setFlow({
         house,
-        step: canQuick ? "choice" : "full",
+        step: canQuick ? "quick" : "full",
         editCode: options?.editCode,
         admin: options?.admin,
         allowDelete: options?.allowDelete,
@@ -80,14 +79,6 @@ export function HouseEditFlowPanels({
 
   return (
     <>
-      <EditChoiceDialog
-        open={flow.step === "choice"}
-        houseName={house.name}
-        quickAvailable={quickAvailable}
-        onClose={onClose}
-        onQuick={() => setFlow((current) => (current ? { ...current, step: "quick" } : current))}
-        onFull={() => setFlow((current) => (current ? { ...current, step: "full" } : current))}
-      />
       <QuickUpdateOverlay
         house={house}
         editCode={editCode}
@@ -95,6 +86,7 @@ export function HouseEditFlowPanels({
         open={flow.step === "quick"}
         onClose={onClose}
         onUpdated={onUpdated}
+        onOpenFull={() => setFlow((current) => (current ? { ...current, step: "full" } : current))}
       />
       {flow.step === "full" ? (
         <HouseEditOverlay
@@ -102,7 +94,9 @@ export function HouseEditFlowPanels({
           editCode={editCode}
           admin={admin}
           allowDelete={allowDelete}
+          quickAvailable={quickAvailable}
           onClose={onClose}
+          onOpenQuick={() => setFlow((current) => (current ? { ...current, step: "quick" } : current))}
           onUpdated={onUpdated}
           onDeleted={onDeleted ? () => onDeleted(house.id) : undefined}
         />

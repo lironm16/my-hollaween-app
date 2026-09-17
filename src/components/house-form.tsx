@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { scareShort, decorShort, suggestedHouseName, nameMatchesTheme, themeFromName } from "@/lib/labels";
-import { neighborhoodFromAddressHit, streetFromAddressHit } from "@/lib/address-fields";
+import { displayAddressFromHit, neighborhoodFromAddressHit } from "@/lib/address-fields";
 import { config, inNeighborhood, NEIGHBORHOODS } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
@@ -217,7 +217,7 @@ export function HouseForm({
     }
     setForm((f) => ({
       ...f,
-      address: streetFromAddressHit(hit),
+      address: displayAddressFromHit(hit),
       neighborhood: neighborhoodFromAddressHit(hit),
       lat: hit.lat,
       lng: hit.lng,
@@ -250,10 +250,13 @@ export function HouseForm({
       ...f,
       lat,
       lng,
-      address: streetFromAddressHit(hit),
+      address: displayAddressFromHit(hit),
       neighborhood: neighborhoodFromAddressHit(hit),
     }));
     setAddressOk(true);
+    if (!hit.precise) {
+      toast.message(streetPinHint(hit) ?? "סימנו את הרחוב. גררו את הסיכה עד לבית שלכם.");
+    }
   }
 
   function useMyLocation() {
