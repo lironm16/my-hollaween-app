@@ -372,6 +372,7 @@ export function MapHouseSheet({
                 now={clusterNow}
                 skipped={isSkipped}
                 filteredOut={isFilteredOut}
+                visited={visited}
                 onSelect={(id) => onSelectClusterHouse?.(id)}
               />
             </div>
