@@ -557,6 +557,10 @@ export function NeighborhoodApp({
         onToggleEdit: canEditSelected ? () => requestHouseEdit(selected, true) : undefined,
         clusterOverview: selection.clusterOverview,
         clusterHouses: selection.selectedCluster,
+        now,
+        skippedIds: skips.skipped,
+        filteredOutIds: (id: string) => filterDimActive && !matchedIds.has(id),
+        onAdjacentClusterHouse: selection.selectAdjacentClusterHouse,
       }
     : null;
 
