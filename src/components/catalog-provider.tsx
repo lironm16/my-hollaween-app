@@ -12,6 +12,7 @@ import {
 import type { Catalog, CatalogDelta } from "@/lib/types";
 import { mergeCatalogDelta, syncCatalog } from "@/lib/catalog-sync";
 import { config } from "@/lib/config";
+import { appInForeground, catalogPollMs } from "@/lib/catalog-poll";
 import {
   loadCatalogCache,
   loadCatalogCacheSync,
@@ -20,16 +21,6 @@ import {
   withDeviceHouseOverlays,
 } from "@/lib/offline-db";
 import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
-
-function catalogPollMs(seconds?: number) {
-  const n = seconds ?? config.catalogPollSeconds;
-  return Math.max(30, n) * 1000;
-}
-
-/** Browser tab / PWA is in the foreground (any in-app route). */
-function appInForeground() {
-  return typeof document === "undefined" || document.visibilityState === "visible";
-}
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
 
@@ -40,6 +31,7 @@ export type CatalogState = {
   unreachable: boolean;
   error: string | null;
   source: Source | null;
+  pollSeconds: number;
   refresh: (force?: boolean) => Promise<void>;
 };
 
@@ -102,6 +94,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const catalogRef = useRef(catalog);
   catalogRef.current = catalog;
   const pollMsRef = useRef(catalogPollMs());
+  const [pollSeconds, setPollSeconds] = useState(config.catalogPollSeconds);
   const seededRef = useRef(false);
 
   const seedCatalog = useCallback((initial: Catalog) => {
@@ -135,7 +128,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       if (readServerSimDown()) throw new Error("sim-down");
       const since = force ? undefined : catalogRef.current?.updatedAt;
       const live = await fetchJson("/api/catalog", force, since);
-      if (live.pollSeconds) pollMsRef.current = catalogPollMs(live.pollSeconds);
+      if (live.pollSeconds) {
+        pollMsRef.current = catalogPollMs(live.pollSeconds);
+        setPollSeconds(live.pollSeconds);
+      }
       let next: Catalog = live;
       setCatalog((prev) => {
         next = withDeviceHouseOverlays(applyCatalogResponse(prev, live));
@@ -195,7 +191,11 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         setSource("cache");
         setLoading(false);
       }
-      await refresh(false);
+      // Let SSR seed catalog before deciding whether mount needs a network refresh.
+      await Promise.resolve();
+      if (!cancelled && !seededRef.current) {
+        await refresh(false);
+      }
       if (!cancelled) setLoading(false);
     })();
 
@@ -248,6 +248,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     unreachable,
     error,
     source,
+    pollSeconds,
     refresh,
     seedCatalog,
   };

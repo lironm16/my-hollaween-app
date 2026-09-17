@@ -54,10 +54,10 @@ export const config = {
   },
   tiles,
   catalogCacheSeconds: process.env.NODE_ENV === "production" ? 30 : 0,
-  /** Foreground catalog poll interval. Override live via CATALOG_POLL_SECONDS on the server. */
+  /** Foreground catalog poll interval (seconds). Default 5 minutes. Override via CATALOG_POLL_SECONDS. */
   catalogPollSeconds: Math.max(
     30,
-    Number(process.env.CATALOG_POLL_SECONDS ?? process.env.NEXT_PUBLIC_CATALOG_POLL_SECONDS ?? 180) || 180,
+    Number(process.env.CATALOG_POLL_SECONDS ?? process.env.NEXT_PUBLIC_CATALOG_POLL_SECONDS ?? 300) || 300,
   ),
   adminCookie: "hw_admin",
   // The neighborhood list lives on this app server. Writes are queued one at a time.

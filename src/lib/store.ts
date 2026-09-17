@@ -797,7 +797,7 @@ export async function getAllHouses(): Promise<House[]> {
 }
 
 export async function getDbSnapshot(): Promise<DbFile> {
-  return loadDb(true);
+  return loadDb();
 }
 
 function findHouseIn(houses: House[], id: string): House | undefined {
@@ -937,8 +937,8 @@ async function patchHouseDoc(
   options?: { includeEndpoint?: string },
 ) {
   const existing =
-    (firestoreConfigured() ? await readFirestoreHouse(docId) : null) ??
     findHouseIn(mem?.houses ?? [], docId) ??
+    (firestoreConfigured() ? await readFirestoreHouse(docId) : null) ??
     (await getHouse(docId));
   if (!existing) return { error: "missing" as const };
   if (existing.editCode !== editCode) return { error: "forbidden" as const };
@@ -1344,17 +1344,18 @@ export async function savePushSubscription(sub: Omit<PushSubscriptionRecord, "cr
 }
 
 export async function isPushEndpointRegistered(endpoint: string) {
-  const db = await loadDb(true);
+  if ((mem?.pushSubscriptions ?? []).some((item) => item.endpoint === endpoint)) return true;
+  const db = await loadDb();
   return (db.pushSubscriptions ?? []).some((item) => item.endpoint === endpoint);
 }
 
 export async function countPushSubscriptions() {
-  const db = await loadDb(true);
+  const db = await loadDb();
   return db.pushSubscriptions?.length ?? 0;
 }
 
 export async function sendPushTestToEndpoint(endpoint: string) {
-  const db = await loadDb(true);
+  const db = await loadDb();
   const sub = (db.pushSubscriptions ?? []).find((item) => item.endpoint === endpoint);
   if (!sub) {
     return {

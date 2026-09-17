@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { ownerPatchSchema } from "@/lib/schema";
-import { deleteByEditCode, getCatalog, getHouse, updateByEditCode } from "@/lib/store";
+import { deleteByEditCode, getHouse, updateByEditCode } from "@/lib/store";
 import { canonicalHouseId, toPublicHouse } from "@/lib/ids";
+import { isPubliclyListed } from "@/lib/house-state";
 import { config } from "@/lib/config";
 import { geocodeHttpError } from "@/lib/geocode";
 import { storageHttpError } from "@/lib/storage-errors";
@@ -19,18 +20,17 @@ export async function GET(
 ) {
   const { id: rawId } = await context.params;
   const id = canonicalHouseId(rawId);
-  const catalog = await getCatalog();
-  const house = catalog.houses.find((h) => canonicalHouseId(h.id) === id);
-  if (!house) {
-    const hidden = await getHouse(id);
-    if (hidden) {
-      return NextResponse.json(
-        { error: "הבית לא מוצג במפה הציבורית עכשיו." },
-        { status: 404 },
-      );
-    }
+  const row = await getHouse(id);
+  if (!row) {
     return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404 });
   }
+  if (!isPubliclyListed(row)) {
+    return NextResponse.json(
+      { error: "הבית לא מוצג במפה הציבורית עכשיו." },
+      { status: 404 },
+    );
+  }
+  const house = toPublicHouse(row);
   return NextResponse.json(house, {
     headers: {
       "Cache-Control":
