@@ -67,6 +67,7 @@ import {
 import {
   firestoreConfigured,
   queryRemovedHouseIdsSince,
+  readCatalogMeta,
   readFirestoreDb,
   readFirestoreHouse,
   writeFirestoreDb,
@@ -750,6 +751,29 @@ export async function getCatalog(): Promise<Catalog> {
   return catalogMem;
 }
 
+function emptyCatalogDelta(updatedAt: string): CatalogDelta {
+  return {
+    updatedAt,
+    neighborhood: config.neighborhood,
+    houses: [],
+    removed: [],
+  };
+}
+
+/** Pure gate check for tests — true when client `since` is already up to date. */
+export function catalogDeltaGatePassed(input: {
+  sinceMs: number;
+  catalogUpdatedAt: string;
+  pushUpdatedAt?: string;
+  removedIds?: string[];
+}) {
+  if (input.removedIds?.length) return false;
+  if (stamp({ updatedAt: input.catalogUpdatedAt }) > input.sinceMs) return false;
+  const pushStamp = Date.parse(input.pushUpdatedAt ?? "");
+  if (Number.isFinite(pushStamp) && pushStamp > input.sinceMs) return false;
+  return true;
+}
+
 /** Build a catalog delta from the in-memory db (no Firestore house queries). */
 export function buildCatalogDeltaFromDb(
   db: DbFile,
@@ -772,6 +796,45 @@ export function buildCatalogDeltaFromDb(
   };
 }
 
+async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<CatalogDelta | null> {
+  if (isMemWarm() && mem) {
+    const removed = firestoreConfigured() ? catalogRemovalsSince(sinceMs) : [];
+    if (
+      catalogDeltaGatePassed({
+        sinceMs,
+        catalogUpdatedAt: mem.updatedAt,
+        pushUpdatedAt: mem.pushSettings?.updatedAt,
+        removedIds: removed,
+      })
+    ) {
+      return emptyCatalogDelta(mem.updatedAt);
+    }
+  }
+
+  if (firestoreConfigured()) {
+    const meta = await readCatalogMeta();
+    if (
+      meta?.updatedAt &&
+      catalogDeltaGatePassed({ sinceMs, catalogUpdatedAt: meta.updatedAt, removedIds: [] })
+    ) {
+      const removed = isMemWarm()
+        ? catalogRemovalsSince(sinceMs)
+        : await queryRemovedHouseIdsSince(since);
+      if (
+        catalogDeltaGatePassed({
+          sinceMs,
+          catalogUpdatedAt: meta.updatedAt,
+          removedIds: removed,
+        })
+      ) {
+        return emptyCatalogDelta(meta.updatedAt);
+      }
+    }
+  }
+
+  return null;
+}
+
 export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
   await ensurePushSettingsGeneration();
   const sinceMs = Date.parse(since);
@@ -779,6 +842,9 @@ export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
     const full = await getCatalog();
     return { ...full, full: true };
   }
+
+  const gated = await tryCatalogDeltaGate(since, sinceMs);
+  if (gated) return gated;
 
   const warm = isMemWarm();
   const db = await loadDb();
