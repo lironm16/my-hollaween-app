@@ -53,6 +53,7 @@ export function useNeighborhoodRoute({
   const [pinnedRoute, setPinnedRoute] = useState<WalkingRoute | null>(null);
   const [routeFitTick, setRouteFitTick] = useState(0);
   const pendingRouteGps = useRef(false);
+  const routeOriginKeyRef = useRef<string | null>(null);
   const routeCandidates = useMemo(
     () =>
       routeCandidateHouses(houses, filters, {
@@ -103,21 +104,28 @@ export function useNeighborhoodRoute({
     if (!routeMode || pendingRouteGps.current) return;
     setPinnedRoute((current) => {
       if (!current) return current;
-      const context = { ...filterContext, skippedIds };
-      const candidateIds = new Set(routeCandidates.map((house) => house.id));
-      const currentStopIds = current.stops.map((stop) => stop.house.id);
-      const hasNewCandidates = routeCandidates.some((house) => !currentStopIds.includes(house.id));
-      const hasRemovedStops = currentStopIds.some((id) => !candidateIds.has(id));
-      const originUnchanged =
-        current.origin.lat === origin.lat && current.origin.lng === origin.lng;
       const routeOptions = {
         accessible: accessibleOnly,
         startedFrom: origin.kind,
         originLabel: origin.label,
       };
+      const originUnchanged =
+        current.origin.lat === origin.lat &&
+        current.origin.lng === origin.lng &&
+        current.startedFrom === origin.kind;
+
+      if (!originUnchanged) {
+        return buildWalkingRoute(routeCandidates, originPoint(origin), routeOptions);
+      }
+
+      const context = { ...filterContext, skippedIds };
+      const candidateIds = new Set(routeCandidates.map((house) => house.id));
+      const currentStopIds = current.stops.map((stop) => stop.house.id);
+      const hasNewCandidates = routeCandidates.some((house) => !currentStopIds.includes(house.id));
+      const hasRemovedStops = currentStopIds.some((id) => !candidateIds.has(id));
 
       if (!hasNewCandidates && !hasRemovedStops) {
-        if (originUnchanged && current.accessible === accessibleOnly) return current;
+        if (current.accessible === accessibleOnly) return current;
         const trimmed = trimWalkingRouteToVisible(current, candidateIds);
         if (!trimmed) return null;
         return refreshWalkingRoute(trimmed, originPoint(origin), routeOptions);
@@ -152,6 +160,18 @@ export function useNeighborhoodRoute({
     if (!routeMode || pinnedRoute) return;
     pinCurrentRoute(false);
   }, [routeMode, pinnedRoute, pinCurrentRoute]);
+
+  useEffect(() => {
+    if (!routeMode) {
+      routeOriginKeyRef.current = null;
+      return;
+    }
+    const key = `${origin.lat}:${origin.lng}:${origin.kind}`;
+    if (routeOriginKeyRef.current !== null && routeOriginKeyRef.current !== key) {
+      setRouteFitTick((n) => n + 1);
+    }
+    routeOriginKeyRef.current = key;
+  }, [routeMode, origin.lat, origin.lng, origin.kind]);
 
   function exitRouteMode() {
     pendingRouteGps.current = false;
