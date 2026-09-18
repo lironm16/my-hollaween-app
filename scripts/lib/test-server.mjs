@@ -106,3 +106,7 @@ export function defaultApiDataDir() {
 export function defaultE2eDataDir() {
   return join(process.cwd(), "artifacts", "e2e-test-data");
 }
+
+export function defaultStressDataDir() {
+  return join(process.cwd(), "artifacts", "stress-test-data");
+}

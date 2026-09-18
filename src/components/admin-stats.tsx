@@ -32,10 +32,14 @@ export function AdminStatsCard({
   stats,
   likedCount,
   visitedCount,
+  neighborhoodLikedTotal,
+  neighborhoodVisitedTotal,
 }: {
   stats: SnapshotStats;
   likedCount?: number;
   visitedCount?: number;
+  neighborhoodLikedTotal?: number | null;
+  neighborhoodVisitedTotal?: number | null;
 }) {
   const personalMarks = (
     <div className="grid grid-cols-2 gap-2">
@@ -56,8 +60,29 @@ export function AdminStatsCard({
     </div>
   );
 
+  const neighborhoodMarks =
+    neighborhoodLikedTotal != null || neighborhoodVisitedTotal != null ? (
+      <div className="grid grid-cols-2 gap-2">
+        <Tile
+          icon={<LikedSign className="size-8" />}
+          label="סה״כ שמורים"
+          value={neighborhoodLikedTotal ?? 0}
+          valueClass={neighborhoodLikedTotal ? "text-rose-300" : undefined}
+          plain
+        />
+        <Tile
+          icon={<VisitedCheck visited className="size-8" />}
+          label="סה״כ ביקורים"
+          value={neighborhoodVisitedTotal ?? 0}
+          valueClass={neighborhoodVisitedTotal ? "text-emerald-300" : undefined}
+          plain
+        />
+      </div>
+    ) : null;
+
   return (
     <div className="space-y-3" dir="rtl">
+      {neighborhoodMarks ? <Section title="שכונה">{neighborhoodMarks}</Section> : null}
       <Section title="סימונים שלי">{personalMarks}</Section>
       <Section title="מפה">
         <div className="mb-2">

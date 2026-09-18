@@ -216,7 +216,7 @@ export async function writeFirestorePushSettings(settings: DbFile["pushSettings"
   if (!firestoreConfigured() || !settings?.templates) return;
   await resolveAdminFirestore();
   await metaDoc("pushSettings").set(settings, { merge: true });
-  await bumpCatalogMeta(settings.updatedAt);
+  await bumpCatalogMeta(settings.updatedAt ?? new Date().toISOString());
 }
 
 export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null }) {

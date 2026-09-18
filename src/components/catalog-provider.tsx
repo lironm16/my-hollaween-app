@@ -106,6 +106,23 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     void saveCatalogCache(initial);
   }, []);
 
+  const applyLiveResponse = useCallback(async (live: CatalogDelta) => {
+    if (live.pollSeconds) {
+      pollMsRef.current = catalogPollMs(live.pollSeconds);
+      setPollSeconds(live.pollSeconds);
+    }
+    let next: Catalog = live;
+    setCatalog((prev) => {
+      next = withDeviceHouseOverlays(applyCatalogResponse(prev, live));
+      return next;
+    });
+    setSource("network");
+    setUnreachable(false);
+    setError(null);
+    await saveCatalogCache(next);
+    return next;
+  }, []);
+
   const refresh = useCallback(async (force = false) => {
     const online = typeof navigator === "undefined" || navigator.onLine;
     setOffline(!online);
@@ -124,37 +141,50 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       }
     }
     if (online) await flushPendingHouseWrites();
+
+    const since = force ? undefined : catalogRef.current?.updatedAt;
+
+    // Delta poll — live API only (0–1 Firestore reads when unchanged).
+    if (since && !force) {
+      try {
+        if (readServerSimDown()) throw new Error("sim-down");
+        await applyLiveResponse(await fetchJson("/api/catalog", false, since));
+        return;
+      } catch {
+        const cached = await readDeviceCatalog();
+        if (cached) {
+          setCatalog((prev) => withDeviceHouseOverlays(syncCatalog(cached, prev ?? cached)));
+          setSource("cache");
+          setUnreachable(online);
+          setError(null);
+          return;
+        }
+      }
+    }
+
+    // Full load — static CDN snapshot first, then API delta for anything newer.
     try {
       if (readServerSimDown()) throw new Error("sim-down");
-      const since = force ? undefined : catalogRef.current?.updatedAt;
-      const live = await fetchJson("/api/catalog", force, since);
-      if (live.pollSeconds) {
-        pollMsRef.current = catalogPollMs(live.pollSeconds);
-        setPollSeconds(live.pollSeconds);
-      }
-      let next: Catalog = live;
+      const snap = await fetchJson("/catalog.json", force);
+      let next: Catalog = snap;
       setCatalog((prev) => {
-        next = withDeviceHouseOverlays(applyCatalogResponse(prev, live));
+        next = withDeviceHouseOverlays(syncCatalog(prev, snap));
         return next;
       });
-      setSource("network");
+      setSource("snapshot");
       setUnreachable(false);
       setError(null);
-      await saveCatalogCache(next);
-      return;
+      try {
+        await applyLiveResponse(await fetchJson("/api/catalog", false, snap.updatedAt));
+        return;
+      } catch {
+        await saveCatalogCache(next);
+        return;
+      }
     } catch {
       try {
         if (readServerSimDown()) throw new Error("sim-down");
-        const snap = await fetchJson("/catalog.json", force);
-        let next: Catalog = snap;
-        setCatalog((prev) => {
-          next = withDeviceHouseOverlays(syncCatalog(prev, snap));
-          return next;
-        });
-        setSource("snapshot");
-        setUnreachable(false);
-        setError(null);
-        await saveCatalogCache(next);
+        await applyLiveResponse(await fetchJson("/api/catalog", force));
         return;
       } catch {
         const cached = await readDeviceCatalog();
@@ -180,7 +210,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         );
       }
     }
-  }, []);
+  }, [applyLiveResponse]);
 
   useEffect(() => {
     let cancelled = false;

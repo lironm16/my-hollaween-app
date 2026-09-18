@@ -858,8 +858,7 @@ export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
 }
 
 export async function getAllHouses(): Promise<House[]> {
-  const db = await loadDb(true);
-  return db.houses;
+  return (await loadDb()).houses;
 }
 
 export async function getDbSnapshot(): Promise<DbFile> {
@@ -875,6 +874,15 @@ function findHouseIn(houses: House[], id: string): House | undefined {
 export async function getHouse(id: string): Promise<House | undefined> {
   const found = findHouseIn((await loadDb()).houses, id);
   if (found) return found;
+  const docId = canonicalHouseId(id);
+  if (firestoreConfigured() && docId) {
+    const remote = await readFirestoreHouse(docId);
+    if (remote) {
+      upsertMemHouse(remote, remote.updatedAt);
+      return remote;
+    }
+    return undefined;
+  }
   return findHouseIn((await loadDb(true)).houses, id);
 }
 
