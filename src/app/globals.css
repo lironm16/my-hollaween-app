@@ -1809,6 +1809,15 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   border-bottom: 0;
 }
 
+.map-house-sheet-card.is-visited {
+  border: 1px solid #059669;
+  border-bottom: 1px solid #059669;
+  border-radius: 1rem;
+  box-shadow: 0 0 0 4px #059669;
+  padding: 12px;
+  padding-bottom: 12px;
+}
+
 .cluster-house-nav {
   display: grid;
   gap: 10px;

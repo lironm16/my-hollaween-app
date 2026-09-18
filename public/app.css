@@ -471,6 +471,12 @@
   .mb-5 {
     margin-bottom: calc(var(--spacing) * 5);
   }
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
   .block {
     display: block;
   }
@@ -1777,6 +1783,9 @@
   .tracking-widest {
     --tw-tracking: var(--tracking-widest);
     letter-spacing: var(--tracking-widest);
+  }
+  .\[overflow-wrap\:anywhere\] {
+    overflow-wrap: anywhere;
   }
   .break-words {
     overflow-wrap: break-word;
@@ -5569,6 +5578,14 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .map-house-sheet-card:last-child {
   padding-bottom: 0;
   border-bottom: 0;
+}
+.map-house-sheet-card.is-visited {
+  border: 1px solid #059669;
+  border-bottom: 1px solid #059669;
+  border-radius: 1rem;
+  box-shadow: 0 0 0 4px #059669;
+  padding: 12px;
+  padding-bottom: 12px;
 }
 .cluster-house-nav {
   display: grid;
