@@ -65,6 +65,8 @@
     --text-xl--line-height: calc(1.75 / 1.25);
     --text-2xl: 1.5rem;
     --text-2xl--line-height: calc(2 / 1.5);
+    --text-3xl: 1.875rem;
+    --text-3xl--line-height: calc(2.25 / 1.875);
     --text-4xl: 2.25rem;
     --text-4xl--line-height: calc(2.5 / 2.25);
     --text-5xl: 3rem;
@@ -861,6 +863,9 @@
   .list-disc {
     list-style-type: disc;
   }
+  .list-none {
+    list-style-type: none;
+  }
   .auto-rows-min {
     grid-auto-rows: min-content;
   }
@@ -1022,9 +1027,6 @@
   }
   .overflow-visible {
     overflow: visible;
-  }
-  .overflow-x-auto {
-    overflow-x: auto;
   }
   .overflow-x-hidden {
     overflow-x: hidden;
@@ -1593,6 +1595,9 @@
   .py-16 {
     padding-block: calc(var(--spacing) * 16);
   }
+  .ps-0 {
+    padding-inline-start: 0px;
+  }
   .ps-0\.5 {
     padding-inline-start: calc(var(--spacing) * 0.5);
   }
@@ -1681,6 +1686,10 @@
     font-size: var(--text-2xl);
     line-height: var(--tw-leading, var(--text-2xl--line-height));
   }
+  .text-3xl {
+    font-size: var(--text-3xl);
+    line-height: var(--tw-leading, var(--text-3xl--line-height));
+  }
   .text-4xl {
     font-size: var(--text-4xl);
     line-height: var(--tw-leading, var(--text-4xl--line-height));
@@ -1738,6 +1747,10 @@
   .tracking-\[0\.2em\] {
     --tw-tracking: 0.2em;
     letter-spacing: 0.2em;
+  }
+  .tracking-\[0\.35em\] {
+    --tw-tracking: 0.35em;
+    letter-spacing: 0.35em;
   }
   .tracking-wide {
     --tw-tracking: var(--tracking-wide);
@@ -1951,6 +1964,9 @@
       color: color-mix(in oklab, var(--color-violet-400) 80%, transparent);
     }
   }
+  .text-violet-500 {
+    color: var(--color-violet-500);
+  }
   .text-white {
     color: var(--color-white);
   }
@@ -1981,6 +1997,9 @@
   .tabular-nums {
     --tw-numeric-spacing: tabular-nums;
     font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);
+  }
+  .underline {
+    text-decoration-line: underline;
   }
   .underline-offset-2 {
     text-underline-offset: 2px;
@@ -2444,6 +2463,9 @@
         border-color: color-mix(in oklab, var(--color-orange-400) 50%, transparent);
       }
     }
+    .hover\:bg-\[\#241332\]:hover {
+      background-color: #241332;
+    }
     .hover\:bg-\[\#261536\]:hover {
       background-color: #261536;
     }
@@ -2532,6 +2554,14 @@
     }
     .hover\:underline:hover {
       text-decoration-line: underline;
+    }
+    .hover\:ring-orange-500\/35:hover {
+      --tw-ring-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 35%, transparent);
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:ring-orange-500\/35:hover {
+        --tw-ring-color: color-mix(in oklab, var(--color-orange-500) 35%, transparent);
+      }
     }
   }
   .focus\:not-sr-only:focus {
