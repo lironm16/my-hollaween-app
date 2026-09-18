@@ -18,6 +18,18 @@ function originPoint(origin: ResolvedOrigin) {
   return { lat: origin.lat, lng: origin.lng };
 }
 
+/** Re-optimize stop order only when the user picks a new starting point — not on live GPS drift. */
+function shouldReoptimizeRoute(current: WalkingRoute, origin: ResolvedOrigin) {
+  if (current.startedFrom !== origin.kind) return true;
+  if (origin.kind === "gps") return false;
+  return current.origin.lat !== origin.lat || current.origin.lng !== origin.lng;
+}
+
+function routeOriginFitKey(origin: ResolvedOrigin) {
+  if (origin.kind === "gps") return "gps";
+  return `${origin.kind}:${origin.lat}:${origin.lng}`;
+}
+
 export function useNeighborhoodRoute({
   houses,
   filters,
@@ -109,12 +121,7 @@ export function useNeighborhoodRoute({
         startedFrom: origin.kind,
         originLabel: origin.label,
       };
-      const originUnchanged =
-        current.origin.lat === origin.lat &&
-        current.origin.lng === origin.lng &&
-        current.startedFrom === origin.kind;
-
-      if (!originUnchanged) {
+      if (shouldReoptimizeRoute(current, origin)) {
         return buildWalkingRoute(routeCandidates, originPoint(origin), routeOptions);
       }
 
@@ -166,12 +173,12 @@ export function useNeighborhoodRoute({
       routeOriginKeyRef.current = null;
       return;
     }
-    const key = `${origin.lat}:${origin.lng}:${origin.kind}`;
+    const key = routeOriginFitKey(origin);
     if (routeOriginKeyRef.current !== null && routeOriginKeyRef.current !== key) {
       setRouteFitTick((n) => n + 1);
     }
     routeOriginKeyRef.current = key;
-  }, [routeMode, origin.lat, origin.lng, origin.kind]);
+  }, [routeMode, origin]);
 
   function exitRouteMode() {
     pendingRouteGps.current = false;
