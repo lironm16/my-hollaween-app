@@ -187,13 +187,11 @@ export function NeighborhoodApp({
     routeMode,
     pinnedRoute,
     setPinnedRoute,
-    routeFitTick,
     filterRoute,
     pinCurrentRoute,
     enterRouteMode: startRouteMode,
     exitRouteMode,
     pendingRouteGps,
-    rebuildPinnedRoute,
   } = useNeighborhoodRoute({
     houses,
     filters,
@@ -633,7 +631,6 @@ export function NeighborhoodApp({
                 locating={geo.status === "pending" && askedLocation}
                 onLocate={originPick.goToMyLocation}
                 routeLine={routeMode && !originPick.originPickActive ? routeLine : null}
-                routeFitTick={routeMode && !originPick.originPickActive ? routeFitTick : 0}
                 routeStart={routeMode ? origin : null}
                 routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}
                 visitedIds={visits.visitedIds}
