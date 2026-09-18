@@ -37,7 +37,7 @@ export function useOriginPick({
   askedLocation: boolean;
   setAskedLocation: (value: boolean) => void;
   pendingRouteGps: React.MutableRefObject<boolean>;
-  pinCurrentRoute: (skipGps?: boolean) => void;
+  pinCurrentRoute: () => void;
   onBeforePick: () => void;
 }) {
   const originPickResumeView = useRef<HomeView | null>(null);
@@ -101,7 +101,7 @@ export function useOriginPick({
     }
     if (pendingRouteGps.current) {
       pendingRouteGps.current = false;
-      pinCurrentRoute(true);
+      pinCurrentRoute();
     }
     if (geoErrorToasted.current) return;
     geoErrorToasted.current = true;

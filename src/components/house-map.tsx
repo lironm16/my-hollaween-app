@@ -287,33 +287,6 @@ const youAreHereIcon = L.divIcon({
   popupAnchor: [0, -12],
 });
 
-/** Fit the walking path only after a route-button tap (tick). Never again if the user zooms. */
-function FitRoute({
-  positions,
-  tick,
-}: {
-  positions: [number, number][] | null;
-  tick: number;
-}) {
-  const map = useMap();
-  const fittedTick = useRef(0);
-  useEffect(() => {
-    if (!tick || tick === fittedTick.current) return;
-    if (!positions || positions.length < 2) return;
-    fittedTick.current = tick;
-    const id = window.setTimeout(() => {
-      map.fitBounds(L.latLngBounds(positions), {
-        padding: [48, 48],
-        maxZoom: 17,
-        animate: false,
-      });
-      window.setTimeout(() => map.invalidateSize({ animate: false }), 0);
-    }, 60);
-    return () => window.clearTimeout(id);
-  }, [map, positions, tick]);
-  return null;
-}
-
 /** Keep Leaflet sized to the visible viewport — never pans/zooms the map. */
 function SizeSync({ active }: { active: boolean }) {
   const map = useMap();
@@ -562,8 +535,6 @@ type Props = {
   /** Walking-route start (GPS / custom / neighborhood) for the dashed approach. */
   routeStart?: LatLng | null;
   routeStartedFrom?: "gps" | "neighborhood" | "custom" | null;
-  /** Increment only on route-button tap to fit the whole path. */
-  routeFitTick?: number;
   visitedIds?: string[];
   skippedIds?: string[];
   originMarker?: LatLng | null;
@@ -596,7 +567,6 @@ export function HouseMap({
   routeStops = null,
   routeStart = null,
   routeStartedFrom = null,
-  routeFitTick = 0,
   visitedIds = [],
   skippedIds = [],
   originMarker = null,
@@ -655,11 +625,6 @@ export function HouseMap({
       [first.lat, first.lng] as [number, number],
     ];
   }, [routeStart, userLocation, routeStops, routeStartedFrom]);
-  const fitPositions = useMemo(() => {
-    if (routePositions && routePositions.length >= 2) return routePositions;
-    if (!routeStops || routeStops.length < 2) return null;
-    return routeStops.map((stop) => [stop.lat, stop.lng] as [number, number]);
-  }, [routePositions, routeStops]);
   const ready = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -727,9 +692,6 @@ export function HouseMap({
           className="hw-basemap"
         />
         <SizeSync active={active} />
-        {routeFitTick > 0 && fitPositions ? (
-          <FitRoute positions={fitPositions} tick={routeFitTick} />
-        ) : null}
         {panTick > 0 && panTo ? <PanTo lat={panTo.lat} lng={panTo.lng} tick={panTick} /> : null}
         {focus && !originPickActive ? (
           <KeepSelectedVisible

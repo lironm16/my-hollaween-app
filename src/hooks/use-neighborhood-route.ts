@@ -25,11 +25,6 @@ function shouldReoptimizeRoute(current: WalkingRoute, origin: ResolvedOrigin) {
   return current.origin.lat !== origin.lat || current.origin.lng !== origin.lng;
 }
 
-function routeOriginFitKey(origin: ResolvedOrigin) {
-  if (origin.kind === "gps") return "gps";
-  return `${origin.kind}:${origin.lat}:${origin.lng}`;
-}
-
 export function useNeighborhoodRoute({
   houses,
   filters,
@@ -63,9 +58,7 @@ export function useNeighborhoodRoute({
 }) {
   const [routeMode, setRouteMode] = useState(() => readRouteMode());
   const [pinnedRoute, setPinnedRoute] = useState<WalkingRoute | null>(null);
-  const [routeFitTick, setRouteFitTick] = useState(0);
   const pendingRouteGps = useRef(false);
-  const routeOriginKeyRef = useRef<string | null>(null);
   const routeCandidates = useMemo(
     () =>
       routeCandidateHouses(houses, filters, {
@@ -83,20 +76,9 @@ export function useNeighborhoodRoute({
     });
   }, [routeCandidates, accessibleOnly, origin]);
 
-  const rebuildPinnedRoute = useCallback(
-    (fit = false) => {
-      setPinnedRoute(filterRoute);
-      if (fit) setRouteFitTick((n) => n + 1);
-    },
-    [filterRoute],
-  );
-
-  const pinCurrentRoute = useCallback(
-    (fit = false) => {
-      rebuildPinnedRoute(fit);
-    },
-    [rebuildPinnedRoute],
-  );
+  const pinCurrentRoute = useCallback(() => {
+    setPinnedRoute(filterRoute);
+  }, [filterRoute]);
 
   useEffect(() => {
     if (!routeMode || !pendingRouteGps.current || !gps) return;
@@ -165,20 +147,8 @@ export function useNeighborhoodRoute({
 
   useEffect(() => {
     if (!routeMode || pinnedRoute) return;
-    pinCurrentRoute(false);
+    pinCurrentRoute();
   }, [routeMode, pinnedRoute, pinCurrentRoute]);
-
-  useEffect(() => {
-    if (!routeMode) {
-      routeOriginKeyRef.current = null;
-      return;
-    }
-    const key = routeOriginFitKey(origin);
-    if (routeOriginKeyRef.current !== null && routeOriginKeyRef.current !== key) {
-      setRouteFitTick((n) => n + 1);
-    }
-    routeOriginKeyRef.current = key;
-  }, [routeMode, origin]);
 
   function exitRouteMode() {
     pendingRouteGps.current = false;
@@ -200,7 +170,7 @@ export function useNeighborhoodRoute({
         return;
       }
       pendingRouteGps.current = false;
-      pinCurrentRoute(false);
+      pinCurrentRoute();
     };
     proceed();
   }
@@ -209,13 +179,11 @@ export function useNeighborhoodRoute({
     routeMode,
     pinnedRoute,
     setPinnedRoute,
-    routeFitTick,
     filterRoute,
     routeCandidates,
     pinCurrentRoute,
     enterRouteMode,
     exitRouteMode,
     pendingRouteGps,
-    rebuildPinnedRoute,
   };
 }
