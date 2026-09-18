@@ -14,6 +14,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import { LocateFixed, Moon, Sun } from "lucide-react";
+import { MapAddHouseFab } from "@/components/map-add-house-fab";
 import { MapLegend } from "@/components/map-legend";
 import "leaflet/dist/leaflet.css";
 import { config, inNeighborhood } from "@/lib/config";
@@ -900,6 +901,7 @@ export function HouseMap({
           </>
         ) : null}
       </MapContainer>
+      {!pickMode && !originPickActive ? <MapAddHouseFab /> : null}
       <div className="map-fab-stack">
           <button
             type="button"
