@@ -25,7 +25,7 @@ function HouseComments({ house, compact }: { house: PublicHouse; compact: boolea
   const description = house.description?.trim() ?? "";
   const notes = house.notes?.trim() ?? "";
   const [expanded, setExpanded] = useState(false);
-  const clampRef = useRef<HTMLParagraphElement>(null);
+  const clampRef = useRef<HTMLDivElement>(null);
   const [overflows, setOverflows] = useState(false);
 
   useEffect(() => {
@@ -66,7 +66,7 @@ function HouseComments({ house, compact }: { house: PublicHouse; compact: boolea
   const canExpand = overflows;
 
   return (
-    <p
+    <div
       ref={clampRef}
       role={canExpand ? "button" : undefined}
       tabIndex={canExpand ? 0 : undefined}
@@ -90,13 +90,12 @@ function HouseComments({ house, compact }: { house: PublicHouse; compact: boolea
       }}
     >
       {description ? (
-        <span className="text-violet-50">
+        <span className="block text-violet-50">
           {DESCRIPTION_PREFIX} {description}
         </span>
       ) : null}
-      {description && notes ? " " : null}
-      {notes ? <span className="text-amber-200/90">הערה: {notes}</span> : null}
-    </p>
+      {notes ? <span className="block text-amber-200/90">הערה: {notes}</span> : null}
+    </div>
   );
 }
 
