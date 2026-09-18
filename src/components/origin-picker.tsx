@@ -26,8 +26,8 @@ export function OriginTrigger({
   return (
     <button
       type="button"
-      aria-label={shifted ? "נקודת מדידה שונה מהמיקום הנוכחי" : "מאיפה למדוד מרחק"}
-      title={shifted ? "נקודת מדידה שונה מהמיקום הנוכחי" : "מאיפה למדוד מרחק"}
+      aria-label={shifted ? "נקודת מדידה שונה מהמיקום הנוכחי" : "נקודת התחלה"}
+      title={shifted ? "נקודת מדידה שונה מהמיקום הנוכחי" : "נקודת התחלה"}
       onClick={onClick}
       className={cn(
         "relative inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
@@ -78,7 +78,7 @@ export function OriginPickerSheet({
         <OverlayCloseBar
           compact
           onClose={() => onOpenChange(false)}
-          title={<span className="text-lg font-semibold text-orange-50">מאיפה למדוד מרחק</span>}
+          title={<span className="text-lg font-semibold text-orange-50">נקודת התחלה</span>}
           className="border-b border-orange-500/15 pb-2"
         />
         <SheetHeader className="shrink-0 px-4 pb-2 pt-3">
