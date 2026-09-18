@@ -90,8 +90,8 @@ export default function AddPage() {
             <PersistNote />
             <CodesCopy editCode={done.editCode} />
             <p className="text-base text-orange-100">
-              הקוד נשמר במכשיר הזה — אפשר לערוך בלי להקליד שוב. אפשר לשתף; אחרי הזנה פעם אחת נשמר גם
-              אצלם.
+              הקוד נשמר במכשיר הזה — אפשר לערוך בלי להקליד שוב. אפשר לתת הרשאת עריכה ע״י שיתוף קוד
+              העריכה — אחרי הזנה פעם אחת נשמר גם אצלם.
             </p>
             <Link
               href="/help/edit-code"
