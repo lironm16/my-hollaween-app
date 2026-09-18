@@ -121,7 +121,7 @@ export default function AddPage() {
             <p className="mb-4 text-base text-violet-200">
               בחרו שם וכתובת אמיתית מהרשימה. אחרי שמירה מוצלחת הבית מופיע במפה.{" "}
               <Link href="/help/add-house" className="text-orange-300 underline underline-offset-2">
-                מדריך הוספה עם תמונה
+                איך מוסיפים?
               </Link>
             </p>
             <PersistNote className="mb-4" />

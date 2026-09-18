@@ -10,7 +10,7 @@ export function HelpShell({
   title,
   children,
   backHref = "/help",
-  backLabel = "חזרה לשאלות ותשובות",
+  backLabel = "חזרה",
 }: {
   title: string;
   children: ReactNode;
@@ -22,7 +22,7 @@ export function HelpShell({
       <AppHeader />
       <main className="relative z-10 mx-auto w-full max-w-lg flex-1 px-4 py-5 pb-10">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <h1 className="font-display text-2xl text-orange-300">{title}</h1>
+          <h1 className="font-display text-xl text-orange-300">{title}</h1>
           <Link href={backHref} className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
             {backLabel}
           </Link>
@@ -33,33 +33,41 @@ export function HelpShell({
   );
 }
 
-export function HelpSection({
-  title,
-  children,
-  id,
-}: {
-  title: string;
-  children: ReactNode;
-  id?: string;
-}) {
+export function HelpShot({ src, alt }: { src: string; alt: string }) {
   return (
-    <section id={id} className="rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/25">
-      <h2 className="mb-2 text-lg font-semibold text-orange-200">{title}</h2>
-      <div className="space-y-2 text-base leading-relaxed text-violet-100">{children}</div>
-    </section>
+    <div className="overflow-hidden rounded-xl ring-1 ring-orange-500/25">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt={alt} className="block w-full bg-[#12081a]" loading="lazy" />
+    </div>
   );
 }
 
-export function HelpStep({ n, children }: { n: number; children: ReactNode }) {
+export function HelpStep({
+  n,
+  title,
+  body,
+  image,
+  imageAlt,
+}: {
+  n: number;
+  title: string;
+  body: string;
+  image: string;
+  imageAlt: string;
+}) {
   return (
-    <li className="flex gap-3">
-      <span
-        className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-black"
-        aria-hidden
-      >
-        {n}
-      </span>
-      <span className="min-w-0 flex-1">{children}</span>
+    <li className="space-y-2 rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
+      <div className="flex items-center gap-2">
+        <span
+          className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-black"
+          aria-hidden
+        >
+          {n}
+        </span>
+        <h2 className="text-base font-semibold text-orange-50">{title}</h2>
+      </div>
+      <p className="text-sm leading-relaxed text-violet-200">{body}</p>
+      <HelpShot src={image} alt={imageAlt} />
     </li>
   );
 }
