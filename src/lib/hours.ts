@@ -444,13 +444,14 @@ function withRehearsalPin<T extends SoonHouse>(house: T, now: Date): T {
 }
 
 /**
- * Last 30 minutes of an open clock window. Ignores the Halloween date so
- * rehearsal nights still mark pins and cards; sold-out / frozen houses do not.
+ * Last 30 minutes of an open clock window on event night only.
+ * Rehearsal dry-runs use appNow() pinned to 31 Oct, so pins still work there.
  */
 export function closingSoonAt(house: SoonHouse, now = appNow()): string | null {
   house = withRehearsalPin(house, now);
   if (effectiveVisit(house) === "closed") return null;
   if (isFrozen(house, now.getTime())) return null;
+  if (eventNightRelation(now) !== 0) return null;
   const nowMin = minutesNow(now);
   for (const window of houseHoursWindows(house)) {
     const from = parseClockMinutes(window.from);
@@ -463,11 +464,12 @@ export function closingSoonAt(house: SoonHouse, now = appNow()): string | null {
   return null;
 }
 
-/** Next 30 minutes before an open clock window. Same rehearsal rules as closing soon. */
+/** Next 30 minutes before an open clock window — event night only. */
 export function openingSoonAt(house: SoonHouse, now = appNow()): string | null {
   house = withRehearsalPin(house, now);
   if (effectiveVisit(house) === "closed") return null;
   if (isFrozen(house, now.getTime())) return null;
+  if (eventNightRelation(now) !== 0) return null;
   if (closingSoonAt(house, now)) return null;
   const nowMin = minutesNow(now);
   for (const window of houseHoursWindows(house)) {
@@ -645,12 +647,13 @@ export function isAfterHoursForFilter(
   return isHoursNightOver(house, probe);
 }
 
-/** Between two clock windows (not yet opening-soon). Same rehearsal rules. */
+/** Between two clock windows (not yet opening-soon) — event night only. */
 export function onBreakAt(house: SoonHouse, now = appNow()): string | null {
   if (isHoursNightOver(house, now)) return null;
   house = withRehearsalPin(house, now);
   if (effectiveVisit(house) === "closed") return null;
   if (isFrozen(house, now.getTime())) return null;
+  if (eventNightRelation(now) !== 0) return null;
   if (closingSoonAt(house, now) || openingSoonAt(house, now)) return null;
   const nowMin = minutesNow(now);
   const parsed = houseHoursWindows(house).flatMap((window) => {
