@@ -14,6 +14,10 @@ const QUESTIONS = [
     href: "/help/install",
   },
   {
+    question: "איך לשתף קוד עריכה?",
+    href: "/help/share-edit-code",
+  },
+  {
     question: "איבדתי את קוד העריכה",
     href: "/help/edit-code",
   },
