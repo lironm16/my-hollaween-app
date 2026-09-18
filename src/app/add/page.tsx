@@ -119,7 +119,10 @@ export default function AddPage() {
           <>
             <h1 className="font-display mb-1 text-2xl text-orange-300">הוספת בית אימה</h1>
             <p className="mb-4 text-base text-violet-200">
-              בחרו שם וכתובת אמיתית מהרשימה. אחרי שמירה מוצלחת הבית מופיע במפה.
+              בחרו שם וכתובת אמיתית מהרשימה. אחרי שמירה מוצלחת הבית מופיע במפה.{" "}
+              <Link href="/help/add-house" className="text-orange-300 underline underline-offset-2">
+                מדריך הוספה עם תמונה
+              </Link>
             </p>
             <PersistNote className="mb-4" />
             <HouseForm
