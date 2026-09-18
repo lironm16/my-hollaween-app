@@ -448,9 +448,9 @@ export function saveServerDbBackup(db: ServerDbBackup) {
   }
 }
 
-export function backupLooksNewer(backup: ServerDbBackup, serverUpdatedAt: string, serverHouses: unknown[]) {
-  if (stamp(backup.updatedAt) > stamp(serverUpdatedAt)) return true;
-  return backup.houses.length > serverHouses.length;
+/** True only when the phone backup timestamp is strictly newer than the server catalog. */
+export function backupIsNewerThanServer(backup: ServerDbBackup, serverUpdatedAt: string) {
+  return stamp(backup.updatedAt) > stamp(serverUpdatedAt);
 }
 
 const FILTERS_KEY = "hw-house-filters";
