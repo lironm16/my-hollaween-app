@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { routeGeometryPoints, routePreviewPoints, type LatLng, type WalkingRoute } from "@/lib/route";
+import { routePreviewPoints, type LatLng, type WalkingRoute } from "@/lib/route";
 
 function geometryKey(route: WalkingRoute) {
   const origin = `${route.origin.lat.toFixed(4)},${route.origin.lng.toFixed(4)}`;
@@ -38,7 +38,7 @@ export function useRouteGeometry(
       setStatus("fallback");
       return;
     }
-    const waypoints = routeGeometryPoints(current);
+    const waypoints = routePreviewPoints(current);
     setStatus("loading");
     setLine(preview.length >= 2 ? preview : null);
     void fetch("/api/walk-route", {
