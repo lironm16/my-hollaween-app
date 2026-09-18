@@ -450,20 +450,6 @@ async function testPhotoApi(adminCookie) {
   await deleteHouse(adminCookie, id);
 }
 
-async function testActivityTotals() {
-  const read = await json("GET", "/api/activity");
-  if (!read.res.ok || typeof read.data.likedTotal !== "number") {
-    return fail("GET /api/activity should return neighborhood totals");
-  }
-  pass("GET /api/activity returns liked/visited totals");
-
-  const bump = await json("POST", "/api/activity", { likedDelta: 1, visitedDelta: 1 });
-  if (!bump.res.ok || bump.data.ok !== true) {
-    return fail("POST /api/activity should accept debounced deltas");
-  }
-  pass("POST /api/activity applies activity deltas");
-}
-
 async function testAdminExtended(adminCookie) {
   const guestList = await json("GET", "/api/admin/houses");
   if (guestList.res.status !== 401) return fail("GET /api/admin/houses without cookie should return 401");
@@ -539,7 +525,6 @@ async function testAdminExtended(adminCookie) {
 async function main() {
   mkdirSync("artifacts", { recursive: true });
   await testCatalog();
-  await testActivityTotals();
   const adminCookie = await testAdminAuth();
   await testPushApi();
   await testWalkRouteApi();

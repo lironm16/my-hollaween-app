@@ -4,7 +4,6 @@ import { AdminStatsCard, useSnapshotStats } from "@/components/admin-stats";
 import { AppHeader } from "@/components/app-header";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useHouseSet } from "@/hooks/use-house-set";
-import { useActivityTotals } from "@/hooks/use-activity-totals";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 
@@ -14,8 +13,6 @@ export default function StatsPage() {
   const stats = useSnapshotStats(true, admin ? houseSet : "real");
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
-  const activity = useActivityTotals(true);
-
   return (
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <AppHeader />
@@ -27,8 +24,6 @@ export default function StatsPage() {
               stats={stats}
               likedCount={likes.likedIds.length}
               visitedCount={visits.visitedIds.length}
-              neighborhoodLikedTotal={activity?.likedTotal ?? null}
-              neighborhoodVisitedTotal={activity?.visitedTotal ?? null}
             />
           ) : (
             <p className="text-base text-violet-300">טוענים נתונים…</p>
