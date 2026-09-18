@@ -4,8 +4,14 @@ import Link from "next/link";
 import { HelpShell, HelpStep } from "@/components/help-shell";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
-const STEPS = [
+const STEPS: Array<{
+  title: string;
+  body: ReactNode;
+  image: string;
+  imageAlt: string;
+}> = [
   {
     title: "פתחו הוספה",
     body: "תפריט ☰ → בית → הוספה.",
@@ -26,11 +32,19 @@ const STEPS = [
   },
   {
     title: "שמירה וקוד",
-    body: "לחצו שמירה. העתיקו את קוד העריכה — תמונה אפשר גם אחר כך.",
+    body: (
+      <>
+        לחצו שמירה. הקוד נשמר במכשיר — אפשר לערוך בלי להקליד שוב. אפשר לשתף; אחרי הזנה פעם אחת נשמר גם
+        אצלם.{" "}
+        <Link href="/help/edit-code" className="text-orange-300 underline underline-offset-2">
+          איבדתם את הקוד?
+        </Link>
+      </>
+    ),
     image: "/help/step-3-done.png",
     imageAlt: "מסך הצלחה עם קוד עריכה",
   },
-] as const;
+];
 
 export default function AddHouseGuidePage() {
   return (

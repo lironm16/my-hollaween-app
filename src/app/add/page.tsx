@@ -89,9 +89,14 @@ export default function AddPage() {
             </div>
             <PersistNote />
             <CodesCopy editCode={done.editCode} />
-            <p className="text-base text-amber-200">
-              אפשר לעדכן את הבית בכל עת — מהמסך הראשי או מעריכה בתפריט הצדדי. גם עד האירוע וגם בלילה
-              עצמו, למשל מלאי ממתקים או סגירת הבית לביקור.
+            <p className="text-base text-orange-100">
+              הקוד נשמר במכשיר הזה — אפשר לערוך בלי להקליד שוב. אפשר לשתף; אחרי הזנה פעם אחת נשמר גם
+              אצלם.
+            </p>
+            <p className="text-sm text-orange-200/90">
+              <Link href="/help/edit-code" className="underline underline-offset-2">
+                איבדתם את קוד העריכה?
+              </Link>
             </p>
             <div className="flex flex-wrap gap-2">
               <Link
