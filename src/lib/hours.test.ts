@@ -2,10 +2,38 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   houseOpenDuringVisitWindow,
+  hoursStatus,
   isOpenDuringCustomVisitForFilter,
   isOpenNowForFilter,
+  isOpeningSoon,
+  openingSoonAt,
   visitWindowIssue,
 } from "@/lib/hours";
+
+describe("openingSoon before event night", () => {
+  const house = { openFrom: "17:00", openTo: "21:00", visit: "come" as const };
+  const beforeHalloween = new Date(2026, 8, 18, 16, 30, 0, 0);
+  const eventNightSoon = new Date(2026, 9, 31, 16, 30, 0, 0);
+
+  it("does not treat today's clock as opening soon before 31 Oct", () => {
+    assert.equal(openingSoonAt(house, beforeHalloween), null);
+    assert.equal(isOpeningSoon(house, beforeHalloween), false);
+  });
+
+  it("shows beforeEvent instead of opening soon before Halloween", () => {
+    const status = hoursStatus(house, beforeHalloween);
+    assert.equal(status.kind, "beforeEvent");
+    if (status.kind === "beforeEvent") {
+      assert.equal(status.opensAt, "17:00");
+      assert.match(status.dateLabel, /31/);
+    }
+  });
+
+  it("shows opening soon on event night within 30 minutes", () => {
+    assert.equal(openingSoonAt(house, eventNightSoon), "17:00");
+    assert.equal(isOpeningSoon(house, eventNightSoon), true);
+  });
+});
 
 describe("visitWindowIssue", () => {
   it("rejects end before start", () => {
