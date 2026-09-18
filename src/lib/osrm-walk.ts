@@ -322,6 +322,17 @@ function skirtPolylineFallback(from: LatLng, to: LatLng, trueTo: LatLng): LatLng
   return finishLegAtTrueStop(best, trueTo, to);
 }
 
+/** One hop for the map overview — direct OSRM or a straight segment, no shared skirt grid. */
+async function fetchDisplayLeg(trueFrom: LatLng, trueTo: LatLng): Promise<LatLng[]> {
+  const from = snapForRouting(trueFrom);
+  const to = snapForRouting(trueTo);
+  const direct = await fetchOsrm([from, to]);
+  if (direct && direct.length >= 2 && northOvershootMeters(direct, [trueFrom, trueTo]) === 0) {
+    return finishLegAtTrueStop(direct, trueTo, to);
+  }
+  return [trueFrom, trueTo];
+}
+
 async function fetchWalkLeg(trueFrom: LatLng, trueTo: LatLng): Promise<LatLng[] | null> {
   const from = snapForRouting(trueFrom);
   const to = snapForRouting(trueTo);
@@ -339,6 +350,37 @@ async function fetchWalkLeg(trueFrom: LatLng, trueTo: LatLng): Promise<LatLng[] 
   }
   const fallback = skirtPolylineFallback(from, to, trueTo);
   return fallback.length >= 2 ? fallback : null;
+}
+
+/**
+ * Map overview line — one simple path through the stops in order.
+ * Avoids the per-leg skirt grid that looked like a tangled web on the map.
+ */
+export async function fetchDisplayWalkingGeometry(points: LatLng[]): Promise<LatLng[] | null> {
+  const unique = dedupeNearby(points);
+  if (unique.length < 2) return unique.length ? unique : null;
+  try {
+    const snapped = snapRoutePoints(unique);
+    const directAll = await fetchOsrm(snapped);
+    if (
+      directAll &&
+      directAll.length >= 2 &&
+      northOvershootMeters(directAll, unique) === 0 &&
+      farmFraction(directAll) <= 0.2
+    ) {
+      return directAll;
+    }
+
+    const legTasks = unique
+      .slice(0, -1)
+      .map((from, index) => () => fetchDisplayLeg(from, unique[index + 1]!));
+    const legs = await runPool(LEG_POOL_SIZE, legTasks);
+    const line: LatLng[] = [];
+    for (const part of legs) appendRouteLeg(line, part);
+    return line.length >= 2 ? line : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Walking line that visits points in order, staying on streets around parks. */

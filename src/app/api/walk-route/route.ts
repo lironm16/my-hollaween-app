@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchWalkingGeometry } from "@/lib/osrm-walk";
+import { fetchDisplayWalkingGeometry } from "@/lib/osrm-walk";
 
 export const runtime = "nodejs";
 
@@ -14,6 +14,6 @@ export async function POST(request: Request) {
   if (!points || points.length < 2) {
     return NextResponse.json({ line: null }, { status: 400 });
   }
-  const line = await fetchWalkingGeometry(points.slice(0, 80));
+  const line = await fetchDisplayWalkingGeometry(points.slice(0, 80));
   return NextResponse.json({ line: line ?? null });
 }
