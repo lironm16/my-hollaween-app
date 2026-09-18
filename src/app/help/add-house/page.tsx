@@ -48,7 +48,7 @@ const STEPS: Array<{
         href="/help/edit-code"
         className={cn(
           buttonVariants({ variant: "outline", size: "lg" }),
-          "w-full border-orange-400/50 bg-orange-500/10 text-base text-orange-100 hover:bg-orange-500/20",
+          "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
         )}
       >
         איבדתם את קוד העריכה?
@@ -77,7 +77,7 @@ export default function AddHouseGuidePage() {
         href="/add"
         className={cn(
           buttonVariants({ size: "lg" }),
-          "mt-5 block w-full bg-orange-500 text-center text-base text-black hover:bg-orange-400",
+          "mt-5 block w-full bg-orange-500 text-center text-lg text-black hover:bg-orange-400",
         )}
       >
         לטופס הוספה
