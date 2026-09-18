@@ -5,10 +5,20 @@ import {
   hoursStatus,
   isOpenDuringCustomVisitForFilter,
   isOpenNowForFilter,
+  isAddHouseOpen,
   isOpeningSoon,
   openingSoonAt,
   visitWindowIssue,
 } from "@/lib/hours";
+
+describe("isAddHouseOpen", () => {
+  it("stays open until 17:00 on event night", () => {
+    assert.equal(isAddHouseOpen(new Date(2026, 8, 18, 16, 30, 0, 0)), true);
+    assert.equal(isAddHouseOpen(new Date(2026, 9, 31, 16, 59, 0, 0)), true);
+    assert.equal(isAddHouseOpen(new Date(2026, 9, 31, 17, 0, 0, 0)), false);
+    assert.equal(isAddHouseOpen(new Date(2026, 9, 31, 18, 0, 0, 0)), false);
+  });
+});
 
 describe("openingSoon before event night", () => {
   const house = { openFrom: "17:00", openTo: "21:00", visit: "come" as const };

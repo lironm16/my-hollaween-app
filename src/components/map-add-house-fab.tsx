@@ -2,8 +2,13 @@
 
 import Link from "next/link";
 import { HousePlus } from "lucide-react";
+import { useAppNow } from "@/hooks/use-app-clock";
+import { isAddHouseOpen } from "@/lib/hours";
 
 export function MapAddHouseFab() {
+  const now = useAppNow();
+  if (!isAddHouseOpen(now)) return null;
+
   return (
     <Link
       href="/add"
