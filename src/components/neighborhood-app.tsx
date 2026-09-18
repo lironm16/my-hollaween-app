@@ -61,7 +61,6 @@ import { HOUSE_SET_LABELS, countSkippedInSet, houseMatchesSet } from "@/lib/hous
 import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
 import { formatDistance } from "@/lib/geo";
 import { isRouteFullyVisited } from "@/lib/route-completion";
-import { buildWalkingRoute } from "@/lib/route";
 import { diffRouteBySkippedIds, rebuildRouteAfterSkipChange } from "@/lib/route-changes";
 import { drainPendingRouteRestores } from "@/lib/route-mode";
 import {
@@ -279,22 +278,9 @@ export function NeighborhoodApp({
     { visitCelebration },
   );
   const routeListItems = useMemo(() => {
-    if (!routeMode) return [];
+    if (!routeMode || !activeRoute) return [];
     const skippedSet = new Set(skips.skippedIds);
-    const eligible = filters.unvisitedOnly
-      ? visible.filter((house) => !visits.visitedIds.includes(house.id))
-      : visible;
-    const orderRoute = buildWalkingRoute(
-      eligible,
-      { lat: origin.lat, lng: origin.lng },
-      {
-        accessible: accessibleOnly,
-        startedFrom: origin.kind,
-        originLabel: origin.label,
-      },
-    );
-    if (!orderRoute) return [];
-    return orderRoute.stops.flatMap((stop) =>
+    return activeRoute.stops.flatMap((stop) =>
       stop.houses.map((house, houseIndex) => ({
         house,
         order: stop.order,
@@ -302,15 +288,7 @@ export function NeighborhoodApp({
         skipped: skippedSet.has(house.id),
       })),
     );
-  }, [
-    routeMode,
-    visible,
-    skips.skippedIds,
-    origin,
-    accessibleOnly,
-    filters.unvisitedOnly,
-    visits.visitedIds,
-  ]);
+  }, [routeMode, activeRoute, skips.skippedIds]);
 
   function applyRouteAfterSkipChange(nextSkippedIds: string[], includeNew: boolean) {
     setPinnedRoute(
