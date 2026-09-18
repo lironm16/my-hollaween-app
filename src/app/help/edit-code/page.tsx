@@ -12,8 +12,8 @@ export default function EditCodeHelpPage() {
           לערוך ב<strong className="text-orange-200">תפריט → בית → שלי / עריכה</strong> בלי להקליד שוב.
         </p>
         <p className="text-base leading-relaxed text-orange-50">
-          אפשר <strong className="text-orange-200">לשתף את הקוד</strong> עם בן משפחה. אחרי שהם מזינים אותו
-          פעם אחת — הוא נשמר גם במכשיר שלהם.
+          אפשר <strong className="text-orange-200">לתת הרשאת עריכה ע״י שיתוף קוד העריכה</strong>. אחרי
+          הזנה פעם אחת — הקוד נשמר גם במכשיר שלהם.
         </p>
         <p className="text-base leading-relaxed text-orange-100">
           אם איבדתם לגמרי ואין גישה מאף מכשיר — פנו ל<strong className="text-orange-200">מנהל/ת האפליקציה</strong>{" "}
