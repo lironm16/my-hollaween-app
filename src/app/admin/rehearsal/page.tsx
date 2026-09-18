@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AdminDryRunPanel } from "@/components/admin-dry-run";
-import { AdminRestorePanel } from "@/components/admin-restore-panel";
 import { AppHeader } from "@/components/app-header";
 import { useAdminSession } from "@/hooks/use-admin-session";
 
@@ -29,7 +28,6 @@ export default function AdminRehearsalPage() {
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-5">
         <div className="mx-auto w-full max-w-lg space-y-4 pb-10">
           <h1 className="font-display text-2xl text-orange-300">בדיקות</h1>
-          <AdminRestorePanel />
           <AdminDryRunPanel />
         </div>
       </main>

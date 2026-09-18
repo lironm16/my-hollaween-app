@@ -448,11 +448,6 @@ export function saveServerDbBackup(db: ServerDbBackup) {
   }
 }
 
-/** True only when the phone backup timestamp is strictly newer than the server catalog. */
-export function backupIsNewerThanServer(backup: ServerDbBackup, serverUpdatedAt: string) {
-  return stamp(backup.updatedAt) > stamp(serverUpdatedAt);
-}
-
 const FILTERS_KEY = "hw-house-filters";
 const FILTERS_VERSION_KEY = "hw-house-filters-version";
 

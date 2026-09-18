@@ -1075,23 +1075,6 @@ export async function adminDeleteHouse(id: string) {
   });
 }
 
-/** Merge a manager-device backup so edits survive ephemeral serverless disks. */
-export async function adminRestoreDb(incoming: DbFile) {
-  return runSyncedWrite((db) => {
-    db.houses = mergeHouses(db.houses, normalizeDb(incoming).houses).map(normalizeHouse);
-    if (incoming.vapid?.publicKey && incoming.vapid?.privateKey) {
-      db.vapid = incoming.vapid;
-    }
-    if (incoming.pushSubscriptions && incoming.pushSubscriptions.length > 0) {
-      db.pushSubscriptions = incoming.pushSubscriptions;
-    }
-    db.updatedAt = new Date(
-      Math.max(stamp(db), stamp(incoming), Date.now()),
-    ).toISOString();
-    return cloneDb(db);
-  });
-}
-
 export async function adminUpdate(
   id: string,
   patch: Partial<HouseInput> & NightPatch,
