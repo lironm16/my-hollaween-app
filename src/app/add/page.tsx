@@ -89,19 +89,29 @@ export default function AddPage() {
             </div>
             <PersistNote />
             <CodesCopy editCode={done.editCode} />
-            <p className="text-base text-orange-100">
-              הקוד נשמר במכשיר הזה — אפשר לערוך בלי להקליד שוב. אפשר לתת הרשאת עריכה ע״י שיתוף קוד
-              העריכה — אחרי הזנה פעם אחת נשמר גם אצלם.
+            <p className="text-lg text-orange-100">
+              קוד העריכה נשמר במכשיר הזה — אפשר לערוך בלי להקליד שוב.
             </p>
-            <Link
-              href="/help/edit-code"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "w-full border-orange-400/50 bg-orange-500/10 text-base text-orange-100 hover:bg-orange-500/20",
-              )}
-            >
-              איבדתם את קוד העריכה?
-            </Link>
+            <div className="flex flex-col gap-2">
+              <Link
+                href="/help/share-edit-code"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "lg" }),
+                  "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
+                )}
+              >
+                איך לשתף קוד עריכה?
+              </Link>
+              <Link
+                href="/help/edit-code"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "lg" }),
+                  "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
+                )}
+              >
+                איבדתם את קוד העריכה?
+              </Link>
+            </div>
             <div className="flex flex-wrap gap-2">
               <Link
                 href={`/?focus=${encodeURIComponent(done.id)}`}

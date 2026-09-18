@@ -44,15 +44,26 @@ const STEPS: Array<{
     image: "/help/step-3-done.png",
     imageAlt: "מסך הצלחה עם קוד עריכה",
     action: (
-      <Link
-        href="/help/edit-code"
-        className={cn(
-          buttonVariants({ variant: "outline", size: "lg" }),
-          "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
-        )}
-      >
-        איבדתם את קוד העריכה?
-      </Link>
+      <div className="flex flex-col gap-2">
+        <Link
+          href="/help/share-edit-code"
+          className={cn(
+            buttonVariants({ variant: "outline", size: "lg" }),
+            "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
+          )}
+        >
+          איך לשתף קוד עריכה?
+        </Link>
+        <Link
+          href="/help/edit-code"
+          className={cn(
+            buttonVariants({ variant: "outline", size: "lg" }),
+            "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
+          )}
+        >
+          איבדתם את קוד העריכה?
+        </Link>
+      </div>
     ),
   },
 ];
