@@ -19,6 +19,8 @@ import type { PublicHouse } from "@/lib/types";
 import { HOUSE_CARD_PHOTO_BOX } from "@/components/house-photo-frame";
 import { cn } from "@/lib/utils";
 
+const DESCRIPTION_PREFIX = "מה מחכה בבית:";
+
 function HouseComments({ house, compact }: { house: PublicHouse; compact: boolean }) {
   const description = house.description?.trim() ?? "";
   const notes = house.notes?.trim() ?? "";
@@ -49,7 +51,9 @@ function HouseComments({ house, compact }: { house: PublicHouse; compact: boolea
   const fullContent = (
     <>
       {description ? (
-        <p className="text-base leading-relaxed text-violet-50">{description}</p>
+        <p className="text-base leading-relaxed text-violet-50">
+          {DESCRIPTION_PREFIX} {description}
+        </p>
       ) : null}
       {notes ? <p className="text-base text-amber-200/90">הערה: {notes}</p> : null}
     </>
@@ -85,7 +89,11 @@ function HouseComments({ house, compact }: { house: PublicHouse; compact: boolea
         setExpanded(true);
       }}
     >
-      {description ? <span className="text-violet-50">{description}</span> : null}
+      {description ? (
+        <span className="text-violet-50">
+          {DESCRIPTION_PREFIX} {description}
+        </span>
+      ) : null}
       {description && notes ? " " : null}
       {notes ? <span className="text-amber-200/90">הערה: {notes}</span> : null}
     </p>
