@@ -10,6 +10,10 @@ const QUESTIONS = [
     href: "/help/add-house",
   },
   {
+    question: "איך מתקינים את האפליקציה?",
+    href: "/help/install",
+  },
+  {
     question: "איבדתי את קוד העריכה",
     href: "/help/edit-code",
   },
