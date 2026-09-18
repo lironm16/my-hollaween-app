@@ -61,11 +61,12 @@ export function resolveDistanceOrigin(
         fromGps: true,
       };
     }
-    if (Number.isFinite(choice.lat) && Number.isFinite(choice.lng)) {
+    const { lat: cachedLat, lng: cachedLng } = choice;
+    if (typeof cachedLat === "number" && typeof cachedLng === "number") {
       return {
         kind: "gps",
-        lat: choice.lat,
-        lng: choice.lng,
+        lat: cachedLat,
+        lng: cachedLng,
         label: "מיקום נוכחי",
         fromGps: true,
       };
