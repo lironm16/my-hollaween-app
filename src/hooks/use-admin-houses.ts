@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { readApiJson } from "@/lib/api-json";
+import { appInForeground, catalogPollMs } from "@/lib/catalog-poll";
 import {
   backupLooksNewer,
   loadServerDbBackup,
@@ -15,12 +16,15 @@ import type { House, PublicHouse } from "@/lib/types";
 export function useAdminHouses({
   admin,
   refresh,
+  pollSeconds,
 }: {
   admin: boolean;
   refresh: (force?: boolean) => Promise<void> | void;
+  pollSeconds?: number;
 }) {
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
   const [busyAction, setBusyAction] = useState(false);
+  const pollMsRef = useRef(catalogPollMs(pollSeconds));
 
   const rememberAdminDb = useCallback((houses: House[], updatedAt: string) => {
     saveServerDbBackup({
@@ -62,13 +66,37 @@ export function useAdminHouses({
   }, [admin, rememberAdminDb]);
 
   useEffect(() => {
+    pollMsRef.current = catalogPollMs(pollSeconds);
+  }, [pollSeconds]);
+
+  useEffect(() => {
     if (!admin) {
       setAdminHouses([]);
       return;
     }
     void loadAdminHouses();
-    const timer = window.setInterval(() => void loadAdminHouses(), 15_000);
-    return () => window.clearInterval(timer);
+
+    const onChanged = () => void loadAdminHouses();
+    const onVis = () => {
+      if (appInForeground()) void loadAdminHouses();
+    };
+    window.addEventListener("hw-catalog-changed", onChanged);
+    document.addEventListener("visibilitychange", onVis);
+
+    let pollTimer: number | undefined;
+    const schedulePoll = () => {
+      pollTimer = window.setTimeout(() => {
+        if (appInForeground()) void loadAdminHouses();
+        schedulePoll();
+      }, pollMsRef.current);
+    };
+    schedulePoll();
+
+    return () => {
+      if (pollTimer !== undefined) window.clearTimeout(pollTimer);
+      window.removeEventListener("hw-catalog-changed", onChanged);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, [admin, loadAdminHouses]);
 
   const applyAdminHouse = useCallback(

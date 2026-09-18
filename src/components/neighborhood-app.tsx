@@ -84,7 +84,8 @@ export function NeighborhoodApp({
   initialCatalog?: Catalog | null;
   focusId?: string | null;
 }) {
-  const { catalog, loading, offline, unreachable, error, source, refresh } = useCatalog(initialCatalog);
+  const { catalog, loading, offline, unreachable, error, source, pollSeconds, refresh } =
+    useCatalog(initialCatalog);
   const { admin } = useAdminSession();
   const geo = useUserLocation();
   const gps = geo.location;
@@ -128,7 +129,7 @@ export function NeighborhoodApp({
     adminHouses,
     applyAdminHouse,
     removeAdminHouse,
-  } = useAdminHouses({ admin, refresh });
+  } = useAdminHouses({ admin, refresh, pollSeconds });
 
   const wasAdmin = useRef(false);
 

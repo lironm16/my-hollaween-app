@@ -134,6 +134,18 @@ async function main() {
     console.log(`Wrote ${subs.length} push subscriptions`);
   }
 
+  let catalogUpdatedAt = String(data.updatedAt ?? "");
+  for (const house of houses) {
+    const candidate = String(house.updatedAt ?? "");
+    if (Date.parse(candidate) > Date.parse(catalogUpdatedAt)) catalogUpdatedAt = candidate;
+  }
+  if (data.pushSettings?.updatedAt && Date.parse(data.pushSettings.updatedAt) > Date.parse(catalogUpdatedAt)) {
+    catalogUpdatedAt = data.pushSettings.updatedAt;
+  }
+  if (!catalogUpdatedAt) catalogUpdatedAt = new Date().toISOString();
+  await rootRef.collection("meta").doc("catalog").set({ updatedAt: catalogUpdatedAt }, { merge: true });
+  console.log(`Set meta/catalog.updatedAt → ${catalogUpdatedAt}`);
+
   const publicCount = houses.filter((h) => h.status === "approved" || !h.status).length;
   console.log(`Done. Wrote ${houses.length} houses (${publicCount} public).`);
 }

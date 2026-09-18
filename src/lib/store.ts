@@ -66,8 +66,8 @@ import {
 } from "@/lib/blob-auth";
 import {
   firestoreConfigured,
-  queryFirestoreHousesSince,
   queryRemovedHouseIdsSince,
+  readCatalogMeta,
   readFirestoreDb,
   readFirestoreHouse,
   writeFirestoreDb,
@@ -477,6 +477,45 @@ let mem: DbFile | null = null;
 let memAt = 0;
 let catalogMem: Catalog | null = null;
 
+type RemovalTombstone = { id: string; deletedAt: string };
+const REMOVAL_MEM_MAX = 200;
+let recentRemovals: RemovalTombstone[] = [];
+
+function isMemWarm() {
+  return Boolean(mem && Date.now() - memAt < MEM_TTL_MS);
+}
+
+/** Tombstone deletes on this instance so warm delta polls skip Firestore. */
+export function recordCatalogRemoval(id: string, deletedAt = new Date().toISOString()) {
+  const docId = canonicalHouseId(id);
+  if (!docId) return;
+  recentRemovals = [
+    { id: docId, deletedAt },
+    ...recentRemovals.filter((entry) => entry.id !== docId),
+  ].slice(0, REMOVAL_MEM_MAX);
+}
+
+function syncRemovalMem(prev: DbFile, db: DbFile) {
+  const nextIds = new Set(db.houses.map((house) => canonicalHouseId(house.id)));
+  for (const house of prev.houses) {
+    const id = canonicalHouseId(house.id);
+    if (id && !nextIds.has(id)) recordCatalogRemoval(id, db.updatedAt);
+  }
+}
+
+function catalogRemovalsSince(sinceMs: number) {
+  return recentRemovals
+    .filter((entry) => stamp({ updatedAt: entry.deletedAt }) > sinceMs)
+    .map((entry) => entry.id);
+}
+
+/** Used by warm delta polls; exported for tests. */
+export function catalogRemovalsSinceIso(since: string) {
+  const sinceMs = Date.parse(since);
+  if (!Number.isFinite(sinceMs)) return [];
+  return catalogRemovalsSince(sinceMs);
+}
+
 function setMem(db: DbFile) {
   mem = db;
   memAt = Date.now();
@@ -523,6 +562,7 @@ async function writeDurableDb(db: DbFile, prev?: DbFile | null) {
 }
 
 async function persistDb(db: DbFile, prev?: DbFile | null) {
+  if (prev) syncRemovalMem(prev, db);
   const cachedPush = pickPushSettings(db, mem, getGlobalDb());
   const pushBlob = cachedPush?.templates ? null : await readPushSettingsBlob();
   const blobWrapper = asPushCandidate(cachedPush ?? pushBlob);
@@ -711,30 +751,39 @@ export async function getCatalog(): Promise<Catalog> {
   return catalogMem;
 }
 
-export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
-  await ensurePushSettingsGeneration();
+function emptyCatalogDelta(updatedAt: string): CatalogDelta {
+  return {
+    updatedAt,
+    neighborhood: config.neighborhood,
+    houses: [],
+    removed: [],
+  };
+}
+
+/** Pure gate check for tests — true when client `since` is already up to date. */
+export function catalogDeltaGatePassed(input: {
+  sinceMs: number;
+  catalogUpdatedAt: string;
+  pushUpdatedAt?: string;
+  removedIds?: string[];
+}) {
+  if (input.removedIds?.length) return false;
+  if (stamp({ updatedAt: input.catalogUpdatedAt }) > input.sinceMs) return false;
+  const pushStamp = Date.parse(input.pushUpdatedAt ?? "");
+  if (Number.isFinite(pushStamp) && pushStamp > input.sinceMs) return false;
+  return true;
+}
+
+/** Build a catalog delta from the in-memory db (no Firestore house queries). */
+export function buildCatalogDeltaFromDb(
+  db: DbFile,
+  since: string,
+  removed: string[] = [],
+): CatalogDelta {
   const sinceMs = Date.parse(since);
-  if (!Number.isFinite(sinceMs) || sinceMs <= 0) {
-    const full = await getCatalog();
-    return { ...full, full: true };
-  }
-
-  const db = await loadDb();
-  let houses: PublicHouse[];
-  let removed: string[];
-
-  if (firestoreConfigured()) {
-    [houses, removed] = await Promise.all([
-      queryFirestoreHousesSince(since),
-      queryRemovedHouseIdsSince(since),
-    ]);
-  } else {
-    houses = db.houses
-      .filter((house) => isPubliclyListed(house) && stamp(house) > sinceMs)
-      .map((house) => toPublicHouse(house) as PublicHouse);
-    removed = [];
-  }
-
+  const houses = db.houses
+    .filter((house) => isPubliclyListed(house) && stamp(house) > sinceMs)
+    .map((house) => toPublicHouse(house) as PublicHouse);
   const pushChanged = pushSettingsStamp(db.pushSettings) > sinceMs;
   return {
     updatedAt: db.updatedAt,
@@ -747,13 +796,73 @@ export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
   };
 }
 
+async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<CatalogDelta | null> {
+  if (isMemWarm() && mem) {
+    const removed = firestoreConfigured() ? catalogRemovalsSince(sinceMs) : [];
+    if (
+      catalogDeltaGatePassed({
+        sinceMs,
+        catalogUpdatedAt: mem.updatedAt,
+        pushUpdatedAt: mem.pushSettings?.updatedAt,
+        removedIds: removed,
+      })
+    ) {
+      return emptyCatalogDelta(mem.updatedAt);
+    }
+  }
+
+  if (firestoreConfigured()) {
+    const meta = await readCatalogMeta();
+    if (
+      meta?.updatedAt &&
+      catalogDeltaGatePassed({ sinceMs, catalogUpdatedAt: meta.updatedAt, removedIds: [] })
+    ) {
+      const removed = isMemWarm()
+        ? catalogRemovalsSince(sinceMs)
+        : await queryRemovedHouseIdsSince(since);
+      if (
+        catalogDeltaGatePassed({
+          sinceMs,
+          catalogUpdatedAt: meta.updatedAt,
+          removedIds: removed,
+        })
+      ) {
+        return emptyCatalogDelta(meta.updatedAt);
+      }
+    }
+  }
+
+  return null;
+}
+
+export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
+  await ensurePushSettingsGeneration();
+  const sinceMs = Date.parse(since);
+  if (!Number.isFinite(sinceMs) || sinceMs <= 0) {
+    const full = await getCatalog();
+    return { ...full, full: true };
+  }
+
+  const gated = await tryCatalogDeltaGate(since, sinceMs);
+  if (gated) return gated;
+
+  const warm = isMemWarm();
+  const db = await loadDb();
+
+  let removed: string[] = [];
+  if (firestoreConfigured()) {
+    removed = warm ? catalogRemovalsSince(sinceMs) : await queryRemovedHouseIdsSince(since);
+  }
+
+  return buildCatalogDeltaFromDb(db, since, removed);
+}
+
 export async function getAllHouses(): Promise<House[]> {
-  const db = await loadDb(true);
-  return db.houses;
+  return (await loadDb()).houses;
 }
 
 export async function getDbSnapshot(): Promise<DbFile> {
-  return loadDb(true);
+  return loadDb();
 }
 
 function findHouseIn(houses: House[], id: string): House | undefined {
@@ -765,6 +874,15 @@ function findHouseIn(houses: House[], id: string): House | undefined {
 export async function getHouse(id: string): Promise<House | undefined> {
   const found = findHouseIn((await loadDb()).houses, id);
   if (found) return found;
+  const docId = canonicalHouseId(id);
+  if (firestoreConfigured() && docId) {
+    const remote = await readFirestoreHouse(docId);
+    if (remote) {
+      upsertMemHouse(remote, remote.updatedAt);
+      return remote;
+    }
+    return undefined;
+  }
   return findHouseIn((await loadDb(true)).houses, id);
 }
 
@@ -893,8 +1011,8 @@ async function patchHouseDoc(
   options?: { includeEndpoint?: string },
 ) {
   const existing =
-    (firestoreConfigured() ? await readFirestoreHouse(docId) : null) ??
     findHouseIn(mem?.houses ?? [], docId) ??
+    (firestoreConfigured() ? await readFirestoreHouse(docId) : null) ??
     (await getHouse(docId));
   if (!existing) return { error: "missing" as const };
   if (existing.editCode !== editCode) return { error: "forbidden" as const };
@@ -1300,17 +1418,18 @@ export async function savePushSubscription(sub: Omit<PushSubscriptionRecord, "cr
 }
 
 export async function isPushEndpointRegistered(endpoint: string) {
-  const db = await loadDb(true);
+  if ((mem?.pushSubscriptions ?? []).some((item) => item.endpoint === endpoint)) return true;
+  const db = await loadDb();
   return (db.pushSubscriptions ?? []).some((item) => item.endpoint === endpoint);
 }
 
 export async function countPushSubscriptions() {
-  const db = await loadDb(true);
+  const db = await loadDb();
   return db.pushSubscriptions?.length ?? 0;
 }
 
 export async function sendPushTestToEndpoint(endpoint: string) {
-  const db = await loadDb(true);
+  const db = await loadDb();
   const sub = (db.pushSubscriptions ?? []).find((item) => item.endpoint === endpoint);
   if (!sub) {
     return {

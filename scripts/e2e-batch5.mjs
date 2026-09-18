@@ -215,7 +215,7 @@ async function main() {
       }, pollHouse.house.id);
       if (!seeded) fail("OFF-06 poll test house should not be in cache before the poll tick");
       else {
-        await pollPage.clock.fastForward(181_000);
+        await pollPage.clock.fastForward(301_000);
         try {
           await pollPage.waitForFunction(
             (houseId) => {

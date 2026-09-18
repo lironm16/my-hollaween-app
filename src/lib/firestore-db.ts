@@ -39,6 +39,39 @@ export async function readFirestoreHouse(id: string): Promise<House | null> {
   }
 }
 
+let catalogMetaMem: { updatedAt: string } | null = null;
+let catalogMetaMemAt = 0;
+const CATALOG_META_MEM_TTL_MS = 120_000;
+
+/** Cheap catalog revision stamp — one doc read for idle delta polls. */
+export async function readCatalogMeta(): Promise<{ updatedAt: string } | null> {
+  if (catalogMetaMem && Date.now() - catalogMetaMemAt < CATALOG_META_MEM_TTL_MS) {
+    return catalogMetaMem;
+  }
+  if (!firestoreConfigured()) return null;
+  try {
+    await resolveAdminFirestore();
+    const snap = await metaDoc("catalog").get();
+    if (!snap.exists) return null;
+    const updatedAt = String((snap.data() as { updatedAt?: string })?.updatedAt ?? "");
+    if (!updatedAt) return null;
+    catalogMetaMem = { updatedAt };
+    catalogMetaMemAt = Date.now();
+    return catalogMetaMem;
+  } catch (error) {
+    console.error("[firestore] catalog meta read failed", error);
+    return null;
+  }
+}
+
+export async function bumpCatalogMeta(updatedAt: string) {
+  if (!firestoreConfigured() || !updatedAt) return;
+  catalogMetaMem = { updatedAt };
+  catalogMetaMemAt = Date.now();
+  await resolveAdminFirestore();
+  await metaDoc("catalog").set({ updatedAt }, { merge: true });
+}
+
 export async function writeFirestoreHouse(house: House) {
   if (!firestoreConfigured()) {
     throw new Error("FIRESTORE_NOT_CONFIGURED");
@@ -47,15 +80,17 @@ export async function writeFirestoreHouse(house: House) {
   await resolveAdminFirestore();
   const id = canonicalHouseId(house.id);
   await housesCollection().doc(id).set({ ...house, id, storeId: id }, { merge: true });
+  await bumpCatalogMeta(house.updatedAt);
 }
 
-export async function deleteFirestoreHouse(id: string) {
+export async function deleteFirestoreHouse(id: string, options?: { skipCatalogMeta?: boolean }) {
   if (!firestoreConfigured()) return;
   await resolveAdminFirestore();
   const docId = canonicalHouseId(id);
   const now = new Date().toISOString();
   await housesCollection().doc(docId).delete();
   await removedHousesCollection().doc(docId).set({ id: docId, deletedAt: now });
+  if (!options?.skipCatalogMeta) await bumpCatalogMeta(now);
 }
 
 export async function queryFirestoreHousesSince(since: string): Promise<PublicHouse[]> {
@@ -181,6 +216,7 @@ export async function writeFirestorePushSettings(settings: DbFile["pushSettings"
   if (!firestoreConfigured() || !settings?.templates) return;
   await resolveAdminFirestore();
   await metaDoc("pushSettings").set(settings, { merge: true });
+  await bumpCatalogMeta(settings.updatedAt ?? new Date().toISOString());
 }
 
 export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null }) {
@@ -209,7 +245,7 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
 
   if (prevHouses) {
     for (const id of removedHouseIds(prevHouses, houses)) {
-      await deleteFirestoreHouse(id);
+      await deleteFirestoreHouse(id, { skipCatalogMeta: true });
     }
   }
 
@@ -235,4 +271,6 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
     }
     await batch.commit();
   }
+
+  await bumpCatalogMeta(db.updatedAt);
 }

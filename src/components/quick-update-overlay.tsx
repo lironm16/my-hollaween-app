@@ -37,7 +37,8 @@ import type { StoredPushSettings } from "@/lib/push-templates";
 import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
 import type { PushKind } from "@/lib/push-templates";
 import { isDecorated } from "@/lib/house-state";
-import type { Catalog, PublicHouse } from "@/lib/types";
+import { useCatalog } from "@/hooks/use-catalog";
+import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function QuickUpdateOverlay({
@@ -61,20 +62,18 @@ export function QuickUpdateOverlay({
   const [housePick, setHousePick] = useState<QuickHouseChoice>(() => currentQuickHouse(house));
   const [sendPush, setSendPush] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [pushStored, setPushStored] = useState<StoredPushSettings | null>(null);
+  const { catalog } = useCatalog();
+  const pushStored = useMemo<StoredPushSettings | null>(
+    () => (catalog?.pushTemplates ? { templates: catalog.pushTemplates } : null),
+    [catalog?.pushTemplates],
+  );
 
   useEffect(() => {
     if (!open) return;
     setCandyPick(currentQuickCandy(house));
     setHousePick(currentQuickHouse(house));
     setSendPush(true);
-    void fetch("/api/catalog", { cache: "no-store" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: Catalog | null) => {
-        setPushStored(data?.pushTemplates ? { templates: data.pushTemplates } : null);
-      })
-      .catch(() => setPushStored(null));
-  }, [open, house.id]);
+  }, [open, house.id, house]);
 
   const dirty = quickUpdateChanged(house, candyPick, housePick);
   const preview = useMemo(
