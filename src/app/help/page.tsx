@@ -23,10 +23,10 @@ export default function HelpPage() {
           <li key={item.href}>
             <Link
               href={item.href}
-              className="flex items-center gap-3 rounded-2xl bg-[#1d1028] px-4 py-3 ring-1 ring-orange-500/20 transition hover:bg-[#241332]"
+              className="flex items-center gap-3 rounded-2xl bg-[#1d1028] px-4 py-4 ring-1 ring-orange-500/20 transition hover:bg-[#241332]"
             >
-              <span className="min-w-0 flex-1 text-base font-medium text-orange-50">{item.question}</span>
-              <ChevronLeft className="size-5 shrink-0 text-violet-500" aria-hidden />
+              <span className="min-w-0 flex-1 text-lg font-medium text-orange-50">{item.question}</span>
+              <ChevronLeft className="size-6 shrink-0 text-orange-400/70" aria-hidden />
             </Link>
           </li>
         ))}

@@ -22,8 +22,8 @@ export function HelpShell({
       <AppHeader />
       <main className="relative z-10 mx-auto w-full max-w-lg flex-1 px-4 py-5 pb-10">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <h1 className="font-display text-xl text-orange-300">{title}</h1>
-          <Link href={backHref} className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
+          <h1 className="font-display text-2xl text-orange-300">{title}</h1>
+          <Link href={backHref} className={cn(buttonVariants({ size: "default", variant: "outline" }))}>
             {backLabel}
           </Link>
         </div>
@@ -48,25 +48,28 @@ export function HelpStep({
   body,
   image,
   imageAlt,
+  action,
 }: {
   n: number;
   title: string;
   body: ReactNode;
   image: string;
   imageAlt: string;
+  action?: ReactNode;
 }) {
   return (
-    <li className="space-y-2 rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
-      <div className="flex items-center gap-2">
+    <li className="space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/20">
+      <div className="flex items-center gap-2.5">
         <span
-          className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-black"
+          className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-base font-bold text-black"
           aria-hidden
         >
           {n}
         </span>
-        <h2 className="text-base font-semibold text-orange-50">{title}</h2>
+        <h2 className="text-lg font-semibold text-orange-50">{title}</h2>
       </div>
-      <div className="text-sm leading-relaxed text-orange-100/90">{body}</div>
+      <div className="text-base leading-relaxed text-orange-50">{body}</div>
+      {action}
       <HelpShot src={image} alt={imageAlt} />
     </li>
   );

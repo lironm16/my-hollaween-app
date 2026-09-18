@@ -11,6 +11,7 @@ const STEPS: Array<{
   body: ReactNode;
   image: string;
   imageAlt: string;
+  action?: ReactNode;
 }> = [
   {
     title: "פתחו הוספה",
@@ -32,24 +33,27 @@ const STEPS: Array<{
   },
   {
     title: "שמירה וקוד",
-    body: (
-      <>
-        לחצו שמירה. הקוד נשמר במכשיר — אפשר לערוך בלי להקליד שוב. אפשר לשתף; אחרי הזנה פעם אחת נשמר גם
-        אצלם.{" "}
-        <Link href="/help/edit-code" className="text-orange-300 underline underline-offset-2">
-          איבדתם את הקוד?
-        </Link>
-      </>
-    ),
+    body: "לחצו שמירה. הקוד נשמר במכשיר — אפשר לערוך בלי להקליד שוב. אפשר לשתף; אחרי הזנה פעם אחת נשמר גם אצלם.",
     image: "/help/step-3-done.png",
     imageAlt: "מסך הצלחה עם קוד עריכה",
+    action: (
+      <Link
+        href="/help/edit-code"
+        className={cn(
+          buttonVariants({ variant: "outline", size: "lg" }),
+          "w-full border-orange-400/50 bg-orange-500/10 text-base text-orange-100 hover:bg-orange-500/20",
+        )}
+      >
+        איבדתם את קוד העריכה?
+      </Link>
+    ),
   },
 ];
 
 export default function AddHouseGuidePage() {
   return (
     <HelpShell title="איך מוסיפים בית?">
-      <ol className="space-y-3">
+      <ol className="space-y-4">
         {STEPS.map((step, index) => (
           <HelpStep
             key={step.title}
@@ -58,12 +62,16 @@ export default function AddHouseGuidePage() {
             body={step.body}
             image={step.image}
             imageAlt={step.imageAlt}
+            action={step.action}
           />
         ))}
       </ol>
       <Link
         href="/add"
-        className={cn(buttonVariants(), "mt-4 block w-full bg-orange-500 text-center text-black hover:bg-orange-400")}
+        className={cn(
+          buttonVariants({ size: "lg" }),
+          "mt-5 block w-full bg-orange-500 text-center text-base text-black hover:bg-orange-400",
+        )}
       >
         לטופס הוספה
       </Link>

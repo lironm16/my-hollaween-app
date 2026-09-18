@@ -93,11 +93,15 @@ export default function AddPage() {
               הקוד נשמר במכשיר הזה — אפשר לערוך בלי להקליד שוב. אפשר לשתף; אחרי הזנה פעם אחת נשמר גם
               אצלם.
             </p>
-            <p className="text-sm text-orange-200/90">
-              <Link href="/help/edit-code" className="underline underline-offset-2">
-                איבדתם את קוד העריכה?
-              </Link>
-            </p>
+            <Link
+              href="/help/edit-code"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "lg" }),
+                "w-full border-orange-400/50 bg-orange-500/10 text-base text-orange-100 hover:bg-orange-500/20",
+              )}
+            >
+              איבדתם את קוד העריכה?
+            </Link>
             <div className="flex flex-wrap gap-2">
               <Link
                 href={`/?focus=${encodeURIComponent(done.id)}`}
