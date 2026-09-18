@@ -404,7 +404,12 @@ export function MapHouseSheet({
                 onPrev={() => onAdjacentClusterHouse?.(-1)}
                 onNext={() => onAdjacentClusterHouse?.(1)}
               >
-                <section className="map-house-sheet-card is-on">
+                <section
+                  className={cn(
+                    "map-house-sheet-card is-on",
+                    visited?.(house.id) && "is-visited",
+                  )}
+                >
                   {multi && clusterIndex != null ? (
                     <ClusterHouseNav
                       houses={clusterHouses}
