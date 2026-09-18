@@ -27,7 +27,12 @@ await page.screenshot({ path: join(outDir, "step-1-menu.png") });
 await page.goto(`${base}/add`, { waitUntil: "domcontentloaded", timeout: 60_000 });
 await page.getByRole("heading", { name: "הוספת בית אימה" }).waitFor({ timeout: 15_000 });
 await page.waitForTimeout(800);
-await page.screenshot({ path: join(outDir, "step-2-form.png"), fullPage: true });
+await page.screenshot({ path: join(outDir, "step-2-form.png") });
+
+await page.getByText("שעות ב־31 באוקטובר").waitFor({ timeout: 15_000 });
+await page.getByText("שעות ב־31 באוקטובר").scrollIntoViewIfNeeded();
+await page.waitForTimeout(400);
+await page.screenshot({ path: join(outDir, "step-3-details.png") });
 
 await page.evaluate(() => {
   const main = document.querySelector("main");
