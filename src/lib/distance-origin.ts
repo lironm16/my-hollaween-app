@@ -4,7 +4,7 @@ export const DISTANCE_ORIGIN_KEY = "hw-distance-origin";
 export const DISTANCE_ORIGIN_EVENT = "hw-distance-origin";
 
 export type DistanceOriginChoice =
-  | { kind: "gps" }
+  | { kind: "gps"; lat?: number; lng?: number; savedAt?: string }
   | { kind: "neighborhood" }
   | { kind: "custom"; lat: number; lng: number; label: string };
 
@@ -51,22 +51,46 @@ export function resolveDistanceOrigin(
     };
   }
   if (choice.kind === "neighborhood") return neighborhoodOrigin();
-  if (gps && Number.isFinite(gps.lat) && Number.isFinite(gps.lng)) {
+  if (choice.kind === "gps") {
+    if (gps && Number.isFinite(gps.lat) && Number.isFinite(gps.lng)) {
+      return {
+        kind: "gps",
+        lat: gps.lat,
+        lng: gps.lng,
+        label: "מיקום נוכחי",
+        fromGps: true,
+      };
+    }
+    if (Number.isFinite(choice.lat) && Number.isFinite(choice.lng)) {
+      return {
+        kind: "gps",
+        lat: choice.lat,
+        lng: choice.lng,
+        label: "מיקום נוכחי",
+        fromGps: true,
+      };
+    }
     return {
       kind: "gps",
-      lat: gps.lat,
-      lng: gps.lng,
+      lat: neighborhoodPoint.lat,
+      lng: neighborhoodPoint.lng,
       label: "מיקום נוכחי",
-      fromGps: true,
+      fromGps: false,
     };
   }
-  return { ...neighborhoodOrigin(), kind: choice.kind === "gps" ? "gps" : "neighborhood" };
+  return neighborhoodOrigin();
 }
 
 function isChoice(value: unknown): value is DistanceOriginChoice {
   if (!value || typeof value !== "object") return false;
   const kind = (value as DistanceOriginChoice).kind;
-  if (kind === "gps" || kind === "neighborhood") return true;
+  if (kind === "neighborhood") return true;
+  if (kind === "gps") {
+    const gps = value as Extract<DistanceOriginChoice, { kind: "gps" }>;
+    if (gps.lat !== undefined && !Number.isFinite(gps.lat)) return false;
+    if (gps.lng !== undefined && !Number.isFinite(gps.lng)) return false;
+    return true;
+  }
   if (kind !== "custom") return false;
   const custom = value as Extract<DistanceOriginChoice, { kind: "custom" }>;
   return Number.isFinite(custom.lat) && Number.isFinite(custom.lng);
@@ -81,7 +105,7 @@ export function readDistanceOrigin(): DistanceOriginChoice {
   if (typeof window === "undefined") return DEFAULT_GPS;
   try {
     const raw =
-      sessionStorage.getItem(DISTANCE_ORIGIN_KEY) ?? localStorage.getItem(DISTANCE_ORIGIN_KEY);
+      localStorage.getItem(DISTANCE_ORIGIN_KEY) ?? sessionStorage.getItem(DISTANCE_ORIGIN_KEY);
     if (raw === cachedRaw) return cachedChoice;
     cachedRaw = raw;
     if (!raw) {
@@ -99,6 +123,15 @@ export function readDistanceOrigin(): DistanceOriginChoice {
   cachedRaw = null;
   cachedChoice = DEFAULT_GPS;
   return cachedChoice;
+}
+
+/** Keep the last GPS fix with a gps origin choice so cold starts don't fall back to map center. */
+export function touchGpsOriginCache(lat: number, lng: number) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+  const current = readDistanceOrigin();
+  if (current.kind !== "gps") return;
+  if (current.lat === lat && current.lng === lng) return;
+  writeDistanceOrigin({ kind: "gps", lat, lng, savedAt: new Date().toISOString() });
 }
 
 export function writeDistanceOrigin(choice: DistanceOriginChoice) {

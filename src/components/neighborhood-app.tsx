@@ -249,9 +249,10 @@ export function NeighborhoodApp({
   });
 
   useEffect(() => {
-    if (gpsAllowed || originChoice.kind !== "gps") return;
-    setOriginChoice({ kind: "neighborhood" });
-  }, [gpsAllowed, originChoice.kind, setOriginChoice]);
+    if (originChoice.kind !== "gps") return;
+    setAskedLocation(true);
+    geo.refresh();
+  }, [originChoice.kind, geo.refresh]);
 
   useEffect(() => {
     if (wasAdmin.current && !admin) {

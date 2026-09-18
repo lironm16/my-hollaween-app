@@ -40,10 +40,19 @@ describe("resolveDistanceOrigin", () => {
     assert.equal(resolved.fromGps, false);
   });
 
-  it("falls back to neighborhood center when GPS is unavailable", () => {
+  it("uses saved GPS coordinates when live GPS is unavailable", () => {
+    const resolved = resolveDistanceOrigin({ kind: "gps", lat: 32.091, lng: 34.803 }, null);
+    assert.equal(resolved.kind, "gps");
+    assert.equal(resolved.lat, 32.091);
+    assert.equal(resolved.lng, 34.803);
+    assert.equal(resolved.fromGps, true);
+  });
+
+  it("keeps gps origin kind while waiting for a fresh fix", () => {
     const resolved = resolveDistanceOrigin({ kind: "gps" }, null);
-    assert.equal(resolved.lat, config.map.center.lat);
-    assert.equal(resolved.lng, config.map.center.lng);
+    assert.equal(resolved.kind, "gps");
+    assert.equal(resolved.label, "מיקום נוכחי");
+    assert.equal(resolved.fromGps, false);
   });
 });
 
