@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Heart, Pencil } from "lucide-react";
@@ -18,6 +18,79 @@ import { shouldLoadHousePhoto } from "@/lib/photos";
 import type { PublicHouse } from "@/lib/types";
 import { HOUSE_CARD_PHOTO_BOX } from "@/components/house-photo-frame";
 import { cn } from "@/lib/utils";
+
+function HouseComments({ house, compact }: { house: PublicHouse; compact: boolean }) {
+  const description = house.description?.trim() ?? "";
+  const notes = house.notes?.trim() ?? "";
+  const [expanded, setExpanded] = useState(false);
+  const clampRef = useRef<HTMLParagraphElement>(null);
+  const [overflows, setOverflows] = useState(false);
+
+  useEffect(() => {
+    setExpanded(false);
+  }, [house.id, description, notes]);
+
+  useLayoutEffect(() => {
+    if (!compact || expanded) {
+      setOverflows(false);
+      return;
+    }
+    const el = clampRef.current;
+    if (!el) return;
+    const check = () => setOverflows(el.scrollHeight > el.clientHeight + 1);
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [compact, expanded, description, notes]);
+
+  if (!description && !notes) return null;
+
+  const fullContent = (
+    <>
+      {description ? (
+        <p className="text-base leading-relaxed text-violet-50">{description}</p>
+      ) : null}
+      {notes ? <p className="text-base text-amber-200/90">הערה: {notes}</p> : null}
+    </>
+  );
+
+  if (!compact || expanded) {
+    return <div className="space-y-2">{fullContent}</div>;
+  }
+
+  const canExpand = overflows;
+
+  return (
+    <p
+      ref={clampRef}
+      role={canExpand ? "button" : undefined}
+      tabIndex={canExpand ? 0 : undefined}
+      aria-label={canExpand ? "הצגת כל התיאור וההערות" : undefined}
+      className={cn(
+        "text-base leading-relaxed [overflow-wrap:anywhere]",
+        "line-clamp-2",
+        canExpand && "cursor-pointer",
+      )}
+      onClick={(event) => {
+        if (!canExpand) return;
+        event.stopPropagation();
+        setExpanded(true);
+      }}
+      onKeyDown={(event) => {
+        if (!canExpand) return;
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        event.stopPropagation();
+        setExpanded(true);
+      }}
+    >
+      {description ? <span className="text-violet-50">{description}</span> : null}
+      {description && notes ? " " : null}
+      {notes ? <span className="text-amber-200/90">הערה: {notes}</span> : null}
+    </p>
+  );
+}
 
 export function HouseDetails({
   house,
@@ -254,14 +327,9 @@ export function HouseDetails({
           איך מגיעים: {house.arrival}
         </p>
       ) : null}
-      {compact ? null : (
+      <HouseComments house={house} compact={compact} />
+      {!compact ? (
         <>
-          {house.description ? (
-            <p className="text-base leading-relaxed text-violet-50">{house.description}</p>
-          ) : null}
-          {house.notes ? (
-            <p className="text-base text-amber-200/90">הערה: {house.notes}</p>
-          ) : null}
           {sheet ? null : (
             <div className="flex flex-wrap gap-2 pt-1">
               <a
@@ -284,7 +352,7 @@ export function HouseDetails({
           )}
           {extra}
         </>
-      )}
+      ) : null}
     </div>
   );
 }
