@@ -5,8 +5,6 @@ import { toast } from "sonner";
 import { readApiJson } from "@/lib/api-json";
 import { appInForeground, catalogPollMs } from "@/lib/catalog-poll";
 import {
-  backupLooksNewer,
-  loadServerDbBackup,
   notifyCatalogChanged,
   saveServerDbBackup,
   type ServerDbBackup,
@@ -39,25 +37,8 @@ export function useAdminHouses({
       const res = await fetch("/api/admin/houses", { cache: "no-store" });
       if (!res.ok) return;
       const data = (await res.json()) as { houses?: House[]; updatedAt?: string };
-      let houses = data.houses ?? [];
-      let updatedAt = data.updatedAt ?? new Date().toISOString();
-      const backup = loadServerDbBackup();
-      if (backup && backupLooksNewer(backup, updatedAt, houses)) {
-        const restoreRes = await fetch("/api/admin/restore", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(backup),
-        });
-        if (restoreRes.ok) {
-          const restored = (await restoreRes.json()) as {
-            houses?: House[];
-            updatedAt?: string;
-          };
-          houses = restored.houses ?? houses;
-          updatedAt = restored.updatedAt ?? updatedAt;
-          notifyCatalogChanged();
-        }
-      }
+      const houses = data.houses ?? [];
+      const updatedAt = data.updatedAt ?? new Date().toISOString();
       setAdminHouses(houses);
       rememberAdminDb(houses, updatedAt);
     } catch {
