@@ -462,7 +462,7 @@ html:has(#neighborhood-shell) body {
   flex-direction: column-reverse;
   align-items: flex-end;
   gap: 0.5rem;
-  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--map-sheet-h, 0px));
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 .locate-me {

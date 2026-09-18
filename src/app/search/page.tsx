@@ -71,9 +71,10 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col">
+    <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <AppHeader />
-      <main className="relative z-10 mx-auto w-full max-w-lg flex-1 px-4 py-5">
+      <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-5">
+        <div className="mx-auto w-full max-w-lg pb-10">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/banner.jpg"
@@ -97,6 +98,7 @@ export default function SearchPage() {
         {!picked ? (
           <p className="text-base text-violet-300">הקלידו שם משפחה או כתובת ובחרו בית.</p>
         ) : null}
+        </div>
       </main>
       {picked ? (
         <HouseDetailOverlay
