@@ -439,9 +439,7 @@ export function NeighborhoodApp({
     );
     applyRouteAfterSkipChange(nextSkippedIds, added.length > 0);
   }
-  const { line: routeLine } = useRouteGeometry(activeRoute, routeMode, {
-    straightOnly: activeHouseSet === "stubs",
-  });
+  const { line: routeLine } = useRouteGeometry(activeRoute, routeMode);
   const summaryProps = {
     filteredHouses: visible.length,
     route: activeRoute ?? filterRoute,
