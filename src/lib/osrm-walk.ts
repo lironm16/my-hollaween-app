@@ -83,6 +83,28 @@ function dedupeNearby(points: LatLng[], meters = 30): LatLng[] {
   return unique;
 }
 
+/** Join a routed leg without doubling back along the previous segment. */
+export function appendRouteLeg(line: LatLng[], part: LatLng[]) {
+  if (part.length === 0) return;
+  if (line.length === 0) {
+    line.push(...part);
+    return;
+  }
+  const tail = line[line.length - 1]!;
+  let joinAt = 0;
+  let minDist = distanceMeters(tail, part[0]!);
+  for (let i = 1; i < part.length; i++) {
+    const d = distanceMeters(tail, part[i]!);
+    if (d <= minDist) {
+      minDist = d;
+      joinAt = i;
+    }
+  }
+  const rest = minDist < 45 ? part.slice(joinAt) : part.slice(1);
+  if (rest.length > 0 && distanceMeters(tail, rest[0]!) < 8) rest.shift();
+  line.push(...rest);
+}
+
 function pointInRing(point: LatLng, ring: LatLng[]) {
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -334,10 +356,7 @@ export async function fetchWalkingGeometry(points: LatLng[]): Promise<LatLng[] |
     const legs = await runPool(LEG_POOL_SIZE, legTasks);
     if (legs.some((leg) => !leg || leg.length < 2)) return null;
     const line: LatLng[] = [];
-    for (const part of legs) {
-      if (line.length > 0) part!.shift();
-      line.push(...part!);
-    }
+    for (const part of legs) appendRouteLeg(line, part!);
     return line.length >= 2 ? line : null;
   } catch {
     return null;

@@ -78,27 +78,9 @@ export function buildWalkingRoute(
       ? { lat: gps.lat, lng: gps.lng }
       : { lat: config.map.center.lat, lng: config.map.center.lng };
 
-  const remaining = clusterHousesByAddress(candidates);
-  const ordered: HouseCluster[] = [];
-  let cursor = origin;
-
-  while (remaining.length > 0) {
-    let bestIdx = 0;
-    let bestDist = Number.POSITIVE_INFINITY;
-    for (let i = 0; i < remaining.length; i++) {
-      const d = estimateWalkingMeters(cursor, clusterPoint(remaining[i]!));
-      if (d < bestDist) {
-        bestDist = d;
-        bestIdx = i;
-      }
-    }
-    const next = remaining.splice(bestIdx, 1)[0]!;
-    ordered.push(next);
-    cursor = clusterPoint(next);
-  }
-
-  const polished = ordered.length >= 4 ? twoOptClusters(ordered, origin) : ordered;
-  return summarizeRoute(polished, origin, startedFrom, accessible, options?.originLabel);
+  const clusters = clusterHousesByAddress(candidates);
+  const ordered = optimizeClusterTour(clusters, origin);
+  return summarizeRoute(ordered, origin, startedFrom, accessible, options?.originLabel);
 }
 
 /** Cluster in first-seen order — no nearest-neighbor re-sort (pinned / filtered routes). */
@@ -204,12 +186,146 @@ export function trimWalkingRouteToVisible(
   return { ...route, stops };
 }
 
+function nearestNeighborTour(
+  clusters: HouseCluster[],
+  origin: LatLng,
+  firstCluster?: HouseCluster,
+): HouseCluster[] {
+  const remaining = clusters.slice();
+  const ordered: HouseCluster[] = [];
+  if (firstCluster) {
+    const idx = remaining.findIndex((cluster) => cluster.key === firstCluster.key);
+    if (idx >= 0) ordered.push(remaining.splice(idx, 1)[0]!);
+  }
+  let cursor = ordered.length > 0 ? clusterPoint(ordered[ordered.length - 1]!) : origin;
+  while (remaining.length > 0) {
+    let bestIdx = 0;
+    let bestDist = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < remaining.length; i++) {
+      const d = estimateWalkingMeters(cursor, clusterPoint(remaining[i]!));
+      if (d < bestDist) {
+        bestDist = d;
+        bestIdx = i;
+      }
+    }
+    const next = remaining.splice(bestIdx, 1)[0]!;
+    ordered.push(next);
+    cursor = clusterPoint(next);
+  }
+  return ordered;
+}
+
+function cheapestInsertionTour(clusters: HouseCluster[], origin: LatLng): HouseCluster[] {
+  if (clusters.length === 0) return [];
+  const remaining = clusters.slice();
+  let bestIdx = 0;
+  let bestDist = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < remaining.length; i++) {
+    const d = estimateWalkingMeters(origin, clusterPoint(remaining[i]!));
+    if (d < bestDist) {
+      bestDist = d;
+      bestIdx = i;
+    }
+  }
+  const tour = [remaining.splice(bestIdx, 1)[0]!];
+  while (remaining.length > 0) {
+    let bestClusterIdx = 0;
+    let bestInsertPos = 0;
+    let bestCost = Number.POSITIVE_INFINITY;
+    for (let ci = 0; ci < remaining.length; ci++) {
+      const point = clusterPoint(remaining[ci]!);
+      for (let pos = 0; pos <= tour.length; pos++) {
+        const prev = pos === 0 ? origin : clusterPoint(tour[pos - 1]!);
+        const next = pos === tour.length ? null : clusterPoint(tour[pos]!);
+        const cost = next
+          ? estimateWalkingMeters(prev, point) +
+            estimateWalkingMeters(point, next) -
+            estimateWalkingMeters(prev, next)
+          : estimateWalkingMeters(prev, point);
+        if (cost < bestCost) {
+          bestCost = cost;
+          bestClusterIdx = ci;
+          bestInsertPos = pos;
+        }
+      }
+    }
+    tour.splice(bestInsertPos, 0, remaining.splice(bestClusterIdx, 1)[0]!);
+  }
+  return tour;
+}
+
+function angularSweepTour(clusters: HouseCluster[], origin: LatLng): HouseCluster[] {
+  return clusters.slice().sort((a, b) => {
+    const pointA = clusterPoint(a);
+    const pointB = clusterPoint(b);
+    const angleA = Math.atan2(pointA.lat - origin.lat, pointA.lng - origin.lng);
+    const angleB = Math.atan2(pointB.lat - origin.lat, pointB.lng - origin.lng);
+    return angleA - angleB;
+  });
+}
+
+function buildInitialTour(clusters: HouseCluster[], origin: LatLng): HouseCluster[] {
+  if (clusters.length === 0) return [];
+  if (clusters.length === 1) return clusters.slice();
+  if (clusters.length === 2) {
+    return clusters
+      .slice()
+      .sort(
+        (a, b) =>
+          estimateWalkingMeters(origin, clusterPoint(a)) -
+          estimateWalkingMeters(origin, clusterPoint(b)),
+      );
+  }
+  const candidates: HouseCluster[][] = [
+    nearestNeighborTour(clusters, origin),
+    cheapestInsertionTour(clusters, origin),
+    angularSweepTour(clusters, origin),
+  ];
+  const seeds = clusters
+    .slice()
+    .sort(
+      (a, b) =>
+        estimateWalkingMeters(origin, clusterPoint(a)) - estimateWalkingMeters(origin, clusterPoint(b)),
+    )
+    .slice(0, Math.min(4, clusters.length));
+  for (const seed of seeds) {
+    candidates.push(nearestNeighborTour(clusters, origin, seed));
+  }
+  let best = candidates[0]!;
+  let bestLen = pathLengthClusters(best, origin);
+  for (const tour of candidates.slice(1)) {
+    const len = pathLengthClusters(tour, origin);
+    if (len < bestLen) {
+      bestLen = len;
+      best = tour;
+    }
+  }
+  return best;
+}
+
+function optimizeClusterTour(clusters: HouseCluster[], origin: LatLng): HouseCluster[] {
+  if (clusters.length === 0) return [];
+  if (clusters.length > 40) return nearestNeighborTour(clusters, origin);
+  const initial = buildInitialTour(clusters, origin);
+  return polishClusterTour(initial, origin);
+}
+
+function polishClusterTour(clusters: HouseCluster[], origin: LatLng): HouseCluster[] {
+  if (clusters.length < 3) return clusters.slice();
+  let tour = twoOptClusters(clusters, origin);
+  if (clusters.length <= 25) {
+    tour = orOptClusters(tour, origin);
+    tour = twoOptClusters(tour, origin);
+  }
+  return tour;
+}
+
 function twoOptClusters(clusters: HouseCluster[], origin: LatLng): HouseCluster[] {
   if (clusters.length > 40) return clusters;
   let best = clusters.slice();
   let improved = true;
   let guard = 0;
-  while (improved && guard < 40) {
+  while (improved && guard < 120) {
     improved = false;
     guard += 1;
     for (let i = 0; i < best.length - 1; i++) {
@@ -220,6 +336,31 @@ function twoOptClusters(clusters: HouseCluster[], origin: LatLng): HouseCluster[
           improved = true;
         }
       }
+    }
+  }
+  return best;
+}
+
+function orOptClusters(clusters: HouseCluster[], origin: LatLng): HouseCluster[] {
+  if (clusters.length < 4) return clusters;
+  let best = clusters.slice();
+  let improved = true;
+  let guard = 0;
+  while (improved && guard < 60) {
+    improved = false;
+    guard += 1;
+    for (let i = 0; i < best.length; i++) {
+      const node = best[i]!;
+      const without = best.slice(0, i).concat(best.slice(i + 1));
+      for (let pos = 0; pos <= without.length; pos++) {
+        const candidate = without.slice(0, pos).concat(node, without.slice(pos));
+        if (pathLengthClusters(candidate, origin) + 1 < pathLengthClusters(best, origin)) {
+          best = candidate;
+          improved = true;
+          break;
+        }
+      }
+      if (improved) break;
     }
   }
   return best;
