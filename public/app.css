@@ -5390,15 +5390,13 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   flex-direction: column-reverse;
   align-items: flex-end;
   gap: 0.5rem;
-  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--map-sheet-h, 0px));
-  transition: bottom 0.2s ease;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
 }
 .map-add-house-fab {
   position: absolute;
   left: 0.75rem;
   z-index: 1100;
-  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--map-sheet-h, 0px));
-  transition: bottom 0.2s ease;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
 }
 .is-origin-pick .map-add-house-fab {
   bottom: calc(8.25rem + env(safe-area-inset-bottom, 0px));

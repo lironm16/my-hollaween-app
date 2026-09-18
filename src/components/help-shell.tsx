@@ -19,9 +19,10 @@ export function HelpShell({
   backLabel?: string;
 }) {
   return (
-    <div className="relative flex min-h-dvh flex-col">
+    <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <AppHeader />
-      <main className="relative z-10 mx-auto w-full max-w-lg flex-1 px-4 py-5 pb-10 text-lg">
+      <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-5 pb-10 text-lg">
+        <div className="mx-auto w-full max-w-lg">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
           <h1 className="font-display text-3xl text-orange-300">{title}</h1>
           <Link href={backHref} className={cn(buttonVariants({ size: "lg", variant: "outline" }))}>
@@ -29,6 +30,7 @@ export function HelpShell({
           </Link>
         </div>
         {children}
+        </div>
       </main>
     </div>
   );
