@@ -51,7 +51,7 @@ export function HelpStep({
 }: {
   n: number;
   title: string;
-  body: string;
+  body: ReactNode;
   image: string;
   imageAlt: string;
 }) {
@@ -66,7 +66,7 @@ export function HelpStep({
         </span>
         <h2 className="text-base font-semibold text-orange-50">{title}</h2>
       </div>
-      <p className="text-sm leading-relaxed text-violet-200">{body}</p>
+      <div className="text-sm leading-relaxed text-orange-100/90">{body}</div>
       <HelpShot src={image} alt={imageAlt} />
     </li>
   );
