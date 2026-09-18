@@ -271,6 +271,16 @@ export function eventNightDateLabel() {
   return eventNightParts().labelHe;
 }
 
+/** When new houses can no longer be added — event night at 17:00. */
+export function addHouseCutoffTime() {
+  const { year, month, day } = config.eventNight;
+  return new Date(year, month - 1, day, 17, 0, 0, 0);
+}
+
+export function isAddHouseOpen(now = appNow()) {
+  return now.getTime() < addHouseCutoffTime().getTime();
+}
+
 /** Pause/stop chips: only after the house’s first window on Halloween night. */
 export function nightStatusControlsEnabled(house: HoursSource, now = appNow()) {
   if (eventNightRelation(now) !== 0) return false;
