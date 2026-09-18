@@ -13,6 +13,7 @@ import {
   Pencil,
   Search,
   Shield,
+  HelpCircle,
   Sparkles,
 } from "lucide-react";
 import { SkipIcon } from "@/components/skip-icon";
@@ -185,6 +186,17 @@ export function AppHeader({
               <Activity className="size-4" />
               תמונת מצב
             </Link>
+            <Link
+              href="/help"
+              onClick={closeMenu}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "lg" }),
+                "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+              )}
+            >
+              <HelpCircle className="size-4" />
+              שאלות ותשובות
+            </Link>
             {admin ? (
               <>
                 <Link
@@ -208,17 +220,6 @@ export function AppHeader({
                 >
                   <Sparkles className="size-4" />
                   בדיקות
-                </Link>
-                <Link
-                  href="/checklist"
-                  onClick={closeMenu}
-                  className={cn(
-                    buttonVariants({ variant: "ghost", size: "lg" }),
-                    "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
-                  )}
-                >
-                  <Sparkles className="size-4" />
-                  רשימת בדיקות ידניות
                 </Link>
                 <button
                   type="button"
