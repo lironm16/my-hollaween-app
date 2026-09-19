@@ -39,7 +39,7 @@ export default function AddPage() {
       ]);
       const { house, editCode } = await publishHouse(input, {
         includeEndpoint,
-        addedBy: extras?.addedBy,
+        addedBy: extras?.addedBy ?? undefined,
       });
       let preview = house;
       if (extras?.photoDataUrl) {

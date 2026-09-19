@@ -12,20 +12,35 @@ function cacheLooksIncomplete(catalog: { houses: PublicHouse[] } | null) {
 }
 
 function house(id: string): PublicHouse {
+  const now = "2026-10-31T12:00:00.000Z";
   return {
     id,
     name: id,
+    theme: "pumpkin",
     address: "רחוב 1",
+    arrival: "",
+    description: "",
     lat: 32.08,
     lng: 34.81,
-    updatedAt: "2026-10-31T12:00:00.000Z",
-    treats: [],
-    treatStock: {},
+    treats: ["candy"],
+    treatStock: { candy: "plenty" },
     scareLevel: "mild",
-    decorLevel: "some",
-    candyTone: "mixed",
-    visit: "open",
-    hoursMode: "default",
+    openFrom: "17:00",
+    openTo: "20:00",
+    openHours: [{ from: "17:00", to: "20:00" }],
+    openFrom2: "",
+    openTo2: "",
+    notes: "",
+    accessible: false,
+    visit: "come",
+    decorLevel: "mild",
+    decorated: true,
+    soldOut: false,
+    createdAt: now,
+    updatedAt: now,
+    adminFrozen: false,
+    ownerFrozenUntil: null,
+    photoUrl: "",
   };
 }
 
