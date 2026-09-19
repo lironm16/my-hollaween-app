@@ -21,7 +21,22 @@ import {
   withDeviceHouseOverlays,
 } from "@/lib/offline-db";
 import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
-import { catalogHasRealHouses } from "@/lib/house-set";
+import { fetchWithTimeout, withTimeout } from "@/lib/fetch-timeout";
+import { catalogHasRealHouses, isStubHouse } from "@/lib/house-set";
+
+/** Thin cache usually means only a locally published house was saved — force a full reload. */
+const MIN_TRUSTED_REAL_HOUSES = 5;
+
+function cacheLooksIncomplete(catalog: Catalog | null) {
+  if (!catalog) return false;
+  const realCount = catalog.houses.filter((house) => !isStubHouse(house)).length;
+  return realCount > 0 && realCount < MIN_TRUSTED_REAL_HOUSES;
+}
+
+const CATALOG_FETCH_MS = 8000;
+const BOOTSTRAP_REFRESH_MS = 20_000;
+const FLUSH_WRITES_MS = 5000;
+const SAVE_CACHE_MS = 4000;
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
 
@@ -50,10 +65,11 @@ async function fetchJson(url: string, force = false, since?: string): Promise<Ca
   else if (since) params.set("since", since);
   const qs = params.toString();
   const href = qs ? `${url}?${qs}` : url;
-  const res = await fetch(href, {
-    cache: force || since ? "no-store" : "default",
-    signal: AbortSignal.timeout(8000),
-  });
+  const res = await fetchWithTimeout(
+    href,
+    { cache: force || since ? "no-store" : "default" },
+    CATALOG_FETCH_MS,
+  );
   if (!res.ok) throw new Error("bad status");
   return res.json() as Promise<CatalogDelta>;
 }
@@ -66,19 +82,8 @@ function applyCatalogResponse(prev: Catalog | null, live: CatalogDelta): Catalog
   return { ...prev, updatedAt: live.updatedAt };
 }
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
-  return new Promise((resolve) => {
-    const t = window.setTimeout(() => resolve(null), ms);
-    promise
-      .then((value) => {
-        window.clearTimeout(t);
-        resolve(value);
-      })
-      .catch(() => {
-        window.clearTimeout(t);
-        resolve(null);
-      });
-  });
+async function saveCatalogCacheBounded(catalog: Catalog) {
+  await withTimeout(saveCatalogCache(catalog), SAVE_CACHE_MS);
 }
 
 async function readDeviceCatalog() {
@@ -126,7 +131,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     setSource("network");
     setUnreachable(false);
     setError(null);
-    await saveCatalogCache(next);
+    await saveCatalogCacheBounded(next);
     return next;
   }, []);
 
@@ -147,7 +152,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         return;
       }
     }
-    if (online) await flushPendingHouseWrites();
+    if (online) await withTimeout(flushPendingHouseWrites(), FLUSH_WRITES_MS);
 
     const since = force ? undefined : catalogRef.current?.updatedAt;
 
@@ -174,6 +179,11 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       if (readServerSimDown()) throw new Error("sim-down");
       const snap = await fetchJson("/catalog.json", force);
       let merged = withDeviceHouseOverlays(syncCatalog(catalogRef.current, snap));
+      setCatalog(merged);
+      setSource("snapshot");
+      setUnreachable(false);
+      setError(null);
+      void saveCatalogCacheBounded(merged);
       try {
         const live = await fetchJson("/api/catalog", false, snap.updatedAt);
         if (live.pollSeconds) {
@@ -185,14 +195,9 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         setSource("network");
         setUnreachable(false);
         setError(null);
-        await saveCatalogCache(merged);
+        await saveCatalogCacheBounded(merged);
         return;
       } catch {
-        setCatalog(merged);
-        setSource("snapshot");
-        setUnreachable(false);
-        setError(null);
-        await saveCatalogCache(merged);
         return;
       }
     } catch {
@@ -207,7 +212,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           const merged = prev && cached ? syncCatalog(cached, prev) : (prev ?? cached);
           const next = merged ? withDeviceHouseOverlays(merged) : merged;
           kept = Boolean(next);
-          if (next) void saveCatalogCache(next);
+          if (next) void saveCatalogCacheBounded(next);
           return next ?? prev;
         });
         if (kept) {
@@ -229,23 +234,27 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const cached = await readDeviceCatalog();
-      if (cached && !cancelled && !seededRef.current) {
-        setCatalog(cached);
-        setSource("cache");
-        if (catalogHasRealHouses(cached)) {
+      try {
+        const cached = await readDeviceCatalog();
+        if (cached && !cancelled && !seededRef.current) {
+          setCatalog(cached);
+          setSource("cache");
+          if (catalogHasRealHouses(cached)) {
+            setLoading(false);
+            setReady(true);
+          }
+        }
+        // Let SSR seed catalog before deciding whether mount needs a network refresh.
+        await Promise.resolve();
+        if (!cancelled && !seededRef.current) {
+          const forceFull = cacheLooksIncomplete(cached ?? catalogRef.current);
+          await withTimeout(refresh(forceFull), BOOTSTRAP_REFRESH_MS);
+        }
+      } finally {
+        if (!cancelled) {
           setLoading(false);
           setReady(true);
         }
-      }
-      // Let SSR seed catalog before deciding whether mount needs a network refresh.
-      await Promise.resolve();
-      if (!cancelled && !seededRef.current) {
-        await refresh(false);
-      }
-      if (!cancelled) {
-        setLoading(false);
-        setReady(true);
       }
     })();
 

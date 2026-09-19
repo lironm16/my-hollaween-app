@@ -1,4 +1,4 @@
-const CACHE = "hw-shell-v101";
+const CACHE = "hw-shell-v102";
 const TILE_CACHE = "hw-tiles-v7";
 const PRECACHE = [
   "/offline.html",
@@ -182,7 +182,7 @@ async function navigation(request) {
 async function networkFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
   try {
-    const res = await fetch(request);
+    const res = await fetchWithTimeout(request, 8000);
     if (res && res.ok) cache.put(request, res.clone());
     return res;
   } catch {
@@ -209,6 +209,13 @@ async function staleWhileRevalidate(request, cacheName) {
     })
     .catch(() => undefined);
   return cached || network || new Response("לא מקוון", { status: 503, statusText: "Offline" });
+}
+
+function fetchWithTimeout(request, ms) {
+  return Promise.race([
+    fetch(request),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ms)),
+  ]);
 }
 
 async function cacheFirst(request, cacheName) {
