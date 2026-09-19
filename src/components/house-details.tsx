@@ -78,31 +78,7 @@ function HouseComments({
     <div className="space-y-1">
       <div
         ref={clampRef}
-        role={onReadMore ? "button" : undefined}
-        tabIndex={onReadMore ? 0 : undefined}
-        className={cn(
-          "text-base leading-relaxed [overflow-wrap:anywhere]",
-          "line-clamp-2",
-          onReadMore && "cursor-pointer",
-        )}
-        onClick={
-          onReadMore
-            ? (event) => {
-                event.stopPropagation();
-                onReadMore();
-              }
-            : undefined
-        }
-        onKeyDown={
-          onReadMore
-            ? (event) => {
-                if (event.key !== "Enter" && event.key !== " ") return;
-                event.preventDefault();
-                event.stopPropagation();
-                onReadMore();
-              }
-            : undefined
-        }
+        className="text-base leading-relaxed [overflow-wrap:anywhere] line-clamp-2"
       >
         {notes ? <span className="block text-amber-200/90">הערה: {notes}</span> : null}
         {description ? (
@@ -122,8 +98,6 @@ function HouseComments({
         >
           קרא עוד
         </button>
-      ) : onReadMore ? (
-        <span className="sr-only">לחצו על הכרטיס לפרטים מלאים</span>
       ) : null}
     </div>
   );

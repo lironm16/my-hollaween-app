@@ -71,34 +71,32 @@ export function HouseCard({
       className={cn(
         "house-list-card overflow-visible bg-[#1d1028]/90 text-base",
         visited ? "is-visited ring-0" : "border-orange-500/15",
-        interactive && "transition hover:bg-[#261536]",
+        interactive && "cursor-pointer transition hover:bg-[#261536]",
         interactive && !visited && "hover:border-orange-400/50",
       )}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-label={interactive ? "פתיחת פרטי הבית" : undefined}
+      onClick={
+        interactive
+          ? (event) => {
+              if (isCardInteractive(event.target)) return;
+              open();
+            }
+          : undefined
+      }
+      onKeyDown={
+        interactive
+          ? (event) => {
+              if (event.key !== "Enter" && event.key !== " ") return;
+              if (isCardInteractive(event.target)) return;
+              event.preventDefault();
+              open();
+            }
+          : undefined
+      }
     >
-      <div
-        className={cn("px-3 pb-1 pt-2", interactive && "cursor-pointer")}
-        role={interactive ? "button" : undefined}
-        tabIndex={interactive ? 0 : undefined}
-        aria-label={interactive ? "פתיחת פרטי הבית" : undefined}
-        onClick={
-          interactive
-            ? (event) => {
-                if (isCardInteractive(event.target)) return;
-                open();
-              }
-            : undefined
-        }
-        onKeyDown={
-          interactive
-            ? (event) => {
-                if (event.key !== "Enter" && event.key !== " ") return;
-                if (isCardInteractive(event.target)) return;
-                event.preventDefault();
-                open();
-              }
-            : undefined
-        }
-      >
+      <div className="px-3 pb-1 pt-2">
         {skipped ? (
           <HouseSkippedBanner meta={skipMeta} onRestore={onRestoreRoute} />
         ) : null}
