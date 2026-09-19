@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" role="img" aria-label="оск дцмзд тн чег тшйлд">
+  <rect width="390" height="780" fill="#12081a"/>
+  <rect x="24" y="160" width="342" height="460" rx="20" fill="#1d1028" stroke="#f97316" stroke-opacity="0.35"/>
+  <circle cx="195" cy="220" r="28" fill="#22c55e"/>
+  <path d="M182 220 L192 232 L212 208" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="195" y="280" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="22" font-weight="700" text-anchor="middle">дбйъ рщош!</text>
+  <text x="195" y="320" fill="#ddd6fe" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="middle">чег тшйлд (6 сфшеъ)</text>
+  <rect x="48" y="340" width="294" height="56" rx="12" fill="#0a0610" stroke="#f97316" stroke-opacity="0.25"/>
+  <text x="195" y="375" fill="#fed7aa" font-family="monospace" font-size="28" letter-spacing="6" text-anchor="middle">218281</text>
+  <text x="195" y="430" fill="#a78bfa" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="middle">щоше аъ дчег  мтшйлеъ тъйгйеъ</text>
+  <rect x="95" y="460" width="200" height="44" rx="12" fill="#f97316"/>
+  <text x="195" y="488" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="16" font-weight="700" text-anchor="middle">дощк</text>
+</svg>
