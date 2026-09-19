@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { formatMapsAddress } from "@/lib/config";
-import { houseMapsUrl, houseSharePath, houseShareUrl } from "@/lib/nav-links";
+import { houseMapsUrl, houseSharePath, houseSharePayload, houseShareUrl } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
 
 function stub(overrides: Partial<PublicHouse> = {}): PublicHouse {
@@ -77,5 +77,27 @@ describe("houseSharePath", () => {
 describe("houseShareUrl", () => {
   it("returns the path when window is unavailable", () => {
     assert.equal(houseShareUrl(stub({ id: "בית-test" })), "/house/%D7%91%D7%99%D7%AA-test");
+  });
+
+  it("builds an absolute url when origin is provided", () => {
+    assert.equal(
+      houseShareUrl(stub({ id: "בית-6895" }), "https://my-hollaween-app.vercel.app"),
+      "https://my-hollaween-app.vercel.app/house/%D7%91%D7%99%D7%AA-6895",
+    );
+  });
+});
+
+describe("houseSharePayload", () => {
+  it("includes the full link in share text for reliable copy", () => {
+    const payload = houseSharePayload(
+      stub({ id: "בית-6895", address: "אסף 24" }),
+      "https://my-hollaween-app.vercel.app",
+    );
+    assert.equal(
+      payload.url,
+      "https://my-hollaween-app.vercel.app/house/%D7%91%D7%99%D7%AA-6895",
+    );
+    assert.match(payload.text, /https:\/\/my-hollaween-app\.vercel\.app\/house\//);
+    assert.match(payload.text, /אסף 24/);
   });
 });

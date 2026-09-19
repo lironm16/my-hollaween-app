@@ -17,17 +17,26 @@ export function houseSharePath(house: PublicHouse) {
   return `/house/${encodeURIComponent(house.id)}`;
 }
 
-export function houseShareUrl(house: PublicHouse) {
-  if (typeof window === "undefined") return houseSharePath(house);
-  return `${window.location.origin}${houseSharePath(house)}`;
+export function houseShareUrl(house: PublicHouse, origin?: string) {
+  const path = houseSharePath(house);
+  if (origin) return `${origin.replace(/\/$/, "")}${path}`;
+  if (typeof window === "undefined") return path;
+  return `${window.location.origin}${path}`;
+}
+
+/** Web Share payload — full URL in `text` so iOS “Copy” gets the link, not just the slug. */
+export function houseSharePayload(house: PublicHouse, origin?: string) {
+  const url = houseShareUrl(house, origin);
+  const title = houseHeadline(house);
+  const address = formatDisplayAddress(house);
+  const text = address ? `${title}\n${address}\n${url}` : `${title}\n${url}`;
+  return { title, text, url };
 }
 
 export async function shareHouse(
   house: PublicHouse,
 ): Promise<"shared" | "copied" | "aborted" | "failed"> {
-  const url = houseShareUrl(house);
-  const title = houseHeadline(house);
-  const text = formatDisplayAddress(house);
+  const { title, text, url } = houseSharePayload(house);
   try {
     if (navigator.share) {
       await navigator.share({ title, text, url });
