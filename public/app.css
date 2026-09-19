@@ -1634,9 +1634,6 @@
   .ps-2\.5 {
     padding-inline-start: calc(var(--spacing) * 2.5);
   }
-  .ps-4 {
-    padding-inline-start: calc(var(--spacing) * 4);
-  }
   .ps-5 {
     padding-inline-start: calc(var(--spacing) * 5);
   }
@@ -1651,9 +1648,6 @@
   }
   .pe-8 {
     padding-inline-end: calc(var(--spacing) * 8);
-  }
-  .pe-14 {
-    padding-inline-end: calc(var(--spacing) * 14);
   }
   .pt-1 {
     padding-top: var(--spacing);
@@ -1780,6 +1774,10 @@
   .tracking-\[0\.2em\] {
     --tw-tracking: 0.2em;
     letter-spacing: 0.2em;
+  }
+  .tracking-\[0\.25em\] {
+    --tw-tracking: 0.25em;
+    letter-spacing: 0.25em;
   }
   .tracking-\[0\.35em\] {
     --tw-tracking: 0.35em;
