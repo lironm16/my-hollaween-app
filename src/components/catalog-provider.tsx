@@ -188,11 +188,15 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         await saveCatalogCache(merged);
         return;
       } catch {
-        setCatalog(merged);
+        setCatalog((prev) => {
+          const next = merged;
+          if (prev && catalogHasRealHouses(prev) && !catalogHasRealHouses(next)) return prev;
+          return next;
+        });
         setSource("snapshot");
         setUnreachable(false);
         setError(null);
-        await saveCatalogCache(merged);
+        if (catalogHasRealHouses(merged)) await saveCatalogCache(merged);
         return;
       }
     } catch {

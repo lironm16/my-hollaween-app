@@ -57,7 +57,12 @@ import {
   writeHomeView,
   type HomeView,
 } from "@/lib/home-view";
-import { HOUSE_SET_LABELS, countSkippedInSet, houseMatchesSet } from "@/lib/house-set";
+import {
+  catalogHasRealHouses,
+  HOUSE_SET_LABELS,
+  countSkippedInSet,
+  houseMatchesSet,
+} from "@/lib/house-set";
 import { filterHouses, houseFilterMismatchReasons, routeHouseIds } from "@/lib/filter-houses";
 import { formatDistance } from "@/lib/geo";
 import { isRouteFullyVisited } from "@/lib/route-completion";
@@ -144,14 +149,22 @@ export function NeighborhoodApp({
     admin,
     adminHouses,
   });
+  const lastHousesRef = useRef<PublicHouse[]>([]);
+  const displayHouses = useMemo(() => {
+    if (houses.length > 0) {
+      lastHousesRef.current = houses;
+      return houses;
+    }
+    return lastHousesRef.current.length > 0 ? lastHousesRef.current : houses;
+  }, [houses]);
 
   const housesForSkipCount = useMemo(() => {
-    const byId = new Map(houses.map((house) => [house.id, house]));
+    const byId = new Map(displayHouses.map((house) => [house.id, house]));
     for (const house of catalog?.houses ?? []) {
       if (!byId.has(house.id)) byId.set(house.id, house);
     }
     return [...byId.values()];
-  }, [houses, catalog?.houses]);
+  }, [displayHouses, catalog?.houses]);
 
   const filterContext = useMemo(
     () => ({
@@ -165,10 +178,15 @@ export function NeighborhoodApp({
   );
 
   const mapHouses = useMemo(
-    () => houses.filter((house) => houseMatchesSet(house, activeHouseSet)),
-    [houses, activeHouseSet],
+    () => displayHouses.filter((house) => houseMatchesSet(house, activeHouseSet)),
+    [displayHouses, activeHouseSet],
   );
-  const visible = useMemo(() => filterHouses(houses, filters, filterContext), [houses, filters, filterContext]);
+  const visible = useMemo(
+    () => filterHouses(displayHouses, filters, filterContext),
+    [displayHouses, filters, filterContext],
+  );
+  const showBootstrapSpinner =
+    !ready && visible.length === 0 && !catalogHasRealHouses(catalog) && displayHouses.length === 0;
   const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
   const filterDimActive = matchedIds.size < mapHouses.length;
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
@@ -613,7 +631,7 @@ export function NeighborhoodApp({
         className="relative z-0 min-h-0 flex-1 isolate overflow-hidden"
         style={{ flex: 1, minHeight: 0, position: "relative" }}
       >
-        {!ready && visible.length === 0 ? (
+        {showBootstrapSpinner ? (
           <div className="flex h-full items-center justify-center text-orange-200">
             מדליקים דלעות…
           </div>
