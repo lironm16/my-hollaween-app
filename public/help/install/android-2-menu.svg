@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" role="img" aria-label="ъфшйи Chrome">
+  <rect width="390" height="780" fill="#12081a"/>
+  <rect y="0" width="390" height="56" fill="#292929"/>
+  <rect x="60" y="14" width="270" height="28" rx="14" fill="#1a1a1a"/>
+  <circle cx="340" cy="28" r="4" fill="#fff"/>
+  <circle cx="352" cy="28" r="4" fill="#fff"/>
+  <circle cx="364" cy="28" r="4" fill="#fff"/>
+  <rect x="318" y="4" width="48" height="48" rx="24" fill="none" stroke="#f97316" stroke-width="2"/>
+  <rect x="200" y="64" width="180" height="220" rx="12" fill="#fff" stroke="#ccc"/>
+  <text x="360" y="100" fill="#333" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="end">десу моск дбйъ</text>
+  <rect x="210" y="88" width="160" height="28" rx="6" fill="#f97316" fill-opacity="0.15"/>
+  <text x="360" y="135" fill="#333" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="end">дъчп афмйчцйд</text>
+  <text x="360" y="170" fill="#333" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="end">дйсиешйд</text>
+  <text x="330" y="52" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="12">ю</text>
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" role="img" aria-label="ъфшйи тн лфъеш десфд">
+  <rect width="390" height="780" fill="#12081a"/>
+  <rect y="0" width="390" height="52" fill="#14091c"/>
+  <text x="195" y="32" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">HallowHood</text>
+  <rect x="0" y="52" width="280" height="728" fill="#0f0814" fill-opacity="0.95"/>
+  <text x="240" y="100" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="20" font-weight="700" text-anchor="end">ъфшйи</text>
+  <text x="240" y="150" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="18" text-anchor="end">офд</text>
+  <text x="240" y="195" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="18" text-anchor="end">шщйод</text>
+  <rect x="40" y="220" width="200" height="36" rx="8" fill="#f97316" fill-opacity="0.15"/>
+  <text x="240" y="244" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="18" font-weight="700" text-anchor="end">бйъ</text>
+  <text x="220" y="290" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="16" text-anchor="end">десфд</text>
+  <text x="220" y="330" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="16" text-anchor="end">тшйлд</text>
+  <path d="M260 280 L310 280" stroke="#a78bfa" stroke-width="2" marker-end="url(#a)"/>
+  <text x="260" y="272" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="12">бзше десфд</text>
+  <defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#a78bfa"/></marker></defs>
+</svg>
