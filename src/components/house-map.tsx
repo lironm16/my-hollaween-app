@@ -58,7 +58,11 @@ function saveMapTheme(theme: "dark" | "light") {
 
 function tileUrlFor(theme: "dark" | "light") {
   if (config.tiles.invert) return config.tiles.url;
-  return theme === "light" ? config.tiles.url.replace("/dark_all/", "/light_all/") : config.tiles.url;
+  const light =
+    "lightUrl" in config.tiles && config.tiles.lightUrl
+      ? config.tiles.lightUrl
+      : config.tiles.url.replace("/dark_all/", "/light_all/");
+  return theme === "light" ? light : config.tiles.url;
 }
 
 function routeBadgeHtml(order: number) {
@@ -696,6 +700,11 @@ export function HouseMap({
           attribution={config.tiles.attribution}
           url={tileUrl}
           key={tileUrl}
+          subdomains={
+            "subdomains" in config.tiles && config.tiles.subdomains
+              ? config.tiles.subdomains
+              : "abc"
+          }
           maxZoom={config.map.maxZoom}
           maxNativeZoom={config.tiles.maxNativeZoom}
           updateWhenZooming={false}

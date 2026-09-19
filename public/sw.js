@@ -1,5 +1,5 @@
 const CACHE = "hw-shell-v109";
-const TILE_CACHE = "hw-tiles-v7";
+const TILE_CACHE = "hw-tiles-v8";
 const PRECACHE = [
   "/offline.html",
   "/catalog.json",

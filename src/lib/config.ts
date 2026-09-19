@@ -4,11 +4,14 @@ const latPad = 0.0075;
 const lngPad = 0.014;
 
 const tiles = {
-  // OSM Standard: classic street drawing, Hebrew names where OSM has them.
-  // Dark look is the older invert (same recipe as the OSM France era).
-  url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  invert: true,
+  // CARTO basemaps — allowed for production apps. (tile.openstreetmap.org blocks
+  // PWA / service-worker traffic without Referer, which showed a blank gray map.)
+  url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+  lightUrl: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+  subdomains: "abcd",
+  attribution:
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  invert: false,
   maxNativeZoom: 19,
 } as const;
 
