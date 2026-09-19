@@ -1,4 +1,4 @@
-const CACHE = "hw-shell-v107";
+const CACHE = "hw-shell-v108";
 const TILE_CACHE = "hw-tiles-v7";
 const PRECACHE = [
   "/offline.html",
@@ -38,9 +38,7 @@ self.addEventListener("message", (event) => {
 });
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting()),
-  );
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)));
 });
 
 self.addEventListener("activate", (event) => {
@@ -156,27 +154,49 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
+async function cachedDocument(cache, request) {
+  return (await cache.match(request)) || (await cache.match("/"));
+}
+
+async function offlineDocument(cache) {
+  return (
+    (await cache.match("/offline.html")) ||
+    new Response(
+      "<!doctype html><meta charset=utf-8><title>לא מקוון</title><p dir=rtl>אין קשר לשרת. פתחו את האפליקציה פעם אחת כשיש רשת כדי לשמור את רשימת הבתים בטלפון.</p>",
+      { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
+    )
+  );
+}
+
+/** Cache-first for HTML: instant PWA reopen; refresh in background when online. */
 async function navigation(request) {
-  try {
-    const res = await fetch(request);
-    if (res && res.ok) {
-      const cache = await caches.open(CACHE);
-      cache.put(request, res.clone());
-      const path = new URL(request.url).pathname;
-      if (path === "/" || path === "") cache.put("/", res.clone());
-    }
-    return res;
-  } catch {
-    const cache = await caches.open(CACHE);
-    return (
-      (await cache.match(request)) ||
-      (await cache.match("/")) ||
-      new Response(
-        "<!doctype html><meta charset=utf-8><title>לא מקוון</title><p dir=rtl>אין קשר לשרת. פתחו את האפליקציה פעם אחת כשיש רשת כדי לשמור את רשימת הבתים בטלפון.</p>",
-        { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
-      )
-    );
+  const cache = await caches.open(CACHE);
+  const cached = await cachedDocument(cache, request);
+
+  const refresh = fetch(request)
+    .then(async (res) => {
+      if (res && res.ok) {
+        await cache.put(request, res.clone());
+        const path = new URL(request.url).pathname;
+        if (path === "/" || path === "") await cache.put("/", res.clone());
+      }
+      return res;
+    })
+    .catch(() => null);
+
+  if (cached) {
+    void refresh;
+    return cached;
   }
+
+  try {
+    const res = await refresh;
+    if (res && res.ok) return res;
+  } catch {
+    /* fall through */
+  }
+
+  return offlineDocument(cache);
 }
 
 async function networkFirst(request, cacheName) {
@@ -184,19 +204,20 @@ async function networkFirst(request, cacheName) {
   try {
     const res = await fetch(request);
     if (res && res.ok) cache.put(request, res.clone());
-    return res;
+    if (res && res.ok) return res;
   } catch {
-    const cached = await cache.match(request);
-    if (cached) return cached;
-    if (new URL(request.url).pathname === "/api/catalog") {
-      const snap = await cache.match("/catalog.json");
-      if (snap) return snap;
-    }
-    return new Response(JSON.stringify({ updatedAt: "", neighborhood: "", houses: [] }), {
-      status: 503,
-      headers: { "Content-Type": "application/json; charset=utf-8" },
-    });
+    /* fall through */
   }
+  const cached = await cache.match(request);
+  if (cached) return cached;
+  if (new URL(request.url).pathname === "/api/catalog") {
+    const snap = await cache.match("/catalog.json");
+    if (snap) return snap;
+  }
+  return new Response(JSON.stringify({ updatedAt: "", neighborhood: "", houses: [] }), {
+    status: 200,
+    headers: { "Content-Type": "application/json; charset=utf-8" },
+  });
 }
 
 async function staleWhileRevalidate(request, cacheName) {
@@ -208,14 +229,27 @@ async function staleWhileRevalidate(request, cacheName) {
       return res;
     })
     .catch(() => undefined);
-  return cached || network || new Response("לא מקוון", { status: 503, statusText: "Offline" });
+  if (cached) {
+    void network;
+    return cached;
+  }
+  const res = await network;
+  if (res) return res;
+  return new Response("לא מקוון", { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8" } });
 }
 
 async function cacheFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
   if (cached) return cached;
-  const res = await fetch(request);
-  if (res && res.ok) cache.put(request, res.clone());
-  return res;
+  try {
+    const res = await fetch(request);
+    if (res && res.ok) {
+      cache.put(request, res.clone());
+      return res;
+    }
+  } catch {
+    /* fall through */
+  }
+  return cached || new Response("", { status: 200, headers: { "Content-Type": "application/javascript" } });
 }
