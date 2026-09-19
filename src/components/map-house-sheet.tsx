@@ -91,6 +91,7 @@ export function MapHouseSheet({
   const labelId = useId();
   const sheetRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const detailScrollRef = useRef<HTMLDivElement>(null);
   const naturalH = useRef(0);
   const drag = useRef<{ y: number; h: number; moved: boolean } | null>(null);
   const liveH = useRef(0);
@@ -111,7 +112,13 @@ export function MapHouseSheet({
   const canPrevCluster = clusterIndex != null && clusterIndex > 1;
   const canNextCluster =
     clusterIndex != null && clusterIndex < clusterHouses.length;
+  const clusterDetail = multi && !overview;
   const displayH = overview ? (dragH ?? sheetH) : (dragH ?? sheetH ?? openH);
+
+  function scrollSheetContentTop() {
+    bodyRef.current?.scrollTo(0, 0);
+    detailScrollRef.current?.scrollTo(0, 0);
+  }
   const clusterNow = now ?? new Date();
   const isSkipped = skippedIds ?? (() => false);
   const isFilteredOut = filteredOutIds ?? (() => false);
@@ -175,7 +182,7 @@ export function MapHouseSheet({
     setOpenH(0);
     sheetOpenRef.current = false;
     detailHeightLockedRef.current = false;
-    bodyRef.current?.scrollTo(0, 0);
+    scrollSheetContentTop();
     if (overview) {
       const cap = measureOverviewHeight();
       naturalH.current = cap;
@@ -191,10 +198,10 @@ export function MapHouseSheet({
   useLayoutEffect(() => {
     if (overview) return;
     if (detailHeightLockedRef.current) {
-      bodyRef.current?.scrollTo(0, 0);
+      scrollSheetContentTop();
       return;
     }
-    bodyRef.current?.scrollTo(0, 0);
+    scrollSheetContentTop();
     const next = measureFitHeight();
     if (next == null) return;
     naturalH.current = next;
@@ -213,7 +220,7 @@ export function MapHouseSheet({
 
   useLayoutEffect(() => {
     if (overview || !detailHeightLockedRef.current) return;
-    bodyRef.current?.scrollTo(0, 0);
+    scrollSheetContentTop();
   }, [house.id, overview]);
 
   useEffect(() => {
@@ -368,7 +375,10 @@ export function MapHouseSheet({
           <div className="map-house-sheet-handle" />
         </div>
       </div>
-      <div ref={bodyRef} className="map-house-sheet-body">
+      <div
+        ref={bodyRef}
+        className={cn("map-house-sheet-body", clusterDetail && "is-cluster-detail")}
+      >
         {overview ? (
           <div id={labelId} className="map-house-sheet-cluster flex min-h-0 flex-1 flex-col">
             <div className="map-house-sheet-cluster-head shrink-0">
@@ -397,59 +407,71 @@ export function MapHouseSheet({
             <span id={labelId} className="sr-only">
               {houseHeadline(house)}
             </span>
-            <div className="map-house-sheet-cards">
-              <ClusterHouseSwipeArea
-                canPrev={canPrevCluster}
-                canNext={canNextCluster}
-                onPrev={() => onAdjacentClusterHouse?.(-1)}
-                onNext={() => onAdjacentClusterHouse?.(1)}
-              >
-                <section
-                  className={cn(
-                    "map-house-sheet-card is-on",
-                    visited?.(house.id) && "is-visited",
-                  )}
-                >
-                  {multi && clusterIndex != null ? (
-                    <ClusterHouseNav
-                      houses={clusterHouses}
-                      selectedId={house.id}
-                      onPrev={() => onAdjacentClusterHouse?.(-1)}
-                      onNext={() => onAdjacentClusterHouse?.(1)}
-                      onBack={() => onBackToClusterOverview?.()}
-                    />
-                  ) : null}
-                  <FilterMismatchNotice
-                    reasons={filterMismatchReasons}
-                    skipMeta={skipMeta}
-                    onRestoreRoute={onRestoreRoute}
+            <div
+              className={cn(
+                "map-house-sheet-cards",
+                clusterDetail && "map-house-sheet-cluster-detail",
+              )}
+            >
+              {clusterDetail && clusterIndex != null ? (
+                <div className="map-house-sheet-cluster-head shrink-0">
+                  <ClusterHouseNav
+                    houses={clusterHouses}
+                    selectedId={house.id}
+                    onPrev={() => onAdjacentClusterHouse?.(-1)}
+                    onNext={() => onAdjacentClusterHouse?.(1)}
+                    onBack={() => onBackToClusterOverview?.()}
                   />
-                  {editing ? (
-                    <>
-                      <p className="map-house-sheet-kicker">{houseHeadline(house)}</p>
-                      <CodesCopy
-                        editCode={editCodeFor?.(house.id) ?? managerEditCode}
-                      />
-                      {extra}
-                    </>
-                  ) : (
-                    <HouseDetails
-                      house={house}
-                      catalogSource={catalogSource}
-                      liked={liked?.(house.id)}
-                      onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-                      visited={visited?.(house.id)}
-                      onToggleVisited={
-                        onToggleVisited ? () => onToggleVisited(house.id) : undefined
-                      }
-                      extra={extra}
-                      chrome="sheet"
-                      index={index}
-                      headerMenu={actionMenu}
+                </div>
+              ) : null}
+              <div
+                ref={clusterDetail ? detailScrollRef : undefined}
+                className={cn(clusterDetail && "map-house-sheet-detail-scroll")}
+              >
+                <ClusterHouseSwipeArea
+                  canPrev={canPrevCluster}
+                  canNext={canNextCluster}
+                  onPrev={() => onAdjacentClusterHouse?.(-1)}
+                  onNext={() => onAdjacentClusterHouse?.(1)}
+                >
+                  <section
+                    className={cn(
+                      "map-house-sheet-card is-on",
+                      visited?.(house.id) && "is-visited",
+                    )}
+                  >
+                    <FilterMismatchNotice
+                      reasons={filterMismatchReasons}
+                      skipMeta={skipMeta}
+                      onRestoreRoute={onRestoreRoute}
                     />
-                  )}
-                </section>
-              </ClusterHouseSwipeArea>
+                    {editing ? (
+                      <>
+                        <p className="map-house-sheet-kicker">{houseHeadline(house)}</p>
+                        <CodesCopy
+                          editCode={editCodeFor?.(house.id) ?? managerEditCode}
+                        />
+                        {extra}
+                      </>
+                    ) : (
+                      <HouseDetails
+                        house={house}
+                        catalogSource={catalogSource}
+                        liked={liked?.(house.id)}
+                        onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
+                        visited={visited?.(house.id)}
+                        onToggleVisited={
+                          onToggleVisited ? () => onToggleVisited(house.id) : undefined
+                        }
+                        extra={extra}
+                        chrome="sheet"
+                        index={index}
+                        headerMenu={actionMenu}
+                      />
+                    )}
+                  </section>
+                </ClusterHouseSwipeArea>
+              </div>
             </div>
           </>
         )}
