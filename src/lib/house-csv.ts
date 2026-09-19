@@ -299,9 +299,9 @@ function triggerDownload(filename: string, blob: Blob) {
 
 export function csvFilename(kind: "liked" | "list" | "all") {
   const day = new Date().toISOString().slice(0, 10);
-  if (kind === "liked") return `spookyhouzz-saved-${day}.csv`;
-  if (kind === "all") return `spookyhouzz-houses-${day}.csv`;
-  return `spookyhouzz-list-${day}.csv`;
+  if (kind === "liked") return `hallowhood-saved-${day}.csv`;
+  if (kind === "all") return `hallowhood-houses-${day}.csv`;
+  return `hallowhood-list-${day}.csv`;
 }
 
 export function sheetFilename(kind: "liked" | "list" | "all") {

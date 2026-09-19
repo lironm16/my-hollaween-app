@@ -150,15 +150,26 @@ export function NeighborhoodApp({
     admin,
     adminHouses,
   });
-  const lastHousesRef = useRef<PublicHouse[]>(
-    typeof window === "undefined" ? [] : (loadCatalogCacheSync()?.houses ?? []),
+  const lastHousesRef = useRef<PublicHouse[]>([]);
+  const cachedOnDevice = useSyncExternalStore(
+    () => () => {},
+    () => catalogHasRealHouses(loadCatalogCacheSync()),
+    () => false,
   );
   const displayHouses = useMemo(() => {
     if (houses.length > 0) {
       lastHousesRef.current = houses;
       return houses;
     }
-    return lastHousesRef.current.length > 0 ? lastHousesRef.current : houses;
+    if (lastHousesRef.current.length > 0) return lastHousesRef.current;
+    if (typeof window !== "undefined") {
+      const cached = loadCatalogCacheSync()?.houses;
+      if (cached?.length) {
+        lastHousesRef.current = cached;
+        return cached;
+      }
+    }
+    return houses;
   }, [houses]);
 
   const housesForSkipCount = useMemo(() => {
@@ -189,7 +200,10 @@ export function NeighborhoodApp({
     [displayHouses, filters, filterContext],
   );
   const showBootstrapSpinner =
-    !ready && visible.length === 0 && !catalogHasRealHouses(catalog) && displayHouses.length === 0;
+    !cachedOnDevice &&
+    !catalogHasRealHouses(catalog) &&
+    displayHouses.length === 0 &&
+    !ready;
   const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
   const filterDimActive = matchedIds.size < mapHouses.length;
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
@@ -628,12 +642,7 @@ export function NeighborhoodApp({
         className="relative z-0 min-h-0 flex-1 isolate overflow-hidden"
         style={{ flex: 1, minHeight: 0, position: "relative" }}
       >
-        {showBootstrapSpinner ? (
-          <div className="flex h-full items-center justify-center text-orange-200">
-            מדליקים דלעות…
-          </div>
-        ) : (
-          <>
+        <>
             <div
               className={cn(
                 "map-stage absolute inset-0 z-0 isolate",
@@ -825,8 +834,15 @@ export function NeighborhoodApp({
                   />
                 )}
             </div>
-          </>
-        )}
+          {showBootstrapSpinner ? (
+            <div
+              className="absolute inset-0 z-30 flex items-center justify-center bg-[#12081a] text-orange-200"
+              aria-live="polite"
+            >
+              מדליקים דלעות…
+            </div>
+          ) : null}
+        </>
         {houseDetailCommon && view === "list" && !originPick.originPickActive && !editFlow.flow ? (
           <HouseDetailOverlay
             {...houseDetailCommon}

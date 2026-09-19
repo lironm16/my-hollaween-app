@@ -28,7 +28,7 @@ export function EditCodeDialog({
       subtitle={houseHeadline(house)}
     >
       <div className="space-y-4">
-        <p className="text-base leading-relaxed text-violet-100">
+        <p className="text-base leading-relaxed text-violet-100 [overflow-wrap:anywhere]">
           שתפו את הקוד עם מי שצריך לערוך את הבית. אחרי הזנה פעם אחת הקוד נשמר במכשיר שלהם.
         </p>
         <div className="space-y-2">
