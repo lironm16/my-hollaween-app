@@ -1,18 +1,19 @@
 "use client";
 
 import { HelpExpandable, HelpShell, HelpStep } from "@/components/help-shell";
+import { helpImage } from "@/lib/help-images";
 
 const IPHONE_STEPS = [
   {
     title: "לחצו שיתוף",
     body: "ב-Safari, בסרגל התחתון — כפתור השיתוף (חץ למעלה מריבוע).",
-    image: "/help/install/ios-2-share.svg",
+    image: helpImage("install/ios-2-share.svg"),
     imageAlt: "כפתור שיתוף בסафari",
   },
   {
     title: "הוספה למסך הבית",
     body: "גללו ובחרו «הוספה למסך הבית» → «הוסף». האייקון יופיע במסך הבית.",
-    image: "/help/install/ios-3-add-home.svg",
+    image: helpImage("install/ios-3-add-home.svg"),
     imageAlt: "הוספה למסך הבית בתפריט השיתוף",
   },
 ] as const;
@@ -21,19 +22,19 @@ const ANDROID_STEPS = [
   {
     title: "פתחו ב-Chrome",
     body: "גלשו לאתר ב-Chrome (מומלץ).",
-    image: "/help/install/android-1-app.svg",
+    image: helpImage("install/android-1-app.svg"),
     imageAlt: "האפליקציה ב-Chrome באנדרואיד",
   },
   {
     title: "תפריט ⋮",
     body: "לחצו שלוש נקודות למעלה מימין.",
-    image: "/help/install/android-2-menu.svg",
+    image: helpImage("install/android-2-menu.svg"),
     imageAlt: "תפריט Chrome עם הוסף למסך הבית",
   },
   {
     title: "אישור הוספה",
     body: "בחרו «הוסף למסך הבית» או «התקן אפליקציה» → «הוסף».",
-    image: "/help/install/android-3-confirm.svg",
+    image: helpImage("install/android-3-confirm.svg"),
     imageAlt: "אישור הוספה למסך הבית",
   },
 ] as const;

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="фъйзъ змеп сйреп">
+  <rect width="390" height="780" fill="#12081a"/>
+  <rect y="52" width="390" height="48" fill="#12081a" stroke="#f97316" stroke-opacity="0.15"/>
+  <rect x="12" y="60" width="80" height="32" rx="8" fill="#261536"/>
+  <rect x="300" y="60" width="78" height="32" rx="8" fill="#f97316"/>
+  <text x="339" y="81" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="13" font-weight="700" text-anchor="middle">сйреп</text>
+  <rect x="24" y="130" width="342" height="520" rx="16" fill="#1d1028" stroke="#f97316" stroke-opacity="0.25"/>
+  <text x="330" y="170" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="18" font-weight="700" text-anchor="end">сйреп бъйн</text>
+  <text x="330" y="220" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="15" font-weight="600" text-anchor="end">щтеъ</text>
+  <text x="330" y="260" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="end">лм щтд З фъезйн тлщйе З оеъан</text>
+  <text x="330" y="310" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="15" font-weight="600" text-anchor="end">шоъ фзг З ооъчйн</text>
+  <text x="330" y="350" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="end">рвйщеъ З щлерд З сйоерйн</text>
+  <rect x="40" y="560" width="140" height="44" rx="12" fill="#261536" stroke="#f97316" stroke-opacity="0.3"/>
+  <text x="110" y="588" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="15" font-weight="600" text-anchor="middle">айфес</text>
+  <rect x="190" y="560" width="160" height="44" rx="12" fill="#f97316"/>
+  <text x="270" y="588" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">дцв ъецаеъ (12)</text>
+</svg>

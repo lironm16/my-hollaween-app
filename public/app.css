@@ -724,6 +724,9 @@
   .min-h-\[4rem\] {
     min-height: 4rem;
   }
+  .min-h-\[12rem\] {
+    min-height: 12rem;
+  }
   .min-h-\[280px\] {
     min-height: 280px;
   }
@@ -1525,6 +1528,9 @@
   }
   .object-center {
     object-position: center;
+  }
+  .object-top {
+    object-position: top;
   }
   .p-\(--card-spacing\) {
     padding: var(--card-spacing);

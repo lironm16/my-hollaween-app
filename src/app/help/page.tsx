@@ -14,6 +14,10 @@ const QUESTIONS = [
     href: "/help/install",
   },
   {
+    question: "איך מסננים בתים?",
+    href: "/help/filter",
+  },
+  {
     question: "איך יוצרים מסלול?",
     href: "/help/create-route",
   },

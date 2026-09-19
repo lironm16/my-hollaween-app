@@ -1,6 +1,7 @@
 "use client";
 
 import { HelpShell, HelpShot } from "@/components/help-shell";
+import { helpImage } from "@/lib/help-images";
 
 export default function EditCodeHelpPage() {
   return (
@@ -13,7 +14,7 @@ export default function EditCodeHelpPage() {
           אם איבדתם לגמרי ואין גישה מאף מכשיר — פנו ל<strong className="text-orange-200">מנהל/ת האפליקציה</strong>{" "}
           לקבלת הקוד מחדש.
         </p>
-        <HelpShot src="/help/step-3-done.svg" alt="מסך הצלחה עם קוד עריכה" />
+        <HelpShot src={helpImage("step-3-done.svg")} alt="מסך הצלחה עם קוד עריכה" />
       </div>
     </HelpShell>
   );

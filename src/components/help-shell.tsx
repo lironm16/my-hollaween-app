@@ -73,9 +73,16 @@ export function HelpExpandable({
 
 export function HelpShot({ src, alt }: { src: string; alt: string }) {
   return (
-    <div className="overflow-hidden rounded-xl ring-1 ring-orange-500/25">
+    <div className="overflow-hidden rounded-xl bg-[#12081a] ring-1 ring-orange-500/25">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt={alt} className="block w-full bg-[#12081a]" loading="lazy" />
+      <img
+        src={src}
+        alt={alt}
+        width={390}
+        height={780}
+        className="block h-auto min-h-[12rem] w-full bg-[#12081a] object-contain object-top"
+        decoding="sync"
+      />
     </div>
   );
 }

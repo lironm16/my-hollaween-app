@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="кХжРХк бЩаХЯ СийЩЮФ ХСЮбЬХЬ">
+  <rect width="390" height="780" fill="#12081a"/>
+  <rect y="52" width="390" height="48" fill="#14091c"/>
+  <rect x="300" y="60" width="78" height="32" rx="8" fill="#f97316"/>
+  <text x="339" y="81" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="13" font-weight="700" text-anchor="middle">бЩаХЯ 3</text>
+  <text x="330" y="130" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="16" font-weight="700" text-anchor="end">ийЩЮФ / ЮбЬХЬ</text>
+  <rect x="24" y="150" width="342" height="72" rx="12" fill="#1d1028" stroke="#f97316" stroke-opacity="0.3"/>
+  <text x="330" y="195" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="15" text-anchor="end">из СкЩЭ йвСиХ бЩаХЯ</text>
+  <rect x="24" y="240" width="342" height="72" rx="12" fill="#1d1028" stroke="#f97316" stroke-opacity="0.15"/>
+  <text x="330" y="285" fill="#9ca3af" font-family="Rubik,Arial,sans-serif" font-size="15" text-anchor="end">СкЩЭ РЧиЩЭ  ЬР СийЩЮФ</text>
+  <rect x="24" y="340" width="342" height="140" rx="12" fill="#261536" stroke="#a78bfa" stroke-opacity="0.25"/>
+  <text x="330" y="380" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="600" text-anchor="end">ЬФЧЦЩи СкЩЭ РдХиЩЭ?</text>
+  <text x="330" y="415" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="end">бЩаХЯ ’ йаФ зиЩШиЩХаЩЭ</text>
+  <text x="330" y="445" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="end">РХ РЩдХб ’ ФжТ кХжРХк</text>
+</svg>
