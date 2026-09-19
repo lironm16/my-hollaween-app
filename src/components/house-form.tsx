@@ -287,7 +287,7 @@ export function HouseForm({
           return;
         }
         if (isNewHouse && addedBy.trim().length < 2) {
-          toast.error("נא למלא מי מוסיף את הבית (שם המשפחה).");
+          toast.error("נא למלא מי מוסיף את הבית.");
           return;
         }
         if (decorLevel === "none" && candy !== "plenty" && candy !== "low" && !(pauseCloseEnabled && nightStatus === "stop") && initial?.visit !== "closed") {
@@ -367,14 +367,14 @@ export function HouseForm({
     >
       <FormSection title="הבית">
         {isNewHouse ? (
-          <Field label="מי מוסיף את הבית? (שם המשפחה)">
+          <Field label="מי מוסיף את הבית?">
             <Input
               required
               value={addedBy}
               minLength={2}
               maxLength={80}
               onChange={(e) => setAddedBy(e.target.value)}
-              placeholder="משפחת לוי"
+              placeholder="ישראל כהן"
               className="h-10 bg-[#1d1028]"
             />
           </Field>

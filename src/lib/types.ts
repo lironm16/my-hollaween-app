@@ -88,7 +88,7 @@ export type House = {
   editCode: string;
   createdAt: string;
   updatedAt: string;
-  /** Family / submitter name captured when the house was first added. */
+  /** Person name captured when the house was first added. */
   addedBy?: string | null;
   /** Remote document id; never sent to the public catalog. */
   storeId?: string;
