@@ -1,26 +1,27 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useEffect, type ComponentProps } from "react";
 
-export const HouseMapDynamic = dynamic(
+/** Dark map shell — no loading text; pins appear as soon as the chunk loads. */
+function MapShell() {
+  return (
+    <div
+      className="h-full min-h-[280px] w-full bg-[#1a1024]"
+      style={{ height: "100%", minHeight: 280, background: "#1a1024" }}
+      aria-hidden
+    />
+  );
+}
+
+const HouseMapLazy = dynamic(
   () => import("@/components/house-map").then((m) => m.HouseMap),
-  {
-    ssr: false,
-    loading: () => (
-      <div
-        className="flex h-full min-h-[280px] w-full items-center justify-center bg-[#1a1024] text-orange-200"
-        style={{
-          display: "flex",
-          height: "100%",
-          minHeight: 280,
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#1a1024",
-          color: "#fed7aa",
-        }}
-      >
-        טוענים את המפה…
-      </div>
-    ),
-  },
+  { ssr: false, loading: MapShell },
 );
+
+export function HouseMapDynamic(props: ComponentProps<typeof HouseMapLazy>) {
+  useEffect(() => {
+    void import("@/components/house-map");
+  }, []);
+  return <HouseMapLazy {...props} />;
+}

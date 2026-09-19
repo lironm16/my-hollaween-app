@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppNow } from "@/hooks/use-app-clock";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Circle,
   MapContainer,
@@ -651,11 +651,6 @@ export function HouseMap({
       [first.lat, first.lng] as [number, number],
     ];
   }, [routeStart, userLocation, routeStops, routeStartedFrom]);
-  const ready = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
   const [mapTheme, setMapTheme] = useState<"dark" | "light">(readMapTheme);
   const tileUrl = tileUrlFor(mapTheme);
   const osmDark = mapTheme === "dark" && config.tiles.invert;
@@ -666,21 +661,6 @@ export function HouseMap({
       saveMapTheme(next);
       return next;
     });
-  }
-
-  if (!ready) {
-    return (
-      <div
-        role="status"
-        aria-live="polite"
-        className={cn(
-          "relative z-0 isolate flex items-center justify-center overflow-hidden bg-[#1a1024] text-orange-200",
-          className ?? "h-full min-h-[280px] w-full",
-        )}
-      >
-        טוענים את המפה…
-      </div>
-    );
   }
 
   return (

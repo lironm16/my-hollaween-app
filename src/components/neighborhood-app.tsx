@@ -47,6 +47,7 @@ import { config } from "@/lib/config";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { useAppNow } from "@/hooks/use-app-clock";
 import {
+  loadCatalogCacheSync,
   notifyCatalogChanged,
   removeOwnedHouse,
   forgetPublishedHouse,
@@ -149,7 +150,9 @@ export function NeighborhoodApp({
     admin,
     adminHouses,
   });
-  const lastHousesRef = useRef<PublicHouse[]>([]);
+  const lastHousesRef = useRef<PublicHouse[]>(
+    typeof window === "undefined" ? [] : (loadCatalogCacheSync()?.houses ?? []),
+  );
   const displayHouses = useMemo(() => {
     if (houses.length > 0) {
       lastHousesRef.current = houses;
