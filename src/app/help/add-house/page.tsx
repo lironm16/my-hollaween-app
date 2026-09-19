@@ -17,19 +17,19 @@ const STEPS: Array<{
   {
     title: "פתחו הוספה",
     body: "תפריט ☰ → בית → הוספה.",
-    image: helpImage("step-1-menu.svg"),
+    image: helpImage("step-1-menu.png"),
     imageAlt: "תפריט עם כפתור הוספה",
   },
   {
     title: "שם וכתובת",
     body: "שם הבית וכתובת אמיתית מהרשימה.",
-    image: helpImage("step-2-form.svg"),
+    image: helpImage("step-2-form.png"),
     imageAlt: "שם וכתובת בטופס",
   },
   {
     title: "שעות, ממתקים, פחד",
     body: "שעות ב־31 באוקטובר, רמת פחד, וממתקים — לפחות קישוטים או ממתקים.",
-    image: helpImage("step-3-details.svg"),
+    image: helpImage("step-3-details.png"),
     imageAlt: "שעות, ממתקים ורמת פחד",
   },
   {
@@ -42,7 +42,7 @@ const STEPS: Array<{
         לתת הרשאת עריכה ע״י שיתוף קוד העריכה — אחרי הזנה פעם אחת נשמר גם אצלם.
       </>
     ),
-    image: helpImage("step-3-done.svg"),
+    image: helpImage("step-3-done.png"),
     imageAlt: "מסך הצלחה עם קוד עריכה",
     action: (
       <div className="flex flex-col gap-2">

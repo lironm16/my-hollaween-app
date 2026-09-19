@@ -16,7 +16,7 @@ const STEPS = [
         ומרחק ההליכה לכל עצירה. במפה — את הקו הכתום ואת כל הבתים על המפה.
       </>
     ),
-    image: helpImage("route-during-exit.svg"),
+    image: helpImage("route-during-exit.png"),
     imageAlt: "מעבר בין מפה לרשימה במסלול",
   },
   {
@@ -27,7 +27,7 @@ const STEPS = [
         (מספר הבתים) מציג מרחק כולל, זמן משוער וכמה דילגתם.
       </>
     ),
-    image: helpImage("route-during-map.svg"),
+    image: helpImage("route-during-map.png"),
     imageAlt: "קו מסלול על המפה",
   },
   {
@@ -41,7 +41,7 @@ const STEPS = [
         בנפרד — אפשר להחזיר למסלול.
       </>
     ),
-    image: helpImage("route-during-actions.svg"),
+    image: helpImage("route-during-actions.png"),
     imageAlt: "סימון ביקור ודילוג במסלול",
   },
   {
@@ -53,7 +53,7 @@ const STEPS = [
         (כשהוא דולק) כדי לצאת ממצב מסלול.
       </>
     ),
-    image: helpImage("route-2-origin.svg"),
+    image: helpImage("route-2-origin.png"),
     imageAlt: "שינוי נקודת התחלה",
   },
 ] as const;

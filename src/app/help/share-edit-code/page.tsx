@@ -12,7 +12,7 @@ const STEPS = [
         <strong className="text-orange-200">⋮</strong> (שלוש נקודות).
       </>
     ),
-    image: helpImage("share-edit-code-menu.svg"),
+    image: helpImage("share-edit-code-menu.png"),
     imageAlt: "תפריט פעולות — שלוש נקודות בכרטיס הבית",
   },
   {
@@ -23,7 +23,7 @@ const STEPS = [
         לבעלי הבית או למנהל.
       </>
     ),
-    image: helpImage("share-edit-code-menu.svg"),
+    image: helpImage("share-edit-code-menu.png"),
     imageAlt: "פריט קוד עריכה בתפריט הפעולות",
   },
   {
@@ -36,7 +36,7 @@ const STEPS = [
         לעריכה».
       </>
     ),
-    image: helpImage("share-edit-code-dialog.svg"),
+    image: helpImage("share-edit-code-dialog.png"),
     imageAlt: "חלון קוד עריכה עם העתיקו ושיתוף",
   },
 ] as const;
