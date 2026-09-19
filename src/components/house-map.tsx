@@ -700,6 +700,11 @@ export function HouseMap({
           attribution={config.tiles.attribution}
           url={tileUrl}
           key={tileUrl}
+          subdomains={
+            "subdomains" in config.tiles && config.tiles.subdomains
+              ? config.tiles.subdomains
+              : "abcd"
+          }
           maxZoom={config.map.maxZoom}
           maxNativeZoom={config.tiles.maxNativeZoom}
           updateWhenZooming={false}
