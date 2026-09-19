@@ -1,13 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" role="img" aria-label="оск дцмзд тн чег тшйлд">
-  <rect width="390" height="780" fill="#12081a"/>
-  <rect x="24" y="160" width="342" height="460" rx="20" fill="#1d1028" stroke="#f97316" stroke-opacity="0.35"/>
-  <circle cx="195" cy="220" r="28" fill="#22c55e"/>
-  <path d="M182 220 L192 232 L212 208" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="195" y="280" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="22" font-weight="700" text-anchor="middle">дбйъ рщош!</text>
-  <text x="195" y="320" fill="#ddd6fe" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="middle">чег тшйлд (6 сфшеъ)</text>
-  <rect x="48" y="340" width="294" height="56" rx="12" fill="#0a0610" stroke="#f97316" stroke-opacity="0.25"/>
-  <text x="195" y="375" fill="#fed7aa" font-family="monospace" font-size="28" letter-spacing="6" text-anchor="middle">218281</text>
-  <text x="195" y="430" fill="#a78bfa" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="middle">щоше аъ дчег  мтшйлеъ тъйгйеъ</text>
-  <rect x="95" y="460" width="200" height="44" rx="12" fill="#f97316"/>
-  <text x="195" y="488" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="16" font-weight="700" text-anchor="middle">дощк</text>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="&#1502;&#1505;&#1498; &#1492;&#1510;&#1500;&#1495;&#1492; &#1506;&#1501; &#1511;&#1493;&#1491; &#1506;&#1512;&#1497;&#1499;&#1492;">
+<rect width="390" height="780" fill="#12081a"/>
+  <rect y="0" width="390" height="52" fill="#14091c"/>
+  <text x="195" y="32" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">HallowHood</text>
+  <rect x="24" y="120" width="342" height="400" rx="16" fill="#1d1028" stroke="#f97316" stroke-opacity="0.35"/>
+  <text x="195" y="200" fill="#86efac" font-family="Rubik,Arial,sans-serif" font-size="40" text-anchor="middle">&#10003;</text>
+  <text x="195" y="250" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="20" font-weight="700" text-anchor="middle">&#1504;&#1513;&#1502;&#1512;!</text>
+  <text x="195" y="300" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="15" text-anchor="middle">&#1511;&#1493;&#1491; &#1506;&#1512;&#1497;&#1499;&#1492;</text>
+  <rect x="115" y="315" width="160" height="44" rx="10" fill="#14081c" stroke="#f97316" stroke-opacity="0.4"/>
+  <text x="195" y="344" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="22" font-weight="700" text-anchor="middle" letter-spacing="4">482916</text>
 </svg>

@@ -1,11 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" role="img" aria-label="‘–‰‹ŸÁÊŸ‘ —-Chrome">
-  <rect width="390" height="780" fill="#12081a"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="&#1488;&#1508;&#1500;&#1497;&#1511;&#1510;&#1497;&#1492; &#1489;-Chrome">
+<rect width="390" height="780" fill="#12081a"/>
   <rect y="0" width="390" height="56" fill="#292929"/>
-  <circle cx="36" cy="28" r="8" fill="#ea4335"/>
-  <rect x="60" y="14" width="270" height="28" rx="14" fill="#1a1a1a"/>
-  <text x="195" y="33" fill="#ddd" font-family="Rubik,Arial,sans-serif" font-size="12" text-anchor="middle">my-hollaween-app.vercel.app</text>
-  <rect x="16" y="72" width="358" height="660" rx="4" fill="#1d1028"/>
-  <text x="195" y="130" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="20" font-weight="700" text-anchor="middle">HallowHood</text>
-  <text x="195" y="170" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="middle">ﬁ‰Í ‘—ÍŸ› —È€’‡‘</text>
-  <rect x="40" y="200" width="310" height="400" rx="12" fill="#0f0814" stroke="#f97316" stroke-opacity="0.2"/>
+  <text x="195" y="36" fill="#fff" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="middle">my-hollaween-app.vercel.app</text>
+  <text x="195" y="200" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="22" font-weight="700" text-anchor="middle">HallowHood</text>
 </svg>

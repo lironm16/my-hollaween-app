@@ -1,26 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" role="img" aria-label="????? ?????? ?????? ???">
-  <rect width="390" height="780" fill="#12081a"/>
-  <rect y="0" width="390" height="44" fill="#14091c"/>
-  <text x="195" y="28" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">HallowHood</text>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="&#1514;&#1508;&#1512;&#1497;&#1496; &#1508;&#1506;&#1493;&#1500;&#1493;&#1514; &#1506;&#1501; &#1511;&#1493;&#1491; &#1506;&#1512;&#1497;&#1499;&#1492;">
+<rect width="390" height="780" fill="#12081a"/>
+  <rect y="0" width="390" height="52" fill="#14091c"/>
+  <text x="195" y="32" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">HallowHood</text>
   <rect x="16" y="56" width="358" height="220" rx="16" fill="#1d1028" stroke="#f97316" stroke-opacity="0.2"/>
-  <circle cx="48" cy="82" r="14" fill="#f97316"/>
-  <text x="48" y="87" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="12" font-weight="700" text-anchor="middle">1</text>
-  <text x="320" y="88" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="18" font-weight="700" text-anchor="end">??? ??????</text>
+  <text x="320" y="88" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="18" font-weight="700" text-anchor="end">&#1489;&#1497;&#1514; &#1492;&#1491;&#1500;&#1506;&#1493;&#1514;</text>
   <rect x="36" y="98" width="28" height="28" rx="14" fill="#2a1638" stroke="#f97316" stroke-opacity="0.35"/>
-  <text x="50" y="117" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="16" text-anchor="middle">?</text>
-  <rect x="190" y="72" width="188" height="248" rx="14" fill="#160b20" stroke="#f97316" stroke-opacity="0.35"/>
-  <text x="284" y="108" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="16" text-anchor="middle">?????</text>
-  <text x="284" y="148" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="16" text-anchor="middle">?????</text>
-  <text x="284" y="188" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="16" text-anchor="middle">?????</text>
-  <text x="284" y="228" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="16" text-anchor="middle">?????</text>
-  <rect x="208" y="212" width="152" height="28" rx="8" fill="#f97316" fill-opacity="0.15"/>
-  <text x="284" y="236" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="16" font-weight="700" text-anchor="middle">??? ?????</text>
-  <text x="284" y="276" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="16" text-anchor="middle">??? ????</text>
+  <text x="50" y="117" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="16" text-anchor="middle">&#8942;</text>
+  <rect x="190" y="72" width="188" height="200" rx="14" fill="#160b20" stroke="#f97316" stroke-opacity="0.35"/>
+  <rect x="208" y="180" width="152" height="28" rx="8" fill="#f97316" fill-opacity="0.25"/>
+  <text x="284" y="199" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="15" font-weight="700" text-anchor="middle">&#1511;&#1493;&#1491; &#1506;&#1512;&#1497;&#1499;&#1492;</text>
   <path d="M72 120 L120 120" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrow)"/>
-  <text x="72" y="112" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="13">???? ?</text>
-  <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L6,3 L0,6 Z" fill="#c4b5fd"/>
-    </marker>
-  </defs>
+  <text x="120" y="112" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="end">&#1500;&#1495;&#1510;&#1493; &#8942;</text>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#a78bfa"/></marker></defs>
 </svg>

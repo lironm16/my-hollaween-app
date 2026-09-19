@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="кХжРХк бЩаХЯ СийЩЮФ ХСЮбЬХЬ">
-  <rect width="390" height="780" fill="#12081a"/>
-  <rect y="52" width="390" height="48" fill="#14091c"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="&#1514;&#1493;&#1510;&#1488;&#1493;&#1514; &#1505;&#1497;&#1504;&#1493;&#1503;">
+<rect width="390" height="780" fill="#12081a"/>
+  <rect y="0" width="390" height="52" fill="#14091c"/>
+  <text x="195" y="32" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">HallowHood</text>
+  <rect y="52" width="390" height="48" fill="#12081a" stroke="#f97316" stroke-opacity="0.15"/>
+  <rect x="12" y="60" width="80" height="32" rx="8" fill="#261536"/>
   <rect x="300" y="60" width="78" height="32" rx="8" fill="#f97316"/>
-  <text x="339" y="81" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="13" font-weight="700" text-anchor="middle">бЩаХЯ 3</text>
-  <text x="330" y="130" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="16" font-weight="700" text-anchor="end">ийЩЮФ / ЮбЬХЬ</text>
+  <text x="339" y="81" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="13" font-weight="700" text-anchor="middle">&#1505;&#1497;&#1504;&#1493;&#1503;</text>
+  <text x="330" y="130" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="16" font-weight="700" text-anchor="end">&#1512;&#1513;&#1497;&#1502;&#1492; / &#1502;&#1505;&#1500;&#1493;&#1500;</text>
   <rect x="24" y="150" width="342" height="72" rx="12" fill="#1d1028" stroke="#f97316" stroke-opacity="0.3"/>
-  <text x="330" y="195" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="15" text-anchor="end">из СкЩЭ йвСиХ бЩаХЯ</text>
-  <rect x="24" y="240" width="342" height="72" rx="12" fill="#1d1028" stroke="#f97316" stroke-opacity="0.15"/>
-  <text x="330" y="285" fill="#9ca3af" font-family="Rubik,Arial,sans-serif" font-size="15" text-anchor="end">СкЩЭ РЧиЩЭ  ЬР СийЩЮФ</text>
-  <rect x="24" y="340" width="342" height="140" rx="12" fill="#261536" stroke="#a78bfa" stroke-opacity="0.25"/>
-  <text x="330" y="380" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="600" text-anchor="end">ЬФЧЦЩи СкЩЭ РдХиЩЭ?</text>
-  <text x="330" y="415" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="end">бЩаХЯ ’ йаФ зиЩШиЩХаЩЭ</text>
-  <text x="330" y="445" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="end">РХ РЩдХб ’ ФжТ кХжРХк</text>
+  <text x="330" y="195" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="15" text-anchor="end">&#1512;&#1511; &#1489;&#1514;&#1497;&#1501; &#1513;&#1506;&#1489;&#1512;&#1493; &#1505;&#1497;&#1504;&#1493;&#1503;</text>
+  <rect x="24" y="340" width="342" height="120" rx="12" fill="#261536" stroke="#a78bfa" stroke-opacity="0.25"/>
+  <text x="330" y="380" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="600" text-anchor="end">&#1500;&#1492;&#1495;&#1494;&#1497;&#1512; &#1488;&#1508;&#1493;&#1512;&#1497;&#1501;?</text>
+  <text x="330" y="415" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="end">&#1513;&#1504;&#1493; &#1505;&#1497;&#1504;&#1493;&#1503; &#8594; &#1492;&#1510;&#1490; &#1514;&#1493;&#1510;&#1488;&#1493;&#1514;</text>
 </svg>

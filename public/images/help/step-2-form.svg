@@ -1,13 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" role="img" aria-label="щн елъебъ биефс">
-  <rect width="390" height="780" fill="#12081a"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="&#1513;&#1501; &#1493;&#1499;&#1514;&#1493;&#1489;&#1514; &#1489;&#1496;&#1493;&#1508;&#1505;">
+<rect width="390" height="780" fill="#12081a"/>
   <rect y="0" width="390" height="52" fill="#14091c"/>
-  <text x="195" y="32" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">десфъ бйъ</text>
-  <rect x="20" y="72" width="350" height="640" rx="16" fill="#1d1028" stroke="#f97316" stroke-opacity="0.2"/>
-  <text x="340" y="110" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="16" font-weight="700" text-anchor="end">щн дбйъ</text>
-  <rect x="40" y="120" width="310" height="44" rx="10" fill="#0a0610" stroke="#f97316" stroke-opacity="0.25"/>
-  <text x="330" y="149" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="15" text-anchor="end">бйъ ощфзъ лдп</text>
-  <text x="340" y="195" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="16" font-weight="700" text-anchor="end">лъебъ</text>
-  <rect x="40" y="205" width="310" height="44" rx="10" fill="#0a0610" stroke="#f97316" stroke-opacity="0.25"/>
-  <text x="330" y="234" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="15" text-anchor="end">зшежйн 12</text>
-  <text x="340" y="280" fill="#a78bfa" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="end">бзше одшщйод</text>
+  <text x="195" y="32" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">HallowHood</text>
+  <rect x="24" y="80" width="342" height="600" rx="16" fill="#1d1028" stroke="#f97316" stroke-opacity="0.25"/>
+  <text x="330" y="130" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="18" font-weight="700" text-anchor="end">&#1492;&#1493;&#1505;&#1508;&#1514; &#1489;&#1497;&#1514;</text>
+  <text x="330" y="180" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="end">&#1513;&#1501; &#1492;&#1489;&#1497;&#1514;</text>
+  <rect x="40" y="190" width="310" height="36" rx="8" fill="#14081c" stroke="#f97316" stroke-opacity="0.2"/>
+  <text x="320" y="214" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="end">&#1489;&#1497;&#1514; &#1492;&#1491;&#1500;&#1506;&#1493;&#1514;</text>
+  <text x="330" y="260" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="end">&#1499;&#1514;&#1493;&#1489;&#1514;</text>
+  <rect x="40" y="270" width="310" height="36" rx="8" fill="#14081c" stroke="#f97316" stroke-opacity="0.2"/>
+  <text x="320" y="294" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="end">&#1512;&#1495;&#1493;&#1489; 12, &#1513;&#1499;&#1493;&#1504;&#1492;</text>
 </svg>
