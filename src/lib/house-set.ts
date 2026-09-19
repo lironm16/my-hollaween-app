@@ -87,3 +87,8 @@ export function houseMatchesSet(house: { id?: string; description?: string }, se
   const stub = isStubHouse(house);
   return set === "stubs" ? stub : !stub;
 }
+
+export function catalogHasRealHouses(catalog: { houses: { id?: string; description?: string }[] } | null) {
+  if (!catalog?.houses.length) return false;
+  return catalog.houses.some((house) => !isStubHouse(house));
+}

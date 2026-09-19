@@ -21,12 +21,15 @@ import {
   withDeviceHouseOverlays,
 } from "@/lib/offline-db";
 import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
+import { catalogHasRealHouses } from "@/lib/house-set";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
 
 export type CatalogState = {
   catalog: Catalog | null;
   loading: boolean;
+  /** False until the first catalog refresh finishes (or real houses were read from cache). */
+  ready: boolean;
   offline: boolean;
   unreachable: boolean;
   error: string | null;
@@ -83,8 +86,11 @@ async function readDeviceCatalog() {
 }
 
 export function CatalogProvider({ children }: { children: ReactNode }) {
-  const [catalog, setCatalog] = useState<Catalog | null>(() => loadCatalogCacheSync());
-  const [loading, setLoading] = useState(() => !loadCatalogCacheSync());
+  const syncCache = loadCatalogCacheSync();
+  const syncHasReal = catalogHasRealHouses(syncCache);
+  const [catalog, setCatalog] = useState<Catalog | null>(() => syncCache);
+  const [loading, setLoading] = useState(() => !syncHasReal);
+  const [ready, setReady] = useState(syncHasReal);
   const [offline, setOffline] = useState(false);
   const [unreachable, setUnreachable] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,6 +109,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     setCatalog(initial);
     setSource("ssr");
     setLoading(false);
+    setReady(true);
     void saveCatalogCache(initial);
   }, []);
 
@@ -166,19 +173,26 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     try {
       if (readServerSimDown()) throw new Error("sim-down");
       const snap = await fetchJson("/catalog.json", force);
-      let next: Catalog = snap;
-      setCatalog((prev) => {
-        next = withDeviceHouseOverlays(syncCatalog(prev, snap));
-        return next;
-      });
-      setSource("snapshot");
-      setUnreachable(false);
-      setError(null);
+      let merged = withDeviceHouseOverlays(syncCatalog(catalogRef.current, snap));
       try {
-        await applyLiveResponse(await fetchJson("/api/catalog", false, snap.updatedAt));
+        const live = await fetchJson("/api/catalog", false, snap.updatedAt);
+        if (live.pollSeconds) {
+          pollMsRef.current = catalogPollMs(live.pollSeconds);
+          setPollSeconds(live.pollSeconds);
+        }
+        merged = withDeviceHouseOverlays(applyCatalogResponse(merged, live));
+        setCatalog(merged);
+        setSource("network");
+        setUnreachable(false);
+        setError(null);
+        await saveCatalogCache(merged);
         return;
       } catch {
-        await saveCatalogCache(next);
+        setCatalog(merged);
+        setSource("snapshot");
+        setUnreachable(false);
+        setError(null);
+        await saveCatalogCache(merged);
         return;
       }
     } catch {
@@ -219,14 +233,20 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       if (cached && !cancelled && !seededRef.current) {
         setCatalog(cached);
         setSource("cache");
-        setLoading(false);
+        if (catalogHasRealHouses(cached)) {
+          setLoading(false);
+          setReady(true);
+        }
       }
       // Let SSR seed catalog before deciding whether mount needs a network refresh.
       await Promise.resolve();
       if (!cancelled && !seededRef.current) {
         await refresh(false);
       }
-      if (!cancelled) setLoading(false);
+      if (!cancelled) {
+        setLoading(false);
+        setReady(true);
+      }
     })();
 
     const onOff = () => {
@@ -274,6 +294,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const value: CatalogContextValue = {
     catalog,
     loading,
+    ready,
     offline,
     unreachable,
     error,
