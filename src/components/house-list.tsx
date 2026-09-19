@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { HouseCard } from "@/components/house-card";
-import { distanceMeters } from "@/lib/geo";
-import { effectiveVisit } from "@/lib/house-state";
+import { LIST_SORT_EVENT, readListSort, sortHousesForList } from "@/lib/list-sort";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 
 export function HouseList({
   houses,
   origin,
+  now = new Date(),
   catalogSource,
   likedIds,
   onToggleLike,
@@ -32,6 +32,7 @@ export function HouseList({
 }: {
   houses: PublicHouse[];
   origin?: { lat: number; lng: number } | null;
+  now?: Date;
   catalogSource?: string | null;
   likedIds?: string[];
   onToggleLike?: (id: string) => void;
@@ -53,20 +54,18 @@ export function HouseList({
   editingId?: string | null;
 }) {
   const focusRef = useRef<HTMLDivElement | null>(null);
-  const filtered = useMemo(() => {
-    return houses
-      .map((h) => ({
-        h,
-        d: origin ? distanceMeters(origin, h) : undefined,
-      }))
-      .sort((a, b) => {
-        const va = effectiveVisit(a.h) === "closed";
-        const vb = effectiveVisit(b.h) === "closed";
-        if (va !== vb) return va ? 1 : -1;
-        if (a.d !== undefined && b.d !== undefined) return a.d - b.d;
-        return a.h.name.localeCompare(b.h.name, "he");
-      });
-  }, [houses, origin]);
+  const sort = useSyncExternalStore(
+    (onStoreChange) => {
+      window.addEventListener(LIST_SORT_EVENT, onStoreChange);
+      return () => window.removeEventListener(LIST_SORT_EVENT, onStoreChange);
+    },
+    readListSort,
+    () => "nearby" as const,
+  );
+  const filtered = useMemo(
+    () => sortHousesForList(houses, sort, origin, now),
+    [houses, sort, origin, now],
+  );
 
   useEffect(() => {
     if (!focusId) return;
@@ -93,36 +92,40 @@ export function HouseList({
 
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3">
-      {filtered.map(({ h, d }, i) => (
+      {filtered.map(({ house, distanceM }, i) => (
         <div
-          key={h.id}
-          ref={h.id === focusId ? focusRef : undefined}
-          className={h.id === focusId ? "house-list-focus" : undefined}
+          key={house.id}
+          ref={house.id === focusId ? focusRef : undefined}
+          className={house.id === focusId ? "house-list-focus" : undefined}
         >
         <HouseCard
           index={i + 1}
-          house={h}
-          distanceM={d}
+          house={house}
+          distanceM={distanceM}
           catalogSource={catalogSource}
-          liked={likedIds?.includes(h.id)}
-          onToggleLike={onToggleLike ? () => onToggleLike(h.id) : undefined}
-          visited={visitedIds?.includes(h.id)}
-          onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
-          skipped={skippedIds?.includes(h.id)}
-          skipMeta={skipMetaFor?.(h.id)}
+          liked={likedIds?.includes(house.id)}
+          onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
+          visited={visitedIds?.includes(house.id)}
+          onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
+          skipped={skippedIds?.includes(house.id)}
+          skipMeta={skipMetaFor?.(house.id)}
           onSkip={
-            onSkipHouse && !skippedIds?.includes(h.id) ? () => onSkipHouse(h.id) : undefined
+            onSkipHouse && !skippedIds?.includes(house.id)
+              ? () => onSkipHouse(house.id)
+              : undefined
           }
           onRestoreRoute={
-            onRestoreHouse && skippedIds?.includes(h.id) ? () => onRestoreHouse(h.id) : undefined
+            onRestoreHouse && skippedIds?.includes(house.id)
+              ? () => onRestoreHouse(house.id)
+              : undefined
           }
-          canEdit={Boolean(canEditHouse?.(h.id))}
-          editCode={editCodeFor?.(h.id)}
+          canEdit={Boolean(canEditHouse?.(house.id))}
+          editCode={editCodeFor?.(house.id)}
           admin={admin}
-          onShowOnMap={onShowOnMap ? () => onShowOnMap(h.id) : undefined}
-          onOpen={onSelectHouse ? () => onSelectHouse(h.id, i + 1) : undefined}
-          onToggleEdit={onEditHouse ? () => onEditHouse(h.id, i + 1) : undefined}
-          editing={editingId === h.id}
+          onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
+          onOpen={onSelectHouse ? () => onSelectHouse(house.id, i + 1) : undefined}
+          onToggleEdit={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
+          editing={editingId === house.id}
         />
         </div>
       ))}

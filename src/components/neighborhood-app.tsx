@@ -17,6 +17,7 @@ import {
   emitTempSkipRestoreAlert,
   useTempSkipRestoreAlerts,
 } from "@/hooks/use-temp-skip-restore-alerts";
+import { ListSortBar } from "@/components/list-sort-bar";
 import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
@@ -599,6 +600,7 @@ export function NeighborhoodApp({
       >
         <HouseFiltersContent filters={sheetFilters} now={now} onPatch={patchFilterDraft} />
       </FiltersSheet>
+      {view === "list" && !routeMode ? <ListSortBar /> : null}
       <NeighborhoodStatusBanners
         outsideBanner={originPick.outsideBanner}
         offline={offline}
@@ -783,6 +785,7 @@ export function NeighborhoodApp({
                   <HouseList
                     houses={visible}
                     origin={origin}
+                    now={now}
                     catalogSource={source}
                     likedIds={likes.likedIds}
                     onToggleLike={onToggleLike}
