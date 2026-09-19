@@ -14,8 +14,10 @@ export function cartoRasterTileUrl(z: string, x: string, y: string, theme: "dark
   return `https://${subdomain}.basemaps.cartocdn.com/${style}/${z}/${x}/${y}.png?key=${encodeURIComponent(key)}`;
 }
 
+/** Leaflet tile URLs often end segments with `.png` — strip before parsing. */
 export function parseTileCoord(value: string) {
-  if (!/^\d+$/.test(value)) return null;
-  const n = Number(value);
+  const digits = value.replace(/\.png$/i, "");
+  if (!/^\d+$/.test(digits)) return null;
+  const n = Number(digits);
   return Number.isFinite(n) && n >= 0 ? n : null;
 }
