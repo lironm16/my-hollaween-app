@@ -83,7 +83,7 @@ export function NeighborhoodApp({
   initialCatalog?: Catalog | null;
   focusId?: string | null;
 }) {
-  const { catalog, loading, offline, unreachable, error, source, pollSeconds, refresh } =
+  const { catalog, loading, ready, offline, unreachable, error, source, pollSeconds, refresh } =
     useCatalog(initialCatalog);
   const { admin } = useAdminSession();
   const geo = useUserLocation();
@@ -600,7 +600,7 @@ export function NeighborhoodApp({
         className="relative z-0 min-h-0 flex-1 isolate overflow-hidden"
         style={{ flex: 1, minHeight: 0, position: "relative" }}
       >
-        {loading && houses.length === 0 ? (
+        {!ready && visible.length === 0 ? (
           <div className="flex h-full items-center justify-center text-orange-200">
             מדליקים דלעות…
           </div>
