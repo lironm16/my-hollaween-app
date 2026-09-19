@@ -22,7 +22,15 @@ import { cn } from "@/lib/utils";
 
 const DESCRIPTION_PREFIX = "מה מחכה בבית:";
 
-function HouseComments({ house, compact }: { house: PublicHouse; compact: boolean }) {
+function HouseComments({
+  house,
+  compact,
+  onReadMore,
+}: {
+  house: PublicHouse;
+  compact: boolean;
+  onReadMore?: () => void;
+}) {
   const description = house.description?.trim() ?? "";
   const notes = house.notes?.trim() ?? "";
   const [expanded, setExpanded] = useState(false);
@@ -64,38 +72,36 @@ function HouseComments({ house, compact }: { house: PublicHouse; compact: boolea
     return <div className="space-y-2">{fullContent}</div>;
   }
 
-  const canExpand = overflows;
+  const showReadMore = overflows && Boolean(onReadMore);
 
   return (
-    <div
-      ref={clampRef}
-      role={canExpand ? "button" : undefined}
-      tabIndex={canExpand ? 0 : undefined}
-      aria-label={canExpand ? "הצגת כל התיאור וההערות" : undefined}
-      className={cn(
-        "text-base leading-relaxed [overflow-wrap:anywhere]",
-        "line-clamp-2",
-        canExpand && "cursor-pointer",
-      )}
-      onClick={(event) => {
-        if (!canExpand) return;
-        event.stopPropagation();
-        setExpanded(true);
-      }}
-      onKeyDown={(event) => {
-        if (!canExpand) return;
-        if (event.key !== "Enter" && event.key !== " ") return;
-        event.preventDefault();
-        event.stopPropagation();
-        setExpanded(true);
-      }}
-    >
-      {description ? (
-        <span className="block text-violet-50">
-          {DESCRIPTION_PREFIX} {description}
-        </span>
+    <div className="space-y-1">
+      <div
+        ref={clampRef}
+        className={cn(
+          "text-base leading-relaxed [overflow-wrap:anywhere]",
+          "line-clamp-2",
+        )}
+      >
+        {description ? (
+          <span className="block text-violet-50">
+            {DESCRIPTION_PREFIX} {description}
+          </span>
+        ) : null}
+        {notes ? <span className="block text-amber-200/90">הערה: {notes}</span> : null}
+      </div>
+      {showReadMore ? (
+        <button
+          type="button"
+          className="text-sm font-medium text-orange-300 underline underline-offset-2 hover:text-orange-200"
+          onClick={(event) => {
+            event.stopPropagation();
+            onReadMore?.();
+          }}
+        >
+          קרא עוד
+        </button>
       ) : null}
-      {notes ? <span className="block text-amber-200/90">הערה: {notes}</span> : null}
     </div>
   );
 }
@@ -117,6 +123,7 @@ export function HouseDetails({
   compact = false,
   distanceM,
   index,
+  onReadMore,
 }: {
   house: PublicHouse;
   extra?: ReactNode;
@@ -137,6 +144,8 @@ export function HouseDetails({
   compact?: boolean;
   distanceM?: number;
   index?: number;
+  /** Compact list card — open full detail when comments overflow. */
+  onReadMore?: () => void;
 }) {
   const displayAddress = formatDisplayAddress(house);
   const addedMeta = houseAddedMetaLine(house);
@@ -336,7 +345,7 @@ export function HouseDetails({
           איך מגיעים: {house.arrival}
         </p>
       ) : null}
-      <HouseComments house={house} compact={compact} />
+      <HouseComments house={house} compact={compact} onReadMore={compact ? onReadMore : undefined} />
       {addedMeta ? (
         <p className="text-sm text-violet-400">{addedMeta}</p>
       ) : null}

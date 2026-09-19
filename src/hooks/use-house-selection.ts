@@ -24,6 +24,8 @@ export function useHouseSelection({
   const [listFocusId, setListFocusId] = useState<string | null>(null);
   const [focusSeen, setFocusSeen] = useState(focusId);
   const [clusterOverview, setClusterOverview] = useState(false);
+  /** List picks a specific apartment — skip map-style cluster chrome in the overlay. */
+  const [openedFromList, setOpenedFromList] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editForId, setEditForId] = useState<SelectedId>(selectedId);
 
@@ -59,6 +61,7 @@ export function useHouseSelection({
 
   const closeSelection = useCallback(() => {
     setClusterOverview(false);
+    setOpenedFromList(false);
     setSelectedId("closed");
     setListFocusId(null);
     setEditing(false);
@@ -67,6 +70,7 @@ export function useHouseSelection({
   const dismissForOverlay = useCallback(() => {
     setEditing(false);
     setClusterOverview(false);
+    setOpenedFromList(false);
     setListFocusId(null);
     setSelectedId("closed");
   }, []);
@@ -81,6 +85,7 @@ export function useHouseSelection({
   const selectOnMap = useCallback(
     (house: PublicHouse, opts?: { clusterOverview?: boolean }) => {
       setListFocusId(null);
+      setOpenedFromList(false);
       const cluster = clusterHousesByAddress(clustersFor).find((item) =>
         item.houses.some((itemHouse) => itemHouse.id === house.id),
       );
@@ -113,6 +118,7 @@ export function useHouseSelection({
 
   const showOnMap = useCallback((id: string) => {
     setClusterOverview(false);
+    setOpenedFromList(false);
     setEditing(false);
     setListFocusId(null);
     setSelectedListIndex(undefined);
@@ -121,6 +127,7 @@ export function useHouseSelection({
 
   const selectInList = useCallback((id: string, index: number) => {
     setClusterOverview(false);
+    setOpenedFromList(true);
     setListFocusId(null);
     setSelectedListIndex(index);
     setSelectedId(id);
@@ -128,6 +135,7 @@ export function useHouseSelection({
 
   const editInList = useCallback((id: string, index: number) => {
     setClusterOverview(false);
+    setOpenedFromList(true);
     setListFocusId(null);
     setEditForId(id);
     setSelectedListIndex(index);
@@ -152,6 +160,7 @@ export function useHouseSelection({
     setSelectedId,
     selectedListIndex,
     clusterOverview,
+    openedFromList,
     editing,
     setEditing,
     editForId,

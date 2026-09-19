@@ -40,6 +40,7 @@ export function HouseDetailOverlay({
   skipMeta,
   filterMismatchReasons,
   clusterOverview,
+  openedFromList = false,
   clusterHouses,
   onSelectClusterHouse,
   onAdjacentClusterHouse,
@@ -70,6 +71,8 @@ export function HouseDetailOverlay({
   skipMeta?: SkippedHouseMeta;
   filterMismatchReasons?: string[];
   clusterOverview?: boolean;
+  /** Opened from the flat list — show one house, not map cluster chrome. */
+  openedFromList?: boolean;
   clusterHouses?: PublicHouse[];
   onSelectClusterHouse?: (id: string) => void;
   onAdjacentClusterHouse?: (delta: -1 | 1) => void;
@@ -81,7 +84,7 @@ export function HouseDetailOverlay({
 }) {
   const labelId = useId();
   const canEditSelected = Boolean(canEditHouse?.(house.id) && onToggleEdit);
-  const multi = (clusterHouses?.length ?? 0) > 1;
+  const multi = !openedFromList && (clusterHouses?.length ?? 0) > 1;
   const overview = Boolean(multi && clusterOverview);
   const clusterIndex = clusterHouses ? clusterHouseIndex(clusterHouses, house.id) : null;
   const canPrevCluster = clusterIndex != null && clusterIndex > 1;
