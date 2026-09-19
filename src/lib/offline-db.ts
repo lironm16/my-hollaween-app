@@ -1,4 +1,3 @@
-import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import type { NeighborhoodId } from "@/lib/config";
 import type { SkipReasonId } from "@/lib/skip-reasons";
 import { tombstoneHouse, loadDeletedHouseIds } from "@/lib/deleted-houses";
@@ -635,16 +634,12 @@ export async function flushPendingHouseWrites(): Promise<number> {
   try {
     for (const item of pending) {
       try {
-        const res = await fetchWithTimeout(
-          item.url,
-          {
-            method: item.method,
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(item.body),
-          },
-          8000,
-        );
+        const res = await fetch(item.url, {
+          method: item.method,
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item.body),
+        });
         if (!res.ok) continue;
         removePendingWrite(item.id);
         flushed += 1;

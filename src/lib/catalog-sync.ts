@@ -39,7 +39,7 @@ export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
     const deleted = new Set(loadDeletedHouseIds());
     for (const house of prev.houses) {
       if (deleted.has(house.id)) continue;
-      if (!byId.has(house.id) && stamp(house) >= nextTs) take(house);
+      if (!byId.has(house.id)) take(house);
     }
     return { ...incoming, houses: [...byId.values()] };
   }
@@ -51,13 +51,21 @@ export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
 
 /** Apply a delta poll (`?since=`) onto the catalog already on the device. */
 export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta): Catalog {
-  if (!prev || incoming.full) {
+  if (!prev) {
     return {
       updatedAt: incoming.updatedAt,
       neighborhood: incoming.neighborhood,
       houses: incoming.houses,
-      pushTemplates: incoming.pushTemplates ?? prev?.pushTemplates,
+      pushTemplates: incoming.pushTemplates,
     };
+  }
+  if (incoming.full) {
+    return syncCatalog(prev, {
+      updatedAt: incoming.updatedAt,
+      neighborhood: incoming.neighborhood,
+      houses: incoming.houses,
+      pushTemplates: incoming.pushTemplates ?? prev.pushTemplates,
+    });
   }
   const byId = new Map(prev.houses.map((house) => [house.id, house]));
   for (const id of incoming.removed ?? []) byId.delete(id);

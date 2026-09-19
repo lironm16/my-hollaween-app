@@ -811,6 +811,9 @@
   .min-w-36 {
     min-width: calc(var(--spacing) * 36);
   }
+  .min-w-\[9\.5rem\] {
+    min-width: 9.5rem;
+  }
   .flex-1 {
     flex: 1;
   }
@@ -1261,9 +1264,6 @@
   }
   .bg-\[\#12081a\]\/90 {
     background-color: color-mix(in oklab, #12081a 90%, transparent);
-  }
-  .bg-\[\#12081a\]\/95 {
-    background-color: color-mix(in oklab, #12081a 95%, transparent);
   }
   .bg-\[\#14081c\] {
     background-color: #14081c;
@@ -1774,10 +1774,6 @@
   .tracking-\[0\.2em\] {
     --tw-tracking: 0.2em;
     letter-spacing: 0.2em;
-  }
-  .tracking-\[0\.25em\] {
-    --tw-tracking: 0.25em;
-    letter-spacing: 0.25em;
   }
   .tracking-\[0\.35em\] {
     --tw-tracking: 0.35em;
@@ -2661,10 +2657,6 @@
   }
   .focus\:text-orange-50:focus {
     color: var(--color-orange-50);
-  }
-  .focus\:ring-2:focus {
-    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
-    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .focus\:outline-none:focus {
     --tw-outline-style: none;

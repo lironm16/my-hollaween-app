@@ -67,6 +67,20 @@ describe("syncCatalog", () => {
     const merged = syncCatalog(prev, incoming);
     assert.deepEqual(merged.houses.map((house) => house.id).sort(), ["a", "b"]);
   });
+
+  it("keeps cached houses when incoming catalog is newer but omits them", () => {
+    const prev = catalog("2026-09-03T13:15:00.000Z", [
+      publicHouse("real-1", "2026-09-03T13:15:00.000Z"),
+      publicHouse("real-2", "2026-09-03T13:15:00.000Z"),
+    ]);
+    const incoming = catalog("2026-09-06T19:50:00.000Z", [
+      publicHouse("stub-1", "2026-09-05T05:50:00.000Z", {
+        description: "סטאב לחזרה — נפתח בקרוב.",
+      }),
+    ]);
+    const merged = syncCatalog(prev, incoming);
+    assert.deepEqual(merged.houses.map((house) => house.id).sort(), ["real-1", "real-2", "stub-1"]);
+  });
 });
 
 describe("mergePushSubscriptions", () => {

@@ -67,7 +67,6 @@ export function RouteList({
   skipMetaFor,
   admin = false,
   canEditHouse,
-  editCodeFor,
   onShowOnMap,
   onEditHouse,
   editingId,
@@ -91,7 +90,6 @@ export function RouteList({
   skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
   admin?: boolean;
   canEditHouse?: (id: string) => boolean;
-  editCodeFor?: (id: string) => string | undefined;
   onShowOnMap?: (id: string) => void;
   onEditHouse?: (id: string, index: number) => void;
   editingId?: string | null;
@@ -177,7 +175,6 @@ export function RouteList({
                   onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
                   onSkip={onSkipHouse ? () => onSkipHouse(house.id) : undefined}
                   canEdit={Boolean(canEditHouse?.(house.id))}
-                  editCode={editCodeFor?.(house.id)}
                   admin={admin}
                   onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
                   onOpen={() => onSelectHouse(house.id, i + 1)}

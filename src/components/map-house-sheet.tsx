@@ -122,7 +122,6 @@ export function MapHouseSheet({
   const clusterNow = now ?? new Date();
   const isSkipped = skippedIds ?? (() => false);
   const isFilteredOut = filteredOutIds ?? (() => false);
-  const ownerEditCode = editCodeFor?.(house.id) ?? managerEditCode;
   const actionMenu = (
     <HouseActionBar
       house={house}
@@ -132,7 +131,6 @@ export function MapHouseSheet({
       onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
       onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
       onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
-      editCode={ownerEditCode}
       onShowOnMap={onShowOnMap}
       onShowInList={onShowInList}
       onSkip={onSkip}

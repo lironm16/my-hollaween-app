@@ -117,7 +117,6 @@ export default function MyHousesPage() {
                 visited={visits.visitedIds.includes(house.id)}
                 onToggleVisited={() => visits.toggle(house.id)}
                 canEdit
-                editCode={owned.find((item) => item.id === house.id)?.editCode}
                 onOpen={() => setSelectedId(house.id)}
                 onToggleEdit={() => requestEdit(house)}
               />
@@ -145,7 +144,6 @@ export default function MyHousesPage() {
           visited={visits.visited}
           onToggleVisited={(id) => visits.toggle(id)}
           catalogSource={catalog ? "network" : null}
-          editCodeFor={(id) => owned.find((item) => item.id === id)?.editCode}
           canEditHouse={() => true}
           onToggleEdit={() => requestEdit(selected)}
         />

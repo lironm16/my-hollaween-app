@@ -1,13 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { formatMapsAddress } from "@/lib/config";
-import {
-  editCodeSharePayload,
-  houseMapsUrl,
-  houseSharePath,
-  houseSharePayload,
-  houseShareUrl,
-} from "@/lib/nav-links";
+import { houseMapsUrl, houseSharePath, houseSharePayload, houseShareUrl } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
 
 function stub(overrides: Partial<PublicHouse> = {}): PublicHouse {
@@ -90,15 +84,6 @@ describe("houseShareUrl", () => {
       houseShareUrl(stub({ id: "בית-6895" }), "https://my-hollaween-app.vercel.app"),
       "https://my-hollaween-app.vercel.app/house/%D7%91%D7%99%D7%AA-6895",
     );
-  });
-});
-
-describe("editCodeSharePayload", () => {
-  it("includes the edit code and short instructions", () => {
-    const payload = editCodeSharePayload(stub({ id: "בית-6895", name: "בית לוי" }), "123456");
-    assert.match(payload.text, /123456/);
-    assert.match(payload.text, /בית לוי/);
-    assert.match(payload.text, /עריכה/);
   });
 });
 

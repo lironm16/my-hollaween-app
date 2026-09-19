@@ -33,33 +33,6 @@ export function houseSharePayload(house: PublicHouse, origin?: string) {
   return { title, text, url };
 }
 
-export function editCodeSharePayload(house: PublicHouse, editCode: string) {
-  const title = `קוד עריכה — ${houseHeadline(house)}`;
-  const text = `קוד העריכה ל${houseHeadline(house)}: ${editCode}\n\nלהזנה: תפריט → בית → עריכה → בחרו את הבית → הזינו את הקוד.`;
-  return { title, text };
-}
-
-export async function shareEditCode(
-  house: PublicHouse,
-  editCode: string,
-): Promise<"shared" | "copied" | "aborted" | "failed"> {
-  const { title, text } = editCodeSharePayload(house, editCode);
-  try {
-    if (navigator.share) {
-      await navigator.share({ title, text });
-      return "shared";
-    }
-  } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") return "aborted";
-  }
-  try {
-    await navigator.clipboard.writeText(text);
-    return "copied";
-  } catch {
-    return "failed";
-  }
-}
-
 export async function shareHouse(
   house: PublicHouse,
 ): Promise<"shared" | "copied" | "aborted" | "failed"> {
