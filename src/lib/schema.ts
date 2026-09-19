@@ -74,6 +74,10 @@ const houseFields = z.object({
   decorated: z.boolean().optional(),
 });
 
+export const houseSubmitSchema = houseFields.extend({
+  addedBy: z.string().trim().min(2).max(80),
+});
+
 export const houseInputSchema = houseFields.extend({
   theme: z.enum(HOUSE_THEMES).default("pumpkin"),
   arrival: z.string().trim().max(240).default(""),

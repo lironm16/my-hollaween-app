@@ -37,7 +37,10 @@ export default function AddPage() {
         senderPushEndpoint(),
         new Promise<undefined>((resolve) => window.setTimeout(() => resolve(undefined), 2000)),
       ]);
-      const { house, editCode } = await publishHouse(input, { includeEndpoint });
+      const { house, editCode } = await publishHouse(input, {
+        includeEndpoint,
+        addedBy: extras?.addedBy,
+      });
       let preview = house;
       if (extras?.photoDataUrl) {
         try {

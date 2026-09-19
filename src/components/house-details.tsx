@@ -12,6 +12,7 @@ import { formatDisplayAddress } from "@/lib/config";
 import { formatDistance } from "@/lib/geo";
 import { HoursLabel } from "@/components/clock-time";
 import { formatHoursLabel } from "@/lib/hours";
+import { houseAddedMetaLine } from "@/lib/house-meta";
 import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl } from "@/lib/nav-links";
 import { shouldLoadHousePhoto } from "@/lib/photos";
@@ -138,6 +139,7 @@ export function HouseDetails({
   index?: number;
 }) {
   const displayAddress = formatDisplayAddress(house);
+  const addedMeta = houseAddedMetaLine(house);
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
   const [photoReady, setPhotoReady] = useState(false);
@@ -335,6 +337,9 @@ export function HouseDetails({
         </p>
       ) : null}
       <HouseComments house={house} compact={compact} />
+      {addedMeta ? (
+        <p className="text-sm text-violet-400">{addedMeta}</p>
+      ) : null}
       {!compact ? (
         <>
           {sheet ? null : (

@@ -1,6 +1,7 @@
 import { formatDisplayAddress } from "@/lib/config";
 import { formatHoursLabel } from "@/lib/hours";
 import { candyLevel, offersSensitivity, resolveDecorLevel } from "@/lib/house-state";
+import { formatHouseAddedAt } from "@/lib/house-meta";
 import { decorShort, scareShort } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 
@@ -18,6 +19,8 @@ const PUBLIC_HEADERS = [
   "ללא גלוטן",
   "ללא אגוזים",
   "ללא שומשום",
+  "נוסף על ידי",
+  "תאריך הוספה",
 ] as const;
 
 function csvCell(value: string | number) {
@@ -64,6 +67,8 @@ function houseRow(house: PublicHouse, index: number): Array<string | number> {
     offersSensitivity(house, "glutenFree") ? "כן" : "לא",
     offersSensitivity(house, "nutsFree") ? "כן" : "לא",
     offersSensitivity(house, "sesameFree") ? "כן" : "לא",
+    house.addedBy?.trim() || "",
+    house.createdAt ? formatHouseAddedAt(house.createdAt) : "",
   ];
 }
 

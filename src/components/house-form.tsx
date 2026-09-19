@@ -85,6 +85,7 @@ export type HouseFormExtras = {
   photoDataUrl?: string;
   clearPhoto?: boolean;
   ownerFrozenUntil?: string | null;
+  addedBy?: string;
 };
 
 export function HouseForm({
@@ -126,7 +127,9 @@ export function HouseForm({
   const [photoFocus, setPhotoFocus] = useState<PhotoFocus>({ x: 50, y: 50 });
   const [clearPhoto, setClearPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [addedBy, setAddedBy] = useState("");
   const existingPhoto = initial?.photoUrl ?? "";
+  const isNewHouse = !initial?.id;
   const now = useAppNow();
   const { admin } = useAdminSession();
   const blocked = Boolean(busy || saving);
@@ -283,6 +286,10 @@ export function HouseForm({
           toast.error("בחרו כתובת אמיתית מהרשימה, או גררו את הסיכה לבית.");
           return;
         }
+        if (isNewHouse && addedBy.trim().length < 2) {
+          toast.error("נא למלא מי מוסיף את הבית (שם המשפחה).");
+          return;
+        }
         if (decorLevel === "none" && candy !== "plenty" && candy !== "low" && !(pauseCloseEnabled && nightStatus === "stop") && initial?.visit !== "closed") {
           toast.error("סמנו לפחות קישוטים או ממתקים — אחרת אין סיבה להוסיף את הבית למפה.");
           return;
@@ -350,6 +357,7 @@ export function HouseForm({
               photoDataUrl,
               clearPhoto: clearPhoto && !photoFile,
               ownerFrozenUntil,
+              addedBy: isNewHouse ? addedBy.trim() : undefined,
             });
           } finally {
             setSaving(false);
@@ -358,6 +366,19 @@ export function HouseForm({
       }}
     >
       <FormSection title="הבית">
+        {isNewHouse ? (
+          <Field label="מי מוסיף את הבית? (שם המשפחה)">
+            <Input
+              required
+              value={addedBy}
+              minLength={2}
+              maxLength={80}
+              onChange={(e) => setAddedBy(e.target.value)}
+              placeholder="משפחת לוי"
+              className="h-10 bg-[#1d1028]"
+            />
+          </Field>
+        ) : null}
         <div>
           <p className="mb-2 text-base font-medium">שם הבית</p>
           <Input
