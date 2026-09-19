@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" role="img" aria-label="осмем тм дофд">
+  <rect width="390" height="780" fill="#1a1024"/>
+  <path d="M60 520 Q140 440 200 360 T340 220" fill="none" stroke="#fb923c" stroke-width="4"/>
+  <circle cx="60" cy="520" r="12" fill="#f97316"/>
+  <text x="60" y="525" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="10" font-weight="700" text-anchor="middle">0</text>
+  <circle cx="200" cy="360" r="10" fill="#c4b5fd"/>
+  <text x="200" y="365" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="9" font-weight="700" text-anchor="middle">2</text>
+  <circle cx="340" cy="220" r="10" fill="#c4b5fd"/>
+  <text x="340" y="225" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="9" font-weight="700" text-anchor="middle">3</text>
+  <rect x="280" y="640" width="56" height="56" rx="28" fill="#1d1028" stroke="#f97316" stroke-opacity="0.35"/>
+  <text x="308" y="674" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="middle">12</text>
+  <text x="195" y="720" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="middle">че лъен = досмем З мзце тм сйлен мфшийн</text>
+</svg>

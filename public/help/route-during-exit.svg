@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" role="img" aria-label="йцйад оосмем">
+  <rect width="390" height="780" fill="#12081a"/>
+  <rect y="52" width="390" height="48" fill="#12081a"/>
+  <rect x="228" y="60" width="44" height="32" rx="8" fill="#f97316"/>
+  <path d="M250 68 L242 84 L258 84 Z M250 84 L250 88" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <text x="250" y="112" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="middle">мзце щеб мйцйад</text>
+  <rect x="12" y="60" width="80" height="32" rx="8" fill="#261536"/>
+  <rect x="52" y="64" width="28" height="24" rx="6" fill="#f97316"/>
+  <text x="66" y="112" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="middle">офд / шщйод</text>
+  <text x="195" y="200" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="16" text-anchor="middle">отбш бйп офд мшщйод</text>
+  <text x="195" y="230" fill="#ddd6fe" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="middle">бшщйод: сгш дтцйшеъ + ошзч дмйлд</text>
+  <text x="195" y="260" fill="#ddd6fe" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="middle">бофд: дче длъен едсйлен моид</text>
+</svg>
