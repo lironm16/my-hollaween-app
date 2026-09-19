@@ -65,7 +65,7 @@ export default function HousePage() {
         {house ? (
           <div className="space-y-4">
             <div className="relative z-0 isolate h-56 overflow-hidden rounded-2xl ring-1 ring-orange-500/30">
-              <HouseMapDynamic houses={[house]} selectedId={house.id} />
+              <HouseMapDynamic houses={[house]} selectedId={house.id} embed />
             </div>
             <HouseDetails
               house={house}
