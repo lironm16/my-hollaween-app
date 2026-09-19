@@ -17,7 +17,8 @@ import { SavedTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons
 import { SkipIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
-import { houseMapsUrl, shareEditCode, shareHouse } from "@/lib/nav-links";
+import { EditCodeDialog } from "@/components/edit-code-dialog";
+import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
 import { safeAreaInsetBottom, safeAreaInsetTop } from "@/lib/viewport";
 import { cn } from "@/lib/utils";
@@ -89,6 +90,7 @@ export function HouseActionBar({
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [editCodeOpen, setEditCodeOpen] = useState(false);
   const [panelStyle, setPanelStyle] = useState<CSSProperties>({ visibility: "hidden" });
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -203,13 +205,7 @@ export function HouseActionBar({
         id: "edit-code",
         label: "קוד עריכה",
         icon: <KeyRound className={MENU_ICON_CLASS} strokeWidth={2.2} />,
-        onClick: () => {
-          void shareEditCode(house, editCode).then((result) => {
-            if (result === "copied") toast.success("קוד העריכה הועתק");
-            if (result === "shared") toast.success("קוד העריכה נשלח");
-            if (result === "failed") toast.error("לא הצלחנו לשתף את הקוד");
-          });
-        },
+        onClick: () => setEditCodeOpen(true),
       });
     }
     if (onToggleEdit) {
@@ -342,6 +338,14 @@ export function HouseActionBar({
 
   return (
     <div ref={rootRef} className={cn("house-action-menu", className)} dir="rtl">
+      {editCode ? (
+        <EditCodeDialog
+          open={editCodeOpen}
+          house={house}
+          editCode={editCode}
+          onClose={() => setEditCodeOpen(false)}
+        />
+      ) : null}
       <button
         ref={triggerRef}
         type="button"

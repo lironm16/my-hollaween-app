@@ -1,17 +1,8 @@
 "use client";
 
 import { Copy } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-
-async function copyText(text: string, ok: string) {
-  try {
-    await navigator.clipboard.writeText(text);
-    toast.success(ok);
-  } catch {
-    toast.error("לא הצלחנו להעתיק. אפשר לסמן את הטקסט ידנית.");
-  }
-}
+import { copyText } from "@/lib/copy-text";
 
 /** Share the family edit code — house id is not needed for in-card editing. */
 export function CodesCopy({ editCode }: { editCode?: string }) {
