@@ -150,29 +150,20 @@ export function NeighborhoodApp({
     admin,
     adminHouses,
   });
-  const deviceHasCache = useSyncExternalStore(
-    () => () => {},
-    () => catalogHasRealHouses(loadCatalogCacheSync()),
-    () => false,
-  );
-  const cachedHouses = useSyncExternalStore(
-    () => () => {},
-    () => loadCatalogCacheSync()?.houses ?? [],
-    () => [] as PublicHouse[],
-  );
-  const lastHousesRef = useRef<PublicHouse[]>(cachedHouses);
+  const lastHousesRef = useRef<PublicHouse[]>([]);
   const displayHouses = useMemo(() => {
     if (houses.length > 0) {
       lastHousesRef.current = houses;
       return houses;
     }
     if (lastHousesRef.current.length > 0) return lastHousesRef.current;
-    if (cachedHouses.length > 0) {
-      lastHousesRef.current = cachedHouses;
-      return cachedHouses;
+    const cached = loadCatalogCacheSync()?.houses;
+    if (cached?.length) {
+      lastHousesRef.current = cached;
+      return cached;
     }
     return houses;
-  }, [houses, cachedHouses]);
+  }, [houses]);
 
   const housesForSkipCount = useMemo(() => {
     const byId = new Map(displayHouses.map((house) => [house.id, house]));
@@ -202,10 +193,7 @@ export function NeighborhoodApp({
     [displayHouses, filters, filterContext],
   );
   const showBootstrapSpinner =
-    !deviceHasCache &&
-    displayHouses.length === 0 &&
-    !catalogHasRealHouses(catalog) &&
-    loading;
+    displayHouses.length === 0 && !catalogHasRealHouses(catalog) && loading;
   const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
   const filterDimActive = matchedIds.size < mapHouses.length;
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
