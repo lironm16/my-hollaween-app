@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
+import { CodesCopy } from "@/components/codes-copy";
 import { HouseCard } from "@/components/house-card";
 import { HouseDetailOverlay } from "@/components/house-detail-overlay";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
@@ -105,8 +106,10 @@ export default function MyHousesPage() {
           <h1 className="font-display mb-2 text-2xl text-orange-300">הבתים שלי</h1>
         </div>
         <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3 pb-8">
-          {houses.map(({ house, distanceM }, index) => (
-            <div key={house.id} className="space-y-1">
+          {houses.map(({ house, distanceM }, index) => {
+            const editCode = owned.find((item) => item.id === house.id)?.editCode;
+            return (
+            <div key={house.id} className="space-y-2">
               <HouseCard
                 index={index + 1}
                 house={house}
@@ -120,6 +123,7 @@ export default function MyHousesPage() {
                 onOpen={() => setSelectedId(house.id)}
                 onToggleEdit={() => requestEdit(house)}
               />
+              {editCode ? <CodesCopy editCode={editCode} /> : null}
               <button
                 type="button"
                 className="px-1 text-sm text-violet-400 underline-offset-2 hover:text-violet-200 hover:underline"
@@ -131,7 +135,8 @@ export default function MyHousesPage() {
                 הסרה מהרשימה
               </button>
             </div>
-          ))}
+            );
+          })}
         </div>
       </main>
       {selected && !editFlow.flow ? (
