@@ -145,13 +145,18 @@ export function RouteList({
             </div>
           </div>
         </li>
-        {items.map(({ house, order, hop, skipped }, i) => (
+        {items.map(({ house, order, hop, skipped }, i) => {
+          const showSkippedHeading = skipped && (i === 0 || !items[i - 1]!.skipped);
+          return (
           <li
             key={house.id}
             ref={house.id === focusId ? focusRef : undefined}
             className={cn(house.id === focusId && "house-list-focus", skipped && "route-list-skipped")}
           >
-            <RouteLeg label={hop} />
+            {showSkippedHeading ? (
+              <p className="route-list-skipped-heading">דילגתם על הבתים האלה</p>
+            ) : null}
+            {hop ? <RouteLeg label={hop} /> : null}
             {skipped ? (
               <RouteSkippedRow
                 house={house}
@@ -180,7 +185,8 @@ export function RouteList({
               </div>
             )}
           </li>
-        ))}
+          );
+        })}
       </ol>
     </div>
   );

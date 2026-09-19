@@ -2591,3 +2591,11 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   font-weight: 600;
   color: #fdba74;
 }
+
+.route-list-skipped-heading {
+  margin: 1rem 0 0.5rem;
+  padding-inline: 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #a78bfa;
+}
