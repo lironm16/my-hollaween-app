@@ -1,4 +1,4 @@
-const CACHE = "hw-shell-v105";
+const CACHE = "hw-shell-v106";
 const TILE_CACHE = "hw-tiles-v7";
 const PRECACHE = [
   "/offline.html",
