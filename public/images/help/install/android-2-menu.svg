@@ -1,15 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" role="img" aria-label="ъфшйи Chrome">
-  <rect width="390" height="780" fill="#12081a"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="&#1514;&#1508;&#1512;&#1497;&#1496; Chrome">
+<rect width="390" height="780" fill="#12081a"/>
   <rect y="0" width="390" height="56" fill="#292929"/>
-  <rect x="60" y="14" width="270" height="28" rx="14" fill="#1a1a1a"/>
-  <circle cx="340" cy="28" r="4" fill="#fff"/>
-  <circle cx="352" cy="28" r="4" fill="#fff"/>
-  <circle cx="364" cy="28" r="4" fill="#fff"/>
-  <rect x="318" y="4" width="48" height="48" rx="24" fill="none" stroke="#f97316" stroke-width="2"/>
-  <rect x="200" y="64" width="180" height="220" rx="12" fill="#fff" stroke="#ccc"/>
-  <text x="360" y="100" fill="#333" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="end">десу моск дбйъ</text>
-  <rect x="210" y="88" width="160" height="28" rx="6" fill="#f97316" fill-opacity="0.15"/>
-  <text x="360" y="135" fill="#333" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="end">дъчп афмйчцйд</text>
-  <text x="360" y="170" fill="#333" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="end">дйсиешйд</text>
-  <text x="330" y="52" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="12">ю</text>
+  <text x="350" y="36" fill="#fff" font-family="Rubik,Arial,sans-serif" font-size="24" text-anchor="middle">&#8942;</text>
+  <rect x="120" y="60" width="250" height="200" rx="12" fill="#fff"/>
+  <text x="245" y="180" fill="#333" font-family="Rubik,Arial,sans-serif" font-size="15" text-anchor="middle">Add to Home screen</text>
+  <path d="M350 50 L280 100" stroke="#f97316" stroke-width="3" marker-end="url(#and)"/>
+  <defs><marker id="and" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#f97316"/></marker></defs>
 </svg>

@@ -1,18 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" role="img" aria-label="сйлен осмем бшщйод">
-  <rect width="390" height="780" fill="#12081a"/>
-  <rect x="16" y="60" width="358" height="120" rx="16" fill="#2c1a12" stroke="#f97316" stroke-opacity="0.25"/>
-  <text x="330" y="95" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="16" font-weight="700" text-anchor="end">осмем</text>
-  <text x="80" y="130" fill="#fff" font-family="Rubik,Arial,sans-serif" font-size="18" font-weight="700">12</text>
-  <text x="80" y="148" fill="#fff" font-family="Rubik,Arial,sans-serif" font-size="12">бъйн</text>
-  <text x="180" y="130" fill="#fff" font-family="Rubik,Arial,sans-serif" font-size="18" font-weight="700">12</text>
-  <text x="180" y="148" fill="#fff" font-family="Rubik,Arial,sans-serif" font-size="12">тцйшеъ</text>
-  <text x="280" y="130" fill="#fff" font-family="Rubik,Arial,sans-serif" font-size="18" font-weight="700">1.4</text>
-  <text x="280" y="148" fill="#fff" font-family="Rubik,Arial,sans-serif" font-size="12">чєо</text>
-  <rect x="16" y="200" width="358" height="64" rx="12" fill="#1d1028" stroke="#f97316" stroke-opacity="0.2"/>
-  <text x="330" y="238" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="16" text-anchor="end">рчегъ дъзмд З ойчен релзй</text>
-  <rect x="16" y="280" width="358" height="80" rx="12" fill="#1d1028"/>
-  <circle cx="48" cy="320" r="14" fill="#f97316"/>
-  <text x="48" y="325" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="12" font-weight="700" text-anchor="middle">1</text>
-  <text x="320" y="325" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="16" text-anchor="end">бйъ шащеп</text>
-  <text x="195" y="390" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="middle">350 оѓ дмйлд</text>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="&#1505;&#1497;&#1499;&#1493;&#1501; &#1502;&#1505;&#1500;&#1493;&#1500;">
+<rect width="390" height="780" fill="#12081a"/>
+  <rect y="0" width="390" height="52" fill="#14091c"/>
+  <text x="195" y="32" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">HallowHood</text>
+  <rect x="24" y="80" width="342" height="120" rx="12" fill="#1d1028" stroke="#f97316" stroke-opacity="0.3"/>
+  <text x="330" y="120" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="16" font-weight="700" text-anchor="end">&#1505;&#1497;&#1499;&#1493;&#1501; &#1502;&#1505;&#1500;&#1493;&#1500;</text>
+  <text x="330" y="155" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="end">8 &#1489;&#1514;&#1497;&#1501; ТЗ 2.4 &#1511;"&#1502; ТЗ ~45 &#1491;&#1511;</text>
+  <rect x="24" y="220" width="342" height="56" rx="10" fill="#14081c"/>
+  <text x="330" y="254" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="15" text-anchor="end">1. &#1489;&#1497;&#1514; &#1492;&#1491;&#1500;&#1506;&#1493;&#1514; ТЗ 120m</text>
+  <rect x="24" y="290" width="342" height="56" rx="10" fill="#14081c"/>
+  <text x="330" y="324" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="15" text-anchor="end">2. &#1489;&#1497;&#1514; &#1492;&#1511;&#1513;&#1514; ТЗ 85m</text>
 </svg>

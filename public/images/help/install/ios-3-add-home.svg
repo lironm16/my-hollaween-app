@@ -1,13 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" role="img" aria-label="десфд моск дбйъ">
-  <rect width="390" height="780" fill="#12081a" fill-opacity="0.6"/>
-  <rect x="0" y="400" width="390" height="380" rx="16" fill="#2c2c2e"/>
-  <text x="195" y="440" fill="#fff" font-family="Rubik,Arial,sans-serif" font-size="16" font-weight="600" text-anchor="middle">щйъеу</text>
-  <rect x="24" y="470" width="342" height="52" rx="12" fill="#f97316" fill-opacity="0.2" stroke="#f97316"/>
-  <text x="340" y="502" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="17" font-weight="700" text-anchor="end">десфд моск дбйъ</text>
-  <rect x="24" y="535" width="342" height="44" rx="10" fill="#3a3a3c"/>
-  <text x="340" y="562" fill="#ddd" font-family="Rubik,Arial,sans-serif" font-size="15" text-anchor="end">дтъч</text>
-  <rect x="24" y="590" width="342" height="44" rx="10" fill="#3a3a3c"/>
-  <text x="340" y="617" fill="#ddd" font-family="Rubik,Arial,sans-serif" font-size="15" text-anchor="end">сйорйд</text>
-  <path d="M60 502 L110 502" stroke="#a78bfa" stroke-width="2" marker-end="url(#b)"/>
-  <defs><marker id="b" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#a78bfa"/></marker></defs>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="&#1492;&#1493;&#1505;&#1508;&#1492; &#1500;&#1502;&#1505;&#1498; &#1492;&#1489;&#1497;&#1514;">
+<rect width="390" height="780" fill="#f2f2f7"/>
+  <rect x="20" y="200" width="350" height="400" rx="16" fill="#fff"/>
+  <rect x="40" y="420" width="310" height="44" rx="10" fill="#007aff" fill-opacity="0.12"/>
+  <text x="195" y="448" fill="#007aff" font-family="Rubik,Arial,sans-serif" font-size="16" font-weight="600" text-anchor="middle">Add to Home Screen</text>
+  <path d="M195 380 L195 340" stroke="#f97316" stroke-width="3" marker-end="url(#ios2)"/>
+  <text x="195" y="320" fill="#f97316" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">&#1489;&#1495;&#1512;&#1493; &#1492;&#1493;&#1505;&#1508;&#1492; &#1500;&#1502;&#1505;&#1498; &#1492;&#1489;&#1497;&#1514;</text>
+  <defs><marker id="ios2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#f97316"/></marker></defs>
 </svg>

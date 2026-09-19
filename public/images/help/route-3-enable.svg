@@ -1,17 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" role="img" aria-label="дфтмъ осмем">
-  <rect width="390" height="780" fill="#12081a"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="&#1492;&#1508;&#1506;&#1500;&#1514; &#1502;&#1505;&#1500;&#1493;&#1500;">
+<rect width="390" height="780" fill="#12081a"/>
+  <rect y="0" width="390" height="52" fill="#14091c"/>
+  <text x="195" y="32" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">HallowHood</text>
   <rect y="52" width="390" height="48" fill="#12081a"/>
   <rect x="12" y="60" width="80" height="32" rx="8" fill="#261536"/>
-  <rect x="108" y="60" width="44" height="32" rx="8" fill="#261536"/>
-  <rect x="168" y="60" width="44" height="32" rx="8" fill="#261536"/>
-  <rect x="228" y="60" width="44" height="32" rx="8" fill="#f97316"/>
-  <path d="M250 68 L242 84 L258 84 Z M250 84 L250 88" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
-  <text x="250" y="112" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="middle">лфъеш осмем</text>
-  <rect x="16" y="140" width="358" height="500" rx="8" fill="#0f0814"/>
-  <path d="M80 500 Q120 420 160 380 T240 320 T320 260" fill="none" stroke="#fb923c" stroke-width="3" stroke-dasharray="8 6"/>
-  <circle cx="80" cy="500" r="10" fill="#f97316"/>
-  <circle cx="160" cy="380" r="8" fill="#c4b5fd"/>
-  <circle cx="240" cy="320" r="8" fill="#c4b5fd"/>
-  <circle cx="320" cy="260" r="8" fill="#c4b5fd"/>
-  <text x="195" y="680" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="middle">досмем рбрд аеиеоийъ мфй дсйреп ерчегъ ддъзмд</text>
+  <rect x="200" y="60" width="78" height="32" rx="8" fill="#f97316"/>
+  <text x="239" y="81" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="13" font-weight="700" text-anchor="middle">&#1502;&#1505;&#1500;&#1493;&#1500;</text>
+  <rect x="24" y="120" width="342" height="500" rx="16" fill="#243447"/>
+  <path d="M80 400 L150 320 L220 380 L300 260" stroke="#f97316" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <circle cx="80" cy="400" r="10" fill="#f97316"/>
+  <circle cx="300" cy="260" r="10" fill="#fde68a"/>
 </svg>
