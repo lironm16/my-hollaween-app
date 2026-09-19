@@ -372,6 +372,29 @@ function FollowPick({ lat, lng }: { lat: number; lng: number }) {
   return null;
 }
 
+/** Embed preview (house link page): center once the map has laid out. */
+function CenterOnHouse({
+  lat,
+  lng,
+  zoom,
+}: {
+  lat: number;
+  lng: number;
+  zoom: number;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    const go = () => {
+      map.invalidateSize({ animate: false });
+      map.setView([lat, lng], zoom, { animate: false });
+    };
+    const timer = window.setTimeout(go, 60);
+    return () => window.clearTimeout(timer);
+  }, [map, lat, lng, zoom]);
+  return null;
+}
+
 /** Pan only when the parent increments tick (locate / saved origin). Never on list↔map. */
 function PanTo({
   lat,
@@ -547,6 +570,8 @@ type Props = {
   /** House ids that pass the current filter — others render faded on the map. */
   matchedIds?: ReadonlySet<string>;
   filterDimActive?: boolean;
+  /** Compact embed on house link pages — center on the house, theme toggle only. */
+  embed?: boolean;
 };
 
 export function HouseMap({
@@ -578,6 +603,7 @@ export function HouseMap({
   statsFab = null,
   matchedIds,
   filterDimActive = false,
+  embed = false,
 }: Props) {
   const clusters = useMemo(
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
@@ -672,9 +698,13 @@ export function HouseMap({
       dir="ltr"
     >
       <MapContainer
-        key={pickMode ? "pick" : "view"}
-        center={[config.map.center.lat, config.map.center.lng]}
-        zoom={config.map.zoom}
+        key={pickMode ? "pick" : embed ? "embed" : "view"}
+        center={
+          embed && focus
+            ? [focus.lat, focus.lng]
+            : [config.map.center.lat, config.map.center.lng]
+        }
+        zoom={embed && focus ? config.map.maxZoom - 1 : config.map.zoom}
         minZoom={config.map.minZoom}
         maxZoom={config.map.maxZoom}
         scrollWheelZoom
@@ -693,7 +723,10 @@ export function HouseMap({
         />
         <SizeSync active={active} />
         {panTick > 0 && panTo ? <PanTo lat={panTo.lat} lng={panTo.lng} tick={panTick} /> : null}
-        {focus && !originPickActive ? (
+        {embed && focus ? (
+          <CenterOnHouse lat={focus.lat} lng={focus.lng} zoom={config.map.maxZoom - 1} />
+        ) : null}
+        {focus && !originPickActive && !embed ? (
           <KeepSelectedVisible
             lat={focus.lat}
             lng={focus.lng}
@@ -863,7 +896,7 @@ export function HouseMap({
           </>
         ) : null}
       </MapContainer>
-      {!pickMode && !originPickActive ? <MapAddHouseFab /> : null}
+      {!pickMode && !originPickActive && !embed ? <MapAddHouseFab /> : null}
       <div className="map-fab-stack">
           <button
             type="button"
@@ -874,7 +907,7 @@ export function HouseMap({
           >
             {mapTheme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
           </button>
-          {!pickMode && onLocate ? (
+          {!pickMode && !embed && onLocate ? (
             <button
               type="button"
               className="locate-me flex size-11 items-center justify-center rounded-full bg-[#1d1028] text-sky-300 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-sky-400/40"
@@ -885,8 +918,8 @@ export function HouseMap({
               <LocateFixed className={cn("size-5", locating && "animate-pulse")} />
             </button>
           ) : null}
-          {!pickMode ? <MapLegend /> : null}
-          {!pickMode ? statsFab : null}
+          {!pickMode && !embed ? <MapLegend /> : null}
+          {!pickMode && !embed ? statsFab : null}
         </div>
     </div>
   );
