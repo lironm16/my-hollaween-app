@@ -1,7 +1,6 @@
 const CACHE = "hw-shell-v109";
 const TILE_CACHE = "hw-tiles-v7";
 const PRECACHE = [
-  "/recover.html",
   "/offline.html",
   "/catalog.json",
   "/shell.css",
