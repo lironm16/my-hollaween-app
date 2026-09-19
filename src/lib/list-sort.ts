@@ -6,14 +6,12 @@ import type { PublicHouse } from "@/lib/types";
 export const LIST_SORT_KEY = "hw-list-sort";
 export const LIST_SORT_EVENT = "hw-list-sort";
 
-export const LIST_SORTS = ["nearby", "added", "updated", "open", "name"] as const;
+export const LIST_SORTS = ["nearby", "added", "name"] as const;
 export type ListSort = (typeof LIST_SORTS)[number];
 
 export const LIST_SORT_LABELS: Record<ListSort, string> = {
   nearby: "לידי",
   added: "חדשים קודם",
-  updated: "עודכנו לאחרונה",
-  open: "פתוח כעת",
   name: "לפי שם",
 };
 
@@ -76,22 +74,12 @@ export function sortHousesForList(
 
   withDistance.sort((a, b) => {
     const closed = byClosed(a.house, b.house);
-    if (closed !== 0 && sort !== "added" && sort !== "updated") return closed;
+    if (closed !== 0 && sort !== "added") return closed;
 
     switch (sort) {
       case "added": {
         const delta = stamp(b.house.createdAt) - stamp(a.house.createdAt);
         return delta !== 0 ? delta : byName(a.house, b.house);
-      }
-      case "updated": {
-        const delta = stamp(b.house.updatedAt) - stamp(a.house.updatedAt);
-        return delta !== 0 ? delta : byName(a.house, b.house);
-      }
-      case "open": {
-        const openDelta = closedRank(a.house, now) - closedRank(b.house, now);
-        if (openDelta !== 0) return openDelta;
-        if (a.distanceM !== undefined && b.distanceM !== undefined) return a.distanceM - b.distanceM;
-        return byName(a.house, b.house);
       }
       case "name":
         return byName(a.house, b.house);

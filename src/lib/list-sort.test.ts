@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { cycleListSort, sortHousesForList, type ListSort } from "@/lib/list-sort";
+import { cycleListSort, sortHousesForList } from "@/lib/list-sort";
 import type { PublicHouse } from "@/lib/types";
 
 const now = new Date("2026-10-31T18:00:00.000Z");
