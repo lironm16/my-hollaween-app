@@ -18,6 +18,8 @@ import { MapAddHouseFab } from "@/components/map-add-house-fab";
 import { MapLegend } from "@/components/map-legend";
 import "leaflet/dist/leaflet.css";
 import { config, inNeighborhood } from "@/lib/config";
+import { useMapTiles } from "@/hooks/use-map-tiles";
+import type { MapTilesConfig } from "@/lib/map-tiles-types";
 import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
 import {
@@ -56,13 +58,13 @@ function saveMapTheme(theme: "dark" | "light") {
   }
 }
 
-function tileUrlFor(theme: "dark" | "light") {
-  if (config.tiles.invert) return config.tiles.url;
+function tileUrlFor(tiles: MapTilesConfig, theme: "dark" | "light"): string {
+  if (tiles.invert) return tiles.url;
   const light =
-    "lightUrl" in config.tiles && config.tiles.lightUrl
-      ? config.tiles.lightUrl
-      : config.tiles.url.replace("/dark_all/", "/light_all/");
-  return theme === "light" ? light : config.tiles.url;
+    "lightUrl" in tiles && tiles.lightUrl
+      ? tiles.lightUrl
+      : tiles.url.replace("/dark_all/", "/light_all/");
+  return theme === "light" ? light : tiles.url;
 }
 
 function routeBadgeHtml(order: number) {
@@ -656,8 +658,9 @@ export function HouseMap({
     ];
   }, [routeStart, userLocation, routeStops, routeStartedFrom]);
   const [mapTheme, setMapTheme] = useState<"dark" | "light">(readMapTheme);
-  const tileUrl = tileUrlFor(mapTheme);
-  const osmDark = mapTheme === "dark" && config.tiles.invert;
+  const tiles = useMapTiles();
+  const tileUrl = tileUrlFor(tiles, mapTheme);
+  const osmDark = mapTheme === "dark" && tiles.invert;
 
   function toggleMapTheme() {
     setMapTheme((current) => {
@@ -697,16 +700,15 @@ export function HouseMap({
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
-          attribution={config.tiles.attribution}
+          attribution={tiles.attribution}
           url={tileUrl}
           key={tileUrl}
           subdomains={
-            "subdomains" in config.tiles && config.tiles.subdomains
-              ? config.tiles.subdomains
-              : "abcd"
+            "subdomains" in tiles && tiles.subdomains ? tiles.subdomains : "abcd"
           }
           maxZoom={config.map.maxZoom}
-          maxNativeZoom={config.tiles.maxNativeZoom}
+          maxNativeZoom={tiles.maxNativeZoom}
+          detectRetina
           updateWhenZooming={false}
           className="hw-basemap"
         />

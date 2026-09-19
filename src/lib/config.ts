@@ -3,22 +3,16 @@ const centerLng = Number(process.env.NEXT_PUBLIC_MAP_CENTER_LNG ?? 34.8112);
 const latPad = 0.0075;
 const lngPad = 0.014;
 
-function cartoTileUrl(style: "dark_all" | "light_all") {
-  const base = `https://{s}.basemaps.cartocdn.com/${style}/{z}/{x}/{y}.png`;
-  const key = process.env.NEXT_PUBLIC_CARTO_BASEMAP_KEY?.trim();
-  if (!key) return base;
-  return `${base}?key=${encodeURIComponent(key)}`;
-}
+import { CARTO_VOYAGER_TEMPLATE } from "@/lib/carto-tiles";
 
 const tiles = {
-  // Direct CARTO tiles (no Vercel proxy — saves Fluid CPU). Key is public in the browser; restrict by domain in CARTO.
-  url: cartoTileUrl("dark_all"),
-  lightUrl: cartoTileUrl("light_all"),
+  // Voyager + CSS invert for night theme. Runtime key from /api/map-config (invalid keys are skipped).
+  url: CARTO_VOYAGER_TEMPLATE,
   subdomains: "abcd",
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-  invert: false,
-  maxNativeZoom: 19,
+  invert: true,
+  maxNativeZoom: 20,
 } as const;
 
 export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים"] as const;
