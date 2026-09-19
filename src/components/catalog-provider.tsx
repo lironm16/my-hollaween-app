@@ -22,7 +22,16 @@ import {
 } from "@/lib/offline-db";
 import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
 import { fetchWithTimeout, withTimeout } from "@/lib/fetch-timeout";
-import { catalogHasRealHouses } from "@/lib/house-set";
+import { catalogHasRealHouses, isStubHouse } from "@/lib/house-set";
+
+/** Thin cache usually means only a locally published house was saved — force a full reload. */
+const MIN_TRUSTED_REAL_HOUSES = 5;
+
+function cacheLooksIncomplete(catalog: Catalog | null) {
+  if (!catalog) return false;
+  const realCount = catalog.houses.filter((house) => !isStubHouse(house)).length;
+  return realCount > 0 && realCount < MIN_TRUSTED_REAL_HOUSES;
+}
 
 const CATALOG_FETCH_MS = 8000;
 const BOOTSTRAP_REFRESH_MS = 20_000;
@@ -238,7 +247,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         // Let SSR seed catalog before deciding whether mount needs a network refresh.
         await Promise.resolve();
         if (!cancelled && !seededRef.current) {
-          await withTimeout(refresh(false), BOOTSTRAP_REFRESH_MS);
+          const forceFull = cacheLooksIncomplete(cached ?? catalogRef.current);
+          await withTimeout(refresh(forceFull), BOOTSTRAP_REFRESH_MS);
         }
       } finally {
         if (!cancelled) {
