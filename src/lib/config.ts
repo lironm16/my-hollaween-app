@@ -3,20 +3,10 @@ const centerLng = Number(process.env.NEXT_PUBLIC_MAP_CENTER_LNG ?? 34.8112);
 const latPad = 0.0075;
 const lngPad = 0.014;
 
-/** Append CARTO basemap API key (required for raster tiles; set on Vercel). */
-function cartoTileUrl(template: string) {
-  const key = process.env.NEXT_PUBLIC_CARTO_BASEMAP_KEY?.trim();
-  if (!key) return template;
-  const joiner = template.includes("?") ? "&" : "?";
-  return `${template}${joiner}key=${encodeURIComponent(key)}`;
-}
-
 const tiles = {
-  // CARTO basemaps — allowed for production apps. (tile.openstreetmap.org blocks
-  // PWA / service-worker traffic without Referer, which showed a blank gray map.)
-  url: cartoTileUrl("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"),
-  lightUrl: cartoTileUrl("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"),
-  subdomains: "abcd",
+  // Proxied via /api/map-tiles so CARTO_BASEMAP_KEY stays server-side (not NEXT_PUBLIC_).
+  url: "/api/map-tiles/{z}/{x}/{y}.png?theme=dark",
+  lightUrl: "/api/map-tiles/{z}/{x}/{y}.png?theme=light",
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
   invert: false,
