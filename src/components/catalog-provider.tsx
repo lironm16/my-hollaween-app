@@ -247,15 +247,6 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const cached = await readDeviceCatalog();
-      if (cached && !cancelled && !seededRef.current) {
-        setCatalog(cached);
-        setSource("cache");
-        if (catalogHasRealHouses(cached)) {
-          setLoading(false);
-          setReady(true);
-        }
-      }
       // Let SSR seed catalog before deciding whether mount needs a network refresh.
       await Promise.resolve();
       if (!cancelled && !seededRef.current) {

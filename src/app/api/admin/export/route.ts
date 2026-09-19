@@ -18,7 +18,7 @@ export async function GET(request: Request) {
       return new NextResponse(Buffer.from(xlsx), {
         headers: {
           "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          "Content-Disposition": "attachment; filename=spookyhouzz-houses.xlsx",
+          "Content-Disposition": "attachment; filename=hallowhood-houses.xlsx",
           "Cache-Control": "no-store",
         },
       });
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": "attachment; filename=spookyhouzz-houses.csv",
+        "Content-Disposition": "attachment; filename=hallowhood-houses.csv",
         "Cache-Control": "no-store",
       },
     });

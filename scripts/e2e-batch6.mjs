@@ -217,7 +217,7 @@ async function main() {
     page.getByRole("button", { name: "הורדה" }).click(),
   ]);
   const fileName = download.suggestedFilename();
-  if (!fileName.startsWith("spookyhouzz-") || !fileName.endsWith(".xlsx")) {
+  if (!fileName.startsWith("hallowhood-") || !fileName.endsWith(".xlsx")) {
     fail("EXP-01 export should download an .xlsx list file");
   } else pass("EXP-01 list export downloads spreadsheet");
 

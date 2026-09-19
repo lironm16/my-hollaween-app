@@ -763,9 +763,6 @@
   .w-\[min\(38rem\,calc\(100vw-1\.5rem\)\)\] {
     width: min(38rem, calc(100vw - 1.5rem));
   }
-  .w-\[min\(100\%-2rem\,24rem\)\] {
-    width: min(100% - 2rem, 24rem);
-  }
   .w-\[min\(100\%-2rem\,26rem\)\] {
     width: min(100% - 2rem, 26rem);
   }
@@ -786,6 +783,9 @@
   }
   .max-w-\[calc\(100\%-2rem\)\] {
     max-width: calc(100% - 2rem);
+  }
+  .max-w-\[calc\(100vw-2rem\)\] {
+    max-width: calc(100vw - 2rem);
   }
   .max-w-\[min\(calc\(100\%-1rem\)\,12rem\)\] {
     max-width: min(calc(100% - 1rem), 12rem);
