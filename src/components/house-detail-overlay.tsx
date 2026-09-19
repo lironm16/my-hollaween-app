@@ -17,6 +17,7 @@ import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline } from "@/lib/labels";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export function HouseDetailOverlay({
   house,
@@ -133,7 +134,14 @@ export function HouseDetailOverlay({
           }
         />
       </div>
-      <div className="house-detail-overlay-body min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+      <div
+        className={cn(
+          "house-detail-overlay-body min-h-0 flex-1 px-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]",
+          multi && !overview
+            ? "flex flex-col overflow-hidden"
+            : "overflow-y-auto overscroll-contain",
+        )}
+      >
         {overview ? (
           <div id={labelId}>
             <p className="map-house-sheet-kicker">{formatDisplayAddress(house)}</p>
@@ -150,6 +158,56 @@ export function HouseDetailOverlay({
               />
             </div>
           </div>
+        ) : multi ? (
+          <div className="flex min-h-0 flex-1 flex-col">
+            {clusterIndex != null ? (
+              <div className="shrink-0 pb-2">
+                <ClusterHouseNav
+                  houses={clusterHouses!}
+                  selectedId={house.id}
+                  onPrev={() => onAdjacentClusterHouse?.(-1)}
+                  onNext={() => onAdjacentClusterHouse?.(1)}
+                  onBack={() => onBackToClusterOverview?.()}
+                />
+              </div>
+            ) : null}
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <ClusterHouseSwipeArea
+                canPrev={canPrevCluster}
+                canNext={canNextCluster}
+                onPrev={() => onAdjacentClusterHouse?.(-1)}
+                onNext={() => onAdjacentClusterHouse?.(1)}
+              >
+                <span id={labelId} className="sr-only">
+                  {houseHeadline(house)}
+                </span>
+                <FilterMismatchNotice
+                  reasons={filterMismatchReasons}
+                  skipMeta={skipMeta}
+                  onRestoreRoute={onRestoreRoute}
+                />
+                {editing ? (
+                  <>
+                    <p className="map-house-sheet-kicker">{houseHeadline(house)}</p>
+                    <CodesCopy editCode={editCodeFor?.(house.id) ?? managerEditCode} />
+                    {extra}
+                  </>
+                ) : (
+                  <HouseDetails
+                    house={house}
+                    catalogSource={catalogSource}
+                    liked={liked?.(house.id)}
+                    onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
+                    visited={visited?.(house.id)}
+                    onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
+                    extra={extra}
+                    chrome="sheet"
+                    index={index}
+                  />
+                )}
+              </ClusterHouseSwipeArea>
+            </div>
+          </div>
         ) : (
           <ClusterHouseSwipeArea
             canPrev={canPrevCluster}
@@ -160,15 +218,6 @@ export function HouseDetailOverlay({
             <span id={labelId} className="sr-only">
               {houseHeadline(house)}
             </span>
-            {multi && clusterIndex != null ? (
-              <ClusterHouseNav
-                houses={clusterHouses!}
-                selectedId={house.id}
-                onPrev={() => onAdjacentClusterHouse?.(-1)}
-                onNext={() => onAdjacentClusterHouse?.(1)}
-                onBack={() => onBackToClusterOverview?.()}
-              />
-            ) : null}
             <FilterMismatchNotice
               reasons={filterMismatchReasons}
               skipMeta={skipMeta}
