@@ -25,7 +25,7 @@ const STEPS: Array<{
         — כדי להחזיר אותם, שנהו את הסינון.
       </>
     ),
-    image: helpImage("route-1-filters.svg"),
+    image: helpImage("route-1-filters.png"),
     imageAlt: "חלון סינון בתים",
     action: (
       <Link
@@ -47,7 +47,7 @@ const STEPS: Array<{
         מיקום נוכחי (GPS), מרכז השכונה, או נקודה על המפה. המסלול מחושב מהנקודה הזו.
       </>
     ),
-    image: helpImage("route-2-origin.svg"),
+    image: helpImage("route-2-origin.png"),
     imageAlt: "בחירת נקודת התחלה",
   },
   {
@@ -59,7 +59,7 @@ const STEPS: Array<{
         גישה למיקום.
       </>
     ),
-    image: helpImage("route-3-enable.svg"),
+    image: helpImage("route-3-enable.png"),
     imageAlt: "הפעלת מסלול מהסרגל",
   },
   {
@@ -71,7 +71,7 @@ const STEPS: Array<{
         משוער) ואז רשימת עצירות ממוספרות עם מרחק הליכה בין כל תחנה.
       </>
     ),
-    image: helpImage("route-4-summary.svg"),
+    image: helpImage("route-4-summary.png"),
     imageAlt: "סיכום מסלול ורשימת עצירות",
   },
 ];

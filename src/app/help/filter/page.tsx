@@ -22,7 +22,7 @@ const STEPS: Array<{
         (אהבתי / לא ביקרתי / דילגתי).
       </>
     ),
-    image: helpImage("filter-1-open.svg"),
+    image: helpImage("filter-1-open.png"),
     imageAlt: "חלון סינון בתים",
   },
   {
@@ -38,7 +38,7 @@ const STEPS: Array<{
         <strong className="text-orange-200">הצג תוצאות</strong>.
       </>
     ),
-    image: helpImage("filter-2-map-dim.svg"),
+    image: helpImage("filter-2-map-dim.png"),
     imageAlt: "בתים מסוננים מוצגים במפה באפור",
   },
   {
@@ -57,7 +57,7 @@ const STEPS: Array<{
         בזמן שהוא פתוח. בתים שכבר נסגרו לפני השעה שבחרתם לא יופיעו.
       </>
     ),
-    image: helpImage("filter-3-custom-times.svg"),
+    image: helpImage("filter-3-custom-times.png"),
     imageAlt: "בחירת שעות מותאמות אישית",
   },
   {
@@ -70,7 +70,7 @@ const STEPS: Array<{
         אלה — שאר הבתים יישארו על המפה באפור. כפתור הסינון בסרגל נדלק בכתום כשיש סינון פעיל.
       </>
     ),
-    image: helpImage("filter-4-results.svg"),
+    image: helpImage("filter-4-results.png"),
     imageAlt: "תוצאות סינון ברשימה",
   },
 ];
