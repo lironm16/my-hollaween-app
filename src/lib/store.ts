@@ -888,7 +888,7 @@ export async function getHouse(id: string): Promise<House | undefined> {
 
 export async function submitHouse(
   input: HouseInput,
-  options?: { includeEndpoint?: string },
+  options?: { includeEndpoint?: string; addedBy?: string },
 ) {
   await assertRealAddress(input);
   let id = "";
@@ -940,6 +940,7 @@ export async function submitHouse(
       editCode,
       createdAt: now,
       updatedAt: now,
+      addedBy: options?.addedBy?.trim() || null,
     };
     db.houses.push(house);
     db.updatedAt = now;

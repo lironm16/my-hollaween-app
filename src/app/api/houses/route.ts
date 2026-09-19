@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { houseInputSchema } from "@/lib/schema";
+import { houseSubmitSchema } from "@/lib/schema";
 import { submitHouse } from "@/lib/store";
 import { toPublicHouse } from "@/lib/ids";
 import { geocodeHttpError } from "@/lib/geocode";
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "גוף הבקשה אינו תקין." }, { status: 400 });
   }
-  const parsed = houseInputSchema.safeParse(json);
+  const parsed = houseSubmitSchema.safeParse(json);
   if (!parsed.success) {
     console.error("[houses] validation failed", parsed.error.flatten());
     return NextResponse.json(
@@ -24,9 +24,11 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+  const { addedBy, ...input } = parsed.data;
   try {
-    const house = await submitHouse(parsed.data, {
+    const house = await submitHouse(input, {
       includeEndpoint: readIncludeEndpoint(json),
+      addedBy,
     });
     try {
       await grantOwnerHouse(house.house.id);

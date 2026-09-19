@@ -47,15 +47,17 @@ export function readyHouseInput(input: HouseInput): HouseInput {
 /** Always posts to the server. Never keeps a house only on the phone. */
 export async function publishHouse(
   input: HouseInput,
-  options?: { includeEndpoint?: string },
+  options?: { includeEndpoint?: string; addedBy?: string },
 ): Promise<PublishResult> {
   const body = readyHouseInput(input);
+  const addedBy = options?.addedBy?.trim();
+  if (!addedBy) throw new Error("נא למלא מי מוסיף את הבית.");
   let res: Response;
   try {
     res = await fetch("/api/houses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...body, includeEndpoint: options?.includeEndpoint }),
+      body: JSON.stringify({ ...body, addedBy, includeEndpoint: options?.includeEndpoint }),
     });
   } catch {
     throw new Error("אין חיבור לשרת. בדקו את הרשת ונסו שוב.");
