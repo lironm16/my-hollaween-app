@@ -14,6 +14,14 @@ const QUESTIONS = [
     href: "/help/install",
   },
   {
+    question: "איך יוצרים מסלול?",
+    href: "/help/create-route",
+  },
+  {
+    question: "במהלך המסלול",
+    href: "/help/during-route",
+  },
+  {
     question: "איך לשתף קוד עריכה?",
     href: "/help/share-edit-code",
   },

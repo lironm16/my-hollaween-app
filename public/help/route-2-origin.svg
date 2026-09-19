@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" role="img" aria-label="бзйшъ рчегъ дъзмд">
+  <rect width="390" height="780" fill="#12081a"/>
+  <rect x="24" y="120" width="342" height="380" rx="20" fill="#1d1028" stroke="#f97316" stroke-opacity="0.35"/>
+  <text x="195" y="168" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="20" font-weight="700" text-anchor="middle">рчегъ дъзмд</text>
+  <rect x="48" y="200" width="294" height="52" rx="12" fill="#f97316" fill-opacity="0.15" stroke="#f97316"/>
+  <text x="330" y="232" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="16" font-weight="700" text-anchor="end">ойчен щмй (GPS)</text>
+  <rect x="48" y="268" width="294" height="52" rx="12" fill="#0a0610" stroke="#f97316" stroke-opacity="0.25"/>
+  <text x="330" y="300" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="16" text-anchor="end">ошлж дщлерд</text>
+  <rect x="48" y="336" width="294" height="52" rx="12" fill="#0a0610" stroke="#f97316" stroke-opacity="0.25"/>
+  <text x="330" y="368" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="16" text-anchor="end">бзйшд тм дофд</text>
+  <text x="195" y="430" fill="#a78bfa" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="middle">лфъеш =Э бсшвм длмйн</text>
+</svg>
