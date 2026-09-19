@@ -48,7 +48,13 @@ export function NightDesk({
     noticeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [notice]);
 
-  function keepLocal(patch: Partial<HouseInput> & { photoUrl?: string; ownerFrozenUntil?: string | null }) {
+  function keepLocal(
+    patch: Partial<HouseInput> & {
+      photoUrl?: string;
+      ownerFrozenUntil?: string | null;
+      addedBy?: string | null;
+    },
+  ) {
     const next = applyLocalHousePatch(house, patch);
     const url = admin
       ? `/api/admin/houses/${encodeURIComponent(house.id)}`
@@ -70,7 +76,11 @@ export function NightDesk({
   }
 
   async function save(
-    patch: Partial<HouseInput> & { photoUrl?: string; ownerFrozenUntil?: string | null },
+    patch: Partial<HouseInput> & {
+      photoUrl?: string;
+      ownerFrozenUntil?: string | null;
+      addedBy?: string | null;
+    },
   ): Promise<SaveResult | null> {
     setBusy(true);
     try {
@@ -169,6 +179,7 @@ export function NightDesk({
     const saved = await save({
       ...input,
       ownerFrozenUntil: extras?.ownerFrozenUntil ?? null,
+      addedBy: extras?.addedBy ?? null,
       ...(extras?.clearPhoto && !extras.photoDataUrl ? { photoUrl: "" } : {}),
     });
     if (!saved) return;

@@ -1151,6 +1151,7 @@ export async function adminUpdate(
     if (patch.adminFrozen !== undefined) house.adminFrozen = patch.adminFrozen;
     if (patch.ownerFrozenUntil !== undefined) house.ownerFrozenUntil = patch.ownerFrozenUntil;
     if (patch.photoUrl !== undefined) house.photoUrl = parsePhotoUrl(patch.photoUrl) ?? patch.photoUrl;
+    if (patch.addedBy !== undefined) house.addedBy = patch.addedBy?.trim() || null;
     if (patch.visit !== undefined) house.soldOut = patch.visit === "closed";
     else if (patch.soldOut !== undefined) {
       house.soldOut = patch.soldOut;
@@ -1214,6 +1215,7 @@ function sanitizeOwnerPatch(
   if (patch.decorated !== undefined) next.decorated = patch.decorated;
   if (patch.ownerFrozenUntil !== undefined) next.ownerFrozenUntil = patch.ownerFrozenUntil;
   if (patch.photoUrl !== undefined) next.photoUrl = patch.photoUrl;
+  if (patch.addedBy !== undefined) next.addedBy = patch.addedBy?.trim() || null;
   return next;
 }
 

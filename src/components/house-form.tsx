@@ -85,7 +85,7 @@ export type HouseFormExtras = {
   photoDataUrl?: string;
   clearPhoto?: boolean;
   ownerFrozenUntil?: string | null;
-  addedBy?: string;
+  addedBy?: string | null;
 };
 
 export function HouseForm({
@@ -101,6 +101,7 @@ export function HouseForm({
     photoUrl?: string;
     visit?: VisitState;
     ownerFrozenUntil?: string | null;
+    addedBy?: string | null;
   };
   submitLabel: string;
   onSubmit: (input: HouseInput, extras?: HouseFormExtras) => Promise<void> | void;
@@ -127,7 +128,7 @@ export function HouseForm({
   const [photoFocus, setPhotoFocus] = useState<PhotoFocus>({ x: 50, y: 50 });
   const [clearPhoto, setClearPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [addedBy, setAddedBy] = useState("");
+  const [addedBy, setAddedBy] = useState(() => initial?.addedBy?.trim() ?? "");
   const existingPhoto = initial?.photoUrl ?? "";
   const isNewHouse = !initial?.id;
   const now = useAppNow();
@@ -186,6 +187,10 @@ export function HouseForm({
   useEffect(() => {
     if (!pauseCloseEnabled && nightStatus !== "open") setNightStatus("open");
   }, [pauseCloseEnabled, nightStatus]);
+
+  useEffect(() => {
+    setAddedBy(initial?.addedBy?.trim() ?? "");
+  }, [initial?.id, initial?.addedBy]);
 
   function pickScare(level: ScareLevel) {
     setForm((f) => ({ ...f, scareLevel: level }));
@@ -286,8 +291,13 @@ export function HouseForm({
           toast.error("בחרו כתובת אמיתית מהרשימה, או גררו את הסיכה לבית.");
           return;
         }
-        if (isNewHouse && addedBy.trim().length < 2) {
+        const submitter = addedBy.trim();
+        if (isNewHouse && submitter.length < 2) {
           toast.error("נא למלא מי מוסיף את הבית.");
+          return;
+        }
+        if (!isNewHouse && submitter.length > 0 && submitter.length < 2) {
+          toast.error("שם מלא של מי שהוסיף את הבית — לפחות 2 תווים.");
           return;
         }
         if (decorLevel === "none" && candy !== "plenty" && candy !== "low" && !(pauseCloseEnabled && nightStatus === "stop") && initial?.visit !== "closed") {
@@ -357,7 +367,7 @@ export function HouseForm({
               photoDataUrl,
               clearPhoto: clearPhoto && !photoFile,
               ownerFrozenUntil,
-              addedBy: isNewHouse ? addedBy.trim() : undefined,
+              addedBy: submitter || null,
             });
           } finally {
             setSaving(false);
@@ -366,19 +376,17 @@ export function HouseForm({
       }}
     >
       <FormSection title="הבית">
-        {isNewHouse ? (
-          <Field label="מי מוסיף את הבית?">
-            <Input
-              required
-              value={addedBy}
-              minLength={2}
-              maxLength={80}
-              onChange={(e) => setAddedBy(e.target.value)}
-              placeholder="ישראל כהן"
-              className="h-10 bg-[#1d1028]"
-            />
-          </Field>
-        ) : null}
+        <Field label="מי מוסיף את הבית?">
+          <Input
+            required={isNewHouse}
+            value={addedBy}
+            minLength={isNewHouse ? 2 : undefined}
+            maxLength={80}
+            onChange={(e) => setAddedBy(e.target.value)}
+            placeholder="ישראל כהן"
+            className="h-10 bg-[#1d1028]"
+          />
+        </Field>
         <div>
           <p className="mb-2 text-base font-medium">שם הבית</p>
           <Input

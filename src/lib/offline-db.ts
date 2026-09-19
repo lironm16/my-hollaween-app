@@ -537,7 +537,11 @@ export type PendingHouseWrite = {
 
 export function applyLocalHousePatch(
   house: PublicHouse,
-  patch: Partial<HouseInput> & { photoUrl?: string; ownerFrozenUntil?: string | null },
+  patch: Partial<HouseInput> & {
+    photoUrl?: string;
+    ownerFrozenUntil?: string | null;
+    addedBy?: string | null;
+  },
 ): PublicHouse {
   const next: PublicHouse = {
     ...house,

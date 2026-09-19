@@ -129,6 +129,7 @@ export type NightPatch = {
   adminFrozen?: boolean;
   soldOut?: boolean;
   photoUrl?: string;
+  addedBy?: string | null;
 };
 
 export type PublicHouse = Omit<House, "editCode" | "storeId">;
