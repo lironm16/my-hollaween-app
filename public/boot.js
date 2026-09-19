@@ -15,13 +15,3 @@
     window.visualViewport.addEventListener("scroll", syncAppH);
   }
 })();
-
-/* Drop stale service workers left from broken builds (no reload loop). */
-(function () {
-  if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.getRegistrations().then(function (regs) {
-    regs.forEach(function (reg) {
-      void reg.unregister();
-    });
-  });
-})();
