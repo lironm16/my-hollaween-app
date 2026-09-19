@@ -800,6 +800,7 @@ export function NeighborhoodApp({
                   <HouseList
                     houses={visible}
                     origin={origin}
+                    now={now}
                     catalogSource={source}
                     likedIds={likes.likedIds}
                     onToggleLike={onToggleLike}
