@@ -102,6 +102,7 @@ export function HouseCard({
           chrome="sheet"
           compact={!expanded}
           index={index}
+          onReadMore={!expanded && onOpen ? open : undefined}
           headerMenu={
             <HouseActionBar
               house={house}
