@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>HallowHood · מתקן</title>
+    <link rel="stylesheet" href="/shell.css" />
+    <style>
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: #12081a;
+        color: #f4e7c8;
+        font-family: Rubik, sans-serif;
+        text-align: center;
+      }
+      h1 {
+        font-size: 1.25rem;
+        color: #fdba74;
+        margin: 0 0 8px;
+      }
+      p {
+        color: #ddd6fe;
+        line-height: 1.5;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1>מתקנים את האפליקציה…</h1>
+      <p>עוד רגע נחזור למפה.</p>
+    </div>
+    <script>
+      (function () {
+        var TARGET_SHELL = "hw-shell-v109";
+        var RECOVER = "hw-recover-v109";
+
+        function done() {
+          try {
+            localStorage.setItem(RECOVER, "done");
+          } catch (e) {}
+          location.replace("/");
+        }
+
+        if (!("serviceWorker" in navigator)) {
+          done();
+          return;
+        }
+
+        var chain = Promise.resolve();
+        if ("caches" in window) {
+          chain = caches.keys().then(function (keys) {
+            return Promise.all(
+              keys
+                .filter(function (key) {
+                  return key.startsWith("hw-shell-") && key !== TARGET_SHELL;
+                })
+                .map(function (key) {
+                  return caches.delete(key);
+                }),
+            );
+          });
+        }
+
+        chain
+          .then(function () {
+            return navigator.serviceWorker.getRegistration("/");
+          })
+          .then(function (reg) {
+            if (reg) return reg.unregister().then(function () { return true; });
+            return false;
+          })
+          .then(function () {
+            return navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" });
+          })
+          .then(function (reg) {
+            if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
+            if (reg.installing) {
+              return new Promise(function (resolve) {
+                reg.installing.addEventListener("statechange", function () {
+                  if (reg.installing.state === "activated") resolve(reg);
+                });
+              });
+            }
+            return reg;
+          })
+          .then(done)
+          .catch(done);
+      })();
+    </script>
+  </body>
+</html>
