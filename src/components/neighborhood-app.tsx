@@ -150,6 +150,11 @@ export function NeighborhoodApp({
     admin,
     adminHouses,
   });
+  const deviceHasCache = useSyncExternalStore(
+    () => () => {},
+    () => catalogHasRealHouses(loadCatalogCacheSync()),
+    () => false,
+  );
   const cachedHouses = useSyncExternalStore(
     () => () => {},
     () => loadCatalogCacheSync()?.houses ?? [],
@@ -197,10 +202,9 @@ export function NeighborhoodApp({
     [displayHouses, filters, filterContext],
   );
   const showBootstrapSpinner =
-    typeof window !== "undefined" &&
+    !deviceHasCache &&
     displayHouses.length === 0 &&
     !catalogHasRealHouses(catalog) &&
-    cachedHouses.length === 0 &&
     loading;
   const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
   const filterDimActive = matchedIds.size < mapHouses.length;

@@ -18,34 +18,52 @@
 })();
 
 (function () {
-  var flag = "hw-sw-bust-v83";
+  var flag = "hw-sw-bust-v106";
+  var currentShell = "hw-shell-v107";
   try {
-    if (sessionStorage.getItem(flag)) return;
+    if (localStorage.getItem(flag)) return;
   } catch (e) {}
 
   if (!("serviceWorker" in navigator)) return;
 
   navigator.serviceWorker.getRegistrations().then(function (regs) {
-    return Promise.all(regs.map(function (reg) {
-      return reg.unregister();
-    })).then(function (results) {
+    return Promise.all(
+      regs.map(function (reg) {
+        return reg.unregister();
+      }),
+    ).then(function (results) {
       var had = results.some(Boolean);
-      var clear = Promise.resolve();
-      if ("caches" in window) {
-        clear = caches.keys().then(function (keys) {
-          had = had || keys.length > 0;
-          return Promise.all(keys.map(function (key) {
-            return caches.delete(key);
-          }));
-        });
+      if (!("caches" in window)) {
+        if (had) markAndReload(flag);
+        return;
       }
-      return clear.then(function () {
-        if (!had) return;
-        try {
-          sessionStorage.setItem(flag, "1");
-        } catch (e) {}
-        location.reload();
+      return caches.keys().then(function (keys) {
+        return Promise.all(
+          keys
+            .filter(function (key) {
+              return key.startsWith("hw-shell-") && key !== currentShell;
+            })
+            .map(function (key) {
+              had = true;
+              return caches.delete(key);
+            }),
+        ).then(function () {
+          if (!had) {
+            try {
+              localStorage.setItem(flag, "1");
+            } catch (e) {}
+            return;
+          }
+          markAndReload(flag);
+        });
       });
     });
   });
+
+  function markAndReload(flag) {
+    try {
+      localStorage.setItem(flag, "1");
+    } catch (e) {}
+    location.reload();
+  }
 })();

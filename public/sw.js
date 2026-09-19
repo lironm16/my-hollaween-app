@@ -1,4 +1,4 @@
-const CACHE = "hw-shell-v106";
+const CACHE = "hw-shell-v107";
 const TILE_CACHE = "hw-tiles-v7";
 const PRECACHE = [
   "/offline.html",
@@ -173,7 +173,7 @@ async function navigation(request) {
       (await cache.match("/")) ||
       new Response(
         "<!doctype html><meta charset=utf-8><title>לא מקוון</title><p dir=rtl>אין קשר לשרת. פתחו את האפליקציה פעם אחת כשיש רשת כדי לשמור את רשימת הבתים בטלפון.</p>",
-        { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } },
+        { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
       )
     );
   }
