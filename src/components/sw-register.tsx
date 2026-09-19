@@ -1,30 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { refreshPushSubscriptionIfEnabled } from "@/lib/push-client";
-
+/** Service worker disabled until v109 — stale SW + React crash blocked all users. Re-enable after stable deploy. */
 export function ServiceWorkerRegister() {
-  useEffect(() => {
-    if (!("serviceWorker" in navigator)) return;
-
-    void navigator.serviceWorker
-      .register("/sw.js", { scope: "/", updateViaCache: "none" })
-      .then((registration) => {
-        void registration.update();
-        return refreshPushSubscriptionIfEnabled();
-      });
-
-    const onVisible = () => {
-      if (document.visibilityState !== "visible") return;
-      void navigator.serviceWorker
-        .getRegistration("/")
-        .then((registration) => registration?.update());
-      void refreshPushSubscriptionIfEnabled();
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-  }, []);
   return null;
 }
