@@ -94,11 +94,17 @@ export const houseInputSchema = houseFields.extend({
   decorated: z.boolean().optional(),
 });
 
+const addedByPatchField = z.preprocess(
+  (value) => (typeof value === "string" && !value.trim() ? null : value),
+  z.union([z.string().trim().min(2).max(80), z.null()]).optional(),
+);
+
 export const ownerPatchSchema = houseFields.partial().extend({
   soldOut: z.boolean().optional(),
   ownerFrozenUntil: z.string().nullable().optional(),
   photoUrl: z.union([photoUrlSchema, z.literal("")]).optional(),
   editCode: z.string().min(4).max(12).optional(),
+  addedBy: addedByPatchField,
 });
 
 export const adminPatchSchema = houseFields.partial().extend({
@@ -106,4 +112,5 @@ export const adminPatchSchema = houseFields.partial().extend({
   ownerFrozenUntil: z.string().nullable().optional(),
   adminFrozen: z.boolean().optional(),
   photoUrl: z.union([photoUrlSchema, z.literal("")]).optional(),
+  addedBy: addedByPatchField,
 });
