@@ -129,6 +129,7 @@ export function HouseDetailOverlay({
               onRestoreRoute={onRestoreRoute}
               skipped={skipped}
               editing={editing}
+              editCode={editCodeFor?.(house.id) ?? managerEditCode}
               menuPlacement="bottom"
             />
           }

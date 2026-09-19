@@ -69,14 +69,20 @@ export function useUserLocation() {
     );
   }, [apply, fail]);
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback(async () => {
     if (!navigator.geolocation) {
       setStatus("unavailable");
       return;
     }
+    const permission = await queryGeoPermission();
+    if (permission === "denied") {
+      setStatus("denied");
+      return;
+    }
     setStatus((s) => (s === "ready" ? s : "pending"));
+    if (permission === "granted") startWatch();
     navigator.geolocation.getCurrentPosition((pos) => apply(pos, true), fail, watchOpts);
-    startWatch();
+    if (permission !== "granted") startWatch();
   }, [apply, fail, startWatch]);
 
   useEffect(() => {

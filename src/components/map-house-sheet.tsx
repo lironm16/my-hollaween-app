@@ -137,7 +137,8 @@ export function MapHouseSheet({
       onRestoreRoute={onRestoreRoute}
       skipped={skipped}
       editing={editing}
-      menuPlacement="top"
+      editCode={editCodeFor?.(house.id) ?? managerEditCode}
+      menuPlacement="bottom"
     />
   );
 
