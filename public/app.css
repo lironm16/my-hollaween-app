@@ -1775,6 +1775,10 @@
     --tw-tracking: 0.2em;
     letter-spacing: 0.2em;
   }
+  .tracking-\[0\.25em\] {
+    --tw-tracking: 0.25em;
+    letter-spacing: 0.25em;
+  }
   .tracking-\[0\.35em\] {
     --tw-tracking: 0.35em;
     letter-spacing: 0.35em;
@@ -2657,6 +2661,10 @@
   }
   .focus\:text-orange-50:focus {
     color: var(--color-orange-50);
+  }
+  .focus\:ring-2:focus {
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .focus\:outline-none:focus {
     --tw-outline-style: none;

@@ -28,6 +28,7 @@ export function HouseCard({
   skipped = false,
   skipMeta,
   canEdit = false,
+  editCode,
   admin = false,
   onShowOnMap,
   onOpen,
@@ -48,6 +49,7 @@ export function HouseCard({
   skipped?: boolean;
   skipMeta?: SkippedHouseMeta;
   canEdit?: boolean;
+  editCode?: string;
   admin?: boolean;
   onShowOnMap?: () => void;
   onOpen?: () => void;
@@ -66,28 +68,37 @@ export function HouseCard({
   return (
     <Card
       size="sm"
-      role={interactive ? "button" : undefined}
-      tabIndex={interactive ? 0 : undefined}
-      aria-label={interactive ? "פתיחת פרטי הבית" : undefined}
       className={cn(
         "house-list-card overflow-visible bg-[#1d1028]/90 text-base",
         visited ? "is-visited ring-0" : "border-orange-500/15",
-        interactive && "cursor-pointer transition hover:bg-[#261536]",
+        interactive && "transition hover:bg-[#261536]",
         interactive && !visited && "hover:border-orange-400/50",
       )}
-      onClick={(event) => {
-        if (!interactive || isCardInteractive(event.target)) return;
-        open();
-      }}
-      onKeyDown={(event) => {
-        if (!interactive) return;
-        if (event.key !== "Enter" && event.key !== " ") return;
-        if (isCardInteractive(event.target)) return;
-        event.preventDefault();
-        open();
-      }}
     >
-      <div className="px-3 pb-1 pt-2">
+      <div
+        className={cn("px-3 pb-1 pt-2", interactive && "cursor-pointer")}
+        role={interactive ? "button" : undefined}
+        tabIndex={interactive ? 0 : undefined}
+        aria-label={interactive ? "פתיחת פרטי הבית" : undefined}
+        onClick={
+          interactive
+            ? (event) => {
+                if (isCardInteractive(event.target)) return;
+                open();
+              }
+            : undefined
+        }
+        onKeyDown={
+          interactive
+            ? (event) => {
+                if (event.key !== "Enter" && event.key !== " ") return;
+                if (isCardInteractive(event.target)) return;
+                event.preventDefault();
+                open();
+              }
+            : undefined
+        }
+      >
         {skipped ? (
           <HouseSkippedBanner meta={skipMeta} onRestore={onRestoreRoute} />
         ) : null}
@@ -114,9 +125,10 @@ export function HouseCard({
               onRestoreRoute={skipped ? onRestoreRoute : undefined}
               skipped={skipped}
               onToggleEdit={canEdit ? onToggleEdit : undefined}
+              editCode={editCode}
               onShowOnMap={onShowOnMap}
               editing={editing}
-              menuPlacement="top"
+              menuPlacement="bottom"
             />
           }
         />

@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type 
 import { createPortal } from "react-dom";
 import {
   Heart,
+  KeyRound,
   List,
   MapPinned,
   MoreVertical,
@@ -16,9 +17,10 @@ import { SavedTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons
 import { SkipIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
+import { EditCodeDialog } from "@/components/edit-code-dialog";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
-import { safeAreaInsetBottom, safeAreaInsetTop } from "@/lib/viewport";
+import { appHeaderBottom, safeAreaInsetBottom } from "@/lib/viewport";
 import { cn } from "@/lib/utils";
 
 export function formatActionCount(n: number) {
@@ -61,6 +63,7 @@ export function HouseActionBar({
   onRestoreRoute,
   skipped,
   editing,
+  editCode,
   navOnly,
   showNav = true,
   menuPlacement = "top",
@@ -78,6 +81,8 @@ export function HouseActionBar({
   onRestoreRoute?: () => void;
   skipped?: boolean;
   editing?: boolean;
+  /** Shown to owners/admins in the ⋮ menu — copy or share the 6-digit edit code. */
+  editCode?: string;
   navOnly?: boolean;
   showNav?: boolean;
   /** Preferred menu direction; flips automatically if there is not enough room. */
@@ -85,6 +90,7 @@ export function HouseActionBar({
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [editCodeOpen, setEditCodeOpen] = useState(false);
   const [panelStyle, setPanelStyle] = useState<CSSProperties>({ visibility: "hidden" });
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -203,6 +209,14 @@ export function HouseActionBar({
         active: editing,
       });
     }
+    if (editCode) {
+      items.push({
+        id: "edit-code",
+        label: "קוד עריכה",
+        icon: <KeyRound className={MENU_ICON_CLASS} strokeWidth={2.2} />,
+        onClick: () => setEditCodeOpen(true),
+      });
+    }
   }
 
   useLayoutEffect(() => {
@@ -215,9 +229,8 @@ export function HouseActionBar({
 
       const margin = 10;
       const gap = 8;
-      const safeTop = safeAreaInsetTop();
       const safeBottom = safeAreaInsetBottom();
-      const minTop = safeTop + margin;
+      const minTop = appHeaderBottom() + margin;
       const maxBottom = window.innerHeight - safeBottom - margin;
       const triggerRect = trigger.getBoundingClientRect();
       const panelRect = panel.getBoundingClientRect();
@@ -228,11 +241,9 @@ export function HouseActionBar({
       let placeAbove = menuPlacement === "top";
       const spaceAbove = triggerRect.top - minTop;
       const spaceBelow = maxBottom - triggerRect.bottom;
-      if (placeAbove && spaceAbove < panelHeight + gap && spaceBelow > spaceAbove) {
-        placeAbove = false;
-      } else if (!placeAbove && spaceBelow < panelHeight + gap && spaceAbove > spaceBelow) {
-        placeAbove = true;
-      }
+      if (spaceAbove < panelHeight + gap) placeAbove = false;
+      else if (spaceBelow < panelHeight + gap && spaceAbove > spaceBelow) placeAbove = true;
+      else if (placeAbove && spaceBelow > spaceAbove) placeAbove = false;
 
       let top = placeAbove ? triggerRect.top - panelHeight - gap : triggerRect.bottom + gap;
       let left = triggerRect.right - panelWidth;
@@ -324,6 +335,14 @@ export function HouseActionBar({
 
   return (
     <div ref={rootRef} className={cn("house-action-menu", className)} dir="rtl">
+      {editCode ? (
+        <EditCodeDialog
+          open={editCodeOpen}
+          house={house}
+          editCode={editCode}
+          onClose={() => setEditCodeOpen(false)}
+        />
+      ) : null}
       <button
         ref={triggerRef}
         type="button"

@@ -18,6 +18,7 @@ export function HouseList({
   onToggleVisited,
   admin = false,
   canEditHouse,
+  editCodeFor,
   onShowOnMap,
   onSelectHouse,
   onEditHouse,
@@ -40,6 +41,7 @@ export function HouseList({
   onToggleVisited?: (id: string) => void;
   admin?: boolean;
   canEditHouse?: (id: string) => boolean;
+  editCodeFor?: (id: string) => string | undefined;
   onShowOnMap?: (id: string) => void;
   onSelectHouse?: (id: string, index: number) => void;
   onEditHouse?: (id: string, index: number) => void;
@@ -116,6 +118,7 @@ export function HouseList({
               onRestoreHouse && skippedIds?.includes(h.id) ? () => onRestoreHouse(h.id) : undefined
             }
             canEdit={Boolean(canEditHouse?.(h.id))}
+            editCode={editCodeFor?.(h.id)}
             admin={admin}
             onShowOnMap={onShowOnMap ? () => onShowOnMap(h.id) : undefined}
             onOpen={onSelectHouse ? () => onSelectHouse(h.id, i + 1) : undefined}

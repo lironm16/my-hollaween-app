@@ -264,12 +264,6 @@ export function NeighborhoodApp({
   });
 
   useEffect(() => {
-    if (originChoice.kind !== "gps") return;
-    setAskedLocation(true);
-    geo.refresh();
-  }, [originChoice.kind, geo.refresh]);
-
-  useEffect(() => {
     if (wasAdmin.current && !admin) {
       resetForNavigation();
       void refresh(true);
@@ -812,6 +806,9 @@ export function NeighborhoodApp({
                     onRestoreHouse={handleRestoreHouse}
                     admin={admin}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
+                    editCodeFor={(id) =>
+                      admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode
+                    }
                     onShowOnMap={openOnMap}
                     onSelectHouse={selection.selectInList}
                     onEditHouse={(id) => {

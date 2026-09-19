@@ -16,6 +16,17 @@ export function safeAreaInsetTop() {
   return readSafeAreaInset("top");
 }
 
+/** Bottom edge of the fixed app header — keep floating menus below it. */
+export function appHeaderBottom() {
+  if (typeof document === "undefined") return safeAreaInsetTop() + 56;
+  const header = document.querySelector(".app-header");
+  if (header instanceof HTMLElement) {
+    const bottom = header.getBoundingClientRect().bottom;
+    if (bottom > 0) return bottom;
+  }
+  return safeAreaInsetTop() + 56;
+}
+
 export function safeAreaInsetBottom() {
   return readSafeAreaInset("bottom");
 }

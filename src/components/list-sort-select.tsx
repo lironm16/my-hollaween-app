@@ -26,7 +26,7 @@ export function ListSortSelect() {
   const sort = useSyncExternalStore(subscribe, readListSort, (): ListSort => "nearby");
 
   return (
-    <div className="flex items-center justify-end gap-2 pb-1" dir="rtl">
+    <div className="flex w-full items-center justify-start gap-2 pb-1" dir="rtl">
       <span className="text-sm text-violet-300">מיון</span>
       <Select value={sort} onValueChange={(next) => writeListSort(next as ListSort)}>
         <SelectTrigger
