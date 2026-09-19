@@ -5,7 +5,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
@@ -86,31 +85,26 @@ async function readDeviceCatalog() {
   return (await withTimeout(loadCatalogCache(), 1500)) ?? loadCatalogCacheSync();
 }
 
+function readInitialDeviceCatalog(): Catalog | null {
+  if (typeof window === "undefined") return null;
+  return loadCatalogCacheSync();
+}
+
 export function CatalogProvider({ children }: { children: ReactNode }) {
-  const [catalog, setCatalog] = useState<Catalog | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [ready, setReady] = useState(false);
+  const initialCacheRef = useRef<Catalog | null | undefined>(undefined);
+  if (initialCacheRef.current === undefined) {
+    initialCacheRef.current = readInitialDeviceCatalog();
+  }
+  const initialCache = initialCacheRef.current;
+  const initialHasHouses = catalogHasRealHouses(initialCache);
+
+  const [catalog, setCatalog] = useState<Catalog | null>(() => initialCache);
+  const [loading, setLoading] = useState(() => !initialHasHouses);
+  const [ready, setReady] = useState(() => initialHasHouses);
   const [offline, setOffline] = useState(false);
   const [unreachable, setUnreachable] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [source, setSource] = useState<Source | null>(null);
-  const cacheHydratedRef = useRef(false);
-
-  useLayoutEffect(() => {
-    if (cacheHydratedRef.current) return;
-    cacheHydratedRef.current = true;
-    const syncCache = loadCatalogCacheSync();
-    if (!syncCache) {
-      setLoading(false);
-      return;
-    }
-    setCatalog(syncCache);
-    setSource("cache");
-    if (catalogHasRealHouses(syncCache)) {
-      setLoading(false);
-      setReady(true);
-    }
-  }, []);
+  const [source, setSource] = useState<Source | null>(() => (initialCache ? "cache" : null));
   const catalogRef = useRef(catalog);
   catalogRef.current = catalog;
   const pollMsRef = useRef(catalogPollMs());

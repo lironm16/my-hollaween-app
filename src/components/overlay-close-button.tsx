@@ -58,7 +58,7 @@ export function OverlayCloseBar({
         <div className="hw-overlay-close-bar-title">
           <div className="font-display text-xl leading-tight text-orange-200">{title}</div>
           {subtitle ? (
-            <p className="mt-0.5 line-clamp-2 break-words text-base leading-snug text-violet-200 [overflow-wrap:anywhere]">
+            <p className="mt-0.5 line-clamp-3 break-words text-balance text-base leading-snug text-violet-200 [overflow-wrap:anywhere]">
               {subtitle}
             </p>
           ) : null}

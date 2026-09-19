@@ -2524,9 +2524,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .hw-overlay-close-bar-title {
   flex: 1;
   min-width: 0;
-  max-width: calc(100% - 6.5rem);
+  max-width: calc(100% - 7.5rem);
   text-align: center;
-  padding-inline: 0.25rem;
+  padding-inline: 0.5rem 2.75rem;
 }
 
 .hw-overlay-close-bar-spacer {
