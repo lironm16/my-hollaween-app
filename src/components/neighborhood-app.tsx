@@ -58,7 +58,7 @@ import {
   type HomeView,
 } from "@/lib/home-view";
 import { HOUSE_SET_LABELS, countSkippedInSet, houseMatchesSet } from "@/lib/house-set";
-import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
+import { filterHouses, houseFilterMismatchReasons, routeHouseIds } from "@/lib/filter-houses";
 import { formatDistance } from "@/lib/geo";
 import { isRouteFullyVisited } from "@/lib/route-completion";
 import { diffRouteBySkippedIds, rebuildRouteAfterSkipChange } from "@/lib/route-changes";
@@ -277,16 +277,28 @@ export function NeighborhoodApp({
   );
   const routeListItems = useMemo(() => {
     if (!routeMode || !activeRoute) return [];
-    const skippedSet = new Set(skips.skippedIds);
-    return activeRoute.stops.flatMap((stop) =>
+    const routeIds = routeHouseIds(activeRoute);
+    const activeItems = activeRoute.stops.flatMap((stop) =>
       stop.houses.map((house, houseIndex) => ({
         house,
         order: stop.order,
         hop: houseIndex > 0 ? "אותו בניין" : formatDistance(stop.fromPreviousMeters),
-        skipped: skippedSet.has(house.id),
+        skipped: false,
       })),
     );
-  }, [routeMode, activeRoute, skips.skippedIds]);
+    const visibleById = new Map(visible.map((house) => [house.id, house]));
+    const skippedTail = skips.skippedIds
+      .filter((id) => !routeIds.has(id))
+      .map((id) => visibleById.get(id))
+      .filter((house): house is PublicHouse => Boolean(house))
+      .map((house) => ({
+        house,
+        order: 0,
+        hop: "",
+        skipped: true,
+      }));
+    return [...activeItems, ...skippedTail];
+  }, [routeMode, activeRoute, skips.skippedIds, visible]);
 
   function applyRouteAfterSkipChange(nextSkippedIds: string[], includeNew: boolean) {
     setPinnedRoute(
