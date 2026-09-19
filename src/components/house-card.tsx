@@ -33,6 +33,7 @@ export function HouseCard({
   onOpen,
   editing = false,
   onToggleEdit,
+  editCode,
   expanded = false,
   index,
 }: {
@@ -53,6 +54,7 @@ export function HouseCard({
   onOpen?: () => void;
   editing?: boolean;
   onToggleEdit?: () => void;
+  editCode?: string;
   /** Show full details inline without opening a sheet. */
   expanded?: boolean;
   index?: number;
@@ -114,6 +116,7 @@ export function HouseCard({
               onRestoreRoute={skipped ? onRestoreRoute : undefined}
               skipped={skipped}
               onToggleEdit={canEdit ? onToggleEdit : undefined}
+              editCode={canEdit ? editCode : undefined}
               onShowOnMap={onShowOnMap}
               editing={editing}
               menuPlacement="top"

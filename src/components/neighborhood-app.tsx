@@ -769,6 +769,9 @@ export function NeighborhoodApp({
                     skipMetaFor={(id) => skips.meta(id)}
                     admin={admin}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
+                    editCodeFor={(id) =>
+                      admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode
+                    }
                     onShowOnMap={openOnMap}
                     onSelectHouse={selection.selectInList}
                     onEditHouse={(id) => {
@@ -793,6 +796,9 @@ export function NeighborhoodApp({
                     onRestoreHouse={handleRestoreHouse}
                     admin={admin}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
+                    editCodeFor={(id) =>
+                      admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode
+                    }
                     onShowOnMap={openOnMap}
                     onSelectHouse={selection.selectInList}
                     onEditHouse={(id) => {

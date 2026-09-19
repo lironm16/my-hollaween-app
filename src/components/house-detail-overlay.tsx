@@ -85,6 +85,7 @@ export function HouseDetailOverlay({
 }) {
   const labelId = useId();
   const canEditSelected = Boolean(canEditHouse?.(house.id) && onToggleEdit);
+  const ownerEditCode = editCodeFor?.(house.id) ?? managerEditCode;
   const multi = !openedFromList && (clusterHouses?.length ?? 0) > 1;
   const overview = Boolean(multi && clusterOverview);
   const clusterIndex = clusterHouses ? clusterHouseIndex(clusterHouses, house.id) : null;
@@ -123,6 +124,7 @@ export function HouseDetailOverlay({
               onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
               onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
               onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
+              editCode={ownerEditCode}
               onShowOnMap={onShowOnMap}
               onShowInList={onShowInList}
               onSkip={onSkip}
