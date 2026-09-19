@@ -1,8 +1,19 @@
 "use client";
 
+import Link from "next/link";
 import { HelpShell, HelpStep } from "@/components/help-shell";
+import { helpImage } from "@/lib/help-images";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
-const STEPS = [
+const STEPS: Array<{
+  title: string;
+  body: ReactNode;
+  image: string;
+  imageAlt: string;
+  action?: ReactNode;
+}> = [
   {
     title: "סינון (אופציונלי)",
     body: (
@@ -10,11 +21,23 @@ const STEPS = [
         לפני המסלול אפשר לסנן בתים: רמת פחד, ממתקים, נגישות, שכונה ועוד — כפתור{" "}
         <strong className="text-orange-200">סינון</strong> בסרגל. רק בתים שעוברים את הסינון
         נכנסים למסלול. בתים שכבר סימנתם כ<strong className="text-orange-200">ביקור</strong> לא
-        נכללים.
+        נכללים. בתים שלא עוברים סינון <strong className="text-orange-200">נשארים על המפה באפור</strong>{" "}
+        — כדי להחזיר אותם, שנהו את הסינון.
       </>
     ),
-    image: "/help/route-1-filters.svg",
+    image: helpImage("route-1-filters.svg"),
     imageAlt: "חלון סינון בתים",
+    action: (
+      <Link
+        href="/help/filter"
+        className={cn(
+          buttonVariants({ variant: "outline", size: "lg" }),
+          "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
+        )}
+      >
+        מדריך מלא: איך מסננים?
+      </Link>
+    ),
   },
   {
     title: "נקודת התחלה",
@@ -24,7 +47,7 @@ const STEPS = [
         מיקום נוכחי (GPS), מרכז השכונה, או נקודה על המפה. המסלול מחושב מהנקודה הזו.
       </>
     ),
-    image: "/help/route-2-origin.svg",
+    image: helpImage("route-2-origin.svg"),
     imageAlt: "בחירת נקודת התחלה",
   },
   {
@@ -36,7 +59,7 @@ const STEPS = [
         גישה למיקום.
       </>
     ),
-    image: "/help/route-3-enable.svg",
+    image: helpImage("route-3-enable.svg"),
     imageAlt: "הפעלת מסלול מהסרגל",
   },
   {
@@ -48,10 +71,10 @@ const STEPS = [
         משוער) ואז רשימת עצירות ממוספרות עם מרחק הליכה בין כל תחנה.
       </>
     ),
-    image: "/help/route-4-summary.svg",
+    image: helpImage("route-4-summary.svg"),
     imageAlt: "סיכום מסלול ורשימת עצירות",
   },
-] as const;
+];
 
 export default function CreateRouteHelpPage() {
   return (
@@ -69,13 +92,14 @@ export default function CreateRouteHelpPage() {
             body={step.body}
             image={step.image}
             imageAlt={step.imageAlt}
+            action={step.action}
           />
         ))}
       </ol>
       <p className="mt-5 text-center text-lg text-violet-200">
-        <a href="/help/during-route" className="text-orange-300 underline underline-offset-2 hover:text-orange-200">
+        <Link href="/help/during-route" className="text-orange-300 underline underline-offset-2 hover:text-orange-200">
           המשך: מה עושים במהלך המסלול?
-        </a>
+        </Link>
       </p>
     </HelpShell>
   );

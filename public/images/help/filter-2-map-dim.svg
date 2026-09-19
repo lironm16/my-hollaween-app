@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="—ÍŸ› ﬁ·’‡‡Ÿ› ﬁ’Ê“Ÿ› —ﬁ‰‘ —–‰’Ë">
+  <rect width="390" height="780" fill="#1a2332"/>
+  <rect y="0" width="390" height="52" fill="#14091c"/>
+  <text x="195" y="32" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">HallowHood</text>
+  <rect y="52" width="390" height="728" fill="#243447"/>
+  <!-- bright matching pins -->
+  <circle cx="120" cy="220" r="18" fill="#f97316"/>
+  <text x="120" y="225" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle"><É</text>
+  <circle cx="260" cy="300" r="18" fill="#f97316"/>
+  <text x="260" y="305" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle"><É</text>
+  <!-- dimmed filtered-out pins -->
+  <circle cx="180" cy="380" r="18" fill="#6b7280" opacity="0.55"/>
+  <text x="180" y="385" fill="#374151" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="middle"><É</text>
+  <circle cx="300" cy="450" r="18" fill="#6b7280" opacity="0.55"/>
+  <text x="300" y="455" fill="#374151" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="middle"><É</text>
+  <circle cx="90" cy="520" r="18" fill="#6b7280" opacity="0.55"/>
+  <text x="90" y="525" fill="#374151" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="middle"><É</text>
+  <rect x="24" y="600" width="342" height="120" rx="16" fill="#12081a" fill-opacity="0.92" stroke="#f97316" stroke-opacity="0.35"/>
+  <text x="330" y="640" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="16" font-weight="700" text-anchor="end">—ﬁ‰‘  È‡Ÿ‘›</text>
+  <text x="330" y="670" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="end">€Í’› = ‚’—Ë ·Ÿ‡’ﬂ</text>
+  <text x="330" y="698" fill="#9ca3af" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="end">–‰’Ë = ‹– ‚’—Ë  ‚”ŸŸﬂ ‚‹ ‘ﬁ‰‘</text>
+</svg>

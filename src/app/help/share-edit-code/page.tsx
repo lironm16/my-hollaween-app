@@ -1,6 +1,7 @@
 "use client";
 
 import { HelpShell, HelpStep } from "@/components/help-shell";
+import { helpImage } from "@/lib/help-images";
 
 const STEPS = [
   {
@@ -11,7 +12,7 @@ const STEPS = [
         <strong className="text-orange-200">⋮</strong> (שלוש נקודות).
       </>
     ),
-    image: "/help/share-edit-code-menu.svg",
+    image: helpImage("share-edit-code-menu.svg"),
     imageAlt: "תפריט פעולות — שלוש נקודות בכרטיס הבית",
   },
   {
@@ -22,7 +23,7 @@ const STEPS = [
         לבעלי הבית או למנהל.
       </>
     ),
-    image: "/help/share-edit-code-menu.svg",
+    image: helpImage("share-edit-code-menu.svg"),
     imageAlt: "פריט קוד עריכה בתפריט הפעולות",
   },
   {
@@ -35,7 +36,7 @@ const STEPS = [
         לעריכה».
       </>
     ),
-    image: "/help/share-edit-code-dialog.svg",
+    image: helpImage("share-edit-code-dialog.svg"),
     imageAlt: "חלון קוד עריכה עם העתיקו ושיתוף",
   },
 ] as const;

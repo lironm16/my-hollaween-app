@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { HelpShell, HelpStep } from "@/components/help-shell";
+import { helpImage } from "@/lib/help-images";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +16,7 @@ const STEPS = [
         ומרחק ההליכה לכל עצירה. במפה — את הקו הכתום ואת כל הבתים על המפה.
       </>
     ),
-    image: "/help/route-during-exit.svg",
+    image: helpImage("route-during-exit.svg"),
     imageAlt: "מעבר בין מפה לרשימה במסלול",
   },
   {
@@ -26,7 +27,7 @@ const STEPS = [
         (מספר הבתים) מציג מרחק כולל, זמן משוער וכמה דילגתם.
       </>
     ),
-    image: "/help/route-during-map.svg",
+    image: helpImage("route-during-map.svg"),
     imageAlt: "קו מסלול על המפה",
   },
   {
@@ -40,7 +41,7 @@ const STEPS = [
         בנפרד — אפשר להחזיר למסלול.
       </>
     ),
-    image: "/help/route-during-actions.svg",
+    image: helpImage("route-during-actions.svg"),
     imageAlt: "סימון ביקור ודילוג במסלול",
   },
   {
@@ -52,7 +53,7 @@ const STEPS = [
         (כשהוא דולק) כדי לצאת ממצב מסלול.
       </>
     ),
-    image: "/help/route-2-origin.svg",
+    image: helpImage("route-2-origin.svg"),
     imageAlt: "שינוי נקודת התחלה",
   },
 ] as const;
