@@ -350,6 +350,9 @@ export function HouseDetails({
           {headerMenu ? <div className="house-details-menu shrink-0">{headerMenu}</div> : null}
         </div>
         {pageActions}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <HouseTags house={house} large={compact} />
+        </div>
       </div>
       {photo ? (
         <div className="flex items-start gap-3">
@@ -366,9 +369,6 @@ export function HouseDetails({
         </p>
       ) : null}
       <HouseComments house={house} compact={compact} onReadMore={compact ? onReadMore : undefined} />
-      <div className="flex flex-wrap items-center gap-1.5">
-        <HouseTags house={house} large={compact} />
-      </div>
       {addedMeta ? (
         <p className="text-sm text-violet-400">{addedMeta}</p>
       ) : null}

@@ -4,22 +4,49 @@ import { HelpShell, HelpStep } from "@/components/help-shell";
 
 const STEPS = [
   {
-    title: "העתיקו ושלחו",
-    body: "לחצו «העתיקו» ליד קוד העריכה (6 ספרות). שלחו בוואטסאפ, הודעה, או בעל פה — זה נותן הרשאת עריכה.",
-    image: "/help/step-3-done.png",
-    imageAlt: "העתקת קוד עריכה",
+    title: "פתחו את תפריט הפעולות (⋮)",
+    body: (
+      <>
+        במפה או ברשימה, פתחו את כרטיס הבית. בפינה העליונה של הכרטיס לחצו על{" "}
+        <strong className="text-orange-200">⋮</strong> (שלוש נקודות).
+      </>
+    ),
+    image: "/help/share-edit-code-menu.svg",
+    imageAlt: "תפריט פעולות — שלוש נקודות בכרטיס הבית",
   },
   {
-    title: "הזנה פעם אחת",
-    body: "תפריט → בית → עריכה → בחרו את הבית → הזינו את הקוד → «פתיחה לעריכה». אחר כך הקוד נשמר במכשיר שלהם.",
-    image: "/help/share-edit-code-enter.png",
-    imageAlt: "הזנת קוד עריכה בדף עריכה",
+    title: "בחרו «קוד עריכה»",
+    body: (
+      <>
+        בתפריט שנפתח בחרו <strong className="text-orange-200">קוד עריכה</strong>. מופיעים רק
+        לבעלי הבית או למנהל.
+      </>
+    ),
+    image: "/help/share-edit-code-menu.svg",
+    imageAlt: "פריט קוד עריכה בתפריט הפעולות",
+  },
+  {
+    title: "העתיקו או שתפו",
+    body: (
+      <>
+        ייפתח חלון עם הקוד בן 6 הספרות. לחצו <strong className="text-orange-200">העתיקו</strong>{" "}
+        או <strong className="text-orange-200">שיתוף</strong> כדי לשלוח בוואטסאפ / הודעה.
+        מי שמקבל את הקוד מזין אותו פעם אחת ב: תפריט → בית → עריכה → בחרו את הבית → «פתיחה
+        לעריכה».
+      </>
+    ),
+    image: "/help/share-edit-code-dialog.svg",
+    imageAlt: "חלון קוד עריכה עם העתיקו ושיתוף",
   },
 ] as const;
 
 export default function ShareEditCodeHelpPage() {
   return (
     <HelpShell title="איך לשתף קוד עריכה?">
+      <p className="mb-4 text-lg leading-relaxed text-violet-100">
+        קוד עריכה מאפשר למישהו אחר לעדכן את הבית שלכם. הדרך המהירה: מתוך כרטיס הבית → ⋮ → קוד
+        עריכה.
+      </p>
       <ol className="space-y-4">
         {STEPS.map((step, index) => (
           <HelpStep
