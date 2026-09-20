@@ -13,7 +13,11 @@ import {
 import type { Catalog, CatalogDelta } from "@/lib/types";
 import { mergeCatalogDelta, syncCatalog } from "@/lib/catalog-sync";
 import { config } from "@/lib/config";
-import { appInForeground, catalogPollMs } from "@/lib/catalog-poll";
+import {
+  adaptiveCatalogPollMs,
+  appInForeground,
+  catalogPollMs,
+} from "@/lib/catalog-poll";
 import {
   loadCatalogCache,
   loadCatalogCacheSync,
@@ -25,6 +29,9 @@ import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
 import { catalogHasRealHouses } from "@/lib/house-set";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
+
+const SNAPSHOT_URL = "/api/catalog/snapshot";
+const OFFLINE_FORCE_REFRESH_MS = 30 * 60 * 1000;
 
 export type CatalogState = {
   catalog: Catalog | null;
@@ -65,6 +72,13 @@ function applyCatalogResponse(prev: Catalog | null, live: CatalogDelta): Catalog
     return mergeCatalogDelta(prev, live);
   }
   return { ...prev, updatedAt: live.updatedAt };
+}
+
+function isEmptyDelta(live: CatalogDelta, prev: Catalog | null) {
+  if (live.full) return false;
+  if (live.houses.length || live.removed?.length || live.pushTemplates) return false;
+  if (!prev) return false;
+  return live.updatedAt === prev.updatedAt;
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
@@ -113,7 +127,9 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   }, []);
   const catalogRef = useRef(catalog);
   catalogRef.current = catalog;
-  const pollMsRef = useRef(catalogPollMs());
+  const pollSecondsRef = useRef(config.catalogPollSeconds);
+  const emptyDeltaStreakRef = useRef(0);
+  const offlineSinceRef = useRef<number | null>(null);
   const [pollSeconds, setPollSeconds] = useState(config.catalogPollSeconds);
   const seededRef = useRef(false);
 
@@ -129,8 +145,13 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
 
   const applyLiveResponse = useCallback(async (live: CatalogDelta) => {
     if (live.pollSeconds) {
-      pollMsRef.current = catalogPollMs(live.pollSeconds);
+      pollSecondsRef.current = live.pollSeconds;
       setPollSeconds(live.pollSeconds);
+    }
+    if (isEmptyDelta(live, catalogRef.current)) {
+      emptyDeltaStreakRef.current += 1;
+    } else {
+      emptyDeltaStreakRef.current = 0;
     }
     let next: Catalog = live;
     setCatalog((prev) => {
@@ -141,6 +162,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     setUnreachable(false);
     setError(null);
     await saveCatalogCache(next);
+    window.dispatchEvent(new Event("hw-catalog-refreshed"));
     return next;
   }, []);
 
@@ -183,15 +205,15 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Full load — static CDN snapshot first, then API delta for anything newer.
+    // Full load — shared snapshot first, then API delta for anything newer.
     try {
       if (readServerSimDown()) throw new Error("sim-down");
-      const snap = await fetchJson("/catalog.json", force);
+      const snap = await fetchJson(SNAPSHOT_URL, force);
       let merged = withDeviceHouseOverlays(syncCatalog(catalogRef.current, snap));
       try {
         const live = await fetchJson("/api/catalog", false, snap.updatedAt);
         if (live.pollSeconds) {
-          pollMsRef.current = catalogPollMs(live.pollSeconds);
+          pollSecondsRef.current = live.pollSeconds;
           setPollSeconds(live.pollSeconds);
         }
         merged = withDeviceHouseOverlays(applyCatalogResponse(merged, live));
@@ -200,6 +222,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         setUnreachable(false);
         setError(null);
         await saveCatalogCache(merged);
+        window.dispatchEvent(new Event("hw-catalog-refreshed"));
         return;
       } catch {
         setCatalog((prev) => {
@@ -211,6 +234,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         setUnreachable(false);
         setError(null);
         if (catalogHasRealHouses(merged)) await saveCatalogCache(merged);
+        window.dispatchEvent(new Event("hw-catalog-refreshed"));
         return;
       }
     } catch {
@@ -261,13 +285,18 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     const onOff = () => {
       const nowOffline = !navigator.onLine;
       setOffline(nowOffline);
-      if (nowOffline) setUnreachable(false);
-      else {
-        void (async () => {
-          await flushPendingHouseWrites();
-          await refresh(true);
-        })();
+      if (nowOffline) {
+        setUnreachable(false);
+        offlineSinceRef.current = Date.now();
+        return;
       }
+      void (async () => {
+        await flushPendingHouseWrites();
+        const awayMs =
+          offlineSinceRef.current != null ? Date.now() - offlineSinceRef.current : 0;
+        offlineSinceRef.current = null;
+        await refresh(awayMs >= OFFLINE_FORCE_REFRESH_MS);
+      })();
     };
     window.addEventListener("online", onOff);
     window.addEventListener("offline", onOff);
@@ -282,10 +311,14 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
 
     let pollTimer: number | undefined;
     const schedulePoll = () => {
+      const delay = adaptiveCatalogPollMs(
+        pollSecondsRef.current,
+        emptyDeltaStreakRef.current,
+      );
       pollTimer = window.setTimeout(() => {
         if (!cancelled && appInForeground()) void refresh(false);
         if (!cancelled) schedulePoll();
-      }, pollMsRef.current);
+      }, delay);
     };
     schedulePoll();
 

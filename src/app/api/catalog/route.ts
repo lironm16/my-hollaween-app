@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { effectiveCatalogPollSeconds } from "@/lib/catalog-poll";
 import { config } from "@/lib/config";
 import { getCatalog, getCatalogDelta } from "@/lib/store";
 
@@ -6,14 +7,14 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function withPollSeconds<T extends object>(body: T) {
-  return { ...body, pollSeconds: config.catalogPollSeconds };
+  return { ...body, pollSeconds: effectiveCatalogPollSeconds() };
 }
 
 export async function GET(request: Request) {
   const since = new URL(request.url).searchParams.get("since")?.trim();
   const headers = new Headers();
   headers.set("Content-Type", "application/json; charset=utf-8");
-  headers.set("X-Catalog-Poll-Seconds", String(config.catalogPollSeconds));
+  headers.set("X-Catalog-Poll-Seconds", String(effectiveCatalogPollSeconds()));
 
   if (since) {
     headers.set("Cache-Control", "no-store");

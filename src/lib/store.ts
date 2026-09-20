@@ -65,14 +65,27 @@ import {
   privateBlobPutOptions,
 } from "@/lib/blob-auth";
 import {
+  catalogSnapshotToDb,
+  publishCatalogSnapshot,
+  readSharedCatalogSnapshot,
+} from "@/lib/catalog-cache";
+import { asCatalogForSnapshot } from "@/lib/catalog-cache-build";
+import {
+  countFirestorePushSubscriptions,
   firestoreConfigured,
   queryRemovedHouseIdsSince,
   readCatalogMeta,
-  readFirestoreDb,
+  readFirestoreCatalog,
   readFirestoreHouse,
+  readFirestorePushData,
+  readFirestorePushSubscription,
+  deleteFirestorePushSubscription,
   writeFirestoreDb,
   writeFirestoreHouse,
   writeFirestorePushSettings,
+  writeFirestorePushSubscription,
+  writeFirestoreVapid,
+  readPushSettingsMeta,
 } from "@/lib/firestore-db";
 import {
   isRetryableBlobError,
@@ -86,7 +99,10 @@ const BLOB_PATH = "halloween-houses/db.json";
 const PUSH_BLOB_PATH = "halloween-houses/push-settings.json";
 const PUSH_SUBS_BLOB_PATH = "halloween-houses/push-subscriptions.json";
 /** Cache house db reads — each miss fans out to several Blob GETs. */
-const MEM_TTL_MS = 120_000;
+const MEM_TTL_MS = 600_000;
+const PUSH_MEM_TTL_MS = 600_000;
+
+let pushMemAt = 0;
 
 let chain: Promise<unknown> = Promise.resolve();
 
@@ -104,6 +120,22 @@ type GlobalBag = { __hwHouseDb?: DbFile };
 function stamp(value: { updatedAt: string }) {
   const n = Date.parse(value.updatedAt);
   return Number.isFinite(n) ? n : 0;
+}
+
+function catalogHousesChanged(prev: House[], next: House[]) {
+  const before = stripStubHouses(prev);
+  const after = stripStubHouses(next);
+  if (before.length !== after.length) return true;
+  const map = new Map(before.map((house) => [canonicalHouseId(house.id), house.updatedAt]));
+  const nextIds = new Set(after.map((house) => canonicalHouseId(house.id)));
+  for (const id of map.keys()) {
+    if (!nextIds.has(id)) return true;
+  }
+  for (const house of after) {
+    const id = canonicalHouseId(house.id);
+    if (map.get(id) !== house.updatedAt) return true;
+  }
+  return false;
 }
 
 function getGlobalDb(): DbFile | null {
@@ -419,10 +451,23 @@ function foldPushSubscriptions(target: DbFile, ...candidates: Array<DbFile | nul
 
 async function readFileDb(): Promise<DbFile> {
   if (firestoreConfigured()) {
-    const [remote, global] = await Promise.all([
-      readFirestoreDb(),
-      Promise.resolve(getGlobalDb()),
-    ]);
+    const global = getGlobalDb();
+    const meta = await readCatalogMeta();
+    const shared =
+      meta?.updatedAt != null
+        ? await readSharedCatalogSnapshot(meta.updatedAt)
+        : await readSharedCatalogSnapshot();
+    let remote: DbFile | null = shared ? catalogSnapshotToDb(shared) : null;
+    if (!remote) {
+      const catalog = await readFirestoreCatalog();
+      if (catalog) {
+        remote = {
+          ...catalog,
+          pushSubscriptions: mem?.pushSubscriptions ?? global?.pushSubscriptions ?? [],
+          ...(mem?.vapid ? { vapid: mem.vapid } : global?.vapid ? { vapid: global.vapid } : {}),
+        };
+      }
+    }
     if (remote) {
       const merged = pickNewest(remote, global) ?? remote;
       foldPushSubscriptions(merged, mem, global);
@@ -628,7 +673,15 @@ async function persistDb(db: DbFile, prev?: DbFile | null) {
     return;
   }
 
+  const housesChanged = catalogHousesChanged(prev?.houses ?? [], db.houses);
+
   await writeDurableDb(db, prev);
+
+  if (housesChanged) {
+    void publishCatalogSnapshot(db).catch((error) => {
+      console.error("[store] catalog snapshot publish failed", error);
+    });
+  }
 
   if (isStaleSnapshot(db)) {
     const live = liveDb();
@@ -675,6 +728,43 @@ async function loadDb(fresh = false): Promise<DbFile> {
   });
 }
 
+/** Push-only data — subscriptions + vapid, without reloading the house catalog (#2). */
+async function loadPushData(): Promise<DbFile> {
+  const hasPushMem =
+    mem &&
+    Array.isArray(mem.pushSubscriptions) &&
+    mem.vapid?.publicKey &&
+    mem.vapid.privateKey &&
+    Date.now() - pushMemAt < PUSH_MEM_TTL_MS;
+  if (hasPushMem) return mem!;
+
+  return withLock(async () => {
+    if (
+      mem &&
+      Array.isArray(mem.pushSubscriptions) &&
+      mem.vapid?.publicKey &&
+      mem.vapid.privateKey &&
+      Date.now() - pushMemAt < PUSH_MEM_TTL_MS
+    ) {
+      return mem;
+    }
+
+    const base = mem ?? (await loadDb());
+    if (firestoreConfigured()) {
+      const push = await readFirestorePushData();
+      if (push) {
+        base.pushSubscriptions = push.pushSubscriptions;
+        if (push.vapid) base.vapid = push.vapid;
+        foldPushSettings(base, asPushCandidate(push.pushSettings));
+      }
+    }
+    pushMemAt = Date.now();
+    setMem(base);
+    setGlobalDb(base);
+    return base;
+  });
+}
+
 async function prepareDbFromSources(): Promise<DbFile> {
   if (firestoreConfigured() && mem && Date.now() - memAt < MEM_TTL_MS) {
     const db = normalizeDb(cloneDb(mem));
@@ -695,20 +785,6 @@ async function prepareDbFromSources(): Promise<DbFile> {
   return db;
 }
 
-/** Best-effort house db write — never blocks push registration on blob hiccups. */
-async function softPersistDb(db: DbFile) {
-  setMem(db);
-  setGlobalDb(db);
-  try {
-    if (firestoreConfigured()) {
-      await writeFirestoreDb({ db, prev: mem });
-    } else if (blobConfigured()) await writeBlobDb(db);
-    else await writeFileDb(db);
-  } catch {
-    /* memory still holds subscriptions */
-  }
-}
-
 async function runSyncedWrite<T>(fn: (db: DbFile) => T | Promise<T>): Promise<T> {
   return withLock(async () => {
     const db = await prepareDbFromSources();
@@ -724,24 +800,7 @@ export function asCatalog(
   updatedAt: string,
   pushSettings?: DbFile["pushSettings"],
 ): Catalog {
-  const published: PublicHouse[] = houses
-    .filter((h) => isPubliclyListed(h))
-    .map((h) => toPublicHouse(h));
-  const merged = mergePushTemplates(pushSettings);
-  const pushTemplates: Catalog["pushTemplates"] = {};
-  for (const id of PUSH_KINDS) {
-    pushTemplates[id] = {
-      enabled: merged[id].enabled,
-      title: merged[id].title,
-      body: merged[id].body,
-    };
-  }
-  return {
-    updatedAt,
-    neighborhood: config.neighborhood,
-    houses: published,
-    pushTemplates,
-  };
+  return asCatalogForSnapshot(houses, updatedAt, pushSettings);
 }
 
 export async function getCatalog(): Promise<Catalog> {
@@ -812,10 +871,15 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
   }
 
   if (firestoreConfigured()) {
-    const meta = await readCatalogMeta();
+    const [meta, pushMeta] = await Promise.all([readCatalogMeta(), readPushSettingsMeta()]);
     if (
       meta?.updatedAt &&
-      catalogDeltaGatePassed({ sinceMs, catalogUpdatedAt: meta.updatedAt, removedIds: [] })
+      catalogDeltaGatePassed({
+        sinceMs,
+        catalogUpdatedAt: meta.updatedAt,
+        pushUpdatedAt: pushMeta?.updatedAt,
+        removedIds: [],
+      })
     ) {
       const removed = isMemWarm()
         ? catalogRemovalsSince(sinceMs)
@@ -824,6 +888,7 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
         catalogDeltaGatePassed({
           sinceMs,
           catalogUpdatedAt: meta.updatedAt,
+          pushUpdatedAt: pushMeta?.updatedAt,
           removedIds: removed,
         })
       ) {
@@ -1364,16 +1429,20 @@ function snapshotHouse(house: House): House {
 
 export async function getVapidPublicKey() {
   return withLock(async () => {
-    const db = await prepareDbFromSources();
-    const key = ensureVapid(db).publicKey;
-    await softPersistDb(db);
-    return key;
+    const db = await loadPushData();
+    const vapid = ensureVapid(db);
+    if (firestoreConfigured()) {
+      await writeFirestoreVapid(vapid);
+    }
+    setMem(db);
+    setGlobalDb(db);
+    return vapid.publicKey;
   });
 }
 
 export async function savePushSubscription(sub: Omit<PushSubscriptionRecord, "createdAt">) {
   return withLock(async () => {
-    const db = await prepareDbFromSources();
+    const db = await loadPushData();
     ensureVapid(db);
     const list = [...(db.pushSubscriptions ?? [])];
     const idx = list.findIndex((item) => item.endpoint === sub.endpoint);
@@ -1388,34 +1457,43 @@ export async function savePushSubscription(sub: Omit<PushSubscriptionRecord, "cr
           ? { topics: [...existing.topics] }
           : {}),
     };
+    const isNew = idx < 0;
     if (idx >= 0) list[idx] = next;
     else {
       if (list.length >= 8000) list.shift();
       list.push(next);
     }
     db.pushSubscriptions = list;
-    db.updatedAt = new Date().toISOString();
     setMem(db);
     setGlobalDb(db);
+    pushMemAt = Date.now();
     await writePushSubsBlob(list);
-    await softPersistDb(db);
+    if (firestoreConfigured()) {
+      await writeFirestorePushSubscription(next, { isNew });
+    }
     return list.length;
   });
 }
 
 export async function isPushEndpointRegistered(endpoint: string) {
   if ((mem?.pushSubscriptions ?? []).some((item) => item.endpoint === endpoint)) return true;
-  const db = await loadDb();
-  return (db.pushSubscriptions ?? []).some((item) => item.endpoint === endpoint);
+  if (firestoreConfigured()) {
+    return (await readFirestorePushSubscription(endpoint)) !== null;
+  }
+  return false;
 }
 
 export async function countPushSubscriptions() {
-  const db = await loadDb();
-  return db.pushSubscriptions?.length ?? 0;
+  if (mem?.pushSubscriptions) return mem.pushSubscriptions.length;
+  if (firestoreConfigured()) {
+    const count = await countFirestorePushSubscriptions();
+    if (count !== null) return count;
+  }
+  return (await loadPushData()).pushSubscriptions?.length ?? 0;
 }
 
 export async function sendPushTestToEndpoint(endpoint: string) {
-  const db = await loadDb();
+  const db = await loadPushData();
   const sub = (db.pushSubscriptions ?? []).find((item) => item.endpoint === endpoint);
   if (!sub) {
     return {
@@ -1435,14 +1513,7 @@ export async function sendPushTestToEndpoint(endpoint: string) {
     payload,
   });
   if (dead.length > 0) {
-    const deadSet = new Set(dead);
-    await runSyncedWrite((inner) => {
-      inner.pushSubscriptions = (inner.pushSubscriptions ?? []).filter(
-        (item) => !deadSet.has(item.endpoint),
-      );
-      inner.updatedAt = new Date().toISOString();
-    });
-    await writePushSubsBlob(mem?.pushSubscriptions ?? []);
+    await pruneDeadPushSubscriptions(dead);
   }
   return {
     registered: true as const,
@@ -1452,14 +1523,33 @@ export async function sendPushTestToEndpoint(endpoint: string) {
   };
 }
 
-export async function removePushSubscription(endpoint: string) {
-  const count = await runSyncedWrite((db) => {
-    db.pushSubscriptions = (db.pushSubscriptions ?? []).filter((item) => item.endpoint !== endpoint);
-    db.updatedAt = new Date().toISOString();
-    return db.pushSubscriptions.length;
+async function pruneDeadPushSubscriptions(endpoints: string[]) {
+  if (endpoints.length === 0) return;
+  const deadSet = new Set(endpoints);
+  await withLock(async () => {
+    const list = (mem?.pushSubscriptions ?? []).filter((item) => !deadSet.has(item.endpoint));
+    if (mem) mem.pushSubscriptions = list;
+    pushMemAt = Date.now();
+    if (firestoreConfigured()) {
+      await Promise.all(endpoints.map((endpoint) => deleteFirestorePushSubscription(endpoint)));
+    }
+    await writePushSubsBlob(list);
+    if (mem) setGlobalDb(mem);
   });
-  await writePushSubsBlob(mem?.pushSubscriptions ?? []);
-  return count;
+}
+
+export async function removePushSubscription(endpoint: string) {
+  return withLock(async () => {
+    if (firestoreConfigured()) {
+      await deleteFirestorePushSubscription(endpoint);
+    }
+    const list = (mem?.pushSubscriptions ?? []).filter((item) => item.endpoint !== endpoint);
+    if (mem) mem.pushSubscriptions = list;
+    pushMemAt = Date.now();
+    if (mem) setGlobalDb(mem);
+    await writePushSubsBlob(list);
+    return list.length;
+  });
 }
 
 export async function broadcastPush(
@@ -1467,25 +1557,17 @@ export async function broadcastPush(
   includeEndpoint?: string,
   options?: { allSubscriptions?: boolean },
 ) {
-  const { vapid, subscriptions } = await runSyncedWrite((db) => {
-    const vapid = ensureVapid(db);
-    return {
-      vapid,
-      subscriptions: (db.pushSubscriptions ?? []).filter(
-        (item) =>
-          options?.allSubscriptions ||
-          subscriptionAllowsTopic(item, payload.topic) ||
-          (includeEndpoint !== undefined && item.endpoint === includeEndpoint),
-      ),
-    };
-  });
+  const db = await loadPushData();
+  const vapid = ensureVapid(db);
+  const subscriptions = (db.pushSubscriptions ?? []).filter(
+    (item) =>
+      options?.allSubscriptions ||
+      subscriptionAllowsTopic(item, payload.topic) ||
+      (includeEndpoint !== undefined && item.endpoint === includeEndpoint),
+  );
   const { dead, delivered, errors } = await sendPushToSubscriptions({ vapid, subscriptions, payload });
   if (dead.length > 0) {
-    const deadSet = new Set(dead);
-    await runSyncedWrite((db) => {
-      db.pushSubscriptions = (db.pushSubscriptions ?? []).filter((item) => !deadSet.has(item.endpoint));
-    });
-    await writePushSubsBlob(mem?.pushSubscriptions ?? []);
+    await pruneDeadPushSubscriptions(dead);
   }
   return {
     sent: delivered,

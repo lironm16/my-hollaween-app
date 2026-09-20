@@ -9,6 +9,9 @@ import {
 export const PUSH_PREF_KEY = "hw-push-pref";
 export const PUSH_PROMPT_SKIP_KEY = "hw-push-prompt-skip";
 export const PUSH_TOPICS_KEY = "hw-push-topics";
+export const PUSH_LAST_SYNC_KEY = "hw-push-last-sync";
+
+const PUSH_RESYNC_MIN_MS = 24 * 60 * 60 * 1000;
 
 export type PushPref = "on" | "off";
 export type PushEnableResult = "on" | "off" | "denied" | "unsupported" | "ios-install";
@@ -334,6 +337,7 @@ export async function enablePushAlerts(prefs?: PushTopicPrefs): Promise<PushEnab
   const sub = await obtainPushSubscription(reg, keyData.publicKey);
   const count = await postSubscription(sub, nextPrefs);
   writePushPref("on");
+  writePushLastSyncMs();
   notifyPushStatusChanged();
   return count > 0 ? "on" : "off";
 }
@@ -381,6 +385,24 @@ export async function disablePushAlerts(): Promise<"off"> {
   return "off";
 }
 
+function readPushLastSyncMs() {
+  try {
+    const raw = localStorage.getItem(PUSH_LAST_SYNC_KEY);
+    const n = raw ? Number(raw) : 0;
+    return Number.isFinite(n) ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function writePushLastSyncMs(ms = Date.now()) {
+  try {
+    localStorage.setItem(PUSH_LAST_SYNC_KEY, String(ms));
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Re-post (and re-key if needed) so the server always has this device. */
 export async function refreshPushSubscriptionIfEnabled() {
   if (!pushSupported()) return;
@@ -390,6 +412,8 @@ export async function refreshPushSubscriptionIfEnabled() {
   const pref = readPushPref();
   const status = await readPushStatus();
   if (pref !== "on" && status !== "on") return;
+  const lastSync = readPushLastSyncMs();
+  if (lastSync > 0 && Date.now() - lastSync < PUSH_RESYNC_MIN_MS) return;
   try {
     const keyRes = await fetch("/api/push/public-key", { cache: "no-store" });
     const keyData = (await keyRes.json()) as { publicKey?: string };
@@ -399,6 +423,7 @@ export async function refreshPushSubscriptionIfEnabled() {
     const sub = await obtainPushSubscription(reg, keyData.publicKey);
     await postSubscription(sub, prefs);
     writePushPref("on");
+    writePushLastSyncMs();
     notifyPushStatusChanged();
   } catch {
     /* ignore — user can re-enable from the bell */
