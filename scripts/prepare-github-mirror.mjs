@@ -1,11 +1,16 @@
 #!/usr/bin/env node
 /**
- * Copy deploy/github workflow templates into .github/workflows (merge, do not wipe).
+ * Prepare .github/workflows on the GitHub mirror.
+ * Copies deploy/github templates. In GitHub Actions (or with --for-github-mirror),
+ * also removes Cursor-only workflows (e.g. ci.yml) so the sync App can push.
  */
-import { cpSync, existsSync, mkdirSync, readdirSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 
-const root = process.argv[2]?.trim() || process.cwd();
+const forGithubMirror =
+  process.argv.includes("--for-github-mirror") || process.env.GITHUB_ACTIONS === "true";
+const rootArg = process.argv.slice(2).find((arg) => !arg.startsWith("-"));
+const root = rootArg?.trim() || process.cwd();
 const workflowDir = join(root, ".github/workflows");
 const templateDir = join(root, "deploy/github");
 
@@ -16,11 +21,21 @@ if (!existsSync(templateDir)) {
 
 mkdirSync(workflowDir, { recursive: true });
 
-let copied = 0;
-for (const name of readdirSync(templateDir)) {
-  if (!name.endsWith(".yml") && !name.endsWith(".yaml")) continue;
+const templateNames = readdirSync(templateDir).filter(
+  (name) => name.endsWith(".yml") || name.endsWith(".yaml"),
+);
+
+for (const name of templateNames) {
   cpSync(join(templateDir, name), join(workflowDir, name));
-  copied += 1;
 }
 
-console.log(`Prepared ${copied} GitHub workflow(s) in .github/workflows.`);
+if (forGithubMirror && existsSync(workflowDir)) {
+  for (const name of readdirSync(workflowDir)) {
+    if (!templateNames.includes(name)) {
+      unlinkSync(join(workflowDir, name));
+      console.log(`Removed GitHub workflow not in deploy/github: ${name}`);
+    }
+  }
+}
+
+console.log(`Prepared ${templateNames.length} GitHub workflow(s) in .github/workflows.`);
