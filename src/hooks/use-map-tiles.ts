@@ -9,7 +9,7 @@ export function useMapTiles() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/map-config")
+    fetch("/api/map-config", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { tiles?: MapTilesConfig } | null) => {
         if (!cancelled && data?.tiles?.url) setTiles(data.tiles);
