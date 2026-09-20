@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { readApiJson } from "@/lib/api-json";
-import { appInForeground, catalogPollMs } from "@/lib/catalog-poll";
+import { appInForeground } from "@/lib/catalog-poll";
 import {
   notifyCatalogChanged,
   saveServerDbBackup,
@@ -14,15 +14,14 @@ import type { House, PublicHouse } from "@/lib/types";
 export function useAdminHouses({
   admin,
   refresh,
-  pollSeconds,
+  catalogUpdatedAt,
 }: {
   admin: boolean;
   refresh: (force?: boolean) => Promise<void> | void;
-  pollSeconds?: number;
+  catalogUpdatedAt?: string;
 }) {
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
   const [busyAction, setBusyAction] = useState(false);
-  const pollMsRef = useRef(catalogPollMs(pollSeconds));
 
   const rememberAdminDb = useCallback((houses: House[], updatedAt: string) => {
     saveServerDbBackup({
@@ -47,10 +46,6 @@ export function useAdminHouses({
   }, [admin, rememberAdminDb]);
 
   useEffect(() => {
-    pollMsRef.current = catalogPollMs(pollSeconds);
-  }, [pollSeconds]);
-
-  useEffect(() => {
     if (!admin) {
       setAdminHouses([]);
       return;
@@ -58,27 +53,25 @@ export function useAdminHouses({
     void loadAdminHouses();
 
     const onChanged = () => void loadAdminHouses();
+    const onRefreshed = () => void loadAdminHouses();
     const onVis = () => {
       if (appInForeground()) void loadAdminHouses();
     };
     window.addEventListener("hw-catalog-changed", onChanged);
+    window.addEventListener("hw-catalog-refreshed", onRefreshed);
     document.addEventListener("visibilitychange", onVis);
 
-    let pollTimer: number | undefined;
-    const schedulePoll = () => {
-      pollTimer = window.setTimeout(() => {
-        if (appInForeground()) void loadAdminHouses();
-        schedulePoll();
-      }, pollMsRef.current);
-    };
-    schedulePoll();
-
     return () => {
-      if (pollTimer !== undefined) window.clearTimeout(pollTimer);
       window.removeEventListener("hw-catalog-changed", onChanged);
+      window.removeEventListener("hw-catalog-refreshed", onRefreshed);
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [admin, loadAdminHouses]);
+
+  useEffect(() => {
+    if (!admin || !catalogUpdatedAt) return;
+    void loadAdminHouses();
+  }, [admin, catalogUpdatedAt, loadAdminHouses]);
 
   const applyAdminHouse = useCallback(
     (next: House | PublicHouse) => {

@@ -41,7 +41,12 @@ export async function readFirestoreHouse(id: string): Promise<House | null> {
 
 let catalogMetaMem: { updatedAt: string } | null = null;
 let catalogMetaMemAt = 0;
-const CATALOG_META_MEM_TTL_MS = 120_000;
+export const CATALOG_META_MEM_TTL_MS = 600_000;
+
+let pushSettingsMetaMem: { updatedAt: string } | null = null;
+let pushSettingsMetaMemAt = 0;
+
+let pushSubsCountMem: { count: number; at: number } | null = null;
 
 /** Cheap catalog revision stamp — one doc read for idle delta polls. */
 export async function readCatalogMeta(): Promise<{ updatedAt: string } | null> {
@@ -64,12 +69,74 @@ export async function readCatalogMeta(): Promise<{ updatedAt: string } | null> {
   }
 }
 
+/** Push template revision — separate from catalog meta (#9). */
+export async function readPushSettingsMeta(): Promise<{ updatedAt: string } | null> {
+  if (pushSettingsMetaMem && Date.now() - pushSettingsMetaMemAt < CATALOG_META_MEM_TTL_MS) {
+    return pushSettingsMetaMem;
+  }
+  if (!firestoreConfigured()) return null;
+  try {
+    await resolveAdminFirestore();
+    const snap = await metaDoc("pushSettings").get();
+    if (!snap.exists) return null;
+    const updatedAt = String((snap.data() as { updatedAt?: string })?.updatedAt ?? "");
+    if (!updatedAt) return null;
+    pushSettingsMetaMem = { updatedAt };
+    pushSettingsMetaMemAt = Date.now();
+    return pushSettingsMetaMem;
+  } catch (error) {
+    console.error("[firestore] push settings meta read failed", error);
+    return null;
+  }
+}
+
 export async function bumpCatalogMeta(updatedAt: string) {
   if (!firestoreConfigured() || !updatedAt) return;
   catalogMetaMem = { updatedAt };
   catalogMetaMemAt = Date.now();
   await resolveAdminFirestore();
   await metaDoc("catalog").set({ updatedAt }, { merge: true });
+}
+
+function rememberPushSettingsMeta(updatedAt: string) {
+  if (!updatedAt) return;
+  pushSettingsMetaMem = { updatedAt };
+  pushSettingsMetaMemAt = Date.now();
+}
+
+async function readPushSubsCountMeta(): Promise<number | null> {
+  if (pushSubsCountMem && Date.now() - pushSubsCountMem.at < CATALOG_META_MEM_TTL_MS) {
+    return pushSubsCountMem.count;
+  }
+  if (!firestoreConfigured()) return null;
+  try {
+    await resolveAdminFirestore();
+    const snap = await metaDoc("pushSubs").get();
+    if (!snap.exists) return null;
+    const count = Number((snap.data() as { count?: number })?.count);
+    if (!Number.isFinite(count) || count < 0) return null;
+    pushSubsCountMem = { count, at: Date.now() };
+    return count;
+  } catch (error) {
+    console.error("[firestore] push subs count read failed", error);
+    return null;
+  }
+}
+
+async function setPushSubsCountMeta(count: number) {
+  if (!firestoreConfigured()) return;
+  pushSubsCountMem = { count, at: Date.now() };
+  await resolveAdminFirestore();
+  await metaDoc("pushSubs").set({ count, updatedAt: new Date().toISOString() }, { merge: true });
+}
+
+export async function countFirestorePushSubscriptions(): Promise<number | null> {
+  const cached = await readPushSubsCountMeta();
+  if (cached !== null) return cached;
+  const subs = await readFirestorePushSubscriptions();
+  if (subs === null) return null;
+  await setPushSubsCountMeta(subs.length);
+  return subs.length;
 }
 
 export async function writeFirestoreHouse(house: House) {
@@ -123,15 +190,15 @@ export async function queryRemovedHouseIdsSince(since: string): Promise<string[]
   }
 }
 
-export async function readFirestoreDb(): Promise<DbFile | null> {
+/** Catalog path — houses + push templates only (#2). */
+export async function readFirestoreCatalog(): Promise<Omit<DbFile, "pushSubscriptions" | "vapid"> | null> {
   if (!firestoreConfigured()) return null;
   try {
     await resolveAdminFirestore();
-    const [housesSnap, pushSettingsSnap, vapidSnap, subsSnap] = await Promise.all([
+    const [housesSnap, pushSettingsSnap, catalogMetaSnap] = await Promise.all([
       housesCollection().get(),
       metaDoc("pushSettings").get(),
-      metaDoc("vapid").get(),
-      pushSubscriptionsCollection().get(),
+      metaDoc("catalog").get(),
     ]);
 
     const houses: House[] = [];
@@ -143,21 +210,50 @@ export async function readFirestoreDb(): Promise<DbFile | null> {
       houses.push(house);
     }
 
-    const pushSubscriptions: PushSubscriptionRecord[] = subsSnap.docs
-      .map((doc) => doc.data() as PushSubscriptionRecord)
-      .filter((row) => row?.endpoint && row.keys?.p256dh && row.keys?.auth);
-
-    let updatedAt = "";
-    for (const house of houses) {
-      if (stamp(house.updatedAt) > stamp(updatedAt)) updatedAt = house.updatedAt;
+    let updatedAt = catalogMetaSnap.exists
+      ? String((catalogMetaSnap.data() as { updatedAt?: string })?.updatedAt ?? "")
+      : "";
+    if (!updatedAt) {
+      for (const house of houses) {
+        if (stamp(house.updatedAt) > stamp(updatedAt)) updatedAt = house.updatedAt;
+      }
     }
 
     const pushSettings = pushSettingsSnap.exists
       ? (pushSettingsSnap.data() as DbFile["pushSettings"])
       : undefined;
-    if (pushSettings?.updatedAt && stamp(pushSettings.updatedAt) > stamp(updatedAt)) {
-      updatedAt = pushSettings.updatedAt;
-    }
+
+    if (!updatedAt) updatedAt = new Date().toISOString();
+
+    return {
+      updatedAt,
+      houses,
+      ...(pushSettings?.templates ? { pushSettings } : {}),
+    };
+  } catch (error) {
+    console.error("[firestore] catalog read failed", error);
+    return null;
+  }
+}
+
+/** Push path — subscriptions + vapid (#2). */
+export async function readFirestorePushData(): Promise<{
+  pushSubscriptions: PushSubscriptionRecord[];
+  vapid?: VapidKeys;
+  pushSettings?: DbFile["pushSettings"];
+} | null> {
+  if (!firestoreConfigured()) return null;
+  try {
+    await resolveAdminFirestore();
+    const [vapidSnap, subsSnap, pushSettingsSnap] = await Promise.all([
+      metaDoc("vapid").get(),
+      pushSubscriptionsCollection().get(),
+      metaDoc("pushSettings").get(),
+    ]);
+
+    const pushSubscriptions: PushSubscriptionRecord[] = subsSnap.docs
+      .map((doc) => doc.data() as PushSubscriptionRecord)
+      .filter((row) => row?.endpoint && row.keys?.p256dh && row.keys?.auth);
 
     const vapidRaw = vapidSnap.exists ? (vapidSnap.data() as VapidKeys) : undefined;
     const vapid =
@@ -169,19 +265,93 @@ export async function readFirestoreDb(): Promise<DbFile | null> {
           }
         : undefined;
 
-    if (!updatedAt) updatedAt = new Date().toISOString();
+    const pushSettings = pushSettingsSnap.exists
+      ? (pushSettingsSnap.data() as DbFile["pushSettings"])
+      : undefined;
+
+    await setPushSubsCountMeta(pushSubscriptions.length);
 
     return {
-      updatedAt,
-      houses,
       pushSubscriptions,
-      ...(pushSettings?.templates ? { pushSettings } : {}),
       ...(vapid ? { vapid } : {}),
+      ...(pushSettings?.templates ? { pushSettings } : {}),
     };
   } catch (error) {
-    console.error("[firestore] db read failed", error);
+    console.error("[firestore] push data read failed", error);
     return null;
   }
+}
+
+/** @deprecated Prefer readFirestoreCatalog + readFirestorePushData. */
+export async function readFirestoreDb(): Promise<DbFile | null> {
+  const [catalog, push] = await Promise.all([readFirestoreCatalog(), readFirestorePushData()]);
+  if (!catalog) return null;
+  return {
+    ...catalog,
+    pushSubscriptions: push?.pushSubscriptions ?? [],
+    ...(push?.vapid ? { vapid: push.vapid } : {}),
+    ...(push?.pushSettings?.templates && !catalog.pushSettings
+      ? { pushSettings: push.pushSettings }
+      : {}),
+  };
+}
+
+export async function readFirestorePushSubscriptions(): Promise<PushSubscriptionRecord[] | null> {
+  const data = await readFirestorePushData();
+  return data?.pushSubscriptions ?? null;
+}
+
+export async function readFirestorePushSubscription(
+  endpoint: string,
+): Promise<PushSubscriptionRecord | null> {
+  if (!firestoreConfigured()) return null;
+  try {
+    await resolveAdminFirestore();
+    const snap = await pushSubscriptionsCollection().doc(pushEndpointDocId(endpoint)).get();
+    if (!snap.exists) return null;
+    const row = snap.data() as PushSubscriptionRecord;
+    if (!row?.endpoint || !row.keys?.p256dh || !row.keys?.auth) return null;
+    return row;
+  } catch (error) {
+    console.error("[firestore] push subscription read failed", error);
+    return null;
+  }
+}
+
+export async function writeFirestorePushSubscription(
+  sub: PushSubscriptionRecord,
+  options?: { isNew?: boolean },
+) {
+  if (!firestoreConfigured()) return;
+  await resolveAdminFirestore();
+  const ref = pushSubscriptionsCollection().doc(pushEndpointDocId(sub.endpoint));
+  let isNew = options?.isNew;
+  if (isNew === undefined) {
+    const existing = await ref.get();
+    isNew = !existing.exists;
+  }
+  await ref.set(sub, { merge: true });
+  if (isNew) {
+    const count = await readPushSubsCountMeta();
+    if (count !== null) await setPushSubsCountMeta(count + 1);
+  }
+}
+
+export async function deleteFirestorePushSubscription(endpoint: string) {
+  if (!firestoreConfigured()) return;
+  await resolveAdminFirestore();
+  const ref = pushSubscriptionsCollection().doc(pushEndpointDocId(endpoint));
+  const existing = await ref.get();
+  if (!existing.exists) return;
+  await ref.delete();
+  const count = await readPushSubsCountMeta();
+  if (count !== null) await setPushSubsCountMeta(Math.max(0, count - 1));
+}
+
+export async function writeFirestoreVapid(vapid: VapidKeys) {
+  if (!firestoreConfigured()) return;
+  await resolveAdminFirestore();
+  await metaDoc("vapid").set(vapid, { merge: true });
 }
 
 function changedHouses(prev: House[], next: House[]) {
@@ -201,22 +371,22 @@ function removedHouseIds(prev: House[], next: House[]) {
     .filter((id) => id && !nextIds.has(id));
 }
 
-function subsChanged(prev: PushSubscriptionRecord[] | undefined, next: PushSubscriptionRecord[] | undefined) {
-  const a = prev ?? [];
-  const b = next ?? [];
-  if (a.length !== b.length) return true;
-  const map = new Map(a.map((item) => [item.endpoint, JSON.stringify(item)]));
-  for (const item of b) {
-    if (map.get(item.endpoint) !== JSON.stringify(item)) return true;
-  }
-  return false;
+function pushSettingsChanged(
+  prev: DbFile["pushSettings"] | undefined,
+  next: DbFile["pushSettings"] | undefined,
+) {
+  return JSON.stringify(prev ?? null) !== JSON.stringify(next ?? null);
+}
+
+function vapidChanged(prev: VapidKeys | undefined, next: VapidKeys | undefined) {
+  return JSON.stringify(prev ?? null) !== JSON.stringify(next ?? null);
 }
 
 export async function writeFirestorePushSettings(settings: DbFile["pushSettings"]) {
   if (!firestoreConfigured() || !settings?.templates) return;
   await resolveAdminFirestore();
   await metaDoc("pushSettings").set(settings, { merge: true });
-  await bumpCatalogMeta(settings.updatedAt ?? new Date().toISOString());
+  rememberPushSettingsMeta(settings.updatedAt ?? new Date().toISOString());
 }
 
 export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null }) {
@@ -229,6 +399,8 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
   const houses = stripStubHouses(db.houses);
   const prevHouses = prev ? stripStubHouses(prev.houses) : null;
   const dirtyHouses = prevHouses ? changedHouses(prevHouses, houses) : houses;
+  const housesChanged = dirtyHouses.length > 0;
+  const removals = prevHouses ? removedHouseIds(prevHouses, houses) : [];
 
   for (let i = 0; i < dirtyHouses.length; i += 400) {
     const batch = firestore.batch();
@@ -243,34 +415,20 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
     await batch.commit();
   }
 
-  if (prevHouses) {
-    for (const id of removedHouseIds(prevHouses, houses)) {
-      await deleteFirestoreHouse(id, { skipCatalogMeta: true });
-    }
+  for (const id of removals) {
+    await deleteFirestoreHouse(id, { skipCatalogMeta: true });
   }
 
-  if (db.pushSettings?.templates) {
+  if (pushSettingsChanged(prev?.pushSettings, db.pushSettings) && db.pushSettings?.templates) {
     await metaDoc("pushSettings").set(db.pushSettings, { merge: true });
+    rememberPushSettingsMeta(db.pushSettings.updatedAt ?? new Date().toISOString());
   }
 
-  if (db.vapid?.publicKey && db.vapid.privateKey) {
+  if (vapidChanged(prev?.vapid, db.vapid) && db.vapid?.publicKey && db.vapid.privateKey) {
     await metaDoc("vapid").set(db.vapid, { merge: true });
   }
 
-  if (subsChanged(prev?.pushSubscriptions, db.pushSubscriptions)) {
-    const subs = db.pushSubscriptions ?? [];
-    const col = pushSubscriptionsCollection();
-    const existing = await col.get();
-    const nextIds = new Set(subs.map((item) => pushEndpointDocId(item.endpoint)));
-    const batch = firestore.batch();
-    for (const doc of existing.docs) {
-      if (!nextIds.has(doc.id)) batch.delete(doc.ref);
-    }
-    for (const sub of subs) {
-      batch.set(col.doc(pushEndpointDocId(sub.endpoint)), sub, { merge: true });
-    }
-    await batch.commit();
+  if (housesChanged || removals.length > 0) {
+    await bumpCatalogMeta(db.updatedAt);
   }
-
-  await bumpCatalogMeta(db.updatedAt);
 }

@@ -91,6 +91,7 @@ export function NeighborhoodApp({
 }) {
   const { catalog, loading, ready, offline, unreachable, error, source, pollSeconds, refresh } =
     useCatalog(initialCatalog);
+  const catalogUpdatedAt = catalog?.updatedAt;
   const { admin } = useAdminSession();
   const geo = useUserLocation();
   const gps = geo.location;
@@ -134,7 +135,7 @@ export function NeighborhoodApp({
     adminHouses,
     applyAdminHouse,
     removeAdminHouse,
-  } = useAdminHouses({ admin, refresh, pollSeconds });
+  } = useAdminHouses({ admin, refresh, catalogUpdatedAt });
 
   const wasAdmin = useRef(false);
 
