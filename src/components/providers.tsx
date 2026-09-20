@@ -7,6 +7,7 @@ import { AndroidInstallGuard } from "@/components/android-install-guard";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { TabTitleCycle } from "@/components/tab-title-cycle";
 import { CatalogProvider } from "@/components/catalog-provider";
+import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { subscribeAppViewport } from "@/lib/viewport";
 
 function AppViewportSync() {
@@ -19,6 +20,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark">
       <CatalogProvider>
         <AppViewportSync />
+        <PresenceHeartbeat />
         <TabTitleCycle />
         {children}
         <Toaster dir="rtl" position="top-center" theme="dark" />

@@ -44,10 +44,12 @@ const MAP_THEME_KEY = "hw-map-theme";
 
 function readMapTheme(): "dark" | "light" {
   try {
-    return localStorage.getItem(MAP_THEME_KEY) === "light" ? "light" : "dark";
+    const stored = localStorage.getItem(MAP_THEME_KEY);
+    if (stored === "dark" || stored === "light") return stored;
   } catch {
-    return "dark";
+    /* private mode */
   }
+  return "light";
 }
 
 function saveMapTheme(theme: "dark" | "light") {
