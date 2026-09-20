@@ -44,7 +44,7 @@ export async function GET() {
         lightUrl: cartoTileUrlWithKey(CARTO_VOYAGER_TEMPLATE, activeKey),
         subdomains: "abcd",
         invert: false,
-        maxNativeZoom: 20,
+        maxNativeZoom: 18,
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
       },

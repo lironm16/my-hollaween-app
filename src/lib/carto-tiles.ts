@@ -1,4 +1,4 @@
-/** CARTO Voyager — day theme, sharp @2x on retina via Leaflet `{r}`. */
+/** CARTO Voyager — day theme. Use Leaflet `{r}` for @2x on retina; do not set detectRetina (breaks max zoom). */
 export const CARTO_VOYAGER_TEMPLATE =
   "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 

@@ -708,9 +708,7 @@ export function HouseMap({
             "subdomains" in tiles && tiles.subdomains ? tiles.subdomains : "abcd"
           }
           maxZoom={config.map.maxZoom}
-          maxNativeZoom={tiles.maxNativeZoom}
-          detectRetina
-          updateWhenZooming={false}
+          maxNativeZoom={Math.min(tiles.maxNativeZoom, config.map.maxZoom)}
           className="hw-basemap"
         />
         <SizeSync active={active} />

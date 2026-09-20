@@ -13,7 +13,7 @@ const tiles = {
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
   invert: false,
-  maxNativeZoom: 20,
+  maxNativeZoom: 18,
 } as const;
 
 export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים"] as const;

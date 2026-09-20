@@ -172,9 +172,9 @@
 /* Native CARTO dark_all — crisp lines, no invert wash-out. */
 .is-carto-dark .leaflet-tile,
 .is-carto-dark img.leaflet-tile {
-  filter: contrast(1.12) brightness(1.06);
+  filter: contrast(1.15) brightness(1.08) saturate(1.05);
   mix-blend-mode: normal;
-  image-rendering: auto;
+  image-rendering: -webkit-optimize-contrast;
 }
 
 /* Tailwind preflight sets img { max-width: 100%; height: auto } and hides tiles. */
