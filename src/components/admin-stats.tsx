@@ -1,8 +1,7 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import { MapPinned, Moon, Pause, Users } from "lucide-react";
-import { useActivePresence } from "@/hooks/use-active-presence";
+import { MapPinned, Moon, Pause } from "lucide-react";
 import { CandySign } from "@/components/candy-glyphs";
 import { OpenNowSign, ClosingSoonSign, OpeningSoonSign } from "@/components/open-now-mark";
 import { ScareSign } from "@/components/scare-glyphs";
@@ -38,8 +37,6 @@ export function AdminStatsCard({
   likedCount?: number;
   visitedCount?: number;
 }) {
-  const presence = useActivePresence(true);
-
   const personalMarks = (
     <div className="grid grid-cols-2 gap-2">
       <Tile
@@ -61,18 +58,6 @@ export function AdminStatsCard({
 
   return (
     <div className="space-y-3" dir="rtl">
-      {presence ? (
-        <Section title="גלישה">
-          <Tile
-            icon={<Users className="size-5" />}
-            label="פעילים עכשיו"
-            hint={`ב-${presence.windowMinutes} הדקות האחרונות`}
-            value={presence.active}
-            valueClass={presence.active ? "text-sky-300" : undefined}
-            wide
-          />
-        </Section>
-      ) : null}
       <Section title="סימונים שלי">{personalMarks}</Section>
       <Section title="מפה">
         <div className="mb-2">
