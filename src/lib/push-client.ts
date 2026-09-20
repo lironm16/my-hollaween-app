@@ -41,7 +41,18 @@ function serviceWorkerTimeoutMs() {
   return isAndroidDevice() ? 12_000 : 4_000;
 }
 
-async function waitForServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
+async function existingServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
+  if (!("serviceWorker" in navigator)) return null;
+  try {
+    return (await navigator.serviceWorker.getRegistration("/")) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Register SW only when enabling push — not on every map page load. */
+async function registerServiceWorkerForPush(): Promise<ServiceWorkerRegistration | null> {
+  if (!("serviceWorker" in navigator)) return null;
   try {
     const registration = await navigator.serviceWorker.register("/sw.js", {
       scope: "/",
@@ -132,7 +143,7 @@ export async function readPushStatus(): Promise<PushEnableResult> {
   if (isIosDevice() && !isStandaloneDisplay()) return "ios-install";
   if (Notification.permission === "denied") return "denied";
   try {
-    const reg = await waitForServiceWorkerRegistration();
+    const reg = await existingServiceWorkerRegistration();
     if (!reg) return "off";
     const sub = await reg.pushManager.getSubscription();
     return sub ? "on" : "off";
@@ -194,7 +205,7 @@ export async function forceRefreshPushSubscription(): Promise<PushEnableResult> 
   if (!pushSupported()) return "unsupported";
   if (Notification.permission !== "granted") return "denied";
   try {
-    const reg = await waitForServiceWorkerRegistration();
+    const reg = await registerServiceWorkerForPush();
     const sub = reg ? await reg.pushManager.getSubscription() : null;
     if (sub) {
       try {
@@ -318,7 +329,7 @@ export async function enablePushAlerts(prefs?: PushTopicPrefs): Promise<PushEnab
     }
   }
 
-  const reg = await waitForServiceWorkerRegistration();
+  const reg = await registerServiceWorkerForPush();
   if (!reg) throw new Error("Service worker לא מוכן. נסו שוב בעוד רגע.");
   const sub = await obtainPushSubscription(reg, keyData.publicKey);
   const count = await postSubscription(sub, nextPrefs);
@@ -337,7 +348,7 @@ export async function syncPushTopicPrefs(prefs: PushTopicPrefs): Promise<PushEna
     try {
       const keyRes = await fetch("/api/push/public-key", { cache: "no-store" });
       const keyData = (await keyRes.json()) as { publicKey?: string };
-      const reg = await waitForServiceWorkerRegistration();
+      const reg = await registerServiceWorkerForPush();
       if (keyRes.ok && keyData.publicKey && reg) {
         const sub = await obtainPushSubscription(reg, keyData.publicKey);
         await postSubscription(sub, prefs);
@@ -383,7 +394,7 @@ export async function refreshPushSubscriptionIfEnabled() {
     const keyRes = await fetch("/api/push/public-key", { cache: "no-store" });
     const keyData = (await keyRes.json()) as { publicKey?: string };
     if (!keyRes.ok || !keyData.publicKey) return;
-    const reg = await waitForServiceWorkerRegistration();
+    const reg = await registerServiceWorkerForPush();
     if (!reg) return;
     const sub = await obtainPushSubscription(reg, keyData.publicKey);
     await postSubscription(sub, prefs);
@@ -397,7 +408,7 @@ export async function refreshPushSubscriptionIfEnabled() {
 export async function senderPushEndpoint() {
   try {
     if (typeof navigator === "undefined" || !navigator.serviceWorker) return undefined;
-    const ready = waitForServiceWorkerRegistration().then((reg) =>
+    const ready = existingServiceWorkerRegistration().then((reg) =>
       reg ? reg.pushManager.getSubscription() : null,
     );
     return (await ready)?.endpoint;

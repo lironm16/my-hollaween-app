@@ -15,16 +15,18 @@
     window.visualViewport.addEventListener("scroll", syncAppH);
   }
 
-  /* Old service workers cached blocked/empty OSM tiles → gray map. Drop them. */
+  /* v110: service worker cached blank map tiles — purge SW + all hw-* caches once. */
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.getRegistrations().then(function (regs) {
-      for (var i = 0; i < regs.length; i++) regs[i].unregister();
+      for (var i = 0; i < regs.length; i++) {
+        regs[i].unregister();
+      }
     });
   }
   if ("caches" in window) {
     caches.keys().then(function (keys) {
       keys.forEach(function (key) {
-        if (key.indexOf("hw-tiles") === 0 || key.indexOf("hw-shell") === 0) caches.delete(key);
+        if (key.indexOf("hw-") === 0) caches.delete(key);
       });
     });
   }

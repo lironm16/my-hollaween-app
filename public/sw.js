@@ -1,5 +1,4 @@
-const CACHE = "hw-shell-v109";
-const TILE_CACHE = "hw-tiles-v8";
+const CACHE = "hw-shell-v110";
 const PRECACHE = [
   "/offline.html",
   "/catalog.json",
@@ -48,7 +47,7 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== CACHE && key !== TILE_CACHE)
+            .filter((key) => key !== CACHE)
             .map((key) => caches.delete(key)),
         ),
       )
@@ -92,6 +91,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Map tiles: never intercept — cached blank/blocked tiles caused gray maps on phones.
   if (
     url.hostname.includes("basemaps.cartocdn.com") ||
     url.hostname.includes("tile.openstreetmap.org") ||
@@ -99,7 +99,6 @@ self.addEventListener("fetch", (event) => {
     url.hostname.includes("israelhiking.osm.org.il") ||
     url.hostname.includes("arcgisonline.com")
   ) {
-    event.respondWith(cacheFirst(req, TILE_CACHE));
     return;
   }
 
