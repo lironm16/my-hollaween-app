@@ -4120,6 +4120,12 @@ svg.leaflet-zoom-animated {
   filter: none;
   isolation: isolate;
 }
+.is-carto-dark .leaflet-tile,
+.is-carto-dark img.leaflet-tile {
+  filter: contrast(1.12) brightness(1.06);
+  mix-blend-mode: normal;
+  image-rendering: auto;
+}
 .leaflet-container img,
 .leaflet-pane img,
 .leaflet-tile,

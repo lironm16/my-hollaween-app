@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  CARTO_DARK_TEMPLATE,
   CARTO_VOYAGER_TEMPLATE,
   cartoTileLooksValid,
   cartoTileUrlWithKey,
@@ -34,18 +35,20 @@ async function keyWorks(key: string) {
 export async function GET() {
   const key = readCartoKey();
   const useKey = key ? await keyWorks(key) : false;
-  const url = cartoTileUrlWithKey(CARTO_VOYAGER_TEMPLATE, useKey ? key : null);
+  const activeKey = useKey ? key : null;
 
   return NextResponse.json(
     {
       tiles: {
-        url,
+        url: cartoTileUrlWithKey(CARTO_DARK_TEMPLATE, activeKey),
+        lightUrl: cartoTileUrlWithKey(CARTO_VOYAGER_TEMPLATE, activeKey),
         subdomains: "abcd",
-        invert: true,
+        invert: false,
         maxNativeZoom: 20,
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
       },
+      keyActive: useKey,
     },
     {
       headers: {

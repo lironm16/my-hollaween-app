@@ -60,11 +60,10 @@ function saveMapTheme(theme: "dark" | "light") {
 
 function tileUrlFor(tiles: MapTilesConfig, theme: "dark" | "light"): string {
   if (tiles.invert) return tiles.url;
-  const light =
-    "lightUrl" in tiles && tiles.lightUrl
-      ? tiles.lightUrl
-      : tiles.url.replace("/dark_all/", "/light_all/");
-  return theme === "light" ? light : tiles.url;
+  if (theme === "light") {
+    return tiles.lightUrl ?? tiles.url.replace("/dark_all/", "/rastertiles/voyager/");
+  }
+  return tiles.url;
 }
 
 function routeBadgeHtml(order: number) {
@@ -661,6 +660,7 @@ export function HouseMap({
   const tiles = useMapTiles();
   const tileUrl = tileUrlFor(tiles, mapTheme);
   const osmDark = mapTheme === "dark" && tiles.invert;
+  const cartoDark = mapTheme === "dark" && !tiles.invert;
 
   function toggleMapTheme() {
     setMapTheme((current) => {
@@ -679,6 +679,7 @@ export function HouseMap({
         originPickActive && "is-origin-pick",
         dimActive && "is-filter-dim",
         osmDark && "is-osm-dark",
+        cartoDark && "is-carto-dark",
         mapTheme === "dark" ? "bg-[#1a1024]" : "bg-[#d6d3d1]",
         className ?? "h-full min-h-[280px] w-full",
       )}

@@ -3,15 +3,16 @@ const centerLng = Number(process.env.NEXT_PUBLIC_MAP_CENTER_LNG ?? 34.8112);
 const latPad = 0.0075;
 const lngPad = 0.014;
 
-import { CARTO_VOYAGER_TEMPLATE } from "@/lib/carto-tiles";
+import { CARTO_DARK_TEMPLATE, CARTO_VOYAGER_TEMPLATE } from "@/lib/carto-tiles";
 
 const tiles = {
-  // Voyager + CSS invert for night theme. Runtime key from /api/map-config (invalid keys are skipped).
-  url: CARTO_VOYAGER_TEMPLATE,
+  // Night = dark_all, day = voyager. Key injected at runtime via /api/map-config.
+  url: CARTO_DARK_TEMPLATE,
+  lightUrl: CARTO_VOYAGER_TEMPLATE,
   subdomains: "abcd",
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-  invert: true,
+  invert: false,
   maxNativeZoom: 20,
 } as const;
 
