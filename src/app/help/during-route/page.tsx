@@ -53,8 +53,8 @@ const STEPS = [
         (כשהוא דולק) כדי לצאת ממצב מסלול.
       </>
     ),
-    image: helpImage("route-2-origin.png"),
-    imageAlt: "שינוי נקודת התחלה",
+    image: helpImage("route-during-exit.png"),
+    imageAlt: "שינוי נקודת התחלה ויציאה מהמסלול",
   },
 ] as const;
 

@@ -212,11 +212,25 @@ async function captureFilter(page) {
   await shot(page, "filter-4-results.png");
 }
 
+async function ensureMapView(page) {
+  await page.evaluate(() => {
+    sessionStorage.setItem("hw-home-view", "map");
+    window.dispatchEvent(new Event("hw-home-view"));
+  });
+  const mapBtn = page.getByRole("button", { name: "מפה", exact: true });
+  if ((await mapBtn.getAttribute("aria-pressed")) !== "true") {
+    await mapBtn.click();
+    await page.getByRole("button", { name: "מפה", exact: true, pressed: true }).waitFor();
+  }
+  await waitForMap(page);
+}
+
 async function captureRoute(page) {
   console.log("create-route + during-route");
   await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
   await waitForMap(page);
   await resetFilters(page);
+  await ensureMapView(page);
 
   await page.evaluate(() => {
     localStorage.setItem("hw-visited-houses", "[]");
@@ -245,7 +259,13 @@ async function captureRoute(page) {
   await page.getByRole("button", { name: "יציאה מהמסלול", pressed: true }).waitFor({ timeout: 10_000 }).catch(async () => {
     await page.getByRole("button", { name: "מסלול" }).click();
   });
-  await page.waitForTimeout(2000);
+  await ensureMapView(page);
+  await page.waitForTimeout(2500);
+  try {
+    await page.locator(".leaflet-overlay-pane path").first().waitFor({ timeout: 12_000 });
+  } catch {
+    console.warn("  (route line not visible — map shot anyway)");
+  }
   await shot(page, "route-3-enable.png");
   await shot(page, "route-during-map.png");
 
