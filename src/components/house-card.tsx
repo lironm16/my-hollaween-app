@@ -56,7 +56,7 @@ export function HouseCard({
   return (
     <Card
       size="sm"
-      className="house-list-card overflow-visible border-orange-500/15 bg-[#1d1028]/90 text-base"
+      className="house-list-card overflow-visible border-orange-500/15 bg-[#1d1028]/90 text-base !shadow-none !ring-0"
     >
       <div className="px-3 pb-1 pt-2">
         {skipped ? <HouseSkippedBanner meta={skipMeta} onRestore={onRestoreRoute} /> : null}

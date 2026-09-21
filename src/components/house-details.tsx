@@ -484,7 +484,7 @@ export function HouseDetails({
               <Heart
                 className="mb-0.5 me-1.5 inline size-5 fill-current text-[#fb7185]"
                 strokeWidth={2.2}
-                aria-label="שמור"
+                aria-label="אהבתי"
               />
             ) : null}
             {houseHeadline(house)}

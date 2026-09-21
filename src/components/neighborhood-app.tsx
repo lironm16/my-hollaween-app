@@ -298,9 +298,13 @@ export function NeighborhoodApp({
       const nextVisitedIds = marking
         ? [id, ...visits.visitedIds.filter((item) => item !== id)]
         : visits.visitedIds.filter((item) => item !== id);
+      const nextSkippedIds =
+        marking && skips.skipped(id)
+          ? skips.skippedIds.filter((item) => item !== id)
+          : skips.skippedIds;
       baseToggleVisited(id);
       if (!routeMode) return;
-      applyRouteAfterSkipChange(skips.skippedIds, !marking, nextVisitedIds);
+      applyRouteAfterSkipChange(nextSkippedIds, !marking, nextVisitedIds);
     },
     [baseToggleVisited, routeMode, skips.skippedIds, visits],
   );
@@ -423,7 +427,10 @@ export function NeighborhoodApp({
     }
     skips.clearNote(house.id);
     if (routeMode && !wasSkipped) {
-      applyRouteAfterSkipChange(nextSkippedIds, false);
+      const nextVisitedIds = visits.visited(house.id)
+        ? visits.visitedIds.filter((item) => item !== house.id)
+        : visits.visitedIds;
+      applyRouteAfterSkipChange(nextSkippedIds, false, nextVisitedIds);
     }
   }
 

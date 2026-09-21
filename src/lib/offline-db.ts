@@ -255,7 +255,11 @@ export function isVisited(id: string) {
 
 export function toggleVisited(id: string): string[] {
   const current = loadVisitedIds();
-  const next = current.includes(id) ? current.filter((item) => item !== id) : [id, ...current];
+  const marking = !current.includes(id);
+  if (marking && isSkipped(id)) {
+    unskipHouse(id);
+  }
+  const next = marking ? [id, ...current.filter((item) => item !== id)] : current.filter((item) => item !== id);
   localStorage.setItem(VISITED_KEY, JSON.stringify(next.slice(0, 200)));
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("hw-visited-changed"));
@@ -366,7 +370,15 @@ export function clearSkipNote(id: string) {
 
 export function skipHouse(id: string, meta?: SkippedHouseMeta): string[] {
   const current = loadSkippedIds();
-  const next = current.includes(id) ? current : [id, ...current];
+  const adding = !current.includes(id);
+  if (adding && isVisited(id)) {
+    const visited = loadVisitedIds().filter((item) => item !== id);
+    localStorage.setItem(VISITED_KEY, JSON.stringify(visited));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("hw-visited-changed"));
+    }
+  }
+  const next = adding ? [id, ...current] : current;
   localStorage.setItem(SKIPPED_KEY, JSON.stringify(next.slice(0, 200)));
   if (meta) {
     const all = loadSkippedMeta();

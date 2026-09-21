@@ -1215,6 +1215,13 @@
   pointer-events: none;
 }
 
+.house-list-card.is-liked,
+.house-list-card.is-visited,
+.house-list-card.is-liked.is-visited {
+  border-color: rgba(249, 115, 22, 0.15) !important;
+  box-shadow: none !important;
+}
+
 .house-list-focus .house-list-card {
   border-color: rgba(249, 115, 22, 0.75) !important;
   box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.45) !important;
@@ -1895,6 +1902,12 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .map-house-sheet-card:last-child {
   padding-bottom: 0;
   border-bottom: 0;
+}
+
+.map-house-sheet-card.is-liked,
+.map-house-sheet-card.is-visited,
+.map-house-sheet-card.is-liked.is-visited {
+  box-shadow: none;
 }
 
 .cluster-house-nav {
