@@ -26,10 +26,12 @@ function HouseComments({
   house,
   compact,
   onReadMore,
+  onOverflowChange,
 }: {
   house: PublicHouse;
   compact: boolean;
   onReadMore?: () => void;
+  onOverflowChange?: (overflows: boolean) => void;
 }) {
   const description = house.description?.trim() ?? "";
   const notes = house.notes?.trim() ?? "";
@@ -54,6 +56,16 @@ function HouseComments({
     observer.observe(el);
     return () => observer.disconnect();
   }, [compact, expanded, description, notes]);
+
+  useEffect(() => {
+    onOverflowChange?.(overflows);
+  }, [overflows, onOverflowChange]);
+
+  useEffect(() => {
+    if (!description && !notes) {
+      onOverflowChange?.(false);
+    }
+  }, [description, notes, onOverflowChange]);
 
   if (!description && !notes) return null;
 
@@ -121,6 +133,7 @@ export function HouseDetails({
   distanceM,
   index,
   onReadMore,
+  onContentOverflowChange,
 }: {
   house: PublicHouse;
   extra?: ReactNode;
@@ -143,6 +156,8 @@ export function HouseDetails({
   index?: number;
   /** Compact list card — open full detail when comments overflow. */
   onReadMore?: () => void;
+  /** Fired when compact comment text overflows its clamp (needs full detail). */
+  onContentOverflowChange?: (overflows: boolean) => void;
 }) {
   const displayAddress = formatDisplayAddress(house);
   const addedMeta = houseAddedMetaLine(house);
@@ -342,7 +357,12 @@ export function HouseDetails({
           איך מגיעים: {house.arrival}
         </p>
       ) : null}
-      <HouseComments house={house} compact={compact} onReadMore={compact ? onReadMore : undefined} />
+      <HouseComments
+        house={house}
+        compact={compact}
+        onReadMore={compact ? onReadMore : undefined}
+        onOverflowChange={compact ? onContentOverflowChange : undefined}
+      />
       {addedMeta ? (
         <p className="text-sm text-violet-400">{addedMeta}</p>
       ) : null}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
@@ -59,11 +60,17 @@ export function HouseCard({
   expanded?: boolean;
   index?: number;
 }) {
+  const [commentsOverflow, setCommentsOverflow] = useState(false);
+
+  useEffect(() => {
+    setCommentsOverflow(false);
+  }, [house.id]);
+
   function open() {
     onOpen?.();
   }
 
-  const interactive = Boolean(onOpen) && !expanded;
+  const interactive = Boolean(onOpen) && !expanded && commentsOverflow;
 
   return (
     <Card
@@ -112,6 +119,7 @@ export function HouseCard({
           compact={!expanded}
           index={index}
           onReadMore={!expanded && onOpen ? open : undefined}
+          onContentOverflowChange={!expanded ? setCommentsOverflow : undefined}
           headerMenu={
             <HouseActionBar
               house={house}
