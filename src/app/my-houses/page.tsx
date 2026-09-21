@@ -133,7 +133,6 @@ export default function MyHousesPage() {
           forgetPublishedHouse(id);
           removeOwnedHouse(id);
           editFlow.close();
-          setSelectedId(null);
           notifyCatalogChanged();
           void refresh(true);
         }}
