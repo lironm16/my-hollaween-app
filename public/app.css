@@ -4719,10 +4719,12 @@ svg.leaflet-zoom-animated {
 .is-filter-dim .pumpkin-pin-icon.is-filtered-out,
 .is-filter-dim .house-pin.is-filtered-out,
 .is-filter-dim .pin-apt-dot.is-filtered-out {
-  filter: brightness(0.55) saturate(0.7);
+  opacity: 0.38;
+  filter: saturate(0.85);
 }
 .is-filter-dim .pumpkin-pin-icon.is-filtered-out .house-pin.is-filtered-out,
 .is-filter-dim .pumpkin-pin-icon.is-filtered-out .pin-apt-dot.is-filtered-out {
+  opacity: 1;
   filter: none;
 }
 .house-skipped-banner {
