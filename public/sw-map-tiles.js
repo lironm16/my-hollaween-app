@@ -5,8 +5,8 @@
 var MapTileCache = (function () {
   var TILE_CACHE = "hw-map-tiles-v1";
   var TILE_MIN_BYTES = 400;
-  /** One event weekend + buffer; stale entries are refetched. */
-  var TILE_MAX_AGE_MS = 8 * 24 * 60 * 60 * 1000;
+  /** Neighborhood tiles are static — keep on device for 60 days, then refetch. */
+  var TILE_MAX_AGE_MS = 60 * 24 * 60 * 60 * 1000;
 
   var MAP_TILE_HOSTS = [
     "basemaps.cartocdn.com",
