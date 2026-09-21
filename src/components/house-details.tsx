@@ -22,19 +22,55 @@ import { cn } from "@/lib/utils";
 
 const DESCRIPTION_PREFIX = "מה מחכה בבית:";
 
+function HouseArrivalDirections({
+  arrival,
+  notes,
+  compact,
+}: {
+  arrival?: string | null;
+  notes?: string | null;
+  compact: boolean;
+}) {
+  const arrivalText = arrival?.trim() ?? "";
+  const notesText = notes?.trim() ?? "";
+  if (!arrivalText && !notesText) return null;
+
+  if (compact) {
+    return (
+      <div className="rounded-lg bg-[#2a1638] px-3 py-2 text-base leading-snug text-amber-100">
+        <p className="mb-1 text-sm font-medium text-amber-200/80">הוראות הגעה</p>
+        <div className="space-y-1 [overflow-wrap:anywhere]">
+          {arrivalText ? <p>{arrivalText}</p> : null}
+          {notesText ? <p>{notesText}</p> : null}
+        </div>
+      </div>
+    );
+  }
+
+  if (!arrivalText) return null;
+
+  return (
+    <p className="rounded-lg bg-[#2a1638] px-3 py-2 text-base text-amber-100">
+      איך מגיעים: {arrivalText}
+    </p>
+  );
+}
+
 function HouseComments({
   house,
   compact,
+  includeNotes,
   onReadMore,
   onOverflowChange,
 }: {
   house: PublicHouse;
   compact: boolean;
+  includeNotes: boolean;
   onReadMore?: () => void;
   onOverflowChange?: (overflows: boolean) => void;
 }) {
   const description = house.description?.trim() ?? "";
-  const notes = house.notes?.trim() ?? "";
+  const notes = includeNotes ? (house.notes?.trim() ?? "") : "";
   const [expanded, setExpanded] = useState(false);
   const clampRef = useRef<HTMLDivElement>(null);
   const [overflows, setOverflows] = useState(false);
@@ -272,31 +308,35 @@ export function HouseDetails({
     </div>
   );
   const metaSep = " · ";
+  const metaTextClass = cn(
+    "min-w-0 leading-snug text-violet-200 break-words",
+    compact ? "text-base" : "text-lg leading-relaxed",
+  );
+  const hoursDistance = (
+    <>
+      {hours ? <HoursLabel house={house} /> : null}
+      {hours && distanceM !== undefined ? metaSep : null}
+      {distanceM !== undefined ? formatDistance(distanceM) : null}
+    </>
+  );
   const meta = (
-    <div className="min-w-0 text-lg leading-relaxed text-violet-200 break-words">
-      {photo ? (
+    <div className={metaTextClass}>
+      {photo || compact ? (
         <>
           {displayAddress ? <p className="break-words">{displayAddress}</p> : null}
-          {hours ? (
-            <p>
-              <HoursLabel house={house} />
-            </p>
-          ) : null}
-          {distanceM !== undefined ? <p>{formatDistance(distanceM)}</p> : null}
+          {hours || distanceM !== undefined ? <p>{hoursDistance}</p> : null}
         </>
       ) : (
         <p className="break-words">
           {displayAddress}
-          {displayAddress && hours ? metaSep : null}
-          {hours ? <HoursLabel house={house} /> : null}
-          {(displayAddress || hours) && distanceM !== undefined ? metaSep : null}
-          {distanceM !== undefined ? formatDistance(distanceM) : null}
+          {displayAddress && (hours || distanceM !== undefined) ? metaSep : null}
+          {hoursDistance}
         </p>
       )}
     </div>
   );
   return (
-    <div className="space-y-3">
+    <div className={cn(compact ? "space-y-2" : "space-y-3")}>
       {photoOpen && house.photoUrl && typeof document !== "undefined"
         ? createPortal(
             <button
@@ -318,8 +358,8 @@ export function HouseDetails({
             document.body,
           )
         : null}
-      <HoursStatusBanner house={house} />
-      <div className="space-y-2">
+      <HoursStatusBanner house={house} compact={compact} />
+      <div className={cn(compact ? "space-y-1.5" : "space-y-2")}>
         <div className="flex min-w-0 items-center gap-2">
           {indexBadge}
           <p
@@ -352,14 +392,15 @@ export function HouseDetails({
         meta
       )}
       {actions}
-      {house.arrival ? (
-        <p className="rounded-lg bg-[#2a1638] px-3 py-2 text-base text-amber-100">
-          איך מגיעים: {house.arrival}
-        </p>
-      ) : null}
+      <HouseArrivalDirections
+        arrival={house.arrival}
+        notes={house.notes}
+        compact={compact}
+      />
       <HouseComments
         house={house}
         compact={compact}
+        includeNotes={!compact}
         onReadMore={compact ? onReadMore : undefined}
         onOverflowChange={compact ? onContentOverflowChange : undefined}
       />

@@ -25,6 +25,7 @@ export function HoursStatusBanner({
   house,
   className,
   now,
+  compact = false,
 }: {
   house: {
     id?: string;
@@ -43,6 +44,8 @@ export function HoursStatusBanner({
   className?: string;
   /** Override clock for previews / tests. */
   now?: Date;
+  /** List cards: skip pre-event banners when hours already appear in the card meta. */
+  compact?: boolean;
 }) {
   const rehearsed = useAppNow();
   const clock = now ?? rehearsed;
@@ -108,6 +111,7 @@ export function HoursStatusBanner({
     return null;
   }
   if (status.kind === "beforeEvent") {
+    if (compact) return null;
     return (
       <p className={cn(BANNER, "bg-sky-950/50 text-sky-100", className)}>
         נפתח ב־{status.dateLabel} בשעה <ClockTime>{status.opensAt}</ClockTime>
@@ -115,6 +119,7 @@ export function HoursStatusBanner({
     );
   }
   if (status.kind === "before") {
+    if (compact) return null;
     return (
       <p className={cn(BANNER, "bg-sky-950/50 text-sky-100", className)}>
         נפתח ב־<ClockTime>{status.opensAt}</ClockTime>
