@@ -27,15 +27,22 @@ describe("catalogDeltaGatePassed", () => {
   });
 
   it("fails when push templates changed after since", () => {
-    assert.equal(
-      catalogDeltaGatePassed({
-        sinceMs: Date.parse("2026-10-31T11:00:00.000Z"),
-        catalogUpdatedAt: "2026-10-31T10:00:00.000Z",
-        pushUpdatedAt: "2026-10-31T12:00:00.000Z",
-        removedIds: [],
-      }),
-      false,
-    );
+    const prev = process.env.NEXT_PUBLIC_PUSH_ALERTS;
+    process.env.NEXT_PUBLIC_PUSH_ALERTS = "1";
+    try {
+      assert.equal(
+        catalogDeltaGatePassed({
+          sinceMs: Date.parse("2026-10-31T11:00:00.000Z"),
+          catalogUpdatedAt: "2026-10-31T10:00:00.000Z",
+          pushUpdatedAt: "2026-10-31T12:00:00.000Z",
+          removedIds: [],
+        }),
+        false,
+      );
+    } finally {
+      if (prev === undefined) delete process.env.NEXT_PUBLIC_PUSH_ALERTS;
+      else process.env.NEXT_PUBLIC_PUSH_ALERTS = prev;
+    }
   });
 
   it("fails when removals are pending", () => {
