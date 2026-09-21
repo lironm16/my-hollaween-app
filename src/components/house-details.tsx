@@ -475,7 +475,7 @@ export function HouseDetails({
               "min-w-0 flex-1 font-display text-xl text-orange-300 break-words",
             )}
           >
-            {liked && !compact ? (
+            {liked ? (
               <Heart
                 className="mb-0.5 me-1.5 inline size-5 fill-current text-[#fb7185]"
                 strokeWidth={2.2}

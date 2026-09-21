@@ -438,6 +438,7 @@ export function MapHouseSheet({
                   <section
                     className={cn(
                       "map-house-sheet-card is-on",
+                      liked?.(house.id) && "is-liked",
                       visited?.(house.id) && "is-visited",
                     )}
                   >
