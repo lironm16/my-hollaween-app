@@ -467,7 +467,7 @@ export function HouseForm({
           </p>
         </div>
         <Field
-          label="איך מגיעים — קומה, דירה, הוראות"
+          label="איפה הדלת (קומה, דירה)"
           charCount={{ length: form.arrival.length, max: HOUSE_FIELD_LIMITS.arrival.max }}
         >
           <Input
@@ -476,6 +476,20 @@ export function HouseForm({
             onChange={(e) => setForm({ ...form, arrival: e.target.value })}
             placeholder="קומה 2, דירה 5, ימינה אחרי השער"
           />
+        </Field>
+        <Field
+          label="הערה למבקרים"
+          charCount={{ length: form.notes.length, max: HOUSE_FIELD_LIMITS.notes.max }}
+        >
+          <Input
+            value={form.notes}
+            maxLength={HOUSE_FIELD_LIMITS.notes.max}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            placeholder="כלב, מדרגות, או משהו שלא קשור להגעה"
+          />
+          <p className="text-sm text-violet-400">
+            מופיעה בכרטיס בנפרד מהוראות ההגעה — למשל כלב, מדרגות, או הערה כללית.
+          </p>
         </Field>
       </FormSection>
       <FormSection title="מתי פתוחים">
@@ -663,9 +677,10 @@ export function HouseForm({
             value={form.description}
             maxLength={HOUSE_FIELD_LIMITS.description.max}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            placeholder="קישוטים, אווירה, הפתעות…"
+            placeholder="קישוטים, אווירה, הפתעות בבית או בחצר…"
             className="min-h-24"
           />
+          <p className="text-sm text-violet-400">מופיע בכרטיס — אפשר להרחיב אם הטקסט ארוך.</p>
         </Field>
       </FormSection>
       <FormSection title="הכניסה">
@@ -686,16 +701,6 @@ export function HouseForm({
             </span>
           </span>
         </label>
-        <Field
-          label="הערות (כלב, מדרגות, עגלה…)"
-          charCount={{ length: form.notes.length, max: HOUSE_FIELD_LIMITS.notes.max }}
-        >
-          <Input
-            value={form.notes}
-            maxLength={HOUSE_FIELD_LIMITS.notes.max}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-          />
-        </Field>
       </FormSection>
       <FormSection title="תמונת קישוט">
         <p className="text-base text-violet-300">אפשר גם להעלות אחרי שתקשטו את הבית.</p>

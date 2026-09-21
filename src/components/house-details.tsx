@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ChevronDown, Heart, Pencil } from "lucide-react";
@@ -90,18 +90,15 @@ function ListDetailSection({
 
 function HouseArrivalDirections({
   arrival,
-  notes,
   compact,
   houseId,
 }: {
   arrival?: string | null;
-  notes?: string | null;
   compact: boolean;
   houseId: string;
 }) {
   const arrivalText = arrival?.trim() ?? "";
-  const notesText = notes?.trim() ?? "";
-  if (!arrivalText && !notesText) return null;
+  if (!arrivalText) return null;
 
   if (compact) {
     return (
@@ -113,13 +110,10 @@ function HouseArrivalDirections({
         titleClassName="text-amber-200/80"
         bodyClassName="text-amber-100"
       >
-        {arrivalText ? <p>{arrivalText}</p> : null}
-        {notesText ? <p>{notesText}</p> : null}
+        <p>{arrivalText}</p>
       </ListDetailSection>
     );
   }
-
-  if (!arrivalText) return null;
 
   return (
     <p className="rounded-lg bg-[#2a1638] px-3 py-2 text-base text-amber-100">
@@ -128,19 +122,98 @@ function HouseArrivalDirections({
   );
 }
 
-function HouseDescriptionSection({
-  description,
+function HouseNotesSection({
+  notes,
   compact,
+  houseId,
 }: {
-  description?: string | null;
+  notes?: string | null;
   compact: boolean;
+  houseId: string;
 }) {
-  const text = description?.trim() ?? "";
+  const text = notes?.trim() ?? "";
   if (!compact || !text) return null;
 
   return (
-    <ListDetailSection title="מה מחכה בבית" titleClassName="text-violet-200/80">
-      <p className="leading-relaxed text-violet-50">{text}</p>
+    <ListDetailSection
+      title="הערה"
+      collapsible
+      defaultOpen={false}
+      resetKey={houseId}
+      titleClassName="text-amber-200/80"
+      bodyClassName="text-amber-200/90"
+    >
+      <p>{text}</p>
+    </ListDetailSection>
+  );
+}
+
+function HouseDescriptionSection({
+  description,
+  compact,
+  houseId,
+}: {
+  description?: string | null;
+  compact: boolean;
+  houseId: string;
+}) {
+  const text = description?.trim() ?? "";
+  const [textExpanded, setTextExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const clampRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setTextExpanded(false);
+  }, [houseId, text]);
+
+  useLayoutEffect(() => {
+    if (!compact || !text || textExpanded) {
+      setOverflows(false);
+      return;
+    }
+    const el = clampRef.current;
+    if (!el) return;
+    const check = () => setOverflows(el.scrollHeight > el.clientHeight + 1);
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [compact, text, textExpanded]);
+
+  if (!compact || !text) return null;
+
+  const showToggle = overflows || textExpanded;
+
+  return (
+    <ListDetailSection
+      title="מה מחכה בבית"
+      collapsible
+      defaultOpen
+      resetKey={houseId}
+      titleClassName="text-violet-200/80"
+      bodyClassName="text-violet-50"
+    >
+      <div
+        ref={clampRef}
+        className={cn(
+          "leading-relaxed [overflow-wrap:anywhere]",
+          !textExpanded && "line-clamp-3",
+        )}
+      >
+        {text}
+      </div>
+      {showToggle ? (
+        <button
+          type="button"
+          className="text-sm font-medium text-orange-300 underline underline-offset-2 hover:text-orange-200"
+          onClick={(event) => {
+            event.stopPropagation();
+            setTextExpanded((value) => !value);
+          }}
+        >
+          {textExpanded ? "הצג פחות" : "הצג עוד"}
+        </button>
+      ) : null}
     </ListDetailSection>
   );
 }
@@ -404,13 +477,13 @@ export function HouseDetails({
         meta
       )}
       {actions}
-      <HouseArrivalDirections
-        arrival={house.arrival}
-        notes={house.notes}
+      <HouseArrivalDirections arrival={house.arrival} compact={compact} houseId={house.id} />
+      <HouseNotesSection notes={house.notes} compact={compact} houseId={house.id} />
+      <HouseDescriptionSection
+        description={house.description}
         compact={compact}
         houseId={house.id}
       />
-      <HouseDescriptionSection description={house.description} compact={compact} />
       {!compact ? <HouseComments house={house} includeNotes /> : null}
       {addedMeta ? (
         <p className="text-sm text-violet-400">{addedMeta}</p>
