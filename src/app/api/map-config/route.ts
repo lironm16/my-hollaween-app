@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import {
-  CARTO_DARK_TEMPLATE,
   CARTO_VOYAGER_TEMPLATE,
   cartoTileLooksValid,
   cartoTileUrlWithKey,
@@ -29,7 +28,7 @@ function probeReferer() {
 }
 
 /** Real neighborhood tile — empty-ocean probes falsely fail key validation. */
-const PROBE_TILE = "https://a.basemaps.cartocdn.com/dark_all/16/39105/26593.png";
+const PROBE_TILE = "https://a.basemaps.cartocdn.com/rastertiles/voyager/16/39105/26593.png";
 
 async function keyProbeOk(key: string) {
   const probe = cartoTileUrlWithKey(PROBE_TILE, key);
@@ -59,8 +58,7 @@ export async function GET() {
   return NextResponse.json(
     {
       tiles: {
-        url: cartoTileUrlWithKey(CARTO_DARK_TEMPLATE, activeKey),
-        lightUrl: cartoTileUrlWithKey(CARTO_VOYAGER_TEMPLATE, activeKey),
+        url: cartoTileUrlWithKey(CARTO_VOYAGER_TEMPLATE, activeKey),
         subdomains: "abcd",
         invert: false,
         maxNativeZoom: 18,
