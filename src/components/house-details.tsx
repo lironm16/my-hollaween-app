@@ -22,6 +22,77 @@ import { cn } from "@/lib/utils";
 
 const DESCRIPTION_PREFIX = "מה מחכה בבית:";
 
+function useMultilineText(text: string, resetKey: string) {
+  const measureRef = useRef<HTMLParagraphElement>(null);
+  const [multiline, setMultiline] = useState(false);
+
+  useLayoutEffect(() => {
+    const el = measureRef.current;
+    if (!text || !el) {
+      setMultiline(false);
+      return;
+    }
+    const check = () => {
+      const style = getComputedStyle(el);
+      const lineHeight = Number.parseFloat(style.lineHeight);
+      if (!Number.isFinite(lineHeight)) {
+        setMultiline(el.scrollHeight > el.clientHeight + 1);
+        return;
+      }
+      setMultiline(el.scrollHeight > lineHeight + 2);
+    };
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [text, resetKey]);
+
+  return { measureRef, multiline };
+}
+
+function CompactTextSection({
+  title,
+  text,
+  houseId,
+  defaultOpen = false,
+  titleClassName,
+  bodyClassName,
+}: {
+  title: string;
+  text: string;
+  houseId: string;
+  defaultOpen?: boolean;
+  titleClassName?: string;
+  bodyClassName?: string;
+}) {
+  const { measureRef, multiline } = useMultilineText(text, houseId);
+
+  return (
+    <div className="relative">
+      <p
+        ref={measureRef}
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute inset-x-0 top-0 -z-10 opacity-0 text-base leading-snug [overflow-wrap:anywhere]",
+          bodyClassName,
+        )}
+      >
+        {text}
+      </p>
+      <ListDetailSection
+        title={title}
+        collapsible={multiline}
+        defaultOpen={multiline ? defaultOpen : true}
+        resetKey={houseId}
+        titleClassName={titleClassName}
+        bodyClassName={bodyClassName}
+      >
+        <p>{text}</p>
+      </ListDetailSection>
+    </div>
+  );
+}
+
 function ListDetailSection({
   title,
   children,
@@ -102,16 +173,13 @@ function HouseArrivalDirections({
 
   if (compact) {
     return (
-      <ListDetailSection
+      <CompactTextSection
         title="הוראות הגעה"
-        collapsible
-        defaultOpen={false}
-        resetKey={houseId}
+        text={arrivalText}
+        houseId={houseId}
         titleClassName="text-amber-200/80"
         bodyClassName="text-amber-100"
-      >
-        <p>{arrivalText}</p>
-      </ListDetailSection>
+      />
     );
   }
 
@@ -135,16 +203,13 @@ function HouseNotesSection({
   if (!compact || !text) return null;
 
   return (
-    <ListDetailSection
+    <CompactTextSection
       title="הערה"
-      collapsible
-      defaultOpen={false}
-      resetKey={houseId}
+      text={text}
+      houseId={houseId}
       titleClassName="text-amber-200/80"
       bodyClassName="text-amber-200/90"
-    >
-      <p>{text}</p>
-    </ListDetailSection>
+    />
   );
 }
 
@@ -187,8 +252,6 @@ function HouseDescriptionSection({
   return (
     <ListDetailSection
       title="מה מחכה בבית"
-      collapsible
-      defaultOpen
       resetKey={houseId}
       titleClassName="text-violet-200/80"
       bodyClassName="text-violet-50"
