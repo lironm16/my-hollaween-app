@@ -41,7 +41,7 @@ export function AdminStatsCard({
     <div className="grid grid-cols-2 gap-2">
       <Tile
         icon={<LikedSign className="size-8" />}
-        label="שמורים"
+        label="אהבתי"
         value={likedCount ?? 0}
         valueClass={likedCount ? "text-rose-300" : undefined}
         plain

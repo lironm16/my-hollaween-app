@@ -157,7 +157,7 @@ export function HouseActionBar({
     if (onToggleLike) {
       items.push({
         id: "like",
-        label: "אהבתי",
+        label: liked ? "הסירו אהבתי" : "אהבתי",
         icon: liked ? (
           <SavedTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.35rem]" />
         ) : (
@@ -170,7 +170,7 @@ export function HouseActionBar({
     if (onToggleVisited) {
       items.push({
         id: "visited",
-        label: "ביקרתי",
+        label: visited ? "לא ביקרתי" : "ביקרתי",
         icon: visited ? (
           <VisitedTrafficIcon
             className={MENU_ACTIVE_ICON_CLASS}

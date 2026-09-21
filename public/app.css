@@ -2153,10 +2153,6 @@
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
-  .ring-0 {
-    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
-    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-  }
   .ring-1 {
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
@@ -4719,12 +4715,24 @@ svg.leaflet-zoom-animated {
 .is-filter-dim .pumpkin-pin-icon.is-filtered-out,
 .is-filter-dim .house-pin.is-filtered-out,
 .is-filter-dim .pin-apt-dot.is-filtered-out {
-  opacity: 0.38;
-}
-.is-filter-dim .pumpkin-pin-icon.is-filtered-out .house-pin.is-filtered-out,
-.is-filter-dim .pumpkin-pin-icon.is-filtered-out .pin-apt-dot.is-filtered-out {
+  position: relative;
   opacity: 1;
-  filter: none;
+  isolation: isolate;
+}
+.is-filter-dim .pumpkin-pin-icon.is-filtered-out::after,
+.is-filter-dim .house-pin.is-filtered-out::after,
+.is-filter-dim .pin-apt-dot.is-filtered-out::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(18, 8, 26, 0.62);
+  pointer-events: none;
+  z-index: 5;
+}
+.is-filter-dim .pumpkin-pin-icon.is-filtered-out .house-pin.is-filtered-out::after,
+.is-filter-dim .pumpkin-pin-icon.is-filtered-out .pin-apt-dot.is-filtered-out::after {
+  content: none;
 }
 .house-skipped-banner {
   margin-bottom: 0.75rem;
@@ -5049,18 +5057,6 @@ svg.leaflet-zoom-animated {
   z-index: 20;
   transform: translateX(-50%);
   pointer-events: none;
-}
-.house-list-card.is-liked {
-  border-color: #fb7185 !important;
-  box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.55) !important;
-}
-.house-list-card.is-visited {
-  border-color: #059669 !important;
-  box-shadow: 0 0 0 4px #059669 !important;
-}
-.house-list-card.is-liked.is-visited {
-  border-color: #059669 !important;
-  box-shadow: 0 0 0 4px #059669 !important;
 }
 .house-list-focus .house-list-card {
   border-color: rgba(249, 115, 22, 0.75) !important;
@@ -5424,11 +5420,6 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .route-tail-chevron.is-open {
   transform: rotate(180deg);
 }
-.route-tail-action {
-  min-height: 2rem;
-  padding-inline: 0.65rem;
-  shrink: 0;
-}
 .route-tail-body {
   padding-inline: 0.15rem;
 }
@@ -5708,27 +5699,6 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .map-house-sheet-card:last-child {
   padding-bottom: 0;
   border-bottom: 0;
-}
-.map-house-sheet-card.is-liked {
-  border: 1px solid #fb7185;
-  border-bottom: 1px solid #fb7185;
-  border-radius: 1rem;
-  box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.55);
-  padding: 12px;
-  padding-bottom: 12px;
-}
-.map-house-sheet-card.is-visited {
-  border: 1px solid #059669;
-  border-bottom: 1px solid #059669;
-  border-radius: 1rem;
-  box-shadow: 0 0 0 4px #059669;
-  padding: 12px;
-  padding-bottom: 12px;
-}
-.map-house-sheet-card.is-liked.is-visited {
-  border-color: #059669;
-  border-bottom-color: #059669;
-  box-shadow: 0 0 0 4px #059669;
 }
 .cluster-house-nav {
   display: grid;

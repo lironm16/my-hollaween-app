@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, MapPin, Navigation, Undo2 } from "lucide-react";
+import { ChevronDown, MapPin, Navigation } from "lucide-react";
 import { HouseCard } from "@/components/house-card";
 import { Button } from "@/components/ui/button";
 import { SkipSign, VisitedSign } from "@/components/visit-marks";
@@ -75,30 +75,6 @@ function RouteTailRow({
           <span className="route-tail-title">{houseHeadline(house)}</span>
           <ChevronDown className={cn("route-tail-chevron", open && "is-open")} aria-hidden />
         </button>
-        {kind === "skipped" && onRestore ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="route-tail-action"
-            onClick={onRestore}
-          >
-            <Undo2 className="size-3.5" />
-            החזרה
-          </Button>
-        ) : null}
-        {kind === "visited" && onToggleVisited ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="route-tail-action"
-            onClick={onToggleVisited}
-          >
-            <Undo2 className="size-3.5" />
-            לא ביקרתי
-          </Button>
-        ) : null}
       </div>
       {open ? (
         <div className="route-tail-body">

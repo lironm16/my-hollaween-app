@@ -388,7 +388,7 @@ export function HouseDetails({
       {onToggleLike ? (
         <button
           type="button"
-          aria-label={liked ? "הסירו מהשמורים" : "שמרו את הבית"}
+          aria-label={liked ? "הסירו אהבתי" : "סמנו אהבתי"}
           onClick={(e) => {
             e.stopPropagation();
             onToggleLike();

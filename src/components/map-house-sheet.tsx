@@ -453,11 +453,7 @@ export function MapHouseSheet({
                   onNext={() => onAdjacentClusterHouse?.(1)}
                 >
                   <section
-                    className={cn(
-                      "map-house-sheet-card is-on",
-                      liked?.(house.id) && "is-liked",
-                      visited?.(house.id) && "is-visited",
-                    )}
+                    className="map-house-sheet-card is-on"
                   >
                     <FilterMismatchNotice
                       reasons={filterMismatchReasons}

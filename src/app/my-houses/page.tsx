@@ -79,7 +79,7 @@ export default function MyHousesPage() {
         <AppHeader />
         <main className="relative z-10 mx-auto w-full max-w-lg flex-1 px-4 py-5">
           <h1 className="font-display mb-2 text-2xl text-orange-300">הבתים שלי</h1>
-          <p className="text-base text-violet-200">אין בתים שמורים במכשיר הזה.</p>
+          <p className="text-base text-violet-200">אין בתים שסימנתם באהבתי במכשיר הזה.</p>
           <Link href="/add" className={cn(buttonVariants(), "mt-4 inline-flex bg-orange-500 text-black hover:bg-orange-400")}>
             הוספת בית
           </Link>

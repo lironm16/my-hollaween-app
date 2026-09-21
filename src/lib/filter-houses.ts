@@ -158,7 +158,7 @@ export function houseFilterMismatchReasons(
     const area = resolveNeighborhood(house);
     reasons.push(area ?? "שכונה אחרת");
   }
-  if (likedOnly && !likedIds.includes(house.id)) reasons.push("לא בשמורים");
+  if (likedOnly && !likedIds.includes(house.id)) reasons.push("לא באהבתי");
   if (unvisitedOnly && visitedIds.includes(house.id)) reasons.push("כבר ביקרת");
   if (visitedOnly && !visitedIds.includes(house.id)) reasons.push("לא ביקרת");
   if (skippedIds.includes(house.id)) reasons.push("דילגתם על הבית");

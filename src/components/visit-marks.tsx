@@ -28,7 +28,7 @@ function HouseGlyph() {
   );
 }
 
-/** Rose disc — saved / שמורים. */
+/** Rose disc — saved / אהבתי. */
 export function LikedSign({ className }: { className?: string }) {
   return (
     <span
@@ -36,8 +36,8 @@ export function LikedSign({ className }: { className?: string }) {
         "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#e11d48] text-[#fff7ed]",
         className,
       )}
-      title="שמורים"
-      aria-label="שמורים"
+      title="אהבתי"
+      aria-label="אהבתי"
     >
       <span className="size-[62%]">
         <HeartGlyph />
@@ -56,7 +56,7 @@ export function LikedMark({
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <LikedSign />
-      {labeled ? <span>שמורים</span> : <span className="sr-only">שמורים</span>}
+      {labeled ? <span>אהבתי</span> : <span className="sr-only">אהבתי</span>}
     </span>
   );
 }
