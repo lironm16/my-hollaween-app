@@ -11,6 +11,7 @@ import type { Catalog, DbFile, House } from "@/lib/types";
 
 const CATALOG_BLOB_PATH = "halloween-houses/catalog-snapshot.json";
 const PUBLIC_CATALOG_PATH = path.join(process.cwd(), "public", "catalog.json");
+const SNAPSHOT_MEM_TTL_MS = 600_000;
 
 export type CatalogSnapshot = {
   updatedAt: string;
@@ -20,9 +21,20 @@ export type CatalogSnapshot = {
   catalog: Catalog;
 };
 
+let snapshotMem: { snap: CatalogSnapshot; at: number } | null = null;
+
 function stamp(value?: string) {
   const n = Date.parse(value ?? "");
   return Number.isFinite(n) ? n : 0;
+}
+
+export function snapshotFreshEnough(snap: CatalogSnapshot, minUpdatedAt?: string) {
+  if (!minUpdatedAt) return true;
+  return stamp(snap.updatedAt) >= stamp(minUpdatedAt);
+}
+
+export function invalidateCatalogSnapshotMem() {
+  snapshotMem = null;
 }
 
 async function readPublicCatalogFallback(): Promise<CatalogSnapshot | null> {
@@ -40,27 +52,56 @@ async function readPublicCatalogFallback(): Promise<CatalogSnapshot | null> {
   }
 }
 
-/** Shared cross-instance catalog snapshot (Vercel Blob), with static fallback. */
+async function readBlobCatalogSnapshot(): Promise<CatalogSnapshot | null> {
+  if (!blobConfigured()) return null;
+  try {
+    const result = await getBlob(CATALOG_BLOB_PATH, privateBlobGetOptions());
+    if (!result?.stream) return null;
+    return JSON.parse(await new Response(result.stream).text()) as CatalogSnapshot;
+  } catch {
+    return null;
+  }
+}
+
+function rememberSnapshot(snap: CatalogSnapshot) {
+  snapshotMem = { snap, at: Date.now() };
+  return snap;
+}
+
+/**
+ * Shared catalog snapshot — bundled public file first (0 Blob reads), Blob only when
+ * the deploy bundle is older than `minUpdatedAt`.
+ */
 export async function readSharedCatalogSnapshot(
   minUpdatedAt?: string,
 ): Promise<CatalogSnapshot | null> {
-  let snap: CatalogSnapshot | null = null;
+  if (
+    snapshotMem &&
+    Date.now() - snapshotMem.at < SNAPSHOT_MEM_TTL_MS &&
+    snapshotFreshEnough(snapshotMem.snap, minUpdatedAt)
+  ) {
+    return snapshotMem.snap;
+  }
 
-  if (blobConfigured()) {
-    try {
-      const result = await getBlob(CATALOG_BLOB_PATH, privateBlobGetOptions());
-      if (result?.stream) {
-        snap = JSON.parse(await new Response(result.stream).text()) as CatalogSnapshot;
-      }
-    } catch {
-      snap = null;
+  const pub = await readPublicCatalogFallback();
+  if (pub && snapshotFreshEnough(pub, minUpdatedAt)) {
+    return rememberSnapshot(pub);
+  }
+
+  const needsNewerThanPublic =
+    Boolean(minUpdatedAt) && (!pub || stamp(pub.updatedAt) < stamp(minUpdatedAt));
+  if (needsNewerThanPublic) {
+    const blob = await readBlobCatalogSnapshot();
+    if (blob && snapshotFreshEnough(blob, minUpdatedAt)) {
+      return rememberSnapshot(blob);
     }
   }
 
-  if (!snap) snap = await readPublicCatalogFallback();
-  if (!snap) return null;
-  if (minUpdatedAt && stamp(snap.updatedAt) < stamp(minUpdatedAt)) return null;
-  return snap;
+  if (!minUpdatedAt && pub) {
+    return rememberSnapshot(pub);
+  }
+
+  return null;
 }
 
 /** Publish catalog snapshot after house/catalog writes — Blob + best-effort public file. */
@@ -75,6 +116,8 @@ export async function publishCatalogSnapshot(db: DbFile): Promise<void> {
   };
   const json = JSON.stringify(payload);
 
+  invalidateCatalogSnapshotMem();
+
   if (blobConfigured()) {
     try {
       await putBlob(CATALOG_BLOB_PATH, json, privateBlobPutOptions("application/json"));
@@ -88,6 +131,7 @@ export async function publishCatalogSnapshot(db: DbFile): Promise<void> {
     const tmp = `${PUBLIC_CATALOG_PATH}.${process.pid}.tmp`;
     await fs.writeFile(tmp, JSON.stringify(catalog));
     await fs.rename(tmp, PUBLIC_CATALOG_PATH);
+    invalidateCatalogSnapshotMem();
   } catch {
     /* read-only FS on serverless — blob is the durable mirror */
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { readApiJson } from "@/lib/api-json";
 import { appInForeground } from "@/lib/catalog-poll";
@@ -22,6 +22,7 @@ export function useAdminHouses({
 }) {
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
   const [busyAction, setBusyAction] = useState(false);
+  const lastLoadedAtRef = useRef<string | null>(null);
 
   const rememberAdminDb = useCallback((houses: House[], updatedAt: string) => {
     saveServerDbBackup({
@@ -40,6 +41,7 @@ export function useAdminHouses({
       const updatedAt = data.updatedAt ?? new Date().toISOString();
       setAdminHouses(houses);
       rememberAdminDb(houses, updatedAt);
+      lastLoadedAtRef.current = updatedAt;
     } catch {
       /* keep last list */
     }
@@ -48,28 +50,27 @@ export function useAdminHouses({
   useEffect(() => {
     if (!admin) {
       setAdminHouses([]);
+      lastLoadedAtRef.current = null;
       return;
     }
     void loadAdminHouses();
 
     const onChanged = () => void loadAdminHouses();
-    const onRefreshed = () => void loadAdminHouses();
     const onVis = () => {
       if (appInForeground()) void loadAdminHouses();
     };
     window.addEventListener("hw-catalog-changed", onChanged);
-    window.addEventListener("hw-catalog-refreshed", onRefreshed);
     document.addEventListener("visibilitychange", onVis);
 
     return () => {
       window.removeEventListener("hw-catalog-changed", onChanged);
-      window.removeEventListener("hw-catalog-refreshed", onRefreshed);
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [admin, loadAdminHouses]);
 
   useEffect(() => {
     if (!admin || !catalogUpdatedAt) return;
+    if (lastLoadedAtRef.current === catalogUpdatedAt) return;
     void loadAdminHouses();
   }, [admin, catalogUpdatedAt, loadAdminHouses]);
 

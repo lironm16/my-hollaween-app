@@ -1,3 +1,4 @@
+import { pushAlertsEnabled } from "@/lib/push-enabled";
 import {
   anyPushTopicOn,
   DEFAULT_PUSH_TOPIC_PREFS,
@@ -79,6 +80,7 @@ export function isStandaloneDisplay() {
 
 export function pushSupported() {
   return (
+    pushAlertsEnabled() &&
     typeof window !== "undefined" &&
     "Notification" in window &&
     "serviceWorker" in navigator &&

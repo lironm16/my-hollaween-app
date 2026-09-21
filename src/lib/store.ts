@@ -5,6 +5,7 @@ import { canonicalAddressForBuilding } from "@/lib/house-clusters";
 import { canonicalHouseId, newEditCode, newPublicId, sameHouseId, toPublicHouse } from "@/lib/ids";
 import { normalizeAddressFields } from "@/lib/address-fields";
 import { config } from "@/lib/config";
+import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { assertRealAddress } from "@/lib/geocode";
 import {
   defaultTreatStock,
@@ -453,10 +454,7 @@ async function readFileDb(): Promise<DbFile> {
   if (firestoreConfigured()) {
     const global = getGlobalDb();
     const meta = await readCatalogMeta();
-    const shared =
-      meta?.updatedAt != null
-        ? await readSharedCatalogSnapshot(meta.updatedAt)
-        : await readSharedCatalogSnapshot();
+    const shared = await readSharedCatalogSnapshot(meta?.updatedAt);
     let remote: DbFile | null = shared ? catalogSnapshotToDb(shared) : null;
     if (!remote) {
       const catalog = await readFirestoreCatalog();
@@ -828,8 +826,10 @@ export function catalogDeltaGatePassed(input: {
 }) {
   if (input.removedIds?.length) return false;
   if (stamp({ updatedAt: input.catalogUpdatedAt }) > input.sinceMs) return false;
-  const pushStamp = Date.parse(input.pushUpdatedAt ?? "");
-  if (Number.isFinite(pushStamp) && pushStamp > input.sinceMs) return false;
+  if (pushAlertsEnabled()) {
+    const pushStamp = Date.parse(input.pushUpdatedAt ?? "");
+    if (Number.isFinite(pushStamp) && pushStamp > input.sinceMs) return false;
+  }
   return true;
 }
 
@@ -843,7 +843,8 @@ export function buildCatalogDeltaFromDb(
   const houses = db.houses
     .filter((house) => isPubliclyListed(house) && stamp(house) > sinceMs)
     .map((house) => toPublicHouse(house) as PublicHouse);
-  const pushChanged = pushSettingsStamp(db.pushSettings) > sinceMs;
+  const pushChanged =
+    pushAlertsEnabled() && pushSettingsStamp(db.pushSettings) > sinceMs;
   return {
     updatedAt: db.updatedAt,
     neighborhood: config.neighborhood,
@@ -871,7 +872,8 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
   }
 
   if (firestoreConfigured()) {
-    const [meta, pushMeta] = await Promise.all([readCatalogMeta(), readPushSettingsMeta()]);
+    const meta = await readCatalogMeta();
+    const pushMeta = pushAlertsEnabled() ? await readPushSettingsMeta() : null;
     if (
       meta?.updatedAt &&
       catalogDeltaGatePassed({
@@ -901,7 +903,7 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
 }
 
 export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
-  await ensurePushSettingsGeneration();
+  if (pushAlertsEnabled()) await ensurePushSettingsGeneration();
   const sinceMs = Date.parse(since);
   if (!Number.isFinite(sinceMs) || sinceMs <= 0) {
     const full = await getCatalog();
@@ -1428,6 +1430,7 @@ function snapshotHouse(house: House): House {
 }
 
 export async function getVapidPublicKey() {
+  if (!pushAlertsEnabled()) return "";
   return withLock(async () => {
     const db = await loadPushData();
     const vapid = ensureVapid(db);
@@ -1441,6 +1444,7 @@ export async function getVapidPublicKey() {
 }
 
 export async function savePushSubscription(sub: Omit<PushSubscriptionRecord, "createdAt">) {
+  if (!pushAlertsEnabled()) return 0;
   return withLock(async () => {
     const db = await loadPushData();
     ensureVapid(db);
@@ -1557,6 +1561,9 @@ export async function broadcastPush(
   includeEndpoint?: string,
   options?: { allSubscriptions?: boolean },
 ) {
+  if (!pushAlertsEnabled()) {
+    return { sent: 0, failed: 0, attempted: 0, errors: 0 };
+  }
   const db = await loadPushData();
   const vapid = ensureVapid(db);
   const subscriptions = (db.pushSubscriptions ?? []).filter(

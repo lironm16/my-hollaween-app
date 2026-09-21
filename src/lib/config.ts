@@ -63,6 +63,8 @@ export const config = {
     30,
     Number(process.env.CATALOG_POLL_SECONDS ?? process.env.NEXT_PUBLIC_CATALOG_POLL_SECONDS ?? 300) || 300,
   ),
+  /** Neighborhood push alerts. Set NEXT_PUBLIC_PUSH_ALERTS=0 to disable. */
+  pushAlertsEnabled: process.env.NEXT_PUBLIC_PUSH_ALERTS !== "0",
   adminCookie: "hw_admin",
   // The neighborhood list lives on this app server. Writes are queued one at a time.
   durableWrites: process.env.NEXT_PUBLIC_DURABLE_WRITES !== "0",

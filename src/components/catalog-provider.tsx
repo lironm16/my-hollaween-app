@@ -30,7 +30,8 @@ import { catalogHasRealHouses } from "@/lib/house-set";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
 
-const SNAPSHOT_URL = "/api/catalog/snapshot";
+/** Static deploy bundle — zero serverless / Firestore reads on full load. */
+const SNAPSHOT_URL = "/catalog.json";
 const OFFLINE_FORCE_REFRESH_MS = 30 * 60 * 1000;
 
 export type CatalogState = {
