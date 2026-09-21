@@ -55,6 +55,7 @@ export function HouseCard({
       size="sm"
       className={cn(
         "house-list-card overflow-visible bg-[#1d1028]/90 text-base",
+        liked && "is-liked",
         visited ? "is-visited ring-0" : "border-orange-500/15",
       )}
     >
