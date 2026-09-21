@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Heart, Pencil } from "lucide-react";
+import { ChevronDown, Heart, Pencil } from "lucide-react";
 import { VisitedCheck } from "@/components/visited-check";
 import { buttonVariants } from "@/components/ui/button";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
@@ -22,14 +22,82 @@ import { cn } from "@/lib/utils";
 
 const DESCRIPTION_PREFIX = "מה מחכה בבית:";
 
+function ListDetailSection({
+  title,
+  children,
+  collapsible = false,
+  defaultOpen = false,
+  resetKey,
+  titleClassName,
+  bodyClassName,
+}: {
+  title: string;
+  children: ReactNode;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
+  /** When this changes the section collapses again (e.g. house id). */
+  resetKey?: string;
+  titleClassName?: string;
+  bodyClassName?: string;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  useEffect(() => {
+    setOpen(defaultOpen);
+  }, [resetKey, defaultOpen]);
+
+  const panel = (
+    <div className={cn("space-y-1 [overflow-wrap:anywhere]", bodyClassName)}>{children}</div>
+  );
+
+  if (!collapsible) {
+    return (
+      <div className="rounded-lg bg-[#2a1638] px-3 py-2 text-base leading-snug">
+        <p className={cn("mb-1 text-sm font-medium", titleClassName ?? "text-violet-200/80")}>
+          {title}
+        </p>
+        {panel}
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-lg bg-[#2a1638] text-base leading-snug text-amber-100">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={(event) => {
+          event.stopPropagation();
+          setOpen((value) => !value);
+        }}
+        className="flex w-full items-center gap-2 px-3 py-2 text-right transition hover:bg-[#342040]"
+      >
+        <span className={cn("min-w-0 flex-1 text-sm font-medium", titleClassName ?? "text-amber-200/80")}>
+          {title}
+        </span>
+        <ChevronDown
+          className={cn(
+            "size-4 shrink-0 text-amber-200/70 transition-transform",
+            open && "rotate-180",
+          )}
+          aria-hidden
+        />
+      </button>
+      {open ? <div className="border-t border-white/5 px-3 pb-2 pt-1">{panel}</div> : null}
+    </div>
+  );
+}
+
 function HouseArrivalDirections({
   arrival,
   notes,
   compact,
+  houseId,
 }: {
   arrival?: string | null;
   notes?: string | null;
   compact: boolean;
+  houseId: string;
 }) {
   const arrivalText = arrival?.trim() ?? "";
   const notesText = notes?.trim() ?? "";
@@ -37,13 +105,17 @@ function HouseArrivalDirections({
 
   if (compact) {
     return (
-      <div className="rounded-lg bg-[#2a1638] px-3 py-2 text-base leading-snug text-amber-100">
-        <p className="mb-1 text-sm font-medium text-amber-200/80">הוראות הגעה</p>
-        <div className="space-y-1 [overflow-wrap:anywhere]">
-          {arrivalText ? <p>{arrivalText}</p> : null}
-          {notesText ? <p>{notesText}</p> : null}
-        </div>
-      </div>
+      <ListDetailSection
+        title="הוראות הגעה"
+        collapsible
+        defaultOpen={false}
+        resetKey={houseId}
+        titleClassName="text-amber-200/80"
+        bodyClassName="text-amber-100"
+      >
+        {arrivalText ? <p>{arrivalText}</p> : null}
+        {notesText ? <p>{notesText}</p> : null}
+      </ListDetailSection>
     );
   }
 
@@ -56,96 +128,42 @@ function HouseArrivalDirections({
   );
 }
 
+function HouseDescriptionSection({
+  description,
+  compact,
+}: {
+  description?: string | null;
+  compact: boolean;
+}) {
+  const text = description?.trim() ?? "";
+  if (!compact || !text) return null;
+
+  return (
+    <ListDetailSection title="מה מחכה בבית" titleClassName="text-violet-200/80">
+      <p className="leading-relaxed text-violet-50">{text}</p>
+    </ListDetailSection>
+  );
+}
+
 function HouseComments({
   house,
-  compact,
   includeNotes,
-  onReadMore,
-  onOverflowChange,
 }: {
   house: PublicHouse;
-  compact: boolean;
   includeNotes: boolean;
-  onReadMore?: () => void;
-  onOverflowChange?: (overflows: boolean) => void;
 }) {
   const description = house.description?.trim() ?? "";
   const notes = includeNotes ? (house.notes?.trim() ?? "") : "";
-  const [expanded, setExpanded] = useState(false);
-  const clampRef = useRef<HTMLDivElement>(null);
-  const [overflows, setOverflows] = useState(false);
-
-  useEffect(() => {
-    setExpanded(false);
-  }, [house.id, description, notes]);
-
-  useLayoutEffect(() => {
-    if (!compact || expanded) {
-      setOverflows(false);
-      return;
-    }
-    const el = clampRef.current;
-    if (!el) return;
-    const check = () => setOverflows(el.scrollHeight > el.clientHeight + 1);
-    check();
-    const observer = new ResizeObserver(check);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [compact, expanded, description, notes]);
-
-  useEffect(() => {
-    onOverflowChange?.(overflows);
-  }, [overflows, onOverflowChange]);
-
-  useEffect(() => {
-    if (!description && !notes) {
-      onOverflowChange?.(false);
-    }
-  }, [description, notes, onOverflowChange]);
 
   if (!description && !notes) return null;
 
-  const fullContent = (
-    <>
+  return (
+    <div className="space-y-2">
       {notes ? <p className="text-base text-amber-200/90">הערה: {notes}</p> : null}
       {description ? (
         <p className="text-base leading-relaxed text-violet-50">
           {DESCRIPTION_PREFIX} {description}
         </p>
-      ) : null}
-    </>
-  );
-
-  if (!compact || expanded) {
-    return <div className="space-y-2">{fullContent}</div>;
-  }
-
-  const showReadMore = overflows && Boolean(onReadMore);
-
-  return (
-    <div className="space-y-1">
-      <div
-        ref={clampRef}
-        className="text-base leading-relaxed [overflow-wrap:anywhere] line-clamp-2"
-      >
-        {notes ? <span className="block text-amber-200/90">הערה: {notes}</span> : null}
-        {description ? (
-          <span className="block text-violet-50">
-            {DESCRIPTION_PREFIX} {description}
-          </span>
-        ) : null}
-      </div>
-      {showReadMore ? (
-        <button
-          type="button"
-          className="text-sm font-medium text-orange-300 underline underline-offset-2 hover:text-orange-200"
-          onClick={(event) => {
-            event.stopPropagation();
-            onReadMore?.();
-          }}
-        >
-          קרא עוד
-        </button>
       ) : null}
     </div>
   );
@@ -168,8 +186,6 @@ export function HouseDetails({
   compact = false,
   distanceM,
   index,
-  onReadMore,
-  onContentOverflowChange,
 }: {
   house: PublicHouse;
   extra?: ReactNode;
@@ -190,10 +206,6 @@ export function HouseDetails({
   compact?: boolean;
   distanceM?: number;
   index?: number;
-  /** Compact list card — open full detail when comments overflow. */
-  onReadMore?: () => void;
-  /** Fired when compact comment text overflows its clamp (needs full detail). */
-  onContentOverflowChange?: (overflows: boolean) => void;
 }) {
   const displayAddress = formatDisplayAddress(house);
   const addedMeta = houseAddedMetaLine(house);
@@ -396,14 +408,10 @@ export function HouseDetails({
         arrival={house.arrival}
         notes={house.notes}
         compact={compact}
+        houseId={house.id}
       />
-      <HouseComments
-        house={house}
-        compact={compact}
-        includeNotes={!compact}
-        onReadMore={compact ? onReadMore : undefined}
-        onOverflowChange={compact ? onContentOverflowChange : undefined}
-      />
+      <HouseDescriptionSection description={house.description} compact={compact} />
+      {!compact ? <HouseComments house={house} includeNotes /> : null}
       {addedMeta ? (
         <p className="text-sm text-violet-400">{addedMeta}</p>
       ) : null}

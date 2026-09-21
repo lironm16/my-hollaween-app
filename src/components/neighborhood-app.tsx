@@ -8,7 +8,6 @@ import { HouseFiltersContent } from "@/components/house-filters-content";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseList } from "@/components/house-list";
 import { MapStats, StatsSummary } from "@/components/map-stats";
-import { HouseDetailOverlay } from "@/components/house-detail-overlay";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { NeighborhoodStatusBanners } from "@/components/neighborhood-status-banners";
@@ -834,37 +833,6 @@ export function NeighborhoodApp({
             </div>
           ) : null}
         </>
-        {houseDetailCommon && view === "list" && !originPick.originPickActive && !editFlow.flow ? (
-          <HouseDetailOverlay
-            {...houseDetailCommon}
-            skipped={skips.skipped(houseDetailCommon.house.id)}
-            onSkip={
-              !skips.skipped(houseDetailCommon.house.id)
-                ? () => handleSkipHouse(houseDetailCommon.house.id)
-                : undefined
-            }
-            onRestoreRoute={
-              skips.skipped(houseDetailCommon.house.id)
-                ? () => handleRestoreHouse(houseDetailCommon.house.id)
-                : undefined
-            }
-            filterMismatchReasons={selectedFilterReasons}
-            skipMeta={
-              skips.skipped(houseDetailCommon.house.id)
-                ? skips.meta(houseDetailCommon.house.id)
-                : undefined
-            }
-            onShowOnMap={() => {
-              setView("map");
-              selection.clearCluster();
-            }}
-            onSelectClusterHouse={(id) => {
-              const house = houses.find((item) => item.id === id);
-              if (house) selection.selectOnMap(house);
-            }}
-            onBackToClusterOverview={selection.backToClusterOverview}
-          />
-        ) : null}
       </main>
       <OriginPickerSheet
         open={originPick.originPickerOpen}

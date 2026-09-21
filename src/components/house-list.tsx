@@ -121,7 +121,6 @@ export function HouseList({
             editCode={editCodeFor?.(h.id)}
             admin={admin}
             onShowOnMap={onShowOnMap ? () => onShowOnMap(h.id) : undefined}
-            onOpen={onSelectHouse ? () => onSelectHouse(h.id, i + 1) : undefined}
             onToggleEdit={onEditHouse ? () => onEditHouse(h.id, i + 1) : undefined}
             editing={editingId === h.id}
           />

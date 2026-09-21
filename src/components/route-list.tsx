@@ -5,7 +5,6 @@ import { MapPin, Navigation } from "lucide-react";
 import { HouseSkippedBanner } from "@/components/house-skipped-banner";
 import { HouseCard } from "@/components/house-card";
 import { Button } from "@/components/ui/button";
-import { houseHeadline } from "@/lib/labels";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -27,24 +26,13 @@ function RouteLeg({ label }: { label: string }) {
 }
 
 function RouteSkippedRow({
-  house,
   skipMeta,
   onRestore,
-  onOpen,
 }: {
-  house: PublicHouse;
   skipMeta?: SkippedHouseMeta;
   onRestore?: () => void;
-  onOpen?: () => void;
 }) {
-  return (
-    <HouseSkippedBanner
-      meta={skipMeta}
-      onRestore={onRestore}
-      onMainClick={onOpen}
-      mainAriaLabel={`${houseHeadline(house)} — דילגתי`}
-    />
-  );
+  return <HouseSkippedBanner meta={skipMeta} onRestore={onRestore} />;
 }
 
 export function RouteList({
@@ -159,10 +147,8 @@ export function RouteList({
             {hop ? <RouteLeg label={hop} /> : null}
             {skipped ? (
               <RouteSkippedRow
-                house={house}
                 skipMeta={skipMetaFor?.(house.id)}
                 onRestore={onRestoreHouse ? () => onRestoreHouse(house.id) : undefined}
-                onOpen={() => onSelectHouse(house.id, i + 1)}
               />
             ) : (
               <div className="route-list-house">
@@ -177,7 +163,6 @@ export function RouteList({
                   canEdit={Boolean(canEditHouse?.(house.id))}
                   admin={admin}
                   onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
-                  onOpen={() => onSelectHouse(house.id, i + 1)}
                   onToggleEdit={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
                   editing={editingId === house.id}
                   index={order}

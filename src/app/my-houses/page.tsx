@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { HouseCard } from "@/components/house-card";
-import { HouseDetailOverlay } from "@/components/house-detail-overlay";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
@@ -31,8 +30,6 @@ export default function MyHousesPage() {
   const geo = useUserLocation();
   const { resolved: origin } = useDistanceOrigin(geo.location);
   const editFlow = useHouseEditFlow();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-
   const houses = useMemo(
     () =>
       owned
@@ -52,13 +49,7 @@ export default function MyHousesPage() {
     [catalog?.houses, owned, origin],
   );
 
-  const selected = houses.find((item) => item.house.id === selectedId)?.house ?? null;
-  const selectedIndex = selected
-    ? houses.findIndex((item) => item.house.id === selectedId) + 1
-    : undefined;
-
   function requestEdit(house: PublicHouse) {
-    setSelectedId(null);
     editFlow.openEdit(house, {
       editCode: owned.find((item) => item.id === house.id)?.editCode,
       allowDelete: true,
@@ -117,7 +108,6 @@ export default function MyHousesPage() {
                 visited={visits.visitedIds.includes(house.id)}
                 onToggleVisited={() => visits.toggle(house.id)}
                 canEdit
-                onOpen={() => setSelectedId(house.id)}
                 onToggleEdit={() => requestEdit(house)}
               />
               <button
@@ -134,20 +124,6 @@ export default function MyHousesPage() {
           ))}
         </div>
       </main>
-      {selected && !editFlow.flow ? (
-        <HouseDetailOverlay
-          house={selected}
-          index={selectedIndex}
-          onClose={() => setSelectedId(null)}
-          liked={likes.liked}
-          onToggleLike={(id) => likes.toggle(id)}
-          visited={visits.visited}
-          onToggleVisited={(id) => visits.toggle(id)}
-          catalogSource={catalog ? "network" : null}
-          canEditHouse={() => true}
-          onToggleEdit={() => requestEdit(selected)}
-        />
-      ) : null}
       <HouseEditFlowPanels
         flow={editFlow.flow}
         setFlow={editFlow.setFlow}

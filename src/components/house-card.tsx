@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
@@ -8,13 +7,6 @@ import { HouseSkippedBanner } from "@/components/house-skipped-banner";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
-
-function isCardInteractive(target: EventTarget | null) {
-  return (
-    target instanceof Element &&
-    Boolean(target.closest("button, a, input, label, textarea, select, form"))
-  );
-}
 
 export function HouseCard({
   house,
@@ -32,7 +24,6 @@ export function HouseCard({
   editCode,
   admin = false,
   onShowOnMap,
-  onOpen,
   editing = false,
   onToggleEdit,
   expanded = false,
@@ -53,55 +44,19 @@ export function HouseCard({
   editCode?: string;
   admin?: boolean;
   onShowOnMap?: () => void;
-  onOpen?: () => void;
   editing?: boolean;
   onToggleEdit?: () => void;
-  /** Show full details inline without opening a sheet. */
+  /** Show full details inline (non-compact list layout). */
   expanded?: boolean;
   index?: number;
 }) {
-  const [commentsOverflow, setCommentsOverflow] = useState(false);
-
-  useEffect(() => {
-    setCommentsOverflow(false);
-  }, [house.id]);
-
-  function open() {
-    onOpen?.();
-  }
-
-  const interactive = Boolean(onOpen) && !expanded && commentsOverflow;
-
   return (
     <Card
       size="sm"
       className={cn(
         "house-list-card overflow-visible bg-[#1d1028]/90 text-base",
         visited ? "is-visited ring-0" : "border-orange-500/15",
-        interactive && "cursor-pointer transition hover:bg-[#261536]",
-        interactive && !visited && "hover:border-orange-400/50",
       )}
-      role={interactive ? "button" : undefined}
-      tabIndex={interactive ? 0 : undefined}
-      aria-label={interactive ? "פתיחת פרטי הבית" : undefined}
-      onClick={
-        interactive
-          ? (event) => {
-              if (isCardInteractive(event.target)) return;
-              open();
-            }
-          : undefined
-      }
-      onKeyDown={
-        interactive
-          ? (event) => {
-              if (event.key !== "Enter" && event.key !== " ") return;
-              if (isCardInteractive(event.target)) return;
-              event.preventDefault();
-              open();
-            }
-          : undefined
-      }
     >
       <div className="px-3 pb-1 pt-2">
         {skipped ? (
@@ -118,8 +73,6 @@ export function HouseCard({
           chrome="sheet"
           compact={!expanded}
           index={index}
-          onReadMore={!expanded && onOpen ? open : undefined}
-          onContentOverflowChange={!expanded ? setCommentsOverflow : undefined}
           headerMenu={
             <HouseActionBar
               house={house}
