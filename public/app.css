@@ -5049,9 +5049,18 @@ svg.leaflet-zoom-animated {
   transform: translateX(-50%);
   pointer-events: none;
 }
+.house-list-card.is-liked {
+  border-color: #fb7185 !important;
+  box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.55) !important;
+}
 .house-list-card.is-visited {
   border-color: #059669 !important;
   box-shadow: 0 0 0 4px #059669 !important;
+}
+.house-list-card.is-liked.is-visited {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 4px #059669,
+    inset 0 0 0 2px #fb7185 !important;
 }
 .house-list-focus .house-list-card {
   border-color: rgba(249, 115, 22, 0.75) !important;
@@ -5647,6 +5656,14 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   padding-bottom: 0;
   border-bottom: 0;
 }
+.map-house-sheet-card.is-liked {
+  border: 1px solid #fb7185;
+  border-bottom: 1px solid #fb7185;
+  border-radius: 1rem;
+  box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.55);
+  padding: 12px;
+  padding-bottom: 12px;
+}
 .map-house-sheet-card.is-visited {
   border: 1px solid #059669;
   border-bottom: 1px solid #059669;
@@ -5654,6 +5671,12 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   box-shadow: 0 0 0 4px #059669;
   padding: 12px;
   padding-bottom: 12px;
+}
+.map-house-sheet-card.is-liked.is-visited {
+  border-color: #059669;
+  border-bottom-color: #059669;
+  box-shadow: 0 0 0 4px #059669,
+    inset 0 0 0 2px #fb7185;
 }
 .cluster-house-nav {
   display: grid;
@@ -6392,19 +6415,35 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   padding: 0.5rem 0.75rem 0.25rem;
 }
 .hw-overlay-close-bar--titled {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
   gap: 0.5rem;
 }
+.hw-overlay-close-bar--titled > .hw-overlay-close {
+  grid-column: 1;
+  grid-row: 1;
+}
 .hw-overlay-close-bar-title {
-  flex: 1;
+  grid-column: 2;
+  grid-row: 1;
   min-width: 0;
-  max-width: calc(100% - 7.5rem);
   text-align: center;
-  padding-inline: 0.5rem 2.75rem;
+  padding-inline: 0.5rem;
+}
+.hw-overlay-close-bar--titled > .hw-overlay-close-bar-title {
+  flex: unset;
+  max-width: none;
 }
 .hw-overlay-close-bar-spacer {
   width: 44px;
   flex-shrink: 0;
+}
+.hw-overlay-close-bar--titled > .hw-overlay-close-bar-spacer,
+.hw-overlay-close-bar--titled > .hw-overlay-close-bar-trailing {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
 }
 .hw-overlay-close-bar--trailing {
   align-items: center;

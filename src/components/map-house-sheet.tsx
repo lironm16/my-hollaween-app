@@ -178,11 +178,17 @@ export function MapHouseSheet({
   }
 
   useLayoutEffect(() => {
+    const wasOpen = (sheetRef.current?.getBoundingClientRect().height ?? 0) > 0;
     setDragH(null);
-    setFitH(null);
-    setOpenH(0);
-    sheetOpenRef.current = false;
-    detailHeightLockedRef.current = false;
+    if (!wasOpen) {
+      setFitH(null);
+      setOpenH(0);
+      sheetOpenRef.current = false;
+      detailHeightLockedRef.current = false;
+    } else {
+      // Keep the sheet at its current height while swapping houses/clusters.
+      detailHeightLockedRef.current = false;
+    }
     scrollSheetContentTop();
     if (overview) {
       const cap = measureOverviewHeight();
@@ -192,8 +198,13 @@ export function MapHouseSheet({
       publishSheetHeight(cap);
       return;
     }
+    const currentH = wasOpen ? (sheetRef.current?.getBoundingClientRect().height ?? 0) : 0;
     setSheetH(null);
     document.documentElement.style.removeProperty("--map-cluster-sheet-h");
+    if (currentH > 0) {
+      setOpenH(currentH);
+      publishSheetHeight(currentH);
+    }
   }, [clusterKey, overview, clusterHouses.length]);
 
   useLayoutEffect(() => {
@@ -234,7 +245,9 @@ export function MapHouseSheet({
   useEffect(() => {
     if (overview || editing || sheetH !== null || dragH !== null) return;
     if (fitH == null) return;
-    if (detailHeightLockedRef.current && openH > 0) return;
+    // Only animate open from the bottom on first open; swaps keep the current height.
+    if (openH > 0) return;
+    if (detailHeightLockedRef.current) return;
     const id = requestAnimationFrame(() => setOpenH(fitH));
     return () => cancelAnimationFrame(id);
   }, [fitH, overview, editing, sheetH, dragH, openH]);
@@ -271,6 +284,10 @@ export function MapHouseSheet({
       if (next == null) return;
       naturalH.current = next;
       setFitH(next);
+      if (sheetOpenRef.current) {
+        setOpenH(next);
+        publishSheetHeight(next);
+      }
     };
 
     if (overview || editing || sheetH !== null) {
@@ -438,6 +455,7 @@ export function MapHouseSheet({
                   <section
                     className={cn(
                       "map-house-sheet-card is-on",
+                      liked?.(house.id) && "is-liked",
                       visited?.(house.id) && "is-visited",
                     )}
                   >
