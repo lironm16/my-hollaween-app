@@ -3,7 +3,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
-import { FilterMismatchNotice } from "@/components/house-skipped-banner";
+import { FilterMismatchNotice, HouseVisitedBanner } from "@/components/house-skipped-banner";
 import { CodesCopy } from "@/components/codes-copy";
 import {
   ClusterHouseList,
@@ -460,6 +460,13 @@ export function MapHouseSheet({
                       skipMeta={skipMeta}
                       onRestoreRoute={onRestoreRoute}
                     />
+                    {visited?.(house.id) && !skipped ? (
+                      <HouseVisitedBanner
+                        onRestore={
+                          onToggleVisited ? () => onToggleVisited(house.id) : undefined
+                        }
+                      />
+                    ) : null}
                     {editing ? (
                       <>
                         <p className="map-house-sheet-kicker">{houseHeadline(house)}</p>
