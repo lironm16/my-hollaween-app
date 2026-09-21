@@ -14,6 +14,7 @@ export type RouteListItem = {
   order: number;
   hop: string;
   skipped: boolean;
+  visitedTail?: boolean;
 };
 
 function RouteLeg({ label }: { label: string }) {
@@ -129,16 +130,25 @@ export function RouteList({
             </div>
           </div>
         </li>
-        {items.map(({ house, order, hop, skipped }, i) => {
+        {items.map(({ house, order, hop, skipped, visitedTail }, i) => {
           const showSkippedHeading = skipped && (i === 0 || !items[i - 1]!.skipped);
+          const showVisitedHeading =
+            visitedTail && (i === 0 || !items[i - 1]?.visitedTail);
           return (
           <li
             key={house.id}
             ref={house.id === focusId ? focusRef : undefined}
-            className={cn(house.id === focusId && "house-list-focus", skipped && "route-list-skipped")}
+            className={cn(
+              house.id === focusId && "house-list-focus",
+              skipped && "route-list-skipped",
+              visitedTail && "route-list-visited",
+            )}
           >
             {showSkippedHeading ? (
               <p className="route-list-skipped-heading">דילגתם על הבתים האלה</p>
+            ) : null}
+            {showVisitedHeading ? (
+              <p className="route-list-visited-heading">ביקרתם</p>
             ) : null}
             {hop ? <RouteLeg label={hop} /> : null}
             {skipped ? (
@@ -161,7 +171,7 @@ export function RouteList({
                   onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
                   onToggleEdit={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
                   editing={editingId === house.id}
-                  index={order}
+                  index={visitedTail ? undefined : order}
                 />
               </div>
             )}

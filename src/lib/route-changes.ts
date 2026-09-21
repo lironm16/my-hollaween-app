@@ -45,9 +45,10 @@ export function routeCandidateHouses(
 ) {
   const visible = filterHouses(houses, filters, context);
   const skipped = new Set(context.skippedIds);
+  const visited = new Set(context.visitedIds);
   return visible.filter((house) => {
     if (skipped.has(house.id)) return false;
-    if (filters.unvisitedOnly && context.visitedIds.includes(house.id)) return false;
+    if (visited.has(house.id)) return false;
     return true;
   });
 }
@@ -58,6 +59,7 @@ export function whyRemovedFromRoute(
   context: RouteChangeContext,
 ): string {
   if (context.skippedIds.includes(house.id)) return "דילגתם על הבית";
+  if (context.visitedIds.includes(house.id)) return "כבר ביקרתם";
   const filterReasons = houseFilterMismatchReasons(house, filters, context);
   if (filterReasons.length > 0) return filterReasons.join(" · ");
   if (isHouseOwnerClosed(house)) return "נסגר";
@@ -71,7 +73,6 @@ export function whyRemovedFromRoute(
     if (status.kind === "closedVisit") return "סגור הלילה";
     return "לא פתוח עכשיו";
   }
-  if (filters.unvisitedOnly && context.visitedIds.includes(house.id)) return "כבר ביקרתם";
   return "לא מתאים למסלול";
 }
 
@@ -150,6 +151,7 @@ export function routeHousesAfterSkipChange(
   const nextVisible = filterHouses(houses, filters, context);
   const visibleIds = new Set(nextVisible.map((house) => house.id));
   const skipped = new Set(nextSkippedIds);
+  const visited = new Set(context.visitedIds);
   const routeHouses: PublicHouse[] = [];
   const seen = new Set<string>();
 
@@ -158,7 +160,7 @@ export function routeHousesAfterSkipChange(
       const fresh = nextVisible.find((item) => item.id === house.id);
       if (!fresh || !visibleIds.has(house.id) || seen.has(house.id)) continue;
       if (skipped.has(house.id)) continue;
-      if (filters.unvisitedOnly && context.visitedIds.includes(house.id)) continue;
+      if (visited.has(house.id)) continue;
       routeHouses.push(fresh);
       seen.add(house.id);
     }
@@ -224,7 +226,7 @@ export function diffRouteByFilters(
   const added = nextVisible
     .filter((house) => !currentIds.has(house.id))
     .filter((house) => !context.skippedIds.includes(house.id))
-    .filter((house) => !(nextFilters.unvisitedOnly && context.visitedIds.includes(house.id)))
+    .filter((house) => !context.visitedIds.includes(house.id))
     .map((house) => ({
       name: house.name,
       reason: whyAddedToRoute(house, nextFilters, context),

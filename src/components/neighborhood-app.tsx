@@ -289,14 +289,25 @@ export function NeighborhoodApp({
     },
     [routeMode, walkingRoute, skips.skippedIds],
   );
-  const { onToggleLike, onToggleVisited, visitCheer, routeCompleteCheer, likeCheer } = useHouseActions(
-    likes,
-    visits,
-    { visitCelebration },
+  const { onToggleLike, onToggleVisited: baseToggleVisited, visitCheer, routeCompleteCheer, likeCheer } =
+    useHouseActions(likes, visits, { visitCelebration });
+
+  const onToggleVisited = useCallback(
+    (id: string) => {
+      const marking = !visits.visited(id);
+      const nextVisitedIds = marking
+        ? [id, ...visits.visitedIds.filter((item) => item !== id)]
+        : visits.visitedIds.filter((item) => item !== id);
+      baseToggleVisited(id);
+      if (!routeMode) return;
+      applyRouteAfterSkipChange(skips.skippedIds, !marking, nextVisitedIds);
+    },
+    [baseToggleVisited, routeMode, skips.skippedIds, visits],
   );
   const routeListItems = useMemo(() => {
     if (!routeMode || !activeRoute) return [];
     const routeIds = routeHouseIds(activeRoute);
+    const skippedSet = new Set(skips.skippedIds);
     const activeItems = activeRoute.stops.flatMap((stop) =>
       stop.houses.map((house, houseIndex) => ({
         house,
@@ -316,16 +327,31 @@ export function NeighborhoodApp({
         hop: "",
         skipped: true,
       }));
-    return [...activeItems, ...skippedTail];
-  }, [routeMode, activeRoute, skips.skippedIds, visible]);
+    const visitedTail = visits.visitedIds
+      .filter((id) => !routeIds.has(id) && !skippedSet.has(id))
+      .map((id) => visibleById.get(id))
+      .filter((house): house is PublicHouse => Boolean(house))
+      .map((house) => ({
+        house,
+        order: 0,
+        hop: "",
+        skipped: false,
+        visitedTail: true,
+      }));
+    return [...activeItems, ...skippedTail, ...visitedTail];
+  }, [routeMode, activeRoute, skips.skippedIds, visits.visitedIds, visible]);
 
-  function applyRouteAfterSkipChange(nextSkippedIds: string[], includeNew: boolean) {
+  function applyRouteAfterSkipChange(
+    nextSkippedIds: string[],
+    includeNew: boolean,
+    nextVisitedIds: string[] = filterContext.visitedIds,
+  ) {
     setPinnedRoute(
       rebuildRouteAfterSkipChange(
         pinnedRoute,
         houses,
         filters,
-        filterContext,
+        { ...filterContext, visitedIds: nextVisitedIds },
         nextSkippedIds,
         includeNew,
         { lat: origin.lat, lng: origin.lng },

@@ -82,7 +82,7 @@ export function useFilterDraft({
         const fresh = nextVisible.find((item) => item.id === house.id);
         if (!fresh || !visibleIds.has(house.id) || seen.has(house.id)) continue;
         if (skipped.has(house.id)) continue;
-        if (nextFilters.unvisitedOnly && visitedIds.includes(house.id)) continue;
+        if (visitedIds.includes(house.id)) continue;
         routeHouses.push(fresh);
         seen.add(house.id);
       }
@@ -90,7 +90,7 @@ export function useFilterDraft({
     for (const house of nextVisible) {
       if (seen.has(house.id)) continue;
       if (skipped.has(house.id)) continue;
-      if (nextFilters.unvisitedOnly && visitedIds.includes(house.id)) continue;
+      if (visitedIds.includes(house.id)) continue;
       routeHouses.push(house);
       seen.add(house.id);
     }

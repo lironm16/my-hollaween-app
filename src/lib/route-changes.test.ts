@@ -82,6 +82,19 @@ describe("routeCandidateHouses", () => {
     const candidates = routeCandidateHouses(houses, baseFilters, context);
     assert.deepEqual(candidates.map((house) => house.id), ["b"]);
   });
+
+  it("excludes visited houses from route candidates", () => {
+    const houses = [stub("a"), stub("b")];
+    const context = {
+      houseSet: "real" as const,
+      likedIds: [],
+      visitedIds: ["a"],
+      skippedIds: [],
+      now: new Date("2026-10-31T18:00:00"),
+    };
+    const candidates = routeCandidateHouses(houses, baseFilters, context);
+    assert.deepEqual(candidates.map((house) => house.id), ["b"]);
+  });
 });
 
 describe("diffRouteBySkippedIds", () => {
@@ -118,6 +131,34 @@ describe("diffRouteBySkippedIds", () => {
 });
 
 describe("rebuildRouteAfterSkipChange", () => {
+  it("drops visited houses from the route without re-optimizing remaining stops", () => {
+    const origin = { lat: 32.0919, lng: 34.8112 };
+    const first = stub("first", { lat: 32.09195, lng: 34.81125 });
+    const second = stub("second", { lat: 32.092, lng: 34.8113 });
+    const route = buildWalkingRouteOrdered([first, second], origin);
+    const context = {
+      houseSet: "real" as const,
+      likedIds: [],
+      visitedIds: ["first"],
+      skippedIds: [],
+      now: new Date("2026-10-31T18:00:00"),
+    };
+    const rebuilt = rebuildRouteAfterSkipChange(
+      route,
+      [first, second],
+      baseFilters,
+      context,
+      [],
+      false,
+      origin,
+    );
+    assert.ok(rebuilt);
+    assert.deepEqual(
+      rebuilt!.stops.map((stop) => stop.house.id),
+      ["second"],
+    );
+  });
+
   it("inserts restored houses at the best stop order, not always last", () => {
     const origin = { lat: 32.0919, lng: 34.8112 };
     const near = stub("near", { lat: 32.09195, lng: 34.81125, address: "חרוזים 8, חרוזים" });
@@ -180,6 +221,18 @@ describe("route change reasons", () => {
       now: new Date("2026-10-31T18:00:00"),
     });
     assert.equal(reason, "דילגתם על הבית");
+  });
+
+  it("labels visited houses when removed", () => {
+    const house = stub("a");
+    const reason = whyRemovedFromRoute(house, baseFilters, {
+      houseSet: "real",
+      likedIds: [],
+      visitedIds: ["a"],
+      skippedIds: [],
+      now: new Date("2026-10-31T18:00:00"),
+    });
+    assert.equal(reason, "כבר ביקרתם");
   });
 
   it("labels closed houses when removed", () => {
