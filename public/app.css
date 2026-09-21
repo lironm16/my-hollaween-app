@@ -4715,24 +4715,12 @@ svg.leaflet-zoom-animated {
 .is-filter-dim .pumpkin-pin-icon.is-filtered-out,
 .is-filter-dim .house-pin.is-filtered-out,
 .is-filter-dim .pin-apt-dot.is-filtered-out {
-  position: relative;
+  opacity: 0.38;
+}
+.is-filter-dim .pumpkin-pin-icon.is-filtered-out .house-pin.is-filtered-out,
+.is-filter-dim .pumpkin-pin-icon.is-filtered-out .pin-apt-dot.is-filtered-out {
   opacity: 1;
-  isolation: isolate;
-}
-.is-filter-dim .pumpkin-pin-icon.is-filtered-out::after,
-.is-filter-dim .house-pin.is-filtered-out::after,
-.is-filter-dim .pin-apt-dot.is-filtered-out::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: rgba(18, 8, 26, 0.62);
-  pointer-events: none;
-  z-index: 5;
-}
-.is-filter-dim .pumpkin-pin-icon.is-filtered-out .house-pin.is-filtered-out::after,
-.is-filter-dim .pumpkin-pin-icon.is-filtered-out .pin-apt-dot.is-filtered-out::after {
-  content: none;
+  filter: none;
 }
 .house-skipped-banner {
   margin-bottom: 0.75rem;

@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { HouseDetails } from "@/components/house-details";
-import { HouseSkippedBanner } from "@/components/house-skipped-banner";
+import { HouseSkippedBanner, HouseVisitedBanner } from "@/components/house-skipped-banner";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,7 @@ export function HouseCard({
   editing = false,
   onToggleEdit,
   expanded = false,
+  visitedTail = false,
   index,
 }: {
   house: PublicHouse;
@@ -48,6 +49,8 @@ export function HouseCard({
   onToggleEdit?: () => void;
   /** Show full details inline (non-compact list layout). */
   expanded?: boolean;
+  /** Route-list visited tail — show ביקרתם banner with restore. */
+  visitedTail?: boolean;
   index?: number;
 }) {
   return (
@@ -56,7 +59,8 @@ export function HouseCard({
       className="house-list-card overflow-visible border-orange-500/15 bg-[#1d1028]/90 text-base"
     >
       <div className="px-3 pb-1 pt-2">
-        {skipped ? <HouseSkippedBanner meta={skipMeta} /> : null}
+        {skipped ? <HouseSkippedBanner meta={skipMeta} onRestore={onRestoreRoute} /> : null}
+        {visitedTail ? <HouseVisitedBanner onRestore={onToggleVisited} /> : null}
         <HouseDetails
           house={house}
           distanceM={distanceM}

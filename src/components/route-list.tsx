@@ -89,6 +89,7 @@ function RouteTailRow({
             skipped={kind === "skipped"}
             skipMeta={skipMeta}
             onRestoreRoute={kind === "skipped" ? onRestore : undefined}
+            visitedTail={kind === "visited"}
             canEdit={canEditHouse}
             admin={admin}
             onShowOnMap={onShowOnMap}

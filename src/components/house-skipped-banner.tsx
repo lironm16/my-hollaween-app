@@ -1,6 +1,6 @@
 import { Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FilterSign, SkipSign } from "@/components/visit-marks";
+import { FilterSign, SkipSign, VisitedSign } from "@/components/visit-marks";
 import { skipMetaSummary } from "@/lib/skip-reasons";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 
@@ -36,6 +36,33 @@ export function HouseSkippedBanner({
       ) : (
         <div className="route-skipped-main">{mainContent}</div>
       )}
+      {onRestore ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="route-skipped-restore shrink-0"
+          onClick={onRestore}
+        >
+          <Undo2 className="size-3.5" />
+          החזרה
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+export function HouseVisitedBanner({
+  onRestore,
+}: {
+  onRestore?: () => void;
+}) {
+  return (
+    <div className="route-skipped-row house-skipped-banner" role="status">
+      <div className="route-skipped-main">
+        <VisitedSign />
+        <span className="route-skipped-name">ביקרתם</span>
+      </div>
       {onRestore ? (
         <Button
           type="button"
