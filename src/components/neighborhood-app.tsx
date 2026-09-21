@@ -338,7 +338,7 @@ export function NeighborhoodApp({
         skipped: false,
         visitedTail: true,
       }));
-    return [...activeItems, ...skippedTail, ...visitedTail];
+    return [...activeItems, ...visitedTail, ...skippedTail];
   }, [routeMode, activeRoute, skips.skippedIds, visits.visitedIds, visible]);
 
   function applyRouteAfterSkipChange(

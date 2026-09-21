@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { MapPin, Navigation } from "lucide-react";
-import { HouseSkippedBanner } from "@/components/house-skipped-banner";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown, MapPin, Navigation, Undo2 } from "lucide-react";
 import { HouseCard } from "@/components/house-card";
 import { Button } from "@/components/ui/button";
+import { SkipSign, VisitedSign } from "@/components/visit-marks";
+import { houseHeadline } from "@/lib/labels";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -26,14 +27,103 @@ function RouteLeg({ label }: { label: string }) {
   );
 }
 
-function RouteSkippedRow({
+function RouteTailRow({
+  house,
+  kind,
   skipMeta,
   onRestore,
+  onToggleVisited,
+  catalogSource,
+  liked,
+  onToggleLike,
+  visited,
+  onSkipHouse,
+  admin,
+  canEditHouse,
+  onShowOnMap,
+  onEditHouse,
+  editingId,
 }: {
+  house: PublicHouse;
+  kind: "skipped" | "visited";
   skipMeta?: SkippedHouseMeta;
   onRestore?: () => void;
+  onToggleVisited?: () => void;
+  catalogSource?: string | null;
+  liked?: boolean;
+  onToggleLike?: () => void;
+  visited?: boolean;
+  onSkipHouse?: () => void;
+  admin?: boolean;
+  canEditHouse?: boolean;
+  onShowOnMap?: () => void;
+  onEditHouse?: () => void;
+  editingId?: string | null;
 }) {
-  return <HouseSkippedBanner meta={skipMeta} onRestore={onRestore} />;
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="route-tail-row">
+      <div className="route-tail-header">
+        <button
+          type="button"
+          className="route-tail-toggle"
+          aria-expanded={open}
+          onClick={() => setOpen((value) => !value)}
+        >
+          {kind === "skipped" ? <SkipSign /> : <VisitedSign />}
+          <span className="route-tail-title">{houseHeadline(house)}</span>
+          <ChevronDown className={cn("route-tail-chevron", open && "is-open")} aria-hidden />
+        </button>
+        {kind === "skipped" && onRestore ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="route-tail-action"
+            onClick={onRestore}
+          >
+            <Undo2 className="size-3.5" />
+            החזרה
+          </Button>
+        ) : null}
+        {kind === "visited" && onToggleVisited ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="route-tail-action"
+            onClick={onToggleVisited}
+          >
+            <Undo2 className="size-3.5" />
+            לא ביקרתי
+          </Button>
+        ) : null}
+      </div>
+      {open ? (
+        <div className="route-tail-body">
+          <HouseCard
+            house={house}
+            catalogSource={catalogSource}
+            liked={liked}
+            onToggleLike={onToggleLike}
+            visited={visited}
+            onToggleVisited={onToggleVisited}
+            onSkip={kind === "visited" ? onSkipHouse : undefined}
+            skipped={kind === "skipped"}
+            skipMeta={skipMeta}
+            onRestoreRoute={kind === "skipped" ? onRestore : undefined}
+            canEdit={canEditHouse}
+            admin={admin}
+            onShowOnMap={onShowOnMap}
+            onToggleEdit={onEditHouse}
+            editing={editingId === house.id}
+            expanded
+          />
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 export function RouteList({
@@ -134,48 +224,66 @@ export function RouteList({
           const showSkippedHeading = skipped && (i === 0 || !items[i - 1]!.skipped);
           const showVisitedHeading =
             visitedTail && (i === 0 || !items[i - 1]?.visitedTail);
+          const isTail = skipped || visitedTail;
           return (
-          <li
-            key={house.id}
-            ref={house.id === focusId ? focusRef : undefined}
-            className={cn(
-              house.id === focusId && "house-list-focus",
-              skipped && "route-list-skipped",
-              visitedTail && "route-list-visited",
-            )}
-          >
-            {showSkippedHeading ? (
-              <p className="route-list-skipped-heading">דילגתם על הבתים האלה</p>
-            ) : null}
-            {showVisitedHeading ? (
-              <p className="route-list-visited-heading">ביקרתם</p>
-            ) : null}
-            {hop ? <RouteLeg label={hop} /> : null}
-            {skipped ? (
-              <RouteSkippedRow
-                skipMeta={skipMetaFor?.(house.id)}
-                onRestore={onRestoreHouse ? () => onRestoreHouse(house.id) : undefined}
-              />
-            ) : (
-              <div className="route-list-house">
-                <HouseCard
+            <li
+              key={house.id}
+              ref={house.id === focusId ? focusRef : undefined}
+              className={cn(
+                house.id === focusId && "house-list-focus",
+                skipped && "route-list-skipped",
+                visitedTail && "route-list-visited",
+              )}
+            >
+              {showVisitedHeading ? (
+                <p className="route-list-visited-heading">ביקרתם</p>
+              ) : null}
+              {showSkippedHeading ? (
+                <p className="route-list-skipped-heading">דילגתם על הבתים האלה</p>
+              ) : null}
+              {hop ? <RouteLeg label={hop} /> : null}
+              {isTail ? (
+                <RouteTailRow
                   house={house}
+                  kind={skipped ? "skipped" : "visited"}
+                  skipMeta={skipMetaFor?.(house.id)}
+                  onRestore={
+                    skipped && onRestoreHouse ? () => onRestoreHouse(house.id) : undefined
+                  }
+                  onToggleVisited={
+                    onToggleVisited ? () => onToggleVisited(house.id) : undefined
+                  }
                   catalogSource={catalogSource}
                   liked={likedIds?.includes(house.id)}
                   onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
                   visited={visitedIds?.includes(house.id)}
-                  onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
-                  onSkip={onSkipHouse ? () => onSkipHouse(house.id) : undefined}
-                  canEdit={Boolean(canEditHouse?.(house.id))}
+                  onSkipHouse={onSkipHouse ? () => onSkipHouse(house.id) : undefined}
                   admin={admin}
+                  canEditHouse={canEditHouse?.(house.id)}
                   onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
-                  onToggleEdit={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
-                  editing={editingId === house.id}
-                  index={visitedTail ? undefined : order}
+                  onEditHouse={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
+                  editingId={editingId}
                 />
-              </div>
-            )}
-          </li>
+              ) : (
+                <div className="route-list-house">
+                  <HouseCard
+                    house={house}
+                    catalogSource={catalogSource}
+                    liked={likedIds?.includes(house.id)}
+                    onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
+                    visited={visitedIds?.includes(house.id)}
+                    onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
+                    onSkip={onSkipHouse ? () => onSkipHouse(house.id) : undefined}
+                    canEdit={Boolean(canEditHouse?.(house.id))}
+                    admin={admin}
+                    onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
+                    onToggleEdit={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
+                    editing={editingId === house.id}
+                    index={order}
+                  />
+                </div>
+              )}
+            </li>
           );
         })}
       </ol>

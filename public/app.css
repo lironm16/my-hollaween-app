@@ -4720,7 +4720,6 @@ svg.leaflet-zoom-animated {
 .is-filter-dim .house-pin.is-filtered-out,
 .is-filter-dim .pin-apt-dot.is-filtered-out {
   opacity: 0.38;
-  filter: saturate(0.85);
 }
 .is-filter-dim .pumpkin-pin-icon.is-filtered-out .house-pin.is-filtered-out,
 .is-filter-dim .pumpkin-pin-icon.is-filtered-out .pin-apt-dot.is-filtered-out {
@@ -5061,8 +5060,7 @@ svg.leaflet-zoom-animated {
 }
 .house-list-card.is-liked.is-visited {
   border-color: #059669 !important;
-  box-shadow: 0 0 0 4px #059669,
-    inset 0 0 0 2px #fb7185 !important;
+  box-shadow: 0 0 0 4px #059669 !important;
 }
 .house-list-focus .house-list-card {
   border-color: rgba(249, 115, 22, 0.75) !important;
@@ -5381,6 +5379,59 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   min-height: 2rem;
   padding-inline: 0.65rem;
 }
+.route-tail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.route-tail-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.9rem;
+  border: 1px dashed rgba(148, 163, 184, 0.45);
+  background: rgba(51, 65, 85, 0.28);
+}
+.route-tail-toggle {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.15rem 0.25rem;
+  border: 0;
+  background: transparent;
+  color: #ffedd5;
+  text-align: start;
+  cursor: pointer;
+}
+.route-tail-title {
+  min-width: 0;
+  flex: 1;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  font-weight: 600;
+}
+.route-tail-chevron {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: #a78bfa;
+  transition: transform 0.2s ease;
+}
+.route-tail-chevron.is-open {
+  transform: rotate(180deg);
+}
+.route-tail-action {
+  min-height: 2rem;
+  padding-inline: 0.65rem;
+  shrink: 0;
+}
+.route-tail-body {
+  padding-inline: 0.15rem;
+}
 .house-added-success {
   animation: house-added-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -5677,8 +5728,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .map-house-sheet-card.is-liked.is-visited {
   border-color: #059669;
   border-bottom-color: #059669;
-  box-shadow: 0 0 0 4px #059669,
-    inset 0 0 0 2px #fb7185;
+  box-shadow: 0 0 0 4px #059669;
 }
 .cluster-house-nav {
   display: grid;
