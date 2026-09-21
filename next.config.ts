@@ -72,6 +72,10 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "no-cache" }],
       },
       {
+        source: "/sw-map-tiles.js",
+        headers: [{ key: "Cache-Control", value: "no-cache" }],
+      },
+      {
         source: "/shell.css",
         headers: [{ key: "Cache-Control", value: "no-cache" }],
       },

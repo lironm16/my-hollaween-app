@@ -1,4 +1,7 @@
-const CACHE = "hw-shell-v110";
+importScripts("/sw-map-tiles.js");
+
+const CACHE = "hw-shell-v111";
+const TILE_CACHE = MapTileCache.TILE_CACHE;
 const PRECACHE = [
   "/offline.html",
   "/catalog.json",
@@ -34,6 +37,9 @@ const PRECACHE = [
 
 self.addEventListener("message", (event) => {
   if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
+  if (event.data?.type === "MAP_TILE_BOUNDS") {
+    MapTileCache.setConfig(event.data);
+  }
 });
 
 self.addEventListener("install", (event) => {
@@ -47,7 +53,7 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== CACHE)
+            .filter((key) => key !== CACHE && key !== TILE_CACHE)
             .map((key) => caches.delete(key)),
         ),
       )
@@ -65,7 +71,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (url.pathname === "/sw.js" || url.pathname === "/boot.js") {
+  if (url.pathname === "/sw.js" || url.pathname === "/boot.js" || url.pathname === "/sw-map-tiles.js") {
     return;
   }
 
@@ -91,14 +97,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Map tiles: never intercept — cached blank/blocked tiles caused gray maps on phones.
-  if (
-    url.hostname.includes("basemaps.cartocdn.com") ||
-    url.hostname.includes("tile.openstreetmap.org") ||
-    url.hostname.includes("openstreetmap.fr") ||
-    url.hostname.includes("israelhiking.osm.org.il") ||
-    url.hostname.includes("arcgisonline.com")
-  ) {
+  if (MapTileCache.isMapTileHost(url.hostname)) {
+    if (MapTileCache.shouldCacheUrl(url)) {
+      event.respondWith(MapTileCache.respondWithCachedTile(req));
+    }
     return;
   }
 

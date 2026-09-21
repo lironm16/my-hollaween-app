@@ -15,19 +15,4 @@
     window.visualViewport.addEventListener("scroll", syncAppH);
   }
 
-  /* v110: service worker cached blank map tiles — purge SW + all hw-* caches once. */
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function (regs) {
-      for (var i = 0; i < regs.length; i++) {
-        regs[i].unregister();
-      }
-    });
-  }
-  if ("caches" in window) {
-    caches.keys().then(function (keys) {
-      keys.forEach(function (key) {
-        if (key.indexOf("hw-") === 0) caches.delete(key);
-      });
-    });
-  }
 })();

@@ -19,6 +19,7 @@ import { MapLegend } from "@/components/map-legend";
 import "leaflet/dist/leaflet.css";
 import { config, inNeighborhood } from "@/lib/config";
 import { useMapTiles } from "@/hooks/use-map-tiles";
+import { postMapTileCacheConfig } from "@/lib/map-tile-cache";
 import type { MapTilesConfig } from "@/lib/map-tiles-types";
 import type { UserLocation } from "@/hooks/use-user-location";
 import type { PublicHouse } from "@/lib/types";
@@ -660,6 +661,9 @@ export function HouseMap({
   }, [routeStart, userLocation, routeStops, routeStartedFrom]);
   const [mapTheme, setMapTheme] = useState<"dark" | "light">(readMapTheme);
   const tiles = useMapTiles();
+  useEffect(() => {
+    postMapTileCacheConfig();
+  }, []);
   const tileUrl = tileUrlFor(tiles, mapTheme);
   const osmDark = mapTheme === "dark" && tiles.invert;
   const cartoDark = mapTheme === "dark" && !tiles.invert;
