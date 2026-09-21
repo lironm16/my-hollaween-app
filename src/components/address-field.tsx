@@ -14,9 +14,18 @@ type Props = {
   confirmed: boolean;
   disabled?: boolean;
   emptyHint?: boolean;
+  maxLength?: number;
 };
 
-export function AddressField({ value, onChange, onSelect, confirmed, disabled, emptyHint = true }: Props) {
+export function AddressField({
+  value,
+  onChange,
+  onSelect,
+  confirmed,
+  disabled,
+  emptyHint = true,
+  maxLength,
+}: Props) {
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -86,6 +95,7 @@ export function AddressField({ value, onChange, onSelect, confirmed, disabled, e
         disabled={disabled}
         required
         minLength={3}
+        maxLength={maxLength}
         value={value}
         placeholder="רחוב ומספר, למשל חרוזים 8"
         aria-autocomplete="list"

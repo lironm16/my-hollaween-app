@@ -42,6 +42,7 @@ import {
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import type { HoursWindow } from "@/lib/types";
+import { HOUSE_FIELD_LIMITS } from "@/lib/schema";
 import { cn } from "@/lib/utils";
 
 const empty: HouseInput = {
@@ -376,23 +377,30 @@ export function HouseForm({
       }}
     >
       <FormSection title="הבית">
-        <Field label="מי מוסיף את הבית?">
+        <Field
+          label="מי מוסיף את הבית?"
+          charCount={{ length: addedBy.length, max: HOUSE_FIELD_LIMITS.addedBy.max }}
+        >
           <Input
             required={isNewHouse}
             value={addedBy}
-            minLength={isNewHouse ? 2 : undefined}
-            maxLength={80}
+            minLength={isNewHouse ? HOUSE_FIELD_LIMITS.addedBy.min : undefined}
+            maxLength={HOUSE_FIELD_LIMITS.addedBy.max}
             onChange={(e) => setAddedBy(e.target.value)}
             placeholder="ישראל כהן"
             className="h-10 bg-[#1d1028]"
           />
         </Field>
         <div>
-          <p className="mb-2 text-base font-medium">שם הבית</p>
+          <div className="mb-2 flex items-baseline justify-between gap-2">
+            <p className="text-base font-medium">שם הבית</p>
+            <CharCount length={form.name.length} max={HOUSE_FIELD_LIMITS.name.max} />
+          </div>
           <Input
             required
             value={form.name}
-            minLength={2}
+            minLength={HOUSE_FIELD_LIMITS.name.min}
+            maxLength={HOUSE_FIELD_LIMITS.name.max}
             onChange={(e) => {
               const name = e.target.value;
               const theme = themeFromName(name) ?? form.theme;
@@ -424,13 +432,17 @@ export function HouseForm({
         </div>
       </FormSection>
       <FormSection title="איפה למצוא">
-        <Field label="כתובת">
+        <Field
+          label="כתובת"
+          charCount={{ length: form.address.length, max: HOUSE_FIELD_LIMITS.address.max }}
+        >
           <AddressField
             value={form.address}
             onChange={onAddressTyped}
             onSelect={onAddressSelect}
             confirmed={addressOk}
             disabled={blocked}
+            maxLength={HOUSE_FIELD_LIMITS.address.max}
           />
         </Field>
         <div>
@@ -454,9 +466,13 @@ export function HouseForm({
             מיקום: {form.lat.toFixed(5)}, {form.lng.toFixed(5)}
           </p>
         </div>
-        <Field label="איך מגיעים — קומה, דירה, הוראות">
+        <Field
+          label="איך מגיעים — קומה, דירה, הוראות"
+          charCount={{ length: form.arrival.length, max: HOUSE_FIELD_LIMITS.arrival.max }}
+        >
           <Input
             value={form.arrival}
+            maxLength={HOUSE_FIELD_LIMITS.arrival.max}
             onChange={(e) => setForm({ ...form, arrival: e.target.value })}
             placeholder="קומה 2, דירה 5, ימינה אחרי השער"
           />
@@ -639,9 +655,13 @@ export function HouseForm({
             ))}
           </div>
         </div>
-        <Field label="מה מחכה בבית?">
+        <Field
+          label="מה מחכה בבית?"
+          charCount={{ length: form.description.length, max: HOUSE_FIELD_LIMITS.description.max }}
+        >
           <Textarea
             value={form.description}
+            maxLength={HOUSE_FIELD_LIMITS.description.max}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             placeholder="קישוטים, אווירה, הפתעות…"
             className="min-h-24"
@@ -666,9 +686,13 @@ export function HouseForm({
             </span>
           </span>
         </label>
-        <Field label="הערות (כלב, מדרגות, עגלה…)">
+        <Field
+          label="הערות (כלב, מדרגות, עגלה…)"
+          charCount={{ length: form.notes.length, max: HOUSE_FIELD_LIMITS.notes.max }}
+        >
           <Input
             value={form.notes}
+            maxLength={HOUSE_FIELD_LIMITS.notes.max}
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
           />
         </Field>
@@ -825,16 +849,35 @@ function FormSection({
   );
 }
 
+function CharCount({ length, max }: { length: number; max: number }) {
+  return (
+    <span
+      className={cn(
+        "shrink-0 text-sm tabular-nums",
+        length >= max ? "text-orange-300" : "text-violet-400",
+      )}
+      aria-live="polite"
+    >
+      {length}/{max}
+    </span>
+  );
+}
+
 function Field({
   label,
   children,
+  charCount,
 }: {
   label: string;
   children: ReactNode;
+  charCount?: { length: number; max: number };
 }) {
   return (
     <div className="space-y-1.5">
-      <Label>{label}</Label>
+      <div className="flex items-baseline justify-between gap-2">
+        <Label>{label}</Label>
+        {charCount ? <CharCount {...charCount} /> : null}
+      </div>
       {children}
     </div>
   );
