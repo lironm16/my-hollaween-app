@@ -20,14 +20,12 @@ export function HouseList({
   canEditHouse,
   editCodeFor,
   onShowOnMap,
-  onSelectHouse,
   onEditHouse,
   skippedIds,
   skipMetaFor,
   onSkipHouse,
   onRestoreHouse,
   emptyKind = "default",
-  selectedId,
   focusId,
   editingId,
 }: {
@@ -43,14 +41,12 @@ export function HouseList({
   canEditHouse?: (id: string) => boolean;
   editCodeFor?: (id: string) => string | undefined;
   onShowOnMap?: (id: string) => void;
-  onSelectHouse?: (id: string, index: number) => void;
   onEditHouse?: (id: string, index: number) => void;
   skippedIds?: string[];
   skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
   onSkipHouse?: (id: string) => void;
   onRestoreHouse?: (id: string) => void;
   emptyKind?: "default" | "skipped";
-  selectedId?: string | null;
   focusId?: string | null;
   editingId?: string | null;
 }) {

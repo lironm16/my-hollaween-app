@@ -42,8 +42,6 @@ export function RouteList({
   hasGps,
   onRequestLocation,
   onChangeOrigin,
-  onSelectHouse,
-  selectedId,
   focusId,
   catalogSource,
   likedIds,
@@ -65,8 +63,6 @@ export function RouteList({
   hasGps: boolean;
   onRequestLocation?: () => void;
   onChangeOrigin?: () => void;
-  onSelectHouse: (id: string, index: number) => void;
-  selectedId?: string | null;
   focusId?: string | null;
   catalogSource?: string | null;
   likedIds?: string[];

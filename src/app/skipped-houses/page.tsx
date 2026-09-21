@@ -1,11 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { HouseList } from "@/components/house-list";
-import { HouseDetailOverlay } from "@/components/house-detail-overlay";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useSkippedHouses } from "@/hooks/use-skipped-houses";
@@ -24,22 +23,15 @@ export default function SkippedHousesPage() {
   const visits = useVisitedHouses();
   const geo = useUserLocation();
   const { resolved: origin } = useDistanceOrigin(geo.location);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const houses = useMemo(() => {
     const ids = new Set(skips.skippedIds);
     return (catalog?.houses ?? []).filter((house) => ids.has(house.id));
   }, [catalog?.houses, skips.skippedIds]);
 
-  const selected = houses.find((house) => house.id === selectedId) ?? null;
-  const selectedIndex = selected
-    ? houses.findIndex((house) => house.id === selectedId) + 1
-    : undefined;
-
   function handleRestore(id: string) {
     skips.unskip(id);
     if (readRouteMode()) queueRouteRestore(id);
-    if (selectedId === id) setSelectedId(null);
   }
 
   function handleRestoreAll() {
@@ -48,7 +40,6 @@ export default function SkippedHousesPage() {
       for (const id of skips.skippedIds) queueRouteRestore(id);
     }
     skips.unskipAll();
-    setSelectedId(null);
   }
 
   return (
@@ -94,28 +85,10 @@ export default function SkippedHousesPage() {
               onRestoreHouse={handleRestore}
               emptyKind="skipped"
               onShowOnMap={(id) => router.push(`/?focus=${encodeURIComponent(id)}`)}
-              onSelectHouse={(id) => setSelectedId(id)}
-              selectedId={selectedId}
             />
           )}
         </div>
       </main>
-      {selected ? (
-        <HouseDetailOverlay
-          house={selected}
-          index={selectedIndex}
-          onClose={() => setSelectedId(null)}
-          liked={likes.liked}
-          onToggleLike={(id) => likes.toggle(id)}
-          visited={visits.visited}
-          onToggleVisited={(id) => visits.toggle(id)}
-          catalogSource={catalog ? "network" : null}
-          skipped
-          skipMeta={skips.meta(selected.id)}
-          onRestoreRoute={() => handleRestore(selected.id)}
-          onShowOnMap={() => router.push(`/?focus=${encodeURIComponent(selected.id)}`)}
-        />
-      ) : null}
     </div>
   );
 }

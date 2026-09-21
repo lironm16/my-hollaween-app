@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
-import { HouseDetailOverlay } from "@/components/house-detail-overlay";
+import { HouseCard } from "@/components/house-card";
 import { HousePicker } from "@/components/house-picker";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { Label } from "@/components/ui/label";
@@ -75,63 +75,57 @@ export default function SearchPage() {
       <AppHeader />
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-5">
         <div className="mx-auto w-full max-w-lg pb-10">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/banner.jpg"
-          alt=""
-          className="mb-4 h-28 w-full rounded-2xl object-cover ring-1 ring-orange-500/30"
-        />
-        <h1 className="font-display mb-1 text-2xl text-orange-300">חיפוש בית</h1>
-        <p className="mb-4 text-base text-violet-200">
-          בחרו בית מהרשימה — נפתח מסך מלא עם פרטי הבית, כמו במפה או ברשימה.
-        </p>
-        <div className="mb-4 space-y-1.5 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
-          <Label htmlFor="house-pick">בית</Label>
-          <HousePicker
-            houses={houses}
-            selected={picked}
-            onSelect={selectHouse}
-            ownedIds={owned.map((item) => item.id)}
-            loading={catalogLoading || (admin && !adminReady)}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/banner.jpg"
+            alt=""
+            className="mb-4 h-28 w-full rounded-2xl object-cover ring-1 ring-orange-500/30"
           />
-        </div>
-        {!picked ? (
-          <p className="text-base text-violet-300">הקלידו שם משפחה או כתובת ובחרו בית.</p>
-        ) : null}
+          <h1 className="font-display mb-1 text-2xl text-orange-300">חיפוש בית</h1>
+          <p className="mb-4 text-base text-violet-200">
+            בחרו בית מהרשימה — הפרטים יופיעו כאן בכרטיס, כמו ברשימה הראשית.
+          </p>
+          <div className="mb-4 space-y-1.5 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
+            <Label htmlFor="house-pick">בית</Label>
+            <HousePicker
+              houses={houses}
+              selected={picked}
+              onSelect={selectHouse}
+              ownedIds={owned.map((item) => item.id)}
+              loading={catalogLoading || (admin && !adminReady)}
+            />
+          </div>
+          {!picked ? (
+            <p className="text-base text-violet-300">הקלידו שם משפחה או כתובת ובחרו בית.</p>
+          ) : (
+            <HouseCard
+              house={picked}
+              catalogSource={source}
+              liked={likes.likedIds.includes(picked.id)}
+              onToggleLike={() => likes.toggle(picked.id)}
+              visited={visits.visitedIds.includes(picked.id)}
+              onToggleVisited={() => visits.toggle(picked.id)}
+              canEdit={canEdit}
+              editCode={editCode}
+              admin={admin}
+              onToggleEdit={
+                canEdit
+                  ? () =>
+                      editFlow.openEdit(picked, {
+                        editCode,
+                        admin,
+                        allowDelete: true,
+                      })
+                  : undefined
+              }
+              onShowOnMap={() => {
+                writeHomeView("map");
+                router.push(`/?focus=${encodeURIComponent(picked.id)}`);
+              }}
+            />
+          )}
         </div>
       </main>
-      {picked ? (
-        <HouseDetailOverlay
-          house={picked}
-          onClose={() => selectHouse(null)}
-          liked={likes.liked}
-          onToggleLike={(id) => likes.toggle(id)}
-          visited={visits.visited}
-          onToggleVisited={(id) => visits.toggle(id)}
-          catalogSource={source}
-          managerEditCode={admin ? editCode : undefined}
-          editCodeFor={(id) =>
-            admin
-              ? adminHouses.find((item) => item.id === id)?.editCode
-              : owned.find((item) => item.id === id)?.editCode
-          }
-          canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-          onToggleEdit={
-            canEdit
-              ? () =>
-                  editFlow.openEdit(picked, {
-                    editCode,
-                    admin,
-                    allowDelete: true,
-                  })
-              : undefined
-          }
-          onShowOnMap={() => {
-            writeHomeView("map");
-            router.push(`/?focus=${encodeURIComponent(picked.id)}`);
-          }}
-        />
-      ) : null}
       {picked ? (
         <HouseEditFlowPanels
           flow={editFlow.flow}

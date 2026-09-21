@@ -20,8 +20,6 @@ import type { PublicHouse } from "@/lib/types";
 import { HOUSE_CARD_PHOTO_BOX } from "@/components/house-photo-frame";
 import { cn } from "@/lib/utils";
 
-const DESCRIPTION_PREFIX = "מה מחכה בבית:";
-
 function useMultilineText(text: string, resetKey: string) {
   const measureRef = useRef<HTMLParagraphElement>(null);
   const [multiline, setMultiline] = useState(false);
@@ -161,46 +159,34 @@ function ListDetailSection({
 
 function HouseArrivalDirections({
   arrival,
-  compact,
   houseId,
 }: {
   arrival?: string | null;
-  compact: boolean;
   houseId: string;
 }) {
   const arrivalText = arrival?.trim() ?? "";
   if (!arrivalText) return null;
 
-  if (compact) {
-    return (
-      <CompactTextSection
-        title="הוראות הגעה"
-        text={arrivalText}
-        houseId={houseId}
-        titleClassName="text-amber-200/80"
-        bodyClassName="text-amber-100"
-      />
-    );
-  }
-
   return (
-    <p className="rounded-lg bg-[#2a1638] px-3 py-2 text-base text-amber-100">
-      איך מגיעים: {arrivalText}
-    </p>
+    <CompactTextSection
+      title="הוראות הגעה"
+      text={arrivalText}
+      houseId={houseId}
+      titleClassName="text-amber-200/80"
+      bodyClassName="text-amber-100"
+    />
   );
 }
 
 function HouseNotesSection({
   notes,
-  compact,
   houseId,
 }: {
   notes?: string | null;
-  compact: boolean;
   houseId: string;
 }) {
   const text = notes?.trim() ?? "";
-  if (!compact || !text) return null;
+  if (!text) return null;
 
   return (
     <CompactTextSection
@@ -215,11 +201,9 @@ function HouseNotesSection({
 
 function HouseDescriptionSection({
   description,
-  compact,
   houseId,
 }: {
   description?: string | null;
-  compact: boolean;
   houseId: string;
 }) {
   const text = description?.trim() ?? "";
@@ -232,7 +216,7 @@ function HouseDescriptionSection({
   }, [houseId, text]);
 
   useLayoutEffect(() => {
-    if (!compact || !text || textExpanded) {
+    if (!text || textExpanded) {
       setOverflows(false);
       return;
     }
@@ -243,9 +227,9 @@ function HouseDescriptionSection({
     const observer = new ResizeObserver(check);
     observer.observe(el);
     return () => observer.disconnect();
-  }, [compact, text, textExpanded]);
+  }, [text, textExpanded]);
 
-  if (!compact || !text) return null;
+  if (!text) return null;
 
   const showToggle = overflows || textExpanded;
 
@@ -281,30 +265,6 @@ function HouseDescriptionSection({
   );
 }
 
-function HouseComments({
-  house,
-  includeNotes,
-}: {
-  house: PublicHouse;
-  includeNotes: boolean;
-}) {
-  const description = house.description?.trim() ?? "";
-  const notes = includeNotes ? (house.notes?.trim() ?? "") : "";
-
-  if (!description && !notes) return null;
-
-  return (
-    <div className="space-y-2">
-      {notes ? <p className="text-base text-amber-200/90">הערה: {notes}</p> : null}
-      {description ? (
-        <p className="text-base leading-relaxed text-violet-50">
-          {DESCRIPTION_PREFIX} {description}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
 export function HouseDetails({
   house,
   extra,
@@ -319,7 +279,7 @@ export function HouseDetails({
   chrome = "page",
   actions,
   headerMenu,
-  compact = false,
+  compact = true,
   distanceM,
   index,
 }: {
@@ -540,39 +500,32 @@ export function HouseDetails({
         meta
       )}
       {actions}
-      <HouseArrivalDirections arrival={house.arrival} compact={compact} houseId={house.id} />
-      <HouseNotesSection notes={house.notes} compact={compact} houseId={house.id} />
-      <HouseDescriptionSection
-        description={house.description}
-        compact={compact}
-        houseId={house.id}
-      />
-      {!compact ? <HouseComments house={house} includeNotes /> : null}
+      <HouseArrivalDirections arrival={house.arrival} houseId={house.id} />
+      <HouseNotesSection notes={house.notes} houseId={house.id} />
+      <HouseDescriptionSection description={house.description} houseId={house.id} />
       {addedMeta ? (
         <p className="text-sm text-violet-400">{addedMeta}</p>
       ) : null}
-      {!compact ? (
+      {!sheet ? (
         <>
-          {sheet ? null : (
-            <div className="flex flex-wrap gap-2 pt-1">
-              <a
-                href={houseMapsUrl(house)}
-                target="_blank"
-                rel="noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className={cn(buttonVariants({ size: "sm" }))}
-              >
-                ניווט ב־Google Maps
-              </a>
-              <Link
-                href={`/house/${encodeURIComponent(house.id)}`}
-                onClick={(e) => e.stopPropagation()}
-                className={cn(buttonVariants({ size: "sm", variant: "ghost" }))}
-              >
-                קישור לבית
-              </Link>
-            </div>
-          )}
+          <div className="flex flex-wrap gap-2 pt-1">
+            <a
+              href={houseMapsUrl(house)}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className={cn(buttonVariants({ size: "sm" }))}
+            >
+              ניווט ב־Google Maps
+            </a>
+            <Link
+              href={`/house/${encodeURIComponent(house.id)}`}
+              onClick={(e) => e.stopPropagation()}
+              className={cn(buttonVariants({ size: "sm", variant: "ghost" }))}
+            >
+              קישור לבית
+            </Link>
+          </div>
           {extra}
         </>
       ) : null}

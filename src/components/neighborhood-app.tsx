@@ -771,7 +771,6 @@ export function NeighborhoodApp({
                     hasGps={Boolean(gps)}
                     onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
                     onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
-                    selectedId={selection.selected?.id ?? null}
                     focusId={selection.listFocusId}
                     catalogSource={source}
                     likedIds={likes.likedIds}
@@ -784,9 +783,7 @@ export function NeighborhoodApp({
                     admin={admin}
                     canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
                     onShowOnMap={openOnMap}
-                    onSelectHouse={selection.selectInList}
                     onEditHouse={(id) => {
-                      selection.dismissForOverlay();
                       const house = visible.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
                       if (house) requestHouseEdit(house, true);
                     }}
@@ -812,13 +809,10 @@ export function NeighborhoodApp({
                       admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode
                     }
                     onShowOnMap={openOnMap}
-                    onSelectHouse={selection.selectInList}
                     onEditHouse={(id) => {
-                      selection.dismissForOverlay();
                       const house = visible.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
                       if (house) requestHouseEdit(house, true);
                     }}
-                    selectedId={selection.selected?.id ?? null}
                     focusId={selection.listFocusId}
                     editingId={null}
                   />
