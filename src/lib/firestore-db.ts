@@ -11,6 +11,7 @@ import { isStubHouse } from "@/lib/house-set";
 import { canonicalHouseId, toPublicHouse } from "@/lib/ids";
 import { isPubliclyListed } from "@/lib/house-state";
 import { stripStubHouses } from "@/lib/rehearsal-stubs";
+import { pushAlertsEnabled } from "@/lib/push-enabled";
 import type { DbFile, House, PublicHouse, PushSubscriptionRecord, VapidKeys } from "@/lib/types";
 
 export { firestoreConfigured };
@@ -197,7 +198,7 @@ export async function readFirestoreCatalog(): Promise<Omit<DbFile, "pushSubscrip
     await resolveAdminFirestore();
     const [housesSnap, pushSettingsSnap, catalogMetaSnap] = await Promise.all([
       housesCollection().get(),
-      metaDoc("pushSettings").get(),
+      pushAlertsEnabled() ? metaDoc("pushSettings").get() : Promise.resolve(null),
       metaDoc("catalog").get(),
     ]);
 
@@ -219,9 +220,10 @@ export async function readFirestoreCatalog(): Promise<Omit<DbFile, "pushSubscrip
       }
     }
 
-    const pushSettings = pushSettingsSnap.exists
-      ? (pushSettingsSnap.data() as DbFile["pushSettings"])
-      : undefined;
+    const pushSettings =
+      pushSettingsSnap?.exists
+        ? (pushSettingsSnap.data() as DbFile["pushSettings"])
+        : undefined;
 
     if (!updatedAt) updatedAt = new Date().toISOString();
 

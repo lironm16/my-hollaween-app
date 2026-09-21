@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/sheet";
 import { buttonVariants } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { cn } from "@/lib/utils";
 
 export function AppHeader({
@@ -76,7 +77,7 @@ export function AppHeader({
           >
             <Menu className="size-5" />
           </button>
-          <PushAlertsButton />
+          {pushAlertsEnabled() ? <PushAlertsButton /> : null}
         </div>
         <Link
           href="/"
