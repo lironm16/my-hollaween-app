@@ -66,7 +66,7 @@ export function HouseList({
 
   useEffect(() => {
     if (!focusId) return;
-    focusRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    focusRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [focusId]);
 
   if (houses.length === 0) {

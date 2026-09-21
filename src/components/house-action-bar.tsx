@@ -163,7 +163,7 @@ export function HouseActionBar({
         ) : (
           <Heart className={MENU_ICON_CLASS} strokeWidth={2.2} />
         ),
-        onClick: onToggleLike,
+        onClick: () => onToggleLike(),
         active: liked,
       });
     }
@@ -180,7 +180,7 @@ export function HouseActionBar({
         ) : (
           <VisitedCheck visited={false} size="lg" />
         ),
-        onClick: onToggleVisited,
+        onClick: () => onToggleVisited(),
         active: visited,
       });
     }

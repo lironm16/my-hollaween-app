@@ -61,6 +61,15 @@ function RouteTailRow({
   editingId?: string | null;
 }) {
   const [open, setOpen] = useState(false);
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const frame = window.requestAnimationFrame(() => {
+      bodyRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [open]);
 
   return (
     <div className="route-tail-row">
@@ -77,7 +86,7 @@ function RouteTailRow({
         </button>
       </div>
       {open ? (
-        <div className="route-tail-body">
+        <div ref={bodyRef} className="route-tail-body">
           <HouseCard
             house={house}
             catalogSource={catalogSource}
@@ -89,7 +98,6 @@ function RouteTailRow({
             skipped={kind === "skipped"}
             skipMeta={skipMeta}
             onRestoreRoute={kind === "skipped" ? onRestore : undefined}
-            visitedTail={kind === "visited"}
             canEdit={canEditHouse}
             admin={admin}
             onShowOnMap={onShowOnMap}
@@ -150,7 +158,7 @@ export function RouteList({
 
   useEffect(() => {
     if (!focusId) return;
-    focusRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    focusRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [focusId]);
 
   const gpsAction =

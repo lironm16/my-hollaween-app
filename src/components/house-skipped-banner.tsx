@@ -69,7 +69,10 @@ export function HouseVisitedBanner({
           size="sm"
           variant="outline"
           className="route-skipped-restore shrink-0"
-          onClick={onRestore}
+          onClick={(event) => {
+            event.stopPropagation();
+            onRestore();
+          }}
         >
           <Undo2 className="size-3.5" />
           החזרה

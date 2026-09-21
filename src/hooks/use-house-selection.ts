@@ -155,6 +155,10 @@ export function useHouseSelection({
     [visible],
   );
 
+  const clearListFocus = useCallback(() => {
+    setListFocusId(null);
+  }, []);
+
   return {
     selectedId,
     setSelectedId,
@@ -180,5 +184,6 @@ export function useHouseSelection({
     editInList,
     showInListFromMap,
     listFocusId,
+    clearListFocus,
   };
 }

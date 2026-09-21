@@ -289,8 +289,11 @@ export function NeighborhoodApp({
     },
     [routeMode, walkingRoute, skips.skippedIds],
   );
-  const { onToggleLike, onToggleVisited: baseToggleVisited, visitCheer, routeCompleteCheer, likeCheer } =
-    useHouseActions(likes, visits, { visitCelebration });
+  const { onToggleLike, celebrateVisit, visitCheer, routeCompleteCheer, likeCheer } = useHouseActions(
+    likes,
+    visits,
+    { visitCelebration },
+  );
 
   const onToggleVisited = useCallback(
     (id: string) => {
@@ -302,11 +305,16 @@ export function NeighborhoodApp({
         marking && skips.skipped(id)
           ? skips.skippedIds.filter((item) => item !== id)
           : skips.skippedIds;
-      baseToggleVisited(id);
+      const ids = visits.toggle(id);
+      if (marking) {
+        celebrateVisit(id, ids);
+      } else {
+        selection.clearListFocus();
+      }
       if (!routeMode) return;
       applyRouteAfterSkipChange(nextSkippedIds, !marking, nextVisitedIds);
     },
-    [baseToggleVisited, routeMode, skips.skippedIds, visits],
+    [celebrateVisit, routeMode, selection.clearListFocus, skips.skippedIds, visits],
   );
   const routeListItems = useMemo(() => {
     if (!routeMode || !activeRoute) return [];

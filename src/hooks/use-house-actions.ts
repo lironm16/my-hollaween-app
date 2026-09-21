@@ -44,13 +44,10 @@ export function useHouseActions(
     [likes],
   );
 
-  const onToggleVisited = useCallback(
-    (id: string) => {
-      const nextOn = !visits.visited(id);
-      const ids = visits.toggle(id);
-      const marking = ids.includes(id);
-      if (!marking) return;
-      const celebration = options?.visitCelebration?.(id, ids) ?? "visit";
+  const celebrateVisit = useCallback(
+    (id: string, nextVisitedIds: string[]) => {
+      if (!nextVisitedIds.includes(id)) return;
+      const celebration = options?.visitCelebration?.(id, nextVisitedIds) ?? "visit";
       if (celebration === "none") return;
       setVisitCheer(false);
       setRouteCompleteCheer(false);
@@ -66,8 +63,23 @@ export function useHouseActions(
         cheerTimer.current = window.setTimeout(() => setVisitCheer(false), 1600);
       });
     },
-    [options, visits],
+    [options],
   );
 
-  return { onToggleLike, onToggleVisited, visitCheer, routeCompleteCheer, likeCheer };
+  const onToggleVisited = useCallback(
+    (id: string) => {
+      const ids = visits.toggle(id);
+      celebrateVisit(id, ids);
+    },
+    [celebrateVisit, visits],
+  );
+
+  return {
+    onToggleLike,
+    onToggleVisited,
+    celebrateVisit,
+    visitCheer,
+    routeCompleteCheer,
+    likeCheer,
+  };
 }

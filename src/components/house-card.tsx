@@ -27,7 +27,6 @@ export function HouseCard({
   editing = false,
   onToggleEdit,
   expanded = false,
-  visitedTail = false,
   index,
 }: {
   house: PublicHouse;
@@ -49,8 +48,6 @@ export function HouseCard({
   onToggleEdit?: () => void;
   /** Show full details inline (non-compact list layout). */
   expanded?: boolean;
-  /** Route-list visited tail — show ביקרתם banner with restore. */
-  visitedTail?: boolean;
   index?: number;
 }) {
   return (
@@ -60,7 +57,7 @@ export function HouseCard({
     >
       <div className="px-3 pb-1 pt-2">
         {skipped ? <HouseSkippedBanner meta={skipMeta} onRestore={onRestoreRoute} /> : null}
-        {visitedTail ? <HouseVisitedBanner onRestore={onToggleVisited} /> : null}
+        {visited && !skipped ? <HouseVisitedBanner onRestore={onToggleVisited} /> : null}
         <HouseDetails
           house={house}
           distanceM={distanceM}

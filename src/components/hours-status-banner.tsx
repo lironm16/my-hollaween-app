@@ -106,25 +106,11 @@ export function HoursStatusBanner({
     status.kind === "open" ||
     status.kind === "closedVisit" ||
     status.kind === "opensSoon" ||
-    status.kind === "closingSoon"
+    status.kind === "closingSoon" ||
+    status.kind === "beforeEvent" ||
+    status.kind === "before"
   ) {
     return null;
-  }
-  if (status.kind === "beforeEvent") {
-    if (compact) return null;
-    return (
-      <p className={cn(BANNER, "bg-sky-950/50 text-sky-100", className)}>
-        נפתח ב־{status.dateLabel} בשעה <ClockTime>{status.opensAt}</ClockTime>
-      </p>
-    );
-  }
-  if (status.kind === "before") {
-    if (compact) return null;
-    return (
-      <p className={cn(BANNER, "bg-sky-950/50 text-sky-100", className)}>
-        נפתח ב־<ClockTime>{status.opensAt}</ClockTime>
-      </p>
-    );
   }
   if (status.kind === "between") {
     return (
