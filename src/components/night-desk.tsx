@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { notifyCatalogChanged, applyLocalHousePatch, queueHouseWrite, rememberPublishedHouse, forgetPublishedHouse, saveOwnedHouse } from "@/lib/offline-db";
 import { publishHousePhoto } from "@/lib/house-photo";
 import { readApiJson } from "@/lib/api-json";
+import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
 import type { HouseInput, PublicHouse } from "@/lib/types";
 import { DEFAULT_PUSH_TEMPLATES, type PushKind } from "@/lib/push-templates";
@@ -122,7 +123,7 @@ export function NightDesk({
         });
       }
       notifyCatalogChanged();
-      if (data.push?.autoSent) {
+      if (pushAlertsEnabled() && data.push?.autoSent) {
         setNotice({
           mode: "auto",
           title: data.push.title ?? "",
@@ -130,17 +131,20 @@ export function NightDesk({
         });
         void showLocalPush(data.push.title ?? "", data.push.body ?? "", `/?focus=${encodeURIComponent(house.id)}`);
         toast.success("נשמר · התראה נשלחה לשכונה");
-      } else if (data.push?.offer) {
+      } else if (pushAlertsEnabled() && data.push?.offer) {
         setNotice({ mode: "offer", offer: data.push.offer });
         toast.success("נשמר — אפשר לשלוח התראה");
-      } else if (data.push?.kind && !data.push.autoSent && !data.push.offer) {
+      } else if (pushAlertsEnabled() && data.push?.kind && !data.push.autoSent && !data.push.offer) {
         setNotice(null);
         toast.success("נשמר · סוג ההתראה כבוי אצל המנהלים");
       } else {
         setNotice(null);
         toast.success("נשמר");
       }
-      return { house: data.house, pendingPushOffer: Boolean(data.push?.offer) };
+      return {
+        house: data.house,
+        pendingPushOffer: pushAlertsEnabled() && Boolean(data.push?.offer),
+      };
     } catch {
       return keepLocal(patch);
     } finally {

@@ -77,7 +77,7 @@ export function AppHeader({
           >
             <Menu className="size-5" />
           </button>
-          {pushAlertsEnabled() ? <PushAlertsButton /> : null}
+          <PushAlertsButton />
         </div>
         <Link
           href="/"
@@ -200,17 +200,19 @@ export function AppHeader({
             </Link>
             {admin ? (
               <>
-                <Link
-                  href="/admin/alerts"
-                  onClick={closeMenu}
-                  className={cn(
-                    buttonVariants({ variant: "ghost", size: "lg" }),
-                    "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
-                  )}
-                >
-                  <Bell className="size-4" />
-                  התראות לשכונה
-                </Link>
+                {pushAlertsEnabled() ? (
+                  <Link
+                    href="/admin/alerts"
+                    onClick={closeMenu}
+                    className={cn(
+                      buttonVariants({ variant: "ghost", size: "lg" }),
+                      "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+                    )}
+                  >
+                    <Bell className="size-4" />
+                    התראות לשכונה
+                  </Link>
+                ) : null}
                 <Link
                   href="/admin/rehearsal"
                   onClick={closeMenu}

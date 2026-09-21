@@ -1,6 +1,7 @@
 import { applyLocalHousePatch } from "@/lib/offline-db";
 import { candyLevel, freezeExpireIso, isOwnerFrozen, markedCandy } from "@/lib/house-state";
 import { houseHoursWindows, nightStatusControlsEnabled } from "@/lib/hours";
+import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { neighborhoodPushBroadcastAllowed } from "@/lib/push-policy";
 import {
   filledPushForKind,
@@ -104,7 +105,7 @@ export function previewQuickUpdatePush(
   houseStatus: QuickHouseChoice,
   stored?: StoredPushSettings | null,
 ): { kind: PushKind; payload: PushPayload } | null {
-  if (!quickUpdateChanged(house, candy, houseStatus)) return null;
+  if (!pushAlertsEnabled() || !quickUpdateChanged(house, candy, houseStatus)) return null;
   const patch = buildQuickUpdatePatch(house, candy, houseStatus);
   const next = applyLocalHousePatch(house, patch);
   const kind = resolveHouseNotifyKind(house as House, next as House, patch);
