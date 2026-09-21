@@ -53,6 +53,7 @@ function CompactTextSection({
   text,
   houseId,
   defaultOpen = false,
+  alwaysCollapsible = false,
   titleClassName,
   bodyClassName,
 }: {
@@ -60,10 +61,13 @@ function CompactTextSection({
   text: string;
   houseId: string;
   defaultOpen?: boolean;
+  /** When true, section is collapsible even for single-line text. */
+  alwaysCollapsible?: boolean;
   titleClassName?: string;
   bodyClassName?: string;
 }) {
   const { measureRef, multiline } = useMultilineText(text, houseId);
+  const collapsible = alwaysCollapsible || multiline;
 
   return (
     <div className="relative">
@@ -79,8 +83,8 @@ function CompactTextSection({
       </p>
       <ListDetailSection
         title={title}
-        collapsible={multiline}
-        defaultOpen={multiline ? defaultOpen : true}
+        collapsible={collapsible}
+        defaultOpen={collapsible ? defaultOpen : true}
         resetKey={houseId}
         titleClassName={titleClassName}
         bodyClassName={bodyClassName}
@@ -172,6 +176,7 @@ function HouseArrivalDirections({
       title="הוראות הגעה"
       text={arrivalText}
       houseId={houseId}
+      alwaysCollapsible
       titleClassName="text-amber-200/80"
       bodyClassName="text-amber-100"
     />
