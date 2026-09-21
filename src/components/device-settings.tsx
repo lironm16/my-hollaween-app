@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import { pushAlertsEnabled } from "@/lib/push-enabled";
 import {
   DEFAULT_PUSH_TOPIC_PREFS,
   readPushPref,
@@ -79,7 +80,7 @@ function SettingsSection({ title, children }: { title: string; children: ReactNo
   );
 }
 
-export function DeviceSettings() {
+function DeviceSettingsInner() {
   const [topics, setTopics] = useState<PushTopicPrefs>(DEFAULT_PUSH_TOPIC_PREFS);
   const [savedTopics, setSavedTopics] = useState<PushTopicPrefs>(DEFAULT_PUSH_TOPIC_PREFS);
   const [pushBusy, setPushBusy] = useState(false);
@@ -91,6 +92,9 @@ export function DeviceSettings() {
     setTopics(initial);
     setSavedTopics(initial);
     void readPushStatus().then((status) => setPushSubscribed(status === "on"));
+  }, []);
+
+  useEffect(() => {
     const onPushChange = () => {
       void readPushStatus().then((status) => setPushSubscribed(status === "on"));
     };
@@ -108,16 +112,13 @@ export function DeviceSettings() {
     setPushBusy(true);
     try {
       const result = await syncPushTopicPrefs(next);
-      if (result !== "on" && anyPushTopicOn(next)) {
-        writePushTopicPrefs(next);
+      if (result === "on") {
         setSavedTopics(next);
+        toast.message("ההעדפות נשמרו.");
+      } else {
         toast.message("ההעדפות נשמרו במכשיר. הפעילו התראות דרך סמל הפעמון.");
-        return;
+        setSavedTopics(next);
       }
-      writePushTopicPrefs(next);
-      setSavedTopics(next);
-      setPushSubscribed(result === "on");
-      toast.success("ההעדפות נשמרו.", { closeButton: true });
     } catch {
       toast.error("לא הצלחנו לשמור את ההעדפות.");
       setTopics(savedTopics);
@@ -156,4 +157,9 @@ export function DeviceSettings() {
       </SettingsSection>
     </div>
   );
+}
+
+export function DeviceSettings() {
+  if (!pushAlertsEnabled()) return null;
+  return <DeviceSettingsInner />;
 }

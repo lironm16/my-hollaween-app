@@ -5,14 +5,23 @@ import { useRouter } from "next/navigation";
 import { AdminPushPanel } from "@/components/admin-push-panel";
 import { AppHeader } from "@/components/app-header";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { pushAlertsEnabled } from "@/lib/push-enabled";
 
 export default function AdminAlertsPage() {
   const router = useRouter();
   const { ready, admin } = useAdminSession();
 
   useEffect(() => {
+    if (ready && !pushAlertsEnabled()) router.replace("/");
+  }, [ready, router]);
+
+  useEffect(() => {
     if (ready && !admin) router.replace("/admin");
   }, [ready, admin, router]);
+
+  if (!pushAlertsEnabled()) {
+    return null;
+  }
 
   if (!ready || !admin) {
     return (

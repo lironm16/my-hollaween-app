@@ -34,6 +34,7 @@ import {
   type QuickHouseChoice,
 } from "@/lib/quick-update";
 import type { StoredPushSettings } from "@/lib/push-templates";
+import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
 import type { PushKind } from "@/lib/push-templates";
 import { isDecorated } from "@/lib/house-state";
@@ -220,7 +221,7 @@ export function QuickUpdateOverlay({
           }))}
         />
 
-        {preview ? (
+        {preview && pushAlertsEnabled() ? (
           <div className="space-y-3">
             <label className="flex items-center gap-2.5 rounded-xl bg-[#12081a] px-3 py-3 ring-1 ring-orange-500/20">
               <input

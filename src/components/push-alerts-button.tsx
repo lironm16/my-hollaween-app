@@ -20,6 +20,7 @@ import {
   type PushTopic,
   type PushTopicPrefs,
 } from "@/lib/push-client";
+import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { anyPushTopicOn, PUSH_TOPIC_ROWS, PUSH_TOPICS } from "@/lib/push-topics";
 import { Button } from "@/components/ui/button";
 import { OverlayCloseBar, OverlayCloseButton } from "@/components/overlay-close-button";
@@ -106,7 +107,7 @@ function TopicSwitch({
   );
 }
 
-export function PushAlertsButton() {
+function PushAlertsButtonInner() {
   const [status, setStatus] = useState<Status>("loading");
   const [busy, setBusy] = useState(false);
   const [askOpen, setAskOpen] = useState(false);
@@ -513,4 +514,9 @@ export function PushAlertsButton() {
       </Dialog>
     </>
   );
+}
+
+export function PushAlertsButton() {
+  if (!pushAlertsEnabled()) return null;
+  return <PushAlertsButtonInner />;
 }
