@@ -15,6 +15,7 @@ import { buildSnapshotStats, type SnapshotStats } from "@/lib/admin-snapshot";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAppNow } from "@/hooks/use-app-clock";
 import type { HouseSet } from "@/lib/house-set";
+import { SENSITIVITY_OPTIONS } from "@/lib/types";
 
 export type { SnapshotStats };
 
@@ -133,26 +134,17 @@ export function AdminStatsCard({
             plain
           />
         </div>
-        <Subhead>רגישויות</Subhead>
+        <Subhead>רגישויות והתאמות</Subhead>
         <div className="grid grid-cols-2 gap-2">
-          <Tile
-            icon={<SensitivitySign kind="glutenFree" className="size-8" />}
-            label={treatLabels.glutenFree}
-            value={stats.glutenFree}
-            plain
-          />
-          <Tile
-            icon={<SensitivitySign kind="nutsFree" className="size-8" />}
-            label={treatLabels.nutsFree}
-            value={stats.nutsFree}
-            plain
-          />
-          <Tile
-            icon={<SensitivitySign kind="sesameFree" className="size-8" />}
-            label={treatLabels.sesameFree}
-            value={stats.sesameFree}
-            plain
-          />
+          {SENSITIVITY_OPTIONS.map((id) => (
+            <Tile
+              key={id}
+              icon={<SensitivitySign kind={id} className="size-8" />}
+              label={treatLabels[id]}
+              value={stats[id]}
+              plain
+            />
+          ))}
         </div>
         <Subhead>אופי</Subhead>
         <div className="grid grid-cols-2 gap-2">

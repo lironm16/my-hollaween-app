@@ -4,7 +4,7 @@ export type ScareLevel = (typeof SCARE_LEVELS)[number];
 export const DECOR_LEVELS = ["none", "mild", "medium", "heavy"] as const;
 export type DecorLevel = (typeof DECOR_LEVELS)[number];
 
-export const SENSITIVITY_OPTIONS = ["glutenFree", "nutsFree", "sesameFree"] as const;
+export const SENSITIVITY_OPTIONS = ["glutenFree", "nutsFree", "sesameFree", "vegan"] as const;
 export type SensitivityId = (typeof SENSITIVITY_OPTIONS)[number];
 
 /** Candy plus optional sensitivity flags — no per-item stock beyond candy. */
@@ -14,7 +14,6 @@ export type TreatId = (typeof TREAT_OPTIONS)[number];
 /** Legacy treat ids stripped on load (older seed / catalog records). */
 export const LEGACY_TREAT_IDS = [
   "chocolate",
-  "vegan",
   "fruit",
   "toys",
   "drinks",

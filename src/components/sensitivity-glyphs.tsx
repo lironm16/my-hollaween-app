@@ -218,12 +218,14 @@ const KIND_LABEL: Record<SensitivityId, string> = {
   glutenFree: treatLabels.glutenFree,
   nutsFree: treatLabels.nutsFree,
   sesameFree: treatLabels.sesameFree,
+  vegan: treatLabels.vegan,
 };
 
 const SENSITIVITY_GLYPH: Record<SensitivityId, string> = {
   glutenFree: "/icons/sensitivity-gluten-glyph.png",
   nutsFree: "/icons/sensitivity-nuts-glyph.png",
   sesameFree: "/icons/sensitivity-sesame-glyph.png",
+  vegan: "/icons/sensitivity-vegan-glyph.png",
 };
 
 export function SensitivitySign({
@@ -253,7 +255,7 @@ export function SensitivitySign({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={photo} alt="" aria-hidden className="h-[82%] w-[82%] object-contain" />
-        <DiscStrike />
+        {kind !== "vegan" ? <DiscStrike /> : null}
       </span>
     );
   }
@@ -298,6 +300,7 @@ export const SENSITIVITY_KINDS: { id: SensitivityId; label: string }[] = [
   { id: "glutenFree", label: treatLabels.glutenFree },
   { id: "nutsFree", label: treatLabels.nutsFree },
   { id: "sesameFree", label: treatLabels.sesameFree },
+  { id: "vegan", label: treatLabels.vegan },
 ];
 
 export const SENSITIVITY_SETS = [
