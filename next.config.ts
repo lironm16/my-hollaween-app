@@ -95,6 +95,10 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "no-cache" }],
       },
       {
+        source: "/app-version.txt",
+        headers: [{ key: "Cache-Control", value: "no-cache" }],
+      },
+      {
         source: "/icon-:size.png",
         headers: [
           {
