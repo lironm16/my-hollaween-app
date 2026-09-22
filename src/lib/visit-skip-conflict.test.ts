@@ -5,7 +5,9 @@ import {
   shouldAskVisitSkipConflict,
 } from "@/lib/visit-skip-conflict";
 
-describe("visit-skip-conflict preference", () => {
+const hasLocalStorage = typeof localStorage !== "undefined";
+
+describe("visit-skip-conflict preference", { skip: !hasLocalStorage }, () => {
   const key = "hw-visit-skip-conflict-dismissed";
 
   beforeEach(() => {

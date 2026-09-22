@@ -26,6 +26,11 @@ export type RouteChangeEntry = {
   reason?: string;
 };
 
+export type RouteStatusChangeEntry = RouteChangeEntry & {
+  houseId: string;
+  house: PublicHouse;
+};
+
 export type RouteChangeContext = {
   houseSet: HouseSet;
   likedIds: string[];
@@ -294,6 +299,51 @@ export function diffRouteByFilters(
       reason: whyAddedToRoute(house, nextFilters, context),
     }));
   return { removed, added };
+}
+
+/** Human-readable delta for a stop that is still on the active route. */
+export function describeRouteStatusChange(
+  previous: PublicHouse,
+  house: PublicHouse,
+  filters: HouseFiltersState,
+  context: RouteChangeContext,
+): string {
+  const added = whyAddedToRoute(house, filters, context, previous);
+  if (added) return added;
+  const removed = whyRemovedFromRoute(house, filters, context);
+  if (removed !== "לא מתאים למסלול") return removed;
+  return "הסטטוס השתנה";
+}
+
+/** Status-only diffs for houses still on the route (not skipped / visited). */
+export function diffActiveRouteStatusChanges(
+  route: WalkingRoute | null,
+  houses: PublicHouse[],
+  filters: HouseFiltersState,
+  context: RouteChangeContext,
+  previousById: Map<string, PublicHouse>,
+): RouteStatusChangeEntry[] {
+  if (!route || previousById.size === 0) return [];
+  const candidateIds = new Set(
+    routeCandidateHouses(houses, filters, context).map((house) => house.id),
+  );
+  const changes: RouteStatusChangeEntry[] = [];
+  for (const id of routeHouseIds(route)) {
+    if (!candidateIds.has(id)) continue;
+    const house = houses.find((item) => item.id === id);
+    const previous = previousById.get(id);
+    if (!house || !previous) continue;
+    if (routeStatusKey(previous, filters, context) === routeStatusKey(house, filters, context)) {
+      continue;
+    }
+    changes.push({
+      houseId: id,
+      name: houseLabel(house, id),
+      reason: describeRouteStatusChange(previous, house, filters, context),
+      house,
+    });
+  }
+  return changes;
 }
 
 function routeStatusKey(

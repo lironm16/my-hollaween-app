@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  diffActiveRouteStatusChanges,
   diffRouteByFilters,
   diffRouteBySkippedIds,
   rebuildRouteAfterFilterChange,
   rebuildRouteAfterSkipChange,
   routeCandidateHouses,
+  snapshotRouteHouses,
   whyAddedToRoute,
   whyRemovedFromRoute,
 } from "@/lib/route-changes";
@@ -239,6 +241,57 @@ describe("diffRouteByFilters", () => {
     assert.equal(removed.length, 1);
     assert.equal(removed[0]?.name, "b");
     assert.equal(removed[0]?.reason, "לא סגור");
+  });
+});
+
+describe("diffActiveRouteStatusChanges", () => {
+  it("detects status changes for houses still on the route", () => {
+    const origin = { lat: 32.0919, lng: 34.8112 };
+    const closed = stub("closed", { visit: "closed", soldOut: true });
+    const open = stub("open");
+    const route = buildWalkingRouteOrdered([closed, open], origin);
+    const context = {
+      houseSet: "real" as const,
+      likedIds: [],
+      visitedIds: [],
+      skippedIds: [],
+      now: new Date("2026-10-31T18:00:00"),
+    };
+    const previous = snapshotRouteHouses(route, [closed, open]);
+    const reopened = { ...closed, visit: "come" as const, soldOut: false };
+    const changes = diffActiveRouteStatusChanges(
+      route,
+      [reopened, open],
+      baseFilters,
+      context,
+      previous,
+    );
+    assert.equal(changes.length, 1);
+    assert.equal(changes[0]?.houseId, "closed");
+    assert.equal(changes[0]?.reason, "חזר לפתוח");
+  });
+
+  it("ignores skipped and visited houses", () => {
+    const origin = { lat: 32.0919, lng: 34.8112 };
+    const closed = stub("closed", { visit: "closed", soldOut: true });
+    const route = buildWalkingRouteOrdered([closed], origin);
+    const context = {
+      houseSet: "real" as const,
+      likedIds: [],
+      visitedIds: ["closed"],
+      skippedIds: [],
+      now: new Date("2026-10-31T18:00:00"),
+    };
+    const previous = snapshotRouteHouses(route, [closed]);
+    const reopened = { ...closed, visit: "come" as const, soldOut: false };
+    const changes = diffActiveRouteStatusChanges(
+      route,
+      [reopened],
+      baseFilters,
+      context,
+      previous,
+    );
+    assert.equal(changes.length, 0);
   });
 });
 

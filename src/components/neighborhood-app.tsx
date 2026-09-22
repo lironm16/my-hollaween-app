@@ -11,6 +11,8 @@ import { MapStats, StatsSummary } from "@/components/map-stats";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { NeighborhoodStatusBanners } from "@/components/neighborhood-status-banners";
+import { RouteChangeBanner } from "@/components/route-change-banner";
+import { RouteChangesSheet } from "@/components/route-changes-sheet";
 import { TempSkipRestoreAlerts } from "@/components/temp-skip-restore-alert";
 import {
   emitTempSkipRestoreAlert,
@@ -67,7 +69,13 @@ import {
 import { filterHouses, houseFilterMismatchReasons, routeHouseIds } from "@/lib/filter-houses";
 import { formatDistance } from "@/lib/geo";
 import { isRouteFullyVisited } from "@/lib/route-completion";
-import { diffRouteBySkippedIds, rebuildRouteAfterSkipChange } from "@/lib/route-changes";
+import {
+  diffActiveRouteStatusChanges,
+  diffRouteBySkippedIds,
+  rebuildRouteAfterSkipChange,
+  snapshotRouteHouses,
+  type RouteStatusChangeEntry,
+} from "@/lib/route-changes";
 import { drainPendingRouteRestores } from "@/lib/route-mode";
 import {
   availableTemporaryRestoreOptions,
@@ -126,6 +134,10 @@ export function NeighborhoodApp({
     house: PublicHouse;
   } | null>(null);
   const { alerts: tempRestoreAlerts, dismiss: dismissTempRestoreAlert } = useTempSkipRestoreAlerts();
+  const [routeStatusChanges, setRouteStatusChanges] = useState<RouteStatusChangeEntry[]>([]);
+  const [routeChangesSheetOpen, setRouteChangesSheetOpen] = useState(false);
+  const routeSnapshotRef = useRef<Map<string, PublicHouse>>(new Map());
+  const routeSnapshotReadyRef = useRef(false);
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
   const skips = useSkippedHouses();
@@ -289,6 +301,36 @@ export function NeighborhoodApp({
 
   const walkingRoute = routeMode ? pinnedRoute : null;
   const activeRoute = routeMode ? (walkingRoute ?? filterRoute) : null;
+
+  useEffect(() => {
+    if (!routeMode || !activeRoute) {
+      routeSnapshotRef.current = new Map();
+      routeSnapshotReadyRef.current = false;
+      setRouteStatusChanges([]);
+      setRouteChangesSheetOpen(false);
+      return;
+    }
+    const nextSnapshot = snapshotRouteHouses(activeRoute, displayHouses);
+    if (!routeSnapshotReadyRef.current) {
+      routeSnapshotRef.current = nextSnapshot;
+      routeSnapshotReadyRef.current = true;
+      return;
+    }
+    const incoming = diffActiveRouteStatusChanges(
+      activeRoute,
+      displayHouses,
+      filters,
+      filterContext,
+      routeSnapshotRef.current,
+    );
+    routeSnapshotRef.current = nextSnapshot;
+    if (incoming.length === 0) return;
+    setRouteStatusChanges((prev) => {
+      const byId = new Map(prev.map((item) => [item.houseId, item]));
+      for (const change of incoming) byId.set(change.houseId, change);
+      return [...byId.values()];
+    });
+  }, [routeMode, activeRoute, displayHouses, filters, filterContext, catalogUpdatedAt]);
   const visitCelebration = useCallback(
     (_id: string, nextVisitedIds: string[]) => {
       if (!routeMode || !walkingRoute) return "visit";
@@ -714,6 +756,40 @@ export function NeighborhoodApp({
         hasCachedHouses={houses.length > 0}
       />
       <TempSkipRestoreAlerts alerts={tempRestoreAlerts} onDismiss={dismissTempRestoreAlert} />
+      {routeMode && routeStatusChanges.length > 0 && !routeChangesSheetOpen ? (
+        <RouteChangeBanner
+          changes={routeStatusChanges}
+          onOpen={() => setRouteChangesSheetOpen(true)}
+          onDismiss={() => setRouteStatusChanges([])}
+        />
+      ) : null}
+      <RouteChangesSheet
+        open={routeChangesSheetOpen}
+        changes={routeStatusChanges}
+        onClose={() => {
+          setRouteChangesSheetOpen(false);
+          setRouteStatusChanges([]);
+        }}
+        onFocusHouse={(house) => {
+          selection.selectOnMap(house);
+          setView("map");
+        }}
+        catalogSource={source}
+        liked={likes.liked}
+        onToggleLike={onToggleLike}
+        visited={visits.visited}
+        onToggleVisited={onToggleVisited}
+        skippedIds={skips.skipped}
+        skipMetaFor={(id) => skips.meta(id)}
+        onSkipHouse={handleSkipHouse}
+        onRestoreHouse={handleRestoreHouse}
+        canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
+        onEditHouse={(id) => {
+          const house = displayHouses.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
+          if (house) requestHouseEdit(house, true);
+        }}
+        onShowOnMap={openOnMap}
+      />
       <main
         className="relative z-0 min-h-0 flex-1 isolate overflow-hidden"
         style={{ flex: 1, minHeight: 0, position: "relative" }}

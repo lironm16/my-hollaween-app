@@ -35,12 +35,14 @@ export function ClusterHouseNav({
   onPrev,
   onNext,
   onBack,
+  backLabel = "חזרה לרשימה",
 }: {
   houses: PublicHouse[];
   selectedId: string;
   onPrev: () => void;
   onNext: () => void;
   onBack: () => void;
+  backLabel?: string;
 }) {
   const index = clusterHouseIndex(houses, selectedId) ?? 1;
   const total = houses.length;
@@ -56,7 +58,7 @@ export function ClusterHouseNav({
           onClick={onBack}
         >
           <ArrowRight className="size-4 shrink-0" aria-hidden />
-          חזרה לרשימה
+          {backLabel}
         </button>
         <div className="cluster-house-nav-pager">
           <button
