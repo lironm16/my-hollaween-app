@@ -23,7 +23,6 @@ function stub(id: string, updatedAt: string, candy: "plenty" | "out" = "plenty")
     accessible: true,
     decorLevel: "medium",
     decorated: true,
-    status: "approved",
     soldOut: false,
     adminFrozen: false,
     ownerFrozenUntil: null,
