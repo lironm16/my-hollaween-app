@@ -1,5 +1,5 @@
 import { appNow } from "@/lib/app-clock";
-import { addHouseCutoffTime, eventNightRelation } from "@/lib/hours";
+import { addHouseCutoffTime } from "@/lib/hours";
 
 export type EventCountdownParts = {
   days: number;
@@ -41,13 +41,12 @@ export function eventCountdownTarget(now = appNow()) {
   return addHouseCutoffTime();
 }
 
-/** True before the Halloween calendar night. Hidden on and after Oct 31. */
+/** True until 17:00 on Oct 31 — then live house status takes over. */
 export function shouldShowEventCountdown(now = appNow()) {
-  return eventNightRelation(now) < 0;
+  return now.getTime() < eventCountdownTarget(now).getTime();
 }
 
 export function eventCountdownRemaining(now = appNow()): EventCountdownParts | null {
-  if (!shouldShowEventCountdown(now)) return null;
   const remaining = eventCountdownTarget(now).getTime() - now.getTime();
   if (remaining <= 0) return null;
   return formatEventCountdownParts(remaining);
