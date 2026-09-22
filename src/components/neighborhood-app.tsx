@@ -64,6 +64,7 @@ import {
   catalogHasRealHouses,
   HOUSE_SET_LABELS,
   countSkippedInSet,
+  countVisitedInSet,
   houseMatchesSet,
 } from "@/lib/house-set";
 import { filterHouses, houseFilterMismatchReasons, routeHouseIds } from "@/lib/filter-houses";
@@ -549,6 +550,9 @@ export function NeighborhoodApp({
     route: activeRoute ?? filterRoute,
     skippedCount: routeMode
       ? countSkippedInSet(skips.skippedIds, housesForSkipCount, activeHouseSet)
+      : 0,
+    visitedCount: routeMode
+      ? countVisitedInSet(visits.visitedIds, housesForSkipCount, activeHouseSet)
       : 0,
     staleLabel: offline
       ? "לא מקוון"

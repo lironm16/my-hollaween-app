@@ -60,6 +60,23 @@ function SkipSummaryIcon() {
   );
 }
 
+function VisitedSummaryIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="size-full">
+      <circle cx="12" cy="12" r="8.6" fill="#059669" />
+      <circle cx="12" cy="12" r="6.6" fill="#1c0e24" />
+      <path
+        d="M8.2 12.4 10.8 15l5-5.2"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function ClockIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden className="size-full">
@@ -136,6 +153,7 @@ export function StatsSummary({
   filteredHouses,
   route = null,
   skippedCount = 0,
+  visitedCount = 0,
   staleLabel = null,
   heading = false,
   compact = false,
@@ -143,6 +161,7 @@ export function StatsSummary({
   filteredHouses: number;
   route?: WalkingRoute | null;
   skippedCount?: number;
+  visitedCount?: number;
   staleLabel?: string | null;
   heading?: boolean;
   compact?: boolean;
@@ -174,11 +193,18 @@ export function StatsSummary({
               label="דק׳"
             />
             {route ? (
-              <CompactChip
-                icon={<SkipSummaryIcon />}
-                value={String(skippedCount)}
-                label="דילגתי"
-              />
+              <>
+                <CompactChip
+                  icon={<VisitedSummaryIcon />}
+                  value={String(visitedCount)}
+                  label="ביקרתי"
+                />
+                <CompactChip
+                  icon={<SkipSummaryIcon />}
+                  value={String(skippedCount)}
+                  label="דילגתי"
+                />
+              </>
             ) : null}
           </div>
         </section>
@@ -218,7 +244,14 @@ export function StatsSummary({
             label="דק׳"
           />
           {route ? (
-            <RouteChip icon={<SkipSummaryIcon />} value={String(skippedCount)} label="דילגתי" />
+            <>
+              <RouteChip
+                icon={<VisitedSummaryIcon />}
+                value={String(visitedCount)}
+                label="ביקרתי"
+              />
+              <RouteChip icon={<SkipSummaryIcon />} value={String(skippedCount)} label="דילגתי" />
+            </>
           ) : null}
         </div>
       </section>
@@ -236,6 +269,7 @@ export function MapStats(props: {
   filteredHouses: number;
   route?: WalkingRoute | null;
   skippedCount?: number;
+  visitedCount?: number;
   staleLabel?: string | null;
 }) {
   const [open, setOpen] = useState(false);

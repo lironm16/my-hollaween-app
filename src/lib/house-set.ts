@@ -57,29 +57,45 @@ export function writeHouseSet(next: HouseSet) {
   window.dispatchEvent(new Event(HOUSE_SET_EVENT));
 }
 
-export function countSkippedInSet(
-  skippedIds: readonly string[],
+function countIdsInSet(
+  ids: readonly string[],
   houses: readonly { id: string; description?: string }[],
   set: HouseSet,
 ): number {
   const byId = new Map(houses.map((house) => [house.id, house]));
 
   if (set === "real") {
-    return skippedIds.filter((id) => {
+    return ids.filter((id) => {
       const house = byId.get(id);
       return house ? !isStubHouse(house) : false;
     }).length;
   }
 
   if (set === "all") {
-    return skippedIds.length;
+    return ids.length;
   }
 
-  // Stubs rehearsal: count every skipped stub, even when the id only exists in catalog.
-  return skippedIds.filter((id) => {
+  // Stubs rehearsal: count every stub id, even when the id only exists in catalog.
+  return ids.filter((id) => {
     const house = byId.get(id);
     return house ? isStubHouse(house) : STUB_ID.test(id);
   }).length;
+}
+
+export function countSkippedInSet(
+  skippedIds: readonly string[],
+  houses: readonly { id: string; description?: string }[],
+  set: HouseSet,
+): number {
+  return countIdsInSet(skippedIds, houses, set);
+}
+
+export function countVisitedInSet(
+  visitedIds: readonly string[],
+  houses: readonly { id: string; description?: string }[],
+  set: HouseSet,
+): number {
+  return countIdsInSet(visitedIds, houses, set);
 }
 
 export function houseMatchesSet(house: { id?: string; description?: string }, set: HouseSet) {
