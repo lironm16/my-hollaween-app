@@ -64,3 +64,21 @@ export function privateBlobPutAttempts(contentType: string, extra?: PutExtra): P
 export function privateBlobPutOptions(contentType: string, extra?: PutExtra) {
   return privateBlobPutAttempts(contentType, extra)[0]!;
 }
+
+/** Public blobs (house photos) — same auth fallbacks as private writes. */
+export function publicBlobPutAttempts(contentType: string, extra?: PutExtra): PutCommandOptions[] {
+  const base = {
+    access: "public" as const,
+    addRandomSuffix: extra?.addRandomSuffix ?? true,
+    allowOverwrite: extra?.allowOverwrite ?? false,
+    contentType,
+    cacheControlMaxAge: extra?.cacheControlMaxAge ?? 60 * 60 * 24 * 365,
+  };
+  const storeId = blobStoreId();
+  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
+  const attempts: PutCommandOptions[] = [];
+  if (storeId) attempts.push({ ...base, storeId });
+  if (token) attempts.push({ ...base, token });
+  if (attempts.length === 0) attempts.push(base);
+  return attempts;
+}

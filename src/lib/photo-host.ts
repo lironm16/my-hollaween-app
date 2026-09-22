@@ -1,5 +1,5 @@
 import { put as putBlob } from "@vercel/blob";
-import { blobConfigured, blobStoreOptions } from "@/lib/blob-auth";
+import { blobConfigured, publicBlobPutAttempts } from "@/lib/blob-auth";
 
 const LITTERBOX = "https://litterbox.catbox.moe/resources/internals/api.php";
 const CATBOX = "https://catbox.moe/user/api.php";
@@ -49,17 +49,31 @@ async function postFile(url: string, fields: Record<string, string>, file: Blob)
   return text.split(/\s+/)[0];
 }
 
+function catboxUploadFields() {
+  const fields: Record<string, string> = { reqtype: "fileupload" };
+  const userhash = process.env.CATBOX_USERHASH?.trim();
+  if (userhash) fields.userhash = userhash;
+  return fields;
+}
+
 async function uploadToBlob(buf: Buffer): Promise<{ url: string; host: PhotoUploadHost } | null> {
   if (!blobConfigured()) return null;
-  const blob = await putBlob(`halloween-houses/photos/${Date.now()}.jpg`, buf, {
-    access: "public",
-    addRandomSuffix: true,
-    allowOverwrite: false,
-    contentType: "image/jpeg",
-    cacheControlMaxAge: 60 * 60 * 24 * 365,
-    ...blobStoreOptions(),
-  });
-  return blob.url ? { url: blob.url, host: "blob" } : null;
+  const path = `halloween-houses/photos/${Date.now()}.jpg`;
+  let lastError: unknown;
+  for (const putOptions of publicBlobPutAttempts("image/jpeg")) {
+    try {
+      const blob = await putBlob(path, buf, putOptions);
+      if (blob.url) return { url: blob.url, host: "blob" };
+    } catch (error) {
+      lastError = error;
+      logPhoto("warn", "blob-attempt-failed", {
+        auth: putOptions.token ? "token" : putOptions.storeId ? "oidc" : "auto",
+        error: errorMessage(error),
+      });
+    }
+  }
+  if (lastError) throw lastError;
+  return null;
 }
 
 /**
@@ -125,12 +139,25 @@ export async function uploadPublicPhoto(
     }
   }
 
+  const catboxFields = catboxUploadFields();
   try {
-    const url = await postFile(CATBOX, { reqtype: "fileupload" }, file);
-    logPhoto("info", "catbox-ok", { ...base, host: "catbox", url });
+    const url = await postFile(CATBOX, catboxFields, file);
+    logPhoto("info", "catbox-ok", {
+      ...base,
+      host: "catbox",
+      url,
+      authenticated: Boolean(catboxFields.userhash),
+    });
     return { url, host: "catbox" };
   } catch (error) {
-    logPhoto("warn", "catbox-failed", { ...base, error: errorMessage(error) });
+    logPhoto("warn", "catbox-failed", {
+      ...base,
+      error: errorMessage(error),
+      authenticated: Boolean(catboxFields.userhash),
+      hint: catboxFields.userhash
+        ? undefined
+        : "Catbox now rejects anonymous uploads — set CATBOX_USERHASH or BLOB_READ_WRITE_TOKEN",
+    });
   }
 
   const url = await postFile(LITTERBOX, { reqtype: "fileupload", time: "72h" }, file);

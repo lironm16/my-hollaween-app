@@ -15,7 +15,7 @@ import { formatHoursLabel } from "@/lib/hours";
 import { houseAddedMetaLine } from "@/lib/house-meta";
 import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl } from "@/lib/nav-links";
-import { isLocalPhotoUrl, shouldLoadHousePhoto } from "@/lib/photos";
+import { shouldLoadHousePhoto } from "@/lib/photos";
 import type { PublicHouse } from "@/lib/types";
 import { HOUSE_CARD_PHOTO_BOX } from "@/components/house-photo-frame";
 import { cn } from "@/lib/utils";
@@ -313,107 +313,66 @@ export function HouseDetails({
 }) {
   const displayAddress = formatDisplayAddress(house);
   const addedMeta = houseAddedMetaLine(house);
-  const photoUrl = house.photoUrl?.trim() ?? "";
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
   const [photoReady, setPhotoReady] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
-  const [photoRetry, setPhotoRetry] = useState(0);
-  const photoHouseRef = useRef(house.id);
-  const wantsLoad = showPhoto || shouldLoadHousePhoto(catalogSource, photoUrl);
-  const loadPhoto = photoReady && wantsLoad && !photoBroken;
-  const photoSrc =
-    photoRetry > 0 && isLocalPhotoUrl(photoUrl)
-      ? `${photoUrl}${photoUrl.includes("?") ? "&" : "?"}retry=${photoRetry}`
-      : photoUrl;
+  const loadPhoto = photoReady && (showPhoto || shouldLoadHousePhoto(catalogSource, house.photoUrl));
 
   useEffect(() => {
     setPhotoReady(true);
   }, []);
 
   useEffect(() => {
-    photoHouseRef.current = house.id;
     setShowPhoto(false);
     setPhotoBroken(false);
     setPhotoOpen(false);
-    setPhotoRetry(0);
-  }, [house.id, photoUrl]);
-
-  function handlePhotoError() {
-    if (photoHouseRef.current !== house.id) return;
-    if (photoRetry === 0 && isLocalPhotoUrl(photoUrl)) {
-      setPhotoRetry(1);
-      return;
-    }
-    setPhotoBroken(true);
-  }
-
-  function handlePhotoRetry() {
-    setPhotoBroken(false);
-    setShowPhoto(true);
-    setPhotoRetry((value) => value + 1);
-  }
-
+  }, [house.id, house.photoUrl]);
   const sheet = chrome === "sheet";
   const hours = hideHoursBanner ? "" : formatHoursLabel(house);
-  const hasPhotoUrl = Boolean(photoUrl);
+  const hasPhoto = Boolean(house.photoUrl && !photoBroken);
   const indexBadge =
     index != null ? (
       <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 font-sans text-base font-bold text-black">
         {index}
       </span>
     ) : null;
-  const photoPlaceholder = (label: string, onClick: () => void) => (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
-      className={`${HOUSE_CARD_PHOTO_BOX} flex items-center justify-center bg-[#2a1638] px-2 py-2 text-center text-base text-amber-100`}
-    >
-      {label}
-    </button>
-  );
-  const photo = hasPhotoUrl
-    ? loadPhoto
-      ? (
-          <button
-            type="button"
-            aria-label="הגדלת התמונה"
-            onClick={(e) => {
-              e.stopPropagation();
-              setPhotoOpen(true);
-            }}
-            className={HOUSE_CARD_PHOTO_BOX}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              key={`${house.id}:${photoSrc}:${photoRetry}`}
-              src={photoSrc}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              referrerPolicy="no-referrer"
-              onError={handlePhotoError}
-              className="h-full w-full object-cover"
-            />
-          </button>
-        )
-      : photoBroken
-        ? photoPlaceholder("לא נטענה התמונה — לחצו לנסות שוב", handlePhotoRetry)
-        : wantsLoad
-          ? (
-              <div
-                className={`${HOUSE_CARD_PHOTO_BOX} bg-[#2a1638]`}
-                aria-hidden="true"
-              />
-            )
-          : photoPlaceholder(
-              "יש תמונת קישוט — לחצו רק אם הרשת פנויה",
-              () => setShowPhoto(true),
-            )
-    : null;
+  const photo =
+    hasPhoto ? (
+      loadPhoto ? (
+        <button
+          type="button"
+          aria-label="הגדלת התמונה"
+          onClick={(e) => {
+            e.stopPropagation();
+            setPhotoOpen(true);
+          }}
+          className={HOUSE_CARD_PHOTO_BOX}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={house.photoUrl}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            onError={() => setPhotoBroken(true)}
+            className="h-full w-full object-cover"
+          />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowPhoto(true);
+          }}
+          className={`${HOUSE_CARD_PHOTO_BOX} flex items-center justify-center bg-[#2a1638] px-2 py-2 text-center text-base text-amber-100`}
+        >
+          יש תמונת קישוט — לחצו רק אם הרשת פנויה
+        </button>
+      )
+    ) : null;
   const pageActions = sheet ? null : (
     <div className="flex shrink-0 items-center gap-0.5">
       {onToggleVisited ? (
@@ -494,7 +453,7 @@ export function HouseDetails({
   );
   return (
     <div className={cn(compact ? "space-y-2" : "space-y-3")}>
-      {photoOpen && photoUrl && typeof document !== "undefined"
+      {photoOpen && house.photoUrl && typeof document !== "undefined"
         ? createPortal(
             <button
               type="button"
@@ -507,8 +466,7 @@ export function HouseDetails({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                key={`lightbox:${photoSrc}:${photoRetry}`}
-                src={photoSrc}
+                src={house.photoUrl}
                 alt=""
                 className="max-h-full max-w-full rounded-xl object-contain"
               />
