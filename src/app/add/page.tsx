@@ -46,7 +46,7 @@ export default function AddPage() {
         try {
           preview = await publishHousePhoto(house.id, editCode, extras.photoDataUrl);
         } catch {
-          toast.error("הבית נוסף, אבל העלאת התמונה נכשלה. אפשר להוסיף אותה בעריכה.");
+          toast.warning("הבית נוסף בלי תמונה. אפשר להוסיף תמונה בעריכה.");
         }
       }
       saveOwnedHouse({

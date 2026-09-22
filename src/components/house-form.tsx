@@ -360,8 +360,7 @@ export function HouseForm({
               try {
                 photoDataUrl = await compressJpegFile(photoFile, photoFocus);
               } catch {
-                toast.error("לא הצלחנו לעבד את התמונה");
-                return;
+                toast.warning("לא הצלחנו לעבד את התמונה — שומרים את הבית בלי תמונה.");
               }
             }
             await onSubmit(payload, {

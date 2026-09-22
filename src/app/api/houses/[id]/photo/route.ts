@@ -81,10 +81,12 @@ export async function POST(
         bytes: buf.length,
         error: error instanceof Error ? error.message : String(error),
       });
-      return NextResponse.json(
-        { error: "העלאה לאירוח החינמי נכשלה. נסו שוב, או הדביקו קישור לתמונה." },
-        { status: 503 },
-      );
+      console.warn("[photo-upload]", {
+        step: "photo-skipped",
+        houseId: id,
+        note: "all hosts failed — house kept without photo",
+      });
+      return NextResponse.json({ house: toPublicHouse(house), photoSkipped: true });
     }
   }
 

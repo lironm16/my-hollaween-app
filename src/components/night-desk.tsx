@@ -193,8 +193,8 @@ export function NightDesk({
         const withPhoto = await publishHousePhoto(house.id, code, extras.photoDataUrl);
         onUpdated(withPhoto);
         notifyCatalogChanged();
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "העלאת התמונה נכשלה");
+      } catch {
+        toast.warning("הבית נשמר בלי תמונה. אפשר לנסות שוב בעריכה.");
       }
     }
     if (!saved.pendingPushOffer) onCancel?.();
