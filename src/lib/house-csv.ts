@@ -19,6 +19,7 @@ const PUBLIC_HEADERS = [
   "ללא גלוטן",
   "ללא אגוזים",
   "ללא שומשום",
+  "טבעוני",
   "נוסף על ידי",
   "תאריך הוספה",
 ] as const;
@@ -67,6 +68,7 @@ function houseRow(house: PublicHouse, index: number): Array<string | number> {
     offersSensitivity(house, "glutenFree") ? "כן" : "לא",
     offersSensitivity(house, "nutsFree") ? "כן" : "לא",
     offersSensitivity(house, "sesameFree") ? "כן" : "לא",
+    offersSensitivity(house, "vegan") ? "כן" : "לא",
     house.addedBy?.trim() || "",
     house.createdAt ? formatHouseAddedAt(house.createdAt) : "",
   ];

@@ -14,7 +14,7 @@ export default function SensitivitiesPreviewPage() {
           <p className="text-base text-violet-300">{config.brandEn} · בחירת אייקון</p>
           <h1 className="text-2xl font-semibold text-orange-100">איזה סימון רגישויות יותר ברור?</h1>
           <p className="text-base text-violet-200">
-            ללא גלוטן · ללא אגוזים · ללא שומשום. הקו דק, מקצה לקצה — כמו בתמונה המקורית, רק דק יותר.
+            ללא גלוטן · ללא אגוזים · ללא שומשום · טבעוני. הקו דק, מקצה לקצה — כמו בתמונה המקורית, רק דק יותר.
           </p>
           <PreviewNav current="/preview/sensitivities" />
         </header>
@@ -42,11 +42,13 @@ export default function SensitivitiesPreviewPage() {
               <div className="flex flex-wrap items-center gap-3">
                 {SENSITIVITY_KINDS.map((kind) => {
                   const Glyph =
-                    kind.id === "glutenFree"
-                      ? set.gluten
-                      : kind.id === "nutsFree"
-                        ? set.nuts
-                        : set.sesame;
+                    kind.id === "vegan"
+                      ? undefined
+                      : kind.id === "glutenFree"
+                        ? set.gluten
+                        : kind.id === "nutsFree"
+                          ? set.nuts
+                          : set.sesame;
                   return (
                     <div key={kind.id} className="flex flex-col items-center gap-1">
                       {"current" in set && set.current ? (

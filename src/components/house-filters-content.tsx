@@ -227,7 +227,7 @@ export function HouseFiltersContent({
         ))}
       </FilterSection>
 
-      <FilterSection title="רגישויות">
+      <FilterSection title="רגישויות והתאמות">
         {SENSITIVITY_OPTIONS.map((id) => (
           <FilterOption
             key={id}

@@ -13,6 +13,7 @@ import {
   markedGlutenFree,
   offersNutsFree,
   offersSesameFree,
+  offersVegan,
   resolveDecorLevel,
   treatLevel,
 } from "@/lib/house-state";
@@ -109,6 +110,7 @@ export function HouseTags({
         {gluten ? <SensitivitySign kind="glutenFree" out={glutenOut} className={signSize} /> : null}
         {offersNutsFree(withTreats) ? <SensitivitySign kind="nutsFree" className={signSize} /> : null}
         {offersSesameFree(withTreats) ? <SensitivitySign kind="sesameFree" className={signSize} /> : null}
+        {offersVegan(withTreats) ? <SensitivitySign kind="vegan" className={signSize} /> : null}
       </div>
     </div>
   );

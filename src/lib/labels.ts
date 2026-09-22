@@ -13,6 +13,7 @@ export const treatLabels: Record<TreatId, string> = {
   glutenFree: "ללא גלוטן",
   nutsFree: "ללא אגוזים",
   sesameFree: "ללא שומשום",
+  vegan: "טבעוני",
 };
 
 export const scareLabels: Record<ScareLevel, string> = {

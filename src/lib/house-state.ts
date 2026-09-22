@@ -4,6 +4,7 @@ import {
   type DecorLevel,
   type House,
   type PublicHouse,
+  type SensitivityId,
   type StockLevel,
   type TreatId,
   type TreatStock,
@@ -103,13 +104,22 @@ export function offersSesameFree(house: { treats: TreatId[]; treatStock?: TreatS
   return house.treats.includes("sesameFree") && treatLevel(house, "sesameFree") !== "out";
 }
 
+export function markedVegan(house: { treats: TreatId[] }) {
+  return house.treats.includes("vegan");
+}
+
+export function offersVegan(house: { treats: TreatId[]; treatStock?: TreatStock }) {
+  return markedVegan(house) && treatLevel(house, "vegan") !== "out";
+}
+
 export function offersSensitivity(
   house: { treats: TreatId[]; treatStock?: TreatStock },
-  id: "glutenFree" | "nutsFree" | "sesameFree",
+  id: SensitivityId,
 ) {
   if (id === "glutenFree") return offersGlutenFree(house);
   if (id === "nutsFree") return offersNutsFree(house);
-  return offersSesameFree(house);
+  if (id === "sesameFree") return offersSesameFree(house);
+  return offersVegan(house);
 }
 
 export function markedCandy(house: { treats: TreatId[] }) {

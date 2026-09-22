@@ -32,6 +32,7 @@ export type AdminSnapshot = {
   glutenFree: number;
   nutsFree: number;
   sesameFree: number;
+  vegan: number;
 };
 
 function scareOf(house: SnapshotHouse): ScareLevel | "none" {
@@ -59,6 +60,7 @@ export type SnapshotStats = Pick<
   | "glutenFree"
   | "nutsFree"
   | "sesameFree"
+  | "vegan"
 >;
 
 export function buildSnapshotStats(input: {
@@ -90,6 +92,7 @@ export function buildSnapshotStats(input: {
     glutenFree,
     nutsFree,
     sesameFree,
+    vegan,
   } = snapshot;
   return {
     houses,
@@ -110,6 +113,7 @@ export function buildSnapshotStats(input: {
     glutenFree,
     nutsFree,
     sesameFree,
+    vegan,
   };
 }
 
@@ -144,5 +148,6 @@ export function buildAdminSnapshot(input: {
     glutenFree: listed.filter((house) => offersSensitivity(house, "glutenFree")).length,
     nutsFree: listed.filter((house) => offersSensitivity(house, "nutsFree")).length,
     sesameFree: listed.filter((house) => offersSensitivity(house, "sesameFree")).length,
+    vegan: listed.filter((house) => offersSensitivity(house, "vegan")).length,
   };
 }

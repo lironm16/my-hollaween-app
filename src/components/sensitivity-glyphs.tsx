@@ -41,6 +41,25 @@ export function Peanut() {
   );
 }
 
+/** Leaf glyph for vegan — SVG until a production PNG is added. */
+export function VeganLeaf() {
+  return (
+    <Icon>
+      <path
+        fill="currentColor"
+        d="M12 4.2c-4.6 3.8-6.2 8.6-4.8 13.2 1.4-.8 2.6-2 3.4-3.6.8 1.6 2 2.8 3.4 3.6 1.4-4.6-.2-9.4-4.8-13.2Z"
+      />
+      <path
+        d="M12 6.4v13.2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </Icon>
+  );
+}
+
 export function SesameSeeds() {
   return (
     <Icon>
@@ -218,12 +237,17 @@ const KIND_LABEL: Record<SensitivityId, string> = {
   glutenFree: treatLabels.glutenFree,
   nutsFree: treatLabels.nutsFree,
   sesameFree: treatLabels.sesameFree,
+  vegan: treatLabels.vegan,
 };
 
-const SENSITIVITY_GLYPH: Record<SensitivityId, string> = {
+const SENSITIVITY_GLYPH: Partial<Record<SensitivityId, string>> = {
   glutenFree: "/icons/sensitivity-gluten-glyph.png",
   nutsFree: "/icons/sensitivity-nuts-glyph.png",
   sesameFree: "/icons/sensitivity-sesame-glyph.png",
+};
+
+const SENSITIVITY_SVG: Partial<Record<SensitivityId, () => ReactNode>> = {
+  vegan: VeganLeaf,
 };
 
 export function SensitivitySign({
@@ -239,8 +263,9 @@ export function SensitivitySign({
 }) {
   const label = KIND_LABEL[kind];
   const photo = SENSITIVITY_GLYPH[kind];
+  const SvgGlyph = Glyph ?? SENSITIVITY_SVG[kind];
 
-  if (!Glyph) {
+  if (!SvgGlyph && photo) {
     return (
       <span
         className={cn(
@@ -258,21 +283,27 @@ export function SensitivitySign({
     );
   }
 
-  return (
-    <span
-      className={cn(
-        "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#9e410d] text-amber-50",
-        className,
-      )}
-      title={label}
-      aria-label={label}
-    >
-      <span className="size-[78%]">
-        <Glyph />
+  if (SvgGlyph) {
+    const productionSvg = !Glyph && Boolean(SENSITIVITY_SVG[kind]);
+    return (
+      <span
+        className={cn(
+          "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#9e410d] text-amber-50",
+          out && "grayscale",
+          className,
+        )}
+        title={label}
+        aria-label={label}
+      >
+        <span className="size-[78%]">
+          <SvgGlyph />
+        </span>
+        {productionSvg || out ? <DiscStrike /> : null}
       </span>
-      {out ? <DiscStrike /> : null}
-    </span>
-  );
+    );
+  }
+
+  return null;
 }
 
 export function SensitivityMark({
@@ -298,6 +329,7 @@ export const SENSITIVITY_KINDS: { id: SensitivityId; label: string }[] = [
   { id: "glutenFree", label: treatLabels.glutenFree },
   { id: "nutsFree", label: treatLabels.nutsFree },
   { id: "sesameFree", label: treatLabels.sesameFree },
+  { id: "vegan", label: treatLabels.vegan },
 ];
 
 export const SENSITIVITY_SETS = [
