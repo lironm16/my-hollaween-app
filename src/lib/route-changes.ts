@@ -26,6 +26,11 @@ export type RouteChangeEntry = {
   reason?: string;
 };
 
+export type RouteStatusChangeEntry = RouteChangeEntry & {
+  houseId: string;
+  house: PublicHouse;
+};
+
 export type RouteChangeContext = {
   houseSet: HouseSet;
   likedIds: string[];
@@ -205,6 +210,68 @@ export function rebuildRouteAfterSkipChange(
   return buildWalkingRouteOrdered(routeHouses, origin, options);
 }
 
+export function routeHousesAfterFilterChange(
+  route: WalkingRoute | null,
+  houses: PublicHouse[],
+  nextFilters: HouseFiltersState,
+  context: RouteChangeContext,
+  includeNew: boolean,
+): PublicHouse[] {
+  const nextVisible = filterHouses(houses, nextFilters, context);
+  const visibleIds = new Set(nextVisible.map((house) => house.id));
+  const skipped = new Set(context.skippedIds);
+  const visited = new Set(context.visitedIds);
+  const routeHouses: PublicHouse[] = [];
+  const seen = new Set<string>();
+
+  for (const stop of route?.stops ?? []) {
+    for (const house of stop.houses) {
+      const fresh = nextVisible.find((item) => item.id === house.id);
+      if (!fresh || !visibleIds.has(house.id) || seen.has(house.id)) continue;
+      if (skipped.has(house.id)) continue;
+      if (visited.has(house.id)) continue;
+      routeHouses.push(fresh);
+      seen.add(house.id);
+    }
+  }
+
+  if (!includeNew) return routeHouses;
+
+  for (const house of routeCandidateHouses(houses, nextFilters, context)) {
+    if (seen.has(house.id)) continue;
+    routeHouses.push(house);
+    seen.add(house.id);
+  }
+  return routeHouses;
+}
+
+/** Rebuild route after filter commit — re-optimizes stop order when houses are added back. */
+export function rebuildRouteAfterFilterChange(
+  route: WalkingRoute | null,
+  houses: PublicHouse[],
+  nextFilters: HouseFiltersState,
+  context: RouteChangeContext,
+  includeNew: boolean,
+  origin: LatLng,
+  options?: {
+    accessible?: boolean;
+    startedFrom?: WalkingRoute["startedFrom"];
+    originLabel?: string;
+  },
+): WalkingRoute | null {
+  const routeHouses = routeHousesAfterFilterChange(
+    route,
+    houses,
+    nextFilters,
+    context,
+    includeNew,
+  );
+  if (includeNew) {
+    return buildWalkingRoute(routeHouses, origin, options);
+  }
+  return buildWalkingRouteOrdered(routeHouses, origin, options);
+}
+
 export function diffRouteByFilters(
   route: WalkingRoute | null,
   houses: PublicHouse[],
@@ -232,6 +299,51 @@ export function diffRouteByFilters(
       reason: whyAddedToRoute(house, nextFilters, context),
     }));
   return { removed, added };
+}
+
+/** Human-readable delta for a stop that is still on the active route. */
+export function describeRouteStatusChange(
+  previous: PublicHouse,
+  house: PublicHouse,
+  filters: HouseFiltersState,
+  context: RouteChangeContext,
+): string {
+  const added = whyAddedToRoute(house, filters, context, previous);
+  if (added) return added;
+  const removed = whyRemovedFromRoute(house, filters, context);
+  if (removed !== "לא מתאים למסלול") return removed;
+  return "הסטטוס השתנה";
+}
+
+/** Status-only diffs for houses still on the route (not skipped / visited). */
+export function diffActiveRouteStatusChanges(
+  route: WalkingRoute | null,
+  houses: PublicHouse[],
+  filters: HouseFiltersState,
+  context: RouteChangeContext,
+  previousById: Map<string, PublicHouse>,
+): RouteStatusChangeEntry[] {
+  if (!route || previousById.size === 0) return [];
+  const candidateIds = new Set(
+    routeCandidateHouses(houses, filters, context).map((house) => house.id),
+  );
+  const changes: RouteStatusChangeEntry[] = [];
+  for (const id of routeHouseIds(route)) {
+    if (!candidateIds.has(id)) continue;
+    const house = houses.find((item) => item.id === id);
+    const previous = previousById.get(id);
+    if (!house || !previous) continue;
+    if (routeStatusKey(previous, filters, context) === routeStatusKey(house, filters, context)) {
+      continue;
+    }
+    changes.push({
+      houseId: id,
+      name: houseLabel(house, id),
+      reason: describeRouteStatusChange(previous, house, filters, context),
+      house,
+    });
+  }
+  return changes;
 }
 
 function routeStatusKey(

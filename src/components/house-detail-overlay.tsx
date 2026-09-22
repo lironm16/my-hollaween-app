@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { HouseDetails } from "@/components/house-details";
-import { FilterMismatchNotice } from "@/components/house-skipped-banner";
+import { FilterMismatchNotice, HouseCardBanners } from "@/components/house-skipped-banner";
 import { CodesCopy } from "@/components/codes-copy";
 import {
   ClusterHouseList,
@@ -186,6 +186,16 @@ export function HouseDetailOverlay({
                   reasons={filterMismatchReasons}
                   skipMeta={skipMeta}
                   onRestoreRoute={onRestoreRoute}
+                  hideSkipBanner
+                />
+                <HouseCardBanners
+                  skipped={skipped}
+                  skipMeta={skipMeta}
+                  visited={visited?.(house.id)}
+                  onRestoreRoute={onRestoreRoute}
+                  onToggleVisited={
+                    onToggleVisited ? () => onToggleVisited(house.id) : undefined
+                  }
                 />
                 {editing ? (
                   <>
@@ -223,6 +233,14 @@ export function HouseDetailOverlay({
               reasons={filterMismatchReasons}
               skipMeta={skipMeta}
               onRestoreRoute={onRestoreRoute}
+              hideSkipBanner
+            />
+            <HouseCardBanners
+              skipped={skipped}
+              skipMeta={skipMeta}
+              visited={visited?.(house.id)}
+              onRestoreRoute={onRestoreRoute}
+              onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
             />
             {editing ? (
               <>

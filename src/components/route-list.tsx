@@ -104,6 +104,7 @@ function RouteTailRow({
             onToggleEdit={onEditHouse}
             editing={editingId === house.id}
             expanded
+            hideHoursBanner
           />
         </div>
       ) : null}

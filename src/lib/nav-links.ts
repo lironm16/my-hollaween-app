@@ -63,17 +63,18 @@ export async function shareEditCode(
 export async function shareHouse(
   house: PublicHouse,
 ): Promise<"shared" | "copied" | "aborted" | "failed"> {
-  const { title, text, url } = houseSharePayload(house);
+  const { title, text } = houseSharePayload(house);
   try {
     if (navigator.share) {
-      await navigator.share({ title, text, url });
+      // Omit `url` — iOS “Copy” duplicates it as a large rich link when text already has the URL.
+      await navigator.share({ title, text });
       return "shared";
     }
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") return "aborted";
   }
   try {
-    await navigator.clipboard.writeText(url);
+    await navigator.clipboard.writeText(text);
     return "copied";
   } catch {
     return "failed";
