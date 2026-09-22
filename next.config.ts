@@ -1,4 +1,10 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { NextConfig } from "next";
+
+const appVersion = (
+  JSON.parse(readFileSync(join(__dirname, "package.json"), "utf8")) as { version?: string }
+).version ?? "0.0.0";
 
 const corsHeaders = [
   { key: "Access-Control-Allow-Origin", value: "*" },
@@ -11,6 +17,7 @@ const corsHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   env: {
+    NEXT_PUBLIC_APP_VERSION: appVersion,
     NEXT_PUBLIC_DURABLE_WRITES: process.env.NEXT_PUBLIC_DURABLE_WRITES ?? "1",
   },
   serverExternalPackages: ["web-push"],

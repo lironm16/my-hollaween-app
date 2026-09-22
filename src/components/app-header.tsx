@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/sheet";
 import { buttonVariants } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { appVersionLabel } from "@/lib/app-version";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { cn } from "@/lib/utils";
 
@@ -256,6 +257,9 @@ export function AppHeader({
             </p>
             <p className="mt-1 text-center font-display text-base text-orange-200/90">
               Liron Matityahu
+            </p>
+            <p className="mt-1 text-center text-sm tabular-nums text-violet-500/70" dir="ltr">
+              {appVersionLabel()}
             </p>
           </div>
         </SheetContent>
