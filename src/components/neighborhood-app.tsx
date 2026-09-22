@@ -18,7 +18,11 @@ import {
   emitTempSkipRestoreAlert,
   useTempSkipRestoreAlerts,
 } from "@/hooks/use-temp-skip-restore-alerts";
+import { EventCountdownBar } from "@/components/event-countdown-bar";
+import { EventCountdownScreen } from "@/components/event-countdown-screen";
 import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
+import { useEventCountdown } from "@/hooks/use-event-countdown";
+import { readCountdownWelcomeSeen, writeCountdownWelcomeSeen } from "@/lib/countdown-welcome";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
 import { SkipHouseDialog } from "@/components/skip-house-dialog";
@@ -124,6 +128,10 @@ export function NeighborhoodApp({
   const { accessibleOnly, likedOnly } = filters;
 
   const [askedLocation, setAskedLocation] = useState(false);
+  const eventCountdown = useEventCountdown();
+  const [countdownScreenOpen, setCountdownScreenOpen] = useState(false);
+  const [countdownWelcome, setCountdownWelcome] = useState(false);
+  const [countdownWelcomeChecked, setCountdownWelcomeChecked] = useState(false);
   const [skipDialogHouse, setSkipDialogHouse] = useState<PublicHouse | null>(null);
   const [visitSkipConflict, setVisitSkipConflict] = useState<{
     kind: "visit" | "skip";
@@ -137,6 +145,27 @@ export function NeighborhoodApp({
   const now = useAppNow();
   useEffect(() => {
     applyClockSearchParams(window.location.search);
+  }, []);
+
+  useEffect(() => {
+    if (countdownWelcomeChecked) return;
+    if (!eventCountdown.active || !eventCountdown.parts) return;
+    setCountdownWelcomeChecked(true);
+    if (!readCountdownWelcomeSeen()) {
+      setCountdownWelcome(true);
+      setCountdownScreenOpen(true);
+    }
+  }, [countdownWelcomeChecked, eventCountdown.active, eventCountdown.parts]);
+
+  const openCountdownScreen = useCallback((welcome: boolean) => {
+    setCountdownWelcome(welcome);
+    setCountdownScreenOpen(true);
+  }, []);
+
+  const closeCountdownScreen = useCallback(() => {
+    writeCountdownWelcomeSeen();
+    setCountdownScreenOpen(false);
+    setCountdownWelcome(false);
   }, []);
 
   function setView(next: HomeView) {
@@ -672,10 +701,16 @@ export function NeighborhoodApp({
   return (
     <div
       id="neighborhood-shell"
-      className="relative isolate flex flex-col overflow-hidden"
+      className="has-floating-toolbar relative isolate flex flex-col overflow-hidden"
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
       <AppHeader onHomeTap={goHome} />
+      {eventCountdown.active && eventCountdown.parts ? (
+        <EventCountdownBar
+          parts={eventCountdown.parts}
+          onClick={() => openCountdownScreen(false)}
+        />
+      ) : null}
       <button
         type="button"
         className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-2 focus:rounded-lg focus:bg-orange-500 focus:px-3 focus:py-2 focus:text-black"
@@ -689,32 +724,6 @@ export function NeighborhoodApp({
           ? ` מסלול עם ${walkingRoute.stops.length} עצירות.`
           : ""}
       </div>
-      <NeighborhoodToolbar
-        view={view}
-        onViewChange={setView}
-        onListView={() => {
-          setView("list");
-          selection.closeSelection();
-        }}
-        likedOnly={likedOnly}
-        activeFilterCount={activeFilterCount}
-        onOpenFilters={() => setFiltersOpen(true)}
-        originShifted={originChoice.kind !== "gps"}
-        onOpenOriginPicker={() => originPick.setOriginPickerOpen(true)}
-        routeMode={routeMode}
-        onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
-        houses={visible}
-        routeTicker={originPick.routeTicker}
-        routeUpdateCount={routeMode ? routeAlerts.changes.length : 0}
-        routeUpdateTicker={
-          routeMode && routeAlerts.changes.length > 0
-            ? routeChangeBannerMessage(routeAlerts.changes, routeAlerts.fromBackground)
-            : null
-        }
-        onOpenRouteUpdates={
-          routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
-        }
-      />
       <FiltersSheet
         open={filtersOpen}
         onOpenChange={setFiltersOpen}
@@ -971,8 +980,49 @@ export function NeighborhoodApp({
               מדליקים דלעות…
             </div>
           ) : null}
+          {!originPick.originPickActive ? (
+            <div className="floating-toolbar-host pointer-events-none absolute inset-x-0 bottom-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
+              <div className="pointer-events-auto">
+              <NeighborhoodToolbar
+                floating
+                view={view}
+                onViewChange={setView}
+                onListView={() => {
+                  setView("list");
+                  selection.closeSelection();
+                }}
+                likedOnly={likedOnly}
+                activeFilterCount={activeFilterCount}
+                onOpenFilters={() => setFiltersOpen(true)}
+                originShifted={originChoice.kind !== "gps"}
+                onOpenOriginPicker={() => originPick.setOriginPickerOpen(true)}
+                routeMode={routeMode}
+                onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
+                houses={visible}
+                routeTicker={originPick.routeTicker}
+                routeUpdateCount={routeMode ? routeAlerts.changes.length : 0}
+                routeUpdateTicker={
+                  routeMode && routeAlerts.changes.length > 0
+                    ? routeChangeBannerMessage(routeAlerts.changes, routeAlerts.fromBackground)
+                    : null
+                }
+                onOpenRouteUpdates={
+                  routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
+                }
+              />
+              </div>
+            </div>
+          ) : null}
         </>
       </main>
+      {eventCountdown.parts ? (
+        <EventCountdownScreen
+          open={countdownScreenOpen}
+          parts={eventCountdown.parts}
+          welcome={countdownWelcome}
+          onClose={closeCountdownScreen}
+        />
+      ) : null}
       <OriginPickerSheet
         open={originPick.originPickerOpen}
         onOpenChange={originPick.setOriginPickerOpen}

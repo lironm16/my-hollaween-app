@@ -1655,6 +1655,30 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
+.event-countdown-bar {
+  container-type: inline-size;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 45;
+}
+
+.event-countdown-bar__text {
+  font-size: clamp(0.72rem, 5cqi, 1.35rem);
+}
+
+#neighborhood-shell.has-floating-toolbar .map-fab-stack {
+  bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+#neighborhood-shell.has-floating-toolbar .map-add-house-fab {
+  bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+#neighborhood-shell.has-floating-toolbar #house-list-skip > div:last-child,
+#neighborhood-shell.has-floating-toolbar #house-list-skip .route-list-root {
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+}
+
 .map-fab-stack {
   position: absolute;
   right: 0.75rem;
