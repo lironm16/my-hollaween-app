@@ -28,7 +28,7 @@ function ViewToggle({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "inline-flex h-10 w-10 items-center justify-center rounded-lg",
+        "app-toolbar__btn inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
         active ? "bg-orange-500 text-black" : "text-violet-200",
       )}
     >
@@ -86,12 +86,12 @@ export function NeighborhoodToolbar({
       className={cn(
         "app-toolbar",
         floating
-          ? "rounded-2xl border-0 bg-[#160b1f]/92 px-2 py-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.45)] ring-1 ring-orange-500/30 backdrop-blur-md"
+          ? "app-toolbar--floating rounded-2xl border-0 bg-[#160b1f]/92 px-2 py-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.45)] ring-1 ring-orange-500/30 backdrop-blur-md"
           : "relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2",
       )}
       style={floating ? undefined : { flexShrink: 0 }}
     >
-      <div className="flex w-full min-w-0 items-center justify-between gap-2">
+      <div className={cn("app-toolbar__row flex w-full min-w-0 items-center justify-between gap-2", floating && "gap-1")}>
         <div className="flex shrink-0 rounded-xl bg-[#261536] p-1 ring-1 ring-orange-400/40">
           <ViewToggle
             active={view === "map"}
@@ -120,7 +120,7 @@ export function NeighborhoodToolbar({
           aria-pressed={routeMode}
           onClick={onToggleRoute}
           className={cn(
-            "relative inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
+            "app-toolbar__btn relative inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
             routeMode
               ? "bg-orange-500 text-black"
               : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",

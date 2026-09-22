@@ -18,7 +18,7 @@ export function EventCountdownBar({
       onClick={onClick}
       aria-label={`${parts.label} until Halloween night`}
       className={cn(
-        "event-countdown-bar flex w-full min-w-0 items-center justify-center border-b border-orange-500/20 bg-[#12081a]/90 px-2 py-2 transition-colors hover:bg-orange-950/25",
+        "event-countdown-bar flex w-full min-w-0 items-center justify-center border-b border-orange-500/20 bg-[#12081a]/90 px-3 py-3 transition-colors hover:bg-orange-950/25",
         className,
       )}
       dir="ltr"

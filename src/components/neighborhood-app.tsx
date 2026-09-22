@@ -701,7 +701,10 @@ export function NeighborhoodApp({
   return (
     <div
       id="neighborhood-shell"
-      className="has-floating-toolbar relative isolate flex flex-col overflow-hidden"
+      className={cn(
+        "has-floating-toolbar relative isolate flex flex-col overflow-hidden",
+        mapSheetHouse && view === "map" && !originPick.originPickActive && "has-map-sheet",
+      )}
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
       <AppHeader onHomeTap={goHome} />
@@ -858,6 +861,39 @@ export function NeighborhoodApp({
                 houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
               />
             </div>
+            {!originPick.originPickActive ? (
+              <div className="floating-toolbar-host pointer-events-none absolute inset-x-0 z-[30] px-3">
+                <div className="pointer-events-auto">
+                  <NeighborhoodToolbar
+                    floating
+                    view={view}
+                    onViewChange={setView}
+                    onListView={() => {
+                      setView("list");
+                      selection.closeSelection();
+                    }}
+                    likedOnly={likedOnly}
+                    activeFilterCount={activeFilterCount}
+                    onOpenFilters={() => setFiltersOpen(true)}
+                    originShifted={originChoice.kind !== "gps"}
+                    onOpenOriginPicker={() => originPick.setOriginPickerOpen(true)}
+                    routeMode={routeMode}
+                    onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
+                    houses={visible}
+                    routeTicker={originPick.routeTicker}
+                    routeUpdateCount={routeMode ? routeAlerts.changes.length : 0}
+                    routeUpdateTicker={
+                      routeMode && routeAlerts.changes.length > 0
+                        ? routeChangeBannerMessage(routeAlerts.changes, routeAlerts.fromBackground)
+                        : null
+                    }
+                    onOpenRouteUpdates={
+                      routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
+                    }
+                  />
+                </div>
+              </div>
+            ) : null}
             {mapSheetHouse && houseDetailCommon && view === "map" && !originPick.originPickActive ? (
               <div className="map-sheet-host" aria-hidden={false}>
                 <MapHouseSheet
@@ -978,39 +1014,6 @@ export function NeighborhoodApp({
               aria-live="polite"
             >
               מדליקים דלעות…
-            </div>
-          ) : null}
-          {!originPick.originPickActive ? (
-            <div className="floating-toolbar-host pointer-events-none absolute inset-x-0 bottom-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
-              <div className="pointer-events-auto">
-              <NeighborhoodToolbar
-                floating
-                view={view}
-                onViewChange={setView}
-                onListView={() => {
-                  setView("list");
-                  selection.closeSelection();
-                }}
-                likedOnly={likedOnly}
-                activeFilterCount={activeFilterCount}
-                onOpenFilters={() => setFiltersOpen(true)}
-                originShifted={originChoice.kind !== "gps"}
-                onOpenOriginPicker={() => originPick.setOriginPickerOpen(true)}
-                routeMode={routeMode}
-                onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
-                houses={visible}
-                routeTicker={originPick.routeTicker}
-                routeUpdateCount={routeMode ? routeAlerts.changes.length : 0}
-                routeUpdateTicker={
-                  routeMode && routeAlerts.changes.length > 0
-                    ? routeChangeBannerMessage(routeAlerts.changes, routeAlerts.fromBackground)
-                    : null
-                }
-                onOpenRouteUpdates={
-                  routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
-                }
-              />
-              </div>
             </div>
           ) : null}
         </>
