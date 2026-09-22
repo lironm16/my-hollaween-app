@@ -16,6 +16,12 @@ import {
 } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import { cloneDb, mergeHouses, mergePushSubscriptions } from "@/lib/catalog-sync";
+import { isStubHouse } from "@/lib/house-set";
+import {
+  changedRehearsalStubs,
+  readRehearsalStubOverlays,
+  writeRehearsalStubOverlays,
+} from "@/lib/rehearsal-stub-overlays";
 import {
   housesForIsolatedTestDb,
   loadStaticRehearsalStubRows,
@@ -72,6 +78,7 @@ import {
 } from "@/lib/catalog-cache";
 import { asCatalogForSnapshot } from "@/lib/catalog-cache-build";
 import {
+  bumpCatalogMeta,
   countFirestorePushSubscriptions,
   firestoreConfigured,
   queryRemovedHouseIdsSince,
@@ -672,8 +679,18 @@ async function persistDb(db: DbFile, prev?: DbFile | null) {
   }
 
   const housesChanged = catalogHousesChanged(prev?.houses ?? [], db.houses);
+  const stubChanges = changedRehearsalStubs(prev, db);
 
   await writeDurableDb(db, prev);
+
+  if (stubChanges.length > 0) {
+    try {
+      await writeRehearsalStubOverlays(stubChanges);
+      await bumpCatalogMeta(db.updatedAt);
+    } catch (error) {
+      console.error("[store] rehearsal stub overlay write failed", error);
+    }
+  }
 
   if (housesChanged) {
     void publishCatalogSnapshot(db).catch((error) => {
@@ -705,11 +722,22 @@ async function persistDb(db: DbFile, prev?: DbFile | null) {
 
 async function withStaticRehearsalStubs(db: DbFile): Promise<DbFile> {
   if (process.env.DATA_DIR?.trim()) return db;
-  const rows = await loadStaticRehearsalStubRows();
+  const [rows, overlays] = await Promise.all([
+    loadStaticRehearsalStubRows(),
+    readRehearsalStubOverlays(),
+  ]);
   const stubs = rows.map((row) => normalizeHouse(row as House & { status?: string }));
   const real = stripStubHouses(db.houses).map(normalizeHouse);
   const byId = new Map(real.map((house) => [house.id, house]));
   for (const stub of stubs) byId.set(stub.id, stub);
+  for (const [id, overlay] of overlays) {
+    if (isStubHouse(overlay)) byId.set(id, normalizeHouse(overlay));
+  }
+  for (const house of db.houses) {
+    if (!isStubHouse(house)) continue;
+    const existing = byId.get(house.id);
+    if (!existing || stamp(house) > stamp(existing)) byId.set(house.id, normalizeHouse(house));
+  }
   return { ...db, houses: [...byId.values()] };
 }
 
@@ -874,8 +902,14 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
   if (firestoreConfigured()) {
     const meta = await readCatalogMeta();
     const pushMeta = pushAlertsEnabled() ? await readPushSettingsMeta() : null;
+    const memAheadOfMeta =
+      isMemWarm() &&
+      mem &&
+      meta?.updatedAt &&
+      stamp(mem) > stamp({ updatedAt: meta.updatedAt });
     if (
       meta?.updatedAt &&
+      !memAheadOfMeta &&
       catalogDeltaGatePassed({
         sinceMs,
         catalogUpdatedAt: meta.updatedAt,

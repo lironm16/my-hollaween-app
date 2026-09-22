@@ -55,4 +55,20 @@ describe("catalogDeltaGatePassed", () => {
       false,
     );
   });
+
+  it("fails when warm mem is ahead of Firestore catalog meta (rehearsal stub edits)", () => {
+    const sinceMs = Date.parse("2026-10-31T17:00:00.000Z");
+    const metaUpdatedAt = "2026-10-31T16:00:00.000Z";
+    const memUpdatedAt = "2026-10-31T18:00:00.000Z";
+    assert.equal(
+      catalogDeltaGatePassed({
+        sinceMs,
+        catalogUpdatedAt: metaUpdatedAt,
+        removedIds: [],
+      }),
+      true,
+    );
+    assert.ok(Date.parse(memUpdatedAt) > Date.parse(metaUpdatedAt));
+    assert.ok(Date.parse(memUpdatedAt) > sinceMs);
+  });
 });
