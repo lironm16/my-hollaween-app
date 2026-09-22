@@ -548,7 +548,6 @@ export function NeighborhoodApp({
   const summaryProps = {
     filteredHouses: visible.length,
     route: activeRoute ?? filterRoute,
-    routeProgress: routeMode,
     skippedCount: countSkippedInSet(skips.skippedIds, housesForSkipCount, activeHouseSet),
     visitedCount: countVisitedInSet(visits.visitedIds, housesForSkipCount, activeHouseSet),
     staleLabel: offline
