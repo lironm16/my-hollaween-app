@@ -846,40 +846,40 @@ export function NeighborhoodApp({
                 hidden={Boolean(selection.selected) && !originPick.originPickActive}
                 houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
               />
-            </div>
-            {!originPick.originPickActive ? (
-              <div className="floating-toolbar-host pointer-events-none absolute inset-x-0 z-[20] px-3">
-                <div className="pointer-events-auto">
-                  <NeighborhoodToolbar
-                    floating
-                    view={view}
-                    onViewChange={setView}
-                    onListView={() => {
-                      setView("list");
-                      selection.closeSelection();
-                    }}
-                    likedOnly={likedOnly}
-                    activeFilterCount={activeFilterCount}
-                    onOpenFilters={() => setFiltersOpen(true)}
-                    originShifted={originChoice.kind !== "gps"}
-                    onOpenOriginPicker={() => originPick.setOriginPickerOpen(true)}
-                    routeMode={routeMode}
-                    onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
-                    houses={visible}
-                    routeTicker={originPick.routeTicker}
-                    routeUpdateCount={routeMode ? routeAlerts.changes.length : 0}
-                    routeUpdateTicker={
-                      routeMode && routeAlerts.changes.length > 0
-                        ? routeChangeBannerMessage(routeAlerts.changes, routeAlerts.fromBackground)
-                        : null
-                    }
-                    onOpenRouteUpdates={
-                      routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
-                    }
-                  />
+              {!originPick.originPickActive ? (
+                <div className="floating-toolbar-host pointer-events-none absolute inset-x-0 z-[15] px-3">
+                  <div className="pointer-events-auto">
+                    <NeighborhoodToolbar
+                      floating
+                      view={view}
+                      onViewChange={setView}
+                      onListView={() => {
+                        setView("list");
+                        selection.closeSelection();
+                      }}
+                      likedOnly={likedOnly}
+                      activeFilterCount={activeFilterCount}
+                      onOpenFilters={() => setFiltersOpen(true)}
+                      originShifted={originChoice.kind !== "gps"}
+                      onOpenOriginPicker={() => originPick.setOriginPickerOpen(true)}
+                      routeMode={routeMode}
+                      onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
+                      houses={visible}
+                      routeTicker={originPick.routeTicker}
+                      routeUpdateCount={routeMode ? routeAlerts.changes.length : 0}
+                      routeUpdateTicker={
+                        routeMode && routeAlerts.changes.length > 0
+                          ? routeChangeBannerMessage(routeAlerts.changes, routeAlerts.fromBackground)
+                          : null
+                      }
+                      onOpenRouteUpdates={
+                        routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
+                      }
+                    />
+                  </div>
                 </div>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
             {mapSheetHouse && houseDetailCommon && view === "map" && !originPick.originPickActive ? (
               <div className="map-sheet-host" aria-hidden={false}>
                 <MapHouseSheet

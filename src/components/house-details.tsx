@@ -14,7 +14,7 @@ import { HoursLabel } from "@/components/clock-time";
 import { formatHoursLabel } from "@/lib/hours";
 import { houseAddedMetaLine } from "@/lib/house-meta";
 import { houseHeadline } from "@/lib/labels";
-import { houseMapsUrl } from "@/lib/nav-links";
+import { houseMapsUrl, houseSharePath } from "@/lib/nav-links";
 import { shouldLoadHousePhoto } from "@/lib/photos";
 import type { PublicHouse } from "@/lib/types";
 import { HOUSE_CARD_PHOTO_BOX } from "@/components/house-photo-frame";
@@ -527,7 +527,7 @@ export function HouseDetails({
               ניווט ב־Google Maps
             </a>
             <Link
-              href={`/house/${encodeURIComponent(house.id)}`}
+              href={houseSharePath(house)}
               onClick={(e) => e.stopPropagation()}
               className={cn(buttonVariants({ size: "sm", variant: "ghost" }))}
             >

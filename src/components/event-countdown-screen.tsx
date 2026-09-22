@@ -79,27 +79,29 @@ export function EventCountdownScreen({
           aria-hidden
         />
 
-        <div className="absolute inset-0 flex flex-col items-center justify-between px-4 py-4 text-center">
+        <div className="absolute inset-0 flex flex-col items-center px-4 pb-6 pt-[clamp(1.5rem,8vh,4rem)] text-center">
           {welcome ? (
-            <p className="max-w-md shrink-0 text-base leading-snug text-violet-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+            <p className="mb-4 max-w-md shrink-0 text-base leading-snug text-violet-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
               <span className="font-display text-lg text-orange-300">ברוכים הבאים!</span>
               {" · "}
               עוד {parts.days} ימים · {parts.time}
             </p>
-          ) : (
-            <span className="shrink-0" aria-hidden />
-          )}
+          ) : null}
 
-          <div className="flex min-h-0 flex-1 flex-col items-center justify-center" aria-live="polite" aria-atomic="true">
+          <div
+            className="flex w-full max-w-2xl shrink-0 flex-col items-center"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             <div dir="ltr">
-              <p className="font-creepster text-[clamp(2.75rem,13vw,4.25rem)] tabular-nums leading-none tracking-wide text-orange-400 drop-shadow-[0_0_24px_rgba(249,115,22,0.7)]">
+              <p className="font-creepster text-[clamp(4rem,22vw,8rem)] tabular-nums leading-[0.9] tracking-wide text-orange-400 drop-shadow-[0_0_32px_rgba(249,115,22,0.75)]">
                 {parts.days} {dayLabel}
               </p>
-              <p className="mt-1 font-creepster text-[clamp(2rem,10vw,3.25rem)] tabular-nums leading-none tracking-[0.2em] text-orange-400 drop-shadow-[0_0_18px_rgba(249,115,22,0.6)]">
+              <p className="mt-2 font-creepster text-[clamp(3rem,16vw,5.75rem)] tabular-nums leading-none tracking-[0.18em] text-orange-400 drop-shadow-[0_0_24px_rgba(249,115,22,0.65)]">
                 {parts.time}
               </p>
             </div>
-            <div className="mt-3 max-w-md space-y-1" dir="rtl">
+            <div className="mt-6 max-w-md space-y-1" dir="rtl">
               <p className="font-display text-[clamp(1.125rem,4.5vw,1.5rem)] text-orange-200 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                 {config.brandEn} · {config.brandHe}
               </p>
@@ -109,7 +111,7 @@ export function EventCountdownScreen({
             </div>
           </div>
 
-          <p className="max-w-md shrink-0 text-base leading-snug text-orange-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] sm:text-lg">
+          <p className="mt-auto max-w-md shrink-0 pt-6 text-base leading-snug text-orange-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] sm:text-lg">
             עד 17:00 · 31 באוקטובר · תחילת הערב בשכונה
           </p>
         </div>

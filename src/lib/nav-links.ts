@@ -1,6 +1,12 @@
 import { formatDisplayAddress, formatMapsAddress } from "@/lib/config";
+import { houseShareSlug } from "@/lib/ids";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
+
+/** Strip invisible bidi marks that break iOS link detection when copying share text. */
+function stripBidiMarks(text: string) {
+  return text.replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, "");
+}
 
 export function houseMapsUrl(house: PublicHouse) {
   const query = formatMapsAddress(house).trim();
@@ -14,7 +20,8 @@ export function houseMapsUrl(house: PublicHouse) {
 }
 
 export function houseSharePath(house: PublicHouse) {
-  return `/house/${encodeURIComponent(house.id)}`;
+  const slug = houseShareSlug(house.id);
+  return `/house/${slug}`;
 }
 
 export function houseShareUrl(house: PublicHouse, origin?: string) {
@@ -24,12 +31,12 @@ export function houseShareUrl(house: PublicHouse, origin?: string) {
   return `${window.location.origin}${path}`;
 }
 
-/** Web Share payload — full URL in `text` so iOS “Copy” gets the link, not just the slug. */
+/** Web Share payload — URL in `url` field so iOS Copy gets a clean ASCII link. */
 export function houseSharePayload(house: PublicHouse, origin?: string) {
   const url = houseShareUrl(house, origin);
-  const title = houseHeadline(house);
-  const address = formatDisplayAddress(house);
-  const text = address ? `${title}\n${address}\n${url}` : `${title}\n${url}`;
+  const title = stripBidiMarks(houseHeadline(house));
+  const address = stripBidiMarks(formatDisplayAddress(house));
+  const text = address ? `${title}\n${address}` : title;
   return { title, text, url };
 }
 
@@ -63,18 +70,17 @@ export async function shareEditCode(
 export async function shareHouse(
   house: PublicHouse,
 ): Promise<"shared" | "copied" | "aborted" | "failed"> {
-  const { title, text } = houseSharePayload(house);
+  const { title, text, url } = houseSharePayload(house);
   try {
     if (navigator.share) {
-      // Omit `url` — iOS “Copy” duplicates it as a large rich link when text already has the URL.
-      await navigator.share({ title, text });
+      await navigator.share({ title, text, url });
       return "shared";
     }
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") return "aborted";
   }
   try {
-    await navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText(url);
     return "copied";
   } catch {
     return "failed";

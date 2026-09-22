@@ -1671,9 +1671,21 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   letter-spacing: 0.08em;
 }
 
-/* Above map (z-20), below house sheet (z-40). Fixed bottom — sheet may cover. */
+/* Inside map-stage (z-15). House sheet host is z-40 — always above for taps. */
 .floating-toolbar-host {
   bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+#neighborhood-shell:has(.map-house-sheet.is-open) .floating-toolbar-host,
+#neighborhood-shell:has(.map-house-sheet.is-dragging) .floating-toolbar-host,
+#neighborhood-shell:has(.map-house-sheet.is-raised) .floating-toolbar-host {
+  pointer-events: none;
+}
+
+#neighborhood-shell:has(.map-house-sheet.is-open) .floating-toolbar-host .pointer-events-auto,
+#neighborhood-shell:has(.map-house-sheet.is-dragging) .floating-toolbar-host .pointer-events-auto,
+#neighborhood-shell:has(.map-house-sheet.is-raised) .floating-toolbar-host .pointer-events-auto {
+  pointer-events: none;
 }
 
 #neighborhood-shell.has-floating-toolbar .map-fab-stack {
@@ -1866,7 +1878,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .map-sheet-host {
   position: absolute;
   inset: 0;
-  z-index: 40;
+  z-index: 50;
   pointer-events: none;
 }
 

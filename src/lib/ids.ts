@@ -35,6 +35,23 @@ export function sameHouseId(a: string, b: string) {
   return canonicalHouseId(a) === canonicalHouseId(b);
 }
 
+const HOUSE_ID_PREFIX = "בית-";
+
+/** ASCII slug for share links — `בית-4948` → `4948`. */
+export function houseShareSlug(rawId: string): string {
+  const id = canonicalHouseId(rawId);
+  const match = id.match(/^בית-(\d{4,6})$/);
+  if (match) return match[1];
+  return encodeURIComponent(id);
+}
+
+/** Resolve `/house/[id]` param to the canonical catalog id. */
+export function resolveHouseIdFromPath(raw: string): string {
+  const segment = canonicalHouseId(raw);
+  if (/^\d{4,6}$/.test(segment)) return `${HOUSE_ID_PREFIX}${segment}`;
+  return segment;
+}
+
 export function toPublicHouse<T extends { editCode?: string; storeId?: string }>(house: T) {
   const rest = { ...house };
   delete rest.editCode;

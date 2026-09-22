@@ -14,13 +14,13 @@ import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
-import { toPublicHouse } from "@/lib/ids";
+import { resolveHouseIdFromPath, toPublicHouse } from "@/lib/ids";
 import type { House, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export default function HousePage() {
   const params = useParams<{ id: string }>();
-  const id = decodeURIComponent(params.id);
+  const id = resolveHouseIdFromPath(params.id);
   const { catalog, loading, error, source, refresh } = useCatalog();
   const owned = useOwnedHouses();
   const likes = useLikedHouses();
