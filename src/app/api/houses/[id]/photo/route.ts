@@ -44,9 +44,18 @@ export async function POST(
   }
 
   let photoUrl: string | null = null;
+  let photoHost: string | null = null;
   try {
-    photoUrl = (await uploadPublicPhoto(buf)).url;
-  } catch {
+    const uploaded = await uploadPublicPhoto(buf, { houseId: id });
+    photoUrl = uploaded.url;
+    photoHost = uploaded.host;
+  } catch (error) {
+    console.error("[photo-upload]", {
+      step: "all-hosts-failed",
+      houseId: id,
+      bytes: buf.length,
+      error: error instanceof Error ? error.message : String(error),
+    });
     photoUrl = null;
   }
 
@@ -57,13 +66,34 @@ export async function POST(
       const file = `${id.replace(/[^0-9\u0590-\u05FFa-zA-Z-]/g, "") || "house"}.jpg`;
       await fs.writeFile(path.join(dir, file), buf);
       photoUrl = `/house-photos/${file}?v=${Date.now()}`;
-    } catch {
+      photoHost = "local-fallback";
+      console.warn("[photo-upload]", {
+        step: "local-fallback-ok",
+        houseId: id,
+        bytes: buf.length,
+        url: photoUrl,
+        note: "ephemeral on Vercel — not durable across deploys",
+      });
+    } catch (error) {
+      console.error("[photo-upload]", {
+        step: "local-fallback-failed",
+        houseId: id,
+        bytes: buf.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return NextResponse.json(
         { error: "העלאה לאירוח החינמי נכשלה. נסו שוב, או הדביקו קישור לתמונה." },
         { status: 503 },
       );
     }
   }
+
+  console.info("[photo-upload]", {
+    step: "saved",
+    houseId: id,
+    host: photoHost,
+    url: photoUrl,
+  });
 
   const updated = await updateByEditCode(id, house.editCode, { photoUrl });
   if ("error" in updated) {
