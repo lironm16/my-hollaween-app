@@ -262,7 +262,6 @@ export function NeighborhoodApp({
     pinnedRoute,
     setPinnedRoute,
     origin,
-    visitedIds: visits.visitedIds,
     skippedIds: skips.skippedIds,
     now,
   });
