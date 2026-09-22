@@ -15,7 +15,7 @@ export function HouseSkippedBanner({
   onMainClick?: () => void;
   mainAriaLabel?: string;
 }) {
-  const summary = meta ? skipMetaSummary(meta) : "דילגתם על הבית";
+  const summary = meta ? skipMetaSummary(meta) : "דילגתם";
   const mainContent = (
     <>
       <SkipSign />

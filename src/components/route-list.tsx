@@ -225,7 +225,7 @@ export function RouteList({
                 <p className="route-list-visited-heading">ביקרתם</p>
               ) : null}
               {showSkippedHeading ? (
-                <p className="route-list-skipped-heading">דילגתם על הבתים האלה</p>
+                <p className="route-list-skipped-heading">דילגתם</p>
               ) : null}
               {hop ? <RouteLeg label={hop} /> : null}
               {isTail ? (
