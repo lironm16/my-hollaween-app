@@ -152,6 +152,7 @@ function CompactChip({
 export function StatsSummary({
   filteredHouses,
   route = null,
+  routeProgress = false,
   skippedCount = 0,
   visitedCount = 0,
   staleLabel = null,
@@ -160,6 +161,8 @@ export function StatsSummary({
 }: {
   filteredHouses: number;
   route?: WalkingRoute | null;
+  /** Visited/skipped chips — only meaningful while actively following a route. */
+  routeProgress?: boolean;
   skippedCount?: number;
   visitedCount?: number;
   staleLabel?: string | null;
@@ -192,7 +195,7 @@ export function StatsSummary({
               value={route ? `כ־${route.totalMinutes}` : "—"}
               label="דק׳"
             />
-            {route ? (
+            {route && routeProgress ? (
               <>
                 <CompactChip
                   icon={<VisitedSummaryIcon />}
@@ -243,7 +246,7 @@ export function StatsSummary({
             value={route ? `כ־${route.totalMinutes}` : "—"}
             label="דק׳"
           />
-          {route ? (
+          {route && routeProgress ? (
             <>
               <RouteChip
                 icon={<VisitedSummaryIcon />}
@@ -268,6 +271,7 @@ export function StatsSummary({
 export function MapStats(props: {
   filteredHouses: number;
   route?: WalkingRoute | null;
+  routeProgress?: boolean;
   skippedCount?: number;
   visitedCount?: number;
   staleLabel?: string | null;

@@ -548,12 +548,9 @@ export function NeighborhoodApp({
   const summaryProps = {
     filteredHouses: visible.length,
     route: activeRoute ?? filterRoute,
-    skippedCount: routeMode
-      ? countSkippedInSet(skips.skippedIds, housesForSkipCount, activeHouseSet)
-      : 0,
-    visitedCount: routeMode
-      ? countVisitedInSet(visits.visitedIds, housesForSkipCount, activeHouseSet)
-      : 0,
+    routeProgress: routeMode,
+    skippedCount: countSkippedInSet(skips.skippedIds, housesForSkipCount, activeHouseSet),
+    visitedCount: countVisitedInSet(visits.visitedIds, housesForSkipCount, activeHouseSet),
     staleLabel: offline
       ? "לא מקוון"
       : unreachable
