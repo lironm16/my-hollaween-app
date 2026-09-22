@@ -41,25 +41,6 @@ export function Peanut() {
   );
 }
 
-/** Leaf glyph for vegan — SVG until a production PNG is added. */
-export function VeganLeaf() {
-  return (
-    <Icon>
-      <path
-        fill="currentColor"
-        d="M12 4.2c-4.6 3.8-6.2 8.6-4.8 13.2 1.4-.8 2.6-2 3.4-3.6.8 1.6 2 2.8 3.4 3.6 1.4-4.6-.2-9.4-4.8-13.2Z"
-      />
-      <path
-        d="M12 6.4v13.2"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-      />
-    </Icon>
-  );
-}
-
 export function SesameSeeds() {
   return (
     <Icon>
@@ -240,14 +221,11 @@ const KIND_LABEL: Record<SensitivityId, string> = {
   vegan: treatLabels.vegan,
 };
 
-const SENSITIVITY_GLYPH: Partial<Record<SensitivityId, string>> = {
+const SENSITIVITY_GLYPH: Record<SensitivityId, string> = {
   glutenFree: "/icons/sensitivity-gluten-glyph.png",
   nutsFree: "/icons/sensitivity-nuts-glyph.png",
   sesameFree: "/icons/sensitivity-sesame-glyph.png",
-};
-
-const SENSITIVITY_SVG: Partial<Record<SensitivityId, () => ReactNode>> = {
-  vegan: VeganLeaf,
+  vegan: "/icons/sensitivity-vegan-glyph.png",
 };
 
 export function SensitivitySign({
@@ -263,9 +241,8 @@ export function SensitivitySign({
 }) {
   const label = KIND_LABEL[kind];
   const photo = SENSITIVITY_GLYPH[kind];
-  const SvgGlyph = Glyph ?? SENSITIVITY_SVG[kind];
 
-  if (!SvgGlyph && photo) {
+  if (!Glyph) {
     return (
       <span
         className={cn(
@@ -283,27 +260,21 @@ export function SensitivitySign({
     );
   }
 
-  if (SvgGlyph) {
-    const productionSvg = !Glyph && Boolean(SENSITIVITY_SVG[kind]);
-    return (
-      <span
-        className={cn(
-          "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#9e410d] text-amber-50",
-          out && "grayscale",
-          className,
-        )}
-        title={label}
-        aria-label={label}
-      >
-        <span className="size-[78%]">
-          <SvgGlyph />
-        </span>
-        {productionSvg || out ? <DiscStrike /> : null}
+  return (
+    <span
+      className={cn(
+        "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#9e410d] text-amber-50",
+        className,
+      )}
+      title={label}
+      aria-label={label}
+    >
+      <span className="size-[78%]">
+        <Glyph />
       </span>
-    );
-  }
-
-  return null;
+      {out ? <DiscStrike /> : null}
+    </span>
+  );
 }
 
 export function SensitivityMark({

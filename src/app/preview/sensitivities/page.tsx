@@ -42,13 +42,13 @@ export default function SensitivitiesPreviewPage() {
               <div className="flex flex-wrap items-center gap-3">
                 {SENSITIVITY_KINDS.map((kind) => {
                   const Glyph =
-                    kind.id === "vegan"
-                      ? undefined
-                      : kind.id === "glutenFree"
-                        ? set.gluten
-                        : kind.id === "nutsFree"
-                          ? set.nuts
-                          : set.sesame;
+                    kind.id === "glutenFree"
+                      ? set.gluten
+                      : kind.id === "nutsFree"
+                        ? set.nuts
+                        : kind.id === "sesameFree"
+                          ? set.sesame
+                          : undefined;
                   return (
                     <div key={kind.id} className="flex flex-col items-center gap-1">
                       {"current" in set && set.current ? (
