@@ -1,5 +1,6 @@
 import { put as putBlob } from "@vercel/blob";
 import { blobConfigured, publicBlobPutAttempts } from "@/lib/blob-auth";
+import { storageErrorCodeFromBlob } from "@/lib/storage-errors";
 
 const LITTERBOX = "https://litterbox.catbox.moe/resources/internals/api.php";
 const CATBOX = "https://catbox.moe/user/api.php";
@@ -66,9 +67,15 @@ async function uploadToBlob(buf: Buffer): Promise<{ url: string; host: PhotoUplo
       if (blob.url) return { url: blob.url, host: "blob" };
     } catch (error) {
       lastError = error;
+      const reason = storageErrorCodeFromBlob(error);
       logPhoto("warn", "blob-attempt-failed", {
         auth: putOptions.token ? "token" : putOptions.storeId ? "oidc" : "auto",
+        reason,
         error: errorMessage(error),
+        note:
+          reason === "BLOB_QUOTA_EXCEEDED"
+            ? "Blob is configured — monthly quota full; will succeed automatically after reset"
+            : undefined,
       });
     }
   }
@@ -100,7 +107,16 @@ export async function uploadPublicPhoto(
       }
       logPhoto("warn", "blob-empty", { ...base, reason: "putBlob returned no url" });
     } catch (error) {
-      logPhoto("warn", "blob-failed", { ...base, error: errorMessage(error) });
+      const reason = storageErrorCodeFromBlob(error);
+      logPhoto("warn", "blob-failed", {
+        ...base,
+        reason,
+        error: errorMessage(error),
+        note:
+          reason === "BLOB_QUOTA_EXCEEDED"
+            ? "Blob is configured — monthly quota full; will succeed automatically after reset"
+            : undefined,
+      });
     }
   }
 
