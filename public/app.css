@@ -455,8 +455,8 @@
   .z-50 {
     z-index: 50;
   }
-  .z-\[30\] {
-    z-index: 30;
+  .z-\[20\] {
+    z-index: 20;
   }
   .z-\[55\] {
     z-index: 55;
@@ -589,9 +589,6 @@
   }
   .field-sizing-content {
     field-sizing: content;
-  }
-  .aspect-\[4\/5\] {
-    aspect-ratio: 4/5;
   }
   .size-1\.5 {
     width: calc(var(--spacing) * 1.5);
@@ -1758,6 +1755,10 @@
       background-color: color-mix(in oklab, var(--color-white) 5%, transparent);
     }
   }
+  .bg-gradient-to-b {
+    --tw-gradient-position: to bottom in oklab;
+    background-image: linear-gradient(var(--tw-gradient-stops));
+  }
   .bg-gradient-to-br {
     --tw-gradient-position: to bottom right in oklab;
     background-image: linear-gradient(var(--tw-gradient-stops));
@@ -1789,6 +1790,13 @@
     }
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
+  .from-black\/75 {
+    --tw-gradient-from: color-mix(in srgb, #000 75%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-gradient-from: color-mix(in oklab, var(--color-black) 75%, transparent);
+    }
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  }
   .from-orange-950 {
     --tw-gradient-from: var(--color-orange-950);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
@@ -1805,8 +1813,23 @@
     --tw-gradient-via-stops: var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-via) var(--tw-gradient-via-position), var(--tw-gradient-to) var(--tw-gradient-to-position);
     --tw-gradient-stops: var(--tw-gradient-via-stops);
   }
+  .via-black\/35 {
+    --tw-gradient-via: color-mix(in srgb, #000 35%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-gradient-via: color-mix(in oklab, var(--color-black) 35%, transparent);
+    }
+    --tw-gradient-via-stops: var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-via) var(--tw-gradient-via-position), var(--tw-gradient-to) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-via-stops);
+  }
   .to-\[\#1d1028\]\/80 {
     --tw-gradient-to: color-mix(in oklab, #1d1028 80%, transparent);
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  }
+  .to-black\/80 {
+    --tw-gradient-to: color-mix(in srgb, #000 80%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-gradient-to: color-mix(in oklab, var(--color-black) 80%, transparent);
+    }
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
   .to-orange-950 {
@@ -1976,17 +1999,11 @@
   .pt-3 {
     padding-top: calc(var(--spacing) * 3);
   }
-  .pt-4 {
-    padding-top: calc(var(--spacing) * 4);
-  }
   .pt-\[env\(safe-area-inset-top\,0px\)\] {
     padding-top: env(safe-area-inset-top,0px);
   }
   .pt-\[max\(0\.5rem\,env\(safe-area-inset-top\,0px\)\)\] {
     padding-top: max(0.5rem, env(safe-area-inset-top,0px));
-  }
-  .pt-\[max\(0\.75rem\,env\(safe-area-inset-top\,0px\)\)\] {
-    padding-top: max(0.75rem, env(safe-area-inset-top,0px));
   }
   .pb-0\.5 {
     padding-bottom: calc(var(--spacing) * 0.5);
@@ -2094,17 +2111,17 @@
   .text-\[22px\] {
     font-size: 22px;
   }
+  .text-\[clamp\(0\.95rem\,3\.6vw\,1\.2rem\)\] {
+    font-size: clamp(0.95rem, 3.6vw, 1.2rem);
+  }
   .text-\[clamp\(1\.125rem\,4\.5vw\,1\.5rem\)\] {
     font-size: clamp(1.125rem, 4.5vw, 1.5rem);
   }
-  .text-\[clamp\(1rem\,3\.8vw\,1\.25rem\)\] {
-    font-size: clamp(1rem, 3.8vw, 1.25rem);
+  .text-\[clamp\(2\.75rem\,13vw\,4\.25rem\)\] {
+    font-size: clamp(2.75rem, 13vw, 4.25rem);
   }
-  .text-\[clamp\(2\.25rem\,11vw\,3\.5rem\)\] {
-    font-size: clamp(2.25rem, 11vw, 3.5rem);
-  }
-  .text-\[clamp\(3\.25rem\,15vw\,5rem\)\] {
-    font-size: clamp(3.25rem, 15vw, 5rem);
+  .text-\[clamp\(2rem\,10vw\,3\.25rem\)\] {
+    font-size: clamp(2rem, 10vw, 3.25rem);
   }
   .leading-none {
     --tw-leading: 1;
@@ -2137,10 +2154,6 @@
   .tracking-\[0\.2em\] {
     --tw-tracking: 0.2em;
     letter-spacing: 0.2em;
-  }
-  .tracking-\[0\.22em\] {
-    --tw-tracking: 0.22em;
-    letter-spacing: 0.22em;
   }
   .tracking-\[0\.25em\] {
     --tw-tracking: 0.25em;
@@ -2810,6 +2823,21 @@
     --tw-contrast: contrast(200%);
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
   }
+  .drop-shadow-\[0_0_18px_rgba\(249\,115\,22\,0\.6\)\] {
+    --tw-drop-shadow-size: drop-shadow(0 0 18px var(--tw-drop-shadow-color, rgba(249,115,22,0.6)));
+    --tw-drop-shadow: var(--tw-drop-shadow-size);
+    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
+  }
+  .drop-shadow-\[0_0_24px_rgba\(249\,115\,22\,0\.7\)\] {
+    --tw-drop-shadow-size: drop-shadow(0 0 24px var(--tw-drop-shadow-color, rgba(249,115,22,0.7)));
+    --tw-drop-shadow: var(--tw-drop-shadow-size);
+    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
+  }
+  .drop-shadow-\[0_2px_8px_rgba\(0\,0\,0\,0\.9\)\] {
+    --tw-drop-shadow-size: drop-shadow(0 2px 8px var(--tw-drop-shadow-color, rgba(0,0,0,0.9)));
+    --tw-drop-shadow: var(--tw-drop-shadow-size);
+    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
+  }
   .grayscale {
     --tw-grayscale: grayscale(100%);
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
@@ -2930,14 +2958,8 @@
   .\[text-shadow\:0_0_18px_rgba\(251\,146\,60\,0\.55\)\] {
     text-shadow: 0 0 18px rgba(251,146,60,0.55);
   }
-  .\[text-shadow\:0_0_20px_rgba\(249\,115\,22\,0\.5\)\] {
-    text-shadow: 0 0 20px rgba(249,115,22,0.5);
-  }
   .\[text-shadow\:0_0_22px_rgba\(251\,146\,60\,0\.55\)\] {
     text-shadow: 0 0 22px rgba(251,146,60,0.55);
-  }
-  .\[text-shadow\:0_0_28px_rgba\(249\,115\,22\,0\.65\)\] {
-    text-shadow: 0 0 28px rgba(249,115,22,0.65);
   }
   .\[unicode-bidi\:isolate\] {
     unicode-bidi: isolate;
@@ -3582,9 +3604,9 @@
       font-size: var(--text-5xl);
       line-height: var(--tw-leading, var(--text-5xl--line-height));
     }
-    .sm\:text-xl {
-      font-size: var(--text-xl);
-      line-height: var(--tw-leading, var(--text-xl--line-height));
+    .sm\:text-lg {
+      font-size: var(--text-lg);
+      line-height: var(--tw-leading, var(--text-lg--line-height));
     }
     .sm\:text-\[1\.4rem\] {
       font-size: 1.4rem;
@@ -6063,6 +6085,10 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 .floating-toolbar-host {
   bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  transition: bottom 0.2s ease;
+}
+#neighborhood-shell.has-map-sheet .floating-toolbar-host {
+  bottom: calc(var(--map-sheet-h, 0px) + 0.5rem);
 }
 #neighborhood-shell.has-floating-toolbar .map-fab-stack {
   bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
@@ -6230,7 +6256,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .map-sheet-host {
   position: absolute;
   inset: 0;
-  z-index: 10;
+  z-index: 40;
   pointer-events: none;
 }
 .map-sheet-host .map-house-sheet {

@@ -851,7 +851,7 @@ export function NeighborhoodApp({
               />
             </div>
             {!originPick.originPickActive ? (
-              <div className="floating-toolbar-host pointer-events-none absolute inset-x-0 z-[30] px-3">
+              <div className="floating-toolbar-host pointer-events-none absolute inset-x-0 z-[20] px-3">
                 <div className="pointer-events-auto">
                   <NeighborhoodToolbar
                     floating
