@@ -20,6 +20,7 @@ import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
 import { SkipHouseDialog } from "@/components/skip-house-dialog";
+import { VisitSkipConflictDialog } from "@/components/visit-skip-conflict-dialog";
 import { LikeCheer } from "@/components/like-cheer";
 import { RouteCompleteCheer } from "@/components/route-complete-cheer";
 import { VisitCheer } from "@/components/visit-cheer";
@@ -78,6 +79,10 @@ import {
   type SkipReasonId,
 } from "@/lib/skip-reasons";
 import { houseSelectionAnnouncement } from "@/lib/map-a11y";
+import {
+  dismissVisitSkipConflictPrompt,
+  shouldAskVisitSkipConflict,
+} from "@/lib/visit-skip-conflict";
 import type { Catalog, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -116,6 +121,10 @@ export function NeighborhoodApp({
 
   const [askedLocation, setAskedLocation] = useState(false);
   const [skipDialogHouse, setSkipDialogHouse] = useState<PublicHouse | null>(null);
+  const [visitSkipConflict, setVisitSkipConflict] = useState<{
+    kind: "visit" | "skip";
+    house: PublicHouse;
+  } | null>(null);
   const { alerts: tempRestoreAlerts, dismiss: dismissTempRestoreAlert } = useTempSkipRestoreAlerts();
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
@@ -295,7 +304,7 @@ export function NeighborhoodApp({
     { visitCelebration },
   );
 
-  const onToggleVisited = useCallback(
+  const performToggleVisited = useCallback(
     (id: string) => {
       const marking = !visits.visited(id);
       const nextVisitedIds = marking
@@ -315,6 +324,21 @@ export function NeighborhoodApp({
       applyRouteAfterSkipChange(nextSkippedIds, !marking, nextVisitedIds);
     },
     [celebrateVisit, routeMode, selection.clearListFocus, skips.skippedIds, visits],
+  );
+
+  const onToggleVisited = useCallback(
+    (id: string) => {
+      const marking = !visits.visited(id);
+      if (marking && skips.skipped(id) && shouldAskVisitSkipConflict()) {
+        const house = houses.find((item) => item.id === id);
+        if (house) {
+          setVisitSkipConflict({ kind: "visit", house });
+          return;
+        }
+      }
+      performToggleVisited(id);
+    },
+    [houses, performToggleVisited, skips, visits],
   );
   const routeListItems = useMemo(() => {
     if (!routeMode || !activeRoute) return [];
@@ -442,16 +466,37 @@ export function NeighborhoodApp({
     }
   }
 
-  function handleSkipHouse(id: string) {
-    const house = houses.find((item) => item.id === id);
-    if (!house) return;
-    const editing = skips.skipped(id);
+  function proceedWithSkipHouse(house: PublicHouse) {
+    const editing = skips.skipped(house.id);
     const canTempSkip = availableTemporaryRestoreOptions(house, now, filters).length > 0;
     if (!editing && !canTempSkip) {
       applySkipHouse(house, "other", false);
       return;
     }
     setSkipDialogHouse(house);
+  }
+
+  function handleSkipHouse(id: string) {
+    const house = houses.find((item) => item.id === id);
+    if (!house) return;
+    const editing = skips.skipped(id);
+    if (!editing && visits.visited(id) && shouldAskVisitSkipConflict()) {
+      setVisitSkipConflict({ kind: "skip", house });
+      return;
+    }
+    proceedWithSkipHouse(house);
+  }
+
+  function confirmVisitSkipConflict(dismissFuture: boolean) {
+    const pending = visitSkipConflict;
+    setVisitSkipConflict(null);
+    if (!pending) return;
+    if (dismissFuture) dismissVisitSkipConflictPrompt();
+    if (pending.kind === "visit") {
+      performToggleVisited(pending.house.id);
+      return;
+    }
+    proceedWithSkipHouse(pending.house);
   }
 
   function confirmSkipHouse(
@@ -892,6 +937,13 @@ export function NeighborhoodApp({
         onConfirm={confirmSkipHouse}
         onUnskip={skipDialogHouse && skips.skipped(skipDialogHouse.id) ? unskipFromDialog : undefined}
         onCancel={() => setSkipDialogHouse(null)}
+      />
+      <VisitSkipConflictDialog
+        open={Boolean(visitSkipConflict)}
+        kind={visitSkipConflict?.kind ?? null}
+        house={visitSkipConflict?.house ?? null}
+        onConfirm={confirmVisitSkipConflict}
+        onCancel={() => setVisitSkipConflict(null)}
       />
       <VisitCheer show={visitCheer} />
       <RouteCompleteCheer show={routeCompleteCheer} />

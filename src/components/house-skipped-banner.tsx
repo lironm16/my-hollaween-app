@@ -52,6 +52,28 @@ export function HouseSkippedBanner({
   );
 }
 
+/** Visited / skipped status row — show on every house card surface. */
+export function HouseCardBanners({
+  skipped,
+  skipMeta,
+  visited,
+  onRestoreRoute,
+  onToggleVisited,
+}: {
+  skipped?: boolean;
+  skipMeta?: SkippedHouseMeta;
+  visited?: boolean;
+  onRestoreRoute?: () => void;
+  onToggleVisited?: () => void;
+}) {
+  return (
+    <>
+      {skipped ? <HouseSkippedBanner meta={skipMeta} onRestore={onRestoreRoute} /> : null}
+      {visited && !skipped ? <HouseVisitedBanner onRestore={onToggleVisited} /> : null}
+    </>
+  );
+}
+
 export function HouseVisitedBanner({
   onRestore,
 }: {
@@ -86,17 +108,22 @@ export function FilterMismatchNotice({
   reasons,
   skipMeta,
   onRestoreRoute,
+  hideSkipBanner = false,
 }: {
   reasons?: string[];
   skipMeta?: SkippedHouseMeta;
   onRestoreRoute?: () => void;
+  /** When house skip/visit banners render separately via HouseCardBanners. */
+  hideSkipBanner?: boolean;
 }) {
   if (!reasons?.length && !skipMeta) return null;
   const skipped = reasons?.includes("דילגתם על הבית") || Boolean(skipMeta);
   const other = (reasons ?? []).filter((reason) => reason !== "דילגתם על הבית");
   return (
     <>
-      {skipped ? <HouseSkippedBanner meta={skipMeta} onRestore={onRestoreRoute} /> : null}
+      {skipped && !hideSkipBanner ? (
+        <HouseSkippedBanner meta={skipMeta} onRestore={onRestoreRoute} />
+      ) : null}
       {other.length > 0 ? (
         <p className="filter-mismatch-banner" role="status">
           <FilterSign />
