@@ -11,7 +11,7 @@ import { MapStats, StatsSummary } from "@/components/map-stats";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { NeighborhoodStatusBanners } from "@/components/neighborhood-status-banners";
-import { RouteChangeBanner } from "@/components/route-change-banner";
+import { RouteChangeBanner, routeChangeBannerMessage } from "@/components/route-change-banner";
 import { RouteChangesSheet } from "@/components/route-changes-sheet";
 import { TempSkipRestoreAlerts } from "@/components/temp-skip-restore-alert";
 import {
@@ -69,13 +69,8 @@ import {
 import { filterHouses, houseFilterMismatchReasons, routeHouseIds } from "@/lib/filter-houses";
 import { formatDistance } from "@/lib/geo";
 import { isRouteFullyVisited } from "@/lib/route-completion";
-import {
-  diffActiveRouteStatusChanges,
-  diffRouteBySkippedIds,
-  rebuildRouteAfterSkipChange,
-  snapshotRouteHouses,
-  type RouteStatusChangeEntry,
-} from "@/lib/route-changes";
+import { diffRouteBySkippedIds, rebuildRouteAfterSkipChange } from "@/lib/route-changes";
+import { useRouteStatusAlerts } from "@/hooks/use-route-status-alerts";
 import { drainPendingRouteRestores } from "@/lib/route-mode";
 import {
   availableTemporaryRestoreOptions,
@@ -134,10 +129,6 @@ export function NeighborhoodApp({
     house: PublicHouse;
   } | null>(null);
   const { alerts: tempRestoreAlerts, dismiss: dismissTempRestoreAlert } = useTempSkipRestoreAlerts();
-  const [routeStatusChanges, setRouteStatusChanges] = useState<RouteStatusChangeEntry[]>([]);
-  const [routeChangesSheetOpen, setRouteChangesSheetOpen] = useState(false);
-  const routeSnapshotRef = useRef<Map<string, PublicHouse>>(new Map());
-  const routeSnapshotReadyRef = useRef(false);
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
   const skips = useSkippedHouses();
@@ -302,35 +293,14 @@ export function NeighborhoodApp({
   const walkingRoute = routeMode ? pinnedRoute : null;
   const activeRoute = routeMode ? (walkingRoute ?? filterRoute) : null;
 
-  useEffect(() => {
-    if (!routeMode || !activeRoute) {
-      routeSnapshotRef.current = new Map();
-      routeSnapshotReadyRef.current = false;
-      setRouteStatusChanges([]);
-      setRouteChangesSheetOpen(false);
-      return;
-    }
-    const nextSnapshot = snapshotRouteHouses(activeRoute, displayHouses);
-    if (!routeSnapshotReadyRef.current) {
-      routeSnapshotRef.current = nextSnapshot;
-      routeSnapshotReadyRef.current = true;
-      return;
-    }
-    const incoming = diffActiveRouteStatusChanges(
-      activeRoute,
-      displayHouses,
-      filters,
-      filterContext,
-      routeSnapshotRef.current,
-    );
-    routeSnapshotRef.current = nextSnapshot;
-    if (incoming.length === 0) return;
-    setRouteStatusChanges((prev) => {
-      const byId = new Map(prev.map((item) => [item.houseId, item]));
-      for (const change of incoming) byId.set(change.houseId, change);
-      return [...byId.values()];
-    });
-  }, [routeMode, activeRoute, displayHouses, filters, filterContext, catalogUpdatedAt]);
+  const routeAlerts = useRouteStatusAlerts({
+    routeMode,
+    activeRoute,
+    displayHouses,
+    filters,
+    filterContext,
+    catalogUpdatedAt,
+  });
   const visitCelebration = useCallback(
     (_id: string, nextVisitedIds: string[]) => {
       if (!routeMode || !walkingRoute) return "visit";
@@ -736,6 +706,15 @@ export function NeighborhoodApp({
         onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
         houses={visible}
         routeTicker={originPick.routeTicker}
+        routeUpdateCount={routeMode ? routeAlerts.changes.length : 0}
+        routeUpdateTicker={
+          routeMode && routeAlerts.changes.length > 0
+            ? routeChangeBannerMessage(routeAlerts.changes, routeAlerts.fromBackground)
+            : null
+        }
+        onOpenRouteUpdates={
+          routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
+        }
       />
       <FiltersSheet
         open={filtersOpen}
@@ -756,20 +735,21 @@ export function NeighborhoodApp({
         hasCachedHouses={houses.length > 0}
       />
       <TempSkipRestoreAlerts alerts={tempRestoreAlerts} onDismiss={dismissTempRestoreAlert} />
-      {routeMode && routeStatusChanges.length > 0 && !routeChangesSheetOpen ? (
+      {routeMode &&
+      routeAlerts.changes.length > 0 &&
+      !routeAlerts.bannerDismissed &&
+      !routeAlerts.sheetOpen ? (
         <RouteChangeBanner
-          changes={routeStatusChanges}
-          onOpen={() => setRouteChangesSheetOpen(true)}
-          onDismiss={() => setRouteStatusChanges([])}
+          changes={routeAlerts.changes}
+          fromBackground={routeAlerts.fromBackground}
+          onOpen={routeAlerts.openSheet}
+          onDismiss={routeAlerts.dismissBanner}
         />
       ) : null}
       <RouteChangesSheet
-        open={routeChangesSheetOpen}
-        changes={routeStatusChanges}
-        onClose={() => {
-          setRouteChangesSheetOpen(false);
-          setRouteStatusChanges([]);
-        }}
+        open={routeAlerts.sheetOpen}
+        changes={routeAlerts.changes}
+        onClose={routeAlerts.closeSheet}
         onFocusHouse={(house) => {
           selection.selectOnMap(house);
           setView("map");

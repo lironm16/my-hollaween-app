@@ -5,20 +5,26 @@ import { createPortal } from "react-dom";
 import { ChevronLeft, X } from "lucide-react";
 import type { RouteStatusChangeEntry } from "@/lib/route-changes";
 
-export function routeChangeBannerMessage(changes: RouteStatusChangeEntry[]): string {
+export function routeChangeBannerMessage(
+  changes: RouteStatusChangeEntry[],
+  fromBackground = false,
+): string {
+  const prefix = fromBackground ? "בחזרה לאפליקציה: " : "";
   if (changes.length === 1) {
     const only = changes[0]!;
-    return `${only.name} — ${only.reason}`;
+    return `${prefix}${only.name} — ${only.reason}`;
   }
-  return `${changes.length} בתים במסלול השתנו · הקישו לפרטים`;
+  return `${prefix}${changes.length} בתים במסלול השתנו · הקישו לפרטים`;
 }
 
 export function RouteChangeBanner({
   changes,
+  fromBackground = false,
   onOpen,
   onDismiss,
 }: {
   changes: RouteStatusChangeEntry[];
+  fromBackground?: boolean;
   onOpen: () => void;
   onDismiss: () => void;
 }) {
@@ -41,7 +47,7 @@ export function RouteChangeBanner({
           className="flex min-w-0 flex-1 items-center gap-2 text-right leading-snug"
           onClick={onOpen}
         >
-          <span className="min-w-0 flex-1">{routeChangeBannerMessage(changes)}</span>
+          <span className="min-w-0 flex-1">{routeChangeBannerMessage(changes, fromBackground)}</span>
           <ChevronLeft className="size-4 shrink-0 opacity-80" aria-hidden />
         </button>
         <button

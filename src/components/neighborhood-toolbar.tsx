@@ -58,6 +58,9 @@ export function NeighborhoodToolbar({
   onToggleRoute,
   houses,
   routeTicker,
+  routeUpdateCount = 0,
+  routeUpdateTicker = null,
+  onOpenRouteUpdates,
 }: {
   view: HomeView;
   onViewChange: (view: HomeView) => void;
@@ -71,6 +74,9 @@ export function NeighborhoodToolbar({
   onToggleRoute: () => void;
   houses: PublicHouse[];
   routeTicker: string | null;
+  routeUpdateCount?: number;
+  routeUpdateTicker?: string | null;
+  onOpenRouteUpdates?: () => void;
 }) {
   return (
     <div
@@ -96,21 +102,42 @@ export function NeighborhoodToolbar({
         <OriginTrigger shifted={originShifted} onClick={onOpenOriginPicker} />
         <button
           type="button"
-          aria-label={routeMode ? "יציאה מהמסלול" : "מסלול"}
+          aria-label={
+            routeMode
+              ? routeUpdateCount > 0
+                ? `${routeUpdateCount} עדכונים במסלול`
+                : "יציאה מהמסלול"
+              : "מסלול"
+          }
           aria-pressed={routeMode}
           onClick={onToggleRoute}
           className={cn(
-            "inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
+            "relative inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
             routeMode
               ? "bg-orange-500 text-black"
               : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
           )}
         >
           <Route className="size-5" />
+          {routeMode && routeUpdateCount > 0 ? (
+            <span className="absolute -top-1 -start-1 inline-flex min-w-[1.15rem] items-center justify-center rounded-full bg-amber-400 px-1 text-[0.65rem] font-bold leading-none text-black ring-2 ring-[#12081a]">
+              {routeUpdateCount > 9 ? "9+" : routeUpdateCount}
+            </span>
+          ) : null}
         </button>
         <CsvExportButton houses={houses} kind={likedOnly ? "liked" : "list"} />
       </div>
-      {routeTicker ? <StatusTicker text={routeTicker} /> : null}
+      {routeUpdateTicker && onOpenRouteUpdates ? (
+        <button
+          type="button"
+          className="mt-1 flex min-w-0 items-center rounded-lg bg-amber-950/50 px-2 py-1 ring-1 ring-amber-500/30"
+          onClick={onOpenRouteUpdates}
+        >
+          <PingPongMarquee text={routeUpdateTicker} className="flex-1 text-base text-amber-100" />
+        </button>
+      ) : routeTicker ? (
+        <StatusTicker text={routeTicker} />
+      ) : null}
     </div>
   );
 }

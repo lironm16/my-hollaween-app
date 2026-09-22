@@ -20,4 +20,8 @@ describe("routeChangeBannerMessage", () => {
       "2 בתים במסלול השתנו · הקישו לפרטים",
     );
   });
+
+  it("prefixes return-from-background copy", () => {
+    assert.match(routeChangeBannerMessage([entry("a", "חזר לפתוח")], true), /^בחזרה לאפליקציה:/);
+  });
 });
