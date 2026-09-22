@@ -690,10 +690,7 @@ export function NeighborhoodApp({
   return (
     <div
       id="neighborhood-shell"
-      className={cn(
-        "has-floating-toolbar relative isolate flex flex-col overflow-hidden",
-        mapSheetHouse && view === "map" && !originPick.originPickActive && "has-map-sheet",
-      )}
+      className="has-floating-toolbar relative isolate flex flex-col overflow-hidden"
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
       <AppHeader onHomeTap={goHome} />

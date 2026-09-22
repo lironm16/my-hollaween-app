@@ -1671,14 +1671,9 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   letter-spacing: 0.08em;
 }
 
-/* Above map (z-20), below house sheet (z-40). When sheet open, sit on map strip above card. */
+/* Above map (z-20), below house sheet (z-40). Fixed bottom — sheet may cover. */
 .floating-toolbar-host {
   bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
-  transition: bottom 0.2s ease;
-}
-
-#neighborhood-shell.has-map-sheet .floating-toolbar-host {
-  bottom: calc(var(--map-sheet-h, 0px) + 0.5rem);
 }
 
 #neighborhood-shell.has-floating-toolbar .map-fab-stack {
@@ -1687,11 +1682,6 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 
 #neighborhood-shell.has-floating-toolbar .map-add-house-fab {
   bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
-}
-
-#neighborhood-shell.has-map-sheet .map-fab-stack,
-#neighborhood-shell.has-map-sheet .map-add-house-fab {
-  bottom: calc(var(--map-sheet-h, 0px) + 5rem + env(safe-area-inset-bottom, 0px));
 }
 
 .app-toolbar--floating {
