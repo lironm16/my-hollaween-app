@@ -255,7 +255,7 @@ export function SensitivitySign({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={photo} alt="" aria-hidden className="h-[82%] w-[82%] object-contain" />
-        <DiscStrike />
+        {kind !== "vegan" ? <DiscStrike /> : null}
       </span>
     );
   }

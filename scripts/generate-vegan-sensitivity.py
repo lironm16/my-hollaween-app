@@ -11,9 +11,6 @@ from PIL import Image, ImageDraw
 ROOT = Path(__file__).resolve().parents[1] / "public" / "icons"
 SRC = ROOT / "sensitivity-vegan-glyph-src.png"
 TERRACOTTA = (158, 65, 13)
-SLASH = (22, 14, 28)
-
-
 def load_extract_mod():
     spec = importlib.util.spec_from_file_location(
         "extract", Path(__file__).resolve().parent / "extract-badge-glyphs.py"
@@ -50,7 +47,6 @@ def build_disc(glyph: Image.Image, dest: Path) -> None:
         Image.Resampling.LANCZOS,
     )
     disc.paste(g, ((256 - g.width) // 2, (256 - g.height) // 2), g)
-    draw.line((22, 22, 234, 234), fill=(*SLASH, 255), width=14)
     disc.save(dest)
 
 
