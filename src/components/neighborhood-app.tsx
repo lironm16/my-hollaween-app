@@ -131,7 +131,6 @@ export function NeighborhoodApp({
   const eventCountdown = useEventCountdown();
   const [countdownScreenOpen, setCountdownScreenOpen] = useState(false);
   const [countdownWelcome, setCountdownWelcome] = useState(false);
-  const [countdownWelcomeChecked, setCountdownWelcomeChecked] = useState(false);
   const [skipDialogHouse, setSkipDialogHouse] = useState<PublicHouse | null>(null);
   const [visitSkipConflict, setVisitSkipConflict] = useState<{
     kind: "visit" | "skip";
@@ -147,18 +146,8 @@ export function NeighborhoodApp({
     applyClockSearchParams(window.location.search);
   }, []);
 
-  useEffect(() => {
-    if (countdownWelcomeChecked) return;
-    if (!eventCountdown.active || !eventCountdown.parts) return;
-    setCountdownWelcomeChecked(true);
-    if (!readCountdownWelcomeSeen()) {
-      setCountdownWelcome(true);
-      setCountdownScreenOpen(true);
-    }
-  }, [countdownWelcomeChecked, eventCountdown.active, eventCountdown.parts]);
-
-  const openCountdownScreen = useCallback((welcome: boolean) => {
-    setCountdownWelcome(welcome);
+  const openCountdownScreen = useCallback(() => {
+    setCountdownWelcome(!readCountdownWelcomeSeen());
     setCountdownScreenOpen(true);
   }, []);
 
@@ -711,7 +700,7 @@ export function NeighborhoodApp({
       {eventCountdown.active && eventCountdown.parts ? (
         <EventCountdownBar
           parts={eventCountdown.parts}
-          onClick={() => openCountdownScreen(false)}
+          onClick={openCountdownScreen}
         />
       ) : null}
       <button

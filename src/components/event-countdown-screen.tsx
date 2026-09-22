@@ -6,7 +6,8 @@ import { X } from "lucide-react";
 import type { EventCountdownParts } from "@/lib/event-countdown";
 import { cn } from "@/lib/utils";
 
-const HERO_IMAGE = "/images/stubs/pumpkin-porch.jpg";
+/** Glowing lanterns — matches reference countdown art. */
+const HERO_IMAGE = "/images/stubs/lantern-path.jpg";
 
 export function EventCountdownScreen({
   open,
@@ -34,62 +35,63 @@ export function EventCountdownScreen({
 
   return (
     <div
-      className="event-countdown-screen fixed inset-0 z-[120] flex flex-col bg-[#0a0610]"
+      className="event-countdown-screen fixed inset-0 z-[120] flex flex-col bg-black"
       role="dialog"
       aria-modal="true"
       aria-label="ספירה לאחור לליל האלווין"
     >
-      <div className="flex shrink-0 items-center justify-between px-4 pb-1 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="סגירה"
-          className="inline-flex size-10 items-center justify-center rounded-lg text-violet-300 hover:bg-orange-500/10"
-        >
-          <X className="size-5" />
-        </button>
-        <span className="font-display text-base text-orange-200">ספירה לאחור</span>
-        <span className="size-10" aria-hidden />
+      <div className="flex shrink-0 items-center justify-center border-b border-orange-500/30 bg-orange-500 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
+        <span className="font-display text-lg text-black">ספירה לאחור</span>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col px-4 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
+      <div className="flex min-h-0 flex-1 flex-col bg-black px-4 pt-4">
         {welcome ? (
-          <p className="mb-3 shrink-0 text-center text-base leading-snug text-violet-200">
-            <span className="font-display text-lg text-orange-200">ברוכים הבאים!</span>
+          <p className="mb-3 shrink-0 text-center text-lg leading-snug text-violet-100">
+            <span className="font-display text-xl text-orange-300">ברוכים הבאים!</span>
             {" · "}
-            עוד {parts.days} ימים לליל האלווין בשכונה — הוסיפו בית ותכננו מסלול.
+            עוד {parts.days} ימים · {parts.time} לליל האלווין בשכונה.
           </p>
         ) : null}
 
         <div className="shrink-0 text-center" dir="ltr">
-          <p className="font-creepster text-[clamp(3rem,14vw,4.5rem)] tabular-nums leading-none tracking-wide text-orange-400 [text-shadow:0_0_24px_rgba(251,146,60,0.55)]">
+          <p className="font-creepster text-[clamp(3.25rem,15vw,5rem)] tabular-nums leading-none tracking-wide text-orange-500 [text-shadow:0_0_28px_rgba(249,115,22,0.65)]">
             {parts.days} {dayLabel}
           </p>
           <p
             className={cn(
-              "mt-1 font-creepster tabular-nums leading-none tracking-[0.18em] text-orange-400/95",
-              "text-[clamp(2rem,10vw,3rem)]",
+              "mt-2 font-creepster tabular-nums leading-none tracking-[0.22em] text-orange-500",
+              "text-[clamp(2.25rem,11vw,3.5rem)] [text-shadow:0_0_20px_rgba(249,115,22,0.5)]",
             )}
           >
             {parts.time}
           </p>
         </div>
 
-        <div className="relative mx-auto mt-3 min-h-0 w-full max-w-lg flex-1 overflow-hidden rounded-2xl ring-1 ring-orange-500/25">
+        <div className="relative mx-auto mt-4 min-h-[min(52vh,420px)] w-full max-w-md flex-1 overflow-hidden">
           <Image
             src={HERO_IMAGE}
             alt=""
             fill
             priority
-            sizes="(max-width: 512px) 100vw, 512px"
-            className="object-cover object-center"
+            sizes="(max-width: 512px) 100vw, 448px"
+            className="object-contain object-center"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0610] via-transparent to-[#0a0610]/40" aria-hidden />
         </div>
 
-        <p className="mt-3 shrink-0 text-center text-base leading-snug text-violet-300">
+        <p className="mt-4 shrink-0 text-center text-lg leading-snug text-orange-100/90 sm:text-xl">
           עד 17:00 · 31 באוקטובר · תחילת הערב בשכונה
         </p>
+      </div>
+
+      <div className="shrink-0 border-t border-orange-500/30 bg-orange-500/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-black/20 py-3.5 text-lg font-semibold text-black hover:bg-black/30"
+        >
+          <X className="size-5" aria-hidden />
+          סגירה
+        </button>
       </div>
     </div>
   );
