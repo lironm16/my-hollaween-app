@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import type { EventCountdownParts } from "@/lib/event-countdown";
+import { config } from "@/lib/config";
 
 /** Glowing lanterns — matches reference countdown art. */
 const HERO_IMAGE = "/images/stubs/lantern-path.jpg";
@@ -73,13 +74,21 @@ export function EventCountdownScreen({
           </p>
         ) : null}
 
-        <div className="shrink-0 text-center" dir="ltr">
-          <p className="font-creepster text-[clamp(3.25rem,15vw,5rem)] tabular-nums leading-none tracking-wide text-orange-500 [text-shadow:0_0_28px_rgba(249,115,22,0.65)]">
-            {parts.days} {dayLabel}
-          </p>
-          <p className="mt-2 font-creepster text-[clamp(2.25rem,11vw,3.5rem)] tabular-nums leading-none tracking-[0.22em] text-orange-500 [text-shadow:0_0_20px_rgba(249,115,22,0.5)]">
-            {parts.time}
-          </p>
+        <div className="shrink-0 text-center" aria-live="polite" aria-atomic="true">
+          <div dir="ltr">
+            <p className="font-creepster text-[clamp(3.25rem,15vw,5rem)] tabular-nums leading-none tracking-wide text-orange-500 [text-shadow:0_0_28px_rgba(249,115,22,0.65)]">
+              {parts.days} {dayLabel}
+            </p>
+            <p className="mt-2 font-creepster text-[clamp(2.25rem,11vw,3.5rem)] tabular-nums leading-none tracking-[0.22em] text-orange-500 [text-shadow:0_0_20px_rgba(249,115,22,0.5)]">
+              {parts.time}
+            </p>
+          </div>
+          <div className="mt-3 space-y-1" dir="rtl">
+            <p className="font-display text-[clamp(1.125rem,4.5vw,1.5rem)] text-orange-300">
+              {config.brandEn} · {config.brandHe}
+            </p>
+            <p className="text-[clamp(1rem,3.8vw,1.25rem)] text-violet-300">{config.neighborhood}</p>
+          </div>
         </div>
 
         <div className="relative mx-auto mt-4 aspect-[4/5] w-full max-w-md shrink-0 overflow-hidden">

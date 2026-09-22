@@ -23,8 +23,15 @@ export function EventCountdownBar({
       )}
       dir="ltr"
     >
-      <span className="event-countdown-bar__text whitespace-nowrap font-creepster max-w-full text-center tabular-nums tracking-wide text-orange-400 [text-shadow:0_0_10px_rgba(251,146,60,0.35)]">
-        {parts.label}
+      <span
+        className="event-countdown-bar__text inline-flex max-w-full items-baseline justify-center gap-0 whitespace-nowrap font-creepster tabular-nums tracking-wide text-orange-400 [text-shadow:0_0_10px_rgba(251,146,60,0.35)]"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <span className="shrink-0">
+          {parts.days} {parts.days === 1 ? "Day" : "Days"} ·
+        </span>
+        <span className="event-countdown-bar__clock ms-1 shrink-0 tracking-widest">{parts.time}</span>
       </span>
     </button>
   );
