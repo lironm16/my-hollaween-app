@@ -258,7 +258,7 @@ export function AppHeader({
             <p className="mt-1 text-center font-display text-base text-orange-200/90">
               Liron Matityahu
             </p>
-            <p className="mt-1 text-center text-sm tabular-nums text-violet-500/70" dir="ltr">
+            <p className="mt-1 text-center text-sm tabular-nums text-violet-300/90" dir="ltr">
               {appVersionLabel()}
             </p>
           </div>
