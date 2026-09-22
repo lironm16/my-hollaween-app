@@ -57,6 +57,7 @@ export function MapHouseSheet({
   skipMeta,
   index,
   filterMismatchReasons,
+  hideHoursBanner = false,
 }: {
   house: PublicHouse;
   clusterHouses: PublicHouse[];
@@ -87,6 +88,7 @@ export function MapHouseSheet({
   skipMeta?: SkippedHouseMeta;
   index?: number;
   filterMismatchReasons?: string[];
+  hideHoursBanner?: boolean;
 }) {
   const labelId = useId();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -488,6 +490,7 @@ export function MapHouseSheet({
                         extra={extra}
                         chrome="sheet"
                         index={index}
+                        hideHoursBanner={hideHoursBanner}
                         headerMenu={actionMenu}
                       />
                     )}

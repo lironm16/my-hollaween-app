@@ -13,8 +13,8 @@ import { filterHouses } from "@/lib/filter-houses";
 import { visitWindowIssue } from "@/lib/hours";
 import { resolveVisitWindow } from "@/lib/visit-window";
 import type { HouseFiltersState } from "@/lib/offline-db";
-import { diffRouteByFilters } from "@/lib/route-changes";
-import { buildWalkingRouteOrdered, type WalkingRoute } from "@/lib/route";
+import { diffRouteByFilters, rebuildRouteAfterFilterChange } from "@/lib/route-changes";
+import type { WalkingRoute } from "@/lib/route";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
@@ -28,7 +28,6 @@ export function useFilterDraft({
   pinnedRoute,
   setPinnedRoute,
   origin,
-  visitedIds,
   skippedIds,
   now,
 }: {
@@ -47,7 +46,6 @@ export function useFilterDraft({
   pinnedRoute: WalkingRoute | null;
   setPinnedRoute: (route: WalkingRoute | null) => void;
   origin: ResolvedOrigin;
-  visitedIds: string[];
   skippedIds: string[];
   now: Date;
 }) {
@@ -71,45 +69,6 @@ export function useFilterDraft({
   );
   const visitWindowInvalid = houseFiltersDraftInvalid(sheetFilters, now);
 
-  function routeHousesForFilters(nextFilters: HouseFiltersState) {
-    const nextVisible = filterHouses(houses, nextFilters, filterContext);
-    const visibleIds = new Set(nextVisible.map((house) => house.id));
-    const skipped = new Set(skippedIds);
-    const routeHouses: PublicHouse[] = [];
-    const seen = new Set<string>();
-    for (const stop of pinnedRoute?.stops ?? []) {
-      for (const house of stop.houses) {
-        const fresh = nextVisible.find((item) => item.id === house.id);
-        if (!fresh || !visibleIds.has(house.id) || seen.has(house.id)) continue;
-        if (skipped.has(house.id)) continue;
-        if (visitedIds.includes(house.id)) continue;
-        routeHouses.push(fresh);
-        seen.add(house.id);
-      }
-    }
-    for (const house of nextVisible) {
-      if (seen.has(house.id)) continue;
-      if (skipped.has(house.id)) continue;
-      if (visitedIds.includes(house.id)) continue;
-      routeHouses.push(house);
-      seen.add(house.id);
-    }
-    return routeHouses;
-  }
-
-  function trimRouteToFilter(nextFilters: HouseFiltersState) {
-    const nextVisible = filterHouses(houses, nextFilters, filterContext);
-    const visibleIds = new Set(nextVisible.map((house) => house.id));
-    const routeHouses: PublicHouse[] = [];
-    for (const stop of pinnedRoute?.stops ?? []) {
-      for (const house of stop.houses) {
-        const fresh = nextVisible.find((item) => item.id === house.id);
-        if (fresh && visibleIds.has(house.id)) routeHouses.push(fresh);
-      }
-    }
-    return routeHouses;
-  }
-
   function previewRouteDiff(nextFilters: HouseFiltersState) {
     return diffRouteByFilters(pinnedRoute, houses, nextFilters, {
       ...filterContext,
@@ -120,15 +79,20 @@ export function useFilterDraft({
   function applyFiltersWithRoute(nextFilters: HouseFiltersState, includeNew: boolean) {
     updateFilters(() => cloneHouseFilters(nextFilters));
     if (routeMode) {
-      const routeHouses = includeNew
-        ? routeHousesForFilters(nextFilters)
-        : trimRouteToFilter(nextFilters);
       setPinnedRoute(
-        buildWalkingRouteOrdered(routeHouses, { lat: origin.lat, lng: origin.lng }, {
-          accessible: nextFilters.accessibleOnly,
-          startedFrom: origin.kind,
-          originLabel: origin.label,
-        }),
+        rebuildRouteAfterFilterChange(
+          pinnedRoute,
+          houses,
+          nextFilters,
+          { ...filterContext, skippedIds },
+          includeNew,
+          { lat: origin.lat, lng: origin.lng },
+          {
+            accessible: nextFilters.accessibleOnly,
+            startedFrom: origin.kind,
+            originLabel: origin.label,
+          },
+        ),
       );
     }
     setFiltersOpen(false);

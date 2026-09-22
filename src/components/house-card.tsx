@@ -28,6 +28,7 @@ export function HouseCard({
   onToggleEdit,
   expanded = false,
   index,
+  hideHoursBanner = false,
 }: {
   house: PublicHouse;
   distanceM?: number;
@@ -49,6 +50,7 @@ export function HouseCard({
   /** Show full details inline (non-compact list layout). */
   expanded?: boolean;
   index?: number;
+  hideHoursBanner?: boolean;
 }) {
   return (
     <Card
@@ -69,6 +71,7 @@ export function HouseCard({
           chrome="sheet"
           compact={!expanded}
           index={index}
+          hideHoursBanner={hideHoursBanner}
           headerMenu={
             <HouseActionBar
               house={house}

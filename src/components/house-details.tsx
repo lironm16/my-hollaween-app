@@ -287,6 +287,7 @@ export function HouseDetails({
   compact = true,
   distanceM,
   index,
+  hideHoursBanner = false,
 }: {
   house: PublicHouse;
   extra?: ReactNode;
@@ -307,6 +308,8 @@ export function HouseDetails({
   compact?: boolean;
   distanceM?: number;
   index?: number;
+  /** Route tail / visited-skipped cards: no opening-date or hours banners. */
+  hideHoursBanner?: boolean;
 }) {
   const displayAddress = formatDisplayAddress(house);
   const addedMeta = houseAddedMetaLine(house);
@@ -326,7 +329,7 @@ export function HouseDetails({
     setPhotoOpen(false);
   }, [house.id, house.photoUrl]);
   const sheet = chrome === "sheet";
-  const hours = formatHoursLabel(house);
+  const hours = hideHoursBanner ? "" : formatHoursLabel(house);
   const hasPhoto = Boolean(house.photoUrl && !photoBroken);
   const indexBadge =
     index != null ? (
@@ -471,7 +474,7 @@ export function HouseDetails({
             document.body,
           )
         : null}
-      <HoursStatusBanner house={house} compact={compact} />
+      {hideHoursBanner ? null : <HoursStatusBanner house={house} compact={compact} />}
       <div className={cn(compact ? "space-y-1.5" : "space-y-2")}>
         <div className="flex min-w-0 items-center gap-2">
           {indexBadge}

@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   diffRouteByFilters,
   diffRouteBySkippedIds,
+  rebuildRouteAfterFilterChange,
   rebuildRouteAfterSkipChange,
   routeCandidateHouses,
   whyAddedToRoute,
@@ -185,6 +186,37 @@ describe("rebuildRouteAfterSkipChange", () => {
       rebuilt!.stops.map((stop) => stop.house.id),
       ["near", "far"],
     );
+  });
+});
+
+describe("rebuildRouteAfterFilterChange", () => {
+  it("re-optimizes stop order when widening filters, not append-only", () => {
+    const origin = { lat: 32.0919, lng: 34.8112 };
+    const near = stub("near", { lat: 32.09195, lng: 34.81125, address: "חרוזים 8, חרוזים" });
+    const far = stub("far", { lat: 32.094, lng: 34.818, address: "נחלת גנים 1, נחלת גנים" });
+    const mid = stub("mid", { lat: 32.0925, lng: 34.814, address: "חרוזים 12, חרוזים" });
+    const likedOnlyRoute = buildWalkingRouteOrdered([far], origin);
+    const context = {
+      houseSet: "real" as const,
+      likedIds: ["far"],
+      visitedIds: [],
+      skippedIds: [],
+      now: new Date("2026-10-31T18:00:00"),
+    };
+    const allFilters = { ...baseFilters, likedOnly: false };
+    const rebuilt = rebuildRouteAfterFilterChange(
+      likedOnlyRoute,
+      [near, mid, far],
+      allFilters,
+      context,
+      true,
+      origin,
+    );
+    assert.ok(rebuilt);
+    const ids = rebuilt!.stops.map((stop) => stop.house.id);
+    assert.equal(ids.length, 3);
+    assert.equal(ids[0], "near");
+    assert.notEqual(ids.join(","), "far,near,mid");
   });
 });
 

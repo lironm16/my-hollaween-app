@@ -783,6 +783,10 @@ export function NeighborhoodApp({
                     if (house) selection.selectOnMap(house);
                   }}
                   onBackToClusterOverview={selection.backToClusterOverview}
+                  hideHoursBanner={
+                    routeMode &&
+                    (visits.visited(mapSheetHouse.id) || skips.skipped(mapSheetHouse.id))
+                  }
                 />
               </div>
             ) : null}
