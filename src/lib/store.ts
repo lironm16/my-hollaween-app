@@ -742,15 +742,17 @@ async function withStaticRehearsalStubs(db: DbFile): Promise<DbFile> {
 }
 
 async function loadDb(fresh = false): Promise<DbFile> {
-  if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return mem;
+  // Warm mem can lag Firestore rehearsal overlays — always re-merge stubs before serving.
+  if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return withStaticRehearsalStubs(mem);
   return withLock(async () => {
-    if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return mem;
+    if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return withStaticRehearsalStubs(mem);
     const db = await readFileDb();
     const global = getGlobalDb();
     const chosen = pickNewest(db, global) ?? db;
     foldPushSubscriptions(chosen, mem, global);
-    setMem(chosen);
-    return chosen;
+    const merged = await withStaticRehearsalStubs(chosen);
+    setMem(merged);
+    return merged;
   });
 }
 

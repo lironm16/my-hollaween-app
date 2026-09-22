@@ -3,7 +3,7 @@ import { canonicalHouseId } from "@/lib/ids";
 import { isStubHouse } from "@/lib/house-set";
 import type { DbFile, House } from "@/lib/types";
 
-const OVERLAY_MEM_TTL_MS = 60_000;
+const OVERLAY_MEM_TTL_MS = 5_000;
 
 type OverlayDoc = {
   updatedAt?: string;

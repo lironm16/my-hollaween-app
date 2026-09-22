@@ -60,10 +60,12 @@ export function useAdminHouses({
       if (appInForeground()) void loadAdminHouses();
     };
     window.addEventListener("hw-catalog-changed", onChanged);
+    window.addEventListener("hw-catalog-refreshed", onChanged);
     document.addEventListener("visibilitychange", onVis);
 
     return () => {
       window.removeEventListener("hw-catalog-changed", onChanged);
+      window.removeEventListener("hw-catalog-refreshed", onChanged);
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [admin, loadAdminHouses]);
