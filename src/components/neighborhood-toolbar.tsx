@@ -62,6 +62,7 @@ export function NeighborhoodToolbar({
   routeUpdateTicker = null,
   onOpenRouteUpdates,
   floating = false,
+  docked = false,
 }: {
   view: HomeView;
   onViewChange: (view: HomeView) => void;
@@ -80,14 +81,18 @@ export function NeighborhoodToolbar({
   onOpenRouteUpdates?: () => void;
   /** Float over map/list instead of a fixed strip under the header. */
   floating?: boolean;
+  /** Full-width bottom dock in list view (tab-bar style). */
+  docked?: boolean;
 }) {
   return (
     <div
       className={cn(
         "app-toolbar",
-        floating
-          ? "app-toolbar--floating rounded-2xl border-0 bg-[#160b1f]/92 px-2 py-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.45)] ring-1 ring-orange-500/30 backdrop-blur-md"
-          : "relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2",
+        docked
+          ? "app-toolbar--docked rounded-none border-0 bg-transparent px-0 py-0 shadow-none ring-0"
+          : floating
+            ? "app-toolbar--floating rounded-2xl border-0 bg-[#160b1f]/92 px-2 py-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.45)] ring-1 ring-orange-500/30 backdrop-blur-md"
+            : "relative z-40 border-b border-orange-500/15 bg-[#12081a]/80 px-3 py-2",
       )}
       style={floating ? undefined : { flexShrink: 0 }}
     >

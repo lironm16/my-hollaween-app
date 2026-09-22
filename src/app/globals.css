@@ -1671,9 +1671,21 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   letter-spacing: 0.08em;
 }
 
-/* Inside map-stage (z-15). House sheet host is z-40 — always above for taps. */
+/* Above map/list content; house sheet host is z-50 — always above for taps. */
 .floating-toolbar-host {
+  position: absolute;
   bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+.floating-toolbar-host--list-dock {
+  bottom: 0;
+  z-index: 30;
+  padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(18, 8, 26, 0.97);
+  border-top: 1px solid rgba(249, 115, 22, 0.22);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 -10px 36px rgba(0, 0, 0, 0.42);
 }
 
 #neighborhood-shell:has(.map-house-sheet.is-open) .floating-toolbar-host,
@@ -1734,9 +1746,9 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   }
 }
 
-#neighborhood-shell.has-floating-toolbar #house-list-skip > div:last-child,
-#neighborhood-shell.has-floating-toolbar #house-list-skip .route-list-root {
-  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+#neighborhood-shell.is-list-view #house-list-skip {
+  box-sizing: border-box;
+  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
 }
 
 .map-fab-stack {

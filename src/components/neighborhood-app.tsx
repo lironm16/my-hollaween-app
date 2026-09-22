@@ -690,7 +690,10 @@ export function NeighborhoodApp({
   return (
     <div
       id="neighborhood-shell"
-      className="has-floating-toolbar relative isolate flex flex-col overflow-hidden"
+      className={cn(
+        "has-floating-toolbar relative isolate flex flex-col overflow-hidden",
+        view === "list" && "is-list-view",
+      )}
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
       <AppHeader onHomeTap={goHome} />
@@ -846,39 +849,6 @@ export function NeighborhoodApp({
                 hidden={Boolean(selection.selected) && !originPick.originPickActive}
                 houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
               />
-              {!originPick.originPickActive ? (
-                <div className="floating-toolbar-host pointer-events-none absolute inset-x-0 z-[15] px-3">
-                  <div className="pointer-events-auto">
-                    <NeighborhoodToolbar
-                      floating
-                      view={view}
-                      onViewChange={setView}
-                      onListView={() => {
-                        setView("list");
-                        selection.closeSelection();
-                      }}
-                      likedOnly={likedOnly}
-                      activeFilterCount={activeFilterCount}
-                      onOpenFilters={() => setFiltersOpen(true)}
-                      originShifted={originChoice.kind !== "gps"}
-                      onOpenOriginPicker={() => originPick.setOriginPickerOpen(true)}
-                      routeMode={routeMode}
-                      onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
-                      houses={visible}
-                      routeTicker={originPick.routeTicker}
-                      routeUpdateCount={routeMode ? routeAlerts.changes.length : 0}
-                      routeUpdateTicker={
-                        routeMode && routeAlerts.changes.length > 0
-                          ? routeChangeBannerMessage(routeAlerts.changes, routeAlerts.fromBackground)
-                          : null
-                      }
-                      onOpenRouteUpdates={
-                        routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
-                      }
-                    />
-                  </div>
-                </div>
-              ) : null}
             </div>
             {mapSheetHouse && houseDetailCommon && view === "map" && !originPick.originPickActive ? (
               <div className="map-sheet-host" aria-hidden={false}>
@@ -994,6 +964,45 @@ export function NeighborhoodApp({
                   />
                 )}
             </div>
+            {!originPick.originPickActive ? (
+              <div
+                className={cn(
+                  "floating-toolbar-host pointer-events-none absolute inset-x-0 z-[30] px-3",
+                  view === "list" && "floating-toolbar-host--list-dock",
+                )}
+              >
+                <div className="pointer-events-auto">
+                  <NeighborhoodToolbar
+                    floating
+                    docked={view === "list"}
+                    view={view}
+                    onViewChange={setView}
+                    onListView={() => {
+                      setView("list");
+                      selection.closeSelection();
+                    }}
+                    likedOnly={likedOnly}
+                    activeFilterCount={activeFilterCount}
+                    onOpenFilters={() => setFiltersOpen(true)}
+                    originShifted={originChoice.kind !== "gps"}
+                    onOpenOriginPicker={() => originPick.setOriginPickerOpen(true)}
+                    routeMode={routeMode}
+                    onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
+                    houses={visible}
+                    routeTicker={originPick.routeTicker}
+                    routeUpdateCount={routeMode ? routeAlerts.changes.length : 0}
+                    routeUpdateTicker={
+                      routeMode && routeAlerts.changes.length > 0
+                        ? routeChangeBannerMessage(routeAlerts.changes, routeAlerts.fromBackground)
+                        : null
+                    }
+                    onOpenRouteUpdates={
+                      routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
+                    }
+                  />
+                </div>
+              </div>
+            ) : null}
           {showBootstrapSpinner ? (
             <div
               className="absolute inset-0 z-30 flex items-center justify-center bg-[#12081a] text-orange-200"
