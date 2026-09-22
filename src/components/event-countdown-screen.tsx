@@ -47,12 +47,12 @@ export function EventCountdownScreen({
 
   return createPortal(
     <div
-      className="event-countdown-screen fixed inset-0 z-[2000] flex h-dvh max-h-dvh flex-col bg-black"
+      className="event-countdown-screen fixed inset-0 z-[2000] flex h-dvh max-h-dvh flex-col overflow-hidden bg-black"
       role="dialog"
       aria-modal="true"
       aria-label="ספירה לאחור לליל האלווין"
     >
-      <div className="relative z-20 flex shrink-0 items-center justify-between border-b border-orange-500/30 bg-orange-500 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
+      <div className="relative z-20 flex shrink-0 items-center justify-between border-b border-orange-500/30 bg-orange-500 px-4 py-2.5 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
         <button
           type="button"
           onClick={onClose}
@@ -65,46 +65,54 @@ export function EventCountdownScreen({
         <span className="size-10" aria-hidden />
       </div>
 
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-black px-4 pt-4">
-        {welcome ? (
-          <p className="mb-3 shrink-0 text-center text-lg leading-snug text-violet-100">
-            <span className="font-display text-xl text-orange-300">ברוכים הבאים!</span>
-            {" · "}
-            עוד {parts.days} ימים · {parts.time} לליל האלווין בשכונה.
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        <Image
+          src={HERO_IMAGE}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
+        <div
+          className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/35 to-black/80"
+          aria-hidden
+        />
+
+        <div className="absolute inset-0 flex flex-col items-center justify-between px-4 py-4 text-center">
+          {welcome ? (
+            <p className="max-w-md shrink-0 text-base leading-snug text-violet-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+              <span className="font-display text-lg text-orange-300">ברוכים הבאים!</span>
+              {" · "}
+              עוד {parts.days} ימים · {parts.time}
+            </p>
+          ) : (
+            <span className="shrink-0" aria-hidden />
+          )}
+
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center" aria-live="polite" aria-atomic="true">
+            <div dir="ltr">
+              <p className="font-creepster text-[clamp(2.75rem,13vw,4.25rem)] tabular-nums leading-none tracking-wide text-orange-400 drop-shadow-[0_0_24px_rgba(249,115,22,0.7)]">
+                {parts.days} {dayLabel}
+              </p>
+              <p className="mt-1 font-creepster text-[clamp(2rem,10vw,3.25rem)] tabular-nums leading-none tracking-[0.2em] text-orange-400 drop-shadow-[0_0_18px_rgba(249,115,22,0.6)]">
+                {parts.time}
+              </p>
+            </div>
+            <div className="mt-3 max-w-md space-y-1" dir="rtl">
+              <p className="font-display text-[clamp(1.125rem,4.5vw,1.5rem)] text-orange-200 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                {config.brandEn} · {config.brandHe}
+              </p>
+              <p className="text-[clamp(0.95rem,3.6vw,1.2rem)] text-violet-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                {config.neighborhood}
+              </p>
+            </div>
+          </div>
+
+          <p className="max-w-md shrink-0 text-base leading-snug text-orange-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] sm:text-lg">
+            עד 17:00 · 31 באוקטובר · תחילת הערב בשכונה
           </p>
-        ) : null}
-
-        <div className="shrink-0 text-center" aria-live="polite" aria-atomic="true">
-          <div dir="ltr">
-            <p className="font-creepster text-[clamp(3.25rem,15vw,5rem)] tabular-nums leading-none tracking-wide text-orange-500 [text-shadow:0_0_28px_rgba(249,115,22,0.65)]">
-              {parts.days} {dayLabel}
-            </p>
-            <p className="mt-2 font-creepster text-[clamp(2.25rem,11vw,3.5rem)] tabular-nums leading-none tracking-[0.22em] text-orange-500 [text-shadow:0_0_20px_rgba(249,115,22,0.5)]">
-              {parts.time}
-            </p>
-          </div>
-          <div className="mt-3 space-y-1" dir="rtl">
-            <p className="font-display text-[clamp(1.125rem,4.5vw,1.5rem)] text-orange-300">
-              {config.brandEn} · {config.brandHe}
-            </p>
-            <p className="text-[clamp(1rem,3.8vw,1.25rem)] text-violet-300">{config.neighborhood}</p>
-          </div>
         </div>
-
-        <div className="relative mx-auto mt-4 aspect-[4/5] w-full max-w-md shrink-0 overflow-hidden">
-          <Image
-            src={HERO_IMAGE}
-            alt=""
-            fill
-            priority
-            sizes="(max-width: 512px) 100vw, 448px"
-            className="object-contain object-center"
-          />
-        </div>
-
-        <p className="mt-4 shrink-0 pb-2 text-center text-lg leading-snug text-orange-100/90 sm:text-xl">
-          עד 17:00 · 31 באוקטובר · תחילת הערב בשכונה
-        </p>
       </div>
 
       <div className="relative z-30 shrink-0 border-t border-orange-500/30 bg-orange-500 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
