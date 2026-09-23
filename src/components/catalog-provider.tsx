@@ -249,7 +249,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     // Full load — shared snapshot first, then API delta for anything newer.
     try {
       if (readServerSimDown()) throw new Error("sim-down");
-      const snap = await fetchJson(SNAPSHOT_URL, force);
+      const snap = await fetchJson(SNAPSHOT_URL, force || needsFullRefresh);
       let merged = withDeviceHouseOverlays(syncCatalog(catalogRef.current, snap));
       try {
         const live = await fetchJson("/api/catalog", false, snap.updatedAt);

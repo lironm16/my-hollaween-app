@@ -5,6 +5,7 @@ import {
   countRealHouses,
   resolveCatalogHouses,
 } from "@/lib/catalog-houses";
+import { saveCatalogCache, loadCatalogCacheSync } from "@/lib/offline-db";
 import type { Catalog, PublicHouse } from "@/lib/types";
 
 const CATALOG_LS_KEY = "hw-catalog-cache";
@@ -109,6 +110,23 @@ describe("resolveCatalogHouses", { skip: !hasLocalStorage }, () => {
     const ids = resolveCatalogHouses(live)
       .map((item) => item.id)
       .sort();
+    assert.deepEqual(ids, ["a", "b", "c"]);
+  });
+
+  it("saveCatalogCache unions with the existing device cache instead of shrinking it", async () => {
+    const cached = catalog(
+      [
+        house("a", { updatedAt: "2026-10-31T09:00:00.000Z" }),
+        house("b", { updatedAt: "2026-10-31T09:00:00.000Z" }),
+        house("c", { updatedAt: "2026-10-31T09:00:00.000Z" }),
+      ],
+      "2026-10-31T09:00:00.000Z",
+    );
+    localStorage.setItem(CATALOG_LS_KEY, JSON.stringify(cached));
+    await saveCatalogCache(
+      catalog([house("a", { updatedAt: "2026-10-31T12:00:00.000Z" })], "2026-10-31T12:00:00.000Z"),
+    );
+    const ids = (loadCatalogCacheSync()?.houses ?? []).map((item) => item.id).sort();
     assert.deepEqual(ids, ["a", "b", "c"]);
   });
 });

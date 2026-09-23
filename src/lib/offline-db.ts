@@ -1,5 +1,6 @@
 import type { NeighborhoodId } from "@/lib/config";
 import type { SkipReasonId } from "@/lib/skip-reasons";
+import { syncCatalog } from "@/lib/catalog-sync";
 import { tombstoneHouse, loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { syncDecorFields } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
@@ -103,7 +104,9 @@ export function loadCatalogCacheSync(): Catalog | null {
 }
 
 export async function saveCatalogCache(catalog: Catalog) {
-  const safe = asCachedCatalog(catalog);
+  const existing = readLocalCatalog();
+  const merged = existing ? syncCatalog(existing, catalog) : catalog;
+  const safe = asCachedCatalog(merged);
   if (!safe) return;
   writeLocalCatalog(safe);
   try {
