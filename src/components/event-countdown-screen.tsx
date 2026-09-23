@@ -54,7 +54,7 @@ export function EventCountdownScreen({
   return createPortal(
     <div
       className={cn(
-        "event-countdown-screen fixed inset-0 z-[2000] flex flex-col overflow-hidden bg-[#141028]",
+        "event-countdown-screen fixed inset-0 z-[2000] flex flex-col overflow-hidden bg-[#221838]",
         standalone ? "event-countdown-screen--standalone" : "event-countdown-screen--browser",
       )}
       style={{

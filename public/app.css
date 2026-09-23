@@ -1495,8 +1495,8 @@
   .bg-\[\#64748b\] {
     background-color: #64748b;
   }
-  .bg-\[\#141028\] {
-    background-color: #141028;
+  .bg-\[\#221838\] {
+    background-color: #221838;
   }
   .bg-\[\#241332\] {
     background-color: #241332;
@@ -6092,10 +6092,10 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   letter-spacing: 0.08em;
 }
 .countdown-scene-bg {
-  background: radial-gradient(circle at 96% 7%, rgba(255, 210, 120, 0.42) 0%, rgba(255, 140, 40, 0.16) 28%, transparent 55%),
-    radial-gradient(ellipse 90% 55% at 50% 88%, rgba(124, 58, 237, 0.22), transparent 58%),
-    radial-gradient(ellipse 80% 45% at 50% 20%, rgba(88, 48, 150, 0.2), transparent 62%),
-    linear-gradient(180deg, #1a1438 0%, #201432 45%, #141028 100%);
+  background: radial-gradient(circle at 96% 7%, rgba(255, 210, 120, 0.5) 0%, rgba(255, 140, 40, 0.2) 30%, transparent 58%),
+    radial-gradient(ellipse 90% 55% at 50% 88%, rgba(124, 58, 237, 0.28), transparent 58%),
+    radial-gradient(ellipse 80% 45% at 50% 20%, rgba(120, 72, 190, 0.26), transparent 62%),
+    linear-gradient(180deg, #2a2248 0%, #2e1f4a 45%, #221838 100%);
 }
 .countdown-decor__bat-emoji {
   position: absolute;
@@ -6105,39 +6105,26 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   opacity: 0.88;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
   will-change: transform;
+  animation: countdown-bat-emoji-rtl linear infinite;
 }
 .countdown-decor__bat-emoji--1 {
   top: clamp(2.5rem, 12vh, 4.5rem);
-  animation: countdown-bat-emoji-ltr 16s linear infinite;
+  animation-duration: 16s;
   animation-delay: -3s;
 }
 .countdown-decor__bat-emoji--2 {
   top: clamp(3.25rem, 15vh, 5.5rem);
   font-size: clamp(2rem, 9vw, 3rem);
   opacity: 0.78;
-  animation: countdown-bat-emoji-rtl 19s linear infinite;
+  animation-duration: 19s;
   animation-delay: -8s;
 }
 .countdown-decor__bat-emoji--3 {
   top: clamp(1.75rem, 9vh, 3.25rem);
   font-size: clamp(1.5rem, 7vw, 2.25rem);
   opacity: 0.72;
-  animation: countdown-bat-emoji-ltr 13s linear infinite;
+  animation-duration: 13s;
   animation-delay: -1s;
-}
-.countdown-decor__bat-emoji--ltr {
-  animation-name: countdown-bat-emoji-ltr;
-}
-.countdown-decor__bat-emoji--rtl {
-  animation-name: countdown-bat-emoji-rtl;
-}
-@keyframes countdown-bat-emoji-ltr {
-  0% {
-    transform: translateX(-110vw);
-  }
-  100% {
-    transform: translateX(110vw);
-  }
 }
 @keyframes countdown-bat-emoji-rtl {
   0% {
