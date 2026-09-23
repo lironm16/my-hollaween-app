@@ -965,16 +965,11 @@ export function NeighborhoodApp({
                 )}
             </div>
             {!originPick.originPickActive ? (
-              <div
-                className={cn(
-                  "floating-toolbar-host pointer-events-none absolute inset-x-0 z-[30] px-3",
-                  view === "list" && "floating-toolbar-host--list-dock",
-                )}
-              >
+              <div className="floating-toolbar-host floating-toolbar-host--bottom-dock pointer-events-none absolute inset-x-0 z-[30]">
                 <div className="pointer-events-auto">
                   <NeighborhoodToolbar
                     floating
-                    docked={view === "list"}
+                    docked
                     view={view}
                     onViewChange={setView}
                     onListView={() => {

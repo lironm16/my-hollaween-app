@@ -81,7 +81,7 @@ export function NeighborhoodToolbar({
   onOpenRouteUpdates?: () => void;
   /** Float over map/list instead of a fixed strip under the header. */
   floating?: boolean;
-  /** Full-width bottom dock in list view (tab-bar style). */
+  /** Full-width bottom dock (same geometry in map + list). */
   docked?: boolean;
 }) {
   return (

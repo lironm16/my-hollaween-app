@@ -1674,13 +1674,13 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 /* Above map/list content; house sheet host is z-50 — always above for taps. */
 .floating-toolbar-host {
   position: absolute;
-  bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 }
 
-.floating-toolbar-host--list-dock {
+.floating-toolbar-host--bottom-dock {
   bottom: 0;
   z-index: 30;
-  padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  /* Flush to screen edge; only safe-area lifts controls above the home indicator. */
+  padding: 0.25rem 0.75rem env(safe-area-inset-bottom, 0px);
   background: rgba(18, 8, 26, 0.97);
   border-top: 1px solid rgba(249, 115, 22, 0.22);
   backdrop-filter: blur(14px);
@@ -1701,11 +1701,11 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 
 #neighborhood-shell.has-floating-toolbar .map-fab-stack {
-  bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
 }
 
 #neighborhood-shell.has-floating-toolbar .map-add-house-fab {
-  bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
 }
 
 .app-toolbar--floating {
@@ -1748,7 +1748,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 
 #neighborhood-shell.is-list-view #house-list-skip {
   box-sizing: border-box;
-  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
 }
 
 .map-fab-stack {
