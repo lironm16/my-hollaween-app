@@ -466,8 +466,8 @@
   .z-\[1\] {
     z-index: 1;
   }
-  .z-\[8\] {
-    z-index: 8;
+  .z-\[6\] {
+    z-index: 6;
   }
   .z-\[55\] {
     z-index: 55;
@@ -6163,6 +6163,83 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   opacity: 0.75;
   animation-duration: 24s;
   animation-delay: -18s;
+}
+.countdown-decor__bat-emoji--7 {
+  top: 52%;
+  font-size: clamp(1.55rem, 7vw, 2.35rem);
+  opacity: 0.64;
+  animation-duration: 21s;
+  animation-delay: -5s;
+}
+.countdown-decor__bat-emoji--8 {
+  top: 61%;
+  font-size: clamp(1.35rem, 6vw, 2rem);
+  opacity: 0.58;
+  animation-duration: 26s;
+  animation-delay: -11s;
+}
+.countdown-decor__bat-emoji--9 {
+  top: 70%;
+  font-size: clamp(1.75rem, 7.5vw, 2.55rem);
+  opacity: 0.52;
+  animation-duration: 18s;
+  animation-delay: -2s;
+}
+.countdown-decor__bat-emoji--10 {
+  top: 79%;
+  font-size: clamp(1.25rem, 5.5vw, 1.9rem);
+  opacity: 0.48;
+  animation-duration: 29s;
+  animation-delay: -16s;
+}
+.countdown-scene-fog {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: min(52vh, 24rem);
+  pointer-events: none;
+}
+.countdown-scene-fog::before,
+.countdown-scene-fog::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  will-change: transform, opacity;
+}
+.countdown-scene-fog::before {
+  background: radial-gradient(ellipse 120% 70% at 50% 100%, rgba(124, 58, 237, 0.42) 0%, transparent 68%),
+    radial-gradient(ellipse 90% 55% at 20% 85%, rgba(139, 92, 246, 0.28) 0%, transparent 62%),
+    radial-gradient(ellipse 85% 50% at 82% 78%, rgba(109, 40, 217, 0.32) 0%, transparent 58%),
+    linear-gradient(180deg, transparent 0%, rgba(91, 33, 182, 0.22) 38%, rgba(76, 29, 149, 0.38) 100%);
+  filter: blur(14px);
+  animation: countdown-fog-drift 11s ease-in-out infinite alternate;
+}
+.countdown-scene-fog::after {
+  background: radial-gradient(ellipse 100% 45% at 50% 100%, rgba(167, 139, 250, 0.2) 0%, transparent 72%),
+    linear-gradient(180deg, transparent 12%, rgba(124, 58, 237, 0.14) 55%, rgba(91, 33, 182, 0.28) 100%);
+  filter: blur(22px);
+  opacity: 0.85;
+  animation: countdown-fog-drift-alt 14s ease-in-out infinite alternate;
+}
+@keyframes countdown-fog-drift {
+  0% {
+    transform: translateX(-3%) scale(1);
+    opacity: 0.88;
+  }
+  100% {
+    transform: translateX(3%) scale(1.04);
+    opacity: 1;
+  }
+}
+@keyframes countdown-fog-drift-alt {
+  0% {
+    transform: translateX(4%) scale(1.02);
+    opacity: 0.72;
+  }
+  100% {
+    transform: translateX(-4%) scale(1.06);
+    opacity: 0.92;
+  }
 }
 @keyframes countdown-bat-emoji-rtl {
   0% {
