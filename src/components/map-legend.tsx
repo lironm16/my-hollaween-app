@@ -95,8 +95,8 @@ const GROUPS: { title: string; items: { key: string; label: string; node: ReactN
   {
     title: "סוג מקום",
     items: [
-      { key: "house-kind", label: "בית", node: <SwatchPin scare="mild" candy="plenty" /> },
-      { key: "poi-kind", label: "נקודת עניין", node: <SwatchPin scare="mild" poi candy="plenty" /> },
+      { key: "house-kind", label: "בית", node: <SwatchPin scare="mild" /> },
+      { key: "poi-kind", label: "נקודת עניין", node: <SwatchPin scare="mild" poi /> },
     ],
   },
   {
