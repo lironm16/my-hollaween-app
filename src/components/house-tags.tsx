@@ -3,7 +3,6 @@
 import { StrollerSign } from "@/components/symbols";
 import { CandySign, candyTone } from "@/components/candy-glyphs";
 import { ScareSign } from "@/components/scare-glyphs";
-import { LocationKindSign } from "@/components/location-kind-sign";
 import { effectiveHouseKind } from "@/lib/house-kind";
 import { PIN_GLYPH_SCALE } from "@/lib/pin-faces";
 import { SensitivitySign } from "@/components/sensitivity-glyphs";
@@ -107,7 +106,6 @@ export function HouseTags({
         {closedInsteadOfCandy ? <ClosedSign className={signSize} /> : null}
         {pausedInsteadOfCandy ? <PauseSign className={signSize} /> : null}
         {showCandy ? <CandySign tone={candy} className={signSize} /> : null}
-        <LocationKindSign kind={kind} className={signSize} glyphClassName={pinGlyphScale} />
         <ScareSign
           level={undecorated ? "none" : scare}
           className={signSize}

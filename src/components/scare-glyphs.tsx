@@ -139,8 +139,8 @@ export function ScareSign({
   const usePumpkin = Glyph === ScarePumpkin;
   const usePoiPinFace = Glyph === PoiPinFaceGlyph;
   const label = struck ? decorShort.none : scareShort[level];
-  const defaultGhostScale = glyphClassName ?? "size-[108%]";
-  const defaultPumpkinScale = glyphClassName ?? "size-[110%]";
+  const defaultGhostScale = glyphClassName ?? PIN_GLYPH_SCALE.house;
+  const defaultPumpkinScale = glyphClassName ?? PIN_GLYPH_SCALE.poi;
 
   return (
     <span

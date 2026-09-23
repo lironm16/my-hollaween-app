@@ -1,5 +1,6 @@
 import { PoiPinFaceGlyph, ScareGhost } from "@/components/scare-glyphs";
 import { houseKindLabels } from "@/lib/labels";
+import { PIN_GLYPH_SCALE } from "@/lib/pin-faces";
 import { PIN_BACKGROUND } from "@/lib/pin-colors";
 import { cn } from "@/lib/utils";
 
@@ -11,12 +12,12 @@ export function LocationKindSign({
 }: {
   kind: "house" | "poi";
   className?: string;
-  /** Inner glyph scale — defaults to filter size; pass PIN_GLYPH_SCALE for card/map match. */
+  /** Inner glyph scale — defaults to map pin % (house 92%, poi 88%). */
   glyphClassName?: string;
 }) {
   const isPoi = kind === "poi";
   const label = houseKindLabels[kind];
-  const glyphScale = glyphClassName ?? "size-[108%]";
+  const glyphScale = glyphClassName ?? (isPoi ? PIN_GLYPH_SCALE.poi : PIN_GLYPH_SCALE.house);
   return (
     <span
       className={cn(
