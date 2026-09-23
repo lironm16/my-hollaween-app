@@ -2,6 +2,7 @@
 
 import { useMemo, type ReactNode } from "react";
 import { MapPinned, Moon, Pause } from "lucide-react";
+import { LocationKindSign } from "@/components/location-kind-sign";
 import { CandySign } from "@/components/candy-glyphs";
 import { OpenNowSign, ClosingSoonSign, OpeningSoonSign } from "@/components/open-now-mark";
 import { ScareSign } from "@/components/scare-glyphs";
@@ -64,8 +65,14 @@ export function AdminStatsCard({
     <div className="space-y-3" dir="rtl">
       <Section title="סימונים שלי">{personalMarks}</Section>
       <Section title="מפה">
-        <div className="mb-2">
-          <Tile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} wide />
+        <div className="mb-2 grid grid-cols-2 gap-2">
+          <Tile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} />
+          <Tile
+            icon={<LocationKindSign kind="poi" className="size-8" />}
+            label="נקודות עניין"
+            value={stats.pois}
+            plain
+          />
         </div>
         <Subhead>שעות</Subhead>
         <Tile

@@ -1,3 +1,4 @@
+import { isPoiHouse } from "@/lib/house-kind";
 import { houseMatchesSet, type HouseSet } from "@/lib/house-set";
 import { isOpeningSoon, isClosingSoon, isOnBreak, isOpenNow } from "@/lib/hours";
 import {
@@ -15,6 +16,7 @@ export type SnapshotHouse = House | PublicHouse;
 
 export type AdminSnapshot = {
   houses: number;
+  pois: number;
   openNow: number;
   openingSoon: number;
   closingSoon: number;
@@ -43,6 +45,7 @@ function scareOf(house: SnapshotHouse): ScareLevel | "none" {
 export type SnapshotStats = Pick<
   AdminSnapshot,
   | "houses"
+  | "pois"
   | "openNow"
   | "openingSoon"
   | "closingSoon"
@@ -75,6 +78,7 @@ export function buildSnapshotStats(input: {
   });
   const {
     houses,
+    pois,
     openNow,
     openingSoon,
     closingSoon,
@@ -96,6 +100,7 @@ export function buildSnapshotStats(input: {
   } = snapshot;
   return {
     houses,
+    pois,
     openNow,
     openingSoon,
     closingSoon,
@@ -130,7 +135,8 @@ export function buildAdminSnapshot(input: {
     markedCandy(house) ? candyLevel(house) : null;
 
   return {
-    houses: listed.length,
+    houses: listed.filter((house) => !isPoiHouse(house)).length,
+    pois: listed.filter((house) => isPoiHouse(house)).length,
     openNow: listed.filter((house) => isOpenNow(house, now)).length,
     openingSoon: listed.filter((house) => isOpeningSoon(house, now)).length,
     closingSoon: listed.filter((house) => isClosingSoon(house, now)).length,

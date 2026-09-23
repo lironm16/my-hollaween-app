@@ -61,6 +61,20 @@ describe("buildSnapshotStats", () => {
     assert.equal(stats.openNow, 1);
   });
 
+  it("counts houses and pois separately on the map", () => {
+    const stats = buildSnapshotStats({
+      houses: [
+        house("a"),
+        house("b"),
+        house("poi-1", { kind: "poi", poiCategory: "coffee" }),
+      ],
+      now: openEvening,
+    });
+
+    assert.equal(stats.houses, 2);
+    assert.equal(stats.pois, 1);
+  });
+
   it("aggregates candy and sensitivity counts", () => {
     const stats = buildSnapshotStats({
       houses: [
