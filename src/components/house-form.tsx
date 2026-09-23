@@ -387,12 +387,12 @@ export function HouseForm({
             maxLength={HOUSE_FIELD_LIMITS.addedBy.max}
             onChange={(e) => setAddedBy(e.target.value)}
             placeholder="ישראל כהן"
-            className="h-10 bg-[#1d1028]"
+            className="h-11 bg-[#1d1028] text-lg"
           />
         </Field>
         <div>
           <div className="mb-2 flex items-baseline justify-between gap-2">
-            <p className="text-base font-medium">שם הבית</p>
+            <p className="text-lg font-medium">שם הבית</p>
             <CharCount length={form.name.length} max={HOUSE_FIELD_LIMITS.name.max} />
           </div>
           <Input
@@ -406,9 +406,9 @@ export function HouseForm({
               setForm({ ...form, name, theme });
             }}
             placeholder="בית משפחת לוי, או בחרו הצעה"
-            className="h-10 bg-[#1d1028]"
+            className="h-11 bg-[#1d1028] text-lg"
           />
-          <p className="mt-2 text-base text-violet-300">הצעות לשם — לחיצה ממלאת את השדה</p>
+          <p className="mt-2 text-lg text-violet-300">הצעות לשם — לחיצה ממלאת את השדה</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {HOUSE_THEMES.map((theme) => {
               const selected = nameMatchesTheme(form.name, theme);
@@ -419,8 +419,8 @@ export function HouseForm({
                   onClick={() => applyNameSuggestion(theme)}
                   className={
                     selected
-                      ? "rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
-                      : "rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
+                      ? "rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black"
+                      : "rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
                   }
                 >
                   {suggestedHouseName(theme)}
@@ -446,12 +446,12 @@ export function HouseForm({
         </Field>
         <div>
           <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="text-base font-medium">סיכה על המפה</p>
+            <p className="text-lg font-medium">סיכה על המפה</p>
             <Button type="button" size="sm" variant="outline" onClick={useMyLocation}>
               {locating ? "מאתרים…" : "המיקום שלי"}
             </Button>
           </div>
-          <p className="mb-2 text-base text-violet-300">
+          <p className="mb-2 text-lg text-violet-300">
             אחרי בחירת כתובת הסיכה זזה לשם. אפשר לגרור אותה לכניסה המדויקת.
           </p>
           <div className="relative z-0 isolate h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/30">
@@ -461,7 +461,7 @@ export function HouseForm({
               onPick={(lat, lng) => void syncFromPin(lat, lng)}
             />
           </div>
-          <p className="mt-1 text-base text-violet-300">
+          <p className="mt-1 text-lg text-violet-300">
             מיקום: {form.lat.toFixed(5)}, {form.lng.toFixed(5)}
           </p>
         </div>
@@ -486,15 +486,15 @@ export function HouseForm({
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
             placeholder="כלב, מדרגות, או משהו שלא קשור להגעה"
           />
-          <p className="text-sm text-violet-400">
+          <p className="text-base text-violet-400">
             מופיעה בכרטיס בנפרד מהוראות ההגעה — למשל כלב, מדרגות, או הערה כללית.
           </p>
         </Field>
       </FormSection>
       <FormSection title="מתי פתוחים">
         <div className="space-y-3">
-          <p className="text-base font-medium">שעות ב־31 באוקטובר</p>
-          <p className="text-base text-violet-300">
+          <p className="text-lg font-medium">שעות ב־31 באוקטובר</p>
+          <p className="text-lg text-violet-300">
             הבתים פתוחים רק בליל האלווין. אפשר כמה חלונות בערב (למשל 17:00–18:00, 19:00–20:00) אם
             יוצאים באמצע לטריק-אור-טריט.
           </p>
@@ -504,13 +504,13 @@ export function HouseForm({
               className="space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20"
             >
               <div className="flex items-center justify-between gap-2">
-                <p className="text-base font-medium text-orange-100">
+                <p className="text-lg font-medium text-orange-100">
                   {hourWindows.length === 1 ? "חלון שעות" : `חלון ${index + 1}`}
                 </p>
                 {hourWindows.length > 1 ? (
                   <button
                     type="button"
-                    className="text-base text-violet-300 underline-offset-2 hover:underline"
+                    className="text-lg text-violet-300 underline-offset-2 hover:underline"
                     onClick={() => removeHourWindow(index)}
                   >
                     הסרה
@@ -538,18 +538,18 @@ export function HouseForm({
           {hourWindows.length < MAX_HOUR_WINDOWS ? (
             <button
               type="button"
-              className="text-base font-medium text-orange-300 underline-offset-2 hover:underline"
+              className="text-lg font-medium text-orange-300 underline-offset-2 hover:underline"
               onClick={addHourWindow}
             >
               + הוספת חלון שעות
             </button>
           ) : null}
-          {hoursIssue ? <p className="text-base text-red-300">{hoursIssue}</p> : null}
+          {hoursIssue ? <p className="text-lg text-red-300">{hoursIssue}</p> : null}
         </div>
         <div className="space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
-          <p className="text-base font-medium text-orange-100">סגירה או הפסקה ידנית בערב האירוע</p>
+          <p className="text-lg font-medium text-orange-100">סגירה או הפסקה ידנית בערב האירוע</p>
           {!pauseCloseEnabled ? (
-            <p className="text-base text-violet-300">
+            <p className="text-lg text-violet-300">
               האפשרות לסמן סגירה או הפסקה תתאפשר בערב האירוע
             </p>
           ) : null}
@@ -589,15 +589,15 @@ export function HouseForm({
       </FormSection>
       <FormSection title="מה יפגשו בבית">
         <div>
-          <p className="mb-2 text-base font-medium">רמת פחד</p>
+          <p className="mb-2 text-lg font-medium">רמת פחד</p>
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
               onClick={() => setDecorLevel("none")}
               className={
                 undecorated
-                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
-                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
               }
             >
               <ScareSign level="none" className="size-6" />
@@ -610,8 +610,8 @@ export function HouseForm({
                 onClick={() => pickScare(level)}
                 className={
                   !undecorated && form.scareLevel === level
-                    ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
-                    : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
+                    ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black"
+                    : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
                 }
               >
                 <ScareSign level={level} className="size-6" />
@@ -621,7 +621,7 @@ export function HouseForm({
           </div>
         </div>
         <div>
-          <p className="mb-2 text-base font-medium">ממתקים</p>
+          <p className="mb-2 text-lg font-medium">ממתקים</p>
           <div className="flex flex-wrap gap-1.5">
             {CANDY_TONES.map((tone) => (
               <button
@@ -630,8 +630,8 @@ export function HouseForm({
                 onClick={() => pickCandy(tone.id)}
                 className={
                   candy === tone.id
-                    ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-base font-medium text-black"
-                    : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-base text-orange-100 ring-1 ring-orange-500/30"
+                    ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black"
+                    : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
                 }
               >
                 <CandySign tone={tone.id} className="size-6" />
@@ -647,18 +647,18 @@ export function HouseForm({
               : "space-y-2 rounded-xl bg-[#1d1028] p-3 opacity-45 ring-1 ring-orange-500/15"
           }
         >
-          <p className="text-base font-medium text-orange-100">רגישויות והתאמות</p>
-          <p className="text-base text-violet-300">
+          <p className="text-lg font-medium text-orange-100">רגישויות והתאמות</p>
+          <p className="text-lg text-violet-300">
             {candyOffered
               ? "סמנו מה יש בבית לילדים עם רגישויות"
               : "בחרו יש או מעט ממתקים כדי לסמן רגישויות"}
           </p>
           <div className="space-y-2">
             {SENSITIVITY_OPTIONS.map((id) => (
-              <label key={id} className="flex items-center gap-2 text-base text-orange-50">
+              <label key={id} className="flex items-center gap-2 text-lg text-orange-50">
                 <input
                   type="checkbox"
-                  className="size-4 accent-orange-500"
+                  className="size-5 accent-orange-500"
                   disabled={!candyOffered}
                   checked={candyOffered && form.treats.includes(id)}
                   onChange={(e) => setTreat(id, e.target.checked)}
@@ -677,16 +677,16 @@ export function HouseForm({
             maxLength={HOUSE_FIELD_LIMITS.description.max}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             placeholder="קישוטים, אווירה, הפתעות בבית או בחצר…"
-            className="min-h-24"
+            className="min-h-24 text-lg"
           />
-          <p className="text-sm text-violet-400">מופיע בכרטיס — אפשר להרחיב אם הטקסט ארוך.</p>
+          <p className="text-base text-violet-400">מופיע בכרטיס — אפשר להרחיב אם הטקסט ארוך.</p>
         </Field>
       </FormSection>
       <FormSection title="הכניסה">
-        <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-base ring-1 ring-orange-500/20">
+        <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-lg ring-1 ring-orange-500/20">
           <input
             type="checkbox"
-            className="mt-1 size-4 accent-orange-500"
+            className="mt-1 size-5 accent-orange-500"
             checked={form.accessible}
             onChange={(e) => setForm({ ...form, accessible: e.target.checked })}
           />
@@ -695,14 +695,14 @@ export function HouseForm({
               <StrollerSign />
               נגיש
             </span>
-            <span className="block text-base text-violet-300">
+            <span className="block text-lg text-violet-300">
               בלי מדרגות בכניסה, מתאים לעגלה או לכיסא גלגלים
             </span>
           </span>
         </label>
       </FormSection>
       <FormSection title="תמונת קישוט">
-        <p className="text-base text-violet-300">אפשר גם להעלות אחרי שתקשטו את הבית.</p>
+        <p className="text-lg text-violet-300">אפשר גם להעלות אחרי שתקשטו את הבית.</p>
         {photoPreview || (existingPhoto && !clearPhoto) ? (
           <div className="mb-2 space-y-2">
             <HousePhotoFrame
@@ -711,12 +711,12 @@ export function HouseForm({
               onFocusChange={photoPreview ? setPhotoFocus : undefined}
             />
             {photoPreview ? (
-              <p className="text-base text-violet-300">גררו את התמונה כדי לבחור את המרכז שיופיע בכרטיס</p>
+              <p className="text-lg text-violet-300">גררו את התמונה כדי לבחור את המרכז שיופיע בכרטיס</p>
             ) : null}
           </div>
         ) : (
           <div
-            className={`${HOUSE_CARD_PHOTO_BOX} mb-2 flex items-center justify-center bg-[#1d1028] text-center text-base text-violet-400`}
+            className={`${HOUSE_CARD_PHOTO_BOX} mb-2 flex items-center justify-center bg-[#1d1028] text-center text-lg text-violet-400`}
           >
             אין תמונה עדיין
           </div>
@@ -726,8 +726,8 @@ export function HouseForm({
             <span
               className={
                 blocked
-                  ? "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-base font-medium text-white opacity-60"
-                  : "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-base font-medium text-white"
+                  ? "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-lg font-medium text-white opacity-60"
+                  : "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-lg font-medium text-white"
               }
             >
               <Camera className="size-3.5" />
@@ -755,7 +755,7 @@ export function HouseForm({
             <button
               type="button"
               disabled={blocked}
-              className="rounded-lg px-3 py-2 text-base text-violet-200 ring-1 ring-orange-500/30"
+              className="rounded-lg px-3 py-2 text-lg text-violet-200 ring-1 ring-orange-500/30"
               onClick={() => {
                 setPhotoFile(null);
                 setPhotoPreview(null);
@@ -774,7 +774,7 @@ export function HouseForm({
             type="button"
             variant="outline"
             disabled={blocked}
-            className="h-10 flex-1"
+            className="h-11 flex-1 text-lg"
             onClick={onCancel}
           >
             ביטול
@@ -785,8 +785,8 @@ export function HouseForm({
           disabled={blocked}
           className={
             onCancel
-              ? "h-10 flex-1 bg-orange-500 text-black hover:bg-orange-400"
-              : "h-10 w-full bg-orange-500 text-black hover:bg-orange-400"
+              ? "h-11 flex-1 text-lg bg-orange-500 text-black hover:bg-orange-400"
+              : "h-11 w-full text-lg bg-orange-500 text-black hover:bg-orange-400"
           }
         >
           {blocked ? "שומרים בשרת…" : submitLabel}
@@ -811,7 +811,7 @@ function NightStatusChip({
   onClick?: () => void;
 }) {
   const className = cn(
-    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-base font-medium",
+    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-lg font-medium",
     locked
       ? "cursor-not-allowed text-violet-400/55 ring-1 ring-white/10"
       : selected
@@ -845,7 +845,7 @@ function FormSection({
 }) {
   return (
     <section className="space-y-4">
-      <h2 className="border-b border-orange-500/25 pb-1 text-base font-semibold text-orange-200">
+      <h2 className="border-b border-orange-500/25 pb-1 text-xl font-semibold text-orange-200">
         {title}
       </h2>
       {children}
@@ -857,7 +857,7 @@ function CharCount({ length, max }: { length: number; max: number }) {
   return (
     <span
       className={cn(
-        "shrink-0 text-sm tabular-nums",
+        "shrink-0 text-base tabular-nums",
         length >= max ? "text-orange-300" : "text-violet-400",
       )}
       aria-live="polite"
@@ -904,7 +904,7 @@ function TimeField({
       lang="he-IL"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="filter-time-input h-11 w-full min-w-0 min-h-11 rounded-lg border border-input bg-[#1d1028] px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+      className="filter-time-input h-11 w-full min-w-0 min-h-11 rounded-lg border border-input bg-[#1d1028] px-2.5 py-2 text-lg outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
     />
   );
 }
