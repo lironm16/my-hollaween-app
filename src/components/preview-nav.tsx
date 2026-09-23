@@ -11,6 +11,7 @@ export const PREVIEW_LINKS = [
   { href: "/preview/push", label: "התראות" },
   { href: "/preview/hours", label: "שעות" },
   { href: "/preview/countdown", label: "ספירה" },
+  { href: "/preview/countdown-fonts", label: "גופני ספירה" },
 ] as const;
 
 export function PreviewNav({ current }: { current: string }) {

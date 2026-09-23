@@ -1914,6 +1914,21 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   color: #fb923c;
 }
 
+/* Preview: /preview/countdown-fonts — font comparison samples */
+.countdown-font-sample-rubik,
+.countdown-font-sample-rubik .countdown-font-brand-he {
+  font-family: var(--font-rubik-preview, var(--font-rubik)), Rubik, ui-sans-serif, sans-serif;
+}
+
+.countdown-font-creepster {
+  font-family: var(--font-creepster-preview, var(--font-creepster)), Creepster, cursive;
+}
+
+.countdown-font-sample-wet-paint,
+.countdown-font-sample-wet-paint * {
+  font-family: var(--font-rubik-wet-paint), "Rubik Wet Paint", cursive;
+}
+
 .neighborhood-toolbar-top {
   flex-shrink: 0;
   z-index: 40;
