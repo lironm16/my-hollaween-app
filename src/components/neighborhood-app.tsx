@@ -686,17 +686,42 @@ export function NeighborhoodApp({
     <div
       id="neighborhood-shell"
       className={cn(
-        "has-toolbar-dock relative isolate flex flex-col overflow-hidden",
+        "relative isolate flex flex-col overflow-hidden",
+        eventCountdown.active && "has-countdown-bar",
         view === "list" && "is-list-view",
       )}
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
       <AppHeader onHomeTap={goHome} />
-      {eventCountdown.active && eventCountdown.parts ? (
-        <EventCountdownBar
-          parts={eventCountdown.parts}
-          onClick={openCountdownScreen}
-        />
+      {!originPick.originPickActive ? (
+        <div className="neighborhood-toolbar-top shrink-0">
+          <NeighborhoodToolbar
+            view={view}
+            onViewChange={setView}
+            onListView={() => {
+              setView("list");
+              selection.closeSelection();
+            }}
+            likedOnly={likedOnly}
+            activeFilterCount={activeFilterCount}
+            onOpenFilters={() => setFiltersOpen(true)}
+            originShifted={originChoice.kind !== "gps"}
+            onOpenOriginPicker={() => originPick.setOriginPickerOpen(true)}
+            routeMode={routeMode}
+            onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
+            houses={visible}
+            routeTicker={originPick.routeTicker}
+            routeUpdateCount={routeMode ? routeAlerts.changes.length : 0}
+            routeUpdateTicker={
+              routeMode && routeAlerts.changes.length > 0
+                ? routeChangeBannerMessage(routeAlerts.changes, routeAlerts.fromBackground)
+                : null
+            }
+            onOpenRouteUpdates={
+              routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
+            }
+          />
+        </div>
       ) : null}
       <button
         type="button"
@@ -969,36 +994,9 @@ export function NeighborhoodApp({
           ) : null}
         </>
       </main>
-      {!originPick.originPickActive ? (
-        <div className="neighborhood-toolbar-dock shrink-0">
-          <NeighborhoodToolbar
-            floating
-            docked
-            view={view}
-            onViewChange={setView}
-            onListView={() => {
-              setView("list");
-              selection.closeSelection();
-            }}
-            likedOnly={likedOnly}
-            activeFilterCount={activeFilterCount}
-            onOpenFilters={() => setFiltersOpen(true)}
-            originShifted={originChoice.kind !== "gps"}
-            onOpenOriginPicker={() => originPick.setOriginPickerOpen(true)}
-            routeMode={routeMode}
-            onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
-            houses={visible}
-            routeTicker={originPick.routeTicker}
-            routeUpdateCount={routeMode ? routeAlerts.changes.length : 0}
-            routeUpdateTicker={
-              routeMode && routeAlerts.changes.length > 0
-                ? routeChangeBannerMessage(routeAlerts.changes, routeAlerts.fromBackground)
-                : null
-            }
-            onOpenRouteUpdates={
-              routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
-            }
-          />
+      {eventCountdown.active && eventCountdown.parts ? (
+        <div className="event-countdown-dock shrink-0">
+          <EventCountdownBar parts={eventCountdown.parts} onClick={openCountdownScreen} />
         </div>
       ) : null}
       {eventCountdown.parts ? (

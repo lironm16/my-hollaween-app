@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, X } from "lucide-react";
-import { CountdownDecor } from "@/components/countdown-decor";
 import type { EventCountdownParts } from "@/lib/event-countdown";
 import { config } from "@/lib/config";
 import { subscribeAppViewport, syncAppViewportVars } from "@/lib/viewport";
@@ -57,8 +56,6 @@ export function EventCountdownScreen({
       aria-label="ספירה לאחור לליל האלווין"
     >
       <div className="countdown-scene-bg relative flex min-h-0 flex-1 flex-col overflow-hidden">
-        <CountdownDecor />
-
         <button
           type="button"
           onClick={onClose}

@@ -465,9 +465,6 @@
   .z-\[1\] {
     z-index: 1;
   }
-  .z-\[45\] {
-    z-index: 45;
-  }
   .z-\[55\] {
     z-index: 55;
   }
@@ -6072,11 +6069,19 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .app-header {
   padding-top: env(safe-area-inset-top, 0px);
 }
+.event-countdown-dock {
+  flex-shrink: 0;
+  z-index: 45;
+  border-top: 1px solid rgba(249, 115, 22, 0.22);
+  background: rgba(18, 8, 26, 0.97);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
 .event-countdown-bar {
   container-type: inline-size;
   flex-shrink: 0;
   position: relative;
-  z-index: 45;
 }
 .event-countdown-bar__text {
   font-size: clamp(1rem, 7cqi, 1.75rem);
@@ -6102,110 +6107,8 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   height: clamp(3.5rem, 14vw, 5.5rem);
   margin-bottom: 0.35rem;
 }
-.countdown-decor__bat-fly {
-  position: absolute;
-  left: 0;
-  width: clamp(4.5rem, 22vw, 8rem);
-  color: #0a0610;
-  opacity: 0.92;
-  will-change: transform;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.65));
-}
-.countdown-decor__bat-inner {
-  width: 100%;
-}
-.countdown-decor__bat-inner--flip {
-  transform: scaleX(-1);
-}
-.countdown-decor__bat-svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  animation: countdown-bat-flap 0.85s ease-in-out infinite alternate;
-}
-.countdown-decor__bat-fly--1 {
-  top: clamp(2.75rem, 13vh, 5rem);
-  animation-duration: 18s;
-  animation-delay: -4s;
-}
-.countdown-decor__bat-fly--2 {
-  width: clamp(5.5rem, 26vw, 9.5rem);
-  top: clamp(3.5rem, 17vh, 6.25rem);
-  opacity: 0.85;
-  animation-duration: 22s;
-  animation-delay: -9s;
-}
-.countdown-decor__bat-fly--3 {
-  width: clamp(3.75rem, 18vw, 6.5rem);
-  top: clamp(2rem, 10vh, 3.75rem);
-  opacity: 0.78;
-  animation-duration: 15s;
-  animation-delay: -2s;
-}
-.countdown-decor__bat-fly--ltr,
-.countdown-decor__bat-fly--rtl {
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-}
-.countdown-decor__bat-fly--ltr {
-  animation-name: countdown-bat-ltr;
-}
-.countdown-decor__bat-fly--rtl {
-  animation-name: countdown-bat-rtl;
-}
-@keyframes countdown-bat-flap {
-  0% {
-    transform: scaleY(1);
-  }
-  100% {
-    transform: scaleY(0.72);
-  }
-}
-@keyframes countdown-bat-ltr {
-  0% {
-    transform: translateX(-110vw) translateY(0);
-  }
-  25% {
-    transform: translateX(-40vw) translateY(-6px);
-  }
-  50% {
-    transform: translateX(20vw) translateY(4px);
-  }
-  75% {
-    transform: translateX(70vw) translateY(-4px);
-  }
-  100% {
-    transform: translateX(110vw) translateY(0);
-  }
-}
-@keyframes countdown-bat-rtl {
-  0% {
-    transform: translateX(110vw) translateY(0);
-  }
-  25% {
-    transform: translateX(40vw) translateY(-5px);
-  }
-  50% {
-    transform: translateX(-20vw) translateY(3px);
-  }
-  75% {
-    transform: translateX(-70vw) translateY(-3px);
-  }
-  100% {
-    transform: translateX(-110vw) translateY(0);
-  }
-}
 .event-countdown-screen {
   padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--vv-bottom-inset, 0px));
-}
-.countdown-decor__pumpkin {
-  position: absolute;
-  right: 4%;
-  bottom: 14%;
-  font-size: clamp(3.5rem, 16vw, 5.5rem);
-  line-height: 1;
-  transform: rotate(8deg);
-  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.45));
 }
 .countdown-brand-he {
   font-family: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
@@ -6301,24 +6204,13 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .countdown-neon-arrow svg {
   color: #fb923c;
 }
-.neighborhood-toolbar-dock {
-  position: fixed;
-  inset-inline: 0;
-  bottom: 0;
-  z-index: 30;
-  padding: 0 0.75rem env(safe-area-inset-bottom, 0px);
-  background: rgba(18, 8, 26, 0.97);
-  border-top: 1px solid rgba(249, 115, 22, 0.22);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 -10px 36px rgba(0, 0, 0, 0.42);
+.neighborhood-toolbar-top {
+  flex-shrink: 0;
+  z-index: 40;
 }
-#neighborhood-shell.has-toolbar-dock main {
-  padding-bottom: calc(3rem + env(safe-area-inset-bottom, 0px));
-}
-#neighborhood-shell:has(.map-house-sheet.is-open) .neighborhood-toolbar-dock,
-#neighborhood-shell:has(.map-house-sheet.is-dragging) .neighborhood-toolbar-dock,
-#neighborhood-shell:has(.map-house-sheet.is-raised) .neighborhood-toolbar-dock {
+#neighborhood-shell:has(.map-house-sheet.is-open) .neighborhood-toolbar-top,
+#neighborhood-shell:has(.map-house-sheet.is-dragging) .neighborhood-toolbar-top,
+#neighborhood-shell:has(.map-house-sheet.is-raised) .neighborhood-toolbar-top {
   pointer-events: none;
 }
 .app-toolbar--floating {
