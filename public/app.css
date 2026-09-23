@@ -2517,12 +2517,6 @@
       color: color-mix(in oklab, var(--color-violet-200) 90%, transparent);
     }
   }
-  .text-violet-200\/95 {
-    color: color-mix(in srgb, oklch(89.4% 0.057 293.283) 95%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      color: color-mix(in oklab, var(--color-violet-200) 95%, transparent);
-    }
-  }
   .text-violet-300 {
     color: var(--color-violet-300);
   }
@@ -3707,10 +3701,6 @@
     .sm\:text-5xl {
       font-size: var(--text-5xl);
       line-height: var(--tw-leading, var(--text-5xl--line-height));
-    }
-    .sm\:text-base {
-      font-size: var(--text-base);
-      line-height: var(--tw-leading, var(--text-base--line-height));
     }
     .sm\:text-xl {
       font-size: var(--text-xl);
