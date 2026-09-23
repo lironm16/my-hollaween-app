@@ -275,6 +275,26 @@ def solidify_pumpkin_features(im: Image.Image, min_alpha: int = 40) -> Image.Ima
     return out
 
 
+def sync_pumpkin_chin(reference: Image.Image, target: Image.Image, split_ratio: float = 0.68) -> Image.Image:
+    """Match the lower pumpkin body (chin) to the reference — medium orange art."""
+    ref = reference.convert("RGBA")
+    tgt = target.convert("RGBA")
+    if ref.size != tgt.size:
+        ref = ref.resize(tgt.size, Image.Resampling.NEAREST)
+    w, h = tgt.size
+    split_y = int(h * split_ratio)
+    rp, tp = ref.load(), tgt.load()
+    out = tgt.copy()
+    op = out.load()
+    for y in range(split_y, h):
+        for x in range(w):
+            if rp[x, y][:3] == CREAM_RGB and rp[x, y][3] > 40:
+                op[x, y] = (*CREAM_RGB, 255)
+            else:
+                op[x, y] = (0, 0, 0, 0)
+    return out
+
+
 def keep_inner_blob(im: Image.Image, min_alpha: int = 40) -> Image.Image:
     """Drop the disc rim — keep the largest blob that does not touch the image edge."""
     src = im.convert("RGBA")
@@ -318,24 +338,29 @@ def extract_pumpkin_glyphs() -> None:
     preview = ROOT.parent / "preview" / "scare-icon-options.png"
     src = Image.open(preview)
     discs = {
+        # Medium disc separates cleanly from its rim; mild/spicy need cream-blob extraction.
         "mild": {"bg": (3, 111, 69), "center": (457, 851), "inner": False, "thresh": 62},
         "medium": {"bg": (217, 119, 6), "center": (774, 881), "inner": True, "thresh": 72},
         "spicy": {"bg": (164, 15, 19), "center": (1082, 855), "inner": False, "thresh": 62},
     }
     size = 230
+    glyphs: dict[str, Image.Image] = {}
     for name, spec in discs.items():
         cx, cy = spec["center"]
         disc = src.crop((cx - size // 2, cy - size // 2, cx + size // 2, cy + size // 2))
         disc.save(ROOT / f"scare-pumpkin-disc-{name}.png")
         keyed = chroma_key(disc, spec["bg"], thresh=spec["thresh"])
         keyed = chroma_key(keyed, spec["bg"], thresh=spec["thresh"] - 8, softness=16)
-        if spec["inner"]:
-            glyph = solidify_pumpkin_features(keep_inner_blob(keyed))
-        else:
-            glyph = solidify_pumpkin_features(keep_cream_blob(keyed))
-        final = recenter_glyph(trim(glyph, pad=4))
+        blob = keep_inner_blob(keyed) if spec["inner"] else keep_cream_blob(keyed)
+        glyph = solidify_pumpkin_features(blob)
+        glyphs[name] = recenter_glyph(trim(glyph, pad=4))
+
+    medium_ref = glyphs["medium"]
+    for name, glyph in glyphs.items():
+        if name != "medium":
+            glyph = sync_pumpkin_chin(medium_ref, glyph)
         scare = ROOT / f"scare-pumpkin-{name}.png"
-        final.save(scare)
+        glyph.save(scare)
         print(f"wrote {scare.name}")
 
     medium_pin = ROOT / "scare-pumpkin-medium.png"
