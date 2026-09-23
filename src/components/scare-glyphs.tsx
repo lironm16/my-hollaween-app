@@ -87,6 +87,20 @@ export function ScarePumpkin({ level = "mild" }: { level?: ScareLevel | "none" }
   );
 }
 
+/** Decorative pumpkin for סיכום headers — not the scare-badge POI art. */
+export function SummaryPumpkinIcon() {
+  return (
+    <Icon>
+      <path fill="currentColor" d="M11.2 2.4h1.6c.5 0 .9.5.8 1l-.4 2.1h-2.4l-.4-2.1c-.1-.5.3-1 .8-1Z" />
+      <ellipse cx="12" cy="13.2" rx="8.4" ry="7.6" fill="currentColor" />
+      <path
+        fill="#1c0e24"
+        d="M8.4 10.4 10.6 12 8.4 12.6zm7.2 0L13.4 12l2.2.6zM8.2 15.4 12 18.2l3.8-2.8-1.4.2L12 16.6l-2.4-1z"
+      />
+    </Icon>
+  );
+}
+
 const TONE_CLASS: Record<ScareLevel | "none", string> = {
   mild: BADGE_TONE_CLASS.green,
   medium: BADGE_TONE_CLASS.amber,

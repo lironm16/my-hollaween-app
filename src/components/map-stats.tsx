@@ -4,7 +4,7 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { WifiOff } from "lucide-react";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
-import { ScarePumpkin } from "@/components/scare-glyphs";
+import { SummaryPumpkinIcon } from "@/components/scare-glyphs";
 import { SkipGlyph } from "@/components/skip-icon";
 import type { WalkingRoute } from "@/lib/route";
 import { cn } from "@/lib/utils";
@@ -223,7 +223,7 @@ export function StatsSummary({
       {heading ? (
         <p className="flex items-center gap-1.5 text-xl font-bold text-orange-400">
           <span className="inline-flex size-7 text-orange-500">
-            <ScarePumpkin />
+            <SummaryPumpkinIcon />
           </span>
           סיכום
         </p>
@@ -323,7 +323,7 @@ export function MapStats(props: {
                       className="inline-flex items-center justify-center gap-1.5 text-xl font-bold text-orange-400"
                     >
                       <span className="inline-flex size-7 text-orange-500" aria-hidden>
-                        <ScarePumpkin />
+                        <SummaryPumpkinIcon />
                       </span>
                       סיכום
                     </span>

@@ -7,13 +7,10 @@ const HOUSE_SCARE_SRC: Record<ScareLevel, string> = {
   spicy: "/icons/pin-scare-spicy.png",
 };
 
-const POI_SCARE_SRC: Record<ScareLevel, string> = {
-  mild: "/icons/pin-poi-mild.png",
-  medium: "/icons/pin-poi-medium.png",
-  spicy: "/icons/pin-poi-spicy.png",
-};
+/** POI map pins — one jack-o'-lantern silhouette (cream + black face) on orange. */
+export const POI_PIN_FACE_SRC = "/icons/pin-poi-medium.png";
 
 export function pinScareSrc(house: Pick<PublicHouse, "kind" | "scareLevel">, level?: ScareLevel) {
   const scare = level ?? house.scareLevel ?? "mild";
-  return effectiveHouseKind(house) === "poi" ? POI_SCARE_SRC[scare] : HOUSE_SCARE_SRC[scare];
+  return effectiveHouseKind(house) === "poi" ? POI_PIN_FACE_SRC : HOUSE_SCARE_SRC[scare];
 }

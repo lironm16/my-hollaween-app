@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Info } from "lucide-react";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { SkipIcon } from "@/components/skip-icon";
+import { POI_PIN_FACE_SRC } from "@/lib/pin-faces";
 import { PIN_BACKGROUND } from "@/lib/pin-colors";
 import { cn } from "@/lib/utils";
 
@@ -32,9 +33,7 @@ function SwatchPin({
   skipped?: boolean;
 }) {
   const scareLevel = scare ?? "mild";
-  const scareSrc = poi
-    ? `/icons/pin-poi-${scareLevel}.png`
-    : `/icons/pin-scare-${scareLevel}.png`;
+  const scareSrc = poi ? POI_PIN_FACE_SRC : `/icons/pin-scare-${scareLevel}.png`;
   return (
     <div
       className={cn(

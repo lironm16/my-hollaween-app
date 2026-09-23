@@ -332,13 +332,17 @@ def extract_pumpkin_glyphs() -> None:
         if spec["inner"]:
             glyph = solidify_pumpkin_features(keep_inner_blob(keyed))
         else:
-            glyph = keep_cream_blob(keyed)
+            glyph = solidify_pumpkin_features(keep_cream_blob(keyed))
         final = recenter_glyph(trim(glyph, pad=4))
         scare = ROOT / f"scare-pumpkin-{name}.png"
-        pin = ROOT / f"pin-poi-{name}.png"
         final.save(scare)
-        final.save(pin)
-        print(f"wrote {scare.name} + {pin.name}")
+        print(f"wrote {scare.name}")
+
+    medium_pin = ROOT / "scare-pumpkin-medium.png"
+    for level in ("mild", "medium", "spicy"):
+        pin = ROOT / f"pin-poi-{level}.png"
+        pin.write_bytes(medium_pin.read_bytes())
+        print(f"wrote {pin.name} (POI pin face)")
 
 
 def main() -> None:

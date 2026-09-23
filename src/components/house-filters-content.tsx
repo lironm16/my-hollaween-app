@@ -82,6 +82,34 @@ function VisitWindowRadio({
   );
 }
 
+function LocationKindRadio({
+  checked,
+  onChange,
+  children,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <label
+      className={cn(
+        "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-base transition",
+        checked ? "bg-orange-500/15 text-orange-50" : "text-orange-50 hover:bg-orange-500/10",
+      )}
+    >
+      <input
+        type="radio"
+        name="location-kind-filter"
+        className="size-4 accent-orange-500"
+        checked={checked}
+        onChange={onChange}
+      />
+      <span className="inline-flex min-w-0 flex-1 items-center gap-2">{children}</span>
+    </label>
+  );
+}
+
 export function HouseFiltersContent({
   filters,
   now,
@@ -207,7 +235,7 @@ export function HouseFiltersContent({
 
       <FilterSection title="סוג המקום">
         {LOCATION_KIND_FILTERS.map((kind) => (
-          <VisitWindowRadio
+          <LocationKindRadio
             key={kind}
             checked={filters.locationKindFilter === kind}
             onChange={() => onPatch({ locationKindFilter: kind as LocationKindFilter })}
@@ -222,7 +250,7 @@ export function HouseFiltersContent({
               )}
               <span>{locationKindFilterLabels[kind]}</span>
             </span>
-          </VisitWindowRadio>
+          </LocationKindRadio>
         ))}
       </FilterSection>
 
