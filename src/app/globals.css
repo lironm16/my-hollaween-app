@@ -1660,7 +1660,6 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   z-index: 45;
   border-top: 1px solid rgba(249, 115, 22, 0.22);
   background: rgba(18, 8, 26, 0.97);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
@@ -1669,6 +1668,8 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   container-type: inline-size;
   flex-shrink: 0;
   position: relative;
+  padding-top: 0.45rem;
+  padding-bottom: max(0.2rem, env(safe-area-inset-bottom, 0px));
 }
 
 .event-countdown-bar__text {
@@ -1683,7 +1684,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 /* Full-screen countdown — night scene + wooden sign (no photo backgrounds). */
 .countdown-scene-bg {
   background:
-    radial-gradient(circle at 88% 8%, rgba(255, 210, 120, 0.32) 0%, rgba(255, 140, 40, 0.1) 24%, transparent 52%),
+    radial-gradient(circle at 96% 7%, rgba(255, 210, 120, 0.32) 0%, rgba(255, 140, 40, 0.1) 24%, transparent 52%),
     radial-gradient(ellipse 90% 55% at 50% 88%, rgba(88, 28, 135, 0.18), transparent 58%),
     linear-gradient(180deg, #0b1024 0%, #14091c 42%, #0a0610 100%);
 }
@@ -1691,7 +1692,8 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .countdown-scene-moon {
   position: absolute;
   top: max(0.65rem, env(safe-area-inset-top, 0px));
-  inset-inline-end: max(0.85rem, env(safe-area-inset-right, 0px));
+  right: max(0.55rem, env(safe-area-inset-right, 0px));
+  left: auto;
   z-index: 5;
   width: clamp(3.25rem, 13vw, 5rem);
   height: clamp(3.25rem, 13vw, 5rem);
@@ -1822,18 +1824,18 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   gap: 0;
 }
 
-/* Safari browser — reserve bottom chrome; keep content visually centered. */
+/* Safari browser — text high under header; reserve bottom browser chrome. */
 .event-countdown-screen--browser .countdown-scene-body {
-  justify-content: center;
-  padding-top: max(1.25rem, env(safe-area-inset-top, 0px));
+  justify-content: flex-start;
+  padding-top: max(2rem, calc(env(safe-area-inset-top, 0px) + 0.5rem));
   padding-bottom: max(1rem, calc(env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px) + 0.5rem));
 }
 
-/* Installed app — no browser bar; sit lower in the full screen. */
+/* Installed app — moon is top-right; start text high, no extra top gap. */
 .event-countdown-screen--standalone .countdown-scene-body {
   justify-content: flex-start;
-  padding-top: max(6.5rem, calc(env(safe-area-inset-top, 0px) + 14vh));
-  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  padding-top: max(2.25rem, calc(env(safe-area-inset-top, 0px) + 0.65rem));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
 }
 
 .countdown-neon-arrow svg {
