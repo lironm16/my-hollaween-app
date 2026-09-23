@@ -3,6 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, X } from "lucide-react";
+import { CountdownDecor } from "@/components/countdown-decor";
 import type { EventCountdownParts } from "@/lib/event-countdown";
 import { config } from "@/lib/config";
 import { isStandaloneDisplay } from "@/lib/push-client";
@@ -53,7 +54,7 @@ export function EventCountdownScreen({
   return createPortal(
     <div
       className={cn(
-        "event-countdown-screen fixed inset-0 z-[2000] flex flex-col overflow-hidden bg-[#0a0610]",
+        "event-countdown-screen fixed inset-0 z-[2000] flex flex-col overflow-hidden bg-[#141028]",
         standalone ? "event-countdown-screen--standalone" : "event-countdown-screen--browser",
       )}
       style={{
@@ -65,6 +66,7 @@ export function EventCountdownScreen({
       aria-label="ספירה לאחור לליל האלווין"
     >
       <div className="countdown-scene-bg relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <CountdownDecor />
         <div className="countdown-scene-moon" aria-hidden />
 
         <button
