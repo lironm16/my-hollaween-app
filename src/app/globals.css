@@ -1694,107 +1694,62 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   opacity: 0.92;
 }
 
-.countdown-decor__bat {
+.countdown-decor__bat-fly {
   position: absolute;
-  font-size: clamp(1.1rem, 4vw, 1.75rem);
-  opacity: 0.75;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.65));
+  top: clamp(0.35rem, 2.5vh, 1.25rem);
+  width: clamp(3.5rem, 16vw, 5.5rem);
+  height: auto;
+  color: #1a1028;
+  opacity: 0.88;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+  animation: countdown-bat-fly linear infinite;
 }
 
-.countdown-decor__bat--1 {
-  top: 11%;
-  left: 18%;
-  transform: rotate(-18deg) scaleX(-1);
+.countdown-decor__bat-fly--1 {
+  top: clamp(0.5rem, 3vh, 1.5rem);
+  animation-duration: 14s;
+  animation-delay: -2s;
 }
 
-.countdown-decor__bat--2 {
-  top: 14%;
-  right: 16%;
-  transform: rotate(12deg);
+.countdown-decor__bat-fly--2 {
+  width: clamp(4.25rem, 20vw, 6.75rem);
+  top: clamp(1.75rem, 7vh, 3.25rem);
+  opacity: 0.72;
+  animation-duration: 18s;
+  animation-delay: -7s;
 }
 
-.countdown-decor__bat--3 {
-  top: 20%;
-  left: 42%;
-  transform: scale(0.85) rotate(-8deg);
-  opacity: 0.55;
+.countdown-decor__bat-fly--3 {
+  width: clamp(3rem, 14vw, 4.75rem);
+  top: clamp(0.25rem, 1.5vh, 0.85rem);
+  opacity: 0.6;
+  animation-duration: 11s;
+  animation-delay: -4s;
 }
 
-.countdown-decor__ghost {
-  position: absolute;
-  top: 28%;
-  left: 8%;
-  font-size: clamp(2rem, 9vw, 3.25rem);
-  filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.35));
-  animation: countdown-ghost-float 4.5s ease-in-out infinite;
+@keyframes countdown-bat-fly {
+  0% {
+    transform: translateX(110vw) scaleX(-1);
+  }
+  100% {
+    transform: translateX(-120%) scaleX(-1);
+  }
 }
 
 .countdown-decor__pumpkin {
   position: absolute;
-  filter: drop-shadow(0 0 16px rgba(255, 120, 0, 0.55)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.45));
-}
-
-.countdown-decor__pumpkin--tl {
-  top: 34%;
-  left: 4%;
-  font-size: clamp(2rem, 8vw, 3rem);
-  transform: rotate(-12deg);
-}
-
-.countdown-decor__pumpkin--tr {
-  top: 32%;
-  right: 5%;
-  font-size: clamp(2.25rem, 9vw, 3.35rem);
-  transform: rotate(10deg);
-}
-
-.countdown-decor__pumpkin--bl {
-  bottom: 22%;
-  left: 6%;
-  font-size: clamp(1.75rem, 7vw, 2.65rem);
+  right: 4%;
+  bottom: 14%;
+  font-size: clamp(3.5rem, 16vw, 5.5rem);
+  line-height: 1;
   transform: rotate(8deg);
-}
-
-.countdown-decor__pumpkin--br {
-  bottom: 20%;
-  right: 7%;
-  font-size: clamp(2rem, 8vw, 3rem);
-  transform: rotate(-6deg);
-}
-
-.countdown-decor__lantern {
-  position: absolute;
-  bottom: 30%;
-  font-size: clamp(1.35rem, 5vw, 2rem);
-  filter: drop-shadow(0 0 12px rgba(255, 100, 0, 0.65));
-}
-
-.countdown-decor__lantern--l {
-  left: 14%;
-}
-
-.countdown-decor__lantern--r {
-  right: 14%;
-}
-
-@keyframes countdown-ghost-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.45));
 }
 
 .countdown-brand-he {
   font-family: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
   font-weight: 800;
   color: #c4b5fd;
-  text-shadow:
-    0 0 20px rgba(167, 139, 250, 0.45),
-    0 2px 0 #4c1d95,
-    0 4px 14px rgba(0, 0, 0, 0.75);
 }
 
 .countdown-scene-close:active {
@@ -1805,28 +1760,13 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   font-family: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
   font-weight: 800;
   color: #fff;
-  line-height: 1.15;
-  text-shadow:
-    0 0 18px rgba(255, 255, 255, 0.25),
-    0 2px 0 #000,
-    0 -1px 0 #000,
-    2px 0 0 #000,
-    -2px 0 0 #000,
-    0 3px 12px rgba(0, 0, 0, 0.85);
+  line-height: 1.1;
 }
 
-.countdown-drip-title,
-.countdown-drip-number {
+.countdown-plain-title,
+.countdown-plain-number {
   font-family: var(--font-creepster), Creepster, cursive;
   color: #fb923c;
-  text-shadow:
-    0 0 8px rgba(255, 120, 0, 0.95),
-    0 0 24px rgba(255, 100, 0, 0.75),
-    0 0 48px rgba(255, 80, 0, 0.45),
-    0 3px 0 #7c2d12,
-    0 5px 0 #431407,
-    0 8px 18px rgba(0, 0, 0, 0.85);
-  filter: drop-shadow(0 0 10px rgba(251, 146, 60, 0.35));
 }
 
 .countdown-wood-sign {
@@ -1910,19 +1850,9 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   transform: skewX(-8deg);
 }
 
-.countdown-neon-arrow svg {
-  filter: drop-shadow(0 0 8px rgba(251, 146, 60, 0.85)) drop-shadow(0 0 16px rgba(251, 146, 60, 0.45));
-}
-
-/* Above map/list content; house sheet host is z-50 — always above for taps. */
-.floating-toolbar-host {
-  position: absolute;
-}
-
-.floating-toolbar-host--bottom-dock {
-  bottom: 0;
+/* Toolbar dock — below map/list, not overlaying them. */
+.neighborhood-toolbar-dock {
   z-index: 30;
-  /* Flush to screen edge; only safe-area lifts controls above the home indicator. */
   padding: 0.25rem 0.75rem env(safe-area-inset-bottom, 0px);
   background: rgba(18, 8, 26, 0.97);
   border-top: 1px solid rgba(249, 115, 22, 0.22);
@@ -1931,24 +1861,10 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   box-shadow: 0 -10px 36px rgba(0, 0, 0, 0.42);
 }
 
-#neighborhood-shell:has(.map-house-sheet.is-open) .floating-toolbar-host,
-#neighborhood-shell:has(.map-house-sheet.is-dragging) .floating-toolbar-host,
-#neighborhood-shell:has(.map-house-sheet.is-raised) .floating-toolbar-host {
+#neighborhood-shell:has(.map-house-sheet.is-open) .neighborhood-toolbar-dock,
+#neighborhood-shell:has(.map-house-sheet.is-dragging) .neighborhood-toolbar-dock,
+#neighborhood-shell:has(.map-house-sheet.is-raised) .neighborhood-toolbar-dock {
   pointer-events: none;
-}
-
-#neighborhood-shell:has(.map-house-sheet.is-open) .floating-toolbar-host .pointer-events-auto,
-#neighborhood-shell:has(.map-house-sheet.is-dragging) .floating-toolbar-host .pointer-events-auto,
-#neighborhood-shell:has(.map-house-sheet.is-raised) .floating-toolbar-host .pointer-events-auto {
-  pointer-events: none;
-}
-
-#neighborhood-shell.has-floating-toolbar .map-fab-stack {
-  bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
-}
-
-#neighborhood-shell.has-floating-toolbar .map-add-house-fab {
-  bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
 }
 
 .app-toolbar--floating {
@@ -1987,11 +1903,6 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
     width: 1.125rem;
     height: 1.125rem;
   }
-}
-
-#neighborhood-shell.is-list-view #house-list-skip {
-  box-sizing: border-box;
-  padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
 }
 
 .map-fab-stack {
