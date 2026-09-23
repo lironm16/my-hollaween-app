@@ -26,6 +26,7 @@ import {
   withDeviceHouseOverlays,
 } from "@/lib/offline-db";
 import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
+import { catalogNeedsFullRefresh } from "@/lib/catalog-houses";
 import { catalogHasRealHouses } from "@/lib/house-set";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
@@ -216,10 +217,11 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     }
     if (online) await flushPendingHouseWrites();
 
-    const since = force ? undefined : catalogRef.current?.updatedAt;
+    const needsFullRefresh = force || catalogNeedsFullRefresh(catalogRef.current);
+    const since = needsFullRefresh ? undefined : catalogRef.current?.updatedAt;
 
     // Delta poll — live API only (0–1 Firestore reads when unchanged).
-    if (since && !force) {
+    if (since && !needsFullRefresh) {
       try {
         if (readServerSimDown()) throw new Error("sim-down");
         await applyLiveResponse(await fetchJson("/api/catalog", false, since));
@@ -231,7 +233,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           await saveCatalogCache(reconciled);
           window.dispatchEvent(new Event("hw-catalog-refreshed"));
         }
-        return;
+        if (!catalogNeedsFullRefresh(catalogRef.current)) return;
       } catch {
         const cached = await readDeviceCatalog();
         if (cached) {

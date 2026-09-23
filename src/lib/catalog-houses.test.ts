@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it, beforeEach, afterEach } from "node:test";
-import { resolveCatalogHouses } from "@/lib/catalog-houses";
+import {
+  catalogNeedsFullRefresh,
+  countRealHouses,
+  resolveCatalogHouses,
+} from "@/lib/catalog-houses";
 import type { Catalog, PublicHouse } from "@/lib/types";
 
 const CATALOG_LS_KEY = "hw-catalog-cache";
@@ -37,6 +41,38 @@ function house(id: string, patch: Partial<PublicHouse> = {}): PublicHouse {
 function catalog(houses: PublicHouse[], updatedAt: string): Catalog {
   return { updatedAt, neighborhood: "test", houses };
 }
+
+describe("catalogNeedsFullRefresh", () => {
+  it("flags small real-house caches for a full snapshot reload", () => {
+    const partial = catalog(
+      [
+        house("a"),
+        house("b"),
+        house("c"),
+        house("d"),
+      ],
+      "2026-10-31T10:00:00.000Z",
+    );
+    assert.equal(countRealHouses(partial), 4);
+    assert.equal(catalogNeedsFullRefresh(partial), true);
+  });
+
+  it("does not force refresh for stub-only rehearsal catalogs", () => {
+    const stubs = catalog(
+      [house("בית-9311", { description: "סטאב לחזרה" })],
+      "2026-10-31T10:00:00.000Z",
+    );
+    assert.equal(catalogNeedsFullRefresh(stubs), false);
+  });
+
+  it("accepts a typical neighborhood catalog size", () => {
+    const full = catalog(
+      Array.from({ length: 12 }, (_, index) => house(`house-${index}`)),
+      "2026-10-31T10:00:00.000Z",
+    );
+    assert.equal(catalogNeedsFullRefresh(full), false);
+  });
+});
 
 describe("resolveCatalogHouses", { skip: !hasLocalStorage }, () => {
   beforeEach(() => {
