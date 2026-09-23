@@ -6,18 +6,24 @@ import { postMapTileCacheConfig } from "@/lib/map-tile-cache";
 import {
   fetchPublishedAppVersion,
   isServiceWorkerUpdateReady,
+  primeServiceWorkerScript,
   versionsDiffer,
 } from "@/lib/sw-update";
 
 const UPDATE_POLL_MS = 4 * 60 * 1000;
 
+function skipWaitingWorker(worker: ServiceWorker) {
+  worker.postMessage({ type: "SKIP_WAITING" });
+}
+
 function promoteWaitingWorker(
   registration: ServiceWorkerRegistration,
   onPromoted: () => void,
 ) {
-  if (!registration.waiting || !navigator.serviceWorker.controller) return;
+  if (!registration.waiting || !navigator.serviceWorker.controller) return false;
   onPromoted();
-  registration.waiting.postMessage({ type: "SKIP_WAITING" });
+  skipWaitingWorker(registration.waiting);
+  return true;
 }
 
 function watchForUpdate(
@@ -25,6 +31,7 @@ function watchForUpdate(
   onPromoted: () => void,
 ) {
   registration.addEventListener("updatefound", () => {
+    onPromoted();
     const worker = registration.installing;
     if (!worker) return;
     worker.addEventListener("statechange", () => {
@@ -32,7 +39,7 @@ function watchForUpdate(
         isServiceWorkerUpdateReady(worker.state, Boolean(navigator.serviceWorker.controller))
       ) {
         onPromoted();
-        worker.postMessage({ type: "SKIP_WAITING" });
+        skipWaitingWorker(worker);
       }
     });
   });
@@ -51,8 +58,20 @@ async function checkForAppUpdate(
   const published = await fetchPublishedAppVersion();
   const versionBump = Boolean(published && versionsDiffer(appVersion(), published));
 
-  if (versionBump || registration.waiting) {
-    promoteWaitingWorker(registration, onPromoted);
+  if (versionBump) {
+    onPromoted();
+    await primeServiceWorkerScript(published!);
+    try {
+      await registration.update();
+    } catch {
+      /* offline / throttled */
+    }
+  }
+
+  if (promoteWaitingWorker(registration, onPromoted)) return;
+
+  if (versionBump && registration.installing) {
+    onPromoted();
   }
 }
 

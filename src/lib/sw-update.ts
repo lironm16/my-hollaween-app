@@ -20,3 +20,12 @@ export async function fetchPublishedAppVersion(): Promise<string | null> {
     return null;
   }
 }
+
+/** Prime SW script fetch so registration.update() sees the latest deploy. */
+export async function primeServiceWorkerScript(version: string): Promise<void> {
+  try {
+    await fetch(`/sw.js?v=${encodeURIComponent(version)}`, { cache: "no-store" });
+  } catch {
+    /* offline / blocked */
+  }
+}

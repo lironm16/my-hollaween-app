@@ -3,7 +3,6 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, X } from "lucide-react";
-import { CountdownBottomScene } from "@/components/countdown-bottom-scene";
 import { CountdownDecor } from "@/components/countdown-decor";
 import type { EventCountdownParts } from "@/lib/event-countdown";
 import { config } from "@/lib/config";
@@ -121,8 +120,6 @@ export function EventCountdownScreen({
             <div className="countdown-date-badge px-5 py-2.5 text-[clamp(1rem,4.2vw,1.35rem)] font-bold text-white">
               17:00 · 31.10
             </div>
-
-            <CountdownBottomScene />
 
             <button
               type="button"
