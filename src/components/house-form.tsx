@@ -18,7 +18,6 @@ import {
   nameMatchesTheme,
   themeFromName,
   houseKindLabels,
-  poiCategoryLabels,
 } from "@/lib/labels";
 import { isPoiHouse } from "@/lib/house-kind";
 import { displayAddressFromHit, neighborhoodFromAddressHit } from "@/lib/address-fields";
@@ -27,12 +26,10 @@ import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
 import {
   HOUSE_THEMES,
-  POI_CATEGORIES,
   SENSITIVITY_OPTIONS,
   type DecorLevel,
   type HouseInput,
   type HouseKind,
-  type PoiCategory,
   type ScareLevel,
   type SensitivityId,
   type TreatId,
@@ -59,7 +56,7 @@ import { cn } from "@/lib/utils";
 
 const empty: HouseInput = {
   kind: "house",
-  poiCategory: "coffee",
+  poiCategory: "other",
   name: "",
   theme: "pumpkin",
   address: "",
@@ -310,11 +307,11 @@ export function HouseForm({
         }
         const submitter = addedBy.trim();
         if (isNewHouse && submitter.length < 2) {
-          toast.error("נא למלא מי מוסיף את הבית.");
+          toast.error("נא למלא מי מוסיף את המקום.");
           return;
         }
         if (!isNewHouse && submitter.length > 0 && submitter.length < 2) {
-          toast.error("שם מלא של מי שהוסיף את הבית — לפחות 2 תווים.");
+          toast.error("שם מלא של מי שהוסיף את המקום — לפחות 2 תווים.");
           return;
         }
         if (decorLevel === "none" && candy !== "plenty" && candy !== "low" && !(pauseCloseEnabled && nightStatus === "stop") && initial?.visit !== "closed") {
@@ -398,7 +395,7 @@ export function HouseForm({
       }}
     >
       {admin ? (
-        <FormSection title="סוג מקום (מנהל)">
+        <FormSection title="סוג מקום">
           <div className="flex flex-wrap gap-1.5">
             {(["house", "poi"] as HouseKind[]).map((kind) => (
               <button
@@ -408,7 +405,7 @@ export function HouseForm({
                   setForm((current) => ({
                     ...current,
                     kind,
-                    poiCategory: kind === "poi" ? current.poiCategory ?? "coffee" : null,
+                    poiCategory: kind === "poi" ? current.poiCategory ?? "other" : null,
                   }))
                 }
                 className={
@@ -426,32 +423,11 @@ export function HouseForm({
               </button>
             ))}
           </div>
-          {isPoi ? (
-            <div className="mt-3">
-              <p className="mb-2 text-lg font-medium">קטגוריה</p>
-              <div className="flex flex-wrap gap-1.5">
-                {POI_CATEGORIES.map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => setForm((current) => ({ ...current, poiCategory: category }))}
-                    className={
-                      (form.poiCategory ?? "other") === category
-                        ? "rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black"
-                        : "rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
-                    }
-                  >
-                    {poiCategoryLabels[category]}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
         </FormSection>
       ) : null}
       <FormSection title={isPoi ? "נקודת העניין" : "הבית"}>
         <Field
-          label="מי מוסיף את הבית?"
+          label="מי מוסיף את המקום?"
           charCount={{ length: addedBy.length, max: HOUSE_FIELD_LIMITS.addedBy.max }}
         >
           <Input

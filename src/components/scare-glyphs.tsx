@@ -72,20 +72,23 @@ export function ScareBat() {
   );
 }
 
-/** 5 — Jack-o’-lantern (white fill on orange badge in forms; expressions vary on map pins). */
+/** 5 — Jack-o’-lantern (preview/scare option — green / amber / red badges). */
 export function ScarePumpkin({ level = "mild" }: { level?: ScareLevel | "none" }) {
+  const tone = level === "none" ? "mild" : level;
   const mouth =
-    level === "spicy"
+    tone === "spicy"
       ? "M7.4 14.2 12 18.6l4.6-4.4-1.8.6L12 16l-3.2-1.8z"
-      : level === "medium"
+      : tone === "medium"
         ? "M7.8 14.8 12 17.8l4.2-3-1.6.4L12 16.2l-2.6-1.4z"
         : "M8.2 15.4 12 18.2l3.8-2.8-1.4.2L12 16.6l-2.4-1z";
+  /** Amber badge: cut-out eyes/mouth show the circle color through the dark pumpkin. */
+  const featureFill = tone === "medium" ? "#d97706" : "#1c0e24";
   return (
     <Icon>
       <path fill="currentColor" d="M11.2 2.4h1.6c.5 0 .9.5.8 1l-.4 2.1h-2.4l-.4-2.1c-.1-.5.3-1 .8-1Z" />
       <ellipse cx="12" cy="13.2" rx="8.4" ry="7.6" fill="currentColor" />
-      <path fill="#1c0e24" d="M8.4 10.4 10.6 12 8.4 12.6zm7.2 0L13.4 12l2.2.6z" />
-      <path fill="#1c0e24" d={mouth} />
+      <path fill={featureFill} d="M8.4 10.4 10.6 12 8.4 12.6zm7.2 0L13.4 12l2.2.6z" />
+      <path fill={featureFill} d={mouth} />
     </Icon>
   );
 }
@@ -94,13 +97,6 @@ const TONE_CLASS: Record<ScareLevel | "none", string> = {
   mild: BADGE_TONE_CLASS.green,
   medium: BADGE_TONE_CLASS.amber,
   spicy: BADGE_TONE_CLASS.red,
-  none: BADGE_TONE_CLASS.gray,
-};
-
-const PUMPKIN_TONE_CLASS: Record<ScareLevel | "none", string> = {
-  mild: "bg-[#f97316] text-[#fff7ed]",
-  medium: "bg-[#f97316] text-[#fff7ed]",
-  spicy: "bg-[#f97316] text-[#fff7ed]",
   none: BADGE_TONE_CLASS.gray,
 };
 
@@ -122,7 +118,7 @@ export function ScareSign({
     <span
       className={cn(
         "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full",
-        usePumpkin ? PUMPKIN_TONE_CLASS[level] : TONE_CLASS[level],
+        TONE_CLASS[level],
         className,
       )}
       title={label}
@@ -140,7 +136,7 @@ export function ScareSign({
       ) : usePumpkin ? (
         <span
           className={cn(
-            "flex size-[108%] items-center justify-center",
+            "flex size-[122%] items-center justify-center",
             struck && "grayscale",
           )}
         >
