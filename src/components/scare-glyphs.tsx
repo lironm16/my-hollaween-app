@@ -73,7 +73,14 @@ export function ScareBat() {
 }
 
 /** 5 — Jack-o’-lantern (preview/scare option — green / amber / red badges). */
-export function ScarePumpkin({ level = "mild" }: { level?: ScareLevel | "none" }) {
+export function ScarePumpkin({
+  level = "mild",
+  featureFill: featureFillOverride,
+}: {
+  level?: ScareLevel | "none";
+  /** Override eye/mouth fill (e.g. POI pin orange behind a dark silhouette). */
+  featureFill?: string;
+}) {
   const tone = level === "none" ? "mild" : level;
   const mouth =
     tone === "spicy"
@@ -82,7 +89,8 @@ export function ScarePumpkin({ level = "mild" }: { level?: ScareLevel | "none" }
         ? "M7.8 14.8 12 17.8l4.2-3-1.6.4L12 16.2l-2.6-1.4z"
         : "M8.2 15.4 12 18.2l3.8-2.8-1.4.2L12 16.6l-2.4-1z";
   /** Amber badge: cut-out eyes/mouth show the circle color through the dark pumpkin. */
-  const featureFill = tone === "medium" ? "#d97706" : "#1c0e24";
+  const featureFill =
+    featureFillOverride ?? (tone === "medium" ? "#d97706" : "#1c0e24");
   return (
     <Icon>
       <path fill="currentColor" d="M11.2 2.4h1.6c.5 0 .9.5.8 1l-.4 2.1h-2.4l-.4-2.1c-.1-.5.3-1 .8-1Z" />

@@ -14,7 +14,8 @@ export function LocationKindSign({
   return (
     <span
       className={cn(
-        "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full text-[#fff7ed]",
+        "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full",
+        isPoi ? "text-[#1c0e24]" : "text-[#fff7ed]",
         className,
       )}
       style={{
@@ -22,8 +23,12 @@ export function LocationKindSign({
       }}
       aria-hidden
     >
-      <span className="flex size-[115%] items-center justify-center">
-        {isPoi ? <ScarePumpkin level="mild" /> : <ScareGhost level="mild" />}
+      <span className="flex size-[122%] items-center justify-center">
+        {isPoi ? (
+          <ScarePumpkin level="medium" featureFill={PIN_BACKGROUND.poi.decorated} />
+        ) : (
+          <ScareGhost level="mild" />
+        )}
       </span>
     </span>
   );

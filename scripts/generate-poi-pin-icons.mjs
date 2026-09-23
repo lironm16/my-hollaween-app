@@ -10,7 +10,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = join(root, "public/icons");
 
 const INK = "#1c0e24";
-const CREAM = "#fff7ed";
+/** POI pin fill — black silhouette with orange cut-outs (preview/scare #5 medium). */
+const POI_ORANGE = "#f97316";
 
 const MOUTHS = {
   mild: `M8.2 15.4 12 18.2l3.8-2.8-1.4.2L12 16.6l-2.4-1z`,
@@ -39,5 +40,5 @@ async function writePng(name, content) {
 }
 
 for (const level of ["mild", "medium", "spicy"]) {
-  await writePng(`pin-poi-${level}.png`, svg(pumpkinPaths(level, CREAM, INK), 1.28));
+  await writePng(`pin-poi-${level}.png`, svg(pumpkinPaths(level, INK, POI_ORANGE), 1.32));
 }
