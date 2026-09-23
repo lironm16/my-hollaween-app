@@ -994,6 +994,9 @@
   .transform {
     transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
   }
+  .animate-bounce {
+    animation: var(--animate-bounce);
+  }
   .animate-pulse {
     animation: var(--animate-pulse);
   }
@@ -1950,8 +1953,8 @@
   .py-16 {
     padding-block: calc(var(--spacing) * 16);
   }
-  .py-\[max\(2\.75rem\,env\(safe-area-inset-top\,0px\)\+1\.75rem\)\] {
-    padding-block: max(2.75rem, env(safe-area-inset-top,0px) + 1.75rem);
+  .py-\[max\(2\.5rem\,env\(safe-area-inset-top\,0px\)\+1\.5rem\)\] {
+    padding-block: max(2.5rem, env(safe-area-inset-top,0px) + 1.5rem);
   }
   .ps-0\.5 {
     padding-inline-start: calc(var(--spacing) * 0.5);
@@ -2022,8 +2025,8 @@
   .pb-16 {
     padding-bottom: calc(var(--spacing) * 16);
   }
-  .pb-\[max\(0\.5rem\,env\(safe-area-inset-bottom\,0px\)\)\] {
-    padding-bottom: max(0.5rem, env(safe-area-inset-bottom,0px));
+  .pb-\[max\(0\.75rem\,env\(safe-area-inset-bottom\,0px\)\)\] {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom,0px));
   }
   .pb-\[max\(1rem\,env\(safe-area-inset-bottom\,0px\)\)\] {
     padding-bottom: max(1rem, env(safe-area-inset-bottom,0px));
@@ -2101,33 +2104,33 @@
   .text-\[22px\] {
     font-size: 22px;
   }
-  .text-\[clamp\(0\.8rem\,3vw\,0\.95rem\)\] {
-    font-size: clamp(0.8rem, 3vw, 0.95rem);
+  .text-\[clamp\(0\.95rem\,3\.6vw\,1\.1rem\)\] {
+    font-size: clamp(0.95rem, 3.6vw, 1.1rem);
   }
-  .text-\[clamp\(0\.9rem\,3\.6vw\,1\.15rem\)\] {
-    font-size: clamp(0.9rem, 3.6vw, 1.15rem);
+  .text-\[clamp\(1\.25rem\,5\.5vw\,2rem\)\] {
+    font-size: clamp(1.25rem, 5.5vw, 2rem);
   }
-  .text-\[clamp\(0\.875rem\,3\.4vw\,1\.05rem\)\] {
-    font-size: clamp(0.875rem, 3.4vw, 1.05rem);
+  .text-\[clamp\(1\.75rem\,7\.5vw\,2\.85rem\)\] {
+    font-size: clamp(1.75rem, 7.5vw, 2.85rem);
   }
-  .text-\[clamp\(1\.35rem\,6vw\,2\.1rem\)\] {
-    font-size: clamp(1.35rem, 6vw, 2.1rem);
+  .text-\[clamp\(1rem\,3\.8vw\,1\.2rem\)\] {
+    font-size: clamp(1rem, 3.8vw, 1.2rem);
   }
-  .text-\[clamp\(1rem\,4\.5vw\,1\.45rem\)\] {
-    font-size: clamp(1rem, 4.5vw, 1.45rem);
+  .text-\[clamp\(1rem\,4\.2vw\,1\.35rem\)\] {
+    font-size: clamp(1rem, 4.2vw, 1.35rem);
   }
-  .text-\[clamp\(2\.25rem\,13vw\,4\.25rem\)\] {
-    font-size: clamp(2.25rem, 13vw, 4.25rem);
+  .text-\[clamp\(2\.75rem\,14vw\,4\.75rem\)\] {
+    font-size: clamp(2.75rem, 14vw, 4.75rem);
   }
-  .text-\[clamp\(2rem\,11vw\,3\.25rem\)\] {
-    font-size: clamp(2rem, 11vw, 3.25rem);
+  .text-\[clamp\(3rem\,18vw\,6\.5rem\)\] {
+    font-size: clamp(3rem, 18vw, 6.5rem);
   }
-  .text-\[clamp\(3\.25rem\,20vw\,6\.5rem\)\] {
-    font-size: clamp(3.25rem, 20vw, 6.5rem);
+  .text-\[clamp\(4\.5rem\,26vw\,9\.5rem\)\] {
+    font-size: clamp(4.5rem, 26vw, 9.5rem);
   }
-  .leading-\[0\.9\] {
-    --tw-leading: 0.9;
-    line-height: 0.9;
+  .leading-\[0\.88\] {
+    --tw-leading: 0.88;
+    line-height: 0.88;
   }
   .leading-none {
     --tw-leading: 1;
@@ -2161,9 +2164,9 @@
     --tw-tracking: 0.2em;
     letter-spacing: 0.2em;
   }
-  .tracking-\[0\.12em\] {
-    --tw-tracking: 0.12em;
-    letter-spacing: 0.12em;
+  .tracking-\[0\.14em\] {
+    --tw-tracking: 0.14em;
+    letter-spacing: 0.14em;
   }
   .tracking-\[0\.25em\] {
     --tw-tracking: 0.25em;
@@ -3302,6 +3305,12 @@
   .focus-visible\:outline-ring:focus-visible {
     outline-color: var(--ring);
   }
+  .active\:scale-95:active {
+    --tw-scale-x: 95%;
+    --tw-scale-y: 95%;
+    --tw-scale-z: 95%;
+    scale: var(--tw-scale-x) var(--tw-scale-y);
+  }
   .active\:cursor-grabbing:active {
     cursor: grabbing;
   }
@@ -3587,11 +3596,11 @@
     .sm\:gap-6 {
       gap: calc(var(--spacing) * 6);
     }
-    .sm\:px-5 {
-      padding-inline: calc(var(--spacing) * 5);
+    .sm\:px-6 {
+      padding-inline: calc(var(--spacing) * 6);
     }
-    .sm\:py-4 {
-      padding-block: calc(var(--spacing) * 4);
+    .sm\:py-6 {
+      padding-block: calc(var(--spacing) * 6);
     }
     .sm\:text-2xl {
       font-size: var(--text-2xl);
@@ -6096,32 +6105,32 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 .countdown-decor__bat-fly {
   position: absolute;
-  top: clamp(0.35rem, 2.5vh, 1.25rem);
-  width: clamp(3.5rem, 16vw, 5.5rem);
+  top: clamp(0.25rem, 2vh, 1rem);
+  width: clamp(5.5rem, 28vw, 10rem);
   height: auto;
-  color: #1a1028;
-  opacity: 0.88;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+  color: #1c0e24;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 10px rgba(251, 146, 60, 0.55)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.65));
   animation: countdown-bat-fly linear infinite;
 }
 .countdown-decor__bat-fly--1 {
-  top: clamp(0.5rem, 3vh, 1.5rem);
-  animation-duration: 14s;
-  animation-delay: -2s;
+  top: clamp(0.5rem, 3vh, 1.25rem);
+  animation-duration: 16s;
+  animation-delay: -1s;
 }
 .countdown-decor__bat-fly--2 {
-  width: clamp(4.25rem, 20vw, 6.75rem);
-  top: clamp(1.75rem, 7vh, 3.25rem);
-  opacity: 0.72;
-  animation-duration: 18s;
-  animation-delay: -7s;
+  width: clamp(6.5rem, 32vw, 11rem);
+  top: clamp(2rem, 8vh, 3.5rem);
+  opacity: 0.88;
+  animation-duration: 22s;
+  animation-delay: -8s;
 }
 .countdown-decor__bat-fly--3 {
-  width: clamp(3rem, 14vw, 4.75rem);
-  top: clamp(0.25rem, 1.5vh, 0.85rem);
-  opacity: 0.6;
-  animation-duration: 11s;
-  animation-delay: -4s;
+  width: clamp(4.75rem, 24vw, 8.5rem);
+  top: clamp(0.15rem, 1vh, 0.65rem);
+  opacity: 0.82;
+  animation-duration: 13s;
+  animation-delay: -5s;
 }
 @keyframes countdown-bat-fly {
   0% {
@@ -6226,6 +6235,13 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   background: linear-gradient(100deg, transparent 8%, rgba(124, 58, 237, 0.55) 18%, rgba(124, 58, 237, 0.75) 55%, transparent 92%);
   filter: blur(1px);
   transform: skewX(-8deg);
+}
+.countdown-scene-body {
+  margin-inline: auto;
+  width: min(100%, 28rem);
+}
+.countdown-neon-arrow svg {
+  color: #fb923c;
 }
 .neighborhood-toolbar-dock {
   z-index: 30;
@@ -7639,6 +7655,21 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   initial-value: "";
   inherits: false;
 }
+@property --tw-scale-x {
+  syntax: "*";
+  inherits: false;
+  initial-value: 1;
+}
+@property --tw-scale-y {
+  syntax: "*";
+  inherits: false;
+  initial-value: 1;
+}
+@property --tw-scale-z {
+  syntax: "*";
+  inherits: false;
+  initial-value: 1;
+}
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -7746,6 +7777,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
       --tw-duration: initial;
       --tw-ease: initial;
       --tw-content: "";
+      --tw-scale-x: 1;
+      --tw-scale-y: 1;
+      --tw-scale-z: 1;
       --tw-animation-delay: 0s;
       --tw-animation-direction: normal;
       --tw-animation-duration: initial;

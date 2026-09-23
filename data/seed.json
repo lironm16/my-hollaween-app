@@ -461,6 +461,49 @@
       "neighborhood": "חרוזים"
     },
     {
+      "id": "בית-9319",
+      "name": "הבית הטבעוני",
+      "theme": "pumpkin",
+      "address": "חרוזים 30",
+      "arrival": "קומה קרקע, שלט על הדלת",
+      "description": "סטאב לחזרה — ממתקים טבעוניים וקישוט ידידותי.",
+      "lat": 32.0906,
+      "lng": 34.8042,
+      "treats": [
+        "candy",
+        "vegan"
+      ],
+      "treatStock": {
+        "candy": "plenty",
+        "vegan": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "ממתקים טבעוניים בקופסה נפרדת",
+      "accessible": true,
+      "decorLevel": "mild",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/candy-bowl.jpg",
+      "editCode": "931925",
+      "createdAt": "2026-09-05T16:30:00.000Z",
+      "updatedAt": "2026-09-05T16:30:00.000Z",
+      "neighborhood": "חרוזים"
+    },
+    {
       "id": "בית-2291",
       "name": "וילה הדלעת",
       "theme": "haunted",
