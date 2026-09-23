@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import { PIN_BACKGROUND, pinBackgroundFill } from "@/lib/pin-colors";
 
 describe("pinBackgroundFill", () => {
-  it("uses purple for decorated houses and teal for POIs", () => {
+  it("uses purple for decorated houses and orange for POIs", () => {
     assert.equal(pinBackgroundFill({}, true), PIN_BACKGROUND.house.decorated);
     assert.equal(pinBackgroundFill({ kind: "poi" }, true), PIN_BACKGROUND.poi.decorated);
   });

@@ -8,9 +8,9 @@ export const PIN_BACKGROUND = {
     undecorated: "#94a3b8",
   },
   poi: {
-    /** Cyan-teal — distinct from house purple and status badge colors. */
-    decorated: "#0e7490",
-    undecorated: "#64748b",
+    /** Vivid orange — pops against house purple; warmer/brighter than candy-low amber. */
+    decorated: "#f97316",
+    undecorated: "#78716c",
   },
 } as const;
 
