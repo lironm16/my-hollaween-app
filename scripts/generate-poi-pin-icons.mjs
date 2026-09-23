@@ -1,5 +1,5 @@
 /**
- * Pumpkin PNGs — badge glyphs (preview/scare #5) + large map pin faces.
+ * Pumpkin PNGs for map pin faces (badge glyphs stay inline SVG in scare-glyphs.tsx).
  */
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -11,7 +11,6 @@ const outDir = join(root, "public/icons");
 
 const INK = "#1c0e24";
 const CREAM = "#fff7ed";
-const AMBER = "#d97706";
 
 const MOUTHS = {
   mild: `M8.2 15.4 12 18.2l3.8-2.8-1.4.2L12 16.6l-2.4-1z`,
@@ -40,8 +39,5 @@ async function writePng(name, content) {
 }
 
 for (const level of ["mild", "medium", "spicy"]) {
-  const body = level === "medium" ? INK : CREAM;
-  const feature = level === "medium" ? AMBER : INK;
-  await writePng(`scare-pumpkin-${level}.png`, svg(pumpkinPaths(level, body, feature), 1.12));
   await writePng(`pin-poi-${level}.png`, svg(pumpkinPaths(level, CREAM, INK), 1.28));
 }
