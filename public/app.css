@@ -330,9 +330,6 @@
   .end-2 {
     inset-inline-end: calc(var(--spacing) * 2);
   }
-  .end-3 {
-    inset-inline-end: calc(var(--spacing) * 3);
-  }
   .end-\[28\%\] {
     inset-inline-end: 28%;
   }
@@ -1950,9 +1947,6 @@
   .py-16 {
     padding-block: calc(var(--spacing) * 16);
   }
-  .py-\[max\(2\.5rem\,env\(safe-area-inset-top\,0px\)\+1\.5rem\)\] {
-    padding-block: max(2.5rem, env(safe-area-inset-top,0px) + 1.5rem);
-  }
   .ps-0\.5 {
     padding-inline-start: calc(var(--spacing) * 0.5);
   }
@@ -2021,9 +2015,6 @@
   }
   .pb-16 {
     padding-bottom: calc(var(--spacing) * 16);
-  }
-  .pb-\[max\(1\.25rem\,calc\(env\(safe-area-inset-bottom\,0px\)\+var\(--vv-bottom-inset\,0px\)\+0\.75rem\)\)\] {
-    padding-bottom: max(1.25rem, calc(env(safe-area-inset-bottom,0px) + var(--vv-bottom-inset,0px) + 0.75rem));
   }
   .pb-\[max\(1rem\,env\(safe-area-inset-bottom\,0px\)\)\] {
     padding-bottom: max(1rem, env(safe-area-inset-bottom,0px));
@@ -6091,24 +6082,29 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   letter-spacing: 0.08em;
 }
 .countdown-scene-bg {
-  background: radial-gradient(circle at 50% 10%, rgba(255, 210, 120, 0.28) 0%, rgba(255, 140, 40, 0.08) 22%, transparent 46%),
+  background: radial-gradient(circle at 88% 8%, rgba(255, 210, 120, 0.32) 0%, rgba(255, 140, 40, 0.1) 24%, transparent 52%),
     radial-gradient(ellipse 90% 55% at 50% 88%, rgba(88, 28, 135, 0.18), transparent 58%),
     linear-gradient(180deg, #0b1024 0%, #14091c 42%, #0a0610 100%);
 }
-.countdown-decor__moon {
+.countdown-scene-moon {
+  position: absolute;
+  top: max(0.65rem, env(safe-area-inset-top, 0px));
+  inset-inline-end: max(0.85rem, env(safe-area-inset-right, 0px));
+  z-index: 5;
+  width: clamp(3.25rem, 13vw, 5rem);
+  height: clamp(3.25rem, 13vw, 5rem);
   border-radius: 9999px;
   background: radial-gradient(circle at 38% 38%, #fff7d6 0%, #ffd080 45%, #ffb347 100%);
   box-shadow: 0 0 40px rgba(255, 190, 80, 0.55),
     0 0 90px rgba(255, 140, 40, 0.25);
   opacity: 0.92;
+  pointer-events: none;
 }
-.countdown-decor__moon--above-welcome {
-  width: clamp(3.5rem, 14vw, 5.5rem);
-  height: clamp(3.5rem, 14vw, 5.5rem);
-  margin-bottom: 0.35rem;
-}
-.event-countdown-screen {
+.event-countdown-screen--browser {
   padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--vv-bottom-inset, 0px));
+}
+.event-countdown-screen--standalone {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .countdown-brand-he {
   font-family: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
@@ -6200,6 +6196,17 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .countdown-scene-body {
   margin-inline: auto;
   width: min(100%, 28rem);
+  gap: 0;
+}
+.event-countdown-screen--browser .countdown-scene-body {
+  justify-content: center;
+  padding-top: max(1.25rem, env(safe-area-inset-top, 0px));
+  padding-bottom: max(1rem, calc(env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px) + 0.5rem));
+}
+.event-countdown-screen--standalone .countdown-scene-body {
+  justify-content: flex-start;
+  padding-top: max(6.5rem, calc(env(safe-area-inset-top, 0px) + 14vh));
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
 }
 .countdown-neon-arrow svg {
   color: #fb923c;

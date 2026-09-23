@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, X } from "lucide-react";
 import type { EventCountdownParts } from "@/lib/event-countdown";
 import { config } from "@/lib/config";
+import { isStandaloneDisplay } from "@/lib/push-client";
 import { subscribeAppViewport, syncAppViewportVars } from "@/lib/viewport";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,11 @@ export function EventCountdownScreen({
   onClose: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
+  const standalone = useSyncExternalStore(
+    () => () => {},
+    isStandaloneDisplay,
+    () => false,
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -46,7 +52,10 @@ export function EventCountdownScreen({
 
   return createPortal(
     <div
-      className="event-countdown-screen fixed inset-0 z-[2000] flex flex-col overflow-hidden bg-[#0a0610]"
+      className={cn(
+        "event-countdown-screen fixed inset-0 z-[2000] flex flex-col overflow-hidden bg-[#0a0610]",
+        standalone ? "event-countdown-screen--standalone" : "event-countdown-screen--browser",
+      )}
       style={{
         height: "var(--app-h, 100dvh)",
         maxHeight: "var(--app-h, 100dvh)",
@@ -56,6 +65,8 @@ export function EventCountdownScreen({
       aria-label="ספירה לאחור לליל האלווין"
     >
       <div className="countdown-scene-bg relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="countdown-scene-moon" aria-hidden />
+
         <button
           type="button"
           onClick={onClose}
@@ -65,15 +76,14 @@ export function EventCountdownScreen({
           <X className="size-5" />
         </button>
 
-        <div className="countdown-scene-body absolute inset-0 z-10 flex min-h-0 flex-col items-center justify-center gap-3 overflow-y-auto px-4 py-[max(2.5rem,env(safe-area-inset-top,0px)+1.5rem)] pb-[max(1.25rem,calc(env(safe-area-inset-bottom,0px)+var(--vv-bottom-inset,0px)+0.75rem))] text-center">
+        <div className="countdown-scene-body absolute inset-0 z-10 flex min-h-0 flex-col items-center overflow-y-auto px-4 text-center">
           <div className="flex w-full max-w-lg shrink-0 flex-col items-center gap-1">
-            <div className="countdown-decor__moon countdown-decor__moon--above-welcome" aria-hidden />
             <p className="countdown-hebrew-line text-[clamp(1.25rem,5.5vw,2rem)]">ברוכים הבאים ל</p>
             <p className="countdown-plain-title text-[clamp(2.75rem,14vw,4.75rem)]">{config.brandEn}</p>
           </div>
 
           <div
-            className="countdown-wood-sign relative w-full max-w-md shrink-0 px-4 py-5 sm:px-6 sm:py-6"
+            className="countdown-wood-sign relative mt-3 w-full max-w-md shrink-0 px-4 py-5 sm:px-6 sm:py-6"
             aria-live="polite"
             aria-atomic="true"
           >
@@ -104,7 +114,7 @@ export function EventCountdownScreen({
             </div>
           </div>
 
-          <div className="countdown-date-badge shrink-0 px-5 py-2.5 text-[clamp(1rem,4.2vw,1.35rem)] font-bold text-white">
+          <div className="countdown-date-badge mt-3 shrink-0 px-5 py-2.5 text-[clamp(1rem,4.2vw,1.35rem)] font-bold text-white">
             17:00 · 31.10
           </div>
 
@@ -112,7 +122,7 @@ export function EventCountdownScreen({
             type="button"
             onClick={onClose}
             className={cn(
-              "countdown-neon-arrow mt-1 flex shrink-0 touch-manipulation flex-col items-center gap-1",
+              "countdown-neon-arrow mt-2 flex shrink-0 touch-manipulation flex-col items-center gap-1",
               "text-orange-300 transition active:scale-95",
             )}
           >
