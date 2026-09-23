@@ -13,11 +13,9 @@ import { subscribeAppViewport, syncAppViewportVars } from "@/lib/viewport";
 import { cn } from "@/lib/utils";
 
 export function EventCountdownScreen({
-  open,
   parts,
   onClose,
 }: {
-  open: boolean;
   parts: EventCountdownParts;
   onClose: () => void;
 }) {
@@ -34,23 +32,18 @@ export function EventCountdownScreen({
     () => false,
   );
 
-  useFocusTrap(dialogRef, open, { inertRootId: "neighborhood-shell", initialFocus: "first" });
+  useFocusTrap(dialogRef, true, { inertRootId: "neighborhood-shell", initialFocus: "first" });
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    if (!open) {
-      setScreenReaderHint("");
-      return;
-    }
     const dayLabel = parts.days === 1 ? "יום" : "ימים";
     setScreenReaderHint(`${parts.days} ${dayLabel}, ${parts.time}`);
-  }, [open, parts.days, parts.time]);
+  }, [parts.days, parts.time]);
 
   useLayoutEffect(() => {
-    if (!open) return;
     const body = sceneBodyRef.current;
     const fit = sceneFitRef.current;
     const stack = sceneStackRef.current;
@@ -82,10 +75,9 @@ export function EventCountdownScreen({
       ro.disconnect();
       unsubViewport();
     };
-  }, [open, parts.days, parts.time]);
+  }, [parts.days, parts.time]);
 
   useEffect(() => {
-    if (!open) return;
     syncAppViewportVars();
     const unsubViewport = subscribeAppViewport();
     const prev = document.body.style.overflow;
@@ -99,9 +91,9 @@ export function EventCountdownScreen({
       document.body.style.overflow = prev;
       document.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose]);
+  }, [onClose]);
 
-  if (!open || !mounted) return null;
+  if (!mounted) return null;
 
   const dayLabel = parts.days === 1 ? "Day" : "Days";
 

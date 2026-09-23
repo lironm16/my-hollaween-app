@@ -3,7 +3,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { Rubik, Creepster, Rubik_Wet_Paint } from "next/font/google";
 import Script from "next/script";
 import { Providers } from "@/components/providers";
-import { HalloweenFx } from "@/components/halloween-fx";
+import { HalloweenFxGate } from "@/components/halloween-fx-gate";
 import { RehearsalBoot } from "@/components/rehearsal-boot";
 import { config } from "@/lib/config";
 import { getInlineThemeCss } from "@/lib/inline-css";
@@ -75,7 +75,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="relative h-full overflow-hidden font-sans">
         <Script src="/boot.js" strategy="beforeInteractive" />
-        <HalloweenFx />
+        <HalloweenFxGate />
         <RehearsalBoot />
         <Providers>{children}</Providers>
         <Analytics />

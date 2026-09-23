@@ -96,7 +96,8 @@ export function AppHeader({
         </Link>
       </div>
 
-      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+      {menuOpen ? (
+      <Sheet open onOpenChange={setMenuOpen}>
         <SheetContent
           side="left"
           showCloseButton={false}
@@ -264,6 +265,7 @@ export function AppHeader({
           </div>
         </SheetContent>
       </Sheet>
+      ) : null}
     </header>
   );
 }

@@ -102,7 +102,8 @@ export function NeighborhoodApp({
     useCatalog(initialCatalog);
   const catalogUpdatedAt = catalog?.updatedAt;
   const { admin } = useAdminSession();
-  const geo = useUserLocation();
+  const geo = useUserLocation({ watch: false });
+  const { setWatchEnabled } = geo;
   const gps = geo.location;
   const gpsAllowed =
     geo.status === "idle" || geo.status === "pending" || geo.status === "ready";
@@ -282,6 +283,15 @@ export function NeighborhoodApp({
     pinCurrentRoute,
     onBeforePick: resetForNavigation,
   });
+
+  useEffect(() => {
+    setWatchEnabled(
+      view === "map" ||
+        routeMode ||
+        originPick.originPickActive ||
+        originPick.originPickerOpen,
+    );
+  }, [setWatchEnabled, view, routeMode, originPick.originPickActive, originPick.originPickerOpen]);
 
   useEffect(() => {
     if (wasAdmin.current && !admin) {
@@ -723,17 +733,19 @@ export function NeighborhoodApp({
           ? ` מסלול עם ${walkingRoute.stops.length} עצירות.`
           : ""}
       </div>
-      <FiltersSheet
-        open={filtersOpen}
-        onOpenChange={setFiltersOpen}
-        activeCount={sheetActiveCount}
-        resultCount={sheetResultCount}
-        onClear={resetFilterDraft}
-        onSave={commitFilterDraft}
-        saveDisabled={Boolean(visitWindowInvalid)}
-      >
-        <HouseFiltersContent filters={sheetFilters} now={now} onPatch={patchFilterDraft} />
-      </FiltersSheet>
+      {filtersOpen ? (
+        <FiltersSheet
+          open
+          onOpenChange={setFiltersOpen}
+          activeCount={sheetActiveCount}
+          resultCount={sheetResultCount}
+          onClear={resetFilterDraft}
+          onSave={commitFilterDraft}
+          saveDisabled={Boolean(visitWindowInvalid)}
+        >
+          <HouseFiltersContent filters={sheetFilters} now={now} onPatch={patchFilterDraft} />
+        </FiltersSheet>
+      ) : null}
       <NeighborhoodStatusBanners
         outsideBanner={originPick.outsideBanner}
         offline={offline}
@@ -753,224 +765,220 @@ export function NeighborhoodApp({
           onDismiss={routeAlerts.dismissBanner}
         />
       ) : null}
-      <RouteChangesSheet
-        open={routeAlerts.sheetOpen}
-        changes={routeAlerts.changes}
-        onClose={routeAlerts.closeSheet}
-        onFocusHouse={(house) => {
-          selection.selectOnMap(house);
-          setView("map");
-        }}
-        catalogSource={source}
-        liked={likes.liked}
-        onToggleLike={onToggleLike}
-        visited={visits.visited}
-        onToggleVisited={onToggleVisited}
-        skippedIds={skips.skipped}
-        skipMetaFor={(id) => skips.meta(id)}
-        onSkipHouse={handleSkipHouse}
-        onRestoreHouse={handleRestoreHouse}
-        canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-        onEditHouse={(id) => {
-          const house = displayHouses.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
-          if (house) requestHouseEdit(house, true);
-        }}
-        onShowOnMap={openOnMap}
-      />
+      {routeAlerts.sheetOpen ? (
+        <RouteChangesSheet
+          open
+          changes={routeAlerts.changes}
+          onClose={routeAlerts.closeSheet}
+          onFocusHouse={(house) => {
+            selection.selectOnMap(house);
+            setView("map");
+          }}
+          catalogSource={source}
+          liked={likes.liked}
+          onToggleLike={onToggleLike}
+          visited={visits.visited}
+          onToggleVisited={onToggleVisited}
+          skippedIds={skips.skipped}
+          skipMetaFor={(id) => skips.meta(id)}
+          onSkipHouse={handleSkipHouse}
+          onRestoreHouse={handleRestoreHouse}
+          canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
+          onEditHouse={(id) => {
+            const house = displayHouses.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
+            if (house) requestHouseEdit(house, true);
+          }}
+          onShowOnMap={openOnMap}
+        />
+      ) : null}
       <main
         className="relative z-0 min-h-0 flex-1 isolate overflow-hidden"
         style={{ flex: 1, minHeight: 0, position: "relative" }}
       >
         <>
-            <div
-              className={cn(
-                "map-stage absolute inset-0 z-0 isolate",
-                view !== "map" && "invisible pointer-events-none",
-              )}
-              style={{ position: "absolute", inset: 0 }}
-              aria-hidden={view !== "map"}
-            >
-              <HouseMapDynamic
-                houses={mapHouses}
-                matchedIds={matchedIds}
-                filterDimActive={filterDimActive}
-                selectedId={originPick.originPickActive ? null : selection.selected?.id}
-                clusterOverview={selection.clusterOverview}
-                onSelect={(house, opts) => {
-                  if (originPick.originPickActive) return;
-                  selection.selectOnMap(house, opts);
-                }}
-                onClose={selection.closeSelection}
-                className="h-full w-full"
-                active={view === "map"}
-                userLocation={gps}
-                locating={geo.status === "pending" && askedLocation}
-                onLocate={originPick.goToMyLocation}
-                routeLine={routeMode && !originPick.originPickActive ? routeLine : null}
-                routeStart={routeMode ? origin : null}
-                routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}
-                visitedIds={visits.visitedIds}
-                skippedIds={skips.skippedIds}
-                originMarker={origin.fromGps ? null : origin}
-                originPickActive={originPick.originPickActive}
-                originPick={originPick.originDraft}
-                onOriginPick={originPick.onOriginMapPick}
-                panTo={originPick.panTo}
-                panTick={originPick.panTick}
-                statsFab={
-                  originPick.originPickActive ? null : (
-                    <MapStats {...summaryProps} />
-                  )
-                }
-                routeStops={
-                  routeMode && activeRoute && !originPick.originPickActive
-                    ? activeRoute.stops.map((stop) => ({
-                        id: stop.house.id,
-                        order: stop.order,
-                        lat: stop.house.lat,
-                        lng: stop.house.lng,
-                      }))
-                    : null
-                }
-              />
-              {originPick.originPickActive ? (
-                <div className="origin-pick-bar">
-                  <p className="origin-pick-label">{originPick.originDraftLabel}</p>
-                  <div className="origin-pick-actions">
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="bg-orange-500 text-black hover:bg-orange-400"
-                      disabled={!originPick.originDraft}
-                      onClick={() => void originPick.saveOriginPick()}
-                    >
-                      שמירת התחלה
-                    </Button>
-                    <Button type="button" variant="outline" size="sm" onClick={originPick.exitOriginPick}>
-                      ביטול
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
-              <CatalogMetaChip
-                hidden={Boolean(selection.selected) && !originPick.originPickActive}
-                houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
-              />
-            </div>
-            {mapSheetHouse && houseDetailCommon && view === "map" && !originPick.originPickActive ? (
-              <div className="map-sheet-host" aria-hidden={false}>
-                <MapHouseSheet
-                  {...houseDetailCommon}
-                  skipped={skips.skipped(mapSheetHouse.id)}
-                  onSkip={
-                    !skips.skipped(mapSheetHouse.id)
-                      ? () => handleSkipHouse(mapSheetHouse.id)
-                      : undefined
-                  }
-                  onRestoreRoute={
-                    skips.skipped(mapSheetHouse.id)
-                      ? () => handleRestoreHouse(mapSheetHouse.id)
-                      : undefined
-                  }
-                  filterMismatchReasons={selectedFilterReasons}
-                  skipMeta={
-                    skips.skipped(mapSheetHouse.id) ? skips.meta(mapSheetHouse.id) : undefined
-                  }
-                  onShowInList={
-                    matchedIds.has(mapSheetHouse.id)
-                      ? () => {
-                          selection.showInListFromMap(mapSheetHouse.id);
-                          setView("list");
-                        }
-                      : undefined
-                  }
-                  onSelectClusterHouse={(id) => {
-                    const house =
-                      selection.selectedCluster.find((item) => item.id === id) ??
-                      houses.find((item) => item.id === id);
-                    if (house) selection.selectOnMap(house);
+          {view === "map" ? (
+            <>
+              <div className="map-stage absolute inset-0 z-0 isolate" style={{ position: "absolute", inset: 0 }}>
+                <HouseMapDynamic
+                  houses={mapHouses}
+                  matchedIds={matchedIds}
+                  filterDimActive={filterDimActive}
+                  selectedId={originPick.originPickActive ? null : selection.selected?.id}
+                  clusterOverview={selection.clusterOverview}
+                  onSelect={(house, opts) => {
+                    if (originPick.originPickActive) return;
+                    selection.selectOnMap(house, opts);
                   }}
-                  onBackToClusterOverview={selection.backToClusterOverview}
-                  hideHoursBanner={
-                    routeMode &&
-                    (visits.visited(mapSheetHouse.id) || skips.skipped(mapSheetHouse.id))
+                  onClose={selection.closeSelection}
+                  className="h-full w-full"
+                  active
+                  userLocation={gps}
+                  locating={geo.status === "pending" && askedLocation}
+                  onLocate={originPick.goToMyLocation}
+                  routeLine={routeMode && !originPick.originPickActive ? routeLine : null}
+                  routeStart={routeMode ? origin : null}
+                  routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}
+                  visitedIds={visits.visitedIds}
+                  skippedIds={skips.skippedIds}
+                  originMarker={origin.fromGps ? null : origin}
+                  originPickActive={originPick.originPickActive}
+                  originPick={originPick.originDraft}
+                  onOriginPick={originPick.onOriginMapPick}
+                  panTo={originPick.panTo}
+                  panTick={originPick.panTick}
+                  statsFab={
+                    originPick.originPickActive ? null : (
+                      <MapStats {...summaryProps} />
+                    )
+                  }
+                  routeStops={
+                    routeMode && activeRoute && !originPick.originPickActive
+                      ? activeRoute.stops.map((stop) => ({
+                          id: stop.house.id,
+                          order: stop.order,
+                          lat: stop.house.lat,
+                          lng: stop.house.lng,
+                        }))
+                      : null
                   }
                 />
+                {originPick.originPickActive ? (
+                  <div className="origin-pick-bar">
+                    <p className="origin-pick-label">{originPick.originDraftLabel}</p>
+                    <div className="origin-pick-actions">
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="bg-orange-500 text-black hover:bg-orange-400"
+                        disabled={!originPick.originDraft}
+                        onClick={() => void originPick.saveOriginPick()}
+                      >
+                        שמירת התחלה
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={originPick.exitOriginPick}>
+                        ביטול
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
+                <CatalogMetaChip
+                  hidden={Boolean(selection.selected) && !originPick.originPickActive}
+                  houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
+                />
               </div>
-            ) : null}
+              {mapSheetHouse && houseDetailCommon && !originPick.originPickActive ? (
+                <div className="map-sheet-host" aria-hidden={false}>
+                  <MapHouseSheet
+                    {...houseDetailCommon}
+                    skipped={skips.skipped(mapSheetHouse.id)}
+                    onSkip={
+                      !skips.skipped(mapSheetHouse.id)
+                        ? () => handleSkipHouse(mapSheetHouse.id)
+                        : undefined
+                    }
+                    onRestoreRoute={
+                      skips.skipped(mapSheetHouse.id)
+                        ? () => handleRestoreHouse(mapSheetHouse.id)
+                        : undefined
+                    }
+                    filterMismatchReasons={selectedFilterReasons}
+                    skipMeta={
+                      skips.skipped(mapSheetHouse.id) ? skips.meta(mapSheetHouse.id) : undefined
+                    }
+                    onShowInList={
+                      matchedIds.has(mapSheetHouse.id)
+                        ? () => {
+                            selection.showInListFromMap(mapSheetHouse.id);
+                            setView("list");
+                          }
+                        : undefined
+                    }
+                    onSelectClusterHouse={(id) => {
+                      const house =
+                        selection.selectedCluster.find((item) => item.id === id) ??
+                        houses.find((item) => item.id === id);
+                      if (house) selection.selectOnMap(house);
+                    }}
+                    onBackToClusterOverview={selection.backToClusterOverview}
+                    hideHoursBanner={
+                      routeMode &&
+                      (visits.visited(mapSheetHouse.id) || skips.skipped(mapSheetHouse.id))
+                    }
+                  />
+                </div>
+              ) : null}
+            </>
+          ) : (
             <div
               id="house-list-skip"
-              className={cn(
-                "absolute inset-0 overflow-y-auto bg-[#12081a]",
-                view === "list" ? "z-10" : "invisible pointer-events-none z-0",
-              )}
+              className="absolute inset-0 z-10 overflow-y-auto bg-[#12081a]"
               style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#12081a" }}
-              aria-hidden={view !== "list"}
               role="region"
               aria-label="רשימת בתים"
             >
-                <div className="mx-auto w-full min-w-0 max-w-3xl px-3 pt-3">
-                  {routeMode ? (
-                    <div className="min-w-0 rounded-3xl bg-[#160b20] p-2 ring-1 ring-orange-500/40">
-                      <StatsSummary {...summaryProps} compact />
-                    </div>
-                  ) : null}
-                </div>
+              <div className="mx-auto w-full min-w-0 max-w-3xl px-3 pt-3">
                 {routeMode ? (
-                  <RouteList
-                    items={routeListItems}
-                    originLabel={activeRoute?.originLabel}
-                    startedFrom={activeRoute?.startedFrom}
-                    hasGps={Boolean(gps)}
-                    onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
-                    onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
-                    focusId={selection.listFocusId}
-                    catalogSource={source}
-                    likedIds={likes.likedIds}
-                    onToggleLike={onToggleLike}
-                    visitedIds={visits.visitedIds}
-                    onToggleVisited={onToggleVisited}
-                    onSkipHouse={handleSkipHouse}
-                    onRestoreHouse={handleRestoreHouse}
-                    skipMetaFor={(id) => skips.meta(id)}
-                    admin={admin}
-                    canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-                    onShowOnMap={openOnMap}
-                    onEditHouse={(id) => {
-                      const house = visible.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
-                      if (house) requestHouseEdit(house, true);
-                    }}
-                    editingId={null}
-                  />
-                ) : (
-                  <HouseList
-                    houses={visible}
-                    origin={origin}
-                    now={now}
-                    catalogSource={source}
-                    likedIds={likes.likedIds}
-                    onToggleLike={onToggleLike}
-                    visitedIds={visits.visitedIds}
-                    onToggleVisited={onToggleVisited}
-                    skippedIds={skips.skippedIds}
-                    skipMetaFor={(id) => skips.meta(id)}
-                    onSkipHouse={handleSkipHouse}
-                    onRestoreHouse={handleRestoreHouse}
-                    admin={admin}
-                    canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-                    editCodeFor={(id) =>
-                      admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode
-                    }
-                    onShowOnMap={openOnMap}
-                    onEditHouse={(id) => {
-                      const house = visible.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
-                      if (house) requestHouseEdit(house, true);
-                    }}
-                    focusId={selection.listFocusId}
-                    editingId={null}
-                  />
-                )}
+                  <div className="min-w-0 rounded-3xl bg-[#160b20] p-2 ring-1 ring-orange-500/40">
+                    <StatsSummary {...summaryProps} compact />
+                  </div>
+                ) : null}
+              </div>
+              {routeMode ? (
+                <RouteList
+                  items={routeListItems}
+                  originLabel={activeRoute?.originLabel}
+                  startedFrom={activeRoute?.startedFrom}
+                  hasGps={Boolean(gps)}
+                  onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
+                  onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
+                  focusId={selection.listFocusId}
+                  catalogSource={source}
+                  likedIds={likes.likedIds}
+                  onToggleLike={onToggleLike}
+                  visitedIds={visits.visitedIds}
+                  onToggleVisited={onToggleVisited}
+                  onSkipHouse={handleSkipHouse}
+                  onRestoreHouse={handleRestoreHouse}
+                  skipMetaFor={(id) => skips.meta(id)}
+                  admin={admin}
+                  canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
+                  onShowOnMap={openOnMap}
+                  onEditHouse={(id) => {
+                    const house = visible.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
+                    if (house) requestHouseEdit(house, true);
+                  }}
+                  editingId={null}
+                />
+              ) : (
+                <HouseList
+                  houses={visible}
+                  origin={origin}
+                  now={now}
+                  catalogSource={source}
+                  likedIds={likes.likedIds}
+                  onToggleLike={onToggleLike}
+                  visitedIds={visits.visitedIds}
+                  onToggleVisited={onToggleVisited}
+                  skippedIds={skips.skippedIds}
+                  skipMetaFor={(id) => skips.meta(id)}
+                  onSkipHouse={handleSkipHouse}
+                  onRestoreHouse={handleRestoreHouse}
+                  admin={admin}
+                  canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
+                  editCodeFor={(id) =>
+                    admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode
+                  }
+                  onShowOnMap={openOnMap}
+                  onEditHouse={(id) => {
+                    const house = visible.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
+                    if (house) requestHouseEdit(house, true);
+                  }}
+                  focusId={selection.listFocusId}
+                  editingId={null}
+                />
+              )}
             </div>
+          )}
           {showBootstrapSpinner ? (
             <div
               className="absolute inset-0 z-30 flex items-center justify-center bg-[#12081a] text-orange-200"
@@ -982,33 +990,39 @@ export function NeighborhoodApp({
         </>
       </main>
       <EventCountdownLayer />
-      <OriginPickerSheet
-        open={originPick.originPickerOpen}
-        onOpenChange={originPick.setOriginPickerOpen}
-        choice={originChoice}
-        gpsAllowed={gpsAllowed}
-        onChooseGps={originPick.chooseGpsOrigin}
-        onChooseNeighborhood={originPick.chooseNeighborhoodOrigin}
-        onChooseCustom={originPick.chooseCustomOrigin}
-        onPickOnMap={originPick.startOriginPick}
-      />
-      <SkipHouseDialog
-        open={Boolean(skipDialogHouse)}
-        house={skipDialogHouse}
-        filters={filters}
-        now={now}
-        existingMeta={skipDialogHouse ? skips.meta(skipDialogHouse.id) : undefined}
-        onConfirm={confirmSkipHouse}
-        onUnskip={skipDialogHouse && skips.skipped(skipDialogHouse.id) ? unskipFromDialog : undefined}
-        onCancel={() => setSkipDialogHouse(null)}
-      />
-      <VisitSkipConflictDialog
-        open={Boolean(visitSkipConflict)}
-        kind={visitSkipConflict?.kind ?? null}
-        house={visitSkipConflict?.house ?? null}
-        onConfirm={confirmVisitSkipConflict}
-        onCancel={() => setVisitSkipConflict(null)}
-      />
+      {originPick.originPickerOpen ? (
+        <OriginPickerSheet
+          open
+          onOpenChange={originPick.setOriginPickerOpen}
+          choice={originChoice}
+          gpsAllowed={gpsAllowed}
+          onChooseGps={originPick.chooseGpsOrigin}
+          onChooseNeighborhood={originPick.chooseNeighborhoodOrigin}
+          onChooseCustom={originPick.chooseCustomOrigin}
+          onPickOnMap={originPick.startOriginPick}
+        />
+      ) : null}
+      {skipDialogHouse ? (
+        <SkipHouseDialog
+          open
+          house={skipDialogHouse}
+          filters={filters}
+          now={now}
+          existingMeta={skips.meta(skipDialogHouse.id)}
+          onConfirm={confirmSkipHouse}
+          onUnskip={skips.skipped(skipDialogHouse.id) ? unskipFromDialog : undefined}
+          onCancel={() => setSkipDialogHouse(null)}
+        />
+      ) : null}
+      {visitSkipConflict ? (
+        <VisitSkipConflictDialog
+          open
+          kind={visitSkipConflict.kind}
+          house={visitSkipConflict.house}
+          onConfirm={confirmVisitSkipConflict}
+          onCancel={() => setVisitSkipConflict(null)}
+        />
+      ) : null}
       <VisitCheer show={visitCheer} />
       <RouteCompleteCheer show={routeCompleteCheer} />
       <LikeCheer show={likeCheer} />

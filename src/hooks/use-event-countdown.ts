@@ -11,25 +11,36 @@ function countdownNow(stamp: number) {
   return appNow();
 }
 
-/** Live countdown to event night 17:00 — ticks every second. */
-export function useEventCountdown() {
+/** Live countdown to event night 17:00 — ticks every second only while the bar or screen is shown. */
+export function useEventCountdown({ screenOpen = false }: { screenOpen?: boolean } = {}) {
   const [stamp, setStamp] = useState(() => Date.now());
 
-  useEffect(() => {
-    const tick = () => setStamp(Date.now());
-    const id = window.setInterval(tick, 1000);
-    window.addEventListener(CLOCK_EVENT, tick);
-    return () => {
-      window.clearInterval(id);
-      window.removeEventListener(CLOCK_EVENT, tick);
-    };
-  }, []);
-
-  return useMemo(() => {
+  const state = useMemo(() => {
     const now = countdownNow(stamp);
     return {
       active: shouldShowEventCountdown(now),
       parts: eventCountdownRemaining(now),
     };
   }, [stamp]);
+
+  const shouldTick = state.parts !== null && (state.active || screenOpen);
+
+  useEffect(() => {
+    if (!shouldTick) return;
+    const tick = () => setStamp(Date.now());
+    tick();
+    const id = window.setInterval(tick, 1000);
+    window.addEventListener(CLOCK_EVENT, tick);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") tick();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener(CLOCK_EVENT, tick);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [shouldTick]);
+
+  return state;
 }

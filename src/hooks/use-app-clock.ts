@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useAppClockContext } from "@/components/app-clock-provider";
 import {
   CLOCK_EVENT,
   clockSnapshot,
@@ -13,13 +14,16 @@ import {
   type RehearsalScene,
 } from "@/lib/app-clock";
 
-/** Live app clock (rehearsal night when a dry-run scene is on). */
+/** Live app clock (rehearsal night when a dry-run scene is on). Uses shared AppClockProvider when present. */
 export function useAppNow() {
-  const [stamp, setStamp] = useState(() =>
+  const shared = useAppClockContext();
+  const [localStamp, setLocalStamp] = useState(() =>
     typeof window === "undefined" ? 0 : clockSnapshot(),
   );
+
   useEffect(() => {
-    const tick = () => setStamp(clockSnapshot());
+    if (shared) return;
+    const tick = () => setLocalStamp(clockSnapshot());
     tick();
     const id = window.setInterval(tick, 15_000);
     window.addEventListener(CLOCK_EVENT, tick);
@@ -27,8 +31,10 @@ export function useAppNow() {
       window.clearInterval(id);
       window.removeEventListener(CLOCK_EVENT, tick);
     };
-  }, []);
-  return dateFromSnapshot(stamp || clockSnapshot());
+  }, [shared]);
+
+  if (shared) return shared;
+  return dateFromSnapshot(localStamp || clockSnapshot());
 }
 
 export function useRehearsalScene() {

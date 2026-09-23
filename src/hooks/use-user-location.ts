@@ -29,11 +29,21 @@ async function queryGeoPermission(): Promise<"granted" | "denied" | "prompt" | "
   return "unknown";
 }
 
-export function useUserLocation() {
+export function useUserLocation(options?: { watch?: boolean }) {
+  const [watchOverride, setWatchOverride] = useState<boolean | null>(null);
+  const setWatchEnabled = useCallback((enabled: boolean) => setWatchOverride(enabled), []);
+  const watchEnabled = watchOverride ?? options?.watch ?? true;
   const [location, setLocation] = useState<UserLocation | null>(null);
   const [status, setStatus] = useState<LocationStatus>("idle");
   const watchId = useRef<number | null>(null);
   const last = useRef<UserLocation | null>(null);
+
+  const stopWatch = useCallback(() => {
+    if (watchId.current !== null) {
+      navigator.geolocation.clearWatch(watchId.current);
+      watchId.current = null;
+    }
+  }, []);
 
   const apply = useCallback((pos: GeolocationPosition, force = false) => {
     const next: UserLocation = {
@@ -56,6 +66,7 @@ export function useUserLocation() {
   }, []);
 
   const startWatch = useCallback(() => {
+    if (!watchEnabled) return;
     if (!navigator.geolocation) {
       setStatus("unavailable");
       return;
@@ -67,7 +78,7 @@ export function useUserLocation() {
       fail,
       watchOpts,
     );
-  }, [apply, fail]);
+  }, [apply, fail, watchEnabled]);
 
   const refresh = useCallback(async () => {
     if (!navigator.geolocation) {
@@ -86,6 +97,11 @@ export function useUserLocation() {
   }, [apply, fail, startWatch]);
 
   useEffect(() => {
+    if (!watchEnabled) {
+      stopWatch();
+      return;
+    }
+
     let cancelled = false;
     let permission: PermissionStatus | null = null;
 
@@ -100,8 +116,6 @@ export function useUserLocation() {
         setStatus("unavailable");
         return;
       }
-      // Only attach the GPS watch when the browser already allowed it.
-      // Calling watchPosition while permission is "prompt" re-asks on every refresh.
       const state = await queryGeoPermission();
       if (cancelled) return;
       if (state === "granted") startWatch();
@@ -118,12 +132,9 @@ export function useUserLocation() {
     return () => {
       cancelled = true;
       permission?.removeEventListener("change", onPermission);
-      if (watchId.current !== null) {
-        navigator.geolocation.clearWatch(watchId.current);
-        watchId.current = null;
-      }
+      stopWatch();
     };
-  }, [startWatch]);
+  }, [watchEnabled, startWatch, stopWatch]);
 
-  return { location, status, refresh };
+  return { location, status, refresh, setWatchEnabled };
 }
