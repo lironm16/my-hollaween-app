@@ -28,6 +28,7 @@ function base(): HouseFiltersState {
     visitedOnly: true,
     skippedOnly: false,
     includeUndecorated: false,
+    locationKindFilter: "all",
   };
 }
 

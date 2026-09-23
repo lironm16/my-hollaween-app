@@ -59,6 +59,7 @@ describe("resolveVisitWindow", () => {
       visitedOnly: false,
       skippedOnly: false,
       includeUndecorated: true,
+      locationKindFilter: "all",
     };
     const resolved = resolveVisitWindow(filters, now);
     assert.equal(resolved.from, formatClockFromDate(now));
