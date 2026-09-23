@@ -36,3 +36,10 @@ test("eventCountdownRemaining counts down to 17:00 on Oct 31", () => {
   assert.equal(parts!.days, 59);
   assert.equal(parts!.time, "05:00:00");
 });
+
+test("eventCountdownRemaining uses local calendar days across DST (Israel)", () => {
+  const parts = eventCountdownRemaining(new Date(2026, 8, 23, 14, 6, 0));
+  assert.ok(parts);
+  assert.equal(parts!.days, 38);
+  assert.equal(parts!.time, "02:54:00");
+});

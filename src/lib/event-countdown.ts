@@ -16,13 +16,21 @@ function pad2(n: number) {
   return String(n).padStart(2, "0");
 }
 
-export function formatEventCountdownParts(totalMs: number): EventCountdownParts {
-  const ms = Math.max(0, totalMs);
-  const totalSec = Math.floor(ms / 1000);
-  const days = Math.floor(totalSec / 86_400);
-  const hours = Math.floor((totalSec % 86_400) / 3600);
-  const minutes = Math.floor((totalSec % 3600) / 60);
-  const seconds = totalSec % 60;
+function formatEventCountdownPartsFromDates(from: Date, to: Date): EventCountdownParts {
+  let cursor = new Date(from.getTime());
+  let days = 0;
+  while (true) {
+    const nextDay = new Date(cursor.getTime());
+    nextDay.setDate(nextDay.getDate() + 1);
+    if (nextDay.getTime() > to.getTime()) break;
+    days += 1;
+    cursor = nextDay;
+  }
+
+  const remainingMs = Math.max(0, to.getTime() - cursor.getTime());
+  const hours = Math.floor(remainingMs / 3_600_000);
+  const minutes = Math.floor((remainingMs % 3_600_000) / 60_000);
+  const seconds = Math.floor((remainingMs % 60_000) / 1000);
   const time = `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`;
   const dayLabel = days === 1 ? "Day" : "Days";
   return {
@@ -33,6 +41,13 @@ export function formatEventCountdownParts(totalMs: number): EventCountdownParts 
     time,
     label: `${days} ${dayLabel} · ${time}`,
   };
+}
+
+/** @deprecated Prefer date-based decomposition; fixed 86400s days drift across DST. */
+export function formatEventCountdownParts(totalMs: number): EventCountdownParts {
+  const from = new Date(0);
+  const to = new Date(Math.max(0, totalMs));
+  return formatEventCountdownPartsFromDates(from, to);
 }
 
 /** Countdown target — event night at 17:00 (same as add-house cutoff). */
@@ -47,7 +62,7 @@ export function shouldShowEventCountdown(now = appNow()) {
 }
 
 export function eventCountdownRemaining(now = appNow()): EventCountdownParts | null {
-  const remaining = eventCountdownTarget(now).getTime() - now.getTime();
-  if (remaining <= 0) return null;
-  return formatEventCountdownParts(remaining);
+  const target = eventCountdownTarget(now);
+  if (target.getTime() <= now.getTime()) return null;
+  return formatEventCountdownPartsFromDates(now, target);
 }
