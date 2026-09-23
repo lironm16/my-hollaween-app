@@ -3,12 +3,33 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 
+/** Classic Halloween bat — scalloped wings, pointed ears, glowing eyes. */
 function BatIcon({ className }: { className?: string }) {
+  const half = `
+    M 0 14
+    L -4 3 -6 10 -8 3 -10 10 -12 3 -14 10 -16 3 -18 10 -20 3 -22 10 -24 3 -26 14
+    C -30 12 -34 11 -38 11
+    C -46 11 -50 17 -50 26
+    C -46 24 -42 22 -38 21
+    C -44 24 -48 30 -50 36
+    C -42 32 -34 27 -26 23
+    C -28 29 -29 35 -29 39
+    L -24 39
+    C -22 33 -18 27 -14 23
+    C -16 29 -17 35 -17 39
+    L -14 39 L -13 32 L -12 39 L -11 32 L -10 39
+    L -9 32 L -8 39 L -7 32 L -6 39 L -5 32 L -4 39 L -3 32 L -2 39 L -1 32 L 0 39
+    Z
+  `;
+
   return (
-    <svg viewBox="0 0 100 44" aria-hidden className={className} fill="currentColor">
-      <path d="M50 14c-1.8 0-3.4.8-4.5 2.1l-1.8-3.4c-.4-.8-1.5-.8-1.9 0l-1.8 3.4c-1.1-1.3-2.7-2.1-4.5-2.1-3.1 0-5.6 2.5-5.6 5.6 0 1.3.4 2.5 1.2 3.5-5 1-9.5 3.4-12.8 7.1-.9 1-.1 2.6 1.2 2.4 3.6-.6 6.8-2.1 9.5-4.3-.6 2.1-1 4.3-1 6.6 0 .7.6 1.2 1.2 1.2h3.3c.7 0 1.2-.6 1.2-1.2 0-2.4.9-4.6 2.4-6.3 1.5 1.7 2.4 3.9 2.4 6.3 0 .7.6 1.2 1.2 1.2h3.3c.7 0 1.2-.6 1.2-1.2 0-2.3-.4-4.5-1-6.6 2.7 2.2 5.9 3.7 9.5 4.3 1.3.2 2.1-1.4 1.2-2.4-3.3-3.7-7.8-6.1-12.8-7.1.8-1 1.2-2.2 1.2-3.5 0-3.1-2.5-5.6-5.6-5.6Z" />
-      <path d="M28 22C14 19 4 23 0 32c2.5-3.5 6.5-6 11-7C6 22 3 14 1 6c9 3.5 16.5 9 27 16Z" />
-      <path d="M72 22C86 19 96 23 100 32c-2.5-3.5-6.5-6-11-7c5-3 8-11 10-19-9 3.5-16.5 9-27 16Z" />
+    <svg viewBox="0 0 112 48" aria-hidden className={className}>
+      <g transform="translate(56 4)">
+        <path fill="currentColor" d={half} />
+        <path fill="currentColor" d={half} transform="scale(-1 1)" />
+      </g>
+      <circle cx="50" cy="16" r="2.4" fill="#fff" opacity="0.95" />
+      <circle cx="62" cy="16" r="2.4" fill="#fff" opacity="0.95" />
     </svg>
   );
 }
