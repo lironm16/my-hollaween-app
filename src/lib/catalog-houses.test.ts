@@ -6,7 +6,7 @@ import type { Catalog, PublicHouse } from "@/lib/types";
 const CATALOG_LS_KEY = "hw-catalog-cache";
 const hasLocalStorage = typeof localStorage !== "undefined";
 
-function house(id: string, updatedAt: string): PublicHouse {
+function house(id: string, patch: Partial<PublicHouse> = {}): PublicHouse {
   return {
     id,
     name: id,
@@ -26,7 +26,11 @@ function house(id: string, updatedAt: string): PublicHouse {
     accessible: false,
     soldOut: false,
     adminFrozen: false,
-    updatedAt,
+    ownerFrozenUntil: null,
+    photoUrl: "",
+    createdAt: "2026-10-31T10:00:00.000Z",
+    updatedAt: "2026-10-31T10:00:00.000Z",
+    ...patch,
   } as PublicHouse;
 }
 
@@ -44,7 +48,10 @@ describe("resolveCatalogHouses", { skip: !hasLocalStorage }, () => {
   });
 
   it("returns cached houses when live catalog is empty", () => {
-    const cached = catalog([house("a", "2026-10-31T10:00:00.000Z")], "2026-10-31T10:00:00.000Z");
+    const cached = catalog(
+      [house("a", { updatedAt: "2026-10-31T10:00:00.000Z" })],
+      "2026-10-31T10:00:00.000Z",
+    );
     localStorage.setItem(CATALOG_LS_KEY, JSON.stringify(cached));
     assert.deepEqual(resolveCatalogHouses(null).map((item) => item.id), ["a"]);
   });
@@ -52,14 +59,17 @@ describe("resolveCatalogHouses", { skip: !hasLocalStorage }, () => {
   it("keeps cached ids when live catalog is a newer partial delta", () => {
     const cached = catalog(
       [
-        house("a", "2026-10-31T09:00:00.000Z"),
-        house("b", "2026-10-31T09:00:00.000Z"),
-        house("c", "2026-10-31T09:00:00.000Z"),
+        house("a", { updatedAt: "2026-10-31T09:00:00.000Z" }),
+        house("b", { updatedAt: "2026-10-31T09:00:00.000Z" }),
+        house("c", { updatedAt: "2026-10-31T09:00:00.000Z" }),
       ],
       "2026-10-31T09:00:00.000Z",
     );
     localStorage.setItem(CATALOG_LS_KEY, JSON.stringify(cached));
-    const live = catalog([house("a", "2026-10-31T12:00:00.000Z")], "2026-10-31T12:00:00.000Z");
+    const live = catalog(
+      [house("a", { updatedAt: "2026-10-31T12:00:00.000Z" })],
+      "2026-10-31T12:00:00.000Z",
+    );
     const ids = resolveCatalogHouses(live)
       .map((item) => item.id)
       .sort();
