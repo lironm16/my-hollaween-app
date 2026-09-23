@@ -6192,6 +6192,9 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   animation-duration: 29s;
   animation-delay: -16s;
 }
+.countdown-decor__bat-emoji--bottom {
+  z-index: 1;
+}
 .countdown-scene-fog {
   position: absolute;
   inset-inline: 0;
