@@ -598,6 +598,9 @@
   .block {
     display: block;
   }
+  .contents {
+    display: contents;
+  }
   .flex {
     display: flex;
   }
@@ -4641,6 +4644,7 @@ svg.leaflet-zoom-animated {
 :root,
 .dark {
   --app-h: 100dvh;
+  --vv-top-offset: 0px;
   --vv-bottom-inset: 0px;
   --background: oklch(0.17 0.04 310);
   --foreground: oklch(0.96 0.03 80);
@@ -4686,12 +4690,6 @@ svg.leaflet-zoom-animated {
   html {
     font-size: 18px;
   }
-  @supports (height: 100svh) {
-    :root,
-    .dark {
-      --app-h: 100svh;
-    }
-  }
   html,
   body {
     background-color: var(--background);
@@ -4702,6 +4700,24 @@ svg.leaflet-zoom-animated {
       radial-gradient(900px 420px at 0% 100%, rgba(110, 40, 180, 0.28), transparent 60%),
       linear-gradient(#12081a, #1a0b24 40%, #12081a);
     min-height: 100%;
+  }
+  html.hw-mobile-browser,
+  html.hw-mobile-browser body {
+    height: var(--app-h, 100svh);
+    max-height: var(--app-h, 100svh);
+    min-height: 0;
+    overflow: hidden;
+  }
+  html.hw-mobile-browser body {
+    position: fixed;
+    top: var(--vv-top-offset, 0px);
+    left: 0;
+    right: 0;
+    width: 100%;
+  }
+  html.hw-mobile-browser #neighborhood-shell {
+    height: var(--app-h, 100svh);
+    max-height: var(--app-h, 100svh);
   }
   .font-display {
     font-family: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
@@ -5380,7 +5396,7 @@ svg.leaflet-zoom-animated {
   background: #1d1028;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(249, 115, 22, 0.28);
-  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
 }
 .origin-pick-label {
   min-width: 0;
@@ -5398,7 +5414,7 @@ svg.leaflet-zoom-animated {
   flex: 1;
 }
 .is-origin-pick .map-fab-stack {
-  bottom: calc(8.25rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(8.25rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
 }
 .house-pin.is-selected,
 .pumpkin-pin.is-selected {
@@ -6111,13 +6127,14 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   background: rgba(18, 8, 26, 0.97);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  padding-bottom: max(0.2rem, env(safe-area-inset-bottom, 0px), var(--vv-bottom-inset, 0px));
 }
 .event-countdown-bar {
   container-type: inline-size;
   flex-shrink: 0;
   position: relative;
   padding-top: 0.45rem;
-  padding-bottom: max(0.2rem, env(safe-area-inset-bottom, 0px));
+  padding-bottom: 0.2rem;
 }
 .event-countdown-bar__text {
   font-size: clamp(1rem, 7cqi, 1.75rem);
@@ -6444,16 +6461,16 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   flex-direction: column-reverse;
   align-items: flex-end;
   gap: 0.5rem;
-  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
 }
 .map-add-house-fab {
   position: absolute;
   left: 0.75rem;
   z-index: 1100;
-  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
 }
 .is-origin-pick .map-add-house-fab {
-  bottom: calc(8.25rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(8.25rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
 }
 .locate-me {
   appearance: none;

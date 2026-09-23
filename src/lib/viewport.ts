@@ -43,10 +43,16 @@ export function visualViewportBottomInset() {
   return Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
 }
 
+export function visualViewportTopOffset() {
+  if (typeof window === "undefined") return 0;
+  return window.visualViewport?.offsetTop ?? 0;
+}
+
 export function syncAppViewportVars() {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   root.style.setProperty("--app-h", `${Math.round(visualViewportHeight())}px`);
+  root.style.setProperty("--vv-top-offset", `${Math.round(visualViewportTopOffset())}px`);
   root.style.setProperty("--vv-bottom-inset", `${Math.round(visualViewportBottomInset())}px`);
 }
 
