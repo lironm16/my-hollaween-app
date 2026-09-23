@@ -61,6 +61,7 @@ import {
   writeHomeView,
   type HomeView,
 } from "@/lib/home-view";
+import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import {
   catalogHasRealHouses,
   HOUSE_SET_LABELS,
@@ -159,8 +160,9 @@ export function NeighborhoodApp({
     return map;
   }, [adminHouses]);
 
+  const catalogHouses = useMemo(() => resolveCatalogHouses(catalog), [catalog]);
   const houses = useMergedHouses({
-    catalogHouses: catalog?.houses ?? [],
+    catalogHouses,
     owned,
     admin,
     adminHouses,

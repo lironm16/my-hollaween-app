@@ -101,6 +101,19 @@ async function readDeviceCatalog() {
   return (await withTimeout(loadCatalogCache(), 1500)) ?? loadCatalogCacheSync();
 }
 
+function mergeDeviceCatalog(prev: Catalog | null, cached: Catalog): Catalog {
+  const base = prev ? syncCatalog(cached, prev) : cached;
+  return withDeviceHouseOverlays(base);
+}
+
+async function reconcileWithDeviceCache(prev: Catalog | null): Promise<Catalog | null> {
+  const cached = await readDeviceCatalog();
+  if (!cached) return prev;
+  const merged = mergeDeviceCatalog(prev, cached);
+  if (prev && merged.houses.length <= prev.houses.length) return prev;
+  return merged;
+}
+
 export function CatalogProvider({ children }: { children: ReactNode }) {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [loading, setLoading] = useState(true);
@@ -119,12 +132,29 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return;
     }
-    setCatalog(syncCache);
+    setCatalog(withDeviceHouseOverlays(syncCache));
     setSource("cache");
     if (catalogHasRealHouses(syncCache)) {
       setLoading(false);
       setReady(true);
     }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const merged = await reconcileWithDeviceCache(catalogRef.current);
+      if (cancelled || !merged) return;
+      setCatalog(merged);
+      setSource("cache");
+      if (catalogHasRealHouses(merged)) {
+        setLoading(false);
+        setReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
   const catalogRef = useRef(catalog);
   catalogRef.current = catalog;
@@ -193,6 +223,14 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       try {
         if (readServerSimDown()) throw new Error("sim-down");
         await applyLiveResponse(await fetchJson("/api/catalog", false, since));
+        const beforeLen = catalogRef.current?.houses.length ?? 0;
+        const reconciled = await reconcileWithDeviceCache(catalogRef.current);
+        if (reconciled && reconciled.houses.length > beforeLen) {
+          setCatalog(reconciled);
+          setSource("cache");
+          await saveCatalogCache(reconciled);
+          window.dispatchEvent(new Event("hw-catalog-refreshed"));
+        }
         return;
       } catch {
         const cached = await readDeviceCatalog();

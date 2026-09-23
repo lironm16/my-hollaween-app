@@ -12,6 +12,7 @@ import { VisitedCheck } from "@/components/visited-check";
 import { scareShort, decorShort, treatLabels } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import { buildSnapshotStats, type SnapshotStats } from "@/lib/admin-snapshot";
+import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAppNow } from "@/hooks/use-app-clock";
 import type { HouseSet } from "@/lib/house-set";
@@ -23,10 +24,12 @@ export function useSnapshotStats(enabled = true, houseSet: HouseSet = "real"): S
   const { catalog } = useCatalog();
   const now = useAppNow();
 
+  const houses = useMemo(() => resolveCatalogHouses(catalog), [catalog]);
+
   return useMemo(() => {
     if (!enabled || !catalog) return null;
-    return buildSnapshotStats({ houses: catalog.houses, now, houseSet });
-  }, [enabled, catalog, now, houseSet]);
+    return buildSnapshotStats({ houses, now, houseSet });
+  }, [enabled, catalog, houses, now, houseSet]);
 }
 
 export function AdminStatsCard({
