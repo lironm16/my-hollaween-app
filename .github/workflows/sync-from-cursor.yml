@@ -5,6 +5,9 @@ on:
     - cron: "*/5 * * * *"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 concurrency:
   group: sync-from-cursor
   cancel-in-progress: true
@@ -36,6 +39,9 @@ jobs:
             echo "Add a Cursor User API key from cursor.com/dashboard/api as ORIGIN_GIT_TOKEN."
             exit 1
           fi
+          # GITHUB_TOKEN cannot update workflow files — keep GitHub's .github/ as-is.
+          BACKUP=$(mktemp -d)
+          cp -a .github "$BACKUP/"
           curl -fsSL https://downloads.cursor.com/origin/install.sh | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           origin auth login --api-key "$CURSOR_API_KEY"
@@ -43,7 +49,9 @@ jobs:
             git remote set-url cursor "https://origin.cursor.com/git/${ORIGIN_REPO}.git"
           git fetch cursor main
           git reset --hard cursor/main
-          node scripts/prepare-github-mirror.mjs --for-github-mirror
+          rm -rf .github
+          cp -a "$BACKUP/.github" .
+          rm -rf "$BACKUP"
           git config user.email "lironm16@gmail.com"
           git config user.name "Liron Matitiyahu"
           git add -A

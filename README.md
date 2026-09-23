@@ -127,7 +127,8 @@ GitHub Actions (`.github/workflows/ci.yml`) מריץ בדיקות יחידה, bu
   1. ב־GitHub → `my-hollaween-app` → הוסיפו קובץ `.github/workflows/sync-from-cursor.yml` (העתיקו מ־`deploy/github/sync-from-cursor.yml` במאגר).
   2. Settings → Secrets → Actions: הוסיפו `ORIGIN_GIT_TOKEN` (User API Key מ־[cursor.com/dashboard/api](https://cursor.com/dashboard/api)).
   3. מעכשיו: כל merge ל־Cursor `main` מגיע ל־Vercel תוך כ~5 דקות (בלי `npm run sync:github` ידני).
-- **סנכרון ידני (מיידי):** `GITHUB_TOKEN=ghp_... npm run sync:github` — מעדכן קוד באפליקציה, לא נוגע ב־`.github/` שכבר על GitHub.
+- **סנכרון ידני (מיידי):** `GITHUB_TOKEN=ghp_... npm run sync:github` — מעדכן קוד באפליקציה בלבד, לא נוגע ב־`.github/`.
+- **שגיאת `workflows permission` בסנכרון האוטומטי:** ב־GitHub → `.github/workflows/sync-from-cursor.yml` → **Edit** → החליפו בתוכן מ־`deploy/github/sync-from-cursor.yml` (Commit to main). הגרסה המתוקנת שומרת את `.github/` של GitHub ולא דוחפת שינויי workflow.
 - בתים חדשים נשמרים על שרת האפליקציה בתור אחד-אחד.
 - **App Store / Google Play:** לא כלול בגרסה המינימלית. אפשר לעטוף אחר כך ב-[Capacitor](https://capacitorjs.com/) מאותו אתר. בינתיים PWA מכסה iOS/Android בלי חנות.
 

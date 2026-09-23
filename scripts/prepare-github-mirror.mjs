@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Prepare .github/workflows on the GitHub mirror.
- * Copies deploy/github templates. In GitHub Actions (or with --for-github-mirror),
- * also removes Cursor-only workflows (e.g. ci.yml) so the sync App can push.
+ * Prepare .github/workflows on the GitHub mirror (manual / local use).
+ * Copies deploy/github templates and removes Cursor-only workflows (e.g. ci.yml).
+ * The scheduled sync-from-cursor workflow keeps GitHub's .github/ unchanged instead.
  */
 import { cpSync, existsSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
