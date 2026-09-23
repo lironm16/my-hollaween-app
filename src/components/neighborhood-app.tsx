@@ -152,15 +152,6 @@ export function NeighborhoodApp({
     setCountdownScreenOpen(false);
   }, []);
 
-  const countdownAutoOpened = useRef(false);
-  useEffect(() => {
-    if (countdownAutoOpened.current) return;
-    if (eventCountdown.active && eventCountdown.parts) {
-      countdownAutoOpened.current = true;
-      setCountdownScreenOpen(true);
-    }
-  }, [eventCountdown.active, eventCountdown.parts]);
-
   function setView(next: HomeView) {
     writeHomeView(next);
   }

@@ -465,6 +465,9 @@
   .z-\[1\] {
     z-index: 1;
   }
+  .z-\[45\] {
+    z-index: 45;
+  }
   .z-\[55\] {
     z-index: 55;
   }
@@ -6091,27 +6094,25 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
     linear-gradient(180deg, #0b1024 0%, #14091c 42%, #0a0610 100%);
 }
 .countdown-decor__moon {
-  position: absolute;
-  top: 4.5%;
-  left: 50%;
-  width: clamp(4.5rem, 18vw, 7rem);
-  height: clamp(4.5rem, 18vw, 7rem);
-  transform: translateX(-50%);
   border-radius: 9999px;
   background: radial-gradient(circle at 38% 38%, #fff7d6 0%, #ffd080 45%, #ffb347 100%);
   box-shadow: 0 0 40px rgba(255, 190, 80, 0.55),
     0 0 90px rgba(255, 140, 40, 0.25);
   opacity: 0.92;
 }
+.countdown-decor__moon--above-welcome {
+  width: clamp(3.5rem, 14vw, 5.5rem);
+  height: clamp(3.5rem, 14vw, 5.5rem);
+  margin-bottom: 0.35rem;
+}
 .countdown-decor__bat-fly {
   position: absolute;
   top: clamp(0.25rem, 2vh, 1rem);
   width: clamp(5.5rem, 28vw, 10rem);
   height: auto;
-  color: #1c0e24;
-  opacity: 0.95;
-  filter: drop-shadow(0 0 10px rgba(251, 146, 60, 0.55)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.65));
-  animation: countdown-bat-fly linear infinite;
+  color: #fb923c;
+  opacity: 0.92;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.75));
 }
 .countdown-decor__bat-fly--1 {
   top: clamp(0.5rem, 3vh, 1.25rem);
@@ -6132,7 +6133,21 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   animation-duration: 13s;
   animation-delay: -5s;
 }
-@keyframes countdown-bat-fly {
+.countdown-decor__bat-fly--ltr {
+  animation: countdown-bat-ltr linear infinite;
+}
+.countdown-decor__bat-fly--rtl {
+  animation: countdown-bat-rtl linear infinite;
+}
+@keyframes countdown-bat-ltr {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(110vw);
+  }
+}
+@keyframes countdown-bat-rtl {
   0% {
     transform: translateX(110vw) scaleX(-1);
   }
@@ -6244,13 +6259,19 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   color: #fb923c;
 }
 .neighborhood-toolbar-dock {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
   z-index: 30;
-  padding: 0.25rem 0.75rem env(safe-area-inset-bottom, 0px);
+  padding: 0 0.75rem env(safe-area-inset-bottom, 0px);
   background: rgba(18, 8, 26, 0.97);
   border-top: 1px solid rgba(249, 115, 22, 0.22);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   box-shadow: 0 -10px 36px rgba(0, 0, 0, 0.42);
+}
+#neighborhood-shell.has-toolbar-dock main {
+  padding-bottom: calc(3rem + env(safe-area-inset-bottom, 0px));
 }
 #neighborhood-shell:has(.map-house-sheet.is-open) .neighborhood-toolbar-dock,
 #neighborhood-shell:has(.map-house-sheet.is-dragging) .neighborhood-toolbar-dock,

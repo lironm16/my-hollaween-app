@@ -1,3 +1,8 @@
+"use client";
+
+import { useMemo } from "react";
+import { cn } from "@/lib/utils";
+
 function BatIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 96 48" aria-hidden className={className} fill="currentColor">
@@ -6,14 +11,26 @@ function BatIcon({ className }: { className?: string }) {
   );
 }
 
-/** Big bats across the top + one hero pumpkin. */
+/** Flying bats (top layer) + one hero pumpkin. Moon lives in the text column. */
 export function CountdownDecor() {
+  const batDirs = useMemo(
+    () =>
+      [0, 1, 2].map(() => (Math.random() > 0.5 ? "ltr" : "rtl")) as ("ltr" | "rtl")[],
+    [],
+  );
+
   return (
-    <div className="countdown-decor pointer-events-none absolute inset-0 z-20 overflow-hidden" aria-hidden>
-      <div className="countdown-decor__moon" />
-      <BatIcon className="countdown-decor__bat-fly countdown-decor__bat-fly--1" />
-      <BatIcon className="countdown-decor__bat-fly countdown-decor__bat-fly--2" />
-      <BatIcon className="countdown-decor__bat-fly countdown-decor__bat-fly--3" />
+    <div className="countdown-decor pointer-events-none absolute inset-0 z-[45] overflow-hidden" aria-hidden>
+      {batDirs.map((dir, index) => (
+        <BatIcon
+          key={`bat-${index}-${dir}`}
+          className={cn(
+            "countdown-decor__bat-fly",
+            `countdown-decor__bat-fly--${index + 1}`,
+            dir === "ltr" ? "countdown-decor__bat-fly--ltr" : "countdown-decor__bat-fly--rtl",
+          )}
+        />
+      ))}
       <span className="countdown-decor__pumpkin">🎃</span>
     </div>
   );

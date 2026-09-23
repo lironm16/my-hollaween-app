@@ -55,13 +55,14 @@ export function EventCountdownScreen({
           type="button"
           onClick={onClose}
           aria-label="סגירה"
-          className="countdown-scene-close absolute end-3 top-[max(0.5rem,env(safe-area-inset-top,0px))] z-30 inline-flex size-10 touch-manipulation items-center justify-center rounded-full bg-black/45 text-orange-100 ring-1 ring-orange-400/35 backdrop-blur-sm"
+          className="countdown-scene-close absolute end-3 top-[max(0.5rem,env(safe-area-inset-top,0px))] z-50 inline-flex size-10 touch-manipulation items-center justify-center rounded-full bg-black/45 text-orange-100 ring-1 ring-orange-400/35 backdrop-blur-sm"
         >
           <X className="size-5" />
         </button>
 
         <div className="countdown-scene-body absolute inset-0 z-10 flex min-h-0 flex-col items-center justify-center gap-3 overflow-y-auto px-4 py-[max(2.5rem,env(safe-area-inset-top,0px)+1.5rem)] pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] text-center">
           <div className="flex w-full max-w-lg shrink-0 flex-col items-center gap-1">
+            <div className="countdown-decor__moon countdown-decor__moon--above-welcome" aria-hidden />
             <p className="countdown-hebrew-line text-[clamp(1.25rem,5.5vw,2rem)]">ברוכים הבאים ל</p>
             <p className="countdown-plain-title text-[clamp(2.75rem,14vw,4.75rem)]">{config.brandEn}</p>
           </div>
