@@ -1,7 +1,7 @@
 importScripts("/sw-map-tiles.js");
 
-const APP_VERSION = "0.1.41";
-const CACHE = "hw-shell-0.1.41";
+const APP_VERSION = "0.1.42";
+const CACHE = "hw-shell-0.1.42";
 const TILE_CACHE = MapTileCache.TILE_CACHE;
 const PRECACHE = [
   "/offline.html",
@@ -73,6 +73,12 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (url.pathname === "/sw.js" || url.pathname === "/boot.js" || url.pathname === "/sw-map-tiles.js") {
+    return;
+  }
+
+  /* Version probe must always hit the network — never serve a stale semver from cache. */
+  if (url.pathname === "/app-version.txt") {
+    event.respondWith(fetch(req, { cache: "no-store" }));
     return;
   }
 

@@ -9,6 +9,8 @@ import {
   versionsDiffer,
 } from "@/lib/sw-update";
 
+const UPDATE_POLL_MS = 4 * 60 * 1000;
+
 function promoteWaitingWorker(
   registration: ServiceWorkerRegistration,
   onPromoted: () => void,
@@ -36,7 +38,25 @@ function watchForUpdate(
   });
 }
 
-/** Register SW; silently reload when package.json version on server is newer. */
+async function checkForAppUpdate(
+  registration: ServiceWorkerRegistration,
+  onPromoted: () => void,
+) {
+  try {
+    await registration.update();
+  } catch {
+    /* offline / throttled */
+  }
+
+  const published = await fetchPublishedAppVersion();
+  const versionBump = Boolean(published && versionsDiffer(appVersion(), published));
+
+  if (versionBump || registration.waiting) {
+    promoteWaitingWorker(registration, onPromoted);
+  }
+}
+
+/** Register SW; silently reload when a newer deploy is published. */
 export function ServiceWorkerRegister() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
@@ -44,6 +64,7 @@ export function ServiceWorkerRegister() {
     let cancelled = false;
     let reloaded = false;
     let pendingVersionReload = false;
+    let pollId: number | undefined;
 
     const markPendingReload = () => {
       pendingVersionReload = true;
@@ -56,11 +77,17 @@ export function ServiceWorkerRegister() {
     };
     navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
 
-    const applyIfNewVersion = async (registration: ServiceWorkerRegistration) => {
-      const published = await fetchPublishedAppVersion();
-      if (!published || !versionsDiffer(appVersion(), published)) return;
-      await registration.update();
-      promoteWaitingWorker(registration, markPendingReload);
+    const runUpdateCheck = () => {
+      if (cancelled || document.visibilityState === "hidden") return;
+      void navigator.serviceWorker
+        .getRegistration("/")
+        .then((registration) => {
+          if (!registration || cancelled) return;
+          return checkForAppUpdate(registration, markPendingReload);
+        })
+        .then(() => {
+          if (!cancelled) postMapTileCacheConfig();
+        });
     };
 
     void navigator.serviceWorker
@@ -69,7 +96,7 @@ export function ServiceWorkerRegister() {
         if (cancelled) return;
         watchForUpdate(registration, markPendingReload);
         promoteWaitingWorker(registration, markPendingReload);
-        await applyIfNewVersion(registration);
+        await checkForAppUpdate(registration, markPendingReload);
         postMapTileCacheConfig();
       })
       .catch(() => {
@@ -78,21 +105,23 @@ export function ServiceWorkerRegister() {
 
     const onVisible = () => {
       if (document.visibilityState !== "visible") return;
-      void navigator.serviceWorker
-        .getRegistration("/")
-        .then((registration) => {
-          if (!registration || cancelled) return;
-          return applyIfNewVersion(registration);
-        })
-        .then(() => {
-          if (!cancelled) postMapTileCacheConfig();
-        });
+      runUpdateCheck();
     };
+
+    const onOnline = () => runUpdateCheck();
+    const onFocus = () => runUpdateCheck();
+
     document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("focus", onFocus);
+    pollId = window.setInterval(runUpdateCheck, UPDATE_POLL_MS);
 
     return () => {
       cancelled = true;
+      if (pollId !== undefined) window.clearInterval(pollId);
       document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("focus", onFocus);
       navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
     };
   }, []);
