@@ -1669,7 +1669,41 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 
 .event-countdown-finale {
-  min-height: 2.75rem;
+  min-height: 4.5rem;
+}
+
+.event-countdown-finale__emoji {
+  filter: drop-shadow(0 0 10px rgba(251, 146, 60, 0.45));
+}
+
+.event-countdown-dock--finale {
+  border-top-color: rgba(251, 146, 60, 0.38);
+  background:
+    radial-gradient(ellipse 120% 80% at 50% 100%, rgba(124, 58, 237, 0.22), transparent 62%),
+    rgba(18, 8, 26, 0.98);
+  box-shadow: 0 -8px 28px rgba(249, 115, 22, 0.12);
+}
+
+.event-countdown-finale__progress-bar {
+  width: 100%;
+  transform-origin: left center;
+  animation: countdown-finale-progress var(--countdown-finale-ms, 3.2s) linear forwards;
+}
+
+@keyframes countdown-finale-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-countdown-finale__progress-bar {
+    animation: none;
+    transform: scaleX(0.35);
+  }
 }
 
 .event-countdown-dock {
