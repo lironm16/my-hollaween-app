@@ -32,6 +32,7 @@ import { distanceMeters } from "@/lib/geo";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { isClosingSoon, isHoursNightOver, isHoursNotYetOpen, isOnBreak, isOpeningSoon } from "@/lib/hours";
 import { pinScareSrc } from "@/lib/pin-faces";
+import { pinBackgroundFill } from "@/lib/pin-colors";
 import { clusterBadgeHouses, clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { SKIP_ICON_SVG } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
@@ -181,7 +182,7 @@ function housePinHtml(
   const visitedClass = extras?.visited ? " is-visited" : "";
   const extraClass = extras?.extraClass ? ` ${extras.extraClass}` : "";
   const idAttr = extras?.houseId ? ` data-house-id="${attr(extras.houseId)}"` : "";
-  const fill = face === "bare" ? "#94a3b8" : "#6d28d9";
+  const fill = pinBackgroundFill(house, face !== "bare");
   const style = extras?.extraStyle ? `${extras.extraStyle};background:${fill}` : `background:${fill}`;
   const label =
     visit === "closed"

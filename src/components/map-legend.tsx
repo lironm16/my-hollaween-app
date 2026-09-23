@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Info } from "lucide-react";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { SkipIcon } from "@/components/skip-icon";
+import { PIN_BACKGROUND } from "@/lib/pin-colors";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -44,7 +45,15 @@ function SwatchPin({
         bare && "is-undecorated",
         visited && "is-visited",
       )}
-      style={{ background: bare ? "#94a3b8" : "#6d28d9" }}
+      style={{
+        background: bare
+          ? poi
+            ? PIN_BACKGROUND.poi.undecorated
+            : PIN_BACKGROUND.house.undecorated
+          : poi
+            ? PIN_BACKGROUND.poi.decorated
+            : PIN_BACKGROUND.house.decorated,
+      }}
       aria-hidden
     >
       {hours === "closing" ? <i className="pin-hours-ring is-closing" /> : null}

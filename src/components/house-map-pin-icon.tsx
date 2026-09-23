@@ -3,6 +3,7 @@
 import { SkipIcon } from "@/components/skip-icon";
 import { clusterPinStatus, clusterPinVisitKind } from "@/lib/cluster-pin-status";
 import { pinScareSrc } from "@/lib/pin-faces";
+import { pinBackgroundFill } from "@/lib/pin-colors";
 import { effectiveVisit, isDecorated } from "@/lib/house-state";
 import { isClosingSoon, isHoursNightOver, isOpeningSoon } from "@/lib/hours";
 import type { PublicHouse } from "@/lib/types";
@@ -44,7 +45,7 @@ export function HouseMapPinIcon({
         filteredOut && "is-filtered-out",
         className,
       )}
-      style={{ background: decorated ? "#6d28d9" : "#94a3b8" }}
+      style={{ background: pinBackgroundFill(house, decorated) }}
       aria-hidden
     >
       {closingSoon ? <i className="pin-hours-ring is-closing" /> : null}
