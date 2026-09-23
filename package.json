@@ -1,6 +1,6 @@
 {
   "name": "halloween-neighborhood",
-  "version": "0.1.70",
+  "version": "0.1.71",
   "private": true,
   "scripts": {
     "dev": "node scripts/allow-preview-origin.mjs && node scripts/build-css.mjs && next dev --webpack --hostname 0.0.0.0 --port 43127",
@@ -17,7 +17,7 @@
     "ci": "node scripts/ci.mjs",
     "catalog": "node scripts/build-catalog.mjs",
     "stub-images": "node scripts/generate-stub-images.mjs",
-    "poi-pin-icons": "node scripts/generate-poi-pin-icons.mjs",
+    "poi-pin-icons": "python3 scripts/extract-badge-glyphs.py",
     "app-icons": "node scripts/generate-app-icons.mjs",
     "stress": "node scripts/stress-test.mjs",
     "migrate:firestore": "node scripts/migrate-to-firestore.mjs",

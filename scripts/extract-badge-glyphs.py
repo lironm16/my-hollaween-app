@@ -201,10 +201,110 @@ def extract_medium_ghost() -> None:
     extract_disc_glyph(ROOT / "scare-ghost-disc-medium.png", ROOT / "scare-ghost-medium.png", (217, 119, 6), 72)
 
 
+def keep_cream_blob(im: Image.Image) -> Image.Image:
+    src = im.convert("RGBA")
+    w, h = src.size
+    px = src.load()
+    seen = [[False] * w for _ in range(h)]
+    best: list[tuple[int, int]] = []
+    for y in range(h):
+        for x in range(w):
+            p = px[x, y]
+            if seen[y][x] or p[3] < 40 or not is_cream(p):
+                continue
+            stack = [(x, y)]
+            seen[y][x] = True
+            blob: list[tuple[int, int]] = []
+            while stack:
+                cx, cy = stack.pop()
+                blob.append((cx, cy))
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    nx, ny = cx + dx, cy + dy
+                    if 0 <= nx < w and 0 <= ny < h and not seen[ny][nx]:
+                        pp = px[nx, ny]
+                        if pp[3] > 40 and is_cream(pp):
+                            seen[ny][nx] = True
+                            stack.append((nx, ny))
+            if len(blob) > len(best):
+                best = blob
+    out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    op = out.load()
+    for x, y in best:
+        op[x, y] = px[x, y]
+    return out
+
+
+def keep_inner_blob(im: Image.Image, min_alpha: int = 40) -> Image.Image:
+    """Drop the disc rim — keep the largest blob that does not touch the image edge."""
+    src = im.convert("RGBA")
+    w, h = src.size
+    px = src.load()
+    seen = [[False] * w for _ in range(h)]
+    blobs: list[list[tuple[int, int]]] = []
+    for y in range(h):
+        for x in range(w):
+            if seen[y][x] or px[x, y][3] <= min_alpha:
+                continue
+            stack = [(x, y)]
+            seen[y][x] = True
+            blob: list[tuple[int, int]] = []
+            while stack:
+                cx, cy = stack.pop()
+                blob.append((cx, cy))
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    nx, ny = cx + dx, cy + dy
+                    if 0 <= nx < w and 0 <= ny < h and not seen[ny][nx] and px[nx, ny][3] > min_alpha:
+                        seen[ny][nx] = True
+                        stack.append((nx, ny))
+            blobs.append(blob)
+    inner: list[tuple[int, int]] = []
+    for blob in blobs:
+        xs = [p[0] for p in blob]
+        ys = [p[1] for p in blob]
+        if min(xs) <= 1 or min(ys) <= 1 or max(xs) >= w - 2 or max(ys) >= h - 2:
+            continue
+        if len(blob) > len(inner):
+            inner = blob
+    out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    op = out.load()
+    for x, y in inner:
+        op[x, y] = px[x, y]
+    return out
+
+
+def extract_pumpkin_glyphs() -> None:
+    """Row 5 of public/preview/scare-icon-options.png — preview/scare option #5."""
+    preview = ROOT.parent / "preview" / "scare-icon-options.png"
+    src = Image.open(preview)
+    discs = {
+        "mild": {"bg": (3, 111, 69), "center": (457, 851), "inner": False, "thresh": 62},
+        "medium": {"bg": (217, 119, 6), "center": (774, 881), "inner": True, "thresh": 72},
+        "spicy": {"bg": (164, 15, 19), "center": (1082, 855), "inner": False, "thresh": 62},
+    }
+    size = 230
+    for name, spec in discs.items():
+        cx, cy = spec["center"]
+        disc = src.crop((cx - size // 2, cy - size // 2, cx + size // 2, cy + size // 2))
+        disc.save(ROOT / f"scare-pumpkin-disc-{name}.png")
+        keyed = chroma_key(disc, spec["bg"], thresh=spec["thresh"])
+        keyed = chroma_key(keyed, spec["bg"], thresh=spec["thresh"] - 8, softness=16)
+        if spec["inner"]:
+            glyph = keep_inner_blob(keyed)
+        else:
+            glyph = keep_cream_blob(keyed)
+        final = recenter_glyph(trim(glyph, pad=4))
+        scare = ROOT / f"scare-pumpkin-{name}.png"
+        pin = ROOT / f"pin-poi-{name}.png"
+        final.save(scare)
+        final.save(pin)
+        print(f"wrote {scare.name} + {pin.name}")
+
+
 def main() -> None:
     extract_disc_glyph(ROOT / "scare-ghost-disc-mild.png", ROOT / "scare-ghost-mild.png", (3, 111, 69), 62)
     extract_medium_ghost()
     extract_disc_glyph(ROOT / "scare-ghost-disc-spicy.png", ROOT / "scare-ghost-spicy.png", (164, 15, 19), 62)
+    extract_pumpkin_glyphs()
     terracotta = (158, 65, 13)
     extract_sensitivity(ROOT / "sensitivity-gluten.png", ROOT / "sensitivity-gluten-glyph.png", terracotta)
     extract_sensitivity(ROOT / "sensitivity-nuts.png", ROOT / "sensitivity-nuts-glyph.png", terracotta)
