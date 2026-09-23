@@ -1,13 +1,20 @@
-import { config } from "@/lib/config";
+/** Read poll interval from env at call time (Vercel runtime vars, not build bake-in). */
+export function readCatalogPollSeconds() {
+  return Math.max(
+    30,
+    Number(process.env.CATALOG_POLL_SECONDS ?? process.env.NEXT_PUBLIC_CATALOG_POLL_SECONDS ?? 300) ||
+      300,
+  );
+}
 
 export function catalogPollMs(seconds?: number) {
-  const n = seconds ?? config.catalogPollSeconds;
+  const n = seconds ?? readCatalogPollSeconds();
   return Math.max(30, n) * 1000;
 }
 
 /** Server-suggested poll interval — longer overnight (#11). */
 export function effectiveCatalogPollSeconds(now = new Date()) {
-  const base = config.catalogPollSeconds;
+  const base = readCatalogPollSeconds();
   const hour = now.getHours();
   if (hour >= 22 || hour < 8) return Math.max(base, 600);
   return base;

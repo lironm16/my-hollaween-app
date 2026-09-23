@@ -1,3 +1,5 @@
+import { readCatalogPollSeconds } from "@/lib/catalog-poll";
+
 const centerLat = Number(process.env.NEXT_PUBLIC_MAP_CENTER_LAT ?? 32.0919);
 const centerLng = Number(process.env.NEXT_PUBLIC_MAP_CENTER_LNG ?? 34.8112);
 const latPad = 0.0075;
@@ -57,11 +59,8 @@ export const config = {
   },
   tiles,
   catalogCacheSeconds: process.env.NODE_ENV === "production" ? 30 : 0,
-  /** Foreground catalog poll interval (seconds). Default 5 minutes. Override via CATALOG_POLL_SECONDS. */
-  catalogPollSeconds: Math.max(
-    30,
-    Number(process.env.CATALOG_POLL_SECONDS ?? process.env.NEXT_PUBLIC_CATALOG_POLL_SECONDS ?? 300) || 300,
-  ),
+  /** Foreground catalog poll interval (seconds). Prefer live value from /api/catalog on clients. */
+  catalogPollSeconds: readCatalogPollSeconds(),
   /** Neighborhood push alerts. Default off — set NEXT_PUBLIC_PUSH_ALERTS=1 to enable. */
   pushAlertsEnabled: process.env.NEXT_PUBLIC_PUSH_ALERTS === "1",
   adminCookie: "hw_admin",
