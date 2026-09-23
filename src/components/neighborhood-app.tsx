@@ -755,7 +755,14 @@ export function NeighborhoodApp({
         error={error}
         hasCachedHouses={houses.length > 0}
       />
-      <TempSkipRestoreAlerts alerts={tempRestoreAlerts} onDismiss={dismissTempRestoreAlert} />
+      <TempSkipRestoreAlerts
+        alerts={tempRestoreAlerts}
+        onFocusHouse={(id) => {
+          dismissTempRestoreAlert(id);
+          openOnMap(id);
+        }}
+        onDismiss={dismissTempRestoreAlert}
+      />
       {routeMode &&
       routeAlerts.changes.length > 0 &&
       !routeAlerts.bannerDismissed &&

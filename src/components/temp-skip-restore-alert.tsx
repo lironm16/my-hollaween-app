@@ -2,14 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
 import type { TempSkipRestoreAlert } from "@/lib/temp-skip-restore-alerts";
 
 export function TempSkipRestoreAlerts({
   alerts,
+  onFocusHouse,
   onDismiss,
 }: {
   alerts: TempSkipRestoreAlert[];
+  onFocusHouse: (houseId: string) => void;
   onDismiss: (id: string) => void;
 }) {
   const [mounted, setMounted] = useState(false);
@@ -29,9 +31,16 @@ export function TempSkipRestoreAlerts({
         <div
           key={alert.id}
           role="status"
-          className="pointer-events-auto flex items-center justify-between gap-3 rounded-xl bg-emerald-950/95 px-3 py-2.5 text-base text-emerald-50 shadow-[0_10px_30px_rgba(0,0,0,0.45)] ring-1 ring-emerald-500/30 backdrop-blur-sm"
+          className="pointer-events-auto flex items-center gap-2 rounded-xl bg-emerald-950/95 px-3 py-2.5 text-base text-emerald-50 shadow-[0_10px_30px_rgba(0,0,0,0.45)] ring-1 ring-emerald-500/30 backdrop-blur-sm"
         >
-          <span className="min-w-0 flex-1 text-right leading-snug">{alert.message}</span>
+          <button
+            type="button"
+            className="flex min-w-0 flex-1 items-center gap-2 text-right leading-snug"
+            onClick={() => onFocusHouse(alert.id)}
+          >
+            <span className="min-w-0 flex-1">{alert.message}</span>
+            <ChevronLeft className="size-4 shrink-0 opacity-80" aria-hidden />
+          </button>
           <button
             type="button"
             className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-emerald-100/90 hover:bg-emerald-900/60"
