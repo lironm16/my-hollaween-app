@@ -1,4 +1,5 @@
-import { ScareGhost, ScarePumpkin } from "@/components/scare-glyphs";
+import { PoiPinFaceGlyph, ScareGhost } from "@/components/scare-glyphs";
+import { houseKindLabels } from "@/lib/labels";
 import { PIN_BACKGROUND } from "@/lib/pin-colors";
 import { cn } from "@/lib/utils";
 
@@ -6,11 +7,16 @@ import { cn } from "@/lib/utils";
 export function LocationKindSign({
   kind,
   className,
+  glyphClassName,
 }: {
   kind: "house" | "poi";
   className?: string;
+  /** Inner glyph scale — defaults to filter size; pass PIN_GLYPH_SCALE for card/map match. */
+  glyphClassName?: string;
 }) {
   const isPoi = kind === "poi";
+  const label = houseKindLabels[kind];
+  const glyphScale = glyphClassName ?? "size-[108%]";
   return (
     <span
       className={cn(
@@ -20,10 +26,11 @@ export function LocationKindSign({
       style={{
         background: isPoi ? PIN_BACKGROUND.poi.decorated : PIN_BACKGROUND.house.decorated,
       }}
-      aria-hidden
+      title={label}
+      aria-label={label}
     >
-      <span className="flex size-[108%] items-center justify-center">
-        {isPoi ? <ScarePumpkin level="medium" /> : <ScareGhost level="mild" />}
+      <span className={cn("flex items-center justify-center", glyphScale)}>
+        {isPoi ? <PoiPinFaceGlyph /> : <ScareGhost level="mild" />}
       </span>
     </span>
   );

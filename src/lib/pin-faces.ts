@@ -10,6 +10,12 @@ const HOUSE_SCARE_SRC: Record<ScareLevel, string> = {
 /** POI map pins — one jack-o'-lantern silhouette (cream + black face) on orange. */
 export const POI_PIN_FACE_SRC = "/icons/pin-poi-medium.png";
 
+/** Inner glyph scale — matches `.house-pin .pin-scare` / `.house-pin.is-poi .pin-scare`. */
+export const PIN_GLYPH_SCALE = {
+  house: "size-[92%]",
+  poi: "size-[88%]",
+} as const;
+
 export function pinScareSrc(house: Pick<PublicHouse, "kind" | "scareLevel">, level?: ScareLevel) {
   const scare = level ?? house.scareLevel ?? "mild";
   return effectiveHouseKind(house) === "poi" ? POI_PIN_FACE_SRC : HOUSE_SCARE_SRC[scare];

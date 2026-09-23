@@ -2,8 +2,10 @@
 
 import { StrollerSign } from "@/components/symbols";
 import { CandySign, candyTone } from "@/components/candy-glyphs";
-import { ScarePumpkin, ScareSign } from "@/components/scare-glyphs";
-import { isPoiHouse } from "@/lib/house-kind";
+import { PoiPinFaceGlyph, ScareSign } from "@/components/scare-glyphs";
+import { LocationKindSign } from "@/components/location-kind-sign";
+import { effectiveHouseKind, isPoiHouse } from "@/lib/house-kind";
+import { PIN_GLYPH_SCALE } from "@/lib/pin-faces";
 import { SensitivitySign } from "@/components/sensitivity-glyphs";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { cn } from "@/lib/utils";
@@ -95,6 +97,8 @@ export function HouseTags({
     !closedInsteadOfCandy &&
     (isOwnerFrozen(house, now.getTime()) || isOnBreak(house, now));
   const signSize = large ? "size-10" : undefined;
+  const kind = effectiveHouseKind(house);
+  const pinGlyphScale = kind === "poi" ? PIN_GLYPH_SCALE.poi : PIN_GLYPH_SCALE.house;
   const showCandy =
     (!closedInsteadOfCandy && !pausedInsteadOfCandy) || candy !== "none";
   return (
@@ -103,10 +107,12 @@ export function HouseTags({
         {closedInsteadOfCandy ? <ClosedSign className={signSize} /> : null}
         {pausedInsteadOfCandy ? <PauseSign className={signSize} /> : null}
         {showCandy ? <CandySign tone={candy} className={signSize} /> : null}
+        <LocationKindSign kind={kind} className={signSize} glyphClassName={pinGlyphScale} />
         <ScareSign
-          Glyph={isPoiHouse(house) ? ScarePumpkin : undefined}
+          Glyph={isPoiHouse(house) ? PoiPinFaceGlyph : undefined}
           level={undecorated ? "none" : scare}
           className={signSize}
+          glyphClassName={pinGlyphScale}
         />
         {house.accessible ? (
           <span title="נגיש" aria-label="נגיש">

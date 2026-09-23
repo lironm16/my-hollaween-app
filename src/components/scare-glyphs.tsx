@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { BADGE_TONE_CLASS } from "@/lib/badge-tones";
 import { decorShort, scareShort } from "@/lib/labels";
+import { POI_PIN_FACE_SRC, PIN_GLYPH_SCALE } from "@/lib/pin-faces";
 import type { ScareLevel } from "@/lib/types";
 import { DiscStrike } from "@/components/disc-strike";
 
@@ -87,6 +88,19 @@ export function ScarePumpkin({ level = "mild" }: { level?: ScareLevel | "none" }
   );
 }
 
+/** POI pin/card face — cream body, solid black eyes and mouth (always medium silhouette). */
+export function PoiPinFaceGlyph() {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={POI_PIN_FACE_SRC}
+      alt=""
+      aria-hidden
+      className="block h-full w-full object-contain object-center"
+    />
+  );
+}
+
 /** Decorative pumpkin for סיכום headers — not the scare-badge POI art. */
 export function SummaryPumpkinIcon() {
   return (
@@ -112,15 +126,21 @@ export function ScareSign({
   Glyph,
   level,
   className,
+  glyphClassName,
 }: {
   Glyph?: (props: { level?: ScareLevel | "none" }) => ReactNode;
   level: ScareLevel | "none";
   className?: string;
+  /** Override inner glyph scale (e.g. card details matching map pin %). */
+  glyphClassName?: string;
 }) {
   const struck = level === "none";
   const useOfferedGhost = !Glyph || Glyph === ScareGhost;
   const usePumpkin = Glyph === ScarePumpkin;
+  const usePoiPinFace = Glyph === PoiPinFaceGlyph;
   const label = struck ? decorShort.none : scareShort[level];
+  const defaultGhostScale = glyphClassName ?? "size-[108%]";
+  const defaultPumpkinScale = glyphClassName ?? "size-[110%]";
 
   return (
     <span
@@ -135,20 +155,22 @@ export function ScareSign({
       {useOfferedGhost ? (
         <span
           className={cn(
-            "flex size-[108%] items-center justify-center",
+            "flex items-center justify-center",
+            defaultGhostScale,
             struck && "grayscale",
           )}
         >
           <ScareGhost level={struck ? "mild" : level} />
         </span>
-      ) : usePumpkin ? (
+      ) : usePumpkin || usePoiPinFace ? (
         <span
           className={cn(
-            "flex size-[110%] items-center justify-center",
+            "flex items-center justify-center",
+            usePoiPinFace ? (glyphClassName ?? PIN_GLYPH_SCALE.poi) : defaultPumpkinScale,
             struck && "grayscale",
           )}
         >
-          <Glyph level={level === "none" ? "mild" : level} />
+          {usePoiPinFace ? <PoiPinFaceGlyph /> : <Glyph level={level === "none" ? "mild" : level} />}
         </span>
       ) : (
         <span className="size-[70%]">
