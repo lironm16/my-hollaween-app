@@ -3,12 +3,11 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import type { EventCountdownParts } from "@/lib/event-countdown";
+import { countdownBackground } from "@/lib/countdown-art";
 import { config } from "@/lib/config";
-
-/** Glowing lanterns — matches reference countdown art. */
-const HERO_IMAGE = "/images/stubs/lantern-path.jpg";
+import { cn } from "@/lib/utils";
 
 export function EventCountdownScreen({
   open,
@@ -44,88 +43,98 @@ export function EventCountdownScreen({
   if (!open || !mounted) return null;
 
   const dayLabel = parts.days === 1 ? "Day" : "Days";
+  const hero = countdownBackground(welcome, parts.days);
 
   return createPortal(
     <div
-      className="event-countdown-screen fixed inset-0 z-[2000] flex h-dvh max-h-dvh flex-col overflow-hidden bg-black"
+      className="event-countdown-screen fixed inset-0 z-[2000] flex h-dvh max-h-dvh flex-col overflow-hidden bg-[#0a0610]"
       role="dialog"
       aria-modal="true"
       aria-label="ספירה לאחור לליל האלווין"
     >
-      <div className="relative z-20 flex shrink-0 items-center justify-between border-b border-orange-500/30 bg-orange-500 px-4 py-2.5 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="סגירה"
-          className="inline-flex size-10 touch-manipulation items-center justify-center rounded-lg text-black/70 hover:bg-black/10"
-        >
-          <X className="size-5" />
-        </button>
-        <span className="font-display text-lg text-black">ספירה לאחור</span>
-        <span className="size-10" aria-hidden />
-      </div>
-
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <Image
-          src={HERO_IMAGE}
+          src={hero}
           alt=""
           fill
           priority
           sizes="100vw"
           className="object-cover object-center"
         />
-        <div
-          className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/35 to-black/80"
-          aria-hidden
-        />
+        <div className="countdown-scene-vignette absolute inset-0" aria-hidden />
 
-        <div className="absolute inset-0 flex flex-col items-center px-4 pb-6 pt-[clamp(1.5rem,8vh,4rem)] text-center">
-          {welcome ? (
-            <p className="mb-4 max-w-md shrink-0 text-base leading-snug text-violet-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-              <span className="font-display text-lg text-orange-300">ברוכים הבאים!</span>
-              {" · "}
-              עוד {parts.days} ימים · {parts.time}
-            </p>
-          ) : null}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="סגירה"
+          className="countdown-scene-close absolute end-3 top-[max(0.75rem,env(safe-area-inset-top,0px))] z-30 inline-flex size-11 touch-manipulation items-center justify-center rounded-full bg-black/45 text-orange-100 ring-1 ring-orange-400/35 backdrop-blur-sm"
+        >
+          <X className="size-5" />
+        </button>
+
+        <div className="absolute inset-0 z-10 flex flex-col items-center px-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] pt-[max(3.5rem,env(safe-area-inset-top,0px)+2.5rem)] text-center">
+          <div className="flex w-full max-w-lg shrink-0 flex-col items-center gap-3">
+            {welcome ? (
+              <>
+                <p className="countdown-hebrew-line text-[clamp(1.25rem,5.5vw,2rem)]">ברוכים הבאים ל</p>
+                <p className="countdown-drip-title text-[clamp(2.75rem,14vw,4.75rem)]">{config.brandEn}</p>
+                <p className="max-w-sm text-[clamp(1rem,4vw,1.25rem)] leading-snug text-white/95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
+                  ההכנות החלו! הוסיפו את הבית, תכננו מסלול — ונתראה בערב.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="countdown-hebrew-line text-[clamp(1.1rem,4.8vw,1.75rem)]">עוד קצת ו…</p>
+                <p className="countdown-drip-title text-[clamp(2.5rem,13vw,4.25rem)]">HALLOWEEN</p>
+              </>
+            )}
+          </div>
 
           <div
-            className="flex w-full max-w-2xl shrink-0 flex-col items-center"
+            className="countdown-wood-sign relative mt-5 w-full max-w-md shrink-0 px-4 py-5 sm:px-6 sm:py-6"
             aria-live="polite"
             aria-atomic="true"
           >
-            <div dir="ltr">
-              <p className="font-creepster text-[clamp(4rem,22vw,8rem)] tabular-nums leading-[0.9] tracking-wide text-orange-400 drop-shadow-[0_0_32px_rgba(249,115,22,0.75)]">
+            <span className="countdown-web countdown-web--tl" aria-hidden />
+            <span className="countdown-web countdown-web--tr" aria-hidden />
+            <span className="countdown-web countdown-web--bl" aria-hidden />
+            <span className="countdown-web countdown-web--br" aria-hidden />
+
+            <div dir="ltr" className="relative z-[1]">
+              <p className="countdown-drip-number text-[clamp(4.5rem,26vw,9.5rem)] tabular-nums leading-[0.88]">
                 {parts.days} {dayLabel}
               </p>
-              <p className="mt-2 font-creepster text-[clamp(3rem,16vw,5.75rem)] tabular-nums leading-none tracking-[0.18em] text-orange-400 drop-shadow-[0_0_24px_rgba(249,115,22,0.65)]">
+              <p className="countdown-drip-number mt-1 text-[clamp(3rem,18vw,6.5rem)] tabular-nums leading-none tracking-[0.14em]">
                 {parts.time}
               </p>
             </div>
-            <div className="mt-6 max-w-md space-y-1" dir="rtl">
-              <p className="font-display text-[clamp(1.125rem,4.5vw,1.5rem)] text-orange-200 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-                {config.brandEn} · {config.brandHe}
+
+            <div className="relative z-[1] mt-4 space-y-1" dir="rtl">
+              <p className="countdown-hebrew-line text-[clamp(1.05rem,4.2vw,1.45rem)]">
+                {config.brandHe} · {config.neighborhood}
               </p>
-              <p className="text-[clamp(0.95rem,3.6vw,1.2rem)] text-violet-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-                {config.neighborhood}
+              <p className="text-[clamp(0.95rem,3.8vw,1.15rem)] font-medium text-violet-100/95">
+                תחילת הערב בשכונה
               </p>
             </div>
           </div>
 
-          <p className="mt-auto max-w-md shrink-0 pt-6 text-base leading-snug text-orange-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] sm:text-lg">
-            עד 17:00 · 31 באוקטובר · תחילת הערב בשכונה
-          </p>
-        </div>
-      </div>
+          <div className="countdown-date-badge mt-5 shrink-0 px-5 py-2.5 text-[clamp(1rem,4.2vw,1.35rem)] font-bold text-white">
+            עד 17:00 · 31.10
+          </div>
 
-      <div className="relative z-30 shrink-0 border-t border-orange-500/30 bg-orange-500 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex w-full touch-manipulation items-center justify-center gap-2 rounded-xl bg-black/20 py-3.5 text-lg font-semibold text-black active:bg-black/35"
-        >
-          <X className="size-5" aria-hidden />
-          סגירה
-        </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className={cn(
+              "countdown-neon-arrow mt-auto flex touch-manipulation flex-col items-center gap-1 pt-6",
+              "text-orange-300 transition active:scale-95",
+            )}
+          >
+            <span className="text-sm font-semibold text-orange-100/90">סגירה · חזרה למפה</span>
+            <ChevronDown className="size-8 animate-bounce" strokeWidth={2.5} aria-hidden />
+          </button>
+        </div>
       </div>
     </div>,
     document.body,
