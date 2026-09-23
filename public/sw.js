@@ -1,7 +1,7 @@
 importScripts("/sw-map-tiles.js");
 
-const APP_VERSION = "0.1.45";
-const CACHE = "hw-shell-0.1.45";
+const APP_VERSION = "0.1.46";
+const CACHE = "hw-shell-0.1.46";
 const TILE_CACHE = MapTileCache.TILE_CACHE;
 const PRECACHE = [
   "/offline.html",
@@ -163,7 +163,11 @@ self.addEventListener("notificationclick", (event) => {
 });
 
 async function cachedDocument(cache, request) {
-  return (await cache.match(request)) || (await cache.match("/"));
+  const matched = await cache.match(request);
+  if (matched) return matched;
+  const path = new URL(request.url).pathname;
+  if (path === "/" || path === "") return cache.match("/");
+  return undefined;
 }
 
 async function offlineDocument(cache) {
@@ -176,8 +180,26 @@ async function offlineDocument(cache) {
   );
 }
 
+function isPreviewNavigation(url) {
+  const path = url.pathname;
+  return path === "/preview" || path.startsWith("/preview/");
+}
+
 /** Cache-first for HTML: instant PWA reopen; refresh in background when online. */
 async function navigation(request) {
+  const url = new URL(request.url);
+
+  if (isPreviewNavigation(url)) {
+    try {
+      const res = await fetch(request);
+      if (res && res.ok) return res;
+    } catch {
+      /* fall through */
+    }
+    const cache = await caches.open(CACHE);
+    return offlineDocument(cache);
+  }
+
   const cache = await caches.open(CACHE);
   const cached = await cachedDocument(cache, request);
 
