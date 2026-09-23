@@ -156,8 +156,7 @@ export function houseInNeighborhoods(
   house: { address: string; neighborhood?: NeighborhoodId | null; lat?: number; lng?: number },
   selected: readonly NeighborhoodId[],
 ) {
-  if (selected.length === 0) return false;
-  if (selected.length === NEIGHBORHOODS.length) return true;
+  if (selected.length === 0 || selected.length === NEIGHBORHOODS.length) return true;
   const area = resolveNeighborhood(house);
   return area !== null && selected.includes(area);
 }

@@ -166,6 +166,7 @@ export function NeighborhoodApp({
     owned,
     admin,
     adminHouses,
+    includeCatalogWhenAdmin: true,
   });
   const lastHousesRef = useRef<PublicHouse[]>([]);
   const displayHouses = useMemo(() => {
@@ -261,7 +262,7 @@ export function NeighborhoodApp({
   } = useFilterDraft({
     filters,
     updateFilters,
-    houses,
+    houses: displayHouses,
     filterContext,
     routeMode,
     pinnedRoute,

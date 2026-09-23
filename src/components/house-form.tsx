@@ -40,6 +40,7 @@ import { freezeExpireIso, isOwnerFrozen, resolveDecorLevel } from "@/lib/house-s
 import { StrollerSign } from "@/components/symbols";
 import { LocationKindSign } from "@/components/location-kind-sign";
 import { ScarePumpkin, ScareSign } from "@/components/scare-glyphs";
+import { PIN_GLYPH_SCALE } from "@/lib/pin-faces";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
 import {
   houseHoursWindows,
@@ -149,6 +150,7 @@ export function HouseForm({
   const blocked = Boolean(busy || saving);
   const isPoi = isPoiHouse(form);
   const scareGlyph = isPoi ? ScarePumpkin : undefined;
+  const scareGlyphScale = isPoi ? PIN_GLYPH_SCALE.poi : PIN_GLYPH_SCALE.house;
 
   function updateHourWindow(index: number, patch: Partial<HoursWindow>) {
     setHourWindows((current) =>
@@ -647,7 +649,12 @@ export function HouseForm({
                   : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
               }
             >
-              <ScareSign Glyph={scareGlyph} level="none" className="size-6" />
+              <ScareSign
+                Glyph={scareGlyph}
+                level="none"
+                className="size-6"
+                glyphClassName={scareGlyphScale}
+              />
               {decorShort.none}
             </button>
             {(["mild", "medium", "spicy"] as ScareLevel[]).map((level) => (
@@ -661,7 +668,12 @@ export function HouseForm({
                     : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
                 }
               >
-                <ScareSign Glyph={scareGlyph} level={level} className="size-6" />
+                <ScareSign
+                  Glyph={scareGlyph}
+                  level={level}
+                  className="size-6"
+                  glyphClassName={scareGlyphScale}
+                />
                 {scareShort[level]}
               </button>
             ))}

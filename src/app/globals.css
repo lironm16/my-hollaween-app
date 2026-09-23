@@ -2188,12 +2188,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .neighborhood-toolbar-top {
   flex-shrink: 0;
   z-index: 40;
-}
-
-#neighborhood-shell:has(.map-house-sheet.is-open) .neighborhood-toolbar-top,
-#neighborhood-shell:has(.map-house-sheet.is-dragging) .neighborhood-toolbar-top,
-#neighborhood-shell:has(.map-house-sheet.is-raised) .neighborhood-toolbar-top {
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .app-toolbar--floating {

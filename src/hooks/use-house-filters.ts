@@ -121,7 +121,10 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
     visitedOnly: Boolean(raw.visitedOnly),
     skippedOnly: Boolean(raw.skippedOnly),
     includeUndecorated,
-    neighborhoodFilters: Array.isArray(raw.neighborhoodFilters) ? neighborhoods : [...NEIGHBORHOODS],
+    neighborhoodFilters:
+      Array.isArray(raw.neighborhoodFilters) && neighborhoods.length > 0
+        ? neighborhoods
+        : [...NEIGHBORHOODS],
     scareFilters: Array.isArray(raw.scareFilters) && raw.scareFilters.length === 0
       ? []
       : scares.length > 0

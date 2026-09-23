@@ -183,10 +183,11 @@ export function removeOwnedHouse(id: string) {
 
 export function rememberPublishedHouse(house: PublicHouse) {
   const cached = loadCatalogCacheSync();
+  if (!cached?.houses?.length) return;
   const next: Catalog = {
+    ...cached,
     updatedAt: house.updatedAt || new Date().toISOString(),
-    neighborhood: cached?.neighborhood ?? "",
-    houses: [...(cached?.houses ?? []).filter((item) => item.id !== house.id), house],
+    houses: [...cached.houses.filter((item) => item.id !== house.id), house],
   };
   void saveCatalogCache(next);
 }
