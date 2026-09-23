@@ -1,23 +1,20 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, X } from "lucide-react";
+import { CountdownDecor } from "@/components/countdown-decor";
 import type { EventCountdownParts } from "@/lib/event-countdown";
-import { countdownBackground } from "@/lib/countdown-art";
 import { config } from "@/lib/config";
 import { cn } from "@/lib/utils";
 
 export function EventCountdownScreen({
   open,
   parts,
-  welcome,
   onClose,
 }: {
   open: boolean;
   parts: EventCountdownParts;
-  welcome: boolean;
   onClose: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
@@ -43,7 +40,6 @@ export function EventCountdownScreen({
   if (!open || !mounted) return null;
 
   const dayLabel = parts.days === 1 ? "Day" : "Days";
-  const hero = countdownBackground(welcome, parts.days);
 
   return createPortal(
     <div
@@ -52,16 +48,8 @@ export function EventCountdownScreen({
       aria-modal="true"
       aria-label="ספירה לאחור לליל האלווין"
     >
-      <div className="relative min-h-0 flex-1 overflow-hidden">
-        <Image
-          src={hero}
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center"
-        />
-        <div className="countdown-scene-vignette absolute inset-0" aria-hidden />
+      <div className="countdown-scene-bg relative min-h-0 flex-1 overflow-hidden">
+        <CountdownDecor />
 
         <button
           type="button"
@@ -73,21 +61,9 @@ export function EventCountdownScreen({
         </button>
 
         <div className="absolute inset-0 z-10 flex flex-col items-center px-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] pt-[max(3.5rem,env(safe-area-inset-top,0px)+2.5rem)] text-center">
-          <div className="flex w-full max-w-lg shrink-0 flex-col items-center gap-3">
-            {welcome ? (
-              <>
-                <p className="countdown-hebrew-line text-[clamp(1.25rem,5.5vw,2rem)]">ברוכים הבאים ל</p>
-                <p className="countdown-drip-title text-[clamp(2.75rem,14vw,4.75rem)]">{config.brandEn}</p>
-                <p className="max-w-sm text-[clamp(1rem,4vw,1.25rem)] leading-snug text-white/95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
-                  ההכנות החלו! הוסיפו את הבית, תכננו מסלול — ונתראה בערב.
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="countdown-hebrew-line text-[clamp(1.1rem,4.8vw,1.75rem)]">עוד קצת ו…</p>
-                <p className="countdown-drip-title text-[clamp(2.5rem,13vw,4.25rem)]">HALLOWEEN</p>
-              </>
-            )}
+          <div className="flex w-full max-w-lg shrink-0 flex-col items-center gap-2">
+            <p className="countdown-hebrew-line text-[clamp(1.25rem,5.5vw,2rem)]">ברוכים הבאים ל</p>
+            <p className="countdown-drip-title text-[clamp(2.75rem,14vw,4.75rem)]">{config.brandEn}</p>
           </div>
 
           <div
@@ -109,18 +85,21 @@ export function EventCountdownScreen({
               </p>
             </div>
 
-            <div className="relative z-[1] mt-4 space-y-1" dir="rtl">
-              <p className="countdown-hebrew-line text-[clamp(1.05rem,4.2vw,1.45rem)]">
-                {config.brandHe} · {config.neighborhood}
+            <div className="relative z-[1] mt-5 space-y-2" dir="rtl">
+              <p className="countdown-brand-he text-[clamp(1.75rem,7.5vw,2.85rem)] leading-tight">
+                {config.brandHe}
               </p>
-              <p className="text-[clamp(0.95rem,3.8vw,1.15rem)] font-medium text-violet-100/95">
+              <p className="text-[clamp(1rem,3.8vw,1.2rem)] font-medium text-orange-100/90">
+                {config.neighborhood}
+              </p>
+              <p className="text-[clamp(0.95rem,3.6vw,1.1rem)] font-medium text-violet-200/85">
                 תחילת הערב בשכונה
               </p>
             </div>
           </div>
 
           <div className="countdown-date-badge mt-5 shrink-0 px-5 py-2.5 text-[clamp(1rem,4.2vw,1.35rem)] font-bold text-white">
-            עד 17:00 · 31.10
+            17:00 · 31.10
           </div>
 
           <button

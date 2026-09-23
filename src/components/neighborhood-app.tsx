@@ -22,7 +22,6 @@ import { EventCountdownBar } from "@/components/event-countdown-bar";
 import { EventCountdownScreen } from "@/components/event-countdown-screen";
 import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
 import { useEventCountdown } from "@/hooks/use-event-countdown";
-import { readCountdownWelcomeSeen, writeCountdownWelcomeSeen } from "@/lib/countdown-welcome";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
 import { SkipHouseDialog } from "@/components/skip-house-dialog";
@@ -130,7 +129,6 @@ export function NeighborhoodApp({
   const [askedLocation, setAskedLocation] = useState(false);
   const eventCountdown = useEventCountdown();
   const [countdownScreenOpen, setCountdownScreenOpen] = useState(false);
-  const [countdownWelcome, setCountdownWelcome] = useState(false);
   const [skipDialogHouse, setSkipDialogHouse] = useState<PublicHouse | null>(null);
   const [visitSkipConflict, setVisitSkipConflict] = useState<{
     kind: "visit" | "skip";
@@ -147,15 +145,21 @@ export function NeighborhoodApp({
   }, []);
 
   const openCountdownScreen = useCallback(() => {
-    setCountdownWelcome(!readCountdownWelcomeSeen());
     setCountdownScreenOpen(true);
   }, []);
 
   const closeCountdownScreen = useCallback(() => {
-    writeCountdownWelcomeSeen();
     setCountdownScreenOpen(false);
-    setCountdownWelcome(false);
   }, []);
+
+  const countdownAutoOpened = useRef(false);
+  useEffect(() => {
+    if (countdownAutoOpened.current) return;
+    if (eventCountdown.active && eventCountdown.parts) {
+      countdownAutoOpened.current = true;
+      setCountdownScreenOpen(true);
+    }
+  }, [eventCountdown.active, eventCountdown.parts]);
 
   function setView(next: HomeView) {
     writeHomeView(next);
@@ -1012,7 +1016,6 @@ export function NeighborhoodApp({
         <EventCountdownScreen
           open={countdownScreenOpen}
           parts={eventCountdown.parts}
-          welcome={countdownWelcome}
           onClose={closeCountdownScreen}
         />
       ) : null}
