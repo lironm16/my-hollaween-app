@@ -34,7 +34,7 @@ export function EventCountdownFinale({ onDone }: { onDone: () => void }) {
             🎃
           </p>
           <p className="font-display text-lg leading-tight text-orange-300 sm:text-xl">
-            הגיע הזמן!
+            הנה אנחנו מתחילים!!!
           </p>
           <p className="text-sm font-medium text-violet-200/95 sm:text-base">
             ליל האלווין בשכונה — טובים לצאת למפה
