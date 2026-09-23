@@ -22,7 +22,7 @@ export function LocationKindSign({
       }}
       aria-hidden
     >
-      <span className="flex size-[122%] items-center justify-center">
+      <span className="flex size-[108%] items-center justify-center">
         {isPoi ? <ScarePumpkin level="medium" /> : <ScareGhost level="mild" />}
       </span>
     </span>

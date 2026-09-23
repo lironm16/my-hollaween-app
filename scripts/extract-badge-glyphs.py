@@ -234,6 +234,47 @@ def keep_cream_blob(im: Image.Image) -> Image.Image:
     return out
 
 
+INK_RGB = (28, 14, 36)
+CREAM_RGB = (255, 247, 237)
+
+
+def solidify_pumpkin_features(im: Image.Image, min_alpha: int = 40) -> Image.Image:
+    """Cream body + solid black eyes/mouth (like scare ghosts), not see-through cut-outs."""
+    src = im.convert("RGBA")
+    w, h = src.size
+    px = src.load()
+    body = [[px[x, y][3] > min_alpha for x in range(w)] for y in range(h)]
+    exterior = [[False] * w for _ in range(h)]
+    stack: list[tuple[int, int]] = []
+    for x in range(w):
+        if not body[0][x]:
+            stack.append((x, 0))
+        if not body[h - 1][x]:
+            stack.append((x, h - 1))
+    for y in range(h):
+        if not body[y][0]:
+            stack.append((0, y))
+        if not body[y][w - 1]:
+            stack.append((w - 1, y))
+    while stack:
+        x, y = stack.pop()
+        if x < 0 or y < 0 or x >= w or y >= h:
+            continue
+        if exterior[y][x] or body[y][x]:
+            continue
+        exterior[y][x] = True
+        stack.extend([(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)])
+    out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    op = out.load()
+    for y in range(h):
+        for x in range(w):
+            if body[y][x]:
+                op[x, y] = (*CREAM_RGB, 255)
+            elif not exterior[y][x]:
+                op[x, y] = (*INK_RGB, 255)
+    return out
+
+
 def keep_inner_blob(im: Image.Image, min_alpha: int = 40) -> Image.Image:
     """Drop the disc rim — keep the largest blob that does not touch the image edge."""
     src = im.convert("RGBA")
@@ -289,7 +330,7 @@ def extract_pumpkin_glyphs() -> None:
         keyed = chroma_key(disc, spec["bg"], thresh=spec["thresh"])
         keyed = chroma_key(keyed, spec["bg"], thresh=spec["thresh"] - 8, softness=16)
         if spec["inner"]:
-            glyph = keep_inner_blob(keyed)
+            glyph = solidify_pumpkin_features(keep_inner_blob(keyed))
         else:
             glyph = keep_cream_blob(keyed)
         final = recenter_glyph(trim(glyph, pad=4))

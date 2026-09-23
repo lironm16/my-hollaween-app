@@ -130,7 +130,7 @@ export function ScareSign({
       ) : usePumpkin ? (
         <span
           className={cn(
-            "flex size-[122%] items-center justify-center",
+            "flex size-[110%] items-center justify-center",
             struck && "grayscale",
           )}
         >

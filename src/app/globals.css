@@ -787,10 +787,10 @@
 }
 
 .house-pin.is-poi .pin-scare {
-  width: 98% !important;
-  height: 98% !important;
-  max-width: 98% !important;
-  max-height: 98% !important;
+  width: 88% !important;
+  height: 88% !important;
+  max-width: 88% !important;
+  max-height: 88% !important;
 }
 
 .house-pin.is-building {
