@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, X } from "lucide-react";
 import { CountdownDecor } from "@/components/countdown-decor";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 import type { EventCountdownParts } from "@/lib/event-countdown";
+import { eventCountdownDateBadgeLabel } from "@/lib/event-countdown-display";
 import { config } from "@/lib/config";
 import { isStandaloneDisplay } from "@/lib/push-client";
 import { subscribeAppViewport, syncAppViewportVars } from "@/lib/viewport";
@@ -19,16 +21,30 @@ export function EventCountdownScreen({
   parts: EventCountdownParts;
   onClose: () => void;
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
   const [mounted, setMounted] = useState(false);
+  const [screenReaderHint, setScreenReaderHint] = useState("");
   const standalone = useSyncExternalStore(
     () => () => {},
     isStandaloneDisplay,
     () => false,
   );
 
+  useFocusTrap(dialogRef, open, { inertRootId: "neighborhood-shell", initialFocus: "first" });
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!open) {
+      setScreenReaderHint("");
+      return;
+    }
+    const dayLabel = parts.days === 1 ? "יום" : "ימים";
+    setScreenReaderHint(`${parts.days} ${dayLabel}, ${parts.time}`);
+  }, [open, parts.days, parts.time]);
 
   useEffect(() => {
     if (!open) return;
@@ -53,6 +69,7 @@ export function EventCountdownScreen({
 
   return createPortal(
     <div
+      ref={dialogRef}
       className={cn(
         "event-countdown-screen fixed inset-0 z-[2000] flex flex-col overflow-hidden bg-[#2e2248]",
         standalone ? "event-countdown-screen--standalone" : "event-countdown-screen--browser",
@@ -64,12 +81,20 @@ export function EventCountdownScreen({
       role="dialog"
       aria-modal="true"
       aria-label="ספירה לאחור לליל האלווין"
+      tabIndex={-1}
     >
+      {screenReaderHint ? (
+        <p className="sr-only" aria-live="polite" aria-atomic="true">
+          {screenReaderHint}
+        </p>
+      ) : null}
+
       <div className="countdown-scene-bg relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <CountdownDecor />
         <div className="countdown-scene-moon" aria-hidden />
 
         <button
+          ref={closeRef}
           type="button"
           onClick={onClose}
           aria-label="סגירה"
@@ -84,17 +109,13 @@ export function EventCountdownScreen({
             <p className="countdown-plain-title text-[clamp(2.75rem,14vw,4.75rem)]">{config.brandEn}</p>
           </div>
 
-          <div
-            className="countdown-wood-sign relative mt-3 w-full max-w-md shrink-0 px-4 py-5 sm:px-6 sm:py-6"
-            aria-live="polite"
-            aria-atomic="true"
-          >
+          <div className="countdown-wood-sign relative mt-3 w-full max-w-md shrink-0 px-4 py-5 sm:px-6 sm:py-6">
             <span className="countdown-web countdown-web--tl" aria-hidden />
             <span className="countdown-web countdown-web--tr" aria-hidden />
             <span className="countdown-web countdown-web--bl" aria-hidden />
             <span className="countdown-web countdown-web--br" aria-hidden />
 
-            <div dir="ltr" className="relative z-[1]">
+            <div dir="ltr" className="relative z-[1]" aria-hidden="true">
               <p className="countdown-plain-number text-[clamp(4.5rem,26vw,9.5rem)] tabular-nums leading-[0.88]">
                 {parts.days} {dayLabel}
               </p>
@@ -118,7 +139,7 @@ export function EventCountdownScreen({
 
           <div className="countdown-footer-cluster mt-3 flex w-full max-w-md shrink-0 flex-col items-center gap-3">
             <div className="countdown-date-badge px-5 py-2.5 text-[clamp(1rem,4.2vw,1.35rem)] font-bold text-white">
-              17:00 · 31.10
+              {eventCountdownDateBadgeLabel()}
             </div>
 
             <button

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { appVersion } from "@/lib/app-version";
 import { postMapTileCacheConfig } from "@/lib/map-tile-cache";
+import { isUserMidInteraction } from "@/lib/sw-idle";
 import {
   fetchPublishedAppVersion,
   isServiceWorkerUpdateReady,
@@ -11,6 +12,7 @@ import {
 } from "@/lib/sw-update";
 
 const UPDATE_POLL_MS = 4 * 60 * 1000;
+const IDLE_RELOAD_POLL_MS = 2000;
 
 function skipWaitingWorker(worker: ServiceWorker) {
   worker.postMessage({ type: "SKIP_WAITING" });
@@ -18,27 +20,22 @@ function skipWaitingWorker(worker: ServiceWorker) {
 
 function promoteWaitingWorker(
   registration: ServiceWorkerRegistration,
-  onPromoted: () => void,
+  onVersionBump: () => void,
 ) {
   if (!registration.waiting || !navigator.serviceWorker.controller) return false;
-  onPromoted();
+  onVersionBump();
   skipWaitingWorker(registration.waiting);
   return true;
 }
 
-function watchForUpdate(
-  registration: ServiceWorkerRegistration,
-  onPromoted: () => void,
-) {
+function watchForUpdate(registration: ServiceWorkerRegistration) {
   registration.addEventListener("updatefound", () => {
-    onPromoted();
     const worker = registration.installing;
     if (!worker) return;
     worker.addEventListener("statechange", () => {
       if (
         isServiceWorkerUpdateReady(worker.state, Boolean(navigator.serviceWorker.controller))
       ) {
-        onPromoted();
         skipWaitingWorker(worker);
       }
     });
@@ -47,7 +44,7 @@ function watchForUpdate(
 
 async function checkForAppUpdate(
   registration: ServiceWorkerRegistration,
-  onPromoted: () => void,
+  onVersionBump: () => void,
 ) {
   try {
     await registration.update();
@@ -57,25 +54,25 @@ async function checkForAppUpdate(
 
   const published = await fetchPublishedAppVersion();
   const versionBump = Boolean(published && versionsDiffer(appVersion(), published));
+  if (!versionBump) return;
 
-  if (versionBump) {
-    onPromoted();
-    await primeServiceWorkerScript(published!);
-    try {
-      await registration.update();
-    } catch {
-      /* offline / throttled */
-    }
+  onVersionBump();
+  await primeServiceWorkerScript(published!);
+  try {
+    await registration.update();
+  } catch {
+    /* offline / throttled */
   }
 
-  if (promoteWaitingWorker(registration, onPromoted)) return;
-
-  if (versionBump && registration.installing) {
-    onPromoted();
-  }
+  promoteWaitingWorker(registration, onVersionBump);
 }
 
-/** Register SW; silently reload when a newer deploy is published. */
+function requestShellPrecache(registration: ServiceWorkerRegistration) {
+  const worker = registration.active ?? registration.waiting ?? registration.installing;
+  worker?.postMessage({ type: "PRECACHE_SHELL" });
+}
+
+/** Register SW; reload when app-version.txt differs (defer if user is mid-form). */
 export function ServiceWorkerRegister() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
@@ -84,15 +81,21 @@ export function ServiceWorkerRegister() {
     let reloaded = false;
     let pendingVersionReload = false;
     let pollId: number | undefined;
+    let idlePollId: number | undefined;
 
-    const markPendingReload = () => {
+    const markVersionReload = () => {
       pendingVersionReload = true;
     };
 
-    const onControllerChange = () => {
-      if (!pendingVersionReload || reloaded) return;
+    const tryReload = () => {
+      if (!pendingVersionReload || reloaded || cancelled) return;
+      if (isUserMidInteraction()) return;
       reloaded = true;
       window.location.reload();
+    };
+
+    const onControllerChange = () => {
+      tryReload();
     };
     navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
 
@@ -102,7 +105,7 @@ export function ServiceWorkerRegister() {
         .getRegistration("/")
         .then((registration) => {
           if (!registration || cancelled) return;
-          return checkForAppUpdate(registration, markPendingReload);
+          return checkForAppUpdate(registration, markVersionReload);
         })
         .then(() => {
           if (!cancelled) postMapTileCacheConfig();
@@ -113,9 +116,10 @@ export function ServiceWorkerRegister() {
       .register("/sw.js", { scope: "/", updateViaCache: "none" })
       .then(async (registration) => {
         if (cancelled) return;
-        watchForUpdate(registration, markPendingReload);
-        promoteWaitingWorker(registration, markPendingReload);
-        await checkForAppUpdate(registration, markPendingReload);
+        watchForUpdate(registration);
+        promoteWaitingWorker(registration, markVersionReload);
+        await checkForAppUpdate(registration, markVersionReload);
+        requestShellPrecache(registration);
         postMapTileCacheConfig();
       })
       .catch(() => {
@@ -125,19 +129,28 @@ export function ServiceWorkerRegister() {
     const onVisible = () => {
       if (document.visibilityState !== "visible") return;
       runUpdateCheck();
+      tryReload();
     };
 
-    const onOnline = () => runUpdateCheck();
-    const onFocus = () => runUpdateCheck();
+    const onOnline = () => {
+      runUpdateCheck();
+      tryReload();
+    };
+    const onFocus = () => {
+      runUpdateCheck();
+      tryReload();
+    };
 
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("online", onOnline);
     window.addEventListener("focus", onFocus);
     pollId = window.setInterval(runUpdateCheck, UPDATE_POLL_MS);
+    idlePollId = window.setInterval(tryReload, IDLE_RELOAD_POLL_MS);
 
     return () => {
       cancelled = true;
       if (pollId !== undefined) window.clearInterval(pollId);
+      if (idlePollId !== undefined) window.clearInterval(idlePollId);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("online", onOnline);
       window.removeEventListener("focus", onFocus);

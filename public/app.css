@@ -496,6 +496,24 @@
   .row-start-1 {
     grid-row-start: 1;
   }
+  .container {
+    width: 100%;
+    @media (width >= 40rem) {
+      max-width: 40rem;
+    }
+    @media (width >= 48rem) {
+      max-width: 48rem;
+    }
+    @media (width >= 64rem) {
+      max-width: 64rem;
+    }
+    @media (width >= 80rem) {
+      max-width: 80rem;
+    }
+    @media (width >= 96rem) {
+      max-width: 96rem;
+    }
+  }
   .-mx-1 {
     margin-inline: calc(var(--spacing) * -1);
   }
@@ -6353,6 +6371,14 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 .countdown-neon-arrow svg {
   color: #fb923c;
+}
+@media (prefers-reduced-motion: reduce) {
+  .countdown-decor__bat-emoji,
+  .countdown-scene-fog::before,
+  .countdown-scene-fog::after,
+  .countdown-neon-arrow svg {
+    animation: none !important;
+  }
 }
 .countdown-footer-cluster {
   position: relative;

@@ -1975,6 +1975,15 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   color: #fb923c;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .countdown-decor__bat-emoji,
+  .countdown-scene-fog::before,
+  .countdown-scene-fog::after,
+  .countdown-neon-arrow svg {
+    animation: none !important;
+  }
+}
+
 .countdown-footer-cluster {
   position: relative;
   z-index: 12;

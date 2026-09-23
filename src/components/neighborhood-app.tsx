@@ -18,10 +18,8 @@ import {
   emitTempSkipRestoreAlert,
   useTempSkipRestoreAlerts,
 } from "@/hooks/use-temp-skip-restore-alerts";
-import { EventCountdownBar } from "@/components/event-countdown-bar";
-import { EventCountdownScreen } from "@/components/event-countdown-screen";
+import { EventCountdownLayer } from "@/components/event-countdown-layer";
 import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
-import { useEventCountdown } from "@/hooks/use-event-countdown";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
 import { SkipHouseDialog } from "@/components/skip-house-dialog";
@@ -127,8 +125,6 @@ export function NeighborhoodApp({
   const { accessibleOnly, likedOnly } = filters;
 
   const [askedLocation, setAskedLocation] = useState(false);
-  const eventCountdown = useEventCountdown();
-  const [countdownScreenOpen, setCountdownScreenOpen] = useState(false);
   const [skipDialogHouse, setSkipDialogHouse] = useState<PublicHouse | null>(null);
   const [visitSkipConflict, setVisitSkipConflict] = useState<{
     kind: "visit" | "skip";
@@ -142,14 +138,6 @@ export function NeighborhoodApp({
   const now = useAppNow();
   useEffect(() => {
     applyClockSearchParams(window.location.search);
-  }, []);
-
-  const openCountdownScreen = useCallback(() => {
-    setCountdownScreenOpen(true);
-  }, []);
-
-  const closeCountdownScreen = useCallback(() => {
-    setCountdownScreenOpen(false);
   }, []);
 
   function setView(next: HomeView) {
@@ -687,7 +675,6 @@ export function NeighborhoodApp({
       id="neighborhood-shell"
       className={cn(
         "relative isolate flex flex-col overflow-hidden",
-        eventCountdown.active && "has-countdown-bar",
         view === "list" && "is-list-view",
       )}
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
@@ -994,18 +981,7 @@ export function NeighborhoodApp({
           ) : null}
         </>
       </main>
-      {eventCountdown.active && eventCountdown.parts ? (
-        <div className="event-countdown-dock shrink-0">
-          <EventCountdownBar parts={eventCountdown.parts} onClick={openCountdownScreen} />
-        </div>
-      ) : null}
-      {eventCountdown.parts ? (
-        <EventCountdownScreen
-          open={countdownScreenOpen}
-          parts={eventCountdown.parts}
-          onClose={closeCountdownScreen}
-        />
-      ) : null}
+      <EventCountdownLayer />
       <OriginPickerSheet
         open={originPick.originPickerOpen}
         onOpenChange={originPick.setOriginPickerOpen}

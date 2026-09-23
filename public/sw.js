@@ -1,7 +1,7 @@
 importScripts("/sw-map-tiles.js");
 
-const APP_VERSION = "0.1.51";
-const CACHE = "hw-shell-0.1.51";
+const APP_VERSION = "0.1.52";
+const CACHE = "hw-shell-0.1.52";
 const TILE_CACHE = MapTileCache.TILE_CACHE;
 const PRECACHE = [
   "/offline.html",
@@ -40,6 +40,9 @@ self.addEventListener("message", (event) => {
   if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
   if (event.data?.type === "MAP_TILE_BOUNDS") {
     MapTileCache.setConfig(event.data);
+  }
+  if (event.data?.type === "PRECACHE_SHELL") {
+    event.waitUntil(precacheShell());
   }
 });
 
@@ -163,6 +166,20 @@ self.addEventListener("notificationclick", (event) => {
     }),
   );
 });
+
+/** Cache home HTML after a successful online visit so reopen works offline. */
+async function precacheShell() {
+  const cache = await caches.open(CACHE);
+  try {
+    const res = await fetch("/");
+    if (res && res.ok) {
+      await cache.put("/", res.clone());
+      await cache.put(new Request("/"), res.clone());
+    }
+  } catch {
+    /* offline */
+  }
+}
 
 async function cachedDocument(cache, request) {
   const matched = await cache.match(request);
