@@ -6192,8 +6192,8 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   padding-bottom: 0;
 }
 .countdown-brand-he {
-  font-family: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
-  font-weight: 800;
+  font-family: var(--font-rubik-wet-paint), "Rubik Wet Paint", cursive;
+  font-weight: 400;
   color: #c4b5fd;
 }
 .countdown-scene-close:active {

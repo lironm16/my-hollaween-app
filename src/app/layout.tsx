@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
-import { Rubik, Creepster } from "next/font/google";
+import { Rubik, Creepster, Rubik_Wet_Paint } from "next/font/google";
 import Script from "next/script";
 import { Providers } from "@/components/providers";
 import { HalloweenFx } from "@/components/halloween-fx";
@@ -19,6 +19,12 @@ const creepster = Creepster({
   weight: "400",
   subsets: ["latin"],
   variable: "--font-creepster",
+});
+
+const rubikWetPaint = Rubik_Wet_Paint({
+  subsets: ["hebrew", "latin"],
+  weight: "400",
+  variable: "--font-rubik-wet-paint",
 });
 
 export const metadata: Metadata = {
@@ -57,7 +63,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="he"
       dir="rtl"
-      className={`${rubik.variable} ${creepster.variable} dark h-full antialiased`}
+      className={`${rubik.variable} ${creepster.variable} ${rubikWetPaint.variable} dark h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
@@ -69,7 +75,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
         {/* Inlined: Cursor Preview is a different origin and Next.js 16 returns 403 for /_next CSS. */}
         {themeCss ? <style dangerouslySetInnerHTML={{ __html: themeCss }} /> : null}
-        <link rel="stylesheet" href="/app.css?v=101" />
+        <link rel="stylesheet" href="/app.css?v=102" />
         <meta name="hw-build" content="2026-09-10-route-fast-v94" />
         <link rel="stylesheet" href="/shell.css?v=58" />
       </head>
