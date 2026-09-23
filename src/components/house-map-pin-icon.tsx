@@ -2,6 +2,7 @@
 
 import { SkipIcon } from "@/components/skip-icon";
 import { clusterPinStatus, clusterPinVisitKind } from "@/lib/cluster-pin-status";
+import { isPoiHouse } from "@/lib/house-kind";
 import { pinScareSrc } from "@/lib/pin-faces";
 import { pinBackgroundFill } from "@/lib/pin-colors";
 import { effectiveVisit, isDecorated } from "@/lib/house-state";
@@ -38,6 +39,7 @@ export function HouseMapPinIcon({
     <div
       className={cn(
         "house-pin cluster-list-pin relative shrink-0",
+        isPoiHouse(house) && "is-poi",
         !decorated && "is-undecorated",
         closingSoon && "is-closing-soon",
         openingSoon && "is-opening-soon",

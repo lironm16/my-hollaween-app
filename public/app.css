@@ -741,6 +741,10 @@
     width: 108%;
     height: 108%;
   }
+  .size-\[115\%\] {
+    width: 115%;
+    height: 115%;
+  }
   .size-full {
     width: 100%;
     height: 100%;
@@ -5352,6 +5356,18 @@ svg.leaflet-zoom-animated {
 }
 .house-pin.is-undecorated {
   background: #94a3b8 !important;
+}
+.house-pin.is-poi {
+  background: #f97316 !important;
+}
+.house-pin.is-poi.is-undecorated {
+  background: #78716c !important;
+}
+.house-pin.is-poi .pin-scare {
+  width: 98% !important;
+  height: 98% !important;
+  max-width: 98% !important;
+  max-height: 98% !important;
 }
 .house-pin.is-building {
   display: grid;

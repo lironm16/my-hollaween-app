@@ -32,6 +32,7 @@ import { distanceMeters } from "@/lib/geo";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { isClosingSoon, isHoursNightOver, isHoursNotYetOpen, isOnBreak, isOpeningSoon } from "@/lib/hours";
 import { pinScareSrc } from "@/lib/pin-faces";
+import { effectiveHouseKind } from "@/lib/house-kind";
 import { pinBackgroundFill } from "@/lib/pin-colors";
 import { clusterBadgeHouses, clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { SKIP_ICON_SVG } from "@/components/skip-icon";
@@ -196,7 +197,8 @@ function housePinHtml(
             : face === "scare"
               ? 'aria-label="מקושט"'
               : 'aria-label="לא מקושט"';
-  return `<div class="house-pin${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}" style="${style}" ${label}${idAttr}>${hoursRingHtml(house, now)}${pinStatusMark(house, now, extras?.skipped)}${pinFaceHtml(house)}</div>`;
+  const poiClass = effectiveHouseKind(house) === "poi" ? " is-poi" : "";
+  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}" style="${style}" ${label}${idAttr}>${hoursRingHtml(house, now)}${pinStatusMark(house, now, extras?.skipped)}${pinFaceHtml(house)}</div>`;
 }
 
 function clusterIcon(

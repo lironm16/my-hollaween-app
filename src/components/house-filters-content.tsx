@@ -6,6 +6,7 @@ import { AccessibleMark } from "@/components/symbols";
 import { CandySign, CANDY_TONES } from "@/components/candy-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
 import { ScareSign } from "@/components/scare-glyphs";
+import { LocationKindSign } from "@/components/location-kind-sign";
 import { FilterOption, FilterSection } from "@/components/filter-menu";
 import { CustomVisitWindowFields } from "@/components/visit-window-fields";
 import { OpenNowSign } from "@/components/open-now-mark";
@@ -13,7 +14,6 @@ import { NEIGHBORHOODS } from "@/lib/config";
 import { hasStockCandySelection } from "@/lib/filter-presets";
 import { visitWindowIssue } from "@/lib/hours";
 import { decorShort, locationKindFilterLabels, scareShort } from "@/lib/labels";
-import { ScarePumpkin } from "@/components/scare-glyphs";
 import { LOCATION_KIND_FILTERS, type LocationKindFilter } from "@/lib/types";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import {
@@ -205,7 +205,7 @@ export function HouseFiltersContent({
         </FilterToggle>
       </FilterSection>
 
-      <FilterSection title="סוג מקום">
+      <FilterSection title="סוג המקום">
         {LOCATION_KIND_FILTERS.map((kind) => (
           <VisitWindowRadio
             key={kind}
@@ -213,14 +213,12 @@ export function HouseFiltersContent({
             onChange={() => onPatch({ locationKindFilter: kind as LocationKindFilter })}
           >
             <span className="inline-flex items-center gap-2">
-              {kind === "house" ? (
-                <ScareSign level="mild" className="size-7" />
-              ) : kind === "poi" ? (
-                <ScareSign Glyph={ScarePumpkin} level="mild" className="size-7" />
-              ) : (
+              {kind === "all" ? (
                 <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-violet-500/25 text-base text-violet-100 ring-1 ring-violet-400/30">
                   ★
                 </span>
+              ) : (
+                <LocationKindSign kind={kind} className="size-7" />
               )}
               <span>{locationKindFilterLabels[kind]}</span>
             </span>

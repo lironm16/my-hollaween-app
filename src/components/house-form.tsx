@@ -38,6 +38,7 @@ import {
 import { candyTone, CandySign, CANDY_TONES, type CandyTone } from "@/components/candy-glyphs";
 import { freezeExpireIso, isOwnerFrozen, resolveDecorLevel } from "@/lib/house-state";
 import { StrollerSign } from "@/components/symbols";
+import { LocationKindSign } from "@/components/location-kind-sign";
 import { ScarePumpkin, ScareSign } from "@/components/scare-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
 import {
@@ -414,11 +415,7 @@ export function HouseForm({
                     : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
                 }
               >
-                {kind === "poi" ? (
-                  <ScareSign Glyph={ScarePumpkin} level="mild" className="size-6" />
-                ) : (
-                  <ScareSign level="mild" className="size-6" />
-                )}
+                <LocationKindSign kind={kind} className="size-6" />
                 {houseKindLabels[kind]}
               </button>
             ))}

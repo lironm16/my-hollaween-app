@@ -39,6 +39,7 @@ function SwatchPin({
     <div
       className={cn(
         "house-pin is-legend relative",
+        poi && "is-poi",
         multi && "is-building",
         hours === "closing" && "is-closing-soon",
         hours === "opening" && "is-opening-soon",
@@ -93,7 +94,7 @@ function SwatchPin({
 
 const GROUPS: { title: string; items: { key: string; label: string; node: ReactNode }[] }[] = [
   {
-    title: "סוג מקום",
+    title: "סוג המקום",
     items: [
       { key: "house-kind", label: "בית", node: <SwatchPin scare="mild" /> },
       { key: "poi-kind", label: "נקודת עניין", node: <SwatchPin scare="mild" poi /> },
