@@ -3,6 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, X } from "lucide-react";
+import { CountdownBottomScene } from "@/components/countdown-bottom-scene";
 import { CountdownDecor } from "@/components/countdown-decor";
 import type { EventCountdownParts } from "@/lib/event-countdown";
 import { config } from "@/lib/config";
@@ -116,21 +117,25 @@ export function EventCountdownScreen({
             </div>
           </div>
 
-          <div className="countdown-date-badge mt-3 shrink-0 px-5 py-2.5 text-[clamp(1rem,4.2vw,1.35rem)] font-bold text-white">
-            17:00 · 31.10
-          </div>
+          <div className="countdown-footer-cluster mt-3 flex w-full max-w-md shrink-0 flex-col items-center gap-3">
+            <div className="countdown-date-badge px-5 py-2.5 text-[clamp(1rem,4.2vw,1.35rem)] font-bold text-white">
+              17:00 · 31.10
+            </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className={cn(
-              "countdown-neon-arrow mt-auto flex shrink-0 touch-manipulation flex-col items-center gap-1 pt-3",
-              "text-orange-300 transition active:scale-95",
-            )}
-          >
-            <span className="text-sm font-semibold text-orange-100/90">סגירה · חזרה למפה</span>
-            <ChevronDown className="size-8 animate-bounce" strokeWidth={2.5} aria-hidden />
-          </button>
+            <CountdownBottomScene />
+
+            <button
+              type="button"
+              onClick={onClose}
+              className={cn(
+                "countdown-neon-arrow flex shrink-0 touch-manipulation flex-col items-center gap-1",
+                "text-orange-300 transition active:scale-95",
+              )}
+            >
+              <span className="text-sm font-semibold text-orange-100/90">סגירה · חזרה למפה</span>
+              <ChevronDown className="size-8 animate-bounce" strokeWidth={2.5} aria-hidden />
+            </button>
+          </div>
         </div>
       </div>
     </div>,
