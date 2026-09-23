@@ -1696,60 +1696,112 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 
 .countdown-decor__bat-fly {
   position: absolute;
-  top: clamp(0.25rem, 2vh, 1rem);
-  width: clamp(5.5rem, 28vw, 10rem);
+  left: 0;
+  width: clamp(4.5rem, 22vw, 8rem);
+  color: #1a0a12;
+  opacity: 0.9;
+  will-change: transform;
+  filter: drop-shadow(0 2px 4px rgba(251, 146, 60, 0.55));
+}
+
+.countdown-decor__bat-inner {
+  width: 100%;
+}
+
+.countdown-decor__bat-inner--flip {
+  transform: scaleX(-1);
+}
+
+.countdown-decor__bat-svg {
+  display: block;
+  width: 100%;
   height: auto;
-  color: #fb923c;
-  opacity: 0.92;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.75));
+  animation: countdown-bat-flap 0.45s ease-in-out infinite alternate;
 }
 
 .countdown-decor__bat-fly--1 {
-  top: clamp(0.5rem, 3vh, 1.25rem);
-  animation-duration: 16s;
-  animation-delay: -1s;
+  top: clamp(0.35rem, 2.5vh, 1.1rem);
+  animation-duration: 7s;
+  animation-delay: -2s;
 }
 
 .countdown-decor__bat-fly--2 {
-  width: clamp(6.5rem, 32vw, 11rem);
-  top: clamp(2rem, 8vh, 3.5rem);
-  opacity: 0.88;
-  animation-duration: 22s;
-  animation-delay: -8s;
+  width: clamp(5.5rem, 26vw, 9.5rem);
+  top: clamp(1.75rem, 7vh, 3rem);
+  opacity: 0.82;
+  animation-duration: 8.5s;
+  animation-delay: -4s;
 }
 
 .countdown-decor__bat-fly--3 {
-  width: clamp(4.75rem, 24vw, 8.5rem);
-  top: clamp(0.15rem, 1vh, 0.65rem);
-  opacity: 0.82;
-  animation-duration: 13s;
-  animation-delay: -5s;
+  width: clamp(3.75rem, 18vw, 6.5rem);
+  top: clamp(0.15rem, 1.2vh, 0.55rem);
+  opacity: 0.75;
+  animation-duration: 6s;
+  animation-delay: -1s;
+}
+
+.countdown-decor__bat-fly--ltr,
+.countdown-decor__bat-fly--rtl {
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }
 
 .countdown-decor__bat-fly--ltr {
-  animation: countdown-bat-ltr linear infinite;
+  animation-name: countdown-bat-ltr;
 }
 
 .countdown-decor__bat-fly--rtl {
-  animation: countdown-bat-rtl linear infinite;
+  animation-name: countdown-bat-rtl;
+}
+
+@keyframes countdown-bat-flap {
+  0% {
+    transform: scaleY(1);
+  }
+  100% {
+    transform: scaleY(0.72);
+  }
 }
 
 @keyframes countdown-bat-ltr {
   0% {
-    transform: translateX(-120%);
+    transform: translateX(-110vw) translateY(0);
+  }
+  25% {
+    transform: translateX(-40vw) translateY(-6px);
+  }
+  50% {
+    transform: translateX(20vw) translateY(4px);
+  }
+  75% {
+    transform: translateX(70vw) translateY(-4px);
   }
   100% {
-    transform: translateX(110vw);
+    transform: translateX(110vw) translateY(0);
   }
 }
 
 @keyframes countdown-bat-rtl {
   0% {
-    transform: translateX(110vw) scaleX(-1);
+    transform: translateX(110vw) translateY(0);
+  }
+  25% {
+    transform: translateX(40vw) translateY(-5px);
+  }
+  50% {
+    transform: translateX(-20vw) translateY(3px);
+  }
+  75% {
+    transform: translateX(-70vw) translateY(-3px);
   }
   100% {
-    transform: translateX(-120%) scaleX(-1);
+    transform: translateX(-110vw) translateY(0);
   }
+}
+
+.event-countdown-screen {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--vv-bottom-inset, 0px));
 }
 
 .countdown-decor__pumpkin {

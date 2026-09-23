@@ -6,6 +6,7 @@ import { ChevronDown, X } from "lucide-react";
 import { CountdownDecor } from "@/components/countdown-decor";
 import type { EventCountdownParts } from "@/lib/event-countdown";
 import { config } from "@/lib/config";
+import { subscribeAppViewport, syncAppViewportVars } from "@/lib/viewport";
 import { cn } from "@/lib/utils";
 
 export function EventCountdownScreen({
@@ -25,6 +26,8 @@ export function EventCountdownScreen({
 
   useEffect(() => {
     if (!open) return;
+    syncAppViewportVars();
+    const unsubViewport = subscribeAppViewport();
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (event: KeyboardEvent) => {
@@ -32,6 +35,7 @@ export function EventCountdownScreen({
     };
     document.addEventListener("keydown", onKey);
     return () => {
+      unsubViewport();
       document.body.style.overflow = prev;
       document.removeEventListener("keydown", onKey);
     };
@@ -43,7 +47,11 @@ export function EventCountdownScreen({
 
   return createPortal(
     <div
-      className="event-countdown-screen fixed inset-0 z-[2000] flex h-dvh max-h-dvh flex-col overflow-hidden bg-[#0a0610]"
+      className="event-countdown-screen fixed inset-0 z-[2000] flex flex-col overflow-hidden bg-[#0a0610]"
+      style={{
+        height: "var(--app-h, 100dvh)",
+        maxHeight: "var(--app-h, 100dvh)",
+      }}
       role="dialog"
       aria-modal="true"
       aria-label="ספירה לאחור לליל האלווין"
@@ -60,7 +68,7 @@ export function EventCountdownScreen({
           <X className="size-5" />
         </button>
 
-        <div className="countdown-scene-body absolute inset-0 z-10 flex min-h-0 flex-col items-center justify-center gap-3 overflow-y-auto px-4 py-[max(2.5rem,env(safe-area-inset-top,0px)+1.5rem)] pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] text-center">
+        <div className="countdown-scene-body absolute inset-0 z-10 flex min-h-0 flex-col items-center justify-center gap-3 overflow-y-auto px-4 py-[max(2.5rem,env(safe-area-inset-top,0px)+1.5rem)] pb-[max(1.25rem,calc(env(safe-area-inset-bottom,0px)+var(--vv-bottom-inset,0px)+0.75rem))] text-center">
           <div className="flex w-full max-w-lg shrink-0 flex-col items-center gap-1">
             <div className="countdown-decor__moon countdown-decor__moon--above-welcome" aria-hidden />
             <p className="countdown-hebrew-line text-[clamp(1.25rem,5.5vw,2rem)]">ברוכים הבאים ל</p>
