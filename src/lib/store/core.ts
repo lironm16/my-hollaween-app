@@ -23,9 +23,11 @@ import {
 } from "@/lib/rehearsal-stubs";
 import {
   HOUSE_THEMES,
+  POI_CATEGORIES,
   type DbFile,
   type House,
   type HouseTheme,
+  type PoiCategory,
   type PushSubscriptionRecord,
 } from "@/lib/types";
 import { migratePushSettings } from "@/lib/push-templates";
@@ -150,8 +152,17 @@ export function normalizeHouse(house: House & { status?: string; rejectionReason
   const hours = syncHoursFields(houseHoursWindows(base));
   const decor = syncDecorFields(base);
   const addressFields = normalizeAddressFields(base);
+  const kind = base.kind === "poi" ? "poi" : "house";
+  const poiCategory =
+    kind === "poi" && base.poiCategory && POI_CATEGORIES.includes(base.poiCategory as PoiCategory)
+      ? (base.poiCategory as PoiCategory)
+      : kind === "poi"
+        ? "other"
+        : null;
   return {
     ...base,
+    kind,
+    poiCategory,
     address: addressFields.address,
     neighborhood: addressFields.neighborhood,
     theme,

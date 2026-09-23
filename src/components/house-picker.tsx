@@ -4,12 +4,20 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Home } from "lucide-react";
 import { inputStyles } from "@/components/ui/input";
 import { formatDisplayAddress } from "@/lib/config";
-import { houseHeadline } from "@/lib/labels";
+import { houseHeadline, locationSearchHaystack, poiCategoryLabel } from "@/lib/labels";
+import { isPoiHouse } from "@/lib/house-kind";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function houseSearchHaystack(house: PublicHouse) {
-  return [house.name, formatDisplayAddress(house), house.arrival, house.description]
+  return [
+    house.name,
+    formatDisplayAddress(house),
+    house.arrival,
+    house.description,
+    locationSearchHaystack(house),
+    isPoiHouse(house) ? poiCategoryLabel(house.poiCategory) : "",
+  ]
     .filter(Boolean)
     .join(" ");
 }

@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 
 function SwatchPin({
   scare,
+  poi,
   candy,
   hours,
   closed,
@@ -19,6 +20,7 @@ function SwatchPin({
   skipped,
 }: {
   scare?: "mild" | "medium" | "spicy";
+  poi?: boolean;
   candy?: "plenty" | "low" | "out";
   hours?: "closing" | "opening";
   closed?: boolean;
@@ -28,6 +30,10 @@ function SwatchPin({
   visited?: boolean;
   skipped?: boolean;
 }) {
+  const scareLevel = scare ?? "mild";
+  const scareSrc = poi
+    ? `/icons/pin-poi-${scareLevel}.png`
+    : `/icons/pin-scare-${scareLevel}.png`;
   return (
     <div
       className={cn(
@@ -45,7 +51,7 @@ function SwatchPin({
       {hours === "opening" ? <i className="pin-hours-ring is-opening" /> : null}
       {scare || bare ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="pin-scare" src={`/icons/pin-scare-${scare ?? "mild"}.png`} alt="" />
+        <img className="pin-scare" src={scareSrc} alt="" />
       ) : null}
       {multi ? (
         <>
@@ -77,6 +83,13 @@ function SwatchPin({
 }
 
 const GROUPS: { title: string; items: { key: string; label: string; node: ReactNode }[] }[] = [
+  {
+    title: "סוג מקום",
+    items: [
+      { key: "house-kind", label: "בית", node: <SwatchPin scare="mild" candy="plenty" /> },
+      { key: "poi-kind", label: "נקודת עניין", node: <SwatchPin scare="mild" poi candy="plenty" /> },
+    ],
+  },
   {
     title: "ממתקים",
     items: [

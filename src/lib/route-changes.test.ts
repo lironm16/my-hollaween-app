@@ -70,6 +70,7 @@ const baseFilters: HouseFiltersState = {
   visitedOnly: false,
   skippedOnly: false,
   includeUndecorated: true,
+  locationKindFilter: "all",
 };
 
 describe("routeCandidateHouses", () => {

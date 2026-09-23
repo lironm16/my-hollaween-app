@@ -11,16 +11,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
-import { scareShort, decorShort, suggestedHouseName, nameMatchesTheme, themeFromName } from "@/lib/labels";
+import {
+  scareShort,
+  decorShort,
+  suggestedHouseName,
+  nameMatchesTheme,
+  themeFromName,
+  houseKindLabels,
+  poiCategoryLabels,
+} from "@/lib/labels";
+import { isPoiHouse } from "@/lib/house-kind";
 import { displayAddressFromHit, neighborhoodFromAddressHit } from "@/lib/address-fields";
 import { config, inNeighborhood, NEIGHBORHOODS } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
 import {
   HOUSE_THEMES,
+  POI_CATEGORIES,
   SENSITIVITY_OPTIONS,
   type DecorLevel,
   type HouseInput,
+  type HouseKind,
+  type PoiCategory,
   type ScareLevel,
   type SensitivityId,
   type TreatId,
@@ -29,7 +41,7 @@ import {
 import { candyTone, CandySign, CANDY_TONES, type CandyTone } from "@/components/candy-glyphs";
 import { freezeExpireIso, isOwnerFrozen, resolveDecorLevel } from "@/lib/house-state";
 import { StrollerSign } from "@/components/symbols";
-import { ScareSign } from "@/components/scare-glyphs";
+import { ScarePumpkin, ScareSign } from "@/components/scare-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
 import {
   houseHoursWindows,
@@ -46,6 +58,8 @@ import { HOUSE_FIELD_LIMITS } from "@/lib/schema";
 import { cn } from "@/lib/utils";
 
 const empty: HouseInput = {
+  kind: "house",
+  poiCategory: "coffee",
   name: "",
   theme: "pumpkin",
   address: "",
@@ -135,6 +149,8 @@ export function HouseForm({
   const now = useAppNow();
   const { admin } = useAdminSession();
   const blocked = Boolean(busy || saving);
+  const isPoi = isPoiHouse(form);
+  const scareGlyph = isPoi ? ScarePumpkin : undefined;
 
   function updateHourWindow(index: number, patch: Partial<HoursWindow>) {
     setHourWindows((current) =>
@@ -351,6 +367,12 @@ export function HouseForm({
           openTo: hours.openTo,
           openFrom2: hours.openFrom2,
           openTo2: hours.openTo2,
+          ...(admin
+            ? {
+                kind: form.kind ?? "house",
+                poiCategory: form.kind === "poi" ? (form.poiCategory ?? "other") : null,
+              }
+            : { kind: "house", poiCategory: null }),
         };
         setSaving(true);
         void (async () => {
@@ -375,7 +397,59 @@ export function HouseForm({
         })();
       }}
     >
-      <FormSection title="הבית">
+      {admin ? (
+        <FormSection title="סוג מקום (מנהל)">
+          <div className="flex flex-wrap gap-1.5">
+            {(["house", "poi"] as HouseKind[]).map((kind) => (
+              <button
+                key={kind}
+                type="button"
+                onClick={() =>
+                  setForm((current) => ({
+                    ...current,
+                    kind,
+                    poiCategory: kind === "poi" ? current.poiCategory ?? "coffee" : null,
+                  }))
+                }
+                className={
+                  (form.kind ?? "house") === kind
+                    ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black"
+                    : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
+                }
+              >
+                {kind === "poi" ? (
+                  <ScareSign Glyph={ScarePumpkin} level="mild" className="size-6" />
+                ) : (
+                  <ScareSign level="mild" className="size-6" />
+                )}
+                {houseKindLabels[kind]}
+              </button>
+            ))}
+          </div>
+          {isPoi ? (
+            <div className="mt-3">
+              <p className="mb-2 text-lg font-medium">קטגוריה</p>
+              <div className="flex flex-wrap gap-1.5">
+                {POI_CATEGORIES.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => setForm((current) => ({ ...current, poiCategory: category }))}
+                    className={
+                      (form.poiCategory ?? "other") === category
+                        ? "rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black"
+                        : "rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
+                    }
+                  >
+                    {poiCategoryLabels[category]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </FormSection>
+      ) : null}
+      <FormSection title={isPoi ? "נקודת העניין" : "הבית"}>
         <Field
           label="מי מוסיף את הבית?"
           charCount={{ length: addedBy.length, max: HOUSE_FIELD_LIMITS.addedBy.max }}
@@ -392,7 +466,7 @@ export function HouseForm({
         </Field>
         <div>
           <div className="mb-2 flex items-baseline justify-between gap-2">
-            <p className="text-lg font-medium">שם הבית</p>
+            <p className="text-lg font-medium">{isPoi ? "שם המקום" : "שם הבית"}</p>
             <CharCount length={form.name.length} max={HOUSE_FIELD_LIMITS.name.max} />
           </div>
           <Input
@@ -600,7 +674,7 @@ export function HouseForm({
                   : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
               }
             >
-              <ScareSign level="none" className="size-6" />
+              <ScareSign Glyph={scareGlyph} level="none" className="size-6" />
               {decorShort.none}
             </button>
             {(["mild", "medium", "spicy"] as ScareLevel[]).map((level) => (
@@ -614,7 +688,7 @@ export function HouseForm({
                     : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
                 }
               >
-                <ScareSign level={level} className="size-6" />
+                <ScareSign Glyph={scareGlyph} level={level} className="size-6" />
                 {scareShort[level]}
               </button>
             ))}

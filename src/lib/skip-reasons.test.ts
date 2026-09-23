@@ -74,6 +74,7 @@ const baseFilters: HouseFiltersState = {
   visitedOnly: false,
   skippedOnly: false,
   includeUndecorated: true,
+  locationKindFilter: "all",
 };
 
 const evening = new Date("2026-10-31T18:00:00");

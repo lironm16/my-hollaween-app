@@ -18,7 +18,7 @@ export const HOUSE_SET_STATUS: Record<HouseSet, string> = {
   all: "מציגים הכל",
 };
 
-const STUB_ID = /^בית-931\d$/;
+const STUB_ID = /^(?:בית|נק)-931\d$/;
 
 export function isStubHouse(house: {
   id?: string;

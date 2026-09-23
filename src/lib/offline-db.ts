@@ -493,6 +493,8 @@ export type HouseFiltersState = {
   skippedOnly: boolean;
   /** Include houses with no outdoor decoration (gray struck lights). */
   includeUndecorated: boolean;
+  /** Show houses, POIs, or both on the map. */
+  locationKindFilter: "all" | "house" | "poi";
 };
 
 export function loadHouseFilters(): HouseFiltersState | null {

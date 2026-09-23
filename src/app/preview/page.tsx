@@ -1,6 +1,6 @@
 import { CANDY_TONES, CandySign } from "@/components/candy-glyphs";
 import { PreviewNav } from "@/components/preview-nav";
-import { SCARE_TONES, ScareSign } from "@/components/scare-glyphs";
+import { SCARE_TONES, ScarePumpkin, ScareSign } from "@/components/scare-glyphs";
 import { SENSITIVITY_KINDS, SensitivitySign } from "@/components/sensitivity-glyphs";
 import { config } from "@/lib/config";
 
@@ -48,7 +48,7 @@ export default function PreviewHubPage() {
         </section>
 
         <section className="space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/20">
-          <h2 className="text-base font-medium text-orange-100">פחד</h2>
+          <h2 className="text-base font-medium text-orange-100">פחד — בית (רוח)</h2>
           <p className="text-base text-violet-300">ירוק = לילדים. אפור עם קו = לא מקושט.</p>
           <div className="flex flex-wrap items-end gap-4">
             <div className="flex flex-col items-center gap-1">
@@ -58,6 +58,23 @@ export default function PreviewHubPage() {
             {SCARE_TONES.map((tone) => (
               <div key={tone.id} className="flex flex-col items-center gap-1">
                 <ScareSign level={tone.id} className="size-12" />
+                <span className="text-base text-violet-300">{tone.label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/20">
+          <h2 className="text-base font-medium text-orange-100">פחד — נקודת עניין (דלעת)</h2>
+          <p className="text-base text-violet-300">אותן רמות, אייקון דלעת על המפה.</p>
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="flex flex-col items-center gap-1">
+              <ScareSign Glyph={ScarePumpkin} level="none" className="size-12" />
+              <span className="text-base text-violet-300">לא מקושט</span>
+            </div>
+            {SCARE_TONES.map((tone) => (
+              <div key={tone.id} className="flex flex-col items-center gap-1">
+                <ScareSign Glyph={ScarePumpkin} level={tone.id} className="size-12" />
                 <span className="text-base text-violet-300">{tone.label}</span>
               </div>
             ))}

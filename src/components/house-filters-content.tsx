@@ -12,7 +12,9 @@ import { OpenNowSign } from "@/components/open-now-mark";
 import { NEIGHBORHOODS } from "@/lib/config";
 import { hasStockCandySelection } from "@/lib/filter-presets";
 import { visitWindowIssue } from "@/lib/hours";
-import { decorShort, scareShort } from "@/lib/labels";
+import { decorShort, locationKindFilterLabels, scareShort } from "@/lib/labels";
+import { ScarePumpkin } from "@/components/scare-glyphs";
+import { LOCATION_KIND_FILTERS, type LocationKindFilter } from "@/lib/types";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import {
   defaultVisitWindowEndFromStart,
@@ -201,6 +203,29 @@ export function HouseFiltersContent({
         >
           <SkippedMark labeled />
         </FilterToggle>
+      </FilterSection>
+
+      <FilterSection title="סוג מקום">
+        {LOCATION_KIND_FILTERS.map((kind) => (
+          <VisitWindowRadio
+            key={kind}
+            checked={filters.locationKindFilter === kind}
+            onChange={() => onPatch({ locationKindFilter: kind as LocationKindFilter })}
+          >
+            <span className="inline-flex items-center gap-2">
+              {kind === "house" ? (
+                <ScareSign level="mild" className="size-7" />
+              ) : kind === "poi" ? (
+                <ScareSign Glyph={ScarePumpkin} level="mild" className="size-7" />
+              ) : (
+                <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-violet-500/25 text-base text-violet-100 ring-1 ring-violet-400/30">
+                  ★
+                </span>
+              )}
+              <span>{locationKindFilterLabels[kind]}</span>
+            </span>
+          </VisitWindowRadio>
+        ))}
       </FilterSection>
 
       <FilterSection title="נגישות">

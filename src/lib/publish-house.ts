@@ -47,14 +47,15 @@ export function readyHouseInput(input: HouseInput): HouseInput {
 /** Always posts to the server. Never keeps a house only on the phone. */
 export async function publishHouse(
   input: HouseInput,
-  options?: { includeEndpoint?: string; addedBy?: string },
+  options?: { includeEndpoint?: string; addedBy?: string; admin?: boolean },
 ): Promise<PublishResult> {
   const body = readyHouseInput(input);
   const addedBy = options?.addedBy?.trim();
   if (!addedBy) throw new Error("נא למלא מי מוסיף את הבית.");
+  const adminPoi = Boolean(options?.admin && body.kind === "poi");
   let res: Response;
   try {
-    res = await fetch("/api/houses", {
+    res = await fetch(adminPoi ? "/api/admin/houses" : "/api/houses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...body, addedBy, includeEndpoint: options?.includeEndpoint }),

@@ -2,6 +2,7 @@
 
 import { SkipIcon } from "@/components/skip-icon";
 import { clusterPinStatus, clusterPinVisitKind } from "@/lib/cluster-pin-status";
+import { pinScareSrc } from "@/lib/pin-faces";
 import { effectiveVisit, isDecorated } from "@/lib/house-state";
 import { isClosingSoon, isHoursNightOver, isOpeningSoon } from "@/lib/hours";
 import type { PublicHouse } from "@/lib/types";
@@ -59,7 +60,7 @@ export function HouseMapPinIcon({
         <b className={`pin-status is-${status}`} />
       ) : null}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="pin-scare" src={`/icons/pin-scare-${scare}.png`} alt="" />
+      <img className="pin-scare" src={pinScareSrc(house, decorated ? scare : "mild")} alt="" />
     </div>
   );
 }

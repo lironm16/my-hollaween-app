@@ -20,6 +20,7 @@ import {
   isOpeningSoonForFilter,
 } from "@/lib/hours";
 import { candyTone } from "@/components/candy-glyphs";
+import { houseMatchesLocationKind } from "@/lib/house-kind";
 import { effectiveVisit, isDecorated, offersSensitivity } from "@/lib/house-state";
 import { houseMatchesSet, type HouseSet } from "@/lib/house-set";
 import type { HouseFiltersState } from "@/lib/offline-db";
@@ -94,6 +95,7 @@ export function houseFilterMismatchReasons(
     visitedOnly,
     skippedOnly,
     includeUndecorated,
+    locationKindFilter,
   } = filters;
   const {
     from: visitWindowFrom,
@@ -103,6 +105,10 @@ export function houseFilterMismatchReasons(
 
   if (!houseMatchesSet(house, houseSet)) {
     reasons.push(isStubHouse(house) ? "סטאב" : "בית אמיתי");
+  }
+  const kindFilter = locationKindFilter ?? "all";
+  if (!houseMatchesLocationKind(house, kindFilter)) {
+    reasons.push(kindFilter === "house" ? "נקודת עניין" : "בית");
   }
   if (accessibleOnly && !house.accessible) reasons.push("לא נגיש");
   if (candyFilterActive(filters)) {
@@ -197,6 +203,7 @@ export function filterHouses(
     visitedOnly,
     skippedOnly,
     includeUndecorated,
+    locationKindFilter,
   } = filters;
   const { houseSet, likedIds, visitedIds, skippedIds = [], now } = options;
   const {
@@ -206,6 +213,7 @@ export function filterHouses(
   } = resolveVisitWindow(filters, now);
   return houses.filter((house) => {
     if (!houseMatchesSet(house, houseSet)) return false;
+    if (!houseMatchesLocationKind(house, locationKindFilter ?? "all")) return false;
     if (accessibleOnly && !house.accessible) return false;
     if (candyFilterActive(filters)) {
       if (candyFilters.length === 0 || !candyFilters.includes(candyTone(house))) return false;

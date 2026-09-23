@@ -1,6 +1,15 @@
 export const SCARE_LEVELS = ["mild", "medium", "spicy"] as const;
 export type ScareLevel = (typeof SCARE_LEVELS)[number];
 
+export const HOUSE_KINDS = ["house", "poi"] as const;
+export type HouseKind = (typeof HOUSE_KINDS)[number];
+
+export const POI_CATEGORIES = ["coffee", "museum", "shop", "food", "services", "info", "other"] as const;
+export type PoiCategory = (typeof POI_CATEGORIES)[number];
+
+export const LOCATION_KIND_FILTERS = ["all", "house", "poi"] as const;
+export type LocationKindFilter = (typeof LOCATION_KIND_FILTERS)[number];
+
 export const DECOR_LEVELS = ["none", "mild", "medium", "heavy"] as const;
 export type DecorLevel = (typeof DECOR_LEVELS)[number];
 
@@ -54,6 +63,10 @@ export type HoursWindow = { from: string; to: string };
 
 export type House = {
   id: string;
+  /** Residential trick-or-treat house vs manager-curated point of interest. */
+  kind?: HouseKind;
+  /** POI subtype — only when kind is poi. */
+  poiCategory?: PoiCategory | null;
   name: string;
   theme: HouseTheme;
   /** Street + house number only (e.g. יהודית 15). */
@@ -94,6 +107,8 @@ export type House = {
 };
 
 export type HouseInput = {
+  kind?: HouseKind;
+  poiCategory?: PoiCategory | null;
   name: string;
   theme: HouseTheme;
   address: string;

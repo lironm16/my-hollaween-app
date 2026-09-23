@@ -6,12 +6,13 @@ import {
 import type { HouseFiltersState } from "@/lib/offline-db";
 import { CANDY_TONE_IDS, SCARE_LEVELS } from "@/lib/types";
 
-export const HOUSE_FILTERS_VERSION = 5;
+export const HOUSE_FILTERS_VERSION = 6;
 
 /** Drop engine flags that no longer have UI controls. */
 export function migrateHouseFilters(filters: HouseFiltersState): HouseFiltersState {
   const next: HouseFiltersState = {
     ...filters,
+    locationKindFilter: filters.locationKindFilter ?? "all",
     openNowOnly: false,
     closingSoonOnly: false,
     openingSoonOnly: false,

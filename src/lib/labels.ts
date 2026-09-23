@@ -1,7 +1,9 @@
 import {
   HOUSE_THEMES,
   type DecorLevel,
+  type HouseKind,
   type HouseTheme,
+  type PoiCategory,
   type ScareLevel,
   type StockLevel,
   type TreatId,
@@ -120,3 +122,48 @@ export const stockLabels: Record<StockLevel, string> = {
   low: "מעט",
   out: "נגמר",
 };
+
+export const houseKindLabels: Record<HouseKind, string> = {
+  house: "בית",
+  poi: "נקודת עניין",
+};
+
+export const locationKindFilterLabels: Record<"all" | HouseKind, string> = {
+  all: "הכל",
+  house: "בתים",
+  poi: "נקודות עניין",
+};
+
+export const poiCategoryLabels: Record<PoiCategory, string> = {
+  coffee: "קפה",
+  museum: "מוזיאון",
+  shop: "חנות",
+  food: "אוכל",
+  services: "שירותים",
+  info: "מידע",
+  other: "אחר",
+};
+
+export const poiCategoryEmoji: Record<PoiCategory, string> = {
+  coffee: "☕",
+  museum: "🏛️",
+  shop: "🛍️",
+  food: "🍽️",
+  services: "🚻",
+  info: "ℹ️",
+  other: "📍",
+};
+
+export function poiCategoryLabel(category: PoiCategory | null | undefined) {
+  return category ? poiCategoryLabels[category] : poiCategoryLabels.other;
+}
+
+export function locationSearchHaystack(house: {
+  kind?: HouseKind | null;
+  poiCategory?: PoiCategory | null;
+  name: string;
+}) {
+  if (house.kind !== "poi") return "";
+  const category = house.poiCategory ?? "other";
+  return [houseKindLabels.poi, poiCategoryLabels[category], poiCategoryEmoji[category]].join(" ");
+}

@@ -45,6 +45,7 @@ export const DEFAULT_HOUSE_FILTERS: HouseFiltersState = {
   visitedOnly: false,
   skippedOnly: false,
   includeUndecorated: true,
+  locationKindFilter: "all",
 };
 
 type LegacyFilters = HouseFiltersState & {
@@ -128,6 +129,12 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
         : [...SCARE_LEVELS],
     candyFilters,
     sensitivityFilters: sensitivities,
+    locationKindFilter:
+      raw.locationKindFilter === "house" ||
+      raw.locationKindFilter === "poi" ||
+      raw.locationKindFilter === "all"
+        ? raw.locationKindFilter
+        : "all",
   };
 }
 
@@ -176,6 +183,7 @@ export function emptyHouseFilters(): HouseFiltersState {
     neighborhoodFilters: [...NEIGHBORHOODS],
     sensitivityFilters: [],
     includeUndecorated: true,
+    locationKindFilter: "all",
   };
 }
 
@@ -198,7 +206,8 @@ export function countActiveFilters(filters: HouseFiltersState): number {
     Number(filters.unvisitedOnly) +
     Number(filters.visitedOnly) +
     Number(filters.skippedOnly) +
-    filters.sensitivityFilters.length
+    filters.sensitivityFilters.length +
+    Number(filters.locationKindFilter !== "all")
   );
 }
 

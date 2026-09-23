@@ -1,5 +1,6 @@
 import { canonicalAddressForBuilding } from "@/lib/house-clusters";
-import { canonicalHouseId, newEditCode, newPublicId, sameHouseId } from "@/lib/ids";
+import { canonicalHouseId, newEditCode, newPoiPublicId, newPublicId, sameHouseId } from "@/lib/ids";
+import { normalizePoiCategory } from "@/lib/house-kind";
 import { normalizeAddressFields } from "@/lib/address-fields";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { assertRealAddress } from "@/lib/geocode";
@@ -75,17 +76,25 @@ export async function getHouse(id: string): Promise<House | undefined> {
   return findHouseIn((await loadDb(true)).houses, id);
 }
 
+function nextPublicId(db: { houses: House[] }, kind: HouseInput["kind"]) {
+  const makeId = kind === "poi" ? newPoiPublicId : newPublicId;
+  let id = makeId();
+  while (db.houses.some((h) => sameHouseId(h.id, id))) id = makeId();
+  return id;
+}
+
 export async function submitHouse(
   input: HouseInput,
-  options?: { includeEndpoint?: string; addedBy?: string },
+  options?: { includeEndpoint?: string; addedBy?: string; admin?: boolean },
 ) {
   await assertRealAddress(input);
+  const kind = options?.admin && input.kind === "poi" ? "poi" : "house";
+  const poiCategory = normalizePoiCategory(kind, input.poiCategory);
   let id = "";
   let editCode = "";
   const house = await runSyncedWrite((db) => {
     if (!id) {
-      id = newPublicId();
-      while (db.houses.some((h) => sameHouseId(h.id, id))) id = newPublicId();
+      id = nextPublicId(db, kind);
       editCode = newEditCode();
     }
     const already = findHouseIn(db.houses, id);
@@ -113,6 +122,8 @@ export async function submitHouse(
     });
     const house: House = {
       ...input,
+      kind,
+      poiCategory,
       address: addressFields.address,
       neighborhood: addressFields.neighborhood,
       treats,
@@ -394,6 +405,12 @@ export async function adminUpdate(
     if (patch.ownerFrozenUntil !== undefined) house.ownerFrozenUntil = patch.ownerFrozenUntil;
     if (patch.photoUrl !== undefined) house.photoUrl = parsePhotoUrl(patch.photoUrl) ?? patch.photoUrl;
     if (patch.addedBy !== undefined) house.addedBy = patch.addedBy?.trim() || null;
+    if (patch.kind !== undefined) {
+      house.kind = patch.kind === "poi" ? "poi" : "house";
+      house.poiCategory = normalizePoiCategory(house.kind, patch.poiCategory ?? house.poiCategory);
+    } else if (patch.poiCategory !== undefined && house.kind === "poi") {
+      house.poiCategory = normalizePoiCategory("poi", patch.poiCategory);
+    }
     if (patch.visit !== undefined) house.soldOut = patch.visit === "closed";
     else if (patch.soldOut !== undefined) {
       house.soldOut = patch.soldOut;

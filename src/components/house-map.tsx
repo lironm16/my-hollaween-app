@@ -31,7 +31,7 @@ import {
 import { distanceMeters } from "@/lib/geo";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { isClosingSoon, isHoursNightOver, isHoursNotYetOpen, isOnBreak, isOpeningSoon } from "@/lib/hours";
-import type { ScareLevel } from "@/lib/types";
+import { pinScareSrc } from "@/lib/pin-faces";
 import { clusterBadgeHouses, clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { SKIP_ICON_SVG } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
@@ -67,12 +67,6 @@ const PIN_BOX = 62;
 function attr(value: string) {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
-
-const SCARE_SRC: Record<ScareLevel, string> = {
-  mild: "/icons/pin-scare-mild.png",
-  medium: "/icons/pin-scare-medium.png",
-  spicy: "/icons/pin-scare-spicy.png",
-};
 
 function pinVisitKind(house: PublicHouse, now: Date): "closed" | "break" | null {
   if (effectiveVisit(house) === "closed") return "closed";
@@ -132,7 +126,8 @@ function hoursPinClass(house: PublicHouse, now: Date) {
 }
 
 function pinFaceHtml(house: PublicHouse) {
-  const src = SCARE_SRC[pinFaceKind(house) === "scare" ? (house.scareLevel ?? "mild") : "mild"];
+  const level = pinFaceKind(house) === "scare" ? (house.scareLevel ?? "mild") : "mild";
+  const src = pinScareSrc(house, level);
   return `<img class="pin-scare" src="${src}" alt="" />`;
 }
 

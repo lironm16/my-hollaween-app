@@ -1,7 +1,9 @@
 import { z } from "zod";
 import {
   DECOR_LEVELS,
+  HOUSE_KINDS,
   HOUSE_THEMES,
+  POI_CATEGORIES,
   SCARE_LEVELS,
   STOCK_LEVELS,
   TREAT_OPTIONS,
@@ -136,9 +138,16 @@ export const ownerPatchSchema = houseFields.partial().extend({
 });
 
 export const adminPatchSchema = houseFields.partial().extend({
+  kind: z.enum(HOUSE_KINDS).optional(),
+  poiCategory: z.enum(POI_CATEGORIES).nullable().optional(),
   soldOut: z.boolean().optional(),
   ownerFrozenUntil: z.string().nullable().optional(),
   adminFrozen: z.boolean().optional(),
   photoUrl: z.union([photoUrlSchema, z.literal("")]).optional(),
   addedBy: addedByPatchField,
+});
+
+export const adminSubmitSchema = houseSubmitSchema.extend({
+  kind: z.enum(HOUSE_KINDS).default("house"),
+  poiCategory: z.enum(POI_CATEGORIES).nullable().optional(),
 });

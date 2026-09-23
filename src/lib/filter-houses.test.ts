@@ -27,6 +27,7 @@ function baseFilters(overrides: Partial<HouseFiltersState> = {}): HouseFiltersSt
     visitedOnly: false,
     skippedOnly: false,
     includeUndecorated: true,
+    locationKindFilter: "all",
     ...overrides,
   };
 }
@@ -153,6 +154,18 @@ describe("filterHouses", () => {
     assert.deepEqual(reasons, ["נחלת גנים"]);
     const visitedReasons = houseFilterMismatchReasons(houses[1]!, filters, context);
     assert.deepEqual(visitedReasons, ["כבר ביקרת"]);
+  });
+
+  it("filters by location kind", () => {
+    const houses = [
+      house("home"),
+      house("poi-cafe", { kind: "poi", poiCategory: "coffee" }),
+    ];
+    const context = { houseSet: "real" as const, likedIds: [], visitedIds: [], now };
+    const housesOnly = filterHouses(houses, baseFilters({ locationKindFilter: "house" }), context);
+    const poiOnly = filterHouses(houses, baseFilters({ locationKindFilter: "poi" }), context);
+    assert.deepEqual(housesOnly.map((item) => item.id), ["home"]);
+    assert.deepEqual(poiOnly.map((item) => item.id), ["poi-cafe"]);
   });
 
   it("now mode stays stricter than custom departure hours", () => {

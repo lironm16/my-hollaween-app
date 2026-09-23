@@ -18,10 +18,12 @@ import { senderPushEndpoint } from "@/lib/push-client";
 import type { HouseInput, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import type { HouseFormExtras } from "@/components/house-form";
+import { useAdminSession } from "@/hooks/use-admin-session";
 
 export default function AddPage() {
   const router = useRouter();
   const editFlow = useHouseEditFlow();
+  const { admin } = useAdminSession();
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{
     id: string;
@@ -40,6 +42,7 @@ export default function AddPage() {
       const { house, editCode } = await publishHouse(input, {
         includeEndpoint,
         addedBy: extras?.addedBy ?? undefined,
+        admin,
       });
       let preview = house;
       if (extras?.photoDataUrl) {
