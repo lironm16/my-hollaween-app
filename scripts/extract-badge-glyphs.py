@@ -275,7 +275,15 @@ def solidify_pumpkin_features(im: Image.Image, min_alpha: int = 40) -> Image.Ima
     return out
 
 
-def sync_pumpkin_chin(reference: Image.Image, target: Image.Image, split_ratio: float = 0.68) -> Image.Image:
+def normalize_pumpkin_canvas(im: Image.Image, side: int) -> Image.Image:
+    """Square canvas so mild/spicy/medium align before chin grafting."""
+    src = im.convert("RGBA")
+    out = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+    out.paste(src, ((side - src.width) // 2, (side - src.height) // 2), src)
+    return out
+
+
+def sync_pumpkin_chin(reference: Image.Image, target: Image.Image, split_ratio: float = 0.72) -> Image.Image:
     """Match the lower pumpkin body (chin) to the reference — medium orange art."""
     ref = reference.convert("RGBA")
     tgt = target.convert("RGBA")
@@ -283,7 +291,7 @@ def sync_pumpkin_chin(reference: Image.Image, target: Image.Image, split_ratio: 
         ref = ref.resize(tgt.size, Image.Resampling.NEAREST)
     w, h = tgt.size
     split_y = int(h * split_ratio)
-    rp, tp = ref.load(), tgt.load()
+    rp = ref.load()
     out = tgt.copy()
     op = out.load()
     for y in range(split_y, h):
@@ -355,12 +363,14 @@ def extract_pumpkin_glyphs() -> None:
         glyph = solidify_pumpkin_features(blob)
         glyphs[name] = recenter_glyph(trim(glyph, pad=4))
 
-    medium_ref = glyphs["medium"]
+    canvas = max(max(g.width, g.height) for g in glyphs.values())
+    medium_ref = normalize_pumpkin_canvas(glyphs["medium"], canvas)
     for name, glyph in glyphs.items():
+        aligned = normalize_pumpkin_canvas(glyph, canvas)
         if name != "medium":
-            glyph = sync_pumpkin_chin(medium_ref, glyph)
+            aligned = sync_pumpkin_chin(medium_ref, aligned)
         scare = ROOT / f"scare-pumpkin-{name}.png"
-        glyph.save(scare)
+        aligned.save(scare)
         print(f"wrote {scare.name}")
 
     medium_pin = ROOT / "scare-pumpkin-medium.png"
