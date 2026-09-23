@@ -3633,6 +3633,10 @@
       font-size: var(--text-5xl);
       line-height: var(--tw-leading, var(--text-5xl--line-height));
     }
+    .sm\:text-xl {
+      font-size: var(--text-xl);
+      line-height: var(--tw-leading, var(--text-xl--line-height));
+    }
     .sm\:text-\[1\.4rem\] {
       font-size: 1.4rem;
     }
@@ -6107,6 +6111,9 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 .app-header {
   padding-top: env(safe-area-inset-top, 0px);
+}
+.event-countdown-finale {
+  min-height: 2.75rem;
 }
 .event-countdown-dock {
   flex-shrink: 0;

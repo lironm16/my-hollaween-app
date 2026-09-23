@@ -66,3 +66,8 @@ export function eventCountdownRemaining(now = appNow()): EventCountdownParts | n
   if (target.getTime() <= now.getTime()) return null;
   return formatEventCountdownPartsFromDates(now, target);
 }
+
+/** Last tick before cutoff — `0 Days · 00:00:00`. */
+export function eventCountdownIsZero(parts: EventCountdownParts): boolean {
+  return parts.days === 0 && parts.hours === 0 && parts.minutes === 0 && parts.seconds === 0;
+}

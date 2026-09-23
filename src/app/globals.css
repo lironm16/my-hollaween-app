@@ -1668,6 +1668,10 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
+.event-countdown-finale {
+  min-height: 2.75rem;
+}
+
 .event-countdown-dock {
   flex-shrink: 0;
   z-index: 45;

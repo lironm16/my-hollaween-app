@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  eventCountdownIsZero,
   eventCountdownRemaining,
   formatEventCountdownParts,
   shouldShowEventCountdown,
@@ -35,6 +36,31 @@ test("eventCountdownRemaining counts down to 17:00 on Oct 31", () => {
   assert.ok(parts);
   assert.equal(parts!.days, 59);
   assert.equal(parts!.time, "05:00:00");
+});
+
+test("eventCountdownIsZero", () => {
+  assert.equal(
+    eventCountdownIsZero({
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      time: "00:00:00",
+      label: "0 Days · 00:00:00",
+    }),
+    true,
+  );
+  assert.equal(
+    eventCountdownIsZero({
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 1,
+      time: "00:00:01",
+      label: "0 Days · 00:00:01",
+    }),
+    false,
+  );
 });
 
 test("eventCountdownRemaining uses local calendar days across DST (Israel)", () => {

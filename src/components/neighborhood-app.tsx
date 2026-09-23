@@ -18,7 +18,7 @@ import {
   emitTempSkipRestoreAlert,
   useTempSkipRestoreAlerts,
 } from "@/hooks/use-temp-skip-restore-alerts";
-import { EventCountdownLayer } from "@/components/event-countdown-layer";
+import { EventCountdownGate } from "@/components/event-countdown-gate";
 import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
@@ -989,7 +989,7 @@ export function NeighborhoodApp({
           ) : null}
         </>
       </main>
-      <EventCountdownLayer />
+      <EventCountdownGate />
       {originPick.originPickerOpen ? (
         <OriginPickerSheet
           open
