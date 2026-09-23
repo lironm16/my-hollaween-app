@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, X } from "lucide-react";
 import { CountdownDecor } from "@/components/countdown-decor";
@@ -23,6 +23,9 @@ export function EventCountdownScreen({
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const sceneBodyRef = useRef<HTMLDivElement>(null);
+  const sceneFitRef = useRef<HTMLDivElement>(null);
+  const sceneStackRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [screenReaderHint, setScreenReaderHint] = useState("");
   const standalone = useSyncExternalStore(
@@ -44,6 +47,41 @@ export function EventCountdownScreen({
     }
     const dayLabel = parts.days === 1 ? "יום" : "ימים";
     setScreenReaderHint(`${parts.days} ${dayLabel}, ${parts.time}`);
+  }, [open, parts.days, parts.time]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const body = sceneBodyRef.current;
+    const fit = sceneFitRef.current;
+    const stack = sceneStackRef.current;
+    if (!body || !fit || !stack) return;
+
+    let raf = 0;
+    const fitStack = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        fit.style.height = "";
+        stack.style.transform = "";
+        const available = body.clientHeight;
+        const needed = stack.scrollHeight;
+        if (needed > available && available > 0) {
+          const scale = Math.max(0.68, available / needed);
+          fit.style.height = `${Math.ceil(needed * scale)}px`;
+          stack.style.transform = `scale(${scale})`;
+        }
+      });
+    };
+
+    fitStack();
+    const ro = new ResizeObserver(fitStack);
+    ro.observe(body);
+    ro.observe(stack);
+    const unsubViewport = subscribeAppViewport(fitStack);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      unsubViewport();
+    };
   }, [open, parts.days, parts.time]);
 
   useEffect(() => {
@@ -103,56 +141,55 @@ export function EventCountdownScreen({
           <X className="size-5" />
         </button>
 
-        <div className="countdown-scene-body absolute inset-0 z-10 flex min-h-0 flex-col items-center overflow-y-auto px-4 text-center">
-          <div className="flex w-full max-w-lg shrink-0 flex-col items-center gap-1">
-            <p className="countdown-hebrew-line text-[clamp(1.25rem,5.5vw,2rem)]">ברוכים הבאים ל</p>
-            <p className="countdown-plain-title text-[clamp(2.75rem,14vw,4.75rem)]">{config.brandEn}</p>
-          </div>
-
-          <div className="countdown-wood-sign relative mt-3 w-full max-w-md shrink-0 px-4 py-5 sm:px-6 sm:py-6">
-            <span className="countdown-web countdown-web--tl" aria-hidden />
-            <span className="countdown-web countdown-web--tr" aria-hidden />
-            <span className="countdown-web countdown-web--bl" aria-hidden />
-            <span className="countdown-web countdown-web--br" aria-hidden />
-
-            <div dir="ltr" className="relative z-[1]" aria-hidden="true">
-              <p className="countdown-plain-number text-[clamp(4.5rem,26vw,9.5rem)] tabular-nums leading-[0.88]">
-                {parts.days} {dayLabel}
-              </p>
-              <p className="countdown-plain-number mt-1 text-[clamp(3rem,18vw,6.5rem)] tabular-nums leading-none tracking-[0.14em]">
-                {parts.time}
-              </p>
+        <div
+          ref={sceneBodyRef}
+          className="countdown-scene-body absolute inset-0 z-10 flex min-h-0 flex-col items-center overflow-hidden px-4 text-center"
+        >
+          <div ref={sceneFitRef} className="countdown-scene-fit">
+            <div ref={sceneStackRef} className="countdown-scene-stack flex w-full max-w-lg flex-col items-center">
+            <div className="countdown-scene-header flex w-full flex-col items-center">
+              <p className="countdown-hebrew-line countdown-welcome-line">ברוכים הבאים ל</p>
+              <p className="countdown-plain-title countdown-brand-en">{config.brandEn}</p>
             </div>
 
-            <div className="relative z-[1] mt-4 space-y-1.5" dir="rtl">
-              <p className="countdown-brand-he text-[clamp(1.75rem,7.5vw,2.85rem)] leading-tight">
-                {config.brandHe}
-              </p>
-              <p className="text-[clamp(1rem,3.8vw,1.2rem)] font-medium text-orange-100/90">
-                {config.neighborhood}
-              </p>
-              <p className="text-[clamp(0.95rem,3.6vw,1.1rem)] font-medium text-violet-200/85">
-                תחילת הערב בשכונה
-              </p>
-            </div>
-          </div>
+            <div className="countdown-wood-sign relative w-full max-w-md px-4 sm:px-6">
+              <span className="countdown-web countdown-web--tl" aria-hidden />
+              <span className="countdown-web countdown-web--tr" aria-hidden />
+              <span className="countdown-web countdown-web--bl" aria-hidden />
+              <span className="countdown-web countdown-web--br" aria-hidden />
 
-          <div className="countdown-footer-cluster mt-3 flex w-full max-w-md shrink-0 flex-col items-center gap-3">
-            <div className="countdown-date-badge px-5 py-2.5 text-[clamp(1rem,4.2vw,1.35rem)] font-bold text-white">
-              {eventCountdownDateBadgeLabel()}
+              <div dir="ltr" className="relative z-[1]" aria-hidden="true">
+                <p className="countdown-plain-number countdown-days-number tabular-nums leading-[0.88]">
+                  {parts.days} {dayLabel}
+                </p>
+                <p className="countdown-plain-number countdown-time-number tabular-nums leading-none tracking-[0.14em]">
+                  {parts.time}
+                </p>
+              </div>
+
+              <div className="countdown-sign-copy relative z-[1]" dir="rtl">
+                <p className="countdown-brand-he countdown-brand-he-size leading-tight">{config.brandHe}</p>
+                <p className="countdown-neighborhood-line font-medium text-orange-100/90">{config.neighborhood}</p>
+                <p className="countdown-event-line font-medium text-violet-200/85">תחילת הערב בשכונה</p>
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={onClose}
-              className={cn(
-                "countdown-neon-arrow flex shrink-0 touch-manipulation flex-col items-center gap-1",
-                "text-orange-300 transition active:scale-95",
-              )}
-            >
-              <span className="text-sm font-semibold text-orange-100/90">סגירה · חזרה למפה</span>
-              <ChevronDown className="size-8 animate-bounce" strokeWidth={2.5} aria-hidden />
-            </button>
+            <div className="countdown-footer-cluster flex w-full max-w-md flex-col items-center">
+              <div className="countdown-date-badge font-bold text-white">{eventCountdownDateBadgeLabel()}</div>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className={cn(
+                  "countdown-neon-arrow flex touch-manipulation flex-col items-center",
+                  "text-orange-300 transition active:scale-95",
+                )}
+              >
+                <span className="countdown-close-label font-semibold text-orange-100/90">סגירה · חזרה למפה</span>
+                <ChevronDown className="countdown-close-chevron animate-bounce" strokeWidth={2.5} aria-hidden />
+              </button>
+            </div>
+            </div>
           </div>
         </div>
       </div>
