@@ -15,6 +15,8 @@ type Props = {
   className?: string;
   collected?: boolean;
   interactive?: boolean;
+  /** Slow spin + bob on turntable (off for tap-to-collect hunt). */
+  spin?: boolean;
   /** turntable = hunt overlay; orbit = drag to inspect (gem bag) */
   controls?: "turntable" | "orbit";
 };
@@ -53,6 +55,7 @@ export function GemModel3D({
   className,
   collected = false,
   interactive = true,
+  spin = true,
   controls = "turntable",
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -168,8 +171,10 @@ export function GemModel3D({
       if (disposed) return;
       const t = (performance.now() - start) / 1000;
       if (controls === "turntable") {
-        pivot.rotation.y = t * (interactive ? 0.7 : 0.35);
-        pivot.position.y = Math.sin(t * 2) * 0.04;
+        if (spin) {
+          pivot.rotation.y = t * (interactive ? 0.7 : 0.35);
+          pivot.position.y = Math.sin(t * 2) * 0.04;
+        }
       } else {
         orbit?.update();
       }
@@ -195,7 +200,7 @@ export function GemModel3D({
       renderer.dispose();
       host.removeChild(renderer.domElement);
     };
-  }, [monsterId, houseId, size, interactive, controls, meta.glbPath]);
+  }, [monsterId, houseId, size, interactive, spin, controls, meta.glbPath]);
 
   if (loadFailed) {
     return (

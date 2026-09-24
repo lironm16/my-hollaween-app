@@ -14,6 +14,8 @@ export function GemSprite({
   className,
   size = "lg",
   mode = "auto",
+  /** Center «גלה לי» — no spin/drag; parent button handles tap to collect. */
+  tapCollect = false,
 }: {
   /** @deprecated use house + monster id */
   variantId?: string;
@@ -24,6 +26,7 @@ export function GemSprite({
   size?: "sm" | "lg";
   /** bag rows use poster; hunt uses 3d; orbit is for gem-bag studio only */
   mode?: "auto" | "3d" | "poster" | "orbit";
+  tapCollect?: boolean;
 }) {
   const id = house?.id ?? houseId ?? "default";
   const monsterId = (house ? gemMonsterForHouse(house) : "dragon") as GemMonsterId;
@@ -67,7 +70,8 @@ export function GemSprite({
         houseId={id}
         size={mode === "orbit" ? "fill" : size}
         collected={collected}
-        interactive
+        interactive={!tapCollect}
+        spin={!tapCollect}
         controls={mode === "orbit" ? "orbit" : "turntable"}
       />
     </div>

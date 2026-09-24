@@ -75,7 +75,6 @@ export function GemHuntOverlay({
   const [posterHintOpen, setPosterHintOpen] = useState(false);
   /** User chose «גלה לי» — centered gem on the camera (not orbit hint box). */
   const [centerReveal, setCenterReveal] = useState(false);
-  const [collectNudge, setCollectNudge] = useState<string | null>(null);
   const scanStartRef = useRef(Date.now());
   const panTotalRef = useRef(0);
   const lastHeadingRef = useRef<number | null>(null);
@@ -191,20 +190,6 @@ export function GemHuntOverlay({
     /** Collect only via «גלה לי» (centered on what you see), not the compass-pinned anchor. */
     if (!centerReveal) return;
     if (phase === "collecting" || phase === "done") return;
-    if (!collectEnabled) {
-      const needM =
-        distanceM != null ? Math.max(0, distanceM - GEM_HUNT_METERS) : null;
-      setCollectNudge(
-        needM != null && needM > 1
-          ? `עוד ~${formatDistance(needM)} — התקרבו לפני איסוף`
-          : `התקרבו ל~${GEM_HUNT_METERS}מ׳ ועמדו במקום לרגע`,
-      );
-      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-        navigator.vibrate(12);
-      }
-      window.setTimeout(() => setCollectNudge(null), 2400);
-      return;
-    }
     setPhase("collecting");
     setHint("found");
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -235,7 +220,7 @@ export function GemHuntOverlay({
   }
 
   const gemVisible = phase === "visible" || phase === "collecting";
-  /** «גלה לי»: dragon centered on live camera (tap to collect when in range). */
+  /** «גלה לי»: dragon centered on live camera — tap to collect (like gem-bag test). */
   const centerDisplayMode = gemVisible && centerReveal;
   /** Compass-pinned guide on camera (visual only — collect via «גלה לי»). */
   const arPinGuideMode = gemVisible && !centerReveal;
@@ -276,17 +261,13 @@ export function GemHuntOverlay({
   const footerHint =
     phase === "collecting"
       ? "אוצר נאסף!"
-      : collectNudge
-        ? collectNudge
-        : centerDisplayMode
-          ? collectEnabled
-            ? "לחצו על האוצר במעגל — לאיסוף"
-            : `תצוגה בלבד — התקרבו ל~${GEM_HUNT_METERS}מ׳ ואז לחצו על האוצר`
-          : gemVisible && arPinGuideMode && pinPlacement && !pinPlacement.inView
-            ? "סובבו את המצלמה — האוצר בקצה המסך"
-            : gemVisible && arPinGuideMode
-              ? "«גלה לי» — האוצר במרכז, ואז לחצו לאיסוף"
-              : null;
+      : centerDisplayMode
+        ? "לחצו על האוצר לאיסוף"
+        : gemVisible && arPinGuideMode && pinPlacement && !pinPlacement.inView
+          ? "סובבו את המצלמה — האוצר בקצה המסך"
+          : gemVisible && arPinGuideMode
+            ? "«גלה לי» — האוצר במרכז, ואז לחצו לאיסוף"
+            : null;
 
   const overlay = (
     <div className="gem-hunt-overlay" dir="rtl">
@@ -310,7 +291,7 @@ export function GemHuntOverlay({
       <div className="gem-hunt-overlay__shade" aria-hidden />
       <header className="gem-hunt-overlay__header">
         <div className="min-w-0 flex-1">
-          {!collectEnabled ? (
+          {!collectEnabled && !centerReveal ? (
             <p className="gem-hunt-overlay__badge">
               חיפוש — התקרבו לבית (~{GEM_HUNT_METERS}מ׳) כדי שהאוצר יופיע
               {distanceM != null
@@ -321,7 +302,7 @@ export function GemHuntOverlay({
                   ? " · ממתינים ל-GPS"
                   : null}
             </p>
-          ) : sim ? (
+          ) : sim && !centerReveal ? (
             <p className="gem-hunt-overlay__badge">סימולציה: בטווח</p>
           ) : null}
           <p className="gem-hunt-overlay__title">מחפשים אוצר נסתר ליד {house.name || house.address}</p>
@@ -396,18 +377,16 @@ export function GemHuntOverlay({
             "gem-hunt-overlay__gem-hit",
             "is-center-collect",
             "is-collect-layer",
-            !collectEnabled && "is-preview-only",
-            collectNudge && "is-nudge",
             phase === "collecting" && "is-collecting",
           )}
           onClick={handleCollect}
-          aria-label={
-            collectEnabled ? `איסוף ${gemLabelHe(monsterId)}` : `תצוגת ${gemLabelHe(monsterId)}`
-          }
+          onPointerDown={(e) => e.preventDefault()}
+          aria-label={`איסוף ${gemLabelHe(monsterId)}`}
         >
           <GemSprite
             house={house}
             mode="3d"
+            tapCollect
             className={cn(phase === "collecting" && "is-burst")}
           />
         </button>
@@ -416,14 +395,7 @@ export function GemHuntOverlay({
       {!posterHintOpen && (phase !== "collecting" || footerHint) ? (
         <footer className="gem-hunt-overlay__footer" dir="rtl">
           {footerHint ? (
-            <p
-              className={cn(
-                "gem-hunt-overlay__footer-hint",
-                collectNudge && "is-nudge",
-              )}
-            >
-              {footerHint}
-            </p>
+            <p className="gem-hunt-overlay__footer-hint">{footerHint}</p>
           ) : null}
 
           {showWalkGuide ? (

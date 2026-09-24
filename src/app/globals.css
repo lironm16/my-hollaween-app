@@ -3612,9 +3612,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__gem-hit.is-collect-layer {
   z-index: 9;
-}
-.gem-hunt-overlay__gem-hit.is-center-collect.is-nudge {
-  animation: gem-hunt-nudge 0.45s ease-in-out 2;
+  touch-action: manipulation;
 }
 .gem-hunt-overlay__gem-hit.is-center-collect .gem-model-3d,
 .gem-hunt-overlay__gem-hit.is-center-collect canvas {
