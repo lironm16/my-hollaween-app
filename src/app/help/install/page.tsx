@@ -92,7 +92,7 @@ export default function InstallHelpPage() {
   return (
     <HelpShell title="איך מתקינים את האפליקציה?">
       <p className="mb-4 text-lg leading-relaxed text-orange-50">
-        «התקנה» = הוספה למסך הבית. פתחו פעם אחת ברשת כדי שהמפה תישמר בטלפון.
+        <HelpUiChip>התקנה</HelpUiChip> = הוספה למסך הבית. פתחו פעם אחת ברשת כדי שהמפה תישמר בטלפון.
       </p>
       <div className="space-y-3">
         <HelpExpandable title="אייפון" subtitle="Safari בלבד">

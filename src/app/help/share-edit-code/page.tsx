@@ -6,7 +6,7 @@ import { helpImage } from "@/lib/help-images";
 import type { ReactNode } from "react";
 
 const STEPS: Array<{
-  title: string;
+  title: ReactNode;
   body: ReactNode;
   image: string;
   imageAlt: string;
@@ -23,7 +23,11 @@ const STEPS: Array<{
     imageAlt: "תפריט פעולות — שלוש נקודות בכרטיס הבית",
   },
   {
-    title: "בחרו «קוד עריכה»",
+    title: (
+      <>
+        בחרו <HelpUiChip>קוד עריכה</HelpUiChip>
+      </>
+    ),
     body: (
       <>
         בתפריט שנפתח בחרו <HelpUiChip>קוד עריכה</HelpUiChip>. מופיעים רק לבעלי הבית או למנהל.
@@ -57,7 +61,7 @@ export default function ShareEditCodeHelpPage() {
       <ol className="space-y-4">
         {STEPS.map((step, index) => (
           <HelpStep
-            key={step.title}
+            key={index}
             n={index + 1}
             title={step.title}
             body={step.body}

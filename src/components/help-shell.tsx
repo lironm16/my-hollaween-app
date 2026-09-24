@@ -98,7 +98,7 @@ export function HelpStep({
   parseBody = false,
 }: {
   n: number;
-  title: string;
+  title: ReactNode;
   body: ReactNode;
   /** When true, string `body` is parsed for explicit <<ui-label>> chips only. */
   parseBody?: boolean;
