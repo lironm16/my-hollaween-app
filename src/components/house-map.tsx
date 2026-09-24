@@ -275,10 +275,9 @@ const youAreHereIcon = L.divIcon({
 });
 
 /** Keep Leaflet sized to the visible viewport — never pans/zooms the map. */
-function SizeSync({ active }: { active: boolean }) {
+function SizeSync() {
   const map = useMap();
   useEffect(() => {
-    if (!active) return;
     const sync = () => map.invalidateSize({ animate: false });
     const id = window.setTimeout(sync, 40);
     window.addEventListener("resize", sync);
@@ -291,7 +290,7 @@ function SizeSync({ active }: { active: boolean }) {
       window.visualViewport?.removeEventListener("resize", sync);
       ro?.disconnect();
     };
-  }, [active, map]);
+  }, [map]);
   return null;
 }
 
@@ -304,18 +303,18 @@ function KeepSelectedVisible({
   lng,
   offsetX = 0,
   offsetY = 0,
-  active,
+  enabled,
 }: {
   lat: number;
   lng: number;
   offsetX?: number;
   offsetY?: number;
-  active: boolean;
+  enabled: boolean;
 }) {
   const map = useMap();
 
   useEffect(() => {
-    if (!active) return;
+    if (!enabled) return;
     const pan = () => {
       const raw = getComputedStyle(document.documentElement).getPropertyValue("--map-sheet-h");
       const sheetH = Number.parseFloat(raw);
@@ -341,7 +340,7 @@ function KeepSelectedVisible({
       window.clearTimeout(timer);
       window.removeEventListener("hw-map-sheet", onSheet);
     };
-  }, [map, lat, lng, offsetX, offsetY, active]);
+  }, [map, lat, lng, offsetX, offsetY, enabled]);
   return null;
 }
 
@@ -460,11 +459,17 @@ function ClusterMarker({
   const now = new Date(tick * 15_000);
   const closingSoon = cluster.houses.some((house) => isClosingSoon(house, now));
   const openingSoon = !closingSoon && cluster.houses.some((house) => isOpeningSoon(house, now));
-  return (
-    <Marker
-      key={cluster.key}
-      position={[cluster.lat, cluster.lng]}
-      icon={clusterIcon(
+  const visitedKey = useMemo(
+    () => cluster.houses.map((house) => (visitedIds.includes(house.id) ? "1" : "0")).join(""),
+    [cluster.houses, visitedIds],
+  );
+  const skippedKey = useMemo(
+    () => cluster.houses.map((house) => (skippedIds?.has(house.id) ? "1" : "0")).join(""),
+    [cluster.houses, skippedIds],
+  );
+  const icon = useMemo(
+    () =>
+      clusterIcon(
         cluster,
         selectedId,
         now,
@@ -473,7 +478,23 @@ function ClusterMarker({
         filteredOut,
         matchedIds,
         skippedIds,
-      )}
+      ),
+    [
+      cluster,
+      selectedId,
+      tick,
+      routeOrder,
+      visitedKey,
+      skippedKey,
+      filteredOut,
+      matchedIds,
+    ],
+  );
+  return (
+    <Marker
+      key={cluster.key}
+      position={[cluster.lat, cluster.lng]}
+      icon={icon}
       zIndexOffset={
         selectedHere
           ? 10000
@@ -526,7 +547,10 @@ type Props = {
   pick?: { lat: number; lng: number } | null;
   onPick?: (lat: number, lng: number) => void;
   className?: string;
+  /** @deprecated Use followSelection — kept so call sites can still pass active. */
   active?: boolean;
+  /** When false, skip pan-to-selected while a sheet/dialog covers the map (map stays live). */
+  followSelection?: boolean;
   userLocation?: UserLocation | null;
   /** @deprecated No map movement — kept for call-site compatibility. */
   followTick?: number;
@@ -571,6 +595,7 @@ export function HouseMap({
   onPick,
   className,
   active = true,
+  followSelection = active,
   userLocation = null,
   locating = false,
   onLocate,
@@ -687,7 +712,7 @@ export function HouseMap({
           maxNativeZoom={Math.min(tiles.maxNativeZoom, config.map.maxZoom)}
           className="hw-basemap"
         />
-        <SizeSync active={active} />
+        <SizeSync />
         {panTick > 0 && panTo ? <PanTo lat={panTo.lat} lng={panTo.lng} tick={panTick} /> : null}
         {embed && focus ? (
           <CenterOnHouse lat={focus.lat} lng={focus.lng} zoom={config.map.maxZoom - 1} />
@@ -698,7 +723,7 @@ export function HouseMap({
             lng={focus.lng}
             offsetX={focus.offsetX}
             offsetY={focus.offsetY}
-            active={active}
+            enabled={followSelection}
           />
         ) : null}
         {!pickMode && !originPickActive ? (

@@ -196,10 +196,6 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     const prev = catalogRef.current;
     if (isEmptyDelta(live, prev)) {
       emptyDeltaStreakRef.current += 1;
-      if (!isMapListSuspended()) {
-        setUnreachable(false);
-        setError(null);
-      }
       return prev;
     }
     emptyDeltaStreakRef.current = 0;

@@ -986,7 +986,7 @@ export function NeighborhoodApp({
                   }}
                   onClose={selection.closeSelection}
                   className="h-full w-full"
-                  active={!mapListObscured}
+                  followSelection={!mapListObscured}
                   userLocation={gps}
                   locating={geo.status === "pending" && askedLocation}
                   onLocate={originPick.goToMyLocation}

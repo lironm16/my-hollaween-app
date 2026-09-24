@@ -21,8 +21,7 @@ const HouseMapLazy = dynamic(
 
 export function HouseMapDynamic(props: ComponentProps<typeof HouseMapLazy>) {
   useEffect(() => {
-    if (props.active === false) return;
     void import("@/components/house-map");
-  }, [props.active]);
+  }, []);
   return <HouseMapLazy {...props} />;
 }
