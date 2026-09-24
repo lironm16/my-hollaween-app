@@ -39,7 +39,7 @@ import { useGemProgress } from "@/hooks/use-gem-progress";
 import { loadGemCollectedIds } from "@/lib/gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
 import { canCollectGem, GEM_CHEER_MS } from "@/lib/gem-hunt";
-import { gemFabGlowLevel, pickGemHuntTarget } from "@/lib/gem-hunt-target";
+import { pickGemHuntTarget } from "@/lib/gem-hunt-target";
 import { prepareGemHuntSensors, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
@@ -252,20 +252,11 @@ export function NeighborhoodApp({
   const selection = useHouseSelection({ focusId, visible, houses, clusterHouses: mapHouses });
   const { resetForNavigation } = selection;
 
-  const gemFabGlow = useMemo(() => {
-    if (!gemHuntActive) return "off" as const;
-    return gemFabGlowLevel(mapHouses, gps, (id) => gems.collected(id));
-  }, [gemHuntActive, mapHouses, gps, gems.collectedIds]);
-
+  /** No per-GPS scan — glow removed; target picked only when FAB is tapped. */
   const gemFabDisabled = useMemo(() => {
     if (!gemHuntActive) return true;
-    return !pickGemHuntTarget(
-      mapHouses,
-      gps,
-      (id) => gems.collected(id),
-      selection.selected?.id ?? null,
-    );
-  }, [gemHuntActive, mapHouses, gps, gems.collectedIds, selection.selected?.id]);
+    return !mapHouses.some((h) => !gems.collected(h.id));
+  }, [gemHuntActive, mapHouses, gems.collectedIds]);
 
   const openMapGemHunt = useCallback(async () => {
     preloadGemHuntChunks();
@@ -982,7 +973,7 @@ export function NeighborhoodApp({
                   }
                   gemHuntEnabled={gemHuntActive}
                   onGemHuntPress={() => void openMapGemHunt()}
-                  gemGlow={gemFabGlow}
+                  gemGlow="off"
                   gemFabDisabled={gemFabDisabled}
                   gemCollectedCount={mapGemBadgeCount}
                 />
