@@ -2993,6 +2993,11 @@
     --tw-contrast: contrast(200%);
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
   }
+  .drop-shadow-\[0_0_8px_rgb\(251_191_36\/0\.85\)\] {
+    --tw-drop-shadow-size: drop-shadow(0 0 8px var(--tw-drop-shadow-color, rgb(251 191 36/0.85)));
+    --tw-drop-shadow: var(--tw-drop-shadow-size);
+    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
+  }
   .grayscale {
     --tw-grayscale: grayscale(100%);
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
@@ -6731,20 +6736,83 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   appearance: none;
   border: 0;
 }
+.map-gem-hunt-fab {
+  isolation: isolate;
+}
+.map-gem-hunt-fab__pulse {
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  opacity: 0;
+  pointer-events: none;
+}
 .map-gem-hunt-fab.is-near {
-  animation: gem-fab-glow 1.6s ease-in-out infinite;
-  box-shadow: 0 0 20px rgb(251 191 36 / 0.75),
-    0 8px 24px rgb(0 0 0 / 0.45);
+  animation: gem-fab-glow 1.25s ease-in-out infinite;
+  background: linear-gradient(145deg, rgb(109 40 217) 0%, rgb(76 29 149) 100%);
+  color: #fef3c7;
+  box-shadow: 0 0 0 3px rgb(251 191 36 / 0.85),
+    0 0 28px rgb(251 191 36 / 0.95),
+    0 0 48px rgb(167 139 250 / 0.55),
+    0 8px 24px rgb(0 0 0 / 0.5);
+}
+.map-gem-hunt-fab.is-near .map-gem-hunt-fab__pulse {
+  animation: gem-fab-ring 1.25s ease-out infinite;
+  border: 2px solid rgb(251 191 36 / 0.75);
+}
+.map-gem-hunt-fab.is-hunt {
+  animation: gem-fab-glow-hunt 0.85s ease-in-out infinite;
+  background: linear-gradient(145deg, rgb(245 158 11) 0%, rgb(180 83 9) 45%, rgb(109 40 217) 100%);
+  color: #fffbeb;
+  box-shadow: 0 0 36px rgb(251 191 36 / 1),
+    0 0 64px rgb(251 146 60 / 0.85),
+    0 0 12px rgb(255 255 255 / 0.35) inset,
+    0 10px 28px rgb(0 0 0 / 0.55);
+  transform: scale(1.06);
+}
+.map-gem-hunt-fab.is-hunt .map-gem-hunt-fab__pulse {
+  animation: gem-fab-ring-hunt 0.85s ease-out infinite;
+  border: 3px solid rgb(255 251 235 / 0.9);
 }
 @keyframes gem-fab-glow {
   0%,
   100% {
-    filter: brightness(1);
+    filter: brightness(1.05);
     transform: scale(1);
   }
   50% {
+    filter: brightness(1.45);
+    transform: scale(1.1);
+  }
+}
+@keyframes gem-fab-glow-hunt {
+  0%,
+  100% {
     filter: brightness(1.15);
-    transform: scale(1.04);
+    transform: scale(1.06);
+  }
+  50% {
+    filter: brightness(1.65);
+    transform: scale(1.14);
+  }
+}
+@keyframes gem-fab-ring {
+  0% {
+    opacity: 0.85;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.55);
+  }
+}
+@keyframes gem-fab-ring-hunt {
+  0% {
+    opacity: 1;
+    transform: scale(0.88);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.75);
   }
 }
 .is-origin-pick .map-add-house-fab,
@@ -7980,6 +8048,46 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   pointer-events: none;
   background: radial-gradient(circle at 50% 44%, rgb(253 224 71 / 0.65) 0%, transparent 58%);
   animation: gem-overlay-collect-flash 4s ease-out forwards;
+}
+.gem-hunt-overlay__walk-guide {
+  position: absolute;
+  left: 50%;
+  bottom: max(7.5rem, calc(env(safe-area-inset-bottom) + 6rem));
+  z-index: 4;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: min(92vw, 22rem);
+  padding: 0.65rem 0.85rem;
+  border-radius: 1rem;
+  background: rgb(12 6 22 / 0.82);
+  border: 1px solid rgb(251 191 36 / 0.45);
+  pointer-events: auto;
+}
+.gem-hunt-overlay__walk-arrow {
+  color: #fde68a;
+  filter: drop-shadow(0 0 10px rgb(251 191 36 / 0.85));
+  transition: color 0.2s ease;
+}
+.gem-hunt-overlay__walk-arrow.is-facing {
+  color: #bbf7d0;
+  filter: drop-shadow(0 0 14px rgb(74 222 128 / 0.9));
+}
+.gem-hunt-overlay__walk-text {
+  margin: 0;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff7ed;
+}
+.gem-hunt-overlay__walk-maps {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #c4b5fd;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .gem-hunt-overlay__hint-actions {
   position: absolute;

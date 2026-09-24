@@ -34,7 +34,7 @@ import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
 import { canCollectGem, GEM_COLLECT_ANIMATION_MS } from "@/lib/gem-hunt";
-import { isNearAnyGem, pickGemHuntTarget } from "@/lib/gem-hunt-target";
+import { gemFabGlowLevel, pickGemHuntTarget } from "@/lib/gem-hunt-target";
 import { prepareGemHuntSensors } from "@/lib/gem-hunt-sensors";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
@@ -239,12 +239,10 @@ export function NeighborhoodApp({
   const selection = useHouseSelection({ focusId, visible, houses, clusterHouses: mapHouses });
   const { resetForNavigation } = selection;
 
-  const nearGemOnMap = useMemo(
-    () =>
-      gemHuntActive &&
-      isNearAnyGem(mapHouses, gps, (id) => gems.collected(id)),
-    [gemHuntActive, mapHouses, gps, gems.collectedIds],
-  );
+  const gemFabGlow = useMemo(() => {
+    if (!gemHuntActive) return "off" as const;
+    return gemFabGlowLevel(mapHouses, gps, (id) => gems.collected(id));
+  }, [gemHuntActive, mapHouses, gps, gems.collectedIds]);
 
   const openMapGemHunt = useCallback(async () => {
     const target = pickGemHuntTarget(
@@ -895,7 +893,7 @@ export function NeighborhoodApp({
                   }
                   gemHuntEnabled={gemHuntActive}
                   onGemHuntPress={() => void openMapGemHunt()}
-                  nearGem={nearGemOnMap}
+                  gemGlow={gemFabGlow}
                   gemFabDisabled={!pickGemHuntTarget(mapHouses, gps, (id) => gems.collected(id), selection.selected?.id ?? null)}
                 />
                 {originPick.originPickActive ? (

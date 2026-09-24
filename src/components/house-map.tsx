@@ -561,7 +561,7 @@ type Props = {
   embed?: boolean;
   gemHuntEnabled?: boolean;
   onGemHuntPress?: () => void;
-  nearGem?: boolean;
+  gemGlow?: import("@/lib/gem-hunt-target").GemFabGlow;
   gemFabDisabled?: boolean;
 };
 
@@ -597,7 +597,7 @@ export function HouseMap({
   embed = false,
   gemHuntEnabled = false,
   onGemHuntPress,
-  nearGem = false,
+  gemGlow = "off",
   gemFabDisabled = false,
 }: Props) {
   const clusters = useMemo(
@@ -870,7 +870,7 @@ export function HouseMap({
         <MapPrimaryFab
           gemHuntEnabled={gemHuntEnabled}
           onGemPress={onGemHuntPress ?? (() => {})}
-          nearGem={nearGem}
+          gemGlow={gemGlow}
           gemDisabled={gemFabDisabled}
         />
       ) : null}

@@ -124,6 +124,20 @@ export function facingHouse(
   return headingDelta(deviceHeading, target) <= toleranceDeg;
 }
 
+/** Degrees to rotate a “walk this way” arrow on screen (0 = straight ahead). */
+export function relativeWalkBearingDeg(
+  user: { lat: number; lng: number },
+  house: Pick<PublicHouse, "lat" | "lng">,
+  deviceHeading: number | null,
+) {
+  if (deviceHeading == null || !Number.isFinite(deviceHeading)) return null;
+  const target = bearingDegrees(user, house);
+  let rel = target - deviceHeading;
+  while (rel > 180) rel -= 360;
+  while (rel < -180) rel += 360;
+  return rel;
+}
+
 export type GemAchievement = {
   id: string;
   titleHe: string;

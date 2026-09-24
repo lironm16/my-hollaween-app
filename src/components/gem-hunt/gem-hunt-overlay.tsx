@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { Navigation } from "lucide-react";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
@@ -16,9 +17,11 @@ import {
   GEM_COLLECT_ANIMATION_MS,
   gemLabelHe,
   gemMonsterForHouse,
+  relativeWalkBearingDeg,
   type GemMonsterId,
 } from "@/lib/gem-hunt";
 import { distanceMeters, formatDistance } from "@/lib/geo";
+import { googleMapsNavigateUrl } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
 import { cn } from "@/lib/utils";
@@ -185,6 +188,19 @@ export function GemHuntOverlay({
   }
 
   const gemVisible = phase === "visible" || phase === "collecting";
+  const walkBearing =
+    userLocation != null ? relativeWalkBearingDeg(userLocation, house, heading) : null;
+  const facingWalk =
+    walkBearing != null && Math.abs(walkBearing) <= GEM_FACING_TOLERANCE_DEG;
+  const showWalkGuide =
+    !collectEnabled &&
+    !sim &&
+    userLocation != null &&
+    distanceM != null &&
+    distanceM > 8 &&
+    phase !== "collecting";
+  const mapsWalkUrl =
+    userLocation != null ? googleMapsNavigateUrl(userLocation, house) : null;
 
   const overlay = (
     <div className="gem-hunt-overlay" dir="rtl">
@@ -278,6 +294,43 @@ export function GemHuntOverlay({
             : null}
         </p>
       </div>
+
+      {showWalkGuide ? (
+        <div className="gem-hunt-overlay__walk-guide" dir="rtl">
+          {walkBearing != null ? (
+            <div
+              className={cn(
+                "gem-hunt-overlay__walk-arrow",
+                facingWalk && "is-facing",
+              )}
+              style={{ transform: `rotate(${walkBearing}deg)` }}
+              aria-hidden
+            >
+              <Navigation className="size-9" strokeWidth={2.4} />
+            </div>
+          ) : null}
+          <p className="gem-hunt-overlay__walk-text">
+            {walkBearing != null
+              ? facingWalk
+                ? "המשיכו ישר — הבית מולכם"
+                : walkBearing > 0
+                  ? "סובבו ימינה לכיוון הבית"
+                  : "סובבו שמאלה לכיוון הבית"
+              : "התקרבו לבית"}
+            {distanceM != null ? ` · ~${formatDistance(distanceM)}` : null}
+          </p>
+          {mapsWalkUrl ? (
+            <a
+              href={mapsWalkUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="gem-hunt-overlay__walk-maps"
+            >
+              הליכה ב-Google Maps
+            </a>
+          ) : null}
+        </div>
+      ) : null}
 
       {phase === "scanning" ? (
         <div className="gem-hunt-overlay__hint-actions" dir="rtl">

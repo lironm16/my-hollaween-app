@@ -63,9 +63,25 @@ export function isNearAnyGem(
   user: { lat: number; lng: number } | null,
   isCollected: (houseId: string) => boolean,
 ): boolean {
-  return houses.some((h) => {
-    if (isCollected(h.id)) return false;
+  return gemFabGlowLevel(houses, user, isCollected) !== "off";
+}
+
+/** Strongest proximity among open gems — drives map diamond pulse. */
+export type GemFabGlow = "off" | "approach" | "hunt";
+
+export function gemFabGlowLevel(
+  houses: PublicHouse[],
+  user: { lat: number; lng: number } | null,
+  isCollected: (houseId: string) => boolean,
+): GemFabGlow {
+  let best: GemProximity = "far";
+  for (const h of houses) {
+    if (isCollected(h.id)) continue;
     const p = gemProximity(user, h, false);
-    return p === "hunt" || p === "approach";
-  });
+    if (rankFor(p) < rankFor(best)) best = p;
+    if (best === "hunt") break;
+  }
+  if (best === "hunt") return "hunt";
+  if (best === "approach") return "approach";
+  return "off";
 }

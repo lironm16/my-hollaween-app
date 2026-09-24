@@ -4,6 +4,7 @@ import { distanceMeters } from "@/lib/geo";
 import {
   bearingDegrees,
   facingHouse,
+  relativeWalkBearingDeg,
   gemProximity,
   gemFamilyForHouse,
   gemVariantForHouse,
@@ -47,6 +48,13 @@ describe("gem hunt geo", () => {
     const target = bearingDegrees(user, house);
     assert.equal(facingHouse(user, house, target, 30), true);
     assert.equal(facingHouse(user, house, target + 90, 30), false);
+  });
+
+  it("computes relative walk bearing for on-screen arrow", () => {
+    const user = { lat: 32.0915, lng: 34.8112 };
+    const target = bearingDegrees(user, house);
+    assert.equal(relativeWalkBearingDeg(user, house, target), 0);
+    assert.ok(Math.abs(relativeWalkBearingDeg(user, house, target + 90) ?? 0) > 80);
   });
 
   it("normalizes heading delta across north", () => {

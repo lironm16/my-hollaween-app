@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { isNearAnyGem, pickGemHuntTarget } from "@/lib/gem-hunt-target";
+import { gemFabGlowLevel, isNearAnyGem, pickGemHuntTarget } from "@/lib/gem-hunt-target";
 import type { PublicHouse } from "@/lib/types";
 
 const base = (id: string, lat: number, lng: number): PublicHouse =>
@@ -27,5 +27,11 @@ describe("pickGemHuntTarget", () => {
     const user = { lat: 32.0, lng: 34.0 };
     assert.equal(isNearAnyGem(houses, user, () => false), true);
     assert.equal(isNearAnyGem(houses, user, () => true), false);
+  });
+
+  it("uses hunt glow when within collect range", () => {
+    const user = { lat: 32.0, lng: 34.0, accuracy: 8 };
+    assert.equal(gemFabGlowLevel(houses, user, () => false), "hunt");
+    assert.equal(gemFabGlowLevel(houses, user, (id) => id === "a"), "hunt");
   });
 });
