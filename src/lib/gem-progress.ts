@@ -40,6 +40,22 @@ function notifyChanged() {
   window.dispatchEvent(new Event(CHANGED_EVENT));
 }
 
+/** Clear one house or the whole bag (achievements follow collected count). */
+export function resetGemProgress(options?: { houseId?: string }) {
+  if (typeof window === "undefined") return [];
+  const houseId = options?.houseId?.trim();
+  const next = houseId
+    ? loadGemCollected().filter((item) => item.houseId !== houseId)
+    : [];
+  if (houseId) {
+    localStorage.setItem(COLLECTED_KEY, JSON.stringify(next));
+  } else {
+    localStorage.removeItem(COLLECTED_KEY);
+  }
+  notifyChanged();
+  return loadGemCollected();
+}
+
 export function collectGem(entry: Omit<GemCollectionEntry, "collectedAt"> & { collectedAt?: number }) {
   const current = loadGemCollected();
   if (current.some((item) => item.houseId === entry.houseId)) {

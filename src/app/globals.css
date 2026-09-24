@@ -3452,8 +3452,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   -webkit-tap-highlight-color: transparent;
 }
 .gem-hunt-overlay__gem-hit .gem-sprite--hunt {
-  width: min(42vw, 9.5rem);
-  height: min(42vw, 9.5rem);
+  width: min(58vw, 14rem);
+  height: min(58vw, 14rem);
   overflow: visible;
 }
 .gem-hunt-overlay__gem-hit .gem-model-3d {
@@ -3461,7 +3461,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   height: 100%;
 }
 .gem-hunt-overlay__gem-hit.is-collecting .gem-sprite {
-  animation: gem-collect-burst 2.4s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+  animation: gem-collect-burst 4s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
 }
 .gem-hunt-overlay__collect-flash {
   position: absolute;
@@ -3469,7 +3469,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   z-index: 6;
   pointer-events: none;
   background: radial-gradient(circle at 50% 44%, rgb(253 224 71 / 0.65) 0%, transparent 58%);
-  animation: gem-overlay-collect-flash 2.4s ease-out forwards;
+  animation: gem-overlay-collect-flash 4s ease-out forwards;
 }
 .gem-hunt-overlay__help {
   position: absolute;
@@ -3578,7 +3578,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-sprite.is-burst .gem-sprite__glow,
 .gem-sprite.is-burst .gem-model-3d {
-  animation: gem-collect-flash 2.4s ease-out forwards;
+  animation: gem-collect-flash 4s ease-out forwards;
 }
 .gem-sprite.is-collected {
   opacity: 0.45;
@@ -3603,7 +3603,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   border-radius: 1.25rem;
   background: rgb(24 12 36 / 0.92);
   border: 1px solid rgb(251 191 36 / 0.45);
-  animation: gem-cheer-pop 2.8s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+  animation: gem-cheer-pop 4.4s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
 }
 .gem-collect-cheer__text {
   font-size: 1.15rem;
@@ -3730,6 +3730,17 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   border-color: rgb(251 191 36 / 0.45);
   color: #fde68a;
 }
+.gem-hunt-panel__done-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+.gem-hunt-panel__reset-btn {
+  border-color: rgb(196 181 253 / 0.45);
+  color: #e9d5ff;
+  font-size: 0.85rem;
+}
 .gem-bag-row__body {
   min-width: 0;
   flex: 1;
@@ -3798,25 +3809,25 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 @keyframes gem-collect-burst {
   0% { transform: scale(1); filter: brightness(1); }
-  25% { transform: scale(1.22); filter: brightness(1.55); }
-  55% { transform: scale(1.15); filter: brightness(1.35); }
-  100% { transform: scale(0.12); opacity: 0; }
+  18% { transform: scale(1.28); filter: brightness(1.6); }
+  45% { transform: scale(1.18); filter: brightness(1.4); }
+  100% { transform: scale(0.1); opacity: 0; }
 }
 @keyframes gem-overlay-collect-flash {
   0% { opacity: 0; }
-  20% { opacity: 1; }
-  55% { opacity: 0.75; }
+  15% { opacity: 1; }
+  50% { opacity: 0.8; }
   100% { opacity: 0; }
 }
 @keyframes gem-collect-flash {
   0% { opacity: 1; transform: scale(1); }
-  45% { opacity: 1; transform: scale(1.35); }
-  100% { opacity: 0; transform: scale(2.4); }
+  40% { opacity: 1; transform: scale(1.4); }
+  100% { opacity: 0; transform: scale(2.5); }
 }
 @keyframes gem-cheer-pop {
   0% { opacity: 0; transform: scale(0.82) translateY(12px); }
-  14% { opacity: 1; transform: scale(1.04) translateY(0); }
-  72% { opacity: 1; transform: scale(1); }
+  12% { opacity: 1; transform: scale(1.04) translateY(0); }
+  75% { opacity: 1; transform: scale(1); }
   100% { opacity: 0; transform: scale(0.96) translateY(-8px); }
 }
 @keyframes gem-cauldron-bubble {

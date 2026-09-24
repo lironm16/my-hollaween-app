@@ -7,6 +7,7 @@ import {
   isGemCollected,
   loadGemCollected,
   loadGemCollectedIds,
+  resetGemProgress,
   type GemCollectionEntry,
 } from "@/lib/gem-progress";
 
@@ -38,6 +39,14 @@ export function useGemProgress() {
       const next = collectGem({ houseId, gemType });
       setEntries(next);
       return next.map((e) => e.houseId);
+    },
+    resetHouse: (houseId: string) => {
+      const next = resetGemProgress({ houseId });
+      setEntries(next);
+    },
+    resetAll: () => {
+      const next = resetGemProgress();
+      setEntries(next);
     },
   };
 }

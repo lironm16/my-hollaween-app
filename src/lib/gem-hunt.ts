@@ -43,7 +43,7 @@ export const GEM_SCAN_PAN_DEGREES = 180;
 export const GEM_HELP_AFTER_SECONDS = 8;
 
 /** Hunt overlay + cheer — keep in sync with gem-collect-* CSS durations */
-export const GEM_COLLECT_ANIMATION_MS = 2400;
+export const GEM_COLLECT_ANIMATION_MS = 4000;
 
 export type GemProximity = "far" | "approach" | "hunt" | "collected";
 

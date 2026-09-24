@@ -112,9 +112,22 @@ export function GemHuntPanel({
         ) : null}
 
         {collected ? (
-          <div className="gem-hunt-panel__done">
-            <Gem className="size-4 text-emerald-300" aria-hidden />
-            נאסף
+          <div className="gem-hunt-panel__done-col">
+            <div className="gem-hunt-panel__done">
+              <Gem className="size-4 text-emerald-300" aria-hidden />
+              נאסף
+            </div>
+            {isAdmin ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gem-hunt-panel__reset-btn w-full"
+                onClick={() => gems.resetHouse(house.id)}
+              >
+                איפוס — ילד/ה הבא יחפש שוב
+              </Button>
+            ) : null}
           </div>
         ) : (
           <Button

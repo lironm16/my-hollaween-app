@@ -114,6 +114,40 @@ function GemBagContent({ houses, isAdmin }: { houses: PublicHouse[]; isAdmin: bo
           <p className="mt-1 text-sm text-violet-400">
             כל אוצר מסתתר ליד בית או נקודה על המפה — לחצו «מפה» כדי לצוד.
           </p>
+          {isAdmin ? (
+            <div className="gem-bag-reset mt-3 space-y-2">
+              {viewerHouse && gems.collected(viewerHouse.id) ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-violet-400/40 text-violet-100"
+                  onClick={() => gems.resetHouse(viewerHouse.id)}
+                >
+                  איפוס אוצר ליד {houseHeadline(viewerHouse)} — חיפוש מחדש
+                </Button>
+              ) : null}
+              {gems.collectedIds.length > 0 ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-red-400/35 text-red-100"
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        "לאפס את כל האוצרות וההישגים במכשיר? כל ילד/ה יוכל/תוכל לאסוף מחדש.",
+                      )
+                    ) {
+                      gems.resetAll();
+                    }
+                  }}
+                >
+                  איפוס מלא — תיק והישגים (ילד/ה הבא)
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </div>
 
