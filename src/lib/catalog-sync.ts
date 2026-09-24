@@ -41,12 +41,20 @@ export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
       if (deleted.has(house.id)) continue;
       if (!byId.has(house.id)) take(house);
     }
-    return { ...incoming, houses: [...byId.values()] };
+    return {
+      ...incoming,
+      houses: [...byId.values()],
+      houseCount: incoming.houseCount ?? prev.houseCount,
+    };
   }
 
   prev.houses.forEach(take);
   incoming.houses.forEach(take);
-  return { ...prev, houses: [...byId.values()] };
+  return {
+    ...prev,
+    houses: [...byId.values()],
+    houseCount: incoming.houseCount ?? prev.houseCount,
+  };
 }
 
 /** Apply a delta poll (`?since=`) onto the catalog already on the device. */
@@ -56,6 +64,7 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
       updatedAt: incoming.updatedAt,
       neighborhood: incoming.neighborhood,
       houses: incoming.houses,
+      houseCount: incoming.houseCount,
       pushTemplates: incoming.pushTemplates,
     };
   }
@@ -64,6 +73,7 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
       updatedAt: incoming.updatedAt,
       neighborhood: incoming.neighborhood,
       houses: incoming.houses,
+      houseCount: incoming.houseCount,
       pushTemplates: incoming.pushTemplates ?? prev.pushTemplates,
     });
   }
@@ -77,6 +87,7 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
     updatedAt: incoming.updatedAt,
     neighborhood: incoming.neighborhood || prev.neighborhood,
     houses: [...byId.values()],
+    houseCount: incoming.houseCount ?? prev.houseCount,
     pushTemplates: incoming.pushTemplates ?? prev.pushTemplates,
   };
 }

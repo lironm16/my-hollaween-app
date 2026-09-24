@@ -81,8 +81,9 @@ async function main() {
     return;
   }
 
-  await rootRef.collection("meta").doc("catalog").set({ updatedAt }, { merge: true });
-  console.log(`Set meta/catalog.updatedAt → ${updatedAt} (${housesSnap.size} houses scanned)`);
+  const houseCount = housesSnap.size;
+  await rootRef.collection("meta").doc("catalog").set({ updatedAt, houseCount }, { merge: true });
+  console.log(`Set meta/catalog.updatedAt → ${updatedAt}, houseCount → ${houseCount}`);
 }
 
 main().catch((error) => {

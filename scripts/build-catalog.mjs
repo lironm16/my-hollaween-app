@@ -17,6 +17,7 @@ function readSeedCatalog() {
     updatedAt: seed.updatedAt,
     neighborhood: process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שיכון ותיקים · חרוזים · נחלת גנים",
     houses,
+    houseCount: houses.length,
   };
 }
 

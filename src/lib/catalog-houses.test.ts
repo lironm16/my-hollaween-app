@@ -1,14 +1,22 @@
 import assert from "node:assert/strict";
 import { describe, it, beforeEach, afterEach } from "node:test";
 import {
+  catalogCacheIncomplete,
   catalogNeedsFullRefresh,
-  countRealHouses,
+  localCatalogHouseCount,
   resolveCatalogHouses,
+  resolveServerHouseCount,
 } from "@/lib/catalog-houses";
-import { saveCatalogCache, loadCatalogCacheSync } from "@/lib/offline-db";
-import type { Catalog, PublicHouse } from "@/lib/types";
+import {
+  loadCatalogCacheMeta,
+  saveCatalogCache,
+  saveCatalogCacheMeta,
+  loadCatalogCacheSync,
+} from "@/lib/offline-db";
+import type { Catalog, CatalogCacheMeta, PublicHouse } from "@/lib/types";
 
 const CATALOG_LS_KEY = "hw-catalog-cache";
+const CATALOG_META_LS_KEY = "hw-catalog-cache-meta";
 const hasLocalStorage = typeof localStorage !== "undefined";
 
 function house(id: string, patch: Partial<PublicHouse> = {}): PublicHouse {
@@ -39,23 +47,64 @@ function house(id: string, patch: Partial<PublicHouse> = {}): PublicHouse {
   } as PublicHouse;
 }
 
-function catalog(houses: PublicHouse[], updatedAt: string): Catalog {
-  return { updatedAt, neighborhood: "test", houses };
+function catalog(
+  houses: PublicHouse[],
+  updatedAt: string,
+  meta: Partial<Pick<Catalog, "houseCount">> = {},
+): Catalog {
+  return { updatedAt, neighborhood: "test", houses, ...meta };
 }
+
+describe("resolveServerHouseCount", () => {
+  it("prefers explicit houseCount over inline houses", () => {
+    assert.equal(resolveServerHouseCount(catalog([house("a")], "2026-10-31T10:00:00.000Z", { houseCount: 25 })), 25);
+  });
+
+  it("falls back to inline houses on legacy payloads", () => {
+    assert.equal(
+      resolveServerHouseCount(catalog([house("a"), house("b")], "2026-10-31T10:00:00.000Z")),
+      2,
+    );
+  });
+});
+
+describe("catalogCacheIncomplete", () => {
+  it("flags partial caches below server houseCount", () => {
+    const partial = catalog(
+      [house("a"), house("b"), house("c"), house("d")],
+      "2026-10-31T10:00:00.000Z",
+    );
+    assert.equal(localCatalogHouseCount(partial), 4);
+    assert.equal(catalogCacheIncomplete(partial, null, 25), true);
+  });
+
+  it("accepts a verified complete cache that matches server count", () => {
+    const full = catalog(
+      Array.from({ length: 25 }, (_, index) => house(`house-${index}`)),
+      "2026-10-31T10:00:00.000Z",
+      { houseCount: 25 },
+    );
+    const meta: CatalogCacheMeta = { complete: true, houseCount: 25 };
+    assert.equal(catalogCacheIncomplete(full, meta, 25), false);
+  });
+
+  it("requires completeness metadata for legacy caches without server count", () => {
+    const full = catalog(
+      Array.from({ length: 25 }, (_, index) => house(`house-${index}`)),
+      "2026-10-31T10:00:00.000Z",
+    );
+    assert.equal(catalogCacheIncomplete(full, null), true);
+    assert.equal(catalogCacheIncomplete(full, { complete: true, houseCount: 25 }), false);
+  });
+});
 
 describe("catalogNeedsFullRefresh", () => {
   it("flags small real-house caches for a full snapshot reload", () => {
     const partial = catalog(
-      [
-        house("a"),
-        house("b"),
-        house("c"),
-        house("d"),
-      ],
+      [house("a"), house("b"), house("c"), house("d")],
       "2026-10-31T10:00:00.000Z",
     );
-    assert.equal(countRealHouses(partial), 4);
-    assert.equal(catalogNeedsFullRefresh(partial), true);
+    assert.equal(catalogNeedsFullRefresh(partial, null, 25), true);
   });
 
   it("does not force refresh for stub-only rehearsal catalogs", () => {
@@ -66,22 +115,26 @@ describe("catalogNeedsFullRefresh", () => {
     assert.equal(catalogNeedsFullRefresh(stubs), false);
   });
 
-  it("accepts a typical neighborhood catalog size", () => {
+  it("skips full refresh when cache meta matches server houseCount", () => {
     const full = catalog(
-      Array.from({ length: 12 }, (_, index) => house(`house-${index}`)),
+      Array.from({ length: 25 }, (_, index) => house(`house-${index}`)),
       "2026-10-31T10:00:00.000Z",
+      { houseCount: 25 },
     );
-    assert.equal(catalogNeedsFullRefresh(full), false);
+    const meta: CatalogCacheMeta = { complete: true, houseCount: 25 };
+    assert.equal(catalogNeedsFullRefresh(full, meta, 25), false);
   });
 });
 
 describe("resolveCatalogHouses", { skip: !hasLocalStorage }, () => {
   beforeEach(() => {
     localStorage.removeItem(CATALOG_LS_KEY);
+    localStorage.removeItem(CATALOG_META_LS_KEY);
   });
 
   afterEach(() => {
     localStorage.removeItem(CATALOG_LS_KEY);
+    localStorage.removeItem(CATALOG_META_LS_KEY);
   });
 
   it("returns cached houses when live catalog is empty", () => {
@@ -128,5 +181,14 @@ describe("resolveCatalogHouses", { skip: !hasLocalStorage }, () => {
     );
     const ids = (loadCatalogCacheSync()?.houses ?? []).map((item) => item.id).sort();
     assert.deepEqual(ids, ["a", "b", "c"]);
+  });
+
+  it("persists cache completeness metadata separately from catalog payload", () => {
+    saveCatalogCacheMeta({ complete: true, houseCount: 25, verifiedAt: "2026-10-31T10:00:00.000Z" });
+    assert.deepEqual(loadCatalogCacheMeta(), {
+      complete: true,
+      houseCount: 25,
+      verifiedAt: "2026-10-31T10:00:00.000Z",
+    });
   });
 });

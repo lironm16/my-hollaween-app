@@ -158,8 +158,17 @@ export type Catalog = {
   updatedAt: string;
   neighborhood: string;
   houses: PublicHouse[];
+  /** Authoritative published location count — compare to local cache for completeness. */
+  houseCount?: number;
   /** Merged owner-alert templates so quick-update preview matches the server. */
   pushTemplates?: Partial<Record<string, CatalogPushTemplate>>;
+};
+
+/** Client-only record that a full snapshot matched server houseCount. */
+export type CatalogCacheMeta = {
+  complete: boolean;
+  houseCount?: number;
+  verifiedAt?: string;
 };
 
 /** Partial catalog from `GET /api/catalog?since=` — merge into the cached full list. */

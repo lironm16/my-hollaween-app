@@ -2,7 +2,7 @@ import { toPublicHouse } from "@/lib/ids";
 import { config } from "@/lib/config";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { isPubliclyListed } from "@/lib/house-state";
-import { asCatalogForSnapshot } from "@/lib/catalog-cache-build";
+import { asCatalogForSnapshot, countPublishedHouses } from "@/lib/catalog-cache-build";
 import {
   firestoreConfigured,
   queryRemovedHouseIdsSince,
@@ -54,12 +54,13 @@ export async function getCatalog(): Promise<Catalog> {
   return catalogMem;
 }
 
-function emptyCatalogDelta(updatedAt: string): CatalogDelta {
+function emptyCatalogDelta(updatedAt: string, houseCount: number): CatalogDelta {
   return {
     updatedAt,
     neighborhood: config.neighborhood,
     houses: [],
     removed: [],
+    houseCount,
   };
 }
 
@@ -96,6 +97,7 @@ export function buildCatalogDeltaFromDb(
     neighborhood: config.neighborhood,
     houses,
     removed,
+    houseCount: countPublishedHouses(db.houses),
     ...(pushChanged
       ? { pushTemplates: asCatalog(db.houses, db.updatedAt, db.pushSettings).pushTemplates }
       : {}),
@@ -114,7 +116,10 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
         removedIds: removed,
       })
     ) {
-      return emptyCatalogDelta(mem.updatedAt);
+      return emptyCatalogDelta(
+        mem.updatedAt,
+        catalogMem?.houseCount ?? countPublishedHouses(mem.houses),
+      );
     }
   }
 
@@ -147,7 +152,7 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
           removedIds: removed,
         })
       ) {
-        return emptyCatalogDelta(meta.updatedAt);
+        return emptyCatalogDelta(meta.updatedAt, meta.houseCount ?? 0);
       }
     }
   }

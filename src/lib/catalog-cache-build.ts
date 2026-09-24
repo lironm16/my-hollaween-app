@@ -4,6 +4,11 @@ import { isPubliclyListed } from "@/lib/house-state";
 import { mergePushTemplates, PUSH_KINDS } from "@/lib/push-templates";
 import type { Catalog, DbFile, House, PublicHouse } from "@/lib/types";
 
+/** Published locations in the catalog (houses + POIs, excluding hidden rows). */
+export function countPublishedHouses(houses: House[]): number {
+  return houses.filter((house) => isPubliclyListed(house)).length;
+}
+
 /** Build a public catalog payload from house rows (shared by store + snapshot publish). */
 export function asCatalogForSnapshot(
   houses: House[],
@@ -26,6 +31,7 @@ export function asCatalogForSnapshot(
     updatedAt,
     neighborhood: config.neighborhood,
     houses: published,
+    houseCount: published.length,
     pushTemplates,
   };
 }

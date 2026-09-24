@@ -9,6 +9,7 @@ import {
 } from "@/lib/firestore-admin";
 import { isStubHouse } from "@/lib/house-set";
 import { canonicalHouseId, toPublicHouse } from "@/lib/ids";
+import { countPublishedHouses } from "@/lib/catalog-cache-build";
 import { isPubliclyListed } from "@/lib/house-state";
 import { stripStubHouses } from "@/lib/rehearsal-stubs";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
@@ -40,7 +41,7 @@ export async function readFirestoreHouse(id: string): Promise<House | null> {
   }
 }
 
-let catalogMetaMem: { updatedAt: string } | null = null;
+let catalogMetaMem: { updatedAt: string; houseCount?: number } | null = null;
 let catalogMetaMemAt = 0;
 export const CATALOG_META_MEM_TTL_MS = 600_000;
 
@@ -50,7 +51,7 @@ let pushSettingsMetaMemAt = 0;
 let pushSubsCountMem: { count: number; at: number } | null = null;
 
 /** Cheap catalog revision stamp — one doc read for idle delta polls. */
-export async function readCatalogMeta(): Promise<{ updatedAt: string } | null> {
+export async function readCatalogMeta(): Promise<{ updatedAt: string; houseCount?: number } | null> {
   if (catalogMetaMem && Date.now() - catalogMetaMemAt < CATALOG_META_MEM_TTL_MS) {
     return catalogMetaMem;
   }
@@ -59,9 +60,14 @@ export async function readCatalogMeta(): Promise<{ updatedAt: string } | null> {
     await resolveAdminFirestore();
     const snap = await metaDoc("catalog").get();
     if (!snap.exists) return null;
-    const updatedAt = String((snap.data() as { updatedAt?: string })?.updatedAt ?? "");
+    const row = snap.data() as { updatedAt?: string; houseCount?: number };
+    const updatedAt = String(row?.updatedAt ?? "");
     if (!updatedAt) return null;
-    catalogMetaMem = { updatedAt };
+    const houseCount = Number(row?.houseCount);
+    catalogMetaMem = {
+      updatedAt,
+      ...(Number.isFinite(houseCount) && houseCount >= 0 ? { houseCount } : {}),
+    };
     catalogMetaMemAt = Date.now();
     return catalogMetaMem;
   } catch (error) {
@@ -91,12 +97,15 @@ export async function readPushSettingsMeta(): Promise<{ updatedAt: string } | nu
   }
 }
 
-export async function bumpCatalogMeta(updatedAt: string) {
+export async function bumpCatalogMeta(updatedAt: string, houseCount?: number) {
   if (!firestoreConfigured() || !updatedAt) return;
-  catalogMetaMem = { updatedAt };
+  catalogMetaMem = {
+    updatedAt,
+    ...(typeof houseCount === "number" && houseCount >= 0 ? { houseCount } : {}),
+  };
   catalogMetaMemAt = Date.now();
   await resolveAdminFirestore();
-  await metaDoc("catalog").set({ updatedAt }, { merge: true });
+  await metaDoc("catalog").set(catalogMetaMem, { merge: true });
 }
 
 function rememberPushSettingsMeta(updatedAt: string) {
@@ -431,6 +440,6 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
   }
 
   if (housesChanged || removals.length > 0) {
-    await bumpCatalogMeta(db.updatedAt);
+    await bumpCatalogMeta(db.updatedAt, countPublishedHouses(houses));
   }
 }

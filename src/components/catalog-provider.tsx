@@ -20,13 +20,15 @@ import {
 } from "@/lib/catalog-poll";
 import {
   loadCatalogCache,
+  loadCatalogCacheMeta,
   loadCatalogCacheSync,
+  markCatalogCacheComplete,
   saveCatalogCache,
   flushPendingHouseWrites,
   withDeviceHouseOverlays,
 } from "@/lib/offline-db";
 import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
-import { catalogNeedsFullRefresh } from "@/lib/catalog-houses";
+import { catalogNeedsFullRefresh, resolveServerHouseCount } from "@/lib/catalog-houses";
 import { catalogHasRealHouses } from "@/lib/house-set";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
@@ -193,6 +195,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     setSource("network");
     setUnreachable(false);
     setError(null);
+    const serverCount = resolveServerHouseCount(live);
+    if (live.full || (serverCount != null && next.houses.length >= serverCount)) {
+      markCatalogCacheComplete(next);
+    }
     await saveCatalogCache(next);
     window.dispatchEvent(new Event("hw-catalog-refreshed"));
     return next;
@@ -217,14 +223,22 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     }
     if (online) await flushPendingHouseWrites();
 
-    const needsFullRefresh = force || catalogNeedsFullRefresh(catalogRef.current);
+    const cacheMeta = loadCatalogCacheMeta();
+    const needsFullRefresh =
+      force ||
+      catalogNeedsFullRefresh(
+        catalogRef.current,
+        cacheMeta,
+        resolveServerHouseCount(catalogRef.current),
+      );
     const since = needsFullRefresh ? undefined : catalogRef.current?.updatedAt;
 
     // Delta poll — live API only (0–1 Firestore reads when unchanged).
     if (since && !needsFullRefresh) {
       try {
         if (readServerSimDown()) throw new Error("sim-down");
-        await applyLiveResponse(await fetchJson("/api/catalog", false, since));
+        const live = await fetchJson("/api/catalog", false, since);
+        await applyLiveResponse(live);
         const beforeLen = catalogRef.current?.houses.length ?? 0;
         const reconciled = await reconcileWithDeviceCache(catalogRef.current);
         if (reconciled && reconciled.houses.length > beforeLen) {
@@ -233,7 +247,15 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           await saveCatalogCache(reconciled);
           window.dispatchEvent(new Event("hw-catalog-refreshed"));
         }
-        if (!catalogNeedsFullRefresh(catalogRef.current)) return;
+        if (
+          !catalogNeedsFullRefresh(
+            catalogRef.current,
+            loadCatalogCacheMeta(),
+            resolveServerHouseCount(live) ?? resolveServerHouseCount(catalogRef.current),
+          )
+        ) {
+          return;
+        }
       } catch {
         const cached = await readDeviceCatalog();
         if (cached) {
@@ -258,6 +280,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           setPollSeconds(live.pollSeconds);
         }
         merged = withDeviceHouseOverlays(applyCatalogResponse(merged, live));
+        markCatalogCacheComplete(merged);
         setCatalog(merged);
         setSource("network");
         setUnreachable(false);
@@ -274,7 +297,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         setSource("snapshot");
         setUnreachable(false);
         setError(null);
-        if (catalogHasRealHouses(merged)) await saveCatalogCache(merged);
+        if (catalogHasRealHouses(merged)) {
+          markCatalogCacheComplete(merged);
+          await saveCatalogCache(merged);
+        }
         window.dispatchEvent(new Event("hw-catalog-refreshed"));
         return;
       }

@@ -5,13 +5,14 @@ import { tombstoneHouse, loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { syncDecorFields } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import type { CandyTone, HouseInput, ScareLevel, SensitivityId } from "@/lib/types";
-import type { Catalog, PublicHouse } from "@/lib/types";
+import type { Catalog, CatalogCacheMeta, PublicHouse } from "@/lib/types";
 
 const DB_NAME = "halloween-neighborhood";
 const STORE = "catalog";
 const PENDING_STORE = "pending";
 const KEY = "latest";
 const CATALOG_LS_KEY = "hw-catalog-cache";
+const CATALOG_META_LS_KEY = "hw-catalog-cache-meta";
 const PENDING_LS_KEY = "hw-pending-writes";
 
 function openDb() {
@@ -101,6 +102,61 @@ function writeLocalCatalog(catalog: Catalog) {
 
 export function loadCatalogCacheSync(): Catalog | null {
   return readLocalCatalog();
+}
+
+function asCatalogCacheMeta(value: unknown): CatalogCacheMeta | null {
+  if (!value || typeof value !== "object") return null;
+  const meta = value as CatalogCacheMeta;
+  if (typeof meta.complete !== "boolean") return null;
+  const houseCount = Number(meta.houseCount);
+  return {
+    complete: meta.complete,
+    ...(Number.isFinite(houseCount) && houseCount >= 0 ? { houseCount } : {}),
+    ...(typeof meta.verifiedAt === "string" ? { verifiedAt: meta.verifiedAt } : {}),
+  };
+}
+
+export function loadCatalogCacheMeta(): CatalogCacheMeta | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(CATALOG_META_LS_KEY);
+    if (!raw) return null;
+    return asCatalogCacheMeta(JSON.parse(raw) as unknown);
+  } catch {
+    return null;
+  }
+}
+
+export function saveCatalogCacheMeta(meta: CatalogCacheMeta) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(CATALOG_META_LS_KEY, JSON.stringify(meta));
+  } catch {
+    /* private mode / quota */
+  }
+}
+
+function serverHouseCountFromCatalog(catalog: Catalog): number | undefined {
+  if (typeof catalog.houseCount === "number" && catalog.houseCount >= 0) {
+    return catalog.houseCount;
+  }
+  if (catalog.houses.length) return catalog.houses.length;
+  return undefined;
+}
+
+/** Mark cache complete after a verified full snapshot load. */
+export function markCatalogCacheComplete(catalog: Catalog) {
+  const houseCount = serverHouseCountFromCatalog(catalog);
+  if (houseCount == null) return;
+  saveCatalogCacheMeta({
+    complete: true,
+    houseCount,
+    verifiedAt: catalog.updatedAt,
+  });
+}
+
+export function clearCatalogCacheComplete() {
+  saveCatalogCacheMeta({ complete: false });
 }
 
 export async function saveCatalogCache(catalog: Catalog) {

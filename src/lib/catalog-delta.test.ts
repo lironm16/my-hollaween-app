@@ -64,6 +64,15 @@ describe("buildCatalogDeltaFromDb", () => {
     const delta = buildCatalogDeltaFromDb(snapshot, "2026-10-31T11:00:00.000Z");
     assert.equal(delta.houses.length, 0);
   });
+
+  it("includes authoritative houseCount on every delta", () => {
+    const snapshot = db("2026-10-31T12:00:00.000Z", [
+      house("a", "2026-10-31T10:00:00.000Z"),
+      house("b", "2026-10-31T12:00:00.000Z"),
+    ]);
+    const delta = buildCatalogDeltaFromDb(snapshot, "2026-10-31T11:00:00.000Z");
+    assert.equal(delta.houseCount, 2);
+  });
 });
 
 describe("recordCatalogRemoval", () => {
