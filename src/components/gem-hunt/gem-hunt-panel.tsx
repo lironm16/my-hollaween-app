@@ -13,6 +13,7 @@ import {
   gemLabelHe,
   GEM_APPROACH_METERS,
   GEM_HUNT_METERS,
+  GEM_COLLECT_ANIMATION_MS,
 } from "@/lib/gem-hunt";
 import { distanceMeters, formatDistance } from "@/lib/geo";
 import type { PublicHouse } from "@/lib/types";
@@ -60,7 +61,7 @@ export function GemHuntPanel({
     gems.collect(house.id, collectedVariant);
     setHuntOpen(false);
     setCheer(true);
-    window.setTimeout(() => setCheer(false), 1600);
+    window.setTimeout(() => setCheer(false), GEM_COLLECT_ANIMATION_MS + 400);
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate(40);
     }

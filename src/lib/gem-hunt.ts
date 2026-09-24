@@ -42,6 +42,9 @@ export const GEM_SCAN_PAN_DEGREES = 180;
 /** Show "can't see it?" help after this many seconds in hunt mode. */
 export const GEM_HELP_AFTER_SECONDS = 8;
 
+/** Hunt overlay + cheer — keep in sync with gem-collect-* CSS durations */
+export const GEM_COLLECT_ANIMATION_MS = 2400;
+
 export type GemProximity = "far" | "approach" | "hunt" | "collected";
 
 export function gemProximity(

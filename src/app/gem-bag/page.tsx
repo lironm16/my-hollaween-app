@@ -21,6 +21,7 @@ import {
   GEM_ACHIEVEMENTS,
   gemLabelHe,
   gemMonsterForHouse,
+  GEM_COLLECT_ANIMATION_MS,
 } from "@/lib/gem-hunt";
 import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl, houseSharePath } from "@/lib/nav-links";
@@ -98,7 +99,7 @@ function GemBagContent({ houses, isAdmin }: { houses: PublicHouse[]; isAdmin: bo
             gems.collect(h.id, monsterId);
             setCameraLabHouse(null);
             setCheerHouse(h);
-            window.setTimeout(() => setCheerHouse(null), 1600);
+            window.setTimeout(() => setCheerHouse(null), GEM_COLLECT_ANIMATION_MS + 400);
           }}
         />
       ) : null}

@@ -10,6 +10,7 @@ import {
   GEM_HELP_AFTER_SECONDS,
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
+  GEM_COLLECT_ANIMATION_MS,
   gemLabelHe,
   gemMonsterForHouse,
   type GemMonsterId,
@@ -164,7 +165,7 @@ export function GemHuntOverlay({
     window.setTimeout(() => {
       setPhase("done");
       onCollect(monsterId);
-    }, 1100);
+    }, GEM_COLLECT_ANIMATION_MS);
   }
 
   function handleHelpReveal() {
