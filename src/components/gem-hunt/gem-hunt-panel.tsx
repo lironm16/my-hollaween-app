@@ -22,7 +22,7 @@ import {
 import { distanceMeters, formatDistance } from "@/lib/geo";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
-import { pauseGemHuntCameraStream, prepareGemHuntSensors } from "@/lib/gem-hunt-sensors";
+import { prepareGemHuntSensors, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
 import {
   clearGemAnchorOverride,
   setGemAnchorOverride,
@@ -51,7 +51,9 @@ export function GemHuntPanel({
   const visible = gemHuntFabVisible(isAdmin, now);
   const collected = gems.collected(house.id);
   const proximity = gemProximity(userLocation, house, collected);
-  const { ready: standingStill } = useStandingStill(userLocation, visible && !collected);
+  const needsStill =
+    visible && !collected && (proximity === "hunt" || proximity === "approach");
+  const { ready: standingStill } = useStandingStill(userLocation, needsStill);
 
   const distanceM = useMemo(() => {
     if (!userLocation) return null;
@@ -72,7 +74,7 @@ export function GemHuntPanel({
 
   function onCollect(collectedVariant: string) {
     gems.collect(house.id, collectedVariant);
-    pauseGemHuntCameraStream();
+    stopGemHuntCameraStream();
     setHuntOpen(false);
     setCheer(true);
     window.setTimeout(() => setCheer(false), GEM_CHEER_MS);
@@ -185,7 +187,7 @@ export function GemHuntPanel({
           simulateInRange={simulate}
           collectEnabled={canCollect}
           onClose={() => {
-            pauseGemHuntCameraStream();
+            stopGemHuntCameraStream();
             setHuntOpen(false);
           }}
           onCollect={onCollect}

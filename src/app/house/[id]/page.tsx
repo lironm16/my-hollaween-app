@@ -14,7 +14,7 @@ import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
-import { GemHuntPanel } from "@/components/gem-hunt/gem-hunt-panel";
+import { GemHuntPanelLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
@@ -93,7 +93,7 @@ export default function HousePage() {
               }
               extra={
                 gemHuntFabVisible(admin, now) ? (
-                  <GemHuntPanel house={house} userLocation={geo.location} isAdmin={admin} />
+                  <GemHuntPanelLazy house={house} userLocation={geo.location} isAdmin={admin} />
                 ) : undefined
               }
             />

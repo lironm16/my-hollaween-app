@@ -79,8 +79,14 @@ export function GemModel3D({
     const camera = new THREE.PerspectiveCamera(32, width / height, 0.1, 100);
     camera.position.set(0, 0.2, 2.6);
 
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const maxDpr =
+      controls === "turntable" ? Math.min(window.devicePixelRatio, 1.35) : Math.min(window.devicePixelRatio, 1.75);
+    const renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: maxDpr > 1.1,
+      powerPreference: "low-power",
+    });
+    renderer.setPixelRatio(maxDpr);
     renderer.setSize(width, height);
     renderer.setClearColor(0x000000, 0);
     host.appendChild(renderer.domElement);
@@ -170,6 +176,8 @@ export function GemModel3D({
     const start = performance.now();
     const tick = () => {
       if (disposed) return;
+      rafRef.current = requestAnimationFrame(tick);
+      if (document.visibilityState === "hidden") return;
       const t = (performance.now() - start) / 1000;
       if (controls === "turntable") {
         if (spin) {
@@ -181,7 +189,6 @@ export function GemModel3D({
         orbit?.update();
       }
       renderer.render(scene, camera);
-      rafRef.current = requestAnimationFrame(tick);
     };
     tick();
 

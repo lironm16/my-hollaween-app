@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { isGemHuntOrientationGranted } from "@/lib/gem-hunt-sensors";
 import { normalizeHeading } from "@/lib/gem-hunt";
 
@@ -23,22 +23,44 @@ function readHeading(event: OrientationLike): number | null {
 
 export type HeadingStatus = "idle" | "pending" | "ready" | "denied" | "unsupported";
 
+const HEADING_UI_MS = 90;
+const HEADING_MIN_STEP_DEG = 1.25;
+
+function headingStep(prev: number | null, next: number) {
+  if (prev == null) return 360;
+  let d = Math.abs(next - prev);
+  if (d > 180) d = 360 - d;
+  return d;
+}
+
 /** Listen only — call prepareGemHuntSensors() from a button before opening hunt. */
 export function useDeviceHeading(active: boolean) {
   const [heading, setHeading] = useState<number | null>(null);
   const [status, setStatus] = useState<HeadingStatus>("idle");
+  const lastUiRef = useRef<number>(0);
+  const lastValueRef = useRef<number | null>(null);
 
   const onOrientation = useCallback((event: Event) => {
     const value = readHeading(event as OrientationLike);
-    if (value != null) {
-      setHeading(value);
-      setStatus("ready");
-    }
+    if (value == null) return;
+    const prev = lastValueRef.current;
+    const now = performance.now();
+    const due =
+      prev == null ||
+      now - lastUiRef.current >= HEADING_UI_MS ||
+      headingStep(prev, value) >= HEADING_MIN_STEP_DEG;
+    lastValueRef.current = value;
+    if (!due) return;
+    lastUiRef.current = now;
+    setHeading(value);
+    setStatus("ready");
   }, []);
 
   useEffect(() => {
     if (!active) {
       window.removeEventListener("deviceorientation", onOrientation, true);
+      lastUiRef.current = 0;
+      lastValueRef.current = null;
       setHeading(null);
       setStatus("idle");
       return;

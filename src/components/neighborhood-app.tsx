@@ -29,15 +29,18 @@ import { RouteCompleteCheer } from "@/components/route-complete-cheer";
 import { VisitCheer } from "@/components/visit-cheer";
 import { GemCheer } from "@/components/gem-cheer";
 import { GemResetConfirmDialog } from "@/components/gem-reset-confirm-dialog";
-import { GemHuntOverlay } from "@/components/gem-hunt/gem-hunt-overlay";
-import { GemHuntPanel } from "@/components/gem-hunt/gem-hunt-panel";
+import {
+  GemHuntOverlayLazy,
+  GemHuntPanelLazy,
+  preloadGemHuntChunks,
+} from "@/components/gem-hunt/gem-hunt-lazy";
 import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { loadGemCollectedIds } from "@/lib/gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
 import { canCollectGem, GEM_CHEER_MS } from "@/lib/gem-hunt";
 import { gemFabGlowLevel, pickGemHuntTarget } from "@/lib/gem-hunt-target";
-import { pauseGemHuntCameraStream, prepareGemHuntSensors } from "@/lib/gem-hunt-sensors";
+import { prepareGemHuntSensors, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -136,6 +139,10 @@ export function NeighborhoodApp({
     setWatchEnabled(true);
     void geo.refresh();
   }, [gemHuntActive, mapGemHouse, geo.refresh, setWatchEnabled]);
+
+  useEffect(() => {
+    if (gemHuntActive) preloadGemHuntChunks();
+  }, [gemHuntActive]);
   const { choice: originChoice, resolved: origin, setChoice: setOriginChoice } = useDistanceOrigin(gps);
   const { houseSet } = useHouseSet();
   const activeHouseSet = admin ? houseSet : "real";
@@ -786,7 +793,7 @@ export function NeighborhoodApp({
         filteredOutIds: (id: string) => filterDimActive && !matchedIds.has(id),
         onAdjacentClusterHouse: selection.selectAdjacentClusterHouse,
         extra: gemHuntFabVisible(admin, now) ? (
-          <GemHuntPanel house={selected} userLocation={gps} isAdmin={admin} />
+          <GemHuntPanelLazy house={selected} userLocation={gps} isAdmin={admin} />
         ) : undefined,
       }
     : null;
@@ -1173,7 +1180,7 @@ export function NeighborhoodApp({
         />
       ) : null}
       {mapGemHouse ? (
-        <GemHuntOverlay
+        <GemHuntOverlayLazy
           house={mapGemHouse}
           userLocation={gps}
           collectEnabled={canCollectGem(
@@ -1184,13 +1191,13 @@ export function NeighborhoodApp({
             false,
           )}
           onClose={() => {
-            pauseGemHuntCameraStream();
+            stopGemHuntCameraStream();
             setMapGemHouse(null);
           }}
           onCollect={(monsterId) => {
             const h = mapGemHouse;
             gems.collect(h.id, monsterId);
-            pauseGemHuntCameraStream();
+            stopGemHuntCameraStream();
             setMapGemHouse(null);
             celebrateGemCollect();
           }}

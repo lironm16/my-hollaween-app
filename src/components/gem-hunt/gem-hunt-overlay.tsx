@@ -7,7 +7,7 @@ import { GemOrbitStage } from "@/components/gem-hunt/gem-orbit-stage";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
-import { getGemHuntCameraStream, pauseGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
+import { getGemHuntCameraStream, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
 import { gemCollectDanceIndex } from "@/lib/gem-collect-dance";
 import {
   facingHouse,
@@ -119,7 +119,7 @@ export function GemHuntOverlay({
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
-      pauseGemHuntCameraStream();
+      stopGemHuntCameraStream();
     };
   }, []);
 
@@ -394,7 +394,7 @@ export function GemHuntOverlay({
             role="img"
             aria-label={`כיוון היהלום — ${gemLabelHe(monsterId)}`}
           >
-            <GemSprite house={house} mode="3d" />
+            <GemSprite house={house} mode="poster" />
           </div>
         ) : null}
 
