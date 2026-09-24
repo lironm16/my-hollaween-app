@@ -84,20 +84,16 @@ export async function prepareGemHuntSensors(): Promise<{
       requestPermission?: () => Promise<"granted" | "denied">;
     };
     if (typeof ctor.requestPermission === "function") {
-      const already =
-        readGranted(ORIENTATION_GRANTED_KEY) ||
-        (await queryPermissionGranted("accelerometer" as PermissionName)) === true;
-      if (!already) {
-        try {
-          const result = await ctor.requestPermission();
-          if (result === "granted") {
-            writeGranted(ORIENTATION_GRANTED_KEY);
-          } else {
-            orientation = false;
-          }
-        } catch {
+      /** Always call from the user tap — on iOS this re-enables events after deploy without re-prompting when already granted. */
+      try {
+        const result = await ctor.requestPermission();
+        if (result === "granted") {
+          writeGranted(ORIENTATION_GRANTED_KEY);
+        } else if (!readGranted(ORIENTATION_GRANTED_KEY)) {
           orientation = false;
         }
+      } catch {
+        if (!readGranted(ORIENTATION_GRANTED_KEY)) orientation = false;
       }
     }
   }

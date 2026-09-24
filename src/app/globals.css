@@ -3496,6 +3496,19 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   aspect-ratio: 1;
   pointer-events: none;
 }
+.gem-hunt-overlay__scan-compass {
+  position: absolute;
+  left: 50%;
+  top: 18%;
+  z-index: 2;
+  color: #fde68a;
+  filter: drop-shadow(0 0 12px rgb(251 191 36 / 0.9));
+  transition: color 0.2s ease, filter 0.2s ease;
+}
+.gem-hunt-overlay__scan-compass.is-facing {
+  color: #bbf7d0;
+  filter: drop-shadow(0 0 16px rgb(74 222 128 / 0.95));
+}
 .gem-hunt-overlay__ring {
   width: 100%;
   height: 100%;

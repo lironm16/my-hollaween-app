@@ -15,7 +15,8 @@ import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { GemHuntPanel } from "@/components/gem-hunt/gem-hunt-panel";
-import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
+import { useAppNow } from "@/hooks/use-app-clock";
+import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
 import { resolveHouseIdFromPath, toPublicHouse } from "@/lib/ids";
 import type { House, PublicHouse } from "@/lib/types";
@@ -29,6 +30,7 @@ export default function HousePage() {
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
   const { admin } = useAdminSession();
+  const now = useAppNow();
   const geo = useUserLocation({ watch: gemHuntVisible(admin) });
   const editFlow = useHouseEditFlow();
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
@@ -90,7 +92,7 @@ export default function HousePage() {
                   : undefined
               }
               extra={
-                gemHuntVisible(admin) ? (
+                gemHuntFabVisible(admin, now) ? (
                   <GemHuntPanel house={house} userLocation={geo.location} isAdmin={admin} />
                 ) : undefined
               }

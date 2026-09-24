@@ -225,19 +225,26 @@ export function GemHuntOverlay({
   const centerDisplayMode = gemVisible && centerReveal;
   /** Compass-pinned guide on camera (visual only — collect via «גלה לי»). */
   const arPinGuideMode = gemVisible && !centerReveal;
-  const walkBearing =
+  const turnBearing =
     effectiveLoc != null ? relativeWalkBearingDeg(effectiveLoc, anchor, heading) : null;
-  const facingWalk =
-    walkBearing != null && Math.abs(walkBearing) <= GEM_FACING_TOLERANCE_DEG;
+  const facingTarget =
+    turnBearing != null && Math.abs(turnBearing) <= GEM_FACING_TOLERANCE_DEG;
   const showWalkGuide =
     !collectEnabled &&
     !sim &&
     effectiveLoc != null &&
     userLocation != null &&
-    !sim &&
     distanceM != null &&
     distanceM > 8 &&
-    phase !== "collecting";
+    phase !== "collecting" &&
+    !centerReveal;
+  /** In-range scan: compass arrow toward the anchor (walk guide covers far mode). */
+  const showScanCompass =
+    !centerReveal &&
+    phase !== "collecting" &&
+    turnBearing != null &&
+    !showWalkGuide &&
+    (collectEnabled || sim || allowAutoReveal);
   const mapsWalkUrl =
     userLocation != null && !sim ? googleMapsNavigateUrl(userLocation, anchor) : null;
 
@@ -293,6 +300,18 @@ export function GemHuntOverlay({
       <div className="gem-hunt-overlay__stage" aria-hidden={false}>
         {!centerDisplayMode ? (
           <div className="gem-hunt-overlay__scan-ring" aria-hidden>
+            {showScanCompass ? (
+              <div
+                className={cn(
+                  "gem-hunt-overlay__scan-compass",
+                  facingTarget && "is-facing",
+                )}
+                style={{ transform: `translate(-50%, -50%) rotate(${turnBearing}deg)` }}
+                aria-hidden
+              >
+                <Navigation className="size-10" strokeWidth={2.5} />
+              </div>
+            ) : null}
             <div className={cn("gem-hunt-overlay__ring", hint === "warm" && "is-warm")} />
           </div>
         ) : null}
@@ -378,23 +397,23 @@ export function GemHuntOverlay({
 
       {showWalkGuide ? (
         <div className="gem-hunt-overlay__walk-guide" dir="rtl">
-          {walkBearing != null ? (
+          {turnBearing != null ? (
             <div
               className={cn(
                 "gem-hunt-overlay__walk-arrow",
-                facingWalk && "is-facing",
+                facingTarget && "is-facing",
               )}
-              style={{ transform: `rotate(${walkBearing}deg)` }}
+              style={{ transform: `rotate(${turnBearing}deg)` }}
               aria-hidden
             >
               <Navigation className="size-9" strokeWidth={2.4} />
             </div>
           ) : null}
           <p className="gem-hunt-overlay__walk-text">
-            {walkBearing != null
-              ? facingWalk
+            {turnBearing != null
+              ? facingTarget
                 ? "המשיכו ישר — הבית מולכם"
-                : walkBearing > 0
+                : turnBearing > 0
                   ? "סובבו ימינה לכיוון הבית"
                   : "סובבו שמאלה לכיוון הבית"
               : "התקרבו לבית"}
