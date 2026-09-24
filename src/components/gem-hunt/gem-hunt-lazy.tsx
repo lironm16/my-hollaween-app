@@ -19,9 +19,10 @@ export function preloadGemHuntChunks() {
     void import("@/components/gem-hunt/gem-hunt-overlay");
     void import("@/components/gem-hunt/gem-model-3d");
   };
-  if ("requestIdleCallback" in window) {
-    window.requestIdleCallback(run, { timeout: 4000 });
+  const idle = window.requestIdleCallback;
+  if (typeof idle === "function") {
+    idle(run, { timeout: 4000 });
   } else {
-    window.setTimeout(run, 1500);
+    setTimeout(run, 1500);
   }
 }
