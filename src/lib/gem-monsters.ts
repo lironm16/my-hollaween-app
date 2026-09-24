@@ -1,7 +1,8 @@
 import type { PublicHouse } from "@/lib/types";
 
-/** Akochan Halloween Spooky Pet Pack (18) — one pet GLB per file after split. */
+/** Molotov dragon + Akochan Halloween pets (19 total), one GLB each. */
 export const GEM_MONSTER_MODELS = [
+  { id: "dragon", glbPath: "/gem-monsters/dragon.glb", posterPath: "/gem-monsters/dragon-poster.png", labelHe: "דרקון חמוד" },
   { id: "black-cat", glbPath: "/gem-monsters/black-cat.glb", posterPath: "/gem-monsters/black-cat-poster.png", labelHe: "חתול שחור" },
   { id: "candy-corn", glbPath: "/gem-monsters/candy-corn.glb", posterPath: "/gem-monsters/candy-corn-poster.png", labelHe: "תירס ממתק" },
   { id: "eyeball", glbPath: "/gem-monsters/eyeball.glb", posterPath: "/gem-monsters/eyeball-poster.png", labelHe: "עין מפחידה" },
@@ -35,7 +36,7 @@ function hashHouseId(id: string) {
   return h >>> 0;
 }
 
-/** Stable pet per house (18 Akochan variants). */
+/** Stable monster per house (dragon + 18 pets). */
 export function gemMonsterForHouse(house: Pick<PublicHouse, "id" | "theme" | "kind">): GemMonsterId {
   void house.theme;
   void house.kind;

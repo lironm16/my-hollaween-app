@@ -34,6 +34,7 @@ const PRECACHE = [
   "/images/stubs/lantern-path.jpg",
   "/images/stubs/black-cat.jpg",
   "/images/stubs/bats-moon.jpg",
+  "/gem-monsters/dragon-poster.png",
   "/gem-monsters/pumpkin-poster.png",
   "/gem-monsters/ghost-poster.png",
 ];

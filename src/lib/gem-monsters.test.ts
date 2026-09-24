@@ -9,7 +9,12 @@ import {
   gemVariantForHouse,
 } from "@/lib/gem-monsters";
 
-describe("gem monsters (Akochan pets)", () => {
+describe("gem monsters (dragon + Akochan pets)", () => {
+  it("has 19 assignable models including dragon", () => {
+    assert.equal(GEM_MONSTER_MODELS.length, 19);
+    assert.ok(GEM_MONSTER_MODELS.some((m) => m.id === "dragon"));
+  });
+
   it("assigns a stable pet per house id", () => {
     const house = { id: "house-abc", theme: "ghost" as const, kind: "house" as const };
     const first = gemMonsterForHouse(house);
@@ -25,6 +30,7 @@ describe("gem monsters (Akochan pets)", () => {
   });
 
   it("labels pets in Hebrew", () => {
+    assert.equal(gemLabelHe("dragon"), "דרקון חמוד");
     assert.equal(gemLabelHe("pumpkin"), "דלעת");
     assert.equal(gemLabelHe("unknown-id"), GEM_MONSTER_MODELS[0]!.labelHe);
   });

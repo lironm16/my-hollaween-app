@@ -26,7 +26,7 @@ export function GemSprite({
   mode?: "auto" | "3d" | "poster" | "orbit";
 }) {
   const id = house?.id ?? houseId ?? "default";
-  const monsterId = (house ? gemMonsterForHouse(house) : "pumpkin") as GemMonsterId;
+  const monsterId = (house ? gemMonsterForHouse(house) : "dragon") as GemMonsterId;
   const meta = gemMonsterMeta(monsterId);
   const use3d = mode === "3d" || mode === "orbit" || (mode === "auto" && size === "lg");
 
