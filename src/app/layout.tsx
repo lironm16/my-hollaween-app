@@ -72,6 +72,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {themeCss ? <style dangerouslySetInnerHTML={{ __html: themeCss }} /> : null}
         <link rel="stylesheet" href={`/app.css?v=${appVersion()}`} />
         <meta name="hw-build" content="2026-09-10-route-fast-v94" />
+        <meta name="hw-version" content={appVersion()} />
         <link rel="stylesheet" href={`/shell.css?v=${appVersion()}`} />
       </head>
       <body className="relative h-full overflow-hidden font-sans">

@@ -11,10 +11,17 @@ export function HelpUiChip({
   return (
     <span
       className={cn(
-        "inline-block rounded-md bg-[#ead5b8] px-1.5 py-0.5 font-semibold text-[#12081a] align-baseline leading-normal",
+        "inline-block rounded-md border-0 bg-[#ead5b8] px-1.5 py-0.5 font-semibold text-[#12081a] align-baseline leading-normal ring-0 outline-none",
         className,
       )}
-      style={{ backgroundColor: "#ead5b8", color: "#12081a" }}
+      style={{
+        backgroundColor: "#ead5b8",
+        color: "#12081a",
+        WebkitTextFillColor: "#12081a",
+        border: "none",
+        boxDecorationBreak: "clone",
+        WebkitBoxDecorationBreak: "clone",
+      }}
     >
       {children}
     </span>

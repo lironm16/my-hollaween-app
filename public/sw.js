@@ -1,7 +1,7 @@
 importScripts("/sw-map-tiles.js");
 
-const APP_VERSION = "0.1.91";
-const CACHE = "hw-shell-0.1.91";
+const APP_VERSION = "0.1.92";
+const CACHE = "hw-shell-0.1.92";
 const TILE_CACHE = MapTileCache.TILE_CACHE;
 const PRECACHE = [
   "/offline.html",
@@ -204,9 +204,37 @@ function isPreviewNavigation(url) {
   return path === "/preview" || path.startsWith("/preview/");
 }
 
+function isHelpNavigation(url) {
+  return url.pathname === "/help" || url.pathname.startsWith("/help/");
+}
+
+/** Help Q&A must always prefer fresh HTML — stale chips/instructions confuse users after deploy. */
+async function networkFirstDocument(request, cache) {
+  try {
+    const res = await fetch(request);
+    if (res && res.ok) {
+      await cache.put(request, res.clone());
+      const path = new URL(request.url).pathname;
+      if (path === "/" || path === "") await cache.put("/", res.clone());
+      return res;
+    }
+  } catch {
+    /* fall through */
+  }
+
+  const cached = await cachedDocument(cache, request);
+  if (cached) return cached;
+  return offlineDocument(cache);
+}
+
 /** Cache-first for HTML: instant PWA reopen; refresh in background when online. */
 async function navigation(request) {
   const url = new URL(request.url);
+
+  if (isHelpNavigation(url)) {
+    const cache = await caches.open(CACHE);
+    return networkFirstDocument(request, cache);
+  }
 
   if (isPreviewNavigation(url)) {
     try {

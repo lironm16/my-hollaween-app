@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { buttonVariants } from "@/components/ui/button";
 import { renderHelpText } from "@/lib/render-help-text";
+import { appVersion } from "@/lib/app-version";
+import { fetchPublishedAppVersion, versionsDiffer } from "@/lib/sw-update";
 import { cn } from "@/lib/utils";
 
 export function HelpShell({
@@ -19,6 +21,18 @@ export function HelpShell({
   backHref?: string;
   backLabel?: string;
 }) {
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const published = await fetchPublishedAppVersion();
+      if (cancelled || !published || !versionsDiffer(appVersion(), published)) return;
+      window.location.reload();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <AppHeader />
@@ -49,6 +63,10 @@ export function HelpExpandable({
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+
+  useEffect(() => {
+    setOpen(defaultOpen);
+  }, [defaultOpen]);
 
   return (
     <section className="overflow-hidden rounded-2xl bg-[#1d1028] ring-1 ring-orange-500/25">

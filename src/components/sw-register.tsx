@@ -89,7 +89,8 @@ export function ServiceWorkerRegister() {
 
     const tryReload = () => {
       if (!pendingVersionReload || reloaded || cancelled) return;
-      if (isUserMidInteraction()) return;
+      const onHelpPage = window.location.pathname.startsWith("/help");
+      if (isUserMidInteraction() && !onHelpPage) return;
       reloaded = true;
       window.location.reload();
     };
