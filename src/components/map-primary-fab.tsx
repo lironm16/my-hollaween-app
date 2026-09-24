@@ -11,14 +11,23 @@ export function MapPrimaryFab({
   onGemPress,
   gemGlow,
   gemDisabled,
+  gemCollectedCount = 0,
 }: {
   gemHuntEnabled: boolean;
   onGemPress: () => void;
   gemGlow: GemFabGlow;
   gemDisabled?: boolean;
+  gemCollectedCount?: number;
 }) {
   const now = useAppNow();
   if (isAddHouseOpen(now)) return <MapAddHouseFab />;
   if (!gemHuntEnabled) return null;
-  return <MapGemHuntFab onClick={onGemPress} glow={gemGlow} disabled={gemDisabled} />;
+  return (
+    <MapGemHuntFab
+      onClick={onGemPress}
+      glow={gemGlow}
+      disabled={gemDisabled}
+      collectedCount={gemCollectedCount}
+    />
+  );
 }

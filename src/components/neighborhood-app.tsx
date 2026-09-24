@@ -27,13 +27,15 @@ import { VisitSkipConflictDialog } from "@/components/visit-skip-conflict-dialog
 import { LikeCheer } from "@/components/like-cheer";
 import { RouteCompleteCheer } from "@/components/route-complete-cheer";
 import { VisitCheer } from "@/components/visit-cheer";
-import { GemCollectCheer } from "@/components/gem-collect-cheer";
+import { GemCheer } from "@/components/gem-cheer";
+import { GemResetConfirmDialog } from "@/components/gem-reset-confirm-dialog";
 import { GemHuntOverlay } from "@/components/gem-hunt/gem-hunt-overlay";
 import { GemHuntPanel } from "@/components/gem-hunt/gem-hunt-panel";
 import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { useGemProgress } from "@/hooks/use-gem-progress";
+import { loadGemCollectedIds } from "@/lib/gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
-import { canCollectGem, GEM_CHEER_DISPLAY_MS } from "@/lib/gem-hunt";
+import { canCollectGem, GEM_CHEER_MS } from "@/lib/gem-hunt";
 import { gemFabGlowLevel, pickGemHuntTarget } from "@/lib/gem-hunt-target";
 import { prepareGemHuntSensors, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
@@ -118,7 +120,13 @@ export function NeighborhoodApp({
   const gemHuntActive = gemHuntVisible(admin);
   const gems = useGemProgress();
   const [mapGemHouse, setMapGemHouse] = useState<PublicHouse | null>(null);
-  const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);
+  const [gemCheer, setGemCheer] = useState(false);
+  const gemCheerTimer = useRef(0);
+  const gemBadgePendingRef = useRef(false);
+  const [mapGemBadgeCount, setMapGemBadgeCount] = useState(() =>
+    typeof window === "undefined" ? 0 : loadGemCollectedIds().length,
+  );
+  const [gemResetHouse, setGemResetHouse] = useState<PublicHouse | null>(null);
   const mapGemStanding = useStandingStill(gps, gemHuntActive && Boolean(mapGemHouse));
   const gpsAllowed =
     geo.status === "idle" || geo.status === "pending" || geo.status === "ready";
@@ -255,6 +263,58 @@ export function NeighborhoodApp({
     await prepareGemHuntSensors();
     setMapGemHouse(target.house);
   }, [mapHouses, gps, gems, selection.selected?.id]);
+
+  const openGemHuntForHouse = useCallback(async (house: PublicHouse) => {
+    if (gems.collected(house.id)) return;
+    await prepareGemHuntSensors();
+    setMapGemHouse(house);
+  }, [gems]);
+
+  useEffect(() => {
+    if (!gemBadgePendingRef.current) {
+      setMapGemBadgeCount(gems.collectedIds.length);
+    }
+  }, [gems.collectedIds.length]);
+
+  useEffect(
+    () => () => {
+      window.clearTimeout(gemCheerTimer.current);
+    },
+    [],
+  );
+
+  const celebrateGemCollect = useCallback(() => {
+    setGemCheer(false);
+    window.clearTimeout(gemCheerTimer.current);
+    gemBadgePendingRef.current = true;
+    window.requestAnimationFrame(() => {
+      setGemCheer(true);
+      gemCheerTimer.current = window.setTimeout(() => {
+        gemBadgePendingRef.current = false;
+        setMapGemBadgeCount(loadGemCollectedIds().length);
+        setGemCheer(false);
+      }, GEM_CHEER_MS);
+    });
+  }, []);
+
+  const handleToggleGemMenu = useCallback(
+    (house: PublicHouse) => {
+      if (gems.collected(house.id)) {
+        setGemResetHouse(house);
+        return;
+      }
+      void openGemHuntForHouse(house);
+    },
+    [gems, openGemHuntForHouse],
+  );
+
+  const confirmGemReset = useCallback(() => {
+    const house = gemResetHouse;
+    if (!house) return;
+    gems.resetHouse(house.id);
+    gemBadgePendingRef.current = false;
+    setGemResetHouse(null);
+  }, [gemResetHouse, gems]);
   const editFlow = useHouseEditFlow();
 
   const ownedEditCode = useMemo(() => {
@@ -703,6 +763,8 @@ export function NeighborhoodApp({
         onToggleLike,
         visited: visits.visited,
         onToggleVisited,
+        gemCollected: gems.collected,
+        onToggleGem: gemHuntFabVisible(admin, now) ? handleToggleGemMenu : undefined,
         catalogSource: source,
         managerEditCode: admin ? editCodeById.get(selected.id) : undefined,
         editCodeFor: (id: string) =>
@@ -895,6 +957,7 @@ export function NeighborhoodApp({
                   onGemHuntPress={() => void openMapGemHunt()}
                   gemGlow={gemFabGlow}
                   gemFabDisabled={!pickGemHuntTarget(mapHouses, gps, (id) => gems.collected(id), selection.selected?.id ?? null)}
+                  gemCollectedCount={mapGemBadgeCount}
                 />
                 {originPick.originPickActive ? (
                   <div className="origin-pick-bar">
@@ -1087,7 +1150,15 @@ export function NeighborhoodApp({
         onUpdated={handleHouseUpdated}
         onDeleted={handleHouseDeleted}
       />
-      {mapGemCheerHouse ? <GemCollectCheer show house={mapGemCheerHouse} /> : null}
+      <GemCheer show={gemCheer} />
+      {gemResetHouse ? (
+        <GemResetConfirmDialog
+          open
+          house={gemResetHouse}
+          onConfirm={confirmGemReset}
+          onCancel={() => setGemResetHouse(null)}
+        />
+      ) : null}
       {mapGemHouse ? (
         <GemHuntOverlay
           house={mapGemHouse}
@@ -1108,8 +1179,7 @@ export function NeighborhoodApp({
             gems.collect(h.id, monsterId);
             stopGemHuntCameraStream();
             setMapGemHouse(null);
-            setMapGemCheerHouse(h);
-            window.setTimeout(() => setMapGemCheerHouse(null), GEM_CHEER_DISPLAY_MS);
+            celebrateGemCollect();
           }}
         />
       ) : null}

@@ -563,6 +563,7 @@ type Props = {
   onGemHuntPress?: () => void;
   gemGlow?: import("@/lib/gem-hunt-target").GemFabGlow;
   gemFabDisabled?: boolean;
+  gemCollectedCount?: number;
 };
 
 export function HouseMap({
@@ -599,6 +600,7 @@ export function HouseMap({
   onGemHuntPress,
   gemGlow = "off",
   gemFabDisabled = false,
+  gemCollectedCount = 0,
 }: Props) {
   const clusters = useMemo(
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
@@ -872,6 +874,7 @@ export function HouseMap({
           onGemPress={onGemHuntPress ?? (() => {})}
           gemGlow={gemGlow}
           gemDisabled={gemFabDisabled}
+          gemCollectedCount={gemCollectedCount}
         />
       ) : null}
       <div className="map-fab-stack">

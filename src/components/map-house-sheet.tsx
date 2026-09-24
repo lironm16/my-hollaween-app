@@ -42,6 +42,8 @@ export function MapHouseSheet({
   onToggleLike,
   visited,
   onToggleVisited,
+  gemCollected,
+  onToggleGem,
   extra,
   catalogSource,
   managerEditCode,
@@ -73,6 +75,8 @@ export function MapHouseSheet({
   onToggleLike?: (id: string) => void;
   visited?: (id: string) => boolean;
   onToggleVisited?: (id: string) => void;
+  gemCollected?: (id: string) => boolean;
+  onToggleGem?: (house: PublicHouse) => void;
   extra?: ReactNode;
   catalogSource?: string | null;
   managerEditCode?: string;
@@ -132,6 +136,8 @@ export function MapHouseSheet({
       visited={visited?.(house.id)}
       onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
       onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
+      gemCollected={gemCollected?.(house.id)}
+      onToggleGem={onToggleGem ? () => onToggleGem(house) : undefined}
       onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
       onShowOnMap={onShowOnMap}
       onShowInList={onShowInList}
@@ -490,6 +496,7 @@ export function MapHouseSheet({
                         onToggleVisited={
                           onToggleVisited ? () => onToggleVisited(house.id) : undefined
                         }
+                        gemCollected={gemCollected?.(house.id)}
                         extra={extra}
                         chrome="sheet"
                         index={index}

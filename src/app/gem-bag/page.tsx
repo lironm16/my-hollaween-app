@@ -5,7 +5,7 @@ import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Camera, Gem, MapPinned, Navigation } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
-import { GemCollectCheer } from "@/components/gem-collect-cheer";
+import { GemCheer } from "@/components/gem-cheer";
 import { GemBagOrbitViewer } from "@/components/gem-hunt/gem-bag-orbit-viewer";
 import { GemHuntOverlay } from "@/components/gem-hunt/gem-hunt-overlay";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
@@ -21,7 +21,7 @@ import {
   GEM_ACHIEVEMENTS,
   gemLabelHe,
   gemMonsterForHouse,
-  GEM_CHEER_DISPLAY_MS,
+  GEM_CHEER_MS,
 } from "@/lib/gem-hunt";
 import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl, houseSharePath } from "@/lib/nav-links";
@@ -68,7 +68,7 @@ function GemBagContent({ houses, isAdmin }: { houses: PublicHouse[]; isAdmin: bo
 
   const [previewHouse, setPreviewHouse] = useState<PublicHouse | null>(null);
   const [cameraLabHouse, setCameraLabHouse] = useState<PublicHouse | null>(null);
-  const [cheerHouse, setCheerHouse] = useState<PublicHouse | null>(null);
+  const [gemCheer, setGemCheer] = useState(false);
   const viewerHouse = previewHouse ?? defaultPreview;
 
   return (
@@ -89,7 +89,7 @@ function GemBagContent({ houses, isAdmin }: { houses: PublicHouse[]; isAdmin: bo
         </Button>
       ) : null}
 
-      {cheerHouse ? <GemCollectCheer show house={cheerHouse} /> : null}
+      <GemCheer show={gemCheer} />
 
       {cameraLabHouse ? (
         <GemHuntOverlay
@@ -106,8 +106,8 @@ function GemBagContent({ houses, isAdmin }: { houses: PublicHouse[]; isAdmin: bo
             gems.collect(h.id, monsterId);
             stopGemHuntCameraStream();
             setCameraLabHouse(null);
-            setCheerHouse(h);
-            window.setTimeout(() => setCheerHouse(null), GEM_CHEER_DISPLAY_MS);
+            setGemCheer(true);
+            window.setTimeout(() => setGemCheer(false), GEM_CHEER_MS);
           }}
         />
       ) : null}

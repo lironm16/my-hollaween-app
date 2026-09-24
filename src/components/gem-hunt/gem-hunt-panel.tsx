@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { Camera, Gem, MapPin } from "lucide-react";
-import { GemCollectCheer } from "@/components/gem-collect-cheer";
+import { GemCheer } from "@/components/gem-cheer";
 import { GemHuntOverlay } from "@/components/gem-hunt/gem-hunt-overlay";
 import { Button } from "@/components/ui/button";
 import { useGemProgress } from "@/hooks/use-gem-progress";
@@ -17,7 +17,7 @@ import {
   gemMonsterForHouse,
   GEM_APPROACH_METERS,
   GEM_HUNT_METERS,
-  GEM_CHEER_DISPLAY_MS,
+  GEM_CHEER_MS,
 } from "@/lib/gem-hunt";
 import { distanceMeters, formatDistance } from "@/lib/geo";
 import type { PublicHouse } from "@/lib/types";
@@ -75,7 +75,7 @@ export function GemHuntPanel({
     stopGemHuntCameraStream();
     setHuntOpen(false);
     setCheer(true);
-    window.setTimeout(() => setCheer(false), GEM_CHEER_DISPLAY_MS);
+    window.setTimeout(() => setCheer(false), GEM_CHEER_MS);
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate(40);
     }
@@ -83,7 +83,7 @@ export function GemHuntPanel({
 
   return (
     <>
-      <GemCollectCheer show={cheer} house={house} />
+      <GemCheer show={cheer} />
       <section className="gem-hunt-panel" dir="rtl">
         <div className="gem-hunt-panel__head">
           <Gem className="size-5 text-amber-300" aria-hidden />

@@ -1,4 +1,4 @@
-import { Check, Heart } from "lucide-react";
+import { Check, Gem, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** Pink heart in ring — matches house-card traffic pills (icon only). */
@@ -19,6 +19,28 @@ export function SavedTrafficIcon({
       aria-label="אהבתי"
     >
       <Heart className={cn("size-5 fill-current text-[#fb7185]", markClassName)} strokeWidth={2.2} />
+    </span>
+  );
+}
+
+/** Amber gem disc — collected diamond for action menu. */
+export function GemTrafficIcon({
+  className,
+  markClassName,
+}: {
+  className?: string;
+  markClassName?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/25 ring-1 ring-amber-300/45",
+        className,
+      )}
+      title="יהלום נאסף"
+      aria-label="יהלום נאסף"
+    >
+      <Gem className={cn("size-5 fill-current text-amber-300", markClassName)} strokeWidth={2.1} />
     </span>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
+  Gem,
   Heart,
   KeyRound,
   List,
@@ -13,7 +14,7 @@ import {
   Share2,
   Undo2,
 } from "lucide-react";
-import { SavedTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
+import { GemTrafficIcon, SavedTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
 import { SkipIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
@@ -56,6 +57,8 @@ export function HouseActionBar({
   visited,
   onToggleLike,
   onToggleVisited,
+  gemCollected,
+  onToggleGem,
   onToggleEdit,
   onShowOnMap,
   onShowInList,
@@ -74,6 +77,8 @@ export function HouseActionBar({
   visited?: boolean;
   onToggleLike?: () => void;
   onToggleVisited?: () => void;
+  gemCollected?: boolean;
+  onToggleGem?: () => void;
   onToggleEdit?: () => void;
   onShowOnMap?: () => void;
   onShowInList?: () => void;
@@ -184,6 +189,19 @@ export function HouseActionBar({
         active: visited,
       });
     }
+    if (onToggleGem) {
+      items.push({
+        id: "gem",
+        label: gemCollected ? "יהלום נאסף" : "יהלום",
+        icon: gemCollected ? (
+          <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.35rem]" />
+        ) : (
+          <Gem className={MENU_ICON_CLASS} strokeWidth={2.1} />
+        ),
+        onClick: () => onToggleGem(),
+        active: gemCollected,
+      });
+    }
     if (onSkip && !skipped) {
       items.push({
         id: "skip",
@@ -283,6 +301,7 @@ export function HouseActionBar({
       item.active && "is-active",
       item.active && item.id === "like" && "is-active-saved",
       item.active && item.id === "visited" && "is-active-visited",
+      item.active && item.id === "gem" && "is-active-gem",
     );
   }
 

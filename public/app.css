@@ -1023,9 +1023,6 @@
   .shrink-0 {
     flex-shrink: 0;
   }
-  .grow {
-    flex-grow: 1;
-  }
   .origin-\(--transform-origin\) {
     transform-origin: var(--transform-origin);
   }
@@ -1614,6 +1611,12 @@
   }
   .bg-amber-500 {
     background-color: var(--color-amber-500);
+  }
+  .bg-amber-500\/25 {
+    background-color: color-mix(in srgb, oklch(76.9% 0.188 70.08) 25%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-amber-500) 25%, transparent);
+    }
   }
   .bg-amber-950 {
     background-color: var(--color-amber-950);
@@ -2810,6 +2813,12 @@
   }
   .ring-\[\#fff7ed\] {
     --tw-ring-color: #fff7ed;
+  }
+  .ring-amber-300\/45 {
+    --tw-ring-color: color-mix(in srgb, oklch(87.9% 0.169 91.605) 45%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--color-amber-300) 45%, transparent);
+    }
   }
   .ring-amber-400\/50 {
     --tw-ring-color: color-mix(in srgb, oklch(82.8% 0.189 84.429) 50%, transparent);
@@ -6742,6 +6751,24 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .map-gem-hunt-fab {
   isolation: isolate;
 }
+.map-gem-hunt-fab__badge {
+  position: absolute;
+  top: -4px;
+  inset-inline-end: -4px;
+  z-index: 2;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #1c0a00;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.35rem;
+  text-align: center;
+  box-shadow: 0 0 0 2px rgb(76 29 149), 0 4px 10px rgb(0 0 0 / 0.45);
+  pointer-events: none;
+}
 .map-gem-hunt-fab__pulse {
   position: absolute;
   inset: -6px;
@@ -7197,6 +7224,9 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .house-action-menu-item.is-active-saved {
   color: #fb7185;
 }
+.house-action-menu-item.is-active-gem {
+  color: #fde68a;
+}
 .house-action-menu-icon {
   display: inline-flex;
   width: 2rem;
@@ -7357,6 +7387,140 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   }
 }
 @keyframes visit-cheer-check {
+  0% {
+    transform: scale(0);
+  }
+  18% {
+    transform: scale(1.25);
+  }
+  32% {
+    transform: scale(0.92);
+  }
+  46% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.gem-cheer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.gem-cheer-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 26px 16px;
+  border-radius: 24px;
+  background: #d97706;
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 800;
+  box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.45), 0 16px 44px rgba(217, 119, 6, 0.5);
+  animation: gem-cheer-pop 1.55s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+}
+.gem-cheer-gem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #fff;
+  color: #d97706;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.28);
+  animation: gem-cheer-gem 1.55s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+}
+.gem-cheer-burst {
+  position: absolute;
+  inset: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.gem-cheer-burst i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  opacity: 0;
+  animation: visit-cheer-spark 1.15s ease-out forwards;
+}
+.gem-cheer-burst i:nth-child(1) {
+  --dx: -42px;
+  --dy: -28px;
+  background: #fde68a;
+}
+.gem-cheer-burst i:nth-child(2) {
+  --dx: 40px;
+  --dy: -26px;
+  background: #fbbf24;
+  animation-delay: 0.04s;
+}
+.gem-cheer-burst i:nth-child(3) {
+  --dx: -36px;
+  --dy: 24px;
+  background: #fcd34d;
+  animation-delay: 0.08s;
+}
+.gem-cheer-burst i:nth-child(4) {
+  --dx: 38px;
+  --dy: 22px;
+  background: #f59e0b;
+  animation-delay: 0.05s;
+}
+.gem-cheer-burst i:nth-child(5) {
+  --dx: 0;
+  --dy: -40px;
+  width: 6px;
+  height: 6px;
+  background: #fff;
+  animation-delay: 0.02s;
+}
+.gem-cheer-burst i:nth-child(6) {
+  --dx: 8px;
+  --dy: 36px;
+  width: 6px;
+  height: 6px;
+  background: #fef3c7;
+  animation-delay: 0.1s;
+}
+@keyframes gem-cheer-pop {
+  0% {
+    transform: scale(0.4) rotate(-6deg);
+    opacity: 0;
+    box-shadow: 0 0 0 0 rgba(217, 119, 6, 0);
+  }
+  16% {
+    transform: scale(1.14) rotate(2deg);
+    opacity: 1;
+    box-shadow: 0 0 0 14px rgba(217, 119, 6, 0.22), 0 16px 44px rgba(217, 119, 6, 0.5);
+  }
+  30% {
+    transform: scale(0.96) rotate(-1deg);
+  }
+  42% {
+    transform: scale(1.04) rotate(0deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) translateY(-18px);
+  }
+}
+@keyframes gem-cheer-gem {
   0% {
     transform: scale(0);
   }
@@ -8141,7 +8305,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   height: 100%;
 }
 .gem-hunt-overlay__gem-hit.is-collecting .gem-sprite {
-  animation: gem-collect-burst 3.8s cubic-bezier(0.22, 0.85, 0.28, 1) forwards;
+  animation: gem-collect-happy 2.8s cubic-bezier(0.34, 1.2, 0.42, 1) forwards;
+  transform-origin: 50% 55%;
 }
 .gem-hunt-overlay__gem-hit.is-pin-collect {
   pointer-events: auto;
@@ -8154,7 +8319,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   z-index: 6;
   pointer-events: none;
   background: radial-gradient(circle at 50% 44%, rgb(253 224 71 / 0.65) 0%, transparent 58%);
-  animation: gem-overlay-collect-flash 3.8s ease-out forwards;
+  animation: gem-overlay-collect-flash 2.8s ease-out forwards;
 }
 .gem-hunt-overlay__walk-guide {
   position: relative;
@@ -8715,37 +8880,46 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
     transform: scale(1.05);
   }
 }
-@keyframes gem-collect-burst {
+@keyframes gem-collect-happy {
   0% {
-    transform: scale(1);
-    filter: brightness(1);
-    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1) drop-shadow(0 0 0 rgb(251 191 36 / 0));
   }
-  55% {
-    transform: scale(1.42);
-    filter: brightness(1.35);
-    opacity: 1;
+  18% {
+    transform: scale(1.08) rotate(-4deg);
+    filter: brightness(1.12) drop-shadow(0 0 12px rgb(251 191 36 / 0.45));
   }
-  78% {
-    transform: scale(1.38);
-    filter: brightness(1.25);
+  36% {
+    transform: scale(1.16) rotate(5deg);
+    filter: brightness(1.2) drop-shadow(0 0 18px rgb(251 191 36 / 0.65));
+  }
+  54% {
+    transform: scale(1.12) rotate(-3deg);
+    filter: brightness(1.15) drop-shadow(0 0 16px rgb(251 191 36 / 0.55));
+  }
+  72% {
+    transform: scale(1.18) rotate(2deg);
+    filter: brightness(1.22) drop-shadow(0 0 20px rgb(251 191 36 / 0.7));
+  }
+  88% {
+    transform: scale(1.14) rotate(0deg);
     opacity: 1;
   }
   100% {
-    transform: scale(0.05) translateY(-18vh);
+    transform: scale(1.06) translateY(-4vh);
     opacity: 0;
-    filter: brightness(1.6);
+    filter: brightness(1.28);
   }
 }
 @keyframes gem-overlay-collect-flash {
   0% {
     opacity: 0;
   }
-  12% {
-    opacity: 0.85;
-  }
-  55% {
+  15% {
     opacity: 0.55;
+  }
+  45% {
+    opacity: 0.35;
   }
   100% {
     opacity: 0;

@@ -9,12 +9,15 @@ export function MapGemHuntFab({
   glow = "off",
   nearGem = false,
   disabled,
+  collectedCount = 0,
 }: {
   onClick: () => void;
   glow?: GemFabGlow;
   /** Legacy: treated as approach glow when glow is off */
   nearGem?: boolean;
   disabled?: boolean;
+  /** Collected gems — badge hidden when 0 */
+  collectedCount?: number;
 }) {
   const level: GemFabGlow = glow !== "off" ? glow : nearGem ? "approach" : "off";
   return (
@@ -38,6 +41,11 @@ export function MapGemHuntFab({
     >
       <span className="map-gem-hunt-fab__pulse" aria-hidden />
       <Gem className="relative z-[1] size-8 drop-shadow-[0_0_8px_rgb(251_191_36/0.85)]" strokeWidth={2.1} aria-hidden />
+      {collectedCount > 0 ? (
+        <span className="map-gem-hunt-fab__badge" aria-label={`${collectedCount} יהלומים`}>
+          {collectedCount > 99 ? "99+" : collectedCount}
+        </span>
+      ) : null}
     </button>
   );
 }
