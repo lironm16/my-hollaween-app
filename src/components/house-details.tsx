@@ -514,28 +514,26 @@ export function HouseDetails({
       {addedMeta ? (
         <p className="text-sm text-violet-400">{addedMeta}</p>
       ) : null}
+      {extra}
       {!sheet ? (
-        <>
-          <div className="flex flex-wrap gap-2 pt-1">
-            <a
-              href={houseMapsUrl(house)}
-              target="_blank"
-              rel="noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className={cn(buttonVariants({ size: "sm" }))}
-            >
-              ניווט ב־Google Maps
-            </a>
-            <Link
-              href={houseSharePath(house)}
-              onClick={(e) => e.stopPropagation()}
-              className={cn(buttonVariants({ size: "sm", variant: "ghost" }))}
-            >
-              קישור לבית
-            </Link>
-          </div>
-          {extra}
-        </>
+        <div className="flex flex-wrap gap-2 pt-1">
+          <a
+            href={houseMapsUrl(house)}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className={cn(buttonVariants({ size: "sm" }))}
+          >
+            ניווט ב־Google Maps
+          </a>
+          <Link
+            href={houseSharePath(house)}
+            onClick={(e) => e.stopPropagation()}
+            className={cn(buttonVariants({ size: "sm", variant: "ghost" }))}
+          >
+            קישור לבית
+          </Link>
+        </div>
       ) : null}
     </div>
   );
