@@ -206,6 +206,31 @@ export function countGemEligibleHouses(houses: PublicHouse[]) {
   return houses.length;
 }
 
+/** Unique gem types that actually appear on the map (stable catalog order). */
+export function gemAlbumMonstersForMap(houses: PublicHouse[]): GemCatalogEntry[] {
+  const onMap = new Set<GemMonsterId>();
+  for (const house of houses) {
+    onMap.add(gemMonsterForHouse(house));
+  }
+  return GEM_MONSTER_MODELS.filter((m) => onMap.has(m.id));
+}
+
+export type GemCollectionStamp = { houseId: string; gemType: string; collectedAt: number };
+
+/** Monster filled in the album when any matching house gem was collected. */
+export function isGemAlbumMonsterCollected(
+  monsterId: GemMonsterId,
+  collected: GemCollectionStamp[],
+  housesById: ReadonlyMap<string, Pick<PublicHouse, "id" | "theme" | "kind">>,
+) {
+  for (const entry of collected) {
+    if (entry.gemType === monsterId) return true;
+    const house = housesById.get(entry.houseId);
+    if (house && gemMonsterForHouse(house) === monsterId) return true;
+  }
+  return false;
+}
+
 export type GemFamily = "monster";
 
 export function gemFamilyForHouse(house: Pick<PublicHouse, "id" | "theme" | "kind">): GemFamily {
