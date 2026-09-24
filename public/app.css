@@ -8342,12 +8342,41 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   color: #c4b5fd;
   margin-bottom: 0.5rem;
 }
-.gem-bag-viewer__stage {
+.gem-bag-viewer__stage,
+.gem-orbit-stage__canvas {
   height: min(42vh, 16rem);
   min-height: 11rem;
   border-radius: 0.75rem;
   overflow: hidden;
   touch-action: none;
+}
+.gem-orbit-stage__hint {
+  font-size: 0.75rem;
+  color: #c4b5fd;
+  margin-bottom: 0.45rem;
+  text-align: center;
+}
+.gem-hunt-overlay__poster-orbit {
+  width: min(92vw, 22rem);
+  height: min(52vh, 20rem);
+  min-height: 14rem;
+}
+.gem-hunt-overlay__studio {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  width: min(94vw, 24rem);
+  pointer-events: auto;
+}
+.gem-hunt-overlay__studio-canvas {
+  height: min(58vh, 22rem);
+  min-height: 15rem;
+  border-radius: 1rem;
+  border: 1px solid rgb(251 191 36 / 0.45);
+  background: radial-gradient(circle at 50% 25%, rgb(49 24 78 / 0.92), rgb(10 4 18 / 0.88));
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.55);
 }
 .gem-model-3d--fill {
   width: 100%;

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Navigation } from "lucide-react";
+import { GemOrbitStage } from "@/components/gem-hunt/gem-orbit-stage";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
@@ -204,6 +205,9 @@ export function GemHuntOverlay({
   }
 
   const gemVisible = phase === "visible" || phase === "collecting";
+  /** In range: pinned in the camera. Too far / hint preview: centered orbit studio (gem bag). */
+  const arCollectMode = gemVisible && collectEnabled;
+  const studioPreview = gemVisible && !collectEnabled;
   const walkBearing =
     effectiveLoc != null ? relativeWalkBearingDeg(effectiveLoc, anchor, heading) : null;
   const facingWalk =
@@ -270,11 +274,23 @@ export function GemHuntOverlay({
       ) : null}
 
       <div className="gem-hunt-overlay__stage" aria-hidden={false}>
-        <div className="gem-hunt-overlay__scan-ring" aria-hidden>
-          <div className={cn("gem-hunt-overlay__ring", hint === "warm" && "is-warm")} />
-        </div>
+        {!studioPreview ? (
+          <div className="gem-hunt-overlay__scan-ring" aria-hidden>
+            <div className={cn("gem-hunt-overlay__ring", hint === "warm" && "is-warm")} />
+          </div>
+        ) : null}
 
-        {gemVisible ? (
+        {studioPreview ? (
+          <div className="gem-hunt-overlay__studio" dir="rtl">
+            <GemOrbitStage
+              house={house}
+              stageClassName="gem-hunt-overlay__studio-canvas"
+              hint="גררו לסיבוב · גוון קל לפי הבית (אותו מראה במצלמה)"
+            />
+          </div>
+        ) : null}
+
+        {arCollectMode ? (
           <button
             type="button"
             className={cn(
@@ -283,7 +299,6 @@ export function GemHuntOverlay({
               pinPlacement && !pinPlacement.inView && "is-off-screen",
               !pinPlacement && "is-center-fallback",
               phase === "collecting" && "is-collecting",
-              !collectEnabled && "is-preview-only",
             )}
             style={
               pinPlacement
@@ -294,9 +309,7 @@ export function GemHuntOverlay({
                 : undefined
             }
             onClick={handleCollect}
-            aria-label={
-              collectEnabled ? `איסוף ${gemLabelHe(monsterId)}` : `תצוגת ${gemLabelHe(monsterId)}`
-            }
+            aria-label={`איסוף ${gemLabelHe(monsterId)}`}
           >
             <GemSprite
               house={house}
@@ -322,7 +335,7 @@ export function GemHuntOverlay({
             ? "לחצו על האוצר לאיסוף!"
             : null}
           {phase !== "collecting" && hint === "found" && !collectEnabled
-            ? "זה האוצר של הבית — התקרבו כדי לאסוף"
+            ? `תצוגה בלבד — התקרבו ל~${GEM_HUNT_METERS}מ׳ מהבית כדי לאסוף במצלמה`
             : null}
         </p>
       </div>
@@ -383,8 +396,8 @@ export function GemHuntOverlay({
         <div className="gem-hunt-overlay__poster-hint" role="dialog" aria-label="תצוגת האוצר">
           <p className="gem-hunt-overlay__poster-kicker">רמז 1</p>
           <p className="gem-hunt-overlay__poster-title">{gemLabelHe(monsterId)}</p>
-          <GemSprite house={house} mode="poster" size="lg" className="gem-hunt-overlay__poster-sprite" />
-          <p className="gem-hunt-overlay__poster-caption">כך האוצר נראה — חפשו אותו במצלמה</p>
+          <GemOrbitStage house={house} stageClassName="gem-hunt-overlay__poster-orbit" />
+          <p className="gem-hunt-overlay__poster-caption">כך האוצר נראה במצלמה — אפשר לסובב</p>
           <button
             type="button"
             className="gem-hunt-overlay__poster-back"
