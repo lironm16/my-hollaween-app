@@ -9,7 +9,7 @@ export function GemBagOrbitViewer({ house }: { house: PublicHouse | null }) {
   if (!house) {
     return (
       <div className="gem-bag-viewer gem-bag-viewer--empty">
-        <p className="text-sm text-violet-300">בחרו בית מהרשימה כדי לסובב את האוצר</p>
+        <p className="text-sm text-violet-300">בחרו בית מהרשימה כדי לסובב את היהלום</p>
       </div>
     );
   }

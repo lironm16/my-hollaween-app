@@ -50,7 +50,7 @@ export const GEM_ANCHOR_MAX_METERS = 10;
 
 /** Camera collect: slow grow then exit — sync gem-collect-burst CSS (~3.8s). */
 export const GEM_COLLECT_OVERLAY_MS = 3800;
-/** Map «אוצר נאסף!» full-screen cheer hold. */
+/** Map «יהלום נאסף!» full-screen cheer hold. */
 export const GEM_CHEER_DISPLAY_MS = 5500;
 /** @deprecated use GEM_COLLECT_OVERLAY_MS / GEM_CHEER_DISPLAY_MS */
 export const GEM_COLLECT_ANIMATION_MS = GEM_COLLECT_OVERLAY_MS;
@@ -265,20 +265,20 @@ export type GemAchievement = {
 export const GEM_ACHIEVEMENTS: GemAchievement[] = [
   {
     id: "first",
-    titleHe: "אוצר ראשון",
-    descriptionHe: "אספתם אוצר אחד",
+    titleHe: "יהלום ראשון",
+    descriptionHe: "אספתם יהלום אחד",
     target: 1,
   },
   {
     id: "hunter5",
-    titleHe: "צייד/ת אוצרות",
-    descriptionHe: "5 אוצרות",
+    titleHe: "צייד/ת יהלומים",
+    descriptionHe: "5 יהלומים",
     target: 5,
   },
   {
     id: "hunter10",
     titleHe: "שכונה מלאה קסם",
-    descriptionHe: "10 אוצרות",
+    descriptionHe: "10 יהלומים",
     target: 10,
   },
   {

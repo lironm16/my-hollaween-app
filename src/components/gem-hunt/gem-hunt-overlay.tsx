@@ -7,7 +7,7 @@ import { GemOrbitStage } from "@/components/gem-hunt/gem-orbit-stage";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
-import { getGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
+import { getGemHuntCameraStream, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
 import {
   facingHouse,
   GEM_FACING_TOLERANCE_DEG,
@@ -114,6 +114,7 @@ export function GemHuntOverlay({
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
+      stopGemHuntCameraStream();
     };
   }, []);
 
@@ -260,22 +261,22 @@ export function GemHuntOverlay({
     phase === "collecting"
       ? null
       : !gemVisible && hint === "scan" && allowAutoReveal
-        ? "סובבו את המצלמה — האוצר ננעץ ליד הבית"
+        ? "סובבו את המצלמה — היהלום ננעץ ליד הבית"
         : !gemVisible && hint === "warm"
-          ? "קרובים! כוונו למקום האוצר…"
+          ? "קרובים! כוונו למקום היהלום…"
           : null;
 
   const footerHint =
     phase === "collecting"
-      ? "אוצר נאסף!"
+      ? "יהלום נאסף!"
       : centerDisplayMode
-        ? "לחצו על האוצר לאיסוף"
+        ? "לחצו על היהלום לאיסוף"
         : pinCollectReady
-          ? "לחצו על האוצר לאיסוף"
+          ? "לחצו על היהלום לאיסוף"
           : gemVisible && arPinGuideMode && pinPlacement?.inView && !gemInRing
-            ? "כוונו את האוצר לתוך המעגל הירוק"
+            ? "כוונו את היהלום לתוך המעגל הירוק"
             : gemVisible && arPinGuideMode && pinPlacement && !pinPlacement.inView
-              ? "סובבו את המצלמה — האוצר בקצה המסך"
+              ? "סובבו את המצלמה — היהלום בקצה המסך"
               : null;
 
   const overlay = (
@@ -291,7 +292,7 @@ export function GemHuntOverlay({
               setCameraError(null);
             }}
           >
-            הצג אוצר על המסך
+            הציגו יהלום על המסך
           </button>
         </div>
       ) : (
@@ -300,7 +301,7 @@ export function GemHuntOverlay({
       <div className="gem-hunt-overlay__shade" aria-hidden />
       <header className="gem-hunt-overlay__header">
         <div className="min-w-0 flex-1">
-          <p className="gem-hunt-overlay__title">מחפשים אוצר נסתר ליד {house.name || house.address}</p>
+          <p className="gem-hunt-overlay__title">מחפשים יהלום נסתר ליד {house.name || house.address}</p>
         </div>
         <OverlayCloseButton
           label="סגירה"
@@ -381,7 +382,7 @@ export function GemHuntOverlay({
             }
             aria-hidden={false}
             role="img"
-            aria-label={`כיוון האוצר — ${gemLabelHe(monsterId)}`}
+            aria-label={`כיוון היהלום — ${gemLabelHe(monsterId)}`}
           >
             <GemSprite house={house} mode="3d" />
           </div>
@@ -486,11 +487,11 @@ export function GemHuntOverlay({
       ) : null}
 
       {posterHintOpen ? (
-        <div className="gem-hunt-overlay__poster-hint" role="dialog" aria-label="תצוגת האוצר">
+        <div className="gem-hunt-overlay__poster-hint" role="dialog" aria-label="תצוגת היהלום">
           <p className="gem-hunt-overlay__poster-kicker">רמז 1</p>
           <p className="gem-hunt-overlay__poster-title">{gemLabelHe(monsterId)}</p>
           <GemOrbitStage house={house} stageClassName="gem-hunt-overlay__poster-orbit" />
-          <p className="gem-hunt-overlay__poster-caption">כך האוצר נראה במצלמה — אפשר לסובב</p>
+          <p className="gem-hunt-overlay__poster-caption">כך היהלום נראה במצלמה — אפשר לסובב</p>
           <button
             type="button"
             className="gem-hunt-overlay__poster-back"

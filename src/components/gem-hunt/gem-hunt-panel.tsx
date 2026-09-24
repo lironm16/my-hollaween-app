@@ -88,7 +88,7 @@ export function GemHuntPanel({
         <div className="gem-hunt-panel__head">
           <Gem className="size-5 text-amber-300" aria-hidden />
           <div className="min-w-0 flex-1">
-            <p className="gem-hunt-panel__title">אוצר נסתר</p>
+            <p className="gem-hunt-panel__title">יהלום נסתר</p>
             <p className="gem-hunt-panel__sub">
               {collected
                 ? `נאסף — ${monsterLabel}`
@@ -117,7 +117,7 @@ export function GemHuntPanel({
             </label>
             <div className="gem-hunt-panel__calibrate">
               <p className="gem-hunt-panel__calibrate-title">
-                {anchorCalibrated ? "מיקום אוצר: מותאם בטלפון" : "מיקום אוצר: אוטומטי ליד הבית"}
+                {anchorCalibrated ? "מיקום יהלום: מותאם בטלפון" : "מיקום יהלום: אוטומטי ליד הבית"}
               </p>
               <p className="gem-hunt-panel__calibrate-hint">
                 הלכו physically למקום הרצוי (לובי, חצר, ליד הדלת), עמדו שם, ואז:
@@ -131,7 +131,7 @@ export function GemHuntPanel({
                 onClick={() => userLocation && setGemAnchorOverride(house.id, userLocation)}
               >
                 <MapPin className="size-3.5" aria-hidden />
-                קבע מיקום אוצר כאן (GPS)
+                קבע מיקום יהלום כאן (GPS)
               </Button>
               {anchorCalibrated ? (
                 <Button
@@ -162,7 +162,7 @@ export function GemHuntPanel({
           onClick={() => void openCamera()}
         >
           <Camera className="size-4" aria-hidden />
-          {collected ? "הציגו שוב במצלמה" : "פתחו מצלמה — חיפוש האוצר"}
+          {collected ? "הציגו שוב במצלמה" : "פתחו מצלמה — חיפוש היהלום"}
         </Button>
 
         {!collected && canCollect ? (

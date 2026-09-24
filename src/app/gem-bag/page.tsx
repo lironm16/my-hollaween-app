@@ -115,12 +115,12 @@ function GemBagContent({ houses, isAdmin }: { houses: PublicHouse[]; isAdmin: bo
       <div className="gem-bag-summary">
         <Gem className="size-8 text-amber-300" aria-hidden />
         <div>
-          <h1 className="font-display text-2xl text-orange-300">תיק האוצרות</h1>
+          <h1 className="font-display text-2xl text-orange-300">תיק היהלומים</h1>
           <p className="text-base text-violet-200">
-            {gems.collectedIds.length} / {total} אוצרות במפה
+            {gems.collectedIds.length} / {total} יהלומים במפה
           </p>
           <p className="mt-1 text-sm text-violet-400">
-            כל אוצר מסתתר ליד בית או נקודה על המפה — לחצו «מפה» כדי לצוד.
+            כל יהלום מסתתר ליד בית או נקודה על המפה — לחצו «מפה» כדי לצוד.
           </p>
           {isAdmin ? (
             <div className="gem-bag-reset mt-3 space-y-2">
@@ -132,7 +132,7 @@ function GemBagContent({ houses, isAdmin }: { houses: PublicHouse[]; isAdmin: bo
                   className="w-full border-violet-400/40 text-violet-100"
                   onClick={() => gems.resetHouse(viewerHouse.id)}
                 >
-                  איפוס אוצר ליד {houseHeadline(viewerHouse)} — חיפוש מחדש
+                  איפוס יהלום ליד {houseHeadline(viewerHouse)} — חיפוש מחדש
                 </Button>
               ) : null}
               {gems.collectedIds.length > 0 ? (
@@ -144,7 +144,7 @@ function GemBagContent({ houses, isAdmin }: { houses: PublicHouse[]; isAdmin: bo
                   onClick={() => {
                     if (
                       window.confirm(
-                        "לאפס את כל האוצרות וההישגים במכשיר? כל ילד/ה יוכל/תוכל לאסוף מחדש.",
+                        "לאפס את כל היהלומים וההישגים במכשיר? כל ילד/ה יוכל/תוכל לאסוף מחדש.",
                       )
                     ) {
                       gems.resetAll();
@@ -159,7 +159,7 @@ function GemBagContent({ houses, isAdmin }: { houses: PublicHouse[]; isAdmin: bo
         </div>
       </div>
 
-      <section aria-label="אוסף אוצרות">
+      <section aria-label="אוסף יהלומים">
         <ul className="gem-bag-list">
           {eligible.map((house) => {
             const collected = gems.collected(house.id);
@@ -271,7 +271,7 @@ export default function GemBagPage() {
         <AppHeader />
         <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-5">
           <div className="mx-auto max-w-lg space-y-4">
-            <h1 className="font-display text-2xl text-orange-300">תיק האוצרות</h1>
+            <h1 className="font-display text-2xl text-orange-300">תיק היהלומים</h1>
             <p className="text-base text-violet-200">הציד עדיין לא פתוח לכולם.</p>
             <Link href="/" className={buttonVariants({ variant: "outline" })}>
               חזרה למפה

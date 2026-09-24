@@ -27,13 +27,13 @@ export function MapGemHuntFab({
         level === "approach" && "is-near",
         level === "hunt" && "is-hunt",
       )}
-      aria-label="חיפוש אוצר נסתר"
+      aria-label="חיפוש יהלום נסתר"
       title={
         level === "hunt"
           ? "בטווח איסוף — פתחו מצלמה!"
           : level === "approach"
-            ? "אוצר קרוב — התקרבו לבית"
-            : "חיפוש אוצר נסתר"
+            ? "יהלום קרוב — התקרבו לבית"
+            : "חיפוש יהלום נסתר"
       }
     >
       <span className="map-gem-hunt-fab__pulse" aria-hidden />

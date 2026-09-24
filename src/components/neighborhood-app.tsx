@@ -124,10 +124,10 @@ export function NeighborhoodApp({
     geo.status === "idle" || geo.status === "pending" || geo.status === "ready";
 
   useEffect(() => {
-    if (!gemHuntActive) return;
+    if (!gemHuntActive || !mapGemHouse) return;
     setWatchEnabled(true);
     void geo.refresh();
-  }, [gemHuntActive, geo.refresh, setWatchEnabled]);
+  }, [gemHuntActive, mapGemHouse, geo.refresh, setWatchEnabled]);
   const { choice: originChoice, resolved: origin, setChoice: setOriginChoice } = useDistanceOrigin(gps);
   const { houseSet } = useHouseSet();
   const activeHouseSet = admin ? houseSet : "real";

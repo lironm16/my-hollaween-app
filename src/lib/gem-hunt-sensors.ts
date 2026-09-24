@@ -58,6 +58,12 @@ export function stopGemHuntCameraStream() {
   sharedCameraStream = null;
 }
 
+if (typeof document !== "undefined") {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") stopGemHuntCameraStream();
+  });
+}
+
 export function isGemHuntOrientationGranted() {
   if (typeof window === "undefined") return false;
   if (!("DeviceOrientationEvent" in window)) return false;

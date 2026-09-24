@@ -24,7 +24,7 @@ export function GemCollectCheer({
           posterFill
           className="gem-collect-cheer__gem"
         />
-        <span className="gem-collect-cheer__text">אוצר נאסף!</span>
+        <span className="gem-collect-cheer__text">יהלום נאסף!</span>
       </div>
     </div>
   );
