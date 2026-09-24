@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { isGemHuntOrientationGranted } from "@/lib/gem-hunt-sensors";
 import { normalizeHeading } from "@/lib/gem-hunt";
 
 type OrientationLike = DeviceOrientationEvent & {
@@ -22,10 +23,10 @@ function readHeading(event: OrientationLike): number | null {
 
 export type HeadingStatus = "idle" | "pending" | "ready" | "denied" | "unsupported";
 
+/** Listen only — call prepareGemHuntSensors() from a button before opening hunt. */
 export function useDeviceHeading(active: boolean) {
   const [heading, setHeading] = useState<number | null>(null);
   const [status, setStatus] = useState<HeadingStatus>("idle");
-  const enabledRef = useRef(false);
 
   const onOrientation = useCallback((event: Event) => {
     const value = readHeading(event as OrientationLike);
@@ -35,48 +36,34 @@ export function useDeviceHeading(active: boolean) {
     }
   }, []);
 
-  const requestAccess = useCallback(async () => {
-    if (typeof window === "undefined") return false;
-    if (!("DeviceOrientationEvent" in window)) {
-      setStatus("unsupported");
-      return false;
-    }
-    setStatus("pending");
-    const ctor = DeviceOrientationEvent as typeof DeviceOrientationEvent & {
-      requestPermission?: () => Promise<"granted" | "denied">;
-    };
-    try {
-      if (typeof ctor.requestPermission === "function") {
-        const result = await ctor.requestPermission();
-        if (result !== "granted") {
-          setStatus("denied");
-          return false;
-        }
-      }
-      enabledRef.current = true;
-      window.addEventListener("deviceorientation", onOrientation, true);
-      setStatus((s) => (s === "ready" ? "ready" : "pending"));
-      return true;
-    } catch {
-      setStatus("denied");
-      return false;
-    }
-  }, [onOrientation]);
-
   useEffect(() => {
     if (!active) {
-      enabledRef.current = false;
       window.removeEventListener("deviceorientation", onOrientation, true);
       setHeading(null);
       setStatus("idle");
       return;
     }
-    void requestAccess();
+
+    if (typeof window === "undefined" || !("DeviceOrientationEvent" in window)) {
+      setStatus("unsupported");
+      return;
+    }
+
+    const ctor = DeviceOrientationEvent as typeof DeviceOrientationEvent & {
+      requestPermission?: () => Promise<"granted" | "denied">;
+    };
+    const needsPrompt = typeof ctor.requestPermission === "function";
+    if (needsPrompt && !isGemHuntOrientationGranted()) {
+      setStatus("denied");
+      return;
+    }
+
+    setStatus("pending");
+    window.addEventListener("deviceorientation", onOrientation, true);
     return () => {
-      enabledRef.current = false;
       window.removeEventListener("deviceorientation", onOrientation, true);
     };
-  }, [active, onOrientation, requestAccess]);
+  }, [active, onOrientation]);
 
-  return { heading, status, requestAccess };
+  return { heading, status };
 }

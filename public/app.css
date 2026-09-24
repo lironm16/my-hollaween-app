@@ -7860,9 +7860,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__scan-ring {
   position: absolute;
   left: 50%;
-  top: 44%;
+  top: 42%;
   transform: translate(-50%, -50%);
-  width: min(72vw, 16rem);
+  width: min(88vw, 22rem);
   aspect-ratio: 1;
   pointer-events: none;
 }
@@ -7904,7 +7904,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__gem-hit {
   position: absolute;
   left: 50%;
-  top: 44%;
+  top: 42%;
   transform: translate(-50%, -50%);
   z-index: 4;
   margin: 0;
@@ -7916,8 +7916,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   -webkit-tap-highlight-color: transparent;
 }
 .gem-hunt-overlay__gem-hit .gem-sprite--hunt {
-  width: min(58vw, 14rem);
-  height: min(58vw, 14rem);
+  width: min(76vw, 18.5rem);
+  height: min(76vw, 18.5rem);
   overflow: visible;
 }
 .gem-hunt-overlay__gem-hit .gem-model-3d {

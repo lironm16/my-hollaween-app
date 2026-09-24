@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Gem, MapPin } from "lucide-react";
 import { GemCollectCheer } from "@/components/gem-collect-cheer";
 import { GemHuntOverlay } from "@/components/gem-hunt/gem-hunt-overlay";
@@ -18,6 +18,7 @@ import {
 import { distanceMeters, formatDistance } from "@/lib/geo";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
+import { prepareGemHuntSensors } from "@/lib/gem-hunt-sensors";
 import { cn } from "@/lib/utils";
 
 export function GemHuntPanel({
@@ -52,10 +53,16 @@ export function GemHuntPanel({
   const inRange = simulate || proximity === "hunt";
   const canHunt = collected ? false : inRange && (standingStill || simulate);
 
-  function openHunt() {
+  const openHunt = useCallback(async () => {
     if (!canHunt) return;
+    await prepareGemHuntSensors();
     setHuntOpen(true);
-  }
+  }, [canHunt]);
+
+  const openLab = useCallback(async () => {
+    await prepareGemHuntSensors();
+    setLabOpen(true);
+  }, []);
 
   function onCollect(collectedVariant: string) {
     gems.collect(house.id, collectedVariant);
@@ -104,7 +111,7 @@ export function GemHuntPanel({
               variant="outline"
               size="sm"
               className="gem-hunt-panel__lab-btn w-full"
-              onClick={() => setLabOpen(true)}
+              onClick={() => void openLab()}
             >
               ניסיון מצלמה (מכל מקום)
             </Button>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
+import { getGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
 import {
   facingHouse,
   GEM_FACING_TOLERANCE_DEG,
@@ -86,35 +87,32 @@ export function GemHuntOverlay({
 
   useEffect(() => {
     let cancelled = false;
-    async function startCamera() {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setCameraError("המצלמה לא נתמכת במכשיר זה");
+
+    async function attachCamera() {
+      const stream = getGemHuntCameraStream();
+      if (!stream) {
+        setCameraError("לא ניתן לפתוח מצלמה — אפשר לאסוף מהמפה");
         return;
       }
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } },
-          audio: false,
-        });
-        if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop());
-          return;
-        }
-        streamRef.current = stream;
-        const video = videoRef.current;
-        if (video) {
-          video.srcObject = stream;
+      if (cancelled) return;
+      streamRef.current = stream;
+      const video = videoRef.current;
+      if (video) {
+        video.srcObject = stream;
+        try {
           await video.play();
+        } catch {
+          setCameraError("לא ניתן להציג מצלמה");
         }
-      } catch {
-        setCameraError("לא ניתן לפתוח מצלמה — אפשר לאסוף מהמפה");
       }
     }
-    void startCamera();
+
+    void attachCamera();
     return () => {
       cancelled = true;
-      streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
+      const video = videoRef.current;
+      if (video) video.srcObject = null;
     };
   }, [house.id]);
 

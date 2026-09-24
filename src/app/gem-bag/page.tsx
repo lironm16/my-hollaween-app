@@ -27,6 +27,7 @@ import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl, houseSharePath } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
 import { buttonVariants } from "@/components/ui/button";
+import { prepareGemHuntSensors } from "@/lib/gem-hunt-sensors";
 import { cn } from "@/lib/utils";
 
 function formatCollectedWhen(ms: number) {
@@ -79,7 +80,9 @@ function GemBagContent({ houses, isAdmin }: { houses: PublicHouse[]; isAdmin: bo
           type="button"
           variant="outline"
           className="w-full border-amber-400/40 text-amber-100"
-          onClick={() => setCameraLabHouse(viewerHouse)}
+          onClick={() => {
+            void prepareGemHuntSensors().then(() => setCameraLabHouse(viewerHouse));
+          }}
         >
           <Camera className="size-4" aria-hidden />
           ניסיון מצלמה (מכל מקום)

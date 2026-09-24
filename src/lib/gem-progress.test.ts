@@ -5,14 +5,14 @@ describe("gem progress reset", () => {
   const key = "hw-gem-collected";
 
   beforeEach(() => {
-    const stub = globalThis as {
-      window?: typeof globalThis & { dispatchEvent?: (e: Event) => boolean };
+    const g = globalThis as typeof globalThis & {
+      window?: typeof globalThis;
       localStorage?: Storage;
+      dispatchEvent?: (e: Event) => boolean;
     };
-    stub.window = Object.assign(stub, {
-      dispatchEvent: () => true,
-    });
-    stub.localStorage = {
+    g.dispatchEvent = () => true;
+    g.window = g as unknown as Window & typeof globalThis;
+    g.localStorage = {
       store: {} as Record<string, string>,
       getItem(k: string) {
         return this.store[k] ?? null;
@@ -32,8 +32,10 @@ describe("gem progress reset", () => {
   });
 
   afterEach(() => {
-    delete (globalThis as { localStorage?: Storage; window?: unknown }).localStorage;
-    delete (globalThis as { window?: unknown }).window;
+    const g = globalThis as { localStorage?: Storage; window?: unknown; dispatchEvent?: unknown };
+    delete g.localStorage;
+    delete g.window;
+    delete g.dispatchEvent;
   });
 
   it("clears one house so it can be collected again", async () => {
