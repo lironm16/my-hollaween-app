@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -56,12 +57,14 @@ export function GemModel3D({
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const meta = gemMonsterMeta(monsterId);
 
   useEffect(() => {
+    setLoadFailed(false);
     const host = hostRef.current;
     if (!host) return;
 
-    const meta = gemMonsterMeta(monsterId);
     const defaultPx = size === "sm" ? 52 : size === "lg" ? 120 : 280;
     let width = host.clientWidth || defaultPx;
     let height = host.clientHeight || (size === "fill" ? 240 : defaultPx);
@@ -139,8 +142,10 @@ export function GemModel3D({
         }
       },
       undefined,
-      () => {
-        /* fallback: empty scene */
+      (err) => {
+        if (disposed) return;
+        console.error("GemModel3D: failed to load", meta.glbPath, err);
+        setLoadFailed(true);
       },
     );
 
@@ -190,7 +195,23 @@ export function GemModel3D({
       renderer.dispose();
       host.removeChild(renderer.domElement);
     };
-  }, [monsterId, houseId, size, interactive, controls]);
+  }, [monsterId, houseId, size, interactive, controls, meta.glbPath]);
+
+  if (loadFailed) {
+    return (
+      <div
+        className={cn(
+          "gem-model-3d gem-model-3d--poster-fallback",
+          size === "sm" && "gem-model-3d--sm",
+          size === "fill" && "gem-model-3d--fill",
+          collected && "is-collected",
+          className,
+        )}
+      >
+        <Image src={meta.posterPath} alt="" fill className="gem-model-3d__poster-fallback" sizes="160px" />
+      </div>
+    );
+  }
 
   return (
     <div
