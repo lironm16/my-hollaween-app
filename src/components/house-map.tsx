@@ -14,7 +14,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import { LocateFixed } from "lucide-react";
-import { MapAddHouseFab } from "@/components/map-add-house-fab";
+import { MapPrimaryFab } from "@/components/map-primary-fab";
 import { MapLegend } from "@/components/map-legend";
 import "leaflet/dist/leaflet.css";
 import { config, inNeighborhood } from "@/lib/config";
@@ -559,6 +559,10 @@ type Props = {
   filterDimActive?: boolean;
   /** Compact embed on house link pages — center on the house, theme toggle only. */
   embed?: boolean;
+  gemHuntEnabled?: boolean;
+  onGemHuntPress?: () => void;
+  nearGem?: boolean;
+  gemFabDisabled?: boolean;
 };
 
 export function HouseMap({
@@ -591,6 +595,10 @@ export function HouseMap({
   matchedIds,
   filterDimActive = false,
   embed = false,
+  gemHuntEnabled = false,
+  onGemHuntPress,
+  nearGem = false,
+  gemFabDisabled = false,
 }: Props) {
   const clusters = useMemo(
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
@@ -858,7 +866,14 @@ export function HouseMap({
           </>
         ) : null}
       </MapContainer>
-      {!pickMode && !originPickActive && !embed ? <MapAddHouseFab /> : null}
+      {!pickMode && !originPickActive && !embed ? (
+        <MapPrimaryFab
+          gemHuntEnabled={gemHuntEnabled}
+          onGemPress={onGemHuntPress ?? (() => {})}
+          nearGem={nearGem}
+          gemDisabled={gemFabDisabled}
+        />
+      ) : null}
       <div className="map-fab-stack">
           {!pickMode && !embed && onLocate ? (
             <button

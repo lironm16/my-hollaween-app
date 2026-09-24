@@ -47,6 +47,8 @@
     --color-violet-300: oklch(81.1% 0.111 293.571);
     --color-violet-400: oklch(70.2% 0.183 293.541);
     --color-violet-500: oklch(60.6% 0.25 292.717);
+    --color-violet-600: oklch(54.1% 0.281 293.009);
+    --color-violet-700: oklch(49.1% 0.27 292.581);
     --color-violet-900: oklch(38% 0.189 293.745);
     --color-rose-300: oklch(81% 0.117 11.638);
     --color-black: #000;
@@ -1850,6 +1852,9 @@
       background-color: color-mix(in oklab, var(--color-violet-500) 25%, transparent);
     }
   }
+  .bg-violet-700 {
+    background-color: var(--color-violet-700);
+  }
   .bg-violet-900 {
     background-color: var(--color-violet-900);
   }
@@ -2401,6 +2406,12 @@
   .text-emerald-300 {
     color: var(--color-emerald-300);
   }
+  .text-emerald-300\/90 {
+    color: color-mix(in srgb, oklch(84.5% 0.143 164.978) 90%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-emerald-300) 90%, transparent);
+    }
+  }
   .text-emerald-400 {
     color: var(--color-emerald-400);
   }
@@ -2797,6 +2808,12 @@
   .ring-\[\#fff7ed\] {
     --tw-ring-color: #fff7ed;
   }
+  .ring-amber-400\/50 {
+    --tw-ring-color: color-mix(in srgb, oklch(82.8% 0.189 84.429) 50%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--color-amber-400) 50%, transparent);
+    }
+  }
   .ring-amber-500\/20 {
     --tw-ring-color: color-mix(in srgb, oklch(76.9% 0.188 70.08) 20%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -2930,6 +2947,12 @@
     --tw-ring-color: color-mix(in srgb, oklch(70.2% 0.183 293.541) 30%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       --tw-ring-color: color-mix(in oklab, var(--color-violet-400) 30%, transparent);
+    }
+  }
+  .ring-violet-400\/50 {
+    --tw-ring-color: color-mix(in srgb, oklch(70.2% 0.183 293.541) 50%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--color-violet-400) 50%, transparent);
     }
   }
   .ring-white\/8 {
@@ -3226,9 +3249,6 @@
         background-color: color-mix(in oklch,var(--secondary),var(--foreground) 5%);
       }
     }
-    .hover\:bg-amber-300:hover {
-      background-color: var(--color-amber-300);
-    }
     .hover\:bg-amber-400:hover {
       background-color: var(--color-amber-400);
     }
@@ -3317,6 +3337,9 @@
       .hover\:bg-red-950\/40:hover {
         background-color: color-mix(in oklab, var(--color-red-950) 40%, transparent);
       }
+    }
+    .hover\:bg-violet-600:hover {
+      background-color: var(--color-violet-600);
     }
     .hover\:text-foreground:hover {
       color: var(--foreground);
@@ -3464,6 +3487,9 @@
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--input) 50%, transparent);
     }
+  }
+  .disabled\:opacity-45:disabled {
+    opacity: 45%;
   }
   .disabled\:opacity-50:disabled {
     opacity: 50%;
@@ -6696,13 +6722,33 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   gap: 0.5rem;
   bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
 }
-.map-add-house-fab {
+.map-add-house-fab,
+.map-gem-hunt-fab {
   position: absolute;
   left: 0.75rem;
   z-index: 1100;
   bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
+  appearance: none;
+  border: 0;
 }
-.is-origin-pick .map-add-house-fab {
+.map-gem-hunt-fab.is-near {
+  animation: gem-fab-glow 1.6s ease-in-out infinite;
+  box-shadow: 0 0 20px rgb(251 191 36 / 0.75),
+    0 8px 24px rgb(0 0 0 / 0.45);
+}
+@keyframes gem-fab-glow {
+  0%,
+  100% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+  50% {
+    filter: brightness(1.15);
+    transform: scale(1.04);
+  }
+}
+.is-origin-pick .map-add-house-fab,
+.is-origin-pick .map-gem-hunt-fab {
   bottom: calc(8.25rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
 }
 .locate-me {
@@ -7810,7 +7856,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 1300;
   overflow: hidden;
   background: #050208;
 }
@@ -7934,6 +7980,58 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   pointer-events: none;
   background: radial-gradient(circle at 50% 44%, rgb(253 224 71 / 0.65) 0%, transparent 58%);
   animation: gem-overlay-collect-flash 4s ease-out forwards;
+}
+.gem-hunt-overlay__hint-actions {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(92vw, 20rem);
+}
+.gem-hunt-overlay__hint-btn {
+  appearance: none;
+  border: 1px solid rgb(167 139 250 / 0.45);
+  border-radius: 9999px;
+  background: rgb(22 11 32 / 0.88);
+  color: #fde68a;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.65rem 1rem;
+}
+.gem-hunt-overlay__hint-btn--accent {
+  border-color: rgb(251 191 36 / 0.65);
+  color: #fff7ed;
+}
+.gem-hunt-overlay__poster-hint {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  background: rgb(5 2 8 / 0.92);
+}
+.gem-hunt-overlay__poster-close {
+  position: absolute;
+  top: max(0.75rem, env(safe-area-inset-top));
+  inset-inline-end: 1rem;
+}
+.gem-hunt-overlay__poster-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fde68a;
+}
+.gem-hunt-overlay__poster-caption {
+  font-size: 0.9rem;
+  color: rgb(196 181 253 / 0.9);
+  text-align: center;
 }
 .gem-hunt-overlay__help {
   position: absolute;

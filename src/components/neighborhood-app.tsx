@@ -27,8 +27,15 @@ import { VisitSkipConflictDialog } from "@/components/visit-skip-conflict-dialog
 import { LikeCheer } from "@/components/like-cheer";
 import { RouteCompleteCheer } from "@/components/route-complete-cheer";
 import { VisitCheer } from "@/components/visit-cheer";
+import { GemCollectCheer } from "@/components/gem-collect-cheer";
+import { GemHuntOverlay } from "@/components/gem-hunt/gem-hunt-overlay";
 import { GemHuntPanel } from "@/components/gem-hunt/gem-hunt-panel";
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
+import { useGemProgress } from "@/hooks/use-gem-progress";
+import { useStandingStill } from "@/hooks/use-standing-still";
+import { canCollectGem, GEM_COLLECT_ANIMATION_MS } from "@/lib/gem-hunt";
+import { isNearAnyGem, pickGemHuntTarget } from "@/lib/gem-hunt-target";
+import { prepareGemHuntSensors } from "@/lib/gem-hunt-sensors";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -109,6 +116,10 @@ export function NeighborhoodApp({
   const { setWatchEnabled } = geo;
   const gps = geo.location;
   const gemHuntActive = gemHuntVisible(admin);
+  const gems = useGemProgress();
+  const [mapGemHouse, setMapGemHouse] = useState<PublicHouse | null>(null);
+  const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);
+  const mapGemStanding = useStandingStill(gps, gemHuntActive && Boolean(mapGemHouse));
   const gpsAllowed =
     geo.status === "idle" || geo.status === "pending" || geo.status === "ready";
 
@@ -227,6 +238,25 @@ export function NeighborhoodApp({
 
   const selection = useHouseSelection({ focusId, visible, houses, clusterHouses: mapHouses });
   const { resetForNavigation } = selection;
+
+  const nearGemOnMap = useMemo(
+    () =>
+      gemHuntActive &&
+      isNearAnyGem(mapHouses, gps, (id) => gems.collected(id)),
+    [gemHuntActive, mapHouses, gps, gems.collectedIds],
+  );
+
+  const openMapGemHunt = useCallback(async () => {
+    const target = pickGemHuntTarget(
+      mapHouses,
+      gps,
+      (id) => gems.collected(id),
+      selection.selected?.id ?? null,
+    );
+    if (!target) return;
+    await prepareGemHuntSensors();
+    setMapGemHouse(target.house);
+  }, [mapHouses, gps, gems, selection.selected?.id]);
   const editFlow = useHouseEditFlow();
 
   const ownedEditCode = useMemo(() => {
@@ -863,6 +893,10 @@ export function NeighborhoodApp({
                         }))
                       : null
                   }
+                  gemHuntEnabled={gemHuntActive}
+                  onGemHuntPress={() => void openMapGemHunt()}
+                  nearGem={nearGemOnMap}
+                  gemFabDisabled={!pickGemHuntTarget(mapHouses, gps, (id) => gems.collected(id), selection.selected?.id ?? null)}
                 />
                 {originPick.originPickActive ? (
                   <div className="origin-pick-bar">
@@ -1055,6 +1089,28 @@ export function NeighborhoodApp({
         onUpdated={handleHouseUpdated}
         onDeleted={handleHouseDeleted}
       />
+      {mapGemCheerHouse ? <GemCollectCheer show house={mapGemCheerHouse} /> : null}
+      {mapGemHouse ? (
+        <GemHuntOverlay
+          house={mapGemHouse}
+          userLocation={gps}
+          collectEnabled={canCollectGem(
+            gps,
+            mapGemHouse,
+            gems.collected(mapGemHouse.id),
+            mapGemStanding.ready,
+            false,
+          )}
+          onClose={() => setMapGemHouse(null)}
+          onCollect={(monsterId) => {
+            const h = mapGemHouse;
+            gems.collect(h.id, monsterId);
+            setMapGemHouse(null);
+            setMapGemCheerHouse(h);
+            window.setTimeout(() => setMapGemCheerHouse(null), GEM_COLLECT_ANIMATION_MS + 400);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

@@ -47,6 +47,18 @@ export const GEM_COLLECT_ANIMATION_MS = 4000;
 
 export type GemProximity = "far" | "approach" | "hunt" | "collected";
 
+export function canCollectGem(
+  userLocation: { lat: number; lng: number } | null,
+  house: Pick<PublicHouse, "lat" | "lng">,
+  collected: boolean,
+  standingStill: boolean,
+  simulateInRange: boolean,
+) {
+  if (collected) return false;
+  const inRange = simulateInRange || gemProximity(userLocation, house, false) === "hunt";
+  return inRange && (standingStill || simulateInRange);
+}
+
 export function gemProximity(
   user: { lat: number; lng: number } | null,
   house: Pick<PublicHouse, "lat" | "lng">,

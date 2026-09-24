@@ -55,6 +55,7 @@ export function GemHuntOverlay({
   const [phase, setPhase] = useState<HuntPhase>("scanning");
   const [hint, setHint] = useState<"scan" | "warm" | "found" | "help">("scan");
   const [showHelp, setShowHelp] = useState(false);
+  const [posterHintOpen, setPosterHintOpen] = useState(false);
   const scanStartRef = useRef(Date.now());
   const panTotalRef = useRef(0);
   const lastHeadingRef = useRef<number | null>(null);
@@ -79,6 +80,7 @@ export function GemHuntOverlay({
     setPhase("scanning");
     setHint("scan");
     setShowHelp(false);
+    setPosterHintOpen(false);
   }, [house.id]);
 
   useEffect(() => {
@@ -264,10 +266,32 @@ export function GemHuntOverlay({
         </p>
       </div>
 
-      {showHelp && phase === "scanning" ? (
-        <button type="button" className="gem-hunt-overlay__help" onClick={handleHelpReveal}>
-          לא רואים? לחצו כאן
-        </button>
+      {phase === "scanning" ? (
+        <div className="gem-hunt-overlay__hint-actions" dir="rtl">
+          <button
+            type="button"
+            className="gem-hunt-overlay__hint-btn"
+            onClick={() => setPosterHintOpen(true)}
+          >
+            רמז: איך נראה האוצר?
+          </button>
+          <button type="button" className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--accent" onClick={handleHelpReveal}>
+            רמז: גלו את האוצר
+          </button>
+        </div>
+      ) : null}
+
+      {posterHintOpen ? (
+        <div className="gem-hunt-overlay__poster-hint" role="dialog" aria-label="תצוגת האוצר">
+          <OverlayCloseButton
+            label="סגירת תצוגה"
+            onClick={() => setPosterHintOpen(false)}
+            className="gem-hunt-overlay__poster-close"
+          />
+          <p className="gem-hunt-overlay__poster-title">{gemLabelHe(monsterId)}</p>
+          <GemSprite house={house} mode="poster" size="lg" className="gem-hunt-overlay__poster-sprite" />
+          <p className="gem-hunt-overlay__poster-caption">כך האוצר נראה — חפשו אותו במצלמה</p>
+        </div>
       ) : null}
 
       {headingStatus === "denied" || headingStatus === "unsupported" ? (

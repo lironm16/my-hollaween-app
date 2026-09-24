@@ -2240,14 +2240,37 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
 }
 
-.map-add-house-fab {
+.map-add-house-fab,
+.map-gem-hunt-fab {
   position: absolute;
   left: 0.75rem;
   z-index: 1100;
   bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
+  appearance: none;
+  border: 0;
 }
 
-.is-origin-pick .map-add-house-fab {
+.map-gem-hunt-fab.is-near {
+  animation: gem-fab-glow 1.6s ease-in-out infinite;
+  box-shadow:
+    0 0 20px rgb(251 191 36 / 0.75),
+    0 8px 24px rgb(0 0 0 / 0.45);
+}
+
+@keyframes gem-fab-glow {
+  0%,
+  100% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+  50% {
+    filter: brightness(1.15);
+    transform: scale(1.04);
+  }
+}
+
+.is-origin-pick .map-add-house-fab,
+.is-origin-pick .map-gem-hunt-fab {
   bottom: calc(8.25rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
 }
 
@@ -3470,6 +3493,58 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   pointer-events: none;
   background: radial-gradient(circle at 50% 44%, rgb(253 224 71 / 0.65) 0%, transparent 58%);
   animation: gem-overlay-collect-flash 4s ease-out forwards;
+}
+.gem-hunt-overlay__hint-actions {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(92vw, 20rem);
+}
+.gem-hunt-overlay__hint-btn {
+  appearance: none;
+  border: 1px solid rgb(167 139 250 / 0.45);
+  border-radius: 9999px;
+  background: rgb(22 11 32 / 0.88);
+  color: #fde68a;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.65rem 1rem;
+}
+.gem-hunt-overlay__hint-btn--accent {
+  border-color: rgb(251 191 36 / 0.65);
+  color: #fff7ed;
+}
+.gem-hunt-overlay__poster-hint {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  background: rgb(5 2 8 / 0.92);
+}
+.gem-hunt-overlay__poster-close {
+  position: absolute;
+  top: max(0.75rem, env(safe-area-inset-top));
+  inset-inline-end: 1rem;
+}
+.gem-hunt-overlay__poster-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fde68a;
+}
+.gem-hunt-overlay__poster-caption {
+  font-size: 0.9rem;
+  color: rgb(196 181 253 / 0.9);
+  text-align: center;
 }
 .gem-hunt-overlay__help {
   position: absolute;

@@ -9,6 +9,7 @@ import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import {
+  canCollectGem,
   gemProximity,
   gemLabelHe,
   gemMonsterForHouse,
@@ -50,8 +51,7 @@ export function GemHuntPanel({
 
   if (!visible) return null;
 
-  const inRange = simulate || proximity === "hunt";
-  const canCollect = !collected && inRange && (standingStill || simulate);
+  const canCollect = canCollectGem(userLocation, house, collected, standingStill, simulate);
   const monsterLabel = gemLabelHe(gemMonsterForHouse(house));
 
   const openCamera = useCallback(async () => {
