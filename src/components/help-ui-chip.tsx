@@ -14,6 +14,7 @@ export function HelpUiChip({
         "inline-block rounded-md bg-[#f5e6d3] px-1.5 py-0.5 font-semibold text-[#12081a] align-baseline leading-normal",
         className,
       )}
+      style={{ backgroundColor: "#f5e6d3", color: "#12081a" }}
     >
       {children}
     </span>
