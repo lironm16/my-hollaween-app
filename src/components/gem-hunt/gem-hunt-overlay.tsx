@@ -47,7 +47,8 @@ export function GemHuntOverlay({
   onCollect: (monsterId: GemMonsterId) => void;
 }) {
   const sim = simulateInRange;
-  const quickReveal = !collectEnabled;
+  /** Only auto-reveal from scan/pan/facing when user can collect (or admin simulate). */
+  const allowAutoReveal = collectEnabled || sim;
   const monsterId = gemMonsterForHouse(house);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -82,12 +83,6 @@ export function GemHuntOverlay({
     setShowHelp(false);
     setPosterHintOpen(false);
   }, [house.id]);
-
-  useEffect(() => {
-    if (!quickReveal) return;
-    const t = window.setTimeout(() => reveal(), 400);
-    return () => window.clearTimeout(t);
-  }, [house.id, quickReveal, reveal]);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -141,7 +136,7 @@ export function GemHuntOverlay({
       setShowHelp(true);
     }
 
-    if (quickReveal) return;
+    if (!allowAutoReveal) return;
 
     const loc = userLocation ?? (sim ? { lat: house.lat, lng: house.lng, accuracy: 5 } : null);
     const facing =
@@ -163,7 +158,7 @@ export function GemHuntOverlay({
     if (elapsedSec >= GEM_SCAN_REVEAL_SECONDS || panTotalRef.current >= GEM_SCAN_PAN_DEGREES) {
       reveal();
     }
-  }, [heading, house, phase, reveal, sim, quickReveal, userLocation]);
+  }, [heading, house, phase, reveal, sim, allowAutoReveal, userLocation]);
 
   function handleCollect() {
     if (!collectEnabled) return;
@@ -210,7 +205,7 @@ export function GemHuntOverlay({
       <header className="gem-hunt-overlay__header">
         <div className="min-w-0 flex-1">
           {!collectEnabled ? (
-            <p className="gem-hunt-overlay__badge">תצוגה — התקרבו לבית כדי לאסוף</p>
+            <p className="gem-hunt-overlay__badge">חיפוש — התקרבו לבית (~25מ׳) כדי לאסוף</p>
           ) : sim ? (
             <p className="gem-hunt-overlay__badge">סימולציה: בטווח</p>
           ) : null}
@@ -255,7 +250,12 @@ export function GemHuntOverlay({
 
         <p className={cn("gem-hunt-overlay__hint", gemVisible && "is-gem-visible")}>
           {phase === "collecting" ? "אוצר נאסף!" : null}
-          {phase !== "collecting" && hint === "scan" ? "סרקו לאט את הבית — האוצר יופיע" : null}
+          {phase !== "collecting" && hint === "scan" && allowAutoReveal
+            ? "סרקו לאט את הבית — האוצר יופיע"
+            : null}
+          {phase !== "collecting" && hint === "scan" && !allowAutoReveal
+            ? "האוצר מוסתר — סרקו את הבית או השתמשו ברמזים"
+            : null}
           {phase !== "collecting" && hint === "warm" ? "קרובים! המשיכו לסרוק…" : null}
           {phase !== "collecting" && hint === "found" && collectEnabled
             ? "לחצו על האוצר לאיסוף!"
