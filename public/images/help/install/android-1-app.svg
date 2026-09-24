@@ -1,7 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="&#1488;&#1508;&#1500;&#1497;&#1511;&#1510;&#1497;&#1492; &#1489;-Chrome">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="&#1499;&#1508;&#1514;&#1493;&#1512; &#1492;&#1514;&#1511;&#1504;&#1492; &#1489;&#1512;&#1488;&#1513; &#1492;&#1488;&#1508;&#1500;&#1497;&#1511;&#1510;&#1497;&#1492;">
 <rect width="390" height="780" fill="#12081a"/>
-  <rect y="0" width="390" height="56" fill="#292929"/>
-  <text x="195" y="36" fill="#fff" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="middle">my-hollaween-app.vercel.app</text>
-  <text x="195" y="200" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="22" font-weight="700" text-anchor="middle">HallowHood</text>
+  <rect y="0" width="390" height="52" fill="#14091c"/>
+  <text x="195" y="32" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">HallowHood</text>
+  <rect x="12" y="58" width="36" height="36" rx="8" fill="#1d1028" stroke="#f97316" stroke-opacity="0.25"/>
+  <text x="30" y="82" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="18" text-anchor="middle">&#9776;</text>
+  <rect x="54" y="58" width="36" height="36" rx="8" fill="#f97316" stroke="#f97316" stroke-opacity="0.8"/>
+  <text x="72" y="82" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="18" font-weight="700" text-anchor="middle">&#8595;</text>
+  <rect x="96" y="58" width="36" height="36" rx="8" fill="#1d1028" stroke="#f97316" stroke-opacity="0.25"/>
+  <text x="114" y="82" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="16" text-anchor="middle">&#128276;</text>
+  <path d="M72 48 L72 28" stroke="#f97316" stroke-width="3" marker-end="url(#anddl)"/>
+  <text x="72" y="20" fill="#f97316" font-family="Rubik,Arial,sans-serif" font-size="13" font-weight="700" text-anchor="middle">&#1492;&#1514;&#1511;&#1504;&#1492;</text>
+  <defs><marker id="anddl" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#f97316"/></marker></defs>
+  <rect y="52" width="390" height="48" fill="#12081a" stroke="#f97316" stroke-opacity="0.15"/>
+  <rect x="12" y="60" width="80" height="32" rx="8" fill="#261536"/>
+  <rect x="300" y="60" width="78" height="32" rx="8" fill="#261536"/>
+  <text x="339" y="81" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="13" font-weight="700" text-anchor="middle">&#1505;&#1497;&#1504;&#1493;&#1503;</text>
+  <rect x="24" y="130" width="342" height="500" rx="16" fill="#243447"/>
 </svg>

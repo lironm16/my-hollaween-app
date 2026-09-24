@@ -25,7 +25,10 @@ export function shouldShowPwaInstallButton(options: {
   isStandalone: boolean;
   /** Help/Q&A demo — show instructional button even without beforeinstallprompt. */
   showAlways?: boolean;
+  /** Help accordion — always render the button UI (ignores standalone / prompt state). */
+  forceVisible?: boolean;
 }) {
+  if (options.forceVisible) return true;
   if (options.isStandalone) return false;
   if (options.showAlways) return true;
   return options.canInstall;

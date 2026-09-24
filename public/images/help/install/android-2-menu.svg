@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="&#1514;&#1508;&#1512;&#1497;&#1496; Chrome">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" width="390" height="780" role="img" aria-label="&#1495;&#1500;&#1493;&#1503; &#1492;&#1514;&#1511;&#1504;&#1514; Chrome">
 <rect width="390" height="780" fill="#12081a"/>
-  <rect y="0" width="390" height="56" fill="#292929"/>
-  <text x="350" y="36" fill="#fff" font-family="Rubik,Arial,sans-serif" font-size="24" text-anchor="middle">&#8942;</text>
-  <rect x="120" y="60" width="250" height="200" rx="12" fill="#fff"/>
-  <text x="245" y="180" fill="#333" font-family="Rubik,Arial,sans-serif" font-size="15" text-anchor="middle">Add to Home screen</text>
-  <path d="M350 50 L280 100" stroke="#f97316" stroke-width="3" marker-end="url(#and)"/>
-  <defs><marker id="and" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#f97316"/></marker></defs>
+  <rect width="390" height="780" fill="#12081a"/>
+  <rect y="0" width="390" height="52" fill="#14091c"/>
+  <text x="195" y="32" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">HallowHood</text>
+  <rect x="12" y="58" width="36" height="36" rx="8" fill="#1d1028" stroke="#f97316" stroke-opacity="0.25"/>
+  <rect x="54" y="58" width="36" height="36" rx="8" fill="#f97316"/>
+  <text x="72" y="82" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="18" font-weight="700" text-anchor="middle">&#8595;</text>
+  <rect x="40" y="250" width="310" height="200" rx="16" fill="#fff"/>
+  <text x="195" y="300" fill="#333" font-family="Rubik,Arial,sans-serif" font-size="16" font-weight="700" text-anchor="middle">Install app?</text>
+  <text x="195" y="330" fill="#666" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="middle">HallowHood</text>
+  <rect x="60" y="380" width="120" height="40" rx="8" fill="#e5e5ea"/>
+  <text x="120" y="406" fill="#333" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="middle">Cancel</text>
+  <rect x="210" y="380" width="120" height="40" rx="8" fill="#f97316"/>
+  <text x="270" y="406" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">Install</text>
 </svg>

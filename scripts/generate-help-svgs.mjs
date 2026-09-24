@@ -297,22 +297,35 @@ const files = {
   }),
 
   "install/android-1-app.svg": svg({
-    label: "אפליקציה ב-Chrome",
-    body: `<rect width="390" height="780" fill="${BG}"/>
-  <rect y="0" width="390" height="56" fill="#292929"/>
-  <text x="195" y="36" fill="#fff" font-family="${FONT}" font-size="14" text-anchor="middle">my-hollaween-app.vercel.app</text>
-  <text x="195" y="200" fill="#fb923c" font-family="${FONT}" font-size="22" font-weight="700" text-anchor="middle">HallowHood</text>`,
+    label: "כפתור התקנה בראש האפליקציה",
+    body: `${header()}
+  <rect x="12" y="58" width="36" height="36" rx="8" fill="${PANEL}" stroke="${ORANGE}" stroke-opacity="0.25"/>
+  <text x="30" y="82" fill="#fde68a" font-family="${FONT}" font-size="18" text-anchor="middle">&#9776;</text>
+  <rect x="54" y="58" width="36" height="36" rx="8" fill="${ORANGE}" stroke="${ORANGE}" stroke-opacity="0.8"/>
+  <text x="72" y="82" fill="#000" font-family="${FONT}" font-size="18" font-weight="700" text-anchor="middle">&#8595;</text>
+  <rect x="96" y="58" width="36" height="36" rx="8" fill="${PANEL}" stroke="${ORANGE}" stroke-opacity="0.25"/>
+  <text x="114" y="82" fill="#fde68a" font-family="${FONT}" font-size="16" text-anchor="middle">&#128276;</text>
+  <path d="M72 48 L72 28" stroke="${ORANGE}" stroke-width="3" marker-end="url(#anddl)"/>
+  <text x="72" y="20" fill="${ORANGE}" font-family="${FONT}" font-size="13" font-weight="700" text-anchor="middle">${t("התקנה")}</text>
+  <defs><marker id="anddl" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="${ORANGE}"/></marker></defs>
+  ${toolbar()}
+  <rect x="24" y="130" width="342" height="500" rx="16" fill="#243447"/>`,
   }),
 
   "install/android-2-menu.svg": svg({
-    label: "תפריט Chrome",
+    label: "חלון התקנת Chrome",
     body: `<rect width="390" height="780" fill="${BG}"/>
-  <rect y="0" width="390" height="56" fill="#292929"/>
-  <text x="350" y="36" fill="#fff" font-family="${FONT}" font-size="24" text-anchor="middle">&#8942;</text>
-  <rect x="120" y="60" width="250" height="200" rx="12" fill="#fff"/>
-  <text x="245" y="180" fill="#333" font-family="${FONT}" font-size="15" text-anchor="middle">${t("Add to Home screen")}</text>
-  <path d="M350 50 L280 100" stroke="${ORANGE}" stroke-width="3" marker-end="url(#and)"/>
-  <defs><marker id="and" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="${ORANGE}"/></marker></defs>`,
+  ${header()}
+  <rect x="12" y="58" width="36" height="36" rx="8" fill="${PANEL}" stroke="${ORANGE}" stroke-opacity="0.25"/>
+  <rect x="54" y="58" width="36" height="36" rx="8" fill="${ORANGE}"/>
+  <text x="72" y="82" fill="#000" font-family="${FONT}" font-size="18" font-weight="700" text-anchor="middle">&#8595;</text>
+  <rect x="40" y="250" width="310" height="200" rx="16" fill="#fff"/>
+  <text x="195" y="300" fill="#333" font-family="${FONT}" font-size="16" font-weight="700" text-anchor="middle">${t("Install app?")}</text>
+  <text x="195" y="330" fill="#666" font-family="${FONT}" font-size="14" text-anchor="middle">HallowHood</text>
+  <rect x="60" y="380" width="120" height="40" rx="8" fill="#e5e5ea"/>
+  <text x="120" y="406" fill="#333" font-family="${FONT}" font-size="14" text-anchor="middle">Cancel</text>
+  <rect x="210" y="380" width="120" height="40" rx="8" fill="${ORANGE}"/>
+  <text x="270" y="406" fill="#000" font-family="${FONT}" font-size="14" font-weight="700" text-anchor="middle">Install</text>`,
   }),
 
   "install/android-3-confirm.svg": svg({

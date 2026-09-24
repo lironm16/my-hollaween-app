@@ -16,17 +16,20 @@ export function PwaInstallButton({
   className,
   onInstalled,
   showAlways = false,
+  forceVisible = false,
 }: {
   variant?: "compact" | "prominent";
   className?: string;
   onInstalled?: () => void;
   /** Show in help/Q&A even when native install prompt is unavailable. */
   showAlways?: boolean;
+  /** Help accordion — always render (even when already installed as PWA). */
+  forceVisible?: boolean;
 }) {
   const { canInstall, promptInstall } = usePwaInstall();
   const isStandalone = isStandaloneDisplay();
 
-  if (!shouldShowPwaInstallButton({ canInstall, isStandalone, showAlways })) return null;
+  if (!shouldShowPwaInstallButton({ canInstall, isStandalone, showAlways, forceVisible })) return null;
 
   async function onClick() {
     if (!canInstall) {

@@ -8,28 +8,28 @@ const IPHONE_STEPS = [
   {
     title: "לחצו שיתוף",
     body: "ב-Safari, בסרגל התחתון — כפתור השיתוף (חץ למעלה מריבוע).",
-    image: helpImage("install/ios-2-share.png"),
+    image: helpImage("install/ios-2-share.svg"),
     imageAlt: "כפתור שיתוף בסафari",
   },
   {
     title: "הוספה למסך הבית",
     body: "גללו ובחרו «הוספה למסך הבית» → «הוסף». האייקון יופיע במסך הבית.",
-    image: helpImage("install/ios-3-add-home.png"),
+    image: helpImage("install/ios-3-add-home.svg"),
     imageAlt: "הוספה למסך הבית בתפריט השיתוף",
   },
 ] as const;
 
 const ANDROID_STEPS = [
   {
-    title: "פתחו ב-Chrome",
-    body: "גלשו לאתר ב-Chrome (מומלץ).",
-    image: helpImage("install/android-1-app.png"),
-    imageAlt: "האפליקציה ב-Chrome באנדרואיד",
+    title: "כפתור ההורדה בראש המסך",
+    body: "ב-Chrome, ליד תפריט ☰ — סמל ההורדה (חץ למטה).",
+    image: helpImage("install/android-1-app.svg"),
+    imageAlt: "כפתור התקנה בראש האפליקציה ליד התפריט",
   },
   {
     title: "אישור התקנה",
     body: "לחצו «הוסף» או «התקן» בחלון שיופיע אחרי הכפתור.",
-    image: helpImage("install/android-3-confirm.png"),
+    image: helpImage("install/android-3-confirm.svg"),
     imageAlt: "אישור התקנת האפליקציה",
   },
 ] as const;
@@ -62,7 +62,7 @@ function AndroidInstallSection() {
         ב-Chrome לחצו על כפתור «התקנת האפליקציה» בראש המסך (סמל ההורדה ליד תפריט ☰), או
         על הכפתור כאן:
       </p>
-      <PwaInstallButton variant="prominent" showAlways />
+      <PwaInstallButton variant="prominent" showAlways forceVisible />
       <PlatformSteps steps={ANDROID_STEPS} />
     </div>
   );
@@ -78,7 +78,7 @@ export default function InstallHelpPage() {
         <HelpExpandable title="אייפון" subtitle="Safari בלבד">
           <PlatformSteps steps={IPHONE_STEPS} />
         </HelpExpandable>
-        <HelpExpandable title="אנדרואיד" subtitle="Chrome מומלץ">
+        <HelpExpandable title="אנדרואיד" subtitle="Chrome מומלץ" defaultOpen>
           <AndroidInstallSection />
         </HelpExpandable>
       </div>

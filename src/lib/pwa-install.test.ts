@@ -64,4 +64,16 @@ describe("shouldShowPwaInstallButton", () => {
       true,
     );
   });
+
+  it("forceVisible always renders in help accordion (even standalone PWA)", () => {
+    assert.equal(
+      shouldShowPwaInstallButton({
+        canInstall: false,
+        isStandalone: true,
+        showAlways: false,
+        forceVisible: true,
+      }),
+      true,
+    );
+  });
 });
