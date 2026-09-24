@@ -7,7 +7,8 @@ import { GemHuntOverlay } from "@/components/gem-hunt/gem-hunt-overlay";
 import { Button } from "@/components/ui/button";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
-import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
+import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
+import { useAppNow } from "@/hooks/use-app-clock";
 import {
   canCollectGem,
   gemAnchorForHouse,
@@ -46,7 +47,8 @@ export function GemHuntPanel({
   const [cheer, setCheer] = useState(false);
   const [simulate, setSimulate] = useState(adminSimulateInRange);
 
-  const visible = gemHuntVisible(isAdmin);
+  const now = useAppNow();
+  const visible = gemHuntFabVisible(isAdmin, now);
   const collected = gems.collected(house.id);
   const proximity = gemProximity(userLocation, house, collected);
   const { ready: standingStill } = useStandingStill(userLocation, visible && !collected);

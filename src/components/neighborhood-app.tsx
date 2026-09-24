@@ -30,7 +30,7 @@ import { VisitCheer } from "@/components/visit-cheer";
 import { GemCollectCheer } from "@/components/gem-collect-cheer";
 import { GemHuntOverlay } from "@/components/gem-hunt/gem-hunt-overlay";
 import { GemHuntPanel } from "@/components/gem-hunt/gem-hunt-panel";
-import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
+import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
 import { canCollectGem, GEM_COLLECT_ANIMATION_MS } from "@/lib/gem-hunt";
@@ -717,7 +717,7 @@ export function NeighborhoodApp({
         skippedIds: skips.skipped,
         filteredOutIds: (id: string) => filterDimActive && !matchedIds.has(id),
         onAdjacentClusterHouse: selection.selectAdjacentClusterHouse,
-        extra: gemHuntActive ? (
+        extra: gemHuntFabVisible(admin, now) ? (
           <GemHuntPanel house={selected} userLocation={gps} isAdmin={admin} />
         ) : undefined,
       }

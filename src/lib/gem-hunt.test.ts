@@ -91,4 +91,13 @@ describe("gem hunt gate", () => {
     assert.equal(gemHuntVisible(true), true);
     assert.equal(gemHuntVisible(false), false);
   });
+
+  it("fab and house treasure hide during add-house hours", async () => {
+    const { gemHuntFabVisible } = await import("@/lib/gem-hunt-enabled");
+    const huntEvening = new Date(2026, 9, 31, 18, 0, 0, 0);
+    const addHouseAfternoon = new Date(2026, 9, 31, 16, 30, 0, 0);
+    assert.equal(gemHuntFabVisible(true, huntEvening), true);
+    assert.equal(gemHuntFabVisible(true, addHouseAfternoon), false);
+    assert.equal(gemHuntFabVisible(false, huntEvening), false);
+  });
 });
