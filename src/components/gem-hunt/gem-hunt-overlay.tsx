@@ -59,7 +59,7 @@ export function GemHuntOverlay({
   const allowAutoReveal = collectEnabled || sim;
   const monsterId = gemMonsterForHouse(house);
   const anchor = useMemo(() => gemAnchorForHouse(house), [house.id, house.lat, house.lng]);
-  /** Admin simulate pretends you are standing at the house pin (for at-home testing). */
+  /** Admin simulate: GPS at the house pin (ground); hunt uses anchor offset + compass like on-site. */
   const effectiveLoc = useMemo(() => {
     if (sim) return { lat: house.lat, lng: house.lng, accuracy: 5 };
     return userLocation;
@@ -198,7 +198,6 @@ export function GemHuntOverlay({
       navigator.vibrate([20, 40, 60]);
     }
     window.setTimeout(() => {
-      setPhase("done");
       onCollect(monsterId);
     }, GEM_COLLECT_OVERLAY_MS);
   }
@@ -231,7 +230,9 @@ export function GemHuntOverlay({
   /** Real hunt: compass-pinned gem (tap when in view + in range). */
   const arPinGuideMode = gemVisible && !centerReveal;
   const pinCollectReady =
-    arPinGuideMode && collectEnabled && Boolean(pinPlacement?.inView);
+    arPinGuideMode &&
+    collectEnabled &&
+    (sim || Boolean(pinPlacement?.inView));
   const showWalkGuide =
     !collectEnabled &&
     !sim &&
@@ -334,6 +335,7 @@ export function GemHuntOverlay({
             type="button"
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-pin-collect",
+              !pinPlacement && sim && "is-center-fallback",
               phase === "collecting" && "is-collecting",
             )}
             style={

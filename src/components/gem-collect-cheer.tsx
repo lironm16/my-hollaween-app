@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import type { PublicHouse } from "@/lib/types";
 
@@ -11,7 +12,7 @@ export function GemCollectCheer({
   house: Pick<PublicHouse, "id" | "theme" | "kind">;
 }) {
   if (!show) return null;
-  return (
+  const cheer = (
     <div className="gem-collect-cheer" role="status" aria-live="polite">
       <div className="gem-collect-cheer__card">
         <span className="gem-collect-cheer__burst" aria-hidden="true">
@@ -27,4 +28,6 @@ export function GemCollectCheer({
       </div>
     </div>
   );
+  if (typeof document === "undefined") return cheer;
+  return createPortal(cheer, document.body);
 }

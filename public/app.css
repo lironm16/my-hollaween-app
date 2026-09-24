@@ -8336,6 +8336,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-sprite--poster-fill {
   position: relative;
 }
+.gem-sprite--poster-fill .gem-sprite__poster {
+  object-fit: contain !important;
+  object-position: center center;
+}
 .gem-sprite--poster {
   overflow: hidden;
   border-radius: 0.85rem;
@@ -8383,7 +8387,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-collect-cheer {
   position: fixed;
   inset: 0;
-  z-index: 180;
+  z-index: 250;
   display: grid;
   place-items: center;
   padding: max(0.75rem, env(safe-area-inset-top)) 0.65rem max(0.75rem, env(safe-area-inset-bottom));
@@ -8404,7 +8408,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   background: rgb(24 12 36 / 0.96);
   border: 1px solid rgb(251 191 36 / 0.55);
   box-shadow: 0 20px 60px rgb(0 0 0 / 0.55);
-  animation: gem-cheer-pop 8.5s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+  animation: gem-cheer-pop 7.5s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
 }
 .gem-collect-cheer__gem.gem-sprite--poster {
   width: min(88vw, 21rem);

@@ -51,7 +51,7 @@ export const GEM_ANCHOR_MAX_METERS = 10;
 /** Camera collect: slow grow then exit — sync gem-collect-burst CSS (~3.8s). */
 export const GEM_COLLECT_OVERLAY_MS = 3800;
 /** Map «אוצר נאסף!» full-screen cheer hold. */
-export const GEM_CHEER_DISPLAY_MS = 8500;
+export const GEM_CHEER_DISPLAY_MS = 7500;
 /** @deprecated use GEM_COLLECT_OVERLAY_MS / GEM_CHEER_DISPLAY_MS */
 export const GEM_COLLECT_ANIMATION_MS = GEM_COLLECT_OVERLAY_MS;
 

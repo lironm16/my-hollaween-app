@@ -135,9 +135,7 @@ export function GemModel3D({
           if (!(mat instanceof THREE.MeshStandardMaterial)) return;
           mat.metalness = 0.05;
           mat.roughness = 0.55;
-          if (interactive) {
-            mat.color.offsetHSL(tint.hue, tint.saturation, tint.lightness);
-          }
+          mat.color.offsetHSL(tint.hue, tint.saturation, tint.lightness);
         });
 
         pivot.add(model);
