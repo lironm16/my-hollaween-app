@@ -19,7 +19,9 @@ export function isMapListOverlayCapture() {
 
 export function subscribeMapListSuspend(onStoreChange: () => void) {
   listeners.add(onStoreChange);
-  return () => listeners.delete(onStoreChange);
+  return () => {
+    listeners.delete(onStoreChange);
+  };
 }
 
 export function setMapListSuspended(value: boolean) {
