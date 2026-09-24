@@ -57,6 +57,13 @@ try {
   mergePreserveDirs(preserveBackup, tmp);
   rmSync(preserveBackup, { recursive: true, force: true });
 
+  const syncWorkflow = join(sourceRoot, "deploy/github/sync-from-cursor.yml");
+  const syncWorkflowDest = join(tmp, ".github/workflows/sync-from-cursor.yml");
+  if (existsSync(syncWorkflow)) {
+    mkdirSync(dirname(syncWorkflowDest), { recursive: true });
+    cpSync(syncWorkflow, syncWorkflowDest);
+  }
+
   run(`git -C "${tmp}" add -A`);
   try {
     run(`git -C "${tmp}" diff --staged --quiet`);
