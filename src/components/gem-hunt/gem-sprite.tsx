@@ -71,7 +71,8 @@ export function GemSprite({
         size={mode === "orbit" ? "fill" : size}
         collected={collected}
         interactive={!tapCollect}
-        spin={!tapCollect}
+        spin
+        spinRate={tapCollect ? 0.35 : undefined}
         controls={mode === "orbit" ? "orbit" : "turntable"}
       />
     </div>

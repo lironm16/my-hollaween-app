@@ -49,7 +49,7 @@ export const GEM_ANCHOR_MIN_METERS = 2;
 export const GEM_ANCHOR_MAX_METERS = 10;
 
 /** Hunt overlay + cheer — keep in sync with gem-collect-* CSS durations */
-export const GEM_COLLECT_ANIMATION_MS = 4000;
+export const GEM_COLLECT_ANIMATION_MS = 2000;
 
 export type GemProximity = "far" | "approach" | "hunt" | "collected";
 

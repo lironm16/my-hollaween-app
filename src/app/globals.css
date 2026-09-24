@@ -3606,7 +3606,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__gem-hit.is-center-collect {
   left: 50%;
-  top: 40%;
+  top: 42%;
   transform: translate(-50%, -50%);
   z-index: 6;
 }
@@ -3642,7 +3642,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   height: 100%;
 }
 .gem-hunt-overlay__gem-hit.is-collecting .gem-sprite {
-  animation: gem-collect-burst 4s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+  animation: gem-collect-burst 2s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
 }
 .gem-hunt-overlay__collect-flash {
   position: absolute;
@@ -3650,7 +3650,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   z-index: 6;
   pointer-events: none;
   background: radial-gradient(circle at 50% 44%, rgb(253 224 71 / 0.65) 0%, transparent 58%);
-  animation: gem-overlay-collect-flash 4s ease-out forwards;
+  animation: gem-overlay-collect-flash 2s ease-out forwards;
 }
 .gem-hunt-overlay__walk-guide {
   position: relative;
@@ -3696,6 +3696,20 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   flex-direction: column;
   gap: 0.5rem;
   width: 100%;
+}
+.gem-hunt-overlay__hint-actions--row {
+  flex-direction: row;
+  gap: 0.45rem;
+  width: 100%;
+}
+.gem-hunt-overlay__hint-actions--row .gem-hunt-overlay__hint-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-inline: 0.65rem;
+  font-size: 0.85rem;
+}
+.gem-hunt-overlay__hint-btn--compact {
+  white-space: nowrap;
 }
 .gem-hunt-overlay__hint-btn {
   appearance: none;
@@ -3860,7 +3874,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-sprite.is-burst .gem-sprite__glow,
 .gem-sprite.is-burst .gem-model-3d {
-  animation: gem-collect-flash 4s ease-out forwards;
+  animation: gem-collect-flash 2s ease-out forwards;
 }
 .gem-sprite.is-collected {
   opacity: 0.45;
@@ -3885,7 +3899,24 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   border-radius: 1.25rem;
   background: rgb(24 12 36 / 0.92);
   border: 1px solid rgb(251 191 36 / 0.45);
-  animation: gem-cheer-pop 4.4s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+  animation: gem-cheer-pop 2.2s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+  min-width: min(88vw, 17rem);
+  padding: 1.15rem 1.35rem 1rem;
+}
+.gem-collect-cheer__gem.gem-sprite--poster {
+  width: min(70vw, 11.5rem);
+  height: min(70vw, 11.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gem-collect-cheer__gem .gem-sprite__poster {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
 }
 .gem-collect-cheer__text {
   font-size: 1.15rem;

@@ -17,7 +17,7 @@ export function GemCollectCheer({
         <span className="gem-collect-cheer__burst" aria-hidden="true">
           <i /><i /><i /><i /><i /><i />
         </span>
-        <GemSprite house={house} mode="poster" size="sm" className="gem-collect-cheer__gem" />
+        <GemSprite house={house} mode="poster" size="lg" className="gem-collect-cheer__gem" />
         <span className="gem-collect-cheer__text">אוצר נאסף!</span>
       </div>
     </div>
