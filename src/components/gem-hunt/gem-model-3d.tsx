@@ -86,7 +86,16 @@ export function GemModel3D({
     const loader = new GLTFLoader();
     let disposed = false;
 
-    const scaleFactor = size === "sm" ? 0.55 : size === "lg" ? 0.85 : 1.35;
+    const scaleFactor =
+      controls === "turntable"
+        ? size === "sm"
+          ? 0.55
+          : 1.05
+        : size === "sm"
+          ? 0.55
+          : size === "lg"
+            ? 0.85
+            : 1.35;
 
     loader.load(
       meta.glbPath,

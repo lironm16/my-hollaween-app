@@ -207,30 +207,32 @@ export function GemHuntOverlay({
         />
       </header>
 
-      <div className="gem-hunt-overlay__scan-ring" aria-hidden>
-        <div className={cn("gem-hunt-overlay__ring", hint === "warm" && "is-warm")} />
+      <div className="gem-hunt-overlay__stage" aria-hidden={false}>
+        <div className="gem-hunt-overlay__scan-ring" aria-hidden>
+          <div className={cn("gem-hunt-overlay__ring", hint === "warm" && "is-warm")} />
+        </div>
+
+        {gemVisible ? (
+          <button
+            type="button"
+            className={cn("gem-hunt-overlay__gem-hit", phase === "collecting" && "is-collecting")}
+            onClick={handleCollect}
+            aria-label={`איסוף ${gemLabelHe(monsterId)}`}
+          >
+            <GemSprite
+              house={house}
+              mode="3d"
+              className={cn("gem-sprite--hunt", phase === "collecting" && "is-burst")}
+            />
+          </button>
+        ) : null}
+
+        <p className={cn("gem-hunt-overlay__hint", gemVisible && "is-gem-visible")}>
+          {hint === "scan" ? "סרקו לאט את הבית — האוצר יופיע" : null}
+          {hint === "warm" ? "קרובים! המשיכו לסרוק…" : null}
+          {hint === "found" ? "לחצו על האוצר לאיסוף!" : null}
+        </p>
       </div>
-
-      <p className="gem-hunt-overlay__hint">
-        {hint === "scan" ? "סרקו לאט את הבית — האוצר יופיע" : null}
-        {hint === "warm" ? "קרובים! המשיכו לסרוק…" : null}
-        {hint === "found" ? "לחצו על האוצר לאיסוף!" : null}
-      </p>
-
-      {gemVisible ? (
-        <button
-          type="button"
-          className={cn("gem-hunt-overlay__gem-hit", phase === "collecting" && "is-collecting")}
-          onClick={handleCollect}
-          aria-label={`איסוף ${gemLabelHe(monsterId)}`}
-        >
-          <GemSprite
-            house={house}
-            mode="3d"
-            className={cn(phase === "collecting" && "is-burst")}
-          />
-        </button>
-      ) : null}
 
       {showHelp && phase === "scanning" ? (
         <button type="button" className="gem-hunt-overlay__help" onClick={handleHelpReveal}>

@@ -3347,12 +3347,14 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   position: fixed;
   inset: 0;
   z-index: 200;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
   background: #050208;
+}
+.gem-hunt-overlay__stage {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
 }
 .gem-hunt-overlay__video {
   position: absolute;
@@ -3392,11 +3394,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   margin-inline-start: auto;
 }
 .gem-hunt-overlay__scan-ring {
-  position: relative;
-  z-index: 2;
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  transform: translate(-50%, -50%);
   width: min(72vw, 16rem);
   aspect-ratio: 1;
-  margin-top: 2rem;
   pointer-events: none;
 }
 .gem-hunt-overlay__ring {
@@ -3412,25 +3415,47 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   animation-duration: 1.1s;
 }
 .gem-hunt-overlay__hint {
-  position: relative;
-  z-index: 2;
-  margin-top: 1rem;
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  transform: translate(-50%, 0);
+  z-index: 3;
+  width: min(92vw, 22rem);
+  margin: 0;
   padding-inline: 1.25rem;
   text-align: center;
   font-size: 1rem;
   font-weight: 500;
   color: #fde68a;
   text-shadow: 0 1px 8px rgb(0 0 0 / 0.8);
+  pointer-events: none;
+}
+.gem-hunt-overlay__hint.is-gem-visible {
+  top: auto;
+  bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
 }
 .gem-hunt-overlay__gem-hit {
-  position: relative;
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  transform: translate(-50%, -50%);
   z-index: 4;
-  margin-top: 0.5rem;
-  padding: 1rem;
+  margin: 0;
+  padding: 0.5rem;
   border: none;
   background: transparent;
   cursor: pointer;
+  pointer-events: auto;
   -webkit-tap-highlight-color: transparent;
+}
+.gem-hunt-overlay__gem-hit .gem-sprite--hunt {
+  width: min(46vw, 10.5rem);
+  height: min(46vw, 10.5rem);
+}
+.gem-hunt-overlay__gem-hit .gem-model-3d {
+  width: 100%;
+  height: 100%;
 }
 .gem-hunt-overlay__gem-hit.is-collecting .gem-sprite {
   animation: gem-collect-burst 0.9s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
