@@ -88,7 +88,7 @@ export function GemHuntPanel({
           </div>
         </div>
 
-        {isAdmin && gemHuntVisible(true) ? (
+        {isAdmin ? (
           <label className="gem-hunt-panel__simulate">
             <input
               type="checkbox"

@@ -41,40 +41,9 @@ describe("gem hunt geo", () => {
 });
 
 describe("gem hunt gate", () => {
-  async function withFlag(value: string | undefined, fn: () => Promise<void> | void) {
-    const prev = process.env.NEXT_PUBLIC_GEM_HUNT;
-    if (value === undefined) delete process.env.NEXT_PUBLIC_GEM_HUNT;
-    else process.env.NEXT_PUBLIC_GEM_HUNT = value;
-    try {
-      await fn();
-    } finally {
-      if (prev === undefined) delete process.env.NEXT_PUBLIC_GEM_HUNT;
-      else process.env.NEXT_PUBLIC_GEM_HUNT = prev;
-    }
-  }
-
-  it("defaults off", async () => {
-    await withFlag(undefined, async () => {
-      const { gemHuntMode, gemHuntVisible } = await import("@/lib/gem-hunt-enabled");
-      assert.equal(gemHuntMode(), "off");
-      assert.equal(gemHuntVisible(true), false);
-      assert.equal(gemHuntVisible(false), false);
-    });
-  });
-
-  it("admin mode shows only for admin", async () => {
-    await withFlag("admin", async () => {
-      const { gemHuntMode, gemHuntVisible } = await import("@/lib/gem-hunt-enabled");
-      assert.equal(gemHuntMode(), "admin");
-      assert.equal(gemHuntVisible(true), true);
-      assert.equal(gemHuntVisible(false), false);
-    });
-  });
-
-  it("public mode shows for everyone", async () => {
-    await withFlag("1", async () => {
-      const { gemHuntVisible } = await import("@/lib/gem-hunt-enabled");
-      assert.equal(gemHuntVisible(false), true);
-    });
+  it("shows only for admin", async () => {
+    const { gemHuntVisible } = await import("@/lib/gem-hunt-enabled");
+    assert.equal(gemHuntVisible(true), true);
+    assert.equal(gemHuntVisible(false), false);
   });
 });
