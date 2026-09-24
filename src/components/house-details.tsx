@@ -3,7 +3,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { ChevronDown, Gem, Heart, Pencil } from "lucide-react";
+import { ChevronDown, Heart, Pencil } from "lucide-react";
+import { HouseTitleMarkers } from "@/components/house-title-markers";
 import { VisitedCheck } from "@/components/visited-check";
 import { buttonVariants } from "@/components/ui/button";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
@@ -485,20 +486,7 @@ export function HouseDetails({
               "min-w-0 flex-1 font-display text-xl text-orange-300 break-words",
             )}
           >
-            {liked ? (
-              <Heart
-                className="mb-0.5 me-1.5 inline size-5 fill-current text-[#fb7185]"
-                strokeWidth={2.2}
-                aria-label="אהבתי"
-              />
-            ) : null}
-            {gemCollected ? (
-              <Gem
-                className="mb-0.5 me-1.5 inline size-5 fill-current text-amber-300"
-                strokeWidth={2.1}
-                aria-label="יהלום"
-              />
-            ) : null}
+            <HouseTitleMarkers liked={liked} gemCollected={gemCollected} />
             {houseHeadline(house)}
           </p>
           {headerMenu ? <div className="house-details-menu shrink-0">{headerMenu}</div> : null}

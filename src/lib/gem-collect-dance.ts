@@ -17,7 +17,8 @@ export function gemCollectDanceIndex(houseId: string, monsterId: GemMonsterId | 
   const monsterIdx = GEM_MONSTER_CATALOG.findIndex((m) => m.id === monsterId);
   const monsterPart = monsterIdx >= 0 ? monsterIdx : 0;
   const housePart = hashDanceSeed(houseId, monsterId);
-  return ((housePart + monsterPart * 9973) % DANCE_COUNT) + 1;
+  const mixed = (housePart ^ Math.imul(monsterPart + 1, 2654435761)) >>> 0;
+  return (mixed % DANCE_COUNT) + 1;
 }
 
 export const GEM_COLLECT_DANCE_MS = 5000;

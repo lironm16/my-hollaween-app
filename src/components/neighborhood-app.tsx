@@ -37,7 +37,7 @@ import { loadGemCollectedIds } from "@/lib/gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
 import { canCollectGem, GEM_CHEER_MS } from "@/lib/gem-hunt";
 import { gemFabGlowLevel, pickGemHuntTarget } from "@/lib/gem-hunt-target";
-import { prepareGemHuntSensors, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
+import { pauseGemHuntCameraStream, prepareGemHuntSensors } from "@/lib/gem-hunt-sensors";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -1070,6 +1070,7 @@ export function NeighborhoodApp({
                     if (house) requestHouseEdit(house, true);
                   }}
                   editingId={null}
+                  gemCollected={gemHuntVisible(admin) ? gems.collected : undefined}
                 />
               ) : (
                 <HouseList
@@ -1081,6 +1082,7 @@ export function NeighborhoodApp({
                   onToggleLike={onToggleLike}
                   visitedIds={visits.visitedIds}
                   onToggleVisited={onToggleVisited}
+                  gemCollected={gemHuntVisible(admin) ? gems.collected : undefined}
                   skippedIds={skips.skippedIds}
                   skipMetaFor={(id) => skips.meta(id)}
                   onSkipHouse={handleSkipHouse}
@@ -1176,13 +1178,13 @@ export function NeighborhoodApp({
             false,
           )}
           onClose={() => {
-            stopGemHuntCameraStream();
+            pauseGemHuntCameraStream();
             setMapGemHouse(null);
           }}
           onCollect={(monsterId) => {
             const h = mapGemHouse;
             gems.collect(h.id, monsterId);
-            stopGemHuntCameraStream();
+            pauseGemHuntCameraStream();
             setMapGemHouse(null);
             celebrateGemCollect();
           }}

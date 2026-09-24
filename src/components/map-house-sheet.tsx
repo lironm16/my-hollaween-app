@@ -424,6 +424,8 @@ export function MapHouseSheet({
                 skipped={isSkipped}
                 filteredOut={isFilteredOut}
                 visited={visited}
+                gemCollected={gemCollected}
+                liked={liked}
                 onSelect={(id) => onSelectClusterHouse?.(id)}
               />
             </div>

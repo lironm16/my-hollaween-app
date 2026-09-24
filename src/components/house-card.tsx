@@ -16,6 +16,7 @@ export function HouseCard({
   onToggleLike,
   visited,
   onToggleVisited,
+  gemCollected,
   onSkip,
   onRestoreRoute,
   skipped = false,
@@ -37,6 +38,7 @@ export function HouseCard({
   onToggleLike?: () => void;
   visited?: boolean;
   onToggleVisited?: () => void;
+  gemCollected?: boolean;
   onSkip?: () => void;
   onRestoreRoute?: () => void;
   skipped?: boolean;
@@ -73,6 +75,7 @@ export function HouseCard({
           onToggleLike={onToggleLike}
           visited={visited}
           onToggleVisited={onToggleVisited}
+          gemCollected={gemCollected}
           chrome="sheet"
           compact={!expanded}
           index={index}

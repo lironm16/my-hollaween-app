@@ -22,7 +22,7 @@ import {
 import { distanceMeters, formatDistance } from "@/lib/geo";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
-import { prepareGemHuntSensors, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
+import { pauseGemHuntCameraStream, prepareGemHuntSensors } from "@/lib/gem-hunt-sensors";
 import {
   clearGemAnchorOverride,
   setGemAnchorOverride,
@@ -72,7 +72,7 @@ export function GemHuntPanel({
 
   function onCollect(collectedVariant: string) {
     gems.collect(house.id, collectedVariant);
-    stopGemHuntCameraStream();
+    pauseGemHuntCameraStream();
     setHuntOpen(false);
     setCheer(true);
     window.setTimeout(() => setCheer(false), GEM_CHEER_MS);
@@ -185,7 +185,7 @@ export function GemHuntPanel({
           simulateInRange={simulate}
           collectEnabled={canCollect}
           onClose={() => {
-            stopGemHuntCameraStream();
+            pauseGemHuntCameraStream();
             setHuntOpen(false);
           }}
           onCollect={onCollect}

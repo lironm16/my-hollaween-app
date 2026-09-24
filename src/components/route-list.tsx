@@ -5,6 +5,7 @@ import { ChevronDown, MapPin, Navigation } from "lucide-react";
 import { HouseCard } from "@/components/house-card";
 import { Button } from "@/components/ui/button";
 import { SkipSign, VisitedSign } from "@/components/visit-marks";
+import { HouseTitleMarkers } from "@/components/house-title-markers";
 import { houseHeadline } from "@/lib/labels";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
@@ -43,6 +44,7 @@ function RouteTailRow({
   onShowOnMap,
   onEditHouse,
   editingId,
+  gemCollected,
 }: {
   house: PublicHouse;
   kind: "skipped" | "visited";
@@ -59,6 +61,7 @@ function RouteTailRow({
   onShowOnMap?: () => void;
   onEditHouse?: () => void;
   editingId?: string | null;
+  gemCollected?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -81,7 +84,10 @@ function RouteTailRow({
           onClick={() => setOpen((value) => !value)}
         >
           {kind === "skipped" ? <SkipSign /> : <VisitedSign />}
-          <span className="route-tail-title">{houseHeadline(house)}</span>
+          <span className="route-tail-title">
+            <HouseTitleMarkers liked={liked} gemCollected={gemCollected} />
+            {houseHeadline(house)}
+          </span>
           <ChevronDown className={cn("route-tail-chevron", open && "is-open")} aria-hidden />
         </button>
       </div>
@@ -94,6 +100,7 @@ function RouteTailRow({
             onToggleLike={onToggleLike}
             visited={visited}
             onToggleVisited={onToggleVisited}
+            gemCollected={gemCollected}
             onSkip={kind === "visited" ? onSkipHouse : undefined}
             skipped={kind === "skipped"}
             skipMeta={skipMeta}
@@ -133,6 +140,7 @@ export function RouteList({
   onShowOnMap,
   onEditHouse,
   editingId,
+  gemCollected,
 }: {
   items: RouteListItem[];
   originLabel?: string;
@@ -154,6 +162,7 @@ export function RouteList({
   onShowOnMap?: (id: string) => void;
   onEditHouse?: (id: string, index: number) => void;
   editingId?: string | null;
+  gemCollected?: (id: string) => boolean;
 }) {
   const focusRef = useRef<HTMLLIElement | null>(null);
 
@@ -249,6 +258,7 @@ export function RouteList({
                   onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
                   onEditHouse={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
                   editingId={editingId}
+                  gemCollected={gemCollected?.(house.id)}
                 />
               ) : (
                 <div className="route-list-house">
@@ -259,6 +269,7 @@ export function RouteList({
                     onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
                     visited={visitedIds?.includes(house.id)}
                     onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
+                    gemCollected={gemCollected?.(house.id)}
                     onSkip={onSkipHouse ? () => onSkipHouse(house.id) : undefined}
                     canEdit={Boolean(canEditHouse?.(house.id))}
                     admin={admin}

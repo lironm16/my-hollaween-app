@@ -8,6 +8,7 @@ import {
 } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { HouseMapPinIcon } from "@/components/house-map-pin-icon";
+import { HouseTitleMarkers } from "@/components/house-title-markers";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -191,6 +192,8 @@ export function ClusterHouseList({
   skipped,
   filteredOut,
   visited,
+  gemCollected,
+  liked,
   onSelect,
 }: {
   houses: PublicHouse[];
@@ -199,6 +202,8 @@ export function ClusterHouseList({
   skipped?: (id: string) => boolean;
   filteredOut?: (id: string) => boolean;
   visited?: (id: string) => boolean;
+  gemCollected?: (id: string) => boolean;
+  liked?: (id: string) => boolean;
   onSelect: (id: string) => void;
 }) {
   const clusterNow = now ?? new Date();
@@ -233,7 +238,10 @@ export function ClusterHouseList({
               />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate font-medium">{houseHeadline(item)}</span>
+              <span className="block truncate font-medium">
+                <HouseTitleMarkers liked={liked?.(item.id)} gemCollected={gemCollected?.(item.id)} />
+                {houseHeadline(item)}
+              </span>
               {item.arrival?.trim() ? (
                 <span className="mt-0.5 block truncate text-sm text-violet-300/90">
                   {item.arrival.trim()}

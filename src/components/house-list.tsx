@@ -16,6 +16,7 @@ export function HouseList({
   onToggleLike,
   visitedIds,
   onToggleVisited,
+  gemCollected,
   admin = false,
   canEditHouse,
   editCodeFor,
@@ -37,6 +38,7 @@ export function HouseList({
   onToggleLike?: (id: string) => void;
   visitedIds?: string[];
   onToggleVisited?: (id: string) => void;
+  gemCollected?: (id: string) => boolean;
   admin?: boolean;
   canEditHouse?: (id: string) => boolean;
   editCodeFor?: (id: string) => string | undefined;
@@ -105,6 +107,7 @@ export function HouseList({
             onToggleLike={onToggleLike ? () => onToggleLike(h.id) : undefined}
             visited={visitedIds?.includes(h.id)}
             onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
+            gemCollected={gemCollected?.(h.id)}
             skipped={skippedIds?.includes(h.id)}
             skipMeta={skipMetaFor?.(h.id)}
             onSkip={

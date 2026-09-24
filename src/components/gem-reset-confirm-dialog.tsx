@@ -19,21 +19,31 @@ export function GemResetConfirmDialog({
   if (!house) return null;
 
   return (
-    <HouseEditModal open={open} onClose={onCancel} title="לאפס יהלום?" subtitle={houseHeadline(house)}>
+    <HouseEditModal
+      open={open}
+      onClose={onCancel}
+      title="לאפס איסוף יהלום?"
+      subtitle={houseHeadline(house)}
+    >
       <div className="space-y-4">
         <p className="text-base leading-relaxed text-violet-100 [overflow-wrap:anywhere]">
           האיסוף של {houseHeadline(house)} יימחק מהמכשיר — אפשר לצוד את היהלום מחדש.
         </p>
-        <div className="flex gap-2 pt-1">
-          <Button type="button" variant="outline" className="min-w-0 flex-1 text-lg" onClick={onCancel}>
-            ביטול
+        <div className="flex gap-3 pt-1" dir="rtl">
+          <Button
+            type="button"
+            className="min-h-12 min-w-0 flex-1 py-3 text-lg font-semibold bg-orange-500 text-black hover:bg-orange-400"
+            onClick={onConfirm}
+          >
+            אפס
           </Button>
           <Button
             type="button"
-            className="min-w-0 flex-1 bg-orange-500 text-lg text-black hover:bg-orange-400"
-            onClick={onConfirm}
+            variant="outline"
+            className="min-h-12 min-w-0 flex-1 py-3 text-lg font-semibold"
+            onClick={onCancel}
           >
-            איפוס
+            ביטול
           </Button>
         </div>
       </div>

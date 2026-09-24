@@ -7,7 +7,7 @@ import { GemOrbitStage } from "@/components/gem-hunt/gem-orbit-stage";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
-import { getGemHuntCameraStream, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
+import { getGemHuntCameraStream, pauseGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
 import { gemCollectDanceIndex } from "@/lib/gem-collect-dance";
 import {
   facingHouse,
@@ -119,7 +119,7 @@ export function GemHuntOverlay({
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
-      stopGemHuntCameraStream();
+      pauseGemHuntCameraStream();
     };
   }, []);
 
@@ -360,7 +360,17 @@ export function GemHuntOverlay({
             onClick={handleCollect}
             aria-label={`איסוף ${gemLabelHe(monsterId)}`}
           >
-            <GemSprite house={house} mode="3d" tapCollect spinWhileCollect={false} />
+            <div
+              className={cn("gem-hunt-overlay__gem-dance", phase === "collecting" && "is-collecting")}
+              data-collect-dance={phase === "collecting" ? collectDanceIndex : undefined}
+            >
+              <GemSprite
+                house={house}
+                mode="3d"
+                tapCollect
+                spinWhileCollect={phase !== "collecting"}
+              />
+            </div>
           </button>
         ) : null}
 
@@ -400,11 +410,20 @@ export function GemHuntOverlay({
             "is-collect-layer",
             phase === "collecting" && "is-collecting",
           )}
-          data-collect-dance={phase === "collecting" ? collectDanceIndex : undefined}
           onClick={handleCollect}
           aria-label={`איסוף ${gemLabelHe(monsterId)}`}
         >
-          <GemSprite house={house} mode="3d" tapCollect spinWhileCollect={false} />
+          <div
+            className={cn("gem-hunt-overlay__gem-dance", phase === "collecting" && "is-collecting")}
+            data-collect-dance={phase === "collecting" ? collectDanceIndex : undefined}
+          >
+            <GemSprite
+              house={house}
+              mode="3d"
+              tapCollect
+              spinWhileCollect={phase !== "collecting"}
+            />
+          </div>
         </button>
       ) : null}
 

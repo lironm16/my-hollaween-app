@@ -53,6 +53,13 @@ export function getGemHuntCameraStream() {
   return null;
 }
 
+/** Pause tracks — keeps OS camera grant for the next hunt in the same session. */
+export function pauseGemHuntCameraStream() {
+  sharedCameraStream?.getVideoTracks().forEach((t) => {
+    t.enabled = false;
+  });
+}
+
 export function stopGemHuntCameraStream() {
   sharedCameraStream?.getTracks().forEach((t) => t.stop());
   sharedCameraStream = null;
@@ -89,34 +96,35 @@ export async function prepareGemHuntSensors(): Promise<{
     const ctor = DeviceOrientationEvent as typeof DeviceOrientationEvent & {
       requestPermission?: () => Promise<"granted" | "denied">;
     };
-    if (typeof ctor.requestPermission === "function") {
-      /** Always call from the user tap — on iOS this re-enables events after deploy without re-prompting when already granted. */
+    if (typeof ctor.requestPermission === "function" && !readGranted(ORIENTATION_GRANTED_KEY)) {
       try {
         const result = await ctor.requestPermission();
         if (result === "granted") {
           writeGranted(ORIENTATION_GRANTED_KEY);
-        } else if (!readGranted(ORIENTATION_GRANTED_KEY)) {
+        } else {
           orientation = false;
         }
       } catch {
-        if (!readGranted(ORIENTATION_GRANTED_KEY)) orientation = false;
+        orientation = false;
       }
     }
   }
 
   if (typeof navigator !== "undefined" && navigator.mediaDevices?.getUserMedia) {
     try {
-      if (!sharedCameraStream?.active) {
-        const cameraKnownGranted =
-          readGranted(CAMERA_GRANTED_KEY) ||
-          (await queryPermissionGranted("camera")) === true;
+      const liveTracks = sharedCameraStream?.getVideoTracks().filter((t) => t.readyState === "live");
+      if (liveTracks && liveTracks.length > 0) {
+        liveTracks.forEach((t) => {
+          t.enabled = true;
+        });
+        writeGranted(CAMERA_GRANTED_KEY);
+      } else {
+        sharedCameraStream = null;
         sharedCameraStream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: "environment" } },
           audio: false,
         });
-        if (cameraKnownGranted || sharedCameraStream.active) {
-          writeGranted(CAMERA_GRANTED_KEY);
-        }
+        writeGranted(CAMERA_GRANTED_KEY);
       }
     } catch {
       camera = false;
