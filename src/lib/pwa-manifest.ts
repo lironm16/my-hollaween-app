@@ -21,15 +21,11 @@ const IOS_ICONS: MetadataRoute.Manifest["icons"] = [
   { src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png", purpose: "any" },
 ];
 
-/**
- * Chrome mints a WebAPK (and Play Protect may block it) only when display is
- * standalone / fullscreen / minimal-ui. On Android we use browser so the map
- * runs in Chrome without an install step.
- */
+/** Standalone + maskable icons so Chrome Android offers full PWA install (not just a bookmark). */
 export function pwaManifestForUserAgent(userAgent: string): MetadataRoute.Manifest {
   const android = isAndroidUserAgent(userAgent);
   const ios = isIosUserAgent(userAgent);
-  const base: MetadataRoute.Manifest = {
+  return {
     name: "HallowHood",
     short_name: "HallowHood",
     description: "מפת הבתים המפחידים של השכונה, גם בלי רשת.",
@@ -38,19 +34,13 @@ export function pwaManifestForUserAgent(userAgent: string): MetadataRoute.Manife
     lang: "he",
     start_url: "/",
     scope: "/",
-    display: android ? "browser" : "standalone",
+    display: "standalone",
     orientation: "portrait",
     background_color: "#12081a",
     theme_color: "#12081a",
     prefer_related_applications: false,
     categories: ["navigation", "entertainment"],
     icons: android ? ANDROID_ICONS : ios ? IOS_ICONS : ANDROID_ICONS,
-  };
-
-  if (android) return base;
-
-  return {
-    ...base,
     handle_links: "preferred",
     launch_handler: { client_mode: ["navigate-existing", "auto"] },
   } as MetadataRoute.Manifest;

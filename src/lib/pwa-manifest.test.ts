@@ -3,12 +3,15 @@ import { describe, it } from "node:test";
 import { isAndroidUserAgent, pwaManifestForUserAgent } from "@/lib/pwa-manifest";
 
 describe("pwaManifestForUserAgent", () => {
-  it("uses browser display on Android to avoid WebAPK install", () => {
+  it("uses standalone display on Android for installable PWA", () => {
     const manifest = pwaManifestForUserAgent(
       "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36",
     );
-    assert.equal(manifest.display, "browser");
-    assert.equal((manifest as { handle_links?: string }).handle_links, undefined);
+    assert.equal(manifest.display, "standalone");
+    assert.equal((manifest as { handle_links?: string }).handle_links, "preferred");
+    const srcs = manifest.icons?.map((icon) => icon.src) ?? [];
+    assert.ok(srcs.includes("/icon-192-maskable.png"));
+    assert.ok(srcs.includes("/icon-512-maskable.png"));
   });
 
   it("keeps standalone display on iPhone for add-to-home-screen", () => {

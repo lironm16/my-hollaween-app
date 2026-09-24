@@ -32,7 +32,7 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 |----------|---------------|--------------|------|-----|-----------------|----------|
 | **iOS Safari** | Share → Add to Home Screen | `standalone` | Requires A2HS first | Yes | localStorage + IndexedDB + SW | **P0** |
 | **iOS PWA (A2HS)** | Already installed | `standalone` | Full push after permission | Yes | Same | **P0** |
-| **Android Chrome** | Menu → Add to Home Screen (manual; auto-install blocked) | `browser` (avoids WebAPK/Play Protect) | Web Push after permission | Yes | Same | **P0** |
+| **Android Chrome** | Menu → Install app / Add to Home Screen | `standalone` (installable PWA) | Web Push after permission | Yes | Same | **P0** |
 | **Android Samsung/Firefox** | Manual A2HS if supported | varies | May differ | Yes | Same | **P1** |
 | **Desktop Chrome** | Optional install | `standalone` or tab | Works | N/A | Same | **P2** |
 | **Native App Store / Play** | Not in scope | — | — | — | — | Out of scope |
@@ -45,7 +45,7 @@ npm run lint          # ESLint (not in CI yet — 36 existing errors)
 | INS-02 | A2HS flow completes; icon on home screen | ✓ | — | ✓ |
 | INS-03 | Launched from home screen: RTL Hebrew layout | — | ✓ | partial |
 | INS-04 | App name: HallowHood / הלואין בשכונה | ✓ | ✓ | ✓ |
-| INS-05 | Android: Chrome install banner does not auto-trigger WebAPK | — | — | ✓ |
+| INS-05 | Android: Chrome menu shows Install app (full PWA, not bookmark-only) | — | — | ✓ |
 | INS-06 | Android: manual A2HS via menu works | — | — | ✓ |
 | INS-07 | First visit online → catalog cached locally | ✓ | ✓ | ✓ |
 | INS-08 | Second launch offline → map/list show saved houses | ✓ | ✓ | ✓ |
