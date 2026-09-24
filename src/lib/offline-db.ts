@@ -551,6 +551,8 @@ export type HouseFiltersState = {
   visitedOnly: boolean;
   /** Show only houses skipped on the route. */
   skippedOnly: boolean;
+  /** Show only houses whose gem is not collected yet. */
+  uncollectedGemOnly: boolean;
   /** Include houses with no outdoor decoration (gray struck lights). */
   includeUndecorated: boolean;
   /** Show houses, POIs, or both on the map. */

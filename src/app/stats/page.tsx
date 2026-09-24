@@ -8,6 +8,8 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
+import { useGemProgress } from "@/hooks/use-gem-progress";
+import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 
 export default function StatsPage() {
   const { refresh } = useCatalog();
@@ -20,6 +22,7 @@ export default function StatsPage() {
   }, [refresh]);
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
+  const gems = useGemProgress();
   return (
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <AppHeader />
@@ -31,6 +34,8 @@ export default function StatsPage() {
               stats={stats}
               likedCount={likes.likedIds.length}
               visitedCount={visits.visitedIds.length}
+              gemCollectedCount={gems.collectedIds.length}
+              showGemStats={gemHuntVisible(admin)}
             />
           ) : (
             <p className="text-base text-violet-300">טוענים נתונים…</p>

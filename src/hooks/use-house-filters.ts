@@ -44,6 +44,7 @@ export const DEFAULT_HOUSE_FILTERS: HouseFiltersState = {
   unvisitedOnly: false,
   visitedOnly: false,
   skippedOnly: false,
+  uncollectedGemOnly: false,
   includeUndecorated: true,
   locationKindFilter: "all",
 };
@@ -120,6 +121,7 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
     unvisitedOnly: Boolean(raw.unvisitedOnly),
     visitedOnly: Boolean(raw.visitedOnly),
     skippedOnly: Boolean(raw.skippedOnly),
+    uncollectedGemOnly: Boolean(raw.uncollectedGemOnly),
     includeUndecorated,
     neighborhoodFilters:
       Array.isArray(raw.neighborhoodFilters) && neighborhoods.length > 0
@@ -180,6 +182,7 @@ export function emptyHouseFilters(): HouseFiltersState {
     unvisitedOnly: false,
     visitedOnly: false,
     skippedOnly: false,
+    uncollectedGemOnly: false,
     accessibleOnly: false,
     scareFilters: [...SCARE_LEVELS],
     candyFilters: [...CANDY_TONE_IDS],
@@ -209,6 +212,7 @@ export function countActiveFilters(filters: HouseFiltersState): number {
     Number(filters.unvisitedOnly) +
     Number(filters.visitedOnly) +
     Number(filters.skippedOnly) +
+    Number(filters.uncollectedGemOnly) +
     filters.sensitivityFilters.length +
     Number(filters.locationKindFilter !== "all")
   );

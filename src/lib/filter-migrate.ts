@@ -6,7 +6,7 @@ import {
 import type { HouseFiltersState } from "@/lib/offline-db";
 import { CANDY_TONE_IDS, SCARE_LEVELS } from "@/lib/types";
 
-export const HOUSE_FILTERS_VERSION = 6;
+export const HOUSE_FILTERS_VERSION = 7;
 
 /** Drop engine flags that no longer have UI controls. */
 export function migrateHouseFilters(filters: HouseFiltersState): HouseFiltersState {
@@ -23,6 +23,7 @@ export function migrateHouseFilters(filters: HouseFiltersState): HouseFiltersSta
     decorOnlyOnly: false,
     visitedOnly: false,
     skippedOnly: false,
+    uncollectedGemOnly: Boolean(filters.uncollectedGemOnly),
     scareFilters: [...filters.scareFilters],
     candyFilters: [...filters.candyFilters],
     neighborhoodFilters: [...filters.neighborhoodFilters],

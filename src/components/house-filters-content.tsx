@@ -23,7 +23,7 @@ import {
   resolveVisitWindow,
   type VisitWindowMode,
 } from "@/lib/visit-window";
-import { LikedMark, SkippedMark, UnvisitedMark } from "@/components/visit-marks";
+import { LikedMark, SkippedMark, UncollectedGemMark, UnvisitedMark } from "@/components/visit-marks";
 import { SCARE_LEVELS, SENSITIVITY_OPTIONS, type ScareLevel } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -114,9 +114,11 @@ export function HouseFiltersContent({
   filters,
   now,
   onPatch,
+  showGemFilters = false,
 }: {
   filters: HouseFiltersState;
   now: Date;
+  showGemFilters?: boolean;
   onPatch: (
     patch: Partial<HouseFiltersState> | ((current: HouseFiltersState) => HouseFiltersState),
   ) => void;
@@ -206,7 +208,7 @@ export function HouseFiltersContent({
         ) : null}
       </FilterSection>
 
-      <FilterSection title="סימונים שלי">
+      <FilterSection title="שלי">
         <FilterToggle
           checked={filters.likedOnly}
           onChange={() => onPatch({ likedOnly: !filters.likedOnly })}
@@ -231,6 +233,14 @@ export function HouseFiltersContent({
         >
           <SkippedMark labeled />
         </FilterToggle>
+        {showGemFilters ? (
+          <FilterToggle
+            checked={filters.uncollectedGemOnly}
+            onChange={() => onPatch({ uncollectedGemOnly: !filters.uncollectedGemOnly })}
+          >
+            <UncollectedGemMark labeled />
+          </FilterToggle>
+        ) : null}
       </FilterSection>
 
       <FilterSection title="סוג המקום">

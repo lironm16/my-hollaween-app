@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import { MapPinned, Moon, Pause } from "lucide-react";
+import { Gem, MapPinned, Moon, Pause } from "lucide-react";
 import { LocationKindSign } from "@/components/location-kind-sign";
 import { CandySign } from "@/components/candy-glyphs";
 import { OpenNowSign, ClosingSoonSign, OpeningSoonSign } from "@/components/open-now-mark";
@@ -37,10 +37,14 @@ export function AdminStatsCard({
   stats,
   likedCount,
   visitedCount,
+  gemCollectedCount,
+  showGemStats = false,
 }: {
   stats: SnapshotStats;
   likedCount?: number;
   visitedCount?: number;
+  gemCollectedCount?: number;
+  showGemStats?: boolean;
 }) {
   const personalMarks = (
     <div className="grid grid-cols-2 gap-2">
@@ -58,12 +62,22 @@ export function AdminStatsCard({
         valueClass={visitedCount ? "text-emerald-300" : undefined}
         plain
       />
+      {showGemStats ? (
+        <Tile
+          icon={<Gem className="size-8 fill-amber-300 text-amber-300" strokeWidth={2.1} />}
+          label="אספתי"
+          value={gemCollectedCount ?? 0}
+          valueClass={gemCollectedCount ? "text-amber-300" : undefined}
+          plain
+          wide
+        />
+      ) : null}
     </div>
   );
 
   return (
     <div className="space-y-3" dir="rtl">
-      <Section title="סימונים שלי">{personalMarks}</Section>
+      <Section title="שלי">{personalMarks}</Section>
       <Section title="מפה">
         <div className="mb-2 grid grid-cols-2 gap-2">
           <Tile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} />

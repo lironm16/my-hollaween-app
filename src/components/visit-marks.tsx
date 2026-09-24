@@ -1,4 +1,4 @@
-import { Check, Filter } from "lucide-react";
+import { Check, Filter, Gem } from "lucide-react";
 import { DecorMark } from "@/components/decor-glyphs";
 import { ClosedSign, PauseSign } from "@/components/house-tags";
 import { VisitedCheck } from "@/components/visited-check";
@@ -200,6 +200,50 @@ export function SkipPinBadge({
       aria-hidden="true"
     >
       <SkipIcon className="skip-pin-badge-icon" />
+    </span>
+  );
+}
+
+function GemSign({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/20 ring-1 ring-amber-300/45",
+        className,
+      )}
+      aria-hidden
+    >
+      <Gem className="size-5 fill-amber-300 text-amber-300" strokeWidth={2.1} />
+    </span>
+  );
+}
+
+export function UncollectedGemMark({
+  labeled = false,
+  className,
+}: {
+  labeled?: boolean;
+  className?: string;
+}) {
+  return (
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <GemSign />
+      {labeled ? <span>לא אספתי</span> : <span className="sr-only">לא אספתי יהלום</span>}
+    </span>
+  );
+}
+
+export function CollectedGemMark({
+  labeled = false,
+  className,
+}: {
+  labeled?: boolean;
+  className?: string;
+}) {
+  return (
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <GemSign />
+      {labeled ? <span>אספתי</span> : <span className="sr-only">אספתי יהלום</span>}
     </span>
   );
 }

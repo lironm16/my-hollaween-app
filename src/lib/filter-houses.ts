@@ -71,11 +71,12 @@ export function houseFilterMismatchReasons(
     likedIds: string[];
     visitedIds: string[];
     skippedIds?: string[];
+    gemCollectedIds?: string[];
     now: Date;
   },
 ): string[] {
   const reasons: string[] = [];
-  const { houseSet, likedIds, visitedIds, skippedIds = [], now } = options;
+  const { houseSet, likedIds, visitedIds, skippedIds = [], gemCollectedIds = [], now } = options;
   const {
     accessibleOnly,
     openNowOnly,
@@ -94,6 +95,7 @@ export function houseFilterMismatchReasons(
     unvisitedOnly,
     visitedOnly,
     skippedOnly,
+    uncollectedGemOnly,
     includeUndecorated,
     locationKindFilter,
   } = filters;
@@ -169,6 +171,7 @@ export function houseFilterMismatchReasons(
   if (visitedOnly && !visitedIds.includes(house.id)) reasons.push("לא ביקרת");
   if (skippedIds.includes(house.id)) reasons.push("דילגתם על הבית");
   if (skippedOnly && !skippedIds.includes(house.id)) reasons.push("לא דילגתם");
+  if (uncollectedGemOnly && gemCollectedIds.includes(house.id)) reasons.push("כבר אספתם יהלום");
 
   return reasons;
 }
@@ -181,6 +184,7 @@ export function filterHouses(
     likedIds: string[];
     visitedIds: string[];
     skippedIds?: string[];
+    gemCollectedIds?: string[];
     now: Date;
   },
 ): PublicHouse[] {
@@ -202,10 +206,11 @@ export function filterHouses(
     unvisitedOnly,
     visitedOnly,
     skippedOnly,
+    uncollectedGemOnly,
     includeUndecorated,
     locationKindFilter,
   } = filters;
-  const { houseSet, likedIds, visitedIds, skippedIds = [], now } = options;
+  const { houseSet, likedIds, visitedIds, skippedIds = [], gemCollectedIds = [], now } = options;
   const {
     from: visitWindowFrom,
     to: visitWindowTo,
@@ -263,6 +268,7 @@ export function filterHouses(
     if (unvisitedOnly && visitedIds.includes(house.id)) return false;
     if (visitedOnly && !visitedIds.includes(house.id)) return false;
     if (skippedOnly && !skippedIds.includes(house.id)) return false;
+    if (uncollectedGemOnly && gemCollectedIds.includes(house.id)) return false;
     return true;
   });
 }

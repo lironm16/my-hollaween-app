@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { resetManagerClientSettings } from "@/lib/admin-client-reset";
 
 const ADMIN_CHANGED_EVENT = "hw-admin-changed";
 
@@ -38,6 +39,7 @@ export function useAdminSession() {
 
   const logout = useCallback(async () => {
     await fetch("/api/admin/logout", { method: "POST" });
+    resetManagerClientSettings();
     setAdmin(false);
     notifyAdminChanged();
   }, []);

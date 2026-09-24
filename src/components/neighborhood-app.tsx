@@ -225,9 +225,10 @@ export function NeighborhoodApp({
       likedIds: likes.likedIds,
       visitedIds: visits.visitedIds,
       skippedIds: skips.skippedIds,
+      gemCollectedIds: gems.collectedIds,
       now,
     }),
-    [activeHouseSet, likes.likedIds, visits.visitedIds, skips.skippedIds, now],
+    [activeHouseSet, likes.likedIds, visits.visitedIds, skips.skippedIds, gems.collectedIds, now],
   );
 
   const mapHouses = useMemo(
@@ -853,7 +854,12 @@ export function NeighborhoodApp({
           onSave={commitFilterDraft}
           saveDisabled={Boolean(visitWindowInvalid)}
         >
-          <HouseFiltersContent filters={sheetFilters} now={now} onPatch={patchFilterDraft} />
+          <HouseFiltersContent
+            filters={sheetFilters}
+            now={now}
+            onPatch={patchFilterDraft}
+            showGemFilters={gemHuntVisible(admin)}
+          />
         </FiltersSheet>
       ) : null}
       <NeighborhoodStatusBanners
