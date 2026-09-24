@@ -2,7 +2,6 @@
 
 import { HelpShell, HelpShot } from "@/components/help-shell";
 import { helpImage } from "@/lib/help-images";
-import { renderHelpText } from "@/lib/render-help-text";
 
 export default function EditCodeHelpPage() {
   return (
@@ -12,9 +11,8 @@ export default function EditCodeHelpPage() {
           אין שחזור אוטומטי של קוד עריכה דרך האפליקציה.
         </p>
         <p className="text-lg leading-relaxed text-orange-100">
-          {renderHelpText(
-            "אם איבדתם לגמרי ואין גישה מאף מכשיר — פנו ל<<מנהל/ת האפליקציה>> לקבלת הקוד מחדש.",
-          )}
+          אם איבדתם לגמרי ואין גישה מאף מכשיר — פנו ל
+          <strong className="text-orange-200">מנהל/ת האפליקציה</strong> לקבלת הקוד מחדש.
         </p>
         <HelpShot src={helpImage("step-3-done.png")} alt="מסך הצלחה עם קוד עריכה" />
       </div>

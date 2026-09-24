@@ -95,12 +95,12 @@ export function HelpStep({
   image,
   imageAlt,
   action,
-  parseBody = typeof body === "string",
+  parseBody = false,
 }: {
   n: number;
   title: string;
   body: ReactNode;
-  /** When true, `body` is a string parsed for <<ui-label>> chips. */
+  /** When true, string `body` is parsed for explicit <<ui-label>> chips only. */
   parseBody?: boolean;
   image: string;
   imageAlt: string;

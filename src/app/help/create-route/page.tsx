@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { HelpShell, HelpStep } from "@/components/help-shell";
+import { HelpUiChip } from "@/components/help-ui-chip";
 import { helpImage } from "@/lib/help-images";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -9,14 +10,22 @@ import type { ReactNode } from "react";
 
 const STEPS: Array<{
   title: string;
-  body: string;
+  body: ReactNode;
   image: string;
   imageAlt: string;
   action?: ReactNode;
 }> = [
   {
     title: "סינון (אופציונלי)",
-    body: "לפני המסלול אפשר לסנן בתים: רמת פחד, ממתקים, נגישות, שכונה ועוד — כפתור <<סינון>> בסרגל. רק בתים שעוברים את הסינון נכנסים למסלול. בתים שכבר סימנתם כ<<ביקור>> לא נכללים. בתים שלא עוברים סינון <<נשארים על המפה באפור>> — כדי להחזיר אותם, שנהו את הסינון.",
+    body: (
+      <>
+        לפני המסלול אפשר לסנן בתים: רמת פחד, ממתקים, נגישות, שכונה ועוד — כפתור{" "}
+        <HelpUiChip>סינון</HelpUiChip> בסרגל. רק בתים שעוברים את הסינון נכנסים למסלול. בתים
+        שכבר סימנתם כ<strong className="text-orange-200">ביקור</strong> לא נכללים. בתים שלא
+        עוברים סינון <strong className="text-orange-200">נשארים על המפה באפור</strong> — כדי
+        להחזיר אותם, שנהו את הסינון.
+      </>
+    ),
     image: helpImage("route-1-filters.png"),
     imageAlt: "חלון סינון בתים",
     action: (
@@ -33,19 +42,35 @@ const STEPS: Array<{
   },
   {
     title: "נקודת התחלה",
-    body: "לחצו על כפתור <<📍>> בסרגל ובחרו מאיפה יוצאים: מיקום נוכחי (GPS), מרכז השכונה, או נקודה על המפה. המסלול מחושב מהנקודה הזו.",
+    body: (
+      <>
+        לחצו על כפתור <HelpUiChip>📍</HelpUiChip> בסרגל ובחרו מאיפה יוצאים: מיקום נוכחי (GPS),
+        מרכז השכונה, או נקודה על המפה. המסלול מחושב מהנקודה הזו.
+      </>
+    ),
     image: helpImage("route-2-origin.png"),
     imageAlt: "בחירת נקודת התחלה",
   },
   {
     title: "הפעלת מסלול",
-    body: "לחצו על כפתור <<מסלול>> (אייקון שביל) בסרגל הכלים. הכפתור נדלק בכתום — המסלול פעיל. אם בחרתם GPS ועדיין אין מיקום, תתבקשו לאשר גישה למיקום.",
+    body: (
+      <>
+        לחצו על כפתור <HelpUiChip>מסלול</HelpUiChip> (אייקון שביל) בסרגל הכלים. הכפתור נדלק
+        בכתום — המסלול פעיל. אם בחרתם GPS ועדיין אין מיקום, תתבקשו לאשר גישה למיקום.
+      </>
+    ),
     image: helpImage("route-3-enable.png"),
     imageAlt: "הפעלת מסלול מהסרגל",
   },
   {
     title: "צפייה במסלול",
-    body: "ב<<מפה>>: קו כתום מחבר את העצירות לפי הסדר. ב<<רשימה>>: סיכום (בתים, עצירות, מרחק, זמן משוער) ואז רשימת עצירות ממוספרות עם מרחק הליכה בין כל תחנה.",
+    body: (
+      <>
+        ב<HelpUiChip>מפה</HelpUiChip>: קו כתום מחבר את העצירות לפי הסדר. ב
+        <HelpUiChip>רשימה</HelpUiChip>: סיכום (בתים, עצירות, מרחק, זמן משוער) ואז רשימת
+        עצירות ממוספרות עם מרחק הליכה בין כל תחנה.
+      </>
+    ),
     image: helpImage("route-4-summary.png"),
     imageAlt: "סיכום מסלול ורשימת עצירות",
   },

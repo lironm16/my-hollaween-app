@@ -1,28 +1,51 @@
 "use client";
 
 import { HelpShell, HelpStep } from "@/components/help-shell";
+import { HelpUiChip } from "@/components/help-ui-chip";
 import { helpImage } from "@/lib/help-images";
+import type { ReactNode } from "react";
 
-const STEPS = [
+const STEPS: Array<{
+  title: string;
+  body: ReactNode;
+  image: string;
+  imageAlt: string;
+}> = [
   {
     title: "פתחו את תפריט הפעולות (⋮)",
-    body: "במפה או ברשימה, פתחו את כרטיס הבית. בפינה העליונה של הכרטיס לחצו על <<⋮>> (שלוש נקודות).",
+    body: (
+      <>
+        במפה או ברשימה, פתחו את כרטיס הבית. בפינה העליונה של הכרטיס לחצו על{" "}
+        <HelpUiChip>⋮</HelpUiChip> (שלוש נקודות).
+      </>
+    ),
     image: helpImage("share-edit-code-menu.png"),
     imageAlt: "תפריט פעולות — שלוש נקודות בכרטיס הבית",
   },
   {
     title: "בחרו «קוד עריכה»",
-    body: "בתפריט שנפתח בחרו <<קוד עריכה>>. מופיעים רק לבעלי הבית או למנהל.",
+    body: (
+      <>
+        בתפריט שנפתח בחרו <HelpUiChip>קוד עריכה</HelpUiChip>. מופיעים רק לבעלי הבית או למנהל.
+      </>
+    ),
     image: helpImage("share-edit-code-menu.png"),
     imageAlt: "פריט קוד עריכה בתפריט הפעולות",
   },
   {
     title: "העתיקו או שתפו",
-    body: "ייפתח חלון עם הקוד בן 6 הספרות. לחצו <<העתיקו>> או <<שיתוף>> כדי לשלוח בוואטסאפ / הודעה. מי שמקבל את הקוד מזין אותו פעם אחת ב: תפריט → בית → עריכה → בחרו את הבית → <<פתיחה לעריכה>>.",
+    body: (
+      <>
+        ייפתח חלון עם הקוד בן 6 הספרות. לחצו <HelpUiChip>העתיקו</HelpUiChip> או{" "}
+        <HelpUiChip>שיתוף</HelpUiChip> כדי לשלוח בוואטסאפ / הודעה. מי שמקבל את הקוד מזין אותו
+        פעם אחת ב: תפריט → בית → עריכה → בחרו את הבית →{" "}
+        <HelpUiChip>פתיחה לעריכה</HelpUiChip>.
+      </>
+    ),
     image: helpImage("share-edit-code-dialog.png"),
     imageAlt: "חלון קוד עריכה עם העתיקו ושיתוף",
   },
-] as const;
+];
 
 export default function ShareEditCodeHelpPage() {
   return (
