@@ -1,5 +1,24 @@
 import { distanceMeters } from "@/lib/geo";
-import type { HouseTheme, PublicHouse } from "@/lib/types";
+import type { GemFamily, GemType, GemVariantId } from "@/lib/gem-variants";
+import {
+  countGemEligibleHouses,
+  gemFamilyForHouse,
+  gemLabelHe,
+  gemTypeForHouse,
+  gemVariantForHouse,
+  GEM_VARIANTS,
+} from "@/lib/gem-variants";
+import type { PublicHouse } from "@/lib/types";
+
+export type { GemFamily, GemType, GemVariantId };
+export {
+  countGemEligibleHouses,
+  gemFamilyForHouse,
+  gemLabelHe,
+  gemTypeForHouse,
+  gemVariantForHouse,
+  GEM_VARIANTS,
+};
 
 /** Show "find gem" affordance when within this range. */
 export const GEM_APPROACH_METERS = 50;
@@ -15,43 +34,6 @@ export const GEM_SCAN_REVEAL_SECONDS = 5;
 export const GEM_SCAN_PAN_DEGREES = 180;
 /** Show "can't see it?" help after this many seconds in hunt mode. */
 export const GEM_HELP_AFTER_SECONDS = 8;
-
-export const GEM_TYPES = ["crystal", "pumpkin", "ghost", "witch"] as const;
-export type GemType = (typeof GEM_TYPES)[number];
-
-const THEME_GEM: Partial<Record<HouseTheme, GemType>> = {
-  pumpkin: "pumpkin",
-  ghost: "ghost",
-  witch: "witch",
-  vampire: "crystal",
-  skeleton: "ghost",
-  monster: "witch",
-  haunted: "ghost",
-  candy: "crystal",
-  spider: "witch",
-  blackCat: "pumpkin",
-};
-
-export function gemTypeForHouse(house: Pick<PublicHouse, "theme">): GemType {
-  return THEME_GEM[house.theme] ?? "crystal";
-}
-
-export function gemLabelHe(type: GemType): string {
-  switch (type) {
-    case "pumpkin":
-      return "דלעת";
-    case "ghost":
-      return "רוח";
-    case "witch":
-      return "מכשפה";
-    default:
-      return "יהלום";
-  }
-}
-
-export function countGemEligibleHouses(houses: PublicHouse[]) {
-  return houses.filter((h) => h.kind !== "poi").length;
-}
 
 export type GemProximity = "far" | "approach" | "hunt" | "collected";
 
@@ -107,15 +89,15 @@ export type GemAchievement = {
   titleHe: string;
   descriptionHe: string;
   target: number;
-  /** When set, counts only gems of these types. */
-  gemTypes?: GemType[];
+  /** When set, counts only gems in these families. */
+  gemFamilies?: GemFamily[];
 };
 
 export const GEM_ACHIEVEMENTS: GemAchievement[] = [
   {
     id: "first",
     titleHe: "אוצר ראשון",
-    descriptionHe: "אספתם יהלום אחד",
+    descriptionHe: "אספתם אוצר אחד",
     target: 1,
   },
   {
@@ -141,14 +123,21 @@ export const GEM_ACHIEVEMENTS: GemAchievement[] = [
     titleHe: "רוחות בלילה",
     descriptionHe: "3 רוחות",
     target: 3,
-    gemTypes: ["ghost"],
+    gemFamilies: ["ghost"],
   },
   {
     id: "pumpkin3",
     titleHe: "מדשאת דלעות",
     descriptionHe: "3 דלעות",
     target: 3,
-    gemTypes: ["pumpkin"],
+    gemFamilies: ["pumpkin"],
+  },
+  {
+    id: "bat3",
+    titleHe: "לילה מעופף",
+    descriptionHe: "3 עטלפים",
+    target: 3,
+    gemFamilies: ["bat"],
   },
 ];
 
@@ -164,10 +153,10 @@ export function achievementProgress(
     count = collectedIds.length;
     return { count, target, done: count >= target };
   }
-  if (achievement.gemTypes?.length) {
+  if (achievement.gemFamilies?.length) {
     count = collectedIds.filter((id) => {
       const house = housesById.get(id);
-      return house && achievement.gemTypes!.includes(gemTypeForHouse(house));
+      return house && achievement.gemFamilies!.includes(gemFamilyForHouse(house));
     }).length;
   } else {
     count = collectedIds.length;

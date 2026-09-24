@@ -1,9 +1,15 @@
 "use client";
 
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
-import type { GemType } from "@/lib/gem-hunt";
+import type { GemVariantId } from "@/lib/gem-variants";
 
-export function GemCollectCheer({ show, type }: { show: boolean; type: GemType }) {
+export function GemCollectCheer({
+  show,
+  variantId,
+}: {
+  show: boolean;
+  variantId: GemVariantId | string;
+}) {
   if (!show) return null;
   return (
     <div className="gem-collect-cheer" role="status" aria-live="polite">
@@ -11,7 +17,7 @@ export function GemCollectCheer({ show, type }: { show: boolean; type: GemType }
         <span className="gem-collect-cheer__burst" aria-hidden="true">
           <i /><i /><i /><i /><i /><i />
         </span>
-        <GemSprite type={type} size="sm" className="gem-collect-cheer__gem" />
+        <GemSprite variantId={variantId} size="sm" className="gem-collect-cheer__gem" />
         <span className="gem-collect-cheer__text">אוצר נאסף!</span>
       </div>
     </div>

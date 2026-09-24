@@ -4,7 +4,8 @@ import {
   bearingDegrees,
   facingHouse,
   gemProximity,
-  gemTypeForHouse,
+  gemFamilyForHouse,
+  gemVariantForHouse,
   headingDelta,
 } from "@/lib/gem-hunt";
 
@@ -21,10 +22,12 @@ describe("gem hunt geo", () => {
     );
   });
 
-  it("maps house themes to gem types", () => {
-    assert.equal(gemTypeForHouse({ theme: "ghost" }), "ghost");
-    assert.equal(gemTypeForHouse({ theme: "pumpkin" }), "pumpkin");
-    assert.equal(gemTypeForHouse({ theme: "vampire" }), "crystal");
+  it("maps house themes to halloween gem families", () => {
+    const ghostFamily = gemFamilyForHouse({ id: "g1", theme: "ghost", kind: "house" });
+    assert.ok(ghostFamily === "ghost" || ghostFamily === "bat");
+    const pumpkinFamily = gemFamilyForHouse({ id: "p1", theme: "pumpkin", kind: "house" });
+    assert.ok(pumpkinFamily === "pumpkin" || pumpkinFamily === "candy");
+    assert.ok(gemVariantForHouse({ id: "v1", theme: "vampire", kind: "house" }));
   });
 
   it("detects facing within tolerance", () => {
