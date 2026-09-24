@@ -58,13 +58,17 @@ export function GemHuntOverlay({
   const allowAutoReveal = collectEnabled || sim;
   const monsterId = gemMonsterForHouse(house);
   const anchor = useMemo(() => gemAnchorForHouse(house), [house.id, house.lat, house.lng]);
+  /** Admin simulate pretends you are standing at the house pin (for at-home testing). */
+  const effectiveLoc = useMemo(() => {
+    if (sim) return { lat: house.lat, lng: house.lng, accuracy: 5 };
+    return userLocation;
+  }, [sim, house.lat, house.lng, userLocation]);
   const distanceM =
-    userLocation != null && !sim ? distanceMeters(userLocation, anchor) : null;
+    effectiveLoc != null && !sim ? distanceMeters(effectiveLoc, anchor) : null;
   const pinPlacement = useMemo(() => {
-    const loc = userLocation ?? (sim ? { lat: house.lat, lng: house.lng } : null);
-    if (!loc) return null;
-    return gemScreenPlacement(loc, anchor, heading);
-  }, [anchor, heading, house.lat, house.lng, sim, userLocation]);
+    if (!effectiveLoc) return null;
+    return gemScreenPlacement(effectiveLoc, anchor, heading);
+  }, [anchor, effectiveLoc, heading]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -153,7 +157,7 @@ export function GemHuntOverlay({
 
     if (!allowAutoReveal) return;
 
-    const loc = userLocation ?? (sim ? { lat: house.lat, lng: house.lng, accuracy: 5 } : null);
+    const loc = effectiveLoc;
     const facing =
       sim ||
       (loc != null &&
@@ -175,7 +179,7 @@ export function GemHuntOverlay({
     if (elapsedSec >= GEM_SCAN_REVEAL_SECONDS || panTotalRef.current >= GEM_SCAN_PAN_DEGREES) {
       reveal();
     }
-  }, [anchor, heading, house, phase, reveal, sim, allowAutoReveal, userLocation]);
+  }, [anchor, effectiveLoc, heading, house, phase, reveal, sim, allowAutoReveal]);
 
   function handleCollect() {
     if (!collectEnabled) return;
@@ -200,18 +204,20 @@ export function GemHuntOverlay({
 
   const gemVisible = phase === "visible" || phase === "collecting";
   const walkBearing =
-    userLocation != null ? relativeWalkBearingDeg(userLocation, anchor, heading) : null;
+    effectiveLoc != null ? relativeWalkBearingDeg(effectiveLoc, anchor, heading) : null;
   const facingWalk =
     walkBearing != null && Math.abs(walkBearing) <= GEM_FACING_TOLERANCE_DEG;
   const showWalkGuide =
     !collectEnabled &&
     !sim &&
+    effectiveLoc != null &&
     userLocation != null &&
+    !sim &&
     distanceM != null &&
     distanceM > 8 &&
     phase !== "collecting";
   const mapsWalkUrl =
-    userLocation != null ? googleMapsNavigateUrl(userLocation, anchor) : null;
+    userLocation != null && !sim ? googleMapsNavigateUrl(userLocation, anchor) : null;
 
   const overlay = (
     <div className="gem-hunt-overlay" dir="rtl">
