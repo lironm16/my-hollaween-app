@@ -52,14 +52,24 @@ export function GemSprite({
   }
 
   return (
-    <GemModel3D
-      monsterId={monsterId}
-      houseId={id}
-      size={mode === "orbit" ? "fill" : size}
-      collected={collected}
-      className={className}
-      interactive
-      controls={mode === "orbit" ? "orbit" : "turntable"}
-    />
+    <div
+      className={cn(
+        "gem-sprite",
+        size === "sm" && "gem-sprite--sm",
+        mode === "3d" && "gem-sprite--hunt",
+        collected && "is-collected",
+        className,
+      )}
+    >
+      <span className="gem-sprite__glow" aria-hidden />
+      <GemModel3D
+        monsterId={monsterId}
+        houseId={id}
+        size={mode === "orbit" ? "fill" : size}
+        collected={collected}
+        interactive
+        controls={mode === "orbit" ? "orbit" : "turntable"}
+      />
+    </div>
   );
 }

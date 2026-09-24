@@ -26,7 +26,23 @@ function frameModel(object: THREE.Object3D, scaleFactor: number) {
   const scale = scaleFactor / maxDim;
   object.scale.setScalar(scale);
   object.position.sub(center.multiplyScalar(scale));
-  object.position.y -= 0.08;
+  object.position.y += size.y * scale * 0.06;
+}
+
+function fitCameraToPivot(
+  camera: THREE.PerspectiveCamera,
+  pivot: THREE.Object3D,
+  padding = 1.55,
+) {
+  const box = new THREE.Box3().setFromObject(pivot);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z, 0.001);
+  const fovRad = (camera.fov * Math.PI) / 180;
+  const dist = (maxDim / 2 / Math.tan(fovRad / 2)) * padding;
+  camera.position.set(center.x, center.y + maxDim * 0.06, center.z + dist);
+  camera.lookAt(center.x, center.y, center.z);
+  camera.updateProjectionMatrix();
 }
 
 export function GemModel3D({
@@ -51,8 +67,8 @@ export function GemModel3D({
     let height = host.clientHeight || (size === "fill" ? 240 : defaultPx);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(28, width / height, 0.1, 100);
-    camera.position.set(0, 0.35, 2.4);
+    const camera = new THREE.PerspectiveCamera(32, width / height, 0.1, 100);
+    camera.position.set(0, 0.2, 2.6);
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -90,7 +106,7 @@ export function GemModel3D({
       controls === "turntable"
         ? size === "sm"
           ? 0.55
-          : 1.05
+          : 0.78
         : size === "sm"
           ? 0.55
           : size === "lg"
@@ -116,7 +132,9 @@ export function GemModel3D({
         });
 
         pivot.add(model);
-        if (controls === "orbit") {
+        if (controls === "turntable") {
+          fitCameraToPivot(camera, pivot, size === "sm" ? 1.45 : 1.65);
+        } else {
           orbit?.update();
         }
       },
@@ -146,7 +164,7 @@ export function GemModel3D({
       const t = (performance.now() - start) / 1000;
       if (controls === "turntable") {
         pivot.rotation.y = t * (interactive ? 0.7 : 0.35);
-        pivot.position.y = Math.sin(t * 2) * 0.06;
+        pivot.position.y = Math.sin(t * 2) * 0.04;
       } else {
         orbit?.update();
       }

@@ -157,10 +157,14 @@ export function GemHuntOverlay({
   function handleCollect() {
     if (phase === "collecting" || phase === "done") return;
     setPhase("collecting");
+    setHint("found");
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate([20, 40, 60]);
+    }
     window.setTimeout(() => {
       setPhase("done");
       onCollect(monsterId);
-    }, 900);
+    }, 1100);
   }
 
   function handleHelpReveal() {
@@ -207,6 +211,10 @@ export function GemHuntOverlay({
         />
       </header>
 
+      {phase === "collecting" ? (
+        <div className="gem-hunt-overlay__collect-flash" aria-hidden />
+      ) : null}
+
       <div className="gem-hunt-overlay__stage" aria-hidden={false}>
         <div className="gem-hunt-overlay__scan-ring" aria-hidden>
           <div className={cn("gem-hunt-overlay__ring", hint === "warm" && "is-warm")} />
@@ -222,15 +230,16 @@ export function GemHuntOverlay({
             <GemSprite
               house={house}
               mode="3d"
-              className={cn("gem-sprite--hunt", phase === "collecting" && "is-burst")}
+              className={cn(phase === "collecting" && "is-burst")}
             />
           </button>
         ) : null}
 
         <p className={cn("gem-hunt-overlay__hint", gemVisible && "is-gem-visible")}>
-          {hint === "scan" ? "סרקו לאט את הבית — האוצר יופיע" : null}
-          {hint === "warm" ? "קרובים! המשיכו לסרוק…" : null}
-          {hint === "found" ? "לחצו על האוצר לאיסוף!" : null}
+          {phase === "collecting" ? "אוצר נאסף!" : null}
+          {phase !== "collecting" && hint === "scan" ? "סרקו לאט את הבית — האוצר יופיע" : null}
+          {phase !== "collecting" && hint === "warm" ? "קרובים! המשיכו לסרוק…" : null}
+          {phase !== "collecting" && hint === "found" ? "לחצו על האוצר לאיסוף!" : null}
         </p>
       </div>
 
