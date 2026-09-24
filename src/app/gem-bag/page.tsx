@@ -27,7 +27,7 @@ import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl, houseSharePath } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
 import { buttonVariants } from "@/components/ui/button";
-import { prepareGemHuntSensors } from "@/lib/gem-hunt-sensors";
+import { prepareGemHuntSensors, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
 import { cn } from "@/lib/utils";
 
 function formatCollectedWhen(ms: number) {
@@ -97,10 +97,14 @@ function GemBagContent({ houses, isAdmin }: { houses: PublicHouse[]; isAdmin: bo
           userLocation={null}
           simulateInRange
           collectEnabled
-          onClose={() => setCameraLabHouse(null)}
+          onClose={() => {
+            stopGemHuntCameraStream();
+            setCameraLabHouse(null);
+          }}
           onCollect={(monsterId) => {
             const h = cameraLabHouse;
             gems.collect(h.id, monsterId);
+            stopGemHuntCameraStream();
             setCameraLabHouse(null);
             setCheerHouse(h);
             window.setTimeout(() => setCheerHouse(null), GEM_COLLECT_ANIMATION_MS + 400);

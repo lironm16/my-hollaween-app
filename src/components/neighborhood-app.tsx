@@ -35,7 +35,7 @@ import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
 import { canCollectGem, GEM_COLLECT_ANIMATION_MS } from "@/lib/gem-hunt";
 import { gemFabGlowLevel, pickGemHuntTarget } from "@/lib/gem-hunt-target";
-import { prepareGemHuntSensors } from "@/lib/gem-hunt-sensors";
+import { prepareGemHuntSensors, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -1099,10 +1099,14 @@ export function NeighborhoodApp({
             mapGemStanding.ready,
             false,
           )}
-          onClose={() => setMapGemHouse(null)}
+          onClose={() => {
+            stopGemHuntCameraStream();
+            setMapGemHouse(null);
+          }}
           onCollect={(monsterId) => {
             const h = mapGemHouse;
             gems.collect(h.id, monsterId);
+            stopGemHuntCameraStream();
             setMapGemHouse(null);
             setMapGemCheerHouse(h);
             window.setTimeout(() => setMapGemCheerHouse(null), GEM_COLLECT_ANIMATION_MS + 400);

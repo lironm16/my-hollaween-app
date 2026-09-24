@@ -188,7 +188,8 @@ export function GemHuntOverlay({
 
   function handleCollect() {
     if (!collectEnabled) return;
-    if (!centerReveal && pinPlacement && !pinPlacement.inView) return;
+    /** Collect only via «גלה לי» (centered on what you see), not the compass-pinned anchor. */
+    if (!centerReveal) return;
     if (phase === "collecting" || phase === "done") return;
     setPhase("collecting");
     setHint("found");
@@ -208,11 +209,22 @@ export function GemHuntOverlay({
     setCenterReveal(true);
   }
 
+  function handleBackToSearch() {
+    setCenterReveal(false);
+    revealedRef.current = false;
+    facingSinceRef.current = null;
+    scanStartRef.current = Date.now();
+    panTotalRef.current = 0;
+    setPhase("scanning");
+    setHint("scan");
+    setShowHelp(false);
+  }
+
   const gemVisible = phase === "visible" || phase === "collecting";
   /** «גלה לי»: dragon centered on live camera (tap to collect when in range). */
   const centerDisplayMode = gemVisible && centerReveal;
-  /** Auto-reveal without «גלה לי»: compass-pinned in the camera. */
-  const arCollectMode = gemVisible && collectEnabled && !centerReveal;
+  /** Compass-pinned guide on camera (visual only — collect via «גלה לי»). */
+  const arPinGuideMode = gemVisible && !centerReveal;
   const walkBearing =
     effectiveLoc != null ? relativeWalkBearingDeg(effectiveLoc, anchor, heading) : null;
   const facingWalk =
@@ -313,15 +325,13 @@ export function GemHuntOverlay({
           </button>
         ) : null}
 
-        {arCollectMode ? (
-          <button
-            type="button"
+        {arPinGuideMode ? (
+          <div
             className={cn(
-              "gem-hunt-overlay__gem-hit",
+              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin",
               pinPlacement && "is-pinned",
               pinPlacement && !pinPlacement.inView && "is-off-screen",
               !pinPlacement && "is-center-fallback",
-              phase === "collecting" && "is-collecting",
             )}
             style={
               pinPlacement
@@ -331,15 +341,12 @@ export function GemHuntOverlay({
                   }
                 : undefined
             }
-            onClick={handleCollect}
-            aria-label={`איסוף ${gemLabelHe(monsterId)}`}
+            aria-hidden={false}
+            role="img"
+            aria-label={`כיוון האוצר — ${gemLabelHe(monsterId)}`}
           >
-            <GemSprite
-              house={house}
-              mode="3d"
-              className={cn(phase === "collecting" && "is-burst")}
-            />
-          </button>
+            <GemSprite house={house} mode="3d" />
+          </div>
         ) : null}
 
         <p className={cn("gem-hunt-overlay__hint", gemVisible && "is-gem-visible")}>
@@ -360,11 +367,11 @@ export function GemHuntOverlay({
           {phase !== "collecting" && hint === "found" && centerDisplayMode && !collectEnabled
             ? `תצוגה במרכז — התקרבו ל~${GEM_HUNT_METERS}מ׳ (או סימולציה) כדי לאסוף`
             : null}
-          {phase !== "collecting" && hint === "found" && arCollectMode && pinPlacement && !pinPlacement.inView
-            ? "סובבו למקום האוצר — או לחצו «גלה לי»"
+          {phase !== "collecting" && hint === "found" && arPinGuideMode && pinPlacement && !pinPlacement.inView
+            ? "סובבו למקום האוצר — «גלה לי» לאיסוף במרכז"
             : null}
-          {phase !== "collecting" && hint === "found" && arCollectMode && (!pinPlacement || pinPlacement.inView)
-            ? "לחצו על האוצר — או «גלה לי» למרכז"
+          {phase !== "collecting" && hint === "found" && arPinGuideMode && (!pinPlacement || pinPlacement.inView)
+            ? "«גלה לי» — האוצר במרכז המסך, ואז לחצו לאיסוף"
             : null}
         </p>
       </div>
@@ -403,6 +410,18 @@ export function GemHuntOverlay({
               הליכה ב-Google Maps
             </a>
           ) : null}
+        </div>
+      ) : null}
+
+      {phase !== "collecting" && centerDisplayMode ? (
+        <div className="gem-hunt-overlay__hint-actions" dir="rtl">
+          <button
+            type="button"
+            className="gem-hunt-overlay__hint-btn"
+            onClick={handleBackToSearch}
+          >
+            חזרה לחיפוש
+          </button>
         </div>
       ) : null}
 
