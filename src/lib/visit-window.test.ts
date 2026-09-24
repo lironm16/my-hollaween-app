@@ -58,6 +58,7 @@ describe("resolveVisitWindow", () => {
       unvisitedOnly: false,
       visitedOnly: false,
       skippedOnly: false,
+      uncollectedGemOnly: false,
       includeUndecorated: true,
       locationKindFilter: "all",
     };

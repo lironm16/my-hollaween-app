@@ -26,6 +26,7 @@ function baseFilters(overrides: Partial<HouseFiltersState> = {}): HouseFiltersSt
     unvisitedOnly: false,
     visitedOnly: false,
     skippedOnly: false,
+    uncollectedGemOnly: false,
     includeUndecorated: true,
     locationKindFilter: "all",
     ...overrides,

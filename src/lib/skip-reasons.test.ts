@@ -73,6 +73,7 @@ const baseFilters: HouseFiltersState = {
   unvisitedOnly: false,
   visitedOnly: false,
   skippedOnly: false,
+  uncollectedGemOnly: false,
   includeUndecorated: true,
   locationKindFilter: "all",
 };
