@@ -9,9 +9,10 @@
  *   GITHUB_TOKEN=ghp_... npm run sync:github
  */
 import { execSync } from "node:child_process";
-import { cpSync, existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { backupPreserveDirs, mergePreserveDirs } from "./sync-preserve-assets.mjs";
 
 const token = process.env.GITHUB_TOKEN?.trim();
 const repo = process.env.GITHUB_REPO?.trim() || "lironm16/my-hollaween-app";
@@ -48,8 +49,13 @@ try {
   console.log(`Fetching github.com/${repo} (${branch})…`);
   run(`git clone --branch ${branch} --single-branch ${remote} "${tmp}"`);
 
+  const preserveBackup = mkdtempSync(join(tmpdir(), "gh-preserve-"));
+  backupPreserveDirs(tmp, preserveBackup);
+
   console.log(`Copying ${sourceBranch} app files (keeping GitHub .github/ as-is)…`);
   copyTree(sourceRoot, tmp);
+  mergePreserveDirs(preserveBackup, tmp);
+  rmSync(preserveBackup, { recursive: true, force: true });
 
   run(`git -C "${tmp}" add -A`);
   try {
