@@ -264,11 +264,16 @@ export function NeighborhoodApp({
     setMapGemHouse(target.house);
   }, [mapHouses, gps, gems, selection.selected?.id]);
 
-  const openGemHuntForHouse = useCallback(async (house: PublicHouse) => {
-    if (gems.collected(house.id)) return;
-    await prepareGemHuntSensors();
-    setMapGemHouse(house);
-  }, [gems]);
+  const openGemHuntForHouse = useCallback(
+    async (house: PublicHouse) => {
+      if (gems.collected(house.id)) return;
+      setView("map");
+      selection.selectOnMap(house);
+      await prepareGemHuntSensors();
+      setMapGemHouse(house);
+    },
+    [gems, selection],
+  );
 
   useEffect(() => {
     if (!gemBadgePendingRef.current) {

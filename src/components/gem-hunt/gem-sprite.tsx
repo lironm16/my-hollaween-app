@@ -16,6 +16,7 @@ export function GemSprite({
   mode = "auto",
   /** Center «גלה לי» — no spin/drag; parent button handles tap to collect. */
   tapCollect = false,
+  spinWhileCollect = true,
   /** Square poster frame (map collect cheer). */
   posterFill = false,
 }: {
@@ -29,6 +30,7 @@ export function GemSprite({
   /** bag rows use poster; hunt uses 3d; orbit is for gem-bag studio only */
   mode?: "auto" | "3d" | "poster" | "orbit";
   tapCollect?: boolean;
+  spinWhileCollect?: boolean;
   posterFill?: boolean;
 }) {
   const id = house?.id ?? houseId ?? "default";
@@ -85,7 +87,7 @@ export function GemSprite({
         size={mode === "orbit" ? "fill" : size}
         collected={collected}
         interactive={!tapCollect}
-        spin
+        spin={!tapCollect && spinWhileCollect}
         spinRate={tapCollect ? 0.35 : undefined}
         controls={mode === "orbit" ? "orbit" : "turntable"}
       />

@@ -8,7 +8,7 @@ import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
 import { getGemHuntCameraStream, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
-import { gemCollectDanceClass } from "@/lib/gem-collect-dance";
+import { gemCollectDanceIndex } from "@/lib/gem-collect-dance";
 import {
   facingHouse,
   GEM_FACING_TOLERANCE_DEG,
@@ -60,8 +60,8 @@ export function GemHuntOverlay({
   /** Only auto-reveal from scan/pan/facing when user can collect (or admin simulate). */
   const allowAutoReveal = collectEnabled || sim;
   const monsterId = gemMonsterForHouse(house);
-  const collectDanceClass = useMemo(
-    () => gemCollectDanceClass(house.id, monsterId),
+  const collectDanceIndex = useMemo(
+    () => gemCollectDanceIndex(house.id, monsterId),
     [house.id, monsterId],
   );
   const anchor = useMemo(() => gemAnchorForHouse(house), [house.id, house.lat, house.lng]);
@@ -348,7 +348,6 @@ export function GemHuntOverlay({
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-pin-collect",
               phase === "collecting" && "is-collecting",
-              phase === "collecting" && collectDanceClass,
             )}
             style={
               pinPlacement
@@ -361,7 +360,7 @@ export function GemHuntOverlay({
             onClick={handleCollect}
             aria-label={`איסוף ${gemLabelHe(monsterId)}`}
           >
-            <GemSprite house={house} mode="3d" tapCollect />
+            <GemSprite house={house} mode="3d" tapCollect spinWhileCollect={false} />
           </button>
         ) : null}
 
@@ -400,12 +399,12 @@ export function GemHuntOverlay({
             "is-center-collect",
             "is-collect-layer",
             phase === "collecting" && "is-collecting",
-            phase === "collecting" && collectDanceClass,
           )}
+          data-collect-dance={phase === "collecting" ? collectDanceIndex : undefined}
           onClick={handleCollect}
           aria-label={`איסוף ${gemLabelHe(monsterId)}`}
         >
-          <GemSprite house={house} mode="3d" tapCollect />
+          <GemSprite house={house} mode="3d" tapCollect spinWhileCollect={false} />
         </button>
       ) : null}
 

@@ -1,4 +1,4 @@
-import type { GemMonsterId } from "@/lib/gem-monsters";
+import { GEM_MONSTER_CATALOG, type GemMonsterId } from "@/lib/gem-monsters";
 
 const DANCE_COUNT = 8;
 
@@ -12,13 +12,12 @@ function hashDanceSeed(houseId: string, monsterId: string) {
   return h >>> 0;
 }
 
-/** Stable per-house dance (varies when monster pool expands). */
+/** Stable per house + monster type (each catalog gem gets a different baseline). */
 export function gemCollectDanceIndex(houseId: string, monsterId: GemMonsterId | string) {
-  return (hashDanceSeed(houseId, monsterId) % DANCE_COUNT) + 1;
-}
-
-export function gemCollectDanceClass(houseId: string, monsterId: GemMonsterId | string) {
-  return `gem-collect-dance-${gemCollectDanceIndex(houseId, monsterId)}`;
+  const monsterIdx = GEM_MONSTER_CATALOG.findIndex((m) => m.id === monsterId);
+  const monsterPart = monsterIdx >= 0 ? monsterIdx : 0;
+  const housePart = hashDanceSeed(houseId, monsterId);
+  return ((housePart + monsterPart * 9973) % DANCE_COUNT) + 1;
 }
 
 export const GEM_COLLECT_DANCE_MS = 5000;
