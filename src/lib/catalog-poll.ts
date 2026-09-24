@@ -2,8 +2,8 @@
 export function readCatalogPollSeconds() {
   return Math.max(
     30,
-    Number(process.env.CATALOG_POLL_SECONDS ?? process.env.NEXT_PUBLIC_CATALOG_POLL_SECONDS ?? 300) ||
-      300,
+    Number(process.env.CATALOG_POLL_SECONDS ?? process.env.NEXT_PUBLIC_CATALOG_POLL_SECONDS ?? 180) ||
+      180,
   );
 }
 
