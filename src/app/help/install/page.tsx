@@ -3,17 +3,18 @@
 import { HelpExpandable, HelpShell, HelpStep } from "@/components/help-shell";
 import { PwaInstallButton } from "@/components/pwa-install-button";
 import { helpImage } from "@/lib/help-images";
+import { renderHelpText } from "@/lib/render-help-text";
 
 const IPHONE_STEPS = [
   {
     title: "לחצו שיתוף",
-    body: "ב-Safari, בסרגל התחתון — כפתור השיתוף (חץ למעלה מריבוע).",
+    body: "ב-Safari, בסרגל התחתון — כפתור <<שיתוף>> (חץ למעלה מריבוע).",
     image: helpImage("install/ios-2-share.svg"),
     imageAlt: "כפתור שיתוף בסафari",
   },
   {
     title: "הוספה למסך הבית",
-    body: "גללו ובחרו «הוספה למסך הבית» → «הוסף». האייקון יופיע במסך הבית.",
+    body: "גללו ובחרו <<הוספה למסך הבית>> → <<הוסף>>. האייקון יופיע במסך הבית.",
     image: helpImage("install/ios-3-add-home.svg"),
     imageAlt: "הוספה למסך הבית בתפריט השיתוף",
   },
@@ -22,13 +23,13 @@ const IPHONE_STEPS = [
 const ANDROID_STEPS = [
   {
     title: "כפתור ההורדה בראש המסך",
-    body: "ב-Chrome, ליד תפריט ☰ — סמל ההורדה (חץ למטה).",
+    body: "ב-Chrome, ליד תפריט ☰ — סמל <<התקנת האפליקציה>> (חץ למטה).",
     image: helpImage("install/android-1-app.svg"),
     imageAlt: "כפתור התקנה בראש האפליקציה ליד התפריט",
   },
   {
     title: "אישור התקנה",
-    body: "לחצו «הוסף» או «התקן» בחלון שיופיע אחרי הכפתור.",
+    body: "לחצו <<הוסף>> או <<התקן>> בחלון שיופיע אחרי הכפתור.",
     image: helpImage("install/android-3-confirm.svg"),
     imageAlt: "אישור התקנת האפליקציה",
   },
@@ -59,8 +60,9 @@ function AndroidInstallSection() {
   return (
     <div className="space-y-4">
       <p className="text-base leading-relaxed text-violet-200/90">
-        ב-Chrome לחצו על כפתור «התקנת האפליקציה» בראש המסך (סמל ההורדה ליד תפריט ☰), או
-        על הכפתור כאן:
+        {renderHelpText(
+          "ב-Chrome לחצו על כפתור <<התקנת האפליקציה>> בראש המסך (סמל ההורדה ליד תפריט ☰), או על הכפתור כאן:",
+        )}
       </p>
       <PwaInstallButton variant="prominent" showAlways forceVisible />
       <PlatformSteps steps={ANDROID_STEPS} />
@@ -72,7 +74,7 @@ export default function InstallHelpPage() {
   return (
     <HelpShell title="איך מתקינים את האפליקציה?">
       <p className="mb-4 text-lg leading-relaxed text-orange-50">
-        «התקנה» = הוספה למסך הבית. פתחו פעם אחת ברשת כדי שהמפה תישמר בטלפון.
+        {renderHelpText("<<התקנה>> = הוספה למסך הבית. פתחו פעם אחת ברשת כדי שהמפה תישמר בטלפון.")}
       </p>
       <div className="space-y-3">
         <HelpExpandable title="אייפון" subtitle="Safari בלבד">

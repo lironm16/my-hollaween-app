@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { buttonVariants } from "@/components/ui/button";
+import { renderHelpText } from "@/lib/render-help-text";
 import { cn } from "@/lib/utils";
 
 export function HelpShell({
@@ -94,14 +95,20 @@ export function HelpStep({
   image,
   imageAlt,
   action,
+  parseBody = typeof body === "string",
 }: {
   n: number;
   title: string;
   body: ReactNode;
+  /** When true, `body` is a string parsed for <<ui-label>> chips. */
+  parseBody?: boolean;
   image: string;
   imageAlt: string;
   action?: ReactNode;
 }) {
+  const renderedBody =
+    parseBody && typeof body === "string" ? renderHelpText(body) : body;
+
   return (
     <li className="space-y-3 rounded-2xl bg-[#14081c] p-4 ring-1 ring-orange-500/15">
       <div className="flex items-center gap-3">
@@ -113,7 +120,7 @@ export function HelpStep({
         </span>
         <h2 className="text-xl font-semibold text-orange-50">{title}</h2>
       </div>
-      <div className="text-lg leading-relaxed text-orange-50">{body}</div>
+      <div className="text-lg leading-relaxed text-orange-50">{renderedBody}</div>
       {action}
       <HelpShot src={image} alt={imageAlt} />
     </li>

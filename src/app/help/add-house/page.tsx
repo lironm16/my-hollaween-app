@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
 
 const STEPS: Array<{
   title: string;
-  body: ReactNode;
+  body: string;
   image: string;
   imageAlt: string;
   action?: ReactNode;
@@ -34,14 +34,7 @@ const STEPS: Array<{
   },
   {
     title: "שמירה וקוד",
-    body: (
-      <>
-        לחצו <strong className="text-orange-200">שמירה</strong>. מופיע{" "}
-        <strong className="text-orange-200">קוד עריכה</strong> — 6 ספרות שמאפשרות לעדכן את הבית
-        (שעות, ממתקים, תמונה). במכשיר שבו הוספתם הקוד נשמר — אפשר לערוך בלי להקליד שוב. אפשר
-        לתת הרשאת עריכה ע״י שיתוף קוד העריכה — אחרי הזנה פעם אחת נשמר גם אצלם.
-      </>
-    ),
+    body: "לחצו <<שמירה>>. מופיע <<קוד עריכה>> — 6 ספרות שמאפשרות לעדכן את הבית (שעות, ממתקים, תמונה). במכשיר שבו הוספתם הקוד נשמר — אפשר לערוך בלי להקליד שוב. אפשר לתת הרשאת עריכה ע״י שיתוף קוד העריכה — אחרי הזנה פעם אחת נשמר גם אצלם.",
     image: helpImage("step-3-done.png"),
     imageAlt: "מסך הצלחה עם קוד עריכה",
     action: (
