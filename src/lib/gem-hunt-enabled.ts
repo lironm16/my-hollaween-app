@@ -5,7 +5,10 @@ export function gemHuntVisible(isAdmin: boolean) {
   return isAdmin;
 }
 
-/** Map diamond FAB + house-detail treasure block (hidden during add-house hours). */
+/** Map FAB, details hunt block, filter «לא אספתי», stats «אספתי», title diamonds — one gate. */
 export function gemHuntFabVisible(isAdmin: boolean, now = new Date()) {
   return gemHuntVisible(isAdmin) && !isAddHouseOpen(now);
 }
+
+/** @deprecated alias — use gemHuntFabVisible for all gem UI visibility */
+export const gemHuntUiVisible = gemHuntFabVisible;

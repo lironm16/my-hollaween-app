@@ -769,7 +769,7 @@ export function NeighborhoodApp({
         onToggleLike,
         visited: visits.visited,
         onToggleVisited,
-        gemCollected: gems.collected,
+        gemCollected: gemHuntFabVisible(admin, now) ? gems.collected : undefined,
         onToggleGem: gemHuntFabVisible(admin, now) ? handleToggleGemMenu : undefined,
         catalogSource: source,
         managerEditCode: admin ? editCodeById.get(selected.id) : undefined,
@@ -858,7 +858,7 @@ export function NeighborhoodApp({
             filters={sheetFilters}
             now={now}
             onPatch={patchFilterDraft}
-            showGemFilters={gemHuntVisible(admin)}
+            showGemFilters={gemHuntFabVisible(admin, now)}
           />
         </FiltersSheet>
       ) : null}
@@ -1076,7 +1076,7 @@ export function NeighborhoodApp({
                     if (house) requestHouseEdit(house, true);
                   }}
                   editingId={null}
-                  gemCollected={gemHuntVisible(admin) ? gems.collected : undefined}
+                  gemCollected={gemHuntFabVisible(admin, now) ? gems.collected : undefined}
                 />
               ) : (
                 <HouseList
@@ -1088,7 +1088,7 @@ export function NeighborhoodApp({
                   onToggleLike={onToggleLike}
                   visitedIds={visits.visitedIds}
                   onToggleVisited={onToggleVisited}
-                  gemCollected={gemHuntVisible(admin) ? gems.collected : undefined}
+                  gemCollected={gemHuntFabVisible(admin, now) ? gems.collected : undefined}
                   skippedIds={skips.skippedIds}
                   skipMetaFor={(id) => skips.meta(id)}
                   onSkipHouse={handleSkipHouse}
