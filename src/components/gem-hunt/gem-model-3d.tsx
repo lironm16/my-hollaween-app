@@ -47,7 +47,7 @@ function fitCameraToPivot(
 }
 
 export function GemModel3D({
-  monsterId = "dragon",
+  monsterId = "pumpkin",
   houseId = "default",
   size = "lg",
   className,

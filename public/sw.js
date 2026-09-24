@@ -1,7 +1,7 @@
 importScripts("/sw-map-tiles.js");
 
-const APP_VERSION = "0.1.104";
-const CACHE = "hw-shell-0.1.104";
+const APP_VERSION = "0.1.105";
+const CACHE = "hw-shell-0.1.105";
 const TILE_CACHE = MapTileCache.TILE_CACHE;
 const PRECACHE = [
   "/offline.html",
@@ -34,8 +34,8 @@ const PRECACHE = [
   "/images/stubs/lantern-path.jpg",
   "/images/stubs/black-cat.jpg",
   "/images/stubs/bats-moon.jpg",
-  "/gem-monsters/dragon.glb",
-  "/gem-monsters/dragon-poster.png",
+  "/gem-monsters/pumpkin-poster.png",
+  "/gem-monsters/ghost-poster.png",
 ];
 
 self.addEventListener("message", (event) => {

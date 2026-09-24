@@ -2,7 +2,7 @@
  * Renders static PNG posters from gem hunt GLBs (same framing as in-app GemModel3D).
  * Posters are build artifacts — never use itch.io marketing cover art in the app.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
@@ -11,8 +11,18 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const publicDir = join(root, "public", "gem-monsters");
 const threeRoot = join(root, "node_modules", "three");
 
-/** Keep in sync with GEM_MONSTER_MODELS in src/lib/gem-monsters.ts */
-const MODELS = [{ id: "dragon", glbFile: "dragon.glb", posterFile: "dragon-poster.png" }];
+const SKIP_GLB = new Set(["HalloweenSpookyPetPack18.glb"]);
+
+/** Discovered from public/gem-monsters/*.glb (see src/lib/gem-monsters.ts ids). */
+function listModels() {
+  return readdirSync(publicDir)
+    .filter((name) => name.endsWith(".glb") && !SKIP_GLB.has(name))
+    .sort()
+    .map((glbFile) => {
+      const id = glbFile.replace(/\.glb$/i, "");
+      return { id, glbFile, posterFile: `${id}-poster.png` };
+    });
+}
 
 const SIZE = 512;
 
@@ -139,9 +149,20 @@ async function main() {
   await page.setContent(RENDER_PAGE, { waitUntil: "load" });
   await page.waitForFunction(() => typeof window.__renderGlbPoster === "function");
 
-  for (const model of MODELS) {
+  const models = listModels();
+  if (models.length === 0) {
+    process.stdout.write("render-gem-monster-posters: no GLBs found — skip\n");
+    await browser.close();
+    return;
+  }
+
+  for (const model of models) {
     const glbPath = join(publicDir, model.glbFile);
     const outPath = join(publicDir, model.posterFile);
+    if (!existsSync(glbPath)) {
+      process.stdout.write(`render-gem-monster-posters: skip missing ${model.glbFile}\n`);
+      continue;
+    }
     process.stdout.write(`render-gem-monster-posters: ${model.id} → ${model.posterFile}\n`);
     await renderPoster(page, glbPath, outPath);
   }

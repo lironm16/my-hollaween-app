@@ -22,9 +22,12 @@ describe("gem hunt geo", () => {
     );
   });
 
-  it("maps every house to the Molotov dragon monster", () => {
+  it("maps each house to a stable Akochan pet", () => {
     assert.equal(gemFamilyForHouse({ id: "g1", theme: "ghost", kind: "house" }), "monster");
-    assert.equal(gemVariantForHouse({ id: "v1", theme: "vampire", kind: "house" }), "dragon");
+    const a = gemVariantForHouse({ id: "v1", theme: "vampire", kind: "house" });
+    const b = gemVariantForHouse({ id: "v1", theme: "vampire", kind: "house" });
+    assert.equal(a, b);
+    assert.notEqual(a, "");
   });
 
   it("detects facing within tolerance", () => {
