@@ -14,7 +14,7 @@ import {
   countGemEligibleHouses,
   GEM_ACHIEVEMENTS,
   gemLabelHe,
-  gemVariantForHouse,
+  gemMonsterForHouse,
 } from "@/lib/gem-hunt";
 import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl, houseSharePath } from "@/lib/nav-links";
@@ -66,19 +66,19 @@ function GemBagContent({ houses }: { houses: PublicHouse[] }) {
         <ul className="gem-bag-list">
           {eligible.map((house) => {
             const collected = gems.collected(house.id);
-            const variantId = gemVariantForHouse(house);
+            const monsterId = gemMonsterForHouse(house);
             const when = collectedAt.get(house.id);
             return (
               <li
                 key={house.id}
                 className={cn("gem-bag-row", collected && "is-collected", !collected && "is-missing")}
               >
-                <GemSprite variantId={variantId} collected={collected} size="sm" />
+                <GemSprite house={house} mode="poster" collected={collected} size="sm" />
                 <div className="gem-bag-row__body">
                   <p className="gem-bag-row__name">{houseHeadline(house)}</p>
                   <p className="gem-bag-row__addr">{formatDisplayAddress(house)}</p>
                   <p className="gem-bag-row__treasure">
-                    {gemLabelHe(variantId)}
+                    {gemLabelHe(monsterId)}
                     {collected && when ? ` · נאסף ${formatCollectedWhen(when)}` : " · מחכה בציד"}
                   </p>
                   <div className="gem-bag-row__links">

@@ -1,14 +1,14 @@
 "use client";
 
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
-import type { GemVariantId } from "@/lib/gem-variants";
+import type { PublicHouse } from "@/lib/types";
 
 export function GemCollectCheer({
   show,
-  variantId,
+  house,
 }: {
   show: boolean;
-  variantId: GemVariantId | string;
+  house: Pick<PublicHouse, "id" | "theme" | "kind">;
 }) {
   if (!show) return null;
   return (
@@ -17,7 +17,7 @@ export function GemCollectCheer({
         <span className="gem-collect-cheer__burst" aria-hidden="true">
           <i /><i /><i /><i /><i /><i />
         </span>
-        <GemSprite variantId={variantId} size="sm" className="gem-collect-cheer__gem" />
+        <GemSprite house={house} mode="poster" size="sm" className="gem-collect-cheer__gem" />
         <span className="gem-collect-cheer__text">אוצר נאסף!</span>
       </div>
     </div>

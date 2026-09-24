@@ -40,6 +40,9 @@ yarn-error.log*
 /data/traffic.json
 /data/devices.json
 /data/.write-probe
+/data/cute-monsters/
+/data/cute-monsters.zip
+/data/__MACOSX/
 
 # optional house photos (generated locally)
 /public/house-photos/*.jpg

@@ -10,7 +10,6 @@ import { useStandingStill } from "@/hooks/use-standing-still";
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import {
   gemProximity,
-  gemVariantForHouse,
   gemLabelHe,
   GEM_APPROACH_METERS,
   GEM_HUNT_METERS,
@@ -48,8 +47,6 @@ export function GemHuntPanel({
 
   if (!visible) return null;
 
-  const variantId = gemVariantForHouse(house);
-
   const inRange = simulate || proximity === "hunt";
   const canHunt = collected ? false : inRange && (standingStill || simulate);
 
@@ -70,7 +67,7 @@ export function GemHuntPanel({
 
   return (
     <>
-      <GemCollectCheer show={cheer} variantId={variantId} />
+      <GemCollectCheer show={cheer} house={house} />
       <section className="gem-hunt-panel" dir="rtl">
         <div className="gem-hunt-panel__head">
           <Gem className="size-5 text-amber-300" aria-hidden />

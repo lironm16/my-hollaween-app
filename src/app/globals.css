@@ -3504,208 +3504,31 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   width: 2.4rem;
   height: 2.4rem;
 }
-.gem-figure {
-  position: absolute;
-  inset: 8%;
-  transform-style: preserve-3d;
-  transform: rotateX(12deg) rotateY(-18deg);
-  filter: drop-shadow(0 10px 14px rgb(0 0 0 / 0.45));
+.gem-sprite--poster {
+  filter: drop-shadow(0 8px 12px rgb(0 0 0 / 0.45));
 }
-.gem-figure::before,
-.gem-figure::after {
-  content: "";
-  position: absolute;
-  inset: 0;
+.gem-sprite__poster {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  animation: gem-float 2.4s ease-in-out infinite;
 }
-/* Pumpkin family */
-.gem-figure--pumpkin-classic::before {
-  border-radius: 45% 45% 40% 40%;
-  background: radial-gradient(circle at 35% 30%, #fdba74, #ea580c 55%, #9a3412);
-  box-shadow: inset -8px -10px 0 rgb(124 45 18 / 0.35);
+.gem-model-3d {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 10px 16px rgb(0 0 0 / 0.5));
 }
-.gem-figure--pumpkin-classic::after {
-  inset: auto 38% 72% 38%;
-  height: 14%;
-  border-radius: 9999px;
-  background: linear-gradient(#166534, #14532d);
+.gem-model-3d--sm {
+  min-width: 3.25rem;
+  min-height: 3.25rem;
 }
-.gem-figure--pumpkin-tall::before {
-  border-radius: 42% 42% 35% 35%;
-  background: radial-gradient(circle at 40% 28%, #fb923c, #c2410c 60%, #7c2d12);
-  transform: scaleX(0.82) scaleY(1.08);
+.gem-model-3d canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
 }
-.gem-figure--pumpkin-grin::before {
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 35%, #fbbf24, #ea580c 70%);
-  box-shadow: inset 0 -12px 0 rgb(154 52 18 / 0.4);
-}
-/* Ghost family */
-.gem-figure--ghost-sheet::before {
-  border-radius: 50% 50% 12% 12%;
-  background: linear-gradient(180deg, #fafafa, #e5e7eb 80%);
-  box-shadow: inset -6px 0 0 rgb(203 213 225 / 0.8);
-}
-.gem-figure--ghost-wisp::before {
-  border-radius: 55% 55% 30% 30%;
-  background: radial-gradient(circle at 50% 20%, rgb(255 255 255 / 0.95), rgb(196 181 253 / 0.75));
-  filter: blur(0.2px);
-}
-.gem-figure--ghost-boo::before {
-  border-radius: 48% 48% 18% 18%;
-  background: linear-gradient(160deg, #f8fafc, #c4b5fd);
-}
-.gem-figure--ghost-sheet::after,
-.gem-figure--ghost-boo::after {
-  inset: 28% 32% auto;
-  height: 18%;
-  border-radius: 9999px;
-  background: rgb(15 23 42 / 0.85);
-  box-shadow: 12px 0 0 rgb(15 23 42 / 0.85);
-}
-/* Witch */
-.gem-figure--witch-hat::before {
-  clip-path: polygon(50% 0%, 8% 72%, 92% 72%);
-  background: linear-gradient(145deg, #1e1b4b, #4c1d95);
-}
-.gem-figure--witch-hat::after {
-  inset: auto 0 18% 0;
-  height: 22%;
-  border-radius: 9999px;
-  background: linear-gradient(#312e81, #1e1b4b);
-}
-.gem-figure--witch-broom::before {
-  inset: auto 20% 8% 20%;
-  height: 12%;
-  border-radius: 9999px;
-  background: linear-gradient(90deg, #78350f, #a16207);
-  transform: rotate(-24deg);
-}
-.gem-figure--witch-broom::after {
-  inset: 10% 8% auto auto;
-  width: 55%;
-  height: 18%;
-  border-radius: 9999px;
-  background: repeating-linear-gradient(90deg, #ca8a04, #ca8a04 4px, #eab308 4px, #eab308 8px);
-  transform: rotate(-24deg);
-}
-/* Bat */
-.gem-figure--bat-wing::before {
-  clip-path: polygon(50% 35%, 0% 20%, 18% 55%, 50% 45%, 82% 55%, 100% 20%);
-  background: linear-gradient(180deg, #312e81, #0f172a);
-}
-.gem-figure--bat-moon::before {
-  clip-path: polygon(50% 30%, 5% 15%, 20% 60%, 50% 48%, 80% 60%, 95% 15%);
-  background: radial-gradient(circle at 50% 40%, #4c1d95, #020617);
-  box-shadow: 0 0 18px rgb(167 139 250 / 0.55);
-}
-/* Spider */
-.gem-figure--spider-web::before {
-  border-radius: 9999px;
-  background:
-    radial-gradient(circle, transparent 42%, rgb(148 163 184 / 0.35) 43%, transparent 44%),
-    radial-gradient(circle, #1e293b 35%, #0f172a);
-}
-.gem-figure--spider-crawl::before {
-  border-radius: 9999px;
-  background: radial-gradient(circle at 50% 40%, #334155, #020617);
-}
-.gem-figure--spider-crawl::after {
-  inset: auto -8% 20% -8%;
-  height: 8%;
-  background: repeating-linear-gradient(90deg, #64748b, #64748b 3px, transparent 3px, transparent 8px);
-}
-/* Skull */
-.gem-figure--skull-glow::before {
-  border-radius: 42% 42% 38% 38%;
-  background: radial-gradient(circle at 50% 30%, #f8fafc, #cbd5e1 55%, #94a3b8);
-  box-shadow: 0 0 16px rgb(248 250 252 / 0.45);
-}
-.gem-figure--skull-bone::before {
-  border-radius: 45%;
-  background: linear-gradient(180deg, #e2e8f0, #94a3b8);
-}
-.gem-figure--skull-glow::after,
-.gem-figure--skull-bone::after {
-  inset: 32% 28% auto;
-  height: 16%;
-  border-radius: 9999px;
-  background: rgb(15 23 42 / 0.9);
-  box-shadow: 14px 0 0 rgb(15 23 42 / 0.9);
-}
-/* Cauldron */
-.gem-figure--cauldron-bubble::before {
-  border-radius: 8% 8% 45% 45%;
-  background: linear-gradient(180deg, #1f2937, #030712);
-  box-shadow: inset 0 8px 0 #374151;
-}
-.gem-figure--cauldron-bubble::after {
-  inset: 18% 22% auto;
-  height: 28%;
-  border-radius: 9999px;
-  background: radial-gradient(circle at 50% 60%, #84cc16, #15803d 70%);
-  animation: gem-cauldron-bubble 1.8s ease-in-out infinite;
-}
-/* Candy */
-.gem-figure--candy-corn::before {
-  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-  background: linear-gradient(180deg, #fef08a 0%, #fef08a 33%, #fb923c 33%, #fb923c 66%, #fff 66%);
-}
-.gem-figure--candy-lollipop::before {
-  inset: auto 42% 0 42%;
-  height: 45%;
-  border-radius: 9999px;
-  background: linear-gradient(#fef3c7, #d97706);
-}
-.gem-figure--candy-lollipop::after {
-  inset: 0 18% 35% 18%;
-  border-radius: 9999px;
-  background: radial-gradient(circle at 35% 30%, #f472b6, #db2777);
-}
-/* Cat */
-.gem-figure--cat-sneak::before {
-  border-radius: 45% 45% 40% 40%;
-  background: radial-gradient(circle at 40% 35%, #374151, #020617);
-}
-.gem-figure--cat-arched::before {
-  border-radius: 40% 40% 55% 55%;
-  background: linear-gradient(180deg, #1f2937, #000);
-  transform: scaleY(0.9);
-}
-.gem-figure--cat-sneak::after,
-.gem-figure--cat-arched::after {
-  inset: 8% 18% auto;
-  height: 22%;
-  clip-path: polygon(50% 100%, 0 0, 22% 70%, 50% 40%, 78% 70%, 100% 0);
-  background: #111827;
-}
-/* Vampire */
-.gem-figure--vampire-cape::before {
-  clip-path: polygon(50% 0%, 100% 35%, 78% 100%, 22% 100%, 0% 35%);
-  background: linear-gradient(180deg, #450a0a, #020617);
-}
-.gem-figure--vampire-cape::after {
-  inset: 18% 32% auto;
-  height: 28%;
-  border-radius: 9999px;
-  background: radial-gradient(circle at 50% 40%, #fecaca, #f87171);
-}
-/* Skeleton / monster */
-.gem-figure--skeleton-rib::before {
-  border-radius: 40%;
-  background: linear-gradient(180deg, #f1f5f9, #cbd5e1);
-  box-shadow: inset 0 -8px 0 rgb(148 163 184 / 0.5);
-}
-.gem-figure--monster-eye::before {
-  border-radius: 9999px;
-  background: radial-gradient(circle at 50% 45%, #a3e635, #365314 65%, #14532d);
-}
-.gem-figure--monster-eye::after {
-  inset: 28% 28% auto;
-  height: 22%;
-  border-radius: 9999px;
-  background: radial-gradient(circle, #020617 35%, transparent 36%);
-}
-.gem-sprite.is-burst .gem-sprite__glow {
+.gem-sprite.is-burst .gem-sprite__glow,
+.gem-sprite.is-burst .gem-model-3d {
   animation: gem-collect-flash 0.9s ease-out forwards;
 }
 .gem-sprite.is-collected {

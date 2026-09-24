@@ -11,9 +11,9 @@ import {
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
   gemLabelHe,
-  gemVariantForHouse,
+  gemMonsterForHouse,
+  type GemMonsterId,
 } from "@/lib/gem-hunt";
-import type { GemVariantId } from "@/lib/gem-variants";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
 import { cn } from "@/lib/utils";
@@ -38,9 +38,9 @@ export function GemHuntOverlay({
   userLocation: UserLocation | null;
   simulateInRange?: boolean;
   onClose: () => void;
-  onCollect: (variantId: GemVariantId) => void;
+  onCollect: (monsterId: GemMonsterId) => void;
 }) {
-  const variantId = gemVariantForHouse(house);
+  const monsterId = gemMonsterForHouse(house);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -147,7 +147,7 @@ export function GemHuntOverlay({
     setPhase("collecting");
     window.setTimeout(() => {
       setPhase("done");
-      onCollect(variantId);
+      onCollect(monsterId);
     }, 900);
   }
 
@@ -182,7 +182,7 @@ export function GemHuntOverlay({
       <header className="gem-hunt-overlay__header">
         <div className="min-w-0 flex-1">
           <p className="gem-hunt-overlay__badge">תצוגת מנהל — ציד אוצרות</p>
-          <p className="gem-hunt-overlay__title">מחפשים {gemLabelHe(variantId)} ליד {house.name || house.address}</p>
+          <p className="gem-hunt-overlay__title">מחפשים {gemLabelHe(monsterId)} ליד {house.name || house.address}</p>
         </div>
         <OverlayCloseButton
           label="סגירה"
@@ -206,9 +206,13 @@ export function GemHuntOverlay({
           type="button"
           className={cn("gem-hunt-overlay__gem-hit", phase === "collecting" && "is-collecting")}
           onClick={handleCollect}
-          aria-label={`איסוף ${gemLabelHe(variantId)}`}
+          aria-label={`איסוף ${gemLabelHe(monsterId)}`}
         >
-          <GemSprite variantId={variantId} className={cn(phase === "collecting" && "is-burst")} />
+          <GemSprite
+            house={house}
+            mode="3d"
+            className={cn(phase === "collecting" && "is-burst")}
+          />
         </button>
       ) : null}
 

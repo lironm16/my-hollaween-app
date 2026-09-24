@@ -1,24 +1,31 @@
 import { distanceMeters } from "@/lib/geo";
-import type { GemFamily, GemType, GemVariantId } from "@/lib/gem-variants";
+import type { GemFamily, GemMonsterId } from "@/lib/gem-monsters";
 import {
   countGemEligibleHouses,
   gemFamilyForHouse,
   gemLabelHe,
-  gemTypeForHouse,
+  gemMonsterForHouse,
+  gemMonsterMeta,
+  gemMonsterTint,
   gemVariantForHouse,
-  GEM_VARIANTS,
-} from "@/lib/gem-variants";
+  gemVariantMeta,
+} from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 
-export type { GemFamily, GemType, GemVariantId };
+export type { GemFamily, GemMonsterId };
 export {
   countGemEligibleHouses,
   gemFamilyForHouse,
   gemLabelHe,
-  gemTypeForHouse,
+  gemMonsterForHouse,
+  gemMonsterMeta,
+  gemMonsterTint,
   gemVariantForHouse,
-  GEM_VARIANTS,
+  gemVariantMeta,
 };
+
+/** @deprecated */
+export type GemVariantId = GemMonsterId;
 
 /** Show "find gem" affordance when within this range. */
 export const GEM_APPROACH_METERS = 50;
@@ -89,8 +96,6 @@ export type GemAchievement = {
   titleHe: string;
   descriptionHe: string;
   target: number;
-  /** When set, counts only gems in these families. */
-  gemFamilies?: GemFamily[];
 };
 
 export const GEM_ACHIEVEMENTS: GemAchievement[] = [
@@ -102,7 +107,7 @@ export const GEM_ACHIEVEMENTS: GemAchievement[] = [
   },
   {
     id: "hunter5",
-    titleHe: "צייד/ת רוחות",
+    titleHe: "צייד/ת אוצרות",
     descriptionHe: "5 אוצרות",
     target: 5,
   },
@@ -118,48 +123,18 @@ export const GEM_ACHIEVEMENTS: GemAchievement[] = [
     descriptionHe: "חצי מהמפה",
     target: 0,
   },
-  {
-    id: "ghost3",
-    titleHe: "רוחות בלילה",
-    descriptionHe: "3 רוחות",
-    target: 3,
-    gemFamilies: ["ghost"],
-  },
-  {
-    id: "pumpkin3",
-    titleHe: "מדשאת דלעות",
-    descriptionHe: "3 דלעות",
-    target: 3,
-    gemFamilies: ["pumpkin"],
-  },
-  {
-    id: "bat3",
-    titleHe: "לילה מעופף",
-    descriptionHe: "3 עטלפים",
-    target: 3,
-    gemFamilies: ["bat"],
-  },
 ];
 
 export function achievementProgress(
   achievement: GemAchievement,
   collectedIds: string[],
-  housesById: Map<string, PublicHouse>,
+  _housesById: Map<string, PublicHouse>,
   totalEligible: number,
 ) {
-  let count: number;
+  const count = collectedIds.length;
   if (achievement.id === "half") {
     const target = Math.max(1, Math.ceil(totalEligible / 2));
-    count = collectedIds.length;
     return { count, target, done: count >= target };
-  }
-  if (achievement.gemFamilies?.length) {
-    count = collectedIds.filter((id) => {
-      const house = housesById.get(id);
-      return house && achievement.gemFamilies!.includes(gemFamilyForHouse(house));
-    }).length;
-  } else {
-    count = collectedIds.length;
   }
   return { count, target: achievement.target, done: count >= achievement.target };
 }
