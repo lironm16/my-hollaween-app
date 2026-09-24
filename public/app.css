@@ -900,6 +900,9 @@
   .min-h-\[12rem\] {
     min-height: 12rem;
   }
+  .min-h-\[40vh\] {
+    min-height: 40vh;
+  }
   .min-h-\[280px\] {
     min-height: 280px;
   }

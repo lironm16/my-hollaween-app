@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useEffect, type ComponentProps } from "react";
 
 /** Dark map shell — no loading text; pins appear as soon as the chunk loads. */
-function MapShell() {
+export function MapShell() {
   return (
     <div
       className="h-full min-h-[280px] w-full bg-[#1a1024]"

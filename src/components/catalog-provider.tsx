@@ -30,7 +30,7 @@ import {
 import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
 import { catalogNeedsFullRefresh, resolveServerHouseCount } from "@/lib/catalog-houses";
 import { catalogHasRealHouses } from "@/lib/house-set";
-import { isGemHuntSessionActive, subscribeGemHuntSession } from "@/lib/gem-hunt-session";
+import { isMapListSuspended, subscribeMapListSuspend } from "@/lib/map-list-suspend";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
 
@@ -170,7 +170,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const pendingCatalogRef = useRef<Catalog | null>(null);
 
   const publishCatalog = useCallback((next: Catalog, prev: Catalog | null) => {
-    if (isGemHuntSessionActive()) {
+    if (isMapListSuspended()) {
       pendingCatalogRef.current = next;
       return prev;
     }
@@ -202,7 +202,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       next = withDeviceHouseOverlays(applyCatalogResponse(prev, live));
       return publishCatalog(next, prev) ?? next;
     });
-    if (isGemHuntSessionActive()) return next;
+    if (isMapListSuspended()) return next;
     setSource("network");
     setUnreachable(false);
     setError(null);
@@ -216,7 +216,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refresh = useCallback(async (force = false) => {
-    if (isGemHuntSessionActive() && !force) return;
+    if (isMapListSuspended() && !force) return;
     const online = typeof navigator === "undefined" || navigator.onLine;
     setOffline(!online);
     if (!online) {
@@ -227,7 +227,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           next = withDeviceHouseOverlays(syncCatalog(cached, prev ?? cached));
           return publishCatalog(next, prev) ?? next;
         });
-        if (isGemHuntSessionActive()) return;
+        if (isMapListSuspended()) return;
         setSource("cache");
         setUnreachable(false);
         setError(null);
@@ -256,7 +256,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         const reconciled = await reconcileWithDeviceCache(catalogRef.current);
         if (reconciled && reconciled.houses.length > beforeLen) {
           setCatalog((prev) => publishCatalog(reconciled, prev) ?? reconciled);
-          if (!isGemHuntSessionActive()) {
+          if (!isMapListSuspended()) {
             setSource("cache");
             await saveCatalogCache(reconciled);
             window.dispatchEvent(new Event("hw-catalog-refreshed"));
@@ -278,7 +278,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
             const next = withDeviceHouseOverlays(syncCatalog(cached, prev ?? cached));
             return publishCatalog(next, prev) ?? next;
           });
-          if (isGemHuntSessionActive()) return;
+          if (isMapListSuspended()) return;
           setSource("cache");
           setUnreachable(online);
           setError(null);
@@ -301,7 +301,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         merged = withDeviceHouseOverlays(applyCatalogResponse(merged, live));
         markCatalogCacheComplete(merged);
         setCatalog((prev) => publishCatalog(merged, prev) ?? merged);
-        if (isGemHuntSessionActive()) return;
+        if (isMapListSuspended()) return;
         setSource("network");
         setUnreachable(false);
         setError(null);
@@ -314,7 +314,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           if (prev && catalogHasRealHouses(prev) && !catalogHasRealHouses(next)) return prev;
           return publishCatalog(next, prev) ?? next;
         });
-        if (isGemHuntSessionActive()) return;
+        if (isMapListSuspended()) return;
         setSource("snapshot");
         setUnreachable(false);
         setError(null);
@@ -337,17 +337,17 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           const merged = prev && cached ? syncCatalog(cached, prev) : (prev ?? cached);
           const next = merged ? withDeviceHouseOverlays(merged) : merged;
           kept = Boolean(next);
-          if (next && !isGemHuntSessionActive()) void saveCatalogCache(next);
+          if (next && !isMapListSuspended()) void saveCatalogCache(next);
           if (!next) return prev;
           return publishCatalog(next, prev) ?? next;
         });
-        if (kept && !isGemHuntSessionActive()) {
+        if (kept && !isMapListSuspended()) {
           setSource("cache");
           setUnreachable(online);
           setError(null);
           return;
         }
-        if (isGemHuntSessionActive()) return;
+        if (isMapListSuspended()) return;
         setUnreachable(online);
         setError(
           online
@@ -359,8 +359,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   }, [applyLiveResponse]);
 
   useEffect(() => {
-    return subscribeGemHuntSession(() => {
-      if (isGemHuntSessionActive()) return;
+    return subscribeMapListSuspend(() => {
+      if (isMapListSuspended()) return;
       const pending = pendingCatalogRef.current;
       if (pending) {
         pendingCatalogRef.current = null;
@@ -408,7 +408,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     window.addEventListener("online", onOff);
     window.addEventListener("offline", onOff);
     const onVis = () => {
-      if (appInForeground() && !isGemHuntSessionActive()) void refresh(false);
+      if (appInForeground() && !isMapListSuspended()) void refresh(false);
     };
     document.addEventListener("visibilitychange", onVis);
     const onChanged = () => void refresh(true);
@@ -423,7 +423,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         emptyDeltaStreakRef.current,
       );
       pollTimer = window.setTimeout(() => {
-        if (!cancelled && appInForeground() && !isGemHuntSessionActive()) void refresh(false);
+        if (!cancelled && appInForeground() && !isMapListSuspended()) void refresh(false);
         if (!cancelled) schedulePoll();
       }, delay);
     };

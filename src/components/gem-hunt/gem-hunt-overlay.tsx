@@ -29,7 +29,7 @@ import { distanceMeters, formatDistance } from "@/lib/geo";
 import { googleMapsNavigateUrl } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
-import { beginGemHuntSession, endGemHuntSession } from "@/lib/gem-hunt-session";
+import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-list-suspend";
 import { cn } from "@/lib/utils";
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "done";
@@ -116,13 +116,13 @@ export function GemHuntOverlay({
   }, [house.id]);
 
   useEffect(() => {
-    beginGemHuntSession();
+    beginMapListOverlayCapture();
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
       stopGemHuntCameraStream();
-      endGemHuntSession();
+      endMapListOverlayCapture();
     };
   }, []);
 

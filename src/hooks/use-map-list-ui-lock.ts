@@ -1,22 +1,22 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
-import { isGemHuntSessionActive, subscribeGemHuntSession } from "@/lib/gem-hunt-session";
+import { isMapListSuspended, subscribeMapListSuspend } from "@/lib/map-list-suspend";
 import type { PublicHouse } from "@/lib/types";
 
-/** Snapshot map/list inputs while hunt overlay is open; release when user sees the map again. */
-export function useGemHuntUiLock<THouse extends PublicHouse>(
+/** Snapshot map/list inputs while an overlay covers them; release when overlay closes. */
+export function useMapListUiLock<THouse extends PublicHouse>(
   displayHouses: THouse[],
   now: Date,
 ): { locked: boolean; houses: THouse[]; now: Date } {
   const locked = useSyncExternalStore(
-    subscribeGemHuntSession,
-    isGemHuntSessionActive,
+    subscribeMapListSuspend,
+    isMapListSuspended,
     () => false,
   );
 
   useEffect(() => {
-    if (!locked) clearGemHuntUiSnapshot();
+    if (!locked) clearMapListUiSnapshot();
   }, [locked]);
 
   if (!locked) {
@@ -38,8 +38,6 @@ function getOrCreateSnapshot(houses: PublicHouse[], now: Date): Snapshot {
   return snapshot;
 }
 
-export function clearGemHuntUiSnapshot() {
+export function clearMapListUiSnapshot() {
   snapshot = null;
 }
-
-/** Call when hunt session ends so the next lock captures fresh data. */
