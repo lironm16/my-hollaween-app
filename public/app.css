@@ -6732,7 +6732,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   position: absolute;
   left: 2.15rem;
   z-index: 1100;
-  bottom: calc(0.45rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
+  bottom: calc(0px + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
   appearance: none;
   border: 0;
 }
