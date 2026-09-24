@@ -30,6 +30,7 @@ import {
 import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
 import { catalogNeedsFullRefresh, resolveServerHouseCount } from "@/lib/catalog-houses";
 import { catalogHasRealHouses } from "@/lib/house-set";
+import { isGemHuntSessionActive, subscribeGemHuntSession } from "@/lib/gem-hunt-session";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
 
@@ -166,6 +167,15 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const offlineSinceRef = useRef<number | null>(null);
   const [pollSeconds, setPollSeconds] = useState(config.catalogPollSeconds);
   const seededRef = useRef(false);
+  const pendingCatalogRef = useRef<Catalog | null>(null);
+
+  const publishCatalog = useCallback((next: Catalog, prev: Catalog | null) => {
+    if (isGemHuntSessionActive()) {
+      pendingCatalogRef.current = next;
+      return prev;
+    }
+    return next;
+  }, []);
 
   const seedCatalog = useCallback((initial: Catalog) => {
     if (seededRef.current) return;
@@ -187,11 +197,12 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     } else {
       emptyDeltaStreakRef.current = 0;
     }
-    let next: Catalog = live;
+    let next!: Catalog;
     setCatalog((prev) => {
       next = withDeviceHouseOverlays(applyCatalogResponse(prev, live));
-      return next;
+      return publishCatalog(next, prev) ?? next;
     });
+    if (isGemHuntSessionActive()) return next;
     setSource("network");
     setUnreachable(false);
     setError(null);
@@ -205,6 +216,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refresh = useCallback(async (force = false) => {
+    if (isGemHuntSessionActive() && !force) return;
     const online = typeof navigator === "undefined" || navigator.onLine;
     setOffline(!online);
     if (!online) {
@@ -213,8 +225,9 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         let next: Catalog = cached;
         setCatalog((prev) => {
           next = withDeviceHouseOverlays(syncCatalog(cached, prev ?? cached));
-          return next;
+          return publishCatalog(next, prev) ?? next;
         });
+        if (isGemHuntSessionActive()) return;
         setSource("cache");
         setUnreachable(false);
         setError(null);
@@ -242,10 +255,12 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         const beforeLen = catalogRef.current?.houses.length ?? 0;
         const reconciled = await reconcileWithDeviceCache(catalogRef.current);
         if (reconciled && reconciled.houses.length > beforeLen) {
-          setCatalog(reconciled);
-          setSource("cache");
-          await saveCatalogCache(reconciled);
-          window.dispatchEvent(new Event("hw-catalog-refreshed"));
+          setCatalog((prev) => publishCatalog(reconciled, prev) ?? reconciled);
+          if (!isGemHuntSessionActive()) {
+            setSource("cache");
+            await saveCatalogCache(reconciled);
+            window.dispatchEvent(new Event("hw-catalog-refreshed"));
+          }
         }
         if (
           !catalogNeedsFullRefresh(
@@ -259,7 +274,11 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       } catch {
         const cached = await readDeviceCatalog();
         if (cached) {
-          setCatalog((prev) => withDeviceHouseOverlays(syncCatalog(cached, prev ?? cached)));
+          setCatalog((prev) => {
+            const next = withDeviceHouseOverlays(syncCatalog(cached, prev ?? cached));
+            return publishCatalog(next, prev) ?? next;
+          });
+          if (isGemHuntSessionActive()) return;
           setSource("cache");
           setUnreachable(online);
           setError(null);
@@ -281,7 +300,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         }
         merged = withDeviceHouseOverlays(applyCatalogResponse(merged, live));
         markCatalogCacheComplete(merged);
-        setCatalog(merged);
+        setCatalog((prev) => publishCatalog(merged, prev) ?? merged);
+        if (isGemHuntSessionActive()) return;
         setSource("network");
         setUnreachable(false);
         setError(null);
@@ -292,8 +312,9 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         setCatalog((prev) => {
           const next = merged;
           if (prev && catalogHasRealHouses(prev) && !catalogHasRealHouses(next)) return prev;
-          return next;
+          return publishCatalog(next, prev) ?? next;
         });
+        if (isGemHuntSessionActive()) return;
         setSource("snapshot");
         setUnreachable(false);
         setError(null);
@@ -316,15 +337,17 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           const merged = prev && cached ? syncCatalog(cached, prev) : (prev ?? cached);
           const next = merged ? withDeviceHouseOverlays(merged) : merged;
           kept = Boolean(next);
-          if (next) void saveCatalogCache(next);
-          return next ?? prev;
+          if (next && !isGemHuntSessionActive()) void saveCatalogCache(next);
+          if (!next) return prev;
+          return publishCatalog(next, prev) ?? next;
         });
-        if (kept) {
+        if (kept && !isGemHuntSessionActive()) {
           setSource("cache");
           setUnreachable(online);
           setError(null);
           return;
         }
+        if (isGemHuntSessionActive()) return;
         setUnreachable(online);
         setError(
           online
@@ -334,6 +357,23 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       }
     }
   }, [applyLiveResponse]);
+
+  useEffect(() => {
+    return subscribeGemHuntSession(() => {
+      if (isGemHuntSessionActive()) return;
+      const pending = pendingCatalogRef.current;
+      if (pending) {
+        pendingCatalogRef.current = null;
+        setCatalog(pending);
+        setSource("network");
+        setUnreachable(false);
+        setError(null);
+        void saveCatalogCache(pending);
+        window.dispatchEvent(new Event("hw-catalog-refreshed"));
+      }
+      void refresh(false);
+    });
+  }, [refresh]);
 
   useEffect(() => {
     let cancelled = false;
@@ -368,7 +408,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     window.addEventListener("online", onOff);
     window.addEventListener("offline", onOff);
     const onVis = () => {
-      if (appInForeground()) void refresh(false);
+      if (appInForeground() && !isGemHuntSessionActive()) void refresh(false);
     };
     document.addEventListener("visibilitychange", onVis);
     const onChanged = () => void refresh(true);
@@ -383,7 +423,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         emptyDeltaStreakRef.current,
       );
       pollTimer = window.setTimeout(() => {
-        if (!cancelled && appInForeground()) void refresh(false);
+        if (!cancelled && appInForeground() && !isGemHuntSessionActive()) void refresh(false);
         if (!cancelled) schedulePoll();
       }, delay);
     };

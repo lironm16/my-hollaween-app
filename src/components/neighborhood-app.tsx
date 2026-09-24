@@ -60,6 +60,7 @@ import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useDistanceOrigin } from "@/hooks/use-distance-origin";
 import { useHouseSet } from "@/hooks/use-house-set";
+import { useGemHuntUiLock } from "@/hooks/use-gem-hunt-ui-lock";
 import { config } from "@/lib/config";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { useAppNow } from "@/hooks/use-app-clock";
@@ -215,6 +216,8 @@ export function NeighborhoodApp({
     return houses;
   }, [houses]);
 
+  const { houses: mapListHouses, now: mapListNow } = useGemHuntUiLock(displayHouses, now);
+
   const housesForSkipCount = useMemo(() => {
     const byId = new Map(displayHouses.map((house) => [house.id, house]));
     for (const house of catalog?.houses ?? []) {
@@ -230,18 +233,18 @@ export function NeighborhoodApp({
       visitedIds: visits.visitedIds,
       skippedIds: skips.skippedIds,
       gemCollectedIds: gemHuntActive ? gems.collectedIds : [],
-      now,
+      now: mapListNow,
     }),
-    [activeHouseSet, likes.likedIds, visits.visitedIds, skips.skippedIds, gemHuntActive, gems.collectedIds, now],
+    [activeHouseSet, likes.likedIds, visits.visitedIds, skips.skippedIds, gemHuntActive, gems.collectedIds, mapListNow],
   );
 
   const mapHouses = useMemo(
-    () => displayHouses.filter((house) => houseMatchesSet(house, activeHouseSet)),
-    [displayHouses, activeHouseSet],
+    () => mapListHouses.filter((house) => houseMatchesSet(house, activeHouseSet)),
+    [mapListHouses, activeHouseSet],
   );
   const visible = useMemo(
-    () => filterHouses(displayHouses, filters, filterContext),
-    [displayHouses, filters, filterContext],
+    () => filterHouses(mapListHouses, filters, filterContext),
+    [mapListHouses, filters, filterContext],
   );
   const showBootstrapSpinner =
     displayHouses.length === 0 && !catalogHasRealHouses(catalog) && loading;
@@ -249,7 +252,7 @@ export function NeighborhoodApp({
   const filterDimActive = matchedIds.size < mapHouses.length;
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
-  const selection = useHouseSelection({ focusId, visible, houses, clusterHouses: mapHouses });
+  const selection = useHouseSelection({ focusId, visible, houses: mapListHouses, clusterHouses: mapHouses });
   const { resetForNavigation } = selection;
 
   /** No per-GPS scan — glow removed; target picked only when FAB is tapped. */
