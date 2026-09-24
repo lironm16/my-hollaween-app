@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppNow } from "@/hooks/use-app-clock";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Circle,
   MapContainer,
@@ -201,6 +201,16 @@ function housePinHtml(
   return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}" style="${style}" ${label}${idAttr}>${hoursRingHtml(house, now)}${pinStatusMark(house, now, extras?.skipped)}${pinFaceHtml(house)}</div>`;
 }
 
+const DIV_ICON_CACHE = new Map<string, L.DivIcon>();
+
+function cachedDivIcon(key: string, build: () => L.DivIcon) {
+  const hit = DIV_ICON_CACHE.get(key);
+  if (hit) return hit;
+  const icon = build();
+  DIV_ICON_CACHE.set(key, icon);
+  return icon;
+}
+
 function clusterIcon(
   cluster: HouseCluster,
   selectedId: string | null | undefined,
@@ -278,7 +288,20 @@ const youAreHereIcon = L.divIcon({
 function SizeSync() {
   const map = useMap();
   useEffect(() => {
-    const sync = () => map.invalidateSize({ animate: false });
+    let lastW = 0;
+    let lastH = 0;
+    let raf = 0;
+    const sync = () => {
+      if (raf) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        const size = map.getSize();
+        if (size.x === lastW && size.y === lastH) return;
+        lastW = size.x;
+        lastH = size.y;
+        map.invalidateSize({ animate: false });
+      });
+    };
     const id = window.setTimeout(sync, 40);
     window.addEventListener("resize", sync);
     window.visualViewport?.addEventListener("resize", sync);
@@ -286,6 +309,7 @@ function SizeSync() {
     ro?.observe(map.getContainer());
     return () => {
       window.clearTimeout(id);
+      if (raf) window.cancelAnimationFrame(raf);
       window.removeEventListener("resize", sync);
       window.visualViewport?.removeEventListener("resize", sync);
       ro?.disconnect();
@@ -431,7 +455,7 @@ function MapDismiss({
   return null;
 }
 
-function ClusterMarker({
+const ClusterMarker = memo(function ClusterMarker({
   cluster,
   selectedId,
   clusterOverview,
@@ -442,6 +466,7 @@ function ClusterMarker({
   skippedIds,
   filteredOut,
   matchedIds,
+  matchedIdsKey,
 }: {
   cluster: HouseCluster;
   selectedId?: string | null;
@@ -453,6 +478,7 @@ function ClusterMarker({
   skippedIds?: ReadonlySet<string>;
   filteredOut?: boolean;
   matchedIds?: ReadonlySet<string>;
+  matchedIdsKey?: string;
 }) {
   const tick = useMinuteTick();
   const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
@@ -467,8 +493,18 @@ function ClusterMarker({
     () => cluster.houses.map((house) => (skippedIds?.has(house.id) ? "1" : "0")).join(""),
     [cluster.houses, skippedIds],
   );
-  const icon = useMemo(
-    () =>
+  const icon = useMemo(() => {
+    const cacheKey = [
+      cluster.key,
+      selectedId ?? "",
+      tick,
+      routeOrder ?? "",
+      visitedKey,
+      skippedKey,
+      filteredOut ? "1" : "0",
+      matchedIdsKey ?? "",
+    ].join("|");
+    return cachedDivIcon(cacheKey, () =>
       clusterIcon(
         cluster,
         selectedId,
@@ -479,17 +515,56 @@ function ClusterMarker({
         matchedIds,
         skippedIds,
       ),
-    [
-      cluster,
-      selectedId,
-      tick,
-      routeOrder,
-      visitedKey,
-      skippedKey,
-      filteredOut,
-      matchedIds,
-    ],
+    );
+  }, [
+    cluster,
+    selectedId,
+    tick,
+    routeOrder,
+    visitedKey,
+    skippedKey,
+    filteredOut,
+    matchedIdsKey,
+    matchedIds,
+    visitedIds,
+    skippedIds,
+    now,
+  ]);
+
+  const onMarkerClick = useCallback(
+    (event: L.LeafletMouseEvent) => {
+      L.DomEvent.stopPropagation(event.originalEvent);
+      const isMulti = cluster.houses.length > 1;
+      if (isMulti) {
+        if (selectedHere && clusterOverview) {
+          onClose?.();
+          return;
+        }
+        if (selectedHere && !clusterOverview) {
+          const current = cluster.houses.find((house) => house.id === selectedId) ?? cluster.houses[0]!;
+          onSelect?.(current, { clusterOverview: true });
+          return;
+        }
+        onSelect?.(cluster.houses[0]!, { clusterOverview: true });
+        return;
+      }
+      const only = cluster.houses[0]!;
+      if (only.id === selectedId) {
+        onClose?.();
+        return;
+      }
+      onSelect?.(only);
+    },
+    [cluster, clusterOverview, onClose, onSelect, selectedHere, selectedId],
   );
+
+  const eventHandlers = useMemo(
+    () => ({
+      click: onMarkerClick,
+    }),
+    [onMarkerClick],
+  );
+
   return (
     <Marker
       key={cluster.key}
@@ -508,34 +583,10 @@ function ClusterMarker({
                   ? 200
                   : 0
       }
-      eventHandlers={{
-        click: (event) => {
-          L.DomEvent.stopPropagation(event.originalEvent);
-          const isMulti = cluster.houses.length > 1;
-          if (isMulti) {
-            if (selectedHere && clusterOverview) {
-              onClose?.();
-              return;
-            }
-            if (selectedHere && !clusterOverview) {
-              const current = cluster.houses.find((house) => house.id === selectedId) ?? cluster.houses[0]!;
-              onSelect?.(current, { clusterOverview: true });
-              return;
-            }
-            onSelect?.(cluster.houses[0]!, { clusterOverview: true });
-            return;
-          }
-          const only = cluster.houses[0]!;
-          if (only.id === selectedId) {
-            onClose?.();
-            return;
-          }
-          onSelect?.(only);
-        },
-      }}
+      eventHandlers={eventHandlers}
     />
   );
-}
+});
 
 type Props = {
   houses?: PublicHouse[];
@@ -574,6 +625,8 @@ type Props = {
   statsFab?: ReactNode;
   /** House ids that pass the current filter — others render faded on the map. */
   matchedIds?: ReadonlySet<string>;
+  /** Stable serialization of matched ids for pin icon memoization. */
+  matchedIdsKey?: string;
   filterDimActive?: boolean;
   /** Compact embed on house link pages — center on the house, theme toggle only. */
   embed?: boolean;
@@ -613,6 +666,7 @@ export function HouseMap({
   panTick = 0,
   statsFab = null,
   matchedIds,
+  matchedIdsKey = "",
   filterDimActive = false,
   embed = false,
   gemHuntEnabled = false,
@@ -848,6 +902,7 @@ export function HouseMap({
                 skippedIds={skippedIdSet}
                 filteredOut={clusterFilteredOut}
                 matchedIds={matchedIds}
+                matchedIdsKey={matchedIdsKey}
                 routeOrder={cluster.houses.reduce<number | undefined>(
                   (found, house) => found ?? routeOrderById.get(house.id),
                   undefined,

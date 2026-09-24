@@ -116,6 +116,9 @@ import {
 import type { Catalog, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
+/** Stable empty array for filter context — never use `[]` inline in useMemo deps. */
+const NO_GEM_COLLECTED_IDS: string[] = [];
+
 export function NeighborhoodApp({
   initialCatalog,
   focusId = null,
@@ -241,7 +244,7 @@ export function NeighborhoodApp({
       likedIds: likes.likedIds,
       visitedIds: visits.visitedIds,
       skippedIds: skips.skippedIds,
-      gemCollectedIds: gemHuntActive ? gems.collectedIds : [],
+      gemCollectedIds: gemHuntActive ? gems.collectedIds : NO_GEM_COLLECTED_IDS,
       now: mapListNow,
     }),
     [activeHouseSet, likes.likedIds, visits.visitedIds, skips.skippedIds, gemHuntActive, gems.collectedIds, mapListNow],
@@ -259,6 +262,10 @@ export function NeighborhoodApp({
     displayHouses.length === 0 && !catalogHasRealHouses(catalog) && loading;
   const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
   const filterDimActive = matchedIds.size < mapHouses.length;
+  const matchedIdsKey = useMemo(
+    () => (filterDimActive ? visible.map((house) => house.id).join("\0") : ""),
+    [filterDimActive, visible],
+  );
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
   const selection = useHouseSelection({ focusId, visible, houses: mapListHouses, clusterHouses: mapHouses });
@@ -358,7 +365,7 @@ export function NeighborhoodApp({
     }
     const t = window.setTimeout(run, 350);
     return () => window.clearTimeout(t);
-  }, [selection.selected?.id, admin, now]);
+  }, [selection.selected?.id, admin]);
 
   const ownedEditCode = useMemo(() => {
     if (!selection.editHouseId) return undefined;
@@ -996,6 +1003,7 @@ export function NeighborhoodApp({
                 <HouseMapDynamic
                   houses={mapHouses}
                   matchedIds={matchedIds}
+                  matchedIdsKey={matchedIdsKey}
                   filterDimActive={filterDimActive}
                   selectedId={originPick.originPickActive ? null : selection.selected?.id}
                   clusterOverview={selection.clusterOverview}

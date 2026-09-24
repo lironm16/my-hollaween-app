@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   collectGem,
   GEM_CHANGED_EVENT,
@@ -30,9 +30,14 @@ export function useGemProgress() {
     };
   }, [read]);
 
+  const collectedIds = useMemo(
+    () => entries.map((e) => e.houseId),
+    [entries],
+  );
+
   return {
     entries,
-    collectedIds: entries.map((e) => e.houseId),
+    collectedIds,
     collected: (id: string) => entries.some((e) => e.houseId === id),
     collect: (houseId: string, gemType: string) => {
       if (isGemCollected(houseId)) return loadGemCollectedIds();
