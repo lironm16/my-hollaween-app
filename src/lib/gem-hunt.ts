@@ -48,8 +48,12 @@ export const GEM_CAMERA_HFOV_DEG = 62;
 export const GEM_ANCHOR_MIN_METERS = 2;
 export const GEM_ANCHOR_MAX_METERS = 10;
 
-/** Hunt overlay + cheer — keep in sync with gem-collect-* CSS durations */
-export const GEM_COLLECT_ANIMATION_MS = 2000;
+/** Camera hunt burst after tap — keep in sync with gem-collect-* overlay CSS (~0.65s). */
+export const GEM_COLLECT_OVERLAY_MS = 650;
+/** Map «אוצר נאסף!» popup — animation + ~2s extra hold. */
+export const GEM_CHEER_DISPLAY_MS = 4200;
+/** @deprecated use GEM_COLLECT_OVERLAY_MS / GEM_CHEER_DISPLAY_MS */
+export const GEM_COLLECT_ANIMATION_MS = GEM_COLLECT_OVERLAY_MS;
 
 export type GemProximity = "far" | "approach" | "hunt" | "collected";
 

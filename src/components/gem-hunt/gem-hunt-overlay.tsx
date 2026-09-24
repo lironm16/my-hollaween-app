@@ -15,7 +15,7 @@ import {
   GEM_HUNT_METERS,
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
-  GEM_COLLECT_ANIMATION_MS,
+  GEM_COLLECT_OVERLAY_MS,
   gemAnchorForHouse,
   gemLabelHe,
   gemMonsterForHouse,
@@ -197,7 +197,7 @@ export function GemHuntOverlay({
     window.setTimeout(() => {
       setPhase("done");
       onCollect(monsterId);
-    }, GEM_COLLECT_ANIMATION_MS);
+    }, GEM_COLLECT_OVERLAY_MS);
   }
 
   function handleRevealMe() {
@@ -223,10 +223,10 @@ export function GemHuntOverlay({
     effectiveLoc != null ? relativeWalkBearingDeg(effectiveLoc, anchor, heading) : null;
   const facingTarget =
     turnBearing != null && Math.abs(turnBearing) <= GEM_FACING_TOLERANCE_DEG;
-  /** Centered, tappable gem: «גלה לי», sim, or in range + facing anchor (green arrow). */
+  /** Centered, tappable gem: «גלה לי» or in range + facing anchor (green arrow). */
   const centerCollectActive =
     gemVisible &&
-    (centerReveal || sim || (collectEnabled && facingTarget));
+    (centerReveal || (collectEnabled && facingTarget));
   const centerDisplayMode = centerCollectActive;
   /** Compass-pinned guide when not yet centered for collect. */
   const arPinGuideMode = gemVisible && !centerCollectActive;

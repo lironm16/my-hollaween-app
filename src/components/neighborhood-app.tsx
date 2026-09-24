@@ -33,7 +33,7 @@ import { GemHuntPanel } from "@/components/gem-hunt/gem-hunt-panel";
 import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
-import { canCollectGem, GEM_COLLECT_ANIMATION_MS } from "@/lib/gem-hunt";
+import { canCollectGem, GEM_CHEER_DISPLAY_MS } from "@/lib/gem-hunt";
 import { gemFabGlowLevel, pickGemHuntTarget } from "@/lib/gem-hunt-target";
 import { prepareGemHuntSensors, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
@@ -1109,7 +1109,7 @@ export function NeighborhoodApp({
             stopGemHuntCameraStream();
             setMapGemHouse(null);
             setMapGemCheerHouse(h);
-            window.setTimeout(() => setMapGemCheerHouse(null), GEM_COLLECT_ANIMATION_MS + 400);
+            window.setTimeout(() => setMapGemCheerHouse(null), GEM_CHEER_DISPLAY_MS);
           }}
         />
       ) : null}

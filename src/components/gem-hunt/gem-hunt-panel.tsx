@@ -17,7 +17,7 @@ import {
   gemMonsterForHouse,
   GEM_APPROACH_METERS,
   GEM_HUNT_METERS,
-  GEM_COLLECT_ANIMATION_MS,
+  GEM_CHEER_DISPLAY_MS,
 } from "@/lib/gem-hunt";
 import { distanceMeters, formatDistance } from "@/lib/geo";
 import type { PublicHouse } from "@/lib/types";
@@ -75,7 +75,7 @@ export function GemHuntPanel({
     stopGemHuntCameraStream();
     setHuntOpen(false);
     setCheer(true);
-    window.setTimeout(() => setCheer(false), GEM_COLLECT_ANIMATION_MS + 400);
+    window.setTimeout(() => setCheer(false), GEM_CHEER_DISPLAY_MS);
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate(40);
     }

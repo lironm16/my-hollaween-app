@@ -3642,7 +3642,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   height: 100%;
 }
 .gem-hunt-overlay__gem-hit.is-collecting .gem-sprite {
-  animation: gem-collect-burst 2s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+  animation: gem-collect-burst 0.65s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
 }
 .gem-hunt-overlay__collect-flash {
   position: absolute;
@@ -3650,7 +3650,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   z-index: 6;
   pointer-events: none;
   background: radial-gradient(circle at 50% 44%, rgb(253 224 71 / 0.65) 0%, transparent 58%);
-  animation: gem-overlay-collect-flash 2s ease-out forwards;
+  animation: gem-overlay-collect-flash 0.65s ease-out forwards;
 }
 .gem-hunt-overlay__walk-guide {
   position: relative;
@@ -3874,7 +3874,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-sprite.is-burst .gem-sprite__glow,
 .gem-sprite.is-burst .gem-model-3d {
-  animation: gem-collect-flash 2s ease-out forwards;
+  animation: gem-collect-flash 0.65s ease-out forwards;
 }
 .gem-sprite.is-collected {
   opacity: 0.45;
@@ -3904,11 +3904,15 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   padding: 1.15rem 1.35rem 1rem;
 }
 .gem-collect-cheer__gem.gem-sprite--poster {
-  width: min(70vw, 11.5rem);
-  height: min(70vw, 11.5rem);
+  width: min(72vw, 12rem);
+  height: min(72vw, 12rem);
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: visible;
+  border-radius: 1rem;
+  padding: 0.65rem 0.5rem 0.85rem;
+  box-sizing: border-box;
 }
 .gem-collect-cheer__gem .gem-sprite__poster {
   width: 100% !important;
@@ -3916,7 +3920,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  object-position: center;
+  object-position: center center;
+  padding: 0.35rem 0.25rem 0.5rem;
+  animation: none;
 }
 .gem-collect-cheer__text {
   font-size: 1.15rem;
@@ -4196,7 +4202,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 @keyframes gem-cheer-pop {
   0% { opacity: 0; transform: scale(0.82) translateY(12px); }
   12% { opacity: 1; transform: scale(1.04) translateY(0); }
-  75% { opacity: 1; transform: scale(1); }
+  52% { opacity: 1; transform: scale(1); }
+  88% { opacity: 1; transform: scale(1); }
   100% { opacity: 0; transform: scale(0.96) translateY(-8px); }
 }
 @keyframes gem-cauldron-bubble {
