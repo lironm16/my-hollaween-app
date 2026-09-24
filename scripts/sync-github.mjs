@@ -9,9 +9,9 @@
  *   GITHUB_TOKEN=ghp_... npm run sync:github
  */
 import { execSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import { backupPreserveDirs, mergePreserveDirs } from "./sync-preserve-assets.mjs";
 
 const token = process.env.GITHUB_TOKEN?.trim();
@@ -56,13 +56,6 @@ try {
   copyTree(sourceRoot, tmp);
   mergePreserveDirs(preserveBackup, tmp);
   rmSync(preserveBackup, { recursive: true, force: true });
-
-  const syncWorkflow = join(sourceRoot, "deploy/github/sync-from-cursor.yml");
-  const syncWorkflowDest = join(tmp, ".github/workflows/sync-from-cursor.yml");
-  if (existsSync(syncWorkflow)) {
-    mkdirSync(dirname(syncWorkflowDest), { recursive: true });
-    cpSync(syncWorkflow, syncWorkflowDest);
-  }
 
   run(`git -C "${tmp}" add -A`);
   try {

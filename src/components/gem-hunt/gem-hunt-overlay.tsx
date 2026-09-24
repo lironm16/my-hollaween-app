@@ -65,10 +65,6 @@ export function GemHuntOverlay({
   }, [sim, house.lat, house.lng, userLocation]);
   const distanceM =
     effectiveLoc != null && !sim ? distanceMeters(effectiveLoc, anchor) : null;
-  const pinPlacement = useMemo(() => {
-    if (!effectiveLoc) return null;
-    return gemScreenPlacement(effectiveLoc, anchor, heading);
-  }, [anchor, effectiveLoc, heading]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -83,6 +79,11 @@ export function GemHuntOverlay({
   const revealedRef = useRef(false);
 
   const { heading, status: headingStatus } = useDeviceHeading(true);
+
+  const pinPlacement = useMemo(() => {
+    if (!effectiveLoc) return null;
+    return gemScreenPlacement(effectiveLoc, anchor, heading);
+  }, [anchor, effectiveLoc, heading]);
 
   const reveal = useCallback(() => {
     if (revealedRef.current) return;
