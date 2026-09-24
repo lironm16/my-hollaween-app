@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { HelpShell, HelpStep } from "@/components/help-shell";
-import { HelpUiChip } from "@/components/help-ui-chip";
 import { helpImage } from "@/lib/help-images";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -10,7 +9,7 @@ import type { ReactNode } from "react";
 
 const STEPS: Array<{
   title: string;
-  body: ReactNode;
+  body: string;
   image: string;
   imageAlt: string;
   action?: ReactNode;
@@ -35,14 +34,7 @@ const STEPS: Array<{
   },
   {
     title: "שמירה וקוד",
-    body: (
-      <>
-        לחצו <HelpUiChip>שמירה</HelpUiChip>. מופיע <HelpUiChip>קוד עריכה</HelpUiChip> — 6 ספרות
-        שמאפשרות לעדכן את הבית (שעות, ממתקים, תמונה). במכשיר שבו הוספתם הקוד נשמר — אפשר
-        לערוך בלי להקליד שוב. אפשר לתת הרשאת עריכה ע״י שיתוף קוד העריכה — אחרי הזנה פעם אחת
-        נשמר גם אצלם.
-      </>
-    ),
+    body: "לחצו <<שמירה>>. מופיע <<קוד עריכה>> — 6 ספרות שמאפשרות לעדכן את הבית (שעות, ממתקים, תמונה). במכשיר שבו הוספתם הקוד נשמר — אפשר לערוך בלי להקליד שוב. אפשר לתת הרשאת עריכה ע״י שיתוף קוד העריכה — אחרי הזנה פעם אחת נשמר גם אצלם.",
     image: helpImage("step-3-done.png"),
     imageAlt: "מסך הצלחה עם קוד עריכה",
     action: (

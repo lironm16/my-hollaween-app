@@ -95,17 +95,18 @@ export function HelpStep({
   image,
   imageAlt,
   action,
-  parseBody = false,
+  parseBody = typeof body === "string",
 }: {
   n: number;
   title: ReactNode;
   body: ReactNode;
-  /** When true, string `body` is parsed for explicit <<ui-label>> chips only. */
+  /** When true (default for string bodies), `body` is parsed for <<ui-label>> chips only. */
   parseBody?: boolean;
   image: string;
   imageAlt: string;
   action?: ReactNode;
 }) {
+  const renderedTitle = typeof title === "string" ? renderHelpText(title) : title;
   const renderedBody =
     parseBody && typeof body === "string" ? renderHelpText(body) : body;
 
@@ -118,7 +119,7 @@ export function HelpStep({
         >
           {n}
         </span>
-        <h2 className="text-xl font-semibold text-orange-50">{title}</h2>
+        <h2 className="text-xl font-semibold text-orange-50">{renderedTitle}</h2>
       </div>
       <div className="text-lg leading-relaxed text-orange-50">{renderedBody}</div>
       {action}

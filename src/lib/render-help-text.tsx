@@ -2,6 +2,12 @@ import { Fragment, type ReactNode } from "react";
 import { HelpUiChip } from "@/components/help-ui-chip";
 
 const CHIP_PATTERN = /<<([^>]+)>>/g;
+const INLINE_PATTERN = /<<([^>]+)>>|\*\*([^*]+)\*\*|\*([^*]+)\*/g;
+
+export function containsChipMarkers(text: string): boolean {
+  CHIP_PATTERN.lastIndex = 0;
+  return CHIP_PATTERN.test(text);
+}
 
 function renderLine(text: string, keyPrefix: string): ReactNode {
   const parts: ReactNode[] = [];
@@ -9,12 +15,24 @@ function renderLine(text: string, keyPrefix: string): ReactNode {
   let match: RegExpExecArray | null;
   let key = 0;
 
-  CHIP_PATTERN.lastIndex = 0;
-  while ((match = CHIP_PATTERN.exec(text)) !== null) {
+  INLINE_PATTERN.lastIndex = 0;
+  while ((match = INLINE_PATTERN.exec(text)) !== null) {
     if (match.index > lastIndex) {
       parts.push(text.slice(lastIndex, match.index));
     }
-    parts.push(<HelpUiChip key={`${keyPrefix}-${key++}`}>{match[1]}</HelpUiChip>);
+
+    if (match[1] !== undefined) {
+      parts.push(<HelpUiChip key={`${keyPrefix}-${key++}`}>{match[1]}</HelpUiChip>);
+    } else if (match[2] !== undefined) {
+      parts.push(
+        <strong key={`${keyPrefix}-${key++}`} className="text-orange-200">
+          {match[2]}
+        </strong>,
+      );
+    } else if (match[3] !== undefined) {
+      parts.push(<em key={`${keyPrefix}-${key++}`}>{match[3]}</em>);
+    }
+
     lastIndex = match.index + match[0].length;
   }
 
@@ -28,7 +46,7 @@ function renderLine(text: string, keyPrefix: string): ReactNode {
   return <Fragment>{parts}</Fragment>;
 }
 
-/** Split help copy on `<<label>>` markers and render UI labels as inline chips. */
+/** Split copy on `<<label>>` markers (and optional **strong** / *em*) and render UI labels as inline chips. */
 export function renderHelpText(text: string): ReactNode {
   const lines = text.split("\n");
   if (lines.length === 1) return renderLine(text, "line");
@@ -43,4 +61,10 @@ export function renderHelpText(text: string): ReactNode {
       ))}
     </Fragment>
   );
+}
+
+/** App-wide helper: auto-parses string children for <<ui-label>> chips; passes ReactNode through unchanged. */
+export function HelpText({ children }: { children: ReactNode }) {
+  if (typeof children === "string") return renderHelpText(children);
+  return children;
 }
