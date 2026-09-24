@@ -188,7 +188,7 @@ export function GemHuntOverlay({
 
   function handleCollect() {
     if (!centerCollectActive) return;
-    if (phase === "collecting" || phase === "done") return;
+    if (phase !== "visible") return;
     setPhase("collecting");
     setHint("found");
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
