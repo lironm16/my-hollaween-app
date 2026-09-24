@@ -7987,6 +7987,19 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   aspect-ratio: 1;
   pointer-events: none;
 }
+.gem-hunt-overlay__scan-compass {
+  position: absolute;
+  left: 50%;
+  top: 18%;
+  z-index: 2;
+  color: #fde68a;
+  filter: drop-shadow(0 0 12px rgb(251 191 36 / 0.9));
+  transition: color 0.2s ease, filter 0.2s ease;
+}
+.gem-hunt-overlay__scan-compass.is-facing {
+  color: #bbf7d0;
+  filter: drop-shadow(0 0 16px rgb(74 222 128 / 0.95));
+}
 .gem-hunt-overlay__ring {
   width: 100%;
   height: 100%;
@@ -8015,12 +8028,46 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   text-shadow: 0 1px 8px rgb(0 0 0 / 0.8);
   pointer-events: none;
 }
-.gem-hunt-overlay__hint.is-gem-visible {
-  top: auto;
-  bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
-  transform: translateX(-50%);
-  font-size: 1.1rem;
+.gem-hunt-overlay__footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 1rem max(0.75rem, env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+.gem-hunt-overlay__footer > * {
+  pointer-events: auto;
+  width: min(92vw, 22rem);
+}
+.gem-hunt-overlay__footer-hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.95rem;
   font-weight: 700;
+  color: #fde68a;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.85);
+}
+.gem-hunt-overlay__footer-hint.is-nudge {
+  color: #fca5a5;
+  animation: gem-hunt-nudge 0.45s ease-in-out 2;
+}
+@keyframes gem-hunt-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(4px);
+  }
+  75% {
+    transform: translateX(-4px);
+  }
 }
 .gem-hunt-overlay__gem-hit {
   position: absolute;
@@ -8049,9 +8096,19 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__gem-hit.is-center-collect {
   left: 50%;
-  top: 42%;
+  top: 40%;
   transform: translate(-50%, -50%);
   z-index: 6;
+}
+.gem-hunt-overlay__gem-hit.is-collect-layer {
+  z-index: 9;
+}
+.gem-hunt-overlay__gem-hit.is-center-collect.is-nudge {
+  animation: gem-hunt-nudge 0.45s ease-in-out 2;
+}
+.gem-hunt-overlay__gem-hit.is-center-collect .gem-model-3d,
+.gem-hunt-overlay__gem-hit.is-center-collect canvas {
+  pointer-events: none;
 }
 .gem-hunt-overlay__gem-hit.is-center-collect .gem-sprite--hunt {
   width: min(82vw, 20rem);
@@ -8088,21 +8145,19 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   animation: gem-overlay-collect-flash 4s ease-out forwards;
 }
 .gem-hunt-overlay__walk-guide {
-  position: absolute;
-  left: 50%;
-  bottom: max(7.5rem, calc(env(safe-area-inset-bottom) + 6rem));
-  z-index: 4;
-  transform: translateX(-50%);
+  position: relative;
+  left: auto;
+  bottom: auto;
+  transform: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.35rem;
-  width: min(92vw, 22rem);
+  width: 100%;
   padding: 0.65rem 0.85rem;
   border-radius: 1rem;
-  background: rgb(12 6 22 / 0.82);
+  background: rgb(12 6 22 / 0.92);
   border: 1px solid rgb(251 191 36 / 0.45);
-  pointer-events: auto;
 }
 .gem-hunt-overlay__walk-arrow {
   color: #fde68a;
@@ -8128,15 +8183,11 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   text-underline-offset: 3px;
 }
 .gem-hunt-overlay__hint-actions {
-  position: absolute;
-  z-index: 4;
-  left: 50%;
-  bottom: max(1rem, env(safe-area-inset-bottom));
-  transform: translateX(-50%);
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  width: min(92vw, 20rem);
+  width: 100%;
 }
 .gem-hunt-overlay__hint-btn {
   appearance: none;

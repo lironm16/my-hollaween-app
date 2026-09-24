@@ -75,6 +75,7 @@ export function GemHuntOverlay({
   const [posterHintOpen, setPosterHintOpen] = useState(false);
   /** User chose «גלה לי» — centered gem on the camera (not orbit hint box). */
   const [centerReveal, setCenterReveal] = useState(false);
+  const [collectNudge, setCollectNudge] = useState<string | null>(null);
   const scanStartRef = useRef(Date.now());
   const panTotalRef = useRef(0);
   const lastHeadingRef = useRef<number | null>(null);
@@ -187,10 +188,23 @@ export function GemHuntOverlay({
   }, [anchor, effectiveLoc, heading, house, phase, reveal, sim, allowAutoReveal]);
 
   function handleCollect() {
-    if (!collectEnabled) return;
     /** Collect only via «גלה לי» (centered on what you see), not the compass-pinned anchor. */
     if (!centerReveal) return;
     if (phase === "collecting" || phase === "done") return;
+    if (!collectEnabled) {
+      const needM =
+        distanceM != null ? Math.max(0, distanceM - GEM_HUNT_METERS) : null;
+      setCollectNudge(
+        needM != null && needM > 1
+          ? `עוד ~${formatDistance(needM)} — התקרבו לפני איסוף`
+          : `התקרבו ל~${GEM_HUNT_METERS}מ׳ ועמדו במקום לרגע`,
+      );
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate(12);
+      }
+      window.setTimeout(() => setCollectNudge(null), 2400);
+      return;
+    }
     setPhase("collecting");
     setHint("found");
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -247,6 +261,32 @@ export function GemHuntOverlay({
     (collectEnabled || sim || allowAutoReveal);
   const mapsWalkUrl =
     userLocation != null && !sim ? googleMapsNavigateUrl(userLocation, anchor) : null;
+
+  const stageScanHint =
+    phase === "collecting"
+      ? null
+      : !gemVisible && hint === "scan" && allowAutoReveal
+        ? "סובבו את המצלמה — האוצר ננעץ ליד הבית"
+        : !gemVisible && hint === "scan" && !allowAutoReveal
+          ? "האוצר מוסתר — התקרבו או השתמשו ברמזים"
+          : !gemVisible && hint === "warm"
+            ? "קרובים! כוונו למקום האוצר…"
+            : null;
+
+  const footerHint =
+    phase === "collecting"
+      ? "אוצר נאסף!"
+      : collectNudge
+        ? collectNudge
+        : centerDisplayMode
+          ? collectEnabled
+            ? "לחצו על האוצר במעגל — לאיסוף"
+            : `תצוגה בלבד — התקרבו ל~${GEM_HUNT_METERS}מ׳ ואז לחצו על האוצר`
+          : gemVisible && arPinGuideMode && pinPlacement && !pinPlacement.inView
+            ? "סובבו את המצלמה — האוצר בקצה המסך"
+            : gemVisible && arPinGuideMode
+              ? "«גלה לי» — האוצר במרכז, ואז לחצו לאיסוף"
+              : null;
 
   const overlay = (
     <div className="gem-hunt-overlay" dir="rtl">
@@ -322,28 +362,6 @@ export function GemHuntOverlay({
           </div>
         ) : null}
 
-        {centerDisplayMode ? (
-          <button
-            type="button"
-            className={cn(
-              "gem-hunt-overlay__gem-hit",
-              "is-center-collect",
-              !collectEnabled && "is-preview-only",
-              phase === "collecting" && "is-collecting",
-            )}
-            onClick={handleCollect}
-            aria-label={
-              collectEnabled ? `איסוף ${gemLabelHe(monsterId)}` : `תצוגת ${gemLabelHe(monsterId)}`
-            }
-          >
-            <GemSprite
-              house={house}
-              mode="3d"
-              className={cn(phase === "collecting" && "is-burst")}
-            />
-          </button>
-        ) : null}
-
         {arPinGuideMode ? (
           <div
             className={cn(
@@ -368,102 +386,117 @@ export function GemHuntOverlay({
           </div>
         ) : null}
 
-        <p className={cn("gem-hunt-overlay__hint", gemVisible && "is-gem-visible")}>
-          {phase === "collecting" ? "אוצר נאסף!" : null}
-          {phase !== "collecting" && hint === "scan" && allowAutoReveal
-            ? "סובבו את המצלמה — האוצר ננעץ ליד הבית"
-            : null}
-          {phase !== "collecting" && hint === "scan" && !allowAutoReveal
-            ? "האוצר מוסתר — התקרבו או השתמשו ברמזים"
-            : null}
-          {phase !== "collecting" && hint === "warm" ? "קרובים! כוונו למקום האוצר…" : null}
-          {phase !== "collecting" && hint === "found" && pinPlacement && !pinPlacement.inView
-            ? "סובבו את המצלמה — האוצר בקצה המסך"
-            : null}
-          {phase !== "collecting" && hint === "found" && centerDisplayMode && collectEnabled
-            ? "לחצו על האוצר באמצע לאיסוף!"
-            : null}
-          {phase !== "collecting" && hint === "found" && centerDisplayMode && !collectEnabled
-            ? `תצוגה במרכז — התקרבו ל~${GEM_HUNT_METERS}מ׳ (או סימולציה) כדי לאסוף`
-            : null}
-          {phase !== "collecting" && hint === "found" && arPinGuideMode && pinPlacement && !pinPlacement.inView
-            ? "סובבו למקום האוצר — «גלה לי» לאיסוף במרכז"
-            : null}
-          {phase !== "collecting" && hint === "found" && arPinGuideMode && (!pinPlacement || pinPlacement.inView)
-            ? "«גלה לי» — האוצר במרכז המסך, ואז לחצו לאיסוף"
-            : null}
-        </p>
+        {stageScanHint ? <p className="gem-hunt-overlay__hint">{stageScanHint}</p> : null}
       </div>
 
-      {showWalkGuide ? (
-        <div className="gem-hunt-overlay__walk-guide" dir="rtl">
-          {turnBearing != null ? (
-            <div
+      {centerDisplayMode ? (
+        <button
+          type="button"
+          className={cn(
+            "gem-hunt-overlay__gem-hit",
+            "is-center-collect",
+            "is-collect-layer",
+            !collectEnabled && "is-preview-only",
+            collectNudge && "is-nudge",
+            phase === "collecting" && "is-collecting",
+          )}
+          onClick={handleCollect}
+          aria-label={
+            collectEnabled ? `איסוף ${gemLabelHe(monsterId)}` : `תצוגת ${gemLabelHe(monsterId)}`
+          }
+        >
+          <GemSprite
+            house={house}
+            mode="3d"
+            className={cn(phase === "collecting" && "is-burst")}
+          />
+        </button>
+      ) : null}
+
+      {!posterHintOpen && (phase !== "collecting" || footerHint) ? (
+        <footer className="gem-hunt-overlay__footer" dir="rtl">
+          {footerHint ? (
+            <p
               className={cn(
-                "gem-hunt-overlay__walk-arrow",
-                facingTarget && "is-facing",
+                "gem-hunt-overlay__footer-hint",
+                collectNudge && "is-nudge",
               )}
-              style={{ transform: `rotate(${turnBearing}deg)` }}
-              aria-hidden
             >
-              <Navigation className="size-9" strokeWidth={2.4} />
+              {footerHint}
+            </p>
+          ) : null}
+
+          {showWalkGuide ? (
+            <div className="gem-hunt-overlay__walk-guide">
+              {turnBearing != null ? (
+                <div
+                  className={cn(
+                    "gem-hunt-overlay__walk-arrow",
+                    facingTarget && "is-facing",
+                  )}
+                  style={{ transform: `rotate(${turnBearing}deg)` }}
+                  aria-hidden
+                >
+                  <Navigation className="size-9" strokeWidth={2.4} />
+                </div>
+              ) : null}
+              <p className="gem-hunt-overlay__walk-text">
+                {turnBearing != null
+                  ? facingTarget
+                    ? "המשיכו ישר — הבית מולכם"
+                    : turnBearing > 0
+                      ? "סובבו ימינה לכיוון הבית"
+                      : "סובבו שמאלה לכיוון הבית"
+                  : "התקרבו לבית"}
+                {distanceM != null ? ` · ~${formatDistance(distanceM)}` : null}
+              </p>
+              {mapsWalkUrl ? (
+                <a
+                  href={mapsWalkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="gem-hunt-overlay__walk-maps"
+                >
+                  הליכה ב-Google Maps
+                </a>
+              ) : null}
             </div>
           ) : null}
-          <p className="gem-hunt-overlay__walk-text">
-            {turnBearing != null
-              ? facingTarget
-                ? "המשיכו ישר — הבית מולכם"
-                : turnBearing > 0
-                  ? "סובבו ימינה לכיוון הבית"
-                  : "סובבו שמאלה לכיוון הבית"
-              : "התקרבו לבית"}
-            {distanceM != null ? ` · ~${formatDistance(distanceM)}` : null}
-          </p>
-          {mapsWalkUrl ? (
-            <a
-              href={mapsWalkUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="gem-hunt-overlay__walk-maps"
+
+          {phase !== "collecting" && centerDisplayMode ? (
+            <button
+              type="button"
+              className="gem-hunt-overlay__hint-btn"
+              onClick={handleBackToSearch}
             >
-              הליכה ב-Google Maps
-            </a>
+              חזרה לחיפוש
+            </button>
           ) : null}
-        </div>
-      ) : null}
 
-      {phase !== "collecting" && centerDisplayMode ? (
-        <div className="gem-hunt-overlay__hint-actions" dir="rtl">
-          <button
-            type="button"
-            className="gem-hunt-overlay__hint-btn"
-            onClick={handleBackToSearch}
-          >
-            חזרה לחיפוש
-          </button>
-        </div>
-      ) : null}
-
-      {phase !== "collecting" && !centerDisplayMode ? (
-        <div className="gem-hunt-overlay__hint-actions" dir="rtl">
-          <button
-            type="button"
-            className="gem-hunt-overlay__hint-btn"
-            onClick={() => setPosterHintOpen(true)}
-          >
-            רמז: איך נראה האוצר?
-          </button>
-          <button
-            type="button"
-            className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--accent gem-hunt-overlay__hint-btn--reveal"
-            onClick={handleRevealMe}
-          >
-            גלה לי
-          </button>
-          {!collectEnabled ? (
-            <p className="gem-hunt-overlay__hint-note">לאיסוף — התקרבו ל~{GEM_HUNT_METERS}מ׳ לכניסה לבניין</p>
+          {phase !== "collecting" && !centerDisplayMode ? (
+            <div className="gem-hunt-overlay__hint-actions">
+              <button
+                type="button"
+                className="gem-hunt-overlay__hint-btn"
+                onClick={() => setPosterHintOpen(true)}
+              >
+                רמז: איך נראה האוצר?
+              </button>
+              <button
+                type="button"
+                className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--accent gem-hunt-overlay__hint-btn--reveal"
+                onClick={handleRevealMe}
+              >
+                גלה לי
+              </button>
+              {!collectEnabled && !showWalkGuide ? (
+                <p className="gem-hunt-overlay__hint-note">
+                  לאיסוף — התקרבו ל~{GEM_HUNT_METERS}מ׳ לכניסה לבניין
+                </p>
+              ) : null}
+            </div>
           ) : null}
-        </div>
+        </footer>
       ) : null}
 
       {posterHintOpen ? (
