@@ -8,6 +8,7 @@ import {
   gemAnchorForHouse,
   gemProximity,
   gemScreenPlacement,
+  gemInScanRing,
   gemFamilyForHouse,
   gemVariantForHouse,
   headingDelta,
@@ -55,6 +56,7 @@ describe("gem hunt geo", () => {
     assert.ok(place);
     assert.equal(place!.inView, true);
     assert.ok(Math.abs(place!.xPercent - 50) < 8);
+    assert.equal(gemInScanRing(place), true);
   });
 
   it("maps each house to a gem monster id", () => {

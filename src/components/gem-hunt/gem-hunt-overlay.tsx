@@ -17,6 +17,7 @@ import {
   GEM_SCAN_REVEAL_SECONDS,
   GEM_COLLECT_OVERLAY_MS,
   gemAnchorForHouse,
+  gemInScanRing,
   gemLabelHe,
   gemMonsterForHouse,
   gemScreenPlacement,
@@ -164,10 +165,9 @@ export function GemHuntOverlay({
 
     const loc = effectiveLoc;
     const facing =
-      sim ||
-      (loc != null &&
-        heading != null &&
-        facingHouse(loc, anchor, heading, GEM_FACING_TOLERANCE_DEG));
+      loc != null &&
+      heading != null &&
+      facingHouse(loc, anchor, heading, GEM_FACING_TOLERANCE_DEG);
 
     if (facing) {
       if (facingSinceRef.current == null) facingSinceRef.current = Date.now();
@@ -181,7 +181,10 @@ export function GemHuntOverlay({
       setHint("scan");
     }
 
-    if (elapsedSec >= GEM_SCAN_REVEAL_SECONDS || panTotalRef.current >= GEM_SCAN_PAN_DEGREES) {
+    if (
+      !sim &&
+      (elapsedSec >= GEM_SCAN_REVEAL_SECONDS || panTotalRef.current >= GEM_SCAN_PAN_DEGREES)
+    ) {
       reveal();
     }
   }, [anchor, effectiveLoc, heading, house, phase, reveal, sim, allowAutoReveal]);
@@ -190,7 +193,9 @@ export function GemHuntOverlay({
     if (phase !== "visible") return;
     const viaTellMe = centerReveal;
     const viaPinned =
-      !centerReveal && collectEnabled && Boolean(pinPlacement?.inView);
+      !centerReveal &&
+      collectEnabled &&
+      Boolean(pinPlacement && gemInScanRing(pinPlacement));
     if (!viaTellMe && !viaPinned) return;
     setPhase("collecting");
     setHint("found");
@@ -229,10 +234,9 @@ export function GemHuntOverlay({
   const centerDisplayMode = gemVisible && centerReveal;
   /** Real hunt: compass-pinned gem (tap when in view + in range). */
   const arPinGuideMode = gemVisible && !centerReveal;
-  const pinCollectReady =
-    arPinGuideMode &&
-    collectEnabled &&
-    (sim || Boolean(pinPlacement?.inView));
+  const gemInRing = pinPlacement ? gemInScanRing(pinPlacement) : false;
+  const pinCollectReady = arPinGuideMode && collectEnabled && gemInRing;
+  const ringReady = centerDisplayMode || pinCollectReady;
   const showWalkGuide =
     !collectEnabled &&
     !sim &&
@@ -268,9 +272,11 @@ export function GemHuntOverlay({
         ? "לחצו על האוצר לאיסוף"
         : pinCollectReady
           ? "לחצו על האוצר לאיסוף"
-          : gemVisible && arPinGuideMode && pinPlacement && !pinPlacement.inView
-            ? "סובבו את המצלמה — האוצר בקצה המסך"
-            : null;
+          : gemVisible && arPinGuideMode && pinPlacement?.inView && !gemInRing
+            ? "כוונו את האוצר לתוך המעגל הירוק"
+            : gemVisible && arPinGuideMode && pinPlacement && !pinPlacement.inView
+              ? "סובבו את המצלמה — האוצר בקצה המסך"
+              : null;
 
   const overlay = (
     <div className="gem-hunt-overlay" dir="rtl">
@@ -324,8 +330,8 @@ export function GemHuntOverlay({
           <div
             className={cn(
               "gem-hunt-overlay__ring",
-              (hint === "warm" || facingTarget || centerDisplayMode || pinCollectReady) &&
-                "is-warm",
+              ringReady && "is-collect-ready",
+              !ringReady && (hint === "warm" || facingTarget) && "is-warm",
             )}
           />
         </div>
@@ -335,7 +341,6 @@ export function GemHuntOverlay({
             type="button"
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-pin-collect",
-              !pinPlacement && sim && "is-center-fallback",
               phase === "collecting" && "is-collecting",
             )}
             style={

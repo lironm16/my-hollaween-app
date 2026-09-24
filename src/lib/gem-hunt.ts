@@ -51,7 +51,7 @@ export const GEM_ANCHOR_MAX_METERS = 10;
 /** Camera collect: slow grow then exit — sync gem-collect-burst CSS (~3.8s). */
 export const GEM_COLLECT_OVERLAY_MS = 3800;
 /** Map «אוצר נאסף!» full-screen cheer hold. */
-export const GEM_CHEER_DISPLAY_MS = 7500;
+export const GEM_CHEER_DISPLAY_MS = 5500;
 /** @deprecated use GEM_COLLECT_OVERLAY_MS / GEM_CHEER_DISPLAY_MS */
 export const GEM_COLLECT_ANIMATION_MS = GEM_COLLECT_OVERLAY_MS;
 
@@ -151,6 +151,14 @@ export function gemScreenPlacement(
   const xPercent = inView ? Math.min(90, Math.max(10, xRaw)) : rel > 0 ? 92 : 8;
   const yPercent = 40 + Math.min(14, (distanceM / GEM_HUNT_METERS) * 10);
   return { xPercent, yPercent, inView, distanceM, relativeBearingDeg: rel };
+}
+
+/** Gem pin overlaps the on-screen hunt ring (center ~42%, radius ~46% in viewport units). */
+export function gemInScanRing(placement: GemScreenPlacement | null, ringRadiusPercent = 46) {
+  if (!placement?.inView) return false;
+  const dx = placement.xPercent - 50;
+  const dy = placement.yPercent - 42;
+  return Math.hypot(dx, dy) <= ringRadiusPercent;
 }
 
 export function canCollectGem(
