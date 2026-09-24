@@ -140,9 +140,6 @@ export function NeighborhoodApp({
     void geo.refresh();
   }, [gemHuntActive, mapGemHouse, geo.refresh, setWatchEnabled]);
 
-  useEffect(() => {
-    if (gemHuntActive) preloadGemHuntChunks();
-  }, [gemHuntActive]);
   const { choice: originChoice, resolved: origin, setChoice: setOriginChoice } = useDistanceOrigin(gps);
   const { houseSet } = useHouseSet();
   const activeHouseSet = admin ? houseSet : "real";
@@ -232,10 +229,10 @@ export function NeighborhoodApp({
       likedIds: likes.likedIds,
       visitedIds: visits.visitedIds,
       skippedIds: skips.skippedIds,
-      gemCollectedIds: gems.collectedIds,
+      gemCollectedIds: gemHuntActive ? gems.collectedIds : [],
       now,
     }),
-    [activeHouseSet, likes.likedIds, visits.visitedIds, skips.skippedIds, gems.collectedIds, now],
+    [activeHouseSet, likes.likedIds, visits.visitedIds, skips.skippedIds, gemHuntActive, gems.collectedIds, now],
   );
 
   const mapHouses = useMemo(
@@ -260,7 +257,18 @@ export function NeighborhoodApp({
     return gemFabGlowLevel(mapHouses, gps, (id) => gems.collected(id));
   }, [gemHuntActive, mapHouses, gps, gems.collectedIds]);
 
+  const gemFabDisabled = useMemo(() => {
+    if (!gemHuntActive) return true;
+    return !pickGemHuntTarget(
+      mapHouses,
+      gps,
+      (id) => gems.collected(id),
+      selection.selected?.id ?? null,
+    );
+  }, [gemHuntActive, mapHouses, gps, gems.collectedIds, selection.selected?.id]);
+
   const openMapGemHunt = useCallback(async () => {
+    preloadGemHuntChunks();
     const target = pickGemHuntTarget(
       mapHouses,
       gps,
@@ -275,6 +283,7 @@ export function NeighborhoodApp({
   const openGemHuntForHouse = useCallback(
     async (house: PublicHouse) => {
       if (gems.collected(house.id)) return;
+      preloadGemHuntChunks();
       setView("map");
       selection.selectOnMap(house);
       await prepareGemHuntSensors();
@@ -974,7 +983,7 @@ export function NeighborhoodApp({
                   gemHuntEnabled={gemHuntActive}
                   onGemHuntPress={() => void openMapGemHunt()}
                   gemGlow={gemFabGlow}
-                  gemFabDisabled={!pickGemHuntTarget(mapHouses, gps, (id) => gems.collected(id), selection.selected?.id ?? null)}
+                  gemFabDisabled={gemFabDisabled}
                   gemCollectedCount={mapGemBadgeCount}
                 />
                 {originPick.originPickActive ? (
