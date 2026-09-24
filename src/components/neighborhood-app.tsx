@@ -37,6 +37,7 @@ import { RouteCompleteCheer } from "@/components/route-complete-cheer";
 import { VisitCheer } from "@/components/visit-cheer";
 import { GemCheer } from "@/components/gem-cheer";
 import { GemResetConfirmDialog } from "@/components/gem-reset-confirm-dialog";
+import { GemMapCompleteBanner } from "@/components/gem-map-complete-banner";
 import {
   GemHuntOverlayLazy,
   GemHuntPanelLazy,
@@ -271,13 +272,16 @@ export function NeighborhoodApp({
   const selection = useHouseSelection({ focusId, visible, houses: mapListHouses, clusterHouses: mapHouses });
   const { resetForNavigation } = selection;
 
-  /** No per-GPS scan — glow removed; target picked only when FAB is tapped. */
-  const gemFabDisabled = useMemo(() => {
-    if (!gemHuntActive) return true;
-    return !mapHouses.some((h) => !gems.collected(h.id));
+  const gemAllCollected = useMemo(() => {
+    if (!gemHuntActive || mapHouses.length === 0) return false;
+    return mapHouses.every((h) => gems.collected(h.id));
   }, [gemHuntActive, mapHouses, gems.collectedIds]);
 
   const openMapGemHunt = useCallback(async () => {
+    if (gemAllCollected) {
+      window.location.assign("/gem-bag");
+      return;
+    }
     preloadGemHuntChunks();
     const target = pickGemHuntTarget(
       mapHouses,
@@ -288,7 +292,7 @@ export function NeighborhoodApp({
     if (!target) return;
     await prepareGemHuntSensors();
     setMapGemHouse(target.house);
-  }, [mapHouses, gps, gems, selection.selected?.id]);
+  }, [gemAllCollected, mapHouses, gps, gems, selection.selected?.id]);
 
   const openGemHuntForHouse = useCallback(
     async (house: PublicHouse) => {
@@ -1046,9 +1050,12 @@ export function NeighborhoodApp({
                   gemHuntEnabled={gemHuntActive}
                   onGemHuntPress={() => void openMapGemHunt()}
                   gemGlow="off"
-                  gemFabDisabled={gemFabDisabled}
+                  gemAllCollected={gemAllCollected}
                   gemCollectedCount={mapGemBadgeCount}
                 />
+                {gemHuntActive && gemAllCollected && !originPick.originPickActive ? (
+                  <GemMapCompleteBanner />
+                ) : null}
                 {originPick.originPickActive ? (
                   <div className="origin-pick-bar">
                     <p className="origin-pick-label">{originPick.originDraftLabel}</p>

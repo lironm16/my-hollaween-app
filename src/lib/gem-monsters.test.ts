@@ -31,10 +31,11 @@ describe("gem monsters", () => {
     assert.equal(gemMonsterForHouse(other), "dragon");
   });
 
-  it("labels pets in Hebrew", () => {
-    assert.equal(gemLabelHe("dragon"), "דרקון חמוד");
-    assert.equal(gemLabelHe("pumpkin"), "דלעת");
-    assert.equal(gemLabelHe("unknown-id"), "דרקון חמוד");
+  it("labels pets with cute Hebrew names", () => {
+    assert.equal(gemLabelHe("dragon"), "דרקי הדרקון");
+    assert.equal(gemLabelHe("spider"), "עכי העכביש");
+    assert.equal(gemLabelHe("mummy"), "מומו המומיה");
+    assert.equal(gemLabelHe("unknown-id"), "דרקי הדרקון");
   });
 
   it("tints by house id", () => {

@@ -11,12 +11,14 @@ export function MapPrimaryFab({
   onGemPress,
   gemGlow,
   gemDisabled,
+  gemAllCollected = false,
   gemCollectedCount = 0,
 }: {
   gemHuntEnabled: boolean;
   onGemPress: () => void;
   gemGlow: GemFabGlow;
   gemDisabled?: boolean;
+  gemAllCollected?: boolean;
   gemCollectedCount?: number;
 }) {
   const now = useAppNow();
@@ -27,6 +29,7 @@ export function MapPrimaryFab({
       onClick={onGemPress}
       glow={gemGlow}
       disabled={gemDisabled}
+      allCollected={gemAllCollected}
       collectedCount={gemCollectedCount}
     />
   );

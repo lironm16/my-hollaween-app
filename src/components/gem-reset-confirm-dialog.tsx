@@ -27,7 +27,7 @@ export function GemResetConfirmDialog({
     >
       <div className="space-y-4">
         <p className="text-base leading-relaxed text-violet-100 [overflow-wrap:anywhere]">
-          האיסוף של {houseHeadline(house)} יימחק מהמכשיר — אפשר לצוד את היהלום מחדש.
+          היהלום של {houseHeadline(house)} יימחק מהמכשיר — אפשר לצוד מחדש.
         </p>
         <div className="flex gap-3 pt-1" dir="rtl">
           <Button

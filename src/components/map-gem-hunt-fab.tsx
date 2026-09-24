@@ -9,6 +9,7 @@ export function MapGemHuntFab({
   glow = "off",
   nearGem = false,
   disabled,
+  allCollected = false,
   collectedCount = 0,
 }: {
   onClick: () => void;
@@ -16,27 +17,32 @@ export function MapGemHuntFab({
   /** Legacy: treated as approach glow when glow is off */
   nearGem?: boolean;
   disabled?: boolean;
+  /** Every gem on the map has been collected — celebrate, don’t fade out. */
+  allCollected?: boolean;
   /** Collected gems — badge hidden when 0 */
   collectedCount?: number;
 }) {
-  const level: GemFabGlow = glow !== "off" ? glow : nearGem ? "approach" : "off";
+  const level: GemFabGlow = allCollected ? "off" : glow !== "off" ? glow : nearGem ? "approach" : "off";
   return (
     <button
       type="button"
-      disabled={disabled}
+      disabled={disabled && !allCollected}
       onClick={onClick}
       className={cn(
         "map-gem-hunt-fab inline-flex size-14 items-center justify-center rounded-full bg-violet-700 text-amber-200 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-violet-400/50 hover:bg-violet-600 disabled:opacity-45",
         level === "approach" && "is-near",
         level === "hunt" && "is-hunt",
+        allCollected && "is-complete",
       )}
-      aria-label="חיפוש יהלום נסתר"
+      aria-label={allCollected ? "כל היהלומים — פתיחת התיק" : "חיפוש יהלום נסתר"}
       title={
-        level === "hunt"
-          ? "בטווח איסוף — פתחו מצלמה!"
-          : level === "approach"
-            ? "יהלום קרוב — התקרבו לבית"
-            : "חיפוש יהלום נסתר"
+        allCollected
+          ? "כל היהלומים נאספו — לתיק האוצר!"
+          : level === "hunt"
+            ? "בטווח איסוף — פתחו מצלמה!"
+            : level === "approach"
+              ? "יהלום קרוב — התקרבו לבית"
+              : "חיפוש יהלום נסתר"
       }
     >
       <span className="map-gem-hunt-fab__pulse" aria-hidden />

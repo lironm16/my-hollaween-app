@@ -633,7 +633,7 @@ type Props = {
   gemHuntEnabled?: boolean;
   onGemHuntPress?: () => void;
   gemGlow?: import("@/lib/gem-hunt-target").GemFabGlow;
-  gemFabDisabled?: boolean;
+  gemAllCollected?: boolean;
   gemCollectedCount?: number;
 };
 
@@ -672,7 +672,7 @@ export function HouseMap({
   gemHuntEnabled = false,
   onGemHuntPress,
   gemGlow = "off",
-  gemFabDisabled = false,
+  gemAllCollected = false,
   gemCollectedCount = 0,
 }: Props) {
   const clusters = useMemo(
@@ -947,7 +947,7 @@ export function HouseMap({
           gemHuntEnabled={gemHuntEnabled}
           onGemPress={onGemHuntPress ?? (() => {})}
           gemGlow={gemGlow}
-          gemDisabled={gemFabDisabled}
+          gemAllCollected={gemAllCollected}
           gemCollectedCount={gemCollectedCount}
         />
       ) : null}

@@ -6,25 +6,139 @@ const SHIPPED_MONSTER_IDS = new Set(shippedMonsterIds as string[]);
 
 /** Full pool (Akochan pack + dragon) — used when GEM_MONSTERS_DRAGON_ONLY is false. */
 export const GEM_MONSTER_CATALOG = [
-  { id: "dragon", glbPath: "/gem-monsters/dragon.glb", posterPath: "/gem-monsters/dragon-poster.png", labelHe: "דרקון חמוד" },
-  { id: "black-cat", glbPath: "/gem-monsters/black-cat.glb", posterPath: "/gem-monsters/black-cat-poster.png", labelHe: "חתול שחור" },
-  { id: "candy-corn", glbPath: "/gem-monsters/candy-corn.glb", posterPath: "/gem-monsters/candy-corn-poster.png", labelHe: "תירס ממתק" },
-  { id: "eyeball", glbPath: "/gem-monsters/eyeball.glb", posterPath: "/gem-monsters/eyeball-poster.png", labelHe: "עין מפחידה" },
-  { id: "frankie", glbPath: "/gem-monsters/frankie.glb", posterPath: "/gem-monsters/frankie-poster.png", labelHe: "פרנקי" },
-  { id: "ghost", glbPath: "/gem-monsters/ghost.glb", posterPath: "/gem-monsters/ghost-poster.png", labelHe: "רוח" },
-  { id: "ghost-hound", glbPath: "/gem-monsters/ghost-hound.glb", posterPath: "/gem-monsters/ghost-hound-poster.png", labelHe: "רוח כלב" },
-  { id: "imp", glbPath: "/gem-monsters/imp.glb", posterPath: "/gem-monsters/imp-poster.png", labelHe: "שדון" },
-  { id: "mummy", glbPath: "/gem-monsters/mummy.glb", posterPath: "/gem-monsters/mummy-poster.png", labelHe: "מומיה" },
-  { id: "mushroom", glbPath: "/gem-monsters/mushroom.glb", posterPath: "/gem-monsters/mushroom-poster.png", labelHe: "פטרייה" },
-  { id: "potion-slime", glbPath: "/gem-monsters/potion-slime.glb", posterPath: "/gem-monsters/potion-slime-poster.png", labelHe: "סליים" },
-  { id: "pumpkin", glbPath: "/gem-monsters/pumpkin.glb", posterPath: "/gem-monsters/pumpkin-poster.png", labelHe: "דלעת" },
-  { id: "raven", glbPath: "/gem-monsters/raven.glb", posterPath: "/gem-monsters/raven-poster.png", labelHe: "עורב" },
-  { id: "reaper", glbPath: "/gem-monsters/reaper.glb", posterPath: "/gem-monsters/reaper-poster.png", labelHe: "קוצר" },
-  { id: "skeleton", glbPath: "/gem-monsters/skeleton.glb", posterPath: "/gem-monsters/skeleton-poster.png", labelHe: "שלד" },
-  { id: "spider", glbPath: "/gem-monsters/spider.glb", posterPath: "/gem-monsters/spider-poster.png", labelHe: "עכביש" },
-  { id: "vampire-bat", glbPath: "/gem-monsters/vampire-bat.glb", posterPath: "/gem-monsters/vampire-bat-poster.png", labelHe: "עטלף" },
-  { id: "werewolf", glbPath: "/gem-monsters/werewolf.glb", posterPath: "/gem-monsters/werewolf-poster.png", labelHe: "איש זאב" },
-  { id: "zombie", glbPath: "/gem-monsters/zombie.glb", posterPath: "/gem-monsters/zombie-poster.png", labelHe: "זומבי" },
+  {
+    id: "dragon",
+    glbPath: "/gem-monsters/dragon.glb",
+    posterPath: "/gem-monsters/dragon-poster.png",
+    labelHe: "דרקון",
+    petNameHe: "דרקי הדרקון",
+  },
+  {
+    id: "black-cat",
+    glbPath: "/gem-monsters/black-cat.glb",
+    posterPath: "/gem-monsters/black-cat-poster.png",
+    labelHe: "חתול שחור",
+    petNameHe: "מיו החתול",
+  },
+  {
+    id: "candy-corn",
+    glbPath: "/gem-monsters/candy-corn.glb",
+    posterPath: "/gem-monsters/candy-corn-poster.png",
+    labelHe: "תירס ממתק",
+    petNameHe: "קורני התירס",
+  },
+  {
+    id: "eyeball",
+    glbPath: "/gem-monsters/eyeball.glb",
+    posterPath: "/gem-monsters/eyeball-poster.png",
+    labelHe: "עין",
+    petNameHe: "גלגל העין",
+  },
+  {
+    id: "frankie",
+    glbPath: "/gem-monsters/frankie.glb",
+    posterPath: "/gem-monsters/frankie-poster.png",
+    labelHe: "פרנקי",
+    petNameHe: "פרנקי החביב",
+  },
+  {
+    id: "ghost",
+    glbPath: "/gem-monsters/ghost.glb",
+    posterPath: "/gem-monsters/ghost-poster.png",
+    labelHe: "רוח",
+    petNameHe: "רפי הרוח",
+  },
+  {
+    id: "ghost-hound",
+    glbPath: "/gem-monsters/ghost-hound.glb",
+    posterPath: "/gem-monsters/ghost-hound-poster.png",
+    labelHe: "רוח כלב",
+    petNameHe: "לבון כלב הרוח",
+  },
+  {
+    id: "imp",
+    glbPath: "/gem-monsters/imp.glb",
+    posterPath: "/gem-monsters/imp-poster.png",
+    labelHe: "שדון",
+    petNameHe: "קונקי השדון",
+  },
+  {
+    id: "mummy",
+    glbPath: "/gem-monsters/mummy.glb",
+    posterPath: "/gem-monsters/mummy-poster.png",
+    labelHe: "מומיה",
+    petNameHe: "מומו המומיה",
+  },
+  {
+    id: "mushroom",
+    glbPath: "/gem-monsters/mushroom.glb",
+    posterPath: "/gem-monsters/mushroom-poster.png",
+    labelHe: "פטרייה",
+    petNameHe: "פטריק הפטרייה",
+  },
+  {
+    id: "potion-slime",
+    glbPath: "/gem-monsters/potion-slime.glb",
+    posterPath: "/gem-monsters/potion-slime-poster.png",
+    labelHe: "סליים",
+    petNameHe: "גלי הסליים",
+  },
+  {
+    id: "pumpkin",
+    glbPath: "/gem-monsters/pumpkin.glb",
+    posterPath: "/gem-monsters/pumpkin-poster.png",
+    labelHe: "דלעת",
+    petNameHe: "דלעל הדלעת",
+  },
+  {
+    id: "raven",
+    glbPath: "/gem-monsters/raven.glb",
+    posterPath: "/gem-monsters/raven-poster.png",
+    labelHe: "עורב",
+    petNameHe: "קרקר העורב",
+  },
+  {
+    id: "reaper",
+    glbPath: "/gem-monsters/reaper.glb",
+    posterPath: "/gem-monsters/reaper-poster.png",
+    labelHe: "קוצר",
+    petNameHe: "גורי הקוצר",
+  },
+  {
+    id: "skeleton",
+    glbPath: "/gem-monsters/skeleton.glb",
+    posterPath: "/gem-monsters/skeleton-poster.png",
+    labelHe: "שלד",
+    petNameHe: "עצמון השלד",
+  },
+  {
+    id: "spider",
+    glbPath: "/gem-monsters/spider.glb",
+    posterPath: "/gem-monsters/spider-poster.png",
+    labelHe: "עכביש",
+    petNameHe: "עכי העכביש",
+  },
+  {
+    id: "vampire-bat",
+    glbPath: "/gem-monsters/vampire-bat.glb",
+    posterPath: "/gem-monsters/vampire-bat-poster.png",
+    labelHe: "עטלף",
+    petNameHe: "ווינקי העטלף",
+  },
+  {
+    id: "werewolf",
+    glbPath: "/gem-monsters/werewolf.glb",
+    posterPath: "/gem-monsters/werewolf-poster.png",
+    labelHe: "איש זאב",
+    petNameHe: "זאבי הלב",
+  },
+  {
+    id: "zombie",
+    glbPath: "/gem-monsters/zombie.glb",
+    posterPath: "/gem-monsters/zombie-poster.png",
+    labelHe: "זומבי",
+    petNameHe: "זוזו הזומבי",
+  },
 ] as const;
 
 export type GemMonsterId = (typeof GEM_MONSTER_CATALOG)[number]["id"];
@@ -70,7 +184,14 @@ export function gemMonsterTint(houseId: string) {
   return { hue, saturation: 0.35, lightness: 0.08 };
 }
 
+/** Cute display name (e.g. «עכי העכביש»). */
 export function gemLabelHe(variantOrMonsterId: string) {
+  const meta = GEM_MONSTER_CATALOG.find((m) => m.id === variantOrMonsterId);
+  return meta?.petNameHe ?? meta?.labelHe ?? DEFAULT_MONSTER.petNameHe;
+}
+
+/** Short species label when needed. */
+export function gemSpeciesLabelHe(variantOrMonsterId: string) {
   const meta = GEM_MONSTER_CATALOG.find((m) => m.id === variantOrMonsterId);
   return meta?.labelHe ?? DEFAULT_MONSTER.labelHe;
 }
@@ -93,5 +214,5 @@ export function gemVariantForHouse(house: Pick<PublicHouse, "id" | "theme" | "ki
 
 export function gemVariantMeta(id: string) {
   const meta = gemMonsterMeta(id as GemMonsterId);
-  return { id: meta.id, family: "monster" as const, labelHe: meta.labelHe };
+  return { id: meta.id, family: "monster" as const, labelHe: meta.petNameHe };
 }
