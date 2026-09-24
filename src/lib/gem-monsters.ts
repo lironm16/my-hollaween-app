@@ -5,8 +5,8 @@ export const GEM_MONSTER_MODELS = [
   {
     id: "dragon",
     glbPath: "/gem-monsters/dragon.glb",
-    /** Cropped from pack cover — no promo text (see dragon-poster.png). */
-    posterPath: "/gem-monsters/dragon-icon.png",
+    /** Generated from glbPath via scripts/render-gem-monster-posters.mjs */
+    posterPath: "/gem-monsters/dragon-poster.png",
     labelHe: "דרקון חמוד",
   },
 ] as const;
