@@ -91,7 +91,7 @@ export function GemHuntPanel({
             <p className="gem-hunt-panel__title">יהלום נסתר</p>
             <p className="gem-hunt-panel__sub">
               {collected
-                ? `נאסף — ${monsterLabel}`
+                ? monsterLabel
                 : canCollect
                   ? "מוכנים לאיסוף!"
                   : proximity === "far"
@@ -169,26 +169,6 @@ export function GemHuntPanel({
           <p className="gem-hunt-panel__distance text-center text-sm text-emerald-300/90">
             <MapPin className="mb-0.5 inline size-3.5" aria-hidden /> בטווח — אפשר לאסוף במצלמה
           </p>
-        ) : null}
-
-        {collected ? (
-          <div className="gem-hunt-panel__done-col">
-            <div className="gem-hunt-panel__done">
-              <Gem className="size-4 text-emerald-300" aria-hidden />
-              נאסף
-            </div>
-            {isAdmin ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gem-hunt-panel__reset-btn w-full"
-                onClick={() => gems.resetHouse(house.id)}
-              >
-                איפוס — ילד/ה הבא יחפש שוב
-              </Button>
-            ) : null}
-          </div>
         ) : null}
 
         {!collected && proximity !== "far" && distanceM != null ? (

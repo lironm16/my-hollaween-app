@@ -188,7 +188,7 @@ function GemBagContent({ houses, isAdmin }: { houses: PublicHouse[]; isAdmin: bo
                   <p className="gem-bag-row__addr">{formatDisplayAddress(house)}</p>
                   <p className="gem-bag-row__treasure">
                     {gemLabelHe(monsterId)}
-                    {collected && when ? ` · נאסף ${formatCollectedWhen(when)}` : " · מחכה בציד"}
+                    {collected && when ? ` · ${formatCollectedWhen(when)}` : " · מחכה בציד"}
                   </p>
                   <div className="gem-bag-row__links">
                     <Link

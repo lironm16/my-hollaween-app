@@ -192,7 +192,7 @@ export function HouseActionBar({
     if (onToggleGem) {
       items.push({
         id: "gem",
-        label: gemCollected ? "יהלום נאסף" : "יהלום",
+        label: "יהלום",
         icon: gemCollected ? (
           <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.35rem]" />
         ) : (

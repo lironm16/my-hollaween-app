@@ -2253,24 +2253,6 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .map-gem-hunt-fab {
   isolation: isolate;
 }
-.map-gem-hunt-fab__badge {
-  position: absolute;
-  top: -4px;
-  inset-inline-end: -4px;
-  z-index: 2;
-  min-width: 1.35rem;
-  height: 1.35rem;
-  padding: 0 0.3rem;
-  border-radius: 999px;
-  background: #f59e0b;
-  color: #1c0a00;
-  font-size: 0.72rem;
-  font-weight: 800;
-  line-height: 1.35rem;
-  text-align: center;
-  box-shadow: 0 0 0 2px rgb(76 29 149), 0 4px 10px rgb(0 0 0 / 0.45);
-  pointer-events: none;
-}
 .map-gem-hunt-fab__pulse {
   position: absolute;
   inset: -6px;
@@ -2948,7 +2930,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .gem-cheer {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 200;
   display: grid;
   place-items: center;
   pointer-events: none;
@@ -2967,7 +2949,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   font-size: 1.35rem;
   font-weight: 800;
   box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.45), 0 16px 44px rgba(217, 119, 6, 0.5);
-  animation: gem-cheer-pop 1.55s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+  animation: gem-cheer-pop 1.35s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
 }
 
 .gem-cheer-gem {
@@ -2980,7 +2962,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   background: #fff;
   color: #d97706;
   box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.28);
-  animation: gem-cheer-gem 1.55s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+  animation: gem-cheer-gem 1.35s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
 }
 
 .gem-cheer-burst {
@@ -3770,9 +3752,20 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   height: 100%;
 }
 .gem-hunt-overlay__gem-hit.is-collecting .gem-sprite {
-  animation: gem-collect-happy 2.8s cubic-bezier(0.34, 1.2, 0.42, 1) forwards;
-  transform-origin: 50% 55%;
+  animation-duration: 5s;
+  animation-timing-function: cubic-bezier(0.33, 1, 0.38, 1);
+  animation-fill-mode: forwards;
+  transform-origin: 50% 58%;
+  will-change: transform, filter;
 }
+.gem-hunt-overlay__gem-hit.is-collecting.gem-collect-dance-1 .gem-sprite { animation-name: gem-dance-hop; }
+.gem-hunt-overlay__gem-hit.is-collecting.gem-collect-dance-2 .gem-sprite { animation-name: gem-dance-shuffle; }
+.gem-hunt-overlay__gem-hit.is-collecting.gem-collect-dance-3 .gem-sprite { animation-name: gem-dance-twirl; }
+.gem-hunt-overlay__gem-hit.is-collecting.gem-collect-dance-4 .gem-sprite { animation-name: gem-dance-figure8; }
+.gem-hunt-overlay__gem-hit.is-collecting.gem-collect-dance-5 .gem-sprite { animation-name: gem-dance-pop; }
+.gem-hunt-overlay__gem-hit.is-collecting.gem-collect-dance-6 .gem-sprite { animation-name: gem-dance-sway; }
+.gem-hunt-overlay__gem-hit.is-collecting.gem-collect-dance-7 .gem-sprite { animation-name: gem-dance-jack; }
+.gem-hunt-overlay__gem-hit.is-collecting.gem-collect-dance-8 .gem-sprite { animation-name: gem-dance-orbit; }
 .gem-hunt-overlay__gem-hit.is-pin-collect {
   pointer-events: auto;
   cursor: pointer;
@@ -3784,7 +3777,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   z-index: 6;
   pointer-events: none;
   background: radial-gradient(circle at 50% 44%, rgb(253 224 71 / 0.65) 0%, transparent 58%);
-  animation: gem-overlay-collect-flash 2.8s ease-out forwards;
+  animation: gem-overlay-collect-flash 5s ease-out forwards;
 }
 .gem-hunt-overlay__walk-guide {
   position: relative;
@@ -4015,7 +4008,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-sprite.is-burst .gem-sprite__glow,
 .gem-sprite.is-burst .gem-model-3d {
-  animation: gem-collect-flash 3.8s ease-out forwards;
+  animation: gem-collect-flash 5s ease-out forwards;
 }
 .gem-sprite.is-collected {
   opacity: 0.45;
@@ -4333,41 +4326,124 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   0%, 100% { opacity: 0.65; transform: scale(0.95); }
   50% { opacity: 1; transform: scale(1.05); }
 }
-@keyframes gem-collect-happy {
-  0% {
-    transform: scale(1) rotate(0deg);
-    filter: brightness(1) drop-shadow(0 0 0 rgb(251 191 36 / 0));
-  }
-  18% {
-    transform: scale(1.08) rotate(-4deg);
-    filter: brightness(1.12) drop-shadow(0 0 12px rgb(251 191 36 / 0.45));
-  }
-  36% {
-    transform: scale(1.16) rotate(5deg);
-    filter: brightness(1.2) drop-shadow(0 0 18px rgb(251 191 36 / 0.65));
-  }
-  54% {
-    transform: scale(1.12) rotate(-3deg);
-    filter: brightness(1.15) drop-shadow(0 0 16px rgb(251 191 36 / 0.55));
-  }
-  72% {
-    transform: scale(1.18) rotate(2deg);
-    filter: brightness(1.22) drop-shadow(0 0 20px rgb(251 191 36 / 0.7));
-  }
-  88% {
-    transform: scale(1.14) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1.06) translateY(-4vh);
-    opacity: 0;
-    filter: brightness(1.28);
-  }
+/* Collect dances — 5s choreography; class gem-collect-dance-N on .gem-hit */
+@keyframes gem-dance-hop {
+  0% { transform: scale(1) translateY(0); filter: brightness(1); }
+  4% { transform: scale(1.1) translateY(-6%); filter: brightness(1.15); }
+  12% { transform: scale(1.05) translateY(0); }
+  20% { transform: scale(1.12) translateY(-10%); filter: brightness(1.2); }
+  28% { transform: scale(1.04) translateY(2%); }
+  36% { transform: scale(1.14) translateY(-12%); }
+  44% { transform: scale(1.06) translateY(0); }
+  52% { transform: scale(1.16) translateY(-8%) rotate(-4deg); }
+  60% { transform: scale(1.08) translateY(0) rotate(4deg); }
+  68% { transform: scale(1.15) translateY(-6%) rotate(0deg); }
+  76% { transform: scale(1.1) translateY(0); opacity: 1; }
+  88% { transform: scale(1.12) translateY(-3%); opacity: 0.95; }
+  100% { transform: scale(1.08) translateY(-5vh); opacity: 0; filter: brightness(1.25); }
+}
+@keyframes gem-dance-shuffle {
+  0% { transform: translateX(0) rotate(0deg) scale(1); }
+  5% { transform: translateX(-8%) scale(1.08) rotate(-6deg); filter: brightness(1.12); }
+  15% { transform: translateX(10%) scale(1.1) rotate(5deg); }
+  25% { transform: translateX(-10%) scale(1.08) rotate(-5deg); }
+  35% { transform: translateX(8%) scale(1.12) rotate(4deg); filter: brightness(1.18); }
+  45% { transform: translateX(-6%) scale(1.06) rotate(-3deg); }
+  55% { transform: translateX(6%) scale(1.14) rotate(3deg); }
+  65% { transform: translateX(-4%) scale(1.08) rotate(-2deg); }
+  75% { transform: translateX(0) scale(1.12) rotate(0deg); opacity: 1; }
+  88% { transform: scale(1.1) translateY(-2%); opacity: 0.92; }
+  100% { transform: scale(1.05) translateY(-4vh); opacity: 0; }
+}
+@keyframes gem-dance-twirl {
+  0% { transform: rotate(0deg) scale(1); }
+  6% { transform: rotate(-18deg) scale(1.12); filter: brightness(1.2); }
+  18% { transform: rotate(160deg) scale(1.14); }
+  30% { transform: rotate(360deg) scale(1.1); }
+  42% { transform: rotate(520deg) scale(1.16); filter: brightness(1.22); }
+  54% { transform: rotate(680deg) scale(1.08); }
+  66% { transform: rotate(820deg) scale(1.14); }
+  78% { transform: rotate(900deg) scale(1.12); opacity: 1; }
+  90% { transform: rotate(920deg) scale(1.1); opacity: 0.9; }
+  100% { transform: rotate(940deg) scale(1.06) translateY(-4vh); opacity: 0; }
+}
+@keyframes gem-dance-figure8 {
+  0% { transform: translate(0, 0) scale(1); }
+  8% { transform: translate(-6%, -5%) scale(1.1); filter: brightness(1.15); }
+  16% { transform: translate(0, 4%) scale(1.06); }
+  24% { transform: translate(6%, -4%) scale(1.12); }
+  32% { transform: translate(0, 5%) scale(1.08); }
+  40% { transform: translate(-7%, -3%) scale(1.14); }
+  48% { transform: translate(0, -4%) scale(1.1); filter: brightness(1.2); }
+  56% { transform: translate(7%, 3%) scale(1.12); }
+  64% { transform: translate(0, -5%) scale(1.08); }
+  72% { transform: translate(-5%, 2%) scale(1.13); }
+  80% { transform: translate(0, 0) scale(1.11); opacity: 1; }
+  100% { transform: translate(0, -5vh) scale(1.06); opacity: 0; }
+}
+@keyframes gem-dance-pop {
+  0% { transform: scale(1); filter: brightness(1); }
+  5% { transform: scale(1.2); filter: brightness(1.25); }
+  10% { transform: scale(1.05); }
+  18% { transform: scale(1.22); filter: brightness(1.28); }
+  24% { transform: scale(1.08); }
+  32% { transform: scale(1.18); }
+  38% { transform: scale(1.06); }
+  46% { transform: scale(1.2); filter: brightness(1.22); }
+  52% { transform: scale(1.1); }
+  60% { transform: scale(1.16); }
+  68% { transform: scale(1.08); }
+  76% { transform: scale(1.14); opacity: 1; }
+  88% { transform: scale(1.1); opacity: 0.95; }
+  100% { transform: scale(1.04) translateY(-4vh); opacity: 0; }
+}
+@keyframes gem-dance-sway {
+  0% { transform: rotate(0deg) scale(1) translateY(0); }
+  6% { transform: rotate(-12deg) scale(1.1) translateY(-3%); filter: brightness(1.15); }
+  14% { transform: rotate(10deg) scale(1.08) translateY(1%); }
+  22% { transform: rotate(-14deg) scale(1.12) translateY(-4%); }
+  30% { transform: rotate(12deg) scale(1.06) translateY(0); }
+  38% { transform: rotate(-10deg) scale(1.14) translateY(-5%); filter: brightness(1.2); }
+  46% { transform: rotate(8deg) scale(1.08) translateY(2%); }
+  54% { transform: rotate(-8deg) scale(1.12) translateY(-3%); }
+  62% { transform: rotate(6deg) scale(1.1) translateY(0); }
+  70% { transform: rotate(-5deg) scale(1.13) translateY(-2%); }
+  78% { transform: rotate(0deg) scale(1.11) translateY(0); opacity: 1; }
+  100% { transform: scale(1.07) translateY(-5vh); opacity: 0; }
+}
+@keyframes gem-dance-jack {
+  0% { transform: scale(1, 1) translateY(0); }
+  5% { transform: scale(0.92, 1.08) translateY(4%); filter: brightness(1.1); }
+  12% { transform: scale(1.15, 0.92) translateY(-14%); filter: brightness(1.22); }
+  20% { transform: scale(0.95, 1.05) translateY(2%); }
+  28% { transform: scale(1.12, 0.94) translateY(-12%); }
+  36% { transform: scale(1, 1) translateY(0); }
+  44% { transform: scale(1.14, 0.9) translateY(-15%); filter: brightness(1.25); }
+  52% { transform: scale(0.96, 1.04) translateY(3%); }
+  60% { transform: scale(1.1, 0.95) translateY(-10%); }
+  68% { transform: scale(1.02, 1) translateY(-2%); }
+  76% { transform: scale(1.12, 0.96) translateY(-8%); opacity: 1; }
+  100% { transform: scale(1.06, 1) translateY(-5vh); opacity: 0; }
+}
+@keyframes gem-dance-orbit {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  8% { transform: translate(8%, -6%) rotate(20deg) scale(1.1); filter: brightness(1.15); }
+  16% { transform: translate(10%, 4%) rotate(45deg) scale(1.08); }
+  24% { transform: translate(0, 10%) rotate(90deg) scale(1.12); }
+  32% { transform: translate(-10%, 4%) rotate(135deg) scale(1.1); }
+  40% { transform: translate(-8%, -6%) rotate(180deg) scale(1.14); filter: brightness(1.2); }
+  48% { transform: translate(0, -10%) rotate(225deg) scale(1.08); }
+  56% { transform: translate(8%, -4%) rotate(270deg) scale(1.12); }
+  64% { transform: translate(6%, 8%) rotate(315deg) scale(1.1); }
+  72% { transform: translate(-4%, 6%) rotate(360deg) scale(1.13); }
+  80% { transform: translate(0, 0) rotate(380deg) scale(1.11); opacity: 1; }
+  100% { transform: translate(0, -5vh) rotate(400deg) scale(1.05); opacity: 0; }
 }
 @keyframes gem-overlay-collect-flash {
   0% { opacity: 0; }
-  15% { opacity: 0.55; }
-  45% { opacity: 0.35; }
+  4% { opacity: 0.5; }
+  12% { opacity: 0.38; }
+  35% { opacity: 0.28; }
   100% { opacity: 0; }
 }
 @keyframes gem-collect-flash {

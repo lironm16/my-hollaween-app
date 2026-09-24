@@ -48,10 +48,10 @@ export const GEM_CAMERA_HFOV_DEG = 62;
 export const GEM_ANCHOR_MIN_METERS = 2;
 export const GEM_ANCHOR_MAX_METERS = 10;
 
-/** Camera collect: happy wiggle — sync gem-collect-happy CSS (~2.8s). */
-export const GEM_COLLECT_OVERLAY_MS = 2800;
+/** Camera collect — per-gem choreography (see gem-collect-dance.ts / CSS). */
+export const GEM_COLLECT_OVERLAY_MS = 5000;
 /** Map toast after collect — matches visit/like cheer (~1.6s). */
-export const GEM_CHEER_MS = 1600;
+export const GEM_CHEER_MS = 1400;
 /** @deprecated use GEM_CHEER_MS */
 export const GEM_CHEER_DISPLAY_MS = GEM_CHEER_MS;
 /** @deprecated use GEM_COLLECT_OVERLAY_MS / GEM_CHEER_DISPLAY_MS */

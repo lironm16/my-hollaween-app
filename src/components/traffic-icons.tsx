@@ -37,8 +37,8 @@ export function GemTrafficIcon({
         "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/25 ring-1 ring-amber-300/45",
         className,
       )}
-      title="יהלום נאסף"
-      aria-label="יהלום נאסף"
+      title="יהלום"
+      aria-label="יהלום"
     >
       <Gem className={cn("size-5 fill-current text-amber-300", markClassName)} strokeWidth={2.1} />
     </span>

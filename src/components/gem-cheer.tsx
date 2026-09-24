@@ -1,10 +1,11 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import { Gem } from "lucide-react";
 
 export function GemCheer({ show }: { show: boolean }) {
   if (!show) return null;
-  return (
+  const cheer = (
     <div className="gem-cheer" role="status" aria-live="polite">
       <div className="gem-cheer-card">
         <span className="gem-cheer-burst" aria-hidden="true">
@@ -17,4 +18,6 @@ export function GemCheer({ show }: { show: boolean }) {
       </div>
     </div>
   );
+  if (typeof document === "undefined") return cheer;
+  return createPortal(cheer, document.body);
 }

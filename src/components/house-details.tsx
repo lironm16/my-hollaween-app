@@ -496,7 +496,7 @@ export function HouseDetails({
               <Gem
                 className="mb-0.5 me-1.5 inline size-5 fill-current text-amber-300"
                 strokeWidth={2.1}
-                aria-label="יהלום נאסף"
+                aria-label="יהלום"
               />
             ) : null}
             {houseHeadline(house)}

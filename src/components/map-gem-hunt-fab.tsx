@@ -42,7 +42,10 @@ export function MapGemHuntFab({
       <span className="map-gem-hunt-fab__pulse" aria-hidden />
       <Gem className="relative z-[1] size-8 drop-shadow-[0_0_8px_rgb(251_191_36/0.85)]" strokeWidth={2.1} aria-hidden />
       {collectedCount > 0 ? (
-        <span className="map-gem-hunt-fab__badge" aria-label={`${collectedCount} יהלומים`}>
+        <span
+          className="absolute -top-1 -right-1 z-[2] inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-black px-1 text-sm font-bold leading-none text-amber-300 ring-1 ring-amber-400/45 pointer-events-none"
+          aria-label={`${collectedCount} יהלומים`}
+        >
           {collectedCount > 99 ? "99+" : collectedCount}
         </span>
       ) : null}

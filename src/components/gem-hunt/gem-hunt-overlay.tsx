@@ -8,6 +8,7 @@ import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
 import { getGemHuntCameraStream, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
+import { gemCollectDanceClass } from "@/lib/gem-collect-dance";
 import {
   facingHouse,
   GEM_FACING_TOLERANCE_DEG,
@@ -59,6 +60,10 @@ export function GemHuntOverlay({
   /** Only auto-reveal from scan/pan/facing when user can collect (or admin simulate). */
   const allowAutoReveal = collectEnabled || sim;
   const monsterId = gemMonsterForHouse(house);
+  const collectDanceClass = useMemo(
+    () => gemCollectDanceClass(house.id, monsterId),
+    [house.id, monsterId],
+  );
   const anchor = useMemo(() => gemAnchorForHouse(house), [house.id, house.lat, house.lng]);
   /** Admin simulate: GPS at the house pin (ground); hunt uses anchor offset + compass like on-site. */
   const effectiveLoc = useMemo(() => {
@@ -268,7 +273,7 @@ export function GemHuntOverlay({
 
   const footerHint =
     phase === "collecting"
-      ? "יהלום נאסף!"
+      ? null
       : centerDisplayMode
         ? "לחצו על היהלום לאיסוף"
         : pinCollectReady
@@ -343,6 +348,7 @@ export function GemHuntOverlay({
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-pin-collect",
               phase === "collecting" && "is-collecting",
+              phase === "collecting" && collectDanceClass,
             )}
             style={
               pinPlacement
@@ -355,12 +361,7 @@ export function GemHuntOverlay({
             onClick={handleCollect}
             aria-label={`איסוף ${gemLabelHe(monsterId)}`}
           >
-            <GemSprite
-              house={house}
-              mode="3d"
-              tapCollect
-              className={cn(phase === "collecting" && "is-burst")}
-            />
+            <GemSprite house={house} mode="3d" tapCollect />
           </button>
         ) : null}
 
@@ -399,16 +400,12 @@ export function GemHuntOverlay({
             "is-center-collect",
             "is-collect-layer",
             phase === "collecting" && "is-collecting",
+            phase === "collecting" && collectDanceClass,
           )}
           onClick={handleCollect}
           aria-label={`איסוף ${gemLabelHe(monsterId)}`}
         >
-          <GemSprite
-            house={house}
-            mode="3d"
-            tapCollect
-            className={cn(phase === "collecting" && "is-burst")}
-          />
+          <GemSprite house={house} mode="3d" tapCollect />
         </button>
       ) : null}
 
