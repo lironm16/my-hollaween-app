@@ -73,6 +73,8 @@ export function GemHuntOverlay({
   const [hint, setHint] = useState<"scan" | "warm" | "found" | "help">("scan");
   const [showHelp, setShowHelp] = useState(false);
   const [posterHintOpen, setPosterHintOpen] = useState(false);
+  /** User chose «גלה לי» — show collectible gem centered (not compass-pinned). */
+  const [centerCollect, setCenterCollect] = useState(false);
   const scanStartRef = useRef(Date.now());
   const panTotalRef = useRef(0);
   const lastHeadingRef = useRef<number | null>(null);
@@ -103,6 +105,7 @@ export function GemHuntOverlay({
     setHint("scan");
     setShowHelp(false);
     setPosterHintOpen(false);
+    setCenterCollect(false);
   }, [house.id]);
 
   useEffect(() => {
@@ -185,7 +188,7 @@ export function GemHuntOverlay({
 
   function handleCollect() {
     if (!collectEnabled) return;
-    if (pinPlacement && !pinPlacement.inView) return;
+    if (!centerCollect && pinPlacement && !pinPlacement.inView) return;
     if (phase === "collecting" || phase === "done") return;
     setPhase("collecting");
     setHint("found");
@@ -198,15 +201,19 @@ export function GemHuntOverlay({
     }, GEM_COLLECT_ANIMATION_MS);
   }
 
-  function handleHelpReveal() {
+  function handleRevealMe() {
     reveal();
     setShowHelp(false);
     setHint("found");
+    if (collectEnabled) setCenterCollect(true);
   }
 
   const gemVisible = phase === "visible" || phase === "collecting";
-  /** In range: pinned in the camera. Too far / hint preview: centered orbit studio (gem bag). */
-  const arCollectMode = gemVisible && collectEnabled;
+  /** «גלה לי» + in range: big centered gem, tap to collect. */
+  const centerCollectMode = gemVisible && collectEnabled && centerCollect;
+  /** Auto-reveal in range without גלה לי: compass-pinned in the camera. */
+  const arCollectMode = gemVisible && collectEnabled && !centerCollect;
+  /** Too far: centered orbit preview only. */
   const studioPreview = gemVisible && !collectEnabled;
   const walkBearing =
     effectiveLoc != null ? relativeWalkBearingDeg(effectiveLoc, anchor, heading) : null;
@@ -274,9 +281,15 @@ export function GemHuntOverlay({
       ) : null}
 
       <div className="gem-hunt-overlay__stage" aria-hidden={false}>
-        {!studioPreview ? (
+        {!studioPreview && !centerCollectMode ? (
           <div className="gem-hunt-overlay__scan-ring" aria-hidden>
             <div className={cn("gem-hunt-overlay__ring", hint === "warm" && "is-warm")} />
+          </div>
+        ) : null}
+
+        {centerCollectMode ? (
+          <div className="gem-hunt-overlay__scan-ring" aria-hidden>
+            <div className="gem-hunt-overlay__ring is-warm" />
           </div>
         ) : null}
 
@@ -288,6 +301,25 @@ export function GemHuntOverlay({
               hint="גררו לסיבוב · גוון קל לפי הבית (אותו מראה במצלמה)"
             />
           </div>
+        ) : null}
+
+        {centerCollectMode ? (
+          <button
+            type="button"
+            className={cn(
+              "gem-hunt-overlay__gem-hit",
+              "is-center-collect",
+              phase === "collecting" && "is-collecting",
+            )}
+            onClick={handleCollect}
+            aria-label={`איסוף ${gemLabelHe(monsterId)}`}
+          >
+            <GemSprite
+              house={house}
+              mode="3d"
+              className={cn(phase === "collecting" && "is-burst")}
+            />
+          </button>
         ) : null}
 
         {arCollectMode ? (
@@ -331,8 +363,14 @@ export function GemHuntOverlay({
           {phase !== "collecting" && hint === "found" && pinPlacement && !pinPlacement.inView
             ? "סובבו את המצלמה — האוצר בקצה המסך"
             : null}
-          {phase !== "collecting" && hint === "found" && collectEnabled && (!pinPlacement || pinPlacement.inView)
+          {phase !== "collecting" && hint === "found" && centerCollectMode
             ? "לחצו על האוצר לאיסוף!"
+            : null}
+          {phase !== "collecting" && hint === "found" && arCollectMode && pinPlacement && !pinPlacement.inView
+            ? "סובבו למקום האוצר — או לחצו «גלה לי»"
+            : null}
+          {phase !== "collecting" && hint === "found" && arCollectMode && (!pinPlacement || pinPlacement.inView)
+            ? "לחצו על האוצר — או «גלה לי» למרכז"
             : null}
           {phase !== "collecting" && hint === "found" && !collectEnabled
             ? `תצוגה בלבד — התקרבו ל~${GEM_HUNT_METERS}מ׳ מהבית כדי לאסוף במצלמה`
@@ -377,7 +415,7 @@ export function GemHuntOverlay({
         </div>
       ) : null}
 
-      {phase === "scanning" ? (
+      {phase !== "collecting" && !centerCollectMode ? (
         <div className="gem-hunt-overlay__hint-actions" dir="rtl">
           <button
             type="button"
@@ -386,9 +424,16 @@ export function GemHuntOverlay({
           >
             רמז: איך נראה האוצר?
           </button>
-          <button type="button" className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--accent" onClick={handleHelpReveal}>
-            רמז: גלו את האוצר
+          <button
+            type="button"
+            className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--accent gem-hunt-overlay__hint-btn--reveal"
+            onClick={handleRevealMe}
+          >
+            גלה לי
           </button>
+          {!collectEnabled ? (
+            <p className="gem-hunt-overlay__hint-note">לאיסוף — התקרבו ל~{GEM_HUNT_METERS}מ׳ לכניסה לבניין</p>
+          ) : null}
         </div>
       ) : null}
 

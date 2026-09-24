@@ -43,9 +43,9 @@ export const GEM_SCAN_PAN_DEGREES = 180;
 export const GEM_HELP_AFTER_SECONDS = 8;
 /** Approx. phone camera horizontal field of view — for pinning gem on screen. */
 export const GEM_CAMERA_HFOV_DEG = 62;
-/** Each house hides its gem at a stable GPS point this many meters from the pin. */
-export const GEM_ANCHOR_MIN_METERS = 4;
-export const GEM_ANCHOR_MAX_METERS = 14;
+/** Ground-level offset from the map pin (no floor height — see gemAnchorForHouse). */
+export const GEM_ANCHOR_MIN_METERS = 2;
+export const GEM_ANCHOR_MAX_METERS = 10;
 
 /** Hunt overlay + cheer — keep in sync with gem-collect-* CSS durations */
 export const GEM_COLLECT_ANIMATION_MS = 4000;
@@ -87,7 +87,11 @@ export function destinationPoint(
   return { lat: (φ2 * 180) / Math.PI, lng: (λ2 * 180) / Math.PI };
 }
 
-/** Stable world pin for this house’s hidden gem (offset from the map pin). */
+/**
+ * Stable ground pin near the building entrance (map lat/lng).
+ * There is no vertical axis — high-floor apartments share the same ground GPS;
+ * the hunt means “at the building / entrance zone”, not at window height.
+ */
 export function gemAnchorForHouse(house: Pick<PublicHouse, "id" | "lat" | "lng">): GemAnchor {
   const h = hashHouseSeed(house.id, "gem-anchor-v1");
   const bearingFromHouseDeg = h % 360;

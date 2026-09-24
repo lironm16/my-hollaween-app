@@ -3550,6 +3550,26 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   transform: translate(-50%, -50%) scale(0.68);
   pointer-events: none;
 }
+.gem-hunt-overlay__gem-hit.is-center-collect {
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+}
+.gem-hunt-overlay__gem-hit.is-center-collect .gem-sprite--hunt {
+  width: min(82vw, 20rem);
+  height: min(82vw, 20rem);
+}
+.gem-hunt-overlay__hint-btn--reveal {
+  font-size: 1.05rem;
+  padding: 0.75rem 1.15rem;
+}
+.gem-hunt-overlay__hint-note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: rgb(196 181 253 / 0.9);
+  text-align: center;
+}
 .gem-hunt-overlay__gem-hit .gem-sprite--hunt {
   width: min(76vw, 18.5rem);
   height: min(76vw, 18.5rem);
