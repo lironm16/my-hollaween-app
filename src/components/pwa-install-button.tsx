@@ -4,22 +4,35 @@ import { Download } from "lucide-react";
 import { toast } from "sonner";
 import { usePwaInstall } from "@/components/pwa-install-provider";
 import { Button } from "@/components/ui/button";
+import {
+  PWA_INSTALL_UNAVAILABLE_TOAST,
+  shouldShowPwaInstallButton,
+} from "@/lib/pwa-install";
+import { isStandaloneDisplay } from "@/lib/push-client";
 import { cn } from "@/lib/utils";
 
 export function PwaInstallButton({
   variant = "compact",
   className,
   onInstalled,
+  showAlways = false,
 }: {
   variant?: "compact" | "prominent";
   className?: string;
   onInstalled?: () => void;
+  /** Show in help/Q&A even when native install prompt is unavailable. */
+  showAlways?: boolean;
 }) {
   const { canInstall, promptInstall } = usePwaInstall();
+  const isStandalone = isStandaloneDisplay();
 
-  if (!canInstall) return null;
+  if (!shouldShowPwaInstallButton({ canInstall, isStandalone, showAlways })) return null;
 
   async function onClick() {
+    if (!canInstall) {
+      toast.message(PWA_INSTALL_UNAVAILABLE_TOAST, { closeButton: true });
+      return;
+    }
     const outcome = await promptInstall();
     if (outcome === "accepted") {
       onInstalled?.();

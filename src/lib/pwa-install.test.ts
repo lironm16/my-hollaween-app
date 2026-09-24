@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   pwaInstallPromptEligible,
   shouldCapturePwaInstallPrompt,
+  shouldShowPwaInstallButton,
 } from "@/lib/pwa-install";
 
 describe("shouldCapturePwaInstallPrompt", () => {
@@ -34,6 +35,33 @@ describe("pwaInstallPromptEligible", () => {
     assert.equal(
       pwaInstallPromptEligible({ isIos: false, isStandalone: false, hasDeferredPrompt: false }),
       false,
+    );
+  });
+});
+
+describe("shouldShowPwaInstallButton", () => {
+  it("hides when already installed standalone", () => {
+    assert.equal(
+      shouldShowPwaInstallButton({ canInstall: true, isStandalone: true, showAlways: true }),
+      false,
+    );
+  });
+
+  it("shows header button only when native prompt is available", () => {
+    assert.equal(
+      shouldShowPwaInstallButton({ canInstall: true, isStandalone: false }),
+      true,
+    );
+    assert.equal(
+      shouldShowPwaInstallButton({ canInstall: false, isStandalone: false }),
+      false,
+    );
+  });
+
+  it("shows help demo button even without native prompt (e.g. iOS viewing Android Q&A)", () => {
+    assert.equal(
+      shouldShowPwaInstallButton({ canInstall: false, isStandalone: false, showAlways: true }),
+      true,
     );
   });
 });

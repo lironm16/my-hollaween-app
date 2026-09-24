@@ -16,3 +16,17 @@ export function pwaInstallPromptEligible(options: {
   if (options.isIos || options.isStandalone) return false;
   return options.hasDeferredPrompt;
 }
+
+/** Toast when help/demo install is tapped without a native prompt (e.g. iOS viewing Android Q&A). */
+export const PWA_INSTALL_UNAVAILABLE_TOAST = "פתחו ב-Chrome באנדרואיד כדי להתקין.";
+
+export function shouldShowPwaInstallButton(options: {
+  canInstall: boolean;
+  isStandalone: boolean;
+  /** Help/Q&A demo — show instructional button even without beforeinstallprompt. */
+  showAlways?: boolean;
+}) {
+  if (options.isStandalone) return false;
+  if (options.showAlways) return true;
+  return options.canInstall;
+}
