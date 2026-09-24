@@ -6,16 +6,19 @@ import { AppClockProvider } from "@/components/app-clock-provider";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { TabTitleCycle } from "@/components/tab-title-cycle";
 import { CatalogProvider } from "@/components/catalog-provider";
+import { PwaInstallProvider } from "@/components/pwa-install-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark">
       <AppClockProvider>
       <CatalogProvider>
-        <TabTitleCycle />
-        {children}
-        <Toaster dir="rtl" position="top-center" theme="dark" />
-        <ServiceWorkerRegister />
+        <PwaInstallProvider>
+          <TabTitleCycle />
+          {children}
+          <Toaster dir="rtl" position="top-center" theme="dark" />
+          <ServiceWorkerRegister />
+        </PwaInstallProvider>
       </CatalogProvider>
       </AppClockProvider>
     </ThemeProvider>

@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
 import { NeighborhoodMarquee } from "@/components/neighborhood-marquee";
 import { PushAlertsButton } from "@/components/push-alerts-button";
+import { PwaInstallButton } from "@/components/pwa-install-button";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import {
@@ -78,6 +79,7 @@ export function AppHeader({
           >
             <Menu className="size-5" />
           </button>
+          <PwaInstallButton />
           <PushAlertsButton />
         </div>
         <Link

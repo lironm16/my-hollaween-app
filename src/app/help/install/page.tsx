@@ -1,6 +1,8 @@
 "use client";
 
 import { HelpExpandable, HelpShell, HelpStep } from "@/components/help-shell";
+import { PwaInstallButton } from "@/components/pwa-install-button";
+import { usePwaInstall } from "@/components/pwa-install-provider";
 import { helpImage } from "@/lib/help-images";
 
 const IPHONE_STEPS = [
@@ -60,12 +62,26 @@ function PlatformSteps({
   );
 }
 
+function InstallPromptCallout() {
+  const { canInstall } = usePwaInstall();
+  if (!canInstall) return null;
+  return (
+    <div className="mb-4 space-y-2">
+      <PwaInstallButton variant="prominent" />
+      <p className="text-base leading-relaxed text-violet-200/90">
+        ב-Chrome (אנדרואיד או מחשב) אפשר גם ללחוץ על סמל ההורדה בראש המסך.
+      </p>
+    </div>
+  );
+}
+
 export default function InstallHelpPage() {
   return (
     <HelpShell title="איך מתקינים את האפליקציה?">
       <p className="mb-4 text-lg leading-relaxed text-orange-50">
         «התקנה» = הוספה למסך הבית. פתחו פעם אחת ברשת כדי שהמפה תישמר בטלפון.
       </p>
+      <InstallPromptCallout />
       <div className="space-y-3">
         <HelpExpandable title="אייפון" subtitle="Safari בלבד">
           <PlatformSteps steps={IPHONE_STEPS} />
