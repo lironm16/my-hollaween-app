@@ -3346,7 +3346,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 1300;
   overflow: hidden;
   background: #050208;
 }

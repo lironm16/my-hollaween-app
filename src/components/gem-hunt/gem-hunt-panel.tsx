@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
-import { Gem, MapPin } from "lucide-react";
+import { Camera, Gem, MapPin } from "lucide-react";
 import { GemCollectCheer } from "@/components/gem-collect-cheer";
 import { GemHuntOverlay } from "@/components/gem-hunt/gem-hunt-overlay";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import {
   gemProximity,
   gemLabelHe,
+  gemMonsterForHouse,
   GEM_APPROACH_METERS,
   GEM_HUNT_METERS,
   GEM_COLLECT_ANIMATION_MS,
@@ -36,7 +37,6 @@ export function GemHuntPanel({
   const [huntOpen, setHuntOpen] = useState(false);
   const [cheer, setCheer] = useState(false);
   const [simulate, setSimulate] = useState(adminSimulateInRange);
-  const [labOpen, setLabOpen] = useState(false);
 
   const visible = gemHuntVisible(isAdmin);
   const collected = gems.collected(house.id);
@@ -51,17 +51,12 @@ export function GemHuntPanel({
   if (!visible) return null;
 
   const inRange = simulate || proximity === "hunt";
-  const canHunt = collected ? false : inRange && (standingStill || simulate);
+  const canCollect = !collected && inRange && (standingStill || simulate);
+  const monsterLabel = gemLabelHe(gemMonsterForHouse(house));
 
-  const openHunt = useCallback(async () => {
-    if (!canHunt) return;
+  const openCamera = useCallback(async () => {
     await prepareGemHuntSensors();
     setHuntOpen(true);
-  }, [canHunt]);
-
-  const openLab = useCallback(async () => {
-    await prepareGemHuntSensors();
-    setLabOpen(true);
   }, []);
 
   function onCollect(collectedVariant: string) {
@@ -84,14 +79,16 @@ export function GemHuntPanel({
             <p className="gem-hunt-panel__title">אוצר נסתר</p>
             <p className="gem-hunt-panel__sub">
               {collected
-                ? "נאסף לתיק האוצרות"
-                : proximity === "far"
-                  ? "התקרבו לבית כדי לחפש"
-                  : proximity === "approach"
-                    ? `עוד ${distanceM != null ? formatDistance(Math.max(0, distanceM - GEM_HUNT_METERS)) : "קצת"} — עמדו על המרפסת`
-                    : standingStill || simulate
-                      ? "מוכנים לציד!"
-                      : "עמדו במקום לרגע…"}
+                ? `נאסף — ${monsterLabel}`
+                : canCollect
+                  ? "מוכנים לאיסוף!"
+                  : proximity === "far"
+                    ? "אפשר לצפות במצלמה מכל מקום · לאיסוף התקרבו לבית"
+                    : proximity === "approach"
+                      ? `עוד ${distanceM != null ? formatDistance(Math.max(0, distanceM - GEM_HUNT_METERS)) : "קצת"} — אפשר לצפות, לאיסוף התקרבו`
+                      : standingStill || simulate
+                        ? "מוכנים לציד!"
+                        : "עמדו במקום לרגע… או פתחו מצלמה לתצוגה"}
             </p>
           </div>
         </div>
@@ -106,16 +103,25 @@ export function GemHuntPanel({
               />
               סימולציה: בטווח (מנהל)
             </label>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="gem-hunt-panel__lab-btn w-full"
-              onClick={() => void openLab()}
-            >
-              ניסיון מצלמה (מכל מקום)
-            </Button>
           </div>
+        ) : null}
+
+        <Button
+          type="button"
+          className={cn(
+            "gem-hunt-panel__btn w-full",
+            canCollect && "ring-2 ring-amber-400/50",
+          )}
+          onClick={() => void openCamera()}
+        >
+          <Camera className="size-4" aria-hidden />
+          {collected ? "הציגו שוב במצלמה" : "פתחו מצלמה — חיפוש האוצר"}
+        </Button>
+
+        {!collected && canCollect ? (
+          <p className="gem-hunt-panel__distance text-center text-sm text-emerald-300/90">
+            <MapPin className="mb-0.5 inline size-3.5" aria-hidden /> בטווח — אפשר לאסוף במצלמה
+          </p>
         ) : null}
 
         {collected ? (
@@ -136,20 +142,7 @@ export function GemHuntPanel({
               </Button>
             ) : null}
           </div>
-        ) : (
-          <Button
-            type="button"
-            className={cn(
-              "gem-hunt-panel__btn w-full",
-              canHunt && "bg-amber-400 text-black hover:bg-amber-300",
-            )}
-            disabled={!canHunt}
-            onClick={openHunt}
-          >
-            <MapPin className="size-4" aria-hidden />
-            {canHunt ? "חפשו את האוצר" : proximity === "approach" ? `התקרבו (${GEM_APPROACH_METERS}מ׳)` : "חפשו את האוצר"}
-          </Button>
-        )}
+        ) : null}
 
         {!collected && proximity !== "far" && distanceM != null ? (
           <p className="gem-hunt-panel__distance" dir="ltr">
@@ -163,21 +156,9 @@ export function GemHuntPanel({
           house={house}
           userLocation={userLocation}
           simulateInRange={simulate}
+          collectEnabled={canCollect}
           onClose={() => setHuntOpen(false)}
           onCollect={onCollect}
-        />
-      ) : null}
-
-      {labOpen ? (
-        <GemHuntOverlay
-          house={house}
-          userLocation={userLocation}
-          labMode
-          onClose={() => setLabOpen(false)}
-          onCollect={(id) => {
-            onCollect(id);
-            setLabOpen(false);
-          }}
         />
       ) : null}
     </>

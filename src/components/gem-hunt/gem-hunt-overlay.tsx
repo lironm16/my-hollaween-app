@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
@@ -33,19 +34,20 @@ export function GemHuntOverlay({
   house,
   userLocation,
   simulateInRange = false,
-  labMode = false,
+  collectEnabled = true,
   onClose,
   onCollect,
 }: {
   house: PublicHouse;
   userLocation: UserLocation | null;
   simulateInRange?: boolean;
-  /** Admin: skip GPS/scan — show camera + gem for testing anywhere */
-  labMode?: boolean;
+  /** When false, user can scan and see the gem but cannot collect (preview / too far). */
+  collectEnabled?: boolean;
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId) => void;
 }) {
-  const sim = simulateInRange || labMode;
+  const sim = simulateInRange;
+  const quickReveal = !collectEnabled;
   const monsterId = gemMonsterForHouse(house);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -80,10 +82,18 @@ export function GemHuntOverlay({
   }, [house.id]);
 
   useEffect(() => {
-    if (!labMode) return;
+    if (!quickReveal) return;
     const t = window.setTimeout(() => reveal(), 400);
     return () => window.clearTimeout(t);
-  }, [house.id, labMode, reveal]);
+  }, [house.id, quickReveal, reveal]);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -129,7 +139,7 @@ export function GemHuntOverlay({
       setShowHelp(true);
     }
 
-    if (labMode) return;
+    if (quickReveal) return;
 
     const loc = userLocation ?? (sim ? { lat: house.lat, lng: house.lng, accuracy: 5 } : null);
     const facing =
@@ -151,9 +161,10 @@ export function GemHuntOverlay({
     if (elapsedSec >= GEM_SCAN_REVEAL_SECONDS || panTotalRef.current >= GEM_SCAN_PAN_DEGREES) {
       reveal();
     }
-  }, [heading, house, phase, reveal, sim, labMode, userLocation]);
+  }, [heading, house, phase, reveal, sim, quickReveal, userLocation]);
 
   function handleCollect() {
+    if (!collectEnabled) return;
     if (phase === "collecting" || phase === "done") return;
     setPhase("collecting");
     setHint("found");
@@ -174,7 +185,7 @@ export function GemHuntOverlay({
 
   const gemVisible = phase === "visible" || phase === "collecting";
 
-  return (
+  const overlay = (
     <div className="gem-hunt-overlay" dir="rtl">
       {cameraError ? (
         <div className="gem-hunt-overlay__fallback">
@@ -196,8 +207,8 @@ export function GemHuntOverlay({
       <div className="gem-hunt-overlay__shade" aria-hidden />
       <header className="gem-hunt-overlay__header">
         <div className="min-w-0 flex-1">
-          {labMode ? (
-            <p className="gem-hunt-overlay__badge">מצב ניסיון — בלי GPS</p>
+          {!collectEnabled ? (
+            <p className="gem-hunt-overlay__badge">תצוגה — התקרבו לבית כדי לאסוף</p>
           ) : sim ? (
             <p className="gem-hunt-overlay__badge">סימולציה: בטווח</p>
           ) : null}
@@ -222,9 +233,15 @@ export function GemHuntOverlay({
         {gemVisible ? (
           <button
             type="button"
-            className={cn("gem-hunt-overlay__gem-hit", phase === "collecting" && "is-collecting")}
+            className={cn(
+              "gem-hunt-overlay__gem-hit",
+              phase === "collecting" && "is-collecting",
+              !collectEnabled && "is-preview-only",
+            )}
             onClick={handleCollect}
-            aria-label={`איסוף ${gemLabelHe(monsterId)}`}
+            aria-label={
+              collectEnabled ? `איסוף ${gemLabelHe(monsterId)}` : `תצוגת ${gemLabelHe(monsterId)}`
+            }
           >
             <GemSprite
               house={house}
@@ -238,7 +255,12 @@ export function GemHuntOverlay({
           {phase === "collecting" ? "אוצר נאסף!" : null}
           {phase !== "collecting" && hint === "scan" ? "סרקו לאט את הבית — האוצר יופיע" : null}
           {phase !== "collecting" && hint === "warm" ? "קרובים! המשיכו לסרוק…" : null}
-          {phase !== "collecting" && hint === "found" ? "לחצו על האוצר לאיסוף!" : null}
+          {phase !== "collecting" && hint === "found" && collectEnabled
+            ? "לחצו על האוצר לאיסוף!"
+            : null}
+          {phase !== "collecting" && hint === "found" && !collectEnabled
+            ? "זה האוצר של הבית — התקרבו כדי לאסוף"
+            : null}
         </p>
       </div>
 
@@ -253,4 +275,7 @@ export function GemHuntOverlay({
       ) : null}
     </div>
   );
+
+  if (typeof document === "undefined") return overlay;
+  return createPortal(overlay, document.body);
 }

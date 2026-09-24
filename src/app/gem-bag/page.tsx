@@ -95,7 +95,8 @@ function GemBagContent({ houses, isAdmin }: { houses: PublicHouse[]; isAdmin: bo
         <GemHuntOverlay
           house={cameraLabHouse}
           userLocation={null}
-          labMode
+          simulateInRange
+          collectEnabled
           onClose={() => setCameraLabHouse(null)}
           onCollect={(monsterId) => {
             const h = cameraLabHouse;
