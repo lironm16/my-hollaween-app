@@ -4,9 +4,10 @@ import Image from "next/image";
 import { useMemo } from "react";
 import { Sparkles } from "lucide-react";
 import {
-  gemAlbumMonstersForMap,
+  gemAlbumStickerPool,
   gemLabelHe,
   isGemAlbumMonsterCollected,
+  syncGemMonsterAssignment,
   type GemCollectionStamp,
   type GemMonsterId,
 } from "@/lib/gem-monsters";
@@ -24,7 +25,10 @@ export function GemStickerAlbum({
     () => new Map(mapHouses.map((house) => [house.id, house])),
     [mapHouses],
   );
-  const slots = useMemo(() => gemAlbumMonstersForMap(mapHouses), [mapHouses]);
+  const slots = useMemo(() => {
+    syncGemMonsterAssignment(mapHouses);
+    return gemAlbumStickerPool();
+  }, [mapHouses]);
   const filledCount = useMemo(
     () =>
       slots.filter((monster) =>

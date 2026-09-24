@@ -48,6 +48,7 @@ import { useGemProgress } from "@/hooks/use-gem-progress";
 import { loadGemCollectedIds } from "@/lib/gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
 import { canCollectGem, GEM_CHEER_MS } from "@/lib/gem-hunt";
+import { syncGemMonsterAssignment } from "@/lib/gem-monsters";
 import { pickGemHuntTarget } from "@/lib/gem-hunt-target";
 import { prepareGemHuntSensors, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
@@ -255,6 +256,9 @@ export function NeighborhoodApp({
     () => mapListHouses.filter((house) => houseMatchesSet(house, activeHouseSet)),
     [mapListHouses, activeHouseSet],
   );
+  useEffect(() => {
+    if (gemHuntActive) syncGemMonsterAssignment(mapHouses);
+  }, [gemHuntActive, mapHouses]);
   const visible = useMemo(
     () => filterHouses(mapListHouses, filters, filterContext),
     [mapListHouses, filters, filterContext],

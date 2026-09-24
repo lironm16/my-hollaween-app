@@ -2,8 +2,11 @@ import { getGemAnchorOverride } from "@/lib/gem-anchor-overrides";
 import { distanceMeters } from "@/lib/geo";
 import type { GemFamily, GemMonsterId } from "@/lib/gem-monsters";
 import {
+  buildGemMonsterAssignment,
   countGemEligibleHouses,
+  gemAlbumStickerPool,
   gemFamilyForHouse,
+  gemHuntMapHouses,
   gemLabelHe,
   gemSpeciesLabelHe,
   gemMonsterForHouse,
@@ -11,13 +14,17 @@ import {
   gemMonsterTint,
   gemVariantForHouse,
   gemVariantMeta,
+  syncGemMonsterAssignment,
 } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 
 export type { GemFamily, GemMonsterId };
 export {
+  buildGemMonsterAssignment,
   countGemEligibleHouses,
+  gemAlbumStickerPool,
   gemFamilyForHouse,
+  gemHuntMapHouses,
   gemLabelHe,
   gemSpeciesLabelHe,
   gemMonsterForHouse,
@@ -25,6 +32,7 @@ export {
   gemMonsterTint,
   gemVariantForHouse,
   gemVariantMeta,
+  syncGemMonsterAssignment,
 };
 
 /** @deprecated */

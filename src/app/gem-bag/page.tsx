@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { GemStickerAlbum } from "@/components/gem-hunt/gem-sticker-album";
@@ -8,7 +9,8 @@ import { useCatalog } from "@/hooks/use-catalog";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
-import { catalogHasRealHouses, houseMatchesSet } from "@/lib/house-set";
+import { gemHuntMapHouses } from "@/lib/gem-monsters";
+import { catalogHasRealHouses } from "@/lib/house-set";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -18,8 +20,9 @@ export default function GemBagPage() {
   const gems = useGemProgress();
   const visible = gemHuntVisible(admin);
 
-  const mapHouses = resolveCatalogHouses(catalog).filter((house) =>
-    houseMatchesSet(house, "real"),
+  const mapHouses = useMemo(
+    () => gemHuntMapHouses(resolveCatalogHouses(catalog), "real"),
+    [catalog],
   );
 
   if (!ready) {

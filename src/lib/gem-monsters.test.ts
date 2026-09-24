@@ -4,13 +4,16 @@ import {
   GEM_MONSTER_CATALOG,
   GEM_MONSTER_MODELS,
   GEM_MONSTERS_DRAGON_ONLY,
+  buildGemMonsterAssignment,
   gemAlbumMonstersForMap,
+  gemAlbumStickerPool,
   gemFamilyForHouse,
   gemLabelHe,
   gemMonsterForHouse,
   gemMonsterTint,
   isGemAlbumMonsterCollected,
   gemVariantForHouse,
+  syncGemMonsterAssignment,
 } from "@/lib/gem-monsters";
 
 describe("gem monsters", () => {
@@ -47,16 +50,27 @@ describe("gem monsters", () => {
     assert.notEqual(a.hue, b.hue);
   });
 
-  it("album lists unique monsters on the map", () => {
-    const houses = [
-      { id: "a", theme: "ghost" as const, kind: "house" as const, lat: 0, lng: 0, address: "a" },
-      { id: "b", theme: "ghost" as const, kind: "house" as const, lat: 0, lng: 0, address: "b" },
-    ];
-    const album = gemAlbumMonstersForMap(houses as import("@/lib/types").PublicHouse[]);
-    assert.ok(album.length >= 1);
-    if (!GEM_MONSTERS_DRAGON_ONLY) {
-      const ids = new Set(album.map((m) => m.id));
-      assert.equal(ids.size, album.length);
+  it("album lists every shipped sticker, not hash-unique subset", () => {
+    const album = gemAlbumMonstersForMap([]);
+    assert.deepEqual(
+      album.map((m) => m.id),
+      gemAlbumStickerPool().map((m) => m.id),
+    );
+  });
+
+  it("assignment places every shipped model on the map when enough houses", () => {
+    if (GEM_MONSTERS_DRAGON_ONLY) return;
+    const poolLen = GEM_MONSTER_MODELS.length;
+    const houses = Array.from({ length: poolLen }, (_, i) => ({
+      id: `house-${String(i).padStart(3, "0")}`,
+      theme: "ghost" as const,
+      kind: "house" as const,
+    }));
+    const assignment = buildGemMonsterAssignment(houses);
+    const onMap = new Set(assignment.values());
+    assert.equal(onMap.size, poolLen);
+    for (const model of GEM_MONSTER_MODELS) {
+      assert.ok(onMap.has(model.id), model.id);
     }
   });
 
@@ -69,6 +83,7 @@ describe("gem monsters", () => {
       lng: 0,
       address: "x",
     };
+    syncGemMonsterAssignment([house]);
     const monster = gemMonsterForHouse(house);
     const map = new Map([[house.id, house]]);
     assert.equal(

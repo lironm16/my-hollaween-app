@@ -1,3 +1,4 @@
+import { houseMatchesSet, type HouseSet } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
 import shippedMonsterIds from "@/lib/gem-monsters-shipped.json";
 
@@ -163,15 +164,69 @@ function hashHouseId(id: string) {
   return h >>> 0;
 }
 
+function hashMonsterForHouse(houseId: string): GemMonsterId {
+  const pool = GEM_MONSTER_MODELS;
+  const idx = hashHouseId(houseId) % pool.length;
+  return pool[idx]!.id;
+}
+
+/** Houses that can hide a gem on the map (real mode drops rehearsal stubs). */
+export function gemHuntMapHouses(houses: PublicHouse[], houseSet: HouseSet = "real") {
+  return houses.filter((house) => houseMatchesSet(house, houseSet));
+}
+
+/**
+ * One monster per map house — first `pool.length` houses (by id) each get a unique pet,
+ * then hash for extras. When there are at least as many houses as shipped GLBs, every sticker appears.
+ */
+export function buildGemMonsterAssignment(
+  mapHouses: readonly Pick<PublicHouse, "id" | "theme" | "kind">[],
+): ReadonlyMap<string, GemMonsterId> {
+  if (GEM_MONSTERS_DRAGON_ONLY) {
+    const only = GEM_MONSTER_MODELS[0]!.id;
+    return new Map(mapHouses.map((house) => [house.id, only]));
+  }
+  const pool = GEM_MONSTER_MODELS;
+  const sorted = [...mapHouses].sort((a, b) => a.id.localeCompare(b.id, "he"));
+  const out = new Map<string, GemMonsterId>();
+  for (let i = 0; i < sorted.length; i += 1) {
+    const house = sorted[i]!;
+    void house.theme;
+    void house.kind;
+    out.set(
+      house.id,
+      i < pool.length ? pool[i]!.id : hashMonsterForHouse(house.id),
+    );
+  }
+  return out;
+}
+
+let activeAssignment: ReadonlyMap<string, GemMonsterId> | null = null;
+let activeAssignmentKey = "";
+
+/** Keep map + album + collect in sync — call when the gem-eligible house list changes. */
+export function syncGemMonsterAssignment(
+  mapHouses: readonly Pick<PublicHouse, "id" | "theme" | "kind">[],
+) {
+  const key = mapHouses
+    .map((house) => house.id)
+    .sort((a, b) => a.localeCompare(b, "he"))
+    .join("\0");
+  if (key === activeAssignmentKey && activeAssignment) return activeAssignment;
+  activeAssignment = buildGemMonsterAssignment(mapHouses);
+  activeAssignmentKey = key;
+  return activeAssignment;
+}
+
 export function gemMonsterForHouse(house: Pick<PublicHouse, "id" | "theme" | "kind">): GemMonsterId {
   if (GEM_MONSTERS_DRAGON_ONLY) {
     return GEM_MONSTER_MODELS[0]!.id;
   }
   void house.theme;
   void house.kind;
-  const pool = GEM_MONSTER_MODELS;
-  const idx = hashHouseId(house.id) % pool.length;
-  return pool[idx]!.id;
+  const assigned = activeAssignment?.get(house.id);
+  if (assigned) return assigned;
+  return hashMonsterForHouse(house.id);
 }
 
 export function gemMonsterMeta(monsterId: GemMonsterId) {
@@ -202,17 +257,18 @@ export function gemSpeciesLabelHe(variantOrMonsterId: string) {
   return meta ? meta.labelHe : DEFAULT_MONSTER.labelHe;
 }
 
-export function countGemEligibleHouses(houses: PublicHouse[]) {
-  return houses.length;
+export function countGemEligibleHouses(houses: PublicHouse[], houseSet: HouseSet = "real") {
+  return gemHuntMapHouses(houses, houseSet).length;
 }
 
-/** Unique gem types that actually appear on the map (stable catalog order). */
-export function gemAlbumMonstersForMap(houses: PublicHouse[]): GemCatalogEntry[] {
-  const onMap = new Set<GemMonsterId>();
-  for (const house of houses) {
-    onMap.add(gemMonsterForHouse(house));
-  }
-  return GEM_MONSTER_MODELS.filter((m) => onMap.has(m.id));
+/** All shipped sticker slots (not deduped by hash collisions on the map). */
+export function gemAlbumStickerPool(): readonly GemCatalogEntry[] {
+  return GEM_MONSTER_MODELS;
+}
+
+/** @deprecated Use gemAlbumStickerPool — album shows every shipped GLB, not hash-unique subset. */
+export function gemAlbumMonstersForMap(_houses: PublicHouse[]): GemCatalogEntry[] {
+  return [...gemAlbumStickerPool()];
 }
 
 export type GemCollectionStamp = { houseId: string; gemType: string; collectedAt: number };
