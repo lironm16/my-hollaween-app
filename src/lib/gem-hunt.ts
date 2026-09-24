@@ -1,3 +1,4 @@
+import { getGemAnchorOverride } from "@/lib/gem-anchor-overrides";
 import { distanceMeters } from "@/lib/geo";
 import type { GemFamily, GemMonsterId } from "@/lib/gem-monsters";
 import {
@@ -52,7 +53,14 @@ export const GEM_COLLECT_ANIMATION_MS = 4000;
 
 export type GemProximity = "far" | "approach" | "hunt" | "collected";
 
-export type GemAnchor = { lat: number; lng: number; bearingFromHouseDeg: number; offsetM: number };
+export type GemAnchor = {
+  lat: number;
+  lng: number;
+  bearingFromHouseDeg: number;
+  offsetM: number;
+  /** Set by admin on-site calibration (this device’s localStorage). */
+  calibrated?: boolean;
+};
 
 function hashHouseSeed(id: string, seed: string) {
   let h = 2166136261;
@@ -93,12 +101,24 @@ export function destinationPoint(
  * the hunt means “at the building / entrance zone”, not at window height.
  */
 export function gemAnchorForHouse(house: Pick<PublicHouse, "id" | "lat" | "lng">): GemAnchor {
+  const override = getGemAnchorOverride(house.id);
+  if (override) {
+    const bearingFromHouseDeg = bearingDegrees(house, override);
+    const offsetM = distanceMeters(house, override);
+    return {
+      lat: override.lat,
+      lng: override.lng,
+      bearingFromHouseDeg,
+      offsetM,
+      calibrated: true,
+    };
+  }
   const h = hashHouseSeed(house.id, "gem-anchor-v1");
   const bearingFromHouseDeg = h % 360;
   const span = GEM_ANCHOR_MAX_METERS - GEM_ANCHOR_MIN_METERS;
   const offsetM = GEM_ANCHOR_MIN_METERS + ((h >>> 8) % 1000) / (1000 / span);
   const point = destinationPoint(house, bearingFromHouseDeg, offsetM);
-  return { ...point, bearingFromHouseDeg, offsetM };
+  return { ...point, bearingFromHouseDeg, offsetM, calibrated: false };
 }
 
 export type GemScreenPlacement = {

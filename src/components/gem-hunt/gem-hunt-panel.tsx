@@ -10,6 +10,7 @@ import { useStandingStill } from "@/hooks/use-standing-still";
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import {
   canCollectGem,
+  gemAnchorForHouse,
   gemProximity,
   gemLabelHe,
   gemMonsterForHouse,
@@ -21,6 +22,11 @@ import { distanceMeters, formatDistance } from "@/lib/geo";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
 import { prepareGemHuntSensors } from "@/lib/gem-hunt-sensors";
+import {
+  clearGemAnchorOverride,
+  setGemAnchorOverride,
+} from "@/lib/gem-anchor-overrides";
+import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { cn } from "@/lib/utils";
 
 export function GemHuntPanel({
@@ -35,6 +41,7 @@ export function GemHuntPanel({
   adminSimulateInRange?: boolean;
 }) {
   const gems = useGemProgress();
+  const { overrides: anchorOverrideMap } = useGemAnchorOverrides();
   const [huntOpen, setHuntOpen] = useState(false);
   const [cheer, setCheer] = useState(false);
   const [simulate, setSimulate] = useState(adminSimulateInRange);
@@ -53,6 +60,8 @@ export function GemHuntPanel({
 
   const canCollect = canCollectGem(userLocation, house, collected, standingStill, simulate);
   const monsterLabel = gemLabelHe(gemMonsterForHouse(house));
+  const anchor = gemAnchorForHouse(house);
+  const anchorCalibrated = Boolean(anchorOverrideMap[house.id]) || anchor.calibrated === true;
 
   const openCamera = useCallback(async () => {
     await prepareGemHuntSensors();
@@ -103,6 +112,41 @@ export function GemHuntPanel({
               />
               סימולציה: בטווח (מנהל)
             </label>
+            <div className="gem-hunt-panel__calibrate">
+              <p className="gem-hunt-panel__calibrate-title">
+                {anchorCalibrated ? "מיקום אוצר: מותאם בטלפון" : "מיקום אוצר: אוטומטי ליד הבית"}
+              </p>
+              <p className="gem-hunt-panel__calibrate-hint">
+                הלכו physically למקום הרצוי (לובי, חצר, ליד הדלת), עמדו שם, ואז:
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full border-amber-400/40 text-amber-100"
+                disabled={!userLocation}
+                onClick={() => userLocation && setGemAnchorOverride(house.id, userLocation)}
+              >
+                <MapPin className="size-3.5" aria-hidden />
+                קבע מיקום אוצר כאן (GPS)
+              </Button>
+              {anchorCalibrated ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-violet-300"
+                  onClick={() => clearGemAnchorOverride(house.id)}
+                >
+                  איפוס — חזרה למיקום אוטומטי
+                </Button>
+              ) : null}
+              {userLocation && anchorCalibrated ? (
+                <p className="gem-hunt-panel__calibrate-dist" dir="ltr">
+                  אתם ~{Math.round(distanceMeters(userLocation, anchor))}m מהנקודה שנשמרה
+                </p>
+              ) : null}
+            </div>
           </div>
         ) : null}
 
