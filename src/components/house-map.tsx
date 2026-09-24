@@ -460,15 +460,9 @@ function ClusterMarker({
   const now = new Date(tick * 15_000);
   const closingSoon = cluster.houses.some((house) => isClosingSoon(house, now));
   const openingSoon = !closingSoon && cluster.houses.some((house) => isOpeningSoon(house, now));
-  const visitedKey = cluster.houses.map((house) => (visitedIds.includes(house.id) ? "1" : "0")).join("");
-  const skippedKey = cluster.houses.map((house) => (skippedIds?.has(house.id) ? "1" : "0")).join("");
-  const statusKey = clusterBadgeHouses(cluster.houses)
-    .map((house) => pinVisitKind(house, now) ?? candyPinDot(house) ?? "x")
-    .join("");
-
   return (
     <Marker
-      key={`${cluster.key}-${routeOrder ?? 0}-${visitedKey}-${skippedKey}-${statusKey}`}
+      key={cluster.key}
       position={[cluster.lat, cluster.lng]}
       icon={clusterIcon(
         cluster,

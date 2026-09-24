@@ -13,7 +13,7 @@ import { AppHeader } from "@/components/app-header";
 import { CatalogMetaChip } from "@/components/catalog-meta-chip";
 import { FiltersSheet } from "@/components/filter-menu";
 import { HouseFiltersContent } from "@/components/house-filters-content";
-import { HouseMapDynamic, MapShell } from "@/components/house-map-dynamic";
+import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseList } from "@/components/house-list";
 import { MapStats, StatsSummary } from "@/components/map-stats";
 import { MapHouseSheet } from "@/components/map-house-sheet";
@@ -69,11 +69,7 @@ import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useDistanceOrigin } from "@/hooks/use-distance-origin";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { useMapListUiLock } from "@/hooks/use-map-list-ui-lock";
-import {
-  isMapListOverlayCapture,
-  setMapListSuspended,
-  subscribeMapListSuspend,
-} from "@/lib/map-list-suspend";
+import { setMapListSuspended } from "@/lib/map-list-suspend";
 import { config } from "@/lib/config";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { useAppNow } from "@/hooks/use-app-clock";
@@ -806,41 +802,9 @@ export function NeighborhoodApp({
     ],
   );
 
-  /** Full-screen overlays — unmount Leaflet instead of updating tiles/markers underneath. */
-  const mapEngineOff = useMemo(
-    () =>
-      Boolean(
-        mapGemHouse ||
-          filtersOpen ||
-          routeAlerts.sheetOpen ||
-          originPick.originPickerOpen ||
-          skipDialogHouse ||
-          visitSkipConflict ||
-          gemResetHouse ||
-          editFlow.flow,
-      ),
-    [
-      mapGemHouse,
-      filtersOpen,
-      routeAlerts.sheetOpen,
-      originPick.originPickerOpen,
-      skipDialogHouse,
-      visitSkipConflict,
-      gemResetHouse,
-      editFlow.flow,
-    ],
-  );
-
   useLayoutEffect(() => {
     setMapListSuspended(mapListObscured);
   }, [mapListObscured]);
-
-  const mapOverlayCapture = useSyncExternalStore(
-    subscribeMapListSuspend,
-    isMapListOverlayCapture,
-    () => false,
-  );
-  const mapEngineHidden = mapEngineOff || mapOverlayCapture;
 
   const selectedFilterReasons = selected
     ? (() => {
@@ -1010,9 +974,6 @@ export function NeighborhoodApp({
           {view === "map" ? (
             <>
               <div className="map-stage absolute inset-0 z-0 isolate" style={{ position: "absolute", inset: 0 }}>
-                {mapEngineHidden ? (
-                  <MapShell />
-                ) : (
                 <HouseMapDynamic
                   houses={mapHouses}
                   matchedIds={matchedIds}
@@ -1061,7 +1022,6 @@ export function NeighborhoodApp({
                   gemFabDisabled={gemFabDisabled}
                   gemCollectedCount={mapGemBadgeCount}
                 />
-                )}
                 {originPick.originPickActive ? (
                   <div className="origin-pick-bar">
                     <p className="origin-pick-label">{originPick.originDraftLabel}</p>

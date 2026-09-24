@@ -28,11 +28,7 @@ import {
   withDeviceHouseOverlays,
 } from "@/lib/offline-db";
 import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
-import {
-  catalogCacheIncomplete,
-  catalogNeedsFullRefresh,
-  resolveServerHouseCount,
-} from "@/lib/catalog-houses";
+import { catalogNeedsFullRefresh, resolveServerHouseCount } from "@/lib/catalog-houses";
 import { catalogHasRealHouses } from "@/lib/house-set";
 import { isMapListSuspended, subscribeMapListSuspend } from "@/lib/map-list-suspend";
 
@@ -80,6 +76,7 @@ function applyCatalogResponse(prev: Catalog | null, live: CatalogDelta): Catalog
   if (live.houses.length || live.removed?.length || live.pushTemplates) {
     return mergeCatalogDelta(prev, live);
   }
+  if (prev.updatedAt === live.updatedAt) return prev;
   return { ...prev, updatedAt: live.updatedAt };
 }
 
@@ -181,22 +178,6 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     return next;
   }, []);
 
-  /** Banner only when the live API failed and the on-device list may be stale (not every delta blip). */
-  const markReachabilityAfterFetchFailure = useCallback((online: boolean) => {
-    if (!online) {
-      setUnreachable(false);
-      return;
-    }
-    if (readServerSimDown()) {
-      setUnreachable(true);
-      return;
-    }
-    const cat = catalogRef.current;
-    const stale = !cat || !catalogHasRealHouses(cat) ||
-      catalogCacheIncomplete(cat, loadCatalogCacheMeta(), resolveServerHouseCount(cat));
-    setUnreachable(stale);
-  }, []);
-
   const seedCatalog = useCallback((initial: Catalog) => {
     if (seededRef.current) return;
     seededRef.current = true;
@@ -212,15 +193,24 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       pollSecondsRef.current = live.pollSeconds;
       setPollSeconds(live.pollSeconds);
     }
-    if (isEmptyDelta(live, catalogRef.current)) {
+    const prev = catalogRef.current;
+    if (isEmptyDelta(live, prev)) {
       emptyDeltaStreakRef.current += 1;
-    } else {
-      emptyDeltaStreakRef.current = 0;
+      if (!isMapListSuspended()) {
+        setUnreachable(false);
+        setError(null);
+      }
+      return prev;
     }
+    emptyDeltaStreakRef.current = 0;
     let next!: Catalog;
-    setCatalog((prev) => {
-      next = withDeviceHouseOverlays(applyCatalogResponse(prev, live));
-      return publishCatalog(next, prev) ?? next;
+    setCatalog((cur) => {
+      const merged = withDeviceHouseOverlays(applyCatalogResponse(cur, live));
+      next = merged === cur ? cur : merged;
+      if (next === cur) return cur;
+      const published = publishCatalog(next, cur);
+      next = published ?? next;
+      return next;
     });
     if (isMapListSuspended()) return next;
     setSource("network");
@@ -291,7 +281,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         ) {
           return;
         }
-      } catch {
+      } catch (err) {
+        console.warn("[catalog] delta poll failed", err);
         const cached = await readDeviceCatalog();
         if (cached) {
           setCatalog((prev) => {
@@ -300,7 +291,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           });
           if (isMapListSuspended()) return;
           setSource("cache");
-          markReachabilityAfterFetchFailure(online);
+          setUnreachable(online);
           setError(null);
           return;
         }
@@ -363,12 +354,12 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         });
         if (kept && !isMapListSuspended()) {
           setSource("cache");
-          markReachabilityAfterFetchFailure(online);
+          setUnreachable(online);
           setError(null);
           return;
         }
         if (isMapListSuspended()) return;
-        markReachabilityAfterFetchFailure(online);
+        setUnreachable(online);
         setError(
           online
             ? "השרת לא עונה, ואין עותק שמור בטלפון. נסו שוב כשיש קליטה."
@@ -376,7 +367,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         );
       }
     }
-  }, [applyLiveResponse, markReachabilityAfterFetchFailure]);
+  }, [applyLiveResponse]);
 
   useEffect(() => {
     return subscribeMapListSuspend(() => {
