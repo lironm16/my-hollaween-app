@@ -184,16 +184,22 @@ export function gemMonsterTint(houseId: string) {
   return { hue, saturation: 0.35, lightness: 0.08 };
 }
 
+type GemCatalogEntry = (typeof GEM_MONSTER_CATALOG)[number];
+
+function findMonsterEntry(id: string): GemCatalogEntry | undefined {
+  return GEM_MONSTER_CATALOG.find((m) => m.id === id);
+}
+
 /** Cute display name (e.g. «עכי העכביש»). */
 export function gemLabelHe(variantOrMonsterId: string) {
-  const meta = GEM_MONSTER_CATALOG.find((m) => m.id === variantOrMonsterId);
-  return meta?.petNameHe ?? meta?.labelHe ?? DEFAULT_MONSTER.petNameHe;
+  const meta = findMonsterEntry(variantOrMonsterId);
+  return meta ? meta.petNameHe : DEFAULT_MONSTER.petNameHe;
 }
 
 /** Short species label when needed. */
 export function gemSpeciesLabelHe(variantOrMonsterId: string) {
-  const meta = GEM_MONSTER_CATALOG.find((m) => m.id === variantOrMonsterId);
-  return meta?.labelHe ?? DEFAULT_MONSTER.labelHe;
+  const meta = findMonsterEntry(variantOrMonsterId);
+  return meta ? meta.labelHe : DEFAULT_MONSTER.labelHe;
 }
 
 export function countGemEligibleHouses(houses: PublicHouse[]) {
