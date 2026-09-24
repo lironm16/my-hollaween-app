@@ -3,7 +3,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { Camera, Gem, MapPin } from "lucide-react";
 import { GemCheer } from "@/components/gem-cheer";
-import { GemHuntOverlay } from "@/components/gem-hunt/gem-hunt-overlay";
+import { GemHuntOverlayLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { Button } from "@/components/ui/button";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
@@ -181,7 +181,7 @@ export function GemHuntPanel({
       </section>
 
       {huntOpen ? (
-        <GemHuntOverlay
+        <GemHuntOverlayLazy
           house={house}
           userLocation={userLocation}
           simulateInRange={simulate}

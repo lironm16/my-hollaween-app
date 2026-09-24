@@ -57,4 +57,4 @@ for (const src of glbs) {
 }
 
 if (copied === 0) process.exit(1);
-console.log(`\nCopied ${copied} file(s). Next: wire ids in src/lib/gem-monsters.ts and run npm run gem-monster-posters`);
+console.log(`\nCopied ${copied} file(s). Next: npm run gem-monster-posters (and commit public/gem-monsters + gem-monsters-shipped.json)`);

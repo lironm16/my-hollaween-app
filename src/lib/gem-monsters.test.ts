@@ -12,11 +12,14 @@ import {
 } from "@/lib/gem-monsters";
 
 describe("gem monsters", () => {
-  it("ships dragon only until full pet GLBs are on GitHub", () => {
-    assert.equal(GEM_MONSTERS_DRAGON_ONLY, true);
-    assert.equal(GEM_MONSTER_MODELS.length, 1);
-    assert.equal(GEM_MONSTER_MODELS[0]!.id, "dragon");
+  it("catalog lists all pets; runtime pool follows shipped GLBs manifest", () => {
     assert.equal(GEM_MONSTER_CATALOG.length, 19);
+    assert.ok(GEM_MONSTER_MODELS.length >= 1);
+    if (GEM_MONSTERS_DRAGON_ONLY) {
+      assert.equal(GEM_MONSTER_MODELS.length, 1);
+    } else {
+      assert.ok(GEM_MONSTER_MODELS.length > 1);
+    }
   });
 
   it("assigns dragon for every house while in dragon-only mode", () => {

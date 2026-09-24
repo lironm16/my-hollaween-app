@@ -342,6 +342,24 @@ export function NeighborhoodApp({
   }, [gemResetHouse, gems]);
   const editFlow = useHouseEditFlow();
 
+  /** Load gem hunt UI after the sheet paints — keeps house detail snappy. */
+  const [gemPanelReady, setGemPanelReady] = useState(false);
+  useEffect(() => {
+    if (!selection.selected || !gemHuntFabVisible(admin, now)) {
+      setGemPanelReady(false);
+      return;
+    }
+    setGemPanelReady(false);
+    const run = () => setGemPanelReady(true);
+    const idle = window.requestIdleCallback;
+    if (typeof idle === "function") {
+      const id = idle(run, { timeout: 1200 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const t = window.setTimeout(run, 350);
+    return () => window.clearTimeout(t);
+  }, [selection.selected?.id, admin, now]);
+
   const ownedEditCode = useMemo(() => {
     if (!selection.editHouseId) return undefined;
     return owned.find((item) => item.id === selection.editHouseId)?.editCode;
@@ -837,9 +855,10 @@ export function NeighborhoodApp({
         skippedIds: skips.skipped,
         filteredOutIds: (id: string) => filterDimActive && !matchedIds.has(id),
         onAdjacentClusterHouse: selection.selectAdjacentClusterHouse,
-        extra: gemHuntFabVisible(admin, now) ? (
-          <GemHuntPanelLazy house={selected} userLocation={gps} isAdmin={admin} />
-        ) : undefined,
+        extra:
+          gemHuntFabVisible(admin, now) && gemPanelReady ? (
+            <GemHuntPanelLazy house={selected} userLocation={gps} isAdmin={admin} />
+          ) : undefined,
       }
     : null;
 

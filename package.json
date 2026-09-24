@@ -1,11 +1,11 @@
 {
   "name": "halloween-neighborhood",
-  "version": "0.1.151",
+  "version": "0.1.152",
   "private": true,
   "scripts": {
     "dev": "node scripts/allow-preview-origin.mjs && node scripts/build-css.mjs && next dev --webpack --hostname 0.0.0.0 --port 43127",
     "postinstall": "node scripts/allow-preview-origin.mjs && node scripts/ensure-git-author.mjs",
-    "build": "node scripts/build-css.mjs && node scripts/sync-sw-version.mjs && node scripts/build-catalog.mjs && node scripts/render-gem-monster-posters.mjs && next build",
+    "build": "node scripts/build-css.mjs && node scripts/sync-sw-version.mjs && node scripts/build-catalog.mjs && node scripts/write-gem-monsters-shipped.mjs && node scripts/render-gem-monster-posters.mjs && next build",
     "start": "next start --hostname 0.0.0.0 --port 43127",
     "lint": "eslint",
     "test": "npm run test:unit",
@@ -20,7 +20,7 @@
     "poi-pin-icons": "python3 scripts/extract-badge-glyphs.py",
     "app-icons": "node scripts/generate-app-icons.mjs",
     "gem-monster-posters": "node scripts/render-gem-monster-posters.mjs",
-    "gem-monsters:ingest": "node scripts/ingest-akochan-pets.mjs",
+    "gem-monsters:ingest": "node scripts/ingest-akochan-pets.mjs && node scripts/write-gem-monsters-shipped.mjs",
     "gem-monsters:split": "node scripts/split-combined-gem-glb.mjs",
     "stress": "node scripts/stress-test.mjs",
     "migrate:firestore": "node scripts/migrate-to-firestore.mjs",

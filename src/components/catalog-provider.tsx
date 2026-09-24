@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -447,18 +448,32 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     };
   }, [refresh]);
 
-  const value: CatalogContextValue = {
-    catalog,
-    loading,
-    ready,
-    offline,
-    unreachable,
-    error,
-    source,
-    pollSeconds,
-    refresh,
-    seedCatalog,
-  };
+  const value: CatalogContextValue = useMemo(
+    () => ({
+      catalog,
+      loading,
+      ready,
+      offline,
+      unreachable,
+      error,
+      source,
+      pollSeconds,
+      refresh,
+      seedCatalog,
+    }),
+    [
+      catalog,
+      loading,
+      ready,
+      offline,
+      unreachable,
+      error,
+      source,
+      pollSeconds,
+      refresh,
+      seedCatalog,
+    ],
+  );
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }
