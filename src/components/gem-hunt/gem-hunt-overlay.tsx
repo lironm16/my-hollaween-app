@@ -10,6 +10,7 @@ import {
   facingHouse,
   GEM_FACING_TOLERANCE_DEG,
   GEM_HELP_AFTER_SECONDS,
+  GEM_HUNT_METERS,
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
   GEM_COLLECT_ANIMATION_MS,
@@ -17,6 +18,7 @@ import {
   gemMonsterForHouse,
   type GemMonsterId,
 } from "@/lib/gem-hunt";
+import { distanceMeters, formatDistance } from "@/lib/geo";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
 import { cn } from "@/lib/utils";
@@ -50,6 +52,8 @@ export function GemHuntOverlay({
   /** Only auto-reveal from scan/pan/facing when user can collect (or admin simulate). */
   const allowAutoReveal = collectEnabled || sim;
   const monsterId = gemMonsterForHouse(house);
+  const distanceM =
+    userLocation != null && !sim ? distanceMeters(userLocation, house) : null;
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -205,7 +209,16 @@ export function GemHuntOverlay({
       <header className="gem-hunt-overlay__header">
         <div className="min-w-0 flex-1">
           {!collectEnabled ? (
-            <p className="gem-hunt-overlay__badge">חיפוש — התקרבו לבית (~25מ׳) כדי לאסוף</p>
+            <p className="gem-hunt-overlay__badge">
+              חיפוש — התקרבו לבית (~{GEM_HUNT_METERS}מ׳) כדי שהאוצר יופיע
+              {distanceM != null
+                ? userLocation!.accuracy > GEM_HUNT_METERS * 2
+                  ? " · GPS לא מדויק — התקרבו פיזית"
+                  : ` · עכשיו ~${formatDistance(distanceM)}`
+                : userLocation == null
+                  ? " · ממתינים ל-GPS"
+                  : null}
+            </p>
           ) : sim ? (
             <p className="gem-hunt-overlay__badge">סימולציה: בטווח</p>
           ) : null}

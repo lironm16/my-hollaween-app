@@ -59,15 +59,33 @@ export function canCollectGem(
   return inRange && (standingStill || simulateInRange);
 }
 
+/** Pessimistic hunt band — avoids treating a wild GPS jump as “at the house”. */
+export function withinGemHuntMeters(
+  user: { lat: number; lng: number; accuracy?: number },
+  house: Pick<PublicHouse, "lat" | "lng">,
+) {
+  const d = distanceMeters(user, house);
+  if (d > GEM_HUNT_METERS) return false;
+  const acc = user.accuracy;
+  if (acc == null || !Number.isFinite(acc) || acc <= 0) return true;
+  const slack = 18;
+  return d + Math.min(acc, 120) <= GEM_HUNT_METERS + slack;
+}
+
 export function gemProximity(
-  user: { lat: number; lng: number } | null,
+  user: { lat: number; lng: number; accuracy?: number } | null,
   house: Pick<PublicHouse, "lat" | "lng">,
   collected: boolean,
 ): GemProximity {
   if (collected) return "collected";
   if (!user) return "far";
   const d = distanceMeters(user, house);
-  if (d <= GEM_HUNT_METERS) return "hunt";
+  if (withinGemHuntMeters(user, house)) return "hunt";
+  if (d <= GEM_HUNT_METERS) {
+    const acc = user.accuracy;
+    if (acc != null && Number.isFinite(acc) && acc > GEM_APPROACH_METERS) return "far";
+    return "approach";
+  }
   if (d <= GEM_APPROACH_METERS) return "approach";
   return "far";
 }
