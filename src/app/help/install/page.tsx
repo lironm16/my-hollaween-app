@@ -59,14 +59,14 @@ function PlatformSteps({
 function AndroidInstallSection() {
   return (
     <div className="space-y-4">
+      <PwaInstallButton variant="prominent" showAlways forceVisible />
       <p className="text-base leading-relaxed text-violet-200/90">
         <HelpText>
           {
-            "ב-Chrome לחצו על כפתור <<התקנת האפליקציה>> בראש המסך (סמל ההורדה ליד תפריט ☰), או על הכפתור כאן:"
+            "ב-Chrome באנדרואיד אפשר גם ללחוץ על סמל ההורדה (↓) בראש המסך, ליד תפריט ☰ — ראו שלב 1 למטה."
           }
         </HelpText>
       </p>
-      <PwaInstallButton variant="prominent" showAlways forceVisible />
       <PlatformSteps steps={ANDROID_STEPS} />
     </div>
   );
