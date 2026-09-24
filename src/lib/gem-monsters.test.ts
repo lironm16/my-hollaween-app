@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  GEM_MONSTER_CATALOG,
   GEM_MONSTER_MODELS,
+  GEM_MONSTERS_DRAGON_ONLY,
   gemFamilyForHouse,
   gemLabelHe,
   gemMonsterForHouse,
@@ -9,30 +11,27 @@ import {
   gemVariantForHouse,
 } from "@/lib/gem-monsters";
 
-describe("gem monsters (dragon + Akochan pets)", () => {
-  it("has 19 assignable models including dragon", () => {
-    assert.equal(GEM_MONSTER_MODELS.length, 19);
-    assert.ok(GEM_MONSTER_MODELS.some((m) => m.id === "dragon"));
+describe("gem monsters", () => {
+  it("ships dragon only until full pet GLBs are on GitHub", () => {
+    assert.equal(GEM_MONSTERS_DRAGON_ONLY, true);
+    assert.equal(GEM_MONSTER_MODELS.length, 1);
+    assert.equal(GEM_MONSTER_MODELS[0]!.id, "dragon");
+    assert.equal(GEM_MONSTER_CATALOG.length, 19);
   });
 
-  it("assigns a stable pet per house id", () => {
+  it("assigns dragon for every house while in dragon-only mode", () => {
     const house = { id: "house-abc", theme: "ghost" as const, kind: "house" as const };
-    const first = gemMonsterForHouse(house);
-    assert.ok(GEM_MONSTER_MODELS.some((m) => m.id === first));
-    assert.equal(gemMonsterForHouse(house), first);
-    assert.equal(gemVariantForHouse(house), first);
+    assert.equal(gemMonsterForHouse(house), "dragon");
+    assert.equal(gemVariantForHouse(house), "dragon");
     assert.equal(gemFamilyForHouse(house), "monster");
-  });
-
-  it("includes POIs in the gem pool", () => {
-    const poi = { id: "poi-cafe", theme: "candy" as const, kind: "poi" as const };
-    assert.ok(GEM_MONSTER_MODELS.some((m) => m.id === gemMonsterForHouse(poi)));
+    const other = { id: "house-xyz", theme: "vampire" as const, kind: "house" as const };
+    assert.equal(gemMonsterForHouse(other), "dragon");
   });
 
   it("labels pets in Hebrew", () => {
     assert.equal(gemLabelHe("dragon"), "דרקון חמוד");
     assert.equal(gemLabelHe("pumpkin"), "דלעת");
-    assert.equal(gemLabelHe("unknown-id"), GEM_MONSTER_MODELS[0]!.labelHe);
+    assert.equal(gemLabelHe("unknown-id"), "דרקון חמוד");
   });
 
   it("tints by house id", () => {

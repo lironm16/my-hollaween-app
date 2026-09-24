@@ -57,12 +57,12 @@ describe("gem hunt geo", () => {
     assert.ok(Math.abs(place!.xPercent - 50) < 8);
   });
 
-  it("maps each house to a stable Akochan pet", () => {
+  it("maps each house to a gem monster id", () => {
     assert.equal(gemFamilyForHouse({ id: "g1", theme: "ghost", kind: "house" }), "monster");
     const a = gemVariantForHouse({ id: "v1", theme: "vampire", kind: "house" });
     const b = gemVariantForHouse({ id: "v1", theme: "vampire", kind: "house" });
     assert.equal(a, b);
-    assert.notEqual(a, "");
+    assert.equal(a, "dragon");
   });
 
   it("detects facing within tolerance", () => {

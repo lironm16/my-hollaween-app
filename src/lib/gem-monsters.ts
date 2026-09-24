@@ -1,7 +1,13 @@
 import type { PublicHouse } from "@/lib/types";
 
-/** Molotov dragon + Akochan Halloween pets (19 total), one GLB each. */
-export const GEM_MONSTER_MODELS = [
+/**
+ * Set to `false` after all pet GLBs + posters are on GitHub/Vercel again.
+ * While `true`, every house uses the Molotov dragon (only asset shipped).
+ */
+export const GEM_MONSTERS_DRAGON_ONLY = true;
+
+/** Full pool (Akochan pack + dragon) — used when GEM_MONSTERS_DRAGON_ONLY is false. */
+export const GEM_MONSTER_CATALOG = [
   { id: "dragon", glbPath: "/gem-monsters/dragon.glb", posterPath: "/gem-monsters/dragon-poster.png", labelHe: "דרקון חמוד" },
   { id: "black-cat", glbPath: "/gem-monsters/black-cat.glb", posterPath: "/gem-monsters/black-cat-poster.png", labelHe: "חתול שחור" },
   { id: "candy-corn", glbPath: "/gem-monsters/candy-corn.glb", posterPath: "/gem-monsters/candy-corn-poster.png", labelHe: "תירס ממתק" },
@@ -23,9 +29,15 @@ export const GEM_MONSTER_MODELS = [
   { id: "zombie", glbPath: "/gem-monsters/zombie.glb", posterPath: "/gem-monsters/zombie-poster.png", labelHe: "זומבי" },
 ] as const;
 
-export type GemMonsterId = (typeof GEM_MONSTER_MODELS)[number]["id"];
+export type GemMonsterId = (typeof GEM_MONSTER_CATALOG)[number]["id"];
 
-const DEFAULT_MONSTER = GEM_MONSTER_MODELS[0]!;
+export const GEM_MONSTER_MODELS = (
+  GEM_MONSTERS_DRAGON_ONLY
+    ? GEM_MONSTER_CATALOG.filter((m) => m.id === "dragon")
+    : [...GEM_MONSTER_CATALOG]
+) as readonly (typeof GEM_MONSTER_CATALOG)[number][];
+
+const DEFAULT_MONSTER = GEM_MONSTER_CATALOG[0]!;
 
 function hashHouseId(id: string) {
   let h = 2166136261;
@@ -36,16 +48,16 @@ function hashHouseId(id: string) {
   return h >>> 0;
 }
 
-/** Stable monster per house (dragon + 18 pets). */
 export function gemMonsterForHouse(house: Pick<PublicHouse, "id" | "theme" | "kind">): GemMonsterId {
+  if (GEM_MONSTERS_DRAGON_ONLY) return "dragon";
   void house.theme;
   void house.kind;
-  const idx = hashHouseId(house.id) % GEM_MONSTER_MODELS.length;
-  return GEM_MONSTER_MODELS[idx]!.id;
+  const idx = hashHouseId(house.id) % GEM_MONSTER_CATALOG.length;
+  return GEM_MONSTER_CATALOG[idx]!.id;
 }
 
 export function gemMonsterMeta(monsterId: GemMonsterId) {
-  return GEM_MONSTER_MODELS.find((m) => m.id === monsterId) ?? DEFAULT_MONSTER;
+  return GEM_MONSTER_CATALOG.find((m) => m.id === monsterId) ?? DEFAULT_MONSTER;
 }
 
 /** Slight per-house hue so repeats feel a bit different on the bag map. */
@@ -55,7 +67,7 @@ export function gemMonsterTint(houseId: string) {
 }
 
 export function gemLabelHe(variantOrMonsterId: string) {
-  const meta = GEM_MONSTER_MODELS.find((m) => m.id === variantOrMonsterId);
+  const meta = GEM_MONSTER_CATALOG.find((m) => m.id === variantOrMonsterId);
   return meta?.labelHe ?? DEFAULT_MONSTER.labelHe;
 }
 
