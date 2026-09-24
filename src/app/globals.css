@@ -3505,13 +3505,26 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   height: 2.4rem;
 }
 .gem-sprite--poster {
-  filter: drop-shadow(0 8px 12px rgb(0 0 0 / 0.45));
+  overflow: hidden;
+  border-radius: 0.85rem;
+  border: 1px solid rgb(251 191 36 / 0.28);
+  background: radial-gradient(circle at 50% 35%, rgb(55 28 88), rgb(24 12 36));
+  box-shadow: 0 6px 14px rgb(0 0 0 / 0.35);
+}
+.gem-sprite--sm.gem-sprite--poster {
+  border-radius: 0.65rem;
 }
 .gem-sprite__poster {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: center 42%;
+  padding: 0.12rem;
   animation: gem-float 2.4s ease-in-out infinite;
+}
+.gem-sprite--sm .gem-sprite__poster {
+  padding: 0.08rem;
+  animation: none;
 }
 .gem-model-3d {
   width: 100%;
@@ -3593,7 +3606,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-bag-row {
   display: flex;
   gap: 0.75rem;
-  align-items: flex-start;
+  align-items: center;
   padding: 0.75rem 0.85rem;
   border-radius: 1rem;
   border: 1px solid rgb(139 92 246 / 0.28);
