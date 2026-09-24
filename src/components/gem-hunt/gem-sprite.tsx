@@ -16,6 +16,8 @@ export function GemSprite({
   mode = "auto",
   /** Center «גלה לי» — no spin/drag; parent button handles tap to collect. */
   tapCollect = false,
+  /** Square poster frame (map collect cheer). */
+  posterFill = false,
 }: {
   /** @deprecated use house + monster id */
   variantId?: string;
@@ -27,6 +29,7 @@ export function GemSprite({
   /** bag rows use poster; hunt uses 3d; orbit is for gem-bag studio only */
   mode?: "auto" | "3d" | "poster" | "orbit";
   tapCollect?: boolean;
+  posterFill?: boolean;
 }) {
   const id = house?.id ?? houseId ?? "default";
   const monsterId = (house ? gemMonsterForHouse(house) : "dragon") as GemMonsterId;
@@ -39,17 +42,28 @@ export function GemSprite({
         className={cn(
           "gem-sprite gem-sprite--poster",
           size === "sm" && "gem-sprite--sm",
+          posterFill && "gem-sprite--poster-fill",
           collected && "is-collected",
           className,
         )}
       >
-        <Image
-          src={meta.posterPath}
-          alt=""
-          width={size === "sm" ? 52 : 96}
-          height={size === "sm" ? 52 : 96}
-          className="gem-sprite__poster"
-        />
+        {posterFill ? (
+          <Image
+            src={meta.posterPath}
+            alt=""
+            fill
+            sizes="(max-width: 480px) 88vw, 21rem"
+            className="gem-sprite__poster"
+          />
+        ) : (
+          <Image
+            src={meta.posterPath}
+            alt=""
+            width={size === "sm" ? 52 : 96}
+            height={size === "sm" ? 52 : 96}
+            className="gem-sprite__poster"
+          />
+        )}
       </div>
     );
   }

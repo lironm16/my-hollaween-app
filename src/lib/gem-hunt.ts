@@ -48,10 +48,10 @@ export const GEM_CAMERA_HFOV_DEG = 62;
 export const GEM_ANCHOR_MIN_METERS = 2;
 export const GEM_ANCHOR_MAX_METERS = 10;
 
-/** Camera hunt burst after tap — keep in sync with gem-collect-* overlay CSS (~0.65s). */
-export const GEM_COLLECT_OVERLAY_MS = 650;
-/** Map «אוצר נאסף!» popup — animation + ~2s extra hold. */
-export const GEM_CHEER_DISPLAY_MS = 4200;
+/** Camera collect: slow grow then exit — sync gem-collect-burst CSS (~3.8s). */
+export const GEM_COLLECT_OVERLAY_MS = 3800;
+/** Map «אוצר נאסף!» full-screen cheer hold. */
+export const GEM_CHEER_DISPLAY_MS = 8500;
 /** @deprecated use GEM_COLLECT_OVERLAY_MS / GEM_CHEER_DISPLAY_MS */
 export const GEM_COLLECT_ANIMATION_MS = GEM_COLLECT_OVERLAY_MS;
 
