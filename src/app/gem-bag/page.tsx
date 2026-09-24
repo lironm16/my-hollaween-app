@@ -1,9 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Gem, MapPinned, Navigation } from "lucide-react";
+import { Suspense, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Camera, Gem, MapPinned, Navigation } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
+import { GemBagOrbitViewer } from "@/components/gem-hunt/gem-bag-orbit-viewer";
+import { GemHuntOverlay } from "@/components/gem-hunt/gem-hunt-overlay";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
+import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useGemProgress } from "@/hooks/use-gem-progress";
@@ -35,8 +40,10 @@ function formatCollectedWhen(ms: number) {
   }
 }
 
-function GemBagContent({ houses }: { houses: PublicHouse[] }) {
+function GemBagContent({ houses, isAdmin }: { houses: PublicHouse[]; isAdmin: boolean }) {
   const gems = useGemProgress();
+  const searchParams = useSearchParams();
+  const focusId = searchParams.get("house") ?? searchParams.get("focus");
   const eligible = [...houses].sort((a, b) => {
     const aCollected = gems.collected(a.id);
     const bCollected = gems.collected(b.id);
@@ -47,8 +54,48 @@ function GemBagContent({ houses }: { houses: PublicHouse[] }) {
   const housesById = new Map(eligible.map((h) => [h.id, h]));
   const collectedAt = new Map(gems.entries.map((e) => [e.houseId, e.collectedAt]));
 
+  const defaultPreview = useMemo(() => {
+    if (focusId) {
+      const focused = eligible.find((h) => h.id === focusId);
+      if (focused) return focused;
+    }
+    const collectedHouse = eligible.find((h) => gems.collected(h.id));
+    return collectedHouse ?? eligible[0] ?? null;
+  }, [eligible, focusId, gems.collectedIds]);
+
+  const [previewHouse, setPreviewHouse] = useState<PublicHouse | null>(null);
+  const [cameraLabHouse, setCameraLabHouse] = useState<PublicHouse | null>(null);
+  const viewerHouse = previewHouse ?? defaultPreview;
+
   return (
     <div className="mx-auto w-full max-w-lg space-y-5 pb-10">
+      <GemBagOrbitViewer house={viewerHouse} />
+
+      {isAdmin && viewerHouse ? (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full border-amber-400/40 text-amber-100"
+          onClick={() => setCameraLabHouse(viewerHouse)}
+        >
+          <Camera className="size-4" aria-hidden />
+          ניסיון מצלמה (מכל מקום)
+        </Button>
+      ) : null}
+
+      {cameraLabHouse ? (
+        <GemHuntOverlay
+          house={cameraLabHouse}
+          userLocation={null}
+          labMode
+          onClose={() => setCameraLabHouse(null)}
+          onCollect={(monsterId) => {
+            gems.collect(cameraLabHouse.id, monsterId);
+            setCameraLabHouse(null);
+          }}
+        />
+      ) : null}
+
       <div className="gem-bag-summary">
         <Gem className="size-8 text-amber-300" aria-hidden />
         <div>
@@ -71,9 +118,21 @@ function GemBagContent({ houses }: { houses: PublicHouse[] }) {
             return (
               <li
                 key={house.id}
-                className={cn("gem-bag-row", collected && "is-collected", !collected && "is-missing")}
+                className={cn(
+                  "gem-bag-row",
+                  collected && "is-collected",
+                  !collected && "is-missing",
+                  viewerHouse?.id === house.id && "is-preview",
+                )}
               >
-                <GemSprite house={house} mode="poster" collected={collected} size="sm" />
+                <button
+                  type="button"
+                  className="gem-bag-row__thumb"
+                  aria-label={`תצוגה תלת־ממדית — ${houseHeadline(house)}`}
+                  onClick={() => setPreviewHouse(house)}
+                >
+                  <GemSprite house={house} mode="poster" collected={collected} size="sm" />
+                </button>
                 <div className="gem-bag-row__body">
                   <p className="gem-bag-row__name">{houseHeadline(house)}</p>
                   <p className="gem-bag-row__addr">{formatDisplayAddress(house)}</p>
@@ -182,7 +241,9 @@ export default function GemBagPage() {
         {loading && houses.length === 0 ? (
           <p className="text-base text-violet-300">טוענים נתונים…</p>
         ) : (
-          <GemBagContent houses={houses} />
+          <Suspense fallback={<p className="text-base text-violet-300">טוענים…</p>}>
+            <GemBagContent houses={houses} isAdmin={admin} />
+          </Suspense>
         )}
       </main>
     </div>

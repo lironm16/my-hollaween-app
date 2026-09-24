@@ -31,15 +31,19 @@ export function GemHuntOverlay({
   house,
   userLocation,
   simulateInRange = false,
+  labMode = false,
   onClose,
   onCollect,
 }: {
   house: PublicHouse;
   userLocation: UserLocation | null;
   simulateInRange?: boolean;
+  /** Admin: skip GPS/scan — show camera + gem for testing anywhere */
+  labMode?: boolean;
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId) => void;
 }) {
+  const sim = simulateInRange || labMode;
   const monsterId = gemMonsterForHouse(house);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -72,6 +76,12 @@ export function GemHuntOverlay({
     setHint("scan");
     setShowHelp(false);
   }, [house.id]);
+
+  useEffect(() => {
+    if (!labMode) return;
+    const t = window.setTimeout(() => reveal(), 400);
+    return () => window.clearTimeout(t);
+  }, [house.id, labMode, reveal]);
 
   useEffect(() => {
     let cancelled = false;
@@ -120,9 +130,11 @@ export function GemHuntOverlay({
       setShowHelp(true);
     }
 
-    const loc = userLocation ?? (simulateInRange ? { lat: house.lat, lng: house.lng, accuracy: 5 } : null);
+    if (labMode) return;
+
+    const loc = userLocation ?? (sim ? { lat: house.lat, lng: house.lng, accuracy: 5 } : null);
     const facing =
-      simulateInRange ||
+      sim ||
       (loc != null && heading != null && facingHouse(loc, house, heading, GEM_FACING_TOLERANCE_DEG));
 
     if (facing) {
@@ -140,7 +152,7 @@ export function GemHuntOverlay({
     if (elapsedSec >= GEM_SCAN_REVEAL_SECONDS || panTotalRef.current >= GEM_SCAN_PAN_DEGREES) {
       reveal();
     }
-  }, [heading, house, phase, reveal, simulateInRange, userLocation]);
+  }, [heading, house, phase, reveal, sim, labMode, userLocation]);
 
   function handleCollect() {
     if (phase === "collecting" || phase === "done") return;
@@ -181,7 +193,11 @@ export function GemHuntOverlay({
       <div className="gem-hunt-overlay__shade" aria-hidden />
       <header className="gem-hunt-overlay__header">
         <div className="min-w-0 flex-1">
-          <p className="gem-hunt-overlay__badge">תצוגת מנהל — ציד אוצרות</p>
+          {labMode ? (
+            <p className="gem-hunt-overlay__badge">מצב ניסיון — בלי GPS</p>
+          ) : sim ? (
+            <p className="gem-hunt-overlay__badge">סימולציה: בטווח</p>
+          ) : null}
           <p className="gem-hunt-overlay__title">מחפשים {gemLabelHe(monsterId)} ליד {house.name || house.address}</p>
         </div>
         <OverlayCloseButton

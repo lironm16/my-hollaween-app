@@ -22,13 +22,13 @@ export function GemSprite({
   collected?: boolean;
   className?: string;
   size?: "sm" | "lg";
-  /** bag rows use poster; hunt uses 3d */
-  mode?: "auto" | "3d" | "poster";
+  /** bag rows use poster; hunt uses 3d; orbit is for gem-bag studio only */
+  mode?: "auto" | "3d" | "poster" | "orbit";
 }) {
   const id = house?.id ?? houseId ?? "default";
   const monsterId = (house ? gemMonsterForHouse(house) : "dragon") as GemMonsterId;
   const meta = gemMonsterMeta(monsterId);
-  const use3d = mode === "3d" || (mode === "auto" && size === "lg");
+  const use3d = mode === "3d" || mode === "orbit" || (mode === "auto" && size === "lg");
 
   if (!use3d) {
     return (
@@ -55,10 +55,11 @@ export function GemSprite({
     <GemModel3D
       monsterId={monsterId}
       houseId={id}
-      size={size}
+      size={mode === "orbit" ? "fill" : size}
       collected={collected}
       className={className}
       interactive
+      controls={mode === "orbit" ? "orbit" : "turntable"}
     />
   );
 }

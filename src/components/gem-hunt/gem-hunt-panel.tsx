@@ -34,6 +34,7 @@ export function GemHuntPanel({
   const [huntOpen, setHuntOpen] = useState(false);
   const [cheer, setCheer] = useState(false);
   const [simulate, setSimulate] = useState(adminSimulateInRange);
+  const [labOpen, setLabOpen] = useState(false);
 
   const visible = gemHuntVisible(isAdmin);
   const collected = gems.collected(house.id);
@@ -88,14 +89,25 @@ export function GemHuntPanel({
         </div>
 
         {isAdmin ? (
-          <label className="gem-hunt-panel__simulate">
-            <input
-              type="checkbox"
-              checked={simulate}
-              onChange={(e) => setSimulate(e.target.checked)}
-            />
-            סימולציה: בטווח (מנהל)
-          </label>
+          <div className="gem-hunt-panel__admin-tools">
+            <label className="gem-hunt-panel__simulate">
+              <input
+                type="checkbox"
+                checked={simulate}
+                onChange={(e) => setSimulate(e.target.checked)}
+              />
+              סימולציה: בטווח (מנהל)
+            </label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gem-hunt-panel__lab-btn w-full"
+              onClick={() => setLabOpen(true)}
+            >
+              ניסיון מצלמה (מכל מקום)
+            </Button>
+          </div>
         ) : null}
 
         {collected ? (
@@ -132,6 +144,19 @@ export function GemHuntPanel({
           simulateInRange={simulate}
           onClose={() => setHuntOpen(false)}
           onCollect={onCollect}
+        />
+      ) : null}
+
+      {labOpen ? (
+        <GemHuntOverlay
+          house={house}
+          userLocation={userLocation}
+          labMode
+          onClose={() => setLabOpen(false)}
+          onCollect={(id) => {
+            onCollect(id);
+            setLabOpen(false);
+          }}
         />
       ) : null}
     </>
