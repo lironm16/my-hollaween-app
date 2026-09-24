@@ -2243,9 +2243,9 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .map-add-house-fab,
 .map-gem-hunt-fab {
   position: absolute;
-  left: 0.75rem;
+  left: 2.15rem;
   z-index: 1100;
-  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
+  bottom: calc(0.45rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
   appearance: none;
   border: 0;
 }
