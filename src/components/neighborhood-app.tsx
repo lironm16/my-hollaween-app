@@ -27,6 +27,8 @@ import { VisitSkipConflictDialog } from "@/components/visit-skip-conflict-dialog
 import { LikeCheer } from "@/components/like-cheer";
 import { RouteCompleteCheer } from "@/components/route-complete-cheer";
 import { VisitCheer } from "@/components/visit-cheer";
+import { GemHuntPanel } from "@/components/gem-hunt/gem-hunt-panel";
+import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -106,8 +108,15 @@ export function NeighborhoodApp({
   const geo = useUserLocation({ watch: false });
   const { setWatchEnabled } = geo;
   const gps = geo.location;
+  const gemHuntActive = gemHuntVisible(admin);
   const gpsAllowed =
     geo.status === "idle" || geo.status === "pending" || geo.status === "ready";
+
+  useEffect(() => {
+    if (!gemHuntActive) return;
+    setWatchEnabled(true);
+    void geo.refresh();
+  }, [gemHuntActive, geo.refresh, setWatchEnabled]);
   const { choice: originChoice, resolved: origin, setChoice: setOriginChoice } = useDistanceOrigin(gps);
   const { houseSet } = useHouseSet();
   const activeHouseSet = admin ? houseSet : "real";
@@ -680,6 +689,9 @@ export function NeighborhoodApp({
         skippedIds: skips.skipped,
         filteredOutIds: (id: string) => filterDimActive && !matchedIds.has(id),
         onAdjacentClusterHouse: selection.selectAdjacentClusterHouse,
+        extra: gemHuntActive ? (
+          <GemHuntPanel house={selected} userLocation={gps} isAdmin={admin} />
+        ) : undefined,
       }
     : null;
 
