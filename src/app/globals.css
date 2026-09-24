@@ -3531,10 +3531,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   padding: 1.5rem;
   background: rgb(5 2 8 / 0.92);
 }
-.gem-hunt-overlay__poster-close {
-  position: absolute;
-  top: max(0.75rem, env(safe-area-inset-top));
-  inset-inline-end: 1rem;
+.gem-hunt-overlay__poster-kicker {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgb(196 181 253 / 0.85);
 }
 .gem-hunt-overlay__poster-title {
   font-size: 1.1rem;
@@ -3545,6 +3547,19 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   font-size: 0.9rem;
   color: rgb(196 181 253 / 0.9);
   text-align: center;
+}
+.gem-hunt-overlay__poster-back {
+  appearance: none;
+  margin-top: 0.5rem;
+  width: min(92vw, 20rem);
+  border: 1px solid rgb(167 139 250 / 0.55);
+  border-radius: 9999px;
+  background: rgb(22 11 32 / 0.95);
+  color: #fff7ed;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.85rem 1.25rem;
+  cursor: pointer;
 }
 .gem-hunt-overlay__help {
   position: absolute;

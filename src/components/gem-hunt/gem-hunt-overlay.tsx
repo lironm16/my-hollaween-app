@@ -222,7 +222,7 @@ export function GemHuntOverlay({
           ) : sim ? (
             <p className="gem-hunt-overlay__badge">סימולציה: בטווח</p>
           ) : null}
-          <p className="gem-hunt-overlay__title">מחפשים {gemLabelHe(monsterId)} ליד {house.name || house.address}</p>
+          <p className="gem-hunt-overlay__title">מחפשים אוצר נסתר ליד {house.name || house.address}</p>
         </div>
         <OverlayCloseButton
           label="סגירה"
@@ -296,14 +296,17 @@ export function GemHuntOverlay({
 
       {posterHintOpen ? (
         <div className="gem-hunt-overlay__poster-hint" role="dialog" aria-label="תצוגת האוצר">
-          <OverlayCloseButton
-            label="סגירת תצוגה"
-            onClick={() => setPosterHintOpen(false)}
-            className="gem-hunt-overlay__poster-close"
-          />
+          <p className="gem-hunt-overlay__poster-kicker">רמז 1</p>
           <p className="gem-hunt-overlay__poster-title">{gemLabelHe(monsterId)}</p>
           <GemSprite house={house} mode="poster" size="lg" className="gem-hunt-overlay__poster-sprite" />
           <p className="gem-hunt-overlay__poster-caption">כך האוצר נראה — חפשו אותו במצלמה</p>
+          <button
+            type="button"
+            className="gem-hunt-overlay__poster-back"
+            onClick={() => setPosterHintOpen(false)}
+          >
+            חזרה למצלמה
+          </button>
         </div>
       ) : null}
 
