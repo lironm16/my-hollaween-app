@@ -40,15 +40,27 @@ const RENDER_PAGE = `<!doctype html>
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-function frameModel(object) {
+function frameModel(object, scaleFactor) {
   const box = new THREE.Box3().setFromObject(object);
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
   const maxDim = Math.max(size.x, size.y, size.z, 0.001);
-  const scale = 1.35 / maxDim;
+  const scale = scaleFactor / maxDim;
   object.scale.setScalar(scale);
   object.position.sub(center.multiplyScalar(scale));
-  object.position.y -= 0.08;
+  object.position.y += size.y * scale * 0.06;
+}
+
+function fitCameraToPivot(camera, pivot, padding) {
+  const box = new THREE.Box3().setFromObject(pivot);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z, 0.001);
+  const fovRad = (camera.fov * Math.PI) / 180;
+  const dist = (maxDim / 2 / Math.tan(fovRad / 2)) * padding;
+  camera.position.set(center.x, center.y + maxDim * 0.06, center.z + dist);
+  camera.lookAt(center.x, center.y, center.z);
+  camera.updateProjectionMatrix();
 }
 
 window.__renderGlbPoster = async (glbBytes) => {
@@ -60,9 +72,7 @@ window.__renderGlbPoster = async (glbBytes) => {
   renderer.setClearColor(0x000000, 0);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100);
-  camera.position.set(0, 0.35, 2.4);
-  camera.lookAt(0, 0.05, 0);
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
 
   scene.add(new THREE.AmbientLight(0xffffff, 0.95));
   const key = new THREE.DirectionalLight(0xffe7ba, 1.2);
@@ -71,8 +81,8 @@ window.__renderGlbPoster = async (glbBytes) => {
   rim.position.set(-2, 1, -3);
   scene.add(key, rim);
 
-  const rootGroup = new THREE.Group();
-  scene.add(rootGroup);
+  const pivot = new THREE.Group();
+  scene.add(pivot);
 
   const loader = new GLTFLoader();
   const blob = new Blob([glbBytes], { type: 'model/gltf-binary' });
@@ -81,9 +91,10 @@ window.__renderGlbPoster = async (glbBytes) => {
   URL.revokeObjectURL(url);
 
   const model = gltf.scene;
-  frameModel(model);
-  rootGroup.add(model);
-  rootGroup.rotation.y = 0.45;
+  frameModel(model, 1.02);
+  pivot.add(model);
+  pivot.rotation.y = 0.45;
+  fitCameraToPivot(camera, pivot, 1.48);
   renderer.render(scene, camera);
 
   const dataUrl = canvas.toDataURL('image/png');
