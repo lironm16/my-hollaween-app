@@ -41,15 +41,93 @@ export const GEM_SCAN_REVEAL_SECONDS = 5;
 export const GEM_SCAN_PAN_DEGREES = 180;
 /** Show "can't see it?" help after this many seconds in hunt mode. */
 export const GEM_HELP_AFTER_SECONDS = 8;
+/** Approx. phone camera horizontal field of view — for pinning gem on screen. */
+export const GEM_CAMERA_HFOV_DEG = 62;
+/** Each house hides its gem at a stable GPS point this many meters from the pin. */
+export const GEM_ANCHOR_MIN_METERS = 4;
+export const GEM_ANCHOR_MAX_METERS = 14;
 
 /** Hunt overlay + cheer — keep in sync with gem-collect-* CSS durations */
 export const GEM_COLLECT_ANIMATION_MS = 4000;
 
 export type GemProximity = "far" | "approach" | "hunt" | "collected";
 
+export type GemAnchor = { lat: number; lng: number; bearingFromHouseDeg: number; offsetM: number };
+
+function hashHouseSeed(id: string, seed: string) {
+  let h = 2166136261;
+  const s = `${id}\0${seed}`;
+  for (let i = 0; i < s.length; i += 1) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/** Move `distanceM` meters from `origin` along compass `bearingDeg` (0 = north). */
+export function destinationPoint(
+  origin: { lat: number; lng: number },
+  bearingDeg: number,
+  distanceM: number,
+) {
+  const R = 6371000;
+  const brng = (bearingDeg * Math.PI) / 180;
+  const φ1 = (origin.lat * Math.PI) / 180;
+  const λ1 = (origin.lng * Math.PI) / 180;
+  const δ = distanceM / R;
+  const sinφ1 = Math.sin(φ1);
+  const cosφ1 = Math.cos(φ1);
+  const sinδ = Math.sin(δ);
+  const cosδ = Math.cos(δ);
+  const sinφ2 = sinφ1 * cosδ + cosφ1 * sinδ * Math.cos(brng);
+  const φ2 = Math.asin(sinφ2);
+  const λ2 =
+    λ1 +
+    Math.atan2(Math.sin(brng) * sinδ * cosφ1, cosδ - sinφ1 * sinφ2);
+  return { lat: (φ2 * 180) / Math.PI, lng: (λ2 * 180) / Math.PI };
+}
+
+/** Stable world pin for this house’s hidden gem (offset from the map pin). */
+export function gemAnchorForHouse(house: Pick<PublicHouse, "id" | "lat" | "lng">): GemAnchor {
+  const h = hashHouseSeed(house.id, "gem-anchor-v1");
+  const bearingFromHouseDeg = h % 360;
+  const span = GEM_ANCHOR_MAX_METERS - GEM_ANCHOR_MIN_METERS;
+  const offsetM = GEM_ANCHOR_MIN_METERS + ((h >>> 8) % 1000) / (1000 / span);
+  const point = destinationPoint(house, bearingFromHouseDeg, offsetM);
+  return { ...point, bearingFromHouseDeg, offsetM };
+}
+
+export type GemScreenPlacement = {
+  xPercent: number;
+  yPercent: number;
+  /** Gem bearing is inside the camera view cone. */
+  inView: boolean;
+  distanceM: number;
+  relativeBearingDeg: number;
+};
+
+/** Map anchor direction to on-screen position (moves when you pan — pseudo-AR pin). */
+export function gemScreenPlacement(
+  user: { lat: number; lng: number },
+  anchor: Pick<GemAnchor, "lat" | "lng">,
+  deviceHeading: number | null,
+  hFovDeg = GEM_CAMERA_HFOV_DEG,
+): GemScreenPlacement | null {
+  if (deviceHeading == null || !Number.isFinite(deviceHeading)) return null;
+  const distanceM = distanceMeters(user, anchor);
+  const rel = relativeWalkBearingDeg(user, anchor, deviceHeading);
+  if (rel == null) return null;
+  const half = hFovDeg / 2;
+  const inView = Math.abs(rel) <= half;
+  const xRaw = 50 + (rel / half) * 42;
+  const xPercent = inView ? Math.min(90, Math.max(10, xRaw)) : rel > 0 ? 92 : 8;
+  const yPercent = 40 + Math.min(14, (distanceM / GEM_HUNT_METERS) * 10);
+  return { xPercent, yPercent, inView, distanceM, relativeBearingDeg: rel };
+}
+
 export function canCollectGem(
   userLocation: { lat: number; lng: number } | null,
-  house: Pick<PublicHouse, "lat" | "lng">,
+  house: Pick<PublicHouse, "id" | "lat" | "lng">,
   collected: boolean,
   standingStill: boolean,
   simulateInRange: boolean,
@@ -59,12 +137,12 @@ export function canCollectGem(
   return inRange && (standingStill || simulateInRange);
 }
 
-/** Pessimistic hunt band — avoids treating a wild GPS jump as “at the house”. */
+/** Pessimistic hunt band — avoids treating a wild GPS jump as “at the anchor”. */
 export function withinGemHuntMeters(
   user: { lat: number; lng: number; accuracy?: number },
-  house: Pick<PublicHouse, "lat" | "lng">,
+  target: { lat: number; lng: number },
 ) {
-  const d = distanceMeters(user, house);
+  const d = distanceMeters(user, target);
   if (d > GEM_HUNT_METERS) return false;
   const acc = user.accuracy;
   if (acc == null || !Number.isFinite(acc) || acc <= 0) return true;
@@ -74,13 +152,16 @@ export function withinGemHuntMeters(
 
 export function gemProximity(
   user: { lat: number; lng: number; accuracy?: number } | null,
-  house: Pick<PublicHouse, "lat" | "lng">,
+  house: Pick<PublicHouse, "id" | "lat" | "lng">,
   collected: boolean,
 ): GemProximity {
   if (collected) return "collected";
   if (!user) return "far";
-  const d = distanceMeters(user, house);
-  if (withinGemHuntMeters(user, house)) return "hunt";
+  const anchor = gemAnchorForHouse(house);
+  const dHouse = distanceMeters(user, house);
+  const dAnchor = distanceMeters(user, anchor);
+  const d = Math.min(dHouse, dAnchor);
+  if (withinGemHuntMeters(user, anchor)) return "hunt";
   if (d <= GEM_HUNT_METERS) {
     const acc = user.accuracy;
     if (acc != null && Number.isFinite(acc) && acc > GEM_APPROACH_METERS) return "far";

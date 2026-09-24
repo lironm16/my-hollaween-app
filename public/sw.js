@@ -1,7 +1,7 @@
 importScripts("/sw-map-tiles.js");
 
-const APP_VERSION = "0.1.113";
-const CACHE = "hw-shell-0.1.113";
+const APP_VERSION = "0.1.114";
+const CACHE = "hw-shell-0.1.114";
 const TILE_CACHE = MapTileCache.TILE_CACHE;
 const PRECACHE = [
   "/offline.html",

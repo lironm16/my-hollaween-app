@@ -5,16 +5,20 @@ import {
   bearingDegrees,
   facingHouse,
   relativeWalkBearingDeg,
+  gemAnchorForHouse,
   gemProximity,
+  gemScreenPlacement,
   gemFamilyForHouse,
   gemVariantForHouse,
   headingDelta,
   withinGemHuntMeters,
   GEM_HUNT_METERS,
+  GEM_ANCHOR_MIN_METERS,
+  GEM_ANCHOR_MAX_METERS,
 } from "@/lib/gem-hunt";
 
 describe("gem hunt geo", () => {
-  const house = { lat: 32.0919, lng: 34.8112 };
+  const house = { id: "gem-test-house", lat: 32.0919, lng: 34.8112 };
 
   it("classifies proximity bands", () => {
     assert.equal(gemProximity(null, house, false), "far");
@@ -27,12 +31,30 @@ describe("gem hunt geo", () => {
   });
 
   it("does not treat a far fix snapped onto the pin as hunt range", () => {
+    const anchor = gemAnchorForHouse(house);
     const snapped = { lat: house.lat, lng: house.lng, accuracy: 400 };
-    assert.equal(withinGemHuntMeters(snapped, house), false);
+    assert.equal(withinGemHuntMeters(snapped, anchor), false);
     assert.equal(gemProximity(snapped, house, false), "far");
-    const near = { lat: house.lat + 0.00008, lng: house.lng, accuracy: 15 };
-    assert.ok(distanceMeters(near, house) <= GEM_HUNT_METERS);
-    assert.equal(withinGemHuntMeters(near, house), true);
+    const near = { lat: anchor.lat, lng: anchor.lng, accuracy: 8 };
+    assert.equal(withinGemHuntMeters(near, anchor), true);
+  });
+
+  it("pins each house gem at a stable offset from the map pin", () => {
+    const a = gemAnchorForHouse(house);
+    const b = gemAnchorForHouse(house);
+    assert.equal(a.lat, b.lat);
+    assert.ok(a.offsetM >= GEM_ANCHOR_MIN_METERS && a.offsetM <= GEM_ANCHOR_MAX_METERS);
+    assert.ok(distanceMeters(house, a) >= GEM_ANCHOR_MIN_METERS - 0.5);
+  });
+
+  it("maps anchor bearing to horizontal screen position", () => {
+    const anchor = gemAnchorForHouse(house);
+    const user = { lat: house.lat + 0.00012, lng: house.lng };
+    const heading = bearingDegrees(user, anchor);
+    const place = gemScreenPlacement(user, anchor, heading);
+    assert.ok(place);
+    assert.equal(place!.inView, true);
+    assert.ok(Math.abs(place!.xPercent - 50) < 8);
   });
 
   it("maps each house to a stable Akochan pet", () => {

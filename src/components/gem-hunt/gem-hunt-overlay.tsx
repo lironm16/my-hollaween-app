@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Navigation } from "lucide-react";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
@@ -15,8 +15,10 @@ import {
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
   GEM_COLLECT_ANIMATION_MS,
+  gemAnchorForHouse,
   gemLabelHe,
   gemMonsterForHouse,
+  gemScreenPlacement,
   relativeWalkBearingDeg,
   type GemMonsterId,
 } from "@/lib/gem-hunt";
@@ -55,8 +57,14 @@ export function GemHuntOverlay({
   /** Only auto-reveal from scan/pan/facing when user can collect (or admin simulate). */
   const allowAutoReveal = collectEnabled || sim;
   const monsterId = gemMonsterForHouse(house);
+  const anchor = useMemo(() => gemAnchorForHouse(house), [house.id, house.lat, house.lng]);
   const distanceM =
-    userLocation != null && !sim ? distanceMeters(userLocation, house) : null;
+    userLocation != null && !sim ? distanceMeters(userLocation, anchor) : null;
+  const pinPlacement = useMemo(() => {
+    const loc = userLocation ?? (sim ? { lat: house.lat, lng: house.lng } : null);
+    if (!loc) return null;
+    return gemScreenPlacement(loc, anchor, heading);
+  }, [anchor, heading, house.lat, house.lng, sim, userLocation]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -148,7 +156,9 @@ export function GemHuntOverlay({
     const loc = userLocation ?? (sim ? { lat: house.lat, lng: house.lng, accuracy: 5 } : null);
     const facing =
       sim ||
-      (loc != null && heading != null && facingHouse(loc, house, heading, GEM_FACING_TOLERANCE_DEG));
+      (loc != null &&
+        heading != null &&
+        facingHouse(loc, anchor, heading, GEM_FACING_TOLERANCE_DEG));
 
     if (facing) {
       if (facingSinceRef.current == null) facingSinceRef.current = Date.now();
@@ -165,10 +175,11 @@ export function GemHuntOverlay({
     if (elapsedSec >= GEM_SCAN_REVEAL_SECONDS || panTotalRef.current >= GEM_SCAN_PAN_DEGREES) {
       reveal();
     }
-  }, [heading, house, phase, reveal, sim, allowAutoReveal, userLocation]);
+  }, [anchor, heading, house, phase, reveal, sim, allowAutoReveal, userLocation]);
 
   function handleCollect() {
     if (!collectEnabled) return;
+    if (pinPlacement && !pinPlacement.inView) return;
     if (phase === "collecting" || phase === "done") return;
     setPhase("collecting");
     setHint("found");
@@ -189,7 +200,7 @@ export function GemHuntOverlay({
 
   const gemVisible = phase === "visible" || phase === "collecting";
   const walkBearing =
-    userLocation != null ? relativeWalkBearingDeg(userLocation, house, heading) : null;
+    userLocation != null ? relativeWalkBearingDeg(userLocation, anchor, heading) : null;
   const facingWalk =
     walkBearing != null && Math.abs(walkBearing) <= GEM_FACING_TOLERANCE_DEG;
   const showWalkGuide =
@@ -200,7 +211,7 @@ export function GemHuntOverlay({
     distanceM > 8 &&
     phase !== "collecting";
   const mapsWalkUrl =
-    userLocation != null ? googleMapsNavigateUrl(userLocation, house) : null;
+    userLocation != null ? googleMapsNavigateUrl(userLocation, anchor) : null;
 
   const overlay = (
     <div className="gem-hunt-overlay" dir="rtl">
@@ -261,9 +272,20 @@ export function GemHuntOverlay({
             type="button"
             className={cn(
               "gem-hunt-overlay__gem-hit",
+              pinPlacement && "is-pinned",
+              pinPlacement && !pinPlacement.inView && "is-off-screen",
+              !pinPlacement && "is-center-fallback",
               phase === "collecting" && "is-collecting",
               !collectEnabled && "is-preview-only",
             )}
+            style={
+              pinPlacement
+                ? {
+                    left: `${pinPlacement.xPercent}%`,
+                    top: `${pinPlacement.yPercent}%`,
+                  }
+                : undefined
+            }
             onClick={handleCollect}
             aria-label={
               collectEnabled ? `איסוף ${gemLabelHe(monsterId)}` : `תצוגת ${gemLabelHe(monsterId)}`
@@ -280,13 +302,16 @@ export function GemHuntOverlay({
         <p className={cn("gem-hunt-overlay__hint", gemVisible && "is-gem-visible")}>
           {phase === "collecting" ? "אוצר נאסף!" : null}
           {phase !== "collecting" && hint === "scan" && allowAutoReveal
-            ? "סרקו לאט את הבית — האוצר יופיע"
+            ? "סובבו את המצלמה — האוצר ננעץ ליד הבית"
             : null}
           {phase !== "collecting" && hint === "scan" && !allowAutoReveal
-            ? "האוצר מוסתר — סרקו את הבית או השתמשו ברמזים"
+            ? "האוצר מוסתר — התקרבו או השתמשו ברמזים"
             : null}
-          {phase !== "collecting" && hint === "warm" ? "קרובים! המשיכו לסרוק…" : null}
-          {phase !== "collecting" && hint === "found" && collectEnabled
+          {phase !== "collecting" && hint === "warm" ? "קרובים! כוונו למקום האוצר…" : null}
+          {phase !== "collecting" && hint === "found" && pinPlacement && !pinPlacement.inView
+            ? "סובבו את המצלמה — האוצר בקצה המסך"
+            : null}
+          {phase !== "collecting" && hint === "found" && collectEnabled && (!pinPlacement || pinPlacement.inView)
             ? "לחצו על האוצר לאיסוף!"
             : null}
           {phase !== "collecting" && hint === "found" && !collectEnabled

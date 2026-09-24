@@ -3538,6 +3538,18 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   pointer-events: auto;
   -webkit-tap-highlight-color: transparent;
 }
+.gem-hunt-overlay__gem-hit.is-pinned {
+  transition:
+    left 0.1s linear,
+    top 0.1s linear,
+    opacity 0.2s ease,
+    transform 0.15s ease;
+}
+.gem-hunt-overlay__gem-hit.is-off-screen {
+  opacity: 0.6;
+  transform: translate(-50%, -50%) scale(0.68);
+  pointer-events: none;
+}
 .gem-hunt-overlay__gem-hit .gem-sprite--hunt {
   width: min(76vw, 18.5rem);
   height: min(76vw, 18.5rem);
