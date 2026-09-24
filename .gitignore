@@ -44,6 +44,10 @@ yarn-error.log*
 /data/cute-monsters.zip
 /data/__MACOSX/
 
+# Large itch zips — unzip into Projects/akochan-halloween-pets/ instead
+/Projects/**/*.zip
+/Projects/**/LowPoly*.zip
+
 # optional house photos (generated locally)
 /public/house-photos/*.jpg
 /public/house-photos/*.jpeg

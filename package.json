@@ -20,6 +20,7 @@
     "poi-pin-icons": "python3 scripts/extract-badge-glyphs.py",
     "app-icons": "node scripts/generate-app-icons.mjs",
     "gem-monster-posters": "node scripts/render-gem-monster-posters.mjs",
+    "gem-monsters:ingest": "node scripts/ingest-akochan-pets.mjs",
     "stress": "node scripts/stress-test.mjs",
     "migrate:firestore": "node scripts/migrate-to-firestore.mjs",
     "seed:catalog-meta": "node scripts/seed-catalog-meta.mjs",

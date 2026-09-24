@@ -1,0 +1,10 @@
+Put Akochan Halloween Spooky Pet Pack GLB files in this folder (not the whole zip).
+
+1. itch.io → Library → Purchases → "Halloween Spooky Pet Pack" → Download
+2. Unzip on your phone or computer
+3. Copy only the individual .glb pet files from the pack's GLB folder into:
+   Projects/akochan-halloween-pets/
+   (Skip huge "bundle" / "combined" / "all models" GLBs if present.)
+
+Then tell the Cloud Agent: "ingest akochan pets" — or run:
+  npm run gem-monsters:ingest
