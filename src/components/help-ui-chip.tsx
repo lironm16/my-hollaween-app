@@ -11,7 +11,7 @@ export function HelpUiChip({
   return (
     <span
       className={cn(
-        "inline rounded-md bg-orange-200/90 px-1.5 py-0.5 font-semibold text-[#12081a] align-baseline",
+        "inline-block rounded-md bg-[#f5e6d3] px-1.5 py-0.5 font-semibold text-[#12081a] align-baseline leading-normal",
         className,
       )}
     >

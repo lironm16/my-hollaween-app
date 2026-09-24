@@ -84,6 +84,7 @@
     --tracking-widest: 0.1em;
     --leading-tight: 1.25;
     --leading-snug: 1.375;
+    --leading-normal: 1.5;
     --leading-relaxed: 1.625;
     --radius-md: calc(var(--radius) * 0.8);
     --ease-out: cubic-bezier(0, 0, 0.2, 1);
@@ -1570,6 +1571,9 @@
   .bg-\[\#e11d48\] {
     background-color: #e11d48;
   }
+  .bg-\[\#f5e6d3\] {
+    background-color: #f5e6d3;
+  }
   .bg-\[\#f97316\] {
     background-color: #f97316;
   }
@@ -1712,12 +1716,6 @@
     background-color: var(--muted);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--muted) 50%, transparent);
-    }
-  }
-  .bg-orange-200\/90 {
-    background-color: color-mix(in srgb, oklch(90.1% 0.076 70.697) 90%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-orange-200) 90%, transparent);
     }
   }
   .bg-orange-400 {
@@ -2220,6 +2218,10 @@
   .leading-none {
     --tw-leading: 1;
     line-height: 1;
+  }
+  .leading-normal {
+    --tw-leading: var(--leading-normal);
+    line-height: var(--leading-normal);
   }
   .leading-relaxed {
     --tw-leading: var(--leading-relaxed);
