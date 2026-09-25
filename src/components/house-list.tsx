@@ -48,7 +48,7 @@ export function HouseList({
   skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
   onSkipHouse?: (id: string) => void;
   onRestoreHouse?: (id: string) => void;
-  emptyKind?: "default" | "skipped";
+  emptyKind?: "default" | "skipped" | "visited" | "saved" | "collected";
   focusId?: string | null;
   editingId?: string | null;
 }) {
@@ -78,6 +78,21 @@ export function HouseList({
           <>
             <p className="font-display text-2xl text-orange-300">אין בתים שדילגתם עליהם</p>
             <p className="mt-2 text-base">בתים שתדלגו עליהם במסלול יופיעו כאן.</p>
+          </>
+        ) : emptyKind === "visited" ? (
+          <>
+            <p className="font-display text-2xl text-orange-300">עדיין לא ביקרתם</p>
+            <p className="mt-2 text-base">בתים שתסמנו כביקור יופיעו כאן.</p>
+          </>
+        ) : emptyKind === "saved" ? (
+          <>
+            <p className="font-display text-2xl text-orange-300">אין בתים שמורים</p>
+            <p className="mt-2 text-base">לחצו על הלב במפה או ברשימה כדי לשמור בית.</p>
+          </>
+        ) : emptyKind === "collected" ? (
+          <>
+            <p className="font-display text-2xl text-orange-300">עדיין לא אספתם מדבקות</p>
+            <p className="mt-2 text-base">מדבקות שתאספו במסע יופיעו כאן.</p>
           </>
         ) : (
           <>
