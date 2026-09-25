@@ -17,7 +17,7 @@ import {
 } from "@/lib/house-csv";
 import {
   buildRouteShareUrl,
-  shareUrlWithFallback,
+  shareRouteUrl,
   sharedRoutePayloadFromRoute,
 } from "@/lib/route-share";
 import type { WalkingRoute } from "@/lib/route";
@@ -72,29 +72,35 @@ export function CsvExportButton({
     setOpen(false);
   }
 
-  async function shareRouteLink() {
+  function shareRouteLink() {
     if (!activeRoute || activeRoute.stops.length === 0) {
       toast.error("אין מסלול פעיל לשיתוף");
       return;
     }
-    const payload = sharedRoutePayloadFromRoute(activeRoute);
-    const url = buildRouteShareUrl(payload, window.location.origin);
-    const outcome = await shareUrlWithFallback(url, {
-      title: "מסלול HallowHood",
-      text: `מסלול עם ${payload.stopIds.length} עצירות`,
-    });
-    if (outcome === "shared") {
-      toast.success("שיתוף המסלול נשלח");
-      setOpen(false);
-      return;
-    }
-    if (outcome === "copied") {
-      toast.success("קישור המסלול הועתק — הדביקו בוואטסאפ / הודעה");
-      setOpen(false);
-      return;
-    }
-    if (outcome === "cancelled") return;
-    toast.message("העתיקו את הקישור:", { description: url, closeButton: true, duration: 20_000 });
+    const stopCount = activeRoute.stops.length;
+    const url = buildRouteShareUrl(
+      sharedRoutePayloadFromRoute(activeRoute),
+      window.location.origin,
+    );
+    void shareRouteUrl(url, stopCount)
+      .then((outcome) => {
+        if (outcome === "shared") {
+          toast.success("שיתוף המסלול נשלח");
+          setOpen(false);
+          return;
+        }
+        if (outcome === "copied") {
+          toast.success("הקישור הועתק — הדביקו בוואטסאפ / הודעה");
+          setOpen(false);
+          return;
+        }
+        if (outcome === "cancelled") return;
+        toast.error("לא הצלחנו לשתף — נסו שוב");
+        toast.message(url, { closeButton: true, duration: 20_000 });
+      })
+      .catch(() => {
+        toast.error("לא הצלחנו לשתף — נסו שוב");
+      });
   }
 
   async function saveRouteTxt() {
@@ -129,7 +135,7 @@ export function CsvExportButton({
       canShareRoute={canShareRoute}
       routeStopCount={activeRoute?.stops.length ?? 0}
       onConfirm={() => void runExport(format)}
-      onShareRoute={() => void shareRouteLink()}
+      onShareRoute={shareRouteLink}
       onSaveRouteTxt={() => void saveRouteTxt()}
     />
   );
@@ -353,14 +359,18 @@ function RouteSharePanel({
       <p className="text-base leading-snug text-violet-200/90">
         {routeStopCount} עצירות — אותם מספרי בתים בכל מכשיר. פותחים את הקישור → «החלפת מסלול».
       </p>
-      <Button
+      <button
         type="button"
-        className="h-12 w-full gap-2 bg-orange-500 text-lg text-black hover:bg-orange-400"
-        onClick={onShareRoute}
+        className="inline-flex h-12 w-full touch-manipulation items-center justify-center gap-2 rounded-lg bg-orange-500 text-lg font-medium text-black hover:bg-orange-400 active:translate-y-px"
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onShareRoute();
+        }}
       >
-        <Link2 className="size-5 shrink-0" aria-hidden />
+        <Link2 className="size-5 shrink-0 pointer-events-none" aria-hidden />
         שיתוף קישור למסלול
-      </Button>
+      </button>
       <Button
         type="button"
         variant="outline"

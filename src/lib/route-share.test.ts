@@ -4,6 +4,7 @@ import {
   decodeSharedRoutePayload,
   encodeSharedRoutePayload,
   housesForSharedRoute,
+  routeSharePlainText,
   sharedRoutePayloadFromRoute,
 } from "@/lib/route-share";
 import type { PublicHouse } from "@/lib/types";
@@ -37,6 +38,12 @@ describe("route share", () => {
       ],
     } as import("@/lib/route").WalkingRoute;
     assert.deepEqual(sharedRoutePayloadFromRoute(route).stopIds, ["h2", "h1"]);
+  });
+
+  it("builds share plain text with url", () => {
+    const text = routeSharePlainText("https://example.com/?routeShare=x", 3);
+    assert.match(text, /3 עצירות/);
+    assert.match(text, /https:\/\/example.com/);
   });
 
   it("resolves houses in shared order", () => {

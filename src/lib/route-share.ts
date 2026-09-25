@@ -93,30 +93,49 @@ export function writePendingRouteShare(payload: SharedRoutePayload | null) {
 
 export type ShareUrlOutcome = "shared" | "copied" | "cancelled" | "failed";
 
-/** Web Share when available; otherwise clipboard. Prefer `{ url }` only — most reliable on Android. */
-export async function shareUrlWithFallback(
-  url: string,
-  extras?: { title?: string; text?: string },
-): Promise<ShareUrlOutcome> {
-  if (typeof navigator === "undefined") return "failed";
+export function routeSharePlainText(url: string, stopCount: number) {
+  return `מסלול HallowHood · ${stopCount} עצירות\n${url}`;
+}
 
-  const nav = navigator as Navigator & {
-    share?: (data: ShareData) => Promise<void>;
-    canShare?: (data: ShareData) => Promise<boolean>;
-  };
-
-  if (typeof nav.share === "function") {
-    const attempts: ShareData[] = [{ url }];
-    if (extras?.title || extras?.text) {
-      attempts.push({ url, title: extras.title, text: extras.text });
+async function copyPlainText(text: string): Promise<boolean> {
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      /* fall through */
     }
+  }
+  if (typeof document === "undefined") return false;
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Web Share when available (no canShare gate — it often false-negatives on Android).
+ * Falls back to copying message + URL as plain text.
+ */
+export async function shareRouteUrl(url: string, stopCount: number): Promise<ShareUrlOutcome> {
+  const title = "מסלול HallowHood";
+  const text = routeSharePlainText(url, stopCount);
+
+  if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+    const attempts: ShareData[] = [{ url }, { title, text }, { text }];
     for (const data of attempts) {
       try {
-        if (typeof nav.canShare === "function") {
-          const ok = await nav.canShare(data);
-          if (!ok) continue;
-        }
-        await nav.share(data);
+        await navigator.share(data);
         return "shared";
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return "cancelled";
@@ -124,14 +143,16 @@ export async function shareUrlWithFallback(
     }
   }
 
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(url);
-      return "copied";
-    }
-  } catch {
-    /* fall through */
-  }
-
+  if (await copyPlainText(text)) return "copied";
   return "failed";
+}
+
+/** @deprecated Use shareRouteUrl */
+export async function shareUrlWithFallback(
+  url: string,
+  extras?: { title?: string; text?: string },
+): Promise<ShareUrlOutcome> {
+  const stopMatch = extras?.text?.match(/(\d+)/);
+  const stopCount = stopMatch ? Number(stopMatch[1]) : 0;
+  return shareRouteUrl(url, stopCount || 1);
 }
