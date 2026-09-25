@@ -166,7 +166,7 @@ export function AppHeader({
                   </Link>
                   <Link href="/my" onClick={closeMenu} className={houseSubLinkClass}>
                     <Home className="size-4" />
-                    שלי
+                    במכשיר שלי
                   </Link>
                 </div>
               ) : null}

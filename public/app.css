@@ -51,6 +51,7 @@
     --color-violet-700: oklch(49.1% 0.27 292.581);
     --color-violet-900: oklch(38% 0.189 293.745);
     --color-rose-300: oklch(81% 0.117 11.638);
+    --color-slate-300: oklch(86.9% 0.022 252.894);
     --color-black: #000;
     --color-white: #fff;
     --spacing: 0.25rem;
@@ -516,6 +517,9 @@
   }
   .z-\[2100\] {
     z-index: 2100;
+  }
+  .col-span-2 {
+    grid-column: span 2 / span 2;
   }
   .col-start-2 {
     grid-column-start: 2;
@@ -1460,6 +1464,12 @@
       border-color: color-mix(in oklab, var(--color-violet-500) 25%, transparent);
     }
   }
+  .border-violet-500\/35 {
+    border-color: color-mix(in srgb, oklch(60.6% 0.25 292.717) 35%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-violet-500) 35%, transparent);
+    }
+  }
   .border-violet-500\/40 {
     border-color: color-mix(in srgb, oklch(60.6% 0.25 292.717) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1513,6 +1523,9 @@
   }
   .bg-\[\#1d1028\]\/60 {
     background-color: color-mix(in oklab, #1d1028 60%, transparent);
+  }
+  .bg-\[\#1d1028\]\/80 {
+    background-color: color-mix(in oklab, #1d1028 80%, transparent);
   }
   .bg-\[\#1d1028\]\/90 {
     background-color: color-mix(in oklab, #1d1028 90%, transparent);
@@ -2156,9 +2169,6 @@
   .pt-3 {
     padding-top: calc(var(--spacing) * 3);
   }
-  .pt-4 {
-    padding-top: calc(var(--spacing) * 4);
-  }
   .pt-\[env\(safe-area-inset-top\,0px\)\] {
     padding-top: env(safe-area-inset-top,0px);
   }
@@ -2587,6 +2597,9 @@
   .text-sky-300 {
     color: var(--color-sky-300);
   }
+  .text-slate-300 {
+    color: var(--color-slate-300);
+  }
   .text-violet-50 {
     color: var(--color-violet-50);
   }
@@ -2639,12 +2652,6 @@
     color: color-mix(in srgb, oklch(81.1% 0.111 293.571) 80%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       color: color-mix(in oklab, var(--color-violet-300) 80%, transparent);
-    }
-  }
-  .text-violet-300\/85 {
-    color: color-mix(in srgb, oklch(81.1% 0.111 293.571) 85%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      color: color-mix(in oklab, var(--color-violet-300) 85%, transparent);
     }
   }
   .text-violet-300\/90 {
@@ -2738,9 +2745,6 @@
   .antialiased {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-  }
-  .accent-orange-400 {
-    accent-color: var(--color-orange-400);
   }
   .accent-orange-500 {
     accent-color: var(--color-orange-500);
@@ -3345,6 +3349,9 @@
         border-color: color-mix(in oklab, var(--color-violet-400) 35%, transparent);
       }
     }
+    .hover\:bg-\[\#1a1028\]:hover {
+      background-color: #1a1028;
+    }
     .hover\:bg-\[\#241332\]:hover {
       background-color: #241332;
     }
@@ -3451,6 +3458,14 @@
         background-color: color-mix(in oklab, var(--color-red-950) 40%, transparent);
       }
     }
+    .hover\:bg-violet-500\/10:hover {
+      background-color: color-mix(in srgb, oklch(60.6% 0.25 292.717) 10%, transparent);
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:bg-violet-500\/10:hover {
+        background-color: color-mix(in oklab, var(--color-violet-500) 10%, transparent);
+      }
+    }
     .hover\:bg-violet-600:hover {
       background-color: var(--color-violet-600);
     }
@@ -3472,11 +3487,20 @@
     .hover\:text-orange-200:hover {
       color: var(--color-orange-200);
     }
-    .hover\:text-violet-200:hover {
-      color: var(--color-violet-200);
-    }
     .hover\:underline:hover {
       text-decoration-line: underline;
+    }
+    .hover\:ring-1:hover {
+      --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+      box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+    }
+    .hover\:ring-orange-500\/25:hover {
+      --tw-ring-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 25%, transparent);
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:ring-orange-500\/25:hover {
+        --tw-ring-color: color-mix(in oklab, var(--color-orange-500) 25%, transparent);
+      }
     }
   }
   .focus\:not-sr-only:focus {
@@ -3584,6 +3608,9 @@
     --tw-scale-y: 95%;
     --tw-scale-z: 95%;
     scale: var(--tw-scale-x) var(--tw-scale-y);
+  }
+  .active\:scale-\[0\.99\]:active {
+    scale: 0.99;
   }
   .active\:cursor-grabbing:active {
     cursor: grabbing;
@@ -3864,11 +3891,17 @@
     .sm\:flex-row {
       flex-direction: row;
     }
+    .sm\:flex-row-reverse {
+      flex-direction: row-reverse;
+    }
     .sm\:justify-center {
       justify-content: center;
     }
     .sm\:justify-end {
       justify-content: flex-end;
+    }
+    .sm\:justify-start {
+      justify-content: flex-start;
     }
     .sm\:gap-6 {
       gap: calc(var(--spacing) * 6);
@@ -7384,6 +7417,14 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 .house-action-menu-item.is-active-gem {
   color: #fde68a;
+}
+.house-action-menu-item.is-disabled,
+.house-action-menu-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+.toolbar-route-menu-panel {
+  min-width: 11.5rem;
 }
 .house-action-menu-icon {
   display: inline-flex;
