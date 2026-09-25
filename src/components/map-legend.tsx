@@ -91,7 +91,7 @@ function SwatchPin({
   );
 }
 
-const GROUPS: { title: string; items: { key: string; label: string; node: ReactNode }[] }[] = [
+const BASE_GROUPS: { title: string; items: { key: string; label: string; node: ReactNode }[] }[] = [
   {
     title: "סוג המקום",
     items: [
@@ -130,7 +130,35 @@ const GROUPS: { title: string; items: { key: string; label: string; node: ReactN
   },
 ];
 
-export function MapLegend() {
+function GemDiamondSwatch({ collected = false }: { collected?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "map-gem-diamond-marker map-legend-gem-swatch",
+        collected && "is-collected",
+      )}
+      aria-hidden
+    >
+      <svg className="map-gem-diamond-marker__svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 3h12l4 7-10 13L2 10l4-7z" fill="currentColor" />
+      </svg>
+    </div>
+  );
+}
+
+export function MapLegend({ showGemAnchors = false }: { showGemAnchors?: boolean }) {
+  const groups = showGemAnchors
+    ? [
+        ...BASE_GROUPS,
+        {
+          title: "יהלומים",
+          items: [
+            { key: "gem-open", label: "יהלום לצוד", node: <GemDiamondSwatch /> },
+            { key: "gem-done", label: "נאסף", node: <GemDiamondSwatch collected /> },
+          ],
+        },
+      ]
+    : BASE_GROUPS;
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const titleId = useId();
@@ -184,7 +212,7 @@ export function MapLegend() {
                 />
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-3">
                   <div className="flex flex-col gap-3">
-                    {GROUPS.map((group) => (
+                    {groups.map((group) => (
                       <section key={group.title}>
                         <h3 className="mb-1.5 text-base font-semibold text-orange-200">{group.title}</h3>
                         <ul className="flex flex-wrap justify-start gap-x-1 gap-y-2">
