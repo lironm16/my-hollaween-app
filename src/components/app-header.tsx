@@ -17,14 +17,11 @@ import {
   Gem,
   Sparkles,
 } from "lucide-react";
-import { SkipIcon } from "@/components/skip-icon";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
 import { NeighborhoodMarquee } from "@/components/neighborhood-marquee";
 import { PushAlertsButton } from "@/components/push-alerts-button";
 import { PwaInstallButton } from "@/components/pwa-install-button";
-import { useOwnedHouses } from "@/hooks/use-owned-houses";
-import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import {
   Sheet,
   SheetContent,
@@ -47,8 +44,6 @@ export function AppHeader({
 }) {
   const { admin, logout } = useAdminSession();
   const now = useAppNow();
-  const owned = useOwnedHouses();
-  const skips = useSkippedHouses();
   const showGemBag = gemBagMenuVisible(admin, now);
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);
@@ -169,18 +164,10 @@ export function AppHeader({
                     <Search className="size-4" />
                     חיפוש
                   </Link>
-                  {owned.length > 0 ? (
-                    <Link href="/my-houses" onClick={closeMenu} className={houseSubLinkClass}>
-                      <Home className="size-4" />
-                      שלי ({owned.length})
-                    </Link>
-                  ) : null}
-                  {skips.skippedIds.length > 0 ? (
-                    <Link href="/skipped-houses" onClick={closeMenu} className={houseSubLinkClass}>
-                      <SkipIcon className="size-4" />
-                      דילגתי ({skips.skippedIds.length})
-                    </Link>
-                  ) : null}
+                  <Link href="/my" onClick={closeMenu} className={houseSubLinkClass}>
+                    <Home className="size-4" />
+                    שלי
+                  </Link>
                 </div>
               ) : null}
             </div>

@@ -17,6 +17,7 @@ export type RouteListItem = {
   hop: string;
   skipped: boolean;
   visitedTail?: boolean;
+  distanceM?: number;
 };
 
 function RouteLeg({ label }: { label: string }) {
@@ -45,9 +46,11 @@ function RouteTailRow({
   onEditHouse,
   editingId,
   gemCollected,
+  distanceM,
 }: {
   house: PublicHouse;
   kind: "skipped" | "visited";
+  distanceM?: number;
   skipMeta?: SkippedHouseMeta;
   onRestore?: () => void;
   onToggleVisited?: () => void;
@@ -95,6 +98,7 @@ function RouteTailRow({
         <div ref={bodyRef} className="route-tail-body">
           <HouseCard
             house={house}
+            distanceM={distanceM}
             catalogSource={catalogSource}
             liked={liked}
             onToggleLike={onToggleLike}
@@ -111,7 +115,6 @@ function RouteTailRow({
             onToggleEdit={onEditHouse}
             editing={editingId === house.id}
             expanded
-            hideHoursBanner
           />
         </div>
       ) : null}
@@ -215,7 +218,7 @@ export function RouteList({
             </div>
           </div>
         </li>
-        {items.map(({ house, order, hop, skipped, visitedTail }, i) => {
+        {items.map(({ house, order, hop, skipped, visitedTail, distanceM }, i) => {
           const showSkippedHeading = skipped && (i === 0 || !items[i - 1]!.skipped);
           const showVisitedHeading =
             visitedTail && (i === 0 || !items[i - 1]?.visitedTail);
@@ -259,6 +262,7 @@ export function RouteList({
                   onEditHouse={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
                   editingId={editingId}
                   gemCollected={gemCollected?.(house.id)}
+                  distanceM={distanceM}
                 />
               ) : (
                 <div className="route-list-house">
