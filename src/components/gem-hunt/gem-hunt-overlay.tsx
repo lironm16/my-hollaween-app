@@ -41,6 +41,7 @@ import type { UserLocation } from "@/hooks/use-user-location";
 import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-list-suspend";
 import { isGemCollected, isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
 import { GemCollectAlbumReveal } from "@/components/gem-hunt/gem-collect-album-reveal";
+import { GpsBearingDial } from "@/components/gem-hunt/gps-bearing-dial";
 import { cn } from "@/lib/utils";
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
@@ -340,17 +341,17 @@ export function GemHuntOverlay({
     (inApproachBand || collectEnabled || sim);
   const gpsBearingToAnchor =
     effectiveLoc != null ? bearingDegrees(effectiveLoc, anchor) : null;
-  const showGpsDirectionHint =
-    !centerReveal &&
+  const showGpsDial =
+    !centerDisplayMode &&
     phase !== "collecting" &&
     turnBearing == null &&
     gpsBearingToAnchor != null &&
-    inApproachBand;
+    effectiveLoc != null &&
+    userLocation != null &&
+    !sim;
   const showCompassEnable =
-    showGpsDirectionHint &&
-    (headingStatus === "denied" || headingStatus === "unsupported");
-  const showCompassPending =
-    showGpsDirectionHint && headingStatus === "pending" && heading == null;
+    showGpsDial && (headingStatus === "denied" || headingStatus === "unsupported");
+  const showCompassPending = showGpsDial && headingStatus === "pending" && heading == null;
 
   async function retryCompassPermission() {
     const result = await prepareGemHuntSensors({ requestCamera: false });
@@ -447,6 +448,8 @@ export function GemHuntOverlay({
             >
               <Navigation className="size-10" strokeWidth={2.5} />
             </div>
+          ) : showGpsDial ? (
+            <GpsBearingDial bearingDeg={gpsBearingToAnchor!} distanceM={distanceM} compact />
           ) : null}
           <div
             className={cn(
@@ -562,6 +565,8 @@ export function GemHuntOverlay({
                 >
                   <Navigation className="size-9" strokeWidth={2.4} />
                 </div>
+              ) : gpsBearingToAnchor != null ? (
+                <GpsBearingDial bearingDeg={gpsBearingToAnchor} distanceM={distanceM} compact />
               ) : null}
               <p className="gem-hunt-overlay__walk-text">
                 {turnBearing != null
@@ -601,24 +606,19 @@ export function GemHuntOverlay({
             </p>
           ) : null}
 
-          {showGpsDirectionHint ? (
+          {showCompassEnable && !showWalkGuide ? (
             <div className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--gps">
               <p className="gem-hunt-overlay__walk-text">
-                {showCompassEnable
-                  ? "אין חץ — הטלפון לא נותן כיוון (Compass)."
-                  : "כיוון לפי GPS:"}{" "}
-                <strong>{bearingClockLabelHe(gpsBearingToAnchor!)}</strong>
-                {distanceM != null ? ` · ~${formatDistance(distanceM)}` : null}
+                רוצים חץ שמסתובב עם הטלפון? באייפון זה לא תמיד מופיע בהגדרות — Safari שואל בהודעה
+                קופצת.
               </p>
-              {showCompassEnable ? (
-                <button
-                  type="button"
-                  className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact w-full"
-                  onClick={() => void retryCompassPermission()}
-                >
-                  אפשרו גישה לכיוון / תנועה
-                </button>
-              ) : null}
+              <button
+                type="button"
+                className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact w-full"
+                onClick={() => void retryCompassPermission()}
+              >
+                נסו שוב — «אפשר» בהודעת Safari
+              </button>
             </div>
           ) : null}
 
@@ -670,7 +670,9 @@ export function GemHuntOverlay({
       ) : null}
 
       {headingStatus === "denied" || headingStatus === "unsupported" ? (
-        <p className="gem-hunt-overlay__sensor-note">סריקה לפי זמן — חיישן כיוון לא זמין</p>
+        <p className="gem-hunt-overlay__sensor-note">
+          אין חיישן כיוון — השתמשו במעגל עם חץ (צפון למעלה) במרכז המסך
+        </p>
       ) : null}
 
       {phase === "albumReveal" ? (

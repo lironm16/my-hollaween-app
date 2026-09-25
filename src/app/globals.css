@@ -4036,6 +4036,70 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   color: #c4b5fd;
   font-weight: 500;
 }
+
+.gps-bearing-dial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  pointer-events: none;
+}
+.gps-bearing-dial--compact .gps-bearing-dial__hint {
+  display: none;
+}
+.gps-bearing-dial__svg {
+  width: min(42vw, 9.5rem);
+  height: min(42vw, 9.5rem);
+  filter: drop-shadow(0 4px 20px rgb(0 0 0 / 0.55));
+}
+.gem-hunt-overlay__scan-ring .gps-bearing-dial {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  z-index: 6;
+  transform: translate(-50%, -50%);
+}
+.gps-bearing-dial__ring {
+  fill: rgb(12 6 22 / 0.55);
+  stroke: rgb(251 191 36 / 0.55);
+  stroke-width: 2;
+}
+.gps-bearing-dial__inner {
+  fill: none;
+  stroke: rgb(139 92 246 / 0.35);
+  stroke-width: 1;
+}
+.gps-bearing-dial__n {
+  fill: #fde68a;
+  font-size: 11px;
+  font-weight: 800;
+}
+.gps-bearing-dial__arrow {
+  fill: #fde68a;
+}
+.gps-bearing-dial__stem {
+  stroke: #fde68a;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.gps-bearing-dial__hub {
+  fill: #a78bfa;
+}
+.gps-bearing-dial__label {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fde68a;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.85);
+}
+.gps-bearing-dial__hint {
+  margin: 0;
+  max-width: 16rem;
+  text-align: center;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: #c4b5fd;
+}
 .gem-hunt-overlay__walk-maps {
   font-size: 0.85rem;
   font-weight: 600;
