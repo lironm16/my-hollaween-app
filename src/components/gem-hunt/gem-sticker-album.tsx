@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useMemo } from "react";
 import { Sparkles } from "lucide-react";
+import { GemBagDiamondHero } from "@/components/gem-hunt/gem-bag-diamond-hero";
 import {
   gemAlbumStickerPool,
   gemLabelHe,
@@ -40,24 +41,23 @@ export function GemStickerAlbum({
 
   return (
     <div className={cn("gem-sticker-album", complete && "gem-sticker-album--complete")}>
-      <header className="gem-sticker-album__head">
-        <div>
-          <h1 className="gem-sticker-album__title">ספר המדבקות</h1>
-          <p className="gem-sticker-album__sub">
-            {complete ? (
-              <>
-                <Sparkles className="inline size-4 text-amber-300" aria-hidden /> האוסף
-                שלם — כל החבר&apos;ה נמצאים!
-              </>
-            ) : (
-              <>
-                {filledCount} מתוך {slots.length} מדבקות — מה חבוי על המפה?
-              </>
-            )}
-          </p>
-        </div>
+      <GemBagDiamondHero filledCount={filledCount} totalSlots={slots.length} complete={complete} />
+      <header className="gem-sticker-album__head gem-sticker-album__head--sub">
+        <p className="gem-sticker-album__sub">
+          {complete ? (
+            <>
+              <Sparkles className="inline size-4 text-amber-300" aria-hidden /> גלו את כל
+              המדבקות למטה
+            </>
+          ) : (
+            <>מה עדיין חבוי על המפה?</>
+          )}
+        </p>
         <div className="gem-sticker-album__meter" aria-hidden>
-          <span className="gem-sticker-album__meter-fill" style={{ width: `${slots.length ? (filledCount / slots.length) * 100 : 0}%` }} />
+          <span
+            className="gem-sticker-album__meter-fill"
+            style={{ width: `${slots.length ? (filledCount / slots.length) * 100 : 0}%` }}
+          />
         </div>
       </header>
 

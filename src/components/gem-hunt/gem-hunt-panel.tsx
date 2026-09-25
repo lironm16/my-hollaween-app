@@ -2,7 +2,8 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { Camera, Gem, MapPin } from "lucide-react";
-import { GemCheer } from "@/components/gem-cheer";
+import { GemCollectCheer } from "@/components/gem-collect-cheer";
+import { GemHouseFoundHero } from "@/components/gem-hunt/gem-house-found-hero";
 import { GemHuntOverlayLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { Button } from "@/components/ui/button";
 import { useGemProgress } from "@/hooks/use-gem-progress";
@@ -85,16 +86,24 @@ export function GemHuntPanel({
 
   return (
     <>
-      <GemCheer show={cheer} />
+      <GemCollectCheer show={cheer} house={house} />
       <section className="gem-hunt-panel" dir="rtl">
-        <div className="gem-hunt-panel__head">
-          <Gem className="size-5 text-amber-300" aria-hidden />
-          <div className="min-w-0 flex-1">
-            <p className="gem-hunt-panel__title">יהלום נסתר</p>
-            <p className="gem-hunt-panel__sub">
-              {collected
-                ? monsterLabel
-                : canCollect
+        <GemHouseFoundHero house={house} collected={collected} className="gem-hunt-panel__found-hero" />
+
+        {collected ? (
+          <div className="gem-hunt-panel__done-col">
+            <div className="gem-hunt-panel__done">
+              <Gem className="size-4 text-emerald-300" aria-hidden />
+              נאסף — {monsterLabel}
+            </div>
+          </div>
+        ) : (
+          <div className="gem-hunt-panel__head">
+            <Gem className="size-5 text-amber-300" aria-hidden />
+            <div className="min-w-0 flex-1">
+              <p className="gem-hunt-panel__title">ציד במצלמה</p>
+              <p className="gem-hunt-panel__sub">
+                {canCollect
                   ? "מוכנים לאיסוף!"
                   : proximity === "far"
                     ? "אפשר לצפות במצלמה מכל מקום · לאיסוף התקרבו לבית"
@@ -103,9 +112,10 @@ export function GemHuntPanel({
                       : standingStill || simulate
                         ? "מוכנים לציד!"
                         : "עמדו במקום לרגע… או פתחו מצלמה לתצוגה"}
-            </p>
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {isAdmin ? (
           <div className="gem-hunt-panel__admin-tools">
