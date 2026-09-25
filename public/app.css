@@ -2630,6 +2630,12 @@
   .text-rose-300 {
     color: var(--color-rose-300);
   }
+  .text-rose-300\/95 {
+    color: color-mix(in srgb, oklch(81% 0.117 11.638) 95%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-rose-300) 95%, transparent);
+    }
+  }
   .text-secondary-foreground {
     color: var(--secondary-foreground);
   }
@@ -6988,6 +6994,10 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 .map-gem-diamond-marker.is-dimmed:not(.is-collected) {
   opacity: 0.45;
+}
+.map-legend-gem-swatch {
+  width: 28px;
+  height: 28px;
 }
 .map-gem-diamond-popup__body {
   min-width: 9rem;

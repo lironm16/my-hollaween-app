@@ -4109,6 +4109,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__walk-guide--at-house {
   border-color: rgb(52 211 153 / 0.55);
 }
+.gem-hunt-overlay__walk-guide--hint {
+  width: min(92vw, 22rem);
+  margin-top: 0.25rem;
+}
 .gem-hunt-overlay__walk-guide--map-gps .gps-bearing-dial__svg {
   width: min(52vw, 11rem);
   height: min(52vw, 11rem);

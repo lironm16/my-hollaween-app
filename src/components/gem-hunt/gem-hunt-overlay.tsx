@@ -127,7 +127,7 @@ export function GemHuntOverlay({
   const [phase, setPhase] = useState<HuntPhase>("scanning");
   const [hint, setHint] = useState<"scan" | "warm" | "found" | "help">("scan");
   const [showHelp, setShowHelp] = useState(false);
-  const [posterHintOpen, setPosterHintOpen] = useState(false);
+  const [hintPanel, setHintPanel] = useState<null | "character" | "nav">(null);
   /** User chose «גלה לי» — centered gem on the camera (not orbit hint box). */
   const [centerReveal, setCenterReveal] = useState(false);
   const scanStartRef = useRef(Date.now());
@@ -170,7 +170,7 @@ export function GemHuntOverlay({
     setPhase("scanning");
     setHint("scan");
     setShowHelp(false);
-    setPosterHintOpen(false);
+    setHintPanel(null);
     setCenterReveal(false);
     setAlbumRevealPhase("enter");
     if (collectFinishRef.current != null) {
@@ -348,7 +348,7 @@ export function GemHuntOverlay({
   const ringReady = centerDisplayMode || pinCollectReady;
   const inApproachBand =
     distanceM != null && distanceM <= GEM_APPROACH_METERS && !sim && userLocation != null;
-  const showWalkGuide =
+  const isFarForHints =
     !collectEnabled &&
     !sim &&
     effectiveLoc != null &&
@@ -366,7 +366,7 @@ export function GemHuntOverlay({
   const showScanArrow =
     !centerDisplayMode &&
     phase !== "collecting" &&
-    !showWalkGuide &&
+    !isFarForHints &&
     huntArrowDeg != null &&
     effectiveLoc != null &&
     userLocation != null &&
@@ -395,14 +395,25 @@ export function GemHuntOverlay({
   const showOrientationGate =
     showHuntUi &&
     phase !== "collecting" &&
-    !posterHintOpen &&
+    !hintPanel &&
     iosOrientationPrompt &&
     !isGemHuntOrientationGranted() &&
     (headingStatus === "denied" || headingStatus === "idle");
   const mapsWalkUrl =
     userLocation != null && !sim
-      ? googleMapsNavigateUrl(userLocation, { lat: house.lat, lng: house.lng })
+      ? googleMapsNavigateUrl(userLocation, { lat: anchor.lat, lng: anchor.lng })
       : null;
+
+  const walkGuideCopy =
+    huntArrowPhoneRelative
+      ? facingTarget
+        ? "המשיכו ישר — היהלום מולכם"
+        : turnBearing! > 0
+          ? "סובבו ימינה לכיוון היהלום"
+          : "סובבו שמאלה לכיוון היהלום"
+      : gpsBearingToAnchor != null
+        ? `כיוון לפי GPS: ${bearingClockLabelHe(gpsBearingToAnchor)} — סובבו את הגוף (צפון = למעלה)`
+        : "התקרבו לנקודת היהלום";
   const showAtHouseCalibrate =
     !sim &&
     userLocation != null &&
@@ -621,52 +632,15 @@ export function GemHuntOverlay({
         </button>
       ) : null}
 
-      {showHuntUi && !posterHintOpen && (phase !== "collecting" || footerHint) ? (
+      {showHuntUi && !hintPanel && (phase !== "collecting" || footerHint) ? (
         <footer className="gem-hunt-overlay__footer" dir="rtl">
           {footerHint ? (
             <p className="gem-hunt-overlay__footer-hint">{footerHint}</p>
+          ) : isFarForHints ? (
+            <p className="gem-hunt-overlay__footer-hint">רחוקים מהיהלום — פתחו רמז 1 או רמז 2 (ניווט)</p>
           ) : null}
 
-          {showWalkGuide ? (
-            <div className="gem-hunt-overlay__walk-guide">
-              {huntArrowDeg != null ? (
-                <div
-                  className={cn(
-                    "gem-hunt-overlay__walk-arrow",
-                    !huntArrowMapNorth && facingTarget && "is-facing",
-                  )}
-                  style={{ transform: `rotate(${huntArrowDeg}deg)` }}
-                  aria-hidden
-                >
-                  <Navigation className="size-11" strokeWidth={2.5} />
-                </div>
-              ) : null}
-              <p className="gem-hunt-overlay__walk-text">
-                {huntArrowPhoneRelative
-                  ? facingTarget
-                    ? "המשיכו ישר — הבית מולכם"
-                    : turnBearing! > 0
-                      ? "סובבו ימינה לכיוון הבית"
-                      : "סובבו שמאלה לכיוון הבית"
-                  : gpsBearingToAnchor != null
-                    ? `כיוון לפי GPS: ${bearingClockLabelHe(gpsBearingToAnchor)} — סובבו את הגוף (צפון = למעלה)`
-                    : "התקרבו לבית"}
-                {distanceM != null ? ` · ~${formatDistance(distanceM)}` : null}
-              </p>
-              {mapsWalkUrl ? (
-                <a
-                  href={mapsWalkUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="gem-hunt-overlay__walk-maps"
-                >
-                  הליכה ב-Google Maps
-                </a>
-              ) : null}
-            </div>
-          ) : null}
-
-          {showScanArrow && !showWalkGuide ? (
+          {showScanArrow ? (
             <p className="gem-hunt-overlay__compass-caption">
               {huntArrowMapNorth
                 ? `חץ במעגל = ${bearingClockLabelHe(gpsBearingToAnchor!)} · צפון למעלה`
@@ -699,7 +673,7 @@ export function GemHuntOverlay({
             </div>
           ) : null}
 
-          {showCompassEnable && !showWalkGuide ? (
+          {showCompassEnable && !isFarForHints ? (
             <div className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--gps">
               <p className="gem-hunt-overlay__walk-text">
                 רוצים חץ שמסתובב עם הטלפון? באייפון אין «תנועה וכיוון» בהגדרות — רק הודעה קופצת
@@ -727,13 +701,32 @@ export function GemHuntOverlay({
 
           {phase !== "collecting" && !centerDisplayMode ? (
             <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
-              <button
-                type="button"
-                className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact"
-                onClick={() => setPosterHintOpen(true)}
-              >
-                רמז
-              </button>
+              {isFarForHints ? (
+                <>
+                  <button
+                    type="button"
+                    className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact"
+                    onClick={() => setHintPanel("character")}
+                  >
+                    רמז 1
+                  </button>
+                  <button
+                    type="button"
+                    className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact"
+                    onClick={() => setHintPanel("nav")}
+                  >
+                    רמז 2
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact"
+                  onClick={() => setHintPanel("character")}
+                >
+                  רמז
+                </button>
+              )}
               <button
                 type="button"
                 className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact"
@@ -746,16 +739,58 @@ export function GemHuntOverlay({
         </footer>
       ) : null}
 
-      {posterHintOpen ? (
-        <div className="gem-hunt-overlay__poster-hint" role="dialog" aria-label="תצוגת היהלום">
+      {hintPanel === "character" ? (
+        <div className="gem-hunt-overlay__poster-hint" role="dialog" aria-label="רמז 1 — הדמות ביהלום">
           <p className="gem-hunt-overlay__poster-kicker">רמז 1</p>
-          <p className="gem-hunt-overlay__poster-title">{gemLabelHe(monsterId)}</p>
+          <p className="gem-hunt-overlay__poster-title">ראו מי הדמות ביהלום</p>
+          <p className="gem-hunt-overlay__poster-caption">{gemLabelHe(monsterId)}</p>
           <GemOrbitStage house={house} stageClassName="gem-hunt-overlay__poster-orbit" />
-          <p className="gem-hunt-overlay__poster-caption">כך היהלום נראה במצלמה — אפשר לסובב</p>
+          <p className="gem-hunt-overlay__poster-caption">אפשר לסובב — כך ייראה במצלמה</p>
           <button
             type="button"
             className="gem-hunt-overlay__poster-back"
-            onClick={() => setPosterHintOpen(false)}
+            onClick={() => setHintPanel(null)}
+          >
+            חזרה למצלמה
+          </button>
+        </div>
+      ) : null}
+
+      {hintPanel === "nav" ? (
+        <div className="gem-hunt-overlay__poster-hint" role="dialog" aria-label="רמז 2 — ניווט ליהלום">
+          <p className="gem-hunt-overlay__poster-kicker">רמז 2: ניווט ליהלום</p>
+          <div className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint">
+            {huntArrowDeg != null ? (
+              <div
+                className={cn(
+                  "gem-hunt-overlay__walk-arrow",
+                  !huntArrowMapNorth && facingTarget && "is-facing",
+                )}
+                style={{ transform: `rotate(${huntArrowDeg}deg)` }}
+                aria-hidden
+              >
+                <Navigation className="size-11" strokeWidth={2.5} />
+              </div>
+            ) : null}
+            <p className="gem-hunt-overlay__walk-text">
+              {walkGuideCopy}
+              {distanceM != null ? ` · ~${formatDistance(distanceM)}` : null}
+            </p>
+            {mapsWalkUrl ? (
+              <a
+                href={mapsWalkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="gem-hunt-overlay__walk-maps"
+              >
+                הליכה ב-Google Maps
+              </a>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            className="gem-hunt-overlay__poster-back"
+            onClick={() => setHintPanel(null)}
           >
             חזרה למצלמה
           </button>
