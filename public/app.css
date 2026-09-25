@@ -9012,6 +9012,43 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   border: 1px solid rgb(167 139 250 / 0.55);
   color: #e9d5ff;
 }
+.gem-hunt-overlay__orientation-gate {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  padding: 1.5rem;
+  text-align: center;
+  background: rgb(8 4 14 / 0.88);
+  backdrop-filter: blur(6px);
+}
+.gem-hunt-overlay__orientation-gate-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fde68a;
+}
+.gem-hunt-overlay__orientation-gate-text {
+  margin: 0;
+  max-width: 18rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: #e9d5ff;
+}
+.gem-hunt-overlay__orientation-gate-btn {
+  margin-top: 0.35rem;
+  padding: 0.85rem 1.35rem;
+  border: none;
+  border-radius: 9999px;
+  background: #fbbf24;
+  color: #1a0a12;
+  font-size: 1rem;
+  font-weight: 700;
+}
 .gem-sprite {
   position: relative;
   width: 7.5rem;

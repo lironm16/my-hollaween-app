@@ -71,6 +71,15 @@ if (typeof document !== "undefined") {
   });
 }
 
+function clearOrientationGranted() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(ORIENTATION_GRANTED_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function isGemHuntOrientationGranted() {
   if (typeof window === "undefined") return false;
   if (!("DeviceOrientationEvent" in window)) return false;
@@ -80,6 +89,28 @@ export function isGemHuntOrientationGranted() {
   };
   if (typeof ctor.requestPermission !== "function") return true;
   return readGranted(ORIENTATION_GRANTED_KEY);
+}
+
+/** iOS Safari / PWA — must run inside a tap handler (same tick as click). */
+export async function requestGemHuntOrientationPermission(): Promise<boolean> {
+  if (typeof window === "undefined" || !("DeviceOrientationEvent" in window)) return false;
+  migrateOrientationSessionFlag();
+  const ctor = DeviceOrientationEvent as typeof DeviceOrientationEvent & {
+    requestPermission?: () => Promise<"granted" | "denied">;
+  };
+  if (typeof ctor.requestPermission !== "function") return true;
+  try {
+    const result = await ctor.requestPermission();
+    if (result === "granted") {
+      writeGranted(ORIENTATION_GRANTED_KEY);
+      return true;
+    }
+    clearOrientationGranted();
+    return false;
+  } catch {
+    clearOrientationGranted();
+    return false;
+  }
 }
 
 export type PrepareGemHuntSensorsOptions = {
@@ -102,26 +133,10 @@ export async function prepareGemHuntSensors(
 
   migrateOrientationSessionFlag();
 
-  if (
-    requestOrientation &&
-    typeof window !== "undefined" &&
-    "DeviceOrientationEvent" in window
-  ) {
-    const ctor = DeviceOrientationEvent as typeof DeviceOrientationEvent & {
-      requestPermission?: () => Promise<"granted" | "denied">;
-    };
-    if (typeof ctor.requestPermission === "function" && !readGranted(ORIENTATION_GRANTED_KEY)) {
-      try {
-        const result = await ctor.requestPermission();
-        if (result === "granted") {
-          writeGranted(ORIENTATION_GRANTED_KEY);
-        } else {
-          orientation = false;
-        }
-      } catch {
-        orientation = false;
-      }
-    }
+  if (requestOrientation) {
+    orientation = await requestGemHuntOrientationPermission();
+  } else {
+    orientation = false;
   }
 
   if (

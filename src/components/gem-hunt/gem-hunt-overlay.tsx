@@ -10,6 +10,8 @@ import { useDeviceHeading } from "@/hooks/use-device-heading";
 import {
   getGemHuntCameraStream,
   prepareGemHuntSensors,
+  requestGemHuntOrientationPermission,
+  isGemHuntOrientationGranted,
   stopGemHuntCameraStream,
 } from "@/lib/gem-hunt-sensors";
 import { gemCollectDanceIndex } from "@/lib/gem-collect-dance";
@@ -182,7 +184,10 @@ export function GemHuntOverlay({
       let stream = getGemHuntCameraStream();
       if (!stream && !cameraBootRef.current) {
         cameraBootRef.current = true;
-        const prepared = await prepareGemHuntSensors({ requestCamera: true });
+        const prepared = await prepareGemHuntSensors({
+          requestCamera: true,
+          requestOrientation: false,
+        });
         cameraBootRef.current = false;
         if (cancelled) return;
         if (!prepared.camera) {
@@ -355,9 +360,25 @@ export function GemHuntOverlay({
   const needsLocationForArrow = !sim && userLocation == null && showHuntUi && phase !== "collecting";
 
   async function retryCompassPermission() {
-    const result = await prepareGemHuntSensors({ requestCamera: false });
-    if (result.orientation) setCompassRetry((n) => n + 1);
+    const ok = await requestGemHuntOrientationPermission();
+    if (ok) setCompassRetry((n) => n + 1);
   }
+
+  const iosOrientationPrompt =
+    typeof window !== "undefined" &&
+    "DeviceOrientationEvent" in window &&
+    typeof (
+      DeviceOrientationEvent as typeof DeviceOrientationEvent & {
+        requestPermission?: () => Promise<"granted" | "denied">;
+      }
+    ).requestPermission === "function";
+  const showOrientationGate =
+    showHuntUi &&
+    phase !== "collecting" &&
+    !posterHintOpen &&
+    iosOrientationPrompt &&
+    !isGemHuntOrientationGranted() &&
+    (headingStatus === "denied" || headingStatus === "idle");
   const mapsWalkUrl =
     userLocation != null && !sim ? googleMapsNavigateUrl(userLocation, anchor) : null;
 
@@ -442,6 +463,22 @@ export function GemHuntOverlay({
 
       {phase === "collecting" ? (
         <div className="gem-hunt-overlay__collect-flash" aria-hidden />
+      ) : null}
+
+      {showOrientationGate ? (
+        <div className="gem-hunt-overlay__orientation-gate" role="dialog" aria-label="אישור כיוון">
+          <p className="gem-hunt-overlay__orientation-gate-title">חץ מסתובב עם הטלפון</p>
+          <p className="gem-hunt-overlay__orientation-gate-text">
+            Safari יציג הודעה — לחצו «אפשר» (אין «תנועה וכיוון» בהגדרות).
+          </p>
+          <button
+            type="button"
+            className="gem-hunt-overlay__orientation-gate-btn"
+            onClick={() => void retryCompassPermission()}
+          >
+            המשך — אישור כיוון
+          </button>
+        </div>
       ) : null}
 
       {showHuntUi ? (
