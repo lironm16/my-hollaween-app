@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -199,14 +198,12 @@ function ExportFormatDialog({
         dir="rtl"
         className="gap-0 border border-orange-500/30 bg-[#1a0d24] p-0 text-orange-50 sm:max-w-md"
       >
-        <DialogHeader className="border-b border-orange-500/15 px-4 py-3 pt-4 text-right">
+        <DialogHeader className="border-b border-orange-500/15 px-4 py-3 pt-4 text-center">
           <DialogTitle className="font-display text-xl text-orange-200">שמירה ושיתוף</DialogTitle>
-          <DialogDescription className="text-base leading-snug text-violet-200/90">
-            {countMessage}
-          </DialogDescription>
         </DialogHeader>
 
         <fieldset className="border-0 px-4 py-3">
+          <p className="mb-3 text-base leading-snug text-violet-200/90">{countMessage}</p>
           <legend className="mb-2 text-sm font-semibold text-violet-200/90">רשימת בתים — פורמט</legend>
           <div className="grid gap-2" role="radiogroup">
             {HOUSE_EXPORT_FORMAT_OPTIONS.map((option) => {
@@ -243,7 +240,8 @@ function ExportFormatDialog({
           <div className="border-t border-orange-500/15 px-4 py-3">
             <p className="mb-2 text-sm font-semibold text-violet-200/90">מסלול פעיל ({routeStopCount} עצירות)</p>
             <p className="mb-3 text-sm leading-snug text-violet-300/85">
-              שיתוף קישור — חבר יקבל את אותם מספרי עצירות. זמין רק במצב מסלול.
+              «שיתוף קישור» שולח קישור לאפליקציה (וואטסאפ, אווירדרופ, הודעה לעצמכם). במכשיר השני
+              פותחים את הקישור — מופיעה «החלפת מסלול» — אותם מספרי בתים; הניווט מנקודת ההתחלה שלכם.
             </p>
             <div className="flex flex-col gap-2">
               <Button

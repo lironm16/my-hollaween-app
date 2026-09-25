@@ -497,15 +497,19 @@ export function NeighborhoodApp({
   const activeRoute = routeMode ? (walkingRoute ?? filterRoute) : null;
 
   useEffect(() => {
-    if (!routeMode) return;
+    if (houses.length === 0) return;
     const pending = readPendingRouteShare();
     if (pending) setRouteSharePrompt(pending);
-  }, [routeMode]);
+  }, [houses.length]);
 
   const housesById = useMemo(() => new Map(houses.map((house) => [house.id, house])), [houses]);
 
   const acceptSharedRoute = useCallback(() => {
     if (!routeSharePrompt) return;
+    if (!routeMode) {
+      originPick.exitOriginPick();
+      startRouteMode();
+    }
     const sharedHouses = housesForSharedRoute(routeSharePrompt.stopIds, housesById);
     const route = buildWalkingRouteOrdered(
       sharedHouses,
@@ -531,8 +535,11 @@ export function NeighborhoodApp({
     origin.label,
     origin.lat,
     origin.lng,
+    originPick,
+    routeMode,
     routeSharePrompt,
     setPinnedRoute,
+    startRouteMode,
   ]);
 
   const declineSharedRoute = useCallback(() => {
