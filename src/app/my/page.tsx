@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
@@ -40,6 +40,18 @@ function parseTab(raw: string | null, showCollected: boolean): MyTab {
 }
 
 export default function MyCollectionsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-dvh items-center justify-center bg-[#12081a] text-orange-200">טוענים…</div>
+      }
+    >
+      <MyCollectionsPageContent />
+    </Suspense>
+  );
+}
+
+function MyCollectionsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { admin } = useAdminSession();
