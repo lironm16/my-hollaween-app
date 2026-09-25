@@ -143,12 +143,12 @@ export function GemHuntOverlay({
   const [albumRevealNewFriend, setAlbumRevealNewFriend] = useState(true);
   const [compassRetry, setCompassRetry] = useState(0);
 
-  const { heading, status: headingStatus } = useDeviceHeading(true, compassRetry);
+  const { heading, pitch: devicePitch, status: headingStatus } = useDeviceHeading(true, compassRetry);
 
   const pinPlacement = useMemo(() => {
     if (!effectiveLoc) return null;
-    return gemScreenPlacement(effectiveLoc, anchor, heading);
-  }, [anchor, effectiveLoc, heading]);
+    return gemScreenPlacement(effectiveLoc, anchor, heading, devicePitch);
+  }, [anchor, effectiveLoc, heading, devicePitch]);
   const pinDisplay = useMemo(
     () => gemPlacementDisplaySnap(pinPlacement),
     [pinPlacement],

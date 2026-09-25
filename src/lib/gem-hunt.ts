@@ -54,6 +54,10 @@ export const GEM_SCAN_PAN_DEGREES = 180;
 export const GEM_HELP_AFTER_SECONDS = 8;
 /** Approx. phone camera horizontal field of view — for pinning gem on screen. */
 export const GEM_CAMERA_HFOV_DEG = 62;
+/** Approx. vertical FOV — used when tilting the phone up/down. */
+export const GEM_CAMERA_VFOV_DEG = 50;
+/** Ground gem elevation vs horizon when holding the phone level (negative = toward feet). */
+export const GEM_ANCHOR_ELEVATION_DEG = -12;
 /** On-screen hunt ring center (matches `.gem-hunt-overlay__scan-ring` at 42%). */
 export const GEM_SCAN_RING_CENTER_X = 50;
 export const GEM_SCAN_RING_CENTER_Y = 42;
@@ -167,21 +171,35 @@ export function gemScreenPlacement(
   user: { lat: number; lng: number },
   anchor: Pick<GemAnchor, "lat" | "lng">,
   deviceHeading: number | null,
+  devicePitch: number | null = null,
   hFovDeg = GEM_CAMERA_HFOV_DEG,
+  vFovDeg = GEM_CAMERA_VFOV_DEG,
 ): GemScreenPlacement | null {
   if (deviceHeading == null || !Number.isFinite(deviceHeading)) return null;
   const distanceM = distanceMeters(user, anchor);
   const rel = relativeWalkBearingDeg(user, anchor, deviceHeading);
   if (rel == null) return null;
-  const half = hFovDeg / 2;
-  const inView = Math.abs(rel) <= half;
-  const xSpread = inView ? 36 : 42;
-  const xRaw = GEM_SCAN_RING_CENTER_X + (rel / half) * xSpread;
-  const xPercent = inView ? Math.min(90, Math.max(10, xRaw)) : rel > 0 ? 92 : 8;
-  /** Keep the pin on the ring center vertically (distance no longer pulls it up/down). */
-  const yPercent = inView
-    ? GEM_SCAN_RING_CENTER_Y
-    : 40 + Math.min(14, (distanceM / GEM_HUNT_METERS) * 10);
+  const halfH = hFovDeg / 2;
+  const inViewH = Math.abs(rel) <= halfH;
+  const xSpread = inViewH ? 36 : 42;
+  const xRaw = GEM_SCAN_RING_CENTER_X + (rel / halfH) * xSpread;
+  const xPercent = inViewH ? Math.min(90, Math.max(10, xRaw)) : rel > 0 ? 92 : 8;
+
+  let yPercent: number;
+  let inViewV = true;
+  if (devicePitch != null && Number.isFinite(devicePitch)) {
+    const halfV = vFovDeg / 2;
+    const relElev = GEM_ANCHOR_ELEVATION_DEG - devicePitch;
+    inViewV = Math.abs(relElev) <= halfV;
+    const yRaw = GEM_SCAN_RING_CENTER_Y + (relElev / halfV) * 40;
+    yPercent = inViewV ? Math.min(88, Math.max(12, yRaw)) : relElev > 0 ? 8 : 92;
+  } else {
+    yPercent = inViewH
+      ? GEM_SCAN_RING_CENTER_Y
+      : 40 + Math.min(14, (distanceM / GEM_HUNT_METERS) * 10);
+  }
+
+  const inView = inViewH && inViewV;
   return { xPercent, yPercent, inView, distanceM, relativeBearingDeg: rel };
 }
 
@@ -204,25 +222,19 @@ export function gemInScanRing(
   return false;
 }
 
-/** Ease gem sprite toward ring center when close (display only). */
+/** Ease gem sprite toward ring center horizontally when close (display only; Y stays world-locked). */
 export function gemPlacementDisplaySnap(placement: GemScreenPlacement | null) {
   if (!placement?.inView) return placement;
   const dx = placement.xPercent - GEM_SCAN_RING_CENTER_X;
-  const dy = placement.yPercent - GEM_SCAN_RING_CENTER_Y;
-  const dist = Math.hypot(dx, dy);
-  if (dist <= 10) {
-    return {
-      ...placement,
-      xPercent: GEM_SCAN_RING_CENTER_X,
-      yPercent: GEM_SCAN_RING_CENTER_Y,
-    };
+  const xDist = Math.abs(dx);
+  if (xDist <= 10) {
+    return { ...placement, xPercent: GEM_SCAN_RING_CENTER_X };
   }
-  if (dist <= 28) {
+  if (xDist <= 28) {
     const pull = 0.45;
     return {
       ...placement,
       xPercent: placement.xPercent + (GEM_SCAN_RING_CENTER_X - placement.xPercent) * pull,
-      yPercent: placement.yPercent + (GEM_SCAN_RING_CENTER_Y - placement.yPercent) * pull,
     };
   }
   return placement;

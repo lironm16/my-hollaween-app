@@ -56,7 +56,7 @@ describe("gem hunt geo", () => {
     const anchor = gemAnchorForHouse(house);
     const user = { lat: house.lat + 0.00012, lng: house.lng };
     const heading = bearingDegrees(user, anchor);
-    const place = gemScreenPlacement(user, anchor, heading);
+    const place = gemScreenPlacement(user, anchor, heading, -12);
     assert.ok(place);
     assert.equal(place!.inView, true);
     assert.ok(Math.abs(place!.xPercent - 50) < 8);
@@ -64,16 +64,25 @@ describe("gem hunt geo", () => {
     assert.equal(gemInScanRing(place), true);
   });
 
+  it("moves gem vertically when camera pitch changes (world-locked)", () => {
+    const anchor = gemAnchorForHouse(house);
+    const user = { lat: house.lat + 0.00012, lng: house.lng };
+    const heading = bearingDegrees(user, anchor);
+    const lookingUp = gemScreenPlacement(user, anchor, heading, 18)!;
+    const lookingDown = gemScreenPlacement(user, anchor, heading, -18)!;
+    assert.ok(lookingUp.yPercent > lookingDown.yPercent);
+  });
+
   it("snaps display placement toward ring center when close", () => {
     const anchor = gemAnchorForHouse(house);
     const user = { lat: house.lat + 0.00012, lng: house.lng };
     const heading = bearingDegrees(user, anchor);
-    const place = gemScreenPlacement(user, anchor, heading);
+    const place = gemScreenPlacement(user, anchor, heading, 0);
     assert.ok(place);
     const snapped = gemPlacementDisplaySnap(place);
     assert.ok(snapped);
     assert.equal(snapped!.xPercent, 50);
-    assert.equal(snapped!.yPercent, GEM_SCAN_RING_CENTER_Y);
+    assert.equal(snapped!.yPercent, place!.yPercent);
   });
 
   it("maps each house to a gem monster id", () => {

@@ -8,6 +8,22 @@ type OrientationLike = DeviceOrientationEvent & {
   webkitCompassHeading?: number;
 };
 
+/** Degrees from horizon: positive = camera tilted up, negative = looking down. */
+export function readDevicePitch(event: DeviceOrientationEvent): number | null {
+  if (typeof window === "undefined") return null;
+  const beta = event.beta;
+  const gamma = event.gamma;
+  if (typeof beta !== "number" || !Number.isFinite(beta)) return null;
+  const angle =
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(orientation: landscape)").matches &&
+    typeof gamma === "number" &&
+    Number.isFinite(gamma)
+      ? gamma
+      : beta;
+  return 90 - angle;
+}
+
 function readHeading(event: OrientationLike): number | null {
   if (typeof event.webkitCompassHeading === "number" && Number.isFinite(event.webkitCompassHeading)) {
     return normalizeHeading(event.webkitCompassHeading);
@@ -36,12 +52,20 @@ function headingStep(prev: number | null, next: number) {
 /** Listen only — call prepareGemHuntSensors() from a button before opening hunt. */
 export function useDeviceHeading(active: boolean, retryToken = 0) {
   const [heading, setHeading] = useState<number | null>(null);
+  const [pitch, setPitch] = useState<number | null>(null);
   const [status, setStatus] = useState<HeadingStatus>("idle");
   const lastUiRef = useRef<number>(0);
   const lastValueRef = useRef<number | null>(null);
+  const lastPitchRef = useRef<number | null>(null);
 
   const onOrientation = useCallback((event: Event) => {
-    const value = readHeading(event as OrientationLike);
+    const orient = event as OrientationLike;
+    const pitchValue = readDevicePitch(orient);
+    if (pitchValue != null) {
+      lastPitchRef.current = pitchValue;
+      setPitch(pitchValue);
+    }
+    const value = readHeading(orient);
     if (value == null) return;
     const prev = lastValueRef.current;
     const now = performance.now();
@@ -61,7 +85,9 @@ export function useDeviceHeading(active: boolean, retryToken = 0) {
       window.removeEventListener("deviceorientation", onOrientation, true);
       lastUiRef.current = 0;
       lastValueRef.current = null;
+      lastPitchRef.current = null;
       setHeading(null);
+      setPitch(null);
       setStatus("idle");
       return;
     }
@@ -87,5 +113,5 @@ export function useDeviceHeading(active: boolean, retryToken = 0) {
     };
   }, [active, onOrientation, retryToken]);
 
-  return { heading, status };
+  return { heading, pitch, status };
 }
