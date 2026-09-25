@@ -123,11 +123,9 @@ GitHub Actions (`.github/workflows/ci.yml`) מריץ בדיקות יחידה, bu
 זה אפליקציית ווב (PWA). בטלפון: «הוספה למסך הבית».
 
 - **Vercel (חינם):** הפריסה מחוברת ל־GitHub `lironm16/my-hollaween-app`. מיזוג ל־`main` ב־Cursor **לא** מפרסם לבד — צריך סנכרון ל־GitHub.
-- **סנכרון אוטומטי (מומלץ):** אחרי הגדרה חד־פעמית, GitHub Actions מושך מ־Cursor כל 5 דקות ו־Vercel נפרס אוטומטית.
-  1. ב־GitHub → `my-hollaween-app` → הוסיפו קובץ `.github/workflows/sync-from-cursor.yml` (העתיקו מ־`deploy/github/sync-from-cursor.yml` במאגר).
-  2. Settings → Secrets → Actions: הוסיפו `ORIGIN_GIT_TOKEN` (User API Key מ־[cursor.com/dashboard/api](https://cursor.com/dashboard/api)).
-  3. מעכשיו: כל merge ל־Cursor `main` מגיע ל־Vercel תוך כ~5 דקות (בלי `npm run sync:github` ידני).
-- **סנכרון ידני (מיידי):** `GITHUB_TOKEN=ghp_... npm run sync:github` — מעדכן קוד באפליקציה בלבד, לא נוגע ב־`.github/`.
+- **סנכרון Cursor → GitHub (כרגע כבוי):** סנכרון אוטומטי מחק תמונות ו־GLBים שהיו רק ב־GitHub. **עדכנו ידנית** את `.github/workflows/sync-from-cursor.yml` ב־GitHub מתוך `deploy/github/sync-from-cursor.yml` (ללא cron), או כבו את ה־workflow ב־Actions. דחפו תמונות (`public/house-photos`, `public/images`, `public/gem-monsters`) ישירות ל־GitHub.
+- **להפעיל שוב בעתיד:** ב־GitHub → Settings → Variables → Actions: `SYNC_CURSOR_MIRROR=true`, והחזירו את ה־`schedule` ב־workflow. אז Cursor main יגיע ל־Vercel בלי `sync:github` ידני.
+- **סנכרון ידני (מכוון בלבד):** `GITHUB_SYNC=1 GITHUB_TOKEN=ghp_... npm run sync:github` — ברירת מחדל **לא** רצה; שומר קבצים חסרים ב־`public/gem-monsters`, `public/house-photos`, `public/images`.
 - **שגיאת `workflows permission` בסנכרון האוטומטי:** ב־GitHub → `.github/workflows/sync-from-cursor.yml` → **Edit** → החליפו בתוכן מ־`deploy/github/sync-from-cursor.yml` (Commit to main). הגרסה המתוקנת שומרת את `.github/` של GitHub ולא דוחפת שינויי workflow.
 - בתים חדשים נשמרים על שרת האפליקציה בתור אחד-אחד.
 - **App Store / Google Play:** לא כלול בגרסה המינימלית. אפשר לעטוף אחר כך ב-[Capacitor](https://capacitorjs.com/) מאותו אתר. בינתיים PWA מכסה iOS/Android בלי חנות.

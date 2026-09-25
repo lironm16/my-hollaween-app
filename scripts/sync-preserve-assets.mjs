@@ -7,7 +7,11 @@ import { cpSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 /** Relative paths to directories that use no-clobber merge (not full mirror wipe). */
-export const SYNC_PRESERVE_DIRS = ["public/gem-monsters"];
+export const SYNC_PRESERVE_DIRS = [
+  "public/gem-monsters",
+  "public/house-photos",
+  "public/images",
+];
 
 export function backupPreserveDirs(repoRoot, backupRoot) {
   for (const rel of SYNC_PRESERVE_DIRS) {

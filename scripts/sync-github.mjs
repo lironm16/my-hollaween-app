@@ -6,13 +6,22 @@
  * `repo` token works. The auto-sync workflow is added once via GitHub UI
  * (deploy/github/sync-from-cursor.yml) with ORIGIN_GIT_TOKEN configured.
  *
- *   GITHUB_TOKEN=ghp_... npm run sync:github
+ * Disabled by default — Cursor clones often omit large `public/` assets; mirroring
+ * would delete them on GitHub. Push photos/GLBs on GitHub directly, or opt in:
+ *
+ *   GITHUB_SYNC=1 GITHUB_TOKEN=ghp_... npm run sync:github
  */
 import { execSync } from "node:child_process";
 import { cpSync, existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { backupPreserveDirs, mergePreserveDirs } from "./sync-preserve-assets.mjs";
+
+if (process.env.GITHUB_SYNC !== "1") {
+  console.log("GitHub mirror sync is OFF (set GITHUB_SYNC=1 to run npm run sync:github).");
+  console.log("Push images and other large assets on GitHub manually until auto-sync is re-enabled.");
+  process.exit(0);
+}
 
 const token = process.env.GITHUB_TOKEN?.trim();
 const repo = process.env.GITHUB_REPO?.trim() || "lironm16/my-hollaween-app";
