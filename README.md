@@ -125,7 +125,7 @@ GitHub Actions (`.github/workflows/ci.yml`) מריץ בדיקות יחידה, bu
 - **Vercel (חינם):** הפריסה מחוברת ל־GitHub `lironm16/my-hollaween-app`. מיזוג ל־`main` ב־Cursor **לא** מפרסם לבד — צריך סנכרון ל־GitHub.
 - **סנכרון Cursor → GitHub (כרגע כבוי):** סנכרון אוטומטי מחק תמונות ו־GLBים שהיו רק ב־GitHub. **עדכנו ידנית** את `.github/workflows/sync-from-cursor.yml` ב־GitHub מתוך `deploy/github/sync-from-cursor.yml` (ללא cron), או כבו את ה־workflow ב־Actions. דחפו תמונות (`public/house-photos`, `public/images`, `public/gem-monsters`) ישירות ל־GitHub.
 - **להפעיל שוב בעתיד:** ב־GitHub → Settings → Variables → Actions: `SYNC_CURSOR_MIRROR=true`, והחזירו את ה־`schedule` ב־workflow. אז Cursor main יגיע ל־Vercel בלי `sync:github` ידני.
-- **סנכרון ידני (מכוון בלבד):** `GITHUB_SYNC=1 GITHUB_TOKEN=ghp_... npm run sync:github` — ברירת מחדל **לא** רצה; שומר קבצים חסרים ב־`public/gem-monsters`, `public/house-photos`, `public/images`.
+- **סנכרון ידני (מכוון בלבד):** `GITHUB_SYNC=1 GITHUB_TOKEN=ghp_... npm run sync:github` — ברירת מחדל **לא** רצה. בשלושת תיקיות הנכסים, **קבצים שכבר על GitHub גוברים** (העלאה מהמק לא נדרסת).
 - **שגיאת `workflows permission` בסנכרון האוטומטי:** ב־GitHub → `.github/workflows/sync-from-cursor.yml` → **Edit** → החליפו בתוכן מ־`deploy/github/sync-from-cursor.yml` (Commit to main). הגרסה המתוקנת שומרת את `.github/` של GitHub ולא דוחפת שינויי workflow.
 - בתים חדשים נשמרים על שרת האפליקציה בתור אחד-אחד.
 - **App Store / Google Play:** לא כלול בגרסה המינימלית. אפשר לעטוף אחר כך ב-[Capacitor](https://capacitorjs.com/) מאותו אתר. בינתיים PWA מכסה iOS/Android בלי חנות.
