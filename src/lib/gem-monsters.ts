@@ -130,8 +130,8 @@ export const GEM_MONSTER_CATALOG = [
     id: "werewolf",
     glbPath: "/gem-monsters/werewolf.glb",
     posterPath: "/gem-monsters/werewolf-poster.png",
-    labelHe: "איש זאב",
-    petNameHe: "זאבי הלב",
+    labelHe: "שועל",
+    petNameHe: "לבי השועל",
   },
   {
     id: "zombie",

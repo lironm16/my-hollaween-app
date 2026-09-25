@@ -3146,16 +3146,6 @@
     --tw-drop-shadow: var(--tw-drop-shadow-size);
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
   }
-  .drop-shadow-\[0_0_14px_rgb\(251_191_36\/0\.45\)\] {
-    --tw-drop-shadow-size: drop-shadow(0 0 14px var(--tw-drop-shadow-color, rgb(251 191 36/0.45)));
-    --tw-drop-shadow: var(--tw-drop-shadow-size);
-    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
-  }
-  .drop-shadow-\[0_0_16px_rgb\(251_191_36\/0\.55\)\] {
-    --tw-drop-shadow-size: drop-shadow(0 0 16px var(--tw-drop-shadow-color, rgb(251 191 36/0.55)));
-    --tw-drop-shadow: var(--tw-drop-shadow-size);
-    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
-  }
   .grayscale {
     --tw-grayscale: grayscale(100%);
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
@@ -8363,66 +8353,37 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   color: #86efac;
 }
 .gem-house-found-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   margin-bottom: 0.75rem;
-  padding: 0.75rem 0.85rem;
+  padding: 1.35rem 0.85rem 1rem;
   border-radius: 0.95rem;
   border: 1px solid rgb(139 92 246 / 0.35);
-  background: radial-gradient(circle at 85% 0%, rgb(76 29 149 / 0.35), rgb(18 8 28 / 0.92));
+  background: radial-gradient(circle at 50% 0%, rgb(76 29 149 / 0.35), rgb(18 8 28 / 0.92));
 }
 .gem-house-found-hero--found {
   border-color: rgb(251 191 36 / 0.45);
   box-shadow: 0 0 24px rgb(251 191 36 / 0.12);
 }
-.gem-house-found-hero--found.is-revealed .gem-house-found-hero__reveal {
-  animation: gem-house-reveal-pop 0.65s cubic-bezier(0.34, 1.35, 0.48, 1) backwards;
-}
-.gem-house-found-hero__row {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-.gem-house-found-hero__diamond {
+.gem-house-found-hero__gem-wrap {
   display: grid;
   place-items: center;
-  width: 3rem;
-  height: 3rem;
+  width: 5.5rem;
+  height: 5.5rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0.65rem;
   border-radius: 9999px;
-  background: rgb(251 191 36 / 0.12);
-  box-shadow: inset 0 0 0 1px rgb(251 191 36 / 0.35);
+  background: rgb(251 191 36 / 0.14);
+  box-shadow: inset 0 0 0 2px rgb(251 191 36 / 0.45),
+    0 0 28px rgb(251 191 36 / 0.35);
 }
-.gem-house-found-hero__diamond--found {
-  background: rgb(16 185 129 / 0.15);
-  box-shadow: inset 0 0 0 1px rgb(110 231 183 / 0.35),
-    0 0 18px rgb(251 191 36 / 0.2);
-}
-.gem-house-found-hero__mystery-slot {
-  display: grid;
-  place-items: center;
+.gem-house-found-hero__gem-icon {
   width: 3.25rem;
   height: 3.25rem;
-  border-radius: 0.65rem;
-  border: 2px dashed rgb(167 139 250 / 0.4);
-  background: repeating-linear-gradient(
-    -45deg,
-    rgb(49 24 78 / 0.35),
-    rgb(49 24 78 / 0.35) 5px,
-    rgb(30 15 45 / 0.55) 5px,
-    rgb(30 15 45 / 0.55) 10px
-  );
-}
-.gem-house-found-hero__question {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: rgb(167 139 250 / 0.45);
-}
-.gem-house-found-hero__reveal {
-  width: 3.25rem;
-  height: 3.25rem;
-  flex-shrink: 0;
-}
-.gem-house-found-hero__poster {
-  width: 3.25rem !important;
-  height: 3.25rem !important;
+  color: #fde68a;
+  filter: drop-shadow(0 0 16px rgb(251 191 36 / 0.75));
 }
 .gem-house-found-hero__kicker {
   margin: 0;
@@ -8431,28 +8392,17 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   font-size: 0.95rem;
 }
 .gem-house-found-hero__hint {
-  margin: 0.2rem 0 0;
+  margin: 0.35rem 0 0;
+  max-width: 16rem;
   font-size: 0.8rem;
   line-height: 1.35;
   color: #c4b5fd;
 }
-.gem-house-found-hero__badge {
-  margin: 0;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: #6ee7b7;
-}
 .gem-house-found-hero__name {
-  margin: 0.1rem 0 0;
+  margin: 0;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.15rem;
   color: #fde68a;
-}
-.gem-house-found-hero__species {
-  margin: 0.05rem 0 0;
-  font-size: 0.78rem;
-  color: #c4b5fd;
 }
 @keyframes gem-house-reveal-pop {
   0% {
@@ -8851,6 +8801,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__walk-guide--at-house {
   border-color: rgb(52 211 153 / 0.55);
+}
+.gem-hunt-overlay__walk-guide--hint {
+  width: min(92vw, 22rem);
+  margin-top: 0.25rem;
 }
 .gem-hunt-overlay__walk-guide--map-gps .gps-bearing-dial__svg {
   width: min(52vw, 11rem);

@@ -37,7 +37,6 @@ import { VisitSkipConflictDialog } from "@/components/visit-skip-conflict-dialog
 import { LikeCheer } from "@/components/like-cheer";
 import { RouteCompleteCheer } from "@/components/route-complete-cheer";
 import { VisitCheer } from "@/components/visit-cheer";
-import { GemCheer } from "@/components/gem-cheer";
 import { GemResetConfirmDialog } from "@/components/gem-reset-confirm-dialog";
 import { GemMapCompleteBanner } from "@/components/gem-map-complete-banner";
 import {
@@ -49,7 +48,7 @@ import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { loadGemCollectedIds } from "@/lib/gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
-import { canCollectGem, GEM_CHEER_MS, userWithinGemHuntRange } from "@/lib/gem-hunt";
+import { canCollectGem, userWithinGemHuntRange } from "@/lib/gem-hunt";
 import { syncGemMonsterAssignment } from "@/lib/gem-monsters";
 import { pickGemHuntTarget } from "@/lib/gem-hunt-target";
 import { prepareGemHuntSensors, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
@@ -153,8 +152,6 @@ export function NeighborhoodApp({
   const gemHuntActive = gemHuntVisible(admin);
   const gems = useGemProgress();
   const [mapGemHouse, setMapGemHouse] = useState<PublicHouse | null>(null);
-  const [gemCheer, setGemCheer] = useState(false);
-  const gemCheerTimer = useRef(0);
   const gemBadgePendingRef = useRef(false);
   const [mapGemBadgeCount, setMapGemBadgeCount] = useState(() =>
     typeof window === "undefined" ? 0 : loadGemCollectedIds().length,
@@ -356,25 +353,8 @@ export function NeighborhoodApp({
     }
   }, [gems.collectedIds.length]);
 
-  useEffect(
-    () => () => {
-      window.clearTimeout(gemCheerTimer.current);
-    },
-    [],
-  );
-
   const celebrateGemCollect = useCallback(() => {
-    setGemCheer(false);
-    window.clearTimeout(gemCheerTimer.current);
-    gemBadgePendingRef.current = true;
-    window.requestAnimationFrame(() => {
-      setGemCheer(true);
-      gemCheerTimer.current = window.setTimeout(() => {
-        gemBadgePendingRef.current = false;
-        setMapGemBadgeCount(loadGemCollectedIds().length);
-        setGemCheer(false);
-      }, GEM_CHEER_MS);
-    });
+    setMapGemBadgeCount(loadGemCollectedIds().length);
   }, []);
 
   const handleToggleGemMenu = useCallback(
@@ -1352,7 +1332,6 @@ export function NeighborhoodApp({
         onUpdated={handleHouseUpdated}
         onDeleted={handleHouseDeleted}
       />
-      <GemCheer show={gemCheer} />
       {gemResetHouse ? (
         <GemResetConfirmDialog
           open

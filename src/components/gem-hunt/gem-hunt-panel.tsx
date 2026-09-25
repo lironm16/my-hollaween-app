@@ -1,8 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
-import { Camera, Gem, MapPin } from "lucide-react";
-import { GemCollectCheer } from "@/components/gem-collect-cheer";
+import { Camera, MapPin } from "lucide-react";
 import { GemHouseFoundHero } from "@/components/gem-hunt/gem-house-found-hero";
 import { GemHuntOverlayLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { Button } from "@/components/ui/button";
@@ -15,11 +14,8 @@ import {
   gemAnchorForHouse,
   gemDistanceMeters,
   gemProximity,
-  gemLabelHe,
-  gemMonsterForHouse,
   GEM_APPROACH_METERS,
   GEM_HUNT_METERS,
-  GEM_CHEER_MS,
 } from "@/lib/gem-hunt";
 import { distanceMeters, formatDistance } from "@/lib/geo";
 import type { PublicHouse } from "@/lib/types";
@@ -49,7 +45,6 @@ export function GemHuntPanel({
   const { overrides: anchorOverrideMap } = useGemAnchorOverrides();
   const calibratedCount = useMemo(() => countGemAnchorOverrides(), [anchorOverrideMap]);
   const [huntOpen, setHuntOpen] = useState(false);
-  const [cheer, setCheer] = useState(false);
   const [simulate, setSimulate] = useState(adminSimulateInRange);
 
   const now = useAppNow();
@@ -68,7 +63,6 @@ export function GemHuntPanel({
   if (!visible) return null;
 
   const canCollect = canCollectGem(userLocation, house, collected, standingStill, simulate);
-  const monsterLabel = gemLabelHe(gemMonsterForHouse(house));
   const anchor = gemAnchorForHouse(house);
   const anchorCalibrated = Boolean(anchorOverrideMap[house.id]) || anchor.calibrated === true;
 
@@ -81,8 +75,6 @@ export function GemHuntPanel({
     gems.collect(house.id, collectedVariant);
     stopGemHuntCameraStream();
     setHuntOpen(false);
-    setCheer(true);
-    window.setTimeout(() => setCheer(false), GEM_CHEER_MS);
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate(40);
     }
@@ -90,24 +82,16 @@ export function GemHuntPanel({
 
   return (
     <>
-      <GemCollectCheer show={cheer} house={house} />
       <section className="gem-hunt-panel" dir="rtl">
         <GemHouseFoundHero house={house} collected={collected} className="gem-hunt-panel__found-hero" />
 
-        {collected ? (
-          <div className="gem-hunt-panel__done-col">
-            <div className="gem-hunt-panel__done">
-              <Gem className="size-4 text-emerald-300" aria-hidden />
-              נאסף — {monsterLabel}
-            </div>
-          </div>
-        ) : (
-          <div className="gem-hunt-panel__head">
-            <Gem className="size-5 text-amber-300" aria-hidden />
-            <div className="min-w-0 flex-1">
-              <p className="gem-hunt-panel__title">ציד במצלמה</p>
-              <p className="gem-hunt-panel__sub">
-                {canCollect
+        <div className="gem-hunt-panel__head">
+          <div className="min-w-0 flex-1 text-center">
+            <p className="gem-hunt-panel__title">ציד במצלמה</p>
+            <p className="gem-hunt-panel__sub">
+              {collected
+                ? "אפשר לפתוח שוב את המצלמה"
+                : canCollect
                   ? "מוכנים לאיסוף!"
                   : proximity === "far"
                     ? "לחצו על המצלמה לתצוגה · לאיסוף התקרבו ל־25 מ׳"
@@ -116,10 +100,9 @@ export function GemHuntPanel({
                       : standingStill || simulate
                         ? "מוכנים לציד!"
                         : "עמדו במקום לרגע… או פתחו מצלמה לתצוגה"}
-              </p>
-            </div>
+            </p>
           </div>
-        )}
+        </div>
 
         {!collected && userLocation && distanceM != null && distanceM > 40 ? (
           <div className="gem-hunt-panel__calibrate-public">

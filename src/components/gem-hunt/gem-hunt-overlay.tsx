@@ -42,7 +42,7 @@ import { googleMapsNavigateUrl } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
 import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-list-suspend";
-import { isGemCollected, isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
+import { isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
 import { GemCollectAlbumReveal } from "@/components/gem-hunt/gem-collect-album-reveal";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { setGemAnchorOverride } from "@/lib/gem-anchor-overrides";
@@ -285,13 +285,16 @@ export function GemHuntOverlay({
     }
     if (collectFinishRef.current != null) window.clearTimeout(collectFinishRef.current);
     const entries = loadGemCollected();
-    const stickerAlreadyInBook =
-      isGemTypeInCollection(monsterId, entries) || isGemCollected(house.id);
-    setAlbumRevealNewFriend(!stickerAlreadyInBook);
+    const newAlbumFriend = !isGemTypeInCollection(monsterId, entries);
+    setAlbumRevealNewFriend(newAlbumFriend);
     collectFinishRef.current = window.setTimeout(() => {
       collectFinishRef.current = null;
-      setAlbumRevealPhase("enter");
-      setPhase("albumReveal");
+      if (newAlbumFriend) {
+        setAlbumRevealPhase("enter");
+        setPhase("albumReveal");
+      } else {
+        onCollectRef.current(monsterId);
+      }
     }, GEM_COLLECT_OVERLAY_MS);
   }
 
@@ -327,6 +330,12 @@ export function GemHuntOverlay({
 
   const gemVisible = phase === "visible" || phase === "collecting";
   const showHuntUi = phase !== "albumReveal";
+  const overlayTitle =
+    phase === "collecting" || phase === "albumReveal"
+      ? albumRevealNewFriend
+        ? "כל הכבוד!! מצאתם חבר חדש"
+        : `מצאתם שוב את ${gemLabelHe(monsterId)}`
+      : `מחפשים יהלום נסתר ליד ${house.name || house.address}`;
   const turnBearing =
     effectiveLoc != null ? relativeWalkBearingDeg(effectiveLoc, anchor, heading) : null;
   const facingTarget =
@@ -478,7 +487,7 @@ export function GemHuntOverlay({
       <div className="gem-hunt-overlay__shade" aria-hidden />
       <header className="gem-hunt-overlay__header">
         <div className="min-w-0 flex-1">
-          <p className="gem-hunt-overlay__title">מחפשים יהלום נסתר ליד {house.name || house.address}</p>
+          <p className="gem-hunt-overlay__title">{overlayTitle}</p>
         </div>
         <OverlayCloseButton
           label="סגירה"
