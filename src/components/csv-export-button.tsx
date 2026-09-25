@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -212,7 +211,7 @@ function ExportFormatDialog({
                 <label
                   key={option.id}
                   className={cn(
-                    "flex min-h-12 cursor-pointer touch-manipulation items-start gap-3 rounded-xl border px-3 py-2.5 transition-colors",
+                    "flex min-h-11 cursor-pointer touch-manipulation items-center gap-3 rounded-xl border px-3 py-2 transition-colors",
                     checked
                       ? "border-orange-400/55 bg-orange-500/10 ring-1 ring-orange-400/35"
                       : "border-violet-500/25 bg-[#12081a]/80 hover:border-violet-400/35",
@@ -224,11 +223,10 @@ function ExportFormatDialog({
                     value={option.id}
                     checked={checked}
                     onChange={() => onFormatChange(option.id)}
-                    className="mt-1 size-4 shrink-0 accent-orange-400"
+                    className="size-4 shrink-0 accent-orange-400"
                   />
-                  <span className="min-w-0 flex-1 text-start">
-                    <span className="block text-base font-medium text-orange-50">{option.labelHe}</span>
-                    <span className="mt-0.5 block text-sm leading-snug text-violet-300/85">{option.hintHe}</span>
+                  <span className="min-w-0 flex-1 text-start text-base font-medium text-orange-50">
+                    {option.labelHe}
                   </span>
                 </label>
               );
@@ -265,24 +263,24 @@ function ExportFormatDialog({
           </div>
         ) : null}
 
-        <DialogFooter className="border-t border-orange-500/15 bg-[#14091c]/80 px-4 py-3">
+        <div className="grid grid-cols-2 gap-2 border-t border-orange-500/15 bg-[#14091c]/80 px-4 py-3">
           <Button
             type="button"
-            variant="outline"
-            className="border-violet-500/40 text-violet-100"
-            onClick={() => onOpenChange(false)}
-          >
-            ביטול
-          </Button>
-          <Button
-            type="button"
-            className="bg-orange-500 text-black hover:bg-orange-400"
+            className="h-11 bg-orange-500 px-5 text-base text-black hover:bg-orange-400"
             disabled={exportCount === 0}
             onClick={onConfirm}
           >
             שמירה לקובץ
           </Button>
-        </DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 border-violet-500/40 px-5 text-base text-violet-100"
+            onClick={() => onOpenChange(false)}
+          >
+            ביטול
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

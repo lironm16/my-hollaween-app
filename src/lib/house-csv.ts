@@ -305,23 +305,10 @@ export type HouseExportFormat = "xlsx" | "csv" | "txt";
 export const HOUSE_EXPORT_FORMAT_OPTIONS: ReadonlyArray<{
   id: HouseExportFormat;
   labelHe: string;
-  hintHe: string;
 }> = [
-  {
-    id: "xlsx",
-    labelHe: "Excel (.xlsx)",
-    hintHe: "הכי נוח לפתיחה באקסל במחשב",
-  },
-  {
-    id: "csv",
-    labelHe: "CSV — טבלה (.csv)",
-    hintHe: "גוגל שיטס, Numbers ואפליקציות בטלפון",
-  },
-  {
-    id: "txt",
-    labelHe: "טקסט (.txt)",
-    hintHe: "יומן / Notes באייפון · שיתוף באנדרואיד",
-  },
+  { id: "xlsx", labelHe: "Excel" },
+  { id: "csv", labelHe: "CSV" },
+  { id: "txt", labelHe: "טקסט" },
 ];
 
 export function exportHouseCountMessage(
