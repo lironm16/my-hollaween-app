@@ -44,11 +44,10 @@ export function PersonalMarksSection({
 }) {
   return (
     <section className="rounded-2xl bg-[#241332] p-2.5 ring-1 ring-white/10" dir="rtl">
-      <h2 className="mb-2 text-base font-semibold text-orange-400">שלי</h2>
       <div className="grid grid-cols-2 gap-2">
         <StatTile
           icon={<Home className="size-8 text-orange-300" strokeWidth={2.1} />}
-          label="במכשיר שלי"
+          label="בתים שלי"
           value={ownedCount}
           valueClass={ownedCount ? "text-orange-200" : undefined}
           plain

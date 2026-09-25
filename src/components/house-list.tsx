@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { HouseCard } from "@/components/house-card";
+import { Button } from "@/components/ui/button";
 import { ListSortSelect } from "@/components/list-sort-select";
 import { LIST_SORT_EVENT, readListSort, sortHousesForList } from "@/lib/list-sort";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export function HouseList({
   houses,
@@ -29,6 +31,9 @@ export function HouseList({
   emptyKind = "default",
   focusId,
   editingId,
+  showSort = true,
+  onRemoveFromDevice,
+  emptyAction,
 }: {
   houses: PublicHouse[];
   origin?: { lat: number; lng: number } | null;
@@ -48,9 +53,12 @@ export function HouseList({
   skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
   onSkipHouse?: (id: string) => void;
   onRestoreHouse?: (id: string) => void;
-  emptyKind?: "default" | "skipped" | "visited" | "saved" | "collected";
+  emptyKind?: "default" | "skipped" | "visited" | "saved" | "collected" | "mine";
   focusId?: string | null;
   editingId?: string | null;
+  showSort?: boolean;
+  onRemoveFromDevice?: (id: string) => void;
+  emptyAction?: ReactNode;
 }) {
   const focusRef = useRef<HTMLDivElement | null>(null);
   const sort = useSyncExternalStore(
@@ -94,6 +102,11 @@ export function HouseList({
             <p className="font-display text-2xl text-orange-300">עדיין לא אספתם מדבקות</p>
             <p className="mt-2 text-base">מדבקות שתאספו במסע יופיעו כאן.</p>
           </>
+        ) : emptyKind === "mine" ? (
+          <>
+            <p className="text-base">אין בתים שהוספתם מהמכשיר הזה.</p>
+            {emptyAction}
+          </>
         ) : (
           <>
             <p className="font-display text-2xl text-orange-300">אין בתים שמתאימים לסינון</p>
@@ -106,12 +119,12 @@ export function HouseList({
 
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3">
-      <ListSortSelect />
+      {showSort ? <ListSortSelect /> : null}
       {filtered.map(({ house: h, distanceM: d }, i) => (
         <div
           key={h.id}
           ref={h.id === focusId ? focusRef : undefined}
-          className={h.id === focusId ? "house-list-focus" : undefined}
+          className={cn(h.id === focusId && "house-list-focus", "space-y-2")}
         >
           <HouseCard
             index={i + 1}
@@ -138,6 +151,19 @@ export function HouseList({
             onToggleEdit={onEditHouse ? () => onEditHouse(h.id, i + 1) : undefined}
             editing={editingId === h.id}
           />
+          {onRemoveFromDevice ? (
+            <div className="px-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-10 w-full border-violet-500/35 bg-[#1d1028]/80 text-base text-violet-100 hover:bg-violet-500/10"
+                onClick={() => onRemoveFromDevice(h.id)}
+              >
+                הסר מהמכשיר
+              </Button>
+            </div>
+          ) : null}
         </div>
       ))}
     </div>

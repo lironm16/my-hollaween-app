@@ -4,9 +4,7 @@ import { useEffect, useId, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
-import { HouseDetails } from "@/components/house-details";
-import { FilterMismatchNotice, HouseCardBanners } from "@/components/house-skipped-banner";
-import { CodesCopy } from "@/components/codes-copy";
+import { HouseSheetBody } from "@/components/house-sheet-body";
 import {
   ClusterHouseList,
   ClusterHouseNav,
@@ -182,40 +180,30 @@ export function HouseDetailOverlay({
                 <span id={labelId} className="sr-only">
                   {houseHeadline(house)}
                 </span>
-                <FilterMismatchNotice
-                  reasons={filterMismatchReasons}
+                <HouseSheetBody
+                  house={house}
+                  editing={editing}
+                  editCode={editCodeFor?.(house.id) ?? managerEditCode}
+                  extra={extra}
+                  filterMismatchReasons={filterMismatchReasons}
                   skipMeta={skipMeta}
                   onRestoreRoute={onRestoreRoute}
-                  hideSkipBanner
-                />
-                <HouseCardBanners
                   skipped={skipped}
-                  skipMeta={skipMeta}
+                  catalogSource={catalogSource}
+                  liked={liked?.(house.id)}
+                  onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
                   visited={visited?.(house.id)}
-                  onRestoreRoute={onRestoreRoute}
                   onToggleVisited={
                     onToggleVisited ? () => onToggleVisited(house.id) : undefined
                   }
+                  index={index}
+                  canEdit={canEditSelected}
+                  onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
+                  onShowOnMap={onShowOnMap}
+                  onShowInList={onShowInList}
+                  onSkip={onSkip}
+                  admin={Boolean(managerEditCode)}
                 />
-                {editing ? (
-                  <>
-                    <p className="map-house-sheet-kicker">{houseHeadline(house)}</p>
-                    <CodesCopy editCode={editCodeFor?.(house.id) ?? managerEditCode} />
-                    {extra}
-                  </>
-                ) : (
-                  <HouseDetails
-                    house={house}
-                    catalogSource={catalogSource}
-                    liked={liked?.(house.id)}
-                    onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-                    visited={visited?.(house.id)}
-                    onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
-                    extra={extra}
-                    chrome="sheet"
-                    index={index}
-                  />
-                )}
               </ClusterHouseSwipeArea>
             </div>
           </div>
@@ -229,38 +217,28 @@ export function HouseDetailOverlay({
             <span id={labelId} className="sr-only">
               {houseHeadline(house)}
             </span>
-            <FilterMismatchNotice
-              reasons={filterMismatchReasons}
+            <HouseSheetBody
+              house={house}
+              editing={editing}
+              editCode={editCodeFor?.(house.id) ?? managerEditCode}
+              extra={extra}
+              filterMismatchReasons={filterMismatchReasons}
               skipMeta={skipMeta}
               onRestoreRoute={onRestoreRoute}
-              hideSkipBanner
-            />
-            <HouseCardBanners
               skipped={skipped}
-              skipMeta={skipMeta}
+              catalogSource={catalogSource}
+              liked={liked?.(house.id)}
+              onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
               visited={visited?.(house.id)}
-              onRestoreRoute={onRestoreRoute}
               onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
+              index={index}
+              canEdit={canEditSelected}
+              onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
+              onShowOnMap={onShowOnMap}
+              onShowInList={onShowInList}
+              onSkip={onSkip}
+              admin={Boolean(managerEditCode)}
             />
-            {editing ? (
-              <>
-                <p className="map-house-sheet-kicker">{houseHeadline(house)}</p>
-                <CodesCopy editCode={editCodeFor?.(house.id) ?? managerEditCode} />
-                {extra}
-              </>
-            ) : (
-              <HouseDetails
-                house={house}
-                catalogSource={catalogSource}
-                liked={liked?.(house.id)}
-                onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-                visited={visited?.(house.id)}
-                onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
-                extra={extra}
-                chrome="sheet"
-                index={index}
-              />
-            )}
           </ClusterHouseSwipeArea>
         )}
       </div>

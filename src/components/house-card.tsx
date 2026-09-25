@@ -7,6 +7,7 @@ import { HouseCardBanners } from "@/components/house-skipped-banner";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
 export function HouseCard({
   house,
@@ -25,11 +26,15 @@ export function HouseCard({
   editCode,
   admin = false,
   onShowOnMap,
+  onShowInList,
+  onToggleGem,
   editing = false,
   onToggleEdit,
   expanded = false,
   index,
   hideHoursBanner = false,
+  extra,
+  className,
 }: {
   house: PublicHouse;
   distanceM?: number;
@@ -47,17 +52,24 @@ export function HouseCard({
   editCode?: string;
   admin?: boolean;
   onShowOnMap?: () => void;
+  onShowInList?: () => void;
+  onToggleGem?: () => void;
   editing?: boolean;
   onToggleEdit?: () => void;
   /** Show full details inline (non-compact list layout). */
   expanded?: boolean;
   index?: number;
   hideHoursBanner?: boolean;
+  extra?: ReactNode;
+  className?: string;
 }) {
   return (
     <Card
       size="sm"
-      className="house-list-card overflow-visible border-orange-500/15 bg-[#1d1028]/90 text-base !shadow-none !ring-0"
+      className={cn(
+        "house-list-card overflow-visible border-orange-500/15 bg-[#1d1028]/90 text-base !shadow-none !ring-0",
+        className,
+      )}
     >
       <div className="px-3 pb-1 pt-2">
         <HouseCardBanners
@@ -80,6 +92,7 @@ export function HouseCard({
           compact={!expanded}
           index={index}
           hideHoursBanner={hideHoursBanner}
+          extra={extra}
           headerMenu={
             <HouseActionBar
               house={house}
@@ -93,6 +106,8 @@ export function HouseCard({
               onToggleEdit={canEdit ? onToggleEdit : undefined}
               editCode={editCode}
               onShowOnMap={onShowOnMap}
+              onShowInList={onShowInList}
+              onToggleGem={onToggleGem}
               editing={editing}
               menuPlacement="bottom"
             />

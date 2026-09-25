@@ -1,14 +1,12 @@
 "use client";
 
-import { Suspense, useMemo } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { PersonalMarksSection, type PersonalMarksTab } from "@/components/admin-stats";
 import { AppHeader } from "@/components/app-header";
-import { HouseCard } from "@/components/house-card";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { HouseList } from "@/components/house-list";
-import { Button, buttonVariants } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useCatalog } from "@/hooks/use-catalog";
@@ -20,7 +18,6 @@ import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { gemBagMenuVisible } from "@/lib/gem-hunt-enabled";
-import { distanceMeters } from "@/lib/geo";
 import {
   forgetPublishedHouse,
   notifyCatalogChanged,
@@ -28,6 +25,7 @@ import {
   saveOwnedHouse,
 } from "@/lib/offline-db";
 import { queueRouteRestore, readRouteMode } from "@/lib/route-mode";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { PublicHouse } from "@/lib/types";
 
@@ -35,6 +33,10 @@ function parseTab(raw: string | null, showCollected: boolean): PersonalMarksTab 
   if (raw === "skipped" || raw === "visited" || raw === "saved") return raw;
   if (raw === "collected" && showCollected) return "collected";
   return "mine";
+}
+
+function tabUrl(tab: PersonalMarksTab) {
+  return tab === "mine" ? "/my" : `/my?tab=${tab}`;
 }
 
 export default function MyCollectionsPage() {
@@ -50,12 +52,16 @@ export default function MyCollectionsPage() {
 }
 
 function MyCollectionsPageContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { admin } = useAdminSession();
   const now = useAppNow();
   const showCollected = gemBagMenuVisible(admin, now);
-  const tab = parseTab(searchParams.get("tab"), showCollected);
+  const urlTab = parseTab(searchParams.get("tab"), showCollected);
+  const [tab, setTab] = useState<PersonalMarksTab>(urlTab);
+
+  useEffect(() => {
+    setTab(urlTab);
+  }, [urlTab]);
 
   const owned = useOwnedHouses();
   const skips = useSkippedHouses();
@@ -69,24 +75,15 @@ function MyCollectionsPageContent() {
 
   const catalogHouses = catalog?.houses ?? [];
 
-  const mineHouses = useMemo(
-    () =>
-      owned
-        .map((item) => {
-          const fromCatalog = catalogHouses.find((house) => house.id === item.id);
-          return item.preview ?? fromCatalog ?? null;
-        })
-        .filter((house): house is PublicHouse => Boolean(house))
-        .map((house) => ({
-          house,
-          distanceM: origin ? distanceMeters(origin, house) : undefined,
-        }))
-        .sort((a, b) => {
-          if (a.distanceM !== undefined && b.distanceM !== undefined) return a.distanceM - b.distanceM;
-          return a.house.name.localeCompare(b.house.name, "he");
-        }),
-    [catalogHouses, owned, origin],
-  );
+  const mineHouses = useMemo(() => {
+    const ids = new Set(owned.map((item) => item.id));
+    return owned
+      .map((item) => {
+        const fromCatalog = catalogHouses.find((house) => house.id === item.id);
+        return item.preview ?? fromCatalog ?? null;
+      })
+      .filter((house): house is PublicHouse => Boolean(house && ids.has(house.id)));
+  }, [catalogHouses, owned]);
 
   const skippedHouses = useMemo(() => {
     const ids = new Set(skips.skippedIds);
@@ -112,9 +109,17 @@ function MyCollectionsPageContent() {
     return catalogHouses.filter((house) => gems.collected(house.id));
   }, [catalogHouses, gems, showCollected]);
 
-  function setTab(next: PersonalMarksTab) {
-    const query = next === "mine" ? "/my" : `/my?tab=${next}`;
-    router.replace(query, { scroll: false });
+  const housesByTab: Record<PersonalMarksTab, PublicHouse[]> = {
+    mine: mineHouses,
+    skipped: skippedHouses,
+    visited: visitedHouses,
+    saved: savedHouses,
+    collected: collectedHouses,
+  };
+
+  function selectTab(next: PersonalMarksTab) {
+    setTab(next);
+    window.history.replaceState(window.history.state, "", tabUrl(next));
   }
 
   function requestEdit(house: PublicHouse) {
@@ -146,14 +151,6 @@ function MyCollectionsPageContent() {
     if (readRouteMode()) queueRouteRestore(id);
   }
 
-  function handleRestoreAll() {
-    if (skips.skippedIds.length === 0) return;
-    if (readRouteMode()) {
-      for (const id of skips.skippedIds) queueRouteRestore(id);
-    }
-    skips.unskipAll();
-  }
-
   const listProps = {
     origin,
     catalogSource: catalog ? "network" : null,
@@ -166,12 +163,23 @@ function MyCollectionsPageContent() {
     skippedIds: skips.skippedIds,
   };
 
+  const emptyKind =
+    tab === "mine"
+      ? "mine"
+      : tab === "skipped"
+        ? "skipped"
+        : tab === "visited"
+          ? "visited"
+          : tab === "saved"
+            ? "saved"
+            : "collected";
+
   return (
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <AppHeader />
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto bg-[#12081a]">
         <div className="mx-auto w-full max-w-lg space-y-4 px-4 py-5 pb-10">
-          <h1 className="font-display text-2xl text-orange-300">שלי</h1>
+          <h1 className="font-display text-2xl text-orange-300">במכשיר שלי</h1>
 
           <PersonalMarksSection
             ownedCount={owned.length}
@@ -181,90 +189,50 @@ function MyCollectionsPageContent() {
             gemCollectedCount={gems.collectedIds.length}
             showGemStats={showCollected}
             selectedTab={tab}
-            onSelectTab={setTab}
+            onSelectTab={selectTab}
           />
 
-          {tab === "mine" ? (
-            mineHouses.length === 0 ? (
-              <div className="px-1 py-6 text-center text-violet-200">
-                <p className="text-base">אין בתים שהוספתם מהמכשיר הזה.</p>
+          <HouseList
+            {...listProps}
+            houses={housesByTab[tab]}
+            emptyKind={emptyKind}
+            showSort={tab !== "mine"}
+            canEditHouse={tab === "mine" ? () => true : undefined}
+            onEditHouse={
+              tab === "mine"
+                ? (id) => {
+                    const house = mineHouses.find((item) => item.id === id);
+                    if (house) requestEdit(house);
+                  }
+                : undefined
+            }
+            onRemoveFromDevice={
+              tab === "mine"
+                ? (id) => {
+                    removeOwnedHouse(id);
+                    notifyCatalogChanged();
+                  }
+                : undefined
+            }
+            onRestoreHouse={tab === "skipped" ? handleRestore : undefined}
+            onSkipHouse={
+              tab === "skipped"
+                ? (id) => skips.unskip(id)
+                : tab === "visited"
+                  ? (id) => skips.toggle(id)
+                  : undefined
+            }
+            emptyAction={
+              tab === "mine" ? (
                 <Link
                   href="/add"
                   className={cn(buttonVariants(), "mt-4 inline-flex bg-orange-500 text-black hover:bg-orange-400")}
                 >
                   הוספת בית
                 </Link>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {mineHouses.map(({ house, distanceM }, index) => (
-                  <div key={house.id} className="space-y-2">
-                    <HouseCard
-                      index={index + 1}
-                      house={house}
-                      distanceM={distanceM}
-                      catalogSource={listProps.catalogSource}
-                      liked={likes.liked(house.id)}
-                      onToggleLike={() => likes.toggle(house.id)}
-                      visited={visits.visited(house.id)}
-                      onToggleVisited={() => visits.toggle(house.id)}
-                      gemCollected={gems.collected(house.id)}
-                      canEdit
-                      onToggleEdit={() => requestEdit(house)}
-                    />
-                    <div className="px-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-10 w-full border-violet-500/35 bg-[#1d1028]/80 text-base text-violet-100 hover:bg-violet-500/10"
-                        onClick={() => {
-                          removeOwnedHouse(house.id);
-                          notifyCatalogChanged();
-                        }}
-                      >
-                        הסר מהמכשיר
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )
-          ) : tab === "skipped" ? (
-            <>
-              {skips.skippedIds.length > 0 ? (
-                <div className="flex justify-end px-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="border-orange-400/40"
-                    onClick={handleRestoreAll}
-                  >
-                    החזרת כל הבתים
-                  </Button>
-                </div>
-              ) : null}
-              <HouseList
-                {...listProps}
-                houses={skippedHouses}
-                onRestoreHouse={handleRestore}
-                onSkipHouse={(id) => skips.unskip(id)}
-                emptyKind="skipped"
-              />
-            </>
-          ) : tab === "visited" ? (
-            <HouseList
-              {...listProps}
-              houses={visitedHouses}
-              onSkipHouse={(id) => skips.toggle(id)}
-              emptyKind="visited"
-            />
-          ) : tab === "saved" ? (
-            <HouseList {...listProps} houses={savedHouses} emptyKind="saved" />
-          ) : (
-            <HouseList {...listProps} houses={collectedHouses} emptyKind="collected" />
-          )}
+              ) : undefined
+            }
+          />
         </div>
       </main>
       <HouseEditFlowPanels

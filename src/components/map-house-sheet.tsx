@@ -2,9 +2,7 @@
 
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { HouseActionBar } from "@/components/house-action-bar";
-import { HouseDetails } from "@/components/house-details";
-import { FilterMismatchNotice, HouseCardBanners } from "@/components/house-skipped-banner";
-import { CodesCopy } from "@/components/codes-copy";
+import { HouseSheetBody } from "@/components/house-sheet-body";
 import {
   ClusterHouseList,
   ClusterHouseNav,
@@ -465,47 +463,33 @@ export function MapHouseSheet({
                   <section
                     className="map-house-sheet-card is-on"
                   >
-                    <FilterMismatchNotice
-                      reasons={filterMismatchReasons}
+                    <HouseSheetBody
+                      house={house}
+                      editing={editing}
+                      editCode={editCodeFor?.(house.id) ?? managerEditCode}
+                      extra={extra}
+                      filterMismatchReasons={filterMismatchReasons}
                       skipMeta={skipMeta}
                       onRestoreRoute={onRestoreRoute}
-                      hideSkipBanner
-                    />
-                    <HouseCardBanners
                       skipped={skipped}
-                      skipMeta={skipMeta}
+                      catalogSource={catalogSource}
+                      liked={liked?.(house.id)}
+                      onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
                       visited={visited?.(house.id)}
-                      onRestoreRoute={onRestoreRoute}
                       onToggleVisited={
                         onToggleVisited ? () => onToggleVisited(house.id) : undefined
                       }
+                      gemCollected={gemCollected?.(house.id)}
+                      onToggleGem={onToggleGem ? () => onToggleGem(house) : undefined}
+                      index={index}
+                      hideHoursBanner={hideHoursBanner}
+                      canEdit={canEditSelected}
+                      onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
+                      onShowOnMap={onShowOnMap}
+                      onShowInList={onShowInList}
+                      onSkip={onSkip}
+                      admin={Boolean(managerEditCode)}
                     />
-                    {editing ? (
-                      <>
-                        <p className="map-house-sheet-kicker">{houseHeadline(house)}</p>
-                        <CodesCopy
-                          editCode={editCodeFor?.(house.id) ?? managerEditCode}
-                        />
-                        {extra}
-                      </>
-                    ) : (
-                      <HouseDetails
-                        house={house}
-                        catalogSource={catalogSource}
-                        liked={liked?.(house.id)}
-                        onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-                        visited={visited?.(house.id)}
-                        onToggleVisited={
-                          onToggleVisited ? () => onToggleVisited(house.id) : undefined
-                        }
-                        gemCollected={gemCollected?.(house.id)}
-                        extra={extra}
-                        chrome="sheet"
-                        index={index}
-                        hideHoursBanner={hideHoursBanner}
-                        headerMenu={actionMenu}
-                      />
-                    )}
                   </section>
                 </ClusterHouseSwipeArea>
               </div>

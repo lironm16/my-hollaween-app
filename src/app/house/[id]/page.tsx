@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
-import { HouseDetails } from "@/components/house-details";
+import { HouseCard } from "@/components/house-card";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { buttonVariants } from "@/components/ui/button";
@@ -73,7 +73,7 @@ export default function HousePage() {
             <div className="relative z-0 isolate h-56 overflow-hidden rounded-2xl ring-1 ring-orange-500/30">
               <HouseMapDynamic houses={[house]} selectedId={house.id} embed />
             </div>
-            <HouseDetails
+            <HouseCard
               house={house}
               catalogSource={source}
               liked={likes.liked(house.id)}
@@ -81,7 +81,8 @@ export default function HousePage() {
               visited={visits.visited(house.id)}
               onToggleVisited={() => visits.toggle(house.id)}
               canEdit={canEdit}
-              editing={false}
+              editCode={editCode}
+              admin={admin}
               onToggleEdit={
                 canEdit
                   ? () =>

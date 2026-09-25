@@ -1,12 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ChevronDown, MapPin, Navigation } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { MapPin, Navigation } from "lucide-react";
 import { HouseCard } from "@/components/house-card";
 import { Button } from "@/components/ui/button";
-import { SkipSign, VisitedSign } from "@/components/visit-marks";
-import { HouseTitleMarkers } from "@/components/house-title-markers";
-import { houseHeadline } from "@/lib/labels";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -25,99 +22,6 @@ function RouteLeg({ label }: { label: string }) {
     <div className="route-list-leg">
       <span className="route-list-leg-line" aria-hidden="true" />
       <span className="route-list-leg-label">{label}</span>
-    </div>
-  );
-}
-
-function RouteTailRow({
-  house,
-  kind,
-  skipMeta,
-  onRestore,
-  onToggleVisited,
-  catalogSource,
-  liked,
-  onToggleLike,
-  visited,
-  onSkipHouse,
-  admin,
-  canEditHouse,
-  onShowOnMap,
-  onEditHouse,
-  editingId,
-  gemCollected,
-  distanceM,
-}: {
-  house: PublicHouse;
-  kind: "skipped" | "visited";
-  distanceM?: number;
-  skipMeta?: SkippedHouseMeta;
-  onRestore?: () => void;
-  onToggleVisited?: () => void;
-  catalogSource?: string | null;
-  liked?: boolean;
-  onToggleLike?: () => void;
-  visited?: boolean;
-  onSkipHouse?: () => void;
-  admin?: boolean;
-  canEditHouse?: boolean;
-  onShowOnMap?: () => void;
-  onEditHouse?: () => void;
-  editingId?: string | null;
-  gemCollected?: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const bodyRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const frame = window.requestAnimationFrame(() => {
-      bodyRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [open]);
-
-  return (
-    <div className="route-tail-row">
-      <div className="route-tail-header">
-        <button
-          type="button"
-          className="route-tail-toggle"
-          aria-expanded={open}
-          onClick={() => setOpen((value) => !value)}
-        >
-          {kind === "skipped" ? <SkipSign /> : <VisitedSign />}
-          <span className="route-tail-title">
-            <HouseTitleMarkers liked={liked} gemCollected={gemCollected} />
-            {houseHeadline(house)}
-          </span>
-          <ChevronDown className={cn("route-tail-chevron", open && "is-open")} aria-hidden />
-        </button>
-      </div>
-      {open ? (
-        <div ref={bodyRef} className="route-tail-body">
-          <HouseCard
-            house={house}
-            distanceM={distanceM}
-            catalogSource={catalogSource}
-            liked={liked}
-            onToggleLike={onToggleLike}
-            visited={visited}
-            onToggleVisited={onToggleVisited}
-            gemCollected={gemCollected}
-            onSkip={kind === "visited" ? onSkipHouse : undefined}
-            skipped={kind === "skipped"}
-            skipMeta={skipMeta}
-            onRestoreRoute={kind === "skipped" ? onRestore : undefined}
-            canEdit={canEditHouse}
-            admin={admin}
-            onShowOnMap={onShowOnMap}
-            onToggleEdit={onEditHouse}
-            editing={editingId === house.id}
-            expanded
-          />
-        </div>
-      ) : null}
     </div>
   );
 }
@@ -240,50 +144,32 @@ export function RouteList({
                 <p className="route-list-skipped-heading">דילגתם</p>
               ) : null}
               {hop ? <RouteLeg label={hop} /> : null}
-              {isTail ? (
-                <RouteTailRow
+              <div className="route-list-house">
+                <HouseCard
                   house={house}
-                  kind={skipped ? "skipped" : "visited"}
-                  skipMeta={skipMetaFor?.(house.id)}
-                  onRestore={
-                    skipped && onRestoreHouse ? () => onRestoreHouse(house.id) : undefined
-                  }
-                  onToggleVisited={
-                    onToggleVisited ? () => onToggleVisited(house.id) : undefined
-                  }
+                  distanceM={distanceM}
                   catalogSource={catalogSource}
                   liked={likedIds?.includes(house.id)}
                   onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
                   visited={visitedIds?.includes(house.id)}
-                  onSkipHouse={onSkipHouse ? () => onSkipHouse(house.id) : undefined}
-                  admin={admin}
-                  canEditHouse={canEditHouse?.(house.id)}
-                  onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
-                  onEditHouse={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
-                  editingId={editingId}
+                  onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
                   gemCollected={gemCollected?.(house.id)}
-                  distanceM={distanceM}
+                  onSkip={
+                    onSkipHouse && !skipped ? () => onSkipHouse(house.id) : undefined
+                  }
+                  skipped={skipped}
+                  skipMeta={skipMetaFor?.(house.id)}
+                  onRestoreRoute={
+                    skipped && onRestoreHouse ? () => onRestoreHouse(house.id) : undefined
+                  }
+                  canEdit={Boolean(canEditHouse?.(house.id))}
+                  admin={admin}
+                  onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
+                  onToggleEdit={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
+                  editing={editingId === house.id}
+                  index={isTail ? undefined : order}
                 />
-              ) : (
-                <div className="route-list-house">
-                  <HouseCard
-                    house={house}
-                    catalogSource={catalogSource}
-                    liked={likedIds?.includes(house.id)}
-                    onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-                    visited={visitedIds?.includes(house.id)}
-                    onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
-                    gemCollected={gemCollected?.(house.id)}
-                    onSkip={onSkipHouse ? () => onSkipHouse(house.id) : undefined}
-                    canEdit={Boolean(canEditHouse?.(house.id))}
-                    admin={admin}
-                    onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
-                    onToggleEdit={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
-                    editing={editingId === house.id}
-                    index={order}
-                  />
-                </div>
-              )}
+              </div>
             </li>
           );
         })}
