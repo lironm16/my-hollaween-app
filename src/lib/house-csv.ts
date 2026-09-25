@@ -392,7 +392,7 @@ export async function sharePlainTextFile(filename: string, text: string, title: 
     await navigator.share({ title, text: text.slice(0, 8000) });
     return true;
   } catch (err) {
-    if (err instanceof Error && err.name === "AbortError") return true;
+    if (err instanceof Error && err.name === "AbortError") return false;
     return false;
   }
 }

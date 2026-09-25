@@ -71,6 +71,8 @@ export const GEM_ANCHOR_MAX_METERS = 10;
 export const GEM_COLLECT_OVERLAY_MS = 5000;
 /** After collect dance — sticker flies into the album before closing the camera. */
 export const GEM_STICKER_REVEAL_MS = 3200;
+/** In-camera mini sticker book (off → navigate to /gem-bag?fly= after collect). */
+export const GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED = false;
 
 export type GemCollectFinishOptions = {
   cheer?: boolean;

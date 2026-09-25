@@ -130,7 +130,10 @@ export function RouteActionsMenu({
 
   function shareRoute() {
     const route = activeRouteRef.current;
-    if (!route || route.stops.length === 0) return;
+    if (!route || route.stops.length === 0) {
+      toast.error("אין מסלול לשיתוף — הוסיפו עצירות למסלול");
+      return;
+    }
 
     const url = buildRouteShareUrl(
       sharedRoutePayloadFromRoute(route),
@@ -142,25 +145,27 @@ export function RouteActionsMenu({
     setMenuOpen(false);
 
     void (async () => {
-      const shared = await sharePlainTextFile(
+      const outcome = await shareRouteUrl(url, stopCount);
+      if (outcome === "shared") {
+        toast.success("שיתוף המסלול נשלח");
+        return;
+      }
+      if (outcome === "copied") {
+        toast.success("הקישור הועתק — הדביקו בוואטסאפ / הודעה");
+        return;
+      }
+      if (outcome === "cancelled") return;
+
+      const fileShared = await sharePlainTextFile(
         `hallowhood-route-share-${day}.txt`,
         text,
         "מסלול HallowHood",
       );
-      if (shared) {
+      if (fileShared) {
         toast.success("שיתוף המסלול נשלח");
         return;
       }
-      const outcome = await shareRouteUrl(url, stopCount);
-      if (outcome === "shared" || outcome === "copied") {
-        toast.success(
-          outcome === "copied"
-            ? "הקישור הועתק — הדביקו בוואטסאפ / הודעה"
-            : "שיתוף המסלול נשלח",
-        );
-        return;
-      }
-      if (outcome === "cancelled") return;
+
       toast.error("לא הצלחנו לשתף — נסו שוב");
       toast.message(url, { closeButton: true, duration: 20_000 });
     })();

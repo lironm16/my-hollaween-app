@@ -21,6 +21,7 @@ export function HouseList({
   onRemoveFromDevice,
   emptyAction,
   selection,
+  insetX = "default",
 }: {
   houses: PublicHouse[];
   origin?: { lat: number; lng: number } | null;
@@ -41,6 +42,8 @@ export function HouseList({
     onRemoveSelected: () => void;
     removeLabel?: string;
   };
+  /** `flush` — horizontal padding comes from the page (e.g. /my tabs). */
+  insetX?: "default" | "flush";
 }) {
   const focusRef = useRef<HTMLDivElement | null>(null);
   const sort = useSyncExternalStore(
@@ -102,14 +105,21 @@ export function HouseList({
   const showPerCardRemove = onRemoveFromDevice && !selection;
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3">
+    <div
+      className={cn(
+        "mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 py-3",
+        insetX === "flush" ? "px-0" : "px-3",
+      )}
+    >
       {selection ? (
-        <div className="house-list-bulk flex flex-wrap items-center gap-2.5 px-1 py-1" dir="rtl">
-          <ListSelectCheck
-            selected={selection.allSelected}
-            aria-label={selection.allSelected ? "בטל סימון הכל" : "סמן הכל"}
-            onClick={selection.onToggleAll}
-          />
+        <div className="house-list-bulk flex w-full flex-wrap items-center gap-2 py-1" dir="rtl">
+          <div className="house-list-select-check-col">
+            <ListSelectCheck
+              selected={selection.allSelected}
+              aria-label={selection.allSelected ? "בטל סימון הכל" : "סמן הכל"}
+              onClick={selection.onToggleAll}
+            />
+          </div>
           <span className="pointer-events-none text-sm font-medium text-violet-200">סמן הכל</span>
           <span className="min-w-2 flex-1" aria-hidden />
           <Button
@@ -137,20 +147,19 @@ export function HouseList({
           dir={selection ? "rtl" : undefined}
           className={cn(
             h.id === focusId && "house-list-focus",
-            selection
-              ? "house-list-row-select flex w-full flex-col items-start gap-1.5"
-              : "flex items-start gap-2",
+            selection ? "house-list-row-select flex w-full flex-col gap-1.5" : "flex items-start gap-2",
           )}
         >
           {selection ? (
-            <ListSelectCheck
-              selected={selection.selectedIds.has(h.id)}
-              aria-label={
-                selection.selectedIds.has(h.id) ? `בטל בחירה — ${h.name}` : `בחר — ${h.name}`
-              }
-              className="house-list-row-select__check"
-              onClick={() => selection.onToggleId(h.id)}
-            />
+            <div className="house-list-select-check-col">
+              <ListSelectCheck
+                selected={selection.selectedIds.has(h.id)}
+                aria-label={
+                  selection.selectedIds.has(h.id) ? `בטל בחירה — ${h.name}` : `בחר — ${h.name}`
+                }
+                onClick={() => selection.onToggleId(h.id)}
+              />
+            </div>
           ) : null}
           <div className={cn("min-w-0 space-y-2", selection ? "w-full" : "flex-1")}>
             <HouseCard

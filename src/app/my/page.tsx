@@ -283,6 +283,7 @@ function MyCollectionsPageContent() {
             actionContext={actionContext}
             emptyKind={emptyKind}
             showSort={tab !== "mine"}
+            insetX="flush"
             selection={{
               selectedIds,
               onToggleId: toggleSelected,

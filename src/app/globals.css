@@ -3694,6 +3694,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   }
 }
 
+.map-house-sheet-body .gem-hunt-panel {
+  padding-inline: 0;
+}
 .gem-hunt-panel {
   margin-top: 0.75rem;
   padding: 0.85rem 1rem;
@@ -3788,8 +3791,14 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__header--close-only {
   justify-content: flex-end;
 }
-.house-list-row-select__check {
-  align-self: flex-start;
+.house-list-select-check-col {
+  display: flex;
+  width: 2.25rem;
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+.house-list-row-select {
+  align-items: stretch;
 }
 .gem-house-found-hero__visual {
   display: flex;
@@ -3815,13 +3824,13 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__collect-banner {
   position: absolute;
-  top: 28%;
+  top: calc(42% - min(44vw, 11rem) - 0.35rem);
   left: 50%;
   z-index: 11;
   width: min(94vw, 26rem);
   margin: 0;
   padding: 0.35rem 0.5rem;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -100%);
   text-align: center;
   font-size: clamp(1.35rem, 5.2vw, 1.85rem);
   font-weight: 800;
@@ -3839,17 +3848,17 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 @keyframes gem-collect-banner-pop {
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.35);
+    transform: translate(-50%, -100%) scale(0.35);
     filter: blur(6px);
   }
   55% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.12);
+    transform: translate(-50%, -100%) scale(1.12);
     filter: blur(0);
   }
   100% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -100%) scale(1);
   }
 }
 .gem-hunt-overlay__badge {

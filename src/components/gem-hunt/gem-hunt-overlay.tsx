@@ -26,6 +26,7 @@ import {
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
   GEM_COLLECT_OVERLAY_MS,
+  GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
   GEM_STICKER_REVEAL_MS,
   gemAnchorForHouse,
   gemInScanRing,
@@ -291,8 +292,13 @@ export function GemHuntOverlay({
     collectFinishRef.current = window.setTimeout(() => {
       collectFinishRef.current = null;
       if (newAlbumFriend) {
-        setAlbumRevealPhase("enter");
-        setPhase("albumReveal");
+        releaseGemHuntCamera(videoRef.current);
+        if (GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED) {
+          setAlbumRevealPhase("enter");
+          setPhase("albumReveal");
+        } else {
+          onCollectRef.current(monsterId, { cheer: false, navigateStickerBook: true });
+        }
       } else {
         onCollectRef.current(monsterId, { cheer: true });
       }

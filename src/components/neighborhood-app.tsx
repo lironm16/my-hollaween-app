@@ -1274,32 +1274,30 @@ export function NeighborhoodApp({
                     <StatsSummary {...summaryProps} compact />
                   </div>
                 ) : null}
+                {mapListObscured ? (
+                  <div className="min-h-[40vh] w-full bg-[#12081a]" aria-hidden />
+                ) : routeMode ? (
+                  <RouteList
+                    items={routeListItems}
+                    actionContext={houseActionContext}
+                    originLabel={activeRoute?.originLabel}
+                    startedFrom={activeRoute?.startedFrom}
+                    hasGps={Boolean(gps)}
+                    onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
+                    onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
+                    focusId={selection.listFocusId}
+                  />
+                ) : (
+                  <HouseList
+                    houses={visible}
+                    origin={origin}
+                    now={now}
+                    actionContext={houseActionContext}
+                    focusId={selection.listFocusId}
+                    insetX="flush"
+                  />
+                )}
               </div>
-              {mapListObscured ? (
-                <div
-                  className="min-h-[40vh] w-full bg-[#12081a]"
-                  aria-hidden
-                />
-              ) : routeMode ? (
-                <RouteList
-                  items={routeListItems}
-                  actionContext={houseActionContext}
-                  originLabel={activeRoute?.originLabel}
-                  startedFrom={activeRoute?.startedFrom}
-                  hasGps={Boolean(gps)}
-                  onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
-                  onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
-                  focusId={selection.listFocusId}
-                />
-              ) : (
-                <HouseList
-                  houses={visible}
-                  origin={origin}
-                  now={now}
-                  actionContext={houseActionContext}
-                  focusId={selection.listFocusId}
-                />
-              )}
             </div>
           )}
           {showBootstrapSpinner ? (
