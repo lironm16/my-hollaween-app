@@ -43,6 +43,8 @@ import type { UserLocation } from "@/hooks/use-user-location";
 import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-list-suspend";
 import { isGemCollected, isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
 import { GemCollectAlbumReveal } from "@/components/gem-hunt/gem-collect-album-reveal";
+import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
+import { setGemAnchorOverride } from "@/lib/gem-anchor-overrides";
 import { cn } from "@/lib/utils";
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
@@ -103,7 +105,11 @@ export function GemHuntOverlay({
     () => gemCollectDanceIndex(house.id, monsterId),
     [house.id, monsterId],
   );
-  const anchor = useMemo(() => gemAnchorForHouse(house), [house.id, house.lat, house.lng]);
+  const { overrides: anchorOverrides } = useGemAnchorOverrides();
+  const anchor = useMemo(
+    () => gemAnchorForHouse(house),
+    [house.id, house.lat, house.lng, anchorOverrides],
+  );
   /** Admin simulate: GPS at the house pin (ground); hunt uses anchor offset + compass like on-site. */
   const effectiveLoc = useMemo(() => {
     if (sim) return { lat: house.lat, lng: house.lng, accuracy: 5 };
@@ -389,7 +395,16 @@ export function GemHuntOverlay({
     !isGemHuntOrientationGranted() &&
     (headingStatus === "denied" || headingStatus === "idle");
   const mapsWalkUrl =
-    userLocation != null && !sim ? googleMapsNavigateUrl(userLocation, anchor) : null;
+    userLocation != null && !sim
+      ? googleMapsNavigateUrl(userLocation, { lat: house.lat, lng: house.lng })
+      : null;
+  const showAtHouseCalibrate =
+    !sim &&
+    userLocation != null &&
+    distanceM != null &&
+    distanceM > 40 &&
+    phase !== "collecting" &&
+    showHuntUi;
 
   const stageScanHint =
     phase === "collecting"
@@ -661,6 +676,22 @@ export function GemHuntOverlay({
             <p className="gem-hunt-overlay__compass-caption gem-hunt-overlay__compass-caption--muted">
               מחפשים כיוון… נעו את הטלפון בקשת קטנה (כמו «ריסוט»).
             </p>
+          ) : null}
+
+          {showAtHouseCalibrate ? (
+            <div className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--at-house">
+              <p className="gem-hunt-overlay__walk-text">
+                הגעתם ל{house.name || "הבית"} אבל המרחק גבוה? הסיכה במפה כנראה רחוקה מהכניסה — עדכנו
+                מכאן.
+              </p>
+              <button
+                type="button"
+                className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--accent w-full"
+                onClick={() => userLocation && setGemAnchorOverride(house.id, userLocation)}
+              >
+                אני ליד הבית — עדכן מיקום לאיסוף
+              </button>
+            </div>
           ) : null}
 
           {showCompassEnable && !showWalkGuide ? (

@@ -118,6 +118,24 @@ export function GemHuntPanel({
           </div>
         )}
 
+        {!collected && userLocation && distanceM != null && distanceM > 40 ? (
+          <div className="gem-hunt-panel__calibrate-public">
+            <p className="gem-hunt-panel__calibrate-hint">
+              הגעתם לכאן אבל המרחק גבוה? (לפעמים הסיכה במפה לא על הכניסה)
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full border-emerald-400/45 text-emerald-100"
+              onClick={() => setGemAnchorOverride(house.id, userLocation)}
+            >
+              <MapPin className="size-3.5" aria-hidden />
+              אני ליד הבית — עדכן מיקום יהלום
+            </Button>
+          </div>
+        ) : null}
+
         {isAdmin ? (
           <div className="gem-hunt-panel__admin-tools">
             <label className="gem-hunt-panel__simulate">

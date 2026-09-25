@@ -1404,6 +1404,12 @@
   .border-border {
     border-color: var(--border);
   }
+  .border-emerald-400\/45 {
+    border-color: color-mix(in srgb, oklch(76.5% 0.177 163.223) 45%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-emerald-400) 45%, transparent);
+    }
+  }
   .border-emerald-500 {
     border-color: var(--color-emerald-500);
   }
@@ -2491,6 +2497,9 @@
   }
   .text-emerald-50 {
     color: var(--color-emerald-50);
+  }
+  .text-emerald-100 {
+    color: var(--color-emerald-100);
   }
   .text-emerald-100\/90 {
     color: color-mix(in srgb, oklch(95% 0.052 163.051) 90%, transparent);
@@ -8778,6 +8787,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   border-color: rgb(251 191 36 / 0.65);
   padding: 0.85rem 0.75rem 0.75rem;
 }
+.gem-hunt-overlay__walk-guide--at-house {
+  border-color: rgb(52 211 153 / 0.55);
+}
 .gem-hunt-overlay__walk-guide--map-gps .gps-bearing-dial__svg {
   width: min(52vw, 11rem);
   height: min(52vw, 11rem);
@@ -9805,6 +9817,16 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+}
+.gem-hunt-panel__calibrate-public {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 0.5rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgb(52 211 153 / 0.4);
+  background: rgb(6 24 20 / 0.45);
 }
 .gem-hunt-panel__calibrate {
   display: flex;

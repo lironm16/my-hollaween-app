@@ -209,13 +209,21 @@ export function withinGemHuntMeters(
   return d + Math.min(acc, 120) <= GEM_HUNT_METERS + slack;
 }
 
-/** Within ~25m of the gem anchor — camera hunt / collect band. */
+function inGemHuntBand(
+  user: { lat: number; lng: number; accuracy?: number },
+  house: Pick<PublicHouse, "id" | "lat" | "lng">,
+) {
+  const anchor = gemAnchorForHouse(house);
+  return withinGemHuntMeters(user, anchor) || withinGemHuntMeters(user, house);
+}
+
+/** Within ~25m of the gem anchor or map pin — camera hunt / collect band. */
 export function userWithinGemHuntRange(
   user: { lat: number; lng: number; accuracy?: number } | null,
   house: Pick<PublicHouse, "id" | "lat" | "lng">,
 ) {
   if (!user) return false;
-  return withinGemHuntMeters(user, gemAnchorForHouse(house));
+  return inGemHuntBand(user, house);
 }
 
 export function gemProximity(
@@ -229,13 +237,12 @@ export function gemProximity(
   const dHouse = distanceMeters(user, house);
   const dAnchor = distanceMeters(user, anchor);
   const d = Math.min(dHouse, dAnchor);
-  if (withinGemHuntMeters(user, anchor)) return "hunt";
-  if (d <= GEM_HUNT_METERS) {
+  if (inGemHuntBand(user, house)) return "hunt";
+  if (d <= GEM_APPROACH_METERS) {
     const acc = user.accuracy;
     if (acc != null && Number.isFinite(acc) && acc > GEM_APPROACH_METERS) return "far";
     return "approach";
   }
-  if (d <= GEM_APPROACH_METERS) return "approach";
   return "far";
 }
 
