@@ -62,7 +62,7 @@ function AndroidInstallSection({ showInstallButton }: { showInstallButton: boole
   return (
     <div className="space-y-4">
       {showInstallButton ? (
-        <PwaInstallButton variant="prominent" showAlways forceVisible />
+        <PwaInstallButton variant="prominent" showAlways />
       ) : null}
       <p className="text-base leading-relaxed text-violet-200/90">
         <HelpText>

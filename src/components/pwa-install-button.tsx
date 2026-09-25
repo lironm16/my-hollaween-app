@@ -8,7 +8,6 @@ import {
   PWA_INSTALL_UNAVAILABLE_TOAST,
   shouldShowPwaInstallButton,
 } from "@/lib/pwa-install";
-import { isStandaloneDisplay } from "@/lib/push-client";
 import { cn } from "@/lib/utils";
 
 export function PwaInstallButton({
@@ -26,10 +25,9 @@ export function PwaInstallButton({
   /** Help accordion — always render (even when already installed as PWA). */
   forceVisible?: boolean;
 }) {
-  const { canInstall, promptInstall } = usePwaInstall();
-  const isStandalone = isStandaloneDisplay();
+  const { canInstall, isPwaInstalled, promptInstall } = usePwaInstall();
 
-  if (!shouldShowPwaInstallButton({ canInstall, isStandalone, showAlways, forceVisible })) return null;
+  if (!shouldShowPwaInstallButton({ canInstall, isPwaInstalled, showAlways, forceVisible })) return null;
 
   async function onClick() {
     if (!canInstall) {
