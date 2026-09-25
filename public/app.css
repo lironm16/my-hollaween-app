@@ -8527,6 +8527,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   filter: drop-shadow(0 0 16px rgb(74 222 128 / 0.95));
 }
 .gem-hunt-overlay__ring {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   border-radius: 9999px;
@@ -8752,6 +8754,25 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__walk-guide--gps {
   border-color: rgb(139 92 246 / 0.45);
 }
+.gem-hunt-overlay__walk-guide--map-gps {
+  border-color: rgb(251 191 36 / 0.65);
+  padding: 0.85rem 0.75rem 0.75rem;
+}
+.gem-hunt-overlay__walk-guide--map-gps .gps-bearing-dial__svg {
+  width: min(52vw, 11rem);
+  height: min(52vw, 11rem);
+}
+.gem-hunt-overlay__fallback-dial {
+  margin-top: 1.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  background: rgb(12 6 22 / 0.88);
+  border: 1px solid rgb(251 191 36 / 0.5);
+}
+.gem-hunt-overlay__fallback-dial .gps-bearing-dial__svg {
+  width: min(58vw, 12rem);
+  height: min(58vw, 12rem);
+}
 .gem-hunt-overlay__compass-caption {
   margin: 0;
   width: 100%;
@@ -8783,9 +8804,13 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__scan-ring .gps-bearing-dial {
   position: absolute;
   left: 50%;
-  top: 42%;
-  z-index: 6;
+  top: 50%;
+  z-index: 4;
   transform: translate(-50%, -50%);
+}
+.gem-hunt-overlay__scan-ring .gps-bearing-dial__svg {
+  width: min(48vw, 10.5rem);
+  height: min(48vw, 10.5rem);
 }
 .gps-bearing-dial__ring {
   fill: rgb(12 6 22 / 0.55);
@@ -8925,11 +8950,23 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__sensor-note {
   position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: max(4.5rem, calc(env(safe-area-inset-bottom) + 3rem));
-  z-index: 3;
-  font-size: 0.75rem;
-  color: #c4b5fd;
-  opacity: 0.85;
+  z-index: 9;
+  max-width: min(92vw, 22rem);
+  padding: 0.5rem 0.85rem;
+  border-radius: 9999px;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fde68a;
+  background: rgb(24 12 36 / 0.92);
+  border: 1px solid rgb(251 191 36 / 0.45);
+}
+.gem-hunt-overlay__sensor-note--alert {
+  color: #fecaca;
+  border-color: rgb(248 113 113 / 0.55);
 }
 .gem-hunt-overlay__fallback {
   position: absolute;
