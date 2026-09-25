@@ -212,9 +212,10 @@ async function main() {
   await gotoPage(page, `${BASE}/?rehearsal=open`);
   await waitForCatalog(page);
   await page.getByRole("button", { name: "רשימה" }).click();
+  await page.getByRole("button", { name: "שמירה" }).click();
   const [download] = await Promise.all([
     page.waitForEvent("download"),
-    page.getByRole("button", { name: "הורדה" }).click(),
+    page.getByRole("button", { name: "שמירה לקובץ" }).click(),
   ]);
   const fileName = download.suggestedFilename();
   if (!fileName.startsWith("hallowhood-") || !fileName.endsWith(".xlsx")) {

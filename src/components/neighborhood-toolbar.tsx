@@ -57,6 +57,7 @@ export function NeighborhoodToolbar({
   routeMode,
   onToggleRoute,
   houses,
+  totalInSet,
   routeTicker,
   routeUpdateCount = 0,
   routeUpdateTicker = null,
@@ -75,6 +76,8 @@ export function NeighborhoodToolbar({
   routeMode: boolean;
   onToggleRoute: () => void;
   houses: PublicHouse[];
+  /** Total houses in the current map/list set (for export «x מתוך y»). */
+  totalInSet: number;
   routeTicker: string | null;
   routeUpdateCount?: number;
   routeUpdateTicker?: string | null;
@@ -138,7 +141,12 @@ export function NeighborhoodToolbar({
             </span>
           ) : null}
         </button>
-        <CsvExportButton houses={houses} kind={likedOnly ? "liked" : "list"} />
+        <CsvExportButton
+          houses={houses}
+          totalInSet={totalInSet}
+          activeFilterCount={activeFilterCount}
+          kind={likedOnly ? "liked" : "list"}
+        />
       </div>
       {routeUpdateTicker && onOpenRouteUpdates ? (
         <button

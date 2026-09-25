@@ -299,6 +299,44 @@ function triggerDownload(filename: string, blob: Blob) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+export type HouseExportFormat = "xlsx" | "csv" | "json";
+
+export const HOUSE_EXPORT_FORMAT_OPTIONS: ReadonlyArray<{
+  id: HouseExportFormat;
+  labelHe: string;
+  hintHe: string;
+}> = [
+  {
+    id: "xlsx",
+    labelHe: "Excel (.xlsx)",
+    hintHe: "הכי נוח לפתיחה באקסל במחשב",
+  },
+  {
+    id: "csv",
+    labelHe: "CSV — טבלה (.csv)",
+    hintHe: "גוגל שיטס, Numbers ואפליקציות בטלפון",
+  },
+  {
+    id: "json",
+    labelHe: "JSON (.json)",
+    hintHe: "גיבוי מלא — שיתוף או כלי פיתוח",
+  },
+];
+
+export function exportHouseCountMessage(
+  exportCount: number,
+  totalInSet: number,
+  activeFilterCount: number,
+) {
+  if (exportCount === 0) {
+    return "אין בתים לשמירה לפי הסינון הנוכחי.";
+  }
+  if (exportCount === totalInSet && activeFilterCount === 0) {
+    return `יישמרו כל ${exportCount} הבתים שמוצגים כרגע במפה/ברשימה.`;
+  }
+  return `יישמרו ${exportCount} בתים מתוך ${totalInSet} במערך — לפי הסינון והמסננים הפעילים.`;
+}
+
 export function csvFilename(kind: "liked" | "list" | "all") {
   const day = new Date().toISOString().slice(0, 10);
   if (kind === "liked") return `hallowhood-saved-${day}.csv`;
@@ -306,6 +344,37 @@ export function csvFilename(kind: "liked" | "list" | "all") {
   return `hallowhood-list-${day}.csv`;
 }
 
+export function exportFilename(kind: "liked" | "list" | "all", format: HouseExportFormat) {
+  const stem = csvFilename(kind).replace(/\.csv$/, "");
+  return `${stem}.${format === "xlsx" ? "xlsx" : format}`;
+}
+
 export function sheetFilename(kind: "liked" | "list" | "all") {
-  return csvFilename(kind).replace(/\.csv$/, ".xlsx");
+  return exportFilename(kind, "xlsx");
+}
+
+export function housesToExportJson(houses: PublicHouse[]) {
+  return `${JSON.stringify(houses, null, 2)}\n`;
+}
+
+export function downloadJson(filename: string, json: string) {
+  const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+  triggerDownload(filename, blob);
+}
+
+export function downloadHouseExport(
+  houses: PublicHouse[],
+  kind: "liked" | "list" | "all",
+  format: HouseExportFormat,
+) {
+  const filename = exportFilename(kind, format);
+  if (format === "xlsx") {
+    downloadSheet(filename, housesToXlsx(houses));
+    return;
+  }
+  if (format === "csv") {
+    downloadCsv(filename, housesToCsv(houses));
+    return;
+  }
+  downloadJson(filename, housesToExportJson(houses));
 }

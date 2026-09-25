@@ -904,6 +904,7 @@ export function NeighborhoodApp({
             routeMode={routeMode}
             onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
             houses={visible}
+            totalInSet={mapHouses.length}
             routeTicker={originPick.routeTicker}
             routeUpdateCount={routeMode ? routeAlerts.changes.length : 0}
             routeUpdateTicker={

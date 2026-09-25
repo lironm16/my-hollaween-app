@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { housesToCsv } from "@/lib/house-csv";
+import {
+  exportFilename,
+  exportHouseCountMessage,
+  housesToCsv,
+  housesToExportJson,
+} from "@/lib/house-csv";
 import type { PublicHouse } from "@/lib/types";
 
 function house(patch: Partial<PublicHouse> = {}): PublicHouse {
@@ -55,5 +60,26 @@ describe("housesToCsv", () => {
     const csv = housesToCsv([]);
     const lines = csv.trim().split(/\r?\n/);
     assert.equal(lines.length, 1);
+  });
+});
+
+describe("house export helpers", () => {
+  it("builds filenames per format", () => {
+    assert.match(exportFilename("list", "xlsx"), /\.xlsx$/);
+    assert.match(exportFilename("list", "csv"), /\.csv$/);
+    assert.match(exportFilename("list", "json"), /\.json$/);
+  });
+
+  it("explains filtered export counts", () => {
+    assert.match(exportHouseCountMessage(3, 10, 2), /3.*10/);
+    assert.match(exportHouseCountMessage(5, 5, 0), /כל 5/);
+    assert.match(exportHouseCountMessage(0, 5, 1), /אין בתים/);
+  });
+
+  it("serializes houses as JSON array", () => {
+    const json = housesToExportJson([house()]);
+    const parsed = JSON.parse(json) as unknown[];
+    assert.equal(parsed.length, 1);
+    assert.equal((parsed[0] as { name: string }).name, "בית בדיקה");
   });
 });
