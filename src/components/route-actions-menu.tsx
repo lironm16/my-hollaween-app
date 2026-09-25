@@ -2,15 +2,16 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
-import { MoreVertical, Save, Share2 } from "lucide-react";
+import { Download, MoreVertical, Share2 } from "lucide-react";
 import { toast } from "sonner";
-import { downloadOrShareRouteTxt } from "@/lib/house-csv";
+import { HouseExportDialog } from "@/components/csv-export-button";
 import {
   buildRouteShareUrl,
   shareRouteUrl,
   sharedRoutePayloadFromRoute,
 } from "@/lib/route-share";
 import type { WalkingRoute } from "@/lib/route";
+import type { PublicHouse } from "@/lib/types";
 import { appHeaderBottom, safeAreaInsetBottom } from "@/lib/viewport";
 import { cn } from "@/lib/utils";
 
@@ -19,27 +20,46 @@ const MENU_ICON_CLASS = "size-5 shrink-0";
 export function RouteActionsMenu({
   routeMode,
   activeRoute,
+  houses,
+  totalInSet,
+  activeFilterCount = 0,
+  kind = "list",
 }: {
   routeMode: boolean;
   activeRoute: WalkingRoute | null;
+  houses: PublicHouse[];
+  totalInSet: number;
+  activeFilterCount?: number;
+  kind?: "liked" | "list" | "all";
 }) {
-  const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [panelStyle, setPanelStyle] = useState<CSSProperties>({ visibility: "hidden" });
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const activeRouteRef = useRef(activeRoute);
+  activeRouteRef.current = activeRoute;
 
-  const routeReady = Boolean(routeMode && activeRoute && activeRoute.stops.length > 0);
+  const routeReady = Boolean(activeRoute && activeRoute.stops.length > 0);
+  const listExportReady = houses.length > 0;
 
   useEffect(() => {
-    if (!open) return;
+    if (!routeMode) {
+      setMenuOpen(false);
+      setExportOpen(false);
+    }
+  }, [routeMode]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
       if (rootRef.current?.contains(target) || panelRef.current?.contains(target)) return;
-      setOpen(false);
+      setMenuOpen(false);
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") setMenuOpen(false);
     };
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
@@ -47,10 +67,10 @@ export function RouteActionsMenu({
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [open]);
+  }, [menuOpen]);
 
   useLayoutEffect(() => {
-    if (!open) return;
+    if (!menuOpen) return;
 
     const updatePosition = () => {
       const trigger = triggerRef.current;
@@ -95,18 +115,32 @@ export function RouteActionsMenu({
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [open]);
+  }, [menuOpen]);
+
+  function openExportDialog() {
+    if (!listExportReady) {
+      toast.error("אין בתים לשמירה — המפה ריקה");
+      return;
+    }
+    setMenuOpen(false);
+    setExportOpen(true);
+  }
 
   function shareRoute() {
-    if (!routeReady || !activeRoute) return;
-    setOpen(false);
-    const stopCount = activeRoute.stops.length;
+    const route = activeRouteRef.current;
+    if (!route || route.stops.length === 0) return;
+
     const url = buildRouteShareUrl(
-      sharedRoutePayloadFromRoute(activeRoute),
+      sharedRoutePayloadFromRoute(route),
       window.location.origin,
     );
-    void shareRouteUrl(url, stopCount)
-      .then((outcome) => {
+    const stopCount = route.stops.length;
+
+    const finishMenu = () => setMenuOpen(false);
+
+    const fallback = () => {
+      void shareRouteUrl(url, stopCount).then((outcome) => {
+        finishMenu();
         if (outcome === "shared") toast.success("שיתוף המסלול נשלח");
         else if (outcome === "copied") toast.success("הקישור הועתק — הדביקו בוואטסאפ / הודעה");
         else if (outcome === "cancelled") return;
@@ -114,18 +148,33 @@ export function RouteActionsMenu({
           toast.error("לא הצלחנו לשתף — נסו שוב");
           toast.message(url, { closeButton: true, duration: 20_000 });
         }
-      })
-      .catch(() => toast.error("לא הצלחנו לשתף — נסו שוב"));
+      });
+    };
+
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      try {
+        const pending = navigator.share({ url });
+        void pending
+          .then(() => {
+            finishMenu();
+            toast.success("שיתוף המסלול נשלח");
+          })
+          .catch((err: unknown) => {
+            if (err instanceof Error && err.name === "AbortError") return;
+            fallback();
+          });
+        return;
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") return;
+      }
+    }
+
+    fallback();
   }
 
-  async function downloadRoute() {
-    if (!routeReady || !activeRoute) return;
-    setOpen(false);
-    await downloadOrShareRouteTxt(activeRoute, false);
-    toast.success("המסלול הורד");
-  }
+  if (!routeMode) return null;
 
-  const panel = open
+  const panel = menuOpen
     ? createPortal(
         <div
           ref={panelRef}
@@ -137,12 +186,12 @@ export function RouteActionsMenu({
           <button
             type="button"
             role="menuitem"
-            className={cn("house-action-menu-item", !routeReady && "is-disabled")}
-            disabled={!routeReady}
-            onClick={() => void downloadRoute()}
+            className={cn("house-action-menu-item", !listExportReady && "is-disabled")}
+            disabled={!listExportReady}
+            onClick={openExportDialog}
           >
             <span className="house-action-menu-icon">
-              <Save className={MENU_ICON_CLASS} strokeWidth={2.2} />
+              <Download className={MENU_ICON_CLASS} strokeWidth={2.2} />
             </span>
             <span className="house-action-menu-label">הורד מסלול</span>
           </button>
@@ -151,7 +200,11 @@ export function RouteActionsMenu({
             role="menuitem"
             className={cn("house-action-menu-item", !routeReady && "is-disabled")}
             disabled={!routeReady}
-            onClick={shareRoute}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              shareRoute();
+            }}
           >
             <span className="house-action-menu-icon">
               <Share2 className={MENU_ICON_CLASS} strokeWidth={2.2} />
@@ -164,22 +217,32 @@ export function RouteActionsMenu({
     : null;
 
   return (
-    <div ref={rootRef} className="relative shrink-0">
-      <button
-        ref={triggerRef}
-        type="button"
-        aria-label="מסלול — הורדה ושיתוף"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={(event) => {
-          event.stopPropagation();
-          setOpen((value) => !value);
-        }}
-        className="app-toolbar__btn inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25"
-      >
-        <MoreVertical className="size-5" strokeWidth={2.25} />
-      </button>
-      {panel}
-    </div>
+    <>
+      <div ref={rootRef} className="relative shrink-0">
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-label="מסלול — הורדה ושיתוף"
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          onClick={(event) => {
+            event.stopPropagation();
+            setMenuOpen((value) => !value);
+          }}
+          className="app-toolbar__btn inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25"
+        >
+          <MoreVertical className="size-5" strokeWidth={2.25} />
+        </button>
+        {panel}
+      </div>
+      <HouseExportDialog
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        houses={houses}
+        totalInSet={totalInSet}
+        activeFilterCount={activeFilterCount}
+        kind={kind}
+      />
+    </>
   );
 }

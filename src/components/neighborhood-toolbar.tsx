@@ -3,7 +3,6 @@
 import { List, MapPinned, Route } from "lucide-react";
 import { FilterTrigger } from "@/components/filter-menu";
 import { OriginTrigger } from "@/components/origin-picker";
-import { CsvExportButton } from "@/components/csv-export-button";
 import { RouteActionsMenu } from "@/components/route-actions-menu";
 import { PingPongMarquee } from "@/components/neighborhood-marquee";
 import type { HomeView } from "@/lib/home-view";
@@ -146,13 +145,14 @@ export function NeighborhoodToolbar({
             </span>
           ) : null}
         </button>
-        <CsvExportButton
+        <RouteActionsMenu
+          routeMode={routeMode}
+          activeRoute={activeRoute}
           houses={houses}
           totalInSet={totalInSet}
           activeFilterCount={activeFilterCount}
           kind={likedOnly ? "liked" : "list"}
         />
-        <RouteActionsMenu routeMode={routeMode} activeRoute={activeRoute} />
       </div>
       {routeUpdateTicker && onOpenRouteUpdates ? (
         <button

@@ -322,7 +322,7 @@ export function exportHouseCountMessage(
   if (exportCount === totalInSet && activeFilterCount === 0) {
     return `יישמרו כל ${exportCount} הבתים שמוצגים כרגע במפה/ברשימה.`;
   }
-  return `יישמרו ${exportCount} בתים מתוך ${totalInSet} במערך — לפי הסינון והמסננים הפעילים.`;
+  return `יישמרו ${exportCount} בתים מתוך ${totalInSet} — לפי הסינון והמסננים הפעילים.`;
 }
 
 export function csvFilename(kind: "liked" | "list" | "all") {

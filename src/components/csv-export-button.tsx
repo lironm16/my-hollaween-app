@@ -1,7 +1,6 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Download } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -16,20 +15,21 @@ import {
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function CsvExportButton({
+export function HouseExportDialog({
+  open,
+  onOpenChange,
   houses,
   totalInSet,
   activeFilterCount = 0,
   kind = "list",
-  label,
 }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   houses: PublicHouse[];
   totalInSet: number;
   activeFilterCount?: number;
   kind?: "liked" | "list" | "all";
-  label?: string;
 }) {
-  const [open, setOpen] = useState(false);
   const [format, setFormat] = useState<HouseExportFormat>("xlsx");
   const groupId = useId();
   const countMessage = exportHouseCountMessage(houses.length, totalInSet, activeFilterCount);
@@ -44,24 +44,11 @@ export function CsvExportButton({
     } else {
       downloadHouseExport(houses, kind, selected);
     }
-    const option = HOUSE_EXPORT_FORMAT_OPTIONS.find((row) => row.id === selected);
-    toast.success(`נשמר ${option?.labelHe ?? selected} · ${houses.length} בתים`);
-    setOpen(false);
+    onOpenChange(false);
   }
 
-  function openDialog() {
-    if (houses.length === 0) {
-      toast.error("אין בתים לשמירה — המפה ריקה");
-      return;
-    }
-    setOpen(true);
-  }
-
-  const triggerClass =
-    "app-toolbar__btn inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25";
-
-  const dialog = (
-    <Dialog open={open} onOpenChange={setOpen}>
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         dir="rtl"
         showCloseButton={false}
@@ -69,8 +56,8 @@ export function CsvExportButton({
       >
         <OverlayCloseBar
           compact
-          title="הורדת רשימה"
-          onClose={() => setOpen(false)}
+          title="הורד מסלול"
+          onClose={() => onOpenChange(false)}
           className="border-b border-orange-500/15 pb-2"
         />
         <div className="space-y-3 px-4 py-3">
@@ -118,45 +105,12 @@ export function CsvExportButton({
             type="button"
             variant="outline"
             className="h-11 border-violet-500/40 px-5 text-base text-violet-100"
-            onClick={() => setOpen(false)}
+            onClick={() => onOpenChange(false)}
           >
             ביטול
           </Button>
         </div>
       </DialogContent>
     </Dialog>
-  );
-
-  if (!label) {
-    return (
-      <>
-        <button
-          type="button"
-          aria-label="הורדת רשימה"
-          title="הורדת רשימה"
-          onClick={openDialog}
-          className={triggerClass}
-        >
-          <Download className="size-5" strokeWidth={2.25} />
-        </button>
-        {dialog}
-      </>
-    );
-  }
-
-  return (
-    <>
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        className="border-orange-400/40 text-orange-100"
-        onClick={openDialog}
-      >
-        <Download className="size-4" strokeWidth={2.25} />
-        {label}
-      </Button>
-      {dialog}
-    </>
   );
 }
