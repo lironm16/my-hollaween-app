@@ -49,7 +49,7 @@ import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { loadGemCollectedIds } from "@/lib/gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
-import { canCollectGem, GEM_CHEER_MS } from "@/lib/gem-hunt";
+import { canCollectGem, GEM_CHEER_MS, userWithinGemHuntRange } from "@/lib/gem-hunt";
 import { syncGemMonsterAssignment } from "@/lib/gem-monsters";
 import { pickGemHuntTarget } from "@/lib/gem-hunt-target";
 import { prepareGemHuntSensors, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
@@ -330,7 +330,9 @@ export function NeighborhoodApp({
       selection.selected?.id ?? null,
     );
     if (!target) return;
-    await prepareGemHuntSensors();
+    const inRange = userWithinGemHuntRange(gps, target.house);
+    if (!inRange) stopGemHuntCameraStream();
+    await prepareGemHuntSensors({ requestCamera: inRange });
     setMapGemHouse(target.house);
   }, [gemAllCollected, mapHouses, gps, gems, selection.selected?.id]);
 
@@ -340,10 +342,12 @@ export function NeighborhoodApp({
       preloadGemHuntChunks();
       setView("map");
       selection.selectOnMap(house);
-      await prepareGemHuntSensors();
+      const inRange = userWithinGemHuntRange(gps, house);
+      if (!inRange) stopGemHuntCameraStream();
+      await prepareGemHuntSensors({ requestCamera: inRange });
       setMapGemHouse(house);
     },
-    [gems, selection],
+    [gems, gps, selection],
   );
 
   useEffect(() => {
@@ -1366,6 +1370,7 @@ export function NeighborhoodApp({
         <GemHuntOverlayLazy
           house={mapGemHouse}
           userLocation={gps}
+          deferCameraUntilInRange={!userWithinGemHuntRange(gps, mapGemHouse)}
           collectEnabled={canCollectGem(
             gps,
             mapGemHouse,

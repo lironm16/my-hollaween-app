@@ -82,17 +82,31 @@ export function isGemHuntOrientationGranted() {
   return readGranted(ORIENTATION_GRANTED_KEY);
 }
 
+export type PrepareGemHuntSensorsOptions = {
+  /** Default true — set false to only request compass (save battery until in range). */
+  requestCamera?: boolean;
+  requestOrientation?: boolean;
+};
+
 /** Call from a click/tap handler before opening the hunt overlay. */
-export async function prepareGemHuntSensors(): Promise<{
+export async function prepareGemHuntSensors(
+  options: PrepareGemHuntSensorsOptions = {},
+): Promise<{
   camera: boolean;
   orientation: boolean;
 }> {
-  let orientation = true;
-  let camera = true;
+  const requestCamera = options.requestCamera !== false;
+  const requestOrientation = options.requestOrientation !== false;
+  let orientation = requestOrientation ? true : false;
+  let camera = requestCamera ? true : false;
 
   migrateOrientationSessionFlag();
 
-  if (typeof window !== "undefined" && "DeviceOrientationEvent" in window) {
+  if (
+    requestOrientation &&
+    typeof window !== "undefined" &&
+    "DeviceOrientationEvent" in window
+  ) {
     const ctor = DeviceOrientationEvent as typeof DeviceOrientationEvent & {
       requestPermission?: () => Promise<"granted" | "denied">;
     };
@@ -110,7 +124,11 @@ export async function prepareGemHuntSensors(): Promise<{
     }
   }
 
-  if (typeof navigator !== "undefined" && navigator.mediaDevices?.getUserMedia) {
+  if (
+    requestCamera &&
+    typeof navigator !== "undefined" &&
+    navigator.mediaDevices?.getUserMedia
+  ) {
     try {
       const liveTracks = sharedCameraStream?.getVideoTracks().filter((t) => t.readyState === "live");
       if (liveTracks && liveTracks.length > 0) {
@@ -130,7 +148,7 @@ export async function prepareGemHuntSensors(): Promise<{
       camera = false;
       stopGemHuntCameraStream();
     }
-  } else {
+  } else if (requestCamera) {
     camera = false;
   }
 

@@ -69,7 +69,7 @@ export function GemHuntPanel({
   const anchorCalibrated = Boolean(anchorOverrideMap[house.id]) || anchor.calibrated === true;
 
   const openCamera = useCallback(async () => {
-    await prepareGemHuntSensors();
+    await prepareGemHuntSensors({ requestCamera: true });
     setHuntOpen(true);
   }, []);
 
@@ -106,7 +106,7 @@ export function GemHuntPanel({
                 {canCollect
                   ? "מוכנים לאיסוף!"
                   : proximity === "far"
-                    ? "אפשר לצפות במצלמה מכל מקום · לאיסוף התקרבו לבית"
+                    ? "לחצו על המצלמה לתצוגה · לאיסוף התקרבו ל־25 מ׳"
                     : proximity === "approach"
                       ? `עוד ${distanceM != null ? formatDistance(Math.max(0, distanceM - GEM_HUNT_METERS)) : "קצת"} — אפשר לצפות, לאיסוף התקרבו`
                       : standingStill || simulate
@@ -195,6 +195,7 @@ export function GemHuntPanel({
           house={house}
           userLocation={userLocation}
           simulateInRange={simulate}
+          deferCameraUntilInRange={false}
           collectEnabled={canCollect}
           onClose={() => {
             stopGemHuntCameraStream();

@@ -21,6 +21,7 @@ import {
   GEM_HUNT_METERS,
   bearingClockLabelHe,
   bearingDegrees,
+  userWithinGemHuntRange,
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
   GEM_COLLECT_OVERLAY_MS,
@@ -55,6 +56,7 @@ export function GemHuntOverlay({
   house,
   userLocation,
   simulateInRange = false,
+  deferCameraUntilInRange = false,
   collectEnabled = true,
   onClose,
   onCollect,
@@ -62,6 +64,8 @@ export function GemHuntOverlay({
   house: PublicHouse;
   userLocation: UserLocation | null;
   simulateInRange?: boolean;
+  /** Map / menu hunt: no getUserMedia until within GEM_HUNT_METERS (battery). */
+  deferCameraUntilInRange?: boolean;
   /** When false, user can scan and see the gem but cannot collect (preview / too far). */
   collectEnabled?: boolean;
   onClose: () => void;
@@ -86,6 +90,8 @@ export function GemHuntOverlay({
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [cameraWaitingForRange, setCameraWaitingForRange] = useState(false);
+  const cameraBootRef = useRef(false);
   const [phase, setPhase] = useState<HuntPhase>("scanning");
   const [hint, setHint] = useState<"scan" | "warm" | "found" | "help">("scan");
   const [showHelp, setShowHelp] = useState(false);
@@ -152,9 +158,33 @@ export function GemHuntOverlay({
     let cancelled = false;
 
     async function attachCamera() {
-      const stream = getGemHuntCameraStream();
+      const needDefer =
+        deferCameraUntilInRange &&
+        !sim &&
+        !userWithinGemHuntRange(effectiveLoc, house);
+      if (needDefer) {
+        setCameraWaitingForRange(true);
+        setCameraError(null);
+        return;
+      }
+      setCameraWaitingForRange(false);
+
+      let stream = getGemHuntCameraStream();
+      if (!stream && !cameraBootRef.current) {
+        cameraBootRef.current = true;
+        const prepared = await prepareGemHuntSensors({ requestCamera: true });
+        cameraBootRef.current = false;
+        if (cancelled) return;
+        if (!prepared.camera) {
+          setCameraError("לא ניתן לפתוח מצלמה — אפשר לאסוף מהמפה");
+          return;
+        }
+        stream = getGemHuntCameraStream();
+      }
       if (!stream) {
-        setCameraError("לא ניתן לפתוח מצלמה — אפשר לאסוף מהמפה");
+        if (!deferCameraUntilInRange) {
+          setCameraError("לא ניתן לפתוח מצלמה — אפשר לאסוף מהמפה");
+        }
         return;
       }
       if (cancelled) return;
@@ -164,6 +194,7 @@ export function GemHuntOverlay({
         video.srcObject = stream;
         try {
           await video.play();
+          setCameraError(null);
         } catch {
           setCameraError("לא ניתן להציג מצלמה");
         }
@@ -177,7 +208,7 @@ export function GemHuntOverlay({
       const video = videoRef.current;
       if (video) video.srcObject = null;
     };
-  }, [house.id]);
+  }, [house.id, deferCameraUntilInRange, sim, effectiveLoc, house]);
 
   useEffect(() => {
     if (phase !== "scanning" || revealedRef.current) return;
@@ -322,7 +353,7 @@ export function GemHuntOverlay({
     showGpsDirectionHint && headingStatus === "pending" && heading == null;
 
   async function retryCompassPermission() {
-    const result = await prepareGemHuntSensors();
+    const result = await prepareGemHuntSensors({ requestCamera: false });
     if (result.orientation) setCompassRetry((n) => n + 1);
   }
   const mapsWalkUrl =
@@ -365,6 +396,17 @@ export function GemHuntOverlay({
           >
             הציגו יהלום על המסך
           </button>
+        </div>
+      ) : cameraWaitingForRange ? (
+        <div className="gem-hunt-overlay__fallback gem-hunt-overlay__fallback--range">
+          <p className="text-base font-semibold text-amber-200">המצלמה כבויה לחיסכון בסוללה</p>
+          <p className="mt-2 text-sm text-violet-100">
+            היא תופעל אוטומטית בטווח ~{GEM_HUNT_METERS} מ&apos; מהיהלום
+            {distanceM != null ? ` · עכשיו ~${formatDistance(distanceM)}` : ""}.
+          </p>
+          <p className="mt-2 text-sm text-violet-300/90">
+            אפשר להמשיך עם החץ / כיוון GPS למטה, או לפתוח מצלמה מכרטיס הבית.
+          </p>
         </div>
       ) : (
         <video ref={videoRef} className="gem-hunt-overlay__video" playsInline muted autoPlay />

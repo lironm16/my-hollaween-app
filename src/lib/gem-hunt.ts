@@ -200,6 +200,15 @@ export function withinGemHuntMeters(
   return d + Math.min(acc, 120) <= GEM_HUNT_METERS + slack;
 }
 
+/** Within ~25m of the gem anchor — camera hunt / collect band. */
+export function userWithinGemHuntRange(
+  user: { lat: number; lng: number; accuracy?: number } | null,
+  house: Pick<PublicHouse, "id" | "lat" | "lng">,
+) {
+  if (!user) return false;
+  return withinGemHuntMeters(user, gemAnchorForHouse(house));
+}
+
 export function gemProximity(
   user: { lat: number; lng: number; accuracy?: number } | null,
   house: Pick<PublicHouse, "id" | "lat" | "lng">,

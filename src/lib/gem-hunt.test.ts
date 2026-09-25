@@ -13,6 +13,7 @@ import {
   gemFamilyForHouse,
   gemVariantForHouse,
   headingDelta,
+  userWithinGemHuntRange,
   withinGemHuntMeters,
   GEM_HUNT_METERS,
   GEM_ANCHOR_MIN_METERS,
@@ -85,6 +86,15 @@ describe("gem hunt geo", () => {
   it("normalizes heading delta across north", () => {
     assert.equal(headingDelta(350, 10), 20);
     assert.equal(headingDelta(10, 350), 20);
+  });
+
+  it("userWithinGemHuntRange uses gem anchor band", () => {
+    const anchor = gemAnchorForHouse(house);
+    assert.equal(userWithinGemHuntRange({ lat: anchor.lat, lng: anchor.lng, accuracy: 8 }, house), true);
+    assert.equal(
+      userWithinGemHuntRange({ lat: house.lat + 0.004, lng: house.lng, accuracy: 8 }, house),
+      false,
+    );
   });
 });
 
