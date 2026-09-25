@@ -110,26 +110,13 @@ export function HouseList({
         >
           <p className="mb-2 text-sm font-semibold text-orange-200">בחירה מהרשימה</p>
           <div className="flex flex-wrap items-stretch gap-2">
-            <div
-              role="button"
-              tabIndex={0}
-              className="flex min-h-11 flex-1 cursor-pointer items-center gap-2.5 rounded-lg border border-violet-500/30 bg-[#1d1028]/90 px-3 py-2 text-right transition-colors hover:bg-violet-500/10"
-              onClick={selection.onToggleAll}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  selection.onToggleAll();
-                }
-              }}
-            >
+            <div className="flex min-h-11 flex-1 items-center gap-2.5 rounded-lg border border-violet-500/30 bg-[#1d1028]/90 px-3 py-2 text-right">
               <ListSelectCheck
-                as="div"
                 selected={selection.allSelected}
-                indeterminate={selection.someSelected && !selection.allSelected}
                 aria-label={selection.allSelected ? "בטל סימון הכל" : "סמן הכל"}
-                className="pointer-events-none"
+                onClick={selection.onToggleAll}
               />
-              <span className="text-base font-medium text-violet-100">סמן הכל</span>
+              <span className="pointer-events-none text-base font-medium text-violet-100">סמן הכל</span>
             </div>
             <Button
               type="button"
@@ -139,14 +126,19 @@ export function HouseList({
               className="min-h-11 flex-1 border-orange-500/40 bg-[#1d1028] text-base font-semibold text-orange-100 hover:bg-orange-500/15 disabled:opacity-40"
               onClick={selection.onRemoveSelected}
             >
-              {selection.removeLabel ?? "הסר מהרשימה"}
+              {selection.someSelected
+                ? (selection.removeLabel ?? "הסר מהרשימה").replace(
+                    /^הסר /,
+                    `הסר ${selection.selectedIds.size} `,
+                  )
+                : (selection.removeLabel ?? "הסר מהרשימה")}
             </Button>
           </div>
-          <p className="mt-2 text-sm leading-snug text-violet-300/95">
-            {selection.someSelected
-              ? `נבחרו ${selection.selectedIds.size} — ${selection.removeLabel ?? "הסר מהרשימה"} ינקה את הסימון המקומי (אהבתי, ביקרתי וכו׳) רק לבתים המסומנים.`
-              : "סמנו בתים (או «סמן הכל»), ואז לחצו על הכפתור הכתום להסרה."}
-          </p>
+          {!selection.someSelected ? (
+            <p className="mt-2 text-sm leading-snug text-violet-300/95">
+              סמנו בתים (או «סמן הכל»), ואז לחצו על הכפתור הכתום להסרה.
+            </p>
+          ) : null}
         </div>
       ) : null}
       {showSort ? <ListSortSelect /> : null}
@@ -156,8 +148,7 @@ export function HouseList({
           ref={h.id === focusId ? focusRef : undefined}
           className={cn(
             h.id === focusId && "house-list-focus",
-            "flex items-start gap-2",
-            selection && "house-list-row-select",
+            selection ? "house-list-row-select flex flex-col items-center gap-2" : "flex items-start gap-2",
           )}
         >
           {selection ? (
@@ -166,11 +157,11 @@ export function HouseList({
               aria-label={
                 selection.selectedIds.has(h.id) ? `בטל בחירה — ${h.name}` : `בחר — ${h.name}`
               }
-              className="mt-2"
+              className="house-list-row-select__check"
               onClick={() => selection.onToggleId(h.id)}
             />
           ) : null}
-          <div className="min-w-0 flex-1 space-y-2">
+          <div className={cn("min-w-0 space-y-2", selection ? "w-full" : "flex-1")}>
             <HouseCard
               {...houseCardPropsFor(h, actionContext, {
                 index: i + 1,

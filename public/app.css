@@ -8507,9 +8507,16 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__header--close-only {
   justify-content: flex-end;
 }
+.house-list-row-select__check {
+  align-self: center;
+}
+.gem-hunt-overlay__video--off {
+  visibility: hidden;
+  pointer-events: none;
+}
 .gem-hunt-overlay__collect-banner {
   position: absolute;
-  top: 42%;
+  top: 28%;
   left: 50%;
   z-index: 11;
   width: min(94vw, 26rem);

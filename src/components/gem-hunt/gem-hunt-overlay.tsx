@@ -301,6 +301,7 @@ export function GemHuntOverlay({
 
   useEffect(() => {
     if (phase !== "albumReveal") return;
+    releaseGemHuntCamera(videoRef.current);
     setAlbumShowActions(false);
     setAlbumRevealPhase("enter");
     const landTimer = window.setTimeout(() => setAlbumRevealPhase("landed"), 720);
@@ -452,6 +453,7 @@ export function GemHuntOverlay({
         className={cn(
           "gem-hunt-overlay__video",
           cameraError && "gem-hunt-overlay__video--behind-fallback",
+          phase === "albumReveal" && "gem-hunt-overlay__video--off",
         )}
         playsInline
         muted

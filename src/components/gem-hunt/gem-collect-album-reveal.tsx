@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useMemo } from "react";
-import { Sparkles } from "lucide-react";
 import {
   gemAlbumStickerPool,
   gemLabelHe,
@@ -44,7 +43,6 @@ export function GemCollectAlbumReveal({
     return pool.slice(start, start + 4);
   }, [pool, slotIndex]);
 
-  const kicker = newAlbumFriend ? "מצאתם חבר חדש!" : "מצאתם שוב את החבר!";
   const bookLabel = newAlbumFriend ? "נכנס לספר המדבקות" : "כבר בספר המדבקות — עוד יהלום!";
   const showFly = newAlbumFriend;
 
@@ -52,10 +50,6 @@ export function GemCollectAlbumReveal({
     <div className="gem-collect-album-reveal" role="status" aria-live="polite">
       <div className="gem-collect-album-reveal__shade" aria-hidden />
       <div className="gem-collect-album-reveal__content">
-        <p className="gem-collect-album-reveal__kicker">
-          <Sparkles className="inline size-4 text-amber-300" aria-hidden /> {kicker}
-        </p>
-
         {showFly ? (
           <div
             className={cn(
