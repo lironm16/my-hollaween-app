@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -199,14 +197,12 @@ function ExportFormatDialog({
         dir="rtl"
         className="gap-0 border border-orange-500/30 bg-[#1a0d24] p-0 text-orange-50 sm:max-w-md"
       >
-        <DialogHeader className="border-b border-orange-500/15 px-4 py-3 pt-4 text-right">
+        <DialogHeader className="border-b border-orange-500/15 px-4 py-3 pt-4 text-center">
           <DialogTitle className="font-display text-xl text-orange-200">שמירה ושיתוף</DialogTitle>
-          <DialogDescription className="text-base leading-snug text-violet-200/90">
-            {countMessage}
-          </DialogDescription>
         </DialogHeader>
 
         <fieldset className="border-0 px-4 py-3">
+          <p className="mb-3 text-base leading-snug text-violet-200/90">{countMessage}</p>
           <legend className="mb-2 text-sm font-semibold text-violet-200/90">רשימת בתים — פורמט</legend>
           <div className="grid gap-2" role="radiogroup">
             {HOUSE_EXPORT_FORMAT_OPTIONS.map((option) => {
@@ -215,7 +211,7 @@ function ExportFormatDialog({
                 <label
                   key={option.id}
                   className={cn(
-                    "flex min-h-12 cursor-pointer touch-manipulation items-start gap-3 rounded-xl border px-3 py-2.5 transition-colors",
+                    "flex min-h-11 cursor-pointer touch-manipulation items-center gap-3 rounded-xl border px-3 py-2 transition-colors",
                     checked
                       ? "border-orange-400/55 bg-orange-500/10 ring-1 ring-orange-400/35"
                       : "border-violet-500/25 bg-[#12081a]/80 hover:border-violet-400/35",
@@ -227,11 +223,10 @@ function ExportFormatDialog({
                     value={option.id}
                     checked={checked}
                     onChange={() => onFormatChange(option.id)}
-                    className="mt-1 size-4 shrink-0 accent-orange-400"
+                    className="size-4 shrink-0 accent-orange-400"
                   />
-                  <span className="min-w-0 flex-1 text-start">
-                    <span className="block text-base font-medium text-orange-50">{option.labelHe}</span>
-                    <span className="mt-0.5 block text-sm leading-snug text-violet-300/85">{option.hintHe}</span>
+                  <span className="min-w-0 flex-1 text-start text-base font-medium text-orange-50">
+                    {option.labelHe}
                   </span>
                 </label>
               );
@@ -243,7 +238,8 @@ function ExportFormatDialog({
           <div className="border-t border-orange-500/15 px-4 py-3">
             <p className="mb-2 text-sm font-semibold text-violet-200/90">מסלול פעיל ({routeStopCount} עצירות)</p>
             <p className="mb-3 text-sm leading-snug text-violet-300/85">
-              שיתוף קישור — חבר יקבל את אותם מספרי עצירות. זמין רק במצב מסלול.
+              «שיתוף קישור» שולח קישור לאפליקציה (וואטסאפ, אווירדרופ, הודעה לעצמכם). במכשיר השני
+              פותחים את הקישור — מופיעה «החלפת מסלול» — אותם מספרי בתים; הניווט מנקודת ההתחלה שלכם.
             </p>
             <div className="flex flex-col gap-2">
               <Button
@@ -267,24 +263,24 @@ function ExportFormatDialog({
           </div>
         ) : null}
 
-        <DialogFooter className="border-t border-orange-500/15 bg-[#14091c]/80 px-4 py-3">
+        <div className="grid grid-cols-2 gap-2 border-t border-orange-500/15 bg-[#14091c]/80 px-4 py-3">
           <Button
             type="button"
-            variant="outline"
-            className="border-violet-500/40 text-violet-100"
-            onClick={() => onOpenChange(false)}
-          >
-            ביטול
-          </Button>
-          <Button
-            type="button"
-            className="bg-orange-500 text-black hover:bg-orange-400"
+            className="h-11 bg-orange-500 px-5 text-base text-black hover:bg-orange-400"
             disabled={exportCount === 0}
             onClick={onConfirm}
           >
             שמירה לקובץ
           </Button>
-        </DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 border-violet-500/40 px-5 text-base text-violet-100"
+            onClick={() => onOpenChange(false)}
+          >
+            ביטול
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
