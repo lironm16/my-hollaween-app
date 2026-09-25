@@ -61,7 +61,8 @@ jobs:
           rm -rf .github
           cp -a "$BACKUP/.github" .
           rm -rf "$BACKUP"
-          merge_preserve_dir() {
+          # GitHub copies win on conflict (gem GLBs/posters uploaded from Mac).
+          restore_preserve_dir() {
             local rel="$1"
             local src="$ASSET_BACKUP/$rel"
             [ -d "$src" ] || return 0
@@ -69,15 +70,13 @@ jobs:
             find "$src" -type f | while read -r f; do
               local base="${f#$src/}"
               local dest="$rel/$base"
-              if [ ! -e "$dest" ]; then
-                mkdir -p "$(dirname "$dest")"
-                cp -a "$f" "$dest"
-              fi
+              mkdir -p "$(dirname "$dest")"
+              cp -a "$f" "$dest"
             done
           }
-          merge_preserve_dir public/gem-monsters
-          merge_preserve_dir public/house-photos
-          merge_preserve_dir public/images
+          restore_preserve_dir public/gem-monsters
+          restore_preserve_dir public/house-photos
+          restore_preserve_dir public/images
           rm -rf "$ASSET_BACKUP"
           git config user.email "lironm16@gmail.com"
           git config user.name "Liron Matitiyahu"

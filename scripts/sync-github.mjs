@@ -6,10 +6,13 @@
  * `repo` token works. The auto-sync workflow is added once via GitHub UI
  * (deploy/github/sync-from-cursor.yml) with ORIGIN_GIT_TOKEN configured.
  *
- * Disabled by default — Cursor clones often omit large `public/` assets; mirroring
- * would delete them on GitHub. Push photos/GLBs on GitHub directly, or opt in:
+ * Disabled by default — Cursor clones often omit large `public/` assets.
+ * When enabled, `public/gem-monsters`, `public/house-photos`, and `public/images`
+ * keep GitHub files on path conflict (Mac uploads are not overwritten).
  *
  *   GITHUB_SYNC=1 GITHUB_TOKEN=ghp_... npm run sync:github
+ *
+ * Cloud agents: do not run sync after the user pushed assets on GitHub unless they ask.
  */
 import { execSync } from "node:child_process";
 import { cpSync, existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";

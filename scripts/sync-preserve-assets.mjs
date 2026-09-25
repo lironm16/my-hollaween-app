@@ -21,23 +21,26 @@ export function backupPreserveDirs(repoRoot, backupRoot) {
   }
 }
 
-/** Copy files from backup into repo only where dest file is missing. */
+/**
+ * After mirroring Cursor → GitHub: GitHub wins on the same path (Mac uploads stay).
+ * Files that exist only on Cursor under these dirs are still copied in.
+ */
 export function mergePreserveDirs(backupRoot, repoRoot) {
   for (const rel of SYNC_PRESERVE_DIRS) {
     const src = join(backupRoot, rel);
     if (!existsSync(src)) continue;
-    mergeDirNoClobber(src, join(repoRoot, rel));
+    mergeDirGitHubWinsOnConflict(src, join(repoRoot, rel));
   }
 }
 
-function mergeDirNoClobber(fromDir, toDir) {
+function mergeDirGitHubWinsOnConflict(fromDir, toDir) {
   mkdirSync(toDir, { recursive: true });
   for (const ent of readdirSync(fromDir, { withFileTypes: true })) {
     const srcPath = join(fromDir, ent.name);
     const destPath = join(toDir, ent.name);
     if (ent.isDirectory()) {
-      mergeDirNoClobber(srcPath, destPath);
-    } else if (!existsSync(destPath)) {
+      mergeDirGitHubWinsOnConflict(srcPath, destPath);
+    } else {
       cpSync(srcPath, destPath);
     }
   }
