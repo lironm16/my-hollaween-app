@@ -2,6 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import { HouseActionBar } from "@/components/house-action-bar";
+import { houseActionBarPropsFromCard } from "@/components/house-card-actions";
 import { HouseDetails } from "@/components/house-details";
 import { HouseCardBanners } from "@/components/house-skipped-banner";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
@@ -35,6 +36,7 @@ export function HouseCard({
   hideHoursBanner = false,
   extra,
   className,
+  ...rest
 }: {
   house: PublicHouse;
   distanceM?: number;
@@ -63,6 +65,36 @@ export function HouseCard({
   extra?: ReactNode;
   className?: string;
 }) {
+  const cardProps = {
+    house,
+    distanceM,
+    catalogSource,
+    liked,
+    onToggleLike,
+    visited,
+    onToggleVisited,
+    gemCollected,
+    onSkip,
+    onRestoreRoute,
+    skipped,
+    skipMeta,
+    canEdit,
+    editCode,
+    admin,
+    onShowOnMap,
+    onShowInList,
+    onToggleGem,
+    editing,
+    onToggleEdit,
+    expanded,
+    index,
+    hideHoursBanner,
+    extra,
+    className,
+    ...rest,
+  };
+  const actionBarProps = houseActionBarPropsFromCard(cardProps);
+
   return (
     <Card
       size="sm"
@@ -93,25 +125,7 @@ export function HouseCard({
           index={index}
           hideHoursBanner={hideHoursBanner}
           extra={extra}
-          headerMenu={
-            <HouseActionBar
-              house={house}
-              liked={liked}
-              visited={visited}
-              onToggleLike={onToggleLike}
-              onToggleVisited={onToggleVisited}
-              onSkip={skipped ? undefined : onSkip}
-              onRestoreRoute={skipped ? onRestoreRoute : undefined}
-              skipped={skipped}
-              onToggleEdit={canEdit ? onToggleEdit : undefined}
-              editCode={editCode}
-              onShowOnMap={onShowOnMap}
-              onShowInList={onShowInList}
-              onToggleGem={onToggleGem}
-              editing={editing}
-              menuPlacement="bottom"
-            />
-          }
+          headerMenu={<HouseActionBar {...actionBarProps} />}
         />
       </div>
     </Card>

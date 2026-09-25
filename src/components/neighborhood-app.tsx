@@ -15,6 +15,7 @@ import { FiltersSheet } from "@/components/filter-menu";
 import { HouseFiltersContent } from "@/components/house-filters-content";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseList } from "@/components/house-list";
+import type { HouseCardActionContext } from "@/components/house-card-actions";
 import { MapStats, StatsSummary } from "@/components/map-stats";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
@@ -954,24 +955,63 @@ export function NeighborhoodApp({
         return reasons.length > 0 ? reasons : undefined;
       })()
     : undefined;
+
+  const gemUi = gemHuntFabVisible(admin, now);
+  const houseActionContext = useMemo((): HouseCardActionContext => {
+    return {
+      admin,
+      catalogSource: source,
+      liked: likes.liked,
+      visited: visits.visited,
+      skipped: skips.skipped,
+      gemCollected: gemUi ? gems.collected : undefined,
+      onToggleLike,
+      onToggleVisited,
+      onToggleGem: gemUi ? handleToggleGemMenu : undefined,
+      onSkip: handleSkipHouse,
+      onRestore: handleRestoreHouse,
+      onShowOnMap: openOnMap,
+      onShowInList: (id) => {
+        if (!matchedIds.has(id)) return;
+        selection.showInListFromMap(id);
+        setView("list");
+      },
+      canEdit: (id) => Boolean(admin || owned.some((item) => item.id === id)),
+      editCodeFor: (id) =>
+        admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode,
+      onEdit: (house) => requestHouseEdit(house, true),
+      skipMetaFor: (id) => skips.meta(id),
+      editingId: editFlow.flow?.house.id ?? null,
+    };
+  }, [
+    admin,
+    source,
+    likes.liked,
+    visits.visited,
+    skips,
+    gemUi,
+    gems.collected,
+    onToggleLike,
+    onToggleVisited,
+    handleToggleGemMenu,
+    handleSkipHouse,
+    handleRestoreHouse,
+    matchedIds,
+    owned,
+    editCodeById,
+    editFlow.flow?.house.id,
+    selection.showInListFromMap,
+  ]);
+
   const houseDetailCommon = selected
     ? {
         house: selected,
+        actionContext: houseActionContext,
         index: selection.selectedListIndex,
         onClose: selection.closeSelection,
         liked: likes.liked,
-        onToggleLike,
         visited: visits.visited,
-        onToggleVisited,
-        gemCollected: gemHuntFabVisible(admin, now) ? gems.collected : undefined,
-        onToggleGem: gemHuntFabVisible(admin, now) ? handleToggleGemMenu : undefined,
-        catalogSource: source,
-        managerEditCode: admin ? editCodeById.get(selected.id) : undefined,
-        editCodeFor: (id: string) =>
-          admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode,
-        canEditHouse: (id: string) => Boolean(admin || owned.some((item) => item.id === id)),
-        editing: false,
-        onToggleEdit: canEditSelected ? () => requestHouseEdit(selected, true) : undefined,
+        gemCollected: gemUi ? gems.collected : undefined,
         clusterOverview: selection.clusterOverview,
         openedFromList: selection.openedFromList,
         clusterHouses: selection.selectedCluster,
@@ -980,7 +1020,7 @@ export function NeighborhoodApp({
         filteredOutIds: (id: string) => filterDimActive && !matchedIds.has(id),
         onAdjacentClusterHouse: selection.selectAdjacentClusterHouse,
         extra:
-          gemHuntFabVisible(admin, now) && gemPanelReady ? (
+          gemUi && gemPanelReady ? (
             <GemHuntPanelLazy house={selected} userLocation={gps} isAdmin={admin} />
           ) : undefined,
       }
@@ -1094,21 +1134,7 @@ export function NeighborhoodApp({
             selection.selectOnMap(house);
             setView("map");
           }}
-          catalogSource={source}
-          liked={likes.liked}
-          onToggleLike={onToggleLike}
-          visited={visits.visited}
-          onToggleVisited={onToggleVisited}
-          skippedIds={skips.skipped}
-          skipMetaFor={(id) => skips.meta(id)}
-          onSkipHouse={handleSkipHouse}
-          onRestoreHouse={handleRestoreHouse}
-          canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-          onEditHouse={(id) => {
-            const house = displayHouses.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
-            if (house) requestHouseEdit(house, true);
-          }}
-          onShowOnMap={openOnMap}
+          actionContext={houseActionContext}
         />
       ) : null}
       <main
@@ -1199,12 +1225,6 @@ export function NeighborhoodApp({
                 <div className="map-sheet-host" aria-hidden={false}>
                   <MapHouseSheet
                     {...houseDetailCommon}
-                    skipped={skips.skipped(mapSheetHouse.id)}
-                    onSkip={
-                      !skips.skipped(mapSheetHouse.id)
-                        ? () => handleSkipHouse(mapSheetHouse.id)
-                        : undefined
-                    }
                     onRestoreRoute={
                       skips.skipped(mapSheetHouse.id)
                         ? () => handleRestoreHouse(mapSheetHouse.id)
@@ -1213,14 +1233,6 @@ export function NeighborhoodApp({
                     filterMismatchReasons={selectedFilterReasons}
                     skipMeta={
                       skips.skipped(mapSheetHouse.id) ? skips.meta(mapSheetHouse.id) : undefined
-                    }
-                    onShowInList={
-                      matchedIds.has(mapSheetHouse.id)
-                        ? () => {
-                            selection.showInListFromMap(mapSheetHouse.id);
-                            setView("list");
-                          }
-                        : undefined
                     }
                     onSelectClusterHouse={(id) => {
                       const house =
@@ -1260,57 +1272,21 @@ export function NeighborhoodApp({
               ) : routeMode ? (
                 <RouteList
                   items={routeListItems}
+                  actionContext={houseActionContext}
                   originLabel={activeRoute?.originLabel}
                   startedFrom={activeRoute?.startedFrom}
                   hasGps={Boolean(gps)}
                   onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
                   onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
                   focusId={selection.listFocusId}
-                  catalogSource={source}
-                  likedIds={likes.likedIds}
-                  onToggleLike={onToggleLike}
-                  visitedIds={visits.visitedIds}
-                  onToggleVisited={onToggleVisited}
-                  onSkipHouse={handleSkipHouse}
-                  onRestoreHouse={handleRestoreHouse}
-                  skipMetaFor={(id) => skips.meta(id)}
-                  admin={admin}
-                  canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-                  onShowOnMap={openOnMap}
-                  onEditHouse={(id) => {
-                    const house = visible.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
-                    if (house) requestHouseEdit(house, true);
-                  }}
-                  editingId={null}
-                  gemCollected={gemHuntFabVisible(admin, now) ? gems.collected : undefined}
                 />
               ) : (
                 <HouseList
                   houses={visible}
                   origin={origin}
                   now={now}
-                  catalogSource={source}
-                  likedIds={likes.likedIds}
-                  onToggleLike={onToggleLike}
-                  visitedIds={visits.visitedIds}
-                  onToggleVisited={onToggleVisited}
-                  gemCollected={gemHuntFabVisible(admin, now) ? gems.collected : undefined}
-                  skippedIds={skips.skippedIds}
-                  skipMetaFor={(id) => skips.meta(id)}
-                  onSkipHouse={handleSkipHouse}
-                  onRestoreHouse={handleRestoreHouse}
-                  admin={admin}
-                  canEditHouse={(id) => Boolean(admin || owned.some((item) => item.id === id))}
-                  editCodeFor={(id) =>
-                    admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode
-                  }
-                  onShowOnMap={openOnMap}
-                  onEditHouse={(id) => {
-                    const house = visible.find((item) => item.id === id) ?? houses.find((item) => item.id === id);
-                    if (house) requestHouseEdit(house, true);
-                  }}
+                  actionContext={houseActionContext}
                   focusId={selection.listFocusId}
-                  editingId={null}
                 />
               )}
             </div>

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { HouseCard } from "@/components/house-card";
+import { houseCardPropsFor, type HouseCardActionContext } from "@/components/house-card-actions";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { buttonVariants } from "@/components/ui/button";
@@ -12,7 +13,10 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
+import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
+import { useGemProgress } from "@/hooks/use-gem-progress";
+import { writeHomeView } from "@/lib/home-view";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { GemHuntPanelLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { useAppNow } from "@/hooks/use-app-clock";
@@ -23,12 +27,15 @@ import type { House, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export default function HousePage() {
+  const router = useRouter();
   const params = useParams<{ id: string }>();
   const id = resolveHouseIdFromPath(params.id);
   const { catalog, loading, error, source, refresh } = useCatalog();
   const owned = useOwnedHouses();
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
+  const skips = useSkippedHouses();
+  const gems = useGemProgress();
   const { admin } = useAdminSession();
   const now = useAppNow();
   const geo = useUserLocation({ watch: gemHuntVisible(admin) });
@@ -63,6 +70,46 @@ export default function HousePage() {
   const canEdit = Boolean(admin || ownedItem);
   const editCode = admin ? adminHouse?.editCode : ownedItem?.editCode;
   const missing = !loading && Boolean(catalog) && !house;
+  const gemUi = gemHuntFabVisible(admin, now);
+
+  const actionContext = useMemo((): HouseCardActionContext => {
+    return {
+      admin,
+      catalogSource: source,
+      liked: likes.liked,
+      visited: visits.visited,
+      skipped: skips.skipped,
+      gemCollected: gemUi ? gems.collected : undefined,
+      onToggleLike: (hid) => likes.toggle(hid),
+      onToggleVisited: (hid) => visits.toggle(hid),
+      onSkip: (hid) => skips.toggle(hid),
+      onRestore: (hid) => skips.unskip(hid),
+      canEdit: () => canEdit,
+      editCodeFor: () => editCode,
+      onEdit: (h) =>
+        editFlow.openEdit(h, {
+          editCode,
+          admin,
+        }),
+      skipMetaFor: (hid) => skips.meta(hid),
+      editingId: editFlow.flow?.house.id ?? null,
+      onShowOnMap: (hid) => {
+        writeHomeView("map");
+        router.push(`/?focus=${encodeURIComponent(hid)}`);
+      },
+    };
+  }, [
+    admin,
+    source,
+    likes,
+    visits,
+    skips,
+    gemUi,
+    gems,
+    canEdit,
+    editCode,
+    editFlow,
+  ]);
 
   return (
     <div className="relative flex min-h-dvh flex-col">
@@ -74,29 +121,12 @@ export default function HousePage() {
               <HouseMapDynamic houses={[house]} selectedId={house.id} embed />
             </div>
             <HouseCard
-              house={house}
-              catalogSource={source}
-              liked={likes.liked(house.id)}
-              onToggleLike={() => likes.toggle(house.id)}
-              visited={visits.visited(house.id)}
-              onToggleVisited={() => visits.toggle(house.id)}
-              canEdit={canEdit}
-              editCode={editCode}
-              admin={admin}
-              onToggleEdit={
-                canEdit
-                  ? () =>
-                      editFlow.openEdit(house, {
-                        editCode,
-                        admin,
-                      })
-                  : undefined
-              }
-              extra={
-                gemHuntFabVisible(admin, now) ? (
-                  <GemHuntPanelLazy house={house} userLocation={geo.location} isAdmin={admin} />
-                ) : undefined
-              }
+              {...houseCardPropsFor(house, actionContext, {
+                extra:
+                  gemUi ? (
+                    <GemHuntPanelLazy house={house} userLocation={geo.location} isAdmin={admin} />
+                  ) : undefined,
+              })}
             />
           </div>
         ) : loading ? (

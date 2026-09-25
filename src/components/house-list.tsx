@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { HouseCard } from "@/components/house-card";
+import { houseCardPropsFor, type HouseCardActionContext } from "@/components/house-card-actions";
 import { Button } from "@/components/ui/button";
 import { ListSortSelect } from "@/components/list-sort-select";
 import { LIST_SORT_EVENT, readListSort, sortHousesForList } from "@/lib/list-sort";
-import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -13,24 +13,9 @@ export function HouseList({
   houses,
   origin,
   now = new Date(),
-  catalogSource,
-  likedIds,
-  onToggleLike,
-  visitedIds,
-  onToggleVisited,
-  gemCollected,
-  admin = false,
-  canEditHouse,
-  editCodeFor,
-  onShowOnMap,
-  onEditHouse,
-  skippedIds,
-  skipMetaFor,
-  onSkipHouse,
-  onRestoreHouse,
+  actionContext,
   emptyKind = "default",
   focusId,
-  editingId,
   showSort = true,
   onRemoveFromDevice,
   emptyAction,
@@ -38,24 +23,9 @@ export function HouseList({
   houses: PublicHouse[];
   origin?: { lat: number; lng: number } | null;
   now?: Date;
-  catalogSource?: string | null;
-  likedIds?: string[];
-  onToggleLike?: (id: string) => void;
-  visitedIds?: string[];
-  onToggleVisited?: (id: string) => void;
-  gemCollected?: (id: string) => boolean;
-  admin?: boolean;
-  canEditHouse?: (id: string) => boolean;
-  editCodeFor?: (id: string) => string | undefined;
-  onShowOnMap?: (id: string) => void;
-  onEditHouse?: (id: string, index: number) => void;
-  skippedIds?: string[];
-  skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
-  onSkipHouse?: (id: string) => void;
-  onRestoreHouse?: (id: string) => void;
+  actionContext: HouseCardActionContext;
   emptyKind?: "default" | "skipped" | "visited" | "saved" | "collected" | "mine";
   focusId?: string | null;
-  editingId?: string | null;
   showSort?: boolean;
   onRemoveFromDevice?: (id: string) => void;
   emptyAction?: ReactNode;
@@ -127,29 +97,10 @@ export function HouseList({
           className={cn(h.id === focusId && "house-list-focus", "space-y-2")}
         >
           <HouseCard
-            index={i + 1}
-            house={h}
-            distanceM={d}
-            catalogSource={catalogSource}
-            liked={likedIds?.includes(h.id)}
-            onToggleLike={onToggleLike ? () => onToggleLike(h.id) : undefined}
-            visited={visitedIds?.includes(h.id)}
-            onToggleVisited={onToggleVisited ? () => onToggleVisited(h.id) : undefined}
-            gemCollected={gemCollected?.(h.id)}
-            skipped={skippedIds?.includes(h.id)}
-            skipMeta={skipMetaFor?.(h.id)}
-            onSkip={
-              onSkipHouse && !skippedIds?.includes(h.id) ? () => onSkipHouse(h.id) : undefined
-            }
-            onRestoreRoute={
-              onRestoreHouse && skippedIds?.includes(h.id) ? () => onRestoreHouse(h.id) : undefined
-            }
-            canEdit={Boolean(canEditHouse?.(h.id))}
-            editCode={editCodeFor?.(h.id)}
-            admin={admin}
-            onShowOnMap={onShowOnMap ? () => onShowOnMap(h.id) : undefined}
-            onToggleEdit={onEditHouse ? () => onEditHouse(h.id, i + 1) : undefined}
-            editing={editingId === h.id}
+            {...houseCardPropsFor(h, actionContext, {
+              index: i + 1,
+              distanceM: d,
+            })}
           />
           {onRemoveFromDevice ? (
             <div className="px-3">

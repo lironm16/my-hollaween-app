@@ -3,6 +3,7 @@
 import { useEffect, useId, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { HouseActionBar } from "@/components/house-action-bar";
+import { houseActionBarPropsFor, type HouseCardActionContext } from "@/components/house-card-actions";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { HouseSheetBody } from "@/components/house-sheet-body";
 import {
@@ -19,23 +20,11 @@ import { cn } from "@/lib/utils";
 
 export function HouseDetailOverlay({
   house,
+  actionContext,
   onClose,
-  liked,
-  onToggleLike,
-  visited,
-  onToggleVisited,
   extra,
-  catalogSource,
-  managerEditCode,
-  editCodeFor,
-  canEditHouse,
   editing,
-  onToggleEdit,
-  onShowOnMap,
-  onShowInList,
-  onSkip,
   onRestoreRoute,
-  skipped,
   skipMeta,
   filterMismatchReasons,
   clusterOverview,
@@ -47,26 +36,17 @@ export function HouseDetailOverlay({
   now,
   skippedIds,
   filteredOutIds,
+  liked,
+  visited,
+  gemCollected,
   index,
 }: {
   house: PublicHouse;
+  actionContext: HouseCardActionContext;
   onClose: () => void;
-  liked?: (id: string) => boolean;
-  onToggleLike?: (id: string) => void;
-  visited?: (id: string) => boolean;
-  onToggleVisited?: (id: string) => void;
   extra?: ReactNode;
-  catalogSource?: string | null;
-  managerEditCode?: string;
-  editCodeFor?: (id: string) => string | undefined;
-  canEditHouse?: (id: string) => boolean;
   editing?: boolean;
-  onToggleEdit?: () => void;
-  onShowOnMap?: () => void;
-  onShowInList?: () => void;
-  onSkip?: () => void;
   onRestoreRoute?: () => void;
-  skipped?: boolean;
   skipMeta?: SkippedHouseMeta;
   filterMismatchReasons?: string[];
   clusterOverview?: boolean;
@@ -79,10 +59,12 @@ export function HouseDetailOverlay({
   now?: Date;
   skippedIds?: (id: string) => boolean;
   filteredOutIds?: (id: string) => boolean;
+  liked?: (id: string) => boolean;
+  visited?: (id: string) => boolean;
+  gemCollected?: (id: string) => boolean;
   index?: number;
 }) {
   const labelId = useId();
-  const canEditSelected = Boolean(canEditHouse?.(house.id) && onToggleEdit);
   const multi = !openedFromList && (clusterHouses?.length ?? 0) > 1;
   const overview = Boolean(multi && clusterOverview);
   const clusterIndex = clusterHouses ? clusterHouseIndex(clusterHouses, house.id) : null;
@@ -92,6 +74,9 @@ export function HouseDetailOverlay({
   const clusterNow = now ?? new Date();
   const isSkipped = skippedIds ?? (() => false);
   const isFilteredOut = filteredOutIds ?? (() => false);
+  const actionMenu = (
+    <HouseActionBar {...houseActionBarPropsFor(house, actionContext)} />
+  );
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -100,6 +85,19 @@ export function HouseDetailOverlay({
       document.body.style.overflow = prev;
     };
   }, [house.id]);
+
+  const sheetBody = (
+    <HouseSheetBody
+      house={house}
+      actionContext={actionContext}
+      editing={editing}
+      extra={extra}
+      filterMismatchReasons={filterMismatchReasons}
+      skipMeta={skipMeta}
+      onRestoreRoute={onRestoreRoute}
+      index={index}
+    />
+  );
 
   const overlay = (
     <div
@@ -110,28 +108,7 @@ export function HouseDetailOverlay({
       dir="rtl"
     >
       <div className="house-detail-overlay-top shrink-0">
-        <OverlayCloseBar
-          onClose={onClose}
-          className="pb-1"
-          trailing={
-            <HouseActionBar
-              house={house}
-              liked={liked?.(house.id)}
-              visited={visited?.(house.id)}
-              onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-              onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
-              onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
-              onShowOnMap={onShowOnMap}
-              onShowInList={onShowInList}
-              onSkip={onSkip}
-              onRestoreRoute={onRestoreRoute}
-              skipped={skipped}
-              editing={editing}
-              editCode={editCodeFor?.(house.id) ?? managerEditCode}
-              menuPlacement="bottom"
-            />
-          }
-        />
+        <OverlayCloseBar onClose={onClose} className="pb-1" />
       </div>
       <div
         className={cn(
@@ -143,8 +120,13 @@ export function HouseDetailOverlay({
       >
         {overview ? (
           <div id={labelId}>
-            <p className="map-house-sheet-kicker">{formatDisplayAddress(house)}</p>
-            <p className="map-house-sheet-sub mb-4">{clusterHouses!.length} בתים בכתובת זו</p>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="map-house-sheet-kicker">{formatDisplayAddress(house)}</p>
+                <p className="map-house-sheet-sub">{clusterHouses!.length} בתים בכתובת זו</p>
+              </div>
+              {actionMenu}
+            </div>
             <div className="max-h-[min(52dvh,28rem)] overflow-y-auto overscroll-contain pe-0.5">
               <ClusterHouseList
                 houses={clusterHouses!}
@@ -153,6 +135,8 @@ export function HouseDetailOverlay({
                 skipped={isSkipped}
                 filteredOut={isFilteredOut}
                 visited={visited}
+                gemCollected={gemCollected}
+                liked={liked}
                 onSelect={(id) => onSelectClusterHouse?.(id)}
               />
             </div>
@@ -180,30 +164,7 @@ export function HouseDetailOverlay({
                 <span id={labelId} className="sr-only">
                   {houseHeadline(house)}
                 </span>
-                <HouseSheetBody
-                  house={house}
-                  editing={editing}
-                  editCode={editCodeFor?.(house.id) ?? managerEditCode}
-                  extra={extra}
-                  filterMismatchReasons={filterMismatchReasons}
-                  skipMeta={skipMeta}
-                  onRestoreRoute={onRestoreRoute}
-                  skipped={skipped}
-                  catalogSource={catalogSource}
-                  liked={liked?.(house.id)}
-                  onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-                  visited={visited?.(house.id)}
-                  onToggleVisited={
-                    onToggleVisited ? () => onToggleVisited(house.id) : undefined
-                  }
-                  index={index}
-                  canEdit={canEditSelected}
-                  onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
-                  onShowOnMap={onShowOnMap}
-                  onShowInList={onShowInList}
-                  onSkip={onSkip}
-                  admin={Boolean(managerEditCode)}
-                />
+                {sheetBody}
               </ClusterHouseSwipeArea>
             </div>
           </div>
@@ -217,28 +178,7 @@ export function HouseDetailOverlay({
             <span id={labelId} className="sr-only">
               {houseHeadline(house)}
             </span>
-            <HouseSheetBody
-              house={house}
-              editing={editing}
-              editCode={editCodeFor?.(house.id) ?? managerEditCode}
-              extra={extra}
-              filterMismatchReasons={filterMismatchReasons}
-              skipMeta={skipMeta}
-              onRestoreRoute={onRestoreRoute}
-              skipped={skipped}
-              catalogSource={catalogSource}
-              liked={liked?.(house.id)}
-              onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-              visited={visited?.(house.id)}
-              onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
-              index={index}
-              canEdit={canEditSelected}
-              onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
-              onShowOnMap={onShowOnMap}
-              onShowInList={onShowInList}
-              onSkip={onSkip}
-              admin={Boolean(managerEditCode)}
-            />
+            {sheetBody}
           </ClusterHouseSwipeArea>
         )}
       </div>

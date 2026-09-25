@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { HouseActionBar } from "@/components/house-action-bar";
+import { houseActionBarPropsFor, type HouseCardActionContext } from "@/components/house-card-actions";
 import { HouseSheetBody } from "@/components/house-sheet-body";
 import {
   ClusterHouseList,
@@ -27,6 +28,7 @@ function isSheetInteractive(target: EventTarget | null) {
 
 export function MapHouseSheet({
   house,
+  actionContext,
   clusterHouses,
   clusterOverview = false,
   onSelectClusterHouse,
@@ -37,29 +39,18 @@ export function MapHouseSheet({
   skippedIds,
   filteredOutIds,
   liked,
-  onToggleLike,
   visited,
-  onToggleVisited,
   gemCollected,
-  onToggleGem,
   extra,
-  catalogSource,
-  managerEditCode,
-  editCodeFor,
-  canEditHouse,
   editing,
-  onToggleEdit,
-  onShowOnMap,
-  onShowInList,
-  onSkip,
   onRestoreRoute,
-  skipped,
   skipMeta,
   index,
   filterMismatchReasons,
   hideHoursBanner = false,
 }: {
   house: PublicHouse;
+  actionContext: HouseCardActionContext;
   clusterHouses: PublicHouse[];
   clusterOverview?: boolean;
   onSelectClusterHouse?: (id: string) => void;
@@ -70,23 +61,11 @@ export function MapHouseSheet({
   skippedIds?: (id: string) => boolean;
   filteredOutIds?: (id: string) => boolean;
   liked?: (id: string) => boolean;
-  onToggleLike?: (id: string) => void;
   visited?: (id: string) => boolean;
-  onToggleVisited?: (id: string) => void;
   gemCollected?: (id: string) => boolean;
-  onToggleGem?: (house: PublicHouse) => void;
   extra?: ReactNode;
-  catalogSource?: string | null;
-  managerEditCode?: string;
-  editCodeFor?: (id: string) => string | undefined;
-  canEditHouse?: (id: string) => boolean;
   editing?: boolean;
-  onToggleEdit?: () => void;
-  onShowOnMap?: () => void;
-  onShowInList?: () => void;
-  onSkip?: () => void;
   onRestoreRoute?: () => void;
-  skipped?: boolean;
   skipMeta?: SkippedHouseMeta;
   index?: number;
   filterMismatchReasons?: string[];
@@ -111,7 +90,6 @@ export function MapHouseSheet({
   const overview = multi && clusterOverview;
   const address = formatDisplayAddress(house);
   const clusterKey = clusterHouses.map((item) => item.id).join(",");
-  const canEditSelected = Boolean(canEditHouse?.(house.id) && onToggleEdit);
   const clusterIndex = clusterHouseIndex(clusterHouses, house.id);
   const canPrevCluster = clusterIndex != null && clusterIndex > 1;
   const canNextCluster =
@@ -127,25 +105,7 @@ export function MapHouseSheet({
   const isSkipped = skippedIds ?? (() => false);
   const isFilteredOut = filteredOutIds ?? (() => false);
   const actionMenu = (
-    <HouseActionBar
-      house={house}
-      navOnly={overview}
-      liked={liked?.(house.id)}
-      visited={visited?.(house.id)}
-      onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-      onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
-      gemCollected={gemCollected?.(house.id)}
-      onToggleGem={onToggleGem ? () => onToggleGem(house) : undefined}
-      onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
-      onShowOnMap={onShowOnMap}
-      onShowInList={onShowInList}
-      onSkip={onSkip}
-      onRestoreRoute={onRestoreRoute}
-      skipped={skipped}
-      editing={editing}
-      editCode={editCodeFor?.(house.id) ?? managerEditCode}
-      menuPlacement="bottom"
-    />
+    <HouseActionBar {...houseActionBarPropsFor(house, actionContext)} />
   );
 
   function parentH() {
@@ -232,7 +192,7 @@ export function MapHouseSheet({
     clusterKey,
     overview,
     editing,
-    skipped,
+    actionContext.skipped(house.id),
     filterMismatchReasons?.join("\0"),
   ]);
 
@@ -465,30 +425,14 @@ export function MapHouseSheet({
                   >
                     <HouseSheetBody
                       house={house}
+                      actionContext={actionContext}
                       editing={editing}
-                      editCode={editCodeFor?.(house.id) ?? managerEditCode}
                       extra={extra}
                       filterMismatchReasons={filterMismatchReasons}
                       skipMeta={skipMeta}
                       onRestoreRoute={onRestoreRoute}
-                      skipped={skipped}
-                      catalogSource={catalogSource}
-                      liked={liked?.(house.id)}
-                      onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-                      visited={visited?.(house.id)}
-                      onToggleVisited={
-                        onToggleVisited ? () => onToggleVisited(house.id) : undefined
-                      }
-                      gemCollected={gemCollected?.(house.id)}
-                      onToggleGem={onToggleGem ? () => onToggleGem(house) : undefined}
                       index={index}
                       hideHoursBanner={hideHoursBanner}
-                      canEdit={canEditSelected}
-                      onToggleEdit={canEditSelected ? () => onToggleEdit?.() : undefined}
-                      onShowOnMap={onShowOnMap}
-                      onShowInList={onShowInList}
-                      onSkip={onSkip}
-                      admin={Boolean(managerEditCode)}
                     />
                   </section>
                 </ClusterHouseSwipeArea>

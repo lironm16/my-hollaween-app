@@ -3,8 +3,8 @@
 import { useEffect, useRef } from "react";
 import { MapPin, Navigation } from "lucide-react";
 import { HouseCard } from "@/components/house-card";
+import { houseCardPropsFor, type HouseCardActionContext } from "@/components/house-card-actions";
 import { Button } from "@/components/ui/button";
-import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -28,48 +28,22 @@ function RouteLeg({ label }: { label: string }) {
 
 export function RouteList({
   items,
+  actionContext,
   originLabel,
   startedFrom,
   hasGps,
   onRequestLocation,
   onChangeOrigin,
   focusId,
-  catalogSource,
-  likedIds,
-  onToggleLike,
-  visitedIds,
-  onToggleVisited,
-  onSkipHouse,
-  onRestoreHouse,
-  skipMetaFor,
-  admin = false,
-  canEditHouse,
-  onShowOnMap,
-  onEditHouse,
-  editingId,
-  gemCollected,
 }: {
   items: RouteListItem[];
+  actionContext: HouseCardActionContext;
   originLabel?: string;
   startedFrom?: "gps" | "neighborhood" | "custom";
   hasGps: boolean;
   onRequestLocation?: () => void;
   onChangeOrigin?: () => void;
   focusId?: string | null;
-  catalogSource?: string | null;
-  likedIds?: string[];
-  onToggleLike?: (id: string) => void;
-  visitedIds?: string[];
-  onToggleVisited?: (id: string) => void;
-  onSkipHouse?: (id: string) => void;
-  onRestoreHouse?: (id: string) => void;
-  skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
-  admin?: boolean;
-  canEditHouse?: (id: string) => boolean;
-  onShowOnMap?: (id: string) => void;
-  onEditHouse?: (id: string, index: number) => void;
-  editingId?: string | null;
-  gemCollected?: (id: string) => boolean;
 }) {
   const focusRef = useRef<HTMLLIElement | null>(null);
 
@@ -146,28 +120,10 @@ export function RouteList({
               {hop ? <RouteLeg label={hop} /> : null}
               <div className="route-list-house">
                 <HouseCard
-                  house={house}
-                  distanceM={distanceM}
-                  catalogSource={catalogSource}
-                  liked={likedIds?.includes(house.id)}
-                  onToggleLike={onToggleLike ? () => onToggleLike(house.id) : undefined}
-                  visited={visitedIds?.includes(house.id)}
-                  onToggleVisited={onToggleVisited ? () => onToggleVisited(house.id) : undefined}
-                  gemCollected={gemCollected?.(house.id)}
-                  onSkip={
-                    onSkipHouse && !skipped ? () => onSkipHouse(house.id) : undefined
-                  }
-                  skipped={skipped}
-                  skipMeta={skipMetaFor?.(house.id)}
-                  onRestoreRoute={
-                    skipped && onRestoreHouse ? () => onRestoreHouse(house.id) : undefined
-                  }
-                  canEdit={Boolean(canEditHouse?.(house.id))}
-                  admin={admin}
-                  onShowOnMap={onShowOnMap ? () => onShowOnMap(house.id) : undefined}
-                  onToggleEdit={onEditHouse ? () => onEditHouse(house.id, i + 1) : undefined}
-                  editing={editingId === house.id}
-                  index={isTail ? undefined : order}
+                  {...houseCardPropsFor(house, actionContext, {
+                    index: isTail ? undefined : order,
+                    distanceM,
+                  })}
                 />
               </div>
             </li>

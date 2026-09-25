@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronLeft } from "lucide-react";
 import { HouseCard } from "@/components/house-card";
+import { houseCardPropsFor, type HouseCardActionContext } from "@/components/house-card-actions";
 import { HouseEditModal } from "@/components/house-edit-modal";
 import {
   ClusterHouseNav,
@@ -11,7 +12,6 @@ import {
 } from "@/components/cluster-house-list";
 import { houseHeadline } from "@/lib/labels";
 import type { RouteStatusChangeEntry } from "@/lib/route-changes";
-import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -20,35 +20,13 @@ export function RouteChangesSheet({
   changes,
   onClose,
   onFocusHouse,
-  catalogSource,
-  liked,
-  onToggleLike,
-  visited,
-  onToggleVisited,
-  skippedIds,
-  skipMetaFor,
-  onSkipHouse,
-  onRestoreHouse,
-  canEditHouse,
-  onEditHouse,
-  onShowOnMap,
+  actionContext,
 }: {
   open: boolean;
   changes: RouteStatusChangeEntry[];
   onClose: () => void;
   onFocusHouse?: (house: PublicHouse) => void;
-  catalogSource?: string | null;
-  liked?: (id: string) => boolean;
-  onToggleLike?: (id: string) => void;
-  visited?: (id: string) => boolean;
-  onToggleVisited?: (id: string) => void;
-  skippedIds?: (id: string) => boolean;
-  skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
-  onSkipHouse?: (id: string) => void;
-  onRestoreHouse?: (id: string) => void;
-  canEditHouse?: (id: string) => boolean;
-  onEditHouse?: (id: string) => void;
-  onShowOnMap?: (id: string) => void;
+  actionContext: HouseCardActionContext;
 }) {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [viewedIds, setViewedIds] = useState<string[]>([]);
@@ -159,31 +137,12 @@ export function RouteChangesSheet({
             }}
           >
             <HouseCard
-              house={selected!}
-              catalogSource={catalogSource}
-              liked={liked?.(selected!.id)}
-              onToggleLike={onToggleLike ? () => onToggleLike(selected!.id) : undefined}
-              visited={visited?.(selected!.id)}
-              onToggleVisited={onToggleVisited ? () => onToggleVisited(selected!.id) : undefined}
-              skipped={skippedIds?.(selected!.id)}
-              skipMeta={skipMetaFor?.(selected!.id)}
-              onSkip={
-                onSkipHouse && !skippedIds?.(selected!.id)
-                  ? () => onSkipHouse(selected!.id)
-                  : undefined
-              }
-              onRestoreRoute={
-                onRestoreHouse && skippedIds?.(selected!.id)
-                  ? () => onRestoreHouse(selected!.id)
-                  : undefined
-              }
-              canEdit={Boolean(canEditHouse?.(selected!.id))}
-              onShowOnMap={onShowOnMap ? () => onShowOnMap(selected!.id) : undefined}
-              onToggleEdit={onEditHouse ? () => onEditHouse(selected!.id) : undefined}
-              expanded
-              hideHoursBanner={
-                Boolean(visited?.(selected!.id) || skippedIds?.(selected!.id))
-              }
+              {...houseCardPropsFor(selected!, actionContext, {
+                expanded: true,
+                hideHoursBanner: Boolean(
+                  actionContext.visited(selected!.id) || actionContext.skipped(selected!.id),
+                ),
+              })}
             />
           </ClusterHouseSwipeArea>
         </div>

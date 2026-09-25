@@ -4,14 +4,19 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { HouseCard } from "@/components/house-card";
+import { houseCardPropsFor, type HouseCardActionContext } from "@/components/house-card-actions";
 import { HousePicker } from "@/components/house-picker";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { Label } from "@/components/ui/label";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { useAppNow } from "@/hooks/use-app-clock";
 import { useCatalog } from "@/hooks/use-catalog";
+import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
+import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
+import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
 import { notifyCatalogChanged, removeOwnedHouse, saveOwnedHouse } from "@/lib/offline-db";
 import { toPublicHouse } from "@/lib/ids";
 import { writeHomeView } from "@/lib/home-view";
@@ -24,6 +29,9 @@ export default function SearchPage() {
   const { admin, ready: adminReady } = useAdminSession();
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
+  const skips = useSkippedHouses();
+  const gems = useGemProgress();
+  const now = useAppNow();
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
   const [picked, setPicked] = useState<PublicHouse | null>(null);
   const editFlow = useHouseEditFlow();
@@ -58,12 +66,50 @@ export default function SearchPage() {
     return [...byId.values()];
   }, [admin, adminHouses, catalog?.houses, owned]);
 
-  const canEdit = Boolean(picked && (admin || owned.some((item) => item.id === picked.id)));
-  const editCode = picked
-    ? admin
-      ? adminHouses.find((item) => item.id === picked.id)?.editCode
-      : owned.find((item) => item.id === picked.id)?.editCode
-    : undefined;
+  const gemUi = gemHuntFabVisible(admin, now);
+  const actionContext = useMemo((): HouseCardActionContext => {
+    return {
+      admin,
+      catalogSource: source,
+      liked: likes.liked,
+      visited: visits.visited,
+      skipped: skips.skipped,
+      gemCollected: gemUi ? gems.collected : undefined,
+      onToggleLike: (id) => likes.toggle(id),
+      onToggleVisited: (id) => visits.toggle(id),
+      onSkip: (id) => skips.toggle(id),
+      onRestore: (id) => skips.unskip(id),
+      canEdit: (id) => Boolean(admin || owned.some((item) => item.id === id)),
+      editCodeFor: (id) =>
+        admin
+          ? adminHouses.find((item) => item.id === id)?.editCode
+          : owned.find((item) => item.id === id)?.editCode,
+      onEdit: (house) => {
+        const editCode = admin
+          ? adminHouses.find((item) => item.id === house.id)?.editCode
+          : owned.find((item) => item.id === house.id)?.editCode;
+        editFlow.openEdit(house, { editCode, admin, allowDelete: true });
+      },
+      skipMetaFor: (id) => skips.meta(id),
+      editingId: editFlow.flow?.house.id ?? null,
+      onShowOnMap: (id) => {
+        writeHomeView("map");
+        router.push(`/?focus=${encodeURIComponent(id)}`);
+      },
+    };
+  }, [
+    admin,
+    source,
+    likes,
+    visits,
+    skips,
+    gemUi,
+    gems,
+    owned,
+    adminHouses,
+    editFlow.flow?.house.id,
+    router,
+  ]);
 
   function selectHouse(next: PublicHouse | null) {
     setPicked(next);
@@ -98,31 +144,7 @@ export default function SearchPage() {
           {!picked ? (
             <p className="text-base text-violet-300">הקלידו שם משפחה או כתובת ובחרו בית.</p>
           ) : (
-            <HouseCard
-              house={picked}
-              catalogSource={source}
-              liked={likes.likedIds.includes(picked.id)}
-              onToggleLike={() => likes.toggle(picked.id)}
-              visited={visits.visitedIds.includes(picked.id)}
-              onToggleVisited={() => visits.toggle(picked.id)}
-              canEdit={canEdit}
-              editCode={editCode}
-              admin={admin}
-              onToggleEdit={
-                canEdit
-                  ? () =>
-                      editFlow.openEdit(picked, {
-                        editCode,
-                        admin,
-                        allowDelete: true,
-                      })
-                  : undefined
-              }
-              onShowOnMap={() => {
-                writeHomeView("map");
-                router.push(`/?focus=${encodeURIComponent(picked.id)}`);
-              }}
-            />
+            <HouseCard {...houseCardPropsFor(picked, actionContext)} />
           )}
         </div>
       </main>
@@ -136,6 +158,9 @@ export default function SearchPage() {
             editFlow.setFlow((current) =>
               current?.house.id === next.id ? { ...current, house: next } : current,
             );
+            const editCode = admin
+              ? adminHouses.find((item) => item.id === next.id)?.editCode
+              : owned.find((item) => item.id === next.id)?.editCode;
             if (!admin && editCode) {
               saveOwnedHouse({
                 id: next.id,

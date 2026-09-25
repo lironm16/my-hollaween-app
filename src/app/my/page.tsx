@@ -1,6 +1,8 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { HouseCardActionContext } from "@/components/house-card-actions";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { PersonalMarksSection, type PersonalMarksTab } from "@/components/admin-stats";
@@ -52,6 +54,7 @@ export default function MyCollectionsPage() {
 }
 
 function MyCollectionsPageContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { admin } = useAdminSession();
   const now = useAppNow();
@@ -151,17 +154,39 @@ function MyCollectionsPageContent() {
     if (readRouteMode()) queueRouteRestore(id);
   }
 
-  const listProps = {
-    origin,
-    catalogSource: catalog ? "network" : null,
-    likedIds: likes.likedIds,
-    onToggleLike: (id: string) => likes.toggle(id),
-    visitedIds: visits.visitedIds,
-    onToggleVisited: (id: string) => visits.toggle(id),
-    gemCollected: (id: string) => gems.collected(id),
-    skipMetaFor: (id: string) => skips.meta(id),
-    skippedIds: skips.skippedIds,
-  };
+  const actionContext = useMemo((): HouseCardActionContext => {
+    return {
+      catalogSource: catalog ? "network" : null,
+      liked: likes.liked,
+      visited: visits.visited,
+      skipped: skips.skipped,
+      gemCollected: showCollected ? gems.collected : undefined,
+      onToggleLike: (id) => likes.toggle(id),
+      onToggleVisited: (id) => visits.toggle(id),
+      onSkip: tab === "visited" ? (id) => skips.toggle(id) : undefined,
+      onRestore:
+        tab === "skipped"
+          ? (id) => {
+              handleRestore(id);
+            }
+          : undefined,
+      canEdit: tab === "mine" ? () => true : undefined,
+      onEdit: tab === "mine" ? requestEdit : undefined,
+      skipMetaFor: (id) => skips.meta(id),
+      editingId: editFlow.flow?.house.id ?? null,
+      onShowOnMap: (id) => router.push(`/?focus=${encodeURIComponent(id)}`),
+    };
+  }, [
+    catalog,
+    likes,
+    visits,
+    skips,
+    showCollected,
+    gems,
+    tab,
+    editFlow.flow?.house.id,
+    router,
+  ]);
 
   const emptyKind =
     tab === "mine"
@@ -193,19 +218,11 @@ function MyCollectionsPageContent() {
           />
 
           <HouseList
-            {...listProps}
             houses={housesByTab[tab]}
+            origin={origin}
+            actionContext={actionContext}
             emptyKind={emptyKind}
             showSort={tab !== "mine"}
-            canEditHouse={tab === "mine" ? () => true : undefined}
-            onEditHouse={
-              tab === "mine"
-                ? (id) => {
-                    const house = mineHouses.find((item) => item.id === id);
-                    if (house) requestEdit(house);
-                  }
-                : undefined
-            }
             onRemoveFromDevice={
               tab === "mine"
                 ? (id) => {
@@ -213,14 +230,6 @@ function MyCollectionsPageContent() {
                     notifyCatalogChanged();
                   }
                 : undefined
-            }
-            onRestoreHouse={tab === "skipped" ? handleRestore : undefined}
-            onSkipHouse={
-              tab === "skipped"
-                ? (id) => skips.unskip(id)
-                : tab === "visited"
-                  ? (id) => skips.toggle(id)
-                  : undefined
             }
             emptyAction={
               tab === "mine" ? (
