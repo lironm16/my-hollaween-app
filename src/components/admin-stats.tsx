@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import { Gem, MapPinned, Moon, Pause } from "lucide-react";
+import { Gem, Home, MapPinned, Moon, Pause } from "lucide-react";
 import { LocationKindSign } from "@/components/location-kind-sign";
 import { CandySign } from "@/components/candy-glyphs";
 import { OpenNowSign, ClosingSoonSign, OpeningSoonSign } from "@/components/open-now-mark";
@@ -21,6 +21,84 @@ import { SENSITIVITY_OPTIONS } from "@/lib/types";
 
 export type { SnapshotStats };
 
+export type PersonalMarksTab = "mine" | "saved" | "visited" | "skipped" | "collected";
+
+export function PersonalMarksSection({
+  ownedCount,
+  likedCount,
+  visitedCount,
+  skippedCount,
+  gemCollectedCount,
+  showGemStats = false,
+  selectedTab,
+  onSelectTab,
+}: {
+  ownedCount: number;
+  likedCount: number;
+  visitedCount: number;
+  skippedCount: number;
+  gemCollectedCount: number;
+  showGemStats?: boolean;
+  selectedTab: PersonalMarksTab;
+  onSelectTab: (tab: PersonalMarksTab) => void;
+}) {
+  return (
+    <section className="rounded-2xl bg-[#241332] p-2.5 ring-1 ring-white/10" dir="rtl">
+      <h2 className="mb-2 text-base font-semibold text-orange-400">שלי</h2>
+      <div className="grid grid-cols-2 gap-2">
+        <StatTile
+          icon={<Home className="size-8 text-orange-300" strokeWidth={2.1} />}
+          label="במכשיר שלי"
+          value={ownedCount}
+          valueClass={ownedCount ? "text-orange-200" : undefined}
+          plain
+          selected={selectedTab === "mine"}
+          onClick={() => onSelectTab("mine")}
+        />
+        <StatTile
+          icon={<LikedSign className="size-8" />}
+          label="אהבתי"
+          value={likedCount}
+          valueClass={likedCount ? "text-rose-300" : undefined}
+          plain
+          selected={selectedTab === "saved"}
+          onClick={() => onSelectTab("saved")}
+        />
+        <StatTile
+          icon={<VisitedCheck visited className="size-8" />}
+          label="ביקרתי"
+          value={visitedCount}
+          valueClass={visitedCount ? "text-emerald-300" : undefined}
+          plain
+          selected={selectedTab === "visited"}
+          onClick={() => onSelectTab("visited")}
+        />
+        <StatTile
+          icon={<SkipSign className="size-8" />}
+          label="דילגתי"
+          value={skippedCount}
+          valueClass={skippedCount ? "text-slate-300" : undefined}
+          plain
+          selected={selectedTab === "skipped"}
+          onClick={() => onSelectTab("skipped")}
+        />
+        {showGemStats ? (
+          <StatTile
+            icon={<Gem className="size-8 fill-amber-300 text-amber-300" strokeWidth={2.1} />}
+            label="אספתי"
+            value={gemCollectedCount}
+            valueClass={gemCollectedCount ? "text-amber-300" : undefined}
+            plain
+            wide
+            selected={selectedTab === "collected"}
+            onClick={() => onSelectTab("collected")}
+          />
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 export function useSnapshotStats(enabled = true, houseSet: HouseSet = "real"): SnapshotStats | null {
   const { catalog } = useCatalog();
   const now = useAppNow();
@@ -35,62 +113,15 @@ export function useSnapshotStats(enabled = true, houseSet: HouseSet = "real"): S
 
 export function AdminStatsCard({
   stats,
-  likedCount,
-  visitedCount,
-  skippedCount,
-  gemCollectedCount,
-  showGemStats = false,
 }: {
   stats: SnapshotStats;
-  likedCount?: number;
-  visitedCount?: number;
-  skippedCount?: number;
-  gemCollectedCount?: number;
-  showGemStats?: boolean;
 }) {
-  const personalMarks = (
-    <div className="grid grid-cols-2 gap-2">
-      <Tile
-        icon={<LikedSign className="size-8" />}
-        label="אהבתי"
-        value={likedCount ?? 0}
-        valueClass={likedCount ? "text-rose-300" : undefined}
-        plain
-      />
-      <Tile
-        icon={<VisitedCheck visited className="size-8" />}
-        label="ביקרתי"
-        value={visitedCount ?? 0}
-        valueClass={visitedCount ? "text-emerald-300" : undefined}
-        plain
-      />
-      <Tile
-        icon={<SkipSign className="size-8" />}
-        label="דילגתי"
-        value={skippedCount ?? 0}
-        valueClass={skippedCount ? "text-slate-300" : undefined}
-        plain
-      />
-      {showGemStats ? (
-        <Tile
-          icon={<Gem className="size-8 fill-amber-300 text-amber-300" strokeWidth={2.1} />}
-          label="אספתי"
-          value={gemCollectedCount ?? 0}
-          valueClass={gemCollectedCount ? "text-amber-300" : undefined}
-          plain
-          wide
-        />
-      ) : null}
-    </div>
-  );
-
   return (
     <div className="space-y-3" dir="rtl">
-      <Section title="שלי">{personalMarks}</Section>
       <Section title="מפה">
         <div className="mb-2 grid grid-cols-2 gap-2">
-          <Tile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} />
-          <Tile
+          <StatTile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} />
+          <StatTile
             icon={<LocationKindSign kind="poi" className="size-8" />}
             label="נקודות עניין"
             value={stats.pois}
@@ -98,7 +129,7 @@ export function AdminStatsCard({
           />
         </div>
         <Subhead>שעות</Subhead>
-        <Tile
+        <StatTile
           icon={<OpenNowSign className="size-8" />}
           label="פתוחים עכשיו"
           value={stats.openNow}
@@ -107,30 +138,30 @@ export function AdminStatsCard({
           plain
         />
         <div className="mt-2 grid grid-cols-2 gap-2">
-          <Tile
+          <StatTile
             icon={<OpeningSoonSign className="size-8" />}
             label="נפתחים בקרוב"
             value={stats.openingSoon}
             valueClass={stats.openingSoon ? "text-cyan-300" : undefined}
             plain
           />
-          <Tile
+          <StatTile
             icon={<ClosingSoonSign className="size-8" />}
             label="נסגרים בקרוב"
             value={stats.closingSoon}
             valueClass={stats.closingSoon ? "text-orange-300" : undefined}
             plain
           />
-          <Tile
+          <StatTile
             icon={<Pause className="size-4" />}
             label="בהפסקה"
             value={stats.onBreak}
             valueClass={stats.onBreak ? "text-amber-300" : undefined}
           />
-          <Tile icon={<Moon className="size-4" />} label="סגורים" value={stats.closed} />
+          <StatTile icon={<Moon className="size-4" />} label="סגורים" value={stats.closed} />
         </div>
         <Subhead>נגישות</Subhead>
-        <Tile
+        <StatTile
           icon={<StrollerSign className="size-8" />}
           label="נגיש"
           value={stats.accessible}
@@ -139,27 +170,27 @@ export function AdminStatsCard({
         />
         <Subhead>ממתקים</Subhead>
         <div className="grid grid-cols-2 gap-2">
-          <Tile
+          <StatTile
             icon={<CandySign tone="none" className="size-8" />}
             label="בלי ממתקים"
             value={stats.candyNone}
             plain
           />
-          <Tile
+          <StatTile
             icon={<CandySign tone="plenty" className="size-8" />}
             label="יש ממתקים"
             value={stats.candyPlenty}
             valueClass={stats.candyPlenty ? "text-emerald-300" : undefined}
             plain
           />
-          <Tile
+          <StatTile
             icon={<CandySign tone="low" className="size-8" />}
             label="מעט ממתקים"
             value={stats.candyLow}
             valueClass={stats.candyLow ? "text-amber-300" : undefined}
             plain
           />
-          <Tile
+          <StatTile
             icon={<CandySign tone="out" className="size-8" />}
             label="נגמרו הממתקים"
             value={stats.candyOut}
@@ -170,7 +201,7 @@ export function AdminStatsCard({
         <Subhead>רגישויות והתאמות</Subhead>
         <div className="grid grid-cols-2 gap-2">
           {SENSITIVITY_OPTIONS.map((id) => (
-            <Tile
+            <StatTile
               key={id}
               icon={<SensitivitySign kind={id} className="size-8" />}
               label={treatLabels[id]}
@@ -181,25 +212,25 @@ export function AdminStatsCard({
         </div>
         <Subhead>אופי</Subhead>
         <div className="grid grid-cols-2 gap-2">
-          <Tile
+          <StatTile
             icon={<ScareSign level="none" className="size-8" />}
             label={decorShort.none}
             value={stats.notDecorated}
             plain
           />
-          <Tile
+          <StatTile
             icon={<ScareSign level="mild" className="size-8" />}
             label={scareShort.mild}
             value={stats.scareMild}
             plain
           />
-          <Tile
+          <StatTile
             icon={<ScareSign level="medium" className="size-8" />}
             label={scareShort.medium}
             value={stats.scareMedium}
             plain
           />
-          <Tile
+          <StatTile
             icon={<ScareSign level="spicy" className="size-8" />}
             label={scareShort.spicy}
             value={stats.scareSpicy}
@@ -224,7 +255,7 @@ function Subhead({ children }: { children: ReactNode }) {
   return <h3 className="mb-1.5 mt-3 text-base font-semibold text-violet-200">{children}</h3>;
 }
 
-function Tile({
+function StatTile({
   icon,
   label,
   value,
@@ -232,6 +263,8 @@ function Tile({
   valueClass,
   wide = false,
   plain = false,
+  selected = false,
+  onClick,
 }: {
   icon: ReactNode;
   label: string;
@@ -240,14 +273,18 @@ function Tile({
   valueClass?: string;
   wide?: boolean;
   plain?: boolean;
+  selected?: boolean;
+  onClick?: () => void;
 }) {
-  return (
-    <div
-      className={cn(
-        "flex min-w-0 items-center gap-2.5 rounded-xl bg-[#14081c] px-2.5 py-2",
-        wide && "w-full",
-      )}
-    >
+  const className = cn(
+    "flex min-w-0 items-center gap-2.5 rounded-xl bg-[#14081c] px-2.5 py-2 text-start",
+    wide && "col-span-2 w-full",
+    onClick &&
+      "cursor-pointer transition hover:bg-[#1a1028] hover:ring-1 hover:ring-orange-500/25 active:scale-[0.99]",
+    selected && "ring-2 ring-orange-400/50 bg-[#1a1028]",
+  );
+  const body = (
+    <>
       <span
         className={cn(
           "inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-orange-300",
@@ -263,6 +300,14 @@ function Tile({
           {value}
         </span>
       </span>
-    </div>
+    </>
   );
+  if (onClick) {
+    return (
+      <button type="button" className={className} onClick={onClick} aria-pressed={selected}>
+        {body}
+      </button>
+    );
+  }
+  return <div className={className}>{body}</div>;
 }
