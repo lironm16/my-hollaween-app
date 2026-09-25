@@ -3,7 +3,7 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, MapPin } from "lucide-react";
-import { GemCollectCheer } from "@/components/gem-collect-cheer";
+import { GemCheer } from "@/components/gem-cheer";
 import { GemHouseFoundHero } from "@/components/gem-hunt/gem-house-found-hero";
 import type { GemCollectFinishOptions } from "@/lib/gem-hunt";
 import { GemHuntOverlayLazy } from "@/components/gem-hunt/gem-hunt-lazy";
@@ -240,7 +240,7 @@ export function GemHuntPanel({
         ) : null}
       </section>
 
-      <GemCollectCheer show={gemCheer} house={house} />
+      <GemCheer show={gemCheer} />
       {huntOpen ? (
         <GemHuntOverlayLazy
           house={house}

@@ -38,7 +38,7 @@ import { VisitSkipConflictDialog } from "@/components/visit-skip-conflict-dialog
 import { LikeCheer } from "@/components/like-cheer";
 import { RouteCompleteCheer } from "@/components/route-complete-cheer";
 import { VisitCheer } from "@/components/visit-cheer";
-import { GemCollectCheer } from "@/components/gem-collect-cheer";
+import { GemCheer } from "@/components/gem-cheer";
 import { GemResetConfirmDialog } from "@/components/gem-reset-confirm-dialog";
 import { GemMapCompleteBanner } from "@/components/gem-map-complete-banner";
 import {
@@ -160,7 +160,7 @@ export function NeighborhoodApp({
     typeof window === "undefined" ? 0 : loadGemCollectedIds().length,
   );
   const [gemResetHouse, setGemResetHouse] = useState<PublicHouse | null>(null);
-  const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);
+  const [mapGemCheer, setMapGemCheer] = useState(false);
   const mapGemCheerTimerRef = useRef<number | null>(null);
   const router = useRouter();
   const mapGemUserLoc = mapGemGps ?? gps;
@@ -366,12 +366,12 @@ export function NeighborhoodApp({
     setMapGemBadgeCount(loadGemCollectedIds().length);
   }, []);
 
-  const showMapGemCheer = useCallback((house: PublicHouse) => {
-    setMapGemCheerHouse(house);
+  const showMapGemCheer = useCallback(() => {
+    setMapGemCheer(true);
     if (mapGemCheerTimerRef.current != null) window.clearTimeout(mapGemCheerTimerRef.current);
     mapGemCheerTimerRef.current = window.setTimeout(() => {
       mapGemCheerTimerRef.current = null;
-      setMapGemCheerHouse(null);
+      setMapGemCheer(false);
     }, GEM_CHEER_MS);
   }, []);
 
@@ -1401,14 +1401,12 @@ export function NeighborhoodApp({
               return;
             }
             if (options?.cheer !== false) {
-              showMapGemCheer(h);
+              showMapGemCheer();
             }
           }}
         />
       ) : null}
-      {mapGemCheerHouse ? (
-        <GemCollectCheer show house={mapGemCheerHouse} />
-      ) : null}
+      <GemCheer show={mapGemCheer} />
     </div>
   );
 }

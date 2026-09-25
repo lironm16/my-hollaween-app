@@ -14,7 +14,7 @@ export function GemCheer({ show }: { show: boolean }) {
         <span className="gem-cheer-gem" aria-hidden="true">
           <Gem className="size-5 fill-current" strokeWidth={2.1} />
         </span>
-        אספתם יהלום!
+        יהלום נאסף!
       </div>
     </div>
   );

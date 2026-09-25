@@ -104,41 +104,29 @@ export function HouseList({
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3">
       {selection ? (
-        <div
-          className="house-list-bulk rounded-xl bg-[#241332] px-3 py-3 ring-1 ring-orange-500/25"
-          dir="rtl"
-        >
-          <p className="mb-2 text-sm font-semibold text-orange-200">בחירה מהרשימה</p>
-          <div className="flex flex-wrap items-stretch gap-2">
-            <div className="flex min-h-11 flex-1 items-center gap-2.5 rounded-lg border border-violet-500/30 bg-[#1d1028]/90 px-3 py-2 text-right">
-              <ListSelectCheck
-                selected={selection.allSelected}
-                aria-label={selection.allSelected ? "בטל סימון הכל" : "סמן הכל"}
-                onClick={selection.onToggleAll}
-              />
-              <span className="pointer-events-none text-base font-medium text-violet-100">סמן הכל</span>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={!selection.someSelected}
-              className="min-h-11 flex-1 border-orange-500/40 bg-[#1d1028] text-base font-semibold text-orange-100 hover:bg-orange-500/15 disabled:opacity-40"
-              onClick={selection.onRemoveSelected}
-            >
-              {selection.someSelected
-                ? (selection.removeLabel ?? "הסר מהרשימה").replace(
-                    /^הסר /,
-                    `הסר ${selection.selectedIds.size} `,
-                  )
-                : (selection.removeLabel ?? "הסר מהרשימה")}
-            </Button>
-          </div>
-          {!selection.someSelected ? (
-            <p className="mt-2 text-sm leading-snug text-violet-300/95">
-              סמנו בתים (או «סמן הכל»), ואז לחצו על הכפתור הכתום להסרה.
-            </p>
-          ) : null}
+        <div className="house-list-bulk flex flex-wrap items-center gap-2.5 px-1 py-1" dir="rtl">
+          <ListSelectCheck
+            selected={selection.allSelected}
+            aria-label={selection.allSelected ? "בטל סימון הכל" : "סמן הכל"}
+            onClick={selection.onToggleAll}
+          />
+          <span className="pointer-events-none text-sm font-medium text-violet-200">סמן הכל</span>
+          <span className="min-w-2 flex-1" aria-hidden />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={!selection.someSelected}
+            className="min-h-10 shrink-0 border-orange-500/45 bg-[#1d1028] px-3 text-sm font-semibold text-orange-100 hover:bg-orange-500/15 disabled:opacity-35"
+            onClick={selection.onRemoveSelected}
+          >
+            {selection.someSelected
+              ? (selection.removeLabel ?? "הסר מהרשימה").replace(
+                  /^הסר /,
+                  `הסר ${selection.selectedIds.size} `,
+                )
+              : (selection.removeLabel ?? "הסר מהרשימה")}
+          </Button>
         </div>
       ) : null}
       {showSort ? <ListSortSelect /> : null}
@@ -146,9 +134,12 @@ export function HouseList({
         <div
           key={h.id}
           ref={h.id === focusId ? focusRef : undefined}
+          dir={selection ? "rtl" : undefined}
           className={cn(
             h.id === focusId && "house-list-focus",
-            selection ? "house-list-row-select flex flex-col items-center gap-2" : "flex items-start gap-2",
+            selection
+              ? "house-list-row-select flex w-full flex-col items-start gap-1.5"
+              : "flex items-start gap-2",
           )}
         >
           {selection ? (

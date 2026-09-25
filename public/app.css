@@ -1028,6 +1028,9 @@
   .min-w-0 {
     min-width: 0px;
   }
+  .min-w-2 {
+    min-width: calc(var(--spacing) * 2);
+  }
   .min-w-4 {
     min-width: calc(var(--spacing) * 4);
   }
@@ -1160,9 +1163,6 @@
   }
   .items-start {
     align-items: flex-start;
-  }
-  .items-stretch {
-    align-items: stretch;
   }
   .justify-between {
     justify-content: space-between;
@@ -1470,6 +1470,12 @@
       border-color: color-mix(in oklab, var(--color-orange-500) 40%, transparent);
     }
   }
+  .border-orange-500\/45 {
+    border-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 45%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-orange-500) 45%, transparent);
+    }
+  }
   .border-red-500\/35 {
     border-color: color-mix(in srgb, oklch(63.7% 0.237 25.331) 35%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1489,12 +1495,6 @@
     border-color: color-mix(in srgb, oklch(60.6% 0.25 292.717) 25%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       border-color: color-mix(in oklab, var(--color-violet-500) 25%, transparent);
-    }
-  }
-  .border-violet-500\/30 {
-    border-color: color-mix(in srgb, oklch(60.6% 0.25 292.717) 30%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklab, var(--color-violet-500) 30%, transparent);
     }
   }
   .border-violet-500\/35 {
@@ -2708,12 +2708,6 @@
       color: color-mix(in oklab, var(--color-violet-300) 90%, transparent);
     }
   }
-  .text-violet-300\/95 {
-    color: color-mix(in srgb, oklch(81.1% 0.111 293.571) 95%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      color: color-mix(in oklab, var(--color-violet-300) 95%, transparent);
-    }
-  }
   .text-violet-400 {
     color: var(--color-violet-400);
   }
@@ -3683,8 +3677,8 @@
       background-color: color-mix(in oklab, var(--input) 50%, transparent);
     }
   }
-  .disabled\:opacity-40:disabled {
-    opacity: 40%;
+  .disabled\:opacity-35:disabled {
+    opacity: 35%;
   }
   .disabled\:opacity-45:disabled {
     opacity: 45%;
@@ -8508,7 +8502,25 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   justify-content: flex-end;
 }
 .house-list-row-select__check {
-  align-self: center;
+  align-self: flex-start;
+}
+.gem-house-found-hero__visual {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  margin-bottom: 0.65rem;
+}
+.gem-house-found-hero__pet-art {
+  width: 5.25rem;
+  height: 5.25rem;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 18px rgb(0 0 0 / 0.45));
+}
+.gem-house-found-hero__visual .gem-house-found-hero__gem-wrap {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 .gem-hunt-overlay__video--off {
   visibility: hidden;
@@ -9538,7 +9550,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   align-items: center;
   justify-content: center;
   padding: 1rem 1rem 2.5rem;
-  pointer-events: none;
+  pointer-events: auto;
   background: #0f0818;
 }
 .gem-collect-album-reveal__shade {
@@ -9546,12 +9558,14 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   inset: 0;
   background: #0f0818;
   backdrop-filter: blur(6px);
+  pointer-events: none;
 }
 .gem-collect-album-reveal__content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: min(100%, 22rem);
   text-align: center;
+  pointer-events: auto;
 }
 .gem-collect-album-reveal__kicker {
   margin: 0 0 0.5rem;

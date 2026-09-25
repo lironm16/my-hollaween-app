@@ -3789,7 +3789,25 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   justify-content: flex-end;
 }
 .house-list-row-select__check {
-  align-self: center;
+  align-self: flex-start;
+}
+.gem-house-found-hero__visual {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  margin-bottom: 0.65rem;
+}
+.gem-house-found-hero__pet-art {
+  width: 5.25rem;
+  height: 5.25rem;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 18px rgb(0 0 0 / 0.45));
+}
+.gem-house-found-hero__visual .gem-house-found-hero__gem-wrap {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 .gem-hunt-overlay__video--off {
   visibility: hidden;
@@ -4823,12 +4841,14 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   inset: 0;
   background: #0f0818;
   backdrop-filter: blur(6px);
+  pointer-events: none;
 }
 .gem-collect-album-reveal__content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: min(100%, 22rem);
   text-align: center;
+  pointer-events: auto;
 }
 .gem-collect-album-reveal__kicker {
   margin: 0 0 0.5rem;
