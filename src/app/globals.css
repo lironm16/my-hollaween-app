@@ -3796,11 +3796,16 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__scan-compass {
   position: absolute;
   left: 50%;
-  top: 18%;
-  z-index: 2;
+  top: 14%;
+  z-index: 5;
   color: #fde68a;
-  filter: drop-shadow(0 0 12px rgb(251 191 36 / 0.9));
+  filter: drop-shadow(0 0 14px rgb(251 191 36 / 0.95));
   transition: color 0.2s ease, filter 0.2s ease;
+  pointer-events: none;
+}
+.gem-hunt-overlay__scan-compass svg {
+  width: 2.85rem;
+  height: 2.85rem;
 }
 .gem-hunt-overlay__scan-compass.is-facing {
   color: #bbf7d0;
@@ -4014,6 +4019,22 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   font-size: 0.95rem;
   font-weight: 600;
   color: #fff7ed;
+}
+.gem-hunt-overlay__walk-guide--gps {
+  border-color: rgb(139 92 246 / 0.45);
+}
+.gem-hunt-overlay__compass-caption {
+  margin: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fde68a;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.85);
+}
+.gem-hunt-overlay__compass-caption--muted {
+  color: #c4b5fd;
+  font-weight: 500;
 }
 .gem-hunt-overlay__walk-maps {
   font-size: 0.85rem;

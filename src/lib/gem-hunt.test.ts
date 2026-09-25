@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { distanceMeters } from "@/lib/geo";
 import {
+  bearingClockLabelHe,
   bearingDegrees,
   facingHouse,
   relativeWalkBearingDeg,
@@ -92,6 +93,12 @@ describe("gem hunt gate", () => {
     const { gemHuntVisible } = await import("@/lib/gem-hunt-enabled");
     assert.equal(gemHuntVisible(true), true);
     assert.equal(gemHuntVisible(false), false);
+  });
+
+  it("bearingClockLabelHe maps compass octants", () => {
+    assert.equal(bearingClockLabelHe(0), "צפון");
+    assert.equal(bearingClockLabelHe(90), "מזרח");
+    assert.equal(bearingClockLabelHe(180), "דרום");
   });
 
   it("fab and house treasure hide during add-house hours", async () => {

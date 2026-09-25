@@ -34,7 +34,7 @@ function headingStep(prev: number | null, next: number) {
 }
 
 /** Listen only — call prepareGemHuntSensors() from a button before opening hunt. */
-export function useDeviceHeading(active: boolean) {
+export function useDeviceHeading(active: boolean, retryToken = 0) {
   const [heading, setHeading] = useState<number | null>(null);
   const [status, setStatus] = useState<HeadingStatus>("idle");
   const lastUiRef = useRef<number>(0);
@@ -85,7 +85,7 @@ export function useDeviceHeading(active: boolean) {
     return () => {
       window.removeEventListener("deviceorientation", onOrientation, true);
     };
-  }, [active, onOrientation]);
+  }, [active, onOrientation, retryToken]);
 
   return { heading, status };
 }

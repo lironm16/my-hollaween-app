@@ -7,13 +7,20 @@ import { GemOrbitStage } from "@/components/gem-hunt/gem-orbit-stage";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
-import { getGemHuntCameraStream, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
+import {
+  getGemHuntCameraStream,
+  prepareGemHuntSensors,
+  stopGemHuntCameraStream,
+} from "@/lib/gem-hunt-sensors";
 import { gemCollectDanceIndex } from "@/lib/gem-collect-dance";
 import {
   facingHouse,
   GEM_FACING_TOLERANCE_DEG,
   GEM_HELP_AFTER_SECONDS,
+  GEM_APPROACH_METERS,
   GEM_HUNT_METERS,
+  bearingClockLabelHe,
+  bearingDegrees,
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
   GEM_COLLECT_OVERLAY_MS,
@@ -96,8 +103,9 @@ export function GemHuntOverlay({
   const [albumRevealPhase, setAlbumRevealPhase] = useState<"enter" | "landed">("enter");
   /** Snapshot at tap — album sticker was new before this collect. */
   const [albumRevealNewFriend, setAlbumRevealNewFriend] = useState(true);
+  const [compassRetry, setCompassRetry] = useState(0);
 
-  const { heading, status: headingStatus } = useDeviceHeading(true);
+  const { heading, status: headingStatus } = useDeviceHeading(true, compassRetry);
 
   const pinPlacement = useMemo(() => {
     if (!effectiveLoc) return null;
@@ -280,22 +288,43 @@ export function GemHuntOverlay({
   const gemInRing = pinPlacement ? gemInScanRing(pinPlacement) : false;
   const pinCollectReady = arPinGuideMode && collectEnabled && gemInRing;
   const ringReady = centerDisplayMode || pinCollectReady;
+  const inApproachBand =
+    distanceM != null && distanceM <= GEM_APPROACH_METERS && !sim && userLocation != null;
   const showWalkGuide =
     !collectEnabled &&
     !sim &&
     effectiveLoc != null &&
     userLocation != null &&
     distanceM != null &&
-    distanceM > 8 &&
+    distanceM > GEM_HUNT_METERS &&
     phase !== "collecting" &&
     !centerReveal;
-  /** In-range scan: compass arrow toward the anchor (walk guide covers far mode). */
+  /** In-range: compass arrow toward the anchor (also when close but not “still” yet). */
   const showScanCompass =
     !centerDisplayMode &&
     phase !== "collecting" &&
     turnBearing != null &&
     !showWalkGuide &&
-    (collectEnabled || sim || allowAutoReveal);
+    effectiveLoc != null &&
+    (inApproachBand || collectEnabled || sim);
+  const gpsBearingToAnchor =
+    effectiveLoc != null ? bearingDegrees(effectiveLoc, anchor) : null;
+  const showGpsDirectionHint =
+    !centerReveal &&
+    phase !== "collecting" &&
+    turnBearing == null &&
+    gpsBearingToAnchor != null &&
+    inApproachBand;
+  const showCompassEnable =
+    showGpsDirectionHint &&
+    (headingStatus === "denied" || headingStatus === "unsupported");
+  const showCompassPending =
+    showGpsDirectionHint && headingStatus === "pending" && heading == null;
+
+  async function retryCompassPermission() {
+    const result = await prepareGemHuntSensors();
+    if (result.orientation) setCompassRetry((n) => n + 1);
+  }
   const mapsWalkUrl =
     userLocation != null && !sim ? googleMapsNavigateUrl(userLocation, anchor) : null;
 
@@ -511,6 +540,42 @@ export function GemHuntOverlay({
                 >
                   הליכה ב-Google Maps
                 </a>
+              ) : null}
+            </div>
+          ) : null}
+
+          {showScanCompass && !showWalkGuide ? (
+            <p className="gem-hunt-overlay__compass-caption">
+              {facingTarget
+                ? "מצוין — סובבו את המצלמה עד שהיהלום במעגל"
+                : "חץ לכיוון היהלום — סובבו את הגוף/הטלפון"}
+              {distanceM != null ? ` · ~${formatDistance(distanceM)}` : null}
+            </p>
+          ) : null}
+
+          {showCompassPending ? (
+            <p className="gem-hunt-overlay__compass-caption gem-hunt-overlay__compass-caption--muted">
+              מחפשים כיוון… נעו את הטלפון בקשת קטנה (כמו «ריסוט»).
+            </p>
+          ) : null}
+
+          {showGpsDirectionHint ? (
+            <div className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--gps">
+              <p className="gem-hunt-overlay__walk-text">
+                {showCompassEnable
+                  ? "אין חץ — הטלפון לא נותן כיוון (Compass)."
+                  : "כיוון לפי GPS:"}{" "}
+                <strong>{bearingClockLabelHe(gpsBearingToAnchor!)}</strong>
+                {distanceM != null ? ` · ~${formatDistance(distanceM)}` : null}
+              </p>
+              {showCompassEnable ? (
+                <button
+                  type="button"
+                  className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact w-full"
+                  onClick={() => void retryCompassPermission()}
+                >
+                  אפשרו גישה לכיוון / תנועה
+                </button>
               ) : null}
             </div>
           ) : null}

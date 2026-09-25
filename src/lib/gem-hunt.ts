@@ -244,6 +244,19 @@ export function normalizeHeading(deg: number) {
   return ((deg % 360) + 360) % 360;
 }
 
+/** Compass bearing → short Hebrew label (map / GPS fallback when no gyro). */
+export function bearingClockLabelHe(bearingDeg: number) {
+  const b = normalizeHeading(bearingDeg);
+  if (b >= 337.5 || b < 22.5) return "צפון";
+  if (b < 67.5) return "צפון-מזרח";
+  if (b < 112.5) return "מזרח";
+  if (b < 157.5) return "דרום-מזרח";
+  if (b < 202.5) return "דרום";
+  if (b < 247.5) return "דרום-מערב";
+  if (b < 292.5) return "מערב";
+  return "צפון-מערב";
+}
+
 export function facingHouse(
   user: { lat: number; lng: number },
   house: Pick<PublicHouse, "lat" | "lng">,
