@@ -80,6 +80,6 @@ describe("house export helpers", () => {
     const txt = housesToExportTxt([house()]);
     assert.ok(txt.includes("בית בדיקה"));
     assert.ok(txt.includes("חרוזים"));
-    assert.match(txt, /^1\./m);
+    assert.match(txt, /\u200F1\./);
   });
 });

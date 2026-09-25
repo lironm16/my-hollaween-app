@@ -302,14 +302,20 @@ function triggerDownload(filename: string, blob: Blob) {
 
 export type HouseExportFormat = "xlsx" | "csv" | "txt";
 
+/** UI export formats (CSV kept for admin API only). */
 export const HOUSE_EXPORT_FORMAT_OPTIONS: ReadonlyArray<{
-  id: HouseExportFormat;
+  id: Extract<HouseExportFormat, "xlsx" | "txt">;
   labelHe: string;
 }> = [
-  { id: "xlsx", labelHe: "Excel" },
-  { id: "csv", labelHe: "CSV" },
+  { id: "xlsx", labelHe: "טבלה" },
   { id: "txt", labelHe: "טקסט" },
 ];
+
+const RTL_MARK = "\u200F";
+
+export function plainTextExportRtl(lines: string[]) {
+  return `\uFEFF${lines.map((line) => (line.trim() ? `${RTL_MARK}${line}` : line)).join("\n")}\n`;
+}
 
 export function exportHouseCountMessage(
   exportCount: number,
@@ -349,7 +355,7 @@ export function housesToExportTxt(houses: PublicHouse[]) {
     if (house.arrival?.trim()) lines.push(`   ${house.arrival.trim()}`);
     lines.push("");
   });
-  return `\uFEFF${lines.join("\n")}\n`;
+  return plainTextExportRtl(lines);
 }
 
 export function routeToExportTxt(route: WalkingRoute) {
@@ -366,7 +372,7 @@ export function routeToExportTxt(route: WalkingRoute) {
     }
     lines.push("");
   }
-  return `\uFEFF${lines.join("\n")}\n`;
+  return plainTextExportRtl(lines);
 }
 
 export function downloadTxt(filename: string, text: string) {

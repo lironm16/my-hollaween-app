@@ -64,7 +64,7 @@ export function HouseExportDialog({
           <p className="text-base leading-snug text-violet-200/90">{countMessage}</p>
           <fieldset className="border-0 p-0">
             <legend className="mb-2 text-sm font-semibold text-violet-200/90">פורמט</legend>
-            <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="פורמט קובץ">
+            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="פורמט קובץ">
               {HOUSE_EXPORT_FORMAT_OPTIONS.map((option) => {
                 const checked = format === option.id;
                 return (

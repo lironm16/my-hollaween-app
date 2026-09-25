@@ -5,8 +5,10 @@ import { createPortal } from "react-dom";
 import { Download, MoreVertical, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { HouseExportDialog } from "@/components/csv-export-button";
+import { sharePlainTextFile } from "@/lib/house-csv";
 import {
   buildRouteShareUrl,
+  routeSharePlainText,
   shareRouteUrl,
   sharedRoutePayloadFromRoute,
 } from "@/lib/route-share";
@@ -135,41 +137,33 @@ export function RouteActionsMenu({
       window.location.origin,
     );
     const stopCount = route.stops.length;
+    const text = routeSharePlainText(url, stopCount);
+    const day = new Date().toISOString().slice(0, 10);
+    setMenuOpen(false);
 
-    const finishMenu = () => setMenuOpen(false);
-
-    const fallback = () => {
-      void shareRouteUrl(url, stopCount).then((outcome) => {
-        finishMenu();
-        if (outcome === "shared") toast.success("שיתוף המסלול נשלח");
-        else if (outcome === "copied") toast.success("הקישור הועתק — הדביקו בוואטסאפ / הודעה");
-        else if (outcome === "cancelled") return;
-        else {
-          toast.error("לא הצלחנו לשתף — נסו שוב");
-          toast.message(url, { closeButton: true, duration: 20_000 });
-        }
-      });
-    };
-
-    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-      try {
-        const pending = navigator.share({ url });
-        void pending
-          .then(() => {
-            finishMenu();
-            toast.success("שיתוף המסלול נשלח");
-          })
-          .catch((err: unknown) => {
-            if (err instanceof Error && err.name === "AbortError") return;
-            fallback();
-          });
+    void (async () => {
+      const shared = await sharePlainTextFile(
+        `hallowhood-route-share-${day}.txt`,
+        text,
+        "מסלול HallowHood",
+      );
+      if (shared) {
+        toast.success("שיתוף המסלול נשלח");
         return;
-      } catch (err) {
-        if (err instanceof Error && err.name === "AbortError") return;
       }
-    }
-
-    fallback();
+      const outcome = await shareRouteUrl(url, stopCount);
+      if (outcome === "shared" || outcome === "copied") {
+        toast.success(
+          outcome === "copied"
+            ? "הקישור הועתק — הדביקו בוואטסאפ / הודעה"
+            : "שיתוף המסלול נשלח",
+        );
+        return;
+      }
+      if (outcome === "cancelled") return;
+      toast.error("לא הצלחנו לשתף — נסו שוב");
+      toast.message(url, { closeButton: true, duration: 20_000 });
+    })();
   }
 
   if (!routeMode) return null;
