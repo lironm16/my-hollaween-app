@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
+import { GemBagCollectFlyGate } from "@/app/gem-bag/gem-bag-collect-fly-gate";
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { GemStickerAlbum } from "@/components/gem-hunt/gem-sticker-album";
@@ -57,6 +58,9 @@ export default function GemBagPage() {
 
   return (
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden bg-[#0f0818]">
+      <Suspense fallback={null}>
+        <GemBagCollectFlyGate />
+      </Suspense>
       <AppHeader />
       <main
         className={cn(

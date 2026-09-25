@@ -97,6 +97,7 @@ function GemStickerSlot({
   return (
     <div
       role="listitem"
+      data-gem-sticker-slot={monsterId}
       className={cn("gem-sticker-slot", collected && "is-found")}
       style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
     >

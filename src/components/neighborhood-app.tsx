@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -37,6 +38,7 @@ import { VisitSkipConflictDialog } from "@/components/visit-skip-conflict-dialog
 import { LikeCheer } from "@/components/like-cheer";
 import { RouteCompleteCheer } from "@/components/route-complete-cheer";
 import { VisitCheer } from "@/components/visit-cheer";
+import { GemCollectCheer } from "@/components/gem-collect-cheer";
 import { GemResetConfirmDialog } from "@/components/gem-reset-confirm-dialog";
 import { GemMapCompleteBanner } from "@/components/gem-map-complete-banner";
 import {
@@ -48,7 +50,7 @@ import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { loadGemCollectedIds } from "@/lib/gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
-import { canCollectGem, userWithinGemHuntRange } from "@/lib/gem-hunt";
+import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
 import { syncGemMonsterAssignment } from "@/lib/gem-monsters";
 import { pickGemHuntTarget } from "@/lib/gem-hunt-target";
 import { prepareGemHuntSensors, releaseGemHuntCamera } from "@/lib/gem-hunt-sensors";
@@ -158,6 +160,9 @@ export function NeighborhoodApp({
     typeof window === "undefined" ? 0 : loadGemCollectedIds().length,
   );
   const [gemResetHouse, setGemResetHouse] = useState<PublicHouse | null>(null);
+  const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);
+  const mapGemCheerTimerRef = useRef<number | null>(null);
+  const router = useRouter();
   const mapGemUserLoc = mapGemGps ?? gps;
   const mapGemStanding = useStandingStill(mapGemUserLoc, gemHuntActive && Boolean(mapGemHouse));
   const gpsAllowed =
@@ -359,6 +364,21 @@ export function NeighborhoodApp({
 
   const celebrateGemCollect = useCallback(() => {
     setMapGemBadgeCount(loadGemCollectedIds().length);
+  }, []);
+
+  const showMapGemCheer = useCallback((house: PublicHouse) => {
+    setMapGemCheerHouse(house);
+    if (mapGemCheerTimerRef.current != null) window.clearTimeout(mapGemCheerTimerRef.current);
+    mapGemCheerTimerRef.current = window.setTimeout(() => {
+      mapGemCheerTimerRef.current = null;
+      setMapGemCheerHouse(null);
+    }, GEM_CHEER_MS);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (mapGemCheerTimerRef.current != null) window.clearTimeout(mapGemCheerTimerRef.current);
+    };
   }, []);
 
   const handleToggleGemMenu = useCallback(
@@ -1365,18 +1385,29 @@ export function NeighborhoodApp({
             false,
           )}
           onClose={() => {
-            stopGemHuntCameraStream();
+            releaseGemHuntCamera();
             setMapGemHouse(null);
             setMapGemGps(null);
           }}
-          onCollect={(monsterId) => {
+          onCollect={(monsterId, options) => {
             const h = mapGemHouse;
             gems.collect(h.id, monsterId);
-            stopGemHuntCameraStream();
+            releaseGemHuntCamera();
             setMapGemHouse(null);
+            setMapGemGps(null);
             celebrateGemCollect();
+            if (options?.navigateStickerBook) {
+              router.push(`/gem-bag?fly=${monsterId}`);
+              return;
+            }
+            if (options?.cheer !== false) {
+              showMapGemCheer(h);
+            }
           }}
         />
+      ) : null}
+      {mapGemCheerHouse ? (
+        <GemCollectCheer show house={mapGemCheerHouse} />
       ) : null}
     </div>
   );

@@ -1,8 +1,11 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Camera, MapPin } from "lucide-react";
+import { GemCollectCheer } from "@/components/gem-collect-cheer";
 import { GemHouseFoundHero } from "@/components/gem-hunt/gem-house-found-hero";
+import type { GemCollectFinishOptions } from "@/lib/gem-hunt";
 import { GemHuntOverlayLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { Button } from "@/components/ui/button";
 import { useGemProgress } from "@/hooks/use-gem-progress";
@@ -16,7 +19,9 @@ import {
   gemProximity,
   GEM_APPROACH_METERS,
   GEM_HUNT_METERS,
+  GEM_CHEER_MS,
 } from "@/lib/gem-hunt";
+import type { GemMonsterId } from "@/lib/gem-monsters";
 import { distanceMeters, formatDistance } from "@/lib/geo";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
@@ -49,9 +54,18 @@ export function GemHuntPanel({
   const gems = useGemProgress();
   const { overrides: anchorOverrideMap } = useGemAnchorOverrides();
   const calibratedCount = useMemo(() => countGemAnchorOverrides(), [anchorOverrideMap]);
+  const router = useRouter();
   const [huntOpen, setHuntOpen] = useState(false);
   const [huntLocation, setHuntLocation] = useState<UserLocation | null>(null);
   const [simulate, setSimulate] = useState(adminSimulateInRange);
+  const [gemCheer, setGemCheer] = useState(false);
+  const cheerTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cheerTimerRef.current != null) window.clearTimeout(cheerTimerRef.current);
+    };
+  }, []);
 
   const now = useAppNow();
   const visible = gemHuntFabVisible(isAdmin, now);
@@ -79,12 +93,24 @@ export function GemHuntPanel({
     setHuntOpen(true);
   }, [onOpenHunt, userLocation]);
 
-  function onCollect(collectedVariant: string) {
+  function onCollect(collectedVariant: GemMonsterId, options?: GemCollectFinishOptions) {
     gems.collect(house.id, collectedVariant);
     releaseGemHuntCamera();
     setHuntOpen(false);
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate(40);
+    }
+    if (options?.navigateStickerBook) {
+      router.push(`/gem-bag?fly=${collectedVariant}`);
+      return;
+    }
+    if (options?.cheer !== false) {
+      setGemCheer(true);
+      if (cheerTimerRef.current != null) window.clearTimeout(cheerTimerRef.current);
+      cheerTimerRef.current = window.setTimeout(() => {
+        cheerTimerRef.current = null;
+        setGemCheer(false);
+      }, GEM_CHEER_MS);
     }
   }
 
@@ -214,6 +240,7 @@ export function GemHuntPanel({
         ) : null}
       </section>
 
+      <GemCollectCheer show={gemCheer} house={house} />
       {huntOpen ? (
         <GemHuntOverlayLazy
           house={house}

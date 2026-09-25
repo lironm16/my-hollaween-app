@@ -16,12 +16,18 @@ export function GemCollectAlbumReveal({
   monsterId,
   phase,
   newAlbumFriend = true,
+  showActions = false,
+  onOpenStickerBook,
+  onClose,
 }: {
   monsterId: GemMonsterId;
   /** `enter` starts fly-in; `landed` holds the placed sticker. */
   phase: "enter" | "landed";
   /** False when this monster type was already in the sticker book. */
   newAlbumFriend?: boolean;
+  showActions?: boolean;
+  onOpenStickerBook?: () => void;
+  onClose?: () => void;
 }) {
   const meta = gemMonsterMeta(monsterId);
   const label = gemLabelHe(monsterId);
@@ -111,13 +117,34 @@ export function GemCollectAlbumReveal({
 
         <h2 className="gem-collect-album-reveal__title">{label}</h2>
 
-        <p className="gem-collect-album-reveal__foot">
-          {phase === "landed" || !newAlbumFriend
-            ? newAlbumFriend
-              ? "שמור בטוח בספר — ממשיכים לצוד!"
-              : "יהלום נוסף לבית — המדבקה כבר אצלכם!"
-            : "מדביקים…"}
-        </p>
+        {showActions && newAlbumFriend ? (
+          <div className="gem-collect-album-reveal__actions">
+            <button
+              type="button"
+              className="gem-collect-album-reveal__action gem-collect-album-reveal__action--primary"
+              onClick={onOpenStickerBook}
+            >
+              לספר המדבקות
+            </button>
+            <button
+              type="button"
+              className="gem-collect-album-reveal__action gem-collect-album-reveal__action--ghost"
+              onClick={onClose}
+            >
+              סגירה
+            </button>
+          </div>
+        ) : (
+          <p className="gem-collect-album-reveal__foot">
+            {phase === "landed" || !newAlbumFriend
+              ? newAlbumFriend
+                ? showActions
+                  ? ""
+                  : "שמור בטוח בספר — ממשיכים לצוד!"
+                : "יהלום נוסף לבית — המדבקה כבר אצלכם!"
+              : "מדביקים…"}
+          </p>
+        )}
       </div>
     </div>
   );
