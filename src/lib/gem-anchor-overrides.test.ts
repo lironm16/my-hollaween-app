@@ -54,4 +54,18 @@ describe("gem anchor overrides", () => {
     assert.equal(getGemAnchorOverride(house.id), null);
     assert.equal(gemAnchorForHouse(house).calibrated, false);
   });
+
+  it("clears all overrides at once", async () => {
+    const {
+      clearAllGemAnchorOverrides,
+      countGemAnchorOverrides,
+      setGemAnchorOverride,
+    } = await import("@/lib/gem-anchor-overrides");
+
+    setGemAnchorOverride("a", { lat: 1, lng: 2, accuracy: 5 });
+    setGemAnchorOverride("b", { lat: 3, lng: 4, accuracy: 5 });
+    assert.equal(countGemAnchorOverrides(), 2);
+    clearAllGemAnchorOverrides();
+    assert.equal(countGemAnchorOverrides(), 0);
+  });
 });

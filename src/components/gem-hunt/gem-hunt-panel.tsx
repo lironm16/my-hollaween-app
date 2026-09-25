@@ -26,7 +26,9 @@ import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
 import { prepareGemHuntSensors, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
 import {
+  clearAllGemAnchorOverrides,
   clearGemAnchorOverride,
+  countGemAnchorOverrides,
   setGemAnchorOverride,
 } from "@/lib/gem-anchor-overrides";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
@@ -45,6 +47,7 @@ export function GemHuntPanel({
 }) {
   const gems = useGemProgress();
   const { overrides: anchorOverrideMap } = useGemAnchorOverrides();
+  const calibratedCount = useMemo(() => countGemAnchorOverrides(), [anchorOverrideMap]);
   const [huntOpen, setHuntOpen] = useState(false);
   const [cheer, setCheer] = useState(false);
   const [simulate, setSimulate] = useState(adminSimulateInRange);
@@ -179,6 +182,17 @@ export function GemHuntPanel({
                 <p className="gem-hunt-panel__calibrate-dist" dir="ltr">
                   אתם ~{Math.round(distanceMeters(userLocation, anchor))}m מהנקודה שנשמרה
                 </p>
+              ) : null}
+              {calibratedCount > 1 ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-rose-300/95"
+                  onClick={() => clearAllGemAnchorOverrides()}
+                >
+                  איפוס כל מיקומי היהלום בטלפון ({calibratedCount})
+                </Button>
               ) : null}
             </div>
           </div>

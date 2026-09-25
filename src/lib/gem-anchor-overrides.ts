@@ -67,3 +67,18 @@ export function clearGemAnchorOverride(houseId: string) {
   else localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
   notify();
 }
+
+/** Remove every on-device gem anchor override (e.g. after testing away from the houses). */
+export function clearAllGemAnchorOverrides() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* private mode */
+  }
+  notify();
+}
+
+export function countGemAnchorOverrides(): number {
+  return Object.keys(loadGemAnchorOverrides()).length;
+}
