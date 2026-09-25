@@ -118,6 +118,15 @@ export function destinationPoint(
  * There is no vertical axis — high-floor apartments share the same ground GPS;
  * the hunt means “at the building / entrance zone”, not at window height.
  */
+/** Shortest walk to either the map pin or the gem anchor (matches collect proximity). */
+export function gemDistanceMeters(
+  user: { lat: number; lng: number },
+  house: Pick<PublicHouse, "id" | "lat" | "lng">,
+) {
+  const anchor = gemAnchorForHouse(house);
+  return Math.min(distanceMeters(user, house), distanceMeters(user, anchor));
+}
+
 export function gemAnchorForHouse(house: Pick<PublicHouse, "id" | "lat" | "lng">): GemAnchor {
   const override = getGemAnchorOverride(house.id);
   if (override) {

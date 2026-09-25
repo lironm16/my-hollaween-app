@@ -323,16 +323,18 @@ export function NeighborhoodApp({
       return;
     }
     preloadGemHuntChunks();
+    setWatchEnabled(true);
+    const freshGps = (await geo.refresh()) ?? gps;
     const target = pickGemHuntTarget(
       mapHouses,
-      gps,
+      freshGps,
       (id) => gems.collected(id),
       selection.selected?.id ?? null,
     );
     if (!target) return;
     await prepareGemHuntSensors({ requestCamera: true });
     setMapGemHouse(target.house);
-  }, [gemAllCollected, mapHouses, gps, gems, selection.selected?.id]);
+  }, [gemAllCollected, mapHouses, gps, gems, selection.selected?.id, geo, setWatchEnabled]);
 
   const openGemHuntForHouse = useCallback(
     async (house: PublicHouse) => {
@@ -340,10 +342,12 @@ export function NeighborhoodApp({
       preloadGemHuntChunks();
       setView("map");
       selection.selectOnMap(house);
+      setWatchEnabled(true);
+      await geo.refresh();
       await prepareGemHuntSensors({ requestCamera: true });
       setMapGemHouse(house);
     },
-    [gems, gps, selection],
+    [gems, geo, selection, setWatchEnabled],
   );
 
   useEffect(() => {

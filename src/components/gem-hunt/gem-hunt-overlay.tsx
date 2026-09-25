@@ -23,6 +23,7 @@ import {
   GEM_HUNT_METERS,
   bearingClockLabelHe,
   bearingDegrees,
+  gemDistanceMeters,
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
   GEM_COLLECT_OVERLAY_MS,
@@ -109,7 +110,8 @@ export function GemHuntOverlay({
     return userLocation;
   }, [sim, house.lat, house.lng, userLocation]);
   const distanceM =
-    effectiveLoc != null && !sim ? distanceMeters(effectiveLoc, anchor) : null;
+    effectiveLoc != null && !sim ? gemDistanceMeters(effectiveLoc, house) : null;
+  const gpsAccuracyM = !sim && userLocation?.accuracy != null ? userLocation.accuracy : null;
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -315,6 +317,13 @@ export function GemHuntOverlay({
 
   const gemVisible = phase === "visible" || phase === "collecting";
   const showHuntUi = phase !== "albumReveal";
+  const showGpsStaleHint =
+    showHuntUi &&
+    phase !== "collecting" &&
+    distanceM != null &&
+    distanceM > 80 &&
+    gpsAccuracyM != null &&
+    gpsAccuracyM > 45;
   const turnBearing =
     effectiveLoc != null ? relativeWalkBearingDeg(effectiveLoc, anchor, heading) : null;
   const facingTarget =
@@ -720,6 +729,13 @@ export function GemHuntOverlay({
       {needsLocationForArrow ? (
         <p className="gem-hunt-overlay__sensor-note gem-hunt-overlay__sensor-note--alert">
           כדי לראות חץ כיוון — אפשרו מיקום (GPS) לדפדפן
+        </p>
+      ) : null}
+
+      {showGpsStaleHint ? (
+        <p className="gem-hunt-overlay__sensor-note">
+          GPS לא מדויק (~{Math.round(gpsAccuracyM!)} מ&apos;) — צאו לרחוב, רעננו, או כיילו נקודת יהלום
+          בכרטיס הבית
         </p>
       ) : null}
 

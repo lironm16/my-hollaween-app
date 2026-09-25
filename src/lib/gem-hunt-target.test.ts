@@ -17,10 +17,19 @@ const base = (id: string, lat: number, lng: number): PublicHouse =>
 describe("pickGemHuntTarget", () => {
   const houses = [base("a", 32.0, 34.0), base("b", 32.0002, 34.0)];
 
-  it("prefers selected house when not collected", () => {
-    const user = { lat: 32.0, lng: 34.0 };
-    const t = pickGemHuntTarget(houses, user, () => false, "b");
+  it("prefers selected house when nearby on the map", () => {
+    const spread = [base("a", 32.1, 34.0), base("b", 32.0002, 34.0)];
+    const user = { lat: 32.0002, lng: 34.0, accuracy: 8 };
+    const t = pickGemHuntTarget(spread, user, () => false, "b");
     assert.equal(t?.house.id, "b");
+  });
+
+  it("prefers in-range house over far map selection", () => {
+    const near = base("near", 32.0, 34.0);
+    const far = base("far", 32.003, 34.0);
+    const user = { lat: 32.0, lng: 34.0, accuracy: 8 };
+    const t = pickGemHuntTarget([near, far], user, () => false, "far");
+    assert.equal(t?.house.id, "near");
   });
 
   it("detects near gems", () => {

@@ -17,6 +17,12 @@ const watchOpts: PositionOptions = {
   timeout: 12_000,
 };
 
+const freshOpts: PositionOptions = {
+  enableHighAccuracy: true,
+  maximumAge: 0,
+  timeout: 15_000,
+};
+
 async function queryGeoPermission(): Promise<"granted" | "denied" | "prompt" | "unknown"> {
   try {
     const result = await navigator.permissions?.query({ name: "geolocation" });
@@ -80,20 +86,39 @@ export function useUserLocation(options?: { watch?: boolean }) {
     );
   }, [apply, fail, watchEnabled]);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback((): Promise<UserLocation | null> => {
     if (!navigator.geolocation) {
       setStatus("unavailable");
-      return;
+      return Promise.resolve(null);
     }
-    const permission = await queryGeoPermission();
-    if (permission === "denied") {
-      setStatus("denied");
-      return;
-    }
-    setStatus((s) => (s === "ready" ? s : "pending"));
-    if (permission === "granted") startWatch();
-    navigator.geolocation.getCurrentPosition((pos) => apply(pos, true), fail, watchOpts);
-    if (permission !== "granted") startWatch();
+    return new Promise((resolve) => {
+      void (async () => {
+        const permission = await queryGeoPermission();
+        if (permission === "denied") {
+          setStatus("denied");
+          resolve(null);
+          return;
+        }
+        setStatus((s) => (s === "ready" ? s : "pending"));
+        if (permission === "granted") startWatch();
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            apply(pos, true);
+            resolve({
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              accuracy: pos.coords.accuracy,
+            });
+          },
+          (err) => {
+            fail(err);
+            resolve(last.current);
+          },
+          freshOpts,
+        );
+        if (permission !== "granted") startWatch();
+      })();
+    });
   }, [apply, fail, startWatch]);
 
   useEffect(() => {

@@ -1,5 +1,4 @@
-import { gemProximity, type GemProximity } from "@/lib/gem-hunt";
-import { distanceMeters } from "@/lib/geo";
+import { gemDistanceMeters, gemProximity, type GemProximity } from "@/lib/gem-hunt";
 import type { PublicHouse } from "@/lib/types";
 
 export type GemHuntTarget = {
@@ -13,7 +12,7 @@ function distanceToHouse(
   house: PublicHouse,
 ): number | null {
   if (!user) return null;
-  return distanceMeters(user, house);
+  return gemDistanceMeters(user, house);
 }
 
 /** House to use for map FAB / quick hunt (prefer selected, then nearest unc collected). */
@@ -26,7 +25,35 @@ export function pickGemHuntTarget(
   const open = houses.filter((h) => !isCollected(h.id));
   if (open.length === 0) return null;
 
-  if (preferredHouseId) {
+  if (user) {
+    const inHunt: GemHuntTarget[] = [];
+    for (const house of open) {
+      if (gemProximity(user, house, false) !== "hunt") continue;
+      inHunt.push({
+        house,
+        proximity: "hunt",
+        distanceM: gemDistanceMeters(user, house),
+      });
+    }
+    if (inHunt.length > 0) {
+      inHunt.sort((a, b) => (a.distanceM ?? 1e9) - (b.distanceM ?? 1e9));
+      return inHunt[0]!;
+    }
+  }
+
+  if (preferredHouseId && user) {
+    const preferred = open.find((h) => h.id === preferredHouseId);
+    if (preferred) {
+      const dPref = gemDistanceMeters(user, preferred);
+      if (dPref <= 120) {
+        return {
+          house: preferred,
+          proximity: gemProximity(user, preferred, false),
+          distanceM: dPref,
+        };
+      }
+    }
+  } else if (preferredHouseId) {
     const preferred = open.find((h) => h.id === preferredHouseId);
     if (preferred) {
       return {

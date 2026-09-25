@@ -13,6 +13,7 @@ import { useAppNow } from "@/hooks/use-app-clock";
 import {
   canCollectGem,
   gemAnchorForHouse,
+  gemDistanceMeters,
   gemProximity,
   gemLabelHe,
   gemMonsterForHouse,
@@ -58,7 +59,7 @@ export function GemHuntPanel({
 
   const distanceM = useMemo(() => {
     if (!userLocation) return null;
-    return distanceMeters(userLocation, house);
+    return gemDistanceMeters(userLocation, house);
   }, [house, userLocation]);
 
   if (!visible) return null;
