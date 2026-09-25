@@ -54,6 +54,11 @@ export const GEM_SCAN_PAN_DEGREES = 180;
 export const GEM_HELP_AFTER_SECONDS = 8;
 /** Approx. phone camera horizontal field of view — for pinning gem on screen. */
 export const GEM_CAMERA_HFOV_DEG = 62;
+/** On-screen hunt ring center (matches `.gem-hunt-overlay__scan-ring` at 42%). */
+export const GEM_SCAN_RING_CENTER_X = 50;
+export const GEM_SCAN_RING_CENTER_Y = 42;
+/** Viewport-% radius for “gem inside ring” collect (slightly generous for thumb + compass jitter). */
+export const GEM_SCAN_RING_COLLECT_RADIUS = 54;
 /** Ground-level offset from the map pin (no floor height — see gemAnchorForHouse). */
 export const GEM_ANCHOR_MIN_METERS = 2;
 export const GEM_ANCHOR_MAX_METERS = 10;
@@ -170,18 +175,57 @@ export function gemScreenPlacement(
   if (rel == null) return null;
   const half = hFovDeg / 2;
   const inView = Math.abs(rel) <= half;
-  const xRaw = 50 + (rel / half) * 42;
+  const xSpread = inView ? 36 : 42;
+  const xRaw = GEM_SCAN_RING_CENTER_X + (rel / half) * xSpread;
   const xPercent = inView ? Math.min(90, Math.max(10, xRaw)) : rel > 0 ? 92 : 8;
-  const yPercent = 40 + Math.min(14, (distanceM / GEM_HUNT_METERS) * 10);
+  /** Keep the pin on the ring center vertically (distance no longer pulls it up/down). */
+  const yPercent = inView
+    ? GEM_SCAN_RING_CENTER_Y
+    : 40 + Math.min(14, (distanceM / GEM_HUNT_METERS) * 10);
   return { xPercent, yPercent, inView, distanceM, relativeBearingDeg: rel };
 }
 
-/** Gem pin overlaps the on-screen hunt ring (center ~42%, radius ~46% in viewport units). */
-export function gemInScanRing(placement: GemScreenPlacement | null, ringRadiusPercent = 46) {
+/** Gem pin overlaps the on-screen hunt ring. */
+export function gemInScanRing(
+  placement: GemScreenPlacement | null,
+  ringRadiusPercent = GEM_SCAN_RING_COLLECT_RADIUS,
+) {
   if (!placement?.inView) return false;
-  const dx = placement.xPercent - 50;
-  const dy = placement.yPercent - 42;
-  return Math.hypot(dx, dy) <= ringRadiusPercent;
+  const dx = placement.xPercent - GEM_SCAN_RING_CENTER_X;
+  const dy = placement.yPercent - GEM_SCAN_RING_CENTER_Y;
+  const dist = Math.hypot(dx, dy);
+  if (dist <= ringRadiusPercent) return true;
+  if (
+    Math.abs(placement.relativeBearingDeg) <= GEM_FACING_TOLERANCE_DEG &&
+    dist <= ringRadiusPercent + 14
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/** Ease gem sprite toward ring center when close (display only). */
+export function gemPlacementDisplaySnap(placement: GemScreenPlacement | null) {
+  if (!placement?.inView) return placement;
+  const dx = placement.xPercent - GEM_SCAN_RING_CENTER_X;
+  const dy = placement.yPercent - GEM_SCAN_RING_CENTER_Y;
+  const dist = Math.hypot(dx, dy);
+  if (dist <= 10) {
+    return {
+      ...placement,
+      xPercent: GEM_SCAN_RING_CENTER_X,
+      yPercent: GEM_SCAN_RING_CENTER_Y,
+    };
+  }
+  if (dist <= 28) {
+    const pull = 0.45;
+    return {
+      ...placement,
+      xPercent: placement.xPercent + (GEM_SCAN_RING_CENTER_X - placement.xPercent) * pull,
+      yPercent: placement.yPercent + (GEM_SCAN_RING_CENTER_Y - placement.yPercent) * pull,
+    };
+  }
+  return placement;
 }
 
 export function canCollectGem(

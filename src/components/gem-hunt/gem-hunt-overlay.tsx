@@ -30,6 +30,7 @@ import {
   GEM_STICKER_REVEAL_MS,
   gemAnchorForHouse,
   gemInScanRing,
+  gemPlacementDisplaySnap,
   gemLabelHe,
   gemMonsterForHouse,
   gemScreenPlacement,
@@ -148,6 +149,10 @@ export function GemHuntOverlay({
     if (!effectiveLoc) return null;
     return gemScreenPlacement(effectiveLoc, anchor, heading);
   }, [anchor, effectiveLoc, heading]);
+  const pinDisplay = useMemo(
+    () => gemPlacementDisplaySnap(pinPlacement),
+    [pinPlacement],
+  );
 
   const reveal = useCallback(() => {
     if (revealedRef.current) return;
@@ -538,10 +543,10 @@ export function GemHuntOverlay({
               phase === "collecting" && "is-collecting",
             )}
             style={
-              pinPlacement
+              pinDisplay
                 ? {
-                    left: `${pinPlacement.xPercent}%`,
-                    top: `${pinPlacement.yPercent}%`,
+                    left: `${pinDisplay.xPercent}%`,
+                    top: `${pinDisplay.yPercent}%`,
                   }
                 : undefined
             }
@@ -571,10 +576,10 @@ export function GemHuntOverlay({
               !pinPlacement && "is-center-fallback",
             )}
             style={
-              pinPlacement
+              pinDisplay
                 ? {
-                    left: `${pinPlacement.xPercent}%`,
-                    top: `${pinPlacement.yPercent}%`,
+                    left: `${pinDisplay.xPercent}%`,
+                    top: `${pinDisplay.yPercent}%`,
                   }
                 : undefined
             }

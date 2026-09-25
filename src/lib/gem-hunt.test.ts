@@ -9,7 +9,9 @@ import {
   gemAnchorForHouse,
   gemProximity,
   gemScreenPlacement,
+  gemPlacementDisplaySnap,
   gemInScanRing,
+  GEM_SCAN_RING_CENTER_Y,
   gemFamilyForHouse,
   gemVariantForHouse,
   headingDelta,
@@ -58,7 +60,20 @@ describe("gem hunt geo", () => {
     assert.ok(place);
     assert.equal(place!.inView, true);
     assert.ok(Math.abs(place!.xPercent - 50) < 8);
+    assert.equal(place!.yPercent, GEM_SCAN_RING_CENTER_Y);
     assert.equal(gemInScanRing(place), true);
+  });
+
+  it("snaps display placement toward ring center when close", () => {
+    const anchor = gemAnchorForHouse(house);
+    const user = { lat: house.lat + 0.00012, lng: house.lng };
+    const heading = bearingDegrees(user, anchor);
+    const place = gemScreenPlacement(user, anchor, heading);
+    assert.ok(place);
+    const snapped = gemPlacementDisplaySnap(place);
+    assert.ok(snapped);
+    assert.equal(snapped!.xPercent, 50);
+    assert.equal(snapped!.yPercent, GEM_SCAN_RING_CENTER_Y);
   });
 
   it("maps each house to a gem monster id", () => {
