@@ -35,6 +35,11 @@ export function isGemCollected(houseId: string) {
   return loadGemCollectedIds().includes(houseId);
 }
 
+/** True if this sticker type is already in the bag (any house), before a new collect. */
+export function isGemTypeInCollection(gemType: string, entries: GemCollectionEntry[] = loadGemCollected()) {
+  return entries.some((item) => item.gemType === gemType);
+}
+
 function notifyChanged() {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new Event(CHANGED_EVENT));

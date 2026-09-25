@@ -31,6 +31,7 @@ import { googleMapsNavigateUrl } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
 import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-list-suspend";
+import { isGemCollected, isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
 import { GemCollectAlbumReveal } from "@/components/gem-hunt/gem-collect-album-reveal";
 import { cn } from "@/lib/utils";
 
@@ -93,6 +94,8 @@ export function GemHuntOverlay({
   const onCollectRef = useRef(onCollect);
   onCollectRef.current = onCollect;
   const [albumRevealPhase, setAlbumRevealPhase] = useState<"enter" | "landed">("enter");
+  /** Snapshot at tap — album sticker was new before this collect. */
+  const [albumRevealNewFriend, setAlbumRevealNewFriend] = useState(true);
 
   const { heading, status: headingStatus } = useDeviceHeading(true);
 
@@ -223,6 +226,10 @@ export function GemHuntOverlay({
       navigator.vibrate([20, 40, 60]);
     }
     if (collectFinishRef.current != null) window.clearTimeout(collectFinishRef.current);
+    const entries = loadGemCollected();
+    const stickerAlreadyInBook =
+      isGemTypeInCollection(monsterId, entries) || isGemCollected(house.id);
+    setAlbumRevealNewFriend(!stickerAlreadyInBook);
     collectFinishRef.current = window.setTimeout(() => {
       collectFinishRef.current = null;
       setAlbumRevealPhase("enter");
@@ -560,7 +567,11 @@ export function GemHuntOverlay({
       ) : null}
 
       {phase === "albumReveal" ? (
-        <GemCollectAlbumReveal monsterId={monsterId} phase={albumRevealPhase} />
+        <GemCollectAlbumReveal
+          monsterId={monsterId}
+          phase={albumRevealPhase}
+          newAlbumFriend={albumRevealNewFriend}
+        />
       ) : null}
     </div>
   );

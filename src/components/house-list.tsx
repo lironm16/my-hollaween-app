@@ -104,23 +104,49 @@ export function HouseList({
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3">
       {selection ? (
-        <div className="flex flex-wrap items-center gap-2 rounded-xl bg-[#1d1028]/80 px-2 py-2 ring-1 ring-violet-500/25">
-          <ListSelectCheck
-            selected={selection.allSelected}
-            indeterminate={selection.someSelected && !selection.allSelected}
-            aria-label={selection.allSelected ? "בטל בחירת הכל" : "בחר הכל"}
-            onClick={selection.onToggleAll}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={!selection.someSelected}
-            className="h-10 flex-1 border-violet-500/35 bg-[#241332] text-base text-violet-100 hover:bg-violet-500/10 disabled:opacity-45"
-            onClick={selection.onRemoveSelected}
-          >
-            {selection.removeLabel ?? "הסר מהרשימה"}
-          </Button>
+        <div
+          className="house-list-bulk rounded-xl bg-[#241332] px-3 py-3 ring-1 ring-orange-500/25"
+          dir="rtl"
+        >
+          <p className="mb-2 text-sm font-semibold text-orange-200">בחירה מהרשימה</p>
+          <div className="flex flex-wrap items-stretch gap-2">
+            <div
+              role="button"
+              tabIndex={0}
+              className="flex min-h-11 flex-1 cursor-pointer items-center gap-2.5 rounded-lg border border-violet-500/30 bg-[#1d1028]/90 px-3 py-2 text-right transition-colors hover:bg-violet-500/10"
+              onClick={selection.onToggleAll}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  selection.onToggleAll();
+                }
+              }}
+            >
+              <ListSelectCheck
+                as="div"
+                selected={selection.allSelected}
+                indeterminate={selection.someSelected && !selection.allSelected}
+                aria-label={selection.allSelected ? "בטל סימון הכל" : "סמן הכל"}
+                className="pointer-events-none"
+              />
+              <span className="text-base font-medium text-violet-100">סמן הכל</span>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!selection.someSelected}
+              className="min-h-11 flex-1 border-orange-500/40 bg-[#1d1028] text-base font-semibold text-orange-100 hover:bg-orange-500/15 disabled:opacity-40"
+              onClick={selection.onRemoveSelected}
+            >
+              {selection.removeLabel ?? "הסר מהרשימה"}
+            </Button>
+          </div>
+          <p className="mt-2 text-sm leading-snug text-violet-300/95">
+            {selection.someSelected
+              ? `נבחרו ${selection.selectedIds.size} — ${selection.removeLabel ?? "הסר מהרשימה"} ינקה את הסימון המקומי (אהבתי, ביקרתי וכו׳) רק לבתים המסומנים.`
+              : "סמנו בתים (או «סמן הכל»), ואז לחצו על הכפתור הכתום להסרה."}
+          </p>
         </div>
       ) : null}
       {showSort ? <ListSortSelect /> : null}

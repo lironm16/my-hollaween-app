@@ -15,10 +15,13 @@ import { cn } from "@/lib/utils";
 export function GemCollectAlbumReveal({
   monsterId,
   phase,
+  newAlbumFriend = true,
 }: {
   monsterId: GemMonsterId;
   /** `enter` starts fly-in; `landed` holds the placed sticker. */
   phase: "enter" | "landed";
+  /** False when this monster type was already in the sticker book. */
+  newAlbumFriend?: boolean;
 }) {
   const meta = gemMonsterMeta(monsterId);
   const label = gemLabelHe(monsterId);
@@ -35,39 +38,44 @@ export function GemCollectAlbumReveal({
     return pool.slice(start, start + 4);
   }, [pool, slotIndex]);
 
+  const kicker = newAlbumFriend ? "מצאתם חבר חדש!" : "מצאתם שוב את החבר!";
+  const bookLabel = newAlbumFriend ? "נכנס לספר המדבקות" : "כבר בספר המדבקות — עוד יהלום!";
+  const showFly = newAlbumFriend;
+
   return (
     <div className="gem-collect-album-reveal" role="status" aria-live="polite">
       <div className="gem-collect-album-reveal__shade" aria-hidden />
       <div className="gem-collect-album-reveal__content">
         <p className="gem-collect-album-reveal__kicker">
-          <Sparkles className="inline size-4 text-amber-300" aria-hidden /> מצאתם חבר חדש!
+          <Sparkles className="inline size-4 text-amber-300" aria-hidden /> {kicker}
         </p>
-        <h2 className="gem-collect-album-reveal__title">{label}</h2>
 
-        <div
-          className={cn(
-            "gem-collect-album-reveal__fly",
-            phase === "enter" && "is-entering",
-            phase === "landed" && "is-landed",
-          )}
-          aria-hidden={phase === "landed"}
-        >
-          <Image
-            src={meta.posterPath}
-            alt=""
-            width={220}
-            height={220}
-            className="gem-collect-album-reveal__fly-art"
-            priority
-          />
-        </div>
+        {showFly ? (
+          <div
+            className={cn(
+              "gem-collect-album-reveal__fly",
+              phase === "enter" && "is-entering",
+              phase === "landed" && "is-landed",
+            )}
+            aria-hidden={phase === "landed"}
+          >
+            <Image
+              src={meta.posterPath}
+              alt=""
+              width={220}
+              height={220}
+              className="gem-collect-album-reveal__fly-art"
+              priority
+            />
+          </div>
+        ) : null}
 
         <div className="gem-collect-album-reveal__book" aria-label="ספר מדבקות">
-          <p className="gem-collect-album-reveal__book-label">נכנס לספר המדבקות</p>
+          <p className="gem-collect-album-reveal__book-label">{bookLabel}</p>
           <div className="gem-collect-album-reveal__grid">
             {previewSlots.map((entry) => {
               const isNew = entry.id === monsterId;
-              const placed = isNew && phase === "landed";
+              const placed = isNew && (newAlbumFriend ? phase === "landed" : true);
               return (
                 <div
                   key={entry.id}
@@ -86,7 +94,9 @@ export function GemCollectAlbumReveal({
                         height={120}
                         className="gem-collect-album-reveal__slot-art"
                       />
-                      <span className="gem-collect-album-reveal__slot-shine" aria-hidden />
+                      {newAlbumFriend ? (
+                        <span className="gem-collect-album-reveal__slot-shine" aria-hidden />
+                      ) : null}
                     </>
                   ) : (
                     <span className="gem-collect-album-reveal__slot-mystery" aria-hidden>
@@ -99,8 +109,14 @@ export function GemCollectAlbumReveal({
           </div>
         </div>
 
+        <h2 className="gem-collect-album-reveal__title">{label}</h2>
+
         <p className="gem-collect-album-reveal__foot">
-          {phase === "landed" ? "שמור בטוח בספר — ממשיכים לצוד!" : "מדביקים…"}
+          {phase === "landed" || !newAlbumFriend
+            ? newAlbumFriend
+              ? "שמור בטוח בספר — ממשיכים לצוד!"
+              : "יהלום נוסף לבית — המדבקה כבר אצלכם!"
+            : "מדביקים…"}
         </p>
       </div>
     </div>

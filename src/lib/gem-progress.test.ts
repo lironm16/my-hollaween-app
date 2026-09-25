@@ -55,4 +55,12 @@ describe("gem progress reset", () => {
     assert.equal(loadGemCollected().length, 0);
     assert.equal(localStorage.getItem(key), null);
   });
+
+  it("detects sticker type already in collection", async () => {
+    const { collectGem, isGemTypeInCollection } = await import("@/lib/gem-progress");
+    assert.equal(isGemTypeInCollection("ghost"), false);
+    collectGem({ houseId: "h1", gemType: "ghost" });
+    assert.equal(isGemTypeInCollection("ghost"), true);
+    assert.equal(isGemTypeInCollection("pumpkin"), false);
+  });
 });
