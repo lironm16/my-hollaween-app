@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { HouseCardActionContext } from "@/components/house-card-actions";
 import Link from "next/link";
@@ -61,10 +61,15 @@ function MyCollectionsPageContent() {
   const showCollected = gemBagMenuVisible(admin, now);
   const urlTab = parseTab(searchParams.get("tab"), showCollected);
   const [tab, setTab] = useState<PersonalMarksTab>(urlTab);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     setTab(urlTab);
   }, [urlTab]);
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [tab]);
 
   const owned = useOwnedHouses();
   const skips = useSkippedHouses();
@@ -199,6 +204,61 @@ function MyCollectionsPageContent() {
             ? "saved"
             : "collected";
 
+  const listHouses = housesByTab[tab];
+  const allSelected =
+    listHouses.length > 0 && listHouses.every((house) => selectedIds.has(house.id));
+  const someSelected = listHouses.some((house) => selectedIds.has(house.id));
+
+  const toggleSelected = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    setSelectedIds((prev) => {
+      if (listHouses.length === 0) return prev;
+      const every = listHouses.every((house) => prev.has(house.id));
+      if (every) return new Set();
+      return new Set(listHouses.map((house) => house.id));
+    });
+  }, [listHouses]);
+
+  function removeSelectedFromList() {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+
+    for (const id of ids) {
+      switch (tab) {
+        case "mine":
+          removeOwnedHouse(id);
+          break;
+        case "saved":
+          if (likes.liked(id)) likes.toggle(id);
+          break;
+        case "visited":
+          if (visits.visited(id)) visits.toggle(id);
+          break;
+        case "skipped":
+          handleRestore(id);
+          break;
+        case "collected":
+          gems.resetHouse(id);
+          break;
+        default:
+          break;
+      }
+    }
+
+    if (tab === "mine") notifyCatalogChanged();
+    setSelectedIds(new Set());
+  }
+
+  const selectionRemoveLabel = tab === "mine" ? "הסר מהמכשיר" : "הסר מהרשימה";
+
   return (
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <AppHeader />
@@ -218,19 +278,20 @@ function MyCollectionsPageContent() {
           />
 
           <HouseList
-            houses={housesByTab[tab]}
+            houses={listHouses}
             origin={origin}
             actionContext={actionContext}
             emptyKind={emptyKind}
             showSort={tab !== "mine"}
-            onRemoveFromDevice={
-              tab === "mine"
-                ? (id) => {
-                    removeOwnedHouse(id);
-                    notifyCatalogChanged();
-                  }
-                : undefined
-            }
+            selection={{
+              selectedIds,
+              onToggleId: toggleSelected,
+              allSelected,
+              someSelected,
+              onToggleAll: toggleSelectAll,
+              onRemoveSelected: removeSelectedFromList,
+              removeLabel: selectionRemoveLabel,
+            }}
             emptyAction={
               tab === "mine" ? (
                 <Link

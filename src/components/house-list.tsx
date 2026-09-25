@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { HouseCard } from "@/components/house-card";
 import { houseCardPropsFor, type HouseCardActionContext } from "@/components/house-card-actions";
+import { ListSelectCheck } from "@/components/list-select-check";
 import { Button } from "@/components/ui/button";
 import { ListSortSelect } from "@/components/list-sort-select";
 import { LIST_SORT_EVENT, readListSort, sortHousesForList } from "@/lib/list-sort";
@@ -19,6 +20,7 @@ export function HouseList({
   showSort = true,
   onRemoveFromDevice,
   emptyAction,
+  selection,
 }: {
   houses: PublicHouse[];
   origin?: { lat: number; lng: number } | null;
@@ -29,6 +31,16 @@ export function HouseList({
   showSort?: boolean;
   onRemoveFromDevice?: (id: string) => void;
   emptyAction?: ReactNode;
+  /** Bulk select + «הסר מהרשימה» (e.g. /my tabs). */
+  selection?: {
+    selectedIds: ReadonlySet<string>;
+    onToggleId: (id: string) => void;
+    allSelected: boolean;
+    someSelected: boolean;
+    onToggleAll: () => void;
+    onRemoveSelected: () => void;
+    removeLabel?: string;
+  };
 }) {
   const focusRef = useRef<HTMLDivElement | null>(null);
   const sort = useSyncExternalStore(
@@ -87,34 +99,72 @@ export function HouseList({
     );
   }
 
+  const showPerCardRemove = onRemoveFromDevice && !selection;
+
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-3 px-3 py-3">
+      {selection ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl bg-[#1d1028]/80 px-2 py-2 ring-1 ring-violet-500/25">
+          <ListSelectCheck
+            selected={selection.allSelected}
+            indeterminate={selection.someSelected && !selection.allSelected}
+            aria-label={selection.allSelected ? "בטל בחירת הכל" : "בחר הכל"}
+            onClick={selection.onToggleAll}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={!selection.someSelected}
+            className="h-10 flex-1 border-violet-500/35 bg-[#241332] text-base text-violet-100 hover:bg-violet-500/10 disabled:opacity-45"
+            onClick={selection.onRemoveSelected}
+          >
+            {selection.removeLabel ?? "הסר מהרשימה"}
+          </Button>
+        </div>
+      ) : null}
       {showSort ? <ListSortSelect /> : null}
       {filtered.map(({ house: h, distanceM: d }, i) => (
         <div
           key={h.id}
           ref={h.id === focusId ? focusRef : undefined}
-          className={cn(h.id === focusId && "house-list-focus", "space-y-2")}
+          className={cn(
+            h.id === focusId && "house-list-focus",
+            "flex items-start gap-2",
+            selection && "house-list-row-select",
+          )}
         >
-          <HouseCard
-            {...houseCardPropsFor(h, actionContext, {
-              index: i + 1,
-              distanceM: d,
-            })}
-          />
-          {onRemoveFromDevice ? (
-            <div className="px-3">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-10 w-full border-violet-500/35 bg-[#1d1028]/80 text-base text-violet-100 hover:bg-violet-500/10"
-                onClick={() => onRemoveFromDevice(h.id)}
-              >
-                הסר מהמכשיר
-              </Button>
-            </div>
+          {selection ? (
+            <ListSelectCheck
+              selected={selection.selectedIds.has(h.id)}
+              aria-label={
+                selection.selectedIds.has(h.id) ? `בטל בחירה — ${h.name}` : `בחר — ${h.name}`
+              }
+              className="mt-2"
+              onClick={() => selection.onToggleId(h.id)}
+            />
           ) : null}
+          <div className="min-w-0 flex-1 space-y-2">
+            <HouseCard
+              {...houseCardPropsFor(h, actionContext, {
+                index: i + 1,
+                distanceM: d,
+              })}
+            />
+            {showPerCardRemove ? (
+              <div className="px-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-10 w-full border-violet-500/35 bg-[#1d1028]/80 text-base text-violet-100 hover:bg-violet-500/10"
+                  onClick={() => onRemoveFromDevice!(h.id)}
+                >
+                  הסר מהמכשיר
+                </Button>
+              </div>
+            ) : null}
+          </div>
         </div>
       ))}
     </div>
