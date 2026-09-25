@@ -67,7 +67,7 @@ export function GemHuntPanel({
   const anchorCalibrated = Boolean(anchorOverrideMap[house.id]) || anchor.calibrated === true;
 
   const openCamera = useCallback(async () => {
-    await prepareGemHuntSensors({ requestCamera: true });
+    await prepareGemHuntSensors({ requestCamera: true, requestOrientation: true });
     setHuntOpen(true);
   }, []);
 

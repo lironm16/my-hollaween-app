@@ -11,7 +11,6 @@ import {
   getGemHuntCameraStream,
   prepareGemHuntSensors,
   requestGemHuntOrientationPermission,
-  isGemHuntOrientationGranted,
   stopGemHuntCameraStream,
 } from "@/lib/gem-hunt-sensors";
 import { gemCollectDanceIndex } from "@/lib/gem-collect-dance";
@@ -45,7 +44,6 @@ import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-
 import { isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
 import { GemCollectAlbumReveal } from "@/components/gem-hunt/gem-collect-album-reveal";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
-import { setGemAnchorOverride } from "@/lib/gem-anchor-overrides";
 import { cn } from "@/lib/utils";
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
@@ -198,7 +196,7 @@ export function GemHuntOverlay({
         cameraBootRef.current = true;
         const prepared = await prepareGemHuntSensors({
           requestCamera: true,
-          requestOrientation: false,
+          requestOrientation: true,
         });
         cameraBootRef.current = false;
         if (cancelled) return;
@@ -385,21 +383,6 @@ export function GemHuntOverlay({
     if (ok) setCompassRetry((n) => n + 1);
   }
 
-  const iosOrientationPrompt =
-    typeof window !== "undefined" &&
-    "DeviceOrientationEvent" in window &&
-    typeof (
-      DeviceOrientationEvent as typeof DeviceOrientationEvent & {
-        requestPermission?: () => Promise<"granted" | "denied">;
-      }
-    ).requestPermission === "function";
-  const showOrientationGate =
-    showHuntUi &&
-    phase !== "collecting" &&
-    !hintPanel &&
-    iosOrientationPrompt &&
-    !isGemHuntOrientationGranted() &&
-    (headingStatus === "denied" || headingStatus === "idle");
   const mapsWalkUrl =
     userLocation != null && !sim
       ? googleMapsNavigateUrl(userLocation, { lat: anchor.lat, lng: anchor.lng })
@@ -415,14 +398,6 @@ export function GemHuntOverlay({
       : gpsBearingToAnchor != null
         ? `כיוון לפי GPS: ${bearingClockLabelHe(gpsBearingToAnchor)} — סובבו את הגוף (צפון = למעלה)`
         : "התקרבו לנקודת היהלום";
-  const showAtHouseCalibrate =
-    !sim &&
-    userLocation != null &&
-    distanceM != null &&
-    distanceM > 40 &&
-    phase !== "collecting" &&
-    showHuntUi;
-
   const stageScanHint =
     phase === "collecting"
       ? null
@@ -504,22 +479,6 @@ export function GemHuntOverlay({
 
       {phase === "collecting" ? (
         <div className="gem-hunt-overlay__collect-flash" aria-hidden />
-      ) : null}
-
-      {showOrientationGate ? (
-        <div className="gem-hunt-overlay__orientation-gate" role="dialog" aria-label="אישור כיוון">
-          <p className="gem-hunt-overlay__orientation-gate-title">חץ מסתובב עם הטלפון</p>
-          <p className="gem-hunt-overlay__orientation-gate-text">
-            Safari יציג הודעה — לחצו «אפשר» (אין «תנועה וכיוון» בהגדרות).
-          </p>
-          <button
-            type="button"
-            className="gem-hunt-overlay__orientation-gate-btn"
-            onClick={() => void retryCompassPermission()}
-          >
-            המשך — אישור כיוון
-          </button>
-        </div>
       ) : null}
 
       {showHuntUi ? (
@@ -637,8 +596,6 @@ export function GemHuntOverlay({
         <footer className="gem-hunt-overlay__footer" dir="rtl">
           {footerHint ? (
             <p className="gem-hunt-overlay__footer-hint">{footerHint}</p>
-          ) : isFarForHints ? (
-            <p className="gem-hunt-overlay__footer-hint">רחוקים מהיהלום — פתחו רמז 1 או רמז 2 (ניווט)</p>
           ) : null}
 
           {showScanArrow ? (
@@ -656,22 +613,6 @@ export function GemHuntOverlay({
             <p className="gem-hunt-overlay__compass-caption gem-hunt-overlay__compass-caption--muted">
               מחפשים כיוון… נעו את הטלפון בקשת קטנה (כמו «ריסוט»).
             </p>
-          ) : null}
-
-          {showAtHouseCalibrate ? (
-            <div className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--at-house">
-              <p className="gem-hunt-overlay__walk-text">
-                הגעתם ל{house.name || "הבית"} אבל המרחק גבוה? הסיכה במפה כנראה רחוקה מהכניסה — עדכנו
-                מכאן.
-              </p>
-              <button
-                type="button"
-                className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--accent w-full"
-                onClick={() => userLocation && setGemAnchorOverride(house.id, userLocation)}
-              >
-                אני ליד הבית — עדכן מיקום לאיסוף
-              </button>
-            </div>
           ) : null}
 
           {showCompassEnable && !isFarForHints ? (

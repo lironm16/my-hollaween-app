@@ -329,7 +329,7 @@ export function NeighborhoodApp({
       selection.selected?.id ?? null,
     );
     if (!target) return;
-    await prepareGemHuntSensors({ requestCamera: true });
+    await prepareGemHuntSensors({ requestCamera: true, requestOrientation: true });
     setMapGemHouse(target.house);
   }, [gemAllCollected, mapHouses, gps, gems, selection.selected?.id, geo, setWatchEnabled]);
 
@@ -341,7 +341,7 @@ export function NeighborhoodApp({
       selection.selectOnMap(house);
       setWatchEnabled(true);
       await geo.refresh();
-      await prepareGemHuntSensors({ requestCamera: true });
+      await prepareGemHuntSensors({ requestCamera: true, requestOrientation: true });
       setMapGemHouse(house);
     },
     [gems, geo, selection, setWatchEnabled],
