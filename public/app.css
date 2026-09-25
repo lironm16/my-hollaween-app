@@ -712,6 +712,10 @@
     width: calc(var(--spacing) * 20);
     height: calc(var(--spacing) * 20);
   }
+  .size-\[1\.15rem\] {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
   .size-\[1\.35rem\] {
     width: 1.35rem;
     height: 1.35rem;
@@ -1405,6 +1409,12 @@
       border-color: color-mix(in oklab, var(--color-orange-400) 50%, transparent);
     }
   }
+  .border-orange-400\/55 {
+    border-color: color-mix(in srgb, oklch(75% 0.183 55.934) 55%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-orange-400) 55%, transparent);
+    }
+  }
   .border-orange-500\/15 {
     border-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 15%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1443,6 +1453,18 @@
   }
   .border-transparent {
     border-color: transparent;
+  }
+  .border-violet-500\/25 {
+    border-color: color-mix(in srgb, oklch(60.6% 0.25 292.717) 25%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-violet-500) 25%, transparent);
+    }
+  }
+  .border-violet-500\/40 {
+    border-color: color-mix(in srgb, oklch(60.6% 0.25 292.717) 40%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-violet-500) 40%, transparent);
+    }
   }
   .border-white\/5 {
     border-color: color-mix(in srgb, #fff 5%, transparent);
@@ -2134,6 +2156,9 @@
   .pt-3 {
     padding-top: calc(var(--spacing) * 3);
   }
+  .pt-4 {
+    padding-top: calc(var(--spacing) * 4);
+  }
   .pt-\[env\(safe-area-inset-top\,0px\)\] {
     padding-top: env(safe-area-inset-top,0px);
   }
@@ -2616,6 +2641,12 @@
       color: color-mix(in oklab, var(--color-violet-300) 80%, transparent);
     }
   }
+  .text-violet-300\/85 {
+    color: color-mix(in srgb, oklch(81.1% 0.111 293.571) 85%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-violet-300) 85%, transparent);
+    }
+  }
   .text-violet-300\/90 {
     color: color-mix(in srgb, oklch(81.1% 0.111 293.571) 90%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -2707,6 +2738,9 @@
   .antialiased {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+  .accent-orange-400 {
+    accent-color: var(--color-orange-400);
   }
   .accent-orange-500 {
     accent-color: var(--color-orange-500);
@@ -2986,6 +3020,12 @@
     --tw-ring-color: color-mix(in srgb, oklch(74.6% 0.16 232.661) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       --tw-ring-color: color-mix(in oklab, var(--color-sky-400) 40%, transparent);
+    }
+  }
+  .ring-violet-300\/45 {
+    --tw-ring-color: color-mix(in srgb, oklch(81.1% 0.111 293.571) 45%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--color-violet-300) 45%, transparent);
     }
   }
   .ring-violet-400\/30 {
@@ -3297,6 +3337,14 @@
     width: calc(var(--spacing) * 0.5);
   }
   @media (hover: hover) {
+    .hover\:border-violet-400\/35:hover {
+      border-color: color-mix(in srgb, oklch(70.2% 0.183 293.541) 35%, transparent);
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:border-violet-400\/35:hover {
+        border-color: color-mix(in oklab, var(--color-violet-400) 35%, transparent);
+      }
+    }
     .hover\:bg-\[\#241332\]:hover {
       background-color: #241332;
     }
@@ -8969,9 +9017,18 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-sticker-album--complete .gem-sticker-album__book {
   animation: gem-album-complete-glow 2.8s ease-in-out infinite;
 }
+.gem-bag-diamond-hero {
+  margin-bottom: 0.85rem;
+}
 .gem-sticker-album__head {
   text-align: center;
   margin-bottom: 1rem;
+}
+.gem-sticker-album__head--sub {
+  margin-bottom: 0.65rem;
+}
+.gem-sticker-album__head--sub .gem-sticker-album__sub {
+  margin-top: 0;
 }
 .gem-sticker-album__title {
   margin: 0;
