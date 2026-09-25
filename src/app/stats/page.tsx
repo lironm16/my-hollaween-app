@@ -8,6 +8,7 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
+import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
@@ -23,6 +24,7 @@ export default function StatsPage() {
   }, [refresh]);
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
+  const skips = useSkippedHouses();
   const gems = useGemProgress();
   const now = useAppNow();
   return (
@@ -36,6 +38,7 @@ export default function StatsPage() {
               stats={stats}
               likedCount={likes.likedIds.length}
               visitedCount={visits.visitedIds.length}
+              skippedCount={skips.skippedIds.length}
               gemCollectedCount={gems.collectedIds.length}
               showGemStats={gemHuntFabVisible(admin, now)}
             />

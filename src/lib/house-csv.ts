@@ -2,7 +2,8 @@ import { formatDisplayAddress } from "@/lib/config";
 import { formatHoursLabel } from "@/lib/hours";
 import { candyLevel, offersSensitivity, resolveDecorLevel } from "@/lib/house-state";
 import { formatHouseAddedAt } from "@/lib/house-meta";
-import { decorShort, scareShort } from "@/lib/labels";
+import { decorShort, scareShort, houseHeadline } from "@/lib/labels";
+import type { WalkingRoute } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 
 const PUBLIC_HEADERS = [
@@ -299,7 +300,7 @@ function triggerDownload(filename: string, blob: Blob) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export type HouseExportFormat = "xlsx" | "csv" | "json";
+export type HouseExportFormat = "xlsx" | "csv" | "txt";
 
 export const HOUSE_EXPORT_FORMAT_OPTIONS: ReadonlyArray<{
   id: HouseExportFormat;
@@ -317,9 +318,9 @@ export const HOUSE_EXPORT_FORMAT_OPTIONS: ReadonlyArray<{
     hintHe: "גוגל שיטס, Numbers ואפליקציות בטלפון",
   },
   {
-    id: "json",
-    labelHe: "JSON (.json)",
-    hintHe: "גיבוי מלא — שיתוף או כלי פיתוח",
+    id: "txt",
+    labelHe: "טקסט (.txt)",
+    hintHe: "יומן / Notes באייפון · שיתוף באנדרואיד",
   },
 ];
 
@@ -353,13 +354,54 @@ export function sheetFilename(kind: "liked" | "list" | "all") {
   return exportFilename(kind, "xlsx");
 }
 
-export function housesToExportJson(houses: PublicHouse[]) {
-  return `${JSON.stringify(houses, null, 2)}\n`;
+export function housesToExportTxt(houses: PublicHouse[]) {
+  const lines = ["רשימת בתים — HallowHood", ""];
+  houses.forEach((house, index) => {
+    lines.push(`${index + 1}. ${houseHeadline(house)}`);
+    lines.push(`   ${formatDisplayAddress(house)}`);
+    if (house.arrival?.trim()) lines.push(`   ${house.arrival.trim()}`);
+    lines.push("");
+  });
+  return `\uFEFF${lines.join("\n")}\n`;
 }
 
-export function downloadJson(filename: string, json: string) {
-  const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+export function routeToExportTxt(route: WalkingRoute) {
+  const lines = [
+    "מסלול HallowHood — סדר העצירות קבוע (לא תלוי במיקום)",
+    route.originLabel ? `התחלה: ${route.originLabel}` : "",
+    "",
+  ].filter(Boolean);
+  for (const stop of route.stops) {
+    lines.push(`${stop.order}. ${houseHeadline(stop.house)}`);
+    lines.push(`   ${formatDisplayAddress(stop.house)}`);
+    if (stop.houses.length > 1) {
+      lines.push(`   (${stop.houses.length} דירות בכתובת)`);
+    }
+    lines.push("");
+  }
+  return `\uFEFF${lines.join("\n")}\n`;
+}
+
+export function downloadTxt(filename: string, text: string) {
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
   triggerDownload(filename, blob);
+}
+
+/** Mobile share sheet — save to Notes (iOS) or any app (Android). */
+export async function sharePlainTextFile(filename: string, text: string, title: string) {
+  if (typeof navigator === "undefined" || !navigator.share) return false;
+  try {
+    const file = new File([text], filename, { type: "text/plain;charset=utf-8" });
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title, text: title });
+      return true;
+    }
+    await navigator.share({ title, text: text.slice(0, 8000) });
+    return true;
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") return true;
+    return false;
+  }
 }
 
 export function downloadHouseExport(
@@ -376,5 +418,32 @@ export function downloadHouseExport(
     downloadCsv(filename, housesToCsv(houses));
     return;
   }
-  downloadJson(filename, housesToExportJson(houses));
+  downloadTxt(filename, housesToExportTxt(houses));
+}
+
+export async function downloadOrShareHouseExport(
+  houses: PublicHouse[],
+  kind: "liked" | "list" | "all",
+  format: HouseExportFormat,
+  options?: { preferShare?: boolean },
+) {
+  if (format !== "txt" || !options?.preferShare) {
+    downloadHouseExport(houses, kind, format);
+    return;
+  }
+  const text = housesToExportTxt(houses);
+  const filename = exportFilename(kind, "txt");
+  const shared = await sharePlainTextFile(filename, text, "רשימת בתים");
+  if (!shared) downloadTxt(filename, text);
+}
+
+export async function downloadOrShareRouteTxt(route: WalkingRoute, preferShare: boolean) {
+  const text = routeToExportTxt(route);
+  const day = new Date().toISOString().slice(0, 10);
+  const filename = `hallowhood-route-${day}.txt`;
+  if (preferShare) {
+    const shared = await sharePlainTextFile(filename, text, "מסלול HallowHood");
+    if (shared) return;
+  }
+  downloadTxt(filename, text);
 }

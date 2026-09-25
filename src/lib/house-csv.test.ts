@@ -4,7 +4,7 @@ import {
   exportFilename,
   exportHouseCountMessage,
   housesToCsv,
-  housesToExportJson,
+  housesToExportTxt,
 } from "@/lib/house-csv";
 import type { PublicHouse } from "@/lib/types";
 
@@ -67,7 +67,7 @@ describe("house export helpers", () => {
   it("builds filenames per format", () => {
     assert.match(exportFilename("list", "xlsx"), /\.xlsx$/);
     assert.match(exportFilename("list", "csv"), /\.csv$/);
-    assert.match(exportFilename("list", "json"), /\.json$/);
+    assert.match(exportFilename("list", "txt"), /\.txt$/);
   });
 
   it("explains filtered export counts", () => {
@@ -76,10 +76,10 @@ describe("house export helpers", () => {
     assert.match(exportHouseCountMessage(0, 5, 1), /אין בתים/);
   });
 
-  it("serializes houses as JSON array", () => {
-    const json = housesToExportJson([house()]);
-    const parsed = JSON.parse(json) as unknown[];
-    assert.equal(parsed.length, 1);
-    assert.equal((parsed[0] as { name: string }).name, "בית בדיקה");
+  it("serializes houses as plain text list", () => {
+    const txt = housesToExportTxt([house()]);
+    assert.ok(txt.includes("בית בדיקה"));
+    assert.ok(txt.includes("חרוזים"));
+    assert.match(txt, /^1\./m);
   });
 });

@@ -28,6 +28,7 @@ import {
 } from "@/hooks/use-temp-skip-restore-alerts";
 import { EventCountdownGate } from "@/components/event-countdown-gate";
 import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
+import { RouteShareImportDialog } from "@/components/route-share-import-dialog";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
 import { SkipHouseDialog } from "@/components/skip-house-dialog";
@@ -97,7 +98,16 @@ import {
 } from "@/lib/house-set";
 import { filterHouses, houseFilterMismatchReasons, routeHouseIds } from "@/lib/filter-houses";
 import { formatDistance } from "@/lib/geo";
+import { buildWalkingRouteOrdered } from "@/lib/route";
 import { isRouteFullyVisited } from "@/lib/route-completion";
+import {
+  decodeSharedRoutePayload,
+  housesForSharedRoute,
+  readPendingRouteShare,
+  ROUTE_SHARE_QUERY,
+  writePendingRouteShare,
+  type SharedRoutePayload,
+} from "@/lib/route-share";
 import { diffRouteBySkippedIds, rebuildRouteAfterSkipChange } from "@/lib/route-changes";
 import { useRouteStatusAlerts } from "@/hooks/use-route-status-alerts";
 import { drainPendingRouteRestores } from "@/lib/route-mode";
@@ -117,6 +127,7 @@ import {
 } from "@/lib/visit-skip-conflict";
 import type { Catalog, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 /** Stable empty array for filter context — never use `[]` inline in useMemo deps. */
 const NO_GEM_COLLECTED_IDS: string[] = [];
@@ -124,9 +135,11 @@ const NO_GEM_COLLECTED_IDS: string[] = [];
 export function NeighborhoodApp({
   initialCatalog,
   focusId = null,
+  routeShareParam = null,
 }: {
   initialCatalog?: Catalog | null;
   focusId?: string | null;
+  routeShareParam?: string | null;
 }) {
   const { catalog, loading, ready, offline, unreachable, error, source, pollSeconds, refresh } =
     useCatalog(initialCatalog);
@@ -188,6 +201,27 @@ export function NeighborhoodApp({
   useEffect(() => {
     applyClockSearchParams(window.location.search);
   }, []);
+
+  const [routeSharePrompt, setRouteSharePrompt] = useState<SharedRoutePayload | null>(null);
+
+  useEffect(() => {
+    let payload: SharedRoutePayload | null = null;
+    if (routeShareParam) {
+      payload = decodeSharedRoutePayload(routeShareParam);
+    }
+    if (!payload && typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      const fromUrl = url.searchParams.get(ROUTE_SHARE_QUERY);
+      if (fromUrl) payload = decodeSharedRoutePayload(fromUrl);
+    }
+    if (payload) writePendingRouteShare(payload);
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has(ROUTE_SHARE_QUERY)) return;
+    url.searchParams.delete(ROUTE_SHARE_QUERY);
+    const next = `${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState({}, "", next);
+  }, [routeShareParam]);
 
   function setView(next: HomeView) {
     writeHomeView(next);
@@ -461,6 +495,50 @@ export function NeighborhoodApp({
 
   const walkingRoute = routeMode ? pinnedRoute : null;
   const activeRoute = routeMode ? (walkingRoute ?? filterRoute) : null;
+
+  useEffect(() => {
+    if (!routeMode) return;
+    const pending = readPendingRouteShare();
+    if (pending) setRouteSharePrompt(pending);
+  }, [routeMode]);
+
+  const housesById = useMemo(() => new Map(houses.map((house) => [house.id, house])), [houses]);
+
+  const acceptSharedRoute = useCallback(() => {
+    if (!routeSharePrompt) return;
+    const sharedHouses = housesForSharedRoute(routeSharePrompt.stopIds, housesById);
+    const route = buildWalkingRouteOrdered(
+      sharedHouses,
+      { lat: origin.lat, lng: origin.lng },
+      {
+        accessible: accessibleOnly,
+        startedFrom: origin.kind,
+        originLabel: origin.label,
+      },
+    );
+    if (!route) {
+      toast.error("לא נמצאו בתים מהמסלול המשותף במפה שלכם");
+    } else {
+      setPinnedRoute(route);
+      toast.success(`המסלול הוחלף · ${route.stops.length} עצירות`);
+    }
+    writePendingRouteShare(null);
+    setRouteSharePrompt(null);
+  }, [
+    accessibleOnly,
+    housesById,
+    origin.kind,
+    origin.label,
+    origin.lat,
+    origin.lng,
+    routeSharePrompt,
+    setPinnedRoute,
+  ]);
+
+  const declineSharedRoute = useCallback(() => {
+    writePendingRouteShare(null);
+    setRouteSharePrompt(null);
+  }, []);
 
   const routeAlerts = useRouteStatusAlerts({
     routeMode,
@@ -915,6 +993,7 @@ export function NeighborhoodApp({
             onOpenRouteUpdates={
               routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
             }
+            activeRoute={activeRoute}
           />
         </div>
       ) : null}
@@ -1226,6 +1305,14 @@ export function NeighborhoodApp({
           onChooseNeighborhood={originPick.chooseNeighborhoodOrigin}
           onChooseCustom={originPick.chooseCustomOrigin}
           onPickOnMap={originPick.startOriginPick}
+        />
+      ) : null}
+      {routeSharePrompt ? (
+        <RouteShareImportDialog
+          open
+          stopCount={routeSharePrompt.stopIds.length}
+          onAccept={acceptSharedRoute}
+          onDecline={declineSharedRoute}
         />
       ) : null}
       {skipDialogHouse ? (

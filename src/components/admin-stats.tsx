@@ -8,7 +8,7 @@ import { OpenNowSign, ClosingSoonSign, OpeningSoonSign } from "@/components/open
 import { ScareSign } from "@/components/scare-glyphs";
 import { SensitivitySign } from "@/components/sensitivity-glyphs";
 import { StrollerSign } from "@/components/symbols";
-import { LikedSign } from "@/components/visit-marks";
+import { LikedSign, SkipSign } from "@/components/visit-marks";
 import { VisitedCheck } from "@/components/visited-check";
 import { scareShort, decorShort, treatLabels } from "@/lib/labels";
 import { cn } from "@/lib/utils";
@@ -37,12 +37,14 @@ export function AdminStatsCard({
   stats,
   likedCount,
   visitedCount,
+  skippedCount,
   gemCollectedCount,
   showGemStats = false,
 }: {
   stats: SnapshotStats;
   likedCount?: number;
   visitedCount?: number;
+  skippedCount?: number;
   gemCollectedCount?: number;
   showGemStats?: boolean;
 }) {
@@ -60,6 +62,13 @@ export function AdminStatsCard({
         label="ביקרתי"
         value={visitedCount ?? 0}
         valueClass={visitedCount ? "text-emerald-300" : undefined}
+        plain
+      />
+      <Tile
+        icon={<SkipSign className="size-8" />}
+        label="דילגתי"
+        value={skippedCount ?? 0}
+        valueClass={skippedCount ? "text-slate-300" : undefined}
         plain
       />
       {showGemStats ? (

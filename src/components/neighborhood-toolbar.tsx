@@ -6,6 +6,7 @@ import { OriginTrigger } from "@/components/origin-picker";
 import { CsvExportButton } from "@/components/csv-export-button";
 import { PingPongMarquee } from "@/components/neighborhood-marquee";
 import type { HomeView } from "@/lib/home-view";
+import type { WalkingRoute } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -62,6 +63,7 @@ export function NeighborhoodToolbar({
   routeUpdateCount = 0,
   routeUpdateTicker = null,
   onOpenRouteUpdates,
+  activeRoute = null,
   floating = false,
   docked = false,
 }: {
@@ -82,6 +84,8 @@ export function NeighborhoodToolbar({
   routeUpdateCount?: number;
   routeUpdateTicker?: string | null;
   onOpenRouteUpdates?: () => void;
+  /** Pinned or filter route while route mode is on (for save/share dialog). */
+  activeRoute?: WalkingRoute | null;
   /** Float over map/list instead of a fixed strip under the header. */
   floating?: boolean;
   /** Full-width bottom dock (same geometry in map + list). */
@@ -146,6 +150,8 @@ export function NeighborhoodToolbar({
           totalInSet={totalInSet}
           activeFilterCount={activeFilterCount}
           kind={likedOnly ? "liked" : "list"}
+          routeMode={routeMode}
+          activeRoute={activeRoute}
         />
       </div>
       {routeUpdateTicker && onOpenRouteUpdates ? (
