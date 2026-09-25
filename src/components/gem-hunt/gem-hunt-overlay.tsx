@@ -19,6 +19,7 @@ import {
   GEM_HELP_AFTER_SECONDS,
   GEM_APPROACH_METERS,
   GEM_HUNT_METERS,
+  bearingClockLabelHe,
   bearingDegrees,
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
@@ -39,7 +40,6 @@ import type { UserLocation } from "@/hooks/use-user-location";
 import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-list-suspend";
 import { isGemCollected, isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
 import { GemCollectAlbumReveal } from "@/components/gem-hunt/gem-collect-album-reveal";
-import { GpsBearingDial } from "@/components/gem-hunt/gps-bearing-dial";
 import { cn } from "@/lib/utils";
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
@@ -332,32 +332,26 @@ export function GemHuntOverlay({
     distanceM > GEM_HUNT_METERS &&
     phase !== "collecting" &&
     !centerReveal;
-  /** In-range: compass arrow toward the anchor (also when close but not “still” yet). */
-  const compassReady = heading != null && headingStatus === "ready";
   const gpsBearingToAnchor =
     effectiveLoc != null ? bearingDegrees(effectiveLoc, anchor) : null;
-  /** Map-north dial — no iPhone «תנועה וכיוון» / motion permission needed. */
-  const showMapGpsGuide =
+  /** Glowing Navigation arrow — phone-relative when compass works, else map-north bearing. */
+  const huntArrowPhoneRelative = heading != null && turnBearing != null;
+  const huntArrowDeg = huntArrowPhoneRelative ? turnBearing : gpsBearingToAnchor;
+  const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToAnchor != null;
+  const showScanArrow =
     !centerDisplayMode &&
     phase !== "collecting" &&
-    !compassReady &&
-    gpsBearingToAnchor != null &&
+    !showWalkGuide &&
+    huntArrowDeg != null &&
     effectiveLoc != null &&
     userLocation != null &&
-    !sim;
-  const showScanCompass =
-    compassReady &&
-    !centerDisplayMode &&
-    phase !== "collecting" &&
-    turnBearing != null &&
-    !showWalkGuide &&
-    effectiveLoc != null &&
+    !sim &&
     (inApproachBand || collectEnabled || sim);
-  const showGpsDial = showMapGpsGuide && !showWalkGuide;
-  const showGpsFooterPanel = showMapGpsGuide && !showWalkGuide;
   const showCompassEnable =
-    showMapGpsGuide && (headingStatus === "denied" || headingStatus === "unsupported");
-  const showCompassPending = showMapGpsGuide && headingStatus === "pending" && heading == null;
+    huntArrowMapNorth &&
+    (headingStatus === "denied" || headingStatus === "unsupported");
+  const showCompassPending =
+    huntArrowMapNorth && headingStatus === "pending" && heading == null;
   const needsLocationForArrow = !sim && userLocation == null && showHuntUi && phase !== "collecting";
 
   async function retryCompassPermission() {
@@ -453,19 +447,18 @@ export function GemHuntOverlay({
       {showHuntUi ? (
       <div className="gem-hunt-overlay__stage" aria-hidden={false}>
         <div className="gem-hunt-overlay__scan-ring" aria-hidden>
-          {showScanCompass ? (
+          {showScanArrow ? (
             <div
               className={cn(
                 "gem-hunt-overlay__scan-compass",
-                facingTarget && "is-facing",
+                huntArrowMapNorth && "gem-hunt-overlay__scan-compass--map-north",
+                !huntArrowMapNorth && facingTarget && "is-facing",
               )}
-              style={{ transform: `translate(-50%, -50%) rotate(${turnBearing}deg)` }}
+              style={{ transform: `translate(-50%, -50%) rotate(${huntArrowDeg}deg)` }}
               aria-hidden
             >
-              <Navigation className="size-10" strokeWidth={2.5} />
+              <Navigation className="gem-hunt-overlay__scan-compass-icon" strokeWidth={2.5} />
             </div>
-          ) : showGpsDial ? (
-            <GpsBearingDial bearingDeg={gpsBearingToAnchor!} distanceM={distanceM} compact />
           ) : null}
           <div
             className={cn(
@@ -568,37 +561,29 @@ export function GemHuntOverlay({
             <p className="gem-hunt-overlay__footer-hint">{footerHint}</p>
           ) : null}
 
-          {showGpsFooterPanel ? (
-            <div className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--map-gps">
-              <GpsBearingDial bearingDeg={gpsBearingToAnchor!} distanceM={distanceM} />
-            </div>
-          ) : null}
-
           {showWalkGuide ? (
             <div className="gem-hunt-overlay__walk-guide">
-              {compassReady && turnBearing != null ? (
+              {huntArrowDeg != null ? (
                 <div
                   className={cn(
                     "gem-hunt-overlay__walk-arrow",
-                    facingTarget && "is-facing",
+                    !huntArrowMapNorth && facingTarget && "is-facing",
                   )}
-                  style={{ transform: `rotate(${turnBearing}deg)` }}
+                  style={{ transform: `rotate(${huntArrowDeg}deg)` }}
                   aria-hidden
                 >
-                  <Navigation className="size-9" strokeWidth={2.4} />
+                  <Navigation className="size-11" strokeWidth={2.5} />
                 </div>
-              ) : gpsBearingToAnchor != null ? (
-                <GpsBearingDial bearingDeg={gpsBearingToAnchor} distanceM={distanceM} compact />
               ) : null}
               <p className="gem-hunt-overlay__walk-text">
-                {compassReady && turnBearing != null
+                {huntArrowPhoneRelative
                   ? facingTarget
                     ? "המשיכו ישר — הבית מולכם"
-                    : turnBearing > 0
+                    : turnBearing! > 0
                       ? "סובבו ימינה לכיוון הבית"
                       : "סובבו שמאלה לכיוון הבית"
                   : gpsBearingToAnchor != null
-                    ? "החץ = כיוון על המפה (צפון למעלה) — אין צורך בהגדרות אייפון"
+                    ? `כיוון לפי GPS: ${bearingClockLabelHe(gpsBearingToAnchor)} — סובבו את הגוף (צפון = למעלה)`
                     : "התקרבו לבית"}
                 {distanceM != null ? ` · ~${formatDistance(distanceM)}` : null}
               </p>
@@ -615,11 +600,13 @@ export function GemHuntOverlay({
             </div>
           ) : null}
 
-          {showScanCompass && !showWalkGuide ? (
+          {showScanArrow && !showWalkGuide ? (
             <p className="gem-hunt-overlay__compass-caption">
-              {facingTarget
-                ? "מצוין — סובבו את המצלמה עד שהיהלום במעגל"
-                : "חץ לכיוון היהלום — סובבו את הגוף/הטלפון"}
+              {huntArrowMapNorth
+                ? `חץ במעגל = ${bearingClockLabelHe(gpsBearingToAnchor!)} · צפון למעלה`
+                : facingTarget
+                  ? "מצוין — סובבו את המצלמה עד שהיהלום במעגל"
+                  : "חץ לכיוון היהלום — סובבו את הגוף/הטלפון"}
               {distanceM != null ? ` · ~${formatDistance(distanceM)}` : null}
             </p>
           ) : null}
@@ -630,7 +617,7 @@ export function GemHuntOverlay({
             </p>
           ) : null}
 
-          {showCompassEnable && !showWalkGuide && !showGpsFooterPanel ? (
+          {showCompassEnable && !showWalkGuide ? (
             <div className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--gps">
               <p className="gem-hunt-overlay__walk-text">
                 רוצים חץ שמסתובב עם הטלפון? באייפון אין «תנועה וכיוון» בהגדרות — רק הודעה קופצת

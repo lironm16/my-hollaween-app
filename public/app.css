@@ -8516,20 +8516,35 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__scan-compass {
   position: absolute;
   left: 50%;
-  top: 14%;
+  top: 50%;
   z-index: 5;
   color: #fde68a;
   filter: drop-shadow(0 0 14px rgb(251 191 36 / 0.95));
   transition: color 0.2s ease, filter 0.2s ease;
   pointer-events: none;
+  animation: gem-scan-compass-pulse 1.6s ease-in-out infinite;
 }
-.gem-hunt-overlay__scan-compass svg {
-  width: 2.85rem;
-  height: 2.85rem;
+.gem-hunt-overlay__scan-compass-icon {
+  width: 3.75rem;
+  height: 3.75rem;
+}
+.gem-hunt-overlay__scan-compass--map-north {
+  color: #fef08a;
+  filter: drop-shadow(0 0 18px rgb(251 191 36 / 1));
 }
 .gem-hunt-overlay__scan-compass.is-facing {
   color: #bbf7d0;
   filter: drop-shadow(0 0 16px rgb(74 222 128 / 0.95));
+  animation: none;
+}
+@keyframes gem-scan-compass-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.82;
+  }
 }
 .gem-hunt-overlay__ring {
   position: relative;
