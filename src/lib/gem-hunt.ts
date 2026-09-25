@@ -71,6 +71,11 @@ export const GEM_ANCHOR_MAX_METERS = 10;
 export const GEM_COLLECT_OVERLAY_MS = 5000;
 /** After collect dance — sticker flies into the album before closing the camera. */
 export const GEM_STICKER_REVEAL_MS = 3200;
+
+export type GemCollectFinishOptions = {
+  cheer?: boolean;
+  navigateStickerBook?: boolean;
+};
 /** Map toast after collect — matches visit/like cheer (~1.6s). */
 export const GEM_CHEER_MS = 1400;
 /** @deprecated use GEM_CHEER_MS */

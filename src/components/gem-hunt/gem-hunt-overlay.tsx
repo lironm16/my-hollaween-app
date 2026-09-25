@@ -35,6 +35,7 @@ import {
   gemScreenPlacement,
   relativeWalkBearingDeg,
   type GemMonsterId,
+  type GemCollectFinishOptions,
 } from "@/lib/gem-hunt";
 import { distanceMeters, formatDistance } from "@/lib/geo";
 import { googleMapsNavigateUrl } from "@/lib/route";
@@ -94,7 +95,7 @@ export function GemHuntOverlay({
   /** When false, user can scan and see the gem but cannot collect (preview / too far). */
   collectEnabled?: boolean;
   onClose: () => void;
-  onCollect: (monsterId: GemMonsterId) => void;
+  onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
 }) {
   const sim = simulateInRange;
   /** Only auto-reveal from scan/pan/facing when user can collect (or admin simulate). */
@@ -138,6 +139,7 @@ export function GemHuntOverlay({
   const [albumRevealPhase, setAlbumRevealPhase] = useState<"enter" | "landed">("enter");
   /** Snapshot at tap — album sticker was new before this collect. */
   const [albumRevealNewFriend, setAlbumRevealNewFriend] = useState(true);
+  const [albumShowActions, setAlbumShowActions] = useState(false);
   const [compassRetry, setCompassRetry] = useState(0);
 
   const { heading, pitch: devicePitch, status: headingStatus } = useDeviceHeading(true, compassRetry);
@@ -292,22 +294,30 @@ export function GemHuntOverlay({
         setAlbumRevealPhase("enter");
         setPhase("albumReveal");
       } else {
-        onCollectRef.current(monsterId);
+        onCollectRef.current(monsterId, { cheer: true });
       }
     }, GEM_COLLECT_OVERLAY_MS);
   }
 
   useEffect(() => {
     if (phase !== "albumReveal") return;
+    setAlbumShowActions(false);
+    setAlbumRevealPhase("enter");
     const landTimer = window.setTimeout(() => setAlbumRevealPhase("landed"), 720);
-    const doneTimer = window.setTimeout(() => {
-      onCollectRef.current(monsterId);
-    }, GEM_STICKER_REVEAL_MS);
+    const actionsTimer = window.setTimeout(() => setAlbumShowActions(true), GEM_STICKER_REVEAL_MS);
     return () => {
       window.clearTimeout(landTimer);
-      window.clearTimeout(doneTimer);
+      window.clearTimeout(actionsTimer);
     };
   }, [phase, monsterId]);
+
+  function finishNewFriendClose() {
+    onCollectRef.current(monsterId, { cheer: true });
+  }
+
+  function finishNewFriendStickerBook() {
+    onCollectRef.current(monsterId, { cheer: false, navigateStickerBook: true });
+  }
 
   function handleRevealMe() {
     reveal();
@@ -330,17 +340,22 @@ export function GemHuntOverlay({
   const gemVisible = phase === "visible" || phase === "collecting";
   const showHuntUi = phase !== "albumReveal";
   const collectBanner =
-    phase === "collecting" || phase === "albumReveal"
+    phase === "collecting"
       ? albumRevealNewFriend
-        ? "כל הכבוד!! מצאתם חבר חדש"
+        ? "כל הכבוד!! מצאתם חבר חדש!"
         : `מצאתם שוב את ${gemLabelHe(monsterId)}`
       : null;
 
-  const handleClose = useCallback(() => {
-    if (phase === "collecting" || phase === "albumReveal") return;
+  function handleClose() {
+    if (phase === "collecting") return;
+    if (phase === "albumReveal") {
+      if (albumShowActions) finishNewFriendClose();
+      return;
+    }
     releaseGemHuntCamera(videoRef.current);
     onClose();
-  }, [phase, onClose]);
+  }
+
   const turnBearing =
     effectiveLoc != null ? relativeWalkBearingDeg(effectiveLoc, anchor, heading) : null;
   const facingTarget =
@@ -466,7 +481,13 @@ export function GemHuntOverlay({
       ) : null}
       <div className="gem-hunt-overlay__shade" aria-hidden />
       {collectBanner ? (
-        <p className="gem-hunt-overlay__collect-banner" role="status">
+        <p
+          className={cn(
+            "gem-hunt-overlay__collect-banner",
+            phase === "collecting" && "is-exploding",
+          )}
+          role="status"
+        >
           {collectBanner}
         </p>
       ) : null}
@@ -476,7 +497,8 @@ export function GemHuntOverlay({
           onClick={handleClose}
           className={cn(
             "gem-hunt-overlay__close",
-            (phase === "collecting" || phase === "albumReveal") && "pointer-events-none opacity-40",
+            (phase === "collecting" || (phase === "albumReveal" && !albumShowActions)) &&
+              "pointer-events-none opacity-40",
           )}
         />
       </header>
@@ -748,6 +770,9 @@ export function GemHuntOverlay({
           monsterId={monsterId}
           phase={albumRevealPhase}
           newAlbumFriend={albumRevealNewFriend}
+          showActions={albumShowActions && albumRevealNewFriend}
+          onClose={finishNewFriendClose}
+          onOpenStickerBook={finishNewFriendStickerBook}
         />
       ) : null}
     </div>
