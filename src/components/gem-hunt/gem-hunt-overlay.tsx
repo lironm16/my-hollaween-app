@@ -20,7 +20,6 @@ import {
   GEM_APPROACH_METERS,
   GEM_HUNT_METERS,
   bearingDegrees,
-  userWithinGemHuntRange,
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
   GEM_COLLECT_OVERLAY_MS,
@@ -52,6 +51,28 @@ function panDelta(prev: number | null, next: number) {
   return d;
 }
 
+async function playCameraOnVideo(video: HTMLVideoElement, stream: MediaStream) {
+  video.srcObject = stream;
+  video.muted = true;
+  video.playsInline = true;
+  try {
+    await video.play();
+    return true;
+  } catch {
+    /* iOS often needs loadedmetadata before play() */
+  }
+  await new Promise<void>((resolve) => {
+    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) resolve();
+    else video.addEventListener("loadeddata", () => resolve(), { once: true });
+  });
+  try {
+    await video.play();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function GemHuntOverlay({
   house,
   userLocation,
@@ -64,7 +85,7 @@ export function GemHuntOverlay({
   house: PublicHouse;
   userLocation: UserLocation | null;
   simulateInRange?: boolean;
-  /** Map / menu hunt: no getUserMedia until within GEM_HUNT_METERS (battery). */
+  /** @deprecated Camera always starts immediately; kept for call-site compatibility. */
   deferCameraUntilInRange?: boolean;
   /** When false, user can scan and see the gem but cannot collect (preview / too far). */
   collectEnabled?: boolean;
@@ -90,7 +111,7 @@ export function GemHuntOverlay({
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const [cameraWaitingForRange, setCameraWaitingForRange] = useState(false);
+  const [cameraRetry, setCameraRetry] = useState(0);
   const cameraBootRef = useRef(false);
   const [phase, setPhase] = useState<HuntPhase>("scanning");
   const [hint, setHint] = useState<"scan" | "warm" | "found" | "help">("scan");
@@ -158,17 +179,6 @@ export function GemHuntOverlay({
     let cancelled = false;
 
     async function attachCamera() {
-      const needDefer =
-        deferCameraUntilInRange &&
-        !sim &&
-        !userWithinGemHuntRange(effectiveLoc, house);
-      if (needDefer) {
-        setCameraWaitingForRange(true);
-        setCameraError(null);
-        return;
-      }
-      setCameraWaitingForRange(false);
-
       let stream = getGemHuntCameraStream();
       if (!stream && !cameraBootRef.current) {
         cameraBootRef.current = true;
@@ -182,33 +192,25 @@ export function GemHuntOverlay({
         stream = getGemHuntCameraStream();
       }
       if (!stream) {
-        if (!deferCameraUntilInRange) {
-          setCameraError("לא ניתן לפתוח מצלמה — אפשר לאסוף מהמפה");
-        }
+        setCameraError("לא ניתן לפתוח מצלמה — אפשר לאסוף מהמפה");
         return;
       }
       if (cancelled) return;
       streamRef.current = stream;
       const video = videoRef.current;
-      if (video) {
-        video.srcObject = stream;
-        try {
-          await video.play();
-          setCameraError(null);
-        } catch {
-          setCameraError("לא ניתן להציג מצלמה");
-        }
-      }
+      if (!video) return;
+      const ok = await playCameraOnVideo(video, stream);
+      if (cancelled) return;
+      if (ok) setCameraError(null);
+      else setCameraError("לא ניתן להציג מצלמה");
     }
 
     void attachCamera();
     return () => {
       cancelled = true;
       streamRef.current = null;
-      const video = videoRef.current;
-      if (video) video.srcObject = null;
     };
-  }, [house.id, deferCameraUntilInRange, sim, effectiveLoc, house]);
+  }, [house.id, cameraRetry, sim]);
 
   useEffect(() => {
     if (phase !== "scanning" || revealedRef.current) return;
@@ -387,14 +389,36 @@ export function GemHuntOverlay({
               ? "סובבו את המצלמה — היהלום בקצה המסך"
               : null;
 
+  function retryCamera() {
+    setCameraError(null);
+    setCameraRetry((n) => n + 1);
+  }
+
   const overlay = (
     <div className="gem-hunt-overlay" dir="rtl">
+      <video
+        ref={videoRef}
+        className={cn(
+          "gem-hunt-overlay__video",
+          cameraError && "gem-hunt-overlay__video--behind-fallback",
+        )}
+        playsInline
+        muted
+        autoPlay
+      />
       {cameraError ? (
         <div className="gem-hunt-overlay__fallback">
           <p className="text-base text-violet-100">{cameraError}</p>
           <button
             type="button"
             className="gem-hunt-overlay__fallback-btn"
+            onClick={() => void retryCamera()}
+          >
+            נסו שוב — הפעלת מצלמה
+          </button>
+          <button
+            type="button"
+            className="gem-hunt-overlay__fallback-btn gem-hunt-overlay__fallback-btn--secondary mt-2"
             onClick={() => {
               reveal();
               setCameraError(null);
@@ -403,26 +427,7 @@ export function GemHuntOverlay({
             הציגו יהלום על המסך
           </button>
         </div>
-      ) : cameraWaitingForRange ? (
-        <div className="gem-hunt-overlay__fallback gem-hunt-overlay__fallback--range">
-          <p className="text-base font-semibold text-amber-200">המצלמה כבויה לחיסכון בסוללה</p>
-          <p className="mt-2 text-sm text-violet-100">
-            היא תופעל אוטומטית בטווח ~{GEM_HUNT_METERS} מ&apos; מהיהלום
-            {distanceM != null ? ` · עכשיו ~${formatDistance(distanceM)}` : ""}.
-          </p>
-          {gpsBearingToAnchor != null && userLocation != null ? (
-            <div className="gem-hunt-overlay__fallback-dial">
-              <GpsBearingDial bearingDeg={gpsBearingToAnchor} distanceM={distanceM} />
-            </div>
-          ) : (
-            <p className="mt-2 text-sm text-violet-300/90">
-              אפשרו מיקום (GPS) כדי לראות חץ כיוון, או לפתוח מצלמה מכרטיס הבית.
-            </p>
-          )}
-        </div>
-      ) : (
-        <video ref={videoRef} className="gem-hunt-overlay__video" playsInline muted autoPlay />
-      )}
+      ) : null}
       <div className="gem-hunt-overlay__shade" aria-hidden />
       <header className="gem-hunt-overlay__header">
         <div className="min-w-0 flex-1">

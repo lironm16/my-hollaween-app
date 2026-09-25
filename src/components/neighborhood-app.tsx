@@ -330,9 +330,7 @@ export function NeighborhoodApp({
       selection.selected?.id ?? null,
     );
     if (!target) return;
-    const inRange = userWithinGemHuntRange(gps, target.house);
-    if (!inRange) stopGemHuntCameraStream();
-    await prepareGemHuntSensors({ requestCamera: inRange });
+    await prepareGemHuntSensors({ requestCamera: true });
     setMapGemHouse(target.house);
   }, [gemAllCollected, mapHouses, gps, gems, selection.selected?.id]);
 
@@ -342,9 +340,7 @@ export function NeighborhoodApp({
       preloadGemHuntChunks();
       setView("map");
       selection.selectOnMap(house);
-      const inRange = userWithinGemHuntRange(gps, house);
-      if (!inRange) stopGemHuntCameraStream();
-      await prepareGemHuntSensors({ requestCamera: inRange });
+      await prepareGemHuntSensors({ requestCamera: true });
       setMapGemHouse(house);
     },
     [gems, gps, selection],
@@ -1370,7 +1366,7 @@ export function NeighborhoodApp({
         <GemHuntOverlayLazy
           house={mapGemHouse}
           userLocation={gps}
-          deferCameraUntilInRange={!userWithinGemHuntRange(gps, mapGemHouse)}
+          deferCameraUntilInRange={false}
           collectEnabled={canCollectGem(
             gps,
             mapGemHouse,
