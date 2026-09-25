@@ -834,14 +834,6 @@ export function NeighborhoodApp({
     route: activeRoute ?? filterRoute,
     skippedCount: countSkippedInSet(skips.skippedIds, housesForSkipCount, activeHouseSet),
     visitedCount: countVisitedInSet(visits.visitedIds, housesForSkipCount, activeHouseSet),
-    staleLabel:
-      offline || unreachable
-        ? null
-        : source === "snapshot"
-          ? "עותק סטטי"
-          : source === "cache"
-            ? "שמור בטלפון"
-            : null,
   };
 
   function enterRouteMode() {

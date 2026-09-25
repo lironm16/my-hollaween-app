@@ -2,7 +2,6 @@
 
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { WifiOff } from "lucide-react";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { SummaryPumpkinIcon } from "@/components/scare-glyphs";
 import { SkipGlyph } from "@/components/skip-icon";
@@ -154,7 +153,6 @@ export function StatsSummary({
   route = null,
   skippedCount = 0,
   visitedCount = 0,
-  staleLabel = null,
   heading = false,
   compact = false,
 }: {
@@ -162,7 +160,6 @@ export function StatsSummary({
   route?: WalkingRoute | null;
   skippedCount?: number;
   visitedCount?: number;
-  staleLabel?: string | null;
   heading?: boolean;
   compact?: boolean;
 }) {
@@ -208,12 +205,6 @@ export function StatsSummary({
             ) : null}
           </div>
         </section>
-        {staleLabel ? (
-          <p className="flex items-center gap-2 text-base text-amber-100">
-            <WifiOff className="size-4 shrink-0" />
-            {staleLabel}
-          </p>
-        ) : null}
       </div>
     );
   }
@@ -255,12 +246,6 @@ export function StatsSummary({
           ) : null}
         </div>
       </section>
-      {staleLabel ? (
-        <p className="flex items-center gap-2 text-base text-amber-100">
-          <WifiOff className="size-4 shrink-0" />
-          {staleLabel}
-        </p>
-      ) : null}
     </div>
   );
 }
@@ -270,7 +255,6 @@ export function MapStats(props: {
   route?: WalkingRoute | null;
   skippedCount?: number;
   visitedCount?: number;
-  staleLabel?: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
