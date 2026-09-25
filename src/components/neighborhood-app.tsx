@@ -66,7 +66,7 @@ import { useNeighborhoodRoute } from "@/hooks/use-neighborhood-route";
 import { useOriginPick } from "@/hooks/use-origin-pick";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
-import { useUserLocation } from "@/hooks/use-user-location";
+import { useUserLocation, type UserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useDistanceOrigin } from "@/hooks/use-distance-origin";
@@ -152,6 +152,9 @@ export function NeighborhoodApp({
   const gemHuntActive = gemHuntVisible(admin);
   const gems = useGemProgress();
   const [mapGemHouse, setMapGemHouse] = useState<PublicHouse | null>(null);
+  const [mapGemGps, setMapGemGps] = useState<import("@/hooks/use-user-location").UserLocation | null>(
+    null,
+  );
   const gemBadgePendingRef = useRef(false);
   const [mapGemBadgeCount, setMapGemBadgeCount] = useState(() =>
     typeof window === "undefined" ? 0 : loadGemCollectedIds().length,
@@ -330,6 +333,7 @@ export function NeighborhoodApp({
     );
     if (!target) return;
     await prepareGemHuntSensors({ requestCamera: true, requestOrientation: true });
+    setMapGemGps(freshGps);
     setMapGemHouse(target.house);
   }, [gemAllCollected, mapHouses, gps, gems, selection.selected?.id, geo, setWatchEnabled]);
 
@@ -340,7 +344,8 @@ export function NeighborhoodApp({
       setView("map");
       selection.selectOnMap(house);
       setWatchEnabled(true);
-      await geo.refresh();
+      const freshGps = (await geo.refresh()) ?? gps;
+      setMapGemGps(freshGps);
       await prepareGemHuntSensors({ requestCamera: true, requestOrientation: true });
       setMapGemHouse(house);
     },
@@ -997,7 +1002,15 @@ export function NeighborhoodApp({
         onAdjacentClusterHouse: selection.selectAdjacentClusterHouse,
         extra:
           gemUi && gemPanelReady ? (
-            <GemHuntPanelLazy house={selected} userLocation={gps} isAdmin={admin} />
+            <GemHuntPanelLazy
+              house={selected}
+              userLocation={gps}
+              isAdmin={admin}
+              onOpenHunt={async () => {
+                setWatchEnabled(true);
+                return (await geo.refresh()) ?? gps;
+              }}
+            />
           ) : undefined,
       }
     : null;
@@ -1343,10 +1356,10 @@ export function NeighborhoodApp({
       {mapGemHouse ? (
         <GemHuntOverlayLazy
           house={mapGemHouse}
-          userLocation={gps}
+          userLocation={mapGemGps ?? gps}
           deferCameraUntilInRange={false}
           collectEnabled={canCollectGem(
-            gps,
+            mapGemGps ?? gps,
             mapGemHouse,
             gems.collected(mapGemHouse.id),
             mapGemStanding.ready,
@@ -1355,6 +1368,7 @@ export function NeighborhoodApp({
           onClose={() => {
             stopGemHuntCameraStream();
             setMapGemHouse(null);
+            setMapGemGps(null);
           }}
           onCollect={(monsterId) => {
             const h = mapGemHouse;

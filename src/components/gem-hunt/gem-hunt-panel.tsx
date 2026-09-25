@@ -20,6 +20,8 @@ import {
 import { distanceMeters, formatDistance } from "@/lib/geo";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
+
+export type GemHuntOpenPrepare = () => Promise<UserLocation | null | void>;
 import { prepareGemHuntSensors, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
 import {
   clearAllGemAnchorOverrides,
@@ -35,16 +37,20 @@ export function GemHuntPanel({
   userLocation,
   isAdmin,
   adminSimulateInRange = false,
+  onOpenHunt,
 }: {
   house: PublicHouse;
   userLocation: UserLocation | null;
   isAdmin: boolean;
   adminSimulateInRange?: boolean;
+  /** Same tap as «פתחו מצלמה» — request GPS + sensors (iOS needs gesture). */
+  onOpenHunt?: GemHuntOpenPrepare;
 }) {
   const gems = useGemProgress();
   const { overrides: anchorOverrideMap } = useGemAnchorOverrides();
   const calibratedCount = useMemo(() => countGemAnchorOverrides(), [anchorOverrideMap]);
   const [huntOpen, setHuntOpen] = useState(false);
+  const [huntLocation, setHuntLocation] = useState<UserLocation | null>(null);
   const [simulate, setSimulate] = useState(adminSimulateInRange);
 
   const now = useAppNow();
@@ -67,9 +73,11 @@ export function GemHuntPanel({
   const anchorCalibrated = Boolean(anchorOverrideMap[house.id]) || anchor.calibrated === true;
 
   const openCamera = useCallback(async () => {
+    const fresh = (await onOpenHunt?.()) ?? userLocation;
     await prepareGemHuntSensors({ requestCamera: true, requestOrientation: true });
+    setHuntLocation(fresh ?? userLocation);
     setHuntOpen(true);
-  }, []);
+  }, [onOpenHunt, userLocation]);
 
   function onCollect(collectedVariant: string) {
     gems.collect(house.id, collectedVariant);
@@ -209,7 +217,7 @@ export function GemHuntPanel({
       {huntOpen ? (
         <GemHuntOverlayLazy
           house={house}
-          userLocation={userLocation}
+          userLocation={huntLocation ?? userLocation}
           simulateInRange={simulate}
           deferCameraUntilInRange={false}
           collectEnabled={canCollect}

@@ -39,6 +39,7 @@ export default function HousePage() {
   const { admin } = useAdminSession();
   const now = useAppNow();
   const geo = useUserLocation({ watch: gemHuntVisible(admin) });
+  const { setWatchEnabled } = geo;
   const editFlow = useHouseEditFlow();
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
 

@@ -376,8 +376,6 @@ export function GemHuntOverlay({
     (headingStatus === "denied" || headingStatus === "unsupported");
   const showCompassPending =
     huntArrowMapNorth && headingStatus === "pending" && heading == null;
-  const needsLocationForArrow = !sim && userLocation == null && showHuntUi && phase !== "collecting";
-
   async function retryCompassPermission() {
     const ok = await requestGemHuntOrientationPermission();
     if (ok) setCompassRetry((n) => n + 1);
@@ -460,10 +458,12 @@ export function GemHuntOverlay({
         </div>
       ) : null}
       <div className="gem-hunt-overlay__shade" aria-hidden />
-      <header className="gem-hunt-overlay__header">
-        <div className="min-w-0 flex-1">
-          <p className="gem-hunt-overlay__title">{overlayTitle}</p>
-        </div>
+      {(phase === "collecting" || phase === "albumReveal") && overlayTitle ? (
+        <p className="gem-hunt-overlay__collect-banner" role="status">
+          {overlayTitle}
+        </p>
+      ) : null}
+      <header className="gem-hunt-overlay__header gem-hunt-overlay__header--close-only">
         <OverlayCloseButton
           label="סגירה"
           onClick={() => {
@@ -737,12 +737,6 @@ export function GemHuntOverlay({
             חזרה למצלמה
           </button>
         </div>
-      ) : null}
-
-      {needsLocationForArrow ? (
-        <p className="gem-hunt-overlay__sensor-note gem-hunt-overlay__sensor-note--alert">
-          כדי לראות חץ כיוון — אפשרו מיקום (GPS) לדפדפן
-        </p>
       ) : null}
 
       {phase === "albumReveal" ? (
