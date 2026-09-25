@@ -90,3 +90,48 @@ export function writePendingRouteShare(payload: SharedRoutePayload | null) {
     /* private mode */
   }
 }
+
+export type ShareUrlOutcome = "shared" | "copied" | "cancelled" | "failed";
+
+/** Web Share when available; otherwise clipboard. Prefer `{ url }` only — most reliable on Android. */
+export async function shareUrlWithFallback(
+  url: string,
+  extras?: { title?: string; text?: string },
+): Promise<ShareUrlOutcome> {
+  if (typeof navigator === "undefined") return "failed";
+
+  const nav = navigator as Navigator & {
+    share?: (data: ShareData) => Promise<void>;
+    canShare?: (data: ShareData) => Promise<boolean>;
+  };
+
+  if (typeof nav.share === "function") {
+    const attempts: ShareData[] = [{ url }];
+    if (extras?.title || extras?.text) {
+      attempts.push({ url, title: extras.title, text: extras.text });
+    }
+    for (const data of attempts) {
+      try {
+        if (typeof nav.canShare === "function") {
+          const ok = await nav.canShare(data);
+          if (!ok) continue;
+        }
+        await nav.share(data);
+        return "shared";
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") return "cancelled";
+      }
+    }
+  }
+
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+      return "copied";
+    }
+  } catch {
+    /* fall through */
+  }
+
+  return "failed";
+}

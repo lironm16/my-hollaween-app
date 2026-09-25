@@ -1,15 +1,12 @@
 "use client";
 
-import { useId, useState } from "react";
-import { Route, Save } from "lucide-react";
+import { useEffect, useId, useState } from "react";
+import { Link2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { OverlayCloseBar } from "@/components/overlay-close-button";
 import {
   downloadHouseExport,
   downloadOrShareHouseExport,
@@ -20,11 +17,14 @@ import {
 } from "@/lib/house-csv";
 import {
   buildRouteShareUrl,
+  shareUrlWithFallback,
   sharedRoutePayloadFromRoute,
 } from "@/lib/route-share";
 import type { WalkingRoute } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+type SaveSharePanel = "list" | "route";
 
 export function CsvExportButton({
   houses,
@@ -45,9 +45,17 @@ export function CsvExportButton({
 }) {
   const [open, setOpen] = useState(false);
   const [format, setFormat] = useState<HouseExportFormat>("xlsx");
+  const [panel, setPanel] = useState<SaveSharePanel>("list");
   const groupId = useId();
   const countMessage = exportHouseCountMessage(houses.length, totalInSet, activeFilterCount);
-  const canShareRoute = routeMode && activeRoute && activeRoute.stops.length > 0;
+  const canShareRoute = Boolean(routeMode && activeRoute && activeRoute.stops.length > 0);
+  const listExportEnabled = houses.length > 0;
+
+  useEffect(() => {
+    if (!open) return;
+    if (canShareRoute && !listExportEnabled) setPanel("route");
+    else setPanel("list");
+  }, [open, canShareRoute, listExportEnabled]);
 
   async function runExport(selected: HouseExportFormat) {
     if (houses.length === 0) {
@@ -65,42 +73,39 @@ export function CsvExportButton({
   }
 
   async function shareRouteLink() {
-    if (!activeRoute) return;
+    if (!activeRoute || activeRoute.stops.length === 0) {
+      toast.error("אין מסלול פעיל לשיתוף");
+      return;
+    }
     const payload = sharedRoutePayloadFromRoute(activeRoute);
-    const url =
-      typeof window !== "undefined"
-        ? buildRouteShareUrl(payload, window.location.origin)
-        : buildRouteShareUrl(payload);
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: "מסלול HallowHood",
-          text: `מסלול עם ${payload.stopIds.length} עצירות — מספרים קבועים`,
-          url,
-        });
-        toast.success("שיתוף המסלול נשלח");
-        setOpen(false);
-        return;
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") return;
+    const url = buildRouteShareUrl(payload, window.location.origin);
+    const outcome = await shareUrlWithFallback(url, {
+      title: "מסלול HallowHood",
+      text: `מסלול עם ${payload.stopIds.length} עצירות`,
+    });
+    if (outcome === "shared") {
+      toast.success("שיתוף המסלול נשלח");
+      setOpen(false);
+      return;
     }
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success("קישור המסלול הועתק");
-    } catch {
-      toast.message(url);
+    if (outcome === "copied") {
+      toast.success("קישור המסלול הועתק — הדביקו בוואטסאפ / הודעה");
+      setOpen(false);
+      return;
     }
+    if (outcome === "cancelled") return;
+    toast.message("העתיקו את הקישור:", { description: url, closeButton: true, duration: 20_000 });
   }
 
   async function saveRouteTxt() {
     if (!activeRoute) return;
     await downloadOrShareRouteTxt(activeRoute, true);
     toast.success("מסלול נשמר / שותף");
+    setOpen(false);
   }
 
   function openDialog() {
-    if (houses.length === 0 && !canShareRoute) {
+    if (!listExportEnabled && !canShareRoute) {
       toast.error("אין בתים לשמירה — המפה ריקה");
       return;
     }
@@ -110,26 +115,32 @@ export function CsvExportButton({
   const triggerClass =
     "app-toolbar__btn inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25";
 
+  const dialog = (
+    <ExportFormatDialog
+      open={open}
+      onOpenChange={setOpen}
+      groupId={groupId}
+      format={format}
+      onFormatChange={setFormat}
+      panel={panel}
+      onPanelChange={setPanel}
+      countMessage={countMessage}
+      exportCount={houses.length}
+      canShareRoute={canShareRoute}
+      routeStopCount={activeRoute?.stops.length ?? 0}
+      onConfirm={() => void runExport(format)}
+      onShareRoute={() => void shareRouteLink()}
+      onSaveRouteTxt={() => void saveRouteTxt()}
+    />
+  );
+
   if (!label) {
     return (
       <>
         <button type="button" aria-label="שמירה" title="שמירה ושיתוף" onClick={openDialog} className={triggerClass}>
           <Save className="size-5" strokeWidth={2.25} />
         </button>
-        <ExportFormatDialog
-          open={open}
-          onOpenChange={setOpen}
-          groupId={groupId}
-          format={format}
-          onFormatChange={setFormat}
-          countMessage={countMessage}
-          exportCount={houses.length}
-          canShareRoute={canShareRoute}
-          routeStopCount={activeRoute?.stops.length ?? 0}
-          onConfirm={() => void runExport(format)}
-          onShareRoute={() => void shareRouteLink()}
-          onSaveRouteTxt={() => void saveRouteTxt()}
-        />
+        {dialog}
       </>
     );
   }
@@ -146,20 +157,7 @@ export function CsvExportButton({
         <Save className="size-4" strokeWidth={2.25} />
         {label}
       </Button>
-      <ExportFormatDialog
-        open={open}
-        onOpenChange={setOpen}
-        groupId={groupId}
-        format={format}
-        onFormatChange={setFormat}
-        countMessage={countMessage}
-        exportCount={houses.length}
-        canShareRoute={canShareRoute}
-        routeStopCount={activeRoute?.stops.length ?? 0}
-        onConfirm={() => void runExport(format)}
-        onShareRoute={() => void shareRouteLink()}
-        onSaveRouteTxt={() => void saveRouteTxt()}
-      />
+      {dialog}
     </>
   );
 }
@@ -170,6 +168,8 @@ function ExportFormatDialog({
   groupId,
   format,
   onFormatChange,
+  panel,
+  onPanelChange,
   countMessage,
   exportCount,
   canShareRoute,
@@ -183,35 +183,120 @@ function ExportFormatDialog({
   groupId: string;
   format: HouseExportFormat;
   onFormatChange: (format: HouseExportFormat) => void;
+  panel: SaveSharePanel;
+  onPanelChange: (panel: SaveSharePanel) => void;
   countMessage: string;
   exportCount: number;
-  canShareRoute: boolean | null | undefined;
+  canShareRoute: boolean;
   routeStopCount: number;
   onConfirm: () => void;
   onShareRoute: () => void;
   onSaveRouteTxt: () => void;
 }) {
+  const showTabs = canShareRoute;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         dir="rtl"
-        className="gap-0 border border-orange-500/30 bg-[#1a0d24] p-0 text-orange-50 sm:max-w-md"
+        showCloseButton={false}
+        className="gap-0 overflow-hidden border border-orange-500/30 bg-[#1a0d24] p-0 text-orange-50 sm:max-w-md"
       >
-        <DialogHeader className="border-b border-orange-500/15 px-4 py-3 pt-4 text-center">
-          <DialogTitle className="font-display text-xl text-orange-200">שמירה ושיתוף</DialogTitle>
-        </DialogHeader>
+        <OverlayCloseBar
+          compact
+          title="שמירה ושיתוף"
+          onClose={() => onOpenChange(false)}
+          className="border-b border-orange-500/15 pb-2"
+        />
 
-        <fieldset className="border-0 px-4 py-3">
-          <p className="mb-3 text-base leading-snug text-violet-200/90">{countMessage}</p>
-          <legend className="mb-2 text-sm font-semibold text-violet-200/90">רשימת בתים — פורמט</legend>
-          <div className="grid gap-2" role="radiogroup">
+        {showTabs ? (
+          <Tabs
+            value={panel}
+            onValueChange={(value) => onPanelChange(value as SaveSharePanel)}
+            className="gap-0"
+          >
+            <TabsList className="mx-4 mt-3 grid h-10 w-[calc(100%-2rem)] grid-cols-2 rounded-xl bg-[#12081a] p-1 ring-1 ring-violet-500/25">
+              <TabsTrigger
+                value="list"
+                className="h-8 rounded-lg text-base data-active:bg-orange-500/20 data-active:text-orange-100"
+              >
+                רשימת בתים
+              </TabsTrigger>
+              <TabsTrigger
+                value="route"
+                className="h-8 rounded-lg text-base data-active:bg-amber-500/20 data-active:text-amber-100"
+              >
+                מסלול ({routeStopCount})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="list" className="mt-0 outline-none">
+              <ListExportPanel
+                groupId={groupId}
+                format={format}
+                onFormatChange={onFormatChange}
+                countMessage={countMessage}
+                exportCount={exportCount}
+                onConfirm={onConfirm}
+                onCancel={() => onOpenChange(false)}
+              />
+            </TabsContent>
+
+            <TabsContent value="route" className="mt-0 outline-none">
+              <RouteSharePanel
+                routeStopCount={routeStopCount}
+                onShareRoute={onShareRoute}
+                onSaveRouteTxt={onSaveRouteTxt}
+              />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <ListExportPanel
+            groupId={groupId}
+            format={format}
+            onFormatChange={onFormatChange}
+            countMessage={countMessage}
+            exportCount={exportCount}
+            onConfirm={onConfirm}
+            onCancel={() => onOpenChange(false)}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ListExportPanel({
+  groupId,
+  format,
+  onFormatChange,
+  countMessage,
+  exportCount,
+  onConfirm,
+  onCancel,
+}: {
+  groupId: string;
+  format: HouseExportFormat;
+  onFormatChange: (format: HouseExportFormat) => void;
+  countMessage: string;
+  exportCount: number;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <>
+      <div className="space-y-3 px-4 py-3">
+        <p className="text-base leading-snug text-violet-200/90">{countMessage}</p>
+        <fieldset className="border-0 p-0">
+          <legend className="mb-2 text-sm font-semibold text-violet-200/90">פורמט</legend>
+          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="פורמט קובץ">
             {HOUSE_EXPORT_FORMAT_OPTIONS.map((option) => {
               const checked = format === option.id;
               return (
                 <label
                   key={option.id}
                   className={cn(
-                    "flex min-h-11 cursor-pointer touch-manipulation items-center gap-3 rounded-xl border px-3 py-2 transition-colors",
+                    "flex min-h-11 cursor-pointer touch-manipulation flex-col items-center justify-center gap-1 rounded-xl border px-2 py-2 text-center transition-colors",
                     checked
                       ? "border-orange-400/55 bg-orange-500/10 ring-1 ring-orange-400/35"
                       : "border-violet-500/25 bg-[#12081a]/80 hover:border-violet-400/35",
@@ -223,65 +308,67 @@ function ExportFormatDialog({
                     value={option.id}
                     checked={checked}
                     onChange={() => onFormatChange(option.id)}
-                    className="size-4 shrink-0 accent-orange-400"
+                    className="sr-only"
                   />
-                  <span className="min-w-0 flex-1 text-start text-base font-medium text-orange-50">
-                    {option.labelHe}
-                  </span>
+                  <span className="text-base font-medium text-orange-50">{option.labelHe}</span>
                 </label>
               );
             })}
           </div>
         </fieldset>
+      </div>
+      <div className="grid grid-cols-2 gap-2 border-t border-orange-500/15 bg-[#14091c]/80 px-4 py-3">
+        <Button
+          type="button"
+          className="h-11 bg-orange-500 px-5 text-base text-black hover:bg-orange-400"
+          disabled={exportCount === 0}
+          onClick={onConfirm}
+        >
+          שמירה לקובץ
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 border-violet-500/40 px-5 text-base text-violet-100"
+          onClick={onCancel}
+        >
+          ביטול
+        </Button>
+      </div>
+    </>
+  );
+}
 
-        {canShareRoute ? (
-          <div className="border-t border-orange-500/15 px-4 py-3">
-            <p className="mb-2 text-sm font-semibold text-violet-200/90">מסלול פעיל ({routeStopCount} עצירות)</p>
-            <p className="mb-3 text-sm leading-snug text-violet-300/85">
-              «שיתוף קישור» שולח קישור לאפליקציה (וואטסאפ, אווירדרופ, הודעה לעצמכם). במכשיר השני
-              פותחים את הקישור — מופיעה «החלפת מסלול» — אותם מספרי בתים; הניווט מנקודת ההתחלה שלכם.
-            </p>
-            <div className="flex flex-col gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full justify-start gap-2 border-amber-400/45 text-amber-100"
-                onClick={onShareRoute}
-              >
-                <Route className="size-4 shrink-0" aria-hidden />
-                שיתוף קישור למסלול
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full justify-start text-violet-200"
-                onClick={onSaveRouteTxt}
-              >
-                שמירת המסלול כקובץ טקסט (Notes / יומן)
-              </Button>
-            </div>
-          </div>
-        ) : null}
-
-        <div className="grid grid-cols-2 gap-2 border-t border-orange-500/15 bg-[#14091c]/80 px-4 py-3">
-          <Button
-            type="button"
-            className="h-11 bg-orange-500 px-5 text-base text-black hover:bg-orange-400"
-            disabled={exportCount === 0}
-            onClick={onConfirm}
-          >
-            שמירה לקובץ
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-11 border-violet-500/40 px-5 text-base text-violet-100"
-            onClick={() => onOpenChange(false)}
-          >
-            ביטול
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+function RouteSharePanel({
+  routeStopCount,
+  onShareRoute,
+  onSaveRouteTxt,
+}: {
+  routeStopCount: number;
+  onShareRoute: () => void;
+  onSaveRouteTxt: () => void;
+}) {
+  return (
+    <div className="space-y-3 px-4 py-3 pb-4">
+      <p className="text-base leading-snug text-violet-200/90">
+        {routeStopCount} עצירות — אותם מספרי בתים בכל מכשיר. פותחים את הקישור → «החלפת מסלול».
+      </p>
+      <Button
+        type="button"
+        className="h-12 w-full gap-2 bg-orange-500 text-lg text-black hover:bg-orange-400"
+        onClick={onShareRoute}
+      >
+        <Link2 className="size-5 shrink-0" aria-hidden />
+        שיתוף קישור למסלול
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        className="h-11 w-full border-violet-500/40 text-base text-violet-100"
+        onClick={onSaveRouteTxt}
+      >
+        שמירה כטקסט (יומן / Notes)
+      </Button>
+    </div>
   );
 }
