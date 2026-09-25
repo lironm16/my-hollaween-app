@@ -28,7 +28,6 @@
     "seed:catalog-snapshot": "node --import tsx scripts/seed-catalog-snapshot.mjs",
     "purge:firestore-stubs": "node scripts/purge-firestore-stubs.mjs",
     "purge:e2e-houses": "node scripts/purge-e2e-test-houses.mjs",
-    "sync:github": "node scripts/sync-github.mjs",
     "capture:help": "node scripts/capture-help-screenshots.mjs",
     "deploy:vercel": "node scripts/trigger-vercel.mjs"
   },

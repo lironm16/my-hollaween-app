@@ -2,7 +2,7 @@
 /**
  * Prepare .github/workflows on the GitHub mirror (manual / local use).
  * Copies deploy/github templates and removes Cursor-only workflows (e.g. ci.yml).
- * The scheduled sync-from-cursor workflow keeps GitHub's .github/ unchanged instead.
+ * Cursor → GitHub mirror sync was removed; push code and assets to GitHub directly.
  */
 import { cpSync, existsSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
