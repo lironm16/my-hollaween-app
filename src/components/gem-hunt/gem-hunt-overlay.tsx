@@ -17,6 +17,7 @@ import {
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
   GEM_COLLECT_OVERLAY_MS,
+  GEM_STICKER_REVEAL_MS,
   gemAnchorForHouse,
   gemInScanRing,
   gemLabelHe,
@@ -30,9 +31,10 @@ import { googleMapsNavigateUrl } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
 import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-list-suspend";
+import { GemCollectAlbumReveal } from "@/components/gem-hunt/gem-collect-album-reveal";
 import { cn } from "@/lib/utils";
 
-type HuntPhase = "scanning" | "visible" | "collecting" | "done";
+type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
 
 function panDelta(prev: number | null, next: number) {
   if (prev == null) return 0;
@@ -87,6 +89,10 @@ export function GemHuntOverlay({
   const lastHeadingRef = useRef<number | null>(null);
   const facingSinceRef = useRef<number | null>(null);
   const revealedRef = useRef(false);
+  const collectFinishRef = useRef<number | null>(null);
+  const onCollectRef = useRef(onCollect);
+  onCollectRef.current = onCollect;
+  const [albumRevealPhase, setAlbumRevealPhase] = useState<"enter" | "landed">("enter");
 
   const { heading, status: headingStatus } = useDeviceHeading(true);
 
@@ -113,6 +119,11 @@ export function GemHuntOverlay({
     setShowHelp(false);
     setPosterHintOpen(false);
     setCenterReveal(false);
+    setAlbumRevealPhase("enter");
+    if (collectFinishRef.current != null) {
+      window.clearTimeout(collectFinishRef.current);
+      collectFinishRef.current = null;
+    }
   }, [house.id]);
 
   useEffect(() => {
@@ -211,10 +222,25 @@ export function GemHuntOverlay({
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate([20, 40, 60]);
     }
-    window.setTimeout(() => {
-      onCollect(monsterId);
+    if (collectFinishRef.current != null) window.clearTimeout(collectFinishRef.current);
+    collectFinishRef.current = window.setTimeout(() => {
+      collectFinishRef.current = null;
+      setAlbumRevealPhase("enter");
+      setPhase("albumReveal");
     }, GEM_COLLECT_OVERLAY_MS);
   }
+
+  useEffect(() => {
+    if (phase !== "albumReveal") return;
+    const landTimer = window.setTimeout(() => setAlbumRevealPhase("landed"), 720);
+    const doneTimer = window.setTimeout(() => {
+      onCollectRef.current(monsterId);
+    }, GEM_STICKER_REVEAL_MS);
+    return () => {
+      window.clearTimeout(landTimer);
+      window.clearTimeout(doneTimer);
+    };
+  }, [phase, monsterId]);
 
   function handleRevealMe() {
     reveal();
@@ -235,6 +261,7 @@ export function GemHuntOverlay({
   }
 
   const gemVisible = phase === "visible" || phase === "collecting";
+  const showHuntUi = phase !== "albumReveal";
   const turnBearing =
     effectiveLoc != null ? relativeWalkBearingDeg(effectiveLoc, anchor, heading) : null;
   const facingTarget =
@@ -313,8 +340,14 @@ export function GemHuntOverlay({
         </div>
         <OverlayCloseButton
           label="סגירה"
-          onClick={onClose}
-          className="gem-hunt-overlay__close"
+          onClick={() => {
+            if (phase === "collecting" || phase === "albumReveal") return;
+            onClose();
+          }}
+          className={cn(
+            "gem-hunt-overlay__close",
+            (phase === "collecting" || phase === "albumReveal") && "pointer-events-none opacity-40",
+          )}
         />
       </header>
 
@@ -322,6 +355,7 @@ export function GemHuntOverlay({
         <div className="gem-hunt-overlay__collect-flash" aria-hidden />
       ) : null}
 
+      {showHuntUi ? (
       <div className="gem-hunt-overlay__stage" aria-hidden={false}>
         <div className="gem-hunt-overlay__scan-ring" aria-hidden>
           {showScanCompass ? (
@@ -403,8 +437,9 @@ export function GemHuntOverlay({
 
         {stageScanHint ? <p className="gem-hunt-overlay__hint">{stageScanHint}</p> : null}
       </div>
+      ) : null}
 
-      {centerDisplayMode ? (
+      {showHuntUi && centerDisplayMode ? (
         <button
           type="button"
           className={cn(
@@ -430,7 +465,7 @@ export function GemHuntOverlay({
         </button>
       ) : null}
 
-      {!posterHintOpen && (phase !== "collecting" || footerHint) ? (
+      {showHuntUi && !posterHintOpen && (phase !== "collecting" || footerHint) ? (
         <footer className="gem-hunt-overlay__footer" dir="rtl">
           {footerHint ? (
             <p className="gem-hunt-overlay__footer-hint">{footerHint}</p>
@@ -522,6 +557,10 @@ export function GemHuntOverlay({
 
       {headingStatus === "denied" || headingStatus === "unsupported" ? (
         <p className="gem-hunt-overlay__sensor-note">סריקה לפי זמן — חיישן כיוון לא זמין</p>
+      ) : null}
+
+      {phase === "albumReveal" ? (
+        <GemCollectAlbumReveal monsterId={monsterId} phase={albumRevealPhase} />
       ) : null}
     </div>
   );

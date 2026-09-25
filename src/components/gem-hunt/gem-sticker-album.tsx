@@ -109,7 +109,7 @@ function GemStickerSlot({
               width={160}
               height={160}
               className="gem-sticker-slot__art"
-              sizes="(max-width: 640px) 28vw, 120px"
+              sizes="(max-width: 640px) 42vw, 140px"
             />
             <span className="gem-sticker-slot__shine" aria-hidden />
           </>

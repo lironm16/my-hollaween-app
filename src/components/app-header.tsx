@@ -14,6 +14,7 @@ import {
   Search,
   Shield,
   HelpCircle,
+  Gem,
   Sparkles,
 } from "lucide-react";
 import { SkipIcon } from "@/components/skip-icon";
@@ -32,6 +33,8 @@ import {
 } from "@/components/ui/sheet";
 import { buttonVariants } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { useAppNow } from "@/hooks/use-app-clock";
+import { gemBagMenuVisible } from "@/lib/gem-hunt-enabled";
 import { appVersionLabel } from "@/lib/app-version";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { cn } from "@/lib/utils";
@@ -43,8 +46,10 @@ export function AppHeader({
   onHomeTap?: () => void;
 }) {
   const { admin, logout } = useAdminSession();
+  const now = useAppNow();
   const owned = useOwnedHouses();
   const skips = useSkippedHouses();
+  const showGemBag = gemBagMenuVisible(admin, now);
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);
 
@@ -191,6 +196,19 @@ export function AppHeader({
               <Activity className="size-4" />
               תמונת מצב
             </Link>
+            {showGemBag ? (
+              <Link
+                href="/gem-bag"
+                onClick={closeMenu}
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "lg" }),
+                  "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+                )}
+              >
+                <Gem className="size-4 text-amber-300/90" />
+                ספר המדבקות
+              </Link>
+            ) : null}
             <Link
               href="/help"
               onClick={closeMenu}

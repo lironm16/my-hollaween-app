@@ -10,5 +10,10 @@ export function gemHuntFabVisible(isAdmin: boolean, now = new Date()) {
   return gemHuntVisible(isAdmin) && !isAddHouseOpen(now);
 }
 
+/** Side menu «ספר מדבקות» — same evening gate as hunt (respects rehearsal / sim clock via `now`). */
+export function gemBagMenuVisible(isAdmin: boolean, now = new Date()) {
+  return gemHuntFabVisible(isAdmin, now);
+}
+
 /** @deprecated alias — use gemHuntFabVisible for all gem UI visibility */
 export const gemHuntUiVisible = gemHuntFabVisible;
