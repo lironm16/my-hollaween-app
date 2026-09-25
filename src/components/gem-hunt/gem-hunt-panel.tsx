@@ -22,7 +22,7 @@ import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
 
 export type GemHuntOpenPrepare = () => Promise<UserLocation | null | void>;
-import { prepareGemHuntSensors, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
+import { prepareGemHuntSensors, releaseGemHuntCamera } from "@/lib/gem-hunt-sensors";
 import {
   clearAllGemAnchorOverrides,
   clearGemAnchorOverride,
@@ -81,7 +81,7 @@ export function GemHuntPanel({
 
   function onCollect(collectedVariant: string) {
     gems.collect(house.id, collectedVariant);
-    stopGemHuntCameraStream();
+    releaseGemHuntCamera();
     setHuntOpen(false);
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate(40);
@@ -222,7 +222,7 @@ export function GemHuntPanel({
           deferCameraUntilInRange={false}
           collectEnabled={canCollect}
           onClose={() => {
-            stopGemHuntCameraStream();
+            releaseGemHuntCamera();
             setHuntOpen(false);
           }}
           onCollect={onCollect}

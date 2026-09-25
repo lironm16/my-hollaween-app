@@ -11,7 +11,7 @@ import {
   getGemHuntCameraStream,
   prepareGemHuntSensors,
   requestGemHuntOrientationPermission,
-  stopGemHuntCameraStream,
+  releaseGemHuntCamera,
 } from "@/lib/gem-hunt-sensors";
 import { gemCollectDanceIndex } from "@/lib/gem-collect-dance";
 import {
@@ -182,7 +182,7 @@ export function GemHuntOverlay({
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
-      stopGemHuntCameraStream();
+      releaseGemHuntCamera(videoRef.current);
       endMapListOverlayCapture();
     };
   }, []);
@@ -224,6 +224,7 @@ export function GemHuntOverlay({
     return () => {
       cancelled = true;
       streamRef.current = null;
+      releaseGemHuntCamera(videoRef.current);
     };
   }, [house.id, cameraRetry, sim]);
 
@@ -328,12 +329,18 @@ export function GemHuntOverlay({
 
   const gemVisible = phase === "visible" || phase === "collecting";
   const showHuntUi = phase !== "albumReveal";
-  const overlayTitle =
+  const collectBanner =
     phase === "collecting" || phase === "albumReveal"
       ? albumRevealNewFriend
         ? "כל הכבוד!! מצאתם חבר חדש"
         : `מצאתם שוב את ${gemLabelHe(monsterId)}`
-      : `מחפשים יהלום נסתר ליד ${house.name || house.address}`;
+      : null;
+
+  const handleClose = useCallback(() => {
+    if (phase === "collecting" || phase === "albumReveal") return;
+    releaseGemHuntCamera(videoRef.current);
+    onClose();
+  }, [phase, onClose]);
   const turnBearing =
     effectiveLoc != null ? relativeWalkBearingDeg(effectiveLoc, anchor, heading) : null;
   const facingTarget =
@@ -458,18 +465,15 @@ export function GemHuntOverlay({
         </div>
       ) : null}
       <div className="gem-hunt-overlay__shade" aria-hidden />
-      {(phase === "collecting" || phase === "albumReveal") && overlayTitle ? (
+      {collectBanner ? (
         <p className="gem-hunt-overlay__collect-banner" role="status">
-          {overlayTitle}
+          {collectBanner}
         </p>
       ) : null}
       <header className="gem-hunt-overlay__header gem-hunt-overlay__header--close-only">
         <OverlayCloseButton
           label="סגירה"
-          onClick={() => {
-            if (phase === "collecting" || phase === "albumReveal") return;
-            onClose();
-          }}
+          onClick={handleClose}
           className={cn(
             "gem-hunt-overlay__close",
             (phase === "collecting" || phase === "albumReveal") && "pointer-events-none opacity-40",

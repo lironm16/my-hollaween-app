@@ -51,7 +51,7 @@ import { useStandingStill } from "@/hooks/use-standing-still";
 import { canCollectGem, userWithinGemHuntRange } from "@/lib/gem-hunt";
 import { syncGemMonsterAssignment } from "@/lib/gem-monsters";
 import { pickGemHuntTarget } from "@/lib/gem-hunt-target";
-import { prepareGemHuntSensors, stopGemHuntCameraStream } from "@/lib/gem-hunt-sensors";
+import { prepareGemHuntSensors, releaseGemHuntCamera } from "@/lib/gem-hunt-sensors";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -152,15 +152,14 @@ export function NeighborhoodApp({
   const gemHuntActive = gemHuntVisible(admin);
   const gems = useGemProgress();
   const [mapGemHouse, setMapGemHouse] = useState<PublicHouse | null>(null);
-  const [mapGemGps, setMapGemGps] = useState<import("@/hooks/use-user-location").UserLocation | null>(
-    null,
-  );
+  const [mapGemGps, setMapGemGps] = useState<UserLocation | null>(null);
   const gemBadgePendingRef = useRef(false);
   const [mapGemBadgeCount, setMapGemBadgeCount] = useState(() =>
     typeof window === "undefined" ? 0 : loadGemCollectedIds().length,
   );
   const [gemResetHouse, setGemResetHouse] = useState<PublicHouse | null>(null);
-  const mapGemStanding = useStandingStill(gps, gemHuntActive && Boolean(mapGemHouse));
+  const mapGemUserLoc = mapGemGps ?? gps;
+  const mapGemStanding = useStandingStill(mapGemUserLoc, gemHuntActive && Boolean(mapGemHouse));
   const gpsAllowed =
     geo.status === "idle" || geo.status === "pending" || geo.status === "ready";
 

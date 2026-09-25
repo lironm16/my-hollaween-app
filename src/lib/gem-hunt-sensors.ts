@@ -65,6 +65,19 @@ export function stopGemHuntCameraStream() {
   sharedCameraStream = null;
 }
 
+/** Stop shared stream and release the preview element (needed for iOS camera indicator). */
+export function releaseGemHuntCamera(video?: HTMLVideoElement | null) {
+  if (video) {
+    try {
+      video.pause();
+    } catch {
+      /* ignore */
+    }
+    video.srcObject = null;
+  }
+  stopGemHuntCameraStream();
+}
+
 if (typeof document !== "undefined") {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") stopGemHuntCameraStream();

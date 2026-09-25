@@ -125,7 +125,15 @@ export default function HousePage() {
               {...houseCardPropsFor(house, actionContext, {
                 extra:
                   gemUi ? (
-                    <GemHuntPanelLazy house={house} userLocation={geo.location} isAdmin={admin} />
+                    <GemHuntPanelLazy
+                      house={house}
+                      userLocation={geo.location}
+                      isAdmin={admin}
+                      onOpenHunt={async () => {
+                        setWatchEnabled(true);
+                        return (await geo.refresh()) ?? geo.location;
+                      }}
+                    />
                   ) : undefined,
               })}
             />
