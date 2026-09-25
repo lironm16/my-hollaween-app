@@ -1365,14 +1365,14 @@ export function NeighborhoodApp({
             false,
           )}
           onClose={() => {
-            stopGemHuntCameraStream();
+            releaseGemHuntCamera();
             setMapGemHouse(null);
             setMapGemGps(null);
           }}
           onCollect={(monsterId) => {
             const h = mapGemHouse;
             gems.collect(h.id, monsterId);
-            stopGemHuntCameraStream();
+            releaseGemHuntCamera();
             setMapGemHouse(null);
             celebrateGemCollect();
           }}
