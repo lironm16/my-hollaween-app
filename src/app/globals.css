@@ -2856,6 +2856,16 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   color: #fde68a;
 }
 
+.house-action-menu-item.is-disabled,
+.house-action-menu-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.toolbar-route-menu-panel {
+  min-width: 11.5rem;
+}
+
 .house-action-menu-icon {
   display: inline-flex;
   width: 2rem;
