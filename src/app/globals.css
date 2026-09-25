@@ -4815,7 +4815,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   align-items: center;
   justify-content: center;
   padding: 1rem 1rem 2.5rem;
-  pointer-events: none;
+  pointer-events: auto;
   background: #0f0818;
 }
 .gem-collect-album-reveal__shade {

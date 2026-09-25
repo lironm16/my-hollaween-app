@@ -9539,11 +9539,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   justify-content: center;
   padding: 1rem 1rem 2.5rem;
   pointer-events: none;
+  background: #0f0818;
 }
 .gem-collect-album-reveal__shade {
   position: absolute;
   inset: 0;
-  background: rgb(8 4 14 / 0.82);
+  background: #0f0818;
   backdrop-filter: blur(6px);
 }
 .gem-collect-album-reveal__content {
