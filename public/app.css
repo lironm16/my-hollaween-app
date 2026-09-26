@@ -9413,11 +9413,6 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   object-fit: contain;
   filter: drop-shadow(0 12px 22px rgb(0 0 0 / 0.55));
 }
-.gem-hunt-overlay__gem-hit .gem-sprite--hunt {
-  width: min(76vw, 18.5rem);
-  height: min(76vw, 18.5rem);
-  overflow: visible;
-}
 .gem-hunt-overlay__gem-hit .gem-model-3d {
   width: 100%;
   height: 100%;
@@ -9494,7 +9489,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__gem-hit.is-pin-collect {
   pointer-events: auto;
   cursor: pointer;
-  z-index: 9;
+  z-index: 15;
+  touch-action: manipulation;
 }
 .gem-hunt-overlay__collect-flash {
   position: absolute;
@@ -9553,6 +9549,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   width: 100%;
   margin-top: 0;
   margin-bottom: 0.15rem;
+  pointer-events: none;
+}
+.gem-hunt-overlay__walk-guide--footer .gem-hunt-overlay__walk-maps {
+  pointer-events: auto;
 }
 .gem-hunt-overlay__walk-guide--map-gps .gps-bearing-dial__svg {
   width: min(52vw, 11rem);
@@ -9853,6 +9853,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-sprite--sm {
   width: 3.25rem;
   height: 3.25rem;
+}
+.gem-sprite--fill {
+  width: 100%;
+  height: 100%;
+  min-width: 7.5rem;
+  min-height: 7.5rem;
 }
 .gem-sprite__glow {
   position: absolute;

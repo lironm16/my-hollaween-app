@@ -306,7 +306,9 @@ export function GemHuntOverlay({
       !centerReveal &&
       collectEnabled &&
       Boolean(pinPlacement && gemInScanRing(pinPlacement));
-    if (!viaTellMe && !viaPinned) return;
+    const viaArReveal =
+      !centerReveal && collectEnabled && arPinGuideMode && phase === "visible";
+    if (!viaTellMe && !viaPinned && !viaArReveal) return;
     setPhase("collecting");
     setHint("found");
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -392,8 +394,15 @@ export function GemHuntOverlay({
   const centerDisplayMode = gemVisible && centerReveal;
   /** Real hunt: compass-pinned gem (tap when in view + in range). */
   const arPinGuideMode = gemVisible && !centerReveal;
+  /** Hide AR pin while «מי מסתתר» popover is open — nav hint keeps the gem visible in the ring. */
+  const hidePinForHints = hintPanel === "character" && !centerReveal;
   const gemInRing = pinPlacement ? gemInScanRing(pinPlacement) : false;
   const pinCollectReady = arPinGuideMode && collectEnabled && gemInRing;
+  const arPinTapCollect =
+    arPinGuideMode &&
+    !hidePinForHints &&
+    collectEnabled &&
+    (phase === "visible" || phase === "collecting");
   const ringReady = centerDisplayMode || pinCollectReady;
   const isFarForHints =
     !collectEnabled &&
@@ -432,8 +441,6 @@ export function GemHuntOverlay({
   const showCompassEnable =
     huntArrowMapNorth &&
     (headingStatus === "denied" || headingStatus === "unsupported");
-  /** Hide AR pin while «מי מסתתר» popover is open — nav hint keeps the gem visible in the ring. */
-  const hidePinForHints = hintPanel === "character" && !centerReveal;
   const gemPetName = gemLabelHe(monsterId);
   const showNavCompassPrompt =
     hintPanel === "nav" &&
@@ -556,12 +563,13 @@ export function GemHuntOverlay({
           />
         </div>
 
-        {arPinGuideMode && pinCollectReady && !hidePinForHints ? (
+        {arPinTapCollect ? (
           <button
             type="button"
             className={cn(
-              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-pin-collect",
+              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-pin-collect is-revealed",
               phase === "collecting" && "is-collecting",
+              pinCollectReady && "is-ring-ready",
             )}
             style={
               pinDisplay
@@ -583,6 +591,7 @@ export function GemHuntOverlay({
               <GemSprite
                 house={house}
                 mode="3d"
+                size="fill"
                 tapCollect
                 spinWhileCollect
                 motion={phase === "collecting" ? "celebrate" : "idle"}
@@ -592,14 +601,13 @@ export function GemHuntOverlay({
           </button>
         ) : null}
 
-        {arPinGuideMode && !pinCollectReady && !hidePinForHints ? (
+        {arPinGuideMode && !hidePinForHints && phase !== "visible" ? (
           <div
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin",
               pinPlacement && "is-pinned",
               pinPlacement && !pinPlacement.inView && "is-off-screen",
               !pinPlacement && "is-center-fallback",
-              phase === "visible" && "is-revealed",
             )}
             style={
               pinDisplay
@@ -613,13 +621,7 @@ export function GemHuntOverlay({
             role="img"
             aria-label={`כיוון היהלום — ${gemLabelHe(monsterId)}`}
           >
-            <GemSprite
-              house={house}
-              mode={phase === "visible" ? "3d" : "poster"}
-              size={phase === "visible" ? "fill" : "lg"}
-              tapCollect={false}
-              spinWhileCollect={phase === "visible"}
-            />
+            <GemSprite house={house} mode="poster" />
           </div>
         ) : null}
       </div>

@@ -4687,7 +4687,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__gem-hit.is-pin-collect {
   pointer-events: auto;
   cursor: pointer;
-  z-index: 9;
+  z-index: 15;
+  touch-action: manipulation;
 }
 .gem-hunt-overlay__collect-flash {
   position: absolute;
@@ -4746,6 +4747,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   width: 100%;
   margin-top: 0;
   margin-bottom: 0.15rem;
+  pointer-events: none;
+}
+.gem-hunt-overlay__walk-guide--footer .gem-hunt-overlay__walk-maps {
+  pointer-events: auto;
 }
 .gem-hunt-overlay__walk-guide--map-gps .gps-bearing-dial__svg {
   width: min(52vw, 11rem);
