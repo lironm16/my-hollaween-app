@@ -5,7 +5,6 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ChevronDown, Heart, Pencil } from "lucide-react";
 import { HouseTitleMarkers } from "@/components/house-title-markers";
-import { HousePersonalMarksLine } from "@/components/house-personal-marks-line";
 import { VisitedCheck } from "@/components/visited-check";
 import { buttonVariants } from "@/components/ui/button";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
@@ -496,7 +495,6 @@ export function HouseDetails({
         <div className="flex flex-wrap items-center gap-1.5">
           <HouseTags house={house} large={compact} />
         </div>
-        <HousePersonalMarksLine liked={liked} gemCollected={gemCollected} />
       </div>
       {photo ? (
         <div className="flex items-start gap-3">

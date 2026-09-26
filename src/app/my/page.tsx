@@ -58,7 +58,7 @@ function MyCollectionsPageContent() {
   const searchParams = useSearchParams();
   const { admin } = useAdminSession();
   const now = useAppNow();
-  const { gemBagMenuVisible: showCollected } = useGemHuntAdminUi(admin, now);
+  const { gemBagMenuVisible: showCollected, gemFabVisible: gemUi } = useGemHuntAdminUi(admin, now);
   const urlTab = parseTab(searchParams.get("tab"), showCollected);
   const [tab, setTab] = useState<PersonalMarksTab>(urlTab);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
@@ -165,7 +165,12 @@ function MyCollectionsPageContent() {
       liked: likes.liked,
       visited: visits.visited,
       skipped: skips.skipped,
-      gemCollected: showCollected ? gems.collected : undefined,
+      gemCollected: gemUi ? gems.collected : undefined,
+      onToggleGem: gemUi
+        ? (house) => {
+            router.push(`/?focus=${encodeURIComponent(house.id)}&gemHunt=1`);
+          }
+        : undefined,
       onToggleLike: (id) => likes.toggle(id),
       onToggleVisited: (id) => visits.toggle(id),
       onSkip: tab === "visited" ? (id) => skips.toggle(id) : undefined,
@@ -187,6 +192,7 @@ function MyCollectionsPageContent() {
     visits,
     skips,
     showCollected,
+    gemUi,
     gems,
     tab,
     editFlow.flow?.house.id,

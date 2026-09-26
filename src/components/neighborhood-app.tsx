@@ -144,10 +144,12 @@ export function NeighborhoodApp({
   initialCatalog,
   focusId = null,
   routeShareParam = null,
+  gemHuntFromUrl = false,
 }: {
   initialCatalog?: Catalog | null;
   focusId?: string | null;
   routeShareParam?: string | null;
+  gemHuntFromUrl?: boolean;
 }) {
   const { catalog, loading, ready, offline, unreachable, error, source, pollSeconds, refresh } =
     useCatalog(initialCatalog);
@@ -389,6 +391,25 @@ export function NeighborhoodApp({
     },
     [gems, openGemHuntForHouse],
   );
+
+  const gemHuntFromUrlHandledRef = useRef(false);
+  useEffect(() => {
+    if (!gemHuntFromUrl || !focusId || gemHuntFromUrlHandledRef.current) return;
+    const house = houses.find((item) => item.id === focusId);
+    if (!house) return;
+    gemHuntFromUrlHandledRef.current = true;
+    setView("map");
+    selection.selectOnMap(house);
+    const timer = window.setTimeout(() => {
+      handleToggleGemMenu(house);
+      if (typeof window === "undefined") return;
+      const url = new URL(window.location.href);
+      url.searchParams.delete("gemHunt");
+      const next = `${url.pathname}${url.search}${url.hash}`;
+      window.history.replaceState(window.history.state, "", next);
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [gemHuntFromUrl, focusId, houses, handleToggleGemMenu, selection]);
 
   const confirmGemReset = useCallback(() => {
     const house = gemResetHouse;
@@ -1013,7 +1034,16 @@ export function NeighborhoodApp({
       )}
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
-      <AppHeader onHomeTap={goHome} />
+      <AppHeader
+        onHomeTap={goHome}
+        routeMenu={{
+          houses: visible,
+          totalInSet: mapHouses.length,
+          activeFilterCount,
+          activeRoute: activeRoute ?? filterRoute,
+          kind: likedOnly ? "liked" : "list",
+        }}
+      />
       {!originPick.originPickActive ? (
         <div className="neighborhood-toolbar-top shrink-0">
           <NeighborhoodToolbar
@@ -1023,15 +1053,12 @@ export function NeighborhoodApp({
               setView("list");
               selection.closeSelection();
             }}
-            likedOnly={likedOnly}
             activeFilterCount={activeFilterCount}
             onOpenFilters={() => setFiltersOpen(true)}
             originShifted={originChoice.kind !== "gps"}
             onOpenOriginPicker={() => originPick.setOriginPickerOpen(true)}
             routeMode={routeMode}
             onToggleRoute={() => (routeMode ? exitRouteMode() : enterRouteMode())}
-            houses={visible}
-            totalInSet={mapHouses.length}
             routeTicker={originPick.routeTicker}
             routeUpdateCount={routeMode ? routeAlerts.changes.length : 0}
             routeUpdateTicker={
@@ -1042,7 +1069,6 @@ export function NeighborhoodApp({
             onOpenRouteUpdates={
               routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
             }
-            activeRoute={activeRoute}
             gemMapToggleEnabled={gemUi}
             gemMapVisible={mapDiamondsVisible}
             onToggleGemMap={() => setMapDiamondsVisible((on) => !on)}

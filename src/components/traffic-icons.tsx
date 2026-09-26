@@ -23,7 +23,7 @@ export function SavedTrafficIcon({
   );
 }
 
-/** Amber gem disc — collected diamond for action menu. */
+/** Orange gem disc — collected diamond for action menu. */
 export function GemTrafficIcon({
   className,
   markClassName,
@@ -34,13 +34,13 @@ export function GemTrafficIcon({
   return (
     <span
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/25 ring-1 ring-amber-300/45",
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500/20 ring-1 ring-orange-400/40",
         className,
       )}
       title="יהלום"
       aria-label="יהלום"
     >
-      <Gem className={cn("size-5 fill-current text-amber-300", markClassName)} strokeWidth={2.1} />
+      <Gem className={cn("size-5 fill-current text-orange-300", markClassName)} strokeWidth={2.1} />
     </span>
   );
 }

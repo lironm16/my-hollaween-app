@@ -3,11 +3,8 @@
 import { Gem, List, MapPinned, Route } from "lucide-react";
 import { FilterTrigger } from "@/components/filter-menu";
 import { OriginTrigger } from "@/components/origin-picker";
-import { RouteActionsMenu } from "@/components/route-actions-menu";
 import { PingPongMarquee } from "@/components/neighborhood-marquee";
 import type { HomeView } from "@/lib/home-view";
-import type { WalkingRoute } from "@/lib/route";
-import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 function ViewToggle({
@@ -50,20 +47,16 @@ export function NeighborhoodToolbar({
   view,
   onViewChange,
   onListView,
-  likedOnly,
   activeFilterCount,
   onOpenFilters,
   originShifted,
   onOpenOriginPicker,
   routeMode,
   onToggleRoute,
-  houses,
-  totalInSet,
   routeTicker,
   routeUpdateCount = 0,
   routeUpdateTicker = null,
   onOpenRouteUpdates,
-  activeRoute = null,
   floating = false,
   docked = false,
   gemMapToggleEnabled = false,
@@ -73,22 +66,16 @@ export function NeighborhoodToolbar({
   view: HomeView;
   onViewChange: (view: HomeView) => void;
   onListView: () => void;
-  likedOnly: boolean;
   activeFilterCount: number;
   onOpenFilters: () => void;
   originShifted: boolean;
   onOpenOriginPicker: () => void;
   routeMode: boolean;
   onToggleRoute: () => void;
-  houses: PublicHouse[];
-  /** Total houses in the current map/list set (for export «x מתוך y»). */
-  totalInSet: number;
   routeTicker: string | null;
   routeUpdateCount?: number;
   routeUpdateTicker?: string | null;
   onOpenRouteUpdates?: () => void;
-  /** Pinned or filter route while route mode is on (for save/share dialog). */
-  activeRoute?: WalkingRoute | null;
   /** Float over map/list instead of a fixed strip under the header. */
   floating?: boolean;
   /** Full-width bottom dock (same geometry in map + list). */
@@ -140,7 +127,10 @@ export function NeighborhoodToolbar({
                 : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
             )}
           >
-            <Gem className="size-5 text-amber-300/90" strokeWidth={2.1} />
+            <Gem
+              className={cn("size-5", gemMapVisible ? "text-black" : "text-orange-100")}
+              strokeWidth={2.1}
+            />
           </button>
         ) : null}
         <button
@@ -168,14 +158,6 @@ export function NeighborhoodToolbar({
             </span>
           ) : null}
         </button>
-        <RouteActionsMenu
-          routeMode={routeMode}
-          activeRoute={activeRoute}
-          houses={houses}
-          totalInSet={totalInSet}
-          activeFilterCount={activeFilterCount}
-          kind={likedOnly ? "liked" : "list"}
-        />
       </div>
       {routeUpdateTicker && onOpenRouteUpdates ? (
         <button

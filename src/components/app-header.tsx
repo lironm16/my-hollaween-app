@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
+import { RouteMenuSection } from "@/components/route-menu-section";
 import { NeighborhoodMarquee } from "@/components/neighborhood-marquee";
 import { PushAlertsButton } from "@/components/push-alerts-button";
 import { PwaInstallButton } from "@/components/pwa-install-button";
@@ -33,14 +34,25 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { appVersionLabel } from "@/lib/app-version";
+import type { WalkingRoute } from "@/lib/route";
+import type { PublicHouse } from "@/lib/types";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { cn } from "@/lib/utils";
 
 export function AppHeader({
   onHomeTap,
+  routeMenu,
 }: {
   /** Brand title and side-menu Home: return to the last map/list home screen. */
   onHomeTap?: () => void;
+  /** Map home — collapsible «מסלול» export/share (optional). */
+  routeMenu?: {
+    houses: PublicHouse[];
+    totalInSet: number;
+    activeFilterCount?: number;
+    activeRoute: WalkingRoute | null;
+    kind?: "liked" | "list" | "all";
+  };
 }) {
   const { admin, logout } = useAdminSession();
   const now = useAppNow();
@@ -171,6 +183,17 @@ export function AppHeader({
                 </div>
               ) : null}
             </div>
+
+            {routeMenu ? (
+              <RouteMenuSection
+                houses={routeMenu.houses}
+                totalInSet={routeMenu.totalInSet}
+                activeFilterCount={routeMenu.activeFilterCount}
+                activeRoute={routeMenu.activeRoute}
+                kind={routeMenu.kind}
+                onNavigate={closeMenu}
+              />
+            ) : null}
 
             <Link
               href="/stats"

@@ -22,7 +22,7 @@ export function HouseTitleMarkers({
       ) : null}
       {gemCollected ? (
         <Gem
-          className="mb-0.5 me-1.5 inline size-5 fill-current text-amber-300"
+          className="mb-0.5 me-1.5 inline size-5 fill-current text-orange-300"
           strokeWidth={2.1}
           aria-label="יהלום"
         />

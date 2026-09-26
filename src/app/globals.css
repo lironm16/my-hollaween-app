@@ -877,14 +877,14 @@
 }
 
 .house-skipped-banner {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.35rem;
 }
 
 .filter-mismatch-banner {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.35rem;
   border-radius: 0.75rem;
   background: rgba(76, 29, 149, 0.35);
   padding: 0.5rem 0.65rem;
@@ -2672,6 +2672,19 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .map-house-sheet select {
   touch-action: manipulation;
   user-select: auto;
+}
+
+.map-house-sheet-body .filter-mismatch-banner {
+  margin-bottom: 0.1rem;
+}
+.map-house-sheet-body .filter-mismatch-banner + .house-list-card > .px-3 {
+  padding-top: 0.15rem;
+}
+.map-house-sheet-body .house-skipped-banner {
+  margin-bottom: 0.2rem;
+}
+.map-house-sheet-body .house-list-card > .px-3 {
+  padding-top: 0.35rem;
 }
 
 .map-house-sheet-kicker,
