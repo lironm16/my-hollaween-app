@@ -9276,6 +9276,11 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   width: min(92vw, 22rem);
   margin-top: 0.25rem;
 }
+.gem-hunt-overlay__walk-guide--footer {
+  width: 100%;
+  margin-top: 0;
+  margin-bottom: 0.15rem;
+}
 .gem-hunt-overlay__walk-guide--map-gps .gps-bearing-dial__svg {
   width: min(52vw, 11rem);
   height: min(52vw, 11rem);

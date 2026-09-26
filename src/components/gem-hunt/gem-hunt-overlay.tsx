@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { Navigation } from "lucide-react";
 import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
 import { GemOrbitStage } from "@/components/gem-hunt/gem-orbit-stage";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
@@ -34,6 +35,7 @@ import {
   gemMonsterForHouse,
   gemScreenPlacement,
   relativeWalkBearingDeg,
+  bearingClockLabelHe,
   type GemMonsterId,
   type GemCollectFinishOptions,
 } from "@/lib/gem-hunt";
@@ -41,12 +43,35 @@ import type { PublicHouse } from "@/lib/types";
 import { formatDistance } from "@/lib/geo";
 import type { UserLocation } from "@/hooks/use-user-location";
 import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-list-suspend";
+import { googleMapsNavigateUrl } from "@/lib/route";
 import { isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
 import { GemCollectAlbumReveal } from "@/components/gem-hunt/gem-collect-album-reveal";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { cn } from "@/lib/utils";
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
+
+const GEM_BEHIND_TURN_DEG = 120;
+
+function gemWalkGuideCopy(
+  huntArrowPhoneRelative: boolean,
+  facingTarget: boolean,
+  turnBearing: number | null,
+  gpsBearingToAnchor: number | null,
+) {
+  if (huntArrowPhoneRelative && turnBearing != null) {
+    if (facingTarget) return "המשיכו ישר — היהלום מולכם";
+    if (Math.abs(turnBearing) >= GEM_BEHIND_TURN_DEG) {
+      return "היהלום מאחוריכם — סובבו את הגוף";
+    }
+    if (turnBearing > 0) return "סובבו ימינה לכיוון היהלום";
+    return "סובבו שמאלה לכיוון היהלום";
+  }
+  if (gpsBearingToAnchor != null) {
+    return `כיוון לפי GPS: ${bearingClockLabelHe(gpsBearingToAnchor)} — סובבו את הגוף (צפון = למעלה)`;
+  }
+  return "התקרבו לנקודת היהלום";
+}
 
 function panDelta(prev: number | null, next: number) {
   if (prev == null) return 0;
@@ -388,11 +413,19 @@ export function GemHuntOverlay({
     effectiveLoc != null &&
     userLocation != null &&
     !sim;
-  const showNavDistance =
-    hintPanel === "nav" &&
-    distanceM != null &&
-    userLocation != null &&
-    !sim;
+  const showNavWalkGuide =
+    hintPanel === "nav" && userLocation != null && effectiveLoc != null && !sim;
+  const mapsWalkUrl =
+    userLocation != null && !sim
+      ? googleMapsNavigateUrl(userLocation, { lat: anchor.lat, lng: anchor.lng })
+      : null;
+  const walkGuideCopy = gemWalkGuideCopy(
+    huntArrowPhoneRelative,
+    facingTarget,
+    turnBearing,
+    gpsBearingToAnchor,
+  );
+  const navHintOpen = hintPanel === "nav" && !centerReveal;
   async function retryCompassPermission() {
     const ok = await requestGemHuntOrientationPermission();
     if (ok) setCompassRetry((n) => n + 1);
@@ -499,19 +532,6 @@ export function GemHuntOverlay({
               className="gem-hunt-overlay__scan-rose"
             />
           ) : null}
-          {showNavDistance ? (
-            <p
-              className="gem-hunt-overlay__ring-distance"
-              dir="ltr"
-              aria-live="polite"
-              aria-label={`${Math.round(distanceM!)} מטר`}
-            >
-              <span className="gem-hunt-overlay__ring-distance-num">
-                {Math.round(distanceM!)}
-              </span>
-              <span className="gem-hunt-overlay__ring-distance-unit">מטר</span>
-            </p>
-          ) : null}
           {centerDisplayMode && collectEnabled && phase === "visible" ? (
             <p className="gem-hunt-overlay__ring-collect-hint">לחיצה לאיסוף</p>
           ) : null}
@@ -524,7 +544,7 @@ export function GemHuntOverlay({
           />
         </div>
 
-        {arPinGuideMode && pinCollectReady ? (
+        {arPinGuideMode && pinCollectReady && !navHintOpen ? (
           <button
             type="button"
             className={cn(
@@ -560,7 +580,7 @@ export function GemHuntOverlay({
           </button>
         ) : null}
 
-        {arPinGuideMode && !pinCollectReady ? (
+        {arPinGuideMode && !pinCollectReady && !navHintOpen ? (
           <div
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin",
@@ -635,6 +655,41 @@ export function GemHuntOverlay({
                   מי החבר שמסתתר ביהלום
                 </p>
                 <GemOrbitStage house={house} stageClassName="gem-hunt-overlay__hint1-orbit" />
+              </div>
+            ) : null}
+
+            {showNavWalkGuide ? (
+              <div
+                className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
+                role="region"
+                aria-label="הנחיות הליכה ליהלום"
+              >
+                {huntArrowDeg != null ? (
+                  <div
+                    className={cn(
+                      "gem-hunt-overlay__walk-arrow",
+                      !huntArrowMapNorth && facingTarget && "is-facing",
+                    )}
+                    style={{ transform: `rotate(${huntArrowDeg}deg)` }}
+                    aria-hidden
+                  >
+                    <Navigation className="size-11" strokeWidth={2.5} />
+                  </div>
+                ) : null}
+                <p className="gem-hunt-overlay__walk-text">
+                  {walkGuideCopy}
+                  {distanceM != null ? ` · ${formatDistance(distanceM)}` : null}
+                </p>
+                {mapsWalkUrl ? (
+                  <a
+                    href={mapsWalkUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="gem-hunt-overlay__walk-maps"
+                  >
+                    הליכה ב-Google Maps ליהלום
+                  </a>
+                ) : null}
               </div>
             ) : null}
 
