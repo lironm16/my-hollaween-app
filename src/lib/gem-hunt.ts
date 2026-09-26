@@ -1,4 +1,6 @@
 import { getGemAnchorOverride } from "@/lib/gem-anchor-overrides";
+import { getOsmGemAnchor } from "@/lib/gem-osm-anchor-cache";
+import { GEM_OSM_ANCHOR_MAX_PIN_DISTANCE_M } from "@/lib/gem-osm-anchor-data";
 import { distanceMeters } from "@/lib/geo";
 import {
   jitterAlongSidewalk,
@@ -169,6 +171,14 @@ export function gemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
       offsetM,
       calibrated: true,
     };
+  }
+
+  const osm = getOsmGemAnchor(house.id);
+  if (osm && osm.distanceM <= GEM_OSM_ANCHOR_MAX_PIN_DISTANCE_M) {
+    const point = { lat: osm.lat, lng: osm.lng };
+    const bearingFromHouseDeg = bearingDegrees(house, point);
+    const offsetM = distanceMeters(house, point);
+    return { ...point, bearingFromHouseDeg, offsetM, calibrated: false };
   }
 
   const sidewalk = nearestSidewalkPoint(house, house.address ?? null);
