@@ -62,6 +62,15 @@ type CatalogContextValue = CatalogState & {
 
 const CatalogContext = createContext<CatalogContextValue | null>(null);
 
+const CATALOG_FETCH_TIMEOUT_MS = 18_000;
+
+function isFetchTimeout(err: unknown) {
+  return (
+    err instanceof Error &&
+    (err.name === "TimeoutError" || err.name === "AbortError" || err.name === "AbortSignal")
+  );
+}
+
 async function fetchJson(url: string, force = false, since?: string): Promise<CatalogDelta> {
   const params = new URLSearchParams();
   if (force) params.set("t", String(Date.now()));
@@ -70,7 +79,7 @@ async function fetchJson(url: string, force = false, since?: string): Promise<Ca
   const href = qs ? `${url}?${qs}` : url;
   const res = await fetch(href, {
     cache: force || since ? "no-store" : "default",
-    signal: AbortSignal.timeout(8000),
+    signal: AbortSignal.timeout(CATALOG_FETCH_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error("bad status");
   return res.json() as Promise<CatalogDelta>;
@@ -303,7 +312,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           return;
         }
       } catch (err) {
-        console.warn("[catalog] delta poll failed", err);
+        if (!isFetchTimeout(err)) console.warn("[catalog] delta poll failed", err);
         const cached = await readDeviceCatalog();
         if (cached) {
           setCatalog((prev) => {
