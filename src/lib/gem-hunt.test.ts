@@ -18,6 +18,7 @@ import {
   userWithinGemHuntRange,
   withinGemHuntMeters,
   GEM_HUNT_METERS,
+  GEM_ONSITE_TRUST_METERS,
   GEM_ANCHOR_MIN_METERS,
   GEM_ANCHOR_MAX_METERS,
 } from "@/lib/gem-hunt";
@@ -42,6 +43,18 @@ describe("gem hunt geo", () => {
     assert.equal(gemProximity(snapped, house, false), "far");
     const near = { lat: anchor.lat, lng: anchor.lng, accuracy: 8 };
     assert.equal(withinGemHuntMeters(near, anchor), true);
+  });
+
+  it("treats on-site GPS as hunt range despite noisy accuracy", () => {
+    const anchor = gemAnchorForHouse(house);
+    const noisy = {
+      lat: anchor.lat + 0.000015,
+      lng: anchor.lng,
+      accuracy: 85,
+    };
+    assert.ok(distanceMeters(noisy, anchor) < 5);
+    assert.equal(withinGemHuntMeters(noisy, anchor), true);
+    assert.equal(gemProximity(noisy, house, false), "hunt");
   });
 
   it("pins each house gem at a stable offset from the map pin", () => {

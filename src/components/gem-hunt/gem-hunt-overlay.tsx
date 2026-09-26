@@ -122,8 +122,12 @@ export function GemHuntOverlay({
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
 }) {
   const sim = simulateInRange;
-  /** Only auto-reveal from scan/pan/facing when user can collect (or admin simulate). */
-  const allowAutoReveal = collectEnabled || sim;
+  const inDistanceBand =
+    effectiveLoc != null &&
+    !sim &&
+    gemDistanceMeters(effectiveLoc, house) <= GEM_HUNT_METERS;
+  /** Scan/pan/facing reveal when in range (or admin simulate), even before «stand still» finishes. */
+  const allowAutoReveal = collectEnabled || sim || inDistanceBand;
   const monsterId = gemMonsterForHouse(house);
   const collectDanceIndex = useMemo(
     () => gemCollectDanceIndex(house.id, monsterId),

@@ -342,6 +342,7 @@ export function NeighborhoodApp({
       if (gems.collected(house.id)) return;
       preloadGemHuntChunks();
       setView("map");
+      setMapDiamondsVisible(true);
       selection.selectOnMap(house);
       setWatchEnabled(true);
       const freshGps = (await geo.refresh()) ?? gps;

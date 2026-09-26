@@ -18,6 +18,7 @@ import {
   gemDistanceMeters,
   gemProximity,
   GEM_CHEER_MS,
+  GEM_STILL_SECONDS,
 } from "@/lib/gem-hunt";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import { distanceMeters } from "@/lib/geo";
@@ -149,17 +150,23 @@ export function GemHuntPanel({
           <p className="gem-hunt-panel__status">
             {canCollect
               ? "בטווח — אפשר לאסוף"
-              : proximity === "far"
-                ? "התקרבו ל־25 מ׳ לאיסוף"
-                : standingStill || simulate
-                  ? "מוכנים לציד"
-                  : distanceM != null
-                    ? `~${Math.round(distanceM)} מ׳`
-                    : "פתחו מצלמה לתצוגה"}
+              : proximity === "far" && distanceM != null && distanceM <= 25
+                ? "ליד הבית — המתינו רגע ל-GPS או עמדו דקה בלי לזוז"
+                : proximity === "far"
+                  ? "התקרבו ל־25 מ׳ לאיסוף"
+                  : standingStill || simulate
+                    ? "מוכנים לציד"
+                    : distanceM != null
+                      ? `~${Math.round(distanceM)} מ׳ — עמדו ${GEM_STILL_SECONDS} שנ׳`
+                      : "פתחו מצלמה לתצוגה"}
           </p>
         ) : null}
 
-        {!collected && userLocation && distanceM != null && distanceM > 40 ? (
+        {!collected &&
+        userLocation &&
+        distanceM != null &&
+        distanceM <= 35 &&
+        (proximity === "far" || proximity === "approach") ? (
           <div className="gem-hunt-panel__calibrate-public">
             <Button
               type="button"

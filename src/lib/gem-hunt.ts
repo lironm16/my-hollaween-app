@@ -66,6 +66,11 @@ export const GEM_SCAN_RING_COLLECT_RADIUS = 54;
 /** Ground-level offset from the map pin (no floor height — see gemAnchorForHouse). */
 export const GEM_ANCHOR_MIN_METERS = 2;
 export const GEM_ANCHOR_MAX_METERS = 10;
+/**
+ * When reported distance to pin/anchor is this small, trust on-site GPS despite noisy accuracy.
+ * (Avoids «2 m away» but still «far» when accuracy is 60–100 m.)
+ */
+export const GEM_ONSITE_TRUST_METERS = 12;
 
 /** Camera collect — per-gem choreography (see gem-collect-dance.ts / CSS). */
 export const GEM_COLLECT_OVERLAY_MS = 5000;
@@ -269,6 +274,13 @@ export function withinGemHuntMeters(
   const acc = user.accuracy;
   if (acc == null || !Number.isFinite(acc) || acc <= 0) return true;
   const slack = 18;
+  if (d <= GEM_ONSITE_TRUST_METERS) {
+    // Teleport onto the pin with a huge accuracy circle — still not “on site”.
+    if (acc > 150 && d < 3) return false;
+    if (acc <= 100) return true;
+    if (d + Math.min(acc, 120) <= GEM_HUNT_METERS + slack) return true;
+    return d <= 8;
+  }
   return d + Math.min(acc, 120) <= GEM_HUNT_METERS + slack;
 }
 
@@ -300,10 +312,18 @@ export function gemProximity(
   const dHouse = distanceMeters(user, house);
   const dAnchor = distanceMeters(user, anchor);
   const d = Math.min(dHouse, dAnchor);
+  const acc = user.accuracy;
+  if (acc != null && Number.isFinite(acc) && acc > 150 && d < 3) return "far";
   if (inGemHuntBand(user, house)) return "hunt";
   if (d <= GEM_APPROACH_METERS) {
-    const acc = user.accuracy;
-    if (acc != null && Number.isFinite(acc) && acc > GEM_APPROACH_METERS) return "far";
+    if (
+      d > GEM_ONSITE_TRUST_METERS &&
+      acc != null &&
+      Number.isFinite(acc) &&
+      acc > GEM_APPROACH_METERS
+    ) {
+      return "far";
+    }
     return "approach";
   }
   return "far";
