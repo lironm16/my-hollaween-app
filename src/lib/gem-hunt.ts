@@ -3,8 +3,8 @@ import { getOsmGemAnchor } from "@/lib/gem-osm-anchor-cache";
 import { GEM_OSM_ANCHOR_MAX_PIN_DISTANCE_M } from "@/lib/gem-osm-anchor-data";
 import { distanceMeters } from "@/lib/geo";
 import {
-  jitterAlongSidewalk,
   nearestSidewalkPoint,
+  sidewalkGemAnchorForHouse,
 } from "@/lib/gem-street-spines";
 import type { GemFamily, GemMonsterId } from "@/lib/gem-monsters";
 import {
@@ -181,11 +181,11 @@ export function gemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
     return { ...point, bearingFromHouseDeg, offsetM, calibrated: false };
   }
 
-  const sidewalk = nearestSidewalkPoint(house, house.address ?? null);
-  if (sidewalk) {
-    const point = jitterAlongSidewalk(sidewalk, house.id, "gem-anchor-v4-sidewalk");
+  const spine = sidewalkGemAnchorForHouse(house);
+  if (spine && spine.distanceM <= GEM_OSM_ANCHOR_MAX_PIN_DISTANCE_M) {
+    const point = { lat: spine.lat, lng: spine.lng };
     const bearingFromHouseDeg = bearingDegrees(house, point);
-    const offsetM = distanceMeters(house, point);
+    const offsetM = spine.distanceM;
     return { ...point, bearingFromHouseDeg, offsetM, calibrated: false };
   }
 
@@ -312,7 +312,7 @@ export function withinGemHuntMeters(
   const slack = 18;
   if (d <= GEM_ONSITE_TRUST_METERS) {
     // Teleport onto the pin with a huge accuracy circle — still not “on site”.
-    if (acc > 150 && d < 3) return false;
+    if (acc > 150) return false;
     if (acc <= 100) return true;
     if (d + Math.min(acc, 120) <= GEM_HUNT_METERS + slack) return true;
     return d <= 8;

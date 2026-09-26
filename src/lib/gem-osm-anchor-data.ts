@@ -4,7 +4,7 @@ export type GemOsmAnchorEntry = {
   lng: number;
   /** Meters from house pin to snapped walk point. */
   distanceM: number;
-  source: "osrm" | "overpass";
+  source: "osrm" | "overpass" | "spine";
 };
 
 export type GemOsmAnchorFile = {

@@ -1,65 +1,52 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { NextResponse } from "next/server";
-import type { GemOsmAnchorFile } from "@/lib/gem-osm-anchor-data";
-import { snapHousesToWalkNetwork } from "@/lib/gem-osrm-snap";
+import type { GemOsmAnchorEntry, GemOsmAnchorFile } from "@/lib/gem-osm-anchor-data";
+import { sidewalkGemAnchorForHouse } from "@/lib/gem-street-spines";
+import { gemHuntMapHouses } from "@/lib/gem-monsters";
 import { getCatalog } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type CacheEntry = {
-  catalogUpdatedAt: string;
-  body: GemOsmAnchorFile;
-};
-
-let memoryCache: CacheEntry | null = null;
-
-function readStaticAnchors(): GemOsmAnchorFile {
+function readStaticAnchors(): Record<string, GemOsmAnchorEntry> {
   try {
     const raw = readFileSync(join(process.cwd(), "public/gem-osm-anchors.json"), "utf8");
     const parsed = JSON.parse(raw) as GemOsmAnchorFile;
-    if (parsed?.version === 1 && parsed.anchors) return parsed;
+    if (parsed?.version === 1 && parsed.anchors) return parsed.anchors;
   } catch {
-    /* missing on dev */
+    /* dev */
   }
-  return { version: 1, generatedAt: "", anchors: {} };
+  return {};
 }
 
-/** Live catalog houses + OSRM snap (static file only has seed ids). */
+/**
+ * Fast sidewalk anchors for every gem-eligible house (street spines + static seed file).
+ * OSRM refinement runs client-side via /api/gem-snap in small batches.
+ */
 export async function GET() {
   const catalog = await getCatalog();
-  const catalogUpdatedAt = catalog.updatedAt ?? "";
-  if (memoryCache && memoryCache.catalogUpdatedAt === catalogUpdatedAt) {
-    return NextResponse.json(memoryCache.body, {
-      headers: { "Cache-Control": "public, max-age=300, s-maxage=600" },
-    });
+  const eligible = gemHuntMapHouses(catalog.houses, "real");
+  const staticAnchors = readStaticAnchors();
+  const anchors: Record<string, GemOsmAnchorEntry> = {};
+
+  for (const house of eligible) {
+    const seeded = staticAnchors[house.id];
+    if (seeded) {
+      anchors[house.id] = seeded;
+      continue;
+    }
+    const spine = sidewalkGemAnchorForHouse(house);
+    if (spine) anchors[house.id] = spine;
   }
 
-  const staticFile = readStaticAnchors();
-  const merged: GemOsmAnchorFile = {
+  const body: GemOsmAnchorFile = {
     version: 1,
-    generatedAt: new Date().toISOString(),
-    anchors: { ...staticFile.anchors },
+    generatedAt: catalog.updatedAt ?? new Date().toISOString(),
+    anchors,
   };
 
-  const missing = catalog.houses.filter(
-    (h) =>
-      h?.id &&
-      Number.isFinite(h.lat) &&
-      Number.isFinite(h.lng) &&
-      !merged.anchors[h.id],
-  );
-
-  if (missing.length > 0) {
-    const snapped = await snapHousesToWalkNetwork(
-      missing.map((h) => ({ id: h.id, lat: h.lat, lng: h.lng })),
-    );
-    Object.assign(merged.anchors, snapped);
-  }
-
-  memoryCache = { catalogUpdatedAt, body: merged };
-  return NextResponse.json(merged, {
-    headers: { "Cache-Control": "public, max-age=300, s-maxage=600" },
+  return NextResponse.json(body, {
+    headers: { "Cache-Control": "public, max-age=60, s-maxage=120" },
   });
 }

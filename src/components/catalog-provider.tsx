@@ -36,6 +36,7 @@ import {
 } from "@/lib/catalog-houses";
 import { catalogHasRealHouses } from "@/lib/house-set";
 import { ensureGemOsmAnchorsLoaded } from "@/lib/gem-osm-anchor-cache";
+import { gemHuntMapHouses } from "@/lib/gem-monsters";
 import { isMapListSuspended, subscribeMapListSuspend } from "@/lib/map-list-suspend";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
@@ -160,9 +161,14 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const gemEligibleHouses = useMemo(() => {
+    if (!catalog?.houses?.length) return undefined;
+    return gemHuntMapHouses(catalog.houses, "real");
+  }, [catalog?.houses]);
+
   useEffect(() => {
-    ensureGemOsmAnchorsLoaded(catalog?.updatedAt ?? null);
-  }, [catalog?.updatedAt]);
+    ensureGemOsmAnchorsLoaded(catalog?.updatedAt ?? null, gemEligibleHouses);
+  }, [catalog?.updatedAt, gemEligibleHouses]);
 
   useEffect(() => {
     let cancelled = false;

@@ -53,6 +53,9 @@ export const GEM_STREET_SPINES: GemStreetSpine[] = [
       { lat: 32.09252, lng: 34.8117 },
       { lat: 32.09312, lng: 34.81225 },
       { lat: 32.09372, lng: 34.8128 },
+      { lat: 32.09435, lng: 34.81335 },
+      { lat: 32.09505, lng: 34.81085 },
+      { lat: 32.09675, lng: 34.81645 },
     ],
   },
   {
@@ -143,7 +146,9 @@ export function streetNameFromAddress(address: string | undefined | null): strin
 }
 
 function normalizeStreetForMatch(street: string): string {
-  return street.replace(/\s+/g, " ").replace(/^אבא\s+/u, "").trim();
+  let norm = street.replace(/\s+/g, " ").trim();
+  norm = norm.replace(/^אבא\s+/u, "").replace(/\s+אבא\s*$/u, "").trim();
+  return norm;
 }
 
 function streetNameMatches(addressStreet: string, aliases: string[]): boolean {
@@ -284,4 +289,22 @@ export function jitterAlongSidewalk(
   const meters = 2 + (h % 500) / 100;
   const sign: 1 | -1 = (h & 1) === 0 ? 1 : -1;
   return moveAlongSpine(hit.spine, hit.segmentIndex, hit.point, meters, sign);
+}
+
+/** Stable sidewalk anchor from street spines (sync — no OSRM). */
+export function sidewalkGemAnchorForHouse(house: {
+  id: string;
+  lat: number;
+  lng: number;
+  address?: string | null;
+}): { lat: number; lng: number; distanceM: number; source: "spine" } | null {
+  const sidewalk = nearestSidewalkPoint(house, house.address ?? null);
+  if (!sidewalk) return null;
+  const point = jitterAlongSidewalk(sidewalk, house.id, "gem-anchor-v5-sidewalk");
+  return {
+    lat: point.lat,
+    lng: point.lng,
+    distanceM: distanceMeters(house, point),
+    source: "spine",
+  };
 }
