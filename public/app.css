@@ -8745,6 +8745,79 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   transform: translate(-50%, -35%) rotate(-45deg);
   filter: drop-shadow(0 0 6px rgb(0 0 0 / 0.45));
 }
+.gem-hunt-direction-rose__chevron {
+  position: absolute;
+  left: 50%;
+  top: -0.15rem;
+  width: 2.35rem;
+  height: 3.35rem;
+  transform: translateX(-50%);
+  color: inherit;
+  opacity: 0.85;
+}
+.gem-hunt-direction-rose__spoke.is-active .gem-hunt-direction-rose__chevron {
+  opacity: 1;
+  filter: drop-shadow(0 0 12px rgb(251 191 36 / 0.9));
+}
+.gem-hunt-overlay__nav-caption {
+  position: absolute;
+  left: 50%;
+  top: calc(42% - min(44vw, 11rem) - 0.35rem);
+  z-index: 4;
+  width: min(92vw, 22rem);
+  margin: 0;
+  transform: translate(-50%, -100%);
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #fde68a;
+  text-shadow: 0 2px 12px rgb(0 0 0 / 0.9);
+  pointer-events: none;
+}
+.gem-hunt-overlay__footer-stack {
+  position: relative;
+  width: min(92vw, 22rem);
+}
+.gem-hunt-overlay__hint1-popover {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.55rem);
+  z-index: 12;
+  width: min(78vw, 19.5rem);
+  padding: 0.65rem 0.65rem 0.75rem;
+  border-radius: 1rem;
+  border: 2px solid rgb(251 191 36 / 0.55);
+  background: linear-gradient(160deg, rgb(49 24 78 / 0.96), rgb(12 6 22 / 0.98));
+  box-shadow: 0 0 28px rgb(109 40 217 / 0.45),
+    0 12px 32px rgb(0 0 0 / 0.55);
+  pointer-events: auto;
+}
+.gem-hunt-overlay__hint1-popover-title {
+  margin: 0 0 0.45rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgb(251 191 36 / 0.25);
+  text-align: center;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #fde68a;
+  line-height: 1.35;
+}
+.gem-hunt-overlay__hint1-orbit {
+  height: min(42vw, 13.5rem);
+  min-height: 11.5rem;
+  border-radius: 0.65rem;
+  overflow: hidden;
+  touch-action: none;
+  background: radial-gradient(circle at 50% 35%, rgb(76 29 149 / 0.35), rgb(18 8 28 / 0.5));
+}
+.gem-hunt-overlay__hint1-orbit.gem-orbit-stage__canvas,
+.gem-hunt-overlay__hint1-orbit {
+  border: none;
+  box-shadow: none;
+}
+.gem-hunt-overlay__hint1-popover .gem-orbit-stage {
+  width: 100%;
+}
 .gem-hunt-direction-rose__spoke.is-active {
   opacity: 1;
   color: #fde68a;
@@ -8755,7 +8828,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-direction-rose__spoke.is-active.is-facing {
   color: #bbf7d0;
 }
-.gem-hunt-direction-rose__spoke.is-active.is-facing .gem-hunt-direction-rose__icon {
+.gem-hunt-direction-rose__spoke.is-active.is-facing .gem-hunt-direction-rose__chevron {
   filter: drop-shadow(0 0 14px rgb(74 222 128 / 0.95));
 }
 .gem-hunt-overlay__inline-hint {
@@ -8794,6 +8867,14 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   pointer-events: auto;
   text-align: center;
 }
+.gem-hunt-overlay__ring-hint-title {
+  margin: 0 0 0.25rem;
+  padding-inline: 0.5rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #fde68a;
+  text-shadow: 0 1px 10px rgb(0 0 0 / 0.85);
+}
 .gem-hunt-overlay__ring-hint-title--top {
   position: absolute;
   top: 10%;
@@ -8802,6 +8883,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   width: 92%;
   transform: translateX(-50%);
   pointer-events: none;
+  margin: 0;
+  text-align: center;
 }
 .gem-hunt-overlay__ring-orbit {
   width: 100%;
@@ -8811,10 +8894,13 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   max-height: 78%;
 }
 .gem-hunt-overlay__ring-orbit .gem-orbit-stage__canvas {
-  border: none;
+  height: 100%;
+  min-height: 8.5rem;
+  border-radius: 0;
+  overflow: visible;
   background: transparent;
   box-shadow: none;
-  min-height: 8.5rem;
+  border: none;
 }
 .gem-hunt-overlay__ring-distance {
   position: absolute;

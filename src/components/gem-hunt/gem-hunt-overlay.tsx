@@ -392,15 +392,25 @@ export function GemHuntOverlay({
     distanceM != null &&
     userLocation != null &&
     !sim;
-  const showCharacterInRing = hintPanel === "character" && !centerDisplayMode;
   async function retryCompassPermission() {
     const ok = await requestGemHuntOrientationPermission();
     if (ok) setCompassRetry((n) => n + 1);
   }
 
-  const toggleHintPanel = useCallback((panel: "character" | "nav") => {
-    setHintPanel((prev) => (prev === panel ? null : panel));
-  }, []);
+  const toggleHintPanel = useCallback(
+    async (panel: "character" | "nav") => {
+      if (hintPanel === panel) {
+        setHintPanel(null);
+        return;
+      }
+      if (panel === "nav" && !isGemHuntOrientationGranted()) {
+        const ok = await requestGemHuntOrientationPermission();
+        if (ok) setCompassRetry((n) => n + 1);
+      }
+      setHintPanel(panel);
+    },
+    [hintPanel],
+  );
 
   const showCompassEnable =
     huntArrowMapNorth &&
@@ -476,6 +486,9 @@ export function GemHuntOverlay({
 
       {showHuntUi ? (
       <div className="gem-hunt-overlay__stage" aria-hidden={false}>
+        {hintPanel === "nav" ? (
+          <p className="gem-hunt-overlay__nav-caption">כוון אותי — ניווט ליהלום</p>
+        ) : null}
         <div className="gem-hunt-overlay__scan-ring" aria-hidden>
           {showDirectionRose ? (
             <GemHuntDirectionRose
@@ -484,23 +497,9 @@ export function GemHuntOverlay({
               className="gem-hunt-overlay__scan-rose"
             />
           ) : null}
-          {hintPanel === "nav" ? (
-            <p className="gem-hunt-overlay__ring-hint-title gem-hunt-overlay__ring-hint-title--top">
-              כוון אותי — ניווט ליהלום
-            </p>
-          ) : null}
-          {showCharacterInRing ? (
-            <div className="gem-hunt-overlay__ring-hint gem-hunt-overlay__ring-hint--character">
-              <p className="gem-hunt-overlay__ring-hint-title">מי החבר שמסתתר ביהלום</p>
-              <GemOrbitStage
-                house={house}
-                stageClassName="gem-hunt-overlay__ring-orbit"
-              />
-            </div>
-          ) : null}
           {showNavDistance ? (
             <p className="gem-hunt-overlay__ring-distance" dir="ltr">
-              ~{formatDistance(distanceM!)}
+              {formatDistance(distanceM!)}
             </p>
           ) : null}
           {centerDisplayMode && collectEnabled && phase === "visible" ? (
@@ -609,7 +608,7 @@ export function GemHuntOverlay({
 
       {showHuntUi && phase !== "collecting" ? (
         <footer className="gem-hunt-overlay__footer" dir="rtl">
-          {showCompassEnable && !isFarForHints ? (
+          {showCompassEnable && hintPanel === "nav" && !isFarForHints ? (
             <button
               type="button"
               className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact w-full"
@@ -619,7 +618,17 @@ export function GemHuntOverlay({
             </button>
           ) : null}
 
-          <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
+          <div className="gem-hunt-overlay__footer-stack">
+            {hintPanel === "character" ? (
+              <div className="gem-hunt-overlay__hint1-popover">
+                <p className="gem-hunt-overlay__hint1-popover-title">
+                  מי החבר שמסתתר ביהלום
+                </p>
+                <GemOrbitStage house={house} stageClassName="gem-hunt-overlay__hint1-orbit" />
+              </div>
+            ) : null}
+
+            <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
             <button
               type="button"
               className={cn(
@@ -653,6 +662,7 @@ export function GemHuntOverlay({
             >
               גלה לי
             </button>
+          </div>
           </div>
         </footer>
       ) : null}
