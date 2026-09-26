@@ -84,8 +84,8 @@ export function HouseList({
           </>
         ) : emptyKind === "collected" ? (
           <>
-            <p className="font-display text-2xl text-orange-300">עדיין לא אספתם מדבקות</p>
-            <p className="mt-2 text-base">מדבקות שתאספו במסע יופיעו כאן.</p>
+            <p className="font-display text-2xl text-orange-300">עדיין לא אספתם חברים</p>
+            <p className="mt-2 text-base">חברים שתאספו במסע יופיעו כאן.</p>
           </>
         ) : emptyKind === "mine" ? (
           <>

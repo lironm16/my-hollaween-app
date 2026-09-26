@@ -126,9 +126,14 @@ describe("gem hunt gate", () => {
   it("shows only for admin", async () => {
     const { writeGemPreviewAsUser } = await import("@/lib/gem-preview-as-user");
     writeGemPreviewAsUser(false);
-    const { gemHuntVisible } = await import("@/lib/gem-hunt-enabled");
+    const { gemHuntVisible, gemHuntFabVisible } = await import("@/lib/gem-hunt-enabled");
     assert.equal(gemHuntVisible(true), true);
     assert.equal(gemHuntVisible(false), false);
+    const huntEvening = new Date(2026, 9, 31, 18, 0, 0, 0);
+    writeGemPreviewAsUser(true);
+    assert.equal(gemHuntVisible(true), true);
+    assert.equal(gemHuntFabVisible(true, huntEvening), true);
+    writeGemPreviewAsUser(false);
   });
 
   it("bearingClockLabelHe maps compass octants", () => {

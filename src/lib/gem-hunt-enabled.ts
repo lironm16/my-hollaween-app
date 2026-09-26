@@ -1,11 +1,8 @@
-import { readGemPreviewAsUser } from "@/lib/gem-preview-as-user";
 import { isAddHouseOpen } from "@/lib/hours";
 
 /** Gem hunt is admin-only until we intentionally open it for everyone. */
 export function gemHuntVisible(isAdmin: boolean) {
-  if (!isAdmin) return false;
-  if (readGemPreviewAsUser()) return false;
-  return true;
+  return isAdmin;
 }
 
 /** Map FAB, details hunt block, filter «לא אספתי», stats «אספתי», title diamonds — one gate. */
@@ -13,7 +10,7 @@ export function gemHuntFabVisible(isAdmin: boolean, now = new Date()) {
   return gemHuntVisible(isAdmin) && !isAddHouseOpen(now);
 }
 
-/** Side menu «ספר מדבקות» — same evening gate as hunt (respects rehearsal / sim clock via `now`). */
+/** Side menu «ספר החברים» — same evening gate as hunt (respects rehearsal / sim clock via `now`). */
 export function gemBagMenuVisible(isAdmin: boolean, now = new Date()) {
   return gemHuntFabVisible(isAdmin, now);
 }

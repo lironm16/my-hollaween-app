@@ -49,7 +49,7 @@ export function GemStickerAlbum({
           {complete ? (
             <>
               <Sparkles className="inline size-4 text-amber-300" aria-hidden /> גלו את כל
-              המדבקות למטה
+              החברים למטה
             </>
           ) : (
             <>מה עדיין חבוי על המפה?</>
@@ -57,7 +57,7 @@ export function GemStickerAlbum({
         </p>
       </header>
 
-      <div className="gem-sticker-album__book" role="list" aria-label="מדבקות יהלום">
+      <div className="gem-sticker-album__book" role="list" aria-label="חברי יהלום">
         {slots.map((monster, index) => {
           const isFound = isGemAlbumMonsterCollected(monster.id, collected, housesById);
           return (
@@ -129,7 +129,7 @@ function GemStickerSlot({
             <span className="gem-sticker-slot__shine" aria-hidden />
           </>
         ) : (
-          <div className="gem-sticker-slot__mystery" aria-label="מדבקה חסרה">
+          <div className="gem-sticker-slot__mystery" aria-label="חבר חסר">
             <span className="gem-sticker-slot__question" aria-hidden>
               ?
             </span>

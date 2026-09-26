@@ -43,7 +43,7 @@ export function GemCollectAlbumReveal({
     return pool.slice(start, start + 4);
   }, [pool, slotIndex]);
 
-  const bookLabel = newAlbumFriend ? "נכנס לספר המדבקות" : "כבר בספר המדבקות — עוד יהלום!";
+  const bookLabel = newAlbumFriend ? "נכנס לספר החברים" : "כבר בספר החברים — עוד יהלום!";
   const showFly = newAlbumFriend;
 
   return (
@@ -70,7 +70,7 @@ export function GemCollectAlbumReveal({
           </div>
         ) : null}
 
-        <div className="gem-collect-album-reveal__book" aria-label="ספר מדבקות">
+        <div className="gem-collect-album-reveal__book" aria-label="ספר חברים">
           <p className="gem-collect-album-reveal__book-label">{bookLabel}</p>
           <div className="gem-collect-album-reveal__grid">
             {previewSlots.map((entry) => {
@@ -118,7 +118,7 @@ export function GemCollectAlbumReveal({
               className="gem-collect-album-reveal__action gem-collect-album-reveal__action--primary"
               onClick={onOpenStickerBook}
             >
-              לספר המדבקות
+              לספר החברים
             </button>
             <button
               type="button"
@@ -135,7 +135,7 @@ export function GemCollectAlbumReveal({
                 ? showActions
                   ? ""
                   : "שמור בטוח בספר — ממשיכים לצוד!"
-                : "יהלום נוסף לבית — המדבקה כבר אצלכם!"
+                : "יהלום נוסף לבית — החבר כבר אצלכם!"
               : "מדביקים…"}
           </p>
         )}

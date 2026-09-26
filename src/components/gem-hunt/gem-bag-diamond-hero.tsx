@@ -28,7 +28,7 @@ export function GemBagDiamondHero({
           aria-hidden
         />
         <div className="min-w-0 flex-1 text-right">
-          <h1 className="font-display text-2xl text-orange-200">ספר המדבקות</h1>
+          <h1 className="font-display text-2xl text-orange-200">ספר החברים</h1>
           <p className="mt-1 text-lg font-medium text-violet-50">
             <span className="text-amber-200">{filledCount}</span>
             <span className="text-violet-200/90"> חברים באלבום · </span>
@@ -55,7 +55,7 @@ export function GemBagDiamondHero({
           באוסף — השכונה מלאה קסם!
         </p>
       ) : (
-        <p className="gem-bag-hero__hint">כל מדבקה = חבר שמצאתם בבית על המפה.</p>
+        <p className="gem-bag-hero__hint">כל חבר = יצור שמצאתם בבית על המפה.</p>
       )}
     </header>
   );

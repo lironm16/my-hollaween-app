@@ -10,7 +10,7 @@ import { GemHuntOverlayLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { Button } from "@/components/ui/button";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
-import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
+import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { useAppNow } from "@/hooks/use-app-clock";
 import {
   canCollectGem,
@@ -77,7 +77,10 @@ export function GemHuntPanel({
   }, []);
 
   const now = useAppNow();
-  const visible = gemHuntFabVisible(isAdmin, now);
+  const { gemFabVisible: visible, gemAdminToolsVisible: showAdminTools } = useGemHuntAdminUi(
+    isAdmin,
+    now,
+  );
   const collected = gems.collected(house.id);
   const proximity = gemProximity(userLocation, house, collected);
   const needsStill =
@@ -178,7 +181,7 @@ export function GemHuntPanel({
           </div>
         ) : null}
 
-        {isAdmin ? (
+        {showAdminTools ? (
           <div className="gem-hunt-panel__admin-tools">
             <label className="gem-hunt-panel__simulate">
               <input

@@ -154,7 +154,12 @@ export function NeighborhoodApp({
   const catalogUpdatedAt = catalog?.updatedAt;
   const { admin } = useAdminSession();
   const now = useAppNow();
-  const { gemHuntVisible: gemHuntActive, gemFabVisible: gemUi } = useGemHuntAdminUi(admin, now);
+  const {
+    gemHuntVisible: gemFeatureOn,
+    gemFabVisible: gemUi,
+    gemAdminToolsVisible: gemAdminTools,
+  } = useGemHuntAdminUi(admin, now);
+  const gemHuntActive = gemFeatureOn && gemUi;
   const geo = useUserLocation({ watch: false });
   const { setWatchEnabled } = geo;
   const gps = geo.location;
@@ -394,13 +399,13 @@ export function NeighborhoodApp({
 
   const handleToggleGemMenu = useCallback(
     (house: PublicHouse) => {
-      if (gems.collected(house.id)) {
+      if (gems.collected(house.id) && gemAdminTools) {
         setGemResetHouse(house);
         return;
       }
       void openGemHuntForHouse(house);
     },
-    [gems, openGemHuntForHouse],
+    [gems, openGemHuntForHouse, gemAdminTools],
   );
 
   const confirmGemReset = useCallback(() => {
@@ -1208,8 +1213,8 @@ export function NeighborhoodApp({
                       : null
                   }
                   gemHuntEnabled={gemHuntActive}
-                  showGemAnchors={gemUi}
-                  gemAnchorHouses={gemUi ? mapHouses : []}
+                  showGemAnchors={gemAdminTools && gemUi}
+                  gemAnchorHouses={gemAdminTools && gemUi ? mapHouses : []}
                   isGemCollected={gems.collected}
                   onGemHuntPress={() => void openMapGemHunt()}
                   gemGlow="off"

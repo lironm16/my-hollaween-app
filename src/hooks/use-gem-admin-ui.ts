@@ -1,7 +1,11 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { isAddHouseOpen } from "@/lib/hours";
+import {
+  gemBagMenuVisible,
+  gemHuntFabVisible,
+  gemHuntVisible,
+} from "@/lib/gem-hunt-enabled";
 import { readGemPreviewAsUser, subscribeGemPreviewAsUser } from "@/lib/gem-preview-as-user";
 
 /** Re-renders when בדיקות → «תצוגת משתמש (יהלומים)» toggles. */
@@ -11,12 +15,14 @@ export function useGemHuntAdminUi(isAdmin: boolean, now = new Date()) {
     readGemPreviewAsUser,
     () => false,
   );
-  const gemToolsOn = isAdmin && !previewAsUser;
-  const fabOn = gemToolsOn && !isAddHouseOpen(now);
+  const gemAdminToolsVisible = isAdmin && !previewAsUser;
+  const fabOn = gemHuntFabVisible(isAdmin, now);
   return {
     previewAsUser,
-    gemHuntVisible: gemToolsOn,
+    gemHuntVisible: gemHuntVisible(isAdmin),
     gemFabVisible: fabOn,
-    gemBagMenuVisible: fabOn,
+    gemBagMenuVisible: gemBagMenuVisible(isAdmin, now),
+    /** Admin-only QA (anchors, reset, simulate in range) — off in user preview. */
+    gemAdminToolsVisible,
   };
 }

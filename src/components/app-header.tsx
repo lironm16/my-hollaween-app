@@ -193,7 +193,7 @@ export function AppHeader({
                 )}
               >
                 <Gem className="size-4 text-amber-300/90" />
-                ספר המדבקות
+                ספר החברים
               </Link>
             ) : null}
             <Link

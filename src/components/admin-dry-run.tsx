@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
-import { useRehearsalScene, useServerSim } from "@/hooks/use-app-clock";
+import { useAdminSession } from "@/hooks/use-admin-session";
+import { useRehearsalScene, useServerSim, useAppNow } from "@/hooks/use-app-clock";
 import { useHouseSet } from "@/hooks/use-house-set";
+import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
 import {
   CLOCK_EVENT,
   REHEARSAL_LABELS,
@@ -44,10 +46,13 @@ function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
 }
 
 export function AdminDryRunPanel() {
+  const { admin } = useAdminSession();
+  const now = useAppNow();
   const { scene, setScene } = useRehearsalScene();
   const { down, setDown } = useServerSim();
   const { houseSet, setHouseSet } = useHouseSet();
   const { previewAsUser, setPreviewAsUser } = useGemPreviewAsUser();
+  const gemsOnScreen = admin && gemHuntFabVisible(admin, now);
   const [lastScene, setLastScene] = useState<RehearsalScene>("open");
   const [customClock, setCustomClock] = useState("18:00");
   const active = scene !== "off";
@@ -97,16 +102,6 @@ export function AdminDryRunPanel() {
         בלי לחכות ל־31 באוקטובר: בחרו רגע בלילה כדי לראות באנרים, סיכות «נפתח/נסגר בקרוב», ואת כפתורי
         ההפסקה בטופס. נשמר בטלפון הזה בלבד.
       </p>
-      <div className="flex items-center justify-between gap-3 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20">
-        <div className="min-w-0">
-          <p className="text-base font-medium text-orange-100">תצוגת משתמש (יהלומים)</p>
-          <p className="text-base text-violet-300">
-            כבוי = כל כלי המנהל ליהלומים. פועל = כמו משתמש רגיל — בלי FAB, בלי ספר מדבקות, בלי סינון
-            «לא אספתי».
-          </p>
-        </div>
-        <Toggle on={previewAsUser} onClick={() => setPreviewAsUser(!previewAsUser)} />
-      </div>
       <div className="flex items-center justify-between gap-3 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20">
         <div className="min-w-0">
           <p className="text-base font-medium text-orange-100">שעון בדיקות</p>
@@ -168,6 +163,18 @@ export function AdminDryRunPanel() {
           מציג את הבאנר «השרת לא עונה» עם הרשימה ששמורה בטלפון. פתחו את המפה פעם אחת ברשת לפני כן.
         </p>
       </div>
+      {gemsOnScreen ? (
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20">
+          <div className="min-w-0">
+            <p className="text-base font-medium text-orange-100">תצוגת משתמש (יהלומים)</p>
+            <p className="text-base text-violet-300">
+              פועל = כמו משתמש בלילה — יהלומים, ספר החברים וסינון «לא אספתי», בלי כלי בדיקה (סימולציית
+              טווח, סיכות יהלום, איפוס איסוף).
+            </p>
+          </div>
+          <Toggle on={previewAsUser} onClick={() => setPreviewAsUser(!previewAsUser)} />
+        </div>
+      ) : null}
     </div>
   );
 }
