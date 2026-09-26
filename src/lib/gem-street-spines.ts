@@ -250,17 +250,23 @@ export function nearestSidewalkPoint(
     street != null
       ? GEM_STREET_SPINES.filter((s) => streetNameMatches(street, s.aliases))
       : [];
-  const pool = namedSpines.length > 0 ? namedSpines : GEM_STREET_SPINES;
-  const maxM =
-    namedSpines.length > 0 ? GEM_STREET_SNAP_NAMED_METERS : GEM_STREET_SNAP_GENERIC_METERS;
 
-  let best: SpineHit | null = null;
-  for (const spine of pool) {
-    const hit = nearestOnSpine(origin, spine);
-    if (!hit || hit.distanceM > maxM) continue;
-    if (!best || hit.distanceM < best.distanceM) best = hit;
+  function bestInPool(spines: GemStreetSpine[], maxM: number): SpineHit | null {
+    let best: SpineHit | null = null;
+    for (const spine of spines) {
+      const hit = nearestOnSpine(origin, spine);
+      if (!hit || hit.distanceM > maxM) continue;
+      if (!best || hit.distanceM < best.distanceM) best = hit;
+    }
+    return best;
   }
-  return best;
+
+  if (namedSpines.length > 0) {
+    const named = bestInPool(namedSpines, GEM_STREET_SNAP_NAMED_METERS);
+    if (named && named.distanceM <= GEM_STREET_NAMED_ABORT_METERS) return named;
+  }
+
+  return bestInPool(GEM_STREET_SPINES, GEM_STREET_SNAP_GENERIC_METERS);
 }
 
 export function clampTowardHouse(

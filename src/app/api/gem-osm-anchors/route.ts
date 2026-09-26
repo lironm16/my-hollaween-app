@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import type { GemOsmAnchorEntry, GemOsmAnchorFile } from "@/lib/gem-osm-anchor-data";
 import { sidewalkGemAnchorForHouse } from "@/lib/gem-street-spines";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
+import { snapHousesToWalkNetwork } from "@/lib/gem-osrm-snap";
 import { getCatalog } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -38,6 +39,14 @@ export async function GET() {
     }
     const spine = sidewalkGemAnchorForHouse(house);
     if (spine) anchors[house.id] = spine;
+  }
+
+  const needOsrm = eligible.filter((house) => !anchors[house.id]);
+  if (needOsrm.length > 0) {
+    const snaps = await snapHousesToWalkNetwork(needOsrm, { gapMs: 60, concurrency: 4 });
+    for (const [houseId, snap] of Object.entries(snaps)) {
+      anchors[houseId] = snap;
+    }
   }
 
   const body: GemOsmAnchorFile = {
