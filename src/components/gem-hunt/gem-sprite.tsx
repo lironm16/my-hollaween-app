@@ -17,6 +17,8 @@ export function GemSprite({
   /** Center «גלה לי» — no spin/drag; parent button handles tap to collect. */
   tapCollect = false,
   spinWhileCollect = true,
+  motion = "idle",
+  celebrateVariant = 1,
   /** Square poster frame (map collect cheer). */
   posterFill = false,
 }: {
@@ -31,6 +33,8 @@ export function GemSprite({
   mode?: "auto" | "3d" | "poster" | "orbit";
   tapCollect?: boolean;
   spinWhileCollect?: boolean;
+  motion?: "idle" | "celebrate";
+  celebrateVariant?: number;
   posterFill?: boolean;
 }) {
   const id = house?.id ?? houseId ?? "default";
@@ -77,6 +81,7 @@ export function GemSprite({
         size === "sm" && "gem-sprite--sm",
         mode === "3d" && "gem-sprite--hunt",
         collected && "is-collected",
+        motion === "celebrate" && "is-celebrating",
         className,
       )}
     >
@@ -87,9 +92,11 @@ export function GemSprite({
         size={mode === "orbit" ? "fill" : size}
         collected={collected}
         interactive={!tapCollect}
-        spin={spinWhileCollect}
-        spinRate={tapCollect ? 0.35 : undefined}
+        spin={spinWhileCollect || motion === "celebrate"}
+        spinRate={tapCollect && motion !== "celebrate" ? 0.35 : undefined}
         controls={mode === "orbit" ? "orbit" : "turntable"}
+        motion={motion}
+        celebrateVariant={celebrateVariant}
       />
     </div>
   );

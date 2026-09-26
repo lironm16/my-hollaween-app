@@ -21,6 +21,10 @@ type Props = {
   spinRate?: number;
   /** turntable = hunt overlay; orbit = drag to inspect (gem bag) */
   controls?: "turntable" | "orbit";
+  /** Energetic hop + flip loop (collect / found hero). */
+  motion?: "idle" | "celebrate";
+  /** 1–8 — varies celebrate timing (collect dance index). */
+  celebrateVariant?: number;
 };
 
 function frameModel(object: THREE.Object3D, scaleFactor: number) {
@@ -60,9 +64,15 @@ export function GemModel3D({
   spin = true,
   spinRate,
   controls = "turntable",
+  motion = "idle",
+  celebrateVariant = 1,
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
+  const motionRef = useRef(motion);
+  motionRef.current = motion;
+  const celebrateVariantRef = useRef(celebrateVariant);
+  celebrateVariantRef.current = celebrateVariant;
   const [loadFailed, setLoadFailed] = useState(false);
   const meta = gemMonsterMeta(monsterId);
 
@@ -96,7 +106,9 @@ export function GemModel3D({
     key.position.set(2, 3, 4);
     const rim = new THREE.DirectionalLight(0xc4b5fd, 0.65);
     rim.position.set(-2, 1, -3);
-    scene.add(ambient, key, rim);
+    const fill = new THREE.DirectionalLight(0xfbbf24, 0.35);
+    fill.position.set(0, -1, 2);
+    scene.add(ambient, key, rim, fill);
 
     const pivot = new THREE.Group();
     scene.add(pivot);
@@ -179,11 +191,39 @@ export function GemModel3D({
       rafRef.current = requestAnimationFrame(tick);
       if (document.visibilityState === "hidden") return;
       const t = (performance.now() - start) / 1000;
+      const celebrate = motionRef.current === "celebrate";
+      const variant = ((celebrateVariantRef.current - 1) % 8) + 1;
+      const phase = variant * 0.37;
+
+      if (celebrate) {
+        const pulse = 0.5 + 0.5 * Math.sin(t * 5.5 + phase);
+        rim.intensity = 0.55 + pulse * 0.85;
+        fill.intensity = 0.25 + pulse * 0.55;
+        key.intensity = 1.05 + pulse * 0.45;
+      } else {
+        rim.intensity = 0.65;
+        fill.intensity = 0.35;
+        key.intensity = 1.2;
+      }
+
       if (controls === "turntable") {
         if (spin) {
-          const rate = spinRate ?? (interactive ? 0.7 : 0.35);
-          pivot.rotation.y = t * rate;
-          pivot.position.y = Math.sin(t * 2) * 0.04;
+          if (celebrate) {
+            const hop = Math.abs(Math.sin(t * 3.4 + phase));
+            pivot.rotation.y = t * (2.1 + variant * 0.08);
+            pivot.position.y = Math.sin(t * 4.8 + phase) * 0.16 + hop * 0.07;
+            pivot.rotation.x = Math.sin(t * 2.35 + phase) * 0.62;
+            pivot.rotation.z = Math.sin(t * 3.9 + phase * 1.2) * 0.14;
+            const squash = 1 + Math.sin(t * 6.2 + phase) * 0.08;
+            pivot.scale.setScalar(squash);
+          } else {
+            pivot.scale.setScalar(1);
+            const rate = spinRate ?? (interactive ? 0.7 : 0.35);
+            pivot.rotation.y = t * rate;
+            pivot.rotation.x = 0;
+            pivot.rotation.z = 0;
+            pivot.position.y = Math.sin(t * 2) * 0.04;
+          }
         }
       } else {
         orbit?.update();
@@ -236,6 +276,7 @@ export function GemModel3D({
         size === "fill" && "gem-model-3d--fill",
         controls === "orbit" && "gem-model-3d--orbit",
         collected && "is-collected",
+        motion === "celebrate" && "is-celebrating",
         className,
       )}
       aria-hidden={controls === "turntable"}

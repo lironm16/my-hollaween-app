@@ -17,12 +17,10 @@ import {
   gemAnchorForHouse,
   gemDistanceMeters,
   gemProximity,
-  GEM_APPROACH_METERS,
-  GEM_HUNT_METERS,
   GEM_CHEER_MS,
 } from "@/lib/gem-hunt";
 import type { GemMonsterId } from "@/lib/gem-monsters";
-import { distanceMeters, formatDistance } from "@/lib/geo";
+import { distanceMeters } from "@/lib/geo";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
 
@@ -68,6 +66,7 @@ export function GemHuntPanel({
   const [huntLocation, setHuntLocation] = useState<UserLocation | null>(null);
   const [simulate, setSimulate] = useState(adminSimulateInRange);
   const [gemCheer, setGemCheer] = useState(false);
+  const [gemCheerPet, setGemCheerPet] = useState<GemMonsterId | null>(null);
   const cheerTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -130,11 +129,13 @@ export function GemHuntPanel({
       return;
     }
     if (options?.cheer !== false) {
+      setGemCheerPet(collectedVariant);
       setGemCheer(true);
       if (cheerTimerRef.current != null) window.clearTimeout(cheerTimerRef.current);
       cheerTimerRef.current = window.setTimeout(() => {
         cheerTimerRef.current = null;
         setGemCheer(false);
+        setGemCheerPet(null);
       }, GEM_CHEER_MS);
     }
   }
@@ -144,30 +145,22 @@ export function GemHuntPanel({
       <section className="gem-hunt-panel" dir="rtl">
         <GemHouseFoundHero house={house} collected={collected} className="gem-hunt-panel__found-hero" />
 
-        <div className="gem-hunt-panel__head">
-          <div className="min-w-0 flex-1 text-center">
-            <p className="gem-hunt-panel__title">ציד במצלמה</p>
-            <p className="gem-hunt-panel__sub">
-              {collected
-                ? "אפשר לפתוח שוב את המצלמה"
-                : canCollect
-                  ? "מוכנים לאיסוף!"
-                  : proximity === "far"
-                    ? "לחצו על המצלמה לתצוגה · לאיסוף התקרבו ל־25 מ׳"
-                    : proximity === "approach"
-                      ? `עוד ${distanceM != null ? formatDistance(Math.max(0, distanceM - GEM_HUNT_METERS)) : "קצת"} — אפשר לצפות, לאיסוף התקרבו`
-                      : standingStill || simulate
-                        ? "מוכנים לציד!"
-                        : "עמדו במקום לרגע… או פתחו מצלמה לתצוגה"}
-            </p>
-          </div>
-        </div>
+        {!collected ? (
+          <p className="gem-hunt-panel__status">
+            {canCollect
+              ? "בטווח — אפשר לאסוף"
+              : proximity === "far"
+                ? "התקרבו ל־25 מ׳ לאיסוף"
+                : standingStill || simulate
+                  ? "מוכנים לציד"
+                  : distanceM != null
+                    ? `~${Math.round(distanceM)} מ׳`
+                    : "פתחו מצלמה לתצוגה"}
+          </p>
+        ) : null}
 
         {!collected && userLocation && distanceM != null && distanceM > 40 ? (
           <div className="gem-hunt-panel__calibrate-public">
-            <p className="gem-hunt-panel__calibrate-hint">
-              הגעתם לכאן אבל המרחק גבוה? (לפעמים הסיכה במפה לא על הכניסה)
-            </p>
             <Button
               type="button"
               variant="outline"
@@ -176,7 +169,7 @@ export function GemHuntPanel({
               onClick={() => setGemAnchorOverride(house.id, userLocation)}
             >
               <MapPin className="size-3.5" aria-hidden />
-              אני ליד הבית — עדכן מיקום יהלום
+              עדכון מיקום יהלום (ליד הבית)
             </Button>
           </div>
         ) : null}
@@ -249,23 +242,11 @@ export function GemHuntPanel({
           onClick={() => void openCamera()}
         >
           <Camera className="size-4" aria-hidden />
-          {collected ? "הציגו שוב במצלמה" : "פתחו מצלמה — חיפוש היהלום"}
+          {collected ? "הציגו במצלמה" : canCollect ? "פתחו מצלמה — איסוף" : "פתחו מצלמה"}
         </Button>
-
-        {!collected && canCollect ? (
-          <p className="gem-hunt-panel__distance text-center text-sm text-emerald-300/90">
-            <MapPin className="mb-0.5 inline size-3.5" aria-hidden /> בטווח — אפשר לאסוף במצלמה
-          </p>
-        ) : null}
-
-        {!collected && proximity !== "far" && distanceM != null ? (
-          <p className="gem-hunt-panel__distance" dir="ltr">
-            ~{Math.round(distanceM)}m
-          </p>
-        ) : null}
       </section>
 
-      <GemCheer show={gemCheer} />
+      <GemCheer show={gemCheer} house={house} monsterId={gemCheerPet ?? undefined} />
       {huntOpen ? (
         <GemHuntOverlayLazy
           house={house}

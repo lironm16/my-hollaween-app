@@ -15,7 +15,7 @@ import {
 import L from "leaflet";
 import { LocateFixed } from "lucide-react";
 import { MapPrimaryFab } from "@/components/map-primary-fab";
-import { MapGemAnchorLayer } from "@/components/map-gem-anchor-layer";
+import { MapGemAnchorLayer, type GemMapAnchorVisual } from "@/components/map-gem-anchor-layer";
 import { MapLegend } from "@/components/map-legend";
 import "leaflet/dist/leaflet.css";
 import { config, inNeighborhood } from "@/lib/config";
@@ -635,6 +635,7 @@ type Props = {
   /** Same gate as map gem FAB / filter «לא אספתי» — admin evening hunt UI. */
   showGemAnchors?: boolean;
   gemAnchorHouses?: PublicHouse[];
+  gemAnchorVisual?: GemMapAnchorVisual;
   isGemCollected?: (houseId: string) => boolean;
   onGemHuntPress?: () => void;
   gemGlow?: import("@/lib/gem-hunt-target").GemFabGlow;
@@ -677,6 +678,7 @@ export function HouseMap({
   gemHuntEnabled = false,
   showGemAnchors = false,
   gemAnchorHouses = [],
+  gemAnchorVisual = "admin",
   isGemCollected,
   onGemHuntPress,
   gemGlow = "off",
@@ -897,6 +899,7 @@ export function HouseMap({
             isCollected={isGemCollected}
             matchedIds={matchedIds}
             filterDimActive={dimActive}
+            visual={gemAnchorVisual}
           />
         ) : null}
         {!pickMode &&

@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
-import { Gem } from "lucide-react";
-import { gemLabelHe, gemMonsterForHouse, gemMonsterMeta } from "@/lib/gem-monsters";
+import { GemMysteryTeaser3D } from "@/components/gem-hunt/gem-mystery-teaser-3d";
+import { GemModel3D } from "@/components/gem-hunt/gem-model-3d";
+import { gemLabelHe, gemMonsterForHouse } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-/** House sheet — large yellow gem; name only after collect (no species / «נמצא» strip). */
+/** House sheet — compact gem teaser; 3D pet + name after collect. */
 export function GemHouseFoundHero({
   house,
   collected,
@@ -18,7 +18,6 @@ export function GemHouseFoundHero({
 }) {
   const monsterId = gemMonsterForHouse(house);
   const petName = gemLabelHe(monsterId);
-  const meta = gemMonsterMeta(monsterId);
 
   return (
     <div
@@ -30,29 +29,29 @@ export function GemHouseFoundHero({
       dir="rtl"
     >
       <div className="gem-house-found-hero__visual">
-        <div className="gem-house-found-hero__gem-wrap" aria-hidden>
-          <Gem className="gem-house-found-hero__gem-icon" strokeWidth={1.75} />
-        </div>
         {collected ? (
-          <Image
-            src={meta.posterPath}
-            alt=""
-            width={120}
-            height={120}
-            className="gem-house-found-hero__pet-art"
-            sizes="120px"
-          />
-        ) : null}
+          <div className="gem-house-found-hero__model" aria-hidden>
+            <GemModel3D
+              houseId={house.id}
+              monsterId={monsterId}
+              size="sm"
+              collected
+              motion="celebrate"
+              spin
+              interactive={false}
+              spinRate={0.55}
+            />
+          </div>
+        ) : (
+          <div className="gem-house-found-hero__model gem-house-found-hero__model--teaser" aria-hidden>
+            <GemMysteryTeaser3D />
+          </div>
+        )}
       </div>
       {collected ? (
         <p className="gem-house-found-hero__name">{petName}</p>
       ) : (
-        <>
-          <p className="gem-house-found-hero__kicker">יהלום נסתר</p>
-          <p className="gem-house-found-hero__hint">
-            חבר חבוי בבית הזה — גלו במצלמה מי מסתתר כאן
-          </p>
-        </>
+        <p className="gem-house-found-hero__kicker">יהלום נסתר · גלו במצלמה</p>
       )}
     </div>
   );
