@@ -14,7 +14,6 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import { LocateFixed } from "lucide-react";
-import { MapPrimaryFab } from "@/components/map-primary-fab";
 import { MapGemAnchorLayer, type GemMapAnchorVisual } from "@/components/map-gem-anchor-layer";
 import { MapLegend } from "@/components/map-legend";
 import "leaflet/dist/leaflet.css";
@@ -631,16 +630,11 @@ type Props = {
   filterDimActive?: boolean;
   /** Compact embed on house link pages — center on the house, theme toggle only. */
   embed?: boolean;
-  gemHuntEnabled?: boolean;
-  /** Same gate as map gem FAB / filter «לא אספתי» — admin evening hunt UI. */
+  /** Show gem diamond markers (controlled by top-bar toggle). */
   showGemAnchors?: boolean;
   gemAnchorHouses?: PublicHouse[];
   gemAnchorVisual?: GemMapAnchorVisual;
   isGemCollected?: (houseId: string) => boolean;
-  onGemHuntPress?: () => void;
-  gemGlow?: import("@/lib/gem-hunt-target").GemFabGlow;
-  gemAllCollected?: boolean;
-  gemCollectedCount?: number;
 };
 
 export function HouseMap({
@@ -675,15 +669,10 @@ export function HouseMap({
   matchedIdsKey = "",
   filterDimActive = false,
   embed = false,
-  gemHuntEnabled = false,
   showGemAnchors = false,
   gemAnchorHouses = [],
   gemAnchorVisual = "admin",
   isGemCollected,
-  onGemHuntPress,
-  gemGlow = "off",
-  gemAllCollected = false,
-  gemCollectedCount = 0,
 }: Props) {
   const clusters = useMemo(
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
@@ -961,15 +950,6 @@ export function HouseMap({
           </>
         ) : null}
       </MapContainer>
-      {!pickMode && !originPickActive && !embed ? (
-        <MapPrimaryFab
-          gemHuntEnabled={gemHuntEnabled}
-          onGemPress={onGemHuntPress ?? (() => {})}
-          gemGlow={gemGlow}
-          gemAllCollected={gemAllCollected}
-          gemCollectedCount={gemCollectedCount}
-        />
-      ) : null}
       <div className="map-fab-stack">
           {!pickMode && !embed && onLocate ? (
             <button

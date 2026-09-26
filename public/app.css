@@ -1956,6 +1956,9 @@
       background-color: color-mix(in oklab, var(--color-violet-500) 25%, transparent);
     }
   }
+  .bg-violet-600 {
+    background-color: var(--color-violet-600);
+  }
   .bg-violet-700 {
     background-color: var(--color-violet-700);
   }

@@ -1,11 +1,10 @@
 "use client";
 
 import { Fragment, useMemo, useState, type ReactNode } from "react";
-import { Marker, Polyline, Popup, useMap, useMapEvents } from "react-leaflet";
+import { Marker, Polyline, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { gemAnchorForHouse } from "@/lib/gem-hunt";
-import { gemLabelHe, gemMonsterForHouse } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 
 /** admin = offset anchors + spokes (QA). compact = tiny diamonds, no lines, zoom-gated. */
@@ -118,24 +117,9 @@ export function MapGemAnchorLayer({
             position={[anchor.lat, anchor.lng]}
             icon={gemDiamondIcon(collected, dimmed, calibrated, compact)}
             zIndexOffset={collected ? 420 : compact ? 380 : 520}
-          >
-            <Popup className="map-gem-diamond-popup">
-              <div dir="rtl" className="map-gem-diamond-popup__body">
-                <p className="map-gem-diamond-popup__title">
-                  {collected ? "יהלום — נאסף" : "יהלום נסתר"}
-                </p>
-                <p className="map-gem-diamond-popup__house">{house.name || house.address}</p>
-                {!collected && !compact ? (
-                  <p className="map-gem-diamond-popup__pet">{gemLabelHe(gemMonsterForHouse(house))}</p>
-                ) : null}
-                {!compact ? (
-                  <p className="map-gem-diamond-popup__meta">
-                    {calibrated ? "מיקום מותאם (טלפון)" : "מיקום אוטומטי ליד הסיכה"}
-                  </p>
-                ) : null}
-              </div>
-            </Popup>
-          </Marker>
+            interactive={false}
+            bubblingMouseEvents={false}
+          />
         </Fragment>
       ))}
     </>

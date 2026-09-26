@@ -110,6 +110,25 @@ function IconWell({ children, className }: { children: ReactNode; className?: st
   );
 }
 
+function LikedSummaryIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="size-full">
+      <path
+        d="M12 20.5s-6.8-4.35-8.6-7.4C1.9 10.4 3.4 7.2 6.4 6.4c1.8-.5 3.6.2 4.6 1.6 1-1.4 2.8-2.1 4.6-1.6 3 0.8 4.5 4 2.9 6.7C18.8 16.15 12 20.5 12 20.5z"
+        fill="#fb7185"
+      />
+    </svg>
+  );
+}
+
+function GemSummaryIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="size-full">
+      <path d="M6 3h12l4 7-10 13L2 10l4-7z" fill="#fbbf24" />
+    </svg>
+  );
+}
+
 function RouteChip({
   icon,
   value,
@@ -153,6 +172,9 @@ export function StatsSummary({
   route = null,
   skippedCount = 0,
   visitedCount = 0,
+  likedCount = 0,
+  gemCollectedCount = 0,
+  showPersonalMarks = false,
   heading = false,
   compact = false,
 }: {
@@ -160,6 +182,9 @@ export function StatsSummary({
   route?: WalkingRoute | null;
   skippedCount?: number;
   visitedCount?: number;
+  likedCount?: number;
+  gemCollectedCount?: number;
+  showPersonalMarks?: boolean;
   heading?: boolean;
   compact?: boolean;
 }) {
@@ -200,6 +225,20 @@ export function StatsSummary({
                   icon={<SkipSummaryIcon />}
                   value={String(skippedCount)}
                   label="דילגתי"
+                />
+              </>
+            ) : null}
+            {showPersonalMarks ? (
+              <>
+                <CompactChip
+                  icon={<LikedSummaryIcon />}
+                  value={String(likedCount)}
+                  label="אהבתי"
+                />
+                <CompactChip
+                  icon={<GemSummaryIcon />}
+                  value={String(gemCollectedCount)}
+                  label="יהלומים"
                 />
               </>
             ) : null}
@@ -244,6 +283,16 @@ export function StatsSummary({
               <RouteChip icon={<SkipSummaryIcon />} value={String(skippedCount)} label="דילגתי" />
             </>
           ) : null}
+          {showPersonalMarks ? (
+            <>
+              <RouteChip icon={<LikedSummaryIcon />} value={String(likedCount)} label="אהבתי" />
+              <RouteChip
+                icon={<GemSummaryIcon />}
+                value={String(gemCollectedCount)}
+                label="יהלומים"
+              />
+            </>
+          ) : null}
         </div>
       </section>
     </div>
@@ -255,6 +304,9 @@ export function MapStats(props: {
   route?: WalkingRoute | null;
   skippedCount?: number;
   visitedCount?: number;
+  likedCount?: number;
+  gemCollectedCount?: number;
+  showPersonalMarks?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);

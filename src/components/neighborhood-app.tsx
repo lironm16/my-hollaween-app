@@ -43,7 +43,6 @@ import { GemResetConfirmDialog } from "@/components/gem-reset-confirm-dialog";
 import { GemMapCompleteBanner } from "@/components/gem-map-complete-banner";
 import {
   GemHuntOverlayLazy,
-  GemHuntPanelLazy,
   preloadGemHuntChunks,
 } from "@/components/gem-hunt/gem-hunt-lazy";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
@@ -54,7 +53,6 @@ import { useStandingStill } from "@/hooks/use-standing-still";
 import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import { syncGemMonsterAssignment } from "@/lib/gem-monsters";
-import { pickGemHuntTarget } from "@/lib/gem-hunt-target";
 import {
   isGemHuntOrientationGranted,
   prepareGemHuntSensors,
@@ -102,6 +100,7 @@ import {
   HOUSE_SET_LABELS,
   countSkippedInSet,
   countVisitedInSet,
+  countLikedInSet,
   houseMatchesSet,
 } from "@/lib/house-set";
 import { filterHouses, houseFilterMismatchReasons, routeHouseIds } from "@/lib/filter-houses";
@@ -171,6 +170,8 @@ export function NeighborhoodApp({
   const [mapGemBadgeCount, setMapGemBadgeCount] = useState(() =>
     typeof window === "undefined" ? 0 : loadGemCollectedIds().length,
   );
+  /** Toolbar toggle — diamonds hidden on map until user taps the top-bar gem control. */
+  const [mapDiamondsVisible, setMapDiamondsVisible] = useState(false);
   const [gemResetHouse, setGemResetHouse] = useState<PublicHouse | null>(null);
   const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);
   const [mapGemCheerMonster, setMapGemCheerMonster] = useState<GemMonsterId | null>(null);
@@ -333,29 +334,6 @@ export function NeighborhoodApp({
     return mapHouses.every((h) => gems.collected(h.id));
   }, [gemHuntActive, mapHouses, gems.collectedIds]);
 
-  const openMapGemHunt = useCallback(async () => {
-    if (gemAllCollected) {
-      window.location.assign("/gem-bag");
-      return;
-    }
-    preloadGemHuntChunks();
-    setWatchEnabled(true);
-    const freshGps = (await geo.refresh()) ?? gps;
-    const target = pickGemHuntTarget(
-      mapHouses,
-      freshGps,
-      (id) => gems.collected(id),
-      selection.selected?.id ?? null,
-    );
-    if (!target) return;
-    await prepareGemHuntSensors({
-      requestCamera: true,
-      requestOrientation: !isGemHuntOrientationGranted(),
-    });
-    setMapGemGps(freshGps);
-    setMapGemHouse(target.house);
-  }, [gemAllCollected, mapHouses, gps, gems, selection.selected?.id, geo, setWatchEnabled]);
-
   const openGemHuntForHouse = useCallback(
     async (house: PublicHouse) => {
       if (gems.collected(house.id)) return;
@@ -420,24 +398,6 @@ export function NeighborhoodApp({
     setGemResetHouse(null);
   }, [gemResetHouse, gems]);
   const editFlow = useHouseEditFlow();
-
-  /** Load gem hunt UI after the sheet paints — keeps house detail snappy. */
-  const [gemPanelReady, setGemPanelReady] = useState(false);
-  useEffect(() => {
-    if (!selection.selected || !gemUi) {
-      setGemPanelReady(false);
-      return;
-    }
-    setGemPanelReady(false);
-    const run = () => setGemPanelReady(true);
-    const idle = window.requestIdleCallback;
-    if (typeof idle === "function") {
-      const id = idle(run, { timeout: 1200 });
-      return () => window.cancelIdleCallback(id);
-    }
-    const t = window.setTimeout(run, 350);
-    return () => window.clearTimeout(t);
-  }, [selection.selected?.id, admin]);
 
   const ownedEditCode = useMemo(() => {
     if (!selection.editHouseId) return undefined;
@@ -858,6 +818,9 @@ export function NeighborhoodApp({
     route: activeRoute ?? filterRoute,
     skippedCount: countSkippedInSet(skips.skippedIds, housesForSkipCount, activeHouseSet),
     visitedCount: countVisitedInSet(visits.visitedIds, housesForSkipCount, activeHouseSet),
+    likedCount: countLikedInSet([...likes.likedIds], housesForSkipCount, activeHouseSet),
+    gemCollectedCount: mapHouses.filter((h) => gems.collected(h.id)).length,
+    showPersonalMarks: gemUi,
   };
 
   function enterRouteMode() {
@@ -1038,19 +1001,6 @@ export function NeighborhoodApp({
         skippedIds: skips.skipped,
         filteredOutIds: (id: string) => filterDimActive && !matchedIds.has(id),
         onAdjacentClusterHouse: selection.selectAdjacentClusterHouse,
-        extra:
-          gemUi && gemPanelReady ? (
-            <GemHuntPanelLazy
-              house={selected}
-              userLocation={gps}
-              isAdmin={admin}
-              mapHousesForCelebrate={mapHouses}
-              onOpenHunt={async () => {
-                setWatchEnabled(true);
-                return (await geo.refresh()) ?? gps;
-              }}
-            />
-          ) : undefined,
       }
     : null;
 
@@ -1093,6 +1043,10 @@ export function NeighborhoodApp({
               routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
             }
             activeRoute={activeRoute}
+            gemMapToggleEnabled={gemUi}
+            gemMapVisible={mapDiamondsVisible}
+            onToggleGemMap={() => setMapDiamondsVisible((on) => !on)}
+            gemCollectedBadge={mapGemBadgeCount}
           />
         </div>
       ) : null}
@@ -1216,15 +1170,10 @@ export function NeighborhoodApp({
                         }))
                       : null
                   }
-                  gemHuntEnabled={gemHuntActive}
-                  showGemAnchors={gemUi}
+                  showGemAnchors={gemUi && mapDiamondsVisible}
                   gemAnchorHouses={gemUi ? mapHouses : []}
                   gemAnchorVisual={gemAdminTools ? "admin" : "compact"}
                   isGemCollected={gems.collected}
-                  onGemHuntPress={() => void openMapGemHunt()}
-                  gemGlow="off"
-                  gemAllCollected={gemAllCollected}
-                  gemCollectedCount={mapGemBadgeCount}
                 />
                 {gemHuntActive && gemAllCollected && !originPick.originPickActive ? (
                   <GemMapCompleteBanner />

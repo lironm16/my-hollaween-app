@@ -1,6 +1,6 @@
 "use client";
 
-import { List, MapPinned, Route } from "lucide-react";
+import { Gem, List, MapPinned, Route } from "lucide-react";
 import { FilterTrigger } from "@/components/filter-menu";
 import { OriginTrigger } from "@/components/origin-picker";
 import { RouteActionsMenu } from "@/components/route-actions-menu";
@@ -66,6 +66,10 @@ export function NeighborhoodToolbar({
   activeRoute = null,
   floating = false,
   docked = false,
+  gemMapToggleEnabled = false,
+  gemMapVisible = false,
+  onToggleGemMap,
+  gemCollectedBadge = 0,
 }: {
   view: HomeView;
   onViewChange: (view: HomeView) => void;
@@ -90,6 +94,11 @@ export function NeighborhoodToolbar({
   floating?: boolean;
   /** Full-width bottom dock (same geometry in map + list). */
   docked?: boolean;
+  /** Show toolbar control to toggle map diamond markers. */
+  gemMapToggleEnabled?: boolean;
+  gemMapVisible?: boolean;
+  onToggleGemMap?: () => void;
+  gemCollectedBadge?: number;
 }) {
   return (
     <div
@@ -120,6 +129,31 @@ export function NeighborhoodToolbar({
         </div>
         <FilterTrigger activeCount={activeFilterCount} onClick={onOpenFilters} />
         <OriginTrigger shifted={originShifted} onClick={onOpenOriginPicker} />
+        {gemMapToggleEnabled && onToggleGemMap ? (
+          <button
+            type="button"
+            aria-label={
+              gemMapVisible
+                ? "הסתר יהלומים במפה"
+                : `הצג יהלומים במפה · ${gemCollectedBadge} נאספו`
+            }
+            aria-pressed={gemMapVisible}
+            onClick={onToggleGemMap}
+            className={cn(
+              "app-toolbar__btn relative inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
+              gemMapVisible
+                ? "bg-amber-400 text-black"
+                : "bg-[#1d1028] text-amber-200 ring-1 ring-amber-500/35",
+            )}
+          >
+            <Gem className="size-5 fill-current" strokeWidth={2.1} />
+            {gemCollectedBadge > 0 ? (
+              <span className="absolute -top-1 -start-1 inline-flex min-w-[1.15rem] items-center justify-center rounded-full bg-violet-600 px-1 text-[0.65rem] font-bold leading-none text-white ring-2 ring-[#12081a]">
+                {gemCollectedBadge > 99 ? "99+" : gemCollectedBadge}
+              </span>
+            ) : null}
+          </button>
+        ) : null}
         <button
           type="button"
           aria-label={

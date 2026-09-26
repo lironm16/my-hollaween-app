@@ -57,7 +57,7 @@ export function writeHouseSet(next: HouseSet) {
   window.dispatchEvent(new Event(HOUSE_SET_EVENT));
 }
 
-function countIdsInSet(
+export function countIdsInSet(
   ids: readonly string[],
   houses: readonly { id: string; description?: string }[],
   set: HouseSet,
@@ -80,6 +80,14 @@ function countIdsInSet(
     const house = byId.get(id);
     return house ? isStubHouse(house) : STUB_ID.test(id);
   }).length;
+}
+
+export function countLikedInSet(
+  likedIds: readonly string[],
+  houses: readonly { id: string; description?: string }[],
+  set: HouseSet,
+): number {
+  return countIdsInSet(likedIds, houses, set);
 }
 
 export function countSkippedInSet(
