@@ -3877,6 +3877,18 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   object-fit: contain;
   filter: drop-shadow(0 6px 18px rgb(0 0 0 / 0.45));
 }
+.gem-house-found-hero--found .gem-house-found-hero__pet-art {
+  animation: gem-float 3.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gem-house-found-hero--found .gem-house-found-hero__pet-art {
+    animation: none;
+  }
+}
+.gem-house-found-hero__poster-wrap {
+  display: grid;
+  place-items: center;
+}
 .gem-house-found-hero__visual .gem-house-found-hero__gem-wrap {
   margin-top: 0;
   margin-bottom: 0;

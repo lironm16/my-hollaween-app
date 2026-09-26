@@ -1,12 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import { GemMysteryTeaser3D } from "@/components/gem-hunt/gem-mystery-teaser-3d";
-import { GemModel3D } from "@/components/gem-hunt/gem-model-3d";
-import { gemLabelHe, gemMonsterForHouse } from "@/lib/gem-monsters";
+import { gemLabelHe, gemMonsterForHouse, gemMonsterMeta } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-/** House sheet — compact gem teaser; 3D pet + name after collect. */
+/** House sheet — compact gem teaser; poster + name after collect (no WebGL loop). */
 export function GemHouseFoundHero({
   house,
   collected,
@@ -18,6 +18,7 @@ export function GemHouseFoundHero({
 }) {
   const monsterId = gemMonsterForHouse(house);
   const petName = gemLabelHe(monsterId);
+  const meta = gemMonsterMeta(monsterId);
 
   return (
     <div
@@ -30,16 +31,14 @@ export function GemHouseFoundHero({
     >
       <div className="gem-house-found-hero__visual">
         {collected ? (
-          <div className="gem-house-found-hero__model" aria-hidden>
-            <GemModel3D
-              houseId={house.id}
-              monsterId={monsterId}
-              size="sm"
-              collected
-              motion="celebrate"
-              spin
-              interactive={false}
-              spinRate={0.55}
+          <div className="gem-house-found-hero__poster-wrap" aria-hidden>
+            <Image
+              src={meta.posterPath}
+              alt=""
+              width={96}
+              height={96}
+              className="gem-house-found-hero__pet-art"
+              sizes="96px"
             />
           </div>
         ) : (

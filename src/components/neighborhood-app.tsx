@@ -403,13 +403,13 @@ export function NeighborhoodApp({
 
   const handleToggleGemMenu = useCallback(
     (house: PublicHouse) => {
-      if (gems.collected(house.id) && gemAdminTools) {
+      if (gems.collected(house.id)) {
         setGemResetHouse(house);
         return;
       }
       void openGemHuntForHouse(house);
     },
-    [gems, openGemHuntForHouse, gemAdminTools],
+    [gems, openGemHuntForHouse],
   );
 
   const confirmGemReset = useCallback(() => {
