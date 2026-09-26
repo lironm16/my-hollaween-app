@@ -3,7 +3,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
-  Gem,
   Heart,
   KeyRound,
   List,
@@ -14,6 +13,7 @@ import {
   Share2,
   Undo2,
 } from "lucide-react";
+import { GemDiamondIcon } from "@/components/gem-diamond-icon";
 import { GemTrafficIcon, SavedTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
 import { SkipIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
@@ -196,7 +196,7 @@ export function HouseActionBar({
         icon: gemCollected ? (
           <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.35rem]" />
         ) : (
-          <Gem className={MENU_ICON_CLASS} strokeWidth={2.1} />
+          <GemDiamondIcon className={MENU_ICON_CLASS} />
         ),
         onClick: () => onToggleGem(),
         active: gemCollected,

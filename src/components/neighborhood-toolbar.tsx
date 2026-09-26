@@ -1,6 +1,7 @@
 "use client";
 
-import { Gem, List, MapPinned, Route, Sparkles } from "lucide-react";
+import { GemDiamondIcon } from "@/components/gem-diamond-icon";
+import { List, MapPinned, Route, Sparkles } from "lucide-react";
 import { FilterTrigger } from "@/components/filter-menu";
 import { OriginTrigger } from "@/components/origin-picker";
 import { PingPongMarquee } from "@/components/neighborhood-marquee";
@@ -134,10 +135,7 @@ export function NeighborhoodToolbar({
                 : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
             )}
           >
-            <Gem
-              className={cn("size-5", gemMapVisible ? "fill-white text-white" : "text-orange-100")}
-              strokeWidth={2.1}
-            />
+            <GemDiamondIcon active={gemMapVisible} filled={!gemMapVisible} />
           </button>
         ) : null}
         {adminCharacterMapToggleEnabled && onToggleAdminCharacterMap ? (
@@ -158,7 +156,7 @@ export function NeighborhoodToolbar({
             <Sparkles
               className={cn(
                 "size-5",
-                adminCharacterMapVisible ? "fill-white text-white" : "text-orange-100",
+                adminCharacterMapVisible ? "fill-none text-white" : "text-orange-100",
               )}
               strokeWidth={2.1}
             />

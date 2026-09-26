@@ -1,12 +1,14 @@
 "use client";
 
 import { Fragment, useMemo, useState, type ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { Marker, Polyline, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { gemAnchorForHouse } from "@/lib/gem-hunt";
 import { gemMonsterForHouse, gemMonsterMeta } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 /** admin = offset anchors + spokes (QA). compact = tiny diamonds. characters = admin QA posters. */
 export type GemMapAnchorVisual = "admin" | "compact" | "characters";
@@ -44,6 +46,15 @@ function gemDiamondIcon(
   return icon;
 }
 
+function escapeHtmlAttr(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function posterUrl(posterPath: string) {
+  if (typeof window === "undefined") return posterPath;
+  return new URL(posterPath, window.location.origin).href;
+}
+
 function gemCharacterIcon(
   house: PublicHouse,
   collected: boolean,
@@ -51,16 +62,27 @@ function gemCharacterIcon(
   calibrated: boolean,
 ) {
   const monsterId = gemMonsterForHouse(house);
-  const posterPath = gemMonsterMeta(monsterId).posterPath;
-  const key = `${monsterId}-${collected ? "c" : "o"}-${dimmed ? "d" : "a"}-${calibrated ? "cal" : "auto"}`;
+  const posterPath = posterUrl(gemMonsterMeta(monsterId).posterPath);
+  const key = `${house.id}-${monsterId}-${collected ? "c" : "o"}-${dimmed ? "d" : "a"}-${calibrated ? "cal" : "auto"}`;
   let icon = gemCharacterIconCache.get(key);
   const size = GEM_ICON_CHARACTER;
   if (!icon) {
+    const markerClass = cn(
+      "map-gem-character-marker",
+      collected && "is-collected",
+      dimmed && "is-dimmed",
+      calibrated && "is-calibrated",
+    );
+    const html = renderToStaticMarkup(
+      <div
+        className={markerClass}
+        style={{ backgroundImage: `url("${escapeHtmlAttr(posterPath)}")` }}
+        aria-hidden
+      />,
+    );
     icon = L.divIcon({
       className: "map-gem-character-leaflet-icon",
-      html: `<div class="map-gem-character-marker${collected ? " is-collected" : ""}${dimmed ? " is-dimmed" : ""}${calibrated ? " is-calibrated" : ""}" aria-hidden="true">
-        <img class="map-gem-character-marker__img" src="${posterPath}" alt="" width="${size}" height="${size}" loading="lazy" decoding="async" />
-      </div>`,
+      html,
       iconSize: [size, size],
       iconAnchor: [size / 2, size / 2],
     });

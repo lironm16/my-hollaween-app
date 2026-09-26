@@ -2049,8 +2049,8 @@
   .fill-current {
     fill: currentcolor;
   }
-  .fill-white {
-    fill: var(--color-white);
+  .fill-none {
+    fill: none;
   }
   .object-contain {
     object-fit: contain;
@@ -2267,6 +2267,9 @@
   }
   .align-baseline {
     vertical-align: baseline;
+  }
+  .align-middle {
+    vertical-align: middle;
   }
   .font-display {
     font-family: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
@@ -6994,22 +6997,27 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   opacity: 0.35;
 }
 .map-gem-character-leaflet-icon {
-  background: transparent;
-  border: none;
+  background: transparent !important;
+  border: none !important;
+}
+.map-gem-character-leaflet-icon.leaflet-div-icon {
+  width: 36px !important;
+  height: 36px !important;
 }
 .map-gem-character-marker {
-  display: grid;
-  place-items: center;
+  display: block;
   width: 36px;
   height: 36px;
   border-radius: 9999px;
   overflow: hidden;
+  background-color: rgb(46 16 78 / 0.85);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   box-shadow: 0 0 0 2px rgb(251 146 60 / 0.85), 0 4px 12px rgb(0 0 0 / 0.45);
 }
 .map-gem-character-marker__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  display: none;
 }
 .map-gem-character-marker.is-calibrated {
   box-shadow: 0 0 0 2px rgb(52 211 153 / 0.9), 0 4px 12px rgb(0 0 0 / 0.45);
@@ -7033,8 +7041,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   aspect-ratio: 1;
   border-radius: 0.85rem;
   background: rgb(18 8 28 / 0.9);
-  ring: 1px solid rgb(251 146 60 / 0.25);
-  box-shadow: inset 0 0 0 1px rgb(167 139 250 / 0.15);
+  box-shadow: inset 0 0 0 1px rgb(167 139 250 / 0.15), 0 0 0 1px rgb(251 146 60 / 0.25);
 }
 .gem-silhouette-sample__art {
   width: 72px;
@@ -7834,7 +7841,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   height: 36px;
   border-radius: 999px;
   background: #fff;
-  color: #f59e0b;
+  color: #fbbf24;
   box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.28);
   animation: gem-cheer-gem 1.35s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
 }

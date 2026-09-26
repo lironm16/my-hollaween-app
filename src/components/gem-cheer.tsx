@@ -1,7 +1,6 @@
 "use client";
 
-import { createPortal } from "react-dom";
-import { Gem } from "lucide-react";
+import { GemDiamondIcon } from "@/components/gem-diamond-icon";
 import { cn } from "@/lib/utils";
 
 export function GemCheer({
@@ -20,7 +19,7 @@ export function GemCheer({
           <i /><i /><i /><i /><i /><i />
         </span>
         <span className="gem-cheer-gem" aria-hidden="true">
-          <Gem className="size-5 fill-current" strokeWidth={2.1} />
+          <GemDiamondIcon className="size-5" filled />
         </span>
         יהלום נאסף!
       </div>

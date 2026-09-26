@@ -1,6 +1,7 @@
 "use client";
 
-import { Gem, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
+import { GemDiamondSvg } from "@/components/gem-diamond-icon";
 
 /** Heart / diamond before house name — list, map sheet, route tail, cluster rows. */
 export function HouseTitleMarkers({
@@ -21,11 +22,13 @@ export function HouseTitleMarkers({
         />
       ) : null}
       {gemCollected ? (
-        <Gem
-          className="mb-0.5 me-1.5 inline size-5 fill-current text-orange-300"
-          strokeWidth={2.1}
-          aria-label="יהלום"
-        />
+        <>
+          <GemDiamondSvg
+            className="mb-0.5 me-1.5 inline size-5 align-middle"
+            aria-hidden
+          />
+          <span className="sr-only">יהלום</span>
+        </>
       ) : null}
     </>
   );
