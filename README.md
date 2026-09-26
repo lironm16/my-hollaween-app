@@ -71,6 +71,18 @@ npm run dev
 
 ברשימה: כפתור ההורדה (גיליון Excel מימין לשמאל). סננו או סמנו לב קודם כדי לקבל רק את הבתים הרצויים. מנהל לוחץ על אותו כפתור ומקבל גם עמודות «שמרו» ו«ביקרו». אותו עותק של הבתים נשמר בטלפון לרשימה בלי קליטה.
 
+### גרסת אפליקציה (PWA cache bust)
+
+מספר הגרסה ב־`package.json` נכנס ל־`public/app-version.txt` ול־Service Worker (`scripts/sync-sw-version.mjs`).
+
+```bash
+node scripts/bump-app-version.mjs patch   # hotfix קטן בפרודקשן
+node scripts/bump-app-version.mjs minor   # אצווה של פיצ'רים / UX (ברירת מחדל לפריסה משמעותית)
+node scripts/bump-app-version.mjs major   # שינוי שובר / אבן דרך (נדיר)
+```
+
+אל תריצו `npm version patch` על כל commit — הספרה השלישית (patch) מיועדת לתיקוני חירום, לא לכל שינוי.
+
 ### בדיקות אוטומטיות
 
 ```bash
