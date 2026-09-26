@@ -40,9 +40,9 @@ export default function AdminGemsPage() {
   return (
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <AppHeader />
-      <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-5">
-        <div className="mx-auto w-full max-w-lg space-y-4 pb-10">
-          <h1 className="font-display text-2xl text-orange-300">יהלומים — מנהל</h1>
+      <main className="relative z-10 flex min-h-0 flex-1 flex-col px-4 py-3">
+        <div className="mx-auto flex w-full max-w-lg min-h-0 flex-1 flex-col gap-2">
+          <h1 className="shrink-0 font-display text-xl text-orange-300">יהלומים — מנהל</h1>
           <AdminGemOpsPanel houses={houses} />
         </div>
       </main>
