@@ -33,7 +33,7 @@ function gemDiamondIcon(
   if (!icon) {
     icon = L.divIcon({
       className: "map-gem-diamond-leaflet-icon",
-      html: `<div class="map-gem-diamond-marker${compact ? " map-gem-diamond-marker--compact" : ""}${collected ? " is-collected" : ""}${dimmed ? " is-dimmed" : ""}${calibrated ? " is-calibrated" : ""}" aria-hidden="true">
+      html: `<div class="map-gem-diamond-marker${compact ? " map-gem-diamond-marker--compact" : " map-gem-diamond-marker--admin"}${collected ? " is-collected" : ""}${dimmed ? " is-dimmed" : ""}${calibrated ? " is-calibrated" : ""}" aria-hidden="true">
         <svg class="map-gem-diamond-marker__svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M6 3h12l4 7-10 13L2 10l4-7z" fill="currentColor"/>
         </svg>
@@ -76,7 +76,10 @@ function gemCharacterIcon(
     const html = renderToStaticMarkup(
       <div
         className={markerClass}
-        style={{ backgroundImage: `url("${escapeHtmlAttr(posterPath)}")` }}
+        style={{
+          backgroundColor: "#ffffff",
+          backgroundImage: `url("${escapeHtmlAttr(posterPath)}")`,
+        }}
         aria-hidden
       />,
     );

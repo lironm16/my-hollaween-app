@@ -2279,8 +2279,35 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   place-items: center;
   width: 30px;
   height: 30px;
-  color: #fde68a;
-  filter: drop-shadow(0 0 10px rgb(251 191 36 / 0.95));
+  color: #fbbf24;
+  filter: drop-shadow(0 0 6px rgb(251 191 36 / 0.75));
+}
+.map-gem-diamond-marker--admin {
+  border-radius: 9999px;
+  background: #fff;
+  opacity: 1;
+  box-shadow:
+    0 0 0 2px rgb(251 146 60 / 0.88),
+    0 2px 8px rgb(0 0 0 / 0.35);
+  filter: none;
+}
+.map-gem-diamond-marker--admin .map-gem-diamond-marker__svg {
+  width: 18px;
+  height: 18px;
+}
+.map-gem-diamond-marker--admin.is-calibrated {
+  color: #059669;
+  box-shadow:
+    0 0 0 2px rgb(52 211 153 / 0.95),
+    0 2px 8px rgb(0 0 0 / 0.35);
+}
+.map-gem-diamond-marker--admin.is-collected {
+  color: #a78bfa;
+  opacity: 1;
+  filter: none;
+}
+.map-gem-diamond-marker--admin.is-dimmed:not(.is-collected) {
+  opacity: 0.72;
 }
 .map-gem-diamond-marker__svg {
   width: 22px;
@@ -2290,13 +2317,23 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   color: #6ee7b7;
   filter: drop-shadow(0 0 10px rgb(52 211 153 / 0.9));
 }
+.map-gem-diamond-marker--admin.is-calibrated {
+  filter: none;
+}
 .map-gem-diamond-marker.is-collected {
   color: #a78bfa;
   opacity: 0.55;
   filter: drop-shadow(0 0 6px rgb(167 139 250 / 0.5));
 }
+.map-gem-diamond-marker--admin.is-collected {
+  opacity: 1;
+  filter: none;
+}
 .map-gem-diamond-marker.is-dimmed:not(.is-collected) {
   opacity: 0.45;
+}
+.map-gem-diamond-marker--admin.is-dimmed:not(.is-collected) {
+  opacity: 0.72;
 }
 .map-gem-diamond-marker--compact {
   color: #fcd34d;
@@ -2323,24 +2360,26 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   height: 36px;
   border-radius: 9999px;
   overflow: hidden;
-  background-color: rgb(46 16 78 / 0.85);
+  background-color: #fff;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  box-shadow: 0 0 0 2px rgb(251 146 60 / 0.85), 0 4px 12px rgb(0 0 0 / 0.45);
-}
-.map-gem-character-marker__img {
-  display: none;
+  opacity: 1;
+  box-shadow:
+    0 0 0 2px rgb(251 146 60 / 0.88),
+    0 2px 8px rgb(0 0 0 / 0.35);
 }
 .map-gem-character-marker.is-calibrated {
-  box-shadow: 0 0 0 2px rgb(52 211 153 / 0.9), 0 4px 12px rgb(0 0 0 / 0.45);
+  box-shadow:
+    0 0 0 2px rgb(52 211 153 / 0.95),
+    0 2px 8px rgb(0 0 0 / 0.35);
 }
 .map-gem-character-marker.is-collected {
-  opacity: 0.72;
-  filter: saturate(0.85);
+  opacity: 1;
+  filter: saturate(0.92);
 }
 .map-gem-character-marker.is-dimmed:not(.is-collected) {
-  opacity: 0.4;
+  opacity: 0.65;
 }
 .gem-silhouette-sample {
   display: flex;
