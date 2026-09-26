@@ -174,6 +174,7 @@ export function NeighborhoodApp({
   );
   /** Toolbar toggle — diamonds hidden on map until user taps the top-bar gem control. */
   const [mapDiamondsVisible, setMapDiamondsVisible] = useState(false);
+  const [mapAdminCharactersVisible, setMapAdminCharactersVisible] = useState(false);
   const [gemResetHouse, setGemResetHouse] = useState<PublicHouse | null>(null);
   const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);
   const [mapGemCheerMonster, setMapGemCheerMonster] = useState<GemMonsterId | null>(null);
@@ -1069,9 +1070,12 @@ export function NeighborhoodApp({
             onOpenRouteUpdates={
               routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
             }
-            gemMapToggleEnabled={gemUi}
+            gemMapToggleEnabled={gemUi && !gemAdminTools}
             gemMapVisible={mapDiamondsVisible}
             onToggleGemMap={() => setMapDiamondsVisible((on) => !on)}
+            adminCharacterMapToggleEnabled={gemUi && gemAdminTools}
+            adminCharacterMapVisible={mapAdminCharactersVisible}
+            onToggleAdminCharacterMap={() => setMapAdminCharactersVisible((on) => !on)}
           />
         </div>
       ) : null}
@@ -1195,9 +1199,18 @@ export function NeighborhoodApp({
                         }))
                       : null
                   }
-                  showGemAnchors={gemUi && mapDiamondsVisible}
+                  showGemAnchors={
+                    gemUi &&
+                    (gemAdminTools ? mapAdminCharactersVisible : mapDiamondsVisible)
+                  }
                   gemAnchorHouses={gemUi ? mapHouses : []}
-                  gemAnchorVisual={gemAdminTools ? "admin" : "compact"}
+                  gemAnchorVisual={
+                    gemAdminTools && mapAdminCharactersVisible
+                      ? "characters"
+                      : gemAdminTools
+                        ? "admin"
+                        : "compact"
+                  }
                   isGemCollected={gems.collected}
                 />
                 {gemHuntActive && gemAllCollected && !originPick.originPickActive ? (

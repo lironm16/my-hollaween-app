@@ -5,16 +5,19 @@ import { Marker, Polyline, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { gemAnchorForHouse } from "@/lib/gem-hunt";
+import { gemMonsterForHouse, gemMonsterMeta } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 
-/** admin = offset anchors + spokes (QA). compact = tiny diamonds, no lines, zoom-gated. */
-export type GemMapAnchorVisual = "admin" | "compact";
+/** admin = offset anchors + spokes (QA). compact = tiny diamonds. characters = admin QA posters. */
+export type GemMapAnchorVisual = "admin" | "compact" | "characters";
 
 const GEM_ICON_ADMIN = 30;
 const GEM_ICON_COMPACT = 18;
+const GEM_ICON_CHARACTER = 36;
 const COMPACT_MIN_ZOOM = 15;
 
 const gemDiamondIconCache = new Map<string, L.DivIcon>();
+const gemCharacterIconCache = new Map<string, L.DivIcon>();
 
 function gemDiamondIcon(
   collected: boolean,
@@ -37,6 +40,31 @@ function gemDiamondIcon(
       iconAnchor: [size / 2, size / 2],
     });
     gemDiamondIconCache.set(key, icon);
+  }
+  return icon;
+}
+
+function gemCharacterIcon(
+  house: PublicHouse,
+  collected: boolean,
+  dimmed: boolean,
+  calibrated: boolean,
+) {
+  const monsterId = gemMonsterForHouse(house);
+  const posterPath = gemMonsterMeta(monsterId).posterPath;
+  const key = `${monsterId}-${collected ? "c" : "o"}-${dimmed ? "d" : "a"}-${calibrated ? "cal" : "auto"}`;
+  let icon = gemCharacterIconCache.get(key);
+  const size = GEM_ICON_CHARACTER;
+  if (!icon) {
+    icon = L.divIcon({
+      className: "map-gem-character-leaflet-icon",
+      html: `<div class="map-gem-character-marker${collected ? " is-collected" : ""}${dimmed ? " is-dimmed" : ""}${calibrated ? " is-calibrated" : ""}" aria-hidden="true">
+        <img class="map-gem-character-marker__img" src="${posterPath}" alt="" width="${size}" height="${size}" loading="lazy" decoding="async" />
+      </div>`,
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2],
+    });
+    gemCharacterIconCache.set(key, icon);
   }
   return icon;
 }
@@ -67,6 +95,7 @@ export function MapGemAnchorLayer({
 }) {
   const { overrides } = useGemAnchorOverrides();
   const compact = visual === "compact";
+  const characters = visual === "characters";
 
   const markers = useMemo(() => {
     return houses
@@ -104,7 +133,7 @@ export function MapGemAnchorLayer({
                 [anchor.lat, anchor.lng],
               ]}
               pathOptions={{
-                color: calibrated ? "#34d399" : "#fbbf24",
+                color: calibrated ? "#34d399" : characters ? "#fb923c" : "#fbbf24",
                 weight: 2,
                 opacity: dimmed ? 0.25 : 0.55,
                 dashArray: "4 6",
@@ -115,7 +144,11 @@ export function MapGemAnchorLayer({
           ) : null}
           <Marker
             position={[anchor.lat, anchor.lng]}
-            icon={gemDiamondIcon(collected, dimmed, calibrated, compact)}
+            icon={
+              characters
+                ? gemCharacterIcon(house, collected, dimmed, calibrated)
+                : gemDiamondIcon(collected, dimmed, calibrated, compact)
+            }
             zIndexOffset={collected ? 420 : compact ? 380 : 520}
             interactive={false}
             bubblingMouseEvents={false}

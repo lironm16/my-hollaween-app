@@ -18,6 +18,7 @@ import {
 } from "@/lib/app-clock";
 import { HOUSE_SETS, HOUSE_SET_LABELS, type HouseSet } from "@/lib/house-set";
 import { Button } from "@/components/ui/button";
+import { GemCharacterSilhouetteSamples } from "@/components/gem-hunt/gem-character-silhouette-samples";
 import { cn } from "@/lib/utils";
 
 const SCENES: RehearsalScene[] = REHEARSAL_SCENES.filter((scene) => scene !== "off");
@@ -169,12 +170,13 @@ export function AdminDryRunPanel() {
             <p className="text-base font-medium text-orange-100">תצוגת משתמש (יהלומים)</p>
             <p className="text-base text-violet-300">
               פועל = כמו משתמש בלילה — יהלומים, ספר החברים וסינון «לא אספתי», בלי כלי בדיקה (סימולציית
-              טווח, סיכות יהלום, איפוס איסוף).
+              טווח, סיכות יהלום, איפוס איסוף). כבוי = כפתור ✨ במפה להצגת כל החברים במקום יהלום.
             </p>
           </div>
           <Toggle on={previewAsUser} onClick={() => setPreviewAsUser(!previewAsUser)} />
         </div>
       ) : null}
+      {gemsOnScreen && !previewAsUser ? <GemCharacterSilhouetteSamples /> : null}
     </div>
   );
 }

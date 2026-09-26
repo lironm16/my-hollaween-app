@@ -216,7 +216,7 @@ export function AppHeader({
                   "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
                 )}
               >
-                <Sparkles className="size-4 text-orange-200" />
+                <Sparkles className="size-4 shrink-0" />
                 ספר החברים
               </Link>
             ) : null}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Gem, List, MapPinned, Route } from "lucide-react";
+import { Gem, List, MapPinned, Route, Sparkles } from "lucide-react";
 import { FilterTrigger } from "@/components/filter-menu";
 import { OriginTrigger } from "@/components/origin-picker";
 import { PingPongMarquee } from "@/components/neighborhood-marquee";
@@ -62,6 +62,9 @@ export function NeighborhoodToolbar({
   gemMapToggleEnabled = false,
   gemMapVisible = false,
   onToggleGemMap,
+  adminCharacterMapToggleEnabled = false,
+  adminCharacterMapVisible = false,
+  onToggleAdminCharacterMap,
 }: {
   view: HomeView;
   onViewChange: (view: HomeView) => void;
@@ -84,6 +87,10 @@ export function NeighborhoodToolbar({
   gemMapToggleEnabled?: boolean;
   gemMapVisible?: boolean;
   onToggleGemMap?: () => void;
+  /** Admin QA — poster pins for every gem friend (replaces diamond toggle). */
+  adminCharacterMapToggleEnabled?: boolean;
+  adminCharacterMapVisible?: boolean;
+  onToggleAdminCharacterMap?: () => void;
 }) {
   return (
     <div
@@ -129,6 +136,30 @@ export function NeighborhoodToolbar({
           >
             <Gem
               className={cn("size-5", gemMapVisible ? "fill-white text-white" : "text-orange-100")}
+              strokeWidth={2.1}
+            />
+          </button>
+        ) : null}
+        {adminCharacterMapToggleEnabled && onToggleAdminCharacterMap ? (
+          <button
+            type="button"
+            aria-label={
+              adminCharacterMapVisible ? "הסתר חברים במפה" : "הצג את כל החברים במפה"
+            }
+            aria-pressed={adminCharacterMapVisible}
+            onClick={onToggleAdminCharacterMap}
+            className={cn(
+              "app-toolbar__btn inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
+              adminCharacterMapVisible
+                ? "bg-orange-500 text-black"
+                : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
+            )}
+          >
+            <Sparkles
+              className={cn(
+                "size-5",
+                adminCharacterMapVisible ? "fill-white text-white" : "text-orange-100",
+              )}
               strokeWidth={2.1}
             />
           </button>

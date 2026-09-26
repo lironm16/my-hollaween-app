@@ -11,6 +11,7 @@ import {
   shareRouteUrl,
   sharedRoutePayloadFromRoute,
 } from "@/lib/route-share";
+import { readMenuSectionOpen, writeMenuSectionOpen } from "@/lib/menu-section-state";
 import type { WalkingRoute } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import { buttonVariants } from "@/components/ui/button";
@@ -36,7 +37,7 @@ export function RouteMenuSection({
   kind?: "liked" | "list" | "all";
   onNavigate?: () => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(() => readMenuSectionOpen("route", false));
   const [exportOpen, setExportOpen] = useState(false);
   const activeRouteRef = useRef(activeRoute);
   activeRouteRef.current = activeRoute;
@@ -108,7 +109,13 @@ export function RouteMenuSection({
         <button
           type="button"
           aria-expanded={open}
-          onClick={() => setOpen((value) => !value)}
+          onClick={() =>
+            setOpen((value) => {
+              const next = !value;
+              writeMenuSectionOpen("route", next);
+              return next;
+            })
+          }
           className={cn(
             buttonVariants({ variant: "ghost", size: "lg" }),
             "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",

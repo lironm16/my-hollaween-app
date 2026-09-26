@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Gem, Sparkles } from "lucide-react";
 import type { GemBagCelebrateKind } from "@/lib/gem-bag-celebrate";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,9 @@ const COPY: Record<
   },
 };
 
+const AUTO_DISMISS_MS = 2800;
+const FADE_OUT_MS = 280;
+
 /** Full-screen beat after the sticker fly-in lands on a milestone collect. */
 export function GemBagMilestoneCelebration({
   kind,
@@ -35,22 +38,28 @@ export function GemBagMilestoneCelebration({
   onDone: () => void;
 }) {
   const [visible, setVisible] = useState(false);
+  const dismissedRef = useRef(false);
   const copy = COPY[kind];
 
+  const finish = useCallback(() => {
+    if (dismissedRef.current) return;
+    dismissedRef.current = true;
+    setVisible(false);
+    window.setTimeout(onDone, FADE_OUT_MS);
+  }, [onDone]);
+
   useEffect(() => {
+    dismissedRef.current = false;
     const enter = window.requestAnimationFrame(() => setVisible(true));
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate([30, 50, 80, 50, 120]);
     }
-    const done = window.setTimeout(() => {
-      setVisible(false);
-      window.setTimeout(onDone, 420);
-    }, 5200);
+    const auto = window.setTimeout(finish, AUTO_DISMISS_MS);
     return () => {
       window.cancelAnimationFrame(enter);
-      window.clearTimeout(done);
+      window.clearTimeout(auto);
     };
-  }, [kind, onDone]);
+  }, [kind, finish]);
 
   return (
     <div
@@ -62,7 +71,13 @@ export function GemBagMilestoneCelebration({
       aria-live="assertive"
       aria-label={copy.title}
       dir="rtl"
-      onClick={onDone}
+      onClick={finish}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          finish();
+        }
+      }}
     >
       <div className="gem-bag-milestone__backdrop" aria-hidden />
       <div className="gem-bag-milestone__burst" aria-hidden />
