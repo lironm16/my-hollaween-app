@@ -12,6 +12,7 @@ import {
   sharedRoutePayloadFromRoute,
 } from "@/lib/route-share";
 import { readMenuSectionOpen, writeMenuSectionOpen } from "@/lib/menu-section-state";
+import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
 import type { WalkingRoute } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import { buttonVariants } from "@/components/ui/button";
@@ -19,7 +20,8 @@ import { cn } from "@/lib/utils";
 
 const subLinkClass = cn(
   buttonVariants({ variant: "ghost", size: "lg" }),
-  "h-10 justify-start gap-2 ps-[4.5rem] text-base text-orange-50 hover:bg-orange-500/10",
+  "h-10 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+  APP_MENU_SUBLINK_PAD,
 );
 
 export function RouteMenuSection({
@@ -129,7 +131,7 @@ export function RouteMenuSection({
           />
         </button>
         {open ? (
-          <div className="ms-5 flex flex-col gap-0.5 border-s border-orange-500/25 ps-3">
+          <div className={APP_MENU_SUBLIST_CLASS}>
             <button type="button" onClick={openExportDialog} className={subLinkClass}>
               <Save className="size-4" strokeWidth={2.25} />
               הורד

@@ -879,6 +879,21 @@
 .house-skipped-banner {
   margin-bottom: 0.35rem;
 }
+.house-list-card .house-skipped-banner {
+  margin-bottom: 0.65rem;
+}
+.house-list-card .house-details-title-row {
+  margin-top: 0.15rem;
+}
+.map-house-sheet-body .house-list-card .house-skipped-banner {
+  margin-bottom: 0.85rem;
+}
+.map-house-sheet-body .house-list-card .house-details-title-row {
+  margin-top: 0.35rem;
+}
+.house-details-menu {
+  margin-top: 0;
+}
 
 .filter-mismatch-banner {
   display: flex;
@@ -3071,10 +3086,6 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .house-action-menu-label {
   min-width: 0;
   flex: 1;
-}
-
-.house-details-menu {
-  margin-top: -0.15rem;
 }
 
 .house-action-btn.has-count {

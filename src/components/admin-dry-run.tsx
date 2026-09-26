@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -165,7 +166,14 @@ export function AdminDryRunPanel() {
         </p>
       </div>
       {gemsOnScreen ? (
-        <div className="flex items-center justify-between gap-3 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20">
+        <div className="space-y-3">
+          <Link
+            href="/admin/gems"
+            className="flex min-h-11 items-center justify-center rounded-xl bg-orange-500/15 px-3 py-2 text-center text-base font-medium text-orange-100 ring-1 ring-orange-400/40"
+          >
+            יהלומים — מפת חברים וחיפוש קרוב
+          </Link>
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20">
           <div className="min-w-0">
             <p className="text-base font-medium text-orange-100">תצוגת משתמש (יהלומים)</p>
             <p className="text-base text-violet-300">
@@ -174,6 +182,7 @@ export function AdminDryRunPanel() {
             </p>
           </div>
           <Toggle on={previewAsUser} onClick={() => setPreviewAsUser(!previewAsUser)} />
+        </div>
         </div>
       ) : null}
       {gemsOnScreen && !previewAsUser ? <GemCharacterSilhouetteSamples /> : null}

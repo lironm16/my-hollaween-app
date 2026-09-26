@@ -14,6 +14,7 @@ import {
   Search,
   Shield,
   HelpCircle,
+  Gem,
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -36,6 +37,8 @@ import { appVersionLabel } from "@/lib/app-version";
 import type { WalkingRoute } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
+import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
+import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
 import { cn } from "@/lib/utils";
 
 export function AppHeader({
@@ -56,6 +59,7 @@ export function AppHeader({
   const { admin, logout } = useAdminSession();
   const now = useAppNow();
   const { gemBagMenuVisible: showGemBag } = useGemHuntAdminUi(admin, now);
+  const showAdminGemOps = admin && gemHuntFabVisible(admin, now);
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);
 
@@ -71,10 +75,9 @@ export function AppHeader({
 
   const houseSubLinkClass = cn(
     buttonVariants({ variant: "ghost", size: "lg" }),
-    "h-10 justify-start gap-2 ps-[4.5rem] text-base text-orange-50 hover:bg-orange-500/10",
+    "h-10 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+    APP_MENU_SUBLINK_PAD,
   );
-
-  const menuSubListClass = "ms-5 flex flex-col gap-0.5 border-s border-orange-500/25 ps-3";
 
   return (
     <header
@@ -157,13 +160,14 @@ export function AppHeader({
                 />
               </button>
               {houseOpen ? (
-                <div className={menuSubListClass}>
+                <div className={APP_MENU_SUBLIST_CLASS}>
                   <Link
                     href="/add"
                     onClick={closeMenu}
                     className={cn(
                       buttonVariants({ size: "lg" }),
-                      "h-10 justify-start gap-2 ps-[4.5rem] text-base bg-orange-500 text-black hover:bg-orange-400",
+                      "h-10 justify-start gap-2 text-base bg-orange-500 text-black hover:bg-orange-400",
+                      APP_MENU_SUBLINK_PAD,
                     )}
                   >
                     <HousePlus className="size-4" />
@@ -233,6 +237,19 @@ export function AppHeader({
             </Link>
             {admin ? (
               <>
+                {showAdminGemOps ? (
+                  <Link
+                    href="/admin/gems"
+                    onClick={closeMenu}
+                    className={cn(
+                      buttonVariants({ variant: "ghost", size: "lg" }),
+                      "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+                    )}
+                  >
+                    <Gem className="size-4 shrink-0" />
+                    יהלומים — מנהל
+                  </Link>
+                ) : null}
                 {pushAlertsEnabled() ? (
                   <Link
                     href="/admin/alerts"

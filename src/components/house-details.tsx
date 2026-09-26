@@ -479,7 +479,7 @@ export function HouseDetails({
         : null}
       {hideHoursBanner ? null : <HoursStatusBanner house={house} compact={compact} />}
       <div className={cn(compact ? "space-y-1.5" : "space-y-2")}>
-        <div className="flex min-w-0 items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2 house-details-title-row">
           {indexBadge}
           <p
             className={cn(
