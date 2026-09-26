@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import { GemDiamondIcon } from "@/components/gem-diamond-icon";
 import { cn } from "@/lib/utils";
 
