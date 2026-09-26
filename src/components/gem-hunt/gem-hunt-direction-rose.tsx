@@ -43,7 +43,7 @@ export function GemHuntDirectionRose({
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
-              d="M16 4 L28 44 L22 44 L16 28 L10 44 L4 44 Z"
+              d="M16 2 L30 48 L23 48 L16 30 L9 48 L2 48 Z"
               fill="currentColor"
             />
           </svg>

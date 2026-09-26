@@ -8430,6 +8430,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   line-height: 1.35;
   color: #c4b5fd;
 }
+.gem-house-found-hero__name--solo {
+  margin: 0.15rem 0 0;
+  font-size: 1.05rem;
+}
 .gem-house-found-hero__name {
   margin: 0.25rem 0 0;
   font-weight: 700;
@@ -8570,7 +8574,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   padding: max(0.75rem, env(safe-area-inset-top)) 1rem 0.5rem;
 }
 .gem-hunt-overlay__header--close-only {
-  justify-content: flex-end;
+  justify-content: flex-start;
+  padding-top: max(1.15rem, calc(env(safe-area-inset-top) + 0.35rem));
+  padding-inline: 1rem;
 }
 .house-list-select-check-col {
   display: flex;
@@ -8667,8 +8673,16 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__close {
   position: relative;
   z-index: 13;
-  margin-inline-start: auto;
   flex-shrink: 0;
+  width: 3.35rem;
+  height: 3.35rem;
+  border: 2px solid rgb(251 191 36 / 0.65);
+  background: rgb(42 22 56 / 0.92);
+  box-shadow: 0 4px 18px rgb(0 0 0 / 0.45);
+}
+.gem-hunt-overlay__close svg {
+  width: 1.65rem;
+  height: 1.65rem;
 }
 .gem-hunt-overlay__gem-pin {
   pointer-events: none;
@@ -8732,8 +8746,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   position: absolute;
   inset: 0;
   transform-origin: 50% 50%;
-  opacity: 0.2;
-  color: #7c3aed;
+  opacity: 0.52;
+  color: #c4b5fd;
   pointer-events: none;
 }
 .gem-hunt-direction-rose__icon {
@@ -8748,12 +8762,13 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-direction-rose__chevron {
   position: absolute;
   left: 50%;
-  top: -0.15rem;
-  width: 2.35rem;
-  height: 3.35rem;
+  top: -0.35rem;
+  width: 3rem;
+  height: 4.25rem;
   transform: translateX(-50%);
   color: inherit;
-  opacity: 0.85;
+  opacity: 0.92;
+  filter: drop-shadow(0 0 8px rgb(124 58 237 / 0.35));
 }
 .gem-hunt-direction-rose__spoke.is-active .gem-hunt-direction-rose__chevron {
   opacity: 1;
@@ -8780,10 +8795,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__hint1-popover {
   position: absolute;
-  right: 0;
+  left: 50%;
+  right: auto;
   bottom: calc(100% + 0.55rem);
   z-index: 12;
   width: min(78vw, 19.5rem);
+  transform: translateX(-50%);
   padding: 0.65rem 0.65rem 0.75rem;
   border-radius: 1rem;
   border: 2px solid rgb(251 191 36 / 0.55);
@@ -8802,16 +8819,13 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   color: #fde68a;
   line-height: 1.35;
 }
-.gem-hunt-overlay__hint1-orbit {
-  height: min(42vw, 13.5rem);
-  min-height: 11.5rem;
+.gem-hunt-overlay__hint1-popover .gem-orbit-stage__canvas.gem-hunt-overlay__hint1-orbit {
+  height: min(44vw, 14rem);
+  min-height: 12rem;
   border-radius: 0.65rem;
   overflow: hidden;
   touch-action: none;
   background: radial-gradient(circle at 50% 35%, rgb(76 29 149 / 0.35), rgb(18 8 28 / 0.5));
-}
-.gem-hunt-overlay__hint1-orbit.gem-orbit-stage__canvas,
-.gem-hunt-overlay__hint1-orbit {
   border: none;
   box-shadow: none;
 }
@@ -8822,14 +8836,16 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   opacity: 1;
   color: #fde68a;
 }
-.gem-hunt-direction-rose__spoke.is-active .gem-hunt-direction-rose__icon {
-  filter: drop-shadow(0 0 14px rgb(251 191 36 / 0.95));
-}
 .gem-hunt-direction-rose__spoke.is-active.is-facing {
   color: #bbf7d0;
 }
 .gem-hunt-direction-rose__spoke.is-active.is-facing .gem-hunt-direction-rose__chevron {
   filter: drop-shadow(0 0 14px rgb(74 222 128 / 0.95));
+}
+.gem-hunt-overlay__hint-btn.is-active {
+  border-color: rgb(251 191 36 / 0.95);
+  background: rgb(76 29 149 / 0.55);
+  box-shadow: 0 0 0 2px rgb(251 191 36 / 0.35);
 }
 .gem-hunt-overlay__inline-hint {
   width: min(92vw, 22rem);
@@ -8907,6 +8923,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   left: 50%;
   bottom: 8%;
   z-index: 6;
+  display: grid;
+  place-items: center;
+  min-width: 5.5ch;
+  min-height: 1.35em;
   margin: 0;
   transform: translateX(-50%);
   font-size: 1.05rem;
@@ -8914,6 +8934,51 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   color: #fde68a;
   text-shadow: 0 1px 10px rgb(0 0 0 / 0.9);
   pointer-events: none;
+}
+.gem-hunt-overlay__ring-distance-num,
+.gem-hunt-overlay__ring-distance-unit {
+  grid-area: 1 / 1;
+}
+.gem-hunt-overlay__ring-distance-num {
+  animation: gem-ring-distance-show-num 2.8s ease-in-out infinite;
+}
+.gem-hunt-overlay__ring-distance-unit {
+  animation: gem-ring-distance-show-unit 2.8s ease-in-out infinite;
+}
+@keyframes gem-ring-distance-show-num {
+  0%,
+  42% {
+    opacity: 1;
+  }
+  50%,
+  92% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes gem-ring-distance-show-unit {
+  0%,
+  42% {
+    opacity: 0;
+  }
+  50%,
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gem-hunt-overlay__ring-distance-num,
+  .gem-hunt-overlay__ring-distance-unit {
+    animation: none;
+  }
+  .gem-hunt-overlay__ring-distance-unit {
+    display: none;
+  }
 }
 .gem-hunt-overlay__ring-collect-hint {
   position: absolute;
@@ -9054,9 +9119,16 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__gem-hit.is-center-collect canvas {
   pointer-events: none;
 }
+.gem-hunt-overlay__gem-hit.is-center-collect .gem-hunt-overlay__gem-dance,
 .gem-hunt-overlay__gem-hit.is-center-collect .gem-sprite--hunt {
   width: min(82vw, 20rem);
   height: min(82vw, 20rem);
+}
+.gem-hunt-overlay__gem-hit.is-center-collect .gem-model-3d {
+  width: 100%;
+  height: 100%;
+  min-width: min(82vw, 20rem);
+  min-height: min(82vw, 20rem);
 }
 .gem-hunt-overlay__hint-btn--reveal {
   font-size: 1.05rem;

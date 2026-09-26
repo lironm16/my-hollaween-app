@@ -329,6 +329,7 @@ export function GemHuntOverlay({
       setCenterReveal(false);
       return;
     }
+    setHintPanel(null);
     reveal();
     setShowHelp(false);
     setHint("found");
@@ -403,6 +404,7 @@ export function GemHuntOverlay({
         setHintPanel(null);
         return;
       }
+      setCenterReveal(false);
       if (panel === "nav" && !isGemHuntOrientationGranted()) {
         const ok = await requestGemHuntOrientationPermission();
         if (ok) setCompassRetry((n) => n + 1);
@@ -498,8 +500,16 @@ export function GemHuntOverlay({
             />
           ) : null}
           {showNavDistance ? (
-            <p className="gem-hunt-overlay__ring-distance" dir="ltr">
-              {formatDistance(distanceM!)}
+            <p
+              className="gem-hunt-overlay__ring-distance"
+              dir="ltr"
+              aria-live="polite"
+              aria-label={`${Math.round(distanceM!)} מטר`}
+            >
+              <span className="gem-hunt-overlay__ring-distance-num">
+                {Math.round(distanceM!)}
+              </span>
+              <span className="gem-hunt-overlay__ring-distance-unit">מטר</span>
             </p>
           ) : null}
           {centerDisplayMode && collectEnabled && phase === "visible" ? (
