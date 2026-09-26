@@ -19,7 +19,6 @@ import {
   facingHouse,
   GEM_FACING_TOLERANCE_DEG,
   GEM_HELP_AFTER_SECONDS,
-  GEM_APPROACH_METERS,
   GEM_HUNT_METERS,
   bearingDegrees,
   gemDistanceMeters,
@@ -39,6 +38,7 @@ import {
   type GemCollectFinishOptions,
 } from "@/lib/gem-hunt";
 import type { PublicHouse } from "@/lib/types";
+import { formatDistance } from "@/lib/geo";
 import type { UserLocation } from "@/hooks/use-user-location";
 import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-list-suspend";
 import { isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
@@ -324,22 +324,15 @@ export function GemHuntOverlay({
     onCollectRef.current(monsterId, { cheer: false, navigateStickerBook: true });
   }
 
-  function handleRevealMe() {
+  function toggleRevealMe() {
+    if (centerReveal) {
+      setCenterReveal(false);
+      return;
+    }
     reveal();
     setShowHelp(false);
     setHint("found");
     setCenterReveal(true);
-  }
-
-  function handleBackToSearch() {
-    setCenterReveal(false);
-    revealedRef.current = false;
-    facingSinceRef.current = null;
-    scanStartRef.current = Date.now();
-    panTotalRef.current = 0;
-    setPhase("scanning");
-    setHint("scan");
-    setShowHelp(false);
   }
 
   const gemVisible = phase === "visible" || phase === "collecting";
@@ -372,8 +365,6 @@ export function GemHuntOverlay({
   const gemInRing = pinPlacement ? gemInScanRing(pinPlacement) : false;
   const pinCollectReady = arPinGuideMode && collectEnabled && gemInRing;
   const ringReady = centerDisplayMode || pinCollectReady;
-  const inApproachBand =
-    distanceM != null && distanceM <= GEM_APPROACH_METERS && !sim && userLocation != null;
   const isFarForHints =
     !collectEnabled &&
     !sim &&
@@ -389,15 +380,19 @@ export function GemHuntOverlay({
   const huntArrowPhoneRelative = heading != null && turnBearing != null;
   const huntArrowDeg = huntArrowPhoneRelative ? turnBearing : gpsBearingToAnchor;
   const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToAnchor != null;
-  const showScanRose =
+  const showDirectionRose =
+    hintPanel === "nav" &&
     !centerDisplayMode &&
-    phase !== "collecting" &&
-    !isFarForHints &&
     huntArrowDeg != null &&
     effectiveLoc != null &&
     userLocation != null &&
-    !sim &&
-    (inApproachBand || collectEnabled || sim);
+    !sim;
+  const showNavDistance =
+    hintPanel === "nav" &&
+    distanceM != null &&
+    userLocation != null &&
+    !sim;
+  const showCharacterInRing = hintPanel === "character" && !centerDisplayMode;
   async function retryCompassPermission() {
     const ok = await requestGemHuntOrientationPermission();
     if (ok) setCompassRetry((n) => n + 1);
@@ -482,12 +477,34 @@ export function GemHuntOverlay({
       {showHuntUi ? (
       <div className="gem-hunt-overlay__stage" aria-hidden={false}>
         <div className="gem-hunt-overlay__scan-ring" aria-hidden>
-          {showScanRose && huntArrowDeg != null ? (
+          {showDirectionRose ? (
             <GemHuntDirectionRose
-              bearingDeg={huntArrowDeg}
+              bearingDeg={huntArrowDeg!}
               facing={facingTarget && !huntArrowMapNorth}
               className="gem-hunt-overlay__scan-rose"
             />
+          ) : null}
+          {hintPanel === "nav" ? (
+            <p className="gem-hunt-overlay__ring-hint-title gem-hunt-overlay__ring-hint-title--top">
+              כוון אותי — ניווט ליהלום
+            </p>
+          ) : null}
+          {showCharacterInRing ? (
+            <div className="gem-hunt-overlay__ring-hint gem-hunt-overlay__ring-hint--character">
+              <p className="gem-hunt-overlay__ring-hint-title">מי החבר שמסתתר ביהלום</p>
+              <GemOrbitStage
+                house={house}
+                stageClassName="gem-hunt-overlay__ring-orbit"
+              />
+            </div>
+          ) : null}
+          {showNavDistance ? (
+            <p className="gem-hunt-overlay__ring-distance" dir="ltr">
+              ~{formatDistance(distanceM!)}
+            </p>
+          ) : null}
+          {centerDisplayMode && collectEnabled && phase === "visible" ? (
+            <p className="gem-hunt-overlay__ring-collect-hint">לחיצה לאיסוף</p>
           ) : null}
           <div
             className={cn(
@@ -592,24 +609,6 @@ export function GemHuntOverlay({
 
       {showHuntUi && phase !== "collecting" ? (
         <footer className="gem-hunt-overlay__footer" dir="rtl">
-          {hintPanel === "character" ? (
-            <div className="gem-hunt-overlay__inline-hint">
-              <p className="gem-hunt-overlay__inline-hint-title">מי החבר שמסתתר ביהלום</p>
-              <GemOrbitStage house={house} stageClassName="gem-hunt-overlay__poster-orbit" />
-            </div>
-          ) : null}
-
-          {hintPanel === "nav" && huntArrowDeg != null ? (
-            <div className="gem-hunt-overlay__inline-hint gem-hunt-overlay__inline-hint--nav">
-              <p className="gem-hunt-overlay__inline-hint-title">כוון אותי — ניווט ליהלום</p>
-              <GemHuntDirectionRose
-                bearingDeg={huntArrowDeg}
-                facing={facingTarget && !huntArrowMapNorth}
-                size="footer"
-              />
-            </div>
-          ) : null}
-
           {showCompassEnable && !isFarForHints ? (
             <button
               type="button"
@@ -620,47 +619,41 @@ export function GemHuntOverlay({
             </button>
           ) : null}
 
-          {centerDisplayMode ? (
+          <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
             <button
               type="button"
-              className="gem-hunt-overlay__hint-btn"
-              onClick={handleBackToSearch}
+              className={cn(
+                "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
+                hintPanel === "character" && "is-active",
+              )}
+              aria-pressed={hintPanel === "character"}
+              onClick={() => toggleHintPanel("character")}
             >
-              חזרה לחיפוש
+              רמז 1
             </button>
-          ) : (
-            <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
-              <button
-                type="button"
-                className={cn(
-                  "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
-                  hintPanel === "character" && "is-active",
-                )}
-                aria-pressed={hintPanel === "character"}
-                onClick={() => toggleHintPanel("character")}
-              >
-                רמז 1
-              </button>
-              <button
-                type="button"
-                className={cn(
-                  "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
-                  hintPanel === "nav" && "is-active",
-                )}
-                aria-pressed={hintPanel === "nav"}
-                onClick={() => toggleHintPanel("nav")}
-              >
-                רמז 2
-              </button>
-              <button
-                type="button"
-                className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact"
-                onClick={handleRevealMe}
-              >
-                גלה לי
-              </button>
-            </div>
-          )}
+            <button
+              type="button"
+              className={cn(
+                "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
+                hintPanel === "nav" && "is-active",
+              )}
+              aria-pressed={hintPanel === "nav"}
+              onClick={() => toggleHintPanel("nav")}
+            >
+              רמז 2
+            </button>
+            <button
+              type="button"
+              className={cn(
+                "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
+                centerReveal && "is-active",
+              )}
+              aria-pressed={centerReveal}
+              onClick={toggleRevealMe}
+            >
+              גלה לי
+            </button>
+          </div>
         </footer>
       ) : null}
 
