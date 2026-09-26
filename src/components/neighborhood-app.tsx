@@ -816,10 +816,10 @@ export function NeighborhoodApp({
   const summaryProps = {
     filteredHouses: visible.length,
     route: activeRoute ?? filterRoute,
-    skippedCount: countSkippedInSet(skips.skippedIds, housesForSkipCount, activeHouseSet),
-    visitedCount: countVisitedInSet(visits.visitedIds, housesForSkipCount, activeHouseSet),
-    likedCount: countLikedInSet([...likes.likedIds], housesForSkipCount, activeHouseSet),
-    gemCollectedCount: mapHouses.filter((h) => gems.collected(h.id)).length,
+    skippedCount: countSkippedInSet(skips.skippedIds, visible, activeHouseSet),
+    visitedCount: countVisitedInSet(visits.visitedIds, visible, activeHouseSet),
+    likedCount: countLikedInSet([...likes.likedIds], visible, activeHouseSet),
+    gemCollectedCount: visible.filter((h) => gems.collected(h.id)).length,
     showPersonalMarks: gemUi,
   };
 
@@ -1046,7 +1046,6 @@ export function NeighborhoodApp({
             gemMapToggleEnabled={gemUi}
             gemMapVisible={mapDiamondsVisible}
             onToggleGemMap={() => setMapDiamondsVisible((on) => !on)}
-            gemCollectedBadge={mapGemBadgeCount}
           />
         </div>
       ) : null}

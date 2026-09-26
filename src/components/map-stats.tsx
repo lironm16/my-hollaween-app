@@ -238,7 +238,7 @@ export function StatsSummary({
                 <CompactChip
                   icon={<GemSummaryIcon />}
                   value={String(gemCollectedCount)}
-                  label="יהלומים"
+                  label="אספתי"
                 />
               </>
             ) : null}
@@ -289,7 +289,7 @@ export function StatsSummary({
               <RouteChip
                 icon={<GemSummaryIcon />}
                 value={String(gemCollectedCount)}
-                label="יהלומים"
+                label="אספתי"
               />
             </>
           ) : null}

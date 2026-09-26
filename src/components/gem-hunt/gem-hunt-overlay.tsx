@@ -710,7 +710,7 @@ export function GemHuntOverlay({
             >
               <span className="gem-hunt-overlay__hint-btn-label">
                 <span className="gem-hunt-overlay__hint-btn-title">רמז 1</span>
-                <span className="gem-hunt-overlay__hint-btn-sub">מי</span>
+                <span className="gem-hunt-overlay__hint-btn-sub">מי מסתתר</span>
               </span>
             </button>
             <button

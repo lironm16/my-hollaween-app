@@ -69,7 +69,6 @@ export function NeighborhoodToolbar({
   gemMapToggleEnabled = false,
   gemMapVisible = false,
   onToggleGemMap,
-  gemCollectedBadge = 0,
 }: {
   view: HomeView;
   onViewChange: (view: HomeView) => void;
@@ -98,7 +97,6 @@ export function NeighborhoodToolbar({
   gemMapToggleEnabled?: boolean;
   gemMapVisible?: boolean;
   onToggleGemMap?: () => void;
-  gemCollectedBadge?: number;
 }) {
   return (
     <div
@@ -132,26 +130,17 @@ export function NeighborhoodToolbar({
         {gemMapToggleEnabled && onToggleGemMap ? (
           <button
             type="button"
-            aria-label={
-              gemMapVisible
-                ? "הסתר יהלומים במפה"
-                : `הצג יהלומים במפה · ${gemCollectedBadge} נאספו`
-            }
+            aria-label={gemMapVisible ? "הסתר יהלומים במפה" : "הצג יהלומים במפה"}
             aria-pressed={gemMapVisible}
             onClick={onToggleGemMap}
             className={cn(
-              "app-toolbar__btn relative inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
+              "app-toolbar__btn inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
               gemMapVisible
-                ? "bg-amber-400 text-black"
-                : "bg-[#1d1028] text-amber-200 ring-1 ring-amber-500/35",
+                ? "bg-orange-500 text-black"
+                : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
             )}
           >
-            <Gem className="size-5 fill-current" strokeWidth={2.1} />
-            {gemCollectedBadge > 0 ? (
-              <span className="absolute -top-1 -start-1 inline-flex min-w-[1.15rem] items-center justify-center rounded-full bg-violet-600 px-1 text-[0.65rem] font-bold leading-none text-white ring-2 ring-[#12081a]">
-                {gemCollectedBadge > 99 ? "99+" : gemCollectedBadge}
-              </span>
-            ) : null}
+            <Gem className="size-5 text-amber-300/90" strokeWidth={2.1} />
           </button>
         ) : null}
         <button
