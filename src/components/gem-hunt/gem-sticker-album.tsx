@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { GemBagDiamondHero } from "@/components/gem-hunt/gem-bag-diamond-hero";
+import { GemStickerSpotlight } from "@/components/gem-hunt/gem-sticker-spotlight";
 import {
   gemAlbumStickerPool,
   gemLabelHe,
@@ -38,6 +39,7 @@ export function GemStickerAlbum({
     [slots, collected, housesById],
   );
   const complete = slots.length > 0 && filledCount >= slots.length;
+  const [spotlightId, setSpotlightId] = useState<GemMonsterId | null>(null);
 
   return (
     <div className={cn("gem-sticker-album", complete && "gem-sticker-album--complete")}>
@@ -53,25 +55,27 @@ export function GemStickerAlbum({
             <>מה עדיין חבוי על המפה?</>
           )}
         </p>
-        <div className="gem-sticker-album__meter" aria-hidden>
-          <span
-            className="gem-sticker-album__meter-fill"
-            style={{ width: `${slots.length ? (filledCount / slots.length) * 100 : 0}%` }}
-          />
-        </div>
       </header>
 
       <div className="gem-sticker-album__book" role="list" aria-label="מדבקות יהלום">
-        {slots.map((monster, index) => (
-          <GemStickerSlot
-            key={monster.id}
-            monsterId={monster.id}
-            posterPath={monster.posterPath}
-            collected={isGemAlbumMonsterCollected(monster.id, collected, housesById)}
-            index={index}
-          />
-        ))}
+        {slots.map((monster, index) => {
+          const isFound = isGemAlbumMonsterCollected(monster.id, collected, housesById);
+          return (
+            <GemStickerSlot
+              key={monster.id}
+              monsterId={monster.id}
+              posterPath={monster.posterPath}
+              collected={isFound}
+              index={index}
+              onOpen={isFound ? () => setSpotlightId(monster.id) : undefined}
+            />
+          );
+        })}
       </div>
+
+      {spotlightId ? (
+        <GemStickerSpotlight monsterId={spotlightId} onClose={() => setSpotlightId(null)} />
+      ) : null}
 
       {!complete ? (
         <p className="gem-sticker-album__tease">
@@ -87,20 +91,30 @@ function GemStickerSlot({
   posterPath,
   collected,
   index,
+  onOpen,
 }: {
   monsterId: GemMonsterId;
   posterPath: string;
   collected: boolean;
   index: number;
+  onOpen?: () => void;
 }) {
   const label = gemLabelHe(monsterId);
+  const interactive = collected && onOpen;
   return (
     <div
       role="listitem"
       data-gem-sticker-slot={monsterId}
-      className={cn("gem-sticker-slot", collected && "is-found")}
+      className={cn("gem-sticker-slot", collected && "is-found", interactive && "is-tappable")}
       style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
     >
+      <button
+        type="button"
+        disabled={!interactive}
+        className="gem-sticker-slot__hit"
+        aria-label={interactive ? `הציגו את ${label} בגדול` : undefined}
+        onClick={onOpen}
+      >
       <div className="gem-sticker-slot__frame">
         {collected ? (
           <>
@@ -126,6 +140,7 @@ function GemStickerSlot({
       <p className="gem-sticker-slot__caption">
         {collected ? label : "מסתתר במפה…"}
       </p>
+      </button>
     </div>
   );
 }

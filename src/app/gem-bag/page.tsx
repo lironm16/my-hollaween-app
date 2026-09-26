@@ -9,7 +9,7 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
-import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
+import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
 import { catalogHasRealHouses } from "@/lib/house-set";
 import { buttonVariants } from "@/components/ui/button";
@@ -19,7 +19,7 @@ export default function GemBagPage() {
   const { admin, ready } = useAdminSession();
   const { catalog, loading } = useCatalog();
   const gems = useGemProgress();
-  const visible = gemHuntVisible(admin);
+  const { gemHuntVisible: visible } = useGemHuntAdminUi(admin);
 
   const mapHouses = useMemo(
     () => gemHuntMapHouses(resolveCatalogHouses(catalog), "real"),
@@ -68,12 +68,6 @@ export default function GemBagPage() {
           "bg-[radial-gradient(ellipse_120%_80%_at_50%_-10%,rgb(76_29_149_/_0.35),transparent_55%)]",
         )}
       >
-        <Link
-          href="/"
-          className="gem-sticker-album-back mb-3 inline-block text-sm text-violet-300/90 hover:text-amber-200"
-        >
-          ← חזרה למפה
-        </Link>
         {loading && !hasHouses ? (
           <p className="text-base text-violet-300">טוענים נתונים…</p>
         ) : mapHouses.length === 0 ? (

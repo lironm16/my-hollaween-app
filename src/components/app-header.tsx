@@ -31,7 +31,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
-import { gemBagMenuVisible } from "@/lib/gem-hunt-enabled";
+import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { appVersionLabel } from "@/lib/app-version";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { cn } from "@/lib/utils";
@@ -44,7 +44,7 @@ export function AppHeader({
 }) {
   const { admin, logout } = useAdminSession();
   const now = useAppNow();
-  const showGemBag = gemBagMenuVisible(admin, now);
+  const { gemBagMenuVisible: showGemBag } = useGemHuntAdminUi(admin, now);
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);
 

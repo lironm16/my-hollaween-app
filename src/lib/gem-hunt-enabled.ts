@@ -1,8 +1,11 @@
+import { readGemPreviewAsUser } from "@/lib/gem-preview-as-user";
 import { isAddHouseOpen } from "@/lib/hours";
 
 /** Gem hunt is admin-only until we intentionally open it for everyone. */
 export function gemHuntVisible(isAdmin: boolean) {
-  return isAdmin;
+  if (!isAdmin) return false;
+  if (readGemPreviewAsUser()) return false;
+  return true;
 }
 
 /** Map FAB, details hunt block, filter «לא אספתי», stats «אספתי», title diamonds — one gate. */

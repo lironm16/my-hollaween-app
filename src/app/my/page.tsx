@@ -19,7 +19,7 @@ import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
-import { gemBagMenuVisible } from "@/lib/gem-hunt-enabled";
+import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import {
   forgetPublishedHouse,
   notifyCatalogChanged,
@@ -58,7 +58,7 @@ function MyCollectionsPageContent() {
   const searchParams = useSearchParams();
   const { admin } = useAdminSession();
   const now = useAppNow();
-  const showCollected = gemBagMenuVisible(admin, now);
+  const { gemBagMenuVisible: showCollected } = useGemHuntAdminUi(admin, now);
   const urlTab = parseTab(searchParams.get("tab"), showCollected);
   const [tab, setTab] = useState<PersonalMarksTab>(urlTab);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
@@ -257,7 +257,7 @@ function MyCollectionsPageContent() {
     setSelectedIds(new Set());
   }
 
-  const selectionRemoveLabel = tab === "mine" ? "הסר מהמכשיר" : "הסר מהרשימה";
+  const selectionRemoveLabel = tab === "mine" ? "הסר מהמכשיר" : "אפס מהרשימה";
 
   return (
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">

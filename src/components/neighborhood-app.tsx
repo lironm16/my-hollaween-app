@@ -46,7 +46,7 @@ import {
   GemHuntPanelLazy,
   preloadGemHuntChunks,
 } from "@/components/gem-hunt/gem-hunt-lazy";
-import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
+import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
 import { loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
@@ -153,10 +153,11 @@ export function NeighborhoodApp({
     useCatalog(initialCatalog);
   const catalogUpdatedAt = catalog?.updatedAt;
   const { admin } = useAdminSession();
+  const now = useAppNow();
+  const { gemHuntVisible: gemHuntActive, gemFabVisible: gemUi } = useGemHuntAdminUi(admin, now);
   const geo = useUserLocation({ watch: false });
   const { setWatchEnabled } = geo;
   const gps = geo.location;
-  const gemHuntActive = gemHuntVisible(admin);
   const gems = useGemProgress();
   const [mapGemHouse, setMapGemHouse] = useState<PublicHouse | null>(null);
   const [mapGemGps, setMapGemGps] = useState<UserLocation | null>(null);
@@ -208,7 +209,6 @@ export function NeighborhoodApp({
   const visits = useVisitedHouses();
   const skips = useSkippedHouses();
   const owned = useOwnedHouses();
-  const now = useAppNow();
   useEffect(() => {
     applyClockSearchParams(window.location.search);
   }, []);
@@ -415,7 +415,7 @@ export function NeighborhoodApp({
   /** Load gem hunt UI after the sheet paints — keeps house detail snappy. */
   const [gemPanelReady, setGemPanelReady] = useState(false);
   useEffect(() => {
-    if (!selection.selected || !gemHuntFabVisible(admin, now)) {
+    if (!selection.selected || !gemUi) {
       setGemPanelReady(false);
       return;
     }
@@ -967,7 +967,6 @@ export function NeighborhoodApp({
       })()
     : undefined;
 
-  const gemUi = gemHuntFabVisible(admin, now);
   const houseActionContext = useMemo((): HouseCardActionContext => {
     return {
       admin,
@@ -1115,7 +1114,7 @@ export function NeighborhoodApp({
             filters={sheetFilters}
             now={now}
             onPatch={patchFilterDraft}
-            showGemFilters={gemHuntFabVisible(admin, now)}
+            showGemFilters={gemUi}
           />
         </FiltersSheet>
       ) : null}

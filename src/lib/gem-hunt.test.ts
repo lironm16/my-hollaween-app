@@ -124,6 +124,8 @@ describe("gem hunt geo", () => {
 
 describe("gem hunt gate", () => {
   it("shows only for admin", async () => {
+    const { writeGemPreviewAsUser } = await import("@/lib/gem-preview-as-user");
+    writeGemPreviewAsUser(false);
     const { gemHuntVisible } = await import("@/lib/gem-hunt-enabled");
     assert.equal(gemHuntVisible(true), true);
     assert.equal(gemHuntVisible(false), false);

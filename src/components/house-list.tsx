@@ -132,8 +132,8 @@ export function HouseList({
           >
             {selection.someSelected
               ? (selection.removeLabel ?? "הסר מהרשימה").replace(
-                  /^הסר /,
-                  `הסר ${selection.selectedIds.size} `,
+                  /^(הסר|אפס) /,
+                  `$1 ${selection.selectedIds.size} `,
                 )
               : (selection.removeLabel ?? "הסר מהרשימה")}
           </Button>
