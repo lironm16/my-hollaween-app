@@ -8,21 +8,38 @@ import {
 } from "@/lib/gem-admin-ops";
 import type { PublicHouse } from "@/lib/types";
 
-function stub(id: string, lat: number, lng: number): PublicHouse {
+function stub(id: string, lat: number, lng: number, overrides: Partial<PublicHouse> = {}): PublicHouse {
   return {
     id,
     name: `בית ${id}`,
+    theme: "pumpkin",
     address: "רחוב 1",
+    arrival: "",
+    description: "",
     lat,
     lng,
-    theme: "pumpkin",
-    kind: "house",
+    treats: ["candy"],
+    treatStock: { candy: "plenty" },
     visit: "come",
-    candy: "plenty",
-    scare: "medium",
-    accessibility: "none",
-    addedAt: "2026-10-31T12:00:00.000Z",
-  } as PublicHouse;
+    scareLevel: "mild",
+    openFrom: "17:00",
+    openTo: "21:00",
+    openHours: [{ from: "17:00", to: "21:00" }],
+    openFrom2: "",
+    openTo2: "",
+    notes: "",
+    accessible: true,
+    decorLevel: "medium",
+    decorated: true,
+    soldOut: false,
+    adminFrozen: false,
+    ownerFrozenUntil: null,
+    photoUrl: "",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    kind: "house",
+    ...overrides,
+  };
 }
 
 describe("gem-admin-ops", () => {
