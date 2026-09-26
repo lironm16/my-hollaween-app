@@ -161,8 +161,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    ensureGemOsmAnchorsLoaded();
-  }, []);
+    ensureGemOsmAnchorsLoaded(catalog?.updatedAt ?? null);
+  }, [catalog?.updatedAt]);
 
   useEffect(() => {
     let cancelled = false;

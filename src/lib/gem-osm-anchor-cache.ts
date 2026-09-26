@@ -4,6 +4,7 @@ import bundled from "../../public/gem-osm-anchors.json";
 
 let file: GemOsmAnchorFile = normalizeFile(bundled as GemOsmAnchorFile);
 let fetchStarted = false;
+let lastCatalogKey = "";
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
@@ -43,11 +44,18 @@ function loadFile(): GemOsmAnchorFile {
 export async function refreshGemOsmAnchorsFromNetwork(): Promise<boolean> {
   if (typeof window === "undefined") return false;
   try {
-    const res = await fetch(`/gem-osm-anchors.json?v=${encodeURIComponent(appVersion())}`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return false;
-    const next = normalizeFile((await res.json()) as GemOsmAnchorFile);
+    const urls = [
+      `/api/gem-osm-anchors?v=${encodeURIComponent(appVersion())}`,
+      `/gem-osm-anchors.json?v=${encodeURIComponent(appVersion())}`,
+    ];
+    let next: GemOsmAnchorFile | null = null;
+    for (const url of urls) {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) continue;
+      next = normalizeFile((await res.json()) as GemOsmAnchorFile);
+      break;
+    }
+    if (!next) return false;
     const prevGenerated = file.generatedAt;
     const prevCount = Object.keys(file.anchors).length;
     file = next;
@@ -60,9 +68,11 @@ export async function refreshGemOsmAnchorsFromNetwork(): Promise<boolean> {
   }
 }
 
-/** Call once on app boot (catalog provider). */
-export function ensureGemOsmAnchorsLoaded() {
-  if (fetchStarted || typeof window === "undefined") return;
+export function ensureGemOsmAnchorsLoaded(catalogUpdatedAt?: string | null) {
+  if (typeof window === "undefined") return;
+  const key = catalogUpdatedAt ?? "";
+  if (fetchStarted && lastCatalogKey === key) return;
+  lastCatalogKey = key;
   fetchStarted = true;
   void refreshGemOsmAnchorsFromNetwork();
 }
