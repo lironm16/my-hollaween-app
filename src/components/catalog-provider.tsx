@@ -35,6 +35,7 @@ import {
   resolveServerHouseCount,
 } from "@/lib/catalog-houses";
 import { catalogHasRealHouses } from "@/lib/house-set";
+import { ensureGemOsmAnchorsLoaded } from "@/lib/gem-osm-anchor-cache";
 import { isMapListSuspended, subscribeMapListSuspend } from "@/lib/map-list-suspend";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
@@ -157,6 +158,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       setReady(true);
     }
+  }, []);
+
+  useEffect(() => {
+    ensureGemOsmAnchorsLoaded();
   }, []);
 
   useEffect(() => {

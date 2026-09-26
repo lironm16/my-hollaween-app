@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { Marker, Polyline, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
+import { useGemOsmAnchorsEpoch } from "@/hooks/use-gem-osm-anchors";
 import { gemAnchorForHouse } from "@/lib/gem-hunt";
 import { gemMonsterForHouse, gemMonsterMeta } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
@@ -119,6 +120,7 @@ export function MapGemAnchorLayer({
   visual?: GemMapAnchorVisual;
 }) {
   const { overrides } = useGemAnchorOverrides();
+  const osmEpoch = useGemOsmAnchorsEpoch();
   const compact = visual === "compact";
   const characters = visual === "characters";
 
@@ -145,7 +147,7 @@ export function MapGemAnchorLayer({
       dimmed: boolean;
       calibrated: boolean;
     }>;
-  }, [houses, isCollected, matchedIds, filterDimActive, overrides, compact]);
+  }, [houses, isCollected, matchedIds, filterDimActive, overrides, compact, osmEpoch, characters]);
 
   const layer = (
     <>

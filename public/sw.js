@@ -1,11 +1,12 @@
 importScripts("/sw-map-tiles.js");
 
-const APP_VERSION = "0.2.8";
-const CACHE = "hw-shell-0.2.8";
+const APP_VERSION = "0.2.9";
+const CACHE = "hw-shell-0.2.9";
 const TILE_CACHE = MapTileCache.TILE_CACHE;
 const PRECACHE = [
   "/offline.html",
   "/catalog.json",
+  "/gem-osm-anchors.json",
   "/shell.css",
   "/app.css",
   "/icon-192.png",

@@ -181,6 +181,19 @@ export function GemHuntPanel({
           </div>
         ) : null}
 
+        {!collected && anchorOverrideMap[house.id] ? (
+          <p className="gem-hunt-panel__override-hint">
+            המיקום בטלפון שלכם דורס את המפה. אחרי עדכון אפל —{" "}
+            <button
+              type="button"
+              className="gem-hunt-panel__override-reset"
+              onClick={() => clearGemAnchorOverride(house.id)}
+            >
+              איפוס מיקום יהלום
+            </button>
+          </p>
+        ) : null}
+
         {showAdminTools ? (
           <div className="gem-hunt-panel__admin-tools">
             <label className="gem-hunt-panel__simulate">
