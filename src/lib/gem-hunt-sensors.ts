@@ -38,26 +38,9 @@ function migrateOrientationSessionFlag() {
   }
 }
 
-async function queryPermissionGranted(name: PermissionName): Promise<boolean | null> {
-  if (typeof navigator === "undefined" || !navigator.permissions?.query) return null;
-  try {
-    const status = await navigator.permissions.query({ name });
-    return status.state === "granted";
-  } catch {
-    return null;
-  }
-}
-
 export function getGemHuntCameraStream() {
   if (sharedCameraStream?.active) return sharedCameraStream;
   return null;
-}
-
-/** Pause tracks — keeps OS camera grant for the next hunt in the same session. */
-export function pauseGemHuntCameraStream() {
-  sharedCameraStream?.getVideoTracks().forEach((t) => {
-    t.enabled = false;
-  });
 }
 
 export function stopGemHuntCameraStream() {
@@ -65,7 +48,11 @@ export function stopGemHuntCameraStream() {
   sharedCameraStream = null;
 }
 
-/** Stop shared stream and release the preview element (needed for iOS camera indicator). */
+/**
+ * Stop tracks and detach video — turns off the iOS camera indicator (green dot).
+ * Site camera permission stays granted; the next hunt should call getUserMedia without
+ * a new system prompt (standard Safari / PWA behavior).
+ */
 export function releaseGemHuntCamera(video?: HTMLVideoElement | null) {
   if (video) {
     try {
@@ -112,6 +99,7 @@ export async function requestGemHuntOrientationPermission(): Promise<boolean> {
     requestPermission?: () => Promise<"granted" | "denied">;
   };
   if (typeof ctor.requestPermission !== "function") return true;
+  if (isGemHuntOrientationGranted()) return true;
   try {
     const result = await ctor.requestPermission();
     if (result === "granted") {
@@ -132,7 +120,11 @@ export type PrepareGemHuntSensorsOptions = {
   requestOrientation?: boolean;
 };
 
-/** Call from a click/tap handler before opening the hunt overlay. */
+/**
+ * Call from a tap handler before opening the hunt overlay (iOS needs gesture for first
+ * camera / motion prompt). After the user grants once per origin, killing the stream
+ * on close and calling getUserMedia again should not re-show those dialogs.
+ */
 export async function prepareGemHuntSensors(
   options: PrepareGemHuntSensorsOptions = {},
 ): Promise<{
@@ -141,15 +133,13 @@ export async function prepareGemHuntSensors(
 }> {
   const requestCamera = options.requestCamera !== false;
   const requestOrientation = options.requestOrientation !== false;
-  let orientation = requestOrientation ? true : false;
-  let camera = requestCamera ? true : false;
+  let orientation = !requestOrientation ? false : isGemHuntOrientationGranted();
+  let camera = !requestCamera ? false : true;
 
   migrateOrientationSessionFlag();
 
-  if (requestOrientation) {
+  if (requestOrientation && !orientation) {
     orientation = await requestGemHuntOrientationPermission();
-  } else {
-    orientation = false;
   }
 
   if (
@@ -165,7 +155,7 @@ export async function prepareGemHuntSensors(
         });
         writeGranted(CAMERA_GRANTED_KEY);
       } else {
-        sharedCameraStream = null;
+        stopGemHuntCameraStream();
         sharedCameraStream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: "environment" } },
           audio: false,

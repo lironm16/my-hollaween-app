@@ -6,7 +6,13 @@ import { gemMonsterMeta, type GemMonsterId } from "@/lib/gem-monsters";
 import { cn } from "@/lib/utils";
 
 /** Lands a new sticker on the real album page (after /gem-bag?fly=). */
-export function GemStickerFlyFromCollect({ monsterId }: { monsterId: GemMonsterId }) {
+export function GemStickerFlyFromCollect({
+  monsterId,
+  onComplete,
+}: {
+  monsterId: GemMonsterId;
+  onComplete?: () => void;
+}) {
   const [phase, setPhase] = useState<"fly" | "done">("fly");
   const meta = gemMonsterMeta(monsterId);
 
@@ -16,6 +22,7 @@ export function GemStickerFlyFromCollect({ monsterId }: { monsterId: GemMonsterI
     );
     if (!slot) {
       setPhase("done");
+      onComplete?.();
       return;
     }
     slot.scrollIntoView({ block: "center", behavior: "auto" });
@@ -36,9 +43,10 @@ export function GemStickerFlyFromCollect({ monsterId }: { monsterId: GemMonsterI
       root.style.removeProperty("--gem-fly-dy");
       root.style.removeProperty("--gem-fly-scale");
       slot.classList.add("is-just-placed");
+      onComplete?.();
     }, 1100);
     return () => window.clearTimeout(done);
-  }, [monsterId]);
+  }, [monsterId, onComplete]);
 
   if (phase === "done") return null;
 

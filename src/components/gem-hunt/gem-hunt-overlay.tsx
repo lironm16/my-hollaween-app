@@ -9,6 +9,7 @@ import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
 import {
   getGemHuntCameraStream,
+  isGemHuntOrientationGranted,
   prepareGemHuntSensors,
   requestGemHuntOrientationPermission,
   releaseGemHuntCamera,
@@ -199,7 +200,7 @@ export function GemHuntOverlay({
         cameraBootRef.current = true;
         const prepared = await prepareGemHuntSensors({
           requestCamera: true,
-          requestOrientation: true,
+          requestOrientation: !isGemHuntOrientationGranted(),
         });
         cameraBootRef.current = false;
         if (cancelled) return;

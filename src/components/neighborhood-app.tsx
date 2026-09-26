@@ -48,12 +48,17 @@ import {
 } from "@/components/gem-hunt/gem-hunt-lazy";
 import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { useGemProgress } from "@/hooks/use-gem-progress";
-import { loadGemCollectedIds } from "@/lib/gem-progress";
+import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
+import { loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
 import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
 import { syncGemMonsterAssignment } from "@/lib/gem-monsters";
 import { pickGemHuntTarget } from "@/lib/gem-hunt-target";
-import { prepareGemHuntSensors, releaseGemHuntCamera } from "@/lib/gem-hunt-sensors";
+import {
+  isGemHuntOrientationGranted,
+  prepareGemHuntSensors,
+  releaseGemHuntCamera,
+} from "@/lib/gem-hunt-sensors";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -336,7 +341,10 @@ export function NeighborhoodApp({
       selection.selected?.id ?? null,
     );
     if (!target) return;
-    await prepareGemHuntSensors({ requestCamera: true, requestOrientation: true });
+    await prepareGemHuntSensors({
+      requestCamera: true,
+      requestOrientation: !isGemHuntOrientationGranted(),
+    });
     setMapGemGps(freshGps);
     setMapGemHouse(target.house);
   }, [gemAllCollected, mapHouses, gps, gems, selection.selected?.id, geo, setWatchEnabled]);
@@ -350,7 +358,10 @@ export function NeighborhoodApp({
       setWatchEnabled(true);
       const freshGps = (await geo.refresh()) ?? gps;
       setMapGemGps(freshGps);
-      await prepareGemHuntSensors({ requestCamera: true, requestOrientation: true });
+      await prepareGemHuntSensors({
+        requestCamera: true,
+        requestOrientation: !isGemHuntOrientationGranted(),
+      });
       setMapGemHouse(house);
     },
     [gems, geo, selection, setWatchEnabled],
@@ -1025,6 +1036,7 @@ export function NeighborhoodApp({
               house={selected}
               userLocation={gps}
               isAdmin={admin}
+              mapHousesForCelebrate={mapHouses}
               onOpenHunt={async () => {
                 setWatchEnabled(true);
                 return (await geo.refresh()) ?? gps;
@@ -1389,13 +1401,18 @@ export function NeighborhoodApp({
           }}
           onCollect={(monsterId, options) => {
             const h = mapGemHouse;
+            const collectedBefore = loadGemCollected();
+            const celebrate =
+              options?.navigateStickerBook
+                ? gemBagCelebrateAfterCollect(mapHouses, collectedBefore, h.id, monsterId)
+                : null;
             gems.collect(h.id, monsterId);
             releaseGemHuntCamera();
             setMapGemHouse(null);
             setMapGemGps(null);
             celebrateGemCollect();
             if (options?.navigateStickerBook) {
-              router.push(`/gem-bag?fly=${monsterId}`);
+              router.push(gemBagCollectHref(monsterId, celebrate));
               return;
             }
             if (options?.cheer !== false) {

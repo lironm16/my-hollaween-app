@@ -142,33 +142,52 @@ export function RouteActionsMenu({
     const stopCount = route.stops.length;
     const text = routeSharePlainText(url, stopCount);
     const day = new Date().toISOString().slice(0, 10);
+    const title = "מסלול HallowHood";
+
     setMenuOpen(false);
 
-    void (async () => {
-      const outcome = await shareRouteUrl(url, stopCount);
-      if (outcome === "shared") {
-        toast.success("שיתוף המסלול נשלח");
-        return;
-      }
-      if (outcome === "copied") {
-        toast.success("הקישור הועתק — הדביקו בוואטסאפ / הודעה");
-        return;
-      }
-      if (outcome === "cancelled") return;
+    const runFallback = () => {
+      void (async () => {
+        const fileShared = await sharePlainTextFile(
+          `hallowhood-route-share-${day}.txt`,
+          text,
+          title,
+        );
+        if (fileShared) {
+          toast.success("שיתוף המסלול נשלח");
+          return;
+        }
 
-      const fileShared = await sharePlainTextFile(
-        `hallowhood-route-share-${day}.txt`,
-        text,
-        "מסלול HallowHood",
-      );
-      if (fileShared) {
-        toast.success("שיתוף המסלול נשלח");
-        return;
-      }
+        const outcome = await shareRouteUrl(url, stopCount);
+        if (outcome === "shared" || outcome === "copied") {
+          toast.success(
+            outcome === "shared"
+              ? "שיתוף המסלול נשלח"
+              : "הקישור הועתק — הדביקו בוואטסאפ / הודעה",
+          );
+          return;
+        }
+        if (outcome === "cancelled") return;
 
-      toast.error("לא הצלחנו לשתף — נסו שוב");
-      toast.message(url, { closeButton: true, duration: 20_000 });
-    })();
+        toast.error("לא הצלחנו לשתף — נסו שוב");
+        toast.message(url, { closeButton: true, duration: 20_000 });
+      })();
+    };
+
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      navigator
+        .share({ title, text: text.slice(0, 8000) })
+        .then(() => {
+          toast.success("שיתוף המסלול נשלח");
+        })
+        .catch((err: unknown) => {
+          if (err instanceof Error && err.name === "AbortError") return;
+          runFallback();
+        });
+      return;
+    }
+
+    runFallback();
   }
 
   if (!routeMode) return null;

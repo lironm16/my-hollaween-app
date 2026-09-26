@@ -27,7 +27,13 @@ import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
 
 export type GemHuntOpenPrepare = () => Promise<UserLocation | null | void>;
-import { prepareGemHuntSensors, releaseGemHuntCamera } from "@/lib/gem-hunt-sensors";
+import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
+import { loadGemCollected } from "@/lib/gem-progress";
+import {
+  isGemHuntOrientationGranted,
+  prepareGemHuntSensors,
+  releaseGemHuntCamera,
+} from "@/lib/gem-hunt-sensors";
 import {
   clearAllGemAnchorOverrides,
   clearGemAnchorOverride,
@@ -43,6 +49,7 @@ export function GemHuntPanel({
   isAdmin,
   adminSimulateInRange = false,
   onOpenHunt,
+  mapHousesForCelebrate = [],
 }: {
   house: PublicHouse;
   userLocation: UserLocation | null;
@@ -50,6 +57,8 @@ export function GemHuntPanel({
   adminSimulateInRange?: boolean;
   /** Same tap as «פתחו מצלמה» — request GPS + sensors (iOS needs gesture). */
   onOpenHunt?: GemHuntOpenPrepare;
+  /** Map-eligible houses — used for milestone query on /gem-bag after collect. */
+  mapHousesForCelebrate?: PublicHouse[];
 }) {
   const gems = useGemProgress();
   const { overrides: anchorOverrideMap } = useGemAnchorOverrides();
@@ -88,12 +97,25 @@ export function GemHuntPanel({
 
   const openCamera = useCallback(async () => {
     const fresh = (await onOpenHunt?.()) ?? userLocation;
-    await prepareGemHuntSensors({ requestCamera: true, requestOrientation: true });
+    await prepareGemHuntSensors({
+      requestCamera: true,
+      requestOrientation: !isGemHuntOrientationGranted(),
+    });
     setHuntLocation(fresh ?? userLocation);
     setHuntOpen(true);
   }, [onOpenHunt, userLocation]);
 
   function onCollect(collectedVariant: GemMonsterId, options?: GemCollectFinishOptions) {
+    const collectedBefore = loadGemCollected();
+    const celebrate =
+      options?.navigateStickerBook && mapHousesForCelebrate.length > 0
+        ? gemBagCelebrateAfterCollect(
+            mapHousesForCelebrate,
+            collectedBefore,
+            house.id,
+            collectedVariant,
+          )
+        : null;
     gems.collect(house.id, collectedVariant);
     releaseGemHuntCamera();
     setHuntOpen(false);
@@ -101,7 +123,7 @@ export function GemHuntPanel({
       navigator.vibrate(40);
     }
     if (options?.navigateStickerBook) {
-      router.push(`/gem-bag?fly=${collectedVariant}`);
+      router.push(gemBagCollectHref(collectedVariant, celebrate));
       return;
     }
     if (options?.cheer !== false) {

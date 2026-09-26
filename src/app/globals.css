@@ -5074,6 +5074,102 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   border-color: rgb(251 191 36 / 0.5);
   animation: gem-bag-hero-shine 2.5s ease-in-out infinite;
 }
+.gem-bag-milestone {
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.gem-bag-milestone.is-visible {
+  opacity: 1;
+}
+.gem-bag-milestone__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(8 4 14 / 0.72);
+  backdrop-filter: blur(6px);
+}
+.gem-bag-milestone__burst {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 40%, rgb(251 191 36 / 0.35), transparent 55%);
+  animation: gem-bag-milestone-burst 2.4s ease-out infinite;
+  pointer-events: none;
+}
+.gem-bag-milestone__card {
+  position: relative;
+  z-index: 1;
+  max-width: 22rem;
+  padding: 1.35rem 1.25rem 1.1rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgb(251 191 36 / 0.45);
+  background: linear-gradient(165deg, rgb(46 16 78 / 0.98), rgb(18 8 28 / 0.98));
+  text-align: center;
+  box-shadow: 0 16px 48px rgb(0 0 0 / 0.45), 0 0 40px rgb(251 191 36 / 0.12);
+  animation: gem-bag-milestone-in 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.gem-bag-milestone__spark {
+  margin: 0 auto 0.35rem;
+  filter: drop-shadow(0 0 10px rgb(251 191 36 / 0.65));
+  animation: gem-bag-milestone-spark 1.8s ease-in-out infinite;
+}
+.gem-bag-milestone__gem {
+  margin: 0 auto 0.65rem;
+  opacity: 0.85;
+}
+.gem-bag-milestone__kicker {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgb(253 186 116);
+}
+.gem-bag-milestone__title {
+  margin-top: 0.35rem;
+  font-family: var(--font-display, inherit);
+  font-size: 1.45rem;
+  line-height: 1.25;
+  color: rgb(255 237 213);
+}
+.gem-bag-milestone__sub {
+  margin-top: 0.55rem;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: rgb(221 214 254 / 0.92);
+}
+.gem-bag-milestone__tap {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: rgb(167 139 250 / 0.75);
+}
+@keyframes gem-bag-milestone-in {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+@keyframes gem-bag-milestone-burst {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+@keyframes gem-bag-milestone-spark {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.12) rotate(8deg);
+  }
+}
 @keyframes gem-bag-hero-shine {
   0%,
   100% {
