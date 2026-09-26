@@ -49,7 +49,6 @@
     --color-violet-500: oklch(60.6% 0.25 292.717);
     --color-violet-600: oklch(54.1% 0.281 293.009);
     --color-violet-700: oklch(49.1% 0.27 292.581);
-    --color-violet-800: oklch(43.2% 0.232 292.759);
     --color-violet-900: oklch(38% 0.189 293.745);
     --color-rose-300: oklch(81% 0.117 11.638);
     --color-slate-300: oklch(86.9% 0.022 252.894);
@@ -9377,6 +9376,42 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   font-size: 0.75rem;
   color: rgb(196 181 253 / 0.9);
   text-align: center;
+}
+.gem-hunt-overlay__gem-hit .gem-sprite--hunt,
+.gem-hunt-overlay__gem-hit .gem-sprite--fill {
+  width: min(84vw, 21rem);
+  height: min(84vw, 21rem);
+  overflow: visible;
+}
+.gem-hunt-overlay__gem-pin .gem-sprite--poster {
+  width: 4.75rem;
+  height: 4.75rem;
+  overflow: visible;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+.gem-hunt-overlay__gem-pin .gem-sprite--poster .gem-sprite__poster {
+  width: 100%;
+  height: auto;
+  padding: 0;
+  filter: drop-shadow(0 10px 18px rgb(0 0 0 / 0.55));
+}
+.gem-hunt-overlay__gem-pin.is-revealed .gem-sprite--hunt,
+.gem-hunt-overlay__gem-pin.is-revealed .gem-sprite--fill,
+.gem-hunt-overlay__gem-pin.is-center-fallback.is-revealed .gem-sprite {
+  width: min(86vw, 21.5rem);
+  height: min(86vw, 21.5rem);
+}
+.gem-hunt-overlay__gem-hit .gem-model-3d--poster-fallback {
+  width: min(84vw, 21rem);
+  height: min(84vw, 21rem);
+  overflow: visible;
+  background: transparent;
+}
+.gem-hunt-overlay__gem-hit .gem-model-3d__poster-fallback {
+  object-fit: contain;
+  filter: drop-shadow(0 12px 22px rgb(0 0 0 / 0.55));
 }
 .gem-hunt-overlay__gem-hit .gem-sprite--hunt {
   width: min(76vw, 18.5rem);

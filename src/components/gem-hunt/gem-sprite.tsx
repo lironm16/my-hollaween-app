@@ -28,7 +28,7 @@ export function GemSprite({
   house?: Pick<PublicHouse, "id" | "theme" | "kind">;
   collected?: boolean;
   className?: string;
-  size?: "sm" | "lg";
+  size?: "sm" | "lg" | "fill";
   /** bag rows use poster; hunt uses 3d; orbit is for gem-bag studio only */
   mode?: "auto" | "3d" | "poster" | "orbit";
   tapCollect?: boolean;
@@ -80,6 +80,7 @@ export function GemSprite({
         "gem-sprite",
         size === "sm" && "gem-sprite--sm",
         mode === "3d" && "gem-sprite--hunt",
+        size === "fill" && "gem-sprite--fill",
         collected && "is-collected",
         motion === "celebrate" && "is-celebrating",
         className,
@@ -89,7 +90,7 @@ export function GemSprite({
       <GemModel3D
         monsterId={monsterId}
         houseId={id}
-        size={mode === "orbit" ? "fill" : size}
+        size={mode === "orbit" ? "fill" : size === "fill" ? "fill" : size}
         collected={collected}
         interactive={!tapCollect}
         spin={spinWhileCollect || motion === "celebrate"}

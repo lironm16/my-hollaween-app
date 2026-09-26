@@ -133,7 +133,9 @@ export function GemModel3D({
       controls === "turntable"
         ? size === "sm"
           ? 0.55
-          : 1.18
+          : size === "fill"
+            ? 1.62
+            : 1.38
         : size === "sm"
           ? 0.55
           : size === "lg"
@@ -158,7 +160,7 @@ export function GemModel3D({
 
         pivot.add(model);
         if (controls === "turntable") {
-          fitCameraToPivot(camera, pivot, size === "sm" ? 1.45 : 1.42);
+          fitCameraToPivot(camera, pivot, size === "sm" ? 1.45 : size === "fill" ? 1.28 : 1.32);
         } else {
           orbit?.update();
         }

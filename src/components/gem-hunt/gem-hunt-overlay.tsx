@@ -598,6 +598,7 @@ export function GemHuntOverlay({
               pinPlacement && "is-pinned",
               pinPlacement && !pinPlacement.inView && "is-off-screen",
               !pinPlacement && "is-center-fallback",
+              phase === "visible" && "is-revealed",
             )}
             style={
               pinDisplay
@@ -611,7 +612,13 @@ export function GemHuntOverlay({
             role="img"
             aria-label={`כיוון היהלום — ${gemLabelHe(monsterId)}`}
           >
-            <GemSprite house={house} mode="poster" />
+            <GemSprite
+              house={house}
+              mode={phase === "visible" ? "3d" : "poster"}
+              size={phase === "visible" ? "fill" : "lg"}
+              tapCollect={false}
+              spinWhileCollect={phase === "visible"}
+            />
           </div>
         ) : null}
       </div>
