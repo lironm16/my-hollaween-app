@@ -138,7 +138,7 @@ export const GEM_MONSTER_CATALOG = [
     glbPath: "/gem-monsters/zombie.glb",
     posterPath: "/gem-monsters/zombie-poster.png",
     labelHe: "זומבי",
-    petNameHe: "זוזו הזומבי",
+    petNameHe: "זומבי הזחל",
   },
 ] as const;
 

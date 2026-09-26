@@ -8723,19 +8723,19 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__scan-rose {
   z-index: 5;
-  width: 118%;
-  height: 118%;
+  width: 100%;
+  height: 100%;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
 }
 .gem-hunt-direction-rose--ring .gem-hunt-direction-rose__spoke {
-  inset: -11%;
+  inset: 5%;
 }
 .gem-hunt-direction-rose--ring .gem-hunt-direction-rose__chevron {
-  top: 0.15rem;
-  width: 3.65rem;
-  height: 1.55rem;
+  top: -0.25rem;
+  width: 3.35rem;
+  height: 1.45rem;
 }
 .gem-hunt-direction-rose {
   position: absolute;
@@ -9425,11 +9425,29 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__hint-actions--row .gem-hunt-overlay__hint-btn {
   flex: 1 1 0;
   min-width: 0;
-  padding-inline: 0.65rem;
+  padding-inline: 0.45rem;
+  padding-block: 0.5rem;
   font-size: 0.85rem;
 }
+.gem-hunt-overlay__hint-btn-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.08rem;
+  line-height: 1.12;
+  text-align: center;
+}
+.gem-hunt-overlay__hint-btn-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.gem-hunt-overlay__hint-btn-sub {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgb(196 181 253 / 0.95);
+}
 .gem-hunt-overlay__hint-btn--compact {
-  white-space: nowrap;
+  white-space: normal;
 }
 .gem-hunt-overlay__hint-btn {
   appearance: none;

@@ -708,7 +708,10 @@ export function GemHuntOverlay({
               aria-pressed={hintPanel === "character"}
               onClick={() => toggleHintPanel("character")}
             >
-              רמז 1
+              <span className="gem-hunt-overlay__hint-btn-label">
+                <span className="gem-hunt-overlay__hint-btn-title">רמז 1</span>
+                <span className="gem-hunt-overlay__hint-btn-sub">מי</span>
+              </span>
             </button>
             <button
               type="button"
@@ -719,7 +722,10 @@ export function GemHuntOverlay({
               aria-pressed={hintPanel === "nav"}
               onClick={() => toggleHintPanel("nav")}
             >
-              רמז 2
+              <span className="gem-hunt-overlay__hint-btn-label">
+                <span className="gem-hunt-overlay__hint-btn-title">רמז 2</span>
+                <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
+              </span>
             </button>
             <button
               type="button"
