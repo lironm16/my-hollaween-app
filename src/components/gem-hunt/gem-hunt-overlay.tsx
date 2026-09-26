@@ -526,7 +526,7 @@ export function GemHuntOverlay({
 
       {showHuntUi ? (
       <div className="gem-hunt-overlay__stage" aria-hidden={false}>
-        {centerDisplayMode ? (
+        {centerDisplayMode && phase !== "collecting" ? (
           <p className="gem-hunt-overlay__nav-caption">{gemPetName}</p>
         ) : hintPanel === "nav" ? (
           <p className="gem-hunt-overlay__nav-caption">כוון אותי — ניווט ליהלום</p>
@@ -536,7 +536,7 @@ export function GemHuntOverlay({
             <GemHuntDirectionRose
               bearingDeg={huntArrowDeg!}
               facing={facingTarget && !huntArrowMapNorth}
-              className="gem-hunt-overlay__scan-rose"
+              className="gem-hunt-overlay__scan-rose gem-hunt-direction-rose--ring"
             />
           ) : null}
           {centerDisplayMode && collectEnabled && phase !== "collecting" ? (

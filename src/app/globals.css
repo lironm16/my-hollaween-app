@@ -4006,6 +4006,19 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__scan-rose {
   z-index: 5;
+  width: 118%;
+  height: 118%;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.gem-hunt-direction-rose--ring .gem-hunt-direction-rose__spoke {
+  inset: -11%;
+}
+.gem-hunt-direction-rose--ring .gem-hunt-direction-rose__chevron {
+  top: 0.15rem;
+  width: 3.65rem;
+  height: 1.55rem;
 }
 .gem-hunt-direction-rose {
   position: absolute;
@@ -4052,6 +4065,11 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   color: inherit;
   opacity: 0.92;
   filter: drop-shadow(0 0 8px rgb(124 58 237 / 0.35));
+}
+/* Default tall chevron (non-ring contexts) — ring uses --ring modifier above */
+.gem-hunt-direction-rose:not(.gem-hunt-direction-rose--ring) .gem-hunt-direction-rose__chevron {
+  width: 3rem;
+  height: 4.25rem;
 }
 .gem-hunt-direction-rose__spoke.is-active .gem-hunt-direction-rose__chevron {
   opacity: 1;

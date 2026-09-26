@@ -38,12 +38,12 @@ export function GemHuntDirectionRose({
         >
           <svg
             className="gem-hunt-direction-rose__chevron"
-            viewBox="0 0 32 56"
+            viewBox="0 0 56 22"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
-              d="M16 2 L30 48 L23 48 L16 30 L9 48 L2 48 Z"
+              d="M28 1 L54 17 L42 17 L42 21 L14 21 L14 17 L2 17 Z"
               fill="currentColor"
             />
           </svg>
