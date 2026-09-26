@@ -432,7 +432,8 @@ export function GemHuntOverlay({
   const showCompassEnable =
     huntArrowMapNorth &&
     (headingStatus === "denied" || headingStatus === "unsupported");
-  const hidePinForHints = hintPanel != null && !centerReveal;
+  /** Hide AR pin while «מי מסתתר» popover is open — nav hint keeps the gem visible in the ring. */
+  const hidePinForHints = hintPanel === "character" && !centerReveal;
   const gemPetName = gemLabelHe(monsterId);
   const showNavCompassPrompt =
     hintPanel === "nav" &&
