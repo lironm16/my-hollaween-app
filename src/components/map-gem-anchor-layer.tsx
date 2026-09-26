@@ -1,34 +1,56 @@
 "use client";
 
-import { Fragment, useMemo } from "react";
-import { Marker, Polyline, Popup } from "react-leaflet";
+import { Fragment, useMemo, useState, type ReactNode } from "react";
+import { Marker, Polyline, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { gemAnchorForHouse } from "@/lib/gem-hunt";
 import { gemLabelHe, gemMonsterForHouse } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 
-const GEM_ICON = 30;
+/** admin = offset anchors + spokes (QA). compact = tiny diamonds, no lines, zoom-gated. */
+export type GemMapAnchorVisual = "admin" | "compact";
+
+const GEM_ICON_ADMIN = 30;
+const GEM_ICON_COMPACT = 18;
+const COMPACT_MIN_ZOOM = 15;
 
 const gemDiamondIconCache = new Map<string, L.DivIcon>();
 
-function gemDiamondIcon(collected: boolean, dimmed: boolean, calibrated: boolean) {
-  const key = `${collected ? "c" : "o"}-${dimmed ? "d" : "a"}-${calibrated ? "cal" : "auto"}`;
+function gemDiamondIcon(
+  collected: boolean,
+  dimmed: boolean,
+  calibrated: boolean,
+  compact: boolean,
+) {
+  const key = `${compact ? "c" : "a"}-${collected ? "c" : "o"}-${dimmed ? "d" : "a"}-${calibrated ? "cal" : "auto"}`;
   let icon = gemDiamondIconCache.get(key);
+  const size = compact ? GEM_ICON_COMPACT : GEM_ICON_ADMIN;
   if (!icon) {
     icon = L.divIcon({
       className: "map-gem-diamond-leaflet-icon",
-      html: `<div class="map-gem-diamond-marker${collected ? " is-collected" : ""}${dimmed ? " is-dimmed" : ""}${calibrated ? " is-calibrated" : ""}" aria-hidden="true">
+      html: `<div class="map-gem-diamond-marker${compact ? " map-gem-diamond-marker--compact" : ""}${collected ? " is-collected" : ""}${dimmed ? " is-dimmed" : ""}${calibrated ? " is-calibrated" : ""}" aria-hidden="true">
         <svg class="map-gem-diamond-marker__svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M6 3h12l4 7-10 13L2 10l4-7z" fill="currentColor"/>
         </svg>
       </div>`,
-      iconSize: [GEM_ICON, GEM_ICON],
-      iconAnchor: [GEM_ICON / 2, GEM_ICON / 2],
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2],
     });
     gemDiamondIconCache.set(key, icon);
   }
   return icon;
+}
+
+function GemMapZoomGate({ minZoom, children }: { minZoom: number; children: ReactNode }) {
+  const map = useMap();
+  const [visible, setVisible] = useState(() => map.getZoom() >= minZoom);
+  useMapEvents({
+    zoomend: () => setVisible(map.getZoom() >= minZoom),
+    moveend: () => setVisible(map.getZoom() >= minZoom),
+  });
+  if (!visible) return null;
+  return children;
 }
 
 export function MapGemAnchorLayer({
@@ -36,35 +58,47 @@ export function MapGemAnchorLayer({
   isCollected,
   matchedIds,
   filterDimActive = false,
+  visual = "admin",
 }: {
   houses: PublicHouse[];
   isCollected: (houseId: string) => boolean;
   matchedIds?: ReadonlySet<string>;
   filterDimActive?: boolean;
+  visual?: GemMapAnchorVisual;
 }) {
   const { overrides } = useGemAnchorOverrides();
+  const compact = visual === "compact";
 
   const markers = useMemo(() => {
-    return houses.map((house) => {
-      const anchor = gemAnchorForHouse(house);
-      const collected = isCollected(house.id);
-      const dimmed =
-        filterDimActive && matchedIds != null && !matchedIds.has(house.id);
-      return {
-        house,
-        anchor,
-        collected,
-        dimmed,
-        calibrated: anchor.calibrated === true || Boolean(overrides[house.id]),
-      };
-    });
-  }, [houses, isCollected, matchedIds, filterDimActive, overrides]);
+    return houses
+      .map((house) => {
+        const anchor = gemAnchorForHouse(house);
+        const collected = isCollected(house.id);
+        if (compact && collected) return null;
+        const dimmed =
+          filterDimActive && matchedIds != null && !matchedIds.has(house.id);
+        return {
+          house,
+          anchor,
+          collected,
+          dimmed,
+          calibrated: anchor.calibrated === true || Boolean(overrides[house.id]),
+        };
+      })
+      .filter(Boolean) as Array<{
+      house: PublicHouse;
+      anchor: ReturnType<typeof gemAnchorForHouse>;
+      collected: boolean;
+      dimmed: boolean;
+      calibrated: boolean;
+    }>;
+  }, [houses, isCollected, matchedIds, filterDimActive, overrides, compact]);
 
-  return (
+  const layer = (
     <>
       {markers.map(({ house, anchor, collected, dimmed, calibrated }) => (
         <Fragment key={`gem-anchor-${house.id}`}>
-          {!collected ? (
+          {!compact && !collected ? (
             <Polyline
               positions={[
                 [house.lat, house.lng],
@@ -82,8 +116,8 @@ export function MapGemAnchorLayer({
           ) : null}
           <Marker
             position={[anchor.lat, anchor.lng]}
-            icon={gemDiamondIcon(collected, dimmed, calibrated)}
-            zIndexOffset={collected ? 420 : 520}
+            icon={gemDiamondIcon(collected, dimmed, calibrated, compact)}
+            zIndexOffset={collected ? 420 : compact ? 380 : 520}
           >
             <Popup className="map-gem-diamond-popup">
               <div dir="rtl" className="map-gem-diamond-popup__body">
@@ -91,12 +125,14 @@ export function MapGemAnchorLayer({
                   {collected ? "יהלום — נאסף" : "יהלום נסתר"}
                 </p>
                 <p className="map-gem-diamond-popup__house">{house.name || house.address}</p>
-                {!collected ? (
+                {!collected && !compact ? (
                   <p className="map-gem-diamond-popup__pet">{gemLabelHe(gemMonsterForHouse(house))}</p>
                 ) : null}
-                <p className="map-gem-diamond-popup__meta">
-                  {calibrated ? "מיקום מותאם (טלפון)" : "מיקום אוטומטי ליד הסיכה"}
-                </p>
+                {!compact ? (
+                  <p className="map-gem-diamond-popup__meta">
+                    {calibrated ? "מיקום מותאם (טלפון)" : "מיקום אוטומטי ליד הסיכה"}
+                  </p>
+                ) : null}
               </div>
             </Popup>
           </Marker>
@@ -104,4 +140,9 @@ export function MapGemAnchorLayer({
       ))}
     </>
   );
+
+  if (compact) {
+    return <GemMapZoomGate minZoom={COMPACT_MIN_ZOOM}>{layer}</GemMapZoomGate>;
+  }
+  return layer;
 }

@@ -1213,8 +1213,9 @@ export function NeighborhoodApp({
                       : null
                   }
                   gemHuntEnabled={gemHuntActive}
-                  showGemAnchors={gemAdminTools && gemUi}
-                  gemAnchorHouses={gemAdminTools && gemUi ? mapHouses : []}
+                  showGemAnchors={gemUi}
+                  gemAnchorHouses={gemUi ? mapHouses : []}
+                  gemAnchorVisual={gemAdminTools ? "admin" : "compact"}
                   isGemCollected={gems.collected}
                   onGemHuntPress={() => void openMapGemHunt()}
                   gemGlow="off"

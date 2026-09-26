@@ -560,14 +560,18 @@ export function GemHuntOverlay({
             aria-label={`איסוף ${gemLabelHe(monsterId)}`}
           >
             <div
-              className={cn("gem-hunt-overlay__gem-dance", phase === "collecting" && "is-collecting")}
-              data-collect-dance={phase === "collecting" ? collectDanceIndex : undefined}
+              className={cn(
+                "gem-hunt-overlay__gem-dance",
+                phase === "collecting" && "is-collecting is-collecting-3d",
+              )}
             >
               <GemSprite
                 house={house}
                 mode="3d"
                 tapCollect
-                spinWhileCollect={phase !== "collecting"}
+                spinWhileCollect
+                motion={phase === "collecting" ? "celebrate" : "idle"}
+                celebrateVariant={collectDanceIndex}
               />
             </div>
           </button>
@@ -614,14 +618,18 @@ export function GemHuntOverlay({
           aria-label={`איסוף ${gemLabelHe(monsterId)}`}
         >
           <div
-            className={cn("gem-hunt-overlay__gem-dance", phase === "collecting" && "is-collecting")}
-            data-collect-dance={phase === "collecting" ? collectDanceIndex : undefined}
+            className={cn(
+              "gem-hunt-overlay__gem-dance",
+              phase === "collecting" && "is-collecting is-collecting-3d",
+            )}
           >
             <GemSprite
               house={house}
               mode="3d"
               tapCollect
-              spinWhileCollect={phase !== "collecting"}
+              spinWhileCollect
+              motion={phase === "collecting" ? "celebrate" : "idle"}
+              celebrateVariant={collectDanceIndex}
             />
           </div>
         </button>
