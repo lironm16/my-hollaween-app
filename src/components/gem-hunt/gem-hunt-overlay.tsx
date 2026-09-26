@@ -122,12 +122,6 @@ export function GemHuntOverlay({
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
 }) {
   const sim = simulateInRange;
-  const inDistanceBand =
-    effectiveLoc != null &&
-    !sim &&
-    gemDistanceMeters(effectiveLoc, house) <= GEM_HUNT_METERS;
-  /** Scan/pan/facing reveal when in range (or admin simulate), even before «stand still» finishes. */
-  const allowAutoReveal = collectEnabled || sim || inDistanceBand;
   const monsterId = gemMonsterForHouse(house);
   const collectDanceIndex = useMemo(
     () => gemCollectDanceIndex(house.id, monsterId),
@@ -145,6 +139,12 @@ export function GemHuntOverlay({
   }, [sim, house.lat, house.lng, userLocation]);
   const distanceM =
     effectiveLoc != null && !sim ? gemDistanceMeters(effectiveLoc, house) : null;
+  const inDistanceBand =
+    effectiveLoc != null &&
+    !sim &&
+    gemDistanceMeters(effectiveLoc, house) <= GEM_HUNT_METERS;
+  /** Scan/pan/facing reveal when in range (or admin simulate), even before «stand still» finishes. */
+  const allowAutoReveal = collectEnabled || sim || inDistanceBand;
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
