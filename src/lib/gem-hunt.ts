@@ -107,6 +107,11 @@ export type GemAnchor = {
   calibrated?: boolean;
 };
 
+/** House fields used for auto sidewalk anchor (address improves street matching). */
+export type GemAnchorHouse = Pick<PublicHouse, "id" | "lat" | "lng"> & {
+  address?: string | null;
+};
+
 function hashHouseSeed(id: string, seed: string) {
   let h = 2166136261;
   const s = `${id}\0${seed}`;
@@ -154,9 +159,7 @@ export function gemDistanceMeters(
   return Math.min(distanceMeters(user, house), distanceMeters(user, anchor));
 }
 
-export function gemAnchorForHouse(
-  house: Pick<PublicHouse, "id" | "lat" | "lng" | "address">,
-): GemAnchor {
+export function gemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
   const override = getGemAnchorOverride(house.id);
   if (override) {
     const bearingFromHouseDeg = bearingDegrees(house, override);
@@ -170,7 +173,7 @@ export function gemAnchorForHouse(
     };
   }
 
-  const sidewalk = nearestSidewalkPoint(house, house.address);
+  const sidewalk = nearestSidewalkPoint(house, house.address ?? null);
   if (sidewalk) {
     let point = jitterAlongSidewalk(sidewalk, house.id, "gem-anchor-v3-sidewalk");
     point = clampTowardHouse(house, point, GEM_STREET_MAX_FROM_HOUSE_METERS);
