@@ -5,6 +5,7 @@ import { distanceMeters } from "@/lib/geo";
 import {
   nearestSidewalkPoint,
   sidewalkGemAnchorForHouse,
+  walkTowardNearestSpine,
 } from "@/lib/gem-street-spines";
 import type { GemFamily, GemMonsterId } from "@/lib/gem-monsters";
 import {
@@ -187,6 +188,13 @@ export function gemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
     const bearingFromHouseDeg = bearingDegrees(house, point);
     const offsetM = spine.distanceM;
     return { ...point, bearingFromHouseDeg, offsetM, calibrated: false };
+  }
+
+  const hint = walkTowardNearestSpine(house);
+  if (hint && hint.distanceM >= GEM_ANCHOR_MIN_METERS) {
+    const point = { lat: hint.lat, lng: hint.lng };
+    const bearingFromHouseDeg = bearingDegrees(house, point);
+    return { ...point, bearingFromHouseDeg, offsetM: hint.distanceM, calibrated: false };
   }
 
   const h = hashHouseSeed(house.id, "gem-anchor-v2");

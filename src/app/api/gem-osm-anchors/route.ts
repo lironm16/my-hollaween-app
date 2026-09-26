@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 import type { GemOsmAnchorEntry, GemOsmAnchorFile } from "@/lib/gem-osm-anchor-data";
 import { sidewalkGemAnchorForHouse } from "@/lib/gem-street-spines";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
-import { snapHousesToWalkNetwork } from "@/lib/gem-osrm-snap";
 import { getCatalog } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -22,8 +21,8 @@ function readStaticAnchors(): Record<string, GemOsmAnchorEntry> {
 }
 
 /**
- * Fast sidewalk anchors for every gem-eligible house (street spines + static seed file).
- * OSRM refinement runs client-side via /api/gem-snap in small batches.
+ * Sidewalk anchors for gem-eligible houses: bundled OSRM (`public/gem-osm-anchors.json`)
+ * plus live street spines when no OSRM entry exists.
  */
 export async function GET() {
   const catalog = await getCatalog();
@@ -33,20 +32,16 @@ export async function GET() {
 
   for (const house of eligible) {
     const seeded = staticAnchors[house.id];
-    if (seeded) {
+    if (seeded?.source === "osrm") {
       anchors[house.id] = seeded;
       continue;
     }
     const spine = sidewalkGemAnchorForHouse(house);
-    if (spine) anchors[house.id] = spine;
-  }
-
-  const needOsrm = eligible.filter((house) => !anchors[house.id]);
-  if (needOsrm.length > 0) {
-    const snaps = await snapHousesToWalkNetwork(needOsrm, { gapMs: 60, concurrency: 4 });
-    for (const [houseId, snap] of Object.entries(snaps)) {
-      anchors[houseId] = snap;
+    if (spine) {
+      anchors[house.id] = spine;
+      continue;
     }
+    if (seeded) anchors[house.id] = seeded;
   }
 
   const body: GemOsmAnchorFile = {

@@ -5,7 +5,34 @@ const OSRM_NEAREST = [
   "https://router.project-osrm.org/nearest/v1/foot",
 ];
 const UA = "bashchona-halloween/1.0 (gem sidewalk snap)";
-export const GEM_OSM_SNAP_MAX_PIN_DISTANCE_M = 95;
+export const GEM_OSM_SNAP_MAX_PIN_DISTANCE_M = 120;
+
+const OSRM_NEAREST_BROWSER = "https://routing.openstreetmap.de/routed-foot/nearest/v1/foot";
+
+/** Browser fallback when `/api/gem-snap` cannot reach OSRM from Vercel. */
+export async function osrmNearestFootWalkFromBrowser(
+  house: { lat: number; lng: number },
+): Promise<GemOsrmSnap | null> {
+  if (typeof window === "undefined") return null;
+  const url = `${OSRM_NEAREST_BROWSER}/${house.lng.toFixed(6)},${house.lat.toFixed(6)}?number=1`;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(12_000) });
+    if (!res.ok) return null;
+    const json = (await res.json()) as {
+      code?: string;
+      waypoints?: { location: [number, number] }[];
+    };
+    if (json.code !== "Ok" || !json.waypoints?.[0]) return null;
+    const wp = json.waypoints[0];
+    const lng = wp.location[0];
+    const lat = wp.location[1];
+    const distanceM = distanceMeters(house, { lat, lng });
+    if (distanceM > GEM_OSM_SNAP_MAX_PIN_DISTANCE_M) return null;
+    return { lat, lng, distanceM, source: "osrm" };
+  } catch {
+    return null;
+  }
+}
 
 export type GemOsrmSnap = {
   lat: number;

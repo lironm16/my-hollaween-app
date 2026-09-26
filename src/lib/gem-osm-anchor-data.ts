@@ -13,4 +13,4 @@ export type GemOsmAnchorFile = {
   anchors: Record<string, GemOsmAnchorEntry>;
 };
 
-export const GEM_OSM_ANCHOR_MAX_PIN_DISTANCE_M = 95;
+export const GEM_OSM_ANCHOR_MAX_PIN_DISTANCE_M = 120;

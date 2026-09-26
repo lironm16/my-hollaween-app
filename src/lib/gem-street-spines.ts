@@ -297,6 +297,32 @@ export function jitterAlongSidewalk(
   return moveAlongSpine(hit.spine, hit.segmentIndex, hit.point, meters, sign);
 }
 
+/** Last-resort: step from the pin toward the closest hand-drawn spine (no OSRM). */
+export function walkTowardNearestSpine(house: {
+  id: string;
+  lat: number;
+  lng: number;
+}): { lat: number; lng: number; distanceM: number; source: "spine" } | null {
+  let bestPoint: LatLng | null = null;
+  let bestD = Infinity;
+  for (const spine of GEM_STREET_SPINES) {
+    const hit = nearestOnSpine(house, spine);
+    if (!hit || hit.distanceM >= bestD) continue;
+    bestD = hit.distanceM;
+    bestPoint = hit.point;
+  }
+  if (!bestPoint || bestD > 220) return null;
+  const brng = bearingDegrees(house, bestPoint);
+  const stepM = Math.max(10, Math.min(34, bestD * 0.4));
+  const point = destinationPoint(house, brng, stepM);
+  return {
+    lat: point.lat,
+    lng: point.lng,
+    distanceM: distanceMeters(house, point),
+    source: "spine",
+  };
+}
+
 /** Stable sidewalk anchor from street spines (sync — no OSRM). */
 export function sidewalkGemAnchorForHouse(house: {
   id: string;

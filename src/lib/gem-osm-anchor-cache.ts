@@ -1,4 +1,5 @@
 import { appVersion } from "@/lib/app-version";
+import { osrmNearestFootWalkFromBrowser } from "@/lib/gem-osrm-snap";
 import type { GemOsmAnchorEntry, GemOsmAnchorFile } from "@/lib/gem-osm-anchor-data";
 import bundled from "../../public/gem-osm-anchors.json";
 
@@ -103,14 +104,22 @@ export async function refreshGemOsmAnchorsFromNetwork(): Promise<boolean> {
 }
 
 async function fetchOsrmSnap(lat: number, lng: number): Promise<GemOsmAnchorEntry | null> {
-  const res = await fetch(
-    `/api/gem-snap?lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}`,
-    { cache: "no-store" },
-  );
-  if (!res.ok) return null;
-  const json = (await res.json()) as GemOsmAnchorEntry;
-  if (!Number.isFinite(json.lat) || !Number.isFinite(json.lng)) return null;
-  return { ...json, source: "osrm" };
+  try {
+    const res = await fetch(
+      `/api/gem-snap?lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}`,
+      { cache: "no-store" },
+    );
+    if (res.ok) {
+      const json = (await res.json()) as GemOsmAnchorEntry;
+      if (Number.isFinite(json.lat) && Number.isFinite(json.lng)) {
+        return { ...json, source: "osrm" };
+      }
+    }
+  } catch {
+    /* serverless OSRM often blocked — try browser */
+  }
+  const direct = await osrmNearestFootWalkFromBrowser({ lat, lng });
+  return direct ? { ...direct, source: "osrm" } : null;
 }
 
 /** Refine spine anchors with per-house OSRM snap (batched — safe for Vercel). */
