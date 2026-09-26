@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useMemo } from "react";
-import { Sparkles } from "lucide-react";
 import { GemBagDiamondHero } from "@/components/gem-hunt/gem-bag-diamond-hero";
 import {
   gemAlbumStickerPool,
@@ -42,18 +41,6 @@ export function GemStickerAlbum({
   return (
     <div className={cn("gem-sticker-album", complete && "gem-sticker-album--complete")}>
       <GemBagDiamondHero filledCount={filledCount} totalSlots={slots.length} complete={complete} />
-      <header className="gem-sticker-album__head gem-sticker-album__head--sub">
-        <p className="gem-sticker-album__sub">
-          {complete ? (
-            <>
-              <Sparkles className="inline size-4 text-amber-300" aria-hidden /> גלו את כל
-              החברים למטה
-            </>
-          ) : (
-            <>מה עדיין חבוי על המפה?</>
-          )}
-        </p>
-      </header>
 
       <div className="gem-sticker-album__book" role="list" aria-label="חברי יהלום">
         {slots.map((monster, index) => {
@@ -69,12 +56,6 @@ export function GemStickerAlbum({
           );
         })}
       </div>
-
-      {!complete ? (
-        <p className="gem-sticker-album__tease">
-          מקומות ריקים = עדיין לא מצאתם. צאו למפה — כל בית מסתיר יהלום אחר.
-        </p>
-      ) : null}
     </div>
   );
 }

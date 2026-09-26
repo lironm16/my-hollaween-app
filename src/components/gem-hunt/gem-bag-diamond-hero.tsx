@@ -54,9 +54,7 @@ export function GemBagDiamondHero({
           <Sparkles className="inline size-4 text-amber-300" aria-hidden /> כל החבר&apos;ה
           באוסף — השכונה מלאה קסם!
         </p>
-      ) : (
-        <p className="gem-bag-hero__hint">כל חבר = יצור שמצאתם בבית על המפה.</p>
-      )}
+      ) : null}
     </header>
   );
 }

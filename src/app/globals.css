@@ -3990,6 +3990,82 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   filter: drop-shadow(0 0 16px rgb(74 222 128 / 0.95));
   animation: none;
 }
+.gem-hunt-overlay__scan-rose {
+  z-index: 5;
+}
+.gem-hunt-direction-rose {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 88%;
+  height: 88%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.gem-hunt-direction-rose--footer {
+  position: relative;
+  left: auto;
+  top: auto;
+  width: min(72vw, 14rem);
+  height: min(72vw, 14rem);
+  margin-inline: auto;
+  transform: none;
+}
+.gem-hunt-direction-rose__spoke {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+  opacity: 0.2;
+  color: #7c3aed;
+  pointer-events: none;
+}
+.gem-hunt-direction-rose__icon {
+  position: absolute;
+  left: 50%;
+  top: 4%;
+  width: 1.65rem;
+  height: 1.65rem;
+  transform: translate(-50%, 0) rotate(-45deg);
+  filter: drop-shadow(0 0 6px rgb(0 0 0 / 0.45));
+}
+.gem-hunt-direction-rose__spoke.is-active {
+  opacity: 1;
+  color: #fde68a;
+}
+.gem-hunt-direction-rose__spoke.is-active .gem-hunt-direction-rose__icon {
+  filter: drop-shadow(0 0 14px rgb(251 191 36 / 0.95));
+}
+.gem-hunt-direction-rose__spoke.is-active.is-facing {
+  color: #bbf7d0;
+}
+.gem-hunt-direction-rose__spoke.is-active.is-facing .gem-hunt-direction-rose__icon {
+  filter: drop-shadow(0 0 14px rgb(74 222 128 / 0.95));
+}
+.gem-hunt-overlay__inline-hint {
+  width: min(92vw, 22rem);
+  padding: 0.65rem 0.75rem 0.75rem;
+  border-radius: 1rem;
+  background: rgb(12 6 22 / 0.92);
+  border: 1px solid rgb(251 191 36 / 0.45);
+}
+.gem-hunt-overlay__inline-hint--nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+.gem-hunt-overlay__inline-hint-title {
+  margin: 0;
+  text-align: center;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fde68a;
+}
+.gem-hunt-overlay__hint-btn.is-active {
+  border-color: rgb(251 191 36 / 0.95);
+  background: rgb(76 29 149 / 0.55);
+  box-shadow: 0 0 0 2px rgb(251 191 36 / 0.35);
+}
 @keyframes gem-scan-compass-pulse {
   0%,
   100% {
