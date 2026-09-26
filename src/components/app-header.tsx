@@ -14,7 +14,6 @@ import {
   Search,
   Shield,
   HelpCircle,
-  Gem,
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -72,8 +71,10 @@ export function AppHeader({
 
   const houseSubLinkClass = cn(
     buttonVariants({ variant: "ghost", size: "lg" }),
-    "h-10 justify-start gap-2 ps-14 text-base text-orange-50 hover:bg-orange-500/10",
+    "h-10 justify-start gap-2 ps-[4.5rem] text-base text-orange-50 hover:bg-orange-500/10",
   );
+
+  const menuSubListClass = "ms-5 flex flex-col gap-0.5 border-s border-orange-500/25 ps-3";
 
   return (
     <header
@@ -149,20 +150,20 @@ export function AppHeader({
                 )}
               >
                 <Home className="size-4" />
-                <span className="flex-1 text-start">בית</span>
+                <span className="flex-1 text-start">בתים</span>
                 <ChevronDown
                   className={cn("size-4 shrink-0 text-violet-400 transition-transform", houseOpen && "rotate-180")}
                   aria-hidden
                 />
               </button>
               {houseOpen ? (
-                <div className="mr-4 flex flex-col gap-0.5 border-s border-orange-500/25 ps-2">
+                <div className={menuSubListClass}>
                   <Link
                     href="/add"
                     onClick={closeMenu}
                     className={cn(
                       buttonVariants({ size: "lg" }),
-                      "h-10 justify-start gap-2 ps-14 text-base bg-orange-500 text-black hover:bg-orange-400",
+                      "h-10 justify-start gap-2 ps-[4.5rem] text-base bg-orange-500 text-black hover:bg-orange-400",
                     )}
                   >
                     <HousePlus className="size-4" />
@@ -215,7 +216,7 @@ export function AppHeader({
                   "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
                 )}
               >
-                <Gem className="size-4 text-amber-300/90" />
+                <Sparkles className="size-4 text-orange-200" />
                 ספר החברים
               </Link>
             ) : null}

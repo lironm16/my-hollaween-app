@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ChevronDown, Download, Route, Share2 } from "lucide-react";
+import { ChevronDown, Route, Save, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { HouseExportDialog } from "@/components/csv-export-button";
 import { sharePlainTextFile } from "@/lib/house-csv";
@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 
 const subLinkClass = cn(
   buttonVariants({ variant: "ghost", size: "lg" }),
-  "h-10 justify-start gap-2 ps-14 text-base text-orange-50 hover:bg-orange-500/10",
+  "h-10 justify-start gap-2 ps-[4.5rem] text-base text-orange-50 hover:bg-orange-500/10",
 );
 
 export function RouteMenuSection({
@@ -122,14 +122,14 @@ export function RouteMenuSection({
           />
         </button>
         {open ? (
-          <div className="mr-4 flex flex-col gap-0.5 border-s border-orange-500/25 ps-2">
+          <div className="ms-5 flex flex-col gap-0.5 border-s border-orange-500/25 ps-3">
             <button type="button" onClick={openExportDialog} className={subLinkClass}>
-              <Download className="size-4" />
-              הורד מסלול
+              <Save className="size-4" strokeWidth={2.25} />
+              הורד
             </button>
             <button type="button" onClick={shareRoute} className={subLinkClass}>
               <Share2 className="size-4" />
-              שתף מסלול
+              שתף
             </button>
           </div>
         ) : null}

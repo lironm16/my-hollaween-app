@@ -128,7 +128,7 @@ export function NeighborhoodToolbar({
             )}
           >
             <Gem
-              className={cn("size-5", gemMapVisible ? "text-black" : "text-orange-100")}
+              className={cn("size-5", gemMapVisible ? "fill-white text-white" : "text-orange-100")}
               strokeWidth={2.1}
             />
           </button>

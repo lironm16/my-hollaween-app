@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
-  Camera,
+  Gem,
   Heart,
   KeyRound,
   List,
@@ -196,7 +196,7 @@ export function HouseActionBar({
         icon: gemCollected ? (
           <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.35rem]" />
         ) : (
-          <Camera className={MENU_ICON_CLASS} strokeWidth={2.2} />
+          <Gem className={MENU_ICON_CLASS} strokeWidth={2.1} />
         ),
         onClick: () => onToggleGem(),
         active: gemCollected,
