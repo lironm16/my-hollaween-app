@@ -425,9 +425,18 @@ export function GemHuntOverlay({
     turnBearing,
     gpsBearingToAnchor,
   );
-  const navHintOpen = hintPanel === "nav" && !centerReveal;
+  const showCompassEnable =
+    huntArrowMapNorth &&
+    (headingStatus === "denied" || headingStatus === "unsupported");
+  const hidePinForHints = hintPanel != null && !centerReveal;
+  const gemPetName = gemLabelHe(monsterId);
+  const showNavCompassPrompt =
+    hintPanel === "nav" &&
+    !centerReveal &&
+    !isFarForHints &&
+    (showCompassEnable || headingStatus === "denied" || headingStatus === "idle" || heading == null);
   async function retryCompassPermission() {
-    const ok = await requestGemHuntOrientationPermission();
+    const ok = await requestGemHuntOrientationPermission({ force: true });
     if (ok) setCompassRetry((n) => n + 1);
   }
 
@@ -438,18 +447,14 @@ export function GemHuntOverlay({
         return;
       }
       setCenterReveal(false);
-      if (panel === "nav" && !isGemHuntOrientationGranted()) {
-        const ok = await requestGemHuntOrientationPermission();
+      if (panel === "nav") {
+        const ok = await requestGemHuntOrientationPermission({ force: true });
         if (ok) setCompassRetry((n) => n + 1);
       }
       setHintPanel(panel);
     },
     [hintPanel],
   );
-
-  const showCompassEnable =
-    huntArrowMapNorth &&
-    (headingStatus === "denied" || headingStatus === "unsupported");
 
   function retryCamera() {
     setCameraError(null);
@@ -521,7 +526,9 @@ export function GemHuntOverlay({
 
       {showHuntUi ? (
       <div className="gem-hunt-overlay__stage" aria-hidden={false}>
-        {hintPanel === "nav" ? (
+        {centerDisplayMode ? (
+          <p className="gem-hunt-overlay__nav-caption">{gemPetName}</p>
+        ) : hintPanel === "nav" ? (
           <p className="gem-hunt-overlay__nav-caption">כוון אותי — ניווט ליהלום</p>
         ) : null}
         <div className="gem-hunt-overlay__scan-ring" aria-hidden>
@@ -532,7 +539,7 @@ export function GemHuntOverlay({
               className="gem-hunt-overlay__scan-rose"
             />
           ) : null}
-          {centerDisplayMode && collectEnabled && phase === "visible" ? (
+          {centerDisplayMode && collectEnabled && phase !== "collecting" ? (
             <p className="gem-hunt-overlay__ring-collect-hint">לחיצה לאיסוף</p>
           ) : null}
           <div
@@ -544,7 +551,7 @@ export function GemHuntOverlay({
           />
         </div>
 
-        {arPinGuideMode && pinCollectReady && !navHintOpen ? (
+        {arPinGuideMode && pinCollectReady && !hidePinForHints ? (
           <button
             type="button"
             className={cn(
@@ -580,7 +587,7 @@ export function GemHuntOverlay({
           </button>
         ) : null}
 
-        {arPinGuideMode && !pinCollectReady && !navHintOpen ? (
+        {arPinGuideMode && !pinCollectReady && !hidePinForHints ? (
           <div
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin",
@@ -638,22 +645,20 @@ export function GemHuntOverlay({
 
       {showHuntUi && phase !== "collecting" ? (
         <footer className="gem-hunt-overlay__footer" dir="rtl">
-          {showCompassEnable && hintPanel === "nav" && !isFarForHints ? (
+          {showNavCompassPrompt ? (
             <button
               type="button"
               className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact w-full"
               onClick={() => void retryCompassPermission()}
             >
-              אפשרו כיוון (Safari)
+              אפשרו כיוון (Safari) — לחץ כדי שהחץ יזוז
             </button>
           ) : null}
 
           <div className="gem-hunt-overlay__footer-stack">
             {hintPanel === "character" ? (
               <div className="gem-hunt-overlay__hint1-popover">
-                <p className="gem-hunt-overlay__hint1-popover-title">
-                  מי החבר שמסתתר ביהלום
-                </p>
+                <p className="gem-hunt-overlay__hint1-popover-title">{gemPetName}</p>
                 <GemOrbitStage house={house} stageClassName="gem-hunt-overlay__hint1-orbit" />
               </div>
             ) : null}

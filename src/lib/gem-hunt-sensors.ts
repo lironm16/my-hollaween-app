@@ -92,14 +92,18 @@ export function isGemHuntOrientationGranted() {
 }
 
 /** iOS Safari / PWA — must run inside a tap handler (same tick as click). */
-export async function requestGemHuntOrientationPermission(): Promise<boolean> {
+export async function requestGemHuntOrientationPermission(options?: {
+  /** Re-show iOS prompt when opening nav hint (stored grant ≠ live events). */
+  force?: boolean;
+}): Promise<boolean> {
   if (typeof window === "undefined" || !("DeviceOrientationEvent" in window)) return false;
   migrateOrientationSessionFlag();
   const ctor = DeviceOrientationEvent as typeof DeviceOrientationEvent & {
     requestPermission?: () => Promise<"granted" | "denied">;
   };
   if (typeof ctor.requestPermission !== "function") return true;
-  if (isGemHuntOrientationGranted()) return true;
+  const force = options?.force === true;
+  if (!force && isGemHuntOrientationGranted()) return true;
   try {
     const result = await ctor.requestPermission();
     if (result === "granted") {

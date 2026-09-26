@@ -9121,14 +9121,24 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__gem-hit.is-center-collect .gem-hunt-overlay__gem-dance,
 .gem-hunt-overlay__gem-hit.is-center-collect .gem-sprite--hunt {
-  width: min(82vw, 20rem);
-  height: min(82vw, 20rem);
+  width: min(88vw, 22rem);
+  height: min(88vw, 22rem);
 }
 .gem-hunt-overlay__gem-hit.is-center-collect .gem-model-3d {
   width: 100%;
   height: 100%;
-  min-width: min(82vw, 20rem);
-  min-height: min(82vw, 20rem);
+  min-width: min(88vw, 22rem);
+  min-height: min(88vw, 22rem);
+}
+.gem-hunt-overlay__gem-hit.is-center-collect.is-collecting .gem-sprite--hunt,
+.gem-hunt-overlay__gem-hit.is-center-collect.is-collecting .gem-hunt-overlay__gem-dance {
+  width: min(88vw, 22rem);
+  height: min(88vw, 22rem);
+  transform: scale(1);
+}
+.gem-hunt-overlay__gem-hit.is-center-collect.is-collecting canvas {
+  width: 100% !important;
+  height: 100% !important;
 }
 .gem-hunt-overlay__hint-btn--reveal {
   font-size: 1.05rem;

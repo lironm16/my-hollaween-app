@@ -133,7 +133,7 @@ export function GemModel3D({
       controls === "turntable"
         ? size === "sm"
           ? 0.55
-          : 1.02
+          : 1.18
         : size === "sm"
           ? 0.55
           : size === "lg"
