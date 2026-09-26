@@ -52,6 +52,7 @@ import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-ce
 import { loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
 import { useStandingStill } from "@/hooks/use-standing-still";
 import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
+import type { GemMonsterId } from "@/lib/gem-monsters";
 import { syncGemMonsterAssignment } from "@/lib/gem-monsters";
 import { pickGemHuntTarget } from "@/lib/gem-hunt-target";
 import {
@@ -171,7 +172,8 @@ export function NeighborhoodApp({
     typeof window === "undefined" ? 0 : loadGemCollectedIds().length,
   );
   const [gemResetHouse, setGemResetHouse] = useState<PublicHouse | null>(null);
-  const [mapGemCheer, setMapGemCheer] = useState(false);
+  const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);
+  const [mapGemCheerMonster, setMapGemCheerMonster] = useState<GemMonsterId | null>(null);
   const mapGemCheerTimerRef = useRef<number | null>(null);
   const router = useRouter();
   const mapGemUserLoc = mapGemGps ?? gps;
@@ -382,12 +384,14 @@ export function NeighborhoodApp({
     setMapGemBadgeCount(loadGemCollectedIds().length);
   }, []);
 
-  const showMapGemCheer = useCallback(() => {
-    setMapGemCheer(true);
+  const showMapGemCheer = useCallback((house: PublicHouse, monsterId: GemMonsterId) => {
+    setMapGemCheerHouse(house);
+    setMapGemCheerMonster(monsterId);
     if (mapGemCheerTimerRef.current != null) window.clearTimeout(mapGemCheerTimerRef.current);
     mapGemCheerTimerRef.current = window.setTimeout(() => {
       mapGemCheerTimerRef.current = null;
-      setMapGemCheer(false);
+      setMapGemCheerHouse(null);
+      setMapGemCheerMonster(null);
     }, GEM_CHEER_MS);
   }, []);
 
@@ -1421,12 +1425,16 @@ export function NeighborhoodApp({
               return;
             }
             if (options?.cheer !== false) {
-              showMapGemCheer();
+              showMapGemCheer(h, monsterId);
             }
           }}
         />
       ) : null}
-      <GemCheer show={mapGemCheer} />
+      <GemCheer
+        show={Boolean(mapGemCheerHouse && mapGemCheerMonster)}
+        house={mapGemCheerHouse ?? undefined}
+        monsterId={mapGemCheerMonster ?? undefined}
+      />
     </div>
   );
 }

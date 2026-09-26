@@ -66,6 +66,7 @@ export function GemHuntPanel({
   const [huntLocation, setHuntLocation] = useState<UserLocation | null>(null);
   const [simulate, setSimulate] = useState(adminSimulateInRange);
   const [gemCheer, setGemCheer] = useState(false);
+  const [gemCheerPet, setGemCheerPet] = useState<GemMonsterId | null>(null);
   const cheerTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -128,11 +129,13 @@ export function GemHuntPanel({
       return;
     }
     if (options?.cheer !== false) {
+      setGemCheerPet(collectedVariant);
       setGemCheer(true);
       if (cheerTimerRef.current != null) window.clearTimeout(cheerTimerRef.current);
       cheerTimerRef.current = window.setTimeout(() => {
         cheerTimerRef.current = null;
         setGemCheer(false);
+        setGemCheerPet(null);
       }, GEM_CHEER_MS);
     }
   }
@@ -243,7 +246,7 @@ export function GemHuntPanel({
         </Button>
       </section>
 
-      <GemCheer show={gemCheer} />
+      <GemCheer show={gemCheer} house={house} monsterId={gemCheerPet ?? undefined} />
       {huntOpen ? (
         <GemHuntOverlayLazy
           house={house}

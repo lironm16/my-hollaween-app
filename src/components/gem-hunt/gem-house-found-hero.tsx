@@ -1,6 +1,6 @@
 "use client";
 
-import { Gem } from "lucide-react";
+import { GemMysteryTeaser3D } from "@/components/gem-hunt/gem-mystery-teaser-3d";
 import { GemModel3D } from "@/components/gem-hunt/gem-model-3d";
 import { gemLabelHe, gemMonsterForHouse } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
@@ -43,8 +43,8 @@ export function GemHouseFoundHero({
             />
           </div>
         ) : (
-          <div className="gem-house-found-hero__gem-wrap" aria-hidden>
-            <Gem className="gem-house-found-hero__gem-icon" strokeWidth={1.75} />
+          <div className="gem-house-found-hero__model gem-house-found-hero__model--teaser" aria-hidden>
+            <GemMysteryTeaser3D />
           </div>
         )}
       </div>
