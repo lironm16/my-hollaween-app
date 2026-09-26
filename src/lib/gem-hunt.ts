@@ -1,5 +1,11 @@
 import { getGemAnchorOverride } from "@/lib/gem-anchor-overrides";
 import { distanceMeters } from "@/lib/geo";
+import {
+  clampTowardHouse,
+  GEM_STREET_MAX_FROM_HOUSE_METERS,
+  jitterAlongSidewalk,
+  nearestSidewalkPoint,
+} from "@/lib/gem-street-spines";
 import type { GemFamily, GemMonsterId } from "@/lib/gem-monsters";
 import {
   buildGemMonsterAssignment,
@@ -148,7 +154,9 @@ export function gemDistanceMeters(
   return Math.min(distanceMeters(user, house), distanceMeters(user, anchor));
 }
 
-export function gemAnchorForHouse(house: Pick<PublicHouse, "id" | "lat" | "lng">): GemAnchor {
+export function gemAnchorForHouse(
+  house: Pick<PublicHouse, "id" | "lat" | "lng" | "address">,
+): GemAnchor {
   const override = getGemAnchorOverride(house.id);
   if (override) {
     const bearingFromHouseDeg = bearingDegrees(house, override);
@@ -161,8 +169,26 @@ export function gemAnchorForHouse(house: Pick<PublicHouse, "id" | "lat" | "lng">
       calibrated: true,
     };
   }
-  const h = hashHouseSeed(house.id, "gem-anchor-v1");
-  const bearingFromHouseDeg = h % 360;
+
+  const sidewalk = nearestSidewalkPoint(house, house.address);
+  if (sidewalk) {
+    let point = jitterAlongSidewalk(sidewalk, house.id, "gem-anchor-v3-sidewalk");
+    point = clampTowardHouse(house, point, GEM_STREET_MAX_FROM_HOUSE_METERS);
+    const bearingFromHouseDeg = bearingDegrees(house, point);
+    const offsetM = distanceMeters(house, point);
+    return { ...point, bearingFromHouseDeg, offsetM, calibrated: false };
+  }
+
+  const h = hashHouseSeed(house.id, "gem-anchor-v2");
+  const fallbackSidewalk = nearestSidewalkPoint(house, null);
+  let bearingFromHouseDeg: number;
+  if (fallbackSidewalk && fallbackSidewalk.distanceM <= 55) {
+    const toward = bearingDegrees(house, fallbackSidewalk.point);
+    const spread = 38;
+    bearingFromHouseDeg = toward + ((h % (spread * 2)) - spread);
+  } else {
+    bearingFromHouseDeg = h % 360;
+  }
   const span = GEM_ANCHOR_MAX_METERS - GEM_ANCHOR_MIN_METERS;
   const offsetM = GEM_ANCHOR_MIN_METERS + ((h >>> 8) % 1000) / (1000 / span);
   const point = destinationPoint(house, bearingFromHouseDeg, offsetM);
