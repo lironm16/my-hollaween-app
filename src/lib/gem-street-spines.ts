@@ -102,6 +102,37 @@ export const GEM_STREET_SPINES: GemStreetSpine[] = [
       { lat: 32.0927, lng: 34.8115 },
     ],
   },
+  {
+    aliases: ["אחימאיר", "אבא אחימאיר", "אבא אחימיר", "ahimeir"],
+    points: [
+      { lat: 32.0929, lng: 34.80938 },
+      { lat: 32.0924, lng: 34.8094 },
+      { lat: 32.0919, lng: 34.80942 },
+      { lat: 32.0914, lng: 34.80944 },
+      { lat: 32.0909, lng: 34.80946 },
+      { lat: 32.0904, lng: 34.80948 },
+      { lat: 32.0899, lng: 34.8095 },
+      { lat: 32.0894, lng: 34.80952 },
+    ],
+  },
+  {
+    aliases: ["רמבה"],
+    points: [
+      { lat: 32.09275, lng: 34.80855 },
+      { lat: 32.09275, lng: 34.80905 },
+      { lat: 32.09275, lng: 34.80955 },
+      { lat: 32.09275, lng: 34.81005 },
+    ],
+  },
+  {
+    aliases: ["מוזס", "Mozes"],
+    points: [
+      { lat: 32.0905, lng: 34.8120 },
+      { lat: 32.0910, lng: 34.81205 },
+      { lat: 32.0915, lng: 34.8121 },
+      { lat: 32.0920, lng: 34.81215 },
+    ],
+  },
 ];
 
 export function streetNameFromAddress(address: string | undefined | null): string | null {
@@ -111,9 +142,16 @@ export function streetNameFromAddress(address: string | undefined | null): strin
   return withoutNum || null;
 }
 
+function normalizeStreetForMatch(street: string): string {
+  return street.replace(/\s+/g, " ").replace(/^אבא\s+/u, "").trim();
+}
+
 function streetNameMatches(addressStreet: string, aliases: string[]): boolean {
-  const norm = addressStreet.replace(/\s+/g, " ").trim();
-  return aliases.some((a) => norm === a || norm.includes(a) || a.includes(norm));
+  const norm = normalizeStreetForMatch(addressStreet);
+  return aliases.some((a) => {
+    const alias = normalizeStreetForMatch(a);
+    return norm === alias || norm.includes(alias) || alias.includes(norm);
+  });
 }
 
 type SpineHit = {
@@ -190,11 +228,13 @@ function moveAlongSpine(
 }
 
 /** Max distance from house pin to snap onto a named street spine. */
-export const GEM_STREET_SNAP_NAMED_METERS = 85;
+export const GEM_STREET_SNAP_NAMED_METERS = 120;
 /** Max distance for any spine when address has no street match. */
-export const GEM_STREET_SNAP_GENERIC_METERS = 48;
-/** Do not place gem farther than this from the map pin (players still “at the house”). */
+export const GEM_STREET_SNAP_GENERIC_METERS = 55;
+/** @deprecated straight clamp — prefer staying on spine (see gemAnchorForHouse). */
 export const GEM_STREET_MAX_FROM_HOUSE_METERS = 28;
+/** If a named spine is farther than this, fall back to cone offset (bad geocode). */
+export const GEM_STREET_NAMED_ABORT_METERS = 65;
 
 export function nearestSidewalkPoint(
   origin: LatLng,

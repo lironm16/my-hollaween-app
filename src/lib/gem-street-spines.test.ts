@@ -24,7 +24,23 @@ describe("gem street spines", () => {
     const anchor = gemAnchorForHouse(house);
     assert.equal(anchor.calibrated, false);
     assert.ok(anchor.lng > house.lng + 0.00015, "anchor should sit on/east of the street line");
-    assert.ok(distanceMeters(house, anchor) <= 28);
+    assert.ok(distanceMeters(house, anchor) < 45);
+    assert.ok(distanceMeters(anchor, hit!.point) < 8);
+  });
+
+  it("snaps אבא אחימאיר houses onto the Achimeir sidewalk spine", () => {
+    /** Pin east of the spine (typical geocode into the building row). */
+    const house = {
+      id: "ahimeir-fixture",
+      address: "אבא אחימאיר 12",
+      lat: 32.09135,
+      lng: 34.80958,
+    };
+    const hit = nearestSidewalkPoint(house, house.address);
+    assert.ok(hit);
+    assert.ok(hit!.distanceM < 22);
+    const anchor = gemAnchorForHouse(house);
+    assert.ok(Math.abs(anchor.lng - 34.80944) < 0.0002, "anchor stays on Achimeir lng band");
     assert.ok(distanceMeters(anchor, hit!.point) < 8);
   });
 });

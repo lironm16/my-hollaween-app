@@ -1,8 +1,6 @@
 import { getGemAnchorOverride } from "@/lib/gem-anchor-overrides";
 import { distanceMeters } from "@/lib/geo";
 import {
-  clampTowardHouse,
-  GEM_STREET_MAX_FROM_HOUSE_METERS,
   jitterAlongSidewalk,
   nearestSidewalkPoint,
 } from "@/lib/gem-street-spines";
@@ -175,8 +173,7 @@ export function gemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
 
   const sidewalk = nearestSidewalkPoint(house, house.address ?? null);
   if (sidewalk) {
-    let point = jitterAlongSidewalk(sidewalk, house.id, "gem-anchor-v3-sidewalk");
-    point = clampTowardHouse(house, point, GEM_STREET_MAX_FROM_HOUSE_METERS);
+    const point = jitterAlongSidewalk(sidewalk, house.id, "gem-anchor-v4-sidewalk");
     const bearingFromHouseDeg = bearingDegrees(house, point);
     const offsetM = distanceMeters(house, point);
     return { ...point, bearingFromHouseDeg, offsetM, calibrated: false };
