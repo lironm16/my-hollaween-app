@@ -91,7 +91,7 @@ export function writePendingRouteShare(payload: SharedRoutePayload | null) {
   }
 }
 
-export type ShareUrlOutcome = "shared" | "copied" | "cancelled" | "failed";
+export type ShareUrlOutcome = "shared" | "copied" | "cancelled" | "failed" | "downloaded";
 
 export function routeSharePlainText(url: string, stopCount: number) {
   return `מסלול HallowHood · ${stopCount} עצירות\n${url}`;
@@ -173,38 +173,29 @@ export function shareRouteFromDialog(
   },
   onDone: (outcome: ShareUrlOutcome) => void,
 ) {
-  const { url, stopCount, filename, fullText } = options;
+  const { url, stopCount, fullText } = options;
   const title = "מסלול HallowHood";
   const linkBlock = routeSharePlainText(url, stopCount);
 
   if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-    try {
-      const file = new File([fullText], filename, { type: "text/plain;charset=utf-8" });
-      if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
-        navigator
-          .share({ files: [file], title, text: linkBlock.slice(0, 2000) })
-          .then(() => onDone("shared"))
-          .catch((err: unknown) => {
-            if (err instanceof Error && err.name === "AbortError") {
-              onDone("cancelled");
-              return;
-            }
-            if (copyPlainTextSync(linkBlock)) {
-              onDone("copied");
-              return;
-            }
-            onDone("failed");
-          });
-        return;
-      }
-    } catch {
-      /* URL share below */
-    }
-    startRouteShare(url, stopCount, onDone);
+    navigator
+      .share({ url, title, text: linkBlock.slice(0, 2000) })
+      .then(() => onDone("shared"))
+      .catch((err: unknown) => {
+        if (err instanceof Error && err.name === "AbortError") {
+          onDone("cancelled");
+          return;
+        }
+        if (copyPlainTextSync(linkBlock)) {
+          onDone("copied");
+          return;
+        }
+        onDone("failed");
+      });
     return;
   }
 
-  if (copyPlainTextSync(fullText)) onDone("copied");
+  if (copyPlainTextSync(linkBlock)) onDone("copied");
   else onDone("failed");
 }
 

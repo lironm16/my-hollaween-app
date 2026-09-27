@@ -8,6 +8,7 @@ import { OverlayCloseBar } from "@/components/overlay-close-button";
 import {
   downloadHouseExport,
   downloadOrShareHouseExport,
+  downloadTxt,
   exportHouseCountMessage,
   routeToExportTxt,
   HOUSE_EXPORT_FORMAT_OPTIONS,
@@ -172,13 +173,29 @@ export function RouteShareDialog({
         onOpenChange(false);
         return;
       }
+      if (outcome === "downloaded") {
+        toast.success("הקובץ ירד — אפשר לשתף ממנהל הקבצים / וואטסאפ");
+        onOpenChange(false);
+        return;
+      }
       if (outcome === "cancelled") return;
       toast.error("לא הצלחנו לשתף — נסו שוב");
       toast.message(url, { closeButton: true, duration: 20_000 });
       onOpenChange(false);
     };
 
-    shareRouteFromDialog({ url, stopCount: stopN, filename, fullText }, finish);
+    const failOpen = () => {
+      downloadTxt(filename, fullText);
+      finish("downloaded");
+    };
+
+    shareRouteFromDialog({ url, stopCount: stopN, filename, fullText }, (outcome) => {
+      if (outcome === "failed") {
+        failOpen();
+        return;
+      }
+      finish(outcome);
+    });
   }
 
   return (

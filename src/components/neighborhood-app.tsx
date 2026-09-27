@@ -952,7 +952,6 @@ export function NeighborhoodApp({
           originPick.originPickerOpen ||
           skipDialogHouse ||
           visitSkipConflict ||
-          gemResetHouse ||
           editFlow.flow,
       ),
     [
@@ -965,7 +964,6 @@ export function NeighborhoodApp({
       routeAlerts.sheetOpen,
       skipDialogHouse,
       visitSkipConflict,
-      gemResetHouse,
       editFlow.flow,
     ],
   );

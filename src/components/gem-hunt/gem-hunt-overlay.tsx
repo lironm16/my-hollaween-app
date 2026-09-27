@@ -295,13 +295,6 @@ export function GemHuntOverlay({
   }, [house.id, cameraRetry, sim]);
 
   useEffect(() => {
-    if (!cameraError || sim) return;
-    reveal();
-    setCenterReveal(true);
-    setHint("found");
-  }, [cameraError, sim, reveal]);
-
-  useEffect(() => {
     if (phase !== "scanning" || revealedRef.current) return;
 
     if (heading != null) {
@@ -534,7 +527,7 @@ export function GemHuntOverlay({
         <div className="gem-hunt-overlay__camera-banner" role="status">
           <p className="gem-hunt-overlay__camera-banner-title">אין גישה למצלמה</p>
           <p className="gem-hunt-overlay__camera-banner-text">
-            היהלום מוצג למטה — לחצו עליו לאיסוף. אפשר גם לאשר מצלמה ולנסות שוב.
+            אפשר לצוד עם «גלה לי» למטה, או לאשר מצלמה ולנסות שוב.
           </p>
           <button type="button" className="gem-hunt-overlay__fallback-btn" onClick={() => void retryCamera()}>
             נסו שוב — אישור מצלמה
@@ -570,7 +563,7 @@ export function GemHuntOverlay({
         <div className="gem-hunt-overlay__collect-flash" aria-hidden />
       ) : null}
 
-      {showHuntUi && !cameraError ? (
+      {showHuntUi ? (
       <div className="gem-hunt-overlay__stage" aria-hidden={false}>
         {centerDisplayMode && phase !== "collecting" ? (
           <p className="gem-hunt-overlay__nav-caption">{gemPetName}</p>
@@ -687,7 +680,7 @@ export function GemHuntOverlay({
         <p className="gem-hunt-overlay__tap-collect-caption">לחיצה על הדמות לאיסוף</p>
       ) : null}
 
-      {showHuntUi && phase !== "collecting" && !cameraError ? (
+      {showHuntUi && phase !== "collecting" ? (
         <footer className="gem-hunt-overlay__footer" dir="rtl">
           {showNavCompassPrompt ? (
             <button
