@@ -101,15 +101,13 @@ export function buildGemLabStub(input: {
     accessible: true,
     decorLevel: "medium",
     decorated: true,
-    status: "approved",
     soldOut: false,
     adminFrozen: false,
     ownerFrozenUntil: null,
     photoUrl: "/images/stubs/candy-bowl.jpg",
-    editCode: "000000",
     createdAt: now,
     updatedAt: now,
-    neighborhood: config.neighborhood,
+    neighborhood: "נחלת גנים",
   };
 }
 

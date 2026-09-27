@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { isHouseDeleted, isPubliclyListed, offersSensitivity, offersVegan } from "@/lib/house-state";
-import type { TreatId } from "@/lib/types";
+import type { PublicHouse, TreatId } from "@/lib/types";
 
 function house(treats: TreatId[]) {
   return { treats, treatStock: { candy: "plenty" as const } };
@@ -9,8 +9,8 @@ function house(treats: TreatId[]) {
 
 describe("soft delete listing", () => {
   it("treats deletedAt as off the public catalog", () => {
-    const active = { id: "בית-1234", deletedAt: null };
-    const removed = { id: "בית-5678", deletedAt: "2026-10-31T12:00:00.000Z" };
+    const active = { id: "בית-1234", deletedAt: null } as PublicHouse;
+    const removed = { id: "בית-5678", deletedAt: "2026-10-31T12:00:00.000Z" } as PublicHouse;
     assert.equal(isHouseDeleted(active), false);
     assert.equal(isPubliclyListed(active), true);
     assert.equal(isHouseDeleted(removed), true);
