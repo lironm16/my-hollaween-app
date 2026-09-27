@@ -27,7 +27,6 @@ import {
   GEM_COLLECT_OVERLAY_MS,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
   gemAnchorForHouse,
-  gemInScanRing,
   gemPlacementDisplaySnap,
   gemLabelHe,
   gemMonsterForHouse,
@@ -334,9 +333,7 @@ export function GemHuntOverlay({
     if (phase !== "visible") return;
     const viaTellMe = centerReveal;
     const viaPinned =
-      !centerReveal &&
-      collectEnabled &&
-      Boolean(pinPlacement && gemInScanRing(pinPlacement));
+      !centerReveal && collectEnabled && Boolean(pinPlacement?.inView);
     if (!viaTellMe && !viaPinned) return;
     setPhase("collecting");
     setHint("found");
@@ -425,8 +422,8 @@ export function GemHuntOverlay({
   const arPinGuideMode = gemVisible && !centerReveal;
   /** Hide off-screen scan pin while nav is open — revealed/collect gem stays visible. */
   const hideScanPinForNav = hintPanel === "nav" && !centerReveal;
-  const gemInRing = pinPlacement ? gemInScanRing(pinPlacement) : false;
-  const pinCollectReady = arPinGuideMode && collectEnabled && gemInRing;
+  const pinCollectReady =
+    arPinGuideMode && collectEnabled && Boolean(pinPlacement?.inView);
   /** Show centered gem after reveal even before «stand still» — tap only when collectEnabled. */
   /** Show when the shared anchor bearing is inside the camera cone — not gated on 25 m. */
   const showWorldGemSprite = Boolean(pinPlacement?.inView);

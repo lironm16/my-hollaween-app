@@ -260,7 +260,7 @@ export function gemScreenPlacement(
   return { xPercent, yPercent, inView, distanceM, relativeBearingDeg: rel };
 }
 
-/** Gem pin overlaps the on-screen hunt ring. */
+/** Gem pin overlaps the on-screen hunt ring (visual / legacy; collect no longer requires this). */
 export function gemInScanRing(
   placement: GemScreenPlacement | null,
   ringRadiusPercent = GEM_SCAN_RING_COLLECT_RADIUS,
