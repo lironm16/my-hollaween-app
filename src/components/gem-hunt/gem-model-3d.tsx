@@ -19,8 +19,8 @@ type Props = {
   spin?: boolean;
   /** Turntable yaw speed multiplier (default 0.7 interactive / 0.35 not). */
   spinRate?: number;
-  /** turntable = hunt overlay; orbit = drag to inspect (gem bag); walkaround = GPS bearing */
-  controls?: "turntable" | "orbit" | "walkaround";
+  /** turntable | orbit (bag) | walkaround (GPS) | inspect360 (auto + finger orbit on hunt) */
+  controls?: "turntable" | "orbit" | "walkaround" | "inspect360";
   /** When set with walkaround, model stays world-locked as viewer walks around anchor. */
   worldYawRad?: number | null;
   /** Energetic hop + flip loop (collect / found hero). */
@@ -95,7 +95,9 @@ export function GemModel3D({
     camera.position.set(0, 0.2, 2.6);
 
     const maxDpr =
-      controls === "turntable" ? Math.min(window.devicePixelRatio, 1.35) : Math.min(window.devicePixelRatio, 1.75);
+      controls === "turntable" || controls === "walkaround"
+        ? Math.min(window.devicePixelRatio, 1.35)
+        : Math.min(window.devicePixelRatio, 1.75);
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: maxDpr > 1.1,
@@ -115,11 +117,14 @@ export function GemModel3D({
     fill.position.set(0, -1, 2);
     scene.add(ambient, key, rim, fill);
 
+    const worldGroup = new THREE.Group();
+    scene.add(worldGroup);
     const pivot = new THREE.Group();
-    scene.add(pivot);
+    worldGroup.add(pivot);
 
     let orbit: OrbitControls | null = null;
-    if (controls === "orbit") {
+    const usesOrbit = controls === "orbit" || controls === "inspect360";
+    if (usesOrbit) {
       orbit = new OrbitControls(camera, renderer.domElement);
       orbit.enableDamping = true;
       orbit.dampingFactor = 0.08;
@@ -127,6 +132,11 @@ export function GemModel3D({
       orbit.maxDistance = 6;
       orbit.maxPolarAngle = Math.PI * 0.92;
       orbit.target.set(0, 0.05, 0);
+      orbit.enablePan = false;
+      if (controls === "inspect360") {
+        orbit.autoRotate = true;
+        orbit.autoRotateSpeed = 1.35;
+      }
     }
 
     let model: THREE.Object3D | null = null;
@@ -135,7 +145,7 @@ export function GemModel3D({
     let disposed = false;
 
     const scaleFactor =
-      controls === "turntable"
+      controls === "turntable" || controls === "walkaround" || controls === "inspect360"
         ? size === "sm"
           ? 0.55
           : size === "fill"
@@ -164,7 +174,7 @@ export function GemModel3D({
         });
 
         pivot.add(model);
-        if (controls === "turntable") {
+        if (controls === "turntable" || controls === "walkaround" || controls === "inspect360") {
           fitCameraToPivot(camera, pivot, size === "sm" ? 1.45 : size === "fill" ? 1.28 : 1.32);
         } else {
           orbit?.update();
@@ -215,7 +225,8 @@ export function GemModel3D({
 
       if (controls === "turntable" || controls === "walkaround") {
         if (controls === "walkaround" && worldYawRef.current != null && Number.isFinite(worldYawRef.current)) {
-          pivot.rotation.y = worldYawRef.current;
+          worldGroup.rotation.y = worldYawRef.current;
+          pivot.rotation.y = 0;
           pivot.rotation.x = 0;
           pivot.rotation.z = 0;
           pivot.position.y = Math.sin(t * 2) * 0.03;
@@ -236,6 +247,14 @@ export function GemModel3D({
             pivot.rotation.z = 0;
             pivot.position.y = Math.sin(t * 2) * 0.04;
           }
+        }
+      } else if (controls === "inspect360") {
+        if (worldYawRef.current != null && Number.isFinite(worldYawRef.current)) {
+          worldGroup.rotation.y = worldYawRef.current;
+        }
+        if (orbit) {
+          orbit.autoRotate = motionRef.current !== "celebrate";
+          orbit.update();
         }
       } else {
         orbit?.update();
@@ -287,13 +306,20 @@ export function GemModel3D({
         size === "sm" && "gem-model-3d--sm",
         size === "fill" && "gem-model-3d--fill",
         controls === "orbit" && "gem-model-3d--orbit",
+        controls === "inspect360" && "gem-model-3d--orbit gem-model-3d--inspect360",
         collected && "is-collected",
         motion === "celebrate" && "is-celebrating",
         className,
       )}
-      aria-hidden={controls === "turntable"}
-      role={controls === "orbit" ? "img" : undefined}
-      aria-label={controls === "orbit" ? "תצוגת דוגמנית — גררו לסיבוב" : undefined}
+      aria-hidden={controls === "turntable" || controls === "walkaround"}
+      role={controls === "orbit" || controls === "inspect360" ? "img" : undefined}
+      aria-label={
+        controls === "inspect360"
+          ? "סיבוב 360° — גררו באצבע או הלכו מסביב"
+          : controls === "orbit"
+            ? "תצוגת דוגמנית — גררו לסיבוב"
+            : undefined
+      }
     />
   );
 }

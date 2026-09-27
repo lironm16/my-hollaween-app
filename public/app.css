@@ -11292,6 +11292,144 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
     opacity: 1;
   }
 }
+.gem-hunt-studio {
+  position: fixed;
+  inset: 0;
+  z-index: 12050;
+  display: flex;
+  flex-direction: column;
+  background: rgb(8 4 16 / 0.96);
+  color: #fef3c7;
+}
+.gem-hunt-studio__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgb(251 191 36 / 0.25);
+}
+.gem-hunt-studio__kicker {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+.gem-hunt-studio__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.gem-hunt-studio__close {
+  border-radius: 999px;
+  border: 1px solid rgb(251 191 36 / 0.5);
+  background: rgb(49 24 78 / 0.8);
+  color: inherit;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+}
+.gem-hunt-studio__stage {
+  flex: 1;
+  min-height: 0;
+  padding: 0.75rem 1rem 1.25rem;
+}
+.gem-hunt-studio__canvas {
+  height: min(72vh, 28rem);
+  min-height: 16rem;
+}
+.gem-hunt-webxr {
+  position: fixed;
+  inset: 0;
+  z-index: 12050;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  color: #fef3c7;
+}
+.gem-hunt-webxr__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  background: rgb(8 4 16 / 0.92);
+  z-index: 2;
+}
+.gem-hunt-webxr__title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.gem-hunt-webxr__close {
+  border-radius: 999px;
+  border: 1px solid rgb(251 191 36 / 0.45);
+  background: transparent;
+  color: inherit;
+  padding: 0.35rem 0.75rem;
+}
+.gem-hunt-webxr__host {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+}
+.gem-hunt-webxr__host canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+.gem-hunt-webxr__start {
+  position: absolute !important;
+  left: 50%;
+  bottom: 5rem;
+  transform: translateX(-50%);
+  z-index: 3;
+  padding: 0.65rem 1.1rem !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+}
+.gem-hunt-webxr__hint,
+.gem-hunt-webxr__error {
+  margin: 0;
+  padding: 0.5rem 0.85rem 0.85rem;
+  font-size: 0.8rem;
+  text-align: center;
+  background: rgb(8 4 16 / 0.85);
+}
+.gem-hunt-webxr__error {
+  color: #fca5a5;
+}
+.gem-hunt-overlay__gem-hit.is-inspect360 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: auto;
+  z-index: 6;
+}
+.gem-hunt-overlay__gem-hit.is-inspect360 .gem-hunt-overlay__gem-dance {
+  width: min(46vw, 12.5rem);
+  height: min(46vw, 12.5rem);
+}
+.gem-sprite--inspect360 {
+  width: 100%;
+  height: 100%;
+}
+.gem-hunt-overlay__spin-collect {
+  margin-top: 0.4rem;
+  border-radius: 999px;
+  padding: 0.4rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  background: rgb(251 191 36);
+  color: #1a0b24;
+  border: none;
+  box-shadow: 0 4px 18px rgb(0 0 0 / 0.4);
+  pointer-events: auto;
+}
+.gem-hunt-overlay__spin-collect--center {
+  position: absolute;
+  left: 50%;
+  bottom: 28%;
+  transform: translateX(-50%);
+}
 @property --tw-translate-x {
   syntax: "*";
   inherits: false;

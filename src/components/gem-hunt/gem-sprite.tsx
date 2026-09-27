@@ -31,7 +31,7 @@ export function GemSprite({
   className?: string;
   size?: "sm" | "lg" | "fill";
   /** bag rows use poster; hunt uses 3d; orbit is for gem-bag studio only */
-  mode?: "auto" | "3d" | "poster" | "orbit" | "walkaround";
+  mode?: "auto" | "3d" | "poster" | "orbit" | "walkaround" | "inspect360";
   tapCollect?: boolean;
   spinWhileCollect?: boolean;
   motion?: "idle" | "celebrate";
@@ -47,11 +47,20 @@ export function GemSprite({
     mode === "3d" ||
     mode === "orbit" ||
     mode === "walkaround" ||
+    mode === "inspect360" ||
     (mode === "auto" && size === "lg");
   const modelControls =
-    mode === "orbit" ? "orbit" : mode === "walkaround" ? "walkaround" : "turntable";
+    mode === "orbit"
+      ? "orbit"
+      : mode === "walkaround"
+        ? "walkaround"
+        : mode === "inspect360"
+          ? "inspect360"
+          : "turntable";
   const modelSpin =
-    mode === "walkaround" ? false : spinWhileCollect || motion === "celebrate";
+    mode === "walkaround" || mode === "inspect360"
+      ? false
+      : spinWhileCollect || motion === "celebrate";
 
   if (!use3d) {
     return (
@@ -91,6 +100,7 @@ export function GemSprite({
         "gem-sprite",
         size === "sm" && "gem-sprite--sm",
         mode === "3d" && "gem-sprite--hunt",
+        mode === "inspect360" && "gem-sprite--inspect360",
         size === "fill" && "gem-sprite--fill",
         collected && "is-collected",
         motion === "celebrate" && "is-celebrating",
@@ -101,9 +111,9 @@ export function GemSprite({
       <GemModel3D
         monsterId={monsterId}
         houseId={id}
-        size={mode === "orbit" ? "fill" : size === "fill" ? "fill" : size}
+        size={mode === "orbit" || mode === "inspect360" ? "fill" : size === "fill" ? "fill" : size}
         collected={collected}
-        interactive={!tapCollect}
+        interactive={mode === "inspect360" ? true : !tapCollect}
         spin={modelSpin}
         spinRate={tapCollect && motion !== "celebrate" ? 0.35 : undefined}
         controls={modelControls}

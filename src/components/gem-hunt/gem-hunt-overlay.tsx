@@ -597,10 +597,9 @@ export function GemHuntOverlay({
         </div>
 
         {arPinTapCollect ? (
-          <button
-            type="button"
+          <div
             className={cn(
-              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-pin-collect is-revealed",
+              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-pin-collect is-revealed is-inspect360",
               phase === "collecting" && "is-collecting",
               pinCollectReady && "is-ring-ready",
             )}
@@ -612,8 +611,6 @@ export function GemHuntOverlay({
                   }
                 : undefined
             }
-            onClick={handleCollect}
-            aria-label={`איסוף ${gemLabelHe(monsterId)}`}
           >
             <div
               className={cn(
@@ -623,16 +620,25 @@ export function GemHuntOverlay({
             >
               <GemSprite
                 house={house}
-                mode="walkaround"
+                mode="inspect360"
                 size="fill"
-                tapCollect
+                tapCollect={false}
                 spinWhileCollect={false}
                 worldYawRad={worldYawRad}
                 motion={phase === "collecting" ? "celebrate" : "idle"}
                 celebrateVariant={collectDanceIndex}
               />
             </div>
-          </button>
+            {pinCollectReady && phase === "visible" ? (
+              <button
+                type="button"
+                className="gem-hunt-overlay__spin-collect"
+                onClick={handleCollect}
+              >
+                אסף
+              </button>
+            ) : null}
+          </div>
         ) : null}
 
         {arPinGuideMode && !hidePinForHints && phase !== "visible" ? (
@@ -662,16 +668,14 @@ export function GemHuntOverlay({
       ) : null}
 
       {showHuntUi && centerDisplayMode ? (
-        <button
-          type="button"
+        <div
           className={cn(
             "gem-hunt-overlay__gem-hit",
             "is-center-collect",
             "is-collect-layer",
+            "is-inspect360",
             phase === "collecting" && "is-collecting",
           )}
-          onClick={handleCollect}
-          aria-label={`איסוף ${gemLabelHe(monsterId)}`}
         >
           <div
             className={cn(
@@ -681,14 +685,25 @@ export function GemHuntOverlay({
           >
             <GemSprite
               house={house}
-              mode="3d"
-              tapCollect
-              spinWhileCollect
+              mode="inspect360"
+              size="fill"
+              tapCollect={false}
+              spinWhileCollect={false}
+              worldYawRad={worldYawRad}
               motion={phase === "collecting" ? "celebrate" : "idle"}
               celebrateVariant={collectDanceIndex}
             />
           </div>
-        </button>
+          {collectEnabled && phase === "visible" ? (
+            <button
+              type="button"
+              className="gem-hunt-overlay__spin-collect gem-hunt-overlay__spin-collect--center"
+              onClick={handleCollect}
+            >
+              אסף
+            </button>
+          ) : null}
+        </div>
       ) : null}
 
       {showHuntUi && phase !== "collecting" ? (
@@ -704,6 +719,11 @@ export function GemHuntOverlay({
           ) : null}
 
           <div className="gem-hunt-overlay__footer-stack">
+            {gemVisible && !centerReveal && phase === "visible" ? (
+              <p className="gem-hunt-overlay__footer-hint">
+                הדמות מסתובבת 360° — גררו עליה · הלכו מסביב · לחצו «אסף» כשמוכנים
+              </p>
+            ) : null}
             {hintPanel === "character" ? (
               <div className="gem-hunt-overlay__hint1-popover">
                 <p className="gem-hunt-overlay__hint1-popover-title">{gemPetName}</p>
