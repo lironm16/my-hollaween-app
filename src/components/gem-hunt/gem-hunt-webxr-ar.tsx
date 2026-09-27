@@ -127,7 +127,7 @@ export function GemHuntWebXrAr({ houseId, monsterId, onClose }: Props) {
         const viewerSpace = await session.requestReferenceSpace("viewer");
         const refSpace = await session.requestReferenceSpace("local");
         renderer.xr.setReferenceSpace(refSpace);
-        hitTestSource = await session.requestHitTestSource!({ space: viewerSpace });
+        hitTestSource = (await session.requestHitTestSource!({ space: viewerSpace })) ?? null;
         renderer.setAnimationLoop((_t, frame) => {
           if (!frame || !hitTestSource) return;
           const ref = renderer.xr.getReferenceSpace() ?? refSpace;
