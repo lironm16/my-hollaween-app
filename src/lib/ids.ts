@@ -71,7 +71,12 @@ export function toPublicHouse<
     typeof rest.lat === "number" &&
     typeof rest.lng === "number"
   ) {
-    return alignPublicHouseCoords(rest) as Omit<T, "editCode" | "storeId">;
+    const aligned = alignPublicHouseCoords({
+      address: rest.address,
+      lat: rest.lat,
+      lng: rest.lng,
+    });
+    return { ...rest, lat: aligned.lat, lng: aligned.lng } as Omit<T, "editCode" | "storeId">;
   }
   return rest as Omit<T, "editCode" | "storeId">;
 }

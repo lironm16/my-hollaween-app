@@ -1,5 +1,6 @@
-import type { PublicHouse } from "@/lib/types";
+import type { NeighborhoodId } from "@/lib/config";
 import { config } from "@/lib/config";
+import type { HouseTheme, PublicHouse } from "@/lib/types";
 
 export const GEM_LAB_STUBS_KEY = "hw-gem-lab-stubs";
 export const GEM_LAB_STUBS_EVENT = "hw-gem-lab-stubs-changed";
@@ -64,10 +65,10 @@ export function nextGemLabStubId(existingHouseIds: Iterable<string>): string | n
 
 const THEMES = ["ghost", "pumpkin", "vampire", "monster", "blackCat"] as const;
 
-function themeForId(id: string) {
+function themeForId(id: string): HouseTheme {
   let h = 0;
   for (let i = 0; i < id.length; i += 1) h = (h + id.charCodeAt(i) * 17) % THEMES.length;
-  return THEMES[h]!;
+  return THEMES[h]! as HouseTheme;
 }
 
 export function buildGemLabStub(input: {
@@ -107,7 +108,7 @@ export function buildGemLabStub(input: {
     photoUrl: "/images/stubs/candy-bowl.jpg",
     createdAt: now,
     updatedAt: now,
-    neighborhood: "נחלת גנים",
+    neighborhood: "נחלת גנים" satisfies NeighborhoodId,
   };
 }
 

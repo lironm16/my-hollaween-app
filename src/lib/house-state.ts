@@ -48,7 +48,7 @@ export function isHouseDeleted(house: { deletedAt?: string | null }) {
   return Number.isFinite(Date.parse(at));
 }
 
-export function isPubliclyListed(house: House | PublicHouse) {
+export function isPubliclyListed(house: { deletedAt?: string | null }) {
   return !isHouseDeleted(house);
 }
 
