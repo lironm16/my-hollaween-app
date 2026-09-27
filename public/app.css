@@ -11393,13 +11393,27 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.65rem 0.85rem;
-  background: rgb(8 4 16 / 0.92);
+  background: rgb(8 4 16 / 0.72);
   z-index: 2;
+  pointer-events: auto;
+}
+.gem-hunt-webxr__bar-text {
+  min-width: 0;
+}
+.gem-hunt-webxr__kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgb(251 191 36 / 0.95);
+  letter-spacing: 0.02em;
 }
 .gem-hunt-webxr__title {
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 600;
+  margin: 0.1rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.gem-hunt-webxr__close-btn {
+  flex-shrink: 0;
 }
 .gem-hunt-webxr__close {
   border-radius: 999px;
@@ -11418,26 +11432,91 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   width: 100% !important;
   height: 100% !important;
 }
+.gem-hunt-webxr__start-host {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
 .gem-hunt-webxr__start {
   position: absolute !important;
   left: 50%;
-  bottom: 5rem;
+  bottom: 42%;
   transform: translateX(-50%);
   z-index: 3;
-  padding: 0.65rem 1.1rem !important;
+  padding: 0.75rem 1.25rem !important;
   border-radius: 999px !important;
   font-weight: 700 !important;
+  pointer-events: auto !important;
 }
-.gem-hunt-webxr__hint,
+.gem-hunt-webxr__footer {
+  z-index: 2;
+  pointer-events: auto;
+  padding: 0.65rem 0.85rem 1rem;
+  background: linear-gradient(to top, rgb(8 4 16 / 0.92), rgb(8 4 16 / 0.55));
+}
+.gem-hunt-webxr__hint {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: center;
+}
+.gem-hunt-webxr__subhint {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  text-align: center;
+  color: rgb(216 180 254 / 0.92);
+}
+.gem-hunt-webxr__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  align-items: stretch;
+}
+.gem-hunt-webxr__collect {
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a0d24;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  box-shadow: 0 8px 28px rgb(251 191 36 / 0.35);
+}
+.gem-hunt-webxr__collect:disabled {
+  opacity: 0.65;
+}
+.gem-hunt-webxr__fallback {
+  border-radius: 999px;
+  border: 1px solid rgb(167 139 250 / 0.45);
+  background: transparent;
+  color: rgb(221 214 254);
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+}
+.gem-hunt-webxr__range-warn {
+  margin: 0;
+  text-align: center;
+  font-size: 0.82rem;
+  color: #fcd34d;
+}
 .gem-hunt-webxr__error {
   margin: 0;
-  padding: 0.5rem 0.85rem 0.85rem;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   text-align: center;
-  background: rgb(8 4 16 / 0.85);
-}
-.gem-hunt-webxr__error {
   color: #fca5a5;
+}
+.gem-hunt-webxr.is-collecting .gem-hunt-webxr__collect {
+  animation: gem-webxr-collect-pulse 0.6s ease-in-out infinite alternate;
+}
+@keyframes gem-webxr-collect-pulse {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.03);
+  }
 }
 .gem-hunt-overlay__gem-hit.is-inspect360 {
   display: flex;
