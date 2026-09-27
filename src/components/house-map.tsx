@@ -720,7 +720,7 @@ export function HouseMap({
       [first.lat, first.lng] as [number, number],
     ];
   }, [routeStart, userLocation, routeStops, routeStartedFrom]);
-  const tiles = useMapTiles();
+  const { tiles, ready: tilesReady } = useMapTiles();
   useEffect(() => {
     postMapTileCacheConfig();
   }, []);
@@ -754,17 +754,18 @@ export function HouseMap({
         className="h-full w-full rounded-none"
         style={{ height: "100%", width: "100%" }}
       >
-        <TileLayer
-          attribution={tiles.attribution}
-          url={tileUrl}
-          key={tileUrl}
-          subdomains={
-            "subdomains" in tiles && tiles.subdomains ? tiles.subdomains : "abcd"
-          }
-          maxZoom={config.map.maxZoom}
-          maxNativeZoom={Math.min(tiles.maxNativeZoom, config.map.maxZoom)}
-          className="hw-basemap"
-        />
+        {tilesReady ? (
+          <TileLayer
+            attribution={tiles.attribution}
+            url={tileUrl}
+            subdomains={
+              "subdomains" in tiles && tiles.subdomains ? tiles.subdomains : "abcd"
+            }
+            maxZoom={config.map.maxZoom}
+            maxNativeZoom={Math.min(tiles.maxNativeZoom, config.map.maxZoom)}
+            className="hw-basemap"
+          />
+        ) : null}
         <SizeSync />
         {panTick > 0 && panTo ? <PanTo lat={panTo.lat} lng={panTo.lng} tick={panTick} /> : null}
         {embed && focus ? (

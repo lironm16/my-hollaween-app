@@ -320,7 +320,10 @@ export function NeighborhoodApp({
     [mapListHouses, filters, filterContext],
   );
   const showBootstrapSpinner =
-    displayHouses.length === 0 && !catalogHasRealHouses(catalog) && loading;
+    displayHouses.length === 0 &&
+    !catalogHasRealHouses(catalog) &&
+    !catalogHasRealHouses(loadCatalogCacheSync()) &&
+    loading;
   const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
   const filterDimActive = matchedIds.size < mapHouses.length;
   const matchedIdsKey = useMemo(
@@ -1154,9 +1157,14 @@ export function NeighborhoodApp({
         style={{ flex: 1, minHeight: 0, position: "relative" }}
       >
         <>
-          {view === "map" ? (
-            <>
-              <div className="map-stage absolute inset-0 z-0 isolate" style={{ position: "absolute", inset: 0 }}>
+          <div
+            className={cn(
+              "map-stage absolute inset-0 z-0 isolate",
+              view !== "map" && "invisible pointer-events-none",
+            )}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden={view !== "map"}
+          >
                 <HouseMapDynamic
                   houses={mapHouses}
                   matchedIds={matchedIds}
@@ -1214,10 +1222,10 @@ export function NeighborhoodApp({
                   }
                   isGemCollected={gems.collected}
                 />
-                {gemHuntActive && gemAllCollected && !originPick.originPickActive ? (
-                  <GemMapCompleteBanner />
-                ) : null}
-                {originPick.originPickActive ? (
+              {view === "map" && gemHuntActive && gemAllCollected && !originPick.originPickActive ? (
+                <GemMapCompleteBanner />
+              ) : null}
+              {view === "map" && originPick.originPickActive ? (
                   <div className="origin-pick-bar">
                     <p className="origin-pick-label">{originPick.originDraftLabel}</p>
                     <div className="origin-pick-actions">
@@ -1237,11 +1245,11 @@ export function NeighborhoodApp({
                   </div>
                 ) : null}
                 <CatalogMetaChip
-                  hidden={Boolean(selection.selected) && !originPick.originPickActive}
+                  hidden={view !== "map" || (Boolean(selection.selected) && !originPick.originPickActive)}
                   houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
                 />
-              </div>
-              {mapSheetHouse && houseDetailCommon && !originPick.originPickActive ? (
+          </div>
+          {view === "map" && mapSheetHouse && houseDetailCommon && !originPick.originPickActive ? (
                 <div className="map-sheet-host" aria-hidden={false}>
                   <MapHouseSheet
                     {...houseDetailCommon}
@@ -1268,14 +1276,16 @@ export function NeighborhoodApp({
                   />
                 </div>
               ) : null}
-            </>
-          ) : (
             <div
               id="house-list-skip"
-              className="absolute inset-0 z-10 overflow-y-auto bg-[#12081a]"
+              className={cn(
+                "absolute inset-0 z-10 overflow-y-auto bg-[#12081a]",
+                view !== "list" && "invisible pointer-events-none",
+              )}
               style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#12081a" }}
               role="region"
               aria-label="רשימת בתים"
+              aria-hidden={view !== "list"}
             >
               <div className="mx-auto w-full min-w-0 max-w-3xl px-3 pt-3">
                 {routeMode ? (
@@ -1308,7 +1318,6 @@ export function NeighborhoodApp({
                 )}
               </div>
             </div>
-          )}
           {showBootstrapSpinner ? (
             <div
               className="absolute inset-0 z-30 flex items-center justify-center bg-[#12081a] text-orange-200"

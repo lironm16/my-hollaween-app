@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
+import { HouseExportDialog } from "@/components/csv-export-button";
 import { RouteMenuSection } from "@/components/route-menu-section";
 import { NeighborhoodMarquee } from "@/components/neighborhood-marquee";
 import { PushAlertsButton } from "@/components/push-alerts-button";
@@ -62,6 +63,7 @@ export function AppHeader({
   const showAdminGemOps = admin && gemHuntFabVisible(admin, now);
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);
+  const [routeExportOpen, setRouteExportOpen] = useState(false);
 
   async function onLogout() {
     setMenuOpen(false);
@@ -71,6 +73,11 @@ export function AppHeader({
 
   function closeMenu() {
     setMenuOpen(false);
+  }
+
+  function openRouteExport() {
+    setRouteExportOpen(true);
+    closeMenu();
   }
 
   const houseSubLinkClass = cn(
@@ -191,12 +198,9 @@ export function AppHeader({
 
             {routeMenu ? (
               <RouteMenuSection
-                houses={routeMenu.houses}
-                totalInSet={routeMenu.totalInSet}
-                activeFilterCount={routeMenu.activeFilterCount}
                 activeRoute={routeMenu.activeRoute}
-                kind={routeMenu.kind}
                 onNavigate={closeMenu}
+                onOpenExport={openRouteExport}
               />
             ) : null}
 
@@ -313,6 +317,16 @@ export function AppHeader({
           </div>
         </SheetContent>
       </Sheet>
+      ) : null}
+      {routeMenu ? (
+        <HouseExportDialog
+          open={routeExportOpen}
+          onOpenChange={setRouteExportOpen}
+          houses={routeMenu.houses}
+          totalInSet={routeMenu.totalInSet}
+          activeFilterCount={routeMenu.activeFilterCount}
+          kind={routeMenu.kind}
+        />
       ) : null}
     </header>
   );

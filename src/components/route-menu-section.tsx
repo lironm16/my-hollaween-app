@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import { ChevronDown, Route, Save, Share2 } from "lucide-react";
 import { toast } from "sonner";
-import { HouseExportDialog } from "@/components/csv-export-button";
 import { sharePlainTextFile } from "@/lib/house-csv";
 import {
   buildRouteShareUrl,
@@ -14,7 +13,6 @@ import {
 import { readMenuSectionOpen, writeMenuSectionOpen } from "@/lib/menu-section-state";
 import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
 import type { WalkingRoute } from "@/lib/route";
-import type { PublicHouse } from "@/lib/types";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -25,35 +23,28 @@ const subLinkClass = cn(
 );
 
 export function RouteMenuSection({
-  houses,
-  totalInSet,
-  activeFilterCount = 0,
   activeRoute,
-  kind = "list",
   onNavigate,
+  onOpenExport,
 }: {
-  houses: PublicHouse[];
-  totalInSet: number;
-  activeFilterCount?: number;
   activeRoute: WalkingRoute | null;
-  kind?: "liked" | "list" | "all";
   onNavigate?: () => void;
+  /** Parent owns export dialog so it stays mounted when the menu sheet closes. */
+  onOpenExport?: () => void;
 }) {
   const [open, setOpen] = useState(() => readMenuSectionOpen("route", false));
-  const [exportOpen, setExportOpen] = useState(false);
   const activeRouteRef = useRef(activeRoute);
   activeRouteRef.current = activeRoute;
 
   function openExportDialog() {
-    onNavigate?.();
-    setExportOpen(true);
+    onOpenExport?.();
   }
 
   function shareRoute() {
-    onNavigate?.();
     const route = activeRouteRef.current;
     if (!route || route.stops.length === 0) {
       toast.message("אין עצירות במסלול — הוסיפו בתים למסלול ונסו שוב");
+      onNavigate?.();
       return;
     }
 
@@ -66,6 +57,10 @@ export function RouteMenuSection({
     const day = new Date().toISOString().slice(0, 10);
     const title = "מסלול HallowHood";
 
+    const finish = () => {
+      onNavigate?.();
+    };
+
     const runFallback = () => {
       void (async () => {
         const fileShared = await sharePlainTextFile(
@@ -75,6 +70,7 @@ export function RouteMenuSection({
         );
         if (fileShared) {
           toast.success("שיתוף המסלול נשלח");
+          finish();
           return;
         }
         const outcome = await shareRouteUrl(url, stopCount);
@@ -84,18 +80,23 @@ export function RouteMenuSection({
               ? "שיתוף המסלול נשלח"
               : "הקישור הועתק — הדביקו בוואטסאפ / הודעה",
           );
+          finish();
           return;
         }
         if (outcome === "cancelled") return;
         toast.error("לא הצלחנו לשתף — נסו שוב");
         toast.message(url, { closeButton: true, duration: 20_000 });
+        finish();
       })();
     };
 
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       navigator
         .share({ title, text: text.slice(0, 8000) })
-        .then(() => toast.success("שיתוף המסלול נשלח"))
+        .then(() => {
+          toast.success("שיתוף המסלול נשלח");
+          finish();
+        })
         .catch((err: unknown) => {
           if (err instanceof Error && err.name === "AbortError") return;
           runFallback();
@@ -106,51 +107,41 @@ export function RouteMenuSection({
   }
 
   return (
-    <>
-      <div className="flex flex-col gap-0.5">
-        <button
-          type="button"
-          aria-expanded={open}
-          onClick={() =>
-            setOpen((value) => {
-              const next = !value;
-              writeMenuSectionOpen("route", next);
-              return next;
-            })
-          }
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "lg" }),
-            "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
-          )}
-        >
-          <Route className="size-4" />
-          <span className="flex-1 text-start">מסלול</span>
-          <ChevronDown
-            className={cn("size-4 shrink-0 text-violet-400 transition-transform", open && "rotate-180")}
-            aria-hidden
-          />
-        </button>
-        {open ? (
-          <div className={APP_MENU_SUBLIST_CLASS}>
-            <button type="button" onClick={openExportDialog} className={subLinkClass}>
-              <Save className="size-4" strokeWidth={2.25} />
-              הורד
-            </button>
-            <button type="button" onClick={shareRoute} className={subLinkClass}>
-              <Share2 className="size-4" />
-              שתף
-            </button>
-          </div>
-        ) : null}
-      </div>
-      <HouseExportDialog
-        open={exportOpen}
-        onOpenChange={setExportOpen}
-        houses={houses}
-        totalInSet={totalInSet}
-        activeFilterCount={activeFilterCount}
-        kind={kind}
-      />
-    </>
+    <div className="flex flex-col gap-0.5">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() =>
+          setOpen((value) => {
+            const next = !value;
+            writeMenuSectionOpen("route", next);
+            return next;
+          })
+        }
+        className={cn(
+          buttonVariants({ variant: "ghost", size: "lg" }),
+          "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+        )}
+      >
+        <Route className="size-4" />
+        <span className="flex-1 text-start">מסלול</span>
+        <ChevronDown
+          className={cn("size-4 shrink-0 text-violet-400 transition-transform", open && "rotate-180")}
+          aria-hidden
+        />
+      </button>
+      {open ? (
+        <div className={APP_MENU_SUBLIST_CLASS}>
+          <button type="button" onClick={openExportDialog} className={subLinkClass}>
+            <Save className="size-4" strokeWidth={2.25} />
+            הורד
+          </button>
+          <button type="button" onClick={shareRoute} className={subLinkClass}>
+            <Share2 className="size-4" />
+            שתף
+          </button>
+        </div>
+      ) : null}
+    </div>
   );
 }

@@ -196,7 +196,14 @@ export function HouseActionBar({
         icon: gemCollected ? (
           <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.35rem]" />
         ) : (
-          <GemDiamondIcon className={MENU_ICON_CLASS} />
+          <span
+            className={cn(
+              "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/15 ring-1 ring-amber-400/40",
+              MENU_ACTIVE_ICON_CLASS,
+            )}
+          >
+            <GemDiamondIcon className="size-[1.35rem]" filled={false} />
+          </span>
         ),
         onClick: () => onToggleGem(),
         active: gemCollected,

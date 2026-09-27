@@ -20,8 +20,10 @@ import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
+import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import {
   forgetPublishedHouse,
+  loadCatalogCacheSync,
   notifyCatalogChanged,
   removeOwnedHouse,
   saveOwnedHouse,
@@ -68,6 +70,12 @@ function MyCollectionsPageContent() {
   }, [urlTab]);
 
   useEffect(() => {
+    if (showCollected || tab !== "collected") return;
+    setTab("mine");
+    window.history.replaceState(window.history.state, "", tabUrl("mine"));
+  }, [showCollected, tab]);
+
+  useEffect(() => {
     setSelectedIds(new Set());
   }, [tab]);
 
@@ -81,7 +89,11 @@ function MyCollectionsPageContent() {
   const { resolved: origin } = useDistanceOrigin(geo.location);
   const editFlow = useHouseEditFlow();
 
-  const catalogHouses = catalog?.houses ?? [];
+  const catalogHouses = useMemo(() => {
+    const resolved = resolveCatalogHouses(catalog);
+    if (resolved.length > 0) return resolved;
+    return loadCatalogCacheSync()?.houses ?? [];
+  }, [catalog]);
 
   const mineHouses = useMemo(() => {
     const ids = new Set(owned.map((item) => item.id));
@@ -263,7 +275,8 @@ function MyCollectionsPageContent() {
     setSelectedIds(new Set());
   }
 
-  const selectionRemoveLabel = tab === "mine" ? "הסר מהמכשיר" : "אפס מהרשימה";
+  const selectionRemoveLabel =
+    tab === "mine" ? "הסר מהמכשיר" : tab === "collected" ? "אפס יהלומים שנבחרו" : "אפס מהרשימה";
 
   return (
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
