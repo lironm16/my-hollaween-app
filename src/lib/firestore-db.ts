@@ -10,7 +10,7 @@ import {
 import { isStubHouse } from "@/lib/house-set";
 import { canonicalHouseId, toPublicHouse } from "@/lib/ids";
 import { countPublishedHouses } from "@/lib/catalog-cache-build";
-import { isPubliclyListed } from "@/lib/house-state";
+import { isHouseDeleted, isPubliclyListed } from "@/lib/house-state";
 import { stripStubHouses } from "@/lib/rehearsal-stubs";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import type { DbFile, House, PublicHouse, PushSubscriptionRecord, VapidKeys } from "@/lib/types";
@@ -156,7 +156,15 @@ export async function writeFirestoreHouse(house: House) {
   if (isStubHouse(house)) return;
   await resolveAdminFirestore();
   const id = canonicalHouseId(house.id);
-  await housesCollection().doc(id).set({ ...house, id, storeId: id }, { merge: true });
+  await housesCollection()
+    .doc(id)
+    .set({ ...house, id, storeId: id, deletedAt: house.deletedAt ?? null }, { merge: true });
+  if (!isPubliclyListed(house)) return;
+  try {
+    await removedHousesCollection().doc(id).delete();
+  } catch {
+    /* tombstone may already be gone */
+  }
   await bumpCatalogMeta(house.updatedAt);
 }
 
@@ -165,9 +173,28 @@ export async function deleteFirestoreHouse(id: string, options?: { skipCatalogMe
   await resolveAdminFirestore();
   const docId = canonicalHouseId(id);
   const now = new Date().toISOString();
-  await housesCollection().doc(docId).delete();
+  await housesCollection().doc(docId).set({ deletedAt: now, updatedAt: now }, { merge: true });
   await removedHousesCollection().doc(docId).set({ id: docId, deletedAt: now });
   if (!options?.skipCatalogMeta) await bumpCatalogMeta(now);
+}
+
+export async function restoreFirestoreHouse(id: string): Promise<boolean> {
+  if (!firestoreConfigured()) return false;
+  await resolveAdminFirestore();
+  const docId = canonicalHouseId(id);
+  const snap = await housesCollection().doc(docId).get();
+  if (!snap.exists) return false;
+  const row = snap.data() as House;
+  if (!row?.deletedAt) return false;
+  const now = new Date().toISOString();
+  await housesCollection().doc(docId).set({ deletedAt: null, updatedAt: now }, { merge: true });
+  try {
+    await removedHousesCollection().doc(docId).delete();
+  } catch {
+    /* tombstone may already be gone */
+  }
+  await bumpCatalogMeta(now);
+  return true;
 }
 
 export async function queryFirestoreHousesSince(since: string): Promise<PublicHouse[]> {
@@ -216,7 +243,7 @@ export async function readFirestoreCatalog(): Promise<Omit<DbFile, "pushSubscrip
       const row = doc.data() as House;
       if (!row?.id && !doc.id) continue;
       const house = rowToHouse(doc.id, row);
-      if (isStubHouse(house)) continue;
+      if (isStubHouse(house) || isHouseDeleted(house)) continue;
       houses.push(house);
     }
 

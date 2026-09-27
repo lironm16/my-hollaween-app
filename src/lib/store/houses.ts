@@ -6,6 +6,7 @@ import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { assertRealAddress } from "@/lib/geocode";
 import {
   defaultTreatStock,
+  isHouseDeleted,
   syncDecorFields,
 } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
@@ -68,6 +69,7 @@ export async function getHouse(id: string): Promise<House | undefined> {
   if (firestoreConfigured() && docId) {
     const remote = await readFirestoreHouse(docId);
     if (remote) {
+      if (isHouseDeleted(remote)) return undefined;
       upsertMemHouse(remote, remote.updatedAt);
       return remote;
     }
@@ -270,6 +272,7 @@ async function patchHouseDoc(
     (await getHouse(docId));
   if (!existing) return { error: "missing" as const };
   if (existing.editCode !== editCode) return { error: "forbidden" as const };
+  if (isHouseDeleted(existing)) return { error: "missing" as const };
 
   await validateOwnerAddressChange(existing, patch);
 
@@ -326,6 +329,21 @@ export async function adminDeleteHouse(id: string) {
     db.houses.splice(idx, 1);
     db.updatedAt = new Date().toISOString();
     return true;
+  });
+}
+
+export async function adminRestoreHouse(id: string): Promise<House | null> {
+  const docId = canonicalHouseId(id);
+  if (!docId || !firestoreConfigured()) return null;
+  const remote = await readFirestoreHouse(docId);
+  if (!remote || !isHouseDeleted(remote)) return null;
+  const restored = normalizeHouse({ ...remote, deletedAt: null, updatedAt: new Date().toISOString() });
+  return runSyncedWrite((db) => {
+    const idx = db.houses.findIndex((h) => sameHouseId(h.id, docId));
+    if (idx >= 0) db.houses[idx] = restored;
+    else db.houses.push(restored);
+    db.updatedAt = restored.updatedAt;
+    return restored;
   });
 }
 

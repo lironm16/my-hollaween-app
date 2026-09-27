@@ -104,6 +104,8 @@ export type House = {
   addedBy?: string | null;
   /** Remote document id; never sent to the public catalog. */
   storeId?: string;
+  /** Set when removed from the public catalog; document kept in Firestore for recovery. */
+  deletedAt?: string | null;
 };
 
 export type HouseInput = {

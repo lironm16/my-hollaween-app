@@ -182,6 +182,7 @@ export function normalizeHouse(house: House & { status?: string; rejectionReason
     openTo: hours.openTo,
     openFrom2: hours.openFrom2,
     openTo2: hours.openTo2,
+    deletedAt: base.deletedAt ?? null,
   };
 }
 

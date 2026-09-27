@@ -42,8 +42,14 @@ export function isFrozen(
   return Boolean(house.adminFrozen) || isOwnerFrozen(house, now);
 }
 
-export function isPubliclyListed(_house: House | PublicHouse) {
-  return true;
+export function isHouseDeleted(house: { deletedAt?: string | null }) {
+  const at = house.deletedAt?.trim();
+  if (!at) return false;
+  return Number.isFinite(Date.parse(at));
+}
+
+export function isPubliclyListed(house: House | PublicHouse) {
+  return !isHouseDeleted(house);
 }
 
 export function effectiveVisit(house: { visit?: VisitState; soldOut?: boolean }): VisitState {
