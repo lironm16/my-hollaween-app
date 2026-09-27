@@ -49,8 +49,8 @@ export type GemVariantId = GemMonsterId;
 export const GEM_APPROACH_METERS = 50;
 /** Must be this close (and still) to start the camera hunt. */
 export const GEM_HUNT_METERS = 25;
-/** Ignore GPS jitter — user must stand still this long before hunting. */
-export const GEM_STILL_SECONDS = 2;
+/** @deprecated Stand-still gate removed — kept for copy/tests that reference the old value. */
+export const GEM_STILL_SECONDS = 0;
 /** Compass cone — gem may appear when facing within this many degrees of the house. */
 export const GEM_FACING_TOLERANCE_DEG = 60;
 /** Guaranteed gem reveal after this many seconds of panning in range. */
@@ -151,13 +151,13 @@ export function destinationPoint(
  * There is no vertical axis — high-floor apartments share the same ground GPS;
  * the hunt means “at the building / entrance zone”, not at window height.
  */
-/** Shortest walk to either the map pin or the gem anchor (matches collect proximity). */
+/** Walk distance to the sidewalk gem anchor (camera hunt targets anchor only). */
 export function gemDistanceMeters(
   user: { lat: number; lng: number },
   house: Pick<PublicHouse, "id" | "lat" | "lng">,
 ) {
   const anchor = gemAnchorForHouse(house);
-  return Math.min(distanceMeters(user, house), distanceMeters(user, anchor));
+  return distanceMeters(user, anchor);
 }
 
 export function gemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
@@ -300,12 +300,11 @@ export function canCollectGem(
   userLocation: { lat: number; lng: number } | null,
   house: Pick<PublicHouse, "id" | "lat" | "lng">,
   collected: boolean,
-  standingStill: boolean,
-  simulateInRange: boolean,
+  _standingStill?: boolean,
+  simulateInRange = false,
 ) {
   if (collected) return false;
-  const inRange = simulateInRange || gemProximity(userLocation, house, false) === "hunt";
-  return inRange && (standingStill || simulateInRange);
+  return simulateInRange || gemProximity(userLocation, house, false) === "hunt";
 }
 
 /** Pessimistic hunt band — avoids treating a wild GPS jump as “at the anchor”. */
@@ -333,7 +332,7 @@ function inGemHuntBand(
   house: Pick<PublicHouse, "id" | "lat" | "lng">,
 ) {
   const anchor = gemAnchorForHouse(house);
-  return withinGemHuntMeters(user, anchor) || withinGemHuntMeters(user, house);
+  return withinGemHuntMeters(user, anchor);
 }
 
 /** Within ~25m of the gem anchor or map pin — camera hunt / collect band. */

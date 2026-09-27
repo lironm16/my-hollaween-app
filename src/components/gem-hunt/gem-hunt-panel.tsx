@@ -9,7 +9,6 @@ import type { GemCollectFinishOptions } from "@/lib/gem-hunt";
 import { GemHuntOverlayLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { Button } from "@/components/ui/button";
 import { useGemProgress } from "@/hooks/use-gem-progress";
-import { useStandingStill } from "@/hooks/use-standing-still";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { useAppNow } from "@/hooks/use-app-clock";
 import {
@@ -18,7 +17,6 @@ import {
   gemDistanceMeters,
   gemProximity,
   GEM_CHEER_MS,
-  GEM_STILL_SECONDS,
 } from "@/lib/gem-hunt";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import { distanceMeters } from "@/lib/geo";
@@ -83,10 +81,6 @@ export function GemHuntPanel({
   );
   const collected = gems.collected(house.id);
   const proximity = gemProximity(userLocation, house, collected);
-  const needsStill =
-    visible && !collected && (proximity === "hunt" || proximity === "approach");
-  const { ready: standingStill } = useStandingStill(userLocation, needsStill);
-
   const distanceM = useMemo(() => {
     if (!userLocation) return null;
     return gemDistanceMeters(userLocation, house);
@@ -94,7 +88,7 @@ export function GemHuntPanel({
 
   if (!visible) return null;
 
-  const canCollect = canCollectGem(userLocation, house, collected, standingStill, simulate);
+  const canCollect = canCollectGem(userLocation, house, collected, true, simulate);
   const anchor = gemAnchorForHouse(house);
   const anchorCalibrated = Boolean(anchorOverrideMap[house.id]) || anchor.calibrated === true;
 
@@ -151,14 +145,12 @@ export function GemHuntPanel({
             {canCollect
               ? "בטווח — אפשר לאסוף"
               : proximity === "far" && distanceM != null && distanceM <= 25
-                ? "ליד הבית — המתינו רגע ל-GPS או עמדו דקה בלי לזוז"
+                ? "ליד היהלום — המתינו רגע ל-GPS"
                 : proximity === "far"
-                  ? "התקרבו ל־25 מ׳ לאיסוף"
-                  : standingStill || simulate
-                    ? "מוכנים לציד"
-                    : distanceM != null
-                      ? `~${Math.round(distanceM)} מ׳ — עמדו ${GEM_STILL_SECONDS} שנ׳`
-                      : "פתחו מצלמה לתצוגה"}
+                  ? "התקרבו ל־25 מ׳ ליהלום על המדרכה"
+                  : distanceM != null
+                    ? `~${Math.round(distanceM)} מ׳ ליהלום — פתחו מצלמה`
+                    : "פתחו מצלמה לתצוגה"}
           </p>
         ) : null}
 

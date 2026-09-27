@@ -24,7 +24,6 @@ import {
   gemDistanceMeters,
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
-  GEM_STILL_SECONDS,
   GEM_COLLECT_OVERLAY_MS,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
   gemAnchorForHouse,
@@ -681,11 +680,6 @@ export function GemHuntOverlay({
 
       {centerDisplayMode && canTapCollect && phase === "visible" ? (
         <p className="gem-hunt-overlay__tap-collect-caption">לחיצה על הדמות לאיסוף</p>
-      ) : null}
-      {arPinRevealedGem && !collectEnabled && phase === "visible" && !centerDisplayMode ? (
-        <p className="gem-hunt-overlay__tap-collect-caption" role="status">
-          עמדו {GEM_STILL_SECONDS} שנ׳ בלי לזוז — ואז לחיצה לאיסוף (או «גלה לי»)
-        </p>
       ) : null}
 
       {showHuntUi && phase !== "collecting" ? (
