@@ -166,7 +166,7 @@ export function GemHuntOverlay({
     effectiveLoc != null &&
     !sim &&
     gemDistanceMeters(effectiveLoc, house) <= GEM_HUNT_METERS;
-  /** Scan/pan/facing reveal when in range (or admin simulate), even before «stand still» finishes. */
+  /** Scan/pan/facing reveal when in range (or admin simulate). */
   const allowAutoReveal = collectEnabled || sim || inDistanceBand;
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
