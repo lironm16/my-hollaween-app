@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useGemLabStubs } from "@/hooks/use-gem-lab-stubs";
+import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useHouseSet } from "@/hooks/use-house-set";
 import {
   addGemLabStub,
@@ -25,6 +26,7 @@ export function AdminGemLabPanel() {
   const router = useRouter();
   const { catalog } = useCatalog();
   const labStubs = useGemLabStubs();
+  const gems = useGemProgress();
   const { houseSet, setHouseSet } = useHouseSet();
   const defaultCenter = gemLabDefaultCenter();
   const [lat, setLat] = useState(defaultCenter.lat);
@@ -124,6 +126,7 @@ export function AdminGemLabPanel() {
         <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto rounded-xl bg-black/20 p-2 ring-1 ring-orange-500/15">
           {labStubs.map((house) => {
             const monster = gemMonsterForHouse(house);
+            const collected = gems.collected(house.id);
             return (
               <li
                 key={house.id}
@@ -133,8 +136,38 @@ export function AdminGemLabPanel() {
                   <p className="truncate font-medium text-orange-50">{house.name}</p>
                   <p className="truncate text-xs text-violet-300">
                     {house.id} · {gemLabelHe(monster)}
+                    {collected ? " · נאסף" : null}
                   </p>
                 </div>
+                {collected ? (
+                  <button
+                    type="button"
+                    className={cn(
+                      "shrink-0 rounded-full px-2.5 py-1 text-xs font-medium",
+                      "bg-emerald-500/15 text-emerald-200 ring-1 ring-emerald-400/35",
+                    )}
+                    onClick={() => {
+                      gems.resetHouse(house.id);
+                      toast.message("איסוף היהלום בוטל");
+                    }}
+                  >
+                    בטל איסוף
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className={cn(
+                      "shrink-0 rounded-full px-2.5 py-1 text-xs font-medium",
+                      "bg-violet-500/25 text-violet-100 ring-1 ring-violet-400/40",
+                    )}
+                    onClick={() => {
+                      gems.collect(house.id, monster);
+                      toast.success("יהלום נאסף (מעבדה)");
+                    }}
+                  >
+                    אסוף יהלום
+                  </button>
+                )}
                 <Link
                   href={`/house/${encodeURIComponent(house.id)}?gemHunt=1`}
                   className={cn(
