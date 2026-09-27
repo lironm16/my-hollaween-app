@@ -297,6 +297,16 @@ export function GemHuntOverlay({
   useEffect(() => {
     if (phase !== "scanning" || revealedRef.current) return;
 
+    const locEarly = effectiveLoc;
+    const facingClose =
+      locEarly != null &&
+      heading != null &&
+      facingHouse(locEarly, anchor, heading, GEM_FACING_TOLERANCE_DEG);
+    if (!sim && allowAutoReveal && distanceM != null && distanceM <= 3 && facingClose) {
+      reveal();
+      return;
+    }
+
     if (heading != null) {
       panTotalRef.current += panDelta(lastHeadingRef.current, heading);
       lastHeadingRef.current = heading;
@@ -430,15 +440,13 @@ export function GemHuntOverlay({
   const centerDisplayMode = gemVisible && centerReveal;
   /** Real hunt: compass-pinned gem (tap when in view + in range). */
   const arPinGuideMode = gemVisible && !centerReveal;
-  /** Hide AR pin while nav hint popover is open. */
-  const hidePinForHints = hintPanel === "nav" && !centerReveal;
+  /** Hide off-screen scan pin while nav is open — revealed/collect gem stays visible. */
+  const hideScanPinForNav = hintPanel === "nav" && !centerReveal;
   const gemInRing = pinPlacement ? gemInScanRing(pinPlacement) : false;
   const pinCollectReady = arPinGuideMode && collectEnabled && gemInRing;
   /** Show centered gem after reveal even before «stand still» — tap only when collectEnabled. */
   const arPinRevealedGem =
-    arPinGuideMode &&
-    !hidePinForHints &&
-    (phase === "visible" || phase === "collecting");
+    arPinGuideMode && (phase === "visible" || phase === "collecting");
   const arPinTapCollect = arPinRevealedGem && collectEnabled;
   const ringReady = centerDisplayMode || pinCollectReady;
   const isFarForHints =
@@ -619,7 +627,7 @@ export function GemHuntOverlay({
           </div>
         ) : null}
 
-        {arPinGuideMode && !hidePinForHints && phase !== "visible" ? (
+        {arPinGuideMode && !hideScanPinForNav && phase !== "visible" ? (
           <div
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin",
@@ -717,6 +725,11 @@ export function GemHuntOverlay({
                   {walkGuideCopy}
                   {distanceM != null ? ` · ${formatDistance(distanceM)}` : null}
                 </p>
+                {distanceM != null && distanceM <= 8 ? (
+                  <p className="gem-hunt-overlay__walk-text gem-hunt-overlay__walk-ground">
+                    היהלום על המדרכה (גובה רגליים) — הטילו את הטלפון מעט למטה. אם עדיין לא רואים: «גלה לי» למטה.
+                  </p>
+                ) : null}
                 {mapsWalkUrl ? (
                   <a
                     href={mapsWalkUrl}
