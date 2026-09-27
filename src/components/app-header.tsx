@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
-import { HouseExportDialog } from "@/components/csv-export-button";
+import { HouseExportDialog, RouteShareDialog } from "@/components/csv-export-button";
 import { RouteMenuSection } from "@/components/route-menu-section";
 import { NeighborhoodMarquee } from "@/components/neighborhood-marquee";
 import { PushAlertsButton } from "@/components/push-alerts-button";
@@ -35,10 +35,6 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { appVersionLabel } from "@/lib/app-version";
-import {
-  buildRouteShareUrl,
-  startRouteShare,
-} from "@/lib/route-share";
 import type { WalkingRoute } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
@@ -68,6 +64,7 @@ export function AppHeader({
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);
   const [routeExportOpen, setRouteExportOpen] = useState(false);
+  const [routeShareOpen, setRouteShareOpen] = useState(false);
 
   async function onLogout() {
     setMenuOpen(false);
@@ -84,38 +81,9 @@ export function AppHeader({
     closeMenu();
   }
 
-  function shareRouteFromMenu() {
-    if (!routeMenu) return;
-    const route = routeMenu.activeRoute;
-    const stopIds =
-      route && route.stops.length > 0
-        ? route.stops.map((stop) => stop.house.id)
-        : routeMenu.houses.map((house) => house.id);
-    if (stopIds.length === 0) {
-      toast.message("אין בתים לשתף — הוסיפו בתים למסלול ונסו שוב");
-      closeMenu();
-      return;
-    }
-    const payload = { v: 1 as const, stopIds };
-    const url = buildRouteShareUrl(payload, window.location.origin);
-    const stopCount = stopIds.length;
-
-    toast.message("פותחים שיתוף…", { duration: 1500 });
-
-    startRouteShare(url, stopCount, (outcome) => {
-      closeMenu();
-      if (outcome === "shared") {
-        toast.success("שיתוף המסלול נשלח");
-        return;
-      }
-      if (outcome === "copied") {
-        toast.success("הקישור הועתק — הדביקו בוואטסאפ / הודעה");
-        return;
-      }
-      if (outcome === "cancelled") return;
-      toast.error("לא הצלחנו לשתף — נסו שוב");
-      toast.message(url, { closeButton: true, duration: 20_000 });
-    });
+  function openRouteShare() {
+    setRouteShareOpen(true);
+    closeMenu();
   }
 
   const houseSubLinkClass = cn(
@@ -236,10 +204,9 @@ export function AppHeader({
 
             {routeMenu ? (
               <RouteMenuSection
-                activeRoute={routeMenu.activeRoute}
                 onNavigate={closeMenu}
                 onOpenExport={openRouteExport}
-                onShareRoute={shareRouteFromMenu}
+                onOpenShare={openRouteShare}
               />
             ) : null}
 
@@ -358,14 +325,24 @@ export function AppHeader({
       </Sheet>
       ) : null}
       {routeMenu ? (
-        <HouseExportDialog
-          open={routeExportOpen}
-          onOpenChange={setRouteExportOpen}
-          houses={routeMenu.houses}
-          totalInSet={routeMenu.totalInSet}
-          activeFilterCount={routeMenu.activeFilterCount}
-          kind={routeMenu.kind}
-        />
+        <>
+          <HouseExportDialog
+            open={routeExportOpen}
+            onOpenChange={setRouteExportOpen}
+            houses={routeMenu.houses}
+            totalInSet={routeMenu.totalInSet}
+            activeFilterCount={routeMenu.activeFilterCount}
+            kind={routeMenu.kind}
+          />
+          <RouteShareDialog
+            open={routeShareOpen}
+            onOpenChange={setRouteShareOpen}
+            route={routeMenu.activeRoute}
+            houses={routeMenu.houses}
+            totalInSet={routeMenu.totalInSet}
+            activeFilterCount={routeMenu.activeFilterCount}
+          />
+        </>
       ) : null}
     </header>
   );

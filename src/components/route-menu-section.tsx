@@ -1,10 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { ChevronDown, Route, Save, Share2 } from "lucide-react";
 import { readMenuSectionOpen, writeMenuSectionOpen } from "@/lib/menu-section-state";
 import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
-import type { WalkingRoute } from "@/lib/route";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -15,29 +14,24 @@ const subLinkClass = cn(
 );
 
 export function RouteMenuSection({
-  activeRoute,
   onNavigate,
   onOpenExport,
-  onShareRoute,
+  onOpenShare,
 }: {
-  activeRoute: WalkingRoute | null;
   onNavigate?: () => void;
   /** Parent owns export dialog so it stays mounted when the menu sheet closes. */
   onOpenExport?: () => void;
-  /** Parent runs share (keeps user-gesture + route snapshot). */
-  onShareRoute?: () => void;
+  /** Same pattern as export — parent opens share dialog after closing the menu. */
+  onOpenShare?: () => void;
 }) {
   const [open, setOpen] = useState(() => readMenuSectionOpen("route", false));
-  const activeRouteRef = useRef(activeRoute);
-  activeRouteRef.current = activeRoute;
 
   function openExportDialog() {
     onOpenExport?.();
   }
 
-  function shareRoute() {
-    if (!onShareRoute) return;
-    onShareRoute();
+  function openShareDialog() {
+    onOpenShare?.();
   }
 
   return (
@@ -70,7 +64,7 @@ export function RouteMenuSection({
             <Save className="size-4" strokeWidth={2.25} />
             הורד
           </button>
-          <button type="button" onClick={shareRoute} className={subLinkClass}>
+          <button type="button" onClick={openShareDialog} className={subLinkClass}>
             <Share2 className="size-4" />
             שתף
           </button>

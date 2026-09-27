@@ -9,9 +9,17 @@ import {
   downloadHouseExport,
   downloadOrShareHouseExport,
   exportHouseCountMessage,
+  routeToExportTxt,
+  sharePlainTextFile,
   HOUSE_EXPORT_FORMAT_OPTIONS,
   type HouseExportFormat,
 } from "@/lib/house-csv";
+import {
+  buildRouteShareUrl,
+  routeSharePlainText,
+  shareRouteUrl,
+} from "@/lib/route-share";
+import type { WalkingRoute } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -100,6 +108,112 @@ export function HouseExportDialog({
             onClick={() => void runExport(format)}
           >
             שמירה לקובץ
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 border-violet-500/40 px-5 text-base text-violet-100"
+            onClick={() => onOpenChange(false)}
+          >
+            ביטול
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function RouteShareDialog({
+  open,
+  onOpenChange,
+  route,
+  houses,
+  totalInSet,
+  activeFilterCount = 0,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  route: WalkingRoute | null;
+  houses: PublicHouse[];
+  totalInSet: number;
+  activeFilterCount?: number;
+}) {
+  const stopCount =
+    route && route.stops.length > 0 ? route.stops.length : houses.length;
+  const countMessage = exportHouseCountMessage(stopCount, totalInSet, activeFilterCount);
+
+  async function runShare() {
+    const stopIds =
+      route && route.stops.length > 0
+        ? route.stops.map((stop) => stop.house.id)
+        : houses.map((house) => house.id);
+    if (stopIds.length === 0) {
+      toast.error("אין בתים לשתף — הוסיפו בתים למסלול ונסו שוב");
+      return;
+    }
+    const payload = { v: 1 as const, stopIds };
+    const url = buildRouteShareUrl(payload, window.location.origin);
+    const stopN = stopIds.length;
+    const linkBlock = routeSharePlainText(url, stopN);
+    const day = new Date().toISOString().slice(0, 10);
+    const filename = `hallowhood-route-share-${day}.txt`;
+    const text =
+      route && route.stops.length > 0
+        ? `${linkBlock}\n\n${routeToExportTxt(route)}`
+        : linkBlock;
+
+    const shared = await sharePlainTextFile(filename, text, "מסלול HallowHood");
+    if (shared) {
+      toast.success("שיתוף המסלול נשלח");
+      onOpenChange(false);
+      return;
+    }
+
+    const outcome = await shareRouteUrl(url, stopN);
+    if (outcome === "shared") {
+      toast.success("שיתוף המסלול נשלח");
+      onOpenChange(false);
+      return;
+    }
+    if (outcome === "copied") {
+      toast.success("הקישור הועתק — הדביקו בוואטסאפ / הודעה");
+      onOpenChange(false);
+      return;
+    }
+    if (outcome === "cancelled") return;
+    toast.error("לא הצלחנו לשתף — נסו שוב");
+    toast.message(url, { closeButton: true, duration: 20_000 });
+    onOpenChange(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        dir="rtl"
+        showCloseButton={false}
+        className="gap-0 overflow-hidden border border-orange-500/30 bg-[#1a0d24] p-0 text-orange-50 sm:max-w-md"
+      >
+        <OverlayCloseBar
+          compact
+          title="שתף מסלול"
+          onClose={() => onOpenChange(false)}
+          className="border-b border-orange-500/15 pb-2"
+        />
+        <div className="space-y-3 px-4 py-3">
+          <p className="text-base leading-snug text-violet-200/90">{countMessage}</p>
+          <p className="text-sm leading-relaxed text-violet-300/85">
+            נשלח קישור לפתיחת המסלול באפליקציה (סדר העצירות נשמר). אפשר לשלוח בוואטסאפ, הודעה או
+            לשמור לקובץ.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2 border-t border-orange-500/15 bg-[#14091c]/80 px-4 py-3">
+          <Button
+            type="button"
+            className="h-11 bg-orange-500 px-5 text-base text-black hover:bg-orange-400"
+            disabled={stopCount === 0}
+            onClick={() => void runShare()}
+          >
+            שתף
           </Button>
           <Button
             type="button"
