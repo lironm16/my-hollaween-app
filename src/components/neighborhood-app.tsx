@@ -42,7 +42,7 @@ import { GemCheer } from "@/components/gem-cheer";
 import { GemResetConfirmDialog } from "@/components/gem-reset-confirm-dialog";
 import { GemMapCompleteBanner } from "@/components/gem-map-complete-banner";
 import {
-  GemHuntOverlayLazy,
+  GemHuntExperienceLazy,
   preloadGemHuntChunks,
 } from "@/components/gem-hunt/gem-hunt-lazy";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
@@ -1435,7 +1435,7 @@ export function NeighborhoodApp({
         />
       ) : null}
       {mapGemHouse ? (
-        <GemHuntOverlayLazy
+        <GemHuntExperienceLazy
           house={mapGemHouse}
           userLocation={mapGemGps ?? gps}
           deferCameraUntilInRange={false}
