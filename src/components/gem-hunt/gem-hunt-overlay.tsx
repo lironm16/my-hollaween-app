@@ -223,9 +223,6 @@ export function GemHuntOverlay({
   }, [pinPlacement, phase, centerReveal]);
   const pinDisplay = useSmoothedGemPlacement(pinDisplayRaw, house.id);
 
-  const inHuntRange =
-    sim || distanceM == null || distanceM <= GEM_HUNT_METERS;
-
   const reveal = useCallback(() => {
     if (revealedRef.current) return;
     revealedRef.current = true;
@@ -251,15 +248,6 @@ export function GemHuntOverlay({
       collectFinishRef.current = null;
     }
   }, [house.id]);
-
-  useEffect(() => {
-    if (sim || distanceM == null || phase === "collecting" || phase === "albumReveal") return;
-    if (distanceM <= GEM_HUNT_METERS) return;
-    revealedRef.current = false;
-    setCenterReveal(false);
-    setPhase("scanning");
-    setHint("scan");
-  }, [distanceM, phase, sim]);
 
   useEffect(() => {
     beginMapListOverlayCapture();
@@ -462,8 +450,8 @@ export function GemHuntOverlay({
   const gemInRing = pinPlacement ? gemInScanRing(pinPlacement) : false;
   const pinCollectReady = arPinGuideMode && collectEnabled && gemInRing;
   /** Show centered gem after reveal even before «stand still» — tap only when collectEnabled. */
-  const showWorldGemSprite =
-    inHuntRange && Boolean(pinPlacement?.inView && pinPlacement.distanceM <= GEM_HUNT_METERS);
+  /** Show when the shared anchor bearing is inside the camera cone — not gated on 25 m. */
+  const showWorldGemSprite = Boolean(pinPlacement?.inView);
   const arPinRevealedGem =
     arPinGuideMode &&
     showWorldGemSprite &&
