@@ -267,13 +267,13 @@ export function GemHuntOverlay({
         cameraBootRef.current = false;
         if (cancelled) return;
         if (!prepared.camera) {
-          setCameraError("לא ניתן לפתוח מצלמה — אפשר לאסוף מהמפה");
+          setCameraError("no-camera");
           return;
         }
         stream = getGemHuntCameraStream();
       }
       if (!stream) {
-        setCameraError("לא ניתן לפתוח מצלמה — אפשר לאסוף מהמפה");
+        setCameraError("no-camera");
         return;
       }
       if (cancelled) return;
@@ -293,6 +293,13 @@ export function GemHuntOverlay({
       releaseGemHuntCamera(videoRef.current);
     };
   }, [house.id, cameraRetry, sim]);
+
+  useEffect(() => {
+    if (!cameraError || sim) return;
+    reveal();
+    setCenterReveal(true);
+    setHint("found");
+  }, [cameraError, sim, reveal]);
 
   useEffect(() => {
     if (phase !== "scanning" || revealedRef.current) return;
@@ -524,24 +531,13 @@ export function GemHuntOverlay({
         autoPlay
       />
       {cameraError ? (
-        <div className="gem-hunt-overlay__fallback">
-          <p className="text-base text-violet-100">{cameraError}</p>
-          <button
-            type="button"
-            className="gem-hunt-overlay__fallback-btn"
-            onClick={() => void retryCamera()}
-          >
-            נסו שוב — הפעלת מצלמה
-          </button>
-          <button
-            type="button"
-            className="gem-hunt-overlay__fallback-btn gem-hunt-overlay__fallback-btn--secondary mt-2"
-            onClick={() => {
-              reveal();
-              setCameraError(null);
-            }}
-          >
-            הציגו יהלום על המסך
+        <div className="gem-hunt-overlay__camera-banner" role="status">
+          <p className="gem-hunt-overlay__camera-banner-title">אין גישה למצלמה</p>
+          <p className="gem-hunt-overlay__camera-banner-text">
+            היהלום מוצג למטה — לחצו עליו לאיסוף. אפשר גם לאשר מצלמה ולנסות שוב.
+          </p>
+          <button type="button" className="gem-hunt-overlay__fallback-btn" onClick={() => void retryCamera()}>
+            נסו שוב — אישור מצלמה
           </button>
         </div>
       ) : null}
@@ -574,7 +570,7 @@ export function GemHuntOverlay({
         <div className="gem-hunt-overlay__collect-flash" aria-hidden />
       ) : null}
 
-      {showHuntUi ? (
+      {showHuntUi && !cameraError ? (
       <div className="gem-hunt-overlay__stage" aria-hidden={false}>
         {centerDisplayMode && phase !== "collecting" ? (
           <p className="gem-hunt-overlay__nav-caption">{gemPetName}</p>
@@ -691,7 +687,7 @@ export function GemHuntOverlay({
         <p className="gem-hunt-overlay__tap-collect-caption">לחיצה על הדמות לאיסוף</p>
       ) : null}
 
-      {showHuntUi && phase !== "collecting" ? (
+      {showHuntUi && phase !== "collecting" && !cameraError ? (
         <footer className="gem-hunt-overlay__footer" dir="rtl">
           {showNavCompassPrompt ? (
             <button

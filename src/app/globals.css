@@ -4998,6 +4998,40 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   padding: 1.5rem;
   background: #12081a;
 }
+.gem-hunt-overlay__camera-banner {
+  position: absolute;
+  top: calc(3.25rem + env(safe-area-inset-top, 0px));
+  left: 50%;
+  z-index: 28;
+  width: min(92vw, 22rem);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgb(167 139 250 / 0.35);
+  background: rgb(18 8 26 / 0.94);
+  text-align: center;
+  pointer-events: auto;
+}
+.gem-hunt-overlay__camera-banner-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fde68a;
+}
+.gem-hunt-overlay__camera-banner-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #e9d5ff;
+}
+.gem-hunt-overlay__camera-banner .gem-hunt-overlay__fallback-btn {
+  align-self: center;
+  margin-top: 0.15rem;
+}
 .gem-hunt-overlay__fallback-btn {
   padding: 0.75rem 1.25rem;
   border-radius: 9999px;

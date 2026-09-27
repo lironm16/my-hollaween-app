@@ -97,6 +97,31 @@ export function routeSharePlainText(url: string, stopCount: number) {
   return `מסלול HallowHood · ${stopCount} עצירות\n${url}`;
 }
 
+/** Sync clipboard copy — safe inside share `.catch` (still in the click gesture on many browsers). */
+export function copyPlainTextSync(text: string): boolean {
+  if (typeof document === "undefined") return false;
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    if (ok) return true;
+  } catch {
+    /* fall through */
+  }
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    void navigator.clipboard.writeText(text);
+    return true;
+  }
+  return false;
+}
+
 async function copyPlainText(text: string): Promise<boolean> {
   if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
     try {
@@ -106,21 +131,7 @@ async function copyPlainText(text: string): Promise<boolean> {
       /* fall through */
     }
   }
-  if (typeof document === "undefined") return false;
-  try {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.setAttribute("readonly", "");
-    ta.style.position = "fixed";
-    ta.style.left = "-9999px";
-    document.body.appendChild(ta);
-    ta.select();
-    const ok = document.execCommand("copy");
-    document.body.removeChild(ta);
-    return ok;
-  } catch {
-    return false;
-  }
+  return copyPlainTextSync(text);
 }
 
 export function startRouteShare(
@@ -140,11 +151,61 @@ export function startRouteShare(
           onDone("cancelled");
           return;
         }
-        void shareRouteUrl(url, stopCount).then(onDone);
+        if (copyPlainTextSync(text)) {
+          onDone("copied");
+          return;
+        }
+        onDone("failed");
       });
     return;
   }
-  void shareRouteUrl(url, stopCount).then(onDone);
+  if (copyPlainTextSync(text)) onDone("copied");
+  else onDone("failed");
+}
+
+/** Share route link + optional full txt body from a menu dialog (must stay sync until `.share()`). */
+export function shareRouteFromDialog(
+  options: {
+    url: string;
+    stopCount: number;
+    filename: string;
+    fullText: string;
+  },
+  onDone: (outcome: ShareUrlOutcome) => void,
+) {
+  const { url, stopCount, filename, fullText } = options;
+  const title = "מסלול HallowHood";
+  const linkBlock = routeSharePlainText(url, stopCount);
+
+  if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+    try {
+      const file = new File([fullText], filename, { type: "text/plain;charset=utf-8" });
+      if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
+        navigator
+          .share({ files: [file], title, text: linkBlock.slice(0, 2000) })
+          .then(() => onDone("shared"))
+          .catch((err: unknown) => {
+            if (err instanceof Error && err.name === "AbortError") {
+              onDone("cancelled");
+              return;
+            }
+            if (copyPlainTextSync(linkBlock)) {
+              onDone("copied");
+              return;
+            }
+            onDone("failed");
+          });
+        return;
+      }
+    } catch {
+      /* URL share below */
+    }
+    startRouteShare(url, stopCount, onDone);
+    return;
+  }
+
+  if (copyPlainTextSync(fullText)) onDone("copied");
+  else onDone("failed");
 }
 
 /**

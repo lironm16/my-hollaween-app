@@ -15,8 +15,7 @@ import {
 } from "@/lib/house-csv";
 import {
   buildRouteShareUrl,
-  routeSharePlainText,
-  startRouteShare,
+  shareRouteFromDialog,
   type ShareUrlOutcome,
 } from "@/lib/route-share";
 import type { WalkingRoute } from "@/lib/route";
@@ -142,7 +141,7 @@ export function RouteShareDialog({
     route && route.stops.length > 0 ? route.stops.length : houses.length;
   const countMessage = exportHouseCountMessage(stopCount, totalInSet, activeFilterCount);
 
-  async function runShare() {
+  function runShare() {
     const stopIds =
       route && route.stops.length > 0
         ? route.stops.map((stop) => stop.house.id)
@@ -154,10 +153,10 @@ export function RouteShareDialog({
     const payload = { v: 1 as const, stopIds };
     const url = buildRouteShareUrl(payload, window.location.origin);
     const stopN = stopIds.length;
-    const linkBlock = routeSharePlainText(url, stopN);
     const day = new Date().toISOString().slice(0, 10);
     const filename = `hallowhood-route-share-${day}.txt`;
-    const text =
+    const linkBlock = `מסלול HallowHood · ${stopN} עצירות\n${url}`;
+    const fullText =
       route && route.stops.length > 0
         ? `${linkBlock}\n\n${routeToExportTxt(route)}`
         : linkBlock;
@@ -179,30 +178,7 @@ export function RouteShareDialog({
       onOpenChange(false);
     };
 
-    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-      try {
-        const file = new File([text], filename, { type: "text/plain;charset=utf-8" });
-        if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
-          navigator
-            .share({ files: [file], title: "מסלול HallowHood", text: linkBlock.slice(0, 2000) })
-            .then(() => finish("shared"))
-            .catch((err: unknown) => {
-              if (err instanceof Error && err.name === "AbortError") {
-                finish("cancelled");
-                return;
-              }
-              startRouteShare(url, stopN, finish);
-            });
-          return;
-        }
-      } catch {
-        /* fall through to URL share */
-      }
-      startRouteShare(url, stopN, finish);
-      return;
-    }
-
-    startRouteShare(url, stopN, finish);
+    shareRouteFromDialog({ url, stopCount: stopN, filename, fullText }, finish);
   }
 
   return (
