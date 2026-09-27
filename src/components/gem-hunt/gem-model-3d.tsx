@@ -314,7 +314,9 @@ export function GemModel3D({
             pivot.rotation.z = 0;
             pivot.scale.setScalar(1);
             pivot.position.y = Math.sin(t * 2.8 + phase * 0.4) * 0.07;
-            orbit.autoRotate = true;
+            const worldLocked =
+              worldYawRef.current != null && Number.isFinite(worldYawRef.current);
+            orbit.autoRotate = !worldLocked;
             orbit.update();
           }
         }

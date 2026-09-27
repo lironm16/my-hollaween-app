@@ -203,19 +203,26 @@ export function GemHuntOverlay({
       ? { lat: effectiveLoc.lat, lng: effectiveLoc.lng, accuracy: effectiveLoc.accuracy ?? 12 }
       : null);
 
+  /** Freshest GPS for AR pin — keeps the gem on the sidewalk anchor, not on the user. */
+  const placementLoc = walkViewer ?? effectiveLoc;
+
   const worldYawRad = useMemo(() => {
     if (!walkViewer || sim) return null;
     return gemWorldYawRad(anchor, walkViewer);
   }, [anchor.lat, anchor.lng, walkViewer?.lat, walkViewer?.lng, sim]);
 
   const pinPlacement = useMemo(() => {
-    if (!effectiveLoc) return null;
-    return gemScreenPlacement(effectiveLoc, anchor, heading, devicePitch);
-  }, [anchor, effectiveLoc, heading, devicePitch]);
+    if (!placementLoc) return null;
+    return gemScreenPlacement(placementLoc, anchor, heading, devicePitch);
+  }, [anchor, placementLoc, heading, devicePitch]);
   const pinDisplay = useMemo(() => {
-    if (phase === "visible" && !centerReveal) return pinPlacement;
+    if (centerReveal) return gemPlacementDisplaySnap(pinPlacement);
+    if (phase === "visible") return pinPlacement;
     return gemPlacementDisplaySnap(pinPlacement);
   }, [pinPlacement, phase, centerReveal]);
+
+  const inHuntRange =
+    sim || distanceM == null || distanceM <= GEM_HUNT_METERS;
 
   const reveal = useCallback(() => {
     if (revealedRef.current) return;
@@ -242,6 +249,15 @@ export function GemHuntOverlay({
       collectFinishRef.current = null;
     }
   }, [house.id]);
+
+  useEffect(() => {
+    if (sim || distanceM == null || phase === "collecting" || phase === "albumReveal") return;
+    if (distanceM <= GEM_HUNT_METERS) return;
+    revealedRef.current = false;
+    setCenterReveal(false);
+    setPhase("scanning");
+    setHint("scan");
+  }, [distanceM, phase, sim]);
 
   useEffect(() => {
     beginMapListOverlayCapture();
@@ -353,9 +369,7 @@ export function GemHuntOverlay({
       !centerReveal &&
       collectEnabled &&
       Boolean(pinPlacement && gemInScanRing(pinPlacement));
-    const viaArReveal =
-      !centerReveal && collectEnabled && arPinGuideMode && phase === "visible";
-    if (!viaTellMe && !viaPinned && !viaArReveal) return;
+    if (!viaTellMe && !viaPinned) return;
     setPhase("collecting");
     setHint("found");
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -447,7 +461,10 @@ export function GemHuntOverlay({
   const pinCollectReady = arPinGuideMode && collectEnabled && gemInRing;
   /** Show centered gem after reveal even before «stand still» — tap only when collectEnabled. */
   const arPinRevealedGem =
-    arPinGuideMode && (phase === "visible" || phase === "collecting");
+    arPinGuideMode &&
+    inHuntRange &&
+    (phase === "visible" || phase === "collecting");
+  const worldLockRevealed = arPinRevealedGem && !centerReveal;
   const arPinTapCollect = arPinRevealedGem && collectEnabled;
   const ringReady = centerDisplayMode || pinCollectReady;
   const isFarForHints =
@@ -600,11 +617,21 @@ export function GemHuntOverlay({
         {arPinRevealedGem ? (
           <div
             className={cn(
-              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-pin-collect is-revealed is-inspect360 is-ring-center",
+              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-pin-collect is-revealed is-inspect360",
+              centerReveal && "is-ring-center",
+              worldLockRevealed && pinPlacement && !pinPlacement.inView && "is-off-screen",
               phase === "collecting" && "is-collecting",
               pinCollectReady && "is-ring-ready",
               !collectEnabled && phase === "visible" && "is-awaiting-still",
             )}
+            style={
+              centerReveal || !pinDisplay
+                ? undefined
+                : {
+                    left: `${pinDisplay.xPercent}%`,
+                    top: `${pinDisplay.yPercent}%`,
+                  }
+            }
           >
             <div
               className={cn(
