@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { AdminGemOpsPanel } from "@/components/admin-gem-ops-panel";
@@ -42,7 +43,15 @@ export default function AdminGemsPage() {
       <AppHeader />
       <main className="relative z-10 flex min-h-0 flex-1 flex-col px-4 py-3">
         <div className="mx-auto flex w-full max-w-lg min-h-0 flex-1 flex-col gap-2">
-          <h1 className="shrink-0 font-display text-xl text-orange-300">יהלומים — מנהל</h1>
+          <div className="flex shrink-0 items-center justify-between gap-2">
+            <h1 className="font-display text-xl text-orange-300">יהלומים — מנהל</h1>
+            <Link
+              href="/admin/gem-lab"
+              className="text-sm text-violet-300 underline-offset-2 hover:text-violet-100 hover:underline"
+            >
+              מעבדת יהלומים
+            </Link>
+          </div>
           <AdminGemOpsPanel houses={houses} />
         </div>
       </main>
