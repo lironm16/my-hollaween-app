@@ -589,7 +589,7 @@ export function GemHuntOverlay({
               className="gem-hunt-overlay__scan-rose gem-hunt-direction-rose--ring"
             />
           ) : null}
-          {centerDisplayMode && canTapCollect && phase !== "collecting" ? (
+          {centerDisplayMode && canTapCollect ? (
             <p className="gem-hunt-overlay__ring-collect-hint">לחיצה על הדמות לאיסוף</p>
           ) : null}
           <div
