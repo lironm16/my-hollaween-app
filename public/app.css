@@ -8757,6 +8757,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  overflow: visible;
 }
 .gem-hunt-overlay__video {
   position: absolute;
@@ -9323,6 +9324,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   cursor: pointer;
   pointer-events: auto;
   -webkit-tap-highlight-color: transparent;
+  overflow: visible;
 }
 .gem-hunt-overlay__gem-hit.is-pinned {
   transition: left 0.1s linear,
@@ -11478,8 +11480,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   cursor: grab;
 }
 .gem-hunt-overlay__gem-hit.is-inspect360 .gem-hunt-overlay__gem-dance {
-  width: min(62vw, 17rem);
-  height: min(62vw, 17rem);
+  width: min(72vw, 19rem);
+  height: min(72vw, 19rem);
+  overflow: visible;
 }
 .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 .gem-hunt-overlay__gem-dance {
   width: min(72vw, 19rem);
@@ -11489,6 +11492,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__gem-hit.is-inspect360 canvas {
   pointer-events: auto;
   touch-action: none;
+  overflow: visible;
+}
+.gem-hunt-overlay__gem-hit.is-inspect360 .gem-model-3d {
+  overflow: visible;
 }
 .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 .gem-model-3d,
 .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 canvas {

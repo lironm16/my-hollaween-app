@@ -211,11 +211,18 @@ export function GemModel3D({
         });
 
         pivot.add(model);
-        if (controls === "inspect360") {
-          pivot.position.x += 0.38;
-        }
         if (controls === "turntable" || controls === "walkaround" || controls === "inspect360") {
-          fitCameraToPivot(camera, pivot, size === "sm" ? 1.45 : size === "fill" ? 1.28 : 1.32);
+          const pad =
+            controls === "inspect360"
+              ? size === "fill"
+                ? 1.78
+                : 1.62
+              : size === "sm"
+                ? 1.45
+                : size === "fill"
+                  ? 1.28
+                  : 1.32;
+          fitCameraToPivot(camera, pivot, pad);
         } else {
           orbit?.update();
         }

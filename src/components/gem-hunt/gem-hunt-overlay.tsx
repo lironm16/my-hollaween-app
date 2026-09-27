@@ -222,6 +222,7 @@ export function GemHuntOverlay({
     revealedRef.current = true;
     setPhase("visible");
     setHint("found");
+    setHintPanel(null);
   }, []);
 
   useEffect(() => {
