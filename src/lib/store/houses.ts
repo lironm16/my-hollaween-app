@@ -4,6 +4,7 @@ import { normalizePoiCategory } from "@/lib/house-kind";
 import { normalizeAddressFields } from "@/lib/address-fields";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { assertRealAddress } from "@/lib/geocode";
+import { alignPublicHouseCoords } from "@/lib/house-footprint-align";
 import {
   defaultTreatStock,
   isHouseDeleted,
@@ -122,8 +123,15 @@ export async function submitHouse(
       lat: input.lat,
       lng: input.lng,
     });
+    const positioned = alignPublicHouseCoords({
+      address: addressFields.address,
+      lat: input.lat,
+      lng: input.lng,
+    });
     const house: House = {
       ...input,
+      lat: positioned.lat,
+      lng: positioned.lng,
       kind,
       poiCategory,
       address: addressFields.address,
@@ -249,6 +257,9 @@ function applyOwnerPatch(house: House, patch: Partial<HouseInput> & NightPatch) 
   house.decorated = decor.decorated;
   house.updatedAt = new Date().toISOString();
   house.soldOut = house.visit === "closed";
+  const aligned = alignPublicHouseCoords(house);
+  house.lat = aligned.lat;
+  house.lng = aligned.lng;
 }
 
 function snapshotHouse(house: House): House {
@@ -434,6 +445,9 @@ export async function adminUpdate(
       house.soldOut = patch.soldOut;
       house.visit = patch.soldOut ? "closed" : house.visit === "closed" ? "come" : house.visit;
     }
+    const aligned = alignPublicHouseCoords(house);
+    house.lat = aligned.lat;
+    house.lng = aligned.lng;
     house.updatedAt = new Date().toISOString();
     db.updatedAt = house.updatedAt;
     return house;

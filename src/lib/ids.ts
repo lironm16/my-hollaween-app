@@ -1,4 +1,5 @@
 import { customAlphabet } from "nanoid";
+import { alignPublicHouseCoords } from "@/lib/house-footprint-align";
 
 const digits = customAlphabet("0123456789", 4);
 const pin = customAlphabet("0123456789", 6);
@@ -59,9 +60,18 @@ export function resolveHouseIdFromPath(raw: string): string {
   return segment;
 }
 
-export function toPublicHouse<T extends { editCode?: string; storeId?: string }>(house: T) {
+export function toPublicHouse<
+  T extends { editCode?: string; storeId?: string; address?: string; lat?: number; lng?: number },
+>(house: T) {
   const rest = { ...house };
   delete rest.editCode;
   delete rest.storeId;
+  if (
+    typeof rest.address === "string" &&
+    typeof rest.lat === "number" &&
+    typeof rest.lng === "number"
+  ) {
+    return alignPublicHouseCoords(rest) as Omit<T, "editCode" | "storeId">;
+  }
   return rest as Omit<T, "editCode" | "storeId">;
 }
