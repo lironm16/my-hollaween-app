@@ -180,6 +180,8 @@ export function NeighborhoodApp({
   const [mapGemCheerMonster, setMapGemCheerMonster] = useState<GemMonsterId | null>(null);
   const mapGemCheerTimerRef = useRef<number | null>(null);
   const gemHuntOpenedFromViewRef = useRef<HomeView>("map");
+  const listScrollRef = useRef<HTMLDivElement | null>(null);
+  const savedListScrollTopRef = useRef(0);
   const router = useRouter();
   const mapGemUserLoc = mapGemGps ?? gps;
   const mapGemStanding = useStandingStill(mapGemUserLoc, gemHuntActive && Boolean(mapGemHouse));
@@ -870,6 +872,10 @@ export function NeighborhoodApp({
     exitRouteMode();
     editFlow.close();
     selection.resetForNavigation();
+    if (readHomeView() === "list") {
+      setView("list");
+      selection.closeSelection();
+    }
   }
 
   useEffect(() => {
@@ -971,6 +977,28 @@ export function NeighborhoodApp({
   useLayoutEffect(() => {
     setMapListSuspended(mapListObscured);
   }, [mapListObscured]);
+
+  useEffect(() => {
+    const el = listScrollRef.current;
+    if (!el || view !== "list") return;
+    const onScroll = () => {
+      savedListScrollTopRef.current = el.scrollTop;
+    };
+    onScroll();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [view, routeMode]);
+
+  useLayoutEffect(() => {
+    if (mapListObscured || view !== "list") return;
+    const el = listScrollRef.current;
+    if (!el) return;
+    const y = savedListScrollTopRef.current;
+    el.scrollTop = y;
+    requestAnimationFrame(() => {
+      el.scrollTop = y;
+    });
+  }, [mapListObscured, view, routeMode, visible.length, gems.collectedIds.length]);
 
   const selectedFilterReasons = selected
     ? (() => {
@@ -1296,6 +1324,7 @@ export function NeighborhoodApp({
                 </div>
               ) : null}
             <div
+              ref={listScrollRef}
               id="house-list-skip"
               className={cn(
                 "absolute inset-0 z-10 overflow-y-auto bg-[#12081a]",
