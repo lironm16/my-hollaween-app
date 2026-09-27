@@ -24,6 +24,7 @@ import {
   gemDistanceMeters,
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
+  GEM_STILL_SECONDS,
   GEM_COLLECT_OVERLAY_MS,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
   gemAnchorForHouse,
@@ -434,11 +435,12 @@ export function GemHuntOverlay({
   const hidePinForHints = hintPanel === "nav" && !centerReveal;
   const gemInRing = pinPlacement ? gemInScanRing(pinPlacement) : false;
   const pinCollectReady = arPinGuideMode && collectEnabled && gemInRing;
-  const arPinTapCollect =
+  /** Show centered gem after reveal even before «stand still» — tap only when collectEnabled. */
+  const arPinRevealedGem =
     arPinGuideMode &&
     !hidePinForHints &&
-    collectEnabled &&
     (phase === "visible" || phase === "collecting");
+  const arPinTapCollect = arPinRevealedGem && collectEnabled;
   const ringReady = centerDisplayMode || pinCollectReady;
   const isFarForHints =
     !collectEnabled &&
@@ -587,12 +589,13 @@ export function GemHuntOverlay({
           />
         </div>
 
-        {arPinTapCollect ? (
+        {arPinRevealedGem ? (
           <div
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-pin-collect is-revealed is-inspect360 is-ring-center",
               phase === "collecting" && "is-collecting",
               pinCollectReady && "is-ring-ready",
+              !collectEnabled && phase === "visible" && "is-awaiting-still",
             )}
           >
             <div
@@ -678,6 +681,11 @@ export function GemHuntOverlay({
 
       {centerDisplayMode && canTapCollect && phase === "visible" ? (
         <p className="gem-hunt-overlay__tap-collect-caption">לחיצה על הדמות לאיסוף</p>
+      ) : null}
+      {arPinRevealedGem && !collectEnabled && phase === "visible" && !centerDisplayMode ? (
+        <p className="gem-hunt-overlay__tap-collect-caption" role="status">
+          עמדו {GEM_STILL_SECONDS} שנ׳ בלי לזוז — ואז לחיצה לאיסוף (או «גלה לי»)
+        </p>
       ) : null}
 
       {showHuntUi && phase !== "collecting" ? (
