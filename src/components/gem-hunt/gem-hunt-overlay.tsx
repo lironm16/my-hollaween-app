@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Navigation } from "lucide-react";
 import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
@@ -55,29 +55,6 @@ function panDelta(prev: number | null, next: number) {
   let d = Math.abs(next - prev);
   if (d > 180) d = 360 - d;
   return d;
-}
-
-function useInspectTapCollect(onCollect: () => void, enabled: boolean) {
-  const dragRef = useRef({ x: 0, y: 0, moved: false });
-  return useMemo(
-    () => ({
-      onPointerDown: (event: ReactPointerEvent) => {
-        if (!enabled) return;
-        dragRef.current = { x: event.clientX, y: event.clientY, moved: false };
-      },
-      onPointerMove: (event: ReactPointerEvent) => {
-        if (!enabled) return;
-        const dx = event.clientX - dragRef.current.x;
-        const dy = event.clientY - dragRef.current.y;
-        if (dx * dx + dy * dy > 64) dragRef.current.moved = true;
-      },
-      onPointerUp: () => {
-        if (!enabled || dragRef.current.moved) return;
-        onCollect();
-      },
-    }),
-    [enabled, onCollect],
-  );
 }
 
 async function playCameraOnVideo(video: HTMLVideoElement, stream: MediaStream) {
@@ -201,6 +178,12 @@ export function GemHuntOverlay({
     setHint("found");
     setHintPanel(null);
   }, []);
+
+  /** In range: skip 5s scan wait so footer + «גלה לי» work immediately. */
+  useEffect(() => {
+    if (!allowAutoReveal) return;
+    reveal();
+  }, [allowAutoReveal, house.id, reveal]);
 
   useEffect(() => {
     scanStartRef.current = Date.now();
@@ -375,7 +358,7 @@ export function GemHuntOverlay({
     onCollectRef.current(monsterId, { cheer: false, navigateStickerBook: true });
   }
 
-  function toggleRevealMe() {
+  const toggleRevealMe = useCallback(() => {
     if (centerReveal) {
       setCenterReveal(false);
       return;
@@ -385,7 +368,7 @@ export function GemHuntOverlay({
     setShowHelp(false);
     setHint("found");
     setCenterReveal(true);
-  }
+  }, [centerReveal, reveal]);
 
   const gemVisible = phase === "visible" || phase === "collecting";
   const showHuntUi = phase !== "albumReveal";
@@ -414,8 +397,6 @@ export function GemHuntOverlay({
   const centerDisplayMode = gemVisible && centerReveal;
   /** Real hunt: compass-pinned gem (tap when in view + in range). */
   const arPinGuideMode = gemVisible && !centerReveal;
-  /** Hide off-screen scan pin while nav is open — revealed/collect gem stays visible. */
-  const hideScanPinForNav = hintPanel === "nav" && !centerReveal;
   const pinCollectReady =
     arPinGuideMode && collectEnabled && Boolean(pinPlacement?.inView);
   /** Show centered gem after reveal even before «stand still» — tap only when collectEnabled. */
@@ -470,10 +451,30 @@ export function GemHuntOverlay({
 
   const canTapCollect =
     phase === "visible" && (centerReveal || collectEnabled || pinCollectReady);
-  const inspectTapHandlers = useInspectTapCollect(handleCollect, canTapCollect);
-  const onGemInspectTap = () => {
-    if (canTapCollect) handleCollect();
-  };
+
+  const renderCollectGem = (extraClass?: string) => (
+    <div
+      className={cn("gem-hunt-overlay__gem-tap-target", extraClass)}
+      role="button"
+      tabIndex={canTapCollect ? 0 : -1}
+      aria-disabled={!canTapCollect}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (canTapCollect) handleCollect();
+      }}
+    >
+      <GemSprite
+        house={house}
+        mode="3d"
+        size="fill"
+        tapCollect
+        spinWhileCollect={false}
+        worldYawRad={worldYawRad}
+        motion={phase === "collecting" ? "celebrate" : "idle"}
+        celebrateVariant={collectDanceIndex}
+      />
+    </div>
+  );
 
   async function retryCompassPermission() {
     const ok = await requestGemHuntOrientationPermission({ force: true });
@@ -591,48 +592,9 @@ export function GemHuntOverlay({
                 "gem-hunt-overlay__gem-dance",
                 phase === "collecting" && "is-collecting is-collecting-3d",
               )}
-              {...inspectTapHandlers}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (canTapCollect) onGemInspectTap();
-              }}
             >
-              <GemSprite
-                house={house}
-                mode="inspect360"
-                size="fill"
-                tapCollect={false}
-                spinWhileCollect={false}
-                worldYawRad={worldYawRad}
-                motion={phase === "collecting" ? "celebrate" : "idle"}
-                celebrateVariant={collectDanceIndex}
-                onInspectTap={onGemInspectTap}
-              />
+              {renderCollectGem()}
             </div>
-          </div>
-        ) : null}
-
-        {arPinGuideMode && !hideScanPinForNav && phase !== "visible" && showWorldGemSprite ? (
-          <div
-            className={cn(
-              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin",
-              pinPlacement && "is-pinned",
-              pinPlacement && !pinPlacement.inView && "is-off-screen",
-              !pinPlacement && "is-center-fallback",
-            )}
-            style={
-              pinDisplay
-                ? {
-                    left: `${pinDisplay.xPercent}%`,
-                    top: `${pinDisplay.yPercent}%`,
-                  }
-                : undefined
-            }
-            aria-hidden={false}
-            role="img"
-            aria-label={`כיוון היהלום — ${gemLabelHe(monsterId)}`}
-          >
-            <GemSprite house={house} mode="poster" />
           </div>
         ) : null}
       </div>
@@ -654,29 +616,14 @@ export function GemHuntOverlay({
               "gem-hunt-overlay__gem-dance",
               phase === "collecting" && "is-collecting is-collecting-3d",
             )}
-            {...inspectTapHandlers}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (canTapCollect) onGemInspectTap();
-            }}
           >
-            <GemSprite
-              house={house}
-              mode="inspect360"
-              size="fill"
-              tapCollect={false}
-              spinWhileCollect={false}
-              worldYawRad={worldYawRad}
-              motion={phase === "collecting" ? "celebrate" : "idle"}
-              celebrateVariant={collectDanceIndex}
-              onInspectTap={onGemInspectTap}
-            />
+            {renderCollectGem()}
           </div>
         </div>
       ) : null}
 
       {showHuntUi && phase !== "collecting" ? (
-        <footer className="gem-hunt-overlay__footer" dir="rtl">
+        <footer className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt" dir="rtl">
           {showNavCompassPrompt ? (
             <button
               type="button"
@@ -723,6 +670,16 @@ export function GemHuntOverlay({
               </div>
             ) : null}
 
+            {canTapCollect ? (
+              <button
+                type="button"
+                className="gem-hunt-overlay__spin-collect gem-hunt-overlay__spin-collect--footer"
+                onClick={() => handleCollect()}
+              >
+                אסף יהלום
+              </button>
+            ) : null}
+
             <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
             <button
               type="button"
@@ -731,7 +688,10 @@ export function GemHuntOverlay({
                 hintPanel === "nav" && "is-active",
               )}
               aria-pressed={hintPanel === "nav"}
-              onClick={() => void toggleHintPanel()}
+              onClick={(e) => {
+                e.stopPropagation();
+                void toggleHintPanel();
+              }}
             >
               <span className="gem-hunt-overlay__hint-btn-label">
                 <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
@@ -745,9 +705,12 @@ export function GemHuntOverlay({
                 centerReveal && "is-active",
               )}
               aria-pressed={centerReveal}
-              onClick={toggleRevealMe}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleRevealMe();
+              }}
             >
-              גלה לי
+              {centerReveal ? "הסתר" : "גלה לי"}
             </button>
           </div>
           </div>
