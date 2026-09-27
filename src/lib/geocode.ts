@@ -255,7 +255,31 @@ function attachTypedNumber(hit: AddressHit, num: string): AddressHit {
   return { ...hit, road, houseNumber: num, label, precise: hit.precise && already === num };
 }
 
-function uniqueHits(hits: AddressHit[]) {
+/** Nominatim footprint ids (way/node/relation) — Esri hits use synthetic `p-…` ids. */
+export function isOsmMapFootprintHit(hit: Pick<AddressHit, "id">) {
+  return /^(way|node|relation)-\d+$/u.test(hit.id);
+}
+
+function hitQuality(
+  hit: AddressHit,
+  query: string,
+  parsed?: { road: string; num?: string },
+) {
+  let score = 0;
+  if (hit.precise) score += 40;
+  if (parsed?.num && hit.houseNumber === parsed.num) score += 30;
+  if (parsed?.road && hit.road.includes(parsed.road)) score += 15;
+  if (inNeighborhood(hit.lat, hit.lng)) score += 20;
+  const q = query.replace(/\s+/g, "");
+  const label = hit.label.replace(/\s+/g, "");
+  if (label.includes(q)) score += 10;
+  if (parsed?.num && hit.houseNumber === parsed.num && isOsmMapFootprintHit(hit)) {
+    score += 50;
+  }
+  return score;
+}
+
+function uniqueHits(hits: AddressHit[], query: string, parsed?: { road: string; num?: string }) {
   const seen = new Set<string>();
   const out: AddressHit[] = [];
   for (const hit of hits) {
@@ -271,24 +295,40 @@ function uniqueHits(hits: AddressHit[]) {
       bestByLabel.set(hit.label, hit);
       continue;
     }
-    const prefer =
-      Number(hit.precise) - Number(current.precise) ||
-      Number(inNeighborhood(hit.lat, hit.lng)) - Number(inNeighborhood(current.lat, current.lng));
-    if (prefer > 0) bestByLabel.set(hit.label, hit);
+    if (hitQuality(hit, query, parsed) > hitQuality(current, query, parsed)) {
+      bestByLabel.set(hit.label, hit);
+    }
   }
   return [...bestByLabel.values()];
 }
 
 function rank(hit: AddressHit, query: string, parsed?: { road: string; num?: string }) {
-  let score = 0;
-  if (hit.precise) score += 40;
-  if (parsed?.num && hit.houseNumber === parsed.num) score += 30;
-  if (parsed?.road && hit.road.includes(parsed.road)) score += 15;
-  if (inNeighborhood(hit.lat, hit.lng)) score += 20;
-  const q = query.replace(/\s+/g, "");
-  const label = hit.label.replace(/\s+/g, "");
-  if (label.includes(q)) score += 10;
-  return score;
+  return hitQuality(hit, query, parsed);
+}
+
+async function searchNominatim(
+  q: string,
+  parsed: { road: string; num?: string },
+): Promise<AddressHit[]> {
+  const withCity = /רמת\s*גן/.test(q) ? q : `${q} רמת גן`;
+  const params = {
+    format: "jsonv2",
+    q: parsed.num ? `${parsed.num} ${parsed.road} רמת גן` : withCity,
+    countrycodes: "il",
+    viewbox: viewbox(),
+    bounded: "1",
+    addressdetails: "1",
+    limit: "10",
+    "accept-language": "he",
+  };
+  let raw = await nominatim<NominatimHit[]>("search", params);
+  if (!Array.isArray(raw) || raw.length === 0) {
+    raw = await nominatim<NominatimHit[]>("search", { ...params, q: withCity, bounded: "0" });
+  }
+  if (!Array.isArray(raw)) return [];
+  let nom = raw.map(toHit).filter((h): h is AddressHit => Boolean(h));
+  if (parsed.num) nom = nom.map((h) => attachTypedNumber(h, parsed.num as string));
+  return nom;
 }
 
 export async function searchAddress(query: string): Promise<AddressHit[]> {
@@ -303,33 +343,25 @@ export async function searchAddress(query: string): Promise<AddressHit[]> {
     } catch {
       // Keep going with OpenStreetMap if the numbered lookup fails.
     }
-  }
-
-  const hasNumbered = collected.some((h) => h.precise && (!parsed.num || h.houseNumber === parsed.num));
-  if (!hasNumbered) {
-    const withCity = /רמת\s*גן/.test(q) ? q : `${q} רמת גן`;
-    const params = {
-      format: "jsonv2",
-      q: parsed.num ? `${parsed.num} ${parsed.road} רמת גן` : withCity,
-      countrycodes: "il",
-      viewbox: viewbox(),
-      bounded: "1",
-      addressdetails: "1",
-      limit: "10",
-      "accept-language": "he",
-    };
-    let raw = await nominatim<NominatimHit[]>("search", params);
-    if (!Array.isArray(raw) || raw.length === 0) {
-      raw = await nominatim<NominatimHit[]>("search", { ...params, q: withCity, bounded: "0" });
+    try {
+      collected.push(...(await searchNominatim(q, parsed)));
+    } catch {
+      // Esri-only results remain when Nominatim is down.
     }
-    if (Array.isArray(raw)) {
-      let nom = raw.map(toHit).filter((h): h is AddressHit => Boolean(h));
-      if (parsed.num) nom = nom.map((h) => attachTypedNumber(h, parsed.num as string));
-      collected.push(...nom);
+  } else {
+    const hasNumbered = collected.some(
+      (h) => h.precise && (!parsed.num || h.houseNumber === parsed.num),
+    );
+    if (!hasNumbered) {
+      try {
+        collected.push(...(await searchNominatim(q, parsed)));
+      } catch {
+        // No hits when both providers fail.
+      }
     }
   }
 
-  const hits = uniqueHits(collected).map((hit) => {
+  const hits = uniqueHits(collected, q, parsed).map((hit) => {
     const fromLabel = parseStreetAndNumber(hit.label).num;
     if (fromLabel && !hit.houseNumber) return { ...hit, houseNumber: fromLabel };
     return hit;
