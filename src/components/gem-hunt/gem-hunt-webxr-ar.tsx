@@ -16,7 +16,6 @@ import {
   bearingDegrees,
   gemAnchorForHouse,
   gemDistanceMeters,
-  gemLabelHe,
   gemMonsterForHouse,
   GEM_HUNT_METERS,
   relativeWalkBearingDeg,
@@ -26,7 +25,7 @@ import { requestGemHuntWebXrSession } from "@/lib/gem-hunt-webxr-init";
 import { requestGemHuntOrientationPermission } from "@/lib/gem-hunt-sensors";
 import { gemWalkGuideCopy } from "@/lib/gem-hunt-walk-guide";
 import { formatDistance } from "@/lib/geo";
-import { gemMonsterMeta, gemMonsterTint, gemSpeciesLabelHe, type GemMonsterId } from "@/lib/gem-monsters";
+import { gemMonsterMeta, gemMonsterTint, type GemMonsterId } from "@/lib/gem-monsters";
 import { gemCollectDanceIndex } from "@/lib/gem-collect-dance";
 import { googleMapsNavigateUrl } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
@@ -89,8 +88,6 @@ export function GemHuntWebXrAr({
 }: Props) {
   const monsterId = gemMonsterForHouse(house);
   const meta = gemMonsterMeta(monsterId);
-  const petName = gemLabelHe(monsterId);
-  const speciesHe = gemSpeciesLabelHe(monsterId);
   const danceIndex = gemCollectDanceIndex(house.id, monsterId);
   const { overrides: anchorOverrides } = useGemAnchorOverrides();
   const anchor = useMemo(
@@ -98,6 +95,7 @@ export function GemHuntWebXrAr({
     [house.id, house.lat, house.lng, anchorOverrides],
   );
   const [hintPanel, setHintPanel] = useState<null | "nav">(null);
+  const [revealAssist, setRevealAssist] = useState(false);
   const [compassRetry, setCompassRetry] = useState(0);
   const { heading } = useDeviceHeading(true, compassRetry);
   const placeAssistRef = useRef({ forceOnce: false, fast: false });
@@ -114,8 +112,6 @@ export function GemHuntWebXrAr({
   const [showManualStart, setShowManualStart] = useState(false);
   const [phase, setPhase] = useState<HuntPhase>("boot");
   const [placed, setPlaced] = useState(false);
-  const [hint, setHint] = useState("מכוונים למדרכה — הדמות תופיע אוטומטית");
-
   const onCollectRef = useRef(onCollect);
   onCollectRef.current = onCollect;
 
@@ -144,6 +140,11 @@ export function GemHuntWebXrAr({
       onCollectRef.current(monsterId, { cheer: true });
     }, GEM_COLLECT_OVERLAY_MS);
   }, [canCollect, monsterId, phase]);
+
+  const canCollectRef = useRef(canCollect);
+  canCollectRef.current = canCollect;
+  const handleCollectRef = useRef(handleCollect);
+  handleCollectRef.current = handleCollect;
 
   useEffect(() => {
     if (error && onFallbackCamera) onFallbackCamera();
@@ -186,15 +187,19 @@ export function GemHuntWebXrAr({
   }, [hintPanel]);
 
   const onRevealAssist = useCallback(() => {
-    if (placed || phase === "collecting") {
-      setHint(`${petName} כבר במרחב — סובבו מסביב`);
+    if (phase === "collecting") return;
+    if (revealAssist) {
+      placeAssistRef.current.forceOnce = false;
+      placeAssistRef.current.fast = false;
+      setRevealAssist(false);
       return;
     }
+    if (placed) return;
     setHintPanel(null);
     placeAssistRef.current.forceOnce = true;
     placeAssistRef.current.fast = true;
-    setHint(`מחפשים משטח ל${petName} — כוונו למדרכה`);
-  }, [placed, phase, petName]);
+    setRevealAssist(true);
+  }, [placed, phase, revealAssist]);
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -314,11 +319,15 @@ export function GemHuntWebXrAr({
       reticle.visible = false;
       setPlaced(true);
       setPhase("placed");
-      setHint(useFloat ? "הלכו מסביב — הדמות באוויר" : "הלכו מסביב — הדמות על המדרכה");
+      setRevealAssist(false);
     };
 
     const onSelect = () => {
       if (collectingRef.current) return;
+      if (isPlaced) {
+        if (canCollectRef.current) handleCollectRef.current();
+        return;
+      }
       placeFromReticle();
     };
 
@@ -334,7 +343,7 @@ export function GemHuntWebXrAr({
       renderer.setAnimationLoop(null);
       setPlaced(false);
       setPhase("boot");
-      setHint("מכוונים למדרכה — הדמות תופיע אוטומטית");
+      setRevealAssist(false);
     };
 
     const attachSession = async (session: XRSession) => {
@@ -380,7 +389,6 @@ export function GemHuntWebXrAr({
               assist.fast = false;
             } else if (stableHitFrames === 8) {
               setPhase("placing");
-              setHint("מזהים משטח…");
             }
           }
         } else if (!isPlaced) {
@@ -467,13 +475,7 @@ export function GemHuntWebXrAr({
 
   const overlay = (
     <div ref={rootRef} className={cn("gem-hunt-webxr", phase === "collecting" && "is-collecting")} dir="rtl">
-      <header className="gem-hunt-webxr__bar" dir="ltr">
-        <div className="gem-hunt-webxr__bar-text" dir="rtl">
-          <p className="gem-hunt-webxr__title">{petName}</p>
-          <p className="gem-hunt-webxr__kicker">
-            {speciesHe} · AR במרחב
-          </p>
-        </div>
+      <header className="gem-hunt-webxr__bar gem-hunt-webxr__bar--close-only" dir="ltr">
         <OverlayCloseButton label="סגירה" onClick={onClose} className="gem-hunt-webxr__close-btn" />
       </header>
 
@@ -526,21 +528,7 @@ export function GemHuntWebXrAr({
                   </a>
                 ) : null}
               </div>
-            ) : (
-              <>
-                <p className="gem-hunt-webxr__hint" role="status">
-                  {hint}
-                  {distanceM != null ? ` · ~${Math.round(distanceM)} מ׳` : null}
-                </p>
-                {!placed ? (
-                  <p className="gem-hunt-webxr__subhint">
-                    כוונו את המצלמה למדרכה. הקישו על המסך או «גלה לי» להנחת {petName}.
-                  </p>
-                ) : (
-                  <p className="gem-hunt-webxr__subhint">סובבו את הגוף והטלפון — כמו חפץ אמיתי במרחב.</p>
-                )}
-              </>
-            )}
+            ) : null}
 
             {phase !== "collecting" ? (
               <div className="gem-hunt-webxr__hint-actions gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
@@ -560,30 +548,17 @@ export function GemHuntWebXrAr({
                 </button>
                 <button
                   type="button"
-                  className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact"
+                  className={cn(
+                    "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
+                    revealAssist && "is-active",
+                  )}
+                  aria-pressed={revealAssist}
                   onClick={onRevealAssist}
                 >
                   גלה לי
                 </button>
               </div>
             ) : null}
-
-            <div className="gem-hunt-webxr__actions">
-              {canCollect ? (
-                <button
-                  type="button"
-                  className="gem-hunt-webxr__collect"
-                  onClick={handleCollect}
-                  disabled={phase === "collecting"}
-                >
-                  {phase === "collecting" ? "אוספים…" : `אספו את ${petName}!`}
-                </button>
-              ) : placed && !inCollectBand ? (
-                <p className="gem-hunt-webxr__range-warn">
-                  התקרבו ל־{GEM_HUNT_METERS} מ׳ ליהלום כדי לאסוף · AR ומצלמה משתמשים באותו GPS
-                </p>
-              ) : null}
-            </div>
           </>
         )}
       </footer>

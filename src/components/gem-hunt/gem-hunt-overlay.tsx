@@ -29,7 +29,6 @@ import {
   gemAnchorForHouse,
   gemLabelHe,
   gemMonsterForHouse,
-  gemSpeciesLabelHe,
   gemScreenPlacement,
   relativeWalkBearingDeg,
   type GemMonsterId,
@@ -382,7 +381,7 @@ export function GemHuntOverlay({
       return;
     }
     setHintPanel(null);
-    reveal();
+    if (!revealedRef.current) reveal();
     setShowHelp(false);
     setHint("found");
     setCenterReveal(true);
@@ -463,18 +462,6 @@ export function GemHuntOverlay({
   const showCompassEnable =
     huntArrowMapNorth &&
     (headingStatus === "denied" || headingStatus === "unsupported");
-  const gemPetName = gemLabelHe(monsterId);
-  const gemSpeciesHe = gemSpeciesLabelHe(monsterId);
-  const huntStatusHint =
-    hintPanel === "nav"
-      ? null
-      : phase === "scanning"
-        ? "סובבו לאט — מחפשים את היהלום"
-        : pinCollectReady
-          ? `רואים את ${gemPetName} — לחיצה לאיסוף`
-          : phase === "visible"
-            ? "כוונו את המצלמה ליהלום או «גלה לי»"
-            : null;
   const showNavCompassPrompt =
     hintPanel === "nav" &&
     !centerReveal &&
@@ -545,13 +532,7 @@ export function GemHuntOverlay({
           {collectBanner}
         </p>
       ) : null}
-      <header className="gem-hunt-overlay__header gem-hunt-overlay__header--title" dir="ltr">
-        <div className="gem-hunt-overlay__header-text" dir="rtl">
-          <p className="gem-hunt-overlay__title gem-hunt-overlay__title--hero">{gemPetName}</p>
-          <p className="gem-hunt-overlay__badge">
-            {gemSpeciesHe} · מצלמה + מיקום
-          </p>
-        </div>
+      <header className="gem-hunt-overlay__header gem-hunt-overlay__header--close-only" dir="ltr">
         <OverlayCloseButton
           label="סגירה"
           onClick={handleClose}
@@ -569,7 +550,13 @@ export function GemHuntOverlay({
       ) : null}
 
       {showHuntUi ? (
-      <div className="gem-hunt-overlay__stage" aria-hidden={false}>
+      <div
+        className={cn(
+          "gem-hunt-overlay__stage",
+          (arPinRevealedGem || centerDisplayMode) && "is-gem-interactive",
+        )}
+        aria-hidden={false}
+      >
         {showDirectionRose ? (
           <div className="gem-hunt-overlay__nav-layer" aria-hidden>
             <GemHuntDirectionRose
@@ -605,6 +592,10 @@ export function GemHuntOverlay({
                 phase === "collecting" && "is-collecting is-collecting-3d",
               )}
               {...inspectTapHandlers}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (canTapCollect) onGemInspectTap();
+              }}
             >
               <GemSprite
                 house={house}
@@ -664,6 +655,10 @@ export function GemHuntOverlay({
               phase === "collecting" && "is-collecting is-collecting-3d",
             )}
             {...inspectTapHandlers}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (canTapCollect) onGemInspectTap();
+            }}
           >
             <GemSprite
               house={house}
@@ -680,10 +675,6 @@ export function GemHuntOverlay({
         </div>
       ) : null}
 
-      {centerDisplayMode && canTapCollect && phase === "visible" ? (
-        <p className="gem-hunt-overlay__tap-collect-caption">לחיצה על הדמות לאיסוף</p>
-      ) : null}
-
       {showHuntUi && phase !== "collecting" ? (
         <footer className="gem-hunt-overlay__footer" dir="rtl">
           {showNavCompassPrompt ? (
@@ -697,12 +688,6 @@ export function GemHuntOverlay({
           ) : null}
 
           <div className="gem-hunt-overlay__footer-stack">
-            {huntStatusHint ? (
-              <p className="gem-hunt-overlay__status-hint" role="status">
-                {huntStatusHint}
-                {distanceM != null && hintPanel !== "nav" ? ` · ~${Math.round(distanceM)} מ׳` : null}
-              </p>
-            ) : null}
             {hintPanel === "nav" ? (
               <div
                 className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
@@ -725,11 +710,6 @@ export function GemHuntOverlay({
                   {walkGuideCopy}
                   {distanceM != null ? ` · ${formatDistance(distanceM)}` : null}
                 </p>
-                {distanceM != null && distanceM <= 8 ? (
-                  <p className="gem-hunt-overlay__walk-text gem-hunt-overlay__walk-ground">
-                    היהלום על המדרכה (גובה רגליים) — הטילו את הטלפון מעט למטה. אם עדיין לא רואים: «גלה לי» למטה.
-                  </p>
-                ) : null}
                 {mapsWalkUrl ? (
                   <a
                     href={mapsWalkUrl}

@@ -127,7 +127,7 @@ export function GemModel3D({
       const onMove = (event: PointerEvent) => {
         const dx = event.clientX - startX;
         const dy = event.clientY - startY;
-        if (dx * dx + dy * dy > 64) moved = true;
+        if (dx * dx + dy * dy > 196) moved = true;
       };
       const onUp = () => {
         if (!moved) onInspectTapRef.current?.();

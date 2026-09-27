@@ -3965,6 +3965,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   pointer-events: none;
   overflow: visible;
 }
+.gem-hunt-overlay__stage.is-gem-interactive {
+  z-index: 9;
+}
 .gem-hunt-overlay__video {
   position: absolute;
   inset: 0;
@@ -4273,6 +4276,11 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__footer-stack {
   position: relative;
   width: min(92vw, 22rem);
+  pointer-events: none;
+}
+.gem-hunt-overlay__footer-stack button,
+.gem-hunt-overlay__footer-stack a {
+  pointer-events: auto;
 }
 .gem-hunt-overlay__hint1-popover {
   position: absolute;
@@ -4526,13 +4534,13 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: max(1.35rem, calc(env(safe-area-inset-bottom, 0px) + 0.65rem));
   z-index: 8;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.35rem 1rem max(0.75rem, env(safe-area-inset-bottom));
+  padding: 0.35rem 1rem 0.35rem;
   pointer-events: none;
 }
 .gem-hunt-overlay__footer > * {
@@ -6400,6 +6408,14 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   z-index: 4;
   pointer-events: auto;
 }
+.gem-hunt-webxr__bar--close-only {
+  justify-content: flex-end;
+  background: transparent;
+  pointer-events: none;
+}
+.gem-hunt-webxr__bar--close-only .gem-hunt-webxr__close-btn {
+  pointer-events: auto;
+}
 .gem-hunt-webxr__bar-text {
   min-width: 0;
   flex: 1;
@@ -6503,7 +6519,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-webxr__footer {
   z-index: 4;
   pointer-events: auto;
-  padding: 0.65rem max(0.85rem, env(safe-area-inset-right, 0px)) max(1rem, env(safe-area-inset-bottom, 0px))
+  margin-bottom: max(1.35rem, calc(env(safe-area-inset-bottom, 0px) + 0.65rem));
+  padding: 0.65rem max(0.85rem, env(safe-area-inset-right, 0px)) 0.45rem
     max(0.85rem, env(safe-area-inset-left, 0px));
   background: linear-gradient(to top, rgb(8 4 16 / 0.92), rgb(8 4 16 / 0.55));
 }
