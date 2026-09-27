@@ -4556,9 +4556,14 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   z-index: 11;
   touch-action: manipulation;
 }
-.gem-hunt-overlay__gem-hit.is-center-collect .gem-model-3d,
-.gem-hunt-overlay__gem-hit.is-center-collect canvas {
+.gem-hunt-overlay__gem-hit.is-center-collect:not(.is-inspect360) .gem-model-3d,
+.gem-hunt-overlay__gem-hit.is-center-collect:not(.is-inspect360) canvas {
   pointer-events: none;
+}
+.gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 .gem-model-3d,
+.gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 canvas {
+  pointer-events: auto;
+  touch-action: none;
 }
 .gem-hunt-overlay__gem-hit.is-center-collect .gem-hunt-overlay__gem-dance,
 .gem-hunt-overlay__gem-hit.is-center-collect .gem-sprite--hunt {
@@ -6371,7 +6376,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__gem-hit.is-inspect360.is-center-collect {
   left: 50%;
   top: 42%;
-  transform: translate(calc(-50% + 0.65rem), -50%);
+  transform: translate(calc(-50% + 4%), -50%);
 }
 .gem-hunt-overlay__gem-hit.is-inspect360 .gem-hunt-overlay__gem-dance {
   touch-action: manipulation;

@@ -37,8 +37,7 @@ import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { appVersionLabel } from "@/lib/app-version";
 import {
   buildRouteShareUrl,
-  shareRouteUrl,
-  sharedRoutePayloadFromRoute,
+  startRouteShare,
 } from "@/lib/route-share";
 import type { WalkingRoute } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
@@ -88,18 +87,22 @@ export function AppHeader({
   function shareRouteFromMenu() {
     if (!routeMenu) return;
     const route = routeMenu.activeRoute;
-    if (!route || route.stops.length === 0) {
-      toast.message("אין עצירות במסלול — הוסיפו בתים למסלול ונסו שוב");
+    const stopIds =
+      route && route.stops.length > 0
+        ? route.stops.map((stop) => stop.house.id)
+        : routeMenu.houses.map((house) => house.id);
+    if (stopIds.length === 0) {
+      toast.message("אין בתים לשתף — הוסיפו בתים למסלול ונסו שוב");
       closeMenu();
       return;
     }
-    const url = buildRouteShareUrl(
-      sharedRoutePayloadFromRoute(route),
-      window.location.origin,
-    );
-    const stopCount = route.stops.length;
-    void (async () => {
-      const outcome = await shareRouteUrl(url, stopCount);
+    const payload = { v: 1 as const, stopIds };
+    const url = buildRouteShareUrl(payload, window.location.origin);
+    const stopCount = stopIds.length;
+
+    toast.message("פותחים שיתוף…", { duration: 1500 });
+
+    startRouteShare(url, stopCount, (outcome) => {
       closeMenu();
       if (outcome === "shared") {
         toast.success("שיתוף המסלול נשלח");
@@ -112,7 +115,7 @@ export function AppHeader({
       if (outcome === "cancelled") return;
       toast.error("לא הצלחנו לשתף — נסו שוב");
       toast.message(url, { closeButton: true, duration: 20_000 });
-    })();
+    });
   }
 
   const houseSubLinkClass = cn(

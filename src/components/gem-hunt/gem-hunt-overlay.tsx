@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as
 import { createPortal } from "react-dom";
 import { Navigation } from "lucide-react";
 import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
-import { GemOrbitStage } from "@/components/gem-hunt/gem-orbit-stage";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
@@ -178,7 +177,7 @@ export function GemHuntOverlay({
   const [phase, setPhase] = useState<HuntPhase>("scanning");
   const [hint, setHint] = useState<"scan" | "warm" | "found" | "help">("scan");
   const [showHelp, setShowHelp] = useState(false);
-  const [hintPanel, setHintPanel] = useState<null | "character" | "nav">(null);
+  const [hintPanel, setHintPanel] = useState<null | "nav">(null);
   /** User chose «גלה לי» — centered gem on the camera (not orbit hint box). */
   const [centerReveal, setCenterReveal] = useState(false);
   const scanStartRef = useRef(Date.now());
@@ -432,8 +431,8 @@ export function GemHuntOverlay({
   const centerDisplayMode = gemVisible && centerReveal;
   /** Real hunt: compass-pinned gem (tap when in view + in range). */
   const arPinGuideMode = gemVisible && !centerReveal;
-  /** Hide AR pin while «מי מסתתר» popover is open — nav hint keeps the gem visible in the ring. */
-  const hidePinForHints = hintPanel === "character" && !centerReveal;
+  /** Hide AR pin while nav hint popover is open. */
+  const hidePinForHints = hintPanel === "nav" && !centerReveal;
   const gemInRing = pinPlacement ? gemInScanRing(pinPlacement) : false;
   const pinCollectReady = arPinGuideMode && collectEnabled && gemInRing;
   const arPinTapCollect =
@@ -464,8 +463,6 @@ export function GemHuntOverlay({
     effectiveLoc != null &&
     userLocation != null &&
     !sim;
-  const showNavWalkGuide =
-    hintPanel === "nav" && userLocation != null && effectiveLoc != null && !sim;
   const mapsWalkUrl =
     userLocation != null && !sim
       ? googleMapsNavigateUrl(userLocation, { lat: anchor.lat, lng: anchor.lng })
@@ -498,21 +495,16 @@ export function GemHuntOverlay({
     if (ok) setCompassRetry((n) => n + 1);
   }
 
-  const toggleHintPanel = useCallback(
-    async (panel: "character" | "nav") => {
-      if (hintPanel === panel) {
-        setHintPanel(null);
-        return;
-      }
-      setCenterReveal(false);
-      if (panel === "nav") {
-        const ok = await requestGemHuntOrientationPermission({ force: true });
-        if (ok) setCompassRetry((n) => n + 1);
-      }
-      setHintPanel(panel);
-    },
-    [hintPanel],
-  );
+  const toggleHintPanel = useCallback(async () => {
+    if (hintPanel === "nav") {
+      setHintPanel(null);
+      return;
+    }
+    setCenterReveal(false);
+    const ok = await requestGemHuntOrientationPermission({ force: true });
+    if (ok) setCompassRetry((n) => n + 1);
+    setHintPanel("nav");
+  }, [hintPanel]);
 
   function retryCamera() {
     setCameraError(null);
@@ -738,14 +730,7 @@ export function GemHuntOverlay({
                 הדמות מסתובבת 360° — גררו עליה · הלכו מסביב · לחצו «אסף» כשמוכנים
               </p>
             ) : null}
-            {hintPanel === "character" ? (
-              <div className="gem-hunt-overlay__hint1-popover">
-                <p className="gem-hunt-overlay__hint1-popover-title">{gemPetName}</p>
-                <GemOrbitStage house={house} stageClassName="gem-hunt-overlay__hint1-orbit" />
-              </div>
-            ) : null}
-
-            {showNavWalkGuide ? (
+            {hintPanel === "nav" ? (
               <div
                 className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
                 role="region"
@@ -785,27 +770,13 @@ export function GemHuntOverlay({
               type="button"
               className={cn(
                 "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
-                hintPanel === "character" && "is-active",
-              )}
-              aria-pressed={hintPanel === "character"}
-              onClick={() => toggleHintPanel("character")}
-            >
-              <span className="gem-hunt-overlay__hint-btn-label">
-                <span className="gem-hunt-overlay__hint-btn-title">רמז 1</span>
-                <span className="gem-hunt-overlay__hint-btn-sub">מי מסתתר</span>
-              </span>
-            </button>
-            <button
-              type="button"
-              className={cn(
-                "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
                 hintPanel === "nav" && "is-active",
               )}
               aria-pressed={hintPanel === "nav"}
-              onClick={() => toggleHintPanel("nav")}
+              onClick={() => void toggleHintPanel()}
             >
               <span className="gem-hunt-overlay__hint-btn-label">
-                <span className="gem-hunt-overlay__hint-btn-title">רמז 2</span>
+                <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
                 <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
               </span>
             </button>

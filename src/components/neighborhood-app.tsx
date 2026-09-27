@@ -907,7 +907,12 @@ export function NeighborhoodApp({
   }
 
   function openOnMap(id: string) {
-    selection.showOnMap(id);
+    const house =
+      houses.find((item) => item.id === id) ??
+      visible.find((item) => item.id === id) ??
+      mapListHouses.find((item) => item.id === id);
+    if (house) selection.selectOnMap(house);
+    else selection.showOnMap(id);
     setView("map");
   }
 
@@ -1178,7 +1183,12 @@ export function NeighborhoodApp({
                   }}
                   onClose={selection.closeSelection}
                   className="h-full w-full"
-                  followSelection={!mapListObscured}
+                  followSelection={Boolean(
+                    view === "map" &&
+                      selection.selected &&
+                      !originPick.originPickActive &&
+                      !mapGemHouse,
+                  )}
                   userLocation={gps}
                   locating={geo.status === "pending" && askedLocation}
                   onLocate={originPick.goToMyLocation}

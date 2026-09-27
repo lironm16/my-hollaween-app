@@ -123,6 +123,30 @@ async function copyPlainText(text: string): Promise<boolean> {
   }
 }
 
+export function startRouteShare(
+  url: string,
+  stopCount: number,
+  onDone: (outcome: ShareUrlOutcome) => void,
+) {
+  const title = "מסלול HallowHood";
+  const text = routeSharePlainText(url, stopCount);
+
+  if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+    navigator
+      .share({ url, title, text: text.slice(0, 2000) })
+      .then(() => onDone("shared"))
+      .catch((err: unknown) => {
+        if (err instanceof Error && err.name === "AbortError") {
+          onDone("cancelled");
+          return;
+        }
+        void shareRouteUrl(url, stopCount).then(onDone);
+      });
+    return;
+  }
+  void shareRouteUrl(url, stopCount).then(onDone);
+}
+
 /**
  * Web Share when available (no canShare gate — it often false-negatives on Android).
  * Falls back to copying message + URL as plain text.
