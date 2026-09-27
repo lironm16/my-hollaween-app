@@ -35,6 +35,11 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { appVersionLabel } from "@/lib/app-version";
+import {
+  buildRouteShareUrl,
+  shareRouteUrl,
+  sharedRoutePayloadFromRoute,
+} from "@/lib/route-share";
 import type { WalkingRoute } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
@@ -78,6 +83,36 @@ export function AppHeader({
   function openRouteExport() {
     setRouteExportOpen(true);
     closeMenu();
+  }
+
+  function shareRouteFromMenu() {
+    if (!routeMenu) return;
+    const route = routeMenu.activeRoute;
+    if (!route || route.stops.length === 0) {
+      toast.message("אין עצירות במסלול — הוסיפו בתים למסלול ונסו שוב");
+      closeMenu();
+      return;
+    }
+    const url = buildRouteShareUrl(
+      sharedRoutePayloadFromRoute(route),
+      window.location.origin,
+    );
+    const stopCount = route.stops.length;
+    void (async () => {
+      const outcome = await shareRouteUrl(url, stopCount);
+      closeMenu();
+      if (outcome === "shared") {
+        toast.success("שיתוף המסלול נשלח");
+        return;
+      }
+      if (outcome === "copied") {
+        toast.success("הקישור הועתק — הדביקו בוואטסאפ / הודעה");
+        return;
+      }
+      if (outcome === "cancelled") return;
+      toast.error("לא הצלחנו לשתף — נסו שוב");
+      toast.message(url, { closeButton: true, duration: 20_000 });
+    })();
   }
 
   const houseSubLinkClass = cn(
@@ -201,6 +236,7 @@ export function AppHeader({
                 activeRoute={routeMenu.activeRoute}
                 onNavigate={closeMenu}
                 onOpenExport={openRouteExport}
+                onShareRoute={shareRouteFromMenu}
               />
             ) : null}
 

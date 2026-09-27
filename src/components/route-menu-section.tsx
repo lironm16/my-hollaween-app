@@ -2,14 +2,6 @@
 
 import { useRef, useState } from "react";
 import { ChevronDown, Route, Save, Share2 } from "lucide-react";
-import { toast } from "sonner";
-import { sharePlainTextFile } from "@/lib/house-csv";
-import {
-  buildRouteShareUrl,
-  routeSharePlainText,
-  shareRouteUrl,
-  sharedRoutePayloadFromRoute,
-} from "@/lib/route-share";
 import { readMenuSectionOpen, writeMenuSectionOpen } from "@/lib/menu-section-state";
 import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
 import type { WalkingRoute } from "@/lib/route";
@@ -26,11 +18,14 @@ export function RouteMenuSection({
   activeRoute,
   onNavigate,
   onOpenExport,
+  onShareRoute,
 }: {
   activeRoute: WalkingRoute | null;
   onNavigate?: () => void;
   /** Parent owns export dialog so it stays mounted when the menu sheet closes. */
   onOpenExport?: () => void;
+  /** Parent runs share (keeps user-gesture + route snapshot). */
+  onShareRoute?: () => void;
 }) {
   const [open, setOpen] = useState(() => readMenuSectionOpen("route", false));
   const activeRouteRef = useRef(activeRoute);
@@ -41,69 +36,8 @@ export function RouteMenuSection({
   }
 
   function shareRoute() {
-    const route = activeRouteRef.current;
-    if (!route || route.stops.length === 0) {
-      toast.message("אין עצירות במסלול — הוסיפו בתים למסלול ונסו שוב");
-      onNavigate?.();
-      return;
-    }
-
-    const url = buildRouteShareUrl(
-      sharedRoutePayloadFromRoute(route),
-      window.location.origin,
-    );
-    const stopCount = route.stops.length;
-    const text = routeSharePlainText(url, stopCount);
-    const day = new Date().toISOString().slice(0, 10);
-    const title = "מסלול HallowHood";
-
-    const finish = () => {
-      onNavigate?.();
-    };
-
-    const runFallback = () => {
-      void (async () => {
-        const fileShared = await sharePlainTextFile(
-          `hallowhood-route-share-${day}.txt`,
-          text,
-          title,
-        );
-        if (fileShared) {
-          toast.success("שיתוף המסלול נשלח");
-          finish();
-          return;
-        }
-        const outcome = await shareRouteUrl(url, stopCount);
-        if (outcome === "shared" || outcome === "copied") {
-          toast.success(
-            outcome === "shared"
-              ? "שיתוף המסלול נשלח"
-              : "הקישור הועתק — הדביקו בוואטסאפ / הודעה",
-          );
-          finish();
-          return;
-        }
-        if (outcome === "cancelled") return;
-        toast.error("לא הצלחנו לשתף — נסו שוב");
-        toast.message(url, { closeButton: true, duration: 20_000 });
-        finish();
-      })();
-    };
-
-    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-      navigator
-        .share({ title, text: text.slice(0, 8000) })
-        .then(() => {
-          toast.success("שיתוף המסלול נשלח");
-          finish();
-        })
-        .catch((err: unknown) => {
-          if (err instanceof Error && err.name === "AbortError") return;
-          runFallback();
-        });
-      return;
-    }
-    runFallback();
+    if (!onShareRoute) return;
+    onShareRoute();
   }
 
   return (

@@ -27,6 +27,8 @@ type Props = {
   motion?: "idle" | "celebrate";
   /** 1–8 — varies celebrate timing (collect dance index). */
   celebrateVariant?: number;
+  /** Short tap on inspect360 canvas (collect). */
+  onInspectTap?: () => void;
 };
 
 function frameModel(object: THREE.Object3D, scaleFactor: number) {
@@ -69,9 +71,12 @@ export function GemModel3D({
   motion = "idle",
   celebrateVariant = 1,
   worldYawRad = null,
+  onInspectTap,
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
+  const onInspectTapRef = useRef(onInspectTap);
+  onInspectTapRef.current = onInspectTap;
   const motionRef = useRef(motion);
   motionRef.current = motion;
   const celebrateVariantRef = useRef(celebrateVariant);
@@ -107,6 +112,37 @@ export function GemModel3D({
     renderer.setSize(width, height);
     renderer.setClearColor(0x000000, 0);
     host.appendChild(renderer.domElement);
+
+    let detachTap: (() => void) | null = null;
+    if (controls === "inspect360") {
+      let startX = 0;
+      let startY = 0;
+      let moved = false;
+      const canvas = renderer.domElement;
+      const onDown = (event: PointerEvent) => {
+        startX = event.clientX;
+        startY = event.clientY;
+        moved = false;
+      };
+      const onMove = (event: PointerEvent) => {
+        const dx = event.clientX - startX;
+        const dy = event.clientY - startY;
+        if (dx * dx + dy * dy > 64) moved = true;
+      };
+      const onUp = () => {
+        if (!moved) onInspectTapRef.current?.();
+      };
+      canvas.addEventListener("pointerdown", onDown);
+      canvas.addEventListener("pointermove", onMove);
+      canvas.addEventListener("pointerup", onUp);
+      canvas.addEventListener("pointercancel", onUp);
+      detachTap = () => {
+        canvas.removeEventListener("pointerdown", onDown);
+        canvas.removeEventListener("pointermove", onMove);
+        canvas.removeEventListener("pointerup", onUp);
+        canvas.removeEventListener("pointercancel", onUp);
+      };
+    }
 
     const ambient = new THREE.AmbientLight(0xffffff, 0.95);
     const key = new THREE.DirectionalLight(0xffe7ba, 1.2);
@@ -175,6 +211,9 @@ export function GemModel3D({
         });
 
         pivot.add(model);
+        if (controls === "inspect360") {
+          pivot.position.x += 0.12;
+        }
         if (controls === "turntable" || controls === "walkaround" || controls === "inspect360") {
           fitCameraToPivot(camera, pivot, size === "sm" ? 1.45 : size === "fill" ? 1.28 : 1.32);
         } else {
@@ -266,6 +305,7 @@ export function GemModel3D({
 
     return () => {
       disposed = true;
+      detachTap?.();
       resizeObserver?.disconnect();
       orbit?.dispose();
       cancelAnimationFrame(rafRef.current);

@@ -132,8 +132,13 @@ export async function shareRouteUrl(url: string, stopCount: number): Promise<Sha
   const text = routeSharePlainText(url, stopCount);
 
   if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-    // URL-only shares often fail on mobile WebKit without opening a sheet; plain text matches save-route flow.
-    const attempts: ShareData[] = [{ title, text }, { text }, { url }];
+    const attempts: ShareData[] = [
+      { url, title, text: text.slice(0, 2000) },
+      { url, title },
+      { url },
+      { title, text },
+      { text },
+    ];
     for (const data of attempts) {
       try {
         await navigator.share(data);

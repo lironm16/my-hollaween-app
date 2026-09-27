@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import dynamic from "next/dynamic";
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { Navigation } from "lucide-react";
 import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
@@ -47,20 +46,10 @@ import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-
 import { googleMapsNavigateUrl } from "@/lib/route";
 import { isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
 import { GemCollectAlbumReveal } from "@/components/gem-hunt/gem-collect-album-reveal";
-import { GemHuntStudioOverlay } from "@/components/gem-hunt/gem-hunt-studio-overlay";
 import { useGemHuntLocation } from "@/hooks/use-gem-hunt-location";
-import {
-  isIosLike,
-  supportsWebXrHitTestAr,
-} from "@/lib/gem-hunt-ar-platform";
 import { gemWorldYawRad } from "@/lib/gem-world-yaw";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { cn } from "@/lib/utils";
-
-const GemHuntWebXrAr = dynamic(
-  () => import("@/components/gem-hunt/gem-hunt-webxr-ar").then((m) => m.GemHuntWebXrAr),
-  { ssr: false },
-);
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
 
@@ -91,6 +80,29 @@ function panDelta(prev: number | null, next: number) {
   let d = Math.abs(next - prev);
   if (d > 180) d = 360 - d;
   return d;
+}
+
+function useInspectTapCollect(onCollect: () => void, enabled: boolean) {
+  const dragRef = useRef({ x: 0, y: 0, moved: false });
+  return useMemo(
+    () => ({
+      onPointerDown: (event: ReactPointerEvent) => {
+        if (!enabled) return;
+        dragRef.current = { x: event.clientX, y: event.clientY, moved: false };
+      },
+      onPointerMove: (event: ReactPointerEvent) => {
+        if (!enabled) return;
+        const dx = event.clientX - dragRef.current.x;
+        const dy = event.clientY - dragRef.current.y;
+        if (dx * dx + dy * dy > 64) dragRef.current.moved = true;
+      },
+      onPointerUp: () => {
+        if (!enabled || dragRef.current.moved) return;
+        onCollect();
+      },
+    }),
+    [enabled, onCollect],
+  );
 }
 
 async function playCameraOnVideo(video: HTMLVideoElement, stream: MediaStream) {
@@ -182,14 +194,8 @@ export function GemHuntOverlay({
   const [albumRevealNewFriend, setAlbumRevealNewFriend] = useState(true);
   const [albumShowActions, setAlbumShowActions] = useState(false);
   const [compassRetry, setCompassRetry] = useState(0);
-  const [spatialMode, setSpatialMode] = useState<null | "studio" | "webxr">(null);
-  const [webxrAvailable, setWebxrAvailable] = useState(false);
 
   const huntGps = useGemHuntLocation(!sim);
-
-  useEffect(() => {
-    void supportsWebXrHitTestAr().then(setWebxrAvailable);
-  }, []);
 
   const { heading, pitch: devicePitch, status: headingStatus } = useDeviceHeading(true, compassRetry);
 
@@ -231,7 +237,6 @@ export function GemHuntOverlay({
     setShowHelp(false);
     setHintPanel(null);
     setCenterReveal(false);
-    setSpatialMode(null);
     setAlbumRevealPhase("enter");
     if (collectFinishRef.current != null) {
       window.clearTimeout(collectFinishRef.current);
@@ -480,6 +485,14 @@ export function GemHuntOverlay({
     !centerReveal &&
     !isFarForHints &&
     (showCompassEnable || headingStatus === "denied" || headingStatus === "idle" || heading == null);
+
+  const canTapCollect =
+    phase === "visible" && (centerReveal || collectEnabled || pinCollectReady);
+  const inspectTapHandlers = useInspectTapCollect(handleCollect, canTapCollect);
+  const onGemInspectTap = () => {
+    if (canTapCollect) handleCollect();
+  };
+
   async function retryCompassPermission() {
     const ok = await requestGemHuntOrientationPermission({ force: true });
     if (ok) setCompassRetry((n) => n + 1);
@@ -584,8 +597,8 @@ export function GemHuntOverlay({
               className="gem-hunt-overlay__scan-rose gem-hunt-direction-rose--ring"
             />
           ) : null}
-          {centerDisplayMode && collectEnabled && phase !== "collecting" ? (
-            <p className="gem-hunt-overlay__ring-collect-hint">לחיצה לאיסוף</p>
+          {centerDisplayMode && canTapCollect && phase !== "collecting" ? (
+            <p className="gem-hunt-overlay__ring-collect-hint">לחיצה על הדמות לאיסוף</p>
           ) : null}
           <div
             className={cn(
@@ -609,6 +622,7 @@ export function GemHuntOverlay({
                 "gem-hunt-overlay__gem-dance",
                 phase === "collecting" && "is-collecting is-collecting-3d",
               )}
+              {...inspectTapHandlers}
             >
               <GemSprite
                 house={house}
@@ -619,9 +633,10 @@ export function GemHuntOverlay({
                 worldYawRad={worldYawRad}
                 motion={phase === "collecting" ? "celebrate" : "idle"}
                 celebrateVariant={collectDanceIndex}
+                onInspectTap={onGemInspectTap}
               />
             </div>
-            {pinCollectReady && phase === "visible" ? (
+            {canTapCollect && phase === "visible" ? (
               <button
                 type="button"
                 className="gem-hunt-overlay__spin-collect"
@@ -675,6 +690,7 @@ export function GemHuntOverlay({
               "gem-hunt-overlay__gem-dance",
               phase === "collecting" && "is-collecting is-collecting-3d",
             )}
+            {...inspectTapHandlers}
           >
             <GemSprite
               house={house}
@@ -685,9 +701,10 @@ export function GemHuntOverlay({
               worldYawRad={worldYawRad}
               motion={phase === "collecting" ? "celebrate" : "idle"}
               celebrateVariant={collectDanceIndex}
+              onInspectTap={onGemInspectTap}
             />
           </div>
-          {collectEnabled && phase === "visible" ? (
+          {canTapCollect && phase === "visible" ? (
             <button
               type="button"
               className="gem-hunt-overlay__spin-collect gem-hunt-overlay__spin-collect--center"
@@ -712,7 +729,11 @@ export function GemHuntOverlay({
           ) : null}
 
           <div className="gem-hunt-overlay__footer-stack">
-            {gemVisible && !centerReveal && phase === "visible" ? (
+            {centerReveal && phase === "visible" ? (
+              <p className="gem-hunt-overlay__footer-hint">
+                גררו לסיבוב · לחיצה על הדמות או «אסף» לאיסוף
+              </p>
+            ) : gemVisible && !centerReveal && phase === "visible" ? (
               <p className="gem-hunt-overlay__footer-hint">
                 הדמות מסתובבת 360° — גררו עליה · הלכו מסביב · לחצו «אסף» כשמוכנים
               </p>
@@ -799,34 +820,6 @@ export function GemHuntOverlay({
             >
               גלה לי
             </button>
-            {gemVisible && !centerReveal ? (
-              <>
-                {(isIosLike() || !webxrAvailable) && (
-                  <button
-                    type="button"
-                    className={cn(
-                      "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--accent gem-hunt-overlay__hint-btn--compact",
-                      spatialMode === "studio" && "is-active",
-                    )}
-                    onClick={() => setSpatialMode((m) => (m === "studio" ? null : "studio"))}
-                  >
-                    {isIosLike() ? "סיבוב 360°" : "סיבוב 360°"}
-                  </button>
-                )}
-                {webxrAvailable && !isIosLike() ? (
-                  <button
-                    type="button"
-                    className={cn(
-                      "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--accent gem-hunt-overlay__hint-btn--compact",
-                      spatialMode === "webxr" && "is-active",
-                    )}
-                    onClick={() => setSpatialMode((m) => (m === "webxr" ? null : "webxr"))}
-                  >
-                    AR במרחב
-                  </button>
-                ) : null}
-              </>
-            ) : null}
           </div>
           </div>
         </footer>
@@ -843,21 +836,6 @@ export function GemHuntOverlay({
         />
       ) : null}
 
-      {spatialMode === "studio" ? (
-        <GemHuntStudioOverlay
-          house={house}
-          monsterId={monsterId}
-          onClose={() => setSpatialMode(null)}
-        />
-      ) : null}
-
-      {spatialMode === "webxr" && webxrAvailable ? (
-        <GemHuntWebXrAr
-          houseId={house.id}
-          monsterId={monsterId}
-          onClose={() => setSpatialMode(null)}
-        />
-      ) : null}
     </div>
   );
 

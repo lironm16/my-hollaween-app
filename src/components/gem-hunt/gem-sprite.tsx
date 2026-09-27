@@ -22,6 +22,7 @@ export function GemSprite({
   /** Square poster frame (map collect cheer). */
   posterFill = false,
   worldYawRad = null,
+  onInspectTap,
 }: {
   /** @deprecated use house + monster id */
   variantId?: string;
@@ -39,6 +40,7 @@ export function GemSprite({
   posterFill?: boolean;
   /** World-locked yaw (radians) — walk around anchor to see different sides. */
   worldYawRad?: number | null;
+  onInspectTap?: () => void;
 }) {
   const id = house?.id ?? houseId ?? "default";
   const monsterId = (house ? gemMonsterForHouse(house) : "dragon") as GemMonsterId;
@@ -120,6 +122,7 @@ export function GemSprite({
         motion={motion}
         celebrateVariant={celebrateVariant}
         worldYawRad={worldYawRad}
+        onInspectTap={mode === "inspect360" ? onInspectTap : undefined}
       />
     </div>
   );
