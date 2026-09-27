@@ -14,11 +14,9 @@ const subLinkClass = cn(
 );
 
 export function RouteMenuSection({
-  onNavigate,
   onOpenExport,
   onOpenShare,
 }: {
-  onNavigate?: () => void;
   /** Parent owns export dialog so it stays mounted when the menu sheet closes. */
   onOpenExport?: () => void;
   /** Same pattern as export — parent opens share dialog after closing the menu. */

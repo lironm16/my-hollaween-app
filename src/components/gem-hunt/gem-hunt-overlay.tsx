@@ -589,9 +589,6 @@ export function GemHuntOverlay({
               className="gem-hunt-overlay__scan-rose gem-hunt-direction-rose--ring"
             />
           ) : null}
-          {centerDisplayMode && canTapCollect ? (
-            <p className="gem-hunt-overlay__ring-collect-hint">לחיצה על הדמות לאיסוף</p>
-          ) : null}
           <div
             className={cn(
               "gem-hunt-overlay__ring",
@@ -628,15 +625,6 @@ export function GemHuntOverlay({
                 onInspectTap={onGemInspectTap}
               />
             </div>
-            {canTapCollect && phase === "visible" ? (
-              <button
-                type="button"
-                className="gem-hunt-overlay__spin-collect"
-                onClick={handleCollect}
-              >
-                אסף
-              </button>
-            ) : null}
           </div>
         ) : null}
 
@@ -696,16 +684,11 @@ export function GemHuntOverlay({
               onInspectTap={onGemInspectTap}
             />
           </div>
-          {canTapCollect && phase === "visible" ? (
-            <button
-              type="button"
-              className="gem-hunt-overlay__spin-collect gem-hunt-overlay__spin-collect--center"
-              onClick={handleCollect}
-            >
-              אסף
-            </button>
-          ) : null}
         </div>
+      ) : null}
+
+      {centerDisplayMode && canTapCollect && phase === "visible" ? (
+        <p className="gem-hunt-overlay__tap-collect-caption">לחיצה על הדמות לאיסוף</p>
       ) : null}
 
       {showHuntUi && phase !== "collecting" ? (
@@ -721,15 +704,6 @@ export function GemHuntOverlay({
           ) : null}
 
           <div className="gem-hunt-overlay__footer-stack">
-            {centerReveal && phase === "visible" ? (
-              <p className="gem-hunt-overlay__footer-hint">
-                גררו לסיבוב · לחיצה על הדמות או «אסף» לאיסוף
-              </p>
-            ) : gemVisible && !centerReveal && phase === "visible" ? (
-              <p className="gem-hunt-overlay__footer-hint">
-                הדמות מסתובבת 360° — גררו עליה · הלכו מסביב · לחצו «אסף» כשמוכנים
-              </p>
-            ) : null}
             {hintPanel === "nav" ? (
               <div
                 className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"

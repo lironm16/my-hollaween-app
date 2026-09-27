@@ -204,7 +204,6 @@ export function AppHeader({
 
             {routeMenu ? (
               <RouteMenuSection
-                onNavigate={closeMenu}
                 onOpenExport={openRouteExport}
                 onOpenShare={openRouteShare}
               />

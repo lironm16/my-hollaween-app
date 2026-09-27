@@ -212,7 +212,7 @@ export function GemModel3D({
 
         pivot.add(model);
         if (controls === "inspect360") {
-          pivot.position.x += 0.22;
+          pivot.position.x += 0.38;
         }
         if (controls === "turntable" || controls === "walkaround" || controls === "inspect360") {
           fitCameraToPivot(camera, pivot, size === "sm" ? 1.45 : size === "fill" ? 1.28 : 1.32);
