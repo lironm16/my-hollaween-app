@@ -1,22 +1,34 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { Navigation } from "lucide-react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { ARButton } from "three/addons/webxr/ARButton.js";
+import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
+import { useDeviceHeading } from "@/hooks/use-device-heading";
+import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import {
   GEM_COLLECT_OVERLAY_MS,
+  GEM_FACING_TOLERANCE_DEG,
+  bearingDegrees,
+  gemAnchorForHouse,
   gemDistanceMeters,
   gemLabelHe,
   gemMonsterForHouse,
   GEM_HUNT_METERS,
+  relativeWalkBearingDeg,
   type GemCollectFinishOptions,
 } from "@/lib/gem-hunt";
 import { requestGemHuntWebXrSession } from "@/lib/gem-hunt-webxr-init";
-import { gemMonsterMeta, gemMonsterTint, type GemMonsterId } from "@/lib/gem-monsters";
+import { requestGemHuntOrientationPermission } from "@/lib/gem-hunt-sensors";
+import { gemWalkGuideCopy } from "@/lib/gem-hunt-walk-guide";
+import { formatDistance } from "@/lib/geo";
+import { gemMonsterMeta, gemMonsterTint, gemSpeciesLabelHe, type GemMonsterId } from "@/lib/gem-monsters";
 import { gemCollectDanceIndex } from "@/lib/gem-collect-dance";
+import { googleMapsNavigateUrl } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
 import { cn } from "@/lib/utils";
@@ -78,7 +90,17 @@ export function GemHuntWebXrAr({
   const monsterId = gemMonsterForHouse(house);
   const meta = gemMonsterMeta(monsterId);
   const petName = gemLabelHe(monsterId);
+  const speciesHe = gemSpeciesLabelHe(monsterId);
   const danceIndex = gemCollectDanceIndex(house.id, monsterId);
+  const { overrides: anchorOverrides } = useGemAnchorOverrides();
+  const anchor = useMemo(
+    () => gemAnchorForHouse(house),
+    [house.id, house.lat, house.lng, anchorOverrides],
+  );
+  const [hintPanel, setHintPanel] = useState<null | "nav">(null);
+  const [compassRetry, setCompassRetry] = useState(0);
+  const { heading } = useDeviceHeading(true, compassRetry);
+  const placeAssistRef = useRef({ forceOnce: false, fast: false });
 
   const rootRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -123,6 +145,57 @@ export function GemHuntWebXrAr({
     }, GEM_COLLECT_OVERLAY_MS);
   }, [canCollect, monsterId, phase]);
 
+  useEffect(() => {
+    if (error && onFallbackCamera) onFallbackCamera();
+  }, [error, onFallbackCamera]);
+
+  const turnBearing =
+    effectiveLoc != null ? relativeWalkBearingDeg(effectiveLoc, anchor, heading) : null;
+  const facingTarget =
+    turnBearing != null && Math.abs(turnBearing) <= GEM_FACING_TOLERANCE_DEG;
+  const gpsBearingToAnchor =
+    effectiveLoc != null ? bearingDegrees(effectiveLoc, anchor) : null;
+  const huntArrowPhoneRelative = heading != null && turnBearing != null;
+  const huntArrowDeg = huntArrowPhoneRelative ? turnBearing : gpsBearingToAnchor;
+  const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToAnchor != null;
+  const walkGuideCopy = gemWalkGuideCopy(
+    huntArrowPhoneRelative,
+    facingTarget,
+    turnBearing,
+    gpsBearingToAnchor,
+  );
+  const mapsWalkUrl =
+    userLocation != null && !simulateInRange
+      ? googleMapsNavigateUrl(userLocation, { lat: anchor.lat, lng: anchor.lng })
+      : null;
+  const showDirectionRose =
+    hintPanel === "nav" &&
+    huntArrowDeg != null &&
+    effectiveLoc != null &&
+    userLocation != null &&
+    !simulateInRange;
+
+  const toggleHintPanel = useCallback(async () => {
+    if (hintPanel === "nav") {
+      setHintPanel(null);
+      return;
+    }
+    const ok = await requestGemHuntOrientationPermission({ force: true });
+    if (ok) setCompassRetry((n) => n + 1);
+    setHintPanel("nav");
+  }, [hintPanel]);
+
+  const onRevealAssist = useCallback(() => {
+    if (placed || phase === "collecting") {
+      setHint(`${petName} כבר במרחב — סובבו מסביב`);
+      return;
+    }
+    setHintPanel(null);
+    placeAssistRef.current.forceOnce = true;
+    placeAssistRef.current.fast = true;
+    setHint(`מחפשים משטח ל${petName} — כוונו למדרכה`);
+  }, [placed, phase, petName]);
+
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -147,7 +220,7 @@ export function GemHuntWebXrAr({
     const root = rootRef.current;
     const startHost = startBtnHostRef.current;
     if (!host || !root || !startHost || !navigator.xr) {
-      setError("AR לא נתמך במכשיר זה");
+      onFallbackCamera?.();
       return;
     }
 
@@ -296,8 +369,15 @@ export function GemHuntWebXrAr({
             reticle.visible = true;
             reticle.matrix.fromArray(pose.transform.matrix);
             stableHitFrames += 1;
-            if (stableHitFrames >= AUTO_PLACE_STABLE_FRAMES) {
+            const assist = placeAssistRef.current;
+            const threshold = assist.fast ? 8 : AUTO_PLACE_STABLE_FRAMES;
+            if (assist.forceOnce) {
               placeFromReticle();
+              assist.forceOnce = false;
+              assist.fast = false;
+            } else if (stableHitFrames >= threshold) {
+              placeFromReticle();
+              assist.fast = false;
             } else if (stableHitFrames === 8) {
               setPhase("placing");
               setHint("מזהים משטח…");
@@ -378,7 +458,7 @@ export function GemHuntWebXrAr({
       hitTestSource?.cancel?.();
       mixer = null;
     };
-  }, [danceIndex, floatHeight, house.id, meta.glbPath, useFloat]);
+  }, [danceIndex, floatHeight, house.id, meta.glbPath, onFallbackCamera, useFloat]);
 
   useEffect(() => {
     const btn = startBtnHostRef.current?.querySelector(".gem-hunt-webxr__start") as HTMLElement | null;
@@ -387,13 +467,25 @@ export function GemHuntWebXrAr({
 
   const overlay = (
     <div ref={rootRef} className={cn("gem-hunt-webxr", phase === "collecting" && "is-collecting")} dir="rtl">
-      <header className="gem-hunt-webxr__bar">
-        <div className="gem-hunt-webxr__bar-text">
-          <p className="gem-hunt-webxr__kicker">AR במרחב</p>
+      <header className="gem-hunt-webxr__bar" dir="ltr">
+        <div className="gem-hunt-webxr__bar-text" dir="rtl">
           <p className="gem-hunt-webxr__title">{petName}</p>
+          <p className="gem-hunt-webxr__kicker">
+            {speciesHe} · AR במרחב
+          </p>
         </div>
         <OverlayCloseButton label="סגירה" onClick={onClose} className="gem-hunt-webxr__close-btn" />
       </header>
+
+      {showDirectionRose ? (
+        <div className="gem-hunt-webxr__nav-layer" aria-hidden>
+          <GemHuntDirectionRose
+            bearingDeg={huntArrowDeg!}
+            facing={facingTarget && !huntArrowMapNorth}
+            className="gem-hunt-webxr__nav-rose gem-hunt-direction-rose--ring"
+          />
+        </div>
+      ) : null}
 
       <div ref={hostRef} className="gem-hunt-webxr__host" />
       <div ref={startBtnHostRef} className="gem-hunt-webxr__start-host" />
@@ -401,26 +493,81 @@ export function GemHuntWebXrAr({
       <footer className="gem-hunt-webxr__footer">
         {error ? (
           <p className="gem-hunt-webxr__error" role="alert">
-            {error}
-            {onFallbackCamera ? (
-              <button type="button" className="gem-hunt-webxr__fallback" onClick={onFallbackCamera}>
-                מצב מצלמה
-              </button>
-            ) : null}
+            {error} — עוברים למצב מצלמה…
           </p>
         ) : (
           <>
-            <p className="gem-hunt-webxr__hint" role="status">
-              {hint}
-              {distanceM != null ? ` · ~${Math.round(distanceM)} מ׳` : null}
-            </p>
-            {!placed ? (
-              <p className="gem-hunt-webxr__subhint">
-                כוונו את המצלמה למדרכה ליד הרגליים. אפשר גם להקיש על המסך כדי להניח.
-              </p>
+            {hintPanel === "nav" ? (
+              <div className="gem-hunt-webxr__walk-guide" role="region" aria-label="הנחיות הליכה ליהלום">
+                {huntArrowDeg != null ? (
+                  <div
+                    className={cn(
+                      "gem-hunt-webxr__walk-arrow",
+                      !huntArrowMapNorth && facingTarget && "is-facing",
+                    )}
+                    style={{ transform: `rotate(${huntArrowDeg}deg)` }}
+                    aria-hidden
+                  >
+                    <Navigation className="size-10" strokeWidth={2.5} />
+                  </div>
+                ) : null}
+                <p className="gem-hunt-webxr__walk-text">
+                  {walkGuideCopy}
+                  {distanceM != null ? ` · ${formatDistance(distanceM)}` : null}
+                </p>
+                {mapsWalkUrl ? (
+                  <a
+                    href={mapsWalkUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="gem-hunt-webxr__walk-maps"
+                  >
+                    הליכה ב-Google Maps ליהלום
+                  </a>
+                ) : null}
+              </div>
             ) : (
-              <p className="gem-hunt-webxr__subhint">סובבו את הגוף והטלפון — כמו חפץ אמיתי במרחב.</p>
+              <>
+                <p className="gem-hunt-webxr__hint" role="status">
+                  {hint}
+                  {distanceM != null ? ` · ~${Math.round(distanceM)} מ׳` : null}
+                </p>
+                {!placed ? (
+                  <p className="gem-hunt-webxr__subhint">
+                    כוונו את המצלמה למדרכה. הקישו על המסך או «גלה לי» להנחת {petName}.
+                  </p>
+                ) : (
+                  <p className="gem-hunt-webxr__subhint">סובבו את הגוף והטלפון — כמו חפץ אמיתי במרחב.</p>
+                )}
+              </>
             )}
+
+            {phase !== "collecting" ? (
+              <div className="gem-hunt-webxr__hint-actions gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
+                <button
+                  type="button"
+                  className={cn(
+                    "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
+                    hintPanel === "nav" && "is-active",
+                  )}
+                  aria-pressed={hintPanel === "nav"}
+                  onClick={() => void toggleHintPanel()}
+                >
+                  <span className="gem-hunt-overlay__hint-btn-label">
+                    <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
+                    <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact"
+                  onClick={onRevealAssist}
+                >
+                  גלה לי
+                </button>
+              </div>
+            ) : null}
+
             <div className="gem-hunt-webxr__actions">
               {canCollect ? (
                 <button
@@ -429,17 +576,12 @@ export function GemHuntWebXrAr({
                   onClick={handleCollect}
                   disabled={phase === "collecting"}
                 >
-                  {phase === "collecting" ? "אוספים…" : "אספו את החבר!"}
+                  {phase === "collecting" ? "אוספים…" : `אספו את ${petName}!`}
                 </button>
               ) : placed && !inCollectBand ? (
                 <p className="gem-hunt-webxr__range-warn">
-                  התקרבו ל־{GEM_HUNT_METERS} מ׳ ליהלום כדי לאסוף
+                  התקרבו ל־{GEM_HUNT_METERS} מ׳ ליהלום כדי לאסוף · AR ומצלמה משתמשים באותו GPS
                 </p>
-              ) : null}
-              {onFallbackCamera ? (
-                <button type="button" className="gem-hunt-webxr__fallback" onClick={onFallbackCamera}>
-                  מצב מצלמה (מסך)
-                </button>
               ) : null}
             </div>
           </>

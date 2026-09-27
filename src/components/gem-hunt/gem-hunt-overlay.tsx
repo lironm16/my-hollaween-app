@@ -33,7 +33,6 @@ import {
   gemMonsterForHouse,
   gemScreenPlacement,
   relativeWalkBearingDeg,
-  bearingClockLabelHe,
   type GemMonsterId,
   type GemCollectFinishOptions,
 } from "@/lib/gem-hunt";
@@ -48,31 +47,10 @@ import { useGemHuntLocation } from "@/hooks/use-gem-hunt-location";
 import { useSmoothedGemPlacement } from "@/hooks/use-smoothed-gem-placement";
 import { gemWorldYawRad } from "@/lib/gem-world-yaw";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
+import { gemWalkGuideCopy } from "@/lib/gem-hunt-walk-guide";
 import { cn } from "@/lib/utils";
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
-
-const GEM_BEHIND_TURN_DEG = 120;
-
-function gemWalkGuideCopy(
-  huntArrowPhoneRelative: boolean,
-  facingTarget: boolean,
-  turnBearing: number | null,
-  gpsBearingToAnchor: number | null,
-) {
-  if (huntArrowPhoneRelative && turnBearing != null) {
-    if (facingTarget) return "המשיכו ישר — היהלום מולכם";
-    if (Math.abs(turnBearing) >= GEM_BEHIND_TURN_DEG) {
-      return "היהלום מאחוריכם — סובבו את הגוף";
-    }
-    if (turnBearing > 0) return "סובבו ימינה לכיוון היהלום";
-    return "סובבו שמאלה לכיוון היהלום";
-  }
-  if (gpsBearingToAnchor != null) {
-    return `כיוון לפי GPS: ${bearingClockLabelHe(gpsBearingToAnchor)} — סובבו את הגוף (צפון = למעלה)`;
-  }
-  return "התקרבו לנקודת היהלום";
-}
 
 function panDelta(prev: number | null, next: number) {
   if (prev == null) return 0;
