@@ -30,6 +30,12 @@ describe("route share", () => {
     assert.deepEqual(decodeSharedRoutePayload(enc), payload);
   });
 
+  it("round-trips Hebrew house ids (btoa latin1 bug)", () => {
+    const payload = { v: 1 as const, stopIds: ["בית-4948", "נק-9310"] };
+    const enc = encodeSharedRoutePayload(payload);
+    assert.deepEqual(decodeSharedRoutePayload(enc), payload);
+  });
+
   it("builds payload from route stops in order", () => {
     const route = {
       stops: [

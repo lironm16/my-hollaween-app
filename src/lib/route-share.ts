@@ -17,26 +17,46 @@ export function sharedRoutePayloadFromRoute(route: WalkingRoute): SharedRoutePay
   };
 }
 
+function bytesToBase64Url(bytes: Uint8Array): string {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 1) {
+    binary += String.fromCharCode(bytes[i]!);
+  }
+  const b64 =
+    typeof btoa === "function"
+      ? btoa(binary)
+      : Buffer.from(bytes).toString("base64");
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
 export function encodeSharedRoutePayload(payload: SharedRoutePayload): string {
   const json = JSON.stringify(payload);
-  if (typeof btoa === "function") {
-    return btoa(json).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  if (typeof TextEncoder !== "undefined") {
+    return bytesToBase64Url(new TextEncoder().encode(json));
   }
   return Buffer.from(json, "utf8").toString("base64url");
+}
+
+function base64UrlToUtf8(encoded: string): string {
+  const trimmed = encoded.trim();
+  const b64 = trimmed.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = b64.length % 4 === 0 ? "" : "=".repeat(4 - (b64.length % 4));
+  if (typeof atob === "function") {
+    const binary = atob(b64 + pad);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return new TextDecoder().decode(bytes);
+  }
+  return Buffer.from(trimmed, "base64url").toString("utf8");
 }
 
 export function decodeSharedRoutePayload(encoded: string): SharedRoutePayload | null {
   const trimmed = encoded.trim();
   if (!trimmed) return null;
   try {
-    let json: string;
-    if (typeof atob === "function") {
-      const b64 = trimmed.replace(/-/g, "+").replace(/_/g, "/");
-      const pad = b64.length % 4 === 0 ? "" : "=".repeat(4 - (b64.length % 4));
-      json = atob(b64 + pad);
-    } else {
-      json = Buffer.from(trimmed, "base64url").toString("utf8");
-    }
+    const json = base64UrlToUtf8(trimmed);
     const parsed = JSON.parse(json) as SharedRoutePayload;
     if (parsed?.v !== 1 || !Array.isArray(parsed.stopIds)) return null;
     const stopIds = parsed.stopIds.filter((id) => typeof id === "string" && id.length > 0);
@@ -91,7 +111,7 @@ export function writePendingRouteShare(payload: SharedRoutePayload | null) {
   }
 }
 
-export type ShareUrlOutcome = "shared" | "copied" | "cancelled" | "failed" | "downloaded";
+export type ShareUrlOutcome = "shared" | "copied" | "cancelled" | "failed";
 
 export function routeSharePlainText(url: string, stopCount: number) {
   return `מסלול HallowHood · ${stopCount} עצירות\n${url}`;
@@ -160,42 +180,6 @@ export function startRouteShare(
     return;
   }
   if (copyPlainTextSync(text)) onDone("copied");
-  else onDone("failed");
-}
-
-/** Share route link + optional full txt body from a menu dialog (must stay sync until `.share()`). */
-export function shareRouteFromDialog(
-  options: {
-    url: string;
-    stopCount: number;
-    filename: string;
-    fullText: string;
-  },
-  onDone: (outcome: ShareUrlOutcome) => void,
-) {
-  const { url, stopCount, fullText } = options;
-  const title = "מסלול HallowHood";
-  const linkBlock = routeSharePlainText(url, stopCount);
-
-  if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-    navigator
-      .share({ url, title, text: linkBlock.slice(0, 2000) })
-      .then(() => onDone("shared"))
-      .catch((err: unknown) => {
-        if (err instanceof Error && err.name === "AbortError") {
-          onDone("cancelled");
-          return;
-        }
-        if (copyPlainTextSync(linkBlock)) {
-          onDone("copied");
-          return;
-        }
-        onDone("failed");
-      });
-    return;
-  }
-
-  if (copyPlainTextSync(linkBlock)) onDone("copied");
   else onDone("failed");
 }
 

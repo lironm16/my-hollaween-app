@@ -8,15 +8,13 @@ import { OverlayCloseBar } from "@/components/overlay-close-button";
 import {
   downloadHouseExport,
   downloadOrShareHouseExport,
-  downloadTxt,
   exportHouseCountMessage,
-  routeToExportTxt,
   HOUSE_EXPORT_FORMAT_OPTIONS,
   type HouseExportFormat,
 } from "@/lib/house-csv";
 import {
   buildRouteShareUrl,
-  shareRouteFromDialog,
+  startRouteShare,
   type ShareUrlOutcome,
 } from "@/lib/route-share";
 import type { WalkingRoute } from "@/lib/route";
@@ -154,13 +152,6 @@ export function RouteShareDialog({
     const payload = { v: 1 as const, stopIds };
     const url = buildRouteShareUrl(payload, window.location.origin);
     const stopN = stopIds.length;
-    const day = new Date().toISOString().slice(0, 10);
-    const filename = `hallowhood-route-share-${day}.txt`;
-    const linkBlock = `מסלול HallowHood · ${stopN} עצירות\n${url}`;
-    const fullText =
-      route && route.stops.length > 0
-        ? `${linkBlock}\n\n${routeToExportTxt(route)}`
-        : linkBlock;
 
     const finish = (outcome: ShareUrlOutcome) => {
       if (outcome === "shared") {
@@ -173,29 +164,13 @@ export function RouteShareDialog({
         onOpenChange(false);
         return;
       }
-      if (outcome === "downloaded") {
-        toast.success("הקובץ ירד — אפשר לשתף ממנהל הקבצים / וואטסאפ");
-        onOpenChange(false);
-        return;
-      }
       if (outcome === "cancelled") return;
       toast.error("לא הצלחנו לשתף — נסו שוב");
       toast.message(url, { closeButton: true, duration: 20_000 });
       onOpenChange(false);
     };
 
-    const failOpen = () => {
-      downloadTxt(filename, fullText);
-      finish("downloaded");
-    };
-
-    shareRouteFromDialog({ url, stopCount: stopN, filename, fullText }, (outcome) => {
-      if (outcome === "failed") {
-        failOpen();
-        return;
-      }
-      finish(outcome);
-    });
+    startRouteShare(url, stopN, finish);
   }
 
   return (
