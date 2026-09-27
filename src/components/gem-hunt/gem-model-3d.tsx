@@ -293,8 +293,23 @@ export function GemModel3D({
           worldGroup.rotation.y = worldYawRef.current;
         }
         if (orbit) {
-          orbit.autoRotate = motionRef.current !== "celebrate";
-          orbit.update();
+          if (celebrate) {
+            orbit.autoRotate = false;
+            const hop = Math.abs(Math.sin(t * 3.4 + phase));
+            pivot.rotation.y = t * (2.1 + variant * 0.08);
+            pivot.position.y = Math.sin(t * 4.8 + phase) * 0.16 + hop * 0.07;
+            pivot.rotation.x = Math.sin(t * 2.35 + phase) * 0.62;
+            pivot.rotation.z = Math.sin(t * 3.9 + phase * 1.2) * 0.14;
+            const squash = 1 + Math.sin(t * 6.2 + phase) * 0.08;
+            pivot.scale.setScalar(squash);
+          } else {
+            pivot.rotation.x = 0;
+            pivot.rotation.z = 0;
+            pivot.scale.setScalar(1);
+            pivot.position.y = Math.sin(t * 2.8 + phase * 0.4) * 0.07;
+            orbit.autoRotate = true;
+            orbit.update();
+          }
         }
       } else {
         orbit?.update();

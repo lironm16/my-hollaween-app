@@ -179,6 +179,7 @@ export function NeighborhoodApp({
   const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);
   const [mapGemCheerMonster, setMapGemCheerMonster] = useState<GemMonsterId | null>(null);
   const mapGemCheerTimerRef = useRef<number | null>(null);
+  const gemHuntOpenedFromViewRef = useRef<HomeView>("map");
   const router = useRouter();
   const mapGemUserLoc = mapGemGps ?? gps;
   const mapGemStanding = useStandingStill(mapGemUserLoc, gemHuntActive && Boolean(mapGemHouse));
@@ -344,9 +345,13 @@ export function NeighborhoodApp({
     async (house: PublicHouse) => {
       if (gems.collected(house.id)) return;
       preloadGemHuntChunks();
-      setView("map");
+      const openedFrom = readHomeView();
+      gemHuntOpenedFromViewRef.current = openedFrom;
+      if (openedFrom === "map") {
+        setView("map");
+        selection.selectOnMap(house);
+      }
       setMapDiamondsVisible(true);
-      selection.selectOnMap(house);
       setWatchEnabled(true);
       const freshGps = (await geo.refresh()) ?? gps;
       setMapGemGps(freshGps);
@@ -356,8 +361,14 @@ export function NeighborhoodApp({
       });
       setMapGemHouse(house);
     },
-    [gems, geo, selection, setWatchEnabled],
+    [gems, geo, gps, selection, setWatchEnabled],
   );
+
+  const restoreAfterGemHunt = useCallback(() => {
+    if (gemHuntOpenedFromViewRef.current !== "list") return;
+    setView("list");
+    selection.closeSelection();
+  }, [selection]);
 
   useEffect(() => {
     if (!gemBadgePendingRef.current) {
@@ -1414,6 +1425,7 @@ export function NeighborhoodApp({
             releaseGemHuntCamera();
             setMapGemHouse(null);
             setMapGemGps(null);
+            restoreAfterGemHunt();
           }}
           onCollect={(monsterId, options) => {
             const h = mapGemHouse;
@@ -1426,6 +1438,7 @@ export function NeighborhoodApp({
             releaseGemHuntCamera();
             setMapGemHouse(null);
             setMapGemGps(null);
+            restoreAfterGemHunt();
             celebrateGemCollect();
             if (options?.navigateStickerBook) {
               router.push(gemBagCollectHref(monsterId, celebrate));

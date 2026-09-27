@@ -10,14 +10,14 @@ import {
   downloadOrShareHouseExport,
   exportHouseCountMessage,
   routeToExportTxt,
-  sharePlainTextFile,
   HOUSE_EXPORT_FORMAT_OPTIONS,
   type HouseExportFormat,
 } from "@/lib/house-csv";
 import {
   buildRouteShareUrl,
   routeSharePlainText,
-  shareRouteUrl,
+  startRouteShare,
+  type ShareUrlOutcome,
 } from "@/lib/route-share";
 import type { WalkingRoute } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
@@ -162,28 +162,47 @@ export function RouteShareDialog({
         ? `${linkBlock}\n\n${routeToExportTxt(route)}`
         : linkBlock;
 
-    const shared = await sharePlainTextFile(filename, text, "מסלול HallowHood");
-    if (shared) {
-      toast.success("שיתוף המסלול נשלח");
+    const finish = (outcome: ShareUrlOutcome) => {
+      if (outcome === "shared") {
+        toast.success("שיתוף המסלול נשלח");
+        onOpenChange(false);
+        return;
+      }
+      if (outcome === "copied") {
+        toast.success("הקישור הועתק — הדביקו בוואטסאפ / הודעה");
+        onOpenChange(false);
+        return;
+      }
+      if (outcome === "cancelled") return;
+      toast.error("לא הצלחנו לשתף — נסו שוב");
+      toast.message(url, { closeButton: true, duration: 20_000 });
       onOpenChange(false);
+    };
+
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      try {
+        const file = new File([text], filename, { type: "text/plain;charset=utf-8" });
+        if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
+          navigator
+            .share({ files: [file], title: "מסלול HallowHood", text: linkBlock.slice(0, 2000) })
+            .then(() => finish("shared"))
+            .catch((err: unknown) => {
+              if (err instanceof Error && err.name === "AbortError") {
+                finish("cancelled");
+                return;
+              }
+              startRouteShare(url, stopN, finish);
+            });
+          return;
+        }
+      } catch {
+        /* fall through to URL share */
+      }
+      startRouteShare(url, stopN, finish);
       return;
     }
 
-    const outcome = await shareRouteUrl(url, stopN);
-    if (outcome === "shared") {
-      toast.success("שיתוף המסלול נשלח");
-      onOpenChange(false);
-      return;
-    }
-    if (outcome === "copied") {
-      toast.success("הקישור הועתק — הדביקו בוואטסאפ / הודעה");
-      onOpenChange(false);
-      return;
-    }
-    if (outcome === "cancelled") return;
-    toast.error("לא הצלחנו לשתף — נסו שוב");
-    toast.message(url, { closeButton: true, duration: 20_000 });
-    onOpenChange(false);
+    startRouteShare(url, stopN, finish);
   }
 
   return (
@@ -211,7 +230,7 @@ export function RouteShareDialog({
             type="button"
             className="h-11 bg-orange-500 px-5 text-base text-black hover:bg-orange-400"
             disabled={stopCount === 0}
-            onClick={() => void runShare()}
+            onClick={runShare}
           >
             שתף
           </Button>

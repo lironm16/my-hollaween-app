@@ -26,7 +26,6 @@ import {
   GEM_SCAN_REVEAL_SECONDS,
   GEM_COLLECT_OVERLAY_MS,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
-  GEM_STICKER_REVEAL_MS,
   gemAnchorForHouse,
   gemInScanRing,
   gemPlacementDisplaySnap,
@@ -377,7 +376,7 @@ export function GemHuntOverlay({
     setAlbumShowActions(false);
     setAlbumRevealPhase("enter");
     const landTimer = window.setTimeout(() => setAlbumRevealPhase("landed"), 720);
-    const actionsTimer = window.setTimeout(() => setAlbumShowActions(true), GEM_STICKER_REVEAL_MS);
+    const actionsTimer = window.setTimeout(() => setAlbumShowActions(true), 880);
     return () => {
       window.clearTimeout(landTimer);
       window.clearTimeout(actionsTimer);
@@ -416,7 +415,7 @@ export function GemHuntOverlay({
   function handleClose() {
     if (phase === "collecting") return;
     if (phase === "albumReveal") {
-      if (albumShowActions) finishNewFriendClose();
+      if (albumShowActions || albumRevealPhase === "landed") finishNewFriendClose();
       return;
     }
     releaseGemHuntCamera(videoRef.current);
@@ -564,7 +563,8 @@ export function GemHuntOverlay({
           onClick={handleClose}
           className={cn(
             "gem-hunt-overlay__close",
-            (phase === "collecting" || (phase === "albumReveal" && !albumShowActions)) &&
+            (phase === "collecting" ||
+              (phase === "albumReveal" && albumRevealPhase === "enter" && !albumShowActions)) &&
               "pointer-events-none opacity-40",
           )}
         />
