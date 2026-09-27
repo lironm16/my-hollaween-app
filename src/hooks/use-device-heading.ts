@@ -41,6 +41,7 @@ export type HeadingStatus = "idle" | "pending" | "ready" | "denied" | "unsupport
 
 const HEADING_UI_MS = 90;
 const HEADING_MIN_STEP_DEG = 1.25;
+const PITCH_SMOOTH_ALPHA = 0.32;
 
 function headingStep(prev: number | null, next: number) {
   if (prev == null) return 360;
@@ -62,8 +63,11 @@ export function useDeviceHeading(active: boolean, retryToken = 0) {
     const orient = event as OrientationLike;
     const pitchValue = readDevicePitch(orient);
     if (pitchValue != null) {
-      lastPitchRef.current = pitchValue;
-      setPitch(pitchValue);
+      const prevP = lastPitchRef.current;
+      const smoothed =
+        prevP == null ? pitchValue : prevP + (pitchValue - prevP) * PITCH_SMOOTH_ALPHA;
+      lastPitchRef.current = smoothed;
+      setPitch(smoothed);
     }
     const value = readHeading(orient);
     if (value == null) return;

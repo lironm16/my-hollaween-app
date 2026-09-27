@@ -237,9 +237,10 @@ export function gemScreenPlacement(
   if (rel == null) return null;
   const halfH = hFovDeg / 2;
   const inViewH = Math.abs(rel) <= halfH;
-  const xSpread = inViewH ? 36 : 42;
+  const xSpread = 36;
   const xRaw = GEM_SCAN_RING_CENTER_X + (rel / halfH) * xSpread;
-  const xPercent = inViewH ? Math.min(90, Math.max(10, xRaw)) : rel > 0 ? 92 : 8;
+  /** Continuous clamp — no snap to 8/92 at FOV edge (avoids top↔bottom jumps when tilting). */
+  const xPercent = Math.min(92, Math.max(8, xRaw));
 
   let yPercent: number;
   let inViewV = true;
@@ -248,7 +249,7 @@ export function gemScreenPlacement(
     const relElev = GEM_ANCHOR_ELEVATION_DEG - devicePitch;
     inViewV = Math.abs(relElev) <= halfV;
     const yRaw = GEM_SCAN_RING_CENTER_Y + (relElev / halfV) * 40;
-    yPercent = inViewV ? Math.min(88, Math.max(12, yRaw)) : relElev > 0 ? 8 : 92;
+    yPercent = Math.min(92, Math.max(8, yRaw));
   } else {
     yPercent = inViewH
       ? GEM_SCAN_RING_CENTER_Y

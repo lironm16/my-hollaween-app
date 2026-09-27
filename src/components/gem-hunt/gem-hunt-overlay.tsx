@@ -45,6 +45,7 @@ import { googleMapsNavigateUrl } from "@/lib/route";
 import { isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
 import { GemCollectAlbumReveal } from "@/components/gem-hunt/gem-collect-album-reveal";
 import { useGemHuntLocation } from "@/hooks/use-gem-hunt-location";
+import { useSmoothedGemPlacement } from "@/hooks/use-smoothed-gem-placement";
 import { gemWorldYawRad } from "@/lib/gem-world-yaw";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { cn } from "@/lib/utils";
@@ -215,11 +216,12 @@ export function GemHuntOverlay({
     if (!placementLoc) return null;
     return gemScreenPlacement(placementLoc, anchor, heading, devicePitch);
   }, [anchor, placementLoc, heading, devicePitch]);
-  const pinDisplay = useMemo(() => {
+  const pinDisplayRaw = useMemo(() => {
     if (centerReveal) return gemPlacementDisplaySnap(pinPlacement);
     if (phase === "visible") return pinPlacement;
     return gemPlacementDisplaySnap(pinPlacement);
   }, [pinPlacement, phase, centerReveal]);
+  const pinDisplay = useSmoothedGemPlacement(pinDisplayRaw, house.id);
 
   const inHuntRange =
     sim || distanceM == null || distanceM <= GEM_HUNT_METERS;
@@ -460,9 +462,11 @@ export function GemHuntOverlay({
   const gemInRing = pinPlacement ? gemInScanRing(pinPlacement) : false;
   const pinCollectReady = arPinGuideMode && collectEnabled && gemInRing;
   /** Show centered gem after reveal even before «stand still» — tap only when collectEnabled. */
+  const showWorldGemSprite =
+    inHuntRange && Boolean(pinPlacement?.inView && pinPlacement.distanceM <= GEM_HUNT_METERS);
   const arPinRevealedGem =
     arPinGuideMode &&
-    inHuntRange &&
+    showWorldGemSprite &&
     (phase === "visible" || phase === "collecting");
   const worldLockRevealed = arPinRevealedGem && !centerReveal;
   const arPinTapCollect = arPinRevealedGem && collectEnabled;
@@ -655,7 +659,7 @@ export function GemHuntOverlay({
           </div>
         ) : null}
 
-        {arPinGuideMode && !hideScanPinForNav && phase !== "visible" ? (
+        {arPinGuideMode && !hideScanPinForNav && phase !== "visible" && showWorldGemSprite ? (
           <div
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin",

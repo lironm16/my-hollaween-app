@@ -83,7 +83,20 @@ describe("gem hunt geo", () => {
     const heading = bearingDegrees(user, anchor);
     const lookingUp = gemScreenPlacement(user, anchor, heading, 18)!;
     const lookingDown = gemScreenPlacement(user, anchor, heading, -18)!;
-    assert.ok(lookingUp.yPercent > lookingDown.yPercent);
+    assert.ok(lookingUp.yPercent < lookingDown.yPercent);
+  });
+
+  it("does not snap gem Y from bottom to top when pitch crosses FOV edge", () => {
+    const anchor = gemAnchorForHouse(house);
+    const user = { lat: house.lat + 0.00012, lng: house.lng };
+    const heading = bearingDegrees(user, anchor);
+    const low = gemScreenPlacement(user, anchor, heading, -20)!;
+    const mid = gemScreenPlacement(user, anchor, heading, -22)!;
+    const high = gemScreenPlacement(user, anchor, heading, -24)!;
+    assert.ok(Math.abs(mid.yPercent - low.yPercent) < 18);
+    assert.ok(Math.abs(high.yPercent - mid.yPercent) < 18);
+    assert.notEqual(low.yPercent, 92);
+    assert.notEqual(high.yPercent, 8);
   });
 
   it("snaps display placement toward ring center when close", () => {
