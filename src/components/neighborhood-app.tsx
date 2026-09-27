@@ -49,7 +49,6 @@ import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
 import { loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
-import { useStandingStill } from "@/hooks/use-standing-still";
 import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import { syncGemMonsterAssignment } from "@/lib/gem-monsters";
@@ -184,7 +183,6 @@ export function NeighborhoodApp({
   const savedListScrollTopRef = useRef(0);
   const router = useRouter();
   const mapGemUserLoc = mapGemGps ?? gps;
-  const mapGemStanding = useStandingStill(mapGemUserLoc, gemHuntActive && Boolean(mapGemHouse));
   const gpsAllowed =
     geo.status === "idle" || geo.status === "pending" || geo.status === "ready";
 
@@ -1445,7 +1443,7 @@ export function NeighborhoodApp({
             mapGemGps ?? gps,
             mapGemHouse,
             gems.collected(mapGemHouse.id),
-            mapGemStanding.ready,
+            true,
             false,
           )}
           onClose={() => {

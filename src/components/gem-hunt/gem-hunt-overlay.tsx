@@ -166,7 +166,7 @@ export function GemHuntOverlay({
     effectiveLoc != null &&
     !sim &&
     gemDistanceMeters(effectiveLoc, house) <= GEM_HUNT_METERS;
-  /** Scan/pan/facing reveal when in range (or admin simulate), even before «stand still» finishes. */
+  /** Scan/pan/facing reveal when in range (or admin simulate). */
   const allowAutoReveal = collectEnabled || sim || inDistanceBand;
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -434,11 +434,12 @@ export function GemHuntOverlay({
   const hidePinForHints = hintPanel === "nav" && !centerReveal;
   const gemInRing = pinPlacement ? gemInScanRing(pinPlacement) : false;
   const pinCollectReady = arPinGuideMode && collectEnabled && gemInRing;
-  const arPinTapCollect =
+  /** Show centered gem after reveal even before «stand still» — tap only when collectEnabled. */
+  const arPinRevealedGem =
     arPinGuideMode &&
     !hidePinForHints &&
-    collectEnabled &&
     (phase === "visible" || phase === "collecting");
+  const arPinTapCollect = arPinRevealedGem && collectEnabled;
   const ringReady = centerDisplayMode || pinCollectReady;
   const isFarForHints =
     !collectEnabled &&
@@ -587,12 +588,13 @@ export function GemHuntOverlay({
           />
         </div>
 
-        {arPinTapCollect ? (
+        {arPinRevealedGem ? (
           <div
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-pin-collect is-revealed is-inspect360 is-ring-center",
               phase === "collecting" && "is-collecting",
               pinCollectReady && "is-ring-ready",
+              !collectEnabled && phase === "visible" && "is-awaiting-still",
             )}
           >
             <div
