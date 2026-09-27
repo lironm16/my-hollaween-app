@@ -21,6 +21,7 @@ export function GemSprite({
   celebrateVariant = 1,
   /** Square poster frame (map collect cheer). */
   posterFill = false,
+  worldYawRad = null,
 }: {
   /** @deprecated use house + monster id */
   variantId?: string;
@@ -30,17 +31,27 @@ export function GemSprite({
   className?: string;
   size?: "sm" | "lg" | "fill";
   /** bag rows use poster; hunt uses 3d; orbit is for gem-bag studio only */
-  mode?: "auto" | "3d" | "poster" | "orbit";
+  mode?: "auto" | "3d" | "poster" | "orbit" | "walkaround";
   tapCollect?: boolean;
   spinWhileCollect?: boolean;
   motion?: "idle" | "celebrate";
   celebrateVariant?: number;
   posterFill?: boolean;
+  /** World-locked yaw (radians) — walk around anchor to see different sides. */
+  worldYawRad?: number | null;
 }) {
   const id = house?.id ?? houseId ?? "default";
   const monsterId = (house ? gemMonsterForHouse(house) : "dragon") as GemMonsterId;
   const meta = gemMonsterMeta(monsterId);
-  const use3d = mode === "3d" || mode === "orbit" || (mode === "auto" && size === "lg");
+  const use3d =
+    mode === "3d" ||
+    mode === "orbit" ||
+    mode === "walkaround" ||
+    (mode === "auto" && size === "lg");
+  const modelControls =
+    mode === "orbit" ? "orbit" : mode === "walkaround" ? "walkaround" : "turntable";
+  const modelSpin =
+    mode === "walkaround" ? false : spinWhileCollect || motion === "celebrate";
 
   if (!use3d) {
     return (
@@ -93,11 +104,12 @@ export function GemSprite({
         size={mode === "orbit" ? "fill" : size === "fill" ? "fill" : size}
         collected={collected}
         interactive={!tapCollect}
-        spin={spinWhileCollect || motion === "celebrate"}
+        spin={modelSpin}
         spinRate={tapCollect && motion !== "celebrate" ? 0.35 : undefined}
-        controls={mode === "orbit" ? "orbit" : "turntable"}
+        controls={modelControls}
         motion={motion}
         celebrateVariant={celebrateVariant}
+        worldYawRad={worldYawRad}
       />
     </div>
   );

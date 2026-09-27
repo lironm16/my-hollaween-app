@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import { Navigation } from "lucide-react";
 import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
@@ -46,8 +47,20 @@ import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-
 import { googleMapsNavigateUrl } from "@/lib/route";
 import { isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
 import { GemCollectAlbumReveal } from "@/components/gem-hunt/gem-collect-album-reveal";
+import { GemHuntStudioOverlay } from "@/components/gem-hunt/gem-hunt-studio-overlay";
+import { useGemHuntLocation } from "@/hooks/use-gem-hunt-location";
+import {
+  isIosLike,
+  supportsWebXrHitTestAr,
+} from "@/lib/gem-hunt-ar-platform";
+import { gemWorldYawRad } from "@/lib/gem-world-yaw";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { cn } from "@/lib/utils";
+
+const GemHuntWebXrAr = dynamic(
+  () => import("@/components/gem-hunt/gem-hunt-webxr-ar").then((m) => m.GemHuntWebXrAr),
+  { ssr: false },
+);
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
 
@@ -169,17 +182,36 @@ export function GemHuntOverlay({
   const [albumRevealNewFriend, setAlbumRevealNewFriend] = useState(true);
   const [albumShowActions, setAlbumShowActions] = useState(false);
   const [compassRetry, setCompassRetry] = useState(0);
+  const [spatialMode, setSpatialMode] = useState<null | "studio" | "webxr">(null);
+  const [webxrAvailable, setWebxrAvailable] = useState(false);
+
+  const huntGps = useGemHuntLocation(!sim);
+
+  useEffect(() => {
+    void supportsWebXrHitTestAr().then(setWebxrAvailable);
+  }, []);
 
   const { heading, pitch: devicePitch, status: headingStatus } = useDeviceHeading(true, compassRetry);
+
+  const walkViewer =
+    huntGps ??
+    (effectiveLoc
+      ? { lat: effectiveLoc.lat, lng: effectiveLoc.lng, accuracy: effectiveLoc.accuracy ?? 12 }
+      : null);
+
+  const worldYawRad = useMemo(() => {
+    if (!walkViewer || sim) return null;
+    return gemWorldYawRad(anchor, walkViewer);
+  }, [anchor.lat, anchor.lng, walkViewer?.lat, walkViewer?.lng, sim]);
 
   const pinPlacement = useMemo(() => {
     if (!effectiveLoc) return null;
     return gemScreenPlacement(effectiveLoc, anchor, heading, devicePitch);
   }, [anchor, effectiveLoc, heading, devicePitch]);
-  const pinDisplay = useMemo(
-    () => gemPlacementDisplaySnap(pinPlacement),
-    [pinPlacement],
-  );
+  const pinDisplay = useMemo(() => {
+    if (phase === "visible" && !centerReveal) return pinPlacement;
+    return gemPlacementDisplaySnap(pinPlacement);
+  }, [pinPlacement, phase, centerReveal]);
 
   const reveal = useCallback(() => {
     if (revealedRef.current) return;
@@ -199,6 +231,7 @@ export function GemHuntOverlay({
     setShowHelp(false);
     setHintPanel(null);
     setCenterReveal(false);
+    setSpatialMode(null);
     setAlbumRevealPhase("enter");
     if (collectFinishRef.current != null) {
       window.clearTimeout(collectFinishRef.current);
@@ -590,10 +623,11 @@ export function GemHuntOverlay({
             >
               <GemSprite
                 house={house}
-                mode="3d"
+                mode="walkaround"
                 size="fill"
                 tapCollect
-                spinWhileCollect
+                spinWhileCollect={false}
+                worldYawRad={worldYawRad}
                 motion={phase === "collecting" ? "celebrate" : "idle"}
                 celebrateVariant={collectDanceIndex}
               />
@@ -752,6 +786,34 @@ export function GemHuntOverlay({
             >
               גלה לי
             </button>
+            {gemVisible && !centerReveal ? (
+              <>
+                {(isIosLike() || !webxrAvailable) && (
+                  <button
+                    type="button"
+                    className={cn(
+                      "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--accent gem-hunt-overlay__hint-btn--compact",
+                      spatialMode === "studio" && "is-active",
+                    )}
+                    onClick={() => setSpatialMode((m) => (m === "studio" ? null : "studio"))}
+                  >
+                    {isIosLike() ? "סיבוב 360°" : "סיבוב 360°"}
+                  </button>
+                )}
+                {webxrAvailable && !isIosLike() ? (
+                  <button
+                    type="button"
+                    className={cn(
+                      "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--accent gem-hunt-overlay__hint-btn--compact",
+                      spatialMode === "webxr" && "is-active",
+                    )}
+                    onClick={() => setSpatialMode((m) => (m === "webxr" ? null : "webxr"))}
+                  >
+                    AR במרחב
+                  </button>
+                ) : null}
+              </>
+            ) : null}
           </div>
           </div>
         </footer>
@@ -765,6 +827,22 @@ export function GemHuntOverlay({
           showActions={albumShowActions && albumRevealNewFriend}
           onClose={finishNewFriendClose}
           onOpenStickerBook={finishNewFriendStickerBook}
+        />
+      ) : null}
+
+      {spatialMode === "studio" ? (
+        <GemHuntStudioOverlay
+          house={house}
+          monsterId={monsterId}
+          onClose={() => setSpatialMode(null)}
+        />
+      ) : null}
+
+      {spatialMode === "webxr" && webxrAvailable ? (
+        <GemHuntWebXrAr
+          houseId={house.id}
+          monsterId={monsterId}
+          onClose={() => setSpatialMode(null)}
         />
       ) : null}
     </div>

@@ -19,8 +19,10 @@ type Props = {
   spin?: boolean;
   /** Turntable yaw speed multiplier (default 0.7 interactive / 0.35 not). */
   spinRate?: number;
-  /** turntable = hunt overlay; orbit = drag to inspect (gem bag) */
-  controls?: "turntable" | "orbit";
+  /** turntable = hunt overlay; orbit = drag to inspect (gem bag); walkaround = GPS bearing */
+  controls?: "turntable" | "orbit" | "walkaround";
+  /** When set with walkaround, model stays world-locked as viewer walks around anchor. */
+  worldYawRad?: number | null;
   /** Energetic hop + flip loop (collect / found hero). */
   motion?: "idle" | "celebrate";
   /** 1–8 — varies celebrate timing (collect dance index). */
@@ -66,6 +68,7 @@ export function GemModel3D({
   controls = "turntable",
   motion = "idle",
   celebrateVariant = 1,
+  worldYawRad = null,
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
@@ -73,6 +76,8 @@ export function GemModel3D({
   motionRef.current = motion;
   const celebrateVariantRef = useRef(celebrateVariant);
   celebrateVariantRef.current = celebrateVariant;
+  const worldYawRef = useRef(worldYawRad);
+  worldYawRef.current = worldYawRad;
   const [loadFailed, setLoadFailed] = useState(false);
   const meta = gemMonsterMeta(monsterId);
 
@@ -208,8 +213,13 @@ export function GemModel3D({
         key.intensity = 1.2;
       }
 
-      if (controls === "turntable") {
-        if (spin) {
+      if (controls === "turntable" || controls === "walkaround") {
+        if (controls === "walkaround" && worldYawRef.current != null && Number.isFinite(worldYawRef.current)) {
+          pivot.rotation.y = worldYawRef.current;
+          pivot.rotation.x = 0;
+          pivot.rotation.z = 0;
+          pivot.position.y = Math.sin(t * 2) * 0.03;
+        } else if (spin) {
           if (celebrate) {
             const hop = Math.abs(Math.sin(t * 3.4 + phase));
             pivot.rotation.y = t * (2.1 + variant * 0.08);
