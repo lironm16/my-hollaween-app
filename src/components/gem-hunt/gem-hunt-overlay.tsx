@@ -27,9 +27,9 @@ import {
   GEM_COLLECT_OVERLAY_MS,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
   gemAnchorForHouse,
-  gemPlacementDisplaySnap,
   gemLabelHe,
   gemMonsterForHouse,
+  gemSpeciesLabelHe,
   gemScreenPlacement,
   relativeWalkBearingDeg,
   type GemMonsterId,
@@ -193,12 +193,7 @@ export function GemHuntOverlay({
     if (!placementLoc) return null;
     return gemScreenPlacement(placementLoc, anchor, heading, devicePitch);
   }, [anchor, placementLoc, heading, devicePitch]);
-  const pinDisplayRaw = useMemo(() => {
-    if (centerReveal) return gemPlacementDisplaySnap(pinPlacement);
-    if (phase === "visible") return pinPlacement;
-    return gemPlacementDisplaySnap(pinPlacement);
-  }, [pinPlacement, phase, centerReveal]);
-  const pinDisplay = useSmoothedGemPlacement(pinDisplayRaw, house.id);
+  const pinDisplay = useSmoothedGemPlacement(pinPlacement, house.id);
 
   const reveal = useCallback(() => {
     if (revealedRef.current) return;
@@ -433,7 +428,6 @@ export function GemHuntOverlay({
     (phase === "visible" || phase === "collecting");
   const worldLockRevealed = arPinRevealedGem && !centerReveal;
   const arPinTapCollect = arPinRevealedGem && collectEnabled;
-  const ringReady = centerDisplayMode || pinCollectReady;
   const isFarForHints =
     !collectEnabled &&
     !sim &&
@@ -470,6 +464,17 @@ export function GemHuntOverlay({
     huntArrowMapNorth &&
     (headingStatus === "denied" || headingStatus === "unsupported");
   const gemPetName = gemLabelHe(monsterId);
+  const gemSpeciesHe = gemSpeciesLabelHe(monsterId);
+  const huntStatusHint =
+    hintPanel === "nav"
+      ? null
+      : phase === "scanning"
+        ? "סובבו לאט — מחפשים את היהלום"
+        : pinCollectReady
+          ? `רואים את ${gemPetName} — לחיצה לאיסוף`
+          : phase === "visible"
+            ? "כוונו את המצלמה ליהלום או «גלה לי»"
+            : null;
   const showNavCompassPrompt =
     hintPanel === "nav" &&
     !centerReveal &&
@@ -540,7 +545,13 @@ export function GemHuntOverlay({
           {collectBanner}
         </p>
       ) : null}
-      <header className="gem-hunt-overlay__header gem-hunt-overlay__header--close-only">
+      <header className="gem-hunt-overlay__header gem-hunt-overlay__header--title" dir="ltr">
+        <div className="gem-hunt-overlay__header-text" dir="rtl">
+          <p className="gem-hunt-overlay__title gem-hunt-overlay__title--hero">{gemPetName}</p>
+          <p className="gem-hunt-overlay__badge">
+            {gemSpeciesHe} · מצלמה + מיקום
+          </p>
+        </div>
         <OverlayCloseButton
           label="סגירה"
           onClick={handleClose}
@@ -559,27 +570,15 @@ export function GemHuntOverlay({
 
       {showHuntUi ? (
       <div className="gem-hunt-overlay__stage" aria-hidden={false}>
-        {centerDisplayMode && phase !== "collecting" ? (
-          <p className="gem-hunt-overlay__nav-caption">{gemPetName}</p>
-        ) : hintPanel === "nav" ? (
-          <p className="gem-hunt-overlay__nav-caption">כוון אותי — ניווט ליהלום</p>
-        ) : null}
-        <div className="gem-hunt-overlay__scan-ring" aria-hidden>
-          {showDirectionRose ? (
+        {showDirectionRose ? (
+          <div className="gem-hunt-overlay__nav-layer" aria-hidden>
             <GemHuntDirectionRose
               bearingDeg={huntArrowDeg!}
               facing={facingTarget && !huntArrowMapNorth}
-              className="gem-hunt-overlay__scan-rose gem-hunt-direction-rose--ring"
+              className="gem-hunt-overlay__nav-rose gem-hunt-direction-rose--ring"
             />
-          ) : null}
-          <div
-            className={cn(
-              "gem-hunt-overlay__ring",
-              ringReady && "is-collect-ready",
-              !ringReady && (hint === "warm" || facingTarget) && "is-warm",
-            )}
-          />
-        </div>
+          </div>
+        ) : null}
 
         {arPinRevealedGem ? (
           <div
@@ -588,7 +587,7 @@ export function GemHuntOverlay({
               centerReveal && "is-ring-center",
               worldLockRevealed && pinPlacement && !pinPlacement.inView && "is-off-screen",
               phase === "collecting" && "is-collecting",
-              pinCollectReady && "is-ring-ready",
+              pinCollectReady && "is-collect-ready-gem",
               !collectEnabled && phase === "visible" && "is-awaiting-still",
             )}
             style={
@@ -698,6 +697,12 @@ export function GemHuntOverlay({
           ) : null}
 
           <div className="gem-hunt-overlay__footer-stack">
+            {huntStatusHint ? (
+              <p className="gem-hunt-overlay__status-hint" role="status">
+                {huntStatusHint}
+                {distanceM != null && hintPanel !== "nav" ? ` · ~${Math.round(distanceM)} מ׳` : null}
+              </p>
+            ) : null}
             {hintPanel === "nav" ? (
               <div
                 className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"

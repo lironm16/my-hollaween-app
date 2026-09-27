@@ -3998,6 +3998,48 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   padding-top: max(1.15rem, calc(env(safe-area-inset-top) + 0.35rem));
   padding-inline: 1rem;
 }
+.gem-hunt-overlay__header--title {
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-top: max(0.65rem, env(safe-area-inset-top, 0px));
+  padding-inline: max(1rem, env(safe-area-inset-right, 0px)) max(1rem, env(safe-area-inset-left, 0px));
+}
+.gem-hunt-overlay__header-text {
+  min-width: 0;
+  flex: 1;
+  padding-inline-end: 0.5rem;
+}
+.gem-hunt-overlay__title--hero {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+.gem-hunt-overlay__nav-layer {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  z-index: 5;
+  width: min(72vw, 17rem);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.92;
+}
+.gem-hunt-overlay__nav-rose {
+  width: 100%;
+  height: 100%;
+}
+.gem-hunt-overlay__status-hint {
+  margin: 0 0 0.45rem;
+  text-align: center;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #fef3c7;
+}
+.gem-hunt-overlay__gem-pin.is-collect-ready-gem .gem-hunt-overlay__gem-dance {
+  filter: drop-shadow(0 0 22px rgb(74 222 128 / 0.55));
+}
 .house-list-select-check-col {
   display: flex;
   width: 2.25rem;
