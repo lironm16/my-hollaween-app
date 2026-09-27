@@ -275,8 +275,7 @@ function MyCollectionsPageContent() {
     setSelectedIds(new Set());
   }
 
-  const selectionRemoveLabel =
-    tab === "mine" ? "הסר מהמכשיר" : tab === "collected" ? "אפס יהלומים שנבחרו" : "אפס מהרשימה";
+  const selectionRemoveLabel = tab === "mine" ? "הסר מהמכשיר" : "אפס מהרשימה";
 
   return (
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">

@@ -135,7 +135,8 @@ export function GemModel3D({
       orbit.enablePan = false;
       if (controls === "inspect360") {
         orbit.autoRotate = true;
-        orbit.autoRotateSpeed = 1.35;
+        orbit.autoRotateSpeed = 4.8;
+        orbit.dampingFactor = 0.06;
       }
     }
 

@@ -599,18 +599,10 @@ export function GemHuntOverlay({
         {arPinTapCollect ? (
           <div
             className={cn(
-              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-pin-collect is-revealed is-inspect360",
+              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-pin-collect is-revealed is-inspect360 is-ring-center",
               phase === "collecting" && "is-collecting",
               pinCollectReady && "is-ring-ready",
             )}
-            style={
-              pinDisplay
-                ? {
-                    left: `${pinDisplay.xPercent}%`,
-                    top: `${pinDisplay.yPercent}%`,
-                  }
-                : undefined
-            }
           >
             <div
               className={cn(
@@ -674,6 +666,7 @@ export function GemHuntOverlay({
             "is-center-collect",
             "is-collect-layer",
             "is-inspect360",
+            "is-ring-center",
             phase === "collecting" && "is-collecting",
           )}
         >

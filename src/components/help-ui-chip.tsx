@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/** Inline chip for UI control names in help / Q&A copy (matches toolbar label styling). */
+/** Inline label for UI control names in help copy — matches toolbar accent (e.g. «סינון»). */
 export function HelpUiChip({
   children,
   className,
@@ -11,17 +11,9 @@ export function HelpUiChip({
   return (
     <span
       className={cn(
-        "inline-block rounded-md border-0 bg-[#ead5b8] px-1.5 py-0.5 font-semibold text-[#12081a] align-baseline leading-normal ring-0 outline-none",
+        "inline-block rounded-md bg-orange-500/25 px-1.5 py-0.5 font-bold text-orange-200 align-baseline leading-normal ring-1 ring-orange-400/35",
         className,
       )}
-      style={{
-        backgroundColor: "#ead5b8",
-        color: "#12081a",
-        WebkitTextFillColor: "#12081a",
-        border: "none",
-        boxDecorationBreak: "clone",
-        WebkitBoxDecorationBreak: "clone",
-      }}
     >
       {children}
     </span>

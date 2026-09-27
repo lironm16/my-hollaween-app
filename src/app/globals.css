@@ -6363,12 +6363,36 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   pointer-events: auto;
   z-index: 6;
 }
+.gem-hunt-overlay__gem-hit.is-inspect360.is-ring-center,
+.gem-hunt-overlay__gem-hit.is-inspect360.is-center-collect {
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+}
+.gem-hunt-overlay__gem-pin.is-inspect360 {
+  pointer-events: auto;
+  cursor: grab;
+}
 .gem-hunt-overlay__gem-hit.is-inspect360 .gem-hunt-overlay__gem-dance {
-  width: min(46vw, 12.5rem);
-  height: min(46vw, 12.5rem);
+  width: min(62vw, 17rem);
+  height: min(62vw, 17rem);
+}
+.gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 .gem-hunt-overlay__gem-dance {
+  width: min(72vw, 19rem);
+  height: min(72vw, 19rem);
+}
+.gem-hunt-overlay__gem-hit.is-inspect360 .gem-model-3d,
+.gem-hunt-overlay__gem-hit.is-inspect360 canvas {
+  pointer-events: auto;
+  touch-action: none;
+}
+.gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 .gem-model-3d,
+.gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 canvas {
+  pointer-events: auto;
 }
 .gem-sprite--inspect360 {
   width: 100%;
@@ -6387,8 +6411,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   pointer-events: auto;
 }
 .gem-hunt-overlay__spin-collect--center {
-  position: absolute;
-  left: 50%;
-  bottom: 28%;
-  transform: translateX(-50%);
+  position: relative;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  margin-top: 0.65rem;
+  z-index: 8;
 }

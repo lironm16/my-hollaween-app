@@ -12,8 +12,8 @@ import {
   Pencil,
   Share2,
   Undo2,
+  Gem,
 } from "lucide-react";
-import { GemDiamondIcon } from "@/components/gem-diamond-icon";
 import { GemTrafficIcon, SavedTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
 import { SkipIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
@@ -196,14 +196,7 @@ export function HouseActionBar({
         icon: gemCollected ? (
           <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.35rem]" />
         ) : (
-          <span
-            className={cn(
-              "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/15 ring-1 ring-amber-400/40",
-              MENU_ACTIVE_ICON_CLASS,
-            )}
-          >
-            <GemDiamondIcon className="size-[1.35rem]" filled={false} />
-          </span>
+          <Gem className={cn(MENU_ICON_CLASS, "text-orange-100")} strokeWidth={2.1} />
         ),
         onClick: () => onToggleGem(),
         active: gemCollected,

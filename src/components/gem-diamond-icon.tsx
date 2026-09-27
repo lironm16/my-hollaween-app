@@ -29,11 +29,7 @@ export function GemDiamondIcon({
     );
   }
   return (
-    <Gem
-      className={cn("size-5 fill-none", className)}
-      style={{ color: GEM_DIAMOND_FILL }}
-      strokeWidth={2.1}
-    />
+    <Gem className={cn("size-5 fill-none text-current", className)} strokeWidth={2.1} />
   );
 }
 
