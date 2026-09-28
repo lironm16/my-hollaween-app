@@ -21,12 +21,18 @@ function readCartoKey() {
   );
 }
 
-function probeReferer() {
+/** CARTO Referer allowlists usually name the public app host, not each Vercel deploy URL. */
+function probeReferers() {
+  const origins: string[] = [];
   const explicit = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (explicit) return explicit.replace(/\/$/, "");
+  if (explicit) origins.push(explicit.replace(/\/$/, ""));
+  origins.push("https://my-hollaween-app.vercel.app");
   const vercel = process.env.VERCEL_URL?.trim();
-  if (vercel) return `https://${vercel.replace(/^https?:\/\//, "")}`;
-  return "https://my-hollaween-app.vercel.app";
+  if (vercel) {
+    const deploy = `https://${vercel.replace(/^https?:\/\//, "")}`;
+    if (!origins.includes(deploy)) origins.push(deploy);
+  }
+  return origins;
 }
 
 /** Real neighborhood tile — empty-ocean probes falsely fail key validation. */
@@ -34,20 +40,23 @@ const PROBE_TILE = "https://a.basemaps.cartocdn.com/rastertiles/voyager/16/39105
 
 async function keyProbeOk(key: string) {
   const probe = cartoTileUrlWithKey(PROBE_TILE, key);
-  try {
-    const res = await fetch(probe, {
-      method: "GET",
-      headers: {
-        Range: "bytes=0-511",
-        Referer: `${probeReferer()}/`,
-      },
-      cache: "no-store",
-    });
-    const buf = await res.arrayBuffer();
-    return res.ok && cartoTileLooksValid(buf.byteLength);
-  } catch {
-    return false;
+  for (const origin of probeReferers()) {
+    try {
+      const res = await fetch(probe, {
+        method: "GET",
+        headers: {
+          Range: "bytes=0-511",
+          Referer: `${origin}/`,
+        },
+        cache: "no-store",
+      });
+      const buf = await res.arrayBuffer();
+      if (res.ok && cartoTileLooksValid(buf.byteLength)) return true;
+    } catch {
+      /* try next referer */
+    }
   }
+  return false;
 }
 
 export async function GET() {
@@ -57,7 +66,9 @@ export async function GET() {
   const cartoAttribution =
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
-  const tiles = keyActive
+  // Phones load tiles with the page Referer (my-hollaween-app…). Use CARTO whenever a key is set;
+  // OSM is only when no key. keyActive is diagnostic (server probe may fail on deploy URLs).
+  const tiles = keyConfigured
     ? {
         url: cartoTileUrlWithKey(CARTO_VOYAGER_TEMPLATE, key),
         subdomains: "abcd",
@@ -78,7 +89,7 @@ export async function GET() {
       tiles,
       keyConfigured,
       keyActive,
-      basemap: keyActive ? ("carto" as const) : ("osm" as const),
+      basemap: keyConfigured ? ("carto" as const) : ("osm" as const),
     },
     {
       headers: {

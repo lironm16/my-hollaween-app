@@ -1,8 +1,8 @@
-/** OpenStreetMap — fallback when CARTO key is missing or over quota (unkeyed CARTO is watermark-only). */
-export const OSM_TILE_TEMPLATE = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+/** Fallback when CARTO key is missing or over quota (unkeyed CARTO is watermark-only). */
+export const OSM_TILE_TEMPLATE = "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png";
 
 export const OSM_TILE_ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, tiles &copy; <a href="https://www.openstreetmap.fr/">OpenStreetMap France</a>';
 
 /** CARTO Voyager — day theme. Use Leaflet `{r}` for @2x on retina; do not set detectRetina (breaks max zoom). */
 export const CARTO_VOYAGER_TEMPLATE =
