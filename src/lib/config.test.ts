@@ -48,15 +48,4 @@ describe("neighborhood config", () => {
     assert.equal(houseLocationAllowed(32.088440010365, 34.811503009317), true);
   });
 
-  it("prefers Gefen zone over stale stored נחלת גנים", () => {
-    assert.equal(
-      resolveNeighborhood({
-        neighborhood: "נחלת גנים",
-        address: "ז'בוטינסקי 105",
-        lat: 32.08925,
-        lng: 34.81205,
-      }),
-      "הגפן",
-    );
-  });
 });

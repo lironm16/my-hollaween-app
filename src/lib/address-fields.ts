@@ -6,7 +6,6 @@ import {
   neighborhoodLabelForPin,
   neighborhoodFromAddress,
   normalizeNeighborhoodId,
-  resolveNeighborhood,
   type NeighborhoodId,
 } from "@/lib/config";
 import { parseStreetAndNumber } from "@/lib/address-text";
@@ -51,9 +50,12 @@ export function normalizeAddressFields(house: {
   lat?: number;
   lng?: number;
 }): { address: string; neighborhood: NeighborhoodId | null } {
-  const street = streetFromLegacyAddress(house.address);
-  const reconciled = resolveNeighborhood(house);
-  if (reconciled) return { address: street, neighborhood: reconciled };
+  if (house.neighborhood !== undefined) {
+    return {
+      address: streetFromLegacyAddress(house.address),
+      neighborhood: normalizeNeighborhoodId(house.neighborhood) ?? house.neighborhood,
+    };
+  }
   const split = splitLegacyAddress(house.address, house.lat, house.lng);
   return { address: split.street, neighborhood: split.neighborhood };
 }
