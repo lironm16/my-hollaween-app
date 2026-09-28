@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Navigation } from "lucide-react";
 import * as THREE from "three";
+import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { ARButton } from "three/addons/webxr/ARButton.js";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
@@ -20,7 +20,6 @@ import {
   relativeWalkBearingDeg,
   type GemCollectFinishOptions,
 } from "@/lib/gem-hunt";
-import { requestGemHuntWebXrSession } from "@/lib/gem-hunt-webxr-init";
 import { requestGemHuntOrientationPermission } from "@/lib/gem-hunt-sensors";
 import { gemWalkGuideCopy } from "@/lib/gem-hunt-walk-guide";
 import { formatDistance } from "@/lib/geo";
@@ -96,7 +95,10 @@ export function GemHuntWebXrAr({
   );
   const [hintPanel, setHintPanel] = useState<null | "nav">(null);
   const [revealAssist, setRevealAssist] = useState(false);
+  const [arGemVisible, setArGemVisible] = useState(true);
+  const arGemVisibleRef = useRef(true);
   const [compassRetry, setCompassRetry] = useState(0);
+  const [sessionActive, setSessionActive] = useState(false);
   const [platformMod, setPlatformMod] = useState<"gem-hunt-webxr--android" | "gem-hunt-webxr--ios" | null>(
     null,
   );
@@ -112,12 +114,11 @@ export function GemHuntWebXrAr({
   const hostRef = useRef<HTMLDivElement>(null);
   const startBtnHostRef = useRef<HTMLDivElement>(null);
 
-  const pendingSessionRef = useRef<XRSession | null>(null);
   const attachSessionRef = useRef<((session: XRSession) => Promise<void>) | null>(null);
   const collectingRef = useRef(false);
 
   const [error, setError] = useState<string | null>(null);
-  const [showManualStart, setShowManualStart] = useState(false);
+  const [showManualStart, setShowManualStart] = useState(true);
   const [phase, setPhase] = useState<HuntPhase>("boot");
   const [placed, setPlaced] = useState(false);
   const onCollectRef = useRef(onCollect);
@@ -177,6 +178,16 @@ export function GemHuntWebXrAr({
     userLocation != null && !simulateInRange
       ? googleMapsNavigateUrl(userLocation, { lat: anchor.lat, lng: anchor.lng })
       : null;
+  const showNavRose =
+    sessionActive &&
+    hintPanel === "nav" &&
+    huntArrowDeg != null &&
+    effectiveLoc != null &&
+    userLocation != null &&
+    !simulateInRange;
+  const revealBtnActive = placed ? arGemVisible : revealAssist;
+  const revealBtnLabel = placed ? (arGemVisible ? "הסתר" : "גלה לי") : revealAssist ? "הסתר" : "גלה לי";
+
   const toggleHintPanel = useCallback(async () => {
     if (hintPanel === "nav") {
       setHintPanel(null);
@@ -191,38 +202,28 @@ export function GemHuntWebXrAr({
   }, [hintPanel]);
 
   const onRevealAssist = useCallback(() => {
-    if (phase === "collecting") return;
+    if (phase === "collecting" || !sessionActive) return;
+
+    if (placed) {
+      const nextVisible = !arGemVisibleRef.current;
+      arGemVisibleRef.current = nextVisible;
+      setArGemVisible(nextVisible);
+      setRevealAssist(nextVisible);
+      return;
+    }
+
     if (revealAssist) {
       placeAssistRef.current.forceOnce = false;
       placeAssistRef.current.fast = false;
       setRevealAssist(false);
       return;
     }
-    if (placed) return;
+
     setHintPanel(null);
     placeAssistRef.current.forceOnce = true;
     placeAssistRef.current.fast = true;
     setRevealAssist(true);
-  }, [placed, phase, revealAssist]);
-
-  useLayoutEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    let cancelled = false;
-    void requestGemHuntWebXrSession(root).then((session) => {
-      if (cancelled) return;
-      if (session && attachSessionRef.current) {
-        void attachSessionRef.current(session).catch(() => setShowManualStart(true));
-      } else if (session) {
-        pendingSessionRef.current = session;
-      } else {
-        setShowManualStart(true);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }, [placed, phase, revealAssist, sessionActive]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -323,7 +324,9 @@ export function GemHuntWebXrAr({
       reticle.visible = false;
       setPlaced(true);
       setPhase("placed");
-      setRevealAssist(false);
+      setRevealAssist(true);
+      arGemVisibleRef.current = true;
+      setArGemVisible(true);
     };
 
     const onSelect = () => {
@@ -348,6 +351,10 @@ export function GemHuntWebXrAr({
       setPlaced(false);
       setPhase("boot");
       setRevealAssist(false);
+      arGemVisibleRef.current = true;
+      setArGemVisible(true);
+      setSessionActive(false);
+      setShowManualStart(true);
     };
 
     const attachSession = async (session: XRSession) => {
@@ -400,7 +407,9 @@ export function GemHuntWebXrAr({
           reticle.visible = false;
         }
 
-        if (isPlaced && !collectingRef.current) {
+        anchorGroup.visible = isPlaced && arGemVisibleRef.current;
+
+        if (isPlaced && arGemVisibleRef.current && !collectingRef.current) {
           const bob = useFloat ? Math.sin(t * 1.6 + dancePhase) * 0.045 : Math.sin(t * 2.2) * 0.018;
           pivot.position.y = floatHeight + bob;
           shadow.scale.setScalar(1 + (useFloat ? 0.15 : 0) * Math.sin(t * 2));
@@ -421,11 +430,6 @@ export function GemHuntWebXrAr({
 
     attachSessionRef.current = attachSession;
 
-    if (pendingSessionRef.current) {
-      void attachSession(pendingSessionRef.current);
-      pendingSessionRef.current = null;
-    }
-
     arButton = ARButton.createButton(renderer, {
       requiredFeatures: ["hit-test"],
       optionalFeatures: ["dom-overlay", "local-floor"],
@@ -440,6 +444,7 @@ export function GemHuntWebXrAr({
       const session = renderer.xr.getSession();
       if (session) void attachSession(session);
       setShowManualStart(false);
+      setSessionActive(true);
     };
     renderer.xr.addEventListener("sessionstart", onSessionStart);
 
@@ -494,7 +499,16 @@ export function GemHuntWebXrAr({
       </header>
 
       <div ref={hostRef} className="gem-hunt-webxr__host" />
-      <div ref={startBtnHostRef} className="gem-hunt-webxr__start-host" />
+
+      {showNavRose ? (
+        <div className="gem-hunt-overlay__nav-layer gem-hunt-webxr__nav-layer" aria-hidden>
+          <GemHuntDirectionRose
+            bearingDeg={huntArrowDeg!}
+            facing={facingTarget && !huntArrowMapNorth}
+            className="gem-hunt-overlay__nav-rose gem-hunt-direction-rose--ring"
+          />
+        </div>
+      ) : null}
 
       <footer
         className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt gem-hunt-webxr__footer"
@@ -506,7 +520,14 @@ export function GemHuntWebXrAr({
           </p>
         ) : (
           <div className="gem-hunt-overlay__footer-stack">
-            {phase !== "collecting" ? (
+            <div
+              ref={startBtnHostRef}
+              className={cn(
+                "gem-hunt-webxr__start-host gem-hunt-webxr__start-host--footer",
+                sessionActive && "is-hidden",
+              )}
+            />
+            {sessionActive && phase !== "collecting" ? (
               <div className="gem-hunt-overlay__footer-controls">
                 <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
                   <button
@@ -531,39 +552,32 @@ export function GemHuntWebXrAr({
                     type="button"
                     className={cn(
                       "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
-                      revealAssist && "is-active",
+                      revealBtnActive && "is-active",
                     )}
-                    aria-pressed={revealAssist}
+                    aria-pressed={revealBtnActive}
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => {
                       e.stopPropagation();
                       onRevealAssist();
                     }}
                   >
-                    {revealAssist ? "הסתר" : "גלה לי"}
+                    {revealBtnLabel}
                   </button>
                 </div>
+                {canCollect && placed && arGemVisible ? (
+                  <p className="gem-hunt-webxr__collect-hint" role="status">
+                    הקישו על החיה במרחב כדי לאסוף
+                  </p>
+                ) : null}
               </div>
             ) : null}
 
-            {hintPanel === "nav" ? (
+            {sessionActive && hintPanel === "nav" ? (
               <div
                 className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
                 role="region"
                 aria-label="הנחיות הליכה ליהלום"
               >
-                {huntArrowDeg != null ? (
-                  <div
-                    className={cn(
-                      "gem-hunt-overlay__walk-arrow",
-                      !huntArrowMapNorth && facingTarget && "is-facing",
-                    )}
-                    style={{ transform: `rotate(${huntArrowDeg}deg)` }}
-                    aria-hidden
-                  >
-                    <Navigation className="size-11" strokeWidth={2.5} />
-                  </div>
-                ) : null}
                 <p className="gem-hunt-overlay__walk-text">
                   {walkGuideCopy}
                   {distanceM != null ? ` · ${formatDistance(distanceM)}` : null}

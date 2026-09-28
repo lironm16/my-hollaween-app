@@ -11570,8 +11570,9 @@ html.hw-mobile-browser .gem-hunt-overlay--android .gem-hunt-overlay__footer--hun
   z-index: 12050;
   display: flex;
   flex-direction: column;
-  background: #000;
+  background: transparent;
   color: #fef3c7;
+  pointer-events: none;
 }
 .gem-hunt-webxr__bar {
   display: flex;
@@ -11614,15 +11615,7 @@ html.hw-mobile-browser .gem-hunt-overlay--android .gem-hunt-overlay__footer--hun
   margin-top: 0.1rem;
 }
 .gem-hunt-webxr__nav-layer {
-  position: absolute;
-  left: 50%;
-  top: 38%;
-  z-index: 2;
-  width: min(72vw, 17rem);
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  opacity: 0.92;
+  z-index: 12;
 }
 .gem-hunt-webxr__nav-rose {
   width: 100%;
@@ -11666,9 +11659,10 @@ html.hw-mobile-browser .gem-hunt-overlay--android .gem-hunt-overlay__footer--hun
   padding: 0.35rem 0.75rem;
 }
 .gem-hunt-webxr__host {
-  flex: 1;
-  position: relative;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 .gem-hunt-webxr__host canvas {
   display: block;
@@ -11681,18 +11675,44 @@ html.hw-mobile-browser .gem-hunt-overlay--android .gem-hunt-overlay__footer--hun
   pointer-events: none;
   z-index: 3;
 }
+.gem-hunt-webxr__start-host--footer {
+  position: relative;
+  inset: auto;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 2.85rem;
+  pointer-events: auto;
+}
+.gem-hunt-webxr__start-host.is-hidden {
+  display: none;
+}
 .gem-hunt-webxr__start {
-  position: absolute !important;
-  left: 50%;
-  bottom: 42%;
-  transform: translateX(-50%);
+  position: relative !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: none !important;
   z-index: 3;
+  width: min(92vw, 22rem);
   padding: 0.75rem 1.25rem !important;
   border-radius: 999px !important;
   font-weight: 700 !important;
   pointer-events: auto !important;
+  border: 1px solid rgb(167 139 250 / 0.45) !important;
+  background: rgb(22 11 32 / 0.88) !important;
+  color: #fde68a !important;
+}
+.gem-hunt-webxr__collect-hint {
+  margin: 0.35rem 0 0;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fde68a;
 }
 .gem-hunt-webxr__footer {
+  position: absolute;
+  left: 0;
+  right: 0;
   z-index: 50;
   pointer-events: none;
   margin-bottom: 0;
