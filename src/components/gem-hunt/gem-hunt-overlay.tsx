@@ -46,6 +46,7 @@ import { useSmoothedGemPlacement } from "@/hooks/use-smoothed-gem-placement";
 import { gemWorldYawRad } from "@/lib/gem-world-yaw";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { gemWalkGuideCopy } from "@/lib/gem-hunt-walk-guide";
+import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { cn } from "@/lib/utils";
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
@@ -146,6 +147,14 @@ export function GemHuntOverlay({
   const [albumRevealNewFriend, setAlbumRevealNewFriend] = useState(true);
   const [albumShowActions, setAlbumShowActions] = useState(false);
   const [compassRetry, setCompassRetry] = useState(0);
+  const [platformMod, setPlatformMod] = useState<"gem-hunt-overlay--android" | "gem-hunt-overlay--ios" | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (isAndroidLike()) setPlatformMod("gem-hunt-overlay--android");
+    else if (isIosLike()) setPlatformMod("gem-hunt-overlay--ios");
+  }, []);
 
   const huntGps = useGemHuntLocation(!sim);
 
@@ -452,9 +461,9 @@ export function GemHuntOverlay({
   const canTapCollect =
     phase === "visible" && (centerReveal || collectEnabled || pinCollectReady);
 
-  const renderCollectGem = (extraClass?: string) => (
+  const renderCollectGem = (options?: { centered?: boolean; extraClass?: string }) => (
     <div
-      className={cn("gem-hunt-overlay__gem-tap-target", extraClass)}
+      className={cn("gem-hunt-overlay__gem-tap-target", options?.extraClass)}
       role="button"
       tabIndex={canTapCollect ? 0 : -1}
       aria-disabled={!canTapCollect}
@@ -469,7 +478,7 @@ export function GemHuntOverlay({
         size="fill"
         tapCollect
         spinWhileCollect={false}
-        worldYawRad={worldYawRad}
+        worldYawRad={options?.centered ? null : worldYawRad}
         motion={phase === "collecting" ? "celebrate" : "idle"}
         celebrateVariant={collectDanceIndex}
       />
@@ -498,7 +507,7 @@ export function GemHuntOverlay({
   }
 
   const overlay = (
-    <div className="gem-hunt-overlay" dir="rtl">
+    <div className={cn("gem-hunt-overlay", platformMod)} dir="rtl">
       <video
         ref={videoRef}
         className={cn(
@@ -606,8 +615,6 @@ export function GemHuntOverlay({
             "gem-hunt-overlay__gem-hit",
             "is-center-collect",
             "is-collect-layer",
-            "is-inspect360",
-            "is-ring-center",
             phase === "collecting" && "is-collecting",
           )}
         >
@@ -617,7 +624,7 @@ export function GemHuntOverlay({
               phase === "collecting" && "is-collecting is-collecting-3d",
             )}
           >
-            {renderCollectGem()}
+            {renderCollectGem({ centered: true })}
           </div>
         </div>
       ) : null}
@@ -668,16 +675,6 @@ export function GemHuntOverlay({
                   </a>
                 ) : null}
               </div>
-            ) : null}
-
-            {canTapCollect ? (
-              <button
-                type="button"
-                className="gem-hunt-overlay__spin-collect gem-hunt-overlay__spin-collect--footer"
-                onClick={() => handleCollect()}
-              >
-                אסף יהלום
-              </button>
             ) : null}
 
             <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
