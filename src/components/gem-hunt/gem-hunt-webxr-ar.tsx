@@ -80,8 +80,17 @@ function frameModel(object: THREE.Object3D, scaleFactor: number) {
 
 function pickIdleClip(clips: THREE.AnimationClip[]) {
   if (clips.length === 0) return null;
-  const prefer = clips.find((c) => /idle|walk|breath|float/i.test(c.name));
+  const prefer = clips.find((c) => /idle|walk|breath|float|hover|fly|dance/i.test(c.name));
   return prefer ?? clips[0]!;
+}
+
+/** Fake ground shadow under the model feet — not at pivot origin (floaters had a “neck ring”). */
+function placeGroundShadow(shadow: THREE.Mesh, model: THREE.Object3D) {
+  const box = new THREE.Box3().setFromObject(model);
+  shadow.position.y = box.min.y + 0.003;
+  const span = Math.max(box.max.x - box.min.x, box.max.z - box.min.z, 0.08);
+  const s = Math.min(1.05, Math.max(0.32, (span * 0.42) / 0.44));
+  shadow.scale.setScalar(s);
 }
 
 /**
@@ -338,11 +347,17 @@ export function GemHuntWebXrAr({
     const pivot = new THREE.Group();
     anchorGroup.add(pivot);
 
-    const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.34 });
+    const shadowMat = new THREE.MeshBasicMaterial({
+      color: 0x000000,
+      transparent: true,
+      opacity: 0.28,
+      depthWrite: false,
+    });
     const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.22, 32), shadowMat);
     shadow.rotation.x = -Math.PI / 2;
-    shadow.position.y = 0.004;
+    shadow.renderOrder = -1;
     pivot.add(shadow);
+    let footShadowScale = 1;
 
     const tint = gemMonsterTint(house.id);
     const loader = new GLTFLoader();
@@ -361,6 +376,8 @@ export function GemHuntWebXrAr({
           mat.color.offsetHSL(tint.hue, tint.saturation, tint.lightness);
         });
         pivot.add(model);
+        placeGroundShadow(shadow, model);
+        footShadowScale = shadow.scale.x;
         pivot.position.y = floatHeight;
 
         const clip = pickIdleClip(gltf.animations);
@@ -442,11 +459,14 @@ export function GemHuntWebXrAr({
       renderer.xr.setReferenceSpace(refSpace);
       hitTestSource = (await session.requestHitTestSource!({ space: viewerSpace })) ?? null;
 
+      let lastFrameMs = 0;
       renderer.setAnimationLoop((_t, frame) => {
         if (!frame || !hitTestSource) return;
         const ref = renderer.xr.getReferenceSpace() ?? refSpace;
         const hits = frame.getHitTestResults(hitTestSource);
         const t = (performance.now() - startTime) / 1000;
+        const delta = lastFrameMs > 0 ? Math.min(0.05, (_t - lastFrameMs) / 1000) : 1 / 60;
+        lastFrameMs = _t;
         const dancePhase = danceIndex * 0.37;
 
         if (!isPlaced && hits.length > 0) {
@@ -479,17 +499,21 @@ export function GemHuntWebXrAr({
           const ep = encounterPhaseRef.current;
           const wiggle =
             ep === "resolve-wiggle1" || ep === "resolve-wiggle2" || ep === "resolve-breakout";
-          const bob = useFloat ? Math.sin(t * 1.6 + dancePhase) * 0.045 : Math.sin(t * 2.2) * 0.018;
+          const bobAmp = useFloat ? 0.055 : 0.038;
+          const bob = Math.sin(t * (useFloat ? 1.6 : 2.4) + dancePhase) * bobAmp;
           pivot.position.y = floatHeight + bob;
           if (wiggle) {
             pivot.rotation.z = Math.sin(t * 14 + dancePhase) * 0.22;
             pivot.rotation.x = Math.sin(t * 11 + dancePhase) * 0.12;
+            pivot.rotation.y = 0;
           } else {
-            pivot.rotation.z = 0;
-            pivot.rotation.x = 0;
+            pivot.rotation.z = Math.sin(t * 1.1 + dancePhase) * 0.06;
+            pivot.rotation.x = Math.sin(t * 0.85 + dancePhase * 0.7) * 0.04;
+            pivot.rotation.y = t * 0.22 + dancePhase;
           }
-          shadow.scale.setScalar(1 + (useFloat ? 0.15 : 0) * Math.sin(t * 2));
-          shadowMat.opacity = useFloat ? 0.22 : 0.34;
+          const shadowPulse = 1 + (useFloat ? 0.12 : 0.06) * Math.sin(t * 2);
+          shadow.scale.setScalar(footShadowScale * shadowPulse);
+          shadowMat.opacity = useFloat ? 0.2 : 0.26;
         }
 
         if (collectingRef.current) {
@@ -499,7 +523,7 @@ export function GemHuntWebXrAr({
           pivot.rotation.x = Math.sin(t * 2.35 + dancePhase) * 0.35;
         }
 
-        mixer?.update(1 / 60);
+        mixer?.update(delta);
         renderer.render(scene, camera);
       });
     };
