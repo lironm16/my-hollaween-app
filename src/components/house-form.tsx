@@ -21,7 +21,7 @@ import {
 } from "@/lib/labels";
 import { isPoiHouse } from "@/lib/house-kind";
 import { displayAddressFromHit, neighborhoodFromAddressHit } from "@/lib/address-fields";
-import { allowedNeighborhoodsMessage, config, houseLocationAllowed } from "@/lib/config";
+import { config } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
 import {
@@ -125,15 +125,7 @@ export function HouseForm({
 }) {
   const [form, setForm] = useState<HouseInput>({ ...empty, ...initial });
   const [locating, setLocating] = useState(false);
-  const [addressOk, setAddressOk] = useState(
-    Boolean(
-      initial?.address &&
-        initial.lat &&
-        initial.lng &&
-        houseLocationAllowed(initial.lat, initial.lng),
-    ),
-  );
-  const [addressError, setAddressError] = useState<string | null>(null);
+  const [addressOk, setAddressOk] = useState(Boolean(initial?.address && initial.lat && initial.lng));
   const [addressFieldActive, setAddressFieldActive] = useState(false);
   const [decorLevel, setDecorLevel] = useState<DecorLevel>(() => initialDecorLevel(initial));
   const [candy, setCandy] = useState<CandyTone>(() => initialCandyTone(initial));
@@ -237,26 +229,10 @@ export function HouseForm({
 
   function onAddressTyped(value: string) {
     setAddressOk(false);
-    setAddressError(null);
     setForm((f) => ({ ...f, address: value, neighborhood: undefined }));
   }
 
-  const outsideZoneMessage = `הכתובת מחוץ לאזור המותר. ${allowedNeighborhoodsMessage()}`;
-
   function onAddressSelect(hit: AddressHit) {
-    if (!houseLocationAllowed(hit.lat, hit.lng)) {
-      setAddressError(outsideZoneMessage);
-      setAddressOk(false);
-      setForm((f) => ({
-        ...f,
-        address: hit.label,
-        neighborhood: undefined,
-        lat: hit.lat,
-        lng: hit.lng,
-      }));
-      return;
-    }
-    setAddressError(null);
     setForm((f) => ({
       ...f,
       address: displayAddressFromHit(hit),
@@ -274,26 +250,18 @@ export function HouseForm({
     setForm((f) => ({ ...f, lat, lng }));
     const hit = await reversePin(lat, lng);
     if (!hit) {
-      setAddressError(null);
       setAddressOk(false);
       setForm((f) => ({ ...f, neighborhood: undefined }));
       toast.error("לא מצאנו כתובת בנקודה הזו. הזינו רחוב ומספר מהרשימה.");
       return;
     }
-    const allowed = houseLocationAllowed(hit.lat, hit.lng);
     setForm((f) => ({
       ...f,
       lat: hit.lat,
       lng: hit.lng,
-      address: allowed ? displayAddressFromHit(hit) : hit.label,
-      neighborhood: allowed ? neighborhoodFromAddressHit(hit) : undefined,
+      address: displayAddressFromHit(hit),
+      neighborhood: neighborhoodFromAddressHit(hit),
     }));
-    if (!allowed) {
-      setAddressError(outsideZoneMessage);
-      setAddressOk(false);
-      return;
-    }
-    setAddressError(null);
     setAddressOk(true);
     if (!hit.precise) {
       toast.message(streetPinHint(hit) ?? "סימנו את הרחוב. גררו את הסיכה עד לבית שלכם.");
@@ -320,11 +288,6 @@ export function HouseForm({
       onSubmit={(e) => {
         e.preventDefault();
         if (blocked) return;
-        if (!houseLocationAllowed(form.lat, form.lng)) {
-          setAddressError(outsideZoneMessage);
-          toast.error(outsideZoneMessage);
-          return;
-        }
         if (!addressOk) {
           toast.error("בחרו כתובת אמיתית מהרשימה, או גררו את הסיכה לבית.");
           return;
@@ -510,7 +473,6 @@ export function HouseForm({
             onChange={onAddressTyped}
             onSelect={onAddressSelect}
             confirmed={addressOk}
-            fieldError={addressError}
             disabled={blocked}
             maxLength={HOUSE_FIELD_LIMITS.address.max}
             onFocusChange={setAddressFieldActive}

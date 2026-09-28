@@ -1,8 +1,7 @@
 import {
   config,
-  houseLocationAllowed,
   inNeighborhood,
-  neighborhoodAtEventLocation,
+  neighborhoodLabelForPin,
   neighborhoodFromCoords,
   suburbToNeighborhood,
   type NeighborhoodId,
@@ -33,7 +32,7 @@ function isCityName(value: string) {
 
 function areaLabelFor(hit: { lat: number; lng: number; suburb?: string }) {
   void hit.suburb;
-  return neighborhoodAtEventLocation(hit.lat, hit.lng);
+  return neighborhoodLabelForPin(hit.lat, hit.lng);
 }
 
 type NominatimHit = {
@@ -490,7 +489,7 @@ export function haversineMeters(
 }
 
 export async function assertRealAddress(input: { address: string; lat: number; lng: number }) {
-  if (!houseLocationAllowed(input.lat, input.lng)) {
+  if (!inNeighborhood(input.lat, input.lng)) {
     throw new Error("OUT_OF_BOUNDS");
   }
   if (!input.address.trim()) {

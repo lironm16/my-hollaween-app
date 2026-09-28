@@ -170,6 +170,12 @@ export function houseLocationAllowed(lat: number, lng: number) {
   return neighborhoodAtEventLocation(lat, lng) !== null;
 }
 
+/** Best-effort neighborhood label for a pin (zone when possible, else nearest center). */
+export function neighborhoodLabelForPin(lat: number, lng: number): NeighborhoodId | null {
+  if (!inNeighborhood(lat, lng)) return null;
+  return neighborhoodAtEventLocation(lat, lng) ?? neighborhoodFromCoords(lat, lng);
+}
+
 export function allowedNeighborhoodsMessage() {
   return `בחרו בית ב${NEIGHBORHOODS.slice(0, -1).join(", ")} או ${NEIGHBORHOODS[NEIGHBORHOODS.length - 1]}.`;
 }
@@ -193,7 +199,7 @@ export function resolveNeighborhood(house: {
     Number.isFinite(house.lat) &&
     Number.isFinite(house.lng)
   ) {
-    return neighborhoodAtEventLocation(house.lat, house.lng);
+    return neighborhoodLabelForPin(house.lat, house.lng);
   }
   return null;
 }

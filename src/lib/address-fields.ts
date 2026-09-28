@@ -1,8 +1,9 @@
 import {
   formatDisplayAddress,
-  houseLocationAllowed,
+  inNeighborhood,
   NEIGHBORHOODS,
   neighborhoodAtEventLocation,
+  neighborhoodLabelForPin,
   neighborhoodFromAddress,
   normalizeNeighborhoodId,
   type NeighborhoodId,
@@ -38,7 +39,7 @@ export function splitLegacyAddress(
   const fromText = neighborhoodFromAddress(address);
   const hasCoords =
     typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng);
-  const fromCoords = hasCoords ? neighborhoodAtEventLocation(lat, lng) : null;
+  const fromCoords = hasCoords ? neighborhoodLabelForPin(lat, lng) : null;
   return { street, neighborhood: fromText ?? fromCoords };
 }
 
@@ -89,6 +90,9 @@ export function addressAutocompleteLabel(hit: AddressHit, query = ""): string {
   const street = road && num ? `${road} ${num}` : streetFromAddressHit(hit);
   const area = neighborhoodAtEventLocation(hit.lat, hit.lng);
   if (area) return `${street}, ${area}`;
+  if (inNeighborhood(hit.lat, hit.lng)) {
+    return /רמת\s*גן/u.test(street) ? street : `${street}, רמת גן`;
+  }
   return /רמת\s*גן/u.test(street) ? street : `${street}, רמת גן`;
 }
 
@@ -140,9 +144,7 @@ export function footprintAddressHit(query: string): AddressHit | null {
     city: "רמת גן",
     precise: true,
   };
-  const prepared = prepareAddressHit(raw, query);
-  if (!prepared || !houseLocationAllowed(prepared.lat, prepared.lng)) return null;
-  return prepared;
+  return prepareAddressHit(raw, query);
 }
 
 export async function searchPreparedAddresses(query: string): Promise<AddressHit[]> {
