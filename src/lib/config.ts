@@ -17,16 +17,18 @@ const tiles = {
   maxNativeZoom: 18,
 } as const;
 
-export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים"] as const;
+export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "שכונת הגפן", "נחלת גנים"] as const;
 export type NeighborhoodId = (typeof NEIGHBORHOODS)[number];
 
-/** OSM often tags הגפן as נחלת גנים — keep the center so we do not relabel it. */
-const GEFEN_CENTER = { lat: 32.08925, lng: 34.81205 };
+const LEGACY_NEIGHBORHOOD_ALIASES: Record<string, NeighborhoodId> = {
+  הגפן: "שכונת הגפן",
+};
 
 /** Approximate centers used when address text has no neighborhood name. */
 const NEIGHBORHOOD_CENTERS: Record<NeighborhoodId, { lat: number; lng: number }> = {
   חרוזים: { lat: 32.0908, lng: 34.8038 },
   "שיכון ותיקים": { lat: 32.0939, lng: 34.8133 },
+  "שכונת הגפן": { lat: 32.08925, lng: 34.81205 },
   "נחלת גנים": { lat: 32.0928, lng: 34.8188 },
 };
 
@@ -40,7 +42,8 @@ export const config = {
   titleWords: ["הלואין בשכונה HallowHood"] as const,
   tagline: "מפת הבתים המפחידים של השכונה",
   neighborhood:
-    process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שיכון ותיקים · חרוזים · נחלת גנים",
+    process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ??
+    "שיכון ותיקים · חרוזים · שכונת הגפן · נחלת גנים",
   neighborhoods: NEIGHBORHOODS,
   map: {
     center: {
@@ -80,10 +83,25 @@ export function inNeighborhood(lat: number, lng: number) {
   return lat >= b.south && lat <= b.north && lng >= b.west && lng <= b.east;
 }
 
+export function normalizeNeighborhoodId(value: unknown): NeighborhoodId | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  const aliased = LEGACY_NEIGHBORHOOD_ALIASES[trimmed] ?? trimmed;
+  return (NEIGHBORHOODS as readonly string[]).includes(aliased) ? (aliased as NeighborhoodId) : null;
+}
+
+/** Map OSM / geocoder suburb labels to a known neighborhood. */
+export function suburbToNeighborhood(suburb: string): NeighborhoodId | null {
+  const normalized = normalizeNeighborhoodId(suburb.trim());
+  return normalized === undefined ? null : normalized;
+}
+
 /** Detect which area a house belongs to from its address text. */
 export function neighborhoodFromAddress(address: string): NeighborhoodId | null {
   const text = address.trim();
-  if (text.includes("הגפן")) return null;
+  if (/הגפן/u.test(text)) return "שכונת הגפן";
   for (const name of NEIGHBORHOODS) {
     const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     if (new RegExp(`(?:^|,)\\s*${escaped}\\s*$`, "u").test(text)) return name;
@@ -94,10 +112,10 @@ export function neighborhoodFromAddress(address: string): NeighborhoodId | null 
   return null;
 }
 
-/** Nearest of the 3 neighborhoods, or null when the pin is in הגפן (or closer to it). */
-export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId | null {
-  let best: NeighborhoodId | null = null;
-  let bestDist = (lat - GEFEN_CENTER.lat) ** 2 + (lng - GEFEN_CENTER.lng) ** 2;
+/** Nearest neighborhood center (for labels that only say רמת גן). */
+export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId {
+  let best: NeighborhoodId = NEIGHBORHOODS[0];
+  let bestDist = Number.POSITIVE_INFINITY;
   for (const name of NEIGHBORHOODS) {
     const c = NEIGHBORHOOD_CENTERS[name];
     const d = (lat - c.lat) ** 2 + (lng - c.lng) ** 2;
@@ -115,19 +133,22 @@ export function resolveNeighborhood(house: {
   lat?: number;
   lng?: number;
 }): NeighborhoodId | null {
-  if (house.neighborhood !== undefined) return house.neighborhood;
-  const lat = house.lat;
-  const lng = house.lng;
-  const hasCoords =
-    typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng);
-  const fromCoords = hasCoords ? neighborhoodFromCoords(lat, lng) : null;
-  // Map pin outside the 3 neighborhoods: do not keep a typed/OSM area label.
-  if (hasCoords && fromCoords === null) return null;
+  if (house.neighborhood !== undefined) {
+    return normalizeNeighborhoodId(house.neighborhood) ?? null;
+  }
   if (house.address) {
     const fromText = neighborhoodFromAddress(house.address);
     if (fromText) return fromText;
   }
-  return fromCoords;
+  if (
+    typeof house.lat === "number" &&
+    typeof house.lng === "number" &&
+    Number.isFinite(house.lat) &&
+    Number.isFinite(house.lng)
+  ) {
+    return neighborhoodFromCoords(house.lat, house.lng);
+  }
+  return null;
 }
 
 /** Street + neighborhood for UI (never city / רמת גן). */

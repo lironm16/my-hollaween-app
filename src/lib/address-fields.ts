@@ -3,6 +3,8 @@ import {
   NEIGHBORHOODS,
   neighborhoodFromAddress,
   neighborhoodFromCoords,
+  normalizeNeighborhoodId,
+  suburbToNeighborhood,
   type NeighborhoodId,
 } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
@@ -47,7 +49,7 @@ export function normalizeAddressFields(house: {
   if (house.neighborhood !== undefined) {
     return {
       address: streetFromLegacyAddress(house.address),
-      neighborhood: house.neighborhood,
+      neighborhood: normalizeNeighborhoodId(house.neighborhood) ?? house.neighborhood,
     };
   }
   const split = splitLegacyAddress(house.address, house.lat, house.lng);
@@ -62,11 +64,11 @@ export function streetFromAddressHit(hit: AddressHit): string {
 }
 
 export function neighborhoodFromAddressHit(hit: AddressHit): NeighborhoodId | null {
+  const fromCoords = neighborhoodFromCoords(hit.lat, hit.lng);
   const suburb = hit.suburb?.trim() ?? "";
-  if (suburb && (NEIGHBORHOODS as readonly string[]).includes(suburb)) {
-    return suburb as NeighborhoodId;
-  }
-  return neighborhoodFromCoords(hit.lat, hit.lng);
+  const fromSuburb = suburb ? suburbToNeighborhood(suburb) : null;
+  if (fromSuburb && fromSuburb === fromCoords) return fromSuburb;
+  return fromCoords;
 }
 
 /** Street + neighborhood for the address input after pin drag or autocomplete pick. */

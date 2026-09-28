@@ -21,7 +21,7 @@ function baseFilters(overrides: Partial<HouseFiltersState> = {}): HouseFiltersSt
     sensitivityFilters: [],
     scareFilters: ["mild", "medium", "spicy"],
     candyFilters: ["none", "plenty", "low", "out"],
-    neighborhoodFilters: ["חרוזים", "נחלת גנים", "שיכון ותיקים"],
+    neighborhoodFilters: ["חרוזים", "נחלת גנים", "שיכון ותיקים", "שכונת הגפן"],
     likedOnly: false,
     unvisitedOnly: false,
     visitedOnly: false,

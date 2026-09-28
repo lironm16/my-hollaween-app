@@ -1,3 +1,4 @@
+import { NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
 import {
   hasStockCandySelection,
   isKidsFriendlyFilter,
@@ -6,7 +7,23 @@ import {
 import type { HouseFiltersState } from "@/lib/offline-db";
 import { CANDY_TONE_IDS, SCARE_LEVELS } from "@/lib/types";
 
-export const HOUSE_FILTERS_VERSION = 7;
+export const HOUSE_FILTERS_VERSION = 8;
+
+const LEGACY_ALL_NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים"] as const;
+
+function migrateNeighborhoodFilters(raw: readonly string[]): NeighborhoodId[] {
+  const mapped = raw.map((item) => (item === "הגפן" ? "שכונת הגפן" : item));
+  const known = mapped.filter((item): item is NeighborhoodId =>
+    (NEIGHBORHOODS as readonly string[]).includes(item),
+  );
+  const hadAllLegacy =
+    known.length >= LEGACY_ALL_NEIGHBORHOODS.length &&
+    LEGACY_ALL_NEIGHBORHOODS.every((name) => known.includes(name));
+  if (hadAllLegacy && !known.includes("שכונת הגפן")) {
+    return [...NEIGHBORHOODS];
+  }
+  return known.length > 0 ? known : [...NEIGHBORHOODS];
+}
 
 /** Drop engine flags that no longer have UI controls. */
 export function migrateHouseFilters(filters: HouseFiltersState): HouseFiltersState {
@@ -26,7 +43,7 @@ export function migrateHouseFilters(filters: HouseFiltersState): HouseFiltersSta
     uncollectedGemOnly: Boolean(filters.uncollectedGemOnly),
     scareFilters: [...filters.scareFilters],
     candyFilters: [...filters.candyFilters],
-    neighborhoodFilters: [...filters.neighborhoodFilters],
+    neighborhoodFilters: migrateNeighborhoodFilters(filters.neighborhoodFilters),
     sensitivityFilters: [...filters.sensitivityFilters],
   };
 
