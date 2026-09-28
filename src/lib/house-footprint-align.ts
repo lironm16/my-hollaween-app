@@ -36,6 +36,10 @@ function footprintKeysForAddress(address: string): string[] {
   if (jabotinsky) {
     keys.push(`זבוטינסקי#${num}`, `זאב זבוטינסקי#${num}`, `ז'בוטינסקי#${num}`);
   }
+  const shkediya = /shkediya|שקדיה/u.test(parsed.road) || /שקדיה/u.test(address);
+  if (shkediya) {
+    keys.push(`השקדיה#${num}`, `שקדיה#${num}`);
+  }
 
   return [...new Set(keys)];
 }

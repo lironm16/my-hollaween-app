@@ -83,7 +83,8 @@ export function displayAddressFromHit(hit: AddressHit): string {
 /** Autocomplete line — city when outside the four neighborhoods; never guess a wrong area. */
 export function addressAutocompleteLabel(hit: AddressHit, query = ""): string {
   const parsed = parseStreetAndNumber(query.trim());
-  const road = hit.road.trim() || parsed.road;
+  const queryRoad = parsed.road.trim();
+  const road = queryRoad || hit.road.trim();
   const num = hit.houseNumber?.trim() || parsed.num;
   const street = road && num ? `${road} ${num}` : streetFromAddressHit(hit);
   const area = neighborhoodAtEventLocation(hit.lat, hit.lng);

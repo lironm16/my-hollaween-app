@@ -42,4 +42,9 @@ describe("neighborhood config", () => {
     assert.equal(houseLocationAllowed(32.0849863, 34.8122928), false);
     assert.equal(neighborhoodAtEventLocation(32.0849863, 34.8122928), null);
   });
+
+  it("includes Hashkediya 13 in Gefen", () => {
+    assert.equal(neighborhoodAtEventLocation(32.088440010365, 34.811503009317), "הגפן");
+    assert.equal(houseLocationAllowed(32.088440010365, 34.811503009317), true);
+  });
 });

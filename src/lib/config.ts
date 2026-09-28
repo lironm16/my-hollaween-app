@@ -119,7 +119,7 @@ const NEIGHBORHOOD_ZONES: Record<
   חרוזים: { south: 32.0888, north: 32.0924, west: 34.8018, east: 34.8052 },
   "שיכון ותיקים": { south: 32.0898, north: 32.0942, west: 34.8088, east: 34.8142 },
   "נחלת גנים": { south: 32.0897, north: 32.0938, west: 34.8103, east: 34.8198 },
-  הגפן: { south: 32.0885, north: 32.0908, west: 34.81, east: 34.8138 },
+  הגפן: { south: 32.08835, north: 32.0908, west: 34.8098, east: 34.8138 },
 };
 
 function inNeighborhoodZone(lat: number, lng: number, zone: (typeof NEIGHBORHOOD_ZONES)[NeighborhoodId]) {
