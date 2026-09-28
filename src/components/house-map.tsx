@@ -15,6 +15,7 @@ import {
 import L from "leaflet";
 import { LocateFixed } from "lucide-react";
 import { MapGemAnchorLayer, type GemMapAnchorVisual } from "@/components/map-gem-anchor-layer";
+import { MapAddHouseFab } from "@/components/map-add-house-fab";
 import { MapLegend } from "@/components/map-legend";
 import "leaflet/dist/leaflet.css";
 import { config, inNeighborhood } from "@/lib/config";
@@ -952,6 +953,7 @@ export function HouseMap({
           </>
         ) : null}
       </MapContainer>
+      {!pickMode && !originPickActive && !embed ? <MapAddHouseFab /> : null}
       <div className="map-fab-stack">
           {!pickMode && !embed && onLocate ? (
             <button
