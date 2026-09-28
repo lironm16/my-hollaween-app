@@ -21,7 +21,7 @@ import {
 } from "@/lib/labels";
 import { isPoiHouse } from "@/lib/house-kind";
 import { displayAddressFromHit, neighborhoodFromAddressHit } from "@/lib/address-fields";
-import { config, inNeighborhood, NEIGHBORHOODS } from "@/lib/config";
+import { config } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
 import {
@@ -233,14 +233,6 @@ export function HouseForm({
   }
 
   function onAddressSelect(hit: AddressHit) {
-    if (!inNeighborhood(hit.lat, hit.lng)) {
-      toast.error(
-        `הכתובת מחוץ לשכונה. בחרו בית ב${NEIGHBORHOODS.slice(0, -1).join(", ")} או ${NEIGHBORHOODS[NEIGHBORHOODS.length - 1]}.`,
-      );
-      setAddressOk(false);
-      setForm((f) => ({ ...f, address: hit.label }));
-      return;
-    }
     setForm((f) => ({
       ...f,
       address: displayAddressFromHit(hit),
@@ -255,27 +247,18 @@ export function HouseForm({
   }
 
   async function syncFromPin(lat: number, lng: number) {
-    if (!inNeighborhood(lat, lng)) {
-      toast.error("הסיכה מחוץ לגבולות השכונה.");
-      setForm((f) => ({ ...f, lat, lng }));
-      setAddressOk(false);
-      return;
-    }
     setForm((f) => ({ ...f, lat, lng }));
     const hit = await reversePin(lat, lng);
     if (!hit) {
       setAddressOk(false);
+      setForm((f) => ({ ...f, neighborhood: undefined }));
       toast.error("לא מצאנו כתובת בנקודה הזו. הזינו רחוב ומספר מהרשימה.");
-      return;
-    }
-    if (!inNeighborhood(hit.lat, hit.lng)) {
-      setAddressOk(false);
       return;
     }
     setForm((f) => ({
       ...f,
-      lat,
-      lng,
+      lat: hit.lat,
+      lng: hit.lng,
       address: displayAddressFromHit(hit),
       neighborhood: neighborhoodFromAddressHit(hit),
     }));

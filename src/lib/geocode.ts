@@ -1,4 +1,12 @@
-import { config, inNeighborhood, neighborhoodFromCoords, NEIGHBORHOODS } from "@/lib/config";
+import {
+  config,
+  inNeighborhood,
+  neighborhoodLabelForPin,
+  neighborhoodFromCoords,
+  suburbToNeighborhood,
+  type NeighborhoodId,
+} from "@/lib/config";
+import { clusterAddressKey } from "@/lib/house-clusters";
 import { houseNumberFromHit, parseStreetAndNumber } from "@/lib/address-text";
 import type { AddressHit } from "@/lib/types";
 
@@ -23,14 +31,8 @@ function isCityName(value: string) {
 }
 
 function areaLabelFor(hit: { lat: number; lng: number; suburb?: string }) {
-  // Only append one of the 3 neighborhoods. Pins nearer to הגפן stay unlabeled.
-  const fromCoords = neighborhoodFromCoords(hit.lat, hit.lng);
-  if (fromCoords) return fromCoords;
-  const suburb = hit.suburb?.trim() ?? "";
-  if (suburb && !isCityName(suburb) && (NEIGHBORHOODS as readonly string[]).includes(suburb)) {
-    return suburb as (typeof NEIGHBORHOODS)[number];
-  }
-  return null;
+  void hit.suburb;
+  return neighborhoodLabelForPin(hit.lat, hit.lng);
 }
 
 type NominatimHit = {
@@ -110,13 +112,9 @@ function formatLabel(hit: NominatimHit): string | null {
   const lat = Number(hit.lat);
   const lng = Number(hit.lon);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-    const area =
-      suburb &&
-      suburb !== road &&
-      !isCityName(suburb) &&
-      (NEIGHBORHOODS as readonly string[]).includes(suburb)
-        ? suburb
-        : null;
+    const mappedSuburb =
+      suburb && suburb !== road && !isCityName(suburb) ? suburbToNeighborhood(suburb) : null;
+    const area = mappedSuburb as NeighborhoodId | null;
     return area && !street.includes(area) ? `${street}, ${area}` : street;
   }
   const area = areaLabelFor({ lat, lng, suburb });
@@ -286,32 +284,33 @@ function hitQuality(
   return score;
 }
 
+function hitIdentityKey(hit: AddressHit) {
+  const street =
+    hit.road && hit.houseNumber
+      ? `${hit.road} ${hit.houseNumber}`
+      : (hit.label.split(",")[0]?.trim() ?? hit.label);
+  return clusterAddressKey(street);
+}
+
 function uniqueHits(hits: AddressHit[], query: string, parsed?: { road: string; num?: string }) {
-  const seen = new Set<string>();
-  const out: AddressHit[] = [];
+  const bestByKey = new Map<string, AddressHit>();
   for (const hit of hits) {
-    const key = `${hit.label}|${hit.lat.toFixed(5)}|${hit.lng.toFixed(5)}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(hit);
-  }
-  const bestByLabel = new Map<string, AddressHit>();
-  for (const hit of out) {
-    const current = bestByLabel.get(hit.label);
+    const key = hitIdentityKey(hit);
+    const current = bestByKey.get(key);
     if (!current) {
-      bestByLabel.set(hit.label, hit);
+      bestByKey.set(key, hit);
       continue;
     }
     if (hit.precise && !current.precise) {
-      bestByLabel.set(hit.label, hit);
+      bestByKey.set(key, hit);
       continue;
     }
     if (!hit.precise && current.precise) continue;
     if (hitQuality(hit, query, parsed) > hitQuality(current, query, parsed)) {
-      bestByLabel.set(hit.label, hit);
+      bestByKey.set(key, hit);
     }
   }
-  return [...bestByLabel.values()];
+  return [...bestByKey.values()];
 }
 
 function rank(hit: AddressHit, query: string, parsed?: { road: string; num?: string }) {

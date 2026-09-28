@@ -1,13 +1,19 @@
 import {
   formatDisplayAddress,
+  inNeighborhood,
   NEIGHBORHOODS,
+  neighborhoodAtEventLocation,
+  neighborhoodLabelForPin,
   neighborhoodFromAddress,
-  neighborhoodFromCoords,
+  normalizeNeighborhoodId,
   type NeighborhoodId,
 } from "@/lib/config";
+import { parseStreetAndNumber } from "@/lib/address-text";
+import { osmFootprintForAddress } from "@/lib/house-footprint-align";
+import { clusterAddressKey } from "@/lib/house-clusters";
 import type { AddressHit } from "@/lib/types";
 
-const ADDRESS_AREA_NAMES = [...NEIGHBORHOODS, "הגפן"] as const;
+const ADDRESS_AREA_NAMES = [...NEIGHBORHOODS, "שכונת הגפן"] as const;
 
 /** Strip city / neighborhood suffixes from a legacy combined address string. */
 export function streetFromLegacyAddress(address: string): string {
@@ -33,7 +39,7 @@ export function splitLegacyAddress(
   const fromText = neighborhoodFromAddress(address);
   const hasCoords =
     typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng);
-  const fromCoords = hasCoords ? neighborhoodFromCoords(lat, lng) : null;
+  const fromCoords = hasCoords ? neighborhoodLabelForPin(lat, lng) : null;
   return { street, neighborhood: fromText ?? fromCoords };
 }
 
@@ -47,7 +53,7 @@ export function normalizeAddressFields(house: {
   if (house.neighborhood !== undefined) {
     return {
       address: streetFromLegacyAddress(house.address),
-      neighborhood: house.neighborhood,
+      neighborhood: normalizeNeighborhoodId(house.neighborhood) ?? house.neighborhood,
     };
   }
   const split = splitLegacyAddress(house.address, house.lat, house.lng);
@@ -62,11 +68,7 @@ export function streetFromAddressHit(hit: AddressHit): string {
 }
 
 export function neighborhoodFromAddressHit(hit: AddressHit): NeighborhoodId | null {
-  const suburb = hit.suburb?.trim() ?? "";
-  if (suburb && (NEIGHBORHOODS as readonly string[]).includes(suburb)) {
-    return suburb as NeighborhoodId;
-  }
-  return neighborhoodFromCoords(hit.lat, hit.lng);
+  return neighborhoodAtEventLocation(hit.lat, hit.lng);
 }
 
 /** Street + neighborhood for the address input after pin drag or autocomplete pick. */
@@ -77,4 +79,98 @@ export function displayAddressFromHit(hit: AddressHit): string {
     lat: hit.lat,
     lng: hit.lng,
   });
+}
+
+/** Autocomplete line — city when outside the four neighborhoods; never guess a wrong area. */
+export function addressAutocompleteLabel(hit: AddressHit, query = ""): string {
+  const parsed = parseStreetAndNumber(query.trim());
+  const queryRoad = parsed.road.trim();
+  const road = queryRoad || hit.road.trim();
+  const num = hit.houseNumber?.trim() || parsed.num;
+  const street = road && num ? `${road} ${num}` : streetFromAddressHit(hit);
+  const area = neighborhoodAtEventLocation(hit.lat, hit.lng);
+  if (area) return `${street}, ${area}`;
+  if (inNeighborhood(hit.lat, hit.lng)) {
+    return /רמת\s*גן/u.test(street) ? street : `${street}, רמת גן`;
+  }
+  return /רמת\s*גן/u.test(street) ? street : `${street}, רמת גן`;
+}
+
+function snapHitToFootprint(hit: AddressHit): AddressHit {
+  const street = streetFromAddressHit(hit);
+  const footprint = osmFootprintForAddress(street);
+  if (!footprint) return hit;
+  return {
+    ...hit,
+    lat: footprint.lat,
+    lng: footprint.lng,
+    precise: true,
+  };
+}
+
+/** Snap to OSM footprints and build a display label (may be outside the four neighborhoods). */
+export function prepareAddressHit(hit: AddressHit, query = ""): AddressHit | null {
+  if (!hit.road.trim() && !parseStreetAndNumber(query).road) return null;
+  const snapped = snapHitToFootprint(hit);
+  const parsed = parseStreetAndNumber(query.trim());
+  const withNumber =
+    parsed.num && !snapped.houseNumber ? { ...snapped, houseNumber: parsed.num } : snapped;
+  return { ...withNumber, label: addressAutocompleteLabel(withNumber, query) };
+}
+
+function addressHitDedupeKey(hit: AddressHit) {
+  const street = streetFromAddressHit(hit);
+  const footprint = osmFootprintForAddress(street);
+  if (footprint) {
+    return `fp#${footprint.lat.toFixed(5)}#${footprint.lng.toFixed(5)}#${hit.houseNumber ?? ""}`;
+  }
+  return clusterAddressKey(street);
+}
+
+/** Build a verified hit from a known OSM footprint when geocoders return nothing. */
+export function footprintAddressHit(query: string): AddressHit | null {
+  const parsed = parseStreetAndNumber(query.trim());
+  if (!parsed.num) return null;
+  const street = `${parsed.road} ${parsed.num}`.trim();
+  const footprint = osmFootprintForAddress(street);
+  if (!footprint) return null;
+  const raw: AddressHit = {
+    id: `footprint-${clusterAddressKey(street)}`,
+    label: street,
+    lat: footprint.lat,
+    lng: footprint.lng,
+    road: parsed.road,
+    houseNumber: parsed.num,
+    city: "רמת גן",
+    precise: true,
+  };
+  return prepareAddressHit(raw, query);
+}
+
+export async function searchPreparedAddresses(query: string): Promise<AddressHit[]> {
+  const { searchAddress } = await import("@/lib/geocode");
+  let hits = prepareAddressHits(await searchAddress(query), query);
+  if (hits.length === 0) {
+    const synthetic = footprintAddressHit(query);
+    if (synthetic) hits = [synthetic];
+  }
+  return hits;
+}
+
+export function prepareAddressHits(hits: AddressHit[], query = ""): AddressHit[] {
+  const best = new Map<string, AddressHit>();
+  for (const raw of hits) {
+    const hit = prepareAddressHit(raw, query);
+    if (!hit) continue;
+    const key = addressHitDedupeKey(hit);
+    const prev = best.get(key);
+    if (!prev || (hit.precise && !prev.precise)) {
+      best.set(key, hit);
+      continue;
+    }
+    if (hit.precise === prev.precise && hit.label.length < prev.label.length) {
+      best.set(key, hit);
+    }
+  }
+  return [...best.values()];
 }

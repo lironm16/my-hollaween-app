@@ -49,6 +49,14 @@ describe("migrateHouseFilters", () => {
     assert.equal(next.unvisitedOnly, true);
   });
 
+  it("adds הגפן when all legacy neighborhoods were selected", () => {
+    const next = migrateHouseFilters({
+      ...base(),
+      neighborhoodFilters: ["שיכון ותיקים", "חרוזים", "נחלת גנים"],
+    });
+    assert.deepEqual(next.neighborhoodFilters, ["שיכון ותיקים", "חרוזים", "נחלת גנים", "הגפן"]);
+  });
+
   it("normalizes partial candy and scare selections", () => {
     const next = migrateHouseFilters(base());
     assert.equal(isWithCandyFilter(next), false);

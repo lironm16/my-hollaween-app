@@ -71,7 +71,7 @@ export type House = {
   theme: HouseTheme;
   /** Street + house number only (e.g. יהודית 15). */
   address: string;
-  /** One of the three map neighborhoods; joined for display only. */
+  /** One of the map neighborhoods; joined for display only. */
   neighborhood?: NeighborhoodId | null;
   arrival: string;
   description: string;

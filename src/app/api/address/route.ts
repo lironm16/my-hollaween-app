@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { reverseAddress, searchAddress } from "@/lib/geocode";
+import { prepareAddressHit, searchPreparedAddresses } from "@/lib/address-fields";
+import { reverseAddress } from "@/lib/geocode";
 
 export const runtime = "nodejs";
 
@@ -11,13 +12,14 @@ export async function GET(request: Request) {
 
   try {
     if (Number.isFinite(lat) && Number.isFinite(lng) && url.searchParams.has("lat")) {
-      const hit = await reverseAddress(lat, lng);
+      const raw = await reverseAddress(lat, lng);
+      const hit = raw ? prepareAddressHit(raw) : null;
       return NextResponse.json({ hit });
     }
     if (q.length < 2) {
       return NextResponse.json({ hits: [] });
     }
-    const hits = await searchAddress(q);
+    const hits = await searchPreparedAddresses(q);
     return NextResponse.json({ hits });
   } catch {
     return NextResponse.json(

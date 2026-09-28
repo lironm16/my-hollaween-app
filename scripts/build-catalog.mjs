@@ -15,7 +15,9 @@ function readSeedCatalog() {
   });
   return {
     updatedAt: seed.updatedAt,
-    neighborhood: process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ?? "שיכון ותיקים · חרוזים · נחלת גנים",
+    neighborhood:
+      process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ??
+      "שיכון ותיקים · חרוזים · נחלת גנים · הגפן",
     houses,
     houseCount: houses.length,
   };
