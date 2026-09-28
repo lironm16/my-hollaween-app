@@ -9391,8 +9391,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   pointer-events: none;
 }
 .gem-hunt-overlay__footer--hunt {
-  z-index: 42;
-  bottom: max(2.75rem, calc(env(safe-area-inset-bottom, 0px) + 1.35rem));
+  z-index: 50;
+  bottom: max(3.35rem, calc(env(safe-area-inset-bottom, 0px) + 1.85rem));
   gap: 0.4rem;
 }
 .gem-hunt-overlay__footer > * {
@@ -9402,10 +9402,20 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__footer--hunt .gem-hunt-overlay__footer-stack {
   pointer-events: none;
 }
+.gem-hunt-overlay__footer--hunt .gem-hunt-overlay__footer-controls,
 .gem-hunt-overlay__footer--hunt .gem-hunt-overlay__hint-actions,
 .gem-hunt-overlay__footer--hunt .gem-hunt-overlay__spin-collect--footer,
 .gem-hunt-overlay__footer--hunt .gem-hunt-overlay__walk-guide--footer a {
   pointer-events: auto;
+}
+.gem-hunt-overlay__footer-controls {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+  touch-action: manipulation;
 }
 .gem-hunt-overlay__footer-hint {
   margin: 0;
@@ -9466,7 +9476,11 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__gem-hit.is-collect-layer {
   z-index: 14;
   touch-action: manipulation;
-  max-height: min(58vh, 16.5rem);
+  max-height: min(48vh, 14.5rem);
+  pointer-events: none;
+}
+.gem-hunt-overlay__gem-hit.is-collect-layer .gem-hunt-overlay__gem-tap-target {
+  pointer-events: auto;
 }
 .gem-hunt-overlay__gem-tap-target {
   display: flex;
@@ -9694,8 +9708,11 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__walk-guide--footer {
   width: 100%;
-  margin-top: 0;
-  margin-bottom: 0.15rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0;
+  padding: 0.35rem 0 0;
+  border: none;
+  background: transparent;
   pointer-events: none;
 }
 .gem-hunt-overlay__walk-guide--footer .gem-hunt-overlay__walk-maps {
@@ -9814,6 +9831,20 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   flex-direction: row;
   gap: 0.45rem;
   width: 100%;
+  z-index: 3;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+.gem-hunt-overlay__footer--hunt .gem-hunt-overlay__hint-actions--row .gem-hunt-overlay__hint-btn {
+  position: relative;
+  z-index: 1;
+  touch-action: manipulation;
+  background: transparent;
+  backdrop-filter: none;
+}
+.gem-hunt-overlay__footer--hunt .gem-hunt-overlay__hint-actions--row .gem-hunt-overlay__hint-btn.is-active {
+  background: rgb(76 29 149 / 0.35);
 }
 .gem-hunt-overlay__hint-actions--row .gem-hunt-overlay__hint-btn {
   flex: 1 1 0;
@@ -11646,12 +11677,16 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   pointer-events: auto !important;
 }
 .gem-hunt-webxr__footer {
-  z-index: 4;
+  z-index: 50;
+  pointer-events: none;
+  margin-bottom: 0;
+  padding: 0.35rem 1rem;
+  background: transparent;
+}
+.gem-hunt-webxr__footer .gem-hunt-webxr__error {
   pointer-events: auto;
-  margin-bottom: max(1.35rem, calc(env(safe-area-inset-bottom, 0px) + 0.65rem));
-  padding: 0.65rem max(0.85rem, env(safe-area-inset-right, 0px)) 0.45rem
-    max(0.85rem, env(safe-area-inset-left, 0px));
-  background: linear-gradient(to top, rgb(8 4 16 / 0.92), rgb(8 4 16 / 0.55));
+  width: min(92vw, 22rem);
+  margin-inline: auto;
 }
 .gem-hunt-webxr__hint {
   margin: 0;
@@ -11727,7 +11762,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__gem-hit.is-inspect360.is-ring-center,
 .gem-hunt-overlay__gem-hit.is-inspect360.is-center-collect {
   left: 50%;
-  top: 42%;
+  top: 36%;
   transform: translate(-50%, -50%);
 }
 .gem-hunt-overlay__tap-collect-caption {
@@ -11774,7 +11809,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 .gem-model-3d,
 .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 canvas {
-  pointer-events: auto;
+  pointer-events: none;
 }
 .gem-sprite--inspect360 {
   width: 100%;

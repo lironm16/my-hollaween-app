@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Navigation } from "lucide-react";
-import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
@@ -423,13 +422,6 @@ export function GemHuntOverlay({
   const huntArrowPhoneRelative = heading != null && turnBearing != null;
   const huntArrowDeg = huntArrowPhoneRelative ? turnBearing : gpsBearingToAnchor;
   const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToAnchor != null;
-  const showDirectionRose =
-    hintPanel === "nav" &&
-    !centerDisplayMode &&
-    huntArrowDeg != null &&
-    effectiveLoc != null &&
-    userLocation != null &&
-    !sim;
   const mapsWalkUrl =
     userLocation != null && !sim
       ? googleMapsNavigateUrl(userLocation, { lat: anchor.lat, lng: anchor.lng })
@@ -558,16 +550,6 @@ export function GemHuntOverlay({
         )}
         aria-hidden={false}
       >
-        {showDirectionRose ? (
-          <div className="gem-hunt-overlay__nav-layer" aria-hidden>
-            <GemHuntDirectionRose
-              bearingDeg={huntArrowDeg!}
-              facing={facingTarget && !huntArrowMapNorth}
-              className="gem-hunt-overlay__nav-rose gem-hunt-direction-rose--ring"
-            />
-          </div>
-        ) : null}
-
         {arPinRevealedGem ? (
           <div
             className={cn(
@@ -635,6 +617,58 @@ export function GemHuntOverlay({
           ) : null}
 
           <div className="gem-hunt-overlay__footer-stack">
+            <div className="gem-hunt-overlay__footer-controls">
+              <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
+                <button
+                  type="button"
+                  className={cn(
+                    "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
+                    hintPanel === "nav" && "is-active",
+                  )}
+                  aria-pressed={hintPanel === "nav"}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void toggleHintPanel();
+                  }}
+                >
+                  <span className="gem-hunt-overlay__hint-btn-label">
+                    <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
+                    <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className={cn(
+                    "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
+                    centerReveal && "is-active",
+                  )}
+                  aria-pressed={centerReveal}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleRevealMe();
+                  }}
+                >
+                  {centerReveal ? "הסתר" : "גלה לי"}
+                </button>
+              </div>
+
+              {canTapCollect ? (
+                <button
+                  type="button"
+                  className="gem-hunt-overlay__spin-collect gem-hunt-overlay__spin-collect--footer"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCollect();
+                  }}
+                >
+                  אסף יהלום
+                </button>
+              ) : null}
+            </div>
+
             {hintPanel === "nav" ? (
               <div
                 className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
@@ -669,50 +703,6 @@ export function GemHuntOverlay({
                 ) : null}
               </div>
             ) : null}
-
-            {canTapCollect ? (
-              <button
-                type="button"
-                className="gem-hunt-overlay__spin-collect gem-hunt-overlay__spin-collect--footer"
-                onClick={() => handleCollect()}
-              >
-                אסף יהלום
-              </button>
-            ) : null}
-
-            <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
-            <button
-              type="button"
-              className={cn(
-                "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
-                hintPanel === "nav" && "is-active",
-              )}
-              aria-pressed={hintPanel === "nav"}
-              onClick={(e) => {
-                e.stopPropagation();
-                void toggleHintPanel();
-              }}
-            >
-              <span className="gem-hunt-overlay__hint-btn-label">
-                <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
-                <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
-              </span>
-            </button>
-            <button
-              type="button"
-              className={cn(
-                "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
-                centerReveal && "is-active",
-              )}
-              aria-pressed={centerReveal}
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleRevealMe();
-              }}
-            >
-              {centerReveal ? "הסתר" : "גלה לי"}
-            </button>
-          </div>
           </div>
         </footer>
       ) : null}
