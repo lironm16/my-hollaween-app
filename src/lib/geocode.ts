@@ -28,7 +28,8 @@ function isCityName(value: string) {
   return /רמת\s*גן/u.test(value) || /ramat\s*gan/i.test(value);
 }
 
-function areaLabelFor(hit: { lat: number; lng: number }) {
+function areaLabelFor(hit: { lat: number; lng: number; suburb?: string }) {
+  void hit.suburb;
   return neighborhoodFromCoords(hit.lat, hit.lng);
 }
 
