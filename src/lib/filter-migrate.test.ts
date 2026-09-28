@@ -57,8 +57,8 @@ describe("migrateHouseFilters", () => {
     assert.deepEqual(next.neighborhoodFilters, [
       "שיכון ותיקים",
       "חרוזים",
-      "שכונת הגפן",
       "נחלת גנים",
+      "שכונת הגפן",
     ]);
   });
 

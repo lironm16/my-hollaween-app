@@ -17,7 +17,7 @@ const tiles = {
   maxNativeZoom: 18,
 } as const;
 
-export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "שכונת הגפן", "נחלת גנים"] as const;
+export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים", "שכונת הגפן"] as const;
 export type NeighborhoodId = (typeof NEIGHBORHOODS)[number];
 
 const LEGACY_NEIGHBORHOOD_ALIASES: Record<string, NeighborhoodId> = {
@@ -43,7 +43,7 @@ export const config = {
   tagline: "מפת הבתים המפחידים של השכונה",
   neighborhood:
     process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ??
-    "שיכון ותיקים · חרוזים · שכונת הגפן · נחלת גנים",
+    "שיכון ותיקים · חרוזים · נחלת גנים · שכונת הגפן",
   neighborhoods: NEIGHBORHOODS,
   map: {
     center: {

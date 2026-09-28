@@ -17,7 +17,7 @@ function readSeedCatalog() {
     updatedAt: seed.updatedAt,
     neighborhood:
       process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ??
-      "שיכון ותיקים · חרוזים · שכונת הגפן · נחלת גנים",
+      "שיכון ותיקים · חרוזים · נחלת גנים · שכונת הגפן",
     houses,
     houseCount: houses.length,
   };
