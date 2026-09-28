@@ -271,32 +271,29 @@ export function HouseForm({
   }
 
   async function syncFromPin(lat: number, lng: number) {
-    if (!houseLocationAllowed(lat, lng)) {
-      setAddressError(outsideZoneMessage);
-      setForm((f) => ({ ...f, lat, lng, neighborhood: undefined }));
-      setAddressOk(false);
-      return;
-    }
     setForm((f) => ({ ...f, lat, lng }));
     const hit = await reversePin(lat, lng);
     if (!hit) {
+      setAddressError(null);
       setAddressOk(false);
+      setForm((f) => ({ ...f, neighborhood: undefined }));
       toast.error("לא מצאנו כתובת בנקודה הזו. הזינו רחוב ומספר מהרשימה.");
       return;
     }
-    if (!houseLocationAllowed(hit.lat, hit.lng)) {
+    const allowed = houseLocationAllowed(hit.lat, hit.lng);
+    setForm((f) => ({
+      ...f,
+      lat: hit.lat,
+      lng: hit.lng,
+      address: allowed ? displayAddressFromHit(hit) : hit.label,
+      neighborhood: allowed ? neighborhoodFromAddressHit(hit) : undefined,
+    }));
+    if (!allowed) {
       setAddressError(outsideZoneMessage);
       setAddressOk(false);
       return;
     }
     setAddressError(null);
-    setForm((f) => ({
-      ...f,
-      lat,
-      lng,
-      address: displayAddressFromHit(hit),
-      neighborhood: neighborhoodFromAddressHit(hit),
-    }));
     setAddressOk(true);
     if (!hit.precise) {
       toast.message(streetPinHint(hit) ?? "סימנו את הרחוב. גררו את הסיכה עד לבית שלכם.");
