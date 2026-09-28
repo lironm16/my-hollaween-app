@@ -635,6 +635,58 @@ export function GemHuntOverlay({
           ) : null}
 
           <div className="gem-hunt-overlay__footer-stack">
+            <div className="gem-hunt-overlay__footer-controls">
+              <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
+                <button
+                  type="button"
+                  className={cn(
+                    "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
+                    hintPanel === "nav" && "is-active",
+                  )}
+                  aria-pressed={hintPanel === "nav"}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void toggleHintPanel();
+                  }}
+                >
+                  <span className="gem-hunt-overlay__hint-btn-label">
+                    <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
+                    <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className={cn(
+                    "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
+                    centerReveal && "is-active",
+                  )}
+                  aria-pressed={centerReveal}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleRevealMe();
+                  }}
+                >
+                  {centerReveal ? "הסתר" : "גלה לי"}
+                </button>
+              </div>
+
+              {canTapCollect ? (
+                <button
+                  type="button"
+                  className="gem-hunt-overlay__spin-collect gem-hunt-overlay__spin-collect--footer"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCollect();
+                  }}
+                >
+                  אסף יהלום
+                </button>
+              ) : null}
+            </div>
+
             {hintPanel === "nav" ? (
               <div
                 className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
@@ -669,50 +721,6 @@ export function GemHuntOverlay({
                 ) : null}
               </div>
             ) : null}
-
-            {canTapCollect ? (
-              <button
-                type="button"
-                className="gem-hunt-overlay__spin-collect gem-hunt-overlay__spin-collect--footer"
-                onClick={() => handleCollect()}
-              >
-                אסף יהלום
-              </button>
-            ) : null}
-
-            <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
-            <button
-              type="button"
-              className={cn(
-                "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
-                hintPanel === "nav" && "is-active",
-              )}
-              aria-pressed={hintPanel === "nav"}
-              onClick={(e) => {
-                e.stopPropagation();
-                void toggleHintPanel();
-              }}
-            >
-              <span className="gem-hunt-overlay__hint-btn-label">
-                <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
-                <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
-              </span>
-            </button>
-            <button
-              type="button"
-              className={cn(
-                "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
-                centerReveal && "is-active",
-              )}
-              aria-pressed={centerReveal}
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleRevealMe();
-              }}
-            >
-              {centerReveal ? "הסתר" : "גלה לי"}
-            </button>
-          </div>
           </div>
         </footer>
       ) : null}
