@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  houseLocationAllowed,
   NEIGHBORHOODS,
+  neighborhoodAtEventLocation,
   neighborhoodFromAddress,
   neighborhoodFromCoords,
   normalizeNeighborhoodId,
@@ -24,9 +26,15 @@ describe("neighborhood config", () => {
 
   it("classifies Jabotinsky-area pins as הגפן", () => {
     assert.equal(neighborhoodFromCoords(32.08925, 34.81205), "הגפן");
+    assert.equal(neighborhoodAtEventLocation(32.08925, 34.81205), "הגפן");
     assert.equal(
       resolveNeighborhood({ address: "ז'בוטינסקי 105", lat: 32.08925, lng: 34.81205 }),
       "הגפן",
     );
+  });
+
+  it("rejects map-box corners outside the four neighborhoods", () => {
+    assert.equal(houseLocationAllowed(32.0994, 34.7972), false);
+    assert.equal(neighborhoodAtEventLocation(32.0994, 34.7972), null);
   });
 });

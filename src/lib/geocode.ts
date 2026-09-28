@@ -1,10 +1,13 @@
 import {
   config,
+  houseLocationAllowed,
   inNeighborhood,
+  neighborhoodAtEventLocation,
   neighborhoodFromCoords,
   suburbToNeighborhood,
   type NeighborhoodId,
 } from "@/lib/config";
+import { clusterAddressKey } from "@/lib/house-clusters";
 import { houseNumberFromHit, parseStreetAndNumber } from "@/lib/address-text";
 import type { AddressHit } from "@/lib/types";
 
@@ -30,7 +33,7 @@ function isCityName(value: string) {
 
 function areaLabelFor(hit: { lat: number; lng: number; suburb?: string }) {
   void hit.suburb;
-  return neighborhoodFromCoords(hit.lat, hit.lng);
+  return neighborhoodAtEventLocation(hit.lat, hit.lng);
 }
 
 type NominatimHit = {
@@ -282,32 +285,33 @@ function hitQuality(
   return score;
 }
 
+function hitIdentityKey(hit: AddressHit) {
+  const street =
+    hit.road && hit.houseNumber
+      ? `${hit.road} ${hit.houseNumber}`
+      : (hit.label.split(",")[0]?.trim() ?? hit.label);
+  return clusterAddressKey(street);
+}
+
 function uniqueHits(hits: AddressHit[], query: string, parsed?: { road: string; num?: string }) {
-  const seen = new Set<string>();
-  const out: AddressHit[] = [];
+  const bestByKey = new Map<string, AddressHit>();
   for (const hit of hits) {
-    const key = `${hit.label}|${hit.lat.toFixed(5)}|${hit.lng.toFixed(5)}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(hit);
-  }
-  const bestByLabel = new Map<string, AddressHit>();
-  for (const hit of out) {
-    const current = bestByLabel.get(hit.label);
+    const key = hitIdentityKey(hit);
+    const current = bestByKey.get(key);
     if (!current) {
-      bestByLabel.set(hit.label, hit);
+      bestByKey.set(key, hit);
       continue;
     }
     if (hit.precise && !current.precise) {
-      bestByLabel.set(hit.label, hit);
+      bestByKey.set(key, hit);
       continue;
     }
     if (!hit.precise && current.precise) continue;
     if (hitQuality(hit, query, parsed) > hitQuality(current, query, parsed)) {
-      bestByLabel.set(hit.label, hit);
+      bestByKey.set(key, hit);
     }
   }
-  return [...bestByLabel.values()];
+  return [...bestByKey.values()];
 }
 
 function rank(hit: AddressHit, query: string, parsed?: { road: string; num?: string }) {
@@ -381,6 +385,7 @@ export async function searchAddress(query: string): Promise<AddressHit[]> {
       hits = hits.filter((h) => h.precise || h.houseNumber !== parsed.num);
     }
   }
+  hits = hits.filter((h) => houseLocationAllowed(h.lat, h.lng));
   return hits.slice(0, 8);
 }
 
@@ -486,7 +491,7 @@ export function haversineMeters(
 }
 
 export async function assertRealAddress(input: { address: string; lat: number; lng: number }) {
-  if (!inNeighborhood(input.lat, input.lng)) {
+  if (!houseLocationAllowed(input.lat, input.lng)) {
     throw new Error("OUT_OF_BOUNDS");
   }
   if (!input.address.trim()) {

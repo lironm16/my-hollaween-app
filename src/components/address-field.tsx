@@ -13,6 +13,7 @@ type Props = {
   onChange: (value: string) => void;
   onSelect: (hit: AddressHit) => void;
   confirmed: boolean;
+  fieldError?: string | null;
   disabled?: boolean;
   emptyHint?: boolean;
   maxLength?: number;
@@ -24,6 +25,7 @@ export function AddressField({
   onChange,
   onSelect,
   confirmed,
+  fieldError = null,
   disabled,
   emptyHint = true,
   maxLength,
@@ -202,7 +204,9 @@ export function AddressField({
           )}
         </ul>
       ) : null}
-      {!listOpen && confirmed ? (
+      {fieldError ? (
+        <p className="mt-1 text-base text-red-300">{fieldError}</p>
+      ) : !listOpen && confirmed ? (
         <p className="mt-1 text-base text-emerald-300">כתובת מאומתת על המפה</p>
       ) : !listOpen && value.trim().length >= 3 ? (
         <p className="mt-1 text-base text-amber-200">בחרו כתובת מהרשימה, או גררו את הסיכה לבית הנכון</p>

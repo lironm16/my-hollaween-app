@@ -1,12 +1,14 @@
 import {
   formatDisplayAddress,
+  houseLocationAllowed,
   NEIGHBORHOODS,
+  neighborhoodAtEventLocation,
   neighborhoodFromAddress,
-  neighborhoodFromCoords,
   normalizeNeighborhoodId,
-  suburbToNeighborhood,
   type NeighborhoodId,
 } from "@/lib/config";
+import { osmFootprintForAddress } from "@/lib/house-footprint-align";
+import { clusterAddressKey } from "@/lib/house-clusters";
 import type { AddressHit } from "@/lib/types";
 
 const ADDRESS_AREA_NAMES = [...NEIGHBORHOODS, "שכונת הגפן"] as const;
@@ -35,7 +37,7 @@ export function splitLegacyAddress(
   const fromText = neighborhoodFromAddress(address);
   const hasCoords =
     typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng);
-  const fromCoords = hasCoords ? neighborhoodFromCoords(lat, lng) : null;
+  const fromCoords = hasCoords ? neighborhoodAtEventLocation(lat, lng) : null;
   return { street, neighborhood: fromText ?? fromCoords };
 }
 
@@ -64,11 +66,7 @@ export function streetFromAddressHit(hit: AddressHit): string {
 }
 
 export function neighborhoodFromAddressHit(hit: AddressHit): NeighborhoodId | null {
-  const fromCoords = neighborhoodFromCoords(hit.lat, hit.lng);
-  const suburb = hit.suburb?.trim() ?? "";
-  const fromSuburb = suburb ? suburbToNeighborhood(suburb) : null;
-  if (fromSuburb && fromSuburb === fromCoords) return fromSuburb;
-  return fromCoords;
+  return neighborhoodAtEventLocation(hit.lat, hit.lng);
 }
 
 /** Street + neighborhood for the address input after pin drag or autocomplete pick. */
@@ -79,4 +77,50 @@ export function displayAddressFromHit(hit: AddressHit): string {
     lat: hit.lat,
     lng: hit.lng,
   });
+}
+
+function snapHitToFootprint(hit: AddressHit): AddressHit {
+  const street = streetFromAddressHit(hit);
+  const footprint = osmFootprintForAddress(street);
+  if (!footprint) return hit;
+  return {
+    ...hit,
+    lat: footprint.lat,
+    lng: footprint.lng,
+    precise: true,
+  };
+}
+
+/** Snap to OSM footprints, relabel by map neighborhood, drop hits outside the four areas. */
+export function prepareAddressHit(hit: AddressHit): AddressHit | null {
+  const snapped = snapHitToFootprint(hit);
+  if (!houseLocationAllowed(snapped.lat, snapped.lng)) return null;
+  return { ...snapped, label: displayAddressFromHit(snapped) };
+}
+
+function addressHitDedupeKey(hit: AddressHit) {
+  const street = streetFromAddressHit(hit);
+  const footprint = osmFootprintForAddress(street);
+  if (footprint) {
+    return `fp#${footprint.lat.toFixed(5)}#${footprint.lng.toFixed(5)}#${hit.houseNumber ?? ""}`;
+  }
+  return clusterAddressKey(street);
+}
+
+export function prepareAddressHits(hits: AddressHit[]): AddressHit[] {
+  const best = new Map<string, AddressHit>();
+  for (const raw of hits) {
+    const hit = prepareAddressHit(raw);
+    if (!hit) continue;
+    const key = addressHitDedupeKey(hit);
+    const prev = best.get(key);
+    if (!prev || (hit.precise && !prev.precise)) {
+      best.set(key, hit);
+      continue;
+    }
+    if (hit.precise === prev.precise && hit.label.length < prev.label.length) {
+      best.set(key, hit);
+    }
+  }
+  return [...best.values()];
 }

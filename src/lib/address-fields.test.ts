@@ -3,6 +3,8 @@ import { describe, it } from "node:test";
 import {
   displayAddressFromHit,
   normalizeAddressFields,
+  prepareAddressHit,
+  prepareAddressHits,
   splitLegacyAddress,
   streetFromLegacyAddress,
 } from "@/lib/address-fields";
@@ -57,5 +59,36 @@ describe("address fields", () => {
     assert.equal(fields.address, "חרוזים 8");
     assert.equal(fields.neighborhood, "חרוזים");
     assert.equal(streetFromLegacyAddress("חרוזים 8, חרוזים"), "חרוזים 8");
+  });
+
+  it("snaps Jabotinsky 105 to Gefen and dedupes autocomplete hits", () => {
+    const wrongSide: AddressHit = {
+      id: "p-1",
+      label: "זאב ז'בוטינסקי 105, נחלת גנים",
+      lat: 32.08918,
+      lng: 34.8182,
+      road: "זאב ז'בוטינסקי",
+      houseNumber: "105",
+      suburb: "נחלת גנים",
+      city: "רמת גן",
+      precise: true,
+    };
+    const plain: AddressHit = {
+      id: "p-2",
+      label: "ז'בוטינסקי 105",
+      lat: 32.08918,
+      lng: 34.8182,
+      road: "ז'בוטינסקי",
+      houseNumber: "105",
+      city: "רמת גן",
+      precise: true,
+    };
+    const prepared = prepareAddressHits([wrongSide, plain]);
+    assert.equal(prepared.length, 1);
+    assert.equal(prepared[0]!.label, "זאב ז'בוטינסקי 105, הגפן");
+    const single = prepareAddressHit(wrongSide);
+    assert.ok(single);
+    assert.equal(single!.lat, 32.08925);
+    assert.equal(single!.lng, 34.81205);
   });
 });

@@ -111,8 +111,10 @@ export function neighborhoodFromAddress(address: string): NeighborhoodId | null 
   return null;
 }
 
-/** Nearest neighborhood center (for labels that only say רמת גן). */
-export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId {
+/** Squared deg distance limit — rejects map-box corners outside the four neighborhoods. */
+const MAX_NEIGHBORHOOD_CENTER_DIST_SQ = 0.00009;
+
+function nearestNeighborhood(lat: number, lng: number) {
   let best: NeighborhoodId = NEIGHBORHOODS[0];
   let bestDist = Number.POSITIVE_INFINITY;
   for (const name of NEIGHBORHOODS) {
@@ -123,7 +125,28 @@ export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId
       best = name;
     }
   }
+  return { best, bestDist };
+}
+
+/** Nearest neighborhood center (for labels that only say רמת גן). */
+export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId {
+  return nearestNeighborhood(lat, lng).best;
+}
+
+/** One of the four event neighborhoods, or null when the pin is outside their area. */
+export function neighborhoodAtEventLocation(lat: number, lng: number): NeighborhoodId | null {
+  if (!inNeighborhood(lat, lng)) return null;
+  const { best, bestDist } = nearestNeighborhood(lat, lng);
+  if (bestDist > MAX_NEIGHBORHOOD_CENTER_DIST_SQ) return null;
   return best;
+}
+
+export function houseLocationAllowed(lat: number, lng: number) {
+  return neighborhoodAtEventLocation(lat, lng) !== null;
+}
+
+export function allowedNeighborhoodsMessage() {
+  return `בחרו בית ב${NEIGHBORHOODS.slice(0, -1).join(", ")} או ${NEIGHBORHOODS[NEIGHBORHOODS.length - 1]}.`;
 }
 
 export function resolveNeighborhood(house: {
@@ -145,7 +168,7 @@ export function resolveNeighborhood(house: {
     Number.isFinite(house.lat) &&
     Number.isFinite(house.lng)
   ) {
-    return neighborhoodFromCoords(house.lat, house.lng);
+    return neighborhoodAtEventLocation(house.lat, house.lng);
   }
   return null;
 }
