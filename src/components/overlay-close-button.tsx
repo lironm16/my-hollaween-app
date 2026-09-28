@@ -64,7 +64,7 @@ export function OverlayCloseBar({
           ) : null}
         </div>
       ) : null}
-      {title ? <div className="hw-overlay-close-bar-spacer" aria-hidden /> : null}
+      {title && !trailing ? <div className="hw-overlay-close-bar-spacer" aria-hidden /> : null}
       {trailing ? <div className="hw-overlay-close-bar-trailing">{trailing}</div> : null}
     </div>
   );

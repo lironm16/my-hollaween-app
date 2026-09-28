@@ -39,11 +39,11 @@ export function HouseEditOverlay({
               type="button"
               size="sm"
               variant="outline"
-              className="h-9 gap-1.5 border-orange-400/40 px-2.5 text-orange-100"
+              className="h-9 max-w-[10.5rem] shrink gap-1.5 border-orange-400/40 px-2.5 text-orange-100"
               onClick={onOpenQuick}
             >
-              <Zap className="size-3.5" />
-              עדכון מהיר
+              <Zap className="size-3.5 shrink-0" />
+              <span className="truncate">עדכון מהיר</span>
             </Button>
           ) : null
         }

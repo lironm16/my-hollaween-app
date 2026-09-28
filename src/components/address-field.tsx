@@ -6,6 +6,7 @@ import { inputStyles } from "@/components/ui/input";
 import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
 import { cn } from "@/lib/utils";
+import { useVisualKeyboardOpen } from "@/hooks/use-visual-keyboard-open";
 
 type Props = {
   value: string;
@@ -15,6 +16,7 @@ type Props = {
   disabled?: boolean;
   emptyHint?: boolean;
   maxLength?: number;
+  onFocusChange?: (focused: boolean) => void;
 };
 
 export function AddressField({
@@ -25,10 +27,14 @@ export function AddressField({
   disabled,
   emptyHint = true,
   maxLength,
+  onFocusChange,
 }: Props) {
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const keyboardOpen = useVisualKeyboardOpen();
   const [hits, setHits] = useState<AddressHit[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,9 +92,20 @@ export function AddressField({
     setHits([]);
   }
 
+  const listOpen = open && value.trim().length >= 2;
+  const dropUp = keyboardOpen || focused;
+
+  useEffect(() => {
+    onFocusChange?.(focused);
+  }, [focused, onFocusChange]);
+
   return (
-    <div ref={wrapRef} className="relative">
+    <div
+      ref={wrapRef}
+      className={cn("relative", listOpen && "z-40")}
+    >
       <input
+        ref={inputRef}
         dir="rtl"
         autoComplete="off"
         spellCheck={false}
@@ -108,7 +125,16 @@ export function AddressField({
           onChange(e.target.value);
           setOpen(true);
         }}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          setFocused(true);
+          setOpen(true);
+          window.requestAnimationFrame(() => {
+            inputRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+          });
+        }}
+        onBlur={() => {
+          setFocused(false);
+        }}
         onKeyDown={(e) => {
           if (!open && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
             setOpen(true);
@@ -132,11 +158,14 @@ export function AddressField({
           }
         }}
       />
-      {open && value.trim().length >= 2 ? (
+      {listOpen ? (
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-xl bg-[#1d1028] py-1 text-base shadow-lg ring-1 ring-orange-500/30"
+          className={cn(
+            "absolute z-50 max-h-[min(14rem,var(--app-h,50vh))] w-full overflow-auto rounded-xl bg-[#1d1028] py-1 text-base shadow-lg ring-1 ring-orange-500/30",
+            dropUp ? "bottom-full mb-1" : "top-full mt-1",
+          )}
         >
           {loading ? (
             <li className="px-3 py-2 text-violet-300">מחפשים כתובות…</li>
@@ -158,6 +187,7 @@ export function AddressField({
                     i === active ? "bg-orange-500/20 text-orange-50" : "text-orange-100",
                   )}
                   onMouseEnter={() => setActive(i)}
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => pick(hit)}
                 >
                   <MapPin className="mt-0.5 size-3.5 shrink-0 text-orange-400" />
@@ -172,11 +202,11 @@ export function AddressField({
           )}
         </ul>
       ) : null}
-      {confirmed ? (
+      {!listOpen && confirmed ? (
         <p className="mt-1 text-base text-emerald-300">כתובת מאומתת על המפה</p>
-      ) : value.trim().length >= 3 ? (
+      ) : !listOpen && value.trim().length >= 3 ? (
         <p className="mt-1 text-base text-amber-200">בחרו כתובת מהרשימה, או גררו את הסיכה לבית הנכון</p>
-      ) : emptyHint ? (
+      ) : !listOpen && emptyHint ? (
         <p className="mt-1 text-base text-violet-300">הכתובת חייבת להיות כתובת אמיתית בשכונה</p>
       ) : null}
     </div>

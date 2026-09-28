@@ -126,6 +126,7 @@ export function HouseForm({
   const [form, setForm] = useState<HouseInput>({ ...empty, ...initial });
   const [locating, setLocating] = useState(false);
   const [addressOk, setAddressOk] = useState(Boolean(initial?.address && initial.lat && initial.lng));
+  const [addressFieldActive, setAddressFieldActive] = useState(false);
   const [decorLevel, setDecorLevel] = useState<DecorLevel>(() => initialDecorLevel(initial));
   const [candy, setCandy] = useState<CandyTone>(() => initialCandyTone(initial));
   const [hourWindows, setHourWindows] = useState<HoursWindow[]>(() => {
@@ -491,6 +492,7 @@ export function HouseForm({
             confirmed={addressOk}
             disabled={blocked}
             maxLength={HOUSE_FIELD_LIMITS.address.max}
+            onFocusChange={setAddressFieldActive}
           />
         </Field>
         <div>
@@ -503,7 +505,12 @@ export function HouseForm({
           <p className="mb-2 text-lg text-violet-300">
             אחרי בחירת כתובת הסיכה זזה לשם. אפשר לגרור אותה לכניסה המדויקת.
           </p>
-          <div className="relative z-0 isolate h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/30">
+          <div
+            className={cn(
+              "relative z-0 isolate h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/30",
+              addressFieldActive && "hidden sm:block",
+            )}
+          >
             <HouseMapDynamic
               pickMode
               pick={{ lat: form.lat, lng: form.lng }}

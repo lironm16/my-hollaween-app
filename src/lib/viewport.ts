@@ -43,6 +43,11 @@ export function visualViewportBottomInset() {
   return Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
 }
 
+/** iOS / mobile software keyboard — visual viewport shrinks from the bottom. */
+export function isVisualKeyboardOpen(thresholdPx = 80) {
+  return visualViewportBottomInset() >= thresholdPx;
+}
+
 export function visualViewportTopOffset() {
   if (typeof window === "undefined") return 0;
   return window.visualViewport?.offsetTop ?? 0;

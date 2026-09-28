@@ -411,6 +411,9 @@
   .top-\[max\(0\.5rem\,env\(safe-area-inset-top\,0px\)\)\] {
     top: max(0.5rem, env(safe-area-inset-top,0px));
   }
+  .top-full {
+    top: 100%;
+  }
   .-right-1 {
     right: calc(var(--spacing) * -1);
   }
@@ -434,6 +437,9 @@
   }
   .bottom-6 {
     bottom: calc(var(--spacing) * 6);
+  }
+  .bottom-full {
+    bottom: 100%;
   }
   .left-1\/2 {
     left: calc(1 / 2 * 100%);
@@ -882,14 +888,14 @@
   .max-h-\(--available-height\) {
     max-height: var(--available-height);
   }
-  .max-h-56 {
-    max-height: calc(var(--spacing) * 56);
-  }
   .max-h-64 {
     max-height: calc(var(--spacing) * 64);
   }
   .max-h-72 {
     max-height: calc(var(--spacing) * 72);
+  }
+  .max-h-\[min\(14rem\,var\(--app-h\,50vh\)\)\] {
+    max-height: min(14rem, var(--app-h,50vh));
   }
   .max-h-\[min\(52dvh\,28rem\)\] {
     max-height: min(52dvh, 28rem);
@@ -1010,6 +1016,9 @@
   }
   .max-w-20 {
     max-width: calc(var(--spacing) * 20);
+  }
+  .max-w-\[10\.5rem\] {
+    max-width: 10.5rem;
   }
   .max-w-\[220px\] {
     max-width: 220px;
@@ -8530,7 +8539,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .house-edit-overlay-bar {
   display: flex;
   justify-content: flex-start;
-  padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 0.75rem 0.5rem;
+  padding: calc(0.75rem + env(safe-area-inset-top, 0px))
+    max(0.75rem, env(safe-area-inset-right, 0px))
+    0.5rem
+    max(0.75rem, env(safe-area-inset-left, 0px));
 }
 .hw-overlay-close-bar--compact {
   padding: 0.5rem 0.75rem 0.25rem;
@@ -8540,6 +8552,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
   gap: 0.5rem;
+}
+.hw-overlay-close-bar--titled.hw-overlay-close-bar--trailing {
+  grid-template-columns: 44px minmax(0, 1fr) minmax(0, max-content);
 }
 .hw-overlay-close-bar--titled > .hw-overlay-close {
   grid-column: 1;
@@ -8593,8 +8608,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: clip;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: max(0.5rem, var(--vv-bottom-inset, 0px));
 }
 .night-status-dot.is-open {
   background: #34d399;
