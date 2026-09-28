@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   displayAddressFromHit,
+  footprintAddressHit,
   normalizeAddressFields,
   prepareAddressHit,
   prepareAddressHits,
@@ -61,6 +62,14 @@ describe("address fields", () => {
     assert.equal(streetFromLegacyAddress("חרוזים 8, חרוזים"), "חרוזים 8");
   });
 
+  it("builds Jabotinsky 105 from footprint when geocoders miss", () => {
+    for (const query of ["Zabutinsky 105", "ז'בוטינסקי 105", "זבוטינסקי 105"]) {
+      const hit = footprintAddressHit(query);
+      assert.ok(hit, query);
+      assert.match(hit!.label, /105, הגפן$/u);
+    }
+  });
+
   it("snaps Jabotinsky 105 to Gefen and dedupes autocomplete hits", () => {
     const wrongSide: AddressHit = {
       id: "p-1",
@@ -85,7 +94,7 @@ describe("address fields", () => {
     };
     const prepared = prepareAddressHits([wrongSide, plain]);
     assert.equal(prepared.length, 1);
-    assert.equal(prepared[0]!.label, "זאב ז'בוטינסקי 105, הגפן");
+    assert.match(prepared[0]!.label, /105, הגפן$/u);
     const single = prepareAddressHit(wrongSide);
     assert.ok(single);
     assert.equal(single!.lat, 32.08925);

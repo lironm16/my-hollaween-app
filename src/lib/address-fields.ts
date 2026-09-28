@@ -7,6 +7,7 @@ import {
   normalizeNeighborhoodId,
   type NeighborhoodId,
 } from "@/lib/config";
+import { parseStreetAndNumber } from "@/lib/address-text";
 import { osmFootprintForAddress } from "@/lib/house-footprint-align";
 import { clusterAddressKey } from "@/lib/house-clusters";
 import type { AddressHit } from "@/lib/types";
@@ -105,6 +106,36 @@ function addressHitDedupeKey(hit: AddressHit) {
     return `fp#${footprint.lat.toFixed(5)}#${footprint.lng.toFixed(5)}#${hit.houseNumber ?? ""}`;
   }
   return clusterAddressKey(street);
+}
+
+/** Build a verified hit from a known OSM footprint when geocoders return nothing. */
+export function footprintAddressHit(query: string): AddressHit | null {
+  const parsed = parseStreetAndNumber(query.trim());
+  if (!parsed.num) return null;
+  const street = `${parsed.road} ${parsed.num}`.trim();
+  const footprint = osmFootprintForAddress(street);
+  if (!footprint) return null;
+  const raw: AddressHit = {
+    id: `footprint-${clusterAddressKey(street)}`,
+    label: street,
+    lat: footprint.lat,
+    lng: footprint.lng,
+    road: parsed.road,
+    houseNumber: parsed.num,
+    city: "רמת גן",
+    precise: true,
+  };
+  return prepareAddressHit(raw);
+}
+
+export async function searchPreparedAddresses(query: string): Promise<AddressHit[]> {
+  const { searchAddress } = await import("@/lib/geocode");
+  let hits = prepareAddressHits(await searchAddress(query));
+  if (hits.length === 0) {
+    const synthetic = footprintAddressHit(query);
+    if (synthetic) hits = [synthetic];
+  }
+  return hits;
 }
 
 export function prepareAddressHits(hits: AddressHit[]): AddressHit[] {

@@ -385,7 +385,6 @@ export async function searchAddress(query: string): Promise<AddressHit[]> {
       hits = hits.filter((h) => h.precise || h.houseNumber !== parsed.num);
     }
   }
-  hits = hits.filter((h) => houseLocationAllowed(h.lat, h.lng));
   return hits.slice(0, 8);
 }
 

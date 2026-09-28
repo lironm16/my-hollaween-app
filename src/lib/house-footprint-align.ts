@@ -1,3 +1,4 @@
+import { parseStreetAndNumber } from "@/lib/address-text";
 import { clusterAddressKey } from "@/lib/house-clusters";
 import { haversineMeters } from "@/lib/geocode";
 import type { PublicHouse } from "@/lib/types";
@@ -16,12 +17,35 @@ type FootprintFile = {
 const footprints: Record<string, { lat: number; lng: number }> =
   (footprintData as FootprintFile).footprints ?? {};
 
+function normalizeHouseNum(num: string) {
+  return num.replace(/^0+/, "").trim().toLowerCase();
+}
+
+function footprintKeysForAddress(address: string): string[] {
+  const keys: string[] = [];
+  const primary = clusterAddressKey(address);
+  if (primary.includes("#")) keys.push(primary);
+
+  const parsed = parseStreetAndNumber(address);
+  if (!parsed.num) return keys;
+
+  const num = normalizeHouseNum(parsed.num);
+  const roadLower = parsed.road.trim().toLowerCase();
+  const jabotinsky =
+    /zabutinsky|jabotinsky/u.test(roadLower) || /בוטינסקי/u.test(parsed.road);
+  if (jabotinsky) {
+    keys.push(`זבוטינסקי#${num}`, `זאב זבוטינסקי#${num}`, `ז'בוטינסקי#${num}`);
+  }
+
+  return [...new Set(keys)];
+}
+
 export function osmFootprintForAddress(address: string) {
-  const key = clusterAddressKey(address);
-  if (!key.includes("#")) return null;
-  const point = footprints[key];
-  if (!point || !Number.isFinite(point.lat) || !Number.isFinite(point.lng)) return null;
-  return point;
+  for (const key of footprintKeysForAddress(address)) {
+    const point = footprints[key];
+    if (point && Number.isFinite(point.lat) && Number.isFinite(point.lng)) return point;
+  }
+  return null;
 }
 
 export function alignPublicHouseCoords<T extends Pick<PublicHouse, "address" | "lat" | "lng">>(

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { prepareAddressHit, prepareAddressHits } from "@/lib/address-fields";
-import { reverseAddress, searchAddress } from "@/lib/geocode";
+import { prepareAddressHit, searchPreparedAddresses } from "@/lib/address-fields";
+import { reverseAddress } from "@/lib/geocode";
 
 export const runtime = "nodejs";
 
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     if (q.length < 2) {
       return NextResponse.json({ hits: [] });
     }
-    const hits = prepareAddressHits(await searchAddress(q));
+    const hits = await searchPreparedAddresses(q);
     return NextResponse.json({ hits });
   } catch {
     return NextResponse.json(
