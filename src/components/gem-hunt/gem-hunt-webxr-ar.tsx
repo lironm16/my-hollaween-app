@@ -29,6 +29,7 @@ import { gemCollectDanceIndex } from "@/lib/gem-collect-dance";
 import { googleMapsNavigateUrl } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
+import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { cn } from "@/lib/utils";
 
 type HuntPhase = "boot" | "placing" | "placed" | "collecting";
@@ -96,6 +97,14 @@ export function GemHuntWebXrAr({
   const [hintPanel, setHintPanel] = useState<null | "nav">(null);
   const [revealAssist, setRevealAssist] = useState(false);
   const [compassRetry, setCompassRetry] = useState(0);
+  const [platformMod, setPlatformMod] = useState<"gem-hunt-webxr--android" | "gem-hunt-webxr--ios" | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (isAndroidLike()) setPlatformMod("gem-hunt-webxr--android");
+    else if (isIosLike()) setPlatformMod("gem-hunt-webxr--ios");
+  }, []);
   const { heading } = useDeviceHeading(true, compassRetry);
   const placeAssistRef = useRef({ forceOnce: false, fast: false });
 
@@ -469,7 +478,17 @@ export function GemHuntWebXrAr({
   }, [showManualStart]);
 
   const overlay = (
-    <div ref={rootRef} className={cn("gem-hunt-webxr", phase === "collecting" && "is-collecting")} dir="rtl">
+    <div
+      ref={rootRef}
+      className={cn(
+        "gem-hunt-webxr",
+        platformMod,
+        platformMod === "gem-hunt-webxr--android" && "gem-hunt-overlay--android",
+        platformMod === "gem-hunt-webxr--ios" && "gem-hunt-overlay--ios",
+        phase === "collecting" && "is-collecting",
+      )}
+      dir="rtl"
+    >
       <header className="gem-hunt-webxr__bar gem-hunt-webxr__bar--close-only" dir="ltr">
         <OverlayCloseButton label="סגירה" onClick={onClose} className="gem-hunt-webxr__close-btn" />
       </header>
@@ -524,20 +543,6 @@ export function GemHuntWebXrAr({
                     {revealAssist ? "הסתר" : "גלה לי"}
                   </button>
                 </div>
-
-                {canCollect ? (
-                  <button
-                    type="button"
-                    className="gem-hunt-overlay__spin-collect gem-hunt-overlay__spin-collect--footer"
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCollect();
-                    }}
-                  >
-                    אסף יהלום
-                  </button>
-                ) : null}
               </div>
             ) : null}
 
