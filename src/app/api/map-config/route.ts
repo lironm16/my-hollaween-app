@@ -51,9 +51,9 @@ async function keyProbeOk(key: string) {
 export async function GET() {
   const key = readCartoKey();
   const keyConfigured = key.length > 0;
-  // Domain-restricted keys fail server probes without Referer — always pass key to the browser when configured.
   const keyActive = keyConfigured ? await keyProbeOk(key) : false;
-  const activeKey = keyConfigured ? key : null;
+  // When the key is over quota or rejected (403), fall back to unkeyed tiles so the map is not blank.
+  const activeKey = keyActive ? key : null;
 
   return NextResponse.json(
     {
