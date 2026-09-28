@@ -11574,6 +11574,13 @@ html.hw-mobile-browser .gem-hunt-overlay--android .gem-hunt-overlay__footer--hun
   color: #fef3c7;
   pointer-events: none;
 }
+.gem-hunt-webxr.is-encounter-swipe {
+  pointer-events: auto;
+}
+.gem-hunt-webxr.is-encounter-swipe .gem-hunt-webxr__host,
+.gem-hunt-webxr.is-encounter-swipe .gem-hunt-webxr__host canvas {
+  pointer-events: none;
+}
 .gem-hunt-webxr__bar {
   display: flex;
   align-items: flex-start;

@@ -598,6 +598,7 @@ export function GemHuntWebXrAr({
         platformMod === "gem-hunt-webxr--android" && "gem-hunt-overlay--android",
         platformMod === "gem-hunt-webxr--ios" && "gem-hunt-overlay--ios",
         encounterMode && "is-encounter-mode",
+        encounterPhase === "encounter" && "is-encounter-swipe",
         phase === "collecting" && "is-collecting",
       )}
       dir="rtl"
