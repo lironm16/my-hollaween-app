@@ -74,8 +74,6 @@ export function HouseEditFlowPanels({
   if (!flow) return null;
 
   const { house, editCode, admin, allowDelete } = flow;
-  const now = useAppNow();
-  const quickAvailable = quickUpdateAvailable(house, now);
 
   return (
     <>
@@ -94,9 +92,7 @@ export function HouseEditFlowPanels({
           editCode={editCode}
           admin={admin}
           allowDelete={allowDelete}
-          quickAvailable={quickAvailable}
           onClose={onClose}
-          onOpenQuick={() => setFlow((current) => (current ? { ...current, step: "quick" } : current))}
           onUpdated={onUpdated}
           onDeleted={onDeleted ? () => onDeleted(house.id) : undefined}
         />
