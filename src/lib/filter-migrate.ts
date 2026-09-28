@@ -12,14 +12,14 @@ export const HOUSE_FILTERS_VERSION = 8;
 const LEGACY_ALL_NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים"] as const;
 
 function migrateNeighborhoodFilters(raw: readonly string[]): NeighborhoodId[] {
-  const mapped = raw.map((item) => (item === "הגפן" ? "שכונת הגפן" : item));
+  const mapped = raw.map((item) => (item === "שכונת הגפן" ? "הגפן" : item));
   const known = mapped.filter((item): item is NeighborhoodId =>
     (NEIGHBORHOODS as readonly string[]).includes(item),
   );
   const hadAllLegacy =
     known.length >= LEGACY_ALL_NEIGHBORHOODS.length &&
     LEGACY_ALL_NEIGHBORHOODS.every((name) => known.includes(name));
-  if (hadAllLegacy && !known.includes("שכונת הגפן")) {
+  if (hadAllLegacy && !known.includes("הגפן")) {
     return [...NEIGHBORHOODS];
   }
   return known.length > 0 ? known : [...NEIGHBORHOODS];

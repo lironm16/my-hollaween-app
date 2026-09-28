@@ -9,7 +9,7 @@ import {
 } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 
-const ADDRESS_AREA_NAMES = [...NEIGHBORHOODS, "הגפן"] as const;
+const ADDRESS_AREA_NAMES = [...NEIGHBORHOODS, "שכונת הגפן"] as const;
 
 /** Strip city / neighborhood suffixes from a legacy combined address string. */
 export function streetFromLegacyAddress(address: string): string {

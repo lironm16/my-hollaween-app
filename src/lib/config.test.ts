@@ -9,24 +9,24 @@ import {
 } from "@/lib/config";
 
 describe("neighborhood config", () => {
-  it("includes שכונת הגפן in the canonical list", () => {
-    assert.ok(NEIGHBORHOODS.includes("שכונת הגפן"));
+  it("includes הגפן in the canonical list", () => {
+    assert.ok(NEIGHBORHOODS.includes("הגפן"));
   });
 
-  it("maps legacy הגפן storage to שכונת הגפן", () => {
-    assert.equal(normalizeNeighborhoodId("הגפן"), "שכונת הגפן");
+  it("maps legacy שכונת הגפן storage to הגפן", () => {
+    assert.equal(normalizeNeighborhoodId("שכונת הגפן"), "הגפן");
   });
 
   it("detects הגפן in address text", () => {
-    assert.equal(neighborhoodFromAddress("ז'בוטינסקי 105, שכונת הגפן"), "שכונת הגפן");
-    assert.equal(neighborhoodFromAddress("ז'בוטינסקי 105, הגפן"), "שכונת הגפן");
+    assert.equal(neighborhoodFromAddress("ז'בוטינסקי 105, הגפן"), "הגפן");
+    assert.equal(neighborhoodFromAddress("ז'בוטינסקי 105, שכונת הגפן"), "הגפן");
   });
 
-  it("classifies Jabotinsky-area pins as שכונת הגפן", () => {
-    assert.equal(neighborhoodFromCoords(32.08925, 34.81205), "שכונת הגפן");
+  it("classifies Jabotinsky-area pins as הגפן", () => {
+    assert.equal(neighborhoodFromCoords(32.08925, 34.81205), "הגפן");
     assert.equal(
       resolveNeighborhood({ address: "ז'בוטינסקי 105", lat: 32.08925, lng: 34.81205 }),
-      "שכונת הגפן",
+      "הגפן",
     );
   });
 });

@@ -17,18 +17,18 @@ const tiles = {
   maxNativeZoom: 18,
 } as const;
 
-export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים", "שכונת הגפן"] as const;
+export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים", "הגפן"] as const;
 export type NeighborhoodId = (typeof NEIGHBORHOODS)[number];
 
 const LEGACY_NEIGHBORHOOD_ALIASES: Record<string, NeighborhoodId> = {
-  הגפן: "שכונת הגפן",
+  "שכונת הגפן": "הגפן",
 };
 
 /** Approximate centers used when address text has no neighborhood name. */
 const NEIGHBORHOOD_CENTERS: Record<NeighborhoodId, { lat: number; lng: number }> = {
   חרוזים: { lat: 32.0908, lng: 34.8038 },
   "שיכון ותיקים": { lat: 32.0939, lng: 34.8133 },
-  "שכונת הגפן": { lat: 32.08925, lng: 34.81205 },
+  הגפן: { lat: 32.08925, lng: 34.81205 },
   "נחלת גנים": { lat: 32.0928, lng: 34.8188 },
 };
 
@@ -43,7 +43,7 @@ export const config = {
   tagline: "מפת הבתים המפחידים של השכונה",
   neighborhood:
     process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ??
-    "שיכון ותיקים · חרוזים · נחלת גנים · שכונת הגפן",
+    "שיכון ותיקים · חרוזים · נחלת גנים · הגפן",
   neighborhoods: NEIGHBORHOODS,
   map: {
     center: {
@@ -101,7 +101,6 @@ export function suburbToNeighborhood(suburb: string): NeighborhoodId | null {
 /** Detect which area a house belongs to from its address text. */
 export function neighborhoodFromAddress(address: string): NeighborhoodId | null {
   const text = address.trim();
-  if (/הגפן/u.test(text)) return "שכונת הגפן";
   for (const name of NEIGHBORHOODS) {
     const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     if (new RegExp(`(?:^|,)\\s*${escaped}\\s*$`, "u").test(text)) return name;
