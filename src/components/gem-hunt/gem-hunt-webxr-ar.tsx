@@ -168,18 +168,14 @@ export function GemHuntWebXrAr({
     userLocation != null && !simulateInRange
       ? googleMapsNavigateUrl(userLocation, { lat: anchor.lat, lng: anchor.lng })
       : null;
-  const showDirectionRose =
-    hintPanel === "nav" &&
-    huntArrowDeg != null &&
-    effectiveLoc != null &&
-    userLocation != null &&
-    !simulateInRange;
-
   const toggleHintPanel = useCallback(async () => {
     if (hintPanel === "nav") {
       setHintPanel(null);
       return;
     }
+    placeAssistRef.current.forceOnce = false;
+    placeAssistRef.current.fast = false;
+    setRevealAssist(false);
     const ok = await requestGemHuntOrientationPermission({ force: true });
     if (ok) setCompassRetry((n) => n + 1);
     setHintPanel("nav");
@@ -478,41 +474,92 @@ export function GemHuntWebXrAr({
         <OverlayCloseButton label="סגירה" onClick={onClose} className="gem-hunt-webxr__close-btn" />
       </header>
 
-      {showDirectionRose ? (
-        <div className="gem-hunt-webxr__nav-layer" aria-hidden>
-          <GemHuntDirectionRose
-            bearingDeg={huntArrowDeg!}
-            facing={facingTarget && !huntArrowMapNorth}
-            className="gem-hunt-webxr__nav-rose gem-hunt-direction-rose--ring"
-          />
-        </div>
-      ) : null}
-
       <div ref={hostRef} className="gem-hunt-webxr__host" />
       <div ref={startBtnHostRef} className="gem-hunt-webxr__start-host" />
 
-      <footer className="gem-hunt-webxr__footer">
+      <footer
+        className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt gem-hunt-webxr__footer"
+        dir="rtl"
+      >
         {error ? (
           <p className="gem-hunt-webxr__error" role="alert">
             {error} — עוברים למצב מצלמה…
           </p>
         ) : (
-          <>
+          <div className="gem-hunt-overlay__footer-stack">
+            {phase !== "collecting" ? (
+              <div className="gem-hunt-overlay__footer-controls">
+                <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
+                  <button
+                    type="button"
+                    className={cn(
+                      "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
+                      hintPanel === "nav" && "is-active",
+                    )}
+                    aria-pressed={hintPanel === "nav"}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void toggleHintPanel();
+                    }}
+                  >
+                    <span className="gem-hunt-overlay__hint-btn-label">
+                      <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
+                      <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className={cn(
+                      "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
+                      revealAssist && "is-active",
+                    )}
+                    aria-pressed={revealAssist}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRevealAssist();
+                    }}
+                  >
+                    {revealAssist ? "הסתר" : "גלה לי"}
+                  </button>
+                </div>
+
+                {canCollect ? (
+                  <button
+                    type="button"
+                    className="gem-hunt-overlay__spin-collect gem-hunt-overlay__spin-collect--footer"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCollect();
+                    }}
+                  >
+                    אסף יהלום
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+
             {hintPanel === "nav" ? (
-              <div className="gem-hunt-webxr__walk-guide" role="region" aria-label="הנחיות הליכה ליהלום">
+              <div
+                className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
+                role="region"
+                aria-label="הנחיות הליכה ליהלום"
+              >
                 {huntArrowDeg != null ? (
                   <div
                     className={cn(
-                      "gem-hunt-webxr__walk-arrow",
+                      "gem-hunt-overlay__walk-arrow",
                       !huntArrowMapNorth && facingTarget && "is-facing",
                     )}
                     style={{ transform: `rotate(${huntArrowDeg}deg)` }}
                     aria-hidden
                   >
-                    <Navigation className="size-10" strokeWidth={2.5} />
+                    <Navigation className="size-11" strokeWidth={2.5} />
                   </div>
                 ) : null}
-                <p className="gem-hunt-webxr__walk-text">
+                <p className="gem-hunt-overlay__walk-text">
                   {walkGuideCopy}
                   {distanceM != null ? ` · ${formatDistance(distanceM)}` : null}
                 </p>
@@ -521,44 +568,14 @@ export function GemHuntWebXrAr({
                     href={mapsWalkUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="gem-hunt-webxr__walk-maps"
+                    className="gem-hunt-overlay__walk-maps"
                   >
                     הליכה ב-Google Maps ליהלום
                   </a>
                 ) : null}
               </div>
             ) : null}
-
-            {phase !== "collecting" ? (
-              <div className="gem-hunt-webxr__hint-actions gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
-                <button
-                  type="button"
-                  className={cn(
-                    "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
-                    hintPanel === "nav" && "is-active",
-                  )}
-                  aria-pressed={hintPanel === "nav"}
-                  onClick={() => void toggleHintPanel()}
-                >
-                  <span className="gem-hunt-overlay__hint-btn-label">
-                    <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
-                    <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className={cn(
-                    "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
-                    revealAssist && "is-active",
-                  )}
-                  aria-pressed={revealAssist}
-                  onClick={onRevealAssist}
-                >
-                  גלה לי
-                </button>
-              </div>
-            ) : null}
-          </>
+          </div>
         )}
       </footer>
     </div>

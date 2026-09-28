@@ -6578,12 +6578,16 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   pointer-events: auto !important;
 }
 .gem-hunt-webxr__footer {
-  z-index: 4;
+  z-index: 50;
+  pointer-events: none;
+  margin-bottom: 0;
+  padding: 0.35rem 1rem;
+  background: transparent;
+}
+.gem-hunt-webxr__footer .gem-hunt-webxr__error {
   pointer-events: auto;
-  margin-bottom: max(1.35rem, calc(env(safe-area-inset-bottom, 0px) + 0.65rem));
-  padding: 0.65rem max(0.85rem, env(safe-area-inset-right, 0px)) 0.45rem
-    max(0.85rem, env(safe-area-inset-left, 0px));
-  background: linear-gradient(to top, rgb(8 4 16 / 0.92), rgb(8 4 16 / 0.55));
+  width: min(92vw, 22rem);
+  margin-inline: auto;
 }
 .gem-hunt-webxr__hint {
   margin: 0;
