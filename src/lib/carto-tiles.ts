@@ -1,3 +1,9 @@
+/** OpenStreetMap — fallback when CARTO key is missing or over quota (unkeyed CARTO is watermark-only). */
+export const OSM_TILE_TEMPLATE = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+export const OSM_TILE_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
 /** CARTO Voyager — day theme. Use Leaflet `{r}` for @2x on retina; do not set detectRetina (breaks max zoom). */
 export const CARTO_VOYAGER_TEMPLATE =
   "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
@@ -13,7 +19,7 @@ export function cartoTileUrlWithKey(template: string, key?: string | null) {
   return `${template}${sep}key=${encodeURIComponent(trimmed)}`;
 }
 
-/** Watermark / “key required” tiles are tiny PNGs (~100 bytes). Real tiles are much larger. */
+/** Watermark / “API KEY REQUIRED” stubs are ~2 KB; real CARTO tiles are much larger. */
 export function cartoTileLooksValid(contentLength: number | null) {
-  return contentLength !== null && contentLength > 400;
+  return contentLength !== null && contentLength > 3000;
 }

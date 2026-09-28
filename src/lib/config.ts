@@ -5,16 +5,15 @@ const centerLng = Number(process.env.NEXT_PUBLIC_MAP_CENTER_LNG ?? 34.8112);
 const latPad = 0.0075;
 const lngPad = 0.014;
 
-import { CARTO_VOYAGER_TEMPLATE } from "@/lib/carto-tiles";
+import { OSM_TILE_ATTRIBUTION, OSM_TILE_TEMPLATE } from "@/lib/carto-tiles";
 
 const tiles = {
-  // Light-only (CARTO Voyager). Key injected at runtime via /api/map-config.
-  url: CARTO_VOYAGER_TEMPLATE,
-  subdomains: "abcd",
-  attribution:
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  // Safe default until /api/map-config returns CARTO (key ok) or keeps OSM fallback.
+  url: OSM_TILE_TEMPLATE,
+  subdomains: "abc",
+  attribution: OSM_TILE_ATTRIBUTION,
   invert: false,
-  maxNativeZoom: 18,
+  maxNativeZoom: 19,
 } as const;
 
 export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים", "הגפן"] as const;

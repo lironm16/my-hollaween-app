@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import {
   CARTO_VOYAGER_TEMPLATE,
+  OSM_TILE_ATTRIBUTION,
+  OSM_TILE_TEMPLATE,
   cartoTileLooksValid,
   cartoTileUrlWithKey,
 } from "@/lib/carto-tiles";
@@ -52,21 +54,31 @@ export async function GET() {
   const key = readCartoKey();
   const keyConfigured = key.length > 0;
   const keyActive = keyConfigured ? await keyProbeOk(key) : false;
-  // When the key is over quota or rejected (403), fall back to unkeyed tiles so the map is not blank.
-  const activeKey = keyActive ? key : null;
+  const cartoAttribution =
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+
+  const tiles = keyActive
+    ? {
+        url: cartoTileUrlWithKey(CARTO_VOYAGER_TEMPLATE, key),
+        subdomains: "abcd",
+        invert: false as const,
+        maxNativeZoom: 18,
+        attribution: cartoAttribution,
+      }
+    : {
+        url: OSM_TILE_TEMPLATE,
+        subdomains: "abc",
+        invert: false as const,
+        maxNativeZoom: 19,
+        attribution: OSM_TILE_ATTRIBUTION,
+      };
 
   return NextResponse.json(
     {
-      tiles: {
-        url: cartoTileUrlWithKey(CARTO_VOYAGER_TEMPLATE, activeKey),
-        subdomains: "abcd",
-        invert: false,
-        maxNativeZoom: 18,
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      },
+      tiles,
       keyConfigured,
       keyActive,
+      basemap: keyActive ? ("carto" as const) : ("osm" as const),
     },
     {
       headers: {

@@ -3,8 +3,8 @@
  * Validates real PNG tiles (not CARTO watermark stubs) and bounds-checks zoom 14–18.
  */
 var MapTileCache = (function () {
-  var TILE_CACHE = "hw-map-tiles-v1";
-  var TILE_MIN_BYTES = 400;
+  var TILE_CACHE = "hw-map-tiles-v2";
+  var TILE_MIN_BYTES = 2500;
   /** Neighborhood tiles are static — keep on device for 60 days, then refetch. */
   var TILE_MAX_AGE_MS = 60 * 24 * 60 * 60 * 1000;
 
