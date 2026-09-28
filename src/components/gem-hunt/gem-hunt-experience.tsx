@@ -17,6 +17,8 @@ export type GemHuntExperienceProps = {
   collectEnabled?: boolean;
   encounterMode?: boolean;
   repeatVisit?: boolean;
+  /** Android: session started on the same tap as «התחילו מפגש» (avoids second AR button). */
+  initialWebXrSession?: XRSession | null;
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
 };
@@ -26,9 +28,16 @@ export type GemHuntExperienceProps = {
  * iOS and fallback: camera pseudo-AR overlay.
  */
 export function GemHuntExperience(props: GemHuntExperienceProps) {
-  const [path, setPath] = useState<"pending" | "webxr" | "camera">("pending");
+  const [path, setPath] = useState<"pending" | "webxr" | "camera">(() => {
+    if (props.initialWebXrSession) return "webxr";
+    return "pending";
+  });
 
   useEffect(() => {
+    if (props.initialWebXrSession) {
+      setPath("webxr");
+      return;
+    }
     let cancelled = false;
     if (!isAndroidLike()) {
       setPath("camera");
@@ -40,7 +49,7 @@ export function GemHuntExperience(props: GemHuntExperienceProps) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [props.initialWebXrSession]);
 
   const onWebXrFallback = useCallback(() => setPath("camera"), []);
 
@@ -55,6 +64,7 @@ export function GemHuntExperience(props: GemHuntExperienceProps) {
         collectEnabled={props.collectEnabled ?? true}
         encounterMode={props.encounterMode ?? true}
         repeatVisit={props.repeatVisit ?? false}
+        initialWebXrSession={props.initialWebXrSession ?? null}
         onClose={props.onClose}
         onCollect={props.onCollect}
         onFallbackCamera={onWebXrFallback}

@@ -28,6 +28,7 @@ export function preloadGemHuntChunks() {
   const run = () => {
     void import("@/components/gem-hunt/gem-hunt-experience");
     void import("@/components/gem-hunt/gem-hunt-overlay");
+    void import("@/components/gem-hunt/gem-hunt-webxr-ar");
     void import("@/components/gem-hunt/gem-model-3d");
   };
   const idle = window.requestIdleCallback;

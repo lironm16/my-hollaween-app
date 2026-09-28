@@ -46,6 +46,11 @@ import {
   preloadGemHuntChunks,
 } from "@/components/gem-hunt/gem-hunt-lazy";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
+import { isAndroidLike, supportsWebXrHitTestAr, webXrHitTestArCached } from "@/lib/gem-hunt-ar-platform";
+import {
+  endGemHuntWebXrSession,
+  requestGemHuntWebXrSession,
+} from "@/lib/gem-hunt-webxr-session";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
 import { loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
@@ -161,12 +166,17 @@ export function NeighborhoodApp({
     gemAdminToolsVisible: gemAdminTools,
   } = useGemHuntAdminUi(admin, now);
   const gemHuntActive = gemFeatureOn && gemUi;
+  useEffect(() => {
+    if (!gemHuntActive || !isAndroidLike()) return;
+    void supportsWebXrHitTestAr();
+  }, [gemHuntActive]);
   const geo = useUserLocation({ watch: false });
   const { setWatchEnabled } = geo;
   const gps = geo.location;
   const gems = useGemProgress();
   const [mapGemHouse, setMapGemHouse] = useState<PublicHouse | null>(null);
   const [mapGemGps, setMapGemGps] = useState<UserLocation | null>(null);
+  const [mapGemWebXrSession, setMapGemWebXrSession] = useState<XRSession | null>(null);
   const gemBadgePendingRef = useRef(false);
   const [mapGemBadgeCount, setMapGemBadgeCount] = useState(() =>
     typeof window === "undefined" ? 0 : loadGemCollectedIds().length,
@@ -352,14 +362,19 @@ export function NeighborhoodApp({
         selection.selectOnMap(house);
       }
       setMapDiamondsVisible(true);
+      let xrSession: XRSession | null = null;
+      if (isAndroidLike() && webXrHitTestArCached()) {
+        xrSession = await requestGemHuntWebXrSession();
+      }
+      setMapGemWebXrSession(xrSession);
+      setMapGemHouse(house);
       setWatchEnabled(true);
       const freshGps = (await geo.refresh()) ?? gps;
       setMapGemGps(freshGps);
       await prepareGemHuntSensors({
-        requestCamera: true,
+        requestCamera: !xrSession,
         requestOrientation: !isGemHuntOrientationGranted(),
       });
-      setMapGemHouse(house);
     },
     [gems, geo, gps, selection, setWatchEnabled],
   );
@@ -1446,8 +1461,11 @@ export function NeighborhoodApp({
             true,
             false,
           )}
+          initialWebXrSession={mapGemWebXrSession}
           onClose={() => {
             releaseGemHuntCamera();
+            void endGemHuntWebXrSession(mapGemWebXrSession);
+            setMapGemWebXrSession(null);
             setMapGemHouse(null);
             setMapGemGps(null);
             restoreAfterGemHunt();

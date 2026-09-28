@@ -21,6 +21,11 @@ export function gemHuntPreferredSpatialMode(): GemSpatialMode {
 
 let webxrArSupport: boolean | null = null;
 
+/** Sync read after {@link supportsWebXrHitTestAr} has resolved once (for user-gesture AR start). */
+export function webXrHitTestArCached(): boolean {
+  return webxrArSupport === true;
+}
+
 /** Chrome Android immersive-ar + hit-test (cached). */
 export async function supportsWebXrHitTestAr(): Promise<boolean> {
   if (typeof navigator === "undefined" || !navigator.xr) return false;

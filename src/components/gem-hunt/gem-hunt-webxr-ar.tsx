@@ -48,6 +48,7 @@ type Props = {
   collectEnabled?: boolean;
   encounterMode?: boolean;
   repeatVisit?: boolean;
+  initialWebXrSession?: XRSession | null;
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
   onFallbackCamera?: () => void;
@@ -93,6 +94,7 @@ export function GemHuntWebXrAr({
   collectEnabled = true,
   encounterMode = true,
   repeatVisit = false,
+  initialWebXrSession = null,
   onClose,
   onCollect,
   onFallbackCamera,
@@ -110,7 +112,7 @@ export function GemHuntWebXrAr({
   const [arGemVisible, setArGemVisible] = useState(true);
   const arGemVisibleRef = useRef(true);
   const [compassRetry, setCompassRetry] = useState(0);
-  const [sessionActive, setSessionActive] = useState(false);
+  const [sessionActive, setSessionActive] = useState(Boolean(initialWebXrSession));
   const [platformMod, setPlatformMod] = useState<"gem-hunt-webxr--android" | "gem-hunt-webxr--ios" | null>(
     null,
   );
@@ -130,7 +132,9 @@ export function GemHuntWebXrAr({
   const collectingRef = useRef(false);
 
   const [error, setError] = useState<string | null>(null);
-  const [showManualStart, setShowManualStart] = useState(true);
+  const [showManualStart, setShowManualStart] = useState(!initialWebXrSession);
+  const bootWebXrSessionRef = useRef(initialWebXrSession);
+  bootWebXrSessionRef.current = initialWebXrSession;
   const [phase, setPhase] = useState<HuntPhase>("boot");
   const [placed, setPlaced] = useState(false);
   const onCollectRef = useRef(onCollect);
@@ -501,6 +505,13 @@ export function GemHuntWebXrAr({
     };
 
     attachSessionRef.current = attachSession;
+
+    const bootSession = bootWebXrSessionRef.current;
+    if (bootSession) {
+      void attachSession(bootSession);
+      setShowManualStart(false);
+      setSessionActive(true);
+    }
 
     arButton = ARButton.createButton(renderer, {
       requiredFeatures: ["hit-test"],

@@ -7,7 +7,11 @@ import { GemCheer } from "@/components/gem-cheer";
 import { GemHouseFoundHero } from "@/components/gem-hunt/gem-house-found-hero";
 import type { GemCollectFinishOptions } from "@/lib/gem-hunt";
 import { GemHuntExperienceLazy } from "@/components/gem-hunt/gem-hunt-lazy";
-import { isAndroidLike, supportsWebXrHitTestAr } from "@/lib/gem-hunt-ar-platform";
+import { isAndroidLike, supportsWebXrHitTestAr, webXrHitTestArCached } from "@/lib/gem-hunt-ar-platform";
+import {
+  endGemHuntWebXrSession,
+  requestGemHuntWebXrSession,
+} from "@/lib/gem-hunt-webxr-session";
 import { Button } from "@/components/ui/button";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
@@ -64,6 +68,7 @@ export function GemHuntPanel({
   const router = useRouter();
   const [huntOpen, setHuntOpen] = useState(false);
   const [huntLocation, setHuntLocation] = useState<UserLocation | null>(null);
+  const [bootWebXrSession, setBootWebXrSession] = useState<XRSession | null>(null);
   const [simulate, setSimulate] = useState(adminSimulateInRange);
   const [gemCheer, setGemCheer] = useState(false);
   const [gemCheerPet, setGemCheerPet] = useState<GemMonsterId | null>(null);
@@ -100,14 +105,20 @@ export function GemHuntPanel({
   const anchorCalibrated = Boolean(anchorOverrideMap[house.id]) || anchor.calibrated === true;
 
   const openCamera = useCallback(async () => {
+    let xrSession: XRSession | null = null;
+    if (isAndroidLike() && webXrHitTestArCached()) {
+      xrSession = await requestGemHuntWebXrSession();
+    }
+    setBootWebXrSession(xrSession);
+    setHuntLocation(userLocation);
+    setHuntOpen(true);
     const fresh = (await onOpenHunt?.()) ?? userLocation;
-    const useWebXr = isAndroidLike() && (await supportsWebXrHitTestAr());
+    const useWebXr = Boolean(xrSession) || (isAndroidLike() && webXrHitTestArCached());
     await prepareGemHuntSensors({
       requestCamera: !useWebXr,
       requestOrientation: !isGemHuntOrientationGranted(),
     });
     setHuntLocation(fresh ?? userLocation);
-    setHuntOpen(true);
   }, [onOpenHunt, userLocation]);
 
   function onCollect(collectedVariant: GemMonsterId, options?: GemCollectFinishOptions) {
@@ -286,8 +297,11 @@ export function GemHuntPanel({
           collectEnabled={canCollect}
           encounterMode
           repeatVisit={collected}
+          initialWebXrSession={bootWebXrSession}
           onClose={() => {
             releaseGemHuntCamera();
+            void endGemHuntWebXrSession(bootWebXrSession);
+            setBootWebXrSession(null);
             setHuntOpen(false);
           }}
           onCollect={onCollect}
