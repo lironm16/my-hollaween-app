@@ -7,7 +7,6 @@ import { GemCheer } from "@/components/gem-cheer";
 import { GemHouseFoundHero } from "@/components/gem-hunt/gem-house-found-hero";
 import type { GemCollectFinishOptions } from "@/lib/gem-hunt";
 import { GemHuntExperienceLazy } from "@/components/gem-hunt/gem-hunt-lazy";
-import { isAndroidLike, supportsWebXrHitTestAr } from "@/lib/gem-hunt-ar-platform";
 import { Button } from "@/components/ui/button";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
@@ -68,13 +67,6 @@ export function GemHuntPanel({
   const [gemCheer, setGemCheer] = useState(false);
   const [gemCheerPet, setGemCheerPet] = useState<GemMonsterId | null>(null);
   const cheerTimerRef = useRef<number | null>(null);
-  const [androidArReady, setAndroidArReady] = useState(false);
-
-  useEffect(() => {
-    if (!isAndroidLike()) return;
-    void supportsWebXrHitTestAr().then(setAndroidArReady);
-  }, []);
-
   useEffect(() => {
     return () => {
       if (cheerTimerRef.current != null) window.clearTimeout(cheerTimerRef.current);
@@ -101,13 +93,10 @@ export function GemHuntPanel({
 
   const openCamera = useCallback(async () => {
     const fresh = (await onOpenHunt?.()) ?? userLocation;
-    const useWebXr = isAndroidLike() && (await supportsWebXrHitTestAr());
-    if (!useWebXr) {
-      await prepareGemHuntSensors({
-        requestCamera: true,
-        requestOrientation: !isGemHuntOrientationGranted(),
-      });
-    }
+    await prepareGemHuntSensors({
+      requestCamera: true,
+      requestOrientation: !isGemHuntOrientationGranted(),
+    });
     setHuntLocation(fresh ?? userLocation);
     setHuntOpen(true);
   }, [onOpenHunt, userLocation]);
@@ -265,16 +254,10 @@ export function GemHuntPanel({
         >
           <Camera className="size-4" aria-hidden />
           {collected
-            ? androidArReady
-              ? "הציגו ב-AR"
-              : "הציגו במצלמה"
+            ? "הציגו במצלמה"
             : canCollect
-              ? androidArReady
-                ? "פתחו AR — איסוף"
-                : "פתחו מצלמה — איסוף"
-              : androidArReady
-                ? "פתחו AR"
-                : "פתחו מצלמה"}
+              ? "פתחו מצלמה — איסוף"
+              : "פתחו מצלמה"}
         </Button>
       </section>
 

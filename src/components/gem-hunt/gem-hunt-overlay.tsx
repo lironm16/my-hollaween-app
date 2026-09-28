@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Navigation } from "lucide-react";
+import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
@@ -316,7 +316,7 @@ export function GemHuntOverlay({
 
   function handleCollect() {
     if (phase !== "visible") return;
-    const viaTellMe = centerReveal;
+    const viaTellMe = centerReveal && collectEnabled;
     const viaPinned =
       !centerReveal && collectEnabled && Boolean(pinPlacement?.inView);
     if (!viaTellMe && !viaPinned) return;
@@ -401,21 +401,15 @@ export function GemHuntOverlay({
     effectiveLoc != null ? relativeWalkBearingDeg(effectiveLoc, anchor, heading) : null;
   const facingTarget =
     turnBearing != null && Math.abs(turnBearing) <= GEM_FACING_TOLERANCE_DEG;
-  /** «גלה לי» only — never auto-switch when close / facing (avoids pin ↔ center flicker). */
-  const centerDisplayMode = gemVisible && centerReveal;
-  /** Real hunt: compass-pinned gem (tap when in view + in range). */
+  /** Real hunt: compass-pinned gem when not in «גלה לי» center mode. */
   const arPinGuideMode = gemVisible && !centerReveal;
   const pinCollectReady =
     arPinGuideMode && collectEnabled && Boolean(pinPlacement?.inView);
   /** Show centered gem after reveal even before «stand still» — tap only when collectEnabled. */
   /** Show when the shared anchor bearing is inside the camera cone — not gated on 25 m. */
   const showWorldGemSprite = Boolean(pinPlacement?.inView);
-  const arPinRevealedGem =
-    arPinGuideMode &&
-    showWorldGemSprite &&
-    (phase === "visible" || phase === "collecting");
-  const worldLockRevealed = arPinRevealedGem && !centerReveal;
-  const arPinTapCollect = arPinRevealedGem && collectEnabled;
+  const worldLockRevealed =
+    arPinGuideMode && showWorldGemSprite && (phase === "visible" || phase === "collecting");
   const isFarForHints =
     !collectEnabled &&
     !sim &&
@@ -449,33 +443,21 @@ export function GemHuntOverlay({
     !centerReveal &&
     !isFarForHints &&
     (showCompassEnable || headingStatus === "denied" || headingStatus === "idle" || heading == null);
+  const showNavRose =
+    hintPanel === "nav" &&
+    !centerReveal &&
+    huntArrowDeg != null &&
+    effectiveLoc != null &&
+    userLocation != null &&
+    !sim;
 
   const canTapCollect =
-    phase === "visible" && (centerReveal || collectEnabled || pinCollectReady);
+    phase === "visible" &&
+    (pinCollectReady || (centerReveal && collectEnabled) || (collectEnabled && sim));
 
-  const renderCollectGem = (options?: { centered?: boolean; extraClass?: string }) => (
-    <div
-      className={cn("gem-hunt-overlay__gem-tap-target", options?.extraClass)}
-      role="button"
-      tabIndex={canTapCollect ? 0 : -1}
-      aria-disabled={!canTapCollect}
-      onClick={(e) => {
-        e.stopPropagation();
-        if (canTapCollect) handleCollect();
-      }}
-    >
-      <GemSprite
-        house={house}
-        mode="3d"
-        size="fill"
-        tapCollect
-        spinWhileCollect={false}
-        worldYawRad={options?.centered ? null : worldYawRad}
-        motion={phase === "collecting" ? "celebrate" : "idle"}
-        celebrateVariant={collectDanceIndex}
-      />
-    </div>
-  );
+  const gemAtCenter = centerReveal;
+  const showHuntGem =
+    gemVisible && (gemAtCenter || (!gemAtCenter && showWorldGemSprite));
 
   async function retryCompassPermission() {
     const ok = await requestGemHuntOrientationPermission({ force: true });
@@ -555,22 +537,32 @@ export function GemHuntOverlay({
       <div
         className={cn(
           "gem-hunt-overlay__stage",
-          (arPinRevealedGem || centerDisplayMode) && "is-gem-interactive",
+          showHuntGem && "is-gem-interactive",
         )}
         aria-hidden={false}
       >
-        {arPinRevealedGem ? (
+        {showNavRose ? (
+          <div className="gem-hunt-overlay__nav-layer" aria-hidden>
+            <GemHuntDirectionRose
+              bearingDeg={huntArrowDeg!}
+              facing={facingTarget && !huntArrowMapNorth}
+              className="gem-hunt-overlay__nav-rose gem-hunt-direction-rose--ring"
+            />
+          </div>
+        ) : null}
+
+        {showHuntGem ? (
           <div
             className={cn(
-              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-pin-collect is-revealed is-inspect360",
-              centerReveal && "is-ring-center",
-              worldLockRevealed && pinPlacement && !pinPlacement.inView && "is-off-screen",
+              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pin-collect is-revealed is-inspect360",
+              gemAtCenter ? "is-ring-center is-center-collect" : "is-pinned is-revealed",
+              !gemAtCenter && worldLockRevealed && pinPlacement && !pinPlacement.inView && "is-off-screen",
               phase === "collecting" && "is-collecting",
-              pinCollectReady && "is-collect-ready-gem",
+              !gemAtCenter && pinCollectReady && "is-collect-ready-gem",
               !collectEnabled && phase === "visible" && "is-awaiting-still",
             )}
             style={
-              centerReveal || !pinDisplay
+              gemAtCenter || !pinDisplay
                 ? undefined
                 : {
                     left: `${pinDisplay.xPercent}%`,
@@ -583,32 +575,22 @@ export function GemHuntOverlay({
                 "gem-hunt-overlay__gem-dance",
                 phase === "collecting" && "is-collecting is-collecting-3d",
               )}
+              data-collect-dance={collectDanceIndex}
             >
-              {renderCollectGem()}
+              <GemSprite
+                house={house}
+                mode="inspect360"
+                size="fill"
+                spinWhileCollect={false}
+                worldYawRad={gemAtCenter ? null : worldYawRad}
+                motion={phase === "collecting" ? "celebrate" : "idle"}
+                celebrateVariant={collectDanceIndex}
+                onInspectTap={canTapCollect ? handleCollect : undefined}
+              />
             </div>
           </div>
         ) : null}
       </div>
-      ) : null}
-
-      {showHuntUi && centerDisplayMode ? (
-        <div
-          className={cn(
-            "gem-hunt-overlay__gem-hit",
-            "is-center-collect",
-            "is-collect-layer",
-            phase === "collecting" && "is-collecting",
-          )}
-        >
-          <div
-            className={cn(
-              "gem-hunt-overlay__gem-dance",
-              phase === "collecting" && "is-collecting is-collecting-3d",
-            )}
-          >
-            {renderCollectGem({ centered: true })}
-          </div>
-        </div>
       ) : null}
 
       {showHuntUi && phase !== "collecting" ? (
@@ -668,18 +650,6 @@ export function GemHuntOverlay({
                 role="region"
                 aria-label="הנחיות הליכה ליהלום"
               >
-                {huntArrowDeg != null ? (
-                  <div
-                    className={cn(
-                      "gem-hunt-overlay__walk-arrow",
-                      !huntArrowMapNorth && facingTarget && "is-facing",
-                    )}
-                    style={{ transform: `rotate(${huntArrowDeg}deg)` }}
-                    aria-hidden
-                  >
-                    <Navigation className="size-11" strokeWidth={2.5} />
-                  </div>
-                ) : null}
                 <p className="gem-hunt-overlay__walk-text">
                   {walkGuideCopy}
                   {distanceM != null ? ` · ${formatDistance(distanceM)}` : null}

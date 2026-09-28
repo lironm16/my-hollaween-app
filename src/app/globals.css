@@ -3997,9 +3997,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   padding: max(0.75rem, env(safe-area-inset-top)) 1rem 0.5rem;
 }
 .gem-hunt-overlay__header--close-only {
-  justify-content: flex-start;
+  justify-content: flex-end;
   padding-top: max(1.15rem, calc(env(safe-area-inset-top) + 0.35rem));
-  padding-inline: 1rem;
+  padding-inline: max(1rem, env(safe-area-inset-right, 0px)) max(1rem, env(safe-area-inset-left, 0px));
 }
 .gem-hunt-overlay__header--title {
   justify-content: space-between;
@@ -4021,7 +4021,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__nav-layer {
   position: absolute;
   left: 50%;
-  top: 38%;
+  top: 50%;
   z-index: 5;
   width: min(72vw, 17rem);
   aspect-ratio: 1;
@@ -4871,9 +4871,9 @@ html.hw-mobile-browser .gem-hunt-overlay--android .gem-hunt-overlay__footer--hun
   width: 100%;
   margin-top: 0.35rem;
   margin-bottom: 0;
-  padding: 0.35rem 0 0;
-  border: none;
-  background: transparent;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid rgb(251 191 36 / 0.45);
+  background: rgb(12 6 22 / 0.92);
   pointer-events: none;
 }
 .gem-hunt-overlay__walk-guide--footer .gem-hunt-overlay__walk-maps {
@@ -5002,11 +5002,6 @@ html.hw-mobile-browser .gem-hunt-overlay--android .gem-hunt-overlay__footer--hun
   position: relative;
   z-index: 1;
   touch-action: manipulation;
-  background: transparent;
-  backdrop-filter: none;
-}
-.gem-hunt-overlay__footer--hunt .gem-hunt-overlay__hint-actions--row .gem-hunt-overlay__hint-btn.is-active {
-  background: rgb(76 29 149 / 0.35);
 }
 .gem-hunt-overlay__hint-actions--row .gem-hunt-overlay__hint-btn {
   flex: 1 1 0;
