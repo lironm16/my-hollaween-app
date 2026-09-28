@@ -6,7 +6,6 @@ import { Navigation } from "lucide-react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { ARButton } from "three/addons/webxr/ARButton.js";
-import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Navigation } from "lucide-react";
-import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
@@ -423,13 +422,6 @@ export function GemHuntOverlay({
   const huntArrowPhoneRelative = heading != null && turnBearing != null;
   const huntArrowDeg = huntArrowPhoneRelative ? turnBearing : gpsBearingToAnchor;
   const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToAnchor != null;
-  const showDirectionRose =
-    hintPanel === "nav" &&
-    !centerDisplayMode &&
-    huntArrowDeg != null &&
-    effectiveLoc != null &&
-    userLocation != null &&
-    !sim;
   const mapsWalkUrl =
     userLocation != null && !sim
       ? googleMapsNavigateUrl(userLocation, { lat: anchor.lat, lng: anchor.lng })
@@ -558,16 +550,6 @@ export function GemHuntOverlay({
         )}
         aria-hidden={false}
       >
-        {showDirectionRose ? (
-          <div className="gem-hunt-overlay__nav-layer" aria-hidden>
-            <GemHuntDirectionRose
-              bearingDeg={huntArrowDeg!}
-              facing={facingTarget && !huntArrowMapNorth}
-              className="gem-hunt-overlay__nav-rose gem-hunt-direction-rose--ring"
-            />
-          </div>
-        ) : null}
-
         {arPinRevealedGem ? (
           <div
             className={cn(
