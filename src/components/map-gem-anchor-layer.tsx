@@ -6,7 +6,8 @@ import { Marker, Polyline, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { useGemOsmAnchorsEpoch } from "@/hooks/use-gem-osm-anchors";
-import { gemAnchorForHouse } from "@/lib/gem-hunt";
+import { gemAnchorForHouse, gemDistanceMeters, GEM_HUNT_METERS } from "@/lib/gem-hunt";
+import type { UserLocation } from "@/hooks/use-user-location";
 import { gemMonsterForHouse, gemMonsterMeta } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -27,14 +28,15 @@ function gemDiamondIcon(
   dimmed: boolean,
   calibrated: boolean,
   compact: boolean,
+  inRange: boolean,
 ) {
-  const key = `${compact ? "c" : "a"}-${collected ? "c" : "o"}-${dimmed ? "d" : "a"}-${calibrated ? "cal" : "auto"}`;
+  const key = `${compact ? "c" : "a"}-${collected ? "c" : "o"}-${dimmed ? "d" : "a"}-${calibrated ? "cal" : "auto"}-${inRange ? "near" : "far"}`;
   let icon = gemDiamondIconCache.get(key);
   const size = compact ? GEM_ICON_COMPACT : GEM_ICON_ADMIN;
   if (!icon) {
     icon = L.divIcon({
       className: "map-gem-diamond-leaflet-icon",
-      html: `<div class="map-gem-diamond-marker${compact ? " map-gem-diamond-marker--compact" : " map-gem-diamond-marker--admin"}${collected ? " is-collected" : ""}${dimmed ? " is-dimmed" : ""}${calibrated ? " is-calibrated" : ""}" aria-hidden="true">
+      html: `<div class="map-gem-diamond-marker${compact ? " map-gem-diamond-marker--compact" : " map-gem-diamond-marker--admin"}${collected ? " is-collected" : ""}${dimmed ? " is-dimmed" : ""}${calibrated ? " is-calibrated" : ""}${inRange ? " is-near" : ""}" aria-hidden="true">
         <svg class="map-gem-diamond-marker__svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M6 3h12l4 7-10 13L2 10l4-7z" fill="currentColor"/>
         </svg>
@@ -112,12 +114,14 @@ export function MapGemAnchorLayer({
   matchedIds,
   filterDimActive = false,
   visual = "admin",
+  userLocation = null,
 }: {
   houses: PublicHouse[];
   isCollected: (houseId: string) => boolean;
   matchedIds?: ReadonlySet<string>;
   filterDimActive?: boolean;
   visual?: GemMapAnchorVisual;
+  userLocation?: UserLocation | null;
 }) {
   const { overrides } = useGemAnchorOverrides();
   const osmEpoch = useGemOsmAnchorsEpoch();
@@ -132,12 +136,17 @@ export function MapGemAnchorLayer({
         if (compact && collected) return null;
         const dimmed =
           filterDimActive && matchedIds != null && !matchedIds.has(house.id);
+        const inRange =
+          userLocation != null &&
+          !collected &&
+          gemDistanceMeters(userLocation, house) <= GEM_HUNT_METERS;
         return {
           house,
           anchor,
           collected,
           dimmed,
           calibrated: anchor.calibrated === true || Boolean(overrides[house.id]),
+          inRange,
         };
       })
       .filter(Boolean) as Array<{
@@ -146,12 +155,13 @@ export function MapGemAnchorLayer({
       collected: boolean;
       dimmed: boolean;
       calibrated: boolean;
+      inRange: boolean;
     }>;
-  }, [houses, isCollected, matchedIds, filterDimActive, overrides, compact, osmEpoch, characters]);
+  }, [houses, isCollected, matchedIds, filterDimActive, overrides, compact, osmEpoch, characters, userLocation]);
 
   const layer = (
     <>
-      {markers.map(({ house, anchor, collected, dimmed, calibrated }) => (
+      {markers.map(({ house, anchor, collected, dimmed, calibrated, inRange }) => (
         <Fragment key={`gem-anchor-${house.id}`}>
           {!compact && !collected ? (
             <Polyline
@@ -174,7 +184,7 @@ export function MapGemAnchorLayer({
             icon={
               characters
                 ? gemCharacterIcon(house, collected, dimmed, calibrated)
-                : gemDiamondIcon(collected, dimmed, calibrated, compact)
+                : gemDiamondIcon(collected, dimmed, calibrated, compact, inRange)
             }
             zIndexOffset={collected ? 420 : compact ? 380 : 520}
             interactive={false}

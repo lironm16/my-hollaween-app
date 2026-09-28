@@ -15,6 +15,8 @@ export type GemHuntExperienceProps = {
   simulateInRange?: boolean;
   deferCameraUntilInRange?: boolean;
   collectEnabled?: boolean;
+  encounterMode?: boolean;
+  repeatVisit?: boolean;
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
 };
@@ -51,6 +53,8 @@ export function GemHuntExperience(props: GemHuntExperienceProps) {
         userLocation={props.userLocation}
         simulateInRange={props.simulateInRange}
         collectEnabled={props.collectEnabled ?? true}
+        encounterMode={props.encounterMode ?? true}
+        repeatVisit={props.repeatVisit ?? false}
         onClose={props.onClose}
         onCollect={props.onCollect}
         onFallbackCamera={onWebXrFallback}

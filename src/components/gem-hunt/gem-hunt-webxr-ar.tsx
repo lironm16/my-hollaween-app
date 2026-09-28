@@ -28,6 +28,14 @@ import { gemCollectDanceIndex } from "@/lib/gem-collect-dance";
 import { googleMapsNavigateUrl } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
+import { GemEncounterLayer } from "@/components/gem-hunt/gem-encounter-layer";
+import { useGemEncounterPhase } from "@/hooks/use-gem-encounter-phase";
+import { useTreatSwipe } from "@/hooks/use-treat-swipe";
+import {
+  GEM_ENCOUNTER_CELEBRATE_MS,
+  encounterUiChromeHidden,
+  markEncounterTutorialSeen,
+} from "@/lib/gem-encounter";
 import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +46,8 @@ type Props = {
   userLocation: UserLocation | null;
   simulateInRange?: boolean;
   collectEnabled?: boolean;
+  encounterMode?: boolean;
+  repeatVisit?: boolean;
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
   onFallbackCamera?: () => void;
@@ -81,6 +91,8 @@ export function GemHuntWebXrAr({
   userLocation,
   simulateInRange = false,
   collectEnabled = true,
+  encounterMode = true,
+  repeatVisit = false,
   onClose,
   onCollect,
   onFallbackCamera,
@@ -145,10 +157,44 @@ export function GemHuntWebXrAr({
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate([35, 40, 35]);
     }
+    const overlayMs =
+      encounterMode && repeatVisit ? GEM_ENCOUNTER_CELEBRATE_MS : GEM_COLLECT_OVERLAY_MS;
     window.setTimeout(() => {
       onCollectRef.current(monsterId, { cheer: true });
-    }, GEM_COLLECT_OVERLAY_MS);
-  }, [canCollect, monsterId, phase]);
+    }, overlayMs);
+  }, [canCollect, encounterMode, monsterId, phase, repeatVisit]);
+
+  const finishRepeatEncounter = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
+  const petRevealedForEncounter = sessionActive && placed && arGemVisible;
+  const inRangeForEncounter = inCollectBand;
+
+  const {
+    encounterPhase,
+    onTreatSuccess,
+    onTreatMiss,
+  } = useGemEncounterPhase({
+    enabled: encounterMode && sessionActive,
+    repeatVisit,
+    collectEnabled: canCollect,
+    petRevealed: petRevealedForEncounter,
+    inRange: inRangeForEncounter,
+    onEncounterCollect: handleCollect,
+    onRepeatRewardDone: finishRepeatEncounter,
+  });
+
+  const encounterPhaseRef = useRef(encounterPhase);
+  encounterPhaseRef.current = encounterPhase;
+
+  const treatSwipe = useTreatSwipe({
+    onSuccess: () => {
+      markEncounterTutorialSeen();
+      onTreatSuccess();
+    },
+    onMiss: onTreatMiss,
+  });
 
   const canCollectRef = useRef(canCollect);
   canCollectRef.current = canCollect;
@@ -187,6 +233,17 @@ export function GemHuntWebXrAr({
     !simulateInRange;
   const revealBtnActive = placed ? arGemVisible : revealAssist;
   const revealBtnLabel = placed ? (arGemVisible ? "הסתר" : "גלה לי") : revealAssist ? "הסתר" : "גלה לי";
+  const hideFooterChrome = encounterMode && encounterUiChromeHidden(encounterPhase);
+  const showEncounterFooter =
+    encounterMode && encounterPhase === "approach" && phase !== "collecting";
+  const showSessionFooter =
+    sessionActive && phase !== "collecting" && (!encounterMode || showEncounterFooter) && !hideFooterChrome;
+
+  const handleClose = useCallback(() => {
+    if (encounterMode && encounterUiChromeHidden(encounterPhase)) return;
+    if (phase === "collecting") return;
+    onClose();
+  }, [encounterMode, encounterPhase, onClose, phase]);
 
   const toggleHintPanel = useCallback(async () => {
     if (hintPanel === "nav") {
@@ -332,7 +389,12 @@ export function GemHuntWebXrAr({
     const onSelect = () => {
       if (collectingRef.current) return;
       if (isPlaced) {
-        if (canCollectRef.current) handleCollectRef.current();
+        if (encounterMode) {
+          const ep = encounterPhaseRef.current;
+          if (ep === "encounter" && canCollectRef.current) return;
+        } else if (canCollectRef.current) {
+          handleCollectRef.current();
+        }
         return;
       }
       placeFromReticle();
@@ -410,8 +472,18 @@ export function GemHuntWebXrAr({
         anchorGroup.visible = isPlaced && arGemVisibleRef.current;
 
         if (isPlaced && arGemVisibleRef.current && !collectingRef.current) {
+          const ep = encounterPhaseRef.current;
+          const wiggle =
+            ep === "resolve-wiggle1" || ep === "resolve-wiggle2" || ep === "resolve-breakout";
           const bob = useFloat ? Math.sin(t * 1.6 + dancePhase) * 0.045 : Math.sin(t * 2.2) * 0.018;
           pivot.position.y = floatHeight + bob;
+          if (wiggle) {
+            pivot.rotation.z = Math.sin(t * 14 + dancePhase) * 0.22;
+            pivot.rotation.x = Math.sin(t * 11 + dancePhase) * 0.12;
+          } else {
+            pivot.rotation.z = 0;
+            pivot.rotation.x = 0;
+          }
           shadow.scale.setScalar(1 + (useFloat ? 0.15 : 0) * Math.sin(t * 2));
           shadowMat.opacity = useFloat ? 0.22 : 0.34;
         }
@@ -475,7 +547,7 @@ export function GemHuntWebXrAr({
       hitTestSource?.cancel?.();
       mixer = null;
     };
-  }, [danceIndex, floatHeight, house.id, meta.glbPath, onFallbackCamera, useFloat]);
+  }, [danceIndex, encounterMode, floatHeight, house.id, meta.glbPath, onFallbackCamera, useFloat]);
 
   useEffect(() => {
     const btn = startBtnHostRef.current?.querySelector(".gem-hunt-webxr__start") as HTMLElement | null;
@@ -490,15 +562,38 @@ export function GemHuntWebXrAr({
         platformMod,
         platformMod === "gem-hunt-webxr--android" && "gem-hunt-overlay--android",
         platformMod === "gem-hunt-webxr--ios" && "gem-hunt-overlay--ios",
+        encounterMode && "is-encounter-mode",
         phase === "collecting" && "is-collecting",
       )}
       dir="rtl"
+      onPointerDown={encounterPhase === "encounter" ? treatSwipe.onPointerDown : undefined}
+      onPointerUp={encounterPhase === "encounter" ? treatSwipe.onPointerUp : undefined}
+      onPointerCancel={encounterPhase === "encounter" ? treatSwipe.onPointerCancel : undefined}
     >
       <header className="gem-hunt-webxr__bar gem-hunt-webxr__bar--close-only" dir="ltr">
-        <OverlayCloseButton label="סגירה" onClick={onClose} className="gem-hunt-webxr__close-btn" />
+        <OverlayCloseButton label="סגירה" onClick={handleClose} className="gem-hunt-webxr__close-btn" />
       </header>
 
       <div ref={hostRef} className="gem-hunt-webxr__host" />
+
+      {encounterMode ? (
+        <GemEncounterLayer
+          house={house}
+          phase={encounterPhase}
+          distanceM={distanceM}
+          inRange={inRangeForEncounter}
+          repeatVisit={repeatVisit}
+          showTutorial={encounterPhase === "encounter"}
+          onOfferTreatButton={
+            encounterPhase === "encounter" && canCollect
+              ? () => {
+                  markEncounterTutorialSeen();
+                  onTreatSuccess();
+                }
+              : undefined
+          }
+        />
+      ) : null}
 
       {showNavRose ? (
         <div className="gem-hunt-overlay__nav-layer gem-hunt-webxr__nav-layer" aria-hidden>
@@ -527,7 +622,7 @@ export function GemHuntWebXrAr({
                 sessionActive && "is-hidden",
               )}
             />
-            {sessionActive && phase !== "collecting" ? (
+            {showSessionFooter ? (
               <div className="gem-hunt-overlay__footer-controls">
                 <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
                   <button
@@ -548,23 +643,25 @@ export function GemHuntWebXrAr({
                       <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
                     </span>
                   </button>
-                  <button
-                    type="button"
-                    className={cn(
-                      "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
-                      revealBtnActive && "is-active",
-                    )}
-                    aria-pressed={revealBtnActive}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRevealAssist();
-                    }}
-                  >
-                    {revealBtnLabel}
-                  </button>
+                  {!encounterMode ? (
+                    <button
+                      type="button"
+                      className={cn(
+                        "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
+                        revealBtnActive && "is-active",
+                      )}
+                      aria-pressed={revealBtnActive}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRevealAssist();
+                      }}
+                    >
+                      {revealBtnLabel}
+                    </button>
+                  ) : null}
                 </div>
-                {canCollect && placed && arGemVisible ? (
+                {!encounterMode && canCollect && placed && arGemVisible ? (
                   <p className="gem-hunt-webxr__collect-hint" role="status">
                     הקישו על החיה במרחב כדי לאסוף
                   </p>
@@ -572,7 +669,7 @@ export function GemHuntWebXrAr({
               </div>
             ) : null}
 
-            {sessionActive && hintPanel === "nav" ? (
+            {showSessionFooter && hintPanel === "nav" ? (
               <div
                 className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
                 role="region"

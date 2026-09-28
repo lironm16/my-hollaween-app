@@ -890,6 +890,7 @@ export function HouseMap({
             matchedIds={matchedIds}
             filterDimActive={dimActive}
             visual={gemAnchorVisual}
+            userLocation={userLocation}
           />
         ) : null}
         {!pickMode &&

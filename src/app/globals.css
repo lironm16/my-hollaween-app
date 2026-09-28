@@ -6801,3 +6801,152 @@ html.hw-mobile-browser .gem-hunt-webxr--android .gem-hunt-webxr__footer {
   padding: 0.65rem 1rem;
   font-size: 1rem;
 }
+
+.gem-hunt-overlay.is-encounter-mode .gem-hunt-overlay__shade {
+  opacity: 0.85;
+}
+.gem-hunt-overlay__gem-dance.is-encounter-wiggle {
+  animation: gem-encounter-wiggle 0.55s ease-in-out infinite;
+}
+@keyframes gem-encounter-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg) translateX(0);
+  }
+  25% {
+    transform: rotate(-4deg) translateX(-4px);
+  }
+  75% {
+    transform: rotate(4deg) translateX(4px);
+  }
+}
+
+.gem-encounter-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: max(5rem, calc(env(safe-area-inset-bottom, 0px) + 4rem)) 1rem 0;
+}
+.gem-encounter-layer--transition {
+  justify-content: center;
+  padding: 0;
+  background: rgb(8 4 16 / 0.72);
+  pointer-events: auto;
+}
+.gem-encounter-layer__transition-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgb(251 191 36 / 0.45);
+  background: rgb(12 6 22 / 0.94);
+}
+.gem-encounter-layer__silhouette {
+  border-radius: 1rem;
+  filter: drop-shadow(0 8px 20px rgb(0 0 0 / 0.45));
+}
+.gem-encounter-layer__transition-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fde68a;
+}
+.gem-encounter-layer__transition-sub {
+  margin: 0;
+  font-size: 0.92rem;
+  color: rgb(196 181 253 / 0.95);
+}
+.gem-encounter-layer--approach {
+  justify-content: flex-end;
+  padding-bottom: max(6.5rem, calc(env(safe-area-inset-bottom, 0px) + 5rem));
+}
+.gem-encounter-layer__approach-line {
+  margin: 0;
+  width: min(92vw, 22rem);
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fde68a;
+  text-shadow: 0 2px 12px rgb(0 0 0 / 0.9);
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  background: rgb(12 6 22 / 0.82);
+  border: 1px solid rgb(251 191 36 / 0.35);
+}
+.gem-encounter-layer--encounter {
+  justify-content: space-between;
+  padding-top: max(4.5rem, env(safe-area-inset-top, 0px));
+  padding-bottom: max(5rem, calc(env(safe-area-inset-bottom, 0px) + 3.5rem));
+  pointer-events: none;
+}
+.gem-encounter-layer__tutorial {
+  margin: 0;
+  align-self: center;
+  max-width: min(92vw, 20rem);
+  text-align: center;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fef3c7;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.85rem;
+  background: rgb(12 6 22 / 0.78);
+}
+.gem-encounter-layer__gesture-zone {
+  flex: 1;
+  width: 100%;
+  pointer-events: none;
+}
+.gem-encounter-layer__a11y-offer {
+  pointer-events: auto;
+  margin: 0 auto 0.35rem;
+  border-radius: 999px;
+  border: 1px solid rgb(167 139 250 / 0.45);
+  background: rgb(22 11 32 / 0.88);
+  color: #fde68a;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 0.55rem 1rem;
+}
+.gem-encounter-layer--resolve,
+.gem-encounter-layer--celebrate,
+.gem-encounter-layer--repeat-reward {
+  justify-content: center;
+  padding: 0;
+}
+.gem-encounter-layer__resolve-msg,
+.gem-encounter-layer__celebrate-msg,
+.gem-encounter-layer__repeat-msg {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fde68a;
+  text-shadow: 0 2px 14px rgb(0 0 0 / 0.9);
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  background: rgb(12 6 22 / 0.75);
+}
+.gem-encounter-layer--resolve.is-breakout .gem-encounter-layer__resolve-msg {
+  color: #fca5a5;
+}
+
+.map-gem-diamond-marker.is-near {
+  animation: map-gem-near-pulse 1.6s ease-in-out infinite;
+}
+@keyframes map-gem-near-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgb(251 191 36 / 0.55));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 14px rgb(251 191 36 / 0.95));
+    transform: scale(1.08);
+  }
+}

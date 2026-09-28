@@ -264,15 +264,15 @@ export function GemHuntPanel({
           <Camera className="size-4" aria-hidden />
           {collected
             ? androidArReady
-              ? "הציגו ב-AR"
-              : "הציגו במצלמה"
+              ? "מפגש AR שוב"
+              : "מפגש במצלמה"
             : canCollect
               ? androidArReady
-                ? "פתחו AR — איסוף"
-                : "פתחו מצלמה — איסוף"
+                ? "התחילו מפגש AR"
+                : "התחילו מפגש"
               : androidArReady
-                ? "פתחו AR"
-                : "פתחו מצלמה"}
+                ? "נסו מפגש (רחוק)"
+                : "נסו מפגש (רחוק)"}
         </Button>
       </section>
 
@@ -284,6 +284,8 @@ export function GemHuntPanel({
           simulateInRange={simulate}
           deferCameraUntilInRange={false}
           collectEnabled={canCollect}
+          encounterMode
+          repeatVisit={collected}
           onClose={() => {
             releaseGemHuntCamera();
             setHuntOpen(false);
