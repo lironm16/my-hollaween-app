@@ -15,19 +15,21 @@ function ClockInput({
   disabled?: boolean;
 }) {
   return (
-    <input
-      id={id}
-      type="time"
-      dir="ltr"
-      lang="he-IL"
-      value={value}
-      disabled={disabled}
-      onChange={(event) => onChange(event.target.value)}
-      className={cn(
-        "filter-time-input h-11 min-w-0 min-h-11 flex-1 rounded-lg border border-input bg-[#1d1028] px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-        disabled && "pointer-events-none opacity-50",
-      )}
-    />
+    <div className="time-field-wrap min-w-0 flex-1">
+      <input
+        id={id}
+        type="time"
+        dir="ltr"
+        lang="he-IL"
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        className={cn(
+          "filter-time-input h-11 min-w-0 min-h-11 w-full rounded-lg border border-input bg-[#1d1028] px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+          disabled && "pointer-events-none opacity-50",
+        )}
+      />
+    </div>
   );
 }
 

@@ -557,7 +557,7 @@ export function HouseForm({
           {hourWindows.map((window, index) => (
             <div
               key={`hours-${index}`}
-              className="space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20"
+              className="min-w-0 space-y-2 overflow-hidden rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20"
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="text-lg font-medium text-orange-100">
@@ -573,7 +573,7 @@ export function HouseForm({
                   </button>
                 ) : null}
               </div>
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid min-w-0 grid-cols-1 gap-3">
                 <Field label="פתיחה">
                   <TimeField
                     required
@@ -943,7 +943,7 @@ function Field({
   charCount?: { length: number; max: number };
 }) {
   return (
-    <div className="space-y-1.5">
+    <div className="min-w-0 space-y-1.5">
       <div className="flex items-baseline justify-between gap-2">
         <Label>{label}</Label>
         {charCount ? <CharCount {...charCount} /> : null}
@@ -963,14 +963,16 @@ function TimeField({
   required?: boolean;
 }) {
   return (
-    <input
-      type="time"
-      required={required}
-      dir="ltr"
-      lang="he-IL"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="filter-time-input h-11 w-full min-w-0 min-h-11 rounded-lg border border-input bg-[#1d1028] px-2.5 py-2 text-lg outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-    />
+    <div className="time-field-wrap">
+      <input
+        type="time"
+        required={required}
+        dir="ltr"
+        lang="he-IL"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="filter-time-input h-11 w-full min-w-0 min-h-11 rounded-lg border border-input bg-[#1d1028] px-2.5 py-2 text-lg outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+      />
+    </div>
   );
 }

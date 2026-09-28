@@ -4062,6 +4062,9 @@
     }
   }
   @media (width >= 40rem) {
+    .sm\:block {
+      display: block;
+    }
     .sm\:h-40 {
       height: calc(var(--spacing) * 40);
     }
@@ -6455,9 +6458,19 @@ svg.leaflet-zoom-animated {
     transform: translateY(-8px) rotate(-8deg);
   }
 }
+.time-field-wrap {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  direction: ltr;
+}
 input[type="time"].filter-time-input {
   display: flex;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 2.75rem;
   box-sizing: border-box;
   align-items: center;
@@ -6468,6 +6481,7 @@ input[type="time"].filter-time-input {
   line-height: 1;
   color-scheme: dark;
   cursor: pointer;
+  overflow: clip;
   -webkit-appearance: auto;
   appearance: auto;
 }
@@ -6486,6 +6500,22 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-hour-field,
 input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   padding: 0;
   line-height: 1;
+}
+@supports (-webkit-touch-callout: none) {
+  input[type="time"].filter-time-input {
+    padding-inline: 0.65rem;
+  }
+  input[type="time"].filter-time-input::-webkit-datetime-edit,
+  input[type="time"].filter-time-input::-webkit-datetime-edit-fields-wrapper {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  input[type="time"].filter-time-input::-webkit-calendar-picker-indicator {
+    flex-shrink: 0;
+    margin-inline: 0;
+  }
 }
 .route-skipped-row {
   display: flex;
