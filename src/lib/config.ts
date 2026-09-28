@@ -179,12 +179,25 @@ export function allowedNeighborhoodsMessage() {
   return `בחרו בית ב${NEIGHBORHOODS.slice(0, -1).join(", ")} או ${NEIGHBORHOODS[NEIGHBORHOODS.length - 1]}.`;
 }
 
+/**
+ * Stored neighborhood can be wrong for houses added before Gefen zones/footprints.
+ * When the pin falls inside an event zone, trust the pin over the saved field.
+ */
 export function resolveNeighborhood(house: {
   address?: string;
   neighborhood?: NeighborhoodId | null;
   lat?: number;
   lng?: number;
 }): NeighborhoodId | null {
+  if (
+    typeof house.lat === "number" &&
+    typeof house.lng === "number" &&
+    Number.isFinite(house.lat) &&
+    Number.isFinite(house.lng)
+  ) {
+    const fromZone = neighborhoodAtEventLocation(house.lat, house.lng);
+    if (fromZone) return fromZone;
+  }
   if (house.neighborhood !== undefined) {
     return normalizeNeighborhoodId(house.neighborhood) ?? null;
   }
