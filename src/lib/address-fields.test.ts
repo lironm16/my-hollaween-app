@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   displayAddressFromHit,
+  addressAutocompleteLabel,
   footprintAddressHit,
   normalizeAddressFields,
   prepareAddressHit,
@@ -60,6 +61,20 @@ describe("address fields", () => {
     assert.equal(fields.address, "חרוזים 8");
     assert.equal(fields.neighborhood, "חרוזים");
     assert.equal(streetFromLegacyAddress("חרוזים 8, חרוזים"), "חרוזים 8");
+  });
+
+  it("labels Bialik 37 with Ramat Gan when outside event neighborhoods", () => {
+    const hit: AddressHit = {
+      id: "way-bialik",
+      label: "ביאליק, הגפן",
+      lat: 32.0849863,
+      lng: 34.8122928,
+      road: "ביאליק",
+      city: "רמת גן",
+      precise: false,
+    };
+    assert.equal(addressAutocompleteLabel(hit, "ביאליק 37"), "ביאליק 37, רמת גן");
+    assert.equal(prepareAddressHit(hit, "ביאליק 37")?.label, "ביאליק 37, רמת גן");
   });
 
   it("builds Jabotinsky 105 from footprint when geocoders miss", () => {

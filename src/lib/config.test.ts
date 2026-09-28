@@ -37,4 +37,9 @@ describe("neighborhood config", () => {
     assert.equal(houseLocationAllowed(32.0994, 34.7972), false);
     assert.equal(neighborhoodAtEventLocation(32.0994, 34.7972), null);
   });
+
+  it("rejects Bialik 37 — Ramat Gan but outside the four event areas", () => {
+    assert.equal(houseLocationAllowed(32.0849863, 34.8122928), false);
+    assert.equal(neighborhoodAtEventLocation(32.0849863, 34.8122928), null);
+  });
 });

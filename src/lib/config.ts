@@ -111,8 +111,20 @@ export function neighborhoodFromAddress(address: string): NeighborhoodId | null 
   return null;
 }
 
-/** Squared deg distance limit — rejects map-box corners outside the four neighborhoods. */
-const MAX_NEIGHBORHOOD_CENTER_DIST_SQ = 0.00009;
+/** Event-night house areas (subset of the map box — not every pin in bounds). */
+const NEIGHBORHOOD_ZONES: Record<
+  NeighborhoodId,
+  { south: number; north: number; west: number; east: number }
+> = {
+  חרוזים: { south: 32.0888, north: 32.0924, west: 34.8018, east: 34.8052 },
+  "שיכון ותיקים": { south: 32.0898, north: 32.0942, west: 34.8088, east: 34.8142 },
+  "נחלת גנים": { south: 32.0897, north: 32.0938, west: 34.8103, east: 34.8198 },
+  הגפן: { south: 32.0885, north: 32.0908, west: 34.81, east: 34.8138 },
+};
+
+function inNeighborhoodZone(lat: number, lng: number, zone: (typeof NEIGHBORHOOD_ZONES)[NeighborhoodId]) {
+  return lat >= zone.south && lat <= zone.north && lng >= zone.west && lng <= zone.east;
+}
 
 function nearestNeighborhood(lat: number, lng: number) {
   let best: NeighborhoodId = NEIGHBORHOODS[0];
@@ -136,8 +148,21 @@ export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId
 /** One of the four event neighborhoods, or null when the pin is outside their area. */
 export function neighborhoodAtEventLocation(lat: number, lng: number): NeighborhoodId | null {
   if (!inNeighborhood(lat, lng)) return null;
-  const { best, bestDist } = nearestNeighborhood(lat, lng);
-  if (bestDist > MAX_NEIGHBORHOOD_CENTER_DIST_SQ) return null;
+  const matches = NEIGHBORHOODS.filter((name) =>
+    inNeighborhoodZone(lat, lng, NEIGHBORHOOD_ZONES[name]),
+  );
+  if (matches.length === 0) return null;
+  if (matches.length === 1) return matches[0];
+  let best = matches[0];
+  let bestDist = Number.POSITIVE_INFINITY;
+  for (const name of matches) {
+    const c = NEIGHBORHOOD_CENTERS[name];
+    const d = (lat - c.lat) ** 2 + (lng - c.lng) ** 2;
+    if (d < bestDist) {
+      bestDist = d;
+      best = name;
+    }
+  }
   return best;
 }
 

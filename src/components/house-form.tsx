@@ -247,7 +247,13 @@ export function HouseForm({
     if (!houseLocationAllowed(hit.lat, hit.lng)) {
       setAddressError(outsideZoneMessage);
       setAddressOk(false);
-      setForm((f) => ({ ...f, address: hit.label, neighborhood: undefined }));
+      setForm((f) => ({
+        ...f,
+        address: hit.label,
+        neighborhood: undefined,
+        lat: hit.lat,
+        lng: hit.lng,
+      }));
       return;
     }
     setAddressError(null);

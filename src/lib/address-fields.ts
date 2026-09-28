@@ -80,6 +80,17 @@ export function displayAddressFromHit(hit: AddressHit): string {
   });
 }
 
+/** Autocomplete line — city when outside the four neighborhoods; never guess a wrong area. */
+export function addressAutocompleteLabel(hit: AddressHit, query = ""): string {
+  const parsed = parseStreetAndNumber(query.trim());
+  const road = hit.road.trim() || parsed.road;
+  const num = hit.houseNumber?.trim() || parsed.num;
+  const street = road && num ? `${road} ${num}` : streetFromAddressHit(hit);
+  const area = neighborhoodAtEventLocation(hit.lat, hit.lng);
+  if (area) return `${street}, ${area}`;
+  return /רמת\s*גן/u.test(street) ? street : `${street}, רמת גן`;
+}
+
 function snapHitToFootprint(hit: AddressHit): AddressHit {
   const street = streetFromAddressHit(hit);
   const footprint = osmFootprintForAddress(street);
@@ -92,11 +103,14 @@ function snapHitToFootprint(hit: AddressHit): AddressHit {
   };
 }
 
-/** Snap to OSM footprints, relabel by map neighborhood, drop hits outside the four areas. */
-export function prepareAddressHit(hit: AddressHit): AddressHit | null {
+/** Snap to OSM footprints and build a display label (may be outside the four neighborhoods). */
+export function prepareAddressHit(hit: AddressHit, query = ""): AddressHit | null {
+  if (!hit.road.trim() && !parseStreetAndNumber(query).road) return null;
   const snapped = snapHitToFootprint(hit);
-  if (!houseLocationAllowed(snapped.lat, snapped.lng)) return null;
-  return { ...snapped, label: displayAddressFromHit(snapped) };
+  const parsed = parseStreetAndNumber(query.trim());
+  const withNumber =
+    parsed.num && !snapped.houseNumber ? { ...snapped, houseNumber: parsed.num } : snapped;
+  return { ...withNumber, label: addressAutocompleteLabel(withNumber, query) };
 }
 
 function addressHitDedupeKey(hit: AddressHit) {
@@ -125,12 +139,14 @@ export function footprintAddressHit(query: string): AddressHit | null {
     city: "רמת גן",
     precise: true,
   };
-  return prepareAddressHit(raw);
+  const prepared = prepareAddressHit(raw, query);
+  if (!prepared || !houseLocationAllowed(prepared.lat, prepared.lng)) return null;
+  return prepared;
 }
 
 export async function searchPreparedAddresses(query: string): Promise<AddressHit[]> {
   const { searchAddress } = await import("@/lib/geocode");
-  let hits = prepareAddressHits(await searchAddress(query));
+  let hits = prepareAddressHits(await searchAddress(query), query);
   if (hits.length === 0) {
     const synthetic = footprintAddressHit(query);
     if (synthetic) hits = [synthetic];
@@ -138,10 +154,10 @@ export async function searchPreparedAddresses(query: string): Promise<AddressHit
   return hits;
 }
 
-export function prepareAddressHits(hits: AddressHit[]): AddressHit[] {
+export function prepareAddressHits(hits: AddressHit[], query = ""): AddressHit[] {
   const best = new Map<string, AddressHit>();
   for (const raw of hits) {
-    const hit = prepareAddressHit(raw);
+    const hit = prepareAddressHit(raw, query);
     if (!hit) continue;
     const key = addressHitDedupeKey(hit);
     const prev = best.get(key);
