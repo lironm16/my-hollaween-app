@@ -223,6 +223,7 @@ async function searchEsri(query: string, parsed: { road: string; num?: string })
       attrs.Addr_type === "PointAddress" ||
       attrs.Addr_type === "Subaddress" ||
       (attrs.Addr_type === "StreetAddress" && Boolean(num));
+    if (!point) continue;
     const fake: NominatimHit = {
       lat: String(lat),
       lon: String(lng),
@@ -244,6 +245,7 @@ async function searchEsri(query: string, parsed: { road: string; num?: string })
 }
 
 function attachTypedNumber(hit: AddressHit, num: string): AddressHit {
+  if (!hit.precise) return hit;
   const already = houseNumberFromHit(hit);
   if (already === num && hit.houseNumber) return { ...hit, houseNumber: num };
   const road = (hit.road || parseStreetAndNumber(hit.label).road || hit.label.split(",")[0]?.trim() || "").replace(
@@ -273,7 +275,12 @@ function hitQuality(
   const q = query.replace(/\s+/g, "");
   const label = hit.label.replace(/\s+/g, "");
   if (label.includes(q)) score += 10;
-  if (parsed?.num && hit.houseNumber === parsed.num && isOsmMapFootprintHit(hit)) {
+  if (
+    hit.precise &&
+    parsed?.num &&
+    hit.houseNumber === parsed.num &&
+    isOsmMapFootprintHit(hit)
+  ) {
     score += 50;
   }
   return score;
@@ -295,6 +302,11 @@ function uniqueHits(hits: AddressHit[], query: string, parsed?: { road: string; 
       bestByLabel.set(hit.label, hit);
       continue;
     }
+    if (hit.precise && !current.precise) {
+      bestByLabel.set(hit.label, hit);
+      continue;
+    }
+    if (!hit.precise && current.precise) continue;
     if (hitQuality(hit, query, parsed) > hitQuality(current, query, parsed)) {
       bestByLabel.set(hit.label, hit);
     }
@@ -361,12 +373,18 @@ export async function searchAddress(query: string): Promise<AddressHit[]> {
     }
   }
 
-  const hits = uniqueHits(collected, q, parsed).map((hit) => {
+  let hits = uniqueHits(collected, q, parsed).map((hit) => {
     const fromLabel = parseStreetAndNumber(hit.label).num;
     if (fromLabel && !hit.houseNumber) return { ...hit, houseNumber: fromLabel };
     return hit;
   });
   hits.sort((a, b) => rank(b, q, parsed) - rank(a, q, parsed));
+  if (parsed.num) {
+    const hasPreciseMatch = hits.some((h) => h.precise && h.houseNumber === parsed.num);
+    if (hasPreciseMatch) {
+      hits = hits.filter((h) => h.precise || h.houseNumber !== parsed.num);
+    }
+  }
   return hits.slice(0, 8);
 }
 
