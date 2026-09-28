@@ -1,6 +1,9 @@
 import { getGemAnchorOverride } from "@/lib/gem-anchor-overrides";
 import { getOsmGemAnchor } from "@/lib/gem-osm-anchor-cache";
-import { GEM_OSM_ANCHOR_MAX_PIN_DISTANCE_M } from "@/lib/gem-osm-anchor-data";
+import {
+  GEM_OSM_ANCHOR_MAX_PIN_DISTANCE_M,
+  isGemOsmAnchorStale,
+} from "@/lib/gem-osm-anchor-data";
 import { distanceMeters } from "@/lib/geo";
 import {
   nearestSidewalkPoint,
@@ -175,7 +178,11 @@ export function gemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
   }
 
   const osm = getOsmGemAnchor(house.id);
-  if (osm && osm.distanceM <= GEM_OSM_ANCHOR_MAX_PIN_DISTANCE_M) {
+  if (
+    osm &&
+    osm.distanceM <= GEM_OSM_ANCHOR_MAX_PIN_DISTANCE_M &&
+    !isGemOsmAnchorStale(house, osm)
+  ) {
     const point = { lat: osm.lat, lng: osm.lng };
     const bearingFromHouseDeg = bearingDegrees(house, point);
     const offsetM = distanceMeters(house, point);

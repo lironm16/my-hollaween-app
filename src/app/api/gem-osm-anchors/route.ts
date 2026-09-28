@@ -1,7 +1,12 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { NextResponse } from "next/server";
-import type { GemOsmAnchorEntry, GemOsmAnchorFile } from "@/lib/gem-osm-anchor-data";
+import {
+  attachGemAnchorPin,
+  isGemOsmAnchorStale,
+  type GemOsmAnchorEntry,
+  type GemOsmAnchorFile,
+} from "@/lib/gem-osm-anchor-data";
 import { sidewalkGemAnchorForHouse } from "@/lib/gem-street-spines";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
 import { getCatalog } from "@/lib/store";
@@ -32,16 +37,16 @@ export async function GET() {
 
   for (const house of eligible) {
     const seeded = staticAnchors[house.id];
-    if (seeded?.source === "osrm") {
+    if (seeded?.source === "osrm" && !isGemOsmAnchorStale(house, seeded)) {
       anchors[house.id] = seeded;
       continue;
     }
     const spine = sidewalkGemAnchorForHouse(house);
     if (spine) {
-      anchors[house.id] = spine;
+      anchors[house.id] = attachGemAnchorPin(house, spine);
       continue;
     }
-    if (seeded) anchors[house.id] = seeded;
+    if (seeded && !isGemOsmAnchorStale(house, seeded)) anchors[house.id] = seeded;
   }
 
   const body: GemOsmAnchorFile = {

@@ -51,7 +51,7 @@ async function osrmNearest(house) {
       const lat = wp.location[1];
       const distanceM = haversineM(house, { lat, lng });
       if (distanceM > MAX_PIN_DISTANCE_M) continue;
-      return { lat, lng, distanceM, source: "osrm" };
+      return { lat, lng, distanceM, source: "osrm", pinLat: house.lat, pinLng: house.lng };
     } catch {
       /* try next endpoint */
     }

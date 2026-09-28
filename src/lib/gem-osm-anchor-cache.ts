@@ -1,6 +1,11 @@
 import { appVersion } from "@/lib/app-version";
 import { osrmNearestFootWalkFromBrowser } from "@/lib/gem-osrm-snap";
-import type { GemOsmAnchorEntry, GemOsmAnchorFile } from "@/lib/gem-osm-anchor-data";
+import {
+  attachGemAnchorPin,
+  isGemOsmAnchorStale,
+  type GemOsmAnchorEntry,
+  type GemOsmAnchorFile,
+} from "@/lib/gem-osm-anchor-data";
 import bundled from "../../public/gem-osm-anchors.json";
 
 let file: GemOsmAnchorFile = normalizeFile(bundled as GemOsmAnchorFile);
@@ -129,7 +134,8 @@ export async function hydrateGemAnchorsForHouses(
   if (typeof window === "undefined") return 0;
   const pending = houses.filter((h) => {
     const cur = file.anchors[h.id];
-    return !cur || cur.source !== "osrm";
+    if (!cur || cur.source !== "osrm") return true;
+    return isGemOsmAnchorStale(h, cur);
   });
   if (pending.length === 0) return 0;
 
@@ -144,7 +150,7 @@ export async function hydrateGemAnchorsForHouses(
       index += 1;
       const house = pending[i]!;
       const snap = await fetchOsrmSnap(house.lat, house.lng);
-      if (snap && mergeAnchor(house.id, snap)) updated += 1;
+      if (snap && mergeAnchor(house.id, attachGemAnchorPin(house, snap))) updated += 1;
       if (i < pending.length - 1) await new Promise((r) => setTimeout(r, gapMs));
     }
   }
