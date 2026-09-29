@@ -196,7 +196,6 @@ function MyCollectionsPageContent() {
       onEdit: tab === "mine" ? requestEdit : undefined,
       skipMetaFor: (id) => skips.meta(id),
       editingId: editFlow.flow?.house.id ?? null,
-      onShowOnMap: (id) => router.push(`/?focus=${encodeURIComponent(id)}`),
     };
   }, [
     catalog,

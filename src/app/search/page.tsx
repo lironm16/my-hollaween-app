@@ -23,7 +23,6 @@ import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
 import { notifyCatalogChanged, removeOwnedHouse, saveOwnedHouse } from "@/lib/offline-db";
-import { writeHomeView } from "@/lib/home-view";
 import type { PublicHouse } from "@/lib/types";
 
 export default function SearchPage() {
@@ -91,10 +90,6 @@ export default function SearchPage() {
       },
       skipMetaFor: (id) => skips.meta(id),
       editingId: editFlow.flow?.house.id ?? null,
-      onShowOnMap: (id) => {
-        writeHomeView("map");
-        router.push(`/?focus=${encodeURIComponent(id)}`);
-      },
     };
   }, [
     admin,

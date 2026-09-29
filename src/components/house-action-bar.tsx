@@ -5,8 +5,6 @@ import { createPortal } from "react-dom";
 import {
   Heart,
   KeyRound,
-  List,
-  MapPinned,
   MoreVertical,
   Navigation,
   Pencil,
@@ -61,8 +59,6 @@ export function HouseActionBar({
   gemCollected,
   onToggleGem,
   onToggleEdit,
-  onShowOnMap,
-  onShowInList,
   onSkip,
   onRestoreRoute,
   skipped,
@@ -81,8 +77,6 @@ export function HouseActionBar({
   gemCollected?: boolean;
   onToggleGem?: () => void;
   onToggleEdit?: () => void;
-  onShowOnMap?: () => void;
-  onShowInList?: () => void;
   onSkip?: () => void;
   onRestoreRoute?: () => void;
   skipped?: boolean;
@@ -132,23 +126,6 @@ export function HouseActionBar({
       external: true,
     });
   }
-  if (onShowOnMap) {
-    items.push({
-      id: "map",
-      label: "הצג במפה",
-      icon: <MapPinned className={MENU_ICON_CLASS} strokeWidth={2.2} />,
-      onClick: onShowOnMap,
-    });
-  }
-  if (onShowInList) {
-    items.push({
-      id: "list",
-      label: "הצגה ברשימה",
-      icon: <List className={MENU_ICON_CLASS} strokeWidth={2.2} />,
-      onClick: onShowInList,
-    });
-  }
-
   if (!navOnly) {
     items.push({
       id: "share",

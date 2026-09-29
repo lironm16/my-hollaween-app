@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  CARTO_VOYAGER_NOLABELS_TEMPLATE,
   CARTO_VOYAGER_TEMPLATE,
   OSM_TILE_ATTRIBUTION,
   OSM_TILE_TEMPLATE,
@@ -36,7 +37,8 @@ function probeReferers() {
 }
 
 /** Real neighborhood tile — empty-ocean probes falsely fail key validation. */
-const PROBE_TILE = "https://a.basemaps.cartocdn.com/rastertiles/voyager/16/39105/26593.png";
+const PROBE_TILE =
+  "https://a.basemaps.cartocdn.com/rastertiles/voyager_nolabels/16/39105/26593.png";
 
 async function keyProbeOk(key: string) {
   const probe = cartoTileUrlWithKey(PROBE_TILE, key);
@@ -68,9 +70,11 @@ export async function GET() {
 
   // Phones load tiles with the page Referer (my-hollaween-app…). Use CARTO whenever a key is set;
   // OSM is only when no key. keyActive is diagnostic (server probe may fail on deploy URLs).
+  const streetLabels = process.env.NEXT_PUBLIC_MAP_STREET_LABELS === "1";
+  const voyagerTemplate = streetLabels ? CARTO_VOYAGER_TEMPLATE : CARTO_VOYAGER_NOLABELS_TEMPLATE;
   const tiles = keyConfigured
     ? {
-        url: cartoTileUrlWithKey(CARTO_VOYAGER_TEMPLATE, key),
+        url: cartoTileUrlWithKey(voyagerTemplate, key),
         subdomains: "abcd",
         invert: false as const,
         maxNativeZoom: 18,

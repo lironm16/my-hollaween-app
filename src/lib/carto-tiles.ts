@@ -8,6 +8,10 @@ export const OSM_TILE_ATTRIBUTION =
 export const CARTO_VOYAGER_TEMPLATE =
   "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 
+/** Same palette without street or building numbers (privacy before address reveal). */
+export const CARTO_VOYAGER_NOLABELS_TEMPLATE =
+  "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png";
+
 /** CARTO Dark Matter — night theme, clear lines without CSS invert. */
 export const CARTO_DARK_TEMPLATE =
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";

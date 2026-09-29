@@ -16,7 +16,6 @@ import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useGemProgress } from "@/hooks/use-gem-progress";
-import { writeHomeView } from "@/lib/home-view";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { GemHuntPanelLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { useAppNow } from "@/hooks/use-app-clock";
@@ -100,10 +99,6 @@ export default function HousePage() {
         }),
       skipMetaFor: (hid) => skips.meta(hid),
       editingId: editFlow.flow?.house.id ?? null,
-      onShowOnMap: (hid) => {
-        writeHomeView("map");
-        router.push(`/?focus=${encodeURIComponent(hid)}`);
-      },
     };
   }, [
     admin,

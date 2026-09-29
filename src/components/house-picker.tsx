@@ -10,23 +10,27 @@ import { isPoiHouse } from "@/lib/house-kind";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function houseSearchHaystack(house: PublicHouse) {
+export function houseSearchHaystack(house: PublicHouse, canViewLocationDetails = true) {
   return [
     house.name,
-    formatDisplayAddress(house),
-    house.arrival,
-    house.description,
-    locationSearchHaystack(house),
+    canViewLocationDetails ? formatDisplayAddress(house) : "",
+    canViewLocationDetails ? house.arrival : "",
+    canViewLocationDetails ? house.description : "",
+    canViewLocationDetails ? locationSearchHaystack(house) : "",
     isPoiHouse(house) ? poiCategoryLabel(house.poiCategory) : "",
   ]
     .filter(Boolean)
     .join(" ");
 }
 
-export function houseMatchesQuery(house: PublicHouse, query: string) {
+export function houseMatchesQuery(
+  house: PublicHouse,
+  query: string,
+  canViewLocationDetails = true,
+) {
   const needle = query.trim().toLowerCase();
   if (!needle) return true;
-  return houseSearchHaystack(house).toLowerCase().includes(needle);
+  return houseSearchHaystack(house, canViewLocationDetails).toLowerCase().includes(needle);
 }
 
 export function HousePicker({
@@ -62,14 +66,16 @@ export function HousePicker({
   const matches = useMemo(() => {
     const needle =
       selected && query === houseHeadline(selected) ? "" : query;
-    const filtered = houses.filter((house) => houseMatchesQuery(house, needle));
+    const filtered = houses.filter((house) =>
+      houseMatchesQuery(house, needle, addressReveal.canViewDetails(house.id)),
+    );
     return [...filtered].sort((a, b) => {
       const ao = owned.has(a.id) ? 0 : 1;
       const bo = owned.has(b.id) ? 0 : 1;
       if (ao !== bo) return ao - bo;
       return houseHeadline(a).localeCompare(houseHeadline(b), "he");
     });
-  }, [houses, query, owned, selected]);
+  }, [houses, query, owned, selected, addressReveal]);
 
   useEffect(() => {
     setActive(0);
