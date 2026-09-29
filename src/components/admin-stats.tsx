@@ -15,8 +15,12 @@ import { cn } from "@/lib/utils";
 import { NEIGHBORHOODS } from "@/lib/config";
 import { buildSnapshotStats, type SnapshotStats } from "@/lib/admin-snapshot";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
+import { useAdminHouses } from "@/hooks/use-admin-houses";
+import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAppNow } from "@/hooks/use-app-clock";
+import { useMergedHouses } from "@/hooks/use-merged-houses";
+import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import type { HouseSet } from "@/lib/house-set";
 import { SENSITIVITY_OPTIONS } from "@/lib/types";
 
@@ -100,15 +104,39 @@ export function PersonalMarksSection({
 }
 
 export function useSnapshotStats(enabled = true, houseSet: HouseSet = "real"): SnapshotStats | null {
-  const { catalog } = useCatalog();
+  const { catalog, refresh } = useCatalog();
   const now = useAppNow();
-
-  const houses = useMemo(() => resolveCatalogHouses(catalog), [catalog]);
+  const { admin } = useAdminSession();
+  const owned = useOwnedHouses();
+  const { adminHouses } = useAdminHouses({
+    admin,
+    refresh,
+    catalogUpdatedAt: catalog?.updatedAt,
+  });
+  const catalogHouses = useMemo(() => resolveCatalogHouses(catalog), [catalog]);
+  const houses = useMergedHouses({
+    catalogHouses,
+    owned,
+    admin,
+    adminHouses,
+    includeCatalogWhenAdmin: true,
+  });
 
   return useMemo(() => {
-    if (!enabled || !catalog) return null;
-    return buildSnapshotStats({ houses, now, houseSet });
-  }, [enabled, catalog, houses, now, houseSet]);
+    if (!enabled) return null;
+    if (!catalog && houses.length === 0) return null;
+    const stats = buildSnapshotStats({ houses, now, houseSet });
+    if (
+      admin &&
+      houseSet === "real" &&
+      stats.houses === 0 &&
+      stats.pois === 0 &&
+      houses.length > 0
+    ) {
+      return buildSnapshotStats({ houses, now, houseSet: "all" });
+    }
+    return stats;
+  }, [enabled, catalog, houses, now, houseSet, admin]);
 }
 
 export function AdminStatsCard({
@@ -127,13 +155,6 @@ export function AdminStatsCard({
             value={stats.pois}
             plain
           />
-        </div>
-        <Subhead>שכונות</Subhead>
-        <div className="grid grid-cols-2 gap-2">
-          {NEIGHBORHOODS.map((name) => (
-            <StatTile key={name} icon={<MapPinned className="size-5" />} label={name} value={stats.neighborhoods[name]} plain />
-          ))}
-          <StatTile icon={<MapPinned className="size-5" />} label="אחר" value={stats.neighborhoods.other} plain />
         </div>
         <Subhead>שעות</Subhead>
         <StatTile
@@ -243,6 +264,13 @@ export function AdminStatsCard({
             value={stats.scareSpicy}
             plain
           />
+        </div>
+        <Subhead>שכונות</Subhead>
+        <div className="grid grid-cols-2 gap-2">
+          {NEIGHBORHOODS.map((name) => (
+            <StatTile key={name} icon={<MapPinned className="size-5" />} label={name} value={stats.neighborhoods[name]} plain />
+          ))}
+          <StatTile icon={<MapPinned className="size-5" />} label="אחר" value={stats.neighborhoods.other} plain />
         </div>
       </Section>
     </div>

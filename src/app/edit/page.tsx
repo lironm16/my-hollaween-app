@@ -10,6 +10,7 @@ import { HousePicker } from "@/components/house-picker";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAdminHouses } from "@/hooks/use-admin-houses";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useHouseSet } from "@/hooks/use-house-set";
@@ -43,7 +44,11 @@ function EditPageContent() {
   const { admin, ready: adminReady } = useAdminSession();
   const { houseSet } = useHouseSet();
   const activeHouseSet = admin ? houseSet : "real";
-  const [adminHouses, setAdminHouses] = useState<House[]>([]);
+  const { adminHouses } = useAdminHouses({
+    admin,
+    refresh,
+    catalogUpdatedAt: catalog?.updatedAt,
+  });
   const [picked, setPicked] = useState<PublicHouse | null>(null);
   const [editCode, setEditCode] = useState("");
   const [house, setHouse] = useState<PublicHouse | null>(null);
@@ -54,25 +59,6 @@ function EditPageContent() {
   const autoOpenedIdRef = useRef<string | null>(null);
   pickedIdRef.current = picked?.id ?? null;
 
-  useEffect(() => {
-    if (!admin) {
-      setAdminHouses([]);
-      return;
-    }
-    let cancelled = false;
-    void fetch("/api/admin/houses", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data: { houses?: House[] }) => {
-        if (!cancelled) setAdminHouses(data.houses ?? []);
-      })
-      .catch(() => {
-        if (!cancelled) setAdminHouses([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [admin]);
-
   const merged = useMergedHouses({
     catalogHouses: catalog?.houses ?? [],
     owned,
@@ -80,10 +66,13 @@ function EditPageContent() {
     adminHouses,
     includeCatalogWhenAdmin: true,
   });
-  const houses = useMemo(
-    () => merged.filter((house) => houseMatchesSet(house, activeHouseSet)),
-    [merged, activeHouseSet],
-  );
+  const houses = useMemo(() => {
+    const filtered = merged.filter((house) => houseMatchesSet(house, activeHouseSet));
+    if (admin && filtered.length === 0 && merged.length > 0 && activeHouseSet === "real") {
+      return merged;
+    }
+    return filtered;
+  }, [merged, activeHouseSet, admin]);
 
   const ownedMatch = picked ? owned.find((item) => item.id === picked.id) : undefined;
   const adminEditCode = picked && admin ? adminHouses.find((item) => item.id === picked.id)?.editCode : undefined;
