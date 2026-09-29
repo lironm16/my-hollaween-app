@@ -105,7 +105,7 @@ function writeLocalCatalog(catalog: Catalog) {
 }
 
 export function loadCatalogCacheSync(): Catalog | null {
-  return readLocalCatalog();
+  return null;
 }
 
 function asCatalogCacheMeta(value: unknown): CatalogCacheMeta | null {
@@ -163,45 +163,38 @@ export function clearCatalogCacheComplete() {
   saveCatalogCacheMeta({ complete: false });
 }
 
-export async function saveCatalogCache(catalog: Catalog) {
-  const existing = readLocalCatalog();
-  const merged = existing ? syncCatalog(existing, catalog) : catalog;
-  const safe = asCachedCatalog(merged);
-  if (!safe) return;
-  writeLocalCatalog(safe);
+/** Remove published catalog snapshots from the device (privacy / no offline house dumps). */
+export function clearDeviceCatalogCache() {
+  if (typeof window === "undefined") return;
   try {
-    const db = await openDb();
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(STORE, "readwrite");
-      tx.objectStore(STORE).put(safe, KEY);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-    db.close();
+    localStorage.removeItem(CATALOG_LS_KEY);
+    localStorage.removeItem(CATALOG_META_LS_KEY);
   } catch {
-    // IndexedDB can be blocked in private mode; localStorage is enough.
+    /* private mode */
   }
+  void (async () => {
+    try {
+      const db = await openDb();
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction(STORE, "readwrite");
+        tx.objectStore(STORE).delete(KEY);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+      db.close();
+    } catch {
+      /* IndexedDB blocked */
+    }
+  })();
+}
+
+/** Published catalog is no longer persisted on devices. */
+export async function saveCatalogCache(_catalog: Catalog) {
+  return;
 }
 
 export async function loadCatalogCache(): Promise<Catalog | null> {
-  try {
-    const db = await openDb();
-    const value = await new Promise<unknown>((resolve, reject) => {
-      const tx = db.transaction(STORE, "readonly");
-      const req = tx.objectStore(STORE).get(KEY);
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-    db.close();
-    const fromDb = asCachedCatalog(value);
-    if (fromDb) {
-      writeLocalCatalog(fromDb);
-      return fromDb;
-    }
-  } catch {
-    /* fall through to localStorage */
-  }
-  return readLocalCatalog();
+  return null;
 }
 
 const MY_HOUSES_KEY = "hw-my-houses";

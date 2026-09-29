@@ -137,50 +137,36 @@ describe("resolveCatalogHouses", { skip: !hasLocalStorage }, () => {
     localStorage.removeItem(CATALOG_META_LS_KEY);
   });
 
-  it("returns cached houses when live catalog is empty", () => {
+  it("does not read legacy localStorage catalog snapshots", () => {
     const cached = catalog(
       [house("a", { updatedAt: "2026-10-31T10:00:00.000Z" })],
       "2026-10-31T10:00:00.000Z",
     );
     localStorage.setItem(CATALOG_LS_KEY, JSON.stringify(cached));
-    assert.deepEqual(resolveCatalogHouses(null).map((item) => item.id), ["a"]);
+    assert.deepEqual(resolveCatalogHouses(null), []);
+    assert.equal(loadCatalogCacheSync(), null);
   });
 
-  it("keeps cached ids when live catalog is a newer partial delta", () => {
-    const cached = catalog(
-      [
-        house("a", { updatedAt: "2026-10-31T09:00:00.000Z" }),
-        house("b", { updatedAt: "2026-10-31T09:00:00.000Z" }),
-        house("c", { updatedAt: "2026-10-31T09:00:00.000Z" }),
-      ],
-      "2026-10-31T09:00:00.000Z",
-    );
-    localStorage.setItem(CATALOG_LS_KEY, JSON.stringify(cached));
+  it("uses live catalog only when device cache is disabled", () => {
     const live = catalog(
       [house("a", { updatedAt: "2026-10-31T12:00:00.000Z" })],
       "2026-10-31T12:00:00.000Z",
     );
-    const ids = resolveCatalogHouses(live)
-      .map((item) => item.id)
-      .sort();
-    assert.deepEqual(ids, ["a", "b", "c"]);
+    assert.deepEqual(resolveCatalogHouses(live).map((item) => item.id), ["a"]);
   });
 
-  it("saveCatalogCache unions with the existing device cache instead of shrinking it", async () => {
-    const cached = catalog(
-      [
-        house("a", { updatedAt: "2026-10-31T09:00:00.000Z" }),
-        house("b", { updatedAt: "2026-10-31T09:00:00.000Z" }),
-        house("c", { updatedAt: "2026-10-31T09:00:00.000Z" }),
-      ],
-      "2026-10-31T09:00:00.000Z",
+  it("saveCatalogCache does not persist catalog on device", async () => {
+    localStorage.setItem(
+      CATALOG_LS_KEY,
+      JSON.stringify(
+        catalog([house("legacy")], "2026-10-31T09:00:00.000Z"),
+      ),
     );
-    localStorage.setItem(CATALOG_LS_KEY, JSON.stringify(cached));
     await saveCatalogCache(
       catalog([house("a", { updatedAt: "2026-10-31T12:00:00.000Z" })], "2026-10-31T12:00:00.000Z"),
     );
-    const ids = (loadCatalogCacheSync()?.houses ?? []).map((item) => item.id).sort();
-    assert.deepEqual(ids, ["a", "b", "c"]);
+    assert.equal(loadCatalogCacheSync(), null);
+    assert.equal(localStorage.getItem(CATALOG_LS_KEY)?.includes("legacy"), true);
   });
 
   it("persists cache completeness metadata separately from catalog payload", () => {

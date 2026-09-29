@@ -206,6 +206,7 @@ export function AppHeader({
               <RouteMenuSection
                 onOpenExport={openRouteExport}
                 onOpenShare={openRouteShare}
+                exportEnabled={Boolean(admin)}
               />
             ) : null}
 
@@ -325,14 +326,16 @@ export function AppHeader({
       ) : null}
       {routeMenu ? (
         <>
-          <HouseExportDialog
-            open={routeExportOpen}
-            onOpenChange={setRouteExportOpen}
-            houses={routeMenu.houses}
-            totalInSet={routeMenu.totalInSet}
-            activeFilterCount={routeMenu.activeFilterCount}
-            kind={routeMenu.kind}
-          />
+          {admin ? (
+            <HouseExportDialog
+              open={routeExportOpen}
+              onOpenChange={setRouteExportOpen}
+              houses={routeMenu.houses}
+              totalInSet={routeMenu.totalInSet}
+              activeFilterCount={routeMenu.activeFilterCount}
+              kind={routeMenu.kind}
+            />
+          ) : null}
           <RouteShareDialog
             open={routeShareOpen}
             onOpenChange={setRouteShareOpen}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect } from "react";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { AppClockProvider } from "@/components/app-clock-provider";
@@ -7,8 +8,13 @@ import { ServiceWorkerRegister } from "@/components/sw-register";
 import { TabTitleCycle } from "@/components/tab-title-cycle";
 import { CatalogProvider } from "@/components/catalog-provider";
 import { PwaInstallProvider } from "@/components/pwa-install-provider";
+import { clearDeviceCatalogCache } from "@/lib/offline-db";
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  useLayoutEffect(() => {
+    clearDeviceCatalogCache();
+  }, []);
+
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark">
       <AppClockProvider>

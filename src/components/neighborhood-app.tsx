@@ -257,8 +257,16 @@ export function NeighborhoodApp({
   }, [routeShareParam]);
 
   function setView(next: HomeView) {
+    if (next === "list" && !admin) {
+      writeHomeView("map");
+      return;
+    }
     writeHomeView(next);
   }
+
+  useEffect(() => {
+    if (!admin && readHomeView() === "list") writeHomeView("map");
+  }, [admin]);
 
   const {
     adminHouses,
@@ -1034,11 +1042,13 @@ export function NeighborhoodApp({
       onSkip: handleSkipHouse,
       onRestore: handleRestoreHouse,
       onShowOnMap: openOnMap,
-      onShowInList: (id) => {
-        if (!matchedIds.has(id)) return;
-        selection.showInListFromMap(id);
-        setView("list");
-      },
+      onShowInList: admin
+        ? (id) => {
+            if (!matchedIds.has(id)) return;
+            selection.showInListFromMap(id);
+            setView("list");
+          }
+        : undefined,
       canEdit: (id) => Boolean(admin || owned.some((item) => item.id === id)),
       editCodeFor: (id) =>
         admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode,
@@ -1113,6 +1123,7 @@ export function NeighborhoodApp({
               setView("list");
               selection.closeSelection();
             }}
+            listViewEnabled={admin}
             activeFilterCount={activeFilterCount}
             onOpenFilters={() => setFiltersOpen(true)}
             originShifted={originChoice.kind !== "gps"}
@@ -1138,13 +1149,15 @@ export function NeighborhoodApp({
           />
         </div>
       ) : null}
-      <button
-        type="button"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-2 focus:rounded-lg focus:bg-orange-500 focus:px-3 focus:py-2 focus:text-black"
-        onClick={() => setView("list")}
-      >
-        דלג לרשימת הבתים
-      </button>
+      {admin ? (
+        <button
+          type="button"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-2 focus:rounded-lg focus:bg-orange-500 focus:px-3 focus:py-2 focus:text-black"
+          onClick={() => setView("list")}
+        >
+          דלג לרשימת הבתים
+        </button>
+      ) : null}
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {selection.selected ? houseSelectionAnnouncement(selection.selected) : ""}
         {routeMode && walkingRoute

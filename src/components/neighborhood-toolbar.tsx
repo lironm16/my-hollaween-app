@@ -48,6 +48,7 @@ export function NeighborhoodToolbar({
   view,
   onViewChange,
   onListView,
+  listViewEnabled = false,
   activeFilterCount,
   onOpenFilters,
   originShifted,
@@ -70,6 +71,8 @@ export function NeighborhoodToolbar({
   view: HomeView;
   onViewChange: (view: HomeView) => void;
   onListView: () => void;
+  /** Map-only for visitors; admins can open the scrollable house list. */
+  listViewEnabled?: boolean;
   activeFilterCount: number;
   onOpenFilters: () => void;
   originShifted: boolean;
@@ -106,20 +109,29 @@ export function NeighborhoodToolbar({
       style={floating ? undefined : { flexShrink: 0 }}
     >
       <div className={cn("app-toolbar__row flex w-full min-w-0 items-center justify-between gap-2", floating && "gap-1")}>
-        <div className="flex shrink-0 rounded-xl bg-[#261536] p-1 ring-1 ring-orange-400/40">
-          <ViewToggle
-            active={view === "map"}
-            onClick={() => onViewChange("map")}
-            icon={<MapPinned />}
-            label="מפה"
-          />
-          <ViewToggle
-            active={view === "list"}
-            onClick={onListView}
-            icon={<List />}
-            label="רשימה"
-          />
-        </div>
+        {listViewEnabled ? (
+          <div className="flex shrink-0 rounded-xl bg-[#261536] p-1 ring-1 ring-orange-400/40">
+            <ViewToggle
+              active={view === "map"}
+              onClick={() => onViewChange("map")}
+              icon={<MapPinned />}
+              label="מפה"
+            />
+            <ViewToggle
+              active={view === "list"}
+              onClick={onListView}
+              icon={<List />}
+              label="רשימה"
+            />
+          </div>
+        ) : (
+          <div
+            className="app-toolbar__btn inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-500 text-black"
+            aria-hidden
+          >
+            <MapPinned className="size-5" />
+          </div>
+        )}
         <FilterTrigger activeCount={activeFilterCount} onClick={onOpenFilters} />
         <OriginTrigger shifted={originShifted} onClick={onOpenOriginPicker} />
         {gemMapToggleEnabled && onToggleGemMap ? (

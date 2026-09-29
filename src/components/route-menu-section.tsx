@@ -16,11 +16,14 @@ const subLinkClass = cn(
 export function RouteMenuSection({
   onOpenExport,
   onOpenShare,
+  exportEnabled = false,
 }: {
   /** Parent owns export dialog so it stays mounted when the menu sheet closes. */
   onOpenExport?: () => void;
   /** Same pattern as export — parent opens share dialog after closing the menu. */
   onOpenShare?: () => void;
+  /** House list download — admin only. */
+  exportEnabled?: boolean;
 }) {
   const [open, setOpen] = useState(() => readMenuSectionOpen("route", false));
 
@@ -58,10 +61,12 @@ export function RouteMenuSection({
       </button>
       {open ? (
         <div className={APP_MENU_SUBLIST_CLASS}>
-          <button type="button" onClick={openExportDialog} className={subLinkClass}>
-            <Save className="size-4" strokeWidth={2.25} />
-            הורד
-          </button>
+          {exportEnabled ? (
+            <button type="button" onClick={openExportDialog} className={subLinkClass}>
+              <Save className="size-4" strokeWidth={2.25} />
+              הורד
+            </button>
+          ) : null}
           <button type="button" onClick={openShareDialog} className={subLinkClass}>
             <Share2 className="size-4" />
             שתף

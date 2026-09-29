@@ -14,10 +14,22 @@
         font-family: Rubik, sans-serif;
         padding: 24px 16px 40px;
       }
-      h1 { font-size: 1.4rem; color: #fdba74; margin: 0 0 8px; }
-      p { color: #ddd6fe; line-height: 1.45; }
-      .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-      a, button.download {
+      h1 {
+        font-size: 1.4rem;
+        color: #fdba74;
+        margin: 0 0 8px;
+      }
+      p {
+        color: #ddd6fe;
+        line-height: 1.45;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      a {
         display: inline-block;
         background: #f97316;
         color: #1c0e24;
@@ -25,202 +37,14 @@
         text-decoration: none;
         border-radius: 12px;
         padding: 10px 14px;
-        border: 0;
-        font: inherit;
-        cursor: pointer;
       }
-      ul { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 10px; }
-      li {
-        background: #1d1028;
-        border-radius: 14px;
-        padding: 12px 14px;
-        box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.25);
-      }
-      .row-top { display: flex; align-items: flex-start; gap: 10px; }
-      .candy {
-        position: relative;
-        width: 32px;
-        height: 32px;
-        flex: 0 0 32px;
-        border-radius: 999px;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .candy.is-plenty { background: #047857; }
-      .candy.is-low { background: #d97706; }
-      .candy.is-out { background: #b91c1c; }
-      .candy.is-none { background: #94a3b8; }
-      .candy img { max-height: 62%; max-width: 70%; object-fit: contain; }
-      .candy-strike {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(to top left, transparent calc(50% - 0.7px), #1c0e24 0, #1c0e24 calc(50% + 0.7px), transparent 0);
-      }
-      strong { display: block; color: #ffedd5; }
-      .meta { display: block; margin-top: 4px; font-size: 14px; color: #c4b5fd; }
-      .block {
-        margin-top: 8px;
-        font-size: 14px;
-        color: #ede9fe;
-        white-space: pre-wrap;
-      }
-      .notes { color: #fde68a; }
     </style>
   </head>
   <body>
-    <h1>הרשימה שמורה בטלפון</h1>
-    <p id="status">אין קשר לשרת או לאינטרנט. אם כבר פתחתם את האפליקציה פעם אחת, הבתים מופיעים כאן מהעותק המקומי.</p>
+    <h1>אין חיבור</h1>
+    <p>אין אינטרנט או שהשרת לא זמין. חזרו למפה כשיש קשר — רשימת הבתים לא נשמרת במכשיר.</p>
     <div class="actions">
       <a href="/">נסו שוב את המפה</a>
-      <button type="button" class="download" id="download" hidden>הורדת גיליון</button>
     </div>
-    <ul id="houses"></ul>
-    <script>
-      (function () {
-        var status = document.getElementById("status");
-        var list = document.getElementById("houses");
-        var downloadBtn = document.getElementById("download");
-        var scare = { mild: "לילדים", medium: "קצת מפחיד", spicy: "מפחיד" };
-        var decorNone = "לא מקושט";
-
-        function csvCell(value) {
-          var text = String(value == null ? "" : value);
-          if (/[",\n\r]/.test(text)) return '"' + text.replace(/"/g, '""') + '"';
-          return text;
-        }
-        function toCsv(houses) {
-          var headers = ["מס'","שם","כתובת","איך מגיעים / דירה","מה מחכה בבית","הערות","שעות","ממתקים","פחד","נגיש","ללא גלוטן","ללא אגוזים","ללא שומשום"];
-          var lines = [headers.join(",")];
-          houses.forEach(function (house, index) {
-            lines.push(rowCells(house, index).map(csvCell).join(","));
-          });
-          return "\uFEFF" + lines.join("\r\n") + "\r\n";
-        }
-        function hoursLabel(house) {
-          if (house.openHours && house.openHours.length) {
-            return house.openHours.map(function (w) { return (w.from || "") + "–" + (w.to || ""); }).join(" · ");
-          }
-          if (house.openFrom && house.openTo) return house.openFrom + "–" + house.openTo;
-          return "";
-        }
-        function candyTone(house) {
-          var treats = house.treats || [];
-          if (treats.indexOf("candy") < 0) return "none";
-          var level = house.treatStock && house.treatStock.candy;
-          if (level === "low" || level === "out" || level === "plenty") return level;
-          return "plenty";
-        }
-        function candyLabel(tone) {
-          if (tone === "none") return "בלי ממתקים";
-          if (tone === "plenty") return "יש";
-          if (tone === "low") return "מעט";
-          return "נגמר";
-        }
-        function yesNo(on) { return on ? "כן" : "לא"; }
-        function hasTreat(house, id) {
-          var treats = house.treats || [];
-          if (treats.indexOf(id) < 0) return false;
-          var level = house.treatStock && house.treatStock[id];
-          return level !== "out";
-        }
-        function scareDecorLabel(house) {
-          if (house.decorLevel === "none" || house.decorated === false) return decorNone;
-          return scare[house.scareLevel] || "";
-        }
-        function rowCells(house, index) {
-          var tone = candyTone(house);
-          return [
-            index + 1,
-            house.name || "בית",
-            house.address || "",
-            house.arrival || "",
-            house.description || "",
-            house.notes || "",
-            hoursLabel(house),
-            candyLabel(tone),
-            scareDecorLabel(house),
-            yesNo(Boolean(house.accessible)),
-            yesNo(hasTreat(house, "glutenFree")),
-            yesNo(hasTreat(house, "nutsFree")),
-            yesNo(hasTreat(house, "sesameFree")),
-          ];
-        }
-
-        try {
-          var raw = localStorage.getItem("hw-catalog-cache");
-          var catalog = raw ? JSON.parse(raw) : null;
-          var houses = catalog && Array.isArray(catalog.houses) ? catalog.houses : [];
-          if (!houses.length) {
-            status.textContent = "אין עותק שמור בטלפון. פתחו את האפליקציה פעם אחת כשיש רשת, ואז הרשימה תישאר כאן.";
-            return;
-          }
-          status.textContent = houses.length + " בתים שמורים במכשיר, עם אותם שדות כמו בגיליון. המפה המלאה תחזור כשיש קליטה.";
-          downloadBtn.hidden = false;
-          downloadBtn.addEventListener("click", function () {
-            var blob = new Blob([toCsv(houses)], { type: "text/csv;charset=utf-8" });
-            var url = URL.createObjectURL(blob);
-            var link = document.createElement("a");
-            link.href = url;
-            link.download = "hallowhood-offline.csv";
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-          });
-          houses.forEach(function (house) {
-            var li = document.createElement("li");
-            var top = document.createElement("div");
-            top.className = "row-top";
-            var tone = candyTone(house);
-            var candy = document.createElement("span");
-            candy.className = "candy is-" + tone;
-            var img = document.createElement("img");
-            img.src = tone === "low" ? "/icons/candy-round-dark.png" : "/icons/candy-round-cream.png";
-            img.alt = "";
-            candy.appendChild(img);
-            if (tone === "none") {
-              var strike = document.createElement("span");
-              strike.className = "candy-strike";
-              candy.appendChild(strike);
-            }
-            var text = document.createElement("div");
-            var title = document.createElement("strong");
-            title.textContent = house.name || "בית";
-            var meta = document.createElement("span");
-            meta.className = "meta";
-            var bits = [house.address || "", hoursLabel(house), candyLabel(tone), scare[house.scareLevel] || ""].filter(Boolean);
-            meta.textContent = bits.join(" · ");
-            text.appendChild(title);
-            text.appendChild(meta);
-            top.appendChild(candy);
-            top.appendChild(text);
-            li.appendChild(top);
-            if (house.arrival) {
-              var arrival = document.createElement("div");
-              arrival.className = "block";
-              arrival.textContent = "איך מגיעים: " + house.arrival;
-              li.appendChild(arrival);
-            }
-            if (house.description) {
-              var desc = document.createElement("div");
-              desc.className = "block";
-              desc.textContent = house.description;
-              li.appendChild(desc);
-            }
-            if (house.notes) {
-              var notes = document.createElement("div");
-              notes.className = "block notes";
-              notes.textContent = "הערה: " + house.notes;
-              li.appendChild(notes);
-            }
-            list.appendChild(li);
-          });
-        } catch (err) {
-          status.textContent = "לא הצלחנו לקרוא את הרשימה השמורה במכשיר.";
-        }
-      })();
-    </script>
   </body>
 </html>
