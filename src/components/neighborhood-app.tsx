@@ -103,6 +103,7 @@ import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import {
   catalogHasRealHouses,
   HOUSE_SET_LABELS,
+  resolveViewerHouseSet,
   countSkippedInSet,
   countVisitedInSet,
   countLikedInSet,
@@ -206,7 +207,7 @@ export function NeighborhoodApp({
 
   const { choice: originChoice, resolved: origin, setChoice: setOriginChoice } = useDistanceOrigin(gps);
   const { houseSet } = useHouseSet();
-  const activeHouseSet = admin ? houseSet : "real";
+  const activeHouseSet = resolveViewerHouseSet(catalog, admin, houseSet);
   const view = useSyncExternalStore(
     (onStoreChange) => {
       window.addEventListener("hw-home-view", onStoreChange);

@@ -2,6 +2,7 @@ import { toPublicHouse } from "@/lib/ids";
 import { config } from "@/lib/config";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { isPubliclyListed } from "@/lib/house-state";
+import { publicHouseForCatalog } from "@/lib/address-reveal";
 import { asCatalogForSnapshot, countPublishedHouses } from "@/lib/catalog-cache-build";
 import {
   firestoreConfigured,
@@ -89,7 +90,7 @@ export function buildCatalogDeltaFromDb(
   const sinceMs = Date.parse(since);
   const houses = db.houses
     .filter((house) => isPubliclyListed(house) && stamp(house) > sinceMs)
-    .map((house) => toPublicHouse(house) as PublicHouse);
+    .map((house) => publicHouseForCatalog(toPublicHouse(house) as PublicHouse));
   const pushChanged =
     pushAlertsEnabled() && pushSettingsStamp(db.pushSettings) > sinceMs;
   return {

@@ -351,6 +351,18 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           setPollSeconds(live.pollSeconds);
         }
         merged = withDeviceHouseOverlays(applyCatalogResponse(merged, live));
+        const serverCountAfterDelta = resolveServerHouseCount(live);
+        if (
+          serverCountAfterDelta != null &&
+          merged.houses.length < serverCountAfterDelta &&
+          !live.full &&
+          live.houses.length === 0
+        ) {
+          const full = await fetchJson("/api/catalog", true);
+          merged = withDeviceHouseOverlays(
+            syncCatalog(merged, { ...full, houses: full.houses ?? [] }),
+          );
+        }
         markCatalogCacheComplete(merged);
         setCatalog((prev) => publishCatalog(merged, prev) ?? merged);
         if (isMapListSuspended()) return;

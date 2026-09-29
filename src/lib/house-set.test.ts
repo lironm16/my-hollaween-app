@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { countSkippedInSet, countVisitedInSet, isStubHouse } from "@/lib/house-set";
+import {
+  countSkippedInSet,
+  countVisitedInSet,
+  isStubHouse,
+  resolveViewerHouseSet,
+} from "@/lib/house-set";
 
 describe("countSkippedInSet", () => {
   it("ignores rehearsal stubs when counting skips in real mode", () => {
@@ -59,5 +64,29 @@ describe("countVisitedInSet", () => {
     assert.equal(countVisitedInSet(["real-1", "בית-9310"], houses, "real"), 1);
     assert.equal(countVisitedInSet(["real-1", "בית-9310"], houses, "stubs"), 1);
     assert.equal(countVisitedInSet(["real-1", "בית-9310"], houses, "all"), 2);
+  });
+});
+
+describe("resolveViewerHouseSet", () => {
+  const stubsOnly = {
+    houses: [{ id: "בית-9310", description: "סטאב לחזרה — נפתח בקרוב." }],
+  };
+  const mixed = {
+    houses: [
+      { id: "real-1", description: "בית אמיתי" },
+      { id: "בית-9310", description: "סטאב לחזרה" },
+    ],
+  };
+
+  it("shows all houses when the catalog is stub-only", () => {
+    assert.equal(resolveViewerHouseSet(stubsOnly, false, "real"), "all");
+  });
+
+  it("keeps real filter when real houses exist", () => {
+    assert.equal(resolveViewerHouseSet(mixed, false, "real"), "real");
+  });
+
+  it("respects admin house-set preference", () => {
+    assert.equal(resolveViewerHouseSet(stubsOnly, true, "stubs"), "stubs");
   });
 });

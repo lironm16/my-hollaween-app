@@ -116,3 +116,18 @@ export function catalogHasRealHouses(catalog: { houses: { id?: string; descripti
   if (!catalog?.houses.length) return false;
   return catalog.houses.some((house) => !isStubHouse(house));
 }
+
+/**
+ * Non-admins normally see only real houses. When the loaded catalog is stub-only
+ * (static snapshot before /api/catalog, or preview without live data), show all
+ * houses so the map is not empty.
+ */
+export function resolveViewerHouseSet(
+  catalog: { houses: { id?: string; description?: string }[] } | null,
+  admin: boolean,
+  preferred: HouseSet,
+): HouseSet {
+  if (admin) return preferred;
+  if (catalog?.houses.length && !catalogHasRealHouses(catalog)) return "all";
+  return "real";
+}

@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-function readSeedCatalog() {
+async function readSeedCatalog() {
+  const { asCatalogForSnapshot } = await import("../src/lib/catalog-cache-build.ts");
   const seed = JSON.parse(readFileSync(join(root, "data/seed.json"), "utf8"));
   const houses = seed.houses.map((h) => {
     const house = { ...h };
@@ -13,14 +14,7 @@ function readSeedCatalog() {
     delete house.rejectionReason;
     return house;
   });
-  return {
-    updatedAt: seed.updatedAt,
-    neighborhood:
-      process.env.NEXT_PUBLIC_NEIGHBORHOOD_NAME ??
-      "שיכון ותיקים · חרוזים · נחלת גנים · הגפן",
-    houses,
-    houseCount: houses.length,
-  };
+  return asCatalogForSnapshot(houses, seed.updatedAt);
 }
 
 async function readFirestoreCatalog() {
@@ -37,7 +31,7 @@ async function readFirestoreCatalog() {
   }
 }
 
-const catalog = (await readFirestoreCatalog()) ?? readSeedCatalog();
+const catalog = (await readFirestoreCatalog()) ?? (await readSeedCatalog());
 
 writeFileSync(join(root, "public/catalog.json"), JSON.stringify(catalog));
 console.log(`wrote public/catalog.json (${catalog.houses.length} houses)`);
