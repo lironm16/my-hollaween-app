@@ -1,13 +1,25 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { adminSubmitSchema } from "@/lib/schema";
-import { submitHouse } from "@/lib/store";
+import { getDbSnapshot, submitHouse } from "@/lib/store";
 import { toPublicHouse } from "@/lib/ids";
 import { geocodeHttpError } from "@/lib/geocode";
 import { storageHttpError } from "@/lib/storage-errors";
 import { readIncludeEndpoint } from "@/lib/push";
 
 export const runtime = "nodejs";
+
+/** Full house rows (incl. editCode + address) for manager UI — not redacted like public catalog. */
+export async function GET() {
+  if (!(await isAdmin())) {
+    return NextResponse.json({ error: "נדרשת הרשאת מנהל." }, { status: 401 });
+  }
+  const db = await getDbSnapshot();
+  return NextResponse.json(
+    { houses: db.houses, updatedAt: db.updatedAt },
+    { headers: { "Cache-Control": "no-store" } },
+  );
+}
 
 export async function POST(request: Request) {
   if (!(await isAdmin())) {

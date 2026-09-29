@@ -7,6 +7,25 @@ import { loadPendingWrites } from "@/lib/offline-db";
 import type { House, PublicHouse } from "@/lib/types";
 import type { OwnedHouse } from "@/lib/offline-db";
 
+function mergeIncomingHouse(
+  current: PublicHouse | undefined,
+  incoming: PublicHouse,
+  admin: boolean,
+): PublicHouse {
+  if (
+    admin &&
+    current?.address?.trim() &&
+    !incoming.address?.trim()
+  ) {
+    return {
+      ...incoming,
+      address: current.address,
+      arrival: incoming.arrival?.trim() ? incoming.arrival : current.arrival,
+    };
+  }
+  return incoming;
+}
+
 export function mergeVisibleHouses({
   catalogHouses,
   owned,
@@ -38,14 +57,14 @@ export function mergeVisibleHouses({
     if (!item.preview || deleted.has(item.id)) continue;
     const current = byId.get(item.id);
     if (!current || Date.parse(item.preview.updatedAt) >= Date.parse(current.updatedAt || "")) {
-      byId.set(item.id, item.preview);
+      byId.set(item.id, mergeIncomingHouse(current, item.preview, admin));
     }
   }
   for (const pending of loadPendingWrites()) {
     if (deleted.has(pending.id)) continue;
     const current = byId.get(pending.id);
     if (!current || Date.parse(pending.house.updatedAt) >= Date.parse(current.updatedAt || "")) {
-      byId.set(pending.id, pending.house);
+      byId.set(pending.id, mergeIncomingHouse(current, pending.house, admin));
     }
   }
   return [...byId.values()].filter((house) => !deleted.has(house.id));

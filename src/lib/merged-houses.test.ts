@@ -58,4 +58,29 @@ describe("mergeVisibleHouses", () => {
     });
     assert.deepEqual(merged.map((house) => house.id), ["admin-only"]);
   });
+
+  it("keeps full address when admin owned preview is redacted", () => {
+    const merged = mergeVisibleHouses({
+      catalogHouses: [],
+      owned: [
+        {
+          id: "a",
+          name: "בית",
+          editCode: "111111",
+          preview: {
+            ...publicHouse("a", "2026-10-31T12:00:00.000Z"),
+            address: "",
+            arrival: "",
+          },
+        },
+      ],
+      admin: true,
+      adminHouses: [
+        adminHouse("a", "2026-10-31T10:00:00.000Z"),
+      ],
+      includeCatalogWhenAdmin: true,
+    });
+    const house = merged.find((item) => item.id === "a");
+    assert.equal(house?.address, "חרוזים");
+  });
 });

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
-import { asCatalog, getAllHouses } from "@/lib/store";
+import { asCatalogForAdmin } from "@/lib/catalog-cache-build";
+import { getAllHouses, getDbSnapshot } from "@/lib/store";
 import { housesToCsv, housesToXlsx } from "@/lib/house-csv";
 import { toPublicHouse } from "@/lib/ids";
 export const runtime = "nodejs";
@@ -32,7 +33,8 @@ export async function GET(request: Request) {
       },
     });
   }
-  const catalog = asCatalog(houses, new Date().toISOString());
+  const db = await getDbSnapshot();
+  const catalog = asCatalogForAdmin(houses, db.updatedAt, db.pushSettings);
   return NextResponse.json(catalog, {
     headers: {
       "Content-Disposition": "attachment; filename=catalog.json",
