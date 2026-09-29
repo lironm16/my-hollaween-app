@@ -1,6 +1,6 @@
 import { customAlphabet } from "nanoid";
 import { alignPublicHouseCoords } from "@/lib/house-footprint-align";
-import type { House, PublicHouse } from "@/lib/types";
+import type { EditorHouse, House, PublicHouse } from "@/lib/types";
 
 const digits = customAlphabet("0123456789", 4);
 const pin = customAlphabet("0123456789", 6);
@@ -91,7 +91,7 @@ export function toPublicHouse<
 }
 
 /** Owner/admin edit surfaces — includes internal contact, still no editCode. */
-export function toEditorHouse(house: House): PublicHouse & { ownerPhone?: string | null } {
+export function toEditorHouse(house: House): EditorHouse {
   return {
     ...(toPublicHouse(house) as PublicHouse),
     ownerPhone: house.ownerPhone ?? null,

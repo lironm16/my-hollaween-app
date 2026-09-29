@@ -10,6 +10,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
 import { HouseTags } from "@/components/house-tags";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { useAdminSession } from "@/hooks/use-admin-session";
 import { formatDistance } from "@/lib/geo";
 import { HoursLabel } from "@/components/clock-time";
 import { formatHoursLabel } from "@/lib/hours";
@@ -17,7 +18,7 @@ import { houseAddedMetaLine } from "@/lib/house-meta";
 import { houseHeadline } from "@/lib/labels";
 import { houseMapsUrl, houseSharePath } from "@/lib/nav-links";
 import { shouldLoadHousePhoto } from "@/lib/photos";
-import type { PublicHouse } from "@/lib/types";
+import type { EditorHouse, PublicHouse } from "@/lib/types";
 import { HOUSE_CARD_PHOTO_BOX } from "@/components/house-photo-frame";
 import { cn } from "@/lib/utils";
 
@@ -315,6 +316,8 @@ export function HouseDetails({
   hideHoursBanner?: boolean;
 }) {
   const addressReveal = useAddressReveal();
+  const { admin } = useAdminSession();
+  const ownerPhone = admin ? (house as EditorHouse).ownerPhone?.trim() : "";
   const displayAddress = addressReveal.formatDisplayAddress(house);
   const arrivalText = addressReveal.visibleArrival(house);
   const showMaps = addressReveal.mapsAllowed(house.id);
@@ -511,6 +514,18 @@ export function HouseDetails({
       )}
       {actions}
       <HouseArrivalDirections arrival={arrivalText} houseId={house.id} />
+      {ownerPhone ? (
+        <div
+          className="rounded-lg bg-amber-950/50 px-3 py-2 text-base ring-1 ring-amber-500/35"
+          data-admin-only
+        >
+          <p className="text-sm font-medium text-amber-200/90">טלפון פנימי (מנהל)</p>
+          <a href={`tel:${ownerPhone}`} className="text-lg text-amber-50 underline-offset-2 hover:underline">
+            {ownerPhone}
+          </a>
+          <p className="mt-1 text-sm text-amber-200/70">לא מוצג למבקרים — ליצירת קשר לפני/במהלך האירוע.</p>
+        </div>
+      ) : null}
       {addressReveal.canViewDetails(house.id) ? (
         <HouseNotesSection notes={house.notes} houseId={house.id} />
       ) : null}

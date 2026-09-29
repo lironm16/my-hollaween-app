@@ -60,6 +60,23 @@ describe("mergeVisibleHouses", () => {
     assert.deepEqual(merged.map((house) => house.id), ["admin-only"]);
   });
 
+  it("keeps ownerPhone on admin merge for internal contact", () => {
+    const merged = mergeVisibleHouses({
+      catalogHouses: [publicHouse("בית-1847", "2026-10-31T10:00:00.000Z")],
+      owned: [],
+      admin: true,
+      adminHouses: [
+        {
+          ...adminHouse("בית-1847", "2026-10-31T12:00:00.000Z"),
+          ownerPhone: "0501112233",
+        },
+      ],
+      includeCatalogWhenAdmin: true,
+    });
+    const house = merged.find((item) => item.id === "בית-1847") as { ownerPhone?: string };
+    assert.equal(house?.ownerPhone, "0501112233");
+  });
+
   it("keeps stub identity when admin API row drops rehearsal description", () => {
     const catalogStub: PublicHouse = {
       ...publicHouse("בית-1847", "2026-10-31T10:00:00.000Z"),

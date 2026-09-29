@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { toPublicHouse } from "@/lib/ids";
+import { toEditorHouse, toPublicHouse } from "@/lib/ids";
 import { loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { loadPendingWrites } from "@/lib/offline-db";
 import { isStubHouse } from "@/lib/house-set";
-import type { House, PublicHouse } from "@/lib/types";
+import type { EditorHouse, House, PublicHouse } from "@/lib/types";
 import type { OwnedHouse } from "@/lib/offline-db";
 
 function mergeIncomingHouse(
@@ -63,7 +63,7 @@ export function mergeVisibleHouses({
   if (admin) {
     for (const house of adminHouses) {
       if (deleted.has(house.id)) continue;
-      const incoming = toPublicHouse(house) as PublicHouse;
+      const incoming = toEditorHouse(house) as EditorHouse;
       const current = byId.get(house.id);
       byId.set(house.id, mergeIncomingHouse(current, incoming, admin));
     }

@@ -40,7 +40,9 @@
       "editCode": "184701",
       "createdAt": "2026-09-01T10:00:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "ownerPhone": "0501112233",
+      "addedBy": "משפחת לוי (סטאב)"
     },
     {
       "id": "בית-1848",
@@ -83,7 +85,9 @@
       "editCode": "184802",
       "createdAt": "2026-09-01T10:02:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "ownerPhone": "0502223344",
+      "addedBy": "דנה כהן (סטאב)"
     },
     {
       "id": "בית-1849",
@@ -126,7 +130,9 @@
       "editCode": "184903",
       "createdAt": "2026-09-03T13:00:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "ownerPhone": "0503334455",
+      "addedBy": "יוסי לוי (סטאב)"
     },
     {
       "id": "בית-9310",
@@ -167,7 +173,9 @@
       "editCode": "931016",
       "createdAt": "2026-09-05T05:50:00.000Z",
       "updatedAt": "2026-09-05T05:50:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "ownerPhone": "0504445566",
+      "addedBy": "מנהל חזרה"
     },
     {
       "id": "בית-9311",
@@ -1141,13 +1149,22 @@
       "description": "סטאב לחזרה — נקודת עניין קפה, רמת פחד לילדים.",
       "lat": 32.0915,
       "lng": 34.8038,
-      "treats": ["candy"],
-      "treatStock": { "candy": "plenty" },
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
       "visit": "come",
       "scareLevel": "mild",
       "openFrom": "17:00",
       "openTo": "21:00",
-      "openHours": [{ "from": "17:00", "to": "21:00" }],
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
       "openFrom2": "",
       "openTo2": "",
       "notes": "POI סטאב — קפה",
@@ -1175,13 +1192,22 @@
       "description": "סטאב לחזרה — נקודת עניין מוזיאון, קצת מפחיד.",
       "lat": 32.0912,
       "lng": 34.8041,
-      "treats": ["candy"],
-      "treatStock": { "candy": "low" },
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
       "visit": "come",
       "scareLevel": "medium",
       "openFrom": "17:00",
       "openTo": "21:00",
-      "openHours": [{ "from": "17:00", "to": "21:00" }],
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
       "openFrom2": "",
       "openTo2": "",
       "notes": "POI סטאב — מוזיאון",
@@ -1209,13 +1235,22 @@
       "description": "סטאב לחזרה — נקודת עניין חנות, מפחיד.",
       "lat": 32.0909,
       "lng": 34.8035,
-      "treats": ["candy"],
-      "treatStock": { "candy": "plenty" },
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
       "visit": "come",
       "scareLevel": "spicy",
       "openFrom": "17:00",
       "openTo": "21:00",
-      "openHours": [{ "from": "17:00", "to": "21:00" }],
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
       "openFrom2": "",
       "openTo2": "",
       "notes": "POI סטאב — חנות",
@@ -1241,13 +1276,22 @@
       "description": "סטאב לחזרה — יהלום בדיקה (מעבדת מנהל)",
       "lat": 32.09192,
       "lng": 34.81118,
-      "treats": ["candy"],
-      "treatStock": { "candy": "plenty" },
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
       "visit": "come",
       "scareLevel": "mild",
       "openFrom": "00:00",
       "openTo": "23:59",
-      "openHours": [{ "from": "00:00", "to": "23:59" }],
+      "openHours": [
+        {
+          "from": "00:00",
+          "to": "23:59"
+        }
+      ],
       "openFrom2": "",
       "openTo2": "",
       "notes": "סטאב יהלום — AR / מצלמה",
@@ -1274,13 +1318,22 @@
       "description": "סטאב לחזרה — יהלום בדיקה (מעבדת מנהל)",
       "lat": 32.09245,
       "lng": 34.81085,
-      "treats": ["candy"],
-      "treatStock": { "candy": "plenty" },
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
       "visit": "come",
       "scareLevel": "mild",
       "openFrom": "00:00",
       "openTo": "23:59",
-      "openHours": [{ "from": "00:00", "to": "23:59" }],
+      "openHours": [
+        {
+          "from": "00:00",
+          "to": "23:59"
+        }
+      ],
       "openFrom2": "",
       "openTo2": "",
       "notes": "סטאב יהלום — AR / מצלמה",
@@ -1307,13 +1360,22 @@
       "description": "סטאב לחזרה — יהלום בדיקה (מעבדת מנהל)",
       "lat": 32.09155,
       "lng": 34.81205,
-      "treats": ["candy"],
-      "treatStock": { "candy": "plenty" },
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
       "visit": "come",
       "scareLevel": "mild",
       "openFrom": "00:00",
       "openTo": "23:59",
-      "openHours": [{ "from": "00:00", "to": "23:59" }],
+      "openHours": [
+        {
+          "from": "00:00",
+          "to": "23:59"
+        }
+      ],
       "openFrom2": "",
       "openTo2": "",
       "notes": "סטאב יהלום — AR / מצלמה",
