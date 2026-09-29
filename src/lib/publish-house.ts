@@ -1,6 +1,6 @@
 import { readApiJson } from "@/lib/api-json";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
-import { isValidOwnerPhone, normalizeOwnerPhone } from "@/lib/owner-phone";
+import { normalizeOwnerPhone, ownerPhoneValidationError } from "@/lib/owner-phone";
 import type { HouseInput, PublicHouse } from "@/lib/types";
 
 export type PublishResult = {
@@ -58,10 +58,10 @@ export async function publishHouse(
   const body = readyHouseInput(input);
   const addedBy = options?.addedBy?.trim();
   if (!addedBy) throw new Error("נא למלא מי מוסיף את הבית.");
-  const ownerPhone = normalizeOwnerPhone(options?.ownerPhone ?? input.ownerPhone ?? "");
-  if (!isValidOwnerPhone(ownerPhone)) {
-    throw new Error("נא למלא טלפון ליצירת קשר עם מנהל האירוע.");
-  }
+  const ownerPhoneRaw = options?.ownerPhone ?? input.ownerPhone ?? "";
+  const phoneIssue = ownerPhoneValidationError(String(ownerPhoneRaw), true);
+  if (phoneIssue) throw new Error(phoneIssue);
+  const ownerPhone = normalizeOwnerPhone(String(ownerPhoneRaw));
   const adminPoi = Boolean(options?.admin && body.kind === "poi");
   let res: Response;
   try {

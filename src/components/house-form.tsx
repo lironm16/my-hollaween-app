@@ -53,7 +53,10 @@ import {
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import type { HoursWindow } from "@/lib/types";
-import { isValidOwnerPhone, normalizeOwnerPhone } from "@/lib/owner-phone";
+import {
+  normalizeOwnerPhone,
+  ownerPhoneValidationError,
+} from "@/lib/owner-phone";
 import { HOUSE_FIELD_LIMITS } from "@/lib/schema";
 import { cn } from "@/lib/utils";
 
@@ -148,9 +151,13 @@ export function HouseForm({
   const [saving, setSaving] = useState(false);
   const [addedBy, setAddedBy] = useState(() => initial?.addedBy?.trim() ?? "");
   const [ownerPhone, setOwnerPhone] = useState(() => initial?.ownerPhone?.trim() ?? "");
+  const [ownerPhoneTouched, setOwnerPhoneTouched] = useState(false);
   const existingPhoto = initial?.photoUrl ?? "";
   const isNewHouse = !initial?.id;
   const ownerPhoneRequired = isNewHouse || !initial?.ownerPhone?.trim();
+  const ownerPhoneError = ownerPhoneTouched
+    ? ownerPhoneValidationError(ownerPhone, ownerPhoneRequired)
+    : null;
   const now = useAppNow();
   const { admin } = useAdminSession();
   const blocked = Boolean(busy || saving);
@@ -214,6 +221,7 @@ export function HouseForm({
   useEffect(() => {
     setAddedBy(initial?.addedBy?.trim() ?? "");
     setOwnerPhone(initial?.ownerPhone?.trim() ?? "");
+    setOwnerPhoneTouched(false);
   }, [initial?.id, initial?.addedBy, initial?.ownerPhone]);
 
   function pickScare(level: ScareLevel) {
@@ -307,15 +315,13 @@ export function HouseForm({
           toast.error("שם מלא של מי שהוסיף את המקום — לפחות 2 תווים.");
           return;
         }
+        setOwnerPhoneTouched(true);
+        const phoneIssue = ownerPhoneValidationError(ownerPhone, ownerPhoneRequired);
+        if (phoneIssue) {
+          toast.error(phoneIssue);
+          return;
+        }
         const phone = normalizeOwnerPhone(ownerPhone);
-        if (ownerPhoneRequired && !isValidOwnerPhone(phone)) {
-          toast.error("נא למלא טלפון ליצירת קשר עם מנהל האירוע.");
-          return;
-        }
-        if (!ownerPhoneRequired && phone && !isValidOwnerPhone(phone)) {
-          toast.error("מספר טלפון לא תקין.");
-          return;
-        }
         if (decorLevel === "none" && candy !== "plenty" && candy !== "low" && !(pauseCloseEnabled && nightStatus === "stop") && initial?.visit !== "closed") {
           toast.error("סמנו לפחות קישוטים או ממתקים — אחרת אין סיבה להוסיף את הבית למפה.");
           return;
@@ -451,10 +457,21 @@ export function HouseForm({
             value={ownerPhone}
             maxLength={HOUSE_FIELD_LIMITS.ownerPhone.max}
             onChange={(e) => setOwnerPhone(e.target.value)}
+            onBlur={() => setOwnerPhoneTouched(true)}
+            aria-invalid={ownerPhoneError ? true : undefined}
+            aria-describedby={ownerPhoneError ? "owner-phone-hint owner-phone-error" : "owner-phone-hint"}
             placeholder="050-1234567"
-            className="h-11 bg-[#1d1028] text-lg"
+            className={cn(
+              "h-11 bg-[#1d1028] text-lg",
+              ownerPhoneError && "ring-2 ring-rose-500/70",
+            )}
           />
-          <p className="mt-1.5 text-base leading-snug text-violet-300">
+          {ownerPhoneError ? (
+            <p id="owner-phone-error" className="mt-1.5 text-base text-rose-300" role="alert">
+              {ownerPhoneError}
+            </p>
+          ) : null}
+          <p id="owner-phone-hint" className="mt-1.5 text-base leading-snug text-violet-300">
             לשימוש מנהל האירוע בלבד — לא מוצג למבקרים. משמש ליצירת קשר לפני או במהלך
             הערב אם צריך.
           </p>

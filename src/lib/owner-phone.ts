@@ -10,12 +10,33 @@ export function normalizeOwnerPhone(raw: string): string {
   return digits;
 }
 
+/** Israeli mobile (05…) or landline (0[2-4,8,9]…), with optional +972 prefix. */
 export function isValidOwnerPhone(raw: string): boolean {
   const digits = raw.replace(/\D/g, "");
   if (!digits) return false;
-  if (digits.startsWith("972")) return digits.length >= 11 && digits.length <= 13;
-  if (digits.startsWith("0")) return digits.length >= 9 && digits.length <= 10;
-  return digits.length >= 9 && digits.length <= 15;
+
+  if (digits.startsWith("972")) {
+    const local = digits.slice(3);
+    if (local.length === 9 && /^5[0-9]{8}$/.test(local)) return true;
+    if (local.length >= 8 && local.length <= 9 && /^[23489]/.test(local)) return true;
+    return false;
+  }
+
+  if (!digits.startsWith("0")) return false;
+  if (/^05[0-9]{8}$/.test(digits)) return true;
+  if (/^0[23489][0-9]{7,8}$/.test(digits)) return true;
+  return false;
+}
+
+export function ownerPhoneValidationError(raw: string, required: boolean): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return required ? "נא למלא מספר טלפון." : null;
+  }
+  if (!isValidOwnerPhone(trimmed)) {
+    return "מספר לא תקין — נייד ישראלי (050-1234567) או קווי עם קידומת אזור.";
+  }
+  return null;
 }
 
 export const ownerPhoneSchema = z
@@ -71,19 +92,36 @@ export class OwnerPhoneRequiredError extends Error {
   }
 }
 
+export class OwnerPhoneInvalidError extends Error {
+  constructor(message = "מספר טלפון לא תקין.") {
+    super(message);
+    this.name = "OwnerPhoneInvalidError";
+  }
+}
+
 export function assertOwnerPhoneForFullPatch(
   existing: { ownerPhone?: string | null },
   patch: Record<string, unknown>,
 ): void {
   if (isQuickUpdatePatch(patch)) return;
+  const hasPhoneField = patch.ownerPhone !== undefined;
   const phone = ownerPhoneAfterPatch(existing, patch as { ownerPhone?: string });
-  if (!phone || !isValidOwnerPhone(phone)) {
+  if (!phone) {
     throw new OwnerPhoneRequiredError();
+  }
+  if (!isValidOwnerPhone(phone)) {
+    throw new OwnerPhoneInvalidError();
+  }
+  if (hasPhoneField && patch.ownerPhone !== undefined) {
+    const raw = String(patch.ownerPhone ?? "").trim();
+    if (raw && !isValidOwnerPhone(raw)) {
+      throw new OwnerPhoneInvalidError();
+    }
   }
 }
 
 export function ownerPhoneHttpError(error: unknown): { error: string; status: 400 } | null {
-  if (error instanceof OwnerPhoneRequiredError) {
+  if (error instanceof OwnerPhoneRequiredError || error instanceof OwnerPhoneInvalidError) {
     return { error: error.message, status: 400 };
   }
   return null;
