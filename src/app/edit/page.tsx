@@ -66,13 +66,10 @@ function EditPageContent() {
     adminHouses,
     includeCatalogWhenAdmin: true,
   });
-  const houses = useMemo(() => {
-    const filtered = merged.filter((house) => houseMatchesSet(house, activeHouseSet));
-    if (admin && filtered.length === 0 && merged.length > 0 && activeHouseSet === "real") {
-      return merged;
-    }
-    return filtered;
-  }, [merged, activeHouseSet, admin]);
+  const houses = useMemo(
+    () => merged.filter((house) => houseMatchesSet(house, activeHouseSet)),
+    [merged, activeHouseSet],
+  );
 
   const ownedMatch = picked ? owned.find((item) => item.id === picked.id) : undefined;
   const adminEditCode = picked && admin ? adminHouses.find((item) => item.id === picked.id)?.editCode : undefined;

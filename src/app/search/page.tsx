@@ -8,9 +8,14 @@ import { houseCardPropsFor, type HouseCardActionContext } from "@/components/hou
 import { HousePicker } from "@/components/house-picker";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { Label } from "@/components/ui/label";
+import { useAdminHouses } from "@/hooks/use-admin-houses";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useCatalog } from "@/hooks/use-catalog";
+import { useHouseSet } from "@/hooks/use-house-set";
+import { useMergedHouses } from "@/hooks/use-merged-houses";
+import { isPreviewDeploymentClient } from "@/lib/deployment-env";
+import { houseMatchesSet, resolveViewerHouseSet } from "@/lib/house-set";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
@@ -18,53 +23,43 @@ import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
 import { notifyCatalogChanged, removeOwnedHouse, saveOwnedHouse } from "@/lib/offline-db";
-import { toPublicHouse } from "@/lib/ids";
 import { writeHomeView } from "@/lib/home-view";
-import type { House, PublicHouse } from "@/lib/types";
+import type { PublicHouse } from "@/lib/types";
 
 export default function SearchPage() {
   const router = useRouter();
   const owned = useOwnedHouses();
   const { catalog, loading: catalogLoading, source, refresh } = useCatalog();
   const { admin, ready: adminReady } = useAdminSession();
+  const { houseSet } = useHouseSet();
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
   const skips = useSkippedHouses();
   const gems = useGemProgress();
   const now = useAppNow();
-  const [adminHouses, setAdminHouses] = useState<House[]>([]);
   const [picked, setPicked] = useState<PublicHouse | null>(null);
   const editFlow = useHouseEditFlow();
-
-  useEffect(() => {
-    if (!admin) return;
-    let cancelled = false;
-    void fetch("/api/admin/houses", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data: { houses?: House[] }) => {
-        if (!cancelled) setAdminHouses(data.houses ?? []);
-      })
-      .catch(() => {
-        if (!cancelled) setAdminHouses([]);
+  const { adminHouses } = useAdminHouses({
+    admin,
+    refresh,
+    catalogUpdatedAt: catalog?.updatedAt,
+  });
+  const activeHouseSet = admin
+    ? houseSet
+    : resolveViewerHouseSet(catalog, false, "real", {
+        previewDeployment: isPreviewDeploymentClient(),
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [admin]);
-
-  const houses = useMemo(() => {
-    const byId = new Map<string, PublicHouse>();
-    for (const item of catalog?.houses ?? []) byId.set(item.id, item);
-    for (const item of owned) {
-      if (item.preview) byId.set(item.id, item.preview);
-    }
-    if (admin) {
-      for (const item of adminHouses) {
-        byId.set(item.id, toPublicHouse(item) as PublicHouse);
-      }
-    }
-    return [...byId.values()];
-  }, [admin, adminHouses, catalog?.houses, owned]);
+  const merged = useMergedHouses({
+    catalogHouses: catalog?.houses ?? [],
+    owned,
+    admin,
+    adminHouses,
+    includeCatalogWhenAdmin: true,
+  });
+  const houses = useMemo(
+    () => merged.filter((house) => houseMatchesSet(house, activeHouseSet)),
+    [merged, activeHouseSet],
+  );
 
   const gemUi = gemHuntFabVisible(admin, now);
   const actionContext = useMemo((): HouseCardActionContext => {

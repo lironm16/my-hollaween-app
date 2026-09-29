@@ -125,18 +125,8 @@ export function useSnapshotStats(enabled = true, houseSet: HouseSet = "real"): S
   return useMemo(() => {
     if (!enabled) return null;
     if (!catalog && houses.length === 0) return null;
-    const stats = buildSnapshotStats({ houses, now, houseSet });
-    if (
-      admin &&
-      houseSet === "real" &&
-      stats.houses === 0 &&
-      stats.pois === 0 &&
-      houses.length > 0
-    ) {
-      return buildSnapshotStats({ houses, now, houseSet: "all" });
-    }
-    return stats;
-  }, [enabled, catalog, houses, now, houseSet, admin]);
+    return buildSnapshotStats({ houses, now, houseSet });
+  }, [enabled, catalog, houses, now, houseSet]);
 }
 
 export function AdminStatsCard({
