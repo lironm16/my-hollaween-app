@@ -19,8 +19,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
-import { HouseExportDialog, RouteShareDialog } from "@/components/csv-export-button";
-import { RouteMenuSection } from "@/components/route-menu-section";
 import { NeighborhoodMarquee } from "@/components/neighborhood-marquee";
 import { PushAlertsButton } from "@/components/push-alerts-button";
 import { PwaInstallButton } from "@/components/pwa-install-button";
@@ -35,8 +33,6 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { appVersionLabel } from "@/lib/app-version";
-import type { WalkingRoute } from "@/lib/route";
-import type { PublicHouse } from "@/lib/types";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
 import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
@@ -44,18 +40,9 @@ import { cn } from "@/lib/utils";
 
 export function AppHeader({
   onHomeTap,
-  routeMenu,
 }: {
   /** Brand title and side-menu Home: return to the last map/list home screen. */
   onHomeTap?: () => void;
-  /** Map home — collapsible «מסלול» export/share (optional). */
-  routeMenu?: {
-    houses: PublicHouse[];
-    totalInSet: number;
-    activeFilterCount?: number;
-    activeRoute: WalkingRoute | null;
-    kind?: "liked" | "list" | "all";
-  };
 }) {
   const { admin, logout } = useAdminSession();
   const now = useAppNow();
@@ -63,8 +50,6 @@ export function AppHeader({
   const showAdminGemOps = admin && gemHuntFabVisible(admin, now);
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);
-  const [routeExportOpen, setRouteExportOpen] = useState(false);
-  const [routeShareOpen, setRouteShareOpen] = useState(false);
 
   async function onLogout() {
     setMenuOpen(false);
@@ -74,16 +59,6 @@ export function AppHeader({
 
   function closeMenu() {
     setMenuOpen(false);
-  }
-
-  function openRouteExport() {
-    setRouteExportOpen(true);
-    closeMenu();
-  }
-
-  function openRouteShare() {
-    setRouteShareOpen(true);
-    closeMenu();
   }
 
   const houseSubLinkClass = cn(
@@ -202,14 +177,6 @@ export function AppHeader({
               ) : null}
             </div>
 
-            {routeMenu ? (
-              <RouteMenuSection
-                onOpenExport={openRouteExport}
-                onOpenShare={openRouteShare}
-                exportEnabled={Boolean(admin)}
-              />
-            ) : null}
-
             <Link
               href="/stats"
               onClick={closeMenu}
@@ -323,28 +290,6 @@ export function AppHeader({
           </div>
         </SheetContent>
       </Sheet>
-      ) : null}
-      {routeMenu ? (
-        <>
-          {admin ? (
-            <HouseExportDialog
-              open={routeExportOpen}
-              onOpenChange={setRouteExportOpen}
-              houses={routeMenu.houses}
-              totalInSet={routeMenu.totalInSet}
-              activeFilterCount={routeMenu.activeFilterCount}
-              kind={routeMenu.kind}
-            />
-          ) : null}
-          <RouteShareDialog
-            open={routeShareOpen}
-            onOpenChange={setRouteShareOpen}
-            route={routeMenu.activeRoute}
-            houses={routeMenu.houses}
-            totalInSet={routeMenu.totalInSet}
-            activeFilterCount={routeMenu.activeFilterCount}
-          />
-        </>
       ) : null}
     </header>
   );
