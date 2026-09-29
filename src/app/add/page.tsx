@@ -42,6 +42,7 @@ export default function AddPage() {
       const { house, editCode } = await publishHouse(input, {
         includeEndpoint,
         addedBy: extras?.addedBy ?? undefined,
+        ownerPhone: extras?.ownerPhone ?? undefined,
         admin,
       });
       let preview = house;

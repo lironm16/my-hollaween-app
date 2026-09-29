@@ -53,6 +53,7 @@ import {
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import type { HoursWindow } from "@/lib/types";
+import { isValidOwnerPhone, normalizeOwnerPhone } from "@/lib/owner-phone";
 import { HOUSE_FIELD_LIMITS } from "@/lib/schema";
 import { cn } from "@/lib/utils";
 
@@ -100,6 +101,7 @@ export type HouseFormExtras = {
   clearPhoto?: boolean;
   ownerFrozenUntil?: string | null;
   addedBy?: string | null;
+  ownerPhone?: string | null;
 };
 
 export function HouseForm({
@@ -116,6 +118,7 @@ export function HouseForm({
     visit?: VisitState;
     ownerFrozenUntil?: string | null;
     addedBy?: string | null;
+    ownerPhone?: string | null;
   };
   submitLabel: string;
   onSubmit: (input: HouseInput, extras?: HouseFormExtras) => Promise<void> | void;
@@ -144,8 +147,10 @@ export function HouseForm({
   const [clearPhoto, setClearPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
   const [addedBy, setAddedBy] = useState(() => initial?.addedBy?.trim() ?? "");
+  const [ownerPhone, setOwnerPhone] = useState(() => initial?.ownerPhone?.trim() ?? "");
   const existingPhoto = initial?.photoUrl ?? "";
   const isNewHouse = !initial?.id;
+  const ownerPhoneRequired = isNewHouse || !initial?.ownerPhone?.trim();
   const now = useAppNow();
   const { admin } = useAdminSession();
   const blocked = Boolean(busy || saving);
@@ -208,7 +213,8 @@ export function HouseForm({
 
   useEffect(() => {
     setAddedBy(initial?.addedBy?.trim() ?? "");
-  }, [initial?.id, initial?.addedBy]);
+    setOwnerPhone(initial?.ownerPhone?.trim() ?? "");
+  }, [initial?.id, initial?.addedBy, initial?.ownerPhone]);
 
   function pickScare(level: ScareLevel) {
     setForm((f) => ({ ...f, scareLevel: level }));
@@ -301,6 +307,15 @@ export function HouseForm({
           toast.error("שם מלא של מי שהוסיף את המקום — לפחות 2 תווים.");
           return;
         }
+        const phone = normalizeOwnerPhone(ownerPhone);
+        if (ownerPhoneRequired && !isValidOwnerPhone(phone)) {
+          toast.error("נא למלא טלפון ליצירת קשר עם מנהל האירוע.");
+          return;
+        }
+        if (!ownerPhoneRequired && phone && !isValidOwnerPhone(phone)) {
+          toast.error("מספר טלפון לא תקין.");
+          return;
+        }
         if (decorLevel === "none" && candy !== "plenty" && candy !== "low" && !(pauseCloseEnabled && nightStatus === "stop") && initial?.visit !== "closed") {
           toast.error("סמנו לפחות קישוטים או ממתקים — אחרת אין סיבה להוסיף את הבית למפה.");
           return;
@@ -374,6 +389,7 @@ export function HouseForm({
               clearPhoto: clearPhoto && !photoFile,
               ownerFrozenUntil,
               addedBy: submitter || null,
+              ownerPhone: phone || null,
             });
           } finally {
             setSaving(false);
@@ -422,6 +438,26 @@ export function HouseForm({
             placeholder="ישראל כהן"
             className="h-11 bg-[#1d1028] text-lg"
           />
+        </Field>
+        <Field
+          label="טלפון ליצירת קשר (פנימי)"
+          charCount={{ length: ownerPhone.length, max: HOUSE_FIELD_LIMITS.ownerPhone.max }}
+        >
+          <Input
+            required={ownerPhoneRequired}
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            value={ownerPhone}
+            maxLength={HOUSE_FIELD_LIMITS.ownerPhone.max}
+            onChange={(e) => setOwnerPhone(e.target.value)}
+            placeholder="050-1234567"
+            className="h-11 bg-[#1d1028] text-lg"
+          />
+          <p className="mt-1.5 text-base leading-snug text-violet-300">
+            לשימוש מנהל האירוע בלבד — לא מוצג למבקרים. משמש ליצירת קשר לפני או במהלך
+            הערב אם צריך.
+          </p>
         </Field>
         <div>
           <div className="mb-2 flex items-baseline justify-between gap-2">

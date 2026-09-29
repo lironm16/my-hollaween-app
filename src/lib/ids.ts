@@ -1,5 +1,6 @@
 import { customAlphabet } from "nanoid";
 import { alignPublicHouseCoords } from "@/lib/house-footprint-align";
+import type { House, PublicHouse } from "@/lib/types";
 
 const digits = customAlphabet("0123456789", 4);
 const pin = customAlphabet("0123456789", 6);
@@ -61,11 +62,19 @@ export function resolveHouseIdFromPath(raw: string): string {
 }
 
 export function toPublicHouse<
-  T extends { editCode?: string; storeId?: string; address?: string; lat?: number; lng?: number },
+  T extends {
+    editCode?: string;
+    storeId?: string;
+    ownerPhone?: string | null;
+    address?: string;
+    lat?: number;
+    lng?: number;
+  },
 >(house: T) {
   const rest = { ...house };
   delete rest.editCode;
   delete rest.storeId;
+  delete rest.ownerPhone;
   if (
     typeof rest.address === "string" &&
     typeof rest.lat === "number" &&
@@ -78,5 +87,13 @@ export function toPublicHouse<
     });
     return { ...rest, lat: aligned.lat, lng: aligned.lng } as Omit<T, "editCode" | "storeId">;
   }
-  return rest as Omit<T, "editCode" | "storeId">;
+  return rest as Omit<T, "editCode" | "storeId" | "ownerPhone">;
+}
+
+/** Owner/admin edit surfaces — includes internal contact, still no editCode. */
+export function toEditorHouse(house: House): PublicHouse & { ownerPhone?: string | null } {
+  return {
+    ...(toPublicHouse(house) as PublicHouse),
+    ownerPhone: house.ownerPhone ?? null,
+  };
 }

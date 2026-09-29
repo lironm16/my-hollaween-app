@@ -11,6 +11,7 @@ import {
 } from "@/lib/types";
 import { hoursWindowsOverlap, isValidHoursWindow } from "@/lib/hours";
 import { parsePhotoUrl } from "@/lib/photos";
+import { ownerPhonePatchSchema, ownerPhoneSchema } from "@/lib/owner-phone";
 
 /** Shared text limits for house forms and API validation. */
 export const HOUSE_FIELD_LIMITS = {
@@ -20,6 +21,7 @@ export const HOUSE_FIELD_LIMITS = {
   description: { max: 500 },
   notes: { max: 240 },
   addedBy: { min: 2, max: 80 },
+  ownerPhone: { max: 24 },
   editCode: { min: 4, max: 12 },
 } as const;
 
@@ -97,6 +99,7 @@ export const houseSubmitSchema = houseFields.extend({
     .trim()
     .min(HOUSE_FIELD_LIMITS.addedBy.min)
     .max(HOUSE_FIELD_LIMITS.addedBy.max),
+  ownerPhone: ownerPhoneSchema,
 });
 
 export const houseInputSchema = houseFields.extend({
@@ -135,6 +138,7 @@ export const ownerPatchSchema = houseFields.partial().extend({
     .max(HOUSE_FIELD_LIMITS.editCode.max)
     .optional(),
   addedBy: addedByPatchField,
+  ownerPhone: ownerPhonePatchSchema,
 });
 
 export const adminPatchSchema = houseFields.partial().extend({
@@ -145,6 +149,7 @@ export const adminPatchSchema = houseFields.partial().extend({
   adminFrozen: z.boolean().optional(),
   photoUrl: z.union([photoUrlSchema, z.literal("")]).optional(),
   addedBy: addedByPatchField,
+  ownerPhone: ownerPhonePatchSchema,
 });
 
 export const adminSubmitSchema = houseSubmitSchema.extend({

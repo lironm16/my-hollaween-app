@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { ownerPatchSchema } from "@/lib/schema";
 import { deleteByEditCode, getHouse, updateByEditCode } from "@/lib/store";
-import { canonicalHouseId, toPublicHouse } from "@/lib/ids";
+import { canonicalHouseId, toEditorHouse, toPublicHouse } from "@/lib/ids";
+import { ownerPhoneHttpError } from "@/lib/owner-phone";
 import { isPubliclyListed } from "@/lib/house-state";
 import { config } from "@/lib/config";
 import { geocodeHttpError } from "@/lib/geocode";
@@ -33,10 +34,7 @@ export async function GET(
   }
   const admin = await isAdmin();
   const ownerOk = await ownerMayEdit(id);
-  let house = toPublicHouse(row);
-  if (!admin && !ownerOk) {
-    house = publicHouseForCatalog(house);
-  }
+  let house = admin || ownerOk ? toEditorHouse(row) : publicHouseForCatalog(toPublicHouse(row));
   return NextResponse.json(house, {
     headers: {
       "Cache-Control":
@@ -92,9 +90,13 @@ export async function PATCH(
       );
     }
     await grantOwnerHouse(id);
-    return NextResponse.json({ house: toPublicHouse(result.house), push: result.push });
+    return NextResponse.json({ house: toEditorHouse(result.house), push: result.push });
   } catch (error) {
     console.error("[houses] update failed", error);
+    const phone = ownerPhoneHttpError(error);
+    if (phone) {
+      return NextResponse.json({ error: phone.error, code: "VALIDATION" }, { status: phone.status });
+    }
     const storage = storageHttpError(error);
     if (storage) {
       return NextResponse.json({ error: storage.error, code: storage.code }, { status: storage.status });

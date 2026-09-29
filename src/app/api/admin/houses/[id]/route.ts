@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { adminPatchSchema } from "@/lib/schema";
 import { adminDeleteHouse, adminUpdate, getHouse } from "@/lib/store";
-import { canonicalHouseId } from "@/lib/ids";
+import { canonicalHouseId, toEditorHouse } from "@/lib/ids";
+import { ownerPhoneHttpError } from "@/lib/owner-phone";
 import { geocodeHttpError } from "@/lib/geocode";
 import { storageHttpError } from "@/lib/storage-errors";
 import { readIncludeEndpoint } from "@/lib/push";
@@ -30,9 +31,13 @@ export async function PATCH(
     if (!result) {
       return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404 });
     }
-    return NextResponse.json({ house: result.house, push: result.push });
+    return NextResponse.json({ house: toEditorHouse(result.house), push: result.push });
   } catch (error) {
     console.error("[admin/houses] update failed", error);
+    const phone = ownerPhoneHttpError(error);
+    if (phone) {
+      return NextResponse.json({ error: phone.error, code: "VALIDATION" }, { status: phone.status });
+    }
     const storage = storageHttpError(error);
     if (storage) {
       return NextResponse.json({ error: storage.error, code: storage.code }, { status: storage.status });

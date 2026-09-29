@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { adminSubmitSchema } from "@/lib/schema";
 import { getDbSnapshot, submitHouse } from "@/lib/store";
-import { toPublicHouse } from "@/lib/ids";
+import { toEditorHouse, toPublicHouse } from "@/lib/ids";
 import { geocodeHttpError } from "@/lib/geocode";
 import { storageHttpError } from "@/lib/storage-errors";
 import { readIncludeEndpoint } from "@/lib/push";
@@ -36,10 +36,10 @@ export async function POST(request: Request) {
     console.error("[admin/houses] validation failed", parsed.error.flatten());
     return NextResponse.json({ error: "נתונים לא תקינים." }, { status: 400 });
   }
-  const { addedBy, kind, poiCategory, ...input } = parsed.data;
+  const { addedBy, ownerPhone, kind, poiCategory, ...input } = parsed.data;
   try {
     const result = await submitHouse(
-      { ...input, kind, poiCategory },
+      { ...input, ownerPhone, kind, poiCategory },
       {
         includeEndpoint: readIncludeEndpoint(json),
         addedBy,
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       },
     );
     return NextResponse.json({
-      house: toPublicHouse(result.house),
+      house: toEditorHouse(result.house),
       editCode: result.house.editCode,
       push: result.push,
     });

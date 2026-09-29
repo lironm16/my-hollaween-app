@@ -54,6 +54,7 @@ export function NightDesk({
       photoUrl?: string;
       ownerFrozenUntil?: string | null;
       addedBy?: string | null;
+      ownerPhone?: string | null;
     },
   ) {
     const next = applyLocalHousePatch(house, patch);
@@ -81,6 +82,7 @@ export function NightDesk({
       photoUrl?: string;
       ownerFrozenUntil?: string | null;
       addedBy?: string | null;
+      ownerPhone?: string | null;
     },
   ): Promise<SaveResult | null> {
     setBusy(true);
@@ -184,6 +186,7 @@ export function NightDesk({
       ...input,
       ownerFrozenUntil: extras?.ownerFrozenUntil ?? null,
       addedBy: extras?.addedBy ?? null,
+      ownerPhone: extras?.ownerPhone ?? null,
       ...(extras?.clearPhoto && !extras.photoDataUrl ? { photoUrl: "" } : {}),
     });
     if (!saved) return;

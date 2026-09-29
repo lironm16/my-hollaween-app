@@ -13,6 +13,11 @@ import {
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import { cloneDb } from "@/lib/catalog-sync";
 import { parsePhotoUrl } from "@/lib/photos";
+import {
+  assertOwnerPhoneForFullPatch,
+  normalizeOwnerPhone,
+  ownerPhoneAfterPatch,
+} from "@/lib/owner-phone";
 import type { House, HouseInput, NightPatch, TreatStock, VisitState } from "@/lib/types";
 import { payloadForKind } from "@/lib/push";
 import { neighborhoodPushBroadcastAllowed } from "@/lib/push-policy";
@@ -151,6 +156,7 @@ export async function submitHouse(
       createdAt: now,
       updatedAt: now,
       addedBy: options?.addedBy?.trim() || null,
+      ownerPhone: normalizeOwnerPhone(String(input.ownerPhone ?? "")) || null,
     };
     db.houses.push(house);
     db.updatedAt = now;
@@ -227,6 +233,10 @@ function sanitizeOwnerPatch(
   if (patch.ownerFrozenUntil !== undefined) next.ownerFrozenUntil = patch.ownerFrozenUntil;
   if (patch.photoUrl !== undefined) next.photoUrl = patch.photoUrl;
   if (patch.addedBy !== undefined) next.addedBy = patch.addedBy?.trim() || null;
+  if (patch.ownerPhone !== undefined) {
+    const normalized = normalizeOwnerPhone(String(patch.ownerPhone ?? ""));
+    next.ownerPhone = normalized || null;
+  }
   return next;
 }
 
@@ -286,6 +296,7 @@ async function patchHouseDoc(
   if (isHouseDeleted(existing)) return { error: "missing" as const };
 
   await validateOwnerAddressChange(existing, patch);
+  assertOwnerPhoneForFullPatch(existing, patch as Record<string, unknown>);
 
   const prev = snapshotHouse(existing);
   const house = normalizeHouse({ ...existing });
@@ -365,6 +376,7 @@ export async function adminUpdate(
 ) {
   const current = await getHouse(id);
   if (!current) return null;
+  assertOwnerPhoneForFullPatch(current, patch as Record<string, unknown>);
   const prev = snapshotHouse(current);
   await validateOwnerAddressChange(current, patch);
   const updated = await runSyncedWrite((db) => {
@@ -434,6 +446,9 @@ export async function adminUpdate(
     if (patch.ownerFrozenUntil !== undefined) house.ownerFrozenUntil = patch.ownerFrozenUntil;
     if (patch.photoUrl !== undefined) house.photoUrl = parsePhotoUrl(patch.photoUrl) ?? patch.photoUrl;
     if (patch.addedBy !== undefined) house.addedBy = patch.addedBy?.trim() || null;
+    if (patch.ownerPhone !== undefined) {
+      house.ownerPhone = ownerPhoneAfterPatch(house, { ownerPhone: patch.ownerPhone });
+    }
     if (patch.kind !== undefined) {
       house.kind = patch.kind === "poi" ? "poi" : "house";
       house.poiCategory = normalizePoiCategory(house.kind, patch.poiCategory ?? house.poiCategory);

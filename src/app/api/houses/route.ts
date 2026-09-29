@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { houseSubmitSchema } from "@/lib/schema";
 import { submitHouse } from "@/lib/store";
-import { toPublicHouse } from "@/lib/ids";
+import { toEditorHouse } from "@/lib/ids";
 import { geocodeHttpError } from "@/lib/geocode";
 import { storageHttpError } from "@/lib/storage-errors";
 import { grantOwnerHouse } from "@/lib/owner-session";
@@ -24,9 +24,9 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  const { addedBy, ...input } = parsed.data;
+  const { addedBy, ownerPhone, ...input } = parsed.data;
   try {
-    const house = await submitHouse(input, {
+    const house = await submitHouse({ ...input, ownerPhone }, {
       includeEndpoint: readIncludeEndpoint(json),
       addedBy,
     });
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       /* owner cookie is optional — house is already saved */
     }
     return NextResponse.json({
-      house: toPublicHouse(house.house),
+      house: toEditorHouse(house.house),
       editCode: house.house.editCode,
       push: house.push,
     });

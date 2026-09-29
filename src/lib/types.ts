@@ -102,6 +102,8 @@ export type House = {
   updatedAt: string;
   /** Person name captured when the house was first added. */
   addedBy?: string | null;
+  /** Internal — for event manager contact only; never in public catalog. */
+  ownerPhone?: string | null;
   /** Remote document id; never sent to the public catalog. */
   storeId?: string;
   /** Set when removed from the public catalog; document kept in Firestore for recovery. */
@@ -132,6 +134,8 @@ export type HouseInput = {
   accessible: boolean;
   decorLevel?: DecorLevel;
   decorated?: boolean;
+  /** Internal contact — set on create/full edit only. */
+  ownerPhone?: string | null;
 };
 
 export type NightPatch = {
@@ -146,9 +150,10 @@ export type NightPatch = {
   soldOut?: boolean;
   photoUrl?: string;
   addedBy?: string | null;
+  ownerPhone?: string | null;
 };
 
-export type PublicHouse = Omit<House, "editCode" | "storeId">;
+export type PublicHouse = Omit<House, "editCode" | "storeId" | "ownerPhone">;
 
 export type CatalogPushTemplate = {
   enabled: boolean;

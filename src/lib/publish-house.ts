@@ -1,5 +1,6 @@
 import { readApiJson } from "@/lib/api-json";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
+import { isValidOwnerPhone, normalizeOwnerPhone } from "@/lib/owner-phone";
 import type { HouseInput, PublicHouse } from "@/lib/types";
 
 export type PublishResult = {
@@ -47,18 +48,32 @@ export function readyHouseInput(input: HouseInput): HouseInput {
 /** Always posts to the server. Never keeps a house only on the phone. */
 export async function publishHouse(
   input: HouseInput,
-  options?: { includeEndpoint?: string; addedBy?: string; admin?: boolean },
+  options?: {
+    includeEndpoint?: string;
+    addedBy?: string;
+    ownerPhone?: string;
+    admin?: boolean;
+  },
 ): Promise<PublishResult> {
   const body = readyHouseInput(input);
   const addedBy = options?.addedBy?.trim();
   if (!addedBy) throw new Error("נא למלא מי מוסיף את הבית.");
+  const ownerPhone = normalizeOwnerPhone(options?.ownerPhone ?? input.ownerPhone ?? "");
+  if (!isValidOwnerPhone(ownerPhone)) {
+    throw new Error("נא למלא טלפון ליצירת קשר עם מנהל האירוע.");
+  }
   const adminPoi = Boolean(options?.admin && body.kind === "poi");
   let res: Response;
   try {
     res = await fetch(adminPoi ? "/api/admin/houses" : "/api/houses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...body, addedBy, includeEndpoint: options?.includeEndpoint }),
+      body: JSON.stringify({
+        ...body,
+        addedBy,
+        ownerPhone,
+        includeEndpoint: options?.includeEndpoint,
+      }),
     });
   } catch {
     throw new Error("אין חיבור לשרת. בדקו את הרשת ונסו שוב.");
