@@ -32,10 +32,17 @@ export function houseShareUrl(house: PublicHouse, origin?: string) {
 }
 
 /** Web Share payload — URL in `url` field so iOS Copy gets a clean ASCII link. */
-export function houseSharePayload(house: PublicHouse, origin?: string) {
+export function houseSharePayload(
+  house: PublicHouse,
+  origin?: string,
+  options?: { includeLocationDetails?: boolean; displayAddress?: string },
+) {
   const url = houseShareUrl(house, origin);
   const title = stripBidiMarks(houseHeadline(house));
-  const address = stripBidiMarks(formatDisplayAddress(house));
+  const includeLocation = options?.includeLocationDetails !== false;
+  const address = includeLocation
+    ? stripBidiMarks(options?.displayAddress ?? formatDisplayAddress(house))
+    : "";
   const text = address ? `${title}\n${address}` : title;
   return { title, text, url };
 }
@@ -69,8 +76,9 @@ export async function shareEditCode(
 
 export async function shareHouse(
   house: PublicHouse,
+  options?: Parameters<typeof houseSharePayload>[2],
 ): Promise<"shared" | "copied" | "aborted" | "failed"> {
-  const { title, text, url } = houseSharePayload(house);
+  const { title, text, url } = houseSharePayload(house, undefined, options);
   try {
     if (navigator.share) {
       await navigator.share({ title, text, url });

@@ -10,7 +10,7 @@ import {
   ClusterHouseSwipeArea,
   clusterHouseIndex,
 } from "@/components/cluster-house-list";
-import { formatDisplayAddress } from "@/lib/config";
+import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseHeadline } from "@/lib/labels";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
@@ -88,7 +88,8 @@ export function MapHouseSheet({
   const [openH, setOpenH] = useState(0);
   const multi = clusterHouses.length > 1;
   const overview = multi && clusterOverview;
-  const address = formatDisplayAddress(house);
+  const addressReveal = useAddressReveal();
+  const address = addressReveal.formatDisplayAddress(house);
   const clusterKey = clusterHouses.map((item) => item.id).join(",");
   const clusterIndex = clusterHouseIndex(clusterHouses, house.id);
   const canPrevCluster = clusterIndex != null && clusterIndex > 1;

@@ -1,3 +1,4 @@
+import { publicHouseForCatalog } from "@/lib/address-reveal";
 import { config } from "@/lib/config";
 import { toPublicHouse } from "@/lib/ids";
 import { isPubliclyListed } from "@/lib/house-state";
@@ -15,9 +16,10 @@ export function asCatalogForSnapshot(
   updatedAt: string,
   pushSettings?: DbFile["pushSettings"],
 ): Catalog {
+  const catalogNow = new Date();
   const published: PublicHouse[] = houses
     .filter((h) => isPubliclyListed(h))
-    .map((h) => toPublicHouse(h));
+    .map((h) => publicHouseForCatalog(toPublicHouse(h) as PublicHouse, catalogNow));
   const merged = mergePushTemplates(pushSettings);
   const pushTemplates: Catalog["pushTemplates"] = {};
   for (const id of PUSH_KINDS) {

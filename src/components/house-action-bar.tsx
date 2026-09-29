@@ -19,6 +19,7 @@ import { SkipIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
 import { EditCodeDialog } from "@/components/edit-code-dialog";
+import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
 import { appHeaderBottom, safeAreaInsetBottom } from "@/lib/viewport";
@@ -94,6 +95,7 @@ export function HouseActionBar({
   menuPlacement?: "top" | "bottom";
   className?: string;
 }) {
+  const addressReveal = useAddressReveal();
   const [open, setOpen] = useState(false);
   const [editCodeOpen, setEditCodeOpen] = useState(false);
   const [panelStyle, setPanelStyle] = useState<CSSProperties>({ visibility: "hidden" });
@@ -121,7 +123,7 @@ export function HouseActionBar({
 
   const items: MenuItem[] = [];
 
-  if (showNav) {
+  if (showNav && addressReveal.mapsAllowed(house.id)) {
     items.push({
       id: "nav",
       label: "ניווט",
@@ -153,7 +155,10 @@ export function HouseActionBar({
       label: "שתף",
       icon: <Share2 className={MENU_ICON_CLASS} strokeWidth={2.2} />,
       onClick: () => {
-        void shareHouse(house).then((result) => {
+        void shareHouse(house, {
+          includeLocationDetails: addressReveal.canViewDetails(house.id),
+          displayAddress: addressReveal.formatDisplayAddress(house),
+        }).then((result) => {
           if (result === "copied") toast.success("הקישור הועתק");
           if (result === "failed") toast.error("לא הצלחנו לשתף");
         });

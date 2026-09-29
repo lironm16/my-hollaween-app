@@ -3,6 +3,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Home } from "lucide-react";
 import { inputStyles } from "@/components/ui/input";
+import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { formatDisplayAddress } from "@/lib/config";
 import { houseHeadline, locationSearchHaystack, poiCategoryLabel } from "@/lib/labels";
 import { isPoiHouse } from "@/lib/house-kind";
@@ -51,6 +52,7 @@ export function HousePicker({
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const owned = useMemo(() => new Set(ownedIds ?? []), [ownedIds]);
+  const addressReveal = useAddressReveal();
 
   useEffect(() => {
     if (!selected) return;
@@ -148,7 +150,8 @@ export function HousePicker({
           ) : (
             matches.map((house, index) => {
               const mine = owned.has(house.id);
-              const address = formatDisplayAddress(house);
+              const address = addressReveal.formatDisplayAddress(house);
+              const arrival = addressReveal.visibleArrival(house);
               return (
                 <li key={house.id} role="option" aria-selected={index === active}>
                   <button
@@ -165,7 +168,7 @@ export function HousePicker({
                       <span className="block font-medium">{houseHeadline(house)}</span>
                       <span className="block text-base text-violet-300">
                         {address}
-                        {house.arrival ? ` · ${house.arrival}` : ""}
+                        {arrival ? ` · ${arrival}` : ""}
                       </span>
                       {mine ? (
                         <span className="mt-0.5 block text-base text-emerald-300">הבית שלכם</span>

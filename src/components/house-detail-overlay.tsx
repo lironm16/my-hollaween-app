@@ -12,7 +12,7 @@ import {
   ClusterHouseSwipeArea,
   clusterHouseIndex,
 } from "@/components/cluster-house-list";
-import { formatDisplayAddress } from "@/lib/config";
+import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseHeadline } from "@/lib/labels";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
@@ -72,6 +72,7 @@ export function HouseDetailOverlay({
   const canNextCluster =
     clusterIndex != null && clusterHouses != null && clusterIndex < clusterHouses.length;
   const clusterNow = now ?? new Date();
+  const addressReveal = useAddressReveal();
   const isSkipped = skippedIds ?? (() => false);
   const isFilteredOut = filteredOutIds ?? (() => false);
   const actionMenu = (
@@ -122,7 +123,7 @@ export function HouseDetailOverlay({
           <div id={labelId}>
             <div className="mb-3 flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <p className="map-house-sheet-kicker">{formatDisplayAddress(house)}</p>
+                <p className="map-house-sheet-kicker">{addressReveal.formatDisplayAddress(house)}</p>
                 <p className="map-house-sheet-sub">{clusterHouses!.length} בתים בכתובת זו</p>
               </div>
               {actionMenu}

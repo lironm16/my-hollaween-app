@@ -9,6 +9,7 @@ import {
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { HouseMapPinIcon } from "@/components/house-map-pin-icon";
 import { HouseTitleMarkers } from "@/components/house-title-markers";
+import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -207,6 +208,7 @@ export function ClusterHouseList({
   onSelect: (id: string) => void;
 }) {
   const clusterNow = now ?? new Date();
+  const addressReveal = useAddressReveal();
   return (
     <ul className="cluster-house-list space-y-2">
       {houses.map((item, index) => (
@@ -242,9 +244,9 @@ export function ClusterHouseList({
                 <HouseTitleMarkers liked={liked?.(item.id)} gemCollected={gemCollected?.(item.id)} />
                 {houseHeadline(item)}
               </span>
-              {item.arrival?.trim() ? (
+              {addressReveal.visibleArrival(item) ? (
                 <span className="mt-0.5 block truncate text-sm text-violet-300/90">
-                  {item.arrival.trim()}
+                  {addressReveal.visibleArrival(item)}
                 </span>
               ) : null}
             </span>

@@ -64,6 +64,7 @@ import {
 } from "@/lib/gem-hunt-sensors";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
+import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAdminHouses } from "@/hooks/use-admin-houses";
@@ -160,6 +161,7 @@ export function NeighborhoodApp({
   const catalogUpdatedAt = catalog?.updatedAt;
   const { admin } = useAdminSession();
   const now = useAppNow();
+  const addressReveal = useAddressReveal();
   const {
     gemHuntVisible: gemFeatureOn,
     gemFabVisible: gemUi,
@@ -1137,7 +1139,7 @@ export function NeighborhoodApp({
         דלג לרשימת הבתים
       </button>
       <div className="sr-only" aria-live="polite" aria-atomic="true">
-        {selection.selected ? houseSelectionAnnouncement(selection.selected) : ""}
+        {selection.selected ? houseSelectionAnnouncement(selection.selected, addressReveal) : ""}
         {routeMode && walkingRoute
           ? ` מסלול עם ${walkingRoute.stops.length} עצירות.`
           : ""}

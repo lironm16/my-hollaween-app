@@ -9,7 +9,7 @@ import { VisitedCheck } from "@/components/visited-check";
 import { buttonVariants } from "@/components/ui/button";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
 import { HouseTags } from "@/components/house-tags";
-import { formatDisplayAddress } from "@/lib/config";
+import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { formatDistance } from "@/lib/geo";
 import { HoursLabel } from "@/components/clock-time";
 import { formatHoursLabel } from "@/lib/hours";
@@ -314,7 +314,10 @@ export function HouseDetails({
   /** Route tail / visited-skipped cards: no opening-date or hours banners. */
   hideHoursBanner?: boolean;
 }) {
-  const displayAddress = formatDisplayAddress(house);
+  const addressReveal = useAddressReveal();
+  const displayAddress = addressReveal.formatDisplayAddress(house);
+  const arrivalText = addressReveal.visibleArrival(house);
+  const showMaps = addressReveal.mapsAllowed(house.id);
   const addedMeta = houseAddedMetaLine(house);
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
@@ -505,7 +508,7 @@ export function HouseDetails({
         meta
       )}
       {actions}
-      <HouseArrivalDirections arrival={house.arrival} houseId={house.id} />
+      <HouseArrivalDirections arrival={arrivalText} houseId={house.id} />
       <HouseNotesSection notes={house.notes} houseId={house.id} />
       <HouseDescriptionSection description={house.description} houseId={house.id} />
       {addedMeta ? (
@@ -514,15 +517,17 @@ export function HouseDetails({
       {extra}
       {!sheet ? (
         <div className="flex flex-wrap gap-2 pt-1">
-          <a
-            href={houseMapsUrl(house)}
-            target="_blank"
-            rel="noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className={cn(buttonVariants({ size: "sm" }))}
-          >
-            ניווט ב־Google Maps
-          </a>
+          {showMaps ? (
+            <a
+              href={houseMapsUrl(house)}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className={cn(buttonVariants({ size: "sm" }))}
+            >
+              ניווט ב־Google Maps
+            </a>
+          ) : null}
           <Link
             href={houseSharePath(house)}
             onClick={(e) => e.stopPropagation()}

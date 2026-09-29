@@ -6,6 +6,7 @@ import { isPubliclyListed } from "@/lib/house-state";
 import { config } from "@/lib/config";
 import { geocodeHttpError } from "@/lib/geocode";
 import { storageHttpError } from "@/lib/storage-errors";
+import { publicHouseForCatalog } from "@/lib/address-reveal";
 import { grantOwnerHouse, ownerMayEdit } from "@/lib/owner-session";
 import { isAdmin } from "@/lib/admin";
 import { readIncludeEndpoint } from "@/lib/push";
@@ -30,7 +31,12 @@ export async function GET(
       { status: 404 },
     );
   }
-  const house = toPublicHouse(row);
+  const admin = await isAdmin();
+  const ownerOk = await ownerMayEdit(id);
+  let house = toPublicHouse(row);
+  if (!admin && !ownerOk) {
+    house = publicHouseForCatalog(house);
+  }
   return NextResponse.json(house, {
     headers: {
       "Cache-Control":
