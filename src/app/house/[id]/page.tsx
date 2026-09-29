@@ -20,6 +20,7 @@ import { useUserLocation } from "@/hooks/use-user-location";
 import { GemHuntPanelLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
+import { writeHomeView } from "@/lib/home-view";
 import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
 import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
@@ -99,6 +100,10 @@ export default function HousePage() {
         }),
       skipMetaFor: (hid) => skips.meta(hid),
       editingId: editFlow.flow?.house.id ?? null,
+      onShowOnMap: (hid) => {
+        writeHomeView("map");
+        router.push(`/?focus=${encodeURIComponent(hid)}`);
+      },
     };
   }, [
     admin,

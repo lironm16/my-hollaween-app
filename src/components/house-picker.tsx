@@ -15,7 +15,7 @@ export function houseSearchHaystack(house: PublicHouse, canViewLocationDetails =
     house.name,
     canViewLocationDetails ? formatDisplayAddress(house) : "",
     canViewLocationDetails ? house.arrival : "",
-    canViewLocationDetails ? house.description : "",
+    house.description,
     canViewLocationDetails ? locationSearchHaystack(house) : "",
     isPoiHouse(house) ? poiCategoryLabel(house.poiCategory) : "",
   ]

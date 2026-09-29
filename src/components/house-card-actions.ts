@@ -18,6 +18,8 @@ export type HouseCardActionContext = {
   onToggleGem?: (house: PublicHouse) => void;
   onSkip?: (id: string) => void;
   onRestore?: (id: string) => void;
+  onShowOnMap?: (id: string) => void;
+  onShowInList?: (id: string) => void;
   canEdit?: (id: string) => boolean;
   editCodeFor?: (id: string) => string | undefined;
   onEdit?: (house: PublicHouse) => void;
@@ -52,6 +54,8 @@ export function houseCardPropsFor(
     onToggleGem: ctx.onToggleGem ? () => ctx.onToggleGem!(house) : undefined,
     onSkip: ctx.onSkip && !isSkipped ? () => ctx.onSkip!(id) : undefined,
     onRestoreRoute: ctx.onRestore && isSkipped ? () => ctx.onRestore!(id) : undefined,
+    onShowOnMap: ctx.onShowOnMap ? () => ctx.onShowOnMap!(id) : undefined,
+    onShowInList: ctx.onShowInList ? () => ctx.onShowInList!(id) : undefined,
     canEdit: Boolean(ctx.canEdit?.(id)),
     editCode: ctx.editCodeFor?.(id),
     admin: ctx.admin,
@@ -79,6 +83,8 @@ export function houseActionBarPropsFromCard(
     onToggleGem: card.onToggleGem,
     onSkip: card.onSkip,
     onRestoreRoute: card.onRestoreRoute,
+    onShowOnMap: card.onShowOnMap,
+    onShowInList: card.onShowInList,
     onToggleEdit: card.canEdit ? card.onToggleEdit : undefined,
     skipped: card.skipped,
     editing: card.editing,

@@ -512,11 +512,9 @@ export function HouseDetails({
       {actions}
       <HouseArrivalDirections arrival={arrivalText} houseId={house.id} />
       {addressReveal.canViewDetails(house.id) ? (
-        <>
-          <HouseNotesSection notes={house.notes} houseId={house.id} />
-          <HouseDescriptionSection description={house.description} houseId={house.id} />
-        </>
+        <HouseNotesSection notes={house.notes} houseId={house.id} />
       ) : null}
+      <HouseDescriptionSection description={house.description} houseId={house.id} />
       {addedMeta ? (
         <p className="text-sm text-violet-400">{addedMeta}</p>
       ) : null}

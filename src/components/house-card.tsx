@@ -26,6 +26,8 @@ export function HouseCard({
   canEdit = false,
   editCode,
   admin = false,
+  onShowOnMap,
+  onShowInList,
   onToggleGem,
   editing = false,
   onToggleEdit,
@@ -51,6 +53,8 @@ export function HouseCard({
   canEdit?: boolean;
   editCode?: string;
   admin?: boolean;
+  onShowOnMap?: () => void;
+  onShowInList?: () => void;
   onToggleGem?: () => void;
   editing?: boolean;
   onToggleEdit?: () => void;
@@ -77,6 +81,8 @@ export function HouseCard({
     canEdit,
     editCode,
     admin,
+    onShowOnMap,
+    onShowInList,
     onToggleGem,
     editing,
     onToggleEdit,

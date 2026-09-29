@@ -1051,6 +1051,18 @@ export function NeighborhoodApp({
       onToggleGem: gemUi ? handleToggleGemMenu : undefined,
       onSkip: handleSkipHouse,
       onRestore: handleRestoreHouse,
+      onShowOnMap:
+        view === "list"
+          ? openOnMap
+          : undefined,
+      onShowInList:
+        view === "map"
+          ? (id) => {
+              if (!matchedIds.has(id)) return;
+              selection.showInListFromMap(id);
+              setView("list");
+            }
+          : undefined,
       canEdit: (id) => Boolean(admin || owned.some((item) => item.id === id)),
       editCodeFor: (id) =>
         admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode,
@@ -1071,9 +1083,12 @@ export function NeighborhoodApp({
     handleToggleGemMenu,
     handleSkipHouse,
     handleRestoreHouse,
+    view,
+    matchedIds,
     owned,
     editCodeById,
     editFlow.flow?.house.id,
+    selection.showInListFromMap,
   ]);
 
   const houseDetailCommon = selected
