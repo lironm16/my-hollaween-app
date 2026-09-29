@@ -514,24 +514,24 @@ export function HouseDetails({
       )}
       {actions}
       <HouseArrivalDirections arrival={arrivalText} houseId={house.id} />
-      {ownerPhone ? (
-        <div
-          className="rounded-lg bg-amber-950/50 px-3 py-2 text-base ring-1 ring-amber-500/35"
-          data-admin-only
-        >
-          <p className="text-sm font-medium text-amber-200/90">טלפון פנימי (מנהל)</p>
-          <a href={`tel:${ownerPhone}`} className="text-lg text-amber-50 underline-offset-2 hover:underline">
-            {ownerPhone}
-          </a>
-          <p className="mt-1 text-sm text-amber-200/70">לא מוצג למבקרים — ליצירת קשר לפני/במהלך האירוע.</p>
-        </div>
-      ) : null}
       {addressReveal.canViewDetails(house.id) ? (
         <HouseNotesSection notes={house.notes} houseId={house.id} />
       ) : null}
       <HouseDescriptionSection description={house.description} houseId={house.id} />
-      {addedMeta ? (
-        <p className="text-sm text-violet-400">{addedMeta}</p>
+      {addedMeta || ownerPhone ? (
+        <p className="text-sm text-violet-400">
+          {addedMeta}
+          {addedMeta && ownerPhone ? " · " : null}
+          {ownerPhone ? (
+            <a
+              href={`tel:${ownerPhone.replace(/\D/g, "")}`}
+              className="text-orange-200 underline decoration-orange-400/50 underline-offset-2 hover:text-orange-100"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {ownerPhone}
+            </a>
+          ) : null}
+        </p>
       ) : null}
       {extra}
       {!sheet ? (
