@@ -64,6 +64,9 @@ async function main() {
     else pass(`SW precache includes ${path}`);
   }
 
+  if (hasCached("/catalog.json")) fail("SW precache must not include /catalog.json (house list)");
+  else pass("SW precache excludes house catalog snapshot");
+
   await context.close();
   await browser.close();
 

@@ -5,7 +5,6 @@ const CACHE = "hw-shell-5.3.9";
 const TILE_CACHE = MapTileCache.TILE_CACHE;
 const PRECACHE = [
   "/offline.html",
-  "/catalog.json",
   "/gem-osm-anchors.json",
   "/shell.css",
   "/app.css",
@@ -67,6 +66,8 @@ self.addEventListener("activate", (event) => {
             .map((key) => caches.delete(key)),
         ),
       )
+      .then(() => caches.open(CACHE))
+      .then((cache) => purgeShellCatalogEntries(cache))
       .then(() => self.clients.claim()),
   );
 });
@@ -104,11 +105,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (
-    url.pathname.startsWith("/api/catalog") ||
-    url.pathname === "/catalog.json" ||
-    url.pathname === "/manifest.webmanifest"
-  ) {
+  if (url.pathname.startsWith("/api/catalog") || url.pathname === "/catalog.json") {
+    event.respondWith(fetchCatalogLiveOnly(req));
+    return;
+  }
+
+  if (url.pathname === "/manifest.webmanifest") {
     event.respondWith(networkFirst(req, CACHE));
     return;
   }
@@ -280,6 +282,32 @@ async function navigation(request) {
   return offlineDocument(cache);
 }
 
+/** House catalog is never cached on device — map tiles use TILE_CACHE separately. */
+async function fetchCatalogLiveOnly(request) {
+  try {
+    const res = await fetch(request);
+    if (res && res.ok) return res;
+  } catch {
+    /* offline / server down */
+  }
+  return new Response(JSON.stringify({ updatedAt: "", neighborhood: "", houses: [] }), {
+    status: 200,
+    headers: { "Content-Type": "application/json; charset=utf-8" },
+  });
+}
+
+async function purgeShellCatalogEntries(cache) {
+  const keys = await cache.keys();
+  await Promise.all(
+    keys
+      .filter((req) => {
+        const path = new URL(req.url).pathname;
+        return path === "/catalog.json" || path.startsWith("/api/catalog");
+      })
+      .map((req) => cache.delete(req)),
+  );
+}
+
 async function networkFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
   try {
@@ -291,14 +319,7 @@ async function networkFirst(request, cacheName) {
   }
   const cached = await cache.match(request);
   if (cached) return cached;
-  if (new URL(request.url).pathname === "/api/catalog") {
-    const snap = await cache.match("/catalog.json");
-    if (snap) return snap;
-  }
-  return new Response(JSON.stringify({ updatedAt: "", neighborhood: "", houses: [] }), {
-    status: 200,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
-  });
+  return new Response("לא מקוון", { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } });
 }
 
 async function staleWhileRevalidate(request, cacheName) {

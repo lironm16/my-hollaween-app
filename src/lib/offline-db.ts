@@ -188,7 +188,10 @@ export function clearDeviceCatalogCache() {
   })();
 }
 
-/** Published catalog is no longer persisted on devices. */
+/**
+ * Published house list is not persisted on devices (localStorage / IndexedDB).
+ * Map basemap tiles are cached separately by the service worker (`hw-map-tiles-v2`).
+ */
 export async function saveCatalogCache(_catalog: Catalog) {
   return;
 }
