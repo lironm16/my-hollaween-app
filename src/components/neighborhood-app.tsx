@@ -109,6 +109,7 @@ import {
   countLikedInSet,
   houseMatchesSet,
 } from "@/lib/house-set";
+import { isPreviewDeploymentClient } from "@/lib/deployment-env";
 import { filterHouses, houseFilterMismatchReasons, routeHouseIds } from "@/lib/filter-houses";
 import { distanceMeters, formatDistance } from "@/lib/geo";
 import { estimateWalkingMeters } from "@/lib/walk-distance-estimate";
@@ -207,7 +208,9 @@ export function NeighborhoodApp({
 
   const { choice: originChoice, resolved: origin, setChoice: setOriginChoice } = useDistanceOrigin(gps);
   const { houseSet } = useHouseSet();
-  const activeHouseSet = resolveViewerHouseSet(catalog, admin, houseSet);
+  const activeHouseSet = resolveViewerHouseSet(catalog, admin, houseSet, {
+    previewDeployment: isPreviewDeploymentClient(),
+  });
   const view = useSyncExternalStore(
     (onStoreChange) => {
       window.addEventListener("hw-home-view", onStoreChange);

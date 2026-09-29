@@ -19,6 +19,7 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_APP_VERSION: appVersion,
     NEXT_PUBLIC_DURABLE_WRITES: process.env.NEXT_PUBLIC_DURABLE_WRITES ?? "1",
+    NEXT_PUBLIC_VERCEL_ENV: process.env.VERCEL_ENV ?? "",
   },
   serverExternalPackages: ["web-push"],
   // Keep the seed on Vercel so /api/catalog can boot without a writable data dir.

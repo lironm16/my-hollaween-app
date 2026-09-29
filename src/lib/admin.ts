@@ -4,13 +4,23 @@ import { config } from "@/lib/config";
 
 const DEV_ADMIN_PASSWORD = "pumpkin2026";
 
-export function adminPassword() {
-  return process.env.ADMIN_PASSWORD ?? DEV_ADMIN_PASSWORD;
+function isVercelPreview() {
+  return process.env.VERCEL_ENV === "preview";
 }
 
-/** Production must set ADMIN_PASSWORD explicitly. */
+export function adminPassword() {
+  const configured = process.env.ADMIN_PASSWORD?.trim();
+  if (configured) return configured;
+  if (process.env.NODE_ENV === "production" && isVercelPreview()) {
+    return process.env.PREVIEW_ADMIN_PASSWORD?.trim() || DEV_ADMIN_PASSWORD;
+  }
+  return DEV_ADMIN_PASSWORD;
+}
+
+/** Production must set ADMIN_PASSWORD explicitly. Preview may use PREVIEW_ADMIN_PASSWORD or the dev default. */
 export function adminLoginEnabled() {
   if (process.env.NODE_ENV !== "production") return true;
+  if (isVercelPreview()) return true;
   return Boolean(process.env.ADMIN_PASSWORD?.trim());
 }
 

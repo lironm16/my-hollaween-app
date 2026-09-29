@@ -118,16 +118,18 @@ export function catalogHasRealHouses(catalog: { houses: { id?: string; descripti
 }
 
 /**
- * Non-admins normally see only real houses. When the loaded catalog is stub-only
- * (static snapshot before /api/catalog, or preview without live data), show all
- * houses so the map is not empty.
+ * Non-admins normally see only real houses. On preview deployments only, when the
+ * loaded catalog is stub-only, show all snapshot houses so the map is not empty.
+ * Production never uses this fallback — visitors keep the real-only filter.
  */
 export function resolveViewerHouseSet(
   catalog: { houses: { id?: string; description?: string }[] } | null,
   admin: boolean,
   preferred: HouseSet,
+  options?: { previewDeployment?: boolean },
 ): HouseSet {
   if (admin) return preferred;
-  if (catalog?.houses.length && !catalogHasRealHouses(catalog)) return "all";
+  const preview = options?.previewDeployment === true;
+  if (preview && catalog?.houses.length && !catalogHasRealHouses(catalog)) return "all";
   return "real";
 }
