@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   countSkippedInSet,
   countVisitedInSet,
+  houseMatchesSet,
   isStubHouse,
   resolveViewerHouseSet,
 } from "@/lib/house-set";
@@ -45,6 +46,16 @@ describe("countSkippedInSet", () => {
 
   it("counts rehearsal stub ids in stubs mode even without a house row", () => {
     assert.equal(countSkippedInSet(["בית-9310"], [], "stubs"), 1);
+  });
+
+  it("treats rehearsal snapshot photos as stubs when description was stripped", () => {
+    const row = {
+      id: "בית-1847",
+      description: "",
+      photoUrl: "/images/stubs/pumpkin-porch.jpg",
+    };
+    assert.equal(isStubHouse(row), true);
+    assert.equal(houseMatchesSet(row, "real"), false);
   });
 
   it("treats leaked E2E houses as stubs hidden from real mode", () => {

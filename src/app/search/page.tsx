@@ -15,7 +15,7 @@ import { useCatalog } from "@/hooks/use-catalog";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { useMergedHouses } from "@/hooks/use-merged-houses";
 import { isPreviewDeploymentClient } from "@/lib/deployment-env";
-import { houseMatchesSet, resolveViewerHouseSet } from "@/lib/house-set";
+import { activeHouseSetForSession, houseMatchesSet } from "@/lib/house-set";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
@@ -44,11 +44,9 @@ export default function SearchPage() {
     refresh,
     catalogUpdatedAt: catalog?.updatedAt,
   });
-  const activeHouseSet = admin
-    ? houseSet
-    : resolveViewerHouseSet(catalog, false, "real", {
-        previewDeployment: isPreviewDeploymentClient(),
-      });
+  const activeHouseSet = activeHouseSetForSession(admin, houseSet, catalog, {
+    previewDeployment: isPreviewDeploymentClient(),
+  });
   const merged = useMergedHouses({
     catalogHouses: catalog?.houses ?? [],
     owned,
@@ -60,6 +58,12 @@ export default function SearchPage() {
     () => merged.filter((house) => houseMatchesSet(house, activeHouseSet)),
     [merged, activeHouseSet],
   );
+
+  useEffect(() => {
+    if (!picked || houseMatchesSet(picked, activeHouseSet)) return;
+    setPicked(null);
+    editFlow.close();
+  }, [activeHouseSet, picked, editFlow.close]);
 
   const gemUi = gemHuntFabVisible(admin, now);
   const actionContext = useMemo((): HouseCardActionContext => {

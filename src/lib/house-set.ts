@@ -25,9 +25,11 @@ export function isStubHouse(house: {
   name?: string;
   description?: string;
   address?: string;
+  photoUrl?: string;
 }) {
   if (house.id && STUB_ID.test(house.id)) return true;
   if (isE2eTestHouse(house)) return true;
+  if (house.photoUrl?.includes("/images/stubs/")) return true;
   return Boolean(house.description?.includes("סטאב לחזרה"));
 }
 
@@ -132,4 +134,15 @@ export function resolveViewerHouseSet(
   const preview = options?.previewDeployment === true;
   if (preview && catalog?.houses.length && !catalogHasRealHouses(catalog)) return "all";
   return "real";
+}
+
+/** Admin UI pages honor the manager house-set toggle; visitors stay on real-only (or preview fallback). */
+export function activeHouseSetForSession(
+  admin: boolean,
+  houseSet: HouseSet,
+  catalog: { houses: { id?: string; description?: string; photoUrl?: string }[] } | null,
+  options?: { previewDeployment?: boolean },
+): HouseSet {
+  if (admin) return houseSet;
+  return resolveViewerHouseSet(catalog, false, "real", options);
 }

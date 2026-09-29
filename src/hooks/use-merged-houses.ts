@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { toPublicHouse } from "@/lib/ids";
 import { loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { loadPendingWrites } from "@/lib/offline-db";
+import { isStubHouse } from "@/lib/house-set";
 import type { House, PublicHouse } from "@/lib/types";
 import type { OwnedHouse } from "@/lib/offline-db";
 
@@ -12,18 +13,30 @@ function mergeIncomingHouse(
   incoming: PublicHouse,
   admin: boolean,
 ): PublicHouse {
+  let merged = incoming;
   if (
     admin &&
     current?.address?.trim() &&
     !incoming.address?.trim()
   ) {
-    return {
+    merged = {
       ...incoming,
       address: current.address,
       arrival: incoming.arrival?.trim() ? incoming.arrival : current.arrival,
     };
   }
-  return incoming;
+  if (current && isStubHouse(current) && !isStubHouse(merged)) {
+    merged = {
+      ...merged,
+      description: merged.description?.includes("סטאב לחזרה")
+        ? merged.description
+        : current.description || merged.description,
+      photoUrl: current.photoUrl?.includes("/images/stubs/")
+        ? current.photoUrl
+        : merged.photoUrl,
+    };
+  }
+  return merged;
 }
 
 export function mergeVisibleHouses({
@@ -50,7 +63,9 @@ export function mergeVisibleHouses({
   if (admin) {
     for (const house of adminHouses) {
       if (deleted.has(house.id)) continue;
-      byId.set(house.id, toPublicHouse(house) as PublicHouse);
+      const incoming = toPublicHouse(house) as PublicHouse;
+      const current = byId.get(house.id);
+      byId.set(house.id, mergeIncomingHouse(current, incoming, admin));
     }
   }
   for (const item of owned) {

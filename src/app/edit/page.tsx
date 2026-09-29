@@ -15,7 +15,7 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
-import { houseMatchesSet } from "@/lib/house-set";
+import { activeHouseSetForSession, houseMatchesSet } from "@/lib/house-set";
 import { saveOwnedHouse, removeOwnedHouse, forgetPublishedHouse, notifyCatalogChanged } from "@/lib/offline-db";
 import type { House, PublicHouse } from "@/lib/types";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
@@ -43,7 +43,7 @@ function EditPageContent() {
   const { catalog, loading: catalogLoading, refresh } = useCatalog();
   const { admin, ready: adminReady } = useAdminSession();
   const { houseSet } = useHouseSet();
-  const activeHouseSet = admin ? houseSet : "real";
+  const activeHouseSet = activeHouseSetForSession(admin, houseSet, catalog);
   const { adminHouses } = useAdminHouses({
     admin,
     refresh,
@@ -70,6 +70,13 @@ function EditPageContent() {
     () => merged.filter((house) => houseMatchesSet(house, activeHouseSet)),
     [merged, activeHouseSet],
   );
+
+  useEffect(() => {
+    if (!picked || houseMatchesSet(picked, activeHouseSet)) return;
+    setPicked(null);
+    setHouse(null);
+    editFlow.close();
+  }, [activeHouseSet, picked, editFlow.close]);
 
   const ownedMatch = picked ? owned.find((item) => item.id === picked.id) : undefined;
   const adminEditCode = picked && admin ? adminHouses.find((item) => item.id === picked.id)?.editCode : undefined;

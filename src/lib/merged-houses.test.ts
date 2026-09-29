@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { mergeVisibleHouses } from "@/hooks/use-merged-houses";
+import { houseMatchesSet } from "@/lib/house-set";
 import type { House, PublicHouse } from "@/lib/types";
 
 function publicHouse(id: string, updatedAt: string): PublicHouse {
@@ -57,6 +58,32 @@ describe("mergeVisibleHouses", () => {
       adminHouses: [adminHouse("admin-only", "2026-10-31T10:00:00.000Z")],
     });
     assert.deepEqual(merged.map((house) => house.id), ["admin-only"]);
+  });
+
+  it("keeps stub identity when admin API row drops rehearsal description", () => {
+    const catalogStub: PublicHouse = {
+      ...publicHouse("בית-1847", "2026-10-31T10:00:00.000Z"),
+      description: "סטאב לחזרה — דלעות על המדרגה.",
+      photoUrl: "/images/stubs/pumpkin-porch.jpg",
+      address: "",
+    };
+    const adminRow: House = {
+      ...adminHouse("בית-1847", "2026-10-31T12:00:00.000Z"),
+      description: "",
+      address: "חרוזים 8",
+      photoUrl: "",
+    };
+    const merged = mergeVisibleHouses({
+      catalogHouses: [catalogStub],
+      owned: [],
+      admin: true,
+      adminHouses: [adminRow],
+      includeCatalogWhenAdmin: true,
+    });
+    const house = merged.find((item) => item.id === "בית-1847");
+    assert.ok(house);
+    assert.equal(houseMatchesSet(house!, "real"), false);
+    assert.equal(houseMatchesSet(house!, "stubs"), true);
   });
 
   it("keeps full address when admin owned preview is redacted", () => {
