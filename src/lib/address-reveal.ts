@@ -21,11 +21,8 @@ export function isAddressRevealed(now = new Date()) {
 
 export function addressHiddenHintHe(now = new Date()) {
   const { labelHe } = config.eventNight;
-  const { hour, minute } = config.addressReveal;
-  const hh = String(hour).padStart(2, "0");
-  const mm = String(minute).padStart(2, "0");
   if (isAddressRevealed(now)) return "";
-  return `הכתובת תיחשף ב-${labelHe} · ${hh}:${mm}`;
+  return `הכתובת תיחשף ב-${labelHe}`;
 }
 
 export function canViewHouseLocationDetails(

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   clusterAddressKey,
+  clusterAddressKeyForHouse,
   clusterBadgeHouses,
   clusterHousesByAddress,
   clusterMembersForHouse,
@@ -40,6 +41,15 @@ function house(id: string, address: string, patch: Partial<PublicHouse> = {}): P
     ...patch,
   };
 }
+
+describe("clusterAddressKeyForHouse", () => {
+  it("uses house id when address is redacted", () => {
+    const a = house("a", "", { lat: 32.091, lng: 34.802 });
+    const b = house("b", "", { lat: 32.092, lng: 34.803 });
+    const clusters = clusterHousesByAddress([a, b]);
+    assert.equal(clusters.length, 2);
+  });
+});
 
 describe("clusterAddressKey", () => {
   it("groups the same street number across formatting variants", () => {

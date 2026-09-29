@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { MapPin, Navigation } from "lucide-react";
 import { HouseCard } from "@/components/house-card";
 import { houseCardPropsFor, type HouseCardActionContext } from "@/components/house-card-actions";
+import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { Button } from "@/components/ui/button";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,7 @@ export function RouteList({
   focusId?: string | null;
 }) {
   const focusRef = useRef<HTMLLIElement | null>(null);
+  const addressReveal = useAddressReveal();
 
   useEffect(() => {
     if (!focusId) return;
@@ -122,7 +124,7 @@ export function RouteList({
                 <HouseCard
                   {...houseCardPropsFor(house, actionContext, {
                     index: isTail ? undefined : order,
-                    distanceM,
+                    distanceM: addressReveal.distanceAllowed(house.id) ? distanceM : undefined,
                   })}
                 />
               </div>

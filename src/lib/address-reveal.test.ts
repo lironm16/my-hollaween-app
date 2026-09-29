@@ -77,7 +77,8 @@ describe("address reveal", () => {
       isAdmin: false,
     });
     const label = formatDisplayAddressWithPolicy(stub(), "בית-1001", ctx);
-    assert.match(label, /12:00/u);
+    assert.match(label, /31 באוקטובר/u);
+    assert.doesNotMatch(label, /12:00/u);
     assert.doesNotMatch(label, /יהודית/u);
   });
 

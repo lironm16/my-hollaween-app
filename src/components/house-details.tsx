@@ -318,6 +318,8 @@ export function HouseDetails({
   const displayAddress = addressReveal.formatDisplayAddress(house);
   const arrivalText = addressReveal.visibleArrival(house);
   const showMaps = addressReveal.mapsAllowed(house.id);
+  const showDistance =
+    addressReveal.distanceAllowed(house.id) && distanceM !== undefined;
   const addedMeta = houseAddedMetaLine(house);
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
@@ -437,8 +439,8 @@ export function HouseDetails({
   const hoursDistance = (
     <>
       {hours ? <HoursLabel house={house} /> : null}
-      {hours && distanceM !== undefined ? metaSep : null}
-      {distanceM !== undefined ? formatDistance(distanceM) : null}
+      {hours && showDistance ? metaSep : null}
+      {showDistance ? formatDistance(distanceM!) : null}
     </>
   );
   const meta = (
@@ -446,12 +448,12 @@ export function HouseDetails({
       {photo || compact ? (
         <>
           {displayAddress ? <p className="break-words">{displayAddress}</p> : null}
-          {hours || distanceM !== undefined ? <p>{hoursDistance}</p> : null}
+          {hours || showDistance ? <p>{hoursDistance}</p> : null}
         </>
       ) : (
         <p className="break-words">
           {displayAddress}
-          {displayAddress && (hours || distanceM !== undefined) ? metaSep : null}
+          {displayAddress && (hours || showDistance) ? metaSep : null}
           {hoursDistance}
         </p>
       )}

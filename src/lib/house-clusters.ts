@@ -40,6 +40,13 @@ export function clusterAddressKey(address: string) {
   return normalizeAddress(address);
 }
 
+/** Map pin grouping — per-house when address is redacted (empty street text). */
+export function clusterAddressKeyForHouse(house: Pick<PublicHouse, "id" | "address">) {
+  const trimmed = house.address?.trim() ?? "";
+  if (!trimmed) return `id:${house.id}`;
+  return clusterAddressKey(trimmed);
+}
+
 function sortHouses(houses: PublicHouse[]) {
   return [...houses].sort((a, b) =>
     (a.arrival || a.name).localeCompare(b.arrival || b.name, "he"),
@@ -63,7 +70,7 @@ function clusterFromHouses(key: string, houses: PublicHouse[]): HouseCluster {
 export function clusterHousesByAddress(houses: PublicHouse[]): HouseCluster[] {
   const byKey = new Map<string, PublicHouse[]>();
   for (const house of houses) {
-    const key = clusterAddressKey(house.address);
+    const key = clusterAddressKeyForHouse(house);
     const list = byKey.get(key);
     if (list) list.push(house);
     else byKey.set(key, [house]);

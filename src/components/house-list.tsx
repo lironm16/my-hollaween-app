@@ -5,6 +5,7 @@ import { HouseCard } from "@/components/house-card";
 import { houseCardPropsFor, type HouseCardActionContext } from "@/components/house-card-actions";
 import { ListSelectCheck } from "@/components/list-select-check";
 import { Button } from "@/components/ui/button";
+import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { ListSortSelect } from "@/components/list-sort-select";
 import { LIST_SORT_EVENT, readListSort, sortHousesForList } from "@/lib/list-sort";
 import type { PublicHouse } from "@/lib/types";
@@ -46,6 +47,7 @@ export function HouseList({
   insetX?: "default" | "flush";
 }) {
   const focusRef = useRef<HTMLDivElement | null>(null);
+  const addressReveal = useAddressReveal();
   const sort = useSyncExternalStore(
     (onStoreChange) => {
       window.addEventListener(LIST_SORT_EVENT, onStoreChange);
@@ -165,7 +167,7 @@ export function HouseList({
             <HouseCard
               {...houseCardPropsFor(h, actionContext, {
                 index: i + 1,
-                distanceM: d,
+                distanceM: addressReveal.distanceAllowed(h.id) ? d : undefined,
               })}
             />
             {showPerCardRemove ? (

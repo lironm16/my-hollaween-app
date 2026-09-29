@@ -19,6 +19,7 @@ export function useAddressReveal(): AddressRevealContext & {
   formatDisplayAddress: (house: PublicHouse) => string;
   visibleArrival: (house: PublicHouse) => string;
   mapsAllowed: (houseId: string) => boolean;
+  distanceAllowed: (houseId: string) => boolean;
 } {
   const now = useAppNow();
   const { admin } = useAdminSession();
@@ -37,6 +38,7 @@ export function useAddressReveal(): AddressRevealContext & {
         formatDisplayAddressWithPolicy(house, house.id, ctx),
       visibleArrival: (house: PublicHouse) => visibleArrivalWithPolicy(house, house.id, ctx),
       mapsAllowed: (houseId: string) => mapsNavigationAllowed(houseId, ctx),
+      distanceAllowed: (houseId: string) => canViewHouseLocationDetails(houseId, ctx),
     }),
     [ctx],
   );

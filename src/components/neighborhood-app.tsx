@@ -164,6 +164,11 @@ export function NeighborhoodApp({
   const { admin } = useAdminSession();
   const now = useAppNow();
   const addressReveal = useAddressReveal();
+  const distanceLabel = useCallback(
+    (houseId: string, meters: number) =>
+      addressReveal.distanceAllowed(houseId) ? formatDistance(meters) : "",
+    [addressReveal],
+  );
   const {
     gemHuntVisible: gemFeatureOn,
     gemFabVisible: gemUi,
@@ -662,7 +667,10 @@ export function NeighborhoodApp({
       stop.houses.map((house, houseIndex) => ({
         house,
         order: stop.order,
-        hop: houseIndex > 0 ? "אותו בניין" : formatDistance(stop.fromPreviousMeters),
+        hop:
+          houseIndex > 0
+            ? "אותו בניין"
+            : distanceLabel(house.id, stop.fromPreviousMeters),
         skipped: false,
       })),
     );
@@ -686,10 +694,12 @@ export function NeighborhoodApp({
         items.push({
           house,
           order: 0,
-          hop: formatDistance(legM),
+          hop: distanceLabel(house.id, legM),
           skipped: flags.skipped,
           visitedTail: flags.visitedTail,
-          distanceM: distanceMeters(originPoint, point),
+          distanceM: addressReveal.distanceAllowed(house.id)
+            ? distanceMeters(originPoint, point)
+            : undefined,
         });
         tailCursor = point;
       }
@@ -713,6 +723,8 @@ export function NeighborhoodApp({
     visible,
     origin.lat,
     origin.lng,
+    addressReveal,
+    distanceLabel,
   ]);
 
   function applyRouteAfterSkipChange(

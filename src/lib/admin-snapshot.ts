@@ -1,3 +1,4 @@
+import { NEIGHBORHOODS, resolveNeighborhood, type NeighborhoodId } from "@/lib/config";
 import { isPoiHouse } from "@/lib/house-kind";
 import { houseMatchesSet, type HouseSet } from "@/lib/house-set";
 import { isOpeningSoon, isClosingSoon, isOnBreak, isOpenNow } from "@/lib/hours";
@@ -14,9 +15,28 @@ import type { House, PublicHouse, ScareLevel } from "@/lib/types";
 
 export type SnapshotHouse = House | PublicHouse;
 
+export type NeighborhoodDistribution = Record<NeighborhoodId, number> & { other: number };
+
+export function buildNeighborhoodDistribution(houses: SnapshotHouse[]): NeighborhoodDistribution {
+  const byNeighborhood = Object.fromEntries(
+    NEIGHBORHOODS.map((name) => [name, 0]),
+  ) as Record<NeighborhoodId, number>;
+  let other = 0;
+  for (const house of houses) {
+    const area = resolveNeighborhood(house);
+    if (area && (NEIGHBORHOODS as readonly string[]).includes(area)) {
+      byNeighborhood[area] += 1;
+    } else {
+      other += 1;
+    }
+  }
+  return { ...byNeighborhood, other };
+}
+
 export type AdminSnapshot = {
   houses: number;
   pois: number;
+  neighborhoods: NeighborhoodDistribution;
   openNow: number;
   openingSoon: number;
   closingSoon: number;
@@ -46,6 +66,7 @@ export type SnapshotStats = Pick<
   AdminSnapshot,
   | "houses"
   | "pois"
+  | "neighborhoods"
   | "openNow"
   | "openingSoon"
   | "closingSoon"
@@ -79,6 +100,7 @@ export function buildSnapshotStats(input: {
   const {
     houses,
     pois,
+    neighborhoods,
     openNow,
     openingSoon,
     closingSoon,
@@ -101,6 +123,7 @@ export function buildSnapshotStats(input: {
   return {
     houses,
     pois,
+    neighborhoods,
     openNow,
     openingSoon,
     closingSoon,
@@ -137,6 +160,7 @@ export function buildAdminSnapshot(input: {
   return {
     houses: listed.filter((house) => !isPoiHouse(house)).length,
     pois: listed.filter((house) => isPoiHouse(house)).length,
+    neighborhoods: buildNeighborhoodDistribution(listed),
     openNow: listed.filter((house) => isOpenNow(house, now)).length,
     openingSoon: listed.filter((house) => isOpeningSoon(house, now)).length,
     closingSoon: listed.filter((house) => isClosingSoon(house, now)).length,

@@ -92,4 +92,19 @@ describe("buildSnapshotStats", () => {
     assert.equal(stats.nutsFree, 1);
     assert.equal(stats.notDecorated, 1);
   });
+
+  it("counts houses per neighborhood and other", () => {
+    const stats = buildSnapshotStats({
+      houses: [
+        house("a", { address: "חרוזים 8", neighborhood: "חרוזים" }),
+        house("b", { address: "המרגנית 1", neighborhood: "שיכון ותיקים" }),
+        house("c", { address: "unknown", lat: 32.05, lng: 34.75 }),
+      ],
+      now: openEvening,
+    });
+
+    assert.equal(stats.neighborhoods.חרוזים, 1);
+    assert.equal(stats.neighborhoods["שיכון ותיקים"], 1);
+    assert.equal(stats.neighborhoods.other, 1);
+  });
 });

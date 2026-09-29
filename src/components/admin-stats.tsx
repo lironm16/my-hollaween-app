@@ -12,6 +12,7 @@ import { LikedSign, SkipSign } from "@/components/visit-marks";
 import { VisitedCheck } from "@/components/visited-check";
 import { scareShort, decorShort, treatLabels } from "@/lib/labels";
 import { cn } from "@/lib/utils";
+import { NEIGHBORHOODS } from "@/lib/config";
 import { buildSnapshotStats, type SnapshotStats } from "@/lib/admin-snapshot";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import { useCatalog } from "@/hooks/use-catalog";
@@ -126,6 +127,13 @@ export function AdminStatsCard({
             value={stats.pois}
             plain
           />
+        </div>
+        <Subhead>שכונות</Subhead>
+        <div className="grid grid-cols-2 gap-2">
+          {NEIGHBORHOODS.map((name) => (
+            <StatTile key={name} icon={<MapPinned className="size-5" />} label={name} value={stats.neighborhoods[name]} plain />
+          ))}
+          <StatTile icon={<MapPinned className="size-5" />} label="אחר" value={stats.neighborhoods.other} plain />
         </div>
         <Subhead>שעות</Subhead>
         <StatTile

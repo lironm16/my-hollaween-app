@@ -1,6 +1,7 @@
 import { config, formatDisplayAddress } from "@/lib/config";
 import {
   clusterAddressKey,
+  clusterAddressKeyForHouse,
   clusterHousesByAddress,
   type HouseCluster,
 } from "@/lib/house-clusters";
@@ -89,7 +90,7 @@ export function clusterHousesInOrder(houses: PublicHouse[]): HouseCluster[] {
   const indexByKey = new Map<string, number>();
   for (const house of houses) {
     if (!Number.isFinite(house.lat) || !Number.isFinite(house.lng)) continue;
-    const key = clusterAddressKey(house.address);
+    const key = clusterAddressKeyForHouse(house);
     const idx = indexByKey.get(key);
     if (idx !== undefined) {
       clusters[idx]!.houses.push(house);
@@ -151,7 +152,7 @@ export function refreshWalkingRoute(
   },
 ): WalkingRoute {
   const clusters: HouseCluster[] = route.stops.map((stop) => ({
-    key: clusterAddressKey(stop.house.address),
+    key: clusterAddressKeyForHouse(stop.house),
     address: stop.house.address,
     lat: stop.house.lat,
     lng: stop.house.lng,
