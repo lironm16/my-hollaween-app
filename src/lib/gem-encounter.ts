@@ -41,9 +41,9 @@ export function markEncounterTutorialSeen() {
   }
 }
 
+/** Hide footer chrome during resolve animations — not during active encounter (collect UI stays up). */
 export function encounterUiChromeHidden(phase: GemEncounterPhase): boolean {
   return (
-    phase === "encounter" ||
     phase === "resolve-hit" ||
     phase === "resolve-wiggle1" ||
     phase === "resolve-wiggle2" ||

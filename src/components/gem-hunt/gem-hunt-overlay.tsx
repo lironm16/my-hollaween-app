@@ -464,7 +464,6 @@ export function GemHuntOverlay({
       : null;
 
   function handleClose() {
-    if (encounterMode && encounterUiChromeHidden(encounterPhase)) return;
     if (phase === "collecting") return;
     if (phase === "albumReveal") {
       if (albumShowActions || albumRevealPhase === "landed") finishNewFriendClose();
@@ -537,12 +536,28 @@ export function GemHuntOverlay({
       liveLoc != null &&
       !sim;
 
+  const gemAtCenter = centerReveal || encounterForcesCenter;
+
   const canTapCollect =
     phase === "visible" &&
-    ((centerReveal && canCollectNow) ||
-      (!encounterMode && (pinCollectReady || (canCollectNow && sim))));
+    canCollectNow &&
+    ((centerReveal && !encounterMode) ||
+      (encounterMode && encounterPhase === "encounter" && gemAtCenter) ||
+      (!encounterMode && (pinCollectReady || sim)));
 
-  const gemAtCenter = centerReveal || encounterForcesCenter;
+  const offerEncounterCollect = useCallback(() => {
+    if (!canCollectNow || encounterPhase !== "encounter") return;
+    markEncounterTutorialSeen();
+    onTreatSuccess();
+  }, [canCollectNow, encounterPhase, onTreatSuccess]);
+
+  const handleGemInspectTap = useCallback(() => {
+    if (encounterMode && encounterPhase === "encounter" && canCollectNow) {
+      offerEncounterCollect();
+      return;
+    }
+    handleCollect();
+  }, [encounterMode, encounterPhase, canCollectNow, offerEncounterCollect, handleCollect]);
   const showHuntGem =
     gemVisible && (gemAtCenter || (!gemAtCenter && showWorldGemSprite));
 
@@ -555,8 +570,9 @@ export function GemHuntOverlay({
 
   const showEncounterFooter =
     encounterMode &&
-    encounterPhase === "approach" &&
+    (encounterPhase === "approach" || encounterPhase === "encounter") &&
     phase !== "collecting";
+  const showEncounterCollectFooter = showEncounterFooter && encounterPhase === "encounter";
   const showLegacyFooter =
     !encounterMode || showEncounterFooter;
   const hideFooterChrome =
@@ -587,15 +603,6 @@ export function GemHuntOverlay({
     <div
       className={cn("gem-hunt-overlay", platformMod, encounterMode && "is-encounter-mode")}
       dir="rtl"
-      onPointerDown={
-        encounterPhase === "encounter" && !centerReveal ? treatSwipe.onPointerDown : undefined
-      }
-      onPointerUp={
-        encounterPhase === "encounter" && !centerReveal ? treatSwipe.onPointerUp : undefined
-      }
-      onPointerCancel={
-        encounterPhase === "encounter" && !centerReveal ? treatSwipe.onPointerCancel : undefined
-      }
     >
       <video
         ref={videoRef}
@@ -721,7 +728,7 @@ export function GemHuntOverlay({
                 worldYawRad={gemAtCenter ? null : worldYawRad}
                 motion={gemMotion}
                 celebrateVariant={collectDanceIndex}
-                onInspectTap={canTapCollect ? handleCollect : undefined}
+                onInspectTap={canTapCollect ? handleGemInspectTap : undefined}
               />
             </div>
           </div>
@@ -729,10 +736,25 @@ export function GemHuntOverlay({
       </div>
       ) : null}
 
+      {encounterPhase === "encounter" && !centerReveal && phase !== "collecting" ? (
+        <div
+          className="gem-hunt-overlay__encounter-swipe-zone"
+          aria-hidden
+          onPointerDown={treatSwipe.onPointerDown}
+          onPointerUp={treatSwipe.onPointerUp}
+          onPointerCancel={treatSwipe.onPointerCancel}
+        />
+      ) : null}
+
       {showHuntUi && phase !== "collecting" && showLegacyFooter && !hideFooterChrome ? (
         <footer className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt" dir="rtl">
           <div className="gem-hunt-overlay__footer-stack">
             <div className="gem-hunt-overlay__footer-hint-slot">
+              {showEncounterCollectFooter ? (
+                <p className="gem-hunt-overlay__footer-hint" role="note">
+                  סובבו את החיה ביד — או החליקו פינוק למעלה / הקישו עליה כדי לאסוף
+                </p>
+              ) : null}
               {showNavCompassPrompt && !encounterMode ? (
                 <button
                   type="button"
@@ -766,43 +788,58 @@ export function GemHuntOverlay({
               ) : null}
             </div>
             <div className="gem-hunt-overlay__footer-controls">
-              <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
+              {showEncounterCollectFooter ? (
                 <button
                   type="button"
-                  className={cn(
-                    "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
-                    hintPanel === "nav" && "is-active",
-                  )}
-                  aria-pressed={hintPanel === "nav"}
+                  className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact gem-hunt-overlay__hint-btn--accent w-full"
+                  disabled={!canCollectNow}
                   onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => {
                     e.stopPropagation();
-                    void toggleHintPanel();
+                    offerEncounterCollect();
                   }}
                 >
-                  <span className="gem-hunt-overlay__hint-btn-label">
-                    <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
-                    <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
-                  </span>
+                  אספו את החבר
                 </button>
-                {!encounterMode || showEncounterFooter ? (
+              ) : (
+                <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
                   <button
                     type="button"
                     className={cn(
-                      "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
-                      centerReveal && "is-active",
+                      "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
+                      hintPanel === "nav" && "is-active",
                     )}
-                    aria-pressed={centerReveal}
+                    aria-pressed={hintPanel === "nav"}
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleRevealMe();
+                      void toggleHintPanel();
                     }}
                   >
-                    {centerReveal ? "הסתר" : "גלה לי"}
+                    <span className="gem-hunt-overlay__hint-btn-label">
+                      <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
+                      <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
+                    </span>
                   </button>
-                ) : null}
-              </div>
+                  {!encounterMode || showEncounterFooter ? (
+                    <button
+                      type="button"
+                      className={cn(
+                        "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
+                        centerReveal && "is-active",
+                      )}
+                      aria-pressed={centerReveal}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleRevealMe();
+                      }}
+                    >
+                      {centerReveal ? "הסתר" : "גלה לי"}
+                    </button>
+                  ) : null}
+                </div>
+              )}
             </div>
           </div>
         </footer>

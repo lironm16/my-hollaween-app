@@ -17,7 +17,6 @@ export function GemEncounterLayer({
   distanceM,
   inRange,
   repeatVisit,
-  showTutorial,
   hideApproachLine = false,
   onOfferTreatButton,
 }: {
@@ -26,7 +25,8 @@ export function GemEncounterLayer({
   distanceM: number | null;
   inRange: boolean;
   repeatVisit: boolean;
-  showTutorial: boolean;
+  /** @deprecated Tutorial copy lives in hunt footer during encounter. */
+  showTutorial?: boolean;
   /** Walk nav hint already shows distance + directions — skip duplicate approach pill. */
   hideApproachLine?: boolean;
   onOfferTreatButton?: () => void;
@@ -54,13 +54,7 @@ export function GemEncounterLayer({
 
   if (phase === "encounter") {
     return (
-      <div className="gem-encounter-layer gem-encounter-layer--encounter">
-        {showTutorial && !tutorialSeen ? (
-          <p className="gem-encounter-layer__tutorial" role="note">
-            החליקו פינוק כלפי מעלה לעבר החיה
-          </p>
-        ) : null}
-        <div className="gem-encounter-layer__gesture-zone" aria-hidden />
+      <div className="gem-encounter-layer gem-encounter-layer--encounter" aria-hidden>
         {onOfferTreatButton ? (
           <button
             type="button"

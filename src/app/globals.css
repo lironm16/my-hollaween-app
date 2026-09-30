@@ -4033,7 +4033,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   position: absolute;
   top: 0;
   inset-inline: 0;
-  z-index: 12;
+  z-index: 60;
+  pointer-events: none;
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
@@ -4181,13 +4182,24 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__close {
   position: relative;
-  z-index: 13;
+  z-index: 61;
   flex-shrink: 0;
   width: 3.35rem;
   height: 3.35rem;
   border: 2px solid rgb(251 191 36 / 0.65);
   background: rgb(42 22 56 / 0.92);
   box-shadow: 0 4px 18px rgb(0 0 0 / 0.45);
+  pointer-events: auto;
+}
+.gem-hunt-overlay__encounter-swipe-zone {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 7;
+  height: min(34vh, 14rem);
+  pointer-events: auto;
+  touch-action: pan-y;
 }
 .gem-hunt-overlay__close svg {
   width: 1.65rem;
@@ -6555,8 +6567,8 @@ html.hw-mobile-browser .gem-hunt-overlay--android .gem-hunt-overlay__footer--hun
   padding: max(0.65rem, env(safe-area-inset-top, 0px)) max(0.85rem, env(safe-area-inset-right, 0px)) 0.55rem
     max(0.85rem, env(safe-area-inset-left, 0px));
   background: rgb(8 4 16 / 0.78);
-  z-index: 4;
-  pointer-events: auto;
+  z-index: 60;
+  pointer-events: none;
 }
 .gem-hunt-webxr__bar--close-only {
   justify-content: flex-end;
@@ -6565,6 +6577,8 @@ html.hw-mobile-browser .gem-hunt-overlay--android .gem-hunt-overlay__footer--hun
 }
 .gem-hunt-webxr__bar--close-only .gem-hunt-webxr__close-btn {
   pointer-events: auto;
+  position: relative;
+  z-index: 61;
 }
 .gem-hunt-webxr__bar-text {
   min-width: 0;
@@ -6952,9 +6966,8 @@ html.hw-mobile-browser .gem-hunt-webxr--android .gem-hunt-webxr__footer {
   border: 1px solid rgb(251 191 36 / 0.35);
 }
 .gem-encounter-layer--encounter {
-  justify-content: space-between;
-  padding-top: max(4.5rem, env(safe-area-inset-top, 0px));
-  padding-bottom: max(5rem, calc(env(safe-area-inset-bottom, 0px) + 3.5rem));
+  justify-content: flex-end;
+  padding: 0;
   pointer-events: none;
 }
 .gem-encounter-layer__tutorial {
