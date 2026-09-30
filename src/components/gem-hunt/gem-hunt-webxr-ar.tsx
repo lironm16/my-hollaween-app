@@ -8,6 +8,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { ARButton } from "three/addons/webxr/ARButton.js";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
+import { useGemHuntLocation } from "@/hooks/use-gem-hunt-location";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import {
   GEM_COLLECT_OVERLAY_MS,
@@ -164,12 +165,15 @@ export function GemHuntWebXrAr({
   const effectiveLoc = simulateInRange
     ? { lat: house.lat, lng: house.lng, accuracy: 5 }
     : userLocation;
+  const huntGps = useGemHuntLocation(!simulateInRange);
+  const liveLoc = simulateInRange ? effectiveLoc : huntGps ?? userLocation;
   const distanceM =
-    effectiveLoc != null ? gemDistanceMeters(effectiveLoc, house) : null;
+    liveLoc != null ? gemDistanceMeters(liveLoc, house) : null;
   const inCollectBand =
     simulateInRange ||
-    (effectiveLoc != null && gemDistanceMeters(effectiveLoc, house) <= GEM_HUNT_METERS);
-  const canCollect = collectEnabled && inCollectBand && placed;
+    (liveLoc != null && gemDistanceMeters(liveLoc, house) <= GEM_HUNT_METERS);
+  const canCollectNow = collectEnabled || inCollectBand;
+  const canCollect = canCollectNow && inCollectBand && placed;
 
   const floatBias = hashFloat(house.id, "webxr-float");
   const useFloat = floatBias > 0.62;
@@ -231,11 +235,11 @@ export function GemHuntWebXrAr({
   }, [error, onFallbackCamera]);
 
   const turnBearing =
-    effectiveLoc != null ? relativeWalkBearingDeg(effectiveLoc, anchor, heading) : null;
+    liveLoc != null ? relativeWalkBearingDeg(liveLoc, anchor, heading) : null;
   const facingTarget =
     turnBearing != null && Math.abs(turnBearing) <= GEM_FACING_TOLERANCE_DEG;
   const gpsBearingToAnchor =
-    effectiveLoc != null ? bearingDegrees(effectiveLoc, anchor) : null;
+    liveLoc != null ? bearingDegrees(liveLoc, anchor) : null;
   const huntArrowPhoneRelative = heading != null && turnBearing != null;
   const huntArrowDeg = huntArrowPhoneRelative ? turnBearing : gpsBearingToAnchor;
   const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToAnchor != null;
@@ -246,8 +250,8 @@ export function GemHuntWebXrAr({
     gpsBearingToAnchor,
   );
   const mapsWalkUrl =
-    userLocation != null && !simulateInRange
-      ? googleMapsNavigateUrl(userLocation, { lat: anchor.lat, lng: anchor.lng })
+    liveLoc != null && !simulateInRange
+      ? googleMapsNavigateUrl(liveLoc, { lat: anchor.lat, lng: anchor.lng })
       : null;
   const revealBtnActive = placed ? arGemVisible : revealAssist;
   const revealBtnLabel = placed ? (arGemVisible ? "הסתר" : "גלה לי") : revealAssist ? "הסתר" : "גלה לי";
@@ -256,8 +260,7 @@ export function GemHuntWebXrAr({
     hintPanel === "nav" &&
     !revealBtnActive &&
     huntArrowDeg != null &&
-    effectiveLoc != null &&
-    userLocation != null &&
+    liveLoc != null &&
     !simulateInRange;
   const hideFooterChrome = encounterMode && encounterUiChromeHidden(encounterPhase);
   const showEncounterFooter =

@@ -1468,10 +1468,10 @@ export function NeighborhoodApp({
       {mapGemHouse ? (
         <GemHuntExperienceLazy
           house={mapGemHouse}
-          userLocation={mapGemGps ?? gps}
+          userLocation={gps ?? mapGemGps}
           deferCameraUntilInRange={false}
           collectEnabled={canCollectGem(
-            mapGemGps ?? gps,
+            gps ?? mapGemGps,
             mapGemHouse,
             gems.collected(mapGemHouse.id),
             true,

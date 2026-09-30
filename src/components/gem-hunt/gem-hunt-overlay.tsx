@@ -128,14 +128,6 @@ export function GemHuntOverlay({
     if (sim) return { lat: house.lat, lng: house.lng, accuracy: 5 };
     return userLocation;
   }, [sim, house.lat, house.lng, userLocation]);
-  const distanceM =
-    effectiveLoc != null && !sim ? gemDistanceMeters(effectiveLoc, house) : null;
-  const inDistanceBand =
-    effectiveLoc != null &&
-    !sim &&
-    gemDistanceMeters(effectiveLoc, house) <= GEM_HUNT_METERS;
-  /** Scan/pan/facing reveal when in range (or admin simulate). */
-  const allowAutoReveal = collectEnabled || sim || inDistanceBand;
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -178,6 +170,22 @@ export function GemHuntOverlay({
     (effectiveLoc
       ? { lat: effectiveLoc.lat, lng: effectiveLoc.lng, accuracy: effectiveLoc.accuracy ?? 12 }
       : null);
+
+  /** Live GPS for distance, hints, and in-range — not the snapshot from hunt open. */
+  const liveLoc = useMemo(() => {
+    if (sim) return effectiveLoc;
+    return walkViewer ?? effectiveLoc;
+  }, [sim, walkViewer, effectiveLoc]);
+
+  const distanceM =
+    liveLoc != null && !sim ? gemDistanceMeters(liveLoc, house) : null;
+  const inDistanceBand =
+    liveLoc != null &&
+    !sim &&
+    gemDistanceMeters(liveLoc, house) <= GEM_HUNT_METERS;
+  const canCollectNow = collectEnabled || sim || inDistanceBand;
+  /** Scan/pan/facing reveal when in range (or admin simulate). */
+  const allowAutoReveal = canCollectNow;
 
   /** Freshest GPS for AR pin — keeps the gem on the sidewalk anchor, not on the user. */
   const placementLoc = walkViewer ?? effectiveLoc;
@@ -280,7 +288,7 @@ export function GemHuntOverlay({
   useEffect(() => {
     if (phase !== "scanning" || revealedRef.current) return;
 
-    const locEarly = effectiveLoc;
+    const locEarly = liveLoc;
     const facingClose =
       locEarly != null &&
       heading != null &&
@@ -302,7 +310,7 @@ export function GemHuntOverlay({
 
     if (!allowAutoReveal) return;
 
-    const loc = effectiveLoc;
+    const loc = liveLoc;
     const facing =
       loc != null &&
       heading != null &&
@@ -326,15 +334,15 @@ export function GemHuntOverlay({
     ) {
       reveal();
     }
-  }, [anchor, effectiveLoc, heading, house, phase, reveal, sim, allowAutoReveal]);
+  }, [anchor, liveLoc, heading, house, phase, reveal, sim, allowAutoReveal, distanceM]);
 
   const handleCollect = useCallback(() => {
     if (phase !== "visible") return;
-    const viaTellMe = centerReveal && collectEnabled;
+    const viaTellMe = centerReveal && canCollectNow;
     const viaPinned =
-      !centerReveal && collectEnabled && Boolean(pinPlacement?.inView);
+      !centerReveal && canCollectNow && Boolean(pinPlacement?.inView);
     /** Swipe-treat collect — not tap on «גלה לי» center mode. */
-    const viaEncounterSwipe = encounterMode && collectEnabled && !centerReveal;
+    const viaEncounterSwipe = encounterMode && canCollectNow && !centerReveal;
     if (!viaTellMe && !viaPinned && !viaEncounterSwipe) return;
     setPhase("collecting");
     setHint("found");
@@ -363,7 +371,7 @@ export function GemHuntOverlay({
     }, overlayMs);
   }, [
     centerReveal,
-    collectEnabled,
+    canCollectNow,
     encounterMode,
     monsterId,
     phase,
@@ -377,7 +385,7 @@ export function GemHuntOverlay({
   }, [onClose]);
 
   const petRevealedForEncounter = phase === "visible" || phase === "collecting";
-  const inRangeForEncounter = inDistanceBand || sim || collectEnabled;
+  const inRangeForEncounter = canCollectNow;
 
   const {
     encounterPhase,
@@ -387,7 +395,7 @@ export function GemHuntOverlay({
   } = useGemEncounterPhase({
     enabled: encounterMode,
     repeatVisit,
-    collectEnabled,
+    collectEnabled: canCollectNow,
     petRevealed: petRevealedForEncounter,
     inRange: inRangeForEncounter,
     onEncounterCollect: handleCollect,
@@ -467,36 +475,35 @@ export function GemHuntOverlay({
   }
 
   const turnBearing =
-    effectiveLoc != null ? relativeWalkBearingDeg(effectiveLoc, anchor, heading) : null;
+    liveLoc != null ? relativeWalkBearingDeg(liveLoc, anchor, heading) : null;
   const facingTarget =
     turnBearing != null && Math.abs(turnBearing) <= GEM_FACING_TOLERANCE_DEG;
   /** Real hunt: compass-pinned gem when not in «גלה לי» center mode. */
   const arPinGuideMode = gemVisible && !centerReveal;
   const pinCollectReady =
-    arPinGuideMode && collectEnabled && Boolean(pinPlacement?.inView);
+    arPinGuideMode && canCollectNow && Boolean(pinPlacement?.inView);
   /** Show centered gem after reveal even before «stand still» — tap only when collectEnabled. */
   /** Show when the shared anchor bearing is inside the camera cone — not gated on 25 m. */
   const showWorldGemSprite = Boolean(pinPlacement?.inView);
   const worldLockRevealed =
     arPinGuideMode && showWorldGemSprite && (phase === "visible" || phase === "collecting");
   const isFarForHints =
-    !collectEnabled &&
+    !canCollectNow &&
     !sim &&
-    effectiveLoc != null &&
-    userLocation != null &&
+    liveLoc != null &&
     distanceM != null &&
     distanceM > GEM_HUNT_METERS &&
     phase !== "collecting" &&
     !centerReveal;
   const gpsBearingToAnchor =
-    effectiveLoc != null ? bearingDegrees(effectiveLoc, anchor) : null;
+    liveLoc != null ? bearingDegrees(liveLoc, anchor) : null;
   /** Glowing Navigation arrow — phone-relative when compass works, else map-north bearing. */
   const huntArrowPhoneRelative = heading != null && turnBearing != null;
   const huntArrowDeg = huntArrowPhoneRelative ? turnBearing : gpsBearingToAnchor;
   const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToAnchor != null;
   const mapsWalkUrl =
-    userLocation != null && !sim
-      ? googleMapsNavigateUrl(userLocation, { lat: anchor.lat, lng: anchor.lng })
+    liveLoc != null && !sim
+      ? googleMapsNavigateUrl(liveLoc, { lat: anchor.lat, lng: anchor.lng })
       : null;
   const walkGuideCopy = gemWalkGuideCopy(
     huntArrowPhoneRelative,
@@ -522,21 +529,18 @@ export function GemHuntOverlay({
       hintPanel === "nav" &&
       !centerReveal &&
       huntArrowDeg != null &&
-      effectiveLoc != null &&
-      userLocation != null &&
+      liveLoc != null &&
       !sim
     : hintPanel === "nav" &&
       !centerReveal &&
       huntArrowDeg != null &&
-      effectiveLoc != null &&
-      userLocation != null &&
+      liveLoc != null &&
       !sim;
 
   const canTapCollect =
     phase === "visible" &&
-    ((centerReveal && collectEnabled) ||
-      (!encounterMode &&
-        (pinCollectReady || (collectEnabled && sim))));
+    ((centerReveal && canCollectNow) ||
+      (!encounterMode && (pinCollectReady || (canCollectNow && sim))));
 
   const gemAtCenter = centerReveal || encounterForcesCenter;
   const showHuntGem =
@@ -637,7 +641,7 @@ export function GemHuntOverlay({
           hideApproachLine={hintPanel === "nav" || centerReveal}
           showTutorial={encounterPhase === "encounter"}
           onOfferTreatButton={
-            encounterPhase === "encounter" && collectEnabled
+            encounterPhase === "encounter" && canCollectNow
               ? () => {
                   markEncounterTutorialSeen();
                   onTreatSuccess();
@@ -690,7 +694,7 @@ export function GemHuntOverlay({
               !gemAtCenter && worldLockRevealed && pinPlacement && !pinPlacement.inView && "is-off-screen",
               phase === "collecting" && "is-collecting",
               !gemAtCenter && pinCollectReady && "is-collect-ready-gem",
-              !collectEnabled && phase === "visible" && "is-awaiting-still",
+              !canCollectNow && phase === "visible" && "is-awaiting-still",
             )}
             style={
               gemAtCenter || !pinDisplay
