@@ -540,9 +540,7 @@ export function GemHuntOverlay({
 
   const gemAtCenter = centerReveal || encounterForcesCenter;
   const showHuntGem =
-    gemVisible &&
-    !(encounterMode && encounterPhase === "transition") &&
-    (gemAtCenter || (!gemAtCenter && showWorldGemSprite));
+    gemVisible && (gemAtCenter || (!gemAtCenter && showWorldGemSprite));
 
   const gemEncounterWiggle =
     encounterPhase === "resolve-wiggle1" || encounterPhase === "resolve-wiggle2";
@@ -729,17 +727,40 @@ export function GemHuntOverlay({
 
       {showHuntUi && phase !== "collecting" && showLegacyFooter && !hideFooterChrome ? (
         <footer className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt" dir="rtl">
-          {showNavCompassPrompt && !encounterMode ? (
-            <button
-              type="button"
-              className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact w-full"
-              onClick={() => void retryCompassPermission()}
-            >
-              אפשרו כיוון (Safari) — לחץ כדי שהחץ יזוז
-            </button>
-          ) : null}
-
           <div className="gem-hunt-overlay__footer-stack">
+            <div className="gem-hunt-overlay__footer-hint-slot">
+              {showNavCompassPrompt && !encounterMode ? (
+                <button
+                  type="button"
+                  className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact w-full"
+                  onClick={() => void retryCompassPermission()}
+                >
+                  אפשרו כיוון (Safari) — לחץ כדי שהחץ יזוז
+                </button>
+              ) : null}
+              {hintPanel === "nav" ? (
+                <div
+                  className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
+                  role="region"
+                  aria-label="הנחיות הליכה ליהלום"
+                >
+                  <p className="gem-hunt-overlay__walk-text">
+                    {walkGuideCopy}
+                    {distanceM != null ? ` · ${formatDistance(distanceM)}` : null}
+                  </p>
+                  {mapsWalkUrl ? (
+                    <a
+                      href={mapsWalkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="gem-hunt-overlay__walk-maps"
+                    >
+                      הליכה ב-Google Maps ליהלום
+                    </a>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
             <div className="gem-hunt-overlay__footer-controls">
               <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
                 <button
@@ -779,29 +800,6 @@ export function GemHuntOverlay({
                 ) : null}
               </div>
             </div>
-
-            {hintPanel === "nav" ? (
-              <div
-                className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
-                role="region"
-                aria-label="הנחיות הליכה ליהלום"
-              >
-                <p className="gem-hunt-overlay__walk-text">
-                  {walkGuideCopy}
-                  {distanceM != null ? ` · ${formatDistance(distanceM)}` : null}
-                </p>
-                {mapsWalkUrl ? (
-                  <a
-                    href={mapsWalkUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="gem-hunt-overlay__walk-maps"
-                  >
-                    הליכה ב-Google Maps ליהלום
-                  </a>
-                ) : null}
-              </div>
-            ) : null}
           </div>
         </footer>
       ) : null}

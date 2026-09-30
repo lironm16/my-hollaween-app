@@ -8,7 +8,6 @@ import {
   GEM_ENCOUNTER_CELEBRATE_MS,
   GEM_ENCOUNTER_HIT_MS,
   GEM_ENCOUNTER_REPEAT_REWARD_MS,
-  GEM_ENCOUNTER_TRANSITION_MS,
   GEM_ENCOUNTER_WIGGLE1_MS,
   GEM_ENCOUNTER_WIGGLE2_MS,
   type GemEncounterPhase,
@@ -34,7 +33,7 @@ export function useGemEncounterPhase({
   onEncounterCollect,
   onRepeatRewardDone,
 }: Args) {
-  const [phase, setPhase] = useState<GemEncounterPhase>(enabled ? "transition" : "encounter");
+  const [phase, setPhase] = useState<GemEncounterPhase>(enabled ? "approach" : "encounter");
   const approachEnteredRef = useRef<number | null>(null);
   const breakoutUsedRef = useRef(0);
   const timerRef = useRef<number | null>(null);
@@ -48,15 +47,10 @@ export function useGemEncounterPhase({
 
   useEffect(() => {
     if (!enabled) return;
-    setPhase("transition");
-    approachEnteredRef.current = null;
+    setPhase("approach");
+    approachEnteredRef.current = Date.now();
     breakoutUsedRef.current = 0;
     clearTimer();
-    timerRef.current = window.setTimeout(() => {
-      timerRef.current = null;
-      setPhase("approach");
-      approachEnteredRef.current = Date.now();
-    }, GEM_ENCOUNTER_TRANSITION_MS);
     return clearTimer;
   }, [enabled, clearTimer]);
 

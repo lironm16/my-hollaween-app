@@ -1,8 +1,6 @@
 "use client";
 
-import Image from "next/image";
 import { gemLabelHe, gemMonsterForHouse } from "@/lib/gem-hunt";
-import { gemMonsterMeta } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 import { formatDistance } from "@/lib/geo";
 import {
@@ -34,32 +32,11 @@ export function GemEncounterLayer({
   onOfferTreatButton?: () => void;
 }) {
   const monsterId = gemMonsterForHouse(house);
-  const meta = gemMonsterMeta(monsterId);
   const [tutorialSeen, setTutorialSeen] = useState(true);
 
   useEffect(() => {
     setTutorialSeen(readEncounterTutorialSeen());
   }, []);
-
-  if (phase === "transition") {
-    return (
-      <div className="gem-encounter-layer gem-encounter-layer--transition" role="status">
-        <div className="gem-encounter-layer__transition-card">
-          <Image
-            src={meta.posterPath}
-            alt=""
-            width={96}
-            height={96}
-            className="gem-encounter-layer__silhouette"
-          />
-          <p className="gem-encounter-layer__transition-title">
-            {repeatVisit ? "מפגש שוב" : "מפגש חדש"}
-          </p>
-          <p className="gem-encounter-layer__transition-sub">מחפשים את {gemLabelHe(monsterId)}…</p>
-        </div>
-      </div>
-    );
-  }
 
   if (phase === "approach" && !hideApproachLine) {
     return (

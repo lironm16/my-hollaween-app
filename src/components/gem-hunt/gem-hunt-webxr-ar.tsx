@@ -37,6 +37,7 @@ import {
   markEncounterTutorialSeen,
 } from "@/lib/gem-encounter";
 import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
+import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-list-suspend";
 import { cn } from "@/lib/utils";
 
 type HuntPhase = "boot" | "placing" | "placed" | "collecting";
@@ -130,6 +131,17 @@ export function GemHuntWebXrAr({
     if (isAndroidLike()) setPlatformMod("gem-hunt-webxr--android");
     else if (isIosLike()) setPlatformMod("gem-hunt-webxr--ios");
   }, []);
+
+  useEffect(() => {
+    beginMapListOverlayCapture();
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+      endMapListOverlayCapture();
+    };
+  }, []);
+
   const { heading } = useDeviceHeading(true, compassRetry);
   const placeAssistRef = useRef({ forceOnce: false, fast: false });
 
@@ -653,6 +665,30 @@ export function GemHuntWebXrAr({
           </p>
         ) : (
           <div className="gem-hunt-overlay__footer-stack">
+            <div className="gem-hunt-overlay__footer-hint-slot">
+              {showSessionFooter && hintPanel === "nav" ? (
+                <div
+                  className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
+                  role="region"
+                  aria-label="הנחיות הליכה ליהלום"
+                >
+                  <p className="gem-hunt-overlay__walk-text">
+                    {walkGuideCopy}
+                    {distanceM != null ? ` · ${formatDistance(distanceM)}` : null}
+                  </p>
+                  {mapsWalkUrl ? (
+                    <a
+                      href={mapsWalkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="gem-hunt-overlay__walk-maps"
+                    >
+                      הליכה ב-Google Maps ליהלום
+                    </a>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
             <div
               ref={startBtnHostRef}
               className={cn(
@@ -703,29 +739,6 @@ export function GemHuntWebXrAr({
                   <p className="gem-hunt-webxr__collect-hint" role="status">
                     הקישו על החיה במרחב כדי לאסוף
                   </p>
-                ) : null}
-              </div>
-            ) : null}
-
-            {showSessionFooter && hintPanel === "nav" ? (
-              <div
-                className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
-                role="region"
-                aria-label="הנחיות הליכה ליהלום"
-              >
-                <p className="gem-hunt-overlay__walk-text">
-                  {walkGuideCopy}
-                  {distanceM != null ? ` · ${formatDistance(distanceM)}` : null}
-                </p>
-                {mapsWalkUrl ? (
-                  <a
-                    href={mapsWalkUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="gem-hunt-overlay__walk-maps"
-                  >
-                    הליכה ב-Google Maps ליהלום
-                  </a>
                 ) : null}
               </div>
             ) : null}
