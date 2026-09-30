@@ -333,8 +333,9 @@ export function GemHuntOverlay({
     const viaTellMe = centerReveal && collectEnabled;
     const viaPinned =
       !centerReveal && collectEnabled && Boolean(pinPlacement?.inView);
-    const viaEncounter = encounterMode && collectEnabled;
-    if (!viaEncounter && !viaTellMe && !viaPinned) return;
+    /** Swipe-treat collect — not tap on «גלה לי» center mode. */
+    const viaEncounterSwipe = encounterMode && collectEnabled && !centerReveal;
+    if (!viaTellMe && !viaPinned && !viaEncounterSwipe) return;
     setPhase("collecting");
     setHint("found");
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -380,6 +381,7 @@ export function GemHuntOverlay({
 
   const {
     encounterPhase,
+    setEncounterPhase,
     onTreatSuccess,
     onTreatMiss,
   } = useGemEncounterPhase({
@@ -404,6 +406,12 @@ export function GemHuntOverlay({
     if (!encounterMode || encounterPhase !== "encounter") return;
     reveal();
   }, [encounterMode, encounterPhase, reveal]);
+
+  /** «גלה לי» during approach: enable swipe-treat fallback and tap-collect (skip approach wait). */
+  useEffect(() => {
+    if (!encounterMode || !centerReveal || encounterPhase !== "approach") return;
+    setEncounterPhase("encounter");
+  }, [encounterMode, centerReveal, encounterPhase, setEncounterPhase]);
 
   useEffect(() => {
     if (phase !== "albumReveal") return;
@@ -525,9 +533,10 @@ export function GemHuntOverlay({
       !sim;
 
   const canTapCollect =
-    !encounterMode &&
     phase === "visible" &&
-    (pinCollectReady || (centerReveal && collectEnabled) || (collectEnabled && sim));
+    ((centerReveal && collectEnabled) ||
+      (!encounterMode &&
+        (pinCollectReady || (collectEnabled && sim))));
 
   const gemAtCenter = centerReveal || encounterForcesCenter;
   const showHuntGem =
@@ -576,9 +585,15 @@ export function GemHuntOverlay({
     <div
       className={cn("gem-hunt-overlay", platformMod, encounterMode && "is-encounter-mode")}
       dir="rtl"
-      onPointerDown={encounterPhase === "encounter" ? treatSwipe.onPointerDown : undefined}
-      onPointerUp={encounterPhase === "encounter" ? treatSwipe.onPointerUp : undefined}
-      onPointerCancel={encounterPhase === "encounter" ? treatSwipe.onPointerCancel : undefined}
+      onPointerDown={
+        encounterPhase === "encounter" && !centerReveal ? treatSwipe.onPointerDown : undefined
+      }
+      onPointerUp={
+        encounterPhase === "encounter" && !centerReveal ? treatSwipe.onPointerUp : undefined
+      }
+      onPointerCancel={
+        encounterPhase === "encounter" && !centerReveal ? treatSwipe.onPointerCancel : undefined
+      }
     >
       <video
         ref={videoRef}
@@ -621,7 +636,7 @@ export function GemHuntOverlay({
           distanceM={distanceM}
           inRange={inRangeForEncounter}
           repeatVisit={repeatVisit}
-          hideApproachLine={hintPanel === "nav"}
+          hideApproachLine={hintPanel === "nav" || centerReveal}
           showTutorial={encounterPhase === "encounter"}
           onOfferTreatButton={
             encounterPhase === "encounter" && collectEnabled
