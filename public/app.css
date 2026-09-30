@@ -8871,6 +8871,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__stage.is-gem-interactive {
   z-index: 9;
 }
+.gem-hunt-overlay__stage.is-gem-interactive .gem-hunt-overlay__gem-hit.is-inspect360 {
+  z-index: 22;
+}
 .gem-hunt-overlay__video {
   position: absolute;
   inset: 0;
@@ -9043,13 +9046,30 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__close {
   position: relative;
-  z-index: 13;
+  z-index: 61;
   flex-shrink: 0;
   width: 3.35rem;
   height: 3.35rem;
   border: 2px solid rgb(251 191 36 / 0.65);
   background: rgb(42 22 56 / 0.92);
   box-shadow: 0 4px 18px rgb(0 0 0 / 0.45);
+  pointer-events: auto;
+}
+.gem-hunt-overlay__encounter-swipe-zone {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  height: min(16vh, 6.5rem);
+  pointer-events: auto;
+  touch-action: pan-y;
+}
+.gem-hunt-overlay__footer-hint--plain {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: rgb(196 181 253 / 0.92);
+  text-shadow: none;
 }
 .gem-hunt-overlay__close svg {
   width: 1.65rem;
@@ -9549,7 +9569,7 @@ html.hw-mobile-browser .gem-hunt-overlay--android .gem-hunt-overlay__footer--hun
   transform: translate(-50%, -50%) scale(0.68);
   pointer-events: none;
 }
-.gem-hunt-overlay__gem-hit.is-center-collect {
+.gem-hunt-overlay__gem-hit.is-center-collect:not(.is-inspect360) {
   left: 50%;
   right: auto;
   top: 38%;
@@ -11898,9 +11918,14 @@ html.hw-mobile-browser .gem-hunt-webxr--android .gem-hunt-webxr__footer {
 }
 .gem-hunt-overlay__gem-hit.is-inspect360.is-ring-center,
 .gem-hunt-overlay__gem-hit.is-inspect360.is-center-collect {
-  left: 50%;
+  left: 0;
+  right: 0;
   top: 36%;
-  transform: translate(-50%, -50%);
+  width: min(72vw, 19rem);
+  max-width: min(72vw, 19rem);
+  margin-inline: auto;
+  transform: translateY(-50%);
+  direction: ltr;
 }
 .gem-hunt-overlay__tap-collect-caption {
   position: absolute;
@@ -12057,9 +12082,8 @@ html.hw-mobile-browser .gem-hunt-webxr--android .gem-hunt-webxr__footer {
   border: 1px solid rgb(251 191 36 / 0.35);
 }
 .gem-encounter-layer--encounter {
-  justify-content: space-between;
-  padding-top: max(4.5rem, env(safe-area-inset-top, 0px));
-  padding-bottom: max(5rem, calc(env(safe-area-inset-bottom, 0px) + 3.5rem));
+  justify-content: flex-end;
+  padding: 0;
   pointer-events: none;
 }
 .gem-encounter-layer__tutorial {

@@ -684,8 +684,8 @@ export function GemHuntWebXrAr({
           <div className="gem-hunt-overlay__footer-stack">
             <div className="gem-hunt-overlay__footer-hint-slot">
               {showEncounterCollectFooter ? (
-                <p className="gem-hunt-overlay__footer-hint" role="note">
-                  החליקו פינוק למעלה לעבר החיה, או הקישו «אספו את החבר»
+                <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
+                  אפשר לסובב את החיה. לאיסוף — הקישו עליה או החליקו פינוק למעלה.
                 </p>
               ) : null}
               {showSessionFooter && hintPanel === "nav" ? (
@@ -731,7 +731,12 @@ export function GemHuntWebXrAr({
                       offerEncounterCollect();
                     }}
                   >
-                    אספו את החבר
+                    <span className="gem-hunt-overlay__hint-btn-label">
+                      <span className="gem-hunt-overlay__hint-btn-title">אספו את החבר</span>
+                      <span className="gem-hunt-overlay__hint-btn-sub gem-hunt-overlay__hint-btn-sub--muted">
+                        הקישו על החיה במרחב
+                      </span>
+                    </span>
                   </button>
                 ) : (
                   <>

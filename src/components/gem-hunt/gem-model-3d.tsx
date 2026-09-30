@@ -127,15 +127,19 @@ export function GemModel3D({
       const onMove = (event: PointerEvent) => {
         const dx = event.clientX - startX;
         const dy = event.clientY - startY;
-        if (dx * dx + dy * dy > 196) moved = true;
+        if (dx * dx + dy * dy > 576) moved = true;
       };
-      const onUp = () => {
-        if (!moved) onInspectTapRef.current?.();
+      const onUp = (event: PointerEvent) => {
+        if (!moved) {
+          event.preventDefault();
+          event.stopPropagation();
+          onInspectTapRef.current?.();
+        }
       };
       canvas.addEventListener("pointerdown", onDown);
       canvas.addEventListener("pointermove", onMove);
-      canvas.addEventListener("pointerup", onUp);
-      canvas.addEventListener("pointercancel", onUp);
+      canvas.addEventListener("pointerup", onUp as EventListener);
+      canvas.addEventListener("pointercancel", onUp as EventListener);
       detachTap = () => {
         canvas.removeEventListener("pointerdown", onDown);
         canvas.removeEventListener("pointermove", onMove);

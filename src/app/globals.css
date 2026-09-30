@@ -4009,6 +4009,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__stage.is-gem-interactive {
   z-index: 9;
 }
+.gem-hunt-overlay__stage.is-gem-interactive .gem-hunt-overlay__gem-hit.is-inspect360 {
+  z-index: 22;
+}
 .gem-hunt-overlay__video {
   position: absolute;
   inset: 0;
@@ -4196,10 +4199,16 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 7;
-  height: min(34vh, 14rem);
+  z-index: 4;
+  height: min(16vh, 6.5rem);
   pointer-events: auto;
   touch-action: pan-y;
+}
+.gem-hunt-overlay__footer-hint--plain {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: rgb(196 181 253 / 0.92);
+  text-shadow: none;
 }
 .gem-hunt-overlay__close svg {
   width: 1.65rem;
@@ -4703,7 +4712,7 @@ html.hw-mobile-browser .gem-hunt-overlay--android .gem-hunt-overlay__footer--hun
   transform: translate(-50%, -50%) scale(0.68);
   pointer-events: none;
 }
-.gem-hunt-overlay__gem-hit.is-center-collect {
+.gem-hunt-overlay__gem-hit.is-center-collect:not(.is-inspect360) {
   left: 50%;
   right: auto;
   top: 38%;
@@ -5100,6 +5109,10 @@ html.hw-mobile-browser .gem-hunt-overlay--android .gem-hunt-overlay__footer--hun
   font-size: 0.7rem;
   font-weight: 700;
   color: rgb(196 181 253 / 0.95);
+}
+.gem-hunt-overlay__hint-btn-sub--muted {
+  font-weight: 500;
+  color: rgb(196 181 253 / 0.78);
 }
 .gem-hunt-overlay__hint-btn--compact {
   white-space: normal;
@@ -6805,9 +6818,14 @@ html.hw-mobile-browser .gem-hunt-webxr--android .gem-hunt-webxr__footer {
 }
 .gem-hunt-overlay__gem-hit.is-inspect360.is-ring-center,
 .gem-hunt-overlay__gem-hit.is-inspect360.is-center-collect {
-  left: 50%;
+  left: 0;
+  right: 0;
   top: 36%;
-  transform: translate(-50%, -50%);
+  width: min(72vw, 19rem);
+  max-width: min(72vw, 19rem);
+  margin-inline: auto;
+  transform: translateY(-50%);
+  direction: ltr;
 }
 .gem-hunt-overlay__tap-collect-caption {
   position: absolute;

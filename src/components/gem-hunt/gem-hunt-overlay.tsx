@@ -139,6 +139,7 @@ export function GemHuntOverlay({
   const [hintPanel, setHintPanel] = useState<null | "nav">(null);
   /** User chose «גלה לי» — centered gem on the camera (not orbit hint box). */
   const [centerReveal, setCenterReveal] = useState(false);
+  const gemTapStartRef = useRef<{ x: number; y: number } | null>(null);
   const scanStartRef = useRef(Date.now());
   const panTotalRef = useRef(0);
   const lastHeadingRef = useRef<number | null>(null);
@@ -558,6 +559,7 @@ export function GemHuntOverlay({
     }
     handleCollect();
   }, [encounterMode, encounterPhase, canCollectNow, offerEncounterCollect, handleCollect]);
+
   const showHuntGem =
     gemVisible && (gemAtCenter || (!gemAtCenter && showWorldGemSprite));
 
@@ -702,6 +704,7 @@ export function GemHuntOverlay({
               phase === "collecting" && "is-collecting",
               !gemAtCenter && pinCollectReady && "is-collect-ready-gem",
               !canCollectNow && phase === "visible" && "is-awaiting-still",
+              canTapCollect && "is-tap-collect-ready",
             )}
             style={
               gemAtCenter || !pinDisplay
@@ -719,6 +722,23 @@ export function GemHuntOverlay({
                 gemEncounterWiggle && "is-encounter-wiggle",
               )}
               data-collect-dance={collectDanceIndex}
+              onPointerDown={(e) => {
+                if (e.button !== 0) return;
+                gemTapStartRef.current = { x: e.clientX, y: e.clientY };
+              }}
+              onPointerUp={(e) => {
+                if (!canTapCollect || e.button !== 0) return;
+                const start = gemTapStartRef.current;
+                gemTapStartRef.current = null;
+                if (!start) return;
+                const dx = e.clientX - start.x;
+                const dy = e.clientY - start.y;
+                if (dx * dx + dy * dy > 576) return;
+                handleGemInspectTap();
+              }}
+              onPointerCancel={() => {
+                gemTapStartRef.current = null;
+              }}
             >
               <GemSprite
                 house={house}
@@ -728,7 +748,7 @@ export function GemHuntOverlay({
                 worldYawRad={gemAtCenter ? null : worldYawRad}
                 motion={gemMotion}
                 celebrateVariant={collectDanceIndex}
-                onInspectTap={canTapCollect ? handleGemInspectTap : undefined}
+                onInspectTap={undefined}
               />
             </div>
           </div>
@@ -751,8 +771,8 @@ export function GemHuntOverlay({
           <div className="gem-hunt-overlay__footer-stack">
             <div className="gem-hunt-overlay__footer-hint-slot">
               {showEncounterCollectFooter ? (
-                <p className="gem-hunt-overlay__footer-hint" role="note">
-                  סובבו את החיה ביד — או החליקו פינוק למעלה / הקישו עליה כדי לאסוף
+                <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
+                  אפשר לסובב את החיה. לאיסוף — הקישו עליה או החליקו פינוק למעלה מהמסך.
                 </p>
               ) : null}
               {showNavCompassPrompt && !encounterMode ? (
@@ -799,7 +819,12 @@ export function GemHuntOverlay({
                     offerEncounterCollect();
                   }}
                 >
-                  אספו את החבר
+                  <span className="gem-hunt-overlay__hint-btn-label">
+                    <span className="gem-hunt-overlay__hint-btn-title">אספו את החבר</span>
+                    <span className="gem-hunt-overlay__hint-btn-sub gem-hunt-overlay__hint-btn-sub--muted">
+                      הקישו על החיה למטה
+                    </span>
+                  </span>
                 </button>
               ) : (
                 <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
