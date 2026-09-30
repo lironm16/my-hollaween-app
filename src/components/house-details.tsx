@@ -492,6 +492,7 @@ export function HouseDetails({
           <p
             className={cn(
               "min-w-0 flex-1 font-display text-xl text-orange-300 break-words",
+              sheet && "line-clamp-2 [overflow-wrap:anywhere]",
             )}
           >
             <HouseTitleMarkers liked={liked} gemCollected={gemCollected} />

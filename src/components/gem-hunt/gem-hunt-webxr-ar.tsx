@@ -623,6 +623,7 @@ export function GemHuntWebXrAr({
         platformMod === "gem-hunt-webxr--ios" && "gem-hunt-overlay--ios",
         encounterMode && "is-encounter-mode",
         phase === "collecting" && "is-collecting",
+        sessionActive && "is-session-active",
       )}
       dir="rtl"
     >

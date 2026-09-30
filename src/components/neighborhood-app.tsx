@@ -383,7 +383,7 @@ export function NeighborhoodApp({
       const freshGps = (await geo.refresh()) ?? gps;
       setMapGemGps(freshGps);
       await prepareGemHuntSensors({
-        requestCamera: !xrSession,
+        requestCamera: false,
         requestOrientation: !isGemHuntOrientationGranted(),
       });
     },
@@ -1009,14 +1009,6 @@ export function NeighborhoodApp({
     setMapListSuspended(mapListObscured);
   }, [mapListObscured]);
 
-  useLayoutEffect(() => {
-    if (typeof document === "undefined") return;
-    document.documentElement.classList.toggle("hw-gem-hunt-open", Boolean(mapGemHouse));
-    return () => {
-      document.documentElement.classList.remove("hw-gem-hunt-open");
-    };
-  }, [mapGemHouse]);
-
   useEffect(() => {
     const el = listScrollRef.current;
     if (!el || view !== "list") return;
@@ -1128,7 +1120,7 @@ export function NeighborhoodApp({
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
       <AppHeader onHomeTap={goHome} />
-      {!originPick.originPickActive && !mapGemHouse ? (
+      {!originPick.originPickActive ? (
         <div className="neighborhood-toolbar-top shrink-0">
           <NeighborhoodToolbar
             view={view}
@@ -1333,11 +1325,7 @@ export function NeighborhoodApp({
                   houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
                 />
           </div>
-          {view === "map" &&
-          mapSheetHouse &&
-          houseDetailCommon &&
-          !originPick.originPickActive &&
-          !mapGemHouse ? (
+          {view === "map" && mapSheetHouse && houseDetailCommon && !originPick.originPickActive ? (
                 <div className="map-sheet-host" aria-hidden={false}>
                   <MapHouseSheet
                     {...houseDetailCommon}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { GemHuntBootShell } from "@/components/gem-hunt/gem-hunt-boot-shell";
 import { GemHuntOverlayLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { GemHuntWebXrArLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { isAndroidLike, supportsWebXrHitTestAr } from "@/lib/gem-hunt-ar-platform";
@@ -53,7 +54,7 @@ export function GemHuntExperience(props: GemHuntExperienceProps) {
 
   const onWebXrFallback = useCallback(() => setPath("camera"), []);
 
-  if (path === "pending") return null;
+  if (path === "pending") return <GemHuntBootShell />;
 
   if (path === "webxr") {
     return (

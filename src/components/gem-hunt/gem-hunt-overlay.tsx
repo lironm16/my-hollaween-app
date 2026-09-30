@@ -152,6 +152,8 @@ export function GemHuntOverlay({
   const collectFinishRef = useRef<number | null>(null);
   const onCollectRef = useRef(onCollect);
   onCollectRef.current = onCollect;
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
   const [albumRevealPhase, setAlbumRevealPhase] = useState<"enter" | "landed">("enter");
   /** Snapshot at tap — album sticker was new before this collect. */
   const [albumRevealNewFriend, setAlbumRevealNewFriend] = useState(true);
@@ -248,6 +250,7 @@ export function GemHuntOverlay({
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
+      huntClosingRef.current = true;
       document.body.style.overflow = prev;
       releaseGemHuntCamera(videoRef.current);
       endMapListOverlayCapture();
@@ -375,17 +378,20 @@ export function GemHuntOverlay({
       encounterMode && repeatVisit ? GEM_ENCOUNTER_CELEBRATE_MS : GEM_COLLECT_OVERLAY_MS;
     collectFinishRef.current = window.setTimeout(() => {
       collectFinishRef.current = null;
+      huntClosingRef.current = true;
+      releaseGemHuntCamera(videoRef.current);
       if (newAlbumFriend) {
-        releaseGemHuntCamera(videoRef.current);
         if (GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED) {
           setAlbumRevealPhase("enter");
           setPhase("albumReveal");
-        } else {
-          onCollectRef.current(monsterId, { cheer: false, navigateStickerBook: true });
+          return;
         }
-      } else {
-        onCollectRef.current(monsterId, { cheer: true });
+        onCollectRef.current(monsterId, { cheer: false, navigateStickerBook: true });
+        onCloseRef.current();
+        return;
       }
+      onCollectRef.current(monsterId, { cheer: true });
+      onCloseRef.current();
     }, overlayMs);
   }, [
     centerReveal,
@@ -459,12 +465,17 @@ export function GemHuntOverlay({
   }, [phase, monsterId]);
 
   function finishNewFriendClose() {
+    huntClosingRef.current = true;
     releaseGemHuntCamera(videoRef.current);
     onCollectRef.current(monsterId, { cheer: true });
+    onCloseRef.current();
   }
 
   function finishNewFriendStickerBook() {
+    huntClosingRef.current = true;
+    releaseGemHuntCamera(videoRef.current);
     onCollectRef.current(monsterId, { cheer: false, navigateStickerBook: true });
+    onCloseRef.current();
   }
 
   const toggleRevealMe = useCallback(() => {
@@ -581,6 +592,9 @@ export function GemHuntOverlay({
 
   const offerEncounterCollect = useCallback(() => {
     if (encounterPhase !== "encounter") return;
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate([12, 28, 18]);
+    }
     encounterCollectLatchedRef.current = true;
     markEncounterTutorialSeen();
     onTreatSuccess();

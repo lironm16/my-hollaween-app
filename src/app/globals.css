@@ -4632,13 +4632,21 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay--android .gem-hunt-overlay__footer--hunt {
   bottom: max(0.85rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem));
 }
-html.hw-gem-hunt-open .map-sheet-host,
-html.hw-gem-hunt-open .map-fab-stack,
-html.hw-gem-hunt-open .map-gem-hunt-fab,
-html.hw-gem-hunt-open .map-add-house-fab,
-html.hw-gem-hunt-open .neighborhood-toolbar-top {
-  visibility: hidden !important;
-  pointer-events: none !important;
+.gem-hunt-boot-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 12050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #050208;
+  color: #fde68a;
+  pointer-events: auto;
+}
+.gem-hunt-boot-shell__text {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
 }
 .gem-hunt-overlay__footer > * {
   pointer-events: auto;
@@ -6563,9 +6571,12 @@ html.hw-gem-hunt-open .neighborhood-toolbar-top {
   z-index: 12050;
   display: flex;
   flex-direction: column;
-  background: transparent;
+  background: #050208;
   color: #fef3c7;
   pointer-events: none;
+}
+.gem-hunt-webxr.is-session-active {
+  background: transparent;
 }
 /** Encounter swipe — root must receive touches (shell is pointer-events: none by default). */
 .gem-hunt-webxr.is-encounter-swipe {

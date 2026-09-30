@@ -115,7 +115,7 @@ export function GemHuntPanel({
     const fresh = (await onOpenHunt?.()) ?? userLocation;
     const useWebXr = Boolean(xrSession) || (isAndroidLike() && webXrHitTestArCached());
     await prepareGemHuntSensors({
-      requestCamera: !useWebXr,
+      requestCamera: false,
       requestOrientation: !isGemHuntOrientationGranted(),
     });
     setHuntLocation(fresh ?? userLocation);
