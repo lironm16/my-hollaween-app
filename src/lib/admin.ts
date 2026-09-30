@@ -1,16 +1,23 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { config } from "@/lib/config";
+import { isPreviewDeploymentServer } from "@/lib/deployment-env";
 
 const DEV_ADMIN_PASSWORD = "pumpkin2026";
 
 export function adminPassword() {
-  return process.env.ADMIN_PASSWORD ?? DEV_ADMIN_PASSWORD;
+  const configured = process.env.ADMIN_PASSWORD?.trim();
+  if (configured) return configured;
+  if (process.env.NODE_ENV === "production" && isPreviewDeploymentServer()) {
+    return process.env.PREVIEW_ADMIN_PASSWORD?.trim() || DEV_ADMIN_PASSWORD;
+  }
+  return DEV_ADMIN_PASSWORD;
 }
 
-/** Production must set ADMIN_PASSWORD explicitly. */
+/** Production must set ADMIN_PASSWORD explicitly. Preview may use PREVIEW_ADMIN_PASSWORD or the dev default. */
 export function adminLoginEnabled() {
   if (process.env.NODE_ENV !== "production") return true;
+  if (isPreviewDeploymentServer()) return true;
   return Boolean(process.env.ADMIN_PASSWORD?.trim());
 }
 
