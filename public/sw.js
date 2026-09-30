@@ -1,7 +1,7 @@
 importScripts("/sw-map-tiles.js");
 
-const APP_VERSION = "5.3.17";
-const CACHE = "hw-shell-5.3.17";
+const APP_VERSION = "5.3.18";
+const CACHE = "hw-shell-5.3.18";
 const TILE_CACHE = MapTileCache.TILE_CACHE;
 const PRECACHE = [
   "/offline.html",
@@ -89,6 +89,15 @@ self.addEventListener("fetch", (event) => {
   /* Version probe must always hit the network — never serve a stale semver from cache. */
   if (url.pathname === "/app-version.txt") {
     event.respondWith(fetch(req, { cache: "no-store" }));
+    return;
+  }
+
+  /** Bust stale PWA shell CSS/JS when ?v= semver changes (same major cache name is not enough). */
+  if (
+    (url.pathname === "/app.css" || url.pathname === "/shell.css") &&
+    url.searchParams.has("v")
+  ) {
+    event.respondWith(networkFirst(req, CACHE));
     return;
   }
 

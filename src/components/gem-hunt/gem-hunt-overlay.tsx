@@ -480,7 +480,13 @@ export function GemHuntOverlay({
       return;
     }
     huntClosingRef.current = true;
-    releaseGemHuntCamera(videoRef.current);
+    streamRef.current = null;
+    const video = videoRef.current;
+    if (video) {
+      video.style.visibility = "hidden";
+      video.style.pointerEvents = "none";
+    }
+    releaseGemHuntCamera(video);
     onClose();
   }
 
@@ -551,7 +557,7 @@ export function GemHuntOverlay({
 
   const canTapCollect =
     phase === "visible" &&
-    canCollectNow &&
+    (canCollectNow || sim) &&
     ((centerReveal && !encounterMode) ||
       (encounterMode && encounterPhase === "encounter" && gemAtCenter) ||
       (!encounterMode && (pinCollectReady || sim)));

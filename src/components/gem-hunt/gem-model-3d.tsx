@@ -137,22 +137,38 @@ export function GemModel3D({
         const dy = event.clientY - startY;
         if (dx * dx + dy * dy > 576) moved = true;
       };
+      const fireInspectTap = () => {
+        onInspectTapRef.current?.();
+      };
       const onUp = (event: PointerEvent) => {
-        if (!moved) {
-          event.preventDefault();
-          event.stopPropagation();
-          onInspectTapRef.current?.();
-        }
+        if (moved) return;
+        event.preventDefault();
+        fireInspectTap();
+      };
+      /** iOS Safari often delivers click/touchend without a reliable pointerup on WebGL canvas. */
+      const onClick = (event: MouseEvent) => {
+        if (moved) return;
+        event.preventDefault();
+        fireInspectTap();
+      };
+      const onTouchEnd = (event: TouchEvent) => {
+        if (moved || event.changedTouches.length !== 1) return;
+        event.preventDefault();
+        fireInspectTap();
       };
       canvas.addEventListener("pointerdown", onDown);
       canvas.addEventListener("pointermove", onMove);
       canvas.addEventListener("pointerup", onUp as EventListener);
       canvas.addEventListener("pointercancel", onUp as EventListener);
+      canvas.addEventListener("click", onClick);
+      canvas.addEventListener("touchend", onTouchEnd, { passive: false });
       detachTap = () => {
         canvas.removeEventListener("pointerdown", onDown);
         canvas.removeEventListener("pointermove", onMove);
         canvas.removeEventListener("pointerup", onUp as EventListener);
         canvas.removeEventListener("pointercancel", onUp as EventListener);
+        canvas.removeEventListener("click", onClick);
+        canvas.removeEventListener("touchend", onTouchEnd);
       };
     }
 
