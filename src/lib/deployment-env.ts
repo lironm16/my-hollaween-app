@@ -7,3 +7,9 @@ export function isPreviewDeploymentClient() {
 export function isPreviewDeploymentServer() {
   return process.env.VERCEL_ENV === "preview";
 }
+
+/** Preview / branch deploys on Vercel (not production). */
+export function isVercelNonProductionServer() {
+  if (process.env.VERCEL !== "1") return false;
+  return process.env.VERCEL_ENV !== "production";
+}

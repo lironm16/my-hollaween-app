@@ -14,6 +14,20 @@ export default function AdminPage() {
   const { ready, admin, refresh } = useAdminSession();
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [loginEnabled, setLoginEnabled] = useState(true);
+  const [loginHint, setLoginHint] = useState<string | null>(null);
+
+  useEffect(() => {
+    void fetch("/api/admin/session", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data: { loginEnabled?: boolean; loginHint?: string | null }) => {
+        setLoginEnabled(data.loginEnabled !== false);
+        setLoginHint(typeof data.loginHint === "string" ? data.loginHint : null);
+      })
+      .catch(() => {
+        setLoginEnabled(true);
+      });
+  }, []);
 
   useEffect(() => {
     if (ready && admin) router.replace("/");
@@ -64,6 +78,11 @@ export default function AdminPage() {
           <p className="text-base text-violet-200">
             אחרי הכניסה תישארו במפה הרגילה. תוכלו לערוך בלי קוד ולמחוק בתים, עד שתלחצו יציאה.
           </p>
+          {loginHint ? (
+            <p className="rounded-lg bg-amber-950/40 px-3 py-2 text-sm text-amber-100 ring-1 ring-amber-500/30">
+              {loginHint}
+            </p>
+          ) : null}
           <div className="space-y-1.5">
             <Label>סיסמת מנהל</Label>
             <Input
@@ -71,10 +90,15 @@ export default function AdminPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
+              disabled={!loginEnabled}
             />
           </div>
-          <Button type="submit" disabled={busy} className="w-full bg-orange-500 text-black">
-            כניסה למפה
+          <Button
+            type="submit"
+            disabled={busy || !loginEnabled}
+            className="w-full bg-orange-500 text-black"
+          >
+            {loginEnabled ? "כניסה למפה" : "כניסה לא זמינה בשרת"}
           </Button>
         </form>
       </main>
