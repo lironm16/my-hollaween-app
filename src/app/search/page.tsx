@@ -37,7 +37,7 @@ export default function SearchPage() {
   const editFlow = useHouseEditFlow();
 
   useEffect(() => {
-    if (!effectiveAdmin) {
+    if (!admin) {
       setAdminHouses([]);
       return;
     }
@@ -53,7 +53,7 @@ export default function SearchPage() {
     return () => {
       cancelled = true;
     };
-  }, [effectiveAdmin]);
+  }, [admin]);
 
   const houses = useMemo(() => {
     const byId = new Map<string, PublicHouse>();
@@ -61,13 +61,13 @@ export default function SearchPage() {
     for (const item of owned) {
       if (item.preview) byId.set(item.id, item.preview);
     }
-    if (effectiveAdmin) {
+    if (admin) {
       for (const item of adminHouses) {
         byId.set(item.id, toPublicHouse(item) as PublicHouse);
       }
     }
     return [...byId.values()];
-  }, [effectiveAdmin, adminHouses, catalog?.houses, owned]);
+  }, [admin, adminHouses, catalog?.houses, owned]);
 
   const gemUi = gemHuntFabVisible(effectiveAdmin, now);
   const actionContext = useMemo((): HouseCardActionContext => {

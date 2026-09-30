@@ -4,14 +4,18 @@ import { useEffect } from "react";
 import { AdminStatsCard, useSnapshotStats } from "@/components/admin-stats";
 import { AppHeader } from "@/components/app-header";
 import { useCatalog } from "@/hooks/use-catalog";
+import { activeHouseSetForSession } from "@/lib/house-set";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useHouseSet } from "@/hooks/use-house-set";
 
 export default function StatsPage() {
-  const { refresh } = useCatalog();
-  const { effectiveAdmin } = useAdminSession();
+  const { refresh, catalog } = useCatalog();
+  const { admin } = useAdminSession();
   const { houseSet } = useHouseSet();
-  const stats = useSnapshotStats(true, effectiveAdmin ? houseSet : "real");
+  const stats = useSnapshotStats(
+    true,
+    activeHouseSetForSession(admin, houseSet, catalog ?? null),
+  );
 
   useEffect(() => {
     void refresh(true);

@@ -82,7 +82,7 @@ export function AdminDryRunPanel() {
           <p className="text-base font-medium text-orange-100">מצב משתמש (מפה · גישה · כתובות)</p>
           <p className="text-base text-violet-300">
             פועל = כמו מכשיר רגיל — קטלוג מוגבל בלי רישום, כתובות לפי שעון האירוע, בלי עריכה בלי קוד.
-            נשמר בדפדפן הזה (גם אחרי רענון).
+            בחירת «איזה בתים להציג» (סטאבים) ושעון בדיקות נשארות פעילות.
           </p>
         </div>
         <Toggle
