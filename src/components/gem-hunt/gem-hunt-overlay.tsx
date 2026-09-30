@@ -133,6 +133,8 @@ export function GemHuntOverlay({
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [cameraRetry, setCameraRetry] = useState(0);
   const cameraBootRef = useRef(false);
+  /** Prevents async getUserMedia from re-attaching after the user closes the hunt. */
+  const huntClosingRef = useRef(false);
   const [phase, setPhase] = useState<HuntPhase>("scanning");
   const [hint, setHint] = useState<"scan" | "warm" | "found" | "help">("scan");
   const [showHelp, setShowHelp] = useState(false);
@@ -235,6 +237,10 @@ export function GemHuntOverlay({
   }, [house.id]);
 
   useEffect(() => {
+    huntClosingRef.current = false;
+  }, [house.id]);
+
+  useEffect(() => {
     beginMapListOverlayCapture();
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -257,7 +263,7 @@ export function GemHuntOverlay({
           requestOrientation: !isGemHuntOrientationGranted(),
         });
         cameraBootRef.current = false;
-        if (cancelled) return;
+        if (cancelled || huntClosingRef.current) return;
         if (!prepared.camera) {
           setCameraError("no-camera");
           return;
@@ -268,12 +274,15 @@ export function GemHuntOverlay({
         setCameraError("no-camera");
         return;
       }
-      if (cancelled) return;
+      if (cancelled || huntClosingRef.current) return;
       streamRef.current = stream;
       const video = videoRef.current;
       if (!video) return;
       const ok = await playCameraOnVideo(video, stream);
-      if (cancelled) return;
+      if (cancelled || huntClosingRef.current) {
+        releaseGemHuntCamera(video);
+        return;
+      }
       if (ok) setCameraError(null);
       else setCameraError("לא ניתן להציג מצלמה");
     }
@@ -470,6 +479,7 @@ export function GemHuntOverlay({
       if (albumShowActions || albumRevealPhase === "landed") finishNewFriendClose();
       return;
     }
+    huntClosingRef.current = true;
     releaseGemHuntCamera(videoRef.current);
     onClose();
   }
@@ -748,7 +758,7 @@ export function GemHuntOverlay({
                 worldYawRad={gemAtCenter ? null : worldYawRad}
                 motion={gemMotion}
                 celebrateVariant={collectDanceIndex}
-                onInspectTap={undefined}
+                onInspectTap={canTapCollect ? handleGemInspectTap : undefined}
               />
             </div>
           </div>

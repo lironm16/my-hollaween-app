@@ -46,6 +46,7 @@ function fitCameraToPivot(
   camera: THREE.PerspectiveCamera,
   pivot: THREE.Object3D,
   padding = 1.55,
+  orbit?: OrbitControls | null,
 ) {
   const box = new THREE.Box3().setFromObject(pivot);
   const size = box.getSize(new THREE.Vector3());
@@ -56,6 +57,10 @@ function fitCameraToPivot(
   camera.position.set(center.x, center.y + maxDim * 0.06, center.z + dist);
   camera.lookAt(center.x, center.y, center.z);
   camera.updateProjectionMatrix();
+  if (orbit) {
+    orbit.target.copy(center);
+    orbit.update();
+  }
 }
 
 export function GemModel3D({
@@ -111,14 +116,17 @@ export function GemModel3D({
     renderer.setPixelRatio(maxDpr);
     renderer.setSize(width, height);
     renderer.setClearColor(0x000000, 0);
-    host.appendChild(renderer.domElement);
+    const canvas = renderer.domElement;
+    canvas.style.display = "block";
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    host.appendChild(canvas);
 
     let detachTap: (() => void) | null = null;
     if (controls === "inspect360") {
       let startX = 0;
       let startY = 0;
       let moved = false;
-      const canvas = renderer.domElement;
       const onDown = (event: PointerEvent) => {
         startX = event.clientX;
         startY = event.clientY;
@@ -143,8 +151,8 @@ export function GemModel3D({
       detachTap = () => {
         canvas.removeEventListener("pointerdown", onDown);
         canvas.removeEventListener("pointermove", onMove);
-        canvas.removeEventListener("pointerup", onUp);
-        canvas.removeEventListener("pointercancel", onUp);
+        canvas.removeEventListener("pointerup", onUp as EventListener);
+        canvas.removeEventListener("pointercancel", onUp as EventListener);
       };
     }
 
@@ -226,7 +234,7 @@ export function GemModel3D({
                 : size === "fill"
                   ? 1.28
                   : 1.32;
-          fitCameraToPivot(camera, pivot, pad);
+          fitCameraToPivot(camera, pivot, pad, orbit);
         } else {
           orbit?.update();
         }

@@ -53,13 +53,26 @@ export function stopGemHuntCameraStream() {
  * Site camera permission stays granted; the next hunt should call getUserMedia without
  * a new system prompt (standard Safari / PWA behavior).
  */
+function stopStreamTracks(stream: MediaStream | null | undefined) {
+  stream?.getTracks().forEach((t) => {
+    try {
+      t.stop();
+    } catch {
+      /* ignore */
+    }
+  });
+}
+
 export function releaseGemHuntCamera(video?: HTMLVideoElement | null) {
+  const fromVideo =
+    video?.srcObject instanceof MediaStream ? video.srcObject : null;
   if (video) {
     try {
       video.pause();
     } catch {
       /* ignore */
     }
+    stopStreamTracks(fromVideo);
     video.srcObject = null;
   }
   stopGemHuntCameraStream();
