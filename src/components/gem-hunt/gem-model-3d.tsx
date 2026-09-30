@@ -135,9 +135,13 @@ export function GemModel3D({
       const onMove = (event: PointerEvent) => {
         const dx = event.clientX - startX;
         const dy = event.clientY - startY;
-        if (dx * dx + dy * dy > 576) moved = true;
+        if (dx * dx + dy * dy > 1600) moved = true;
       };
+      let lastTapMs = 0;
       const fireInspectTap = () => {
+        const now = Date.now();
+        if (now - lastTapMs < 450) return;
+        lastTapMs = now;
         onInspectTapRef.current?.();
       };
       const onUp = (event: PointerEvent) => {

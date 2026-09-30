@@ -4634,6 +4634,31 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
     5.25rem,
     calc(env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px) + 3.25rem)
   );
+  z-index: 55;
+  padding-top: 0.65rem;
+  background: linear-gradient(
+    180deg,
+    rgb(18 8 26 / 0) 0%,
+    rgb(18 8 26 / 0.94) 28%,
+    rgb(12 6 18 / 0.98) 100%
+  );
+  border-radius: 1.25rem 1.25rem 0 0;
+}
+.gem-hunt-overlay--android::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 47;
+  height: max(8.5rem, calc(env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px) + 6.5rem));
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgb(5 2 8 / 0) 0%,
+    rgb(5 2 8 / 0.88) 42%,
+    rgb(5 2 8 / 0.98) 100%
+  );
 }
 html.hw-mobile-browser .gem-hunt-overlay--android .gem-hunt-overlay__footer--hunt {
   bottom: max(
@@ -6732,6 +6757,22 @@ html.hw-mobile-browser .gem-hunt-overlay--android .gem-hunt-overlay__footer--hun
   width: min(92vw, 22rem);
   margin-inline: auto;
   touch-action: manipulation;
+}
+.gem-hunt-webxr--android::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 47;
+  height: max(8.5rem, calc(env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px) + 6.5rem));
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgb(5 2 8 / 0) 0%,
+    rgb(5 2 8 / 0.88) 42%,
+    rgb(5 2 8 / 0.98) 100%
+  );
 }
 .gem-hunt-webxr--android .gem-hunt-webxr__footer {
   margin-bottom: max(

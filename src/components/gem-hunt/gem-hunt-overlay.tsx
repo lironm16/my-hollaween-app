@@ -135,6 +135,8 @@ export function GemHuntOverlay({
   const cameraBootRef = useRef(false);
   /** Prevents async getUserMedia from re-attaching after the user closes the hunt. */
   const huntClosingRef = useRef(false);
+  /** True once user starts collect or enters encounter in band — avoids GPS flicker blocking finish. */
+  const encounterCollectLatchedRef = useRef(false);
   const [phase, setPhase] = useState<HuntPhase>("scanning");
   const [hint, setHint] = useState<"scan" | "warm" | "found" | "help">("scan");
   const [showHelp, setShowHelp] = useState(false);
@@ -238,6 +240,7 @@ export function GemHuntOverlay({
 
   useEffect(() => {
     huntClosingRef.current = false;
+    encounterCollectLatchedRef.current = false;
   }, [house.id]);
 
   useEffect(() => {
@@ -348,12 +351,14 @@ export function GemHuntOverlay({
 
   const handleCollect = useCallback(() => {
     if (phase !== "visible") return;
-    const viaTellMe = centerReveal && canCollectNow;
+    const inCollectBand =
+      canCollectNow || encounterCollectLatchedRef.current || sim;
+    const viaTellMe = centerReveal && inCollectBand && !encounterMode;
+    const viaTellMeEncounter = centerReveal && inCollectBand && encounterMode;
     const viaPinned =
-      !centerReveal && canCollectNow && Boolean(pinPlacement?.inView);
-    /** Swipe-treat collect — not tap on «גלה לי» center mode. */
-    const viaEncounterSwipe = encounterMode && canCollectNow && !centerReveal;
-    if (!viaTellMe && !viaPinned && !viaEncounterSwipe) return;
+      !centerReveal && inCollectBand && Boolean(pinPlacement?.inView);
+    const viaEncounter = encounterMode && inCollectBand;
+    if (!viaTellMe && !viaTellMeEncounter && !viaPinned && !viaEncounter) return;
     setPhase("collecting");
     setHint("found");
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -424,6 +429,12 @@ export function GemHuntOverlay({
     if (!encounterMode || encounterPhase !== "encounter") return;
     reveal();
   }, [encounterMode, encounterPhase, reveal]);
+
+  useEffect(() => {
+    if (encounterMode && encounterPhase === "encounter" && (canCollectNow || sim)) {
+      encounterCollectLatchedRef.current = true;
+    }
+  }, [encounterMode, encounterPhase, canCollectNow, sim]);
 
   /** «גלה לי» during approach: enable swipe-treat fallback and tap-collect (skip approach wait). */
   useEffect(() => {
@@ -557,16 +568,19 @@ export function GemHuntOverlay({
 
   const canTapCollect =
     phase === "visible" &&
-    (canCollectNow || sim) &&
-    ((centerReveal && !encounterMode) ||
-      (encounterMode && encounterPhase === "encounter" && gemAtCenter) ||
-      (!encounterMode && (pinCollectReady || sim)));
+    ((encounterMode &&
+      encounterPhase === "encounter" &&
+      gemAtCenter) ||
+      (canCollectNow &&
+        ((centerReveal && !encounterMode) ||
+          (!encounterMode && (pinCollectReady || sim)))));
 
   const offerEncounterCollect = useCallback(() => {
-    if (!canCollectNow || encounterPhase !== "encounter") return;
+    if (encounterPhase !== "encounter") return;
+    encounterCollectLatchedRef.current = true;
     markEncounterTutorialSeen();
     onTreatSuccess();
-  }, [canCollectNow, encounterPhase, onTreatSuccess]);
+  }, [encounterPhase, onTreatSuccess]);
 
   const handleGemInspectTap = useCallback(() => {
     if (encounterMode && encounterPhase === "encounter" && canCollectNow) {
@@ -828,7 +842,7 @@ export function GemHuntOverlay({
                 <button
                   type="button"
                   className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact gem-hunt-overlay__hint-btn--accent w-full"
-                  disabled={!canCollectNow}
+                  disabled={encounterPhase !== "encounter"}
                   onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => {
                     e.stopPropagation();

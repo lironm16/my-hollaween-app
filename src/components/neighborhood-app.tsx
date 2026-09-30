@@ -1325,7 +1325,11 @@ export function NeighborhoodApp({
                   houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
                 />
           </div>
-          {view === "map" && mapSheetHouse && houseDetailCommon && !originPick.originPickActive ? (
+          {view === "map" &&
+          mapSheetHouse &&
+          houseDetailCommon &&
+          !originPick.originPickActive &&
+          !mapGemHouse ? (
                 <div className="map-sheet-host" aria-hidden={false}>
                   <MapHouseSheet
                     {...houseDetailCommon}

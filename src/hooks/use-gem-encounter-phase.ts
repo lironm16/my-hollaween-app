@@ -111,9 +111,10 @@ export function useGemEncounterPhase({
 
   const onTreatSuccess = useCallback(() => {
     if (phase !== "encounter") return;
-    if (!collectEnabled) return;
+    /** GPS can flicker out of band during the swipe/tap — do not block the resolve chain. */
+    if (!collectEnabled && !petRevealed && !inRange) return;
     runResolveChain();
-  }, [phase, collectEnabled, runResolveChain]);
+  }, [phase, collectEnabled, petRevealed, inRange, runResolveChain]);
 
   const onTreatMiss = useCallback(() => {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
