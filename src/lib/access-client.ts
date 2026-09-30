@@ -11,20 +11,15 @@ export type AccessRegistrationRow = {
 };
 
 export type AccessMeResponse = {
-  gate: boolean;
   tier: "limited" | "full";
   registrations: AccessRegistrationRow[];
   admin?: boolean;
 };
 
-export function accessGateClientEnabled() {
-  return process.env.NEXT_PUBLIC_ACCESS_GATE === "1";
-}
-
 export async function fetchAccessMe(): Promise<AccessMeResponse> {
   const res = await fetch("/api/access/me", { cache: "no-store" });
   if (!res.ok) {
-    return { gate: accessGateClientEnabled(), tier: "limited", registrations: [] };
+    return { tier: "limited", registrations: [] };
   }
   return res.json() as Promise<AccessMeResponse>;
 }

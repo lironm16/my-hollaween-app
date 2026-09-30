@@ -50,13 +50,25 @@ function validHousePayload(name = "אינטגרציה — כללי", patch = {})
   });
 }
 
+function mergeCookies(...parts) {
+  return parts
+    .filter(Boolean)
+    .flatMap((chunk) => chunk.split(";").map((entry) => entry.trim()))
+    .filter(Boolean)
+    .join("; ");
+}
+
 async function createHouse(name = "אינטגרציה — כללי", patch = {}) {
   const created = await json("POST", "/api/houses", validHousePayload(name, patch));
   if (!created.res.ok || !created.data.house?.id || !created.data.editCode) {
     fail("POST /api/houses valid payload should return house + editCode");
     return null;
   }
-  return created.data;
+  return {
+    house: created.data.house,
+    editCode: created.data.editCode,
+    accessCookie: cookieHeader(created.res),
+  };
 }
 
 async function deleteHouse(adminCookie, id) {
@@ -71,8 +83,11 @@ async function deleteHouse(adminCookie, id) {
 async function testCatalog() {
   const { res, data } = await json("GET", "/api/catalog");
   if (!res.ok) return fail("GET /api/catalog should return 200");
-  if (!Array.isArray(data.houses) || data.houses.length < 1) {
+  if (!Array.isArray(data.houses)) {
     return fail("GET /api/catalog should include houses[]");
+  }
+  if (data.accessTier !== "limited" || data.houses.length !== 0) {
+    return fail("GET /api/catalog without device session should be limited (no house list)");
   }
   if (!res.headers.get("content-type")?.includes("application/json")) {
     return fail("GET /api/catalog should set JSON content-type");
@@ -88,6 +103,9 @@ async function testCatalog() {
   const delta = await json("GET", "/api/catalog?since=not-a-date");
   if (!delta.res.ok) return fail("GET /api/catalog?since=… should return 200");
   if (!Array.isArray(delta.data.houses)) return fail("catalog delta should include houses[]");
+  if (delta.data.accessTier !== "limited") {
+    return fail("catalog delta without session should stay limited");
+  }
   pass("GET /api/catalog?since=… returns a delta payload");
 }
 
@@ -169,9 +187,9 @@ async function testHouseCreate(adminCookie) {
   if (!created) return null;
   pass(`POST /api/houses creates ${created.house.id}`);
 
-  const listed = await json("GET", "/api/catalog");
+  const listed = await json("GET", "/api/catalog", null, { Cookie: created.accessCookie });
   const found = listed.data.houses?.some((house) => house.id === created.house.id);
-  if (!found) return fail("created house should appear in catalog");
+  if (!found) return fail("created house should appear in catalog for registered device");
   pass("created house appears in catalog");
 
   await deleteHouse(adminCookie, created.house.id);
@@ -198,9 +216,12 @@ async function testHouseUnlock(adminCookie) {
   if (wrong.res.status !== 403) return fail("unlock with wrong edit code should return 403");
   pass("unlock rejects wrong edit code");
 
-  const right = await json("POST", `/api/houses/${encodeURIComponent(id)}/unlock`, {
-    editCode: created.editCode,
-  });
+  const right = await json(
+    "POST",
+    `/api/houses/${encodeURIComponent(id)}/unlock`,
+    { editCode: created.editCode },
+    { Cookie: created.accessCookie },
+  );
   if (!right.res.ok || right.data.house?.id !== id) {
     return fail("unlock with correct edit code should return the house");
   }

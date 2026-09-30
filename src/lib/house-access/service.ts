@@ -3,7 +3,6 @@ import { canonicalHouseId, sameHouseId } from "@/lib/ids";
 import { isAdmin } from "@/lib/admin";
 import { ownerMayEdit } from "@/lib/owner-session";
 import {
-  accessGateEnabled,
   INVITE_TTL_MS,
 } from "@/lib/house-access/config";
 import {
@@ -59,9 +58,6 @@ export function buildLimitedCatalog(full: Catalog): Catalog {
 }
 
 export async function applyAccessToCatalog(full: Catalog): Promise<Catalog> {
-  if (!accessGateEnabled()) {
-    return { ...full, accessTier: "full" };
-  }
   if (await isAdmin()) {
     return { ...full, accessTier: "full" };
   }
@@ -80,7 +76,6 @@ export async function applyAccessToCatalog(full: Catalog): Promise<Catalog> {
 }
 
 export async function deviceRegisteredAsEditor(houseId: string): Promise<boolean> {
-  if (!accessGateEnabled()) return true;
   if (await isAdmin()) return true;
   const session = await readAccessSession();
   const row = session?.registrations.find((item) => sameHouseId(item.houseId, houseId));
@@ -88,7 +83,6 @@ export async function deviceRegisteredAsEditor(houseId: string): Promise<boolean
 }
 
 export async function canUseEditCodeForHouse(houseId: string): Promise<boolean> {
-  if (!accessGateEnabled()) return true;
   if (await isAdmin()) return true;
   if (await ownerMayEdit(houseId)) return true;
   return deviceRegisteredAsEditor(houseId);

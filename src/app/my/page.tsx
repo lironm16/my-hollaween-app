@@ -11,7 +11,6 @@ import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-f
 import { HouseAccessPanel } from "@/components/house-access-panel";
 import { HouseList } from "@/components/house-list";
 import {
-  accessGateClientEnabled,
   fetchAccessMe,
   revokeAccessForHouse,
   roleBadgeLabel,
@@ -100,10 +99,6 @@ function MyCollectionsPageContent() {
   const [accessRegs, setAccessRegs] = useState<AccessRegistrationRow[]>([]);
 
   useEffect(() => {
-    if (!accessGateClientEnabled()) {
-      setAccessRegs([]);
-      return;
-    }
     void fetchAccessMe().then((me) => setAccessRegs(me.registrations));
   }, [catalog?.updatedAt, catalog?.accessTier]);
 
@@ -225,10 +220,8 @@ function MyCollectionsPageContent() {
       canEdit:
         tab === "mine"
           ? (id) => {
-              if (!accessGateClientEnabled()) {
-                return Boolean(owned.find((item) => item.id === id));
-              }
-              return roleByHouseId.get(id) === "editor";
+              if (roleByHouseId.get(id) === "editor") return true;
+              return Boolean(owned.find((item) => item.id === id));
             }
           : undefined,
       onEdit: tab === "mine" ? requestEdit : undefined,
@@ -291,13 +284,11 @@ function MyCollectionsPageContent() {
       for (const id of ids) {
         switch (tab) {
           case "mine":
-            if (accessGateClientEnabled()) {
-              try {
-                await revokeAccessForHouse(id);
-              } catch (error) {
-                toast.error(error instanceof Error ? error.message : "לא הצלחנו להסיר");
-                continue;
-              }
+            try {
+              await revokeAccessForHouse(id);
+            } catch (error) {
+              toast.error(error instanceof Error ? error.message : "לא הצלחנו להסיר");
+              continue;
             }
             removeOwnedHouse(id);
             break;
@@ -320,10 +311,8 @@ function MyCollectionsPageContent() {
 
       if (tab === "mine") {
         notifyCatalogChanged();
-        if (accessGateClientEnabled()) {
-          const me = await fetchAccessMe();
-          setAccessRegs(me.registrations);
-        }
+        const me = await fetchAccessMe();
+        setAccessRegs(me.registrations);
         void refresh(true);
       }
       setSelectedIds(new Set());
@@ -340,7 +329,7 @@ function MyCollectionsPageContent() {
           <h1 className="font-display text-2xl text-orange-300">במכשיר שלי</h1>
 
           <PersonalMarksSection
-            ownedCount={accessGateClientEnabled() ? mineHouses.length : owned.length}
+            ownedCount={mineHouses.length}
             likedCount={likes.likedIds.length}
             visitedCount={visits.visitedIds.length}
             skippedCount={skips.skippedIds.length}
@@ -350,7 +339,7 @@ function MyCollectionsPageContent() {
             onSelectTab={selectTab}
           />
 
-          {tab === "mine" && accessGateClientEnabled() && accessRegs.length > 0 ? (
+          {tab === "mine" && accessRegs.length > 0 ? (
             <div className="space-y-3" dir="rtl">
               {accessRegs.map((reg) => (
                 <div
