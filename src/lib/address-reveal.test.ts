@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   addressRevealTime,
   canViewHouseLocationDetails,
+  catalogAccessBlockHintHe,
   formatDisplayAddressWithPolicy,
   isAddressRevealed,
   makeAddressRevealContext,
@@ -55,11 +56,35 @@ describe("address reveal", () => {
     assert.equal(redacted.arrival, "");
   });
 
-  it("admin and owner bypass before reveal", () => {
+  it("shows block message without catalog access", () => {
+    const ctx = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 10, 0),
+      hasCatalogAccess: false,
+    });
+    const label = formatDisplayAddressWithPolicy(stub(), "בית-1001", ctx);
+    assert.match(label, /חרוזים/u);
+    assert.match(label, new RegExp(catalogAccessBlockHintHe().slice(0, 12)));
+    assert.doesNotMatch(label, /יהודית/u);
+    assert.doesNotMatch(label, /תיחשף/u);
+  });
+
+  it("shows reveal hint with catalog access before noon", () => {
+    const ctx = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 10, 0),
+      hasCatalogAccess: true,
+    });
+    const label = formatDisplayAddressWithPolicy(stub(), "בית-1001", ctx);
+    assert.match(label, /31 באוקטובר/u);
+    assert.match(label, /תיחשף/u);
+    assert.doesNotMatch(label, /יהודית/u);
+  });
+
+  it("admin and owner bypass before reveal when catalog access", () => {
     const ctx = makeAddressRevealContext({
       now: new Date(2026, 9, 31, 10, 0),
       isAdmin: false,
       ownedHouseIds: ["בית-1001"],
+      hasCatalogAccess: true,
     });
     assert.equal(canViewHouseLocationDetails("בית-1001", ctx), true);
     assert.equal(canViewHouseLocationDetails("בית-9999", ctx), false);
@@ -67,19 +92,9 @@ describe("address reveal", () => {
     const adminCtx = makeAddressRevealContext({
       now: new Date(2026, 9, 31, 10, 0),
       isAdmin: true,
+      hasCatalogAccess: true,
     });
     assert.equal(canViewHouseLocationDetails("בית-9999", adminCtx), true);
-  });
-
-  it("shows hint instead of street before reveal", () => {
-    const ctx = makeAddressRevealContext({
-      now: new Date(2026, 9, 31, 10, 0),
-      isAdmin: false,
-    });
-    const label = formatDisplayAddressWithPolicy(stub(), "בית-1001", ctx);
-    assert.match(label, /31 באוקטובר/u);
-    assert.doesNotMatch(label, /12:00/u);
-    assert.doesNotMatch(label, /יהודית/u);
   });
 
   it("redact helper clears fields", () => {

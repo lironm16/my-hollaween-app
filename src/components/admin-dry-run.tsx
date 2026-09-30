@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
+import { writeGemPreviewAsUser } from "@/lib/gem-preview-as-user";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useRehearsalScene, useServerSim, useAppNow } from "@/hooks/use-app-clock";
 import { useHouseSet } from "@/hooks/use-house-set";
@@ -48,13 +49,13 @@ function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
 }
 
 export function AdminDryRunPanel() {
-  const { admin } = useAdminSession();
+  const { admin, effectiveAdmin, userPreview, setUserPreviewMode } = useAdminSession();
   const now = useAppNow();
   const { scene, setScene } = useRehearsalScene();
   const { down, setDown } = useServerSim();
   const { houseSet, setHouseSet } = useHouseSet();
   const { previewAsUser, setPreviewAsUser } = useGemPreviewAsUser();
-  const gemsOnScreen = admin && gemHuntFabVisible(admin, now);
+  const gemsOnScreen = admin && gemHuntFabVisible(effectiveAdmin, now);
   const [lastScene, setLastScene] = useState<RehearsalScene>("open");
   const [customClock, setCustomClock] = useState("18:00");
   const active = scene !== "off";
@@ -76,6 +77,24 @@ export function AdminDryRunPanel() {
 
   return (
     <div className="space-y-3 rounded-xl bg-black/25 p-3">
+      <div className="flex items-center justify-between gap-3 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20">
+        <div className="min-w-0">
+          <p className="text-base font-medium text-orange-100">מצב משתמש (מפה · גישה · כתובות)</p>
+          <p className="text-base text-violet-300">
+            פועל = כמו מכשיר רגיל — קטלוג מוגבל בלי רישום, כתובות לפי שעון האירוע, בלי עריכה בלי קוד.
+            נשמר בדפדפן הזה (גם אחרי רענון).
+          </p>
+        </div>
+        <Toggle
+          on={userPreview}
+          onClick={() => {
+            const next = !userPreview;
+            void setUserPreviewMode(next).then((ok) => {
+              if (ok && next) writeGemPreviewAsUser(true);
+            });
+          }}
+        />
+      </div>
       <div className="space-y-2">
         <p className="text-base font-medium text-amber-100">איזה בתים להציג</p>
         <p className="text-base text-violet-300">

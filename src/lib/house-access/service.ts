@@ -1,6 +1,6 @@
 import { customAlphabet } from "nanoid";
 import { canonicalHouseId, sameHouseId } from "@/lib/ids";
-import { isAdmin } from "@/lib/admin";
+import { hasAdminBypass } from "@/lib/admin";
 import { ownerMayEdit } from "@/lib/owner-session";
 import {
   INVITE_TTL_MS,
@@ -28,6 +28,7 @@ import {
   writeAccessCookies,
   type AccessRegistration,
 } from "@/lib/house-access/session";
+import { publicHouseForCatalog } from "@/lib/address-reveal";
 import { asCatalogForSnapshot, countPublishedHouses } from "@/lib/catalog-cache-build";
 import { isPubliclyListed } from "@/lib/house-state";
 import { config } from "@/lib/config";
@@ -58,15 +59,18 @@ export function buildLimitedCatalog(full: Catalog): Catalog {
 }
 
 export async function applyAccessToCatalog(full: Catalog): Promise<Catalog> {
-  if (await isAdmin()) {
+  const now = new Date();
+  if (await hasAdminBypass()) {
     return { ...full, accessTier: "full" };
   }
   const session = await readAccessSession();
   if (!session?.registrations.length) {
     return buildLimitedCatalog(full);
   }
+  const houses = full.houses.map((house) => publicHouseForCatalog(house, now));
   return {
     ...full,
+    houses,
     accessTier: "full",
     accessRegistrations: session.registrations.map((row) => ({
       houseId: row.houseId,
@@ -76,20 +80,20 @@ export async function applyAccessToCatalog(full: Catalog): Promise<Catalog> {
 }
 
 export async function deviceRegisteredAsEditor(houseId: string): Promise<boolean> {
-  if (await isAdmin()) return true;
+  if (await hasAdminBypass()) return true;
   const session = await readAccessSession();
   const row = session?.registrations.find((item) => sameHouseId(item.houseId, houseId));
   return row?.role === "editor";
 }
 
 export async function canUseEditCodeForHouse(houseId: string): Promise<boolean> {
-  if (await isAdmin()) return true;
+  if (await hasAdminBypass()) return true;
   if (await ownerMayEdit(houseId)) return true;
   return deviceRegisteredAsEditor(houseId);
 }
 
 async function editorAuthorized(houseId: string): Promise<boolean> {
-  if (await isAdmin()) return true;
+  if (await hasAdminBypass()) return true;
   if (await ownerMayEdit(houseId)) return true;
   return deviceRegisteredAsEditor(houseId);
 }

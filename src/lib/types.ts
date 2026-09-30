@@ -162,6 +162,8 @@ export type PublicHouse = Omit<House, "editCode" | "storeId" | "ownerPhone">;
 /** Admin / owner edit surfaces may attach internal contact fields. */
 export type EditorHouse = PublicHouse & { ownerPhone?: string | null };
 
+export type EditorHouse = PublicHouse & { ownerPhone?: string | null };
+
 export type CatalogPushTemplate = {
   enabled: boolean;
   title: string;

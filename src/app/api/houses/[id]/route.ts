@@ -9,7 +9,7 @@ import { geocodeHttpError } from "@/lib/geocode";
 import { storageHttpError } from "@/lib/storage-errors";
 import { publicHouseForCatalog } from "@/lib/address-reveal";
 import { grantOwnerHouse, ownerMayEdit } from "@/lib/owner-session";
-import { isAdmin } from "@/lib/admin";
+import { hasAdminBypass, isAdmin } from "@/lib/admin";
 import { readIncludeEndpoint } from "@/lib/push";
 import { clientKey } from "@/lib/rate-limit";
 import { rateLimitShared } from "@/lib/rate-limit-store";
@@ -32,9 +32,12 @@ export async function GET(
       { status: 404 },
     );
   }
-  const admin = await isAdmin();
+  const adminBypass = await hasAdminBypass();
   const ownerOk = await ownerMayEdit(id);
-  let house = admin || ownerOk ? toEditorHouse(row) : publicHouseForCatalog(toPublicHouse(row));
+  const house =
+    adminBypass || ownerOk
+      ? toEditorHouse(row)
+      : publicHouseForCatalog(toPublicHouse(row) as import("@/lib/types").PublicHouse);
   return NextResponse.json(house, {
     headers: {
       "Cache-Control":
@@ -93,9 +96,9 @@ export async function PATCH(
     return NextResponse.json({ house: toEditorHouse(result.house), push: result.push });
   } catch (error) {
     console.error("[houses] update failed", error);
-    const phone = ownerPhoneHttpError(error);
-    if (phone) {
-      return NextResponse.json({ error: phone.error, code: "VALIDATION" }, { status: phone.status });
+    const ownerPhone = ownerPhoneHttpError(error);
+    if (ownerPhone) {
+      return NextResponse.json({ error: ownerPhone.error }, { status: ownerPhone.status });
     }
     const storage = storageHttpError(error);
     if (storage) {

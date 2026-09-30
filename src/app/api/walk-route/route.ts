@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { hasFullCatalogAccess, readAccessSession } from "@/lib/house-access/session";
-import { isAdmin } from "@/lib/admin";
+import { hasAdminBypass } from "@/lib/admin";
 import { fetchDisplayWalkingGeometry } from "@/lib/osrm-walk";
 
 export const runtime = "nodejs";
 
 /** Proxy walking geometry so phones don't hit CORS. Stays on streets around parks. */
 export async function POST(request: Request) {
-  if (!(await isAdmin())) {
+  if (!(await hasAdminBypass())) {
     const session = await readAccessSession();
     if (!hasFullCatalogAccess(session)) {
       return NextResponse.json({ error: "נדרשת גישה מלאה." }, { status: 403 });

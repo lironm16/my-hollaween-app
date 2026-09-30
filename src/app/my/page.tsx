@@ -66,9 +66,9 @@ export default function MyCollectionsPage() {
 function MyCollectionsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { admin } = useAdminSession();
+  const { effectiveAdmin } = useAdminSession();
   const now = useAppNow();
-  const { gemBagMenuVisible: showCollected, gemFabVisible: gemUi } = useGemHuntAdminUi(admin, now);
+  const { gemBagMenuVisible: showCollected, gemFabVisible: gemUi } = useGemHuntAdminUi(effectiveAdmin, now);
   const urlTab = parseTab(searchParams.get("tab"), showCollected);
   const [tab, setTab] = useState<PersonalMarksTab>(urlTab);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());

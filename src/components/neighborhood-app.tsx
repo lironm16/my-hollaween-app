@@ -64,7 +64,6 @@ import {
 } from "@/lib/gem-hunt-sensors";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
-import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAdminHouses } from "@/hooks/use-admin-houses";
@@ -103,13 +102,11 @@ import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import {
   catalogHasRealHouses,
   HOUSE_SET_LABELS,
-  resolveViewerHouseSet,
   countSkippedInSet,
   countVisitedInSet,
   countLikedInSet,
   houseMatchesSet,
 } from "@/lib/house-set";
-import { isPreviewDeploymentClient } from "@/lib/deployment-env";
 import { filterHouses, houseFilterMismatchReasons, routeHouseIds } from "@/lib/filter-houses";
 import { distanceMeters, formatDistance } from "@/lib/geo";
 import { estimateWalkingMeters } from "@/lib/walk-distance-estimate";
@@ -161,19 +158,13 @@ export function NeighborhoodApp({
   const { catalog, loading, ready, offline, unreachable, error, source, pollSeconds, refresh } =
     useCatalog(initialCatalog);
   const catalogUpdatedAt = catalog?.updatedAt;
-  const { admin } = useAdminSession();
+  const { admin, effectiveAdmin } = useAdminSession();
   const now = useAppNow();
-  const addressReveal = useAddressReveal();
-  const distanceLabel = useCallback(
-    (houseId: string, meters: number) =>
-      addressReveal.distanceAllowed(houseId) ? formatDistance(meters) : "",
-    [addressReveal],
-  );
   const {
     gemHuntVisible: gemFeatureOn,
     gemFabVisible: gemUi,
     gemAdminToolsVisible: gemAdminTools,
-  } = useGemHuntAdminUi(admin, now);
+  } = useGemHuntAdminUi(effectiveAdmin, now);
   const gemHuntActive = gemFeatureOn && gemUi;
   useEffect(() => {
     if (!gemHuntActive || !isAndroidLike()) return;
@@ -213,9 +204,7 @@ export function NeighborhoodApp({
 
   const { choice: originChoice, resolved: origin, setChoice: setOriginChoice } = useDistanceOrigin(gps);
   const { houseSet } = useHouseSet();
-  const activeHouseSet = resolveViewerHouseSet(catalog, admin, houseSet, {
-    previewDeployment: isPreviewDeploymentClient(),
-  });
+  const activeHouseSet = effectiveAdmin ? houseSet : "real";
   const view = useSyncExternalStore(
     (onStoreChange) => {
       window.addEventListener("hw-home-view", onStoreChange);
@@ -275,7 +264,7 @@ export function NeighborhoodApp({
     adminHouses,
     applyAdminHouse,
     removeAdminHouse,
-  } = useAdminHouses({ admin, refresh, catalogUpdatedAt });
+  } = useAdminHouses({ admin: effectiveAdmin, refresh, catalogUpdatedAt });
 
   const wasAdmin = useRef(false);
 
@@ -289,7 +278,7 @@ export function NeighborhoodApp({
   const houses = useMergedHouses({
     catalogHouses,
     owned,
-    admin,
+    admin: effectiveAdmin,
     adminHouses,
     includeCatalogWhenAdmin: true,
   });
@@ -466,7 +455,7 @@ export function NeighborhoodApp({
     if (!selection.editHouseId) return undefined;
     return owned.find((item) => item.id === selection.editHouseId)?.editCode;
   }, [owned, selection.editHouseId]);
-  const canEditSelected = Boolean(admin || ownedEditCode);
+  const canEditSelected = Boolean(effectiveAdmin || ownedEditCode);
 
   const {
     routeMode,
@@ -667,10 +656,7 @@ export function NeighborhoodApp({
       stop.houses.map((house, houseIndex) => ({
         house,
         order: stop.order,
-        hop:
-          houseIndex > 0
-            ? "אותו בניין"
-            : distanceLabel(house.id, stop.fromPreviousMeters),
+        hop: houseIndex > 0 ? "אותו בניין" : formatDistance(stop.fromPreviousMeters),
         skipped: false,
       })),
     );
@@ -694,12 +680,10 @@ export function NeighborhoodApp({
         items.push({
           house,
           order: 0,
-          hop: distanceLabel(house.id, legM),
+          hop: formatDistance(legM),
           skipped: flags.skipped,
           visitedTail: flags.visitedTail,
-          distanceM: addressReveal.distanceAllowed(house.id)
-            ? distanceMeters(originPoint, point)
-            : undefined,
+          distanceM: distanceMeters(originPoint, point),
         });
         tailCursor = point;
       }
@@ -723,8 +707,6 @@ export function NeighborhoodApp({
     visible,
     origin.lat,
     origin.lng,
-    addressReveal,
-    distanceLabel,
   ]);
 
   function applyRouteAfterSkipChange(
@@ -932,7 +914,7 @@ export function NeighborhoodApp({
     editFlow.setFlow((current) =>
       current?.house.id === next.id ? { ...current, house: next } : current,
     );
-    if (admin) {
+    if (effectiveAdmin) {
       applyAdminHouse(next);
       return;
     }
@@ -952,9 +934,12 @@ export function NeighborhoodApp({
   function requestHouseEdit(house: PublicHouse, allowDelete = false) {
     selection.setEditing(false);
     editFlow.openEdit(house, {
-      editCode: admin ? editCodeById.get(house.id) : owned.find((item) => item.id === house.id)?.editCode,
-      admin,
-      allowDelete: allowDelete || Boolean(admin || owned.some((item) => item.id === house.id)),
+      editCode: effectiveAdmin
+        ? editCodeById.get(house.id)
+        : owned.find((item) => item.id === house.id)?.editCode,
+      admin: effectiveAdmin,
+      allowDelete:
+        allowDelete || Boolean(effectiveAdmin || owned.some((item) => item.id === house.id)),
     });
   }
 
@@ -1044,7 +1029,7 @@ export function NeighborhoodApp({
 
   const houseActionContext = useMemo((): HouseCardActionContext => {
     return {
-      admin,
+      admin: effectiveAdmin,
       catalogSource: source,
       liked: likes.liked,
       visited: visits.visited,
@@ -1055,27 +1040,21 @@ export function NeighborhoodApp({
       onToggleGem: gemUi ? handleToggleGemMenu : undefined,
       onSkip: handleSkipHouse,
       onRestore: handleRestoreHouse,
-      onShowOnMap:
-        view === "list"
-          ? openOnMap
-          : undefined,
-      onShowInList:
-        view === "map"
-          ? (id) => {
-              if (!matchedIds.has(id)) return;
-              selection.showInListFromMap(id);
-              setView("list");
-            }
-          : undefined,
-      canEdit: (id) => Boolean(admin || owned.some((item) => item.id === id)),
+      onShowOnMap: openOnMap,
+      onShowInList: (id) => {
+        if (!matchedIds.has(id)) return;
+        selection.showInListFromMap(id);
+        setView("list");
+      },
+      canEdit: (id) => Boolean(effectiveAdmin || owned.some((item) => item.id === id)),
       editCodeFor: (id) =>
-        admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode,
+        effectiveAdmin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode,
       onEdit: (house) => requestHouseEdit(house, true),
       skipMetaFor: (id) => skips.meta(id),
       editingId: editFlow.flow?.house.id ?? null,
     };
   }, [
-    admin,
+    effectiveAdmin,
     source,
     likes.liked,
     visits.visited,
@@ -1087,7 +1066,6 @@ export function NeighborhoodApp({
     handleToggleGemMenu,
     handleSkipHouse,
     handleRestoreHouse,
-    view,
     matchedIds,
     owned,
     editCodeById,
@@ -1123,7 +1101,16 @@ export function NeighborhoodApp({
       )}
       style={{ display: "flex", flexDirection: "column", height: "var(--app-h, 100svh)", overflow: "hidden" }}
     >
-      <AppHeader onHomeTap={goHome} />
+      <AppHeader
+        onHomeTap={goHome}
+        routeMenu={{
+          houses: visible,
+          totalInSet: mapHouses.length,
+          activeFilterCount,
+          activeRoute: activeRoute ?? filterRoute,
+          kind: likedOnly ? "liked" : "list",
+        }}
+      />
       {!originPick.originPickActive ? (
         <div className="neighborhood-toolbar-top shrink-0">
           <NeighborhoodToolbar
@@ -1166,7 +1153,7 @@ export function NeighborhoodApp({
         דלג לרשימת הבתים
       </button>
       <div className="sr-only" aria-live="polite" aria-atomic="true">
-        {selection.selected ? houseSelectionAnnouncement(selection.selected, addressReveal) : ""}
+        {selection.selected ? houseSelectionAnnouncement(selection.selected) : ""}
         {routeMode && walkingRoute
           ? ` מסלול עם ${walkingRoute.stops.length} עצירות.`
           : ""}
@@ -1326,7 +1313,7 @@ export function NeighborhoodApp({
                 ) : null}
                 <CatalogMetaChip
                   hidden={view !== "map" || (Boolean(selection.selected) && !originPick.originPickActive)}
-                  houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
+                  houseSetLabel={effectiveAdmin ? HOUSE_SET_LABELS[activeHouseSet] : null}
                 />
           </div>
           {view === "map" && mapSheetHouse && houseDetailCommon && !originPick.originPickActive ? (

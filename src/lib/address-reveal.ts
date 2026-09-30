@@ -5,6 +5,8 @@ export type AddressRevealContext = {
   now: Date;
   isAdmin: boolean;
   ownedHouseIds: ReadonlySet<string>;
+  /** Registered device (full catalog tier) — not merely edit code in local storage. */
+  hasCatalogAccess: boolean;
 };
 
 /** Local time on event night when street addresses and arrival notes become public. */
@@ -25,10 +27,16 @@ export function addressHiddenHintHe(now = new Date()) {
   return `הכתובת תיחשף ב-${labelHe}`;
 }
 
+/** Shown on house cards when the device is not registered for map access. */
+export function catalogAccessBlockHintHe() {
+  return "המפה למכשירים רשומים · עורך הבית מוסיף מכשיר";
+}
+
 export function canViewHouseLocationDetails(
   houseId: string,
   ctx: AddressRevealContext,
 ): boolean {
+  if (!ctx.hasCatalogAccess && !ctx.isAdmin) return false;
   if (isAddressRevealed(ctx.now)) return true;
   if (ctx.isAdmin) return true;
   return ctx.ownedHouseIds.has(houseId);
@@ -59,6 +67,12 @@ export function formatDisplayAddressWithPolicy(
   if (canViewHouseLocationDetails(houseId, ctx)) {
     return formatDisplayAddress(house);
   }
+  if (!ctx.isAdmin && !ctx.hasCatalogAccess) {
+    const block = catalogAccessBlockHintHe();
+    const area = resolveNeighborhood(house);
+    if (area) return `${area} · ${block}`;
+    return block;
+  }
   const hint = addressHiddenHintHe(ctx.now);
   const area = resolveNeighborhood(house);
   if (area && hint) return `${area} · ${hint}`;
@@ -82,10 +96,12 @@ export function makeAddressRevealContext(input: {
   now: Date;
   isAdmin?: boolean;
   ownedHouseIds?: Iterable<string>;
+  hasCatalogAccess?: boolean;
 }): AddressRevealContext {
   return {
     now: input.now,
     isAdmin: Boolean(input.isAdmin),
     ownedHouseIds: new Set(input.ownedHouseIds ?? []),
+    hasCatalogAccess: Boolean(input.hasCatalogAccess),
   };
 }

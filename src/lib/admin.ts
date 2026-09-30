@@ -4,23 +4,13 @@ import { config } from "@/lib/config";
 
 const DEV_ADMIN_PASSWORD = "pumpkin2026";
 
-function isVercelPreview() {
-  return process.env.VERCEL_ENV === "preview";
-}
-
 export function adminPassword() {
-  const configured = process.env.ADMIN_PASSWORD?.trim();
-  if (configured) return configured;
-  if (process.env.NODE_ENV === "production" && isVercelPreview()) {
-    return process.env.PREVIEW_ADMIN_PASSWORD?.trim() || DEV_ADMIN_PASSWORD;
-  }
-  return DEV_ADMIN_PASSWORD;
+  return process.env.ADMIN_PASSWORD ?? DEV_ADMIN_PASSWORD;
 }
 
-/** Production must set ADMIN_PASSWORD explicitly. Preview may use PREVIEW_ADMIN_PASSWORD or the dev default. */
+/** Production must set ADMIN_PASSWORD explicitly. */
 export function adminLoginEnabled() {
   if (process.env.NODE_ENV !== "production") return true;
-  if (isVercelPreview()) return true;
   return Boolean(process.env.ADMIN_PASSWORD?.trim());
 }
 
@@ -60,4 +50,39 @@ export async function isAdmin() {
   const b = Buffer.from(expected);
   if (a.length !== b.length) return false;
   return timingSafeEqual(a, b);
+}
+
+const USER_PREVIEW_COOKIE = "hw_admin_user_preview";
+
+/** Admin chose «מצב משתמש» — public APIs behave like a visitor on this browser. */
+export async function adminUserPreviewMode() {
+  if (!(await isAdmin())) return false;
+  const jar = await cookies();
+  return jar.get(USER_PREVIEW_COOKIE)?.value === "1";
+}
+
+/** Full manager powers (catalog bypass, device bypass, address bypass). */
+export async function hasAdminBypass() {
+  return (await isAdmin()) && !(await adminUserPreviewMode());
+}
+
+export async function setAdminUserPreviewMode(enabled: boolean) {
+  if (!(await isAdmin())) return;
+  const jar = await cookies();
+  if (enabled) {
+    jar.set(USER_PREVIEW_COOKIE, "1", {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+      secure: process.env.NODE_ENV === "production",
+    });
+  } else {
+    jar.delete(USER_PREVIEW_COOKIE);
+  }
+}
+
+export async function clearAdminUserPreviewMode() {
+  const jar = await cookies();
+  jar.delete(USER_PREVIEW_COOKIE);
 }

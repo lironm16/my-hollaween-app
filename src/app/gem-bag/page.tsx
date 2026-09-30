@@ -11,17 +11,20 @@ import { useGemProgress } from "@/hooks/use-gem-progress";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
+import { useAppRouteMenu } from "@/hooks/use-app-route-menu";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
 import { catalogHasRealHouses } from "@/lib/house-set";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function GemBagPage() {
-  const { admin, ready } = useAdminSession();
+  const { effectiveAdmin, ready } = useAdminSession();
   const { catalog, loading } = useCatalog();
   const gems = useGemProgress();
   const now = useAppNow();
-  const { gemBagMenuVisible: visible } = useGemHuntAdminUi(admin, now);
+  const { gemBagMenuVisible: visible } = useGemHuntAdminUi(effectiveAdmin, now);
+  const routeMenu = useAppRouteMenu(null);
+
   const mapHouses = useMemo(
     () => gemHuntMapHouses(resolveCatalogHouses(catalog), "real"),
     [catalog],
@@ -30,7 +33,7 @@ export default function GemBagPage() {
   if (!ready) {
     return (
       <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden bg-[#0f0818]">
-        <AppHeader />
+        <AppHeader routeMenu={routeMenu} />
         <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-5">
           <p className="text-base text-violet-300">טוענים…</p>
         </main>
@@ -41,7 +44,7 @@ export default function GemBagPage() {
   if (!visible) {
     return (
       <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden bg-[#0f0818]">
-        <AppHeader />
+        <AppHeader routeMenu={routeMenu} />
         <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-5">
           <div className="mx-auto max-w-lg space-y-4">
             <h1 className="font-display text-2xl text-orange-300">ספר החברים</h1>
@@ -62,7 +65,7 @@ export default function GemBagPage() {
       <Suspense fallback={null}>
         <GemBagCollectFlyGate />
       </Suspense>
-      <AppHeader />
+      <AppHeader routeMenu={routeMenu} />
       <main
         className={cn(
           "relative z-10 min-h-0 flex-1 overflow-y-auto px-3 py-4 sm:px-4",

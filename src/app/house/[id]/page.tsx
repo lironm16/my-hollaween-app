@@ -16,11 +16,11 @@ import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useGemProgress } from "@/hooks/use-gem-progress";
+import { writeHomeView } from "@/lib/home-view";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { GemHuntPanelLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
-import { writeHomeView } from "@/lib/home-view";
 import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
 import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
@@ -38,15 +38,15 @@ export default function HousePage() {
   const visits = useVisitedHouses();
   const skips = useSkippedHouses();
   const gems = useGemProgress();
-  const { admin } = useAdminSession();
+  const { admin, effectiveAdmin } = useAdminSession();
   const now = useAppNow();
-  const geo = useUserLocation({ watch: gemHuntVisible(admin) });
+  const geo = useUserLocation({ watch: gemHuntVisible(effectiveAdmin) });
   const { setWatchEnabled } = geo;
   const editFlow = useHouseEditFlow();
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
 
   useEffect(() => {
-    if (!admin) {
+    if (!effectiveAdmin) {
       setAdminHouses([]);
       return;
     }
@@ -62,18 +62,18 @@ export default function HousePage() {
     return () => {
       cancelled = true;
     };
-  }, [admin]);
+  }, [effectiveAdmin]);
 
   const ownedItem = owned.find((item) => item.id === id);
   const adminHouse = adminHouses.find((item) => item.id === id);
   const house: PublicHouse | undefined =
     catalog?.houses.find((h) => h.id === id) ??
-    (adminHouse ? (toPublicHouse(adminHouse) as PublicHouse) : undefined) ??
+    (effectiveAdmin && adminHouse ? (toPublicHouse(adminHouse) as PublicHouse) : undefined) ??
     ownedItem?.preview;
-  const canEdit = Boolean(admin || ownedItem);
-  const editCode = admin ? adminHouse?.editCode : ownedItem?.editCode;
+  const canEdit = Boolean(effectiveAdmin || ownedItem);
+  const editCode = effectiveAdmin ? adminHouse?.editCode : ownedItem?.editCode;
   const missing = !loading && Boolean(catalog) && !house;
-  const gemUi = gemHuntFabVisible(admin, now);
+  const gemUi = gemHuntFabVisible(effectiveAdmin, now);
   const mapHousesForCelebrate = useMemo(
     () => gemHuntMapHouses(resolveCatalogHouses(catalog), "real"),
     [catalog],
@@ -81,7 +81,7 @@ export default function HousePage() {
 
   const actionContext = useMemo((): HouseCardActionContext => {
     return {
-      admin,
+      admin: effectiveAdmin,
       catalogSource: source,
       liked: likes.liked,
       visited: visits.visited,
@@ -96,7 +96,7 @@ export default function HousePage() {
       onEdit: (h) =>
         editFlow.openEdit(h, {
           editCode,
-          admin,
+          admin: effectiveAdmin,
         }),
       skipMetaFor: (hid) => skips.meta(hid),
       editingId: editFlow.flow?.house.id ?? null,
@@ -106,7 +106,7 @@ export default function HousePage() {
       },
     };
   }, [
-    admin,
+    effectiveAdmin,
     source,
     likes,
     visits,
@@ -134,7 +134,7 @@ export default function HousePage() {
                     <GemHuntPanelLazy
                       house={house}
                       userLocation={geo.location}
-                      isAdmin={admin}
+                      isAdmin={effectiveAdmin}
                       mapHousesForCelebrate={mapHousesForCelebrate}
                       onOpenHunt={async () => {
                         setWatchEnabled(true);
@@ -170,7 +170,7 @@ export default function HousePage() {
             editFlow.setFlow((current) =>
               current?.house.id === next.id ? { ...current, house: next } : current,
             );
-            if (!admin && editCode) {
+            if (!effectiveAdmin && editCode) {
               saveOwnedHouse({
                 id: next.id,
                 name: next.name,

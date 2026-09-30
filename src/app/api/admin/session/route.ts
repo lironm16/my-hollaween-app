@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
-import { isAdmin } from "@/lib/admin";
+import { adminUserPreviewMode, isAdmin } from "@/lib/admin";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  return NextResponse.json({ admin: await isAdmin() });
+  const admin = await isAdmin();
+  return NextResponse.json({
+    admin,
+    userPreview: admin ? await adminUserPreviewMode() : false,
+  });
 }

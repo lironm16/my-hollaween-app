@@ -316,8 +316,8 @@ export function HouseDetails({
   hideHoursBanner?: boolean;
 }) {
   const addressReveal = useAddressReveal();
-  const { admin } = useAdminSession();
-  const ownerPhone = admin ? (house as EditorHouse).ownerPhone?.trim() : "";
+  const { effectiveAdmin } = useAdminSession();
+  const ownerPhone = effectiveAdmin ? (house as EditorHouse).ownerPhone?.trim() : "";
   const displayAddress = addressReveal.formatDisplayAddress(house);
   const arrivalText = addressReveal.visibleArrival(house);
   const showMaps = addressReveal.mapsAllowed(house.id);

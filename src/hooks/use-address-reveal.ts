@@ -11,6 +11,7 @@ import {
 } from "@/lib/address-reveal";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
+import { useCatalog } from "@/hooks/use-catalog";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import type { PublicHouse } from "@/lib/types";
 
@@ -22,12 +23,21 @@ export function useAddressReveal(): AddressRevealContext & {
   distanceAllowed: (houseId: string) => boolean;
 } {
   const now = useAppNow();
-  const { admin } = useAdminSession();
+  const { effectiveAdmin } = useAdminSession();
+  const { catalog } = useCatalog();
   const owned = useOwnedHouses();
   const ownedHouseIds = useMemo(() => new Set(owned.map((item) => item.id)), [owned]);
+  const hasCatalogAccess = effectiveAdmin || catalog?.accessTier === "full";
+
   const ctx = useMemo(
-    () => makeAddressRevealContext({ now, isAdmin: admin, ownedHouseIds }),
-    [now, admin, ownedHouseIds],
+    () =>
+      makeAddressRevealContext({
+        now,
+        isAdmin: effectiveAdmin,
+        ownedHouseIds,
+        hasCatalogAccess,
+      }),
+    [now, effectiveAdmin, ownedHouseIds, hasCatalogAccess],
   );
 
   return useMemo(

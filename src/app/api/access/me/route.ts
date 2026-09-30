@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { listMyRegistrations } from "@/lib/house-access/service";
 import { hasFullCatalogAccess, readAccessSession } from "@/lib/house-access/session";
-import { isAdmin } from "@/lib/admin";
+import { hasAdminBypass } from "@/lib/admin";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  if (await isAdmin()) {
+  if (await hasAdminBypass()) {
     return NextResponse.json({ tier: "full" as const, registrations: [], admin: true });
   }
   const session = await readAccessSession();

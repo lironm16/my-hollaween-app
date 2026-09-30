@@ -6,14 +6,12 @@ import { AppHeader } from "@/components/app-header";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useHouseSet } from "@/hooks/use-house-set";
-import { activeHouseSetForSession } from "@/lib/house-set";
 
 export default function StatsPage() {
-  const { catalog, refresh } = useCatalog();
-  const { admin } = useAdminSession();
+  const { refresh } = useCatalog();
+  const { effectiveAdmin } = useAdminSession();
   const { houseSet } = useHouseSet();
-  const activeHouseSet = activeHouseSetForSession(admin, houseSet, catalog);
-  const stats = useSnapshotStats(true, activeHouseSet);
+  const stats = useSnapshotStats(true, effectiveAdmin ? houseSet : "real");
 
   useEffect(() => {
     void refresh(true);
