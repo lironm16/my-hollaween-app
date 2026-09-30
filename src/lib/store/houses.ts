@@ -10,6 +10,7 @@ import {
   isHouseDeleted,
   syncDecorFields,
 } from "@/lib/house-state";
+import { deviceAccessOf, emptyDeviceAccess, normalizeAdminDeviceSlotMax } from "@/lib/house-access/policy";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import { cloneDb } from "@/lib/catalog-sync";
 import { parsePhotoUrl } from "@/lib/photos";
@@ -448,6 +449,13 @@ export async function adminUpdate(
     if (patch.addedBy !== undefined) house.addedBy = patch.addedBy?.trim() || null;
     if (patch.ownerPhone !== undefined) {
       house.ownerPhone = ownerPhoneAfterPatch(house, { ownerPhone: patch.ownerPhone });
+    }
+    if (patch.deviceSlotMax !== undefined) {
+      const access = deviceAccessOf(house);
+      house.deviceAccess = {
+        ...access,
+        deviceSlotMax: normalizeAdminDeviceSlotMax(patch.deviceSlotMax),
+      };
     }
     if (patch.kind !== undefined) {
       house.kind = patch.kind === "poi" ? "poi" : "house";

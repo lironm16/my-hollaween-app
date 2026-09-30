@@ -33,5 +33,16 @@ async function readFirestoreCatalog() {
 
 const catalog = (await readFirestoreCatalog()) ?? (await readSeedCatalog());
 
-writeFileSync(join(root, "public/catalog.json"), JSON.stringify(catalog));
-console.log(`wrote public/catalog.json (${catalog.houses.length} houses)`);
+let out = catalog;
+if (process.env.NEXT_PUBLIC_ACCESS_GATE === "1") {
+  out = {
+    ...catalog,
+    houses: [],
+    houseCount: catalog.houseCount ?? catalog.houses.length,
+    accessTier: "limited",
+    accessRegistrations: [],
+  };
+}
+
+writeFileSync(join(root, "public/catalog.json"), JSON.stringify(out));
+console.log(`wrote public/catalog.json (${out.houses.length} houses, gate=${process.env.NEXT_PUBLIC_ACCESS_GATE === "1"})`);

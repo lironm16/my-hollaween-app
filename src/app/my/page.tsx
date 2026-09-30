@@ -8,7 +8,15 @@ import { useSearchParams } from "next/navigation";
 import { PersonalMarksSection, type PersonalMarksTab } from "@/components/admin-stats";
 import { AppHeader } from "@/components/app-header";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
+import { HouseAccessPanel } from "@/components/house-access-panel";
 import { HouseList } from "@/components/house-list";
+import {
+  accessGateClientEnabled,
+  fetchAccessMe,
+  revokeAccessForHouse,
+  roleBadgeLabel,
+  type AccessRegistrationRow,
+} from "@/lib/access-client";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useCatalog } from "@/hooks/use-catalog";
@@ -32,6 +40,7 @@ import { queueRouteRestore, readRouteMode } from "@/lib/route-mode";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { PublicHouse } from "@/lib/types";
+import { toast } from "sonner";
 
 function parseTab(raw: string | null, showCollected: boolean): PersonalMarksTab {
   if (raw === "skipped" || raw === "visited" || raw === "saved") return raw;
@@ -88,6 +97,20 @@ function MyCollectionsPageContent() {
   const geo = useUserLocation();
   const { resolved: origin } = useDistanceOrigin(geo.location);
   const editFlow = useHouseEditFlow();
+  const [accessRegs, setAccessRegs] = useState<AccessRegistrationRow[]>([]);
+
+  useEffect(() => {
+    if (!accessGateClientEnabled()) {
+      setAccessRegs([]);
+      return;
+    }
+    void fetchAccessMe().then((me) => setAccessRegs(me.registrations));
+  }, [catalog?.updatedAt, catalog?.accessTier]);
+
+  const roleByHouseId = useMemo(
+    () => new Map(accessRegs.map((row) => [row.houseId, row.role])),
+    [accessRegs],
+  );
 
   const catalogHouses = useMemo(() => {
     const resolved = resolveCatalogHouses(catalog);
@@ -96,14 +119,21 @@ function MyCollectionsPageContent() {
   }, [catalog]);
 
   const mineHouses = useMemo(() => {
-    const ids = new Set(owned.map((item) => item.id));
-    return owned
-      .map((item) => {
-        const fromCatalog = catalogHouses.find((house) => house.id === item.id);
-        return item.preview ?? fromCatalog ?? null;
-      })
-      .filter((house): house is PublicHouse => Boolean(house && ids.has(house.id)));
-  }, [catalogHouses, owned]);
+    const ids = new Set<string>();
+    const rows: PublicHouse[] = [];
+    const push = (house: PublicHouse | null | undefined) => {
+      if (!house || ids.has(house.id)) return;
+      ids.add(house.id);
+      rows.push(house);
+    };
+    for (const reg of accessRegs) {
+      push(catalogHouses.find((house) => house.id === reg.houseId));
+    }
+    for (const item of owned) {
+      push(item.preview ?? catalogHouses.find((house) => house.id === item.id) ?? null);
+    }
+    return rows;
+  }, [catalogHouses, owned, accessRegs]);
 
   const skippedHouses = useMemo(() => {
     const ids = new Set(skips.skippedIds);
@@ -192,7 +222,15 @@ function MyCollectionsPageContent() {
               handleRestore(id);
             }
           : undefined,
-      canEdit: tab === "mine" ? () => true : undefined,
+      canEdit:
+        tab === "mine"
+          ? (id) => {
+              if (!accessGateClientEnabled()) {
+                return Boolean(owned.find((item) => item.id === id));
+              }
+              return roleByHouseId.get(id) === "editor";
+            }
+          : undefined,
       onEdit: tab === "mine" ? requestEdit : undefined,
       skipMetaFor: (id) => skips.meta(id),
       editingId: editFlow.flow?.house.id ?? null,
@@ -249,11 +287,20 @@ function MyCollectionsPageContent() {
     const ids = [...selectedIds];
     if (ids.length === 0) return;
 
-    for (const id of ids) {
-      switch (tab) {
-        case "mine":
-          removeOwnedHouse(id);
-          break;
+    void (async () => {
+      for (const id of ids) {
+        switch (tab) {
+          case "mine":
+            if (accessGateClientEnabled()) {
+              try {
+                await revokeAccessForHouse(id);
+              } catch (error) {
+                toast.error(error instanceof Error ? error.message : "לא הצלחנו להסיר");
+                continue;
+              }
+            }
+            removeOwnedHouse(id);
+            break;
         case "saved":
           if (likes.liked(id)) likes.toggle(id);
           break;
@@ -268,11 +315,19 @@ function MyCollectionsPageContent() {
           break;
         default:
           break;
+        }
       }
-    }
 
-    if (tab === "mine") notifyCatalogChanged();
-    setSelectedIds(new Set());
+      if (tab === "mine") {
+        notifyCatalogChanged();
+        if (accessGateClientEnabled()) {
+          const me = await fetchAccessMe();
+          setAccessRegs(me.registrations);
+        }
+        void refresh(true);
+      }
+      setSelectedIds(new Set());
+    })();
   }
 
   const selectionRemoveLabel = tab === "mine" ? "הסר מהמכשיר" : "אפס מהרשימה";
@@ -285,7 +340,7 @@ function MyCollectionsPageContent() {
           <h1 className="font-display text-2xl text-orange-300">במכשיר שלי</h1>
 
           <PersonalMarksSection
-            ownedCount={owned.length}
+            ownedCount={accessGateClientEnabled() ? mineHouses.length : owned.length}
             likedCount={likes.likedIds.length}
             visitedCount={visits.visitedIds.length}
             skippedCount={skips.skippedIds.length}
@@ -294,6 +349,33 @@ function MyCollectionsPageContent() {
             selectedTab={tab}
             onSelectTab={selectTab}
           />
+
+          {tab === "mine" && accessGateClientEnabled() && accessRegs.length > 0 ? (
+            <div className="space-y-3" dir="rtl">
+              {accessRegs.map((reg) => (
+                <div
+                  key={reg.houseId}
+                  className="rounded-2xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-medium text-orange-100">{reg.houseName}</p>
+                    <span className="rounded-full bg-orange-500/20 px-2.5 py-0.5 text-sm text-orange-200">
+                      {roleBadgeLabel(reg.role)}
+                    </span>
+                  </div>
+                  {reg.role === "editor" ? (
+                    <HouseAccessPanel
+                      houseId={reg.houseId}
+                      onChanged={() => {
+                        void fetchAccessMe().then((me) => setAccessRegs(me.registrations));
+                        void refresh(true);
+                      }}
+                    />
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
 
           <HouseList
             houses={listHouses}

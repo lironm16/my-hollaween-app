@@ -894,6 +894,10 @@ export function NeighborhoodApp({
   };
 
   function enterRouteMode() {
+    if (catalog?.accessTier === "limited") {
+      toast.error("למסלול צריך גישה מלאה — עורך הבית מוסיף מכשיר מ«במכשיר שלי».");
+      return;
+    }
     originPick.exitOriginPick();
     startRouteMode();
   }

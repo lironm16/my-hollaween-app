@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getHouse } from "@/lib/store";
 import { canonicalHouseId, toEditorHouse } from "@/lib/ids";
+import { canUseEditCodeForHouse } from "@/lib/house-access/service";
 import { grantOwnerHouse } from "@/lib/owner-session";
 import { clientKey } from "@/lib/rate-limit";
 import { rateLimitShared } from "@/lib/rate-limit-store";
@@ -27,6 +28,16 @@ export async function POST(
   }
   if (!body?.editCode || house.editCode !== body.editCode) {
     return NextResponse.json({ error: "קוד העריכה שגוי." }, { status: 403 });
+  }
+  if (!(await canUseEditCodeForHouse(id))) {
+    return NextResponse.json(
+      {
+        error:
+          "המכשיר לא רשום לבית הזה. עורך הבית יוסיף את המכשיר מ«במכשיר שלי» → הוספת מכשיר.",
+        code: "device_not_registered",
+      },
+      { status: 403 },
+    );
   }
   await grantOwnerHouse(id);
   return NextResponse.json({ house: toEditorHouse(house) });

@@ -147,6 +147,7 @@ export const adminPatchSchema = houseFields.partial().extend({
   soldOut: z.boolean().optional(),
   ownerFrozenUntil: z.string().nullable().optional(),
   adminFrozen: z.boolean().optional(),
+  deviceSlotMax: z.number().int().min(1).max(10).nullable().optional(),
   photoUrl: z.union([photoUrlSchema, z.literal("")]).optional(),
   addedBy: addedByPatchField,
   ownerPhone: ownerPhonePatchSchema,

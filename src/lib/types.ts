@@ -108,6 +108,8 @@ export type House = {
   storeId?: string;
   /** Set when removed from the public catalog; document kept in Firestore for recovery. */
   deletedAt?: string | null;
+  /** Registered phones + pending invites — never in public catalog. */
+  deviceAccess?: HouseDeviceAccess;
 };
 
 export type HouseInput = {
@@ -151,6 +153,8 @@ export type NightPatch = {
   photoUrl?: string;
   addedBy?: string | null;
   ownerPhone?: string | null;
+  /** Admin-only per-house device slot cap override. */
+  deviceSlotMax?: number | null;
 };
 
 export type PublicHouse = Omit<House, "editCode" | "storeId" | "ownerPhone">;
@@ -164,6 +168,11 @@ export type CatalogPushTemplate = {
   body: string;
 };
 
+export type CatalogAccessRegistration = {
+  houseId: string;
+  role: DeviceRole;
+};
+
 export type Catalog = {
   updatedAt: string;
   neighborhood: string;
@@ -172,6 +181,9 @@ export type Catalog = {
   houseCount?: number;
   /** Merged owner-alert templates so quick-update preview matches the server. */
   pushTemplates?: Partial<Record<string, CatalogPushTemplate>>;
+  /** Present when neighborhood access gate is on. */
+  accessTier?: "limited" | "full";
+  accessRegistrations?: CatalogAccessRegistration[];
 };
 
 /** Client-only record that a full snapshot matched server houseCount. */
@@ -213,6 +225,31 @@ export type VapidKeys = {
   publicKey: string;
   privateKey: string;
   subject: string;
+};
+
+/** Server-only — stripped from public catalog payloads. */
+export type DeviceRole = "editor" | "visitor";
+
+export type RegisteredDevice = {
+  id: string;
+  tokenHash: string;
+  role: DeviceRole;
+  createdAt: string;
+  label?: string;
+};
+
+export type PendingDeviceInvite = {
+  id: string;
+  tokenHash: string;
+  role: DeviceRole;
+  expiresAt: string;
+  createdAt: string;
+};
+
+export type HouseDeviceAccess = {
+  deviceSlotMax?: number | null;
+  devices: RegisteredDevice[];
+  pending: PendingDeviceInvite[];
 };
 
 export type DbFile = {

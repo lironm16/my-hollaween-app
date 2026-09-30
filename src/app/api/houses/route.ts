@@ -4,6 +4,8 @@ import { submitHouse } from "@/lib/store";
 import { toEditorHouse } from "@/lib/ids";
 import { geocodeHttpError } from "@/lib/geocode";
 import { storageHttpError } from "@/lib/storage-errors";
+import { accessGateEnabled } from "@/lib/house-access/config";
+import { registerBootstrapEditor } from "@/lib/house-access/service";
 import { grantOwnerHouse } from "@/lib/owner-session";
 import { readIncludeEndpoint } from "@/lib/push";
 
@@ -34,6 +36,13 @@ export async function POST(request: Request) {
       await grantOwnerHouse(house.house.id);
     } catch {
       /* owner cookie is optional — house is already saved */
+    }
+    if (accessGateEnabled()) {
+      try {
+        await registerBootstrapEditor(house.house.id);
+      } catch {
+        /* access registration is best-effort */
+      }
     }
     return NextResponse.json({
       house: toEditorHouse(house.house),

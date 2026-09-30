@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { effectiveCatalogPollSeconds } from "@/lib/catalog-poll";
 import { config } from "@/lib/config";
+import { applyAccessToCatalog } from "@/lib/house-access/service";
 import { getCatalog, getCatalogDelta } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -19,10 +20,11 @@ export async function GET(request: Request) {
   if (since) {
     headers.set("Cache-Control", "no-store");
     const delta = await getCatalogDelta(since);
-    return NextResponse.json(withPollSeconds(delta), { headers });
+    const gated = await applyAccessToCatalog(delta);
+    return NextResponse.json(withPollSeconds({ ...delta, ...gated }), { headers });
   }
 
-  const catalog = await getCatalog();
+  const catalog = await applyAccessToCatalog(await getCatalog());
   const seconds = config.catalogCacheSeconds;
   if (seconds > 0) {
     const value = `public, max-age=0, s-maxage=${seconds}, stale-while-revalidate=${seconds * 10}`;

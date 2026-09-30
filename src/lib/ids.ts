@@ -75,6 +75,7 @@ export function toPublicHouse<
   delete rest.editCode;
   delete rest.storeId;
   delete rest.ownerPhone;
+  delete (rest as { deviceAccess?: unknown }).deviceAccess;
   if (
     typeof rest.address === "string" &&
     typeof rest.lat === "number" &&

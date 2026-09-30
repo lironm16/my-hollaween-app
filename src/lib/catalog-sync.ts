@@ -25,6 +25,14 @@ export function mergeHouses<T extends { id: string; updatedAt: string }>(
  * A stale CDN copy cannot drop a house that was just published.
  */
 export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
+  if (incoming.accessTier === "limited") {
+    return {
+      ...incoming,
+      houses: [],
+      houseCount: incoming.houseCount ?? prev?.houseCount ?? 0,
+      accessRegistrations: incoming.accessRegistrations ?? [],
+    };
+  }
   if (!prev) return incoming;
   const prevTs = stamp(prev);
   const nextTs = stamp(incoming);
