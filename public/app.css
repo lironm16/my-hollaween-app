@@ -11923,7 +11923,8 @@ html.hw-mobile-browser .gem-hunt-webxr--android .gem-hunt-webxr__footer {
 }
 .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 .gem-model-3d,
 .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 canvas {
-  pointer-events: none;
+  pointer-events: auto;
+  touch-action: manipulation;
 }
 .gem-sprite--inspect360 {
   width: 100%;
