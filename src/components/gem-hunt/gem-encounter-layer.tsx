@@ -20,6 +20,7 @@ export function GemEncounterLayer({
   inRange,
   repeatVisit,
   showTutorial,
+  hideApproachLine = false,
   onOfferTreatButton,
 }: {
   house: PublicHouse;
@@ -28,6 +29,8 @@ export function GemEncounterLayer({
   inRange: boolean;
   repeatVisit: boolean;
   showTutorial: boolean;
+  /** Walk nav hint already shows distance + directions — skip duplicate approach pill. */
+  hideApproachLine?: boolean;
   onOfferTreatButton?: () => void;
 }) {
   const monsterId = gemMonsterForHouse(house);
@@ -58,7 +61,7 @@ export function GemEncounterLayer({
     );
   }
 
-  if (phase === "approach") {
+  if (phase === "approach" && !hideApproachLine) {
     return (
       <div className="gem-encounter-layer gem-encounter-layer--approach" role="status">
         <p className="gem-encounter-layer__approach-line">

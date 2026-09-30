@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
+import { GemHuntOrientationArrow } from "@/components/gem-hunt/gem-hunt-orientation-arrow";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
@@ -509,9 +509,10 @@ export function GemHuntOverlay({
     (encounterPhase === "encounter" ||
       encounterPhase.startsWith("resolve") ||
       encounterPhase === "reward");
-  const showNavRose = encounterMode
+  const showNavArrow = encounterMode
     ? encounterPhase === "approach" &&
       hintPanel === "nav" &&
+      !centerReveal &&
       huntArrowDeg != null &&
       effectiveLoc != null &&
       userLocation != null &&
@@ -620,6 +621,7 @@ export function GemHuntOverlay({
           distanceM={distanceM}
           inRange={inRangeForEncounter}
           repeatVisit={repeatVisit}
+          hideApproachLine={hintPanel === "nav"}
           showTutorial={encounterPhase === "encounter"}
           onOfferTreatButton={
             encounterPhase === "encounter" && collectEnabled
@@ -657,12 +659,12 @@ export function GemHuntOverlay({
         )}
         aria-hidden={false}
       >
-        {showNavRose ? (
+        {showNavArrow ? (
           <div className="gem-hunt-overlay__nav-layer" aria-hidden>
-            <GemHuntDirectionRose
+            <GemHuntOrientationArrow
               bearingDeg={huntArrowDeg!}
               facing={facingTarget && !huntArrowMapNorth}
-              className="gem-hunt-overlay__nav-rose gem-hunt-direction-rose--ring"
+              mapNorth={huntArrowMapNorth}
             />
           </div>
         ) : null}
@@ -743,7 +745,7 @@ export function GemHuntOverlay({
                     <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
                   </span>
                 </button>
-                {!encounterMode ? (
+                {!encounterMode || showEncounterFooter ? (
                   <button
                     type="button"
                     className={cn(

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import * as THREE from "three";
-import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
+import { GemHuntOrientationArrow } from "@/components/gem-hunt/gem-hunt-orientation-arrow";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { ARButton } from "three/addons/webxr/ARButton.js";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
@@ -237,15 +237,16 @@ export function GemHuntWebXrAr({
     userLocation != null && !simulateInRange
       ? googleMapsNavigateUrl(userLocation, { lat: anchor.lat, lng: anchor.lng })
       : null;
-  const showNavRose =
+  const revealBtnActive = placed ? arGemVisible : revealAssist;
+  const revealBtnLabel = placed ? (arGemVisible ? "הסתר" : "גלה לי") : revealAssist ? "הסתר" : "גלה לי";
+  const showNavArrow =
     sessionActive &&
     hintPanel === "nav" &&
+    !revealBtnActive &&
     huntArrowDeg != null &&
     effectiveLoc != null &&
     userLocation != null &&
     !simulateInRange;
-  const revealBtnActive = placed ? arGemVisible : revealAssist;
-  const revealBtnLabel = placed ? (arGemVisible ? "הסתר" : "גלה לי") : revealAssist ? "הסתר" : "גלה לי";
   const hideFooterChrome = encounterMode && encounterUiChromeHidden(encounterPhase);
   const showEncounterFooter =
     encounterMode && encounterPhase === "approach" && phase !== "collecting";
@@ -619,6 +620,7 @@ export function GemHuntWebXrAr({
           distanceM={distanceM}
           inRange={inRangeForEncounter}
           repeatVisit={repeatVisit}
+          hideApproachLine={hintPanel === "nav"}
           showTutorial={encounterPhase === "encounter"}
           onOfferTreatButton={
             encounterPhase === "encounter" && canCollect
@@ -631,12 +633,12 @@ export function GemHuntWebXrAr({
         />
       ) : null}
 
-      {showNavRose ? (
+      {showNavArrow ? (
         <div className="gem-hunt-overlay__nav-layer gem-hunt-webxr__nav-layer" aria-hidden>
-          <GemHuntDirectionRose
+          <GemHuntOrientationArrow
             bearingDeg={huntArrowDeg!}
             facing={facingTarget && !huntArrowMapNorth}
-            className="gem-hunt-overlay__nav-rose gem-hunt-direction-rose--ring"
+            mapNorth={huntArrowMapNorth}
           />
         </div>
       ) : null}
@@ -679,7 +681,7 @@ export function GemHuntWebXrAr({
                       <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
                     </span>
                   </button>
-                  {!encounterMode ? (
+                  {!encounterMode || showEncounterFooter ? (
                     <button
                       type="button"
                       className={cn(
