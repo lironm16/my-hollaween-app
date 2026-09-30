@@ -146,7 +146,6 @@ export function GemModel3D({
       };
       const onUp = (event: PointerEvent) => {
         if (moved) return;
-        event.preventDefault();
         fireInspectTap();
       };
       /** iOS Safari often delivers click/touchend without a reliable pointerup on WebGL canvas. */

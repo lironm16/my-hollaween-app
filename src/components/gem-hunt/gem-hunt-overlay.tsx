@@ -359,14 +359,17 @@ export function GemHuntOverlay({
       !centerReveal && inCollectBand && Boolean(pinPlacement?.inView);
     const viaEncounter = encounterMode && inCollectBand;
     if (!viaTellMe && !viaTellMeEncounter && !viaPinned && !viaEncounter) return;
+    const entries = loadGemCollected();
+    const newAlbumFriend = !repeatVisit && !isGemTypeInCollection(monsterId, entries);
+    if (newAlbumFriend) {
+      releaseGemHuntCamera(videoRef.current);
+    }
     setPhase("collecting");
     setHint("found");
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate([20, 40, 60]);
     }
     if (collectFinishRef.current != null) window.clearTimeout(collectFinishRef.current);
-    const entries = loadGemCollected();
-    const newAlbumFriend = !repeatVisit && !isGemTypeInCollection(monsterId, entries);
     setAlbumRevealNewFriend(newAlbumFriend);
     const overlayMs =
       encounterMode && repeatVisit ? GEM_ENCOUNTER_CELEBRATE_MS : GEM_COLLECT_OVERLAY_MS;
@@ -456,6 +459,7 @@ export function GemHuntOverlay({
   }, [phase, monsterId]);
 
   function finishNewFriendClose() {
+    releaseGemHuntCamera(videoRef.current);
     onCollectRef.current(monsterId, { cheer: true });
   }
 
@@ -583,18 +587,24 @@ export function GemHuntOverlay({
   }, [encounterPhase, onTreatSuccess]);
 
   const handleGemInspectTap = useCallback(() => {
-    if (encounterMode && encounterPhase === "encounter" && canCollectNow) {
+    if (encounterMode && encounterPhase === "encounter" && gemAtCenter) {
       offerEncounterCollect();
       return;
     }
-    handleCollect();
-  }, [encounterMode, encounterPhase, canCollectNow, offerEncounterCollect, handleCollect]);
+    if (canTapCollect) handleCollect();
+  }, [encounterMode, encounterPhase, gemAtCenter, offerEncounterCollect, canTapCollect, handleCollect]);
 
   const showHuntGem =
-    gemVisible && (gemAtCenter || (!gemAtCenter && showWorldGemSprite));
+    gemVisible &&
+    (gemAtCenter ||
+      showWorldGemSprite ||
+      (hintPanel === "nav" && !centerReveal && !gemAtCenter));
 
   const gemEncounterWiggle =
-    encounterPhase === "resolve-wiggle1" || encounterPhase === "resolve-wiggle2";
+    encounterPhase === "resolve-hit" ||
+    encounterPhase === "resolve-wiggle1" ||
+    encounterPhase === "resolve-wiggle2" ||
+    encounterPhase === "resolve-breakout";
   const gemMotion =
     phase === "collecting" || encounterPhase === "resolve-celebrate"
       ? "celebrate"
@@ -604,7 +614,7 @@ export function GemHuntOverlay({
     encounterMode &&
     (encounterPhase === "approach" || encounterPhase === "encounter") &&
     phase !== "collecting";
-  const showEncounterCollectFooter = showEncounterFooter && encounterPhase === "encounter";
+  const showEncounterCollectFooter = false;
   const showLegacyFooter =
     !encounterMode || showEncounterFooter;
   const hideFooterChrome =
@@ -778,7 +788,13 @@ export function GemHuntOverlay({
                 worldYawRad={gemAtCenter ? null : worldYawRad}
                 motion={gemMotion}
                 celebrateVariant={collectDanceIndex}
-                onInspectTap={canTapCollect ? handleGemInspectTap : undefined}
+                onInspectTap={
+                  encounterMode && encounterPhase === "encounter" && gemAtCenter
+                    ? handleGemInspectTap
+                    : canTapCollect
+                      ? handleGemInspectTap
+                      : undefined
+                }
               />
             </div>
           </div>
@@ -800,9 +816,9 @@ export function GemHuntOverlay({
         <footer className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt" dir="rtl">
           <div className="gem-hunt-overlay__footer-stack">
             <div className="gem-hunt-overlay__footer-hint-slot">
-              {showEncounterCollectFooter ? (
+              {showEncounterFooter && encounterPhase === "encounter" ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
-                  אפשר לסובב את החיה. לאיסוף — הקישו עליה או החליקו פינוק למעלה מהמסך.
+                  סובבו את החיה באצבע. לאיסוף — הקישו עליה.
                 </p>
               ) : null}
               {showNavCompassPrompt && !encounterMode ? (
@@ -838,25 +854,6 @@ export function GemHuntOverlay({
               ) : null}
             </div>
             <div className="gem-hunt-overlay__footer-controls">
-              {showEncounterCollectFooter ? (
-                <button
-                  type="button"
-                  className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact gem-hunt-overlay__hint-btn--accent w-full"
-                  disabled={encounterPhase !== "encounter"}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    offerEncounterCollect();
-                  }}
-                >
-                  <span className="gem-hunt-overlay__hint-btn-label">
-                    <span className="gem-hunt-overlay__hint-btn-title">אספו את החבר</span>
-                    <span className="gem-hunt-overlay__hint-btn-sub gem-hunt-overlay__hint-btn-sub--muted">
-                      הקישו על החיה למטה
-                    </span>
-                  </span>
-                </button>
-              ) : (
                 <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
                   <button
                     type="button"
@@ -894,7 +891,6 @@ export function GemHuntOverlay({
                     </button>
                   ) : null}
                 </div>
-              )}
             </div>
           </div>
         </footer>

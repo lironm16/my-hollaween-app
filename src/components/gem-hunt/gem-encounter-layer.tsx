@@ -1,6 +1,5 @@
 "use client";
 
-import { gemLabelHe, gemMonsterForHouse } from "@/lib/gem-hunt";
 import type { PublicHouse } from "@/lib/types";
 import { formatDistance } from "@/lib/geo";
 import {
@@ -8,7 +7,6 @@ import {
   markEncounterTutorialSeen,
   type GemEncounterPhase,
 } from "@/lib/gem-encounter";
-import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
 export function GemEncounterLayer({
@@ -31,7 +29,6 @@ export function GemEncounterLayer({
   hideApproachLine?: boolean;
   onOfferTreatButton?: () => void;
 }) {
-  const monsterId = gemMonsterForHouse(house);
   const [tutorialSeen, setTutorialSeen] = useState(true);
 
   useEffect(() => {
@@ -77,39 +74,11 @@ export function GemEncounterLayer({
     phase === "resolve-hit" ||
     phase === "resolve-wiggle1" ||
     phase === "resolve-wiggle2" ||
-    phase === "resolve-breakout"
+    phase === "resolve-breakout" ||
+    phase === "resolve-celebrate" ||
+    (phase === "reward" && repeatVisit)
   ) {
-    const msg =
-      phase === "resolve-breakout"
-        ? "אופס! נסו שוב…"
-        : phase === "resolve-wiggle2"
-          ? "רגע…"
-          : phase === "resolve-wiggle1"
-            ? "האם יישאר?"
-            : "";
-    return (
-      <div className={cn("gem-encounter-layer gem-encounter-layer--resolve", phase === "resolve-breakout" && "is-breakout")} role="status">
-        {msg ? <p className="gem-encounter-layer__resolve-msg">{msg}</p> : null}
-      </div>
-    );
-  }
-
-  if (phase === "resolve-celebrate") {
-    return (
-      <div className="gem-encounter-layer gem-encounter-layer--celebrate" role="status">
-        <p className="gem-encounter-layer__celebrate-msg">
-          {repeatVisit ? `שוב פגשתם את ${gemLabelHe(monsterId)}!` : "כל הכבוד!!"}
-        </p>
-      </div>
-    );
-  }
-
-  if (phase === "reward" && repeatVisit) {
-    return (
-      <div className="gem-encounter-layer gem-encounter-layer--repeat-reward" role="status">
-        <p className="gem-encounter-layer__repeat-msg">+1 למפגשים שלכם</p>
-      </div>
-    );
+    return null;
   }
 
   return null;

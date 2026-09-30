@@ -267,7 +267,7 @@ export function GemHuntWebXrAr({
     encounterMode &&
     (encounterPhase === "approach" || encounterPhase === "encounter") &&
     phase !== "collecting";
-  const showEncounterCollectFooter = showEncounterFooter && encounterPhase === "encounter";
+  const showEncounterCollectFooter = false;
   const showSessionFooter =
     sessionActive && phase !== "collecting" && (!encounterMode || showEncounterFooter) && !hideFooterChrome;
 
@@ -683,9 +683,9 @@ export function GemHuntWebXrAr({
         ) : (
           <div className="gem-hunt-overlay__footer-stack">
             <div className="gem-hunt-overlay__footer-hint-slot">
-              {showEncounterCollectFooter ? (
+              {showEncounterFooter && encounterPhase === "encounter" ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
-                  אפשר לסובב את החיה. לאיסוף — הקישו עליה או החליקו פינוק למעלה.
+                  סובבו את החיה. לאיסוף — הקישו עליה.
                 </p>
               ) : null}
               {showSessionFooter && hintPanel === "nav" ? (
@@ -720,70 +720,48 @@ export function GemHuntWebXrAr({
             />
             {showSessionFooter ? (
               <div className="gem-hunt-overlay__footer-controls">
-                {showEncounterCollectFooter ? (
+                <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
                   <button
                     type="button"
-                    className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact gem-hunt-overlay__hint-btn--accent w-full"
-                    disabled={!canCollect}
+                    className={cn(
+                      "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
+                      hintPanel === "nav" && "is-active",
+                    )}
+                    aria-pressed={hintPanel === "nav"}
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => {
                       e.stopPropagation();
-                      offerEncounterCollect();
+                      void toggleHintPanel();
                     }}
                   >
                     <span className="gem-hunt-overlay__hint-btn-label">
-                      <span className="gem-hunt-overlay__hint-btn-title">אספו את החבר</span>
-                      <span className="gem-hunt-overlay__hint-btn-sub gem-hunt-overlay__hint-btn-sub--muted">
-                        הקישו על החיה במרחב
-                      </span>
+                      <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
+                      <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
                     </span>
                   </button>
-                ) : (
-                  <>
-                    <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
-                      <button
-                        type="button"
-                        className={cn(
-                          "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
-                          hintPanel === "nav" && "is-active",
-                        )}
-                        aria-pressed={hintPanel === "nav"}
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void toggleHintPanel();
-                        }}
-                      >
-                        <span className="gem-hunt-overlay__hint-btn-label">
-                          <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
-                          <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
-                        </span>
-                      </button>
-                      {!encounterMode || showEncounterFooter ? (
-                        <button
-                          type="button"
-                          className={cn(
-                            "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
-                            revealBtnActive && "is-active",
-                          )}
-                          aria-pressed={revealBtnActive}
-                          onPointerDown={(e) => e.stopPropagation()}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onRevealAssist();
-                          }}
-                        >
-                          {revealBtnLabel}
-                        </button>
-                      ) : null}
-                    </div>
-                    {!encounterMode && canCollect && placed && arGemVisible ? (
-                      <p className="gem-hunt-webxr__collect-hint" role="status">
-                        הקישו על החיה במרחב כדי לאסוף
-                      </p>
-                    ) : null}
-                  </>
-                )}
+                  {!encounterMode || showEncounterFooter ? (
+                    <button
+                      type="button"
+                      className={cn(
+                        "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
+                        revealBtnActive && "is-active",
+                      )}
+                      aria-pressed={revealBtnActive}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRevealAssist();
+                      }}
+                    >
+                      {revealBtnLabel}
+                    </button>
+                  ) : null}
+                </div>
+                {!encounterMode && canCollect && placed && arGemVisible ? (
+                  <p className="gem-hunt-webxr__collect-hint" role="status">
+                    הקישו על החיה במרחב כדי לאסוף
+                  </p>
+                ) : null}
               </div>
             ) : null}
           </div>

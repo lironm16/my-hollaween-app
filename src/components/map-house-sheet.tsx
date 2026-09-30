@@ -372,7 +372,6 @@ export function MapHouseSheet({
                   <p className="map-house-sheet-kicker">{address}</p>
                   <p className="map-house-sheet-sub">{clusterHouses.length} בתים בכתובת זו</p>
                 </div>
-                {actionMenu}
               </div>
             </div>
             <div className="map-house-sheet-cluster-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
