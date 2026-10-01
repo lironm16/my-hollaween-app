@@ -129,6 +129,7 @@ export default function HousePage() {
             </div>
             <HouseCard
               {...houseCardPropsFor(house, actionContext, {
+                liveDetail: true,
                 extra:
                   gemUi ? (
                     <GemHuntPanelLazy

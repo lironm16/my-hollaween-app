@@ -153,7 +153,10 @@ export type NightPatch = {
   ownerPhone?: string | null;
 };
 
-export type PublicHouse = Omit<House, "editCode" | "storeId" | "ownerPhone">;
+export type PublicHouse = Omit<House, "editCode" | "storeId" | "ownerPhone"> & {
+  /** True when hydrated from on-device cache — detail text/address must be fetched live. */
+  deviceCachePin?: boolean;
+};
 
 /** Admin / owner edit surfaces may attach internal contact fields. */
 export type EditorHouse = PublicHouse & { ownerPhone?: string | null };

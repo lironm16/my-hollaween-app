@@ -66,6 +66,13 @@ describe("houseMapsUrl", () => {
     const url = houseMapsUrl(stub({ address: "", lat: 32.09, lng: 34.8 }));
     assert.match(url, /destination=32\.09,34\.8/);
   });
+
+  it("does not navigate by coordinates for pin-only device cache rows", () => {
+    const url = houseMapsUrl(
+      stub({ address: "", lat: 32.09, lng: 34.8, deviceCachePin: true }),
+    );
+    assert.doesNotMatch(url, /destination=32\.09,34\.8/);
+  });
 });
 
 describe("houseSharePath", () => {

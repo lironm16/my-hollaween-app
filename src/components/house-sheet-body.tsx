@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { HouseCard } from "@/components/house-card";
 import { houseCardPropsFor, type HouseCardActionContext } from "@/components/house-card-actions";
+import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
 import { FilterMismatchNotice } from "@/components/house-skipped-banner";
 import { CodesCopy } from "@/components/codes-copy";
 import { houseHeadline } from "@/lib/labels";
@@ -32,8 +33,20 @@ export function HouseSheetBody({
   hideHoursBanner?: boolean;
 }) {
   const editCode = actionContext.editCodeFor?.(house.id);
+  const { house: liveHouse, loading, unavailable } = useServerHouseDetail(house);
+  const displayHouse = liveHouse ?? house;
   return (
     <>
+      {loading ? (
+        <p className="mb-2 text-sm text-violet-300" role="status">
+          טוען פרטי בית מהשרת…
+        </p>
+      ) : null}
+      {unavailable ? (
+        <p className="mb-2 text-sm text-orange-200" role="alert">
+          הבית לא זמין במפה הציבורית.
+        </p>
+      ) : null}
       <FilterMismatchNotice
         reasons={filterMismatchReasons}
         skipMeta={skipMeta}
@@ -42,13 +55,13 @@ export function HouseSheetBody({
       />
       {editing ? (
         <>
-          <p className="map-house-sheet-kicker">{houseHeadline(house)}</p>
+          <p className="map-house-sheet-kicker">{houseHeadline(displayHouse)}</p>
           {editCode ? <CodesCopy editCode={editCode} /> : null}
           {extra}
         </>
       ) : (
         <HouseCard
-          {...houseCardPropsFor(house, actionContext, {
+          {...houseCardPropsFor(displayHouse, actionContext, {
             index,
             hideHoursBanner,
             extra,

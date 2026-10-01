@@ -6,6 +6,8 @@ import { houseActionBarPropsFromCard } from "@/components/house-card-actions";
 import { HouseDetails } from "@/components/house-details";
 import { HouseCardBanners } from "@/components/house-skipped-banner";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
+import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
+import { isDeviceCachePinHouse } from "@/lib/device-catalog-cache";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
@@ -36,6 +38,8 @@ export function HouseCard({
   hideHoursBanner = false,
   extra,
   className,
+  /** Fetch address/story fields when the row is pin-only from device cache. */
+  liveDetail = false,
   ...rest
 }: {
   house: PublicHouse;
@@ -64,9 +68,15 @@ export function HouseCard({
   hideHoursBanner?: boolean;
   extra?: ReactNode;
   className?: string;
+  liveDetail?: boolean;
 }) {
+  const shouldFetchLive = liveDetail && isDeviceCachePinHouse(house);
+  const { house: liveHouse, loading, unavailable } = useServerHouseDetail(
+    shouldFetchLive ? house : null,
+  );
+  const displayHouse = shouldFetchLive ? (liveHouse ?? house) : house;
   const cardProps = {
-    house,
+    house: displayHouse,
     distanceM,
     catalogSource,
     liked,
@@ -91,6 +101,7 @@ export function HouseCard({
     hideHoursBanner,
     extra,
     className,
+    liveDetail,
     ...rest,
   };
   const actionBarProps = houseActionBarPropsFromCard(cardProps);
@@ -104,6 +115,16 @@ export function HouseCard({
       )}
     >
       <div className="px-3 pb-1 pt-2">
+        {shouldFetchLive && loading ? (
+          <p className="mb-2 text-sm text-violet-300" role="status">
+            טוען פרטי בית מהשרת…
+          </p>
+        ) : null}
+        {shouldFetchLive && unavailable ? (
+          <p className="mb-2 text-sm text-orange-200" role="alert">
+            הבית לא זמין במפה הציבורית.
+          </p>
+        ) : null}
         <HouseCardBanners
           skipped={skipped}
           skipMeta={skipMeta}

@@ -3,6 +3,7 @@ import type { SkipReasonId } from "@/lib/skip-reasons";
 import { syncCatalog } from "@/lib/catalog-sync";
 import { loadGemLabStubs } from "@/lib/gem-lab-stubs";
 import { tombstoneHouse, loadDeletedHouseIds } from "@/lib/deleted-houses";
+import { stripHouseForDeviceCache } from "@/lib/device-catalog-cache";
 import { syncDecorFields } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import type { CandyTone, HouseInput, ScareLevel, SensitivityId } from "@/lib/types";
@@ -195,7 +196,11 @@ export function clearDeviceCatalogCache() {
 export async function saveCatalogCache(catalog: Catalog) {
   const existing = readLocalCatalog();
   const merged = existing ? syncCatalog(existing, catalog) : catalog;
-  const safe = asCachedCatalog(merged);
+  const forDevice: Catalog = {
+    ...merged,
+    houses: merged.houses.map(stripHouseForDeviceCache),
+  };
+  const safe = asCachedCatalog(forDevice);
   if (!safe) return;
   writeLocalCatalog(safe);
   try {

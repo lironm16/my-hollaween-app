@@ -16,6 +16,7 @@ import { HoursLabel } from "@/components/clock-time";
 import { formatHoursLabel } from "@/lib/hours";
 import { houseAddedMetaLine } from "@/lib/house-meta";
 import { houseHeadline } from "@/lib/labels";
+import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { houseMapsUrl, houseSharePath } from "@/lib/nav-links";
 import { shouldLoadHousePhoto } from "@/lib/photos";
 import type { EditorHouse, PublicHouse } from "@/lib/types";
@@ -320,7 +321,7 @@ export function HouseDetails({
   const ownerPhone = admin ? (house as EditorHouse).ownerPhone?.trim() : "";
   const displayAddress = addressReveal.formatDisplayAddress(house);
   const arrivalText = addressReveal.visibleArrival(house);
-  const showMaps = addressReveal.mapsAllowed(house.id);
+  const showMaps = addressReveal.mapsAllowed(house.id) && houseServerDetailReady(house);
   const showDistance =
     addressReveal.distanceAllowed(house.id) && distanceM !== undefined;
   const addedMeta = houseAddedMetaLine(house);

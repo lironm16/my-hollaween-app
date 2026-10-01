@@ -20,6 +20,7 @@ import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
 import { EditCodeDialog } from "@/components/edit-code-dialog";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
 import { appHeaderBottom, safeAreaInsetBottom } from "@/lib/viewport";
@@ -123,7 +124,7 @@ export function HouseActionBar({
 
   const items: MenuItem[] = [];
 
-  if (showNav && addressReveal.mapsAllowed(house.id)) {
+  if (showNav && addressReveal.mapsAllowed(house.id) && houseServerDetailReady(house)) {
     items.push({
       id: "nav",
       label: "ניווט",
@@ -156,7 +157,8 @@ export function HouseActionBar({
       icon: <Share2 className={MENU_ICON_CLASS} strokeWidth={2.2} />,
       onClick: () => {
         void shareHouse(house, {
-          includeLocationDetails: addressReveal.canViewDetails(house.id),
+          includeLocationDetails:
+            addressReveal.canViewDetails(house.id) && houseServerDetailReady(house),
           displayAddress: addressReveal.formatDisplayAddress(house),
         }).then((result) => {
           if (result === "copied") toast.success("הקישור הועתק");

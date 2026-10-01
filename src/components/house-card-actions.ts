@@ -37,6 +37,7 @@ export function houseCardPropsFor(
     extra?: ReactNode;
     className?: string;
     expanded?: boolean;
+    liveDetail?: boolean;
   },
 ): ComponentProps<typeof HouseCard> {
   const id = house.id;
@@ -67,6 +68,7 @@ export function houseCardPropsFor(
     extra: opts?.extra,
     className: opts?.className,
     expanded: opts?.expanded,
+    liveDetail: opts?.liveDetail,
   };
 }
 

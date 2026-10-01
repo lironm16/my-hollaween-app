@@ -1,4 +1,5 @@
 import { formatDisplayAddress, formatMapsAddress } from "@/lib/config";
+import { isDeviceCachePinHouse } from "@/lib/device-catalog-cache";
 import { houseShareSlug } from "@/lib/ids";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
@@ -13,7 +14,7 @@ export function houseMapsUrl(house: PublicHouse) {
   if (query) {
     return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}&travelmode=walking`;
   }
-  if (Number.isFinite(house.lat) && Number.isFinite(house.lng)) {
+  if (!isDeviceCachePinHouse(house) && Number.isFinite(house.lat) && Number.isFinite(house.lng)) {
     return `https://www.google.com/maps/dir/?api=1&destination=${house.lat},${house.lng}&travelmode=walking`;
   }
   return `https://www.google.com/maps/dir/?api=1&travelmode=walking`;

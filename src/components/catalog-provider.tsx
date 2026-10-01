@@ -11,7 +11,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { Catalog, CatalogDelta } from "@/lib/types";
+import type { Catalog, CatalogDelta, PublicHouse } from "@/lib/types";
 import { mergeCatalogDelta, syncCatalog } from "@/lib/catalog-sync";
 import { config } from "@/lib/config";
 import {
@@ -37,6 +37,8 @@ import {
 import { catalogHasRealHouses } from "@/lib/house-set";
 import { ensureGemOsmAnchorsLoaded } from "@/lib/gem-osm-anchor-cache";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
+import { withServerHouseDetail } from "@/lib/device-catalog-cache";
+import { HOUSE_DETAIL_LOADED_EVENT } from "@/lib/fetch-public-house";
 import { isMapListSuspended, subscribeMapListSuspend } from "@/lib/map-list-suspend";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
@@ -246,7 +248,11 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     emptyDeltaStreakRef.current = 0;
     let next!: Catalog;
     setCatalog((cur) => {
-      const merged = withDeviceHouseOverlays(applyCatalogResponse(cur, live));
+      let merged = withDeviceHouseOverlays(applyCatalogResponse(cur, live));
+      merged = {
+        ...merged,
+        houses: merged.houses.map((row) => withServerHouseDetail(row)),
+      };
       next = merged === cur ? cur : merged;
       if (next === cur) return cur;
       const published = publishCatalog(next, cur);
@@ -421,6 +427,20 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       }
     }
   }, [applyLiveResponse, markReachabilityAfterFetchFailure]);
+
+  useEffect(() => {
+    const onHouseDetail = (event: Event) => {
+      const house = (event as CustomEvent<PublicHouse>).detail;
+      if (!house?.id) return;
+      setCatalog((prev) => {
+        if (!prev) return prev;
+        const houses = prev.houses.map((row) => (row.id === house.id ? house : row));
+        return { ...prev, houses };
+      });
+    };
+    window.addEventListener(HOUSE_DETAIL_LOADED_EVENT, onHouseDetail);
+    return () => window.removeEventListener(HOUSE_DETAIL_LOADED_EVENT, onHouseDetail);
+  }, []);
 
   useEffect(() => {
     return subscribeMapListSuspend(() => {
