@@ -13,14 +13,17 @@ import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import {
   GEM_COLLECT_OVERLAY_MS,
   GEM_FACING_TOLERANCE_DEG,
+  GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
   bearingDegrees,
   gemAnchorForHouse,
   gemDistanceMeters,
+  gemLabelHe,
   gemMonsterForHouse,
   GEM_HUNT_METERS,
   relativeWalkBearingDeg,
   type GemCollectFinishOptions,
 } from "@/lib/gem-hunt";
+import { isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
 import { requestGemHuntOrientationPermission } from "@/lib/gem-hunt-sensors";
 import { gemWalkGuideCopy } from "@/lib/gem-hunt-walk-guide";
 import { formatDistance } from "@/lib/geo";
@@ -119,9 +122,14 @@ export function GemHuntWebXrAr({
     [house.id, house.lat, house.lng, anchorOverrides],
   );
   const [hintPanel, setHintPanel] = useState<null | "nav">(null);
-  const [revealAssist, setRevealAssist] = useState(false);
-  const [arGemVisible, setArGemVisible] = useState(true);
-  const arGemVisibleRef = useRef(true);
+  /** «גלה לי» — same semantics as iOS centerReveal (AR model stays in world). */
+  const [centerReveal, setCenterReveal] = useState(false);
+  const [userDismissedCenterGem, setUserDismissedCenterGem] = useState(false);
+  const userDismissedCenterGemRef = useRef(false);
+  const centerRevealRef = useRef(false);
+  const encounterCollectLatchedRef = useRef(false);
+  const collectFinishRef = useRef<number | null>(null);
+  const [albumRevealNewFriend, setAlbumRevealNewFriend] = useState(true);
   const [compassRetry, setCompassRetry] = useState(0);
   const [sessionActive, setSessionActive] = useState(Boolean(initialWebXrSession));
   const [platformMod, setPlatformMod] = useState<"gem-hunt-webxr--android" | "gem-hunt-webxr--ios" | null>(
@@ -132,6 +140,20 @@ export function GemHuntWebXrAr({
     if (isAndroidLike()) setPlatformMod("gem-hunt-webxr--android");
     else if (isIosLike()) setPlatformMod("gem-hunt-webxr--ios");
   }, []);
+
+  useEffect(() => {
+    setCenterReveal(false);
+    setUserDismissedCenterGem(false);
+    setHintPanel(null);
+  }, [house.id]);
+
+  useEffect(() => {
+    userDismissedCenterGemRef.current = userDismissedCenterGem;
+  }, [userDismissedCenterGem]);
+
+  useEffect(() => {
+    centerRevealRef.current = centerReveal;
+  }, [centerReveal]);
 
   useEffect(() => {
     beginMapListOverlayCapture();
@@ -161,6 +183,8 @@ export function GemHuntWebXrAr({
   const [placed, setPlaced] = useState(false);
   const onCollectRef = useRef(onCollect);
   onCollectRef.current = onCollect;
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   const effectiveLoc = simulateInRange
     ? { lat: house.lat, lng: house.lng, accuracy: 5 }
@@ -180,34 +204,63 @@ export function GemHuntWebXrAr({
   const floatHeight = useFloat ? 0.22 + floatBias * 0.18 : 0;
 
   const handleCollect = useCallback(() => {
-    if (!canCollect || phase === "collecting") return;
+    if (phase === "collecting") return;
+    const inCollectBand =
+      canCollectNow || encounterCollectLatchedRef.current || simulateInRange;
+    if (!inCollectBand || !placed) return;
+    const entries = loadGemCollected();
+    const newAlbumFriend = !repeatVisit && !isGemTypeInCollection(monsterId, entries);
     collectingRef.current = true;
     setPhase("collecting");
+    setAlbumRevealNewFriend(newAlbumFriend);
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-      navigator.vibrate([35, 40, 35]);
+      navigator.vibrate([20, 40, 60]);
     }
+    if (collectFinishRef.current != null) window.clearTimeout(collectFinishRef.current);
     const overlayMs =
       encounterMode && repeatVisit ? GEM_ENCOUNTER_CELEBRATE_MS : GEM_COLLECT_OVERLAY_MS;
-    window.setTimeout(() => {
+    collectFinishRef.current = window.setTimeout(() => {
+      collectFinishRef.current = null;
+      if (newAlbumFriend) {
+        if (GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED) {
+          /* WebXR has no in-camera album — same as overlay fallback */
+        }
+        onCollectRef.current(monsterId, { cheer: false, navigateStickerBook: true });
+        onCloseRef.current();
+        return;
+      }
       onCollectRef.current(monsterId, { cheer: true });
+      onCloseRef.current();
     }, overlayMs);
-  }, [canCollect, encounterMode, monsterId, phase, repeatVisit]);
+  }, [
+    canCollectNow,
+    encounterMode,
+    monsterId,
+    phase,
+    placed,
+    repeatVisit,
+    simulateInRange,
+  ]);
 
   const finishRepeatEncounter = useCallback(() => {
     onClose();
   }, [onClose]);
 
-  const petRevealedForEncounter = sessionActive && placed && arGemVisible;
+  const showArGem =
+    placed && (phase === "collecting" || !userDismissedCenterGem);
+
+  const petRevealedForEncounter = sessionActive && placed && showArGem;
   const inRangeForEncounter = inCollectBand;
 
   const {
     encounterPhase,
+    setEncounterPhase,
     onTreatSuccess,
     onTreatMiss,
   } = useGemEncounterPhase({
     enabled: encounterMode && sessionActive,
     repeatVisit,
-    collectEnabled: canCollect,
+    collectEnabled: canCollectNow,
     petRevealed: petRevealedForEncounter,
     inRange: inRangeForEncounter,
     onEncounterCollect: handleCollect,
@@ -216,6 +269,27 @@ export function GemHuntWebXrAr({
 
   const encounterPhaseRef = useRef(encounterPhase);
   encounterPhaseRef.current = encounterPhase;
+
+  useEffect(() => {
+    if (encounterMode && encounterPhase === "encounter" && (canCollectNow || simulateInRange)) {
+      encounterCollectLatchedRef.current = true;
+    }
+  }, [encounterMode, encounterPhase, canCollectNow, simulateInRange]);
+
+  /** «גלה לי» during approach — skip wait (iOS parity). */
+  useEffect(() => {
+    if (!encounterMode || !centerReveal || userDismissedCenterGem || encounterPhase !== "approach")
+      return;
+    setEncounterPhase("encounter");
+  }, [encounterMode, centerReveal, userDismissedCenterGem, encounterPhase, setEncounterPhase]);
+
+  const encounterForcesReveal =
+    !userDismissedCenterGem &&
+    encounterMode &&
+    (encounterPhase === "encounter" ||
+      encounterPhase.startsWith("resolve") ||
+      encounterPhase === "reward");
+  const tellMeRevealActive = centerReveal || encounterForcesReveal;
 
   const treatSwipe = useTreatSwipe({
     onSuccess: () => {
@@ -253,15 +327,20 @@ export function GemHuntWebXrAr({
     liveLoc != null && !simulateInRange
       ? googleMapsNavigateUrl(liveLoc, { lat: anchor.lat, lng: anchor.lng })
       : null;
-  const revealBtnActive = placed ? arGemVisible : revealAssist;
-  const revealBtnLabel = placed ? (arGemVisible ? "הסתר" : "גלה לי") : revealAssist ? "הסתר" : "גלה לי";
-  const showNavArrow =
-    sessionActive &&
-    hintPanel === "nav" &&
-    !revealBtnActive &&
-    huntArrowDeg != null &&
-    liveLoc != null &&
-    !simulateInRange;
+  const showNavArrow = encounterMode
+    ? sessionActive &&
+      encounterPhase === "approach" &&
+      hintPanel === "nav" &&
+      !centerReveal &&
+      huntArrowDeg != null &&
+      liveLoc != null &&
+      !simulateInRange
+    : sessionActive &&
+      hintPanel === "nav" &&
+      !centerReveal &&
+      huntArrowDeg != null &&
+      liveLoc != null &&
+      !simulateInRange;
   const hideFooterChrome = encounterMode && encounterUiChromeHidden(encounterPhase);
   const showEncounterFooter =
     encounterMode &&
@@ -272,10 +351,26 @@ export function GemHuntWebXrAr({
     sessionActive && phase !== "collecting" && (!encounterMode || showEncounterFooter) && !hideFooterChrome;
 
   const offerEncounterCollect = useCallback(() => {
-    if (!canCollect || encounterPhase !== "encounter") return;
+    if (encounterPhase !== "encounter") return;
+    if (!canCollectNow && !encounterCollectLatchedRef.current && !simulateInRange) return;
+    if (!placed || !showArGem) return;
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate([12, 28, 18]);
+    }
+    encounterCollectLatchedRef.current = true;
     markEncounterTutorialSeen();
     onTreatSuccess();
-  }, [canCollect, encounterPhase, onTreatSuccess]);
+  }, [
+    canCollectNow,
+    encounterPhase,
+    onTreatSuccess,
+    placed,
+    showArGem,
+    simulateInRange,
+  ]);
+
+  const offerEncounterCollectRef = useRef(offerEncounterCollect);
+  offerEncounterCollectRef.current = offerEncounterCollect;
 
   const handleClose = useCallback(() => {
     if (phase === "collecting") return;
@@ -287,37 +382,68 @@ export function GemHuntWebXrAr({
       setHintPanel(null);
       return;
     }
+    if (centerReveal || tellMeRevealActive) {
+      setUserDismissedCenterGem(true);
+      if (encounterMode && encounterPhase === "encounter") {
+        setEncounterPhase("approach");
+      }
+    }
     placeAssistRef.current.forceOnce = false;
     placeAssistRef.current.fast = false;
-    setRevealAssist(false);
+    setCenterReveal(false);
     const ok = await requestGemHuntOrientationPermission({ force: true });
     if (ok) setCompassRetry((n) => n + 1);
     setHintPanel("nav");
-  }, [hintPanel]);
+  }, [
+    hintPanel,
+    centerReveal,
+    tellMeRevealActive,
+    encounterMode,
+    encounterPhase,
+    setEncounterPhase,
+  ]);
 
-  const onRevealAssist = useCallback(() => {
+  const toggleRevealMe = useCallback(() => {
     if (phase === "collecting" || !sessionActive) return;
 
-    if (placed) {
-      const nextVisible = !arGemVisibleRef.current;
-      arGemVisibleRef.current = nextVisible;
-      setArGemVisible(nextVisible);
-      setRevealAssist(nextVisible);
-      return;
-    }
-
-    if (revealAssist) {
+    if (centerReveal) {
+      setCenterReveal(false);
+      setUserDismissedCenterGem(true);
       placeAssistRef.current.forceOnce = false;
       placeAssistRef.current.fast = false;
-      setRevealAssist(false);
+      if (encounterMode && encounterPhase === "encounter") {
+        setEncounterPhase("approach");
+      }
       return;
     }
 
+    setUserDismissedCenterGem(false);
     setHintPanel(null);
-    placeAssistRef.current.forceOnce = true;
-    placeAssistRef.current.fast = true;
-    setRevealAssist(true);
-  }, [placed, phase, revealAssist, sessionActive]);
+
+    if (!placed) {
+      placeAssistRef.current.forceOnce = true;
+      placeAssistRef.current.fast = true;
+      setCenterReveal(true);
+      return;
+    }
+
+    setCenterReveal(true);
+  }, [
+    centerReveal,
+    encounterMode,
+    encounterPhase,
+    phase,
+    placed,
+    sessionActive,
+    setEncounterPhase,
+  ]);
+
+  const collectBanner =
+    phase === "collecting"
+      ? albumRevealNewFriend
+        ? "כל הכבוד!! מצאתם חבר חדש!"
+        : `מצאתם שוב את ${gemLabelHe(monsterId)}`
+      : null;
 
   useEffect(() => {
     const host = hostRef.current;
@@ -426,9 +552,6 @@ export function GemHuntWebXrAr({
       reticle.visible = false;
       setPlaced(true);
       setPhase("placed");
-      setRevealAssist(true);
-      arGemVisibleRef.current = true;
-      setArGemVisible(true);
     };
 
     const onSelect = () => {
@@ -436,7 +559,14 @@ export function GemHuntWebXrAr({
       if (isPlaced) {
         if (encounterMode) {
           const ep = encounterPhaseRef.current;
-          if (ep === "encounter" && canCollectRef.current) return;
+          if (
+            ep === "encounter" &&
+            !userDismissedCenterGemRef.current &&
+            (canCollectRef.current || encounterCollectLatchedRef.current)
+          ) {
+            offerEncounterCollectRef.current();
+            return;
+          }
         } else if (canCollectRef.current) {
           handleCollectRef.current();
         }
@@ -457,9 +587,8 @@ export function GemHuntWebXrAr({
       renderer.setAnimationLoop(null);
       setPlaced(false);
       setPhase("boot");
-      setRevealAssist(false);
-      arGemVisibleRef.current = true;
-      setArGemVisible(true);
+      setCenterReveal(false);
+      setUserDismissedCenterGem(false);
       setSessionActive(false);
       setShowManualStart(true);
     };
@@ -517,9 +646,14 @@ export function GemHuntWebXrAr({
           reticle.visible = false;
         }
 
-        anchorGroup.visible = isPlaced && arGemVisibleRef.current;
+        anchorGroup.visible =
+          isPlaced && (collectingRef.current || !userDismissedCenterGemRef.current);
 
-        if (isPlaced && arGemVisibleRef.current && !collectingRef.current) {
+        if (
+          isPlaced &&
+          !userDismissedCenterGemRef.current &&
+          !collectingRef.current
+        ) {
           const ep = encounterPhaseRef.current;
           const wiggle =
             ep === "resolve-wiggle1" || ep === "resolve-wiggle2" || ep === "resolve-breakout";
@@ -631,6 +765,22 @@ export function GemHuntWebXrAr({
         <OverlayCloseButton label="סגירה" onClick={handleClose} className="gem-hunt-webxr__close-btn" />
       </header>
 
+      {collectBanner ? (
+        <p
+          className={cn(
+            "gem-hunt-overlay__collect-banner",
+            phase === "collecting" && "is-exploding",
+          )}
+          role="status"
+        >
+          {collectBanner}
+        </p>
+      ) : null}
+
+      {phase === "collecting" ? (
+        <div className="gem-hunt-overlay__collect-flash" aria-hidden />
+      ) : null}
+
       <div ref={hostRef} className="gem-hunt-webxr__host" />
 
       {encounterMode ? (
@@ -640,14 +790,11 @@ export function GemHuntWebXrAr({
           distanceM={distanceM}
           inRange={inRangeForEncounter}
           repeatVisit={repeatVisit}
-          hideApproachLine={hintPanel === "nav"}
+          hideApproachLine={hintPanel === "nav" || centerReveal}
           showTutorial={encounterPhase === "encounter"}
           onOfferTreatButton={
-            encounterPhase === "encounter" && canCollect
-              ? () => {
-                  markEncounterTutorialSeen();
-                  onTreatSuccess();
-                }
+            encounterPhase === "encounter" && tellMeRevealActive
+              ? () => offerEncounterCollect()
               : undefined
           }
         />
@@ -663,7 +810,7 @@ export function GemHuntWebXrAr({
         </div>
       ) : null}
 
-      {encounterPhase === "encounter" && phase !== "collecting" ? (
+      {encounterPhase === "encounter" && !centerReveal && phase !== "collecting" ? (
         <div
           className="gem-hunt-overlay__encounter-swipe-zone"
           aria-hidden
@@ -686,7 +833,7 @@ export function GemHuntWebXrAr({
             <div className="gem-hunt-overlay__footer-hint-slot">
               {showEncounterFooter && encounterPhase === "encounter" ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
-                  סובבו את החיה. לאיסוף — הקישו עליה.
+                  סובבו את החיה באצבע. לאיסוף — הקישו עליה.
                 </p>
               ) : null}
               {showSessionFooter && hintPanel === "nav" ? (
@@ -745,24 +892,19 @@ export function GemHuntWebXrAr({
                       type="button"
                       className={cn(
                         "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
-                        revealBtnActive && "is-active",
+                        centerReveal && "is-active",
                       )}
-                      aria-pressed={revealBtnActive}
+                      aria-pressed={centerReveal}
                       onPointerDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onRevealAssist();
+                        toggleRevealMe();
                       }}
                     >
-                      {revealBtnLabel}
+                      {centerReveal ? "הסתר" : "גלה לי"}
                     </button>
                   ) : null}
                 </div>
-                {!encounterMode && canCollect && placed && arGemVisible ? (
-                  <p className="gem-hunt-webxr__collect-hint" role="status">
-                    הקישו על החיה במרחב כדי לאסוף
-                  </p>
-                ) : null}
               </div>
             ) : null}
           </div>
