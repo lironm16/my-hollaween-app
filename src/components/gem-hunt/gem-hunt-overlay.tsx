@@ -143,6 +143,8 @@ export function GemHuntOverlay({
   const [hintPanel, setHintPanel] = useState<null | "nav">(null);
   /** User chose «גלה לי» — centered gem on the camera (not orbit hint box). */
   const [centerReveal, setCenterReveal] = useState(false);
+  /** User tapped «הסתר» or opened «רמז» after center — do not keep encounter/tell-me center lock. */
+  const [userDismissedCenterGem, setUserDismissedCenterGem] = useState(false);
   const gemTapStartRef = useRef<{ x: number; y: number } | null>(null);
   const scanStartRef = useRef(Date.now());
   const panTotalRef = useRef(0);
@@ -167,6 +169,12 @@ export function GemHuntOverlay({
     if (isAndroidLike()) setPlatformMod("gem-hunt-overlay--android");
     else if (isIosLike()) setPlatformMod("gem-hunt-overlay--ios");
   }, []);
+
+  useEffect(() => {
+    setCenterReveal(false);
+    setUserDismissedCenterGem(false);
+    setHintPanel(null);
+  }, [house.id]);
 
   const huntGps = useGemHuntLocation(!sim);
 
@@ -447,9 +455,10 @@ export function GemHuntOverlay({
 
   /** «גלה לי» during approach: enable swipe-treat fallback and tap-collect (skip approach wait). */
   useEffect(() => {
-    if (!encounterMode || !centerReveal || encounterPhase !== "approach") return;
+    if (!encounterMode || !centerReveal || userDismissedCenterGem || encounterPhase !== "approach")
+      return;
     setEncounterPhase("encounter");
-  }, [encounterMode, centerReveal, encounterPhase, setEncounterPhase]);
+  }, [encounterMode, centerReveal, userDismissedCenterGem, encounterPhase, setEncounterPhase]);
 
   useEffect(() => {
     if (phase !== "albumReveal") return;
@@ -481,14 +490,19 @@ export function GemHuntOverlay({
   const toggleRevealMe = useCallback(() => {
     if (centerReveal) {
       setCenterReveal(false);
+      setUserDismissedCenterGem(true);
+      if (encounterMode && encounterPhase === "encounter") {
+        setEncounterPhase("approach");
+      }
       return;
     }
+    setUserDismissedCenterGem(false);
     setHintPanel(null);
     if (!revealedRef.current) reveal();
     setShowHelp(false);
     setHint("found");
     setCenterReveal(true);
-  }, [centerReveal, reveal]);
+  }, [centerReveal, encounterMode, encounterPhase, reveal, setEncounterPhase]);
 
   const gemVisible = phase === "visible" || phase === "collecting";
   const showHuntUi = phase !== "albumReveal";
@@ -562,6 +576,7 @@ export function GemHuntOverlay({
     !isFarForHints &&
     (showCompassEnable || headingStatus === "denied" || headingStatus === "idle" || heading == null);
   const encounterForcesCenter =
+    !userDismissedCenterGem &&
     encounterMode &&
     (encounterPhase === "encounter" ||
       encounterPhase.startsWith("resolve") ||
@@ -612,7 +627,10 @@ export function GemHuntOverlay({
     gemVisible &&
     (gemAtCenter ||
       showWorldGemSprite ||
-      (hintPanel === "nav" && !centerReveal && !gemAtCenter));
+      (hintPanel === "nav" &&
+        !centerReveal &&
+        !gemAtCenter &&
+        !userDismissedCenterGem));
 
   const gemEncounterWiggle =
     encounterPhase === "resolve-hit" ||
@@ -644,11 +662,17 @@ export function GemHuntOverlay({
       setHintPanel(null);
       return;
     }
+    if (centerReveal || gemAtCenter) {
+      setUserDismissedCenterGem(true);
+      if (encounterMode && encounterPhase === "encounter") {
+        setEncounterPhase("approach");
+      }
+    }
     setCenterReveal(false);
     const ok = await requestGemHuntOrientationPermission({ force: true });
     if (ok) setCompassRetry((n) => n + 1);
     setHintPanel("nav");
-  }, [hintPanel]);
+  }, [hintPanel, centerReveal, gemAtCenter, encounterMode, encounterPhase, setEncounterPhase]);
 
   function retryCamera() {
     setCameraError(null);
