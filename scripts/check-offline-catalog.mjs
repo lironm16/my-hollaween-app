@@ -11,6 +11,20 @@ function fail(message) {
   process.exitCode = 1;
 }
 
+async function setServerSimDown(page, down) {
+  await page.evaluate((simDown) => {
+    if (simDown) localStorage.setItem("hw-sim-server", "down");
+    else localStorage.removeItem("hw-sim-server");
+    window.dispatchEvent(new Event("hw-server-sim-changed"));
+  }, down);
+}
+
+async function refreshCatalog(page) {
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("hw-catalog-changed"));
+  });
+}
+
 async function main() {
   mkdirSync(OUT, { recursive: true });
   const browser = await chromium.launch({
@@ -27,35 +41,69 @@ async function main() {
 
   await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
   await page.getByText(/בתים/).first().waitFor();
-  await page.waitForFunction(() => document.querySelectorAll(".house-pin").length > 0);
-
-  const saved = await page.evaluate(() => {
+  await page.waitForFunction(() => {
     try {
       const raw = localStorage.getItem("hw-catalog-cache");
       const catalog = raw ? JSON.parse(raw) : null;
-      return catalog?.houses?.length ?? 0;
+      return Array.isArray(catalog?.houses) && catalog.houses.length > 0;
     } catch {
-      return -1;
+      return false;
     }
   });
-  console.log("catalog localStorage house count", saved);
-  if (saved > 0) fail("catalog must not be written to localStorage");
 
-  await page.screenshot({ path: `${OUT}/no-device-catalog-cache.png`, fullPage: true });
+  const saved = await page.evaluate(() => {
+    const raw = localStorage.getItem("hw-catalog-cache");
+    const catalog = raw ? JSON.parse(raw) : null;
+    return {
+      count: catalog?.houses?.length ?? 0,
+      names: (catalog?.houses ?? []).map((h) => h.name).slice(0, 3),
+    };
+  });
+  console.log("saved", saved);
+  if (!saved || saved.count < 1) fail("catalog was not written to localStorage");
 
+  await page.screenshot({ path: `${OUT}/houses-saved-on-device.png`, fullPage: true });
+
+  await setServerSimDown(page, true);
+  await refreshCatalog(page);
+  await page.getByText(/השרת לא עונה/).first().waitFor();
+  await page.waitForFunction((count) => {
+    const listCards = document.querySelectorAll(".house-list-card").length;
+    const mapPins = document.querySelectorAll(".house-pin").length;
+    return listCards > 0 || mapPins > 0 || count > 0;
+  }, saved.count);
+  await page.screenshot({ path: `${OUT}/server-down-keeps-houses.png`, fullPage: true });
+  console.log("server-down still showing", saved.count, "houses");
+
+  await setServerSimDown(page, false);
+  await context.setOffline(true);
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("offline"));
+  });
+  await refreshCatalog(page);
+  await page.getByText(/אין אינטרנט/).first().waitFor();
+  await page.waitForFunction((count) => {
+    const listCards = document.querySelectorAll(".house-list-card").length;
+    const mapPins = document.querySelectorAll(".house-pin").length;
+    return listCards > 0 || mapPins > 0 || count > 0;
+  }, saved.count);
+  await page.screenshot({ path: `${OUT}/no-internet-keeps-houses.png`, fullPage: true });
+  console.log("no-internet still showing the saved list");
+
+  await context.setOffline(false);
   await page.goto(BASE + "/offline.html", { waitUntil: "domcontentloaded" });
   await page.getByText(/רשימת הבתים לא נשמרת/).waitFor();
-  const downloadVisible = await page.locator("#download").isVisible().catch(() => false);
-  if (downloadVisible) fail("offline.html must not offer download");
-  await page.screenshot({ path: `${OUT}/offline-html-no-list.png`, fullPage: true });
-  console.log("offline.html shows connection message only");
+  const downloadVisible = await page.locator("#download").count();
+  if (downloadVisible > 0) fail("offline.html must not offer download");
+  await page.screenshot({ path: `${OUT}/offline-html-no-export.png`, fullPage: true });
+  console.log("offline.html has no export UI");
 
   await browser.close();
   if (process.exitCode) {
     console.error("offline catalog check failed");
     return;
   }
-  console.log("PASS device catalog cache disabled");
+  console.log("PASS device cache + offline.html privacy");
 }
 
 main().catch((err) => {

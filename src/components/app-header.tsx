@@ -34,7 +34,8 @@ import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { appVersionLabel } from "@/lib/app-version";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
-import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
+import { AdminGemUserPreviewToggle } from "@/components/admin-gem-user-preview-toggle";
+import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +49,7 @@ export function AppHeader({
   const now = useAppNow();
   const { gemBagMenuVisible: showGemBag } = useGemHuntAdminUi(admin, now);
   const showAdminGemOps = admin && gemHuntFabVisible(admin, now);
+  const showAdminUserPreview = admin && gemHuntVisible(admin);
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);
 
@@ -214,6 +216,11 @@ export function AppHeader({
             </Link>
             {admin ? (
               <>
+                {showAdminUserPreview ? (
+                  <div className="px-1 pb-1">
+                    <AdminGemUserPreviewToggle compact />
+                  </div>
+                ) : null}
                 {showAdminGemOps ? (
                   <Link
                     href="/admin/gems"

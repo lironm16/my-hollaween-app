@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { AdminGemUserPreviewToggle } from "@/components/admin-gem-user-preview-toggle";
 import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useRehearsalScene, useServerSim, useAppNow } from "@/hooks/use-app-clock";
@@ -53,7 +54,7 @@ export function AdminDryRunPanel() {
   const { scene, setScene } = useRehearsalScene();
   const { down, setDown } = useServerSim();
   const { houseSet, setHouseSet } = useHouseSet();
-  const { previewAsUser, setPreviewAsUser } = useGemPreviewAsUser();
+  const { previewAsUser } = useGemPreviewAsUser();
   const gemsOnScreen = admin && gemHuntFabVisible(admin, now);
   const [lastScene, setLastScene] = useState<RehearsalScene>("open");
   const [customClock, setCustomClock] = useState("18:00");
@@ -173,16 +174,7 @@ export function AdminDryRunPanel() {
           >
             יהלומים — מפת חברים וחיפוש קרוב
           </Link>
-          <div className="flex items-center justify-between gap-3 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20">
-          <div className="min-w-0">
-            <p className="text-base font-medium text-orange-100">תצוגת משתמש (יהלומים)</p>
-            <p className="text-base text-violet-300">
-              פועל = כמו משתמש בלילה — יהלומים, ספר החברים וסינון «לא אספתי», בלי כלי בדיקה (סימולציית
-              טווח, סיכות יהלום, איפוס איסוף). כבוי = כפתור ✨ במפה להצגת כל החברים במקום יהלום.
-            </p>
-          </div>
-          <Toggle on={previewAsUser} onClick={() => setPreviewAsUser(!previewAsUser)} />
-        </div>
+          <AdminGemUserPreviewToggle />
         </div>
       ) : null}
       {gemsOnScreen && !previewAsUser ? <GemCharacterSilhouetteSamples /> : null}

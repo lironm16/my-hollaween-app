@@ -105,7 +105,7 @@ function writeLocalCatalog(catalog: Catalog) {
 }
 
 export function loadCatalogCacheSync(): Catalog | null {
-  return null;
+  return readLocalCatalog();
 }
 
 function asCatalogCacheMeta(value: unknown): CatalogCacheMeta | null {
@@ -163,7 +163,7 @@ export function clearCatalogCacheComplete() {
   saveCatalogCacheMeta({ complete: false });
 }
 
-/** Remove published catalog snapshots from the device (privacy / no offline house dumps). */
+/** Optional wipe — not run on boot (cache is needed for instant map paint). */
 export function clearDeviceCatalogCache() {
   if (typeof window === "undefined") return;
   try {
@@ -189,15 +189,48 @@ export function clearDeviceCatalogCache() {
 }
 
 /**
- * Published house list is not persisted on devices (localStorage / IndexedDB).
- * Map basemap tiles are cached separately by the service worker (`hw-map-tiles-v2`).
+ * On-device catalog for fast startup and offline map (not exposed via offline.html export).
+ * Map basemap tiles use the service worker cache (`hw-map-tiles-v2`) separately.
  */
-export async function saveCatalogCache(_catalog: Catalog) {
-  return;
+export async function saveCatalogCache(catalog: Catalog) {
+  const existing = readLocalCatalog();
+  const merged = existing ? syncCatalog(existing, catalog) : catalog;
+  const safe = asCachedCatalog(merged);
+  if (!safe) return;
+  writeLocalCatalog(safe);
+  try {
+    const db = await openDb();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE, "readwrite");
+      tx.objectStore(STORE).put(safe, KEY);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+  } catch {
+    // IndexedDB can be blocked in private mode; localStorage is enough.
+  }
 }
 
 export async function loadCatalogCache(): Promise<Catalog | null> {
-  return null;
+  try {
+    const db = await openDb();
+    const value = await new Promise<unknown>((resolve, reject) => {
+      const tx = db.transaction(STORE, "readonly");
+      const req = tx.objectStore(STORE).get(KEY);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    db.close();
+    const fromDb = asCachedCatalog(value);
+    if (fromDb) {
+      writeLocalCatalog(fromDb);
+      return fromDb;
+    }
+  } catch {
+    /* fall through to localStorage */
+  }
+  return readLocalCatalog();
 }
 
 const MY_HOUSES_KEY = "hw-my-houses";
