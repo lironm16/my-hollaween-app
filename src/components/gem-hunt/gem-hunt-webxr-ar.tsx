@@ -27,7 +27,6 @@ import {
 import {
   averageGeoSamples,
   geoPlacementReady,
-  geoSampleSpreadMeters,
   rigidTransformFromViewerOffset,
   tryCreateNativeGeospatialAnchor,
   viewerLocalOffsetMeters,
@@ -530,6 +529,7 @@ export function GemHuntWebXrAr({
       if (!worldAnchor) return;
       const pose = frame.getPose(worldAnchor.anchorSpace, ref);
       if (!pose) return;
+      anchorGroup.matrixAutoUpdate = false;
       anchorGroup.matrix.fromArray(pose.transform.matrix);
       anchorGroup.matrix.decompose(anchorGroup.position, anchorGroup.quaternion, anchorGroup.scale);
       anchorGroup.visible =
