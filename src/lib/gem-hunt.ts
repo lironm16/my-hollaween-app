@@ -66,6 +66,8 @@ export const GEM_HELP_AFTER_SECONDS = 8;
 export const GEM_CAMERA_HFOV_DEG = 48;
 /** Max walk distance to anchor before hiding the world-pinned gem (iOS camera hunt). */
 export const GEM_WORLD_PIN_MAX_METERS = 16;
+/** Android WebXR — same on-site radius for placement, encounter, and collect. */
+export const GEM_WEBXR_HUNT_METERS = GEM_WORLD_PIN_MAX_METERS;
 /** Approx. vertical FOV — used when tilting the phone up/down. */
 export const GEM_CAMERA_VFOV_DEG = 50;
 /** Ground gem elevation vs horizon when holding the phone level (negative = toward feet). */

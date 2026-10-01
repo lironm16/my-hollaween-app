@@ -19,7 +19,7 @@ import {
   gemDistanceMeters,
   gemLabelHe,
   gemMonsterForHouse,
-  GEM_HUNT_METERS,
+  GEM_WEBXR_HUNT_METERS,
   relativeWalkBearingDeg,
   type GemCollectFinishOptions,
 } from "@/lib/gem-hunt";
@@ -193,11 +193,15 @@ export function GemHuntWebXrAr({
   const liveLoc = simulateInRange ? effectiveLoc : huntGps ?? userLocation;
   const distanceM =
     liveLoc != null ? gemDistanceMeters(liveLoc, house) : null;
-  const inCollectBand =
+  const inWebXrHuntBand =
     simulateInRange ||
-    (liveLoc != null && gemDistanceMeters(liveLoc, house) <= GEM_HUNT_METERS);
-  const canCollectNow = collectEnabled || inCollectBand;
-  const canCollect = canCollectNow && inCollectBand && placed;
+    (liveLoc != null && gemDistanceMeters(liveLoc, house) <= GEM_WEBXR_HUNT_METERS);
+  /** Tighter than map «hunt» (25 m) — matches iOS world-pin radius on WebXR. */
+  const canCollectNow =
+    inWebXrHuntBand && (simulateInRange || collectEnabled);
+  const canCollect = canCollectNow && inWebXrHuntBand && placed;
+  const inWebXrHuntBandRef = useRef(inWebXrHuntBand);
+  inWebXrHuntBandRef.current = inWebXrHuntBand;
 
   const floatBias = hashFloat(house.id, "webxr-float");
   const useFloat = floatBias > 0.62;
@@ -205,9 +209,11 @@ export function GemHuntWebXrAr({
 
   const handleCollect = useCallback(() => {
     if (phase === "collecting") return;
-    const inCollectBand =
-      canCollectNow || encounterCollectLatchedRef.current || simulateInRange;
-    if (!inCollectBand || !placed) return;
+    const inBand =
+      inWebXrHuntBand ||
+      encounterCollectLatchedRef.current ||
+      simulateInRange;
+    if (!inBand || !placed) return;
     const entries = loadGemCollected();
     const newAlbumFriend = !repeatVisit && !isGemTypeInCollection(monsterId, entries);
     collectingRef.current = true;
@@ -250,7 +256,7 @@ export function GemHuntWebXrAr({
     placed && (phase === "collecting" || !userDismissedCenterGem);
 
   const petRevealedForEncounter = sessionActive && placed && showArGem;
-  const inRangeForEncounter = inCollectBand;
+  const inRangeForEncounter = inWebXrHuntBand;
 
   const {
     encounterPhase,
@@ -405,6 +411,7 @@ export function GemHuntWebXrAr({
 
   const toggleRevealMe = useCallback(() => {
     if (phase === "collecting" || !sessionActive) return;
+    if (!inWebXrHuntBand && !simulateInRange) return;
 
     if (centerReveal) {
       setCenterReveal(false);
@@ -436,7 +443,15 @@ export function GemHuntWebXrAr({
     placed,
     sessionActive,
     setEncounterPhase,
+    inWebXrHuntBand,
+    simulateInRange,
   ]);
+
+  const showWebXrRangeHint =
+    sessionActive &&
+    !simulateInRange &&
+    !inWebXrHuntBand &&
+    phase !== "collecting";
 
   const collectBanner =
     phase === "collecting"
@@ -543,7 +558,7 @@ export function GemHuntWebXrAr({
     );
 
     const placeFromReticle = () => {
-      if (!reticle.visible) return;
+      if (!inWebXrHuntBandRef.current || !reticle.visible) return;
       anchorGroup.position.setFromMatrixPosition(reticle.matrix);
       anchorGroup.quaternion.setFromRotationMatrix(reticle.matrix);
       anchorGroup.visible = true;
@@ -572,7 +587,7 @@ export function GemHuntWebXrAr({
         }
         return;
       }
-      placeFromReticle();
+      if (inWebXrHuntBandRef.current) placeFromReticle();
     };
 
     const onSessionEnd = () => {
@@ -622,7 +637,7 @@ export function GemHuntWebXrAr({
         lastFrameMs = _t;
         const dancePhase = danceIndex * 0.37;
 
-        if (!isPlaced && hits.length > 0) {
+        if (!isPlaced && inWebXrHuntBandRef.current && hits.length > 0) {
           const pose = hits[0]!.getPose(ref);
           if (pose) {
             reticle.visible = true;
@@ -831,6 +846,11 @@ export function GemHuntWebXrAr({
         ) : (
           <div className="gem-hunt-overlay__footer-stack">
             <div className="gem-hunt-overlay__footer-hint-slot">
+              {showWebXrRangeHint ? (
+                <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="status">
+                  התקרבו לנקודה על המדרכה (עד {GEM_WEBXR_HUNT_METERS} מ׳) — אז אפשר לשים את החיה ולאסוף.
+                </p>
+              ) : null}
               {showEncounterFooter && encounterPhase === "encounter" ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
                   סובבו את החיה באצבע. לאיסוף — הקישו עליה.
