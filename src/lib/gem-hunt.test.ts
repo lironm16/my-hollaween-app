@@ -9,7 +9,9 @@ import {
   gemAnchorForHouse,
   gemProximity,
   gemScreenPlacement,
+  gemWorldPinVisible,
   gemPlacementDisplaySnap,
+  GEM_WORLD_PIN_MAX_METERS,
   gemInScanRing,
   GEM_SCAN_RING_CENTER_Y,
   gemFamilyForHouse,
@@ -63,6 +65,16 @@ describe("gem hunt geo", () => {
     assert.equal(a.lat, b.lat);
     assert.ok(a.offsetM >= GEM_ANCHOR_MIN_METERS && a.offsetM <= GEM_ANCHOR_MAX_METERS);
     assert.ok(distanceMeters(house, a) >= GEM_ANCHOR_MIN_METERS - 0.5);
+  });
+
+  it("hides world pin when anchor is beyond GEM_WORLD_PIN_MAX_METERS", () => {
+    const anchor = gemAnchorForHouse(house);
+    const user = { lat: house.lat + 0.0002, lng: house.lng };
+    const heading = bearingDegrees(user, anchor);
+    const place = gemScreenPlacement(user, anchor, heading, -12);
+    assert.ok(place);
+    assert.ok(place!.distanceM > GEM_WORLD_PIN_MAX_METERS);
+    assert.equal(gemWorldPinVisible(place), false);
   });
 
   it("maps anchor bearing to horizontal screen position", () => {

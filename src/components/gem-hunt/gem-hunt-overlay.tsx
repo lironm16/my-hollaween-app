@@ -29,6 +29,7 @@ import {
   gemLabelHe,
   gemMonsterForHouse,
   gemScreenPlacement,
+  gemWorldPinVisible,
   relativeWalkBearingDeg,
   type GemMonsterId,
   type GemCollectFinishOptions,
@@ -367,7 +368,7 @@ export function GemHuntOverlay({
     const viaTellMe = centerReveal && inCollectBand && !encounterMode;
     const viaTellMeEncounter = centerReveal && inCollectBand && encounterMode;
     const viaPinned =
-      !centerReveal && inCollectBand && Boolean(pinPlacement?.inView);
+      !centerReveal && inCollectBand && gemWorldPinVisible(pinDisplay ?? pinPlacement);
     const viaEncounter = encounterMode && inCollectBand;
     if (!viaTellMe && !viaTellMeEncounter && !viaPinned && !viaEncounter) return;
     const entries = loadGemCollected();
@@ -407,7 +408,8 @@ export function GemHuntOverlay({
     encounterMode,
     monsterId,
     phase,
-    pinPlacement?.inView,
+    pinDisplay,
+    pinPlacement,
     repeatVisit,
   ]);
 
@@ -537,10 +539,10 @@ export function GemHuntOverlay({
   /** Real hunt: compass-pinned gem when not in «גלה לי» center mode. */
   const arPinGuideMode = gemVisible && !centerReveal;
   const pinCollectReady =
-    arPinGuideMode && canCollectNow && Boolean(pinPlacement?.inView);
+    arPinGuideMode && canCollectNow && gemWorldPinVisible(pinDisplay ?? pinPlacement);
   /** Show centered gem after reveal even before «stand still» — tap only when collectEnabled. */
   /** Show when the shared anchor bearing is inside the camera cone — not gated on 25 m. */
-  const showWorldGemSprite = Boolean(pinPlacement?.inView);
+  const showWorldGemSprite = gemWorldPinVisible(pinDisplay ?? pinPlacement);
   const worldLockRevealed =
     arPinGuideMode && showWorldGemSprite && (phase === "visible" || phase === "collecting");
   const isFarForHints =
@@ -623,14 +625,7 @@ export function GemHuntOverlay({
     if (canTapCollect) handleCollect();
   }, [encounterMode, encounterPhase, gemAtCenter, offerEncounterCollect, canTapCollect, handleCollect]);
 
-  const showHuntGem =
-    gemVisible &&
-    (gemAtCenter ||
-      showWorldGemSprite ||
-      (hintPanel === "nav" &&
-        !centerReveal &&
-        !gemAtCenter &&
-        !userDismissedCenterGem));
+  const showHuntGem = gemVisible && (gemAtCenter || showWorldGemSprite);
 
   const gemEncounterWiggle =
     encounterPhase === "resolve-hit" ||

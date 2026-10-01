@@ -63,7 +63,9 @@ export const GEM_SCAN_PAN_DEGREES = 180;
 /** Show "can't see it?" help after this many seconds in hunt mode. */
 export const GEM_HELP_AFTER_SECONDS = 8;
 /** Approx. phone camera horizontal field of view — for pinning gem on screen. */
-export const GEM_CAMERA_HFOV_DEG = 62;
+export const GEM_CAMERA_HFOV_DEG = 48;
+/** Max walk distance to anchor before hiding the world-pinned gem (iOS camera hunt). */
+export const GEM_WORLD_PIN_MAX_METERS = 16;
 /** Approx. vertical FOV — used when tilting the phone up/down. */
 export const GEM_CAMERA_VFOV_DEG = 50;
 /** Ground gem elevation vs horizon when holding the phone level (negative = toward feet). */
@@ -265,6 +267,15 @@ export function gemScreenPlacement(
 
   const inView = inViewH && inViewV;
   return { xPercent, yPercent, inView, distanceM, relativeBearingDeg: rel };
+}
+
+/** World-locked camera gem — tighter than hunt band so neighbors (e.g. רוקח 32 vs 34) do not overlap. */
+export function gemWorldPinVisible(
+  placement: GemScreenPlacement | null,
+  maxDistanceM = GEM_WORLD_PIN_MAX_METERS,
+) {
+  if (!placement?.inView) return false;
+  return placement.distanceM <= maxDistanceM;
 }
 
 /** Gem pin overlaps the on-screen hunt ring (visual / legacy; collect no longer requires this). */
