@@ -27,6 +27,10 @@ export function webXrHitTestArCached(): boolean {
 }
 
 /** Chrome Android immersive-ar + hit-test (cached). */
+export function webXrSessionHasAnchors(session: XRSession): boolean {
+  return session.enabledFeatures?.includes("anchors") ?? false;
+}
+
 export async function supportsWebXrHitTestAr(): Promise<boolean> {
   if (typeof navigator === "undefined" || !navigator.xr) return false;
   if (webxrArSupport != null) return webxrArSupport;

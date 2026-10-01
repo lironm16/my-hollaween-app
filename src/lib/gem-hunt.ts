@@ -68,6 +68,8 @@ export const GEM_CAMERA_HFOV_DEG = 48;
 export const GEM_WORLD_PIN_MAX_METERS = 16;
 /** Android WebXR — same on-site radius for placement, encounter, and collect. */
 export const GEM_WEBXR_HUNT_METERS = GEM_WORLD_PIN_MAX_METERS;
+/** Place Android AR pet at gemAnchorForHouse (GPS + anchor), not only hit-test at feet. */
+export const GEM_WEBXR_GEO_PLACEMENT_ENABLED = true;
 /** Approx. vertical FOV — used when tilting the phone up/down. */
 export const GEM_CAMERA_VFOV_DEG = 50;
 /** Ground gem elevation vs horizon when holding the phone level (negative = toward feet). */

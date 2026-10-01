@@ -19,10 +19,21 @@ import {
   gemDistanceMeters,
   gemLabelHe,
   gemMonsterForHouse,
+  GEM_WEBXR_GEO_PLACEMENT_ENABLED,
   GEM_WEBXR_HUNT_METERS,
   relativeWalkBearingDeg,
   type GemCollectFinishOptions,
 } from "@/lib/gem-hunt";
+import {
+  averageGeoSamples,
+  geoPlacementReady,
+  geoSampleSpreadMeters,
+  rigidTransformFromViewerOffset,
+  tryCreateNativeGeospatialAnchor,
+  viewerLocalOffsetMeters,
+  type GeoPlacementSample,
+} from "@/lib/gem-webxr-geospatial";
+import { webXrSessionHasAnchors } from "@/lib/gem-hunt-ar-platform";
 import { isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
 import { requestGemHuntOrientationPermission } from "@/lib/gem-hunt-sensors";
 import { gemWalkGuideCopy } from "@/lib/gem-hunt-walk-guide";
@@ -166,6 +177,13 @@ export function GemHuntWebXrAr({
   }, []);
 
   const { heading } = useDeviceHeading(true, compassRetry);
+  const headingRef = useRef<number | null>(heading);
+  const liveLocRef = useRef<typeof userLocation>(null);
+  const geoTargetRef = useRef({ lat: anchor.lat, lng: anchor.lng });
+  const simulateInRangeRef = useRef(simulateInRange);
+  const [geoLockMode, setGeoLockMode] = useState<"pending" | "sidewalk" | "native" | "local">(
+    "pending",
+  );
   const placeAssistRef = useRef({ forceOnce: false, fast: false });
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -191,6 +209,10 @@ export function GemHuntWebXrAr({
     : userLocation;
   const huntGps = useGemHuntLocation(!simulateInRange);
   const liveLoc = simulateInRange ? effectiveLoc : huntGps ?? userLocation;
+  headingRef.current = heading;
+  liveLocRef.current = liveLoc;
+  geoTargetRef.current = { lat: anchor.lat, lng: anchor.lng };
+  simulateInRangeRef.current = simulateInRange;
   const distanceM =
     liveLoc != null ? gemDistanceMeters(liveLoc, house) : null;
   const inWebXrHuntBand =
@@ -202,6 +224,8 @@ export function GemHuntWebXrAr({
   const canCollect = canCollectNow && inWebXrHuntBand && placed;
   const inWebXrHuntBandRef = useRef(inWebXrHuntBand);
   inWebXrHuntBandRef.current = inWebXrHuntBand;
+  const setGeoLockModeRef = useRef(setGeoLockMode);
+  setGeoLockModeRef.current = setGeoLockMode;
 
   const floatBias = hashFloat(house.id, "webxr-float");
   const useFloat = floatBias > 0.62;
@@ -453,6 +477,14 @@ export function GemHuntWebXrAr({
     !inWebXrHuntBand &&
     phase !== "collecting";
 
+  const showWebXrGeoHint =
+    sessionActive &&
+    !placed &&
+    phase !== "collecting" &&
+    inWebXrHuntBand &&
+    geoLockMode === "pending" &&
+    GEM_WEBXR_GEO_PLACEMENT_ENABLED;
+
   const collectBanner =
     phase === "collecting"
       ? albumRevealNewFriend
@@ -476,8 +508,115 @@ export function GemHuntWebXrAr({
     let sessionAttached = false;
     let stableHitFrames = 0;
     let isPlaced = false;
+    let worldAnchor: XRAnchor | null = null;
+    let geoSamples: GeoPlacementSample[] = [];
+    let geoNativeTried = false;
+    let geoAttemptFrame = 0;
+    let anchorsEnabled = false;
     let mixer: THREE.AnimationMixer | null = null;
     const startTime = performance.now();
+
+    const finishPlacement = (mode: "sidewalk" | "native" | "local") => {
+      isPlaced = true;
+      stableHitFrames = 0;
+      reticle.visible = false;
+      anchorGroup.visible = true;
+      setPlaced(true);
+      setPhase("placed");
+      setGeoLockModeRef.current(mode);
+    };
+
+    const syncAnchorGroupToWorldAnchor = (frame: XRFrame, ref: XRReferenceSpace) => {
+      if (!worldAnchor) return;
+      const pose = frame.getPose(worldAnchor.anchorSpace, ref);
+      if (!pose) return;
+      anchorGroup.matrix.fromArray(pose.transform.matrix);
+      anchorGroup.matrix.decompose(anchorGroup.position, anchorGroup.quaternion, anchorGroup.scale);
+      anchorGroup.visible =
+        collectingRef.current || !userDismissedCenterGemRef.current;
+    };
+
+    const pushGeoSample = () => {
+      const loc = liveLocRef.current;
+      if (!loc || !inWebXrHuntBandRef.current) return;
+      const acc = loc.accuracy ?? 99;
+      if (acc > 28) return;
+      geoSamples.push({ lat: loc.lat, lng: loc.lng, accuracy: loc.accuracy });
+      if (geoSamples.length > 8) geoSamples.shift();
+    };
+
+    const tryLockGeoPlacement = async (
+      frame: XRFrame,
+      ref: XRReferenceSpace,
+      viewerSpace: XRReferenceSpace,
+    ) => {
+      if (isPlaced || !GEM_WEBXR_GEO_PLACEMENT_ENABLED) return;
+      if (!inWebXrHuntBandRef.current) return;
+
+      const assist = placeAssistRef.current;
+      const target = geoTargetRef.current;
+      const headingDeg = headingRef.current;
+
+      if (simulateInRangeRef.current) {
+        const simUser = { lat: house.lat, lng: house.lng, accuracy: 3 };
+        const h = headingDeg ?? bearingDegrees(simUser, target);
+        const off = viewerLocalOffsetMeters(simUser, target, h);
+        anchorGroup.position.set(off.x, 0, off.z);
+        finishPlacement("sidewalk");
+        assist.forceOnce = false;
+        assist.fast = false;
+        return;
+      }
+
+      pushGeoSample();
+      const ready = geoPlacementReady(geoSamples, headingDeg, target);
+      const force = assist.forceOnce;
+      if (!ready && !force) return;
+
+      const avg =
+        averageGeoSamples(geoSamples) ??
+        (liveLocRef.current
+          ? {
+              lat: liveLocRef.current.lat,
+              lng: liveLocRef.current.lng,
+              accuracy: liveLocRef.current.accuracy,
+            }
+          : null);
+      if (!avg || headingDeg == null) return;
+
+      if (!geoNativeTried) {
+        geoNativeTried = true;
+        const native = await tryCreateNativeGeospatialAnchor(frame, target);
+        if (native) {
+          worldAnchor = native;
+          finishPlacement("native");
+          assist.forceOnce = false;
+          assist.fast = false;
+          return;
+        }
+      }
+
+      const off = viewerLocalOffsetMeters(avg, target, headingDeg);
+      if (off.quality === "weak" && !force) return;
+
+      if (anchorsEnabled && frame.createAnchor) {
+        try {
+          const xf = rigidTransformFromViewerOffset(off.x, 0, off.z);
+          worldAnchor = await frame.createAnchor(xf, viewerSpace);
+          finishPlacement("sidewalk");
+          assist.forceOnce = false;
+          assist.fast = false;
+          return;
+        } catch {
+          worldAnchor = null;
+        }
+      }
+
+      anchorGroup.position.set(off.x, 0, off.z);
+      finishPlacement("local");
+      assist.forceOnce = false;
+      assist.fast = false;
+    };
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 40);
@@ -561,12 +700,7 @@ export function GemHuntWebXrAr({
       if (!inWebXrHuntBandRef.current || !reticle.visible) return;
       anchorGroup.position.setFromMatrixPosition(reticle.matrix);
       anchorGroup.quaternion.setFromRotationMatrix(reticle.matrix);
-      anchorGroup.visible = true;
-      isPlaced = true;
-      stableHitFrames = 0;
-      reticle.visible = false;
-      setPlaced(true);
-      setPhase("placed");
+      finishPlacement("local");
     };
 
     const onSelect = () => {
@@ -604,6 +738,10 @@ export function GemHuntWebXrAr({
       setPhase("boot");
       setCenterReveal(false);
       setUserDismissedCenterGem(false);
+      setGeoLockModeRef.current("pending");
+      worldAnchor?.delete();
+      worldAnchor = null;
+      geoSamples = [];
       setSessionActive(false);
       setShowManualStart(true);
     };
@@ -611,6 +749,7 @@ export function GemHuntWebXrAr({
     const attachSession = async (session: XRSession) => {
       if (disposed || sessionAttached) return;
       sessionAttached = true;
+      anchorsEnabled = webXrSessionHasAnchors(session);
       await renderer.xr.setSession(session);
       session.addEventListener("select", onSelect);
       session.addEventListener("end", onSessionEnd);
@@ -629,15 +768,34 @@ export function GemHuntWebXrAr({
 
       let lastFrameMs = 0;
       renderer.setAnimationLoop((_t, frame) => {
-        if (!frame || !hitTestSource) return;
+        if (!frame) return;
         const ref = renderer.xr.getReferenceSpace() ?? refSpace;
-        const hits = frame.getHitTestResults(hitTestSource);
+        const hits = hitTestSource ? frame.getHitTestResults(hitTestSource) : [];
         const t = (performance.now() - startTime) / 1000;
         const delta = lastFrameMs > 0 ? Math.min(0.05, (_t - lastFrameMs) / 1000) : 1 / 60;
         lastFrameMs = _t;
         const dancePhase = danceIndex * 0.37;
 
-        if (!isPlaced && inWebXrHuntBandRef.current && hits.length > 0) {
+        if (isPlaced && worldAnchor) {
+          syncAnchorGroupToWorldAnchor(frame, ref);
+        }
+
+        const allowHitTestFallback =
+          !GEM_WEBXR_GEO_PLACEMENT_ENABLED || performance.now() - startTime > 10_000;
+
+        if (!isPlaced && GEM_WEBXR_GEO_PLACEMENT_ENABLED && inWebXrHuntBandRef.current) {
+          geoAttemptFrame += 1;
+          if (geoAttemptFrame % 12 === 0 || placeAssistRef.current.forceOnce) {
+            void tryLockGeoPlacement(frame, ref, viewerSpace);
+          }
+        }
+
+        if (
+          !isPlaced &&
+          inWebXrHuntBandRef.current &&
+          allowHitTestFallback &&
+          hits.length > 0
+        ) {
           const pose = hits[0]!.getPose(ref);
           if (pose) {
             reticle.visible = true;
@@ -661,8 +819,10 @@ export function GemHuntWebXrAr({
           reticle.visible = false;
         }
 
-        anchorGroup.visible =
-          isPlaced && (collectingRef.current || !userDismissedCenterGemRef.current);
+        if (!worldAnchor) {
+          anchorGroup.visible =
+            isPlaced && (collectingRef.current || !userDismissedCenterGemRef.current);
+        }
 
         if (
           isPlaced &&
@@ -711,8 +871,8 @@ export function GemHuntWebXrAr({
     }
 
     arButton = ARButton.createButton(renderer, {
-      requiredFeatures: ["hit-test"],
-      optionalFeatures: ["dom-overlay", "local-floor"],
+      requiredFeatures: ["hit-test", "local-floor"],
+      optionalFeatures: ["dom-overlay", "anchors", "geo-alignment"],
       domOverlay: { root },
     });
     arButton.className = "gem-hunt-webxr__start";
@@ -849,6 +1009,11 @@ export function GemHuntWebXrAr({
               {showWebXrRangeHint ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="status">
                   התקרבו לנקודה על המדרכה (עד {GEM_WEBXR_HUNT_METERS} מ׳) — אז אפשר לשים את החיה ולאסוף.
+                </p>
+              ) : null}
+              {showWebXrGeoHint ? (
+                <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="status">
+                  מאתרים את היהלום על המדרכה (אותה נקודה כמו במפה)…
                 </p>
               ) : null}
               {showEncounterFooter && encounterPhase === "encounter" ? (
