@@ -1,60 +1,19 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { AdminGemOpsPanel } from "@/components/admin-gem-ops-panel";
-import { AppHeader } from "@/components/app-header";
-import { useAdminSession } from "@/hooks/use-admin-session";
-import { useAppNow } from "@/hooks/use-app-clock";
-import { useCatalog } from "@/hooks/use-catalog";
-import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
-import type { PublicHouse } from "@/lib/types";
 
-export default function AdminGemsPage() {
+/** Diamond manager lives on בדיקות — keep old URL working. */
+export default function AdminGemsRedirectPage() {
   const router = useRouter();
-  const { ready, admin } = useAdminSession();
-  const now = useAppNow();
-  const eventNight = gemHuntFabVisible(admin, now);
-  const { catalog, loading } = useCatalog();
 
   useEffect(() => {
-    if (ready && !admin) router.replace("/admin");
-  }, [ready, admin, router]);
-
-  useEffect(() => {
-    if (ready && admin && !eventNight) router.replace("/admin/rehearsal");
-  }, [ready, admin, eventNight, router]);
-
-  const houses = useMemo(() => {
-    return (catalog?.houses ?? []) as PublicHouse[];
-  }, [catalog?.houses]);
-
-  if (!ready || !admin || !eventNight) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center text-base text-orange-200">
-        {loading ? "טוען…" : "בודקים הרשאות…"}
-      </div>
-    );
-  }
+    router.replace("/admin/rehearsal");
+  }, [router]);
 
   return (
-    <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
-      <AppHeader />
-      <main className="relative z-10 flex min-h-0 flex-1 flex-col px-4 py-3">
-        <div className="mx-auto flex w-full max-w-lg min-h-0 flex-1 flex-col gap-2">
-          <div className="flex shrink-0 items-center justify-between gap-2">
-            <h1 className="font-display text-xl text-orange-300">יהלומים — מנהל</h1>
-            <Link
-              href="/admin/gem-lab"
-              className="text-sm text-violet-300 underline-offset-2 hover:text-violet-100 hover:underline"
-            >
-              מעבדת יהלומים
-            </Link>
-          </div>
-          <AdminGemOpsPanel houses={houses} />
-        </div>
-      </main>
+    <div className="flex min-h-dvh items-center justify-center text-base text-orange-200">
+      עוברים לבדיקות…
     </div>
   );
 }

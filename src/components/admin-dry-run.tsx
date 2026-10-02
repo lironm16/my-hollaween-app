@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { AdminGemOpsPanel } from "@/components/admin-gem-ops-panel";
 import { AdminGemUserPreviewToggle } from "@/components/admin-gem-user-preview-toggle";
 import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -175,19 +176,28 @@ export function AdminDryRunPanel() {
         </p>
       </div>
       {gemsOnScreen ? (
-        <div className="space-y-3">
-          <Link
-            href="/admin/gems"
-            className="flex min-h-11 items-center justify-center rounded-xl bg-orange-500/15 px-3 py-2 text-center text-base font-medium text-orange-100 ring-1 ring-orange-400/40"
-          >
-            יהלומים — מנהל (מפה לפי חבר)
-          </Link>
+        <div className="space-y-4">
           <AdminGemUserPreviewToggle />
+          {!previewAsUser && catalogHouses.length > 0 ? (
+            <div className="space-y-3 rounded-xl bg-[#12081a] p-3 ring-1 ring-orange-500/25">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-base font-medium text-orange-100">יהלומים — מנהל</p>
+                  <p className="text-sm text-violet-400">מפה לפי חבר, רשימה, וחיפוש קרוב</p>
+                </div>
+                <Link
+                  href="/admin/gem-lab"
+                  className="shrink-0 text-sm text-orange-200 underline-offset-2 hover:underline"
+                >
+                  מעבדת יהלומים
+                </Link>
+              </div>
+              <AdminGemOpsPanel houses={catalogHouses} />
+              <AdminGemProximityPanel houses={catalogHouses} />
+            </div>
+          ) : null}
+          {gemsOnScreen && !previewAsUser ? <GemCharacterSilhouetteSamples /> : null}
         </div>
-      ) : null}
-      {gemsOnScreen && !previewAsUser ? <GemCharacterSilhouetteSamples /> : null}
-      {gemsOnScreen && !previewAsUser && catalogHouses.length > 0 ? (
-        <AdminGemProximityPanel houses={catalogHouses} />
       ) : null}
     </div>
   );

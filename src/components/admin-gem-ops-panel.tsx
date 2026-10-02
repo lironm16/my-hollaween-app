@@ -83,7 +83,7 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div className="flex flex-col gap-3">
       <div className="relative shrink-0">
         <button
           type="button"
@@ -215,10 +215,6 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
       )}
 
       <p className="shrink-0 text-center text-xs text-violet-500">
-        <Link href="/admin/rehearsal" className="text-orange-200/80 underline">
-          בדיקות
-        </Link>
-        {" · "}
         <Link href="/gem-bag" className="text-orange-200/80 underline">
           ספר החברים
         </Link>

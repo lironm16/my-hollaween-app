@@ -14,7 +14,6 @@ import {
   Search,
   Shield,
   HelpCircle,
-  Gem,
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -35,7 +34,7 @@ import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { appVersionLabel } from "@/lib/app-version";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { AdminGemUserPreviewToggle } from "@/components/admin-gem-user-preview-toggle";
-import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
+import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
 import { cn } from "@/lib/utils";
 
@@ -48,7 +47,6 @@ export function AppHeader({
   const { admin, logout } = useAdminSession();
   const now = useAppNow();
   const { gemBagMenuVisible: showGemBag } = useGemHuntAdminUi(admin, now);
-  const showAdminGemOps = admin && gemHuntFabVisible(admin, now);
   const showAdminUserPreview = admin && gemHuntVisible(admin);
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);
@@ -221,19 +219,6 @@ export function AppHeader({
             </Link>
             {admin ? (
               <>
-                {showAdminGemOps ? (
-                  <Link
-                    href="/admin/gems"
-                    onClick={closeMenu}
-                    className={cn(
-                      buttonVariants({ variant: "ghost", size: "lg" }),
-                      "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
-                    )}
-                  >
-                    <Gem className="size-4 shrink-0" />
-                    יהלומים — מנהל
-                  </Link>
-                ) : null}
                 {pushAlertsEnabled() ? (
                   <Link
                     href="/admin/alerts"

@@ -35,10 +35,10 @@ export default function AdminGemLabPage() {
               <p className="text-xs text-violet-400">/admin/gem-lab</p>
             </div>
             <Link
-              href="/admin/gems"
+              href="/admin/rehearsal"
               className="shrink-0 text-sm text-orange-200 underline-offset-2 hover:underline"
             >
-              ← יהלומים
+              ← בדיקות
             </Link>
           </div>
           <AdminGemLabPanel />
