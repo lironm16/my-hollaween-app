@@ -174,7 +174,7 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
         ) : null}
       </div>
 
-      <div className="relative z-0 min-h-[min(52vh,22rem)] shrink-0 overflow-hidden rounded-lg ring-1 ring-violet-500/25">
+      <div className="relative z-0 h-[min(52vh,22rem)] w-full shrink-0 overflow-hidden rounded-lg ring-1 ring-violet-500/25">
         <HouseMapDynamic
           houses={mapHouses}
           selectedId={sheetHouse?.id ?? null}
@@ -192,7 +192,7 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
           gemAnchorVisual="characters"
           isGemCollected={gems.collected}
           onGemAnchorSelect={openSheet}
-          className="h-full min-h-[min(52vh,22rem)] w-full"
+          className="absolute inset-0 h-full w-full"
         />
         {sheetHouse ? (
           <div className="map-sheet-host">

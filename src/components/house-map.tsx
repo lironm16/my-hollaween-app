@@ -307,7 +307,10 @@ function SizeSync() {
     window.addEventListener("resize", sync);
     window.visualViewport?.addEventListener("resize", sync);
     const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sync) : null;
-    ro?.observe(map.getContainer());
+    const container = map.getContainer();
+    ro?.observe(container);
+    const wrap = container.parentElement;
+    if (wrap) ro?.observe(wrap);
     return () => {
       window.clearTimeout(id);
       if (raf) window.cancelAnimationFrame(raf);
@@ -744,7 +747,7 @@ export function HouseMap({
         "relative z-0 isolate overflow-hidden",
         originPickActive && "is-origin-pick",
         dimActive && "is-filter-dim",
-        "bg-[#d6d3d1]",
+        embed ? "bg-[#14091c]" : "bg-[#d6d3d1]",
         className ?? "h-full min-h-[280px] w-full",
       )}
       dir="ltr"
