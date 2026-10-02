@@ -102,7 +102,7 @@ export default function GemHuntHelpPage() {
             <p>
               <HelpText>
                 {
-                  "ב-iPhone: <<רמז · ניווט ברחוב>> — בלי חץ בקו ישר (לא דרך בניינים). מרחק + <<ניווט הליכה ב-Google Maps>>. ב-Android: חץ + מפות."
+                  "ב-iPhone: <<רמז · ניווט ברחוב>> — חץ לפי מסלול הליכה ברחוב (OSRM, מעקף גבעה/פארק), וגם <<ניווט הליכה ב-Google Maps>>. ב-Android: חץ ישר + מפות."
                 }
               </HelpText>
             </p>
