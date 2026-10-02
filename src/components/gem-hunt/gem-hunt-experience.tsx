@@ -18,15 +18,15 @@ export type GemHuntExperienceProps = {
   collectEnabled?: boolean;
   encounterMode?: boolean;
   repeatVisit?: boolean;
-  /** Android: session started on the same tap as «התחילו מפגש» (avoids second AR button). */
+  /** Non-Android: session started on the same tap as hunt open (avoids second AR button). */
   initialWebXrSession?: XRSession | null;
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
 };
 
 /**
- * Android Chrome: immersive WebXR when hit-test AR is available.
- * iOS and fallback: camera pseudo-AR overlay.
+ * Android + iOS: full-screen camera pseudo-AR (`getUserMedia`).
+ * WebXR path only when `initialWebXrSession` is passed on non-Android.
  */
 export function GemHuntExperience(props: GemHuntExperienceProps) {
   const [path, setPath] = useState<"pending" | "webxr" | "camera">(() => {
@@ -39,19 +39,7 @@ export function GemHuntExperience(props: GemHuntExperienceProps) {
       setPath("webxr");
       return;
     }
-    let cancelled = false;
-    /** Android: full-screen getUserMedia hunt (same as iOS). WebXR dom-overlay left the map visible. */
-    if (isAndroidLike()) {
-      setPath("camera");
-      return;
-    }
     setPath("camera");
-    void supportsWebXrHitTestAr().then((ok) => {
-      if (!cancelled && ok) setPath("webxr");
-    });
-    return () => {
-      cancelled = true;
-    };
   }, [props.initialWebXrSession]);
 
   const onWebXrFallback = useCallback(() => setPath("camera"), []);
