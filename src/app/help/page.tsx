@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { HelpShell } from "@/components/help-shell";
+import { useAdminSession } from "@/hooks/use-admin-session";
+import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 
 const QUESTIONS = [
   {
@@ -35,11 +37,20 @@ const QUESTIONS = [
   },
 ] as const;
 
+const GEM_HUNT_QUESTION = {
+  question: "ציד יהלומים (בדיקות)",
+  href: "/help/gem-hunt",
+} as const;
+
 export default function HelpPage() {
+  const { admin } = useAdminSession();
+  const { gemHuntVisible: showGemHuntHelp } = useGemHuntAdminUi(admin);
+  const items = showGemHuntHelp ? [...QUESTIONS, GEM_HUNT_QUESTION] : QUESTIONS;
+
   return (
     <HelpShell title="שאלות ותשובות" backHref="/" backLabel="מפה">
       <ul className="space-y-2">
-        {QUESTIONS.map((item) => (
+        {items.map((item) => (
           <li key={item.href}>
             <Link
               href={item.href}
