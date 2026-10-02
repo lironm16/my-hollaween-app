@@ -631,6 +631,8 @@ type Props = {
   filterDimActive?: boolean;
   /** Compact embed on house link pages — center on the house, theme toggle only. */
   embed?: boolean;
+  /** Show «המיקום שלי» on embed maps (admin gem manager). */
+  showLocateButton?: boolean;
   /** Show gem diamond markers (controlled by top-bar toggle). */
   showGemAnchors?: boolean;
   gemAnchorHouses?: PublicHouse[];
@@ -670,6 +672,7 @@ export function HouseMap({
   matchedIdsKey = "",
   filterDimActive = false,
   embed = false,
+  showLocateButton = false,
   showGemAnchors = false,
   gemAnchorHouses = [],
   gemAnchorVisual = "admin",
@@ -955,7 +958,7 @@ export function HouseMap({
       </MapContainer>
       {!pickMode && !originPickActive && !embed ? <MapAddHouseFab /> : null}
       <div className="map-fab-stack">
-          {!pickMode && !embed && onLocate ? (
+          {!pickMode && onLocate && (!embed || showLocateButton) ? (
             <button
               type="button"
               className="locate-me flex size-11 items-center justify-center rounded-full bg-[#1d1028] text-sky-300 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-sky-400/40"

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AdminGemOpsPanel } from "@/components/admin-gem-ops-panel";
 import { AdminGemUserPreviewToggle } from "@/components/admin-gem-user-preview-toggle";
@@ -21,8 +20,6 @@ import {
 } from "@/lib/app-clock";
 import { HOUSE_SETS, HOUSE_SET_LABELS, type HouseSet } from "@/lib/house-set";
 import { Button } from "@/components/ui/button";
-import { AdminGemProximityPanel } from "@/components/admin-gem-proximity-panel";
-import { GemCharacterSilhouetteSamples } from "@/components/gem-hunt/gem-character-silhouette-samples";
 import { useCatalog } from "@/hooks/use-catalog";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -180,23 +177,13 @@ export function AdminDryRunPanel() {
           <AdminGemUserPreviewToggle />
           {!previewAsUser && catalogHouses.length > 0 ? (
             <div className="space-y-3 rounded-xl bg-[#12081a] p-3 ring-1 ring-orange-500/25">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-base font-medium text-orange-100">יהלומים — מנהל</p>
-                  <p className="text-sm text-violet-400">מפה לפי חבר, רשימה, וחיפוש קרוב</p>
-                </div>
-                <Link
-                  href="/admin/gem-lab"
-                  className="shrink-0 text-sm text-orange-200 underline-offset-2 hover:underline"
-                >
-                  מעבדת יהלומים
-                </Link>
+              <div>
+                <p className="text-base font-medium text-orange-100">יהלומים</p>
+                <p className="text-sm text-violet-400">מפה לפי חבר ורשימת בתים</p>
               </div>
               <AdminGemOpsPanel houses={catalogHouses} />
-              <AdminGemProximityPanel houses={catalogHouses} />
             </div>
           ) : null}
-          {gemsOnScreen && !previewAsUser ? <GemCharacterSilhouetteSamples /> : null}
         </div>
       ) : null}
     </div>

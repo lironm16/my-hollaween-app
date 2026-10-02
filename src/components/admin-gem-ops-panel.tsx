@@ -1,20 +1,29 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { HouseDetailOverlay } from "@/components/house-detail-overlay";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
+import type { HouseCardActionContext } from "@/components/house-card-actions";
+import { useAdminSession } from "@/hooks/use-admin-session";
+import { useCatalog } from "@/hooks/use-catalog";
+import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useHouseSet } from "@/hooks/use-house-set";
+import { useLikedHouses } from "@/hooks/use-liked-houses";
+import { useSkippedHouses } from "@/hooks/use-skipped-houses";
+import { useUserLocation } from "@/hooks/use-user-location";
+import { useVisitedHouses } from "@/hooks/use-visited-houses";
+import { useAppNow } from "@/hooks/use-app-clock";
 import {
   buildGemMapHouseRows,
   countGemsOnMapByMonster,
   type GemMapHouseRow,
 } from "@/lib/gem-admin-ops";
 import { formatDisplayAddress } from "@/lib/config";
+import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
 import { gemAlbumStickerPool, gemMonsterMeta, type GemMonsterId } from "@/lib/gem-monsters";
 import { houseHeadline } from "@/lib/labels";
-import { houseSharePath } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -49,10 +58,20 @@ function GemPickerRow({
 }
 
 export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
+  const { admin } = useAdminSession();
+  const { source } = useCatalog();
+  const now = useAppNow();
+  const gemUi = gemHuntFabVisible(admin, now);
   const { houseSet } = useHouseSet();
+  const likes = useLikedHouses();
+  const visits = useVisitedHouses();
+  const skips = useSkippedHouses();
+  const gems = useGemProgress();
+  const geo = useUserLocation({ watch: false });
   const [pickerOpen, setPickerOpen] = useState(false);
   const [listOnly, setListOnly] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailHouse, setDetailHouse] = useState<PublicHouse | null>(null);
 
   const rows = useMemo(() => buildGemMapHouseRows(houses, houseSet), [houses, houseSet]);
   const counts = useMemo(() => countGemsOnMapByMonster(rows), [rows]);
@@ -77,6 +96,30 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
     if (!selectedId) return;
     if (!mapHouses.some((house) => house.id === selectedId)) setSelectedId(null);
   }, [mapHouses, selectedId]);
+
+  const onLocate = useCallback(() => {
+    void geo.refresh();
+  }, [geo]);
+
+  const actionContext = useMemo((): HouseCardActionContext => {
+    return {
+      admin: true,
+      catalogSource: source,
+      liked: likes.liked,
+      visited: visits.visited,
+      skipped: skips.skipped,
+      gemCollected: gemUi ? gems.collected : undefined,
+      onToggleLike: (id) => likes.toggle(id),
+      onToggleVisited: (id) => visits.toggle(id),
+      onSkip: (id) => skips.toggle(id),
+      onRestore: (id) => skips.unskip(id),
+      skipMetaFor: (id) => skips.meta(id),
+    };
+  }, [source, likes, visits, skips, gemUi, gems.collected]);
+
+  function openDetails(house: PublicHouse) {
+    setDetailHouse(house);
+  }
 
   function onPickRow(row: GemMapHouseRow) {
     setSelectedId(row.house.id);
@@ -135,8 +178,15 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
         <HouseMapDynamic
           houses={mapHouses}
           selectedId={selectedId}
-          onSelect={(house) => setSelectedId(house.id)}
+          onSelect={(house) => {
+            setSelectedId(house.id);
+            openDetails(house);
+          }}
           embed
+          showLocateButton
+          userLocation={geo.location}
+          locating={geo.status === "pending"}
+          onLocate={onLocate}
           showGemAnchors
           gemAnchorHouses={mapHouses}
           gemAnchorVisual="characters"
@@ -171,9 +221,7 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
             const active = selectedId === row.house.id;
             return (
               <li key={row.house.id}>
-                <button
-                  type="button"
-                  onClick={() => onPickRow(row)}
+                <div
                   className={cn(
                     "flex w-full items-center gap-2 rounded-lg px-2 py-2 text-start ring-1 transition-colors",
                     active
@@ -181,44 +229,53 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
                       : "bg-black/20 ring-violet-500/15 hover:ring-orange-500/25",
                   )}
                 >
-                  <Image
-                    src={meta.posterPath}
-                    alt=""
-                    width={36}
-                    height={36}
-                    className="size-9 shrink-0 rounded-full bg-white object-cover"
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium text-orange-50">
-                      {houseHeadline(row.house)}
+                  <button
+                    type="button"
+                    onClick={() => onPickRow(row)}
+                    className="flex min-w-0 flex-1 items-center gap-2 text-start"
+                  >
+                    <Image
+                      src={meta.posterPath}
+                      alt=""
+                      width={36}
+                      height={36}
+                      className="size-9 shrink-0 rounded-full bg-white object-cover"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium text-orange-50">
+                        {houseHeadline(row.house)}
+                      </span>
+                      <span className="block truncate text-sm text-violet-300">
+                        {formatDisplayAddress(row.house)}
+                      </span>
                     </span>
-                    <span className="block truncate text-sm text-violet-300">
-                      {formatDisplayAddress(row.house)}
-                    </span>
-                  </span>
-                  <Link
-                    href={houseSharePath(row.house)}
-                    onClick={(event) => event.stopPropagation()}
-                    className="shrink-0 text-sm text-orange-200 underline"
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openDetails(row.house)}
+                    className="shrink-0 rounded-lg px-2 py-1 text-sm text-orange-200 underline-offset-2 hover:underline"
                   >
                     פרטים
-                  </Link>
-                </button>
+                  </button>
+                </div>
               </li>
             );
           })}
         </ul>
       ) : (
         <p className="text-sm text-violet-400">
-          הפעילו את המתג כדי לראות רשימה; לחצו על סיכה במפה או בחרו בית מהרשימה.
+          הפעילו את המתג כדי לראות רשימה; לחצו על סיכה במפה לפרטי בית.
         </p>
       )}
 
-      <p className="shrink-0 text-center text-xs text-violet-500">
-        <Link href="/gem-bag" className="text-orange-200/80 underline">
-          ספר החברים
-        </Link>
-      </p>
+      {detailHouse ? (
+        <HouseDetailOverlay
+          house={detailHouse}
+          actionContext={actionContext}
+          onClose={() => setDetailHouse(null)}
+          openedFromList
+        />
+      ) : null}
     </div>
   );
 }
