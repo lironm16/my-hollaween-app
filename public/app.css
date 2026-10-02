@@ -9966,6 +9966,17 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.gem-hunt-overlay__walk-maps--primary {
+  display: inline-block;
+  margin-top: 0.35rem;
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgb(251 191 36 / 0.55);
+  background: rgb(251 191 36 / 0.16);
+  color: #fde68a;
+  text-decoration: none;
+  text-align: center;
+}
 .gem-hunt-overlay__hint-actions {
   position: relative;
   display: flex;
