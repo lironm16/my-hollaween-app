@@ -31,6 +31,11 @@ async function shotHtml(name, html, viewport, deviceScaleFactor = 2) {
 const iosSafari = devices["iPhone 13 Pro"];
 const androidChrome = devices["Pixel 7"];
 
+const mockStyles = `
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000; }
+`;
+
 {
   const page = await browser.newPage({
     ...iosSafari,
@@ -47,16 +52,54 @@ const androidChrome = devices["Pixel 7"];
     ...androidChrome,
     locale: "he-IL",
   });
-  await page.goto(base, { waitUntil: "domcontentloaded", timeout: 60_000 });
-  await page.waitForTimeout(1500);
-  await shot(page, "android-1-app.png");
+  await page.addInitScript(() => {
+    const fire = () => {
+      const event = new Event("beforeinstallprompt", { cancelable: true });
+      Object.assign(event, {
+        prompt: () => Promise.resolve(),
+        userChoice: Promise.resolve({ outcome: "dismissed" }),
+      });
+      window.dispatchEvent(event);
+    };
+    window.addEventListener("load", () => window.setTimeout(fire, 50), { once: true });
+  });
+  const captureUrl = `${base.replace(/\/$/, "")}/?helpInstallCapture=1`;
+  await page.goto(captureUrl, { waitUntil: "networkidle", timeout: 60_000 });
+  const installBtn = page.locator('[aria-label="התקנת האפליקציה"]');
+  const header = page.locator("header.app-header");
+  try {
+    await installBtn.waitFor({ state: "visible", timeout: 12_000 });
+    await header.screenshot({ path: join(outDir, "android-1-app.png") });
+  } catch {
+    await shotHtml(
+      "android-1-app.png",
+      `<!DOCTYPE html><html lang="he" dir="ltr"><head><meta charset="utf-8"/><style>${mockStyles}
+        .bar { width: 390px; height: 120px; background: #14091c; border-bottom: 1px solid rgba(249,115,22,.2); padding: 8px 12px; display: flex; align-items: flex-start; justify-content: space-between; }
+        .actions { display: flex; gap: 8px; align-items: center; }
+        .btn { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; font-size: 18px; }
+        .menu { background: #1d1028; color: #ffedd5; border: 1px solid rgba(249,115,22,.25); }
+        .install { background: #1d1028; color: #ffedd5; border: 3px solid #f97316; box-shadow: 0 0 0 2px rgba(249,115,22,.35); }
+        .bell { background: #1d1028; color: #ffedd5; border: 1px solid rgba(249,115,22,.25); }
+        .brand { text-align: right; color: #fb923c; font-weight: 700; font-size: 15px; line-height: 1.2; max-width: 58%; }
+        .brand small { display: block; color: #c4b5fd; font-weight: 500; font-size: 11px; }
+        .hint { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); background: rgba(249,115,22,.15); border: 1px solid rgba(249,115,22,.45); color: #ffd099; padding: 6px 10px; border-radius: 10px; font-size: 13px; white-space: nowrap; }
+        .wrap { position: relative; width: 390px; height: 120px; }
+      </style></head><body><div class="wrap">
+        <div class="hint">כפתור ההורדה ↓ ליד התפריט</div>
+        <div class="bar">
+          <div class="actions">
+            <div class="btn menu" aria-hidden>☰</div>
+            <div class="btn install" aria-hidden>↓</div>
+            <div class="btn bell" aria-hidden>🔔</div>
+          </div>
+          <div class="brand">HALLOWHOOD<small>הלואין בשכונה</small></div>
+        </div>
+      </div></body></html>`,
+      { width: 390, height: 120 },
+    );
+  }
   await page.close();
 }
-
-const mockStyles = `
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000; }
-`;
 
 await shotHtml(
   "ios-2-share.png",

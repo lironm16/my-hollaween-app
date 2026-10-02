@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -36,6 +36,7 @@ import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { AdminGemUserPreviewToggle } from "@/components/admin-gem-user-preview-toggle";
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
+import { readHelpInstallCaptureFromLocation } from "@/lib/help-install-capture";
 import { cn } from "@/lib/utils";
 
 export function AppHeader({
@@ -50,6 +51,11 @@ export function AppHeader({
   const showAdminUserPreview = admin && gemHuntVisible(admin);
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);
+  const [helpInstallCapture, setHelpInstallCapture] = useState(false);
+
+  useEffect(() => {
+    setHelpInstallCapture(readHelpInstallCaptureFromLocation());
+  }, []);
 
   async function onLogout() {
     setMenuOpen(false);
@@ -83,7 +89,7 @@ export function AppHeader({
           >
             <Menu className="size-5" />
           </button>
-          <PwaInstallButton />
+          <PwaInstallButton forceVisible={helpInstallCapture} />
           <PushAlertsButton />
         </div>
         <Link

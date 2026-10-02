@@ -2,8 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AdminGemOpsPanel } from "@/components/admin-gem-ops-panel";
-import { AdminGemUserPreviewToggle } from "@/components/admin-gem-user-preview-toggle";
-import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useRehearsalScene, useServerSim, useAppNow } from "@/hooks/use-app-clock";
 import { useHouseSet } from "@/hooks/use-house-set";
@@ -56,7 +54,6 @@ export function AdminDryRunPanel() {
   const { scene, setScene } = useRehearsalScene();
   const { down, setDown } = useServerSim();
   const { houseSet, setHouseSet } = useHouseSet();
-  const { previewAsUser } = useGemPreviewAsUser();
   const gemsOnScreen = admin && gemHuntFabVisible(admin, now);
   const catalogHouses = useMemo(
     () => (catalog?.houses ?? []) as PublicHouse[],
@@ -172,15 +169,10 @@ export function AdminDryRunPanel() {
           מציג את הבאנר «השרת לא עונה» עם הרשימה ששמורה בטלפון. פתחו את המפה פעם אחת ברשת לפני כן.
         </p>
       </div>
-      {gemsOnScreen ? (
-        <div className="space-y-1.5">
-          <AdminGemUserPreviewToggle />
-          {!previewAsUser && catalogHouses.length > 0 ? (
-            <div className="space-y-1 rounded-lg bg-[#12081a] p-1 ring-1 ring-orange-500/25">
-              <p className="px-1 pt-0.5 text-base font-medium text-orange-100">יהלומים</p>
-              <AdminGemOpsPanel houses={catalogHouses} />
-            </div>
-          ) : null}
+      {gemsOnScreen && catalogHouses.length > 0 ? (
+        <div className="space-y-1 rounded-lg bg-[#12081a] p-1 ring-1 ring-orange-500/25">
+          <p className="px-1 pt-0.5 text-base font-medium text-orange-100">יהלומים</p>
+          <AdminGemOpsPanel houses={catalogHouses} />
         </div>
       ) : null}
     </div>

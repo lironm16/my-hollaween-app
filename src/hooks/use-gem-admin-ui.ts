@@ -8,7 +8,7 @@ import {
 } from "@/lib/gem-hunt-enabled";
 import { readGemPreviewAsUser, subscribeGemPreviewAsUser } from "@/lib/gem-preview-as-user";
 
-/** Re-renders when בדיקות → «תצוגת משתמש (יהלומים)» toggles. */
+/** Re-renders when תפריט → «תצוגת משתמש (יהלומים)» toggles. */
 export function useGemHuntAdminUi(isAdmin: boolean, now = new Date()) {
   const previewAsUser = useSyncExternalStore(
     subscribeGemPreviewAsUser,
