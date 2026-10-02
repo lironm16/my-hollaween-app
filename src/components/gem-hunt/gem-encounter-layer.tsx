@@ -1,7 +1,6 @@
 "use client";
 
 import type { PublicHouse } from "@/lib/types";
-import { formatDistance } from "@/lib/geo";
 import {
   readEncounterTutorialSeen,
   markEncounterTutorialSeen,
@@ -35,18 +34,8 @@ export function GemEncounterLayer({
     setTutorialSeen(readEncounterTutorialSeen());
   }, []);
 
-  if (phase === "approach" && !hideApproachLine) {
-    return (
-      <div className="gem-encounter-layer gem-encounter-layer--approach" role="status">
-        <p className="gem-encounter-layer__approach-line">
-          {inRange
-            ? "החיה מופיעה — התקרבו עוד רגע…"
-            : distanceM != null
-              ? `התקרבו לנקודה · ${formatDistance(distanceM)}`
-              : "התקרבו לנקודה על המדרכה"}
-        </p>
-      </div>
-    );
+  if (phase === "approach") {
+    return null;
   }
 
   if (phase === "encounter") {

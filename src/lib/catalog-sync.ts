@@ -1,4 +1,5 @@
 import type { Catalog, CatalogDelta, DbFile, PublicHouse, PushSubscriptionRecord } from "@/lib/types";
+import { isAuthoritativeHouseList } from "@/lib/catalog-houses";
 import { loadDeletedHouseIds } from "@/lib/deleted-houses";
 
 function stamp(value: { updatedAt: string }) {
@@ -36,10 +37,12 @@ export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
 
   if (nextTs >= prevTs) {
     incoming.houses.forEach(take);
-    const deleted = new Set(loadDeletedHouseIds());
-    for (const house of prev.houses) {
-      if (deleted.has(house.id)) continue;
-      if (!byId.has(house.id)) take(house);
+    if (!isAuthoritativeHouseList(incoming)) {
+      const deleted = new Set(loadDeletedHouseIds());
+      for (const house of prev.houses) {
+        if (deleted.has(house.id)) continue;
+        if (!byId.has(house.id)) take(house);
+      }
     }
     return {
       ...incoming,

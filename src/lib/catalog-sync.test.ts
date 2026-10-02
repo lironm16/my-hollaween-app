@@ -68,6 +68,25 @@ describe("syncCatalog", () => {
     assert.deepEqual(merged.houses.map((house) => house.id).sort(), ["a", "b"]);
   });
 
+  it("drops stale local-only houses when incoming catalog is authoritative", () => {
+    const prev = catalog("2026-09-06T19:50:00.000Z", [
+      ...Array.from({ length: 97 }, (_, index) =>
+        publicHouse(`house-${index}`, "2026-09-03T13:15:00.000Z"),
+      ),
+    ]);
+    const incoming: Catalog = {
+      updatedAt: "2026-10-31T12:00:00.000Z",
+      neighborhood: "שכונה",
+      houseCount: 75,
+      houses: Array.from({ length: 75 }, (_, index) =>
+        publicHouse(`live-${index}`, "2026-10-31T12:00:00.000Z"),
+      ),
+    };
+    const merged = syncCatalog(prev, incoming);
+    assert.equal(merged.houses.length, 75);
+    assert.equal(merged.houseCount, 75);
+  });
+
   it("keeps cached houses when incoming catalog is newer but omits them", () => {
     const prev = catalog("2026-09-03T13:15:00.000Z", [
       publicHouse("real-1", "2026-09-03T13:15:00.000Z"),

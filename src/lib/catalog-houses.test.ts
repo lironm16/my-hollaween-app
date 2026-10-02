@@ -3,6 +3,7 @@ import { describe, it, beforeEach, afterEach } from "node:test";
 import {
   catalogCacheIncomplete,
   catalogNeedsFullRefresh,
+  isAuthoritativeHouseList,
   localCatalogHouseCount,
   resolveCatalogHouses,
   resolveServerHouseCount,
@@ -54,6 +55,24 @@ function catalog(
 ): Catalog {
   return { updatedAt, neighborhood: "test", houses, ...meta };
 }
+
+describe("isAuthoritativeHouseList", () => {
+  it("is true when inline houses match houseCount", () => {
+    const full = catalog(
+      Array.from({ length: 75 }, (_, index) => house(`house-${index}`)),
+      "2026-10-31T10:00:00.000Z",
+      { houseCount: 75 },
+    );
+    assert.equal(isAuthoritativeHouseList(full), true);
+  });
+
+  it("is false for partial delta payloads", () => {
+    assert.equal(
+      isAuthoritativeHouseList(catalog([house("a")], "2026-10-31T10:00:00.000Z", { houseCount: 75 })),
+      false,
+    );
+  });
+});
 
 describe("resolveServerHouseCount", () => {
   it("prefers explicit houseCount over inline houses", () => {
@@ -144,6 +163,24 @@ describe("resolveCatalogHouses", { skip: !hasLocalStorage }, () => {
     );
     localStorage.setItem(CATALOG_LS_KEY, JSON.stringify(cached));
     assert.deepEqual(resolveCatalogHouses(null).map((item) => item.id), ["a"]);
+  });
+
+  it("uses live houses only when the live catalog is authoritative", () => {
+    const cached = catalog(
+      [
+        house("a", { updatedAt: "2026-09-01T09:00:00.000Z" }),
+        house("b", { updatedAt: "2026-09-01T09:00:00.000Z" }),
+        house("c", { updatedAt: "2026-09-01T09:00:00.000Z" }),
+      ],
+      "2026-09-01T09:00:00.000Z",
+    );
+    localStorage.setItem(CATALOG_LS_KEY, JSON.stringify(cached));
+    const live = catalog(
+      [house("a", { updatedAt: "2026-10-31T12:00:00.000Z" }), house("b", { updatedAt: "2026-10-31T12:00:00.000Z" })],
+      "2026-10-31T12:00:00.000Z",
+      { houseCount: 2 },
+    );
+    assert.deepEqual(resolveCatalogHouses(live).map((item) => item.id).sort(), ["a", "b"]);
   });
 
   it("keeps cached ids when live catalog is a newer partial delta", () => {

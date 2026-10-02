@@ -438,7 +438,6 @@ export function GemHuntWebXrAr({
 
   const toggleRevealMe = useCallback(() => {
     if (phase === "collecting" || !sessionActive) return;
-    if (!inWebXrHuntBand && !simulateInRange) return;
 
     if (centerReveal) {
       setCenterReveal(false);
@@ -470,15 +469,7 @@ export function GemHuntWebXrAr({
     placed,
     sessionActive,
     setEncounterPhase,
-    inWebXrHuntBand,
-    simulateInRange,
   ]);
-
-  const showWebXrRangeHint =
-    sessionActive &&
-    !simulateInRange &&
-    !inWebXrHuntBand &&
-    phase !== "collecting";
 
   const showWebXrGeoHint =
     sessionActive &&
@@ -1011,11 +1002,6 @@ export function GemHuntWebXrAr({
         ) : (
           <div className="gem-hunt-overlay__footer-stack">
             <div className="gem-hunt-overlay__footer-hint-slot">
-              {showWebXrRangeHint ? (
-                <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="status">
-                  התקרבו לנקודה על המדרכה (עד {GEM_WEBXR_HUNT_METERS} מ׳) — אז אפשר לשים את החיה ולאסוף.
-                </p>
-              ) : null}
               {showWebXrGeoHint ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="status">
                   מאתרים את היהלום על המדרכה (אותה נקודה כמו במפה)…

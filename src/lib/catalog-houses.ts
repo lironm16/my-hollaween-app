@@ -19,6 +19,15 @@ export function localCatalogHouseCount(catalog: Catalog | null): number {
   return catalog?.houses.length ?? 0;
 }
 
+/** Server sent a full inline list matching explicit `houseCount` — safe to drop stale local-only ids. */
+export function isAuthoritativeHouseList(
+  catalog: Pick<Catalog, "houseCount" | "houses"> | null | undefined,
+): boolean {
+  if (!catalog?.houses.length) return false;
+  const count = catalog.houseCount;
+  return typeof count === "number" && count >= 0 && catalog.houses.length === count;
+}
+
 /** True when the on-device list is shorter than the server says the catalog should be. */
 export function catalogCacheIncomplete(
   catalog: Catalog | null,
@@ -50,6 +59,7 @@ export function catalogNeedsFullRefresh(
 export function resolveCatalogHouses(catalog: Catalog | null): PublicHouse[] {
   const cached = loadCatalogCacheSync();
   if (!catalog?.houses.length) return cached?.houses ?? [];
+  if (isAuthoritativeHouseList(catalog)) return catalog.houses;
   if (!cached?.houses.length) return catalog.houses;
   return syncCatalog(cached, catalog).houses;
 }

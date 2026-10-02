@@ -32,6 +32,7 @@ import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
 import {
   catalogCacheIncomplete,
   catalogNeedsFullRefresh,
+  isAuthoritativeHouseList,
   resolveServerHouseCount,
 } from "@/lib/catalog-houses";
 import { catalogHasRealHouses } from "@/lib/house-set";
@@ -132,8 +133,15 @@ function mergeDeviceCatalog(prev: Catalog | null, cached: Catalog): Catalog {
 async function reconcileWithDeviceCache(prev: Catalog | null): Promise<Catalog | null> {
   const cached = await readDeviceCatalog();
   if (!cached) return prev;
+  if (prev && isAuthoritativeHouseList(prev)) {
+    return withDeviceHouseOverlays(prev);
+  }
   const merged = mergeDeviceCatalog(prev, cached);
+  if (prev && isAuthoritativeHouseList(merged)) return merged;
   if (prev && merged.houses.length <= prev.houses.length) return prev;
+  if (prev && merged.houses.length > prev.houses.length && isAuthoritativeHouseList(prev)) {
+    return withDeviceHouseOverlays(prev);
+  }
   return merged;
 }
 
