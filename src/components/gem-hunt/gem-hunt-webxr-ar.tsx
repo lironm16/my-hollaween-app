@@ -219,7 +219,7 @@ export function GemHuntWebXrAr({
   const inWebXrHuntBand =
     simulateInRange ||
     (liveLoc != null && gemDistanceMeters(liveLoc, house) <= GEM_WEBXR_HUNT_METERS);
-  /** Tighter than map «hunt» (25 m) — matches iOS world-pin radius on WebXR. */
+  /** Same on-site radius as iOS camera hunt (GEM_WEBXR_HUNT_METERS). */
   const canCollectNow =
     inWebXrHuntBand && (simulateInRange || collectEnabled);
   const canCollect = canCollectNow && inWebXrHuntBand && placed;

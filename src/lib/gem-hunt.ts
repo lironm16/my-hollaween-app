@@ -50,8 +50,9 @@ export type GemVariantId = GemMonsterId;
 
 /** Show "find gem" affordance when within this range. */
 export const GEM_APPROACH_METERS = 50;
-/** Must be this close (and still) to start the camera hunt. */
-export const GEM_HUNT_METERS = 25;
+/** Must be this close to start camera hunt / see the world-pinned gem (iOS + map band). */
+export const GEM_WORLD_PIN_MAX_METERS = 15;
+export const GEM_HUNT_METERS = GEM_WORLD_PIN_MAX_METERS;
 /** @deprecated Stand-still gate removed — kept for copy/tests that reference the old value. */
 export const GEM_STILL_SECONDS = 0;
 /** Compass cone — gem may appear when facing within this many degrees of the house. */
@@ -64,8 +65,6 @@ export const GEM_SCAN_PAN_DEGREES = 180;
 export const GEM_HELP_AFTER_SECONDS = 8;
 /** Approx. phone camera horizontal field of view — for pinning gem on screen. */
 export const GEM_CAMERA_HFOV_DEG = 48;
-/** Max walk distance to anchor before hiding the world-pinned gem (iOS camera hunt). */
-export const GEM_WORLD_PIN_MAX_METERS = 15;
 /** Android WebXR — same on-site radius for placement, encounter, and collect. */
 export const GEM_WEBXR_HUNT_METERS = GEM_WORLD_PIN_MAX_METERS;
 /** Place Android AR pet at gemAnchorForHouse (GPS + anchor), not only hit-test at feet. */
@@ -358,7 +357,7 @@ function inGemHuntBand(
   return withinGemHuntMeters(user, anchor);
 }
 
-/** Within ~25m of the gem anchor or map pin — camera hunt / collect band. */
+/** Within GEM_HUNT_METERS of the gem anchor or map pin — camera hunt / collect band. */
 export function userWithinGemHuntRange(
   user: { lat: number; lng: number; accuracy?: number } | null,
   house: Pick<PublicHouse, "id" | "lat" | "lng">,

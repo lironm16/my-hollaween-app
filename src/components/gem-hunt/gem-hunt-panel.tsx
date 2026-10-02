@@ -20,6 +20,7 @@ import {
   gemDistanceMeters,
   gemProximity,
   GEM_CHEER_MS,
+  GEM_HUNT_METERS,
 } from "@/lib/gem-hunt";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import { distanceMeters } from "@/lib/geo";
@@ -160,7 +161,7 @@ export function GemHuntPanel({
               : proximity === "far" && distanceM != null && distanceM <= 25
                 ? "ליד היהלום — המתינו רגע ל-GPS"
                 : proximity === "far"
-                  ? "התקרבו ל־25 מ׳ ליהלום על המדרכה"
+                  ? `התקרבו ל־${GEM_HUNT_METERS} מ׳ ליהלום על המדרכה`
                   : distanceM != null
                     ? `~${Math.round(distanceM)} מ׳ ליהלום — פתחו מצלמה`
                     : "פתחו מצלמה לתצוגה"}

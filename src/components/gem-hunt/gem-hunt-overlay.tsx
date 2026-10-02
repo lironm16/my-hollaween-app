@@ -543,7 +543,7 @@ export function GemHuntOverlay({
   const pinCollectReady =
     arPinGuideMode && canCollectNow && gemWorldPinVisible(pinDisplay ?? pinPlacement);
   /** Show centered gem after reveal even before «stand still» — tap only when collectEnabled. */
-  /** Show when the shared anchor bearing is inside the camera cone — not gated on 25 m. */
+  /** Show when the shared anchor bearing is inside the camera cone — gated by GEM_WORLD_PIN_MAX_METERS. */
   const showWorldGemSprite = gemWorldPinVisible(pinDisplay ?? pinPlacement);
   const worldLockRevealed =
     arPinGuideMode && showWorldGemSprite && (phase === "visible" || phase === "collecting");
