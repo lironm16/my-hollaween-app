@@ -6,6 +6,7 @@ import {
   bearingDegrees,
   facingHouse,
   relativeWalkBearingDeg,
+  navTurnBearingForUi,
   gemAnchorForHouse,
   gemProximity,
   gemScreenPlacement,
@@ -136,6 +137,11 @@ describe("gem hunt geo", () => {
     const target = bearingDegrees(user, house);
     assert.equal(facingHouse(user, house, target, 30), true);
     assert.equal(facingHouse(user, house, target + 90, 30), false);
+  });
+
+  it("mirrors turn bearing for nav hint arrow copy", () => {
+    assert.equal(navTurnBearingForUi(35), -35);
+    assert.equal(navTurnBearingForUi(-35), 35);
   });
 
   it("computes relative walk bearing for on-screen arrow", () => {

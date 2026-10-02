@@ -1,6 +1,6 @@
 "use client";
 
-import { Navigation } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** Single phone-relative direction chevron (replaces the eight-spoke hunt ring). */
@@ -23,11 +23,12 @@ export function GemHuntOrientationArrow({
         facing && "is-facing",
         className,
       )}
+      dir="ltr"
       style={{ transform: `translate(-50%, -50%) rotate(${bearingDeg}deg)` }}
       role="img"
       aria-label="כיוון הליכה — חץ"
     >
-      <Navigation className="gem-hunt-overlay__scan-compass-icon" strokeWidth={2.5} aria-hidden />
+      <ArrowUp className="gem-hunt-overlay__scan-compass-icon" strokeWidth={2.5} aria-hidden />
     </div>
   );
 }

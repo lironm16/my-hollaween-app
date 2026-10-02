@@ -30,6 +30,7 @@ import {
   gemMonsterForHouse,
   gemScreenPlacement,
   gemWorldPinVisible,
+  navTurnBearingForUi,
   relativeWalkBearingDeg,
   type GemMonsterId,
   type GemCollectFinishOptions,
@@ -557,7 +558,9 @@ export function GemHuntOverlay({
     liveLoc != null ? bearingDegrees(liveLoc, anchor) : null;
   /** Glowing Navigation arrow — phone-relative when compass works, else map-north bearing. */
   const huntArrowPhoneRelative = heading != null && turnBearing != null;
-  const huntArrowDeg = huntArrowPhoneRelative ? turnBearing : gpsBearingToAnchor;
+  const navTurnBearing =
+    turnBearing != null ? navTurnBearingForUi(turnBearing) : null;
+  const huntArrowDeg = huntArrowPhoneRelative ? navTurnBearing : gpsBearingToAnchor;
   const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToAnchor != null;
   const mapsWalkUrl =
     liveLoc != null && !sim
@@ -566,7 +569,7 @@ export function GemHuntOverlay({
   const walkGuideCopy = gemWalkGuideCopy(
     huntArrowPhoneRelative,
     facingTarget,
-    turnBearing,
+    navTurnBearing,
     gpsBearingToAnchor,
   );
   const showCompassEnable =

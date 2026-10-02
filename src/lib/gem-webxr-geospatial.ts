@@ -100,7 +100,7 @@ export function geoPlacementReady(
   if (!avg) return false;
   if (avg.accuracy != null && avg.accuracy > maxAccuracyM) return false;
   if (geoSampleSpreadMeters(samples) > maxSpreadM) return false;
-  return distanceMeters(avg, target) <= 16.5;
+  return distanceMeters(avg, target) <= 15.5;
 }
 
 type XRFrameGeo = XRFrame & {

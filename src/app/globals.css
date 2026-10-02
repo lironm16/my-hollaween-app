@@ -4073,6 +4073,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   width: min(72vw, 17rem);
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
+  direction: ltr;
   pointer-events: none;
   opacity: 0.92;
 }

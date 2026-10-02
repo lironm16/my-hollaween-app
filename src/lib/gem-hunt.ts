@@ -65,7 +65,7 @@ export const GEM_HELP_AFTER_SECONDS = 8;
 /** Approx. phone camera horizontal field of view — for pinning gem on screen. */
 export const GEM_CAMERA_HFOV_DEG = 48;
 /** Max walk distance to anchor before hiding the world-pinned gem (iOS camera hunt). */
-export const GEM_WORLD_PIN_MAX_METERS = 16;
+export const GEM_WORLD_PIN_MAX_METERS = 15;
 /** Android WebXR — same on-site radius for placement, encounter, and collect. */
 export const GEM_WEBXR_HUNT_METERS = GEM_WORLD_PIN_MAX_METERS;
 /** Place Android AR pet at gemAnchorForHouse (GPS + anchor), not only hit-test at feet. */
@@ -454,6 +454,14 @@ export function relativeWalkBearingDeg(
   while (rel > 180) rel -= 360;
   while (rel < -180) rel += 360;
   return rel;
+}
+
+/**
+ * Hunt «רמז» arrow + שמאלה/ימינה copy — screen-space (matches gem pin left/right on camera).
+ * Raw {@link relativeWalkBearingDeg} follows map/compass; UI chevron uses the mirror.
+ */
+export function navTurnBearingForUi(turnBearingDeg: number) {
+  return -turnBearingDeg;
 }
 
 export type GemAchievement = {
