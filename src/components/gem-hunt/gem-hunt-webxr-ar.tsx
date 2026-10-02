@@ -289,8 +289,10 @@ export function GemHuntWebXrAr({
   const showArGem =
     (placed || centerReveal) && (phase === "collecting" || !userDismissedCenterGem);
 
-  const petRevealedForEncounter = sessionActive && placed && showArGem;
-  const inRangeForEncounter = inWebXrHuntBand;
+  const petRevealedForEncounter =
+    sessionActive && showArGem && (placed || centerReveal);
+  const inRangeForEncounter =
+    inWebXrHuntBand || centerReveal || simulateInRange;
 
   const {
     encounterPhase,
@@ -300,12 +302,15 @@ export function GemHuntWebXrAr({
   } = useGemEncounterPhase({
     enabled: encounterMode && sessionActive,
     repeatVisit,
-    collectEnabled: canCollectNow,
+    collectEnabled: canCollectNow || centerReveal || simulateInRange,
     petRevealed: petRevealedForEncounter,
     inRange: inRangeForEncounter,
     onEncounterCollect: handleCollect,
     onRepeatRewardDone: finishRepeatEncounter,
   });
+
+  const onTreatSuccessRef = useRef(onTreatSuccess);
+  onTreatSuccessRef.current = onTreatSuccess;
 
   const encounterPhaseRef = useRef(encounterPhase);
   encounterPhaseRef.current = encounterPhase;
@@ -334,8 +339,9 @@ export function GemHuntWebXrAr({
       encounterPhase.startsWith("resolve") ||
       encounterPhase === "reward");
   const tellMeRevealActive = centerReveal || encounterForcesReveal;
+  /** DOM center gem only for «גלה לי» — world AR model handles on-site placement taps. */
   const showTellMeCenterGem =
-    tellMeRevealActive && sessionActive && phase !== "collecting" && !userDismissedCenterGem;
+    centerReveal && sessionActive && phase !== "collecting" && !userDismissedCenterGem;
 
   const treatSwipe = useTreatSwipe({
     onSuccess: () => {
@@ -437,13 +443,31 @@ export function GemHuntWebXrAr({
     if (!canTapTellMeCenter) return;
     if (encounterMode) {
       encounterCollectLatchedRef.current = true;
-      offerEncounterCollectRef.current();
+      markEncounterTutorialSeen();
+      onTreatSuccessRef.current();
       return;
     }
     handleCollectRef.current();
   }, [canTapTellMeCenter, encounterMode]);
 
   const tellMeTapStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const fireTellMeTapFromPointer = useCallback(
+    (clientX: number, clientY: number) => {
+      if (!canTapTellMeCenter) return;
+      const start = tellMeTapStartRef.current;
+      tellMeTapStartRef.current = null;
+      if (!start) {
+        onTellMeCenterTap();
+        return;
+      }
+      const dx = clientX - start.x;
+      const dy = clientY - start.y;
+      if (dx * dx + dy * dy > 576) return;
+      onTellMeCenterTap();
+    },
+    [canTapTellMeCenter, onTellMeCenterTap],
+  );
 
   const handleClose = useCallback(() => {
     if (phase === "collecting") return;
@@ -741,7 +765,9 @@ export function GemHuntWebXrAr({
           if (
             ep === "encounter" &&
             !userDismissedCenterGemRef.current &&
-            (canCollectRef.current || encounterCollectLatchedRef.current)
+            (canCollectRef.current ||
+              encounterCollectLatchedRef.current ||
+              centerRevealRef.current)
           ) {
             offerEncounterCollectRef.current();
             return;
@@ -992,40 +1018,50 @@ export function GemHuntWebXrAr({
       <div ref={hostRef} className="gem-hunt-webxr__host" />
 
       {showTellMeCenterGem ? (
-        <div className="gem-hunt-overlay__stage gem-hunt-webxr__tell-me-stage" aria-hidden={false}>
+        <div
+          className="gem-hunt-overlay__stage gem-hunt-webxr__tell-me-stage is-gem-interactive"
+          aria-hidden={false}
+        >
           <div
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pin-collect is-revealed is-inspect360",
-              "is-ring-center is-center-collect",
+              "is-ring-center is-center-collect is-collect-layer",
               canTapTellMeCenter && "is-tap-collect-ready",
             )}
-            onPointerDown={(e) => {
-              if (e.button !== 0) return;
-              tellMeTapStartRef.current = { x: e.clientX, y: e.clientY };
-            }}
-            onPointerUp={(e) => {
-              if (!canTapTellMeCenter || e.button !== 0) return;
-              const start = tellMeTapStartRef.current;
-              tellMeTapStartRef.current = null;
-              if (!start) return;
-              const dx = e.clientX - start.x;
-              const dy = e.clientY - start.y;
-              if (dx * dx + dy * dy > 576) return;
-              onTellMeCenterTap();
-            }}
-            onPointerCancel={() => {
-              tellMeTapStartRef.current = null;
-            }}
           >
-            <GemSprite
-              house={house}
-              mode="inspect360"
-              size="fill"
-              spinWhileCollect={false}
-              tapCollect
-              celebrateVariant={danceIndex}
-              onInspectTap={canTapTellMeCenter ? onTellMeCenterTap : undefined}
-            />
+            <button
+              type="button"
+              className="gem-hunt-overlay__gem-tap-target"
+              aria-label="איסוף החיה"
+              disabled={!canTapTellMeCenter}
+              onPointerDown={(e) => {
+                if (e.button !== 0) return;
+                tellMeTapStartRef.current = { x: e.clientX, y: e.clientY };
+              }}
+              onPointerUp={(e) => {
+                if (e.button !== 0) return;
+                fireTellMeTapFromPointer(e.clientX, e.clientY);
+              }}
+              onPointerCancel={() => {
+                tellMeTapStartRef.current = null;
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                tellMeTapStartRef.current = null;
+                onTellMeCenterTap();
+              }}
+            >
+              <div className="gem-hunt-overlay__gem-dance" data-collect-dance={danceIndex}>
+                <GemSprite
+                  house={house}
+                  mode="inspect360"
+                  size="fill"
+                  spinWhileCollect={false}
+                  tapCollect
+                  celebrateVariant={danceIndex}
+                />
+              </div>
+            </button>
           </div>
         </div>
       ) : null}

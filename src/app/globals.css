@@ -6731,6 +6731,25 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-hit {
   pointer-events: auto;
 }
+.gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-hit.is-collect-layer {
+  pointer-events: none;
+}
+.gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-tap-target {
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-tap-target:disabled {
+  cursor: default;
+}
+.gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-tap-target .gem-model-3d,
+.gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-tap-target canvas {
+  pointer-events: none !important;
+  touch-action: none;
+}
 .gem-hunt-webxr__host canvas {
   display: block;
   width: 100% !important;
