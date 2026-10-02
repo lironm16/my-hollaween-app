@@ -6713,6 +6713,15 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   z-index: 0;
   pointer-events: none;
 }
+.gem-hunt-webxr__tell-me-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+}
+.gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-hit {
+  pointer-events: auto;
+}
 .gem-hunt-webxr__host canvas {
   display: block;
   width: 100% !important;

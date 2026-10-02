@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import * as THREE from "three";
 import { GemHuntOrientationArrow } from "@/components/gem-hunt/gem-hunt-orientation-arrow";
+import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { ARButton } from "three/addons/webxr/ARButton.js";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
@@ -244,7 +245,9 @@ export function GemHuntWebXrAr({
       inWebXrHuntBand ||
       encounterCollectLatchedRef.current ||
       simulateInRange;
-    if (!inBand || !placed) return;
+    const tellMeCenter = centerRevealRef.current;
+    if (!inBand && !tellMeCenter) return;
+    if (!placed && !tellMeCenter) return;
     const entries = loadGemCollected();
     const newAlbumFriend = !repeatVisit && !isGemTypeInCollection(monsterId, entries);
     collectingRef.current = true;
@@ -284,7 +287,7 @@ export function GemHuntWebXrAr({
   }, [onClose]);
 
   const showArGem =
-    placed && (phase === "collecting" || !userDismissedCenterGem);
+    (placed || centerReveal) && (phase === "collecting" || !userDismissedCenterGem);
 
   const petRevealedForEncounter = sessionActive && placed && showArGem;
   const inRangeForEncounter = inWebXrHuntBand;
@@ -327,6 +330,8 @@ export function GemHuntWebXrAr({
       encounterPhase.startsWith("resolve") ||
       encounterPhase === "reward");
   const tellMeRevealActive = centerReveal || encounterForcesReveal;
+  const showTellMeCenterGem =
+    tellMeRevealActive && sessionActive && phase !== "collecting" && !userDismissedCenterGem;
 
   const treatSwipe = useTreatSwipe({
     onSuccess: () => {
@@ -392,7 +397,7 @@ export function GemHuntWebXrAr({
   const offerEncounterCollect = useCallback(() => {
     if (encounterPhase !== "encounter") return;
     if (!canCollectNow && !encounterCollectLatchedRef.current && !simulateInRange) return;
-    if (!placed || !showArGem) return;
+    if ((!placed && !centerRevealRef.current) || !showArGem) return;
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate([12, 28, 18]);
     }
@@ -410,6 +415,23 @@ export function GemHuntWebXrAr({
 
   const offerEncounterCollectRef = useRef(offerEncounterCollect);
   offerEncounterCollectRef.current = offerEncounterCollect;
+
+  const canTapTellMeCenter =
+    showTellMeCenterGem &&
+    (encounterMode
+      ? encounterPhase === "encounter" &&
+        (canCollectNow || encounterCollectLatchedRef.current || centerReveal)
+      : canCollectNow || centerReveal || simulateInRange);
+
+  const onTellMeCenterTap = useCallback(() => {
+    if (!canTapTellMeCenter) return;
+    if (encounterMode) {
+      encounterCollectLatchedRef.current = true;
+      offerEncounterCollectRef.current();
+      return;
+    }
+    handleCollectRef.current();
+  }, [canTapTellMeCenter, encounterMode]);
 
   const handleClose = useCallback(() => {
     if (phase === "collecting") return;
@@ -514,7 +536,7 @@ export function GemHuntWebXrAr({
       isPlaced = true;
       stableHitFrames = 0;
       reticle.visible = false;
-      anchorGroup.visible = true;
+      if (!centerRevealRef.current) anchorGroup.visible = true;
       setPlaced(true);
       setPhase("placed");
       setGeoLockModeRef.current(mode);
@@ -528,7 +550,8 @@ export function GemHuntWebXrAr({
       anchorGroup.matrix.fromArray(pose.transform.matrix);
       anchorGroup.matrix.decompose(anchorGroup.position, anchorGroup.quaternion, anchorGroup.scale);
       anchorGroup.visible =
-        collectingRef.current || !userDismissedCenterGemRef.current;
+        !centerRevealRef.current &&
+        (collectingRef.current || !userDismissedCenterGemRef.current);
     };
 
     const pushGeoSample = () => {
@@ -816,7 +839,9 @@ export function GemHuntWebXrAr({
 
         if (!worldAnchor) {
           anchorGroup.visible =
-            isPlaced && (collectingRef.current || !userDismissedCenterGemRef.current);
+            isPlaced &&
+            !centerRevealRef.current &&
+            (collectingRef.current || !userDismissedCenterGemRef.current);
         }
 
         if (
@@ -954,6 +979,28 @@ export function GemHuntWebXrAr({
 
       <div ref={hostRef} className="gem-hunt-webxr__host" />
 
+      {showTellMeCenterGem ? (
+        <div className="gem-hunt-overlay__stage gem-hunt-webxr__tell-me-stage" aria-hidden={false}>
+          <div
+            className={cn(
+              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pin-collect is-revealed is-inspect360",
+              "is-ring-center is-center-collect",
+              canTapTellMeCenter && "is-tap-collect-ready",
+            )}
+          >
+            <GemSprite
+              house={house}
+              mode="inspect360"
+              size="fill"
+              spinWhileCollect={false}
+              tapCollect
+              celebrateVariant={danceIndex}
+              onInspectTap={canTapTellMeCenter ? onTellMeCenterTap : undefined}
+            />
+          </div>
+        </div>
+      ) : null}
+
       {encounterMode ? (
         <GemEncounterLayer
           house={house}
@@ -963,11 +1010,6 @@ export function GemHuntWebXrAr({
           repeatVisit={repeatVisit}
           hideApproachLine={hintPanel === "nav" || centerReveal}
           showTutorial={encounterPhase === "encounter"}
-          onOfferTreatButton={
-            encounterPhase === "encounter" && tellMeRevealActive
-              ? () => offerEncounterCollect()
-              : undefined
-          }
         />
       ) : null}
 
