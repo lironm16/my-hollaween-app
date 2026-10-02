@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { GemHuntBootShell } from "@/components/gem-hunt/gem-hunt-boot-shell";
 import { GemHuntOverlayLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { GemHuntWebXrArLazy } from "@/components/gem-hunt/gem-hunt-lazy";
-import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
+import { isAndroidLike, supportsWebXrHitTestAr } from "@/lib/gem-hunt-ar-platform";
 import type { GemCollectFinishOptions } from "@/lib/gem-hunt";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
@@ -18,28 +18,38 @@ export type GemHuntExperienceProps = {
   collectEnabled?: boolean;
   encounterMode?: boolean;
   repeatVisit?: boolean;
-  /** Non-Android: session started on the same tap as hunt open (avoids second AR button). */
+  /** Android: session started on the same tap as hunt open (avoids second AR button). */
   initialWebXrSession?: XRSession | null;
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
 };
 
 /**
- * Android + iOS: full-screen camera pseudo-AR (`getUserMedia`).
- * WebXR path only when `initialWebXrSession` is passed on non-Android.
+ * Android Chrome: immersive WebXR when hit-test AR is available.
+ * iOS: camera pseudo-AR overlay (`getUserMedia`).
  */
 export function GemHuntExperience(props: GemHuntExperienceProps) {
   const [path, setPath] = useState<"pending" | "webxr" | "camera">(() => {
-    if (props.initialWebXrSession && !isAndroidLike()) return "webxr";
+    if (props.initialWebXrSession) return "webxr";
     return "pending";
   });
 
   useEffect(() => {
-    if (props.initialWebXrSession && !isAndroidLike()) {
+    if (props.initialWebXrSession) {
       setPath("webxr");
       return;
     }
-    setPath("camera");
+    let cancelled = false;
+    if (!isAndroidLike()) {
+      setPath("camera");
+      return;
+    }
+    void supportsWebXrHitTestAr().then((ok) => {
+      if (!cancelled) setPath(ok ? "webxr" : "camera");
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [props.initialWebXrSession]);
 
   const onWebXrFallback = useCallback(() => setPath("camera"), []);

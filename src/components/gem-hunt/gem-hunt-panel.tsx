@@ -8,7 +8,7 @@ import { GemHouseFoundHero } from "@/components/gem-hunt/gem-house-found-hero";
 import type { GemCollectFinishOptions } from "@/lib/gem-hunt";
 import { GemHuntExperienceLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { isAndroidLike, supportsWebXrHitTestAr, webXrHitTestArCached } from "@/lib/gem-hunt-ar-platform";
-import { endGemHuntWebXrSession } from "@/lib/gem-hunt-webxr-session";
+import { endGemHuntWebXrSession, requestGemHuntWebXrSession } from "@/lib/gem-hunt-webxr-session";
 import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import { Button } from "@/components/ui/button";
 import { useGemProgress } from "@/hooks/use-gem-progress";
@@ -106,12 +106,16 @@ export function GemHuntPanel({
 
   const openCamera = useCallback(async () => {
     getGemHuntPortalRoot();
-    setBootWebXrSession(null);
+    let xrSession: XRSession | null = null;
+    if (isAndroidLike() && webXrHitTestArCached()) {
+      xrSession = await requestGemHuntWebXrSession();
+    }
+    setBootWebXrSession(xrSession);
     setHuntLocation(userLocation);
     setHuntOpen(true);
     const fresh = (await onOpenHunt?.()) ?? userLocation;
     await prepareGemHuntSensors({
-      requestCamera: isAndroidLike(),
+      requestCamera: !xrSession,
       requestOrientation: !isGemHuntOrientationGranted(),
     });
     setHuntLocation(fresh ?? userLocation);
