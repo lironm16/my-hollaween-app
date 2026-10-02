@@ -82,7 +82,7 @@ export function AdminDryRunPanel() {
   }
 
   return (
-    <div className="space-y-3 rounded-xl bg-black/25 p-3">
+    <div className="space-y-2 rounded-lg bg-black/25 p-1.5">
       <div className="space-y-2">
         <p className="text-base font-medium text-amber-100">איזה בתים להציג</p>
         <p className="text-base text-violet-300">
@@ -173,14 +173,11 @@ export function AdminDryRunPanel() {
         </p>
       </div>
       {gemsOnScreen ? (
-        <div className="space-y-4">
+        <div className="space-y-1.5">
           <AdminGemUserPreviewToggle />
           {!previewAsUser && catalogHouses.length > 0 ? (
-            <div className="space-y-3 rounded-xl bg-[#12081a] p-3 ring-1 ring-orange-500/25">
-              <div>
-                <p className="text-base font-medium text-orange-100">יהלומים</p>
-                <p className="text-sm text-violet-400">מפה לפי חבר ורשימת בתים</p>
-              </div>
+            <div className="space-y-1 rounded-lg bg-[#12081a] p-1 ring-1 ring-orange-500/25">
+              <p className="px-1 pt-0.5 text-base font-medium text-orange-100">יהלומים</p>
               <AdminGemOpsPanel houses={catalogHouses} />
             </div>
           ) : null}

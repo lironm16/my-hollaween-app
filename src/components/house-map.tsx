@@ -633,6 +633,10 @@ type Props = {
   embed?: boolean;
   /** Show «המיקום שלי» on embed maps (admin gem manager). */
   showLocateButton?: boolean;
+  /** When embed + selectedId, pan/zoom to house (off for admin gem map). */
+  embedCenterOnSelect?: boolean;
+  /** Tap gem anchor marker (admin QA posters). */
+  onGemAnchorSelect?: (house: PublicHouse) => void;
   /** Show gem diamond markers (controlled by top-bar toggle). */
   showGemAnchors?: boolean;
   gemAnchorHouses?: PublicHouse[];
@@ -673,6 +677,8 @@ export function HouseMap({
   filterDimActive = false,
   embed = false,
   showLocateButton = false,
+  embedCenterOnSelect = true,
+  onGemAnchorSelect,
   showGemAnchors = false,
   gemAnchorHouses = [],
   gemAnchorVisual = "admin",
@@ -772,7 +778,7 @@ export function HouseMap({
         ) : null}
         <SizeSync />
         {panTick > 0 && panTo ? <PanTo lat={panTo.lat} lng={panTo.lng} tick={panTick} /> : null}
-        {embed && focus ? (
+        {embed && embedCenterOnSelect && focus ? (
           <CenterOnHouse lat={focus.lat} lng={focus.lng} zoom={config.map.maxZoom - 1} />
         ) : null}
         {focus && !originPickActive && !embed ? (
@@ -887,14 +893,15 @@ export function HouseMap({
             />
           </>
         ) : null}
-        {!pickMode && showGemAnchors && gemAnchorHouses.length > 0 && isGemCollected ? (
+        {!pickMode && showGemAnchors && gemAnchorHouses.length > 0 ? (
           <MapGemAnchorLayer
             houses={gemAnchorHouses}
-            isCollected={isGemCollected}
+            isCollected={isGemCollected ?? (() => false)}
             matchedIds={matchedIds}
             filterDimActive={dimActive}
             visual={gemAnchorVisual}
             userLocation={userLocation}
+            onSelectHouse={onGemAnchorSelect}
           />
         ) : null}
         {!pickMode &&

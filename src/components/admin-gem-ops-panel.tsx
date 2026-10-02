@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { HouseDetailOverlay } from "@/components/house-detail-overlay";
+import { MapHouseSheet } from "@/components/map-house-sheet";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import type { HouseCardActionContext } from "@/components/house-card-actions";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -18,12 +18,10 @@ import { useAppNow } from "@/hooks/use-app-clock";
 import {
   buildGemMapHouseRows,
   countGemsOnMapByMonster,
-  type GemMapHouseRow,
 } from "@/lib/gem-admin-ops";
-import { formatDisplayAddress } from "@/lib/config";
 import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
+import { clusterHousesByAddress } from "@/lib/house-clusters";
 import { gemAlbumStickerPool, gemMonsterMeta, type GemMonsterId } from "@/lib/gem-monsters";
-import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -38,13 +36,13 @@ function GemPickerRow({
 }) {
   const meta = gemMonsterMeta(monsterId);
   return (
-    <span className="flex min-w-0 flex-1 items-center gap-3">
+    <span className="flex min-w-0 flex-1 items-center gap-2">
       <Image
         src={meta.posterPath}
         alt=""
-        width={48}
-        height={48}
-        className="size-12 shrink-0 rounded-xl bg-white object-cover ring-1 ring-violet-500/25"
+        width={44}
+        height={44}
+        className="size-11 shrink-0 rounded-lg bg-white object-cover ring-1 ring-violet-500/25"
       />
       <span className="min-w-0 flex-1 text-start">
         <span className="block truncate text-base font-semibold text-orange-50">{meta.petNameHe}</span>
@@ -69,9 +67,7 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
   const gems = useGemProgress();
   const geo = useUserLocation({ watch: false });
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [listOnly, setListOnly] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [detailHouse, setDetailHouse] = useState<PublicHouse | null>(null);
+  const [sheetHouse, setSheetHouse] = useState<PublicHouse | null>(null);
 
   const rows = useMemo(() => buildGemMapHouseRows(houses, houseSet), [houses, houseSet]);
   const counts = useMemo(() => countGemsOnMapByMonster(rows), [rows]);
@@ -93,13 +89,25 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
   const selectedMonsterCount = counts.get(monsterId) ?? 0;
 
   useEffect(() => {
-    if (!selectedId) return;
-    if (!mapHouses.some((house) => house.id === selectedId)) setSelectedId(null);
-  }, [mapHouses, selectedId]);
+    if (!sheetHouse) return;
+    if (!mapHouses.some((house) => house.id === sheetHouse.id)) setSheetHouse(null);
+  }, [mapHouses, sheetHouse]);
+
+  const clusterHouses = useMemo(() => {
+    if (!sheetHouse) return [];
+    for (const cluster of clusterHousesByAddress(mapHouses)) {
+      if (cluster.houses.some((house) => house.id === sheetHouse.id)) return cluster.houses;
+    }
+    return [sheetHouse];
+  }, [sheetHouse, mapHouses]);
 
   const onLocate = useCallback(() => {
     void geo.refresh();
   }, [geo]);
+
+  const openSheet = useCallback((house: PublicHouse) => {
+    setSheetHouse(house);
+  }, []);
 
   const actionContext = useMemo((): HouseCardActionContext => {
     return {
@@ -117,22 +125,14 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
     };
   }, [source, likes, visits, skips, gemUi, gems.collected]);
 
-  function openDetails(house: PublicHouse) {
-    setDetailHouse(house);
-  }
-
-  function onPickRow(row: GemMapHouseRow) {
-    setSelectedId(row.house.id);
-  }
-
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-1">
       <div className="relative shrink-0">
         <button
           type="button"
           aria-expanded={pickerOpen}
           onClick={() => setPickerOpen((open) => !open)}
-          className="flex w-full items-center gap-2 rounded-xl bg-[#12081a] px-3 py-3 text-start ring-1 ring-orange-500/30 hover:ring-orange-400/45"
+          className="flex w-full items-center gap-1.5 rounded-lg bg-[#12081a] px-2 py-2 text-start ring-1 ring-orange-500/30 hover:ring-orange-400/45"
         >
           <GemPickerRow monsterId={monsterId} count={selectedMonsterCount} selected />
           <ChevronDown
@@ -142,7 +142,7 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
         </button>
         {pickerOpen ? (
           <ul
-            className="absolute inset-x-0 top-full z-20 mt-1 max-h-[min(24rem,55vh)] overflow-y-auto overscroll-contain rounded-xl bg-[#160b1f] py-1 shadow-xl ring-1 ring-orange-500/35"
+            className="absolute inset-x-0 top-full z-20 mt-0.5 max-h-[min(24rem,55vh)] overflow-y-auto overscroll-contain rounded-lg bg-[#160b1f] py-0.5 shadow-xl ring-1 ring-orange-500/35"
             role="listbox"
           >
             {pool.map((monster) => {
@@ -158,10 +158,10 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
                     onClick={() => {
                       setMonsterId(id);
                       setPickerOpen(false);
-                      setSelectedId(null);
+                      setSheetHouse(null);
                     }}
                     className={cn(
-                      "flex w-full px-3 py-2.5 text-start transition-colors hover:bg-orange-500/10",
+                      "flex w-full px-2 py-2 text-start transition-colors hover:bg-orange-500/10",
                       active && "bg-orange-500/15",
                     )}
                   >
@@ -174,15 +174,15 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
         ) : null}
       </div>
 
-      <div className="relative z-0 min-h-[14rem] shrink-0 overflow-hidden rounded-xl ring-1 ring-violet-500/25 sm:min-h-[16rem]">
+      <div className="relative z-0 min-h-[min(52vh,22rem)] shrink-0 overflow-hidden rounded-lg ring-1 ring-violet-500/25">
         <HouseMapDynamic
           houses={mapHouses}
-          selectedId={selectedId}
-          onSelect={(house) => {
-            setSelectedId(house.id);
-            openDetails(house);
-          }}
+          selectedId={sheetHouse?.id ?? null}
+          onSelect={(house) => openSheet(house)}
+          onClose={() => setSheetHouse(null)}
+          followSelection={false}
           embed
+          embedCenterOnSelect={false}
           showLocateButton
           userLocation={geo.location}
           locating={geo.status === "pending"}
@@ -190,92 +190,30 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
           showGemAnchors
           gemAnchorHouses={mapHouses}
           gemAnchorVisual="characters"
+          isGemCollected={gems.collected}
+          onGemAnchorSelect={openSheet}
+          className="h-full min-h-[min(52vh,22rem)] w-full"
         />
+        {sheetHouse ? (
+          <div className="map-sheet-host">
+            <MapHouseSheet
+              house={sheetHouse}
+              actionContext={actionContext}
+              clusterHouses={clusterHouses}
+              onClose={() => setSheetHouse(null)}
+              now={now}
+              skippedIds={skips.skipped}
+              liked={likes.liked}
+              visited={visits.visited}
+              gemCollected={gemUi ? gems.collected : undefined}
+              onSelectClusterHouse={(id) => {
+                const next = mapHouses.find((house) => house.id === id);
+                if (next) setSheetHouse(next);
+              }}
+            />
+          </div>
+        ) : null}
       </div>
-
-      <div className="flex shrink-0 items-center justify-between gap-3 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20">
-        <div className="min-w-0">
-          <p className="text-base font-medium text-orange-100">רשימת בתים לחבר הזה</p>
-          <p className="text-sm text-violet-400">{gemRows.length} בתים במפה</p>
-        </div>
-        <button
-          type="button"
-          dir="ltr"
-          role="switch"
-          aria-checked={listOnly}
-          aria-label="הצג רק ברשימה"
-          onClick={() => setListOnly((on) => !on)}
-          className={cn(
-            "flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition",
-            listOnly ? "justify-end bg-orange-500" : "justify-start bg-violet-900 ring-1 ring-orange-500/20",
-          )}
-        >
-          <span className="size-5 rounded-full bg-white shadow" />
-        </button>
-      </div>
-
-      {listOnly ? (
-        <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain pb-2">
-          {gemRows.map((row) => {
-            const meta = gemMonsterMeta(row.monsterId);
-            const active = selectedId === row.house.id;
-            return (
-              <li key={row.house.id}>
-                <div
-                  className={cn(
-                    "flex w-full items-center gap-2 rounded-lg px-2 py-2 text-start ring-1 transition-colors",
-                    active
-                      ? "bg-orange-500/10 ring-orange-400/45"
-                      : "bg-black/20 ring-violet-500/15 hover:ring-orange-500/25",
-                  )}
-                >
-                  <button
-                    type="button"
-                    onClick={() => onPickRow(row)}
-                    className="flex min-w-0 flex-1 items-center gap-2 text-start"
-                  >
-                    <Image
-                      src={meta.posterPath}
-                      alt=""
-                      width={36}
-                      height={36}
-                      className="size-9 shrink-0 rounded-full bg-white object-cover"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium text-orange-50">
-                        {houseHeadline(row.house)}
-                      </span>
-                      <span className="block truncate text-sm text-violet-300">
-                        {formatDisplayAddress(row.house)}
-                      </span>
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => openDetails(row.house)}
-                    className="shrink-0 rounded-lg px-2 py-1 text-sm text-orange-200 underline-offset-2 hover:underline"
-                  >
-                    פרטים
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <p className="text-sm text-violet-400">
-          הפעילו את המתג כדי לראות רשימה; לחצו על סיכה במפה לפרטי בית.
-        </p>
-      )}
-
-      {detailHouse ? (
-        <HouseDetailOverlay
-          house={detailHouse}
-          actionContext={actionContext}
-          onClose={() => setDetailHouse(null)}
-          openedFromList
-        />
-      ) : null}
     </div>
   );
 }

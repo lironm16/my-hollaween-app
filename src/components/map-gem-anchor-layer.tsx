@@ -115,6 +115,7 @@ export function MapGemAnchorLayer({
   filterDimActive = false,
   visual = "admin",
   userLocation = null,
+  onSelectHouse,
 }: {
   houses: PublicHouse[];
   isCollected: (houseId: string) => boolean;
@@ -122,6 +123,8 @@ export function MapGemAnchorLayer({
   filterDimActive?: boolean;
   visual?: GemMapAnchorVisual;
   userLocation?: UserLocation | null;
+  /** Admin gem map — tap poster/diamond opens house sheet without panning. */
+  onSelectHouse?: (house: PublicHouse) => void;
 }) {
   const { overrides } = useGemAnchorOverrides();
   const osmEpoch = useGemOsmAnchorsEpoch();
@@ -187,8 +190,15 @@ export function MapGemAnchorLayer({
                 : gemDiamondIcon(collected, dimmed, calibrated, compact, inRange)
             }
             zIndexOffset={collected ? 420 : compact ? 380 : 520}
-            interactive={false}
-            bubblingMouseEvents={false}
+            interactive={Boolean(onSelectHouse)}
+            bubblingMouseEvents={!onSelectHouse}
+            eventHandlers={
+              onSelectHouse
+                ? {
+                    click: () => onSelectHouse(house),
+                  }
+                : undefined
+            }
           />
         </Fragment>
       ))}
