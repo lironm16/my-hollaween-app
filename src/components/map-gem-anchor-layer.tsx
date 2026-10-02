@@ -136,7 +136,6 @@ export function MapGemAnchorLayer({
       .map((house) => {
         const anchor = gemAnchorForHouse(house);
         const collected = isCollected(house.id);
-        if (compact && collected) return null;
         const dimmed =
           filterDimActive && matchedIds != null && !matchedIds.has(house.id);
         const inRange =

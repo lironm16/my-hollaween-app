@@ -311,10 +311,14 @@ export function GemHuntWebXrAr({
   encounterPhaseRef.current = encounterPhase;
 
   useEffect(() => {
-    if (encounterMode && encounterPhase === "encounter" && (canCollectNow || simulateInRange)) {
+    if (
+      encounterMode &&
+      encounterPhase === "encounter" &&
+      (canCollectNow || simulateInRange || centerReveal)
+    ) {
       encounterCollectLatchedRef.current = true;
     }
-  }, [encounterMode, encounterPhase, canCollectNow, simulateInRange]);
+  }, [encounterMode, encounterPhase, canCollectNow, simulateInRange, centerReveal]);
 
   /** «גלה לי» during approach — skip wait (iOS parity). */
   useEffect(() => {
@@ -396,7 +400,14 @@ export function GemHuntWebXrAr({
 
   const offerEncounterCollect = useCallback(() => {
     if (encounterPhase !== "encounter") return;
-    if (!canCollectNow && !encounterCollectLatchedRef.current && !simulateInRange) return;
+    if (
+      !canCollectNow &&
+      !encounterCollectLatchedRef.current &&
+      !simulateInRange &&
+      !centerRevealRef.current
+    ) {
+      return;
+    }
     if ((!placed && !centerRevealRef.current) || !showArGem) return;
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate([12, 28, 18]);
@@ -419,8 +430,7 @@ export function GemHuntWebXrAr({
   const canTapTellMeCenter =
     showTellMeCenterGem &&
     (encounterMode
-      ? encounterPhase === "encounter" &&
-        (canCollectNow || encounterCollectLatchedRef.current || centerReveal)
+      ? encounterPhase === "encounter"
       : canCollectNow || centerReveal || simulateInRange);
 
   const onTellMeCenterTap = useCallback(() => {
@@ -432,6 +442,8 @@ export function GemHuntWebXrAr({
     }
     handleCollectRef.current();
   }, [canTapTellMeCenter, encounterMode]);
+
+  const tellMeTapStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const handleClose = useCallback(() => {
     if (phase === "collecting") return;
@@ -987,6 +999,23 @@ export function GemHuntWebXrAr({
               "is-ring-center is-center-collect",
               canTapTellMeCenter && "is-tap-collect-ready",
             )}
+            onPointerDown={(e) => {
+              if (e.button !== 0) return;
+              tellMeTapStartRef.current = { x: e.clientX, y: e.clientY };
+            }}
+            onPointerUp={(e) => {
+              if (!canTapTellMeCenter || e.button !== 0) return;
+              const start = tellMeTapStartRef.current;
+              tellMeTapStartRef.current = null;
+              if (!start) return;
+              const dx = e.clientX - start.x;
+              const dy = e.clientY - start.y;
+              if (dx * dx + dy * dy > 576) return;
+              onTellMeCenterTap();
+            }}
+            onPointerCancel={() => {
+              tellMeTapStartRef.current = null;
+            }}
           >
             <GemSprite
               house={house}

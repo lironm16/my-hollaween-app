@@ -98,7 +98,7 @@ import {
   writeHomeView,
   type HomeView,
 } from "@/lib/home-view";
-import { resolveCatalogHouses } from "@/lib/catalog-houses";
+import { isAuthoritativeHouseList, resolveCatalogHouses } from "@/lib/catalog-houses";
 import {
   catalogHasRealHouses,
   HOUSE_SET_LABELS,
@@ -300,6 +300,14 @@ export function NeighborhoodApp({
       lastHousesRef.current = houses;
       return houses;
     }
+    const authHouses =
+      catalog && isAuthoritativeHouseList(catalog) && catalog.houses.length > 0
+        ? catalog.houses
+        : null;
+    if (authHouses) {
+      lastHousesRef.current = authHouses;
+      return authHouses;
+    }
     if (lastHousesRef.current.length > 0) return lastHousesRef.current;
     const cached = loadCatalogCacheSync()?.houses;
     if (cached?.length) {
@@ -307,17 +315,11 @@ export function NeighborhoodApp({
       return cached;
     }
     return houses;
-  }, [houses]);
+  }, [houses, catalog]);
 
   const { houses: mapListHouses, now: mapListNow } = useMapListUiLock(displayHouses, now);
 
-  const housesForSkipCount = useMemo(() => {
-    const byId = new Map(displayHouses.map((house) => [house.id, house]));
-    for (const house of catalog?.houses ?? []) {
-      if (!byId.has(house.id)) byId.set(house.id, house);
-    }
-    return [...byId.values()];
-  }, [displayHouses, catalog?.houses]);
+  const housesForSkipCount = displayHouses;
 
   const filterContext = useMemo(
     () => ({
@@ -891,7 +893,7 @@ export function NeighborhoodApp({
     skippedCount: countSkippedInSet(skips.skippedIds, visible, activeHouseSet),
     visitedCount: countVisitedInSet(visits.visitedIds, visible, activeHouseSet),
     likedCount: countLikedInSet([...likes.likedIds], visible, activeHouseSet),
-    gemCollectedCount: visible.filter((h) => gems.collected(h.id)).length,
+    gemCollectedCount: gemHuntActive ? gems.collectedIds.length : 0,
     showPersonalMarks: gemUi,
   };
 

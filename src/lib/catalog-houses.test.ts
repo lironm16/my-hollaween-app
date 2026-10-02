@@ -88,6 +88,15 @@ describe("resolveServerHouseCount", () => {
 });
 
 describe("catalogCacheIncomplete", () => {
+  it("flags inflated local caches above server houseCount", () => {
+    const inflated = catalog(
+      Array.from({ length: 93 }, (_, index) => house(`house-${index}`)),
+      "2026-10-31T10:00:00.000Z",
+      { houseCount: 93 },
+    );
+    assert.equal(catalogCacheIncomplete(inflated, null, 75), true);
+  });
+
   it("flags partial caches below server houseCount", () => {
     const partial = catalog(
       [house("a"), house("b"), house("c"), house("d")],

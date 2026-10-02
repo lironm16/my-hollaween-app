@@ -2392,6 +2392,11 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .map-gem-diamond-marker--compact.is-dimmed:not(.is-collected) {
   opacity: 0.35;
 }
+.map-gem-diamond-marker--compact.is-collected {
+  color: #a78bfa;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 5px rgb(167 139 250 / 0.55));
+}
 .map-gem-character-leaflet-icon {
   background: transparent !important;
   border: none !important;
@@ -4631,7 +4636,11 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   bottom: max(0.85rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem));
 }
 .gem-hunt-overlay--android .gem-hunt-overlay__footer--hunt {
-  bottom: max(0.85rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem));
+  --gem-hunt-footer-lift: 3.15rem;
+  bottom: max(
+    calc(0.85rem + var(--gem-hunt-footer-lift)),
+    calc(env(safe-area-inset-bottom, 0px) + 0.35rem + var(--gem-hunt-footer-lift))
+  );
 }
 .gem-hunt-portal-root {
   position: fixed;
@@ -6788,10 +6797,14 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   touch-action: manipulation;
 }
 .gem-hunt-webxr--android .gem-hunt-webxr__footer {
-  margin-bottom: max(0.85rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem));
+  --gem-hunt-footer-lift: 3.15rem;
+  bottom: max(
+    calc(0.85rem + var(--gem-hunt-footer-lift)),
+    calc(env(safe-area-inset-bottom, 0px) + 0.35rem + var(--gem-hunt-footer-lift))
+  );
 }
 .gem-hunt-webxr--ios .gem-hunt-webxr__footer {
-  margin-bottom: max(0.85rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem));
+  bottom: max(0.85rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem));
 }
 .gem-hunt-webxr__hint {
   margin: 0;

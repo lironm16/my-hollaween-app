@@ -1,5 +1,6 @@
 import type { NeighborhoodId } from "@/lib/config";
 import type { SkipReasonId } from "@/lib/skip-reasons";
+import { isAuthoritativeHouseList } from "@/lib/catalog-houses";
 import { syncCatalog } from "@/lib/catalog-sync";
 import { loadGemLabStubs } from "@/lib/gem-lab-stubs";
 import { tombstoneHouse, loadDeletedHouseIds } from "@/lib/deleted-houses";
@@ -195,7 +196,11 @@ export function clearDeviceCatalogCache() {
  */
 export async function saveCatalogCache(catalog: Catalog) {
   const existing = readLocalCatalog();
-  const merged = existing ? syncCatalog(existing, catalog) : catalog;
+  const merged = isAuthoritativeHouseList(catalog)
+    ? catalog
+    : existing
+      ? syncCatalog(existing, catalog)
+      : catalog;
   const forDevice: Catalog = {
     ...merged,
     houses: merged.houses.map(stripHouseForDeviceCache),

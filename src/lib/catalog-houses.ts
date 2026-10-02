@@ -39,7 +39,9 @@ export function catalogCacheIncomplete(
   const authoritative = serverCount ?? resolveServerHouseCount(catalog) ?? meta?.houseCount;
 
   if (typeof authoritative === "number" && localCount < authoritative) return true;
+  if (typeof authoritative === "number" && localCount > authoritative) return true;
   if (!meta?.complete) return true;
+  if (typeof meta.houseCount === "number" && localCount > meta.houseCount) return true;
   if (typeof meta.houseCount === "number" && localCount < meta.houseCount) return true;
   return false;
 }
