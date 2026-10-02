@@ -115,6 +115,11 @@ export function AppHeader({
             <SheetTitle className="text-lg font-semibold text-orange-50">תפריט</SheetTitle>
           </SheetHeader>
           <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pb-3 pt-2">
+            {showAdminUserPreview ? (
+              <div className="px-1 pb-1">
+                <AdminGemUserPreviewToggle compact />
+              </div>
+            ) : null}
             <Link
               href="/"
               onClick={(event) => {
@@ -216,11 +221,6 @@ export function AppHeader({
             </Link>
             {admin ? (
               <>
-                {showAdminUserPreview ? (
-                  <div className="px-1 pb-1">
-                    <AdminGemUserPreviewToggle compact />
-                  </div>
-                ) : null}
                 {showAdminGemOps ? (
                   <Link
                     href="/admin/gems"

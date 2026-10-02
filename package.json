@@ -33,6 +33,7 @@
     "purge:firestore-stubs": "node scripts/purge-firestore-stubs.mjs",
     "purge:e2e-houses": "node scripts/purge-e2e-test-houses.mjs",
     "capture:help": "node scripts/capture-help-screenshots.mjs",
+    "capture:install": "node scripts/capture-install-screenshots.mjs",
     "deploy:vercel": "node scripts/trigger-vercel.mjs",
     "deploy:production": "node scripts/sync-github-deploy.mjs"
   },

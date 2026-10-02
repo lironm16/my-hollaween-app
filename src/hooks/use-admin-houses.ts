@@ -5,11 +5,18 @@ import { toast } from "sonner";
 import { readApiJson } from "@/lib/api-json";
 import { appInForeground } from "@/lib/catalog-poll";
 import {
+  loadServerDbBackup,
   notifyCatalogChanged,
   saveServerDbBackup,
   type ServerDbBackup,
 } from "@/lib/offline-db";
 import type { House, PublicHouse } from "@/lib/types";
+
+function readAdminHousesBackup(): House[] {
+  if (typeof window === "undefined") return [];
+  const backup = loadServerDbBackup();
+  return (backup?.houses ?? []) as House[];
+}
 
 export function useAdminHouses({
   admin,
@@ -52,6 +59,11 @@ export function useAdminHouses({
       setAdminHouses([]);
       lastLoadedAtRef.current = null;
       return;
+    }
+    const backup = readAdminHousesBackup();
+    if (backup.length > 0) {
+      setAdminHouses(backup);
+      lastLoadedAtRef.current = backup[0]?.updatedAt ?? null;
     }
     void loadAdminHouses();
 

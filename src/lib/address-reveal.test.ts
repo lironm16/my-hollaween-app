@@ -71,6 +71,14 @@ describe("address reveal", () => {
     assert.equal(canViewHouseLocationDetails("בית-9999", adminCtx), true);
   });
 
+  it("admin in user preview follows visitor address policy", () => {
+    const ctx = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 10, 0),
+      isAdmin: false,
+    });
+    assert.equal(canViewHouseLocationDetails("בית-9999", ctx), false);
+  });
+
   it("shows hint instead of street before reveal", () => {
     const ctx = makeAddressRevealContext({
       now: new Date(2026, 9, 31, 10, 0),

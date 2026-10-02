@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdminGemUserPreviewToggle } from "@/components/admin-gem-user-preview-toggle";
 import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -20,7 +20,10 @@ import {
 } from "@/lib/app-clock";
 import { HOUSE_SETS, HOUSE_SET_LABELS, type HouseSet } from "@/lib/house-set";
 import { Button } from "@/components/ui/button";
+import { AdminGemProximityPanel } from "@/components/admin-gem-proximity-panel";
 import { GemCharacterSilhouetteSamples } from "@/components/gem-hunt/gem-character-silhouette-samples";
+import { useCatalog } from "@/hooks/use-catalog";
+import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const SCENES: RehearsalScene[] = REHEARSAL_SCENES.filter((scene) => scene !== "off");
@@ -50,12 +53,17 @@ function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
 
 export function AdminDryRunPanel() {
   const { admin } = useAdminSession();
+  const { catalog } = useCatalog();
   const now = useAppNow();
   const { scene, setScene } = useRehearsalScene();
   const { down, setDown } = useServerSim();
   const { houseSet, setHouseSet } = useHouseSet();
   const { previewAsUser } = useGemPreviewAsUser();
   const gemsOnScreen = admin && gemHuntFabVisible(admin, now);
+  const catalogHouses = useMemo(
+    () => (catalog?.houses ?? []) as PublicHouse[],
+    [catalog?.houses],
+  );
   const [lastScene, setLastScene] = useState<RehearsalScene>("open");
   const [customClock, setCustomClock] = useState("18:00");
   const active = scene !== "off";
@@ -172,12 +180,15 @@ export function AdminDryRunPanel() {
             href="/admin/gems"
             className="flex min-h-11 items-center justify-center rounded-xl bg-orange-500/15 px-3 py-2 text-center text-base font-medium text-orange-100 ring-1 ring-orange-400/40"
           >
-            יהלומים — מפת חברים וחיפוש קרוב
+            יהלומים — מנהל (מפה לפי חבר)
           </Link>
           <AdminGemUserPreviewToggle />
         </div>
       ) : null}
       {gemsOnScreen && !previewAsUser ? <GemCharacterSilhouetteSamples /> : null}
+      {gemsOnScreen && !previewAsUser && catalogHouses.length > 0 ? (
+        <AdminGemProximityPanel houses={catalogHouses} />
+      ) : null}
     </div>
   );
 }

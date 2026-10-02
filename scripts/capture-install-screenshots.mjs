@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { chromium, devices } from "playwright";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const outDir = join(root, "public", "help", "install");
+const outDir = join(root, "public", "images", "help", "install");
 const tmpDir = join(root, ".tmp-install-mocks");
 const base = process.env.APP_URL ?? "http://127.0.0.1:43128";
 

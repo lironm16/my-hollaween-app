@@ -1,7 +1,9 @@
 "use client";
 
 import { Gem } from "lucide-react";
+import { GemDiamondSvg } from "@/components/gem-diamond-icon";
 import type { GemFabGlow } from "@/lib/gem-hunt-target";
+import { GEM_DIAMOND_COLLECTED_FILL, GEM_DIAMOND_FILL } from "@/lib/gem-diamond-visual";
 import { cn } from "@/lib/utils";
 
 export function MapGemHuntFab({
@@ -46,7 +48,19 @@ export function MapGemHuntFab({
       }
     >
       <span className="map-gem-hunt-fab__pulse" aria-hidden />
-      <Gem className="relative z-[1] size-8 drop-shadow-[0_0_8px_rgb(251_191_36/0.85)]" strokeWidth={2.1} aria-hidden />
+      {allCollected ? (
+        <GemDiamondSvg
+          className="relative z-[1] size-8 drop-shadow-[0_0_10px_rgb(167_139_250/0.85)]"
+          fill={GEM_DIAMOND_COLLECTED_FILL}
+        />
+      ) : (
+        <Gem
+          className="relative z-[1] size-8 drop-shadow-[0_0_8px_rgb(251_191_36/0.85)]"
+          style={{ color: GEM_DIAMOND_FILL, fill: GEM_DIAMOND_FILL }}
+          strokeWidth={2.1}
+          aria-hidden
+        />
+      )}
       {collectedCount > 0 ? (
         <span
           className="absolute -top-1 -right-1 z-[2] inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-black px-1 text-sm font-bold leading-none text-amber-300 ring-1 ring-amber-400/45 pointer-events-none"

@@ -7,17 +7,21 @@ import { PwaInstallButton } from "@/components/pwa-install-button";
 import { helpImage } from "@/lib/help-images";
 import { isAndroidDevice, isIosDevice } from "@/lib/push-client";
 
+function installHelpImage(name: string) {
+  return helpImage(`install/${name}.png`);
+}
+
 const IPHONE_STEPS = [
   {
     title: "לחצו שיתוף",
     body: "ב-Safari, בסרגל התחתון — כפתור <<שיתוף>> (חץ למעלה מריבוע).",
-    image: helpImage("install/ios-2-share.svg"),
+    image: installHelpImage("ios-2-share"),
     imageAlt: "כפתור שיתוף בסафari",
   },
   {
     title: "הוספה למסך הבית",
     body: "גללו ובחרו <<הוספה למסך הבית>> → <<הוסף>>. האייקון יופיע במסך הבית.",
-    image: helpImage("install/ios-3-add-home.svg"),
+    image: installHelpImage("ios-3-add-home"),
     imageAlt: "הוספה למסך הבית בתפריט השיתוף",
   },
 ] as const;
@@ -25,14 +29,14 @@ const IPHONE_STEPS = [
 const ANDROID_STEPS = [
   {
     title: "כפתור ההורדה בראש המסך",
-    body: "ב-Chrome, ליד תפריט ☰ — סמל ההורדה (↓) בראש המסך.",
-    image: helpImage("install/android-1-app.svg"),
+    body: "ב-Chrome, ליד תפריט ☰ — סמל ההורדה (↓) בראש המסך (אותו כפתור כמו באפליקציה).",
+    image: installHelpImage("android-1-app"),
     imageAlt: "כפתור התקנה בראש האפליקציה ליד התפריט",
   },
   {
     title: "אישור התקנה",
     body: "לחצו <<הוסף>> או <<התקן>> בחלון שיופיע אחרי הכפתור.",
-    image: helpImage("install/android-3-confirm.svg"),
+    image: installHelpImage("android-3-confirm"),
     imageAlt: "אישור התקנת האפליקציה",
   },
 ] as const;

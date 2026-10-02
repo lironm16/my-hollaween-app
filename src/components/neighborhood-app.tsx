@@ -161,7 +161,7 @@ export function NeighborhoodApp({
   const { catalog, loading, ready, offline, unreachable, error, source, pollSeconds, refresh } =
     useCatalog(initialCatalog);
   const catalogUpdatedAt = catalog?.updatedAt;
-  const { admin } = useAdminSession();
+  const { admin, ready: adminSessionReady } = useAdminSession();
   const now = useAppNow();
   const addressReveal = useAddressReveal();
   const distanceLabel = useCallback(
@@ -213,7 +213,8 @@ export function NeighborhoodApp({
 
   const { choice: originChoice, resolved: origin, setChoice: setOriginChoice } = useDistanceOrigin(gps);
   const { houseSet } = useHouseSet();
-  const activeHouseSet = resolveViewerHouseSet(catalog, admin, houseSet, {
+  const adminForHouseSet = adminSessionReady && admin;
+  const activeHouseSet = resolveViewerHouseSet(catalog, adminForHouseSet, houseSet, {
     previewDeployment: isPreviewDeploymentClient(),
   });
   const view = useSyncExternalStore(
@@ -289,7 +290,7 @@ export function NeighborhoodApp({
   const houses = useMergedHouses({
     catalogHouses,
     owned,
-    admin,
+    admin: adminForHouseSet,
     adminHouses,
     includeCatalogWhenAdmin: true,
   });
@@ -1322,7 +1323,7 @@ export function NeighborhoodApp({
                 ) : null}
                 <CatalogMetaChip
                   hidden={view !== "map" || (Boolean(selection.selected) && !originPick.originPickActive)}
-                  houseSetLabel={admin ? HOUSE_SET_LABELS[activeHouseSet] : null}
+                  houseSetLabel={adminForHouseSet ? HOUSE_SET_LABELS[activeHouseSet] : null}
                 />
           </div>
           {view === "map" && mapSheetHouse && houseDetailCommon && !originPick.originPickActive ? (
