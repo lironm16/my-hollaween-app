@@ -102,7 +102,7 @@ export default function GemHuntHelpPage() {
             <p>
               <HelpText>
                 {
-                  "<<רמז · כוון אותי>> — חץ, מרחק והנחיות הליכה (כולל קישור ל-Google Maps לנקודת היהלום)."
+                  "ב-iPhone: <<רמז · ניווט ברחוב>> — בלי חץ בקו ישר (לא דרך בניינים). מרחק + <<ניווט הליכה ב-Google Maps>>. ב-Android: חץ + מפות."
                 }
               </HelpText>
             </p>
