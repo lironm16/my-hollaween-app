@@ -1,6 +1,7 @@
 "use client";
 
 import { createPortal } from "react-dom";
+import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 
 /** Opaque full-screen cover while hunt mode picks WebXR vs camera (camera must not run under the map). */
 export function GemHuntBootShell() {
@@ -10,5 +11,5 @@ export function GemHuntBootShell() {
     </div>
   );
   if (typeof document === "undefined") return shell;
-  return createPortal(shell, document.body);
+  return createPortal(shell, getGemHuntPortalRoot());
 }

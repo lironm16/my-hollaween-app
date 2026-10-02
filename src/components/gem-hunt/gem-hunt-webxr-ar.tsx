@@ -53,6 +53,7 @@ import {
 } from "@/lib/gem-encounter";
 import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-list-suspend";
+import { getGemHuntDomOverlayRoot, getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import { cn } from "@/lib/utils";
 
 type HuntPhase = "boot" | "placing" | "placed" | "collecting";
@@ -873,10 +874,11 @@ export function GemHuntWebXrAr({
       setSessionActive(true);
     }
 
+    const domOverlayRoot = getGemHuntDomOverlayRoot();
     arButton = ARButton.createButton(renderer, {
       requiredFeatures: ["hit-test", "local-floor"],
       optionalFeatures: ["dom-overlay", "anchors", "geo-alignment"],
-      domOverlay: { root },
+      domOverlay: { root: domOverlayRoot },
     });
     arButton.className = "gem-hunt-webxr__start";
     arButton.textContent = "התחילו AR";
@@ -1102,5 +1104,5 @@ export function GemHuntWebXrAr({
   );
 
   if (typeof document === "undefined") return overlay;
-  return createPortal(overlay, document.body);
+  return createPortal(overlay, getGemHuntPortalRoot());
 }

@@ -46,11 +46,9 @@ import {
   preloadGemHuntChunks,
 } from "@/components/gem-hunt/gem-hunt-lazy";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
-import { isAndroidLike, supportsWebXrHitTestAr, webXrHitTestArCached } from "@/lib/gem-hunt-ar-platform";
-import {
-  endGemHuntWebXrSession,
-  requestGemHuntWebXrSession,
-} from "@/lib/gem-hunt-webxr-session";
+import { isAndroidLike, supportsWebXrHitTestAr } from "@/lib/gem-hunt-ar-platform";
+import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
+import { endGemHuntWebXrSession } from "@/lib/gem-hunt-webxr-session";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
 import { loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
@@ -367,6 +365,7 @@ export function NeighborhoodApp({
     async (house: PublicHouse) => {
       if (gems.collected(house.id)) return;
       preloadGemHuntChunks();
+      getGemHuntPortalRoot();
       const openedFrom = readHomeView();
       gemHuntOpenedFromViewRef.current = openedFrom;
       if (openedFrom === "map") {
@@ -374,17 +373,13 @@ export function NeighborhoodApp({
         selection.selectOnMap(house);
       }
       setMapDiamondsVisible(true);
-      let xrSession: XRSession | null = null;
-      if (isAndroidLike() && webXrHitTestArCached()) {
-        xrSession = await requestGemHuntWebXrSession();
-      }
-      setMapGemWebXrSession(xrSession);
+      setMapGemWebXrSession(null);
       setMapGemHouse(house);
       setWatchEnabled(true);
       const freshGps = (await geo.refresh()) ?? gps;
       setMapGemGps(freshGps);
       await prepareGemHuntSensors({
-        requestCamera: false,
+        requestCamera: isAndroidLike(),
         requestOrientation: !isGemHuntOrientationGranted(),
       });
     },

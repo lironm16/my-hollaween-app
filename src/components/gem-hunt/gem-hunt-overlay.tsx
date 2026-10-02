@@ -56,6 +56,7 @@ import {
   markEncounterTutorialSeen,
 } from "@/lib/gem-encounter";
 import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
+import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import { cn } from "@/lib/utils";
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
@@ -947,5 +948,5 @@ export function GemHuntOverlay({
   );
 
   if (typeof document === "undefined") return overlay;
-  return createPortal(overlay, document.body);
+  return createPortal(overlay, getGemHuntPortalRoot());
 }

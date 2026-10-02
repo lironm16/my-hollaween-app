@@ -4633,6 +4633,16 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay--android .gem-hunt-overlay__footer--hunt {
   bottom: max(0.85rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem));
 }
+.gem-hunt-portal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 12050;
+  isolation: isolate;
+  pointer-events: none;
+}
+.gem-hunt-portal-root:not(:empty) {
+  pointer-events: auto;
+}
 .gem-hunt-boot-shell {
   position: fixed;
   inset: 0;

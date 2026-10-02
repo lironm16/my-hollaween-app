@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { GemHuntBootShell } from "@/components/gem-hunt/gem-hunt-boot-shell";
 import { GemHuntOverlayLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { GemHuntWebXrArLazy } from "@/components/gem-hunt/gem-hunt-lazy";
-import { isAndroidLike, supportsWebXrHitTestAr } from "@/lib/gem-hunt-ar-platform";
+import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
 import type { GemCollectFinishOptions } from "@/lib/gem-hunt";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
@@ -30,22 +30,24 @@ export type GemHuntExperienceProps = {
  */
 export function GemHuntExperience(props: GemHuntExperienceProps) {
   const [path, setPath] = useState<"pending" | "webxr" | "camera">(() => {
-    if (props.initialWebXrSession) return "webxr";
+    if (props.initialWebXrSession && !isAndroidLike()) return "webxr";
     return "pending";
   });
 
   useEffect(() => {
-    if (props.initialWebXrSession) {
+    if (props.initialWebXrSession && !isAndroidLike()) {
       setPath("webxr");
       return;
     }
     let cancelled = false;
-    if (!isAndroidLike()) {
+    /** Android: full-screen getUserMedia hunt (same as iOS). WebXR dom-overlay left the map visible. */
+    if (isAndroidLike()) {
       setPath("camera");
       return;
     }
+    setPath("camera");
     void supportsWebXrHitTestAr().then((ok) => {
-      if (!cancelled) setPath(ok ? "webxr" : "camera");
+      if (!cancelled && ok) setPath("webxr");
     });
     return () => {
       cancelled = true;

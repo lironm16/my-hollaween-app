@@ -1,3 +1,5 @@
+import { getGemHuntDomOverlayRoot } from "@/lib/gem-hunt-portal-root";
+
 /** WebXR session options shared by the Android AR hunt. */
 export const GEM_HUNT_WEBXR_SESSION_INIT: XRSessionInit = {
   requiredFeatures: ["hit-test"],
@@ -5,7 +7,7 @@ export const GEM_HUNT_WEBXR_SESSION_INIT: XRSessionInit = {
 };
 
 export async function requestGemHuntWebXrSession(
-  domOverlayRoot: HTMLElement,
+  domOverlayRoot: HTMLElement = getGemHuntDomOverlayRoot(),
 ): Promise<XRSession | null> {
   if (typeof navigator === "undefined" || !navigator.xr) return null;
   try {
