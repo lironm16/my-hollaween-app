@@ -13,6 +13,16 @@ export function gemStreetNavGuideCopy(distanceLabel: string | null): string {
   return `הליכה ברחוב${dist} — לא בקו ישר דרך בניינים`;
 }
 
+export function gemStreetRouteNavCopy(
+  routeStatus: "loading" | "ready" | "error",
+  distanceLabel: string | null,
+): string {
+  const dist = distanceLabel ? ` · ${distanceLabel}` : "";
+  if (routeStatus === "loading") return `מחשבים מסלול ברחוב${dist}…`;
+  if (routeStatus === "ready") return `עקבו אחרי החץ — מסלול ברחוב${dist}`;
+  return gemStreetNavGuideCopy(distanceLabel);
+}
+
 export function gemWalkGuideCopy(
   huntArrowPhoneRelative: boolean,
   facingTarget: boolean,
