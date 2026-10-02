@@ -36,11 +36,7 @@ import {
 import { webXrSessionHasAnchors } from "@/lib/gem-hunt-ar-platform";
 import { isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
 import { requestGemHuntOrientationPermission } from "@/lib/gem-hunt-sensors";
-import {
-  gemNavPrefersStreetMaps,
-  gemStreetNavGuideCopy,
-  gemWalkGuideCopy,
-} from "@/lib/gem-hunt-walk-guide";
+import { gemWalkGuideCopy } from "@/lib/gem-hunt-walk-guide";
 import { formatDistance } from "@/lib/geo";
 import { gemMonsterMeta, gemMonsterTint, type GemMonsterId } from "@/lib/gem-monsters";
 import { gemCollectDanceIndex } from "@/lib/gem-collect-dance";
@@ -354,37 +350,30 @@ export function GemHuntWebXrAr({
     turnBearing != null ? navTurnBearingForUi(turnBearing) : null;
   const huntArrowDeg = huntArrowPhoneRelative ? navTurnBearing : gpsBearingToAnchor;
   const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToAnchor != null;
-  const streetNav = gemNavPrefersStreetMaps();
   const walkGuideCopy = gemWalkGuideCopy(
     huntArrowPhoneRelative,
     facingTarget,
     navTurnBearing,
     gpsBearingToAnchor,
   );
-  const navGuideCopy =
-    streetNav && hintPanel === "nav"
-      ? gemStreetNavGuideCopy(distanceM != null ? formatDistance(distanceM) : null)
-      : walkGuideCopy;
   const mapsWalkUrl =
     liveLoc != null && !simulateInRange
       ? googleMapsNavigateUrl(liveLoc, { lat: anchor.lat, lng: anchor.lng })
       : null;
-  const showNavArrow =
-    !streetNav &&
-    (encounterMode
-      ? sessionActive &&
-        encounterPhase === "approach" &&
-        hintPanel === "nav" &&
-        !centerReveal &&
-        huntArrowDeg != null &&
-        liveLoc != null &&
-        !simulateInRange
-      : sessionActive &&
-        hintPanel === "nav" &&
-        !centerReveal &&
-        huntArrowDeg != null &&
-        liveLoc != null &&
-        !simulateInRange);
+  const showNavArrow = encounterMode
+    ? sessionActive &&
+      encounterPhase === "approach" &&
+      hintPanel === "nav" &&
+      !centerReveal &&
+      huntArrowDeg != null &&
+      liveLoc != null &&
+      !simulateInRange
+    : sessionActive &&
+      hintPanel === "nav" &&
+      !centerReveal &&
+      huntArrowDeg != null &&
+      liveLoc != null &&
+      !simulateInRange;
   const hideFooterChrome = encounterMode && encounterUiChromeHidden(encounterPhase);
   const showEncounterFooter =
     encounterMode &&
@@ -1043,18 +1032,18 @@ export function GemHuntWebXrAr({
                   role="region"
                   aria-label="הנחיות הליכה ליהלום"
                 >
-                  <p className="gem-hunt-overlay__walk-text">{navGuideCopy}</p>
+                  <p className="gem-hunt-overlay__walk-text">
+                    {walkGuideCopy}
+                    {distanceM != null ? ` · ${formatDistance(distanceM)}` : null}
+                  </p>
                   {mapsWalkUrl ? (
                     <a
                       href={mapsWalkUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={cn(
-                        "gem-hunt-overlay__walk-maps",
-                        streetNav && "gem-hunt-overlay__walk-maps--primary",
-                      )}
+                      className="gem-hunt-overlay__walk-maps"
                     >
-                      {streetNav ? "ניווט הליכה ב-Google Maps" : "הליכה ב-Google Maps ליהלום"}
+                      הליכה ב-Google Maps ליהלום
                     </a>
                   ) : null}
                 </div>
@@ -1085,9 +1074,7 @@ export function GemHuntWebXrAr({
                   >
                     <span className="gem-hunt-overlay__hint-btn-label">
                       <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
-                      <span className="gem-hunt-overlay__hint-btn-sub">
-                        {streetNav ? "ניווט ברחוב" : "כוון אותי"}
-                      </span>
+                      <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
                     </span>
                   </button>
                   {!encounterMode || showEncounterFooter ? (

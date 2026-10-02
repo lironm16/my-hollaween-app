@@ -46,16 +46,7 @@ import { useGemHuntLocation } from "@/hooks/use-gem-hunt-location";
 import { useSmoothedGemPlacement } from "@/hooks/use-smoothed-gem-placement";
 import { gemWorldYawRad } from "@/lib/gem-world-yaw";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
-import { useGemWalkRoute } from "@/hooks/use-gem-walk-route";
-import {
-  gemNavPrefersStreetMaps,
-  gemStreetRouteNavCopy,
-  gemWalkGuideCopy,
-} from "@/lib/gem-hunt-walk-guide";
-import {
-  walkRouteMapBearingDeg,
-  walkRouteTurnBearingDeg,
-} from "@/lib/gem-walk-route-bearing";
+import { gemWalkGuideCopy } from "@/lib/gem-hunt-walk-guide";
 import { GemEncounterLayer } from "@/components/gem-hunt/gem-encounter-layer";
 import { useGemEncounterPhase } from "@/hooks/use-gem-encounter-phase";
 import { useTreatSwipe } from "@/hooks/use-treat-swipe";
@@ -575,57 +566,19 @@ export function GemHuntOverlay({
     liveLoc != null && !sim
       ? googleMapsNavigateUrl(liveLoc, { lat: anchor.lat, lng: anchor.lng })
       : null;
-  const streetNav = gemNavPrefersStreetMaps();
-  const distLabel = distanceM != null ? formatDistance(distanceM) : null;
-  const navRouteEnabled =
-    streetNav && hintPanel === "nav" && liveLoc != null && !sim;
-  const { line: walkRouteLine, status: walkRouteStatus } = useGemWalkRoute(
-    navRouteEnabled ? liveLoc : null,
-    navRouteEnabled ? { lat: anchor.lat, lng: anchor.lng } : null,
-    navRouteEnabled,
-  );
-  const routeTurnRaw =
-    liveLoc != null ? walkRouteTurnBearingDeg(liveLoc, heading, walkRouteLine) : null;
-  const routeMapBearing =
-    liveLoc != null ? walkRouteMapBearingDeg(liveLoc, walkRouteLine) : null;
-  const streetArrowPhoneRelative = routeTurnRaw != null && heading != null;
-  const streetArrowDeg = streetArrowPhoneRelative
-    ? navTurnBearingForUi(routeTurnRaw)
-    : routeMapBearing;
-  const streetArrowMapNorth = !streetArrowPhoneRelative && routeMapBearing != null;
   const walkGuideCopy = gemWalkGuideCopy(
     huntArrowPhoneRelative,
     facingTarget,
     navTurnBearing,
     gpsBearingToAnchor,
   );
-  const navGuideCopy =
-    streetNav && hintPanel === "nav"
-      ? gemStreetRouteNavCopy(
-          walkRouteStatus === "loading"
-            ? "loading"
-            : walkRouteStatus === "ready"
-              ? "ready"
-              : "error",
-          distLabel,
-        )
-      : walkGuideCopy;
   const showCompassEnable =
     huntArrowMapNorth &&
     (headingStatus === "denied" || headingStatus === "unsupported");
-  const showStreetRouteArrow =
-    streetNav &&
-    hintPanel === "nav" &&
-    !centerReveal &&
-    liveLoc != null &&
-    !sim &&
-    walkRouteStatus === "ready" &&
-    streetArrowDeg != null;
   const showNavCompassPrompt =
     hintPanel === "nav" &&
     !centerReveal &&
     !isFarForHints &&
-    (showStreetRouteArrow || !streetNav) &&
     (showCompassEnable ||
       headingStatus === "denied" ||
       headingStatus === "idle" ||
@@ -636,29 +589,18 @@ export function GemHuntOverlay({
     (encounterPhase === "encounter" ||
       encounterPhase.startsWith("resolve") ||
       encounterPhase === "reward");
-  const showStraightNavArrow =
-    !streetNav &&
-    (encounterMode
-      ? encounterPhase === "approach" &&
-        hintPanel === "nav" &&
-        !centerReveal &&
-        huntArrowDeg != null &&
-        liveLoc != null &&
-        !sim
-      : hintPanel === "nav" &&
-        !centerReveal &&
-        huntArrowDeg != null &&
-        liveLoc != null &&
-        !sim);
-  const showNavArrow = showStreetRouteArrow || showStraightNavArrow;
-  const displayArrowDeg = showStreetRouteArrow ? streetArrowDeg! : huntArrowDeg!;
-  const displayArrowMapNorth = showStreetRouteArrow ? streetArrowMapNorth : huntArrowMapNorth;
-  const displayArrowFacing =
-    showStreetRouteArrow
-      ? streetArrowPhoneRelative &&
-        routeTurnRaw != null &&
-        Math.abs(routeTurnRaw) <= GEM_FACING_TOLERANCE_DEG
-      : facingTarget && !huntArrowMapNorth;
+  const showNavArrow = encounterMode
+    ? encounterPhase === "approach" &&
+      hintPanel === "nav" &&
+      !centerReveal &&
+      huntArrowDeg != null &&
+      liveLoc != null &&
+      !sim
+    : hintPanel === "nav" &&
+      !centerReveal &&
+      huntArrowDeg != null &&
+      liveLoc != null &&
+      !sim;
 
   const gemAtCenter = centerReveal || encounterForcesCenter;
 
@@ -825,9 +767,9 @@ export function GemHuntOverlay({
         {showNavArrow ? (
           <div className="gem-hunt-overlay__nav-layer" aria-hidden>
             <GemHuntOrientationArrow
-              bearingDeg={displayArrowDeg}
-              facing={displayArrowFacing}
-              mapNorth={displayArrowMapNorth}
+              bearingDeg={huntArrowDeg!}
+              facing={facingTarget && !huntArrowMapNorth}
+              mapNorth={huntArrowMapNorth}
             />
           </div>
         ) : null}
@@ -933,18 +875,18 @@ export function GemHuntOverlay({
                   role="region"
                   aria-label="הנחיות הליכה ליהלום"
                 >
-                  <p className="gem-hunt-overlay__walk-text">{navGuideCopy}</p>
+                  <p className="gem-hunt-overlay__walk-text">
+                    {walkGuideCopy}
+                    {distanceM != null ? ` · ${formatDistance(distanceM)}` : null}
+                  </p>
                   {mapsWalkUrl ? (
                     <a
                       href={mapsWalkUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={cn(
-                        "gem-hunt-overlay__walk-maps",
-                        streetNav && "gem-hunt-overlay__walk-maps--primary",
-                      )}
+                      className="gem-hunt-overlay__walk-maps"
                     >
-                      {streetNav ? "ניווט הליכה ב-Google Maps" : "הליכה ב-Google Maps ליהלום"}
+                      הליכה ב-Google Maps ליהלום
                     </a>
                   ) : null}
                 </div>
@@ -967,9 +909,7 @@ export function GemHuntOverlay({
                   >
                     <span className="gem-hunt-overlay__hint-btn-label">
                       <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
-                      <span className="gem-hunt-overlay__hint-btn-sub">
-                        {streetNav ? "ניווט ברחוב" : "כוון אותי"}
-                      </span>
+                      <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
                     </span>
                   </button>
                   {!encounterMode || showEncounterFooter ? (
