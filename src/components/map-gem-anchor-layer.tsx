@@ -6,7 +6,7 @@ import { Marker, Polyline, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { useGemOsmAnchorsEpoch } from "@/hooks/use-gem-osm-anchors";
-import { gemAnchorForHouse, gemDistanceMeters, GEM_HUNT_METERS } from "@/lib/gem-hunt";
+import { activeGemHuntMeters, gemAnchorForHouse, gemDistanceMeters } from "@/lib/gem-hunt";
 import type { UserLocation } from "@/hooks/use-user-location";
 import { gemMonsterForHouse, gemMonsterMeta } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
@@ -142,7 +142,7 @@ export function MapGemAnchorLayer({
         const inRange =
           userLocation != null &&
           !collected &&
-          gemDistanceMeters(userLocation, house) <= GEM_HUNT_METERS;
+          gemDistanceMeters(userLocation, house) <= activeGemHuntMeters();
         return {
           house,
           anchor,

@@ -18,7 +18,7 @@ import {
   facingHouse,
   GEM_FACING_TOLERANCE_DEG,
   GEM_HELP_AFTER_SECONDS,
-  GEM_HUNT_METERS,
+  activeGemHuntMeters,
   bearingDegrees,
   gemDistanceMeters,
   GEM_SCAN_PAN_DEGREES,
@@ -197,10 +197,9 @@ export function GemHuntOverlay({
 
   const distanceM =
     liveLoc != null && !sim ? gemDistanceMeters(liveLoc, house) : null;
+  const huntBandM = activeGemHuntMeters();
   const inDistanceBand =
-    liveLoc != null &&
-    !sim &&
-    gemDistanceMeters(liveLoc, house) <= GEM_HUNT_METERS;
+    liveLoc != null && !sim && gemDistanceMeters(liveLoc, house) <= huntBandM;
   const canCollectNow = collectEnabled || sim || inDistanceBand;
   /** Scan/pan/facing reveal when in range (or admin simulate). */
   const allowAutoReveal = canCollectNow;
@@ -541,10 +540,10 @@ export function GemHuntOverlay({
   /** Real hunt: compass-pinned gem when not in «גלה לי» center mode. */
   const arPinGuideMode = gemVisible && !centerReveal;
   const pinCollectReady =
-    arPinGuideMode && canCollectNow && gemWorldPinVisible(pinDisplay ?? pinPlacement);
+    arPinGuideMode && canCollectNow && gemWorldPinVisible(pinDisplay ?? pinPlacement, huntBandM);
   /** Show centered gem after reveal even before «stand still» — tap only when collectEnabled. */
-  /** Show when the shared anchor bearing is inside the camera cone — gated by GEM_WORLD_PIN_MAX_METERS. */
-  const showWorldGemSprite = gemWorldPinVisible(pinDisplay ?? pinPlacement);
+  /** Show when anchor bearing is in the camera cone — gated by activeGemHuntMeters(). */
+  const showWorldGemSprite = gemWorldPinVisible(pinDisplay ?? pinPlacement, huntBandM);
   const worldLockRevealed =
     arPinGuideMode && showWorldGemSprite && (phase === "visible" || phase === "collecting");
   const isFarForHints =
@@ -552,7 +551,7 @@ export function GemHuntOverlay({
     !sim &&
     liveLoc != null &&
     distanceM != null &&
-    distanceM > GEM_HUNT_METERS &&
+    distanceM > huntBandM &&
     phase !== "collecting" &&
     !centerReveal;
   const gpsBearingToAnchor =

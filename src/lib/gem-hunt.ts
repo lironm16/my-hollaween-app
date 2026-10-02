@@ -1,3 +1,4 @@
+import { isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { getGemAnchorOverride } from "@/lib/gem-anchor-overrides";
 import { getOsmGemAnchor } from "@/lib/gem-osm-anchor-cache";
 import {
@@ -50,9 +51,11 @@ export type GemVariantId = GemMonsterId;
 
 /** Show "find gem" affordance when within this range. */
 export const GEM_APPROACH_METERS = 50;
-/** Must be this close to start camera hunt / see the world-pinned gem (iOS + map band). */
+/** Map / Android camera hunt band. */
 export const GEM_WORLD_PIN_MAX_METERS = 15;
 export const GEM_HUNT_METERS = GEM_WORLD_PIN_MAX_METERS;
+/** iOS camera hunt — tighter sidewalk radius (neighbors + GPS). */
+export const GEM_IOS_HUNT_METERS = 5;
 /** @deprecated Stand-still gate removed — kept for copy/tests that reference the old value. */
 export const GEM_STILL_SECONDS = 0;
 /** Compass cone — gem may appear when facing within this many degrees of the house. */
@@ -318,6 +321,12 @@ export function gemPlacementDisplaySnap(placement: GemScreenPlacement | null) {
   return placement;
 }
 
+/** Hunt/collect radius for this device (5 m iOS Safari, 15 m otherwise). */
+export function activeGemHuntMeters(): number {
+  if (typeof navigator !== "undefined" && isIosLike()) return GEM_IOS_HUNT_METERS;
+  return GEM_HUNT_METERS;
+}
+
 export function canCollectGem(
   userLocation: { lat: number; lng: number } | null,
   house: Pick<PublicHouse, "id" | "lat" | "lng">,
@@ -333,9 +342,10 @@ export function canCollectGem(
 export function withinGemHuntMeters(
   user: { lat: number; lng: number; accuracy?: number },
   target: { lat: number; lng: number },
+  maxMeters = GEM_HUNT_METERS,
 ) {
   const d = distanceMeters(user, target);
-  if (d > GEM_HUNT_METERS) return false;
+  if (d > maxMeters) return false;
   const acc = user.accuracy;
   if (acc == null || !Number.isFinite(acc) || acc <= 0) return true;
   const slack = 18;
@@ -343,21 +353,22 @@ export function withinGemHuntMeters(
     // Teleport onto the pin with a huge accuracy circle — still not “on site”.
     if (acc > 150) return false;
     if (acc <= 100) return true;
-    if (d + Math.min(acc, 120) <= GEM_HUNT_METERS + slack) return true;
-    return d <= 8;
+    if (d + Math.min(acc, 120) <= maxMeters + slack) return true;
+    return d <= Math.min(8, maxMeters);
   }
-  return d + Math.min(acc, 120) <= GEM_HUNT_METERS + slack;
+  return d + Math.min(acc, 120) <= maxMeters + slack;
 }
 
 function inGemHuntBand(
   user: { lat: number; lng: number; accuracy?: number },
   house: Pick<PublicHouse, "id" | "lat" | "lng">,
+  maxMeters = activeGemHuntMeters(),
 ) {
   const anchor = gemAnchorForHouse(house);
-  return withinGemHuntMeters(user, anchor);
+  return withinGemHuntMeters(user, anchor, maxMeters);
 }
 
-/** Within GEM_HUNT_METERS of the gem anchor or map pin — camera hunt / collect band. */
+/** Within active hunt meters of the gem anchor — camera hunt / collect band. */
 export function userWithinGemHuntRange(
   user: { lat: number; lng: number; accuracy?: number } | null,
   house: Pick<PublicHouse, "id" | "lat" | "lng">,
@@ -373,9 +384,8 @@ export function gemProximity(
 ): GemProximity {
   if (collected) return "collected";
   if (!user) return "far";
-  const anchor = gemAnchorForHouse(house);
   const dHouse = distanceMeters(user, house);
-  const dAnchor = distanceMeters(user, anchor);
+  const dAnchor = distanceMeters(user, gemAnchorForHouse(house));
   const d = Math.min(dHouse, dAnchor);
   const acc = user.accuracy;
   if (acc != null && Number.isFinite(acc) && acc > 150 && d < 3) return "far";
