@@ -4811,6 +4811,19 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   font-size: 1.05rem;
   padding: 0.75rem 1.15rem;
 }
+.gem-hunt-overlay__hint-btn--reveal.is-ready {
+  border-color: rgb(74 222 128 / 0.9);
+  background: rgb(22 101 52 / 0.5);
+  box-shadow: 0 0 0 2px rgb(74 222 128 / 0.35);
+  color: #ecfdf5;
+}
+.gem-hunt-overlay__footer-hint--error {
+  color: #fecaca;
+  border: 1px solid rgb(248 113 113 / 0.45);
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.65rem;
+  background: rgb(69 10 10 / 0.55);
+}
 .gem-hunt-overlay__hint-note {
   margin: 0;
   font-size: 0.75rem;

@@ -53,6 +53,7 @@ import { useGemProgress } from "@/hooks/use-gem-progress";
 import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
 import { loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
 import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
+import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import { syncGemMonsterAssignment } from "@/lib/gem-monsters";
 import {
@@ -171,6 +172,7 @@ export function NeighborhoodApp({
     gemHuntVisible: gemFeatureOn,
     gemFabVisible: gemUi,
     gemAdminToolsVisible: gemAdminTools,
+    previewAsUser: gemPreviewAsUser,
   } = useGemHuntAdminUi(admin, now);
   const gemHuntActive = gemFeatureOn && gemUi;
   useEffect(() => {
@@ -1478,6 +1480,7 @@ export function NeighborhoodApp({
             false,
           )}
           initialWebXrSession={mapGemWebXrSession}
+          tellMeHuntRadiusEnforced={gemTellMeHuntRadiusEnforced(admin, gemPreviewAsUser)}
           onClose={() => {
             releaseGemHuntCamera();
             void endGemHuntWebXrSession(mapGemWebXrSession);

@@ -43,6 +43,7 @@ import {
 } from "@/lib/gem-anchor-overrides";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { cn } from "@/lib/utils";
+import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 
 export function GemHuntPanel({
   house,
@@ -86,10 +87,12 @@ export function GemHuntPanel({
   }, []);
 
   const now = useAppNow();
-  const { gemFabVisible: visible, gemAdminToolsVisible: showAdminTools } = useGemHuntAdminUi(
-    isAdmin,
-    now,
-  );
+  const {
+    gemFabVisible: visible,
+    gemAdminToolsVisible: showAdminTools,
+    previewAsUser,
+  } = useGemHuntAdminUi(isAdmin, now);
+  const tellMeHuntRadiusEnforced = gemTellMeHuntRadiusEnforced(isAdmin, previewAsUser);
   const collected = gems.collected(house.id);
   const huntBandM = activeGemHuntMeters();
   const proximity = gemProximity(userLocation, house, collected);
@@ -297,6 +300,7 @@ export function GemHuntPanel({
           collectEnabled={canCollect}
           encounterMode
           repeatVisit={collected}
+          tellMeHuntRadiusEnforced={tellMeHuntRadiusEnforced}
           initialWebXrSession={bootWebXrSession}
           onClose={() => {
             releaseGemHuntCamera();

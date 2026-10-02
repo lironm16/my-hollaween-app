@@ -48,6 +48,9 @@ import { gemWorldYawRad } from "@/lib/gem-world-yaw";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { gemWalkGuideCopy } from "@/lib/gem-hunt-walk-guide";
 import { GemEncounterLayer } from "@/components/gem-hunt/gem-encounter-layer";
+import { GemHuntTellMeButton } from "@/components/gem-hunt/gem-hunt-tell-me-button";
+import { useGemTellMeButton } from "@/hooks/use-gem-tell-me-button";
+import { gemTellMeInRange } from "@/lib/gem-tell-me-gate";
 import { useGemEncounterPhase } from "@/hooks/use-gem-encounter-phase";
 import { useTreatSwipe } from "@/hooks/use-treat-swipe";
 import {
@@ -98,6 +101,7 @@ export function GemHuntOverlay({
   collectEnabled = true,
   encounterMode = true,
   repeatVisit = false,
+  tellMeHuntRadiusEnforced = true,
   onClose,
   onCollect,
 }: {
@@ -112,6 +116,7 @@ export function GemHuntOverlay({
   encounterMode?: boolean;
   /** House pet already in sticker book — shorter resolve + repeat reward. */
   repeatVisit?: boolean;
+  tellMeHuntRadiusEnforced?: boolean;
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
 }) {
@@ -200,6 +205,7 @@ export function GemHuntOverlay({
   const huntBandM = activeGemHuntMeters();
   const inDistanceBand =
     liveLoc != null && !sim && gemDistanceMeters(liveLoc, house) <= huntBandM;
+  const tellMeInRange = gemTellMeInRange(liveLoc ?? effectiveLoc, house, sim);
   const canCollectNow = collectEnabled || sim || inDistanceBand;
   /** Scan/pan/facing reveal when in range (or admin simulate). */
   const allowAutoReveal = canCollectNow;
@@ -490,22 +496,31 @@ export function GemHuntOverlay({
     onCloseRef.current();
   }
 
-  const toggleRevealMe = useCallback(() => {
-    if (centerReveal) {
-      setCenterReveal(false);
-      setUserDismissedCenterGem(true);
-      if (encounterMode && encounterPhase === "encounter") {
-        setEncounterPhase("approach");
-      }
-      return;
-    }
+  const activateTellMe = useCallback(() => {
     setUserDismissedCenterGem(false);
     setHintPanel(null);
     if (!revealedRef.current) reveal();
     setShowHelp(false);
     setHint("found");
     setCenterReveal(true);
-  }, [centerReveal, encounterMode, encounterPhase, reveal, setEncounterPhase]);
+  }, [reveal]);
+
+  const deactivateTellMe = useCallback(() => {
+    setCenterReveal(false);
+    setUserDismissedCenterGem(true);
+    if (encounterMode && encounterPhase === "encounter") {
+      setEncounterPhase("approach");
+    }
+  }, [encounterMode, encounterPhase, setEncounterPhase]);
+
+  const tellMeButton = useGemTellMeButton({
+    enforceHuntRadius: tellMeHuntRadiusEnforced,
+    inRange: tellMeInRange,
+    centerReveal,
+    blocked: phase === "collecting",
+    onActivate: activateTellMe,
+    onDeactivate: deactivateTellMe,
+  });
 
   const gemVisible = phase === "visible" || phase === "collecting";
   const showHuntUi = phase !== "albumReveal";
@@ -855,6 +870,14 @@ export function GemHuntOverlay({
         <footer className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt" dir="rtl">
           <div className="gem-hunt-overlay__footer-stack">
             <div className="gem-hunt-overlay__footer-hint-slot">
+              {tellMeButton.showRangeError ? (
+                <p
+                  className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain gem-hunt-overlay__footer-hint--error"
+                  role="alert"
+                >
+                  {tellMeButton.rangeErrorMessage}
+                </p>
+              ) : null}
               {showEncounterFooter && encounterPhase === "encounter" ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
                   סובבו את החיה באצבע. לאיסוף — הקישו עליה.
@@ -913,21 +936,14 @@ export function GemHuntOverlay({
                     </span>
                   </button>
                   {!encounterMode || showEncounterFooter ? (
-                    <button
-                      type="button"
-                      className={cn(
-                        "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
-                        centerReveal && "is-active",
-                      )}
-                      aria-pressed={centerReveal}
-                      onPointerDown={(e) => e.stopPropagation()}
+                    <GemHuntTellMeButton
+                      centerReveal={centerReveal}
+                      readyHighlight={tellMeButton.readyHighlight}
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleRevealMe();
+                        tellMeButton.onTellMeClick();
                       }}
-                    >
-                      {centerReveal ? "הסתר" : "גלה לי"}
-                    </button>
+                    />
                   ) : null}
                 </div>
             </div>

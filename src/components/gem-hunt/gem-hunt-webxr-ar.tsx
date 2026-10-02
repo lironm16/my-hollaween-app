@@ -55,6 +55,9 @@ import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-list-suspend";
 import { getGemHuntDomOverlayRoot, getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import { cn } from "@/lib/utils";
+import { GemHuntTellMeButton } from "@/components/gem-hunt/gem-hunt-tell-me-button";
+import { useGemTellMeButton } from "@/hooks/use-gem-tell-me-button";
+import { gemTellMeInRange } from "@/lib/gem-tell-me-gate";
 
 type HuntPhase = "boot" | "placing" | "placed" | "collecting";
 
@@ -65,6 +68,7 @@ type Props = {
   collectEnabled?: boolean;
   encounterMode?: boolean;
   repeatVisit?: boolean;
+  tellMeHuntRadiusEnforced?: boolean;
   initialWebXrSession?: XRSession | null;
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
@@ -120,6 +124,7 @@ export function GemHuntWebXrAr({
   collectEnabled = true,
   encounterMode = true,
   repeatVisit = false,
+  tellMeHuntRadiusEnforced = true,
   initialWebXrSession = null,
   onClose,
   onCollect,
@@ -219,6 +224,7 @@ export function GemHuntWebXrAr({
   const inWebXrHuntBand =
     simulateInRange ||
     (liveLoc != null && gemDistanceMeters(liveLoc, house) <= GEM_WEBXR_HUNT_METERS);
+  const tellMeInRange = gemTellMeInRange(liveLoc, house, simulateInRange);
   /** Same on-site radius as iOS camera hunt (GEM_WEBXR_HUNT_METERS). */
   const canCollectNow =
     inWebXrHuntBand && (simulateInRange || collectEnabled);
@@ -436,40 +442,34 @@ export function GemHuntWebXrAr({
     setEncounterPhase,
   ]);
 
-  const toggleRevealMe = useCallback(() => {
-    if (phase === "collecting" || !sessionActive) return;
-
-    if (centerReveal) {
-      setCenterReveal(false);
-      setUserDismissedCenterGem(true);
-      placeAssistRef.current.forceOnce = false;
-      placeAssistRef.current.fast = false;
-      if (encounterMode && encounterPhase === "encounter") {
-        setEncounterPhase("approach");
-      }
-      return;
-    }
-
+  const activateTellMe = useCallback(() => {
     setUserDismissedCenterGem(false);
     setHintPanel(null);
-
     if (!placed) {
       placeAssistRef.current.forceOnce = true;
       placeAssistRef.current.fast = true;
-      setCenterReveal(true);
-      return;
     }
-
     setCenterReveal(true);
-  }, [
+  }, [placed]);
+
+  const deactivateTellMe = useCallback(() => {
+    setCenterReveal(false);
+    setUserDismissedCenterGem(true);
+    placeAssistRef.current.forceOnce = false;
+    placeAssistRef.current.fast = false;
+    if (encounterMode && encounterPhase === "encounter") {
+      setEncounterPhase("approach");
+    }
+  }, [encounterMode, encounterPhase, setEncounterPhase]);
+
+  const tellMeButton = useGemTellMeButton({
+    enforceHuntRadius: tellMeHuntRadiusEnforced,
+    inRange: tellMeInRange,
     centerReveal,
-    encounterMode,
-    encounterPhase,
-    phase,
-    placed,
-    sessionActive,
-    setEncounterPhase,
-  ]);
+    blocked: phase === "collecting" || !sessionActive,
+    onActivate: activateTellMe,
+    onDeactivate: deactivateTellMe,
+  });
 
   const showWebXrGeoHint =
     sessionActive &&
@@ -1002,6 +1002,14 @@ export function GemHuntWebXrAr({
         ) : (
           <div className="gem-hunt-overlay__footer-stack">
             <div className="gem-hunt-overlay__footer-hint-slot">
+              {tellMeButton.showRangeError ? (
+                <p
+                  className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain gem-hunt-overlay__footer-hint--error"
+                  role="alert"
+                >
+                  {tellMeButton.rangeErrorMessage}
+                </p>
+              ) : null}
               {showWebXrGeoHint ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="status">
                   מאתרים את היהלום על המדרכה (אותה נקודה כמו במפה)…
@@ -1064,21 +1072,14 @@ export function GemHuntWebXrAr({
                     </span>
                   </button>
                   {!encounterMode || showEncounterFooter ? (
-                    <button
-                      type="button"
-                      className={cn(
-                        "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--reveal gem-hunt-overlay__hint-btn--compact",
-                        centerReveal && "is-active",
-                      )}
-                      aria-pressed={centerReveal}
-                      onPointerDown={(e) => e.stopPropagation()}
+                    <GemHuntTellMeButton
+                      centerReveal={centerReveal}
+                      readyHighlight={tellMeButton.readyHighlight}
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleRevealMe();
+                        tellMeButton.onTellMeClick();
                       }}
-                    >
-                      {centerReveal ? "הסתר" : "גלה לי"}
-                    </button>
+                    />
                   ) : null}
                 </div>
               </div>
