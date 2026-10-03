@@ -21,7 +21,7 @@ export function GemCheer({
           <i /><i /><i /><i /><i /><i />
         </span>
         <span className="gem-cheer-gem" aria-hidden="true">
-          <GemDiamondIcon className="size-5" filled />
+          <GemDiamondIcon className="size-9" filled />
         </span>
         {GEM_FOUND_CHEER_HE}
       </div>

@@ -16,17 +16,14 @@ export function HouseTitleMarkers({
     <>
       {liked ? (
         <Heart
-          className="mb-0.5 me-1.5 inline size-5 fill-current text-[#fb7185]"
+          className="me-1.5 inline size-6 fill-current text-[#fb7185] align-middle"
           strokeWidth={2.2}
           aria-label="אהבתי"
         />
       ) : null}
       {gemCollected ? (
         <>
-          <GemDiamondSvg
-            className="mb-0.5 me-1.5 inline size-5 align-middle"
-            aria-hidden
-          />
+          <GemDiamondSvg className="me-1.5 inline size-7 align-middle" aria-hidden />
           <span className="sr-only">שדון</span>
         </>
       ) : null}

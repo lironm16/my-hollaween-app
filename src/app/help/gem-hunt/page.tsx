@@ -4,6 +4,7 @@ import Link from "next/link";
 import { HelpExpandable, HelpShell } from "@/components/help-shell";
 import { HelpText } from "@/lib/render-help-text";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { buttonVariants } from "@/components/ui/button";
 import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
@@ -17,7 +18,8 @@ import { cn } from "@/lib/utils";
 
 export default function GemHuntHelpPage() {
   const { admin, ready } = useAdminSession();
-  const { gemHuntVisible: showGemHuntHelp } = useGemHuntAdminUi(admin);
+  const now = useAppNow();
+  const { gemFabVisible: showGemHuntHelp } = useGemHuntAdminUi(admin, now);
 
   if (!ready) {
     return (
@@ -49,19 +51,19 @@ export default function GemHuntHelpPage() {
       </p>
 
       <div className="space-y-3">
-        <HelpExpandable title="איפה רואים יהלומים?" defaultOpen>
+        <HelpExpandable title="איפה רואים שדונים?" defaultOpen>
           <ul className="list-disc space-y-2 pr-5 text-lg leading-relaxed text-orange-50">
             <li>
               <HelpText>
                 {
-                  "במפה — יהלומים על בתים (אחרי שמפעילים את כפתור הציד בסרגל). בליל פורים, כשהציד פעיל, יופיע גם כפתור <<חיפוש יהלום נסתר>> כשמתקרבים לבית."
+                  "במפה — סימני שדון על בתים (אחרי שמפעילים את כפתור השדונים בסרגל). בליל פורים, כשהציד פעיל, יופיע גם כפתור <<חיפוש שדון נסתר>> כשמתקרבים לבית."
                 }
               </HelpText>
             </li>
             <li>
               <HelpText>
                 {
-                  "בפרטי בית — בלוק <<יהלום נסתר>> עם מרחק וכפתור <<פתחו מצלמה>> בטווח (iPhone ~5 מ׳, Android ~15 מ׳ מהנקודה על המדרכה)."
+                  "בפרטי בית — בלוק <<שדון נסתר>> עם מרחק וכפתור <<פתחו מצלמה>> בטווח (iPhone ~5 מ׳, Android ~15 מ׳ מהנקודה על המדרכה)."
                 }
               </HelpText>
             </li>
@@ -97,7 +99,7 @@ export default function GemHuntHelpPage() {
             <li>
               <HelpText>
                 {
-                  "סובבו את המצלמה — היהלום ננעל בעולם ליד המדרכה (בטווח קרוב, עד ~15 מ׳, כדי שלא יתערבב עם שכן)."
+                  "סובבו את המצלמה — השדון ננעל בעולם ליד המדרכה (בטווח קרוב, עד ~15 מ׳, כדי שלא יתערבב עם שכן)."
                 }
               </HelpText>
             </li>
@@ -109,7 +111,7 @@ export default function GemHuntHelpPage() {
             <p>
               <HelpText>
                 {
-                  "<<רמז · כוון אותי>> — חץ מצפן (קו ישר ליהלום), מרחק, שמאלה/ימינה, וקישור <<הליכה ב-Google Maps>> למסלול ברחוב."
+                  "<<רמז · כוון אותי>> — חץ מצפן (קו ישר לשדון), מרחק, שמאלה/ימינה, וקישור <<הליכה ב-Google Maps>> למסלול ברחוב."
                 }
               </HelpText>
             </p>
@@ -142,7 +144,7 @@ export default function GemHuntHelpPage() {
             <p>
               <HelpText>
                 {
-                  "כל בית עם שדון מוסיף חבר לאלבום — אפשר לראות מי כבר נמצא ומי עדיין מחכה בשכונה."
+                  "כל בית עם שדון מוסיף שדון לאלבום — אפשר לראות מי כבר נמצא ומי עדיין מחכה בשכונה."
                 }
               </HelpText>
             </p>
@@ -181,7 +183,7 @@ export default function GemHuntHelpPage() {
             <li>
               <HelpText>
                 {
-                  "**יהלום של שכן** — הנקודה על המדרכה מוגבלת בטווח; אם צריך כיול — כלי מנהל בפרטי הבית."
+                  "**שדון של שכן** — הנקודה על המדרכה מוגבלת בטווח; אם צריך כיול — כלי מנהל בפרטי הבית."
                 }
               </HelpText>
             </li>

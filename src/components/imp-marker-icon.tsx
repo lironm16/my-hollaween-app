@@ -12,11 +12,12 @@ export function GemDiamondIcon({
   active?: boolean;
   filled?: boolean;
 }) {
+  const solid = active || filled;
   return (
     <ImpMarkerGlyph
+      variant={solid ? "solid" : "eyes"}
       className={cn(
-        "size-5",
-        active ? "text-white" : filled ? "text-[#fbbf24]" : "text-current",
+        active ? "text-white" : filled ? "text-[#fbbf24]" : "text-orange-100",
         className,
       )}
     />
@@ -30,5 +31,10 @@ export function GemDiamondSvg({
   className?: string;
   fill?: string;
 }) {
-  return <ImpMarkerGlyph className={cn("block", className)} style={{ color: fill }} />;
+  return (
+    <ImpMarkerGlyph
+      className={cn("inline-block align-middle", className)}
+      style={{ color: fill }}
+    />
+  );
 }

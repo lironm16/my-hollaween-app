@@ -483,20 +483,20 @@ export type GemAchievement = {
 export const GEM_ACHIEVEMENTS: GemAchievement[] = [
   {
     id: "first",
-    titleHe: "יהלום ראשון",
+    titleHe: "שדון ראשון",
     descriptionHe: "מצאתם שדון אחד",
     target: 1,
   },
   {
     id: "hunter5",
-    titleHe: "צייד/ת יהלומים",
-    descriptionHe: "5 יהלומים",
+    titleHe: "צייד/ת שדונים",
+    descriptionHe: "5 שדונים",
     target: 5,
   },
   {
     id: "hunter10",
     titleHe: "שכונה מלאה קסם",
-    descriptionHe: "10 יהלומים",
+    descriptionHe: "10 שדונים",
     target: 10,
   },
   {

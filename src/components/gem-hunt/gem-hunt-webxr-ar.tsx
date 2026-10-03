@@ -59,6 +59,12 @@ import { cn } from "@/lib/utils";
 import { GemHuntTellMeButton } from "@/components/gem-hunt/gem-hunt-tell-me-button";
 import { useGemTellMeButton } from "@/hooks/use-gem-tell-me-button";
 import { gemTellMeInRange } from "@/lib/gem-tell-me-gate";
+import {
+  GEM_AR_LOCATING_HE,
+  GEM_COLLECT_NEW_HE,
+  GEM_WALK_MAPS_ARIA_HE,
+  GEM_WALK_MAPS_LINK_HE,
+} from "@/lib/gem-hunt-copy";
 
 type HuntPhase = "boot" | "placing" | "placed" | "collecting";
 
@@ -539,7 +545,7 @@ export function GemHuntWebXrAr({
   const collectBanner =
     phase === "collecting"
       ? albumRevealNewFriend
-        ? "כל הכבוד!! מצאתם חבר חדש!"
+        ? GEM_COLLECT_NEW_HE
         : `מצאתם שוב את ${gemLabelHe(monsterId)}`
       : null;
 
@@ -1118,7 +1124,7 @@ export function GemHuntWebXrAr({
               ) : null}
               {showWebXrGeoHint ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="status">
-                  מאתרים את היהלום על המדרכה (אותה נקודה כמו במפה)…
+                  {GEM_AR_LOCATING_HE}
                 </p>
               ) : null}
               {showEncounterFooter && encounterPhase === "encounter" ? (
@@ -1130,7 +1136,7 @@ export function GemHuntWebXrAr({
                 <div
                   className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
                   role="region"
-                  aria-label="הנחיות הליכה ליהלום"
+                  aria-label={GEM_WALK_MAPS_ARIA_HE}
                 >
                   <p className="gem-hunt-overlay__walk-text">
                     {walkGuideCopy}
@@ -1143,7 +1149,7 @@ export function GemHuntWebXrAr({
                       rel="noopener noreferrer"
                       className="gem-hunt-overlay__walk-maps"
                     >
-                      הליכה ב-Google Maps ליהלום
+                      {GEM_WALK_MAPS_LINK_HE}
                     </a>
                   ) : null}
                 </div>

@@ -1,7 +1,8 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
+import { GEM_ALBUM_ALL_HE, GEM_ALBUM_SLOTS_HE } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
 /** Top section on the sticker bag — album progress only (no separate «diamond» count). */
@@ -24,15 +25,15 @@ export function GemBagDiamondHero({
       dir="rtl"
     >
       <div className="gem-bag-hero__head">
-        <Sparkles
-          className="size-9 shrink-0 text-amber-300 drop-shadow-[0_0_12px_rgb(251_191_36/0.5)]"
+        <ImpMarkerGlyph
+          className="size-10 shrink-0 text-amber-300 drop-shadow-[0_0_12px_rgb(251_191_36/0.5)]"
           aria-hidden
         />
         <div className="min-w-0 flex-1 text-right">
           <h1 className="font-display text-2xl text-orange-200">{GEM_ALBUM_TITLE_HE}</h1>
           <p className="mt-1 text-lg font-medium text-violet-50">
             <span className="text-amber-200">{filledCount}</span>
-            <span className="text-violet-200/90"> חברים באלבום · </span>
+            <span className="text-violet-200/90"> {GEM_ALBUM_SLOTS_HE} · </span>
             <span className="text-violet-300">עוד {Math.max(0, totalSlots - filledCount)} לגלות</span>
           </p>
         </div>
@@ -46,14 +47,14 @@ export function GemBagDiamondHero({
         aria-valuenow={progressPct}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label={`${filledCount} מתוך ${totalSlots} חברים באלבום`}
+        aria-label={`${filledCount} מתוך ${totalSlots} ${GEM_ALBUM_SLOTS_HE}`}
       >
         <div className="gem-bag-progress-bar__fill" style={{ width: `${progressPct}%` }} />
       </div>
       {complete ? (
         <p className="gem-bag-hero__celebrate">
-          <Sparkles className="inline size-4 text-amber-300" aria-hidden /> כל החבר&apos;ה
-          באוסף — השכונה מלאה קסם!
+          <ImpMarkerGlyph className="inline-block size-4 align-middle text-amber-300" aria-hidden />{" "}
+          {GEM_ALBUM_ALL_HE} באוסף — השכונה מלאה קסם!
         </p>
       ) : null}
     </header>

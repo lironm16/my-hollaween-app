@@ -20,7 +20,7 @@ export function GemMapCompleteBanner({ className }: { className?: string }) {
         <Sparkles className="gem-map-complete__icon size-6 text-amber-300" aria-hidden />
         <div className="min-w-0 flex-1 text-right">
           <p className="gem-map-complete__title">{GEM_MAP_COMPLETE_TITLE_HE}</p>
-          <p className="gem-map-complete__sub">השכונה מלאה קסם — פתחו את התיק לראות את החבר&apos;ה.</p>
+          <p className="gem-map-complete__sub">השכונה מלאה קסם — פתחו את התיק לראות את כל השדונים.</p>
         </div>
         <Link href="/gem-bag" className="gem-map-complete__link shrink-0">
           לתיק

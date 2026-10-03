@@ -68,7 +68,7 @@ export const GEM_MONSTER_CATALOG = [
     glbPath: "/gem-monsters/imp.glb",
     posterPath: "/gem-monsters/imp-poster.png",
     labelHe: "שדון",
-    petNameHe: "קונקי השדון",
+    petNameHe: "קונקי השובב",
   },
   {
     id: "mummy",

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { HelpShell } from "@/components/help-shell";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { GEM_GAME_TITLE_HE } from "@/lib/gem-hunt-copy";
 
@@ -45,7 +46,8 @@ const GEM_HUNT_QUESTION = {
 
 export default function HelpPage() {
   const { admin } = useAdminSession();
-  const { gemHuntVisible: showGemHuntHelp } = useGemHuntAdminUi(admin);
+  const now = useAppNow();
+  const { gemFabVisible: showGemHuntHelp } = useGemHuntAdminUi(admin, now);
   const items = showGemHuntHelp ? [...QUESTIONS, GEM_HUNT_QUESTION] : QUESTIONS;
 
   return (

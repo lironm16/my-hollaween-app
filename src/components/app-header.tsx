@@ -14,8 +14,8 @@ import {
   Search,
   Shield,
   HelpCircle,
-  Sparkles,
 } from "lucide-react";
+import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
 import { NeighborhoodMarquee } from "@/components/neighborhood-marquee";
@@ -209,7 +209,7 @@ export function AppHeader({
                   "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
                 )}
               >
-                <Sparkles className="size-4 shrink-0" />
+                <ImpMarkerGlyph className="size-5 shrink-0 text-amber-300" aria-hidden />
                 {GEM_ALBUM_TITLE_HE}
               </Link>
             ) : null}

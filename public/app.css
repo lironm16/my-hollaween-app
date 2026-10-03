@@ -619,9 +619,6 @@
   .-mb-4 {
     margin-bottom: calc(var(--spacing) * -4);
   }
-  .mb-0\.5 {
-    margin-bottom: calc(var(--spacing) * 0.5);
-  }
   .mb-1 {
     margin-bottom: var(--spacing);
   }
@@ -746,6 +743,14 @@
   .size-\[1\.35rem\] {
     width: 1.35rem;
     height: 1.35rem;
+  }
+  .size-\[1\.55rem\] {
+    width: 1.55rem;
+    height: 1.55rem;
+  }
+  .size-\[2\.125rem\] {
+    width: 2.125rem;
+    height: 2.125rem;
   }
   .size-\[38px\] {
     width: 38px;
@@ -2550,9 +2555,6 @@
   }
   .text-card-foreground {
     color: var(--card-foreground);
-  }
-  .text-current {
-    color: currentcolor;
   }
   .text-cyan-100 {
     color: var(--color-cyan-100);
@@ -7174,10 +7176,13 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   opacity: 0.72;
 }
 .map-gem-diamond-marker__svg {
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
 }
-.imp-marker-glyph,
+.imp-marker-glyph {
+  display: inline-block;
+  vertical-align: middle;
+}
 .map-gem-imp-marker__glyph {
   display: block;
   background-color: currentColor;
@@ -7189,18 +7194,16 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
-}
-.map-gem-imp-marker__glyph {
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
 }
 .map-gem-diamond-marker--admin .map-gem-imp-marker__glyph {
-  width: 18px;
-  height: 18px;
+  width: 26px;
+  height: 26px;
 }
 .map-gem-diamond-marker--compact .map-gem-imp-marker__glyph {
-  width: 13px;
-  height: 13px;
+  width: 17px;
+  height: 17px;
 }
 .map-gem-diamond-marker.is-calibrated {
   color: #6ee7b7;
@@ -8078,8 +8081,8 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 999px;
   background: #fff;
   color: #fbbf24;

@@ -26,6 +26,17 @@ import type { GemMonsterId } from "@/lib/gem-monsters";
 import { distanceMeters } from "@/lib/geo";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
+import {
+  GEM_ANCHOR_RESET_ALL_HE,
+  GEM_ANCHOR_RESET_ONE_HE,
+  GEM_ANCHOR_SET_GPS_HE,
+  GEM_ANCHOR_TITLE_AUTO_HE,
+  GEM_ANCHOR_TITLE_CALIBRATED_HE,
+  GEM_ANCHOR_UPDATE_PUBLIC_HE,
+  GEM_PANEL_NEAR_GPS_HE,
+  gemPanelApproachHe,
+  gemPanelOpenCameraHe,
+} from "@/lib/gem-hunt-copy";
 
 export type GemHuntOpenPrepare = () => Promise<UserLocation | null | void>;
 import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
@@ -167,11 +178,11 @@ export function GemHuntPanel({
             {canCollect
               ? "בטווח — אפשר למצוא"
               : proximity === "far" && distanceM != null && distanceM <= huntBandM + 10
-                ? "ליד היהלום — המתינו רגע ל-GPS"
+                ? GEM_PANEL_NEAR_GPS_HE
                 : proximity === "far"
-                  ? `התקרבו ל־${huntBandM} מ׳ ליהלום על המדרכה`
+                  ? gemPanelApproachHe(huntBandM)
                   : distanceM != null
-                    ? `~${Math.round(distanceM)} מ׳ ליהלום — פתחו מצלמה`
+                    ? gemPanelOpenCameraHe(Math.round(distanceM))
                     : "פתחו מצלמה לתצוגה"}
           </p>
         ) : null}
@@ -190,7 +201,7 @@ export function GemHuntPanel({
               onClick={() => setGemAnchorOverride(house.id, userLocation)}
             >
               <MapPin className="size-3.5" aria-hidden />
-              עדכון מיקום יהלום (ליד הבית)
+              {GEM_ANCHOR_UPDATE_PUBLIC_HE}
             </Button>
           </div>
         ) : null}
@@ -203,7 +214,7 @@ export function GemHuntPanel({
               className="gem-hunt-panel__override-reset"
               onClick={() => clearGemAnchorOverride(house.id)}
             >
-              איפוס מיקום יהלום
+              {GEM_ANCHOR_RESET_ONE_HE}
             </button>
           </p>
         ) : null}
@@ -220,7 +231,7 @@ export function GemHuntPanel({
             </label>
             <div className="gem-hunt-panel__calibrate">
               <p className="gem-hunt-panel__calibrate-title">
-                {anchorCalibrated ? "מיקום יהלום: מותאם בטלפון" : "מיקום יהלום: אוטומטי ליד הבית"}
+                {anchorCalibrated ? GEM_ANCHOR_TITLE_CALIBRATED_HE : GEM_ANCHOR_TITLE_AUTO_HE}
               </p>
               <p className="gem-hunt-panel__calibrate-hint">
                 הלכו physically למקום הרצוי (לובי, חצר, ליד הדלת), עמדו שם, ואז:
@@ -234,7 +245,7 @@ export function GemHuntPanel({
                 onClick={() => userLocation && setGemAnchorOverride(house.id, userLocation)}
               >
                 <MapPin className="size-3.5" aria-hidden />
-                קבע מיקום יהלום כאן (GPS)
+                {GEM_ANCHOR_SET_GPS_HE}
               </Button>
               {anchorCalibrated ? (
                 <Button
@@ -260,7 +271,7 @@ export function GemHuntPanel({
                   className="w-full text-rose-300/95"
                   onClick={() => clearAllGemAnchorOverrides()}
                 >
-                  איפוס כל מיקומי היהלום בטלפון ({calibratedCount})
+                  {GEM_ANCHOR_RESET_ALL_HE(calibratedCount)}
                 </Button>
               ) : null}
             </div>

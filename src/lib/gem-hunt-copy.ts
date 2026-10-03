@@ -25,3 +25,33 @@ export const GEM_FAB_FOUND_COUNT_ARIA_HE = (n: number) => `${n} שדונים`;
 export const GEM_HOUSE_KICKER_HE = "שדון נסתר · גלו במצלמה";
 export const GEM_ACTION_FIND_HE = "מצא שדון";
 export const GEM_MAP_COMPLETE_TITLE_HE = "כל השדונים נמצאו!";
+
+export const GEM_COLLECT_NEW_HE = "כל הכבוד!! מצאתם שדון חדש!";
+export const GEM_ALBUM_SLOTS_HE = "שדונים באלבום";
+export const GEM_ALBUM_ALL_HE = "כל השדונים";
+
+export const GEM_WALK_STRAIGHT_HE = "המשיכו ישר — השדון מולכם";
+export const GEM_WALK_BEHIND_HE = "השדון מאחוריכם — סובבו את הגוף";
+export const GEM_WALK_TURN_RIGHT_HE = "סובבו ימינה לכיוון השדון";
+export const GEM_WALK_TURN_LEFT_HE = "סובבו שמאלה לכיוון השדון";
+export const GEM_WALK_APPROACH_HE = "התקרבו לנקודת השדון";
+export const GEM_WALK_MAPS_ARIA_HE = "הנחיות הליכה לשדון";
+export const GEM_WALK_MAPS_LINK_HE = "הליכה ב-Google Maps לשדון";
+
+export const GEM_PANEL_NEAR_GPS_HE = "ליד השדון — המתינו רגע ל-GPS";
+export const gemPanelApproachHe = (m: number) => `התקרבו ל־${m} מ׳ לשדון על המדרכה`;
+export const gemPanelOpenCameraHe = (m: number) => `~${m} מ׳ לשדון — פתחו מצלמה`;
+
+export const GEM_TELL_ME_RANGE_HE = "יש להתקרב לשדון כדי להשתמש ב«גלה לי»";
+export const GEM_AR_LOCATING_HE = "מאתרים את השדון על המדרכה (אותה נקודה כמו במפה)…";
+export const GEM_BEARING_ARIA_HE = (label: string, distance?: string) =>
+  `כיוון השדון: ${label}${distance ?? ""}`;
+
+export const GEM_ORBIT_PICK_HOUSE_HE = "בחרו בית מהרשימה כדי לסובב את השדון";
+
+export const GEM_ANCHOR_UPDATE_PUBLIC_HE = "עדכון מיקום שדון (ליד הבית)";
+export const GEM_ANCHOR_RESET_ONE_HE = "איפוס מיקום שדון";
+export const GEM_ANCHOR_TITLE_CALIBRATED_HE = "מיקום שדון: מותאם בטלפון";
+export const GEM_ANCHOR_TITLE_AUTO_HE = "מיקום שדון: אוטומטי ליד הבית";
+export const GEM_ANCHOR_SET_GPS_HE = "קבע מיקום שדון כאן (GPS)";
+export const GEM_ANCHOR_RESET_ALL_HE = (n: number) => `איפוס כל מיקומי השדון בטלפון (${n})`;

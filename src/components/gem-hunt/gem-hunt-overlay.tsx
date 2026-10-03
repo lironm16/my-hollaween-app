@@ -60,6 +60,11 @@ import {
 } from "@/lib/gem-encounter";
 import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
+import {
+  GEM_COLLECT_NEW_HE,
+  GEM_WALK_MAPS_ARIA_HE,
+  GEM_WALK_MAPS_LINK_HE,
+} from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
@@ -529,7 +534,7 @@ export function GemHuntOverlay({
   const collectBanner =
     phase === "collecting"
       ? albumRevealNewFriend
-        ? "כל הכבוד!! מצאתם חבר חדש!"
+        ? GEM_COLLECT_NEW_HE
         : `מצאתם שוב את ${gemLabelHe(monsterId)}`
       : null;
 
@@ -897,7 +902,7 @@ export function GemHuntOverlay({
                 <div
                   className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
                   role="region"
-                  aria-label="הנחיות הליכה ליהלום"
+                  aria-label={GEM_WALK_MAPS_ARIA_HE}
                 >
                   <p className="gem-hunt-overlay__walk-text">
                     {walkGuideCopy}
@@ -910,7 +915,7 @@ export function GemHuntOverlay({
                       rel="noopener noreferrer"
                       className="gem-hunt-overlay__walk-maps"
                     >
-                      הליכה ב-Google Maps ליהלום
+                      {GEM_WALK_MAPS_LINK_HE}
                     </a>
                   ) : null}
                 </div>

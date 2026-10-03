@@ -162,7 +162,7 @@ const GEM_LEGEND_GROUP = {
 } as const;
 
 export function MapLegend({ showGemLegend = false }: { showGemLegend?: boolean }) {
-  const groups = showGemLegend ? [GEM_LEGEND_GROUP, ...BASE_GROUPS] : BASE_GROUPS;
+  const groups = showGemLegend ? [...BASE_GROUPS, GEM_LEGEND_GROUP] : BASE_GROUPS;
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const titleId = useId();

@@ -42,7 +42,7 @@ export function GemTrafficIcon({
       title="שדון"
       aria-label="שדון"
     >
-      <ImpMarkerGlyph className={cn("size-5", markClassName)} style={{ color: GEM_DIAMOND_FILL }} />
+      <ImpMarkerGlyph className={cn("size-6", markClassName)} style={{ color: GEM_DIAMOND_FILL }} />
     </span>
   );
 }

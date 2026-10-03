@@ -136,7 +136,7 @@ export function NeighborhoodToolbar({
                 : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
             )}
           >
-            <GemDiamondIcon active={gemMapVisible} filled={false} />
+            <GemDiamondIcon active={gemMapVisible} filled={false} className="size-[2.125rem]" />
           </button>
         ) : null}
         {adminCharacterMapToggleEnabled && onToggleAdminCharacterMap ? (

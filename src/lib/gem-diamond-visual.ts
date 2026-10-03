@@ -5,6 +5,8 @@ export const GEM_DIAMOND_COLLECTED_FILL = "#a78bfa";
 
 /** Black-on-transparent mask — tinted with CSS `background-color` + mask. */
 export const IMP_MARKER_MASK_URL = "/icons/imp-marker.png";
+/** Eye slits only — toolbar / inactive controls (outline-like). */
+export const IMP_MARKER_EYES_MASK_URL = "/icons/imp-marker-eyes.png";
 
 /** @deprecated Map markers use {@link IMP_MARKER_MASK_URL} mask glyph. */
 export function gemDiamondSvgPath() {
