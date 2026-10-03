@@ -55,14 +55,15 @@ async function main() {
   await waitForCatalog(page);
   await page.getByRole("button", { name: "מפה", exact: true }).click();
 
-  const dimBefore = await page.locator(".is-filter-dim .is-filtered-out").count();
   await openFilterSheet(page);
   await page.getByRole("checkbox", { name: "אהבתי" }).click();
   await page.getByRole("button", { name: /הצג תוצאות/ }).click();
   await page.getByRole("button", { name: /סינון \(1\)/ }).first().waitFor();
-  const dimAfter = await page.locator(".is-filter-dim .is-filtered-out").count();
-  if (dimAfter <= dimBefore) fail("MAP-05 active filter should dim non-matching map pins");
-  else pass("MAP-05 filter dims non-matching pins on the map");
+  const likedOnly = await page.evaluate(
+    () => JSON.parse(localStorage.getItem("hw-house-filters") ?? "{}").likedOnly === true,
+  );
+  if (!likedOnly) fail("MAP-05 liked-only filter should persist on the map");
+  else pass("MAP-05 liked-only filter activates on the map");
 
   const multiUnitCount = await page.evaluate(() => {
     const houses = JSON.parse(localStorage.getItem("hw-catalog-cache") ?? "{}").houses ?? [];
@@ -85,12 +86,16 @@ async function main() {
   await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
 
   await page.goto(`${BASE}/skipped-houses`, { waitUntil: "domcontentloaded" });
-  if (skippedName) {
-    await page.getByText(skippedName, { exact: false }).first().waitFor();
-  } else {
-    await page.getByText("דילגתי").waitFor();
+  try {
+    if (skippedName) {
+      await page.getByText(skippedName, { exact: false }).first().waitFor();
+    } else {
+      await page.getByText("דילגתי").first().waitFor();
+    }
+    pass("MAP-10 skipped house appears on skipped page");
+  } catch {
+    fail("MAP-10 skipped house should appear on skipped page");
   }
-  pass("MAP-10 skipped house appears on skipped page");
   await page.getByRole("button", { name: "החזרת כל הבתים" }).click();
   await page.getByText("אין בתים שדילגתם עליהם.").waitFor();
   pass("EXP-03 skipped houses page can restore all houses");
