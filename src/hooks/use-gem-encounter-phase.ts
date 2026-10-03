@@ -47,10 +47,10 @@ export function useGemEncounterPhase({
 
   useEffect(() => {
     if (!enabled) return;
+    setPhase("approach");
     approachEnteredRef.current = Date.now();
     breakoutUsedRef.current = 0;
     clearTimer();
-    queueMicrotask(() => setPhase("approach"));
     return clearTimer;
   }, [enabled, clearTimer]);
 

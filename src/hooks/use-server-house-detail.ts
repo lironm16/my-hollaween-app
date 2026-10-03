@@ -13,20 +13,21 @@ export function useServerHouseDetail(house: PublicHouse | null) {
   const [resolved, setResolved] = useState<PublicHouse | null>(house);
   const [loading, setLoading] = useState(false);
   const [unavailable, setUnavailable] = useState(false);
-  const [trackedHouse, setTrackedHouse] = useState(house);
-
-  if (house !== trackedHouse) {
-    setTrackedHouse(house);
-    setResolved(house);
-    setUnavailable(false);
-    setLoading(Boolean(house && isDeviceCachePinHouse(house)));
-  }
 
   useEffect(() => {
-    if (!house) return;
-    if (!isDeviceCachePinHouse(house)) return;
+    setResolved(house);
+    setUnavailable(false);
+    if (!house) {
+      setLoading(false);
+      return;
+    }
+    if (!isDeviceCachePinHouse(house)) {
+      setLoading(false);
+      return;
+    }
 
     let cancelled = false;
+    setLoading(true);
     void (async () => {
       const result = await fetchPublicHouse(house.id);
       if (cancelled) return;
@@ -53,7 +54,7 @@ export function useServerHouseDetail(house: PublicHouse | null) {
     return () => {
       cancelled = true;
     };
-  }, [house]);
+  }, [house?.id, house?.updatedAt, house?.deviceCachePin]);
 
   const active = resolved ?? house;
   return {

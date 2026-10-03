@@ -98,14 +98,8 @@ export function useRouteStatusAlerts({
   ]);
 
   useEffect(() => {
-    if (!routeMode || !activeRoute) {
-      snapshotRef.current = new Map();
-      snapshotReadyRef.current = false;
-      pendingBackgroundRef.current = false;
-      return;
-    }
-    queueMicrotask(() => runDiff());
-  }, [runDiff, catalogUpdatedAt, routeMode, activeRoute]);
+    runDiff();
+  }, [runDiff, catalogUpdatedAt]);
 
   useEffect(() => {
     if (!routeMode) return;
@@ -151,10 +145,10 @@ export function useRouteStatusAlerts({
   }
 
   return {
-    changes: routeMode ? changes : [],
-    sheetOpen: routeMode && sheetOpen,
+    changes,
+    sheetOpen,
     bannerDismissed,
-    fromBackground: routeMode && fromBackground,
+    fromBackground,
     openSheet,
     dismissBanner,
     closeSheet,

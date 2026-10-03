@@ -1,6 +1,11 @@
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
+import {
+  firstRealHouseId,
+  openHouseByFocus,
+  waitForCatalog,
+} from "./lib/e2e-helpers.mjs";
 
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:43127";
 const OUT = process.env.E2E_ARTIFACTS_DIR ?? join(process.cwd(), "artifacts", "e2e");
@@ -21,19 +26,6 @@ async function launchBrowser() {
   return chromium.launch({
     ...(IS_CI ? {} : { channel: "chrome" }),
     args: ["--no-sandbox", "--disable-dev-shm-usage"],
-  });
-}
-
-async function waitForCatalog(page) {
-  await page.getByText(/בתים/).first().waitFor();
-  await page.waitForFunction(() => {
-    try {
-      const raw = localStorage.getItem("hw-catalog-cache");
-      const catalog = raw ? JSON.parse(raw) : null;
-      return Array.isArray(catalog?.houses) && catalog.houses.length > 0;
-    } catch {
-      return false;
-    }
   });
 }
 
@@ -86,16 +78,15 @@ async function main() {
   await page.getByRole("button", { name: "מפה", pressed: true }).waitFor();
   pass("MAP-04 toggles between list and map views");
 
-  await page.goto(`${BASE}/?focus=${encodeURIComponent(firstHouse.id)}&rehearsal=open`, {
-    waitUntil: "domcontentloaded",
-  });
-  await waitForCatalog(page);
-  const detail = page.getByRole("dialog");
+  const focusId =
+    (await firstRealHouseId(page)) ?? firstHouse.id;
+  let detail;
   try {
-    await detail.getByRole("button", { name: "פעולות" }).waitFor({ timeout: 5_000 });
+    detail = await openHouseByFocus(page, BASE, focusId);
     pass("MAP-02 focus selection opens house detail overlay");
   } catch {
     fail("MAP-02 house selection should open a house card with actions");
+    return;
   }
 
   const likedBefore = await readStorageIds(page, "hw-liked-houses");

@@ -29,9 +29,7 @@ export function useAdminSession() {
   }, []);
 
   useEffect(() => {
-    queueMicrotask(() => {
-      void refresh();
-    });
+    void refresh();
     const onChange = () => {
       void refresh();
     };

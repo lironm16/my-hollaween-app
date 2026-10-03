@@ -25,7 +25,7 @@ export function useDistanceOrigin(gps: { lat: number; lng: number } | null | und
   useEffect(() => {
     if (choice.kind !== "gps" || !gps) return;
     touchGpsOriginCache(gps.lat, gps.lng);
-  }, [choice.kind, gps]);
+  }, [choice.kind, gps?.lat, gps?.lng]);
 
   return { choice, resolved, setChoice };
 }

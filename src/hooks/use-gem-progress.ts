@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   collectGem,
   GEM_CHANGED_EVENT,
@@ -11,21 +11,24 @@ import {
   type GemCollectionEntry,
 } from "@/lib/gem-progress";
 
-function subscribe(onStoreChange: () => void) {
-  window.addEventListener("storage", onStoreChange);
-  window.addEventListener(GEM_CHANGED_EVENT, onStoreChange);
-  return () => {
-    window.removeEventListener("storage", onStoreChange);
-    window.removeEventListener(GEM_CHANGED_EVENT, onStoreChange);
-  };
-}
-
 export function useGemProgress() {
-  const entries = useSyncExternalStore(
-    subscribe,
-    loadGemCollected,
-    () => [] as GemCollectionEntry[],
+  const [entries, setEntries] = useState<GemCollectionEntry[]>(() =>
+    typeof window === "undefined" ? [] : loadGemCollected(),
   );
+
+  const read = useCallback(() => {
+    setEntries(loadGemCollected());
+  }, []);
+
+  useEffect(() => {
+    queueMicrotask(() => read());
+    window.addEventListener("storage", read);
+    window.addEventListener(GEM_CHANGED_EVENT, read);
+    return () => {
+      window.removeEventListener("storage", read);
+      window.removeEventListener(GEM_CHANGED_EVENT, read);
+    };
+  }, [read]);
 
   const collectedIds = useMemo(
     () => entries.map((e) => e.houseId),
@@ -38,14 +41,17 @@ export function useGemProgress() {
     collected: (id: string) => entries.some((e) => e.houseId === id),
     collect: (houseId: string, gemType: string) => {
       if (isGemCollected(houseId)) return loadGemCollectedIds();
-      collectGem({ houseId, gemType });
-      return loadGemCollectedIds();
+      const next = collectGem({ houseId, gemType });
+      setEntries(next);
+      return next.map((e) => e.houseId);
     },
     resetHouse: (houseId: string) => {
-      resetGemProgress({ houseId });
+      const next = resetGemProgress({ houseId });
+      setEntries(next);
     },
     resetAll: () => {
-      resetGemProgress();
+      const next = resetGemProgress();
+      setEntries(next);
     },
   };
 }

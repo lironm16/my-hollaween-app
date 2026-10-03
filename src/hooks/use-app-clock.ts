@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAppClockContext } from "@/components/app-clock-provider";
 import {
   CLOCK_EVENT,
@@ -37,32 +37,41 @@ export function useAppNow() {
   return dateFromSnapshot(localStamp || clockSnapshot());
 }
 
-function subscribeClock(onStoreChange: () => void) {
-  window.addEventListener(CLOCK_EVENT, onStoreChange);
-  return () => window.removeEventListener(CLOCK_EVENT, onStoreChange);
-}
-
-function subscribeServerSim(onStoreChange: () => void) {
-  window.addEventListener(SERVER_SIM_EVENT, onStoreChange);
-  window.addEventListener("storage", onStoreChange);
-  return () => {
-    window.removeEventListener(SERVER_SIM_EVENT, onStoreChange);
-    window.removeEventListener("storage", onStoreChange);
-  };
-}
-
 export function useRehearsalScene() {
-  const scene = useSyncExternalStore(subscribeClock, readRehearsalScene, (): RehearsalScene => "off");
+  const [scene, setSceneState] = useState<RehearsalScene>("off");
+  const [, bump] = useState(0);
+  useEffect(() => {
+    const onChange = () => {
+      setSceneState(readRehearsalScene());
+      bump((n) => n + 1);
+    };
+    onChange();
+    window.addEventListener(CLOCK_EVENT, onChange);
+    return () => window.removeEventListener(CLOCK_EVENT, onChange);
+  }, []);
   const setScene = useCallback((next: RehearsalScene) => {
     writeRehearsalScene(next);
+    setSceneState(next);
+    bump((n) => n + 1);
   }, []);
   return { scene, setScene };
 }
 
 export function useServerSim() {
-  const down = useSyncExternalStore(subscribeServerSim, readServerSimDown, () => false);
+  const [down, setDownState] = useState(false);
+  useEffect(() => {
+    setDownState(readServerSimDown());
+    const onChange = () => setDownState(readServerSimDown());
+    window.addEventListener(SERVER_SIM_EVENT, onChange);
+    window.addEventListener("storage", onChange);
+    return () => {
+      window.removeEventListener(SERVER_SIM_EVENT, onChange);
+      window.removeEventListener("storage", onChange);
+    };
+  }, []);
   const setDown = useCallback((next: boolean) => {
     writeServerSimDown(next);
+    setDownState(next);
   }, []);
   return { down, setDown };
 }

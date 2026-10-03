@@ -90,11 +90,14 @@ export function useDeviceHeading(active: boolean, retryToken = 0) {
       lastUiRef.current = 0;
       lastValueRef.current = null;
       lastPitchRef.current = null;
+      setHeading(null);
+      setPitch(null);
+      setStatus("idle");
       return;
     }
 
     if (typeof window === "undefined" || !("DeviceOrientationEvent" in window)) {
-      queueMicrotask(() => setStatus("unsupported"));
+      setStatus("unsupported");
       return;
     }
 
@@ -103,20 +106,16 @@ export function useDeviceHeading(active: boolean, retryToken = 0) {
     };
     const needsPrompt = typeof ctor.requestPermission === "function";
     if (needsPrompt && !isGemHuntOrientationGranted()) {
-      queueMicrotask(() => setStatus("denied"));
+      setStatus("denied");
       return;
     }
 
-    queueMicrotask(() => setStatus("pending"));
+    setStatus("pending");
     window.addEventListener("deviceorientation", onOrientation, true);
     return () => {
       window.removeEventListener("deviceorientation", onOrientation, true);
     };
   }, [active, onOrientation, retryToken]);
 
-  return {
-    heading: active ? heading : null,
-    pitch: active ? pitch : null,
-    status: active ? status : "idle",
-  };
+  return { heading, pitch, status };
 }
