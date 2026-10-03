@@ -156,6 +156,8 @@ export type NightPatch = {
 export type PublicHouse = Omit<House, "editCode" | "storeId" | "ownerPhone"> & {
   /** True when hydrated from on-device cache — detail text/address must be fetched live. */
   deviceCachePin?: boolean;
+  /** Rehearsal stub row in device cache after description/photo were stripped. */
+  deviceCacheStub?: boolean;
 };
 
 /** Admin / owner edit surfaces may attach internal contact fields. */

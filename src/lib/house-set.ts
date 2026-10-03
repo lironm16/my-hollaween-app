@@ -1,4 +1,5 @@
 import { isE2eTestHouse } from "@/lib/e2e-houses";
+import { isKnownRehearsalStubId } from "@/lib/rehearsal-stub-ids";
 
 export const HOUSE_SET_KEY = "hw-house-set";
 export const HOUSE_SET_EVENT = "hw-house-set";
@@ -26,7 +27,10 @@ export function isStubHouse(house: {
   description?: string;
   address?: string;
   photoUrl?: string;
+  deviceCacheStub?: boolean;
 }) {
+  if (house.deviceCacheStub) return true;
+  if (isKnownRehearsalStubId(house.id)) return true;
   if (house.id && STUB_ID.test(house.id)) return true;
   if (isE2eTestHouse(house)) return true;
   if (house.photoUrl?.includes("/images/stubs/")) return true;
