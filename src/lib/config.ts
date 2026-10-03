@@ -19,10 +19,28 @@ const tiles = {
 export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים", "הגפן"] as const;
 export type NeighborhoodId = (typeof NEIGHBORHOODS)[number];
 
-/** Filter chip for houses outside the four event neighborhoods (stats אחר). */
+/** Filter chip / form option for houses outside the four event neighborhoods (stats אחר). */
 export const NEIGHBORHOOD_FILTER_OTHER = "אחר" as const;
 export const NEIGHBORHOOD_FILTER_OPTIONS = [...NEIGHBORHOODS, NEIGHBORHOOD_FILTER_OTHER] as const;
 export type NeighborhoodFilterId = (typeof NEIGHBORHOOD_FILTER_OPTIONS)[number];
+
+/** Picker value on add/edit — stored as {@link NeighborhoodId} or `null` for אחר. */
+export type HouseNeighborhoodChoice = NeighborhoodFilterId;
+
+export function houseNeighborhoodChoiceToStored(
+  choice: HouseNeighborhoodChoice,
+): NeighborhoodId | null {
+  return choice === NEIGHBORHOOD_FILTER_OTHER ? null : choice;
+}
+
+export function storedToHouseNeighborhoodChoice(
+  stored: NeighborhoodId | null | undefined,
+): HouseNeighborhoodChoice | undefined {
+  if (stored === undefined) return undefined;
+  if (stored === null) return NEIGHBORHOOD_FILTER_OTHER;
+  const normalized = normalizeNeighborhoodId(stored);
+  return normalized ?? NEIGHBORHOOD_FILTER_OTHER;
+}
 
 const LEGACY_NEIGHBORHOOD_ALIASES: Record<string, NeighborhoodId> = {
   "שכונת הגפן": "הגפן",
@@ -247,46 +265,19 @@ export function allowedNeighborhoodsMessage() {
   return `בחרו בית ב${NEIGHBORHOODS.slice(0, -1).join(", ")} או ${NEIGHBORHOODS[NEIGHBORHOODS.length - 1]}.`;
 }
 
+/** Display / filters / stats — uses stored hood only (legacy suffix in address if unset). */
 export function resolveNeighborhood(house: {
   address?: string;
   neighborhood?: NeighborhoodId | null;
   lat?: number;
   lng?: number;
 }): NeighborhoodId | null {
-  const lat = house.lat;
-  const lng = house.lng;
-  const hasCoords =
-    typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng);
-
-  if (hasCoords) {
-    const zoned = neighborhoodAtEventLocation(lat, lng);
-    if (zoned) return zoned;
+  if (house.neighborhood !== undefined) {
+    if (house.neighborhood === null) return null;
+    return normalizeNeighborhoodId(house.neighborhood) ?? null;
   }
-
-  const stored = house.neighborhood;
-  if (stored !== undefined && stored !== null) {
-    const normalized = normalizeNeighborhoodId(stored) ?? null;
-    if (hasCoords) {
-      const falseGefen =
-        normalized === "הגפן" &&
-        !inNeighborhoodZone(lat, lng, NEIGHBORHOOD_ZONES["הגפן"]);
-      if (falseGefen) {
-        return neighborhoodInferredFromPin(lat, lng);
-      }
-      if (isOutsideEventNeighborhoods(lat, lng)) {
-        return null;
-      }
-    }
-    return normalized;
-  }
-
   if (house.address) {
-    const fromText = neighborhoodFromAddress(house.address);
-    if (fromText) return fromText;
-  }
-
-  if (hasCoords) {
-    return neighborhoodInferredFromPin(lat, lng);
+    return neighborhoodFromAddress(house.address);
   }
   return null;
 }
