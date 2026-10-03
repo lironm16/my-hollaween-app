@@ -225,12 +225,12 @@ function UncollectedGemSign({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#1d1028] ring-1 ring-orange-500/30",
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/20 ring-1 ring-amber-400/45",
         className,
       )}
       aria-hidden
     >
-      <ImpMarkerGlyph variant="solid" className="size-[88%] text-orange-100" />
+      <ImpMarkerGlyph variant="solid" className="size-[88%] text-[#fbbf24]" />
     </span>
   );
 }

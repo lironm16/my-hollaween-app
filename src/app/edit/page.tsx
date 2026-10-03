@@ -23,6 +23,7 @@ import { Plus } from "lucide-react";
 import { PersistNote } from "@/components/persist-note";
 import { readApiJson } from "@/lib/api-json";
 import { cn } from "@/lib/utils";
+import { useAddHouseOpen } from "@/hooks/use-add-house-open";
 
 export default function EditPage() {
   return (
@@ -55,6 +56,7 @@ function EditPageContent() {
   const [busy, setBusy] = useState(false);
   const [, setPrefilled] = useState(false);
   const editFlow = useHouseEditFlow();
+  const addHouseOpen = useAddHouseOpen();
   const pickedIdRef = useRef<string | null>(null);
   const autoOpenedIdRef = useRef<string | null>(null);
   pickedIdRef.current = picked?.id ?? null;
@@ -228,17 +230,21 @@ function EditPageContent() {
             />
           </div>
           <div className="flex flex-wrap items-center gap-2 border-t border-orange-500/15 pt-3">
-            <Link
-              href="/add"
-              className={cn(
-                buttonVariants({ size: "sm", variant: "outline" }),
-                "inline-flex items-center gap-1.5 border-orange-400/40 text-orange-100",
-              )}
-            >
-              <Plus className="size-4" />
-              הוספת בית חדש
-            </Link>
-            <span className="text-base text-violet-400">או חפשו בית קיים למעלה</span>
+            {addHouseOpen ? (
+              <Link
+                href="/add"
+                className={cn(
+                  buttonVariants({ size: "sm", variant: "outline" }),
+                  "inline-flex items-center gap-1.5 border-orange-400/40 text-orange-100",
+                )}
+              >
+                <Plus className="size-4" />
+                הוספת בית חדש
+              </Link>
+            ) : null}
+            <span className="text-base text-violet-400">
+              {addHouseOpen ? "או חפשו בית קיים למעלה" : "חפשו בית קיים למעלה"}
+            </span>
           </div>
           {needsCode ? (
             <div className="space-y-1.5 border-t border-orange-500/15 pt-3">

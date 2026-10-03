@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { HousePlus } from "lucide-react";
-import { toast } from "sonner";
-import { ADD_HOUSE_CLOSED_HE } from "@/lib/add-house-copy";
 import { useAddHouseOpen } from "@/hooks/use-add-house-open";
 
 const fabClass =
@@ -12,23 +10,11 @@ const fabClass =
 export function MapAddHouseFab() {
   const addOpen = useAddHouseOpen();
 
-  if (addOpen) {
-    return (
-      <Link href="/add" className={fabClass} aria-label="הוספת בית" title="הוספת בית">
-        <HousePlus className="size-8" strokeWidth={2.25} aria-hidden />
-      </Link>
-    );
-  }
+  if (!addOpen) return null;
 
   return (
-    <button
-      type="button"
-      className={`${fabClass} opacity-80`}
-      aria-label="הוספת בית — לא זמין"
-      title={ADD_HOUSE_CLOSED_HE}
-      onClick={() => toast.message(ADD_HOUSE_CLOSED_HE)}
-    >
+    <Link href="/add" className={fabClass} aria-label="הוספת בית" title="הוספת בית">
       <HousePlus className="size-8" strokeWidth={2.25} aria-hidden />
-    </button>
+    </Link>
   );
 }
