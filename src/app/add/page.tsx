@@ -24,6 +24,7 @@ import { ADD_HOUSE_CLOSED_HE } from "@/lib/add-house-copy";
 
 export default function AddPage() {
   const router = useRouter();
+  const { admin } = useAdminSession();
   const editFlow = useHouseEditFlow();
   const addHouseOpen = useAddHouseOpen();
   const canAdd = addHouseOpen;
