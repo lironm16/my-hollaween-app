@@ -59,11 +59,8 @@ export async function openHouseByFocus(page, baseUrl, houseId) {
     try {
       await page.goto(url, { waitUntil: "domcontentloaded" });
       await waitForCatalog(page);
-      const dialog = page.getByRole("dialog");
-      await dialog.waitFor();
-      await dialog
-        .locator(".map-house-sheet.is-open, .map-house-sheet.is-raised")
-        .waitFor({ timeout: 15_000 });
+      const dialog = page.locator(".map-house-sheet[role='dialog']");
+      await dialog.waitFor({ timeout: 15_000 });
       await dialog.getByRole("button", { name: "פעולות" }).waitFor({ timeout: 15_000 });
       return dialog;
     } catch (error) {

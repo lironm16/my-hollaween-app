@@ -86,7 +86,11 @@ async function main() {
     pass("MAP-02 focus selection opens house detail overlay");
   } catch {
     fail("MAP-02 house selection should open a house card with actions");
-    return;
+  }
+  if (failures) {
+    await context.close();
+    await browser.close();
+    process.exit(1);
   }
 
   const likedBefore = await readStorageIds(page, "hw-liked-houses");
