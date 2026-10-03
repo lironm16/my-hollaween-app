@@ -50,7 +50,7 @@ async function main() {
   const detail = await openHouseByFocus(page, BASE, likeHouseId);
   await detail.getByRole("button", { name: "פעולות" }).click();
   await page.getByRole("menuitem", { name: "אהבתי" }).click();
-  await page.getByText("שמרתם!").waitFor();
+  await page.getByText("אהבתם!").waitFor();
   await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
   await waitForCatalog(page);
   await page.getByRole("button", { name: "מפה", exact: true }).click();
@@ -137,7 +137,7 @@ async function main() {
   const routeHouseName = await routeDetail.locator(".sr-only").first().innerText().catch(() => "");
   await routeDetail.getByRole("button", { name: "פעולות" }).click();
   await page.getByRole("menuitem", { name: "אהבתי" }).click();
-  await page.getByText("שמרתם!").waitFor();
+  await page.getByText("אהבתם!").waitFor();
   await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
   await waitForCatalog(page);
   await openFilterSheet(page);

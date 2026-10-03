@@ -96,7 +96,7 @@ async function main() {
   const likedBefore = await readStorageIds(page, "hw-liked-houses");
   await detail.getByRole("button", { name: "פעולות" }).click();
   await page.getByRole("menuitem", { name: "אהבתי" }).click();
-  await page.getByText("שמרתם!").waitFor();
+  await page.getByText("אהבתם!").waitFor();
   const likedAfter = await readStorageIds(page, "hw-liked-houses");
   const newlyLiked = likedAfter.some((id) => !likedBefore.includes(id));
   if (!newlyLiked) fail("MAP-07 like should persist in localStorage");
