@@ -559,9 +559,6 @@ export function HouseForm({
           />
         </Field>
         <Field label="שכונה">
-          <p className="mb-2 text-base leading-snug text-violet-300">
-            בחרו את השכונה של הבית — לא נחשב אוטומטית מהמפה.
-          </p>
           <div className="flex flex-wrap gap-1.5" role="group" aria-label="שכונה">
             {NEIGHBORHOOD_FILTER_OPTIONS.map((choice) => {
               const selected = hoodChoice === choice;
