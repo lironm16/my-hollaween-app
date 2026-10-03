@@ -676,6 +676,9 @@
   .field-sizing-content {
     field-sizing: content;
   }
+  .aspect-square {
+    aspect-ratio: 1 / 1;
+  }
   .size-1\.5 {
     width: calc(var(--spacing) * 1.5);
     height: calc(var(--spacing) * 1.5);
@@ -747,10 +750,6 @@
   .size-\[1\.55rem\] {
     width: 1.55rem;
     height: 1.55rem;
-  }
-  .size-\[2\.125rem\] {
-    width: 2.125rem;
-    height: 2.125rem;
   }
   .size-\[38px\] {
     width: 38px;
@@ -2891,6 +2890,9 @@
   .opacity-80 {
     opacity: 80%;
   }
+  .opacity-85 {
+    opacity: 85%;
+  }
   .opacity-100 {
     opacity: 100%;
   }
@@ -4072,6 +4074,9 @@
     }
     .sm\:max-w-sm {
       max-width: var(--container-sm);
+    }
+    .sm\:grid-cols-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .sm\:grid-cols-3 {
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -7179,9 +7184,21 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .imp-marker-glyph {
   display: inline-block;
   vertical-align: middle;
+  background-color: currentColor;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
 }
 .map-gem-imp-marker__glyph {
   display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 32px;
+  max-height: 32px;
+  margin: auto;
   background-color: currentColor;
   mask-image: url(/icons/imp-marker.png);
   mask-size: contain;
@@ -7191,16 +7208,18 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
-  width: 28px;
-  height: 28px;
 }
 .map-gem-diamond-marker--admin .map-gem-imp-marker__glyph {
-  width: 26px;
-  height: 26px;
+  max-width: 30px;
+  max-height: 30px;
 }
 .map-gem-diamond-marker--compact .map-gem-imp-marker__glyph {
-  width: 17px;
-  height: 17px;
+  max-width: 22px;
+  max-height: 22px;
+}
+.map-gem-diamond-marker {
+  display: grid;
+  place-items: center;
 }
 .map-gem-diamond-marker.is-calibrated {
   color: #6ee7b7;

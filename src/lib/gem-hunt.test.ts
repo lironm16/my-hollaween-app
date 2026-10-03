@@ -198,19 +198,20 @@ describe("gem hunt gate", () => {
   it("fab and house treasure hide during add-house hours", async () => {
     const { gemHuntFabVisible } = await import("@/lib/gem-hunt-enabled");
     const huntEvening = new Date(2026, 9, 31, 18, 0, 0, 0);
-    const addHouseAfternoon = new Date(2026, 9, 31, 16, 30, 0, 0);
+    const beforeAddCutoff = new Date(2026, 9, 29, 12, 0, 0, 0);
     assert.equal(gemHuntFabVisible(true, huntEvening), true);
-    assert.equal(gemHuntFabVisible(true, addHouseAfternoon), false);
+    assert.equal(gemHuntFabVisible(true, beforeAddCutoff), false);
     assert.equal(gemHuntFabVisible(false, huntEvening), false);
   });
 
   it("map legend gems for admin QA and when map toggle is on", async () => {
     const { gemMapLegendVisible } = await import("@/lib/gem-hunt-enabled");
     const huntEvening = new Date(2026, 9, 31, 18, 0, 0, 0);
-    const afternoon = new Date(2026, 9, 31, 16, 30, 0, 0);
+    const beforeAddCutoff = new Date(2026, 9, 29, 12, 0, 0, 0);
+    const afterAddCutoff = new Date(2026, 9, 31, 16, 30, 0, 0);
     assert.equal(
       gemMapLegendVisible(true, {
-        now: afternoon,
+        now: beforeAddCutoff,
         previewAsUser: false,
         mapDiamondsVisible: false,
         mapAdminCharactersVisible: false,
@@ -219,7 +220,7 @@ describe("gem hunt gate", () => {
     );
     assert.equal(
       gemMapLegendVisible(true, {
-        now: afternoon,
+        now: beforeAddCutoff,
         previewAsUser: true,
         mapDiamondsVisible: true,
         mapAdminCharactersVisible: false,
@@ -228,12 +229,21 @@ describe("gem hunt gate", () => {
     );
     assert.equal(
       gemMapLegendVisible(true, {
-        now: afternoon,
+        now: beforeAddCutoff,
         previewAsUser: true,
         mapDiamondsVisible: false,
         mapAdminCharactersVisible: false,
       }),
       false,
+    );
+    assert.equal(
+      gemMapLegendVisible(true, {
+        now: afterAddCutoff,
+        previewAsUser: true,
+        mapDiamondsVisible: false,
+        mapAdminCharactersVisible: false,
+      }),
+      true,
     );
     assert.equal(
       gemMapLegendVisible(true, {

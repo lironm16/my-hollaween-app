@@ -28,7 +28,16 @@ describe("event settings", () => {
         updatedAt: "2026-10-01T00:00:00.000Z",
         addressReveal: { hour: 18, minute: 30 },
       }),
-      { addressReveal: { hour: 18, minute: 30 } },
+      {
+        addressReveal: { hour: 18, minute: 30 },
+        addHouseCutoff: {
+          year: config.addHouseCutoff.year,
+          month: config.addHouseCutoff.month,
+          day: config.addHouseCutoff.day,
+          hour: config.addHouseCutoff.hour,
+          minute: config.addHouseCutoff.minute,
+        },
+      },
     );
   });
 });

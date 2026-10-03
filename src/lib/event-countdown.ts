@@ -50,13 +50,13 @@ export function formatEventCountdownParts(totalMs: number): EventCountdownParts 
   return formatEventCountdownPartsFromDates(from, to);
 }
 
-/** Countdown target — event night at 17:00 (same as add-house cutoff). */
+/** Countdown target — same moment as the public add-house cutoff. */
 export function eventCountdownTarget(now = appNow()) {
   void now;
   return addHouseCutoffTime();
 }
 
-/** True until 17:00 on Oct 31 — then live house status takes over. */
+/** True until add-house cutoff — then live house status takes over. */
 export function shouldShowEventCountdown(now = appNow()) {
   return now.getTime() < eventCountdownTarget(now).getTime();
 }

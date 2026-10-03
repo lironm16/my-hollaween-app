@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Activity,
   Bell,
@@ -39,6 +40,8 @@ import { AdminGemUserPreviewToggle } from "@/components/admin-gem-user-preview-t
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
 import { readHelpInstallCaptureFromLocation } from "@/lib/help-install-capture";
+import { tryOpenAddHouse } from "@/lib/add-house-nav";
+import { useAddHouseOpen } from "@/hooks/use-add-house-open";
 import { cn } from "@/lib/utils";
 
 export function AppHeader({
@@ -47,7 +50,9 @@ export function AppHeader({
   /** Brand title and side-menu Home: return to the last map/list home screen. */
   onHomeTap?: () => void;
 }) {
+  const router = useRouter();
   const { admin, logout } = useAdminSession();
+  const addHouseOpen = useAddHouseOpen();
   const now = useAppNow();
   const { gemBagMenuVisible: showGemBag } = useGemHuntAdminUi(admin, now);
   const showAdminUserPreview = admin && gemHuntVisible(admin);
@@ -164,7 +169,15 @@ export function AppHeader({
                 <div className={APP_MENU_SUBLIST_CLASS}>
                   <Link
                     href="/add"
-                    onClick={closeMenu}
+                    onClick={(event) => {
+                      if (addHouseOpen) {
+                        closeMenu();
+                        return;
+                      }
+                      event.preventDefault();
+                      closeMenu();
+                      tryOpenAddHouse(false, () => router.push("/add"));
+                    }}
                     className={cn(
                       buttonVariants({ size: "lg" }),
                       "h-10 justify-start gap-2 text-base bg-orange-500 text-black hover:bg-orange-400",

@@ -148,6 +148,9 @@ export function cloneDb(db: DbFile): DbFile {
           ...(db.eventSettings.addressReveal
             ? { addressReveal: { ...db.eventSettings.addressReveal } }
             : {}),
+          ...(db.eventSettings.addHouseCutoff
+            ? { addHouseCutoff: { ...db.eventSettings.addHouseCutoff } }
+            : {}),
         }
       : undefined,
   };

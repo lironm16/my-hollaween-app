@@ -2362,9 +2362,21 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .imp-marker-glyph {
   display: inline-block;
   vertical-align: middle;
+  background-color: currentColor;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
 }
 .map-gem-imp-marker__glyph {
   display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 32px;
+  max-height: 32px;
+  margin: auto;
   background-color: currentColor;
   mask-image: url(/icons/imp-marker.png);
   mask-size: contain;
@@ -2375,17 +2387,17 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
-.map-gem-imp-marker__glyph {
-  width: 28px;
-  height: 28px;
-}
 .map-gem-diamond-marker--admin .map-gem-imp-marker__glyph {
-  width: 26px;
-  height: 26px;
+  max-width: 30px;
+  max-height: 30px;
 }
 .map-gem-diamond-marker--compact .map-gem-imp-marker__glyph {
-  width: 17px;
-  height: 17px;
+  max-width: 22px;
+  max-height: 22px;
+}
+.map-gem-diamond-marker {
+  display: grid;
+  place-items: center;
 }
 .map-gem-diamond-marker.is-calibrated {
   color: #6ee7b7;

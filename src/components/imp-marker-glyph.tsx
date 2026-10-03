@@ -9,6 +9,12 @@ function maskStyleFor(url: string) {
   return {
     maskImage: `url(${url})`,
     WebkitMaskImage: `url(${url})`,
+    maskSize: "contain",
+    WebkitMaskSize: "contain",
+    maskRepeat: "no-repeat",
+    WebkitMaskRepeat: "no-repeat",
+    maskPosition: "center",
+    WebkitMaskPosition: "center",
   } as const;
 }
 
@@ -20,13 +26,13 @@ export function ImpMarkerGlyph({
 }: {
   className?: string;
   style?: CSSProperties;
-  /** `eyes` = slits only (inactive toolbar); `solid` = full imp. */
+  /** `eyes` = slits only (small controls); `solid` = full imp. */
   variant?: "solid" | "eyes";
 }) {
   const url = variant === "eyes" ? IMP_MARKER_EYES_MASK_URL : IMP_MARKER_MASK_URL;
   return (
     <span
-      className={cn("imp-marker-glyph bg-current", className)}
+      className={cn("imp-marker-glyph shrink-0 bg-current", className)}
       style={{ ...maskStyleFor(url), ...style }}
       aria-hidden
     />

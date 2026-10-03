@@ -19,11 +19,15 @@ import type { HouseInput, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import type { HouseFormExtras } from "@/components/house-form";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { useAddHouseOpen } from "@/hooks/use-add-house-open";
+import { ADD_HOUSE_CLOSED_HE } from "@/lib/add-house-copy";
 
 export default function AddPage() {
   const router = useRouter();
   const editFlow = useHouseEditFlow();
   const { admin } = useAdminSession();
+  const addHouseOpen = useAddHouseOpen();
+  const canAdd = addHouseOpen || admin;
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{
     id: string;
@@ -140,6 +144,14 @@ export default function AddPage() {
                 לעריכה
               </Button>
             </div>
+          </div>
+        ) : !canAdd ? (
+          <div className="space-y-4 rounded-2xl bg-[#1d1028] p-5 ring-1 ring-orange-500/25">
+            <h1 className="font-display text-3xl text-orange-300">הוספת בית אימה</h1>
+            <p className="text-lg leading-relaxed text-violet-100">{ADD_HOUSE_CLOSED_HE}</p>
+            <Link href="/" className={cn(buttonVariants({ variant: "outline" }), "w-full")}>
+              חזרה למפה
+            </Link>
           </div>
         ) : (
           <>

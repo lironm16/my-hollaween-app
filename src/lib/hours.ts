@@ -1,6 +1,11 @@
 import { appNow } from "@/lib/app-clock";
 import { config } from "@/lib/config";
-import type { VisitState } from "@/lib/types";
+import {
+  addHouseCutoffDate,
+  addHouseCutoffScheduleFromDb,
+  defaultAddHouseCutoffSchedule,
+} from "@/lib/event-settings";
+import type { AddHouseCutoffSchedule, VisitState } from "@/lib/types";
 import { effectiveVisit, isFrozen } from "@/lib/house-state";
 
 export type HoursWindow = { from: string; to: string };
@@ -271,14 +276,28 @@ export function eventNightDateLabel() {
   return eventNightParts().labelHe;
 }
 
-/** When new houses can no longer be added — event night at 17:00. */
-export function addHouseCutoffTime() {
-  const { year, month, day } = config.eventNight;
-  return new Date(year, month - 1, day, 17, 0, 0, 0);
+/** When new houses can no longer be added (default: 30 Oct 23:59 local). */
+export function addHouseCutoffTime(cutoff?: AddHouseCutoffSchedule) {
+  return addHouseCutoffDate(cutoff ?? defaultAddHouseCutoffSchedule());
 }
 
-export function isAddHouseOpen(now = appNow()) {
-  return now.getTime() < addHouseCutoffTime().getTime();
+export function isAddHouseOpen(
+  now = appNow(),
+  opts?: { cutoff?: AddHouseCutoffSchedule; isAdmin?: boolean },
+) {
+  if (opts?.isAdmin) return true;
+  const cutoff = opts?.cutoff ?? defaultAddHouseCutoffSchedule();
+  return now.getTime() < addHouseCutoffDate(cutoff).getTime();
+}
+
+/** Server/catalog-aware cutoff (ignores admin — pass isAdmin separately). */
+export function isAddHouseOpenForCatalog(
+  now = appNow(),
+  eventSettings?: { addHouseCutoff?: AddHouseCutoffSchedule } | null,
+  isAdmin = false,
+) {
+  const cutoff = addHouseCutoffScheduleFromDb(eventSettings ?? undefined);
+  return isAddHouseOpen(now, { cutoff, isAdmin });
 }
 
 /** Pause/stop chips: only after the house’s first window on Halloween night. */

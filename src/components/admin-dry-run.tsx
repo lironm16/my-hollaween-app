@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AdminAddHouseCutoffSettings } from "@/components/admin-add-house-cutoff-settings";
 import { AdminAddressRevealSettings } from "@/components/admin-address-reveal-settings";
 import { AdminGemOpsPanel } from "@/components/admin-gem-ops-panel";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -104,6 +105,7 @@ export function AdminDryRunPanel() {
           ))}
         </div>
       </div>
+      <AdminAddHouseCutoffSettings />
       <AdminAddressRevealSettings />
       <div className="space-y-2 rounded-xl bg-[#12081a]/80 p-2 ring-1 ring-orange-500/15">
         <p className="text-base font-medium text-amber-100">בדיקות</p>

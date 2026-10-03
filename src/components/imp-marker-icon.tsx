@@ -12,11 +12,13 @@ export function GemDiamondIcon({
   active?: boolean;
   filled?: boolean;
 }) {
-  const solid = active || filled;
+  const emphasize = active || filled;
   return (
     <ImpMarkerGlyph
-      variant={solid ? "solid" : "eyes"}
+      variant="solid"
       className={cn(
+        "aspect-square",
+        emphasize ? "opacity-100" : "opacity-85",
         active ? "text-white" : filled ? "text-[#fbbf24]" : "text-orange-100",
         className,
       )}
@@ -33,7 +35,7 @@ export function GemDiamondSvg({
 }) {
   return (
     <ImpMarkerGlyph
-      className={cn("inline-block align-middle", className)}
+      className={cn("inline-block aspect-square align-middle", className)}
       style={{ color: fill }}
     />
   );

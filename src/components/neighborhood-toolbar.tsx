@@ -130,13 +130,13 @@ export function NeighborhoodToolbar({
             aria-pressed={gemMapVisible}
             onClick={onToggleGemMap}
             className={cn(
-              "app-toolbar__btn inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
+              "app-toolbar__btn inline-flex size-10 shrink-0 items-center justify-center rounded-lg p-1",
               gemMapVisible
                 ? "bg-orange-500 text-black"
                 : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
             )}
           >
-            <GemDiamondIcon active={gemMapVisible} filled={false} className="size-[2.125rem]" />
+            <GemDiamondIcon active={gemMapVisible} filled={false} className="size-full max-h-full max-w-full" />
           </button>
         ) : null}
         {adminCharacterMapToggleEnabled && onToggleAdminCharacterMap ? (

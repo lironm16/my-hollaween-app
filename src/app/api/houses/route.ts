@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
+import { isAdmin } from "@/lib/admin";
+import { ADD_HOUSE_CLOSED_HE } from "@/lib/add-house-copy";
+import { isAddHouseOpenForCatalog } from "@/lib/hours";
 import { houseSubmitSchema } from "@/lib/schema";
 import { submitHouse } from "@/lib/store";
+import { loadDb } from "@/lib/store/core";
 import { toEditorHouse } from "@/lib/ids";
 import { geocodeHttpError } from "@/lib/geocode";
 import { storageHttpError } from "@/lib/storage-errors";
@@ -25,6 +29,16 @@ export async function POST(request: Request) {
     );
   }
   const { addedBy, ownerPhone, ...input } = parsed.data;
+  const admin = await isAdmin();
+  if (!admin) {
+    const db = await loadDb();
+    if (!isAddHouseOpenForCatalog(new Date(), db.eventSettings, false)) {
+      return NextResponse.json(
+        { error: ADD_HOUSE_CLOSED_HE, code: "ADD_CLOSED" },
+        { status: 403 },
+      );
+    }
+  }
   try {
     const house = await submitHouse({ ...input, ownerPhone }, {
       includeEndpoint: readIncludeEndpoint(json),

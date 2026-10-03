@@ -12,11 +12,18 @@ import {
 } from "@/lib/hours";
 
 describe("isAddHouseOpen", () => {
-  it("stays open until 17:00 on event night", () => {
+  it("stays open until 30 Oct 23:59 local by default", () => {
     assert.equal(isAddHouseOpen(new Date(2026, 8, 18, 16, 30, 0, 0)), true);
-    assert.equal(isAddHouseOpen(new Date(2026, 9, 31, 16, 59, 0, 0)), true);
-    assert.equal(isAddHouseOpen(new Date(2026, 9, 31, 17, 0, 0, 0)), false);
-    assert.equal(isAddHouseOpen(new Date(2026, 9, 31, 18, 0, 0, 0)), false);
+    assert.equal(isAddHouseOpen(new Date(2026, 9, 30, 23, 58, 0, 0)), true);
+    assert.equal(isAddHouseOpen(new Date(2026, 9, 30, 23, 59, 0, 0)), false);
+    assert.equal(isAddHouseOpen(new Date(2026, 9, 31, 16, 59, 0, 0)), false);
+  });
+
+  it("admins bypass the cutoff", () => {
+    assert.equal(
+      isAddHouseOpen(new Date(2026, 9, 31, 18, 0, 0, 0), { isAdmin: true }),
+      true,
+    );
   });
 });
 

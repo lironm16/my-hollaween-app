@@ -179,6 +179,15 @@ export type AddressRevealSchedule = {
   minute: number;
 };
 
+/** Local date/time after which visitors can no longer add houses. */
+export type AddHouseCutoffSchedule = {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+};
+
 export type Catalog = {
   updatedAt: string;
   neighborhood: string;
@@ -190,6 +199,7 @@ export type Catalog = {
   /** Effective reveal schedule for clients (defaults merged with admin override). */
   eventSettings?: {
     addressReveal: AddressRevealSchedule;
+    addHouseCutoff: AddHouseCutoffSchedule;
   };
 };
 
@@ -242,6 +252,7 @@ export type DbFile = {
   eventSettings?: {
     updatedAt?: string;
     addressReveal?: AddressRevealSchedule;
+    addHouseCutoff?: AddHouseCutoffSchedule;
   };
   pushSettings?: {
     updatedAt?: string;

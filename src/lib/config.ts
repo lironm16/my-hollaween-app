@@ -82,6 +82,15 @@ export const config = {
     hour: 12,
     minute: 0,
   },
+  /** Last moment visitors can submit a new house (local time). Admins bypass. */
+  addHouseCutoff: {
+    year: 2026,
+    month: 10,
+    day: 30,
+    hour: 23,
+    minute: 59,
+    labelHe: "30 באוקטובר, 23:59",
+  },
 } as const;
 
 export function inNeighborhood(lat: number, lng: number) {

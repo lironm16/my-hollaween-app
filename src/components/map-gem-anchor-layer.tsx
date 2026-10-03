@@ -15,8 +15,8 @@ import { cn } from "@/lib/utils";
 /** admin = offset anchors + spokes (QA). compact = tiny diamonds. characters = admin QA posters. */
 export type GemMapAnchorVisual = "admin" | "compact" | "characters";
 
-const GEM_ICON_ADMIN = 34;
-const GEM_ICON_COMPACT = 22;
+const GEM_ICON_ADMIN = 36;
+const GEM_ICON_COMPACT = 26;
 const GEM_ICON_CHARACTER = 36;
 const COMPACT_MIN_ZOOM = 15;
 
