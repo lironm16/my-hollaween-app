@@ -290,7 +290,7 @@ export function StatsSummary({
               <RouteChip
                 icon={<GemSummaryIcon />}
                 value={String(gemCollectedCount)}
-                label="מצאתי"
+                label={GEM_FOUND_I_HE}
               />
             </>
           ) : null}
