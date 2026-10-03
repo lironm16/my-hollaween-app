@@ -14,6 +14,7 @@ import {
   Search,
   Shield,
   HelpCircle,
+  Sparkles,
 } from "lucide-react";
 import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { toast } from "sonner";

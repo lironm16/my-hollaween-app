@@ -190,10 +190,6 @@ export default function GemHuntHelpPage() {
           </ul>
         </HelpExpandable>
       </div>
-
-      <p className="mt-6 text-center text-base text-violet-300/90">
-        תצוגת משתמש (יהלומים) בתפריט — לראות את האפליקציה כמו אורח בלי כלי בדיקה.
-      </p>
     </HelpShell>
   );
 }
