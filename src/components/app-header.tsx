@@ -248,7 +248,7 @@ export function AppHeader({
                   )}
                 >
                   <Sparkles className="size-4" />
-                  בדיקות
+                  הגדרות מנהל
                 </Link>
                 <button
                   type="button"

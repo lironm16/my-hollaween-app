@@ -38,7 +38,7 @@ export default function AdminGemLabPage() {
               href="/admin/rehearsal"
               className="shrink-0 text-sm text-orange-200 underline-offset-2 hover:underline"
             >
-              ← בדיקות
+              ← הגדרות מנהל
             </Link>
           </div>
           <AdminGemLabPanel />
