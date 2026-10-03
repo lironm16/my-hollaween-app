@@ -180,7 +180,8 @@ async function main() {
   const freshPage = await freshContext.newPage();
   freshPage.setDefaultTimeout(20_000);
   await freshPage.goto(`${BASE}/offline.html`, { waitUntil: "domcontentloaded" });
-  await freshPage.getByText(/אין עותק שמור בטלפון/).waitFor();
+  await freshPage.getByRole("heading", { name: "אין חיבור" }).waitFor();
+  await freshPage.getByText(/רשימת הבתים לא נשמרת במכשיר/).waitFor();
   pass("OFF-04 offline.html without cache shows empty-state message");
   await freshContext.close();
 
