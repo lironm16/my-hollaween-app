@@ -12,6 +12,7 @@ import { HouseTags } from "@/components/house-tags";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
+import { adminLocationLines } from "@/lib/admin-house-location";
 import { adminShowsPrivateHouseFields } from "@/lib/gem-preview-as-user";
 import { formatDistance } from "@/lib/geo";
 import { HoursLabel } from "@/components/clock-time";
@@ -324,7 +325,13 @@ export function HouseDetails({
   const showPrivateFields = adminShowsPrivateHouseFields(admin, previewAsUser);
   const editorHouse = house as EditorHouse;
   const ownerPhone = showPrivateFields ? editorHouse.ownerPhone?.trim() : "";
-  const displayAddress = addressReveal.formatDisplayAddress(house);
+  const adminLines =
+    showPrivateFields && addressReveal.canViewDetails(house.id)
+      ? adminLocationLines(house)
+      : null;
+  const displayAddress = adminLines
+    ? [adminLines.street, adminLines.hood].filter(Boolean).join(", ")
+    : addressReveal.formatDisplayAddress(house);
   const arrivalText = addressReveal.visibleArrival(house);
   const showMaps = addressReveal.mapsAllowed(house.id) && houseServerDetailReady(house);
   const showDistance =
@@ -456,9 +463,23 @@ export function HouseDetails({
     <div className={metaTextClass}>
       {photo || compact ? (
         <>
-          {displayAddress ? <p className="break-words">{displayAddress}</p> : null}
+          {adminLines?.street ? <p className="break-words">{adminLines.street}</p> : null}
+          {adminLines?.hood ? (
+            <p className="break-words text-violet-300">{adminLines.hood}</p>
+          ) : null}
+          {!adminLines && displayAddress ? <p className="break-words">{displayAddress}</p> : null}
           {hours || showDistance ? <p>{hoursDistance}</p> : null}
         </>
+      ) : adminLines ? (
+        <div className="break-words">
+          {adminLines.street ? <p>{adminLines.street}</p> : null}
+          {adminLines.hood ? <p className="text-violet-300">{adminLines.hood}</p> : null}
+          {hours || showDistance ? (
+            <p>
+              {hoursDistance}
+            </p>
+          ) : null}
+        </div>
       ) : (
         <p className="break-words">
           {displayAddress}

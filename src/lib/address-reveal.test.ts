@@ -88,6 +88,20 @@ describe("address reveal", () => {
     assert.equal(canViewHouseLocationDetails("בית-9999", ctx), false);
   });
 
+  it("admin sees street and inferred hood before reveal", () => {
+    const adminCtx = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 10, 0),
+      isAdmin: true,
+    });
+    const label = formatDisplayAddressWithPolicy(
+      stub({ address: "רוקח 32", neighborhood: null }),
+      "בית-9999",
+      adminCtx,
+    );
+    assert.match(label, /רוקח 32/u);
+    assert.match(label, /שיכון ותיקים/u);
+  });
+
   it("shows hint instead of street before reveal", () => {
     const ctx = makeAddressRevealContext({
       now: new Date(2026, 9, 31, 10, 0),

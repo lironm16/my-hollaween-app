@@ -217,7 +217,7 @@ export function GemModel3D({
         ? size === "sm"
           ? 0.55
           : size === "fill"
-            ? 1.62
+            ? 1.78
             : 1.38
         : size === "sm"
           ? 0.55
@@ -246,7 +246,7 @@ export function GemModel3D({
           const pad =
             controls === "inspect360"
               ? size === "fill"
-                ? 1.78
+                ? 1.92
                 : 1.62
               : size === "sm"
                 ? 1.45

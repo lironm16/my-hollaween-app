@@ -6,6 +6,7 @@ import {
   isOutsideEventNeighborhoods,
   type NeighborhoodId,
 } from "@/lib/config";
+import { neighborhoodOverrideForStreetAddress } from "@/lib/street-neighborhood-overrides";
 
 /**
  * What the map-zone pipeline assigned before manual hood selection (v5.4.7).
@@ -17,6 +18,10 @@ export function neighborhoodCalculatedLegacy(house: {
   lat?: number;
   lng?: number;
 }): NeighborhoodId | null {
+  if (house.address?.trim()) {
+    const override = neighborhoodOverrideForStreetAddress(house.address);
+    if (override) return override;
+  }
   const lat = house.lat;
   const lng = house.lng;
   const hasCoords =
