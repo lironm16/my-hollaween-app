@@ -3,6 +3,7 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import {
   firstRealHouseId,
+  openFilterSheet,
   openHouseByFocus,
   skipHouseFromDetail,
   waitForCatalog,
@@ -28,10 +29,6 @@ async function launchBrowser() {
     ...(IS_CI ? {} : { channel: "chrome" }),
     args: ["--no-sandbox", "--disable-dev-shm-usage"],
   });
-}
-
-async function openFilterSheet(page) {
-  await page.getByRole("button", { name: /^סינון/ }).first().click();
 }
 
 async function main() {

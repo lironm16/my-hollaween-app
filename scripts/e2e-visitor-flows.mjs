@@ -3,6 +3,7 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import {
   firstRealHouseId,
+  openFilterSheet,
   openHouseByFocus,
   waitForCatalog,
 } from "./lib/e2e-helpers.mjs";
@@ -43,10 +44,6 @@ async function readStorageIds(page, key) {
     const ids = raw ? JSON.parse(raw) : [];
     return Array.isArray(ids) ? ids : [];
   }, key);
-}
-
-async function openFilterSheet(page) {
-  await page.getByRole("button", { name: /^סינון/ }).first().click();
 }
 
 async function main() {
@@ -159,9 +156,9 @@ async function main() {
   if (firstHouse?.name) {
     try {
       await page.goto(`${BASE}/search?rehearsal=open`, { waitUntil: "domcontentloaded" });
-      const combobox = page.getByRole("combobox", { name: "בית" });
+      const combobox = page.getByPlaceholder("הקלידו שם משפחה או כתובת");
       await combobox.fill(firstHouse.name.slice(0, 6));
-      await page.getByRole("listbox").waitFor();
+      await page.getByRole("option").first().waitFor({ timeout: 15_000 });
       await combobox.press("Enter");
       await page.getByRole("button", { name: "פעולות" }).first().waitFor();
       pass("EXP-02 search page opens selected house");

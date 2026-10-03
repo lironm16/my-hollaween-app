@@ -52,6 +52,11 @@ export async function skipHouseFromDetail(page, detail) {
   return { skippedBefore, skippedAfter };
 }
 
+export async function openFilterSheet(page) {
+  await page.getByRole("button", { name: /^סינון/ }).first().click();
+  await page.getByText("שלי", { exact: true }).waitFor({ timeout: 15_000 });
+}
+
 export async function openHouseByFocus(page, baseUrl, houseId) {
   const url = `${baseUrl}/?focus=${encodeURIComponent(houseId)}&rehearsal=open`;
   let lastError;
