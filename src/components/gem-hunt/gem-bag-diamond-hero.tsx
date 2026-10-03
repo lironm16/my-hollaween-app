@@ -26,7 +26,8 @@ export function GemBagDiamondHero({
     >
       <div className="gem-bag-hero__head">
         <ImpMarkerGlyph
-          className="size-20 shrink-0 text-amber-300 drop-shadow-[0_0_12px_rgb(251_191_36/0.5)]"
+          variant="solid"
+          className="size-20 shrink-0 text-[#fbbf24] drop-shadow-[0_0_12px_rgb(251_191_36/0.5)]"
           aria-hidden
         />
         <div className="min-w-0 flex-1 text-right">
@@ -53,7 +54,11 @@ export function GemBagDiamondHero({
       </div>
       {complete ? (
         <p className="gem-bag-hero__celebrate">
-          <ImpMarkerGlyph className="inline-block size-5 align-middle text-amber-300" aria-hidden />{" "}
+          <ImpMarkerGlyph
+            variant="solid"
+            className="inline-block size-5 align-middle text-[#fbbf24]"
+            aria-hidden
+          />{" "}
           {GEM_ALBUM_ALL_HE} באוסף — השכונה מלאה קסם!
         </p>
       ) : null}

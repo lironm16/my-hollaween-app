@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Activity,
   Bell,
@@ -40,7 +39,6 @@ import { AdminGemUserPreviewToggle } from "@/components/admin-gem-user-preview-t
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
 import { readHelpInstallCaptureFromLocation } from "@/lib/help-install-capture";
-import { tryOpenAddHouse } from "@/lib/add-house-nav";
 import { useAddHouseOpen } from "@/hooks/use-add-house-open";
 import { cn } from "@/lib/utils";
 
@@ -50,7 +48,6 @@ export function AppHeader({
   /** Brand title and side-menu Home: return to the last map/list home screen. */
   onHomeTap?: () => void;
 }) {
-  const router = useRouter();
   const { admin, logout } = useAdminSession();
   const addHouseOpen = useAddHouseOpen();
   const now = useAppNow();
@@ -167,26 +164,20 @@ export function AppHeader({
               </button>
               {houseOpen ? (
                 <div className={APP_MENU_SUBLIST_CLASS}>
-                  <Link
-                    href="/add"
-                    onClick={(event) => {
-                      if (addHouseOpen) {
-                        closeMenu();
-                        return;
-                      }
-                      event.preventDefault();
-                      closeMenu();
-                      tryOpenAddHouse(false, () => router.push("/add"));
-                    }}
-                    className={cn(
-                      buttonVariants({ size: "lg" }),
-                      "h-10 justify-start gap-2 text-base bg-orange-500 text-black hover:bg-orange-400",
-                      APP_MENU_SUBLINK_PAD,
-                    )}
-                  >
-                    <HousePlus className="size-4" />
-                    הוספה
-                  </Link>
+                  {addHouseOpen ? (
+                    <Link
+                      href="/add"
+                      onClick={closeMenu}
+                      className={cn(
+                        buttonVariants({ size: "lg" }),
+                        "h-10 justify-start gap-2 text-base bg-orange-500 text-black hover:bg-orange-400",
+                        APP_MENU_SUBLINK_PAD,
+                      )}
+                    >
+                      <HousePlus className="size-4" />
+                      הוספה
+                    </Link>
+                  ) : null}
                   <Link href="/edit" onClick={closeMenu} className={houseSubLinkClass}>
                     <Pencil className="size-4" />
                     עריכה
@@ -224,8 +215,8 @@ export function AppHeader({
                 )}
               >
                 <ImpMarkerGlyph
-                  className="size-5 shrink-0 text-orange-50"
-                  variant="eyes"
+                  variant="solid"
+                  className="size-6 shrink-0 text-[#fbbf24]"
                   aria-hidden
                 />
                 {GEM_ALBUM_TITLE_HE}

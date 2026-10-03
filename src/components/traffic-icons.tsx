@@ -63,7 +63,7 @@ export function GemMenuDiscIcon({
   return (
     <span
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#1d1028] ring-1 ring-orange-500/30",
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/20 ring-1 ring-amber-400/45",
         className,
       )}
       title="שדון"
@@ -72,7 +72,7 @@ export function GemMenuDiscIcon({
       <ImpMarkerGlyph
         variant="solid"
         className={cn(
-          "size-[1.55rem] max-h-full max-w-full text-orange-100",
+          "size-[1.55rem] max-h-full max-w-full text-[#fbbf24]",
           markClassName,
         )}
       />

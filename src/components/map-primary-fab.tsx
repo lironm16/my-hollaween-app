@@ -21,7 +21,8 @@ export function MapPrimaryFab({
   gemCollectedCount?: number;
 }) {
   const addOpen = useAddHouseOpen();
-  if (addOpen || !gemHuntEnabled) return <MapAddHouseFab />;
+  if (!gemHuntEnabled) return <MapAddHouseFab />;
+  if (addOpen) return <MapAddHouseFab />;
   return (
     <MapGemHuntFab
       onClick={onGemPress}
