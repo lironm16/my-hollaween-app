@@ -1,0 +1,40 @@
+/** Rehearsal house ids from seed.json — stable even when device cache strips stub markers. */
+export const REHEARSAL_STUB_IDS = new Set<string>([
+  "בית-1847",
+  "בית-1848",
+  "בית-1849",
+  "בית-2291",
+  "בית-3304",
+  "בית-4418",
+  "בית-5520",
+  "בית-5521",
+  "בית-6637",
+  "בית-7742",
+  "בית-8479",
+  "בית-8859",
+  "בית-9011",
+  "בית-9124",
+  "בית-9201",
+  "בית-9202",
+  "בית-9203",
+  "בית-9204",
+  "בית-9310",
+  "בית-9311",
+  "בית-9312",
+  "בית-9313",
+  "בית-9314",
+  "בית-9315",
+  "בית-9316",
+  "בית-9317",
+  "בית-9318",
+  "בית-9319",
+  "נק-9310",
+  "נק-9311",
+  "נק-9312",
+  "נק-9313",
+  "נק-9314",
+]);
+
+export function isKnownRehearsalStubId(id: string | undefined): boolean {
+  return Boolean(id && REHEARSAL_STUB_IDS.has(id));
+}
