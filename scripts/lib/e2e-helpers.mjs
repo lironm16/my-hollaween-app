@@ -53,10 +53,21 @@ export async function skipHouseFromDetail(page, detail) {
 }
 
 export async function openFilterSheet(page) {
-  await page.getByRole("button", { name: /^סינון/ }).first().click();
-  const liked = page.getByRole("checkbox", { name: "אהבתי" });
-  await liked.scrollIntoViewIfNeeded();
-  await liked.waitFor({ timeout: 15_000 });
+  let lastError;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.getByRole("button", { name: /^סינון/ }).first().click();
+      const liked = page.getByRole("checkbox", { name: "אהבתי" });
+      await liked.scrollIntoViewIfNeeded();
+      await liked.waitFor({ timeout: 10_000 });
+      return;
+    } catch (error) {
+      lastError = error;
+      await page.keyboard.press("Escape").catch(() => {});
+      await page.waitForTimeout(400);
+    }
+  }
+  throw lastError;
 }
 
 export async function openHouseByFocus(page, baseUrl, houseId) {
