@@ -101,12 +101,6 @@ export function GemHuntPanel({
     return gemDistanceMeters(userLocation, house);
   }, [house, userLocation]);
 
-  if (!visible) return null;
-
-  const canCollect = canCollectGem(userLocation, house, collected, true, simulate);
-  const anchor = gemAnchorForHouse(house);
-  const anchorCalibrated = Boolean(anchorOverrideMap[house.id]) || anchor.calibrated === true;
-
   const openCamera = useCallback(async () => {
     getGemHuntPortalRoot();
     let xrSession: XRSession | null = null;
@@ -123,6 +117,12 @@ export function GemHuntPanel({
     });
     setHuntLocation(fresh ?? userLocation);
   }, [onOpenHunt, userLocation]);
+
+  if (!visible) return null;
+
+  const canCollect = canCollectGem(userLocation, house, collected, true, simulate);
+  const anchor = gemAnchorForHouse(house);
+  const anchorCalibrated = Boolean(anchorOverrideMap[house.id]) || anchor.calibrated === true;
 
   function onCollect(collectedVariant: GemMonsterId, options?: GemCollectFinishOptions) {
     const collectedBefore = loadGemCollected();

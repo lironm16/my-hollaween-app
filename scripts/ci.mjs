@@ -21,6 +21,7 @@ function run(label, command, args, env = {}) {
   }
 }
 
+run("ESLint", "npm", ["run", "lint"]);
 run("Unit tests", "npm", ["run", "test:unit"]);
 run("Production build", "npm", ["run", "build"]);
 run("API integration", "node", ["scripts/run-api-tests.mjs"]);

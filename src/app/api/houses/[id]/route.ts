@@ -34,7 +34,7 @@ export async function GET(
   }
   const admin = await isAdmin();
   const ownerOk = await ownerMayEdit(id);
-  let house = admin || ownerOk ? toEditorHouse(row) : publicHouseForCatalog(toPublicHouse(row));
+  const house = admin || ownerOk ? toEditorHouse(row) : publicHouseForCatalog(toPublicHouse(row));
   return NextResponse.json(house, {
     headers: {
       "Cache-Control":

@@ -154,7 +154,10 @@ export function GemHuntOverlay({
   /** User tapped «הסתר» or opened «רמז» after center — do not keep encounter/tell-me center lock. */
   const [userDismissedCenterGem, setUserDismissedCenterGem] = useState(false);
   const gemTapStartRef = useRef<{ x: number; y: number } | null>(null);
-  const scanStartRef = useRef(Date.now());
+  const scanStartRef = useRef(0);
+  useEffect(() => {
+    scanStartRef.current = Date.now();
+  }, [house.id]);
   const panTotalRef = useRef(0);
   const lastHeadingRef = useRef<number | null>(null);
   const facingSinceRef = useRef<number | null>(null);

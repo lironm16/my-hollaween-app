@@ -481,6 +481,7 @@ export function NeighborhoodApp({
     enterRouteMode: startRouteMode,
     exitRouteMode,
     pendingRouteGps,
+    clearPendingRouteGps,
   } = useNeighborhoodRoute({
     houses,
     filters,
@@ -529,6 +530,7 @@ export function NeighborhoodApp({
     askedLocation,
     setAskedLocation,
     pendingRouteGps,
+    clearPendingRouteGps,
     pinCurrentRoute,
     onBeforePick: resetForNavigation,
   });

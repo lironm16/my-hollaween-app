@@ -80,6 +80,10 @@ export function useNeighborhoodRoute({
     setPinnedRoute(filterRoute);
   }, [filterRoute]);
 
+  const clearPendingRouteGps = useCallback(() => {
+    pendingRouteGps.current = false;
+  }, []);
+
   useEffect(() => {
     if (!routeMode || !pendingRouteGps.current || !gps) return;
     pendingRouteGps.current = false;
@@ -185,5 +189,6 @@ export function useNeighborhoodRoute({
     enterRouteMode,
     exitRouteMode,
     pendingRouteGps,
+    clearPendingRouteGps,
   };
 }

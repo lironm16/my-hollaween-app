@@ -28,7 +28,6 @@ jobs:
 
       - name: ESLint
         run: npm run lint
-        continue-on-error: true
 
       - name: Production build
         run: npm run build

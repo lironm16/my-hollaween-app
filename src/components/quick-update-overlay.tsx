@@ -66,7 +66,7 @@ export function QuickUpdateOverlay({
   const { catalog } = useCatalog();
   const pushStored = useMemo<StoredPushSettings | null>(
     () => (catalog?.pushTemplates ? { templates: catalog.pushTemplates } : null),
-    [catalog?.pushTemplates],
+    [catalog],
   );
 
   useEffect(() => {

@@ -15,10 +15,10 @@ npm run test:stress   # Load test — GET /api/catalog + /catalog.json
 npm run test:e2e      # Playwright E2E (offline + visitor flows)
 npm run test:all      # Unit + API + stress + E2E
 npm run ci            # Unit + build + API + stress + E2E (local CI mirror)
-npm run lint          # ESLint (not in CI yet — 36 existing errors)
+npm run lint          # ESLint (also first step in npm run ci; compiler hygiene rules warn only)
 ```
 
-**CI** (`.github/workflows/ci.yml`): unit → build → API integration → stress (200 concurrent) → browser E2E on every PR and `main` push.
+**CI** (`npm run ci` / `.github/workflows/ci.yml`): ESLint → unit → build → API integration → stress (200 concurrent) → browser E2E on every PR and `main` push.
 
 **E2E data isolation:** `npm run test:e2e` starts a fresh server with `DATA_DIR=artifacts/e2e-test-data` (file-backed, never Firestore). E2E house creates use address `העמל 99`, not seed addresses like `חרוזים 8`. If test houses leaked into production Firestore before this fix, run `node scripts/purge-e2e-test-houses.mjs`.
 

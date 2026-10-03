@@ -80,9 +80,6 @@ export function ServiceWorkerRegister() {
     let cancelled = false;
     let reloaded = false;
     let pendingVersionReload = false;
-    let pollId: number | undefined;
-    let idlePollId: number | undefined;
-
     const markVersionReload = () => {
       pendingVersionReload = true;
     };
@@ -145,13 +142,13 @@ export function ServiceWorkerRegister() {
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("online", onOnline);
     window.addEventListener("focus", onFocus);
-    pollId = window.setInterval(runUpdateCheck, UPDATE_POLL_MS);
-    idlePollId = window.setInterval(tryReload, IDLE_RELOAD_POLL_MS);
+    const pollId = window.setInterval(runUpdateCheck, UPDATE_POLL_MS);
+    const idlePollId = window.setInterval(tryReload, IDLE_RELOAD_POLL_MS);
 
     return () => {
       cancelled = true;
-      if (pollId !== undefined) window.clearInterval(pollId);
-      if (idlePollId !== undefined) window.clearInterval(idlePollId);
+      window.clearInterval(pollId);
+      window.clearInterval(idlePollId);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("online", onOnline);
       window.removeEventListener("focus", onFocus);

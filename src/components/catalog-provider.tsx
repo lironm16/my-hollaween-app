@@ -154,6 +154,16 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [source, setSource] = useState<Source | null>(null);
   const cacheHydratedRef = useRef(false);
+  const catalogRef = useRef(catalog);
+  const pollSecondsRef = useRef(config.catalogPollSeconds);
+  const emptyDeltaStreakRef = useRef(0);
+  const offlineSinceRef = useRef<number | null>(null);
+  const seededRef = useRef(false);
+  const pendingCatalogRef = useRef<Catalog | null>(null);
+
+  useEffect(() => {
+    catalogRef.current = catalog;
+  }, [catalog]);
 
   useLayoutEffect(() => {
     if (cacheHydratedRef.current) return;
@@ -174,7 +184,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const gemEligibleHouses = useMemo(() => {
     if (!catalog?.houses?.length) return undefined;
     return gemHuntMapHouses(catalog.houses, "real");
-  }, [catalog?.houses]);
+  }, [catalog]);
 
   useEffect(() => {
     ensureGemOsmAnchorsLoaded(catalog?.updatedAt ?? null, gemEligibleHouses);
@@ -196,14 +206,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, []);
-  const catalogRef = useRef(catalog);
-  catalogRef.current = catalog;
-  const pollSecondsRef = useRef(config.catalogPollSeconds);
-  const emptyDeltaStreakRef = useRef(0);
-  const offlineSinceRef = useRef<number | null>(null);
   const [pollSeconds, setPollSeconds] = useState(config.catalogPollSeconds);
-  const seededRef = useRef(false);
-  const pendingCatalogRef = useRef<Catalog | null>(null);
 
   const publishCatalog = useCallback((next: Catalog, prev: Catalog | null) => {
     if (isMapListSuspended()) {

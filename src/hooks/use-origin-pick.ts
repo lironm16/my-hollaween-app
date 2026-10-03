@@ -24,6 +24,7 @@ export function useOriginPick({
   askedLocation,
   setAskedLocation,
   pendingRouteGps,
+  clearPendingRouteGps,
   pinCurrentRoute,
   onBeforePick,
 }: {
@@ -37,6 +38,7 @@ export function useOriginPick({
   askedLocation: boolean;
   setAskedLocation: (value: boolean) => void;
   pendingRouteGps: React.MutableRefObject<boolean>;
+  clearPendingRouteGps: () => void;
   pinCurrentRoute: () => void;
   onBeforePick: () => void;
 }) {
@@ -100,13 +102,13 @@ export function useOriginPick({
       return;
     }
     if (pendingRouteGps.current) {
-      pendingRouteGps.current = false;
+      clearPendingRouteGps();
       pinCurrentRoute();
     }
     if (geoErrorToasted.current) return;
     geoErrorToasted.current = true;
     toast.warning("לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בהגדרות.");
-  }, [geoError, pinCurrentRoute, pendingRouteGps]);
+  }, [geoError, pinCurrentRoute, pendingRouteGps, clearPendingRouteGps]);
 
   const panMapTo = useCallback((point: { lat: number; lng: number }) => {
     setPanTo(point);
