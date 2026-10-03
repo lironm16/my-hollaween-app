@@ -13,12 +13,8 @@ import {
   Share2,
   Undo2,
 } from "lucide-react";
-import {
-  GemMenuDiscIcon,
-  GemTrafficIcon,
-  SavedTrafficIcon,
-  VisitedTrafficIcon,
-} from "@/components/traffic-icons";
+import { SavedTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
+import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { SkipIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
@@ -205,10 +201,14 @@ export function HouseActionBar({
       items.push({
         id: "gem",
         label: gemCollected ? GEM_FOUND_I_HE : GEM_ACTION_FIND_HE,
-        icon: gemCollected ? (
-          <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} />
-        ) : (
-          <GemMenuDiscIcon className={MENU_ACTIVE_ICON_CLASS} />
+        icon: (
+          <ImpMarkerGlyph
+            variant={gemCollected ? "solid" : "eyes"}
+            className={cn(
+              gemCollected ? MENU_ACTIVE_ICON_CLASS : MENU_ICON_CLASS,
+              "text-orange-100",
+            )}
+          />
         ),
         onClick: () => onToggleGem(),
         active: gemCollected,

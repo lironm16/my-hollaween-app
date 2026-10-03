@@ -8,25 +8,38 @@ import { GemStickerAlbum } from "@/components/gem-hunt/gem-sticker-album";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useGemProgress } from "@/hooks/use-gem-progress";
+import { useHouseSet } from "@/hooks/use-house-set";
+import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
-import { gemHuntMapHouses } from "@/lib/gem-monsters";
-import { catalogHasRealHouses } from "@/lib/house-set";
+import {
+  catalogHasRealHouses,
+  houseMatchesSet,
+  resolveViewerHouseSet,
+} from "@/lib/house-set";
+import { isPreviewDeploymentClient } from "@/lib/deployment-env";
 import { buttonVariants } from "@/components/ui/button";
 import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
 import { cn } from "@/lib/utils";
 
 export default function GemBagPage() {
   const { admin, ready } = useAdminSession();
+  const { previewAsUser } = useGemPreviewAsUser();
   const { catalog, loading } = useCatalog();
   const gems = useGemProgress();
   const now = useAppNow();
   const { gemBagMenuVisible: visible } = useGemHuntAdminUi(admin, now);
-  const mapHouses = useMemo(
-    () => gemHuntMapHouses(resolveCatalogHouses(catalog), "real"),
-    [catalog],
-  );
+  const { houseSet } = useHouseSet();
+  const adminForHouseSet = Boolean(admin && !previewAsUser);
+  const activeHouseSet = resolveViewerHouseSet(catalog, adminForHouseSet, houseSet, {
+    previewDeployment: isPreviewDeploymentClient(),
+  });
+  const catalogHouses = useMemo(() => resolveCatalogHouses(catalog), [catalog]);
+  const mapHouses = useMemo(() => {
+    const eligible = catalogHouses.filter((house) => houseMatchesSet(house, activeHouseSet));
+    return gemCarrierHousesForMap(eligible);
+  }, [catalogHouses, activeHouseSet]);
 
   if (!ready) {
     return (

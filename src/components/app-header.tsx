@@ -223,7 +223,11 @@ export function AppHeader({
                   "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
                 )}
               >
-                <ImpMarkerGlyph className="size-4 shrink-0 text-orange-50" variant="eyes" aria-hidden />
+                <ImpMarkerGlyph
+                  className="size-5 shrink-0 text-orange-50"
+                  variant="eyes"
+                  aria-hidden
+                />
                 {GEM_ALBUM_TITLE_HE}
               </Link>
             ) : null}

@@ -209,12 +209,12 @@ function GemSign({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/20 ring-1 ring-amber-300/45",
+        "inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-[#1d1028] ring-1 ring-orange-500/30",
         className,
       )}
       aria-hidden
     >
-      <ImpMarkerGlyph className="size-5 text-amber-300" />
+      <ImpMarkerGlyph variant="eyes" className="size-7 text-orange-100" />
     </span>
   );
 }
