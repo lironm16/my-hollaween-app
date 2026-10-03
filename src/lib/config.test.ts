@@ -105,6 +105,22 @@ describe("neighborhood config", () => {
     );
   });
 
+  it("Hadar 18 is אחר — same south strip as הדר 11", () => {
+    const lat = 32.087749006268;
+    const lng = 34.812607995613;
+    assert.equal(neighborhoodAtEventLocation(lat, lng), null);
+    assert.equal(neighborhoodInferredFromPin(lat, lng), null);
+    assert.equal(
+      resolveNeighborhood({
+        address: "הדר 18",
+        lat,
+        lng,
+        neighborhood: "שיכון ותיקים",
+      }),
+      null,
+    );
+  });
+
   it("Rokach 17 is אחר — off-zone south strip, not nearest שיכון ותיקים", () => {
     const lat = 32.088;
     const lng = 34.8107;
