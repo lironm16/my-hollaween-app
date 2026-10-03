@@ -10,7 +10,10 @@ import {
   neighborhoodLabelForPin,
   normalizeNeighborhoodId,
   houseInNeighborhoods,
+  houseNeighborhoodChoiceToStored,
+  NEIGHBORHOOD_FILTER_OTHER,
   resolveNeighborhood,
+  storedToHouseNeighborhoodChoice,
   suburbToNeighborhood,
 } from "@/lib/config";
 
@@ -33,11 +36,16 @@ describe("neighborhood config", () => {
     assert.equal(neighborhoodFromAddress("ז'בוטינסקי 105, שכונת הגפן"), "הגפן");
   });
 
-  it("classifies Jabotinsky-area pins as הגפן", () => {
+  it("classifies Jabotinsky-area pins in הגפן zone (map bounds only)", () => {
     assert.equal(neighborhoodFromCoords(32.08925, 34.81205), "הגפן");
     assert.equal(neighborhoodAtEventLocation(32.08925, 34.81205), "הגפן");
     assert.equal(
-      resolveNeighborhood({ address: "ז'בוטינסקי 105", lat: 32.08925, lng: 34.81205 }),
+      resolveNeighborhood({
+        address: "ז'בוטינסקי 105",
+        neighborhood: "הגפן",
+        lat: 32.08925,
+        lng: 34.81205,
+      }),
       "הגפן",
     );
   });
@@ -52,15 +60,14 @@ describe("neighborhood config", () => {
     assert.equal(neighborhoodAtEventLocation(32.0849863, 34.8122928), null);
   });
 
-  it("Yohanna 6 is אחר — null hood outside event zones", () => {
+  it("Yohanna 6 is אחר when stored null — not inferred from pin", () => {
     const lat = 32.0883058;
     const lng = 34.8163387;
     assert.equal(neighborhoodAtEventLocation(lat, lng), null);
-    assert.equal(neighborhoodInferredFromPin(lat, lng), null);
-    assert.equal(resolveNeighborhood({ address: "יוהנה 6", lat, lng }), null);
+    assert.equal(resolveNeighborhood({ address: "יוהנה 6", lat, lng, neighborhood: null }), null);
     assert.equal(
       resolveNeighborhood({ address: "יוהנה 6", lat, lng, neighborhood: "הגפן" }),
-      null,
+      "הגפן",
     );
   });
 
@@ -105,20 +112,20 @@ describe("neighborhood config", () => {
     assert.equal(houseLocationAllowed(32.088440010365, 34.811503009317), true);
   });
 
-  it("classifies HaZamir 8 in Shikun Vetikim (not Nachlat Ganem)", () => {
+  it("resolveNeighborhood uses stored hood, not zone at pin", () => {
     const lat = 32.0945618;
     const lng = 34.816518;
     assert.equal(neighborhoodAtEventLocation(lat, lng), "שיכון ותיקים");
+    assert.equal(
+      resolveNeighborhood({ address: "הזמיר 8", lat, lng, neighborhood: "נחלת גנים" }),
+      "נחלת גנים",
+    );
     assert.equal(neighborhoodLabelForPin(lat, lng, "ותיקים"), "שיכון ותיקים");
-    assert.equal(resolveNeighborhood({ address: "הזמיר 8", lat, lng }), "שיכון ותיקים");
   });
 
-  it("Hadar 11 is אחר — south of all event zones, not שיכון ותיקים", () => {
+  it("Hadar 11 uses stored hood only", () => {
     const lat = 32.087930013467;
     const lng = 34.812298032833;
-    assert.equal(neighborhoodAtEventLocation(lat, lng), null);
-    assert.equal(neighborhoodInferredFromPin(lat, lng), null);
-    assert.equal(resolveNeighborhood({ address: "הדר 11", lat, lng }), null);
     assert.equal(
       resolveNeighborhood({
         address: "הדר 11",
@@ -126,32 +133,19 @@ describe("neighborhood config", () => {
         lng,
         neighborhood: "שיכון ותיקים",
       }),
-      null,
+      "שיכון ותיקים",
     );
-  });
-
-  it("Hadar 18 is אחר — same south strip as הדר 11", () => {
-    const lat = 32.087749006268;
-    const lng = 34.812607995613;
-    assert.equal(neighborhoodAtEventLocation(lat, lng), null);
-    assert.equal(neighborhoodInferredFromPin(lat, lng), null);
     assert.equal(
-      resolveNeighborhood({
-        address: "הדר 18",
-        lat,
-        lng,
-        neighborhood: "שיכון ותיקים",
-      }),
+      resolveNeighborhood({ address: "הדר 11", lat, lng, neighborhood: null }),
       null,
     );
   });
 
-  it("Rokach 17 is אחר — off-zone south strip, not nearest שיכון ותיקים", () => {
-    const lat = 32.088;
-    const lng = 34.8107;
-    assert.equal(neighborhoodAtEventLocation(lat, lng), null);
-    assert.equal(neighborhoodInferredFromPin(lat, lng), null);
-    assert.equal(resolveNeighborhood({ address: "רוקח 17", lat, lng }), null);
+  it("houseNeighborhoodChoice round-trip", () => {
+    assert.equal(houseNeighborhoodChoiceToStored("חרוזים"), "חרוזים");
+    assert.equal(houseNeighborhoodChoiceToStored(NEIGHBORHOOD_FILTER_OTHER), null);
+    assert.equal(storedToHouseNeighborhoodChoice(null), NEIGHBORHOOD_FILTER_OTHER);
+    assert.equal(storedToHouseNeighborhoodChoice("הגפן"), "הגפן");
   });
 
 });

@@ -20,7 +20,7 @@ describe("address fields", () => {
     assert.equal(split.neighborhood, "חרוזים");
   });
 
-  it("keeps already-split storage", () => {
+  it("keeps stored neighborhood on normalize", () => {
     const fields = normalizeAddressFields({
       address: "יהודית 15",
       neighborhood: "חרוזים",
@@ -31,15 +31,14 @@ describe("address fields", () => {
     assert.equal(fields.neighborhood, "חרוזים");
   });
 
-  it("corrects stale neighborhood labels from pin zones (HaZamir 8)", () => {
+  it("does not override stored hood from pin zones", () => {
     const fields = normalizeAddressFields({
       address: "הזמיר 8",
       neighborhood: "נחלת גנים",
       lat: 32.0945618,
       lng: 34.816518,
     });
-    assert.equal(fields.address, "הזמיר 8");
-    assert.equal(fields.neighborhood, "שיכון ותיקים");
+    assert.equal(fields.neighborhood, "נחלת גנים");
   });
 
   it("keeps stored hood outside zone polygons (איתמר 2)", () => {
@@ -52,42 +51,12 @@ describe("address fields", () => {
     assert.equal(fields.neighborhood, "חרוזים");
   });
 
-  it("clears wrong stored hood south of all zones (הדר 11)", () => {
+  it("keeps explicit אחר (null) on normalize", () => {
     const fields = normalizeAddressFields({
       address: "הדר 11",
-      neighborhood: "שיכון ותיקים",
+      neighborhood: null,
       lat: 32.087930013467,
       lng: 34.812298032833,
-    });
-    assert.equal(fields.neighborhood, null);
-  });
-
-  it("recalculates null hood from zone when pin is inside an event zone", () => {
-    const fields = normalizeAddressFields({
-      address: "הזמיר 8",
-      neighborhood: null,
-      lat: 32.0945618,
-      lng: 34.816518,
-    });
-    assert.equal(fields.neighborhood, "שיכון ותיקים");
-  });
-
-  it("recalculates null hood from pin when outside zones but in event area", () => {
-    const fields = normalizeAddressFields({
-      address: "",
-      neighborhood: null,
-      lat: 32.0909211,
-      lng: 34.8066897,
-    });
-    assert.equal(fields.neighborhood, "חרוזים");
-  });
-
-  it("null hood outside the four (Yohanna 6)", () => {
-    const fields = normalizeAddressFields({
-      address: "יוהנה 6",
-      neighborhood: null,
-      lat: 32.0883058,
-      lng: 34.8163387,
     });
     assert.equal(fields.neighborhood, null);
   });
@@ -98,7 +67,7 @@ describe("address fields", () => {
     assert.equal(formatMapsAddress(house), "יהודית 15, רמת גן");
   });
 
-  it("formats pin/autocomplete address with neighborhood for the input field", () => {
+  it("formats pin/autocomplete as street only for the input field", () => {
     const hit: AddressHit = {
       id: "test-1",
       label: "יהודית 15, חרוזים",
@@ -110,7 +79,7 @@ describe("address fields", () => {
       city: "רמת גן",
       precise: true,
     };
-    assert.equal(displayAddressFromHit(hit), "יהודית 15, חרוזים");
+    assert.equal(displayAddressFromHit(hit), "יהודית 15");
   });
 
   it("strips neighborhood suffix from legacy street field on normalize", () => {
@@ -142,11 +111,11 @@ describe("address fields", () => {
     for (const query of ["Zabutinsky 105", "ז'בוטינסקי 105", "זבוטינסקי 105"]) {
       const hit = footprintAddressHit(query);
       assert.ok(hit, query);
-      assert.match(hit!.label, /105, הגפן$/u);
+      assert.match(hit!.label, /105, רמת גן$/u);
     }
   });
 
-  it("snaps Jabotinsky 105 to Gefen and dedupes autocomplete hits", () => {
+  it("snaps Jabotinsky 105 to footprint and dedupes autocomplete hits", () => {
     const wrongSide: AddressHit = {
       id: "p-1",
       label: "זאב ז'בוטינסקי 105, נחלת גנים",
@@ -170,7 +139,7 @@ describe("address fields", () => {
     };
     const prepared = prepareAddressHits([wrongSide, plain]);
     assert.equal(prepared.length, 1);
-    assert.match(prepared[0]!.label, /105, הגפן$/u);
+    assert.match(prepared[0]!.label, /105, רמת גן$/u);
     const single = prepareAddressHit(wrongSide);
     assert.ok(single);
     assert.equal(single!.lat, 32.08925);

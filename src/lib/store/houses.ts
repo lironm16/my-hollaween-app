@@ -190,6 +190,7 @@ function sanitizeOwnerPatch(
   if (patch.name !== undefined) next.name = patch.name;
   if (patch.theme !== undefined) next.theme = patch.theme;
   if (patch.address !== undefined) next.address = patch.address;
+  if (patch.neighborhood !== undefined) next.neighborhood = patch.neighborhood;
   if (patch.arrival !== undefined) next.arrival = patch.arrival;
   if (patch.description !== undefined) next.description = patch.description;
   if (patch.lat !== undefined) next.lat = patch.lat;

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { NEIGHBORHOODS } from "@/lib/config";
 import {
   DECOR_LEVELS,
   HOUSE_KINDS,
@@ -91,6 +92,7 @@ const houseFields = z.object({
   accessible: z.boolean(),
   decorLevel: z.enum(DECOR_LEVELS).optional(),
   decorated: z.boolean().optional(),
+  neighborhood: z.union([z.enum(NEIGHBORHOODS), z.null()]).optional(),
 });
 
 export const houseSubmitSchema = houseFields.extend({

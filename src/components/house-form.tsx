@@ -20,8 +20,15 @@ import {
   houseKindLabels,
 } from "@/lib/labels";
 import { isPoiHouse } from "@/lib/house-kind";
-import { displayAddressFromHit, neighborhoodFromAddressHit } from "@/lib/address-fields";
-import { config } from "@/lib/config";
+import { displayAddressFromHit } from "@/lib/address-fields";
+import {
+  config,
+  houseNeighborhoodChoiceToStored,
+  NEIGHBORHOOD_FILTER_OPTIONS,
+  neighborhoodFromAddress,
+  storedToHouseNeighborhoodChoice,
+  type HouseNeighborhoodChoice,
+} from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
 import {
@@ -83,6 +90,7 @@ const empty: HouseInput = {
   treatStock: { candy: "plenty" },
   decorLevel: "mild",
   decorated: true,
+  neighborhood: undefined,
 };
 
 function clock(value: string) {
@@ -224,6 +232,24 @@ export function HouseForm({
     setOwnerPhoneTouched(false);
   }, [initial?.id, initial?.addedBy, initial?.ownerPhone]);
 
+  useEffect(() => {
+    if (!initial?.id && initial?.neighborhood === undefined) return;
+    setForm((f) => {
+      if (f.neighborhood !== undefined) return f;
+      if (initial?.neighborhood !== undefined) {
+        return { ...f, neighborhood: initial.neighborhood };
+      }
+      const fromText = initial?.address ? neighborhoodFromAddress(initial.address) : null;
+      return fromText !== null ? { ...f, neighborhood: fromText } : f;
+    });
+  }, [initial?.id, initial?.neighborhood, initial?.address]);
+
+  const hoodChoice = storedToHouseNeighborhoodChoice(form.neighborhood);
+
+  function setHoodChoice(choice: HouseNeighborhoodChoice) {
+    setForm((f) => ({ ...f, neighborhood: houseNeighborhoodChoiceToStored(choice) }));
+  }
+
   function pickScare(level: ScareLevel) {
     setForm((f) => ({ ...f, scareLevel: level }));
     setDecorLevel((current) => (current === "none" ? "mild" : current));
@@ -243,14 +269,13 @@ export function HouseForm({
 
   function onAddressTyped(value: string) {
     setAddressOk(false);
-    setForm((f) => ({ ...f, address: value, neighborhood: undefined }));
+    setForm((f) => ({ ...f, address: value }));
   }
 
   function onAddressSelect(hit: AddressHit) {
     setForm((f) => ({
       ...f,
       address: displayAddressFromHit(hit),
-      neighborhood: neighborhoodFromAddressHit(hit),
       lat: hit.lat,
       lng: hit.lng,
     }));
@@ -265,7 +290,6 @@ export function HouseForm({
     const hit = await reversePin(lat, lng);
     if (!hit) {
       setAddressOk(false);
-      setForm((f) => ({ ...f, neighborhood: undefined }));
       toast.error("לא מצאנו כתובת בנקודה הזו. הזינו רחוב ומספר מהרשימה.");
       return;
     }
@@ -274,7 +298,6 @@ export function HouseForm({
       lat: hit.lat,
       lng: hit.lng,
       address: displayAddressFromHit(hit),
-      neighborhood: neighborhoodFromAddressHit(hit),
     }));
     setAddressOk(true);
     if (!hit.precise) {
@@ -304,6 +327,10 @@ export function HouseForm({
         if (blocked) return;
         if (!addressOk) {
           toast.error("בחרו כתובת אמיתית מהרשימה, או גררו את הסיכה לבית.");
+          return;
+        }
+        if (form.neighborhood === undefined) {
+          toast.error("בחרו שכונה מהרשימה (או «אחר»).");
           return;
         }
         const submitter = addedBy.trim();
@@ -530,6 +557,31 @@ export function HouseForm({
             maxLength={HOUSE_FIELD_LIMITS.address.max}
             onFocusChange={setAddressFieldActive}
           />
+        </Field>
+        <Field label="שכונה">
+          <p className="mb-2 text-base leading-snug text-violet-300">
+            בחרו את השכונה של הבית — לא נחשב אוטומטית מהמפה.
+          </p>
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="שכונה">
+            {NEIGHBORHOOD_FILTER_OPTIONS.map((choice) => {
+              const selected = hoodChoice === choice;
+              return (
+                <button
+                  key={choice}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => setHoodChoice(choice)}
+                  className={
+                    selected
+                      ? "rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black"
+                      : "rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
+                  }
+                >
+                  {choice}
+                </button>
+              );
+            })}
+          </div>
         </Field>
         <div>
           <div className="mb-2 flex items-center justify-between gap-2">

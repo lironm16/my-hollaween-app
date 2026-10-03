@@ -2,10 +2,6 @@ import {
   formatDisplayAddress,
   inNeighborhood,
   NEIGHBORHOODS,
-  isOutsideEventNeighborhoods,
-  neighborhoodAtEventLocation,
-  neighborhoodInferredFromPin,
-  neighborhoodLabelForPin,
   neighborhoodFromAddress,
   normalizeNeighborhoodId,
   type NeighborhoodId,
@@ -34,59 +30,28 @@ export function streetFromLegacyAddress(address: string): string {
 
 export function splitLegacyAddress(
   address: string,
-  lat?: number,
-  lng?: number,
+  _lat?: number,
+  _lng?: number,
 ): { street: string; neighborhood: NeighborhoodId | null } {
   const street = streetFromLegacyAddress(address);
   const fromText = neighborhoodFromAddress(address);
-  const hasCoords =
-    typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng);
-  const fromCoords = hasCoords ? neighborhoodInferredFromPin(lat, lng) : null;
-  return { street, neighborhood: fromText ?? fromCoords };
+  return { street, neighborhood: fromText };
 }
 
-/** Normalize stored address fields — split legacy combined strings on read/write. */
+/** Normalize stored address fields — street only; neighborhood is owner-selected, not from pin. */
 export function normalizeAddressFields(house: {
   address: string;
   neighborhood?: NeighborhoodId | null;
   lat?: number;
   lng?: number;
 }): { address: string; neighborhood: NeighborhoodId | null } {
+  const address = streetFromLegacyAddress(house.address);
   if (house.neighborhood !== undefined) {
-    const address = streetFromLegacyAddress(house.address);
-    const stored = normalizeNeighborhoodId(house.neighborhood) ?? house.neighborhood;
-    const lat = house.lat;
-    const lng = house.lng;
-    const hasCoords =
-      typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng);
-    if (hasCoords) {
-      const fromZone = neighborhoodAtEventLocation(lat, lng);
-      if (fromZone) {
-        return { address, neighborhood: fromZone };
-      }
-      if (isOutsideEventNeighborhoods(lat, lng)) {
-        if (stored === "הגפן") {
-          return {
-            address,
-            neighborhood: neighborhoodInferredFromPin(lat, lng),
-          };
-        }
-        return { address, neighborhood: null };
-      }
-      if (stored === null) {
-        return { address, neighborhood: neighborhoodInferredFromPin(lat, lng) };
-      }
-      if (stored === "הגפן" && !fromZone) {
-        return {
-          address,
-          neighborhood: neighborhoodInferredFromPin(lat, lng),
-        };
-      }
-    }
-    return { address, neighborhood: stored };
+    if (house.neighborhood === null) return { address, neighborhood: null };
+    const normalized = normalizeNeighborhoodId(house.neighborhood);
+    return { address, neighborhood: normalized ?? null };
   }
-  const split = splitLegacyAddress(house.address, house.lat, house.lng);
-  return { address: split.street, neighborhood: split.neighborhood };
+  return { address, neighborhood: neighborhoodFromAddress(house.address) };
 }
 
 export function streetFromAddressHit(hit: AddressHit): string {
@@ -96,33 +61,26 @@ export function streetFromAddressHit(hit: AddressHit): string {
   return streetFromLegacyAddress(hit.label);
 }
 
-export function neighborhoodFromAddressHit(hit: AddressHit): NeighborhoodId | null {
-  return neighborhoodAtEventLocation(hit.lat, hit.lng);
+/** Geocoding does not assign a hood — chosen on the house form. */
+export function neighborhoodFromAddressHit(_hit: AddressHit): undefined {
+  return undefined;
 }
 
-/** Street + neighborhood for the address input after pin drag or autocomplete pick. */
+/** Street line for the address input (hood is a separate form field). */
 export function displayAddressFromHit(hit: AddressHit): string {
-  return formatDisplayAddress({
-    address: streetFromAddressHit(hit),
-    neighborhood: neighborhoodFromAddressHit(hit),
-    lat: hit.lat,
-    lng: hit.lng,
-  });
+  return streetFromAddressHit(hit);
 }
 
-/** Autocomplete line — city when outside the four neighborhoods; never guess a wrong area. */
+/** Autocomplete line — street + city only (no calculated hood). */
 export function addressAutocompleteLabel(hit: AddressHit, query = ""): string {
   const parsed = parseStreetAndNumber(query.trim());
   const queryRoad = parsed.road.trim();
   const road = queryRoad || hit.road.trim();
   const num = hit.houseNumber?.trim() || parsed.num;
   const street = road && num ? `${road} ${num}` : streetFromAddressHit(hit);
-  const area = neighborhoodAtEventLocation(hit.lat, hit.lng);
-  if (area) return `${street}, ${area}`;
-  if (inNeighborhood(hit.lat, hit.lng)) {
-    return /רמת\s*גן/u.test(street) ? street : `${street}, רמת גן`;
-  }
-  return /רמת\s*גן/u.test(street) ? street : `${street}, רמת גן`;
+  if (/רמת\s*גן/u.test(street)) return street;
+  if (inNeighborhood(hit.lat, hit.lng)) return `${street}, רמת גן`;
+  return `${street}, רמת גן`;
 }
 
 function snapHitToFootprint(hit: AddressHit): AddressHit {
@@ -203,3 +161,6 @@ export function prepareAddressHits(hits: AddressHit[], query = ""): AddressHit[]
   }
   return [...best.values()];
 }
+
+// re-export for tests that assert display formatting
+export { formatDisplayAddress };
