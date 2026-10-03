@@ -244,14 +244,13 @@ export function resolveNeighborhood(house: {
   lat?: number;
   lng?: number;
 }): NeighborhoodId | null {
+  const lat = house.lat;
+  const lng = house.lng;
   const hasCoords =
-    typeof house.lat === "number" &&
-    typeof house.lng === "number" &&
-    Number.isFinite(house.lat) &&
-    Number.isFinite(house.lng);
+    typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng);
 
   if (hasCoords) {
-    const zoned = neighborhoodAtEventLocation(house.lat, house.lng);
+    const zoned = neighborhoodAtEventLocation(lat, lng);
     if (zoned) return zoned;
   }
 
@@ -261,9 +260,9 @@ export function resolveNeighborhood(house: {
     if (
       normalized === "הגפן" &&
       hasCoords &&
-      !inNeighborhoodZone(house.lat, house.lng, NEIGHBORHOOD_ZONES["הגפן"])
+      !inNeighborhoodZone(lat, lng, NEIGHBORHOOD_ZONES["הגפן"])
     ) {
-      return neighborhoodInferredFromPin(house.lat, house.lng);
+      return neighborhoodInferredFromPin(lat, lng);
     }
     return normalized;
   }
@@ -274,7 +273,7 @@ export function resolveNeighborhood(house: {
   }
 
   if (hasCoords) {
-    return neighborhoodInferredFromPin(house.lat, house.lng);
+    return neighborhoodInferredFromPin(lat, lng);
   }
   return null;
 }

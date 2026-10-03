@@ -54,23 +54,22 @@ export function normalizeAddressFields(house: {
   if (house.neighborhood !== undefined) {
     const address = streetFromLegacyAddress(house.address);
     const stored = normalizeNeighborhoodId(house.neighborhood) ?? house.neighborhood;
+    const lat = house.lat;
+    const lng = house.lng;
     const hasCoords =
-      typeof house.lat === "number" &&
-      typeof house.lng === "number" &&
-      Number.isFinite(house.lat) &&
-      Number.isFinite(house.lng);
+      typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng);
     if (hasCoords) {
-      const fromZone = neighborhoodAtEventLocation(house.lat, house.lng);
+      const fromZone = neighborhoodAtEventLocation(lat, lng);
       if (fromZone) {
         return { address, neighborhood: fromZone };
       }
       if (stored === null) {
-        return { address, neighborhood: neighborhoodInferredFromPin(house.lat, house.lng) };
+        return { address, neighborhood: neighborhoodInferredFromPin(lat, lng) };
       }
       if (stored === "הגפן" && !fromZone) {
         return {
           address,
-          neighborhood: neighborhoodInferredFromPin(house.lat, house.lng),
+          neighborhood: neighborhoodInferredFromPin(lat, lng),
         };
       }
     }
