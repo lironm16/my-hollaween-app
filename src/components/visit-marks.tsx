@@ -205,16 +205,32 @@ export function SkipPinBadge({
   );
 }
 
-function GemSign({ className }: { className?: string }) {
+/** Amber filled imp — מצאתי (matches LikedSign / VisitedSign size-8). */
+export function CollectedGemSign({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-[#1d1028] ring-1 ring-orange-500/30",
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/20 ring-1 ring-amber-400/45",
+        className,
+      )}
+      title={GEM_FOUND_I_HE}
+      aria-label={GEM_FOUND_I_HE}
+    >
+      <ImpMarkerGlyph variant="solid" className="size-[72%] text-[#fbbf24]" />
+    </span>
+  );
+}
+
+function UncollectedGemSign({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#1d1028] ring-1 ring-orange-500/30",
         className,
       )}
       aria-hidden
     >
-      <ImpMarkerGlyph variant="eyes" className="size-7 text-orange-100" />
+      <ImpMarkerGlyph variant="eyes" className="size-[72%] text-orange-100" />
     </span>
   );
 }
@@ -228,7 +244,7 @@ export function UncollectedGemMark({
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <GemSign />
+      <UncollectedGemSign />
       {labeled ? <span>{GEM_NOT_FOUND_I_HE}</span> : <span className="sr-only">{GEM_NOT_FOUND_I_HE}</span>}
     </span>
   );
@@ -243,7 +259,7 @@ export function CollectedGemMark({
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <GemSign />
+      <CollectedGemSign />
       {labeled ? <span>{GEM_FOUND_I_HE}</span> : <span className="sr-only">{GEM_FOUND_I_HE}</span>}
     </span>
   );

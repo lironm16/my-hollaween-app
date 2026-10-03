@@ -124,7 +124,7 @@ function LikedSummaryIcon() {
 }
 
 function GemSummaryIcon() {
-  return <ImpMarkerGlyph className="size-full text-[#fbbf24]" />;
+  return <ImpMarkerGlyph variant="solid" className="size-full text-[#fbbf24]" />;
 }
 
 function RouteChip({

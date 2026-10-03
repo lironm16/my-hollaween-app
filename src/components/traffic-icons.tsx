@@ -42,7 +42,8 @@ export function GemTrafficIcon({
       aria-label="שדון"
     >
       <ImpMarkerGlyph
-        className={cn("size-[1.35rem] max-h-full max-w-full text-orange-50", markClassName)}
+        variant="solid"
+        className={cn("size-[1.35rem] max-h-full max-w-full text-[#fbbf24]", markClassName)}
       />
     </span>
   );

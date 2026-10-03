@@ -32,7 +32,7 @@ export function ImpMarkerGlyph({
   const url = variant === "eyes" ? IMP_MARKER_EYES_MASK_URL : IMP_MARKER_MASK_URL;
   return (
     <span
-      className={cn("imp-marker-glyph shrink-0 bg-current", className)}
+      className={cn("imp-marker-glyph aspect-square shrink-0 bg-current", className)}
       style={{ ...maskStyleFor(url), ...style }}
       aria-hidden
     />

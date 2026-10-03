@@ -2,14 +2,13 @@
 
 import { useMemo, type ReactNode } from "react";
 import { Home, MapPinned, Moon, Pause } from "lucide-react";
-import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { LocationKindSign } from "@/components/location-kind-sign";
 import { CandySign } from "@/components/candy-glyphs";
 import { OpenNowSign, ClosingSoonSign, OpeningSoonSign } from "@/components/open-now-mark";
 import { ScareSign } from "@/components/scare-glyphs";
 import { SensitivitySign } from "@/components/sensitivity-glyphs";
 import { StrollerSign } from "@/components/symbols";
-import { LikedSign, SkipSign } from "@/components/visit-marks";
+import { CollectedGemSign, LikedSign, SkipSign } from "@/components/visit-marks";
 import { VisitedCheck } from "@/components/visited-check";
 import { GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { scareShort, decorShort, treatLabels } from "@/lib/labels";
@@ -90,7 +89,7 @@ export function PersonalMarksSection({
         />
         {showGemStats ? (
           <StatTile
-            icon={<ImpMarkerGlyph className="size-8 text-amber-300" />}
+            icon={<CollectedGemSign />}
             label={GEM_FOUND_I_HE}
             value={gemCollectedCount}
             valueClass={gemCollectedCount ? "text-amber-300" : undefined}
