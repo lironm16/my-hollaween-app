@@ -21,6 +21,8 @@ export type NeighborhoodId = (typeof NEIGHBORHOODS)[number];
 
 const LEGACY_NEIGHBORHOOD_ALIASES: Record<string, NeighborhoodId> = {
   "שכונת הגפן": "הגפן",
+  /** OSM suburb label for שיכון ותיקים (e.g. הזמיר). */
+  ותיקים: "שיכון ותיקים",
 };
 
 /** Approximate centers used when address text has no neighborhood name. */
@@ -121,7 +123,7 @@ const NEIGHBORHOOD_ZONES: Record<
   { south: number; north: number; west: number; east: number }
 > = {
   חרוזים: { south: 32.0888, north: 32.0924, west: 34.8018, east: 34.8052 },
-  "שיכון ותיקים": { south: 32.0898, north: 32.0942, west: 34.8088, east: 34.8142 },
+  "שיכון ותיקים": { south: 32.0898, north: 32.0952, west: 34.8088, east: 34.8178 },
   "נחלת גנים": { south: 32.0897, north: 32.0938, west: 34.8103, east: 34.8198 },
   הגפן: { south: 32.08835, north: 32.0908, west: 34.8098, east: 34.8138 },
 };
@@ -174,10 +176,18 @@ export function houseLocationAllowed(lat: number, lng: number) {
   return neighborhoodAtEventLocation(lat, lng) !== null;
 }
 
-/** Best-effort neighborhood label for a pin (zone when possible, else nearest center). */
-export function neighborhoodLabelForPin(lat: number, lng: number): NeighborhoodId | null {
+/** Best-effort neighborhood label for a pin (zone when possible, else OSM suburb, else nearest center). */
+export function neighborhoodLabelForPin(
+  lat: number,
+  lng: number,
+  suburb?: string,
+): NeighborhoodId | null {
   if (!inNeighborhood(lat, lng)) return null;
-  return neighborhoodAtEventLocation(lat, lng) ?? neighborhoodFromCoords(lat, lng);
+  const zoned = neighborhoodAtEventLocation(lat, lng);
+  if (zoned) return zoned;
+  const fromSuburb = suburb ? suburbToNeighborhood(suburb) : null;
+  if (fromSuburb) return fromSuburb;
+  return neighborhoodFromCoords(lat, lng);
 }
 
 export function allowedNeighborhoodsMessage() {

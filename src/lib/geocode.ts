@@ -30,8 +30,7 @@ function isCityName(value: string) {
 }
 
 function areaLabelFor(hit: { lat: number; lng: number; suburb?: string }) {
-  void hit.suburb;
-  return neighborhoodLabelForPin(hit.lat, hit.lng);
+  return neighborhoodLabelForPin(hit.lat, hit.lng, hit.suburb);
 }
 
 type NominatimHit = {

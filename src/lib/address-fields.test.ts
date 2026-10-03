@@ -31,6 +31,17 @@ describe("address fields", () => {
     assert.equal(fields.neighborhood, "חרוזים");
   });
 
+  it("corrects stale neighborhood labels from pin zones (HaZamir 8)", () => {
+    const fields = normalizeAddressFields({
+      address: "הזמיר 8",
+      neighborhood: "נחלת גנים",
+      lat: 32.0945618,
+      lng: 34.816518,
+    });
+    assert.equal(fields.address, "הזמיר 8");
+    assert.equal(fields.neighborhood, "שיכון ותיקים");
+  });
+
   it("joins street and neighborhood only for display", () => {
     const house = { address: "יהודית 15", neighborhood: "חרוזים" as const };
     assert.equal(formatDisplayAddress(house), "יהודית 15, חרוזים");

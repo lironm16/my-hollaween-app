@@ -6,8 +6,10 @@ import {
   neighborhoodAtEventLocation,
   neighborhoodFromAddress,
   neighborhoodFromCoords,
+  neighborhoodLabelForPin,
   normalizeNeighborhoodId,
   resolveNeighborhood,
+  suburbToNeighborhood,
 } from "@/lib/config";
 
 describe("neighborhood config", () => {
@@ -17,6 +19,11 @@ describe("neighborhood config", () => {
 
   it("maps legacy שכונת הגפן storage to הגפן", () => {
     assert.equal(normalizeNeighborhoodId("שכונת הגפן"), "הגפן");
+  });
+
+  it("maps OSM suburb ותיקים to שיכון ותיקים", () => {
+    assert.equal(normalizeNeighborhoodId("ותיקים"), "שיכון ותיקים");
+    assert.equal(suburbToNeighborhood("ותיקים"), "שיכון ותיקים");
   });
 
   it("detects הגפן in address text", () => {
@@ -46,6 +53,14 @@ describe("neighborhood config", () => {
   it("includes Hashkediya 13 in Gefen", () => {
     assert.equal(neighborhoodAtEventLocation(32.088440010365, 34.811503009317), "הגפן");
     assert.equal(houseLocationAllowed(32.088440010365, 34.811503009317), true);
+  });
+
+  it("classifies HaZamir 8 in Shikun Vetikim (not Nachlat Ganem)", () => {
+    const lat = 32.0945618;
+    const lng = 34.816518;
+    assert.equal(neighborhoodAtEventLocation(lat, lng), "שיכון ותיקים");
+    assert.equal(neighborhoodLabelForPin(lat, lng, "ותיקים"), "שיכון ותיקים");
+    assert.equal(resolveNeighborhood({ address: "הזמיר 8", lat, lng }), "שיכון ותיקים");
   });
 
 });
