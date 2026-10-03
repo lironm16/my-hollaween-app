@@ -10,7 +10,7 @@ export function gemHuntFabVisible(isAdmin: boolean, now = new Date()) {
   return gemHuntVisible(isAdmin) && !isAddHouseOpen(now);
 }
 
-/** Side menu «ספר החברים» — same evening gate as hunt (respects rehearsal / sim clock via `now`). */
+/** Side menu gem album — same evening gate as hunt (respects rehearsal / sim clock via `now`). */
 export function gemBagMenuVisible(isAdmin: boolean, now = new Date()) {
   return gemHuntFabVisible(isAdmin, now);
 }
