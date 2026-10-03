@@ -60,6 +60,23 @@ describe("mergeVisibleHouses", () => {
     assert.deepEqual(merged.map((house) => house.id), ["admin-only"]);
   });
 
+  it("keeps addedBy on admin merge for internal submitter name", () => {
+    const merged = mergeVisibleHouses({
+      catalogHouses: [publicHouse("בית-2000", "2026-10-31T10:00:00.000Z")],
+      owned: [],
+      admin: true,
+      adminHouses: [
+        {
+          ...adminHouse("בית-2000", "2026-10-31T12:00:00.000Z"),
+          addedBy: "משפחת כהן",
+        },
+      ],
+      includeCatalogWhenAdmin: true,
+    });
+    const house = merged.find((item) => item.id === "בית-2000") as { addedBy?: string };
+    assert.equal(house?.addedBy, "משפחת כהן");
+  });
+
   it("keeps ownerPhone on admin merge for internal contact", () => {
     const merged = mergeVisibleHouses({
       catalogHouses: [publicHouse("בית-1847", "2026-10-31T10:00:00.000Z")],

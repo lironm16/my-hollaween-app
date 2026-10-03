@@ -31,7 +31,10 @@ export async function PATCH(
     if (!result) {
       return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404 });
     }
-    return NextResponse.json({ house: toEditorHouse(result.house), push: result.push });
+    return NextResponse.json({
+      house: toEditorHouse(result.house, { includeAddedBy: true }),
+      push: result.push,
+    });
   } catch (error) {
     console.error("[admin/houses] update failed", error);
     const phone = ownerPhoneHttpError(error);

@@ -100,7 +100,7 @@ export type House = {
   editCode: string;
   createdAt: string;
   updatedAt: string;
-  /** Person name captured when the house was first added. */
+  /** Person name captured when the house was first added — admin-only, never in public catalog. */
   addedBy?: string | null;
   /** Internal — for event manager contact only; never in public catalog. */
   ownerPhone?: string | null;
@@ -153,13 +153,17 @@ export type NightPatch = {
   ownerPhone?: string | null;
 };
 
-export type PublicHouse = Omit<House, "editCode" | "storeId" | "ownerPhone"> & {
+export type PublicHouse = Omit<House, "editCode" | "storeId" | "ownerPhone" | "addedBy"> & {
   /** True when hydrated from on-device cache — detail text/address must be fetched live. */
   deviceCachePin?: boolean;
 };
 
 /** Admin / owner edit surfaces may attach internal contact fields. */
-export type EditorHouse = PublicHouse & { ownerPhone?: string | null };
+export type EditorHouse = PublicHouse & {
+  ownerPhone?: string | null;
+  /** Submitter name — only hydrated for admin API / merge, never on public catalog. */
+  addedBy?: string | null;
+};
 
 export type CatalogPushTemplate = {
   enabled: boolean;

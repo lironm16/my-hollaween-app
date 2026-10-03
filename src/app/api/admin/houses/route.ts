@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       },
     );
     return NextResponse.json({
-      house: toEditorHouse(result.house),
+      house: toEditorHouse(result.house, { includeAddedBy: true }),
       editCode: result.house.editCode,
       push: result.push,
     });

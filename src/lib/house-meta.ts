@@ -6,10 +6,13 @@ export function formatHouseAddedAt(iso: string) {
   return date.toLocaleString("he-IL", { dateStyle: "medium", timeStyle: "short" });
 }
 
-/** One line for when / who registered the house — null when nothing to show. */
-export function houseAddedMetaLine(house: Pick<PublicHouse, "createdAt" | "addedBy">) {
+/** One line for when the house was registered — submitter name is admin-only. */
+export function houseAddedMetaLine(
+  house: Pick<PublicHouse, "createdAt"> & { addedBy?: string | null },
+  options?: { showSubmitterName?: boolean },
+) {
   const when = house.createdAt ? formatHouseAddedAt(house.createdAt) : "";
-  const who = house.addedBy?.trim();
+  const who = options?.showSubmitterName ? house.addedBy?.trim() : "";
   if (who && when) return `נוסף על ידי ${who} · ${when}`;
   if (who) return `נוסף על ידי ${who}`;
   if (when) return `נוסף ${when}`;
