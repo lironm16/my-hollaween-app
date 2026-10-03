@@ -27,9 +27,11 @@ export function isStubHouse(house: {
   description?: string;
   address?: string;
   photoUrl?: string;
+  /** Pin-only device cache shell (no server detail yet). */
+  deviceCachePin?: boolean;
   deviceCacheStub?: boolean;
 }) {
-  if (house.deviceCacheStub) return true;
+  if (house.deviceCachePin || house.deviceCacheStub) return true;
   if (isKnownRehearsalStubId(house.id)) return true;
   if (house.id && STUB_ID.test(house.id)) return true;
   if (isE2eTestHouse(house)) return true;
