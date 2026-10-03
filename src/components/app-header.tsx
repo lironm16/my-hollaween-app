@@ -28,6 +28,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { buttonVariants } from "@/components/ui/button";
+import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
@@ -209,7 +210,7 @@ export function AppHeader({
                 )}
               >
                 <Sparkles className="size-4 shrink-0" />
-                ספר החברים
+                {GEM_ALBUM_TITLE_HE}
               </Link>
             ) : null}
             <Link

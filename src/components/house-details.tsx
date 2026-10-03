@@ -11,6 +11,8 @@ import { HoursStatusBanner } from "@/components/hours-status-banner";
 import { HouseTags } from "@/components/house-tags";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
+import { adminShowsPrivateHouseFields } from "@/lib/gem-preview-as-user";
 import { formatDistance } from "@/lib/geo";
 import { HoursLabel } from "@/components/clock-time";
 import { formatHoursLabel } from "@/lib/hours";
@@ -318,7 +320,10 @@ export function HouseDetails({
 }) {
   const addressReveal = useAddressReveal();
   const { admin } = useAdminSession();
-  const ownerPhone = admin ? (house as EditorHouse).ownerPhone?.trim() : "";
+  const { previewAsUser } = useGemPreviewAsUser();
+  const ownerPhone = adminShowsPrivateHouseFields(admin, previewAsUser)
+    ? (house as EditorHouse).ownerPhone?.trim()
+    : "";
   const displayAddress = addressReveal.formatDisplayAddress(house);
   const arrivalText = addressReveal.visibleArrival(house);
   const showMaps = addressReveal.mapsAllowed(house.id) && houseServerDetailReady(house);

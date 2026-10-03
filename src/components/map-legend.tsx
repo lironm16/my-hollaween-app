@@ -7,6 +7,11 @@ import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { SkipIcon } from "@/components/skip-icon";
 import { POI_PIN_FACE_SRC } from "@/lib/pin-faces";
 import { PIN_BACKGROUND } from "@/lib/pin-colors";
+import {
+  GEM_DIAMOND_COLLECTED_FILL,
+  GEM_DIAMOND_FILL,
+  gemDiamondSvgPath,
+} from "@/lib/gem-diamond-visual";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -140,25 +145,25 @@ function GemDiamondSwatch({ collected = false }: { collected?: boolean }) {
       aria-hidden
     >
       <svg className="map-gem-diamond-marker__svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M6 3h12l4 7-10 13L2 10l4-7z" fill="currentColor" />
+        <path
+          d={gemDiamondSvgPath()}
+          fill={collected ? GEM_DIAMOND_COLLECTED_FILL : GEM_DIAMOND_FILL}
+        />
       </svg>
     </div>
   );
 }
 
-export function MapLegend({ showGemAnchors = false }: { showGemAnchors?: boolean }) {
-  const groups = showGemAnchors
-    ? [
-        ...BASE_GROUPS,
-        {
-          title: "יהלומים",
-          items: [
-            { key: "gem-open", label: "יהלום לצוד", node: <GemDiamondSwatch /> },
-            { key: "gem-done", label: "נאסף", node: <GemDiamondSwatch collected /> },
-          ],
-        },
-      ]
-    : BASE_GROUPS;
+const GEM_LEGEND_GROUP = {
+  title: "יהלומים",
+  items: [
+    { key: "gem-open", label: "יהלום לצוד", node: <GemDiamondSwatch /> },
+    { key: "gem-done", label: "נאסף", node: <GemDiamondSwatch collected /> },
+  ],
+} as const;
+
+export function MapLegend({ showGemLegend = false }: { showGemLegend?: boolean }) {
+  const groups = showGemLegend ? [GEM_LEGEND_GROUP, ...BASE_GROUPS] : BASE_GROUPS;
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const titleId = useId();
@@ -197,7 +202,7 @@ export function MapLegend({ showGemAnchors = false }: { showGemAnchors?: boolean
                 aria-labelledby={titleId}
                 dir="rtl"
                 className="map-legend-panel relative flex max-h-[min(88dvh,40rem)] w-[min(38rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl bg-[#160b20] text-right shadow-[0_16px_48px_rgba(0,0,0,0.55)] ring-1 ring-orange-500/30"
-                onClick={() => setOpen(false)}
+                onClick={(event) => event.stopPropagation()}
               >
                 <OverlayCloseBar
                   compact

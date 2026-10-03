@@ -78,6 +78,20 @@ export function mapsNavigationAllowed(houseId: string, ctx: AddressRevealContext
   return canViewHouseLocationDetails(houseId, ctx);
 }
 
+/** Strip address/arrival on rows the viewer may not see (e.g. admin user preview). */
+export function housesWithLocationPolicy(
+  houses: readonly PublicHouse[],
+  ctx: AddressRevealContext,
+): PublicHouse[] {
+  return houses.map((house) =>
+    canViewHouseLocationDetails(house.id, ctx) ? house : redactHouseLocationDetails(house),
+  );
+}
+
+export function houseWithLocationPolicy(house: PublicHouse, ctx: AddressRevealContext): PublicHouse {
+  return canViewHouseLocationDetails(house.id, ctx) ? house : redactHouseLocationDetails(house);
+}
+
 export function makeAddressRevealContext(input: {
   now: Date;
   isAdmin?: boolean;
@@ -88,4 +102,12 @@ export function makeAddressRevealContext(input: {
     isAdmin: Boolean(input.isAdmin),
     ownedHouseIds: new Set(input.ownedHouseIds ?? []),
   };
+}
+
+/** תצוגת משתמש — same reveal rules as a signed-out visitor (owned houses still see their row). */
+export function visitorAddressRevealContext(
+  now: Date,
+  ownedHouseIds?: Iterable<string>,
+): AddressRevealContext {
+  return makeAddressRevealContext({ now, isAdmin: false, ownedHouseIds });
 }

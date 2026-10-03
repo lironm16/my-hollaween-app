@@ -196,4 +196,55 @@ describe("gem hunt gate", () => {
     assert.equal(gemHuntFabVisible(true, addHouseAfternoon), false);
     assert.equal(gemHuntFabVisible(false, huntEvening), false);
   });
+
+  it("map legend gems for admin QA and when map toggle is on", async () => {
+    const { gemMapLegendVisible } = await import("@/lib/gem-hunt-enabled");
+    const huntEvening = new Date(2026, 9, 31, 18, 0, 0, 0);
+    const afternoon = new Date(2026, 9, 31, 16, 30, 0, 0);
+    assert.equal(
+      gemMapLegendVisible(true, {
+        now: afternoon,
+        previewAsUser: false,
+        mapDiamondsVisible: false,
+        mapAdminCharactersVisible: false,
+      }),
+      true,
+    );
+    assert.equal(
+      gemMapLegendVisible(true, {
+        now: afternoon,
+        previewAsUser: true,
+        mapDiamondsVisible: true,
+        mapAdminCharactersVisible: false,
+      }),
+      true,
+    );
+    assert.equal(
+      gemMapLegendVisible(true, {
+        now: afternoon,
+        previewAsUser: true,
+        mapDiamondsVisible: false,
+        mapAdminCharactersVisible: false,
+      }),
+      false,
+    );
+    assert.equal(
+      gemMapLegendVisible(true, {
+        now: huntEvening,
+        previewAsUser: true,
+        mapDiamondsVisible: false,
+        mapAdminCharactersVisible: false,
+      }),
+      true,
+    );
+    assert.equal(
+      gemMapLegendVisible(false, {
+        now: huntEvening,
+        previewAsUser: false,
+        mapDiamondsVisible: true,
+        mapAdminCharactersVisible: false,
+      }),
+      false,
+    );
+  });
 });

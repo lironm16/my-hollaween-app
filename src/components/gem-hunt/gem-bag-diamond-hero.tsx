@@ -1,6 +1,7 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
+import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
 import { cn } from "@/lib/utils";
 
 /** Top section on the sticker bag — album progress only (no separate «diamond» count). */
@@ -28,7 +29,7 @@ export function GemBagDiamondHero({
           aria-hidden
         />
         <div className="min-w-0 flex-1 text-right">
-          <h1 className="font-display text-2xl text-orange-200">ספר החברים</h1>
+          <h1 className="font-display text-2xl text-orange-200">{GEM_ALBUM_TITLE_HE}</h1>
           <p className="mt-1 text-lg font-medium text-violet-50">
             <span className="text-amber-200">{filledCount}</span>
             <span className="text-violet-200/90"> חברים באלבום · </span>

@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { isDeviceCachePinHouse } from "@/lib/device-catalog-cache";
+import { houseWithLocationPolicy, visitorAddressRevealContext } from "@/lib/address-reveal";
+import { appNow } from "@/lib/app-clock";
 import { fetchPublicHouse, notifyHouseDetailLoaded } from "@/lib/fetch-public-house";
+import { readGemPreviewAsUser } from "@/lib/gem-preview-as-user";
+import { loadOwnedHouses } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 
 export function useServerHouseDetail(house: PublicHouse | null) {
@@ -32,8 +36,19 @@ export function useServerHouseDetail(house: PublicHouse | null) {
         setUnavailable(result.status === 404);
         return;
       }
-      setResolved(result.house);
-      notifyHouseDetailLoaded(result.house);
+      let detail = result.house;
+      if (readGemPreviewAsUser()) {
+        const now = appNow();
+        detail = houseWithLocationPolicy(
+          detail,
+          visitorAddressRevealContext(
+            now,
+            loadOwnedHouses().map((row) => row.id),
+          ),
+        );
+      }
+      setResolved(detail);
+      notifyHouseDetailLoaded(detail);
     })();
 
     return () => {

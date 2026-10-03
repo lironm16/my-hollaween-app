@@ -52,7 +52,8 @@ import { endGemHuntWebXrSession, requestGemHuntWebXrSession } from "@/lib/gem-hu
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
 import { loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
-import { canCollectGem, GEM_CHEER_MS } from "@/lib/gem-hunt";
+import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
+import { gemMapLegendVisible } from "@/lib/gem-hunt-enabled";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import { syncGemMonsterAssignment } from "@/lib/gem-monsters";
@@ -64,6 +65,8 @@ import {
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { housesWithLocationPolicy } from "@/lib/address-reveal";
+import { adminShowsPrivateHouseFields } from "@/lib/gem-preview-as-user";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAdminHouses } from "@/hooks/use-admin-houses";
@@ -192,6 +195,16 @@ export function NeighborhoodApp({
   /** Toolbar toggle — diamonds hidden on map until user taps the top-bar gem control. */
   const [mapDiamondsVisible, setMapDiamondsVisible] = useState(false);
   const [mapAdminCharactersVisible, setMapAdminCharactersVisible] = useState(false);
+  const showGemMapLegend = useMemo(
+    () =>
+      gemMapLegendVisible(admin, {
+        now,
+        previewAsUser: gemPreviewAsUser,
+        mapDiamondsVisible,
+        mapAdminCharactersVisible,
+      }),
+    [admin, now, gemPreviewAsUser, mapDiamondsVisible, mapAdminCharactersVisible],
+  );
   const [gemResetHouse, setGemResetHouse] = useState<PublicHouse | null>(null);
   const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);
   const [mapGemCheerMonster, setMapGemCheerMonster] = useState<GemMonsterId | null>(null);
@@ -285,35 +298,43 @@ export function NeighborhoodApp({
   }, [adminHouses]);
 
   const catalogHouses = useMemo(() => resolveCatalogHouses(catalog), [catalog]);
+  const restoreRedactedLocations = adminShowsPrivateHouseFields(adminForHouseSet, gemPreviewAsUser);
   const houses = useMergedHouses({
     catalogHouses,
     owned,
     admin: adminForHouseSet,
     adminHouses,
     includeCatalogWhenAdmin: true,
+    restoreRedactedLocations,
   });
   const lastHousesRef = useRef<PublicHouse[]>([]);
   const displayHouses = useMemo(() => {
+    const applyVisitorLocations = (list: PublicHouse[]) =>
+      gemPreviewAsUser ? housesWithLocationPolicy(list, addressReveal) : list;
+
     if (houses.length > 0) {
-      lastHousesRef.current = houses;
-      return houses;
+      const next = applyVisitorLocations(houses);
+      lastHousesRef.current = next;
+      return next;
     }
     const authHouses =
       catalog && isAuthoritativeHouseList(catalog) && catalog.houses.length > 0
         ? catalog.houses
         : null;
     if (authHouses) {
-      lastHousesRef.current = authHouses;
-      return authHouses;
+      const next = applyVisitorLocations(authHouses);
+      lastHousesRef.current = next;
+      return next;
     }
     if (lastHousesRef.current.length > 0) return lastHousesRef.current;
     const cached = loadCatalogCacheSync()?.houses;
     if (cached?.length) {
-      lastHousesRef.current = cached;
-      return cached;
+      const next = applyVisitorLocations(cached);
+      lastHousesRef.current = next;
+      return next;
     }
     return houses;
-  }, [houses, catalog]);
+  }, [houses, catalog, gemPreviewAsUser, addressReveal]);
 
   const { houses: mapListHouses, now: mapListNow } = useMapListUiLock(displayHouses, now);
 
@@ -1286,6 +1307,7 @@ export function NeighborhoodApp({
                     gemUi &&
                     (gemAdminTools ? mapAdminCharactersVisible : mapDiamondsVisible)
                   }
+                  showGemLegend={showGemMapLegend}
                   gemAnchorHouses={gemUi ? mapHouses : []}
                   gemAnchorVisual={
                     gemAdminTools && mapAdminCharactersVisible

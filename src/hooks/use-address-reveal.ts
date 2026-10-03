@@ -12,6 +12,7 @@ import {
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
+import { adminShowsPrivateHouseFields } from "@/lib/gem-preview-as-user";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import type { PublicHouse } from "@/lib/types";
 
@@ -31,7 +32,7 @@ export function useAddressReveal(): AddressRevealContext & {
     () =>
       makeAddressRevealContext({
         now,
-        isAdmin: admin && !previewAsUser,
+        isAdmin: adminShowsPrivateHouseFields(admin, previewAsUser),
         ownedHouseIds,
       }),
     [now, admin, previewAsUser, ownedHouseIds],

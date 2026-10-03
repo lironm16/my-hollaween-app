@@ -14,6 +14,7 @@ import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
 import { catalogHasRealHouses } from "@/lib/house-set";
 import { buttonVariants } from "@/components/ui/button";
+import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
 import { cn } from "@/lib/utils";
 
 export default function GemBagPage() {
@@ -44,7 +45,7 @@ export default function GemBagPage() {
         <AppHeader />
         <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-5">
           <div className="mx-auto max-w-lg space-y-4">
-            <h1 className="font-display text-2xl text-orange-300">ספר החברים</h1>
+            <h1 className="font-display text-2xl text-orange-300">{GEM_ALBUM_TITLE_HE}</h1>
             <p className="text-base text-violet-200">הציד עדיין לא פתוח לכולם.</p>
             <Link href="/" className={buttonVariants({ variant: "outline" })}>
               חזרה למפה

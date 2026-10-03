@@ -6,6 +6,7 @@ import { HelpText } from "@/lib/render-help-text";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { buttonVariants } from "@/components/ui/button";
+import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
 import { cn } from "@/lib/utils";
 
 export default function GemHuntHelpPage() {
@@ -37,7 +38,7 @@ export default function GemHuntHelpPage() {
     <HelpShell title="ציד יהלומים">
       <p className="mb-5 text-lg leading-relaxed text-violet-100">
         ליד בתים נבחרים מסתתר יהלום — חיה קטנה שאפשר לאסוף במצלמה ולהוסיף ל
-        <strong className="font-semibold text-orange-100">ספר החברים</strong>. המדריך הזה מיועד
+        <strong className="font-semibold text-orange-100">{GEM_ALBUM_TITLE_HE}</strong>. המדריך הזה מיועד
         לבדיקות לפני פתיחה לציבור.
       </p>
 
@@ -123,19 +124,19 @@ export default function GemHuntHelpPage() {
           </div>
         </HelpExpandable>
 
-        <HelpExpandable title="איסוף וספר החברים">
+        <HelpExpandable title={`איסוף ו${GEM_ALBUM_TITLE_HE}`}>
           <div className="space-y-3 text-lg leading-relaxed text-orange-50">
             <p>
               <HelpText>
                 {
-                  "כשהחיה במסגרת — הקישו עליה (או סובבו במצב מפגש ואז הקישו). אחרי <<יהלום נאסף!>> אפשר לפתוח את <<ספר החברים>> מהתפריט."
+                  `כשהחיה במסגרת — הקישו עליה (או סובבו במצב מפגש ואז הקישו). אחרי <<יהלום נאסף!>> אפשר לפתוח את <<${GEM_ALBUM_TITLE_HE}>> מהתפריט.`
                 }
               </HelpText>
             </p>
             <p>
               <HelpText>
                 {
-                  "כל בית עם יהלום מוסיף חבר לספר — אפשר לראות מי כבר נאסף ומי עדיין מחכה בשכונה."
+                  "כל בית עם יהלום מוסיף חבר לאלבום — אפשר לראות מי כבר נאסף ומי עדיין מחכה בשכונה."
                 }
               </HelpText>
             </p>
@@ -143,7 +144,7 @@ export default function GemHuntHelpPage() {
               href="/gem-bag"
               className="inline-block text-orange-300 underline underline-offset-2 hover:text-orange-200"
             >
-              פתיחת ספר החברים
+              {`פתיחת ${GEM_ALBUM_TITLE_HE}`}
             </Link>
           </div>
         </HelpExpandable>

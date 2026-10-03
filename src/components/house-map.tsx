@@ -641,6 +641,8 @@ type Props = {
   onGemAnchorSelect?: (house: PublicHouse) => void;
   /** Show gem diamond markers (controlled by top-bar toggle). */
   showGemAnchors?: boolean;
+  /** Map legend «יהלומים» section — when gem hunt UI is on (independent of anchor toggle). */
+  showGemLegend?: boolean;
   gemAnchorHouses?: PublicHouse[];
   gemAnchorVisual?: GemMapAnchorVisual;
   isGemCollected?: (houseId: string) => boolean;
@@ -682,6 +684,7 @@ export function HouseMap({
   embedCenterOnSelect = true,
   onGemAnchorSelect,
   showGemAnchors = false,
+  showGemLegend = false,
   gemAnchorHouses = [],
   gemAnchorVisual = "admin",
   isGemCollected,
@@ -978,7 +981,9 @@ export function HouseMap({
               <LocateFixed className={cn("size-5", locating && "animate-pulse")} />
             </button>
           ) : null}
-          {!pickMode && !embed ? <MapLegend showGemAnchors={showGemAnchors} /> : null}
+          {!pickMode && !embed ? (
+            <MapLegend key={showGemLegend ? "with-gems" : "base"} showGemLegend={showGemLegend} />
+          ) : null}
           {!pickMode && !embed ? statsFab : null}
         </div>
     </div>
