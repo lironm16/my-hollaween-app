@@ -68,6 +68,9 @@ type CatalogContextValue = CatalogState & {
 const CatalogContext = createContext<CatalogContextValue | null>(null);
 
 const CATALOG_FETCH_TIMEOUT_MS = 18_000;
+/** After a failed sync, retry sooner than the normal poll (e.g. post-deploy cold start). */
+const CATALOG_QUICK_RETRY_MS = 12_000;
+const CATALOG_QUICK_RETRY_MAX = 4;
 
 function isFetchTimeout(err: unknown) {
   return (
@@ -162,6 +165,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const offlineSinceRef = useRef<number | null>(null);
   const seededRef = useRef(false);
   const pendingCatalogRef = useRef<Catalog | null>(null);
+  const quickRetryCountRef = useRef(0);
+  const quickRetryTimerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     catalogRef.current = catalog;
@@ -276,6 +281,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     setSource("network");
     setUnreachable(false);
     setError(null);
+    quickRetryCountRef.current = 0;
     const serverCount = resolveServerHouseCount(live);
     if (live.full || (serverCount != null && next.houses.length >= serverCount)) {
       markCatalogCacheComplete(next);
@@ -351,9 +357,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           });
           if (isMapListSuspended()) return;
           setSource("cache");
-          markReachabilityAfterFetchFailure(online);
-          setError(null);
-          return;
+          // Fall through to snapshot + API full load — CDN snapshot often works when serverless is cold.
         }
       }
     }
@@ -388,6 +392,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         setSource("network");
         setUnreachable(false);
         setError(null);
+        quickRetryCountRef.current = 0;
         await saveCatalogCache(merged);
         window.dispatchEvent(new Event("hw-catalog-refreshed"));
         return;
@@ -401,6 +406,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         setSource("snapshot");
         setUnreachable(false);
         setError(null);
+        quickRetryCountRef.current = 0;
         if (catalogHasRealHouses(merged)) {
           markCatalogCacheComplete(merged);
           await saveCatalogCache(merged);
@@ -437,6 +443,30 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
             ? "השרת לא עונה, ואין עותק שמור בטלפון. נסו שוב כשיש קליטה."
             : "אין אינטרנט, ואין עותק שמור בטלפון. פתחו את האפליקציה פעם אחת כשיש רשת.",
         );
+      }
+    }
+
+    if (online && !readServerSimDown()) {
+      const cat = catalogRef.current;
+      const stillStale =
+        !cat ||
+        !catalogHasRealHouses(cat) ||
+        catalogCacheIncomplete(cat, loadCatalogCacheMeta(), resolveServerHouseCount(cat));
+      if (
+        stillStale &&
+        quickRetryCountRef.current < CATALOG_QUICK_RETRY_MAX &&
+        !isMapListSuspended()
+      ) {
+        quickRetryCountRef.current += 1;
+        if (quickRetryTimerRef.current !== undefined) {
+          window.clearTimeout(quickRetryTimerRef.current);
+        }
+        quickRetryTimerRef.current = window.setTimeout(() => {
+          quickRetryTimerRef.current = undefined;
+          void refresh(false);
+        }, CATALOG_QUICK_RETRY_MS);
+      } else if (!stillStale) {
+        quickRetryCountRef.current = 0;
       }
     }
   }, [applyLiveResponse, markReachabilityAfterFetchFailure]);
@@ -538,6 +568,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
       if (pollTimer !== undefined) window.clearTimeout(pollTimer);
+      if (quickRetryTimerRef.current !== undefined) window.clearTimeout(quickRetryTimerRef.current);
       window.removeEventListener("online", onOff);
       window.removeEventListener("offline", onOff);
       document.removeEventListener("visibilitychange", onVis);
