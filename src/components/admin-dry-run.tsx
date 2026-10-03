@@ -177,7 +177,7 @@ export function AdminDryRunPanel() {
       </div>
       {gemsOnScreen && catalogHouses.length > 0 ? (
         <div className="space-y-1 rounded-lg bg-[#12081a] p-1 ring-1 ring-orange-500/25">
-          <p className="px-1 pt-0.5 text-base font-medium text-orange-100">יהלומים</p>
+          <p className="px-1 pt-0.5 text-base font-medium text-orange-100">שדונים</p>
           <AdminGemOpsPanel houses={catalogHouses} />
         </div>
       ) : null}

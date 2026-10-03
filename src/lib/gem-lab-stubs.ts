@@ -17,10 +17,15 @@ const GEM_LAB_ID_POOL = [
   "נק-9319",
 ] as const;
 
-const GEM_LAB_DESCRIPTION = "סטאב לחזרה — יהלום בדיקה (מעבדת מנהל)";
+const GEM_LAB_DESCRIPTION = "סטאב לחזרה — שדון בדיקה (מעבדת מנהל)";
 
 export function isGemLabStub(house: { id?: string; description?: string }) {
-  if (house.description?.includes("יהלום בדיקה")) return true;
+  if (
+    house.description?.includes("שדון בדיקה") ||
+    house.description?.includes("יהלום בדיקה")
+  ) {
+    return true;
+  }
   return GEM_LAB_ID_POOL.includes(house.id as (typeof GEM_LAB_ID_POOL)[number]);
 }
 
@@ -82,7 +87,7 @@ export function buildGemLabStub(input: {
   return {
     id: input.id,
     kind: "house",
-    name: input.name?.trim() || `יהלום בדיקה ${input.id.replace(/^.*-/, "")}`,
+    name: input.name?.trim() || `שדון בדיקה ${input.id.replace(/^.*-/, "")}`,
     theme,
     address: "מעבדת יהלומים — מיקום GPS",
     arrival: "עמדו ליד הסיכה",

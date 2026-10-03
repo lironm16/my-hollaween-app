@@ -23,7 +23,7 @@ export function HouseTitleMarkers({
       ) : null}
       {gemCollected ? (
         <>
-          <GemDiamondSvg className="me-1.5 inline size-7 align-middle" aria-hidden />
+          <GemDiamondSvg className="me-1.5 inline size-8 align-middle" aria-hidden />
           <span className="sr-only">שדון</span>
         </>
       ) : null}

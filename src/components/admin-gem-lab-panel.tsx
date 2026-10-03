@@ -93,7 +93,7 @@ export function AdminGemLabPanel() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <p className="text-sm text-violet-200">
-        סיכה על המפה (או GPS) → שמירה יוצרת <strong className="font-semibold text-orange-100">בית סטאב עם יהלום</strong>{" "}
+        סיכה על המפה (או GPS) → שמירה יוצרת <strong className="font-semibold text-orange-100">בית סטאב עם שדון</strong>{" "}
         רק בטלפון הזה. במפה: סט «סטאבים» או «הכל».
       </p>
 
@@ -111,7 +111,7 @@ export function AdminGemLabPanel() {
           {locating ? "מאתרים…" : "המיקום שלי"}
         </Button>
         <Button type="button" size="sm" className="bg-violet-600 text-white hover:bg-violet-500" onClick={createStub}>
-          שמור סטאב + יהלום כאן
+          שמור סטאב + שדון כאן
         </Button>
       </div>
 
@@ -165,7 +165,7 @@ export function AdminGemLabPanel() {
                       toast.success("מצאת שדון! (מעבדה)");
                     }}
                   >
-                    אסוף יהלום
+                    אסוף שדון
                   </button>
                 )}
                 <Link

@@ -1,6 +1,5 @@
 import { Check, Heart, Save } from "lucide-react";
 import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
-import { GEM_DIAMOND_FILL } from "@/lib/gem-diamond-visual";
 import { cn } from "@/lib/utils";
 
 /** Pink heart in ring — matches house-card traffic pills (icon only). */
@@ -25,7 +24,7 @@ export function SavedTrafficIcon({
   );
 }
 
-/** Imp marker disc — dwarf hunt for action menu. */
+/** Imp in disc — collected / action menu (matches heart & visited scale). */
 export function GemTrafficIcon({
   className,
   markClassName,
@@ -36,15 +35,39 @@ export function GemTrafficIcon({
   return (
     <span
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/20 ring-1 ring-amber-400/45",
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/25 ring-1 ring-amber-400/45",
         className,
       )}
       title="שדון"
       aria-label="שדון"
     >
       <ImpMarkerGlyph
-        className={cn("size-6 max-h-full max-w-full", markClassName)}
-        style={{ color: GEM_DIAMOND_FILL }}
+        className={cn("size-[1.35rem] max-h-full max-w-full text-orange-50", markClassName)}
+      />
+    </span>
+  );
+}
+
+/** Outline-style imp disc — ⋮ menu when שדון not yet found. */
+export function GemMenuDiscIcon({
+  className,
+  markClassName,
+}: {
+  className?: string;
+  markClassName?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#1d1028] ring-1 ring-orange-500/30",
+        className,
+      )}
+      title="שדון"
+      aria-hidden
+    >
+      <ImpMarkerGlyph
+        variant="eyes"
+        className={cn("size-[1.35rem] max-h-full max-w-full text-orange-100", markClassName)}
       />
     </span>
   );

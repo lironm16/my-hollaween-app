@@ -13,7 +13,12 @@ import {
   Share2,
   Undo2,
 } from "lucide-react";
-import { GemTrafficIcon, SavedTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
+import {
+  GemMenuDiscIcon,
+  GemTrafficIcon,
+  SavedTrafficIcon,
+  VisitedTrafficIcon,
+} from "@/components/traffic-icons";
 import { SkipIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
@@ -21,7 +26,6 @@ import { EditCodeDialog } from "@/components/edit-code-dialog";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { GEM_ACTION_FIND_HE, GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
-import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
 import { appHeaderBottom, safeAreaInsetBottom } from "@/lib/viewport";
@@ -202,9 +206,9 @@ export function HouseActionBar({
         id: "gem",
         label: gemCollected ? GEM_FOUND_I_HE : GEM_ACTION_FIND_HE,
         icon: gemCollected ? (
-          <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.55rem]" />
+          <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} />
         ) : (
-          <ImpMarkerGlyph className={cn(MENU_ICON_CLASS, "aspect-square text-orange-100")} />
+          <GemMenuDiscIcon className={MENU_ACTIVE_ICON_CLASS} />
         ),
         onClick: () => onToggleGem(),
         active: gemCollected,

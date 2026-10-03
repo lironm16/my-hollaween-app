@@ -2,7 +2,7 @@ import { GEM_DIAMOND_FILL } from "@/lib/gem-diamond-visual";
 import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { cn } from "@/lib/utils";
 
-/** Imp marker — toolbar uses white tint when active on orange. */
+/** Imp marker — toolbar uses black on orange when active, eye slits when idle. */
 export function GemDiamondIcon({
   className,
   active = false,
@@ -12,16 +12,26 @@ export function GemDiamondIcon({
   active?: boolean;
   filled?: boolean;
 }) {
-  const emphasize = active || filled;
+  if (active) {
+    return (
+      <ImpMarkerGlyph
+        variant="solid"
+        className={cn("aspect-square text-black", className)}
+      />
+    );
+  }
+  if (filled) {
+    return (
+      <ImpMarkerGlyph
+        variant="solid"
+        className={cn("aspect-square text-[#fbbf24]", className)}
+      />
+    );
+  }
   return (
     <ImpMarkerGlyph
-      variant="solid"
-      className={cn(
-        "aspect-square",
-        emphasize ? "opacity-100" : "opacity-85",
-        active ? "text-white" : filled ? "text-[#fbbf24]" : "text-orange-100",
-        className,
-      )}
+      variant="eyes"
+      className={cn("aspect-square text-orange-100", className)}
     />
   );
 }
