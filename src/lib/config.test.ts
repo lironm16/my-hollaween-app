@@ -51,15 +51,16 @@ describe("neighborhood config", () => {
     assert.equal(neighborhoodAtEventLocation(32.0849863, 34.8122928), null);
   });
 
-  it("does not assign Yohanna 6 to Gefen (outside event zones)", () => {
+  it("does not assign Yohanna 6 to any event neighborhood (outside event zones)", () => {
     const lat = 32.0883058;
     const lng = 34.8163387;
     assert.equal(neighborhoodAtEventLocation(lat, lng), null);
     assert.equal(neighborhoodLabelForPin(lat, lng), null);
-    assert.notEqual(neighborhoodInferredFromPin(lat, lng), "הגפן");
-    assert.notEqual(
-      resolveNeighborhood({ address: "יוהנה 6", lat, lng }),
-      "הגפן",
+    assert.equal(neighborhoodInferredFromPin(lat, lng), null);
+    assert.equal(resolveNeighborhood({ address: "יוהנה 6", lat, lng }), null);
+    assert.equal(
+      resolveNeighborhood({ address: "יוהנה 6", lat, lng, neighborhood: "הגפן" }),
+      null,
     );
   });
 

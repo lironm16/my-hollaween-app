@@ -155,16 +155,6 @@ function nearestNeighborhood(lat: number, lng: number) {
   return { best, bestDist };
 }
 
-function neighborhoodsByDistance(lat: number, lng: number): NeighborhoodId[] {
-  return [...NEIGHBORHOODS]
-    .map((name) => {
-      const c = NEIGHBORHOOD_CENTERS[name];
-      return { name, d: (lat - c.lat) ** 2 + (lng - c.lng) ** 2 };
-    })
-    .sort((a, b) => a.d - b.d)
-    .map((entry) => entry.name);
-}
-
 /** Nearest neighborhood center (for labels that only say רמת גן). */
 export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId {
   return nearestNeighborhood(lat, lng).best;
@@ -205,20 +195,28 @@ export function neighborhoodLabelForPin(
 }
 
 /**
- * Infer neighborhood from coordinates for listings/stats when storage is null.
- * Uses event zones when possible; otherwise nearest center, but never a false הגפן label.
+ * Infer neighborhood from coordinates when storage is null — event zones only.
+ * Pins outside the four zones (e.g. יוהנה 6) stay unassigned (אחר), never nearest-center guess.
  */
 export function neighborhoodInferredFromPin(lat: number, lng: number): NeighborhoodId | null {
-  if (!inNeighborhood(lat, lng)) return null;
-  const zoned = neighborhoodAtEventLocation(lat, lng);
-  if (zoned) return zoned;
-  for (const name of neighborhoodsByDistance(lat, lng)) {
-    if (name === "הגפן" && !inNeighborhoodZone(lat, lng, NEIGHBORHOOD_ZONES["הגפן"])) {
-      continue;
-    }
-    return name;
+  return neighborhoodAtEventLocation(lat, lng);
+}
+
+function isFalseStoredGefen(
+  stored: NeighborhoodId | null,
+  lat: number | undefined,
+  lng: number | undefined,
+): boolean {
+  if (stored !== "הגפן") return false;
+  if (
+    typeof lat !== "number" ||
+    typeof lng !== "number" ||
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng)
+  ) {
+    return false;
   }
-  return null;
+  return !inNeighborhoodZone(lat, lng, NEIGHBORHOOD_ZONES["הגפן"]);
 }
 
 export function allowedNeighborhoodsMessage() {
@@ -233,7 +231,9 @@ export function resolveNeighborhood(house: {
 }): NeighborhoodId | null {
   const stored = house.neighborhood;
   if (stored !== undefined && stored !== null) {
-    return normalizeNeighborhoodId(stored) ?? null;
+    const normalized = normalizeNeighborhoodId(stored) ?? null;
+    if (isFalseStoredGefen(normalized, house.lat, house.lng)) return null;
+    return normalized;
   }
   if (house.address) {
     const fromText = neighborhoodFromAddress(house.address);
