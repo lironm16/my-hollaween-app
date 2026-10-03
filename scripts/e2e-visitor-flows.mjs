@@ -115,7 +115,7 @@ async function main() {
   await waitForCatalog(page);
 
   await openFilterSheet(page);
-  await page.getByText("שמורים", { exact: true }).click();
+  await page.getByRole("checkbox", { name: "אהבתי" }).click();
   await page.getByRole("button", { name: /הצג תוצאות/ }).click();
   await page.getByRole("button", { name: /סינון \(1\)/ }).first().waitFor();
   pass("MAP-09 liked-only quick filter can be applied");

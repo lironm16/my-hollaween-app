@@ -57,7 +57,7 @@ async function main() {
 
   const dimBefore = await page.locator(".is-filter-dim .is-filtered-out").count();
   await openFilterSheet(page);
-  await page.getByText("שמורים", { exact: true }).click();
+  await page.getByRole("checkbox", { name: "אהבתי" }).click();
   await page.getByRole("button", { name: /הצג תוצאות/ }).click();
   await page.getByRole("button", { name: /סינון \(1\)/ }).first().waitFor();
   const dimAfter = await page.locator(".is-filter-dim .is-filtered-out").count();
@@ -141,7 +141,7 @@ async function main() {
   await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
   await waitForCatalog(page);
   await openFilterSheet(page);
-  await page.getByText("שמורים", { exact: true }).click();
+  await page.getByRole("checkbox", { name: "אהבתי" }).click();
   await page.getByRole("button", { name: /הצג תוצאות/ }).click();
   await page.getByRole("button", { name: /סינון \(1\)/ }).first().waitFor();
   await page.getByRole("button", { name: "מסלול" }).click();
