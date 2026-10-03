@@ -136,7 +136,7 @@ async function main() {
 
   await gotoPage(page, `${BASE}/?rehearsal=open`);
   await waitForCatalog(page);
-  await page.getByRole("button", { name: "מאיפה למדוד מרחק" }).click();
+  await page.getByRole("button", { name: "נקודת התחלה" }).click();
   await page.getByRole("button", { name: "המיקום שלי" }).click();
   const gpsOrigin = await page.evaluate(() => {
     const raw =
@@ -146,7 +146,7 @@ async function main() {
   if (gpsOrigin?.kind !== "gps") fail("ORIGIN-02 should persist GPS origin choice");
   else pass("ORIGIN-02 origin picker saves GPS choice");
 
-  await page.getByRole("button", { name: "מאיפה למדוד מרחק" }).click();
+  await page.getByRole("button", { name: "נקודת התחלה" }).click();
   await page.getByRole("button", { name: "בחירה על המפה" }).click();
   await page.getByRole("button", { name: "שמירת התחלה" }).waitFor();
   await page.getByRole("button", { name: "שמירת התחלה" }).click();

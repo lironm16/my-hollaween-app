@@ -54,7 +54,7 @@ async function main() {
 
   await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
   await waitForCatalog(page);
-  await page.getByRole("button", { name: "מאיפה למדוד מרחק" }).click();
+  await page.getByRole("button", { name: "נקודת התחלה" }).click();
   await page.getByRole("button", { name: "מרכז השכונה" }).click();
   const origin = await page.evaluate(() => {
     const raw =
