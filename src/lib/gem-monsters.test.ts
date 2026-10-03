@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { distanceMeters } from "@/lib/geo";
 import {
   GEM_MONSTER_CATALOG,
   GEM_MONSTER_MODELS,
   GEM_MONSTERS_DRAGON_ONLY,
+  GEM_REPEAT_MIN_SPACING_M,
   buildGemMonsterAssignment,
   gemAlbumMonstersForMap,
   gemAlbumStickerPool,
@@ -65,12 +67,47 @@ describe("gem monsters", () => {
       id: `house-${String(i).padStart(3, "0")}`,
       theme: "ghost" as const,
       kind: "house" as const,
+      lat: 32.09 + i * 0.003,
+      lng: 34.8 + i * 0.003,
     }));
     const assignment = buildGemMonsterAssignment(houses);
     const onMap = new Set(assignment.values());
     assert.equal(onMap.size, poolLen);
     for (const model of GEM_MONSTER_MODELS) {
       assert.ok(onMap.has(model.id), model.id);
+    }
+  });
+
+  it("spreads duplicate pets across distance (frankie / spider not clustered)", () => {
+    if (GEM_MONSTERS_DRAGON_ONLY) return;
+    const clusters = [
+      { lat: 32.0916, lng: 34.8028 },
+      { lat: 32.0939, lng: 34.8133 },
+      { lat: 32.093, lng: 34.8186 },
+    ];
+    const houses = Array.from({ length: 28 }, (_, i) => ({
+      id: `spread-${String(i).padStart(2, "0")}`,
+      theme: "ghost" as const,
+      kind: "house" as const,
+      lat: clusters[i % clusters.length]!.lat + (i % 3) * 0.00005,
+      lng: clusters[i % clusters.length]!.lng + (i % 5) * 0.00004,
+    }));
+    const assignment = buildGemMonsterAssignment(houses);
+    for (const monsterId of ["frankie", "spider"] as const) {
+      const pts = houses
+        .filter((h) => assignment.get(h.id) === monsterId)
+        .map((h) => ({ lat: h.lat!, lng: h.lng! }));
+      if (pts.length < 2) continue;
+      let minPair = Infinity;
+      for (let i = 0; i < pts.length; i += 1) {
+        for (let j = i + 1; j < pts.length; j += 1) {
+          minPair = Math.min(minPair, distanceMeters(pts[i]!, pts[j]!));
+        }
+      }
+      assert.ok(
+        minPair >= GEM_REPEAT_MIN_SPACING_M * 0.45,
+        `${monsterId} min pair ${minPair.toFixed(0)}m`,
+      );
     }
   });
 
