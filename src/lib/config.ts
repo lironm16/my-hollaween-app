@@ -155,16 +155,6 @@ function nearestNeighborhood(lat: number, lng: number) {
   return { best, bestDist };
 }
 
-function neighborhoodsByDistance(lat: number, lng: number): NeighborhoodId[] {
-  return [...NEIGHBORHOODS]
-    .map((name) => {
-      const c = NEIGHBORHOOD_CENTERS[name];
-      return { name, d: (lat - c.lat) ** 2 + (lng - c.lng) ** 2 };
-    })
-    .sort((a, b) => a.d - b.d)
-    .map((entry) => entry.name);
-}
-
 /** Nearest neighborhood center (for labels that only say רמת גן). */
 export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId {
   return nearestNeighborhood(lat, lng).best;
@@ -204,38 +194,9 @@ export function neighborhoodLabelForPin(
   return neighborhoodAtEventLocation(lat, lng);
 }
 
-/**
- * Infer neighborhood from coordinates (stats, backfill, resolve when storage is null).
- * Prefer event zones; otherwise nearest center, but never assign false הגפן off-zone pins.
- */
+/** Hood from pin only when inside one of the four event zones; else null (אחר). */
 export function neighborhoodInferredFromPin(lat: number, lng: number): NeighborhoodId | null {
-  if (!inNeighborhood(lat, lng)) return null;
-  const zoned = neighborhoodAtEventLocation(lat, lng);
-  if (zoned) return zoned;
-  for (const name of neighborhoodsByDistance(lat, lng)) {
-    if (name === "הגפן" && !inNeighborhoodZone(lat, lng, NEIGHBORHOOD_ZONES["הגפן"])) {
-      continue;
-    }
-    return name;
-  }
-  return null;
-}
-
-function isFalseStoredGefen(
-  stored: NeighborhoodId | null,
-  lat: number | undefined,
-  lng: number | undefined,
-): boolean {
-  if (stored !== "הגפן") return false;
-  if (
-    typeof lat !== "number" ||
-    typeof lng !== "number" ||
-    !Number.isFinite(lat) ||
-    !Number.isFinite(lng)
-  ) {
-    return false;
-  }
-  return !inNeighborhoodZone(lat, lng, NEIGHBORHOOD_ZONES["הגפן"]);
+  return neighborhoodAtEventLocation(lat, lng);
 }
 
 export function allowedNeighborhoodsMessage() {
@@ -248,33 +209,21 @@ export function resolveNeighborhood(house: {
   lat?: number;
   lng?: number;
 }): NeighborhoodId | null {
-  const stored = house.neighborhood;
-  if (stored !== undefined && stored !== null) {
-    const normalized = normalizeNeighborhoodId(stored) ?? null;
-    if (isFalseStoredGefen(normalized, house.lat, house.lng)) {
-      if (
-        typeof house.lat === "number" &&
-        typeof house.lng === "number" &&
-        Number.isFinite(house.lat) &&
-        Number.isFinite(house.lng)
-      ) {
-        return neighborhoodInferredFromPin(house.lat, house.lng);
-      }
-      return null;
-    }
-    return normalized;
-  }
-  if (house.address) {
-    const fromText = neighborhoodFromAddress(house.address);
-    if (fromText) return fromText;
-  }
   if (
     typeof house.lat === "number" &&
     typeof house.lng === "number" &&
     Number.isFinite(house.lat) &&
     Number.isFinite(house.lng)
   ) {
-    return neighborhoodInferredFromPin(house.lat, house.lng);
+    return neighborhoodAtEventLocation(house.lat, house.lng);
+  }
+  const stored = house.neighborhood;
+  if (stored !== undefined && stored !== null) {
+    return normalizeNeighborhoodId(stored) ?? null;
+  }
+  if (house.address) {
+    const fromText = neighborhoodFromAddress(house.address);
+    if (fromText) return fromText;
   }
   return null;
 }

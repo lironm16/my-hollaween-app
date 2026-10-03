@@ -42,27 +42,27 @@ describe("address fields", () => {
     assert.equal(fields.neighborhood, "שיכון ותיקים");
   });
 
-  it("keeps stored neighborhood when pin is outside zone box (איתמר 2)", () => {
+  it("sets null hood when pin is outside all event zones (איתמר 2)", () => {
     const fields = normalizeAddressFields({
       address: "איתמר 2",
       neighborhood: "חרוזים",
       lat: 32.09090420608,
       lng: 34.806805706959,
     });
-    assert.equal(fields.neighborhood, "חרוזים");
+    assert.equal(fields.neighborhood, null);
   });
 
-  it("recalculates null neighborhood from pin (legacy empty address rows)", () => {
+  it("recalculates hood from zone when pin is inside an event zone", () => {
     const fields = normalizeAddressFields({
-      address: "",
+      address: "הזמיר 8",
       neighborhood: null,
-      lat: 32.0909211,
-      lng: 34.8066897,
+      lat: 32.0945618,
+      lng: 34.816518,
     });
-    assert.equal(fields.neighborhood, "חרוזים");
+    assert.equal(fields.neighborhood, "שיכון ותיקים");
   });
 
-  it("replaces false stored Gefen with inferred hood (Yohanna 6)", () => {
+  it("clears hood to null outside zones (Yohanna 6)", () => {
     const fields = normalizeAddressFields({
       address: "יוהנה 6",
       neighborhood: "הגפן",
@@ -70,8 +70,7 @@ describe("address fields", () => {
       lng: 34.8163387,
     });
     assert.equal(fields.address, "יוהנה 6");
-    assert.notEqual(fields.neighborhood, "הגפן");
-    assert.ok(fields.neighborhood);
+    assert.equal(fields.neighborhood, null);
   });
 
   it("joins street and neighborhood only for display", () => {

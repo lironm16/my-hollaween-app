@@ -51,20 +51,19 @@ describe("neighborhood config", () => {
     assert.equal(neighborhoodAtEventLocation(32.0849863, 34.8122928), null);
   });
 
-  it("does not assign Yohanna 6 to Gefen (recalc uses next-nearest hood)", () => {
+  it("Yohanna 6 is אחר — null hood outside event zones", () => {
     const lat = 32.0883058;
     const lng = 34.8163387;
     assert.equal(neighborhoodAtEventLocation(lat, lng), null);
-    assert.equal(neighborhoodLabelForPin(lat, lng), null);
-    assert.notEqual(neighborhoodInferredFromPin(lat, lng), "הגפן");
-    assert.notEqual(resolveNeighborhood({ address: "יוהנה 6", lat, lng }), "הגפן");
-    assert.notEqual(
+    assert.equal(neighborhoodInferredFromPin(lat, lng), null);
+    assert.equal(resolveNeighborhood({ address: "יוהנה 6", lat, lng }), null);
+    assert.equal(
       resolveNeighborhood({ address: "יוהנה 6", lat, lng, neighborhood: "הגפן" }),
-      "הגפן",
+      null,
     );
   });
 
-  it("keeps stored neighborhood when pin is outside zone polygons (stats)", () => {
+  it("ignores stored neighborhood when pin is outside all event zones", () => {
     assert.equal(
       resolveNeighborhood({
         address: "איתמר 2",
@@ -72,7 +71,7 @@ describe("neighborhood config", () => {
         lat: 32.09090420608,
         lng: 34.806805706959,
       }),
-      "חרוזים",
+      null,
     );
   });
 

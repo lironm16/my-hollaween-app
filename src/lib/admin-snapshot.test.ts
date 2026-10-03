@@ -96,9 +96,14 @@ describe("buildSnapshotStats", () => {
   it("counts houses per neighborhood and other", () => {
     const stats = buildSnapshotStats({
       houses: [
-        house("a", { address: "חרוזים 8", neighborhood: "חרוזים" }),
-        house("b", { address: "המרגנית 1", neighborhood: "שיכון ותיקים" }),
-        house("c", { address: "unknown", lat: 32.05, lng: 34.75 }),
+        house("a", { address: "חרוזים 8", neighborhood: "חרוזים", lat: 32.0916477, lng: 34.8028691 }),
+        house("b", {
+          address: "המרגנית 1",
+          neighborhood: "שיכון ותיקים",
+          lat: 32.0945618,
+          lng: 34.816518,
+        }),
+        house("c", { address: "יוהנה 6", neighborhood: null, lat: 32.0883058, lng: 34.8163387 }),
       ],
       now: openEvening,
     });

@@ -61,21 +61,7 @@ export function normalizeAddressFields(house: {
       Number.isFinite(house.lng);
     if (hasCoords) {
       const fromZone = neighborhoodAtEventLocation(house.lat, house.lng);
-      if (fromZone && fromZone !== stored) {
-        return { address, neighborhood: fromZone };
-      }
-      if (stored === "הגפן" && !fromZone) {
-        const inferred = neighborhoodInferredFromPin(house.lat, house.lng);
-        if (inferred !== "הגפן") {
-          return { address, neighborhood: inferred };
-        }
-      }
-      if (stored === null) {
-        const inferred = neighborhoodInferredFromPin(house.lat, house.lng);
-        if (inferred) {
-          return { address, neighborhood: inferred };
-        }
-      }
+      return { address, neighborhood: fromZone };
     }
     return { address, neighborhood: stored };
   }
