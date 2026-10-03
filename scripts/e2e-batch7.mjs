@@ -112,22 +112,40 @@ async function main() {
     fail("EDIT-03 add form should preview a selected decor photo");
   }
 
+  await loginAdmin(page);
   await gotoPage(page, `${BASE}/?rehearsal=open`);
   await waitForCatalog(page);
   const houseId = (await firstRealHouseId(page)) ?? null;
   const houseMeta = houseId
-    ? await page.evaluate((id) => {
+    ? await page.evaluate(async (id) => {
         const houses = JSON.parse(localStorage.getItem("hw-catalog-cache") ?? "{}").houses ?? [];
-        return houses.find((item) => item.id === id) ?? null;
+        const cached = houses.find((item) => item.id === id) ?? null;
+        if (!cached?.lat || !cached?.lng) return null;
+        try {
+          const res = await fetch(`/api/houses/${encodeURIComponent(id)}`, { cache: "no-store" });
+          if (!res.ok) return cached;
+          const live = await res.json();
+          return { ...cached, ...live };
+        } catch {
+          return cached;
+        }
       }, houseId)
     : null;
-  if (!houseId || !houseMeta?.address) {
-    fail("ROUTE-05 could not pick a catalog house with address and coordinates");
+  if (!houseId || !houseMeta?.lat || !houseMeta?.lng) {
+    fail("ROUTE-05 could not pick a catalog house with coordinates");
+  } else if (!String(houseMeta.address ?? "").trim()) {
+    fail("ROUTE-05 admin house detail should include street address before navigation");
   } else {
     const detail = await openHouseByFocus(page, BASE, houseId);
     await detail.getByRole("button", { name: "פעולות" }).click();
     const nav = page.getByRole("menuitem", { name: "ניווט" });
-    const href = await nav.getAttribute("href");
+    let href = null;
+    try {
+      await nav.waitFor({ timeout: 15_000 });
+      href = await nav.getAttribute("href");
+    } catch {
+      fail("ROUTE-05 navigation menu item should appear for admin after address reveal rehearsal");
+    }
     if (!href) fail("ROUTE-05 navigation menu item should expose a maps href");
     else {
       const url = new URL(href);
@@ -158,9 +176,6 @@ async function main() {
     }
   }
 
-  await gotoPage(page, `${BASE}/?rehearsal=open`);
-  await waitForCatalog(page);
-  await loginAdmin(page);
   await gotoPage(page, `${BASE}/admin/rehearsal`);
   await page.getByRole("heading", { name: "הגדרות מנהל" }).waitFor();
   const rehearsalSwitch = page.getByRole("switch").first();
