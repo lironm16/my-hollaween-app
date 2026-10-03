@@ -5,7 +5,7 @@ export function gemHuntVisible(isAdmin: boolean) {
   return isAdmin;
 }
 
-/** Map FAB, details hunt block, filter «לא אספתי», stats «אספתי», title diamonds — one gate. */
+/** Map FAB, details hunt block, filter «לא מצאתי», stats «מצאתי», title diamonds — one gate. */
 export function gemHuntFabVisible(isAdmin: boolean, now = new Date()) {
   return gemHuntVisible(isAdmin) && !isAddHouseOpen(now);
 }

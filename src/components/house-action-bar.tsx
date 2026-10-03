@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { EditCodeDialog } from "@/components/edit-code-dialog";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
+import { GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
 import { appHeaderBottom, safeAreaInsetBottom } from "@/lib/viewport";
@@ -199,7 +200,7 @@ export function HouseActionBar({
     if (onToggleGem) {
       items.push({
         id: "gem",
-        label: gemCollected ? "אספתי" : "אסוף יהלום",
+        label: gemCollected ? GEM_FOUND_I_HE : "אסוף יהלום",
         icon: gemCollected ? (
           <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.35rem]" />
         ) : (

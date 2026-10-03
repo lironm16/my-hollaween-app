@@ -136,7 +136,7 @@ export function AdminGemLabPanel() {
                   <p className="truncate font-medium text-orange-50">{house.name}</p>
                   <p className="truncate text-xs text-violet-300">
                     {house.id} · {gemLabelHe(monster)}
-                    {collected ? " · נאסף" : null}
+                    {collected ? " · נמצא" : null}
                   </p>
                 </div>
                 {collected ? (
@@ -148,10 +148,10 @@ export function AdminGemLabPanel() {
                     )}
                     onClick={() => {
                       gems.resetHouse(house.id);
-                      toast.message("איסוף היהלום בוטל");
+                      toast.message("המציאה בוטלה");
                     }}
                   >
-                    בטל איסוף
+                    בטל מציאה
                   </button>
                 ) : (
                   <button
@@ -162,7 +162,7 @@ export function AdminGemLabPanel() {
                     )}
                     onClick={() => {
                       gems.collect(house.id, monster);
-                      toast.success("יהלום נאסף (מעבדה)");
+                      toast.success("מצאת שדון! (מעבדה)");
                     }}
                   >
                     אסוף יהלום

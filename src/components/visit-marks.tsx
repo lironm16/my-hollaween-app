@@ -3,6 +3,7 @@ import { DecorMark } from "@/components/decor-glyphs";
 import { ClosedSign, PauseSign } from "@/components/house-tags";
 import { SkipIcon } from "@/components/skip-icon";
 import { visitShort } from "@/lib/labels";
+import { GEM_FOUND_I_HE, GEM_NOT_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
 function HeartGlyph() {
@@ -227,7 +228,7 @@ export function UncollectedGemMark({
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <GemSign />
-      {labeled ? <span>לא אספתי</span> : <span className="sr-only">לא אספתי יהלום</span>}
+      {labeled ? <span>{GEM_NOT_FOUND_I_HE}</span> : <span className="sr-only">{GEM_NOT_FOUND_I_HE}</span>}
     </span>
   );
 }
@@ -242,7 +243,7 @@ export function CollectedGemMark({
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <GemSign />
-      {labeled ? <span>אספתי</span> : <span className="sr-only">אספתי יהלום</span>}
+      {labeled ? <span>{GEM_FOUND_I_HE}</span> : <span className="sr-only">{GEM_FOUND_I_HE}</span>}
     </span>
   );
 }

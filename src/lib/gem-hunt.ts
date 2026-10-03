@@ -484,7 +484,7 @@ export const GEM_ACHIEVEMENTS: GemAchievement[] = [
   {
     id: "first",
     titleHe: "יהלום ראשון",
-    descriptionHe: "אספתם יהלום אחד",
+    descriptionHe: "מצאתם שדון אחד",
     target: 1,
   },
   {

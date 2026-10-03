@@ -6,6 +6,7 @@ import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { SummaryPumpkinIcon } from "@/components/scare-glyphs";
 import { SkipGlyph } from "@/components/skip-icon";
 import type { WalkingRoute } from "@/lib/route";
+import { GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
 function HouseIcon() {
@@ -238,7 +239,7 @@ export function StatsSummary({
                 <CompactChip
                   icon={<GemSummaryIcon />}
                   value={String(gemCollectedCount)}
-                  label="אספתי"
+                  label={GEM_FOUND_I_HE}
                 />
               </>
             ) : null}
@@ -289,7 +290,7 @@ export function StatsSummary({
               <RouteChip
                 icon={<GemSummaryIcon />}
                 value={String(gemCollectedCount)}
-                label="אספתי"
+                label="מצאתי"
               />
             </>
           ) : null}

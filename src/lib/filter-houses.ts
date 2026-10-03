@@ -171,7 +171,7 @@ export function houseFilterMismatchReasons(
   if (visitedOnly && !visitedIds.includes(house.id)) reasons.push("לא ביקרת");
   if (skippedIds.includes(house.id)) reasons.push("דילגתם על הבית");
   if (skippedOnly && !skippedIds.includes(house.id)) reasons.push("לא דילגתם");
-  if (uncollectedGemOnly && gemCollectedIds.includes(house.id)) reasons.push("כבר אספתם יהלום");
+  if (uncollectedGemOnly && gemCollectedIds.includes(house.id)) reasons.push("כבר מצאתם שדון");
 
   return reasons;
 }

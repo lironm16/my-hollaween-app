@@ -165,7 +165,7 @@ export function GemHuntPanel({
         {!collected ? (
           <p className="gem-hunt-panel__status">
             {canCollect
-              ? "בטווח — אפשר לאסוף"
+              ? "בטווח — אפשר למצוא"
               : proximity === "far" && distanceM != null && distanceM <= huntBandM + 10
                 ? "ליד היהלום — המתינו רגע ל-GPS"
                 : proximity === "far"

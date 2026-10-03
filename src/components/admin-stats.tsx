@@ -10,6 +10,7 @@ import { SensitivitySign } from "@/components/sensitivity-glyphs";
 import { StrollerSign } from "@/components/symbols";
 import { LikedSign, SkipSign } from "@/components/visit-marks";
 import { VisitedCheck } from "@/components/visited-check";
+import { GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { scareShort, decorShort, treatLabels } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import { NEIGHBORHOODS } from "@/lib/config";
@@ -89,7 +90,7 @@ export function PersonalMarksSection({
         {showGemStats ? (
           <StatTile
             icon={<Gem className="size-8 fill-amber-300 text-amber-300" strokeWidth={2.1} />}
-            label="אספתי"
+            label={GEM_FOUND_I_HE}
             value={gemCollectedCount}
             valueClass={gemCollectedCount ? "text-amber-300" : undefined}
             plain

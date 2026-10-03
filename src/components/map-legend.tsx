@@ -12,6 +12,7 @@ import {
   GEM_DIAMOND_FILL,
   gemDiamondSvgPath,
 } from "@/lib/gem-diamond-visual";
+import { GEM_FOUND_STATE_HE } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -158,7 +159,7 @@ const GEM_LEGEND_GROUP = {
   title: "יהלומים",
   items: [
     { key: "gem-open", label: "יהלום לצוד", node: <GemDiamondSwatch /> },
-    { key: "gem-done", label: "נאסף", node: <GemDiamondSwatch collected /> },
+    { key: "gem-done", label: GEM_FOUND_STATE_HE, node: <GemDiamondSwatch collected /> },
   ],
 } as const;
 

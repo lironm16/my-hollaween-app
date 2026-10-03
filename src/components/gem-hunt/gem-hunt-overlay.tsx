@@ -881,7 +881,7 @@ export function GemHuntOverlay({
               ) : null}
               {showEncounterFooter && encounterPhase === "encounter" ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
-                  סובבו את החיה באצבע. לאיסוף — הקישו עליה.
+                  סובבו את החיה באצבע. למציאה — הקישו עליה.
                 </p>
               ) : null}
               {showNavCompassPrompt && !encounterMode ? (

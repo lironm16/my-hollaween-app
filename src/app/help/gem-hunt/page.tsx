@@ -7,6 +7,11 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { buttonVariants } from "@/components/ui/button";
 import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
+import {
+  GEM_FOUND_CHEER_HE,
+  GEM_FOUND_I_HE,
+  GEM_NOT_FOUND_I_HE,
+} from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
 export default function GemHuntHelpPage() {
@@ -62,7 +67,7 @@ export default function GemHuntHelpPage() {
             <li>
               <HelpText>
                 {
-                  "בסינון — אפשר לסנן <<לא אספתי>> / <<אספתי>>. ב<<הסימונים שלי>> יש לשונית <<אספתי>>."
+                  `בסינון — אפשר לסנן <<${GEM_NOT_FOUND_I_HE}>> / <<${GEM_FOUND_I_HE}>>. ב<<הסימונים שלי>> יש לשונית <<${GEM_FOUND_I_HE}>>.`
                 }
               </HelpText>
             </li>
@@ -124,19 +129,19 @@ export default function GemHuntHelpPage() {
           </div>
         </HelpExpandable>
 
-        <HelpExpandable title={`איסוף ו${GEM_ALBUM_TITLE_HE}`}>
+        <HelpExpandable title={`מציאה ו${GEM_ALBUM_TITLE_HE}`}>
           <div className="space-y-3 text-lg leading-relaxed text-orange-50">
             <p>
               <HelpText>
                 {
-                  `כשהחיה במסגרת — הקישו עליה (או סובבו במצב מפגש ואז הקישו). אחרי <<יהלום נאסף!>> אפשר לפתוח את <<${GEM_ALBUM_TITLE_HE}>> מהתפריט.`
+                  `כשהחיה במסגרת — הקישו עליה (או סובבו במצב מפגש ואז הקישו). אחרי <<${GEM_FOUND_CHEER_HE}>> אפשר לפתוח את <<${GEM_ALBUM_TITLE_HE}>> מהתפריט.`
                 }
               </HelpText>
             </p>
             <p>
               <HelpText>
                 {
-                  "כל בית עם יהלום מוסיף חבר לאלבום — אפשר לראות מי כבר נאסף ומי עדיין מחכה בשכונה."
+                  "כל בית עם שדון מוסיף חבר לאלבום — אפשר לראות מי כבר נמצא ומי עדיין מחכה בשכונה."
                 }
               </HelpText>
             </p>

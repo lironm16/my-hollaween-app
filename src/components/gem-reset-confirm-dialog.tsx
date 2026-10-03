@@ -22,12 +22,12 @@ export function GemResetConfirmDialog({
     <HouseEditModal
       open={open}
       onClose={onCancel}
-      title="לאפס איסוף יהלום?"
+      title="לאפס מציאת שדון?"
       subtitle={houseHeadline(house)}
     >
       <div className="space-y-4">
         <p className="text-base leading-relaxed text-violet-100 [overflow-wrap:anywhere]">
-          היהלום יימחק מהמכשיר — אפשר לצוד מחדש.
+          השדון יוסר מהמכשיר — אפשר לחפש מחדש.
         </p>
         <div className="flex gap-3 pt-1" dir="rtl">
           <Button

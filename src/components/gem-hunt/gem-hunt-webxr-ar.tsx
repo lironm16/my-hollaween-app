@@ -1031,7 +1031,7 @@ export function GemHuntWebXrAr({
             <button
               type="button"
               className="gem-hunt-overlay__gem-tap-target"
-              aria-label="איסוף החיה"
+              aria-label="מציאת השדון"
               disabled={!canTapTellMeCenter}
               onPointerDown={(e) => {
                 if (e.button !== 0) return;
@@ -1123,7 +1123,7 @@ export function GemHuntWebXrAr({
               ) : null}
               {showEncounterFooter && encounterPhase === "encounter" ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
-                  סובבו את החיה באצבע. לאיסוף — הקישו עליה.
+                  סובבו את החיה באצבע. למציאה — הקישו עליה.
                 </p>
               ) : null}
               {showSessionFooter && hintPanel === "nav" ? (

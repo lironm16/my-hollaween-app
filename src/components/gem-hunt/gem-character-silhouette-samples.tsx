@@ -14,7 +14,7 @@ export function GemCharacterSilhouetteSamples() {
     {
       id: "full",
       title: "פוסטר מלא",
-      hint: "כמו באלבום אחרי איסוף",
+      hint: "כמו באלבום אחרי מציאה",
       className: "gem-silhouette-sample__art gem-silhouette-sample__art--full",
     },
     {
