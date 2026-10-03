@@ -157,11 +157,17 @@ async function main() {
   pass("A11Y-01 skip link opens list view");
 
   if (firstHouse?.name) {
-    await page.goto(`${BASE}/search`, { waitUntil: "domcontentloaded" });
-    await page.getByPlaceholder("הקלידו שם משפחה או כתובת").fill(firstHouse.name.slice(0, 6));
-    await page.getByText(firstHouse.name).first().click();
-    await page.getByRole("button", { name: "פעולות" }).first().waitFor();
-    pass("EXP-02 search page opens selected house");
+    try {
+      await page.goto(`${BASE}/search?rehearsal=open`, { waitUntil: "domcontentloaded" });
+      const combobox = page.getByRole("combobox", { name: "בית" });
+      await combobox.fill(firstHouse.name.slice(0, 6));
+      await page.getByRole("listbox").waitFor();
+      await combobox.press("Enter");
+      await page.getByRole("button", { name: "פעולות" }).first().waitFor();
+      pass("EXP-02 search page opens selected house");
+    } catch {
+      fail("EXP-02 search page should open selected house with actions");
+    }
   }
 
   await page.screenshot({ path: `${OUT}/visitor-flows.png`, fullPage: true });
