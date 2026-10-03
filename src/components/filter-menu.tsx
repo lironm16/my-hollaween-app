@@ -35,7 +35,7 @@ export function FilterTrigger({
       className={cn(
         "relative inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
         activeCount > 0
-          ? "bg-orange-500 text-black"
+          ? "bg-orange-500 text-white"
           : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
       )}
     >

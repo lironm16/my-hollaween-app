@@ -10,7 +10,7 @@ import { LocationKindSign } from "@/components/location-kind-sign";
 import { FilterOption, FilterSection } from "@/components/filter-menu";
 import { CustomVisitWindowFields } from "@/components/visit-window-fields";
 import { OpenNowSign } from "@/components/open-now-mark";
-import { NEIGHBORHOODS } from "@/lib/config";
+import { NEIGHBORHOOD_FILTER_OPTIONS } from "@/lib/config";
 import { hasStockCandySelection } from "@/lib/filter-presets";
 import { visitWindowIssue } from "@/lib/hours";
 import { decorShort, locationKindFilterLabels, scareShort } from "@/lib/labels";
@@ -333,7 +333,7 @@ export function HouseFiltersContent({
       </FilterSection>
 
       <FilterSection title="שכונה">
-        {NEIGHBORHOODS.map((area) => (
+        {NEIGHBORHOOD_FILTER_OPTIONS.map((area) => (
           <FilterOption
             key={area}
             checked={filters.neighborhoodFilters.includes(area)}

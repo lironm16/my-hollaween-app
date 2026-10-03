@@ -9,6 +9,7 @@ import {
   neighborhoodInferredFromPin,
   neighborhoodLabelForPin,
   normalizeNeighborhoodId,
+  houseInNeighborhoods,
   resolveNeighborhood,
   suburbToNeighborhood,
 } from "@/lib/config";
@@ -72,6 +73,30 @@ describe("neighborhood config", () => {
         lng: 34.806805706959,
       }),
       "חרוזים",
+    );
+  });
+
+  it("houseInNeighborhoods returns false when no hoods selected", () => {
+    assert.equal(
+      houseInNeighborhoods({ address: "חרוזים 1", neighborhood: "חרוזים" }, []),
+      false,
+    );
+  });
+
+  it("houseInNeighborhoods matches אחר for null resolveNeighborhood", () => {
+    assert.equal(
+      houseInNeighborhoods(
+        { address: "הדר 11", lat: 32.08793, lng: 34.8123 },
+        ["אחר"],
+      ),
+      true,
+    );
+    assert.equal(
+      houseInNeighborhoods(
+        { address: "הדר 11", lat: 32.08793, lng: 34.8123 },
+        ["חרוזים"],
+      ),
+      false,
     );
   });
 

@@ -2,36 +2,24 @@ import { GEM_DIAMOND_FILL } from "@/lib/gem-diamond-visual";
 import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { cn } from "@/lib/utils";
 
-/** Imp marker — toolbar uses black on orange when active, eye slits when idle. */
+/** Imp marker — outline-style when idle (full silhouette), white on orange when active. */
 export function GemDiamondIcon({
   className,
   active = false,
-  filled = true,
 }: {
   className?: string;
   active?: boolean;
+  /** @deprecated Idle toolbar uses full silhouette, not a yellow fill. */
   filled?: boolean;
 }) {
-  if (active) {
-    return (
-      <ImpMarkerGlyph
-        variant="solid"
-        className={cn("aspect-square text-black", className)}
-      />
-    );
-  }
-  if (filled) {
-    return (
-      <ImpMarkerGlyph
-        variant="solid"
-        className={cn("aspect-square text-[#fbbf24]", className)}
-      />
-    );
-  }
   return (
     <ImpMarkerGlyph
-      variant="eyes"
-      className={cn("aspect-square text-orange-100", className)}
+      variant="solid"
+      className={cn(
+        "aspect-square",
+        active ? "text-white" : "text-orange-100",
+        className,
+      )}
     />
   );
 }

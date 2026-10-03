@@ -19,6 +19,11 @@ const tiles = {
 export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים", "הגפן"] as const;
 export type NeighborhoodId = (typeof NEIGHBORHOODS)[number];
 
+/** Filter chip for houses outside the four event neighborhoods (stats אחר). */
+export const NEIGHBORHOOD_FILTER_OTHER = "אחר" as const;
+export const NEIGHBORHOOD_FILTER_OPTIONS = [...NEIGHBORHOODS, NEIGHBORHOOD_FILTER_OTHER] as const;
+export type NeighborhoodFilterId = (typeof NEIGHBORHOOD_FILTER_OPTIONS)[number];
+
 const LEGACY_NEIGHBORHOOD_ALIASES: Record<string, NeighborhoodId> = {
   "שכונת הגפן": "הגפן",
   /** OSM suburb label for שיכון ותיקים (e.g. הזמיר). */
@@ -310,9 +315,11 @@ export function formatMapsAddress(house: { address: string }): string {
 
 export function houseInNeighborhoods(
   house: { address: string; neighborhood?: NeighborhoodId | null; lat?: number; lng?: number },
-  selected: readonly NeighborhoodId[],
+  selected: readonly NeighborhoodFilterId[],
 ) {
-  if (selected.length === 0 || selected.length === NEIGHBORHOODS.length) return true;
+  if (selected.length === 0) return false;
+  if (selected.length === NEIGHBORHOOD_FILTER_OPTIONS.length) return true;
   const area = resolveNeighborhood(house);
-  return area !== null && selected.includes(area);
+  if (area === null) return selected.includes(NEIGHBORHOOD_FILTER_OTHER);
+  return selected.includes(area);
 }

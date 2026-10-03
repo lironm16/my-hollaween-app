@@ -54,7 +54,21 @@ describe("migrateHouseFilters", () => {
       ...base(),
       neighborhoodFilters: ["שיכון ותיקים", "חרוזים", "נחלת גנים"],
     });
-    assert.deepEqual(next.neighborhoodFilters, ["שיכון ותיקים", "חרוזים", "נחלת גנים", "הגפן"]);
+    assert.deepEqual(next.neighborhoodFilters, [
+      "שיכון ותיקים",
+      "חרוזים",
+      "נחלת גנים",
+      "הגפן",
+      "אחר",
+    ]);
+  });
+
+  it("adds אחר when all four hoods were selected", () => {
+    const next = migrateHouseFilters({
+      ...base(),
+      neighborhoodFilters: ["שיכון ותיקים", "חרוזים", "נחלת גנים", "הגפן"],
+    });
+    assert.ok(next.neighborhoodFilters.includes("אחר"));
   });
 
   it("normalizes partial candy and scare selections", () => {

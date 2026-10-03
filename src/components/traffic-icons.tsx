@@ -43,7 +43,10 @@ export function GemTrafficIcon({
     >
       <ImpMarkerGlyph
         variant="solid"
-        className={cn("size-[1.35rem] max-h-full max-w-full text-[#fbbf24]", markClassName)}
+        className={cn(
+          "size-[1.55rem] max-h-full max-w-full text-[#fbbf24]",
+          markClassName,
+        )}
       />
     </span>
   );
@@ -67,8 +70,11 @@ export function GemMenuDiscIcon({
       aria-hidden
     >
       <ImpMarkerGlyph
-        variant="eyes"
-        className={cn("size-[1.35rem] max-h-full max-w-full text-orange-100", markClassName)}
+        variant="solid"
+        className={cn(
+          "size-[1.55rem] max-h-full max-w-full text-orange-100",
+          markClassName,
+        )}
       />
     </span>
   );

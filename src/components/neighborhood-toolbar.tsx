@@ -29,7 +29,7 @@ function ViewToggle({
       onClick={onClick}
       className={cn(
         "app-toolbar__btn inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-        active ? "bg-orange-500 text-black" : "text-violet-200",
+        active ? "bg-orange-500 text-white" : "text-violet-200",
       )}
     >
       <span className="[&_svg]:size-5">{icon}</span>
@@ -132,11 +132,11 @@ export function NeighborhoodToolbar({
             className={cn(
               "app-toolbar__btn inline-flex size-10 shrink-0 items-center justify-center rounded-lg p-1",
               gemMapVisible
-                ? "bg-orange-500 text-black"
+                ? "bg-orange-500 text-white"
                 : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
             )}
           >
-            <GemDiamondIcon active={gemMapVisible} filled className="size-8" />
+            <GemDiamondIcon active={gemMapVisible} className="size-6" />
           </button>
         ) : null}
         {adminCharacterMapToggleEnabled && onToggleAdminCharacterMap ? (
@@ -150,7 +150,7 @@ export function NeighborhoodToolbar({
             className={cn(
               "app-toolbar__btn inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
               adminCharacterMapVisible
-                ? "bg-orange-500 text-black"
+                ? "bg-orange-500 text-white"
                 : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
             )}
           >
@@ -177,7 +177,7 @@ export function NeighborhoodToolbar({
           className={cn(
             "app-toolbar__btn relative inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
             routeMode
-              ? "bg-orange-500 text-black"
+              ? "bg-orange-500 text-white"
               : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
           )}
         >
