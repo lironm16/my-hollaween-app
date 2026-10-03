@@ -92,7 +92,7 @@ async function fetchJson(url: string, force = false, since?: string): Promise<Ca
 
 function applyCatalogResponse(prev: Catalog | null, live: CatalogDelta): Catalog {
   if (!prev || live.full) return syncCatalog(prev, live);
-  if (live.houses.length || live.removed?.length || live.pushTemplates) {
+  if (live.houses.length || live.removed?.length || live.pushTemplates || live.eventSettings) {
     return mergeCatalogDelta(prev, live);
   }
   if (prev.updatedAt === live.updatedAt) return prev;
@@ -101,7 +101,9 @@ function applyCatalogResponse(prev: Catalog | null, live: CatalogDelta): Catalog
 
 function isEmptyDelta(live: CatalogDelta, prev: Catalog | null) {
   if (live.full) return false;
-  if (live.houses.length || live.removed?.length || live.pushTemplates) return false;
+  if (live.houses.length || live.removed?.length || live.pushTemplates || live.eventSettings) {
+    return false;
+  }
   if (!prev) return false;
   return live.updatedAt === prev.updatedAt;
 }

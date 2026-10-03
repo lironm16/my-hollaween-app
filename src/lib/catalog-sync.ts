@@ -48,6 +48,7 @@ export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
       ...incoming,
       houses: [...byId.values()],
       houseCount: incoming.houseCount ?? prev.houseCount,
+      eventSettings: incoming.eventSettings ?? prev.eventSettings,
     };
   }
 
@@ -57,6 +58,7 @@ export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
     ...prev,
     houses: [...byId.values()],
     houseCount: incoming.houseCount ?? prev.houseCount,
+    eventSettings: incoming.eventSettings ?? prev.eventSettings,
   };
 }
 
@@ -69,6 +71,7 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
       houses: incoming.houses,
       houseCount: incoming.houseCount,
       pushTemplates: incoming.pushTemplates,
+      eventSettings: incoming.eventSettings,
     };
   }
   if (incoming.full) {
@@ -78,6 +81,7 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
       houses: incoming.houses,
       houseCount: incoming.houseCount,
       pushTemplates: incoming.pushTemplates ?? prev.pushTemplates,
+      eventSettings: incoming.eventSettings ?? prev.eventSettings,
     });
   }
   const byId = new Map(prev.houses.map((house) => [house.id, house]));
@@ -92,6 +96,7 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
     houses: [...byId.values()],
     houseCount: incoming.houseCount ?? prev.houseCount,
     pushTemplates: incoming.pushTemplates ?? prev.pushTemplates,
+    eventSettings: incoming.eventSettings ?? prev.eventSettings,
   };
 }
 
@@ -135,6 +140,14 @@ export function cloneDb(db: DbFile): DbFile {
           templates: Object.fromEntries(
             Object.entries(db.pushSettings.templates ?? {}).map(([id, fields]) => [id, { ...fields }]),
           ),
+        }
+      : undefined,
+    eventSettings: db.eventSettings
+      ? {
+          updatedAt: db.eventSettings.updatedAt,
+          ...(db.eventSettings.addressReveal
+            ? { addressReveal: { ...db.eventSettings.addressReveal } }
+            : {}),
         }
       : undefined,
   };

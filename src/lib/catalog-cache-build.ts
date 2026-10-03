@@ -1,5 +1,6 @@
 import { publicHouseForCatalog } from "@/lib/address-reveal";
 import { config } from "@/lib/config";
+import { addressRevealScheduleFromDb, catalogEventSettings } from "@/lib/event-settings";
 import { toPublicHouse } from "@/lib/ids";
 import { isPubliclyListed } from "@/lib/house-state";
 import { mergePushTemplates, PUSH_KINDS } from "@/lib/push-templates";
@@ -15,6 +16,7 @@ export function asCatalogForAdmin(
   houses: House[],
   updatedAt: string,
   pushSettings?: DbFile["pushSettings"],
+  eventSettings?: DbFile["eventSettings"],
 ): Catalog {
   const published: PublicHouse[] = houses
     .filter((h) => isPubliclyListed(h))
@@ -34,6 +36,7 @@ export function asCatalogForAdmin(
     houses: published,
     houseCount: published.length,
     pushTemplates,
+    eventSettings: catalogEventSettings(eventSettings),
   };
 }
 
@@ -42,11 +45,13 @@ export function asCatalogForSnapshot(
   houses: House[],
   updatedAt: string,
   pushSettings?: DbFile["pushSettings"],
+  eventSettings?: DbFile["eventSettings"],
 ): Catalog {
   const catalogNow = new Date();
+  const revealSchedule = addressRevealScheduleFromDb(eventSettings);
   const published: PublicHouse[] = houses
     .filter((h) => isPubliclyListed(h))
-    .map((h) => publicHouseForCatalog(toPublicHouse(h) as PublicHouse, catalogNow));
+    .map((h) => publicHouseForCatalog(toPublicHouse(h) as PublicHouse, catalogNow, revealSchedule));
   const merged = mergePushTemplates(pushSettings);
   const pushTemplates: Catalog["pushTemplates"] = {};
   for (const id of PUSH_KINDS) {
@@ -62,5 +67,6 @@ export function asCatalogForSnapshot(
     houses: published,
     houseCount: published.length,
     pushTemplates,
+    eventSettings: catalogEventSettings(eventSettings),
   };
 }

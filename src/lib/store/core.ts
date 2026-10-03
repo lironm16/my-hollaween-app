@@ -200,6 +200,20 @@ export function normalizeDb(db: DbFile): DbFile {
           templates: { ...db.pushSettings.templates },
         }
       : undefined,
+    eventSettings:
+      db.eventSettings?.updatedAt || db.eventSettings?.addressReveal
+        ? {
+            ...(db.eventSettings.updatedAt ? { updatedAt: db.eventSettings.updatedAt } : {}),
+            ...(db.eventSettings.addressReveal
+              ? {
+                  addressReveal: {
+                    hour: db.eventSettings.addressReveal.hour,
+                    minute: db.eventSettings.addressReveal.minute,
+                  },
+                }
+              : {}),
+          }
+        : undefined,
   };
 }
 

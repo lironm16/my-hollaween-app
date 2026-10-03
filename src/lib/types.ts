@@ -167,6 +167,12 @@ export type CatalogPushTemplate = {
   body: string;
 };
 
+/** Local time (hour/minute) on event night when addresses unlock for visitors. */
+export type AddressRevealSchedule = {
+  hour: number;
+  minute: number;
+};
+
 export type Catalog = {
   updatedAt: string;
   neighborhood: string;
@@ -175,6 +181,10 @@ export type Catalog = {
   houseCount?: number;
   /** Merged owner-alert templates so quick-update preview matches the server. */
   pushTemplates?: Partial<Record<string, CatalogPushTemplate>>;
+  /** Effective reveal schedule for clients (defaults merged with admin override). */
+  eventSettings?: {
+    addressReveal: AddressRevealSchedule;
+  };
 };
 
 /** Client-only record that a full snapshot matched server houseCount. */
@@ -223,6 +233,10 @@ export type DbFile = {
   updatedAt: string;
   pushSubscriptions?: PushSubscriptionRecord[];
   vapid?: VapidKeys;
+  eventSettings?: {
+    updatedAt?: string;
+    addressReveal?: AddressRevealSchedule;
+  };
   pushSettings?: {
     updatedAt?: string;
     generation?: number;

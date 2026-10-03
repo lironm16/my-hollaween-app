@@ -42,10 +42,19 @@ function stub(overrides: Partial<PublicHouse> = {}): PublicHouse {
 
 describe("address reveal", () => {
   it("reveals at noon on event night", () => {
-    const before = new Date(addressRevealTime().getTime() - 60_000);
-    const at = addressRevealTime();
-    assert.equal(isAddressRevealed(before), false);
-    assert.equal(isAddressRevealed(at), true);
+    const schedule = { hour: 12, minute: 0 };
+    const before = new Date(addressRevealTime(schedule).getTime() - 60_000);
+    const at = addressRevealTime(schedule);
+    assert.equal(isAddressRevealed(before, schedule), false);
+    assert.equal(isAddressRevealed(at, schedule), true);
+  });
+
+  it("honors admin schedule override", () => {
+    const schedule = { hour: 18, minute: 0 };
+    const before = new Date(2026, 9, 31, 17, 59);
+    const after = new Date(2026, 9, 31, 18, 0);
+    assert.equal(isAddressRevealed(before, schedule), false);
+    assert.equal(isAddressRevealed(after, schedule), true);
   });
 
   it("redacts catalog houses before reveal", () => {

@@ -107,7 +107,7 @@ export async function readSharedCatalogSnapshot(
 /** Publish catalog snapshot after house/catalog writes — Blob + best-effort public file. */
 export async function publishCatalogSnapshot(db: DbFile): Promise<void> {
   const houses = db.houses ?? [];
-  const catalog = asCatalogForSnapshot(houses, db.updatedAt, db.pushSettings);
+  const catalog = asCatalogForSnapshot(houses, db.updatedAt, db.pushSettings, db.eventSettings);
   const payload: CatalogSnapshot = {
     updatedAt: db.updatedAt,
     houses,
