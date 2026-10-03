@@ -56,7 +56,7 @@ import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-h
 import { gemMapLegendVisible } from "@/lib/gem-hunt-enabled";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
-import { syncGemMonsterAssignment } from "@/lib/gem-monsters";
+import { gemCarrierHousesForMap, syncGemMonsterAssignment } from "@/lib/gem-monsters";
 import {
   isGemHuntOrientationGranted,
   prepareGemHuntSensors,
@@ -358,6 +358,7 @@ export function NeighborhoodApp({
     () => mapListHouses.filter((house) => houseMatchesSet(house, activeHouseSet)),
     [mapListHouses, activeHouseSet],
   );
+  const mapGemHouses = useMemo(() => gemCarrierHousesForMap(mapHouses), [mapHouses]);
   useEffect(() => {
     if (gemHuntActive) syncGemMonsterAssignment(mapHouses);
   }, [gemHuntActive, mapHouses]);
@@ -382,9 +383,9 @@ export function NeighborhoodApp({
   const { resetForNavigation } = selection;
 
   const gemAllCollected = useMemo(() => {
-    if (!gemHuntActive || mapHouses.length === 0) return false;
-    return mapHouses.every((h) => gems.collected(h.id));
-  }, [gemHuntActive, mapHouses, gems.collectedIds]);
+    if (!gemHuntActive || mapGemHouses.length === 0) return false;
+    return mapGemHouses.every((h) => gems.collected(h.id));
+  }, [gemHuntActive, mapGemHouses, gems.collectedIds]);
 
   const openGemHuntForHouse = useCallback(
     async (house: PublicHouse) => {
@@ -1314,7 +1315,7 @@ export function NeighborhoodApp({
                     (gemAdminTools ? mapAdminCharactersVisible : mapDiamondsVisible)
                   }
                   showGemLegend={showGemMapLegend}
-                  gemAnchorHouses={gemUi ? mapHouses : []}
+                  gemAnchorHouses={gemUi ? mapGemHouses : []}
                   gemAnchorVisual={
                     gemAdminTools && mapAdminCharactersVisible
                       ? "characters"
