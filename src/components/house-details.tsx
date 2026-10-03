@@ -12,6 +12,7 @@ import { HouseTags } from "@/components/house-tags";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
+import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
 import { adminLocationLines } from "@/lib/admin-house-location";
 import { adminShowsPrivateHouseFields } from "@/lib/gem-preview-as-user";
 import { formatDistance } from "@/lib/geo";
@@ -322,20 +323,21 @@ export function HouseDetails({
   const addressReveal = useAddressReveal();
   const { admin } = useAdminSession();
   const { previewAsUser } = useGemPreviewAsUser();
+  const viewHouse = useAdminHouseFields(house) ?? house;
   const showPrivateFields = adminShowsPrivateHouseFields(admin, previewAsUser);
-  const editorHouse = house as EditorHouse;
+  const editorHouse = viewHouse as EditorHouse;
   const ownerPhone = showPrivateFields ? editorHouse.ownerPhone?.trim() : "";
   const adminLines =
-    showPrivateFields && addressReveal.canViewDetails(house.id)
-      ? adminLocationLines(house)
+    showPrivateFields && addressReveal.canViewDetails(viewHouse.id)
+      ? adminLocationLines(viewHouse)
       : null;
   const displayAddress = adminLines
     ? [adminLines.street, adminLines.hood].filter(Boolean).join(", ")
-    : addressReveal.formatDisplayAddress(house);
-  const arrivalText = addressReveal.visibleArrival(house);
-  const showMaps = addressReveal.mapsAllowed(house.id) && houseServerDetailReady(house);
+    : addressReveal.formatDisplayAddress(viewHouse);
+  const arrivalText = addressReveal.visibleArrival(viewHouse);
+  const showMaps = addressReveal.mapsAllowed(viewHouse.id) && houseServerDetailReady(viewHouse);
   const showDistance =
-    addressReveal.distanceAllowed(house.id) && distanceM !== undefined;
+    addressReveal.distanceAllowed(viewHouse.id) && distanceM !== undefined;
   const addedMeta = houseAddedMetaLine(editorHouse, { showSubmitterName: showPrivateFields });
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
@@ -542,10 +544,10 @@ export function HouseDetails({
       )}
       {actions}
       <HouseArrivalDirections arrival={arrivalText} houseId={house.id} />
-      {addressReveal.canViewDetails(house.id) ? (
-        <HouseNotesSection notes={house.notes} houseId={house.id} />
+      {addressReveal.canViewDetails(viewHouse.id) ? (
+        <HouseNotesSection notes={viewHouse.notes} houseId={viewHouse.id} />
       ) : null}
-      <HouseDescriptionSection description={house.description} houseId={house.id} />
+      <HouseDescriptionSection description={viewHouse.description} houseId={viewHouse.id} />
       {addedMeta || ownerPhone ? (
         <p className="text-sm text-violet-400">
           {addedMeta}

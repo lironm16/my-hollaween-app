@@ -10,6 +10,7 @@ import {
   clusterHouseIndex,
 } from "@/components/cluster-house-list";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
 import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
 import { houseHeadline } from "@/lib/labels";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
@@ -89,8 +90,9 @@ export function MapHouseSheet({
   const multi = clusterHouses.length > 1;
   const overview = multi && clusterOverview;
   const addressReveal = useAddressReveal();
-  const { house: hydratedHouse } = useServerHouseDetail(house);
-  const sheetHouse = hydratedHouse ?? house;
+  const overlaid = useAdminHouseFields(house) ?? house;
+  const { house: hydratedHouse } = useServerHouseDetail(overlaid);
+  const sheetHouse = useAdminHouseFields(hydratedHouse) ?? hydratedHouse ?? overlaid;
   const address = addressReveal.formatDisplayAddress(sheetHouse);
   const clusterKey = clusterHouses.map((item) => item.id).join(",");
   const clusterIndex = clusterHouseIndex(clusterHouses, house.id);

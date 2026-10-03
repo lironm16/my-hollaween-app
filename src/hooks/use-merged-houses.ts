@@ -5,6 +5,7 @@ import { toEditorHouse } from "@/lib/ids";
 import { loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { loadPendingWrites } from "@/lib/offline-db";
 import { isStubHouse } from "@/lib/house-set";
+import { mergePublicHouseWithAdminRow } from "@/lib/admin-house-overlay";
 import type { EditorHouse, House, PublicHouse } from "@/lib/types";
 import type { OwnedHouse } from "@/lib/offline-db";
 
@@ -94,22 +95,7 @@ export function enrichHousesWithAdminLocations(
 ): PublicHouse[] {
   if (!enabled || adminHouses.length === 0) return [...houses];
   const byId = new Map(adminHouses.map((row) => [row.id, row]));
-  return houses.map((house) => {
-    const admin = byId.get(house.id);
-    if (!admin) return house;
-    const address = house.address?.trim() ? house.address : admin.address;
-    const arrival = house.arrival?.trim() ? house.arrival : admin.arrival;
-    const neighborhood =
-      house.neighborhood !== undefined ? house.neighborhood : admin.neighborhood;
-    if (
-      address === house.address &&
-      arrival === house.arrival &&
-      neighborhood === house.neighborhood
-    ) {
-      return house;
-    }
-    return { ...house, address, arrival, neighborhood };
-  });
+  return houses.map((house) => mergePublicHouseWithAdminRow(house, byId.get(house.id)));
 }
 
 export function useMergedHouses({

@@ -74,6 +74,7 @@ import { useFilterDraft } from "@/hooks/use-filter-draft";
 import { useHouseActions } from "@/hooks/use-house-actions";
 import { useHouseFilters, countActiveFilters } from "@/hooks/use-house-filters";
 import { useHouseSelection } from "@/hooks/use-house-selection";
+import { AdminHouseFieldsProvider } from "@/hooks/use-admin-house-fields";
 import { enrichHousesWithAdminLocations, useMergedHouses } from "@/hooks/use-merged-houses";
 import { useNeighborhoodRoute } from "@/hooks/use-neighborhood-route";
 import { useOriginPick } from "@/hooks/use-origin-pick";
@@ -1133,6 +1134,7 @@ export function NeighborhoodApp({
     : null;
 
   return (
+    <AdminHouseFieldsProvider adminHouses={adminHouses} enabled={restoreRedactedLocations}>
     <div
       id="neighborhood-shell"
       className={cn(
@@ -1539,5 +1541,6 @@ export function NeighborhoodApp({
         monsterId={mapGemCheerMonster ?? undefined}
       />
     </div>
+    </AdminHouseFieldsProvider>
   );
 }

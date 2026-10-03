@@ -6,6 +6,7 @@ import { houseWithLocationPolicy, visitorAddressRevealContext } from "@/lib/addr
 import { appNow } from "@/lib/app-clock";
 import { fetchPublicHouse, notifyHouseDetailLoaded } from "@/lib/fetch-public-house";
 import { readGemPreviewAsUser } from "@/lib/gem-preview-as-user";
+import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
 import { loadOwnedHouses } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 
@@ -54,9 +55,9 @@ export function useServerHouseDetail(house: PublicHouse | null) {
     return () => {
       cancelled = true;
     };
-  }, [house?.id, house?.updatedAt, house?.deviceCachePin]);
+  }, [house?.id, house?.updatedAt, house?.deviceCachePin, house?.address]);
 
-  const active = resolved ?? house;
+  const active = useAdminHouseFields(resolved ?? house) ?? resolved ?? house;
   return {
     house: active,
     loading,

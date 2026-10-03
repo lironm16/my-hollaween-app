@@ -6,8 +6,9 @@ import { houseActionBarPropsFromCard } from "@/components/house-card-actions";
 import { HouseDetails } from "@/components/house-details";
 import { HouseCardBanners } from "@/components/house-skipped-banner";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
+import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
 import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
-import { isDeviceCachePinHouse } from "@/lib/device-catalog-cache";
+import { houseNeedsLocationHydration, isDeviceCachePinHouse } from "@/lib/device-catalog-cache";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
@@ -70,11 +71,14 @@ export function HouseCard({
   className?: string;
   liveDetail?: boolean;
 }) {
-  const shouldFetchLive = liveDetail && isDeviceCachePinHouse(house);
+  const overlaid = useAdminHouseFields(house) ?? house;
+  const shouldFetchLive =
+    (liveDetail && isDeviceCachePinHouse(overlaid)) || houseNeedsLocationHydration(overlaid);
   const { house: liveHouse, loading, unavailable } = useServerHouseDetail(
-    shouldFetchLive ? house : null,
+    shouldFetchLive ? overlaid : null,
   );
-  const displayHouse = shouldFetchLive ? (liveHouse ?? house) : house;
+  const hydrated = useAdminHouseFields(liveHouse) ?? liveHouse;
+  const displayHouse = shouldFetchLive ? (hydrated ?? overlaid) : overlaid;
   const cardProps = {
     house: displayHouse,
     distanceM,
