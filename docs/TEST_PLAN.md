@@ -24,6 +24,18 @@ npm run lint          # ESLint (also first step in npm run ci; compiler hygiene 
 
 **Rehearsal mode** for time-sensitive manual tests: `/?rehearsal=open` or Admin → חזרה כללית.
 
+**Pre-event checklist (manual) vs automation** — see `docs/MANUAL_TEST_CHECKLIST.md` section A. CI already covers:
+
+| Checklist ID | Automated coverage |
+|--------------|-------------------|
+| INS-07 / INS-08 | `scripts/check-offline-catalog.mjs` (catalog in `localStorage`, offline relaunch) |
+| OFF-02 | Same script (`hw-sim-server` + «השרת לא עונה») |
+| OFF-03 | Same script (`context.setOffline`, «אין אינטרנט») |
+| MAP / ROUTE / EDIT (partial) | `scripts/e2e-visitor-flows.mjs`, `e2e-batch3`–`7` with `?rehearsal=open` |
+| Rehearsal clock / admin sim | `e2e-batch7` (ADM-05/06), unit tests in `src/lib/app-clock.test.ts` |
+
+Device-only rows (PWA install, push, GPS permissions, multi-unit feel on real hardware) stay manual.
+
 ---
 
 ## 1. Platform & installation matrix
