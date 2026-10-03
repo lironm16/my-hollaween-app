@@ -35,3 +35,8 @@ export function subscribeGemPreviewAsUser(onStoreChange: () => void) {
 export function adminShowsPrivateHouseFields(admin: boolean, previewAsUser: boolean) {
   return admin && !previewAsUser;
 }
+
+/** Add-house cutoff bypass — off in תצוגת משתמש so QA matches visitors. */
+export function adminBypassesAddHouseCutoff(admin: boolean, previewAsUser: boolean) {
+  return admin && !previewAsUser;
+}

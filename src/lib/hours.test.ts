@@ -25,6 +25,13 @@ describe("isAddHouseOpen", () => {
       true,
     );
   });
+
+  it("admins do not bypass when isAdmin is false (תצוגת משתמש)", () => {
+    assert.equal(
+      isAddHouseOpen(new Date(2026, 9, 31, 18, 0, 0, 0), { isAdmin: false }),
+      false,
+    );
+  });
 });
 
 describe("openingSoon before event night", () => {
