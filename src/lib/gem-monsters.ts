@@ -385,12 +385,14 @@ export function buildGemMonsterAssignment(
 let activeAssignment: ReadonlyMap<string, GemMonsterId> | null = null;
 let activeAssignmentKey = "";
 
+const GEM_ASSIGNMENT_ALGO = "spatial-v1";
+
 /** Keep map + album + collect in sync — call when the gem-eligible house list changes. */
 export function syncGemMonsterAssignment(mapHouses: readonly GemAssignHouse[]) {
-  const key = mapHouses
+  const key = `${GEM_ASSIGNMENT_ALGO}\0${mapHouses
     .map((house) => house.id)
     .sort((a, b) => a.localeCompare(b, "he"))
-    .join("\0");
+    .join("\0")}`;
   if (key === activeAssignmentKey && activeAssignment) return activeAssignment;
   activeAssignment = buildGemMonsterAssignment(mapHouses);
   activeAssignmentKey = key;
