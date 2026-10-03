@@ -154,19 +154,16 @@ function GemDiamondSwatch({ collected = false }: { collected?: boolean }) {
   );
 }
 
+const GEM_LEGEND_GROUP = {
+  title: "יהלומים",
+  items: [
+    { key: "gem-open", label: "יהלום לצוד", node: <GemDiamondSwatch /> },
+    { key: "gem-done", label: "נאסף", node: <GemDiamondSwatch collected /> },
+  ],
+} as const;
+
 export function MapLegend({ showGemLegend = false }: { showGemLegend?: boolean }) {
-  const groups = showGemLegend
-    ? [
-        ...BASE_GROUPS,
-        {
-          title: "יהלומים",
-          items: [
-            { key: "gem-open", label: "יהלום לצוד", node: <GemDiamondSwatch /> },
-            { key: "gem-done", label: "נאסף", node: <GemDiamondSwatch collected /> },
-          ],
-        },
-      ]
-    : BASE_GROUPS;
+  const groups = showGemLegend ? [GEM_LEGEND_GROUP, ...BASE_GROUPS] : BASE_GROUPS;
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const titleId = useId();
@@ -205,7 +202,7 @@ export function MapLegend({ showGemLegend = false }: { showGemLegend?: boolean }
                 aria-labelledby={titleId}
                 dir="rtl"
                 className="map-legend-panel relative flex max-h-[min(88dvh,40rem)] w-[min(38rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl bg-[#160b20] text-right shadow-[0_16px_48px_rgba(0,0,0,0.55)] ring-1 ring-orange-500/30"
-                onClick={() => setOpen(false)}
+                onClick={(event) => event.stopPropagation()}
               >
                 <OverlayCloseBar
                   compact

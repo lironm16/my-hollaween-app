@@ -53,6 +53,7 @@ import { useGemProgress } from "@/hooks/use-gem-progress";
 import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
 import { loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
 import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
+import { gemMapLegendVisible } from "@/lib/gem-hunt-enabled";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import { syncGemMonsterAssignment } from "@/lib/gem-monsters";
@@ -193,6 +194,16 @@ export function NeighborhoodApp({
   /** Toolbar toggle — diamonds hidden on map until user taps the top-bar gem control. */
   const [mapDiamondsVisible, setMapDiamondsVisible] = useState(false);
   const [mapAdminCharactersVisible, setMapAdminCharactersVisible] = useState(false);
+  const showGemMapLegend = useMemo(
+    () =>
+      gemMapLegendVisible(admin, {
+        now,
+        previewAsUser: gemPreviewAsUser,
+        mapDiamondsVisible,
+        mapAdminCharactersVisible,
+      }),
+    [admin, now, gemPreviewAsUser, mapDiamondsVisible, mapAdminCharactersVisible],
+  );
   const [gemResetHouse, setGemResetHouse] = useState<PublicHouse | null>(null);
   const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);
   const [mapGemCheerMonster, setMapGemCheerMonster] = useState<GemMonsterId | null>(null);
@@ -1292,7 +1303,7 @@ export function NeighborhoodApp({
                     gemUi &&
                     (gemAdminTools ? mapAdminCharactersVisible : mapDiamondsVisible)
                   }
-                  showGemLegend={gemUi}
+                  showGemLegend={showGemMapLegend}
                   gemAnchorHouses={gemUi ? mapHouses : []}
                   gemAnchorVisual={
                     gemAdminTools && mapAdminCharactersVisible

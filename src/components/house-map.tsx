@@ -982,7 +982,9 @@ export function HouseMap({
               <LocateFixed className={cn("size-5", locating && "animate-pulse")} />
             </button>
           ) : null}
-          {!pickMode && !embed ? <MapLegend showGemLegend={showGemLegend} /> : null}
+          {!pickMode && !embed ? (
+            <MapLegend key={showGemLegend ? "with-gems" : "base"} showGemLegend={showGemLegend} />
+          ) : null}
           {!pickMode && !embed ? statsFab : null}
         </div>
     </div>
