@@ -38,8 +38,12 @@ import {
 import { catalogHasRealHouses } from "@/lib/house-set";
 import { ensureGemOsmAnchorsLoaded } from "@/lib/gem-osm-anchor-cache";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
+import { houseWithLocationPolicy, visitorAddressRevealContext } from "@/lib/address-reveal";
+import { appNow } from "@/lib/app-clock";
 import { withServerHouseDetail } from "@/lib/device-catalog-cache";
 import { HOUSE_DETAIL_LOADED_EVENT } from "@/lib/fetch-public-house";
+import { readGemPreviewAsUser } from "@/lib/gem-preview-as-user";
+import { loadOwnedHouses } from "@/lib/offline-db";
 import { isMapListSuspended, subscribeMapListSuspend } from "@/lib/map-list-suspend";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
@@ -438,8 +442,17 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const onHouseDetail = (event: Event) => {
-      const house = (event as CustomEvent<PublicHouse>).detail;
+      let house = (event as CustomEvent<PublicHouse>).detail;
       if (!house?.id) return;
+      if (readGemPreviewAsUser()) {
+        house = houseWithLocationPolicy(
+          house,
+          visitorAddressRevealContext(
+            appNow(),
+            loadOwnedHouses().map((row) => row.id),
+          ),
+        );
+      }
       setCatalog((prev) => {
         if (!prev) return prev;
         const houses = prev.houses.map((row) => (row.id === house.id ? house : row));

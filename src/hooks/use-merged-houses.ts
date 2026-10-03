@@ -11,11 +11,11 @@ import type { OwnedHouse } from "@/lib/offline-db";
 function mergeIncomingHouse(
   current: PublicHouse | undefined,
   incoming: PublicHouse,
-  admin: boolean,
+  restoreRedactedLocations: boolean,
 ): PublicHouse {
   let merged = incoming;
   if (
-    admin &&
+    restoreRedactedLocations &&
     current?.address?.trim() &&
     !incoming.address?.trim()
   ) {
@@ -45,6 +45,7 @@ export function mergeVisibleHouses({
   admin,
   adminHouses,
   includeCatalogWhenAdmin = false,
+  restoreRedactedLocations,
 }: {
   catalogHouses: PublicHouse[];
   owned: OwnedHouse[];
@@ -52,7 +53,10 @@ export function mergeVisibleHouses({
   adminHouses: House[];
   /** Edit page needs catalog + admin API houses; the map uses admin houses only. */
   includeCatalogWhenAdmin?: boolean;
+  /** Admin merge can fill address back after catalog redaction — off in תצוגת משתמש. */
+  restoreRedactedLocations?: boolean;
 }): PublicHouse[] {
+  const restoreLocations = restoreRedactedLocations ?? admin;
   const deleted = new Set(loadDeletedHouseIds());
   const byId = new Map<string, PublicHouse>();
   if (!admin || includeCatalogWhenAdmin) {
@@ -65,21 +69,21 @@ export function mergeVisibleHouses({
       if (deleted.has(house.id)) continue;
       const incoming = toEditorHouse(house) as EditorHouse;
       const current = byId.get(house.id);
-      byId.set(house.id, mergeIncomingHouse(current, incoming, admin));
+      byId.set(house.id, mergeIncomingHouse(current, incoming, restoreLocations));
     }
   }
   for (const item of owned) {
     if (!item.preview || deleted.has(item.id)) continue;
     const current = byId.get(item.id);
     if (!current || Date.parse(item.preview.updatedAt) >= Date.parse(current.updatedAt || "")) {
-      byId.set(item.id, mergeIncomingHouse(current, item.preview, admin));
+      byId.set(item.id, mergeIncomingHouse(current, item.preview, restoreLocations));
     }
   }
   for (const pending of loadPendingWrites()) {
     if (deleted.has(pending.id)) continue;
     const current = byId.get(pending.id);
     if (!current || Date.parse(pending.house.updatedAt) >= Date.parse(current.updatedAt || "")) {
-      byId.set(pending.id, mergeIncomingHouse(current, pending.house, admin));
+      byId.set(pending.id, mergeIncomingHouse(current, pending.house, restoreLocations));
     }
   }
   return [...byId.values()].filter((house) => !deleted.has(house.id));
@@ -91,12 +95,14 @@ export function useMergedHouses({
   admin,
   adminHouses,
   includeCatalogWhenAdmin = false,
+  restoreRedactedLocations,
 }: {
   catalogHouses: PublicHouse[];
   owned: OwnedHouse[];
   admin: boolean;
   adminHouses: House[];
   includeCatalogWhenAdmin?: boolean;
+  restoreRedactedLocations?: boolean;
 }) {
   return useMemo(
     () =>
@@ -106,7 +112,8 @@ export function useMergedHouses({
         admin,
         adminHouses,
         includeCatalogWhenAdmin,
+        restoreRedactedLocations,
       }),
-    [catalogHouses, owned, admin, adminHouses, includeCatalogWhenAdmin],
+    [catalogHouses, owned, admin, adminHouses, includeCatalogWhenAdmin, restoreRedactedLocations],
   );
 }

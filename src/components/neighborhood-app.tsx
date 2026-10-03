@@ -65,6 +65,8 @@ import {
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { housesWithLocationPolicy } from "@/lib/address-reveal";
+import { adminShowsPrivateHouseFields } from "@/lib/gem-preview-as-user";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAdminHouses } from "@/hooks/use-admin-houses";
@@ -298,35 +300,43 @@ export function NeighborhoodApp({
   }, [adminHouses]);
 
   const catalogHouses = useMemo(() => resolveCatalogHouses(catalog), [catalog]);
+  const restoreRedactedLocations = adminShowsPrivateHouseFields(adminForHouseSet, gemPreviewAsUser);
   const houses = useMergedHouses({
     catalogHouses,
     owned,
     admin: adminForHouseSet,
     adminHouses,
     includeCatalogWhenAdmin: true,
+    restoreRedactedLocations,
   });
   const lastHousesRef = useRef<PublicHouse[]>([]);
   const displayHouses = useMemo(() => {
+    const applyVisitorLocations = (list: PublicHouse[]) =>
+      gemPreviewAsUser ? housesWithLocationPolicy(list, addressReveal) : list;
+
     if (houses.length > 0) {
-      lastHousesRef.current = houses;
-      return houses;
+      const next = applyVisitorLocations(houses);
+      lastHousesRef.current = next;
+      return next;
     }
     const authHouses =
       catalog && isAuthoritativeHouseList(catalog) && catalog.houses.length > 0
         ? catalog.houses
         : null;
     if (authHouses) {
-      lastHousesRef.current = authHouses;
-      return authHouses;
+      const next = applyVisitorLocations(authHouses);
+      lastHousesRef.current = next;
+      return next;
     }
     if (lastHousesRef.current.length > 0) return lastHousesRef.current;
     const cached = loadCatalogCacheSync()?.houses;
     if (cached?.length) {
-      lastHousesRef.current = cached;
-      return cached;
+      const next = applyVisitorLocations(cached);
+      lastHousesRef.current = next;
+      return next;
     }
     return houses;
-  }, [houses, catalog]);
+  }, [houses, catalog, gemPreviewAsUser, addressReveal]);
 
   const { houses: mapListHouses, now: mapListNow } = useMapListUiLock(displayHouses, now);
 
