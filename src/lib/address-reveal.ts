@@ -1,27 +1,31 @@
 import { config, formatDisplayAddress, resolveNeighborhood, type NeighborhoodId } from "@/lib/config";
-import type { PublicHouse } from "@/lib/types";
+import { mergeAddressRevealSchedule } from "@/lib/event-settings";
+import type { AddressRevealSchedule, PublicHouse } from "@/lib/types";
 
 export type AddressRevealContext = {
   now: Date;
   isAdmin: boolean;
   ownedHouseIds: ReadonlySet<string>;
+  addressReveal: AddressRevealSchedule;
 };
 
 /** Local time on event night when street addresses and arrival notes become public. */
-export function addressRevealTime(reference = new Date()) {
+export function addressRevealTime(
+  schedule = mergeAddressRevealSchedule(),
+  reference = new Date(),
+) {
   void reference;
   const { year, month, day } = config.eventNight;
-  const { hour, minute } = config.addressReveal;
-  return new Date(year, month - 1, day, hour, minute, 0, 0);
+  return new Date(year, month - 1, day, schedule.hour, schedule.minute, 0, 0);
 }
 
-export function isAddressRevealed(now = new Date()) {
-  return now.getTime() >= addressRevealTime(now).getTime();
+export function isAddressRevealed(now = new Date(), schedule = mergeAddressRevealSchedule()) {
+  return now.getTime() >= addressRevealTime(schedule, now).getTime();
 }
 
-export function addressHiddenHintHe(now = new Date()) {
+export function addressHiddenHintHe(now = new Date(), schedule = mergeAddressRevealSchedule()) {
   const { labelHe } = config.eventNight;
-  if (isAddressRevealed(now)) return "";
+  if (isAddressRevealed(now, schedule)) return "";
   return `הכתובת תיחשף ב-${labelHe}`;
 }
 
@@ -29,7 +33,7 @@ export function canViewHouseLocationDetails(
   houseId: string,
   ctx: AddressRevealContext,
 ): boolean {
-  if (isAddressRevealed(ctx.now)) return true;
+  if (isAddressRevealed(ctx.now, ctx.addressReveal)) return true;
   if (ctx.isAdmin) return true;
   return ctx.ownedHouseIds.has(houseId);
 }
@@ -41,8 +45,12 @@ export function redactHouseLocationDetails<T extends Pick<PublicHouse, "address"
 }
 
 /** Strip location fields for the public catalog before reveal time. */
-export function publicHouseForCatalog(house: PublicHouse, now = new Date()): PublicHouse {
-  if (isAddressRevealed(now)) return house;
+export function publicHouseForCatalog(
+  house: PublicHouse,
+  now = new Date(),
+  schedule = mergeAddressRevealSchedule(),
+): PublicHouse {
+  if (isAddressRevealed(now, schedule)) return house;
   return redactHouseLocationDetails(house);
 }
 
@@ -59,7 +67,7 @@ export function formatDisplayAddressWithPolicy(
   if (canViewHouseLocationDetails(houseId, ctx)) {
     return formatDisplayAddress(house);
   }
-  const hint = addressHiddenHintHe(ctx.now);
+  const hint = addressHiddenHintHe(ctx.now, ctx.addressReveal);
   const area = resolveNeighborhood(house);
   if (area && hint) return `${area} · ${hint}`;
   return hint || formatDisplayAddress(house);
@@ -96,11 +104,13 @@ export function makeAddressRevealContext(input: {
   now: Date;
   isAdmin?: boolean;
   ownedHouseIds?: Iterable<string>;
+  addressReveal?: AddressRevealSchedule;
 }): AddressRevealContext {
   return {
     now: input.now,
     isAdmin: Boolean(input.isAdmin),
     ownedHouseIds: new Set(input.ownedHouseIds ?? []),
+    addressReveal: mergeAddressRevealSchedule(input.addressReveal),
   };
 }
 
@@ -108,6 +118,7 @@ export function makeAddressRevealContext(input: {
 export function visitorAddressRevealContext(
   now: Date,
   ownedHouseIds?: Iterable<string>,
+  addressReveal?: AddressRevealSchedule,
 ): AddressRevealContext {
-  return makeAddressRevealContext({ now, isAdmin: false, ownedHouseIds });
+  return makeAddressRevealContext({ now, isAdmin: false, ownedHouseIds, addressReveal });
 }

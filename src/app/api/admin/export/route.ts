@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     });
   }
   const db = await getDbSnapshot();
-  const catalog = asCatalogForAdmin(houses, db.updatedAt, db.pushSettings);
+  const catalog = asCatalogForAdmin(houses, db.updatedAt, db.pushSettings, db.eventSettings);
   return NextResponse.json(catalog, {
     headers: {
       "Content-Disposition": "attachment; filename=catalog.json",

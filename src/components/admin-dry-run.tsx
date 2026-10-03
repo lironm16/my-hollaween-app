@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AdminAddressRevealSettings } from "@/components/admin-address-reveal-settings";
 import { AdminGemOpsPanel } from "@/components/admin-gem-ops-panel";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useRehearsalScene, useServerSim, useAppNow } from "@/hooks/use-app-clock";
@@ -103,6 +104,7 @@ export function AdminDryRunPanel() {
           ))}
         </div>
       </div>
+      <AdminAddressRevealSettings />
       <p className="text-base font-medium text-amber-100">בדיקות</p>
       <p className="text-base text-violet-300">
         בלי לחכות ל־31 באוקטובר: בחרו רגע בלילה כדי לראות באנרים, סיכות «נפתח/נסגר בקרוב», ואת כפתורי

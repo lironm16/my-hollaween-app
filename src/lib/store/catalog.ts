@@ -4,6 +4,7 @@ import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { isPubliclyListed } from "@/lib/house-state";
 import { publicHouseForCatalog } from "@/lib/address-reveal";
 import { asCatalogForSnapshot, countPublishedHouses } from "@/lib/catalog-cache-build";
+import { addressRevealScheduleFromDb, eventSettingsStamp } from "@/lib/event-settings";
 import {
   firestoreConfigured,
   queryRemovedHouseIdsSince,
@@ -40,18 +41,14 @@ export function catalogRemovalsSinceIso(since: string) {
   return catalogRemovalsSince(sinceMs);
 }
 
-export function asCatalog(
-  houses: House[],
-  updatedAt: string,
-  pushSettings?: DbFile["pushSettings"],
-): Catalog {
-  return asCatalogForSnapshot(houses, updatedAt, pushSettings);
+export function asCatalog(db: Pick<DbFile, "houses" | "updatedAt" | "pushSettings" | "eventSettings">): Catalog {
+  return asCatalogForSnapshot(db.houses, db.updatedAt, db.pushSettings, db.eventSettings);
 }
 
 export async function getCatalog(): Promise<Catalog> {
   await ensurePushSettingsGeneration();
   const db = await loadDb();
-  catalogMem = asCatalog(db.houses, db.updatedAt, db.pushSettings);
+  catalogMem = asCatalog(db);
   return catalogMem;
 }
 
@@ -70,6 +67,7 @@ export function catalogDeltaGatePassed(input: {
   sinceMs: number;
   catalogUpdatedAt: string;
   pushUpdatedAt?: string;
+  eventSettingsUpdatedAt?: string;
   removedIds?: string[];
 }) {
   if (input.removedIds?.length) return false;
@@ -78,6 +76,8 @@ export function catalogDeltaGatePassed(input: {
     const pushStamp = Date.parse(input.pushUpdatedAt ?? "");
     if (Number.isFinite(pushStamp) && pushStamp > input.sinceMs) return false;
   }
+  const eventStamp = Date.parse(input.eventSettingsUpdatedAt ?? "");
+  if (Number.isFinite(eventStamp) && eventStamp > input.sinceMs) return false;
   return true;
 }
 
@@ -88,20 +88,23 @@ export function buildCatalogDeltaFromDb(
   removed: string[] = [],
 ): CatalogDelta {
   const sinceMs = Date.parse(since);
+  const revealSchedule = addressRevealScheduleFromDb(db.eventSettings);
   const houses = db.houses
     .filter((house) => isPubliclyListed(house) && stamp(house) > sinceMs)
-    .map((house) => publicHouseForCatalog(toPublicHouse(house) as PublicHouse));
+    .map((house) =>
+      publicHouseForCatalog(toPublicHouse(house) as PublicHouse, new Date(), revealSchedule),
+    );
   const pushChanged =
     pushAlertsEnabled() && pushSettingsStamp(db.pushSettings) > sinceMs;
+  const eventChanged = eventSettingsStamp(db.eventSettings) > sinceMs;
   return {
     updatedAt: db.updatedAt,
     neighborhood: config.neighborhood,
     houses,
     removed,
     houseCount: countPublishedHouses(db.houses),
-    ...(pushChanged
-      ? { pushTemplates: asCatalog(db.houses, db.updatedAt, db.pushSettings).pushTemplates }
-      : {}),
+    ...(pushChanged ? { pushTemplates: asCatalog(db).pushTemplates } : {}),
+    ...(eventChanged ? { eventSettings: asCatalog(db).eventSettings } : {}),
   };
 }
 
@@ -114,6 +117,7 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
         sinceMs,
         catalogUpdatedAt: mem.updatedAt,
         pushUpdatedAt: mem.pushSettings?.updatedAt,
+        eventSettingsUpdatedAt: mem.eventSettings?.updatedAt,
         removedIds: removed,
       })
     ) {
@@ -139,6 +143,7 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
         sinceMs,
         catalogUpdatedAt: meta.updatedAt,
         pushUpdatedAt: pushMeta?.updatedAt,
+        eventSettingsUpdatedAt: mem?.eventSettings?.updatedAt,
         removedIds: [],
       })
     ) {
@@ -150,6 +155,7 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
           sinceMs,
           catalogUpdatedAt: meta.updatedAt,
           pushUpdatedAt: pushMeta?.updatedAt,
+          eventSettingsUpdatedAt: mem?.eventSettings?.updatedAt,
           removedIds: removed,
         })
       ) {

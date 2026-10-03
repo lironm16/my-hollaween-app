@@ -14,6 +14,7 @@ import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
 import { adminShowsPrivateHouseFields } from "@/lib/gem-preview-as-user";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
+import { useCatalog } from "@/hooks/use-catalog";
 import type { PublicHouse } from "@/lib/types";
 
 export function useAddressReveal(): AddressRevealContext & {
@@ -24,18 +25,21 @@ export function useAddressReveal(): AddressRevealContext & {
   distanceAllowed: (houseId: string) => boolean;
 } {
   const now = useAppNow();
+  const { catalog } = useCatalog();
   const { admin } = useAdminSession();
   const { previewAsUser } = useGemPreviewAsUser();
   const owned = useOwnedHouses();
   const ownedHouseIds = useMemo(() => new Set(owned.map((item) => item.id)), [owned]);
+  const addressRevealFromCatalog = catalog?.eventSettings?.addressReveal;
   const ctx = useMemo(
     () =>
       makeAddressRevealContext({
         now,
         isAdmin: adminShowsPrivateHouseFields(admin, previewAsUser),
         ownedHouseIds,
+        addressReveal: addressRevealFromCatalog,
       }),
-    [now, admin, previewAsUser, ownedHouseIds],
+    [now, admin, previewAsUser, ownedHouseIds, addressRevealFromCatalog],
   );
 
   return useMemo(
