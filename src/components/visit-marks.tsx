@@ -1,4 +1,5 @@
-import { Check, Filter, Gem } from "lucide-react";
+import { Check, Filter } from "lucide-react";
+import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { DecorMark } from "@/components/decor-glyphs";
 import { ClosedSign, PauseSign } from "@/components/house-tags";
 import { SkipIcon } from "@/components/skip-icon";
@@ -213,7 +214,7 @@ function GemSign({ className }: { className?: string }) {
       )}
       aria-hidden
     >
-      <Gem className="size-5 fill-amber-300 text-amber-300" strokeWidth={2.1} />
+      <ImpMarkerGlyph className="size-5 text-amber-300" />
     </span>
   );
 }

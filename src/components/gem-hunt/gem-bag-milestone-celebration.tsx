@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Gem, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import type { GemBagCelebrateKind } from "@/lib/gem-bag-celebrate";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +11,7 @@ const COPY: Record<
   { title: string; sub: string; kicker: string }
 > = {
   map: {
-    kicker: "כל היהלומים על המפה",
+    kicker: "כל השדונים על המפה",
     title: "השכונה שלכם מלאה קסם!",
     sub: "מצאתם את כל החבר'ה הנסתרים — התיק מוכן לפסגה.",
   },
@@ -22,7 +23,7 @@ const COPY: Record<
   "map-album": {
     kicker: "פסגה כפולה",
     title: "מפה מלאה + אלבום שלם!",
-    sub: "יהלום אחרון, חבר אחרון — כל הכבוד, ציידי הקסם.",
+    sub: "שדון אחרון, חבר אחרון — כל הכבוד, ציידי הקסם.",
   },
 };
 
@@ -83,7 +84,7 @@ export function GemBagMilestoneCelebration({
       <div className="gem-bag-milestone__burst" aria-hidden />
       <div className="gem-bag-milestone__card">
         <Sparkles className="gem-bag-milestone__spark size-8 text-amber-300" aria-hidden />
-        <Gem className="gem-bag-milestone__gem size-10 text-violet-200" aria-hidden />
+        <ImpMarkerGlyph className="gem-bag-milestone__gem size-10 text-violet-200" />
         <p className="gem-bag-milestone__kicker">{copy.kicker}</p>
         <h2 className="gem-bag-milestone__title">{copy.title}</h2>
         <p className="gem-bag-milestone__sub">{copy.sub}</p>

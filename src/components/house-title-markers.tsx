@@ -27,7 +27,7 @@ export function HouseTitleMarkers({
             className="mb-0.5 me-1.5 inline size-5 align-middle"
             aria-hidden
           />
-          <span className="sr-only">יהלום</span>
+          <span className="sr-only">שדון</span>
         </>
       ) : null}
     </>

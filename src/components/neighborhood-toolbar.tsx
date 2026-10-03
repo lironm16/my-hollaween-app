@@ -1,6 +1,7 @@
 "use client";
 
 import { GemDiamondIcon } from "@/components/gem-diamond-icon";
+import { GEM_MAP_TOGGLE_HIDE_HE, GEM_MAP_TOGGLE_SHOW_HE } from "@/lib/gem-hunt-copy";
 import { List, MapPinned, Route, Sparkles } from "lucide-react";
 import { FilterTrigger } from "@/components/filter-menu";
 import { OriginTrigger } from "@/components/origin-picker";
@@ -125,7 +126,7 @@ export function NeighborhoodToolbar({
         {gemMapToggleEnabled && onToggleGemMap ? (
           <button
             type="button"
-            aria-label={gemMapVisible ? "הסתר יהלומים במפה" : "הצג יהלומים במפה"}
+            aria-label={gemMapVisible ? GEM_MAP_TOGGLE_HIDE_HE : GEM_MAP_TOGGLE_SHOW_HE}
             aria-pressed={gemMapVisible}
             onClick={onToggleGemMap}
             className={cn(

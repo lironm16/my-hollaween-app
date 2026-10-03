@@ -123,11 +123,7 @@ function LikedSummaryIcon() {
 }
 
 function GemSummaryIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden className="size-full">
-      <path d="M6 3h12l4 7-10 13L2 10l4-7z" fill="#fbbf24" />
-    </svg>
-  );
+  return <ImpMarkerGlyph className="size-full text-[#fbbf24]" />;
 }
 
 function RouteChip({

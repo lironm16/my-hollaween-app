@@ -1,6 +1,7 @@
 "use client";
 
 import { GemMysteryTeaser3D } from "@/components/gem-hunt/gem-mystery-teaser-3d";
+import { GEM_HOUSE_KICKER_HE } from "@/lib/gem-hunt-copy";
 import { gemLabelHe, gemMonsterForHouse } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -36,7 +37,7 @@ export function GemHouseFoundHero({
               <GemMysteryTeaser3D />
             </div>
           </div>
-          <p className="gem-house-found-hero__kicker">יהלום נסתר · גלו במצלמה</p>
+          <p className="gem-house-found-hero__kicker">{GEM_HOUSE_KICKER_HE}</p>
         </>
       )}
     </div>

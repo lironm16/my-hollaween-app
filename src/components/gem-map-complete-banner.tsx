@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
+import { GEM_MAP_COMPLETE_TITLE_HE } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
 /** Shown on the map when every gem on the set has been collected. */
@@ -18,7 +19,7 @@ export function GemMapCompleteBanner({ className }: { className?: string }) {
       <div className="gem-map-complete__card">
         <Sparkles className="gem-map-complete__icon size-6 text-amber-300" aria-hidden />
         <div className="min-w-0 flex-1 text-right">
-          <p className="gem-map-complete__title">כל היהלומים באוסף!</p>
+          <p className="gem-map-complete__title">{GEM_MAP_COMPLETE_TITLE_HE}</p>
           <p className="gem-map-complete__sub">השכונה מלאה קסם — פתחו את התיק לראות את החבר&apos;ה.</p>
         </div>
         <Link href="/gem-bag" className="gem-map-complete__link shrink-0">

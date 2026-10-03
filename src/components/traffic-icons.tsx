@@ -1,4 +1,5 @@
-import { Check, Gem, Heart, Save } from "lucide-react";
+import { Check, Heart, Save } from "lucide-react";
+import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { GEM_DIAMOND_FILL } from "@/lib/gem-diamond-visual";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +25,7 @@ export function SavedTrafficIcon({
   );
 }
 
-/** Map-yellow gem disc — collected diamond for action menu. */
+/** Imp marker disc — dwarf hunt for action menu. */
 export function GemTrafficIcon({
   className,
   markClassName,
@@ -38,14 +39,10 @@ export function GemTrafficIcon({
         "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/20 ring-1 ring-amber-400/45",
         className,
       )}
-      title="יהלום"
-      aria-label="יהלום"
+      title="שדון"
+      aria-label="שדון"
     >
-      <Gem
-        className={cn("size-5 fill-current", markClassName)}
-        style={{ color: GEM_DIAMOND_FILL }}
-        strokeWidth={2.1}
-      />
+      <ImpMarkerGlyph className={cn("size-5", markClassName)} style={{ color: GEM_DIAMOND_FILL }} />
     </span>
   );
 }

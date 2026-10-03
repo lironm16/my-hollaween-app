@@ -10,6 +10,7 @@ import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
 import {
   GEM_FOUND_CHEER_HE,
   GEM_FOUND_I_HE,
+  GEM_GAME_TITLE_HE,
   GEM_NOT_FOUND_I_HE,
 } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
@@ -20,7 +21,7 @@ export default function GemHuntHelpPage() {
 
   if (!ready) {
     return (
-      <HelpShell title="ציד יהלומים">
+      <HelpShell title={GEM_GAME_TITLE_HE}>
         <p className="text-base text-violet-300">טוענים…</p>
       </HelpShell>
     );
@@ -28,7 +29,7 @@ export default function GemHuntHelpPage() {
 
   if (!showGemHuntHelp) {
     return (
-      <HelpShell title="ציד יהלומים">
+      <HelpShell title={GEM_GAME_TITLE_HE}>
         <div className="space-y-4 rounded-2xl bg-[#1d1028] p-5 ring-1 ring-orange-500/25">
           <p className="text-lg leading-relaxed text-orange-50">הציד עדיין לא פתוח לכולם.</p>
           <Link href="/help" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "inline-flex")}>
@@ -40,9 +41,9 @@ export default function GemHuntHelpPage() {
   }
 
   return (
-    <HelpShell title="ציד יהלומים">
+    <HelpShell title={GEM_GAME_TITLE_HE}>
       <p className="mb-5 text-lg leading-relaxed text-violet-100">
-        ליד בתים נבחרים מסתתר יהלום — חיה קטנה שאפשר לאסוף במצלמה ולהוסיף ל
+        ליד בתים נבחרים מסתתר שדון — חיה קטנה שאפשר למצוא במצלמה ולהוסיף ל
         <strong className="font-semibold text-orange-100">{GEM_ALBUM_TITLE_HE}</strong>. המדריך הזה מיועד
         לבדיקות לפני פתיחה לציבור.
       </p>

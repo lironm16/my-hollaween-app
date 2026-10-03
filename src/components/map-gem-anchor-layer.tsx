@@ -37,9 +37,7 @@ function gemDiamondIcon(
     icon = L.divIcon({
       className: "map-gem-diamond-leaflet-icon",
       html: `<div class="map-gem-diamond-marker${compact ? " map-gem-diamond-marker--compact" : " map-gem-diamond-marker--admin"}${collected ? " is-collected" : ""}${dimmed ? " is-dimmed" : ""}${calibrated ? " is-calibrated" : ""}${inRange ? " is-near" : ""}" aria-hidden="true">
-        <svg class="map-gem-diamond-marker__svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M6 3h12l4 7-10 13L2 10l4-7z" fill="currentColor"/>
-        </svg>
+        <span class="map-gem-imp-marker__glyph"></span>
       </div>`,
       iconSize: [size, size],
       iconAnchor: [size / 2, size / 2],

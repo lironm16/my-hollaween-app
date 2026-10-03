@@ -2359,6 +2359,31 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   width: 22px;
   height: 22px;
 }
+.imp-marker-glyph,
+.map-gem-imp-marker__glyph {
+  display: block;
+  background-color: currentColor;
+  mask-image: url(/icons/imp-marker.png);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url(/icons/imp-marker.png);
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+.map-gem-imp-marker__glyph {
+  width: 22px;
+  height: 22px;
+}
+.map-gem-diamond-marker--admin .map-gem-imp-marker__glyph {
+  width: 18px;
+  height: 18px;
+}
+.map-gem-diamond-marker--compact .map-gem-imp-marker__glyph {
+  width: 13px;
+  height: 13px;
+}
 .map-gem-diamond-marker.is-calibrated {
   color: #6ee7b7;
   filter: drop-shadow(0 0 10px rgb(52 211 153 / 0.9));

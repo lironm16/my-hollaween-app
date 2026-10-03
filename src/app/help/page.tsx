@@ -5,6 +5,7 @@ import { ChevronLeft } from "lucide-react";
 import { HelpShell } from "@/components/help-shell";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
+import { GEM_GAME_TITLE_HE } from "@/lib/gem-hunt-copy";
 
 const QUESTIONS = [
   {
@@ -38,7 +39,7 @@ const QUESTIONS = [
 ] as const;
 
 const GEM_HUNT_QUESTION = {
-  question: "ציד יהלומים",
+  question: GEM_GAME_TITLE_HE,
   href: "/help/gem-hunt",
 } as const;
 

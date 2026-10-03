@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import { Gem, Home, MapPinned, Moon, Pause } from "lucide-react";
+import { Home, MapPinned, Moon, Pause } from "lucide-react";
+import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { LocationKindSign } from "@/components/location-kind-sign";
 import { CandySign } from "@/components/candy-glyphs";
 import { OpenNowSign, ClosingSoonSign, OpeningSoonSign } from "@/components/open-now-mark";
@@ -89,7 +90,7 @@ export function PersonalMarksSection({
         />
         {showGemStats ? (
           <StatTile
-            icon={<Gem className="size-8 fill-amber-300 text-amber-300" strokeWidth={2.1} />}
+            icon={<ImpMarkerGlyph className="size-8 text-amber-300" />}
             label={GEM_FOUND_I_HE}
             value={gemCollectedCount}
             valueClass={gemCollectedCount ? "text-amber-300" : undefined}

@@ -44,7 +44,7 @@ export function GemCollectAlbumReveal({
     return pool.slice(start, start + 4);
   }, [pool, slotIndex]);
 
-  const bookLabel = newAlbumFriend ? "נוסף לאלבום" : "כבר באלבום — עוד יהלום!";
+  const bookLabel = newAlbumFriend ? "נוסף לאלבום" : "כבר באלבום — עוד שדון!";
   const showFly = newAlbumFriend;
 
   return (

@@ -1832,6 +1832,9 @@
   .bg-card {
     background-color: var(--card);
   }
+  .bg-current {
+    background-color: currentcolor;
+  }
   .bg-cyan-950\/55 {
     background-color: color-mix(in srgb, oklch(30.2% 0.056 229.695) 55%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -2089,9 +2092,6 @@
   }
   .bg-clip-padding {
     background-clip: padding-box;
-  }
-  .fill-amber-300 {
-    fill: var(--color-amber-300);
   }
   .fill-current {
     fill: currentcolor;
@@ -2493,6 +2493,9 @@
   }
   .text-\[\#fb7185\] {
     color: #fb7185;
+  }
+  .text-\[\#fbbf24\] {
+    color: #fbbf24;
   }
   .text-\[\#fde68a\] {
     color: #fde68a;
@@ -7173,6 +7176,31 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .map-gem-diamond-marker__svg {
   width: 22px;
   height: 22px;
+}
+.imp-marker-glyph,
+.map-gem-imp-marker__glyph {
+  display: block;
+  background-color: currentColor;
+  mask-image: url(/icons/imp-marker.png);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url(/icons/imp-marker.png);
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+.map-gem-imp-marker__glyph {
+  width: 22px;
+  height: 22px;
+}
+.map-gem-diamond-marker--admin .map-gem-imp-marker__glyph {
+  width: 18px;
+  height: 18px;
+}
+.map-gem-diamond-marker--compact .map-gem-imp-marker__glyph {
+  width: 13px;
+  height: 13px;
 }
 .map-gem-diamond-marker.is-calibrated {
   color: #6ee7b7;

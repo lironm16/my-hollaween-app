@@ -42,7 +42,7 @@ export function GemStickerAlbum({
     <div className={cn("gem-sticker-album", complete && "gem-sticker-album--complete")}>
       <GemBagDiamondHero filledCount={filledCount} totalSlots={slots.length} complete={complete} />
 
-      <div className="gem-sticker-album__book" role="list" aria-label="חברי יהלום">
+      <div className="gem-sticker-album__book" role="list" aria-label="חברי השדונים">
         {slots.map((monster, index) => {
           const isFound = isGemAlbumMonsterCollected(monster.id, collected, housesById);
           return (
