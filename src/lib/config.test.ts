@@ -88,4 +88,29 @@ describe("neighborhood config", () => {
     assert.equal(resolveNeighborhood({ address: "הזמיר 8", lat, lng }), "שיכון ותיקים");
   });
 
+  it("Hadar 11 is אחר — south of all event zones, not שיכון ותיקים", () => {
+    const lat = 32.087930013467;
+    const lng = 34.812298032833;
+    assert.equal(neighborhoodAtEventLocation(lat, lng), null);
+    assert.equal(neighborhoodInferredFromPin(lat, lng), null);
+    assert.equal(resolveNeighborhood({ address: "הדר 11", lat, lng }), null);
+    assert.equal(
+      resolveNeighborhood({
+        address: "הדר 11",
+        lat,
+        lng,
+        neighborhood: "שיכון ותיקים",
+      }),
+      null,
+    );
+  });
+
+  it("Rokach 17 is אחר — off-zone south strip, not nearest שיכון ותיקים", () => {
+    const lat = 32.088;
+    const lng = 34.8107;
+    assert.equal(neighborhoodAtEventLocation(lat, lng), null);
+    assert.equal(neighborhoodInferredFromPin(lat, lng), null);
+    assert.equal(resolveNeighborhood({ address: "רוקח 17", lat, lng }), null);
+  });
+
 });

@@ -52,6 +52,16 @@ describe("address fields", () => {
     assert.equal(fields.neighborhood, "חרוזים");
   });
 
+  it("clears wrong stored hood south of all zones (הדר 11)", () => {
+    const fields = normalizeAddressFields({
+      address: "הדר 11",
+      neighborhood: "שיכון ותיקים",
+      lat: 32.087930013467,
+      lng: 34.812298032833,
+    });
+    assert.equal(fields.neighborhood, null);
+  });
+
   it("recalculates null hood from zone when pin is inside an event zone", () => {
     const fields = normalizeAddressFields({
       address: "הזמיר 8",
