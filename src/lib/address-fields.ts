@@ -3,10 +3,10 @@ import {
   inNeighborhood,
   NEIGHBORHOODS,
   neighborhoodAtEventLocation,
+  neighborhoodInferredFromPin,
   neighborhoodLabelForPin,
   neighborhoodFromAddress,
   normalizeNeighborhoodId,
-  resolveNeighborhood,
   type NeighborhoodId,
 } from "@/lib/config";
 import { parseStreetAndNumber } from "@/lib/address-text";
@@ -60,16 +60,16 @@ export function normalizeAddressFields(house: {
       Number.isFinite(house.lat) &&
       Number.isFinite(house.lng);
     if (hasCoords) {
-      const fromPin = resolveNeighborhood({
-        address,
-        neighborhood: undefined,
-        lat: house.lat,
-        lng: house.lng,
-      });
-      const corrected = normalizeNeighborhoodId(fromPin) ?? fromPin;
-      const normalizedStored = normalizeNeighborhoodId(stored) ?? stored;
-      if (corrected !== normalizedStored) {
-        return { address, neighborhood: corrected };
+      const fromZone = neighborhoodAtEventLocation(house.lat, house.lng);
+      if (fromZone && fromZone !== stored) {
+        return { address, neighborhood: fromZone };
+      }
+      if (
+        stored === "הגפן" &&
+        !fromZone &&
+        neighborhoodInferredFromPin(house.lat, house.lng) !== "הגפן"
+      ) {
+        return { address, neighborhood: null };
       }
     }
     return { address, neighborhood: stored };

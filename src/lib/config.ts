@@ -155,6 +155,16 @@ function nearestNeighborhood(lat: number, lng: number) {
   return { best, bestDist };
 }
 
+function neighborhoodsByDistance(lat: number, lng: number): NeighborhoodId[] {
+  return [...NEIGHBORHOODS]
+    .map((name) => {
+      const c = NEIGHBORHOOD_CENTERS[name];
+      return { name, d: (lat - c.lat) ** 2 + (lng - c.lng) ** 2 };
+    })
+    .sort((a, b) => a.d - b.d)
+    .map((entry) => entry.name);
+}
+
 /** Nearest neighborhood center (for labels that only say רמת גן). */
 export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId {
   return nearestNeighborhood(lat, lng).best;
@@ -194,6 +204,23 @@ export function neighborhoodLabelForPin(
   return neighborhoodAtEventLocation(lat, lng);
 }
 
+/**
+ * Infer neighborhood from coordinates for listings/stats when storage is null.
+ * Uses event zones when possible; otherwise nearest center, but never a false הגפן label.
+ */
+export function neighborhoodInferredFromPin(lat: number, lng: number): NeighborhoodId | null {
+  if (!inNeighborhood(lat, lng)) return null;
+  const zoned = neighborhoodAtEventLocation(lat, lng);
+  if (zoned) return zoned;
+  for (const name of neighborhoodsByDistance(lat, lng)) {
+    if (name === "הגפן" && !inNeighborhoodZone(lat, lng, NEIGHBORHOOD_ZONES["הגפן"])) {
+      continue;
+    }
+    return name;
+  }
+  return null;
+}
+
 export function allowedNeighborhoodsMessage() {
   return `בחרו בית ב${NEIGHBORHOODS.slice(0, -1).join(", ")} או ${NEIGHBORHOODS[NEIGHBORHOODS.length - 1]}.`;
 }
@@ -204,8 +231,9 @@ export function resolveNeighborhood(house: {
   lat?: number;
   lng?: number;
 }): NeighborhoodId | null {
-  if (house.neighborhood !== undefined) {
-    return normalizeNeighborhoodId(house.neighborhood) ?? null;
+  const stored = house.neighborhood;
+  if (stored !== undefined && stored !== null) {
+    return normalizeNeighborhoodId(stored) ?? null;
   }
   if (house.address) {
     const fromText = neighborhoodFromAddress(house.address);
@@ -217,7 +245,7 @@ export function resolveNeighborhood(house: {
     Number.isFinite(house.lat) &&
     Number.isFinite(house.lng)
   ) {
-    return neighborhoodLabelForPin(house.lat, house.lng);
+    return neighborhoodInferredFromPin(house.lat, house.lng);
   }
   return null;
 }

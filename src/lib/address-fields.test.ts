@@ -42,6 +42,16 @@ describe("address fields", () => {
     assert.equal(fields.neighborhood, "שיכון ותיקים");
   });
 
+  it("keeps stored neighborhood when pin is outside zone box (איתמר 2)", () => {
+    const fields = normalizeAddressFields({
+      address: "איתמר 2",
+      neighborhood: "חרוזים",
+      lat: 32.09090420608,
+      lng: 34.806805706959,
+    });
+    assert.equal(fields.neighborhood, "חרוזים");
+  });
+
   it("clears wrongly stored Gefen when pin is outside event zones (Yohanna 6)", () => {
     const fields = normalizeAddressFields({
       address: "יוהנה 6",

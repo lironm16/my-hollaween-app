@@ -6,6 +6,7 @@ import {
   neighborhoodAtEventLocation,
   neighborhoodFromAddress,
   neighborhoodFromCoords,
+  neighborhoodInferredFromPin,
   neighborhoodLabelForPin,
   normalizeNeighborhoodId,
   resolveNeighborhood,
@@ -55,9 +56,22 @@ describe("neighborhood config", () => {
     const lng = 34.8163387;
     assert.equal(neighborhoodAtEventLocation(lat, lng), null);
     assert.equal(neighborhoodLabelForPin(lat, lng), null);
-    assert.equal(
+    assert.notEqual(neighborhoodInferredFromPin(lat, lng), "הגפן");
+    assert.notEqual(
       resolveNeighborhood({ address: "יוהנה 6", lat, lng }),
-      null,
+      "הגפן",
+    );
+  });
+
+  it("keeps stored neighborhood when pin is outside zone polygons (stats)", () => {
+    assert.equal(
+      resolveNeighborhood({
+        address: "איתמר 2",
+        neighborhood: "חרוזים",
+        lat: 32.09090420608,
+        lng: 34.806805706959,
+      }),
+      "חרוזים",
     );
   });
 
