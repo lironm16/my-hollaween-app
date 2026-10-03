@@ -2,6 +2,7 @@ import {
   formatDisplayAddress,
   inNeighborhood,
   NEIGHBORHOODS,
+  isOutsideEventNeighborhoods,
   neighborhoodAtEventLocation,
   neighborhoodInferredFromPin,
   neighborhoodLabelForPin,
@@ -62,6 +63,15 @@ export function normalizeAddressFields(house: {
       const fromZone = neighborhoodAtEventLocation(lat, lng);
       if (fromZone) {
         return { address, neighborhood: fromZone };
+      }
+      if (isOutsideEventNeighborhoods(lat, lng)) {
+        if (stored === "הגפן") {
+          return {
+            address,
+            neighborhood: neighborhoodInferredFromPin(lat, lng),
+          };
+        }
+        return { address, neighborhood: null };
       }
       if (stored === null) {
         return { address, neighborhood: neighborhoodInferredFromPin(lat, lng) };

@@ -137,6 +137,9 @@ const NEIGHBORHOOD_ZONES: Record<
   הגפן: { south: 32.08835, north: 32.0908, west: 34.8098, east: 34.8138 },
 };
 
+/** Southern edge of the lowest event zone (הגפן) — pins below are not in any hood polygon. */
+const EVENT_ZONE_MIN_SOUTH = Math.min(...NEIGHBORHOODS.map((n) => NEIGHBORHOOD_ZONES[n].south));
+
 function inNeighborhoodZone(lat: number, lng: number, zone: (typeof NEIGHBORHOOD_ZONES)[NeighborhoodId]) {
   return lat >= zone.south && lat <= zone.north && lng >= zone.west && lng <= zone.east;
 }
@@ -211,6 +214,7 @@ export function neighborhoodLabelForPin(
 export function isOutsideEventNeighborhoods(lat: number, lng: number): boolean {
   if (neighborhoodAtEventLocation(lat, lng)) return false;
   if (!inNeighborhood(lat, lng)) return true;
+  if (lat < EVENT_ZONE_MIN_SOUTH) return true;
   const eastOfGefen = lng > NEIGHBORHOOD_ZONES["הגפן"].east;
   const southOfNachlat = lat < NEIGHBORHOOD_ZONES["נחלת גנים"].south;
   return eastOfGefen && southOfNachlat;
@@ -257,12 +261,16 @@ export function resolveNeighborhood(house: {
   const stored = house.neighborhood;
   if (stored !== undefined && stored !== null) {
     const normalized = normalizeNeighborhoodId(stored) ?? null;
-    if (
-      normalized === "הגפן" &&
-      hasCoords &&
-      !inNeighborhoodZone(lat, lng, NEIGHBORHOOD_ZONES["הגפן"])
-    ) {
-      return neighborhoodInferredFromPin(lat, lng);
+    if (hasCoords) {
+      const falseGefen =
+        normalized === "הגפן" &&
+        !inNeighborhoodZone(lat, lng, NEIGHBORHOOD_ZONES["הגפן"]);
+      if (falseGefen) {
+        return neighborhoodInferredFromPin(lat, lng);
+      }
+      if (isOutsideEventNeighborhoods(lat, lng)) {
+        return null;
+      }
     }
     return normalized;
   }
