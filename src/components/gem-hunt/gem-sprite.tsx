@@ -26,7 +26,10 @@ export function GemSprite({
   /** @deprecated use house + monster id */
   variantId?: string;
   houseId?: string;
-  house?: Pick<PublicHouse, "id" | "theme" | "kind">;
+  house?: Pick<
+    PublicHouse,
+    "id" | "theme" | "kind" | "description" | "neighborhood" | "address" | "lat" | "lng"
+  >;
   collected?: boolean;
   className?: string;
   size?: "sm" | "lg" | "fill";
@@ -112,6 +115,7 @@ export function GemSprite({
       <GemModel3D
         monsterId={monsterId}
         houseId={id}
+        tintHouse={house}
         size={mode === "orbit" || mode === "inspect360" ? "fill" : size === "fill" ? "fill" : size}
         collected={collected}
         interactive={mode === "inspect360" ? true : !tapCollect}

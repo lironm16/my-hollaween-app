@@ -169,6 +169,22 @@ describe("filterHouses", () => {
     assert.deepEqual(poiOnly.map((item) => item.id), ["poi-cafe"]);
   });
 
+  it("keeps POI pins visible in now mode before event night", () => {
+    const houses = [
+      house("home", { openFrom: "19:00", openTo: "21:00", visit: "come" }),
+      house("poi-school", {
+        kind: "poi",
+        poiCategory: "info",
+        openFrom: "19:00",
+        openTo: "21:00",
+        visit: "come",
+      }),
+    ];
+    const context = { houseSet: "real" as const, likedIds: [], visitedIds: [], now };
+    const nowMode = filterHouses(houses, baseFilters({ visitWindowMode: "now" }), context);
+    assert.deepEqual(nowMode.map((item) => item.id), ["poi-school"]);
+  });
+
   it("now mode stays stricter than custom departure hours", () => {
     const houses = [house("later", { openFrom: "19:00", openTo: "21:00", visit: "come" })];
     const context = { houseSet: "real" as const, likedIds: [], visitedIds: [], now };

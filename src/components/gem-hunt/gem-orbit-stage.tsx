@@ -24,6 +24,7 @@ export function GemOrbitStage({
       <div className={cn("gem-orbit-stage__canvas", stageClassName)}>
         <GemModel3D
           houseId={house.id}
+          tintHouse={house}
           monsterId={monsterId}
           size="fill"
           controls="orbit"

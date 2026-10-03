@@ -5,12 +5,19 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { applyGemMaterialTint } from "@/lib/apply-gem-material-tint";
 import { gemMonsterMeta, gemMonsterTint, type GemMonsterId } from "@/lib/gem-monsters";
+import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type Props = {
   monsterId?: GemMonsterId;
   houseId?: string;
+  /** When set, POI practice dragons use neighborhood color (not hash-only). */
+  tintHouse?: Pick<
+    PublicHouse,
+    "id" | "kind" | "description" | "neighborhood" | "address" | "lat" | "lng"
+  >;
   size?: "sm" | "lg" | "fill";
   className?: string;
   collected?: boolean;
@@ -66,6 +73,7 @@ function fitCameraToPivot(
 export function GemModel3D({
   monsterId = "dragon",
   houseId = "default",
+  tintHouse,
   size = "lg",
   className,
   collected = false,
@@ -208,7 +216,7 @@ export function GemModel3D({
     }
 
     let model: THREE.Object3D | null = null;
-    const tint = gemMonsterTint(houseId);
+    const tint = gemMonsterTint(tintHouse ?? { id: houseId });
     const loader = new GLTFLoader();
     let disposed = false;
 
@@ -236,9 +244,7 @@ export function GemModel3D({
           if (!(obj instanceof THREE.Mesh)) return;
           const mat = obj.material;
           if (!(mat instanceof THREE.MeshStandardMaterial)) return;
-          mat.metalness = 0.05;
-          mat.roughness = 0.55;
-          mat.color.offsetHSL(tint.hue, tint.saturation, tint.lightness);
+          applyGemMaterialTint(mat, tint);
         });
 
         pivot.add(model);

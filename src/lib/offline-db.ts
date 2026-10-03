@@ -2,7 +2,6 @@ import type { NeighborhoodId } from "@/lib/config";
 import type { SkipReasonId } from "@/lib/skip-reasons";
 import { isAuthoritativeHouseList } from "@/lib/catalog-houses";
 import { syncCatalog } from "@/lib/catalog-sync";
-import { loadGemLabStubs } from "@/lib/gem-lab-stubs";
 import { tombstoneHouse, loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { stripHouseForDeviceCache } from "@/lib/device-catalog-cache";
 import { syncDecorFields } from "@/lib/house-state";
@@ -55,9 +54,6 @@ function overlayLocalHouses(catalog: Catalog): Catalog {
   }
   for (const pending of loadPendingWritesSync()) {
     take(pending.house);
-  }
-  for (const gemLab of loadGemLabStubs()) {
-    take(gemLab);
   }
   return { ...catalog, houses: [...byId.values()] };
 }

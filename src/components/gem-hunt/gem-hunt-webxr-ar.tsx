@@ -39,6 +39,7 @@ import { isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
 import { requestGemHuntOrientationPermission } from "@/lib/gem-hunt-sensors";
 import { gemWalkGuideCopy } from "@/lib/gem-hunt-walk-guide";
 import { formatDistance } from "@/lib/geo";
+import { applyGemMaterialTint } from "@/lib/apply-gem-material-tint";
 import { gemMonsterMeta, gemMonsterTint, type GemMonsterId } from "@/lib/gem-monsters";
 import { gemCollectDanceIndex } from "@/lib/gem-collect-dance";
 import { googleMapsNavigateUrl } from "@/lib/route";
@@ -716,7 +717,7 @@ export function GemHuntWebXrAr({
     pivot.add(shadow);
     let footShadowScale = 1;
 
-    const tint = gemMonsterTint(house.id);
+    const tint = gemMonsterTint(house);
     const loader = new GLTFLoader();
     loader.load(
       meta.glbPath,
@@ -728,9 +729,7 @@ export function GemHuntWebXrAr({
           if (!(obj instanceof THREE.Mesh)) return;
           const mat = obj.material;
           if (!(mat instanceof THREE.MeshStandardMaterial)) return;
-          mat.metalness = 0.06;
-          mat.roughness = 0.52;
-          mat.color.offsetHSL(tint.hue, tint.saturation, tint.lightness);
+          applyGemMaterialTint(mat, tint);
         });
         pivot.add(model);
         placeGroundShadow(shadow, model);

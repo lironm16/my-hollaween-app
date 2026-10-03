@@ -55,7 +55,7 @@ import { loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
 import { canCollectGem, GEM_CHEER_MS } from "@/lib/gem-hunt";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
-import { syncGemMonsterAssignment } from "@/lib/gem-monsters";
+import { gemHuntMapHouses, syncGemMonsterAssignment } from "@/lib/gem-monsters";
 import {
   isGemHuntOrientationGranted,
   prepareGemHuntSensors,
@@ -335,9 +335,13 @@ export function NeighborhoodApp({
     () => mapListHouses.filter((house) => houseMatchesSet(house, activeHouseSet)),
     [mapListHouses, activeHouseSet],
   );
+  const gemPracticeHouses = useMemo(
+    () => gemHuntMapHouses(mapListHouses, activeHouseSet),
+    [mapListHouses, activeHouseSet],
+  );
   useEffect(() => {
-    if (gemHuntActive) syncGemMonsterAssignment(mapHouses);
-  }, [gemHuntActive, mapHouses]);
+    if (gemHuntActive) syncGemMonsterAssignment(gemPracticeHouses);
+  }, [gemHuntActive, gemPracticeHouses]);
   const visible = useMemo(
     () => filterHouses(mapListHouses, filters, filterContext),
     [mapListHouses, filters, filterContext],
@@ -359,9 +363,9 @@ export function NeighborhoodApp({
   const { resetForNavigation } = selection;
 
   const gemAllCollected = useMemo(() => {
-    if (!gemHuntActive || mapHouses.length === 0) return false;
-    return mapHouses.every((h) => gems.collected(h.id));
-  }, [gemHuntActive, mapHouses, gems.collectedIds]);
+    if (!gemHuntActive || gemPracticeHouses.length === 0) return false;
+    return gemPracticeHouses.every((h) => gems.collected(h.id));
+  }, [gemHuntActive, gemPracticeHouses, gems.collectedIds]);
 
   const openGemHuntForHouse = useCallback(
     async (house: PublicHouse) => {
@@ -1286,7 +1290,7 @@ export function NeighborhoodApp({
                     gemUi &&
                     (gemAdminTools ? mapAdminCharactersVisible : mapDiamondsVisible)
                   }
-                  gemAnchorHouses={gemUi ? mapHouses : []}
+                  gemAnchorHouses={gemUi ? gemPracticeHouses : []}
                   gemAnchorVisual={
                     gemAdminTools && mapAdminCharactersVisible
                       ? "characters"
@@ -1490,7 +1494,7 @@ export function NeighborhoodApp({
             const collectedBefore = loadGemCollected();
             const celebrate =
               options?.navigateStickerBook
-                ? gemBagCelebrateAfterCollect(mapHouses, collectedBefore, h.id, monsterId)
+                ? gemBagCelebrateAfterCollect(gemPracticeHouses, collectedBefore, h.id, monsterId)
                 : null;
             gems.collect(h.id, monsterId);
             releaseGemHuntCamera();
