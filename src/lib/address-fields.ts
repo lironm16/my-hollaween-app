@@ -66,8 +66,10 @@ export function normalizeAddressFields(house: {
         lat: house.lat,
         lng: house.lng,
       });
-      if (fromPin && fromPin !== stored) {
-        return { address, neighborhood: fromPin };
+      const corrected = normalizeNeighborhoodId(fromPin) ?? fromPin;
+      const normalizedStored = normalizeNeighborhoodId(stored) ?? stored;
+      if (corrected !== normalizedStored) {
+        return { address, neighborhood: corrected };
       }
     }
     return { address, neighborhood: stored };

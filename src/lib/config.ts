@@ -185,18 +185,13 @@ export function houseLocationAllowed(lat: number, lng: number) {
   return neighborhoodAtEventLocation(lat, lng) !== null;
 }
 
-/** Best-effort neighborhood label for a pin (zone when possible, else OSM suburb, else nearest center). */
+/** Neighborhood for a pin — only when inside one of the four event zones (never nearest-center guess). */
 export function neighborhoodLabelForPin(
   lat: number,
   lng: number,
-  suburb?: string,
+  _suburb?: string,
 ): NeighborhoodId | null {
-  if (!inNeighborhood(lat, lng)) return null;
-  const zoned = neighborhoodAtEventLocation(lat, lng);
-  if (zoned) return zoned;
-  const fromSuburb = suburb ? suburbToNeighborhood(suburb) : null;
-  if (fromSuburb) return fromSuburb;
-  return neighborhoodFromCoords(lat, lng);
+  return neighborhoodAtEventLocation(lat, lng);
 }
 
 export function allowedNeighborhoodsMessage() {

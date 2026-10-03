@@ -50,6 +50,17 @@ describe("neighborhood config", () => {
     assert.equal(neighborhoodAtEventLocation(32.0849863, 34.8122928), null);
   });
 
+  it("does not assign Yohanna 6 to Gefen (outside event zones)", () => {
+    const lat = 32.0883058;
+    const lng = 34.8163387;
+    assert.equal(neighborhoodAtEventLocation(lat, lng), null);
+    assert.equal(neighborhoodLabelForPin(lat, lng), null);
+    assert.equal(
+      resolveNeighborhood({ address: "יוהנה 6", lat, lng }),
+      null,
+    );
+  });
+
   it("includes Hashkediya 13 in Gefen", () => {
     assert.equal(neighborhoodAtEventLocation(32.088440010365, 34.811503009317), "הגפן");
     assert.equal(houseLocationAllowed(32.088440010365, 34.811503009317), true);
