@@ -42,17 +42,17 @@ describe("address fields", () => {
     assert.equal(fields.neighborhood, "שיכון ותיקים");
   });
 
-  it("sets null hood when pin is outside all event zones (איתמר 2)", () => {
+  it("keeps stored hood outside zone polygons (איתמר 2)", () => {
     const fields = normalizeAddressFields({
       address: "איתמר 2",
       neighborhood: "חרוזים",
       lat: 32.09090420608,
       lng: 34.806805706959,
     });
-    assert.equal(fields.neighborhood, null);
+    assert.equal(fields.neighborhood, "חרוזים");
   });
 
-  it("recalculates hood from zone when pin is inside an event zone", () => {
+  it("recalculates null hood from zone when pin is inside an event zone", () => {
     const fields = normalizeAddressFields({
       address: "הזמיר 8",
       neighborhood: null,
@@ -62,14 +62,23 @@ describe("address fields", () => {
     assert.equal(fields.neighborhood, "שיכון ותיקים");
   });
 
-  it("clears hood to null outside zones (Yohanna 6)", () => {
+  it("recalculates null hood from pin when outside zones but in event area", () => {
+    const fields = normalizeAddressFields({
+      address: "",
+      neighborhood: null,
+      lat: 32.0909211,
+      lng: 34.8066897,
+    });
+    assert.equal(fields.neighborhood, "חרוזים");
+  });
+
+  it("null hood outside the four (Yohanna 6)", () => {
     const fields = normalizeAddressFields({
       address: "יוהנה 6",
-      neighborhood: "הגפן",
+      neighborhood: null,
       lat: 32.0883058,
       lng: 34.8163387,
     });
-    assert.equal(fields.address, "יוהנה 6");
     assert.equal(fields.neighborhood, null);
   });
 

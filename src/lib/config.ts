@@ -155,6 +155,16 @@ function nearestNeighborhood(lat: number, lng: number) {
   return { best, bestDist };
 }
 
+function neighborhoodsByDistance(lat: number, lng: number): NeighborhoodId[] {
+  return [...NEIGHBORHOODS]
+    .map((name) => {
+      const c = NEIGHBORHOOD_CENTERS[name];
+      return { name, d: (lat - c.lat) ** 2 + (lng - c.lng) ** 2 };
+    })
+    .sort((a, b) => a.d - b.d)
+    .map((entry) => entry.name);
+}
+
 /** Nearest neighborhood center (for labels that only say רמת גן). */
 export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId {
   return nearestNeighborhood(lat, lng).best;
@@ -194,9 +204,34 @@ export function neighborhoodLabelForPin(
   return neighborhoodAtEventLocation(lat, lng);
 }
 
-/** Hood from pin only when inside one of the four event zones; else null (אחר). */
+/**
+ * Pin is in the map box but not inside any of the four event zones — not assignable
+ * (e.g. יוהנה 6 east of הגפן and south of נחלת גנים).
+ */
+export function isOutsideEventNeighborhoods(lat: number, lng: number): boolean {
+  if (neighborhoodAtEventLocation(lat, lng)) return false;
+  if (!inNeighborhood(lat, lng)) return true;
+  const eastOfGefen = lng > NEIGHBORHOOD_ZONES["הגפן"].east;
+  const southOfNachlat = lat < NEIGHBORHOOD_ZONES["נחלת גנים"].south;
+  return eastOfGefen && southOfNachlat;
+}
+
+/**
+ * Backfill when storage is null: zone, else nearest center (never false הגפן),
+ * unless {@link isOutsideEventNeighborhoods}.
+ */
 export function neighborhoodInferredFromPin(lat: number, lng: number): NeighborhoodId | null {
-  return neighborhoodAtEventLocation(lat, lng);
+  if (!inNeighborhood(lat, lng)) return null;
+  const zoned = neighborhoodAtEventLocation(lat, lng);
+  if (zoned) return zoned;
+  if (isOutsideEventNeighborhoods(lat, lng)) return null;
+  for (const name of neighborhoodsByDistance(lat, lng)) {
+    if (name === "הגפן" && !inNeighborhoodZone(lat, lng, NEIGHBORHOOD_ZONES["הגפן"])) {
+      continue;
+    }
+    return name;
+  }
+  return null;
 }
 
 export function allowedNeighborhoodsMessage() {
@@ -209,21 +244,37 @@ export function resolveNeighborhood(house: {
   lat?: number;
   lng?: number;
 }): NeighborhoodId | null {
-  if (
+  const hasCoords =
     typeof house.lat === "number" &&
     typeof house.lng === "number" &&
     Number.isFinite(house.lat) &&
-    Number.isFinite(house.lng)
-  ) {
-    return neighborhoodAtEventLocation(house.lat, house.lng);
+    Number.isFinite(house.lng);
+
+  if (hasCoords) {
+    const zoned = neighborhoodAtEventLocation(house.lat, house.lng);
+    if (zoned) return zoned;
   }
+
   const stored = house.neighborhood;
   if (stored !== undefined && stored !== null) {
-    return normalizeNeighborhoodId(stored) ?? null;
+    const normalized = normalizeNeighborhoodId(stored) ?? null;
+    if (
+      normalized === "הגפן" &&
+      hasCoords &&
+      !inNeighborhoodZone(house.lat, house.lng, NEIGHBORHOOD_ZONES["הגפן"])
+    ) {
+      return neighborhoodInferredFromPin(house.lat, house.lng);
+    }
+    return normalized;
   }
+
   if (house.address) {
     const fromText = neighborhoodFromAddress(house.address);
     if (fromText) return fromText;
+  }
+
+  if (hasCoords) {
+    return neighborhoodInferredFromPin(house.lat, house.lng);
   }
   return null;
 }

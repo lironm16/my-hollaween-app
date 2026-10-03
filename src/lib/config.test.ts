@@ -63,7 +63,7 @@ describe("neighborhood config", () => {
     );
   });
 
-  it("ignores stored neighborhood when pin is outside all event zones", () => {
+  it("keeps stored neighborhood when pin is outside zone polygons", () => {
     assert.equal(
       resolveNeighborhood({
         address: "איתמר 2",
@@ -71,7 +71,7 @@ describe("neighborhood config", () => {
         lat: 32.09090420608,
         lng: 34.806805706959,
       }),
-      null,
+      "חרוזים",
     );
   });
 
