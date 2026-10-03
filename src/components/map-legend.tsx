@@ -146,8 +146,8 @@ function GemDiamondSwatch({ collected = false }: { collected?: boolean }) {
   );
 }
 
-export function MapLegend({ showGemAnchors = false }: { showGemAnchors?: boolean }) {
-  const groups = showGemAnchors
+export function MapLegend({ showGemLegend = false }: { showGemLegend?: boolean }) {
+  const groups = showGemLegend
     ? [
         ...BASE_GROUPS,
         {

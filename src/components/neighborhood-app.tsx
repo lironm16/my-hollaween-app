@@ -1292,6 +1292,7 @@ export function NeighborhoodApp({
                     gemUi &&
                     (gemAdminTools ? mapAdminCharactersVisible : mapDiamondsVisible)
                   }
+                  showGemLegend={gemUi}
                   gemAnchorHouses={gemUi ? mapHouses : []}
                   gemAnchorVisual={
                     gemAdminTools && mapAdminCharactersVisible

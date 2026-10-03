@@ -38,7 +38,7 @@ const QUESTIONS = [
 ] as const;
 
 const GEM_HUNT_QUESTION = {
-  question: "ציד יהלומים (בדיקות)",
+  question: "ציד יהלומים",
   href: "/help/gem-hunt",
 } as const;
 
