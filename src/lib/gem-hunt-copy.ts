@@ -16,7 +16,7 @@ export const GEM_MAP_TOGGLE_SHOW_HE = "הצג שדונים במפה";
 export const GEM_MAP_TOGGLE_HIDE_HE = "הסתר שדונים במפה";
 
 export const GEM_FAB_HUNT_ARIA_HE = "חיפוש שדון נסתר";
-export const GEM_FAB_ALL_FOUND_ARIA_HE = "כל השדונים — פתיחת האלבום";
+export const GEM_FAB_ALL_FOUND_ARIA_HE = "כל השדונים — פתיחת האוסף";
 export const GEM_FAB_APPROACH_TITLE_HE = "שדון קרוב — התקרבו לבית";
 export const GEM_FAB_HUNT_TITLE_HE = "בטווח מציאה — פתחו מצלמה!";
 export const GEM_FAB_ALL_FOUND_TITLE_HE = "כל השדונים נמצאו — לתיק האוצר!";
@@ -27,7 +27,7 @@ export const GEM_ACTION_FIND_HE = "מצא שדון";
 export const GEM_MAP_COMPLETE_TITLE_HE = "כל השדונים נמצאו!";
 
 export const GEM_COLLECT_NEW_HE = "כל הכבוד!! מצאתם שדון חדש!";
-export const GEM_ALBUM_SLOTS_HE = "שדונים באלבום";
+export const GEM_ALBUM_SLOTS_HE = "שדונים באוסף";
 export const GEM_ALBUM_ALL_HE = "כל השדונים";
 
 export const GEM_WALK_STRAIGHT_HE = "המשיכו ישר — השדון מולכם";
