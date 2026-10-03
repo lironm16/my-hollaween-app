@@ -97,7 +97,6 @@ export function GemHuntOverlay({
   house,
   userLocation,
   simulateInRange = false,
-  deferCameraUntilInRange = false,
   collectEnabled = true,
   encounterMode = true,
   repeatVisit = false,
@@ -146,8 +145,8 @@ export function GemHuntOverlay({
   /** True once user starts collect or enters encounter in band — avoids GPS flicker blocking finish. */
   const encounterCollectLatchedRef = useRef(false);
   const [phase, setPhase] = useState<HuntPhase>("scanning");
-  const [hint, setHint] = useState<"scan" | "warm" | "found" | "help">("scan");
-  const [showHelp, setShowHelp] = useState(false);
+  const [, setHint] = useState<"scan" | "warm" | "found" | "help">("scan");
+  const [, setShowHelp] = useState(false);
   const [hintPanel, setHintPanel] = useState<null | "nav">(null);
   /** User chose «גלה לי» — centered gem on the camera (not orbit hint box). */
   const [centerReveal, setCenterReveal] = useState(false);
@@ -665,7 +664,6 @@ export function GemHuntOverlay({
     encounterMode &&
     (encounterPhase === "approach" || encounterPhase === "encounter") &&
     phase !== "collecting";
-  const showEncounterCollectFooter = false;
   const showLegacyFooter =
     !encounterMode || showEncounterFooter;
   const hideFooterChrome =

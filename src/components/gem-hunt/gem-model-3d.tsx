@@ -144,7 +144,7 @@ export function GemModel3D({
         lastTapMs = now;
         onInspectTapRef.current?.();
       };
-      const onUp = (event: PointerEvent) => {
+      const onUp = () => {
         if (moved) return;
         fireInspectTap();
       };

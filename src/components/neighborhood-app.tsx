@@ -52,7 +52,7 @@ import { endGemHuntWebXrSession, requestGemHuntWebXrSession } from "@/lib/gem-hu
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
 import { loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
-import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
+import { canCollectGem, GEM_CHEER_MS } from "@/lib/gem-hunt";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import { syncGemMonsterAssignment } from "@/lib/gem-monsters";
@@ -83,7 +83,6 @@ import { useDistanceOrigin } from "@/hooks/use-distance-origin";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { useMapListUiLock } from "@/hooks/use-map-list-ui-lock";
 import { setMapListSuspended } from "@/lib/map-list-suspend";
-import { config } from "@/lib/config";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { useAppNow } from "@/hooks/use-app-clock";
 import {
@@ -157,7 +156,7 @@ export function NeighborhoodApp({
   routeShareParam?: string | null;
   gemHuntFromUrl?: boolean;
 }) {
-  const { catalog, loading, ready, offline, unreachable, error, source, pollSeconds, refresh } =
+  const { catalog, loading, offline, unreachable, error, source, refresh } =
     useCatalog(initialCatalog);
   const catalogUpdatedAt = catalog?.updatedAt;
   const { admin, ready: adminSessionReady } = useAdminSession();
@@ -187,7 +186,7 @@ export function NeighborhoodApp({
   const [mapGemGps, setMapGemGps] = useState<UserLocation | null>(null);
   const [mapGemWebXrSession, setMapGemWebXrSession] = useState<XRSession | null>(null);
   const gemBadgePendingRef = useRef(false);
-  const [mapGemBadgeCount, setMapGemBadgeCount] = useState(() =>
+  const [, setMapGemBadgeCount] = useState(() =>
     typeof window === "undefined" ? 0 : loadGemCollectedIds().length,
   );
   /** Toolbar toggle — diamonds hidden on map until user taps the top-bar gem control. */
@@ -201,7 +200,6 @@ export function NeighborhoodApp({
   const listScrollRef = useRef<HTMLDivElement | null>(null);
   const savedListScrollTopRef = useRef(0);
   const router = useRouter();
-  const mapGemUserLoc = mapGemGps ?? gps;
   const gpsAllowed =
     geo.status === "idle" || geo.status === "pending" || geo.status === "ready";
 
@@ -230,7 +228,7 @@ export function NeighborhoodApp({
     filters,
     update: updateFilters,
   } = useHouseFilters();
-  const { accessibleOnly, likedOnly } = filters;
+  const { accessibleOnly } = filters;
 
   const [askedLocation, setAskedLocation] = useState(false);
   const [skipDialogHouse, setSkipDialogHouse] = useState<PublicHouse | null>(null);
@@ -465,12 +463,6 @@ export function NeighborhoodApp({
     setGemResetHouse(null);
   }, [gemResetHouse, gems]);
   const editFlow = useHouseEditFlow();
-
-  const ownedEditCode = useMemo(() => {
-    if (!selection.editHouseId) return undefined;
-    return owned.find((item) => item.id === selection.editHouseId)?.editCode;
-  }, [owned, selection.editHouseId]);
-  const canEditSelected = Boolean(admin || ownedEditCode);
 
   const {
     routeMode,

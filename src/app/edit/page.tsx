@@ -17,7 +17,7 @@ import { useHouseSet } from "@/hooks/use-house-set";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { activeHouseSetForSession, houseMatchesSet } from "@/lib/house-set";
 import { saveOwnedHouse, removeOwnedHouse, forgetPublishedHouse, notifyCatalogChanged } from "@/lib/offline-db";
-import type { House, PublicHouse } from "@/lib/types";
+import type { PublicHouse } from "@/lib/types";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { Plus } from "lucide-react";
 import { PersistNote } from "@/components/persist-note";
@@ -53,7 +53,7 @@ function EditPageContent() {
   const [editCode, setEditCode] = useState("");
   const [house, setHouse] = useState<PublicHouse | null>(null);
   const [busy, setBusy] = useState(false);
-  const [prefilled, setPrefilled] = useState(false);
+  const [, setPrefilled] = useState(false);
   const editFlow = useHouseEditFlow();
   const pickedIdRef = useRef<string | null>(null);
   const autoOpenedIdRef = useRef<string | null>(null);

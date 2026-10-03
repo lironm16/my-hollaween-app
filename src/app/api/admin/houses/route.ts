@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { adminSubmitSchema } from "@/lib/schema";
 import { getDbSnapshot, submitHouse } from "@/lib/store";
-import { toEditorHouse, toPublicHouse } from "@/lib/ids";
+import { toEditorHouse } from "@/lib/ids";
 import { geocodeHttpError } from "@/lib/geocode";
 import { storageHttpError } from "@/lib/storage-errors";
 import { readIncludeEndpoint } from "@/lib/push";

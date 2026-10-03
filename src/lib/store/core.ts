@@ -143,7 +143,9 @@ async function readSeed(): Promise<DbFile> {
 }
 
 export function normalizeHouse(house: House & { status?: string; rejectionReason?: string }): House {
-  const { status: _status, rejectionReason: _reason, ...base } = house;
+  const { status, rejectionReason, ...base } = house;
+  void status;
+  void rejectionReason;
   const theme = HOUSE_THEMES.includes(base.theme as HouseTheme)
     ? (base.theme as HouseTheme)
     : "pumpkin";

@@ -29,7 +29,6 @@ export function useNeighborhoodRoute({
   houses,
   filters,
   filterContext,
-  visitedIds,
   skippedIds,
   origin,
   accessibleOnly,

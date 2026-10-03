@@ -16,10 +16,8 @@ type GeoState = {
 export function useOriginPick({
   view,
   origin,
-  originChoice,
   setOriginChoice,
   gps,
-  gpsAllowed,
   geo,
   askedLocation,
   setAskedLocation,

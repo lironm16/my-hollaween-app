@@ -1,6 +1,5 @@
 import { config, formatDisplayAddress } from "@/lib/config";
 import {
-  clusterAddressKey,
   clusterAddressKeyForHouse,
   clusterHousesByAddress,
   type HouseCluster,

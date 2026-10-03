@@ -570,6 +570,7 @@ export function isOpenDuringCustomVisitForFilter(
   visitWindowTo = "",
   wallNow = appNow(),
 ) {
+  void wallNow;
   const vf = visitWindowFrom ? parseClockMinutes(visitWindowFrom) : null;
   const vt = visitWindowTo ? parseClockMinutes(visitWindowTo) : null;
   if (vf === null && vt === null) return true;

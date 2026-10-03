@@ -1,10 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import {
-  getOsmGemAnchor,
-  osmGemAnchorCount,
-  __resetGemOsmAnchorsForTests,
-} from "@/lib/gem-osm-anchor-cache";
+import { getOsmGemAnchor, osmGemAnchorCount } from "@/lib/gem-osm-anchor-cache";
 
 describe("gem osm anchor cache", () => {
   it("loads bundled anchor file", () => {

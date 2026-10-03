@@ -7,7 +7,6 @@ import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function GemSprite({
-  variantId,
   houseId,
   house,
   collected = false,

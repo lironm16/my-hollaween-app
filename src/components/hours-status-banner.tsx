@@ -25,7 +25,6 @@ export function HoursStatusBanner({
   house,
   className,
   now,
-  compact = false,
 }: {
   house: {
     id?: string;

@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { HouseActionBar } from "@/components/house-action-bar";
-import { houseActionBarPropsFor, type HouseCardActionContext } from "@/components/house-card-actions";
+import type { HouseCardActionContext } from "@/components/house-card-actions";
 import { HouseSheetBody } from "@/components/house-sheet-body";
 import {
   ClusterHouseList,
@@ -105,10 +104,6 @@ export function MapHouseSheet({
   const clusterNow = now ?? new Date();
   const isSkipped = skippedIds ?? (() => false);
   const isFilteredOut = filteredOutIds ?? (() => false);
-  const actionMenu = (
-    <HouseActionBar {...houseActionBarPropsFor(house, actionContext)} />
-  );
-
   function parentH() {
     const el = sheetRef.current;
     const parent =

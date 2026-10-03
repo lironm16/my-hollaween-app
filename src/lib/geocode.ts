@@ -2,7 +2,6 @@ import {
   config,
   inNeighborhood,
   neighborhoodLabelForPin,
-  neighborhoodFromCoords,
   suburbToNeighborhood,
   type NeighborhoodId,
 } from "@/lib/config";

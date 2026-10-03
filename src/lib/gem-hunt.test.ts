@@ -16,12 +16,12 @@ import {
   gemInScanRing,
   GEM_SCAN_RING_CENTER_Y,
   gemFamilyForHouse,
+  gemMonsterForHouse,
   gemVariantForHouse,
+  syncGemMonsterAssignment,
   headingDelta,
   userWithinGemHuntRange,
   withinGemHuntMeters,
-  GEM_HUNT_METERS,
-  GEM_ONSITE_TRUST_METERS,
   GEM_ANCHOR_MIN_METERS,
   GEM_ANCHOR_MAX_METERS,
 } from "@/lib/gem-hunt";
@@ -126,10 +126,12 @@ describe("gem hunt geo", () => {
 
   it("maps each house to a gem monster id", () => {
     assert.equal(gemFamilyForHouse({ id: "g1", theme: "ghost", kind: "house" }), "monster");
-    const a = gemVariantForHouse({ id: "v1", theme: "vampire", kind: "house" });
-    const b = gemVariantForHouse({ id: "v1", theme: "vampire", kind: "house" });
+    const house = { id: "v1", theme: "vampire" as const, kind: "house" as const };
+    syncGemMonsterAssignment([house]);
+    const a = gemVariantForHouse(house);
+    const b = gemVariantForHouse(house);
     assert.equal(a, b);
-    assert.equal(a, "dragon");
+    assert.equal(a, gemMonsterForHouse(house));
   });
 
   it("detects facing within tolerance", () => {

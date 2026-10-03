@@ -19,7 +19,6 @@ import {
   SENSITIVITY_OPTIONS,
   type CandyTone,
   type DecorLevel,
-  type ScareLevel,
   type SensitivityId,
 } from "@/lib/types";
 

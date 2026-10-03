@@ -267,7 +267,8 @@ export function gemAlbumStickerPool(): readonly GemCatalogEntry[] {
 }
 
 /** @deprecated Use gemAlbumStickerPool — album shows every shipped GLB, not hash-unique subset. */
-export function gemAlbumMonstersForMap(_houses: PublicHouse[]): GemCatalogEntry[] {
+export function gemAlbumMonstersForMap(houses: PublicHouse[]): GemCatalogEntry[] {
+  void houses;
   return [...gemAlbumStickerPool()];
 }
 

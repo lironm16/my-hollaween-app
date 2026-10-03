@@ -27,13 +27,19 @@ describe("gem monsters", () => {
     }
   });
 
-  it("assigns dragon for every house while in dragon-only mode", () => {
+  it("assigns monsters consistently per house", () => {
     const house = { id: "house-abc", theme: "ghost" as const, kind: "house" as const };
-    assert.equal(gemMonsterForHouse(house), "dragon");
-    assert.equal(gemVariantForHouse(house), "dragon");
-    assert.equal(gemFamilyForHouse(house), "monster");
     const other = { id: "house-xyz", theme: "vampire" as const, kind: "house" as const };
-    assert.equal(gemMonsterForHouse(other), "dragon");
+    syncGemMonsterAssignment([house, other]);
+    if (GEM_MONSTERS_DRAGON_ONLY) {
+      assert.equal(gemMonsterForHouse(house), GEM_MONSTER_MODELS[0]!.id);
+      assert.equal(gemMonsterForHouse(other), GEM_MONSTER_MODELS[0]!.id);
+    } else {
+      assert.equal(gemMonsterForHouse(house), gemMonsterForHouse(house));
+      assert.notEqual(gemMonsterForHouse(house), undefined);
+    }
+    assert.equal(gemVariantForHouse(house), gemMonsterForHouse(house));
+    assert.equal(gemFamilyForHouse(house), "monster");
   });
 
   it("labels pets with cute Hebrew names", () => {

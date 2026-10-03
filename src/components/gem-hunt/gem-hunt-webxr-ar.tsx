@@ -400,7 +400,6 @@ export function GemHuntWebXrAr({
     encounterMode &&
     (encounterPhase === "approach" || encounterPhase === "encounter") &&
     phase !== "collecting";
-  const showEncounterCollectFooter = false;
   const showSessionFooter =
     sessionActive && phase !== "collecting" && (!encounterMode || showEncounterFooter) && !hideFooterChrome;
 

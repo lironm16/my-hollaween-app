@@ -6,7 +6,8 @@ export function isDeviceCachePinHouse(house: PublicHouse | null | undefined): bo
 }
 
 export function withServerHouseDetail(house: PublicHouse): PublicHouse {
-  const { deviceCachePin: _pin, ...rest } = house;
+  const { deviceCachePin, ...rest } = house;
+  void deviceCachePin;
   return rest;
 }
 

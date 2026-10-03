@@ -21,14 +21,6 @@ const HILL_RING: LatLng[] = [
   { lat: 32.09285, lng: 34.8069 },
 ];
 
-const NORTH_STREET_EDGE = 32.0948;
-const FARM_RING: LatLng[] = [
-  { lat: NORTH_STREET_EDGE, lng: 34.802 },
-  { lat: NORTH_STREET_EDGE, lng: 34.819 },
-  { lat: 32.1008, lng: 34.819 },
-  { lat: 32.1008, lng: 34.802 },
-];
-
 function pointInRing(point: LatLng, ring: LatLng[]) {
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {

@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { GemStickerFlyFromCollect } from "@/components/gem-hunt/gem-sticker-fly-from-collect";
 import { GemBagMilestoneCelebration } from "@/components/gem-hunt/gem-bag-milestone-celebration";
-import { parseGemBagCelebrate, type GemBagCelebrateKind } from "@/lib/gem-bag-celebrate";
+import { parseGemBagCelebrate } from "@/lib/gem-bag-celebrate";
 import { gemAlbumStickerPool, type GemMonsterId } from "@/lib/gem-monsters";
 
 export function GemBagCollectFlyGate() {

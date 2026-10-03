@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { toEditorHouse, toPublicHouse } from "@/lib/ids";
+import { toEditorHouse } from "@/lib/ids";
 import { loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { loadPendingWrites } from "@/lib/offline-db";
 import { isStubHouse } from "@/lib/house-set";

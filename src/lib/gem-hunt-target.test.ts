@@ -41,6 +41,7 @@ describe("pickGemHuntTarget", () => {
   it("uses hunt glow when within collect range", () => {
     const user = { lat: 32.0, lng: 34.0, accuracy: 8 };
     assert.equal(gemFabGlowLevel(houses, user, () => false), "hunt");
-    assert.equal(gemFabGlowLevel(houses, user, (id) => id === "a"), "hunt");
+    // With only the farther house open, user is in approach band but not hunt band.
+    assert.equal(gemFabGlowLevel(houses, user, (id) => id === "a"), "approach");
   });
 });

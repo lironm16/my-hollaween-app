@@ -9,12 +9,8 @@ import {
 import { useEffect, useState } from "react";
 
 export function GemEncounterLayer({
-  house,
   phase,
-  distanceM,
-  inRange,
   repeatVisit,
-  hideApproachLine = false,
   onOfferTreatButton,
 }: {
   house: PublicHouse;
@@ -28,7 +24,7 @@ export function GemEncounterLayer({
   hideApproachLine?: boolean;
   onOfferTreatButton?: () => void;
 }) {
-  const [tutorialSeen, setTutorialSeen] = useState(true);
+  const [, setTutorialSeen] = useState(true);
 
   useEffect(() => {
     setTutorialSeen(readEncounterTutorialSeen());

@@ -14,11 +14,7 @@ import {
 import type { Catalog, CatalogDelta, PublicHouse } from "@/lib/types";
 import { mergeCatalogDelta, syncCatalog } from "@/lib/catalog-sync";
 import { config } from "@/lib/config";
-import {
-  adaptiveCatalogPollMs,
-  appInForeground,
-  catalogPollMs,
-} from "@/lib/catalog-poll";
+import { adaptiveCatalogPollMs, appInForeground } from "@/lib/catalog-poll";
 import {
   loadCatalogCache,
   loadCatalogCacheMeta,

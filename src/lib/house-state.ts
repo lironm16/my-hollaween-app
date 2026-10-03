@@ -2,8 +2,6 @@ import {
   DECOR_LEVELS,
   TREAT_OPTIONS,
   type DecorLevel,
-  type House,
-  type PublicHouse,
   type SensitivityId,
   type StockLevel,
   type TreatId,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppNow } from "@/hooks/use-app-clock";
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useMemo, type ReactNode } from "react";
 import {
   Circle,
   MapContainer,
@@ -29,7 +29,6 @@ import {
   stripApproachFromRouteLine,
   type LatLng,
 } from "@/lib/route";
-import { distanceMeters } from "@/lib/geo";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { isClosingSoon, isHoursNightOver, isHoursNotYetOpen, isOnBreak, isOpeningSoon } from "@/lib/hours";
 import { pinScareSrc } from "@/lib/pin-faces";

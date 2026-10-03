@@ -1,7 +1,6 @@
 import { Check, Filter, Gem } from "lucide-react";
 import { DecorMark } from "@/components/decor-glyphs";
 import { ClosedSign, PauseSign } from "@/components/house-tags";
-import { VisitedCheck } from "@/components/visited-check";
 import { SkipIcon } from "@/components/skip-icon";
 import { visitShort } from "@/lib/labels";
 import { cn } from "@/lib/utils";
