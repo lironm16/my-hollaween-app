@@ -24,6 +24,8 @@ export function e2eHousePayload(name = "בית בדיקה E2E", patch = {}) {
     accessible: false,
     decorLevel: "medium",
     decorated: true,
+    addedBy: "בדיקות E2E",
+    ownerPhone: "0501234567",
     ...patch,
   };
 }

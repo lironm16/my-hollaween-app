@@ -14,6 +14,12 @@ const server = createTestServerManager({
   label: "api",
   extraEnv: {
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ?? "pumpkin2026",
+    NEXT_PUBLIC_PUSH_ALERTS: "1",
+    VAPID_PUBLIC_KEY:
+      process.env.VAPID_PUBLIC_KEY ??
+      "BFv8IZZswPD-n3VbqXoGiQJQ9JsPQN2nouX_eA_JW2IAjZQN22swsxSPS2I3aZQyE_twEof49hKcLs-M2GvfeAs",
+    VAPID_PRIVATE_KEY:
+      process.env.VAPID_PRIVATE_KEY ?? "HxaioVmvoYivcQ4vz2mCCTQ07m6OnoLZJ-We1e-vtWA",
   },
   forceFresh: true,
 });

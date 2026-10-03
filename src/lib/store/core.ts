@@ -69,9 +69,18 @@ const PUSH_MEM_TTL_MS = 600_000;
 let pushMemAt = 0;
 
 let chain: Promise<unknown> = Promise.resolve();
+let lockDepth = 0;
 
 export function withLock<T>(fn: () => Promise<T>): Promise<T> {
-  const run = chain.then(fn, fn);
+  if (lockDepth > 0) return fn();
+  lockDepth += 1;
+  const run = chain.then(async () => {
+    try {
+      return await fn();
+    } finally {
+      lockDepth -= 1;
+    }
+  });
   chain = run.then(
     () => undefined,
     () => undefined,
@@ -325,7 +334,7 @@ export async function writePushSubsBlob(subscriptions: PushSubscriptionRecord[])
   } catch {
     /* blob/memory may still hold it */
   }
-  if (!blobConfigured()) return;
+  if (!blobConfigured() || process.env.DATA_DIR?.trim()) return;
   try {
     await putBlob(PUSH_SUBS_BLOB_PATH, payload, privateBlobPutOptions("application/json"));
   } catch {
@@ -457,6 +466,18 @@ export async function readFileDb(): Promise<DbFile> {
     }
     return withStaticRehearsalStubs(realSeed);
   }
+  if (process.env.DATA_DIR?.trim()) {
+    const local = await readLocalFileDb();
+    if (local) return withStaticRehearsalStubs(local);
+    const seed = normalizeDb(await readSeed());
+    const seedForDisk = { ...seed, houses: housesForIsolatedTestDb(seed.houses) };
+    try {
+      await writeFileDb(seedForDisk);
+    } catch {
+      /* /tmp may still work later */
+    }
+    return withStaticRehearsalStubs(seedForDisk);
+  }
   const [local, blob, global, pushBlob, pushSubsBlob] = await Promise.all([
     readLocalFileDb(),
     readBlobDb(),
@@ -478,17 +499,13 @@ export async function readFileDb(): Promise<DbFile> {
     return withStaticRehearsalStubs(merged);
   }
   const seed = normalizeDb(await readSeed());
-  const seedForDisk = process.env.DATA_DIR
-    ? { ...seed, houses: housesForIsolatedTestDb(seed.houses) }
-    : { ...seed, houses: stripStubHouses(seed.houses) };
+  const seedForDisk = { ...seed, houses: stripStubHouses(seed.houses) };
   try {
     await writeFileDb(seedForDisk);
   } catch {
     /* /tmp may still work later */
   }
-  if (!process.env.DATA_DIR) {
-    void writeBlobDb({ ...seed, houses: stripStubHouses(seed.houses) }).catch(() => undefined);
-  }
+  void writeBlobDb({ ...seed, houses: stripStubHouses(seed.houses) }).catch(() => undefined);
   return withStaticRehearsalStubs(seedForDisk);
 }
 

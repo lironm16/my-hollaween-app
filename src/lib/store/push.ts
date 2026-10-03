@@ -115,6 +115,9 @@ export async function notifyHouseKind(options: {
 
 export async function getVapidPublicKey() {
   if (!pushAlertsEnabled()) return "";
+  const envPublic = process.env.VAPID_PUBLIC_KEY?.trim();
+  const envPrivate = process.env.VAPID_PRIVATE_KEY?.trim();
+  if (envPublic && envPrivate) return envPublic;
   return withLock(async () => {
     const db = await loadPushData();
     const vapid = ensureVapid(db);
