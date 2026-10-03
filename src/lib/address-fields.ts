@@ -40,7 +40,7 @@ export function splitLegacyAddress(
   const fromText = neighborhoodFromAddress(address);
   const hasCoords =
     typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng);
-  const fromCoords = hasCoords ? neighborhoodLabelForPin(lat, lng) : null;
+  const fromCoords = hasCoords ? neighborhoodInferredFromPin(lat, lng) : null;
   return { street, neighborhood: fromText ?? fromCoords };
 }
 
@@ -64,12 +64,17 @@ export function normalizeAddressFields(house: {
       if (fromZone && fromZone !== stored) {
         return { address, neighborhood: fromZone };
       }
-      if (
-        stored === "הגפן" &&
-        !fromZone &&
-        neighborhoodInferredFromPin(house.lat, house.lng) !== "הגפן"
-      ) {
-        return { address, neighborhood: null };
+      if (stored === "הגפן" && !fromZone) {
+        const inferred = neighborhoodInferredFromPin(house.lat, house.lng);
+        if (inferred !== "הגפן") {
+          return { address, neighborhood: inferred };
+        }
+      }
+      if (stored === null) {
+        const inferred = neighborhoodInferredFromPin(house.lat, house.lng);
+        if (inferred) {
+          return { address, neighborhood: inferred };
+        }
       }
     }
     return { address, neighborhood: stored };

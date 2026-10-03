@@ -52,7 +52,17 @@ describe("address fields", () => {
     assert.equal(fields.neighborhood, "חרוזים");
   });
 
-  it("clears wrongly stored Gefen when pin is outside event zones (Yohanna 6)", () => {
+  it("recalculates null neighborhood from pin (legacy empty address rows)", () => {
+    const fields = normalizeAddressFields({
+      address: "",
+      neighborhood: null,
+      lat: 32.0909211,
+      lng: 34.8066897,
+    });
+    assert.equal(fields.neighborhood, "חרוזים");
+  });
+
+  it("replaces false stored Gefen with inferred hood (Yohanna 6)", () => {
     const fields = normalizeAddressFields({
       address: "יוהנה 6",
       neighborhood: "הגפן",
@@ -60,7 +70,8 @@ describe("address fields", () => {
       lng: 34.8163387,
     });
     assert.equal(fields.address, "יוהנה 6");
-    assert.equal(fields.neighborhood, null);
+    assert.notEqual(fields.neighborhood, "הגפן");
+    assert.ok(fields.neighborhood);
   });
 
   it("joins street and neighborhood only for display", () => {

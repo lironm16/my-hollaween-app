@@ -155,6 +155,16 @@ function nearestNeighborhood(lat: number, lng: number) {
   return { best, bestDist };
 }
 
+function neighborhoodsByDistance(lat: number, lng: number): NeighborhoodId[] {
+  return [...NEIGHBORHOODS]
+    .map((name) => {
+      const c = NEIGHBORHOOD_CENTERS[name];
+      return { name, d: (lat - c.lat) ** 2 + (lng - c.lng) ** 2 };
+    })
+    .sort((a, b) => a.d - b.d)
+    .map((entry) => entry.name);
+}
+
 /** Nearest neighborhood center (for labels that only say רמת גן). */
 export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId {
   return nearestNeighborhood(lat, lng).best;
@@ -195,11 +205,20 @@ export function neighborhoodLabelForPin(
 }
 
 /**
- * Infer neighborhood from coordinates when storage is null — event zones only.
- * Pins outside the four zones (e.g. יוהנה 6) stay unassigned (אחר), never nearest-center guess.
+ * Infer neighborhood from coordinates (stats, backfill, resolve when storage is null).
+ * Prefer event zones; otherwise nearest center, but never assign false הגפן off-zone pins.
  */
 export function neighborhoodInferredFromPin(lat: number, lng: number): NeighborhoodId | null {
-  return neighborhoodAtEventLocation(lat, lng);
+  if (!inNeighborhood(lat, lng)) return null;
+  const zoned = neighborhoodAtEventLocation(lat, lng);
+  if (zoned) return zoned;
+  for (const name of neighborhoodsByDistance(lat, lng)) {
+    if (name === "הגפן" && !inNeighborhoodZone(lat, lng, NEIGHBORHOOD_ZONES["הגפן"])) {
+      continue;
+    }
+    return name;
+  }
+  return null;
 }
 
 function isFalseStoredGefen(
@@ -232,7 +251,17 @@ export function resolveNeighborhood(house: {
   const stored = house.neighborhood;
   if (stored !== undefined && stored !== null) {
     const normalized = normalizeNeighborhoodId(stored) ?? null;
-    if (isFalseStoredGefen(normalized, house.lat, house.lng)) return null;
+    if (isFalseStoredGefen(normalized, house.lat, house.lng)) {
+      if (
+        typeof house.lat === "number" &&
+        typeof house.lng === "number" &&
+        Number.isFinite(house.lat) &&
+        Number.isFinite(house.lng)
+      ) {
+        return neighborhoodInferredFromPin(house.lat, house.lng);
+      }
+      return null;
+    }
     return normalized;
   }
   if (house.address) {
