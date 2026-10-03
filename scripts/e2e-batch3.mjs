@@ -80,9 +80,8 @@ async function main() {
   const newlySkipped = skippedAfter.some((id) => !skippedBefore.includes(id));
   if (!newlySkipped) fail("MAP-10 skip should persist in localStorage");
   else pass("MAP-10 skip saves to localStorage");
-  await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
-
-  await page.goto(`${BASE}/skipped-houses`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE}/my?tab=skipped`, { waitUntil: "domcontentloaded" });
+  await waitForCatalog(page);
   try {
     if (skippedName) {
       await page.getByText(skippedName, { exact: false }).first().waitFor();
@@ -93,9 +92,14 @@ async function main() {
   } catch {
     fail("MAP-10 skipped house should appear on skipped page");
   }
-  await page.getByRole("button", { name: "החזרת כל הבתים" }).click();
-  await page.getByText("אין בתים שדילגתם עליהם.").waitFor();
-  pass("EXP-03 skipped houses page can restore all houses");
+  try {
+    await page.getByRole("button", { name: /סמן הכל/ }).click();
+    await page.getByRole("button", { name: /אפס .* מהרשימה/ }).click();
+    await page.getByText("אין בתים שדילגתם עליהם").waitFor();
+    pass("EXP-03 skipped houses page can restore all houses");
+  } catch {
+    fail("EXP-03 should restore all skipped houses from my tab");
+  }
 
   const restoreHouseId = skippedAfter.find((id) => !skippedBefore.includes(id));
   if (restoreHouseId) {
