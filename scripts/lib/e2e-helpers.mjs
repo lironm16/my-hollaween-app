@@ -54,7 +54,9 @@ export async function skipHouseFromDetail(page, detail) {
 
 export async function openFilterSheet(page) {
   await page.getByRole("button", { name: /^סינון/ }).first().click();
-  await page.getByText("שלי", { exact: true }).waitFor({ timeout: 15_000 });
+  const liked = page.getByRole("checkbox", { name: "אהבתי" });
+  await liked.scrollIntoViewIfNeeded();
+  await liked.waitFor({ timeout: 15_000 });
 }
 
 export async function openHouseByFocus(page, baseUrl, houseId) {
