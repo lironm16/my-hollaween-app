@@ -6,6 +6,7 @@ import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { SummaryPumpkinIcon } from "@/components/scare-glyphs";
 import { SkipGlyph } from "@/components/skip-icon";
 import type { WalkingRoute } from "@/lib/route";
+import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
