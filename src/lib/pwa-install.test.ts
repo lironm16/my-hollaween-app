@@ -14,8 +14,12 @@ describe("shouldCapturePwaInstallPrompt", () => {
     assert.equal(shouldCapturePwaInstallPrompt(true, true), false);
   });
 
-  it("captures on Android and desktop browsers when not installed", () => {
+  it("captures on desktop browsers when not installed", () => {
     assert.equal(shouldCapturePwaInstallPrompt(false, false), true);
+  });
+
+  it("skips Android to avoid Play Protect WebAPK install", () => {
+    assert.equal(shouldCapturePwaInstallPrompt(false, false, false, true), false);
   });
 
   it("skips capture when Android web app is already on device (browser tab)", () => {
@@ -36,6 +40,15 @@ describe("pwaInstallPromptEligible", () => {
     assert.equal(
       pwaInstallPromptEligible({ isIos: false, isPwaInstalled: false, hasDeferredPrompt: true }),
       true,
+    );
+    assert.equal(
+      pwaInstallPromptEligible({
+        isIos: false,
+        isAndroid: true,
+        isPwaInstalled: false,
+        hasDeferredPrompt: true,
+      }),
+      false,
     );
     assert.equal(
       pwaInstallPromptEligible({ isIos: true, isPwaInstalled: false, hasDeferredPrompt: true }),

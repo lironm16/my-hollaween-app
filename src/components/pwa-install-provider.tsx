@@ -73,7 +73,16 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!shouldCapturePwaInstallPrompt(isIosDevice(), isStandaloneDisplay(), isPwaInstalled)) return;
+    if (
+      !shouldCapturePwaInstallPrompt(
+        isIosDevice(),
+        isStandaloneDisplay(),
+        isPwaInstalled,
+        isAndroidDevice(),
+      )
+    ) {
+      return;
+    }
 
     const onBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();
@@ -104,6 +113,7 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
 
   const canInstall = pwaInstallPromptEligible({
     isIos: isIosDevice(),
+    isAndroid: isAndroidDevice(),
     isPwaInstalled,
     hasDeferredPrompt: deferredPrompt !== null,
   });

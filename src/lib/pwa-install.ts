@@ -33,21 +33,24 @@ export function shouldCapturePwaInstallPrompt(
   isIos: boolean,
   isStandalone: boolean,
   isPwaInstalled = isStandalone,
+  isAndroid = false,
 ) {
-  return !isIos && !isPwaInstalled;
+  return !isIos && !isAndroid && !isPwaInstalled;
 }
 
 export function pwaInstallPromptEligible(options: {
   isIos: boolean;
+  isAndroid?: boolean;
   isPwaInstalled: boolean;
   hasDeferredPrompt: boolean;
 }) {
-  if (options.isIos || options.isPwaInstalled) return false;
+  if (options.isIos || options.isAndroid || options.isPwaInstalled) return false;
   return options.hasDeferredPrompt;
 }
 
 /** Toast when help/demo install is tapped without a native prompt (e.g. iOS viewing Android Q&A). */
-export const PWA_INSTALL_UNAVAILABLE_TOAST = "פתחו ב-Chrome באנדרואיד כדי להתקין.";
+export const PWA_INSTALL_UNAVAILABLE_TOAST =
+  "באנדרואיד חדש Google חוסם «התקנת אפל» — פתחו ב-Chrome והוסיפו קיצור דרך מהתפריט (⋮).";
 
 export function shouldShowPwaInstallButton(options: {
   canInstall: boolean;

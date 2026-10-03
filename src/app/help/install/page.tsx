@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { HelpExpandable, HelpShell, HelpStep } from "@/components/help-shell";
 import { HelpText } from "@/lib/render-help-text";
-import { PwaInstallButton } from "@/components/pwa-install-button";
 import { helpImage } from "@/lib/help-images";
 import { isAndroidDevice, isIosDevice } from "@/lib/push-client";
 
@@ -28,16 +27,16 @@ const IPHONE_STEPS = [
 
 const ANDROID_STEPS = [
   {
-    title: "כפתור ההורדה בראש המסך",
-    body: "ב-Chrome, ליד תפריט ☰ — סמל ההורדה (↓) בראש המסך (אותו כפתור כמו באפליקציה).",
+    title: "פתחו ב-Chrome",
+    body: "השתמשו ב-Google Chrome (לא Samsung Internet). אם כבר הותקן «אפל» ו-Google חוסם — מחקו את HallowHood מהגדרות → אפליקציות.",
     image: installHelpImage("android-1-app"),
-    imageAlt: "כפתור התקנה בראש האפליקציה ליד התפריט",
+    imageAlt: "HallowHood ב-Chrome",
   },
   {
-    title: "אישור התקנה",
-    body: "לחצו <<הוסף>> או <<התקן>> בחלון שיופיע אחרי הכפתור.",
-    image: installHelpImage("android-3-confirm"),
-    imageAlt: "אישור התקנת האפליקציה",
+    title: "קיצור דרך למסך הבית",
+    body: "בתפריט ⋮ בחרו <<הוסף למסך הבית>> (לא «התקנת אפל» אם מופיעה אזהרת Google Play Protect). פתיחה מהאייקון תמשיך ב-Chrome — המפה וההתראות עובדים.",
+    image: installHelpImage("android-2-menu"),
+    imageAlt: "תפריט Chrome — הוסף למסך הבית",
   },
 ] as const;
 
@@ -62,16 +61,13 @@ function PlatformSteps({
   );
 }
 
-function AndroidInstallSection({ showInstallButton }: { showInstallButton: boolean }) {
+function AndroidInstallSection() {
   return (
     <div className="space-y-4">
-      {showInstallButton ? (
-        <PwaInstallButton variant="prominent" showAlways />
-      ) : null}
       <p className="text-base leading-relaxed text-violet-200/90">
         <HelpText>
           {
-            "ב-Chrome באנדרואיד אפשר גם ללחוץ על סמל ההורדה (↓) בראש המסך, ליד תפריט ☰ — ראו שלב 1 למטה."
+            "באנדרואיד חדש Google עלול לחסום «התקנת אפל» בגלל דרישות אבטחה — זה לא באג באתר. קיצור דרך ב-Chrome מספיק; אין צורך באפליקציה נפרדת."
           }
         </HelpText>
       </p>
@@ -109,7 +105,7 @@ export default function InstallHelpPage() {
           <PlatformSteps steps={IPHONE_STEPS} />
         </HelpExpandable>
         <HelpExpandable title="אנדרואיד" subtitle="Chrome מומלץ" defaultOpen={androidDefaultOpen}>
-          <AndroidInstallSection showInstallButton={platform === "android"} />
+          <AndroidInstallSection />
         </HelpExpandable>
       </div>
     </HelpShell>

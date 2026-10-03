@@ -63,7 +63,7 @@ Use this before event night. CI already covers logic, API, and Playwright flows 
 |---|-----|------|------|
 | ☐ | INS-01 | Map loads | |
 | ☐ | INS-02 | Manual A2HS via menu (⋮ → Add to Home screen) | |
-| ☐ | INS-05 | Android Chrome: menu shows Install app (full PWA) | |
+| ☐ | INS-05 | Android Chrome: no Play Protect block; shortcut via ⋮ → Add to Home screen | |
 | ☐ | INS-06 | A2HS icon launches app | |
 | ☐ | INS-07 | Catalog cached | |
 | ☐ | INS-08 | Offline relaunch works | |
