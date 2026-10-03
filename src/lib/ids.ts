@@ -66,6 +66,7 @@ export function toPublicHouse<
     editCode?: string;
     storeId?: string;
     ownerPhone?: string | null;
+    addedBy?: string | null;
     address?: string;
     lat?: number;
     lng?: number;
@@ -75,6 +76,7 @@ export function toPublicHouse<
   delete rest.editCode;
   delete rest.storeId;
   delete rest.ownerPhone;
+  delete rest.addedBy;
   if (
     typeof rest.address === "string" &&
     typeof rest.lat === "number" &&
@@ -85,15 +87,24 @@ export function toPublicHouse<
       lat: rest.lat,
       lng: rest.lng,
     });
-    return { ...rest, lat: aligned.lat, lng: aligned.lng } as Omit<T, "editCode" | "storeId">;
+    return { ...rest, lat: aligned.lat, lng: aligned.lng } as Omit<
+      T,
+      "editCode" | "storeId" | "ownerPhone" | "addedBy"
+    >;
   }
-  return rest as Omit<T, "editCode" | "storeId" | "ownerPhone">;
+  return rest as Omit<T, "editCode" | "storeId" | "ownerPhone" | "addedBy">;
 }
 
+export type ToEditorHouseOptions = {
+  /** Include submitter name — admin surfaces only. */
+  includeAddedBy?: boolean;
+};
+
 /** Owner/admin edit surfaces — includes internal contact, still no editCode. */
-export function toEditorHouse(house: House): EditorHouse {
+export function toEditorHouse(house: House, options?: ToEditorHouseOptions): EditorHouse {
   return {
     ...(toPublicHouse(house) as PublicHouse),
     ownerPhone: house.ownerPhone ?? null,
+    ...(options?.includeAddedBy ? { addedBy: house.addedBy ?? null } : {}),
   };
 }

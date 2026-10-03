@@ -67,7 +67,7 @@ export function mergeVisibleHouses({
   if (admin) {
     for (const house of adminHouses) {
       if (deleted.has(house.id)) continue;
-      const incoming = toEditorHouse(house) as EditorHouse;
+      const incoming = toEditorHouse(house, { includeAddedBy: true }) as EditorHouse;
       const current = byId.get(house.id);
       byId.set(house.id, mergeIncomingHouse(current, incoming, restoreLocations));
     }

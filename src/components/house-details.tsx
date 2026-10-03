@@ -321,15 +321,15 @@ export function HouseDetails({
   const addressReveal = useAddressReveal();
   const { admin } = useAdminSession();
   const { previewAsUser } = useGemPreviewAsUser();
-  const ownerPhone = adminShowsPrivateHouseFields(admin, previewAsUser)
-    ? (house as EditorHouse).ownerPhone?.trim()
-    : "";
+  const showPrivateFields = adminShowsPrivateHouseFields(admin, previewAsUser);
+  const editorHouse = house as EditorHouse;
+  const ownerPhone = showPrivateFields ? editorHouse.ownerPhone?.trim() : "";
   const displayAddress = addressReveal.formatDisplayAddress(house);
   const arrivalText = addressReveal.visibleArrival(house);
   const showMaps = addressReveal.mapsAllowed(house.id) && houseServerDetailReady(house);
   const showDistance =
     addressReveal.distanceAllowed(house.id) && distanceM !== undefined;
-  const addedMeta = houseAddedMetaLine(house);
+  const addedMeta = houseAddedMetaLine(editorHouse, { showSubmitterName: showPrivateFields });
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
   const [photoReady, setPhotoReady] = useState(false);

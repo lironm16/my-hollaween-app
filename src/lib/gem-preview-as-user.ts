@@ -35,3 +35,8 @@ export function subscribeGemPreviewAsUser(onStoreChange: () => void) {
     window.removeEventListener("storage", handler);
   };
 }
+
+/** Admin-only fields (phone, submitter name) — hidden in תצוגת משתמש. */
+export function adminShowsPrivateHouseFields(admin: boolean, previewAsUser: boolean) {
+  return admin && !previewAsUser;
+}
