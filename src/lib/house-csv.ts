@@ -54,7 +54,10 @@ function scareDecorLabel(house: PublicHouse) {
   return scareShort[house.scareLevel];
 }
 
-function houseRow(house: PublicHouse, index: number): Array<string | number> {
+function houseRow(
+  house: PublicHouse & { addedBy?: string | null },
+  index: number,
+): Array<string | number> {
   return [
     index + 1,
     house.name,

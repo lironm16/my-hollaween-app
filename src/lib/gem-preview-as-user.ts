@@ -21,11 +21,6 @@ export function writeGemPreviewAsUser(on: boolean) {
   window.dispatchEvent(new Event(CHANGED));
 }
 
-/** Admin-only fields (phone, full address in data) — hidden in תצוגת משתמש. */
-export function adminShowsPrivateHouseFields(isAdmin: boolean, previewAsUser: boolean) {
-  return isAdmin && !previewAsUser;
-}
-
 export function subscribeGemPreviewAsUser(onStoreChange: () => void) {
   const handler = () => onStoreChange();
   window.addEventListener(CHANGED, handler);

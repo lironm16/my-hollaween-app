@@ -44,7 +44,10 @@ function stub(id: string, lat: number, lng: number, overrides: Partial<PublicHou
 
 describe("gem-admin-ops", () => {
   it("counts monsters on the map set", () => {
-    const rows = buildGemMapHouseRows([stub("בית-1", 32.08, 34.78), stub("בית-2", 32.09, 34.79)]);
+    const rows = buildGemMapHouseRows([
+      stub("בית-1", 32.08, 34.78, { address: "רחוב 1" }),
+      stub("בית-2", 32.09, 34.79, { address: "רחוב 2" }),
+    ]);
     const counts = countGemsOnMapByMonster(rows);
     assert.ok(counts.size >= 1);
     assert.equal([...counts.values()].reduce((a, b) => a + b, 0), 2);
@@ -52,8 +55,8 @@ describe("gem-admin-ops", () => {
 
   it("finds closest row to a point", () => {
     const rows = buildGemMapHouseRows([
-      stub("בית-far", 32.1, 34.8),
-      stub("בית-near", 32.0801, 34.7801),
+      stub("בית-far", 32.1, 34.8, { address: "רחוק 1" }),
+      stub("בית-near", 32.0801, 34.7801, { address: "קרוב 1" }),
     ]);
     const near = closestGemMapRow({ lat: 32.08, lng: 34.78 }, rows, "all");
     assert.ok(near);
@@ -62,7 +65,10 @@ describe("gem-admin-ops", () => {
   });
 
   it("filters by text query", () => {
-    const rows = buildGemMapHouseRows([stub("בית-aaa", 32, 34), stub("בית-bbb", 32, 34)]);
+    const rows = buildGemMapHouseRows([
+      stub("בית-aaa", 32, 34, { address: "aaa 1" }),
+      stub("בית-bbb", 32, 34, { address: "bbb 1" }),
+    ]);
     rows[0]!.house.name = "משפחת לוי";
     const filtered = filterGemMapRows(rows, { query: "לוי" });
     assert.equal(filtered.length, 1);

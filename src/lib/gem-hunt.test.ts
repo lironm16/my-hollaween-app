@@ -126,7 +126,14 @@ describe("gem hunt geo", () => {
 
   it("maps each house to a gem monster id", () => {
     assert.equal(gemFamilyForHouse({ id: "g1", theme: "ghost", kind: "house" }), "monster");
-    const house = { id: "v1", theme: "vampire" as const, kind: "house" as const };
+    const house = {
+      id: "v1",
+      theme: "vampire" as const,
+      kind: "house" as const,
+      address: "test 1",
+      lat: 32.09,
+      lng: 34.81,
+    };
     syncGemMonsterAssignment([house]);
     const a = gemVariantForHouse(house);
     const b = gemVariantForHouse(house);

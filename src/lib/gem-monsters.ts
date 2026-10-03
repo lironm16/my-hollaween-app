@@ -388,7 +388,7 @@ function buildGemMonsterAssignmentSpatial(
   }
 
   if (noGeo.length > 0) {
-    const sortedNoGeo = [...noGeo].sort((a, b) => a.id.localeCompare(b, "he"));
+    const sortedNoGeo = [...noGeo].sort((a, b) => a.id.localeCompare(b.id, "he"));
     for (const house of sortedNoGeo) {
       let bestMonster = hashMonsterForHouse(house.id);
       let bestCount = countByMonster.get(bestMonster) ?? 0;
