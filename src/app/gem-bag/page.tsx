@@ -36,10 +36,10 @@ export default function GemBagPage() {
     previewDeployment: isPreviewDeploymentClient(),
   });
   const catalogHouses = useMemo(() => resolveCatalogHouses(catalog), [catalog]);
-  const mapHouses = useMemo(() => {
-    const eligible = catalogHouses.filter((house) => houseMatchesSet(house, activeHouseSet));
-    return gemCarrierHousesForMap(eligible);
-  }, [catalogHouses, activeHouseSet]);
+  const mapHouses = useMemo(
+    () => catalogHouses.filter((house) => houseMatchesSet(house, activeHouseSet)),
+    [catalogHouses, activeHouseSet],
+  );
 
   if (!ready) {
     return (
