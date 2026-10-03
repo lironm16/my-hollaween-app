@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
 import { HOUSE_FILTERS_VERSION, migrateHouseFilters } from "@/lib/filter-migrate";
 import { hasVisitWindow, parseClockMinutes } from "@/lib/hours";
@@ -226,13 +226,10 @@ function toggleItem<T>(list: T[], item: T): T[] {
 }
 
 export function useHouseFilters() {
-  const [filters, setFilters] = useState<HouseFiltersState>(DEFAULT_HOUSE_FILTERS);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    setFilters(loadSanitizedHouseFilters());
-    setReady(true);
-  }, []);
+  const [filters, setFilters] = useState<HouseFiltersState>(() =>
+    typeof window === "undefined" ? DEFAULT_HOUSE_FILTERS : loadSanitizedHouseFilters(),
+  );
+  const [ready] = useState(() => typeof window !== "undefined");
 
   const update = useCallback((patch: Partial<HouseFiltersState> | ((current: HouseFiltersState) => HouseFiltersState)) => {
     setFilters((current) => {

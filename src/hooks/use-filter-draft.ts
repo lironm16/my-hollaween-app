@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { houseFiltersDraftInvalid } from "@/components/house-filters-content";
 import {
@@ -49,17 +49,20 @@ export function useFilterDraft({
   skippedIds: string[];
   now: Date;
 }) {
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersOpen, setFiltersOpenState] = useState(false);
   const [filterDraft, setFilterDraft] = useState<HouseFiltersState | null>(null);
-  const filtersOpenRef = useRef(false);
 
-  useEffect(() => {
-    if (filtersOpen && !filtersOpenRef.current) {
-      setFilterDraft(cloneHouseFilters(filters));
-    }
-    if (!filtersOpen) setFilterDraft(null);
-    filtersOpenRef.current = filtersOpen;
-  }, [filtersOpen, filters]);
+  const setFiltersOpen = useCallback(
+    (open: boolean) => {
+      setFiltersOpenState(open);
+      if (open) {
+        setFilterDraft(cloneHouseFilters(filters));
+      } else {
+        setFilterDraft(null);
+      }
+    },
+    [filters],
+  );
 
   const sheetFilters = filterDraft ?? filters;
   const sheetActiveCount = useMemo(() => countActiveFilters(sheetFilters), [sheetFilters]);

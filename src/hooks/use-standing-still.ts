@@ -14,7 +14,6 @@ export function useStandingStill(location: UserLocation | null, enabled: boolean
     if (!enabled || !location) {
       anchorRef.current = null;
       stillSinceRef.current = null;
-      setStillForMs(0);
       return;
     }
 
@@ -22,7 +21,7 @@ export function useStandingStill(location: UserLocation | null, enabled: boolean
     if (!anchor || movedAtLeast(anchor, location, GPS_MOVE_METERS)) {
       anchorRef.current = location;
       stillSinceRef.current = Date.now();
-      setStillForMs(0);
+      queueMicrotask(() => setStillForMs(0));
       return;
     }
 
@@ -35,8 +34,9 @@ export function useStandingStill(location: UserLocation | null, enabled: boolean
     tick();
     const id = window.setInterval(tick, 250);
     return () => window.clearInterval(id);
-  }, [enabled, location?.lat, location?.lng, location?.accuracy]);
+  }, [enabled, location]);
 
-  const ready = enabled && stillForMs >= GEM_STILL_SECONDS * 1000;
-  return { stillForMs, ready };
+  const activeStillForMs = enabled && location ? stillForMs : 0;
+  const ready = enabled && location != null && activeStillForMs >= GEM_STILL_SECONDS * 1000;
+  return { stillForMs: activeStillForMs, ready };
 }

@@ -140,17 +140,14 @@ export function useNeighborhoodRoute({
     filters,
     filterContext,
     skippedIds,
-    origin.lat,
-    origin.lng,
-    origin.kind,
-    origin.label,
+    origin,
     accessibleOnly,
     routeCandidates,
   ]);
 
   useEffect(() => {
     if (!routeMode || pinnedRoute) return;
-    pinCurrentRoute();
+    queueMicrotask(() => pinCurrentRoute());
   }, [routeMode, pinnedRoute, pinCurrentRoute]);
 
   function exitRouteMode() {

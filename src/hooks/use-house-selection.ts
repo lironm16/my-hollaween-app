@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { clusterHousesByAddress, clusterMembersForHouse } from "@/lib/house-clusters";
 import type { PublicHouse } from "@/lib/types";
 
@@ -29,18 +29,16 @@ export function useHouseSelection({
   const [editing, setEditing] = useState(false);
   const [editForId, setEditForId] = useState<SelectedId>(selectedId);
 
-  useEffect(() => {
-    if (!focusId || focusId === focusSeen) return;
+  if (focusId && focusId !== focusSeen) {
     setFocusSeen(focusId);
     setSelectedId(focusId);
     setClusterOverview(false);
-  }, [focusId, focusSeen]);
+  }
 
-  useEffect(() => {
-    if (selectedId === editForId) return;
+  if (selectedId !== editForId) {
     setEditForId(selectedId);
     setEditing(false);
-  }, [selectedId, editForId]);
+  }
 
   const activeId = selectedId === "closed" ? null : (selectedId ?? focusId);
   const editHouseId = activeId;

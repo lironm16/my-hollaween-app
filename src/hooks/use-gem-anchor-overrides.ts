@@ -1,28 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import {
   GEM_ANCHOR_CHANGED_EVENT,
   loadGemAnchorOverrides,
   type GemAnchorOverrideMap,
 } from "@/lib/gem-anchor-overrides";
 
+function subscribe(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(GEM_ANCHOR_CHANGED_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(GEM_ANCHOR_CHANGED_EVENT, onStoreChange);
+  };
+}
+
 export function useGemAnchorOverrides() {
-  const [map, setMap] = useState<GemAnchorOverrideMap>(() =>
-    typeof window === "undefined" ? {} : loadGemAnchorOverrides(),
-  );
-
-  const read = useCallback(() => setMap(loadGemAnchorOverrides()), []);
-
-  useEffect(() => {
-    read();
-    window.addEventListener("storage", read);
-    window.addEventListener(GEM_ANCHOR_CHANGED_EVENT, read);
-    return () => {
-      window.removeEventListener("storage", read);
-      window.removeEventListener(GEM_ANCHOR_CHANGED_EVENT, read);
-    };
-  }, [read]);
+  const map = useSyncExternalStore(subscribe, loadGemAnchorOverrides, () => ({} as GemAnchorOverrideMap));
 
   return { overrides: map, hasOverride: (houseId: string) => Boolean(map[houseId]) };
 }

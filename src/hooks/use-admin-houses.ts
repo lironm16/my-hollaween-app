@@ -27,7 +27,9 @@ export function useAdminHouses({
   refresh: (force?: boolean) => Promise<void> | void;
   catalogUpdatedAt?: string;
 }) {
-  const [adminHouses, setAdminHouses] = useState<House[]>([]);
+  const [adminHouses, setAdminHouses] = useState<House[]>(() =>
+    admin ? readAdminHousesBackup() : [],
+  );
   const [busyAction, setBusyAction] = useState(false);
   const lastLoadedAtRef = useRef<string | null>(null);
 
@@ -56,16 +58,12 @@ export function useAdminHouses({
 
   useEffect(() => {
     if (!admin) {
-      setAdminHouses([]);
       lastLoadedAtRef.current = null;
       return;
     }
-    const backup = readAdminHousesBackup();
-    if (backup.length > 0) {
-      setAdminHouses(backup);
-      lastLoadedAtRef.current = backup[0]?.updatedAt ?? null;
-    }
-    void loadAdminHouses();
+    queueMicrotask(() => {
+      void loadAdminHouses();
+    });
 
     const onChanged = () => void loadAdminHouses();
     const onVis = () => {
@@ -150,7 +148,7 @@ export function useAdminHouses({
   );
 
   return {
-    adminHouses,
+    adminHouses: admin ? adminHouses : [],
     busyAction,
     loadAdminHouses,
     applyAdminHouse,

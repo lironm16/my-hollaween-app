@@ -83,7 +83,6 @@ export function useOriginPick({
 
   useEffect(() => {
     if (!outsideNeighborhood) {
-      setOutsideBanner(false);
       return;
     }
     if (outsideBannerFor.current === panTick) return;
@@ -198,7 +197,7 @@ export function useOriginPick({
     originDraftLabel,
     panTo,
     panTick,
-    outsideBanner,
+    outsideBanner: outsideBanner && outsideNeighborhood,
     geoError,
     routeTicker,
     panMapTo,
