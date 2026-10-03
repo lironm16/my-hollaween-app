@@ -103,11 +103,12 @@ export function AdminDryRunPanel() {
           ))}
         </div>
       </div>
-      <p className="text-base font-medium text-amber-100">בדיקות</p>
-      <p className="text-base text-violet-300">
-        בלי לחכות ל־31 באוקטובר: בחרו רגע בלילה כדי לראות באנרים, סיכות «נפתח/נסגר בקרוב», ואת כפתורי
-        ההפסקה בטופס. נשמר בטלפון הזה בלבד.
-      </p>
+      <div className="space-y-2 rounded-xl bg-[#12081a]/80 p-2 ring-1 ring-orange-500/15">
+        <p className="text-base font-medium text-amber-100">בדיקות</p>
+        <p className="text-base text-violet-300">
+          בלי לחכות ל־31 באוקטובר: בחרו רגע בלילה כדי לראות באנרים, סיכות «נפתח/נסגר בקרוב», ואת כפתורי
+          ההפסקה בטופס. נשמר בטלפון הזה בלבד.
+        </p>
       <div className="flex items-center justify-between gap-3 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20">
         <div className="min-w-0">
           <p className="text-base font-medium text-orange-100">שעון בדיקות</p>
@@ -168,6 +169,7 @@ export function AdminDryRunPanel() {
         <p className="text-base text-violet-300">
           מציג את הבאנר «השרת לא עונה» עם הרשימה ששמורה בטלפון. פתחו את המפה פעם אחת ברשת לפני כן.
         </p>
+      </div>
       </div>
       {gemsOnScreen && catalogHouses.length > 0 ? (
         <div className="space-y-1 rounded-lg bg-[#12081a] p-1 ring-1 ring-orange-500/25">
