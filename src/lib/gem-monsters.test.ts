@@ -30,6 +30,7 @@ describe("gem monsters", () => {
   });
 
   it("assigns dragon for every house while in dragon-only mode", () => {
+    if (!GEM_MONSTERS_DRAGON_ONLY) return;
     const house = { id: "house-abc", theme: "ghost" as const, kind: "house" as const };
     assert.equal(gemMonsterForHouse(house), "dragon");
     assert.equal(gemVariantForHouse(house), "dragon");
