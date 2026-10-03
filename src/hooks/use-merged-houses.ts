@@ -14,16 +14,13 @@ function mergeIncomingHouse(
   restoreRedactedLocations: boolean,
 ): PublicHouse {
   let merged = incoming;
-  if (
-    restoreRedactedLocations &&
-    current?.address?.trim() &&
-    !incoming.address?.trim()
-  ) {
-    merged = {
-      ...incoming,
-      address: current.address,
-      arrival: incoming.arrival?.trim() ? incoming.arrival : current.arrival,
-    };
+  if (restoreRedactedLocations) {
+    const street = incoming.address?.trim() || current?.address?.trim() || "";
+    const arrival =
+      incoming.arrival?.trim() || current?.arrival?.trim() || "";
+    if (street !== (incoming.address ?? "") || arrival !== (incoming.arrival ?? "")) {
+      merged = { ...incoming, address: street, arrival };
+    }
   }
   if (current && isStubHouse(current) && !isStubHouse(merged)) {
     merged = {
@@ -87,6 +84,32 @@ export function mergeVisibleHouses({
     }
   }
   return [...byId.values()].filter((house) => !deleted.has(house.id));
+}
+
+/** Fill redacted catalog rows from admin API snapshot (map/list/sheet). */
+export function enrichHousesWithAdminLocations(
+  houses: readonly PublicHouse[],
+  adminHouses: readonly House[],
+  enabled: boolean,
+): PublicHouse[] {
+  if (!enabled || adminHouses.length === 0) return [...houses];
+  const byId = new Map(adminHouses.map((row) => [row.id, row]));
+  return houses.map((house) => {
+    const admin = byId.get(house.id);
+    if (!admin) return house;
+    const address = house.address?.trim() ? house.address : admin.address;
+    const arrival = house.arrival?.trim() ? house.arrival : admin.arrival;
+    const neighborhood =
+      house.neighborhood !== undefined ? house.neighborhood : admin.neighborhood;
+    if (
+      address === house.address &&
+      arrival === house.arrival &&
+      neighborhood === house.neighborhood
+    ) {
+      return house;
+    }
+    return { ...house, address, arrival, neighborhood };
+  });
 }
 
 export function useMergedHouses({

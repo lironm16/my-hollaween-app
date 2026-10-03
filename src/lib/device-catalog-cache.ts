@@ -31,3 +31,10 @@ export function stripHouseForDeviceCache(house: PublicHouse): PublicHouse {
 export function houseServerDetailReady(house: PublicHouse | null | undefined): boolean {
   return Boolean(house && !isDeviceCachePinHouse(house));
 }
+
+/** Fetch `/api/houses/[id]` when pin-only cache or catalog redaction left address empty. */
+export function houseNeedsLocationHydration(house: PublicHouse | null | undefined): boolean {
+  if (!house) return false;
+  if (isDeviceCachePinHouse(house)) return true;
+  return !house.address?.trim();
+}

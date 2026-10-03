@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { mergeVisibleHouses } from "@/hooks/use-merged-houses";
+import { enrichHousesWithAdminLocations, mergeVisibleHouses } from "@/hooks/use-merged-houses";
 import { houseMatchesSet } from "@/lib/house-set";
 import type { House, PublicHouse } from "@/lib/types";
 
@@ -143,6 +143,26 @@ describe("mergeVisibleHouses", () => {
     });
     const house = merged.find((item) => item.id === "a");
     assert.equal(house?.address, "חרוזים");
+  });
+
+  it("enrichHousesWithAdminLocations fills redacted catalog rows", () => {
+    const catalog = [
+      {
+        ...publicHouse("בית-9001", "2026-10-31T10:00:00.000Z"),
+        address: "",
+        arrival: "",
+      },
+    ];
+    const admin = [
+      {
+        ...adminHouse("בית-9001", "2026-10-31T10:00:00.000Z"),
+        address: "רוקח 32",
+        arrival: "קומה 1",
+      },
+    ];
+    const enriched = enrichHousesWithAdminLocations(catalog, admin, true);
+    assert.equal(enriched[0]?.address, "רוקח 32");
+    assert.equal(enriched[0]?.arrival, "קומה 1");
   });
 
   it("does not restore redacted address when restoreRedactedLocations is false", () => {

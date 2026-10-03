@@ -10,6 +10,7 @@ import {
   clusterHouseIndex,
 } from "@/components/cluster-house-list";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
 import { houseHeadline } from "@/lib/labels";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
@@ -88,7 +89,9 @@ export function MapHouseSheet({
   const multi = clusterHouses.length > 1;
   const overview = multi && clusterOverview;
   const addressReveal = useAddressReveal();
-  const address = addressReveal.formatDisplayAddress(house);
+  const { house: hydratedHouse } = useServerHouseDetail(house);
+  const sheetHouse = hydratedHouse ?? house;
+  const address = addressReveal.formatDisplayAddress(sheetHouse);
   const clusterKey = clusterHouses.map((item) => item.id).join(",");
   const clusterIndex = clusterHouseIndex(clusterHouses, house.id);
   const canPrevCluster = clusterIndex != null && clusterIndex > 1;
@@ -419,7 +422,7 @@ export function MapHouseSheet({
                     className="map-house-sheet-card is-on"
                   >
                     <HouseSheetBody
-                      house={house}
+                      house={sheetHouse}
                       actionContext={actionContext}
                       editing={editing}
                       extra={extra}

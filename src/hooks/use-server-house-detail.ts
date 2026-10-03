@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { isDeviceCachePinHouse } from "@/lib/device-catalog-cache";
+import { houseNeedsLocationHydration, isDeviceCachePinHouse } from "@/lib/device-catalog-cache";
 import { houseWithLocationPolicy, visitorAddressRevealContext } from "@/lib/address-reveal";
 import { appNow } from "@/lib/app-clock";
 import { fetchPublicHouse, notifyHouseDetailLoaded } from "@/lib/fetch-public-house";
@@ -21,7 +21,7 @@ export function useServerHouseDetail(house: PublicHouse | null) {
       setLoading(false);
       return;
     }
-    if (!isDeviceCachePinHouse(house)) {
+    if (!houseNeedsLocationHydration(house)) {
       setLoading(false);
       return;
     }
@@ -61,6 +61,6 @@ export function useServerHouseDetail(house: PublicHouse | null) {
     house: active,
     loading,
     unavailable,
-    detailReady: Boolean(active && !isDeviceCachePinHouse(active)),
+    detailReady: Boolean(active && !houseNeedsLocationHydration(active)),
   };
 }

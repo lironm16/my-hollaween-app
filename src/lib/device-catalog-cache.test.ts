@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  houseNeedsLocationHydration,
   houseServerDetailReady,
   isDeviceCachePinHouse,
   stripHouseForDeviceCache,
@@ -69,5 +70,10 @@ describe("device catalog cache", () => {
   it("blocks navigation readiness until server detail arrives", () => {
     assert.equal(houseServerDetailReady({ ...house(), deviceCachePin: true }), false);
     assert.equal(houseServerDetailReady(house()), true);
+  });
+
+  it("hydrates when catalog redaction left address empty", () => {
+    assert.equal(houseNeedsLocationHydration({ ...house(), address: "" }), true);
+    assert.equal(houseNeedsLocationHydration(house()), false);
   });
 });

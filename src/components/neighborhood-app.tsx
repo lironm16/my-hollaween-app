@@ -74,7 +74,7 @@ import { useFilterDraft } from "@/hooks/use-filter-draft";
 import { useHouseActions } from "@/hooks/use-house-actions";
 import { useHouseFilters, countActiveFilters } from "@/hooks/use-house-filters";
 import { useHouseSelection } from "@/hooks/use-house-selection";
-import { useMergedHouses } from "@/hooks/use-merged-houses";
+import { enrichHousesWithAdminLocations, useMergedHouses } from "@/hooks/use-merged-houses";
 import { useNeighborhoodRoute } from "@/hooks/use-neighborhood-route";
 import { useOriginPick } from "@/hooks/use-origin-pick";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
@@ -311,9 +311,11 @@ export function NeighborhoodApp({
   const displayHouses = useMemo(() => {
     const applyVisitorLocations = (list: PublicHouse[]) =>
       gemPreviewAsUser ? housesWithLocationPolicy(list, addressReveal) : list;
+    const applyAdminLocations = (list: PublicHouse[]) =>
+      enrichHousesWithAdminLocations(list, adminHouses, restoreRedactedLocations);
 
     if (houses.length > 0) {
-      const next = applyVisitorLocations(houses);
+      const next = applyVisitorLocations(applyAdminLocations(houses));
       lastHousesRef.current = next;
       return next;
     }
@@ -322,19 +324,19 @@ export function NeighborhoodApp({
         ? catalog.houses
         : null;
     if (authHouses) {
-      const next = applyVisitorLocations(authHouses);
+      const next = applyVisitorLocations(applyAdminLocations(authHouses));
       lastHousesRef.current = next;
       return next;
     }
     if (lastHousesRef.current.length > 0) return lastHousesRef.current;
     const cached = loadCatalogCacheSync()?.houses;
     if (cached?.length) {
-      const next = applyVisitorLocations(cached);
+      const next = applyVisitorLocations(applyAdminLocations(cached));
       lastHousesRef.current = next;
       return next;
     }
     return houses;
-  }, [houses, catalog, gemPreviewAsUser, addressReveal]);
+  }, [houses, catalog, gemPreviewAsUser, addressReveal, adminHouses, restoreRedactedLocations]);
 
   const { houses: mapListHouses, now: mapListNow } = useMapListUiLock(displayHouses, now);
 
