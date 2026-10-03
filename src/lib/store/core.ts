@@ -37,15 +37,10 @@ import {
   privateBlobPutAttempts,
   privateBlobPutOptions,
 } from "@/lib/blob-auth";
-import {
-  catalogSnapshotToDb,
-  publishCatalogSnapshot,
-  readSharedCatalogSnapshot,
-} from "@/lib/catalog-cache";
+import { publishCatalogSnapshot } from "@/lib/catalog-cache";
 import {
   bumpCatalogMeta,
   firestoreConfigured,
-  readCatalogMeta,
   readFirestoreCatalog,
   readFirestorePushData,
   writeFirestoreDb,
@@ -457,20 +452,14 @@ function foldPushSubscriptions(target: DbFile, ...candidates: Array<DbFile | nul
 export async function readFileDb(): Promise<DbFile> {
   if (firestoreConfigured()) {
     const global = getGlobalDb();
-    const meta = await readCatalogMeta();
-    const shared = await readSharedCatalogSnapshot(meta?.updatedAt);
-    let remote: DbFile | null = shared ? catalogSnapshotToDb(shared) : null;
-    if (!remote) {
-      const catalog = await readFirestoreCatalog();
-      if (catalog) {
-        remote = {
-          ...catalog,
-          pushSubscriptions: mem?.pushSubscriptions ?? global?.pushSubscriptions ?? [],
-          ...(mem?.vapid ? { vapid: mem.vapid } : global?.vapid ? { vapid: global.vapid } : {}),
-        };
-      }
-    }
-    if (remote) {
+    // Never hydrate the house db from public/catalog.json — that file redacts address/arrival.
+    const catalog = await readFirestoreCatalog();
+    if (catalog) {
+      const remote: DbFile = {
+        ...catalog,
+        pushSubscriptions: mem?.pushSubscriptions ?? global?.pushSubscriptions ?? [],
+        ...(mem?.vapid ? { vapid: mem.vapid } : global?.vapid ? { vapid: global.vapid } : {}),
+      };
       const merged = pickNewest(remote, global) ?? remote;
       foldPushSubscriptions(merged, mem, global);
       return withStaticRehearsalStubs(merged);

@@ -13,6 +13,7 @@ import { countPublishedHouses } from "@/lib/catalog-cache-build";
 import { isHouseDeleted, isPubliclyListed } from "@/lib/house-state";
 import { stripStubHouses } from "@/lib/rehearsal-stubs";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
+import { preserveStoredAddressFields } from "@/lib/firestore-address-preserve";
 import type { DbFile, House, PublicHouse, PushSubscriptionRecord, VapidKeys } from "@/lib/types";
 
 export { firestoreConfigured };
@@ -156,9 +157,14 @@ export async function writeFirestoreHouse(house: House) {
   if (isStubHouse(house)) return;
   await resolveAdminFirestore();
   const id = canonicalHouseId(house.id);
-  await housesCollection()
-    .doc(id)
-    .set({ ...house, id, storeId: id, deletedAt: house.deletedAt ?? null }, { merge: true });
+  const ref = housesCollection().doc(id);
+  const existingSnap = await ref.get();
+  const existing = existingSnap.exists ? rowToHouse(existingSnap.id, existingSnap.data() as House) : null;
+  const toWrite = preserveStoredAddressFields(house, existing);
+  await ref.set(
+    { ...toWrite, id, storeId: id, deletedAt: toWrite.deletedAt ?? null },
+    { merge: true },
+  );
   if (!isPubliclyListed(house)) return;
   try {
     await removedHousesCollection().doc(id).delete();
@@ -441,12 +447,24 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
   const removals = prevHouses ? removedHouseIds(prevHouses, houses) : [];
 
   for (let i = 0; i < dirtyHouses.length; i += 400) {
+    const slice = dirtyHouses.slice(i, i + 400);
+    const existingById = new Map<string, House>();
+    await Promise.all(
+      slice.map(async (house) => {
+        const id = canonicalHouseId(house.id);
+        if (house.address?.trim() && house.arrival?.trim()) return;
+        const snap = await housesCollection().doc(id).get();
+        if (!snap.exists) return;
+        existingById.set(id, rowToHouse(snap.id, snap.data() as House));
+      }),
+    );
     const batch = firestore.batch();
-    for (const house of dirtyHouses.slice(i, i + 400)) {
+    for (const house of slice) {
       const id = canonicalHouseId(house.id);
+      const toWrite = preserveStoredAddressFields(house, existingById.get(id));
       batch.set(
         housesCollection().doc(id),
-        { ...house, id, storeId: id },
+        { ...toWrite, id, storeId: id },
         { merge: true },
       );
     }

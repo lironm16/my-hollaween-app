@@ -1,6 +1,6 @@
 {
   "name": "halloween-neighborhood",
-  "version": "5.4.14",
+  "version": "5.4.15",
   "private": true,
   "scripts": {
     "dev": "node scripts/allow-preview-origin.mjs && node scripts/build-css.mjs && next dev --webpack --hostname 0.0.0.0 --port 43127",
@@ -32,6 +32,7 @@
     "migrate:firestore": "node scripts/migrate-to-firestore.mjs",
     "seed:catalog-meta": "node scripts/seed-catalog-meta.mjs",
     "seed:catalog-snapshot": "node --import tsx scripts/seed-catalog-snapshot.mjs",
+    "restore:addresses": "node --import tsx scripts/restore-addresses-from-blob.mjs",
     "purge:firestore-stubs": "node scripts/purge-firestore-stubs.mjs",
     "purge:e2e-houses": "node scripts/purge-e2e-test-houses.mjs",
     "capture:help": "node scripts/capture-help-screenshots.mjs",

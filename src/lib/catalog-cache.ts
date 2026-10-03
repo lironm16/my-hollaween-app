@@ -44,7 +44,8 @@ async function readPublicCatalogFallback(): Promise<CatalogSnapshot | null> {
     if (!catalog?.updatedAt || !Array.isArray(catalog.houses)) return null;
     return {
       updatedAt: catalog.updatedAt,
-      houses: catalog.houses as unknown as House[],
+      // Public catalog rows redact address/arrival — not usable as authoritative house db rows.
+      houses: [],
       catalog,
     };
   } catch {
