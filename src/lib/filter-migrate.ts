@@ -1,4 +1,10 @@
-import { NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
+import {
+  NEIGHBORHOOD_FILTER_OPTIONS,
+  NEIGHBORHOOD_FILTER_OTHER,
+  NEIGHBORHOODS,
+  type NeighborhoodFilterId,
+  type NeighborhoodId,
+} from "@/lib/config";
 import {
   hasStockCandySelection,
   isKidsFriendlyFilter,
@@ -7,22 +13,32 @@ import {
 import type { HouseFiltersState } from "@/lib/offline-db";
 import { CANDY_TONE_IDS, SCARE_LEVELS } from "@/lib/types";
 
-export const HOUSE_FILTERS_VERSION = 8;
+export const HOUSE_FILTERS_VERSION = 9;
 
 const LEGACY_ALL_NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים"] as const;
 
-function migrateNeighborhoodFilters(raw: readonly string[]): NeighborhoodId[] {
+function migrateNeighborhoodFilters(raw: readonly string[]): NeighborhoodFilterId[] {
   const mapped = raw.map((item) => (item === "שכונת הגפן" ? "הגפן" : item));
-  const known = mapped.filter((item): item is NeighborhoodId =>
+  const known = mapped.filter((item): item is NeighborhoodFilterId =>
+    (NEIGHBORHOOD_FILTER_OPTIONS as readonly string[]).includes(item),
+  );
+  const hoodsOnly = known.filter((item): item is NeighborhoodId =>
     (NEIGHBORHOODS as readonly string[]).includes(item),
   );
   const hadAllLegacy =
-    known.length >= LEGACY_ALL_NEIGHBORHOODS.length &&
-    LEGACY_ALL_NEIGHBORHOODS.every((name) => known.includes(name));
-  if (hadAllLegacy && !known.includes("הגפן")) {
-    return [...NEIGHBORHOODS];
+    hoodsOnly.length >= LEGACY_ALL_NEIGHBORHOODS.length &&
+    LEGACY_ALL_NEIGHBORHOODS.every((name) => hoodsOnly.includes(name));
+  if (hadAllLegacy && !hoodsOnly.includes("הגפן")) {
+    return [...NEIGHBORHOOD_FILTER_OPTIONS];
   }
-  return known.length > 0 ? known : [...NEIGHBORHOODS];
+  if (
+    hoodsOnly.length === NEIGHBORHOODS.length &&
+    NEIGHBORHOODS.every((name) => hoodsOnly.includes(name)) &&
+    !known.includes(NEIGHBORHOOD_FILTER_OTHER)
+  ) {
+    return [...NEIGHBORHOOD_FILTER_OPTIONS];
+  }
+  return known;
 }
 
 /** Drop engine flags that no longer have UI controls. */

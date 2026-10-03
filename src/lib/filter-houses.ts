@@ -1,7 +1,7 @@
 import { candyToneLabel } from "@/components/candy-glyphs";
 import {
   houseInNeighborhoods,
-  NEIGHBORHOODS,
+  NEIGHBORHOOD_FILTER_OPTIONS,
   resolveNeighborhood,
 } from "@/lib/config";
 import { isStubHouse } from "@/lib/house-set";
@@ -59,7 +59,7 @@ function scareFilterActive(filters: HouseFiltersState) {
 }
 
 function neighborhoodFilterActive(filters: HouseFiltersState) {
-  return filters.neighborhoodFilters.length !== NEIGHBORHOODS.length;
+  return filters.neighborhoodFilters.length !== NEIGHBORHOOD_FILTER_OPTIONS.length;
 }
 
 /** Short Hebrew labels for why a house is faded on the map (not in the active filter). */

@@ -216,7 +216,7 @@ export function CollectedGemSign({ className }: { className?: string }) {
       title={GEM_FOUND_I_HE}
       aria-label={GEM_FOUND_I_HE}
     >
-      <ImpMarkerGlyph variant="solid" className="size-[72%] text-[#fbbf24]" />
+      <ImpMarkerGlyph variant="solid" className="size-[88%] text-[#fbbf24]" />
     </span>
   );
 }
@@ -230,7 +230,7 @@ function UncollectedGemSign({ className }: { className?: string }) {
       )}
       aria-hidden
     >
-      <ImpMarkerGlyph variant="eyes" className="size-[72%] text-orange-100" />
+      <ImpMarkerGlyph variant="solid" className="size-[88%] text-orange-100" />
     </span>
   );
 }

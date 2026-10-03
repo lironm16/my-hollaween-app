@@ -1,4 +1,4 @@
-import type { NeighborhoodId } from "@/lib/config";
+import type { NeighborhoodFilterId } from "@/lib/config";
 import type { SkipReasonId } from "@/lib/skip-reasons";
 import { isAuthoritativeHouseList } from "@/lib/catalog-houses";
 import { syncCatalog } from "@/lib/catalog-sync";
@@ -588,7 +588,7 @@ export type HouseFiltersState = {
   sensitivityFilters: SensitivityId[];
   scareFilters: ScareLevel[];
   candyFilters: CandyTone[];
-  neighborhoodFilters: NeighborhoodId[];
+  neighborhoodFilters: NeighborhoodFilterId[];
   likedOnly: boolean;
   unvisitedOnly: boolean;
   visitedOnly: boolean;

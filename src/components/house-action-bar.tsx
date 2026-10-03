@@ -201,9 +201,9 @@ export function HouseActionBar({
         id: "gem",
         label: gemCollected ? GEM_FOUND_I_HE : GEM_ACTION_FIND_HE,
         icon: gemCollected ? (
-          <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.35rem]" />
+          <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.55rem]" />
         ) : (
-          <GemMenuDiscIcon className={MENU_ICON_CLASS} markClassName="size-[1.35rem]" />
+          <GemMenuDiscIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.55rem]" />
         ),
         onClick: () => onToggleGem(),
         active: gemCollected,

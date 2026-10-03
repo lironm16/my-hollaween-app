@@ -21,7 +21,7 @@ function baseFilters(overrides: Partial<HouseFiltersState> = {}): HouseFiltersSt
     sensitivityFilters: [],
     scareFilters: ["mild", "medium", "spicy"],
     candyFilters: ["none", "plenty", "low", "out"],
-    neighborhoodFilters: ["חרוזים", "נחלת גנים", "שיכון ותיקים", "הגפן"],
+    neighborhoodFilters: ["חרוזים", "נחלת גנים", "שיכון ותיקים", "הגפן", "אחר"],
     likedOnly: false,
     unvisitedOnly: false,
     visitedOnly: false,
@@ -155,6 +155,41 @@ describe("filterHouses", () => {
     assert.deepEqual(reasons, ["נחלת גנים"]);
     const visitedReasons = houseFilterMismatchReasons(houses[1]!, filters, context);
     assert.deepEqual(visitedReasons, ["כבר ביקרת"]);
+  });
+
+  it("shows no houses when every neighborhood option is unchecked", () => {
+    const houses = [house("a"), house("b")];
+    const context = { houseSet: "real" as const, likedIds: [], visitedIds: [], now };
+    const result = filterHouses(
+      houses,
+      baseFilters({ visitWindowMode: "all", neighborhoodFilters: [] }),
+      context,
+    );
+    assert.deepEqual(result.map((item) => item.id), []);
+  });
+
+  it("filters to אחר when only the other chip is selected", () => {
+    const houses = [
+      house("zoned", {
+        address: "חרוזים 1",
+        neighborhood: "חרוזים",
+        lat: 32.0916,
+        lng: 34.8028,
+      }),
+      house("other", {
+        address: "הדר 11",
+        neighborhood: null,
+        lat: 32.08793,
+        lng: 34.8123,
+      }),
+    ];
+    const context = { houseSet: "real" as const, likedIds: [], visitedIds: [], now };
+    const result = filterHouses(
+      houses,
+      baseFilters({ visitWindowMode: "all", neighborhoodFilters: ["אחר"] }),
+      context,
+    );
+    assert.deepEqual(result.map((item) => item.id), ["other"]);
   });
 
   it("filters by location kind", () => {
