@@ -21,7 +21,7 @@ export function useGemProgress() {
   }, []);
 
   useEffect(() => {
-    read();
+    queueMicrotask(() => read());
     window.addEventListener("storage", read);
     window.addEventListener(GEM_CHANGED_EVENT, read);
     return () => {

@@ -15,7 +15,9 @@ import { useCatalog } from "@/hooks/use-catalog";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { useMergedHouses } from "@/hooks/use-merged-houses";
 import { isPreviewDeploymentClient } from "@/lib/deployment-env";
-import { activeHouseSetForSession, houseMatchesSet } from "@/lib/house-set";
+import { resolveCatalogHouses } from "@/lib/catalog-houses";
+import { activeHouseSetForSession, catalogHasRealHouses, houseMatchesSet } from "@/lib/house-set";
+import { loadCatalogCacheSync } from "@/lib/offline-db";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
@@ -47,8 +49,16 @@ export default function SearchPage() {
   const activeHouseSet = activeHouseSetForSession(admin, houseSet, catalog, {
     previewDeployment: isPreviewDeploymentClient(),
   });
+  const catalogHouses = useMemo(() => {
+    const resolved = resolveCatalogHouses(catalog);
+    if (!admin && !catalogHasRealHouses({ houses: resolved })) {
+      const cached = loadCatalogCacheSync();
+      if (cached?.houses.length) return cached.houses;
+    }
+    return resolved;
+  }, [admin, catalog]);
   const merged = useMergedHouses({
-    catalogHouses: catalog?.houses ?? [],
+    catalogHouses,
     owned,
     admin,
     adminHouses,

@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
       "react-hooks/refs": "warn",
     },
   },
+  {
+    files: ["src/hooks/use-smoothed-gem-placement.ts"],
+    rules: {
+      // Intentional ref smoothing during render — state-based alternative caused update loops in E2E.
+      "react-hooks/refs": "off",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

@@ -1,6 +1,12 @@
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
+import {
+  firstRealHouseId,
+  openFilterSheet,
+  openHouseByFocus,
+  waitForCatalog,
+} from "./lib/e2e-helpers.mjs";
 
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:43127";
 const OUT = process.env.E2E_ARTIFACTS_DIR ?? join(process.cwd(), "artifacts", "e2e");
@@ -24,19 +30,6 @@ async function launchBrowser() {
   });
 }
 
-async function waitForCatalog(page) {
-  await page.getByText(/בתים/).first().waitFor();
-  await page.waitForFunction(() => {
-    try {
-      const raw = localStorage.getItem("hw-catalog-cache");
-      const catalog = raw ? JSON.parse(raw) : null;
-      return Array.isArray(catalog?.houses) && catalog.houses.length > 0;
-    } catch {
-      return false;
-    }
-  });
-}
-
 async function catalogHouseIds(page) {
   return page.evaluate(() => {
     const raw = localStorage.getItem("hw-catalog-cache");
@@ -51,10 +44,6 @@ async function readStorageIds(page, key) {
     const ids = raw ? JSON.parse(raw) : [];
     return Array.isArray(ids) ? ids : [];
   }, key);
-}
-
-async function openFilterSheet(page) {
-  await page.getByRole("button", { name: /^סינון/ }).first().click();
 }
 
 async function main() {
@@ -86,22 +75,25 @@ async function main() {
   await page.getByRole("button", { name: "מפה", pressed: true }).waitFor();
   pass("MAP-04 toggles between list and map views");
 
-  await page.goto(`${BASE}/?focus=${encodeURIComponent(firstHouse.id)}&rehearsal=open`, {
-    waitUntil: "domcontentloaded",
-  });
-  await waitForCatalog(page);
-  const detail = page.getByRole("dialog");
+  const focusId =
+    (await firstRealHouseId(page)) ?? firstHouse.id;
+  let detail;
   try {
-    await detail.getByRole("button", { name: "פעולות" }).waitFor({ timeout: 5_000 });
+    detail = await openHouseByFocus(page, BASE, focusId);
     pass("MAP-02 focus selection opens house detail overlay");
   } catch {
     fail("MAP-02 house selection should open a house card with actions");
+  }
+  if (failures) {
+    await context.close();
+    await browser.close();
+    process.exit(1);
   }
 
   const likedBefore = await readStorageIds(page, "hw-liked-houses");
   await detail.getByRole("button", { name: "פעולות" }).click();
   await page.getByRole("menuitem", { name: "אהבתי" }).click();
-  await page.getByText("שמרתם!").waitFor();
+  await page.getByText("אהבתם!").waitFor();
   const likedAfter = await readStorageIds(page, "hw-liked-houses");
   const newlyLiked = likedAfter.some((id) => !likedBefore.includes(id));
   if (!newlyLiked) fail("MAP-07 like should persist in localStorage");
@@ -120,7 +112,7 @@ async function main() {
   await waitForCatalog(page);
 
   await openFilterSheet(page);
-  await page.getByText("שמורים", { exact: true }).click();
+  await page.getByRole("checkbox", { name: "אהבתי" }).click();
   await page.getByRole("button", { name: /הצג תוצאות/ }).click();
   await page.getByRole("button", { name: /סינון \(1\)/ }).first().waitFor();
   pass("MAP-09 liked-only quick filter can be applied");
@@ -162,11 +154,17 @@ async function main() {
   pass("A11Y-01 skip link opens list view");
 
   if (firstHouse?.name) {
-    await page.goto(`${BASE}/search`, { waitUntil: "domcontentloaded" });
-    await page.getByPlaceholder("הקלידו שם משפחה או כתובת").fill(firstHouse.name.slice(0, 6));
-    await page.getByText(firstHouse.name).first().click();
-    await page.getByRole("button", { name: "פעולות" }).first().waitFor();
-    pass("EXP-02 search page opens selected house");
+    try {
+      await page.goto(`${BASE}/search?rehearsal=open`, { waitUntil: "domcontentloaded" });
+      const combobox = page.getByPlaceholder("הקלידו שם משפחה או כתובת");
+      await combobox.fill(firstHouse.name.slice(0, 6));
+      await page.getByRole("option").first().waitFor({ timeout: 15_000 });
+      await combobox.press("Enter");
+      await page.getByRole("button", { name: "פעולות" }).first().waitFor();
+      pass("EXP-02 search page opens selected house");
+    } catch {
+      fail("EXP-02 search page should open selected house with actions");
+    }
   }
 
   await page.screenshot({ path: `${OUT}/visitor-flows.png`, fullPage: true });
@@ -179,7 +177,8 @@ async function main() {
   const freshPage = await freshContext.newPage();
   freshPage.setDefaultTimeout(20_000);
   await freshPage.goto(`${BASE}/offline.html`, { waitUntil: "domcontentloaded" });
-  await freshPage.getByText(/אין עותק שמור בטלפון/).waitFor();
+  await freshPage.getByRole("heading", { name: "אין חיבור" }).waitFor();
+  await freshPage.getByText(/רשימת הבתים לא נשמרת במכשיר/).waitFor();
   pass("OFF-04 offline.html without cache shows empty-state message");
   await freshContext.close();
 
