@@ -7,6 +7,11 @@ import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { SkipIcon } from "@/components/skip-icon";
 import { POI_PIN_FACE_SRC } from "@/lib/pin-faces";
 import { PIN_BACKGROUND } from "@/lib/pin-colors";
+import {
+  GEM_DIAMOND_COLLECTED_FILL,
+  GEM_DIAMOND_FILL,
+  gemDiamondSvgPath,
+} from "@/lib/gem-diamond-visual";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -140,7 +145,10 @@ function GemDiamondSwatch({ collected = false }: { collected?: boolean }) {
       aria-hidden
     >
       <svg className="map-gem-diamond-marker__svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M6 3h12l4 7-10 13L2 10l4-7z" fill="currentColor" />
+        <path
+          d={gemDiamondSvgPath()}
+          fill={collected ? GEM_DIAMOND_COLLECTED_FILL : GEM_DIAMOND_FILL}
+        />
       </svg>
     </div>
   );
