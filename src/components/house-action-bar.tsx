@@ -204,7 +204,7 @@ export function HouseActionBar({
         icon: gemCollected ? (
           <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.55rem]" />
         ) : (
-          <ImpMarkerGlyph variant="solid" className={cn(MENU_ICON_CLASS, "text-orange-50")} />
+          <ImpMarkerGlyph variant="solid" className={cn(MENU_ICON_CLASS, "text-current")} />
         ),
         onClick: () => onToggleGem(),
         active: gemCollected,

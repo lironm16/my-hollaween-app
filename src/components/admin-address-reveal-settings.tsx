@@ -114,14 +114,13 @@ export function AdminAddressRevealSettings() {
   const defaultLabel = formatTimeInput(defaults);
 
   return (
-    <div className="space-y-2 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20">
-      <p className="text-base font-medium text-orange-100">חשיפת כתובות · {config.eventNight.labelHe}</p>
-      <p className="text-base text-violet-300">
-        שעה מקומית שבה כתובות רחוב והוראות הגעה נפתחות לכל המבקרים. נשמר בשרת ומתעדכן בכל הטלפונים
-        (בנפרד משעון הבדיקות למטה).
+    <div className="space-y-2 rounded-xl bg-[#12081a] px-3 py-2 ring-1 ring-orange-500/20">
+      <p className="text-base font-medium text-orange-100">
+        חשיפת כתובות · {config.eventNight.labelHe} — שעה מקומית לפתיחת כתובות והוראות הגעה (מסונכרן,
+        נפרד משעון בדיקות)
       </p>
-      <label className={cn("block space-y-1.5", loading && "opacity-50")}>
-        <span className="text-base text-violet-200">שעת חשיפה</span>
+      <label className={cn("block space-y-1", loading && "opacity-50")}>
+        <span className="text-sm text-violet-300">שעת חשיפה</span>
         <input
           type="time"
           value={timeValue}
@@ -133,15 +132,15 @@ export function AdminAddressRevealSettings() {
           className="filter-time-input h-10 w-full min-h-10 rounded-md bg-black/30 px-2 text-base text-orange-50 ring-1 ring-orange-500/20 disabled:cursor-not-allowed"
         />
       </label>
-      <p className="text-base text-violet-400">
-        ברירת מחדל בקוד:{" "}
+      <p className="text-sm text-violet-400">
+        ברירת מחדל{" "}
         <span dir="ltr" className="text-violet-200">
           {defaultLabel}
         </span>
         {customized ? <span className="text-orange-200"> · מוגדר במנהל</span> : null}
       </p>
-      {error ? <p className="text-base text-red-300">{error}</p> : null}
-      <div className="flex flex-wrap gap-2 pt-0.5">
+      {error ? <p className="text-sm text-red-300">{error}</p> : null}
+      <div className="flex flex-wrap gap-2">
         <Button type="button" size="sm" disabled={loading || saving} onClick={() => void onSave()}>
           {saving ? "שומר…" : "שמירה"}
         </Button>
@@ -153,7 +152,7 @@ export function AdminAddressRevealSettings() {
             disabled={loading || saving}
             onClick={() => void onReset()}
           >
-            איפוס לברירת מחדל
+            איפוס
           </Button>
         ) : null}
       </div>

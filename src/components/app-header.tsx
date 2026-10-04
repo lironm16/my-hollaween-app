@@ -224,7 +224,7 @@ export function AppHeader({
               >
                 <ImpMarkerGlyph
                   variant="solid"
-                  className="size-6 shrink-0 text-[#fbbf24]"
+                  className="size-4 shrink-0 text-current"
                   aria-hidden
                 />
                 {GEM_ALBUM_TITLE_HE}

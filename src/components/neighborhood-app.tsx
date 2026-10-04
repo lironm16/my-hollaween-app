@@ -190,6 +190,7 @@ export function NeighborhoodApp({
   const [mapGemGps, setMapGemGps] = useState<UserLocation | null>(null);
   const [mapGemWebXrSession, setMapGemWebXrSession] = useState<XRSession | null>(null);
   const gemBadgePendingRef = useRef(false);
+  const mapGemOpenGenRef = useRef(0);
   const [, setMapGemBadgeCount] = useState(() =>
     typeof window === "undefined" ? 0 : loadGemCollectedIds().length,
   );
@@ -391,6 +392,7 @@ export function NeighborhoodApp({
   const openGemHuntForHouse = useCallback(
     async (house: PublicHouse) => {
       if (gems.collected(house.id)) return;
+      const gen = ++mapGemOpenGenRef.current;
       preloadGemHuntChunks();
       getGemHuntPortalRoot();
       const openedFrom = readHomeView();
@@ -404,15 +406,30 @@ export function NeighborhoodApp({
       if (isAndroidLike() && webXrHitTestArCached()) {
         xrSession = await requestGemHuntWebXrSession();
       }
-      setMapGemWebXrSession(xrSession);
-      setMapGemHouse(house);
+      if (gen !== mapGemOpenGenRef.current) {
+        void endGemHuntWebXrSession(xrSession);
+        releaseGemHuntCamera();
+        return;
+      }
       setWatchEnabled(true);
       const freshGps = (await geo.refresh()) ?? gps;
-      setMapGemGps(freshGps);
+      if (gen !== mapGemOpenGenRef.current) {
+        void endGemHuntWebXrSession(xrSession);
+        releaseGemHuntCamera();
+        return;
+      }
       await prepareGemHuntSensors({
         requestCamera: !xrSession,
         requestOrientation: !isGemHuntOrientationGranted(),
       });
+      if (gen !== mapGemOpenGenRef.current) {
+        void endGemHuntWebXrSession(xrSession);
+        releaseGemHuntCamera();
+        return;
+      }
+      setMapGemWebXrSession(xrSession);
+      setMapGemGps(freshGps);
+      setMapGemHouse(house);
     },
     [gems, geo, gps, selection, setWatchEnabled],
   );
@@ -1505,6 +1522,7 @@ export function NeighborhoodApp({
           initialWebXrSession={mapGemWebXrSession}
           tellMeHuntRadiusEnforced={gemTellMeHuntRadiusEnforced(admin, gemPreviewAsUser)}
           onClose={() => {
+            mapGemOpenGenRef.current += 1;
             releaseGemHuntCamera();
             void endGemHuntWebXrSession(mapGemWebXrSession);
             setMapGemWebXrSession(null);

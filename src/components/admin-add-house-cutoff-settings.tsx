@@ -143,15 +143,13 @@ export function AdminAddHouseCutoffSettings() {
   }
 
   return (
-    <div className="space-y-2 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20">
-      <p className="text-base font-medium text-orange-100">חיתוך הוספת בתים</p>
-      <p className="text-base text-violet-300">
-        אחרי המועד הזה מבקרים לא יכולים לשלוח בית חדש (מנהלים תמיד יכולים). נשמר בשרת ומתעדכן בכל
-        הטלפונים.
+    <div className="space-y-2 rounded-xl bg-[#12081a] px-3 py-2 ring-1 ring-orange-500/20">
+      <p className="text-base font-medium text-orange-100">
+        חיתוך הוספת בתים — אחרי המועד מבקרים לא מוסיפים בית (מנהלים כן), מסונכרן לכל המכשירים
       </p>
       <div className={cn("grid gap-2 sm:grid-cols-2", loading && "opacity-50")}>
-        <label className="block space-y-1.5">
-          <span className="text-base text-violet-200">תאריך (מקומי)</span>
+        <label className="block space-y-1">
+          <span className="text-sm text-violet-300">תאריך</span>
           <input
             type="date"
             value={dateValue}
@@ -160,8 +158,8 @@ export function AdminAddHouseCutoffSettings() {
             className="filter-time-input h-10 w-full min-h-10 rounded-md bg-black/30 px-2 text-base text-orange-50 ring-1 ring-orange-500/20 disabled:cursor-not-allowed"
           />
         </label>
-        <label className="block space-y-1.5">
-          <span className="text-base text-violet-200">שעה</span>
+        <label className="block space-y-1">
+          <span className="text-sm text-violet-300">שעה</span>
           <input
             type="time"
             value={timeValue}
@@ -174,15 +172,15 @@ export function AdminAddHouseCutoffSettings() {
           />
         </label>
       </div>
-      <p className="text-base text-violet-400">
-        ברירת מחדל:{" "}
+      <p className="text-sm text-violet-400">
+        ברירת מחדל{" "}
         <span dir="ltr" className="text-violet-200">
           {labelSchedule(defaults)}
         </span>
         {customized ? <span className="text-orange-200"> · מוגדר במנהל</span> : null}
       </p>
-      {error ? <p className="text-base text-red-300">{error}</p> : null}
-      <div className="flex flex-wrap gap-2 pt-0.5">
+      {error ? <p className="text-sm text-red-300">{error}</p> : null}
+      <div className="flex flex-wrap gap-2">
         <Button type="button" size="sm" disabled={loading || saving} onClick={() => void onSave()}>
           {saving ? "שומר…" : "שמירה"}
         </Button>
@@ -194,7 +192,7 @@ export function AdminAddHouseCutoffSettings() {
             disabled={loading || saving}
             onClick={() => void onReset()}
           >
-            איפוס לברירת מחדל
+            איפוס
           </Button>
         ) : null}
       </div>
