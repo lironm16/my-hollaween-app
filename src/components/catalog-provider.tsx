@@ -41,6 +41,7 @@ import { HOUSE_DETAIL_LOADED_EVENT } from "@/lib/fetch-public-house";
 import { readGemPreviewAsUser } from "@/lib/gem-preview-as-user";
 import { loadOwnedHouses } from "@/lib/offline-db";
 import { isMapListSuspended, subscribeMapListSuspend } from "@/lib/map-list-suspend";
+import { trackCatalogRemovalDelta } from "@/lib/catalog-removed";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
 
@@ -277,6 +278,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       next = published ?? next;
       return next;
     });
+    trackCatalogRemovalDelta(prev, next, live.removed);
     if (isMapListSuspended()) return next;
     setSource("network");
     setUnreachable(false);

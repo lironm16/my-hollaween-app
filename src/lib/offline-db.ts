@@ -3,6 +3,7 @@ import type { SkipReasonId } from "@/lib/skip-reasons";
 import { isAuthoritativeHouseList } from "@/lib/catalog-houses";
 import { syncCatalog } from "@/lib/catalog-sync";
 import { loadGemLabStubs } from "@/lib/gem-lab-stubs";
+import { clearCatalogRemoved } from "@/lib/catalog-removed";
 import { tombstoneHouse, loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { stripHouseForDeviceCache } from "@/lib/device-catalog-cache";
 import { syncDecorFields } from "@/lib/house-state";
@@ -296,6 +297,7 @@ export function rememberPublishedHouse(house: PublicHouse) {
 
 export function forgetPublishedHouse(id: string) {
   if (typeof window === "undefined" || !id) return;
+  clearCatalogRemoved(id);
   tombstoneHouse(id);
   const cached = loadCatalogCacheSync();
   if (cached?.houses.some((item) => item.id === id)) {
