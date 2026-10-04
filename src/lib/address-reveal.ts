@@ -1,4 +1,3 @@
-import { formatAdminDisplayAddress } from "@/lib/admin-house-location";
 import { config, formatDisplayAddress, resolveNeighborhood, type NeighborhoodId } from "@/lib/config";
 import { mergeAddressRevealSchedule } from "@/lib/event-settings";
 import type { AddressRevealSchedule, PublicHouse } from "@/lib/types";
@@ -66,7 +65,6 @@ export function formatDisplayAddressWithPolicy(
   ctx: AddressRevealContext,
 ): string {
   if (canViewHouseLocationDetails(houseId, ctx)) {
-    if (ctx.isAdmin) return formatAdminDisplayAddress(house);
     return formatDisplayAddress(house);
   }
   const hint = addressHiddenHintHe(ctx.now, ctx.addressReveal);

@@ -88,18 +88,30 @@ describe("address reveal", () => {
     assert.equal(canViewHouseLocationDetails("בית-9999", ctx), false);
   });
 
-  it("admin sees street and inferred hood before reveal", () => {
+  it("admin sees street and stored hood on one line before reveal", () => {
     const adminCtx = makeAddressRevealContext({
       now: new Date(2026, 9, 31, 10, 0),
       isAdmin: true,
     });
     const label = formatDisplayAddressWithPolicy(
-      stub({ address: "רוקח 32", neighborhood: null }),
+      stub({ address: "רוקח 32", neighborhood: "שיכון ותיקים" }),
       "בית-9999",
       adminCtx,
     );
-    assert.match(label, /רוקח 32/u);
-    assert.match(label, /שיכון ותיקים/u);
+    assert.equal(label, "רוקח 32, שיכון ותיקים");
+  });
+
+  it("after reveal, public sees street and stored hood comma-separated", () => {
+    const ctx = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 20, 0),
+      isAdmin: false,
+    });
+    const label = formatDisplayAddressWithPolicy(
+      stub({ address: "סטרומה 4", neighborhood: "נחלת גנים" }),
+      "בית-8975",
+      ctx,
+    );
+    assert.equal(label, "סטרומה 4, נחלת גנים");
   });
 
   it("shows hint instead of street before reveal", () => {

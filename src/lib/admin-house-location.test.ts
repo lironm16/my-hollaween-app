@@ -3,28 +3,28 @@ import { describe, it } from "node:test";
 import { formatAdminDisplayAddress, resolveNeighborhoodForAdmin } from "@/lib/admin-house-location";
 
 describe("admin house location", () => {
-  it("uses legacy inference for admin hood when stored is null", () => {
+  it("does not infer hood from pin when stored is null", () => {
     const lat = 32.0945618;
     const lng = 34.816518;
     assert.equal(
       resolveNeighborhoodForAdmin({ address: "הזמיר 8", lat, lng, neighborhood: null }),
-      "שיכון ותיקים",
+      null,
     );
     assert.equal(
       formatAdminDisplayAddress({ address: "הזמיר 8", lat, lng, neighborhood: null }),
-      "הזמיר 8, שיכון ותיקים",
+      "הזמיר 8",
     );
   });
 
-  it("prefers Rokach street override", () => {
+  it("uses stored neighborhood for display line", () => {
     assert.equal(
-      resolveNeighborhoodForAdmin({
-        address: "רוקח 32",
-        lat: 32.09,
-        lng: 34.81,
-        neighborhood: null,
+      formatAdminDisplayAddress({
+        address: "סטרומה 4",
+        lat: 32.0899146,
+        lng: 34.8047034,
+        neighborhood: "נחלת גנים",
       }),
-      "שיכון ותיקים",
+      "סטרומה 4, נחלת גנים",
     );
   });
 });

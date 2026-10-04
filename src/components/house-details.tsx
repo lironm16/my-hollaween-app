@@ -13,7 +13,6 @@ import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
 import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
-import { adminLocationLines } from "@/lib/admin-house-location";
 import { adminShowsPrivateHouseFields } from "@/lib/gem-preview-as-user";
 import { formatDistance } from "@/lib/geo";
 import { HoursLabel } from "@/components/clock-time";
@@ -327,13 +326,7 @@ export function HouseDetails({
   const showPrivateFields = adminShowsPrivateHouseFields(admin, previewAsUser);
   const editorHouse = viewHouse as EditorHouse;
   const ownerPhone = showPrivateFields ? editorHouse.ownerPhone?.trim() : "";
-  const adminLines =
-    showPrivateFields && addressReveal.canViewDetails(viewHouse.id)
-      ? adminLocationLines(viewHouse)
-      : null;
-  const displayAddress = adminLines
-    ? [adminLines.street, adminLines.hood].filter(Boolean).join(", ")
-    : addressReveal.formatDisplayAddress(viewHouse);
+  const displayAddress = addressReveal.formatDisplayAddress(viewHouse);
   const arrivalText = addressReveal.visibleArrival(viewHouse);
   const showMaps = addressReveal.mapsAllowed(viewHouse.id) && houseServerDetailReady(viewHouse);
   const showDistance =
