@@ -6,9 +6,9 @@ import {
   housesToCsv,
   housesToExportTxt,
 } from "@/lib/house-csv";
-import type { PublicHouse } from "@/lib/types";
+import type { EditorHouse } from "@/lib/types";
 
-function house(patch: Partial<PublicHouse> = {}): PublicHouse {
+function house(patch: Partial<EditorHouse> = {}): EditorHouse {
   return {
     id: "בית-1",
     name: "בית בדיקה",
@@ -34,7 +34,7 @@ function house(patch: Partial<PublicHouse> = {}): PublicHouse {
     updatedAt: "2026-10-31T12:00:00.000Z",
     adminFrozen: false,
     ...patch,
-  } as PublicHouse;
+  } as EditorHouse;
 }
 
 describe("housesToCsv", () => {
