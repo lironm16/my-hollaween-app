@@ -21,7 +21,7 @@ const FORMAT_OPTIONS: ReadonlyArray<{ id: AdminHouseDownloadFormat; labelHe: str
     {
       id: "xlsx",
       labelHe: "טבלה (Excel)",
-      hint: "רשימה לעריכה / הדפסה",
+      hint: "רשימה לעריכה / הדפסה — כולל טלפון",
     },
     {
       id: "csv",
