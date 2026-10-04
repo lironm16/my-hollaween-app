@@ -15,7 +15,9 @@ import {
   Shield,
   HelpCircle,
   Sparkles,
+  Save,
 } from "lucide-react";
+import { AdminHouseDownloadDialog } from "@/components/admin-house-download-dialog";
 import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
@@ -55,6 +57,7 @@ export function AppHeader({
   const showAdminUserPreview = admin && gemHuntVisible(admin);
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);
+  const [adminDownloadOpen, setAdminDownloadOpen] = useState(false);
   const [helpInstallCapture, setHelpInstallCapture] = useState(false);
 
   useEffect(() => {
@@ -69,6 +72,11 @@ export function AppHeader({
 
   function closeMenu() {
     setMenuOpen(false);
+  }
+
+  function openAdminDownload() {
+    closeMenu();
+    setAdminDownloadOpen(true);
   }
 
   const houseSubLinkClass = cn(
@@ -261,6 +269,17 @@ export function AppHeader({
                 </Link>
                 <button
                   type="button"
+                  onClick={openAdminDownload}
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "lg" }),
+                    "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+                  )}
+                >
+                  <Save className="size-4" strokeWidth={2.25} />
+                  הורדת רשימת בתים
+                </button>
+                <button
+                  type="button"
                   onClick={() => void onLogout()}
                   className={cn(
                     buttonVariants({ variant: "outline", size: "lg" }),
@@ -298,6 +317,9 @@ export function AppHeader({
           </div>
         </SheetContent>
       </Sheet>
+      ) : null}
+      {admin ? (
+        <AdminHouseDownloadDialog open={adminDownloadOpen} onOpenChange={setAdminDownloadOpen} />
       ) : null}
     </header>
   );
