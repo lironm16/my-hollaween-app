@@ -13,7 +13,10 @@ import { countPublishedHouses } from "@/lib/catalog-cache-build";
 import { isHouseDeleted, isPubliclyListed } from "@/lib/house-state";
 import { stripStubHouses } from "@/lib/rehearsal-stubs";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
-import { preserveStoredAddressFields } from "@/lib/firestore-address-preserve";
+import {
+  houseNeedsExistingMerge,
+  preserveStoredHouseFields,
+} from "@/lib/firestore-address-preserve";
 import type { DbFile, House, PublicHouse, PushSubscriptionRecord, VapidKeys } from "@/lib/types";
 
 export { firestoreConfigured };
@@ -160,7 +163,7 @@ export async function writeFirestoreHouse(house: House) {
   const ref = housesCollection().doc(id);
   const existingSnap = await ref.get();
   const existing = existingSnap.exists ? rowToHouse(existingSnap.id, existingSnap.data() as House) : null;
-  const toWrite = preserveStoredAddressFields(house, existing);
+  const toWrite = preserveStoredHouseFields(house, existing);
   await ref.set(
     { ...toWrite, id, storeId: id, deletedAt: toWrite.deletedAt ?? null },
     { merge: true },
@@ -452,7 +455,7 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
     await Promise.all(
       slice.map(async (house) => {
         const id = canonicalHouseId(house.id);
-        if (house.address?.trim() && house.arrival?.trim()) return;
+        if (!houseNeedsExistingMerge(house)) return;
         const snap = await housesCollection().doc(id).get();
         if (!snap.exists) return;
         existingById.set(id, rowToHouse(snap.id, snap.data() as House));
@@ -461,7 +464,7 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
     const batch = firestore.batch();
     for (const house of slice) {
       const id = canonicalHouseId(house.id);
-      const toWrite = preserveStoredAddressFields(house, existingById.get(id));
+      const toWrite = preserveStoredHouseFields(house, existingById.get(id));
       batch.set(
         housesCollection().doc(id),
         { ...toWrite, id, storeId: id },
