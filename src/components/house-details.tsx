@@ -458,23 +458,9 @@ export function HouseDetails({
     <div className={metaTextClass}>
       {photo || compact ? (
         <>
-          {adminLines?.street ? <p className="break-words">{adminLines.street}</p> : null}
-          {adminLines?.hood ? (
-            <p className="break-words text-violet-300">{adminLines.hood}</p>
-          ) : null}
-          {!adminLines && displayAddress ? <p className="break-words">{displayAddress}</p> : null}
+          {displayAddress ? <p className="break-words">{displayAddress}</p> : null}
           {hours || showDistance ? <p>{hoursDistance}</p> : null}
         </>
-      ) : adminLines ? (
-        <div className="break-words">
-          {adminLines.street ? <p>{adminLines.street}</p> : null}
-          {adminLines.hood ? <p className="text-violet-300">{adminLines.hood}</p> : null}
-          {hours || showDistance ? (
-            <p>
-              {hoursDistance}
-            </p>
-          ) : null}
-        </div>
       ) : (
         <p className="break-words">
           {displayAddress}
