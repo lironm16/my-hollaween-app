@@ -22,8 +22,27 @@ const PUBLIC_HEADERS = [
   "ללא שומשום",
   "טבעוני",
   "נוסף על ידי",
+  "טלפון",
   "תאריך הוספה",
 ] as const;
+
+type HouseExportRow = PublicHouse & {
+  addedBy?: string | null;
+  ownerPhone?: string | null;
+};
+
+/** Strip invisible chars that break Excel; prefix Latin text for RTL worksheets. */
+function exportDisplayText(value: string | number): string {
+  let text = String(value ?? "")
+    .replace(/[\u200B-\u200D\uFEFF\u2060\u00AD]/g, "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
+  const trimmed = text.trim();
+  if (!trimmed) return "";
+  if (/[A-Za-z]/.test(trimmed) && !/[\u0590-\u05FF]/.test(trimmed)) {
+    return `\u200E${trimmed}`;
+  }
+  return trimmed;
+}
 
 function csvCell(value: string | number) {
   const text = String(value ?? "");
@@ -54,17 +73,14 @@ function scareDecorLabel(house: PublicHouse) {
   return scareShort[house.scareLevel];
 }
 
-function houseRow(
-  house: PublicHouse & { addedBy?: string | null },
-  index: number,
-): Array<string | number> {
+function houseRow(house: HouseExportRow, index: number): Array<string | number> {
   return [
     index + 1,
-    house.name,
-    formatDisplayAddress(house),
-    house.arrival || "",
-    house.description || "",
-    house.notes || "",
+    exportDisplayText(house.name),
+    exportDisplayText(formatDisplayAddress(house)),
+    exportDisplayText(house.arrival || ""),
+    exportDisplayText(house.description || ""),
+    exportDisplayText(house.notes || ""),
     formatHoursLabel(house),
     candyLabel(house),
     scareDecorLabel(house),
@@ -73,7 +89,8 @@ function houseRow(
     offersSensitivity(house, "nutsFree") ? "כן" : "לא",
     offersSensitivity(house, "sesameFree") ? "כן" : "לא",
     offersSensitivity(house, "vegan") ? "כן" : "לא",
-    house.addedBy?.trim() || "",
+    exportDisplayText(house.addedBy?.trim() || ""),
+    exportDisplayText(house.ownerPhone?.trim() || ""),
     house.createdAt ? formatHouseAddedAt(house.createdAt) : "",
   ];
 }
@@ -216,7 +233,7 @@ export function housesToXlsx(houses: PublicHouse[]): Uint8Array {
       return `<row r="${r}" ht="28" customHeight="1">${cells}</row>`;
     })
     .join("");
-  const colWidths = [8, 22, 28, 26, 36, 24, 16, 14, 16, 10, 14, 14, 14, 10, 10];
+  const colWidths = [8, 22, 28, 26, 36, 24, 16, 14, 16, 10, 14, 14, 14, 10, 14, 12, 12];
   const cols = headers
     .map((_, index) => `<col min="${index + 1}" max="${index + 1}" width="${colWidths[index] ?? 14}" customWidth="1"/>`)
     .join("");

@@ -56,6 +56,19 @@ describe("housesToCsv", () => {
     assert.ok(csv.includes("לילדים"));
   });
 
+  it("includes owner phone and strips zero-width chars from Latin names", () => {
+    const csv = housesToCsv([
+      house({
+        name: "\u200bThe Sabrra Spookhouse",
+        ownerPhone: "050-1234567",
+        addedBy: "Sabrra",
+      }),
+    ]);
+    assert.ok(csv.includes("050-1234567"));
+    assert.ok(csv.includes("The Sabrra Spookhouse"));
+    assert.ok(!csv.includes("\u200b"));
+  });
+
   it("returns header only for an empty list", () => {
     const csv = housesToCsv([]);
     const lines = csv.trim().split(/\r?\n/);
