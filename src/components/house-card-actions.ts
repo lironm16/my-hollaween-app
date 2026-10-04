@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
+import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import type { PublicHouse } from "@/lib/types";
 import type { ComponentProps } from "react";
 import type { HouseActionBar } from "@/components/house-action-bar";
@@ -42,6 +43,7 @@ export function houseCardPropsFor(
 ): ComponentProps<typeof HouseCard> {
   const id = house.id;
   const isSkipped = ctx.skipped(id);
+  const editAllowed = deviceHouseEditAllowed(id, { admin: ctx.admin });
   return {
     house,
     catalogSource: ctx.catalogSource,
@@ -57,8 +59,8 @@ export function houseCardPropsFor(
     onRestoreRoute: ctx.onRestore && isSkipped ? () => ctx.onRestore!(id) : undefined,
     onShowOnMap: ctx.onShowOnMap ? () => ctx.onShowOnMap!(id) : undefined,
     onShowInList: ctx.onShowInList ? () => ctx.onShowInList!(id) : undefined,
-    canEdit: Boolean(ctx.canEdit?.(id)),
-    editCode: ctx.editCodeFor?.(id),
+    canEdit: Boolean(ctx.canEdit?.(id) && editAllowed),
+    editCode: editAllowed ? ctx.editCodeFor?.(id) : undefined,
     admin: ctx.admin,
     onToggleEdit: ctx.onEdit ? () => ctx.onEdit!(house) : undefined,
     editing: ctx.editingId === id,

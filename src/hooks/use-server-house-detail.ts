@@ -7,6 +7,7 @@ import { appNow } from "@/lib/app-clock";
 import { fetchPublicHouse, notifyHouseDetailLoaded } from "@/lib/fetch-public-house";
 import { readGemPreviewAsUser } from "@/lib/gem-preview-as-user";
 import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
+import { noteCatalogRemovals } from "@/lib/catalog-removed";
 import { loadOwnedHouses } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 
@@ -34,6 +35,12 @@ export function useServerHouseDetail(house: PublicHouse | null) {
       if (cancelled) return;
       setLoading(false);
       if (!result.ok) {
+        if (
+          result.status === 404 &&
+          loadOwnedHouses().some((row) => row.id === house.id)
+        ) {
+          noteCatalogRemovals([house.id], new Date().toISOString());
+        }
         setUnavailable(result.status === 404);
         return;
       }

@@ -3,6 +3,7 @@ import { describe, it, beforeEach } from "node:test";
 import type { Catalog } from "@/lib/types";
 import {
   clearCatalogRemoved,
+  deviceHouseEditAllowed,
   isCatalogRemoved,
   noteCatalogRemovals,
   trackCatalogRemovalDelta,
@@ -79,5 +80,12 @@ describe("catalog-removed", () => {
     noteCatalogRemovals(["a"], "2026-10-31T12:00:00.000Z");
     clearCatalogRemoved("a");
     assert.equal(isCatalogRemoved("a"), false);
+  });
+
+  it("blocks device edit when removed but allows admins", () => {
+    noteCatalogRemovals(["a"], "2026-10-31T12:00:00.000Z");
+    assert.equal(deviceHouseEditAllowed("a"), false);
+    assert.equal(deviceHouseEditAllowed("a", { admin: true }), true);
+    assert.equal(deviceHouseEditAllowed("b"), true);
   });
 });

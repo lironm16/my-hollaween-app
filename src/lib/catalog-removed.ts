@@ -42,6 +42,16 @@ export function isCatalogRemoved(id: string | undefined | null) {
   return readEntries().some((entry) => entry.id === id);
 }
 
+/** Owners may view/navigate locally; admins keep full edit in admin flows. */
+export function deviceHouseEditAllowed(
+  id: string | undefined | null,
+  options?: { admin?: boolean },
+) {
+  if (options?.admin) return true;
+  if (!id) return false;
+  return !isCatalogRemoved(id);
+}
+
 export function clearCatalogRemoved(id: string) {
   if (!id) return;
   const next = readEntries().filter((entry) => entry.id !== id);
@@ -63,7 +73,7 @@ export function noteCatalogRemovals(ids: string[], removedAt: string) {
   writeEntries(merged);
 }
 
-/** Persist admin/catalog deletes from a sync so local owner previews can show status. */
+/** Persist catalog deletes (owner or admin) from sync so local previews can show status. */
 export function trackCatalogRemovalDelta(
   prev: Catalog | null,
   next: Catalog,

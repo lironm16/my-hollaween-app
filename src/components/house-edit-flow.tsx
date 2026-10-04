@@ -4,8 +4,10 @@ import { useCallback, useState } from "react";
 import { HouseEditOverlay } from "@/components/house-edit-overlay";
 import { QuickUpdateOverlay } from "@/components/quick-update-overlay";
 import { useAppNow } from "@/hooks/use-app-clock";
+import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import { quickUpdateAvailable } from "@/lib/quick-update";
 import type { PublicHouse } from "@/lib/types";
+import { toast } from "sonner";
 
 type EditStep = "quick" | "full";
 
@@ -28,6 +30,10 @@ export function useHouseEditFlow() {
       house: PublicHouse,
       options?: { editCode?: string; admin?: boolean; allowDelete?: boolean; forceFull?: boolean },
     ) => {
+      if (!deviceHouseEditAllowed(house.id, { admin: options?.admin })) {
+        toast.message("הבית הוסר מהמדריך — אי אפשר לערוך");
+        return;
+      }
       const canQuick = !options?.forceFull && quickUpdateAvailable(house, now);
       setFlow({
         house,
@@ -45,6 +51,10 @@ export function useHouseEditFlow() {
       house: PublicHouse,
       options?: { editCode?: string; admin?: boolean },
     ) => {
+      if (!deviceHouseEditAllowed(house.id, { admin: options?.admin })) {
+        toast.message("הבית הוסר מהמדריך — אי אפשר לערוך");
+        return;
+      }
       setFlow({
         house,
         step: "quick",

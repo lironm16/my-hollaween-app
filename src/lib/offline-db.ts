@@ -3,7 +3,7 @@ import type { SkipReasonId } from "@/lib/skip-reasons";
 import { isAuthoritativeHouseList } from "@/lib/catalog-houses";
 import { syncCatalog } from "@/lib/catalog-sync";
 import { loadGemLabStubs } from "@/lib/gem-lab-stubs";
-import { clearCatalogRemoved } from "@/lib/catalog-removed";
+import { clearCatalogRemoved, isCatalogRemoved, noteCatalogRemovals } from "@/lib/catalog-removed";
 import { tombstoneHouse, loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { stripHouseForDeviceCache } from "@/lib/device-catalog-cache";
 import { syncDecorFields } from "@/lib/house-state";
@@ -726,6 +726,8 @@ export function loadPendingWrites(): PendingHouseWrite[] {
 }
 
 export function queueHouseWrite(write: PendingHouseWrite) {
+  const adminWrite = write.url.includes("/api/admin/");
+  if (!adminWrite && isCatalogRemoved(write.id)) return;
   const next = loadPendingWritesSync().filter((item) => item.id !== write.id);
   next.push(write);
   writePendingSync(next);
@@ -754,6 +756,11 @@ export async function flushPendingHouseWrites(): Promise<number> {
   let flushed = 0;
   try {
     for (const item of pending) {
+      const adminWrite = item.url.includes("/api/admin/");
+      if (!adminWrite && isCatalogRemoved(item.id)) {
+        removePendingWrite(item.id);
+        continue;
+      }
       try {
         const res = await fetch(item.url, {
           method: item.method,
@@ -761,7 +768,13 @@ export async function flushPendingHouseWrites(): Promise<number> {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(item.body),
         });
-        if (!res.ok) continue;
+        if (!res.ok) {
+          if (!adminWrite && res.status === 404) {
+            noteCatalogRemovals([item.id], new Date().toISOString());
+            removePendingWrite(item.id);
+          }
+          continue;
+        }
         removePendingWrite(item.id);
         flushed += 1;
       } catch {
