@@ -84,6 +84,7 @@ export function GemHuntPanel({
   const [gemCheer, setGemCheer] = useState(false);
   const [gemCheerPet, setGemCheerPet] = useState<GemMonsterId | null>(null);
   const cheerTimerRef = useRef<number | null>(null);
+  const huntOpenGenRef = useRef(0);
   const [androidArReady, setAndroidArReady] = useState(false);
 
   useEffect(() => {
@@ -113,20 +114,36 @@ export function GemHuntPanel({
   }, [house, userLocation]);
 
   const openCamera = useCallback(async () => {
+    const gen = ++huntOpenGenRef.current;
     getGemHuntPortalRoot();
     let xrSession: XRSession | null = null;
     if (isAndroidLike() && webXrHitTestArCached()) {
       xrSession = await requestGemHuntWebXrSession();
     }
+    if (gen !== huntOpenGenRef.current) {
+      void endGemHuntWebXrSession(xrSession);
+      releaseGemHuntCamera();
+      return;
+    }
     setBootWebXrSession(xrSession);
     setHuntLocation(userLocation);
-    setHuntOpen(true);
     const fresh = (await onOpenHunt?.()) ?? userLocation;
+    if (gen !== huntOpenGenRef.current) {
+      void endGemHuntWebXrSession(xrSession);
+      releaseGemHuntCamera();
+      return;
+    }
     await prepareGemHuntSensors({
       requestCamera: !xrSession,
       requestOrientation: !isGemHuntOrientationGranted(),
     });
+    if (gen !== huntOpenGenRef.current) {
+      void endGemHuntWebXrSession(xrSession);
+      releaseGemHuntCamera();
+      return;
+    }
     setHuntLocation(fresh ?? userLocation);
+    setHuntOpen(true);
   }, [onOpenHunt, userLocation]);
 
   if (!visible) return null;
@@ -314,6 +331,7 @@ export function GemHuntPanel({
           tellMeHuntRadiusEnforced={tellMeHuntRadiusEnforced}
           initialWebXrSession={bootWebXrSession}
           onClose={() => {
+            huntOpenGenRef.current += 1;
             releaseGemHuntCamera();
             void endGemHuntWebXrSession(bootWebXrSession);
             setBootWebXrSession(null);
