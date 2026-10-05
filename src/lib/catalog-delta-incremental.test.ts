@@ -1,22 +1,37 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { buildCatalogDeltaFromDb } from "@/lib/store/catalog";
+import { normalizeHouse } from "@/lib/store/core";
 import type { DbFile, House } from "@/lib/types";
 
 function house(id: string, updatedAt: string): House {
-  return {
+  return normalizeHouse({
     id,
     storeId: id,
     name: "test",
+    theme: "pumpkin",
     address: "street",
+    arrival: "",
+    description: "",
     lat: 32.09,
     lng: 34.81,
     updatedAt,
-    visit: "open",
-    treatStock: "full",
-    treats: { regular: true },
+    createdAt: updatedAt,
+    visit: "come",
+    treatStock: { candy: "plenty" },
+    treats: ["candy"],
+    scareLevel: "mild",
+    openFrom: "17:00",
+    openTo: "21:00",
+    notes: "",
+    accessible: false,
+    soldOut: false,
+    adminFrozen: false,
+    ownerFrozenUntil: null,
+    photoUrl: "",
+    editCode: "123456",
     kind: "house",
-  };
+  });
 }
 
 describe("buildCatalogDeltaFromDb", () => {
