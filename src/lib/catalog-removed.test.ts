@@ -82,10 +82,9 @@ describe("catalog-removed", () => {
     assert.equal(isCatalogRemoved("a"), false);
   });
 
-  it("blocks device edit when removed but allows admins", () => {
+  it("blocks device edit when removed from the catalog", () => {
     noteCatalogRemovals(["a"], "2026-10-31T12:00:00.000Z");
     assert.equal(deviceHouseEditAllowed("a"), false);
-    assert.equal(deviceHouseEditAllowed("a", { admin: true }), true);
     assert.equal(deviceHouseEditAllowed("b"), true);
   });
 });

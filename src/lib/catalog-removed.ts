@@ -42,12 +42,8 @@ export function isCatalogRemoved(id: string | undefined | null) {
   return readEntries().some((entry) => entry.id === id);
 }
 
-/** Owners may view/navigate locally; admins keep full edit in admin flows. */
-export function deviceHouseEditAllowed(
-  id: string | undefined | null,
-  options?: { admin?: boolean },
-) {
-  if (options?.admin) return true;
+/** View/navigate locally; no edit entry points on cards when removed from the catalog. */
+export function deviceHouseEditAllowed(id: string | undefined | null) {
   if (!id) return false;
   return !isCatalogRemoved(id);
 }

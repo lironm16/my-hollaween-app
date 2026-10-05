@@ -61,7 +61,7 @@ export function QuickUpdateOverlay({
   onUpdated: (house: PublicHouse) => void;
 }) {
   useEffect(() => {
-    if (open && !deviceHouseEditAllowed(house.id, { admin })) {
+    if (open && !deviceHouseEditAllowed(house.id)) {
       toast.message("הבית הוסר מהמדריך — אי אפשר לערוך");
       onClose();
     }

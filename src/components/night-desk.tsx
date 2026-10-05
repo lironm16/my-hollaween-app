@@ -40,7 +40,7 @@ export function NightDesk({
   allowDelete = false,
   onDeleted,
 }: Props) {
-  const editLocked = !deviceHouseEditAllowed(house.id, { admin });
+  const editLocked = !deviceHouseEditAllowed(house.id);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<PushNoticeState | null>(null);
   const [offerBusy, setOfferBusy] = useState(false);

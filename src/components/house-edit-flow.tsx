@@ -30,7 +30,7 @@ export function useHouseEditFlow() {
       house: PublicHouse,
       options?: { editCode?: string; admin?: boolean; allowDelete?: boolean; forceFull?: boolean },
     ) => {
-      if (!deviceHouseEditAllowed(house.id, { admin: options?.admin })) {
+      if (!deviceHouseEditAllowed(house.id)) {
         toast.message("הבית הוסר מהמדריך — אי אפשר לערוך");
         return;
       }
@@ -51,7 +51,7 @@ export function useHouseEditFlow() {
       house: PublicHouse,
       options?: { editCode?: string; admin?: boolean },
     ) => {
-      if (!deviceHouseEditAllowed(house.id, { admin: options?.admin })) {
+      if (!deviceHouseEditAllowed(house.id)) {
         toast.message("הבית הוסר מהמדריך — אי אפשר לערוך");
         return;
       }
