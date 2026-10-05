@@ -77,6 +77,9 @@ export function toPublicHouse<
   delete rest.storeId;
   delete rest.ownerPhone;
   delete rest.addedBy;
+  delete rest.likeCount;
+  delete rest.visitCount;
+  delete rest.engagementAt;
   if (
     typeof rest.address === "string" &&
     typeof rest.lat === "number" &&

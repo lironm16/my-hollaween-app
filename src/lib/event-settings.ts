@@ -89,12 +89,19 @@ export function addHouseCutoffScheduleFromDb(
   return mergeAddHouseCutoffSchedule(eventSettings?.addHouseCutoff);
 }
 
+export function communityEngagementEnabledFromDb(
+  eventSettings?: DbFile["eventSettings"] | null,
+): boolean {
+  return Boolean(eventSettings?.communityEngagementEnabled);
+}
+
 export function catalogEventSettings(
   eventSettings?: DbFile["eventSettings"] | null,
 ): NonNullable<Catalog["eventSettings"]> {
   return {
     addressReveal: addressRevealScheduleFromDb(eventSettings),
     addHouseCutoff: addHouseCutoffScheduleFromDb(eventSettings),
+    communityEngagementEnabled: communityEngagementEnabledFromDb(eventSettings),
   };
 }
 

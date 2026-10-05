@@ -19,6 +19,8 @@ import {
   resolveDecorLevel,
   treatLevel,
 } from "@/lib/house-state";
+import { SavedTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
+import { formatActionCount } from "@/components/house-action-bar";
 import type { DecorLevel, ScareLevel, TreatId, TreatStock } from "@/lib/types";
 
 export function ClosedSign({ className }: { className?: string }) {
@@ -52,9 +54,46 @@ export function PauseSign({ className }: { className?: string }) {
   );
 }
 
+function EngagementCountSign({
+  kind,
+  count,
+  large,
+}: {
+  kind: "like" | "visit";
+  count: number;
+  large?: boolean;
+}) {
+  const value = Math.max(0, Math.floor(count) || 0);
+  if (value <= 0) return null;
+  const label = kind === "like" ? `${value} שמרו` : `${value} ביקרו`;
+  const iconBox = large ? "size-10" : undefined;
+  const mark = large ? "size-5" : undefined;
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#2a1638] text-orange-100 ring-1 ring-orange-500/25",
+        large ? "h-10 pe-2.5 ps-1" : "h-8 pe-2 ps-0.5",
+      )}
+      title={label}
+      aria-label={label}
+    >
+      {kind === "like" ? (
+        <SavedTrafficIcon className={iconBox} markClassName={mark} />
+      ) : (
+        <VisitedTrafficIcon className={iconBox} markClassName={mark} />
+      )}
+      <span className={cn("font-bold tabular-nums", large ? "text-lg" : "text-base")}>
+        {formatActionCount(value)}
+      </span>
+    </span>
+  );
+}
+
 export function HouseTags({
   house,
   large = false,
+  likeCount,
+  visitCount,
 }: {
   house: {
     kind?: "house" | "poi";
@@ -78,6 +117,8 @@ export function HouseTags({
     openHours?: { from: string; to: string }[];
   };
   large?: boolean;
+  likeCount?: number;
+  visitCount?: number;
 }) {
   const now = useAppNow();
   const treats = house.treats ?? [];
@@ -100,6 +141,9 @@ export function HouseTags({
   const pinGlyphScale = kind === "poi" ? PIN_GLYPH_SCALE.poi : PIN_GLYPH_SCALE.house;
   const showCandy =
     (!closedInsteadOfCandy && !pausedInsteadOfCandy) || candy !== "none";
+  const showLike = likeCount !== undefined && Math.max(0, Math.floor(likeCount) || 0) > 0;
+  const showVisit = visitCount !== undefined && Math.max(0, Math.floor(visitCount) || 0) > 0;
+  const showEngagementRow = showLike || showVisit;
   return (
     <div className={cn("space-y-1.5", large && "space-y-2")}>
       <div className={cn("flex flex-wrap gap-1.5 pb-0.5 ps-0.5", large && "gap-2")}>
@@ -122,6 +166,14 @@ export function HouseTags({
         {offersSesameFree(withTreats) ? <SensitivitySign kind="sesameFree" className={signSize} /> : null}
         {offersVegan(withTreats) ? <SensitivitySign kind="vegan" className={signSize} /> : null}
       </div>
+      {showEngagementRow ? (
+        <div className={cn("flex flex-wrap gap-1.5 ps-0.5", large && "gap-2")}>
+          {showLike ? <EngagementCountSign kind="like" count={likeCount!} large={large} /> : null}
+          {showVisit ? (
+            <EngagementCountSign kind="visit" count={visitCount!} large={large} />
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -109,6 +109,34 @@ export async function clearAdminAddHouseCutoffSchedule(): Promise<AdminAddHouseC
   return getAdminAddHouseCutoffSettings();
 }
 
+export type AdminCommunityEngagementSettings = {
+  enabled: boolean;
+  updatedAt?: string;
+};
+
+export async function getAdminCommunityEngagementSettings(): Promise<AdminCommunityEngagementSettings> {
+  const db = await loadDb();
+  return {
+    enabled: Boolean(db.eventSettings?.communityEngagementEnabled),
+    updatedAt: db.eventSettings?.updatedAt,
+  };
+}
+
+export async function saveAdminCommunityEngagementEnabled(
+  enabled: boolean,
+): Promise<AdminCommunityEngagementSettings> {
+  const now = new Date().toISOString();
+  await runSyncedWrite((db) => {
+    db.eventSettings = {
+      ...(db.eventSettings ?? {}),
+      updatedAt: now,
+      communityEngagementEnabled: enabled,
+    };
+    db.updatedAt = now;
+  });
+  return getAdminCommunityEngagementSettings();
+}
+
 /** Convenience for server routes that redact a single house row. */
 export async function loadAddressRevealSchedule(): Promise<AddressRevealSchedule> {
   const db = await loadDb();

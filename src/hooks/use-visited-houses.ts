@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ensureEngagementClientLifecycle, reportEngagement } from "@/lib/activity-client";
 import { loadVisitedIds, toggleVisited } from "@/lib/offline-db";
 
 export function useVisitedHouses() {
@@ -23,8 +24,11 @@ export function useVisitedHouses() {
     visitedIds: ids,
     visited: (id: string) => ids.includes(id),
     toggle: (id: string) => {
+      const wasOn = loadVisitedIds().includes(id);
       const next = toggleVisited(id);
       setIds(next);
+      ensureEngagementClientLifecycle();
+      reportEngagement(id, "visit", !wasOn);
       return next;
     },
   };

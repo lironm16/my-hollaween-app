@@ -100,6 +100,12 @@ export type House = {
   editCode: string;
   createdAt: string;
   updatedAt: string;
+  /** Anonymous community saves (♥) — rollup only; not part of the public catalog poll. */
+  likeCount?: number;
+  /** Anonymous community visits (✓) — rollup only; not part of the public catalog poll. */
+  visitCount?: number;
+  /** Last server rollup touch for engagement counters (optional). */
+  engagementAt?: string;
   /** Person name captured when the house was first added — admin-only, never in public catalog. */
   addedBy?: string | null;
   /** Internal — for event manager contact only; never in public catalog. */
@@ -200,6 +206,8 @@ export type Catalog = {
   eventSettings?: {
     addressReveal: AddressRevealSchedule;
     addHouseCutoff: AddHouseCutoffSchedule;
+    /** When true, owners/admins see per-house like/visit totals (admin toggle). */
+    communityEngagementEnabled?: boolean;
   };
 };
 
@@ -253,6 +261,7 @@ export type DbFile = {
     updatedAt?: string;
     addressReveal?: AddressRevealSchedule;
     addHouseCutoff?: AddHouseCutoffSchedule;
+    communityEngagementEnabled?: boolean;
   };
   pushSettings?: {
     updatedAt?: string;

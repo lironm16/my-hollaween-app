@@ -210,7 +210,8 @@ export function normalizeDb(db: DbFile): DbFile {
     eventSettings:
       db.eventSettings?.updatedAt ||
       db.eventSettings?.addressReveal ||
-      db.eventSettings?.addHouseCutoff
+      db.eventSettings?.addHouseCutoff ||
+      db.eventSettings?.communityEngagementEnabled
         ? {
             ...(db.eventSettings.updatedAt ? { updatedAt: db.eventSettings.updatedAt } : {}),
             ...(db.eventSettings.addressReveal
@@ -223,6 +224,9 @@ export function normalizeDb(db: DbFile): DbFile {
               : {}),
             ...(db.eventSettings.addHouseCutoff
               ? { addHouseCutoff: { ...db.eventSettings.addHouseCutoff } }
+              : {}),
+            ...(db.eventSettings.communityEngagementEnabled
+              ? { communityEngagementEnabled: true }
               : {}),
           }
         : undefined,

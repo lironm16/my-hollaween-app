@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ensureEngagementClientLifecycle, reportEngagement } from "@/lib/activity-client";
 import { loadLikedIds, toggleLiked } from "@/lib/offline-db";
 
 export function useLikedHouses() {
@@ -23,8 +24,11 @@ export function useLikedHouses() {
     likedIds: ids,
     liked: (id: string) => ids.includes(id),
     toggle: (id: string) => {
+      const wasOn = loadLikedIds().includes(id);
       const next = toggleLiked(id);
       setIds(next);
+      ensureEngagementClientLifecycle();
+      reportEngagement(id, "like", !wasOn);
       return next;
     },
   };
