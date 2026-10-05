@@ -20,6 +20,7 @@ export function shouldFetchFullCatalogAfterCheapRecovery(
   serverCount: number,
   localCount: number,
 ): boolean {
+  if (localCount > serverCount) return true;
   const gap = Math.max(0, serverCount - localCount);
   if (gap === 0) return false;
   if (localCount === 0 && serverCount > 0) return true;

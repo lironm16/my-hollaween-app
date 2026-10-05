@@ -110,11 +110,17 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
     const current = byId.get(house.id);
     if (!current || stamp(house) >= stamp(current)) byId.set(house.id, house);
   }
+  const houses = [...byId.values()];
+  const mergedLen = houses.length;
+  let houseCount = delta.houseCount ?? prev.houseCount;
+  if (typeof houseCount === "number" && houseCount < mergedLen) {
+    houseCount = Math.max(prev.houseCount ?? 0, mergedLen);
+  }
   return {
     updatedAt: delta.updatedAt,
     neighborhood: delta.neighborhood || prev.neighborhood,
-    houses: [...byId.values()],
-    houseCount: delta.houseCount ?? prev.houseCount,
+    houses,
+    houseCount,
     pushTemplates: delta.pushTemplates ?? prev.pushTemplates,
     eventSettings: delta.eventSettings ?? prev.eventSettings,
   };

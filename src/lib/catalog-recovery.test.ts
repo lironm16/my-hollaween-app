@@ -52,6 +52,10 @@ describe("shouldFetchFullCatalogAfterCheapRecovery", () => {
     assert.equal(shouldFetchFullCatalogAfterCheapRecovery(88, 0), true);
   });
 
+  it("uses full fetch when server houseCount is stale below local", () => {
+    assert.equal(shouldFetchFullCatalogAfterCheapRecovery(2, 35), true);
+  });
+
   it("skips full fetch for a single missing house", () => {
     assert.equal(shouldFetchFullCatalogAfterCheapRecovery(88, 87), false);
   });

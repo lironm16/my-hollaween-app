@@ -20,6 +20,7 @@ import {
   loadCatalogCacheMeta,
   loadCatalogCacheSync,
   markCatalogCacheComplete,
+  clearCatalogCacheComplete,
   saveCatalogCache,
   flushPendingHouseWrites,
   withDeviceHouseOverlays,
@@ -383,7 +384,15 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     setError(null);
     quickRetryCountRef.current = 0;
     const serverCount = resolveServerHouseCount(live);
-    if (live.full || (serverCount != null && next.houses.length >= serverCount)) {
+    if (serverCount != null && serverCount < next.houses.length) {
+      clearCatalogCacheComplete();
+    }
+    if (
+      live.full ||
+      (serverCount != null &&
+        serverCount >= next.houses.length &&
+        next.houses.length >= serverCount)
+    ) {
       markCatalogCacheComplete(next);
     }
     await saveCatalogCache(next);

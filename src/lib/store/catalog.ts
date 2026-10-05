@@ -145,12 +145,13 @@ export async function buildCatalogDeltaFromFirestore(
     ...(context.pushSettings?.templates ? { pushSettings: context.pushSettings } : {}),
     ...(context.eventSettings ? { eventSettings: context.eventSettings } : {}),
   };
+  const houseCount = Math.max(context.houseCount, houses.length);
   return {
     updatedAt: context.catalogUpdatedAt,
     neighborhood: config.neighborhood,
     houses,
     removed,
-    houseCount: context.houseCount,
+    houseCount,
     ...(pushChanged && context.pushSettings
       ? { pushTemplates: asCatalog(dbSlice).pushTemplates }
       : {}),
@@ -160,10 +161,25 @@ export async function buildCatalogDeltaFromFirestore(
   };
 }
 
+async function resolveAuthoritativeHouseCount(): Promise<number> {
+  const mem = getMem();
+  if (isMemWarm() && mem) return countPublishedHouses(mem.houses);
+  if (catalogMem && typeof catalogMem.houseCount === "number" && catalogMem.houseCount >= 0) {
+    return catalogMem.houseCount;
+  }
+  if (catalogMem?.houses?.length) {
+    return catalogMem.houseCount ?? catalogMem.houses.length;
+  }
+  const global = getGlobalDb();
+  if (global?.houses?.length) return countPublishedHouses(global.houses);
+  const meta = await readCatalogMeta();
+  return meta?.houseCount ?? 0;
+}
+
 async function loadDeltaContextForColdPoll(sinceMs: number) {
   const meta = await readCatalogMeta();
   const catalogUpdatedAt = meta?.updatedAt ?? new Date(0).toISOString();
-  const houseCount = meta?.houseCount ?? 0;
+  const houseCount = await resolveAuthoritativeHouseCount();
   const mem = getMem();
   const global = getGlobalDb();
 
@@ -241,7 +257,7 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
           removedIds: removed,
         })
       ) {
-        return emptyCatalogDelta(meta.updatedAt, meta.houseCount ?? 0);
+        return emptyCatalogDelta(meta.updatedAt, await resolveAuthoritativeHouseCount());
       }
     }
   }

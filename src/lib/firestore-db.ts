@@ -104,6 +104,24 @@ export async function readPushSettingsMeta(): Promise<{ updatedAt: string } | nu
   }
 }
 
+function isPublishedCatalogHouse(house: House | null | undefined): boolean {
+  return Boolean(house && !isStubHouse(house) && !isHouseDeleted(house) && isPubliclyListed(house));
+}
+
+async function nextCatalogHouseCountAfterListingChange(
+  existing: House | null,
+  next: House,
+): Promise<number | undefined> {
+  const meta = await readCatalogMeta();
+  const base = meta?.houseCount;
+  if (typeof base !== "number" || base < 0) return undefined;
+  const was = isPublishedCatalogHouse(existing);
+  const now = isPublishedCatalogHouse(next);
+  if (!was && now) return base + 1;
+  if (was && !now) return Math.max(0, base - 1);
+  return base;
+}
+
 export async function bumpCatalogMeta(updatedAt: string, houseCount?: number) {
   if (!firestoreConfigured() || !updatedAt) return;
   catalogMetaMem = {
@@ -226,17 +244,28 @@ export async function writeFirestoreHouse(house: House) {
   } catch {
     /* tombstone may already be gone */
   }
-  await bumpCatalogMeta(house.updatedAt);
+  const houseCount = await nextCatalogHouseCountAfterListingChange(existing, toWrite);
+  await bumpCatalogMeta(house.updatedAt, houseCount);
 }
 
 export async function deleteFirestoreHouse(id: string, options?: { skipCatalogMeta?: boolean }) {
   if (!firestoreConfigured()) return;
   await resolveAdminFirestore();
   const docId = canonicalHouseId(id);
+  const existingSnap = await housesCollection().doc(docId).get();
+  const existing = existingSnap.exists
+    ? rowToHouse(existingSnap.id, existingSnap.data() as House)
+    : null;
   const now = new Date().toISOString();
   await housesCollection().doc(docId).set({ deletedAt: now, updatedAt: now }, { merge: true });
   await removedHousesCollection().doc(docId).set({ id: docId, deletedAt: now });
-  if (!options?.skipCatalogMeta) await bumpCatalogMeta(now);
+  if (!options?.skipCatalogMeta) {
+    let houseCount = (await readCatalogMeta())?.houseCount;
+    if (isPublishedCatalogHouse(existing) && typeof houseCount === "number") {
+      houseCount = Math.max(0, houseCount - 1);
+    }
+    await bumpCatalogMeta(now, houseCount);
+  }
 }
 
 export async function restoreFirestoreHouse(id: string): Promise<boolean> {
@@ -254,7 +283,12 @@ export async function restoreFirestoreHouse(id: string): Promise<boolean> {
   } catch {
     /* tombstone may already be gone */
   }
-  await bumpCatalogMeta(now);
+  const restored = rowToHouse(snap.id, { ...row, deletedAt: null, updatedAt: now } as House);
+  let houseCount = (await readCatalogMeta())?.houseCount;
+  if (isPublishedCatalogHouse(restored) && typeof houseCount === "number") {
+    houseCount = houseCount + 1;
+  }
+  await bumpCatalogMeta(now, houseCount);
   return true;
 }
 
