@@ -117,6 +117,9 @@ export const visitShort: Record<VisitState, string> = {
   closed: "סגור",
 };
 
+/** Shown on cards when the house was removed from the public catalog but kept locally. */
+export const catalogRemovedBannerLabel = "הוסר מהמדריך";
+
 export const stockLabels: Record<StockLevel, string> = {
   plenty: "יש",
   low: "מעט",

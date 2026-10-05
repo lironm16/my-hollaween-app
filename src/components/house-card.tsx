@@ -3,6 +3,8 @@
 import { Card } from "@/components/ui/card";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { houseActionBarPropsFromCard } from "@/components/house-card-actions";
+import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
+import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import { HouseDetails } from "@/components/house-details";
 import { HouseCardBanners } from "@/components/house-skipped-banner";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
@@ -71,6 +73,8 @@ export function HouseCard({
   className?: string;
   liveDetail?: boolean;
 }) {
+  void useCatalogRemoved(house.id);
+  const mayEdit = canEdit && deviceHouseEditAllowed(house.id);
   const overlaid = useAdminHouseFields(house) ?? house;
   const shouldFetchLive =
     (liveDetail && isDeviceCachePinHouse(overlaid)) || houseNeedsLocationHydration(overlaid);
@@ -92,14 +96,14 @@ export function HouseCard({
     onRestoreRoute,
     skipped,
     skipMeta,
-    canEdit,
-    editCode,
+    canEdit: mayEdit,
+    editCode: mayEdit ? editCode : undefined,
     admin,
     onShowOnMap,
     onShowInList,
     onToggleGem,
-    editing,
-    onToggleEdit,
+    editing: mayEdit && editing,
+    onToggleEdit: mayEdit ? onToggleEdit : undefined,
     expanded,
     index,
     hideHoursBanner,
@@ -108,8 +112,6 @@ export function HouseCard({
     liveDetail,
     ...rest,
   };
-  const actionBarProps = houseActionBarPropsFromCard(cardProps);
-
   return (
     <Card
       size="sm"
@@ -150,7 +152,9 @@ export function HouseCard({
           index={index}
           hideHoursBanner={hideHoursBanner}
           extra={extra}
-          headerMenu={<HouseActionBar {...actionBarProps} />}
+          canEdit={mayEdit}
+          onToggleEdit={mayEdit ? onToggleEdit : undefined}
+          headerMenu={<HouseActionBar {...houseActionBarPropsFromCard(cardProps)} />}
         />
       </div>
     </Card>

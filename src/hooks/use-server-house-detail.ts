@@ -34,7 +34,8 @@ export function useServerHouseDetail(house: PublicHouse | null) {
       if (cancelled) return;
       setLoading(false);
       if (!result.ok) {
-        setUnavailable(result.status === 404);
+        // 404 = gone from public catalog — keep the local row; «removed» comes from catalog sync.
+        setUnavailable(result.status !== 404);
         return;
       }
       let detail = result.house;

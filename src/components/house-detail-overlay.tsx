@@ -2,8 +2,8 @@
 
 import { useEffect, useId, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { HouseActionBar } from "@/components/house-action-bar";
-import { houseActionBarPropsFor, type HouseCardActionContext } from "@/components/house-card-actions";
+import { HouseCardActionMenu } from "@/components/house-card-action-menu";
+import type { HouseCardActionContext } from "@/components/house-card-actions";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { HouseSheetBody } from "@/components/house-sheet-body";
 import {
@@ -75,9 +75,7 @@ export function HouseDetailOverlay({
   const addressReveal = useAddressReveal();
   const isSkipped = skippedIds ?? (() => false);
   const isFilteredOut = filteredOutIds ?? (() => false);
-  const actionMenu = (
-    <HouseActionBar {...houseActionBarPropsFor(house, actionContext)} />
-  );
+  const actionMenu = <HouseCardActionMenu house={house} actionContext={actionContext} />;
 
   useEffect(() => {
     const prev = document.body.style.overflow;
