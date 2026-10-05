@@ -1,15 +1,19 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { CLOCK_EVENT, clockSnapshot, dateFromSnapshot } from "@/lib/app-clock";
+import {
+  CLOCK_EVENT,
+  clockSnapshot,
+  dateFromSnapshot,
+  hydrationSafeClockSnapshot,
+} from "@/lib/app-clock";
 
 const AppClockContext = createContext<Date | null>(null);
 
 /** One 15s wall clock for the whole app — avoids duplicate intervals per hook caller. */
 export function AppClockProvider({ children }: { children: React.ReactNode }) {
-  const [stamp, setStamp] = useState(() =>
-    typeof window === "undefined" ? 0 : clockSnapshot(),
-  );
+  /** 0 until mounted tick — hydration uses {@link hydrationSafeClockSnapshot}. */
+  const [stamp, setStamp] = useState(0);
 
   useEffect(() => {
     const tick = () => setStamp(clockSnapshot());
@@ -22,7 +26,10 @@ export function AppClockProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const now = useMemo(() => dateFromSnapshot(stamp || clockSnapshot()), [stamp]);
+  const now = useMemo(
+    () => dateFromSnapshot(stamp !== 0 ? stamp : hydrationSafeClockSnapshot()),
+    [stamp],
+  );
 
   return <AppClockContext.Provider value={now}>{children}</AppClockContext.Provider>;
 }

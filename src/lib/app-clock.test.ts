@@ -4,6 +4,7 @@ import {
   clockSnapshot,
   dateForRehearsalScene,
   formatCustomRehearsalClock,
+  hydrationSafeClockSnapshot,
   isRehearsalOn,
 } from "@/lib/app-clock";
 import { config } from "@/lib/config";
@@ -23,6 +24,11 @@ describe("app clock / rehearsal", () => {
     const b = clockSnapshot(new Date("2026-10-01T12:34:57.000Z"), "open");
     assert.equal(a, b);
     assert.notEqual(a, 0);
+  });
+
+  it("hydrationSafeClockSnapshot ignores rehearsal and matches off scene", () => {
+    const wall = new Date("2026-10-01T12:34:56.789Z");
+    assert.equal(hydrationSafeClockSnapshot(wall), clockSnapshot(wall, "off"));
   });
 
   it("ticks wall clock when rehearsal is off", () => {

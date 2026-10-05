@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   }
   const snap = await osrmNearestFootWalk({ lat, lng });
   if (!snap) {
-    return NextResponse.json({ error: "no snap" }, { status: 404 });
+    return new NextResponse(null, { status: 204 });
   }
   return NextResponse.json(snap, {
     headers: { "Cache-Control": "public, max-age=86400, s-maxage=604800" },

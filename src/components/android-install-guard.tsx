@@ -29,11 +29,9 @@ export function AndroidInstallGuard() {
       /* private mode */
     }
 
-    const blockInstallPrompt = (event: Event) => {
-      event.preventDefault();
-    };
-    window.addEventListener("beforeinstallprompt", blockInstallPrompt);
-    return () => window.removeEventListener("beforeinstallprompt", blockInstallPrompt);
+    /* Do not call preventDefault() — Chrome logs noisy "Banner not shown" when we
+       block without calling prompt(). Android manifest uses display:browser and
+       PwaInstallProvider skips capture on Android, so the native banner stays off. */
   }, []);
 
   return null;

@@ -114,6 +114,7 @@ async function fetchOsrmSnap(lat: number, lng: number): Promise<GemOsmAnchorEntr
       `/api/gem-snap?lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}`,
       { cache: "no-store" },
     );
+    if (res.status === 204) return null;
     if (res.ok) {
       const json = (await res.json()) as GemOsmAnchorEntry;
       if (Number.isFinite(json.lat) && Number.isFinite(json.lng)) {
