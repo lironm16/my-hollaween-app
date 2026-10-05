@@ -411,7 +411,7 @@ export function gemHuntMapHouses(houses: PublicHouse[], houseSet: HouseSet = "re
   return houses.filter((house) => houseMatchesSet(house, houseSet));
 }
 
-/** One gem anchor per map pin cluster (shared street address). */
+/** @deprecated One carrier per address cluster — prefer {@link gemHousesForMap}. */
 export function gemCarrierHousesForMap<T extends Pick<PublicHouse, "id" | "address">>(
   houses: readonly T[],
 ): T[] {
@@ -430,6 +430,40 @@ export function gemCarrierHousesForMap<T extends Pick<PublicHouse, "id" | "addre
   return carriers.sort((a, b) => a.id.localeCompare(b.id, "he"));
 }
 
+/** Every eligible house gets its own map gem (including apartments / booths at one address). */
+export function gemHousesForMap<T extends Pick<PublicHouse, "id" | "address">>(
+  houses: readonly T[],
+): T[] {
+  return [...houses].sort((a, b) => a.id.localeCompare(b.id, "he"));
+}
+
+export type GemClusterSpread = { index: number; size: number };
+
+let gemClusterSpreadByHouseId: ReadonlyMap<string, GemClusterSpread> = new Map();
+
+function rebuildGemClusterSpread(houses: readonly Pick<PublicHouse, "id" | "address">[]) {
+  const byCluster = new Map<string, Pick<PublicHouse, "id" | "address">[]>();
+  for (const house of houses) {
+    const key = clusterAddressKeyForHouse(house);
+    const list = byCluster.get(key);
+    if (list) list.push(house);
+    else byCluster.set(key, [house]);
+  }
+  const spread = new Map<string, GemClusterSpread>();
+  for (const group of byCluster.values()) {
+    const sorted = [...group].sort((a, b) => a.id.localeCompare(b.id, "he"));
+    const size = sorted.length;
+    sorted.forEach((house, index) => {
+      if (size > 1) spread.set(house.id, { index, size });
+    });
+  }
+  gemClusterSpreadByHouseId = spread;
+}
+
+export function gemClusterSpreadForHouse(houseId: string): GemClusterSpread | null {
+  return gemClusterSpreadByHouseId.get(houseId) ?? null;
+}
+
 /**
  * One monster per map house — first `pool.length` houses (by id) each get a unique pet,
  * then hash for extras. When there are at least as many houses as shipped GLBs, every sticker appears.
@@ -437,27 +471,27 @@ export function gemCarrierHousesForMap<T extends Pick<PublicHouse, "id" | "addre
 export function buildGemMonsterAssignment(
   mapHouses: readonly GemAssignHouse[],
 ): ReadonlyMap<string, GemMonsterId> {
-  const carriers = gemCarrierHousesForMap(mapHouses);
+  const onMap = gemHousesForMap(mapHouses);
   if (GEM_MONSTERS_DRAGON_ONLY) {
     const only = GEM_MONSTER_MODELS[0]!.id;
-    return new Map(carriers.map((house) => [house.id, only]));
+    return new Map(onMap.map((house) => [house.id, only]));
   }
-  for (const house of carriers) {
+  for (const house of onMap) {
     void house.theme;
     void house.kind;
   }
-  if (carriers.length <= 1) {
-    const only = carriers[0];
+  if (onMap.length <= 1) {
+    const only = onMap[0];
     if (!only) return new Map();
     return new Map([[only.id, hashMonsterForHouse(only.id)]]);
   }
-  return buildGemMonsterAssignmentSpatial(carriers);
+  return buildGemMonsterAssignmentSpatial(onMap);
 }
 
 let activeAssignment: ReadonlyMap<string, GemMonsterId> | null = null;
 let activeAssignmentKey = "";
 
-const GEM_ASSIGNMENT_ALGO = "spatial-v2-cluster";
+const GEM_ASSIGNMENT_ALGO = "spatial-v3-per-house";
 
 /** Keep map + album + collect in sync — call when the gem-eligible house list changes. */
 export function syncGemMonsterAssignment(mapHouses: readonly GemAssignHouse[]) {
@@ -466,6 +500,7 @@ export function syncGemMonsterAssignment(mapHouses: readonly GemAssignHouse[]) {
     .sort((a, b) => a.localeCompare(b, "he"))
     .join("\0")}`;
   if (key === activeAssignmentKey && activeAssignment) return activeAssignment;
+  rebuildGemClusterSpread(mapHouses);
   activeAssignment = buildGemMonsterAssignment(mapHouses);
   activeAssignmentKey = key;
   return activeAssignment;
@@ -516,7 +551,7 @@ export function gemSpeciesLabelHe(variantOrMonsterId: string) {
 }
 
 export function countGemEligibleHouses(houses: PublicHouse[], houseSet: HouseSet = "real") {
-  return gemCarrierHousesForMap(gemHuntMapHouses(houses, houseSet)).length;
+  return gemHousesForMap(gemHuntMapHouses(houses, houseSet)).length;
 }
 
 /** All shipped sticker slots (not deduped by hash collisions on the map). */

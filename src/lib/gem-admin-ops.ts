@@ -1,7 +1,7 @@
 import { gemAnchorForHouse } from "@/lib/gem-hunt";
 import { distanceMeters } from "@/lib/geo";
 import {
-  gemCarrierHousesForMap,
+  gemHousesForMap,
   gemHuntMapHouses,
   gemLabelHe,
   gemMonsterForHouse,
@@ -25,7 +25,7 @@ export function buildGemMapHouseRows(
 ): GemMapHouseRow[] {
   const eligible = gemHuntMapHouses(houses, houseSet);
   syncGemMonsterAssignment(eligible);
-  const onMap = gemCarrierHousesForMap(eligible);
+  const onMap = gemHousesForMap(eligible);
   return onMap.map((house) => {
     const monsterId = gemMonsterForHouse(house);
     return {

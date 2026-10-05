@@ -9,6 +9,7 @@ import {
 import { parseStreetAndNumber } from "@/lib/address-text";
 import { osmFootprintForAddress } from "@/lib/house-footprint-align";
 import { clusterAddressKey } from "@/lib/house-clusters";
+import { searchNamedAddressPlaces } from "@/lib/named-address-places";
 import type { AddressHit } from "@/lib/types";
 
 const ADDRESS_AREA_NAMES = [...NEIGHBORHOODS, "שכונת הגפן"] as const;
@@ -135,13 +136,22 @@ export function footprintAddressHit(query: string): AddressHit | null {
 }
 
 export async function searchPreparedAddresses(query: string): Promise<AddressHit[]> {
+  const named = searchNamedAddressPlaces(query).map((hit) => prepareAddressHit(hit, query)).filter(Boolean) as AddressHit[];
   const { searchAddress } = await import("@/lib/geocode");
   let hits = prepareAddressHits(await searchAddress(query), query);
   if (hits.length === 0) {
     const synthetic = footprintAddressHit(query);
     if (synthetic) hits = [synthetic];
   }
-  return hits;
+  const merged = [...named];
+  const seen = new Set(named.map((h) => addressHitDedupeKey(h)));
+  for (const hit of hits) {
+    const key = addressHitDedupeKey(hit);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(hit);
+  }
+  return merged;
 }
 
 export function prepareAddressHits(hits: AddressHit[], query = ""): AddressHit[] {

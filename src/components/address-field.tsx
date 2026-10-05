@@ -116,7 +116,7 @@ export function AddressField({
         minLength={3}
         maxLength={maxLength}
         value={value}
-        placeholder="רחוב ומספר, למשל חרוזים 8"
+        placeholder="רחוב ומספר, או שם מוסד — למשל חרוזים 8"
         aria-autocomplete="list"
         aria-expanded={open && hits.length > 0}
         aria-controls={listId}
