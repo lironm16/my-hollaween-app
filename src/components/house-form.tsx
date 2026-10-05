@@ -31,7 +31,10 @@ import {
 } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
-import { schoolCampusNeighborhoodForAddress } from "@/lib/school-campus";
+import {
+  isSchoolCampusAddress,
+  schoolCampusNeighborhoodForAddress,
+} from "@/lib/school-campus";
 import {
   HOUSE_THEMES,
   SENSITIVITY_OPTIONS,
@@ -247,6 +250,10 @@ export function HouseForm({
 
   const lockedSchoolHood = useMemo(
     () => schoolCampusNeighborhoodForAddress(form.address),
+    [form.address],
+  );
+  const schoolCampusPinLocked = useMemo(
+    () => isSchoolCampusAddress(form.address),
     [form.address],
   );
 
@@ -607,12 +614,20 @@ export function HouseForm({
         <div>
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="text-lg font-medium">סיכה על המפה</p>
-            <Button type="button" size="sm" variant="outline" onClick={useMyLocation}>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={useMyLocation}
+              disabled={schoolCampusPinLocked || blocked}
+            >
               {locating ? "מאתרים…" : "המיקום שלי"}
             </Button>
           </div>
           <p className="mb-2 text-lg text-violet-300">
-            אחרי בחירת כתובת הסיכה זזה לשם. אפשר לגרור אותה לכניסה המדויקת.
+            {schoolCampusPinLocked
+              ? "מיקום בית הספר קבוע — לא ניתן לגרור את הסיכה."
+              : "אחרי בחירת כתובת הסיכה זזה לשם. אפשר לגרור אותה לכניסה המדויקת."}
           </p>
           <div
             className={cn(
@@ -623,7 +638,12 @@ export function HouseForm({
             <HouseMapDynamic
               pickMode
               pick={{ lat: form.lat, lng: form.lng }}
-              onPick={(lat, lng) => void syncFromPin(lat, lng)}
+              pickDraggable={!schoolCampusPinLocked}
+              onPick={
+                schoolCampusPinLocked
+                  ? undefined
+                  : (lat, lng) => void syncFromPin(lat, lng)
+              }
             />
           </div>
           <p className="mt-1 text-lg text-violet-300">

@@ -9,6 +9,7 @@ import {
   ClusterHouseSwipeArea,
   clusterHouseIndex,
 } from "@/components/cluster-house-list";
+import { clusterOverviewSubtitle } from "@/lib/school-campus";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
 import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
@@ -370,7 +371,7 @@ export function MapHouseSheet({
               <div className="mb-3 flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="map-house-sheet-kicker">{address}</p>
-                  <p className="map-house-sheet-sub">{clusterHouses.length} בתים בכתובת זו</p>
+                  <p className="map-house-sheet-sub">{clusterOverviewSubtitle(clusterHouses)}</p>
                 </div>
               </div>
             </div>

@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   clusterIsSchoolCampus,
+  clusterOverviewSubtitle,
+  clusterPinAriaLabel,
   isSchoolCampusAddress,
   schoolCampusNeighborhoodForAddress,
 } from "@/lib/school-campus";
@@ -16,6 +18,20 @@ describe("school campus", () => {
     assert.equal(schoolCampusNeighborhoodForAddress("ביה״ס ניצנים"), "שיכון ותיקים");
     assert.equal(schoolCampusNeighborhoodForAddress("ביה״ס גבעולים"), "הגפן");
     assert.equal(schoolCampusNeighborhoodForAddress("ביה״ס המנחיל"), "נחלת גנים");
+  });
+
+  it("uses school copy for one booth or many", () => {
+    assert.equal(clusterIsSchoolCampus([{ address: "ביה״ס ניצנים" }]), true);
+    assert.equal(clusterOverviewSubtitle([{ address: "ביה״ס ניצנים" }]), "דוכן אחד בבית הספר");
+    assert.equal(
+      clusterOverviewSubtitle([
+        { address: "ביה״ס ניצנים" },
+        { address: "ביה״ס ניצנים" },
+      ]),
+      "2 דוכנים בבית הספר",
+    );
+    assert.equal(clusterOverviewSubtitle([{ address: "חרוזים 8" }]), "בית בכתובת זו");
+    assert.equal(clusterPinAriaLabel([{ address: "ביה״ס גבעולים" }]), "דוכן בבית הספר");
   });
 
   it("requires every cluster member to be at a school", () => {

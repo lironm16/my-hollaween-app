@@ -16,8 +16,27 @@ export function isSchoolCampusAddress(address: string | null | undefined): boole
   return CAMPUS_NAMES.has(street);
 }
 
-/** Multi-house pin at one school address — show school icon instead of apartment towers. */
+/** Map pin / copy — one or more rows at the same curated school address. */
 export function clusterIsSchoolCampus(houses: readonly Pick<PublicHouse, "address">[]): boolean {
-  if (houses.length <= 1) return isSchoolCampusAddress(houses[0]?.address);
+  if (houses.length === 0) return false;
+  if (houses.length === 1) return isSchoolCampusAddress(houses[0]?.address);
   return houses.every((house) => isSchoolCampusAddress(house.address));
+}
+
+/** Cluster sheet subtitle under the address line. */
+export function clusterOverviewSubtitle(houses: readonly Pick<PublicHouse, "address">[]): string {
+  const count = houses.length;
+  if (clusterIsSchoolCampus(houses)) {
+    return count === 1 ? "דוכן אחד בבית הספר" : `${count} דוכנים בבית הספר`;
+  }
+  return count === 1 ? "בית בכתובת זו" : `${count} בתים בכתובת זו`;
+}
+
+/** Pin aria-label for multi-unit clusters. */
+export function clusterPinAriaLabel(houses: readonly Pick<PublicHouse, "address">[]): string {
+  const count = houses.length;
+  if (clusterIsSchoolCampus(houses)) {
+    return count === 1 ? "דוכן בבית הספר" : `${count} דוכנים בבית הספר`;
+  }
+  return count === 1 ? "בית" : `${count} דירות`;
 }

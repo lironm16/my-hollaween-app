@@ -36,7 +36,7 @@ import { effectiveHouseKind } from "@/lib/house-kind";
 import { pinBackgroundFill } from "@/lib/pin-colors";
 import { clusterBadgeHouses, clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { pinSchoolClusterIconHtml } from "@/lib/map-pin-school-icon";
-import { clusterIsSchoolCampus } from "@/lib/school-campus";
+import { clusterIsSchoolCampus, clusterPinAriaLabel } from "@/lib/school-campus";
 import { SKIP_ICON_SVG } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
 
@@ -233,17 +233,26 @@ function clusterIcon(
   const allVisited = houses.length > 0 && houses.every((house) => visitedIds.includes(house.id));
   const allSkipped = houses.length > 0 && houses.every((house) => skippedIds?.has(house.id));
 
-  if (!only || houses.length <= 1) {
-    const hoursClass = only ? hoursPinClass(only, now) : "";
+  if (!only) {
+    const wrapped = wrapRoutePin("", routeOrder);
+    return L.divIcon({
+      className: `pumpkin-pin-icon${selectedClass}${filterClass}`,
+      html: wrapped.html,
+      iconSize: [PIN_BOX, PIN_BOX + 4 + wrapped.extraH],
+      iconAnchor: [PIN_BOX / 2, PIN_BOX + wrapped.extraH],
+    });
+  }
+
+  const schoolCampus = clusterIsSchoolCampus(houses);
+  if (houses.length <= 1 && !schoolCampus) {
+    const hoursClass = hoursPinClass(only, now);
     const wrapped = wrapRoutePin(
-      only
-        ? housePinHtml(only, now, {
-            selected: selectedHere,
-            visited: visitedIds.includes(only.id),
-            filteredOut: matchedIds ? !matchedIds.has(only.id) : false,
-            skipped: skippedIds?.has(only.id),
-          })
-        : "",
+      housePinHtml(only, now, {
+        selected: selectedHere,
+        visited: visitedIds.includes(only.id),
+        filteredOut: matchedIds ? !matchedIds.has(only.id) : false,
+        skipped: skippedIds?.has(only.id),
+      }),
       routeOrder,
     );
     return L.divIcon({
@@ -254,12 +263,9 @@ function clusterIcon(
     });
   }
 
-  const schoolCampus = clusterIsSchoolCampus(houses);
   const clusterIconHtml = schoolCampus ? pinSchoolClusterIconHtml() : pinClusterIconHtml();
   const campusClass = schoolCampus ? " is-school-campus" : "";
-  const clusterLabel = schoolCampus
-    ? `${houses.length} דוכנים בבית ספר`
-    : `${houses.length} דירות`;
+  const clusterLabel = attr(clusterPinAriaLabel(houses));
   const wrapped = wrapRoutePin(
     `<div class="house-pin is-building${campusClass}${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${clusterLabel}">${allSkipped ? pinSkippedMark() : ""}${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>`,
     routeOrder,
@@ -613,6 +619,8 @@ type Props = {
   pickMode?: boolean;
   pick?: { lat: number; lng: number } | null;
   onPick?: (lat: number, lng: number) => void;
+  /** Add-house: allow drag / map tap to move pin (off for fixed campuses). */
+  pickDraggable?: boolean;
   className?: string;
   /** @deprecated Use followSelection — kept so call sites can still pass active. */
   active?: boolean;
@@ -670,6 +678,7 @@ export function HouseMap({
   pickMode,
   pick,
   onPick,
+  pickDraggable = true,
   className,
   active = true,
   followSelection = active,
@@ -812,14 +821,15 @@ export function HouseMap({
           <MapDismiss enabled={Boolean(selectedId)} onDismiss={onClose} />
         ) : null}
         {pickMode && pick ? <FollowPick lat={pick.lat} lng={pick.lng} /> : null}
-        {pickMode && onPick ? <ClickCatcher onPick={onPick} /> : null}
+        {pickMode && onPick && pickDraggable ? <ClickCatcher onPick={onPick} /> : null}
         {pickMode && pick ? (
           <Marker
             position={[pick.lat, pick.lng]}
             icon={pickIcon}
-            draggable={Boolean(onPick)}
+            draggable={Boolean(onPick && pickDraggable)}
             eventHandlers={{
               dragend: (event) => {
+                if (!pickDraggable) return;
                 const latlng = event.target.getLatLng();
                 onPick?.(latlng.lat, latlng.lng);
               },
