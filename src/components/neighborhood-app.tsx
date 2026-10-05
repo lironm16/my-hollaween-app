@@ -1055,6 +1055,12 @@ export function NeighborhoodApp({
     ],
   );
 
+  /** Keep list DOM mounted while house edit is open so scroll position is not lost. */
+  const listContentObscured = useMemo(
+    () => mapListObscured && !(view === "list" && editFlow.flow),
+    [mapListObscured, view, editFlow.flow],
+  );
+
   useLayoutEffect(() => {
     setMapListSuspended(mapListObscured);
   }, [mapListObscured]);
@@ -1063,15 +1069,16 @@ export function NeighborhoodApp({
     const el = listScrollRef.current;
     if (!el || view !== "list") return;
     const onScroll = () => {
+      if (listContentObscured) return;
       savedListScrollTopRef.current = el.scrollTop;
     };
     onScroll();
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
-  }, [view, routeMode]);
+  }, [view, routeMode, listContentObscured]);
 
   useLayoutEffect(() => {
-    if (mapListObscured || view !== "list") return;
+    if (listContentObscured || view !== "list") return;
     const el = listScrollRef.current;
     if (!el) return;
     const y = savedListScrollTopRef.current;
@@ -1079,7 +1086,7 @@ export function NeighborhoodApp({
     requestAnimationFrame(() => {
       el.scrollTop = y;
     });
-  }, [mapListObscured, view, routeMode, visible.length, gems.collectedIds.length]);
+  }, [listContentObscured, view, routeMode, visible.length, gems.collectedIds.length]);
 
   const selectedFilterReasons = selected
     ? (() => {
@@ -1422,7 +1429,7 @@ export function NeighborhoodApp({
                     <StatsSummary {...summaryProps} compact />
                   </div>
                 ) : null}
-                {mapListObscured ? (
+                {listContentObscured ? (
                   <div className="min-h-[40vh] w-full bg-[#12081a]" aria-hidden />
                 ) : routeMode ? (
                   <RouteList
