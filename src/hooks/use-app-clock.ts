@@ -6,6 +6,7 @@ import {
   CLOCK_EVENT,
   clockSnapshot,
   dateFromSnapshot,
+  hydrationSafeClockSnapshot,
   readRehearsalScene,
   readServerSimDown,
   SERVER_SIM_EVENT,
@@ -17,9 +18,7 @@ import {
 /** Live app clock (rehearsal night when a dry-run scene is on). Uses shared AppClockProvider when present. */
 export function useAppNow() {
   const shared = useAppClockContext();
-  const [localStamp, setLocalStamp] = useState(() =>
-    typeof window === "undefined" ? 0 : clockSnapshot(),
-  );
+  const [localStamp, setLocalStamp] = useState(0);
 
   useEffect(() => {
     if (shared) return;
@@ -34,7 +33,7 @@ export function useAppNow() {
   }, [shared]);
 
   if (shared) return shared;
-  return dateFromSnapshot(localStamp || clockSnapshot());
+  return dateFromSnapshot(localStamp !== 0 ? localStamp : hydrationSafeClockSnapshot());
 }
 
 export function useRehearsalScene() {

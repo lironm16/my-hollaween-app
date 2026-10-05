@@ -21,11 +21,7 @@ const IOS_ICONS: MetadataRoute.Manifest["icons"] = [
   { src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png", purpose: "any" },
 ];
 
-/**
- * Chrome mints a WebAPK when display is standalone/fullscreen/minimal-ui. That shell
- * still targets an older Android SDK, so Play Protect blocks install on Android 15+.
- * Use browser display on Android so the map runs in Chrome without a blocked APK.
- */
+/** Standalone on Android so Chrome can offer install from the header button (Play Protect may warn on some devices). */
 export function pwaManifestForUserAgent(userAgent: string): MetadataRoute.Manifest {
   const android = isAndroidUserAgent(userAgent);
   const ios = isIosUserAgent(userAgent);
@@ -38,7 +34,7 @@ export function pwaManifestForUserAgent(userAgent: string): MetadataRoute.Manife
     lang: "he",
     start_url: "/",
     scope: "/",
-    display: android ? "browser" : "standalone",
+    display: "standalone",
     orientation: "portrait",
     background_color: "#12081a",
     theme_color: "#12081a",
@@ -46,10 +42,9 @@ export function pwaManifestForUserAgent(userAgent: string): MetadataRoute.Manife
     categories: ["navigation", "entertainment"],
     icons: android ? ANDROID_ICONS : ios ? IOS_ICONS : ANDROID_ICONS,
   };
-  if (!android) {
-    (manifest as MetadataRoute.Manifest & { handle_links?: string }).handle_links = "preferred";
-    (manifest as MetadataRoute.Manifest & { launch_handler?: { client_mode: string[] } }).launch_handler =
-      { client_mode: ["navigate-existing", "auto"] };
-  }
+  (manifest as MetadataRoute.Manifest & { handle_links?: string }).handle_links = "preferred";
+  (manifest as MetadataRoute.Manifest & { launch_handler?: { client_mode: string[] } }).launch_handler = {
+    client_mode: ["navigate-existing", "auto"],
+  };
   return manifest;
 }
