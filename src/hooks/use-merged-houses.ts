@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { toEditorHouse } from "@/lib/ids";
+import { isCatalogRemoved } from "@/lib/catalog-removed";
 import { loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { loadPendingWrites } from "@/lib/offline-db";
 import { isStubHouse } from "@/lib/house-set";
@@ -72,6 +73,7 @@ export function mergeVisibleHouses({
   }
   for (const item of owned) {
     if (!item.preview || deleted.has(item.id)) continue;
+    if (!admin && isCatalogRemoved(item.id)) continue;
     const current = byId.get(item.id);
     if (!current || Date.parse(item.preview.updatedAt) >= Date.parse(current.updatedAt || "")) {
       byId.set(item.id, mergeIncomingHouse(current, item.preview, restoreLocations));
@@ -79,12 +81,17 @@ export function mergeVisibleHouses({
   }
   for (const pending of loadPendingWrites()) {
     if (deleted.has(pending.id)) continue;
+    if (!admin && isCatalogRemoved(pending.id)) continue;
     const current = byId.get(pending.id);
     if (!current || Date.parse(pending.house.updatedAt) >= Date.parse(current.updatedAt || "")) {
       byId.set(pending.id, mergeIncomingHouse(current, pending.house, restoreLocations));
     }
   }
-  return [...byId.values()].filter((house) => !deleted.has(house.id));
+  return [...byId.values()].filter((house) => {
+    if (deleted.has(house.id)) return false;
+    if (!admin && isCatalogRemoved(house.id)) return false;
+    return true;
+  });
 }
 
 /** Fill redacted catalog rows from admin API snapshot (map/list/sheet). */

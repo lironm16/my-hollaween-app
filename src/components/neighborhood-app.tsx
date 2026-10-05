@@ -75,6 +75,7 @@ import { useHouseActions } from "@/hooks/use-house-actions";
 import { useHouseFilters, countActiveFilters } from "@/hooks/use-house-filters";
 import { useHouseSelection } from "@/hooks/use-house-selection";
 import { AdminHouseFieldsProvider } from "@/hooks/use-admin-house-fields";
+import { isCatalogRemoved } from "@/lib/catalog-removed";
 import { enrichHousesWithAdminLocations, useMergedHouses } from "@/hooks/use-merged-houses";
 import { useNeighborhoodRoute } from "@/hooks/use-neighborhood-route";
 import { useOriginPick } from "@/hooks/use-origin-pick";
@@ -309,6 +310,15 @@ export function NeighborhoodApp({
     includeCatalogWhenAdmin: true,
     restoreRedactedLocations,
   });
+  /** Removed-from-catalog rows stay on «במכשיר שלי» only — inject for ?focus= from that tab. */
+  const housesForMap = useMemo(() => {
+    if (!focusId || adminForHouseSet || houses.some((house) => house.id === focusId)) {
+      return houses;
+    }
+    if (!isCatalogRemoved(focusId)) return houses;
+    const preview = owned.find((item) => item.id === focusId)?.preview;
+    return preview ? [...houses, preview] : houses;
+  }, [houses, focusId, owned, adminForHouseSet]);
   const lastHousesRef = useRef<PublicHouse[]>([]);
   const displayHouses = useMemo(() => {
     const applyVisitorLocations = (list: PublicHouse[]) =>
@@ -316,8 +326,8 @@ export function NeighborhoodApp({
     const applyAdminLocations = (list: PublicHouse[]) =>
       enrichHousesWithAdminLocations(list, adminHouses, restoreRedactedLocations);
 
-    if (houses.length > 0) {
-      const next = applyVisitorLocations(applyAdminLocations(houses));
+    if (housesForMap.length > 0) {
+      const next = applyVisitorLocations(applyAdminLocations(housesForMap));
       lastHousesRef.current = next;
       return next;
     }
@@ -337,8 +347,8 @@ export function NeighborhoodApp({
       lastHousesRef.current = next;
       return next;
     }
-    return houses;
-  }, [houses, catalog, gemPreviewAsUser, addressReveal, adminHouses, restoreRedactedLocations]);
+    return housesForMap;
+  }, [housesForMap, catalog, gemPreviewAsUser, addressReveal, adminHouses, restoreRedactedLocations]);
 
   const { houses: mapListHouses, now: mapListNow } = useMapListUiLock(displayHouses, now);
 

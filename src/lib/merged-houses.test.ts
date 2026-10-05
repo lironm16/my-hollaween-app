@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { enrichHousesWithAdminLocations, mergeVisibleHouses } from "@/hooks/use-merged-houses";
+import { noteCatalogRemovals } from "@/lib/catalog-removed";
 import { houseMatchesSet } from "@/lib/house-set";
 import type { House, PublicHouse } from "@/lib/types";
 
@@ -36,6 +37,27 @@ function adminHouse(id: string, updatedAt: string): House {
     ...publicHouse(id, updatedAt),
     editCode: "123456",
   } as House;
+}
+
+const storage = new Map<string, string>();
+
+function mockCatalogRemovedStorage() {
+  storage.clear();
+  (globalThis as { localStorage?: Storage }).localStorage = {
+    getItem: (key) => storage.get(key) ?? null,
+    setItem: (key, value) => {
+      storage.set(key, value);
+    },
+    removeItem: (key) => {
+      storage.delete(key);
+    },
+    clear: () => storage.clear(),
+    key: () => null,
+    length: 0,
+  };
+  (globalThis as { window?: Window }).window = {
+    dispatchEvent: () => true,
+  } as Window;
 }
 
 describe("mergeVisibleHouses", () => {
@@ -163,6 +185,25 @@ describe("mergeVisibleHouses", () => {
     const enriched = enrichHousesWithAdminLocations(catalog, admin, true);
     assert.equal(enriched[0]?.address, "רוקח 32");
     assert.equal(enriched[0]?.arrival, "קומה 1");
+  });
+
+  it("drops catalog-removed owned previews from the public merge", () => {
+    mockCatalogRemovedStorage();
+    noteCatalogRemovals(["gone"], "2026-10-31T12:00:00.000Z");
+    const merged = mergeVisibleHouses({
+      catalogHouses: [],
+      owned: [
+        {
+          id: "gone",
+          name: "בית",
+          editCode: "111111",
+          preview: publicHouse("gone", "2026-10-31T12:00:00.000Z"),
+        },
+      ],
+      admin: false,
+      adminHouses: [],
+    });
+    assert.equal(merged.length, 0);
   });
 
   it("does not restore redacted address when restoreRedactedLocations is false", () => {
