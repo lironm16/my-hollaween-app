@@ -12,7 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Catalog, CatalogDelta, PublicHouse } from "@/lib/types";
-import { mergeCatalogDelta, syncCatalog } from "@/lib/catalog-sync";
+import { mergeCatalogDelta, normalizeCatalogDelta, syncCatalog } from "@/lib/catalog-sync";
 import { config } from "@/lib/config";
 import { adaptiveCatalogPollMs, appInForeground } from "@/lib/catalog-poll";
 import {
@@ -91,7 +91,8 @@ async function fetchJson(url: string, force = false, since?: string): Promise<Ca
     signal: AbortSignal.timeout(CATALOG_FETCH_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error("bad status");
-  return res.json() as Promise<CatalogDelta>;
+  const raw: unknown = await res.json();
+  return normalizeCatalogDelta(raw);
 }
 
 function applyCatalogResponse(prev: Catalog | null, live: CatalogDelta): Catalog {

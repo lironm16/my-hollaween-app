@@ -11,7 +11,7 @@ export function resolveServerHouseCount(
   if (typeof payload.houseCount === "number" && payload.houseCount >= 0) {
     return payload.houseCount;
   }
-  if (payload.houses.length) return payload.houses.length;
+  if (payload.houses?.length) return payload.houses.length;
   return undefined;
 }
 
@@ -52,7 +52,7 @@ export function catalogNeedsFullRefresh(
   cacheMeta?: CatalogCacheMeta | null,
   serverCount?: number | null,
 ): boolean {
-  if (!catalog?.houses.length) return true;
+  if (!catalog?.houses?.length) return true;
   if (!catalogHasRealHouses(catalog)) return false;
   return catalogCacheIncomplete(catalog, cacheMeta, serverCount);
 }

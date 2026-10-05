@@ -1,6 +1,24 @@
 import type { Catalog, CatalogDelta, DbFile, PublicHouse, PushSubscriptionRecord } from "@/lib/types";
 import { isAuthoritativeHouseList } from "@/lib/catalog-houses";
 import { loadDeletedHouseIds } from "@/lib/deleted-houses";
+import { config } from "@/lib/config";
+
+/** API / CDN payloads must always expose houses[] — delta polls omit the key when unchanged. */
+export function normalizeCatalogDelta(raw: unknown): CatalogDelta {
+  const o = raw && typeof raw === "object" ? (raw as Partial<CatalogDelta>) : {};
+  return {
+    updatedAt: typeof o.updatedAt === "string" ? o.updatedAt : "",
+    neighborhood:
+      typeof o.neighborhood === "string" ? o.neighborhood : config.neighborhood,
+    houses: Array.isArray(o.houses) ? o.houses : [],
+    houseCount: typeof o.houseCount === "number" ? o.houseCount : undefined,
+    removed: Array.isArray(o.removed) ? o.removed : undefined,
+    full: o.full === true ? true : undefined,
+    pollSeconds: typeof o.pollSeconds === "number" ? o.pollSeconds : undefined,
+    pushTemplates: o.pushTemplates,
+    eventSettings: o.eventSettings,
+  };
+}
 
 function stamp(value: { updatedAt: string }) {
   const n = Date.parse(value.updatedAt);
@@ -26,9 +44,10 @@ export function mergeHouses<T extends { id: string; updatedAt: string }>(
  * A stale CDN copy cannot drop a house that was just published.
  */
 export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
-  if (!prev) return incoming;
+  const next = normalizeCatalogDelta(incoming);
+  if (!prev) return next;
   const prevTs = stamp(prev);
-  const nextTs = stamp(incoming);
+  const nextTs = stamp(next);
   const byId = new Map<string, PublicHouse>();
   const take = (house: PublicHouse) => {
     const current = byId.get(house.id);
@@ -36,8 +55,8 @@ export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
   };
 
   if (nextTs >= prevTs) {
-    incoming.houses.forEach(take);
-    if (!isAuthoritativeHouseList(incoming)) {
+    next.houses.forEach(take);
+    if (!isAuthoritativeHouseList(next)) {
       const deleted = new Set(loadDeletedHouseIds());
       for (const house of prev.houses) {
         if (deleted.has(house.id)) continue;
@@ -45,58 +64,59 @@ export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
       }
     }
     return {
-      ...incoming,
+      ...next,
       houses: [...byId.values()],
-      houseCount: incoming.houseCount ?? prev.houseCount,
-      eventSettings: incoming.eventSettings ?? prev.eventSettings,
+      houseCount: next.houseCount ?? prev.houseCount,
+      eventSettings: next.eventSettings ?? prev.eventSettings,
     };
   }
 
   prev.houses.forEach(take);
-  incoming.houses.forEach(take);
+  next.houses.forEach(take);
   return {
     ...prev,
     houses: [...byId.values()],
-    houseCount: incoming.houseCount ?? prev.houseCount,
-    eventSettings: incoming.eventSettings ?? prev.eventSettings,
+    houseCount: next.houseCount ?? prev.houseCount,
+    eventSettings: next.eventSettings ?? prev.eventSettings,
   };
 }
 
 /** Apply a delta poll (`?since=`) onto the catalog already on the device. */
 export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta): Catalog {
+  const delta = normalizeCatalogDelta(incoming);
   if (!prev) {
     return {
-      updatedAt: incoming.updatedAt,
-      neighborhood: incoming.neighborhood,
-      houses: incoming.houses,
-      houseCount: incoming.houseCount,
-      pushTemplates: incoming.pushTemplates,
-      eventSettings: incoming.eventSettings,
+      updatedAt: delta.updatedAt,
+      neighborhood: delta.neighborhood,
+      houses: delta.houses,
+      houseCount: delta.houseCount,
+      pushTemplates: delta.pushTemplates,
+      eventSettings: delta.eventSettings,
     };
   }
-  if (incoming.full) {
+  if (delta.full) {
     return syncCatalog(prev, {
-      updatedAt: incoming.updatedAt,
-      neighborhood: incoming.neighborhood,
-      houses: incoming.houses,
-      houseCount: incoming.houseCount,
-      pushTemplates: incoming.pushTemplates ?? prev.pushTemplates,
-      eventSettings: incoming.eventSettings ?? prev.eventSettings,
+      updatedAt: delta.updatedAt,
+      neighborhood: delta.neighborhood,
+      houses: delta.houses,
+      houseCount: delta.houseCount,
+      pushTemplates: delta.pushTemplates ?? prev.pushTemplates,
+      eventSettings: delta.eventSettings ?? prev.eventSettings,
     });
   }
   const byId = new Map(prev.houses.map((house) => [house.id, house]));
-  for (const id of incoming.removed ?? []) byId.delete(id);
-  for (const house of incoming.houses) {
+  for (const id of delta.removed ?? []) byId.delete(id);
+  for (const house of delta.houses) {
     const current = byId.get(house.id);
     if (!current || stamp(house) >= stamp(current)) byId.set(house.id, house);
   }
   return {
-    updatedAt: incoming.updatedAt,
-    neighborhood: incoming.neighborhood || prev.neighborhood,
+    updatedAt: delta.updatedAt,
+    neighborhood: delta.neighborhood || prev.neighborhood,
     houses: [...byId.values()],
-    houseCount: incoming.houseCount ?? prev.houseCount,
-    pushTemplates: incoming.pushTemplates ?? prev.pushTemplates,
-    eventSettings: incoming.eventSettings ?? prev.eventSettings,
+    houseCount: delta.houseCount ?? prev.houseCount,
+    pushTemplates: delta.pushTemplates ?? prev.pushTemplates,
+    eventSettings: delta.eventSettings ?? prev.eventSettings,
   };
 }
 

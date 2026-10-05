@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { mergeHouses, mergePushSubscriptions, syncCatalog } from "@/lib/catalog-sync";
+import {
+  mergeHouses,
+  mergePushSubscriptions,
+  normalizeCatalogDelta,
+  syncCatalog,
+} from "@/lib/catalog-sync";
 import type { Catalog, PublicHouse, PushSubscriptionRecord } from "@/lib/types";
 
 function publicHouse(id: string, updatedAt: string, patch: Partial<PublicHouse> = {}): PublicHouse {
@@ -55,7 +60,7 @@ describe("mergeHouses", () => {
 describe("syncCatalog", () => {
   it("returns incoming when there is no previous catalog", () => {
     const incoming = catalog("2026-10-31T12:00:00.000Z", [publicHouse("a", "2026-10-31T12:00:00.000Z")]);
-    assert.deepEqual(syncCatalog(null, incoming), incoming);
+    assert.deepEqual(syncCatalog(null, incoming), normalizeCatalogDelta(incoming));
   });
 
   it("keeps a newer local house when incoming catalog is older", () => {
@@ -99,6 +104,18 @@ describe("syncCatalog", () => {
     ]);
     const merged = syncCatalog(prev, incoming);
     assert.deepEqual(merged.houses.map((house) => house.id).sort(), ["real-1", "real-2", "stub-1"]);
+  });
+});
+
+describe("normalizeCatalogDelta", () => {
+  it("defaults missing houses to an empty array", () => {
+    const delta = normalizeCatalogDelta({
+      updatedAt: "2026-10-31T12:00:00.000Z",
+      pollSeconds: 45,
+    });
+    assert.deepEqual(delta.houses, []);
+    assert.equal(delta.updatedAt, "2026-10-31T12:00:00.000Z");
+    assert.equal(delta.pollSeconds, 45);
   });
 });
 
