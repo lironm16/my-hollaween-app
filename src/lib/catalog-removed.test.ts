@@ -27,7 +27,7 @@ beforeEach(() => {
   };
   (globalThis as { window?: Window }).window = {
     dispatchEvent: () => true,
-  } as Window;
+  } as unknown as Window;
 });
 
 function catalog(updatedAt: string, ids: string[]): Catalog {

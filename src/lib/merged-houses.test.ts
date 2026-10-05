@@ -57,7 +57,7 @@ function mockCatalogRemovedStorage() {
   };
   (globalThis as { window?: Window }).window = {
     dispatchEvent: () => true,
-  } as Window;
+  } as unknown as Window;
 }
 
 describe("mergeVisibleHouses", () => {
