@@ -3,6 +3,7 @@ import { describe, it, beforeEach, afterEach } from "node:test";
 import {
   catalogCacheIncomplete,
   catalogNeedsFullRefresh,
+  catalogServerCountMismatch,
   isAuthoritativeHouseList,
   localCatalogHouseCount,
   resolveCatalogHouses,
@@ -85,6 +86,14 @@ describe("resolveServerHouseCount", () => {
       resolveServerHouseCount(catalog([house("a"), house("b")], "2026-10-31T10:00:00.000Z")),
       2,
     );
+  });
+});
+
+describe("catalogServerCountMismatch", () => {
+  it("detects when inline houses differ from server houseCount", () => {
+    const partial = catalog([house("a")], "2026-10-31T10:00:00.000Z");
+    assert.equal(catalogServerCountMismatch(partial, 88), true);
+    assert.equal(catalogServerCountMismatch(partial, 1), false);
   });
 });
 

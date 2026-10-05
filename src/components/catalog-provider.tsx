@@ -28,6 +28,7 @@ import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
 import {
   catalogCacheIncomplete,
   catalogNeedsFullRefresh,
+  catalogServerCountMismatch,
   isAuthoritativeHouseList,
   resolveServerHouseCount,
 } from "@/lib/catalog-houses";
@@ -101,8 +102,20 @@ function applyCatalogResponse(prev: Catalog | null, live: CatalogDelta): Catalog
   if (live.houses.length || live.removed?.length || live.pushTemplates || live.eventSettings) {
     return mergeCatalogDelta(prev, live);
   }
+  const serverCount = resolveServerHouseCount(live);
+  if (catalogServerCountMismatch(prev, serverCount)) {
+    return {
+      ...prev,
+      updatedAt: live.updatedAt,
+      houseCount: serverCount ?? prev.houseCount,
+    };
+  }
   if (prev.updatedAt === live.updatedAt) return prev;
-  return { ...prev, updatedAt: live.updatedAt };
+  return {
+    ...prev,
+    updatedAt: live.updatedAt,
+    houseCount: live.houseCount ?? prev.houseCount,
+  };
 }
 
 function isEmptyDelta(live: CatalogDelta, prev: Catalog | null) {
@@ -111,6 +124,7 @@ function isEmptyDelta(live: CatalogDelta, prev: Catalog | null) {
     return false;
   }
   if (!prev) return false;
+  if (catalogServerCountMismatch(prev, resolveServerHouseCount(live))) return false;
   return live.updatedAt === prev.updatedAt;
 }
 
@@ -142,6 +156,9 @@ async function reconcileWithDeviceCache(prev: Catalog | null): Promise<Catalog |
   const cached = await readDeviceCatalog();
   if (!cached) return prev;
   if (prev && isAuthoritativeHouseList(prev)) {
+    if (cached.houses.length > prev.houses.length) {
+      return mergeDeviceCatalog(prev, cached);
+    }
     return withDeviceHouseOverlays(prev);
   }
   const merged = mergeDeviceCatalog(prev, cached);

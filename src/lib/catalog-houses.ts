@@ -20,6 +20,15 @@ export function localCatalogHouseCount(catalog: Catalog | null): number {
   return catalog?.houses.length ?? 0;
 }
 
+/** True when the server says the public catalog size differs from what we are showing. */
+export function catalogServerCountMismatch(
+  catalog: Catalog | null,
+  serverCount: number | undefined | null,
+): boolean {
+  if (serverCount == null || serverCount < 0) return false;
+  return localCatalogHouseCount(catalog) !== serverCount;
+}
+
 /** Server sent a full inline list matching explicit `houseCount` — safe to drop stale local-only ids. */
 export function isAuthoritativeHouseList(
   catalog: Pick<Catalog, "houseCount" | "houses"> | null | undefined,
@@ -39,8 +48,7 @@ export function catalogCacheIncomplete(
   const meta = cacheMeta ?? loadCatalogCacheMeta();
   const authoritative = serverCount ?? resolveServerHouseCount(catalog) ?? meta?.houseCount;
 
-  if (typeof authoritative === "number" && localCount < authoritative) return true;
-  if (typeof authoritative === "number" && localCount > authoritative) return true;
+  if (typeof authoritative === "number" && localCount !== authoritative) return true;
   if (!meta?.complete) return true;
   if (typeof meta.houseCount === "number" && localCount > meta.houseCount) return true;
   if (typeof meta.houseCount === "number" && localCount < meta.houseCount) return true;
