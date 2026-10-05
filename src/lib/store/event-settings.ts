@@ -7,8 +7,9 @@ import {
   normalizeAddHouseCutoffSchedule,
   normalizeAddressRevealSchedule,
 } from "@/lib/event-settings";
+import { firestoreConfigured, readFirestoreEventSettings } from "@/lib/firestore-db";
 import type { AddHouseCutoffSchedule, AddressRevealSchedule } from "@/lib/types";
-import { loadDb, runSyncedWrite } from "./core";
+import { getGlobalDb, getMem, loadDb, runSyncedWrite } from "./core";
 
 export type AdminAddressRevealSettings = {
   addressReveal: AddressRevealSchedule;
@@ -111,6 +112,17 @@ export async function clearAdminAddHouseCutoffSchedule(): Promise<AdminAddHouseC
 
 /** Convenience for server routes that redact a single house row. */
 export async function loadAddressRevealSchedule(): Promise<AddressRevealSchedule> {
-  const db = await loadDb();
-  return mergeAddressRevealSchedule(db.eventSettings?.addressReveal);
+  const mem = getMem();
+  if (mem?.eventSettings?.addressReveal) {
+    return mergeAddressRevealSchedule(mem.eventSettings.addressReveal);
+  }
+  const global = getGlobalDb();
+  if (global?.eventSettings?.addressReveal) {
+    return mergeAddressRevealSchedule(global.eventSettings.addressReveal);
+  }
+  if (firestoreConfigured()) {
+    const remote = await readFirestoreEventSettings();
+    if (remote?.addressReveal) return mergeAddressRevealSchedule(remote.addressReveal);
+  }
+  return mergeAddressRevealSchedule();
 }

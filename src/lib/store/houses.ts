@@ -35,7 +35,9 @@ import {
   writeFirestoreHouse,
 } from "@/lib/firestore-db";
 import {
+  getGlobalDb,
   getMem,
+  isMemWarm,
   loadDb,
   normalizeHouse,
   runSyncedWrite,
@@ -68,9 +70,26 @@ export async function getDbSnapshot() {
   return loadDb();
 }
 
+/** @internal exported for tests */
+export function houseFromWarmCaches(id: string): House | undefined {
+  const mem = getMem();
+  if (isMemWarm() && mem) {
+    const found = findHouseIn(mem.houses, id);
+    if (found) return found;
+  }
+  const global = getGlobalDb();
+  if (global) {
+    const found = findHouseIn(global.houses, id);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+/** One house row — avoids full catalog load on Firestore when caches miss. */
 export async function getHouse(id: string): Promise<House | undefined> {
-  const found = findHouseIn((await loadDb()).houses, id);
-  if (found) return found;
+  const cached = houseFromWarmCaches(id);
+  if (cached) return cached;
+
   const docId = canonicalHouseId(id);
   if (firestoreConfigured() && docId) {
     const remote = await readFirestoreHouse(docId);
@@ -81,6 +100,9 @@ export async function getHouse(id: string): Promise<House | undefined> {
     }
     return undefined;
   }
+
+  const found = findHouseIn((await loadDb()).houses, id);
+  if (found) return found;
   return findHouseIn((await loadDb(true)).houses, id);
 }
 
