@@ -4,6 +4,7 @@ import {
   catalogShortfall,
   CATALOG_FULL_RECOVERY_MIN_GAP,
   shouldFetchFullCatalogAfterCheapRecovery,
+  shouldUseSteadyDeltaPoll,
 } from "@/lib/catalog-recovery";
 import type { Catalog } from "@/lib/types";
 
@@ -47,6 +48,10 @@ describe("catalogShortfall", () => {
 });
 
 describe("shouldFetchFullCatalogAfterCheapRecovery", () => {
+  it("uses full fetch when local list is empty but server has houses", () => {
+    assert.equal(shouldFetchFullCatalogAfterCheapRecovery(88, 0), true);
+  });
+
   it("skips full fetch for a single missing house", () => {
     assert.equal(shouldFetchFullCatalogAfterCheapRecovery(88, 87), false);
   });
@@ -60,5 +65,56 @@ describe("shouldFetchFullCatalogAfterCheapRecovery", () => {
 
   it("requests full fetch for large relative gaps", () => {
     assert.equal(shouldFetchFullCatalogAfterCheapRecovery(50, 40), true);
+  });
+});
+
+describe("shouldUseSteadyDeltaPoll", () => {
+  it("blocks delta polls while the catalog is empty", () => {
+    assert.equal(
+      shouldUseSteadyDeltaPoll({
+        localCount: 0,
+        since: "2026-10-31T12:00:00.000Z",
+        needsFullRefresh: false,
+        serverCount: 88,
+      }),
+      false,
+    );
+  });
+
+  it("blocks delta polls while count is below server houseCount", () => {
+    assert.equal(
+      shouldUseSteadyDeltaPoll({
+        localCount: 5,
+        since: "2026-10-31T12:00:00.000Z",
+        needsFullRefresh: false,
+        serverCount: 88,
+      }),
+      false,
+    );
+  });
+
+  it("allows delta polls only when local count matches server", () => {
+    assert.equal(
+      shouldUseSteadyDeltaPoll({
+        localCount: 88,
+        since: "2026-10-31T12:00:00.000Z",
+        needsFullRefresh: false,
+        serverCount: 88,
+      }),
+      true,
+    );
+  });
+
+  it("blocks delta polls when server count is unknown and cache is not marked complete", () => {
+    assert.equal(
+      shouldUseSteadyDeltaPoll({
+        localCount: 40,
+        since: "2026-10-31T12:00:00.000Z",
+        needsFullRefresh: false,
+        serverCount: null,
+        cacheMarkedComplete: false,
+      }),
+      false,
+    );
   });
 });

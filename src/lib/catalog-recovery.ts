@@ -22,7 +22,24 @@ export function shouldFetchFullCatalogAfterCheapRecovery(
 ): boolean {
   const gap = Math.max(0, serverCount - localCount);
   if (gap === 0) return false;
+  if (localCount === 0 && serverCount > 0) return true;
   if (gap >= CATALOG_FULL_RECOVERY_MIN_GAP) return true;
   if (serverCount <= 0) return false;
   return gap / serverCount >= CATALOG_FULL_RECOVERY_MIN_RATIO;
+}
+
+/** Steady-state delta polls are unsafe while the list is empty or shorter than the server count. */
+export function shouldUseSteadyDeltaPoll(input: {
+  localCount: number;
+  since?: string;
+  needsFullRefresh: boolean;
+  serverCount?: number | null;
+  cacheMarkedComplete?: boolean;
+}): boolean {
+  if (!input.since || input.needsFullRefresh) return false;
+  if (input.localCount === 0) return false;
+  if (input.serverCount == null || input.serverCount < 0) {
+    return Boolean(input.cacheMarkedComplete);
+  }
+  return input.localCount === input.serverCount;
 }
