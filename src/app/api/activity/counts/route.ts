@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
-import { readHouseEngagementCounts, isCommunityEngagementEnabled } from "@/lib/engagement-store";
+import { readHouseEngagementCounts } from "@/lib/engagement-store";
 import { canonicalHouseId } from "@/lib/ids";
 
 export const runtime = "nodejs";
@@ -9,8 +9,8 @@ export const dynamic = "force-dynamic";
 const NO_STORE = { "Cache-Control": "private, no-store" };
 
 export async function GET(request: Request) {
-  if (!(await isCommunityEngagementEnabled())) {
-    return NextResponse.json({ enabled: false, houses: {} }, { headers: NO_STORE });
+  if (!(await isAdmin())) {
+    return NextResponse.json({ error: "נדרשת הרשאת מנהל." }, { status: 401, headers: NO_STORE });
   }
   const url = new URL(request.url);
   const raw = url.searchParams.get("ids") ?? "";
@@ -19,17 +19,11 @@ export async function GET(request: Request) {
     .map((id) => canonicalHouseId(id.trim()))
     .filter(Boolean);
   if (!ids.length) {
-    return NextResponse.json({ enabled: true, houses: {} }, { headers: NO_STORE });
+    return NextResponse.json({ houses: {} }, { headers: NO_STORE });
   }
-  const admin = await isAdmin();
   const houses = await readHouseEngagementCounts(ids);
   return NextResponse.json(
-    { enabled: true, admin, houses },
-    {
-      headers: {
-        ...NO_STORE,
-        "Cache-Control": admin ? "private, max-age=15" : "private, max-age=30",
-      },
-    },
+    { houses },
+    { headers: { ...NO_STORE, "Cache-Control": "private, max-age=15" } },
   );
 }

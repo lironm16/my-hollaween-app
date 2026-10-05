@@ -1,9 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useCatalog } from "@/hooks/use-catalog";
+import { useCallback, useEffect, useState } from "react";
 import { useAdminSession } from "@/hooks/use-admin-session";
-import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { showCommunityEngagementCounts } from "@/lib/community-engagement-ui";
 import type { HouseEngagementCounts } from "@/lib/house-engagement";
 import { normalizeEngagementCounts } from "@/lib/house-engagement";
@@ -25,10 +23,9 @@ async function fetchCounts(ids: string[]) {
     });
     if (!res.ok) return;
     const data = (await res.json()) as {
-      enabled?: boolean;
       houses?: Record<string, HouseEngagementCounts>;
     };
-    if (!data.enabled || !data.houses) return;
+    if (!data.houses) return;
     for (const [id, row] of Object.entries(data.houses)) {
       cache[id] = normalizeEngagementCounts(row);
     }
@@ -38,20 +35,9 @@ async function fetchCounts(ids: string[]) {
   }
 }
 
-export function useCommunityEngagementEnabled() {
-  const { catalog } = useCatalog();
-  return useMemo(
-    () => Boolean(catalog?.eventSettings?.communityEngagementEnabled),
-    [catalog?.eventSettings?.communityEngagementEnabled],
-  );
-}
-
-export function useShowCommunityEngagementForHouse(houseId: string) {
-  const enabled = useCommunityEngagementEnabled();
+export function useShowCommunityEngagementForHouse(_houseId: string) {
   const { admin } = useAdminSession();
-  const owned = useOwnedHouses();
-  const ownedSet = useMemo(() => new Set(owned.map((item) => item.id)), [owned]);
-  return showCommunityEngagementCounts(enabled, admin, ownedSet, houseId);
+  return showCommunityEngagementCounts(admin);
 }
 
 export function useHouseEngagementCounts(houseId: string) {

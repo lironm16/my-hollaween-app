@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AdminAddHouseCutoffSettings } from "@/components/admin-add-house-cutoff-settings";
 import { AdminAddressRevealSettings } from "@/components/admin-address-reveal-settings";
-import { AdminCommunityEngagementSettings } from "@/components/admin-community-engagement-settings";
 import { AdminGemOpsPanel } from "@/components/admin-gem-ops-panel";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useRehearsalScene, useServerSim, useAppNow } from "@/hooks/use-app-clock";
@@ -108,7 +107,6 @@ export function AdminDryRunPanel() {
       </div>
       <AdminAddHouseCutoffSettings />
       <AdminAddressRevealSettings />
-      <AdminCommunityEngagementSettings />
       <div className="space-y-2 rounded-xl bg-[#12081a]/80 p-2 ring-1 ring-orange-500/15">
         <p className="text-base font-medium text-amber-100">בדיקות</p>
         <p className="text-base text-violet-300">

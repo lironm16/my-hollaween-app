@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { normalizeDeviceId } from "@/lib/device-id";
-import {
-  appendActivitySessionEvents,
-  isCommunityEngagementEnabled,
-} from "@/lib/engagement-store";
+import { appendActivitySessionEvents } from "@/lib/engagement-store";
 import type { EngagementEvent } from "@/lib/house-engagement";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 
@@ -13,14 +10,10 @@ export const dynamic = "force-dynamic";
 const NO_STORE = { "Cache-Control": "no-store" };
 
 export async function GET() {
-  const enabled = await isCommunityEngagementEnabled();
-  return NextResponse.json({ enabled }, { headers: NO_STORE });
+  return NextResponse.json({ ok: true }, { headers: NO_STORE });
 }
 
 export async function POST(request: Request) {
-  if (!(await isCommunityEngagementEnabled())) {
-    return NextResponse.json({ ok: false, disabled: true }, { headers: NO_STORE });
-  }
   if (!rateLimit(`activity:${clientKey(request.headers)}`, 24, 60 * 1000)) {
     return NextResponse.json({ error: "יותר מדי עדכונים." }, { status: 429, headers: NO_STORE });
   }

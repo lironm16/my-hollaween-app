@@ -37,7 +37,6 @@ describe("event settings", () => {
           hour: config.addHouseCutoff.hour,
           minute: config.addHouseCutoff.minute,
         },
-        communityEngagementEnabled: false,
       },
     );
   });

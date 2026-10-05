@@ -206,8 +206,6 @@ export type Catalog = {
   eventSettings?: {
     addressReveal: AddressRevealSchedule;
     addHouseCutoff: AddHouseCutoffSchedule;
-    /** When true, owners/admins see per-house like/visit totals (admin toggle). */
-    communityEngagementEnabled?: boolean;
   };
 };
 
@@ -261,7 +259,6 @@ export type DbFile = {
     updatedAt?: string;
     addressReveal?: AddressRevealSchedule;
     addHouseCutoff?: AddHouseCutoffSchedule;
-    communityEngagementEnabled?: boolean;
   };
   pushSettings?: {
     updatedAt?: string;

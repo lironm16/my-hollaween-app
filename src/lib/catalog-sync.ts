@@ -171,9 +171,6 @@ export function cloneDb(db: DbFile): DbFile {
           ...(db.eventSettings.addHouseCutoff
             ? { addHouseCutoff: { ...db.eventSettings.addHouseCutoff } }
             : {}),
-          ...(db.eventSettings.communityEngagementEnabled
-            ? { communityEngagementEnabled: true }
-            : {}),
         }
       : undefined,
   };

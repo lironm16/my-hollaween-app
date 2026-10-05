@@ -15,7 +15,6 @@ import {
   type EngagementEvent,
   type HouseEngagementCounts,
 } from "@/lib/house-engagement";
-import { communityEngagementEnabledFromDb } from "@/lib/event-settings";
 import type { House } from "@/lib/types";
 import { loadDb, runSyncedWrite } from "@/lib/store/core";
 
@@ -74,11 +73,6 @@ async function writeFileSessions(sessions: Record<string, ActivitySessionDoc>) {
   const tmp = `${dest}.${process.pid}.tmp`;
   await fs.writeFile(tmp, JSON.stringify(sessions));
   await fs.rename(tmp, dest);
-}
-
-export async function isCommunityEngagementEnabled(): Promise<boolean> {
-  const db = await loadDb();
-  return communityEngagementEnabledFromDb(db.eventSettings);
 }
 
 export async function appendActivitySessionEvents(deviceId: string, events: EngagementEvent[]) {
