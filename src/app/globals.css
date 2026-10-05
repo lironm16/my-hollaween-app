@@ -798,6 +798,15 @@
   place-items: center;
 }
 
+.house-pin.is-school-campus {
+  background: linear-gradient(165deg, #5b21b6 0%, #6d28d9 55%, #7c3aed 100%) !important;
+}
+
+.pin-school-icon {
+  width: 36px;
+  height: 32px;
+}
+
 .pin-cluster-icon {
   position: absolute;
   left: 50%;

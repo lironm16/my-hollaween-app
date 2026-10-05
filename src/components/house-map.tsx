@@ -35,6 +35,8 @@ import { pinScareSrc } from "@/lib/pin-faces";
 import { effectiveHouseKind } from "@/lib/house-kind";
 import { pinBackgroundFill } from "@/lib/pin-colors";
 import { clusterBadgeHouses, clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
+import { pinSchoolClusterIconHtml } from "@/lib/map-pin-school-icon";
+import { clusterIsSchoolCampus } from "@/lib/school-campus";
 import { SKIP_ICON_SVG } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
 
@@ -250,12 +252,18 @@ function clusterIcon(
     });
   }
 
+  const schoolCampus = clusterIsSchoolCampus(houses);
+  const clusterIconHtml = schoolCampus ? pinSchoolClusterIconHtml() : pinClusterIconHtml();
+  const campusClass = schoolCampus ? " is-school-campus" : "";
+  const clusterLabel = schoolCampus
+    ? `${houses.length} דוכנים בבית ספר`
+    : `${houses.length} דירות`;
   const wrapped = wrapRoutePin(
-    `<div class="house-pin is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות">${allSkipped ? pinSkippedMark() : ""}${pinClusterIconHtml()}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>`,
+    `<div class="house-pin is-building${campusClass}${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${clusterLabel}">${allSkipped ? pinSkippedMark() : ""}${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>`,
     routeOrder,
   );
   return L.divIcon({
-    className: `pumpkin-pin-icon pumpkin-pin-building${selectedClass}${filterClass}`,
+    className: `pumpkin-pin-icon pumpkin-pin-building${schoolCampus ? " pumpkin-pin-school" : ""}${selectedClass}${filterClass}`,
     html: wrapped.html,
     iconSize: [PIN_BOX, PIN_BOX + 20 + wrapped.extraH],
     iconAnchor: [PIN_BOX / 2, PIN_BOX + 16 + wrapped.extraH],
