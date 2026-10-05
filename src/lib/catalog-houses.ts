@@ -1,3 +1,4 @@
+import { isRehearsalOn } from "@/lib/app-clock";
 import { syncCatalog } from "@/lib/catalog-sync";
 import { catalogHasRealHouses } from "@/lib/house-set";
 import { loadCatalogCacheMeta, loadCatalogCacheSync } from "@/lib/offline-db";
@@ -53,7 +54,11 @@ export function catalogNeedsFullRefresh(
   serverCount?: number | null,
 ): boolean {
   if (!catalog?.houses?.length) return true;
-  if (!catalogHasRealHouses(catalog)) return false;
+  if (!catalogHasRealHouses(catalog)) {
+    /** Stale stub-only snapshot (browser cache / old catalog.json) — must hit live API. */
+    if (isRehearsalOn()) return false;
+    return true;
+  }
   return catalogCacheIncomplete(catalog, cacheMeta, serverCount);
 }
 

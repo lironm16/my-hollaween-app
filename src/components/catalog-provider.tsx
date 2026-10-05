@@ -96,6 +96,7 @@ async function fetchJson(url: string, force = false, since?: string): Promise<Ca
 }
 
 function applyCatalogResponse(prev: Catalog | null, live: CatalogDelta): Catalog {
+  live = normalizeCatalogDelta(live);
   if (!prev || live.full) return syncCatalog(prev, live);
   if (live.houses.length || live.removed?.length || live.pushTemplates || live.eventSettings) {
     return mergeCatalogDelta(prev, live);
