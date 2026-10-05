@@ -30,8 +30,10 @@ import {
   catalogNeedsFullRefresh,
   catalogServerCountMismatch,
   isAuthoritativeHouseList,
+  localCatalogHouseCount,
   resolveServerHouseCount,
 } from "@/lib/catalog-houses";
+import { shouldFetchFullCatalogAfterCheapRecovery } from "@/lib/catalog-recovery";
 import { catalogHasRealHouses } from "@/lib/house-set";
 import { ensureGemOsmAnchorsLoaded } from "@/lib/gem-osm-anchor-cache";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
@@ -96,7 +98,7 @@ async function fetchJson(url: string, force = false, since?: string): Promise<Ca
   return normalizeCatalogDelta(raw);
 }
 
-/** One-shot full catalog when server houseCount exceeds what we show (avoids trickle deltas). */
+/** Last resort — full live catalog (expensive on Firestore). Prefer recoverCatalogShortfall. */
 async function fetchFullCatalogBundle(base: Catalog | null): Promise<Catalog | null> {
   try {
     const full = await fetchJson("/api/catalog", true);
@@ -112,6 +114,47 @@ async function fetchFullCatalogBundle(base: Catalog | null): Promise<Catalog | n
   } catch {
     return null;
   }
+}
+
+/** CDN snapshot + wide incremental delta; full catalog only for large gaps (or force). */
+async function recoverCatalogShortfall(
+  base: Catalog | null,
+  serverCount: number | undefined,
+  opts: { forceFull?: boolean },
+): Promise<Catalog | null> {
+  if (serverCount == null || serverCount < 0) return base;
+  if (!opts.forceFull && !catalogServerCountMismatch(base, serverCount)) return base;
+  if (opts.forceFull) return fetchFullCatalogBundle(base);
+
+  let merged = base;
+  try {
+    const cached = await readDeviceCatalog();
+    if (cached) merged = mergeDeviceCatalog(merged, cached);
+
+    const snap = await fetchJson(SNAPSHOT_URL, true);
+    const snapCatalog: Catalog = {
+      updatedAt: snap.updatedAt,
+      neighborhood: snap.neighborhood,
+      houses: snap.houses ?? [],
+      houseCount: snap.houseCount,
+      pushTemplates: snap.pushTemplates,
+      eventSettings: snap.eventSettings,
+    };
+    merged = withDeviceHouseOverlays(syncCatalog(merged, snapCatalog));
+    if (!catalogServerCountMismatch(merged, serverCount)) return merged;
+
+    const live = await fetchJson("/api/catalog", false, snap.updatedAt);
+    merged = withDeviceHouseOverlays(applyCatalogResponse(merged, live));
+    if (!catalogServerCountMismatch(merged, serverCount)) return merged;
+  } catch {
+    /* best-effort cheap path */
+  }
+
+  const localCount = localCatalogHouseCount(merged);
+  if (shouldFetchFullCatalogAfterCheapRecovery(serverCount, localCount)) {
+    return fetchFullCatalogBundle(merged);
+  }
+  return merged;
 }
 
 function applyCatalogResponse(prev: Catalog | null, live: CatalogDelta): Catalog {
@@ -380,25 +423,32 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         const serverCountAfterPoll =
           resolveServerHouseCount(live) ?? resolveServerHouseCount(catalogRef.current);
         if (catalogServerCountMismatch(catalogRef.current, serverCountAfterPoll)) {
-          const fullMerged = await fetchFullCatalogBundle(catalogRef.current);
+          const recovered = await recoverCatalogShortfall(
+            catalogRef.current,
+            serverCountAfterPoll,
+            { forceFull: force },
+          );
+          const target = serverCountAfterPoll;
           if (
-            fullMerged &&
-            !catalogServerCountMismatch(
-              fullMerged,
-              resolveServerHouseCount(fullMerged) ?? serverCountAfterPoll,
-            )
+            recovered &&
+            !catalogServerCountMismatch(recovered, target) &&
+            localCatalogHouseCount(recovered) >= localCatalogHouseCount(catalogRef.current)
           ) {
-            setCatalog((prev) => publishCatalog(fullMerged, prev) ?? fullMerged);
+            setCatalog((prev) => publishCatalog(recovered, prev) ?? recovered);
             if (!isMapListSuspended()) {
               setSource("network");
               setUnreachable(false);
               setError(null);
               quickRetryCountRef.current = 0;
-              markCatalogCacheComplete(fullMerged);
-              await saveCatalogCache(fullMerged);
+              markCatalogCacheComplete(recovered);
+              await saveCatalogCache(recovered);
               window.dispatchEvent(new Event("hw-catalog-refreshed"));
             }
             return;
+          }
+          if (recovered && localCatalogHouseCount(recovered) > localCatalogHouseCount(catalogRef.current)) {
+            setCatalog((prev) => publishCatalog(recovered, prev) ?? recovered);
+            if (!isMapListSuspended()) await saveCatalogCache(recovered);
           }
         }
         if (
@@ -426,26 +476,25 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     }
 
     const shortfallTarget = resolveServerHouseCount(catalogRef.current);
-    if (catalogServerCountMismatch(catalogRef.current, shortfallTarget)) {
-      const fullMerged = await fetchFullCatalogBundle(catalogRef.current);
-      if (
-        fullMerged &&
-        !catalogServerCountMismatch(
-          fullMerged,
-          resolveServerHouseCount(fullMerged) ?? shortfallTarget,
-        )
-      ) {
-        setCatalog((prev) => publishCatalog(fullMerged, prev) ?? fullMerged);
+    if (shortfallTarget != null && catalogServerCountMismatch(catalogRef.current, shortfallTarget)) {
+      const recovered = await recoverCatalogShortfall(catalogRef.current, shortfallTarget, {
+        forceFull: force,
+      });
+      if (recovered && !catalogServerCountMismatch(recovered, shortfallTarget)) {
+        setCatalog((prev) => publishCatalog(recovered, prev) ?? recovered);
         if (!isMapListSuspended()) {
           setSource("network");
           setUnreachable(false);
           setError(null);
           quickRetryCountRef.current = 0;
-          markCatalogCacheComplete(fullMerged);
-          await saveCatalogCache(fullMerged);
+          markCatalogCacheComplete(recovered);
+          await saveCatalogCache(recovered);
           window.dispatchEvent(new Event("hw-catalog-refreshed"));
         }
         return;
+      }
+      if (recovered && localCatalogHouseCount(recovered) > localCatalogHouseCount(catalogRef.current)) {
+        setCatalog((prev) => publishCatalog(recovered, prev) ?? recovered);
       }
     }
 
@@ -467,16 +516,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           merged.houses.length < serverCountAfterDelta &&
           !live.full
         ) {
-          const full = await fetchJson("/api/catalog", true);
-          const payload: Catalog = {
-            updatedAt: full.updatedAt,
-            neighborhood: full.neighborhood,
-            houses: full.houses ?? [],
-            houseCount: full.houseCount,
-            pushTemplates: full.pushTemplates ?? merged.pushTemplates,
-            eventSettings: full.eventSettings ?? merged.eventSettings,
-          };
-          merged = withDeviceHouseOverlays(syncCatalog(merged, payload));
+          const recovered = await recoverCatalogShortfall(merged, serverCountAfterDelta, {
+            forceFull: force,
+          });
+          if (recovered) merged = recovered;
         }
         markCatalogCacheComplete(merged);
         setCatalog((prev) => publishCatalog(merged, prev) ?? merged);
