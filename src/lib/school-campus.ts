@@ -1,6 +1,11 @@
 import { streetFromLegacyAddress } from "@/lib/address-fields";
-import { NAMED_ADDRESS_PLACES } from "@/lib/named-address-places";
+import {
+  NAMED_ADDRESS_PLACES,
+  schoolCampusNeighborhoodForAddress,
+} from "@/lib/named-address-places";
 import type { PublicHouse } from "@/lib/types";
+
+export { schoolCampusNeighborhoodForAddress };
 
 const CAMPUS_NAMES = new Set(NAMED_ADDRESS_PLACES.map((p) => p.displayName));
 

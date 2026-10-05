@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Camera } from "lucide-react";
 import { toast } from "sonner";
 import { compressJpegFile, type PhotoFocus } from "@/lib/compress-image";
@@ -31,6 +31,7 @@ import {
 } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
+import { schoolCampusNeighborhoodForAddress } from "@/lib/school-campus";
 import {
   HOUSE_THEMES,
   SENSITIVITY_OPTIONS,
@@ -244,9 +245,22 @@ export function HouseForm({
     });
   }, [initial?.id, initial?.neighborhood, initial?.address]);
 
-  const hoodChoice = storedToHouseNeighborhoodChoice(form.neighborhood);
+  const lockedSchoolHood = useMemo(
+    () => schoolCampusNeighborhoodForAddress(form.address),
+    [form.address],
+  );
+
+  useEffect(() => {
+    if (!lockedSchoolHood) return;
+    setForm((f) => (f.neighborhood === lockedSchoolHood ? f : { ...f, neighborhood: lockedSchoolHood }));
+  }, [lockedSchoolHood]);
+
+  const hoodChoice = storedToHouseNeighborhoodChoice(
+    lockedSchoolHood ?? form.neighborhood,
+  );
 
   function setHoodChoice(choice: HouseNeighborhoodChoice) {
+    if (lockedSchoolHood) return;
     setForm((f) => ({ ...f, neighborhood: houseNeighborhoodChoiceToStored(choice) }));
   }
 
@@ -273,11 +287,14 @@ export function HouseForm({
   }
 
   function onAddressSelect(hit: AddressHit) {
+    const address = displayAddressFromHit(hit);
+    const campusHood = schoolCampusNeighborhoodForAddress(address);
     setForm((f) => ({
       ...f,
-      address: displayAddressFromHit(hit),
+      address,
       lat: hit.lat,
       lng: hit.lng,
+      ...(campusHood !== null ? { neighborhood: campusHood } : {}),
     }));
     setAddressOk(true);
     if (!hit.precise) {
@@ -559,19 +576,26 @@ export function HouseForm({
           />
         </Field>
         <Field label="שכונה">
+          {lockedSchoolHood ? (
+            <p className="mb-2 text-lg text-violet-300">
+              נקבע אוטומטית לפי בית הספר — לא ניתן לשנות.
+            </p>
+          ) : null}
           <div className="flex flex-wrap gap-1.5" role="group" aria-label="שכונה">
             {NEIGHBORHOOD_FILTER_OPTIONS.map((choice) => {
               const selected = hoodChoice === choice;
+              const disabled = Boolean(blocked || lockedSchoolHood);
               return (
                 <button
                   key={choice}
                   type="button"
                   aria-pressed={selected}
+                  disabled={disabled}
                   onClick={() => setHoodChoice(choice)}
                   className={
                     selected
-                      ? "rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black"
-                      : "rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
+                      ? "rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black disabled:opacity-100"
+                      : "rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30 disabled:opacity-40"
                   }
                 >
                   {choice}

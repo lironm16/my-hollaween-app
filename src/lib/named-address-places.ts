@@ -1,4 +1,5 @@
-import { inNeighborhood } from "@/lib/config";
+import { inNeighborhood, type NeighborhoodId } from "@/lib/config";
+import { streetFromLegacyAddress } from "@/lib/address-fields";
 import type { AddressHit } from "@/lib/types";
 
 /** Curated buildings / campuses — same flow as street addresses (pick → pin on map). */
@@ -7,6 +8,8 @@ export type NamedAddressPlace = {
   displayName: string;
   lat: number;
   lng: number;
+  /** Event neighborhood — fixed when this campus is chosen on add/edit. */
+  neighborhood: NeighborhoodId;
   /** Optional street line for maps / footprint hints (not shown in the form field). */
   streetLine?: string;
   /** Extra search phrases (normalized matching). */
@@ -18,6 +21,7 @@ export const NAMED_ADDRESS_PLACES: readonly NamedAddressPlace[] = [
     displayName: "ביה״ס ניצנים",
     lat: 32.0933947,
     lng: 34.811005,
+    neighborhood: "שיכון ותיקים",
     streetLine: "רמבה",
     aliases: ["ניצנים", "בי\"ס ניצנים", "בית ספר ניצנים"],
   },
@@ -25,6 +29,7 @@ export const NAMED_ADDRESS_PLACES: readonly NamedAddressPlace[] = [
     displayName: "ביה״ס המנחיל",
     lat: 32.0935807,
     lng: 34.8204925,
+    neighborhood: "נחלת גנים",
     streetLine: "העמל",
     aliases: ["המנחיל", "בי\"ס המנחיל", "בית ספר המנחיל"],
   },
@@ -32,10 +37,25 @@ export const NAMED_ADDRESS_PLACES: readonly NamedAddressPlace[] = [
     displayName: "ביה״ס גבעולים",
     lat: 32.0886888,
     lng: 34.812861,
+    neighborhood: "הגפן",
     streetLine: "התקווה 20",
     aliases: ["גבעולים", "בי\"ס גבעולים", "בית ספר גבעולים"],
   },
 ];
+
+export function namedPlaceForCampusAddress(
+  address: string | null | undefined,
+): NamedAddressPlace | null {
+  const street = streetFromLegacyAddress(address?.trim() ?? "");
+  if (!street) return null;
+  return NAMED_ADDRESS_PLACES.find((place) => place.displayName === street) ?? null;
+}
+
+export function schoolCampusNeighborhoodForAddress(
+  address: string | null | undefined,
+): NeighborhoodId | null {
+  return namedPlaceForCampusAddress(address)?.neighborhood ?? null;
+}
 
 function normalizePlaceQuery(query: string) {
   let q = query.trim().replace(/\s+/g, " ");
