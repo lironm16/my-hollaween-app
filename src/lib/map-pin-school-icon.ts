@@ -1,4 +1,8 @@
-/** Map cluster pin — single school building (Halloween palette). */
+/** Haunted campus castle — derived from product art, transparent PNG in /public/icons. */
+export const PIN_SCHOOL_CAMPUS_SRC = "/icons/pin-school-campus.png";
+export const PIN_SCHOOL_CAMPUS_SRC_2X = "/icons/pin-school-campus@2x.png";
+
+/** Map cluster pin for curated school addresses (multi-booth). */
 export function pinSchoolClusterIconHtml() {
-  return `<span class="pin-cluster-icon pin-school-icon" aria-hidden="true"><svg viewBox="0 0 36 32" width="36" height="32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 14h28l-14-9L4 14Z" fill="#fb923c"/><rect x="5" y="14" width="26" height="15" rx="1.5" fill="#ffedd5" stroke="#fdba74" stroke-width="0.75"/><rect x="14" y="20" width="8" height="9" rx="1" fill="#7c3aed"/><circle cx="18" cy="24.5" r="1.2" fill="#fbbf24"/><rect x="24" y="16" width="5" height="10" rx="1" fill="#fed7aa"/><circle cx="26.5" cy="19.5" r="2.2" fill="#fff7ed" stroke="#ea580c" stroke-width="0.6"/><path d="M26.5 17.8v3.4M25.1 19.5h2.8" stroke="#ea580c" stroke-width="0.55" stroke-linecap="round"/><path d="M29.5 12.5v4.5M28.2 13.2h2.6" stroke="#dc2626" stroke-width="1.1" stroke-linecap="round"/><path d="M8 11.5c0-1.2 1.2-2 2.2-1.4l1.3.8c.6.4.6 1.2 0 1.6l-1.3.8c-1 .6-2.2-.2-2.2-1.4v-.4Z" fill="#22c55e"/></svg></span>`;
+  return `<span class="pin-cluster-icon pin-school-icon" aria-hidden="true"><img class="pin-school-castle" src="${PIN_SCHOOL_CAMPUS_SRC}" srcset="${PIN_SCHOOL_CAMPUS_SRC} 1x, ${PIN_SCHOOL_CAMPUS_SRC_2X} 2x" width="64" height="52" alt="" decoding="async" /></span>`;
 }

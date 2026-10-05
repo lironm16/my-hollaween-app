@@ -67,6 +67,8 @@ function wrapRoutePin(html: string, routeOrder?: number) {
 }
 
 const PIN_BOX = 62;
+/** School campus clusters — castle art reads better slightly above apartment-building pins. */
+const SCHOOL_CAMPUS_PIN_BOX = PIN_BOX + 12;
 
 function attr(value: string) {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -262,11 +264,14 @@ function clusterIcon(
     `<div class="house-pin is-building${campusClass}${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${clusterLabel}">${allSkipped ? pinSkippedMark() : ""}${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>`,
     routeOrder,
   );
+  const pinBox = schoolCampus ? SCHOOL_CAMPUS_PIN_BOX : PIN_BOX;
+  const pinExtraH = schoolCampus ? 26 : 20;
+  const pinAnchorTail = schoolCampus ? 20 : 16;
   return L.divIcon({
     className: `pumpkin-pin-icon pumpkin-pin-building${schoolCampus ? " pumpkin-pin-school" : ""}${selectedClass}${filterClass}`,
     html: wrapped.html,
-    iconSize: [PIN_BOX, PIN_BOX + 20 + wrapped.extraH],
-    iconAnchor: [PIN_BOX / 2, PIN_BOX + 16 + wrapped.extraH],
+    iconSize: [pinBox, pinBox + pinExtraH + wrapped.extraH],
+    iconAnchor: [pinBox / 2, pinBox + pinAnchorTail + wrapped.extraH],
   });
 }
 
