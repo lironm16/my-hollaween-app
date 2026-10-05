@@ -43,6 +43,7 @@ import {
   firestoreConfigured,
   readFirestoreCatalog,
   readFirestorePushData,
+  readFirestorePushSettings,
   writeFirestoreDb,
   writeFirestorePushSettings,
 } from "@/lib/firestore-db";
@@ -845,16 +846,24 @@ export async function ensurePushSettingsGeneration() {
   if (pushSettingsGenerationChecked) return;
   await withLock(async () => {
     if (pushSettingsGenerationChecked) return;
-    const db = normalizeDb(cloneDb(await readFileDb()));
-    foldPushSettings(db, mem, getGlobalDb());
-    const { settings, changed } = migratePushSettings(db.pushSettings);
+    const remotePush = firestoreConfigured()
+      ? asPushCandidate(await readFirestorePushSettings())
+      : normalizeDb(cloneDb(await readFileDb()));
+    const pushSettings = pickPushSettings(remotePush, mem, getGlobalDb());
+    const { settings, changed } = migratePushSettings(pushSettings);
     if (!changed) {
       pushSettingsGenerationChecked = true;
       return;
     }
-    db.pushSettings = settings;
-    db.updatedAt = new Date().toISOString();
-    await persistPushSettingsMigration(db);
+    const migrated: DbFile = {
+      updatedAt: new Date().toISOString(),
+      houses: mem?.houses ?? [],
+      pushSubscriptions: mem?.pushSubscriptions ?? [],
+      pushSettings: settings,
+      ...(mem?.vapid ? { vapid: mem.vapid } : {}),
+      ...(mem?.eventSettings ? { eventSettings: mem.eventSettings } : {}),
+    };
+    await persistPushSettingsMigration(migrated);
     pushSettingsGenerationChecked = true;
   });
 }

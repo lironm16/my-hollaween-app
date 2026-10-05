@@ -109,7 +109,9 @@ export function pushSubscriptionsCollection() {
   return neighborhoodRoot().collection("pushSubscriptions");
 }
 
-export function metaDoc(name: "pushSettings" | "vapid" | "catalog" | "pushSubs" | "rehearsalStubs") {
+export function metaDoc(
+  name: "pushSettings" | "vapid" | "catalog" | "pushSubs" | "rehearsalStubs" | "eventSettings",
+) {
   return neighborhoodRoot().collection("meta").doc(name);
 }
 

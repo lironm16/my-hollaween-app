@@ -4,17 +4,26 @@ import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { isPubliclyListed } from "@/lib/house-state";
 import { publicHouseForCatalog } from "@/lib/address-reveal";
 import { asCatalogForSnapshot, countPublishedHouses } from "@/lib/catalog-cache-build";
-import { addressRevealScheduleFromDb, eventSettingsStamp } from "@/lib/event-settings";
+import {
+  addressRevealScheduleFromDb,
+  catalogEventSettings,
+  eventSettingsStamp,
+} from "@/lib/event-settings";
 import {
   firestoreConfigured,
+  queryFirestoreHousesSince,
   queryRemovedHouseIdsSince,
   readCatalogMeta,
+  readEventSettingsMeta,
+  readFirestoreEventSettings,
+  readFirestorePushSettings,
   readPushSettingsMeta,
 } from "@/lib/firestore-db";
 import type { Catalog, CatalogDelta, DbFile, House, PublicHouse } from "@/lib/types";
 import {
   catalogRemovalsSince,
   ensurePushSettingsGeneration,
+  getGlobalDb,
   getMem,
   isMemWarm,
   loadDb,
@@ -108,8 +117,81 @@ export function buildCatalogDeltaFromDb(
   };
 }
 
+/** Firestore incremental delta — changed house docs + removals only (no collection scan). */
+export async function buildCatalogDeltaFromFirestore(
+  since: string,
+  sinceMs: number,
+  context: {
+    catalogUpdatedAt: string;
+    houseCount: number;
+    eventSettings?: DbFile["eventSettings"] | null;
+    pushSettings?: DbFile["pushSettings"] | null;
+  },
+): Promise<CatalogDelta> {
+  const revealSchedule = addressRevealScheduleFromDb(context.eventSettings ?? undefined);
+  const [houseRows, removed] = await Promise.all([
+    queryFirestoreHousesSince(since),
+    queryRemovedHouseIdsSince(since),
+  ]);
+  const houses = houseRows.map((house) =>
+    publicHouseForCatalog(house, new Date(), revealSchedule),
+  );
+  const pushChanged =
+    pushAlertsEnabled() && pushSettingsStamp(context.pushSettings ?? undefined) > sinceMs;
+  const eventChanged = eventSettingsStamp(context.eventSettings ?? undefined) > sinceMs;
+  const dbSlice: Pick<DbFile, "houses" | "updatedAt" | "pushSettings" | "eventSettings"> = {
+    houses: [],
+    updatedAt: context.catalogUpdatedAt,
+    ...(context.pushSettings?.templates ? { pushSettings: context.pushSettings } : {}),
+    ...(context.eventSettings ? { eventSettings: context.eventSettings } : {}),
+  };
+  return {
+    updatedAt: context.catalogUpdatedAt,
+    neighborhood: config.neighborhood,
+    houses,
+    removed,
+    houseCount: context.houseCount,
+    ...(pushChanged && context.pushSettings
+      ? { pushTemplates: asCatalog(dbSlice).pushTemplates }
+      : {}),
+    ...(eventChanged && context.eventSettings
+      ? { eventSettings: catalogEventSettings(context.eventSettings) }
+      : {}),
+  };
+}
+
+async function loadDeltaContextForColdPoll(sinceMs: number) {
+  const meta = await readCatalogMeta();
+  const catalogUpdatedAt = meta?.updatedAt ?? new Date(0).toISOString();
+  const houseCount = meta?.houseCount ?? 0;
+  const mem = getMem();
+  const global = getGlobalDb();
+
+  let eventSettings = mem?.eventSettings ?? global?.eventSettings ?? null;
+  const eventMeta = await readEventSettingsMeta();
+  const eventStamp = eventSettingsStamp(eventSettings ?? undefined);
+  const remoteEventStamp = eventMeta?.updatedAt ? Date.parse(eventMeta.updatedAt) : 0;
+  if (remoteEventStamp > sinceMs && remoteEventStamp > eventStamp) {
+    eventSettings = (await readFirestoreEventSettings()) ?? eventSettings;
+  }
+
+  let pushSettings = mem?.pushSettings ?? global?.pushSettings ?? null;
+  if (pushAlertsEnabled()) {
+    const pushMeta = await readPushSettingsMeta();
+    const pushStamp = pushSettingsStamp(pushSettings ?? undefined);
+    const remotePushStamp = pushMeta?.updatedAt ? Date.parse(pushMeta.updatedAt) : 0;
+    if (remotePushStamp > sinceMs && remotePushStamp > pushStamp) {
+      pushSettings = (await readFirestorePushSettings()) ?? pushSettings;
+    }
+  }
+
+  return { catalogUpdatedAt, houseCount, eventSettings, pushSettings };
+}
+
 async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<CatalogDelta | null> {
   const mem = getMem();
+  const eventMeta = firestoreConfigured() ? await readEventSettingsMeta() : null;
+  const eventSettingsUpdatedAt = mem?.eventSettings?.updatedAt ?? eventMeta?.updatedAt;
   if (isMemWarm() && mem) {
     const removed = firestoreConfigured() ? catalogRemovalsSince(sinceMs) : [];
     if (
@@ -117,7 +199,7 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
         sinceMs,
         catalogUpdatedAt: mem.updatedAt,
         pushUpdatedAt: mem.pushSettings?.updatedAt,
-        eventSettingsUpdatedAt: mem.eventSettings?.updatedAt,
+        eventSettingsUpdatedAt,
         removedIds: removed,
       })
     ) {
@@ -143,7 +225,7 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
         sinceMs,
         catalogUpdatedAt: meta.updatedAt,
         pushUpdatedAt: pushMeta?.updatedAt,
-        eventSettingsUpdatedAt: mem?.eventSettings?.updatedAt,
+        eventSettingsUpdatedAt,
         removedIds: [],
       })
     ) {
@@ -155,7 +237,7 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
           sinceMs,
           catalogUpdatedAt: meta.updatedAt,
           pushUpdatedAt: pushMeta?.updatedAt,
-          eventSettingsUpdatedAt: mem?.eventSettings?.updatedAt,
+          eventSettingsUpdatedAt,
           removedIds: removed,
         })
       ) {
@@ -168,7 +250,6 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
 }
 
 export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
-  if (pushAlertsEnabled()) await ensurePushSettingsGeneration();
   const sinceMs = Date.parse(since);
   if (!Number.isFinite(sinceMs) || sinceMs <= 0) {
     const full = await getCatalog();
@@ -178,13 +259,17 @@ export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
   const gated = await tryCatalogDeltaGate(since, sinceMs);
   if (gated) return gated;
 
-  const warm = isMemWarm();
-  const db = await loadDb();
-
-  let removed: string[] = [];
-  if (firestoreConfigured()) {
-    removed = warm ? catalogRemovalsSince(sinceMs) : await queryRemovedHouseIdsSince(since);
+  const mem = getMem();
+  if (isMemWarm() && mem) {
+    const removed = firestoreConfigured() ? catalogRemovalsSince(sinceMs) : [];
+    return buildCatalogDeltaFromDb(mem, since, removed);
   }
 
-  return buildCatalogDeltaFromDb(db, since, removed);
+  if (firestoreConfigured()) {
+    const context = await loadDeltaContextForColdPoll(sinceMs);
+    return buildCatalogDeltaFromFirestore(since, sinceMs, context);
+  }
+
+  const db = await loadDb();
+  return buildCatalogDeltaFromDb(db, since, []);
 }

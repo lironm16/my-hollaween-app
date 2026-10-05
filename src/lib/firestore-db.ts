@@ -52,6 +52,9 @@ export const CATALOG_META_MEM_TTL_MS = 600_000;
 let pushSettingsMetaMem: { updatedAt: string } | null = null;
 let pushSettingsMetaMemAt = 0;
 
+let eventSettingsMetaMem: { updatedAt: string } | null = null;
+let eventSettingsMetaMemAt = 0;
+
 let pushSubsCountMem: { count: number; at: number } | null = null;
 
 /** Cheap catalog revision stamp — one doc read for idle delta polls. */
@@ -110,6 +113,55 @@ export async function bumpCatalogMeta(updatedAt: string, houseCount?: number) {
   catalogMetaMemAt = Date.now();
   await resolveAdminFirestore();
   await metaDoc("catalog").set(catalogMetaMem, { merge: true });
+}
+
+/** Event schedule revision for delta polls (address reveal / add-house cutoff). */
+export async function readEventSettingsMeta(): Promise<{ updatedAt: string } | null> {
+  if (eventSettingsMetaMem && Date.now() - eventSettingsMetaMemAt < CATALOG_META_MEM_TTL_MS) {
+    return eventSettingsMetaMem;
+  }
+  if (!firestoreConfigured()) return null;
+  try {
+    await resolveAdminFirestore();
+    const snap = await metaDoc("eventSettings").get();
+    if (!snap.exists) return null;
+    const updatedAt = String((snap.data() as { updatedAt?: string })?.updatedAt ?? "");
+    if (!updatedAt) return null;
+    eventSettingsMetaMem = { updatedAt };
+    eventSettingsMetaMemAt = Date.now();
+    return eventSettingsMetaMem;
+  } catch (error) {
+    console.error("[firestore] event settings meta read failed", error);
+    return null;
+  }
+}
+
+export async function readFirestoreEventSettings(): Promise<DbFile["eventSettings"] | null> {
+  if (!firestoreConfigured()) return null;
+  try {
+    await resolveAdminFirestore();
+    const snap = await metaDoc("eventSettings").get();
+    if (!snap.exists) return null;
+    return snap.data() as DbFile["eventSettings"];
+  } catch (error) {
+    console.error("[firestore] event settings read failed", error);
+    return null;
+  }
+}
+
+/** Full push template doc (one read when templates changed since client `since`). */
+export async function readFirestorePushSettings(): Promise<DbFile["pushSettings"] | null> {
+  if (!firestoreConfigured()) return null;
+  try {
+    await resolveAdminFirestore();
+    const snap = await metaDoc("pushSettings").get();
+    if (!snap.exists) return null;
+    const row = snap.data() as DbFile["pushSettings"];
+    return row?.templates ? row : null;
+  } catch (error) {
+    console.error("[firestore] push settings read failed", error);
+    return null;
+  }
 }
 
 function rememberPushSettingsMeta(updatedAt: string) {
@@ -425,6 +477,13 @@ function pushSettingsChanged(
   return JSON.stringify(prev ?? null) !== JSON.stringify(next ?? null);
 }
 
+function eventSettingsChanged(
+  prev: DbFile["eventSettings"] | undefined,
+  next: DbFile["eventSettings"] | undefined,
+) {
+  return JSON.stringify(prev ?? null) !== JSON.stringify(next ?? null);
+}
+
 function vapidChanged(prev: VapidKeys | undefined, next: VapidKeys | undefined) {
   return JSON.stringify(prev ?? null) !== JSON.stringify(next ?? null);
 }
@@ -487,7 +546,17 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
     await metaDoc("vapid").set(db.vapid, { merge: true });
   }
 
+  const eventChanged = eventSettingsChanged(prev?.eventSettings, db.eventSettings);
+  if (eventChanged && db.eventSettings) {
+    await metaDoc("eventSettings").set(db.eventSettings, { merge: true });
+    const eventUpdatedAt = db.eventSettings.updatedAt ?? db.updatedAt;
+    eventSettingsMetaMem = { updatedAt: eventUpdatedAt };
+    eventSettingsMetaMemAt = Date.now();
+  }
+
   if (housesChanged || removals.length > 0) {
     await bumpCatalogMeta(db.updatedAt, countPublishedHouses(houses));
+  } else if (eventChanged) {
+    await bumpCatalogMeta(db.eventSettings?.updatedAt ?? db.updatedAt);
   }
 }
