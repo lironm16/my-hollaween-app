@@ -33,18 +33,16 @@ export function shouldCapturePwaInstallPrompt(
   isIos: boolean,
   isStandalone: boolean,
   isPwaInstalled = isStandalone,
-  isAndroid = false,
 ) {
-  return !isIos && !isAndroid && !isPwaInstalled;
+  return !isIos && !isPwaInstalled;
 }
 
 export function pwaInstallPromptEligible(options: {
   isIos: boolean;
-  isAndroid?: boolean;
   isPwaInstalled: boolean;
   hasDeferredPrompt: boolean;
 }) {
-  if (options.isIos || options.isAndroid || options.isPwaInstalled) return false;
+  if (options.isIos || options.isPwaInstalled) return false;
   return options.hasDeferredPrompt;
 }
 
@@ -55,6 +53,8 @@ export const PWA_INSTALL_UNAVAILABLE_TOAST =
 export function shouldShowPwaInstallButton(options: {
   canInstall: boolean;
   isPwaInstalled: boolean;
+  /** Header on Android — always show download; tap uses native prompt when available. */
+  alwaysOnAndroid?: boolean;
   /** Help/Q&A demo — show instructional button even without beforeinstallprompt. */
   showAlways?: boolean;
   /** Help accordion — always render the button UI (ignores standalone / prompt state). */
@@ -62,6 +62,7 @@ export function shouldShowPwaInstallButton(options: {
 }) {
   if (options.forceVisible) return true;
   if (options.isPwaInstalled) return false;
+  if (options.alwaysOnAndroid) return true;
   if (options.showAlways) return true;
   return options.canInstall;
 }

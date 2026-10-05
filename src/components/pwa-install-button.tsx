@@ -4,10 +4,8 @@ import { Download } from "lucide-react";
 import { toast } from "sonner";
 import { usePwaInstall } from "@/components/pwa-install-provider";
 import { Button } from "@/components/ui/button";
-import {
-  PWA_INSTALL_UNAVAILABLE_TOAST,
-  shouldShowPwaInstallButton,
-} from "@/lib/pwa-install";
+import { shouldShowPwaInstallButton } from "@/lib/pwa-install";
+import { isAndroidDevice } from "@/lib/push-client";
 import { cn } from "@/lib/utils";
 
 export function PwaInstallButton({
@@ -26,21 +24,29 @@ export function PwaInstallButton({
   forceVisible?: boolean;
 }) {
   const { canInstall, isPwaInstalled, promptInstall } = usePwaInstall();
+  const android = isAndroidDevice();
 
-  if (!shouldShowPwaInstallButton({ canInstall, isPwaInstalled, showAlways, forceVisible })) return null;
+  if (
+    !shouldShowPwaInstallButton({
+      canInstall,
+      isPwaInstalled,
+      showAlways,
+      forceVisible,
+      alwaysOnAndroid: android,
+    })
+  ) {
+    return null;
+  }
 
   async function onClick() {
-    if (!canInstall) {
-      toast.message(PWA_INSTALL_UNAVAILABLE_TOAST, { closeButton: true });
-      return;
-    }
+    if (!canInstall) return;
     const outcome = await promptInstall();
     if (outcome === "accepted") {
       onInstalled?.();
       toast.success("האפליקציה הותקנה!", { closeButton: true });
       return;
     }
-    if (outcome === "dismissed") {
+    if (outcome === "dismissed" && !android) {
       toast.message("אפשר להתקין בכל עת מהתפריט או מדף העזרה.");
     }
   }
