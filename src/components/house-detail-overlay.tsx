@@ -2,6 +2,7 @@
 
 import { useEffect, useId, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { ClusterHouseActionMenu } from "@/components/cluster-house-action-menu";
 import { HouseCardActionMenu } from "@/components/house-card-action-menu";
 import type { HouseCardActionContext } from "@/components/house-card-actions";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
@@ -125,7 +126,27 @@ export function HouseDetailOverlay({
                 <p className="map-house-sheet-kicker">{addressReveal.formatDisplayAddress(house)}</p>
                 <p className="map-house-sheet-sub">{clusterOverviewSubtitle(clusterHouses!)}</p>
               </div>
-              {actionMenu}
+              <ClusterHouseActionMenu
+                houses={clusterHouses!}
+                liked={liked ?? (() => false)}
+                visited={visited ?? (() => false)}
+                skipped={skippedIds ?? (() => false)}
+                onVisitAll={
+                  actionContext.onClusterVisitAll
+                    ? () => actionContext.onClusterVisitAll!(clusterHouses!)
+                    : undefined
+                }
+                onSkipAll={
+                  actionContext.onClusterSkipAll
+                    ? () => actionContext.onClusterSkipAll!(clusterHouses!)
+                    : undefined
+                }
+                onLikeAll={
+                  actionContext.onClusterLikeAll
+                    ? () => actionContext.onClusterLikeAll!(clusterHouses!)
+                    : undefined
+                }
+              />
             </div>
             <div className="max-h-[min(52dvh,28rem)] overflow-y-auto overscroll-contain pe-0.5">
               <ClusterHouseList

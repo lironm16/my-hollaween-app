@@ -9,6 +9,7 @@ import {
   ClusterHouseSwipeArea,
   clusterHouseIndex,
 } from "@/components/cluster-house-list";
+import { ClusterHouseActionMenu } from "@/components/cluster-house-action-menu";
 import { clusterOverviewSubtitle } from "@/lib/school-campus";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
@@ -373,6 +374,27 @@ export function MapHouseSheet({
                   <p className="map-house-sheet-kicker">{address}</p>
                   <p className="map-house-sheet-sub">{clusterOverviewSubtitle(clusterHouses)}</p>
                 </div>
+                <ClusterHouseActionMenu
+                  houses={clusterHouses}
+                  liked={liked ?? (() => false)}
+                  visited={visited ?? (() => false)}
+                  skipped={skippedIds ?? (() => false)}
+                  onVisitAll={
+                    actionContext.onClusterVisitAll
+                      ? () => actionContext.onClusterVisitAll!(clusterHouses)
+                      : undefined
+                  }
+                  onSkipAll={
+                    actionContext.onClusterSkipAll
+                      ? () => actionContext.onClusterSkipAll!(clusterHouses)
+                      : undefined
+                  }
+                  onLikeAll={
+                    actionContext.onClusterLikeAll
+                      ? () => actionContext.onClusterLikeAll!(clusterHouses)
+                      : undefined
+                  }
+                />
               </div>
             </div>
             <div className="map-house-sheet-cluster-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">

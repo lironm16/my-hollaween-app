@@ -36,7 +36,11 @@ import { effectiveHouseKind } from "@/lib/house-kind";
 import { pinBackgroundFill } from "@/lib/pin-colors";
 import { clusterBadgeHouses, clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
 import { pinSchoolClusterIconHtml } from "@/lib/map-pin-school-icon";
-import { clusterIsSchoolCampus, clusterPinAriaLabel } from "@/lib/school-campus";
+import {
+  clusterIsSchoolCampus,
+  clusterPinAriaLabel,
+  mapCoordsForHouse,
+} from "@/lib/school-campus";
 import { SKIP_ICON_SVG } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
 
@@ -67,8 +71,6 @@ function wrapRoutePin(html: string, routeOrder?: number) {
 }
 
 const PIN_BOX = 62;
-/** School campus clusters — castle art reads better slightly above apartment-building pins. */
-const SCHOOL_CAMPUS_PIN_BOX = PIN_BOX + 12;
 
 function attr(value: string) {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -270,9 +272,9 @@ function clusterIcon(
     `<div class="house-pin is-building${campusClass}${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${clusterLabel}">${allSkipped ? pinSkippedMark() : ""}${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>`,
     routeOrder,
   );
-  const pinBox = schoolCampus ? SCHOOL_CAMPUS_PIN_BOX : PIN_BOX;
-  const pinExtraH = schoolCampus ? 26 : 20;
-  const pinAnchorTail = schoolCampus ? 20 : 16;
+  const pinBox = PIN_BOX;
+  const pinExtraH = 20;
+  const pinAnchorTail = 16;
   return L.divIcon({
     className: `pumpkin-pin-icon pumpkin-pin-building${schoolCampus ? " pumpkin-pin-school" : ""}${selectedClass}${filterClass}`,
     html: wrapped.html,
@@ -361,26 +363,55 @@ function KeepSelectedVisible({
 
   useEffect(() => {
     if (!enabled) return;
-    const pan = () => {
+
+    const adjustForSheet = () => {
       const raw = getComputedStyle(document.documentElement).getPropertyValue("--map-sheet-h");
       const sheetH = Number.parseFloat(raw);
-      if (!Number.isFinite(sheetH) || sheetH < 80) return;
       const size = map.getSize();
+      if (size.x < 40 || size.y < 40) return;
       const topChrome = 72;
+      const point = map.latLngToContainerPoint(L.latLng(lat, lng));
+      point.x += offsetX;
+      point.y += offsetY;
+
+      if (!Number.isFinite(sheetH) || sheetH < 80) {
+        const dx = point.x - size.x / 2;
+        const dy = point.y - size.y * 0.42;
+        if (Math.abs(dx) >= 8 || Math.abs(dy) >= 8) {
+          map.panBy([dx, dy], { animate: true, duration: 0.28 });
+        }
+        return;
+      }
+
       const visibleBottom = size.y - sheetH;
       const usable = visibleBottom - topChrome;
       if (usable < 40) return;
       const visibleMidY = topChrome + usable * 0.62;
-      const point = map.latLngToContainerPoint(L.latLng(lat, lng));
-      point.x += offsetX;
-      point.y += offsetY;
       const dx = point.x - size.x / 2;
       const dy = point.y - visibleMidY;
       if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
       map.panBy([dx, dy], { animate: true, duration: 0.28 });
     };
-    const onSheet = () => pan();
-    const timer = window.setTimeout(pan, 70);
+
+    const ensureOnMap = () => {
+      map.invalidateSize({ animate: false });
+      const size = map.getSize();
+      if (size.x < 40 || size.y < 40) return;
+      const point = map.latLngToContainerPoint(L.latLng(lat, lng));
+      const margin = 56;
+      const offScreen =
+        point.x < margin ||
+        point.x > size.x - margin ||
+        point.y < margin ||
+        point.y > size.y - margin;
+      if (offScreen) {
+        map.panTo([lat, lng], { animate: false });
+      }
+      adjustForSheet();
+    };
+
+    const onSheet = () => ensureOnMap();
+    const timer = window.setTimeout(ensureOnMap, 70);
     window.addEventListener("hw-map-sheet", onSheet);
     return () => {
       window.clearTimeout(timer);
@@ -728,7 +759,9 @@ export function HouseMap({
     const cluster = clusters.find((item) => item.houses.some((house) => house.id === selectedId));
     if (!cluster) {
       const house = houses.find((item) => item.id === selectedId);
-      return house ? { lat: house.lat, lng: house.lng, offsetX: 0, offsetY: 0 } : null;
+      if (!house) return null;
+      const coords = mapCoordsForHouse(house);
+      return { lat: coords.lat, lng: coords.lng, offsetX: 0, offsetY: 0 };
     }
     return { lat: cluster.lat, lng: cluster.lng, offsetX: 0, offsetY: 0 };
   }, [clusters, houses, pickMode, selectedId]);

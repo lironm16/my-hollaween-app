@@ -10,12 +10,15 @@ export function VisitSkipConflictDialog({
   open,
   kind,
   house,
+  cluster = false,
   onConfirm,
   onCancel,
 }: {
   open: boolean;
-  kind: "visit" | "skip" | null;
+  kind: "visit" | "skip" | "visit-all" | "skip-all" | null;
   house: PublicHouse | null;
+  /** Multi-house / school cluster bulk action — generic copy. */
+  cluster?: boolean;
   onConfirm: (dismissFuture: boolean) => void;
   onCancel: () => void;
 }) {
@@ -23,13 +26,23 @@ export function VisitSkipConflictDialog({
 
   useEffect(() => {
     if (!open) setDismissFuture(false);
-  }, [open, house?.id, kind]);
+  }, [open, house?.id, kind, cluster]);
 
   if (!house || !kind) return null;
 
-  const title = kind === "visit" ? "לסמן ביקור?" : "לדלג על הבית?";
-  const body =
-    kind === "visit"
+  const markingVisit = kind === "visit" || kind === "visit-all";
+  const title = cluster
+    ? markingVisit
+      ? "לסמן ביקור בכולם?"
+      : "לדלג על כולם?"
+    : markingVisit
+      ? "לסמן ביקור?"
+      : "לדלג על הבית?";
+  const body = cluster
+    ? markingVisit
+      ? "לפחות אחד מהבתים בכתובת הזו מסומן כ«דילגתי». סימון «ביקרתי בכולם» יסיר את סימוני הדילוג על כל הבתים."
+      : "לפחות אחד מהבתים בכתובת הזו מסומן כ«ביקרתי». «דילוג על כולם» יסיר את סימוני הביקור על כל הבתים."
+    : markingVisit
       ? `סימון «ביקרתם» יסיר את סימון «דילגתם» על ${houseHeadline(house)}.`
       : `«דילוג על בית» יסיר את סימון «ביקרתם» על ${houseHeadline(house)}.`;
 

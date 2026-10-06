@@ -1399,15 +1399,24 @@
       "address": "ביה״ס ניצנים",
       "arrival": "דוכן 1 — ליד הכניסה",
       "description": "סטאב לחזרה — דוכן קישוט וממתקים בביה״ס ניצנים.",
-      "lat": 32.0933947,
-      "lng": 34.811005,
-      "treats": ["candy"],
-      "treatStock": { "candy": "plenty" },
+      "lat": 32.09322,
+      "lng": 34.81118,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
       "visit": "come",
       "scareLevel": "mild",
       "openFrom": "17:00",
       "openTo": "21:00",
-      "openHours": [{ "from": "17:00", "to": "21:00" }],
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
       "openFrom2": "",
       "openTo2": "",
       "notes": "",
@@ -1432,15 +1441,26 @@
       "address": "ביה״ס ניצנים",
       "arrival": "דוכן 2 — המסדרון",
       "description": "סטאב לחזרה — דוכן שני באותו בית ספר.",
-      "lat": 32.0934247,
-      "lng": 34.811035,
-      "treats": ["candy", "vegan"],
-      "treatStock": { "candy": "plenty", "vegan": "plenty" },
+      "lat": 32.093250000000005,
+      "lng": 34.81121,
+      "treats": [
+        "candy",
+        "vegan"
+      ],
+      "treatStock": {
+        "candy": "plenty",
+        "vegan": "plenty"
+      },
       "visit": "come",
       "scareLevel": "mild",
       "openFrom": "17:00",
       "openTo": "21:00",
-      "openHours": [{ "from": "17:00", "to": "21:00" }],
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
       "openFrom2": "",
       "openTo2": "",
       "notes": "",
@@ -1465,15 +1485,24 @@
       "address": "ביה״ס ניצנים",
       "arrival": "דוכן 3 — החצר",
       "description": "סטאב לחזרה — דוכן שלישי בניצנים.",
-      "lat": 32.0933647,
-      "lng": 34.811045,
-      "treats": ["candy"],
-      "treatStock": { "candy": "low" },
+      "lat": 32.09319,
+      "lng": 34.81122,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
       "visit": "come",
       "scareLevel": "medium",
       "openFrom": "17:00",
       "openTo": "21:00",
-      "openHours": [{ "from": "17:00", "to": "21:00" }],
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
       "openFrom2": "",
       "openTo2": "",
       "notes": "",
@@ -1498,15 +1527,24 @@
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 1",
       "description": "סטאב לחזרה — דוכן בביה״ס המנחיל.",
-      "lat": 32.0935807,
-      "lng": 34.8204925,
-      "treats": ["candy"],
-      "treatStock": { "candy": "plenty" },
+      "lat": 32.0935306,
+      "lng": 34.8205447,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
       "visit": "come",
       "scareLevel": "mild",
       "openFrom": "17:00",
       "openTo": "21:00",
-      "openHours": [{ "from": "17:00", "to": "21:00" }],
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
       "openFrom2": "",
       "openTo2": "",
       "notes": "",
@@ -1531,15 +1569,24 @@
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 2",
       "description": "סטאב לחזרה — דוכן שני בהמנחיל.",
-      "lat": 32.0936107,
-      "lng": 34.8205225,
-      "treats": ["candy"],
-      "treatStock": { "candy": "plenty" },
+      "lat": 32.0935606,
+      "lng": 34.8205747,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
       "visit": "come",
       "scareLevel": "mild",
       "openFrom": "17:00",
       "openTo": "21:00",
-      "openHours": [{ "from": "17:00", "to": "21:00" }],
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
       "openFrom2": "",
       "openTo2": "",
       "notes": "",
@@ -1564,15 +1611,24 @@
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 3",
       "description": "סטאב לחזרה — דוכן שלישי בהמנחיל.",
-      "lat": 32.0935507,
-      "lng": 34.8205125,
-      "treats": ["candy"],
-      "treatStock": { "candy": "low" },
+      "lat": 32.0935006,
+      "lng": 34.8205847,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
       "visit": "come",
       "scareLevel": "medium",
       "openFrom": "17:00",
       "openTo": "21:00",
-      "openHours": [{ "from": "17:00", "to": "21:00" }],
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
       "openFrom2": "",
       "openTo2": "",
       "notes": "",
@@ -1597,15 +1653,24 @@
       "address": "ביה״ס גבעולים",
       "arrival": "דוכן 1",
       "description": "סטאב לחזרה — דוכן בביה״ס גבעולים.",
-      "lat": 32.0886888,
-      "lng": 34.812861,
-      "treats": ["candy"],
-      "treatStock": { "candy": "plenty" },
+      "lat": 32.0886564,
+      "lng": 34.8128792,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
       "visit": "come",
       "scareLevel": "mild",
       "openFrom": "17:00",
       "openTo": "21:00",
-      "openHours": [{ "from": "17:00", "to": "21:00" }],
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
       "openFrom2": "",
       "openTo2": "",
       "notes": "",
@@ -1630,15 +1695,26 @@
       "address": "ביה״ס גבעולים",
       "arrival": "דוכן 2",
       "description": "סטאב לחזרה — דוכן שני בגבעולים.",
-      "lat": 32.0887188,
-      "lng": 34.812891,
-      "treats": ["candy", "vegan"],
-      "treatStock": { "candy": "plenty", "vegan": "plenty" },
+      "lat": 32.0886864,
+      "lng": 34.8129092,
+      "treats": [
+        "candy",
+        "vegan"
+      ],
+      "treatStock": {
+        "candy": "plenty",
+        "vegan": "plenty"
+      },
       "visit": "come",
       "scareLevel": "mild",
       "openFrom": "17:00",
       "openTo": "21:00",
-      "openHours": [{ "from": "17:00", "to": "21:00" }],
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
       "openFrom2": "",
       "openTo2": "",
       "notes": "",
@@ -1663,15 +1739,24 @@
       "address": "ביה״ס גבעולים",
       "arrival": "דוכן 3",
       "description": "סטאב לחזרה — דוכן שלישי בגבעולים.",
-      "lat": 32.0886588,
-      "lng": 34.812901,
-      "treats": ["candy"],
-      "treatStock": { "candy": "out" },
+      "lat": 32.088626399999995,
+      "lng": 34.812919199999996,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "out"
+      },
       "visit": "come",
       "scareLevel": "medium",
       "openFrom": "17:00",
       "openTo": "21:00",
-      "openHours": [{ "from": "17:00", "to": "21:00" }],
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
       "openFrom2": "",
       "openTo2": "",
       "notes": "ממתקים נגמרו — עדיין קישוט",

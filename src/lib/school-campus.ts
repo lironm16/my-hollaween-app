@@ -1,6 +1,7 @@
 import { streetFromLegacyAddress } from "@/lib/address-fields";
 import {
   NAMED_ADDRESS_PLACES,
+  namedPlaceForCampusAddress,
   schoolCampusNeighborhoodForAddress,
 } from "@/lib/named-address-places";
 import type { PublicHouse } from "@/lib/types";
@@ -33,6 +34,15 @@ export function clusterOverviewSubtitle(houses: readonly Pick<PublicHouse, "addr
 }
 
 /** Pin aria-label for multi-unit clusters. */
+/** Map pan / cluster anchor — curated campus coords when the row is a school address. */
+export function mapCoordsForHouse(
+  house: Pick<PublicHouse, "address" | "lat" | "lng">,
+): { lat: number; lng: number } {
+  const place = namedPlaceForCampusAddress(house.address);
+  if (place) return { lat: place.lat, lng: place.lng };
+  return { lat: house.lat, lng: house.lng };
+}
+
 export function clusterPinAriaLabel(houses: readonly Pick<PublicHouse, "address">[]): string {
   const count = houses.length;
   if (clusterIsSchoolCampus(houses)) {

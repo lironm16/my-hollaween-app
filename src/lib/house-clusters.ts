@@ -1,4 +1,6 @@
 import { parseStreetAndNumber } from "@/lib/address-text";
+import { namedPlaceForCampusAddress } from "@/lib/named-address-places";
+import { clusterIsSchoolCampus } from "@/lib/school-campus";
 import type { PublicHouse } from "@/lib/types";
 
 export type HouseCluster = {
@@ -55,8 +57,15 @@ function sortHouses(houses: PublicHouse[]) {
 
 function clusterFromHouses(key: string, houses: PublicHouse[]): HouseCluster {
   const housesSorted = sortHouses(houses);
-  const lat = housesSorted.reduce((sum, h) => sum + h.lat, 0) / housesSorted.length;
-  const lng = housesSorted.reduce((sum, h) => sum + h.lng, 0) / housesSorted.length;
+  const campusPlace =
+    clusterIsSchoolCampus(housesSorted) &&
+    namedPlaceForCampusAddress(housesSorted[0]!.address);
+  const lat =
+    campusPlace?.lat ??
+    housesSorted.reduce((sum, h) => sum + h.lat, 0) / housesSorted.length;
+  const lng =
+    campusPlace?.lng ??
+    housesSorted.reduce((sum, h) => sum + h.lng, 0) / housesSorted.length;
   return {
     key,
     address: housesSorted[0]!.address,

@@ -41,6 +41,17 @@ function house(id: string, address: string, patch: Partial<PublicHouse> = {}): P
   };
 }
 
+describe("school campus cluster anchor", () => {
+  it("uses curated map coords instead of averaging booth offsets", () => {
+    const a = house("a", "ביה״ס ניצנים", { lat: 32.09, lng: 34.81 });
+    const b = house("b", "ביה״ס ניצנים", { lat: 32.091, lng: 34.811 });
+    const [cluster] = clusterHousesByAddress([a, b]);
+    assert.ok(cluster);
+    assert.equal(cluster!.lat, 32.09322);
+    assert.equal(cluster!.lng, 34.81118);
+  });
+});
+
 describe("clusterAddressKeyForHouse", () => {
   it("uses house id when address is redacted", () => {
     const a = house("a", "", { lat: 32.091, lng: 34.802 });

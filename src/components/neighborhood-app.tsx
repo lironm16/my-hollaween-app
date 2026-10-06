@@ -249,8 +249,10 @@ export function NeighborhoodApp({
   const [askedLocation, setAskedLocation] = useState(false);
   const [skipDialogHouse, setSkipDialogHouse] = useState<PublicHouse | null>(null);
   const [visitSkipConflict, setVisitSkipConflict] = useState<{
-    kind: "visit" | "skip";
+    kind: "visit" | "skip" | "visit-all" | "skip-all";
     house: PublicHouse;
+    cluster?: boolean;
+    clusterHouses?: PublicHouse[];
   } | null>(null);
   const { alerts: tempRestoreAlerts, dismiss: dismissTempRestoreAlert } = useTempSkipRestoreAlerts();
   const likes = useLikedHouses();
@@ -887,11 +889,70 @@ export function NeighborhoodApp({
     proceedWithSkipHouse(house);
   }
 
+  function applyClusterSkipAll(houses: PublicHouse[]) {
+    for (const item of houses) {
+      if (skips.skipped(item.id)) continue;
+      applySkipHouse(item, "other", false);
+    }
+  }
+
+  function applyClusterVisitAll(houses: PublicHouse[]) {
+    for (const item of houses) {
+      if (visits.visited(item.id)) continue;
+      performToggleVisited(item.id);
+    }
+  }
+
+  function applyClusterLikeAll(houses: PublicHouse[]) {
+    for (const item of houses) {
+      if (likes.liked(item.id)) continue;
+      onToggleLike(item.id);
+    }
+  }
+
+  function handleClusterSkipAll(houses: PublicHouse[]) {
+    const pending = houses.filter((item) => !skips.skipped(item.id));
+    if (pending.length === 0) return;
+    if (pending.some((item) => visits.visited(item.id)) && shouldAskVisitSkipConflict()) {
+      setVisitSkipConflict({
+        kind: "skip-all",
+        house: pending[0]!,
+        cluster: true,
+        clusterHouses: pending,
+      });
+      return;
+    }
+    applyClusterSkipAll(pending);
+  }
+
+  function handleClusterVisitAll(houses: PublicHouse[]) {
+    const pending = houses.filter((item) => !visits.visited(item.id));
+    if (pending.length === 0) return;
+    if (pending.some((item) => skips.skipped(item.id)) && shouldAskVisitSkipConflict()) {
+      setVisitSkipConflict({
+        kind: "visit-all",
+        house: pending[0]!,
+        cluster: true,
+        clusterHouses: pending,
+      });
+      return;
+    }
+    applyClusterVisitAll(pending);
+  }
+
   function confirmVisitSkipConflict(dismissFuture: boolean) {
     const pending = visitSkipConflict;
     setVisitSkipConflict(null);
     if (!pending) return;
     if (dismissFuture) dismissVisitSkipConflictPrompt();
+    if (pending.kind === "visit-all") {
+      applyClusterVisitAll(pending.clusterHouses ?? [pending.house]);
+      return;
+    }
+    if (pending.kind === "skip-all") {
+      applyClusterSkipAll(pending.clusterHouses ?? [pending.house]);
+      return;
+    }
     if (pending.kind === "visit") {
       performToggleVisited(pending.house.id);
       return;
@@ -1120,6 +1181,9 @@ export function NeighborhoodApp({
               setView("list");
             }
           : undefined,
+      onClusterVisitAll: handleClusterVisitAll,
+      onClusterSkipAll: handleClusterSkipAll,
+      onClusterLikeAll: applyClusterLikeAll,
       canEdit: (id) => Boolean(admin || owned.some((item) => item.id === id)),
       editCodeFor: (id) =>
         admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode,
@@ -1502,6 +1566,7 @@ export function NeighborhoodApp({
           open
           kind={visitSkipConflict.kind}
           house={visitSkipConflict.house}
+          cluster={visitSkipConflict.cluster}
           onConfirm={confirmVisitSkipConflict}
           onCancel={() => setVisitSkipConflict(null)}
         />

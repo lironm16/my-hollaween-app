@@ -800,21 +800,29 @@
 
 .house-pin.is-school-campus {
   background: linear-gradient(165deg, #5b21b6 0%, #6d28d9 55%, #7c3aed 100%) !important;
+  overflow: hidden;
 }
 
-.pin-school-icon {
-  width: 64px;
-  height: 52px;
-  top: 42%;
+.pin-school-clip {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 82%;
+  height: 82%;
+  overflow: hidden;
+  border-radius: 999px;
+  pointer-events: none;
 }
 
-.pin-school-icon .pin-school-castle {
+.pin-school-clip .pin-school-castle {
   display: block;
-  width: 100%;
-  height: auto;
-  max-width: 64px;
-  max-height: 52px;
-  object-fit: contain;
+  width: 118%;
+  height: 118%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  object-position: center center;
   filter: drop-shadow(0 1px 2px rgb(0 0 0 / 35%));
 }
 
