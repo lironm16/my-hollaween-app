@@ -56,7 +56,7 @@ import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-h
 import { gemMapLegendVisible } from "@/lib/gem-hunt-enabled";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
-import { gemCarrierHousesForMap, syncGemMonsterAssignment } from "@/lib/gem-monsters";
+import { gemHousesForMap, syncGemMonsterAssignment } from "@/lib/gem-monsters";
 import {
   isGemHuntOrientationGranted,
   prepareGemHuntSensors,
@@ -370,7 +370,7 @@ export function NeighborhoodApp({
     () => mapListHouses.filter((house) => houseMatchesSet(house, activeHouseSet)),
     [mapListHouses, activeHouseSet],
   );
-  const mapGemHouses = useMemo(() => gemCarrierHousesForMap(mapHouses), [mapHouses]);
+  const mapGemHouses = useMemo(() => gemHousesForMap(mapHouses), [mapHouses]);
   useEffect(() => {
     if (gemHuntActive) syncGemMonsterAssignment(mapHouses);
   }, [gemHuntActive, mapHouses]);

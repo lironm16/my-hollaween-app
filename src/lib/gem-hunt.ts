@@ -16,6 +16,7 @@ import {
   buildGemMonsterAssignment,
   countGemEligibleHouses,
   gemAlbumStickerPool,
+  gemClusterSpreadForHouse,
   gemFamilyForHouse,
   gemHuntMapHouses,
   gemLabelHe,
@@ -84,6 +85,9 @@ export const GEM_SCAN_RING_COLLECT_RADIUS = 54;
 /** Ground-level offset from the map pin (no floor height — see gemAnchorForHouse). */
 export const GEM_ANCHOR_MIN_METERS = 2;
 export const GEM_ANCHOR_MAX_METERS = 10;
+/** Shared-building clusters — fan gems around the pin so markers stay tappable. */
+export const GEM_CLUSTER_ANCHOR_MIN_METERS = 8;
+export const GEM_CLUSTER_ANCHOR_MAX_METERS = 28;
 /**
  * When reported distance to pin/anchor is this small, trust on-site GPS despite noisy accuracy.
  * (Avoids «2 m away» but still «far» when accuracy is 60–100 m.)
@@ -171,6 +175,20 @@ export function gemDistanceMeters(
   return distanceMeters(user, anchor);
 }
 
+function gemClusterFanAnchor(house: GemAnchorHouse, cluster: { index: number; size: number }): GemAnchor {
+  const h = hashHouseSeed(house.id, "gem-cluster-spread");
+  const slotDeg = (360 / cluster.size) * cluster.index;
+  const jitter = (h % 15) - 7;
+  const bearingFromHouseDeg = slotDeg + jitter;
+  const ring = Math.floor(cluster.index / 10);
+  const span = GEM_CLUSTER_ANCHOR_MAX_METERS - GEM_CLUSTER_ANCHOR_MIN_METERS;
+  const offsetM =
+    GEM_CLUSTER_ANCHOR_MIN_METERS +
+    Math.min(span, ring * 5 + ((h >>> 8) % 1000) / (1000 / Math.max(span - ring * 5, 4)));
+  const point = destinationPoint(house, bearingFromHouseDeg, offsetM);
+  return { ...point, bearingFromHouseDeg, offsetM, calibrated: false };
+}
+
 export function gemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
   const override = getGemAnchorOverride(house.id);
   if (override) {
@@ -183,6 +201,11 @@ export function gemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
       offsetM,
       calibrated: true,
     };
+  }
+
+  const cluster = gemClusterSpreadForHouse(house.id);
+  if (cluster && cluster.size > 1) {
+    return gemClusterFanAnchor(house, cluster);
   }
 
   const osm = getOsmGemAnchor(house.id);

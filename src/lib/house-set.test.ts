@@ -111,8 +111,8 @@ describe("resolveViewerHouseSet", () => {
     assert.equal(resolveViewerHouseSet(stubsOnly, false, "real"), "real");
   });
 
-  it("keeps real filter when real houses exist", () => {
-    assert.equal(resolveViewerHouseSet(mixed, false, "real", { previewDeployment: true }), "real");
+  it("shows real and stubs on preview when both exist", () => {
+    assert.equal(resolveViewerHouseSet(mixed, false, "real", { previewDeployment: true }), "all");
   });
 
   it("respects admin house-set preference", () => {

@@ -10,6 +10,8 @@ import {
   gemAlbumMonstersForMap,
   gemAlbumStickerPool,
   gemCarrierHousesForMap,
+  gemHousesForMap,
+  gemClusterSpreadForHouse,
   gemFamilyForHouse,
   gemLabelHe,
   gemMonsterForHouse,
@@ -120,7 +122,7 @@ describe("gem monsters", () => {
     }
   });
 
-  it("assigns at most one gem per address cluster", () => {
+  it("assigns one gem per house in a shared address cluster", () => {
     if (GEM_MONSTERS_DRAGON_ONLY) return;
     const shared = "חרוזים 8, חרוזים";
     const houses = [
@@ -151,10 +153,13 @@ describe("gem monsters", () => {
     ];
     syncGemMonsterAssignment(houses);
     assert.equal(gemCarrierHousesForMap(houses).length, 2);
+    assert.equal(gemHousesForMap(houses).length, 3);
     assert.equal(houseHasMapGem("cluster-a1"), true);
-    assert.equal(houseHasMapGem("cluster-a2"), false);
+    assert.equal(houseHasMapGem("cluster-a2"), true);
     assert.equal(houseHasMapGem("cluster-b"), true);
-    assert.equal(buildGemMonsterAssignment(houses).size, 2);
+    assert.equal(buildGemMonsterAssignment(houses).size, 3);
+    assert.deepEqual(gemClusterSpreadForHouse("cluster-a1"), { index: 0, size: 2 });
+    assert.deepEqual(gemClusterSpreadForHouse("cluster-a2"), { index: 1, size: 2 });
   });
 
   it("album stamp collected by house or gemType", () => {
