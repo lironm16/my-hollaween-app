@@ -1,10 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { HouseEditModal } from "@/components/house-edit-modal";
-import { ImpMenuActiveGlyph } from "@/components/imp-marker-glyph";
 import { Button } from "@/components/ui/button";
 import { gemClusterSessionSummaryHe } from "@/lib/gem-hunt-copy";
-import { gemLabelHe } from "@/lib/gem-monsters";
+import { gemLabelHe, gemMonsterMeta } from "@/lib/gem-monsters";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 
@@ -40,13 +40,23 @@ export function GemClusterSessionSummary({
           dir="rtl"
           aria-label="שדונים שנמצאו במפגש"
         >
-          {catches.map((item, index) => (
+          {catches.map((item, index) => {
+            const meta = gemMonsterMeta(item.monsterId);
+            return (
             <li
               key={item.house.id}
               className="gem-cluster-session-summary__slot flex max-w-[5.5rem] flex-col items-center gap-1 text-center"
               style={{ animationDelay: `${index * 120}ms` }}
             >
-              <ImpMenuActiveGlyph className="!size-9 shrink-0" />
+              <div className="gem-cluster-session-summary__poster shrink-0" aria-hidden>
+                <Image
+                  src={meta.posterPath}
+                  alt=""
+                  width={88}
+                  height={88}
+                  className="gem-cluster-session-summary__poster-img"
+                />
+              </div>
               <span className="text-[11px] font-semibold leading-tight text-amber-100/95 [overflow-wrap:anywhere]">
                 {gemLabelHe(item.monsterId)}
               </span>
@@ -56,7 +66,8 @@ export function GemClusterSessionSummary({
                 </span>
               ) : null}
             </li>
-          ))}
+            );
+          })}
         </ul>
         <Button
           type="button"
