@@ -97,7 +97,7 @@ export function SaveExportTrafficIcon({
   );
 }
 
-/** Gray skip disc — ⋮ menu when דילגתי (matches visited / liked active scale). */
+/** Skip disc — ⋮ menu when דילגתי (same as card banner SkipSign). */
 export function SkipTrafficIcon({
   className,
   markClassName,
@@ -108,7 +108,7 @@ export function SkipTrafficIcon({
   return (
     <span
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-stone-500/40 text-white ring-1 ring-stone-400/55",
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#64748b] text-white shadow-[0_1px_2px_rgba(0,0,0,0.45)]",
         className,
       )}
       title="דילגתי"

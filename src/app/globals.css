@@ -3169,7 +3169,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 
 .house-action-menu-item.is-active-skipped {
-  color: #d6d3d1;
+  color: #ddd6fe;
 }
 
 .house-action-menu-item.is-disabled,

@@ -18,7 +18,7 @@ import {
   Save,
 } from "lucide-react";
 import { AdminHouseDownloadDialog } from "@/components/admin-house-download-dialog";
-import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
+import { ImpOutlineIcon } from "@/components/imp-outline-icon";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
 import { NeighborhoodMarquee } from "@/components/neighborhood-marquee";
@@ -222,11 +222,7 @@ export function AppHeader({
                   "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
                 )}
               >
-                <ImpMarkerGlyph
-                  variant="solid"
-                  className="size-[1.35rem] shrink-0 text-current"
-                  aria-hidden
-                />
+                <ImpOutlineIcon className="size-4 shrink-0" />
                 {GEM_ALBUM_TITLE_HE}
               </Link>
             ) : null}

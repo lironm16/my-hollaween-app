@@ -18,12 +18,15 @@ function maskStyleFor(url: string) {
   } as const;
 }
 
-/** Imp for ⋮ menu — size-7, same slot as skip outline. */
-export function ImpMenuOutlineGlyph({ className }: { className?: string }) {
+const MENU_IMP_MASK = { WebkitMaskSize: "76%", maskSize: "76%" } as const;
+
+/** Collected imp in ⋮ menu — yellow fill, no ring (same size as outline). */
+export function ImpMenuActiveGlyph({ className }: { className?: string }) {
   return (
     <ImpMarkerGlyph
       variant="solid"
-      className={cn("size-7 shrink-0 text-current", className)}
+      className={cn("size-7 shrink-0 text-amber-300", className)}
+      style={MENU_IMP_MASK}
       aria-hidden
     />
   );
