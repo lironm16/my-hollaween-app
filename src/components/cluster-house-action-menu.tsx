@@ -2,13 +2,8 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import {
-  Heart,
-  MoreVertical,
-  Navigation,
-  Undo2,
-} from "lucide-react";
-import { SavedTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
+import { Heart, MoreVertical, Navigation } from "lucide-react";
+import { SavedTrafficIcon, SkipTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
 import { SkipIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
@@ -32,7 +27,7 @@ type MenuItem = {
 const MENU_ICON_CLASS = "size-7";
 const MENU_ACTIVE_ICON_CLASS = "size-8";
 
-/** ⋮ menu on multi-house / school cluster overview — bulk actions + navigate. */
+/** ⋮ menu on multi-house / school cluster overview — same toggles as one house, with «הכל». */
 export function ClusterHouseActionMenu({
   houses,
   liked,
@@ -74,8 +69,6 @@ export function ClusterHouseActionMenu({
   const allVisited = houses.length > 0 && houses.every((house) => visited(house.id));
   const allSkipped = houses.length > 0 && houses.every((house) => skipped(house.id));
   const allLiked = houses.length > 0 && houses.every((house) => liked(house.id));
-  const anySkipped = houses.some((house) => skipped(house.id));
-  const anyVisited = houses.some((house) => visited(house.id));
 
   useEffect(() => {
     if (!open) return;
@@ -107,50 +100,34 @@ export function ClusterHouseActionMenu({
     });
   }
   if (onSkipAll || onRestoreAll) {
-    if (allSkipped && onRestoreAll) {
-      items.push({
-        id: "restore-all",
-        label: "החזרת הכל",
-        icon: <Undo2 className={MENU_ICON_CLASS} strokeWidth={2.2} />,
-        onClick: onRestoreAll,
-        active: true,
-      });
-    } else if (onSkipAll) {
-      items.push({
-        id: "skip-all",
-        label: "דילוג על הכל",
-        icon: <SkipIcon className={MENU_ICON_CLASS} />,
-        onClick: onSkipAll,
-        active: anySkipped && !allSkipped,
-      });
-    }
+    items.push({
+      id: "skip-all",
+      label: allSkipped ? "דילגתי" : "דילוג על הכל",
+      icon: allSkipped ? (
+        <SkipTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.15rem]" />
+      ) : (
+        <SkipIcon className={MENU_ICON_CLASS} />
+      ),
+      onClick: allSkipped ? onRestoreAll : onSkipAll,
+      active: allSkipped,
+    });
   }
   if (onVisitAll || onUnvisitAll) {
-    if (allVisited && onUnvisitAll) {
-      items.push({
-        id: "unvisit-all",
-        label: "החזרת הכל",
-        icon: <Undo2 className={MENU_ICON_CLASS} strokeWidth={2.2} />,
-        onClick: onUnvisitAll,
-        active: true,
-      });
-    } else if (onVisitAll) {
-      items.push({
-        id: "visit-all",
-        label: "ביקרתי הכל",
-        icon: allVisited ? (
-          <VisitedTrafficIcon
-            className={MENU_ACTIVE_ICON_CLASS}
-            markClassName="size-[1.35rem]"
-            markStrokeWidth={4}
-          />
-        ) : (
-          <VisitedCheck visited={false} size="lg" />
-        ),
-        onClick: onVisitAll,
-        active: anyVisited && !allVisited,
-      });
-    }
+    items.push({
+      id: "visit-all",
+      label: "ביקרתי הכל",
+      icon: allVisited ? (
+        <VisitedTrafficIcon
+          className={MENU_ACTIVE_ICON_CLASS}
+          markClassName="size-[1.35rem]"
+          markStrokeWidth={4}
+        />
+      ) : (
+        <VisitedCheck visited={false} size="lg" />
+      ),
+      onClick: allVisited ? onUnvisitAll : onVisitAll,
+      active: allVisited,
+    });
   }
   if (onLikeAll || onUnlikeAll) {
     items.push({
@@ -161,7 +138,7 @@ export function ClusterHouseActionMenu({
       ) : (
         <Heart className={MENU_ICON_CLASS} strokeWidth={2.2} />
       ),
-      onClick: allLiked && onUnlikeAll ? onUnlikeAll : onLikeAll,
+      onClick: allLiked ? onUnlikeAll : onLikeAll,
       active: allLiked,
     });
   }
@@ -224,7 +201,8 @@ export function ClusterHouseActionMenu({
       "house-action-menu-item",
       item.active && "is-active",
       item.active && item.id === "like-all" && "is-active-saved",
-      item.active && (item.id === "visit-all" || item.id === "unvisit-all") && "is-active-visited",
+      item.active && item.id === "visit-all" && "is-active-visited",
+      item.active && item.id === "skip-all" && "is-active-skipped",
     );
   }
 

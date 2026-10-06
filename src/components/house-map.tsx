@@ -72,7 +72,7 @@ function wrapRoutePin(html: string, routeOrder?: number) {
 }
 
 const PIN_BOX = 62;
-const SCHOOL_CAMPUS_PIN_BOX = 74;
+const SCHOOL_CAMPUS_PIN_BOX = 88;
 
 function attr(value: string) {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -92,10 +92,6 @@ function pinFaceKind(house: PublicHouse): "bare" | "scare" {
 
 function pinSkippedMark() {
   return `<b class="pin-status is-skipped" aria-label="דילגתי">${SKIP_ICON_SVG}</b>`;
-}
-
-function pinVisitedMark() {
-  return `<b class="pin-status is-visited-mark" aria-label="ביקרתי"><span class="pin-visited-glyph" aria-hidden="true">✓</span></b>`;
 }
 
 function pinStatusMark(house: PublicHouse, now: Date, skipped = false) {
@@ -275,7 +271,7 @@ function clusterIcon(
   const campusClass = schoolCampus ? " is-school-campus" : "";
   const clusterLabel = attr(clusterPinAriaLabel(houses));
   const pinFill = "#6d28d9";
-  const statusMarks = `${allSkipped ? pinSkippedMark() : ""}${allVisited && !allSkipped ? pinVisitedMark() : ""}`;
+  const statusMarks = allSkipped ? pinSkippedMark() : "";
   const wrapped = wrapRoutePin(
     `<div class="house-pin is-building${campusClass}${allVisited ? " is-visited" : ""}" style="background:${pinFill}" role="img" aria-label="${clusterLabel}">${statusMarks}${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>`,
     routeOrder,

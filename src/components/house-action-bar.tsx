@@ -11,10 +11,14 @@ import {
   Navigation,
   Pencil,
   Share2,
-  Undo2,
 } from "lucide-react";
 import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
-import { GemTrafficIcon, SavedTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
+import {
+  GemTrafficIcon,
+  SavedTrafficIcon,
+  SkipTrafficIcon,
+  VisitedTrafficIcon,
+} from "@/components/traffic-icons";
 import { SkipIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
@@ -210,20 +214,17 @@ export function HouseActionBar({
         active: gemCollected,
       });
     }
-    if (onSkip && !skipped) {
+    if (onSkip || onRestoreRoute) {
       items.push({
         id: "skip",
-        label: "דילוג על בית",
-        icon: <SkipIcon className={MENU_ICON_CLASS} />,
-        onClick: onSkip,
-      });
-    }
-    if (onRestoreRoute && skipped) {
-      items.push({
-        id: "restore",
-        label: "החזרה",
-        icon: <Undo2 className={MENU_ICON_CLASS} strokeWidth={2.2} />,
-        onClick: onRestoreRoute,
+        label: skipped ? "דילגתי" : "דילוג על בית",
+        icon: skipped ? (
+          <SkipTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.15rem]" />
+        ) : (
+          <SkipIcon className={MENU_ICON_CLASS} />
+        ),
+        onClick: skipped ? onRestoreRoute : onSkip,
+        active: skipped,
       });
     }
     if (onToggleEdit) {
@@ -310,6 +311,7 @@ export function HouseActionBar({
       item.active && item.id === "like" && "is-active-saved",
       item.active && item.id === "visited" && "is-active-visited",
       item.active && item.id === "gem" && "is-active-gem",
+      item.active && item.id === "skip" && "is-active-skipped",
     );
   }
 

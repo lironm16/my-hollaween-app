@@ -56,6 +56,8 @@
     --color-slate-300: oklch(86.9% 0.022 252.894);
     --color-zinc-100: oklch(96.7% 0.001 286.375);
     --color-zinc-900: oklch(21% 0.006 285.885);
+    --color-stone-400: oklch(70.9% 0.01 56.259);
+    --color-stone-500: oklch(55.3% 0.013 58.071);
     --color-black: #000;
     --color-white: #fff;
     --spacing: 0.25rem;
@@ -2006,6 +2008,12 @@
   .bg-secondary {
     background-color: var(--secondary);
   }
+  .bg-stone-500\/40 {
+    background-color: color-mix(in srgb, oklch(55.3% 0.013 58.071) 40%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-stone-500) 40%, transparent);
+    }
+  }
   .bg-transparent {
     background-color: transparent;
   }
@@ -3200,6 +3208,12 @@
     --tw-ring-color: color-mix(in srgb, oklch(74.6% 0.16 232.661) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       --tw-ring-color: color-mix(in oklab, var(--color-sky-400) 40%, transparent);
+    }
+  }
+  .ring-stone-400\/55 {
+    --tw-ring-color: color-mix(in srgb, oklch(70.9% 0.01 56.259) 55%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--color-stone-400) 55%, transparent);
     }
   }
   .ring-violet-300\/45 {
@@ -5831,8 +5845,8 @@ svg.leaflet-zoom-animated {
   place-items: center;
 }
 .house-pin.is-school-campus {
-  width: 68px;
-  height: 68px;
+  width: 80px;
+  height: 80px;
   background: linear-gradient(165deg, #5b21b6 0%, #6d28d9 55%, #7c3aed 100%) !important;
   overflow: visible;
 }
@@ -5840,56 +5854,53 @@ svg.leaflet-zoom-animated {
   width: 56px;
   height: 56px;
 }
+.house-pin.is-school-list-pin.is-school-campus {
+  width: 64px;
+  height: 64px;
+}
 .pin-school-art {
   position: relative;
   z-index: 1;
   display: grid;
   place-items: center;
-  width: 78%;
-  height: 78%;
+  width: 94%;
+  height: 94%;
   pointer-events: none;
+}
+.house-pin.is-school-list-pin .pin-school-art {
+  width: 90%;
+  height: 90%;
 }
 .pin-school-castle-svg {
   display: block;
   width: 100%;
   height: auto;
   max-height: 100%;
+  transform: scale(1.08);
+  transform-origin: center center;
   filter: drop-shadow(0 1px 1px rgb(0 0 0 / 25%));
 }
 .pin-school-castle-img {
   display: block;
-  width: 72%;
+  width: 100%;
   height: auto;
-  max-height: 72%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   object-position: center center;
   filter: drop-shadow(0 1px 2px rgb(0 0 0 / 35%));
 }
+.house-pin.is-school-campus .pin-school-art {
+  width: 98%;
+  height: 98%;
+}
+.house-pin.is-school-campus .pin-school-castle-img {
+  transform: scale(1.14);
+  transform-origin: center center;
+}
 .pin-school-twin {
-  width: 78%;
-  height: 78%;
-}
-.house-pin .pin-status.is-visited-mark {
-  position: absolute;
-  bottom: -6px;
-  inset-inline-start: -6px;
-  z-index: 3;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  border: 1.5px solid #fff7ed;
-  background: #059669;
-  color: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 1;
-}
-.house-pin .pin-status.is-visited-mark .pin-visited-glyph {
-  transform: translateY(1px);
+  width: 92%;
+  height: 92%;
 }
 .pin-cluster-icon {
   position: absolute;
@@ -7952,6 +7963,9 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 .house-action-menu-item.is-active-gem {
   color: #fde68a;
+}
+.house-action-menu-item.is-active-skipped {
+  color: #d6d3d1;
 }
 .house-action-menu-item.is-disabled,
 .house-action-menu-item:disabled {

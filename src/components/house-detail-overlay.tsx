@@ -15,6 +15,7 @@ import {
 } from "@/components/cluster-house-list";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseHeadline } from "@/lib/labels";
+import { HouseSkippedBanner, HouseVisitedBanner } from "@/components/house-skipped-banner";
 import { clusterOverviewSubtitle, usesSchoolCampusClusterChrome } from "@/lib/school-campus";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
@@ -81,6 +82,15 @@ export function HouseDetailOverlay({
   const addressReveal = useAddressReveal();
   const isSkipped = skippedIds ?? (() => false);
   const isFilteredOut = filteredOutIds ?? (() => false);
+  const clusterAllSkipped =
+    overview &&
+    (clusterHouses?.length ?? 0) > 0 &&
+    clusterHouses!.every((item) => isSkipped(item.id));
+  const clusterAllVisited =
+    overview &&
+    (clusterHouses?.length ?? 0) > 0 &&
+    clusterHouses!.every((item) => visited?.(item.id)) &&
+    !clusterAllSkipped;
   const actionMenu = <HouseCardActionMenu house={house} actionContext={actionContext} />;
 
   useEffect(() => {
@@ -167,6 +177,16 @@ export function HouseDetailOverlay({
                 }
               />
             </div>
+            {clusterAllSkipped && actionContext.onClusterRestoreAll ? (
+              <HouseSkippedBanner
+                onRestore={() => actionContext.onClusterRestoreAll!(clusterHouses!)}
+              />
+            ) : null}
+            {clusterAllVisited && actionContext.onClusterUnvisitAll ? (
+              <HouseVisitedBanner
+                onRestore={() => actionContext.onClusterUnvisitAll!(clusterHouses!)}
+              />
+            ) : null}
             <div className="max-h-[min(52dvh,28rem)] overflow-y-auto overscroll-contain pe-0.5">
               <ClusterHouseList
                 houses={clusterHouses!}

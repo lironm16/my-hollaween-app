@@ -1,5 +1,6 @@
 import { Check, Heart, Save } from "lucide-react";
 import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
+import { SkipIcon } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
 
 /** Pink heart in ring — matches house-card traffic pills (icon only). */
@@ -92,6 +93,28 @@ export function SaveExportTrafficIcon({
       aria-hidden
     >
       <Save className={cn("size-[1.15rem] text-violet-100", markClassName)} strokeWidth={2.25} />
+    </span>
+  );
+}
+
+/** Gray skip square — ⋮ menu when דילגתי (matches visited / liked active scale). */
+export function SkipTrafficIcon({
+  className,
+  markClassName,
+}: {
+  className?: string;
+  markClassName?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-stone-500/40 text-white ring-1 ring-stone-400/55",
+        className,
+      )}
+      title="דילגתי"
+      aria-label="דילגתי"
+    >
+      <SkipIcon className={cn("size-5", markClassName)} />
     </span>
   );
 }

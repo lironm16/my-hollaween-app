@@ -21,8 +21,8 @@ const VALID_VARIANTS = new Set<SchoolPinVariant>([
   "twin-homes",
 ]);
 
-/** Default — white castle + black windows (from your PNG, fits purple pin). */
-export const DEFAULT_SCHOOL_PIN_VARIANT: SchoolPinVariant = "castle-ink";
+/** Default — original black castle + golden windows (from your PNG). */
+export const DEFAULT_SCHOOL_PIN_VARIANT: SchoolPinVariant = "castle-original";
 
 export function resolveSchoolPinVariant(raw?: string | null): SchoolPinVariant {
   const trimmed = raw?.trim();
@@ -40,7 +40,7 @@ export function activeSchoolPinVariant(): SchoolPinVariant {
 }
 
 function imgCastleHtml(src: string, src2x: string, className: string) {
-  return `<span class="pin-school-art" aria-hidden="true"><img class="pin-school-castle-img ${className}" src="${src}" srcset="${src} 1x, ${src2x} 2x" width="58" height="48" alt="" decoding="async" /></span>`;
+  return `<span class="pin-school-art" aria-hidden="true"><img class="pin-school-castle-img ${className}" src="${src}" srcset="${src} 1x, ${src2x} 2x" width="68" height="56" alt="" decoding="async" /></span>`;
 }
 
 function twinHomesSvgHtml() {
@@ -89,14 +89,14 @@ export const SCHOOL_PIN_VARIANT_PREVIEWS: readonly SchoolPinAssetPreview[] = [
   {
     variant: "castle-ink",
     title: "טירה — לבן + חלונות שחורים",
-    note: "נגזר מהאיור שלך · ברירת מחדל במפה",
+    note: "נגזר מהאיור שלך",
     assetSrc: PIN_SCHOOL_CAMPUS_INK_SRC,
     assetSrc2x: PIN_SCHOOL_CAMPUS_INK_SRC_2X,
   },
   {
     variant: "castle-original",
     title: "טירה — מקור (שחור + חלונות זהובים)",
-    note: "הקובץ המקורי שהעלית",
+    note: "הקובץ המקורי שהעלית · ברירת מחדל במפה",
     assetSrc: PIN_SCHOOL_CAMPUS_SRC,
     assetSrc2x: PIN_SCHOOL_CAMPUS_SRC_2X,
   },
