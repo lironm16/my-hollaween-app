@@ -150,8 +150,10 @@ function clusterAptDotsHtml(
   now: Date,
   matchedIds?: ReadonlySet<string>,
   skippedIds?: ReadonlySet<string>,
+  /** School campus shows candy/skip even for a single booth. */
+  showWhenSingle = false,
 ) {
-  if (houses.length <= 1) return "";
+  if (houses.length <= 1 && !showWhenSingle) return "";
   const dots = clusterBadgeHouses(houses)
     .map((house) => {
       const filteredClass =
@@ -271,7 +273,7 @@ function clusterIcon(
   const clusterLabel = attr(clusterPinAriaLabel(houses));
   const pinFill = "#6d28d9";
   const wrapped = wrapRoutePin(
-    `<div class="house-pin is-building${campusClass}${allVisited ? " is-visited" : ""}" style="background:${pinFill}" role="img" aria-label="${clusterLabel}">${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>`,
+    `<div class="house-pin is-building${campusClass}${allVisited ? " is-visited" : ""}" style="background:${pinFill}" role="img" aria-label="${clusterLabel}">${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds, schoolCampus)}</div>`,
     routeOrder,
   );
   const pinBox = schoolCampus ? SCHOOL_CAMPUS_PIN_BOX : PIN_BOX;

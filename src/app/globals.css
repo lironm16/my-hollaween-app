@@ -802,7 +802,7 @@
   width: 76px;
   height: 76px;
   background: linear-gradient(165deg, #5b21b6 0%, #6d28d9 55%, #7c3aed 100%) !important;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .house-pin.is-school-list-pin {
@@ -857,6 +857,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  border-radius: 999px;
+  z-index: 1;
+}
+
+.house-pin.is-school-campus .pin-apt-dots {
+  z-index: 6;
 }
 
 .house-pin.is-school-campus .pin-school-castle-img {
