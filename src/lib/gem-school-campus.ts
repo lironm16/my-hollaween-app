@@ -35,9 +35,11 @@ const SCHOOL_BOOTH_DRAGON_TINTS: readonly Omit<GemMonsterTint, "glow">[] = [
 
 /** Rows at curated school campuses (house or POI דוכן) — pre-event gem hunt anchors. */
 export function isGemSchoolCampusBooth(
-  house: Pick<PublicHouse, "address" | "kind">,
+  house: { address?: string | null; kind?: PublicHouse["kind"] },
 ): boolean {
-  return isSchoolCampusAddress(house.address);
+  const address = house.address?.trim();
+  if (!address) return false;
+  return isSchoolCampusAddress(address);
 }
 
 function schoolBoothPaletteIndex(
@@ -49,7 +51,10 @@ function schoolBoothPaletteIndex(
 }
 
 export function schoolCampusDragonTint(
-  house: Pick<PublicHouse, "id" | "address" | "kind" | "boothNumber">,
+  house: Pick<PublicHouse, "id" | "boothNumber"> & {
+    address?: string | null;
+    kind?: PublicHouse["kind"];
+  },
 ): GemMonsterTint | null {
   if (!isGemSchoolCampusBooth(house)) return null;
   const palette = SCHOOL_BOOTH_DRAGON_TINTS;
@@ -59,7 +64,7 @@ export function schoolCampusDragonTint(
 
 /** Gem-eligible school rows — same stub/real rules as the map ({@link houseMatchesSet}). */
 export function houseMatchesGemHuntSet(
-  house: Pick<PublicHouse, "id" | "description" | "address" | "kind" | "photoUrl">,
+  house: Pick<PublicHouse, "address" | "kind" | "isStub"> & { deviceCacheStub?: boolean },
   houseSet: import("@/lib/house-set").HouseSet,
 ): boolean {
   if (!isGemSchoolCampusBooth(house)) return false;

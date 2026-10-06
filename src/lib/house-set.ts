@@ -16,14 +16,25 @@ export const HOUSE_SET_STATUS: Record<HouseSet, string> = {
   all: "מציגים הכל",
 };
 
-export function isStubHouse(house: {
+/** Stub/real filter reads only `isStub` / `deviceCacheStub`; other house fields are ignored. */
+export type StubFlagHouse = {
   isStub?: boolean;
   /** @deprecated Offline cache before `isStub` was persisted on strip. */
   deviceCacheStub?: boolean;
-}) {
+  id?: string;
+  deviceCachePin?: boolean;
+};
+
+export function isStubHouse(house: StubFlagHouse | null | undefined) {
+  if (!house) return false;
   if (house.isStub === true) return true;
   if (house.deviceCacheStub === true) return true;
   return false;
+}
+
+/** Drop legacy QA rows still marked `isStub` in Firestore or old exports. */
+export function stripStubHouses<T extends StubFlagHouse>(houses: readonly T[]): T[] {
+  return houses.filter((house) => !isStubHouse(house));
 }
 
 function isHouseSet(value: string | null | undefined): value is HouseSet {
@@ -100,10 +111,7 @@ export function countVisitedInSet(
   return countIdsInSet(visitedIds, houses, set);
 }
 
-export function houseMatchesSet(
-  house: { isStub?: boolean; deviceCacheStub?: boolean },
-  set: HouseSet,
-) {
+export function houseMatchesSet(house: StubFlagHouse, set: HouseSet) {
   if (set === "all") return true;
   const stub = isStubHouse(house);
   return set === "stubs" ? stub : !stub;
@@ -111,7 +119,7 @@ export function houseMatchesSet(
 
 /** Device cache rows must carry `isStub` (or legacy deviceCacheStub) so real/stub filters work offline. */
 export function catalogHasExplicitStubFlags(
-  catalog: { houses: { isStub?: boolean; deviceCacheStub?: boolean }[] } | null,
+  catalog: { houses: readonly StubFlagHouse[] } | null,
 ): boolean {
   if (!catalog?.houses.length) return false;
   return catalog.houses.every(
@@ -119,9 +127,7 @@ export function catalogHasExplicitStubFlags(
   );
 }
 
-export function catalogHasRealHouses(
-  catalog: { houses: { isStub?: boolean; deviceCacheStub?: boolean }[] } | null,
-) {
+export function catalogHasRealHouses(catalog: { houses: readonly StubFlagHouse[] } | null) {
   if (!catalog?.houses.length) return false;
   if (!catalogHasExplicitStubFlags(catalog)) return false;
   return catalog.houses.some((house) => !isStubHouse(house));

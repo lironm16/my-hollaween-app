@@ -2,7 +2,12 @@
 
 import Image from "next/image";
 import { GemModel3D } from "@/components/gem-hunt/gem-model-3d";
-import { gemMonsterForHouse, gemMonsterMeta, type GemMonsterId } from "@/lib/gem-monsters";
+import {
+  gemMonsterForHouse,
+  gemMonsterMeta,
+  type GemMonsterHouseRef,
+  type GemMonsterId,
+} from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -26,10 +31,7 @@ export function GemSprite({
   /** @deprecated use house + monster id */
   variantId?: string;
   houseId?: string;
-  house?: Pick<
-    PublicHouse,
-    "id" | "theme" | "kind" | "description" | "neighborhood" | "address" | "lat" | "lng"
-  >;
+  house?: GemMonsterHouseRef & Pick<Partial<PublicHouse>, "theme">;
   collected?: boolean;
   className?: string;
   size?: "sm" | "lg" | "fill";

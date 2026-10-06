@@ -6,18 +6,19 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { applyGemMaterialTint } from "@/lib/apply-gem-material-tint";
-import { gemMonsterMeta, gemMonsterTint, type GemMonsterId } from "@/lib/gem-monsters";
-import type { PublicHouse } from "@/lib/types";
+import {
+  gemMonsterMeta,
+  gemMonsterTint,
+  type GemMonsterHouseRef,
+  type GemMonsterId,
+} from "@/lib/gem-monsters";
 import { cn } from "@/lib/utils";
 
 type Props = {
   monsterId?: GemMonsterId;
   houseId?: string;
   /** When set, POI practice dragons use neighborhood color (not hash-only). */
-  tintHouse?: Pick<
-    PublicHouse,
-    "id" | "kind" | "description" | "neighborhood" | "address" | "lat" | "lng"
-  >;
+  tintHouse?: GemMonsterHouseRef;
   size?: "sm" | "lg" | "fill";
   className?: string;
   collected?: boolean;
