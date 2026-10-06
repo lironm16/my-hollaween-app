@@ -25,8 +25,9 @@ const VALID_VARIANTS = new Set<SchoolPinVariant>([
 export const DEFAULT_SCHOOL_PIN_VARIANT: SchoolPinVariant = "castle-light";
 
 export function resolveSchoolPinVariant(raw?: string | null): SchoolPinVariant {
-  const value = raw?.trim() as SchoolPinVariant | undefined;
-  if (value === "castle-png") return "castle-original";
+  const trimmed = raw?.trim();
+  if (trimmed === "castle-png") return "castle-original";
+  const value = trimmed as SchoolPinVariant | undefined;
   if (value && VALID_VARIANTS.has(value)) return value;
   return DEFAULT_SCHOOL_PIN_VARIANT;
 }
