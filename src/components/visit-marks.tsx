@@ -230,7 +230,7 @@ function UncollectedGemSign({ className }: { className?: string }) {
       )}
       aria-hidden
     >
-      <ImpMarkerGlyph variant="solid" className="size-[88%] text-[#fbbf24]" />
+      <ImpMarkerGlyph variant="eyes" className="size-[88%] text-[#fbbf24]" />
     </span>
   );
 }

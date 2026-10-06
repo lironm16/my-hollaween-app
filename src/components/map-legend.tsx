@@ -146,6 +146,7 @@ function GemDiamondSwatch({ collected = false }: { collected?: boolean }) {
       aria-hidden
     >
       <ImpMarkerGlyph
+        variant={collected ? "solid" : "eyes"}
         className="map-gem-diamond-marker__svg"
         style={{ color: collected ? GEM_DIAMOND_COLLECTED_FILL : GEM_DIAMOND_FILL }}
       />

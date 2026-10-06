@@ -68,7 +68,7 @@ export function GemMenuDiscIcon({
       aria-hidden
     >
       <ImpMarkerGlyph
-        variant="solid"
+        variant="eyes"
         className={cn("size-[1.55rem] max-h-full max-w-full text-current", markClassName)}
       />
     </span>

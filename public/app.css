@@ -1916,9 +1916,6 @@
   .bg-card {
     background-color: var(--card);
   }
-  .bg-current {
-    background-color: currentcolor;
-  }
   .bg-cyan-950\/55 {
     background-color: color-mix(in srgb, oklch(30.2% 0.056 229.695) 55%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -7416,21 +7413,20 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   -webkit-mask-position: center;
 }
 .map-gem-imp-marker__glyph {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
   max-width: 32px;
   max-height: 32px;
   margin: auto;
-  background-color: currentColor;
-  mask-image: url(/icons/imp-marker.png);
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url(/icons/imp-marker.png);
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
+  color: currentColor;
+}
+.map-gem-imp-marker__glyph .map-gem-imp-marker__svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
 }
 .map-gem-diamond-marker--admin .map-gem-imp-marker__glyph {
   max-width: 30px;

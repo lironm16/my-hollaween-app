@@ -8,13 +8,19 @@ import type { PublicHouse } from "@/lib/types";
 
 export { schoolCampusNeighborhoodForAddress };
 
-const CAMPUS_NAMES = new Set(NAMED_ADDRESS_PLACES.map((p) => p.displayName));
+let campusNamesCache: Set<string> | null = null;
+function getCampusNames(): Set<string> {
+  if (!campusNamesCache) {
+    campusNamesCache = new Set(NAMED_ADDRESS_PLACES.map((p) => p.displayName));
+  }
+  return campusNamesCache;
+}
 
 /** Address field equals a curated school campus (e.g. ביה״ס ניצנים). */
 export function isSchoolCampusAddress(address: string | null | undefined): boolean {
   const street = streetFromLegacyAddress(address?.trim() ?? "");
   if (!street) return false;
-  return CAMPUS_NAMES.has(street);
+  return getCampusNames().has(street);
 }
 
 /** Cluster sheet / list chrome — school campuses always use campus UI (even one booth). */
