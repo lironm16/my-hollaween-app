@@ -15,18 +15,13 @@ export function catalogShortfall(
   return Math.max(0, serverCount - localCatalogHouseCount(catalog));
 }
 
-/** Full `GET /api/catalog` only after snapshot + wide delta still leave a large gap. */
+/** Full `GET /api/catalog` when cheap snapshot + delta still disagree with server count. */
 export function shouldFetchFullCatalogAfterCheapRecovery(
   serverCount: number,
   localCount: number,
 ): boolean {
-  if (localCount > serverCount) return true;
-  const gap = Math.max(0, serverCount - localCount);
-  if (gap === 0) return false;
-  if (localCount === 0 && serverCount > 0) return true;
-  if (gap >= CATALOG_FULL_RECOVERY_MIN_GAP) return true;
-  if (serverCount <= 0) return false;
-  return gap / serverCount >= CATALOG_FULL_RECOVERY_MIN_RATIO;
+  if (localCount !== serverCount) return true;
+  return false;
 }
 
 /** Steady-state delta polls are unsafe while the list is empty or shorter than the server count. */

@@ -4,6 +4,25 @@ import { mergeCatalogHouseRow } from "@/lib/catalog-stub-flags";
 import { loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { config } from "@/lib/config";
 
+export type SyncCatalogOptions = {
+  /**
+   * Live full catalog (`GET /api/catalog` or `delta.full`) — inline list may replace local ids.
+   * Snapshots and CDN bundles must omit this so stale shorter lists cannot drop rows.
+   */
+  trustedCompleteList?: boolean;
+};
+
+function preserveLocalHousesFromPrev(
+  prev: Catalog,
+  take: (house: PublicHouse) => void,
+) {
+  const deleted = new Set(loadDeletedHouseIds());
+  for (const house of prev.houses) {
+    if (deleted.has(house.id)) continue;
+    take(house);
+  }
+}
+
 /** API / CDN payloads must always expose houses[] — delta polls omit the key when unchanged. */
 export function normalizeCatalogDelta(raw: unknown): CatalogDelta {
   const o = raw && typeof raw === "object" ? (raw as Partial<CatalogDelta>) : {};
@@ -44,7 +63,11 @@ export function mergeHouses<T extends { id: string; updatedAt: string }>(
  * Fold a fetched catalog into what the phone already shows.
  * A stale CDN copy cannot drop a house that was just published.
  */
-export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
+export function syncCatalog(
+  prev: Catalog | null,
+  incoming: Catalog,
+  options?: SyncCatalogOptions,
+): Catalog {
   const next = normalizeCatalogDelta(incoming);
   if (!prev) return next;
   const prevTs = stamp(prev);
@@ -54,14 +77,13 @@ export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
     byId.set(house.id, mergeCatalogHouseRow(byId.get(house.id), house));
   };
 
+  const allowAuthoritativeDrop =
+    Boolean(options?.trustedCompleteList) && isAuthoritativeHouseList(next);
+
   if (nextTs >= prevTs) {
     next.houses.forEach(take);
-    if (!isAuthoritativeHouseList(next)) {
-      const deleted = new Set(loadDeletedHouseIds());
-      for (const house of prev.houses) {
-        if (deleted.has(house.id)) continue;
-        take(house);
-      }
+    if (!allowAuthoritativeDrop) {
+      preserveLocalHousesFromPrev(prev, take);
     }
     return {
       ...next,
@@ -95,14 +117,18 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
     };
   }
   if (delta.full) {
-    return syncCatalog(prev, {
-      updatedAt: delta.updatedAt,
-      neighborhood: delta.neighborhood,
-      houses: delta.houses,
-      houseCount: delta.houseCount,
-      pushTemplates: delta.pushTemplates ?? prev.pushTemplates,
-      eventSettings: delta.eventSettings ?? prev.eventSettings,
-    });
+    return syncCatalog(
+      prev,
+      {
+        updatedAt: delta.updatedAt,
+        neighborhood: delta.neighborhood,
+        houses: delta.houses,
+        houseCount: delta.houseCount,
+        pushTemplates: delta.pushTemplates ?? prev.pushTemplates,
+        eventSettings: delta.eventSettings ?? prev.eventSettings,
+      },
+      { trustedCompleteList: true },
+    );
   }
   const byId = new Map(prev.houses.map((house) => [house.id, house]));
   for (const id of delta.removed ?? []) byId.delete(id);

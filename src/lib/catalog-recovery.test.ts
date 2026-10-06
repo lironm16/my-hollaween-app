@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   catalogShortfall,
-  CATALOG_FULL_RECOVERY_MIN_GAP,
   shouldFetchFullCatalogAfterCheapRecovery,
   shouldUseSteadyDeltaPoll,
 } from "@/lib/catalog-recovery";
@@ -56,19 +55,13 @@ describe("shouldFetchFullCatalogAfterCheapRecovery", () => {
     assert.equal(shouldFetchFullCatalogAfterCheapRecovery(2, 35), true);
   });
 
-  it("skips full fetch for a single missing house", () => {
-    assert.equal(shouldFetchFullCatalogAfterCheapRecovery(88, 87), false);
+  it("uses full fetch for any shortfall vs server houseCount", () => {
+    assert.equal(shouldFetchFullCatalogAfterCheapRecovery(88, 87), true);
+    assert.equal(shouldFetchFullCatalogAfterCheapRecovery(90, 85), true);
   });
 
-  it("requests full fetch for large absolute gaps", () => {
-    assert.equal(
-      shouldFetchFullCatalogAfterCheapRecovery(88, 88 - CATALOG_FULL_RECOVERY_MIN_GAP),
-      true,
-    );
-  });
-
-  it("requests full fetch for large relative gaps", () => {
-    assert.equal(shouldFetchFullCatalogAfterCheapRecovery(50, 40), true);
+  it("skips full fetch when local count matches server", () => {
+    assert.equal(shouldFetchFullCatalogAfterCheapRecovery(88, 88), false);
   });
 });
 

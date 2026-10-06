@@ -74,7 +74,6 @@ export function catalogNeedsFullRefresh(
 export function resolveCatalogHouses(catalog: Catalog | null): PublicHouse[] {
   const cached = loadCatalogCacheSync();
   if (!catalog?.houses.length) return cached?.houses ?? [];
-  if (isAuthoritativeHouseList(catalog)) return catalog.houses;
   if (!cached?.houses.length) return catalog.houses;
   return syncCatalog(cached, catalog).houses;
 }

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  mergeCatalogDelta,
   mergeHouses,
   mergePushSubscriptions,
   normalizeCatalogDelta,
@@ -87,9 +88,27 @@ describe("syncCatalog", () => {
         publicHouse(`live-${index}`, "2026-10-31T12:00:00.000Z"),
       ),
     };
-    const merged = syncCatalog(prev, incoming);
+    const merged = syncCatalog(prev, incoming, { trustedCompleteList: true });
     assert.equal(merged.houses.length, 75);
     assert.equal(merged.houseCount, 75);
+  });
+
+  it("keeps local rows when a stale authoritative snapshot is shorter", () => {
+    const prev = catalog("2026-10-31T10:00:00.000Z", [
+      ...Array.from({ length: 90 }, (_, index) =>
+        publicHouse(`keep-${index}`, "2026-10-31T10:00:00.000Z"),
+      ),
+    ]);
+    const incoming: Catalog = {
+      updatedAt: "2026-10-31T12:00:00.000Z",
+      neighborhood: "שכונה",
+      houseCount: 85,
+      houses: Array.from({ length: 85 }, (_, index) =>
+        publicHouse(`snap-${index}`, "2026-10-31T12:00:00.000Z"),
+      ),
+    };
+    const merged = syncCatalog(prev, incoming);
+    assert.equal(merged.houses.length, 175);
   });
 
   it("preserves isStub when a newer live row omits stub flags", () => {
@@ -116,6 +135,30 @@ describe("syncCatalog", () => {
     ]);
     const merged = syncCatalog(prev, incoming);
     assert.deepEqual(merged.houses.map((house) => house.id).sort(), ["real-1", "real-2", "stub-1"]);
+  });
+});
+
+describe("mergeCatalogDelta", () => {
+  it("applies explicit removed ids from delta polls", () => {
+    const prev: Catalog = {
+      updatedAt: "2026-10-31T10:00:00.000Z",
+      neighborhood: "שכונה",
+      houseCount: 3,
+      houses: [
+        publicHouse("a", "2026-10-31T10:00:00.000Z"),
+        publicHouse("b", "2026-10-31T10:00:00.000Z"),
+        publicHouse("c", "2026-10-31T10:00:00.000Z"),
+      ],
+    };
+    const merged = mergeCatalogDelta(prev, {
+      updatedAt: "2026-10-31T12:00:00.000Z",
+      neighborhood: "שכונה",
+      houses: [],
+      removed: ["b"],
+      houseCount: 2,
+    });
+    assert.deepEqual(merged.houses.map((house) => house.id).sort(), ["a", "c"]);
+    assert.equal(merged.houseCount, 2);
   });
 });
 
