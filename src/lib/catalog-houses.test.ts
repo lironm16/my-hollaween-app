@@ -168,7 +168,9 @@ describe("catalogNeedsFullRefresh", () => {
 
   it("skips full refresh when cache meta matches server houseCount", () => {
     const full = catalog(
-      Array.from({ length: 25 }, (_, index) => house(`house-${index}`)),
+      Array.from({ length: 25 }, (_, index) =>
+        house(`house-${index}`, { isStub: false }),
+      ),
       "2026-10-31T10:00:00.000Z",
       { houseCount: 25 },
     );

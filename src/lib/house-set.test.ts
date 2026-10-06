@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  catalogHasExplicitStubFlags,
+  catalogHasRealHouses,
   countSkippedInSet,
   countVisitedInSet,
   houseMatchesSet,
@@ -57,6 +59,26 @@ describe("countVisitedInSet", () => {
     assert.equal(countVisitedInSet(["real-1", "בית-9310"], houses, "real"), 1);
     assert.equal(countVisitedInSet(["real-1", "בית-9310"], houses, "stubs"), 1);
     assert.equal(countVisitedInSet(["real-1", "בית-9310"], houses, "all"), 2);
+  });
+});
+
+describe("catalogHasRealHouses", () => {
+  it("does not treat legacy cache rows without isStub as real houses", () => {
+    const legacy = {
+      houses: [{ id: "בית-1847", deviceCachePin: true }, { id: "real-1", deviceCachePin: true }],
+    };
+    assert.equal(catalogHasExplicitStubFlags(legacy), false);
+    assert.equal(catalogHasRealHouses(legacy), false);
+  });
+
+  it("recognizes explicit real rows in cache", () => {
+    const mixed = {
+      houses: [
+        { id: "בית-1847", isStub: true },
+        { id: "real-1", isStub: false },
+      ],
+    };
+    assert.equal(catalogHasRealHouses(mixed), true);
   });
 });
 

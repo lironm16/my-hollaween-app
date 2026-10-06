@@ -109,10 +109,21 @@ export function houseMatchesSet(
   return set === "stubs" ? stub : !stub;
 }
 
+/** Device cache rows must carry `isStub` (or legacy deviceCacheStub) so real/stub filters work offline. */
+export function catalogHasExplicitStubFlags(
+  catalog: { houses: { isStub?: boolean; deviceCacheStub?: boolean }[] } | null,
+): boolean {
+  if (!catalog?.houses.length) return false;
+  return catalog.houses.every(
+    (house) => typeof house.isStub === "boolean" || house.deviceCacheStub === true,
+  );
+}
+
 export function catalogHasRealHouses(
   catalog: { houses: { isStub?: boolean; deviceCacheStub?: boolean }[] } | null,
 ) {
   if (!catalog?.houses.length) return false;
+  if (!catalogHasExplicitStubFlags(catalog)) return false;
   return catalog.houses.some((house) => !isStubHouse(house));
 }
 

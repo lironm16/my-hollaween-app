@@ -1,5 +1,6 @@
 import type { Catalog, CatalogDelta, DbFile, PublicHouse, PushSubscriptionRecord } from "@/lib/types";
 import { isAuthoritativeHouseList } from "@/lib/catalog-houses";
+import { mergeCatalogHouseRow } from "@/lib/catalog-stub-flags";
 import { loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { config } from "@/lib/config";
 
@@ -50,8 +51,7 @@ export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
   const nextTs = stamp(next);
   const byId = new Map<string, PublicHouse>();
   const take = (house: PublicHouse) => {
-    const current = byId.get(house.id);
-    if (!current || stamp(house) >= stamp(current)) byId.set(house.id, house);
+    byId.set(house.id, mergeCatalogHouseRow(byId.get(house.id), house));
   };
 
   if (nextTs >= prevTs) {
@@ -60,7 +60,7 @@ export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
       const deleted = new Set(loadDeletedHouseIds());
       for (const house of prev.houses) {
         if (deleted.has(house.id)) continue;
-        if (!byId.has(house.id)) take(house);
+        take(house);
       }
     }
     return {
@@ -107,8 +107,7 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
   const byId = new Map(prev.houses.map((house) => [house.id, house]));
   for (const id of delta.removed ?? []) byId.delete(id);
   for (const house of delta.houses) {
-    const current = byId.get(house.id);
-    if (!current || stamp(house) >= stamp(current)) byId.set(house.id, house);
+    byId.set(house.id, mergeCatalogHouseRow(byId.get(house.id), house));
   }
   const houses = [...byId.values()];
   const mergedLen = houses.length;

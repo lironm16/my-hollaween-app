@@ -16,16 +16,20 @@ export function withServerHouseDetail(house: PublicHouse): PublicHouse {
 /** Persist map/list shell fields only — no address, story text, or photo URL. */
 export function stripHouseForDeviceCache(house: PublicHouse): PublicHouse {
   const stub = isStubHouse(house);
-  return {
+  const stripped = {
     ...house,
     address: "",
     arrival: "",
     notes: "",
     description: "",
     photoUrl: "",
-    deviceCachePin: true,
-    ...(stub ? { isStub: true, deviceCacheStub: true } : {}),
+    deviceCachePin: true as const,
+    isStub: stub,
   };
+  if (stub) return { ...stripped, deviceCacheStub: true };
+  const { deviceCacheStub, ...real } = stripped;
+  void deviceCacheStub;
+  return real;
 }
 
 export function houseServerDetailReady(house: PublicHouse | null | undefined): boolean {

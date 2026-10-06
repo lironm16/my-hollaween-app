@@ -27,7 +27,9 @@ export function useAdminHouses({
   refresh: (force?: boolean) => Promise<void> | void;
   catalogUpdatedAt?: string;
 }) {
-  const [adminHouses, setAdminHouses] = useState<House[]>([]);
+  const [adminHouses, setAdminHouses] = useState<House[]>(() =>
+    admin ? readAdminHousesBackup() : [],
+  );
   const [busyAction, setBusyAction] = useState(false);
   const lastLoadedAtRef = useRef<string | null>(null);
 

@@ -39,13 +39,15 @@ function house(patch: Partial<PublicHouse> = {}): PublicHouse {
 
 describe("device catalog cache", () => {
   it("strips location and story fields and marks pin rows", () => {
-    const stripped = stripHouseForDeviceCache(house());
+    const stripped = stripHouseForDeviceCache(house({ isStub: false }));
     assert.equal(stripped.address, "");
     assert.equal(stripped.arrival, "");
     assert.equal(stripped.notes, "");
     assert.equal(stripped.description, "");
     assert.equal(stripped.photoUrl, "");
     assert.equal(stripped.lat, 32.09);
+    assert.equal(stripped.isStub, false);
+    assert.equal(stripped.deviceCacheStub, undefined);
     assert.equal(isDeviceCachePinHouse(stripped), true);
   });
 

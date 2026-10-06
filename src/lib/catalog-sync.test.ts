@@ -92,6 +92,17 @@ describe("syncCatalog", () => {
     assert.equal(merged.houseCount, 75);
   });
 
+  it("preserves isStub when a newer live row omits stub flags", () => {
+    const prev = catalog("2026-09-06T19:50:00.000Z", [
+      publicHouse("בית-9310", "2026-09-06T19:50:00.000Z", { isStub: true }),
+    ]);
+    const incoming = catalog("2026-10-31T12:00:00.000Z", [
+      publicHouse("בית-9310", "2026-10-31T12:00:00.000Z", { address: "חרוזים 8" }),
+    ]);
+    const merged = syncCatalog(prev, incoming);
+    assert.equal(merged.houses.find((h) => h.id === "בית-9310")?.isStub, true);
+  });
+
   it("keeps cached houses when incoming catalog is newer but omits them", () => {
     const prev = catalog("2026-09-03T13:15:00.000Z", [
       publicHouse("real-1", "2026-09-03T13:15:00.000Z"),

@@ -39,6 +39,8 @@ import {
   shouldUseSteadyDeltaPoll,
 } from "@/lib/catalog-recovery";
 import { catalogHasRealHouses } from "@/lib/house-set";
+import { applySnapshotStubFlags } from "@/lib/catalog-stub-flags";
+import { catalogHasExplicitStubFlags } from "@/lib/house-set";
 import { ensureGemOsmAnchorsLoaded } from "@/lib/gem-osm-anchor-cache";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
 import { houseWithLocationPolicy, visitorAddressRevealContext } from "@/lib/address-reveal";
@@ -282,10 +284,47 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     }
     setCatalog(withDeviceHouseOverlays(syncCache));
     setSource("cache");
-    if (catalogHasRealHouses(syncCache)) {
+    if (catalogHasExplicitStubFlags(syncCache)) {
       setLoading(false);
       setReady(true);
     }
+  }, []);
+
+  useEffect(() => {
+    const syncCache = loadCatalogCacheSync();
+    if (!syncCache?.houses.length || catalogHasExplicitStubFlags(syncCache)) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const snap = await fetchJson(SNAPSHOT_URL, true);
+        const snapshot: Catalog = {
+          updatedAt: snap.updatedAt,
+          neighborhood: snap.neighborhood,
+          houses: snap.houses ?? [],
+          houseCount: snap.houseCount,
+          pushTemplates: snap.pushTemplates,
+          eventSettings: snap.eventSettings,
+        };
+        const repaired = applySnapshotStubFlags(
+          withDeviceHouseOverlays(syncCache),
+          snapshot,
+        );
+        if (cancelled) return;
+        setCatalog(repaired);
+        setSource("cache");
+        setLoading(false);
+        setReady(true);
+        await saveCatalogCache(repaired);
+      } catch {
+        if (!cancelled) {
+          setLoading(false);
+          setReady(true);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const gemEligibleHouses = useMemo(() => {
@@ -304,7 +343,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       if (cancelled || !merged) return;
       setCatalog(merged);
       setSource("cache");
-      if (catalogHasRealHouses(merged)) {
+      if (catalogHasExplicitStubFlags(merged)) {
         setLoading(false);
         setReady(true);
       }
