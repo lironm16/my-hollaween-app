@@ -721,7 +721,7 @@ export function NeighborhoodApp({
         order: stop.order,
         hop:
           houseIndex > 0
-            ? "אותו בניין"
+            ? "אותו המיקום"
             : distanceLabel(house.id, stop.fromPreviousMeters),
         skipped: false,
       })),

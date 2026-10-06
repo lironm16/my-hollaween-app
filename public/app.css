@@ -1643,6 +1643,9 @@
   .bg-\[\#2a1838\] {
     background-color: #2a1838;
   }
+  .bg-\[\#2a1838\]\/80 {
+    background-color: color-mix(in oklab, #2a1838 80%, transparent);
+  }
   .bg-\[\#2c1a12\] {
     background-color: #2c1a12;
   }
@@ -1651,6 +1654,9 @@
   }
   .bg-\[\#3a2a48\]\/92 {
     background-color: color-mix(in oklab, #3a2a48 92%, transparent);
+  }
+  .bg-\[\#3d262a\] {
+    background-color: #3d262a;
   }
   .bg-\[\#4f46e5\] {
     background-color: #4f46e5;

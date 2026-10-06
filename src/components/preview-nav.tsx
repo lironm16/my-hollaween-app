@@ -8,6 +8,7 @@ export const PREVIEW_LINKS = [
   { href: "/preview/scare", label: "פחד" },
   { href: "/preview/decor", label: "קישוט" },
   { href: "/preview/school-pins", label: "ביה״ס" },
+  { href: "/preview/imp-icons", label: "שדון" },
   { href: "/preview/strollers", label: "עגלות" },
   { href: "/preview/push", label: "התראות" },
   { href: "/preview/hours", label: "שעות" },
