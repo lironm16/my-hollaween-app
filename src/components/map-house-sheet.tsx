@@ -427,6 +427,11 @@ export function MapHouseSheet({
                       ? () => actionContext.onClusterFindAllGems!(clusterHouses)
                       : undefined
                   }
+                  onResetAllGems={
+                    actionContext.onClusterResetAllGems
+                      ? () => actionContext.onClusterResetAllGems!(clusterHouses)
+                      : undefined
+                  }
                 />
               </div>
               {clusterAllSkipped && actionContext.onClusterRestoreAll ? (

@@ -185,6 +185,11 @@ export function HouseDetailOverlay({
                     ? () => actionContext.onClusterFindAllGems!(clusterHouses!)
                     : undefined
                 }
+                onResetAllGems={
+                  actionContext.onClusterResetAllGems
+                    ? () => actionContext.onClusterResetAllGems!(clusterHouses!)
+                    : undefined
+                }
               />
             </div>
             {clusterAllSkipped && actionContext.onClusterRestoreAll ? (

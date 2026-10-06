@@ -216,6 +216,7 @@ export function NeighborhoodApp({
     [admin, now, gemPreviewAsUser, mapDiamondsVisible, mapAdminCharactersVisible],
   );
   const [gemResetHouse, setGemResetHouse] = useState<PublicHouse | null>(null);
+  const [gemResetCluster, setGemResetCluster] = useState<PublicHouse[] | null>(null);
   const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);
   const [mapGemCheerMonster, setMapGemCheerMonster] = useState<GemMonsterId | null>(null);
   const mapGemCheerTimerRef = useRef<number | null>(null);
@@ -523,6 +524,7 @@ export function NeighborhoodApp({
   const handleToggleGemMenu = useCallback(
     (house: PublicHouse) => {
       if (gems.collected(house.id)) {
+        setGemResetCluster(null);
         setGemResetHouse(house);
         return;
       }
@@ -550,13 +552,33 @@ export function NeighborhoodApp({
     return () => window.clearTimeout(timer);
   }, [gemHuntFromUrl, focusId, houses, handleToggleGemMenu, selection]);
 
+  const handleClusterResetAllGems = useCallback((houses: PublicHouse[]) => {
+    if (houses.length < 2) return;
+    if (!houses.every((h) => gems.collected(h.id))) return;
+    setGemResetHouse(null);
+    setGemResetCluster(houses);
+  }, [gems]);
+
+  const cancelGemReset = useCallback(() => {
+    setGemResetHouse(null);
+    setGemResetCluster(null);
+  }, []);
+
   const confirmGemReset = useCallback(() => {
+    const cluster = gemResetCluster;
+    if (cluster && cluster.length >= 2) {
+      for (const h of cluster) gems.resetHouse(h.id);
+      gemBadgePendingRef.current = false;
+      setMapGemBadgeCount(loadGemCollectedIds().length);
+      setGemResetCluster(null);
+      return;
+    }
     const house = gemResetHouse;
     if (!house) return;
     gems.resetHouse(house.id);
     gemBadgePendingRef.current = false;
     setGemResetHouse(null);
-  }, [gemResetHouse, gems]);
+  }, [gemResetCluster, gemResetHouse, gems]);
   const editFlow = useHouseEditFlow();
 
   const {
@@ -1263,6 +1285,7 @@ export function NeighborhoodApp({
       onClusterLikeAll: applyClusterLikeAll,
       onClusterUnlikeAll: applyClusterUnlikeAll,
       onClusterFindAllGems: gemUi ? openGemHuntForCluster : undefined,
+      onClusterResetAllGems: gemUi ? handleClusterResetAllGems : undefined,
       canEdit: (id) => Boolean(admin || owned.some((item) => item.id === id)),
       editCodeFor: (id) =>
         admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode,
@@ -1282,6 +1305,7 @@ export function NeighborhoodApp({
     onToggleVisited,
     handleToggleGemMenu,
     openGemHuntForCluster,
+    handleClusterResetAllGems,
     handleSkipHouse,
     handleRestoreHouse,
     view,
@@ -1662,12 +1686,14 @@ export function NeighborhoodApp({
         onUpdated={handleHouseUpdated}
         onDeleted={handleHouseDeleted}
       />
-      {gemResetHouse ? (
+      {gemResetHouse || gemResetCluster ? (
         <GemResetConfirmDialog
           open
-          house={gemResetHouse}
+          house={gemResetHouse ?? gemResetCluster?.[0] ?? null}
+          cluster={Boolean(gemResetCluster && gemResetCluster.length >= 2)}
+          clusterHouses={gemResetCluster ?? undefined}
           onConfirm={confirmGemReset}
-          onCancel={() => setGemResetHouse(null)}
+          onCancel={cancelGemReset}
         />
       ) : null}
       {mapGemHouse ? (

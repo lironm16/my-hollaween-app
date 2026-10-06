@@ -27,6 +27,12 @@ export const GEM_ACTION_FIND_HE = "מצא שדון";
 /** Cluster ⋮ menu — start sequential hunt for every booth/unit at the address. */
 export const GEM_CLUSTER_FIND_ALL_HE = "מצא הכל";
 export const GEM_CLUSTER_FOUND_ALL_HE = "מצאתי הכל";
+
+export const GEM_RESET_TITLE_HE = "לאפס מציאת שדון?";
+export const GEM_RESET_BODY_ONE_HE = "השדון יוסר מהמכשיר — אפשר לחפש מחדש.";
+export const GEM_RESET_CLUSTER_TITLE_HE = "לאפס מציאת שדונים?";
+export const GEM_RESET_CLUSTER_BODY_HE =
+  "כל השדונים בכתובת הזו יוסרו מהמכשיר — אפשר לחפש מחדש.";
 export const GEM_MAP_COMPLETE_TITLE_HE = "כל השדונים נמצאו!";
 
 export const GEM_COLLECT_NEW_HE = "כל הכבוד!! מצאתם שדון חדש!";

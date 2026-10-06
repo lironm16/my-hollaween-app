@@ -29,6 +29,7 @@ export type HouseCardActionContext = {
   onClusterUnlikeAll?: (houses: PublicHouse[]) => void;
   /** Cluster ⋮ — sequential camera session for every inner house (not per-house «מצא שדון»). */
   onClusterFindAllGems?: (houses: PublicHouse[]) => void;
+  onClusterResetAllGems?: (houses: PublicHouse[]) => void;
   canEdit?: (id: string) => boolean;
   editCodeFor?: (id: string) => string | undefined;
   onEdit?: (house: PublicHouse) => void;

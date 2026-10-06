@@ -44,6 +44,7 @@ export function ClusterHouseActionMenu({
   onUnlikeAll,
   gemCollected,
   onFindAllGems,
+  onResetAllGems,
   menuPlacement = "bottom",
   className,
 }: {
@@ -59,6 +60,7 @@ export function ClusterHouseActionMenu({
   onUnlikeAll?: () => void;
   gemCollected?: (id: string) => boolean;
   onFindAllGems?: () => void;
+  onResetAllGems?: () => void;
   menuPlacement?: "top" | "bottom";
   className?: string;
 }) {
@@ -151,7 +153,11 @@ export function ClusterHouseActionMenu({
       active: allLiked,
     });
   }
-  if (gemCollected && (onFindAllGems || allGemsCollected) && houses.length >= 2) {
+  if (
+    gemCollected &&
+    (onFindAllGems || (allGemsCollected && onResetAllGems)) &&
+    houses.length >= 2
+  ) {
     items.push({
       id: "gem-all",
       label: allGemsCollected ? GEM_CLUSTER_FOUND_ALL_HE : GEM_CLUSTER_FIND_ALL_HE,
@@ -160,7 +166,7 @@ export function ClusterHouseActionMenu({
       ) : (
         <ImpOutlineIcon className={MENU_ICON_CLASS} />
       ),
-      onClick: allGemsCollected ? undefined : onFindAllGems,
+      onClick: allGemsCollected ? onResetAllGems : onFindAllGems,
       active: allGemsCollected,
     });
   }
