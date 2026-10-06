@@ -1,5 +1,6 @@
 import { isE2eTestHouse } from "@/lib/e2e-houses";
 import { isKnownRehearsalStubId } from "@/lib/rehearsal-stub-ids";
+import { isSchoolCampusAddress } from "@/lib/school-campus";
 
 export const HOUSE_SET_KEY = "hw-house-set";
 export const HOUSE_SET_EVENT = "hw-house-set";
@@ -31,6 +32,7 @@ export function isStubHouse(house: {
   deviceCachePin?: boolean;
   deviceCacheStub?: boolean;
 }) {
+  if (isSchoolCampusAddress(house.address)) return false;
   if (house.deviceCachePin || house.deviceCacheStub) return true;
   if (isKnownRehearsalStubId(house.id)) return true;
   if (house.id && STUB_ID.test(house.id)) return true;

@@ -11,11 +11,11 @@ import type { PublicHouse } from "@/lib/types";
 function stub(id: string, lat: number, lng: number, overrides: Partial<PublicHouse> = {}): PublicHouse {
   return {
     id,
-    name: `POI ${id}`,
+    name: `דוכן ${id}`,
     theme: "pumpkin",
-    address: "רחוב 1",
+    address: "ביה״ס המנחיל",
     arrival: "",
-    description: "",
+    description: "דוכן בביה״ס המנחיל",
     lat,
     lng,
     treats: ["candy"],
@@ -37,9 +37,8 @@ function stub(id: string, lat: number, lng: number, overrides: Partial<PublicHou
     photoUrl: "",
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
-    kind: "poi",
-    poiCategory: "info",
-    description: "נקודת עניין לתרגול",
+    kind: "house",
+    boothNumber: 1,
     ...overrides,
   };
 }
@@ -47,8 +46,8 @@ function stub(id: string, lat: number, lng: number, overrides: Partial<PublicHou
 describe("gem-admin-ops", () => {
   it("counts monsters on the map set", () => {
     const rows = buildGemMapHouseRows([
-      stub("נק-1", 32.08, 34.78, { address: "רחוב 1" }),
-      stub("נק-2", 32.09, 34.79, { address: "רחוב 2" }),
+      stub("בית-9323", 32.08, 34.78, { boothNumber: 1 }),
+      stub("בית-9324", 32.09, 34.79, { boothNumber: 2 }),
     ]);
     const counts = countGemsOnMapByMonster(rows);
     assert.ok(counts.size >= 1);
@@ -57,19 +56,19 @@ describe("gem-admin-ops", () => {
 
   it("finds closest row to a point", () => {
     const rows = buildGemMapHouseRows([
-      stub("נק-far", 32.1, 34.8, { address: "רחוק 1" }),
-      stub("נק-near", 32.0801, 34.7801, { address: "קרוב 1" }),
+      stub("בית-far", 32.1, 34.8, { boothNumber: 3 }),
+      stub("בית-near", 32.0801, 34.7801, { boothNumber: 4 }),
     ]);
     const near = closestGemMapRow({ lat: 32.08, lng: 34.78 }, rows, "all");
     assert.ok(near);
-    assert.equal(near!.house.id, "נק-near");
+    assert.equal(near!.house.id, "בית-near");
     assert.ok(near!.distanceM < 50);
   });
 
   it("filters by text query", () => {
     const rows = buildGemMapHouseRows([
-      stub("נק-aaa", 32, 34, { address: "aaa 1" }),
-      stub("נק-bbb", 32, 34, { address: "bbb 1" }),
+      stub("בית-aaa", 32, 34, { boothNumber: 5 }),
+      stub("בית-bbb", 32, 34, { boothNumber: 6 }),
     ]);
     rows[0]!.house.name = "משפחת לוי";
     const filtered = filterGemMapRows(rows, { query: "לוי" });

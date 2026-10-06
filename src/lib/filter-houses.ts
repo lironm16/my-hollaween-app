@@ -20,7 +20,7 @@ import {
   isOpeningSoonForFilter,
 } from "@/lib/hours";
 import { candyTone } from "@/components/candy-glyphs";
-import { poiExemptFromOutingHourFilters } from "@/lib/gem-poi-practice";
+import { schoolCampusExemptFromOutingHourFilters } from "@/lib/gem-school-campus";
 import { houseMatchesLocationKind } from "@/lib/house-kind";
 import { effectiveVisit, isDecorated, offersSensitivity } from "@/lib/house-state";
 import { houseMatchesSet, type HouseSet } from "@/lib/house-set";
@@ -119,7 +119,7 @@ export function houseFilterMismatchReasons(
     else if (!candyFilters.includes(candyTone(house))) reasons.push(candyToneLabel(candyTone(house)));
   }
   if (!includeUndecorated && !isDecorated(house)) reasons.push("לא מקושט");
-  if (!poiExemptFromOutingHourFilters(house)) {
+  if (!schoolCampusExemptFromOutingHourFilters(house)) {
     if (visitWindowMode === "now" && !isOpenNowForFilter(house, "", "", now)) {
       reasons.push("לא פתוח עכשיו");
     } else if (
@@ -227,7 +227,7 @@ export function filterHouses(
       if (candyFilters.length === 0 || !candyFilters.includes(candyTone(house))) return false;
     }
     if (!includeUndecorated && !isDecorated(house)) return false;
-    if (!poiExemptFromOutingHourFilters(house)) {
+    if (!schoolCampusExemptFromOutingHourFilters(house)) {
       if (visitWindowMode === "now") {
         if (!isOpenNowForFilter(house, "", "", now)) return false;
       } else if (

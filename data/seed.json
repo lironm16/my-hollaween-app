@@ -1408,7 +1408,7 @@
       "theme": "pumpkin",
       "address": "ביה״ס ניצנים",
       "arrival": "דוכן 1 — ליד הכניסה",
-      "description": "סטאב לחזרה — דוכן קישוט וממתקים בביה״ס ניצנים.",
+      "description": "דוכן קישוט וממתקים בביה״ס ניצנים.",
       "lat": 32.093264,
       "lng": 34.81124,
       "treats": [
@@ -1442,7 +1442,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "שיכון ותיקים",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 1
     },
     {
@@ -1451,7 +1451,7 @@
       "theme": "pumpkin",
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 1",
-      "description": "סטאב לחזרה — דוכן בביה״ס המנחיל.",
+      "description": "דוכן בביה״ס המנחיל.",
       "lat": 32.093471,
       "lng": 34.820566,
       "treats": [
@@ -1485,7 +1485,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 1
     },
     {
@@ -1494,7 +1494,7 @@
       "theme": "ghost",
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 2",
-      "description": "סטאב לחזרה — דוכן שני בהמנחיל.",
+      "description": "דוכן שני בהמנחיל.",
       "lat": 32.093471,
       "lng": 34.820566,
       "treats": [
@@ -1528,7 +1528,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 2
     },
     {
@@ -1537,7 +1537,7 @@
       "theme": "spider",
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 3",
-      "description": "סטאב לחזרה — דוכן שלישי בהמנחיל.",
+      "description": "דוכן שלישי בהמנחיל.",
       "lat": 32.093471,
       "lng": 34.820566,
       "treats": [
@@ -1571,7 +1571,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 3
     },
     {
@@ -1580,7 +1580,7 @@
       "theme": "pumpkin",
       "address": "ביה״ס גבעולים",
       "arrival": "דוכן 1",
-      "description": "סטאב לחזרה — דוכן בביה״ס גבעולים.",
+      "description": "דוכן בביה״ס גבעולים.",
       "lat": 32.088541,
       "lng": 34.812853,
       "treats": [
@@ -1614,7 +1614,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "הגפן",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 1
     },
     {
@@ -1623,7 +1623,7 @@
       "theme": "ghost",
       "address": "ביה״ס גבעולים",
       "arrival": "דוכן 2",
-      "description": "סטאב לחזרה — דוכן שני בגבעולים.",
+      "description": "דוכן שני בגבעולים.",
       "lat": 32.088541,
       "lng": 34.812853,
       "treats": [
@@ -1659,7 +1659,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "הגפן",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 2
     },
     {
@@ -1668,7 +1668,7 @@
       "theme": "spider",
       "address": "ביה״ס גבעולים",
       "arrival": "דוכן 3",
-      "description": "סטאב לחזרה — דוכן שלישי בגבעולים.",
+      "description": "דוכן שלישי בגבעולים.",
       "lat": 32.088541,
       "lng": 34.812853,
       "treats": [
@@ -1702,18 +1702,16 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "הגפן",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 3
     },
     {
       "id": "בית-9341",
-      "kind": "poi",
-      "poiCategory": "coffee",
-      "name": "🎃 גבעולים — דוכן קפה",
+      "name": "🎃 גבעולים — דוכן 4",
       "theme": "pumpkin",
       "address": "ביה״ס גבעולים",
       "arrival": "דוכן 4 — עמדת קפה",
-      "description": "סטאב לחזרה — דוכן POI דלעת/קפה בביה״ס גבעולים.",
+      "description": "דוכן POI דלעת/קפה בביה״ס גבעולים.",
       "lat": 32.088541,
       "lng": 34.812853,
       "treats": [
@@ -1749,7 +1747,7 @@
       "createdAt": "2026-10-06T07:00:00.000Z",
       "updatedAt": "2026-10-06T07:00:00.000Z",
       "neighborhood": "הגפן",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 4
     },
     {
@@ -1758,7 +1756,7 @@
       "theme": "pumpkin",
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 4 — ערוגת דלעת",
-      "description": "סטאב לחזרה — דוכן דלעת בהמנחיל.",
+      "description": "דוכן דלעת בהמנחיל.",
       "lat": 32.093471,
       "lng": 34.820566,
       "treats": [
@@ -1792,7 +1790,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 4
     },
     {
@@ -1801,7 +1799,7 @@
       "theme": "ghost",
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 5",
-      "description": "סטאב לחזרה — דוכן 5 בהמנחיל.",
+      "description": "דוכן 5 בהמנחיל.",
       "lat": 32.093471,
       "lng": 34.820566,
       "treats": [
@@ -1835,7 +1833,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 5
     },
     {
@@ -1844,7 +1842,7 @@
       "theme": "spider",
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 6",
-      "description": "סטאב לחזרה — דוכן 6 בהמנחיל.",
+      "description": "דוכן 6 בהמנחיל.",
       "lat": 32.093471,
       "lng": 34.820566,
       "treats": [
@@ -1878,7 +1876,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 6
     },
     {
@@ -1887,7 +1885,7 @@
       "theme": "candy",
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 7",
-      "description": "סטאב לחזרה — דוכן 7 בהמנחיל.",
+      "description": "דוכן 7 בהמנחיל.",
       "lat": 32.093471,
       "lng": 34.820566,
       "treats": [
@@ -1921,7 +1919,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 7
     },
     {
@@ -1930,7 +1928,7 @@
       "theme": "witch",
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 8",
-      "description": "סטאב לחזרה — דוכן 8 בהמנחיל.",
+      "description": "דוכן 8 בהמנחיל.",
       "lat": 32.093471,
       "lng": 34.820566,
       "treats": [
@@ -1964,7 +1962,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 8
     },
     {
@@ -1973,7 +1971,7 @@
       "theme": "vampire",
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 9",
-      "description": "סטאב לחזרה — דוכן 9 בהמנחיל.",
+      "description": "דוכן 9 בהמנחיל.",
       "lat": 32.093471,
       "lng": 34.820566,
       "treats": [
@@ -2007,7 +2005,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 9
     },
     {
@@ -2016,7 +2014,7 @@
       "theme": "pumpkin",
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 10",
-      "description": "סטאב לחזרה — דוכן 10 בהמנחיל.",
+      "description": "דוכן 10 בהמנחיל.",
       "lat": 32.093471,
       "lng": 34.820566,
       "treats": [
@@ -2050,7 +2048,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 10
     },
     {
@@ -2059,7 +2057,7 @@
       "theme": "ghost",
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 11",
-      "description": "סטאב לחזרה — דוכן 11 בהמנחיל.",
+      "description": "דוכן 11 בהמנחיל.",
       "lat": 32.093471,
       "lng": 34.820566,
       "treats": [
@@ -2093,7 +2091,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 11
     },
     {
@@ -2102,7 +2100,7 @@
       "theme": "spider",
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 12",
-      "description": "סטאב לחזרה — דוכן 12 בהמנחיל.",
+      "description": "דוכן 12 בהמנחיל.",
       "lat": 32.093471,
       "lng": 34.820566,
       "treats": [
@@ -2136,7 +2134,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 12
     },
     {
@@ -2145,7 +2143,7 @@
       "theme": "candy",
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 13",
-      "description": "סטאב לחזרה — דוכן 13 בהמנחיל.",
+      "description": "דוכן 13 בהמנחיל.",
       "lat": 32.093471,
       "lng": 34.820566,
       "treats": [
@@ -2179,7 +2177,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 13
     },
     {
@@ -2188,7 +2186,7 @@
       "theme": "witch",
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 14",
-      "description": "סטאב לחזרה — דוכן 14 בהמנחיל.",
+      "description": "דוכן 14 בהמנחיל.",
       "lat": 32.093471,
       "lng": 34.820566,
       "treats": [
@@ -2222,7 +2220,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 14
     },
     {
@@ -2231,7 +2229,7 @@
       "theme": "vampire",
       "address": "ביה״ס המנחיל",
       "arrival": "דוכן 15",
-      "description": "סטאב לחזרה — דוכן 15 בהמנחיל.",
+      "description": "דוכן 15 בהמנחיל.",
       "lat": 32.093471,
       "lng": 34.820566,
       "treats": [
@@ -2265,7 +2263,7 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס",
+      "addedBy": "דוכני ביה״ס",
       "boothNumber": 15
     }
   ]

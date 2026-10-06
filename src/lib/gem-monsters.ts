@@ -1,15 +1,16 @@
 import { distanceMeters } from "@/lib/geo";
 import {
   GEM_HUNT_GLOW_INTENSITY,
-  isGemPracticePoi,
-  practicePoiDragonTint,
+  houseMatchesGemHuntSet,
+  isGemSchoolCampusBooth,
+  schoolCampusDragonTint,
   type GemMonsterTint,
-} from "@/lib/gem-poi-practice";
+} from "@/lib/gem-school-campus";
 import { clusterAddressKeyForHouse } from "@/lib/house-clusters";
-import { houseMatchesSet, type HouseSet } from "@/lib/house-set";
+import type { HouseSet } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
 
-export type { GemMonsterTint } from "@/lib/gem-poi-practice";
+export type { GemMonsterTint } from "@/lib/gem-school-campus";
 
 /** Target spacing between two houses with the same pet (when the map allows it). */
 export const GEM_REPEAT_MIN_SPACING_M = 300;
@@ -417,9 +418,9 @@ function buildGemMonsterAssignmentSpatial(
   return assignment;
 }
 
-/** Practice gems only on real catalog POIs (pumpkin pins), not residential houses or fakes. */
+/** Pre-event hunt: gems on school campus booths (דוכנים), not residential houses yet. */
 export function gemHuntMapHouses(houses: PublicHouse[], houseSet: HouseSet = "real") {
-  return houses.filter((house) => houseMatchesSet(house, houseSet) && isGemPracticePoi(house));
+  return houses.filter((house) => houseMatchesGemHuntSet(house, houseSet));
 }
 
 /** @deprecated One carrier per address cluster — prefer {@link gemHousesForMap}. */
@@ -525,7 +526,7 @@ export function houseHasMapGem(houseId: string) {
 export function gemMonsterForHouse(
   house: Pick<PublicHouse, "id" | "theme" | "kind" | "description" | "neighborhood" | "address" | "lat" | "lng">,
 ): GemMonsterId {
-  if (isGemPracticePoi(house)) {
+  if (isGemSchoolCampusBooth(house)) {
     return "dragon";
   }
   if (GEM_MONSTERS_DRAGON_ONLY) {
@@ -542,13 +543,15 @@ export function gemMonsterMeta(monsterId: GemMonsterId) {
   return GEM_MONSTER_CATALOG.find((m) => m.id === monsterId) ?? DEFAULT_MONSTER;
 }
 
-/** Per-location hue; POIs use neighborhood dragon palette + glow on all gems. */
+/** Per-location hue; school booths get a stable dragon tint per דוכן. */
 export function gemMonsterTint(
-  houseOrId: string | Pick<PublicHouse, "id" | "kind" | "description" | "neighborhood" | "address" | "lat" | "lng">,
+  houseOrId:
+    | string
+    | Pick<PublicHouse, "id" | "kind" | "description" | "neighborhood" | "address" | "lat" | "lng" | "boothNumber">,
 ): GemMonsterTint {
   if (typeof houseOrId !== "string") {
-    const poiTint = practicePoiDragonTint(houseOrId);
-    if (poiTint) return poiTint;
+    const campusTint = schoolCampusDragonTint(houseOrId);
+    if (campusTint) return campusTint;
   }
   const id = typeof houseOrId === "string" ? houseOrId : houseOrId.id;
   const hue = (hashHouseId(id) % 360) / 360;

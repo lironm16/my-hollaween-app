@@ -1,5 +1,5 @@
 import type { MeshStandardMaterial } from "three";
-import type { GemMonsterTint } from "@/lib/gem-poi-practice";
+import type { GemMonsterTint } from "@/lib/gem-school-campus";
 
 /** Shared body tint + emissive glow for GLB hunt models. */
 export function applyGemMaterialTint(mat: MeshStandardMaterial, tint: GemMonsterTint) {
