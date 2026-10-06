@@ -148,7 +148,7 @@ describe("catalogNeedsFullRefresh", () => {
   it("forces refresh for stub-only cached snapshot outside rehearsal", () => {
     writeRehearsalScene("off");
     const stubs = catalog(
-      [house("בית-9311", { description: "סטאב לחזרה" })],
+      [house("בית-9311", { isStub: true })],
       "2026-10-31T10:00:00.000Z",
     );
     assert.equal(catalogNeedsFullRefresh(stubs), true);
@@ -159,7 +159,7 @@ describe("catalogNeedsFullRefresh", () => {
   }, () => {
     writeRehearsalScene("open");
     const stubs = catalog(
-      [house("בית-9311", { description: "סטאב לחזרה" })],
+      [house("בית-9311", { isStub: true })],
       "2026-10-31T10:00:00.000Z",
     );
     assert.equal(catalogNeedsFullRefresh(stubs), false);

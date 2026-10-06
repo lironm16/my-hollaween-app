@@ -43,7 +43,8 @@
       "neighborhood": "חרוזים",
       "ownerPhone": "0501112233",
       "addedBy": "משפחת לוי (סטאב)",
-      "boothNumber": 1
+      "boothNumber": 1,
+      "isStub": true
     },
     {
       "id": "בית-1848",
@@ -89,7 +90,8 @@
       "neighborhood": "חרוזים",
       "ownerPhone": "0502223344",
       "addedBy": "דנה כהן (סטאב)",
-      "boothNumber": 2
+      "boothNumber": 2,
+      "isStub": true
     },
     {
       "id": "בית-1849",
@@ -135,7 +137,8 @@
       "neighborhood": "חרוזים",
       "ownerPhone": "0503334455",
       "addedBy": "יוסי לוי (סטאב)",
-      "boothNumber": 3
+      "boothNumber": 3,
+      "isStub": true
     },
     {
       "id": "בית-9310",
@@ -178,7 +181,8 @@
       "updatedAt": "2026-09-05T05:50:00.000Z",
       "neighborhood": "חרוזים",
       "ownerPhone": "0504445566",
-      "addedBy": "מנהל חזרה"
+      "addedBy": "מנהל חזרה",
+      "isStub": true
     },
     {
       "id": "בית-9311",
@@ -219,7 +223,8 @@
       "editCode": "931117",
       "createdAt": "2026-09-05T05:50:00.000Z",
       "updatedAt": "2026-09-05T05:50:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "isStub": true
     },
     {
       "id": "בית-9312",
@@ -264,7 +269,8 @@
       "editCode": "931218",
       "createdAt": "2026-09-05T05:50:00.000Z",
       "updatedAt": "2026-09-05T05:50:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "isStub": true
     },
     {
       "id": "בית-9313",
@@ -305,7 +311,8 @@
       "editCode": "931319",
       "createdAt": "2026-09-05T05:50:00.000Z",
       "updatedAt": "2026-09-05T05:50:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "isStub": true
     },
     {
       "id": "בית-9314",
@@ -346,7 +353,8 @@
       "editCode": "931420",
       "createdAt": "2026-09-05T16:30:00.000Z",
       "updatedAt": "2026-09-05T16:30:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "isStub": true
     },
     {
       "id": "בית-9315",
@@ -388,7 +396,8 @@
       "createdAt": "2026-09-05T16:30:00.000Z",
       "updatedAt": "2026-09-05T16:30:00.000Z",
       "neighborhood": "חרוזים",
-      "boothNumber": 1
+      "boothNumber": 1,
+      "isStub": true
     },
     {
       "id": "בית-9317",
@@ -430,7 +439,8 @@
       "createdAt": "2026-09-05T16:30:00.000Z",
       "updatedAt": "2026-09-05T16:30:00.000Z",
       "neighborhood": "חרוזים",
-      "boothNumber": 1
+      "boothNumber": 1,
+      "isStub": true
     },
     {
       "id": "בית-9318",
@@ -471,7 +481,8 @@
       "editCode": "931824",
       "createdAt": "2026-09-05T16:30:00.000Z",
       "updatedAt": "2026-09-05T16:30:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "isStub": true
     },
     {
       "id": "בית-9319",
@@ -514,7 +525,8 @@
       "editCode": "931925",
       "createdAt": "2026-09-05T16:30:00.000Z",
       "updatedAt": "2026-09-05T16:30:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "isStub": true
     },
     {
       "id": "בית-2291",
@@ -555,7 +567,8 @@
       "editCode": "229102",
       "createdAt": "2026-09-01T10:05:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "isStub": true
     },
     {
       "id": "בית-3304",
@@ -598,7 +611,8 @@
       "editCode": "330403",
       "createdAt": "2026-09-01T10:10:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "isStub": true
     },
     {
       "id": "בית-4418",
@@ -639,7 +653,8 @@
       "editCode": "441804",
       "createdAt": "2026-09-01T10:15:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "isStub": true
     },
     {
       "id": "בית-5520",
@@ -680,7 +695,8 @@
       "editCode": "552005",
       "createdAt": "2026-09-01T10:20:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "isStub": true
     },
     {
       "id": "בית-5521",
@@ -721,7 +737,8 @@
       "editCode": "552106",
       "createdAt": "2026-09-03T13:01:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "isStub": true
     },
     {
       "id": "בית-9124",
@@ -762,7 +779,8 @@
       "editCode": "912410",
       "createdAt": "2026-09-02T07:40:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "שיכון ותיקים"
+      "neighborhood": "שיכון ותיקים",
+      "isStub": true
     },
     {
       "id": "בית-8479",
@@ -809,7 +827,8 @@
       "editCode": "847911",
       "createdAt": "2026-09-03T12:03:18.573Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "שיכון ותיקים"
+      "neighborhood": "שיכון ותיקים",
+      "isStub": true
     },
     {
       "id": "בית-9201",
@@ -850,7 +869,8 @@
       "editCode": "920112",
       "createdAt": "2026-09-03T13:02:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "שיכון ותיקים"
+      "neighborhood": "שיכון ותיקים",
+      "isStub": true
     },
     {
       "id": "בית-9202",
@@ -893,7 +913,8 @@
       "editCode": "920213",
       "createdAt": "2026-09-03T13:03:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "שיכון ותיקים"
+      "neighborhood": "שיכון ותיקים",
+      "isStub": true
     },
     {
       "id": "בית-6637",
@@ -930,7 +951,8 @@
       "editCode": "663706",
       "createdAt": "2026-09-01T10:25:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "נחלת גנים"
+      "neighborhood": "נחלת גנים",
+      "isStub": true
     },
     {
       "id": "בית-7742",
@@ -975,7 +997,8 @@
       "editCode": "774207",
       "createdAt": "2026-09-01T10:30:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "נחלת גנים"
+      "neighborhood": "נחלת גנים",
+      "isStub": true
     },
     {
       "id": "בית-8859",
@@ -1018,7 +1041,8 @@
       "editCode": "885908",
       "createdAt": "2026-09-01T10:35:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "נחלת גנים"
+      "neighborhood": "נחלת גנים",
+      "isStub": true
     },
     {
       "id": "בית-9011",
@@ -1059,7 +1083,8 @@
       "editCode": "901109",
       "createdAt": "2026-09-02T07:10:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "נחלת גנים"
+      "neighborhood": "נחלת גנים",
+      "isStub": true
     },
     {
       "id": "בית-9203",
@@ -1100,7 +1125,8 @@
       "editCode": "920314",
       "createdAt": "2026-09-03T13:04:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "נחלת גנים"
+      "neighborhood": "נחלת גנים",
+      "isStub": true
     },
     {
       "id": "בית-9204",
@@ -1141,7 +1167,8 @@
       "editCode": "920415",
       "createdAt": "2026-09-03T13:05:00.000Z",
       "updatedAt": "2026-09-03T13:15:00.000Z",
-      "neighborhood": "נחלת גנים"
+      "neighborhood": "נחלת גנים",
+      "isStub": true
     },
     {
       "id": "נק-9310",
@@ -1185,7 +1212,8 @@
       "createdAt": "2026-09-06T10:00:00.000Z",
       "updatedAt": "2026-09-06T10:00:00.000Z",
       "neighborhood": "חרוזים",
-      "boothNumber": 2
+      "boothNumber": 2,
+      "isStub": true
     },
     {
       "id": "נק-9311",
@@ -1228,7 +1256,8 @@
       "editCode": "931121",
       "createdAt": "2026-09-06T10:00:00.000Z",
       "updatedAt": "2026-09-06T10:00:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "isStub": true
     },
     {
       "id": "נק-9312",
@@ -1272,7 +1301,8 @@
       "createdAt": "2026-09-06T10:00:00.000Z",
       "updatedAt": "2026-09-06T10:00:00.000Z",
       "neighborhood": "חרוזים",
-      "boothNumber": 2
+      "boothNumber": 2,
+      "isStub": true
     },
     {
       "id": "בית-9316",
@@ -1314,7 +1344,8 @@
       "createdAt": "2026-09-27T10:00:00.000Z",
       "updatedAt": "2026-09-27T10:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "boothNumber": 1
+      "boothNumber": 1,
+      "isStub": true
     },
     {
       "id": "נק-9313",
@@ -1357,7 +1388,8 @@
       "createdAt": "2026-09-27T10:00:00.000Z",
       "updatedAt": "2026-09-27T10:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "boothNumber": 2
+      "boothNumber": 2,
+      "isStub": true
     },
     {
       "id": "נק-9314",
@@ -1400,7 +1432,8 @@
       "createdAt": "2026-09-27T10:00:00.000Z",
       "updatedAt": "2026-09-27T10:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "boothNumber": 3
+      "boothNumber": 3,
+      "isStub": true
     },
     {
       "id": "בית-9320",
@@ -1443,7 +1476,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "שיכון ותיקים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 1
+      "boothNumber": 1,
+      "isStub": true
     },
     {
       "id": "בית-9321",
@@ -1486,7 +1520,8 @@
       "updatedAt": "2026-10-06T16:00:00.000Z",
       "neighborhood": "שיכון ותיקים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 2
+      "boothNumber": 2,
+      "isStub": true
     },
     {
       "id": "בית-9322",
@@ -1529,7 +1564,8 @@
       "updatedAt": "2026-10-06T16:00:00.000Z",
       "neighborhood": "שיכון ותיקים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 3
+      "boothNumber": 3,
+      "isStub": true
     },
     {
       "id": "בית-9342",
@@ -1572,7 +1608,8 @@
       "updatedAt": "2026-10-06T16:00:00.000Z",
       "neighborhood": "שיכון ותיקים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 4
+      "boothNumber": 4,
+      "isStub": true
     },
     {
       "id": "בית-9343",
@@ -1615,7 +1652,8 @@
       "updatedAt": "2026-10-06T16:00:00.000Z",
       "neighborhood": "שיכון ותיקים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 5
+      "boothNumber": 5,
+      "isStub": true
     },
     {
       "id": "בית-9344",
@@ -1658,7 +1696,8 @@
       "updatedAt": "2026-10-06T16:00:00.000Z",
       "neighborhood": "שיכון ותיקים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 6
+      "boothNumber": 6,
+      "isStub": true
     },
     {
       "id": "בית-9345",
@@ -1701,7 +1740,8 @@
       "updatedAt": "2026-10-06T16:00:00.000Z",
       "neighborhood": "שיכון ותיקים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 7
+      "boothNumber": 7,
+      "isStub": true
     },
     {
       "id": "בית-9346",
@@ -1744,7 +1784,8 @@
       "updatedAt": "2026-10-06T16:00:00.000Z",
       "neighborhood": "שיכון ותיקים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 8
+      "boothNumber": 8,
+      "isStub": true
     },
     {
       "id": "בית-9347",
@@ -1787,7 +1828,8 @@
       "updatedAt": "2026-10-06T16:00:00.000Z",
       "neighborhood": "שיכון ותיקים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 9
+      "boothNumber": 9,
+      "isStub": true
     },
     {
       "id": "בית-9348",
@@ -1830,7 +1872,8 @@
       "updatedAt": "2026-10-06T16:00:00.000Z",
       "neighborhood": "שיכון ותיקים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 10
+      "boothNumber": 10,
+      "isStub": true
     },
     {
       "id": "בית-9349",
@@ -1873,7 +1916,8 @@
       "updatedAt": "2026-10-06T16:00:00.000Z",
       "neighborhood": "שיכון ותיקים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 11
+      "boothNumber": 11,
+      "isStub": true
     },
     {
       "id": "בית-9323",
@@ -1916,7 +1960,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 1
+      "boothNumber": 1,
+      "isStub": true
     },
     {
       "id": "בית-9324",
@@ -1959,7 +2004,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 2
+      "boothNumber": 2,
+      "isStub": true
     },
     {
       "id": "בית-9325",
@@ -2002,7 +2048,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 3
+      "boothNumber": 3,
+      "isStub": true
     },
     {
       "id": "בית-9326",
@@ -2045,7 +2092,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "הגפן",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 1
+      "boothNumber": 1,
+      "isStub": true
     },
     {
       "id": "בית-9327",
@@ -2090,7 +2138,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "הגפן",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 2
+      "boothNumber": 2,
+      "isStub": true
     },
     {
       "id": "בית-9328",
@@ -2133,7 +2182,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "הגפן",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 3
+      "boothNumber": 3,
+      "isStub": true
     },
     {
       "id": "בית-9341",
@@ -2180,7 +2230,8 @@
       "updatedAt": "2026-10-06T07:00:00.000Z",
       "neighborhood": "הגפן",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 4
+      "boothNumber": 4,
+      "isStub": true
     },
     {
       "id": "בית-9329",
@@ -2223,7 +2274,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 4
+      "boothNumber": 4,
+      "isStub": true
     },
     {
       "id": "בית-9330",
@@ -2266,7 +2318,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 5
+      "boothNumber": 5,
+      "isStub": true
     },
     {
       "id": "בית-9331",
@@ -2309,7 +2362,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 6
+      "boothNumber": 6,
+      "isStub": true
     },
     {
       "id": "בית-9332",
@@ -2352,7 +2406,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 7
+      "boothNumber": 7,
+      "isStub": true
     },
     {
       "id": "בית-9333",
@@ -2395,7 +2450,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 8
+      "boothNumber": 8,
+      "isStub": true
     },
     {
       "id": "בית-9334",
@@ -2438,7 +2494,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 9
+      "boothNumber": 9,
+      "isStub": true
     },
     {
       "id": "בית-9335",
@@ -2481,7 +2538,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 10
+      "boothNumber": 10,
+      "isStub": true
     },
     {
       "id": "בית-9336",
@@ -2524,7 +2582,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 11
+      "boothNumber": 11,
+      "isStub": true
     },
     {
       "id": "בית-9337",
@@ -2567,7 +2626,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 12
+      "boothNumber": 12,
+      "isStub": true
     },
     {
       "id": "בית-9338",
@@ -2610,7 +2670,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 13
+      "boothNumber": 13,
+      "isStub": true
     },
     {
       "id": "בית-9339",
@@ -2653,7 +2714,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 14
+      "boothNumber": 14,
+      "isStub": true
     },
     {
       "id": "בית-9340",
@@ -2696,7 +2758,8 @@
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
       "addedBy": "סטאב ביה״ס",
-      "boothNumber": 15
+      "boothNumber": 15,
+      "isStub": true
     }
   ]
 }

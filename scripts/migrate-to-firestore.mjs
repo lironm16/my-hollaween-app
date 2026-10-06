@@ -19,11 +19,8 @@ import { getFirestore } from "firebase-admin/firestore";
 import { get as getBlob } from "@vercel/blob";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const STUB_ID = /^בית-931\d$/;
-
 function isStubHouse(house) {
-  if (house?.id && STUB_ID.test(String(house.id))) return true;
-  return Boolean(house?.description?.includes("סטאב לחזרה"));
+  return house?.isStub === true;
 }
 
 function stripStubHouses(houses) {

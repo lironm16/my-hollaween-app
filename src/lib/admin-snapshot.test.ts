@@ -36,7 +36,7 @@ describe("buildSnapshotStats", () => {
       houses: [
         house("a", { visit: "come", openFrom: "17:00", openTo: "21:00" }),
         house("b", { visit: "closed", openFrom: "17:00", openTo: "21:00" }),
-        house("בית-9310", { description: "סטאב לחזרה" }),
+        house("בית-9310", { isStub: true }),
       ],
       now: openEvening,
       houseSet: "real",
@@ -51,7 +51,7 @@ describe("buildSnapshotStats", () => {
     const stats = buildSnapshotStats({
       houses: [
         house("a"),
-        house("בית-9314", { description: "סטאב לחזרה", visit: "come" }),
+        house("בית-9314", { isStub: true, visit: "come" }),
       ],
       now: openEvening,
       houseSet: "stubs",

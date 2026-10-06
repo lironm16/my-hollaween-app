@@ -43,15 +43,15 @@ describe("gem school campus", () => {
       id: "בית-9320",
       address: "ביה״ס ניצנים",
       kind: "house" as const,
-      description: "סטאב לחזרה — דוכן",
-      photoUrl: "/images/stubs/pumpkin-porch.jpg",
+      isStub: true,
+      description: "דוכן QA",
     };
     const realBooth = {
       id: "בית-9001",
       address: "ביה״ס ניצנים",
       kind: "house" as const,
+      isStub: false,
       description: "דוכן אמיתי",
-      photoUrl: "/images/houses/example.jpg",
     };
     assert.equal(houseMatchesGemHuntSet(stubBooth, "real"), false);
     assert.equal(houseMatchesGemHuntSet(stubBooth, "stubs"), true);

@@ -99,7 +99,8 @@ describe("syncCatalog", () => {
     ]);
     const incoming = catalog("2026-09-06T19:50:00.000Z", [
       publicHouse("stub-1", "2026-09-05T05:50:00.000Z", {
-        description: "סטאב לחזרה — נפתח בקרוב.",
+        isStub: true,
+        description: "נפתח בקרוב.",
       }),
     ]);
     const merged = syncCatalog(prev, incoming);

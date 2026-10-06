@@ -27,12 +27,9 @@ function mergeIncomingHouse(
   if (current && isStubHouse(current) && !isStubHouse(merged)) {
     merged = {
       ...merged,
-      description: merged.description?.includes("סטאב לחזרה")
-        ? merged.description
-        : current.description || merged.description,
-      photoUrl: current.photoUrl?.includes("/images/stubs/")
-        ? current.photoUrl
-        : merged.photoUrl,
+      isStub: true,
+      description: merged.description?.trim() ? merged.description : current.description,
+      photoUrl: merged.photoUrl?.trim() ? merged.photoUrl : current.photoUrl,
     };
   }
   return merged;

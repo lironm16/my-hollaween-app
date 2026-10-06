@@ -53,10 +53,12 @@ describe("device catalog cache", () => {
     const stripped = stripHouseForDeviceCache(
       house({
         id: "בית-1847",
-        description: "סטאב לחזרה — דלעות על המדרגה.",
+        isStub: true,
+        description: "דלעות על המדרגה.",
         photoUrl: "/images/stubs/pumpkin-porch.jpg",
       }),
     );
+    assert.equal(stripped.isStub, true);
     assert.equal(stripped.deviceCacheStub, true);
     assert.equal(stripped.photoUrl, "");
   });

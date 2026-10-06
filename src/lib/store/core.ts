@@ -191,6 +191,7 @@ export function normalizeHouse(house: House & { status?: string; rejectionReason
     openTo2: hours.openTo2,
     deletedAt: base.deletedAt ?? null,
     ownerPhone: base.ownerPhone?.trim() ? base.ownerPhone.trim() : null,
+    isStub: Boolean(base.isStub),
   };
 }
 

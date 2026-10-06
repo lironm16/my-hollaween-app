@@ -95,9 +95,9 @@ describe("clusterMembersForHouse", () => {
       house("r1", "חרוזים 8"),
       house("r2", "חרוזים 8"),
       house("r3", "חרוזים 8"),
-      house("בית-9310", "חרוזים 8", { description: "סטאב לחזרה" }),
-      house("בית-9311", "חרוזים 8", { description: "סטאב לחזרה" }),
-      house("בית-9312", "חרוזים 8", { description: "סטאב לחזרה" }),
+      house("בית-9310", "חרוזים 8", { isStub: true }),
+      house("בית-9311", "חרוזים 8", { isStub: true }),
+      house("בית-9312", "חרוזים 8", { isStub: true }),
     ];
     const realOnly = all.filter((item) => !isStubHouse(item));
     assert.equal(clusterMembersForHouse(all, "r1").length, 6);

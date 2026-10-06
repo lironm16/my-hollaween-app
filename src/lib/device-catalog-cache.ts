@@ -24,7 +24,7 @@ export function stripHouseForDeviceCache(house: PublicHouse): PublicHouse {
     description: "",
     photoUrl: "",
     deviceCachePin: true,
-    ...(stub ? { deviceCacheStub: true } : {}),
+    ...(stub ? { isStub: true, deviceCacheStub: true } : {}),
   };
 }
 

@@ -1,5 +1,3 @@
-import { isE2eTestHouse } from "@/lib/e2e-houses";
-import { isKnownRehearsalStubId } from "@/lib/rehearsal-stub-ids";
 export const HOUSE_SET_KEY = "hw-house-set";
 export const HOUSE_SET_EVENT = "hw-house-set";
 
@@ -18,24 +16,14 @@ export const HOUSE_SET_STATUS: Record<HouseSet, string> = {
   all: "מציגים הכל",
 };
 
-const STUB_ID = /^(?:בית|נק)-931\d$/;
-
 export function isStubHouse(house: {
-  id?: string;
-  name?: string;
-  description?: string;
-  address?: string;
-  photoUrl?: string;
-  /** Pin-only device cache shell (no server detail yet). */
-  deviceCachePin?: boolean;
+  isStub?: boolean;
+  /** @deprecated Offline cache before `isStub` was persisted on strip. */
   deviceCacheStub?: boolean;
 }) {
-  if (house.deviceCachePin || house.deviceCacheStub) return true;
-  if (isKnownRehearsalStubId(house.id)) return true;
-  if (house.id && STUB_ID.test(house.id)) return true;
-  if (isE2eTestHouse(house)) return true;
-  if (house.photoUrl?.includes("/images/stubs/")) return true;
-  return Boolean(house.description?.includes("סטאב לחזרה"));
+  if (house.isStub === true) return true;
+  if (house.deviceCacheStub === true) return true;
+  return false;
 }
 
 function isHouseSet(value: string | null | undefined): value is HouseSet {
@@ -66,7 +54,7 @@ export function writeHouseSet(next: HouseSet) {
 
 export function countIdsInSet(
   ids: readonly string[],
-  houses: readonly { id: string; description?: string }[],
+  houses: readonly { id: string; isStub?: boolean; deviceCacheStub?: boolean }[],
   set: HouseSet,
 ): number {
   const byId = new Map(houses.map((house) => [house.id, house]));
@@ -82,16 +70,15 @@ export function countIdsInSet(
     return ids.length;
   }
 
-  // Stubs rehearsal: count every stub id, even when the id only exists in catalog.
   return ids.filter((id) => {
     const house = byId.get(id);
-    return house ? isStubHouse(house) : STUB_ID.test(id);
+    return house ? isStubHouse(house) : false;
   }).length;
 }
 
 export function countLikedInSet(
   likedIds: readonly string[],
-  houses: readonly { id: string; description?: string }[],
+  houses: readonly { id: string; isStub?: boolean; deviceCacheStub?: boolean }[],
   set: HouseSet,
 ): number {
   return countIdsInSet(likedIds, houses, set);
@@ -99,7 +86,7 @@ export function countLikedInSet(
 
 export function countSkippedInSet(
   skippedIds: readonly string[],
-  houses: readonly { id: string; description?: string }[],
+  houses: readonly { id: string; isStub?: boolean; deviceCacheStub?: boolean }[],
   set: HouseSet,
 ): number {
   return countIdsInSet(skippedIds, houses, set);
@@ -107,19 +94,24 @@ export function countSkippedInSet(
 
 export function countVisitedInSet(
   visitedIds: readonly string[],
-  houses: readonly { id: string; description?: string }[],
+  houses: readonly { id: string; isStub?: boolean; deviceCacheStub?: boolean }[],
   set: HouseSet,
 ): number {
   return countIdsInSet(visitedIds, houses, set);
 }
 
-export function houseMatchesSet(house: { id?: string; description?: string }, set: HouseSet) {
+export function houseMatchesSet(
+  house: { isStub?: boolean; deviceCacheStub?: boolean },
+  set: HouseSet,
+) {
   if (set === "all") return true;
   const stub = isStubHouse(house);
   return set === "stubs" ? stub : !stub;
 }
 
-export function catalogHasRealHouses(catalog: { houses: { id?: string; description?: string }[] } | null) {
+export function catalogHasRealHouses(
+  catalog: { houses: { isStub?: boolean; deviceCacheStub?: boolean }[] } | null,
+) {
   if (!catalog?.houses.length) return false;
   return catalog.houses.some((house) => !isStubHouse(house));
 }
@@ -130,7 +122,7 @@ export function catalogHasRealHouses(catalog: { houses: { id?: string; descripti
  * Production visitors always stay on real-only.
  */
 export function resolveViewerHouseSet(
-  catalog: { houses: { id?: string; description?: string }[] } | null,
+  catalog: { houses: { isStub?: boolean; deviceCacheStub?: boolean }[] } | null,
   admin: boolean,
   preferred: HouseSet,
   options?: { previewDeployment?: boolean },
@@ -145,7 +137,7 @@ export function resolveViewerHouseSet(
 export function activeHouseSetForSession(
   admin: boolean,
   houseSet: HouseSet,
-  catalog: { houses: { id?: string; description?: string; photoUrl?: string }[] } | null,
+  catalog: { houses: { isStub?: boolean; deviceCacheStub?: boolean }[] } | null,
   options?: { previewDeployment?: boolean },
 ): HouseSet {
   if (admin) return houseSet;
