@@ -778,6 +778,10 @@
     width: 1.55rem;
     height: 1.55rem;
   }
+  .size-\[4\.5rem\] {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
   .size-\[38px\] {
     width: 38px;
     height: 38px;
@@ -1804,6 +1808,12 @@
   }
   .bg-amber-400 {
     background-color: var(--color-amber-400);
+  }
+  .bg-amber-400\/20 {
+    background-color: color-mix(in srgb, oklch(82.8% 0.189 84.429) 20%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-amber-400) 20%, transparent);
+    }
   }
   .bg-amber-500 {
     background-color: var(--color-amber-500);
@@ -4217,6 +4227,10 @@
   @media (width >= 40rem) {
     .sm\:block {
       display: block;
+    }
+    .sm\:size-20 {
+      width: calc(var(--spacing) * 20);
+      height: calc(var(--spacing) * 20);
     }
     .sm\:h-64 {
       height: calc(var(--spacing) * 64);
@@ -8081,6 +8095,19 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 .house-action-menu-item.is-active-gem {
   color: #fde68a;
+}
+.gem-cluster-session-summary__slot {
+  animation: gem-cluster-summary-pop 520ms ease-out both;
+}
+@keyframes gem-cluster-summary-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 .house-action-menu-item.is-active-skipped {
   color: #ddd6fe;

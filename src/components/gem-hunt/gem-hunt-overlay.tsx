@@ -283,6 +283,15 @@ export function GemHuntOverlay({
   }, [house.id]);
 
   useEffect(() => {
+    if (!campusSession) return;
+    if (phase === "collecting") return;
+    if (!canCollectNow && !sim) return;
+    reveal();
+    setCenterReveal(true);
+    encounterCollectLatchedRef.current = true;
+  }, [campusSession, house.id, canCollectNow, sim, phase, reveal]);
+
+  useEffect(() => {
     beginMapListOverlayCapture();
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -398,7 +407,11 @@ export function GemHuntOverlay({
     const viaPinned =
       !centerReveal && inCollectBand && gemWorldPinVisible(pinDisplay ?? pinPlacement);
     const viaEncounter = encounterMode && inCollectBand;
-    if (!viaTellMe && !viaTellMeEncounter && !viaPinned && !viaEncounter) return;
+    const viaCampus =
+      campusSession &&
+      inCollectBand &&
+      (centerReveal || sim || gemWorldPinVisible(pinDisplay ?? pinPlacement));
+    if (!viaTellMe && !viaTellMeEncounter && !viaPinned && !viaEncounter && !viaCampus) return;
     const entries = loadGemCollected();
     const newAlbumFriend = !repeatVisit && !isGemTypeInCollection(monsterId, entries);
     if (campusSession) {
@@ -652,11 +665,17 @@ export function GemHuntOverlay({
 
   const gemAtCenter = centerReveal || encounterForcesCenter;
 
+  const campusTapCollect =
+    campusSession &&
+    canCollectNow &&
+    (gemAtCenter || pinCollectReady || showWorldGemSprite || sim);
+
   const canTapCollect =
     phase === "visible" &&
-    ((encounterMode &&
-      encounterPhase === "encounter" &&
-      gemAtCenter) ||
+    (campusTapCollect ||
+      (encounterMode &&
+        encounterPhase === "encounter" &&
+        gemAtCenter) ||
       (canCollectNow &&
         ((centerReveal && !encounterMode) ||
           (!encounterMode && (pinCollectReady || sim)))));

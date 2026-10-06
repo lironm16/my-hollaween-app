@@ -39,6 +39,10 @@ import { LikeCheer } from "@/components/like-cheer";
 import { RouteCompleteCheer } from "@/components/route-complete-cheer";
 import { VisitCheer } from "@/components/visit-cheer";
 import { GemCheer } from "@/components/gem-cheer";
+import {
+  GemClusterSessionSummary,
+  type GemClusterSessionCatch,
+} from "@/components/gem-cluster-session-summary";
 import { GemResetConfirmDialog } from "@/components/gem-reset-confirm-dialog";
 import { GemMapCompleteBanner } from "@/components/gem-map-complete-banner";
 import {
@@ -51,7 +55,7 @@ import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import { endGemHuntWebXrSession, requestGemHuntWebXrSession } from "@/lib/gem-hunt-webxr-session";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
-import { loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
+import { isGemTypeInCollection, loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
 import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
 import {
   firstClusterGemHouseToHunt,
@@ -220,6 +224,10 @@ export function NeighborhoodApp({
   const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);
   const [mapGemCheerMonster, setMapGemCheerMonster] = useState<GemMonsterId | null>(null);
   const mapGemCheerTimerRef = useRef<number | null>(null);
+  const mapGemClusterSessionRef = useRef<GemClusterSessionCatch[]>([]);
+  const [clusterGemSessionSummary, setClusterGemSessionSummary] = useState<
+    GemClusterSessionCatch[] | null
+  >(null);
   const gemHuntOpenedFromViewRef = useRef<HomeView>("map");
   const listScrollRef = useRef<HTMLDivElement | null>(null);
   const savedListScrollTopRef = useRef(0);
@@ -416,9 +424,11 @@ export function NeighborhoodApp({
       getGemHuntPortalRoot();
       const openedFrom = readHomeView();
       gemHuntOpenedFromViewRef.current = openedFrom;
-      if (openedFrom === "map") {
+      if (openedFrom === "map" && !clusterMembers) {
         setView("map");
         selection.selectOnMap(house);
+      } else if (openedFrom === "map" && clusterMembers) {
+        setView("map");
       }
       setMapDiamondsVisible(true);
       let xrSession: XRSession | null = null;
@@ -457,6 +467,7 @@ export function NeighborhoodApp({
   const openGemHuntForHouse = useCallback(
     async (house: PublicHouse) => {
       if (gems.collected(house.id)) return;
+      mapGemClusterSessionRef.current = [];
       await bootMapGemHunt(house, null);
     },
     [bootMapGemHunt, gems],
@@ -467,6 +478,7 @@ export function NeighborhoodApp({
       if (houses.length < 2) return;
       const target = firstClusterGemHouseToHunt(houses, gems.collected);
       if (!target) return;
+      mapGemClusterSessionRef.current = [];
       await bootMapGemHunt(target, houses);
     },
     [bootMapGemHunt, gems.collected],
@@ -1260,7 +1272,7 @@ export function NeighborhoodApp({
       liked: likes.liked,
       visited: visits.visited,
       skipped: skips.skipped,
-      gemCollected: gemUi ? gems.collected : undefined,
+      gemCollected: gemFeatureOn ? gems.collected : undefined,
       onToggleLike,
       onToggleVisited,
       onToggleGem: gemUi ? handleToggleGemMenu : undefined,
@@ -1284,8 +1296,8 @@ export function NeighborhoodApp({
       onClusterRestoreAll: applyClusterRestoreAll,
       onClusterLikeAll: applyClusterLikeAll,
       onClusterUnlikeAll: applyClusterUnlikeAll,
-      onClusterFindAllGems: gemUi ? openGemHuntForCluster : undefined,
-      onClusterResetAllGems: gemUi ? handleClusterResetAllGems : undefined,
+      onClusterFindAllGems: gemFeatureOn ? openGemHuntForCluster : undefined,
+      onClusterResetAllGems: gemFeatureOn ? handleClusterResetAllGems : undefined,
       canEdit: (id) => Boolean(admin || owned.some((item) => item.id === id)),
       editCodeFor: (id) =>
         admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode,
@@ -1300,6 +1312,7 @@ export function NeighborhoodApp({
     visits.visited,
     skips,
     gemUi,
+    gemFeatureOn,
     gems.collected,
     onToggleLike,
     onToggleVisited,
@@ -1324,7 +1337,7 @@ export function NeighborhoodApp({
         onClose: selection.closeSelection,
         liked: likes.liked,
         visited: visits.visited,
-        gemCollected: gemUi ? gems.collected : undefined,
+        gemCollected: gemFeatureOn ? gems.collected : undefined,
         clusterOverview: selection.clusterOverview,
         openedFromList: selection.openedFromList,
         clusterHouses: selection.selectedCluster,
@@ -1686,6 +1699,13 @@ export function NeighborhoodApp({
         onUpdated={handleHouseUpdated}
         onDeleted={handleHouseDeleted}
       />
+      {clusterGemSessionSummary ? (
+        <GemClusterSessionSummary
+          open
+          catches={clusterGemSessionSummary}
+          onClose={() => setClusterGemSessionSummary(null)}
+        />
+      ) : null}
       {gemResetHouse || gemResetCluster ? (
         <GemResetConfirmDialog
           open
@@ -1715,7 +1735,16 @@ export function NeighborhoodApp({
           onCollectPersist={
             mapGemClusterMembers
               ? (monsterId) => {
-                  gems.collect(mapGemHouse.id, monsterId);
+                  const h = mapGemHouse;
+                  const before = loadGemCollected();
+                  const isNew =
+                    !gems.collected(h.id) && !isGemTypeInCollection(monsterId, before);
+                  mapGemClusterSessionRef.current.push({
+                    house: h,
+                    monsterId,
+                    isNew,
+                  });
+                  gems.collect(h.id, monsterId);
                   celebrateGemCollect();
                 }
               : undefined
@@ -1724,12 +1753,20 @@ export function NeighborhoodApp({
             mapGemClusterMembers
               ? () => {
                   const h = mapGemHouse;
-                  const next = nextClusterGemHouse(mapGemClusterMembers, gems.collected, h.id);
+                  const members = mapGemClusterMembers;
+                  const next = nextClusterGemHouse(members, gems.collected, h.id);
                   if (next) {
                     setMapGemHouse(next);
                     return;
                   }
+                  const session = [...mapGemClusterSessionRef.current];
+                  mapGemClusterSessionRef.current = [];
                   closeMapGemHunt();
+                  if (session.length > 0 && members.length >= 2) {
+                    setClusterGemSessionSummary(session);
+                  } else if (session.length === 1) {
+                    showMapGemCheer(session[0]!.house, session[0]!.monsterId);
+                  }
                 }
               : undefined
           }

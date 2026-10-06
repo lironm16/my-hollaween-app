@@ -78,8 +78,9 @@ export function ClusterHouseActionMenu({
   const allVisited = houses.length > 0 && houses.every((house) => visited(house.id));
   const allSkipped = houses.length > 0 && houses.every((house) => skipped(house.id));
   const allLiked = houses.length > 0 && houses.every((house) => liked(house.id));
+  const readGemCollected = gemCollected ?? (() => false);
   const allGemsCollected =
-    houses.length > 0 && gemCollected != null && houses.every((house) => gemCollected(house.id));
+    houses.length >= 2 && houses.every((house) => readGemCollected(house.id));
 
   useEffect(() => {
     if (!open) return;
@@ -140,6 +141,19 @@ export function ClusterHouseActionMenu({
       active: allVisited,
     });
   }
+  if (houses.length >= 2 && (onFindAllGems || onResetAllGems)) {
+    items.push({
+      id: "gem-all",
+      label: allGemsCollected ? GEM_CLUSTER_FOUND_ALL_HE : GEM_CLUSTER_FIND_ALL_HE,
+      icon: allGemsCollected ? (
+        <ImpMenuActiveGlyph className={MENU_ACTIVE_ICON_CLASS} />
+      ) : (
+        <ImpOutlineIcon className={MENU_ICON_CLASS} />
+      ),
+      onClick: allGemsCollected ? onResetAllGems : onFindAllGems,
+      active: allGemsCollected,
+    });
+  }
   if (onLikeAll || onUnlikeAll) {
     items.push({
       id: "like-all",
@@ -151,23 +165,6 @@ export function ClusterHouseActionMenu({
       ),
       onClick: allLiked ? onUnlikeAll : onLikeAll,
       active: allLiked,
-    });
-  }
-  if (
-    gemCollected &&
-    (onFindAllGems || (allGemsCollected && onResetAllGems)) &&
-    houses.length >= 2
-  ) {
-    items.push({
-      id: "gem-all",
-      label: allGemsCollected ? GEM_CLUSTER_FOUND_ALL_HE : GEM_CLUSTER_FIND_ALL_HE,
-      icon: allGemsCollected ? (
-        <ImpMenuActiveGlyph className={MENU_ACTIVE_ICON_CLASS} />
-      ) : (
-        <ImpOutlineIcon className={MENU_ICON_CLASS} />
-      ),
-      onClick: allGemsCollected ? onResetAllGems : onFindAllGems,
-      active: allGemsCollected,
     });
   }
 

@@ -3191,6 +3191,21 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   color: #fde68a;
 }
 
+.gem-cluster-session-summary__slot {
+  animation: gem-cluster-summary-pop 520ms ease-out both;
+}
+
+@keyframes gem-cluster-summary-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .house-action-menu-item.is-active-skipped {
   color: #ddd6fe;
 }

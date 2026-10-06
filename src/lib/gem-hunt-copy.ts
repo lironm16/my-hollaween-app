@@ -33,6 +33,12 @@ export const GEM_RESET_BODY_ONE_HE = "השדון יוסר מהמכשיר — א�
 export const GEM_RESET_CLUSTER_TITLE_HE = "לאפס מציאת שדונים?";
 export const GEM_RESET_CLUSTER_BODY_HE =
   "כל השדונים בכתובת הזו יוסרו מהמכשיר — אפשר לחפש מחדש.";
+
+export function gemClusterSessionSummaryHe(total: number, newCount: number): string {
+  if (newCount > 0) return `מצאתם ${total} שדונים — ${newCount} חדשים!`;
+  if (total > 1) return `מצאתם שוב ${total} שדונים!`;
+  return GEM_FOUND_CHEER_HE;
+}
 export const GEM_MAP_COMPLETE_TITLE_HE = "כל השדונים נמצאו!";
 
 export const GEM_COLLECT_NEW_HE = "כל הכבוד!! מצאתם שדון חדש!";
