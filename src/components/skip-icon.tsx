@@ -31,6 +31,26 @@ export function SkipIcon({ className }: { className?: string }) {
   );
 }
 
+/** ⋮ menu — outline skip (hollow center, like heart / pencil). */
+export function SkipOutlineIcon({ className }: { className?: string }) {
+  const { bar } = skipIconPaths;
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinejoin="round"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <path d="M3.75 3.5 14.25 12 3.75 20.5Z" />
+      <rect x={bar.x} y={bar.y} width={bar.width} height={bar.height} rx={bar.rx} />
+    </svg>
+  );
+}
+
 export const SKIP_ICON_SVG = `<svg class="pin-skip-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">${skipIconMarkup("#fff")}</svg>`;
 
 export const SKIP_ICON_DATA_URI = `data:image/svg+xml,${encodeURIComponent(

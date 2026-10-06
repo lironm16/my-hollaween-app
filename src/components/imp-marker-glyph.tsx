@@ -18,6 +18,22 @@ function maskStyleFor(url: string) {
   } as const;
 }
 
+const MENU_PANEL_BG = "#1d1028";
+
+/** Hollow imp silhouette for ⋮ menu (matches outline lucide icons). */
+export function ImpMenuOutlineGlyph({ className }: { className?: string }) {
+  return (
+    <span className={cn("relative inline-block size-7 shrink-0", className)} aria-hidden>
+      <ImpMarkerGlyph variant="solid" className="absolute inset-0 size-full text-current" />
+      <ImpMarkerGlyph
+        variant="solid"
+        className="absolute inset-[12%] size-[76%]"
+        style={{ color: MENU_PANEL_BG }}
+      />
+    </span>
+  );
+}
+
 /** Imp silhouette (mask PNG) — tint via `color` / `currentColor`. */
 export function ImpMarkerGlyph({
   className,

@@ -310,7 +310,9 @@ export function MapStats(props: {
   const [mounted, setMounted] = useState(false);
   const titleId = useId();
   const panelId = useId();
-  const badge = props.filteredHouses > 99 ? "99+" : String(props.filteredHouses);
+  const houseCount = props.filteredHouses;
+  const badge = String(houseCount);
+  const badgeWide = houseCount >= 100;
 
   useEffect(() => {
     setMounted(true);
@@ -384,7 +386,14 @@ export function MapStats(props: {
         <span className="inline-flex size-6 items-center justify-center text-orange-400">
           <HouseIcon />
         </span>
-        <span className="absolute -top-1 -right-1 inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-orange-500 px-1 text-sm font-bold leading-none text-black">
+        <span
+          className={cn(
+            "absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-orange-500 font-bold leading-none text-black",
+            badgeWide
+              ? "min-h-7 min-w-7 px-1.5 text-[0.7rem] tabular-nums"
+              : "h-6 min-w-6 px-1 text-sm",
+          )}
+        >
           {badge}
         </span>
       </button>

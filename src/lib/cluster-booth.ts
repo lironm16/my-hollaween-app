@@ -35,7 +35,3 @@ export function clusterBoothLabel(
   if (clusterIsSchoolCampus(cluster)) return `דוכן ${n}`;
   return `יחידה ${n}`;
 }
-
-export function clusterBoothVisitorHint(label: string) {
-  return `שאלו: «${label}?»`;
-}

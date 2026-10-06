@@ -2,19 +2,25 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { List, MapPinned, MoreVertical, Navigation, Share2 } from "lucide-react";
 import {
-  EditMenuDiscIcon,
-  GemMenuDiscIcon,
+  Heart,
+  KeyRound,
+  List,
+  MapPinned,
+  MoreVertical,
+  Navigation,
+  Pencil,
+  Share2,
+} from "lucide-react";
+import { ImpMenuOutlineGlyph } from "@/components/imp-marker-glyph";
+import {
   GemTrafficIcon,
-  KeyMenuDiscIcon,
-  SavedMenuDiscIcon,
   SavedTrafficIcon,
-  SkipMenuDiscIcon,
   SkipTrafficIcon,
-  VisitedMenuDiscIcon,
   VisitedTrafficIcon,
 } from "@/components/traffic-icons";
+import { SkipOutlineIcon } from "@/components/skip-icon";
+import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
 import { EditCodeDialog } from "@/components/edit-code-dialog";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
@@ -172,7 +178,7 @@ export function HouseActionBar({
         icon: liked ? (
           <SavedTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.35rem]" />
         ) : (
-          <SavedMenuDiscIcon />
+          <Heart className={MENU_ICON_CLASS} strokeWidth={2.2} />
         ),
         onClick: () => onToggleLike(),
         active: liked,
@@ -189,7 +195,7 @@ export function HouseActionBar({
             markStrokeWidth={4}
           />
         ) : (
-          <VisitedMenuDiscIcon />
+          <VisitedCheck visited={false} size="lg" />
         ),
         onClick: () => onToggleVisited(),
         active: visited,
@@ -202,7 +208,7 @@ export function HouseActionBar({
         icon: gemCollected ? (
           <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.55rem]" />
         ) : (
-          <GemMenuDiscIcon markClassName="size-[1.35rem]" />
+          <ImpMenuOutlineGlyph className={MENU_ICON_CLASS} />
         ),
         onClick: () => onToggleGem(),
         active: gemCollected,
@@ -215,7 +221,7 @@ export function HouseActionBar({
         icon: skipped ? (
           <SkipTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.15rem]" />
         ) : (
-          <SkipMenuDiscIcon />
+          <SkipOutlineIcon className={MENU_ICON_CLASS} />
         ),
         onClick: skipped ? onRestoreRoute : onSkip,
         active: skipped,
@@ -225,7 +231,7 @@ export function HouseActionBar({
       items.push({
         id: "edit",
         label: editing ? "סגירת עריכה" : "ערוך בית",
-        icon: <EditMenuDiscIcon />,
+        icon: <Pencil className={MENU_ICON_CLASS} strokeWidth={2.2} />,
         onClick: onToggleEdit,
         active: editing,
       });
@@ -234,7 +240,7 @@ export function HouseActionBar({
       items.push({
         id: "edit-code",
         label: "קוד עריכה",
-        icon: <KeyMenuDiscIcon />,
+        icon: <KeyRound className={MENU_ICON_CLASS} strokeWidth={2.2} />,
         onClick: () => setEditCodeOpen(true),
       });
     }

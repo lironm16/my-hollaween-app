@@ -1,69 +1,7 @@
-import { Check, Heart, KeyRound, Pencil, Save } from "lucide-react";
+import { Check, Heart, Save } from "lucide-react";
 import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { SkipIcon } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
-
-const MENU_DISC = "inline-flex size-8 shrink-0 items-center justify-center rounded-full";
-
-/** ⋮ menu — inactive אהבתי (filled heart in disc). */
-export function SavedMenuDiscIcon({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn(`${MENU_DISC} bg-[#fb7185]/18 ring-1 ring-[#fb7185]/35`, className)}
-      aria-hidden
-    >
-      <Heart className="size-5 fill-[#fb7185] text-[#fb7185]" strokeWidth={2.2} />
-    </span>
-  );
-}
-
-/** ⋮ menu — inactive ביקרתי (check in muted green disc). */
-export function VisitedMenuDiscIcon({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn(`${MENU_DISC} bg-emerald-600/25 text-emerald-100 ring-1 ring-emerald-500/40`, className)}
-      aria-hidden
-    >
-      <Check className="size-5" strokeWidth={3.2} />
-    </span>
-  );
-}
-
-/** ⋮ menu — inactive דילוג (skip glyph in muted disc). */
-export function SkipMenuDiscIcon({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn(`${MENU_DISC} bg-stone-500/25 text-orange-50 ring-1 ring-stone-400/45`, className)}
-      aria-hidden
-    >
-      <SkipIcon className="size-5" />
-    </span>
-  );
-}
-
-/** ⋮ menu — ערוך בית */
-export function EditMenuDiscIcon({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn(`${MENU_DISC} bg-orange-500/15 text-orange-100 ring-1 ring-orange-400/35`, className)}
-      aria-hidden
-    >
-      <Pencil className="size-5 fill-orange-100/25" strokeWidth={2.4} />
-    </span>
-  );
-}
-
-/** ⋮ menu — קוד עריכה */
-export function KeyMenuDiscIcon({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn(`${MENU_DISC} bg-violet-400/15 text-violet-100 ring-1 ring-violet-300/35`, className)}
-      aria-hidden
-    >
-      <KeyRound className="size-5 fill-violet-100/20" strokeWidth={2.4} />
-    </span>
-  );
-}
 
 /** Pink heart in ring — matches house-card traffic pills (icon only). */
 export function SavedTrafficIcon({
@@ -131,7 +69,7 @@ export function GemMenuDiscIcon({
     >
       <ImpMarkerGlyph
         variant="solid"
-        className={cn("size-[1.35rem] max-h-full max-w-full text-current", markClassName)}
+        className={cn("size-[1.55rem] max-h-full max-w-full text-current", markClassName)}
       />
     </span>
   );

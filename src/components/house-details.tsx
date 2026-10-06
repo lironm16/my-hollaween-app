@@ -19,7 +19,6 @@ import { HoursLabel } from "@/components/clock-time";
 import { formatHoursLabel } from "@/lib/hours";
 import { houseAddedMetaLine } from "@/lib/house-meta";
 import { houseHeadline } from "@/lib/labels";
-import { clusterBoothVisitorHint } from "@/lib/cluster-booth";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { houseMapsUrl, houseSharePath } from "@/lib/nav-links";
 import { shouldLoadHousePhoto } from "@/lib/photos";
@@ -513,12 +512,7 @@ export function HouseDetails({
           {headerMenu ? <div className="house-details-menu shrink-0">{headerMenu}</div> : null}
         </div>
         {clusterBoothTag ? (
-          <p className="text-base font-semibold text-orange-200">
-            {clusterBoothTag}
-            <span className="mt-0.5 block text-sm font-normal text-violet-300/90">
-              {clusterBoothVisitorHint(clusterBoothTag)}
-            </span>
-          </p>
+          <p className="text-base font-semibold text-orange-200">{clusterBoothTag}</p>
         ) : null}
         {pageActions}
         <div className="flex flex-wrap items-center gap-1.5">
