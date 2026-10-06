@@ -384,14 +384,29 @@ export function MapHouseSheet({
                       ? () => actionContext.onClusterVisitAll!(clusterHouses)
                       : undefined
                   }
+                  onUnvisitAll={
+                    actionContext.onClusterUnvisitAll
+                      ? () => actionContext.onClusterUnvisitAll!(clusterHouses)
+                      : undefined
+                  }
                   onSkipAll={
                     actionContext.onClusterSkipAll
                       ? () => actionContext.onClusterSkipAll!(clusterHouses)
                       : undefined
                   }
+                  onRestoreAll={
+                    actionContext.onClusterRestoreAll
+                      ? () => actionContext.onClusterRestoreAll!(clusterHouses)
+                      : undefined
+                  }
                   onLikeAll={
                     actionContext.onClusterLikeAll
                       ? () => actionContext.onClusterLikeAll!(clusterHouses)
+                      : undefined
+                  }
+                  onUnlikeAll={
+                    actionContext.onClusterUnlikeAll
+                      ? () => actionContext.onClusterUnlikeAll!(clusterHouses)
                       : undefined
                   }
                 />

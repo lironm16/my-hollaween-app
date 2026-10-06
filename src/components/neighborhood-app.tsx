@@ -910,6 +910,25 @@ export function NeighborhoodApp({
     }
   }
 
+  function applyClusterUnlikeAll(houses: PublicHouse[]) {
+    for (const item of houses) {
+      if (!likes.liked(item.id)) continue;
+      onToggleLike(item.id);
+    }
+  }
+
+  function applyClusterRestoreAll(houses: PublicHouse[]) {
+    for (const item of houses) {
+      if (skips.skipped(item.id)) handleRestoreHouse(item.id);
+    }
+  }
+
+  function applyClusterUnvisitAll(houses: PublicHouse[]) {
+    for (const item of houses) {
+      if (visits.visited(item.id)) performToggleVisited(item.id);
+    }
+  }
+
   function handleClusterSkipAll(houses: PublicHouse[]) {
     const pending = houses.filter((item) => !skips.skipped(item.id));
     if (pending.length === 0) return;
@@ -1182,8 +1201,11 @@ export function NeighborhoodApp({
             }
           : undefined,
       onClusterVisitAll: handleClusterVisitAll,
+      onClusterUnvisitAll: applyClusterUnvisitAll,
       onClusterSkipAll: handleClusterSkipAll,
+      onClusterRestoreAll: applyClusterRestoreAll,
       onClusterLikeAll: applyClusterLikeAll,
+      onClusterUnlikeAll: applyClusterUnlikeAll,
       canEdit: (id) => Boolean(admin || owned.some((item) => item.id === id)),
       editCodeFor: (id) =>
         admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode,

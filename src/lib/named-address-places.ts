@@ -104,7 +104,8 @@ export function searchNamedAddressPlaces(query: string): AddressHit[] {
       lng: place.lng,
       road,
       city: "רמת גן",
-      precise: false,
+      precise: true,
+      subtitle: place.streetLine?.trim() || undefined,
     } satisfies AddressHit;
   });
 }

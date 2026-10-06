@@ -228,6 +228,8 @@ export type AddressHit = {
   suburb?: string;
   city: string;
   precise: boolean;
+  /** Autocomplete secondary line (e.g. campus street). */
+  subtitle?: string;
 };
 
 export type PushSubscriptionRecord = {

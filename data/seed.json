@@ -1435,92 +1435,6 @@
       "addedBy": "סטאב ביה״ס"
     },
     {
-      "id": "בית-9321",
-      "name": "👻 ניצנים — כיתה ב׳",
-      "theme": "ghost",
-      "address": "ביה״ס ניצנים",
-      "arrival": "דוכן 2 — המסדרון",
-      "description": "סטאב לחזרה — דוכן שני באותו בית ספר.",
-      "lat": 32.093250000000005,
-      "lng": 34.81121,
-      "treats": [
-        "candy",
-        "vegan"
-      ],
-      "treatStock": {
-        "candy": "plenty",
-        "vegan": "plenty"
-      },
-      "visit": "come",
-      "scareLevel": "mild",
-      "openFrom": "17:00",
-      "openTo": "21:00",
-      "openHours": [
-        {
-          "from": "17:00",
-          "to": "21:00"
-        }
-      ],
-      "openFrom2": "",
-      "openTo2": "",
-      "notes": "",
-      "accessible": true,
-      "decorLevel": "heavy",
-      "decorated": true,
-      "status": "approved",
-      "soldOut": false,
-      "adminFrozen": false,
-      "ownerFrozenUntil": null,
-      "photoUrl": "/images/stubs/ghost-trees.jpg",
-      "editCode": "932102",
-      "createdAt": "2026-10-05T20:00:00.000Z",
-      "updatedAt": "2026-10-05T20:00:00.000Z",
-      "neighborhood": "שיכון ותיקים",
-      "addedBy": "סטאב ביה״ס"
-    },
-    {
-      "id": "בית-9322",
-      "name": "🕷️ ניצנים — כיתה ג׳",
-      "theme": "spider",
-      "address": "ביה״ס ניצנים",
-      "arrival": "דוכן 3 — החצר",
-      "description": "סטאב לחזרה — דוכן שלישי בניצנים.",
-      "lat": 32.09319,
-      "lng": 34.81122,
-      "treats": [
-        "candy"
-      ],
-      "treatStock": {
-        "candy": "low"
-      },
-      "visit": "come",
-      "scareLevel": "medium",
-      "openFrom": "17:00",
-      "openTo": "21:00",
-      "openHours": [
-        {
-          "from": "17:00",
-          "to": "21:00"
-        }
-      ],
-      "openFrom2": "",
-      "openTo2": "",
-      "notes": "",
-      "accessible": false,
-      "decorLevel": "mild",
-      "decorated": true,
-      "status": "approved",
-      "soldOut": false,
-      "adminFrozen": false,
-      "ownerFrozenUntil": null,
-      "photoUrl": "/images/stubs/spider-door.jpg",
-      "editCode": "932203",
-      "createdAt": "2026-10-05T20:00:00.000Z",
-      "updatedAt": "2026-10-05T20:00:00.000Z",
-      "neighborhood": "שיכון ותיקים",
-      "addedBy": "סטאב ביה״ס"
-    },
-    {
       "id": "בית-9323",
       "name": "🎃 המנחיל — כיתה א׳",
       "theme": "pumpkin",
@@ -1772,6 +1686,510 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "הגפן",
+      "addedBy": "סטאב ביה״ס"
+    },
+    {
+      "id": "בית-9329",
+      "name": "🎃 המנחיל — דוכן 4",
+      "theme": "pumpkin",
+      "address": "ביה״ס המנחיל",
+      "arrival": "דוכן 4",
+      "description": "סטאב לחזרה — דוכן 4 בהמנחיל.",
+      "lat": 32.0934906,
+      "lng": 34.8205447,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "mild",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "009329",
+      "createdAt": "2026-10-05T20:00:00.000Z",
+      "updatedAt": "2026-10-05T20:00:00.000Z",
+      "neighborhood": "נחלת גנים",
+      "addedBy": "סטאב ביה״ס"
+    },
+    {
+      "id": "בית-9330",
+      "name": "🎃 המנחיל — דוכן 5",
+      "theme": "ghost",
+      "address": "ביה״ס המנחיל",
+      "arrival": "דוכן 5",
+      "description": "סטאב לחזרה — דוכן 5 בהמנחיל.",
+      "lat": 32.093520600000005,
+      "lng": 34.8205447,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "mild",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "009330",
+      "createdAt": "2026-10-05T20:00:00.000Z",
+      "updatedAt": "2026-10-05T20:00:00.000Z",
+      "neighborhood": "נחלת גנים",
+      "addedBy": "סטאב ביה״ס"
+    },
+    {
+      "id": "בית-9331",
+      "name": "🎃 המנחיל — דוכן 6",
+      "theme": "spider",
+      "address": "ביה״ס המנחיל",
+      "arrival": "דוכן 6",
+      "description": "סטאב לחזרה — דוכן 6 בהמנחיל.",
+      "lat": 32.0935506,
+      "lng": 34.8205447,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "mild",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "009331",
+      "createdAt": "2026-10-05T20:00:00.000Z",
+      "updatedAt": "2026-10-05T20:00:00.000Z",
+      "neighborhood": "נחלת גנים",
+      "addedBy": "סטאב ביה״ס"
+    },
+    {
+      "id": "בית-9332",
+      "name": "🎃 המנחיל — דוכן 7",
+      "theme": "candy",
+      "address": "ביה״ס המנחיל",
+      "arrival": "דוכן 7",
+      "description": "סטאב לחזרה — דוכן 7 בהמנחיל.",
+      "lat": 32.0935806,
+      "lng": 34.8205447,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "mild",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "009332",
+      "createdAt": "2026-10-05T20:00:00.000Z",
+      "updatedAt": "2026-10-05T20:00:00.000Z",
+      "neighborhood": "נחלת גנים",
+      "addedBy": "סטאב ביה״ס"
+    },
+    {
+      "id": "בית-9333",
+      "name": "🎃 המנחיל — דוכן 8",
+      "theme": "witch",
+      "address": "ביה״ס המנחיל",
+      "arrival": "דוכן 8",
+      "description": "סטאב לחזרה — דוכן 8 בהמנחיל.",
+      "lat": 32.093610600000005,
+      "lng": 34.8205447,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "mild",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "009333",
+      "createdAt": "2026-10-05T20:00:00.000Z",
+      "updatedAt": "2026-10-05T20:00:00.000Z",
+      "neighborhood": "נחלת גנים",
+      "addedBy": "סטאב ביה״ס"
+    },
+    {
+      "id": "בית-9334",
+      "name": "🎃 המנחיל — דוכן 9",
+      "theme": "vampire",
+      "address": "ביה״ס המנחיל",
+      "arrival": "דוכן 9",
+      "description": "סטאב לחזרה — דוכן 9 בהמנחיל.",
+      "lat": 32.0934906,
+      "lng": 34.8205747,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "mild",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "009334",
+      "createdAt": "2026-10-05T20:00:00.000Z",
+      "updatedAt": "2026-10-05T20:00:00.000Z",
+      "neighborhood": "נחלת גנים",
+      "addedBy": "סטאב ביה״ס"
+    },
+    {
+      "id": "בית-9335",
+      "name": "🎃 המנחיל — דוכן 10",
+      "theme": "pumpkin",
+      "address": "ביה״ס המנחיל",
+      "arrival": "דוכן 10",
+      "description": "סטאב לחזרה — דוכן 10 בהמנחיל.",
+      "lat": 32.093520600000005,
+      "lng": 34.8205747,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "mild",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "009335",
+      "createdAt": "2026-10-05T20:00:00.000Z",
+      "updatedAt": "2026-10-05T20:00:00.000Z",
+      "neighborhood": "נחלת גנים",
+      "addedBy": "סטאב ביה״ס"
+    },
+    {
+      "id": "בית-9336",
+      "name": "🎃 המנחיל — דוכן 11",
+      "theme": "ghost",
+      "address": "ביה״ס המנחיל",
+      "arrival": "דוכן 11",
+      "description": "סטאב לחזרה — דוכן 11 בהמנחיל.",
+      "lat": 32.0935506,
+      "lng": 34.8205747,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "mild",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "009336",
+      "createdAt": "2026-10-05T20:00:00.000Z",
+      "updatedAt": "2026-10-05T20:00:00.000Z",
+      "neighborhood": "נחלת גנים",
+      "addedBy": "סטאב ביה״ס"
+    },
+    {
+      "id": "בית-9337",
+      "name": "🎃 המנחיל — דוכן 12",
+      "theme": "spider",
+      "address": "ביה״ס המנחיל",
+      "arrival": "דוכן 12",
+      "description": "סטאב לחזרה — דוכן 12 בהמנחיל.",
+      "lat": 32.0935806,
+      "lng": 34.8205747,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "mild",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "009337",
+      "createdAt": "2026-10-05T20:00:00.000Z",
+      "updatedAt": "2026-10-05T20:00:00.000Z",
+      "neighborhood": "נחלת גנים",
+      "addedBy": "סטאב ביה״ס"
+    },
+    {
+      "id": "בית-9338",
+      "name": "🎃 המנחיל — דוכן 13",
+      "theme": "candy",
+      "address": "ביה״ס המנחיל",
+      "arrival": "דוכן 13",
+      "description": "סטאב לחזרה — דוכן 13 בהמנחיל.",
+      "lat": 32.093610600000005,
+      "lng": 34.8205747,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "mild",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "009338",
+      "createdAt": "2026-10-05T20:00:00.000Z",
+      "updatedAt": "2026-10-05T20:00:00.000Z",
+      "neighborhood": "נחלת גנים",
+      "addedBy": "סטאב ביה״ס"
+    },
+    {
+      "id": "בית-9339",
+      "name": "🎃 המנחיל — דוכן 14",
+      "theme": "witch",
+      "address": "ביה״ס המנחיל",
+      "arrival": "דוכן 14",
+      "description": "סטאב לחזרה — דוכן 14 בהמנחיל.",
+      "lat": 32.0934906,
+      "lng": 34.8206047,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "mild",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "009339",
+      "createdAt": "2026-10-05T20:00:00.000Z",
+      "updatedAt": "2026-10-05T20:00:00.000Z",
+      "neighborhood": "נחלת גנים",
+      "addedBy": "סטאב ביה״ס"
+    },
+    {
+      "id": "בית-9340",
+      "name": "🎃 המנחיל — דוכן 15",
+      "theme": "vampire",
+      "address": "ביה״ס המנחיל",
+      "arrival": "דוכן 15",
+      "description": "סטאב לחזרה — דוכן 15 בהמנחיל.",
+      "lat": 32.093520600000005,
+      "lng": 34.8206047,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "mild",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "009340",
+      "createdAt": "2026-10-05T20:00:00.000Z",
+      "updatedAt": "2026-10-05T20:00:00.000Z",
+      "neighborhood": "נחלת גנים",
       "addedBy": "סטאב ביה״ס"
     }
   ]

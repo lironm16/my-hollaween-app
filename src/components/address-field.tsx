@@ -179,7 +179,7 @@ export function AddressField({
             </li>
           ) : (
             hits.map((hit, i) => {
-              const hint = streetPinHint(hit);
+              const sub = hit.subtitle ?? streetPinHint(hit);
               return (
               <li key={hit.id} role="option" aria-selected={i === active}>
                 <button
@@ -195,7 +195,7 @@ export function AddressField({
                   <MapPin className="mt-0.5 size-3.5 shrink-0 text-orange-400" />
                   <span>
                     <span className="block">{hit.label}</span>
-                    {hint ? <span className="block text-base text-violet-300">{hint}</span> : null}
+                    {sub ? <span className="block text-base text-violet-300">{sub}</span> : null}
                   </span>
                 </button>
               </li>

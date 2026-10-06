@@ -799,31 +799,52 @@
 }
 
 .house-pin.is-school-campus {
-  background: linear-gradient(165deg, #5b21b6 0%, #6d28d9 55%, #7c3aed 100%) !important;
-  overflow: hidden;
+  width: 68px;
+  height: 68px;
+  background: #fff7ed !important;
+  overflow: visible;
 }
 
-.pin-school-clip {
+.pin-school-art {
   position: relative;
-  z-index: 5;
+  z-index: 1;
   display: grid;
   place-items: center;
-  width: 82%;
-  height: 82%;
-  overflow: hidden;
-  border-radius: 999px;
+  width: 78%;
+  height: 78%;
   pointer-events: none;
 }
 
-.pin-school-clip .pin-school-castle {
+.pin-school-castle-svg {
   display: block;
-  width: 118%;
-  height: 118%;
-  max-width: none;
-  max-height: none;
-  object-fit: cover;
-  object-position: center center;
-  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 35%));
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 25%));
+}
+
+.house-pin .pin-status.is-visited-mark {
+  position: absolute;
+  bottom: -6px;
+  inset-inline-start: -6px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1.5px solid #fff7ed;
+  background: #059669;
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.house-pin .pin-status.is-visited-mark .pin-visited-glyph {
+  transform: translateY(1px);
 }
 
 .pin-cluster-icon {
