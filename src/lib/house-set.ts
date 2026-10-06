@@ -126,9 +126,9 @@ export function catalogHasRealHouses(catalog: { houses: { id?: string; descripti
 }
 
 /**
- * Non-admins normally see only real houses. On preview deployments only, when the
- * loaded catalog is stub-only, show all snapshot houses so the map is not empty.
- * Production never uses this fallback — visitors keep the real-only filter.
+ * Non-admins normally see only real houses. On Vercel Preview deployments, show
+ * rehearsal stubs too (real + stubs) so QA can test schools and edge cases.
+ * Production visitors always stay on real-only.
  */
 export function resolveViewerHouseSet(
   catalog: { houses: { id?: string; description?: string }[] } | null,
@@ -138,7 +138,7 @@ export function resolveViewerHouseSet(
 ): HouseSet {
   if (admin) return preferred;
   const preview = options?.previewDeployment === true;
-  if (preview && catalog?.houses.length && !catalogHasRealHouses(catalog)) return "all";
+  if (preview && catalog?.houses.length) return "all";
   return "real";
 }
 
