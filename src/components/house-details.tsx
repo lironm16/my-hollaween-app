@@ -19,7 +19,7 @@ import { HoursLabel } from "@/components/clock-time";
 import { formatHoursLabel } from "@/lib/hours";
 import { houseAddedMetaLine } from "@/lib/house-meta";
 import { houseHeadline } from "@/lib/labels";
-import { clusterOverviewSubtitle, isSchoolCampusAddress } from "@/lib/school-campus";
+import { clusterBoothVisitorHint } from "@/lib/cluster-booth";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { houseMapsUrl, houseSharePath } from "@/lib/nav-links";
 import { shouldLoadHousePhoto } from "@/lib/photos";
@@ -296,8 +296,8 @@ export function HouseDetails({
   distanceM,
   index,
   hideHoursBanner = false,
-  /** When >1 booths at a school address, hide per-booth «דוכן אחד» line (overview shows count). */
-  schoolCampusClusterSize,
+  /** Stable «דוכן N» / «יחידה N» when several share an address. */
+  clusterBoothTag,
 }: {
   house: PublicHouse;
   extra?: ReactNode;
@@ -321,7 +321,7 @@ export function HouseDetails({
   index?: number;
   /** Route tail / visited-skipped cards: no opening-date or hours banners. */
   hideHoursBanner?: boolean;
-  schoolCampusClusterSize?: number;
+  clusterBoothTag?: string | null;
 }) {
   const addressReveal = useAddressReveal();
   const { admin } = useAdminSession();
@@ -446,11 +446,6 @@ export function HouseDetails({
       ) : null}
     </div>
   );
-  const schoolCampusLine =
-    isSchoolCampusAddress(house.address) &&
-    (schoolCampusClusterSize == null || schoolCampusClusterSize <= 1)
-      ? clusterOverviewSubtitle([house])
-      : null;
   const metaSep = " · ";
   const metaTextClass = cn(
     "min-w-0 leading-snug text-violet-200 break-words",
@@ -517,8 +512,13 @@ export function HouseDetails({
           </p>
           {headerMenu ? <div className="house-details-menu shrink-0">{headerMenu}</div> : null}
         </div>
-        {schoolCampusLine ? (
-          <p className="text-base text-violet-300">{schoolCampusLine}</p>
+        {clusterBoothTag ? (
+          <p className="text-base font-semibold text-orange-200">
+            {clusterBoothTag}
+            <span className="mt-0.5 block text-sm font-normal text-violet-300/90">
+              {clusterBoothVisitorHint(clusterBoothTag)}
+            </span>
+          </p>
         ) : null}
         {pageActions}
         <div className="flex flex-wrap items-center gap-1.5">

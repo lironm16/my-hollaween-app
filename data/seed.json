@@ -42,7 +42,8 @@
       "updatedAt": "2026-09-03T13:15:00.000Z",
       "neighborhood": "חרוזים",
       "ownerPhone": "0501112233",
-      "addedBy": "משפחת לוי (סטאב)"
+      "addedBy": "משפחת לוי (סטאב)",
+      "boothNumber": 1
     },
     {
       "id": "בית-1848",
@@ -87,7 +88,8 @@
       "updatedAt": "2026-09-03T13:15:00.000Z",
       "neighborhood": "חרוזים",
       "ownerPhone": "0502223344",
-      "addedBy": "דנה כהן (סטאב)"
+      "addedBy": "דנה כהן (סטאב)",
+      "boothNumber": 2
     },
     {
       "id": "בית-1849",
@@ -132,7 +134,8 @@
       "updatedAt": "2026-09-03T13:15:00.000Z",
       "neighborhood": "חרוזים",
       "ownerPhone": "0503334455",
-      "addedBy": "יוסי לוי (סטאב)"
+      "addedBy": "יוסי לוי (סטאב)",
+      "boothNumber": 3
     },
     {
       "id": "בית-9310",
@@ -384,7 +387,8 @@
       "editCode": "931521",
       "createdAt": "2026-09-05T16:30:00.000Z",
       "updatedAt": "2026-09-05T16:30:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "boothNumber": 1
     },
     {
       "id": "בית-9317",
@@ -425,7 +429,8 @@
       "editCode": "931723",
       "createdAt": "2026-09-05T16:30:00.000Z",
       "updatedAt": "2026-09-05T16:30:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "boothNumber": 1
     },
     {
       "id": "בית-9318",
@@ -1179,7 +1184,8 @@
       "editCode": "931020",
       "createdAt": "2026-09-06T10:00:00.000Z",
       "updatedAt": "2026-09-06T10:00:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "boothNumber": 2
     },
     {
       "id": "נק-9311",
@@ -1265,7 +1271,8 @@
       "editCode": "931222",
       "createdAt": "2026-09-06T10:00:00.000Z",
       "updatedAt": "2026-09-06T10:00:00.000Z",
-      "neighborhood": "חרוזים"
+      "neighborhood": "חרוזים",
+      "boothNumber": 2
     },
     {
       "id": "בית-9316",
@@ -1306,7 +1313,8 @@
       "editCode": "931601",
       "createdAt": "2026-09-27T10:00:00.000Z",
       "updatedAt": "2026-09-27T10:00:00.000Z",
-      "neighborhood": "נחלת גנים"
+      "neighborhood": "נחלת גנים",
+      "boothNumber": 1
     },
     {
       "id": "נק-9313",
@@ -1348,7 +1356,8 @@
       "editCode": "931301",
       "createdAt": "2026-09-27T10:00:00.000Z",
       "updatedAt": "2026-09-27T10:00:00.000Z",
-      "neighborhood": "נחלת גנים"
+      "neighborhood": "נחלת גנים",
+      "boothNumber": 2
     },
     {
       "id": "נק-9314",
@@ -1390,7 +1399,8 @@
       "editCode": "931401",
       "createdAt": "2026-09-27T10:00:00.000Z",
       "updatedAt": "2026-09-27T10:00:00.000Z",
-      "neighborhood": "נחלת גנים"
+      "neighborhood": "נחלת גנים",
+      "boothNumber": 3
     },
     {
       "id": "בית-9320",
@@ -1432,7 +1442,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "שיכון ותיקים",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 1
     },
     {
       "id": "בית-9323",
@@ -1474,7 +1485,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 1
     },
     {
       "id": "בית-9324",
@@ -1516,7 +1528,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 2
     },
     {
       "id": "בית-9325",
@@ -1558,7 +1571,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 3
     },
     {
       "id": "בית-9326",
@@ -1600,7 +1614,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "הגפן",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 1
     },
     {
       "id": "בית-9327",
@@ -1644,7 +1659,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "הגפן",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 2
     },
     {
       "id": "בית-9328",
@@ -1686,7 +1702,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "הגפן",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 3
     },
     {
       "id": "בית-9341",
@@ -1732,7 +1749,8 @@
       "createdAt": "2026-10-06T07:00:00.000Z",
       "updatedAt": "2026-10-06T07:00:00.000Z",
       "neighborhood": "הגפן",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 4
     },
     {
       "id": "בית-9329",
@@ -1774,7 +1792,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 4
     },
     {
       "id": "בית-9330",
@@ -1816,7 +1835,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 5
     },
     {
       "id": "בית-9331",
@@ -1858,7 +1878,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 6
     },
     {
       "id": "בית-9332",
@@ -1900,7 +1921,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 7
     },
     {
       "id": "בית-9333",
@@ -1942,7 +1964,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 8
     },
     {
       "id": "בית-9334",
@@ -1984,7 +2007,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 9
     },
     {
       "id": "בית-9335",
@@ -2026,7 +2050,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 10
     },
     {
       "id": "בית-9336",
@@ -2068,7 +2093,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 11
     },
     {
       "id": "בית-9337",
@@ -2110,7 +2136,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 12
     },
     {
       "id": "בית-9338",
@@ -2152,7 +2179,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 13
     },
     {
       "id": "בית-9339",
@@ -2194,7 +2222,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 14
     },
     {
       "id": "בית-9340",
@@ -2236,7 +2265,8 @@
       "createdAt": "2026-10-05T20:00:00.000Z",
       "updatedAt": "2026-10-05T20:00:00.000Z",
       "neighborhood": "נחלת גנים",
-      "addedBy": "סטאב ביה״ס"
+      "addedBy": "סטאב ביה״ס",
+      "boothNumber": 15
     }
   ]
 }

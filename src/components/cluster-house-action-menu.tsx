@@ -3,8 +3,12 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Heart, MoreVertical, Navigation } from "lucide-react";
-import { SavedTrafficIcon, SkipTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
-import { SkipIcon } from "@/components/skip-icon";
+import {
+  SavedTrafficIcon,
+  SkipMenuDiscIcon,
+  SkipTrafficIcon,
+  VisitedTrafficIcon,
+} from "@/components/traffic-icons";
 import { VisitedCheck } from "@/components/visited-check";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
@@ -106,7 +110,7 @@ export function ClusterHouseActionMenu({
       icon: allSkipped ? (
         <SkipTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.15rem]" />
       ) : (
-        <SkipIcon className={MENU_ICON_CLASS} />
+        <SkipMenuDiscIcon />
       ),
       onClick: allSkipped ? onRestoreAll : onSkipAll,
       active: allSkipped,

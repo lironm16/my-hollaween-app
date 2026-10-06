@@ -21,7 +21,7 @@ export function HouseSheetBody({
   onRestoreRoute,
   index,
   hideHoursBanner,
-  schoolCampusClusterSize,
+  clusterBoothTag,
 }: {
   house: PublicHouse;
   actionContext: HouseCardActionContext;
@@ -32,7 +32,7 @@ export function HouseSheetBody({
   onRestoreRoute?: () => void;
   index?: number;
   hideHoursBanner?: boolean;
-  schoolCampusClusterSize?: number;
+  clusterBoothTag?: string | null;
 }) {
   const editCode = actionContext.editCodeFor?.(house.id);
   const { house: liveHouse, loading, unavailable } = useServerHouseDetail(house);
@@ -68,7 +68,7 @@ export function HouseSheetBody({
             hideHoursBanner,
             extra,
             className: "border-0 bg-transparent !shadow-none !ring-0",
-            schoolCampusClusterSize,
+            clusterBoothTag,
           })}
         />
       )}

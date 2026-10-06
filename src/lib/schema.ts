@@ -76,6 +76,7 @@ const houseFields = z.object({
     .min(HOUSE_FIELD_LIMITS.address.min)
     .max(HOUSE_FIELD_LIMITS.address.max),
   arrival: z.string().trim().max(HOUSE_FIELD_LIMITS.arrival.max),
+  boothNumber: z.number().int().min(1).optional().nullable(),
   description: z.string().trim().max(HOUSE_FIELD_LIMITS.description.max),
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),

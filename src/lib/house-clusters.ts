@@ -1,3 +1,4 @@
+import { boothNumberForHouse } from "@/lib/cluster-booth";
 import { parseStreetAndNumber } from "@/lib/address-text";
 import { namedPlaceForCampusAddress } from "@/lib/named-address-places";
 import { clusterIsSchoolCampus } from "@/lib/school-campus";
@@ -50,9 +51,16 @@ export function clusterAddressKeyForHouse(house: Pick<PublicHouse, "id" | "addre
 }
 
 function sortHouses(houses: PublicHouse[]) {
-  return [...houses].sort((a, b) =>
-    (a.arrival || a.name).localeCompare(b.arrival || b.name, "he"),
-  );
+  return [...houses].sort((a, b) => {
+    const an = boothNumberForHouse(a);
+    const bn = boothNumberForHouse(b);
+    if (an != null && bn != null && an !== bn) return an - bn;
+    if (an != null && bn == null) return -1;
+    if (an == null && bn != null) return 1;
+    const created = a.createdAt.localeCompare(b.createdAt);
+    if (created !== 0) return created;
+    return (a.arrival || a.name).localeCompare(b.arrival || b.name, "he");
+  });
 }
 
 function clusterFromHouses(key: string, houses: PublicHouse[]): HouseCluster {

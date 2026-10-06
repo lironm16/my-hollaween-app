@@ -11,6 +11,7 @@ import {
 } from "@/components/cluster-house-list";
 import { ClusterHouseActionMenu } from "@/components/cluster-house-action-menu";
 import { HouseSkippedBanner, HouseVisitedBanner } from "@/components/house-skipped-banner";
+import { boothNumberForHouse, clusterBoothLabel } from "@/lib/cluster-booth";
 import { clusterOverviewSubtitle, usesSchoolCampusClusterChrome } from "@/lib/school-campus";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
@@ -488,10 +489,16 @@ export function MapHouseSheet({
                       filterMismatchReasons={filterMismatchReasons}
                       skipMeta={skipMeta}
                       onRestoreRoute={onRestoreRoute}
-                      index={index}
+                      index={
+                        clusterDetail && clusterHouses.length > 1
+                          ? (boothNumberForHouse(sheetHouse) ?? clusterIndex ?? undefined)
+                          : index
+                      }
                       hideHoursBanner={hideHoursBanner}
-                      schoolCampusClusterSize={
-                        clusterShell && clusterHouses.length > 1 ? clusterHouses.length : undefined
+                      clusterBoothTag={
+                        clusterShell && clusterHouses.length > 1
+                          ? clusterBoothLabel(sheetHouse, clusterHouses)
+                          : undefined
                       }
                     />
                   </section>

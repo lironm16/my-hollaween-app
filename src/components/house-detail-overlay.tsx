@@ -15,6 +15,7 @@ import {
 } from "@/components/cluster-house-list";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseHeadline } from "@/lib/labels";
+import { clusterBoothLabel } from "@/lib/cluster-booth";
 import { HouseSkippedBanner, HouseVisitedBanner } from "@/components/house-skipped-banner";
 import { clusterOverviewSubtitle, usesSchoolCampusClusterChrome } from "@/lib/school-campus";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
@@ -101,8 +102,10 @@ export function HouseDetailOverlay({
     };
   }, [house.id]);
 
-  const schoolCampusClusterSize =
-    clusterShell && (clusterHouses?.length ?? 0) > 1 ? clusterHouses!.length : undefined;
+  const clusterBoothTag =
+    clusterShell && (clusterHouses?.length ?? 0) > 1
+      ? clusterBoothLabel(house, clusterHouses!)
+      : null;
 
   const sheetBody = (
     <HouseSheetBody
@@ -114,7 +117,7 @@ export function HouseDetailOverlay({
       skipMeta={skipMeta}
       onRestoreRoute={onRestoreRoute}
       index={index}
-      schoolCampusClusterSize={schoolCampusClusterSize}
+      clusterBoothTag={clusterBoothTag}
     />
   );
 

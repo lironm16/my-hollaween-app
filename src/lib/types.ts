@@ -74,6 +74,8 @@ export type House = {
   /** One of the map neighborhoods; joined for display only. */
   neighborhood?: NeighborhoodId | null;
   arrival: string;
+  /** Stable serial at a shared address (school booth / apartment). Never renumbered when others are removed. */
+  boothNumber?: number | null;
   description: string;
   lat: number;
   lng: number;
