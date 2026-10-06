@@ -702,10 +702,6 @@
     width: calc(var(--spacing) * 9) !important;
     height: calc(var(--spacing) * 9) !important;
   }
-  .\!size-11 {
-    width: calc(var(--spacing) * 11) !important;
-    height: calc(var(--spacing) * 11) !important;
-  }
   .size-1\.5 {
     width: calc(var(--spacing) * 1.5);
     height: calc(var(--spacing) * 1.5);
@@ -7451,6 +7447,9 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   width: 28px;
   height: 28px;
 }
+.imp-glyph-box {
+  display: inline-flex !important;
+}
 .imp-marker-glyph {
   display: inline-block;
   vertical-align: middle;
@@ -9002,8 +9001,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-house-found-hero__gem-wrap {
   display: grid;
   place-items: center;
-  width: 3.75rem;
-  height: 3.75rem;
+  width: 3rem;
+  height: 3rem;
   margin: 0;
   border-radius: 9999px;
   background: rgb(251 191 36 / 0.14);
@@ -9011,12 +9010,16 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
     0 0 20px rgb(251 191 36 / 0.35);
 }
 .gem-house-found-hero__gem-icon {
-  width: 2.25rem !important;
-  height: 2.25rem !important;
-  max-width: 2.25rem;
-  max-height: 2.25rem;
+  width: 1.9rem !important;
+  height: 1.9rem !important;
+  max-width: 1.9rem;
+  max-height: 1.9rem;
   color: #fde68a;
   filter: drop-shadow(0 0 16px rgb(251 191 36 / 0.75));
+}
+.gem-house-found-hero__gem-icon svg {
+  width: 1.65rem;
+  height: 1.65rem;
 }
 .gem-house-found-hero__kicker {
   margin: 0.35rem 0 0;

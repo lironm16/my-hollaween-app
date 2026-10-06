@@ -46,7 +46,7 @@ export function GemClusterSessionSummary({
               className="gem-cluster-session-summary__slot flex max-w-[5.5rem] flex-col items-center gap-1 text-center"
               style={{ animationDelay: `${index * 120}ms` }}
             >
-              <ImpMenuActiveGlyph className="!size-11 shrink-0" />
+              <ImpMenuActiveGlyph className="!size-9 shrink-0" />
               <span className="text-[11px] font-semibold leading-tight text-amber-100/95 [overflow-wrap:anywhere]">
                 {gemLabelHe(item.monsterId)}
               </span>

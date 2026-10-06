@@ -32,7 +32,7 @@ export function GemHouseFoundHero({
       {collected ? (
         <>
           <div className="gem-house-found-hero__gem-wrap" aria-hidden>
-            <ImpMenuActiveGlyph className="gem-house-found-hero__gem-icon !size-9" />
+            <ImpMenuActiveGlyph className="gem-house-found-hero__gem-icon" />
           </div>
           <p className="gem-house-found-hero__name gem-house-found-hero__name--solo">{petName}</p>
         </>

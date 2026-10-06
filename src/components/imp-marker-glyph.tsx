@@ -10,7 +10,7 @@ export function ImpMenuActiveGlyph({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center overflow-hidden",
+        "imp-glyph-box inline-flex size-8 shrink-0 items-center justify-center overflow-hidden",
         className,
       )}
       aria-hidden
@@ -40,7 +40,7 @@ export function ImpMarkerGlyph({
   return (
     <span
       className={cn(
-        "inline-flex size-7 aspect-square shrink-0 items-center justify-center overflow-hidden",
+        "imp-glyph-box inline-flex size-7 aspect-square shrink-0 items-center justify-center overflow-hidden",
         className,
       )}
       style={style}
@@ -54,7 +54,7 @@ export function ImpMarkerGlyph({
   return (
     <span
       className={cn(
-        "inline-flex size-7 aspect-square shrink-0 items-center justify-center overflow-hidden",
+        "imp-glyph-box inline-flex size-7 aspect-square shrink-0 items-center justify-center overflow-hidden",
         className,
       )}
       style={style}
