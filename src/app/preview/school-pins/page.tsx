@@ -15,7 +15,7 @@ export default function SchoolPinsPreviewPage() {
           <p className="text-base text-violet-200">
             שלוש הגרסאות הראשונות נוצרו מהטירה שהעלית (
             <code className="text-orange-300">pin-school-campus.png</code>
-            ). ברירת המחדל במפה: <strong className="text-orange-200">castle-light</strong>.
+            ). ברירת המחדל במפה: <strong className="text-orange-200">castle-ink</strong>.
             שינוי: <code className="text-orange-300">NEXT_PUBLIC_SCHOOL_PIN_VARIANT</code>.
           </p>
           <PreviewNav current="/preview/school-pins" />
