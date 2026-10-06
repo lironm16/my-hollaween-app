@@ -1,10 +1,5 @@
 import type { NeighborhoodFilterId } from "@/lib/config";
 import type { SkipReasonId } from "@/lib/skip-reasons";
-import {
-  catalogServerCountMismatch,
-  isAuthoritativeHouseList,
-  resolveServerHouseCount,
-} from "@/lib/catalog-houses";
 import { syncCatalog } from "@/lib/catalog-sync";
 import { clearCatalogRemoved, isCatalogRemoved } from "@/lib/catalog-removed";
 import { tombstoneHouse, loadDeletedHouseIds } from "@/lib/deleted-houses";
@@ -197,12 +192,7 @@ export function clearDeviceCatalogCache() {
  */
 export async function saveCatalogCache(catalog: Catalog) {
   const existing = readLocalCatalog();
-  const trustedComplete =
-    isAuthoritativeHouseList(catalog) &&
-    !catalogServerCountMismatch(catalog, resolveServerHouseCount(catalog));
-  const merged = existing
-    ? syncCatalog(existing, catalog, trustedComplete ? { trustedCompleteList: true } : undefined)
-    : catalog;
+  const merged = existing ? syncCatalog(existing, catalog) : catalog;
   const forDevice: Catalog = {
     ...merged,
     houses: merged.houses.map(stripHouseForDeviceCache),

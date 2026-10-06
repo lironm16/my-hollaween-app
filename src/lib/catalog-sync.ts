@@ -117,18 +117,14 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
     };
   }
   if (delta.full) {
-    return syncCatalog(
-      prev,
-      {
-        updatedAt: delta.updatedAt,
-        neighborhood: delta.neighborhood,
-        houses: delta.houses,
-        houseCount: delta.houseCount,
-        pushTemplates: delta.pushTemplates ?? prev.pushTemplates,
-        eventSettings: delta.eventSettings ?? prev.eventSettings,
-      },
-      { trustedCompleteList: true },
-    );
+    return syncCatalog(prev, {
+      updatedAt: delta.updatedAt,
+      neighborhood: delta.neighborhood,
+      houses: delta.houses,
+      houseCount: delta.houseCount,
+      pushTemplates: delta.pushTemplates ?? prev.pushTemplates,
+      eventSettings: delta.eventSettings ?? prev.eventSettings,
+    });
   }
   const byId = new Map(prev.houses.map((house) => [house.id, house]));
   for (const id of delta.removed ?? []) byId.delete(id);

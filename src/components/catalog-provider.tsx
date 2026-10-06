@@ -116,9 +116,7 @@ async function fetchFullCatalogBundle(base: Catalog | null): Promise<Catalog | n
       pushTemplates: full.pushTemplates,
       eventSettings: full.eventSettings,
     };
-    return withDeviceHouseOverlays(
-      syncCatalog(base, payload, { trustedCompleteList: true }),
-    );
+    return withDeviceHouseOverlays(syncCatalog(base, payload));
   } catch {
     return null;
   }
@@ -183,7 +181,7 @@ async function recoverCatalogShortfall(
 function applyCatalogResponse(prev: Catalog | null, live: CatalogDelta): Catalog {
   live = normalizeCatalogDelta(live);
   if (!prev || live.full) {
-    return syncCatalog(prev, live, live.full ? { trustedCompleteList: true } : undefined);
+    return syncCatalog(prev, live);
   }
   if (live.houses.length || live.removed?.length || live.pushTemplates || live.eventSettings) {
     return mergeCatalogDelta(prev, live);

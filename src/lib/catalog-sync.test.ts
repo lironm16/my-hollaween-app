@@ -88,9 +88,26 @@ describe("syncCatalog", () => {
         publicHouse(`live-${index}`, "2026-10-31T12:00:00.000Z"),
       ),
     };
-    const merged = syncCatalog(prev, incoming, { trustedCompleteList: true });
+    const merged = syncCatalog(prev, incoming, {
+      trustedCompleteList: true,
+    });
     assert.equal(merged.houses.length, 75);
     assert.equal(merged.houseCount, 75);
+  });
+
+  it("keeps local rows on live full catalog when not explicitly trusted", () => {
+    const prev = catalog("2026-10-31T10:00:00.000Z", [
+      publicHouse("keep-a", "2026-10-31T10:00:00.000Z"),
+      publicHouse("keep-b", "2026-10-31T10:00:00.000Z"),
+    ]);
+    const incoming: Catalog = {
+      updatedAt: "2026-10-31T12:00:00.000Z",
+      neighborhood: "שכונה",
+      houseCount: 1,
+      houses: [publicHouse("server-only", "2026-10-31T12:00:00.000Z")],
+    };
+    const merged = syncCatalog(prev, incoming);
+    assert.deepEqual(merged.houses.map((house) => house.id).sort(), ["keep-a", "keep-b", "server-only"]);
   });
 
   it("keeps local rows when a stale authoritative snapshot is shorter", () => {
