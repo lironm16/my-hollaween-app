@@ -40,7 +40,7 @@ export function activeSchoolPinVariant(): SchoolPinVariant {
 }
 
 function imgCastleHtml(src: string, src2x: string, className: string) {
-  return `<span class="pin-school-art" aria-hidden="true"><img class="pin-school-castle-img ${className}" src="${src}" srcset="${src} 1x, ${src2x} 2x" width="48" height="40" alt="" decoding="async" /></span>`;
+  return `<span class="pin-school-art" aria-hidden="true"><img class="pin-school-castle-img ${className}" src="${src}" srcset="${src} 1x, ${src2x} 2x" width="58" height="48" alt="" decoding="async" /></span>`;
 }
 
 function twinHomesSvgHtml() {
