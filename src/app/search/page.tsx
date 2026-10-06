@@ -23,7 +23,7 @@ import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
-import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
+import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { notifyCatalogChanged, removeOwnedHouse, saveOwnedHouse } from "@/lib/offline-db";
 import { writeHomeView } from "@/lib/home-view";
 import type { PublicHouse } from "@/lib/types";
@@ -75,7 +75,7 @@ export default function SearchPage() {
     editFlow.close();
   }, [activeHouseSet, picked, editFlow.close]);
 
-  const gemUi = gemHuntFabVisible(admin, now);
+  const gemUi = gemHuntVisible(admin);
   const actionContext = useMemo((): HouseCardActionContext => {
     return {
       admin,

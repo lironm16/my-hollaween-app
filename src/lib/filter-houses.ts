@@ -20,7 +20,6 @@ import {
   isOpeningSoonForFilter,
 } from "@/lib/hours";
 import { candyTone } from "@/components/candy-glyphs";
-import { schoolCampusExemptFromOutingHourFilters } from "@/lib/gem-school-campus";
 import { houseMatchesLocationKind } from "@/lib/house-kind";
 import { effectiveVisit, isDecorated, offersSensitivity } from "@/lib/house-state";
 import { houseMatchesSet, type HouseSet } from "@/lib/house-set";
@@ -119,39 +118,37 @@ export function houseFilterMismatchReasons(
     else if (!candyFilters.includes(candyTone(house))) reasons.push(candyToneLabel(candyTone(house)));
   }
   if (!includeUndecorated && !isDecorated(house)) reasons.push("לא מקושט");
-  if (!schoolCampusExemptFromOutingHourFilters(house)) {
-    if (visitWindowMode === "now" && !isOpenNowForFilter(house, "", "", now)) {
-      reasons.push("לא פתוח עכשיו");
-    } else if (
-      visitWindowMode === "custom" &&
-      hasValidVisitWindow(visitWindowFrom, visitWindowTo) &&
-      !isOpenDuringCustomVisitForFilter(house, visitWindowFrom, visitWindowTo, now)
-    ) {
-      reasons.push("מחוץ לשעות");
-    }
-    if (
-      openNowOnly ||
-      closingSoonOnly ||
-      openingSoonOnly ||
-      notYetOpenOnly ||
-      onBreakOnly ||
-      afterHoursOnly
-    ) {
-      const hoursHit =
-        (openNowOnly && isOpenNowForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
-        (closingSoonOnly && isClosingSoonForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
-        (openingSoonOnly && isOpeningSoonForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
-        (notYetOpenOnly && isNotYetOpenForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
-        (onBreakOnly && isOnBreakForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
-        (afterHoursOnly && isAfterHoursForFilter(house, visitWindowFrom, visitWindowTo, now));
-      if (!hoursHit) {
-        if (closingSoonOnly) reasons.push("לא נסגר בקרוב");
-        else if (openingSoonOnly) reasons.push("לא נפתח בקרוב");
-        else if (notYetOpenOnly) reasons.push("כבר פתוח");
-        else if (onBreakOnly) reasons.push("לא בהפסקה");
-        else if (afterHoursOnly) reasons.push("לא אחרי שעות");
-        else reasons.push("לא פתוח עכשיו");
-      }
+  if (visitWindowMode === "now" && !isOpenNowForFilter(house, "", "", now)) {
+    reasons.push("לא פתוח עכשיו");
+  } else if (
+    visitWindowMode === "custom" &&
+    hasValidVisitWindow(visitWindowFrom, visitWindowTo) &&
+    !isOpenDuringCustomVisitForFilter(house, visitWindowFrom, visitWindowTo, now)
+  ) {
+    reasons.push("מחוץ לשעות");
+  }
+  if (
+    openNowOnly ||
+    closingSoonOnly ||
+    openingSoonOnly ||
+    notYetOpenOnly ||
+    onBreakOnly ||
+    afterHoursOnly
+  ) {
+    const hoursHit =
+      (openNowOnly && isOpenNowForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+      (closingSoonOnly && isClosingSoonForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+      (openingSoonOnly && isOpeningSoonForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+      (notYetOpenOnly && isNotYetOpenForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+      (onBreakOnly && isOnBreakForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+      (afterHoursOnly && isAfterHoursForFilter(house, visitWindowFrom, visitWindowTo, now));
+    if (!hoursHit) {
+      if (closingSoonOnly) reasons.push("לא נסגר בקרוב");
+      else if (openingSoonOnly) reasons.push("לא נפתח בקרוב");
+      else if (notYetOpenOnly) reasons.push("כבר פתוח");
+      else if (onBreakOnly) reasons.push("לא בהפסקה");
+      else if (afterHoursOnly) reasons.push("לא אחרי שעות");
+      else reasons.push("לא פתוח עכשיו");
     }
   }
   if (closedOnly && !isHouseOwnerClosed(house)) reasons.push("לא סגור");
@@ -227,34 +224,32 @@ export function filterHouses(
       if (candyFilters.length === 0 || !candyFilters.includes(candyTone(house))) return false;
     }
     if (!includeUndecorated && !isDecorated(house)) return false;
-    if (!schoolCampusExemptFromOutingHourFilters(house)) {
-      if (visitWindowMode === "now") {
-        if (!isOpenNowForFilter(house, "", "", now)) return false;
-      } else if (
-        visitWindowMode === "custom" &&
-        hasValidVisitWindow(visitWindowFrom, visitWindowTo)
-      ) {
-        if (!isOpenDuringCustomVisitForFilter(house, visitWindowFrom, visitWindowTo, now)) {
-          return false;
-        }
+    if (visitWindowMode === "now") {
+      if (!isOpenNowForFilter(house, "", "", now)) return false;
+    } else if (
+      visitWindowMode === "custom" &&
+      hasValidVisitWindow(visitWindowFrom, visitWindowTo)
+    ) {
+      if (!isOpenDuringCustomVisitForFilter(house, visitWindowFrom, visitWindowTo, now)) {
+        return false;
       }
-      if (
-        openNowOnly ||
-        closingSoonOnly ||
-        openingSoonOnly ||
-        notYetOpenOnly ||
-        onBreakOnly ||
-        afterHoursOnly
-      ) {
-        const hoursHit =
-          (openNowOnly && isOpenNowForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
-          (closingSoonOnly && isClosingSoonForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
-          (openingSoonOnly && isOpeningSoonForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
-          (notYetOpenOnly && isNotYetOpenForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
-          (onBreakOnly && isOnBreakForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
-          (afterHoursOnly && isAfterHoursForFilter(house, visitWindowFrom, visitWindowTo, now));
-        if (!hoursHit) return false;
-      }
+    }
+    if (
+      openNowOnly ||
+      closingSoonOnly ||
+      openingSoonOnly ||
+      notYetOpenOnly ||
+      onBreakOnly ||
+      afterHoursOnly
+    ) {
+      const hoursHit =
+        (openNowOnly && isOpenNowForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+        (closingSoonOnly && isClosingSoonForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+        (openingSoonOnly && isOpeningSoonForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+        (notYetOpenOnly && isNotYetOpenForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+        (onBreakOnly && isOnBreakForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
+        (afterHoursOnly && isAfterHoursForFilter(house, visitWindowFrom, visitWindowTo, now));
+      if (!hoursHit) return false;
     }
     if (closedOnly || decorOnlyOnly) {
       const statusHit =

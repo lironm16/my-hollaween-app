@@ -19,7 +19,7 @@ import {
   buildGemMapHouseRows,
   countGemsOnMapByMonster,
 } from "@/lib/gem-admin-ops";
-import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
+import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { clusterHousesByAddress } from "@/lib/house-clusters";
 import { gemAlbumStickerPool, gemMonsterMeta, type GemMonsterId } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
@@ -59,7 +59,7 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
   const { admin } = useAdminSession();
   const { source } = useCatalog();
   const now = useAppNow();
-  const gemUi = gemHuntFabVisible(admin, now);
+  const gemUi = gemHuntVisible(admin);
   const { houseSet } = useHouseSet();
   const likes = useLikedHouses();
   const visits = useVisitedHouses();

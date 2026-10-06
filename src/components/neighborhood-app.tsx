@@ -80,7 +80,7 @@ import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { housesWithLocationPolicy } from "@/lib/address-reveal";
-import { adminShowsPrivateHouseFields } from "@/lib/gem-preview-as-user";
+import { adminShowsPrivateHouseFields } from "@/lib/admin-preview-as-user";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAdminHouses } from "@/hooks/use-admin-houses";
@@ -188,10 +188,10 @@ export function NeighborhoodApp({
   );
   const {
     gemHuntVisible: gemFeatureOn,
-    gemFabVisible: gemUi,
+    gemUiVisible: gemUi,
     gemAdminToolsVisible: gemAdminTools,
     previewAsUser: gemPreviewAsUser,
-  } = useGemHuntAdminUi(admin, now);
+  } = useGemHuntAdminUi(admin);
   const gemHuntActive = gemFeatureOn && gemUi;
   useEffect(() => {
     if (!gemHuntActive || !isAndroidLike()) return;
@@ -217,12 +217,11 @@ export function NeighborhoodApp({
   const showGemMapLegend = useMemo(
     () =>
       gemMapLegendVisible(admin, {
-        now,
         previewAsUser: gemPreviewAsUser,
         mapDiamondsVisible,
         mapAdminCharactersVisible,
       }),
-    [admin, now, gemPreviewAsUser, mapDiamondsVisible, mapAdminCharactersVisible],
+    [admin, gemPreviewAsUser, mapDiamondsVisible, mapAdminCharactersVisible],
   );
   const [gemResetHouse, setGemResetHouse] = useState<PublicHouse | null>(null);
   const [gemResetCluster, setGemResetCluster] = useState<PublicHouse[] | null>(null);
@@ -1531,10 +1530,7 @@ export function NeighborhoodApp({
                         }))
                       : null
                   }
-                  showGemAnchors={
-                    gemUi &&
-                    (gemAdminTools ? mapAdminCharactersVisible : mapDiamondsVisible)
-                  }
+                  showGemAnchors={gemUi && (gemAdminTools || mapDiamondsVisible)}
                   showGemLegend={showGemMapLegend}
                   gemAnchorHouses={gemUi ? gemPracticeHouses : []}
                   gemAnchorVisual={

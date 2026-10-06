@@ -521,9 +521,6 @@
   .z-\[1\] {
     z-index: 1;
   }
-  .z-\[2\] {
-    z-index: 2;
-  }
   .z-\[6\] {
     z-index: 6;
   }
@@ -2111,9 +2108,6 @@
   .bg-violet-600 {
     background-color: var(--color-violet-600);
   }
-  .bg-violet-700 {
-    background-color: var(--color-violet-700);
-  }
   .bg-violet-900 {
     background-color: var(--color-violet-900);
   }
@@ -3364,12 +3358,6 @@
       --tw-ring-color: color-mix(in oklab, var(--color-violet-400) 40%, transparent);
     }
   }
-  .ring-violet-400\/50 {
-    --tw-ring-color: color-mix(in srgb, oklch(70.2% 0.183 293.541) 50%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      --tw-ring-color: color-mix(in oklab, var(--color-violet-400) 50%, transparent);
-    }
-  }
   .ring-violet-500\/25 {
     --tw-ring-color: color-mix(in srgb, oklch(60.6% 0.25 292.717) 25%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -3418,16 +3406,6 @@
   }
   .contrast-200 {
     --tw-contrast: contrast(200%);
-    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
-  }
-  .drop-shadow-\[0_0_8px_rgb\(251_191_36\/0\.85\)\] {
-    --tw-drop-shadow-size: drop-shadow(0 0 8px var(--tw-drop-shadow-color, rgb(251 191 36/0.85)));
-    --tw-drop-shadow: var(--tw-drop-shadow-size);
-    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
-  }
-  .drop-shadow-\[0_0_10px_rgb\(167_139_250\/0\.85\)\] {
-    --tw-drop-shadow-size: drop-shadow(0 0 10px var(--tw-drop-shadow-color, rgb(167 139 250/0.85)));
-    --tw-drop-shadow: var(--tw-drop-shadow-size);
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
   }
   .drop-shadow-\[0_0_12px_rgb\(251_191_36\/0\.5\)\] {
@@ -3818,9 +3796,6 @@
         background-color: color-mix(in oklab, var(--color-violet-500) 10%, transparent);
       }
     }
-    .hover\:bg-violet-600:hover {
-      background-color: var(--color-violet-600);
-    }
     .hover\:text-foreground:hover {
       color: var(--foreground);
     }
@@ -3993,9 +3968,6 @@
   }
   .disabled\:opacity-40:disabled {
     opacity: 40%;
-  }
-  .disabled\:opacity-45:disabled {
-    opacity: 45%;
   }
   .disabled\:opacity-50:disabled {
     opacity: 50%;

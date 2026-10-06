@@ -119,3 +119,4 @@ describe("resolveViewerHouseSet", () => {
     assert.equal(resolveViewerHouseSet(stubsOnly, true, "stubs"), "stubs");
   });
 });
+

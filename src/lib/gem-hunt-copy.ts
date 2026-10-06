@@ -15,13 +15,6 @@ export const GEM_MAP_LEGEND_OPEN_HE = "שדון לגלות";
 export const GEM_MAP_TOGGLE_SHOW_HE = "הצג שדונים במפה";
 export const GEM_MAP_TOGGLE_HIDE_HE = "הסתר שדונים במפה";
 
-export const GEM_FAB_HUNT_ARIA_HE = "חיפוש שדון נסתר";
-export const GEM_FAB_ALL_FOUND_ARIA_HE = "כל השדונים — פתיחת האוסף";
-export const GEM_FAB_APPROACH_TITLE_HE = "שדון קרוב — התקרבו לבית";
-export const GEM_FAB_HUNT_TITLE_HE = "בטווח מציאה — פתחו מצלמה!";
-export const GEM_FAB_ALL_FOUND_TITLE_HE = "כל השדונים נמצאו — לתיק האוצר!";
-export const GEM_FAB_FOUND_COUNT_ARIA_HE = (n: number) => `${n} שדונים`;
-
 export const GEM_HOUSE_KICKER_HE = "שדון נסתר · גלו במצלמה";
 export const GEM_ACTION_FIND_HE = "מצא שדון";
 /** Cluster ⋮ menu — start sequential hunt for every booth/unit at the address. */

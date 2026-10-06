@@ -47,7 +47,7 @@ const GEM_HUNT_QUESTION = {
 export default function HelpPage() {
   const { admin } = useAdminSession();
   const now = useAppNow();
-  const { gemFabVisible: showGemHuntHelp } = useGemHuntAdminUi(admin, now);
+  const { gemUiVisible: showGemHuntHelp } = useGemHuntAdminUi(admin);
   const items = showGemHuntHelp ? [...QUESTIONS, GEM_HUNT_QUESTION] : QUESTIONS;
 
   return (

@@ -61,7 +61,7 @@ function MyCollectionsPageContent() {
   const searchParams = useSearchParams();
   const { admin } = useAdminSession();
   const now = useAppNow();
-  const { gemBagMenuVisible: showCollected, gemFabVisible: gemUi } = useGemHuntAdminUi(admin, now);
+  const { gemBagMenuVisible: showCollected, gemUiVisible: gemUi } = useGemHuntAdminUi(admin);
   const addHouseOpen = useAddHouseOpen();
   const urlTab = parseTab(searchParams.get("tab"), showCollected);
   const [tab, setTab] = useState<PersonalMarksTab>(urlTab);

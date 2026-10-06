@@ -1,6 +1,6 @@
 import { boothNumberForHouse } from "@/lib/cluster-booth";
 import { isSchoolCampusAddress } from "@/lib/school-campus";
-import { isStubHouse } from "@/lib/house-set";
+import { houseMatchesSet } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
 
 /** Emissive strength for hunt gems (school booths + future house gems). */
@@ -33,18 +33,9 @@ const SCHOOL_BOOTH_DRAGON_TINTS: readonly Omit<GemMonsterTint, "glow">[] = [
   { hue: 0.42, saturation: 0.55, lightness: 0.05 },
 ];
 
-/** Inner booths at curated school campuses — pre-event gem hunt anchors. */
+/** Rows at curated school campuses (house or POI דוכן) — pre-event gem hunt anchors. */
 export function isGemSchoolCampusBooth(
   house: Pick<PublicHouse, "address" | "kind">,
-): boolean {
-  if (!isSchoolCampusAddress(house.address)) return false;
-  if (house.kind === "poi") return false;
-  return true;
-}
-
-/** School booths stay on the map during «פתוחים עכשיו» before Halloween evening hours. */
-export function schoolCampusExemptFromOutingHourFilters(
-  house: Pick<PublicHouse, "address">,
 ): boolean {
   return isSchoolCampusAddress(house.address);
 }
@@ -66,13 +57,11 @@ export function schoolCampusDragonTint(
   return { ...base, glow: GEM_HUNT_GLOW_INTENSITY };
 }
 
-/** Gem-eligible rows for the active house-set (school booths only until hunt opens wide). */
+/** Gem-eligible school rows — same stub/real rules as the map ({@link houseMatchesSet}). */
 export function houseMatchesGemHuntSet(
-  house: Pick<PublicHouse, "id" | "description" | "address" | "kind">,
+  house: Pick<PublicHouse, "id" | "description" | "address" | "kind" | "photoUrl">,
   houseSet: import("@/lib/house-set").HouseSet,
 ): boolean {
   if (!isGemSchoolCampusBooth(house)) return false;
-  if (houseSet === "all") return true;
-  if (houseSet === "real") return true;
-  return isStubHouse(house);
+  return houseMatchesSet(house, houseSet);
 }

@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 export default function GemHuntHelpPage() {
   const { admin, ready } = useAdminSession();
   const now = useAppNow();
-  const { gemFabVisible: showGemHuntHelp } = useGemHuntAdminUi(admin, now);
+  const { gemUiVisible: showGemHuntHelp } = useGemHuntAdminUi(admin);
 
   if (!ready) {
     return (

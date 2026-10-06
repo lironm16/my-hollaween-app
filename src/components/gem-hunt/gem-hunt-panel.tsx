@@ -104,10 +104,10 @@ export function GemHuntPanel({
 
   const now = useAppNow();
   const {
-    gemFabVisible: visible,
+    gemUiVisible: visible,
     gemAdminToolsVisible: showAdminTools,
     previewAsUser,
-  } = useGemHuntAdminUi(isAdmin, now);
+  } = useGemHuntAdminUi(isAdmin);
   const tellMeHuntRadiusEnforced = gemTellMeHuntRadiusEnforced(isAdmin, previewAsUser);
   const collected = gems.collected(house.id);
   const huntBandM = activeGemHuntMeters();

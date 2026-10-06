@@ -21,7 +21,7 @@ import { GemHuntPanelLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import { writeHomeView } from "@/lib/home-view";
-import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
+import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
 import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
 import { resolveHouseIdFromPath, toPublicHouse } from "@/lib/ids";
@@ -73,7 +73,7 @@ export default function HousePage() {
   const canEdit = Boolean(admin || ownedItem);
   const editCode = admin ? adminHouse?.editCode : ownedItem?.editCode;
   const missing = !loading && Boolean(catalog) && !house;
-  const gemUi = gemHuntFabVisible(admin, now);
+  const gemUi = gemHuntVisible(admin);
   const mapHousesForCelebrate = useMemo(
     () => gemHuntMapHouses(resolveCatalogHouses(catalog), "real"),
     [catalog],

@@ -7,7 +7,7 @@ import { AdminGemOpsPanel } from "@/components/admin-gem-ops-panel";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useRehearsalScene, useServerSim, useAppNow } from "@/hooks/use-app-clock";
 import { useHouseSet } from "@/hooks/use-house-set";
-import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
+import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import {
   CLOCK_EVENT,
   REHEARSAL_LABELS,
@@ -56,7 +56,7 @@ export function AdminDryRunPanel() {
   const { scene, setScene } = useRehearsalScene();
   const { down, setDown } = useServerSim();
   const { houseSet, setHouseSet } = useHouseSet();
-  const gemsOnScreen = admin && gemHuntFabVisible(admin, now);
+  const gemsOnScreen = admin && gemHuntVisible(admin);
   const catalogHouses = useMemo(
     () => (catalog?.houses ?? []) as PublicHouse[],
     [catalog?.houses],

@@ -1,6 +1,6 @@
-/** Open / hunt imp marker tint (map, FAB, legend). */
+/** Open / hunt imp marker tint (map, legend). */
 export const GEM_DIAMOND_FILL = "#fbbf24";
-/** Found imp on map / legend / completion FAB. */
+/** Found imp on map / legend. */
 export const GEM_DIAMOND_COLLECTED_FILL = "#a78bfa";
 
 /** Legacy SW precache assets (UI uses vector {@link ImpDemonFilledIcon} / outline). */

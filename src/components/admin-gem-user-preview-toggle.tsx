@@ -1,6 +1,6 @@
 "use client";
 
-import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
+import { useAdminPreviewAsUser } from "@/hooks/use-admin-preview-as-user";
 import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +31,7 @@ export function AdminGemUserPreviewToggle({
   compact?: boolean;
   className?: string;
 }) {
-  const { previewAsUser, setPreviewAsUser } = useGemPreviewAsUser();
+  const { previewAsUser, setPreviewAsUser } = useAdminPreviewAsUser();
 
   return (
     <div

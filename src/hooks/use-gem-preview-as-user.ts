@@ -1,20 +1,4 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import {
-  readGemPreviewAsUser,
-  subscribeGemPreviewAsUser,
-  writeGemPreviewAsUser,
-} from "@/lib/gem-preview-as-user";
-
-export function useGemPreviewAsUser() {
-  const previewAsUser = useSyncExternalStore(
-    subscribeGemPreviewAsUser,
-    readGemPreviewAsUser,
-    () => false,
-  );
-  return {
-    previewAsUser,
-    setPreviewAsUser: writeGemPreviewAsUser,
-  };
-}
+/** @deprecated Use `useAdminPreviewAsUser` — shared «תצוגת משתמש» toggle. */
+export { useAdminPreviewAsUser as useGemPreviewAsUser } from "@/hooks/use-admin-preview-as-user";
