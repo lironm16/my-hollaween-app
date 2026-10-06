@@ -490,6 +490,9 @@ export function MapHouseSheet({
                       onRestoreRoute={onRestoreRoute}
                       index={index}
                       hideHoursBanner={hideHoursBanner}
+                      schoolCampusClusterSize={
+                        clusterShell && clusterHouses.length > 1 ? clusterHouses.length : undefined
+                      }
                     />
                   </section>
                 </ClusterHouseSwipeArea>

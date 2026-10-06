@@ -101,6 +101,9 @@ export function HouseDetailOverlay({
     };
   }, [house.id]);
 
+  const schoolCampusClusterSize =
+    clusterShell && (clusterHouses?.length ?? 0) > 1 ? clusterHouses!.length : undefined;
+
   const sheetBody = (
     <HouseSheetBody
       house={house}
@@ -111,6 +114,7 @@ export function HouseDetailOverlay({
       skipMeta={skipMeta}
       onRestoreRoute={onRestoreRoute}
       index={index}
+      schoolCampusClusterSize={schoolCampusClusterSize}
     />
   );
 

@@ -296,6 +296,8 @@ export function HouseDetails({
   distanceM,
   index,
   hideHoursBanner = false,
+  /** When >1 booths at a school address, hide per-booth «דוכן אחד» line (overview shows count). */
+  schoolCampusClusterSize,
 }: {
   house: PublicHouse;
   extra?: ReactNode;
@@ -319,6 +321,7 @@ export function HouseDetails({
   index?: number;
   /** Route tail / visited-skipped cards: no opening-date or hours banners. */
   hideHoursBanner?: boolean;
+  schoolCampusClusterSize?: number;
 }) {
   const addressReveal = useAddressReveal();
   const { admin } = useAdminSession();
@@ -443,9 +446,11 @@ export function HouseDetails({
       ) : null}
     </div>
   );
-  const schoolCampusLine = isSchoolCampusAddress(house.address)
-    ? clusterOverviewSubtitle([house])
-    : null;
+  const schoolCampusLine =
+    isSchoolCampusAddress(house.address) &&
+    (schoolCampusClusterSize == null || schoolCampusClusterSize <= 1)
+      ? clusterOverviewSubtitle([house])
+      : null;
   const metaSep = " · ";
   const metaTextClass = cn(
     "min-w-0 leading-snug text-violet-200 break-words",

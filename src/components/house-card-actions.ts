@@ -45,6 +45,7 @@ export function houseCardPropsFor(
     className?: string;
     expanded?: boolean;
     liveDetail?: boolean;
+    schoolCampusClusterSize?: number;
   },
 ): ComponentProps<typeof HouseCard> {
   const id = house.id;
@@ -77,6 +78,7 @@ export function houseCardPropsFor(
     className: opts?.className,
     expanded: opts?.expanded,
     liveDetail: opts?.liveDetail,
+    schoolCampusClusterSize: opts?.schoolCampusClusterSize,
   };
 }
 

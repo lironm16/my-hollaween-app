@@ -43,6 +43,7 @@ export function HouseCard({
   className,
   /** Fetch address/story fields when the row is pin-only from device cache. */
   liveDetail = false,
+  schoolCampusClusterSize,
   ...rest
 }: {
   house: PublicHouse;
@@ -72,6 +73,7 @@ export function HouseCard({
   extra?: ReactNode;
   className?: string;
   liveDetail?: boolean;
+  schoolCampusClusterSize?: number;
 }) {
   void useCatalogRemoved(house.id);
   const mayEdit = canEdit && deviceHouseEditAllowed(house.id);
@@ -151,6 +153,7 @@ export function HouseCard({
           compact={!expanded}
           index={index}
           hideHoursBanner={hideHoursBanner}
+          schoolCampusClusterSize={schoolCampusClusterSize}
           extra={extra}
           canEdit={mayEdit}
           onToggleEdit={mayEdit ? onToggleEdit : undefined}
