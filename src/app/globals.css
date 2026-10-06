@@ -838,16 +838,6 @@
   filter: drop-shadow(0 1px 2px rgb(0 0 0 / 35%));
 }
 
-.pin-school-emoji-wrap {
-  display: grid;
-  place-items: center;
-}
-
-.pin-school-emoji {
-  font-size: 1.65rem;
-  line-height: 1;
-}
-
 .pin-school-twin {
   width: 78%;
   height: 78%;
