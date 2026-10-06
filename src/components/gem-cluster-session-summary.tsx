@@ -1,9 +1,10 @@
 "use client";
 
 import { HouseEditModal } from "@/components/house-edit-modal";
-import { GemSprite } from "@/components/gem-hunt/gem-sprite";
+import { ImpMenuActiveGlyph } from "@/components/imp-marker-glyph";
 import { Button } from "@/components/ui/button";
 import { gemClusterSessionSummaryHe } from "@/lib/gem-hunt-copy";
+import { gemLabelHe } from "@/lib/gem-monsters";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 
@@ -35,26 +36,20 @@ export function GemClusterSessionSummary({
     >
       <div className="space-y-4">
         <ul
-          className="flex flex-wrap items-end justify-center gap-3 py-2"
+          className="flex flex-wrap items-start justify-center gap-3 py-1"
           dir="rtl"
           aria-label="שדונים שנמצאו במפגש"
         >
           {catches.map((item, index) => (
             <li
               key={item.house.id}
-              className="gem-cluster-session-summary__slot flex flex-col items-center gap-1"
+              className="gem-cluster-session-summary__slot flex max-w-[5.5rem] flex-col items-center gap-1 text-center"
               style={{ animationDelay: `${index * 120}ms` }}
             >
-              <div className="gem-cluster-session-summary__sprite relative size-[4.5rem] sm:size-20">
-                <GemSprite
-                  house={item.house}
-                  mode="3d"
-                  size="fill"
-                  motion="celebrate"
-                  celebrateVariant={index + 1}
-                  spinWhileCollect={false}
-                />
-              </div>
+              <ImpMenuActiveGlyph className="!size-11 shrink-0" />
+              <span className="text-[11px] font-semibold leading-tight text-amber-100/95 [overflow-wrap:anywhere]">
+                {gemLabelHe(item.monsterId)}
+              </span>
               {item.isNew ? (
                 <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-[10px] font-bold text-amber-100 ring-1 ring-amber-400/45">
                   חדש

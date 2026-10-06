@@ -8,9 +8,15 @@ import { cn } from "@/lib/utils";
 /** Collected demon in ⋮ menu — yellow fill, no ring (matches outline scale). */
 export function ImpMenuActiveGlyph({ className }: { className?: string }) {
   return (
-    <ImpDemonFilledIcon
-      className={cn("size-7 shrink-0 text-amber-300", className)}
-    />
+    <span
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center overflow-hidden",
+        className,
+      )}
+      aria-hidden
+    >
+      <ImpDemonFilledIcon className="size-[1.55rem] text-amber-300" />
+    </span>
   );
 }
 
@@ -31,24 +37,30 @@ export function ImpMarkerGlyph({
   variant?: "solid" | "eyes";
 }) {
   if (variant === "eyes") {
-    return (
-      <span
-        className={cn("inline-flex aspect-square shrink-0 items-center justify-center", className)}
-        style={style}
-        aria-hidden
-      >
-        <ImpDemonOutlineIcon className="size-full" />
-      </span>
-    );
+  return (
+    <span
+      className={cn(
+        "inline-flex size-7 aspect-square shrink-0 items-center justify-center overflow-hidden",
+        className,
+      )}
+      style={style}
+      aria-hidden
+    >
+      <ImpDemonOutlineIcon className="size-[88%]" />
+    </span>
+  );
   }
 
   return (
     <span
-      className={cn("inline-flex aspect-square shrink-0 items-center justify-center", className)}
+      className={cn(
+        "inline-flex size-7 aspect-square shrink-0 items-center justify-center overflow-hidden",
+        className,
+      )}
       style={style}
       aria-hidden
     >
-      <ImpDemonFilledIcon className="size-full" />
+      <ImpDemonFilledIcon className="size-[88%]" />
     </span>
   );
 }

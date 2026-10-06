@@ -407,10 +407,7 @@ export function GemHuntOverlay({
     const viaPinned =
       !centerReveal && inCollectBand && gemWorldPinVisible(pinDisplay ?? pinPlacement);
     const viaEncounter = encounterMode && inCollectBand;
-    const viaCampus =
-      campusSession &&
-      inCollectBand &&
-      (centerReveal || sim || gemWorldPinVisible(pinDisplay ?? pinPlacement));
+    const viaCampus = campusSession && inCollectBand;
     if (!viaTellMe && !viaTellMeEncounter && !viaPinned && !viaEncounter && !viaCampus) return;
     const entries = loadGemCollected();
     const newAlbumFriend = !repeatVisit && !isGemTypeInCollection(monsterId, entries);
@@ -550,12 +547,13 @@ export function GemHuntOverlay({
   }, [reveal]);
 
   const deactivateTellMe = useCallback(() => {
+    if (campusSession) return;
     setCenterReveal(false);
     setUserDismissedCenterGem(true);
     if (encounterMode && encounterPhase === "encounter") {
       setEncounterPhase("approach");
     }
-  }, [encounterMode, encounterPhase, setEncounterPhase]);
+  }, [campusSession, encounterMode, encounterPhase, setEncounterPhase]);
 
   const tellMeButton = useGemTellMeButton({
     enforceHuntRadius: tellMeHuntRadiusEnforced,
@@ -663,12 +661,13 @@ export function GemHuntOverlay({
       liveLoc != null &&
       !sim;
 
-  const gemAtCenter = centerReveal || encounterForcesCenter;
+  const gemAtCenter =
+    centerReveal ||
+    encounterForcesCenter ||
+    (campusSession && (canCollectNow || sim));
 
   const campusTapCollect =
-    campusSession &&
-    canCollectNow &&
-    (gemAtCenter || pinCollectReady || showWorldGemSprite || sim);
+    campusSession && phase === "visible" && (canCollectNow || sim || encounterCollectLatchedRef.current);
 
   const canTapCollect =
     phase === "visible" &&
@@ -748,7 +747,12 @@ export function GemHuntOverlay({
 
   const overlay = (
     <div
-      className={cn("gem-hunt-overlay", platformMod, encounterMode && "is-encounter-mode")}
+      className={cn(
+        "gem-hunt-overlay",
+        platformMod,
+        encounterMode && "is-encounter-mode",
+        campusSession && "is-campus-queue",
+      )}
       dir="rtl"
     >
       <video
@@ -898,6 +902,11 @@ export function GemHuntOverlay({
               }}
               onPointerCancel={() => {
                 gemTapStartRef.current = null;
+              }}
+              onClick={(e) => {
+                if (!campusTapCollect) return;
+                e.stopPropagation();
+                handleGemInspectTap();
               }}
             >
               <GemSprite

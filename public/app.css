@@ -698,6 +698,14 @@
   .aspect-square {
     aspect-ratio: 1 / 1;
   }
+  .\!size-9 {
+    width: calc(var(--spacing) * 9) !important;
+    height: calc(var(--spacing) * 9) !important;
+  }
+  .\!size-11 {
+    width: calc(var(--spacing) * 11) !important;
+    height: calc(var(--spacing) * 11) !important;
+  }
   .size-1\.5 {
     width: calc(var(--spacing) * 1.5);
     height: calc(var(--spacing) * 1.5);
@@ -777,10 +785,6 @@
   .size-\[1\.55rem\] {
     width: 1.55rem;
     height: 1.55rem;
-  }
-  .size-\[4\.5rem\] {
-    width: 4.5rem;
-    height: 4.5rem;
   }
   .size-\[38px\] {
     width: 38px;
@@ -896,6 +900,9 @@
   }
   .h-72 {
     height: calc(var(--spacing) * 72);
+  }
+  .h-\[1em\] {
+    height: 1em;
   }
   .h-\[56\%\] {
     height: 56%;
@@ -1032,6 +1039,9 @@
   .w-32 {
     width: calc(var(--spacing) * 32);
   }
+  .w-\[1em\] {
+    width: 1em;
+  }
   .w-\[4\.75rem\] {
     width: 4.75rem;
   }
@@ -1082,6 +1092,9 @@
   }
   .max-w-20 {
     max-width: calc(var(--spacing) * 20);
+  }
+  .max-w-\[5\.5rem\] {
+    max-width: 5.5rem;
   }
   .max-w-\[220px\] {
     max-width: 220px;
@@ -2637,6 +2650,12 @@
     color: color-mix(in srgb, oklch(96.2% 0.059 95.617) 90%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       color: color-mix(in oklab, var(--color-amber-100) 90%, transparent);
+    }
+  }
+  .text-amber-100\/95 {
+    color: color-mix(in srgb, oklch(96.2% 0.059 95.617) 95%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-amber-100) 95%, transparent);
     }
   }
   .text-amber-200 {
@@ -4227,10 +4246,6 @@
   @media (width >= 40rem) {
     .sm\:block {
       display: block;
-    }
-    .sm\:size-20 {
-      width: calc(var(--spacing) * 20);
-      height: calc(var(--spacing) * 20);
     }
     .sm\:h-64 {
       height: calc(var(--spacing) * 64);
@@ -8126,6 +8141,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 .house-action-menu-label {
   min-width: 0;
@@ -8989,8 +9005,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
     0 0 20px rgb(251 191 36 / 0.35);
 }
 .gem-house-found-hero__gem-icon {
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  max-width: 2.25rem;
+  max-height: 2.25rem;
   color: #fde68a;
   filter: drop-shadow(0 0 16px rgb(251 191 36 / 0.75));
 }
@@ -12297,6 +12315,19 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 .gem-hunt-overlay__gem-dance {
   width: min(88vw, 26rem);
   height: min(88vw, 26rem);
+}
+.gem-hunt-overlay.is-campus-queue .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 {
+  top: 38%;
+  width: min(78vw, 15rem);
+  max-width: min(78vw, 15rem);
+}
+.gem-hunt-overlay.is-campus-queue .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 .gem-hunt-overlay__gem-dance {
+  width: min(78vw, 15rem);
+  height: min(78vw, 15rem);
+}
+.gem-hunt-overlay.is-campus-queue .gem-hunt-overlay__collect-banner {
+  top: calc(38% - min(38vw, 7.5rem) - 0.35rem);
+  font-size: clamp(1.1rem, 4.5vw, 1.45rem);
 }
 .gem-hunt-overlay__gem-hit.is-inspect360 .gem-model-3d,
 .gem-hunt-overlay__gem-hit.is-inspect360 canvas {

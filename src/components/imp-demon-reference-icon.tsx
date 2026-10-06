@@ -16,7 +16,7 @@ export const ImpDemonOutlineIcon: FC<IconProps> = ({ className }) => {
     <svg
       viewBox="0 0 439 447"
       fill="currentColor"
-      className={cn("shrink-0 inline-block", className)}
+      className={cn("block h-[1em] w-[1em] max-h-full max-w-full shrink-0", className)}
       aria-hidden
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -35,7 +35,7 @@ export const ImpDemonFilledIcon: FC<IconProps> = ({ className }) => {
     <svg
       viewBox="0 0 436 438"
       fill="currentColor"
-      className={cn("shrink-0 inline-block", className)}
+      className={cn("block h-[1em] w-[1em] max-h-full max-w-full shrink-0", className)}
       aria-hidden
       xmlns="http://www.w3.org/2000/svg"
     >
