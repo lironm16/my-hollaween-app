@@ -1,17 +1,17 @@
 import type { ReactNode } from "react";
 
 import {
-  IMP_HORN_BAND_PREVIEW_SPECS,
-  ImpHornBandFilledFound,
-  ImpHornBandOutlineSilhouette,
+  CREATURE_ICON_LAB,
+  ImpDevilFaceFilled,
+  ImpDevilFaceOutline,
   PREVIEW_ICON_SIZES,
-} from "@/components/imp-horn-band-icon";
+} from "@/components/imp-creature-icon-lab";
 import { PreviewNav } from "@/components/preview-nav";
 import { SkipOutlineIcon } from "@/components/skip-icon";
 import { config } from "@/lib/config";
 import { cn } from "@/lib/utils";
 
-function MenuRowMock({
+function MenuRow({
   label,
   icon,
   active,
@@ -28,103 +28,131 @@ function MenuRowMock({
       )}
     >
       <span className="text-base">{label}</span>
-      <span className="inline-flex shrink-0 items-center justify-center text-orange-100">{icon}</span>
+      <span className="inline-flex shrink-0 items-center justify-center">{icon}</span>
+    </div>
+  );
+}
+
+function IconPair({
+  Outline,
+  Filled,
+  sizeClass,
+}: {
+  Outline: React.ComponentType<{ className?: string }>;
+  Filled: React.ComponentType<{ className?: string }>;
+  sizeClass: string;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex flex-col items-center gap-1">
+        <span className="text-[10px] uppercase tracking-wide text-violet-500">outline</span>
+        <Outline className={cn(sizeClass, "text-orange-100")} />
+      </div>
+      <div className="flex flex-col items-center gap-1">
+        <span className="text-[10px] uppercase tracking-wide text-violet-500">fill</span>
+        <Filled className={cn(sizeClass, "text-amber-300")} />
+      </div>
     </div>
   );
 }
 
 export default function ImpIconsPreviewPage() {
-  const silhouette = IMP_HORN_BAND_PREVIEW_SPECS.find((s) => s.id === "outline-silhouette");
-  const found = IMP_HORN_BAND_PREVIEW_SPECS.find((s) => s.id === "filled-found");
-  const reference = IMP_HORN_BAND_PREVIEW_SPECS.find((s) => s.id === "reference-png");
+  const impPicks = CREATURE_ICON_LAB.filter((e) => e.impCandidate);
+  const roster = CREATURE_ICON_LAB.filter((e) => !e.impCandidate);
 
   return (
     <div className="min-h-dvh bg-[#140a1c] px-4 py-6 text-orange-50" dir="rtl">
-      <div className="mx-auto max-w-2xl space-y-8">
+      <div className="mx-auto max-w-4xl space-y-10">
         <header className="space-y-3">
-          <p className="text-base text-violet-300">{config.brandEn} · אייקון שדון</p>
-          <h1 className="text-2xl font-semibold text-orange-100">שדון — עיגול + קרניים (מקור שלך)</h1>
-          <p className="text-base text-violet-200">
-            כל הגרסאות מבוססות על האיור שהעלית.{" "}
-            <strong className="font-medium text-orange-200">Silhouette</strong> לתפריט (כמו דילוג),{" "}
-            <strong className="font-medium text-orange-200">Fill</strong> ל«מצאתי». בחרו{" "}
-            <code className="text-orange-300">id</code> לפני החלפה בפרודקשן.
+          <p className="text-base text-violet-300">{config.brandEn} · מעבדת אייקונים</p>
+          <h1 className="text-2xl font-semibold text-orange-100">יצורים ליל כל הקדושים — רעיונות SVG</h1>
+          <p className="max-w-2xl text-base leading-relaxed text-violet-200">
+            עמוד מלא של צורות חדשות: לכל יצור <strong className="font-medium text-orange-200">outline</strong>{" "}
+            (כמו דילוג בתפריט) ו־<strong className="font-medium text-orange-200">fill</strong> (ל«מצאתי» / צהוב).
+            בחרו <code className="text-orange-300">id</code> לשדון ולשאר החיות — הפרודקשן עדיין לא השתנה.
           </p>
           <PreviewNav current="/preview/imp-icons" />
         </header>
 
-        <section className="space-y-4 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/20">
-          <h2 className="text-lg font-medium text-orange-100">השוואה מהירה</h2>
-          <div className="flex flex-wrap items-center justify-center gap-10">
-            {reference ? (
-              <div className="flex flex-col items-center gap-2">
-                <p className="text-sm text-violet-400">PNG מקור</p>
-                <div className="rounded-xl bg-white p-3">{reference.render("size-12")}</div>
-              </div>
-            ) : null}
-            <div className="flex flex-col items-center gap-2">
-              <p className="text-sm text-violet-400">SVG silhouette</p>
-              <div className="flex h-16 items-center justify-center rounded-xl bg-[#3d262a] px-5">
-                <ImpHornBandOutlineSilhouette className="size-12 text-orange-100" />
-              </div>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <p className="text-sm text-violet-400">SVG fill «מצאתי»</p>
-              <div className="flex h-16 items-center justify-center rounded-xl bg-[#3d262a] px-5">
-                <ImpHornBandFilledFound className="size-12" />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/20">
-          <h2 className="text-lg font-medium text-orange-100">זוג תפריט (מומלץ)</h2>
-          <div className="space-y-2">
-            <MenuRowMock
+        <section className="space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/30">
+          <h2 className="text-lg font-medium text-orange-100">מומלץ לתפריט «מצא שדון»</h2>
+          <p className="text-sm text-violet-300">השוואה לדילוג — אותו size-4.</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <MenuRow
               label="מצא שדון"
-              icon={silhouette?.render("size-4") ?? null}
+              icon={<ImpDevilFaceOutline className="size-4 text-orange-100" />}
             />
-            <MenuRowMock
-              label="מצאתי שדון"
-              icon={found?.render("size-4") ?? null}
+            <MenuRow
+              label="מצאתי"
+              icon={<ImpDevilFaceFilled className="size-4 text-amber-300" />}
               active
             />
-            <MenuRowMock label="דילוג" icon={<SkipOutlineIcon className="size-4 shrink-0" />} />
+            <MenuRow label="דילוג" icon={<SkipOutlineIcon className="size-4 text-orange-100" />} />
           </div>
         </section>
 
-        {IMP_HORN_BAND_PREVIEW_SPECS.map((spec) => (
-          <section
-            key={spec.id}
-            className="space-y-4 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/20"
-          >
-            <div>
-              <h2 className="text-lg font-medium text-orange-100">{spec.title}</h2>
-              <p className="text-base text-violet-300">{spec.note}</p>
-              <code className="mt-1 inline-block text-sm text-violet-400">{spec.id}</code>
-            </div>
+        <section className="space-y-4">
+          <h2 className="text-xl font-medium text-orange-100">שלושה כיוונים לשדון</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {impPicks.map((entry) => (
+              <article
+                key={entry.id}
+                className="flex flex-col gap-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-amber-500/25"
+              >
+                <div>
+                  <p className="text-sm text-amber-400/90">{entry.creatureHe} · {entry.styleHe}</p>
+                  <h3 className="text-lg text-orange-50">{entry.note}</h3>
+                  <code className="text-xs text-violet-400">{entry.id}</code>
+                </div>
+                <div className="flex justify-center rounded-xl bg-[#3d262a] py-4">
+                  <IconPair Outline={entry.Outline} Filled={entry.Filled} sizeClass="size-10" />
+                </div>
+                <MenuRow
+                  label="מצא שדון"
+                  icon={<entry.Outline className="size-4 text-orange-100" />}
+                  active
+                />
+              </article>
+            ))}
+          </div>
+        </section>
 
-            <div className="flex flex-wrap items-end gap-8">
-              {PREVIEW_ICON_SIZES.map((size) => (
-                <div key={size.label} className="flex flex-col items-center gap-2">
-                  <p className="text-sm text-violet-400">{size.label}</p>
-                  <div
-                    className={cn(
-                      "flex h-12 items-center justify-center rounded-xl px-4",
-                      spec.id === "reference-png" ? "bg-white" : "bg-[#3d262a]",
-                    )}
-                  >
-                    {spec.render(size.className)}
+        <section className="space-y-4">
+          <h2 className="text-xl font-medium text-orange-100">שאר חיות האוסף (gem / UI)</h2>
+          <p className="text-base text-violet-300">
+            אותה שפה גрафית — אפשר ליישם לתגיות, רשימת שק, או אייקוני משנה.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {roster.map((entry) => (
+              <article
+                key={entry.id}
+                className="space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/15"
+              >
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <div>
+                    <h3 className="text-lg font-medium text-orange-100">
+                      {entry.creatureHe}
+                      <span className="ms-2 text-base font-normal text-violet-400">{entry.styleHe}</span>
+                    </h3>
+                    <p className="text-sm text-violet-300">{entry.note}</p>
+                  </div>
+                  <code className="text-xs text-violet-500">{entry.id}</code>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-[#3d262a] px-4 py-3">
+                  <IconPair Outline={entry.Outline} Filled={entry.Filled} sizeClass="size-8" />
+                  <div className="flex flex-col gap-2">
+                    {PREVIEW_ICON_SIZES.map((s) => (
+                      <div key={s.label} className="flex items-center gap-2">
+                        <span className="w-14 text-xs text-violet-500">{s.label}</span>
+                        <entry.Outline className={cn(s.className, "text-orange-100")} />
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {spec.id !== "reference-png" ? (
-              <MenuRowMock label="מצא שדון" icon={spec.render("size-4")} active />
-            ) : null}
-          </section>
-        ))}
+              </article>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );
