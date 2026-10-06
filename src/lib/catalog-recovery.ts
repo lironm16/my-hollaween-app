@@ -1,12 +1,6 @@
 import { localCatalogHouseCount } from "@/lib/catalog-houses";
 import type { Catalog } from "@/lib/types";
 
-/** Missing this many houses (absolute) triggers full catalog after cheap recovery. */
-export const CATALOG_FULL_RECOVERY_MIN_GAP = 8;
-
-/** Missing at least this fraction of the server catalog triggers full recovery. */
-export const CATALOG_FULL_RECOVERY_MIN_RATIO = 0.12;
-
 export function catalogShortfall(
   catalog: Catalog | null,
   serverCount: number | undefined | null,
