@@ -17,6 +17,13 @@ export function isSchoolCampusAddress(address: string | null | undefined): boole
   return CAMPUS_NAMES.has(street);
 }
 
+/** Cluster sheet / list chrome — school campuses always use campus UI (even one booth). */
+export function usesSchoolCampusClusterChrome(
+  houses: readonly Pick<PublicHouse, "address">[],
+): boolean {
+  return clusterIsSchoolCampus(houses);
+}
+
 /** Map pin / copy — one or more rows at the same curated school address. */
 export function clusterIsSchoolCampus(houses: readonly Pick<PublicHouse, "address">[]): boolean {
   if (houses.length === 0) return false;

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   clusterIsSchoolCampus,
+  usesSchoolCampusClusterChrome,
   clusterOverviewSubtitle,
   clusterPinAriaLabel,
   isSchoolCampusAddress,
@@ -22,6 +23,8 @@ describe("school campus", () => {
 
   it("uses school copy for one booth or many", () => {
     assert.equal(clusterIsSchoolCampus([{ address: "ביה״ס ניצנים" }]), true);
+    assert.equal(usesSchoolCampusClusterChrome([{ address: "ביה״ס ניצנים" }]), true);
+    assert.equal(usesSchoolCampusClusterChrome([{ address: "חרוזים 8" }]), false);
     assert.equal(clusterOverviewSubtitle([{ address: "ביה״ס ניצנים" }]), "דוכן אחד בבית הספר");
     assert.equal(
       clusterOverviewSubtitle([

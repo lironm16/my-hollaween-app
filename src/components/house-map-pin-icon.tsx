@@ -5,6 +5,8 @@ import { clusterPinStatus, clusterPinVisitKind } from "@/lib/cluster-pin-status"
 import { isPoiHouse } from "@/lib/house-kind";
 import { pinScareSrc } from "@/lib/pin-faces";
 import { pinBackgroundFill } from "@/lib/pin-colors";
+import { pinSchoolClusterIconHtml } from "@/lib/map-pin-school-icon";
+import { isSchoolCampusAddress } from "@/lib/school-campus";
 import { effectiveVisit, isDecorated } from "@/lib/house-state";
 import { isClosingSoon, isHoursNightOver, isOpeningSoon } from "@/lib/hours";
 import type { PublicHouse } from "@/lib/types";
@@ -25,6 +27,7 @@ export function HouseMapPinIcon({
   visited?: boolean;
   className?: string;
 }) {
+  const schoolCampus = isSchoolCampusAddress(house.address);
   const decorated = isDecorated(house);
   const visit = clusterPinVisitKind(house, now);
   const status = clusterPinStatus(house, now, { skipped });
@@ -34,6 +37,22 @@ export function HouseMapPinIcon({
     effectiveVisit(house) !== "closed" &&
     !isHoursNightOver(house, now);
   const scare = house.scareLevel ?? "mild";
+
+  if (schoolCampus) {
+    return (
+      <div
+        className={cn(
+          "house-pin is-building is-school-campus is-school-list-pin relative shrink-0",
+          visited && "is-visited",
+          filteredOut && "is-filtered-out",
+          className,
+        )}
+        style={{ background: "#6d28d9" }}
+        aria-hidden
+        dangerouslySetInnerHTML={{ __html: pinSchoolClusterIconHtml() }}
+      />
+    );
+  }
 
   return (
     <div

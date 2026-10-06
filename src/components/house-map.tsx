@@ -40,6 +40,7 @@ import {
   clusterIsSchoolCampus,
   clusterPinAriaLabel,
   mapCoordsForHouse,
+  usesSchoolCampusClusterChrome,
 } from "@/lib/school-campus";
 import { SKIP_ICON_SVG } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
@@ -273,7 +274,7 @@ function clusterIcon(
   const clusterIconHtml = schoolCampus ? pinSchoolClusterIconHtml() : pinClusterIconHtml();
   const campusClass = schoolCampus ? " is-school-campus" : "";
   const clusterLabel = attr(clusterPinAriaLabel(houses));
-  const pinFill = schoolCampus ? "#fff7ed" : "#6d28d9";
+  const pinFill = "#6d28d9";
   const statusMarks = `${allSkipped ? pinSkippedMark() : ""}${allVisited && !allSkipped ? pinVisitedMark() : ""}`;
   const wrapped = wrapRoutePin(
     `<div class="house-pin is-building${campusClass}${allVisited ? " is-visited" : ""}" style="background:${pinFill}" role="img" aria-label="${clusterLabel}">${statusMarks}${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>`,
@@ -595,7 +596,8 @@ const ClusterMarker = memo(function ClusterMarker({
     (event: L.LeafletMouseEvent) => {
       L.DomEvent.stopPropagation(event.originalEvent);
       const isMulti = cluster.houses.length > 1;
-      if (isMulti) {
+      const clusterShell = isMulti || usesSchoolCampusClusterChrome(cluster.houses);
+      if (clusterShell) {
         if (selectedHere && clusterOverview) {
           onClose?.();
           return;

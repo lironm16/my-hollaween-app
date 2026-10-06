@@ -801,8 +801,13 @@
 .house-pin.is-school-campus {
   width: 68px;
   height: 68px;
-  background: #fff7ed !important;
+  background: linear-gradient(165deg, #5b21b6 0%, #6d28d9 55%, #7c3aed 100%) !important;
   overflow: visible;
+}
+
+.house-pin.is-school-list-pin {
+  width: 56px;
+  height: 56px;
 }
 
 .pin-school-art {
@@ -821,6 +826,31 @@
   height: auto;
   max-height: 100%;
   filter: drop-shadow(0 1px 1px rgb(0 0 0 / 25%));
+}
+
+.pin-school-castle-img {
+  display: block;
+  width: 72%;
+  height: auto;
+  max-height: 72%;
+  object-fit: contain;
+  object-position: center center;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 35%));
+}
+
+.pin-school-emoji-wrap {
+  display: grid;
+  place-items: center;
+}
+
+.pin-school-emoji {
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.pin-school-twin {
+  width: 78%;
+  height: 78%;
 }
 
 .house-pin .pin-status.is-visited-mark {

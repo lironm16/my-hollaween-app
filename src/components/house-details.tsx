@@ -19,6 +19,7 @@ import { HoursLabel } from "@/components/clock-time";
 import { formatHoursLabel } from "@/lib/hours";
 import { houseAddedMetaLine } from "@/lib/house-meta";
 import { houseHeadline } from "@/lib/labels";
+import { clusterOverviewSubtitle, isSchoolCampusAddress } from "@/lib/school-campus";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { houseMapsUrl, houseSharePath } from "@/lib/nav-links";
 import { shouldLoadHousePhoto } from "@/lib/photos";
@@ -442,6 +443,9 @@ export function HouseDetails({
       ) : null}
     </div>
   );
+  const schoolCampusLine = isSchoolCampusAddress(house.address)
+    ? clusterOverviewSubtitle([house])
+    : null;
   const metaSep = " · ";
   const metaTextClass = cn(
     "min-w-0 leading-snug text-violet-200 break-words",
@@ -508,6 +512,9 @@ export function HouseDetails({
           </p>
           {headerMenu ? <div className="house-details-menu shrink-0">{headerMenu}</div> : null}
         </div>
+        {schoolCampusLine ? (
+          <p className="text-base text-violet-300">{schoolCampusLine}</p>
+        ) : null}
         {pageActions}
         <div className="flex flex-wrap items-center gap-1.5">
           <HouseTags house={house} large={compact} />

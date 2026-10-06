@@ -14,6 +14,7 @@ import { VisitedCheck } from "@/components/visited-check";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { houseMapsUrl } from "@/lib/nav-links";
+import { clusterIsSchoolCampus } from "@/lib/school-campus";
 import type { PublicHouse } from "@/lib/types";
 import { appHeaderBottom, safeAreaInsetBottom } from "@/lib/viewport";
 import { cn } from "@/lib/utils";
@@ -216,7 +217,7 @@ export function ClusterHouseActionMenu({
     };
   }, [open, menuPlacement, items.length]);
 
-  if (houses.length <= 1 || items.length === 0) return null;
+  if ((houses.length <= 1 && !clusterIsSchoolCampus(houses)) || items.length === 0) return null;
 
   function menuItemClass(item: MenuItem) {
     return cn(

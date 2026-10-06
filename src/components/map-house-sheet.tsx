@@ -10,7 +10,7 @@ import {
   clusterHouseIndex,
 } from "@/components/cluster-house-list";
 import { ClusterHouseActionMenu } from "@/components/cluster-house-action-menu";
-import { clusterOverviewSubtitle } from "@/lib/school-campus";
+import { clusterOverviewSubtitle, usesSchoolCampusClusterChrome } from "@/lib/school-campus";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
 import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
@@ -90,7 +90,8 @@ export function MapHouseSheet({
   const [fitH, setFitH] = useState<number | null>(null);
   const [openH, setOpenH] = useState(0);
   const multi = clusterHouses.length > 1;
-  const overview = multi && clusterOverview;
+  const clusterShell = multi || usesSchoolCampusClusterChrome(clusterHouses);
+  const overview = clusterShell && clusterOverview;
   const addressReveal = useAddressReveal();
   const overlaid = useAdminHouseFields(house) ?? house;
   const { house: hydratedHouse } = useServerHouseDetail(overlaid);
@@ -101,7 +102,7 @@ export function MapHouseSheet({
   const canPrevCluster = clusterIndex != null && clusterIndex > 1;
   const canNextCluster =
     clusterIndex != null && clusterIndex < clusterHouses.length;
-  const clusterDetail = multi && !overview;
+  const clusterDetail = clusterShell && !overview;
   const displayH = overview ? (dragH ?? sheetH) : (dragH ?? sheetH ?? openH);
 
   function scrollSheetContentTop() {

@@ -15,7 +15,7 @@ import {
 } from "@/components/cluster-house-list";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseHeadline } from "@/lib/labels";
-import { clusterOverviewSubtitle } from "@/lib/school-campus";
+import { clusterOverviewSubtitle, usesSchoolCampusClusterChrome } from "@/lib/school-campus";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -68,7 +68,11 @@ export function HouseDetailOverlay({
 }) {
   const labelId = useId();
   const multi = !openedFromList && (clusterHouses?.length ?? 0) > 1;
-  const overview = Boolean(multi && clusterOverview);
+  const clusterShell =
+    !openedFromList &&
+    ((clusterHouses?.length ?? 0) > 1 ||
+      usesSchoolCampusClusterChrome(clusterHouses ?? []));
+  const overview = Boolean(clusterShell && clusterOverview);
   const clusterIndex = clusterHouses ? clusterHouseIndex(clusterHouses, house.id) : null;
   const canPrevCluster = clusterIndex != null && clusterIndex > 1;
   const canNextCluster =
@@ -114,7 +118,7 @@ export function HouseDetailOverlay({
       <div
         className={cn(
           "house-detail-overlay-body min-h-0 flex-1 px-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]",
-          multi && !overview
+          clusterShell && !overview
             ? "flex flex-col overflow-hidden"
             : "overflow-y-auto overscroll-contain",
         )}
@@ -177,7 +181,7 @@ export function HouseDetailOverlay({
               />
             </div>
           </div>
-        ) : multi ? (
+        ) : clusterShell ? (
           <div className="flex min-h-0 flex-1 flex-col">
             {clusterIndex != null ? (
               <div className="shrink-0 pb-2">
