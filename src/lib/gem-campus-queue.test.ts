@@ -74,12 +74,12 @@ describe("gem cluster queue", () => {
   it("formats school and apartment headlines", () => {
     const school = [house("a", "ביה״ס ניצנים", 2, "ממתקים"), house("b", "ביה״ס ניצנים", 3, "אימה")];
     const schoolHead = gemClusterQueueHeadline(school[0]!, school);
-    assert.equal(schoolHead.title, "ממתקים");
-    assert.equal(schoolHead.subtitle, "דוכן 2");
+    assert.equal(schoolHead.boothTitle, "ממתקים");
+    assert.equal(schoolHead.boothSubtitle, "דוכן 2");
 
     const apt = [house("x", "חרוזים 8", 4, "רוח רפאים"), house("y", "חרוזים 8", 5, "ממתקים")];
     const aptHead = gemClusterQueueHeadline(apt[0]!, apt);
-    assert.equal(aptHead.title, "רוח רפאים");
-    assert.equal(aptHead.subtitle, "יחידה 4");
+    assert.equal(aptHead.boothTitle, "רוח רפאים");
+    assert.equal(aptHead.boothSubtitle, "יחידה 4");
   });
 });

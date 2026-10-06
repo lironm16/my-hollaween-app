@@ -1,5 +1,6 @@
 import { clusterBoothLabel } from "@/lib/cluster-booth";
 import { clusterMembersForHouse } from "@/lib/house-clusters";
+import type { GemClusterQueueUi } from "@/lib/gem-hunt";
 import type { PublicHouse } from "@/lib/types";
 
 /** Multi-house building pin (school דוכן or apartment יחידה) — one camera session for the cluster. */
@@ -52,10 +53,10 @@ export const nextCampusGemHouse = nextClusterGemHouse;
 export function gemClusterQueueHeadline(
   house: PublicHouse,
   cluster: readonly PublicHouse[],
-): { title: string; subtitle: string } {
-  const title = house.name?.trim() || house.arrival?.trim() || "בית";
+): GemClusterQueueUi {
+  const boothTitle = house.name?.trim() || house.arrival?.trim() || "בית";
   const booth = clusterBoothLabel(house, cluster);
-  return { title, subtitle: booth ?? "" };
+  return { boothTitle, boothSubtitle: booth ?? "" };
 }
 
 /** @deprecated Use {@link gemClusterQueueHeadline}. */

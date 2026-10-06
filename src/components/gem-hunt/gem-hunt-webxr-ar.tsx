@@ -12,6 +12,7 @@ import { useDeviceHeading } from "@/hooks/use-device-heading";
 import { useGemHuntLocation } from "@/hooks/use-gem-hunt-location";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import {
+  GEM_CAMPUS_COLLECT_MS,
   GEM_COLLECT_OVERLAY_MS,
   GEM_FACING_TOLERANCE_DEG,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
@@ -24,6 +25,7 @@ import {
   GEM_WEBXR_HUNT_METERS,
   navTurnBearingForUi,
   relativeWalkBearingDeg,
+  type GemCampusQueueUi,
   type GemCollectFinishOptions,
 } from "@/lib/gem-hunt";
 import {
@@ -48,9 +50,7 @@ import { GemEncounterLayer } from "@/components/gem-hunt/gem-encounter-layer";
 import { useGemEncounterPhase } from "@/hooks/use-gem-encounter-phase";
 import { useTreatSwipe } from "@/hooks/use-treat-swipe";
 import {
-  GEM_CAMPUS_COLLECT_MS,
   GEM_ENCOUNTER_CELEBRATE_MS,
-  type GemCampusQueueUi,
   encounterUiChromeHidden,
   markEncounterTutorialSeen,
 } from "@/lib/gem-encounter";
@@ -218,22 +218,6 @@ export function GemHuntWebXrAr({
   const collectingRef = useRef(false);
   const webXrClusterApiRef = useRef<{ advanceClusterHouse: () => void } | null>(null);
   const clusterAdvanceHouseIdRef = useRef(house.id);
-  const houseVisualRef = useRef({
-    houseId: house.id,
-    glbPath: meta.glbPath,
-    floatHeight,
-    danceIndex,
-    lat: house.lat,
-    lng: house.lng,
-  });
-  houseVisualRef.current = {
-    houseId: house.id,
-    glbPath: meta.glbPath,
-    floatHeight,
-    danceIndex,
-    lat: house.lat,
-    lng: house.lng,
-  };
 
   const [error, setError] = useState<string | null>(null);
   const [showManualStart, setShowManualStart] = useState(!initialWebXrSession);
@@ -277,6 +261,23 @@ export function GemHuntWebXrAr({
   const floatBias = hashFloat(house.id, "webxr-float");
   const useFloat = floatBias > 0.62;
   const floatHeight = useFloat ? 0.22 + floatBias * 0.18 : 0;
+
+  const houseVisualRef = useRef({
+    houseId: house.id,
+    glbPath: meta.glbPath,
+    floatHeight,
+    danceIndex,
+    lat: house.lat,
+    lng: house.lng,
+  });
+  houseVisualRef.current = {
+    houseId: house.id,
+    glbPath: meta.glbPath,
+    floatHeight,
+    danceIndex,
+    lat: house.lat,
+    lng: house.lng,
+  };
 
   const handleCollect = useCallback(() => {
     if (phase === "collecting") return;

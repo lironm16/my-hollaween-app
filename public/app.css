@@ -929,6 +929,9 @@
   .max-h-\(--available-height\) {
     max-height: var(--available-height);
   }
+  .max-h-40 {
+    max-height: calc(var(--spacing) * 40);
+  }
   .max-h-64 {
     max-height: calc(var(--spacing) * 64);
   }
@@ -2885,6 +2888,12 @@
     color: color-mix(in srgb, oklch(89.4% 0.057 293.283) 90%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       color: color-mix(in oklab, var(--color-violet-200) 90%, transparent);
+    }
+  }
+  .text-violet-200\/95 {
+    color: color-mix(in srgb, oklch(89.4% 0.057 293.283) 95%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-violet-200) 95%, transparent);
     }
   }
   .text-violet-300 {
