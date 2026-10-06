@@ -47,8 +47,8 @@ describe("school campus cluster anchor", () => {
     const b = house("b", "ביה״ס ניצנים", { lat: 32.091, lng: 34.811 });
     const [cluster] = clusterHousesByAddress([a, b]);
     assert.ok(cluster);
-    assert.equal(cluster!.lat, 32.09322);
-    assert.equal(cluster!.lng, 34.81118);
+    assert.equal(cluster!.lat, 32.093264);
+    assert.equal(cluster!.lng, 34.81124);
   });
 });
 

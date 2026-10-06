@@ -868,20 +868,20 @@
 
 .house-pin.is-school-campus .pin-school-castle-img {
   display: block;
-  width: 72%;
-  height: 72%;
-  max-width: 72%;
-  max-height: 72%;
+  width: 84%;
+  height: 84%;
+  max-width: 84%;
+  max-height: 84%;
   object-fit: contain;
   object-position: center center;
-  transform: translateY(-7%);
+  transform: translateY(-6%);
   transform-origin: center center;
 }
 
 .house-pin.is-school-campus .pin-school-castle-svg {
-  width: 72%;
-  max-height: 72%;
-  transform: translateY(-5%) scale(1.02);
+  width: 84%;
+  max-height: 84%;
+  transform: translateY(-5%) scale(1.06);
   transform-origin: center center;
 }
 
