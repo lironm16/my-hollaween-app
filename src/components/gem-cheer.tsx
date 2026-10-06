@@ -2,6 +2,7 @@
 
 import { createPortal } from "react-dom";
 import { GemDiamondIcon } from "@/components/gem-diamond-icon";
+import { GEM_FOUND_CHEER_HE } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
 export function GemCheer({
@@ -20,9 +21,9 @@ export function GemCheer({
           <i /><i /><i /><i /><i /><i />
         </span>
         <span className="gem-cheer-gem" aria-hidden="true">
-          <GemDiamondIcon className="size-5" filled />
+          <GemDiamondIcon className="size-7" filled />
         </span>
-        יהלום נאסף!
+        {GEM_FOUND_CHEER_HE}
       </div>
     </div>
   );

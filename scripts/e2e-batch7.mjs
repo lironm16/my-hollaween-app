@@ -3,11 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 /** Seed address that autocomplete knows (העמל 99 is API-only for isolated creates). */
 const FORM_ADDRESS = "העמל 18";
-import {
-  firstRealHouseId,
-  openHouseByFocus,
-  waitForCatalog,
-} from "./lib/e2e-helpers.mjs";
+import { firstRealHouseId, openHouseByFocus, waitForCatalog } from "./lib/e2e-helpers.mjs";
 
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:43127";
 const OUT = process.env.E2E_ARTIFACTS_DIR ?? join(process.cwd(), "artifacts", "e2e");
@@ -67,6 +63,8 @@ async function fillVerifiedAddress(page, { name, address = FORM_ADDRESS }) {
   await page.getByText("כתובת מאומתת על המפה").waitFor();
   await page.getByPlaceholder(/בית משפחת/).fill(name);
   await page.getByPlaceholder(/קומה|דירה|הוראות/).fill("קומה 1");
+  await page.getByPlaceholder("ישראל כהן").fill("בדיקות E2E");
+  await page.locator('input[type="tel"]').first().fill("0501234567");
 }
 
 async function loginAdmin(page) {
@@ -98,7 +96,7 @@ async function main() {
   await page.getByRole("button", { name: "בלי ממתקים" }).click();
   await page.getByRole("button", { name: "שמירה" }).click();
   try {
-    await page.getByText("סמנו לפחות קישוטים או ממתקים").waitFor({ timeout: 5000 });
+    await page.getByText(/סמנו לפחות קישוטים או ממתקים/).waitFor({ timeout: 5000 });
     pass("ADD-03 add form blocks submit without decor or candy");
   } catch {
     fail("ADD-03 add form should show decor/candy validation toast");
@@ -114,28 +112,40 @@ async function main() {
     fail("EDIT-03 add form should preview a selected decor photo");
   }
 
+  await loginAdmin(page);
   await gotoPage(page, `${BASE}/?rehearsal=open`);
   await waitForCatalog(page);
-  const houseMeta = await page.evaluate(() => {
-    const houses = JSON.parse(localStorage.getItem("hw-catalog-cache") ?? "{}").houses ?? [];
-    return (
-      houses.find(
-        (item) =>
-          String(item.address ?? "").trim().length > 0 &&
-          Number.isFinite(item.lat) &&
-          Number.isFinite(item.lng) &&
-          !/^בית-931\d$/.test(item.id) &&
-          !String(item.description ?? "").includes("סטאב לחזרה"),
-      ) ?? null
-    );
-  });
-  const houseId = houseMeta?.id ?? null;
-  if (!houseId) fail("ROUTE-05 could not pick a catalog house with address and coordinates");
-  else {
+  const houseId = (await firstRealHouseId(page)) ?? null;
+  const houseMeta = houseId
+    ? await page.evaluate(async (id) => {
+        const houses = JSON.parse(localStorage.getItem("hw-catalog-cache") ?? "{}").houses ?? [];
+        const cached = houses.find((item) => item.id === id) ?? null;
+        if (!cached?.lat || !cached?.lng) return null;
+        try {
+          const res = await fetch(`/api/houses/${encodeURIComponent(id)}`, { cache: "no-store" });
+          if (!res.ok) return cached;
+          const live = await res.json();
+          return { ...cached, ...live };
+        } catch {
+          return cached;
+        }
+      }, houseId)
+    : null;
+  if (!houseId || !houseMeta?.lat || !houseMeta?.lng) {
+    fail("ROUTE-05 could not pick a catalog house with coordinates");
+  } else if (!String(houseMeta.address ?? "").trim()) {
+    fail("ROUTE-05 admin house detail should include street address before navigation");
+  } else {
     const detail = await openHouseByFocus(page, BASE, houseId);
     await detail.getByRole("button", { name: "פעולות" }).click();
     const nav = page.getByRole("menuitem", { name: "ניווט" });
-    const href = await nav.getAttribute("href");
+    let href = null;
+    try {
+      await nav.waitFor({ timeout: 15_000 });
+      href = await nav.getAttribute("href");
+    } catch {
+      fail("ROUTE-05 navigation menu item should appear for admin after address reveal rehearsal");
+    }
     if (!href) fail("ROUTE-05 navigation menu item should expose a maps href");
     else {
       const url = new URL(href);
@@ -166,11 +176,8 @@ async function main() {
     }
   }
 
-  await gotoPage(page, `${BASE}/?rehearsal=open`);
-  await waitForCatalog(page);
-  await loginAdmin(page);
   await gotoPage(page, `${BASE}/admin/rehearsal`);
-  await page.getByRole("heading", { name: "בדיקות" }).waitFor();
+  await page.getByRole("heading", { name: "הגדרות מנהל" }).waitFor();
   const rehearsalSwitch = page.getByRole("switch").first();
   const enabled = await rehearsalSwitch.getAttribute("aria-checked");
   if (enabled !== "true") await rehearsalSwitch.click();

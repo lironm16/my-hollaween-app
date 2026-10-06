@@ -32,6 +32,7 @@ import { queueRouteRestore, readRouteMode } from "@/lib/route-mode";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { PublicHouse } from "@/lib/types";
+import { useAddHouseOpen } from "@/hooks/use-add-house-open";
 
 function parseTab(raw: string | null, showCollected: boolean): PersonalMarksTab {
   if (raw === "skipped" || raw === "visited" || raw === "saved") return raw;
@@ -61,6 +62,7 @@ function MyCollectionsPageContent() {
   const { admin } = useAdminSession();
   const now = useAppNow();
   const { gemBagMenuVisible: showCollected, gemFabVisible: gemUi } = useGemHuntAdminUi(admin, now);
+  const addHouseOpen = useAddHouseOpen();
   const urlTab = parseTab(searchParams.get("tab"), showCollected);
   const [tab, setTab] = useState<PersonalMarksTab>(urlTab);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
@@ -312,7 +314,7 @@ function MyCollectionsPageContent() {
               removeLabel: selectionRemoveLabel,
             }}
             emptyAction={
-              tab === "mine" ? (
+              tab === "mine" && addHouseOpen ? (
                 <Link
                   href="/add"
                   className={cn(buttonVariants(), "mt-4 inline-flex bg-orange-500 text-black hover:bg-orange-400")}

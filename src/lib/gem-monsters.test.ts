@@ -1,16 +1,22 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { distanceMeters } from "@/lib/geo";
 import {
   GEM_MONSTER_CATALOG,
   GEM_MONSTER_MODELS,
   GEM_MONSTERS_DRAGON_ONLY,
+  GEM_REPEAT_MIN_SPACING_M,
   buildGemMonsterAssignment,
   gemAlbumMonstersForMap,
   gemAlbumStickerPool,
+  gemCarrierHousesForMap,
+  gemHousesForMap,
+  gemClusterSpreadForHouse,
   gemFamilyForHouse,
   gemLabelHe,
   gemMonsterForHouse,
   gemMonsterTint,
+  houseHasMapGem,
   isGemAlbumMonsterCollected,
   gemVariantForHouse,
   syncGemMonsterAssignment,
@@ -27,19 +33,14 @@ describe("gem monsters", () => {
     }
   });
 
-  it("assigns monsters consistently per house", () => {
+  it("assigns dragon for every house while in dragon-only mode", () => {
+    if (!GEM_MONSTERS_DRAGON_ONLY) return;
     const house = { id: "house-abc", theme: "ghost" as const, kind: "house" as const };
-    const other = { id: "house-xyz", theme: "vampire" as const, kind: "house" as const };
-    syncGemMonsterAssignment([house, other]);
-    if (GEM_MONSTERS_DRAGON_ONLY) {
-      assert.equal(gemMonsterForHouse(house), GEM_MONSTER_MODELS[0]!.id);
-      assert.equal(gemMonsterForHouse(other), GEM_MONSTER_MODELS[0]!.id);
-    } else {
-      assert.equal(gemMonsterForHouse(house), gemMonsterForHouse(house));
-      assert.notEqual(gemMonsterForHouse(house), undefined);
-    }
-    assert.equal(gemVariantForHouse(house), gemMonsterForHouse(house));
+    assert.equal(gemMonsterForHouse(house), "dragon");
+    assert.equal(gemVariantForHouse(house), "dragon");
     assert.equal(gemFamilyForHouse(house), "monster");
+    const other = { id: "house-xyz", theme: "vampire" as const, kind: "house" as const };
+    assert.equal(gemMonsterForHouse(other), "dragon");
   });
 
   it("labels pets with cute Hebrew names", () => {
@@ -71,6 +72,9 @@ describe("gem monsters", () => {
       id: `house-${String(i).padStart(3, "0")}`,
       theme: "ghost" as const,
       kind: "house" as const,
+      address: `רח-${i}`,
+      lat: 32.09 + i * 0.003,
+      lng: 34.8 + i * 0.003,
     }));
     const assignment = buildGemMonsterAssignment(houses);
     const onMap = new Set(assignment.values());
@@ -78,6 +82,84 @@ describe("gem monsters", () => {
     for (const model of GEM_MONSTER_MODELS) {
       assert.ok(onMap.has(model.id), model.id);
     }
+  });
+
+  it("spreads duplicate pets across distance (frankie / spider not clustered)", () => {
+    if (GEM_MONSTERS_DRAGON_ONLY) return;
+    const clusters = [
+      { lat: 32.0916, lng: 34.8028 },
+      { lat: 32.0939, lng: 34.8133 },
+      { lat: 32.093, lng: 34.8186 },
+    ];
+    const houses = Array.from({ length: 28 }, (_, i) => ({
+      id: `spread-${String(i).padStart(2, "0")}`,
+      theme: "ghost" as const,
+      kind: "house" as const,
+      address: `spread-${i}`,
+      lat: clusters[i % clusters.length]!.lat + (i % 3) * 0.00005,
+      lng: clusters[i % clusters.length]!.lng + (i % 5) * 0.00004,
+    }));
+    const assignment = buildGemMonsterAssignment(houses);
+    const byId = new Map(houses.map((h) => [h.id, h]));
+    for (const monsterId of ["frankie", "spider"] as const) {
+      const pts = [...assignment.entries()]
+        .filter(([, mid]) => mid === monsterId)
+        .map(([id]) => {
+          const h = byId.get(id)!;
+          return { lat: h.lat!, lng: h.lng! };
+        });
+      if (pts.length < 2) continue;
+      let minPair = Infinity;
+      for (let i = 0; i < pts.length; i += 1) {
+        for (let j = i + 1; j < pts.length; j += 1) {
+          minPair = Math.min(minPair, distanceMeters(pts[i]!, pts[j]!));
+        }
+      }
+      assert.ok(
+        minPair >= GEM_REPEAT_MIN_SPACING_M * 0.55,
+        `${monsterId} min pair ${minPair.toFixed(0)}m`,
+      );
+    }
+  });
+
+  it("assigns one gem per house in a shared address cluster", () => {
+    if (GEM_MONSTERS_DRAGON_ONLY) return;
+    const shared = "חרוזים 8, חרוזים";
+    const houses = [
+      {
+        id: "cluster-a2",
+        address: shared,
+        lat: 32.09,
+        lng: 34.81,
+        theme: "ghost" as const,
+        kind: "house" as const,
+      },
+      {
+        id: "cluster-a1",
+        address: shared,
+        lat: 32.09,
+        lng: 34.81,
+        theme: "ghost" as const,
+        kind: "house" as const,
+      },
+      {
+        id: "cluster-b",
+        address: "נחלת גנים 1",
+        lat: 32.1,
+        lng: 34.82,
+        theme: "ghost" as const,
+        kind: "house" as const,
+      },
+    ];
+    syncGemMonsterAssignment(houses);
+    assert.equal(gemCarrierHousesForMap(houses).length, 2);
+    assert.equal(gemHousesForMap(houses).length, 3);
+    assert.equal(houseHasMapGem("cluster-a1"), true);
+    assert.equal(houseHasMapGem("cluster-a2"), true);
+    assert.equal(houseHasMapGem("cluster-b"), true);
+    assert.equal(buildGemMonsterAssignment(houses).size, 3);
+    assert.deepEqual(gemClusterSpreadForHouse("cluster-a1"), { index: 0, size: 2 });
+    assert.deepEqual(gemClusterSpreadForHouse("cluster-a2"), { index: 1, size: 2 });
   });
 
   it("album stamp collected by house or gemType", () => {

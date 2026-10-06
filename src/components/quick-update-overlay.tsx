@@ -38,6 +38,7 @@ import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
 import type { PushKind } from "@/lib/push-templates";
 import { isDecorated } from "@/lib/house-state";
+import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import { useCatalog } from "@/hooks/use-catalog";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -59,6 +60,12 @@ export function QuickUpdateOverlay({
   onOpenFull?: () => void;
   onUpdated: (house: PublicHouse) => void;
 }) {
+  useEffect(() => {
+    if (open && !deviceHouseEditAllowed(house.id)) {
+      toast.message("הבית הוסר מהמדריך — אי אפשר לערוך");
+      onClose();
+    }
+  }, [open, house.id, admin, onClose]);
   const [candyPick, setCandyPick] = useState<QuickCandyChoice>(() => currentQuickCandy(house));
   const [housePick, setHousePick] = useState<QuickHouseChoice>(() => currentQuickHouse(house));
   const [sendPush, setSendPush] = useState(true);

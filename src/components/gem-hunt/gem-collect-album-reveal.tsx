@@ -8,6 +8,7 @@ import {
   gemMonsterMeta,
   type GemMonsterId,
 } from "@/lib/gem-monsters";
+import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
 import { cn } from "@/lib/utils";
 
 /** Camera overlay after collect — pet flies into the sticker book. */
@@ -43,7 +44,7 @@ export function GemCollectAlbumReveal({
     return pool.slice(start, start + 4);
   }, [pool, slotIndex]);
 
-  const bookLabel = newAlbumFriend ? "נכנס לספר החברים" : "כבר בספר החברים — עוד יהלום!";
+  const bookLabel = newAlbumFriend ? "נוסף לאוסף" : "כבר באוסף — עוד שדון!";
   const showFly = newAlbumFriend;
 
   return (
@@ -70,7 +71,7 @@ export function GemCollectAlbumReveal({
           </div>
         ) : null}
 
-        <div className="gem-collect-album-reveal__book" aria-label="ספר חברים">
+        <div className="gem-collect-album-reveal__book" aria-label={GEM_ALBUM_TITLE_HE}>
           <p className="gem-collect-album-reveal__book-label">{bookLabel}</p>
           <div className="gem-collect-album-reveal__grid">
             {previewSlots.map((entry) => {
@@ -118,7 +119,7 @@ export function GemCollectAlbumReveal({
               className="gem-collect-album-reveal__action gem-collect-album-reveal__action--primary"
               onClick={onOpenStickerBook}
             >
-              לספר החברים
+              {GEM_ALBUM_TITLE_HE}
             </button>
             <button
               type="button"
@@ -134,8 +135,8 @@ export function GemCollectAlbumReveal({
               ? newAlbumFriend
                 ? showActions
                   ? ""
-                  : "שמור בטוח בספר — ממשיכים לצוד!"
-                : "יהלום נוסף לבית — החבר כבר אצלכם!"
+                  : "שמור באוסף — ממשיכים לצוד!"
+                : "שדון נוסף לבית — כבר אצלכם באוסף!"
               : "מדביקים…"}
           </p>
         )}

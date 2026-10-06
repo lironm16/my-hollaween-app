@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Camera } from "lucide-react";
 import { toast } from "sonner";
 import { compressJpegFile, type PhotoFocus } from "@/lib/compress-image";
@@ -20,10 +20,21 @@ import {
   houseKindLabels,
 } from "@/lib/labels";
 import { isPoiHouse } from "@/lib/house-kind";
-import { displayAddressFromHit, neighborhoodFromAddressHit } from "@/lib/address-fields";
-import { config } from "@/lib/config";
+import { displayAddressFromHit } from "@/lib/address-fields";
+import {
+  config,
+  houseNeighborhoodChoiceToStored,
+  NEIGHBORHOOD_FILTER_OPTIONS,
+  neighborhoodFromAddress,
+  storedToHouseNeighborhoodChoice,
+  type HouseNeighborhoodChoice,
+} from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
+import {
+  isSchoolCampusAddress,
+  schoolCampusNeighborhoodForAddress,
+} from "@/lib/school-campus";
 import {
   HOUSE_THEMES,
   SENSITIVITY_OPTIONS,
@@ -83,6 +94,7 @@ const empty: HouseInput = {
   treatStock: { candy: "plenty" },
   decorLevel: "mild",
   decorated: true,
+  neighborhood: undefined,
 };
 
 function clock(value: string) {
@@ -224,6 +236,41 @@ export function HouseForm({
     setOwnerPhoneTouched(false);
   }, [initial?.id, initial?.addedBy, initial?.ownerPhone]);
 
+  useEffect(() => {
+    if (!initial?.id && initial?.neighborhood === undefined) return;
+    setForm((f) => {
+      if (f.neighborhood !== undefined) return f;
+      if (initial?.neighborhood !== undefined) {
+        return { ...f, neighborhood: initial.neighborhood };
+      }
+      const fromText = initial?.address ? neighborhoodFromAddress(initial.address) : null;
+      return fromText !== null ? { ...f, neighborhood: fromText } : f;
+    });
+  }, [initial?.id, initial?.neighborhood, initial?.address]);
+
+  const lockedSchoolHood = useMemo(
+    () => schoolCampusNeighborhoodForAddress(form.address),
+    [form.address],
+  );
+  const schoolCampusPinLocked = useMemo(
+    () => isSchoolCampusAddress(form.address),
+    [form.address],
+  );
+
+  useEffect(() => {
+    if (!lockedSchoolHood) return;
+    setForm((f) => (f.neighborhood === lockedSchoolHood ? f : { ...f, neighborhood: lockedSchoolHood }));
+  }, [lockedSchoolHood]);
+
+  const hoodChoice = storedToHouseNeighborhoodChoice(
+    lockedSchoolHood ?? form.neighborhood,
+  );
+
+  function setHoodChoice(choice: HouseNeighborhoodChoice) {
+    if (lockedSchoolHood) return;
+    setForm((f) => ({ ...f, neighborhood: houseNeighborhoodChoiceToStored(choice) }));
+  }
+
   function pickScare(level: ScareLevel) {
     setForm((f) => ({ ...f, scareLevel: level }));
     setDecorLevel((current) => (current === "none" ? "mild" : current));
@@ -243,16 +290,18 @@ export function HouseForm({
 
   function onAddressTyped(value: string) {
     setAddressOk(false);
-    setForm((f) => ({ ...f, address: value, neighborhood: undefined }));
+    setForm((f) => ({ ...f, address: value }));
   }
 
   function onAddressSelect(hit: AddressHit) {
+    const address = displayAddressFromHit(hit);
+    const campusHood = schoolCampusNeighborhoodForAddress(address);
     setForm((f) => ({
       ...f,
-      address: displayAddressFromHit(hit),
-      neighborhood: neighborhoodFromAddressHit(hit),
+      address,
       lat: hit.lat,
       lng: hit.lng,
+      ...(campusHood !== null ? { neighborhood: campusHood } : {}),
     }));
     setAddressOk(true);
     if (!hit.precise) {
@@ -265,7 +314,6 @@ export function HouseForm({
     const hit = await reversePin(lat, lng);
     if (!hit) {
       setAddressOk(false);
-      setForm((f) => ({ ...f, neighborhood: undefined }));
       toast.error("לא מצאנו כתובת בנקודה הזו. הזינו רחוב ומספר מהרשימה.");
       return;
     }
@@ -274,7 +322,6 @@ export function HouseForm({
       lat: hit.lat,
       lng: hit.lng,
       address: displayAddressFromHit(hit),
-      neighborhood: neighborhoodFromAddressHit(hit),
     }));
     setAddressOk(true);
     if (!hit.precise) {
@@ -304,6 +351,10 @@ export function HouseForm({
         if (blocked) return;
         if (!addressOk) {
           toast.error("בחרו כתובת אמיתית מהרשימה, או גררו את הסיכה לבית.");
+          return;
+        }
+        if (form.neighborhood === undefined) {
+          toast.error("בחרו שכונה מהרשימה (או «אחר»).");
           return;
         }
         const submitter = addedBy.trim();
@@ -531,15 +582,52 @@ export function HouseForm({
             onFocusChange={setAddressFieldActive}
           />
         </Field>
+        <Field label="שכונה">
+          {lockedSchoolHood ? (
+            <p className="mb-2 text-lg text-violet-300">
+              נקבע אוטומטית לפי בית הספר — לא ניתן לשנות.
+            </p>
+          ) : null}
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="שכונה">
+            {NEIGHBORHOOD_FILTER_OPTIONS.map((choice) => {
+              const selected = hoodChoice === choice;
+              const disabled = Boolean(blocked || lockedSchoolHood);
+              return (
+                <button
+                  key={choice}
+                  type="button"
+                  aria-pressed={selected}
+                  disabled={disabled}
+                  onClick={() => setHoodChoice(choice)}
+                  className={
+                    selected
+                      ? "rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black disabled:opacity-100"
+                      : "rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30 disabled:opacity-40"
+                  }
+                >
+                  {choice}
+                </button>
+              );
+            })}
+          </div>
+        </Field>
         <div>
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="text-lg font-medium">סיכה על המפה</p>
-            <Button type="button" size="sm" variant="outline" onClick={useMyLocation}>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={useMyLocation}
+              disabled={schoolCampusPinLocked || blocked}
+            >
               {locating ? "מאתרים…" : "המיקום שלי"}
             </Button>
           </div>
           <p className="mb-2 text-lg text-violet-300">
-            אחרי בחירת כתובת הסיכה זזה לשם. אפשר לגרור אותה לכניסה המדויקת.
+            {schoolCampusPinLocked
+              ? "מיקום בית הספר קבוע — לא ניתן לגרור את הסיכה."
+              : "אחרי בחירת כתובת הסיכה זזה לשם. אפשר לגרור אותה לכניסה המדויקת."}
           </p>
           <div
             className={cn(
@@ -550,7 +638,12 @@ export function HouseForm({
             <HouseMapDynamic
               pickMode
               pick={{ lat: form.lat, lng: form.lng }}
-              onPick={(lat, lng) => void syncFromPin(lat, lng)}
+              pickDraggable={!schoolCampusPinLocked}
+              onPick={
+                schoolCampusPinLocked
+                  ? undefined
+                  : (lat, lng) => void syncFromPin(lat, lng)
+              }
             />
           </div>
           <p className="mt-1 text-lg text-violet-300">

@@ -47,11 +47,14 @@ export function pwaInstallPromptEligible(options: {
 }
 
 /** Toast when help/demo install is tapped without a native prompt (e.g. iOS viewing Android Q&A). */
-export const PWA_INSTALL_UNAVAILABLE_TOAST = "פתחו ב-Chrome באנדרואיד כדי להתקין.";
+export const PWA_INSTALL_UNAVAILABLE_TOAST =
+  "באנדרואיד חדש Google חוסם «התקנת אפל» — פתחו ב-Chrome והוסיפו קיצור דרך מהתפריט (⋮).";
 
 export function shouldShowPwaInstallButton(options: {
   canInstall: boolean;
   isPwaInstalled: boolean;
+  /** Header on Android — always show download; tap uses native prompt when available. */
+  alwaysOnAndroid?: boolean;
   /** Help/Q&A demo — show instructional button even without beforeinstallprompt. */
   showAlways?: boolean;
   /** Help accordion — always render the button UI (ignores standalone / prompt state). */
@@ -59,6 +62,7 @@ export function shouldShowPwaInstallButton(options: {
 }) {
   if (options.forceVisible) return true;
   if (options.isPwaInstalled) return false;
+  if (options.alwaysOnAndroid) return true;
   if (options.showAlways) return true;
   return options.canInstall;
 }

@@ -2,6 +2,7 @@
 
 import { GemOrbitStage } from "@/components/gem-hunt/gem-orbit-stage";
 import { gemLabelHe, gemMonsterForHouse } from "@/lib/gem-hunt";
+import { GEM_ORBIT_PICK_HOUSE_HE } from "@/lib/gem-hunt-copy";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 
@@ -9,7 +10,7 @@ export function GemBagOrbitViewer({ house }: { house: PublicHouse | null }) {
   if (!house) {
     return (
       <div className="gem-bag-viewer gem-bag-viewer--empty">
-        <p className="text-sm text-violet-300">בחרו בית מהרשימה כדי לסובב את היהלום</p>
+        <p className="text-sm text-violet-300">{GEM_ORBIT_PICK_HOUSE_HE}</p>
       </div>
     );
   }

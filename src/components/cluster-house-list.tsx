@@ -10,6 +10,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { HouseMapPinIcon } from "@/components/house-map-pin-icon";
 import { HouseTitleMarkers } from "@/components/house-title-markers";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { boothNumberForHouse } from "@/lib/cluster-booth";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -211,7 +212,9 @@ export function ClusterHouseList({
   const addressReveal = useAddressReveal();
   return (
     <ul className="cluster-house-list space-y-2">
-      {houses.map((item, index) => (
+      {houses.map((item, index) => {
+        const slot = boothNumberForHouse(item) ?? index + 1;
+        return (
         <li key={item.id}>
           <button
             type="button"
@@ -228,7 +231,7 @@ export function ClusterHouseList({
               className="flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500/20 text-sm font-semibold text-orange-200 tabular-nums"
               aria-hidden
             >
-              {index + 1}
+              {slot}
             </span>
             <span className="cluster-house-list-pin-wrap shrink-0" dir="ltr">
               <HouseMapPinIcon
@@ -252,7 +255,8 @@ export function ClusterHouseList({
             </span>
           </button>
         </li>
-      ))}
+      );
+      })}
     </ul>
   );
 }

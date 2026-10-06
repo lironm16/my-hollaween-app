@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { HouseForm, type HouseFormExtras } from "@/components/house-form";
 import { PushNotice } from "@/components/push-notice";
 import { Button } from "@/components/ui/button";
+import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import { notifyCatalogChanged, applyLocalHousePatch, queueHouseWrite, rememberPublishedHouse, forgetPublishedHouse, saveOwnedHouse } from "@/lib/offline-db";
 import { publishHousePhoto } from "@/lib/house-photo";
 import { readApiJson } from "@/lib/api-json";
@@ -39,6 +40,7 @@ export function NightDesk({
   allowDelete = false,
   onDeleted,
 }: Props) {
+  const editLocked = !deviceHouseEditAllowed(house.id);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<PushNoticeState | null>(null);
   const [offerBusy, setOfferBusy] = useState(false);
@@ -57,6 +59,10 @@ export function NightDesk({
       ownerPhone?: string | null;
     },
   ) {
+    if (editLocked) {
+      toast.message("הבית הוסר מהמדריך — אי אפשר לערוך");
+      return { house, pendingPushOffer: false };
+    }
     const next = applyLocalHousePatch(house, patch);
     const url = admin
       ? `/api/admin/houses/${encodeURIComponent(house.id)}`
@@ -85,6 +91,10 @@ export function NightDesk({
       ownerPhone?: string | null;
     },
   ): Promise<SaveResult | null> {
+    if (editLocked) {
+      toast.message("הבית הוסר מהמדריך — אי אפשר לערוך");
+      return null;
+    }
     setBusy(true);
     try {
       if (typeof navigator !== "undefined" && !navigator.onLine) {
@@ -204,6 +214,7 @@ export function NightDesk({
   }
 
   async function onDelete() {
+    if (editLocked) return;
     if (!allowDelete) return;
     if (!window.confirm("למחוק את הבית מהמפה? אי אפשר לבטל את זה.")) return;
     setBusy(true);
@@ -240,6 +251,11 @@ export function NightDesk({
 
   return (
     <div className="space-y-4">
+      {editLocked ? (
+        <p className="rounded-lg bg-zinc-900/90 px-3 py-2 text-base text-zinc-100" role="status">
+          הבית הוסר מהמדריך — צפייה בלבד. אפשר להסיר את הכרטיס מ«במכשיר שלי».
+        </p>
+      ) : null}
       {notice ? (
         <div
           ref={noticeRef}
@@ -300,28 +316,30 @@ export function NightDesk({
         </div>
       ) : null}
 
-      <HouseForm
-        key={house.id}
-        initial={house}
-        submitLabel="שמירה"
-        busy={busy}
-        onSubmit={onSave}
-        onCancel={onCancel}
-        extraActions={
-          allowDelete ? (
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={busy}
-              className="h-10 w-full"
-              onClick={() => void onDelete()}
-            >
-              <Trash2 className="size-4" />
-              מחיקת הבית מהמפה
-            </Button>
-          ) : null
-        }
-      />
+      {editLocked ? null : (
+        <HouseForm
+          key={house.id}
+          initial={house}
+          submitLabel="שמירה"
+          busy={busy}
+          onSubmit={onSave}
+          onCancel={onCancel}
+          extraActions={
+            allowDelete ? (
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={busy}
+                className="h-10 w-full"
+                onClick={() => void onDelete()}
+              >
+                <Trash2 className="size-4" />
+                מחיקת הבית מהמפה
+              </Button>
+            ) : null
+          }
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { effectiveCatalogPollSeconds } from "@/lib/catalog-poll";
 import { config } from "@/lib/config";
+import { normalizeCatalogDelta } from "@/lib/catalog-sync";
 import { getCatalog, getCatalogDelta } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -18,11 +19,11 @@ export async function GET(request: Request) {
 
   if (since) {
     headers.set("Cache-Control", "no-store");
-    const delta = await getCatalogDelta(since);
+    const delta = normalizeCatalogDelta(await getCatalogDelta(since));
     return NextResponse.json(withPollSeconds(delta), { headers });
   }
 
-  const catalog = await getCatalog();
+  const catalog = normalizeCatalogDelta(await getCatalog());
   const seconds = config.catalogCacheSeconds;
   if (seconds > 0) {
     const value = `public, max-age=0, s-maxage=${seconds}, stale-while-revalidate=${seconds * 10}`;

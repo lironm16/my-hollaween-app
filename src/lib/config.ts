@@ -19,8 +19,33 @@ const tiles = {
 export const NEIGHBORHOODS = ["שיכון ותיקים", "חרוזים", "נחלת גנים", "הגפן"] as const;
 export type NeighborhoodId = (typeof NEIGHBORHOODS)[number];
 
+/** Filter chip / form option for houses outside the four event neighborhoods (stats אחר). */
+export const NEIGHBORHOOD_FILTER_OTHER = "אחר" as const;
+export const NEIGHBORHOOD_FILTER_OPTIONS = [...NEIGHBORHOODS, NEIGHBORHOOD_FILTER_OTHER] as const;
+export type NeighborhoodFilterId = (typeof NEIGHBORHOOD_FILTER_OPTIONS)[number];
+
+/** Picker value on add/edit — stored as {@link NeighborhoodId} or `null` for אחר. */
+export type HouseNeighborhoodChoice = NeighborhoodFilterId;
+
+export function houseNeighborhoodChoiceToStored(
+  choice: HouseNeighborhoodChoice,
+): NeighborhoodId | null {
+  return choice === NEIGHBORHOOD_FILTER_OTHER ? null : choice;
+}
+
+export function storedToHouseNeighborhoodChoice(
+  stored: NeighborhoodId | null | undefined,
+): HouseNeighborhoodChoice | undefined {
+  if (stored === undefined) return undefined;
+  if (stored === null) return NEIGHBORHOOD_FILTER_OTHER;
+  const normalized = normalizeNeighborhoodId(stored);
+  return normalized ?? NEIGHBORHOOD_FILTER_OTHER;
+}
+
 const LEGACY_NEIGHBORHOOD_ALIASES: Record<string, NeighborhoodId> = {
   "שכונת הגפן": "הגפן",
+  /** OSM suburb label for שיכון ותיקים (e.g. הזמיר). */
+  ותיקים: "שיכון ותיקים",
 };
 
 /** Approximate centers used when address text has no neighborhood name. */
@@ -80,6 +105,15 @@ export const config = {
     hour: 12,
     minute: 0,
   },
+  /** Last moment visitors can submit a new house (local time). Admins bypass. */
+  addHouseCutoff: {
+    year: 2026,
+    month: 10,
+    day: 30,
+    hour: 23,
+    minute: 59,
+    labelHe: "30 באוקטובר, 23:59",
+  },
 } as const;
 
 export function inNeighborhood(lat: number, lng: number) {
@@ -121,10 +155,13 @@ const NEIGHBORHOOD_ZONES: Record<
   { south: number; north: number; west: number; east: number }
 > = {
   חרוזים: { south: 32.0888, north: 32.0924, west: 34.8018, east: 34.8052 },
-  "שיכון ותיקים": { south: 32.0898, north: 32.0942, west: 34.8088, east: 34.8142 },
+  "שיכון ותיקים": { south: 32.0898, north: 32.0952, west: 34.8088, east: 34.8178 },
   "נחלת גנים": { south: 32.0897, north: 32.0938, west: 34.8103, east: 34.8198 },
   הגפן: { south: 32.08835, north: 32.0908, west: 34.8098, east: 34.8138 },
 };
+
+/** Southern edge of the lowest event zone (הגפן) — pins below are not in any hood polygon. */
+const EVENT_ZONE_MIN_SOUTH = Math.min(...NEIGHBORHOODS.map((n) => NEIGHBORHOOD_ZONES[n].south));
 
 function inNeighborhoodZone(lat: number, lng: number, zone: (typeof NEIGHBORHOOD_ZONES)[NeighborhoodId]) {
   return lat >= zone.south && lat <= zone.north && lng >= zone.west && lng <= zone.east;
@@ -142,6 +179,16 @@ function nearestNeighborhood(lat: number, lng: number) {
     }
   }
   return { best, bestDist };
+}
+
+function neighborhoodsByDistance(lat: number, lng: number): NeighborhoodId[] {
+  return [...NEIGHBORHOODS]
+    .map((name) => {
+      const c = NEIGHBORHOOD_CENTERS[name];
+      return { name, d: (lat - c.lat) ** 2 + (lng - c.lng) ** 2 };
+    })
+    .sort((a, b) => a.d - b.d)
+    .map((entry) => entry.name);
 }
 
 /** Nearest neighborhood center (for labels that only say רמת גן). */
@@ -174,16 +221,51 @@ export function houseLocationAllowed(lat: number, lng: number) {
   return neighborhoodAtEventLocation(lat, lng) !== null;
 }
 
-/** Best-effort neighborhood label for a pin (zone when possible, else nearest center). */
-export function neighborhoodLabelForPin(lat: number, lng: number): NeighborhoodId | null {
+/** Neighborhood for a pin — only when inside one of the four event zones (never nearest-center guess). */
+export function neighborhoodLabelForPin(
+  lat: number,
+  lng: number,
+  _suburb?: string,
+): NeighborhoodId | null {
+  return neighborhoodAtEventLocation(lat, lng);
+}
+
+/**
+ * Pin is in the map box but not inside any of the four event zones — not assignable
+ * (e.g. יוהנה 6 east of הגפן and south of נחלת גנים).
+ */
+export function isOutsideEventNeighborhoods(lat: number, lng: number): boolean {
+  if (neighborhoodAtEventLocation(lat, lng)) return false;
+  if (!inNeighborhood(lat, lng)) return true;
+  if (lat < EVENT_ZONE_MIN_SOUTH) return true;
+  const eastOfGefen = lng > NEIGHBORHOOD_ZONES["הגפן"].east;
+  const southOfNachlat = lat < NEIGHBORHOOD_ZONES["נחלת גנים"].south;
+  return eastOfGefen && southOfNachlat;
+}
+
+/**
+ * Backfill when storage is null: zone, else nearest center (never false הגפן),
+ * unless {@link isOutsideEventNeighborhoods}.
+ */
+export function neighborhoodInferredFromPin(lat: number, lng: number): NeighborhoodId | null {
   if (!inNeighborhood(lat, lng)) return null;
-  return neighborhoodAtEventLocation(lat, lng) ?? neighborhoodFromCoords(lat, lng);
+  const zoned = neighborhoodAtEventLocation(lat, lng);
+  if (zoned) return zoned;
+  if (isOutsideEventNeighborhoods(lat, lng)) return null;
+  for (const name of neighborhoodsByDistance(lat, lng)) {
+    if (name === "הגפן" && !inNeighborhoodZone(lat, lng, NEIGHBORHOOD_ZONES["הגפן"])) {
+      continue;
+    }
+    return name;
+  }
+  return null;
 }
 
 export function allowedNeighborhoodsMessage() {
   return `בחרו בית ב${NEIGHBORHOODS.slice(0, -1).join(", ")} או ${NEIGHBORHOODS[NEIGHBORHOODS.length - 1]}.`;
 }
 
+/** Display / filters / stats — uses stored hood only (legacy suffix in address if unset). */
 export function resolveNeighborhood(house: {
   address?: string;
   neighborhood?: NeighborhoodId | null;
@@ -191,19 +273,11 @@ export function resolveNeighborhood(house: {
   lng?: number;
 }): NeighborhoodId | null {
   if (house.neighborhood !== undefined) {
+    if (house.neighborhood === null) return null;
     return normalizeNeighborhoodId(house.neighborhood) ?? null;
   }
   if (house.address) {
-    const fromText = neighborhoodFromAddress(house.address);
-    if (fromText) return fromText;
-  }
-  if (
-    typeof house.lat === "number" &&
-    typeof house.lng === "number" &&
-    Number.isFinite(house.lat) &&
-    Number.isFinite(house.lng)
-  ) {
-    return neighborhoodLabelForPin(house.lat, house.lng);
+    return neighborhoodFromAddress(house.address);
   }
   return null;
 }
@@ -232,9 +306,11 @@ export function formatMapsAddress(house: { address: string }): string {
 
 export function houseInNeighborhoods(
   house: { address: string; neighborhood?: NeighborhoodId | null; lat?: number; lng?: number },
-  selected: readonly NeighborhoodId[],
+  selected: readonly NeighborhoodFilterId[],
 ) {
-  if (selected.length === 0 || selected.length === NEIGHBORHOODS.length) return true;
+  if (selected.length === 0) return false;
+  if (selected.length === NEIGHBORHOOD_FILTER_OPTIONS.length) return true;
   const area = resolveNeighborhood(house);
-  return area !== null && selected.includes(area);
+  if (area === null) return selected.includes(NEIGHBORHOOD_FILTER_OTHER);
+  return selected.includes(area);
 }

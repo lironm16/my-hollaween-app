@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { NEIGHBORHOODS } from "@/lib/config";
 import {
   DECOR_LEVELS,
   HOUSE_KINDS,
@@ -75,6 +76,7 @@ const houseFields = z.object({
     .min(HOUSE_FIELD_LIMITS.address.min)
     .max(HOUSE_FIELD_LIMITS.address.max),
   arrival: z.string().trim().max(HOUSE_FIELD_LIMITS.arrival.max),
+  boothNumber: z.number().int().min(1).optional().nullable(),
   description: z.string().trim().max(HOUSE_FIELD_LIMITS.description.max),
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
@@ -91,6 +93,7 @@ const houseFields = z.object({
   accessible: z.boolean(),
   decorLevel: z.enum(DECOR_LEVELS).optional(),
   decorated: z.boolean().optional(),
+  neighborhood: z.union([z.enum(NEIGHBORHOODS), z.null()]).optional(),
 });
 
 export const houseSubmitSchema = houseFields.extend({

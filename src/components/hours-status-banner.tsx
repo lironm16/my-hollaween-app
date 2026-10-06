@@ -16,6 +16,8 @@ import {
   isOwnerFrozen,
   markedCandy,
 } from "@/lib/house-state";
+import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
+import { catalogRemovedBannerLabel } from "@/lib/labels";
 import type { TreatStock, TreatId, VisitState } from "@/lib/types";
 
 const BANNER = "rounded-lg px-3 py-2 text-base font-medium leading-snug break-words";
@@ -48,6 +50,15 @@ export function HoursStatusBanner({
 }) {
   const rehearsed = useAppNow();
   const clock = now ?? rehearsed;
+  const catalogRemoved = useCatalogRemoved(house.id);
+
+  if (catalogRemoved) {
+    return (
+      <p className={cn(BANNER, "bg-zinc-900/90 text-zinc-100", className)}>
+        {catalogRemovedBannerLabel}
+      </p>
+    );
+  }
 
   if (effectiveVisit(house) === "closed" || isHoursNightOver(house, clock)) {
     return (

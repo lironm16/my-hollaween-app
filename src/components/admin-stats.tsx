@@ -1,15 +1,16 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import { Gem, Home, MapPinned, Moon, Pause } from "lucide-react";
+import { Home, MapPinned, Moon, Pause } from "lucide-react";
 import { LocationKindSign } from "@/components/location-kind-sign";
 import { CandySign } from "@/components/candy-glyphs";
 import { OpenNowSign, ClosingSoonSign, OpeningSoonSign } from "@/components/open-now-mark";
 import { ScareSign } from "@/components/scare-glyphs";
 import { SensitivitySign } from "@/components/sensitivity-glyphs";
 import { StrollerSign } from "@/components/symbols";
-import { LikedSign, SkipSign } from "@/components/visit-marks";
+import { CollectedGemSign, LikedSign, SkipSign } from "@/components/visit-marks";
 import { VisitedCheck } from "@/components/visited-check";
+import { GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { scareShort, decorShort, treatLabels } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import { NEIGHBORHOODS } from "@/lib/config";
@@ -88,8 +89,8 @@ export function PersonalMarksSection({
         />
         {showGemStats ? (
           <StatTile
-            icon={<Gem className="size-8 fill-amber-300 text-amber-300" strokeWidth={2.1} />}
-            label="אספתי"
+            icon={<CollectedGemSign />}
+            label={GEM_FOUND_I_HE}
             value={gemCollectedCount}
             valueClass={gemCollectedCount ? "text-amber-300" : undefined}
             plain

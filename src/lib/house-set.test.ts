@@ -48,6 +48,19 @@ describe("countSkippedInSet", () => {
     assert.equal(countSkippedInSet(["בית-9310"], [], "stubs"), 1);
   });
 
+  it("treats device-cache shell rows as stubs when id is a known rehearsal house", () => {
+    assert.equal(
+      isStubHouse({
+        id: "בית-2291",
+        description: "",
+        photoUrl: "",
+        deviceCachePin: true,
+      }),
+      true,
+    );
+    assert.equal(houseMatchesSet({ id: "בית-2291", description: "" }, "real"), false);
+  });
+
   it("treats rehearsal snapshot photos as stubs when description was stripped", () => {
     const row = {
       id: "בית-1847",
@@ -98,8 +111,8 @@ describe("resolveViewerHouseSet", () => {
     assert.equal(resolveViewerHouseSet(stubsOnly, false, "real"), "real");
   });
 
-  it("keeps real filter when real houses exist", () => {
-    assert.equal(resolveViewerHouseSet(mixed, false, "real", { previewDeployment: true }), "real");
+  it("shows real and stubs on preview when both exist", () => {
+    assert.equal(resolveViewerHouseSet(mixed, false, "real", { previewDeployment: true }), "all");
   });
 
   it("respects admin house-set preference", () => {

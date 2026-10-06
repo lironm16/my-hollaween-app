@@ -1,4 +1,5 @@
 import { isE2eTestHouse } from "@/lib/e2e-houses";
+import { isKnownRehearsalStubId } from "@/lib/rehearsal-stub-ids";
 
 export const HOUSE_SET_KEY = "hw-house-set";
 export const HOUSE_SET_EVENT = "hw-house-set";
@@ -26,7 +27,12 @@ export function isStubHouse(house: {
   description?: string;
   address?: string;
   photoUrl?: string;
+  /** Pin-only device cache shell (no server detail yet). */
+  deviceCachePin?: boolean;
+  deviceCacheStub?: boolean;
 }) {
+  if (house.deviceCachePin || house.deviceCacheStub) return true;
+  if (isKnownRehearsalStubId(house.id)) return true;
   if (house.id && STUB_ID.test(house.id)) return true;
   if (isE2eTestHouse(house)) return true;
   if (house.photoUrl?.includes("/images/stubs/")) return true;
@@ -120,9 +126,9 @@ export function catalogHasRealHouses(catalog: { houses: { id?: string; descripti
 }
 
 /**
- * Non-admins normally see only real houses. On preview deployments only, when the
- * loaded catalog is stub-only, show all snapshot houses so the map is not empty.
- * Production never uses this fallback — visitors keep the real-only filter.
+ * Non-admins normally see only real houses. On Vercel Preview deployments, show
+ * rehearsal stubs too (real + stubs) so QA can test schools and edge cases.
+ * Production visitors always stay on real-only.
  */
 export function resolveViewerHouseSet(
   catalog: { houses: { id?: string; description?: string }[] } | null,
@@ -132,7 +138,7 @@ export function resolveViewerHouseSet(
 ): HouseSet {
   if (admin) return preferred;
   const preview = options?.previewDeployment === true;
-  if (preview && catalog?.houses.length && !catalogHasRealHouses(catalog)) return "all";
+  if (preview && catalog?.houses.length) return "all";
   return "real";
 }
 

@@ -14,8 +14,9 @@ describe("shouldCapturePwaInstallPrompt", () => {
     assert.equal(shouldCapturePwaInstallPrompt(true, true), false);
   });
 
-  it("captures on Android and desktop browsers when not installed", () => {
+  it("captures on desktop and Android when not installed", () => {
     assert.equal(shouldCapturePwaInstallPrompt(false, false), true);
+    assert.equal(shouldCapturePwaInstallPrompt(false, false, false), true);
   });
 
   it("skips capture when Android web app is already on device (browser tab)", () => {
@@ -35,6 +36,14 @@ describe("pwaInstallPromptEligible", () => {
   it("shows install UI only when prompt is available and app is not installed", () => {
     assert.equal(
       pwaInstallPromptEligible({ isIos: false, isPwaInstalled: false, hasDeferredPrompt: true }),
+      true,
+    );
+    assert.equal(
+      pwaInstallPromptEligible({
+        isIos: false,
+        isPwaInstalled: false,
+        hasDeferredPrompt: true,
+      }),
       true,
     );
     assert.equal(
@@ -60,7 +69,7 @@ describe("shouldShowPwaInstallButton", () => {
     );
   });
 
-  it("shows header button only when native prompt is available", () => {
+  it("shows header button when native prompt is available", () => {
     assert.equal(
       shouldShowPwaInstallButton({ canInstall: true, isPwaInstalled: false }),
       true,
@@ -68,6 +77,17 @@ describe("shouldShowPwaInstallButton", () => {
     assert.equal(
       shouldShowPwaInstallButton({ canInstall: false, isPwaInstalled: false }),
       false,
+    );
+  });
+
+  it("always shows header button on Android until installed", () => {
+    assert.equal(
+      shouldShowPwaInstallButton({
+        canInstall: false,
+        isPwaInstalled: false,
+        alwaysOnAndroid: true,
+      }),
+      true,
     );
   });
 

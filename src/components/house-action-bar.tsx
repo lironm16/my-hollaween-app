@@ -11,16 +11,17 @@ import {
   Navigation,
   Pencil,
   Share2,
-  Undo2,
-  Gem,
 } from "lucide-react";
-import { GemTrafficIcon, SavedTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
-import { SkipIcon } from "@/components/skip-icon";
+import { ImpMenuActiveGlyph } from "@/components/imp-marker-glyph";
+import { ImpOutlineIcon } from "@/components/imp-outline-icon";
+import { SavedTrafficIcon, SkipTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
+import { SkipOutlineIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
 import { EditCodeDialog } from "@/components/edit-code-dialog";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
+import { GEM_ACTION_FIND_HE, GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
 import { appHeaderBottom, safeAreaInsetBottom } from "@/lib/viewport";
@@ -199,30 +200,27 @@ export function HouseActionBar({
     if (onToggleGem) {
       items.push({
         id: "gem",
-        label: gemCollected ? "אספתי" : "אסוף יהלום",
+        label: gemCollected ? GEM_FOUND_I_HE : GEM_ACTION_FIND_HE,
         icon: gemCollected ? (
-          <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.35rem]" />
+          <ImpMenuActiveGlyph className={MENU_ICON_CLASS} />
         ) : (
-          <Gem className={cn(MENU_ICON_CLASS, "text-orange-100")} strokeWidth={2.1} />
+          <ImpOutlineIcon className={MENU_ICON_CLASS} />
         ),
         onClick: () => onToggleGem(),
         active: gemCollected,
       });
     }
-    if (onSkip && !skipped) {
+    if (onSkip || onRestoreRoute) {
       items.push({
         id: "skip",
-        label: "דילוג על בית",
-        icon: <SkipIcon className={MENU_ICON_CLASS} />,
-        onClick: onSkip,
-      });
-    }
-    if (onRestoreRoute && skipped) {
-      items.push({
-        id: "restore",
-        label: "החזרה",
-        icon: <Undo2 className={MENU_ICON_CLASS} strokeWidth={2.2} />,
-        onClick: onRestoreRoute,
+        label: skipped ? "דילגתי" : "דילוג",
+        icon: skipped ? (
+          <SkipTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.15rem]" />
+        ) : (
+          <SkipOutlineIcon className={MENU_ICON_CLASS} />
+        ),
+        onClick: skipped ? onRestoreRoute : onSkip,
+        active: skipped,
       });
     }
     if (onToggleEdit) {
@@ -309,6 +307,7 @@ export function HouseActionBar({
       item.active && item.id === "like" && "is-active-saved",
       item.active && item.id === "visited" && "is-active-visited",
       item.active && item.id === "gem" && "is-active-gem",
+      item.active && item.id === "skip" && "is-active-skipped",
     );
   }
 

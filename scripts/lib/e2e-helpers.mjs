@@ -52,6 +52,24 @@ export async function skipHouseFromDetail(page, detail) {
   return { skippedBefore, skippedAfter };
 }
 
+export async function openFilterSheet(page) {
+  let lastError;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.getByRole("button", { name: /^סינון/ }).first().click();
+      const liked = page.getByRole("checkbox", { name: "אהבתי" });
+      await liked.scrollIntoViewIfNeeded();
+      await liked.waitFor({ timeout: 10_000 });
+      return;
+    } catch (error) {
+      lastError = error;
+      await page.keyboard.press("Escape").catch(() => {});
+      await page.waitForTimeout(400);
+    }
+  }
+  throw lastError;
+}
+
 export async function openHouseByFocus(page, baseUrl, houseId) {
   const url = `${baseUrl}/?focus=${encodeURIComponent(houseId)}&rehearsal=open`;
   let lastError;
@@ -59,8 +77,9 @@ export async function openHouseByFocus(page, baseUrl, houseId) {
     try {
       await page.goto(url, { waitUntil: "domcontentloaded" });
       await waitForCatalog(page);
-      const dialog = page.getByRole("dialog");
-      await dialog.waitFor();
+      const dialog = page.locator(".map-house-sheet[role='dialog']");
+      await dialog.waitFor({ timeout: 15_000 });
+      await dialog.getByRole("button", { name: "פעולות" }).waitFor({ timeout: 15_000 });
       return dialog;
     } catch (error) {
       lastError = error;

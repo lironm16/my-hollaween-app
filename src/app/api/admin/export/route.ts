@@ -3,7 +3,7 @@ import { isAdmin } from "@/lib/admin";
 import { asCatalogForAdmin } from "@/lib/catalog-cache-build";
 import { getAllHouses, getDbSnapshot } from "@/lib/store";
 import { housesToCsv, housesToXlsx } from "@/lib/house-csv";
-import { toPublicHouse } from "@/lib/ids";
+import { toEditorHouse } from "@/lib/ids";
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const houses = await getAllHouses();
   const format = new URL(request.url).searchParams.get("format");
   if (format === "csv" || format === "xls" || format === "xlsx") {
-    const listed = houses.map(toPublicHouse);
+    const listed = houses.map((house) => toEditorHouse(house, { includeAddedBy: true }));
     if (format === "xls" || format === "xlsx") {
       const xlsx = housesToXlsx(listed);
       return new NextResponse(Buffer.from(xlsx), {
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     });
   }
   const db = await getDbSnapshot();
-  const catalog = asCatalogForAdmin(houses, db.updatedAt, db.pushSettings);
+  const catalog = asCatalogForAdmin(houses, db.updatedAt, db.pushSettings, db.eventSettings);
   return NextResponse.json(catalog, {
     headers: {
       "Content-Disposition": "attachment; filename=catalog.json",

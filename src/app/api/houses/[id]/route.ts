@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ownerPatchSchema } from "@/lib/schema";
-import { deleteByEditCode, getHouse, updateByEditCode } from "@/lib/store";
+import { deleteByEditCode, getHouse, loadAddressRevealSchedule, updateByEditCode } from "@/lib/store";
 import { canonicalHouseId, toEditorHouse, toPublicHouse } from "@/lib/ids";
 import { ownerPhoneHttpError } from "@/lib/owner-phone";
 import { isPubliclyListed } from "@/lib/house-state";
@@ -34,7 +34,11 @@ export async function GET(
   }
   const admin = await isAdmin();
   const ownerOk = await ownerMayEdit(id);
-  const house = admin || ownerOk ? toEditorHouse(row) : publicHouseForCatalog(toPublicHouse(row));
+  const revealSchedule = await loadAddressRevealSchedule();
+  const house =
+    admin || ownerOk
+      ? toEditorHouse(row)
+      : publicHouseForCatalog(toPublicHouse(row), new Date(), revealSchedule);
   return NextResponse.json(house, {
     headers: {
       "Cache-Control":

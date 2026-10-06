@@ -9,7 +9,13 @@ import {
   ClusterHouseSwipeArea,
   clusterHouseIndex,
 } from "@/components/cluster-house-list";
+import { ClusterHouseActionMenu } from "@/components/cluster-house-action-menu";
+import { HouseSkippedBanner, HouseVisitedBanner } from "@/components/house-skipped-banner";
+import { boothNumberForHouse, clusterBoothLabel } from "@/lib/cluster-booth";
+import { clusterOverviewSubtitle, usesSchoolCampusClusterChrome } from "@/lib/school-campus";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
+import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
 import { houseHeadline } from "@/lib/labels";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
@@ -86,15 +92,19 @@ export function MapHouseSheet({
   const [fitH, setFitH] = useState<number | null>(null);
   const [openH, setOpenH] = useState(0);
   const multi = clusterHouses.length > 1;
-  const overview = multi && clusterOverview;
+  const clusterShell = multi || usesSchoolCampusClusterChrome(clusterHouses);
+  const overview = clusterShell && clusterOverview;
   const addressReveal = useAddressReveal();
-  const address = addressReveal.formatDisplayAddress(house);
+  const overlaid = useAdminHouseFields(house) ?? house;
+  const { house: hydratedHouse } = useServerHouseDetail(overlaid);
+  const sheetHouse = useAdminHouseFields(hydratedHouse) ?? hydratedHouse ?? overlaid;
+  const address = addressReveal.formatDisplayAddress(sheetHouse);
   const clusterKey = clusterHouses.map((item) => item.id).join(",");
   const clusterIndex = clusterHouseIndex(clusterHouses, house.id);
   const canPrevCluster = clusterIndex != null && clusterIndex > 1;
   const canNextCluster =
     clusterIndex != null && clusterIndex < clusterHouses.length;
-  const clusterDetail = multi && !overview;
+  const clusterDetail = clusterShell && !overview;
   const displayH = overview ? (dragH ?? sheetH) : (dragH ?? sheetH ?? openH);
 
   function scrollSheetContentTop() {
@@ -104,6 +114,13 @@ export function MapHouseSheet({
   const clusterNow = now ?? new Date();
   const isSkipped = skippedIds ?? (() => false);
   const isFilteredOut = filteredOutIds ?? (() => false);
+  const clusterAllSkipped =
+    overview && clusterHouses.length > 0 && clusterHouses.every((item) => isSkipped(item.id));
+  const clusterAllVisited =
+    overview &&
+    clusterHouses.length > 0 &&
+    clusterHouses.every((item) => visited?.(item.id)) &&
+    !clusterAllSkipped;
   function parentH() {
     const el = sheetRef.current;
     const parent =
@@ -131,7 +148,8 @@ export function MapHouseSheet({
     const chrome = el.querySelector(".map-house-sheet-chrome");
     const chromeH = chrome instanceof HTMLElement ? chrome.offsetHeight : 0;
     const contentH = body.scrollHeight;
-    return Math.min(peekPx(), Math.max(72, Math.ceil(chromeH + contentH)));
+    const cap = clusterDetail ? maxPx() : peekPx();
+    return Math.min(cap, Math.max(72, Math.ceil(chromeH + contentH)));
   }
 
   function publishSheetHeight(h: number) {
@@ -187,6 +205,7 @@ export function MapHouseSheet({
   }, [
     clusterKey,
     overview,
+    clusterDetail,
     editing,
     actionContext.skipped(house.id),
     filterMismatchReasons?.join("\0"),
@@ -365,9 +384,66 @@ export function MapHouseSheet({
               <div className="mb-3 flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="map-house-sheet-kicker">{address}</p>
-                  <p className="map-house-sheet-sub">{clusterHouses.length} בתים בכתובת זו</p>
+                  <p className="map-house-sheet-sub">{clusterOverviewSubtitle(clusterHouses)}</p>
                 </div>
+                <ClusterHouseActionMenu
+                  houses={clusterHouses}
+                  liked={liked ?? (() => false)}
+                  visited={visited ?? (() => false)}
+                  skipped={skippedIds ?? (() => false)}
+                  onVisitAll={
+                    actionContext.onClusterVisitAll
+                      ? () => actionContext.onClusterVisitAll!(clusterHouses)
+                      : undefined
+                  }
+                  onUnvisitAll={
+                    actionContext.onClusterUnvisitAll
+                      ? () => actionContext.onClusterUnvisitAll!(clusterHouses)
+                      : undefined
+                  }
+                  onSkipAll={
+                    actionContext.onClusterSkipAll
+                      ? () => actionContext.onClusterSkipAll!(clusterHouses)
+                      : undefined
+                  }
+                  onRestoreAll={
+                    actionContext.onClusterRestoreAll
+                      ? () => actionContext.onClusterRestoreAll!(clusterHouses)
+                      : undefined
+                  }
+                  onLikeAll={
+                    actionContext.onClusterLikeAll
+                      ? () => actionContext.onClusterLikeAll!(clusterHouses)
+                      : undefined
+                  }
+                  onUnlikeAll={
+                    actionContext.onClusterUnlikeAll
+                      ? () => actionContext.onClusterUnlikeAll!(clusterHouses)
+                      : undefined
+                  }
+                  gemCollected={actionContext.gemCollected}
+                  onFindAllGems={
+                    actionContext.onClusterFindAllGems
+                      ? () => actionContext.onClusterFindAllGems!(clusterHouses)
+                      : undefined
+                  }
+                  onResetAllGems={
+                    actionContext.onClusterResetAllGems
+                      ? () => actionContext.onClusterResetAllGems!(clusterHouses)
+                      : undefined
+                  }
+                />
               </div>
+              {clusterAllSkipped && actionContext.onClusterRestoreAll ? (
+                <HouseSkippedBanner
+                  onRestore={() => actionContext.onClusterRestoreAll!(clusterHouses)}
+                />
+              ) : null}
+              {clusterAllVisited && actionContext.onClusterUnvisitAll ? (
+                <HouseVisitedBanner
+                  onRestore={() => actionContext.onClusterUnvisitAll!(clusterHouses)}
+                />
+              ) : null}
             </div>
             <div className="map-house-sheet-cluster-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
               <ClusterHouseList
@@ -419,15 +495,22 @@ export function MapHouseSheet({
                     className="map-house-sheet-card is-on"
                   >
                     <HouseSheetBody
-                      house={house}
+                      house={sheetHouse}
                       actionContext={actionContext}
                       editing={editing}
                       extra={extra}
                       filterMismatchReasons={filterMismatchReasons}
                       skipMeta={skipMeta}
                       onRestoreRoute={onRestoreRoute}
-                      index={index}
+                      index={
+                        clusterDetail && clusterHouses.length > 1
+                          ? (boothNumberForHouse(sheetHouse) ?? clusterIndex ?? undefined)
+                          : index
+                      }
                       hideHoursBanner={hideHoursBanner}
+                      clusterBoothTag={
+                        clusterShell ? clusterBoothLabel(sheetHouse, clusterHouses) : undefined
+                      }
                     />
                   </section>
                 </ClusterHouseSwipeArea>

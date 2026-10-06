@@ -20,7 +20,7 @@ describe("address fields", () => {
     assert.equal(split.neighborhood, "חרוזים");
   });
 
-  it("keeps already-split storage", () => {
+  it("keeps stored neighborhood on normalize", () => {
     const fields = normalizeAddressFields({
       address: "יהודית 15",
       neighborhood: "חרוזים",
@@ -31,13 +31,43 @@ describe("address fields", () => {
     assert.equal(fields.neighborhood, "חרוזים");
   });
 
+  it("does not override stored hood from pin zones", () => {
+    const fields = normalizeAddressFields({
+      address: "הזמיר 8",
+      neighborhood: "נחלת גנים",
+      lat: 32.0945618,
+      lng: 34.816518,
+    });
+    assert.equal(fields.neighborhood, "נחלת גנים");
+  });
+
+  it("keeps stored hood outside zone polygons (איתמר 2)", () => {
+    const fields = normalizeAddressFields({
+      address: "איתמר 2",
+      neighborhood: "חרוזים",
+      lat: 32.09090420608,
+      lng: 34.806805706959,
+    });
+    assert.equal(fields.neighborhood, "חרוזים");
+  });
+
+  it("keeps explicit אחר (null) on normalize", () => {
+    const fields = normalizeAddressFields({
+      address: "הדר 11",
+      neighborhood: null,
+      lat: 32.087930013467,
+      lng: 34.812298032833,
+    });
+    assert.equal(fields.neighborhood, null);
+  });
+
   it("joins street and neighborhood only for display", () => {
     const house = { address: "יהודית 15", neighborhood: "חרוזים" as const };
     assert.equal(formatDisplayAddress(house), "יהודית 15, חרוזים");
     assert.equal(formatMapsAddress(house), "יהודית 15, רמת גן");
   });
 
-  it("formats pin/autocomplete address with neighborhood for the input field", () => {
+  it("formats pin/autocomplete as street only for the input field", () => {
     const hit: AddressHit = {
       id: "test-1",
       label: "יהודית 15, חרוזים",
@@ -49,7 +79,7 @@ describe("address fields", () => {
       city: "רמת גן",
       precise: true,
     };
-    assert.equal(displayAddressFromHit(hit), "יהודית 15, חרוזים");
+    assert.equal(displayAddressFromHit(hit), "יהודית 15");
   });
 
   it("strips neighborhood suffix from legacy street field on normalize", () => {
@@ -81,11 +111,18 @@ describe("address fields", () => {
     for (const query of ["Zabutinsky 105", "ז'בוטינסקי 105", "זבוטינסקי 105"]) {
       const hit = footprintAddressHit(query);
       assert.ok(hit, query);
-      assert.match(hit!.label, /105, הגפן$/u);
+      assert.match(hit!.label, /105, רמת גן$/u);
     }
   });
 
-  it("snaps Jabotinsky 105 to Gefen and dedupes autocomplete hits", () => {
+  it("surfaces curated school names in address search", async () => {
+    const { searchPreparedAddresses } = await import("@/lib/address-fields");
+    const hits = await searchPreparedAddresses("ניצנים");
+    assert.ok(hits.some((h) => h.label.includes("ביה״ס ניצנים")));
+    assert.ok(hits[0]!.lat > 32 && hits[0]!.lng > 34);
+  });
+
+  it("snaps Jabotinsky 105 to footprint and dedupes autocomplete hits", () => {
     const wrongSide: AddressHit = {
       id: "p-1",
       label: "זאב ז'בוטינסקי 105, נחלת גנים",
@@ -109,7 +146,7 @@ describe("address fields", () => {
     };
     const prepared = prepareAddressHits([wrongSide, plain]);
     assert.equal(prepared.length, 1);
-    assert.match(prepared[0]!.label, /105, הגפן$/u);
+    assert.match(prepared[0]!.label, /105, רמת גן$/u);
     const single = prepareAddressHit(wrongSide);
     assert.ok(single);
     assert.equal(single!.lat, 32.08925);

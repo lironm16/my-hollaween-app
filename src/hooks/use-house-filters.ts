@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { NEIGHBORHOODS, type NeighborhoodId } from "@/lib/config";
+import {
+  NEIGHBORHOOD_FILTER_OPTIONS,
+  NEIGHBORHOODS,
+  type NeighborhoodFilterId,
+  type NeighborhoodId,
+} from "@/lib/config";
 import { HOUSE_FILTERS_VERSION, migrateHouseFilters } from "@/lib/filter-migrate";
 import { hasVisitWindow, parseClockMinutes } from "@/lib/hours";
 import { effectiveVisitWindowMode } from "@/lib/visit-window";
@@ -38,7 +43,7 @@ export const DEFAULT_HOUSE_FILTERS: HouseFiltersState = {
   sensitivityFilters: [],
   scareFilters: [...SCARE_LEVELS],
   candyFilters: [...CANDY_TONE_IDS],
-  neighborhoodFilters: [...NEIGHBORHOODS],
+  neighborhoodFilters: [...NEIGHBORHOOD_FILTER_OPTIONS],
   likedOnly: false,
   unvisitedOnly: false,
   visitedOnly: false,
@@ -70,11 +75,11 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
     ...DEFAULT_HOUSE_FILTERS,
     scareFilters: [...SCARE_LEVELS],
     candyFilters: [...CANDY_TONE_IDS],
-    neighborhoodFilters: [...NEIGHBORHOODS],
+    neighborhoodFilters: [...NEIGHBORHOOD_FILTER_OPTIONS],
   };
   if (!raw) return empty;
   const legacy = raw as LegacyFilters;
-  const neighborhoods = pickKnown(raw.neighborhoodFilters, NEIGHBORHOODS);
+  const neighborhoods = pickKnown(raw.neighborhoodFilters, NEIGHBORHOOD_FILTER_OPTIONS);
   const scares = pickKnown(raw.scareFilters, SCARE_LEVELS);
   const sensitivities = pickKnown(raw.sensitivityFilters, SENSITIVITY_OPTIONS);
   const candies = pickKnown(raw.candyFilters, CANDY_TONE_IDS);
@@ -122,10 +127,9 @@ function sanitize(raw: HouseFiltersState | null): HouseFiltersState {
     skippedOnly: Boolean(raw.skippedOnly),
     uncollectedGemOnly: Boolean(raw.uncollectedGemOnly),
     includeUndecorated,
-    neighborhoodFilters:
-      Array.isArray(raw.neighborhoodFilters) && neighborhoods.length > 0
-        ? neighborhoods
-        : [...NEIGHBORHOODS],
+    neighborhoodFilters: Array.isArray(raw.neighborhoodFilters)
+      ? neighborhoods
+      : [...NEIGHBORHOOD_FILTER_OPTIONS],
     scareFilters: Array.isArray(raw.scareFilters) && raw.scareFilters.length === 0
       ? []
       : scares.length > 0
@@ -185,7 +189,7 @@ export function emptyHouseFilters(): HouseFiltersState {
     accessibleOnly: false,
     scareFilters: [...SCARE_LEVELS],
     candyFilters: [...CANDY_TONE_IDS],
-    neighborhoodFilters: [...NEIGHBORHOODS],
+    neighborhoodFilters: [...NEIGHBORHOOD_FILTER_OPTIONS],
     sensitivityFilters: [],
     includeUndecorated: true,
     locationKindFilter: "all",
@@ -193,7 +197,7 @@ export function emptyHouseFilters(): HouseFiltersState {
 }
 
 export function countActiveFilters(filters: HouseFiltersState): number {
-  const neighborhoodActive = NEIGHBORHOODS.filter(
+  const neighborhoodActive = NEIGHBORHOOD_FILTER_OPTIONS.filter(
     (area) => !filters.neighborhoodFilters.includes(area),
   ).length;
   const candyActive = CANDY_TONE_IDS.filter((tone) => !filters.candyFilters.includes(tone)).length;
@@ -249,7 +253,7 @@ export function useHouseFilters() {
     setFilters(next);
   }, []);
 
-  function toggleNeighborhood(area: NeighborhoodId) {
+  function toggleNeighborhood(area: NeighborhoodFilterId) {
     update((current) => ({
       ...current,
       neighborhoodFilters: toggleItem(current.neighborhoodFilters, area),

@@ -35,6 +35,13 @@ import { pinScareSrc } from "@/lib/pin-faces";
 import { effectiveHouseKind } from "@/lib/house-kind";
 import { pinBackgroundFill } from "@/lib/pin-colors";
 import { clusterBadgeHouses, clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
+import { pinSchoolClusterIconHtml } from "@/lib/map-pin-school-icon";
+import {
+  clusterIsSchoolCampus,
+  clusterPinAriaLabel,
+  mapCoordsForHouse,
+  usesSchoolCampusClusterChrome,
+} from "@/lib/school-campus";
 import { SKIP_ICON_SVG } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
 
@@ -65,6 +72,7 @@ function wrapRoutePin(html: string, routeOrder?: number) {
 }
 
 const PIN_BOX = 62;
+const SCHOOL_CAMPUS_PIN_BOX = 88;
 
 function attr(value: string) {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -142,8 +150,10 @@ function clusterAptDotsHtml(
   now: Date,
   matchedIds?: ReadonlySet<string>,
   skippedIds?: ReadonlySet<string>,
+  /** School campus shows candy/skip even for a single booth. */
+  showWhenSingle = false,
 ) {
-  if (houses.length <= 1) return "";
+  if (houses.length <= 1 && !showWhenSingle) return "";
   const dots = clusterBadgeHouses(houses)
     .map((house) => {
       const filteredClass =
@@ -227,19 +237,27 @@ function clusterIcon(
   const selectedClass = selectedHere ? " is-selected" : "";
   const filterClass = filteredOut ? " is-filtered-out" : "";
   const allVisited = houses.length > 0 && houses.every((house) => visitedIds.includes(house.id));
-  const allSkipped = houses.length > 0 && houses.every((house) => skippedIds?.has(house.id));
 
-  if (!only || houses.length <= 1) {
-    const hoursClass = only ? hoursPinClass(only, now) : "";
+  if (!only) {
+    const wrapped = wrapRoutePin("", routeOrder);
+    return L.divIcon({
+      className: `pumpkin-pin-icon${selectedClass}${filterClass}`,
+      html: wrapped.html,
+      iconSize: [PIN_BOX, PIN_BOX + 4 + wrapped.extraH],
+      iconAnchor: [PIN_BOX / 2, PIN_BOX + wrapped.extraH],
+    });
+  }
+
+  const schoolCampus = clusterIsSchoolCampus(houses);
+  if (houses.length <= 1 && !schoolCampus) {
+    const hoursClass = hoursPinClass(only, now);
     const wrapped = wrapRoutePin(
-      only
-        ? housePinHtml(only, now, {
-            selected: selectedHere,
-            visited: visitedIds.includes(only.id),
-            filteredOut: matchedIds ? !matchedIds.has(only.id) : false,
-            skipped: skippedIds?.has(only.id),
-          })
-        : "",
+      housePinHtml(only, now, {
+        selected: selectedHere,
+        visited: visitedIds.includes(only.id),
+        filteredOut: matchedIds ? !matchedIds.has(only.id) : false,
+        skipped: skippedIds?.has(only.id),
+      }),
       routeOrder,
     );
     return L.divIcon({
@@ -250,15 +268,22 @@ function clusterIcon(
     });
   }
 
+  const clusterIconHtml = schoolCampus ? pinSchoolClusterIconHtml() : pinClusterIconHtml();
+  const campusClass = schoolCampus ? " is-school-campus" : "";
+  const clusterLabel = attr(clusterPinAriaLabel(houses));
+  const pinFill = "#6d28d9";
   const wrapped = wrapRoutePin(
-    `<div class="house-pin is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות">${allSkipped ? pinSkippedMark() : ""}${pinClusterIconHtml()}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>`,
+    `<div class="house-pin is-building${campusClass}${allVisited ? " is-visited" : ""}" style="background:${pinFill}" role="img" aria-label="${clusterLabel}">${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds, schoolCampus)}</div>`,
     routeOrder,
   );
+  const pinBox = schoolCampus ? SCHOOL_CAMPUS_PIN_BOX : PIN_BOX;
+  const pinExtraH = schoolCampus ? 22 : 20;
+  const pinAnchorTail = schoolCampus ? 18 : 16;
   return L.divIcon({
-    className: `pumpkin-pin-icon pumpkin-pin-building${selectedClass}${filterClass}`,
+    className: `pumpkin-pin-icon pumpkin-pin-building${schoolCampus ? " pumpkin-pin-school" : ""}${selectedClass}${filterClass}`,
     html: wrapped.html,
-    iconSize: [PIN_BOX, PIN_BOX + 20 + wrapped.extraH],
-    iconAnchor: [PIN_BOX / 2, PIN_BOX + 16 + wrapped.extraH],
+    iconSize: [pinBox, pinBox + pinExtraH + wrapped.extraH],
+    iconAnchor: [pinBox / 2, pinBox + pinAnchorTail + wrapped.extraH],
   });
 }
 
@@ -342,26 +367,55 @@ function KeepSelectedVisible({
 
   useEffect(() => {
     if (!enabled) return;
-    const pan = () => {
+
+    const adjustForSheet = () => {
       const raw = getComputedStyle(document.documentElement).getPropertyValue("--map-sheet-h");
       const sheetH = Number.parseFloat(raw);
-      if (!Number.isFinite(sheetH) || sheetH < 80) return;
       const size = map.getSize();
+      if (size.x < 40 || size.y < 40) return;
       const topChrome = 72;
+      const point = map.latLngToContainerPoint(L.latLng(lat, lng));
+      point.x += offsetX;
+      point.y += offsetY;
+
+      if (!Number.isFinite(sheetH) || sheetH < 80) {
+        const dx = point.x - size.x / 2;
+        const dy = point.y - size.y * 0.42;
+        if (Math.abs(dx) >= 8 || Math.abs(dy) >= 8) {
+          map.panBy([dx, dy], { animate: true, duration: 0.28 });
+        }
+        return;
+      }
+
       const visibleBottom = size.y - sheetH;
       const usable = visibleBottom - topChrome;
       if (usable < 40) return;
       const visibleMidY = topChrome + usable * 0.62;
-      const point = map.latLngToContainerPoint(L.latLng(lat, lng));
-      point.x += offsetX;
-      point.y += offsetY;
       const dx = point.x - size.x / 2;
       const dy = point.y - visibleMidY;
       if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
       map.panBy([dx, dy], { animate: true, duration: 0.28 });
     };
-    const onSheet = () => pan();
-    const timer = window.setTimeout(pan, 70);
+
+    const ensureOnMap = () => {
+      map.invalidateSize({ animate: false });
+      const size = map.getSize();
+      if (size.x < 40 || size.y < 40) return;
+      const point = map.latLngToContainerPoint(L.latLng(lat, lng));
+      const margin = 56;
+      const offScreen =
+        point.x < margin ||
+        point.x > size.x - margin ||
+        point.y < margin ||
+        point.y > size.y - margin;
+      if (offScreen) {
+        map.panTo([lat, lng], { animate: false });
+      }
+      adjustForSheet();
+    };
+
+    const onSheet = () => ensureOnMap();
+    const timer = window.setTimeout(ensureOnMap, 70);
     window.addEventListener("hw-map-sheet", onSheet);
     return () => {
       window.clearTimeout(timer);
@@ -538,7 +592,8 @@ const ClusterMarker = memo(function ClusterMarker({
     (event: L.LeafletMouseEvent) => {
       L.DomEvent.stopPropagation(event.originalEvent);
       const isMulti = cluster.houses.length > 1;
-      if (isMulti) {
+      const clusterShell = isMulti || usesSchoolCampusClusterChrome(cluster.houses);
+      if (clusterShell) {
         if (selectedHere && clusterOverview) {
           onClose?.();
           return;
@@ -600,6 +655,8 @@ type Props = {
   pickMode?: boolean;
   pick?: { lat: number; lng: number } | null;
   onPick?: (lat: number, lng: number) => void;
+  /** Add-house: allow drag / map tap to move pin (off for fixed campuses). */
+  pickDraggable?: boolean;
   className?: string;
   /** @deprecated Use followSelection — kept so call sites can still pass active. */
   active?: boolean;
@@ -641,6 +698,8 @@ type Props = {
   onGemAnchorSelect?: (house: PublicHouse) => void;
   /** Show gem diamond markers (controlled by top-bar toggle). */
   showGemAnchors?: boolean;
+  /** Map legend «יהלומים» section — when gem hunt UI is on (independent of anchor toggle). */
+  showGemLegend?: boolean;
   gemAnchorHouses?: PublicHouse[];
   gemAnchorVisual?: GemMapAnchorVisual;
   isGemCollected?: (houseId: string) => boolean;
@@ -655,6 +714,7 @@ export function HouseMap({
   pickMode,
   pick,
   onPick,
+  pickDraggable = true,
   className,
   active = true,
   followSelection = active,
@@ -682,6 +742,7 @@ export function HouseMap({
   embedCenterOnSelect = true,
   onGemAnchorSelect,
   showGemAnchors = false,
+  showGemLegend = false,
   gemAnchorHouses = [],
   gemAnchorVisual = "admin",
   isGemCollected,
@@ -703,7 +764,9 @@ export function HouseMap({
     const cluster = clusters.find((item) => item.houses.some((house) => house.id === selectedId));
     if (!cluster) {
       const house = houses.find((item) => item.id === selectedId);
-      return house ? { lat: house.lat, lng: house.lng, offsetX: 0, offsetY: 0 } : null;
+      if (!house) return null;
+      const coords = mapCoordsForHouse(house);
+      return { lat: coords.lat, lng: coords.lng, offsetX: 0, offsetY: 0 };
     }
     return { lat: cluster.lat, lng: cluster.lng, offsetX: 0, offsetY: 0 };
   }, [clusters, houses, pickMode, selectedId]);
@@ -796,14 +859,15 @@ export function HouseMap({
           <MapDismiss enabled={Boolean(selectedId)} onDismiss={onClose} />
         ) : null}
         {pickMode && pick ? <FollowPick lat={pick.lat} lng={pick.lng} /> : null}
-        {pickMode && onPick ? <ClickCatcher onPick={onPick} /> : null}
+        {pickMode && onPick && pickDraggable ? <ClickCatcher onPick={onPick} /> : null}
         {pickMode && pick ? (
           <Marker
             position={[pick.lat, pick.lng]}
             icon={pickIcon}
-            draggable={Boolean(onPick)}
+            draggable={Boolean(onPick && pickDraggable)}
             eventHandlers={{
               dragend: (event) => {
+                if (!pickDraggable) return;
                 const latlng = event.target.getLatLng();
                 onPick?.(latlng.lat, latlng.lng);
               },
@@ -978,7 +1042,9 @@ export function HouseMap({
               <LocateFixed className={cn("size-5", locating && "animate-pulse")} />
             </button>
           ) : null}
-          {!pickMode && !embed ? <MapLegend showGemAnchors={showGemAnchors} /> : null}
+          {!pickMode && !embed ? (
+            <MapLegend key={showGemLegend ? "with-gems" : "base"} showGemLegend={showGemLegend} />
+          ) : null}
           {!pickMode && !embed ? statsFab : null}
         </div>
     </div>

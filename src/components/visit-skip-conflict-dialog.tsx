@@ -4,18 +4,24 @@ import { useEffect, useState } from "react";
 import { HouseEditModal } from "@/components/house-edit-modal";
 import { Button } from "@/components/ui/button";
 import { houseHeadline } from "@/lib/labels";
+import { clusterBulkActionSubtitle } from "@/lib/school-campus";
 import type { PublicHouse } from "@/lib/types";
 
 export function VisitSkipConflictDialog({
   open,
   kind,
   house,
+  cluster = false,
+  clusterHouses,
   onConfirm,
   onCancel,
 }: {
   open: boolean;
-  kind: "visit" | "skip" | null;
+  kind: "visit" | "skip" | "visit-all" | "skip-all" | null;
   house: PublicHouse | null;
+  /** Multi-house / school cluster bulk action — generic copy. */
+  cluster?: boolean;
+  clusterHouses?: PublicHouse[];
   onConfirm: (dismissFuture: boolean) => void;
   onCancel: () => void;
 }) {
@@ -23,18 +29,33 @@ export function VisitSkipConflictDialog({
 
   useEffect(() => {
     if (!open) setDismissFuture(false);
-  }, [open, house?.id, kind]);
+  }, [open, house?.id, kind, cluster]);
 
   if (!house || !kind) return null;
 
-  const title = kind === "visit" ? "לסמן ביקור?" : "לדלג על הבית?";
-  const body =
-    kind === "visit"
+  const markingVisit = kind === "visit" || kind === "visit-all";
+  const title = cluster
+    ? markingVisit
+      ? "לסמן ביקרתם בהכל?"
+      : "לדלג על הכל?"
+    : markingVisit
+      ? "לסמן ביקור?"
+      : "לדלג על הבית?";
+  const body = cluster
+    ? markingVisit
+      ? "לפחות אחד מהבתים בכתובת הזו מסומן כ«דילגתי». סימון «ביקרתי הכל» יסיר את סימוני הדילוג על כל הבתים."
+      : "לפחות אחד מהבתים בכתובת הזו מסומן כ«ביקרתי». «דילוג על הכל» יסיר את סימוני הביקור על כל הבתים."
+    : markingVisit
       ? `סימון «ביקרתם» יסיר את סימון «דילגתם» על ${houseHeadline(house)}.`
       : `«דילוג על בית» יסיר את סימון «ביקרתם» על ${houseHeadline(house)}.`;
 
+  const subtitle =
+    cluster && clusterHouses && clusterHouses.length > 0
+      ? clusterBulkActionSubtitle(clusterHouses)
+      : houseHeadline(house);
+
   return (
-    <HouseEditModal open={open} onClose={onCancel} title={title} subtitle={houseHeadline(house)}>
+    <HouseEditModal open={open} onClose={onCancel} title={title} subtitle={subtitle}>
       <div className="space-y-4">
         <p className="text-base leading-relaxed text-violet-100 [overflow-wrap:anywhere]">{body}</p>
         <label className="flex cursor-pointer items-start gap-2 text-base text-violet-200">

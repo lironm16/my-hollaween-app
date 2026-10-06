@@ -42,10 +42,19 @@ function stub(overrides: Partial<PublicHouse> = {}): PublicHouse {
 
 describe("address reveal", () => {
   it("reveals at noon on event night", () => {
-    const before = new Date(addressRevealTime().getTime() - 60_000);
-    const at = addressRevealTime();
-    assert.equal(isAddressRevealed(before), false);
-    assert.equal(isAddressRevealed(at), true);
+    const schedule = { hour: 12, minute: 0 };
+    const before = new Date(addressRevealTime(schedule).getTime() - 60_000);
+    const at = addressRevealTime(schedule);
+    assert.equal(isAddressRevealed(before, schedule), false);
+    assert.equal(isAddressRevealed(at, schedule), true);
+  });
+
+  it("honors admin schedule override", () => {
+    const schedule = { hour: 18, minute: 0 };
+    const before = new Date(2026, 9, 31, 17, 59);
+    const after = new Date(2026, 9, 31, 18, 0);
+    assert.equal(isAddressRevealed(before, schedule), false);
+    assert.equal(isAddressRevealed(after, schedule), true);
   });
 
   it("redacts catalog houses before reveal", () => {
@@ -77,6 +86,32 @@ describe("address reveal", () => {
       isAdmin: false,
     });
     assert.equal(canViewHouseLocationDetails("בית-9999", ctx), false);
+  });
+
+  it("admin sees street and stored hood on one line before reveal", () => {
+    const adminCtx = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 10, 0),
+      isAdmin: true,
+    });
+    const label = formatDisplayAddressWithPolicy(
+      stub({ address: "רוקח 32", neighborhood: "שיכון ותיקים" }),
+      "בית-9999",
+      adminCtx,
+    );
+    assert.equal(label, "רוקח 32, שיכון ותיקים");
+  });
+
+  it("after reveal, public sees street and stored hood comma-separated", () => {
+    const ctx = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 20, 0),
+      isAdmin: false,
+    });
+    const label = formatDisplayAddressWithPolicy(
+      stub({ address: "סטרומה 4", neighborhood: "נחלת גנים" }),
+      "בית-8975",
+      ctx,
+    );
+    assert.equal(label, "סטרומה 4, נחלת גנים");
   });
 
   it("shows hint instead of street before reveal", () => {

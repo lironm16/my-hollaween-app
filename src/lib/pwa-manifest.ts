@@ -21,11 +21,11 @@ const IOS_ICONS: MetadataRoute.Manifest["icons"] = [
   { src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png", purpose: "any" },
 ];
 
-/** Standalone + maskable icons so Chrome Android offers full PWA install (not just a bookmark). */
+/** Standalone on Android so Chrome can offer install from the header button (Play Protect may warn on some devices). */
 export function pwaManifestForUserAgent(userAgent: string): MetadataRoute.Manifest {
   const android = isAndroidUserAgent(userAgent);
   const ios = isIosUserAgent(userAgent);
-  return {
+  const manifest: MetadataRoute.Manifest = {
     name: "HallowHood",
     short_name: "HallowHood",
     description: "מפת הבתים המפחידים של השכונה, גם בלי רשת.",
@@ -41,7 +41,10 @@ export function pwaManifestForUserAgent(userAgent: string): MetadataRoute.Manife
     prefer_related_applications: false,
     categories: ["navigation", "entertainment"],
     icons: android ? ANDROID_ICONS : ios ? IOS_ICONS : ANDROID_ICONS,
-    handle_links: "preferred",
-    launch_handler: { client_mode: ["navigate-existing", "auto"] },
-  } as MetadataRoute.Manifest;
+  };
+  (manifest as MetadataRoute.Manifest & { handle_links?: string }).handle_links = "preferred";
+  (manifest as MetadataRoute.Manifest & { launch_handler?: { client_mode: string[] } }).launch_handler = {
+    client_mode: ["navigate-existing", "auto"],
+  };
+  return manifest;
 }

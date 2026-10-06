@@ -1,8 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { isDeviceCachePinHouse } from "@/lib/device-catalog-cache";
+import { houseNeedsLocationHydration, isDeviceCachePinHouse } from "@/lib/device-catalog-cache";
+import { houseWithLocationPolicy, visitorAddressRevealContext } from "@/lib/address-reveal";
+import { appNow } from "@/lib/app-clock";
 import { fetchPublicHouse, notifyHouseDetailLoaded } from "@/lib/fetch-public-house";
+import { readGemPreviewAsUser } from "@/lib/gem-preview-as-user";
+import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
+import { loadOwnedHouses } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 
 export function useServerHouseDetail(house: PublicHouse | null) {
@@ -17,7 +22,7 @@ export function useServerHouseDetail(house: PublicHouse | null) {
       setLoading(false);
       return;
     }
-    if (!isDeviceCachePinHouse(house)) {
+    if (!houseNeedsLocationHydration(house)) {
       setLoading(false);
       return;
     }
@@ -29,23 +34,35 @@ export function useServerHouseDetail(house: PublicHouse | null) {
       if (cancelled) return;
       setLoading(false);
       if (!result.ok) {
-        setUnavailable(result.status === 404);
+        // 404 = gone from public catalog — keep the local row; «removed» comes from catalog sync.
+        setUnavailable(result.status !== 404);
         return;
       }
-      setResolved(result.house);
-      notifyHouseDetailLoaded(result.house);
+      let detail = result.house;
+      if (readGemPreviewAsUser()) {
+        const now = appNow();
+        detail = houseWithLocationPolicy(
+          detail,
+          visitorAddressRevealContext(
+            now,
+            loadOwnedHouses().map((row) => row.id),
+          ),
+        );
+      }
+      setResolved(detail);
+      notifyHouseDetailLoaded(detail);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [house?.id, house?.updatedAt, house?.deviceCachePin]);
+  }, [house?.id, house?.updatedAt, house?.deviceCachePin, house?.address]);
 
-  const active = resolved ?? house;
+  const active = useAdminHouseFields(resolved ?? house) ?? resolved ?? house;
   return {
     house: active,
     loading,
     unavailable,
-    detailReady: Boolean(active && !isDeviceCachePinHouse(active)),
+    detailReady: Boolean(active && !houseNeedsLocationHydration(active)),
   };
 }

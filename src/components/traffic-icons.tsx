@@ -1,5 +1,6 @@
-import { Check, Gem, Heart, Save } from "lucide-react";
-import { GEM_DIAMOND_FILL } from "@/lib/gem-diamond-visual";
+import { Check, Heart, Save } from "lucide-react";
+import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
+import { SkipIcon } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
 
 /** Pink heart in ring — matches house-card traffic pills (icon only). */
@@ -24,8 +25,33 @@ export function SavedTrafficIcon({
   );
 }
 
-/** Map-yellow gem disc — collected diamond for action menu. */
+/** Imp in disc — collected / action menu (matches heart & visited scale). */
 export function GemTrafficIcon({
+  className,
+  markClassName,
+}: {
+  className?: string;
+  markClassName?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/25 ring-1 ring-amber-400/45",
+        className,
+      )}
+      title="שדון"
+      aria-label="שדון"
+    >
+      <ImpMarkerGlyph
+        variant="solid"
+        className={cn("size-[1.55rem] max-h-full max-w-full text-current", markClassName)}
+      />
+    </span>
+  );
+}
+
+/** Outline-style imp disc — ⋮ menu when שדון not yet found. */
+export function GemMenuDiscIcon({
   className,
   markClassName,
 }: {
@@ -38,13 +64,12 @@ export function GemTrafficIcon({
         "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/20 ring-1 ring-amber-400/45",
         className,
       )}
-      title="יהלום"
-      aria-label="יהלום"
+      title="שדון"
+      aria-hidden
     >
-      <Gem
-        className={cn("size-5 fill-current", markClassName)}
-        style={{ color: GEM_DIAMOND_FILL }}
-        strokeWidth={2.1}
+      <ImpMarkerGlyph
+        variant="eyes"
+        className={cn("size-[1.55rem] max-h-full max-w-full text-current", markClassName)}
       />
     </span>
   );
@@ -68,6 +93,28 @@ export function SaveExportTrafficIcon({
       aria-hidden
     >
       <Save className={cn("size-[1.15rem] text-violet-100", markClassName)} strokeWidth={2.25} />
+    </span>
+  );
+}
+
+/** Skip disc — ⋮ menu when דילגתי (same as card banner SkipSign). */
+export function SkipTrafficIcon({
+  className,
+  markClassName,
+}: {
+  className?: string;
+  markClassName?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#64748b] text-white shadow-[0_1px_2px_rgba(0,0,0,0.45)]",
+        className,
+      )}
+      title="דילגתי"
+      aria-label="דילגתי"
+    >
+      <SkipIcon className={cn("size-5", markClassName)} />
     </span>
   );
 }

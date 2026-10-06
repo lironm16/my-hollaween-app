@@ -1,6 +1,7 @@
 "use client";
 
 import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
+import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
 import { cn } from "@/lib/utils";
 
 function Toggle({ on, onClick, label }: { on: boolean; onClick: () => void; label: string }) {
@@ -43,7 +44,7 @@ export function AdminGemUserPreviewToggle({
         <p className="text-base font-medium text-orange-100">תצוגת משתמש</p>
         {!compact ? (
           <p className="text-base text-violet-300">
-            כמו משתמש בלילה — יהלומים וספר החברים, בלי כלי בדיקה במפה.
+            כמו משתמש בלילה — משחק השדונים ו{GEM_ALBUM_TITLE_HE}, בלי כלי בדיקה במפה.
           </p>
         ) : (
           <p className="text-sm text-violet-400">{previewAsUser ? "פועל" : "כבוי"}</p>

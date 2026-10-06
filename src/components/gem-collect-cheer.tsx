@@ -2,6 +2,7 @@
 
 import { createPortal } from "react-dom";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
+import { GEM_FOUND_CHEER_HE } from "@/lib/gem-hunt-copy";
 import type { PublicHouse } from "@/lib/types";
 
 export function GemCollectCheer({
@@ -24,7 +25,7 @@ export function GemCollectCheer({
           posterFill
           className="gem-collect-cheer__gem"
         />
-        <span className="gem-collect-cheer__text">יהלום נאסף!</span>
+        <span className="gem-collect-cheer__text">{GEM_FOUND_CHEER_HE}</span>
       </div>
     </div>
   );

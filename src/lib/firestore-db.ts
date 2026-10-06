@@ -13,6 +13,10 @@ import { countPublishedHouses } from "@/lib/catalog-cache-build";
 import { isHouseDeleted, isPubliclyListed } from "@/lib/house-state";
 import { stripStubHouses } from "@/lib/rehearsal-stubs";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
+import {
+  houseNeedsExistingMerge,
+  preserveStoredHouseFields,
+} from "@/lib/firestore-address-preserve";
 import type { DbFile, House, PublicHouse, PushSubscriptionRecord, VapidKeys } from "@/lib/types";
 
 export { firestoreConfigured };
@@ -47,6 +51,9 @@ export const CATALOG_META_MEM_TTL_MS = 600_000;
 
 let pushSettingsMetaMem: { updatedAt: string } | null = null;
 let pushSettingsMetaMemAt = 0;
+
+let eventSettingsMetaMem: { updatedAt: string } | null = null;
+let eventSettingsMetaMemAt = 0;
 
 let pushSubsCountMem: { count: number; at: number } | null = null;
 
@@ -97,6 +104,24 @@ export async function readPushSettingsMeta(): Promise<{ updatedAt: string } | nu
   }
 }
 
+function isPublishedCatalogHouse(house: House | null | undefined): boolean {
+  return Boolean(house && !isStubHouse(house) && !isHouseDeleted(house) && isPubliclyListed(house));
+}
+
+async function nextCatalogHouseCountAfterListingChange(
+  existing: House | null,
+  next: House,
+): Promise<number | undefined> {
+  const meta = await readCatalogMeta();
+  const base = meta?.houseCount;
+  if (typeof base !== "number" || base < 0) return undefined;
+  const was = isPublishedCatalogHouse(existing);
+  const now = isPublishedCatalogHouse(next);
+  if (!was && now) return base + 1;
+  if (was && !now) return Math.max(0, base - 1);
+  return base;
+}
+
 export async function bumpCatalogMeta(updatedAt: string, houseCount?: number) {
   if (!firestoreConfigured() || !updatedAt) return;
   catalogMetaMem = {
@@ -106,6 +131,55 @@ export async function bumpCatalogMeta(updatedAt: string, houseCount?: number) {
   catalogMetaMemAt = Date.now();
   await resolveAdminFirestore();
   await metaDoc("catalog").set(catalogMetaMem, { merge: true });
+}
+
+/** Event schedule revision for delta polls (address reveal / add-house cutoff). */
+export async function readEventSettingsMeta(): Promise<{ updatedAt: string } | null> {
+  if (eventSettingsMetaMem && Date.now() - eventSettingsMetaMemAt < CATALOG_META_MEM_TTL_MS) {
+    return eventSettingsMetaMem;
+  }
+  if (!firestoreConfigured()) return null;
+  try {
+    await resolveAdminFirestore();
+    const snap = await metaDoc("eventSettings").get();
+    if (!snap.exists) return null;
+    const updatedAt = String((snap.data() as { updatedAt?: string })?.updatedAt ?? "");
+    if (!updatedAt) return null;
+    eventSettingsMetaMem = { updatedAt };
+    eventSettingsMetaMemAt = Date.now();
+    return eventSettingsMetaMem;
+  } catch (error) {
+    console.error("[firestore] event settings meta read failed", error);
+    return null;
+  }
+}
+
+export async function readFirestoreEventSettings(): Promise<DbFile["eventSettings"] | null> {
+  if (!firestoreConfigured()) return null;
+  try {
+    await resolveAdminFirestore();
+    const snap = await metaDoc("eventSettings").get();
+    if (!snap.exists) return null;
+    return snap.data() as DbFile["eventSettings"];
+  } catch (error) {
+    console.error("[firestore] event settings read failed", error);
+    return null;
+  }
+}
+
+/** Full push template doc (one read when templates changed since client `since`). */
+export async function readFirestorePushSettings(): Promise<DbFile["pushSettings"] | null> {
+  if (!firestoreConfigured()) return null;
+  try {
+    await resolveAdminFirestore();
+    const snap = await metaDoc("pushSettings").get();
+    if (!snap.exists) return null;
+    const row = snap.data() as DbFile["pushSettings"];
+    return row?.templates ? row : null;
+  } catch (error) {
+    console.error("[firestore] push settings read failed", error);
+    return null;
+  }
 }
 
 function rememberPushSettingsMeta(updatedAt: string) {
@@ -156,26 +230,42 @@ export async function writeFirestoreHouse(house: House) {
   if (isStubHouse(house)) return;
   await resolveAdminFirestore();
   const id = canonicalHouseId(house.id);
-  await housesCollection()
-    .doc(id)
-    .set({ ...house, id, storeId: id, deletedAt: house.deletedAt ?? null }, { merge: true });
+  const ref = housesCollection().doc(id);
+  const existingSnap = await ref.get();
+  const existing = existingSnap.exists ? rowToHouse(existingSnap.id, existingSnap.data() as House) : null;
+  const toWrite = preserveStoredHouseFields(house, existing);
+  await ref.set(
+    { ...toWrite, id, storeId: id, deletedAt: toWrite.deletedAt ?? null },
+    { merge: true },
+  );
   if (!isPubliclyListed(house)) return;
   try {
     await removedHousesCollection().doc(id).delete();
   } catch {
     /* tombstone may already be gone */
   }
-  await bumpCatalogMeta(house.updatedAt);
+  const houseCount = await nextCatalogHouseCountAfterListingChange(existing, toWrite);
+  await bumpCatalogMeta(house.updatedAt, houseCount);
 }
 
 export async function deleteFirestoreHouse(id: string, options?: { skipCatalogMeta?: boolean }) {
   if (!firestoreConfigured()) return;
   await resolveAdminFirestore();
   const docId = canonicalHouseId(id);
+  const existingSnap = await housesCollection().doc(docId).get();
+  const existing = existingSnap.exists
+    ? rowToHouse(existingSnap.id, existingSnap.data() as House)
+    : null;
   const now = new Date().toISOString();
   await housesCollection().doc(docId).set({ deletedAt: now, updatedAt: now }, { merge: true });
   await removedHousesCollection().doc(docId).set({ id: docId, deletedAt: now });
-  if (!options?.skipCatalogMeta) await bumpCatalogMeta(now);
+  if (!options?.skipCatalogMeta) {
+    let houseCount = (await readCatalogMeta())?.houseCount;
+    if (isPublishedCatalogHouse(existing) && typeof houseCount === "number") {
+      houseCount = Math.max(0, houseCount - 1);
+    }
+    await bumpCatalogMeta(now, houseCount);
+  }
 }
 
 export async function restoreFirestoreHouse(id: string): Promise<boolean> {
@@ -193,7 +283,12 @@ export async function restoreFirestoreHouse(id: string): Promise<boolean> {
   } catch {
     /* tombstone may already be gone */
   }
-  await bumpCatalogMeta(now);
+  const restored = rowToHouse(snap.id, { ...row, deletedAt: null, updatedAt: now } as House);
+  let houseCount = (await readCatalogMeta())?.houseCount;
+  if (isPublishedCatalogHouse(restored) && typeof houseCount === "number") {
+    houseCount = houseCount + 1;
+  }
+  await bumpCatalogMeta(now, houseCount);
   return true;
 }
 
@@ -416,6 +511,13 @@ function pushSettingsChanged(
   return JSON.stringify(prev ?? null) !== JSON.stringify(next ?? null);
 }
 
+function eventSettingsChanged(
+  prev: DbFile["eventSettings"] | undefined,
+  next: DbFile["eventSettings"] | undefined,
+) {
+  return JSON.stringify(prev ?? null) !== JSON.stringify(next ?? null);
+}
+
 function vapidChanged(prev: VapidKeys | undefined, next: VapidKeys | undefined) {
   return JSON.stringify(prev ?? null) !== JSON.stringify(next ?? null);
 }
@@ -441,12 +543,24 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
   const removals = prevHouses ? removedHouseIds(prevHouses, houses) : [];
 
   for (let i = 0; i < dirtyHouses.length; i += 400) {
+    const slice = dirtyHouses.slice(i, i + 400);
+    const existingById = new Map<string, House>();
+    await Promise.all(
+      slice.map(async (house) => {
+        const id = canonicalHouseId(house.id);
+        if (!houseNeedsExistingMerge(house)) return;
+        const snap = await housesCollection().doc(id).get();
+        if (!snap.exists) return;
+        existingById.set(id, rowToHouse(snap.id, snap.data() as House));
+      }),
+    );
     const batch = firestore.batch();
-    for (const house of dirtyHouses.slice(i, i + 400)) {
+    for (const house of slice) {
       const id = canonicalHouseId(house.id);
+      const toWrite = preserveStoredHouseFields(house, existingById.get(id));
       batch.set(
         housesCollection().doc(id),
-        { ...house, id, storeId: id },
+        { ...toWrite, id, storeId: id },
         { merge: true },
       );
     }
@@ -466,7 +580,17 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
     await metaDoc("vapid").set(db.vapid, { merge: true });
   }
 
+  const eventChanged = eventSettingsChanged(prev?.eventSettings, db.eventSettings);
+  if (eventChanged && db.eventSettings) {
+    await metaDoc("eventSettings").set(db.eventSettings, { merge: true });
+    const eventUpdatedAt = db.eventSettings.updatedAt ?? db.updatedAt;
+    eventSettingsMetaMem = { updatedAt: eventUpdatedAt };
+    eventSettingsMetaMemAt = Date.now();
+  }
+
   if (housesChanged || removals.length > 0) {
     await bumpCatalogMeta(db.updatedAt, countPublishedHouses(houses));
+  } else if (eventChanged) {
+    await bumpCatalogMeta(db.eventSettings?.updatedAt ?? db.updatedAt);
   }
 }

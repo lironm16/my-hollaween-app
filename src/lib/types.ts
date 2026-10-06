@@ -74,6 +74,8 @@ export type House = {
   /** One of the map neighborhoods; joined for display only. */
   neighborhood?: NeighborhoodId | null;
   arrival: string;
+  /** Stable serial at a shared address (school booth / apartment). Never renumbered when others are removed. */
+  boothNumber?: number | null;
   description: string;
   lat: number;
   lng: number;
@@ -100,7 +102,7 @@ export type House = {
   editCode: string;
   createdAt: string;
   updatedAt: string;
-  /** Person name captured when the house was first added. */
+  /** Person name captured when the house was first added — admin-only, never in public catalog. */
   addedBy?: string | null;
   /** Internal — for event manager contact only; never in public catalog. */
   ownerPhone?: string | null;
@@ -153,18 +155,39 @@ export type NightPatch = {
   ownerPhone?: string | null;
 };
 
-export type PublicHouse = Omit<House, "editCode" | "storeId" | "ownerPhone"> & {
+export type PublicHouse = Omit<House, "editCode" | "storeId" | "ownerPhone" | "addedBy"> & {
   /** True when hydrated from on-device cache — detail text/address must be fetched live. */
   deviceCachePin?: boolean;
+  /** Rehearsal stub row in device cache after description/photo were stripped. */
+  deviceCacheStub?: boolean;
 };
 
 /** Admin / owner edit surfaces may attach internal contact fields. */
-export type EditorHouse = PublicHouse & { ownerPhone?: string | null };
+export type EditorHouse = PublicHouse & {
+  ownerPhone?: string | null;
+  /** Submitter name — only hydrated for admin API / merge, never on public catalog. */
+  addedBy?: string | null;
+};
 
 export type CatalogPushTemplate = {
   enabled: boolean;
   title: string;
   body: string;
+};
+
+/** Local time (hour/minute) on event night when addresses unlock for visitors. */
+export type AddressRevealSchedule = {
+  hour: number;
+  minute: number;
+};
+
+/** Local date/time after which visitors can no longer add houses. */
+export type AddHouseCutoffSchedule = {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
 };
 
 export type Catalog = {
@@ -175,6 +198,11 @@ export type Catalog = {
   houseCount?: number;
   /** Merged owner-alert templates so quick-update preview matches the server. */
   pushTemplates?: Partial<Record<string, CatalogPushTemplate>>;
+  /** Effective reveal schedule for clients (defaults merged with admin override). */
+  eventSettings?: {
+    addressReveal: AddressRevealSchedule;
+    addHouseCutoff: AddHouseCutoffSchedule;
+  };
 };
 
 /** Client-only record that a full snapshot matched server houseCount. */
@@ -202,6 +230,8 @@ export type AddressHit = {
   suburb?: string;
   city: string;
   precise: boolean;
+  /** Autocomplete secondary line (e.g. campus street). */
+  subtitle?: string;
 };
 
 export type PushSubscriptionRecord = {
@@ -223,6 +253,11 @@ export type DbFile = {
   updatedAt: string;
   pushSubscriptions?: PushSubscriptionRecord[];
   vapid?: VapidKeys;
+  eventSettings?: {
+    updatedAt?: string;
+    addressReveal?: AddressRevealSchedule;
+    addHouseCutoff?: AddHouseCutoffSchedule;
+  };
   pushSettings?: {
     updatedAt?: string;
     generation?: number;

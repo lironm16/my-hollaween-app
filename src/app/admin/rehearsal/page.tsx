@@ -27,7 +27,7 @@ export default function AdminRehearsalPage() {
       <AppHeader />
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-1 py-1 sm:px-2">
         <div className="mx-auto w-full max-w-lg space-y-1.5 pb-2">
-          <h1 className="px-0.5 font-display text-2xl text-orange-300">בדיקות</h1>
+          <h1 className="px-0.5 font-display text-2xl text-orange-300">הגדרות מנהל</h1>
           <AdminDryRunPanel />
         </div>
       </main>

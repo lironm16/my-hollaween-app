@@ -1,7 +1,7 @@
 importScripts("/sw-map-tiles.js");
 
-const APP_VERSION = "5.3.41";
-const CACHE = "hw-shell-5.3.41";
+const APP_VERSION = "5.4.66";
+const CACHE = "hw-shell-5.4.66";
 const TILE_CACHE = MapTileCache.TILE_CACHE;
 const PRECACHE = [
   "/offline.html",
@@ -18,6 +18,8 @@ const PRECACHE = [
   "/apple-touch-icon-167.png",
   "/apple-touch-icon-152.png",
   "/icons/brand-mark.png",
+  "/icons/imp-marker.png",
+  "/icons/imp-marker-eyes.png",
   "/icons/pin-candy.png",
   "/icons/pin-scare-mild.png",
   "/images/banner.jpg",

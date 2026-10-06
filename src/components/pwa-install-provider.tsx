@@ -73,7 +73,11 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!shouldCapturePwaInstallPrompt(isIosDevice(), isStandaloneDisplay(), isPwaInstalled)) return;
+    if (
+      !shouldCapturePwaInstallPrompt(isIosDevice(), isStandaloneDisplay(), isPwaInstalled)
+    ) {
+      return;
+    }
 
     const onBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();

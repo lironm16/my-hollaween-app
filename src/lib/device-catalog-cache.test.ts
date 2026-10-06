@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  houseNeedsLocationHydration,
   houseServerDetailReady,
   isDeviceCachePinHouse,
   stripHouseForDeviceCache,
@@ -48,6 +49,18 @@ describe("device catalog cache", () => {
     assert.equal(isDeviceCachePinHouse(stripped), true);
   });
 
+  it("marks rehearsal stubs so real-only filters work before network refresh", () => {
+    const stripped = stripHouseForDeviceCache(
+      house({
+        id: "בית-1847",
+        description: "סטאב לחזרה — דלעות על המדרגה.",
+        photoUrl: "/images/stubs/pumpkin-porch.jpg",
+      }),
+    );
+    assert.equal(stripped.deviceCacheStub, true);
+    assert.equal(stripped.photoUrl, "");
+  });
+
   it("clears pin marker when merging server detail", () => {
     const full = withServerHouseDetail({ ...house(), deviceCachePin: true });
     assert.equal(isDeviceCachePinHouse(full), false);
@@ -57,5 +70,10 @@ describe("device catalog cache", () => {
   it("blocks navigation readiness until server detail arrives", () => {
     assert.equal(houseServerDetailReady({ ...house(), deviceCachePin: true }), false);
     assert.equal(houseServerDetailReady(house()), true);
+  });
+
+  it("hydrates when catalog redaction left address empty", () => {
+    assert.equal(houseNeedsLocationHydration({ ...house(), address: "" }), true);
+    assert.equal(houseNeedsLocationHydration(house()), false);
   });
 });

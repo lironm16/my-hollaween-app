@@ -1,6 +1,8 @@
 "use client";
 
 import { GemMysteryTeaser3D } from "@/components/gem-hunt/gem-mystery-teaser-3d";
+import { ImpMenuActiveGlyph } from "@/components/imp-marker-glyph";
+import { GEM_HOUSE_KICKER_HE } from "@/lib/gem-hunt-copy";
 import { gemLabelHe, gemMonsterForHouse } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -28,7 +30,12 @@ export function GemHouseFoundHero({
       dir="rtl"
     >
       {collected ? (
-        <p className="gem-house-found-hero__name gem-house-found-hero__name--solo">{petName}</p>
+        <>
+          <div className="gem-house-found-hero__gem-wrap" aria-hidden>
+            <ImpMenuActiveGlyph className="gem-house-found-hero__gem-icon" />
+          </div>
+          <p className="gem-house-found-hero__name gem-house-found-hero__name--solo">{petName}</p>
+        </>
       ) : (
         <>
           <div className="gem-house-found-hero__visual" aria-hidden>
@@ -36,7 +43,7 @@ export function GemHouseFoundHero({
               <GemMysteryTeaser3D />
             </div>
           </div>
-          <p className="gem-house-found-hero__kicker">יהלום נסתר · גלו במצלמה</p>
+          <p className="gem-house-found-hero__kicker">{GEM_HOUSE_KICKER_HE}</p>
         </>
       )}
     </div>

@@ -6,9 +6,9 @@ import {
   housesToCsv,
   housesToExportTxt,
 } from "@/lib/house-csv";
-import type { PublicHouse } from "@/lib/types";
+import type { EditorHouse } from "@/lib/types";
 
-function house(patch: Partial<PublicHouse> = {}): PublicHouse {
+function house(patch: Partial<EditorHouse> = {}): EditorHouse {
   return {
     id: "בית-1",
     name: "בית בדיקה",
@@ -34,7 +34,7 @@ function house(patch: Partial<PublicHouse> = {}): PublicHouse {
     updatedAt: "2026-10-31T12:00:00.000Z",
     adminFrozen: false,
     ...patch,
-  } as PublicHouse;
+  } as EditorHouse;
 }
 
 describe("housesToCsv", () => {
@@ -54,6 +54,19 @@ describe("housesToCsv", () => {
     assert.ok(csv.includes("יש"));
     assert.ok(csv.includes("מעט"));
     assert.ok(csv.includes("לילדים"));
+  });
+
+  it("includes owner phone and strips zero-width chars from Latin names", () => {
+    const csv = housesToCsv([
+      house({
+        name: "\u200bThe Sabrra Spookhouse",
+        ownerPhone: "050-1234567",
+        addedBy: "Sabrra",
+      }),
+    ]);
+    assert.ok(csv.includes("050-1234567"));
+    assert.ok(csv.includes("The Sabrra Spookhouse"));
+    assert.ok(!csv.includes("\u200b"));
   });
 
   it("returns header only for an empty list", () => {

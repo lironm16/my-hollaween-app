@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AdminAddHouseCutoffSettings } from "@/components/admin-add-house-cutoff-settings";
+import { AdminAddressRevealSettings } from "@/components/admin-address-reveal-settings";
 import { AdminGemOpsPanel } from "@/components/admin-gem-ops-panel";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useRehearsalScene, useServerSim, useAppNow } from "@/hooks/use-app-clock";
@@ -103,11 +105,14 @@ export function AdminDryRunPanel() {
           ))}
         </div>
       </div>
-      <p className="text-base font-medium text-amber-100">בדיקות</p>
-      <p className="text-base text-violet-300">
-        בלי לחכות ל־31 באוקטובר: בחרו רגע בלילה כדי לראות באנרים, סיכות «נפתח/נסגר בקרוב», ואת כפתורי
-        ההפסקה בטופס. נשמר בטלפון הזה בלבד.
-      </p>
+      <AdminAddHouseCutoffSettings />
+      <AdminAddressRevealSettings />
+      <div className="space-y-2 rounded-xl bg-[#12081a]/80 p-2 ring-1 ring-orange-500/15">
+        <p className="text-base font-medium text-amber-100">בדיקות</p>
+        <p className="text-base text-violet-300">
+          בלי לחכות ל־31 באוקטובר: בחרו רגע בלילה כדי לראות באנרים, סיכות «נפתח/נסגר בקרוב», ואת כפתורי
+          ההפסקה בטופס. נשמר בטלפון הזה בלבד.
+        </p>
       <div className="flex items-center justify-between gap-3 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20">
         <div className="min-w-0">
           <p className="text-base font-medium text-orange-100">שעון בדיקות</p>
@@ -169,9 +174,10 @@ export function AdminDryRunPanel() {
           מציג את הבאנר «השרת לא עונה» עם הרשימה ששמורה בטלפון. פתחו את המפה פעם אחת ברשת לפני כן.
         </p>
       </div>
+      </div>
       {gemsOnScreen && catalogHouses.length > 0 ? (
         <div className="space-y-1 rounded-lg bg-[#12081a] p-1 ring-1 ring-orange-500/25">
-          <p className="px-1 pt-0.5 text-base font-medium text-orange-100">יהלומים</p>
+          <p className="px-1 pt-0.5 text-base font-medium text-orange-100">שדונים</p>
           <AdminGemOpsPanel houses={catalogHouses} />
         </div>
       ) : null}

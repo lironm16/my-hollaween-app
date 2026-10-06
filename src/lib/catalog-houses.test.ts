@@ -3,6 +3,7 @@ import { describe, it, beforeEach, afterEach } from "node:test";
 import {
   catalogCacheIncomplete,
   catalogNeedsFullRefresh,
+  catalogServerCountMismatch,
   isAuthoritativeHouseList,
   localCatalogHouseCount,
   resolveCatalogHouses,
@@ -14,6 +15,7 @@ import {
   saveCatalogCacheMeta,
   loadCatalogCacheSync,
 } from "@/lib/offline-db";
+import { writeRehearsalScene } from "@/lib/app-clock";
 import type { Catalog, CatalogCacheMeta, PublicHouse } from "@/lib/types";
 
 const CATALOG_LS_KEY = "hw-catalog-cache";
@@ -87,6 +89,14 @@ describe("resolveServerHouseCount", () => {
   });
 });
 
+describe("catalogServerCountMismatch", () => {
+  it("detects when inline houses differ from server houseCount", () => {
+    const partial = catalog([house("a")], "2026-10-31T10:00:00.000Z");
+    assert.equal(catalogServerCountMismatch(partial, 88), true);
+    assert.equal(catalogServerCountMismatch(partial, 1), false);
+  });
+});
+
 describe("catalogCacheIncomplete", () => {
   it("flags inflated local caches above server houseCount", () => {
     const inflated = catalog(
@@ -135,12 +145,25 @@ describe("catalogNeedsFullRefresh", () => {
     assert.equal(catalogNeedsFullRefresh(partial, null, 25), true);
   });
 
-  it("does not force refresh for stub-only rehearsal catalogs", () => {
+  it("forces refresh for stub-only cached snapshot outside rehearsal", () => {
+    writeRehearsalScene("off");
+    const stubs = catalog(
+      [house("בית-9311", { description: "סטאב לחזרה" })],
+      "2026-10-31T10:00:00.000Z",
+    );
+    assert.equal(catalogNeedsFullRefresh(stubs), true);
+  });
+
+  it("does not force refresh for stub-only catalogs during rehearsal dry-run", {
+    skip: !hasLocalStorage,
+  }, () => {
+    writeRehearsalScene("open");
     const stubs = catalog(
       [house("בית-9311", { description: "סטאב לחזרה" })],
       "2026-10-31T10:00:00.000Z",
     );
     assert.equal(catalogNeedsFullRefresh(stubs), false);
+    writeRehearsalScene("off");
   });
 
   it("skips full refresh when cache meta matches server houseCount", () => {

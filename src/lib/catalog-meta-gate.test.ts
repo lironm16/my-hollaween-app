@@ -26,6 +26,18 @@ describe("catalogDeltaGatePassed", () => {
     );
   });
 
+  it("fails when address reveal schedule changed after since", () => {
+    assert.equal(
+      catalogDeltaGatePassed({
+        sinceMs: Date.parse("2026-10-31T11:00:00.000Z"),
+        catalogUpdatedAt: "2026-10-31T10:00:00.000Z",
+        eventSettingsUpdatedAt: "2026-10-31T12:00:00.000Z",
+        removedIds: [],
+      }),
+      false,
+    );
+  });
+
   it("fails when push templates changed after since", () => {
     const prev = process.env.NEXT_PUBLIC_PUSH_ALERTS;
     process.env.NEXT_PUBLIC_PUSH_ALERTS = "1";

@@ -200,6 +200,11 @@ export function appNow(): Date {
  * Stable clock id for React: same value until the 15s tick or the rehearsal scene
  * changes. Frozen Halloween scenes return a constant timestamp.
  */
+/** SSR and first client paint — never reads rehearsal localStorage (avoids hydration #418). */
+export function hydrationSafeClockSnapshot(wall = new Date()): number {
+  return clockSnapshot(wall, "off");
+}
+
 export function clockSnapshot(wall = new Date(), scene: RehearsalScene = readRehearsalScene()): number {
   if (scene !== "off" && scene !== "today") {
     return dateForRehearsalScene(scene, wall)?.getTime() ?? 0;
@@ -216,7 +221,9 @@ const snapshotDates = new Map<number, Date>();
 export function dateFromSnapshot(stamp: number) {
   const cached = snapshotDates.get(stamp);
   if (cached) return cached;
-  const date = new Date(stamp || Date.now());
+  const resolved =
+    stamp !== 0 ? stamp : hydrationSafeClockSnapshot();
+  const date = new Date(resolved);
   snapshotDates.set(stamp, date);
   if (snapshotDates.size > 8) {
     const first = snapshotDates.keys().next().value;

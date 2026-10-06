@@ -4,17 +4,26 @@ import Link from "next/link";
 import { HelpExpandable, HelpShell } from "@/components/help-shell";
 import { HelpText } from "@/lib/render-help-text";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { buttonVariants } from "@/components/ui/button";
+import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
+import {
+  GEM_FOUND_CHEER_HE,
+  GEM_FOUND_I_HE,
+  GEM_GAME_TITLE_HE,
+  GEM_NOT_FOUND_I_HE,
+} from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
 export default function GemHuntHelpPage() {
   const { admin, ready } = useAdminSession();
-  const { gemHuntVisible: showGemHuntHelp } = useGemHuntAdminUi(admin);
+  const now = useAppNow();
+  const { gemFabVisible: showGemHuntHelp } = useGemHuntAdminUi(admin, now);
 
   if (!ready) {
     return (
-      <HelpShell title="ציד יהלומים">
+      <HelpShell title={GEM_GAME_TITLE_HE}>
         <p className="text-base text-violet-300">טוענים…</p>
       </HelpShell>
     );
@@ -22,7 +31,7 @@ export default function GemHuntHelpPage() {
 
   if (!showGemHuntHelp) {
     return (
-      <HelpShell title="ציד יהלומים">
+      <HelpShell title={GEM_GAME_TITLE_HE}>
         <div className="space-y-4 rounded-2xl bg-[#1d1028] p-5 ring-1 ring-orange-500/25">
           <p className="text-lg leading-relaxed text-orange-50">הציד עדיין לא פתוח לכולם.</p>
           <Link href="/help" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "inline-flex")}>
@@ -34,34 +43,34 @@ export default function GemHuntHelpPage() {
   }
 
   return (
-    <HelpShell title="ציד יהלומים">
+    <HelpShell title={GEM_GAME_TITLE_HE}>
       <p className="mb-5 text-lg leading-relaxed text-violet-100">
-        ליד בתים נבחרים מסתתר יהלום — חיה קטנה שאפשר לאסוף במצלמה ולהוסיף ל
-        <strong className="font-semibold text-orange-100">ספר החברים</strong>. המדריך הזה מיועד
+        ליד בתים נבחרים מסתתר שדון — חיה קטנה שאפשר למצוא במצלמה ולהוסיף ל
+        <strong className="font-semibold text-orange-100">{GEM_ALBUM_TITLE_HE}</strong>. המדריך הזה מיועד
         לבדיקות לפני פתיחה לציבור.
       </p>
 
       <div className="space-y-3">
-        <HelpExpandable title="איפה רואים יהלומים?" defaultOpen>
+        <HelpExpandable title="איפה רואים שדונים?" defaultOpen>
           <ul className="list-disc space-y-2 pr-5 text-lg leading-relaxed text-orange-50">
             <li>
               <HelpText>
                 {
-                  "במפה — יהלומים על בתים (אחרי שמפעילים את כפתור הציד בסרגל). בליל פורים, כשהציד פעיל, יופיע גם כפתור <<חיפוש יהלום נסתר>> כשמתקרבים לבית."
+                  "במפה — סימני שדון על בתים (אחרי שמפעילים את כפתור השדונים בסרגל). בליל פורים, כשהציד פעיל, יופיע גם כפתור <<חיפוש שדון נסתר>> כשמתקרבים לבית."
                 }
               </HelpText>
             </li>
             <li>
               <HelpText>
                 {
-                  "בפרטי בית — בלוק <<יהלום נסתר>> עם מרחק וכפתור <<פתחו מצלמה>> בטווח (iPhone ~5 מ׳, Android ~15 מ׳ מהנקודה על המדרכה)."
+                  "בפרטי בית — בלוק <<שדון נסתר>> עם מרחק וכפתור <<פתחו מצלמה>> בטווח (iPhone ~5 מ׳, Android ~15 מ׳ מהנקודה על המדרכה)."
                 }
               </HelpText>
             </li>
             <li>
               <HelpText>
                 {
-                  "בסינון — אפשר לסנן <<לא אספתי>> / <<אספתי>>. ב<<הסימונים שלי>> יש לשונית <<אספתי>>."
+                  `בסינון — אפשר לסנן <<${GEM_NOT_FOUND_I_HE}>> / <<${GEM_FOUND_I_HE}>>. ב<<הסימונים שלי>> יש לשונית <<${GEM_FOUND_I_HE}>>.`
                 }
               </HelpText>
             </li>
@@ -90,7 +99,7 @@ export default function GemHuntHelpPage() {
             <li>
               <HelpText>
                 {
-                  "סובבו את המצלמה — היהלום ננעל בעולם ליד המדרכה (בטווח קרוב, עד ~15 מ׳, כדי שלא יתערבב עם שכן)."
+                  "סובבו את המצלמה — השדון ננעל בעולם ליד המדרכה (בטווח קרוב, עד ~15 מ׳, כדי שלא יתערבב עם שכן)."
                 }
               </HelpText>
             </li>
@@ -102,7 +111,7 @@ export default function GemHuntHelpPage() {
             <p>
               <HelpText>
                 {
-                  "<<רמז · כוון אותי>> — חץ מצפן (קו ישר ליהלום), מרחק, שמאלה/ימינה, וקישור <<הליכה ב-Google Maps>> למסלול ברחוב."
+                  "<<רמז · כוון אותי>> — חץ מצפן (קו ישר לשדון), מרחק, שמאלה/ימינה, וקישור <<הליכה ב-Google Maps>> למסלול ברחוב."
                 }
               </HelpText>
             </p>
@@ -123,19 +132,19 @@ export default function GemHuntHelpPage() {
           </div>
         </HelpExpandable>
 
-        <HelpExpandable title="איסוף וספר החברים">
+        <HelpExpandable title={`מציאה ו${GEM_ALBUM_TITLE_HE}`}>
           <div className="space-y-3 text-lg leading-relaxed text-orange-50">
             <p>
               <HelpText>
                 {
-                  "כשהחיה במסגרת — הקישו עליה (או סובבו במצב מפגש ואז הקישו). אחרי <<יהלום נאסף!>> אפשר לפתוח את <<ספר החברים>> מהתפריט."
+                  `כשהחיה במסגרת — הקישו עליה (או סובבו במצב מפגש ואז הקישו). אחרי <<${GEM_FOUND_CHEER_HE}>> אפשר לפתוח את <<${GEM_ALBUM_TITLE_HE}>> מהתפריט.`
                 }
               </HelpText>
             </p>
             <p>
               <HelpText>
                 {
-                  "כל בית עם יהלום מוסיף חבר לספר — אפשר לראות מי כבר נאסף ומי עדיין מחכה בשכונה."
+                  "כל בית עם שדון מוסיף שדון לאוסף — אפשר לראות מי כבר נמצא ומי עדיין מחכה בשכונה."
                 }
               </HelpText>
             </p>
@@ -143,7 +152,7 @@ export default function GemHuntHelpPage() {
               href="/gem-bag"
               className="inline-block text-orange-300 underline underline-offset-2 hover:text-orange-200"
             >
-              פתיחת ספר החברים
+              {`פתיחת ${GEM_ALBUM_TITLE_HE}`}
             </Link>
           </div>
         </HelpExpandable>
@@ -174,17 +183,13 @@ export default function GemHuntHelpPage() {
             <li>
               <HelpText>
                 {
-                  "**יהלום של שכן** — הנקודה על המדרכה מוגבלת בטווח; אם צריך כיול — כלי מנהל בפרטי הבית."
+                  "**שדון של שכן** — הנקודה על המדרכה מוגבלת בטווח; אם צריך כיול — כלי מנהל בפרטי הבית."
                 }
               </HelpText>
             </li>
           </ul>
         </HelpExpandable>
       </div>
-
-      <p className="mt-6 text-center text-base text-violet-300/90">
-        תצוגת משתמש (יהלומים) בתפריט — לראות את האפליקציה כמו אורח בלי כלי בדיקה.
-      </p>
     </HelpShell>
   );
 }

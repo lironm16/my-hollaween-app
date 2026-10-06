@@ -6,6 +6,8 @@ import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { SummaryPumpkinIcon } from "@/components/scare-glyphs";
 import { SkipGlyph } from "@/components/skip-icon";
 import type { WalkingRoute } from "@/lib/route";
+import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
+import { GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
 function HouseIcon() {
@@ -122,11 +124,7 @@ function LikedSummaryIcon() {
 }
 
 function GemSummaryIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden className="size-full">
-      <path d="M6 3h12l4 7-10 13L2 10l4-7z" fill="#fbbf24" />
-    </svg>
-  );
+  return <ImpMarkerGlyph variant="solid" className="size-full text-[#fbbf24]" />;
 }
 
 function RouteChip({
@@ -238,7 +236,7 @@ export function StatsSummary({
                 <CompactChip
                   icon={<GemSummaryIcon />}
                   value={String(gemCollectedCount)}
-                  label="אספתי"
+                  label={GEM_FOUND_I_HE}
                 />
               </>
             ) : null}
@@ -289,7 +287,7 @@ export function StatsSummary({
               <RouteChip
                 icon={<GemSummaryIcon />}
                 value={String(gemCollectedCount)}
-                label="אספתי"
+                label={GEM_FOUND_I_HE}
               />
             </>
           ) : null}
@@ -312,7 +310,9 @@ export function MapStats(props: {
   const [mounted, setMounted] = useState(false);
   const titleId = useId();
   const panelId = useId();
-  const badge = props.filteredHouses > 99 ? "99+" : String(props.filteredHouses);
+  const houseCount = props.filteredHouses;
+  const badge = String(houseCount);
+  const badgeWide = houseCount >= 100;
 
   useEffect(() => {
     setMounted(true);
@@ -386,7 +386,14 @@ export function MapStats(props: {
         <span className="inline-flex size-6 items-center justify-center text-orange-400">
           <HouseIcon />
         </span>
-        <span className="absolute -top-1 -right-1 inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-orange-500 px-1 text-sm font-bold leading-none text-black">
+        <span
+          className={cn(
+            "absolute -right-1 inline-flex items-center justify-center rounded-full bg-orange-500 font-bold leading-none text-black",
+            badgeWide
+              ? "-top-3 min-h-7 min-w-7 px-1.5 text-[0.7rem] tabular-nums"
+              : "-top-2.5 h-6 min-w-6 px-1 text-sm",
+          )}
+        >
           {badge}
         </span>
       </button>

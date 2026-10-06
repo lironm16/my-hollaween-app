@@ -41,7 +41,7 @@ export function useAdminHouses({
   const loadAdminHouses = useCallback(async () => {
     if (!admin) return;
     try {
-      const res = await fetch("/api/admin/houses", { cache: "no-store" });
+      const res = await fetch("/api/admin/houses", { cache: "no-store", credentials: "include" });
       if (!res.ok) return;
       const data = (await res.json()) as { houses?: House[]; updatedAt?: string };
       const houses = data.houses ?? [];

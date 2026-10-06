@@ -1,6 +1,7 @@
 "use client";
 
 import { GemDiamondIcon } from "@/components/gem-diamond-icon";
+import { GEM_MAP_TOGGLE_HIDE_HE, GEM_MAP_TOGGLE_SHOW_HE } from "@/lib/gem-hunt-copy";
 import { List, MapPinned, Route, Sparkles } from "lucide-react";
 import { FilterTrigger } from "@/components/filter-menu";
 import { OriginTrigger } from "@/components/origin-picker";
@@ -28,7 +29,7 @@ function ViewToggle({
       onClick={onClick}
       className={cn(
         "app-toolbar__btn inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-        active ? "bg-orange-500 text-black" : "text-violet-200",
+        active ? "bg-orange-500 text-white" : "text-violet-200",
       )}
     >
       <span className="[&_svg]:size-5">{icon}</span>
@@ -125,17 +126,17 @@ export function NeighborhoodToolbar({
         {gemMapToggleEnabled && onToggleGemMap ? (
           <button
             type="button"
-            aria-label={gemMapVisible ? "הסתר יהלומים במפה" : "הצג יהלומים במפה"}
+            aria-label={gemMapVisible ? GEM_MAP_TOGGLE_HIDE_HE : GEM_MAP_TOGGLE_SHOW_HE}
             aria-pressed={gemMapVisible}
             onClick={onToggleGemMap}
             className={cn(
-              "app-toolbar__btn inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
+              "app-toolbar__btn inline-flex size-10 shrink-0 items-center justify-center rounded-lg p-0.5",
               gemMapVisible
-                ? "bg-orange-500 text-black"
+                ? "bg-orange-500 text-white"
                 : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
             )}
           >
-            <GemDiamondIcon active={gemMapVisible} filled={false} />
+            <GemDiamondIcon active={gemMapVisible} className="size-6 max-h-full max-w-full" />
           </button>
         ) : null}
         {adminCharacterMapToggleEnabled && onToggleAdminCharacterMap ? (
@@ -149,7 +150,7 @@ export function NeighborhoodToolbar({
             className={cn(
               "app-toolbar__btn inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
               adminCharacterMapVisible
-                ? "bg-orange-500 text-black"
+                ? "bg-orange-500 text-white"
                 : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
             )}
           >
@@ -176,7 +177,7 @@ export function NeighborhoodToolbar({
           className={cn(
             "app-toolbar__btn relative inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
             routeMode
-              ? "bg-orange-500 text-black"
+              ? "bg-orange-500 text-white"
               : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
           )}
         >

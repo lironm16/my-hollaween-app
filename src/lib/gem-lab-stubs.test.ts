@@ -10,7 +10,7 @@ describe("gem-lab-stubs", () => {
 
   it("builds stub houses with gem lab marker", () => {
     const house = buildGemLabStub({ id: "נק-9315", lat: 32.09, lng: 34.81 });
-    assert.ok(house.description?.includes("יהלום בדיקה"));
+    assert.ok(house.description?.includes("שדון בדיקה"));
     assert.equal(house.visit, "come");
   });
 });

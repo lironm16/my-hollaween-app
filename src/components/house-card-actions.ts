@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
+import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import type { PublicHouse } from "@/lib/types";
 import type { ComponentProps } from "react";
 import type { HouseActionBar } from "@/components/house-action-bar";
@@ -20,6 +21,15 @@ export type HouseCardActionContext = {
   onRestore?: (id: string) => void;
   onShowOnMap?: (id: string) => void;
   onShowInList?: (id: string) => void;
+  onClusterVisitAll?: (houses: PublicHouse[]) => void;
+  onClusterUnvisitAll?: (houses: PublicHouse[]) => void;
+  onClusterSkipAll?: (houses: PublicHouse[]) => void;
+  onClusterRestoreAll?: (houses: PublicHouse[]) => void;
+  onClusterLikeAll?: (houses: PublicHouse[]) => void;
+  onClusterUnlikeAll?: (houses: PublicHouse[]) => void;
+  /** Cluster ⋮ — sequential camera session for every inner house (not per-house «מצא שדון»). */
+  onClusterFindAllGems?: (houses: PublicHouse[]) => void;
+  onClusterResetAllGems?: (houses: PublicHouse[]) => void;
   canEdit?: (id: string) => boolean;
   editCodeFor?: (id: string) => string | undefined;
   onEdit?: (house: PublicHouse) => void;
@@ -38,10 +48,12 @@ export function houseCardPropsFor(
     className?: string;
     expanded?: boolean;
     liveDetail?: boolean;
+    clusterBoothTag?: string | null;
   },
 ): ComponentProps<typeof HouseCard> {
   const id = house.id;
   const isSkipped = ctx.skipped(id);
+  const editAllowed = deviceHouseEditAllowed(id) && Boolean(ctx.canEdit?.(id));
   return {
     house,
     catalogSource: ctx.catalogSource,
@@ -57,11 +69,11 @@ export function houseCardPropsFor(
     onRestoreRoute: ctx.onRestore && isSkipped ? () => ctx.onRestore!(id) : undefined,
     onShowOnMap: ctx.onShowOnMap ? () => ctx.onShowOnMap!(id) : undefined,
     onShowInList: ctx.onShowInList ? () => ctx.onShowInList!(id) : undefined,
-    canEdit: Boolean(ctx.canEdit?.(id)),
-    editCode: ctx.editCodeFor?.(id),
+    canEdit: editAllowed,
+    editCode: editAllowed ? ctx.editCodeFor?.(id) : undefined,
     admin: ctx.admin,
-    onToggleEdit: ctx.onEdit ? () => ctx.onEdit!(house) : undefined,
-    editing: ctx.editingId === id,
+    onToggleEdit: editAllowed && ctx.onEdit ? () => ctx.onEdit!(house) : undefined,
+    editing: editAllowed && ctx.editingId === id,
     index: opts?.index,
     distanceM: opts?.distanceM,
     hideHoursBanner: opts?.hideHoursBanner,
@@ -69,6 +81,7 @@ export function houseCardPropsFor(
     className: opts?.className,
     expanded: opts?.expanded,
     liveDetail: opts?.liveDetail,
+    clusterBoothTag: opts?.clusterBoothTag,
   };
 }
 

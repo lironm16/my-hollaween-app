@@ -3,11 +3,14 @@
 import { Card } from "@/components/ui/card";
 import { HouseActionBar } from "@/components/house-action-bar";
 import { houseActionBarPropsFromCard } from "@/components/house-card-actions";
+import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
+import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import { HouseDetails } from "@/components/house-details";
 import { HouseCardBanners } from "@/components/house-skipped-banner";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
+import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
 import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
-import { isDeviceCachePinHouse } from "@/lib/device-catalog-cache";
+import { houseNeedsLocationHydration, isDeviceCachePinHouse } from "@/lib/device-catalog-cache";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
@@ -40,6 +43,7 @@ export function HouseCard({
   className,
   /** Fetch address/story fields when the row is pin-only from device cache. */
   liveDetail = false,
+  clusterBoothTag,
   ...rest
 }: {
   house: PublicHouse;
@@ -69,12 +73,18 @@ export function HouseCard({
   extra?: ReactNode;
   className?: string;
   liveDetail?: boolean;
+  clusterBoothTag?: string | null;
 }) {
-  const shouldFetchLive = liveDetail && isDeviceCachePinHouse(house);
+  void useCatalogRemoved(house.id);
+  const mayEdit = canEdit && deviceHouseEditAllowed(house.id);
+  const overlaid = useAdminHouseFields(house) ?? house;
+  const shouldFetchLive =
+    (liveDetail && isDeviceCachePinHouse(overlaid)) || houseNeedsLocationHydration(overlaid);
   const { house: liveHouse, loading, unavailable } = useServerHouseDetail(
-    shouldFetchLive ? house : null,
+    shouldFetchLive ? overlaid : null,
   );
-  const displayHouse = shouldFetchLive ? (liveHouse ?? house) : house;
+  const hydrated = useAdminHouseFields(liveHouse) ?? liveHouse;
+  const displayHouse = shouldFetchLive ? (hydrated ?? overlaid) : overlaid;
   const cardProps = {
     house: displayHouse,
     distanceM,
@@ -88,14 +98,14 @@ export function HouseCard({
     onRestoreRoute,
     skipped,
     skipMeta,
-    canEdit,
-    editCode,
+    canEdit: mayEdit,
+    editCode: mayEdit ? editCode : undefined,
     admin,
     onShowOnMap,
     onShowInList,
     onToggleGem,
-    editing,
-    onToggleEdit,
+    editing: mayEdit && editing,
+    onToggleEdit: mayEdit ? onToggleEdit : undefined,
     expanded,
     index,
     hideHoursBanner,
@@ -104,8 +114,6 @@ export function HouseCard({
     liveDetail,
     ...rest,
   };
-  const actionBarProps = houseActionBarPropsFromCard(cardProps);
-
   return (
     <Card
       size="sm"
@@ -145,8 +153,11 @@ export function HouseCard({
           compact={!expanded}
           index={index}
           hideHoursBanner={hideHoursBanner}
+          clusterBoothTag={clusterBoothTag}
           extra={extra}
-          headerMenu={<HouseActionBar {...actionBarProps} />}
+          canEdit={mayEdit}
+          onToggleEdit={mayEdit ? onToggleEdit : undefined}
+          headerMenu={<HouseActionBar {...houseActionBarPropsFromCard(cardProps)} />}
         />
       </div>
     </Card>

@@ -15,7 +15,10 @@ import {
   Shield,
   HelpCircle,
   Sparkles,
+  Save,
 } from "lucide-react";
+import { AdminHouseDownloadDialog } from "@/components/admin-house-download-dialog";
+import { ImpOutlineIcon } from "@/components/imp-outline-icon";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
 import { NeighborhoodMarquee } from "@/components/neighborhood-marquee";
@@ -28,6 +31,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { buttonVariants } from "@/components/ui/button";
+import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
@@ -37,6 +41,7 @@ import { AdminGemUserPreviewToggle } from "@/components/admin-gem-user-preview-t
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
 import { readHelpInstallCaptureFromLocation } from "@/lib/help-install-capture";
+import { useAddHouseOpen } from "@/hooks/use-add-house-open";
 import { cn } from "@/lib/utils";
 
 export function AppHeader({
@@ -46,11 +51,13 @@ export function AppHeader({
   onHomeTap?: () => void;
 }) {
   const { admin, logout } = useAdminSession();
+  const addHouseOpen = useAddHouseOpen();
   const now = useAppNow();
   const { gemBagMenuVisible: showGemBag } = useGemHuntAdminUi(admin, now);
   const showAdminUserPreview = admin && gemHuntVisible(admin);
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);
+  const [adminDownloadOpen, setAdminDownloadOpen] = useState(false);
   const [helpInstallCapture, setHelpInstallCapture] = useState(false);
 
   useEffect(() => {
@@ -65,6 +72,11 @@ export function AppHeader({
 
   function closeMenu() {
     setMenuOpen(false);
+  }
+
+  function openAdminDownload() {
+    closeMenu();
+    setAdminDownloadOpen(true);
   }
 
   const houseSubLinkClass = cn(
@@ -160,18 +172,20 @@ export function AppHeader({
               </button>
               {houseOpen ? (
                 <div className={APP_MENU_SUBLIST_CLASS}>
-                  <Link
-                    href="/add"
-                    onClick={closeMenu}
-                    className={cn(
-                      buttonVariants({ size: "lg" }),
-                      "h-10 justify-start gap-2 text-base bg-orange-500 text-black hover:bg-orange-400",
-                      APP_MENU_SUBLINK_PAD,
-                    )}
-                  >
-                    <HousePlus className="size-4" />
-                    הוספה
-                  </Link>
+                  {addHouseOpen ? (
+                    <Link
+                      href="/add"
+                      onClick={closeMenu}
+                      className={cn(
+                        buttonVariants({ size: "lg" }),
+                        "h-10 justify-start gap-2 text-base bg-orange-500 text-black hover:bg-orange-400",
+                        APP_MENU_SUBLINK_PAD,
+                      )}
+                    >
+                      <HousePlus className="size-4" />
+                      הוספה
+                    </Link>
+                  ) : null}
                   <Link href="/edit" onClick={closeMenu} className={houseSubLinkClass}>
                     <Pencil className="size-4" />
                     עריכה
@@ -208,8 +222,8 @@ export function AppHeader({
                   "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
                 )}
               >
-                <Sparkles className="size-4 shrink-0" />
-                ספר החברים
+                <ImpOutlineIcon className="size-4 shrink-0" />
+                {GEM_ALBUM_TITLE_HE}
               </Link>
             ) : null}
             <Link
@@ -247,8 +261,19 @@ export function AppHeader({
                   )}
                 >
                   <Sparkles className="size-4" />
-                  בדיקות
+                  הגדרות מנהל
                 </Link>
+                <button
+                  type="button"
+                  onClick={openAdminDownload}
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "lg" }),
+                    "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+                  )}
+                >
+                  <Save className="size-4" strokeWidth={2.25} />
+                  הורדת רשימת בתים
+                </button>
                 <button
                   type="button"
                   onClick={() => void onLogout()}
@@ -288,6 +313,9 @@ export function AppHeader({
           </div>
         </SheetContent>
       </Sheet>
+      ) : null}
+      {admin ? (
+        <AdminHouseDownloadDialog open={adminDownloadOpen} onOpenChange={setAdminDownloadOpen} />
       ) : null}
     </header>
   );

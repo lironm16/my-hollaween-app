@@ -37,17 +37,13 @@ import {
   privateBlobPutAttempts,
   privateBlobPutOptions,
 } from "@/lib/blob-auth";
-import {
-  catalogSnapshotToDb,
-  publishCatalogSnapshot,
-  readSharedCatalogSnapshot,
-} from "@/lib/catalog-cache";
+import { publishCatalogSnapshot } from "@/lib/catalog-cache";
 import {
   bumpCatalogMeta,
   firestoreConfigured,
-  readCatalogMeta,
   readFirestoreCatalog,
   readFirestorePushData,
+  readFirestorePushSettings,
   writeFirestoreDb,
   writeFirestorePushSettings,
 } from "@/lib/firestore-db";
@@ -211,6 +207,25 @@ export function normalizeDb(db: DbFile): DbFile {
           templates: { ...db.pushSettings.templates },
         }
       : undefined,
+    eventSettings:
+      db.eventSettings?.updatedAt ||
+      db.eventSettings?.addressReveal ||
+      db.eventSettings?.addHouseCutoff
+        ? {
+            ...(db.eventSettings.updatedAt ? { updatedAt: db.eventSettings.updatedAt } : {}),
+            ...(db.eventSettings.addressReveal
+              ? {
+                  addressReveal: {
+                    hour: db.eventSettings.addressReveal.hour,
+                    minute: db.eventSettings.addressReveal.minute,
+                  },
+                }
+              : {}),
+            ...(db.eventSettings.addHouseCutoff
+              ? { addHouseCutoff: { ...db.eventSettings.addHouseCutoff } }
+              : {}),
+          }
+        : undefined,
   };
 }
 
@@ -438,20 +453,14 @@ function foldPushSubscriptions(target: DbFile, ...candidates: Array<DbFile | nul
 export async function readFileDb(): Promise<DbFile> {
   if (firestoreConfigured()) {
     const global = getGlobalDb();
-    const meta = await readCatalogMeta();
-    const shared = await readSharedCatalogSnapshot(meta?.updatedAt);
-    let remote: DbFile | null = shared ? catalogSnapshotToDb(shared) : null;
-    if (!remote) {
-      const catalog = await readFirestoreCatalog();
-      if (catalog) {
-        remote = {
-          ...catalog,
-          pushSubscriptions: mem?.pushSubscriptions ?? global?.pushSubscriptions ?? [],
-          ...(mem?.vapid ? { vapid: mem.vapid } : global?.vapid ? { vapid: global.vapid } : {}),
-        };
-      }
-    }
-    if (remote) {
+    // Never hydrate the house db from public/catalog.json — that file redacts address/arrival.
+    const catalog = await readFirestoreCatalog();
+    if (catalog) {
+      const remote: DbFile = {
+        ...catalog,
+        pushSubscriptions: mem?.pushSubscriptions ?? global?.pushSubscriptions ?? [],
+        ...(mem?.vapid ? { vapid: mem.vapid } : global?.vapid ? { vapid: global.vapid } : {}),
+      };
       const merged = pickNewest(remote, global) ?? remote;
       foldPushSubscriptions(merged, mem, global);
       return withStaticRehearsalStubs(merged);
@@ -837,16 +846,24 @@ export async function ensurePushSettingsGeneration() {
   if (pushSettingsGenerationChecked) return;
   await withLock(async () => {
     if (pushSettingsGenerationChecked) return;
-    const db = normalizeDb(cloneDb(await readFileDb()));
-    foldPushSettings(db, mem, getGlobalDb());
-    const { settings, changed } = migratePushSettings(db.pushSettings);
+    const remotePush = firestoreConfigured()
+      ? asPushCandidate(await readFirestorePushSettings())
+      : normalizeDb(cloneDb(await readFileDb()));
+    const pushSettings = pickPushSettings(remotePush, mem, getGlobalDb());
+    const { settings, changed } = migratePushSettings(pushSettings);
     if (!changed) {
       pushSettingsGenerationChecked = true;
       return;
     }
-    db.pushSettings = settings;
-    db.updatedAt = new Date().toISOString();
-    await persistPushSettingsMigration(db);
+    const migrated: DbFile = {
+      updatedAt: new Date().toISOString(),
+      houses: mem?.houses ?? [],
+      pushSubscriptions: mem?.pushSubscriptions ?? [],
+      pushSettings: settings,
+      ...(mem?.vapid ? { vapid: mem.vapid } : {}),
+      ...(mem?.eventSettings ? { eventSettings: mem.eventSettings } : {}),
+    };
+    await persistPushSettingsMigration(migrated);
     pushSettingsGenerationChecked = true;
   });
 }

@@ -2,8 +2,7 @@
 
 import { MapAddHouseFab } from "@/components/map-add-house-fab";
 import { MapGemHuntFab } from "@/components/map-gem-hunt-fab";
-import { useAppNow } from "@/hooks/use-app-clock";
-import { isAddHouseOpen } from "@/lib/hours";
+import { useAddHouseOpen } from "@/hooks/use-add-house-open";
 import type { GemFabGlow } from "@/lib/gem-hunt-target";
 
 export function MapPrimaryFab({
@@ -21,9 +20,9 @@ export function MapPrimaryFab({
   gemAllCollected?: boolean;
   gemCollectedCount?: number;
 }) {
-  const now = useAppNow();
-  if (isAddHouseOpen(now)) return <MapAddHouseFab />;
-  if (!gemHuntEnabled) return null;
+  const addOpen = useAddHouseOpen();
+  if (!gemHuntEnabled) return <MapAddHouseFab />;
+  if (addOpen) return <MapAddHouseFab />;
   return (
     <MapGemHuntFab
       onClick={onGemPress}

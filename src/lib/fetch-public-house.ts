@@ -9,6 +9,7 @@ export type FetchPublicHouseResult =
 export async function fetchPublicHouse(id: string): Promise<FetchPublicHouseResult> {
   const res = await fetch(`/api/houses/${encodeURIComponent(id)}`, {
     cache: "no-store",
+    credentials: "include",
     signal: AbortSignal.timeout(18_000),
   });
   if (!res.ok) return { ok: false, status: res.status };

@@ -10,13 +10,14 @@ import { activeGemHuntMeters, gemAnchorForHouse, gemDistanceMeters } from "@/lib
 import type { UserLocation } from "@/hooks/use-user-location";
 import { gemMonsterForHouse, gemMonsterMeta } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
+import { ImpDemonFilledIcon } from "@/components/imp-demon-reference-icon";
 import { cn } from "@/lib/utils";
 
 /** admin = offset anchors + spokes (QA). compact = tiny diamonds. characters = admin QA posters. */
 export type GemMapAnchorVisual = "admin" | "compact" | "characters";
 
-const GEM_ICON_ADMIN = 30;
-const GEM_ICON_COMPACT = 18;
+const GEM_ICON_ADMIN = 36;
+const GEM_ICON_COMPACT = 26;
 const GEM_ICON_CHARACTER = 36;
 const COMPACT_MIN_ZOOM = 15;
 
@@ -34,12 +35,13 @@ function gemDiamondIcon(
   let icon = gemDiamondIconCache.get(key);
   const size = compact ? GEM_ICON_COMPACT : GEM_ICON_ADMIN;
   if (!icon) {
+    const glyphSvg = renderToStaticMarkup(
+      <ImpDemonFilledIcon className="map-gem-imp-marker__svg size-full" />
+    );
     icon = L.divIcon({
       className: "map-gem-diamond-leaflet-icon",
       html: `<div class="map-gem-diamond-marker${compact ? " map-gem-diamond-marker--compact" : " map-gem-diamond-marker--admin"}${collected ? " is-collected" : ""}${dimmed ? " is-dimmed" : ""}${calibrated ? " is-calibrated" : ""}${inRange ? " is-near" : ""}" aria-hidden="true">
-        <svg class="map-gem-diamond-marker__svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M6 3h12l4 7-10 13L2 10l4-7z" fill="currentColor"/>
-        </svg>
+        <span class="map-gem-imp-marker__glyph">${glyphSvg}</span>
       </div>`,
       iconSize: [size, size],
       iconAnchor: [size / 2, size / 2],

@@ -44,7 +44,8 @@ async function readPublicCatalogFallback(): Promise<CatalogSnapshot | null> {
     if (!catalog?.updatedAt || !Array.isArray(catalog.houses)) return null;
     return {
       updatedAt: catalog.updatedAt,
-      houses: catalog.houses as unknown as House[],
+      // Public catalog rows redact address/arrival — not usable as authoritative house db rows.
+      houses: [],
       catalog,
     };
   } catch {
@@ -107,7 +108,7 @@ export async function readSharedCatalogSnapshot(
 /** Publish catalog snapshot after house/catalog writes — Blob + best-effort public file. */
 export async function publishCatalogSnapshot(db: DbFile): Promise<void> {
   const houses = db.houses ?? [];
-  const catalog = asCatalogForSnapshot(houses, db.updatedAt, db.pushSettings);
+  const catalog = asCatalogForSnapshot(houses, db.updatedAt, db.pushSettings, db.eventSettings);
   const payload: CatalogSnapshot = {
     updatedAt: db.updatedAt,
     houses,

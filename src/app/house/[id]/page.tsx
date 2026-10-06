@@ -119,9 +119,9 @@ export default function HousePage() {
   ]);
 
   return (
-    <div className="relative flex min-h-dvh flex-col">
+    <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <AppHeader />
-      <main className="relative z-10 mx-auto w-full max-w-lg flex-1 px-4 py-5">
+      <main className="relative z-10 mx-auto min-h-0 w-full max-w-lg flex-1 overflow-y-auto px-4 py-5 pb-10">
         {house ? (
           <div className="space-y-4">
             <div className="relative z-0 isolate h-56 overflow-hidden rounded-2xl ring-1 ring-orange-500/30">

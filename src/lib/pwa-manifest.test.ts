@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import { isAndroidUserAgent, pwaManifestForUserAgent } from "@/lib/pwa-manifest";
 
 describe("pwaManifestForUserAgent", () => {
-  it("uses standalone display on Android for installable PWA", () => {
+  it("uses standalone display on Android for install prompt", () => {
     const manifest = pwaManifestForUserAgent(
       "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36",
     );

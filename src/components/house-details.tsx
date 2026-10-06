@@ -11,6 +11,9 @@ import { HoursStatusBanner } from "@/components/hours-status-banner";
 import { HouseTags } from "@/components/house-tags";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
+import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
+import { adminShowsPrivateHouseFields } from "@/lib/gem-preview-as-user";
 import { formatDistance } from "@/lib/geo";
 import { HoursLabel } from "@/components/clock-time";
 import { formatHoursLabel } from "@/lib/hours";
@@ -292,6 +295,8 @@ export function HouseDetails({
   distanceM,
   index,
   hideHoursBanner = false,
+  /** Stable «דוכן N» / «יחידה N» when several share an address. */
+  clusterBoothTag,
 }: {
   house: PublicHouse;
   extra?: ReactNode;
@@ -315,16 +320,21 @@ export function HouseDetails({
   index?: number;
   /** Route tail / visited-skipped cards: no opening-date or hours banners. */
   hideHoursBanner?: boolean;
+  clusterBoothTag?: string | null;
 }) {
   const addressReveal = useAddressReveal();
   const { admin } = useAdminSession();
-  const ownerPhone = admin ? (house as EditorHouse).ownerPhone?.trim() : "";
-  const displayAddress = addressReveal.formatDisplayAddress(house);
-  const arrivalText = addressReveal.visibleArrival(house);
-  const showMaps = addressReveal.mapsAllowed(house.id) && houseServerDetailReady(house);
+  const { previewAsUser } = useGemPreviewAsUser();
+  const viewHouse = useAdminHouseFields(house) ?? house;
+  const showPrivateFields = adminShowsPrivateHouseFields(admin, previewAsUser);
+  const editorHouse = viewHouse as EditorHouse;
+  const ownerPhone = showPrivateFields ? editorHouse.ownerPhone?.trim() : "";
+  const displayAddress = addressReveal.formatDisplayAddress(viewHouse);
+  const arrivalText = addressReveal.visibleArrival(viewHouse);
+  const showMaps = addressReveal.mapsAllowed(viewHouse.id) && houseServerDetailReady(viewHouse);
   const showDistance =
-    addressReveal.distanceAllowed(house.id) && distanceM !== undefined;
-  const addedMeta = houseAddedMetaLine(house);
+    addressReveal.distanceAllowed(viewHouse.id) && distanceM !== undefined;
+  const addedMeta = houseAddedMetaLine(editorHouse, { showSubmitterName: showPrivateFields });
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
   const [photoReady, setPhotoReady] = useState(false);
@@ -501,6 +511,9 @@ export function HouseDetails({
           </p>
           {headerMenu ? <div className="house-details-menu shrink-0">{headerMenu}</div> : null}
         </div>
+        {clusterBoothTag ? (
+          <p className="text-base font-semibold text-orange-200">{clusterBoothTag}</p>
+        ) : null}
         {pageActions}
         <div className="flex flex-wrap items-center gap-1.5">
           <HouseTags house={house} large={compact} />
@@ -516,10 +529,10 @@ export function HouseDetails({
       )}
       {actions}
       <HouseArrivalDirections arrival={arrivalText} houseId={house.id} />
-      {addressReveal.canViewDetails(house.id) ? (
-        <HouseNotesSection notes={house.notes} houseId={house.id} />
+      {addressReveal.canViewDetails(viewHouse.id) ? (
+        <HouseNotesSection notes={viewHouse.notes} houseId={viewHouse.id} />
       ) : null}
-      <HouseDescriptionSection description={house.description} houseId={house.id} />
+      <HouseDescriptionSection description={viewHouse.description} houseId={viewHouse.id} />
       {addedMeta || ownerPhone ? (
         <p className="text-sm text-violet-400">
           {addedMeta}

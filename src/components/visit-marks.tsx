@@ -1,8 +1,10 @@
-import { Check, Filter, Gem } from "lucide-react";
+import { Check, Filter } from "lucide-react";
+import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { DecorMark } from "@/components/decor-glyphs";
 import { ClosedSign, PauseSign } from "@/components/house-tags";
 import { SkipIcon } from "@/components/skip-icon";
 import { visitShort } from "@/lib/labels";
+import { GEM_FOUND_I_HE, GEM_NOT_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
 function HeartGlyph() {
@@ -203,16 +205,32 @@ export function SkipPinBadge({
   );
 }
 
-function GemSign({ className }: { className?: string }) {
+/** Amber filled imp — מצאתי (matches LikedSign / VisitedSign size-8). */
+export function CollectedGemSign({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/20 ring-1 ring-amber-300/45",
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/20 ring-1 ring-amber-400/45",
+        className,
+      )}
+      title={GEM_FOUND_I_HE}
+      aria-label={GEM_FOUND_I_HE}
+    >
+      <ImpMarkerGlyph variant="solid" className="size-[88%] text-[#fbbf24]" />
+    </span>
+  );
+}
+
+function UncollectedGemSign({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/20 ring-1 ring-amber-400/45",
         className,
       )}
       aria-hidden
     >
-      <Gem className="size-5 fill-amber-300 text-amber-300" strokeWidth={2.1} />
+      <ImpMarkerGlyph variant="eyes" className="size-[88%] text-[#fbbf24]" />
     </span>
   );
 }
@@ -226,8 +244,8 @@ export function UncollectedGemMark({
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <GemSign />
-      {labeled ? <span>לא אספתי</span> : <span className="sr-only">לא אספתי יהלום</span>}
+      <UncollectedGemSign />
+      {labeled ? <span>{GEM_NOT_FOUND_I_HE}</span> : <span className="sr-only">{GEM_NOT_FOUND_I_HE}</span>}
     </span>
   );
 }
@@ -241,8 +259,8 @@ export function CollectedGemMark({
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <GemSign />
-      {labeled ? <span>אספתי</span> : <span className="sr-only">אספתי יהלום</span>}
+      <CollectedGemSign />
+      {labeled ? <span>{GEM_FOUND_I_HE}</span> : <span className="sr-only">{GEM_FOUND_I_HE}</span>}
     </span>
   );
 }

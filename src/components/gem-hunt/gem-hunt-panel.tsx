@@ -26,6 +26,17 @@ import type { GemMonsterId } from "@/lib/gem-monsters";
 import { distanceMeters } from "@/lib/geo";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
+import {
+  GEM_ANCHOR_RESET_ALL_HE,
+  GEM_ANCHOR_RESET_ONE_HE,
+  GEM_ANCHOR_SET_GPS_HE,
+  GEM_ANCHOR_TITLE_AUTO_HE,
+  GEM_ANCHOR_TITLE_CALIBRATED_HE,
+  GEM_ANCHOR_UPDATE_PUBLIC_HE,
+  GEM_PANEL_NEAR_GPS_HE,
+  gemPanelApproachHe,
+  gemPanelOpenCameraHe,
+} from "@/lib/gem-hunt-copy";
 
 export type GemHuntOpenPrepare = () => Promise<UserLocation | null | void>;
 import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
@@ -44,6 +55,7 @@ import {
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { cn } from "@/lib/utils";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
+import { gemClusterQueueHeadline, nextClusterGemHouse } from "@/lib/gem-campus-queue";
 
 export function GemHuntPanel({
   house,
@@ -67,12 +79,16 @@ export function GemHuntPanel({
   const calibratedCount = useMemo(() => countGemAnchorOverrides(), [anchorOverrideMap]);
   const router = useRouter();
   const [huntOpen, setHuntOpen] = useState(false);
+  /** Active row during multi-house cluster camera session (may differ from panel `house`). */
+  const [huntTargetHouse, setHuntTargetHouse] = useState<PublicHouse | null>(null);
+  const [huntClusterMembers, setHuntClusterMembers] = useState<PublicHouse[] | null>(null);
   const [huntLocation, setHuntLocation] = useState<UserLocation | null>(null);
   const [bootWebXrSession, setBootWebXrSession] = useState<XRSession | null>(null);
   const [simulate, setSimulate] = useState(adminSimulateInRange);
   const [gemCheer, setGemCheer] = useState(false);
   const [gemCheerPet, setGemCheerPet] = useState<GemMonsterId | null>(null);
   const cheerTimerRef = useRef<number | null>(null);
+  const huntOpenGenRef = useRef(0);
   const [androidArReady, setAndroidArReady] = useState(false);
 
   useEffect(() => {
@@ -102,27 +118,70 @@ export function GemHuntPanel({
   }, [house, userLocation]);
 
   const openCamera = useCallback(async () => {
+    const gen = ++huntOpenGenRef.current;
     getGemHuntPortalRoot();
     let xrSession: XRSession | null = null;
     if (isAndroidLike() && webXrHitTestArCached()) {
       xrSession = await requestGemHuntWebXrSession();
     }
+    if (gen !== huntOpenGenRef.current) {
+      void endGemHuntWebXrSession(xrSession);
+      releaseGemHuntCamera();
+      return;
+    }
     setBootWebXrSession(xrSession);
     setHuntLocation(userLocation);
-    setHuntOpen(true);
     const fresh = (await onOpenHunt?.()) ?? userLocation;
+    if (gen !== huntOpenGenRef.current) {
+      void endGemHuntWebXrSession(xrSession);
+      releaseGemHuntCamera();
+      return;
+    }
     await prepareGemHuntSensors({
       requestCamera: !xrSession,
       requestOrientation: !isGemHuntOrientationGranted(),
     });
+    if (gen !== huntOpenGenRef.current) {
+      void endGemHuntWebXrSession(xrSession);
+      releaseGemHuntCamera();
+      return;
+    }
     setHuntLocation(fresh ?? userLocation);
-  }, [onOpenHunt, userLocation]);
+    setHuntClusterMembers(null);
+    setHuntTargetHouse(house);
+    setHuntOpen(true);
+  }, [house, mapHousesForCelebrate, onOpenHunt, userLocation]);
+
+  const huntHouse = huntTargetHouse ?? house;
+
+  const huntClusterQueueUi = useMemo(() => {
+    if (!huntClusterMembers || !huntTargetHouse) return undefined;
+    return gemClusterQueueHeadline(huntTargetHouse, huntClusterMembers);
+  }, [huntClusterMembers, huntTargetHouse]);
+
+  const huntCanCollect = canCollectGem(
+    userLocation,
+    huntHouse,
+    gems.collected(huntHouse.id),
+    true,
+    simulate,
+  );
 
   if (!visible) return null;
 
   const canCollect = canCollectGem(userLocation, house, collected, true, simulate);
   const anchor = gemAnchorForHouse(house);
   const anchorCalibrated = Boolean(anchorOverrideMap[house.id]) || anchor.calibrated === true;
+
+  function closeHunt() {
+    huntOpenGenRef.current += 1;
+    releaseGemHuntCamera();
+    void endGemHuntWebXrSession(bootWebXrSession);
+    setBootWebXrSession(null);
+    setHuntOpen(false);
+    setHuntTargetHouse(null);
+    setHuntClusterMembers(null);
+  }
 
   function onCollect(collectedVariant: GemMonsterId, options?: GemCollectFinishOptions) {
     const collectedBefore = loadGemCollected();
@@ -131,13 +190,12 @@ export function GemHuntPanel({
         ? gemBagCelebrateAfterCollect(
             mapHousesForCelebrate,
             collectedBefore,
-            house.id,
+            huntHouse.id,
             collectedVariant,
           )
         : null;
-    gems.collect(house.id, collectedVariant);
-    releaseGemHuntCamera();
-    setHuntOpen(false);
+    gems.collect(huntHouse.id, collectedVariant);
+    closeHunt();
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate(40);
     }
@@ -165,13 +223,13 @@ export function GemHuntPanel({
         {!collected ? (
           <p className="gem-hunt-panel__status">
             {canCollect
-              ? "בטווח — אפשר לאסוף"
+              ? "בטווח — אפשר למצוא"
               : proximity === "far" && distanceM != null && distanceM <= huntBandM + 10
-                ? "ליד היהלום — המתינו רגע ל-GPS"
+                ? GEM_PANEL_NEAR_GPS_HE
                 : proximity === "far"
-                  ? `התקרבו ל־${huntBandM} מ׳ ליהלום על המדרכה`
+                  ? gemPanelApproachHe(huntBandM)
                   : distanceM != null
-                    ? `~${Math.round(distanceM)} מ׳ ליהלום — פתחו מצלמה`
+                    ? gemPanelOpenCameraHe(Math.round(distanceM))
                     : "פתחו מצלמה לתצוגה"}
           </p>
         ) : null}
@@ -190,7 +248,7 @@ export function GemHuntPanel({
               onClick={() => setGemAnchorOverride(house.id, userLocation)}
             >
               <MapPin className="size-3.5" aria-hidden />
-              עדכון מיקום יהלום (ליד הבית)
+              {GEM_ANCHOR_UPDATE_PUBLIC_HE}
             </Button>
           </div>
         ) : null}
@@ -203,7 +261,7 @@ export function GemHuntPanel({
               className="gem-hunt-panel__override-reset"
               onClick={() => clearGemAnchorOverride(house.id)}
             >
-              איפוס מיקום יהלום
+              {GEM_ANCHOR_RESET_ONE_HE}
             </button>
           </p>
         ) : null}
@@ -220,7 +278,7 @@ export function GemHuntPanel({
             </label>
             <div className="gem-hunt-panel__calibrate">
               <p className="gem-hunt-panel__calibrate-title">
-                {anchorCalibrated ? "מיקום יהלום: מותאם בטלפון" : "מיקום יהלום: אוטומטי ליד הבית"}
+                {anchorCalibrated ? GEM_ANCHOR_TITLE_CALIBRATED_HE : GEM_ANCHOR_TITLE_AUTO_HE}
               </p>
               <p className="gem-hunt-panel__calibrate-hint">
                 הלכו physically למקום הרצוי (לובי, חצר, ליד הדלת), עמדו שם, ואז:
@@ -234,7 +292,7 @@ export function GemHuntPanel({
                 onClick={() => userLocation && setGemAnchorOverride(house.id, userLocation)}
               >
                 <MapPin className="size-3.5" aria-hidden />
-                קבע מיקום יהלום כאן (GPS)
+                {GEM_ANCHOR_SET_GPS_HE}
               </Button>
               {anchorCalibrated ? (
                 <Button
@@ -260,7 +318,7 @@ export function GemHuntPanel({
                   className="w-full text-rose-300/95"
                   onClick={() => clearAllGemAnchorOverrides()}
                 >
-                  איפוס כל מיקומי היהלום בטלפון ({calibratedCount})
+                  {GEM_ANCHOR_RESET_ALL_HE(calibratedCount)}
                 </Button>
               ) : null}
             </div>
@@ -291,23 +349,42 @@ export function GemHuntPanel({
       </section>
 
       <GemCheer show={gemCheer} house={house} monsterId={gemCheerPet ?? undefined} />
-      {huntOpen ? (
+      {huntOpen && huntTargetHouse ? (
         <GemHuntExperienceLazy
-          house={house}
+          house={huntTargetHouse}
           userLocation={huntLocation ?? userLocation}
           simulateInRange={simulate}
           deferCameraUntilInRange={false}
-          collectEnabled={canCollect}
-          encounterMode
-          repeatVisit={collected}
+          collectEnabled={huntCanCollect}
+          encounterMode={!huntClusterMembers}
+          repeatVisit={gems.collected(huntTargetHouse.id)}
           tellMeHuntRadiusEnforced={tellMeHuntRadiusEnforced}
           initialWebXrSession={bootWebXrSession}
-          onClose={() => {
-            releaseGemHuntCamera();
-            void endGemHuntWebXrSession(bootWebXrSession);
-            setBootWebXrSession(null);
-            setHuntOpen(false);
-          }}
+          campusQueue={huntClusterQueueUi}
+          onCollectPersist={
+            huntClusterMembers
+              ? (monsterId) => {
+                  gems.collect(huntTargetHouse.id, monsterId);
+                }
+              : undefined
+          }
+          onCampusStepComplete={
+            huntClusterMembers
+              ? () => {
+                  const next = nextClusterGemHouse(
+                    huntClusterMembers,
+                    gems.collected,
+                    huntTargetHouse.id,
+                  );
+                  if (next) {
+                    setHuntTargetHouse(next);
+                    return;
+                  }
+                  closeHunt();
+                }
+              : undefined
+          }
+          onClose={closeHunt}
           onCollect={onCollect}
         />
       ) : null}

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { mergeVisibleHouses } from "@/hooks/use-merged-houses";
+import { enrichHousesWithAdminLocations, mergeVisibleHouses } from "@/hooks/use-merged-houses";
+import { noteCatalogRemovals } from "@/lib/catalog-removed";
 import { houseMatchesSet } from "@/lib/house-set";
 import type { House, PublicHouse } from "@/lib/types";
 
@@ -38,6 +39,27 @@ function adminHouse(id: string, updatedAt: string): House {
   } as House;
 }
 
+const storage = new Map<string, string>();
+
+function mockCatalogRemovedStorage() {
+  storage.clear();
+  (globalThis as { localStorage?: Storage }).localStorage = {
+    getItem: (key) => storage.get(key) ?? null,
+    setItem: (key, value) => {
+      storage.set(key, value);
+    },
+    removeItem: (key) => {
+      storage.delete(key);
+    },
+    clear: () => storage.clear(),
+    key: () => null,
+    length: 0,
+  };
+  (globalThis as { window?: Window }).window = {
+    dispatchEvent: () => true,
+  } as unknown as Window;
+}
+
 describe("mergeVisibleHouses", () => {
   it("includes catalog and admin houses when includeCatalogWhenAdmin is true", () => {
     const merged = mergeVisibleHouses({
@@ -58,6 +80,23 @@ describe("mergeVisibleHouses", () => {
       adminHouses: [adminHouse("admin-only", "2026-10-31T10:00:00.000Z")],
     });
     assert.deepEqual(merged.map((house) => house.id), ["admin-only"]);
+  });
+
+  it("keeps addedBy on admin merge for internal submitter name", () => {
+    const merged = mergeVisibleHouses({
+      catalogHouses: [publicHouse("בית-2000", "2026-10-31T10:00:00.000Z")],
+      owned: [],
+      admin: true,
+      adminHouses: [
+        {
+          ...adminHouse("בית-2000", "2026-10-31T12:00:00.000Z"),
+          addedBy: "משפחת כהן",
+        },
+      ],
+      includeCatalogWhenAdmin: true,
+    });
+    const house = merged.find((item) => item.id === "בית-2000") as { addedBy?: string };
+    assert.equal(house?.addedBy, "משפחת כהן");
   });
 
   it("keeps ownerPhone on admin merge for internal contact", () => {
@@ -126,5 +165,68 @@ describe("mergeVisibleHouses", () => {
     });
     const house = merged.find((item) => item.id === "a");
     assert.equal(house?.address, "חרוזים");
+  });
+
+  it("enrichHousesWithAdminLocations fills redacted catalog rows", () => {
+    const catalog = [
+      {
+        ...publicHouse("בית-9001", "2026-10-31T10:00:00.000Z"),
+        address: "",
+        arrival: "",
+      },
+    ];
+    const admin = [
+      {
+        ...adminHouse("בית-9001", "2026-10-31T10:00:00.000Z"),
+        address: "רוקח 32",
+        arrival: "קומה 1",
+      },
+    ];
+    const enriched = enrichHousesWithAdminLocations(catalog, admin, true);
+    assert.equal(enriched[0]?.address, "רוקח 32");
+    assert.equal(enriched[0]?.arrival, "קומה 1");
+  });
+
+  it("drops catalog-removed owned previews from the public merge", () => {
+    mockCatalogRemovedStorage();
+    noteCatalogRemovals(["gone"], "2026-10-31T12:00:00.000Z");
+    const merged = mergeVisibleHouses({
+      catalogHouses: [],
+      owned: [
+        {
+          id: "gone",
+          name: "בית",
+          editCode: "111111",
+          preview: publicHouse("gone", "2026-10-31T12:00:00.000Z"),
+        },
+      ],
+      admin: false,
+      adminHouses: [],
+    });
+    assert.equal(merged.length, 0);
+  });
+
+  it("does not restore redacted address when restoreRedactedLocations is false", () => {
+    const merged = mergeVisibleHouses({
+      catalogHouses: [],
+      owned: [
+        {
+          id: "a",
+          name: "בית",
+          editCode: "111111",
+          preview: {
+            ...publicHouse("a", "2026-10-31T12:00:00.000Z"),
+            address: "",
+            arrival: "",
+          },
+        },
+      ],
+      admin: true,
+      adminHouses: [adminHouse("a", "2026-10-31T10:00:00.000Z")],
+      includeCatalogWhenAdmin: true,
+      restoreRedactedLocations: false,
+    });
+    const house = merged.find((item) => item.id === "a");
+    assert.equal(house?.address, "");
   });
 });

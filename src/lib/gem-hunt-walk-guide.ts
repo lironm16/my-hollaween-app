@@ -1,4 +1,11 @@
 import { bearingClockLabelHe } from "@/lib/gem-hunt";
+import {
+  GEM_WALK_APPROACH_HE,
+  GEM_WALK_BEHIND_HE,
+  GEM_WALK_STRAIGHT_HE,
+  GEM_WALK_TURN_LEFT_HE,
+  GEM_WALK_TURN_RIGHT_HE,
+} from "@/lib/gem-hunt-copy";
 
 export const GEM_BEHIND_TURN_DEG = 120;
 
@@ -9,15 +16,15 @@ export function gemWalkGuideCopy(
   gpsBearingToAnchor: number | null,
 ) {
   if (huntArrowPhoneRelative && turnBearing != null) {
-    if (facingTarget) return "המשיכו ישר — היהלום מולכם";
+    if (facingTarget) return GEM_WALK_STRAIGHT_HE;
     if (Math.abs(turnBearing) >= GEM_BEHIND_TURN_DEG) {
-      return "היהלום מאחוריכם — סובבו את הגוף";
+      return GEM_WALK_BEHIND_HE;
     }
-    if (turnBearing > 0) return "סובבו ימינה לכיוון היהלום";
-    return "סובבו שמאלה לכיוון היהלום";
+    if (turnBearing > 0) return GEM_WALK_TURN_RIGHT_HE;
+    return GEM_WALK_TURN_LEFT_HE;
   }
   if (gpsBearingToAnchor != null) {
     return `כיוון לפי GPS: ${bearingClockLabelHe(gpsBearingToAnchor)} — סובבו את הגוף (צפון = למעלה)`;
   }
-  return "התקרבו לנקודת היהלום";
+  return GEM_WALK_APPROACH_HE;
 }
