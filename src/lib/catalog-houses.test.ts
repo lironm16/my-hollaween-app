@@ -4,6 +4,7 @@ import {
   catalogCacheIncomplete,
   catalogNeedsFullRefresh,
   catalogServerCountMismatch,
+  catalogServerCountSatisfied,
   isAuthoritativeHouseList,
   localCatalogHouseCount,
   resolveCatalogHouses,
@@ -94,6 +95,23 @@ describe("catalogServerCountMismatch", () => {
     const partial = catalog([house("a")], "2026-10-31T10:00:00.000Z");
     assert.equal(catalogServerCountMismatch(partial, 88), true);
     assert.equal(catalogServerCountMismatch(partial, 1), false);
+  });
+});
+
+describe("catalogServerCountSatisfied", () => {
+  it("accepts inline rows above real-only houseCount metadata", () => {
+    const full = catalog(
+      Array.from({ length: 151 }, (_, index) => house(`house-${index}`)),
+      "2026-10-31T10:00:00.000Z",
+      { houseCount: 91 },
+    );
+    assert.equal(catalogServerCountSatisfied(full, 91), true);
+    assert.equal(catalogServerCountSatisfied(full, 151), true);
+  });
+
+  it("rejects partial caches below server houseCount", () => {
+    const partial = catalog([house("a"), house("b")], "2026-10-31T10:00:00.000Z", { houseCount: 2 });
+    assert.equal(catalogServerCountSatisfied(partial, 91), false);
   });
 });
 

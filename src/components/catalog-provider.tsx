@@ -26,10 +26,12 @@ import {
   withDeviceHouseOverlays,
 } from "@/lib/offline-db";
 import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
+import { runCatalogBootMigrationIfNeeded } from "@/lib/catalog-boot-migration";
 import {
   catalogCacheIncomplete,
   catalogNeedsFullRefresh,
   catalogServerCountMismatch,
+  catalogServerCountSatisfied,
   isAuthoritativeHouseList,
   localCatalogHouseCount,
   resolveServerHouseCount,
@@ -162,7 +164,7 @@ async function recoverCatalogShortfall(
     merged = withDeviceHouseOverlays(applyCatalogResponse(merged, live));
     resolvedCount = resolvedCount ?? resolveServerHouseCount(live) ?? resolveServerHouseCount(merged);
 
-    if (resolvedCount != null && !catalogServerCountMismatch(merged, resolvedCount)) {
+    if (resolvedCount != null && catalogServerCountSatisfied(merged, resolvedCount)) {
       return merged;
     }
   } catch {
@@ -279,6 +281,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   useLayoutEffect(() => {
     if (cacheHydratedRef.current) return;
     cacheHydratedRef.current = true;
+    runCatalogBootMigrationIfNeeded();
     const syncCache = loadCatalogCacheSync();
     if (!syncCache) {
       setLoading(false);
@@ -428,12 +431,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     if (serverCount != null && serverCount < next.houses.length) {
       clearCatalogCacheComplete();
     }
-    if (
-      live.full ||
-      (serverCount != null &&
-        serverCount >= next.houses.length &&
-        next.houses.length >= serverCount)
-    ) {
+    if (live.full || catalogServerCountSatisfied(next, serverCount)) {
       markCatalogCacheComplete(next);
     }
     await saveCatalogCache(next);
@@ -483,6 +481,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         needsFullRefresh,
         serverCount: expectedServerCount,
         cacheMarkedComplete: cacheMeta?.complete,
+        catalogHouseCount: catalogRef.current?.houseCount ?? null,
       })
     ) {
       try {
@@ -509,7 +508,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           const target = serverCountAfterPoll;
           if (
             recovered &&
-            !catalogServerCountMismatch(recovered, target) &&
+            catalogServerCountSatisfied(recovered, target) &&
             localCatalogHouseCount(recovered) >= localCatalogHouseCount(current)
           ) {
             setCatalog((prev) => publishCatalog(recovered, prev) ?? recovered);
@@ -563,7 +562,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         forceFull: force,
       });
       const resolvedTarget = resolveServerHouseCount(recovered) ?? shortfallTarget;
-      if (resolvedTarget != null && recovered && !catalogServerCountMismatch(recovered, resolvedTarget)) {
+      if (resolvedTarget != null && recovered && catalogServerCountSatisfied(recovered, resolvedTarget)) {
         setCatalog((prev) => publishCatalog(recovered, prev) ?? recovered);
         if (!isMapListSuspended()) {
           setSource("network");
@@ -606,10 +605,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         }
         const serverCountFinal =
           resolveServerHouseCount(live) ?? resolveServerHouseCount(merged);
-        if (
-          serverCountFinal == null ||
-          !catalogServerCountMismatch(merged, serverCountFinal)
-        ) {
+        if (serverCountFinal == null || catalogServerCountSatisfied(merged, serverCountFinal)) {
           markCatalogCacheComplete(merged);
         }
         setCatalog((prev) => publishCatalog(merged, prev) ?? merged);

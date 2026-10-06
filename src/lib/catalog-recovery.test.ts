@@ -102,6 +102,20 @@ describe("shouldUseSteadyDeltaPoll", () => {
     );
   });
 
+  it("blocks delta polls when inline count disagrees with catalog houseCount metadata", () => {
+    assert.equal(
+      shouldUseSteadyDeltaPoll({
+        localCount: 5,
+        since: "2026-10-31T12:00:00.000Z",
+        needsFullRefresh: false,
+        serverCount: 5,
+        cacheMarkedComplete: true,
+        catalogHouseCount: 91,
+      }),
+      false,
+    );
+  });
+
   it("blocks delta polls when server count is unknown and cache is not marked complete", () => {
     assert.equal(
       shouldUseSteadyDeltaPoll({

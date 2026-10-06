@@ -1,4 +1,4 @@
-import { localCatalogHouseCount } from "@/lib/catalog-houses";
+import { catalogServerCountSatisfied, localCatalogHouseCount } from "@/lib/catalog-houses";
 import type { Catalog } from "@/lib/types";
 
 export function catalogShortfall(
@@ -25,9 +25,18 @@ export function shouldUseSteadyDeltaPoll(input: {
   needsFullRefresh: boolean;
   serverCount?: number | null;
   cacheMarkedComplete?: boolean;
+  /** When set, block steady polls while inline rows disagree with server count metadata. */
+  catalogHouseCount?: number | null;
 }): boolean {
   if (!input.since || input.needsFullRefresh) return false;
   if (input.localCount === 0) return false;
+  if (
+    typeof input.catalogHouseCount === "number" &&
+    input.catalogHouseCount >= 0 &&
+    input.catalogHouseCount !== input.localCount
+  ) {
+    return false;
+  }
   if (input.serverCount == null || input.serverCount < 0) {
     return Boolean(input.cacheMarkedComplete);
   }
