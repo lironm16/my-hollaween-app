@@ -1446,6 +1446,436 @@
       "boothNumber": 1
     },
     {
+      "id": "בית-9321",
+      "name": "👻 ניצנים — דוכן 2",
+      "theme": "ghost",
+      "address": "ביה״ס ניצנים",
+      "arrival": "דוכן 2",
+      "description": "דוכן קישוט וממתקים בביה״ס ניצנים (דוכן 2).",
+      "lat": 32.093264,
+      "lng": 34.81124,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "932002",
+      "createdAt": "2026-10-06T16:00:00.000Z",
+      "updatedAt": "2026-10-06T16:00:00.000Z",
+      "neighborhood": "שיכון ותיקים",
+      "addedBy": "דוכני ביה״ס",
+      "boothNumber": 2
+    },
+    {
+      "id": "בית-9322",
+      "name": "🕷️ ניצנים — דוכן 3",
+      "theme": "spider",
+      "address": "ביה״ס ניצנים",
+      "arrival": "דוכן 3",
+      "description": "דוכן קישוט וממתקים בביה״ס ניצנים (דוכן 3).",
+      "lat": 32.093264,
+      "lng": 34.81124,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
+      "visit": "come",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "932003",
+      "createdAt": "2026-10-06T16:00:00.000Z",
+      "updatedAt": "2026-10-06T16:00:00.000Z",
+      "neighborhood": "שיכון ותיקים",
+      "addedBy": "דוכני ביה״ס",
+      "boothNumber": 3
+    },
+    {
+      "id": "בית-9342",
+      "name": "🍬 ניצנים — דוכן 4",
+      "theme": "candy",
+      "address": "ביה״ס ניצנים",
+      "arrival": "דוכן 4",
+      "description": "דוכן קישוט וממתקים בביה״ס ניצנים (דוכן 4).",
+      "lat": 32.093264,
+      "lng": 34.81124,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/pumpkin-porch.jpg",
+      "editCode": "932004",
+      "createdAt": "2026-10-06T16:00:00.000Z",
+      "updatedAt": "2026-10-06T16:00:00.000Z",
+      "neighborhood": "שיכון ותיקים",
+      "addedBy": "דוכני ביה״ס",
+      "boothNumber": 4
+    },
+    {
+      "id": "בית-9343",
+      "name": "🧙 ניצנים — דוכן 5",
+      "theme": "witch",
+      "address": "ביה״ס ניצנים",
+      "arrival": "דוכן 5",
+      "description": "דוכן קישוט וממתקים בביה״ס ניצנים (דוכן 5).",
+      "lat": 32.093264,
+      "lng": 34.81124,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/pumpkin-porch.jpg",
+      "editCode": "932005",
+      "createdAt": "2026-10-06T16:00:00.000Z",
+      "updatedAt": "2026-10-06T16:00:00.000Z",
+      "neighborhood": "שיכון ותיקים",
+      "addedBy": "דוכני ביה״ס",
+      "boothNumber": 5
+    },
+    {
+      "id": "בית-9344",
+      "name": "🧛 ניצנים — דוכן 6",
+      "theme": "vampire",
+      "address": "ביה״ס ניצנים",
+      "arrival": "דוכן 6",
+      "description": "דוכן קישוט וממתקים בביה״ס ניצנים (דוכן 6).",
+      "lat": 32.093264,
+      "lng": 34.81124,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/pumpkin-porch.jpg",
+      "editCode": "932006",
+      "createdAt": "2026-10-06T16:00:00.000Z",
+      "updatedAt": "2026-10-06T16:00:00.000Z",
+      "neighborhood": "שיכון ותיקים",
+      "addedBy": "דוכני ביה״ס",
+      "boothNumber": 6
+    },
+    {
+      "id": "בית-9345",
+      "name": "🎃 ניצנים — דוכן 7",
+      "theme": "pumpkin",
+      "address": "ביה״ס ניצנים",
+      "arrival": "דוכן 7",
+      "description": "דוכן קישוט וממתקים בביה״ס ניצנים (דוכן 7).",
+      "lat": 32.093264,
+      "lng": 34.81124,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/pumpkin-porch.jpg",
+      "editCode": "932007",
+      "createdAt": "2026-10-06T16:00:00.000Z",
+      "updatedAt": "2026-10-06T16:00:00.000Z",
+      "neighborhood": "שיכון ותיקים",
+      "addedBy": "דוכני ביה״ס",
+      "boothNumber": 7
+    },
+    {
+      "id": "בית-9346",
+      "name": "👻 ניצנים — דוכן 8",
+      "theme": "ghost",
+      "address": "ביה״ס ניצנים",
+      "arrival": "דוכן 8",
+      "description": "דוכן קישוט וממתקים בביה״ס ניצנים (דוכן 8).",
+      "lat": 32.093264,
+      "lng": 34.81124,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "932008",
+      "createdAt": "2026-10-06T16:00:00.000Z",
+      "updatedAt": "2026-10-06T16:00:00.000Z",
+      "neighborhood": "שיכון ותיקים",
+      "addedBy": "דוכני ביה״ס",
+      "boothNumber": 8
+    },
+    {
+      "id": "בית-9347",
+      "name": "🕷️ ניצנים — דוכן 9",
+      "theme": "spider",
+      "address": "ביה״ס ניצנים",
+      "arrival": "דוכן 9",
+      "description": "דוכן קישוט וממתקים בביה״ס ניצנים (דוכן 9).",
+      "lat": 32.093264,
+      "lng": 34.81124,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "low"
+      },
+      "visit": "come",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "932009",
+      "createdAt": "2026-10-06T16:00:00.000Z",
+      "updatedAt": "2026-10-06T16:00:00.000Z",
+      "neighborhood": "שיכון ותיקים",
+      "addedBy": "דוכני ביה״ס",
+      "boothNumber": 9
+    },
+    {
+      "id": "בית-9348",
+      "name": "🍬 ניצנים — דוכן 10",
+      "theme": "candy",
+      "address": "ביה״ס ניצנים",
+      "arrival": "דוכן 10",
+      "description": "דוכן קישוט וממתקים בביה״ס ניצנים (דוכן 10).",
+      "lat": 32.093264,
+      "lng": 34.81124,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/pumpkin-porch.jpg",
+      "editCode": "932010",
+      "createdAt": "2026-10-06T16:00:00.000Z",
+      "updatedAt": "2026-10-06T16:00:00.000Z",
+      "neighborhood": "שיכון ותיקים",
+      "addedBy": "דוכני ביה״ס",
+      "boothNumber": 10
+    },
+    {
+      "id": "בית-9349",
+      "name": "🎃 ניצנים — דוכן 11",
+      "theme": "pumpkin",
+      "address": "ביה״ס ניצנים",
+      "arrival": "דוכן 11",
+      "description": "דוכן קישוט וממתקים בביה״ס ניצנים (דוכן 11).",
+      "lat": 32.093264,
+      "lng": 34.81124,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "",
+      "accessible": true,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/pumpkin-porch.jpg",
+      "editCode": "932011",
+      "createdAt": "2026-10-06T16:00:00.000Z",
+      "updatedAt": "2026-10-06T16:00:00.000Z",
+      "neighborhood": "שיכון ותיקים",
+      "addedBy": "דוכני ביה״ס",
+      "boothNumber": 11
+    },
+    {
       "id": "בית-9323",
       "name": "🎃 המנחיל — כיתה א׳",
       "theme": "pumpkin",
