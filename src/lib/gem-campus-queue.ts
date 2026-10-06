@@ -15,6 +15,17 @@ export function gemClusterSessionMembers(
 /** @deprecated Use {@link gemClusterSessionMembers}. */
 export const gemCampusSessionMembers = gemClusterSessionMembers;
 
+/** First uncollected house in cluster order (members sorted by booth/unit). */
+export function firstClusterGemHouseToHunt(
+  members: readonly PublicHouse[],
+  isCollected: (houseId: string) => boolean,
+): PublicHouse | null {
+  for (const h of members) {
+    if (!isCollected(h.id)) return h;
+  }
+  return null;
+}
+
 /** Next house in cluster order after `justCollectedId` (members sorted by booth/unit). */
 export function nextClusterGemHouse(
   members: readonly PublicHouse[],

@@ -6,6 +6,9 @@ import { Heart, MoreVertical, Navigation } from "lucide-react";
 import { SavedTrafficIcon, SkipTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
 import { SkipOutlineIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
+import { ImpMenuActiveGlyph } from "@/components/imp-marker-glyph";
+import { ImpOutlineIcon } from "@/components/imp-outline-icon";
+import { GEM_CLUSTER_FIND_ALL_HE, GEM_CLUSTER_FOUND_ALL_HE } from "@/lib/gem-hunt-copy";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { houseMapsUrl } from "@/lib/nav-links";
@@ -39,6 +42,8 @@ export function ClusterHouseActionMenu({
   onRestoreAll,
   onLikeAll,
   onUnlikeAll,
+  gemCollected,
+  onFindAllGems,
   menuPlacement = "bottom",
   className,
 }: {
@@ -52,6 +57,8 @@ export function ClusterHouseActionMenu({
   onRestoreAll?: () => void;
   onLikeAll?: () => void;
   onUnlikeAll?: () => void;
+  gemCollected?: (id: string) => boolean;
+  onFindAllGems?: () => void;
   menuPlacement?: "top" | "bottom";
   className?: string;
 }) {
@@ -69,6 +76,8 @@ export function ClusterHouseActionMenu({
   const allVisited = houses.length > 0 && houses.every((house) => visited(house.id));
   const allSkipped = houses.length > 0 && houses.every((house) => skipped(house.id));
   const allLiked = houses.length > 0 && houses.every((house) => liked(house.id));
+  const allGemsCollected =
+    houses.length > 0 && gemCollected != null && houses.every((house) => gemCollected(house.id));
 
   useEffect(() => {
     if (!open) return;
@@ -142,6 +151,19 @@ export function ClusterHouseActionMenu({
       active: allLiked,
     });
   }
+  if (gemCollected && (onFindAllGems || allGemsCollected) && houses.length >= 2) {
+    items.push({
+      id: "gem-all",
+      label: allGemsCollected ? GEM_CLUSTER_FOUND_ALL_HE : GEM_CLUSTER_FIND_ALL_HE,
+      icon: allGemsCollected ? (
+        <ImpMenuActiveGlyph className={MENU_ACTIVE_ICON_CLASS} />
+      ) : (
+        <ImpOutlineIcon className={MENU_ICON_CLASS} />
+      ),
+      onClick: allGemsCollected ? undefined : onFindAllGems,
+      active: allGemsCollected,
+    });
+  }
 
   useLayoutEffect(() => {
     if (!open) return;
@@ -203,6 +225,7 @@ export function ClusterHouseActionMenu({
       item.active && item.id === "like-all" && "is-active-saved",
       item.active && item.id === "visit-all" && "is-active-visited",
       item.active && item.id === "skip-all" && "is-active-skipped",
+      item.active && item.id === "gem-all" && "is-active-gem",
     );
   }
 
@@ -241,6 +264,7 @@ export function ClusterHouseActionMenu({
                 onClick={(event) => {
                   event.stopPropagation();
                   item.onClick?.();
+                  setOpen(false);
                 }}
               >
                 <span className="house-action-menu-icon">{item.icon}</span>

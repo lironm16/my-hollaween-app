@@ -55,11 +55,7 @@ import {
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { cn } from "@/lib/utils";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
-import {
-  gemClusterQueueHeadline,
-  gemClusterSessionMembers,
-  nextClusterGemHouse,
-} from "@/lib/gem-campus-queue";
+import { gemClusterQueueHeadline, nextClusterGemHouse } from "@/lib/gem-campus-queue";
 
 export function GemHuntPanel({
   house,
@@ -151,8 +147,7 @@ export function GemHuntPanel({
       return;
     }
     setHuntLocation(fresh ?? userLocation);
-    const clusterMembers = gemClusterSessionMembers(mapHousesForCelebrate, house);
-    setHuntClusterMembers(clusterMembers);
+    setHuntClusterMembers(null);
     setHuntTargetHouse(house);
     setHuntOpen(true);
   }, [house, mapHousesForCelebrate, onOpenHunt, userLocation]);

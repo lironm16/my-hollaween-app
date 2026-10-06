@@ -421,6 +421,12 @@ export function MapHouseSheet({
                       ? () => actionContext.onClusterUnlikeAll!(clusterHouses)
                       : undefined
                   }
+                  gemCollected={actionContext.gemCollected}
+                  onFindAllGems={
+                    actionContext.onClusterFindAllGems
+                      ? () => actionContext.onClusterFindAllGems!(clusterHouses)
+                      : undefined
+                  }
                 />
               </div>
               {clusterAllSkipped && actionContext.onClusterRestoreAll ? (

@@ -24,6 +24,9 @@ export const GEM_FAB_FOUND_COUNT_ARIA_HE = (n: number) => `${n} שדונים`;
 
 export const GEM_HOUSE_KICKER_HE = "שדון נסתר · גלו במצלמה";
 export const GEM_ACTION_FIND_HE = "מצא שדון";
+/** Cluster ⋮ menu — start sequential hunt for every booth/unit at the address. */
+export const GEM_CLUSTER_FIND_ALL_HE = "מצא הכל";
+export const GEM_CLUSTER_FOUND_ALL_HE = "מצאתי הכל";
 export const GEM_MAP_COMPLETE_TITLE_HE = "כל השדונים נמצאו!";
 
 export const GEM_COLLECT_NEW_HE = "כל הכבוד!! מצאתם שדון חדש!";

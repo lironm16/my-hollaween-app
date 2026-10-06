@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  firstClusterGemHouseToHunt,
   gemClusterQueueHeadline,
   gemClusterSessionMembers,
   nextClusterGemHouse,
@@ -41,6 +42,17 @@ describe("gem cluster queue", () => {
     ];
     assert.ok(gemClusterSessionMembers(building, building[0]!));
     assert.equal(gemClusterSessionMembers([building[0]!], building[0]!), null);
+  });
+
+  it("picks first uncollected house to start cluster hunt", () => {
+    const members = [
+      house("a", "ביה״ס ניצנים", 1, "א"),
+      house("b", "ביה״ס ניצנים", 2, "ב"),
+    ];
+    const collected = new Set<string>(["a"]);
+    assert.equal(firstClusterGemHouseToHunt(members, (id) => collected.has(id))?.id, "b");
+    collected.add("b");
+    assert.equal(firstClusterGemHouseToHunt(members, (id) => collected.has(id)), null);
   });
 
   it("advances by booth/unit order", () => {

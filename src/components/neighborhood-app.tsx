@@ -54,8 +54,8 @@ import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-ce
 import { loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
 import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
 import {
+  firstClusterGemHouseToHunt,
   gemClusterQueueHeadline,
-  gemClusterSessionMembers,
   nextClusterGemHouse,
 } from "@/lib/gem-campus-queue";
 import { gemMapLegendVisible } from "@/lib/gem-hunt-enabled";
@@ -408,9 +408,8 @@ export function NeighborhoodApp({
     return mapGemHouses.every((h) => gems.collected(h.id));
   }, [gemHuntActive, mapGemHouses, gems.collectedIds]);
 
-  const openGemHuntForHouse = useCallback(
-    async (house: PublicHouse) => {
-      if (gems.collected(house.id)) return;
+  const bootMapGemHunt = useCallback(
+    async (house: PublicHouse, clusterMembers: PublicHouse[] | null) => {
       const gen = ++mapGemOpenGenRef.current;
       preloadGemHuntChunks();
       getGemHuntPortalRoot();
@@ -448,10 +447,28 @@ export function NeighborhoodApp({
       }
       setMapGemWebXrSession(xrSession);
       setMapGemGps(freshGps);
-      setMapGemClusterMembers(gemClusterSessionMembers(mapHouses, house));
+      setMapGemClusterMembers(clusterMembers);
       setMapGemHouse(house);
     },
-    [gems, geo, gps, mapHouses, selection, setWatchEnabled],
+    [geo, gps, selection, setWatchEnabled],
+  );
+
+  const openGemHuntForHouse = useCallback(
+    async (house: PublicHouse) => {
+      if (gems.collected(house.id)) return;
+      await bootMapGemHunt(house, null);
+    },
+    [bootMapGemHunt, gems],
+  );
+
+  const openGemHuntForCluster = useCallback(
+    async (houses: PublicHouse[]) => {
+      if (houses.length < 2) return;
+      const target = firstClusterGemHouseToHunt(houses, gems.collected);
+      if (!target) return;
+      await bootMapGemHunt(target, houses);
+    },
+    [bootMapGemHunt, gems.collected],
   );
 
   const restoreAfterGemHunt = useCallback(() => {
@@ -1245,6 +1262,7 @@ export function NeighborhoodApp({
       onClusterRestoreAll: applyClusterRestoreAll,
       onClusterLikeAll: applyClusterLikeAll,
       onClusterUnlikeAll: applyClusterUnlikeAll,
+      onClusterFindAllGems: gemUi ? openGemHuntForCluster : undefined,
       canEdit: (id) => Boolean(admin || owned.some((item) => item.id === id)),
       editCodeFor: (id) =>
         admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode,
@@ -1263,6 +1281,7 @@ export function NeighborhoodApp({
     onToggleLike,
     onToggleVisited,
     handleToggleGemMenu,
+    openGemHuntForCluster,
     handleSkipHouse,
     handleRestoreHouse,
     view,
