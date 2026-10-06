@@ -100,7 +100,7 @@ async function main() {
   const data = await loadSource();
   const houses = stripStubHouses(data.houses ?? []);
   const skipped = (data.houses?.length ?? 0) - houses.length;
-  if (skipped) console.log(`Skipping ${skipped} legacy isStub houses`);
+  if (skipped) console.log(`Skipping ${skipped} rehearsal stub houses (served from seed.json)`);
   console.log(`Writing ${houses.length} houses to neighborhoods/${nId}/houses`);
   for (let i = 0; i < houses.length; i += 400) {
     const batch = db.batch();

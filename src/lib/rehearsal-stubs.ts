@@ -1,0 +1,32 @@
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import { isStubHouse } from "@/lib/house-set";
+
+const SEED_PATH = path.join(process.cwd(), "data/seed.json");
+
+type StubRow = { id: string; isStub?: boolean; [key: string]: unknown };
+
+let cachedRows: StubRow[] | null = null;
+
+/** Static QA rows in seed.json — not loaded from Firestore. */
+export async function loadStaticRehearsalStubRows(): Promise<StubRow[]> {
+  if (cachedRows) return cachedRows;
+  const raw = JSON.parse(await fs.readFile(SEED_PATH, "utf8")) as { houses?: StubRow[] };
+  cachedRows = (raw.houses ?? []).filter(
+    (house) => house.id && isStubHouse(house),
+  );
+  return cachedRows;
+}
+
+export function stripStubHouses<T extends { isStub?: boolean; deviceCacheStub?: boolean }>(
+  houses: readonly T[],
+): T[] {
+  return houses.filter((house) => !isStubHouse(house));
+}
+
+/** Drop stub rows for isolated DATA_DIR servers that mirror production listings. */
+export function housesForIsolatedTestDb<T extends { isStub?: boolean; deviceCacheStub?: boolean }>(
+  houses: readonly T[],
+): T[] {
+  return houses.filter((house) => !isStubHouse(house));
+}

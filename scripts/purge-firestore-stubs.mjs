@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Remove rehearsal stub house documents from Firestore.
- * Legacy QA rows marked isStub should not live in Firestore.
+ * Stubs are served statically from data/seed.json — they should not live in Firestore.
  *
  * Env: same Firebase credentials as migrate-to-firestore.mjs
  */

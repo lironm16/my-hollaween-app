@@ -26,13 +26,6 @@ export function isStubHouse(house: {
   return false;
 }
 
-/** Drop legacy QA rows still marked `isStub` in Firestore or old exports. */
-export function stripStubHouses<T extends { isStub?: boolean; deviceCacheStub?: boolean }>(
-  houses: readonly T[],
-): T[] {
-  return houses.filter((house) => !isStubHouse(house));
-}
-
 function isHouseSet(value: string | null | undefined): value is HouseSet {
   return Boolean(value && (HOUSE_SETS as readonly string[]).includes(value));
 }
@@ -136,7 +129,7 @@ export function catalogHasRealHouses(
 
 /**
  * Non-admins normally see only real houses. On Vercel Preview deployments, show
- * legacy isStub rows too when present in the cached catalog.
+ * rehearsal stubs too (real + stubs) so QA can test schools and edge cases.
  * Production visitors always stay on real-only.
  */
 export function resolveViewerHouseSet(

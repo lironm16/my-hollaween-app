@@ -6,4 +6,9 @@ export function resetManagerClientSettings() {
   writeRehearsalScene("off");
   writeServerSimDown(false);
   writeHouseSet("real");
+  try {
+    localStorage.removeItem("hw-gem-lab-stubs");
+  } catch {
+    /* private mode */
+  }
 }
