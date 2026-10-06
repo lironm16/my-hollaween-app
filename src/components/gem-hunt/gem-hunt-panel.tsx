@@ -55,6 +55,11 @@ import {
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { cn } from "@/lib/utils";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
+import {
+  gemClusterQueueHeadline,
+  gemClusterSessionMembers,
+  nextClusterGemHouse,
+} from "@/lib/gem-campus-queue";
 
 export function GemHuntPanel({
   house,
@@ -78,6 +83,9 @@ export function GemHuntPanel({
   const calibratedCount = useMemo(() => countGemAnchorOverrides(), [anchorOverrideMap]);
   const router = useRouter();
   const [huntOpen, setHuntOpen] = useState(false);
+  /** Active row during multi-house cluster camera session (may differ from panel `house`). */
+  const [huntTargetHouse, setHuntTargetHouse] = useState<PublicHouse | null>(null);
+  const [huntClusterMembers, setHuntClusterMembers] = useState<PublicHouse[] | null>(null);
   const [huntLocation, setHuntLocation] = useState<UserLocation | null>(null);
   const [bootWebXrSession, setBootWebXrSession] = useState<XRSession | null>(null);
   const [simulate, setSimulate] = useState(adminSimulateInRange);
@@ -143,14 +151,42 @@ export function GemHuntPanel({
       return;
     }
     setHuntLocation(fresh ?? userLocation);
+    const clusterMembers = gemClusterSessionMembers(mapHousesForCelebrate, house);
+    setHuntClusterMembers(clusterMembers);
+    setHuntTargetHouse(house);
     setHuntOpen(true);
-  }, [onOpenHunt, userLocation]);
+  }, [house, mapHousesForCelebrate, onOpenHunt, userLocation]);
+
+  const huntHouse = huntTargetHouse ?? house;
+
+  const huntClusterQueueUi = useMemo(() => {
+    if (!huntClusterMembers || !huntTargetHouse) return undefined;
+    return gemClusterQueueHeadline(huntTargetHouse, huntClusterMembers);
+  }, [huntClusterMembers, huntTargetHouse]);
+
+  const huntCanCollect = canCollectGem(
+    userLocation,
+    huntHouse,
+    gems.collected(huntHouse.id),
+    true,
+    simulate,
+  );
 
   if (!visible) return null;
 
   const canCollect = canCollectGem(userLocation, house, collected, true, simulate);
   const anchor = gemAnchorForHouse(house);
   const anchorCalibrated = Boolean(anchorOverrideMap[house.id]) || anchor.calibrated === true;
+
+  function closeHunt() {
+    huntOpenGenRef.current += 1;
+    releaseGemHuntCamera();
+    void endGemHuntWebXrSession(bootWebXrSession);
+    setBootWebXrSession(null);
+    setHuntOpen(false);
+    setHuntTargetHouse(null);
+    setHuntClusterMembers(null);
+  }
 
   function onCollect(collectedVariant: GemMonsterId, options?: GemCollectFinishOptions) {
     const collectedBefore = loadGemCollected();
@@ -159,13 +195,12 @@ export function GemHuntPanel({
         ? gemBagCelebrateAfterCollect(
             mapHousesForCelebrate,
             collectedBefore,
-            house.id,
+            huntHouse.id,
             collectedVariant,
           )
         : null;
-    gems.collect(house.id, collectedVariant);
-    releaseGemHuntCamera();
-    setHuntOpen(false);
+    gems.collect(huntHouse.id, collectedVariant);
+    closeHunt();
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate(40);
     }
@@ -319,24 +354,42 @@ export function GemHuntPanel({
       </section>
 
       <GemCheer show={gemCheer} house={house} monsterId={gemCheerPet ?? undefined} />
-      {huntOpen ? (
+      {huntOpen && huntTargetHouse ? (
         <GemHuntExperienceLazy
-          house={house}
+          house={huntTargetHouse}
           userLocation={huntLocation ?? userLocation}
           simulateInRange={simulate}
           deferCameraUntilInRange={false}
-          collectEnabled={canCollect}
-          encounterMode
-          repeatVisit={collected}
+          collectEnabled={huntCanCollect}
+          encounterMode={!huntClusterMembers}
+          repeatVisit={gems.collected(huntTargetHouse.id)}
           tellMeHuntRadiusEnforced={tellMeHuntRadiusEnforced}
           initialWebXrSession={bootWebXrSession}
-          onClose={() => {
-            huntOpenGenRef.current += 1;
-            releaseGemHuntCamera();
-            void endGemHuntWebXrSession(bootWebXrSession);
-            setBootWebXrSession(null);
-            setHuntOpen(false);
-          }}
+          campusQueue={huntClusterQueueUi}
+          onCollectPersist={
+            huntClusterMembers
+              ? (monsterId) => {
+                  gems.collect(huntTargetHouse.id, monsterId);
+                }
+              : undefined
+          }
+          onCampusStepComplete={
+            huntClusterMembers
+              ? () => {
+                  const next = nextClusterGemHouse(
+                    huntClusterMembers,
+                    gems.collected,
+                    huntTargetHouse.id,
+                  );
+                  if (next) {
+                    setHuntTargetHouse(next);
+                    return;
+                  }
+                  closeHunt();
+                }
+              : undefined
+          }
+          onClose={closeHunt}
           onCollect={onCollect}
         />
       ) : null}

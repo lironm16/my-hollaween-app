@@ -1,17 +1,22 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
-  campusGemBoothHeadline,
-  gemCampusSessionMembers,
-  nextCampusGemHouse,
+  gemClusterQueueHeadline,
+  gemClusterSessionMembers,
+  nextClusterGemHouse,
 } from "@/lib/gem-campus-queue";
 import type { PublicHouse } from "@/lib/types";
 
-function booth(id: string, boothNumber: number, name: string): PublicHouse {
+function house(
+  id: string,
+  address: string,
+  boothNumber: number,
+  name: string,
+): PublicHouse {
   return {
     id,
     name,
-    address: "ביה״ס ניצנים",
+    address,
     lat: 32.093,
     lng: 34.811,
     boothNumber,
@@ -22,29 +27,47 @@ function booth(id: string, boothNumber: number, name: string): PublicHouse {
   } as PublicHouse;
 }
 
-describe("gem campus queue", () => {
-  it("detects multi-booth school campus", () => {
-    const map = [booth("a", 1, "א"), booth("b", 2, "ב")];
-    assert.ok(gemCampusSessionMembers(map, map[0]!));
-    assert.equal(gemCampusSessionMembers([booth("a", 1, "א")], map[0]!), null);
+describe("gem cluster queue", () => {
+  it("detects any multi-house cluster pin", () => {
+    const school = [
+      house("a", "ביה״ס ניצנים", 1, "א"),
+      house("b", "ביה״ס ניצנים", 2, "ב"),
+    ];
+    assert.ok(gemClusterSessionMembers(school, school[0]!));
+
+    const building = [
+      house("x", "חרוזים 8, חרוזים", 1, "דירה א"),
+      house("y", "חרוזים 8, חרוזים", 2, "דירה ב"),
+    ];
+    assert.ok(gemClusterSessionMembers(building, building[0]!));
+    assert.equal(gemClusterSessionMembers([building[0]!], building[0]!), null);
   });
 
-  it("advances by booth order", () => {
-    const members = [booth("a", 1, "א"), booth("b", 2, "ב"), booth("c", 3, "ג")];
+  it("advances by booth/unit order", () => {
+    const members = [
+      house("a", "ביה״ס ניצנים", 1, "א"),
+      house("b", "ביה״ס ניצנים", 2, "ב"),
+      house("c", "ביה״ס ניצנים", 3, "ג"),
+    ];
     const collected = new Set<string>();
     const isCollected = (id: string) => collected.has(id);
     collected.add("a");
-    assert.equal(nextCampusGemHouse(members, isCollected, "a")?.id, "b");
+    assert.equal(nextClusterGemHouse(members, isCollected, "a")?.id, "b");
     collected.add("b");
-    assert.equal(nextCampusGemHouse(members, isCollected, "b")?.id, "c");
+    assert.equal(nextClusterGemHouse(members, isCollected, "b")?.id, "c");
     collected.add("c");
-    assert.equal(nextCampusGemHouse(members, isCollected, "c"), null);
+    assert.equal(nextClusterGemHouse(members, isCollected, "c"), null);
   });
 
-  it("formats booth headline", () => {
-    const members = [booth("a", 2, "ממתקים"), booth("b", 3, "אימה")];
-    const { title, subtitle } = campusGemBoothHeadline(members[0]!, members);
-    assert.equal(title, "ממתקים");
-    assert.equal(subtitle, "דוכן 2");
+  it("formats school and apartment headlines", () => {
+    const school = [house("a", "ביה״ס ניצנים", 2, "ממתקים"), house("b", "ביה״ס ניצנים", 3, "אימה")];
+    const schoolHead = gemClusterQueueHeadline(school[0]!, school);
+    assert.equal(schoolHead.title, "ממתקים");
+    assert.equal(schoolHead.subtitle, "דוכן 2");
+
+    const apt = [house("x", "חרוזים 8", 4, "רוח רפאים"), house("y", "חרוזים 8", 5, "ממתקים")];
+    const aptHead = gemClusterQueueHeadline(apt[0]!, apt);
+    assert.equal(aptHead.title, "רוח רפאים");
+    assert.equal(aptHead.subtitle, "יחידה 4");
   });
 });

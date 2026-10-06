@@ -54,9 +54,9 @@ import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-ce
 import { loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
 import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
 import {
-  campusGemBoothHeadline,
-  gemCampusSessionMembers,
-  nextCampusGemHouse,
+  gemClusterQueueHeadline,
+  gemClusterSessionMembers,
+  nextClusterGemHouse,
 } from "@/lib/gem-campus-queue";
 import { gemMapLegendVisible } from "@/lib/gem-hunt-enabled";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
@@ -193,8 +193,8 @@ export function NeighborhoodApp({
   const gps = geo.location;
   const gems = useGemProgress();
   const [mapGemHouse, setMapGemHouse] = useState<PublicHouse | null>(null);
-  /** Sorted school booths when gem camera runs as one campus session. */
-  const [mapGemCampusMembers, setMapGemCampusMembers] = useState<PublicHouse[] | null>(null);
+  /** Sorted cluster houses when gem camera runs as one multi-unit session. */
+  const [mapGemClusterMembers, setMapGemClusterMembers] = useState<PublicHouse[] | null>(null);
   const [mapGemGps, setMapGemGps] = useState<UserLocation | null>(null);
   const [mapGemWebXrSession, setMapGemWebXrSession] = useState<XRSession | null>(null);
   const gemBadgePendingRef = useRef(false);
@@ -448,7 +448,7 @@ export function NeighborhoodApp({
       }
       setMapGemWebXrSession(xrSession);
       setMapGemGps(freshGps);
-      setMapGemCampusMembers(gemCampusSessionMembers(mapHouses, house));
+      setMapGemClusterMembers(gemClusterSessionMembers(mapHouses, house));
       setMapGemHouse(house);
     },
     [gems, geo, gps, mapHouses, selection, setWatchEnabled],
@@ -466,15 +466,15 @@ export function NeighborhoodApp({
     void endGemHuntWebXrSession(mapGemWebXrSession);
     setMapGemWebXrSession(null);
     setMapGemHouse(null);
-    setMapGemCampusMembers(null);
+    setMapGemClusterMembers(null);
     setMapGemGps(null);
     restoreAfterGemHunt();
   }, [mapGemWebXrSession, restoreAfterGemHunt]);
 
-  const mapGemCampusQueueUi = useMemo(() => {
-    if (!mapGemHouse || !mapGemCampusMembers) return undefined;
-    return campusGemBoothHeadline(mapGemHouse, mapGemCampusMembers);
-  }, [mapGemHouse, mapGemCampusMembers]);
+  const mapGemClusterQueueUi = useMemo(() => {
+    if (!mapGemHouse || !mapGemClusterMembers) return undefined;
+    return gemClusterQueueHeadline(mapGemHouse, mapGemClusterMembers);
+  }, [mapGemHouse, mapGemClusterMembers]);
 
   useEffect(() => {
     if (!gemBadgePendingRef.current) {
@@ -1665,10 +1665,10 @@ export function NeighborhoodApp({
           )}
           initialWebXrSession={mapGemWebXrSession}
           tellMeHuntRadiusEnforced={gemTellMeHuntRadiusEnforced(admin, gemPreviewAsUser)}
-          encounterMode={!mapGemCampusMembers}
-          campusQueue={mapGemCampusQueueUi}
+          encounterMode={!mapGemClusterMembers}
+          campusQueue={mapGemClusterQueueUi}
           onCollectPersist={
-            mapGemCampusMembers
+            mapGemClusterMembers
               ? (monsterId) => {
                   gems.collect(mapGemHouse.id, monsterId);
                   celebrateGemCollect();
@@ -1676,10 +1676,10 @@ export function NeighborhoodApp({
               : undefined
           }
           onCampusStepComplete={
-            mapGemCampusMembers
+            mapGemClusterMembers
               ? () => {
                   const h = mapGemHouse;
-                  const next = nextCampusGemHouse(mapGemCampusMembers, gems.collected, h.id);
+                  const next = nextClusterGemHouse(mapGemClusterMembers, gems.collected, h.id);
                   if (next) {
                     setMapGemHouse(next);
                     return;

@@ -96,8 +96,9 @@ export const GEM_ONSITE_TRUST_METERS = 12;
 
 /** Camera collect — per-gem choreography (see gem-collect-dance.ts / CSS). */
 export const GEM_COLLECT_OVERLAY_MS = 5000;
-/** School campus queue — one short dance per booth, then next. */
+/** Multi-house cluster queue — one short dance per house, then next. */
 export const GEM_CAMPUS_COLLECT_MS = 2400;
+/** @deprecated alias */ export const GEM_CLUSTER_COLLECT_MS = GEM_CAMPUS_COLLECT_MS;
 /** After collect dance — sticker flies into the album before closing the camera. */
 export const GEM_STICKER_REVEAL_MS = 3200;
 /** In-camera mini sticker book (off → navigate to /gem-bag?fly= after collect). */
@@ -108,11 +109,14 @@ export type GemCollectFinishOptions = {
   navigateStickerBook?: boolean;
 };
 
-/** Header on camera when hunting several school booths in one session. */
-export type GemCampusQueueUi = {
+/** Header on camera when hunting several houses at one address in one session. */
+export type GemClusterQueueUi = {
   boothTitle: string;
   boothSubtitle: string;
 };
+
+/** @deprecated Use {@link GemClusterQueueUi}. */
+export type GemCampusQueueUi = GemClusterQueueUi;
 /** Map toast after collect — matches visit/like cheer (~1.6s). */
 export const GEM_CHEER_MS = 1400;
 /** @deprecated use GEM_CHEER_MS */
