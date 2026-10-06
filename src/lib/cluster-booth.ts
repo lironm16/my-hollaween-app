@@ -32,7 +32,6 @@ export function clusterBoothLabel(
 ): string | null {
   const n = boothNumberForHouse(house);
   if (n == null) return null;
-  if (clusterIsSchoolCampus(cluster)) return `דוכן ${n}`;
-  if (cluster.length <= 1) return null;
-  return `יחידה ${n}`;
+  if (!clusterIsSchoolCampus(cluster)) return null;
+  return `דוכן ${n}`;
 }

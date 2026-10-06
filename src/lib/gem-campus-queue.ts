@@ -3,7 +3,7 @@ import { clusterMembersForHouse } from "@/lib/house-clusters";
 import type { GemClusterQueueUi } from "@/lib/gem-hunt";
 import type { PublicHouse } from "@/lib/types";
 
-/** Multi-house building pin (school דוכן or apartment יחידה) — one camera session for the cluster. */
+/** Multi-house building pin — one camera session for the cluster (school or shared address). */
 export function gemClusterSessionMembers(
   mapHouses: PublicHouse[],
   house: PublicHouse,
