@@ -388,10 +388,10 @@ export function MapStats(props: {
         </span>
         <span
           className={cn(
-            "absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-orange-500 font-bold leading-none text-black",
+            "absolute -right-1 inline-flex items-center justify-center rounded-full bg-orange-500 font-bold leading-none text-black",
             badgeWide
-              ? "min-h-7 min-w-7 px-1.5 text-[0.7rem] tabular-nums"
-              : "h-6 min-w-6 px-1 text-sm",
+              ? "-top-3 min-h-7 min-w-7 px-1.5 text-[0.7rem] tabular-nums"
+              : "-top-2.5 h-6 min-w-6 px-1 text-sm",
           )}
         >
           {badge}

@@ -1089,7 +1089,7 @@ export function NeighborhoodApp({
       houses.find((item) => item.id === id) ??
       visible.find((item) => item.id === id) ??
       mapListHouses.find((item) => item.id === id);
-    if (house) selection.selectOnMap(house);
+    if (house) selection.selectOnMap(house, { clusterOverview: false });
     else selection.showOnMap(id);
     setView("map");
   }
@@ -1167,6 +1167,21 @@ export function NeighborhoodApp({
       el.scrollTop = y;
     });
   }, [listContentObscured, view, routeMode, visible.length, gems.collectedIds.length]);
+
+  useEffect(() => {
+    const focusId = selection.listFocusId;
+    if (view !== "list" || !focusId || listContentObscured) return;
+    const scrollToHouse = () => {
+      const root = listScrollRef.current;
+      const row = root?.querySelector(`[data-list-house-id="${CSS.escape(focusId)}"]`);
+      if (row instanceof HTMLElement) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    };
+    scrollToHouse();
+    const t = window.setTimeout(scrollToHouse, 150);
+    return () => window.clearTimeout(t);
+  }, [view, selection.listFocusId, listContentObscured, visible.length]);
 
   const selectedFilterReasons = selected
     ? (() => {

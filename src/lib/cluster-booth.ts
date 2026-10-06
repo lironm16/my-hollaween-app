@@ -31,7 +31,8 @@ export function clusterBoothLabel(
   cluster: readonly Pick<PublicHouse, "address">[],
 ): string | null {
   const n = boothNumberForHouse(house);
-  if (n == null || cluster.length <= 1) return null;
+  if (n == null) return null;
   if (clusterIsSchoolCampus(cluster)) return `דוכן ${n}`;
+  if (cluster.length <= 1) return null;
   return `יחידה ${n}`;
 }

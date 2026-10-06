@@ -1,6 +1,7 @@
 "use client";
 
 import { GemMysteryTeaser3D } from "@/components/gem-hunt/gem-mystery-teaser-3d";
+import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { GEM_HOUSE_KICKER_HE } from "@/lib/gem-hunt-copy";
 import { gemLabelHe, gemMonsterForHouse } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
@@ -29,7 +30,12 @@ export function GemHouseFoundHero({
       dir="rtl"
     >
       {collected ? (
-        <p className="gem-house-found-hero__name gem-house-found-hero__name--solo">{petName}</p>
+        <>
+          <div className="gem-house-found-hero__gem-wrap" aria-hidden>
+            <ImpMarkerGlyph variant="solid" className="gem-house-found-hero__gem-icon" />
+          </div>
+          <p className="gem-house-found-hero__name gem-house-found-hero__name--solo">{petName}</p>
+        </>
       ) : (
         <>
           <div className="gem-house-found-hero__visual" aria-hidden>

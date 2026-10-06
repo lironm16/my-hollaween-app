@@ -148,7 +148,8 @@ export function MapHouseSheet({
     const chrome = el.querySelector(".map-house-sheet-chrome");
     const chromeH = chrome instanceof HTMLElement ? chrome.offsetHeight : 0;
     const contentH = body.scrollHeight;
-    return Math.min(peekPx(), Math.max(72, Math.ceil(chromeH + contentH)));
+    const cap = clusterDetail ? maxPx() : peekPx();
+    return Math.min(cap, Math.max(72, Math.ceil(chromeH + contentH)));
   }
 
   function publishSheetHeight(h: number) {
@@ -204,6 +205,7 @@ export function MapHouseSheet({
   }, [
     clusterKey,
     overview,
+    clusterDetail,
     editing,
     actionContext.skipped(house.id),
     filterMismatchReasons?.join("\0"),
@@ -496,9 +498,7 @@ export function MapHouseSheet({
                       }
                       hideHoursBanner={hideHoursBanner}
                       clusterBoothTag={
-                        clusterShell && clusterHouses.length > 1
-                          ? clusterBoothLabel(sheetHouse, clusterHouses)
-                          : undefined
+                        clusterShell ? clusterBoothLabel(sheetHouse, clusterHouses) : undefined
                       }
                     />
                   </section>

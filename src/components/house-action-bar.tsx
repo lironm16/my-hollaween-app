@@ -12,13 +12,8 @@ import {
   Pencil,
   Share2,
 } from "lucide-react";
-import { ImpMenuOutlineGlyph } from "@/components/imp-marker-glyph";
-import {
-  GemTrafficIcon,
-  SavedTrafficIcon,
-  SkipTrafficIcon,
-  VisitedTrafficIcon,
-} from "@/components/traffic-icons";
+import { ImpMarkerGlyph, ImpMenuOutlineGlyph } from "@/components/imp-marker-glyph";
+import { SavedTrafficIcon, SkipTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
 import { SkipOutlineIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
@@ -206,7 +201,10 @@ export function HouseActionBar({
         id: "gem",
         label: gemCollected ? GEM_FOUND_I_HE : GEM_ACTION_FIND_HE,
         icon: gemCollected ? (
-          <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.55rem]" />
+          <ImpMarkerGlyph
+            variant="solid"
+            className={cn(MENU_ICON_CLASS, "shrink-0 text-amber-300")}
+          />
         ) : (
           <ImpMenuOutlineGlyph className={MENU_ICON_CLASS} />
         ),

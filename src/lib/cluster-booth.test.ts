@@ -25,4 +25,11 @@ describe("cluster booth numbers", () => {
     );
     assert.equal(boothNumberForHouse({ boothNumber: 2.9 }), 2);
   });
+
+  it("labels single-booth school as דוכן 1", () => {
+    assert.equal(
+      clusterBoothLabel({ address: "ביה״ס ניצנים", boothNumber: 1 }, [{ address: "ביה״ס ניצנים" }]),
+      "דוכן 1",
+    );
+  });
 });

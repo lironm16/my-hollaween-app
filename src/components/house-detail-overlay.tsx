@@ -102,10 +102,7 @@ export function HouseDetailOverlay({
     };
   }, [house.id]);
 
-  const clusterBoothTag =
-    clusterShell && (clusterHouses?.length ?? 0) > 1
-      ? clusterBoothLabel(house, clusterHouses!)
-      : null;
+  const clusterBoothTag = clusterShell ? clusterBoothLabel(house, clusterHouses!) : null;
 
   const sheetBody = (
     <HouseSheetBody

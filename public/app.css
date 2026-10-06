@@ -86,7 +86,6 @@
     --text-5xl--line-height: 1;
     --text-6xl: 3.75rem;
     --text-6xl--line-height: 1;
-    --font-weight-normal: 400;
     --font-weight-medium: 500;
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
@@ -307,9 +306,6 @@
   .inset-0 {
     inset: 0px;
   }
-  .inset-\[12\%\] {
-    inset: 12%;
-  }
   .inset-x-0 {
     inset-inline: 0px;
   }
@@ -360,6 +356,12 @@
   }
   .-top-1 {
     top: calc(var(--spacing) * -1);
+  }
+  .-top-2\.5 {
+    top: calc(var(--spacing) * -2.5);
+  }
+  .-top-3 {
+    top: calc(var(--spacing) * -3);
   }
   .top-0 {
     top: 0px;
@@ -783,10 +785,6 @@
   .size-\[70\%\] {
     width: 70%;
     height: 70%;
-  }
-  .size-\[76\%\] {
-    width: 76%;
-    height: 76%;
   }
   .size-\[78\%\] {
     width: 78%;
