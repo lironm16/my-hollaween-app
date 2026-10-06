@@ -10,17 +10,7 @@ import {
 } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import { cloneDb, mergeHouses, mergePushSubscriptions } from "@/lib/catalog-sync";
-import { isStubHouse } from "@/lib/house-set";
-import {
-  changedRehearsalStubs,
-  readRehearsalStubOverlays,
-  writeRehearsalStubOverlays,
-} from "@/lib/rehearsal-stub-overlays";
-import {
-  housesForIsolatedTestDb,
-  loadStaticRehearsalStubRows,
-  stripStubHouses,
-} from "@/lib/rehearsal-stubs";
+import { stripStubHouses } from "@/lib/house-set";
 import {
   HOUSE_THEMES,
   POI_CATEGORIES,
@@ -464,7 +454,7 @@ export async function readFileDb(): Promise<DbFile> {
       };
       const merged = pickNewest(remote, global) ?? remote;
       foldPushSubscriptions(merged, mem, global);
-      return withStaticRehearsalStubs(merged);
+      return merged;
     }
     const blob = await readBlobDb();
     const seed = normalizeDb(blob ?? (await readSeed()));
@@ -474,19 +464,19 @@ export async function readFileDb(): Promise<DbFile> {
     } catch (error) {
       console.error("[store] firestore bootstrap failed", error);
     }
-    return withStaticRehearsalStubs(realSeed);
+    return realSeed;
   }
   if (process.env.DATA_DIR?.trim()) {
     const local = await readLocalFileDb();
-    if (local) return withStaticRehearsalStubs(local);
+    if (local) return local;
     const seed = normalizeDb(await readSeed());
-    const seedForDisk = { ...seed, houses: housesForIsolatedTestDb(seed.houses) };
+    const seedForDisk = { ...seed, houses: stripStubHouses(seed.houses) };
     try {
       await writeFileDb(seedForDisk);
     } catch {
       /* /tmp may still work later */
     }
-    return withStaticRehearsalStubs(seedForDisk);
+    return seedForDisk;
   }
   const [local, blob, global, pushBlob, pushSubsBlob] = await Promise.all([
     readLocalFileDb(),
@@ -506,7 +496,7 @@ export async function readFileDb(): Promise<DbFile> {
   if (newest) {
     const merged = pushSettings ? { ...newest, pushSettings } : newest;
     merged.pushSubscriptions = mergePushSubscriptions(merged.pushSubscriptions, pushSubsBlob);
-    return withStaticRehearsalStubs(merged);
+    return merged;
   }
   const seed = normalizeDb(await readSeed());
   const seedForDisk = { ...seed, houses: stripStubHouses(seed.houses) };
@@ -516,7 +506,7 @@ export async function readFileDb(): Promise<DbFile> {
     /* /tmp may still work later */
   }
   void writeBlobDb({ ...seed, houses: stripStubHouses(seed.houses) }).catch(() => undefined);
-  return withStaticRehearsalStubs(seedForDisk);
+  return seedForDisk;
 }
 
 let mem: DbFile | null = null;
@@ -672,18 +662,7 @@ export async function persistDb(db: DbFile, prev?: DbFile | null) {
   }
 
   const housesChanged = catalogHousesChanged(prev?.houses ?? [], db.houses);
-  const stubChanges = changedRehearsalStubs(prev, db);
-
   await writeDurableDb(db, prev);
-
-  if (stubChanges.length > 0) {
-    try {
-      await writeRehearsalStubOverlays(stubChanges);
-      await bumpCatalogMeta(db.updatedAt);
-    } catch (error) {
-      console.error("[store] rehearsal stub overlay write failed", error);
-    }
-  }
 
   if (housesChanged) {
     void publishCatalogSnapshot(db).catch((error) => {
@@ -713,39 +692,16 @@ export async function persistDb(db: DbFile, prev?: DbFile | null) {
   setMem(db);
 }
 
-async function withStaticRehearsalStubs(db: DbFile): Promise<DbFile> {
-  if (process.env.DATA_DIR?.trim()) return db;
-  const [rows, overlays] = await Promise.all([
-    loadStaticRehearsalStubRows(),
-    readRehearsalStubOverlays(),
-  ]);
-  const stubs = rows.map((row) => normalizeHouse(row as House & { status?: string }));
-  const real = stripStubHouses(db.houses).map(normalizeHouse);
-  const byId = new Map(real.map((house) => [house.id, house]));
-  for (const stub of stubs) byId.set(stub.id, stub);
-  for (const [id, overlay] of overlays) {
-    if (isStubHouse(overlay)) byId.set(id, normalizeHouse(overlay));
-  }
-  for (const house of db.houses) {
-    if (!isStubHouse(house)) continue;
-    const existing = byId.get(house.id);
-    if (!existing || stamp(house) > stamp(existing)) byId.set(house.id, normalizeHouse(house));
-  }
-  return { ...db, houses: [...byId.values()] };
-}
-
 export async function loadDb(fresh = false): Promise<DbFile> {
-  // Warm mem can lag Firestore rehearsal overlays — always re-merge stubs before serving.
-  if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return withStaticRehearsalStubs(mem);
+  if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return mem;
   return withLock(async () => {
-    if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return withStaticRehearsalStubs(mem);
+    if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return mem;
     const db = await readFileDb();
     const global = getGlobalDb();
     const chosen = pickNewest(db, global) ?? db;
     foldPushSubscriptions(chosen, mem, global);
-    const merged = await withStaticRehearsalStubs(chosen);
-    setMem(merged);
-    return merged;
+    setMem(chosen);
+    return chosen;
   });
 }
 

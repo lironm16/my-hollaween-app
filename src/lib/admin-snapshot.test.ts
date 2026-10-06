@@ -47,20 +47,6 @@ describe("buildSnapshotStats", () => {
     assert.equal(stats.closed, 1);
   });
 
-  it("includes rehearsal stubs when houseSet is stubs", () => {
-    const stats = buildSnapshotStats({
-      houses: [
-        house("a"),
-        house("בית-9314", { isStub: true, visit: "come" }),
-      ],
-      now: openEvening,
-      houseSet: "stubs",
-    });
-
-    assert.equal(stats.houses, 1);
-    assert.equal(stats.openNow, 1);
-  });
-
   it("counts houses and pois separately on the map", () => {
     const stats = buildSnapshotStats({
       houses: [

@@ -7,11 +7,10 @@ import {
   removedHousesCollection,
   resolveAdminFirestore,
 } from "@/lib/firestore-admin";
-import { isStubHouse } from "@/lib/house-set";
+import { isStubHouse, stripStubHouses } from "@/lib/house-set";
 import { canonicalHouseId, toPublicHouse } from "@/lib/ids";
 import { countPublishedHouses } from "@/lib/catalog-cache-build";
 import { isHouseDeleted, isPubliclyListed } from "@/lib/house-state";
-import { stripStubHouses } from "@/lib/rehearsal-stubs";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import {
   houseNeedsExistingMerge,
