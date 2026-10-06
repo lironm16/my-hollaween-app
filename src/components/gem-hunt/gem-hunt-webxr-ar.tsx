@@ -216,6 +216,24 @@ export function GemHuntWebXrAr({
 
   const attachSessionRef = useRef<((session: XRSession) => Promise<void>) | null>(null);
   const collectingRef = useRef(false);
+  const webXrClusterApiRef = useRef<{ advanceClusterHouse: () => void } | null>(null);
+  const clusterAdvanceHouseIdRef = useRef(house.id);
+  const houseVisualRef = useRef({
+    houseId: house.id,
+    glbPath: meta.glbPath,
+    floatHeight,
+    danceIndex,
+    lat: house.lat,
+    lng: house.lng,
+  });
+  houseVisualRef.current = {
+    houseId: house.id,
+    glbPath: meta.glbPath,
+    floatHeight,
+    danceIndex,
+    lat: house.lat,
+    lng: house.lng,
+  };
 
   const [error, setError] = useState<string | null>(null);
   const [showManualStart, setShowManualStart] = useState(!initialWebXrSession);
@@ -753,38 +771,92 @@ export function GemHuntWebXrAr({
     pivot.add(shadow);
     let footShadowScale = 1;
 
-    const tint = gemMonsterTint(house.id);
     const loader = new GLTFLoader();
-    loader.load(
-      meta.glbPath,
-      (gltf) => {
-        if (disposed) return;
-        const model = gltf.scene;
-        frameModel(model, MODEL_SCALE);
-        model.traverse((obj) => {
-          if (!(obj instanceof THREE.Mesh)) return;
-          const mat = obj.material;
-          if (!(mat instanceof THREE.MeshStandardMaterial)) return;
-          mat.metalness = 0.06;
-          mat.roughness = 0.52;
-          mat.color.offsetHSL(tint.hue, tint.saturation, tint.lightness);
-        });
-        pivot.add(model);
-        placeGroundShadow(shadow, model);
-        footShadowScale = shadow.scale.x;
-        pivot.position.y = floatHeight;
 
-        const clip = pickIdleClip(gltf.animations);
-        if (clip) {
-          mixer = new THREE.AnimationMixer(model);
-          const action = mixer.clipAction(clip);
-          action.loop = THREE.LoopRepeat;
-          action.play();
-        }
+    const clearPivotModel = () => {
+      for (let i = pivot.children.length - 1; i >= 0; i -= 1) {
+        const child = pivot.children[i];
+        if (child !== shadow) pivot.remove(child);
+      }
+      if (mixer) {
+        mixer.stopAllAction();
+        mixer = null;
+      }
+    };
+
+    const repositionToGeoTarget = () => {
+      worldAnchor?.delete?.();
+      worldAnchor = null;
+      const target = geoTargetRef.current;
+      const loc = liveLocRef.current;
+      if (simulateInRangeRef.current) {
+        const vis = houseVisualRef.current;
+        const simUser = { lat: vis.lat, lng: vis.lng, accuracy: 3 };
+        const h = headingRef.current ?? bearingDegrees(simUser, target);
+        const off = viewerLocalOffsetMeters(simUser, target, h);
+        anchorGroup.position.set(off.x, 0, off.z);
+      } else if (loc) {
+        const h = headingRef.current ?? bearingDegrees(loc, target);
+        const off = viewerLocalOffsetMeters(loc, target, h);
+        anchorGroup.position.set(off.x, 0, off.z);
+      }
+      anchorGroup.visible = !centerRevealRef.current;
+      isPlaced = true;
+      setPlaced(true);
+      setPhase("placed");
+      setGeoLockModeRef.current("local");
+    };
+
+    const loadModelForHouse = (onLoaded?: () => void) => {
+      const vis = houseVisualRef.current;
+      const tint = gemMonsterTint(vis.houseId);
+      loader.load(
+        vis.glbPath,
+        (gltf) => {
+          if (disposed) return;
+          const model = gltf.scene;
+          frameModel(model, MODEL_SCALE);
+          model.traverse((obj) => {
+            if (!(obj instanceof THREE.Mesh)) return;
+            const mat = obj.material;
+            if (!(mat instanceof THREE.MeshStandardMaterial)) return;
+            mat.metalness = 0.06;
+            mat.roughness = 0.52;
+            mat.color.offsetHSL(tint.hue, tint.saturation, tint.lightness);
+          });
+          pivot.add(model);
+          placeGroundShadow(shadow, model);
+          footShadowScale = shadow.scale.x;
+          pivot.position.y = vis.floatHeight;
+
+          const clip = pickIdleClip(gltf.animations);
+          if (clip) {
+            mixer = new THREE.AnimationMixer(model);
+            const action = mixer.clipAction(clip);
+            action.loop = THREE.LoopRepeat;
+            action.play();
+          }
+          onLoaded?.();
+        },
+        undefined,
+        () => setError("לא הצלחנו לטעון את הדמות"),
+      );
+    };
+
+    loadModelForHouse();
+
+    webXrClusterApiRef.current = {
+      advanceClusterHouse: () => {
+        if (disposed) return;
+        clearPivotModel();
+        loadModelForHouse(() => {
+          repositionToGeoTarget();
+          collectingRef.current = false;
+          encounterCollectLatchedRef.current = false;
+          setUserDismissedCenterGem(false);
+        });
       },
-      undefined,
-      () => setError("לא הצלחנו לטעון את הדמות"),
-    );
+    };
 
     const placeFromReticle = () => {
       if (!inWebXrHuntBandRef.current || !reticle.visible) return;
@@ -866,7 +938,7 @@ export function GemHuntWebXrAr({
         const t = (performance.now() - startTime) / 1000;
         const delta = lastFrameMs > 0 ? Math.min(0.05, (_t - lastFrameMs) / 1000) : 1 / 60;
         lastFrameMs = _t;
-        const dancePhase = danceIndex * 0.37;
+        const dancePhase = houseVisualRef.current.danceIndex * 0.37;
 
         if (isPlaced && worldAnchor) {
           syncAnchorGroupToWorldAnchor(frame, ref);
@@ -992,6 +1064,7 @@ export function GemHuntWebXrAr({
 
     return () => {
       disposed = true;
+      webXrClusterApiRef.current = null;
       attachSessionRef.current = null;
       window.removeEventListener("resize", onResize);
       renderer.xr.removeEventListener("sessionstart", onSessionStart);
@@ -1010,7 +1083,15 @@ export function GemHuntWebXrAr({
       hitTestSource?.cancel?.();
       mixer = null;
     };
-  }, [danceIndex, encounterMode, floatHeight, house.id, meta.glbPath, onFallbackCamera, useFloat]);
+  }, [encounterMode, onFallbackCamera]);
+
+  /** Cluster queue — swap GLB + sidewalk anchor without ending the WebXR session. */
+  useEffect(() => {
+    if (!campusSession || !sessionActive) return;
+    if (clusterAdvanceHouseIdRef.current === house.id) return;
+    clusterAdvanceHouseIdRef.current = house.id;
+    webXrClusterApiRef.current?.advanceClusterHouse();
+  }, [campusSession, house.id, sessionActive]);
 
   useEffect(() => {
     const btn = startBtnHostRef.current?.querySelector(".gem-hunt-webxr__start") as HTMLElement | null;
@@ -1175,6 +1256,11 @@ export function GemHuntWebXrAr({
               {showEncounterFooter && encounterPhase === "encounter" ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
                   סובבו את החיה באצבע. למציאה — הקישו עליה.
+                </p>
+              ) : null}
+              {campusSession && placed && phase !== "collecting" && !encounterMode ? (
+                <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
+                  לחצו על החיה במרחב (או «גלה לי») כדי לאסוף — ואז הדוכן הבא.
                 </p>
               ) : null}
               {showSessionFooter && hintPanel === "nav" ? (
