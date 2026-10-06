@@ -57,9 +57,9 @@ function sortHouses(houses: PublicHouse[]) {
 
 function clusterFromHouses(key: string, houses: PublicHouse[]): HouseCluster {
   const housesSorted = sortHouses(houses);
-  const campusPlace =
-    clusterIsSchoolCampus(housesSorted) &&
-    namedPlaceForCampusAddress(housesSorted[0]!.address);
+  const campusPlace = clusterIsSchoolCampus(housesSorted)
+    ? namedPlaceForCampusAddress(housesSorted[0]!.address)
+    : null;
   const lat =
     campusPlace?.lat ??
     housesSorted.reduce((sum, h) => sum + h.lat, 0) / housesSorted.length;
