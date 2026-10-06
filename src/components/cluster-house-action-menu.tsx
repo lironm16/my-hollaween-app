@@ -102,7 +102,7 @@ export function ClusterHouseActionMenu({
   if (onSkipAll || onRestoreAll) {
     items.push({
       id: "skip-all",
-      label: allSkipped ? "דילגתי" : "דילוג על הכל",
+      label: allSkipped ? "דילגתי על הכל" : "דילוג על הכל",
       icon: allSkipped ? (
         <SkipTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.15rem]" />
       ) : (

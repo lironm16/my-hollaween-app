@@ -937,7 +937,7 @@ export function NeighborhoodApp({
         kind: "skip-all",
         house: pending[0]!,
         cluster: true,
-        clusterHouses: pending,
+        clusterHouses: houses,
       });
       return;
     }
@@ -952,7 +952,7 @@ export function NeighborhoodApp({
         kind: "visit-all",
         house: pending[0]!,
         cluster: true,
-        clusterHouses: pending,
+        clusterHouses: houses,
       });
       return;
     }
@@ -1589,6 +1589,7 @@ export function NeighborhoodApp({
           kind={visitSkipConflict.kind}
           house={visitSkipConflict.house}
           cluster={visitSkipConflict.cluster}
+          clusterHouses={visitSkipConflict.clusterHouses}
           onConfirm={confirmVisitSkipConflict}
           onCancel={() => setVisitSkipConflict(null)}
         />

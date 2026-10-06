@@ -852,12 +852,12 @@
 }
 
 .house-pin.is-school-campus .pin-school-art {
-  width: 98%;
-  height: 98%;
+  width: 88%;
+  height: 88%;
 }
 
 .house-pin.is-school-campus .pin-school-castle-img {
-  transform: scale(1.14);
+  transform: scale(1);
   transform-origin: center center;
 }
 

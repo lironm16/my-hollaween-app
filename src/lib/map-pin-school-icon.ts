@@ -21,8 +21,8 @@ const VALID_VARIANTS = new Set<SchoolPinVariant>([
   "twin-homes",
 ]);
 
-/** Default — original black castle + golden windows (from your PNG). */
-export const DEFAULT_SCHOOL_PIN_VARIANT: SchoolPinVariant = "castle-original";
+/** Default — white castle + black windows (ink PNG). */
+export const DEFAULT_SCHOOL_PIN_VARIANT: SchoolPinVariant = "castle-ink";
 
 export function resolveSchoolPinVariant(raw?: string | null): SchoolPinVariant {
   const trimmed = raw?.trim();
@@ -89,14 +89,14 @@ export const SCHOOL_PIN_VARIANT_PREVIEWS: readonly SchoolPinAssetPreview[] = [
   {
     variant: "castle-ink",
     title: "טירה — לבן + חלונות שחורים",
-    note: "נגזר מהאיור שלך",
+    note: "נגזר מהאיור שלך · ברירת מחדל במפה",
     assetSrc: PIN_SCHOOL_CAMPUS_INK_SRC,
     assetSrc2x: PIN_SCHOOL_CAMPUS_INK_SRC_2X,
   },
   {
     variant: "castle-original",
     title: "טירה — מקור (שחור + חלונות זהובים)",
-    note: "הקובץ המקורי שהעלית · ברירת מחדל במפה",
+    note: "הקובץ המקורי שהעלית",
     assetSrc: PIN_SCHOOL_CAMPUS_SRC,
     assetSrc2x: PIN_SCHOOL_CAMPUS_SRC_2X,
   },

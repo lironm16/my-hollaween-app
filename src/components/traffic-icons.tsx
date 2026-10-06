@@ -97,7 +97,7 @@ export function SaveExportTrafficIcon({
   );
 }
 
-/** Gray skip square — ⋮ menu when דילגתי (matches visited / liked active scale). */
+/** Gray skip disc — ⋮ menu when דילגתי (matches visited / liked active scale). */
 export function SkipTrafficIcon({
   className,
   markClassName,
@@ -108,7 +108,7 @@ export function SkipTrafficIcon({
   return (
     <span
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-stone-500/40 text-white ring-1 ring-stone-400/55",
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-stone-500/40 text-white ring-1 ring-stone-400/55",
         className,
       )}
       title="דילגתי"

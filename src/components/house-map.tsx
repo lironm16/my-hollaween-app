@@ -235,7 +235,6 @@ function clusterIcon(
   const selectedClass = selectedHere ? " is-selected" : "";
   const filterClass = filteredOut ? " is-filtered-out" : "";
   const allVisited = houses.length > 0 && houses.every((house) => visitedIds.includes(house.id));
-  const allSkipped = houses.length > 0 && houses.every((house) => skippedIds?.has(house.id));
 
   if (!only) {
     const wrapped = wrapRoutePin("", routeOrder);
@@ -271,9 +270,8 @@ function clusterIcon(
   const campusClass = schoolCampus ? " is-school-campus" : "";
   const clusterLabel = attr(clusterPinAriaLabel(houses));
   const pinFill = "#6d28d9";
-  const statusMarks = allSkipped ? pinSkippedMark() : "";
   const wrapped = wrapRoutePin(
-    `<div class="house-pin is-building${campusClass}${allVisited ? " is-visited" : ""}" style="background:${pinFill}" role="img" aria-label="${clusterLabel}">${statusMarks}${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>`,
+    `<div class="house-pin is-building${campusClass}${allVisited ? " is-visited" : ""}" style="background:${pinFill}" role="img" aria-label="${clusterLabel}">${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>`,
     routeOrder,
   );
   const pinBox = schoolCampus ? SCHOOL_CAMPUS_PIN_BOX : PIN_BOX;

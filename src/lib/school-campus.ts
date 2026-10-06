@@ -50,6 +50,16 @@ export function mapCoordsForHouse(
   return { lat: house.lat, lng: house.lng };
 }
 
+/** Bulk visit/skip dialog — school name or building street only (not first booth title). */
+export function clusterBulkActionSubtitle(
+  houses: readonly Pick<PublicHouse, "address">[],
+): string {
+  const first = houses[0];
+  if (!first) return "";
+  const street = streetFromLegacyAddress(first.address?.trim() ?? "").trim();
+  return street || first.address?.trim() || "";
+}
+
 export function clusterPinAriaLabel(houses: readonly Pick<PublicHouse, "address">[]): string {
   const count = houses.length;
   if (clusterIsSchoolCampus(houses)) {

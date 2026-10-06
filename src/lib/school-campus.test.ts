@@ -4,6 +4,7 @@ import {
   clusterIsSchoolCampus,
   usesSchoolCampusClusterChrome,
   clusterOverviewSubtitle,
+  clusterBulkActionSubtitle,
   clusterPinAriaLabel,
   isSchoolCampusAddress,
   schoolCampusNeighborhoodForAddress,
@@ -35,6 +36,10 @@ describe("school campus", () => {
     );
     assert.equal(clusterOverviewSubtitle([{ address: "חרוזים 8" }]), "בית בכתובת זו");
     assert.equal(clusterPinAriaLabel([{ address: "ביה״ס גבעולים" }]), "דוכן בבית הספר");
+    assert.equal(
+      clusterBulkActionSubtitle([{ address: "ביה״ס המנחיל" }]),
+      "ביה״ס המנחיל",
+    );
   });
 
   it("requires every cluster member to be at a school", () => {

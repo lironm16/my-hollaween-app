@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { HouseEditModal } from "@/components/house-edit-modal";
 import { Button } from "@/components/ui/button";
 import { houseHeadline } from "@/lib/labels";
+import { clusterBulkActionSubtitle } from "@/lib/school-campus";
 import type { PublicHouse } from "@/lib/types";
 
 export function VisitSkipConflictDialog({
@@ -11,6 +12,7 @@ export function VisitSkipConflictDialog({
   kind,
   house,
   cluster = false,
+  clusterHouses,
   onConfirm,
   onCancel,
 }: {
@@ -19,6 +21,7 @@ export function VisitSkipConflictDialog({
   house: PublicHouse | null;
   /** Multi-house / school cluster bulk action — generic copy. */
   cluster?: boolean;
+  clusterHouses?: PublicHouse[];
   onConfirm: (dismissFuture: boolean) => void;
   onCancel: () => void;
 }) {
@@ -46,8 +49,13 @@ export function VisitSkipConflictDialog({
       ? `סימון «ביקרתם» יסיר את סימון «דילגתם» על ${houseHeadline(house)}.`
       : `«דילוג על בית» יסיר את סימון «ביקרתם» על ${houseHeadline(house)}.`;
 
+  const subtitle =
+    cluster && clusterHouses && clusterHouses.length > 0
+      ? clusterBulkActionSubtitle(clusterHouses)
+      : houseHeadline(house);
+
   return (
-    <HouseEditModal open={open} onClose={onCancel} title={title} subtitle={houseHeadline(house)}>
+    <HouseEditModal open={open} onClose={onCancel} title={title} subtitle={subtitle}>
       <div className="space-y-4">
         <p className="text-base leading-relaxed text-violet-100 [overflow-wrap:anywhere]">{body}</p>
         <label className="flex cursor-pointer items-start gap-2 text-base text-violet-200">

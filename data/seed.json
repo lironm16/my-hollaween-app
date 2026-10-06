@@ -1689,6 +1689,52 @@
       "addedBy": "סטאב ביה״ס"
     },
     {
+      "id": "בית-9341",
+      "kind": "poi",
+      "poiCategory": "coffee",
+      "name": "🎃 גבעולים — דוכן קפה",
+      "theme": "pumpkin",
+      "address": "ביה״ס גבעולים",
+      "arrival": "דוכן 4 — עמדת קפה",
+      "description": "סטאב לחזרה — דוכן POI דלעת/קפה בביה״ס גבעולים.",
+      "lat": 32.0886464,
+      "lng": 34.8128892,
+      "treats": [
+        "candy",
+        "vegan"
+      ],
+      "treatStock": {
+        "candy": "plenty",
+        "vegan": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "POI סטאב — דוכן קפה בבית ספר",
+      "accessible": true,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/pumpkin-porch.jpg",
+      "editCode": "934107",
+      "createdAt": "2026-10-06T07:00:00.000Z",
+      "updatedAt": "2026-10-06T07:00:00.000Z",
+      "neighborhood": "הגפן",
+      "addedBy": "סטאב ביה״ס"
+    },
+    {
       "id": "בית-9329",
       "name": "🎃 המנחיל — דוכן 4",
       "theme": "pumpkin",
