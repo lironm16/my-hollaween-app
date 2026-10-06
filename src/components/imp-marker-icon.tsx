@@ -16,7 +16,7 @@ export function GemDiamondIcon({
     <ImpMarkerGlyph
       variant={active ? "solid" : "eyes"}
       className={cn(
-        "aspect-square",
+        "inline-flex size-8 max-h-8 max-w-8 shrink-0 items-center justify-center overflow-hidden",
         active ? "text-white" : "text-orange-100",
         className,
       )}
@@ -36,7 +36,10 @@ export function GemDiamondSvg({
   return (
     <ImpMarkerGlyph
       variant={variant}
-      className={cn("inline-block aspect-square align-middle", className)}
+      className={cn(
+        "inline-flex size-8 max-h-8 max-w-8 shrink-0 items-center justify-center overflow-hidden align-middle",
+        className,
+      )}
       style={{ color: fill }}
     />
   );

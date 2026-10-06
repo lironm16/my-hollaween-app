@@ -50,7 +50,12 @@ import {
   preloadGemHuntChunks,
 } from "@/components/gem-hunt/gem-hunt-lazy";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
-import { isAndroidLike, supportsWebXrHitTestAr, webXrHitTestArCached } from "@/lib/gem-hunt-ar-platform";
+import {
+  isAndroidLike,
+  isIosLike,
+  supportsWebXrHitTestAr,
+  webXrHitTestArCached,
+} from "@/lib/gem-hunt-ar-platform";
 import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import { endGemHuntWebXrSession, requestGemHuntWebXrSession } from "@/lib/gem-hunt-webxr-session";
 import { useGemProgress } from "@/hooks/use-gem-progress";
@@ -1272,7 +1277,7 @@ export function NeighborhoodApp({
       liked: likes.liked,
       visited: visits.visited,
       skipped: skips.skipped,
-      gemCollected: gemFeatureOn ? gems.collected : undefined,
+      gemCollected: admin ? gems.collected : undefined,
       onToggleLike,
       onToggleVisited,
       onToggleGem: gemUi ? handleToggleGemMenu : undefined,
@@ -1296,8 +1301,8 @@ export function NeighborhoodApp({
       onClusterRestoreAll: applyClusterRestoreAll,
       onClusterLikeAll: applyClusterLikeAll,
       onClusterUnlikeAll: applyClusterUnlikeAll,
-      onClusterFindAllGems: gemFeatureOn ? openGemHuntForCluster : undefined,
-      onClusterResetAllGems: gemFeatureOn ? handleClusterResetAllGems : undefined,
+      onClusterFindAllGems: admin ? openGemHuntForCluster : undefined,
+      onClusterResetAllGems: admin ? handleClusterResetAllGems : undefined,
       canEdit: (id) => Boolean(admin || owned.some((item) => item.id === id)),
       editCodeFor: (id) =>
         admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode,
@@ -1337,7 +1342,7 @@ export function NeighborhoodApp({
         onClose: selection.closeSelection,
         liked: likes.liked,
         visited: visits.visited,
-        gemCollected: gemFeatureOn ? gems.collected : undefined,
+        gemCollected: admin ? gems.collected : undefined,
         clusterOverview: selection.clusterOverview,
         openedFromList: selection.openedFromList,
         clusterHouses: selection.selectedCluster,
@@ -1565,7 +1570,11 @@ export function NeighborhoodApp({
                   houseSetLabel={adminForHouseSet ? HOUSE_SET_LABELS[activeHouseSet] : null}
                 />
           </div>
-          {view === "map" && mapSheetHouse && houseDetailCommon && !originPick.originPickActive ? (
+          {view === "map" &&
+          mapSheetHouse &&
+          houseDetailCommon &&
+          !mapGemHouse &&
+          !originPick.originPickActive ? (
                 <div className="map-sheet-host" aria-hidden={false}>
                   <MapHouseSheet
                     {...houseDetailCommon}
@@ -1730,7 +1739,7 @@ export function NeighborhoodApp({
           )}
           initialWebXrSession={mapGemWebXrSession}
           tellMeHuntRadiusEnforced={gemTellMeHuntRadiusEnforced(admin, gemPreviewAsUser)}
-          encounterMode={!mapGemClusterMembers}
+          encounterMode={!mapGemClusterMembers || isIosLike()}
           campusQueue={mapGemClusterQueueUi}
           onCollectPersist={
             mapGemClusterMembers

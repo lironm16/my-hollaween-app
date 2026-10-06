@@ -63,6 +63,7 @@ import {
 import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import {
+  GEM_CAMPUS_TAP_SAVE_HE,
   GEM_COLLECT_NEW_HE,
   GEM_FOUND_CHEER_HE,
   GEM_WALK_MAPS_ARIA_HE,
@@ -862,7 +863,8 @@ export function GemHuntOverlay({
         {showHuntGem ? (
           <div
             className={cn(
-              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pin-collect is-revealed is-inspect360",
+              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pin-collect is-revealed",
+              campusSession ? "is-campus-tap" : "is-inspect360",
               gemAtCenter ? "is-ring-center is-center-collect" : "is-pinned is-revealed",
               !gemAtCenter && worldLockRevealed && pinPlacement && !pinPlacement.inView && "is-off-screen",
               phase === "collecting" && "is-collecting",
@@ -911,8 +913,9 @@ export function GemHuntOverlay({
             >
               <GemSprite
                 house={house}
-                mode="inspect360"
+                mode={campusSession && !encounterMode ? "3d" : "inspect360"}
                 size="fill"
+                tapCollect={campusSession && !encounterMode}
                 spinWhileCollect={false}
                 worldYawRad={gemAtCenter ? null : worldYawRad}
                 motion={gemMotion}
@@ -991,6 +994,19 @@ export function GemHuntOverlay({
               ) : null}
             </div>
             <div className="gem-hunt-overlay__footer-controls">
+              {campusSession && phase === "visible" && !encounterMode ? (
+                <button
+                  type="button"
+                  className="gem-hunt-overlay__campus-save-btn"
+                  disabled={!canTapCollect}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleGemInspectTap();
+                  }}
+                >
+                  {GEM_CAMPUS_TAP_SAVE_HE}
+                </button>
+              ) : null}
                 <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
                   <button
                     type="button"

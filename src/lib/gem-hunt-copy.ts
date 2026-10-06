@@ -27,6 +27,7 @@ export const GEM_ACTION_FIND_HE = "מצא שדון";
 /** Cluster ⋮ menu — start sequential hunt for every booth/unit at the address. */
 export const GEM_CLUSTER_FIND_ALL_HE = "מצא הכל";
 export const GEM_CLUSTER_FOUND_ALL_HE = "מצאתי הכל";
+export const GEM_CAMPUS_TAP_SAVE_HE = "שמרו שדון";
 
 export const GEM_RESET_TITLE_HE = "לאפס מציאת שדון?";
 export const GEM_RESET_BODY_ONE_HE = "השדון יוסר מהמכשיר — אפשר לחפש מחדש.";
