@@ -355,6 +355,7 @@ export function GemHuntWebXrAr({
     onTreatMiss,
   } = useGemEncounterPhase({
     enabled: encounterMode && sessionActive,
+    sessionKey: house.id,
     repeatVisit,
     collectEnabled: canCollectNow || centerReveal || simulateInRange,
     petRevealed: petRevealedForEncounter,

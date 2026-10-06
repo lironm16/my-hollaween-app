@@ -12322,18 +12322,17 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   width: min(88vw, 26rem);
   height: min(88vw, 26rem);
 }
-.gem-hunt-overlay.is-campus-queue .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 {
-  top: 38%;
-  width: min(78vw, 15rem);
-  max-width: min(78vw, 15rem);
-}
-.gem-hunt-overlay.is-campus-queue .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 .gem-hunt-overlay__gem-dance {
-  width: min(78vw, 15rem);
-  height: min(78vw, 15rem);
-}
 .gem-hunt-overlay.is-campus-queue .gem-hunt-overlay__collect-banner {
-  top: calc(38% - min(38vw, 7.5rem) - 0.35rem);
+  top: calc(42% - min(44vw, 13rem) - 0.35rem);
   font-size: clamp(1.1rem, 4.5vw, 1.45rem);
+}
+.gem-hunt-overlay__gem-hit.is-tell-me-center.is-inspect360 .gem-hunt-overlay__gem-dance,
+.gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360.is-tell-me-center {
+  width: min(92vw, 28rem);
+  max-width: min(92vw, 28rem);
+}
+.gem-hunt-overlay__gem-hit.is-tell-me-center.is-inspect360 .gem-hunt-overlay__gem-dance {
+  height: min(92vw, 28rem);
 }
 .gem-hunt-overlay__gem-hit.is-campus-tap.is-center-collect {
   top: 40%;

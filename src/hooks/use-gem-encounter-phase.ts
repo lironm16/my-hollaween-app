@@ -15,6 +15,8 @@ import {
 
 type Args = {
   enabled: boolean;
+  /** Reset approach/encounter when the hunted house changes (cluster queue). */
+  sessionKey?: string;
   repeatVisit: boolean;
   collectEnabled: boolean;
   petRevealed: boolean;
@@ -26,6 +28,7 @@ type Args = {
 
 export function useGemEncounterPhase({
   enabled,
+  sessionKey,
   repeatVisit,
   collectEnabled,
   petRevealed,
@@ -52,7 +55,7 @@ export function useGemEncounterPhase({
     breakoutUsedRef.current = 0;
     clearTimer();
     return clearTimer;
-  }, [enabled, clearTimer]);
+  }, [enabled, sessionKey, clearTimer]);
 
   useEffect(() => {
     if (!enabled || phase !== "approach") return;

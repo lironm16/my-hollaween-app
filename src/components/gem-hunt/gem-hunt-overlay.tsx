@@ -477,6 +477,7 @@ export function GemHuntOverlay({
     onTreatMiss,
   } = useGemEncounterPhase({
     enabled: encounterMode,
+    sessionKey: house.id,
     repeatVisit,
     collectEnabled: canCollectNow,
     petRevealed: petRevealedForEncounter,
@@ -714,8 +715,11 @@ export function GemHuntOverlay({
     encounterMode &&
     (encounterPhase === "approach" || encounterPhase === "encounter") &&
     phase !== "collecting";
+  const campusQuickTapGem = campusSession && !encounterMode && !centerReveal;
   const showLegacyFooter =
-    !encounterMode || showEncounterFooter;
+    !encounterMode ||
+    showEncounterFooter ||
+    (campusSession && phase === "visible");
   const hideFooterChrome =
     encounterMode && encounterUiChromeHidden(encounterPhase);
 
@@ -864,8 +868,9 @@ export function GemHuntOverlay({
           <div
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pin-collect is-revealed",
-              campusSession ? "is-campus-tap" : "is-inspect360",
+              campusQuickTapGem ? "is-campus-tap" : "is-inspect360",
               gemAtCenter ? "is-ring-center is-center-collect" : "is-pinned is-revealed",
+              centerReveal && gemAtCenter && "is-tell-me-center",
               !gemAtCenter && worldLockRevealed && pinPlacement && !pinPlacement.inView && "is-off-screen",
               phase === "collecting" && "is-collecting",
               !gemAtCenter && pinCollectReady && "is-collect-ready-gem",
@@ -913,9 +918,9 @@ export function GemHuntOverlay({
             >
               <GemSprite
                 house={house}
-                mode={campusSession && !encounterMode ? "3d" : "inspect360"}
+                mode={campusQuickTapGem ? "3d" : "inspect360"}
                 size="fill"
-                tapCollect={campusSession && !encounterMode}
+                tapCollect={campusQuickTapGem}
                 spinWhileCollect={false}
                 worldYawRad={gemAtCenter ? null : worldYawRad}
                 motion={gemMotion}
