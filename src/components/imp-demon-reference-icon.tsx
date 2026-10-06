@@ -1,126 +1,48 @@
-import type { ReactNode } from "react";
-
+import type { FC } from "react";
 import { cn } from "@/lib/utils";
 
-/** Geometry from user reference (circle + curved horns + inner ring). viewBox 0 0 24 24 */
-
-const HEAD = { cx: 12, cy: 13.65, r: 6.05, rInner: 4.75 } as const;
-
-const LEFT_HORN =
-  "M8.35 10.85 C6.45 8.35 5.35 5.75 5.85 4.25 C6.35 2.95 7.55 2.85 8.45 4.35 C9.15 5.55 9.35 7.85 8.35 10.85 Z";
-
-const RIGHT_HORN =
-  "M15.65 10.85 C17.55 8.35 18.65 5.75 18.15 4.25 C17.65 2.95 16.45 2.85 15.55 4.35 C14.85 5.55 14.65 7.85 15.65 10.85 Z";
-
-const LEFT_HORN_SEAM = "M7.55 9.55 C8.05 8.35 8.25 7.05 8.15 5.95";
-const RIGHT_HORN_SEAM = "M16.45 9.55 C15.95 8.35 15.75 7.05 15.85 5.95";
-
-const strokeOutline = {
-  fill: "none" as const,
-  stroke: "currentColor",
-  strokeWidth: 1.35,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
+type IconProps = {
+  className?: string;
 };
 
-/** «גרסת קווי» — double ring + horn outlines (menu inactive). */
-export function ImpDemonReferenceOutline({ className }: { className?: string }) {
+/**
+ * Exact vector replication of the user's demon icon.
+ * "Not full mode" = Outline (left side of reference).
+ * "Full mode" = Filled (right side of reference).
+ */
+
+export const ImpDemonOutlineIcon: FC<IconProps> = ({ className }) => {
   return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden xmlns="http://www.w3.org/2000/svg">
-      <circle cx={HEAD.cx} cy={HEAD.cy} r={HEAD.r} {...strokeOutline} />
-      <circle cx={HEAD.cx} cy={HEAD.cy} r={HEAD.rInner} {...strokeOutline} />
-      <path d={LEFT_HORN} {...strokeOutline} />
-      <path d={RIGHT_HORN} {...strokeOutline} />
-      <path d={LEFT_HORN_SEAM} {...strokeOutline} strokeWidth={1.15} />
-      <path d={RIGHT_HORN_SEAM} {...strokeOutline} strokeWidth={1.15} />
+    <svg
+      viewBox="0 0 439 447"
+      fill="currentColor"
+      className={cn("shrink-0 inline-block", className)}
+      aria-hidden
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g transform="translate(0,447) scale(0.1,-0.1)">
+        <path d="M261 4326 c-63 -146 -128 -408 -152 -610 -14 -123 -6 -394 15 -496 54 -263 182 -490 380 -677 180 -171 409 -293 548 -293 78 0 128 29 210 124 117 135 188 252 222 365 30 103 15 263 -34 343 -11 18 -20 38 -20 45 0 31 246 140 420 186 110 29 124 30 330 31 231 1 292 -7 457 -60 68 -22 275 -116 311 -141 10 -8 6 -24 -17 -74 -17 -35 -36 -98 -42 -139 -10 -65 -9 -87 5 -153 32 -142 127 -299 271 -444 63 -63 77 -72 119 -78 89 -14 142 0 291 74 110 55 161 87 240 154 388 326 533 753 450 1322 -32 217 -133 556 -169 563 -26 5 -46 -17 -46 -52 0 -52 -48 -317 -70 -391 -32 -103 -112 -260 -178 -345 -32 -41 -89 -99 -127 -128 -121 -92 -310 -172 -407 -172 -25 0 -54 15 -113 56 -93 65 -281 159 -409 204 -49 17 -146 43 -215 57 -114 25 -146 27 -336 27 -181 0 -226 -3 -325 -23 -232 -47 -423 -125 -618 -251 -110 -70 -115 -72 -161 -67 -70 8 -184 49 -276 99 -150 81 -295 252 -370 435 -37 91 -81 274 -100 413 -9 68 -19 128 -21 132 -3 5 -14 8 -25 8 -14 0 -25 -13 -38 -44z m53 -288 c33 -158 43 -188 101 -311 64 -137 146 -239 265 -331 110 -86 262 -154 404 -181 l70 -13 44 31 c24 18 65 47 91 65 72 52 256 141 368 178 447 150 927 108 1333 -116 52 -29 125 -74 163 -101 75 -55 96 -58 192 -34 189 48 333 130 460 262 147 152 225 328 291 662 11 55 43 -34 91 -259 25 -116 27 -142 27 -365 0 -237 0 -241 -31 -356 -57 -215 -159 -391 -313 -546 -163 -164 -344 -273 -504 -304 -73 -14 -118 10 -201 107 -143 168 -204 287 -213 416 -7 107 12 172 85 285 14 21 11 24 -69 75 -97 62 -109 68 -208 106 -153 60 -270 88 -427 103 -298 29 -619 -38 -872 -181 -62 -36 -116 -71 -119 -79 -3 -8 2 -26 11 -40 47 -76 70 -131 78 -188 23 -161 -49 -321 -232 -518 -112 -119 -161 -122 -364 -18 -228 117 -434 323 -547 548 -100 199 -145 479 -119 740 19 189 87 495 109 495 4 0 20 -59 36 -132z" />
+        <path d="M331 3686 c-16 -19 26 -192 68 -282 87 -186 235 -353 391 -442 161 -92 354 -162 445 -162 48 0 102 31 115 66 23 59 2 126 -48 153 -10 5 -59 16 -109 25 -162 28 -308 94 -460 208 -125 93 -214 197 -309 357 -51 87 -71 104 -93 77z m263 -395 c109 -106 127 -121 227 -177 98 -56 224 -103 354 -133 118 -27 157 -69 100 -107 -22 -15 -31 -14 -130 10 -111 28 -251 88 -345 148 -111 71 -245 213 -299 316 -23 44 11 23 93 -57z" />
+        <path d="M3992 3669 c-92 -168 -152 -249 -257 -347 -163 -152 -358 -251 -559 -282 -115 -18 -152 -51 -150 -133 1 -34 8 -47 39 -75 36 -33 40 -34 99 -30 33 3 110 22 170 42 267 89 469 241 590 444 78 131 151 348 133 396 -11 27 -46 19 -65 -15z m-113 -332 c-48 -78 -110 -156 -167 -209 -125 -117 -337 -221 -525 -258 -52 -10 -61 -10 -78 6 -26 23 -24 60 4 78 12 8 60 22 105 31 232 46 413 144 582 314 58 58 107 103 108 98 2 -4 -11 -31 -29 -60z" />
+        <path d="M513 2388 c-13 -17 -58 -201 -74 -303 -16 -101 -16 -355 0 -460 42 -274 133 -509 289 -745 102 -153 310 -363 463 -467 241 -164 482 -260 744 -298 130 -19 388 -19 513 0 658 99 1217 569 1422 1195 71 214 85 306 84 545 0 177 -4 227 -23 315 -32 154 -52 221 -68 227 -11 5 -181 -97 -221 -133 -12 -9 -10 -30 9 -120 20 -92 23 -137 23 -289 -1 -156 -4 -195 -27 -295 -32 -143 -65 -238 -116 -340 -155 -310 -398 -550 -705 -696 -649 -308 -1398 -113 -1844 481 -69 93 -185 327 -217 441 -62 221 -74 487 -31 694 28 133 40 109 -101 201 -98 63 -105 66 -120 47z m115 -123 c28 -20 52 -39 52 -43 0 -4 -7 -43 -16 -87 -22 -104 -25 -418 -5 -525 77 -429 330 -812 691 -1045 531 -344 1177 -336 1719 22 122 80 328 289 414 418 74 113 153 272 192 387 28 86 61 269 69 396 6 83 -8 286 -24 352 -22 94 -25 85 37 123 31 19 62 33 69 30 6 -2 19 -34 27 -71 52 -223 53 -526 1 -737 -97 -393 -291 -695 -619 -961 -83 -67 -164 -118 -283 -178 -147 -74 -193 -91 -332 -127 -281 -73 -543 -76 -824 -9 -472 113 -897 449 -1119 885 -164 322 -219 654 -167 1000 23 152 36 205 53 205 7 0 36 -16 65 -35z" />
+      </g>
     </svg>
   );
-}
-
-/** «גרסת מילוי» — amber body, cream ring lines (found / reference). */
-export function ImpDemonReferenceFilled({ className }: { className?: string }) {
-  const ring = "#fff7ed";
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden xmlns="http://www.w3.org/2000/svg">
-      <path d={LEFT_HORN} fill="currentColor" stroke={ring} strokeWidth={1.15} strokeLinejoin="round" />
-      <path d={RIGHT_HORN} fill="currentColor" stroke={ring} strokeWidth={1.15} strokeLinejoin="round" />
-      <circle
-        cx={HEAD.cx}
-        cy={HEAD.cy}
-        r={HEAD.r}
-        fill="currentColor"
-        stroke={ring}
-        strokeWidth={1.2}
-      />
-      <circle cx={HEAD.cx} cy={HEAD.cy} r={HEAD.rInner} fill="none" stroke={ring} strokeWidth={1.05} />
-      <path d={LEFT_HORN_SEAM} fill="none" stroke={ring} strokeWidth={0.95} strokeLinecap="round" />
-      <path d={RIGHT_HORN_SEAM} fill="none" stroke={ring} strokeWidth={0.95} strokeLinecap="round" />
-    </svg>
-  );
-}
-
-/** Filled on dark menu — app amber. */
-export function ImpDemonReferenceFilledMenu({ className }: { className?: string }) {
-  return <ImpDemonReferenceFilled className={cn("text-amber-300", className)} />;
-}
-
-export type ImpDemonPreviewSpec = {
-  id: string;
-  title: string;
-  note: string;
-  render: (className?: string) => ReactNode;
 };
 
-export const IMP_DEMON_PREVIEW_SPECS: ImpDemonPreviewSpec[] = [
-  {
-    id: "reference-jpg",
-    title: "מקור — גרסאות צבע וצורה",
-    note: "הקובץ שהעלית (ייחוס).",
-    render: (className) => (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src="/icons/imp-demon-reference.jpg"
-        alt=""
-        className={cn("h-auto w-[min(100%,11rem)] rounded-lg object-contain", className)}
-        width={176}
-        height={120}
-      />
-    ),
-  },
-  {
-    id: "svg-outline-menu",
-    title: "SVG — outline (תפריט)",
-    note: "currentColor קרם על רקע כהה — כמו דילוג.",
-    render: (className) => (
-      <ImpDemonReferenceOutline className={cn("size-10 text-orange-100", className)} />
-    ),
-  },
-  {
-    id: "svg-filled-menu",
-    title: "SVG — fill («מצאתי»)",
-    note: "ענבר + קווי טבעת בהירים כמו במקור.",
-    render: (className) => <ImpDemonReferenceFilledMenu className={cn("size-10", className)} />,
-  },
-  {
-    id: "svg-outline-light",
-    title: "SVG — outline על רקע בהיר",
-    note: "כמו צד שמאל בקובץ המקור.",
-    render: (className) => (
-      <ImpDemonReferenceOutline className={cn("size-10 text-[#c4a574]", className)} />
-    ),
-  },
-  {
-    id: "svg-filled-light",
-    title: "SVG — fill על רקע בהיר",
-    note: "כמו צד ימין — צהוב/ענבר.",
-    render: (className) => (
-      <ImpDemonReferenceFilled className={cn("size-10 text-amber-400", className)} />
-    ),
-  },
-];
-
-export const PREVIEW_ICON_SIZES = [
-  { label: "size-4 (תפריט)", className: "size-4" },
-  { label: "size-7 (⋮)", className: "size-7" },
-  { label: "size-8", className: "size-8" },
-] as const;
+export const ImpDemonFilledIcon: FC<IconProps> = ({ className }) => {
+  return (
+    <svg
+      viewBox="0 0 436 438"
+      fill="currentColor"
+      className={cn("shrink-0 inline-block", className)}
+      aria-hidden
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g transform="translate(0,438) scale(0.1,-0.1)">
+        <path d="M254 4269 c-17 -20 -80 -222 -104 -331 -101 -454 -47 -853 157 -1162 86 -130 246 -291 365 -366 52 -33 87 -62 88 -72 0 -9 -11 -57 -24 -107 -73 -272 -57 -632 38 -885 39 -104 140 -293 198 -371 175 -235 459 -444 722 -530 182 -59 290 -77 476 -78 223 0 339 21 559 102 82 30 267 134 346 194 186 142 331 316 439 526 160 312 199 693 107 1050 l-29 113 45 27 c279 165 493 444 573 746 29 110 50 263 50 367 0 193 -43 452 -109 658 -43 132 -61 148 -73 60 -49 -356 -178 -625 -373 -783 -111 -89 -254 -156 -389 -182 l-69 -13 -66 47 c-147 104 -286 176 -439 228 -230 77 -303 88 -567 88 -194 0 -232 -3 -325 -23 -247 -55 -480 -155 -653 -281 l-87 -63 -93 22 c-387 93 -630 384 -716 855 -32 174 -34 181 -47 164z m223 -857 c164 -215 418 -372 673 -416 47 -8 93 -18 102 -21 20 -8 48 -48 48 -69 0 -30 -23 -65 -49 -74 -83 -29 -369 74 -537 193 -148 106 -277 283 -340 466 -35 105 -31 124 12 53 19 -32 60 -92 91 -132z m3518 111 c-53 -182 -185 -373 -338 -487 -168 -126 -480 -242 -550 -205 -78 42 -53 139 39 154 197 32 311 77 489 194 95 62 230 202 306 321 35 53 65 93 67 89 2 -5 -4 -35 -13 -66z" />
+        <path d="M497 2363 c-12 -21 -39 -134 -57 -238 -24 -140 -27 -374 -6 -510 61 -400 226 -724 512 -1009 253 -253 567 -414 949 -487 106 -21 474 -18 592 4 189 36 414 119 568 209 309 182 575 471 720 783 167 359 206 744 116 1144 -23 101 -27 111 -42 111 -22 0 -109 -66 -109 -83 0 -11 10 -65 22 -120 19 -87 22 -133 22 -317 0 -198 -2 -224 -27 -332 -49 -215 -137 -416 -256 -582 -100 -142 -316 -352 -443 -432 -63 -40 -239 -129 -309 -157 -73 -28 -183 -58 -311 -84 -127 -25 -389 -23 -543 6 -635 117 -1150 609 -1289 1231 -50 225 -53 468 -9 664 31 137 31 137 -26 174 -52 33 -67 38 -74 25z" />
+      </g>
+    </svg>
+  );
+};
