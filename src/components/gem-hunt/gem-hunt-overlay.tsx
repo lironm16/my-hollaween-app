@@ -23,8 +23,10 @@ import {
   gemDistanceMeters,
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
+  GEM_CAMPUS_COLLECT_MS,
   GEM_COLLECT_OVERLAY_MS,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
+  type GemCampusQueueUi,
   gemAnchorForHouse,
   gemLabelHe,
   gemMonsterForHouse,
@@ -62,6 +64,7 @@ import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import {
   GEM_COLLECT_NEW_HE,
+  GEM_FOUND_CHEER_HE,
   GEM_WALK_MAPS_ARIA_HE,
   GEM_WALK_MAPS_LINK_HE,
 } from "@/lib/gem-hunt-copy";
@@ -108,6 +111,9 @@ export function GemHuntOverlay({
   tellMeHuntRadiusEnforced = true,
   onClose,
   onCollect,
+  campusQueue,
+  onCollectPersist,
+  onCampusStepComplete,
 }: {
   house: PublicHouse;
   userLocation: UserLocation | null;
@@ -121,9 +127,13 @@ export function GemHuntOverlay({
   /** House pet already in sticker book — shorter resolve + repeat reward. */
   repeatVisit?: boolean;
   tellMeHuntRadiusEnforced?: boolean;
+  campusQueue?: GemCampusQueueUi;
+  onCollectPersist?: (monsterId: GemMonsterId) => void;
+  onCampusStepComplete?: (monsterId: GemMonsterId) => void;
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
 }) {
+  const campusSession = Boolean(campusQueue && onCampusStepComplete && onCollectPersist);
   const sim = simulateInRange;
   const monsterId = gemMonsterForHouse(house);
   const collectDanceIndex = useMemo(
@@ -171,6 +181,10 @@ export function GemHuntOverlay({
   onCollectRef.current = onCollect;
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const onCollectPersistRef = useRef(onCollectPersist);
+  onCollectPersistRef.current = onCollectPersist;
+  const onCampusStepCompleteRef = useRef(onCampusStepComplete);
+  onCampusStepCompleteRef.current = onCampusStepComplete;
   const [albumRevealPhase, setAlbumRevealPhase] = useState<"enter" | "landed">("enter");
   /** Snapshot at tap — album sticker was new before this collect. */
   const [albumRevealNewFriend, setAlbumRevealNewFriend] = useState(true);
@@ -387,7 +401,9 @@ export function GemHuntOverlay({
     if (!viaTellMe && !viaTellMeEncounter && !viaPinned && !viaEncounter) return;
     const entries = loadGemCollected();
     const newAlbumFriend = !repeatVisit && !isGemTypeInCollection(monsterId, entries);
-    if (newAlbumFriend) {
+    if (campusSession) {
+      onCollectPersistRef.current?.(monsterId);
+    } else if (newAlbumFriend) {
       releaseGemHuntCamera(videoRef.current);
     }
     setPhase("collecting");
@@ -396,11 +412,18 @@ export function GemHuntOverlay({
       navigator.vibrate([20, 40, 60]);
     }
     if (collectFinishRef.current != null) window.clearTimeout(collectFinishRef.current);
-    setAlbumRevealNewFriend(newAlbumFriend);
-    const overlayMs =
-      encounterMode && repeatVisit ? GEM_ENCOUNTER_CELEBRATE_MS : GEM_COLLECT_OVERLAY_MS;
+    setAlbumRevealNewFriend(campusSession ? true : newAlbumFriend);
+    const overlayMs = campusSession
+      ? GEM_CAMPUS_COLLECT_MS
+      : encounterMode && repeatVisit
+        ? GEM_ENCOUNTER_CELEBRATE_MS
+        : GEM_COLLECT_OVERLAY_MS;
     collectFinishRef.current = window.setTimeout(() => {
       collectFinishRef.current = null;
+      if (campusSession) {
+        onCampusStepCompleteRef.current?.(monsterId);
+        return;
+      }
       huntClosingRef.current = true;
       releaseGemHuntCamera(videoRef.current);
       if (newAlbumFriend) {
@@ -417,6 +440,7 @@ export function GemHuntOverlay({
       onCloseRef.current();
     }, overlayMs);
   }, [
+    campusSession,
     centerReveal,
     canCollectNow,
     encounterMode,
@@ -533,13 +557,15 @@ export function GemHuntOverlay({
   const showHuntUi = phase !== "albumReveal";
   const collectBanner =
     phase === "collecting"
-      ? albumRevealNewFriend
-        ? GEM_COLLECT_NEW_HE
-        : `מצאתם שוב את ${gemLabelHe(monsterId)}`
+      ? campusSession
+        ? GEM_FOUND_CHEER_HE
+        : albumRevealNewFriend
+          ? GEM_COLLECT_NEW_HE
+          : `מצאתם שוב את ${gemLabelHe(monsterId)}`
       : null;
 
   function handleClose() {
-    if (phase === "collecting") return;
+    if (phase === "collecting" && !campusSession) return;
     if (phase === "albumReveal") {
       if (albumShowActions || albumRevealPhase === "landed") finishNewFriendClose();
       return;
@@ -760,14 +786,29 @@ export function GemHuntOverlay({
         />
       ) : null}
 
-      <header className="gem-hunt-overlay__header gem-hunt-overlay__header--close-only" dir="ltr">
+      <header
+        className={cn(
+          "gem-hunt-overlay__header",
+          campusQueue ? "gem-hunt-overlay__header--title" : "gem-hunt-overlay__header--close-only",
+        )}
+        dir={campusQueue ? "rtl" : "ltr"}
+      >
+        {campusQueue ? (
+          <div className="gem-hunt-overlay__header-text pointer-events-none" dir="rtl">
+            <p className="gem-hunt-overlay__title--hero text-orange-50">{campusQueue.boothTitle}</p>
+            {campusQueue.boothSubtitle ? (
+              <p className="mt-0.5 text-sm font-semibold text-amber-200/95">{campusQueue.boothSubtitle}</p>
+            ) : null}
+          </div>
+        ) : null}
         <OverlayCloseButton
           label="סגירה"
           onClick={handleClose}
           className={cn(
-            "gem-hunt-overlay__close",
-            (phase === "collecting" ||
-              (phase === "albumReveal" && albumRevealPhase === "enter" && !albumShowActions)) &&
+            "gem-hunt-overlay__close pointer-events-auto",
+            !campusSession &&
+              (phase === "collecting" ||
+                (phase === "albumReveal" && albumRevealPhase === "enter" && !albumShowActions)) &&
               "pointer-events-none opacity-40",
           )}
         />

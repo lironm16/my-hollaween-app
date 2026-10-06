@@ -53,6 +53,11 @@ import { useGemProgress } from "@/hooks/use-gem-progress";
 import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
 import { loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
 import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
+import {
+  campusGemBoothHeadline,
+  gemCampusSessionMembers,
+  nextCampusGemHouse,
+} from "@/lib/gem-campus-queue";
 import { gemMapLegendVisible } from "@/lib/gem-hunt-enabled";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
@@ -188,6 +193,8 @@ export function NeighborhoodApp({
   const gps = geo.location;
   const gems = useGemProgress();
   const [mapGemHouse, setMapGemHouse] = useState<PublicHouse | null>(null);
+  /** Sorted school booths when gem camera runs as one campus session. */
+  const [mapGemCampusMembers, setMapGemCampusMembers] = useState<PublicHouse[] | null>(null);
   const [mapGemGps, setMapGemGps] = useState<UserLocation | null>(null);
   const [mapGemWebXrSession, setMapGemWebXrSession] = useState<XRSession | null>(null);
   const gemBadgePendingRef = useRef(false);
@@ -441,9 +448,10 @@ export function NeighborhoodApp({
       }
       setMapGemWebXrSession(xrSession);
       setMapGemGps(freshGps);
+      setMapGemCampusMembers(gemCampusSessionMembers(mapHouses, house));
       setMapGemHouse(house);
     },
-    [gems, geo, gps, selection, setWatchEnabled],
+    [gems, geo, gps, mapHouses, selection, setWatchEnabled],
   );
 
   const restoreAfterGemHunt = useCallback(() => {
@@ -451,6 +459,22 @@ export function NeighborhoodApp({
     setView("list");
     selection.closeSelection();
   }, [selection]);
+
+  const closeMapGemHunt = useCallback(() => {
+    mapGemOpenGenRef.current += 1;
+    releaseGemHuntCamera();
+    void endGemHuntWebXrSession(mapGemWebXrSession);
+    setMapGemWebXrSession(null);
+    setMapGemHouse(null);
+    setMapGemCampusMembers(null);
+    setMapGemGps(null);
+    restoreAfterGemHunt();
+  }, [mapGemWebXrSession, restoreAfterGemHunt]);
+
+  const mapGemCampusQueueUi = useMemo(() => {
+    if (!mapGemHouse || !mapGemCampusMembers) return undefined;
+    return campusGemBoothHeadline(mapGemHouse, mapGemCampusMembers);
+  }, [mapGemHouse, mapGemCampusMembers]);
 
   useEffect(() => {
     if (!gemBadgePendingRef.current) {
@@ -1641,15 +1665,30 @@ export function NeighborhoodApp({
           )}
           initialWebXrSession={mapGemWebXrSession}
           tellMeHuntRadiusEnforced={gemTellMeHuntRadiusEnforced(admin, gemPreviewAsUser)}
-          onClose={() => {
-            mapGemOpenGenRef.current += 1;
-            releaseGemHuntCamera();
-            void endGemHuntWebXrSession(mapGemWebXrSession);
-            setMapGemWebXrSession(null);
-            setMapGemHouse(null);
-            setMapGemGps(null);
-            restoreAfterGemHunt();
-          }}
+          encounterMode={!mapGemCampusMembers}
+          campusQueue={mapGemCampusQueueUi}
+          onCollectPersist={
+            mapGemCampusMembers
+              ? (monsterId) => {
+                  gems.collect(mapGemHouse.id, monsterId);
+                  celebrateGemCollect();
+                }
+              : undefined
+          }
+          onCampusStepComplete={
+            mapGemCampusMembers
+              ? () => {
+                  const h = mapGemHouse;
+                  const next = nextCampusGemHouse(mapGemCampusMembers, gems.collected, h.id);
+                  if (next) {
+                    setMapGemHouse(next);
+                    return;
+                  }
+                  closeMapGemHunt();
+                }
+              : undefined
+          }
+          onClose={closeMapGemHunt}
           onCollect={(monsterId, options) => {
             const h = mapGemHouse;
             const collectedBefore = loadGemCollected();
@@ -1658,10 +1697,7 @@ export function NeighborhoodApp({
                 ? gemBagCelebrateAfterCollect(mapHouses, collectedBefore, h.id, monsterId)
                 : null;
             gems.collect(h.id, monsterId);
-            releaseGemHuntCamera();
-            setMapGemHouse(null);
-            setMapGemGps(null);
-            restoreAfterGemHunt();
+            closeMapGemHunt();
             celebrateGemCollect();
             if (options?.navigateStickerBook) {
               router.push(gemBagCollectHref(monsterId, celebrate));

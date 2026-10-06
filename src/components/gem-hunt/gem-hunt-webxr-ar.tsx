@@ -48,7 +48,9 @@ import { GemEncounterLayer } from "@/components/gem-hunt/gem-encounter-layer";
 import { useGemEncounterPhase } from "@/hooks/use-gem-encounter-phase";
 import { useTreatSwipe } from "@/hooks/use-treat-swipe";
 import {
+  GEM_CAMPUS_COLLECT_MS,
   GEM_ENCOUNTER_CELEBRATE_MS,
+  type GemCampusQueueUi,
   encounterUiChromeHidden,
   markEncounterTutorialSeen,
 } from "@/lib/gem-encounter";
@@ -62,6 +64,7 @@ import { gemTellMeInRange } from "@/lib/gem-tell-me-gate";
 import {
   GEM_AR_LOCATING_HE,
   GEM_COLLECT_NEW_HE,
+  GEM_FOUND_CHEER_HE,
   GEM_WALK_MAPS_ARIA_HE,
   GEM_WALK_MAPS_LINK_HE,
 } from "@/lib/gem-hunt-copy";
@@ -136,7 +139,15 @@ export function GemHuntWebXrAr({
   onClose,
   onCollect,
   onFallbackCamera,
-}: Props) {
+  campusQueue,
+  onCollectPersist,
+  onCampusStepComplete,
+}: Props & {
+  campusQueue?: GemCampusQueueUi;
+  onCollectPersist?: (monsterId: GemMonsterId) => void;
+  onCampusStepComplete?: (monsterId: GemMonsterId) => void;
+}) {
+  const campusSession = Boolean(campusQueue && onCampusStepComplete && onCollectPersist);
   const monsterId = gemMonsterForHouse(house);
   const meta = gemMonsterMeta(monsterId);
   const danceIndex = gemCollectDanceIndex(house.id, monsterId);
@@ -216,6 +227,10 @@ export function GemHuntWebXrAr({
   onCollectRef.current = onCollect;
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const onCollectPersistRef = useRef(onCollectPersist);
+  onCollectPersistRef.current = onCollectPersist;
+  const onCampusStepCompleteRef = useRef(onCampusStepComplete);
+  onCampusStepCompleteRef.current = onCampusStepComplete;
 
   const effectiveLoc = simulateInRange
     ? { lat: house.lat, lng: house.lng, accuracy: 5 }
@@ -256,17 +271,29 @@ export function GemHuntWebXrAr({
     if (!placed && !tellMeCenter) return;
     const entries = loadGemCollected();
     const newAlbumFriend = !repeatVisit && !isGemTypeInCollection(monsterId, entries);
+    if (campusSession) {
+      onCollectPersistRef.current?.(monsterId);
+    }
     collectingRef.current = true;
     setPhase("collecting");
-    setAlbumRevealNewFriend(newAlbumFriend);
+    setAlbumRevealNewFriend(campusSession ? true : newAlbumFriend);
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate([20, 40, 60]);
     }
     if (collectFinishRef.current != null) window.clearTimeout(collectFinishRef.current);
-    const overlayMs =
-      encounterMode && repeatVisit ? GEM_ENCOUNTER_CELEBRATE_MS : GEM_COLLECT_OVERLAY_MS;
+    const overlayMs = campusSession
+      ? GEM_CAMPUS_COLLECT_MS
+      : encounterMode && repeatVisit
+        ? GEM_ENCOUNTER_CELEBRATE_MS
+        : GEM_COLLECT_OVERLAY_MS;
     collectFinishRef.current = window.setTimeout(() => {
       collectFinishRef.current = null;
+      if (campusSession) {
+        collectingRef.current = false;
+        setPhase("placed");
+        onCampusStepCompleteRef.current?.(monsterId);
+        return;
+      }
       if (newAlbumFriend) {
         if (GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED) {
           /* WebXR has no in-camera album — same as overlay fallback */
@@ -279,8 +306,10 @@ export function GemHuntWebXrAr({
       onCloseRef.current();
     }, overlayMs);
   }, [
+    campusSession,
     canCollectNow,
     encounterMode,
+    inWebXrHuntBand,
     monsterId,
     phase,
     placed,
@@ -475,9 +504,9 @@ export function GemHuntWebXrAr({
   );
 
   const handleClose = useCallback(() => {
-    if (phase === "collecting") return;
+    if (phase === "collecting" && !campusSession) return;
     onClose();
-  }, [onClose, phase]);
+  }, [campusSession, onClose, phase]);
 
   const toggleHintPanel = useCallback(async () => {
     if (hintPanel === "nav") {
@@ -544,9 +573,11 @@ export function GemHuntWebXrAr({
 
   const collectBanner =
     phase === "collecting"
-      ? albumRevealNewFriend
-        ? GEM_COLLECT_NEW_HE
-        : `מצאתם שוב את ${gemLabelHe(monsterId)}`
+      ? campusSession
+        ? GEM_FOUND_CHEER_HE
+        : albumRevealNewFriend
+          ? GEM_COLLECT_NEW_HE
+          : `מצאתם שוב את ${gemLabelHe(monsterId)}`
       : null;
 
   useEffect(() => {
@@ -1000,8 +1031,22 @@ export function GemHuntWebXrAr({
       )}
       dir="rtl"
     >
-      <header className="gem-hunt-webxr__bar gem-hunt-webxr__bar--close-only" dir="ltr">
-        <OverlayCloseButton label="סגירה" onClick={handleClose} className="gem-hunt-webxr__close-btn" />
+      <header
+        className={cn(
+          "gem-hunt-webxr__bar",
+          campusQueue ? "gem-hunt-overlay__header--title" : "gem-hunt-webxr__bar--close-only",
+        )}
+        dir={campusQueue ? "rtl" : "ltr"}
+      >
+        {campusQueue ? (
+          <div className="gem-hunt-overlay__header-text pointer-events-none" dir="rtl">
+            <p className="gem-hunt-overlay__title--hero text-orange-50">{campusQueue.boothTitle}</p>
+            {campusQueue.boothSubtitle ? (
+              <p className="mt-0.5 text-sm font-semibold text-amber-200/95">{campusQueue.boothSubtitle}</p>
+            ) : null}
+          </div>
+        ) : null}
+        <OverlayCloseButton label="סגירה" onClick={handleClose} className="gem-hunt-webxr__close-btn pointer-events-auto" />
       </header>
 
       {collectBanner ? (
