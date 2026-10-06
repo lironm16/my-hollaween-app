@@ -1,6 +1,7 @@
 import { canonicalAddressForBuilding } from "@/lib/house-clusters";
 import { canonicalHouseId, newEditCode, newPoiPublicId, newPublicId, sameHouseId } from "@/lib/ids";
 import { nextBoothNumberForAddress } from "@/lib/cluster-booth";
+import { isSchoolCampusAddress } from "@/lib/school-campus";
 import { normalizePoiCategory } from "@/lib/house-kind";
 import { normalizeAddressFields } from "@/lib/address-fields";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
@@ -156,7 +157,9 @@ export async function submitHouse(
       lat: input.lat,
       lng: input.lng,
     });
-    const boothNumber = nextBoothNumberForAddress(db.houses, addressFields.address);
+    const boothNumber = isSchoolCampusAddress(addressFields.address)
+      ? nextBoothNumberForAddress(db.houses, addressFields.address)
+      : null;
     const house: House = {
       ...input,
       lat: positioned.lat,

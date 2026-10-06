@@ -32,4 +32,12 @@ describe("cluster booth numbers", () => {
       "דוכן 1",
     );
   });
+
+  it("does not label multi-house street clusters as יחידה", () => {
+    const cluster = [{ address: "חרוזים 8" }, { address: "חרוזים 8, חרוזים" }];
+    assert.equal(
+      clusterBoothLabel({ address: "חרוזים 8", boothNumber: 1 }, cluster),
+      null,
+    );
+  });
 });
