@@ -799,6 +799,36 @@
   max-height: 88% !important;
 }
 
+.house-pin.is-practice {
+  background: linear-gradient(165deg, #0f766e 0%, #0d9488 55%, #14b8a6 100%) !important;
+  box-shadow:
+    0 0 0 3px #134e4a,
+    0 0 0 6px dashed rgba(165, 243, 252, 0.92);
+  overflow: visible;
+}
+
+.house-pin.is-practice .pin-practice-face {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 72%;
+  height: 72%;
+  color: #fff7ed;
+  pointer-events: none;
+}
+
+.house-pin.is-practice .pin-practice-bat {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.house-pin.is-gem-ring-sparkle.is-practice .pin-practice-face,
+.house-pin.is-gem-ring-diamond.is-practice .pin-practice-face {
+  z-index: 2;
+}
+
 .house-pin.is-school-campus {
   width: 76px;
   height: 76px;
@@ -1167,7 +1197,9 @@
 }
 
 .house-pin.is-gem-ring-sparkle .pin-scare,
-.house-pin.is-gem-ring-diamond .pin-scare {
+.house-pin.is-gem-ring-diamond .pin-scare,
+.house-pin.is-gem-ring-sparkle .pin-practice-face,
+.house-pin.is-gem-ring-diamond .pin-practice-face {
   position: relative;
   z-index: 1;
 }

@@ -112,10 +112,13 @@ export type House = {
   deletedAt?: string | null;
   /** QA / rehearsal row — hidden from «אמיתיים» map and visitor counts. */
   isStub?: boolean;
+  /** Demon practice row — admin-managed; excluded from neighborhood stats/routes. */
+  isPractice?: boolean;
 };
 
 export type HouseInput = {
   kind?: HouseKind;
+  isPractice?: boolean;
   poiCategory?: PoiCategory | null;
   name: string;
   theme: HouseTheme;

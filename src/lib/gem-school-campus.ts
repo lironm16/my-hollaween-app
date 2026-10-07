@@ -1,7 +1,8 @@
 import { boothNumberForHouse } from "@/lib/cluster-booth";
 import { isSchoolCampusAddress } from "@/lib/school-campus";
 import { gemHuntResidentialHousesEnabled } from "@/lib/gem-hunt-enabled";
-import { houseMatchesSet } from "@/lib/house-set";
+import { houseMatchesSet, isStubHouse } from "@/lib/house-set";
+import { isPracticeHouse } from "@/lib/practice-house";
 import type { PublicHouse } from "@/lib/types";
 
 /** Emissive strength for hunt gems (school booths + future house gems). */
@@ -63,18 +64,36 @@ export function schoolCampusDragonTint(
   return { ...base, glow: GEM_HUNT_GLOW_INTENSITY };
 }
 
+function hashPracticePaletteIndex(id: string) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+/** Admin practice houses — dragon only, distinct stable color per row. */
+export function practiceDragonTint(house: Pick<PublicHouse, "id">): GemMonsterTint {
+  const base = SCHOOL_BOOTH_DRAGON_TINTS[hashPracticePaletteIndex(house.id) % SCHOOL_BOOTH_DRAGON_TINTS.length]!;
+  return { ...base, glow: GEM_HUNT_GLOW_INTENSITY };
+}
+
 export type GemHuntSetOptions = {
   /** Admin / demon map mode — every house in the set gets a gem (not only schools). */
   includeAllHouses?: boolean;
 };
 
-/** Gem-eligible rows — stub/real ({@link houseMatchesSet}) and pre-event school campuses. */
+/** Gem-eligible rows — practice pre-event; all in-set houses after residential hunt opens. */
 export function houseMatchesGemHuntSet(
-  house: Pick<PublicHouse, "address" | "kind" | "isStub"> & { deviceCacheStub?: boolean },
+  house: Pick<PublicHouse, "address" | "kind" | "isStub" | "isPractice"> & {
+    deviceCacheStub?: boolean;
+  },
   houseSet: import("@/lib/house-set").HouseSet,
   options?: GemHuntSetOptions,
 ): boolean {
+  if (isPracticeHouse(house)) {
+    if (houseSet === "stubs" || isStubHouse(house)) return false;
+    return true;
+  }
   if (!houseMatchesSet(house, houseSet)) return false;
   if (options?.includeAllHouses || gemHuntResidentialHousesEnabled()) return true;
-  return isGemSchoolCampusBooth(house);
+  return false;
 }

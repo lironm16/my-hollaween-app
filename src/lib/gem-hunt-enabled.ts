@@ -4,7 +4,7 @@ export function gemHuntVisible(isAdmin: boolean) {
 }
 
 /**
- * When false (pre-event), only school-campus booths carry gems — residential houses join at event time.
+ * When false (pre-event), only admin practice houses carry gems — residential houses join at event time.
  * Map pin rings use the same eligibility list; ring styling works on every pin shape once a row has a gem.
  */
 export function gemHuntResidentialHousesEnabled() {

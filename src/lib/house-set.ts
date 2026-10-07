@@ -111,10 +111,15 @@ export function countVisitedInSet(
   return countIdsInSet(visitedIds, houses, set);
 }
 
-export function houseMatchesSet(house: StubFlagHouse, set: HouseSet) {
+export function houseMatchesSet(
+  house: StubFlagHouse & { isPractice?: boolean },
+  set: HouseSet,
+) {
   if (set === "all") return true;
   const stub = isStubHouse(house);
-  return set === "stubs" ? stub : !stub;
+  const practice = house.isPractice === true;
+  if (set === "stubs") return stub;
+  return !stub && !practice;
 }
 
 /** Device cache rows must carry `isStub` (or legacy deviceCacheStub) so real/stub filters work offline. */

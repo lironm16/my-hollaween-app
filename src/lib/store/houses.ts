@@ -1,5 +1,12 @@
 import { canonicalAddressForBuilding } from "@/lib/house-clusters";
-import { canonicalHouseId, newEditCode, newPoiPublicId, newPublicId, sameHouseId } from "@/lib/ids";
+import {
+  canonicalHouseId,
+  newEditCode,
+  newPoiPublicId,
+  newPracticePublicId,
+  newPublicId,
+  sameHouseId,
+} from "@/lib/ids";
 import { nextBoothNumberForAddress } from "@/lib/cluster-booth";
 import { isSchoolCampusAddress } from "@/lib/school-campus";
 import { normalizePoiCategory } from "@/lib/house-kind";
@@ -108,8 +115,8 @@ export async function getHouse(id: string): Promise<House | undefined> {
   return findHouseIn((await loadDb(true)).houses, id);
 }
 
-function nextPublicId(db: { houses: House[] }, kind: HouseInput["kind"]) {
-  const makeId = kind === "poi" ? newPoiPublicId : newPublicId;
+function nextPublicId(db: { houses: House[] }, kind: HouseInput["kind"], practice = false) {
+  const makeId = practice ? newPracticePublicId : kind === "poi" ? newPoiPublicId : newPublicId;
   let id = makeId();
   while (db.houses.some((h) => sameHouseId(h.id, id))) id = makeId();
   return id;
@@ -120,13 +127,14 @@ export async function submitHouse(
   options?: { includeEndpoint?: string; addedBy?: string; admin?: boolean },
 ) {
   await assertRealAddress(input);
-  const kind = options?.admin && input.kind === "poi" ? "poi" : "house";
+  const practice = Boolean(options?.admin && input.isPractice);
+  const kind = options?.admin && input.kind === "poi" && !practice ? "poi" : "house";
   const poiCategory = normalizePoiCategory(kind, input.poiCategory);
   let id = "";
   let editCode = "";
   const house = await runSyncedWrite((db) => {
     if (!id) {
-      id = nextPublicId(db, kind);
+      id = nextPublicId(db, kind, practice);
       editCode = newEditCode();
     }
     const already = findHouseIn(db.houses, id);
@@ -185,6 +193,8 @@ export async function submitHouse(
       updatedAt: now,
       addedBy: options?.addedBy?.trim() || null,
       ownerPhone: normalizeOwnerPhone(String(input.ownerPhone ?? "")) || null,
+      isPractice: practice,
+      isStub: false,
     };
     db.houses.push(house);
     db.updatedAt = now;

@@ -1,4 +1,5 @@
 import { config, formatDisplayAddress, resolveNeighborhood, type NeighborhoodId } from "@/lib/config";
+import { isPracticeHouse } from "@/lib/practice-house";
 import { mergeAddressRevealSchedule } from "@/lib/event-settings";
 import type { AddressRevealSchedule, PublicHouse } from "@/lib/types";
 
@@ -50,6 +51,7 @@ export function publicHouseForCatalog(
   now = new Date(),
   schedule = mergeAddressRevealSchedule(),
 ): PublicHouse {
+  if (isPracticeHouse(house)) return house;
   if (isAddressRevealed(now, schedule)) return house;
   return redactHouseLocationDetails(house);
 }
@@ -92,12 +94,16 @@ export function housesWithLocationPolicy(
   ctx: AddressRevealContext,
 ): PublicHouse[] {
   return houses.map((house) =>
-    canViewHouseLocationDetails(house.id, ctx) ? house : redactHouseLocationDetails(house),
+    isPracticeHouse(house) || canViewHouseLocationDetails(house.id, ctx)
+      ? house
+      : redactHouseLocationDetails(house),
   );
 }
 
 export function houseWithLocationPolicy(house: PublicHouse, ctx: AddressRevealContext): PublicHouse {
-  return canViewHouseLocationDetails(house.id, ctx) ? house : redactHouseLocationDetails(house);
+  return isPracticeHouse(house) || canViewHouseLocationDetails(house.id, ctx)
+    ? house
+    : redactHouseLocationDetails(house);
 }
 
 export function makeAddressRevealContext(input: {

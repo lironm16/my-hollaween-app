@@ -62,10 +62,10 @@ export async function publishHouse(
   const phoneIssue = ownerPhoneValidationError(String(ownerPhoneRaw), true);
   if (phoneIssue) throw new Error(phoneIssue);
   const ownerPhone = normalizeOwnerPhone(String(ownerPhoneRaw));
-  const adminPoi = Boolean(options?.admin && body.kind === "poi");
+  const adminCreate = Boolean(options?.admin && (body.kind === "poi" || body.isPractice));
   let res: Response;
   try {
-    res = await fetch(adminPoi ? "/api/admin/houses" : "/api/houses", {
+    res = await fetch(adminCreate ? "/api/admin/houses" : "/api/houses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -126,6 +126,11 @@ import {
   countLikedInSet,
   houseMatchesSet,
 } from "@/lib/house-set";
+import {
+  housesForMainMap,
+  practiceHousesVisibleToUsers,
+  stripPracticeHouses,
+} from "@/lib/practice-house";
 import { isPreviewDeploymentClient } from "@/lib/deployment-env";
 import { filterHouses, houseFilterMismatchReasons, routeHouseIds } from "@/lib/filter-houses";
 import { distanceMeters, formatDistance } from "@/lib/geo";
@@ -370,7 +375,14 @@ export function NeighborhoodApp({
     return housesForMap;
   }, [housesForMap, catalog, gemPreviewAsUser, addressReveal, adminHouses, restoreRedactedLocations]);
 
-  const { houses: mapListHouses, now: mapListNow } = useMapListUiLock(displayHouses, now);
+  const housesForMapAndList = useMemo(() => {
+    if (adminForHouseSet || practiceHousesVisibleToUsers()) return displayHouses;
+    return stripPracticeHouses(displayHouses);
+  }, [displayHouses, adminForHouseSet]);
+
+  const { houses: mapListHouses, now: mapListNow } = useMapListUiLock(housesForMapAndList, now);
+
+  const housesForFilters = useMemo(() => stripPracticeHouses(mapListHouses), [mapListHouses]);
 
   const housesForSkipCount = displayHouses;
 
@@ -387,8 +399,11 @@ export function NeighborhoodApp({
   );
 
   const mapHouses = useMemo(
-    () => mapListHouses.filter((house) => houseMatchesSet(house, activeHouseSet)),
-    [mapListHouses, activeHouseSet],
+    () =>
+      housesForMainMap(mapListHouses, activeHouseSet, {
+        admin: Boolean(adminForHouseSet),
+      }),
+    [mapListHouses, activeHouseSet, adminForHouseSet],
   );
   const gemPracticeHouses = useMemo(
     () => gemHousesForMap(gemHuntMapHouses(mapListHouses, activeHouseSet)),
@@ -398,8 +413,8 @@ export function NeighborhoodApp({
     if (gemHuntActive) syncGemMonsterAssignment(gemPracticeHouses);
   }, [gemHuntActive, gemPracticeHouses]);
   const visible = useMemo(
-    () => filterHouses(mapListHouses, filters, filterContext),
-    [mapListHouses, filters, filterContext],
+    () => filterHouses(housesForFilters, filters, filterContext),
+    [housesForFilters, filters, filterContext],
   );
   const showBootstrapSpinner =
     displayHouses.length === 0 &&

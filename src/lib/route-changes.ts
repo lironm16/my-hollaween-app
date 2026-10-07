@@ -13,6 +13,7 @@ import {
 import { resolveVisitWindow } from "@/lib/visit-window";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { HouseSet } from "@/lib/house-set";
+import { isPracticeHouse } from "@/lib/practice-house";
 import type { PublicHouse } from "@/lib/types";
 import {
   buildWalkingRoute,
@@ -52,6 +53,7 @@ export function routeCandidateHouses(
   const skipped = new Set(context.skippedIds);
   const visited = new Set(context.visitedIds);
   return visible.filter((house) => {
+    if (isPracticeHouse(house)) return false;
     if (skipped.has(house.id)) return false;
     if (visited.has(house.id)) return false;
     return true;

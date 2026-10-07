@@ -12,6 +12,7 @@ import {
   PIN_SCHOOL_CAMPUS_INK_SRC,
   PIN_SCHOOL_CAMPUS_INK_SRC_2X,
 } from "@/lib/map-pin-school-icon";
+import { PRACTICE_PIN_BAT_SVG } from "@/lib/practice-pin-face";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -24,6 +25,7 @@ function SwatchPin({
   bare,
   multi,
   school,
+  practice,
   visited,
   skipped,
   gemRing,
@@ -37,6 +39,7 @@ function SwatchPin({
   bare?: boolean;
   multi?: boolean;
   school?: boolean;
+  practice?: boolean;
   visited?: boolean;
   skipped?: boolean;
   gemRing?: "sparkle" | "diamond";
@@ -50,6 +53,7 @@ function SwatchPin({
         poi && "is-poi",
         multi && "is-building",
         school && "is-school-campus is-school-list-pin",
+        practice && "is-practice",
         !gemRing && hours === "closing" && "is-closing-soon",
         !gemRing && hours === "opening" && "is-opening-soon",
         gemRing === "sparkle" && "is-gem-ring-sparkle",
@@ -58,8 +62,10 @@ function SwatchPin({
         visited && "is-visited",
       )}
       style={{
-        background: school
-          ? undefined
+        background: school || practice
+          ? practice
+            ? "linear-gradient(165deg,#0f766e 0%,#0d9488 55%,#14b8a6 100%)"
+            : undefined
           : bare
             ? poi
               ? PIN_BACKGROUND.poi.undecorated
@@ -87,7 +93,14 @@ function SwatchPin({
       ) : null}
       {!gemRing && hours === "closing" ? <i className="pin-hours-ring is-closing" /> : null}
       {!gemRing && hours === "opening" ? <i className="pin-hours-ring is-opening" /> : null}
-      {scare || bare ? (
+      {practice ? (
+        <span
+          className="pin-practice-face"
+          aria-hidden
+          dangerouslySetInnerHTML={{ __html: PRACTICE_PIN_BAT_SVG }}
+        />
+      ) : null}
+      {!practice && (scare || bare) ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img className="pin-scare" src={scareSrc} alt="" />
       ) : null}
@@ -135,6 +148,7 @@ const BASE_GROUPS: { title: string; items: { key: string; label: string; node: R
       { key: "poi-kind", label: "נקודת עניין", node: <SwatchPin scare="mild" poi /> },
       { key: "building-kind", label: "בניין", node: <SwatchPin multi /> },
       { key: "school-kind", label: "בית ספר", node: <SwatchPin school /> },
+      { key: "practice-kind", label: "בית תרגול", node: <SwatchPin practice /> },
     ],
   },
   {

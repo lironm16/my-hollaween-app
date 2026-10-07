@@ -20,18 +20,38 @@ describe("gem school campus", () => {
     assert.equal(isGemSchoolCampusBooth({ address: "חרוזים 8", kind: "house" }), false);
   });
 
-  it("excludes residential houses pre-event unless includeAllHouses", () => {
+  it("excludes residential and school houses pre-event unless includeAllHouses", () => {
     const home = {
       id: "בית-100",
       address: "חרוזים 8",
       kind: "house" as const,
       isStub: false,
     };
+    const school = {
+      id: "בית-200",
+      address: "ביה״ס ניצנים",
+      kind: "house" as const,
+      isStub: false,
+    };
     assert.equal(houseMatchesGemHuntSet(home, "real"), false);
+    assert.equal(houseMatchesGemHuntSet(school, "real"), false);
     assert.equal(houseMatchesGemHuntSet(home, "real", { includeAllHouses: true }), true);
+    assert.equal(houseMatchesGemHuntSet(school, "real", { includeAllHouses: true }), true);
   });
 
-  it("assigns dragon with distinct booth tints", () => {
+  it("includes practice houses pre-event on the real set", () => {
+    const practice = {
+      id: "תרגול-1001",
+      address: "רחוב תרגול 1",
+      kind: "house" as const,
+      isStub: false,
+      isPractice: true,
+    };
+    assert.equal(houseMatchesGemHuntSet(practice, "real"), true);
+    assert.equal(gemMonsterForHouse(practice), "dragon");
+  });
+
+  it("assigns distinct dragon tints per school booth", () => {
     const boothA = {
       id: "בית-9323",
       address: "ביה״ס המנחיל",
@@ -44,12 +64,11 @@ describe("gem school campus", () => {
       kind: "house" as const,
       boothNumber: 2,
     };
-    assert.equal(gemMonsterForHouse(boothA), "dragon");
     assert.notEqual(schoolCampusDragonTint(boothA)!.hue, schoolCampusDragonTint(boothB)!.hue);
     assert.equal(gemMonsterTint(boothA).glow, gemMonsterTint(boothB).glow);
   });
 
-  it("respects stub vs real house-set for school gem map", () => {
+  it("does not assign school booths to pre-event gem map", () => {
     const stubBooth = {
       id: "בית-9320",
       address: "ביה״ס ניצנים",
@@ -65,9 +84,9 @@ describe("gem school campus", () => {
       description: "דוכן אמיתי",
     };
     assert.equal(houseMatchesGemHuntSet(stubBooth, "real"), false);
-    assert.equal(houseMatchesGemHuntSet(stubBooth, "stubs"), true);
-    assert.equal(houseMatchesGemHuntSet(realBooth, "real"), true);
-    const eligible = gemHuntMapHouses([stubBooth, realBooth] as never, "stubs");
-    assert.deepEqual(eligible.map((h) => h.id), ["בית-9320"]);
+    assert.equal(houseMatchesGemHuntSet(stubBooth, "stubs"), false);
+    assert.equal(houseMatchesGemHuntSet(realBooth, "real"), false);
+    const eligible = gemHuntMapHouses([stubBooth, realBooth] as never, "real");
+    assert.deepEqual(eligible.map((h) => h.id), []);
   });
 });

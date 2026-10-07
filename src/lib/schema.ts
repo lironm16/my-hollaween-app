@@ -146,6 +146,7 @@ export const ownerPatchSchema = houseFields.partial().extend({
 
 export const adminPatchSchema = houseFields.partial().extend({
   kind: z.enum(HOUSE_KINDS).optional(),
+  isPractice: z.boolean().optional(),
   poiCategory: z.enum(POI_CATEGORIES).nullable().optional(),
   soldOut: z.boolean().optional(),
   ownerFrozenUntil: z.string().nullable().optional(),
@@ -158,4 +159,5 @@ export const adminPatchSchema = houseFields.partial().extend({
 export const adminSubmitSchema = houseSubmitSchema.extend({
   kind: z.enum(HOUSE_KINDS).default("house"),
   poiCategory: z.enum(POI_CATEGORIES).nullable().optional(),
+  isPractice: z.boolean().optional(),
 });
