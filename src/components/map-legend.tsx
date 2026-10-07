@@ -7,12 +7,7 @@ import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { SkipIcon } from "@/components/skip-icon";
 import { POI_PIN_FACE_SRC } from "@/lib/pin-faces";
 import { PIN_BACKGROUND } from "@/lib/pin-colors";
-import {
-  GEM_FOUND_STATE_HE,
-  GEM_MAP_LEGEND_HOURS_GEM_HE,
-  GEM_MAP_LEGEND_OPEN_HE,
-  GEM_MAP_LEGEND_SECTION_HE,
-} from "@/lib/gem-hunt-copy";
+import { GEM_MAP_LEGEND_OPEN_HE, GEM_MAP_LEGEND_SECTION_HE } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -141,25 +136,14 @@ const BASE_GROUPS: { title: string; items: { key: string; label: string; node: R
   },
 ];
 
-function GemRingSwatch({ variant }: { variant: "sparkle" | "diamond" | "none" }) {
-  return (
-    <SwatchPin
-      scare="mild"
-      gemRing={variant === "none" ? undefined : variant}
-    />
-  );
-}
-
 const GEM_LEGEND_GROUP = {
   title: GEM_MAP_LEGEND_SECTION_HE,
   items: [
-    { key: "gem-open", label: GEM_MAP_LEGEND_OPEN_HE, node: <GemRingSwatch variant="sparkle" /> },
     {
-      key: "gem-hours",
-      label: GEM_MAP_LEGEND_HOURS_GEM_HE,
-      node: <GemRingSwatch variant="diamond" />,
+      key: "gem-open",
+      label: GEM_MAP_LEGEND_OPEN_HE,
+      node: <SwatchPin scare="mild" gemRing="sparkle" />,
     },
-    { key: "gem-done", label: GEM_FOUND_STATE_HE, node: <GemRingSwatch variant="none" /> },
   ],
 } as const;
 

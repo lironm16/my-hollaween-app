@@ -264,7 +264,7 @@ function clusterIcon(
   const pinExtraH = schoolCampus ? 22 : 20;
   const pinAnchorTail = schoolCampus ? 18 : 16;
   return L.divIcon({
-    className: `pumpkin-pin-icon pumpkin-pin-building${schoolCampus ? " pumpkin-pin-school" : ""}${selectedClass}${filterClass}`,
+    className: `pumpkin-pin-icon pumpkin-pin-building${schoolCampus ? " pumpkin-pin-school" : ""}${selectedClass}${filterClass}${clusterRing.hoursSoonClass}`,
     html: wrapped.html,
     iconSize: [pinBox, pinBox + pinExtraH + wrapped.extraH],
     iconAnchor: [pinBox / 2, pinBox + pinAnchorTail + wrapped.extraH],
