@@ -56,19 +56,16 @@ describe("map gem pin rings", () => {
     assert.doesNotMatch(decor.ringHtml, /pin-hours-ring/);
   });
 
-  it("cluster decor uses diamond when hours conflict", () => {
+  it("cluster decor uses gem ring instead of hours ring when hunt mode on", () => {
     const house = stubHouse("h1", {
-      hourWindows: [{ open: "18:00", close: "22:00" }],
+      openHours: [{ from: "18:00", to: "22:00" }],
     });
-    const now = new Date("2026-10-31T21:50:00");
-    const decor = mapPinRingDecorForCluster([house], now, {
+    const decor = mapPinRingDecorForCluster([house], new Date("2026-10-31T21:50:00"), {
       showGemRings: true,
       gemHouseIds: new Set(["h1"]),
       isCollected: () => false,
     });
-    if (decor.ringHtml.includes("pin-gem-ring")) {
-      assert.match(decor.ringHtml, /is-diamond|is-sparkle/);
-      assert.doesNotMatch(decor.ringHtml, /pin-hours-ring/);
-    }
+    assert.match(decor.ringHtml, /pin-gem-ring is-(diamond|sparkle)/);
+    assert.doesNotMatch(decor.ringHtml, /pin-hours-ring/);
   });
 });
