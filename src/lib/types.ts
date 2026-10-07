@@ -207,9 +207,8 @@ export type Catalog = {
   };
 };
 
-/** Client-only record that a full snapshot matched server houseCount. */
+/** Client-only hint from the last successful sync (not a “done forever” latch). */
 export type CatalogCacheMeta = {
-  complete: boolean;
   houseCount?: number;
   verifiedAt?: string;
 };

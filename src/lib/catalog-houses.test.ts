@@ -140,17 +140,17 @@ describe("catalogCacheIncomplete", () => {
       "2026-10-31T10:00:00.000Z",
       { houseCount: 25 },
     );
-    const meta: CatalogCacheMeta = { complete: true, houseCount: 25 };
+    const meta: CatalogCacheMeta = { houseCount: 25 };
     assert.equal(catalogCacheIncomplete(full, meta, 25), false);
   });
 
-  it("requires completeness metadata for legacy caches without server count", () => {
+  it("requires a count hint for legacy caches without server houseCount", () => {
     const full = catalog(
       Array.from({ length: 25 }, (_, index) => house(`house-${index}`)),
       "2026-10-31T10:00:00.000Z",
     );
     assert.equal(catalogCacheIncomplete(full, null), true);
-    assert.equal(catalogCacheIncomplete(full, { complete: true, houseCount: 25 }), false);
+    assert.equal(catalogCacheIncomplete(full, { houseCount: 25 }), false);
   });
 });
 
@@ -192,7 +192,7 @@ describe("catalogNeedsFullRefresh", () => {
       "2026-10-31T10:00:00.000Z",
       { houseCount: 25 },
     );
-    const meta: CatalogCacheMeta = { complete: true, houseCount: 25 };
+    const meta: CatalogCacheMeta = { houseCount: 25 };
     assert.equal(catalogNeedsFullRefresh(full, meta, 25), false);
   });
 });
@@ -272,10 +272,9 @@ describe("resolveCatalogHouses", { skip: !hasLocalStorage }, () => {
     assert.deepEqual(ids, ["a", "b", "c"]);
   });
 
-  it("persists cache completeness metadata separately from catalog payload", () => {
-    saveCatalogCacheMeta({ complete: true, houseCount: 25, verifiedAt: "2026-10-31T10:00:00.000Z" });
+  it("persists last verified count separately from catalog payload", () => {
+    saveCatalogCacheMeta({ houseCount: 25, verifiedAt: "2026-10-31T10:00:00.000Z" });
     assert.deepEqual(loadCatalogCacheMeta(), {
-      complete: true,
       houseCount: 25,
       verifiedAt: "2026-10-31T10:00:00.000Z",
     });

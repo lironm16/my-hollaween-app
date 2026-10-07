@@ -1,9 +1,9 @@
 import { appVersion } from "@/lib/app-version";
-import { clearDeviceCatalogCache } from "@/lib/offline-db";
+import { clearCatalogCacheMeta, clearDeviceCatalogCache } from "@/lib/offline-db";
 
 const CATALOG_BOOT_GENERATION_KEY = "hw-catalog-boot-generation";
 /** Bump when a one-time device catalog wipe is required after a bad release. */
-export const CATALOG_BOOT_GENERATION = 3;
+export const CATALOG_BOOT_GENERATION = 4;
 
 export function catalogBootMigrationNeeded(): boolean {
   if (typeof window === "undefined") return false;
@@ -25,10 +25,15 @@ export function completeCatalogBootMigration() {
   }
 }
 
-/** Drop stale partial caches that block catalog refresh (e.g. meta marked complete at 5 houses). */
+/** Drop stale caches / legacy `complete` meta after a bad release. */
 export function runCatalogBootMigrationIfNeeded(): boolean {
   if (!catalogBootMigrationNeeded()) return false;
-  clearDeviceCatalogCache();
+  const stored = Number(localStorage.getItem(CATALOG_BOOT_GENERATION_KEY) || 0);
+  if (!Number.isFinite(stored) || stored < 3) {
+    clearDeviceCatalogCache();
+  } else {
+    clearCatalogCacheMeta();
+  }
   completeCatalogBootMigration();
   return true;
 }

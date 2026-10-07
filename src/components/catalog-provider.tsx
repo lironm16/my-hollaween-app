@@ -19,8 +19,8 @@ import {
   loadCatalogCache,
   loadCatalogCacheMeta,
   loadCatalogCacheSync,
-  markCatalogCacheComplete,
-  clearCatalogCacheComplete,
+  recordCatalogCacheVerified,
+  clearCatalogCacheMeta,
   saveCatalogCache,
   flushPendingHouseWrites,
   withDeviceHouseOverlays,
@@ -429,10 +429,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     quickRetryCountRef.current = 0;
     const serverCount = resolveServerHouseCount(live);
     if (serverCount != null && serverCount < next.houses.length) {
-      clearCatalogCacheComplete();
+      clearCatalogCacheMeta();
     }
     if (live.full || catalogServerCountSatisfied(next, serverCount)) {
-      markCatalogCacheComplete(next);
+      recordCatalogCacheVerified(next);
     }
     await saveCatalogCache(next);
     window.dispatchEvent(new Event("hw-catalog-refreshed"));
@@ -480,7 +480,6 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         since,
         needsFullRefresh,
         serverCount: expectedServerCount,
-        cacheMarkedComplete: cacheMeta?.complete,
         catalogHouseCount: catalogRef.current?.houseCount ?? null,
       })
     ) {
@@ -517,7 +516,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
               setUnreachable(false);
               setError(null);
               quickRetryCountRef.current = 0;
-              markCatalogCacheComplete(recovered);
+              recordCatalogCacheVerified(recovered);
               await saveCatalogCache(recovered);
               window.dispatchEvent(new Event("hw-catalog-refreshed"));
             }
@@ -569,7 +568,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           setUnreachable(false);
           setError(null);
           quickRetryCountRef.current = 0;
-          markCatalogCacheComplete(recovered);
+          recordCatalogCacheVerified(recovered);
           await saveCatalogCache(recovered);
           window.dispatchEvent(new Event("hw-catalog-refreshed"));
         }
@@ -606,7 +605,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         const serverCountFinal =
           resolveServerHouseCount(live) ?? resolveServerHouseCount(merged);
         if (serverCountFinal == null || catalogServerCountSatisfied(merged, serverCountFinal)) {
-          markCatalogCacheComplete(merged);
+          recordCatalogCacheVerified(merged);
         }
         setCatalog((prev) => publishCatalog(merged, prev) ?? merged);
         if (isMapListSuspended()) return;
@@ -629,7 +628,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         setError(null);
         quickRetryCountRef.current = 0;
         if (catalogHasRealHouses(merged)) {
-          markCatalogCacheComplete(merged);
+          recordCatalogCacheVerified(merged);
           await saveCatalogCache(merged);
         }
         window.dispatchEvent(new Event("hw-catalog-refreshed"));

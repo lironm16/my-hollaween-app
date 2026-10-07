@@ -24,8 +24,7 @@ export function shouldUseSteadyDeltaPoll(input: {
   since?: string;
   needsFullRefresh: boolean;
   serverCount?: number | null;
-  cacheMarkedComplete?: boolean;
-  /** When set, block steady polls while inline rows disagree with server count metadata. */
+  /** Block steady polls while inline rows disagree with server count metadata. */
   catalogHouseCount?: number | null;
 }): boolean {
   if (!input.since || input.needsFullRefresh) return false;
@@ -37,8 +36,6 @@ export function shouldUseSteadyDeltaPoll(input: {
   ) {
     return false;
   }
-  if (input.serverCount == null || input.serverCount < 0) {
-    return Boolean(input.cacheMarkedComplete);
-  }
+  if (input.serverCount == null || input.serverCount < 0) return false;
   return input.localCount === input.serverCount;
 }

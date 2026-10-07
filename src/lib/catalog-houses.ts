@@ -47,7 +47,20 @@ export function isAuthoritativeHouseList(
   return typeof count === "number" && count >= 0 && catalog.houses.length === count;
 }
 
-/** True when the on-device list is shorter than the server says the catalog should be. */
+function explicitCatalogHouseCount(
+  catalog: Catalog | null,
+  meta: CatalogCacheMeta | null,
+  serverCount?: number | null,
+): number | undefined {
+  if (typeof serverCount === "number" && serverCount >= 0) return serverCount;
+  if (typeof catalog?.houseCount === "number" && catalog.houseCount >= 0) {
+    return catalog.houseCount;
+  }
+  if (typeof meta?.houseCount === "number" && meta.houseCount >= 0) return meta.houseCount;
+  return undefined;
+}
+
+/** True when the on-device list does not match a known server/catalog count. */
 export function catalogCacheIncomplete(
   catalog: Catalog | null,
   cacheMeta?: CatalogCacheMeta | null,
@@ -55,20 +68,16 @@ export function catalogCacheIncomplete(
 ): boolean {
   const localCount = localCatalogHouseCount(catalog);
   const meta = cacheMeta ?? loadCatalogCacheMeta();
-  const authoritative = serverCount ?? resolveServerHouseCount(catalog) ?? meta?.houseCount;
-
-  if (typeof authoritative === "number" && localCount !== authoritative) return true;
-  if (
-    catalog &&
-    typeof catalog.houseCount === "number" &&
-    catalog.houseCount >= 0 &&
-    localCount !== catalog.houseCount
-  ) {
-    return true;
+  const expected = explicitCatalogHouseCount(catalog, meta, serverCount);
+  if (expected == null) return true;
+  if (localCount < expected) return true;
+  if (localCount > expected) {
+    const stubInflated =
+      typeof catalog?.houseCount === "number" &&
+      catalog.houseCount === expected &&
+      catalogServerCountSatisfied(catalog, expected);
+    if (!stubInflated) return true;
   }
-  if (!meta?.complete) return true;
-  if (typeof meta.houseCount === "number" && localCount > meta.houseCount) return true;
-  if (typeof meta.houseCount === "number" && localCount < meta.houseCount) return true;
   return false;
 }
 

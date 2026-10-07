@@ -109,21 +109,19 @@ describe("shouldUseSteadyDeltaPoll", () => {
         since: "2026-10-31T12:00:00.000Z",
         needsFullRefresh: false,
         serverCount: 5,
-        cacheMarkedComplete: true,
         catalogHouseCount: 91,
       }),
       false,
     );
   });
 
-  it("blocks delta polls when server count is unknown and cache is not marked complete", () => {
+  it("blocks delta polls when server count is unknown", () => {
     assert.equal(
       shouldUseSteadyDeltaPoll({
         localCount: 40,
         since: "2026-10-31T12:00:00.000Z",
         needsFullRefresh: false,
         serverCount: null,
-        cacheMarkedComplete: false,
       }),
       false,
     );

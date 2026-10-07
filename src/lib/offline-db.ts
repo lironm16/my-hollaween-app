@@ -108,13 +108,13 @@ export function loadCatalogCacheSync(): Catalog | null {
 
 function asCatalogCacheMeta(value: unknown): CatalogCacheMeta | null {
   if (!value || typeof value !== "object") return null;
-  const meta = value as CatalogCacheMeta;
-  if (typeof meta.complete !== "boolean") return null;
-  const houseCount = Number(meta.houseCount);
+  const raw = value as Record<string, unknown>;
+  const houseCount = Number(raw.houseCount);
+  const verifiedAt = typeof raw.verifiedAt === "string" ? raw.verifiedAt : undefined;
+  if (!Number.isFinite(houseCount) || houseCount < 0) return null;
   return {
-    complete: meta.complete,
-    ...(Number.isFinite(houseCount) && houseCount >= 0 ? { houseCount } : {}),
-    ...(typeof meta.verifiedAt === "string" ? { verifiedAt: meta.verifiedAt } : {}),
+    houseCount,
+    ...(verifiedAt ? { verifiedAt } : {}),
   };
 }
 
@@ -146,19 +146,23 @@ function serverHouseCountFromCatalog(catalog: Catalog): number | undefined {
   return undefined;
 }
 
-/** Mark cache complete after a verified full snapshot load. */
-export function markCatalogCacheComplete(catalog: Catalog) {
+/** Remember last verified server count — hint only; sync gates use live API counts. */
+export function recordCatalogCacheVerified(catalog: Catalog) {
   const houseCount = serverHouseCountFromCatalog(catalog);
   if (houseCount == null) return;
   saveCatalogCacheMeta({
-    complete: true,
     houseCount,
     verifiedAt: catalog.updatedAt,
   });
 }
 
-export function clearCatalogCacheComplete() {
-  saveCatalogCacheMeta({ complete: false });
+export function clearCatalogCacheMeta() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(CATALOG_META_LS_KEY);
+  } catch {
+    /* private mode */
+  }
 }
 
 /** Optional wipe — not run on boot (cache is needed for instant map paint). */
