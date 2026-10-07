@@ -63,12 +63,18 @@ export function schoolCampusDragonTint(
   return { ...base, glow: GEM_HUNT_GLOW_INTENSITY };
 }
 
+export type GemHuntSetOptions = {
+  /** Admin / demon map mode — every house in the set gets a gem (not only schools). */
+  includeAllHouses?: boolean;
+};
+
 /** Gem-eligible rows — stub/real ({@link houseMatchesSet}) and pre-event school campuses. */
 export function houseMatchesGemHuntSet(
   house: Pick<PublicHouse, "address" | "kind" | "isStub"> & { deviceCacheStub?: boolean },
   houseSet: import("@/lib/house-set").HouseSet,
+  options?: GemHuntSetOptions,
 ): boolean {
   if (!houseMatchesSet(house, houseSet)) return false;
-  if (gemHuntResidentialHousesEnabled()) return true;
+  if (options?.includeAllHouses || gemHuntResidentialHousesEnabled()) return true;
   return isGemSchoolCampusBooth(house);
 }

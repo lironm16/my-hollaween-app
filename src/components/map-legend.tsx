@@ -8,6 +8,10 @@ import { SkipIcon } from "@/components/skip-icon";
 import { POI_PIN_FACE_SRC } from "@/lib/pin-faces";
 import { PIN_BACKGROUND } from "@/lib/pin-colors";
 import { GEM_MAP_LEGEND_OPEN_HE, GEM_MAP_LEGEND_SECTION_HE } from "@/lib/gem-hunt-copy";
+import {
+  PIN_SCHOOL_CAMPUS_INK_SRC,
+  PIN_SCHOOL_CAMPUS_INK_SRC_2X,
+} from "@/lib/map-pin-school-icon";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -19,6 +23,7 @@ function SwatchPin({
   onBreak,
   bare,
   multi,
+  school,
   visited,
   skipped,
   gemRing,
@@ -31,6 +36,7 @@ function SwatchPin({
   onBreak?: boolean;
   bare?: boolean;
   multi?: boolean;
+  school?: boolean;
   visited?: boolean;
   skipped?: boolean;
   gemRing?: "sparkle" | "diamond";
@@ -43,6 +49,7 @@ function SwatchPin({
         "house-pin is-legend relative",
         poi && "is-poi",
         multi && "is-building",
+        school && "is-school-campus is-school-list-pin",
         !gemRing && hours === "closing" && "is-closing-soon",
         !gemRing && hours === "opening" && "is-opening-soon",
         gemRing === "sparkle" && "is-gem-ring-sparkle",
@@ -51,17 +58,33 @@ function SwatchPin({
         visited && "is-visited",
       )}
       style={{
-        background: bare
-          ? poi
-            ? PIN_BACKGROUND.poi.undecorated
-            : PIN_BACKGROUND.house.undecorated
-          : poi
-            ? PIN_BACKGROUND.poi.decorated
-            : PIN_BACKGROUND.house.decorated,
+        background: school
+          ? undefined
+          : bare
+            ? poi
+              ? PIN_BACKGROUND.poi.undecorated
+              : PIN_BACKGROUND.house.undecorated
+            : poi
+              ? PIN_BACKGROUND.poi.decorated
+              : PIN_BACKGROUND.house.decorated,
       }}
       aria-hidden
     >
-      {gemRing ? <i className={`pin-gem-ring is-${gemRing}`} aria-hidden /> : null}
+      {gemRing ? (
+        <>
+          <i className={`pin-gem-ring is-${gemRing}`} aria-hidden />
+          {gemRing === "sparkle" ? (
+            <span className="pin-gem-sparkles" aria-hidden>
+              <i />
+              <i />
+              <i />
+              <i />
+              <i />
+              <i />
+            </span>
+          ) : null}
+        </>
+      ) : null}
       {!gemRing && hours === "closing" ? <i className="pin-hours-ring is-closing" /> : null}
       {!gemRing && hours === "opening" ? <i className="pin-hours-ring is-opening" /> : null}
       {scare || bare ? (
@@ -69,21 +92,28 @@ function SwatchPin({
         <img className="pin-scare" src={scareSrc} alt="" />
       ) : null}
       {multi ? (
-        <>
-          <span className="pin-cluster-icon" aria-hidden>
-            <svg viewBox="0 0 32 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="1" y="12" width="13" height="15" rx="1.5" fill="#ffedd5" />
-              <path d="M1 12 L7.5 5.5 L14 12 Z" fill="#ffedd5" />
-              <rect x="14" y="8" width="13" height="19" rx="1.5" fill="#fb923c" />
-              <path d="M14 8 L20.5 1.5 L27 8 Z" fill="#fb923c" />
-            </svg>
-          </span>
-          <span className="pin-apt-dots" aria-hidden>
-            <i className="pin-apt-dot is-plenty" />
-            <i className="pin-apt-dot is-low" />
-            <i className="pin-apt-dot is-out" />
-          </span>
-        </>
+        <span className="pin-cluster-icon" aria-hidden>
+          <svg viewBox="0 0 32 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="12" width="13" height="15" rx="1.5" fill="#ffedd5" />
+            <path d="M1 12 L7.5 5.5 L14 12 Z" fill="#ffedd5" />
+            <rect x="14" y="8" width="13" height="19" rx="1.5" fill="#fb923c" />
+            <path d="M14 8 L20.5 1.5 L27 8 Z" fill="#fb923c" />
+          </svg>
+        </span>
+      ) : null}
+      {school ? (
+        <span className="pin-school-art" aria-hidden>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="pin-school-castle-img is-ink"
+            src={PIN_SCHOOL_CAMPUS_INK_SRC}
+            srcSet={`${PIN_SCHOOL_CAMPUS_INK_SRC} 1x, ${PIN_SCHOOL_CAMPUS_INK_SRC_2X} 2x`}
+            alt=""
+            width={68}
+            height={56}
+            decoding="async"
+          />
+        </span>
       ) : null}
       {skipped ? (
         <b className="pin-status is-skipped" aria-hidden>
@@ -103,6 +133,8 @@ const BASE_GROUPS: { title: string; items: { key: string; label: string; node: R
     items: [
       { key: "house-kind", label: "בית", node: <SwatchPin scare="mild" /> },
       { key: "poi-kind", label: "נקודת עניין", node: <SwatchPin scare="mild" poi /> },
+      { key: "building-kind", label: "בניין", node: <SwatchPin multi /> },
+      { key: "school-kind", label: "בית ספר", node: <SwatchPin school /> },
     ],
   },
   {
@@ -129,7 +161,6 @@ const BASE_GROUPS: { title: string; items: { key: string; label: string; node: R
       { key: "break", label: "הפסקה", node: <SwatchPin scare="mild" onBreak /> },
       { key: "close", label: "נסגר בקרוב", node: <SwatchPin scare="mild" hours="closing" /> },
       { key: "open", label: "נפתח בקרוב", node: <SwatchPin scare="mild" hours="opening" /> },
-      { key: "multi", label: "כמה בתים", node: <SwatchPin multi /> },
       { key: "visited", label: "ביקרתי", node: <SwatchPin scare="mild" visited /> },
       { key: "skipped", label: "דילגתי", node: <SwatchPin scare="mild" skipped /> },
     ],

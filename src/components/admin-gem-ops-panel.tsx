@@ -80,8 +80,11 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
   const [sheetHouse, setSheetHouse] = useState<PublicHouse | null>(null);
   const [mapGemRingsVisible, setMapGemRingsVisible] = useState(false);
 
-  /** Manager map lists every gem row (stubs + real), independent of the map viewer house-set toggle. */
-  const rows = useMemo(() => buildGemMapHouseRows(houses, "all"), [houses]);
+  /** Full catalog + every house type (admin demon QA), not only school booths. */
+  const rows = useMemo(
+    () => buildGemMapHouseRows(houses, "all", { includeAllHouses: true }),
+    [houses],
+  );
   const counts = useMemo(() => countGemsOnMapByMonster(rows), [rows]);
   const pool = useMemo(() => gemAlbumStickerPool(), []);
 

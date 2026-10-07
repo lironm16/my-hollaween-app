@@ -391,8 +391,13 @@ export function NeighborhoodApp({
     [mapListHouses, activeHouseSet],
   );
   const gemPracticeHouses = useMemo(
-    () => gemHousesForMap(gemHuntMapHouses(mapListHouses, activeHouseSet)),
-    [mapListHouses, activeHouseSet],
+    () =>
+      gemHousesForMap(
+        gemHuntMapHouses(mapListHouses, activeHouseSet, {
+          includeAllHouses: gemUi,
+        }),
+      ),
+    [mapListHouses, activeHouseSet, gemUi],
   );
   useEffect(() => {
     if (gemHuntActive) syncGemMonsterAssignment(gemPracticeHouses);

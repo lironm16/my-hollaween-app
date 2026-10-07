@@ -53,6 +53,7 @@ describe("map gem pin rings", () => {
       isCollected: () => false,
     });
     assert.match(decor.ringHtml, /pin-gem-ring is-sparkle/);
+    assert.match(decor.ringHtml, /pin-gem-sparkles/);
     assert.doesNotMatch(decor.ringHtml, /pin-hours-ring/);
   });
 

@@ -7,6 +7,7 @@ import {
   gemMonsterForHouse,
   gemSpeciesLabelHe,
   syncGemMonsterAssignment,
+  type GemHuntSetOptions,
   type GemMonsterId,
 } from "@/lib/gem-monsters";
 import type { HouseSet } from "@/lib/house-set";
@@ -22,8 +23,9 @@ export type GemMapHouseRow = {
 export function buildGemMapHouseRows(
   houses: PublicHouse[],
   houseSet: HouseSet = "real",
+  options?: GemHuntSetOptions,
 ): GemMapHouseRow[] {
-  const eligible = gemHuntMapHouses(houses, houseSet);
+  const eligible = gemHuntMapHouses(houses, houseSet, options);
   syncGemMonsterAssignment(eligible);
   const onMap = gemHousesForMap(eligible);
   return onMap.map((house) => {
