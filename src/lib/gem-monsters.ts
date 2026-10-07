@@ -428,7 +428,7 @@ function buildGemMonsterAssignmentSpatial(
   return assignment;
 }
 
-/** Houses that participate in the gem hunt for the active catalog set. */
+/** Pre-event: school booths; after event: all houses in the active set (see gemHuntResidentialHousesEnabled). */
 export function gemHuntMapHouses(houses: PublicHouse[], houseSet: HouseSet = "real") {
   return houses.filter((house) => houseMatchesGemHuntSet(house, houseSet));
 }

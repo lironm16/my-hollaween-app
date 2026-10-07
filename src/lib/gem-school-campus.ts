@@ -1,5 +1,6 @@
 import { boothNumberForHouse } from "@/lib/cluster-booth";
 import { isSchoolCampusAddress } from "@/lib/school-campus";
+import { gemHuntResidentialHousesEnabled } from "@/lib/gem-hunt-enabled";
 import { houseMatchesSet } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
 
@@ -62,10 +63,12 @@ export function schoolCampusDragonTint(
   return { ...base, glow: GEM_HUNT_GLOW_INTENSITY };
 }
 
-/** Gem-eligible rows — same stub/real rules as the map ({@link houseMatchesSet}). */
+/** Gem-eligible rows — stub/real ({@link houseMatchesSet}) and pre-event school campuses. */
 export function houseMatchesGemHuntSet(
   house: Pick<PublicHouse, "address" | "kind" | "isStub"> & { deviceCacheStub?: boolean },
   houseSet: import("@/lib/house-set").HouseSet,
 ): boolean {
-  return houseMatchesSet(house, houseSet);
+  if (!houseMatchesSet(house, houseSet)) return false;
+  if (gemHuntResidentialHousesEnabled()) return true;
+  return isGemSchoolCampusBooth(house);
 }

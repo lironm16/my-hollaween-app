@@ -11,7 +11,6 @@ import type { HouseCardActionContext } from "@/components/house-card-actions";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useGemProgress } from "@/hooks/use-gem-progress";
-import { useHouseSet } from "@/hooks/use-house-set";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
@@ -72,7 +71,6 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
   const { source } = useCatalog();
   const now = useAppNow();
   const gemUi = gemHuntVisible(admin);
-  const { houseSet } = useHouseSet();
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
   const skips = useSkippedHouses();
@@ -82,7 +80,8 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
   const [sheetHouse, setSheetHouse] = useState<PublicHouse | null>(null);
   const [mapGemRingsVisible, setMapGemRingsVisible] = useState(false);
 
-  const rows = useMemo(() => buildGemMapHouseRows(houses, houseSet), [houses, houseSet]);
+  /** Manager map lists every gem row (stubs + real), independent of the map viewer house-set toggle. */
+  const rows = useMemo(() => buildGemMapHouseRows(houses, "all"), [houses]);
   const counts = useMemo(() => countGemsOnMapByMonster(rows), [rows]);
   const pool = useMemo(() => gemAlbumStickerPool(), []);
 
