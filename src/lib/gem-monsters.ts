@@ -428,7 +428,7 @@ function buildGemMonsterAssignmentSpatial(
   return assignment;
 }
 
-/** Pre-event hunt: gems on school campus booths (דוכנים), not residential houses yet. */
+/** Houses that participate in the gem hunt for the active catalog set. */
 export function gemHuntMapHouses(houses: PublicHouse[], houseSet: HouseSet = "real") {
   return houses.filter((house) => houseMatchesGemHuntSet(house, houseSet));
 }

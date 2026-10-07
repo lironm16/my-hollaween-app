@@ -62,11 +62,10 @@ export function schoolCampusDragonTint(
   return { ...base, glow: GEM_HUNT_GLOW_INTENSITY };
 }
 
-/** Gem-eligible school rows — same stub/real rules as the map ({@link houseMatchesSet}). */
+/** Gem-eligible rows — same stub/real rules as the map ({@link houseMatchesSet}). */
 export function houseMatchesGemHuntSet(
   house: Pick<PublicHouse, "address" | "kind" | "isStub"> & { deviceCacheStub?: boolean },
   houseSet: import("@/lib/house-set").HouseSet,
 ): boolean {
-  if (!isGemSchoolCampusBooth(house)) return false;
   return houseMatchesSet(house, houseSet);
 }

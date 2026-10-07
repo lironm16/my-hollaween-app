@@ -20,6 +20,16 @@ describe("gem school campus", () => {
     assert.equal(isGemSchoolCampusBooth({ address: "חרוזים 8", kind: "house" }), false);
   });
 
+  it("includes every house in the active set for gem hunt eligibility", () => {
+    const home = {
+      id: "בית-100",
+      address: "חרוזים 8",
+      kind: "house" as const,
+      isStub: false,
+    };
+    assert.equal(houseMatchesGemHuntSet(home, "real"), true);
+  });
+
   it("assigns dragon with distinct booth tints", () => {
     const boothA = {
       id: "בית-9323",

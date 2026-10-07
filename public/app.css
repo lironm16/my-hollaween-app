@@ -5701,7 +5701,13 @@ svg.leaflet-zoom-animated {
 }
 .pumpkin-pin-icon.is-closing-soon,
 .pumpkin-pin-icon.is-opening-soon,
-.pumpkin-pin-icon.pumpkin-pin-fan {
+.pumpkin-pin-icon.is-gem-ring-sparkle,
+.pumpkin-pin-icon.is-gem-ring-diamond,
+.pumpkin-pin-icon.pumpkin-pin-fan,
+.pumpkin-pin-icon.pumpkin-pin-building.is-closing-soon,
+.pumpkin-pin-icon.pumpkin-pin-building.is-opening-soon,
+.pumpkin-pin-icon.pumpkin-pin-building.is-gem-ring-sparkle,
+.pumpkin-pin-icon.pumpkin-pin-building.is-gem-ring-diamond {
   overflow: visible !important;
 }
 .house-pin,
@@ -6152,12 +6158,18 @@ svg.leaflet-zoom-animated {
   border: 4px solid #22d3ee;
   box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.28), 0 0 12px rgba(34, 211, 238, 0.4);
 }
-.house-pin.is-closing-soon span,
-.house-pin.is-opening-soon span,
-.pumpkin-pin.is-closing-soon span,
-.pumpkin-pin.is-opening-soon span {
+.house-pin.is-closing-soon .pin-scare,
+.house-pin.is-opening-soon .pin-scare,
+.pumpkin-pin.is-closing-soon .pin-scare,
+.pumpkin-pin.is-opening-soon .pin-scare {
   position: relative;
   z-index: 1;
+}
+.house-pin.is-closing-soon .pin-cluster-icon,
+.house-pin.is-opening-soon .pin-cluster-icon,
+.pumpkin-pin.is-closing-soon .pin-cluster-icon,
+.pumpkin-pin.is-opening-soon .pin-cluster-icon {
+  z-index: 6;
 }
 @keyframes pin-hours-fade {
   0%, 100% {
@@ -6192,6 +6204,8 @@ svg.leaflet-zoom-animated {
     0 0 14px rgba(251, 191, 36, 0.75),
     0 0 22px rgba(253, 224, 71, 0.45);
   animation: pin-gem-sparkle 2.2s ease-in-out infinite;
+  transform: scale(1);
+  transform-origin: center;
 }
 .house-pin .pin-gem-ring.is-diamond {
   border: 3px solid #fbbf24;
@@ -6213,11 +6227,9 @@ svg.leaflet-zoom-animated {
   0%,
   100% {
     opacity: 0.55;
-    transform: scale(0.98);
   }
   50% {
     opacity: 1;
-    transform: scale(1.02);
   }
 }
 @keyframes pin-gem-diamond-pulse {
