@@ -257,7 +257,7 @@ function clusterIcon(
   const pinFill = "#6d28d9";
   const clusterRing = mapPinRingDecorForCluster(houses, now, gemCtx);
   const wrapped = wrapRoutePin(
-    `<div class="house-pin is-building${campusClass}${allVisited ? " is-visited" : ""}${clusterRing.hoursSoonClass}" style="background:${pinFill}" role="img" aria-label="${clusterLabel}"><span class="pin-building-core" aria-hidden="true">${clusterRing.ringHtml}${clusterIconHtml}</span>${clusterAptDotsHtml(houses, now, matchedIds, skippedIds, schoolCampus)}</div>`,
+    `<div class="house-pin is-building${campusClass}${allVisited ? " is-visited" : ""}${clusterRing.hoursSoonClass}" style="background:${pinFill}" role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds, schoolCampus)}</div>`,
     routeOrder,
   );
   const pinBox = schoolCampus ? SCHOOL_CAMPUS_PIN_BOX : PIN_BOX;

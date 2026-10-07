@@ -5890,26 +5890,6 @@ svg.leaflet-zoom-animated {
   max-width: 88% !important;
   max-height: 88% !important;
 }
-.house-pin.is-building {
-  display: block;
-  position: relative;
-}
-.pin-building-core {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.pin-building-core .pin-cluster-icon {
-  position: absolute;
-  left: 50%;
-  top: 44%;
-  z-index: 5;
-  transform: translate(-50%, -50%);
-}
-.pin-building-core .pin-hours-ring,
-.pin-building-core .pin-gem-ring {
-  z-index: 0;
-}
 .house-pin.is-school-campus {
   width: 76px;
   height: 76px;
@@ -6007,12 +5987,8 @@ svg.leaflet-zoom-animated {
   width: 100%;
   height: 100%;
 }
-.house-pin span:not(.pin-apt-dots):not(.pin-cluster-icon):not(.pin-school-art):not(
-    .pin-gem-sparkles
-  ):not(.pin-building-core),
-.pumpkin-pin span:not(.pin-apt-dots):not(.pin-cluster-icon):not(.pin-school-art):not(
-    .pin-gem-sparkles
-  ):not(.pin-building-core) {
+.house-pin span:not(.pin-apt-dots):not(.pin-cluster-icon):not(.pin-school-art):not(.pin-gem-sparkles),
+.pumpkin-pin span:not(.pin-apt-dots):not(.pin-cluster-icon):not(.pin-school-art):not(.pin-gem-sparkles) {
   font-size: 26px;
   line-height: 1;
   filter: none;
@@ -6157,15 +6133,22 @@ svg.leaflet-zoom-animated {
 .house-pin .pin-hours-ring,
 .pumpkin-pin .pin-hours-ring {
   position: absolute;
-  inset: -8px;
+  top: 50%;
+  left: 50%;
+  inset: auto;
   z-index: 0;
   display: block;
+  width: calc(100% + 16px);
+  height: calc(100% + 16px);
+  margin: 0;
   border-radius: 999px;
   pointer-events: none;
+  transform: translate(-50%, -50%);
   animation: pin-hours-fade 4.5s ease-in-out infinite;
 }
 .house-pin.house-pin-dot .pin-hours-ring {
-  inset: -5px;
+  width: calc(100% + 10px);
+  height: calc(100% + 10px);
   border-width: 3px;
 }
 .house-pin .pin-hours-ring.is-closing,
@@ -6209,14 +6192,17 @@ svg.leaflet-zoom-animated {
 .house-pin .pin-gem-ring,
 .pumpkin-pin .pin-gem-ring {
   position: absolute;
-  inset: -9px;
+  top: 50%;
+  left: 50%;
+  inset: auto;
   z-index: 0;
   display: block;
+  width: calc(100% + 18px);
+  height: calc(100% + 18px);
+  margin: 0;
   border-radius: 999px;
   pointer-events: none;
-}
-.house-pin.is-building .pin-gem-ring {
-  inset: -10px;
+  transform: translate(-50%, -50%);
 }
 .house-pin .pin-gem-ring.is-sparkle {
   border: 3px solid #fde047;
@@ -6224,8 +6210,6 @@ svg.leaflet-zoom-animated {
     0 0 14px rgba(251, 191, 36, 0.75),
     0 0 22px rgba(253, 224, 71, 0.45);
   animation: pin-gem-sparkle 2.2s ease-in-out infinite;
-  transform: scale(1);
-  transform-origin: center;
 }
 .house-pin .pin-gem-ring.is-diamond {
   border: 3px solid #fbbf24;
@@ -6233,7 +6217,7 @@ svg.leaflet-zoom-animated {
     0 0 16px rgba(245, 158, 11, 0.85),
     inset 0 0 10px rgba(255, 255, 255, 0.35);
   animation: pin-gem-diamond-pulse 2.6s ease-in-out infinite;
-  transform: rotate(45deg);
+  transform: translate(-50%, -50%) rotate(45deg);
   border-radius: 4px;
 }
 .house-pin.is-gem-ring-sparkle .pin-scare,
@@ -6249,9 +6233,15 @@ svg.leaflet-zoom-animated {
 }
 .pin-gem-sparkles {
   position: absolute;
-  inset: -14px;
+  top: 50%;
+  left: 50%;
+  inset: auto;
   z-index: 1;
+  width: calc(100% + 28px);
+  height: calc(100% + 28px);
+  margin: 0;
   pointer-events: none;
+  transform: translate(-50%, -50%);
 }
 .pin-gem-sparkles i {
   position: absolute;
