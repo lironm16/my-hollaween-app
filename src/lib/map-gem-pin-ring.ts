@@ -67,6 +67,14 @@ export type MapPinRingDecor = {
   ringHtml: string;
 };
 
+const GEM_SPARKLE_MARKUP =
+  '<span class="pin-gem-sparkles" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>';
+
+function gemRingMarkup(variant: MapGemPinRingVariant): string {
+  const ring = `<i class="pin-gem-ring is-${variant}" aria-hidden="true"></i>`;
+  return variant === "sparkle" ? `${ring}${GEM_SPARKLE_MARKUP}` : ring;
+}
+
 export function mapPinRingDecorForHouse(
   house: PublicHouse,
   now: Date,
@@ -79,7 +87,7 @@ export function mapPinRingDecorForHouse(
   if (gemVariant) {
     return {
       hoursSoonClass: gemVariant === "diamond" ? " is-gem-ring-diamond" : " is-gem-ring-sparkle",
-      ringHtml: `<i class="pin-gem-ring is-${gemVariant}" aria-hidden="true"></i>`,
+      ringHtml: gemRingMarkup(gemVariant),
     };
   }
 
@@ -102,7 +110,7 @@ export function mapPinRingDecorForCluster(
   if (gemVariant) {
     return {
       hoursSoonClass: gemVariant === "diamond" ? " is-gem-ring-diamond" : " is-gem-ring-sparkle",
-      ringHtml: `<i class="pin-gem-ring is-${gemVariant}" aria-hidden="true"></i>`,
+      ringHtml: gemRingMarkup(gemVariant),
     };
   }
 

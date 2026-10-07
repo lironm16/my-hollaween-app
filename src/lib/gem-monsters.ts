@@ -4,8 +4,10 @@ import {
   houseMatchesGemHuntSet,
   isGemSchoolCampusBooth,
   schoolCampusDragonTint,
+  type GemHuntSetOptions,
   type GemMonsterTint,
 } from "@/lib/gem-school-campus";
+export type { GemHuntSetOptions } from "@/lib/gem-school-campus";
 import { clusterAddressKeyForHouse } from "@/lib/house-clusters";
 import type { HouseSet } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
@@ -429,8 +431,12 @@ function buildGemMonsterAssignmentSpatial(
 }
 
 /** Pre-event: school booths; after event: all houses in the active set (see gemHuntResidentialHousesEnabled). */
-export function gemHuntMapHouses(houses: PublicHouse[], houseSet: HouseSet = "real") {
-  return houses.filter((house) => houseMatchesGemHuntSet(house, houseSet));
+export function gemHuntMapHouses(
+  houses: PublicHouse[],
+  houseSet: HouseSet = "real",
+  options?: GemHuntSetOptions,
+) {
+  return houses.filter((house) => houseMatchesGemHuntSet(house, houseSet, options));
 }
 
 /** @deprecated One carrier per address cluster — prefer {@link gemHousesForMap}. */

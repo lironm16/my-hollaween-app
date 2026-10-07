@@ -800,8 +800,8 @@
 }
 
 .house-pin.is-building {
-  display: grid;
-  place-items: center;
+  display: block;
+  position: relative;
 }
 
 .house-pin.is-school-campus {
@@ -1176,11 +1176,81 @@
 }
 
 .house-pin.is-gem-ring-sparkle .pin-scare,
-.house-pin.is-gem-ring-sparkle .pin-cluster-icon,
-.house-pin.is-gem-ring-diamond .pin-scare,
-.house-pin.is-gem-ring-diamond .pin-cluster-icon {
+.house-pin.is-gem-ring-diamond .pin-scare {
   position: relative;
   z-index: 1;
+}
+
+.house-pin.is-gem-ring-sparkle .pin-cluster-icon,
+.house-pin.is-gem-ring-diamond .pin-cluster-icon,
+.house-pin.is-closing-soon .pin-cluster-icon,
+.house-pin.is-opening-soon .pin-cluster-icon {
+  z-index: 6;
+}
+
+.pin-gem-sparkles {
+  position: absolute;
+  inset: -14px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.pin-gem-sparkles i {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  background: #fef08a;
+  clip-path: polygon(50% 0, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0 50%, 39% 35%);
+  filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.95));
+  opacity: 0;
+  animation: pin-gem-sparkle-twinkle 2.4s ease-in-out infinite;
+}
+
+.pin-gem-sparkles i:nth-child(1) {
+  top: 4%;
+  left: 50%;
+  margin-left: -4px;
+  animation-delay: 0s;
+}
+.pin-gem-sparkles i:nth-child(2) {
+  top: 22%;
+  right: 6%;
+  animation-delay: 0.35s;
+}
+.pin-gem-sparkles i:nth-child(3) {
+  bottom: 18%;
+  right: 10%;
+  animation-delay: 0.7s;
+}
+.pin-gem-sparkles i:nth-child(4) {
+  bottom: 4%;
+  left: 50%;
+  margin-left: -4px;
+  animation-delay: 1.05s;
+}
+.pin-gem-sparkles i:nth-child(5) {
+  bottom: 20%;
+  left: 8%;
+  animation-delay: 1.4s;
+}
+.pin-gem-sparkles i:nth-child(6) {
+  top: 28%;
+  left: 4%;
+  animation-delay: 1.75s;
+}
+
+@keyframes pin-gem-sparkle-twinkle {
+  0%,
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  12%,
+  28% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes pin-gem-sparkle {
@@ -1211,6 +1281,11 @@
   }
   .house-pin .pin-gem-ring.is-diamond {
     transform: rotate(45deg);
+  }
+  .pin-gem-sparkles i {
+    animation: none;
+    opacity: 0.85;
+    transform: scale(1);
   }
 }
 
@@ -2728,6 +2803,11 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .house-pin.is-legend {
   width: 60px;
   height: 60px;
+}
+
+.house-pin.is-legend.is-school-campus {
+  width: 62px;
+  height: 62px;
 }
 
 .house-pin.is-legend .pin-cluster-icon {
