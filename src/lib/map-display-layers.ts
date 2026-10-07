@@ -22,6 +22,26 @@ export const MAP_LAYER_LABELS: Record<MapDisplayLayer, string> = {
 
 const LAYER_ORDER: MapDisplayLayer[] = ["real", "stubs", "practice"];
 
+/** Stable reference for `useSyncExternalStore` — new objects every read cause React #185. */
+let cachedLayersSnapshot: MapDisplayLayers = { ...DEFAULT_MAP_DISPLAY_LAYERS };
+let cachedLayersKey = layersSnapshotKey(cachedLayersSnapshot);
+
+function layersSnapshotKey(layers: MapDisplayLayers): string {
+  return `${layers.real ? 1 : 0}${layers.stubs ? 1 : 0}${layers.practice ? 1 : 0}`;
+}
+
+function commitLayersSnapshot(layers: MapDisplayLayers): MapDisplayLayers {
+  const key = layersSnapshotKey(layers);
+  if (key === cachedLayersKey) return cachedLayersSnapshot;
+  cachedLayersSnapshot = {
+    real: layers.real,
+    stubs: layers.stubs,
+    practice: layers.practice,
+  };
+  cachedLayersKey = key;
+  return cachedLayersSnapshot;
+}
+
 function isLayerRecord(value: unknown): value is MapDisplayLayers {
   if (!value || typeof value !== "object") return false;
   const o = value as Record<string, unknown>;
@@ -39,13 +59,19 @@ export function layersFromLegacyHouseSet(set: HouseSet): MapDisplayLayers {
   return { ...DEFAULT_MAP_DISPLAY_LAYERS };
 }
 
-export function readMapDisplayLayers(): MapDisplayLayers {
-  if (typeof window === "undefined") return { ...DEFAULT_MAP_DISPLAY_LAYERS };
+function readMapDisplayLayersFromStorage(): MapDisplayLayers {
+  if (typeof window === "undefined") return DEFAULT_MAP_DISPLAY_LAYERS;
   try {
     const raw = localStorage.getItem(MAP_DISPLAY_LAYERS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as unknown;
-      if (isLayerRecord(parsed)) return parsed;
+      if (isLayerRecord(parsed)) {
+        return {
+          real: parsed.real,
+          stubs: parsed.stubs,
+          practice: parsed.practice,
+        };
+      }
     }
     const legacy = localStorage.getItem("hw-house-set");
     if (legacy === "real" || legacy === "stubs" || legacy === "all") {
@@ -54,7 +80,12 @@ export function readMapDisplayLayers(): MapDisplayLayers {
   } catch {
     /* private mode */
   }
-  return { ...DEFAULT_MAP_DISPLAY_LAYERS };
+  return DEFAULT_MAP_DISPLAY_LAYERS;
+}
+
+/** Cached snapshot — safe for `useSyncExternalStore` getSnapshot. */
+export function readMapDisplayLayers(): MapDisplayLayers {
+  return commitLayersSnapshot(readMapDisplayLayersFromStorage());
 }
 
 export function writeMapDisplayLayers(next: MapDisplayLayers) {
@@ -73,6 +104,7 @@ export function writeMapDisplayLayers(next: MapDisplayLayers) {
   } catch {
     /* private mode */
   }
+  commitLayersSnapshot(next);
   window.dispatchEvent(new Event(MAP_DISPLAY_LAYERS_EVENT));
 }
 

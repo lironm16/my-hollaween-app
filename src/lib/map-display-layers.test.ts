@@ -5,6 +5,7 @@ import {
   houseVisibleOnMainMap,
   layersFromLegacyHouseSet,
   layersToLegacyHouseSet,
+  readMapDisplayLayers,
   toggleMapDisplayLayer,
 } from "@/lib/map-display-layers";
 
@@ -49,5 +50,11 @@ describe("map display layers", () => {
   it("never leaves all layers off when toggling", () => {
     const onlyReal = { real: true, stubs: false, practice: false };
     assert.deepEqual(toggleMapDisplayLayer(onlyReal, "real"), onlyReal);
+  });
+
+  it("returns a stable snapshot reference for useSyncExternalStore", () => {
+    const a = readMapDisplayLayers();
+    const b = readMapDisplayLayers();
+    assert.equal(a, b);
   });
 });
