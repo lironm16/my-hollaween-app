@@ -199,7 +199,6 @@ describe("gem hunt gate", () => {
       gemMapLegendVisible(true, {
         previewAsUser: false,
         mapDiamondsVisible: false,
-        mapAdminCharactersVisible: false,
       }),
       true,
     );
@@ -207,7 +206,6 @@ describe("gem hunt gate", () => {
       gemMapLegendVisible(true, {
         previewAsUser: true,
         mapDiamondsVisible: true,
-        mapAdminCharactersVisible: false,
       }),
       true,
     );
@@ -215,15 +213,6 @@ describe("gem hunt gate", () => {
       gemMapLegendVisible(true, {
         previewAsUser: true,
         mapDiamondsVisible: false,
-        mapAdminCharactersVisible: true,
-      }),
-      true,
-    );
-    assert.equal(
-      gemMapLegendVisible(true, {
-        previewAsUser: true,
-        mapDiamondsVisible: false,
-        mapAdminCharactersVisible: false,
       }),
       false,
     );
@@ -231,7 +220,6 @@ describe("gem hunt gate", () => {
       gemMapLegendVisible(false, {
         previewAsUser: false,
         mapDiamondsVisible: true,
-        mapAdminCharactersVisible: false,
       }),
       false,
     );

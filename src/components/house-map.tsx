@@ -44,6 +44,13 @@ import {
 } from "@/lib/school-campus";
 import { SKIP_ICON_SVG } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
+import {
+  gemMapHouseIdSet,
+  clusterGemRingCacheKey,
+  mapPinRingDecorForCluster,
+  mapPinRingDecorForHouse,
+  type MapGemPinRingContext,
+} from "@/lib/map-gem-pin-ring";
 
 function useMinuteTick() {
   const now = useAppNow();
@@ -109,32 +116,6 @@ function pinStatusMark(house: PublicHouse, now: Date, skipped = false) {
   return `<b class="pin-status is-${dot}" aria-label="${label}"></b>`;
 }
 
-function hoursRingHtml(house: PublicHouse, now: Date) {
-  if (isClosingSoon(house, now) && !pinVisitKind(house, now)) {
-    return `<i class="pin-hours-ring is-closing" aria-hidden="true"></i>`;
-  }
-  if (
-    isOpeningSoon(house, now) &&
-    effectiveVisit(house) !== "closed" &&
-    !isHoursNightOver(house, now)
-  ) {
-    return `<i class="pin-hours-ring is-opening" aria-hidden="true"></i>`;
-  }
-  return "";
-}
-
-function hoursPinClass(house: PublicHouse, now: Date) {
-  if (isClosingSoon(house, now) && !pinVisitKind(house, now)) return " is-closing-soon";
-  if (
-    isOpeningSoon(house, now) &&
-    effectiveVisit(house) !== "closed" &&
-    !isHoursNightOver(house, now)
-  ) {
-    return " is-opening-soon";
-  }
-  return "";
-}
-
 function pinFaceHtml(house: PublicHouse) {
   const level = pinFaceKind(house) === "scare" ? (house.scareLevel ?? "mild") : "mild";
   const src = pinScareSrc(house, level);
@@ -174,6 +155,7 @@ function clusterAptDotsHtml(
 function housePinHtml(
   house: PublicHouse,
   now: Date,
+  gemCtx: MapGemPinRingContext,
   extras?: {
     selected?: boolean;
     houseId?: string;
@@ -186,7 +168,7 @@ function housePinHtml(
 ) {
   const selectedClass = extras?.selected ? " is-selected" : "";
   const filteredClass = extras?.filteredOut ? " is-filtered-out" : "";
-  const hoursClass = hoursPinClass(house, now);
+  const { hoursSoonClass: hoursClass, ringHtml } = mapPinRingDecorForHouse(house, now, gemCtx);
   const face = pinFaceKind(house);
   const visit = pinVisitKind(house, now);
   const bareClass = face === "bare" ? " is-undecorated" : "";
@@ -208,7 +190,7 @@ function housePinHtml(
               ? 'aria-label="מקושט"'
               : 'aria-label="לא מקושט"';
   const poiClass = effectiveHouseKind(house) === "poi" ? " is-poi" : "";
-  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}" style="${style}" ${label}${idAttr}>${hoursRingHtml(house, now)}${pinStatusMark(house, now, extras?.skipped)}${pinFaceHtml(house)}</div>`;
+  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}" style="${style}" ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, extras?.skipped)}${pinFaceHtml(house)}</div>`;
 }
 
 const DIV_ICON_CACHE = new Map<string, L.DivIcon>();
@@ -225,6 +207,7 @@ function clusterIcon(
   cluster: HouseCluster,
   selectedId: string | null | undefined,
   now: Date,
+  gemCtx: MapGemPinRingContext,
   routeOrder?: number,
   visitedIds: string[] = [],
   filteredOut = false,
@@ -250,9 +233,9 @@ function clusterIcon(
 
   const schoolCampus = clusterIsSchoolCampus(houses);
   if (houses.length <= 1 && !schoolCampus) {
-    const hoursClass = hoursPinClass(only, now);
+    const { hoursSoonClass: hoursClass } = mapPinRingDecorForHouse(only, now, gemCtx);
     const wrapped = wrapRoutePin(
-      housePinHtml(only, now, {
+      housePinHtml(only, now, gemCtx, {
         selected: selectedHere,
         visited: visitedIds.includes(only.id),
         filteredOut: matchedIds ? !matchedIds.has(only.id) : false,
@@ -272,8 +255,9 @@ function clusterIcon(
   const campusClass = schoolCampus ? " is-school-campus" : "";
   const clusterLabel = attr(clusterPinAriaLabel(houses));
   const pinFill = "#6d28d9";
+  const clusterRing = mapPinRingDecorForCluster(houses, now, gemCtx);
   const wrapped = wrapRoutePin(
-    `<div class="house-pin is-building${campusClass}${allVisited ? " is-visited" : ""}" style="background:${pinFill}" role="img" aria-label="${clusterLabel}">${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds, schoolCampus)}</div>`,
+    `<div class="house-pin is-building${campusClass}${allVisited ? " is-visited" : ""}${clusterRing.hoursSoonClass}" style="background:${pinFill}" role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds, schoolCampus)}</div>`,
     routeOrder,
   );
   const pinBox = schoolCampus ? SCHOOL_CAMPUS_PIN_BOX : PIN_BOX;
@@ -524,6 +508,7 @@ const ClusterMarker = memo(function ClusterMarker({
   filteredOut,
   matchedIds,
   matchedIdsKey,
+  gemPinRingCtx,
 }: {
   cluster: HouseCluster;
   selectedId?: string | null;
@@ -536,6 +521,7 @@ const ClusterMarker = memo(function ClusterMarker({
   filteredOut?: boolean;
   matchedIds?: ReadonlySet<string>;
   matchedIdsKey?: string;
+  gemPinRingCtx: MapGemPinRingContext;
 }) {
   const tick = useMinuteTick();
   const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
@@ -550,6 +536,10 @@ const ClusterMarker = memo(function ClusterMarker({
     () => cluster.houses.map((house) => (skippedIds?.has(house.id) ? "1" : "0")).join(""),
     [cluster.houses, skippedIds],
   );
+  const gemRingKey = useMemo(
+    () => clusterGemRingCacheKey(cluster.houses, gemPinRingCtx),
+    [cluster.houses, gemPinRingCtx],
+  );
   const icon = useMemo(() => {
     const cacheKey = [
       cluster.key,
@@ -560,12 +550,14 @@ const ClusterMarker = memo(function ClusterMarker({
       skippedKey,
       filteredOut ? "1" : "0",
       matchedIdsKey ?? "",
+      gemRingKey,
     ].join("|");
     return cachedDivIcon(cacheKey, () =>
       clusterIcon(
         cluster,
         selectedId,
         now,
+        gemPinRingCtx,
         routeOrder,
         visitedIds,
         filteredOut,
@@ -586,6 +578,8 @@ const ClusterMarker = memo(function ClusterMarker({
     visitedIds,
     skippedIds,
     now,
+    gemPinRingCtx,
+    gemRingKey,
   ]);
 
   const onMarkerClick = useCallback(
@@ -696,13 +690,15 @@ type Props = {
   embedCenterOnSelect?: boolean;
   /** Tap gem anchor marker (admin QA posters). */
   onGemAnchorSelect?: (house: PublicHouse) => void;
-  /** Show gem diamond markers (controlled by top-bar toggle). */
+  /** @deprecated Separate gem markers — use {@link showGemPinRings} on house pins. */
   showGemAnchors?: boolean;
   /** Map legend «יהלומים» section — when gem hunt UI is on (independent of anchor toggle). */
   showGemLegend?: boolean;
   gemAnchorHouses?: PublicHouse[];
   gemAnchorVisual?: GemMapAnchorVisual;
   isGemCollected?: (houseId: string) => boolean;
+  /** Yellow/diamond rings on pins when the top-bar demon toggle is on. */
+  showGemPinRings?: boolean;
 };
 
 export function HouseMap({
@@ -746,7 +742,17 @@ export function HouseMap({
   gemAnchorHouses = [],
   gemAnchorVisual = "admin",
   isGemCollected,
+  showGemPinRings = false,
 }: Props) {
+  const gemHouseIds = useMemo(() => gemMapHouseIdSet(gemAnchorHouses), [gemAnchorHouses]);
+  const gemPinRingCtx = useMemo(
+    (): MapGemPinRingContext => ({
+      showGemRings: showGemPinRings,
+      gemHouseIds,
+      isCollected: isGemCollected ?? (() => true),
+    }),
+    [showGemPinRings, gemHouseIds, isGemCollected],
+  );
   const clusters = useMemo(
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
     [houses, pickMode],
@@ -990,6 +996,7 @@ export function HouseMap({
                 filteredOut={clusterFilteredOut}
                 matchedIds={matchedIds}
                 matchedIdsKey={matchedIdsKey}
+                gemPinRingCtx={gemPinRingCtx}
                 routeOrder={cluster.houses.reduce<number | undefined>(
                   (found, house) => found ?? routeOrderById.get(house.id),
                   undefined,

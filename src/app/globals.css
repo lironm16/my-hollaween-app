@@ -1125,6 +1125,82 @@
     opacity: 0.85;
   }
 }
+
+.house-pin .pin-gem-ring,
+.pumpkin-pin .pin-gem-ring {
+  position: absolute;
+  inset: -9px;
+  z-index: 0;
+  display: block;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.house-pin.is-building .pin-gem-ring {
+  inset: -10px;
+}
+
+.house-pin .pin-gem-ring.is-sparkle {
+  border: 3px solid #fde047;
+  box-shadow:
+    0 0 0 2px rgba(250, 204, 21, 0.35),
+    0 0 14px rgba(251, 191, 36, 0.75),
+    0 0 22px rgba(253, 224, 71, 0.45);
+  animation: pin-gem-sparkle 2.2s ease-in-out infinite;
+}
+
+.house-pin .pin-gem-ring.is-diamond {
+  border: 3px solid #fbbf24;
+  box-shadow:
+    0 0 0 2px rgba(251, 191, 36, 0.45),
+    0 0 16px rgba(245, 158, 11, 0.85),
+    inset 0 0 10px rgba(255, 255, 255, 0.35);
+  animation: pin-gem-diamond-pulse 2.6s ease-in-out infinite;
+  transform: rotate(45deg);
+  border-radius: 4px;
+}
+
+.house-pin.is-gem-ring-sparkle .pin-scare,
+.house-pin.is-gem-ring-sparkle .pin-cluster-icon,
+.house-pin.is-gem-ring-diamond .pin-scare,
+.house-pin.is-gem-ring-diamond .pin-cluster-icon {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes pin-gem-sparkle {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes pin-gem-diamond-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .house-pin .pin-gem-ring.is-sparkle,
+  .house-pin .pin-gem-ring.is-diamond {
+    animation: none;
+    opacity: 0.92;
+  }
+  .house-pin .pin-gem-ring.is-diamond {
+    transform: rotate(45deg);
+  }
+}
+
 .house-pin .pin-status,
 .pumpkin-pin .pin-status {
   position: absolute;

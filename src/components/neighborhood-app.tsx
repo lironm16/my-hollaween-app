@@ -213,15 +213,13 @@ export function NeighborhoodApp({
   );
   /** Toolbar toggle — diamonds hidden on map until user taps the top-bar gem control. */
   const [mapDiamondsVisible, setMapDiamondsVisible] = useState(false);
-  const [mapAdminCharactersVisible, setMapAdminCharactersVisible] = useState(false);
   const showGemMapLegend = useMemo(
     () =>
       gemMapLegendVisible(admin, {
         previewAsUser: gemPreviewAsUser,
         mapDiamondsVisible,
-        mapAdminCharactersVisible,
       }),
-    [admin, gemPreviewAsUser, mapDiamondsVisible, mapAdminCharactersVisible],
+    [admin, gemPreviewAsUser, mapDiamondsVisible],
   );
   const [gemResetHouse, setGemResetHouse] = useState<PublicHouse | null>(null);
   const [gemResetCluster, setGemResetCluster] = useState<PublicHouse[] | null>(null);
@@ -1391,12 +1389,9 @@ export function NeighborhoodApp({
             onOpenRouteUpdates={
               routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
             }
-            gemMapToggleEnabled={gemUi && !gemAdminTools}
+            gemMapToggleEnabled={gemUi}
             gemMapVisible={mapDiamondsVisible}
             onToggleGemMap={() => setMapDiamondsVisible((on) => !on)}
-            adminCharacterMapToggleEnabled={gemUi && gemAdminTools}
-            adminCharacterMapVisible={mapAdminCharactersVisible}
-            onToggleAdminCharacterMap={() => setMapAdminCharactersVisible((on) => !on)}
           />
         </div>
       ) : null}
@@ -1530,16 +1525,9 @@ export function NeighborhoodApp({
                         }))
                       : null
                   }
-                  showGemAnchors={gemUi && (gemAdminTools || mapDiamondsVisible)}
                   showGemLegend={showGemMapLegend}
                   gemAnchorHouses={gemUi ? gemPracticeHouses : []}
-                  gemAnchorVisual={
-                    gemAdminTools && mapAdminCharactersVisible
-                      ? "characters"
-                      : gemAdminTools
-                        ? "admin"
-                        : "compact"
-                  }
+                  showGemPinRings={gemUi && mapDiamondsVisible}
                   isGemCollected={gems.collected}
                 />
               {view === "map" && gemHuntActive && gemAllCollected && !originPick.originPickActive ? (

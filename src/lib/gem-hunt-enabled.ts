@@ -13,10 +13,9 @@ export function gemMapLegendVisible(
   opts: {
     previewAsUser: boolean;
     mapDiamondsVisible: boolean;
-    mapAdminCharactersVisible: boolean;
   },
 ) {
   if (!gemHuntVisible(isAdmin)) return false;
   if (isAdmin && !opts.previewAsUser) return true;
-  return opts.mapDiamondsVisible || opts.mapAdminCharactersVisible;
+  return opts.mapDiamondsVisible;
 }
