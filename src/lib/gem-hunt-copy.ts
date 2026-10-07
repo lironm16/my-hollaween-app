@@ -11,7 +11,8 @@ export const GEM_NOT_FOUND_I_HE = "לא מצאתי";
 export const GEM_IN_FIND_RANGE_HE = "בטווח מציאה";
 
 export const GEM_MAP_LEGEND_SECTION_HE = "שדונים";
-export const GEM_MAP_LEGEND_OPEN_HE = "שדון לגלות";
+export const GEM_MAP_LEGEND_OPEN_HE = "שדון לגלות (טבעת זהובה)";
+export const GEM_MAP_LEGEND_HOURS_GEM_HE = "שדון + נפתח/נסגר בקרוב (יהלום)";
 export const GEM_MAP_TOGGLE_SHOW_HE = "הצג שדונים במפה";
 export const GEM_MAP_TOGGLE_HIDE_HE = "הסתר שדונים במפה";
 

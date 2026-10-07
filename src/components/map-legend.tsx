@@ -8,11 +8,11 @@ import { SkipIcon } from "@/components/skip-icon";
 import { POI_PIN_FACE_SRC } from "@/lib/pin-faces";
 import { PIN_BACKGROUND } from "@/lib/pin-colors";
 import {
-  GEM_DIAMOND_COLLECTED_FILL,
-  GEM_DIAMOND_FILL,
-} from "@/lib/gem-diamond-visual";
-import { GEM_FOUND_STATE_HE, GEM_MAP_LEGEND_OPEN_HE, GEM_MAP_LEGEND_SECTION_HE } from "@/lib/gem-hunt-copy";
-import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
+  GEM_FOUND_STATE_HE,
+  GEM_MAP_LEGEND_HOURS_GEM_HE,
+  GEM_MAP_LEGEND_OPEN_HE,
+  GEM_MAP_LEGEND_SECTION_HE,
+} from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -26,6 +26,7 @@ function SwatchPin({
   multi,
   visited,
   skipped,
+  gemRing,
 }: {
   scare?: "mild" | "medium" | "spicy";
   poi?: boolean;
@@ -37,6 +38,7 @@ function SwatchPin({
   multi?: boolean;
   visited?: boolean;
   skipped?: boolean;
+  gemRing?: "sparkle" | "diamond";
 }) {
   const scareLevel = scare ?? "mild";
   const scareSrc = poi ? POI_PIN_FACE_SRC : `/icons/pin-scare-${scareLevel}.png`;
@@ -46,8 +48,10 @@ function SwatchPin({
         "house-pin is-legend relative",
         poi && "is-poi",
         multi && "is-building",
-        hours === "closing" && "is-closing-soon",
-        hours === "opening" && "is-opening-soon",
+        !gemRing && hours === "closing" && "is-closing-soon",
+        !gemRing && hours === "opening" && "is-opening-soon",
+        gemRing === "sparkle" && "is-gem-ring-sparkle",
+        gemRing === "diamond" && "is-gem-ring-diamond",
         bare && "is-undecorated",
         visited && "is-visited",
       )}
@@ -62,8 +66,9 @@ function SwatchPin({
       }}
       aria-hidden
     >
-      {hours === "closing" ? <i className="pin-hours-ring is-closing" /> : null}
-      {hours === "opening" ? <i className="pin-hours-ring is-opening" /> : null}
+      {gemRing ? <i className={`pin-gem-ring is-${gemRing}`} aria-hidden /> : null}
+      {!gemRing && hours === "closing" ? <i className="pin-hours-ring is-closing" /> : null}
+      {!gemRing && hours === "opening" ? <i className="pin-hours-ring is-opening" /> : null}
       {scare || bare ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img className="pin-scare" src={scareSrc} alt="" />
@@ -136,29 +141,25 @@ const BASE_GROUPS: { title: string; items: { key: string; label: string; node: R
   },
 ];
 
-function GemDiamondSwatch({ collected = false }: { collected?: boolean }) {
+function GemRingSwatch({ variant }: { variant: "sparkle" | "diamond" | "none" }) {
   return (
-    <div
-      className={cn(
-        "map-gem-diamond-marker map-legend-gem-swatch",
-        collected && "is-collected",
-      )}
-      aria-hidden
-    >
-      <ImpMarkerGlyph
-        variant={collected ? "solid" : "eyes"}
-        className="map-gem-diamond-marker__svg"
-        style={{ color: collected ? GEM_DIAMOND_COLLECTED_FILL : GEM_DIAMOND_FILL }}
-      />
-    </div>
+    <SwatchPin
+      scare="mild"
+      gemRing={variant === "none" ? undefined : variant}
+    />
   );
 }
 
 const GEM_LEGEND_GROUP = {
   title: GEM_MAP_LEGEND_SECTION_HE,
   items: [
-    { key: "gem-open", label: GEM_MAP_LEGEND_OPEN_HE, node: <GemDiamondSwatch /> },
-    { key: "gem-done", label: GEM_FOUND_STATE_HE, node: <GemDiamondSwatch collected /> },
+    { key: "gem-open", label: GEM_MAP_LEGEND_OPEN_HE, node: <GemRingSwatch variant="sparkle" /> },
+    {
+      key: "gem-hours",
+      label: GEM_MAP_LEGEND_HOURS_GEM_HE,
+      node: <GemRingSwatch variant="diamond" />,
+    },
+    { key: "gem-done", label: GEM_FOUND_STATE_HE, node: <GemRingSwatch variant="none" /> },
   ],
 } as const;
 
