@@ -119,18 +119,14 @@ import {
 import { isAuthoritativeHouseList, resolveCatalogHouses } from "@/lib/catalog-houses";
 import {
   catalogHasRealHouses,
-  HOUSE_SET_LABELS,
   resolveViewerHouseSet,
   countSkippedInSet,
   countVisitedInSet,
   countLikedInSet,
   houseMatchesSet,
 } from "@/lib/house-set";
-import {
-  housesForMainMap,
-  practiceHousesVisibleToUsers,
-  stripPracticeHouses,
-} from "@/lib/practice-house";
+import { houseVisibleOnMainMap, formatMapDisplayLayersStatus } from "@/lib/map-display-layers";
+import { practiceHousesVisibleToUsers, stripPracticeHouses } from "@/lib/practice-house";
 import { isPreviewDeploymentClient } from "@/lib/deployment-env";
 import { filterHouses, houseFilterMismatchReasons, routeHouseIds } from "@/lib/filter-houses";
 import { distanceMeters, formatDistance } from "@/lib/geo";
@@ -249,7 +245,8 @@ export function NeighborhoodApp({
   }, [gemHuntActive, mapGemHouse, geo.refresh, setWatchEnabled]);
 
   const { choice: originChoice, resolved: origin, setChoice: setOriginChoice } = useDistanceOrigin(gps);
-  const { houseSet } = useHouseSet();
+  const { layers, houseSet: legacyHouseSetFromLayers } = useHouseSet();
+  const houseSet = legacyHouseSetFromLayers;
   const adminForHouseSet = adminSessionReady && admin;
   const activeHouseSet = resolveViewerHouseSet(catalog, adminForHouseSet, houseSet, {
     previewDeployment: isPreviewDeploymentClient(),
@@ -400,10 +397,13 @@ export function NeighborhoodApp({
 
   const mapHouses = useMemo(
     () =>
-      housesForMainMap(mapListHouses, activeHouseSet, {
-        admin: Boolean(adminForHouseSet),
-      }),
-    [mapListHouses, activeHouseSet, adminForHouseSet],
+      mapListHouses.filter((house) =>
+        houseVisibleOnMainMap(house, layers, {
+          admin: Boolean(adminForHouseSet),
+          practicePublic: practiceHousesVisibleToUsers(),
+        }),
+      ),
+    [mapListHouses, layers, adminForHouseSet],
   );
   const gemPracticeHouses = useMemo(
     () => gemHousesForMap(gemHuntMapHouses(mapListHouses, activeHouseSet)),
@@ -1569,7 +1569,9 @@ export function NeighborhoodApp({
                 ) : null}
                 <CatalogMetaChip
                   hidden={view !== "map" || (Boolean(selection.selected) && !originPick.originPickActive)}
-                  houseSetLabel={adminForHouseSet ? HOUSE_SET_LABELS[activeHouseSet] : null}
+                  houseSetLabel={
+                    adminForHouseSet ? formatMapDisplayLayersStatus(layers) : null
+                  }
                 />
           </div>
           {view === "map" &&

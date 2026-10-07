@@ -18,7 +18,10 @@ import {
   writeCustomRehearsalClock,
   type RehearsalScene,
 } from "@/lib/app-clock";
-import { HOUSE_SETS, HOUSE_SET_LABELS, type HouseSet } from "@/lib/house-set";
+import {
+  MAP_LAYER_LABELS,
+  type MapDisplayLayer,
+} from "@/lib/map-display-layers";
 import { Button } from "@/components/ui/button";
 import { useCatalog } from "@/hooks/use-catalog";
 import type { PublicHouse } from "@/lib/types";
@@ -55,7 +58,7 @@ export function AdminDryRunPanel() {
   const now = useAppNow();
   const { scene, setScene } = useRehearsalScene();
   const { down, setDown } = useServerSim();
-  const { houseSet, setHouseSet } = useHouseSet();
+  const { layers, toggleLayer } = useHouseSet();
   const gemsOnScreen = admin && gemHuntVisible(admin);
   const catalogHouses = useMemo(
     () => (catalog?.houses ?? []) as PublicHouse[],
@@ -83,24 +86,27 @@ export function AdminDryRunPanel() {
   return (
     <div className="space-y-2 rounded-lg bg-black/25 p-1.5">
       <div className="space-y-2">
-        <p className="text-base font-medium text-amber-100">איזה בתים להציג</p>
+        <p className="text-base font-medium text-amber-100">מה להציג במפה</p>
         <p className="text-base text-violet-300">
-          סטאבים לחזרה או בתים אמיתיים. הבחירה נשמרת בטלפון הזה, והסטטוס מופיע במפה וברשימה.
+          אפשר לבחור כמה שכבות יחד — אמיתיים, סטאבים לחזרה, ובתי תרגול לשדונים. נשמר בטלפון הזה
+          ומופיע בסטטוס במפה.
         </p>
         <div className="flex flex-wrap gap-1.5">
-          {HOUSE_SETS.map((id: HouseSet) => (
+          {(["real", "stubs", "practice"] as MapDisplayLayer[]).map((id) => (
             <button
               key={id}
               type="button"
-              onClick={() => setHouseSet(id)}
+              onClick={() => toggleLayer(id)}
               className={cn(
                 "rounded-full px-3 py-1.5 text-base",
-                houseSet === id
-                  ? "bg-orange-500 text-black"
+                layers[id]
+                  ? id === "practice"
+                    ? "bg-teal-500 text-black"
+                    : "bg-orange-500 text-black"
                   : "bg-[#12081a] text-orange-100 ring-1 ring-orange-500/20",
               )}
             >
-              {HOUSE_SET_LABELS[id]}
+              {MAP_LAYER_LABELS[id]}
             </button>
           ))}
         </div>

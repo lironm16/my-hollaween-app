@@ -12,7 +12,7 @@ import {
   PIN_SCHOOL_CAMPUS_INK_SRC,
   PIN_SCHOOL_CAMPUS_INK_SRC_2X,
 } from "@/lib/map-pin-school-icon";
-import { PRACTICE_PIN_BAT_SVG } from "@/lib/practice-pin-face";
+import { PRACTICE_PIN_BAT_SRC } from "@/lib/practice-pin-face";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -94,11 +94,8 @@ function SwatchPin({
       {!gemRing && hours === "closing" ? <i className="pin-hours-ring is-closing" /> : null}
       {!gemRing && hours === "opening" ? <i className="pin-hours-ring is-opening" /> : null}
       {practice ? (
-        <span
-          className="pin-practice-face"
-          aria-hidden
-          dangerouslySetInnerHTML={{ __html: PRACTICE_PIN_BAT_SVG }}
-        />
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="pin-practice-bat-img" src={PRACTICE_PIN_BAT_SRC} alt="" aria-hidden />
       ) : null}
       {!practice && (scare || bare) ? (
         // eslint-disable-next-line @next/next/no-img-element

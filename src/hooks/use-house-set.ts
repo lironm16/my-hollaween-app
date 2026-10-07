@@ -1,21 +1,48 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
-import { HOUSE_SET_EVENT, readHouseSet, writeHouseSet, type HouseSet } from "@/lib/house-set";
+import type { HouseSet } from "@/lib/house-set";
+import {
+  DEFAULT_MAP_DISPLAY_LAYERS,
+  MAP_DISPLAY_LAYERS_EVENT,
+  layersFromLegacyHouseSet,
+  readMapDisplayLayers,
+  toggleMapDisplayLayer,
+  writeMapDisplayLayers,
+  layersToLegacyHouseSet,
+  type MapDisplayLayer,
+  type MapDisplayLayers,
+} from "@/lib/map-display-layers";
 
 function subscribe(onStoreChange: () => void) {
-  window.addEventListener(HOUSE_SET_EVENT, onStoreChange);
+  window.addEventListener(MAP_DISPLAY_LAYERS_EVENT, onStoreChange);
   window.addEventListener("storage", onStoreChange);
   return () => {
-    window.removeEventListener(HOUSE_SET_EVENT, onStoreChange);
+    window.removeEventListener(MAP_DISPLAY_LAYERS_EVENT, onStoreChange);
     window.removeEventListener("storage", onStoreChange);
   };
 }
 
 export function useHouseSet() {
-  const houseSet = useSyncExternalStore(subscribe, readHouseSet, () => "real" as HouseSet);
-  const setHouseSet = useCallback((next: HouseSet) => {
-    writeHouseSet(next);
+  const layers = useSyncExternalStore(
+    subscribe,
+    readMapDisplayLayers,
+    () => DEFAULT_MAP_DISPLAY_LAYERS,
+  );
+  const houseSet = layersToLegacyHouseSet(layers);
+
+  const setLayers = useCallback((next: MapDisplayLayers) => {
+    writeMapDisplayLayers(next);
   }, []);
-  return { houseSet, setHouseSet };
+
+  const toggleLayer = useCallback((layer: MapDisplayLayer) => {
+    writeMapDisplayLayers(toggleMapDisplayLayer(readMapDisplayLayers(), layer));
+  }, []);
+
+  /** @deprecated Prefer {@link setLayers} / {@link toggleLayer}. */
+  const setHouseSet = useCallback((next: HouseSet) => {
+    writeMapDisplayLayers(layersFromLegacyHouseSet(next));
+  }, []);
+
+  return { houseSet, setHouseSet, layers, setLayers, toggleLayer };
 }

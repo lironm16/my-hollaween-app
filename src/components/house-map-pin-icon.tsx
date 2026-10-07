@@ -9,7 +9,7 @@ import { effectiveVisit, isDecorated } from "@/lib/house-state";
 import { isClosingSoon, isHoursNightOver, isOpeningSoon } from "@/lib/hours";
 import type { PublicHouse } from "@/lib/types";
 import { isPracticeHouse } from "@/lib/practice-house";
-import { PRACTICE_PIN_BAT_SVG } from "@/lib/practice-pin-face";
+import { PRACTICE_PIN_BAT_SRC } from "@/lib/practice-pin-face";
 import { cn } from "@/lib/utils";
 
 export function HouseMapPinIcon({
@@ -73,11 +73,8 @@ export function HouseMapPinIcon({
         <b className={`pin-status is-${status}`} />
       ) : null}
       {practice ? (
-        <span
-          className="pin-practice-face"
-          aria-hidden
-          dangerouslySetInnerHTML={{ __html: PRACTICE_PIN_BAT_SVG }}
-        />
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="pin-practice-bat-img" src={PRACTICE_PIN_BAT_SRC} alt="" aria-hidden />
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
         <img className="pin-scare" src={pinScareSrc(house, decorated ? scare : "mild")} alt="" />

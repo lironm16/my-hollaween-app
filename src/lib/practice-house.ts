@@ -1,4 +1,4 @@
-import { houseMatchesSet, isStubHouse, type HouseSet, type StubFlagHouse } from "@/lib/house-set";
+import { isStubHouse, type StubFlagHouse } from "@/lib/house-set";
 import { schoolCampusDragonTint } from "@/lib/gem-school-campus";
 import type { PublicHouse } from "@/lib/types";
 
@@ -27,23 +27,3 @@ export function practiceDragonTint(house: Pick<PublicHouse, "id" | "boothNumber"
   return schoolCampusDragonTint({ ...house, address: "practice", kind: "house" });
 }
 
-export function practiceHouseVisibleOnMap(
-  house: PracticeFlagHouse & StubFlagHouse,
-  opts: { admin: boolean },
-) {
-  if (!isPracticeHouse(house)) return false;
-  if (isStubHouse(house)) return false;
-  return opts.admin || practiceHousesVisibleToUsers();
-}
-
-/** Houses drawn on the main map (practice for admins only during dev). */
-export function housesForMainMap<T extends PracticeFlagHouse & StubFlagHouse>(
-  houses: readonly T[],
-  houseSet: HouseSet,
-  opts: { admin: boolean },
-): T[] {
-  return houses.filter(
-    (house) =>
-      houseMatchesSet(house, houseSet) || practiceHouseVisibleOnMap(house, opts),
-  );
-}

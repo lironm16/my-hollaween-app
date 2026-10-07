@@ -16,7 +16,10 @@ import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useAppNow } from "@/hooks/use-app-clock";
-import { buildAdminGemMapRows, countGemsOnMapByMonster } from "@/lib/gem-admin-ops";
+import { buildGemMapHouseRows, countGemsOnMapByMonster } from "@/lib/gem-admin-ops";
+import { useHouseSet } from "@/hooks/use-house-set";
+import { houseMatchesMapLayers } from "@/lib/map-display-layers";
+import { practiceHousesVisibleToUsers } from "@/lib/practice-house";
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { clusterHousesByAddress } from "@/lib/house-clusters";
 import { gemAlbumStickerPool, gemMonsterMeta, type GemMonsterId } from "@/lib/gem-monsters";
@@ -77,10 +80,28 @@ export function AdminGemOpsPanel({ houses: housesProp }: { houses: PublicHouse[]
   const [sheetHouse, setSheetHouse] = useState<PublicHouse | null>(null);
   const [mapGemRingsVisible, setMapGemRingsVisible] = useState(false);
 
+  const { layers, houseSet } = useHouseSet();
   const catalogHouses = (catalog?.houses ?? []) as PublicHouse[];
   const houses = catalogHouses.length > 0 ? catalogHouses : housesProp;
 
-  const rows = useMemo(() => buildAdminGemMapRows(houses), [houses]);
+  const mapLayerHouses = useMemo(
+    () =>
+      houses.filter((house) => {
+        if (house.isPractice) {
+          return (
+            layers.practice &&
+            (admin || practiceHousesVisibleToUsers())
+          );
+        }
+        return houseMatchesMapLayers(house, layers);
+      }),
+    [houses, layers, admin],
+  );
+
+  const rows = useMemo(
+    () => buildGemMapHouseRows(mapLayerHouses, houseSet, { includeAllHouses: true }),
+    [mapLayerHouses, houseSet],
+  );
   const counts = useMemo(() => countGemsOnMapByMonster(rows), [rows]);
   const pool = useMemo(() => gemAlbumStickerPool(), []);
 

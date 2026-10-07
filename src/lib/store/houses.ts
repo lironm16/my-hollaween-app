@@ -165,9 +165,10 @@ export async function submitHouse(
       lat: input.lat,
       lng: input.lng,
     });
-    const boothNumber = isSchoolCampusAddress(addressFields.address)
-      ? nextBoothNumberForAddress(db.houses, addressFields.address)
-      : null;
+    const boothNumber =
+      isSchoolCampusAddress(addressFields.address) && !practice
+        ? nextBoothNumberForAddress(db.houses, addressFields.address, "real")
+        : null;
     const house: House = {
       ...input,
       lat: positioned.lat,

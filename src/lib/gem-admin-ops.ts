@@ -42,12 +42,9 @@ export function buildGemMapHouseRows(
   return rowsFromGemHouses(gemHousesForMap(eligible));
 }
 
-/** Admin rehearsal map — every catalog row is a gem (no hunt filter). */
+/** @deprecated Use {@link buildGemMapHouseRows} with map-layer-filtered houses. */
 export function buildAdminGemMapRows(houses: PublicHouse[]): GemMapHouseRow[] {
-  const pool = houses.filter(Boolean);
-  if (!pool.length) return [];
-  syncGemMonsterAssignment(pool);
-  return rowsFromGemHouses(gemHousesForMap(pool));
+  return buildGemMapHouseRows(houses, "all", { includeAllHouses: true });
 }
 
 export function countGemsOnMapByMonster(rows: GemMapHouseRow[]) {

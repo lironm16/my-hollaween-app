@@ -61,6 +61,7 @@ describe("gem-admin-ops", () => {
         stub("בית-9324", 32.09, 34.79, { boothNumber: 2 }),
       ],
       "stubs",
+      { includeAllHouses: true },
     );
     const counts = countGemsOnMapByMonster(rows);
     assert.ok(counts.size >= 1);
