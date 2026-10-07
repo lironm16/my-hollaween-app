@@ -6133,22 +6133,15 @@ svg.leaflet-zoom-animated {
 .house-pin .pin-hours-ring,
 .pumpkin-pin .pin-hours-ring {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  inset: auto;
+  inset: -8px;
   z-index: 0;
   display: block;
-  width: calc(100% + 16px);
-  height: calc(100% + 16px);
-  margin: 0;
   border-radius: 999px;
   pointer-events: none;
-  transform: translate(-50%, -50%);
   animation: pin-hours-fade 4.5s ease-in-out infinite;
 }
 .house-pin.house-pin-dot .pin-hours-ring {
-  width: calc(100% + 10px);
-  height: calc(100% + 10px);
+  inset: -5px;
   border-width: 3px;
 }
 .house-pin .pin-hours-ring.is-closing,
@@ -6171,7 +6164,9 @@ svg.leaflet-zoom-animated {
 .house-pin.is-closing-soon .pin-cluster-icon,
 .house-pin.is-opening-soon .pin-cluster-icon,
 .pumpkin-pin.is-closing-soon .pin-cluster-icon,
-.pumpkin-pin.is-opening-soon .pin-cluster-icon {
+.pumpkin-pin.is-opening-soon .pin-cluster-icon,
+.house-pin.is-gem-ring-sparkle .pin-cluster-icon,
+.house-pin.is-gem-ring-diamond .pin-cluster-icon {
   z-index: 6;
 }
 @keyframes pin-hours-fade {
@@ -6192,17 +6187,11 @@ svg.leaflet-zoom-animated {
 .house-pin .pin-gem-ring,
 .pumpkin-pin .pin-gem-ring {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  inset: auto;
+  inset: -9px;
   z-index: 0;
   display: block;
-  width: calc(100% + 18px);
-  height: calc(100% + 18px);
-  margin: 0;
   border-radius: 999px;
   pointer-events: none;
-  transform: translate(-50%, -50%);
 }
 .house-pin .pin-gem-ring.is-sparkle {
   border: 3px solid #fde047;
@@ -6217,7 +6206,7 @@ svg.leaflet-zoom-animated {
     0 0 16px rgba(245, 158, 11, 0.85),
     inset 0 0 10px rgba(255, 255, 255, 0.35);
   animation: pin-gem-diamond-pulse 2.6s ease-in-out infinite;
-  transform: translate(-50%, -50%) rotate(45deg);
+  transform: rotate(45deg);
   border-radius: 4px;
 }
 .house-pin.is-gem-ring-sparkle .pin-scare,
@@ -6225,23 +6214,11 @@ svg.leaflet-zoom-animated {
   position: relative;
   z-index: 1;
 }
-.house-pin.is-gem-ring-sparkle .pin-cluster-icon,
-.house-pin.is-gem-ring-diamond .pin-cluster-icon,
-.house-pin.is-closing-soon .pin-cluster-icon,
-.house-pin.is-opening-soon .pin-cluster-icon {
-  z-index: 6;
-}
 .pin-gem-sparkles {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  inset: auto;
+  inset: -14px;
   z-index: 1;
-  width: calc(100% + 28px);
-  height: calc(100% + 28px);
-  margin: 0;
   pointer-events: none;
-  transform: translate(-50%, -50%);
 }
 .pin-gem-sparkles i {
   position: absolute;
@@ -7709,6 +7686,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   height: 62px;
 }
 .house-pin.is-legend .pin-cluster-icon {
+  top: 50%;
   width: 36px;
   height: 32px;
 }
