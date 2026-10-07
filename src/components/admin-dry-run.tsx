@@ -88,8 +88,8 @@ export function AdminDryRunPanel() {
       <div className="space-y-2">
         <p className="text-base font-medium text-amber-100">מה להציג במפה</p>
         <p className="text-base text-violet-300">
-          אפשר לבחור כמה שכבות יחד — אמיתיים, סטאבים לחזרה, ובתי תרגול (מפת השדונים). בתי תרגול
-          תמיד מופיעים למנהל במפה הראשית. נשמר בטלפון הזה.
+          אפשר לבחור כמה שכבות יחד — אמיתיים, סטאבים לחזרה, ובתי תרגול. נשמר בטלפון הזה,
+          והסטטוס מופיע במפה.
         </p>
         <div className="flex flex-wrap gap-1.5">
           {(["real", "stubs", "practice"] as MapDisplayLayer[]).map((id) => (

@@ -5,6 +5,7 @@ import { toEditorHouse } from "@/lib/ids";
 import { isCatalogRemoved } from "@/lib/catalog-removed";
 import { loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { loadPendingWrites } from "@/lib/offline-db";
+import { isPracticeHouse } from "@/lib/practice-house";
 import { isStubHouse } from "@/lib/house-set";
 import { mergePublicHouseWithAdminRow } from "@/lib/admin-house-overlay";
 import type { EditorHouse, House, PublicHouse } from "@/lib/types";
@@ -31,6 +32,9 @@ function mergeIncomingHouse(
       description: merged.description?.trim() ? merged.description : current.description,
       photoUrl: merged.photoUrl?.trim() ? merged.photoUrl : current.photoUrl,
     };
+  }
+  if (isPracticeHouse(current) || isPracticeHouse(merged)) {
+    merged = { ...merged, isPractice: true };
   }
   return merged;
 }

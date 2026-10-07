@@ -44,6 +44,10 @@ describe("map display layers", () => {
     );
     assert.equal(
       houseVisibleOnMainMap(practice, layersOff, { admin: true, practicePublic: false }),
+      false,
+    );
+    assert.equal(
+      houseVisibleOnMainMap(practice, layersOn, { admin: true, practicePublic: false }),
       true,
     );
     assert.equal(

@@ -47,6 +47,20 @@ describe("catalog stub flags", () => {
     assert.equal(merged.address, "חרוזים 8");
   });
 
+  it("keeps isPractice when a newer catalog row omits the flag", () => {
+    const cached = house("תרגול-1001", {
+      isPractice: true,
+      updatedAt: "2026-10-07T10:00:00.000Z",
+    });
+    const live = house("תרגול-1001", {
+      updatedAt: "2026-10-07T12:00:00.000Z",
+      name: "תרגול מעודכן",
+    });
+    const merged = mergeCatalogHouseRow(cached, live);
+    assert.equal(merged.isPractice, true);
+    assert.equal(merged.name, "תרגול מעודכן");
+  });
+
   it("marks explicit real rows after device cache strip", () => {
     const merged = mergePublicHouseStubFields(
       house("real-1", { isStub: false, deviceCachePin: true }),

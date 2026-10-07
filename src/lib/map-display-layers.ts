@@ -11,7 +11,7 @@ export const MAP_DISPLAY_LAYERS_EVENT = "hw-house-set";
 export const DEFAULT_MAP_DISPLAY_LAYERS: MapDisplayLayers = {
   real: true,
   stubs: false,
-  practice: true,
+  practice: false,
 };
 
 export const MAP_LAYER_LABELS: Record<MapDisplayLayer, string> = {
@@ -150,8 +150,8 @@ export function houseVisibleOnMainMap(
 ): boolean {
   if (isPracticeHouse(house)) {
     if (isStubHouse(house)) return false;
-    if (opts.admin) return true;
-    return opts.practicePublic && layers.practice;
+    if (!layers.practice) return false;
+    return opts.admin || opts.practicePublic;
   }
   return houseMatchesMapLayers(house, layers);
 }

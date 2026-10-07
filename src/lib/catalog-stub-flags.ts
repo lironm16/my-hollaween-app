@@ -1,3 +1,4 @@
+import { isPracticeHouse } from "@/lib/practice-house";
 import { isStubHouse } from "@/lib/house-set";
 import type { Catalog, PublicHouse } from "@/lib/types";
 
@@ -33,16 +34,30 @@ export function mergePublicHouseStubFields(
   return merged;
 }
 
+/** Never drop `isPractice` when catalog deltas omit the flag (same idea as stub merge). */
+export function mergePublicHousePracticeField(
+  winner: PublicHouse,
+  other: PublicHouse,
+): PublicHouse {
+  if (isPracticeHouse(winner) || isPracticeHouse(other)) {
+    return { ...winner, isPractice: true };
+  }
+  return winner;
+}
+
 export function mergeCatalogHouseRow(
   current: PublicHouse | undefined,
   incoming: PublicHouse,
 ): PublicHouse {
-  if (!current) return withExplicitStubFlag(incoming);
+  if (!current) {
+    return mergePublicHousePracticeField(withExplicitStubFlag(incoming), incoming);
+  }
   const incomingWins =
     Date.parse(incoming.updatedAt) >= Date.parse(current.updatedAt);
-  return incomingWins
+  const merged = incomingWins
     ? mergePublicHouseStubFields(incoming, current)
     : mergePublicHouseStubFields(current, incoming);
+  return mergePublicHousePracticeField(merged, incomingWins ? current : incoming);
 }
 
 /** Copy `isStub` from deploy snapshot onto device cache rows (same ids, stripped detail). */
