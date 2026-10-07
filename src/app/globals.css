@@ -804,6 +804,25 @@
   position: relative;
 }
 
+.pin-building-core {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.pin-building-core .pin-cluster-icon {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  z-index: 5;
+  transform: translate(-50%, -50%);
+}
+
+.pin-building-core .pin-hours-ring,
+.pin-building-core .pin-gem-ring {
+  z-index: 0;
+}
+
 .house-pin.is-school-campus {
   width: 76px;
   height: 76px;
@@ -915,8 +934,12 @@
   height: 100%;
 }
 
-.house-pin span,
-.pumpkin-pin span {
+.house-pin span:not(.pin-apt-dots):not(.pin-cluster-icon):not(.pin-school-art):not(
+    .pin-gem-sparkles
+  ):not(.pin-building-core),
+.pumpkin-pin span:not(.pin-apt-dots):not(.pin-cluster-icon):not(.pin-school-art):not(
+    .pin-gem-sparkles
+  ):not(.pin-building-core) {
   font-size: 26px;
   line-height: 1;
   filter: none;
@@ -1199,9 +1222,10 @@
   position: absolute;
   width: 9px;
   height: 9px;
-  background: #fef08a;
+  background: #a855f7;
   clip-path: polygon(50% 0, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0 50%, 39% 35%);
-  filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.95));
+  box-shadow: 0 0 0 1.5px #5b21b6;
+  filter: drop-shadow(0 0 4px rgba(91, 33, 182, 0.95));
   opacity: 0;
   animation: pin-gem-sparkle-twinkle 2.4s ease-in-out infinite;
 }

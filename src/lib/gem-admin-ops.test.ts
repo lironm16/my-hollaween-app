@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  buildAdminGemMapRows,
   buildGemMapHouseRows,
   closestGemMapRow,
   countGemsOnMapByMonster,
@@ -45,6 +46,14 @@ function stub(id: string, lat: number, lng: number, overrides: Partial<PublicHou
 }
 
 describe("gem-admin-ops", () => {
+  it("admin map rows include every catalog house", () => {
+    const rows = buildAdminGemMapRows([
+      stub("בית-a", 32, 34, { boothNumber: 1, address: "חרוזים 1" }),
+      stub("בית-b", 32.01, 34.01, { boothNumber: 2, address: "ביה״ס ניצנים" }),
+    ]);
+    assert.equal(rows.length, 2);
+  });
+
   it("counts monsters on the map set", () => {
     const rows = buildGemMapHouseRows(
       [

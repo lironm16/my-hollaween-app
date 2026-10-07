@@ -20,14 +20,7 @@ export type GemMapHouseRow = {
   speciesHe: string;
 };
 
-export function buildGemMapHouseRows(
-  houses: PublicHouse[],
-  houseSet: HouseSet = "real",
-  options?: GemHuntSetOptions,
-): GemMapHouseRow[] {
-  const eligible = gemHuntMapHouses(houses, houseSet, options);
-  syncGemMonsterAssignment(eligible);
-  const onMap = gemHousesForMap(eligible);
+function rowsFromGemHouses(onMap: PublicHouse[]): GemMapHouseRow[] {
   return onMap.map((house) => {
     const monsterId = gemMonsterForHouse(house);
     return {
@@ -37,6 +30,24 @@ export function buildGemMapHouseRows(
       speciesHe: gemSpeciesLabelHe(monsterId),
     };
   });
+}
+
+export function buildGemMapHouseRows(
+  houses: PublicHouse[],
+  houseSet: HouseSet = "real",
+  options?: GemHuntSetOptions,
+): GemMapHouseRow[] {
+  const eligible = gemHuntMapHouses(houses, houseSet, options);
+  syncGemMonsterAssignment(eligible);
+  return rowsFromGemHouses(gemHousesForMap(eligible));
+}
+
+/** Admin rehearsal map — every catalog row is a gem (no hunt filter). */
+export function buildAdminGemMapRows(houses: PublicHouse[]): GemMapHouseRow[] {
+  const pool = houses.filter(Boolean);
+  if (!pool.length) return [];
+  syncGemMonsterAssignment(pool);
+  return rowsFromGemHouses(gemHousesForMap(pool));
 }
 
 export function countGemsOnMapByMonster(rows: GemMapHouseRow[]) {

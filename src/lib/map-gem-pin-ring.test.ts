@@ -28,9 +28,9 @@ describe("map gem pin rings", () => {
     assert.equal(resolveMapGemPinRingVariant(false, null, true), null);
   });
 
-  it("prefers diamond ring when hours ring would show", () => {
-    assert.equal(resolveMapGemPinRingVariant(true, "closing", true), "diamond");
-    assert.equal(resolveMapGemPinRingVariant(true, "opening", true), "diamond");
+  it("uses one sparkle ring even when hours ring would show", () => {
+    assert.equal(resolveMapGemPinRingVariant(true, "closing", true), "sparkle");
+    assert.equal(resolveMapGemPinRingVariant(true, "opening", true), "sparkle");
   });
 
   it("cluster ring when any unit still has an uncollected gem", () => {

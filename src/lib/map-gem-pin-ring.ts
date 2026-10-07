@@ -55,11 +55,11 @@ export function clusterHasUncollectedMapGem(
 
 export function resolveMapGemPinRingVariant(
   hasUncollectedGem: boolean,
-  hoursKind: "closing" | "opening" | null,
+  _hoursKind: "closing" | "opening" | null,
   showGemRings: boolean,
 ): MapGemPinRingVariant | null {
   if (!showGemRings || !hasUncollectedGem) return null;
-  return hoursKind ? "diamond" : "sparkle";
+  return "sparkle";
 }
 
 export type MapPinRingDecor = {
@@ -70,9 +70,8 @@ export type MapPinRingDecor = {
 const GEM_SPARKLE_MARKUP =
   '<span class="pin-gem-sparkles" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>';
 
-function gemRingMarkup(variant: MapGemPinRingVariant): string {
-  const ring = `<i class="pin-gem-ring is-${variant}" aria-hidden="true"></i>`;
-  return variant === "sparkle" ? `${ring}${GEM_SPARKLE_MARKUP}` : ring;
+function gemRingMarkup(_variant: MapGemPinRingVariant): string {
+  return `<i class="pin-gem-ring is-sparkle" aria-hidden="true"></i>${GEM_SPARKLE_MARKUP}`;
 }
 
 export function mapPinRingDecorForHouse(
@@ -86,7 +85,7 @@ export function mapPinRingDecorForHouse(
 
   if (gemVariant) {
     return {
-      hoursSoonClass: gemVariant === "diamond" ? " is-gem-ring-diamond" : " is-gem-ring-sparkle",
+      hoursSoonClass: " is-gem-ring-sparkle",
       ringHtml: gemRingMarkup(gemVariant),
     };
   }
@@ -109,7 +108,7 @@ export function mapPinRingDecorForCluster(
 
   if (gemVariant) {
     return {
-      hoursSoonClass: gemVariant === "diamond" ? " is-gem-ring-diamond" : " is-gem-ring-sparkle",
+      hoursSoonClass: " is-gem-ring-sparkle",
       ringHtml: gemRingMarkup(gemVariant),
     };
   }

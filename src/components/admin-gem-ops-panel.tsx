@@ -16,10 +16,7 @@ import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useAppNow } from "@/hooks/use-app-clock";
-import {
-  buildGemMapHouseRows,
-  countGemsOnMapByMonster,
-} from "@/lib/gem-admin-ops";
+import { buildAdminGemMapRows, countGemsOnMapByMonster } from "@/lib/gem-admin-ops";
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { clusterHousesByAddress } from "@/lib/house-clusters";
 import { gemAlbumStickerPool, gemMonsterMeta, type GemMonsterId } from "@/lib/gem-monsters";
@@ -66,9 +63,9 @@ function GemPickerRow({
   );
 }
 
-export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
+export function AdminGemOpsPanel({ houses: housesProp }: { houses: PublicHouse[] }) {
   const { admin } = useAdminSession();
-  const { source } = useCatalog();
+  const { catalog, source } = useCatalog();
   const now = useAppNow();
   const gemUi = gemHuntVisible(admin);
   const likes = useLikedHouses();
@@ -80,11 +77,10 @@ export function AdminGemOpsPanel({ houses }: { houses: PublicHouse[] }) {
   const [sheetHouse, setSheetHouse] = useState<PublicHouse | null>(null);
   const [mapGemRingsVisible, setMapGemRingsVisible] = useState(false);
 
-  /** Full catalog + every house type (admin demon QA), not only school booths. */
-  const rows = useMemo(
-    () => buildGemMapHouseRows(houses, "all", { includeAllHouses: true }),
-    [houses],
-  );
+  const catalogHouses = (catalog?.houses ?? []) as PublicHouse[];
+  const houses = catalogHouses.length > 0 ? catalogHouses : housesProp;
+
+  const rows = useMemo(() => buildAdminGemMapRows(houses), [houses]);
   const counts = useMemo(() => countGemsOnMapByMonster(rows), [rows]);
   const pool = useMemo(() => gemAlbumStickerPool(), []);
 
