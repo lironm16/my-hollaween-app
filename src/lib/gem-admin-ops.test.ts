@@ -75,6 +75,7 @@ describe("gem-admin-ops", () => {
         stub("בית-near", 32.0801, 34.7801, { boothNumber: 4 }),
       ],
       "stubs",
+      { includeAllHouses: true },
     );
     const near = closestGemMapRow({ lat: 32.08, lng: 34.78 }, rows, "all");
     assert.ok(near);
@@ -89,6 +90,7 @@ describe("gem-admin-ops", () => {
         stub("בית-bbb", 32, 34, { boothNumber: 6 }),
       ],
       "stubs",
+      { includeAllHouses: true },
     );
     rows[0]!.house.name = "משפחת לוי";
     const filtered = filterGemMapRows(rows, { query: "לוי" });
