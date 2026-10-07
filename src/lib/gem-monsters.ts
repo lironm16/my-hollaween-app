@@ -29,7 +29,15 @@ export type GemMonsterHouseRef = Pick<PublicHouse, "id"> &
   Partial<
     Pick<
       PublicHouse,
-      "theme" | "kind" | "address" | "description" | "neighborhood" | "lat" | "lng" | "boothNumber"
+      | "theme"
+      | "kind"
+      | "address"
+      | "description"
+      | "neighborhood"
+      | "lat"
+      | "lng"
+      | "boothNumber"
+      | "isPractice"
     >
   >;
 import shippedMonsterIds from "@/lib/gem-monsters-shipped.json";

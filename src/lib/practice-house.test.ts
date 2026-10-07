@@ -11,7 +11,7 @@ import {
 describe("practice houses", () => {
   it("flags practice rows and strips them from neighborhood metrics", () => {
     const practice = { id: "תרגול-1", isPractice: true, isStub: false };
-    const real = { id: "בית-1", isStub: false };
+    const real = { id: "בית-1", isStub: false, isPractice: false as const };
     assert.equal(isPracticeHouse(practice), true);
     assert.equal(isNeighborhoodHouse(practice), false);
     assert.equal(isNeighborhoodHouse(real), true);
@@ -21,7 +21,7 @@ describe("practice houses", () => {
   it("shows practice on the map only for admins while dev flag is off", () => {
     assert.equal(practiceHousesVisibleToUsers(), false);
     const practice = { id: "תרגול-1", isPractice: true, isStub: false };
-    const real = { id: "בית-1", isStub: false };
+    const real = { id: "בית-1", isStub: false, isPractice: false as const };
     const list = [practice, real];
     assert.deepEqual(
       housesForMainMap(list, "real", { admin: false }).map((h) => h.id),

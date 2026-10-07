@@ -7,7 +7,7 @@ export function practiceHousesVisibleToUsers() {
   return false;
 }
 
-export type PracticeFlagHouse = Pick<PublicHouse, "isPractice">;
+export type PracticeFlagHouse = { isPractice?: boolean | undefined };
 
 export function isPracticeHouse(house: PracticeFlagHouse | null | undefined) {
   return house?.isPractice === true;
