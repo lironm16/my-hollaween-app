@@ -51,6 +51,7 @@ import {
   mapPinRingDecorForHouse,
   type MapGemPinRingContext,
 } from "@/lib/map-gem-pin-ring";
+import { mapPinIconCacheGemRingEpoch } from "@/lib/map-pin-icon-cache";
 import { isPracticeHouse } from "@/lib/practice-house";
 import { practicePinFaceHtml } from "@/lib/practice-pin-face";
 
@@ -204,10 +205,11 @@ function housePinHtml(
 const DIV_ICON_CACHE = new Map<string, L.DivIcon>();
 
 function cachedDivIcon(key: string, build: () => L.DivIcon) {
-  const hit = DIV_ICON_CACHE.get(key);
+  const scopedKey = `${mapPinIconCacheGemRingEpoch()}|${key}`;
+  const hit = DIV_ICON_CACHE.get(scopedKey);
   if (hit) return hit;
   const icon = build();
-  DIV_ICON_CACHE.set(key, icon);
+  DIV_ICON_CACHE.set(scopedKey, icon);
   return icon;
 }
 

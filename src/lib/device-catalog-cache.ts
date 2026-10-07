@@ -1,3 +1,4 @@
+import { isPracticeHouse } from "@/lib/practice-house";
 import { isStubHouse } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
 
@@ -25,6 +26,7 @@ export function stripHouseForDeviceCache(house: PublicHouse): PublicHouse {
     photoUrl: "",
     deviceCachePin: true as const,
     isStub: stub,
+    isPractice: isPracticeHouse(house),
   };
   if (stub) return { ...stripped, deviceCacheStub: true };
   const { deviceCacheStub, ...real } = stripped;

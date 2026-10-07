@@ -36,13 +36,18 @@ describe("map display layers", () => {
 
   it("keeps practice admin-only until public flag is on", () => {
     const practice = { isStub: false, isPractice: true };
-    const layers = { real: false, stubs: false, practice: true };
+    const layersOff = { real: true, stubs: false, practice: false };
+    const layersOn = { real: false, stubs: false, practice: true };
     assert.equal(
-      houseVisibleOnMainMap(practice, layers, { admin: false, practicePublic: false }),
+      houseVisibleOnMainMap(practice, layersOff, { admin: false, practicePublic: false }),
       false,
     );
     assert.equal(
-      houseVisibleOnMainMap(practice, layers, { admin: true, practicePublic: false }),
+      houseVisibleOnMainMap(practice, layersOff, { admin: true, practicePublic: false }),
+      true,
+    );
+    assert.equal(
+      houseVisibleOnMainMap(practice, layersOn, { admin: false, practicePublic: true }),
       true,
     );
   });

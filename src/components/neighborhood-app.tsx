@@ -15,6 +15,7 @@ import { CatalogMetaChip } from "@/components/catalog-meta-chip";
 import { FiltersSheet } from "@/components/filter-menu";
 import { HouseFiltersContent } from "@/components/house-filters-content";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
+import { invalidateMapPinIconCacheForGemRings } from "@/lib/map-pin-icon-cache";
 import { HouseList } from "@/components/house-list";
 import type { HouseCardActionContext } from "@/components/house-card-actions";
 import { MapStats, StatsSummary } from "@/components/map-stats";
@@ -126,7 +127,11 @@ import {
   houseMatchesSet,
 } from "@/lib/house-set";
 import { houseVisibleOnMainMap, formatMapDisplayLayersStatus } from "@/lib/map-display-layers";
-import { practiceHousesVisibleToUsers, stripPracticeHouses } from "@/lib/practice-house";
+import {
+  isPracticeHouse,
+  practiceHousesVisibleToUsers,
+  stripPracticeHouses,
+} from "@/lib/practice-house";
 import { isPreviewDeploymentClient } from "@/lib/deployment-env";
 import { filterHouses, houseFilterMismatchReasons, routeHouseIds } from "@/lib/filter-houses";
 import { distanceMeters, formatDistance } from "@/lib/geo";
@@ -214,6 +219,9 @@ export function NeighborhoodApp({
   );
   /** Toolbar toggle — diamonds hidden on map until user taps the top-bar gem control. */
   const [mapDiamondsVisible, setMapDiamondsVisible] = useState(false);
+  useEffect(() => {
+    invalidateMapPinIconCacheForGemRings();
+  }, [mapDiamondsVisible]);
   const showGemMapLegend = useMemo(
     () =>
       gemMapLegendVisible(admin, {
@@ -405,10 +413,10 @@ export function NeighborhoodApp({
       ),
     [mapListHouses, layers, adminForHouseSet],
   );
-  const gemPracticeHouses = useMemo(
-    () => gemHousesForMap(gemHuntMapHouses(mapListHouses, activeHouseSet)),
-    [mapListHouses, activeHouseSet],
-  );
+  const gemPracticeHouses = useMemo(() => {
+    const practiceRows = mapHouses.filter(isPracticeHouse);
+    return gemHousesForMap(gemHuntMapHouses(practiceRows, activeHouseSet));
+  }, [mapHouses, activeHouseSet]);
   useEffect(() => {
     if (gemHuntActive) syncGemMonsterAssignment(gemPracticeHouses);
   }, [gemHuntActive, gemPracticeHouses]);
