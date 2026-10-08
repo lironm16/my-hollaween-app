@@ -605,9 +605,6 @@
   .ms-1 {
     margin-inline-start: var(--spacing);
   }
-  .ms-2 {
-    margin-inline-start: calc(var(--spacing) * 2);
-  }
   .me-1\.5 {
     margin-inline-end: calc(var(--spacing) * 1.5);
   }
@@ -1506,10 +1503,6 @@
   .border-2 {
     border-style: var(--tw-border-style);
     border-width: 2px;
-  }
-  .border-s-2 {
-    border-inline-start-style: var(--tw-border-style);
-    border-inline-start-width: 2px;
   }
   .border-e {
     border-inline-end-style: var(--tw-border-style);

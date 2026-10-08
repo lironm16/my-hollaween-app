@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { CheckCircle2, ImagePlus, Loader2, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -150,12 +151,18 @@ export function HelpContactForm() {
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string; ticket?: string };
       if (!res.ok) {
-        setError(data.error ?? "השליחה נכשלה.");
+        const msg = data.error ?? "השליחה נכשלה.";
+        setError(msg);
+        toast.error(msg);
         return;
       }
-      setTicket(data.ticket ?? "ok");
+      const id = data.ticket ?? "ok";
+      setTicket(id);
+      toast.success("הפנייה נשלחה — תודה!");
     } catch {
-      setError("אין חיבור לשרת. בדקו רשת ונסו שוב.");
+      const msg = "אין חיבור לשרת. בדקו רשת ונסו שוב.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setBusy(false);
     }

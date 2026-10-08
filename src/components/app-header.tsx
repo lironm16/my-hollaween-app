@@ -242,11 +242,9 @@ export function AppHeader({
               className={cn(
                 buttonVariants({ variant: "ghost", size: "lg" }),
                 "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
-                APP_MENU_SUBLINK_PAD,
-                "ms-2 border-s-2 border-orange-500/20",
               )}
             >
-              <HelpCircle className="size-4 opacity-80" />
+              <HelpCircle className="size-4" />
               עזרה אישית
             </Link>
             {admin ? (

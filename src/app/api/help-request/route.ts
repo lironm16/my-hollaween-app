@@ -9,7 +9,8 @@ export async function POST(request: Request) {
   if (!helpRequestDeliveryConfigured()) {
     return NextResponse.json(
       {
-        error: "טופס העזרה עדיין לא מחובר בשרת. פנו למנהל האירוע.",
+        error:
+          "טופס העזרה לא מוגדר: צריך HELP_REQUEST_NOTIFY_EMAIL וגם RESEND_API_KEY או Gmail SMTP.",
         code: "NOT_CONFIGURED",
       },
       { status: 503 },
@@ -49,7 +50,11 @@ export async function POST(request: Request) {
     }
     if (error instanceof Error && error.message === "HELP_REQUEST_EMAIL_FAILED") {
       return NextResponse.json(
-        { error: "לא הצלחנו לשלוח מייל. נסו שוב בעוד רגע.", code: "EMAIL_FAILED" },
+        {
+          error:
+            "לא הצלחנו לשלוח מייל. בדקו RESEND_API_KEY או Gmail SMTP (HELP_REQUEST_SMTP_*) ב-Vercel.",
+          code: "EMAIL_FAILED",
+        },
         { status: 502 },
       );
     }

@@ -23,23 +23,13 @@ test("helpRequestSubmitSchema rejects honeypot", () => {
   assert.equal(parsed.success, false);
 });
 
-test("helpRequestSubmitSchema validates optional phone", () => {
-  const bad = helpRequestSubmitSchema.safeParse({
+test("helpRequestSubmitSchema accepts any phone text", () => {
+  const parsed = helpRequestSubmitSchema.safeParse({
     name: "דנה",
     role: "owner",
     platform: "android",
     message: "לא מצליח להוסיף בית",
-    phone: "123",
+    phone: "call me anytime",
   });
-  assert.equal(bad.success, false);
-
-  const good = helpRequestSubmitSchema.safeParse({
-    name: "דנה",
-    role: "owner",
-    platform: "android",
-    message: "לא מצליח להוסיף בית",
-    phone: "050-1234567",
-  });
-  assert.equal(good.success, true);
-  if (good.success) assert.equal(good.data.phone, "0501234567");
+  assert.equal(parsed.success, true);
 });

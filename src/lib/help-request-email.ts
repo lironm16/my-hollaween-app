@@ -1,3 +1,4 @@
+import nodemailer from "nodemailer";
 import { formatHelpRequestPlain, helpRequestPublicId } from "@/lib/help-request-format";
 import type { StoredHelpRequest } from "@/lib/help-request-schema";
 
@@ -8,12 +9,19 @@ export function helpRequestNotifyEmails(): string[] {
   return [...new Set(raw.split(/[,;]/).map((s) => s.trim()).filter(Boolean))];
 }
 
+export function helpRequestSmtpConfigured(): boolean {
+  const user = process.env.HELP_REQUEST_SMTP_USER?.trim();
+  const pass = process.env.HELP_REQUEST_SMTP_PASS?.trim();
+  return Boolean(user && pass);
+}
+
+/** Needs inbox + Resend API key or Gmail/SMTP credentials (FormSubmit is blocked from Vercel). */
 export function helpRequestEmailConfigured(): boolean {
   const emails = helpRequestNotifyEmails();
   if (!emails.length) return false;
   if (process.env.RESEND_API_KEY?.trim()) return true;
-  if (process.env.HELP_REQUEST_USE_FORMSUBMIT === "0") return false;
-  return true;
+  if (helpRequestSmtpConfigured()) return true;
+  return false;
 }
 
 function helpRequestEmailSubject(record: StoredHelpRequest): string {
@@ -54,45 +62,33 @@ async function sendViaResend(record: StoredHelpRequest, to: string[]): Promise<b
   return true;
 }
 
-/** First-time setup: FormSubmit sends a confirmation link to the inbox — click once. */
-async function sendViaFormSubmit(record: StoredHelpRequest, to: string[]): Promise<boolean> {
-  if (to.length !== 1) {
-    console.error("[help-request] formsubmit supports one HELP_REQUEST_NOTIFY_EMAIL only");
-    return false;
-  }
-  const inbox = to[0]!;
+async function sendViaSmtp(record: StoredHelpRequest, to: string[]): Promise<boolean> {
+  if (!helpRequestSmtpConfigured()) return false;
+  const user = process.env.HELP_REQUEST_SMTP_USER!.trim();
+  const pass = process.env.HELP_REQUEST_SMTP_PASS!.trim();
+  const host = process.env.HELP_REQUEST_SMTP_HOST?.trim() || "smtp.gmail.com";
+  const port = Number(process.env.HELP_REQUEST_SMTP_PORT?.trim() || "465");
   const text = formatHelpRequestPlain(record);
-  const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(inbox)}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      _subject: helpRequestEmailSubject(record),
-      _captcha: "false",
-      _template: "box",
-      name: record.name,
-      role: record.role,
-      platform: record.platform,
-      phone: record.phone || "(לא הושאר)",
-      screenshot: record.screenshotUrl || "(ללא)",
-      message: text,
-    }),
+
+  const transport = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
   });
-  if (!res.ok) {
-    console.error("[help-request] formsubmit failed", res.status, await res.text().catch(() => ""));
+
+  try {
+    await transport.sendMail({
+      from: process.env.HELP_REQUEST_EMAIL_FROM?.trim() || `"בשכונה Halloween" <${user}>`,
+      to: to.join(", "),
+      subject: helpRequestEmailSubject(record),
+      text,
+    });
+    return true;
+  } catch (error) {
+    console.error("[help-request] smtp failed", error);
     return false;
   }
-  let ok = true;
-  try {
-    const data = (await res.json()) as { success?: string | boolean };
-    ok = data.success === "true" || data.success === true;
-  } catch {
-    ok = true;
-  }
-  if (!ok) console.error("[help-request] formsubmit rejected payload");
-  return ok;
 }
 
 export async function notifyHelpRequestEmail(record: StoredHelpRequest): Promise<boolean> {
@@ -100,8 +96,8 @@ export async function notifyHelpRequestEmail(record: StoredHelpRequest): Promise
   if (!to.length) return false;
 
   if (process.env.RESEND_API_KEY?.trim()) {
-    return sendViaResend(record, to);
+    const ok = await sendViaResend(record, to);
+    if (ok) return true;
   }
-  if (process.env.HELP_REQUEST_USE_FORMSUBMIT === "0") return false;
-  return sendViaFormSubmit(record, to);
+  return sendViaSmtp(record, to);
 }

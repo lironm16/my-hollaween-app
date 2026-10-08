@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { isValidOwnerPhone, normalizeOwnerPhone } from "@/lib/owner-phone";
 
 export const HELP_REQUEST_ROLES = ["owner", "visitor", "other"] as const;
 export type HelpRequestRole = (typeof HELP_REQUEST_ROLES)[number];
@@ -16,13 +15,6 @@ export const HELP_REQUEST_TOPICS = [
   "other",
 ] as const;
 export type HelpRequestTopic = (typeof HELP_REQUEST_TOPICS)[number];
-
-const optionalPhoneSchema = z
-  .string()
-  .trim()
-  .max(24)
-  .refine((v) => !v || isValidOwnerPhone(v), "מספר טלפון לא תקין")
-  .transform((v) => (v ? normalizeOwnerPhone(v) : ""));
 
 const contextSchema = z
   .object({
@@ -49,7 +41,7 @@ const screenshotUrlSchema = z
 
 export const helpRequestSubmitSchema = z.object({
   name: z.string().trim().min(2, "נא למלא שם.").max(80),
-  phone: optionalPhoneSchema.optional(),
+  phone: z.string().trim().max(40).optional(),
   role: z.enum(HELP_REQUEST_ROLES),
   platform: z.enum(HELP_REQUEST_PLATFORMS),
   topic: z.enum(HELP_REQUEST_TOPICS).optional(),
