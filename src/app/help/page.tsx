@@ -10,6 +10,10 @@ import { GEM_GAME_TITLE_HE } from "@/lib/gem-hunt-copy";
 
 const QUESTIONS = [
   {
+    question: "עזרה אישית — טופס ליצירת קשר",
+    href: "/help/contact",
+  },
+  {
     question: "איך מוסיפים בית?",
     href: "/help/add-house",
   },
