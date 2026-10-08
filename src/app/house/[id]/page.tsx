@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { HouseCard } from "@/components/house-card";
@@ -24,14 +24,17 @@ import { writeHomeView } from "@/lib/home-view";
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
 import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
+import { parseVisitFromSearchParams } from "@/lib/house-visit-qr";
 import { resolveHouseIdFromPath, toPublicHouse } from "@/lib/ids";
 import type { House, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export default function HousePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const params = useParams<{ id: string }>();
   const id = resolveHouseIdFromPath(params.id);
+  const visitFromUrl = parseVisitFromSearchParams(searchParams);
   const { catalog, loading, error, source, refresh } = useCatalog();
   const owned = useOwnedHouses();
   const likes = useLikedHouses();
@@ -44,6 +47,12 @@ export default function HousePage() {
   const { setWatchEnabled } = geo;
   const editFlow = useHouseEditFlow();
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
+
+  useEffect(() => {
+    if (!visitFromUrl || !id) return;
+    const params = new URLSearchParams({ focus: id, visit: "1" });
+    router.replace(`/?${params.toString()}`);
+  }, [visitFromUrl, id, router]);
 
   useEffect(() => {
     if (!admin) {

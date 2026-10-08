@@ -175,11 +175,13 @@ export function NeighborhoodApp({
   focusId = null,
   routeShareParam = null,
   gemHuntFromUrl = false,
+  visitFromUrl = false,
 }: {
   initialCatalog?: Catalog | null;
   focusId?: string | null;
   routeShareParam?: string | null;
   gemHuntFromUrl?: boolean;
+  visitFromUrl?: boolean;
 }) {
   const { catalog, loading, offline, unreachable, error, source, refresh } =
     useCatalog(initialCatalog);
@@ -591,6 +593,27 @@ export function NeighborhoodApp({
     }, 350);
     return () => window.clearTimeout(timer);
   }, [gemHuntFromUrl, focusId, houses, handleToggleGemMenu, selection]);
+
+  const visitFromUrlHandledRef = useRef(false);
+  useEffect(() => {
+    if (!visitFromUrl || !focusId || visitFromUrlHandledRef.current) return;
+    const house = mapListHouses.find((item) => item.id === focusId) ?? houses.find((item) => item.id === focusId);
+    if (!house) return;
+    visitFromUrlHandledRef.current = true;
+    setView("map");
+    selection.selectOnMap(house);
+    const timer = window.setTimeout(() => {
+      if (!visits.visited(focusId)) {
+        onToggleVisited(focusId);
+      }
+      if (typeof window === "undefined") return;
+      const url = new URL(window.location.href);
+      url.searchParams.delete("visit");
+      const next = `${url.pathname}${url.search}${url.hash}`;
+      window.history.replaceState(window.history.state, "", next);
+    }, 200);
+    return () => window.clearTimeout(timer);
+  }, [visitFromUrl, focusId, houses, mapListHouses, onToggleVisited, selection, visits]);
 
   const handleClusterResetAllGems = useCallback((houses: PublicHouse[]) => {
     if (houses.length < 2) return;

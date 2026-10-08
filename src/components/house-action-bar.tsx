@@ -10,6 +10,7 @@ import {
   MoreVertical,
   Navigation,
   Pencil,
+  QrCode,
   Share2,
 } from "lucide-react";
 import { ImpMenuActiveGlyph } from "@/components/imp-marker-glyph";
@@ -19,6 +20,7 @@ import { SkipOutlineIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
 import { EditCodeDialog } from "@/components/edit-code-dialog";
+import { HouseVisitQrDialog } from "@/components/house-visit-qr-dialog";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { GEM_ACTION_FIND_HE, GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
@@ -70,6 +72,7 @@ export function HouseActionBar({
   skipped,
   editing,
   editCode,
+  showVisitQr = false,
   navOnly,
   showNav = true,
   menuPlacement = "top",
@@ -91,6 +94,8 @@ export function HouseActionBar({
   editing?: boolean;
   /** Shown to owners/admins in the ⋮ menu — copy or share the 6-digit edit code. */
   editCode?: string;
+  /** Owners/admins — print a visit QR (public link, no edit code). */
+  showVisitQr?: boolean;
   navOnly?: boolean;
   showNav?: boolean;
   /** Preferred menu direction; flips automatically if there is not enough room. */
@@ -100,6 +105,7 @@ export function HouseActionBar({
   const addressReveal = useAddressReveal();
   const [open, setOpen] = useState(false);
   const [editCodeOpen, setEditCodeOpen] = useState(false);
+  const [visitQrOpen, setVisitQrOpen] = useState(false);
   const [panelStyle, setPanelStyle] = useState<CSSProperties>({ visibility: "hidden" });
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -240,6 +246,14 @@ export function HouseActionBar({
         onClick: () => setEditCodeOpen(true),
       });
     }
+    if (showVisitQr) {
+      items.push({
+        id: "visit-qr",
+        label: "QR לביקור",
+        icon: <QrCode className={MENU_ICON_CLASS} strokeWidth={2.2} />,
+        onClick: () => setVisitQrOpen(true),
+      });
+    }
   }
 
   useLayoutEffect(() => {
@@ -367,6 +381,9 @@ export function HouseActionBar({
           editCode={editCode}
           onClose={() => setEditCodeOpen(false)}
         />
+      ) : null}
+      {showVisitQr ? (
+        <HouseVisitQrDialog open={visitQrOpen} house={house} onClose={() => setVisitQrOpen(false)} />
       ) : null}
       <button
         ref={triggerRef}

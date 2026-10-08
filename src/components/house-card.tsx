@@ -30,6 +30,7 @@ export function HouseCard({
   skipMeta,
   canEdit = false,
   editCode,
+  showVisitQr = false,
   admin = false,
   onShowOnMap,
   onShowInList,
@@ -60,6 +61,7 @@ export function HouseCard({
   skipMeta?: SkippedHouseMeta;
   canEdit?: boolean;
   editCode?: string;
+  showVisitQr?: boolean;
   admin?: boolean;
   onShowOnMap?: () => void;
   onShowInList?: () => void;
