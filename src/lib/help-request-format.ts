@@ -8,7 +8,7 @@ import {
 
 export function formatHelpRequestPlain(record: StoredHelpRequest): string {
   const lines = [
-    `🆘 עזרה — ${record.name}`,
+    `עזרה — ${record.name}`,
     `תפקיד: ${HELP_REQUEST_ROLE_LABELS[record.role]}`,
     `מכשיר: ${HELP_REQUEST_PLATFORM_LABELS[record.platform]}`,
   ];

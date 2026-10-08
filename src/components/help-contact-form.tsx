@@ -158,7 +158,7 @@ export function HelpContactForm() {
       }
       const id = data.ticket ?? "ok";
       setTicket(id);
-      toast.success("הפנייה נשלחה — תודה!");
+      toast.success("הפנייה נשלחה — אם אין מייל, בדקו ספאם או חפשו [Halloween Help]");
     } catch {
       const msg = "אין חיבור לשרת. בדקו רשת ונסו שוב.";
       setError(msg);

@@ -35,7 +35,7 @@ function escapeHtml(text: string): string {
 function helpRequestEmailSubject(record: StoredHelpRequest): string {
   const ticket = helpRequestPublicId(record.id);
   const phone = record.phone?.trim();
-  const bits = [`עזרה Halloween`, record.name.trim()];
+  const bits = [`[Halloween Help]`, record.name.trim()];
   if (phone) bits.push(phone);
   bits.push(`#${ticket}`);
   return bits.join(" · ").slice(0, 200);
@@ -45,8 +45,9 @@ async function sendViaResend(record: StoredHelpRequest, to: string[]): Promise<b
   const apiKey = process.env.RESEND_API_KEY?.trim();
   if (!apiKey) return false;
 
+  // ASCII From matches Resend dashboard tests — Hebrew display names hurt Gmail inbox placement.
   const from =
-    process.env.HELP_REQUEST_EMAIL_FROM?.trim() || "בשכונה Halloween <onboarding@resend.dev>";
+    process.env.HELP_REQUEST_EMAIL_FROM?.trim() || "Halloween App <onboarding@resend.dev>";
   const text = formatHelpRequestPlain(record);
 
   const replyTo =
@@ -65,12 +66,19 @@ async function sendViaResend(record: StoredHelpRequest, to: string[]): Promise<b
       subject: helpRequestEmailSubject(record),
       text,
       html: `<pre style="font-family:system-ui,sans-serif;font-size:14px;white-space:pre-wrap;line-height:1.5">${escapeHtml(text)}</pre>`,
+      tags: [{ name: "source", value: "help-contact" }],
     }),
   });
 
   if (!res.ok) {
     console.error("[help-request] resend failed", res.status, await res.text().catch(() => ""));
     return false;
+  }
+  try {
+    const sent = (await res.json()) as { id?: string };
+    if (sent.id) console.info("[help-request] resend ok", sent.id);
+  } catch {
+    /* body optional */
   }
   return true;
 }

@@ -16,7 +16,7 @@ test("formatHelpRequestPlain includes message and context", () => {
     context: { appVersion: "5.4.71", path: "/edit" },
   };
   const text = formatHelpRequestPlain(record);
-  assert.match(text, /לירון/);
+  assert.match(text, /עזרה — לירון/);
   assert.match(text, /קוד עריכה לא נשמר/);
   assert.match(text, /0501234567/);
   assert.match(text, /5\.4\.71/);
