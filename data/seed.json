@@ -1305,6 +1305,143 @@
       "isStub": true
     },
     {
+      "id": "נק-9350",
+      "kind": "poi",
+      "poiCategory": "coffee",
+      "name": "קפה במרכז — סטאב א׳",
+      "theme": "pumpkin",
+      "address": "חרוזים 34",
+      "arrival": "דוכן 1 — פינת הרחוב",
+      "description": "סטאב לחזרה — שלושה עסקים באותה כתובת (POI בלבד). קפה.",
+      "lat": 32.09142,
+      "lng": 34.80392,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "POI סטאב — מרכז 34, דוכן 1",
+      "accessible": true,
+      "decorLevel": "mild",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/candy-bowl.jpg",
+      "editCode": "935001",
+      "createdAt": "2026-10-08T07:00:00.000Z",
+      "updatedAt": "2026-10-08T07:00:00.000Z",
+      "neighborhood": "חרוזים",
+      "boothNumber": 1,
+      "isStub": true
+    },
+    {
+      "id": "נק-9351",
+      "kind": "poi",
+      "poiCategory": "shop",
+      "name": "חנות מתוקים — סטאב ב׳",
+      "theme": "candy",
+      "address": "חרוזים 34",
+      "arrival": "דוכן 2 — ויטרינה",
+      "description": "סטאב לחזרה — אותו מרכז, חנות ממתקים.",
+      "lat": 32.09142,
+      "lng": 34.80392,
+      "treats": [
+        "candy",
+        "nutsFree"
+      ],
+      "treatStock": {
+        "candy": "low",
+        "nutsFree": "plenty"
+      },
+      "visit": "come",
+      "scareLevel": "mild",
+      "openFrom": "17:00",
+      "openTo": "21:30",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:30"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "POI סטאב — מרכז 34, דוכן 2",
+      "accessible": true,
+      "decorLevel": "medium",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/pumpkin-porch.jpg",
+      "editCode": "935102",
+      "createdAt": "2026-10-08T07:01:00.000Z",
+      "updatedAt": "2026-10-08T07:01:00.000Z",
+      "neighborhood": "חרוזים",
+      "boothNumber": 2,
+      "isStub": true
+    },
+    {
+      "id": "נק-9352",
+      "kind": "poi",
+      "poiCategory": "other",
+      "name": "גלריית דלעות — סטאב ג׳",
+      "theme": "ghost",
+      "address": "חרוזים 34",
+      "arrival": "דוכן 3 — אולם פנימי",
+      "description": "סטאב לחזרה — אותו מרכז, גלריה / נקודת עניין שלישית.",
+      "lat": 32.09142,
+      "lng": 34.80392,
+      "treats": [
+        "candy"
+      ],
+      "treatStock": {
+        "candy": "out"
+      },
+      "visit": "come",
+      "scareLevel": "medium",
+      "openFrom": "17:00",
+      "openTo": "21:00",
+      "openHours": [
+        {
+          "from": "17:00",
+          "to": "21:00"
+        }
+      ],
+      "openFrom2": "",
+      "openTo2": "",
+      "notes": "POI סטאב — מרכז 34, דוכן 3",
+      "accessible": false,
+      "decorLevel": "heavy",
+      "decorated": true,
+      "status": "approved",
+      "soldOut": false,
+      "adminFrozen": false,
+      "ownerFrozenUntil": null,
+      "photoUrl": "/images/stubs/spider-door.jpg",
+      "editCode": "935203",
+      "createdAt": "2026-10-08T07:02:00.000Z",
+      "updatedAt": "2026-10-08T07:02:00.000Z",
+      "neighborhood": "חרוזים",
+      "boothNumber": 3,
+      "isStub": true
+    },
+    {
       "id": "בית-9320",
       "name": "🎃 ניצנים — כיתה א׳",
       "theme": "pumpkin",
