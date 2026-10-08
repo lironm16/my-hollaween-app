@@ -936,10 +936,12 @@
   top: 44%;
 }
 
-.house-pin.is-building.is-cluster-houses,
-.house-pin.is-building.is-cluster-businesses {
-  width: 68px;
-  height: 68px;
+/* Vertical ellipse — grows upward; bottom aligns with single-house pin (56px). */
+.house-pin.is-building.is-cluster-ellipse {
+  width: 54px;
+  height: 74px;
+  margin: -18px auto 0;
+  border-radius: 999px;
 }
 
 .house-pin.is-building.is-cluster-houses {
@@ -951,11 +953,8 @@
 }
 
 .house-pin.is-building.is-cluster-mixed {
-  width: 86px;
-  height: 62px;
-  border-radius: 999px;
   background: linear-gradient(
-    to right,
+    to bottom,
     #6d28d9 0%,
     #6d28d9 50%,
     #f97316 50%,
@@ -963,17 +962,9 @@
   ) !important;
 }
 
-.house-pin.is-building.is-cluster-houses .pin-cluster-icon,
-.house-pin.is-building.is-cluster-businesses .pin-cluster-icon {
-  width: 54px;
-  height: 34px;
-  top: 50%;
-}
-
-.house-pin.is-building.is-cluster-mixed .pin-cluster-icon {
-  width: 78%;
-  max-width: 68px;
-  height: 36px;
+.house-pin.is-building.is-cluster-ellipse .pin-cluster-icon {
+  width: 40px;
+  height: 58px;
   top: 50%;
 }
 
@@ -2880,15 +2871,11 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   height: 28px;
 }
 
-.house-pin.is-legend.is-cluster-houses,
-.house-pin.is-legend.is-cluster-businesses {
-  width: 68px;
-  height: 68px;
-}
-
-.house-pin.is-legend.is-cluster-mixed {
-  width: 86px;
-  height: 62px;
+.house-pin.is-legend.is-cluster-ellipse {
+  width: 54px;
+  height: 74px;
+  margin: -18px auto 0;
+  border-radius: 999px;
 }
 
 .house-pin.is-legend.is-cluster-houses {
@@ -2901,7 +2888,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 
 .house-pin.is-legend.is-cluster-mixed {
   background: linear-gradient(
-    to right,
+    to bottom,
     #6d28d9 0%,
     #6d28d9 50%,
     #f97316 50%,
@@ -2909,15 +2896,10 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   ) !important;
 }
 
-.house-pin.is-legend .pin-cluster-icon.pin-cluster-duo {
-  width: 54px;
-  height: 34px;
+.house-pin.is-legend.is-cluster-ellipse .pin-cluster-icon.pin-cluster-duo {
+  width: 40px;
+  height: 58px;
   top: 50%;
-}
-
-.house-pin.is-legend.is-cluster-mixed .pin-cluster-icon.pin-cluster-duo {
-  width: 68px;
-  height: 36px;
 }
 
 .map-house-sheet {

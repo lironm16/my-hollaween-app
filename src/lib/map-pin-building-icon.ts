@@ -26,35 +26,22 @@ const CLUSTER_ICON: Record<
   houses: {
     src: PIN_CLUSTER_GHOSTS_SRC,
     src2x: PIN_CLUSTER_GHOSTS_SRC_2X,
-    width: 84,
-    height: 50,
+    width: 48,
+    height: 72,
   },
   businesses: {
     src: PIN_CLUSTER_PUMPKINS_SRC,
     src2x: PIN_CLUSTER_PUMPKINS_SRC_2X,
-    width: 84,
-    height: 50,
+    width: 48,
+    height: 72,
   },
   mixed: {
     src: PIN_CLUSTER_MIXED_SRC,
     src2x: PIN_CLUSTER_MIXED_SRC_2X,
-    width: 92,
-    height: 50,
+    width: 48,
+    height: 72,
   },
 };
-
-/** Leaflet divIcon footprint — larger than a single-house pin (PIN_BOX 62). */
-export function buildingClusterLeafletBox(kind: BuildingClusterIconKind): {
-  width: number;
-  height: number;
-  anchorTail: number;
-  extraH: number;
-} {
-  if (kind === "mixed") {
-    return { width: 94, height: 66, anchorTail: 18, extraH: 22 };
-  }
-  return { width: 76, height: 76, anchorTail: 18, extraH: 20 };
-}
 
 /** Pick cluster art from house vs business counts at one address. */
 export function buildingClusterIconKind(houses: PublicHouse[]): BuildingClusterIconKind | null {
@@ -72,7 +59,7 @@ export function buildingClusterIconKind(houses: PublicHouse[]): BuildingClusterI
 }
 
 export function buildingClusterPinClass(kind: BuildingClusterIconKind) {
-  return `is-cluster-${kind}`;
+  return `is-cluster-ellipse is-cluster-${kind}`;
 }
 
 export function pinBuildingClusterIconHtml(houses: PublicHouse[]) {

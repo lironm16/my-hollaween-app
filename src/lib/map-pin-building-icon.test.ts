@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   buildingClusterIconKind,
-  buildingClusterLeafletBox,
+  buildingClusterPinClass,
   pinBuildingClusterIconHtml,
 } from "@/lib/map-pin-building-icon";
 import type { PublicHouse } from "@/lib/types";
@@ -87,9 +87,8 @@ describe("pinBuildingClusterIconHtml", () => {
     assert.match(html, /pin-cluster-ghosts\.png/);
   });
 
-  it("uses a wider leaflet box for mixed clusters", () => {
-    const mixed = buildingClusterLeafletBox("mixed");
-    const duo = buildingClusterLeafletBox("houses");
-    assert.ok(mixed.width > duo.width);
+  it("tags all cluster pins with the shared vertical ellipse class", () => {
+    assert.match(buildingClusterPinClass("mixed"), /is-cluster-ellipse/);
+    assert.match(buildingClusterPinClass("houses"), /is-cluster-ellipse/);
   });
 });
