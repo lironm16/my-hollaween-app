@@ -8,9 +8,10 @@ import { SkipIcon } from "@/components/skip-icon";
 import { POI_PIN_FACE_SRC } from "@/lib/pin-faces";
 import { PIN_BACKGROUND } from "@/lib/pin-colors";
 import { GEM_MAP_LEGEND_OPEN_HE, GEM_MAP_LEGEND_SECTION_HE } from "@/lib/gem-hunt-copy";
+import { BuildingClusterPinArt } from "@/components/building-cluster-pin-art";
 import {
-  PIN_CLUSTER_GHOSTS_SRC,
-  PIN_CLUSTER_GHOSTS_SRC_2X,
+  buildingClusterPinClass,
+  type BuildingClusterIconKind,
 } from "@/lib/map-pin-building-icon";
 import {
   PIN_SCHOOL_CAMPUS_INK_SRC,
@@ -28,6 +29,7 @@ function SwatchPin({
   onBreak,
   bare,
   multi,
+  multiClusterKind,
   school,
   practice,
   visited,
@@ -42,6 +44,7 @@ function SwatchPin({
   onBreak?: boolean;
   bare?: boolean;
   multi?: boolean;
+  multiClusterKind?: BuildingClusterIconKind;
   school?: boolean;
   practice?: boolean;
   visited?: boolean;
@@ -56,6 +59,7 @@ function SwatchPin({
         "house-pin is-legend relative",
         poi && "is-poi",
         multi && "is-building",
+        multi && multiClusterKind && buildingClusterPinClass(multiClusterKind),
         school && "is-school-campus is-school-list-pin",
         practice && "is-practice",
         !gemRing && hours === "closing" && "is-closing-soon",
@@ -65,19 +69,23 @@ function SwatchPin({
         bare && "is-undecorated",
         visited && "is-visited",
       )}
-      style={{
-        background: school || practice
-          ? practice
-            ? "linear-gradient(165deg,#0f766e 0%,#0d9488 55%,#14b8a6 100%)"
-            : undefined
-          : bare
-            ? poi
-              ? PIN_BACKGROUND.poi.undecorated
-              : PIN_BACKGROUND.house.undecorated
-            : poi
-              ? PIN_BACKGROUND.poi.decorated
-              : PIN_BACKGROUND.house.decorated,
-      }}
+      style={
+        multi && multiClusterKind
+          ? undefined
+          : {
+              background: school || practice
+                ? practice
+                  ? "linear-gradient(165deg,#0f766e 0%,#0d9488 55%,#14b8a6 100%)"
+                  : undefined
+                : bare
+                  ? poi
+                    ? PIN_BACKGROUND.poi.undecorated
+                    : PIN_BACKGROUND.house.undecorated
+                  : poi
+                    ? PIN_BACKGROUND.poi.decorated
+                    : PIN_BACKGROUND.house.decorated,
+            }
+      }
       aria-hidden
     >
       {gemRing ? (
@@ -105,20 +113,7 @@ function SwatchPin({
         // eslint-disable-next-line @next/next/no-img-element
         <img className="pin-scare" src={scareSrc} alt="" />
       ) : null}
-      {multi ? (
-        <span className="pin-cluster-icon pin-cluster-duo" aria-hidden>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            className="pin-cluster-art"
-            src={PIN_CLUSTER_GHOSTS_SRC}
-            srcSet={`${PIN_CLUSTER_GHOSTS_SRC} 1x, ${PIN_CLUSTER_GHOSTS_SRC_2X} 2x`}
-            width={72}
-            height={56}
-            alt=""
-            decoding="async"
-          />
-        </span>
-      ) : null}
+      {multi && multiClusterKind ? <BuildingClusterPinArt kind={multiClusterKind} /> : null}
       {school ? (
         <span className="pin-school-art" aria-hidden>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -151,7 +146,21 @@ const BASE_GROUPS: { title: string; items: { key: string; label: string; node: R
     items: [
       { key: "house-kind", label: "בית", node: <SwatchPin scare="mild" /> },
       { key: "poi-kind", label: "נקודת עניין", node: <SwatchPin scare="mild" poi /> },
-      { key: "building-kind", label: "בניין", node: <SwatchPin multi /> },
+      {
+        key: "building-houses",
+        label: "בניין — בתים",
+        node: <SwatchPin multi multiClusterKind="houses" />,
+      },
+      {
+        key: "building-businesses",
+        label: "בניין — עסקים",
+        node: <SwatchPin multi multiClusterKind="businesses" />,
+      },
+      {
+        key: "building-mixed",
+        label: "בניין — מעורב",
+        node: <SwatchPin multi multiClusterKind="mixed" />,
+      },
       { key: "school-kind", label: "בית ספר", node: <SwatchPin school /> },
       { key: "practice-kind", label: "בית תרגול", node: <SwatchPin practice /> },
     ],

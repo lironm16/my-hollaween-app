@@ -35,7 +35,12 @@ import { pinScareSrc } from "@/lib/pin-faces";
 import { effectiveHouseKind } from "@/lib/house-kind";
 import { pinBackgroundFill } from "@/lib/pin-colors";
 import { clusterBadgeHouses, clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
-import { pinBuildingClusterIconHtml } from "@/lib/map-pin-building-icon";
+import {
+  buildingClusterIconKind,
+  buildingClusterLeafletBox,
+  buildingClusterPinClass,
+  pinBuildingClusterIconHtml,
+} from "@/lib/map-pin-building-icon";
 import { pinSchoolClusterIconHtml } from "@/lib/map-pin-school-icon";
 import {
   clusterIsSchoolCampus,
@@ -262,22 +267,29 @@ function clusterIcon(
     });
   }
 
+  const clusterKind = schoolCampus ? null : buildingClusterIconKind(houses);
   const clusterIconHtml = schoolCampus ? pinSchoolClusterIconHtml() : pinClusterIconHtml(houses);
   const campusClass = schoolCampus ? " is-school-campus" : "";
+  const clusterKindClass = clusterKind ? ` ${buildingClusterPinClass(clusterKind)}` : "";
   const clusterLabel = attr(clusterPinAriaLabel(houses));
   const pinFill = "#6d28d9";
   const clusterRing = mapPinRingDecorForCluster(houses, now, gemCtx);
+  const pinStyleAttr = schoolCampus ? ` style="background:${pinFill}"` : "";
   const wrapped = wrapRoutePin(
-    `<div class="house-pin is-building${campusClass}${allVisited ? " is-visited" : ""}${clusterRing.hoursSoonClass}" style="background:${pinFill}" role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds, schoolCampus)}</div>`,
+    `<div class="house-pin is-building${clusterKindClass}${campusClass}${allVisited ? " is-visited" : ""}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds, schoolCampus)}</div>`,
     routeOrder,
   );
-  const pinBox = schoolCampus ? SCHOOL_CAMPUS_PIN_BOX : PIN_BOX;
-  const pinExtraH = schoolCampus ? 22 : 20;
-  const pinAnchorTail = schoolCampus ? 18 : 16;
+  const clusterBox = clusterKind ? buildingClusterLeafletBox(clusterKind) : null;
+  const pinBox = schoolCampus ? SCHOOL_CAMPUS_PIN_BOX : clusterBox?.width ?? PIN_BOX;
+  const pinExtraH = schoolCampus ? 22 : clusterBox?.extraH ?? 20;
+  const pinAnchorTail = schoolCampus ? 18 : clusterBox?.anchorTail ?? 16;
   return L.divIcon({
     className: `pumpkin-pin-icon pumpkin-pin-building${schoolCampus ? " pumpkin-pin-school" : ""}${selectedClass}${filterClass}${clusterRing.hoursSoonClass}`,
     html: wrapped.html,
-    iconSize: [pinBox, pinBox + pinExtraH + wrapped.extraH],
+    iconSize: [
+      pinBox,
+      (clusterBox?.height ?? pinBox) + pinExtraH + wrapped.extraH,
+    ],
     iconAnchor: [pinBox / 2, pinBox + pinAnchorTail + wrapped.extraH],
   });
 }

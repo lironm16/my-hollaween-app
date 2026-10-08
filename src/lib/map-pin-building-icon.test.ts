@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { buildingClusterIconKind } from "@/lib/map-pin-building-icon";
+import {
+  buildingClusterIconKind,
+  buildingClusterLeafletBox,
+  pinBuildingClusterIconHtml,
+} from "@/lib/map-pin-building-icon";
 import type { PublicHouse } from "@/lib/types";
 
 function house(id: string, patch: Partial<PublicHouse> = {}): PublicHouse {
@@ -71,5 +75,21 @@ describe("buildingClusterIconKind", () => {
       ]),
       "mixed",
     );
+  });
+});
+
+describe("pinBuildingClusterIconHtml", () => {
+  it("renders outline SVG pairs for each cluster kind", () => {
+    const houses = [house("a"), house("b")];
+    const html = pinBuildingClusterIconHtml(houses);
+    assert.match(html, /pin-cluster-houses/);
+    assert.match(html, /pin-cluster-svg/);
+    assert.match(html, /svg/);
+  });
+
+  it("uses a wider leaflet box for mixed clusters", () => {
+    const mixed = buildingClusterLeafletBox("mixed");
+    const duo = buildingClusterLeafletBox("houses");
+    assert.ok(mixed.width > duo.width);
   });
 });
