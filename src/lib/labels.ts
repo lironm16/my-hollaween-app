@@ -117,8 +117,16 @@ export const visitShort: Record<VisitState, string> = {
   closed: "סגור",
 };
 
-/** Shown on cards when the house was removed from the public catalog but kept locally. */
-export const catalogRemovedBannerLabel = "הוסר מהמדריך";
+/** Shown on cards when the house was removed from the public map but kept locally. */
+export const catalogRemovedBannerLabel = "הוסר מהמפה";
+
+export const catalogRemovedEditBlockedToast = "הבית הוסר מהמפה — אי אפשר לערוך";
+
+export const catalogRemovedViewOnlyNotice =
+  "הבית הוסר מהמפה — צפייה בלבד. אפשר להסיר את הכרטיס מ«במכשיר שלי».";
+
+export const catalogRemovedViewOnlyEditPage =
+  "הבית הוסר מהמפה — צפייה בלבד. להסרה מהמכשיר: «במכשיר שלי» → «הסר מהמכשיר».";
 
 export const stockLabels: Record<StockLevel, string> = {
   plenty: "יש",
