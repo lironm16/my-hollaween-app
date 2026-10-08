@@ -930,10 +930,19 @@
   pointer-events: none;
 }
 
-.pin-cluster-icon svg {
+.pin-cluster-icon.pin-cluster-duo {
+  width: 36px;
+  height: 28px;
+  top: 44%;
+}
+
+.pin-cluster-icon svg,
+.pin-cluster-icon .pin-cluster-art {
   display: block;
   width: 100%;
   height: 100%;
+  object-fit: contain;
+  object-position: center center;
 }
 
 .house-pin span:not(.pin-apt-dots):not(.pin-cluster-icon):not(.pin-school-art):not(.pin-gem-sparkles),
@@ -2826,7 +2835,12 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .house-pin.is-legend .pin-cluster-icon {
   top: 50%;
   width: 36px;
-  height: 32px;
+  height: 28px;
+}
+
+.house-pin.is-legend .pin-cluster-icon.pin-cluster-duo {
+  width: 40px;
+  height: 30px;
 }
 
 .map-house-sheet {

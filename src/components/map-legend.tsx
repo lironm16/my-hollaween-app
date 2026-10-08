@@ -9,6 +9,10 @@ import { POI_PIN_FACE_SRC } from "@/lib/pin-faces";
 import { PIN_BACKGROUND } from "@/lib/pin-colors";
 import { GEM_MAP_LEGEND_OPEN_HE, GEM_MAP_LEGEND_SECTION_HE } from "@/lib/gem-hunt-copy";
 import {
+  PIN_CLUSTER_GHOSTS_SRC,
+  PIN_CLUSTER_GHOSTS_SRC_2X,
+} from "@/lib/map-pin-building-icon";
+import {
   PIN_SCHOOL_CAMPUS_INK_SRC,
   PIN_SCHOOL_CAMPUS_INK_SRC_2X,
 } from "@/lib/map-pin-school-icon";
@@ -102,13 +106,17 @@ function SwatchPin({
         <img className="pin-scare" src={scareSrc} alt="" />
       ) : null}
       {multi ? (
-        <span className="pin-cluster-icon" aria-hidden>
-          <svg viewBox="0 0 32 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="1" y="12" width="13" height="15" rx="1.5" fill="#ffedd5" />
-            <path d="M1 12 L7.5 5.5 L14 12 Z" fill="#ffedd5" />
-            <rect x="14" y="8" width="13" height="19" rx="1.5" fill="#fb923c" />
-            <path d="M14 8 L20.5 1.5 L27 8 Z" fill="#fb923c" />
-          </svg>
+        <span className="pin-cluster-icon pin-cluster-duo" aria-hidden>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="pin-cluster-art"
+            src={PIN_CLUSTER_GHOSTS_SRC}
+            srcSet={`${PIN_CLUSTER_GHOSTS_SRC} 1x, ${PIN_CLUSTER_GHOSTS_SRC_2X} 2x`}
+            width={72}
+            height={56}
+            alt=""
+            decoding="async"
+          />
         </span>
       ) : null}
       {school ? (
