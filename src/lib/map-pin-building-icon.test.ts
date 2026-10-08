@@ -83,8 +83,8 @@ describe("pinBuildingClusterIconHtml", () => {
     const houses = [house("a"), house("b")];
     const html = pinBuildingClusterIconHtml(houses);
     assert.match(html, /pin-cluster-houses/);
-    assert.match(html, /pin-cluster-svg/);
-    assert.match(html, /svg/);
+    assert.match(html, /pin-cluster-art/);
+    assert.match(html, /pin-cluster-ghosts\.png/);
   });
 
   it("uses a wider leaflet box for mixed clusters", () => {

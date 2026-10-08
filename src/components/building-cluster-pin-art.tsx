@@ -43,7 +43,7 @@ function mockCluster(kind: BuildingClusterIconKind): PublicHouse[] {
   return [mockHouse("h1", "house"), mockHouse("p1", "poi")];
 }
 
-/** Map + legend cluster glyph (outline ghost / pumpkin pairs). */
+/** Map + legend cluster glyph (spaced ghost / pumpkin pairs). */
 export function BuildingClusterPinArt({ kind }: { kind: BuildingClusterIconKind }) {
   const html = pinBuildingClusterIconHtml(mockCluster(kind));
   return <span dangerouslySetInnerHTML={{ __html: html }} />;

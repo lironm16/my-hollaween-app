@@ -6063,19 +6063,18 @@ svg.leaflet-zoom-animated {
 }
 .house-pin.is-building.is-cluster-houses .pin-cluster-icon,
 .house-pin.is-building.is-cluster-businesses .pin-cluster-icon {
-  width: 48px;
-  height: 40px;
+  width: 54px;
+  height: 34px;
   top: 50%;
 }
 .house-pin.is-building.is-cluster-mixed .pin-cluster-icon {
-  width: 76%;
-  max-width: 64px;
-  height: 44px;
+  width: 78%;
+  max-width: 68px;
+  height: 36px;
   top: 50%;
 }
 .pin-cluster-icon svg,
-.pin-cluster-icon .pin-cluster-art,
-.house-pin.is-building .pin-cluster-svg {
+.pin-cluster-icon .pin-cluster-art {
   display: block;
   width: 100%;
   height: 100%;
@@ -7813,13 +7812,13 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   ) !important;
 }
 .house-pin.is-legend .pin-cluster-icon.pin-cluster-duo {
-  width: 48px;
-  height: 40px;
+  width: 54px;
+  height: 34px;
   top: 50%;
 }
 .house-pin.is-legend.is-cluster-mixed .pin-cluster-icon.pin-cluster-duo {
-  width: 64px;
-  height: 44px;
+  width: 68px;
+  height: 36px;
 }
 .map-house-sheet {
   position: absolute;
