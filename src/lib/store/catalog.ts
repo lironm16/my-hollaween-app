@@ -204,19 +204,44 @@ async function loadDeltaContextForColdPoll(sinceMs: number) {
   return { catalogUpdatedAt, houseCount, eventSettings, pushSettings };
 }
 
+/** Instance tombstones + Firestore `removed` docs — every poll path must use both. */
+export function mergeCatalogRemovalIds(local: string[], remote: string[]): string[] {
+  const ids = new Set<string>();
+  for (const id of local) {
+    if (id) ids.add(id);
+  }
+  for (const id of remote) {
+    if (id) ids.add(id);
+  }
+  return [...ids];
+}
+
+async function catalogRemovalsForDelta(since: string, sinceMs: number): Promise<string[]> {
+  const local = firestoreConfigured() ? catalogRemovalsSince(sinceMs) : [];
+  if (!firestoreConfigured()) return local;
+  const remote = await queryRemovedHouseIdsSince(since);
+  return mergeCatalogRemovalIds(local, remote);
+}
+
 async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<CatalogDelta | null> {
   const mem = getMem();
   const eventMeta = firestoreConfigured() ? await readEventSettingsMeta() : null;
   const eventSettingsUpdatedAt = mem?.eventSettings?.updatedAt ?? eventMeta?.updatedAt;
+  const removedForSince = firestoreConfigured() ? await catalogRemovalsForDelta(since, sinceMs) : [];
+
   if (isMemWarm() && mem) {
-    const removed = firestoreConfigured() ? catalogRemovalsSince(sinceMs) : [];
+    if (removedForSince.length > 0) return null;
+    if (firestoreConfigured()) {
+      const meta = await readCatalogMeta();
+      if (meta?.updatedAt && stamp({ updatedAt: meta.updatedAt }) > sinceMs) return null;
+    }
     if (
       catalogDeltaGatePassed({
         sinceMs,
         catalogUpdatedAt: mem.updatedAt,
         pushUpdatedAt: mem.pushSettings?.updatedAt,
         eventSettingsUpdatedAt,
-        removedIds: removed,
+        removedIds: [],
       })
     ) {
       return emptyCatalogDelta(
@@ -234,27 +259,14 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
       mem &&
       meta?.updatedAt &&
       stamp(mem) > stamp({ updatedAt: meta.updatedAt });
-    if (
-      meta?.updatedAt &&
-      !memAheadOfMeta &&
-      catalogDeltaGatePassed({
-        sinceMs,
-        catalogUpdatedAt: meta.updatedAt,
-        pushUpdatedAt: pushMeta?.updatedAt,
-        eventSettingsUpdatedAt,
-        removedIds: [],
-      })
-    ) {
-      const removed = isMemWarm()
-        ? catalogRemovalsSince(sinceMs)
-        : await queryRemovedHouseIdsSince(since);
+    if (meta?.updatedAt && !memAheadOfMeta) {
       if (
         catalogDeltaGatePassed({
           sinceMs,
           catalogUpdatedAt: meta.updatedAt,
           pushUpdatedAt: pushMeta?.updatedAt,
           eventSettingsUpdatedAt,
-          removedIds: removed,
+          removedIds: removedForSince,
         })
       ) {
         return emptyCatalogDelta(meta.updatedAt, await resolveAuthoritativeHouseCount());
@@ -277,7 +289,7 @@ export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
 
   const mem = getMem();
   if (isMemWarm() && mem) {
-    const removed = firestoreConfigured() ? catalogRemovalsSince(sinceMs) : [];
+    const removed = await catalogRemovalsForDelta(since, sinceMs);
     return buildCatalogDeltaFromDb(mem, since, removed);
   }
 

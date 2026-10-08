@@ -25,6 +25,7 @@ import { readApiJson } from "@/lib/api-json";
 import { cn } from "@/lib/utils";
 import { useAddHouseOpen } from "@/hooks/use-add-house-open";
 import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
+import { catalogRemovedViewOnlyEditPage } from "@/lib/labels";
 
 export default function EditPage() {
   return (
@@ -289,7 +290,7 @@ function EditPageContent() {
         {house && !editFlow.flow ? (
           pickedRemovedFromCatalog && !admin ? (
             <p className="rounded-xl bg-zinc-900/90 px-3 py-3 text-center text-base text-zinc-100 ring-1 ring-white/10">
-              הבית הוסר מהמדריך — צפייה בלבד. להסרה מהמכשיר: «במכשיר שלי» → «הסר מהמכשיר».
+              {catalogRemovedViewOnlyEditPage}
             </p>
           ) : (
             <Button

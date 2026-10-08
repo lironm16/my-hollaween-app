@@ -5,6 +5,7 @@ import { HouseEditOverlay } from "@/components/house-edit-overlay";
 import { QuickUpdateOverlay } from "@/components/quick-update-overlay";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
+import { catalogRemovedEditBlockedToast } from "@/lib/labels";
 import { quickUpdateAvailable } from "@/lib/quick-update";
 import type { PublicHouse } from "@/lib/types";
 import { toast } from "sonner";
@@ -31,7 +32,7 @@ export function useHouseEditFlow() {
       options?: { editCode?: string; admin?: boolean; allowDelete?: boolean; forceFull?: boolean },
     ) => {
       if (!deviceHouseEditAllowed(house.id)) {
-        toast.message("הבית הוסר מהמדריך — אי אפשר לערוך");
+        toast.message(catalogRemovedEditBlockedToast);
         return;
       }
       const canQuick = !options?.forceFull && quickUpdateAvailable(house, now);
@@ -52,7 +53,7 @@ export function useHouseEditFlow() {
       options?: { editCode?: string; admin?: boolean },
     ) => {
       if (!deviceHouseEditAllowed(house.id)) {
-        toast.message("הבית הוסר מהמדריך — אי אפשר לערוך");
+        toast.message(catalogRemovedEditBlockedToast);
         return;
       }
       setFlow({
