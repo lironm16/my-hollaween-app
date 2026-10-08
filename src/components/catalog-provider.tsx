@@ -91,6 +91,16 @@ function isFetchTimeout(err: unknown) {
   );
 }
 
+/** Live API full catalogs may drop ids; never use for CDN snapshot bundles. */
+function syncLiveCatalog(prev: Catalog | null, incoming: CatalogDelta): Catalog {
+  const normalized = normalizeCatalogDelta(incoming);
+  const opts =
+    incoming.full === true || isAuthoritativeHouseList(normalized)
+      ? { trustedCompleteList: true as const }
+      : undefined;
+  return syncCatalog(prev, normalized, opts);
+}
+
 async function fetchJson(url: string, force = false, since?: string): Promise<CatalogDelta> {
   const params = new URLSearchParams();
   if (force) params.set("t", String(Date.now()));
@@ -118,7 +128,10 @@ async function fetchFullCatalogBundle(base: Catalog | null): Promise<Catalog | n
       pushTemplates: full.pushTemplates,
       eventSettings: full.eventSettings,
     };
-    return withDeviceHouseOverlays(syncCatalog(base, payload));
+    const opts = isAuthoritativeHouseList(payload)
+      ? { trustedCompleteList: true as const }
+      : undefined;
+    return withDeviceHouseOverlays(syncCatalog(base, payload, opts));
   } catch {
     return null;
   }
@@ -183,7 +196,7 @@ async function recoverCatalogShortfall(
 function applyCatalogResponse(prev: Catalog | null, live: CatalogDelta): Catalog {
   live = normalizeCatalogDelta(live);
   if (!prev || live.full) {
-    return syncCatalog(prev, live);
+    return syncLiveCatalog(prev, live);
   }
   if (live.houses.length || live.removed?.length || live.pushTemplates || live.eventSettings) {
     return mergeCatalogDelta(prev, live);

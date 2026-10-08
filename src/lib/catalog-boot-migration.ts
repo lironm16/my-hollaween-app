@@ -3,7 +3,7 @@ import { clearCatalogCacheMeta, clearDeviceCatalogCache } from "@/lib/offline-db
 
 const CATALOG_BOOT_GENERATION_KEY = "hw-catalog-boot-generation";
 /** Bump when a one-time device catalog wipe is required after a bad release. */
-export const CATALOG_BOOT_GENERATION = 4;
+export const CATALOG_BOOT_GENERATION = 5;
 
 export function catalogBootMigrationNeeded(): boolean {
   if (typeof window === "undefined") return false;
@@ -28,12 +28,7 @@ export function completeCatalogBootMigration() {
 /** Drop stale caches / legacy `complete` meta after a bad release. */
 export function runCatalogBootMigrationIfNeeded(): boolean {
   if (!catalogBootMigrationNeeded()) return false;
-  const stored = Number(localStorage.getItem(CATALOG_BOOT_GENERATION_KEY) || 0);
-  if (!Number.isFinite(stored) || stored < 3) {
-    clearDeviceCatalogCache();
-  } else {
-    clearCatalogCacheMeta();
-  }
+  clearDeviceCatalogCache();
   completeCatalogBootMigration();
   return true;
 }
