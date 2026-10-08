@@ -79,7 +79,7 @@ describe("buildingClusterIconKind", () => {
 });
 
 describe("pinBuildingClusterIconHtml", () => {
-  it("renders outline SVG pairs for each cluster kind", () => {
+  it("renders spaced PNG pairs for each cluster kind", () => {
     const houses = [house("a"), house("b")];
     const html = pinBuildingClusterIconHtml(houses);
     assert.match(html, /pin-cluster-houses/);
