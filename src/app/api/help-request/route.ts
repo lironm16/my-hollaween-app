@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { helpRequestSubmitSchema } from "@/lib/help-request-schema";
-import {
-  helpRequestDeliveryConfigured,
-  helpRequestPublicId,
-  persistHelpRequest,
-} from "@/lib/help-request-store";
+import { helpRequestPublicId } from "@/lib/help-request-format";
+import { helpRequestDeliveryConfigured, persistHelpRequest } from "@/lib/help-request-store";
 
 export const runtime = "nodejs";
 

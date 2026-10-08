@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { formatHelpRequestPlain } from "./help-request-store";
+import { formatHelpRequestPlain } from "./help-request-format";
 import type { StoredHelpRequest } from "./help-request-schema";
 
 test("formatHelpRequestPlain includes message and context", () => {
