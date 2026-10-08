@@ -87,7 +87,7 @@ def compose_mixed_halves(
     ghost_r = resize_glyph(ghost, gh)
     pump_r = resize_glyph(pumpkin, gh)
     y0 = (ch - gh) // 2
-    out.alpha_composite(ghost_r, (half - ghost_r.width) // 2, y0))
+    out.alpha_composite(ghost_r, ((half - ghost_r.width) // 2, y0))
     out.alpha_composite(pump_r, (half + (half - pump_r.width) // 2, y0))
     return out
 
