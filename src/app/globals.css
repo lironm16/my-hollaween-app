@@ -936,16 +936,16 @@
   top: 44%;
 }
 
-/* Horizontal ellipse — shared map + legend; map centers in 62px Leaflet box without parent transform. */
+/* Multi-listing circle — between house (56px) and school campus (76px). */
 .house-pin.is-cluster-ellipse {
-  width: 82px;
-  height: 58px;
-  margin-top: -2px;
+  width: 66px;
+  height: 66px;
+  margin-top: -10px;
   border-radius: 999px;
 }
 
 .house-pin.is-building.is-cluster-ellipse {
-  margin-left: -10px;
+  margin-left: -2px;
 }
 
 .house-pin.is-legend.is-cluster-ellipse {
@@ -972,8 +972,8 @@
 }
 
 .house-pin.is-cluster-ellipse .pin-cluster-icon.pin-cluster-duo {
-  width: 54px;
-  height: 34px;
+  width: 58px;
+  height: 58px;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);

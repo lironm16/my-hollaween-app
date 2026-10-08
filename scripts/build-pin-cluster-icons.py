@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compose horizontal twin-ghost / twin-pumpkin / mixed building cluster map icons."""
+"""Compose tight twin glyphs for circular building cluster map pins."""
 
 from __future__ import annotations
 
@@ -21,6 +21,9 @@ OUT_2X = {
     "businesses": ROOT / "pin-cluster-pumpkins@2x.png",
     "mixed": ROOT / "pin-cluster-mixed@2x.png",
 }
+
+CANVAS = 64
+GAP = 1
 
 
 def alpha_bbox(im: Image.Image, min_alpha: int = 16) -> tuple[int, int, int, int]:
@@ -51,39 +54,50 @@ def resize_glyph(im: Image.Image, target_h: int) -> Image.Image:
     return im.resize((nw, nh), Image.Resampling.LANCZOS)
 
 
+def max_pair_glyph_h(left: Image.Image, right: Image.Image, cw: int, ch: int, gap: int) -> int:
+    for gh in range(ch, 0, -1):
+        left_r = resize_glyph(left, gh)
+        right_r = resize_glyph(right, gh)
+        if left_r.width + gap + right_r.width <= cw and gh <= ch:
+            return gh
+    return 1
+
+
+def max_half_glyph_h(left: Image.Image, right: Image.Image, cw: int, ch: int) -> int:
+    half = cw // 2
+    for gh in range(ch, 0, -1):
+        left_r = resize_glyph(left, gh)
+        right_r = resize_glyph(right, gh)
+        if left_r.width <= half and right_r.width <= half and gh <= ch:
+            return gh
+    return 1
+
+
 def compose_pair(
     left: Image.Image,
     right: Image.Image,
-    canvas: tuple[int, int],
+    canvas: int,
     *,
     gap: int,
-    glyph_height_ratio: float,
 ) -> Image.Image:
-    cw, ch = canvas
+    cw = ch = canvas
+    gh = max_pair_glyph_h(left, right, cw, ch, gap)
     out = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
-    lh = int(ch * glyph_height_ratio)
-    left_r = resize_glyph(left, lh)
-    right_r = resize_glyph(right, lh)
+    left_r = resize_glyph(left, gh)
+    right_r = resize_glyph(right, gh)
     total_w = left_r.width + gap + right_r.width
-    x0 = max(0, (cw - total_w) // 2)
-    y0 = (ch - lh) // 2
+    x0 = (cw - total_w) // 2
+    y0 = (ch - gh) // 2
     out.alpha_composite(left_r, (x0, y0))
     out.alpha_composite(right_r, (x0 + left_r.width + gap, y0))
     return out
 
 
-def compose_mixed_halves(
-    ghost: Image.Image,
-    pumpkin: Image.Image,
-    canvas: tuple[int, int],
-    *,
-    glyph_height_ratio: float,
-) -> Image.Image:
-    """One glyph centered in each half — matches the purple/orange split on the pin."""
-    cw, ch = canvas
+def compose_mixed_halves(ghost: Image.Image, pumpkin: Image.Image, canvas: int) -> Image.Image:
+    cw = ch = canvas
+    gh = max_half_glyph_h(ghost, pumpkin, cw, ch)
     out = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
     half = cw // 2
-    gh = int(ch * glyph_height_ratio)
     ghost_r = resize_glyph(ghost, gh)
     pump_r = resize_glyph(pumpkin, gh)
     y0 = (ch - gh) // 2
@@ -95,36 +109,20 @@ def compose_mixed_halves(
 def build() -> None:
     ghost = trim(Image.open(GHOST).convert("RGBA"))
     pumpkin = trim(Image.open(PUMPKIN).convert("RGBA"))
-    pair_specs: dict[str, tuple[tuple[int, int], int, float, tuple[Image.Image, Image.Image]]] = {
-        "houses": ((84, 50), 8, 0.78, (ghost, ghost)),
-        "businesses": ((84, 50), 8, 0.78, (pumpkin, pumpkin)),
-    }
-    for key, (canvas, gap, ratio, pair) in pair_specs.items():
+    for key, pair in (
+        ("houses", (ghost, ghost)),
+        ("businesses", (pumpkin, pumpkin)),
+    ):
         left, right = pair
-        im = compose_pair(left, right, canvas, gap=gap, glyph_height_ratio=ratio)
+        im = compose_pair(left, right, CANVAS, gap=GAP)
         im.save(OUT_1X[key], optimize=True)
-        cw, ch = canvas
-        im2 = compose_pair(
-            left,
-            right,
-            (cw * 2, ch * 2),
-            gap=gap * 2,
-            glyph_height_ratio=ratio,
-        )
+        im2 = compose_pair(left, right, CANVAS * 2, gap=GAP * 2)
         im2.save(OUT_2X[key], optimize=True)
         print("wrote", OUT_1X[key].name, OUT_2X[key].name)
 
-    mixed_canvas = (92, 50)
-    mixed_ratio = 0.74
-    mixed = compose_mixed_halves(ghost, pumpkin, mixed_canvas, glyph_height_ratio=mixed_ratio)
+    mixed = compose_mixed_halves(ghost, pumpkin, CANVAS)
     mixed.save(OUT_1X["mixed"], optimize=True)
-    cw, ch = mixed_canvas
-    mixed2 = compose_mixed_halves(
-        ghost,
-        pumpkin,
-        (cw * 2, ch * 2),
-        glyph_height_ratio=mixed_ratio,
-    )
+    mixed2 = compose_mixed_halves(ghost, pumpkin, CANVAS * 2)
     mixed2.save(OUT_2X["mixed"], optimize=True)
     print("wrote", OUT_1X["mixed"].name, OUT_2X["mixed"].name)
 
