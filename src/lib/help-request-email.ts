@@ -24,6 +24,14 @@ export function helpRequestEmailConfigured(): boolean {
   return false;
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function helpRequestEmailSubject(record: StoredHelpRequest): string {
   const ticket = helpRequestPublicId(record.id);
   const phone = record.phone?.trim();
@@ -41,6 +49,9 @@ async function sendViaResend(record: StoredHelpRequest, to: string[]): Promise<b
     process.env.HELP_REQUEST_EMAIL_FROM?.trim() || "בשכונה Halloween <onboarding@resend.dev>";
   const text = formatHelpRequestPlain(record);
 
+  const replyTo =
+    process.env.HELP_REQUEST_REPLY_TO?.trim() || helpRequestNotifyEmails()[0] || undefined;
+
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -50,8 +61,10 @@ async function sendViaResend(record: StoredHelpRequest, to: string[]): Promise<b
     body: JSON.stringify({
       from,
       to,
+      ...(replyTo ? { reply_to: replyTo } : {}),
       subject: helpRequestEmailSubject(record),
       text,
+      html: `<pre style="font-family:system-ui,sans-serif;font-size:14px;white-space:pre-wrap;line-height:1.5">${escapeHtml(text)}</pre>`,
     }),
   });
 
