@@ -72,15 +72,34 @@ def compose_pair(
     return out
 
 
+def compose_mixed_halves(
+    ghost: Image.Image,
+    pumpkin: Image.Image,
+    canvas: tuple[int, int],
+    *,
+    glyph_height_ratio: float,
+) -> Image.Image:
+    """One glyph centered in each half — matches the purple/orange split on the pin."""
+    cw, ch = canvas
+    out = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
+    half = cw // 2
+    gh = int(ch * glyph_height_ratio)
+    ghost_r = resize_glyph(ghost, gh)
+    pump_r = resize_glyph(pumpkin, gh)
+    y0 = (ch - gh) // 2
+    out.alpha_composite(ghost_r, (half - ghost_r.width) // 2, y0))
+    out.alpha_composite(pump_r, (half + (half - pump_r.width) // 2, y0))
+    return out
+
+
 def build() -> None:
     ghost = trim(Image.open(GHOST).convert("RGBA"))
     pumpkin = trim(Image.open(PUMPKIN).convert("RGBA"))
-    specs: dict[str, tuple[tuple[int, int], int, float, tuple[Image.Image, Image.Image]]] = {
+    pair_specs: dict[str, tuple[tuple[int, int], int, float, tuple[Image.Image, Image.Image]]] = {
         "houses": ((84, 50), 8, 0.78, (ghost, ghost)),
         "businesses": ((84, 50), 8, 0.78, (pumpkin, pumpkin)),
-        "mixed": ((92, 50), 10, 0.76, (ghost, pumpkin)),
     }
-    for key, (canvas, gap, ratio, pair) in specs.items():
+    for key, (canvas, gap, ratio, pair) in pair_specs.items():
         left, right = pair
         im = compose_pair(left, right, canvas, gap=gap, glyph_height_ratio=ratio)
         im.save(OUT_1X[key], optimize=True)
@@ -94,6 +113,20 @@ def build() -> None:
         )
         im2.save(OUT_2X[key], optimize=True)
         print("wrote", OUT_1X[key].name, OUT_2X[key].name)
+
+    mixed_canvas = (92, 50)
+    mixed_ratio = 0.74
+    mixed = compose_mixed_halves(ghost, pumpkin, mixed_canvas, glyph_height_ratio=mixed_ratio)
+    mixed.save(OUT_1X["mixed"], optimize=True)
+    cw, ch = mixed_canvas
+    mixed2 = compose_mixed_halves(
+        ghost,
+        pumpkin,
+        (cw * 2, ch * 2),
+        glyph_height_ratio=mixed_ratio,
+    )
+    mixed2.save(OUT_2X["mixed"], optimize=True)
+    print("wrote", OUT_1X["mixed"].name, OUT_2X["mixed"].name)
 
 
 def main() -> None:

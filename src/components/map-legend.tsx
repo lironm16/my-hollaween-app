@@ -145,23 +145,23 @@ const BASE_GROUPS: { title: string; items: { key: string; label: string; node: R
     title: "סוג המקום",
     items: [
       { key: "house-kind", label: "בית", node: <SwatchPin scare="mild" /> },
-      { key: "poi-kind", label: "נקודת עניין", node: <SwatchPin scare="mild" poi /> },
+      { key: "poi-kind", label: "עסק", node: <SwatchPin scare="mild" poi /> },
+      { key: "school-kind", label: "בית ספר", node: <SwatchPin school /> },
       {
         key: "building-houses",
-        label: "בניין — בתים",
+        label: "כמה בתים",
         node: <SwatchPin multi multiClusterKind="houses" />,
       },
       {
         key: "building-businesses",
-        label: "בניין — עסקים",
+        label: "כמה עסקים",
         node: <SwatchPin multi multiClusterKind="businesses" />,
       },
       {
         key: "building-mixed",
-        label: "בניין — מעורב",
+        label: "מעורב",
         node: <SwatchPin multi multiClusterKind="mixed" />,
       },
-      { key: "school-kind", label: "בית ספר", node: <SwatchPin school /> },
       { key: "practice-kind", label: "בית תרגול", node: <SwatchPin practice /> },
     ],
   },
