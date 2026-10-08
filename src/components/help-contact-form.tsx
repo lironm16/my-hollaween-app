@@ -156,9 +156,7 @@ export function HelpContactForm() {
         toast.error(msg);
         return;
       }
-      const id = data.ticket ?? "ok";
-      setTicket(id);
-      toast.success("הפנייה נשלחה — אם אין מייל, בדקו ספאם או חפשו [Halloween Help]");
+      setTicket(data.ticket ?? "ok");
     } catch {
       const msg = "אין חיבור לשרת. בדקו רשת ונסו שוב.";
       setError(msg);
@@ -174,11 +172,6 @@ export function HelpContactForm() {
         <div className="flex flex-col items-center gap-2 text-center">
           <CheckCircle2 className="size-12 text-emerald-400" aria-hidden />
           <h2 className="text-xl font-semibold text-orange-50">קיבלנו את הפנייה</h2>
-          <p className="text-lg text-violet-100">
-            {phone.trim()
-              ? "ננסה לחזור אליכם לפי הטלפון שהשארתם."
-              : "אם השארתם טלפון — נחזור אליכם."}
-          </p>
           <p className="text-sm text-violet-300/90" dir="ltr">
             #{ticket}
           </p>

@@ -2,11 +2,22 @@ import nodemailer from "nodemailer";
 import { formatHelpRequestPlain, helpRequestPublicId } from "@/lib/help-request-format";
 import type { StoredHelpRequest } from "@/lib/help-request-schema";
 
+function cleanEnvValue(raw: string): string {
+  return raw.trim().replace(/^["']+|["']+$/g, "");
+}
+
 /** Comma- or semicolon-separated inbox list. */
 export function helpRequestNotifyEmails(): string[] {
   const raw = process.env.HELP_REQUEST_NOTIFY_EMAIL?.trim();
   if (!raw) return [];
-  return [...new Set(raw.split(/[,;]/).map((s) => s.trim()).filter(Boolean))];
+  return [
+    ...new Set(
+      raw
+        .split(/[,;]/)
+        .map((s) => cleanEnvValue(s))
+        .filter(Boolean),
+    ),
+  ];
 }
 
 export function helpRequestSmtpConfigured(): boolean {
@@ -42,7 +53,7 @@ function helpRequestEmailSubject(record: StoredHelpRequest): string {
 }
 
 async function sendViaResend(record: StoredHelpRequest, to: string[]): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const apiKey = cleanEnvValue(process.env.RESEND_API_KEY ?? "");
   if (!apiKey) return false;
 
   // ASCII From matches Resend dashboard tests — Hebrew display names hurt Gmail inbox placement.
