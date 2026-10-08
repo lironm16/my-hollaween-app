@@ -15,6 +15,7 @@ export function formatHelpRequestPlain(record: StoredHelpRequest): string {
   if (record.topic) lines.push(`נושא: ${HELP_REQUEST_TOPIC_LABELS[record.topic]}`);
   if (record.phone) lines.push(`טלפון: ${record.phone}`);
   if (record.houseHint?.trim()) lines.push(`בית/כתובת: ${record.houseHint.trim()}`);
+  if (record.screenshotUrl?.trim()) lines.push(`צילום מסך: ${record.screenshotUrl.trim()}`);
   lines.push("", record.message.trim());
   const ctx = record.context;
   if (ctx && typeof ctx === "object") {

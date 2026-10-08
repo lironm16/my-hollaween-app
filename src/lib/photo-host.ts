@@ -185,3 +185,8 @@ export async function uploadPublicPhoto(
   });
   return { url, host: "litterbox" };
 }
+
+/** Help form screenshots — temporary hosting only (~72h), no Blob quota use. */
+export async function uploadTemporaryLitterboxImage(buf: Buffer): Promise<string> {
+  return postFile(LITTERBOX, { reqtype: "fileupload", time: "72h" }, asBlob(buf));
+}

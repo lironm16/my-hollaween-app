@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { isValidOwnerPhone, normalizeOwnerPhone } from "@/lib/owner-phone";
 
-export const HELP_REQUEST_ROLES = ["owner", "visitor"] as const;
+export const HELP_REQUEST_ROLES = ["owner", "visitor", "other"] as const;
 export type HelpRequestRole = (typeof HELP_REQUEST_ROLES)[number];
 
-export const HELP_REQUEST_PLATFORMS = ["android", "iphone", "other"] as const;
+export const HELP_REQUEST_PLATFORMS = ["android", "iphone", "computer", "other"] as const;
 export type HelpRequestPlatform = (typeof HELP_REQUEST_PLATFORMS)[number];
 
 export const HELP_REQUEST_TOPICS = [
@@ -35,10 +35,17 @@ const contextSchema = z
     language: z.string().max(32).optional(),
     viewport: z.string().max(32).optional(),
     timezone: z.string().max(64).optional(),
-    detectedPlatform: z.enum(["android", "iphone", "other"]).optional(),
+    detectedPlatform: z.enum(["android", "iphone", "computer", "other"]).optional(),
     neighborhoodLabel: z.string().max(120).optional(),
   })
   .passthrough();
+
+const screenshotUrlSchema = z
+  .string()
+  .trim()
+  .max(500)
+  .refine((v) => !v || /^https?:\/\//i.test(v), "קישור תמונה לא תקין")
+  .optional();
 
 export const helpRequestSubmitSchema = z.object({
   name: z.string().trim().min(2, "נא למלא שם.").max(80),
@@ -48,6 +55,7 @@ export const helpRequestSubmitSchema = z.object({
   topic: z.enum(HELP_REQUEST_TOPICS).optional(),
   message: z.string().trim().min(10, "ספרו בקצרה מה קרה (לפחות 10 תווים).").max(2000),
   houseHint: z.string().trim().max(120).optional(),
+  screenshotUrl: screenshotUrlSchema,
   /** Honeypot — must stay empty. */
   company: z.string().max(0).optional(),
   context: contextSchema.optional(),
@@ -55,7 +63,7 @@ export const helpRequestSubmitSchema = z.object({
 
 export type HelpRequestSubmitInput = z.infer<typeof helpRequestSubmitSchema>;
 
-export type StoredHelpRequest = HelpRequestSubmitInput & {
+export type StoredHelpRequest = Omit<HelpRequestSubmitInput, "company" | "phone"> & {
   id: string;
   createdAt: string;
   phone: string;
@@ -71,12 +79,14 @@ export const HELP_REQUEST_TOPIC_LABELS: Record<HelpRequestTopic, string> = {
 };
 
 export const HELP_REQUEST_ROLE_LABELS: Record<HelpRequestRole, string> = {
-  owner: "בעל/ת בית",
-  visitor: "מבקר/ת",
+  owner: "בעל בית",
+  visitor: "מבקר",
+  other: "אחר",
 };
 
 export const HELP_REQUEST_PLATFORM_LABELS: Record<HelpRequestPlatform, string> = {
   android: "אנדרואיד",
   iphone: "אייפון",
-  other: "אחר / לא בטוח/ה",
+  computer: "מחשב",
+  other: "אחר",
 };

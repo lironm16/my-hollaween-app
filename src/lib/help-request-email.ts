@@ -76,6 +76,7 @@ async function sendViaFormSubmit(record: StoredHelpRequest, to: string[]): Promi
       role: record.role,
       platform: record.platform,
       phone: record.phone || "(לא הושאר)",
+      screenshot: record.screenshotUrl || "(ללא)",
       message: text,
     }),
   });

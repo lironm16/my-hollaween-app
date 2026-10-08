@@ -7,7 +7,8 @@ function detectedPlatformFromUa(): HelpRequestPlatform {
   const ua = navigator.userAgent;
   if (isAndroidUserAgent(ua)) return "android";
   if (isIosUserAgent(ua)) return "iphone";
-  return "other";
+  if (/mobile/i.test(ua)) return "other";
+  return "computer";
 }
 
 function isStandaloneDisplay(): boolean {

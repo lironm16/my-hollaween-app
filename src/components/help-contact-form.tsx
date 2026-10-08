@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { CheckCircle2, ImagePlus, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { collectHelpRequestContext } from "@/lib/help-request-client";
+import { compressJpegFile } from "@/lib/compress-image";
 import {
   HELP_REQUEST_PLATFORM_LABELS,
   HELP_REQUEST_PLATFORMS,
@@ -26,7 +27,8 @@ function defaultPlatform(): HelpRequestPlatform {
   const ua = navigator.userAgent;
   if (isAndroidUserAgent(ua)) return "android";
   if (isIosUserAgent(ua)) return "iphone";
-  return "other";
+  if (/mobile/i.test(ua)) return "other";
+  return "computer";
 }
 
 function ChoiceGroup<T extends string>({
@@ -80,17 +82,56 @@ export function HelpContactForm() {
   const [houseHint, setHouseHint] = useState("");
   const [message, setMessage] = useState("");
   const [company, setCompany] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ticket, setTicket] = useState<string | null>(null);
 
   const topicOptions = useMemo(() => HELP_REQUEST_TOPICS, []);
 
+  function clearPhoto() {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function onPickPhoto(file: File | null) {
+    if (!file) return;
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  }
+
+  async function uploadScreenshotIfNeeded(): Promise<string | undefined> {
+    if (!photoFile) return undefined;
+    const dataUrl = await compressJpegFile(photoFile);
+    const blob = await fetch(dataUrl).then((r) => r.blob());
+    const form = new FormData();
+    form.append("file", blob, "screenshot.jpg");
+    const res = await fetch("/api/help-request/screenshot", { method: "POST", body: form });
+    const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+    if (!res.ok || !data.url) {
+      throw new Error(data.error ?? "העלאת התמונה נכשלה");
+    }
+    return data.url;
+  }
+
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
     setBusy(true);
     try {
+      let screenshotUrl: string | undefined;
+      if (photoFile) {
+        try {
+          screenshotUrl = await uploadScreenshotIfNeeded();
+        } catch (uploadError) {
+          setError(uploadError instanceof Error ? uploadError.message : "העלאת התמונה נכשלה");
+          return;
+        }
+      }
+
       const res = await fetch("/api/help-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -102,6 +143,7 @@ export function HelpContactForm() {
           topic: topic || undefined,
           houseHint: houseHint.trim() || undefined,
           message,
+          screenshotUrl,
           company,
           context: collectHelpRequestContext(),
         }),
@@ -128,7 +170,7 @@ export function HelpContactForm() {
           <p className="text-lg text-violet-100">
             {phone.trim()
               ? "ננסה לחזור אליכם לפי הטלפון שהשארתם."
-              : "אם השארתם טלפון — נחזור אליכם. אפשר גם לבדוק שוב בעזרה בשאלות ותשובות."}
+              : "אם השארתם טלפון — נחזור אליכם."}
           </p>
           <p className="text-sm text-violet-300/90" dir="ltr">
             #{ticket}
@@ -141,7 +183,7 @@ export function HelpContactForm() {
   return (
     <form onSubmit={(e) => void onSubmit(e)} className="space-y-5">
       <p className="text-lg leading-relaxed text-orange-100/95">
-        משהו לא עובד? נשמח לעזור. השאירו פרטים — אפשר גם בלי טלפון, ואז נענה כשאפשר דרך עדכונים באפליקציה.
+        משהו לא עובד? נשמח לעזור. השאירו פרטים — אפשר גם בלי טלפון.
       </p>
 
       <div className="hidden" aria-hidden>
@@ -169,7 +211,7 @@ export function HelpContactForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="help-phone">טלפון (אופציונלי — לחזרה אליכם)</Label>
+        <Label htmlFor="help-phone">טלפון — לחזרה אליכם</Label>
         <Input
           id="help-phone"
           type="tel"
@@ -194,7 +236,7 @@ export function HelpContactForm() {
       />
 
       <ChoiceGroup
-        legend="איזה טלפון?"
+        legend="איזה מכשיר?"
         name="help-platform"
         value={platform}
         onChange={setPlatform}
@@ -203,7 +245,7 @@ export function HelpContactForm() {
       />
 
       <fieldset className="space-y-2">
-        <legend className="text-base font-medium text-orange-100">נושא (אופציונלי)</legend>
+        <legend className="text-base font-medium text-orange-100">נושא</legend>
         <select
           value={topic}
           onChange={(e) => setTopic(e.target.value as HelpRequestTopic | "")}
@@ -220,7 +262,7 @@ export function HelpContactForm() {
 
       {role === "owner" ? (
         <div className="space-y-2">
-          <Label htmlFor="help-house">שם הבית או כתובת (אופציונלי)</Label>
+          <Label htmlFor="help-house">שם הבית או כתובת</Label>
           <Input
             id="help-house"
             value={houseHint}
@@ -245,6 +287,43 @@ export function HelpContactForm() {
         />
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="help-photo">צילום מסך</Label>
+        <p className="text-sm text-violet-300/90">התמונה נשמרת בשרת זמני לכ־72 שעות.</p>
+        <input
+          ref={fileInputRef}
+          id="help-photo"
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => void onPickPhoto(e.target.files?.[0] ?? null)}
+        />
+        {photoPreview ? (
+          <div className="relative overflow-hidden rounded-xl ring-1 ring-orange-500/25">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={photoPreview} alt="" className="max-h-48 w-full object-contain bg-[#12081a]" />
+            <button
+              type="button"
+              aria-label="הסרת תמונה"
+              onClick={clearPhoto}
+              className="absolute left-2 top-2 rounded-full bg-black/60 p-1.5 text-orange-100"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full border-orange-400/40 text-orange-100"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <ImagePlus className="size-5" aria-hidden />
+            הוספת צילום מסך
+          </Button>
+        )}
+      </div>
+
       {error ? <p className="text-base text-red-300">{error}</p> : null}
 
       <Button
@@ -262,10 +341,6 @@ export function HelpContactForm() {
           "שליחה"
         )}
       </Button>
-
-      <p className="text-sm leading-relaxed text-violet-300/85">
-        עם השליחה נשלח גם מידע טכני (גרסת אפליקציה, עמוד, מכשיר) — כדי שנוכל לעזור מהר יותר. לא נשלח קודי עריכה.
-      </p>
     </form>
   );
 }

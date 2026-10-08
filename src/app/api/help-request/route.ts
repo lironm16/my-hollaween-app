@@ -43,8 +43,14 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof Error && error.message === "HELP_REQUEST_NOT_CONFIGURED") {
       return NextResponse.json(
-        { error: "לא הצלחנו לשמור את הפנייה.", code: "NOT_CONFIGURED" },
+        { error: "טופס העזרה לא מוגדר (חסר HELP_REQUEST_NOTIFY_EMAIL).", code: "NOT_CONFIGURED" },
         { status: 503 },
+      );
+    }
+    if (error instanceof Error && error.message === "HELP_REQUEST_EMAIL_FAILED") {
+      return NextResponse.json(
+        { error: "לא הצלחנו לשלוח מייל. נסו שוב בעוד רגע.", code: "EMAIL_FAILED" },
+        { status: 502 },
       );
     }
     console.error("[help-request] persist failed", error);
