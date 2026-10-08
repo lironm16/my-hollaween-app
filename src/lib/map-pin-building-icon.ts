@@ -26,20 +26,20 @@ const CLUSTER_ICON: Record<
   houses: {
     src: PIN_CLUSTER_GHOSTS_SRC,
     src2x: PIN_CLUSTER_GHOSTS_SRC_2X,
-    width: 48,
-    height: 72,
+    width: 84,
+    height: 50,
   },
   businesses: {
     src: PIN_CLUSTER_PUMPKINS_SRC,
     src2x: PIN_CLUSTER_PUMPKINS_SRC_2X,
-    width: 48,
-    height: 72,
+    width: 84,
+    height: 50,
   },
   mixed: {
     src: PIN_CLUSTER_MIXED_SRC,
     src2x: PIN_CLUSTER_MIXED_SRC_2X,
-    width: 48,
-    height: 72,
+    width: 92,
+    height: 50,
   },
 };
 

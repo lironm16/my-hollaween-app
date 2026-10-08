@@ -936,11 +936,13 @@
   top: 44%;
 }
 
-/* Vertical ellipse — grows upward; bottom aligns with single-house pin (56px). */
+/* Horizontal ellipse — centered on map anchor; bottom aligns with single-house pin. */
 .house-pin.is-building.is-cluster-ellipse {
-  width: 54px;
-  height: 74px;
-  margin: -18px auto 0;
+  width: 82px;
+  height: 58px;
+  margin-top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
   border-radius: 999px;
 }
 
@@ -954,7 +956,7 @@
 
 .house-pin.is-building.is-cluster-mixed {
   background: linear-gradient(
-    to bottom,
+    to right,
     #6d28d9 0%,
     #6d28d9 50%,
     #f97316 50%,
@@ -963,8 +965,8 @@
 }
 
 .house-pin.is-building.is-cluster-ellipse .pin-cluster-icon {
-  width: 40px;
-  height: 58px;
+  width: 54px;
+  height: 34px;
   top: 50%;
 }
 
@@ -2872,9 +2874,11 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 
 .house-pin.is-legend.is-cluster-ellipse {
-  width: 54px;
-  height: 74px;
-  margin: -18px auto 0;
+  width: 82px;
+  height: 58px;
+  margin-top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
   border-radius: 999px;
 }
 
@@ -2888,7 +2892,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 
 .house-pin.is-legend.is-cluster-mixed {
   background: linear-gradient(
-    to bottom,
+    to right,
     #6d28d9 0%,
     #6d28d9 50%,
     #f97316 50%,
@@ -2897,8 +2901,8 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 
 .house-pin.is-legend.is-cluster-ellipse .pin-cluster-icon.pin-cluster-duo {
-  width: 40px;
-  height: 58px;
+  width: 54px;
+  height: 34px;
   top: 50%;
 }
 

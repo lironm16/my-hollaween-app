@@ -87,7 +87,7 @@ describe("pinBuildingClusterIconHtml", () => {
     assert.match(html, /pin-cluster-ghosts\.png/);
   });
 
-  it("tags all cluster pins with the shared vertical ellipse class", () => {
+  it("tags all cluster pins with the shared horizontal ellipse class", () => {
     assert.match(buildingClusterPinClass("mixed"), /is-cluster-ellipse/);
     assert.match(buildingClusterPinClass("houses"), /is-cluster-ellipse/);
   });

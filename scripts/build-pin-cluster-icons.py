@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compose vertical twin-ghost / twin-pumpkin / mixed building cluster map icons."""
+"""Compose horizontal twin-ghost / twin-pumpkin / mixed building cluster map icons."""
 
 from __future__ import annotations
 
@@ -51,9 +51,9 @@ def resize_glyph(im: Image.Image, target_h: int) -> Image.Image:
     return im.resize((nw, nh), Image.Resampling.LANCZOS)
 
 
-def compose_stack(
-    top: Image.Image,
-    bottom: Image.Image,
+def compose_pair(
+    left: Image.Image,
+    right: Image.Image,
     canvas: tuple[int, int],
     *,
     gap: int,
@@ -61,34 +61,37 @@ def compose_stack(
 ) -> Image.Image:
     cw, ch = canvas
     out = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
-    gh = int(ch * glyph_height_ratio)
-    top_r = resize_glyph(top, gh)
-    bottom_r = resize_glyph(bottom, gh)
-    total_h = top_r.height + gap + bottom_r.height
-    y0 = max(0, (ch - total_h) // 2)
-    x_top = (cw - top_r.width) // 2
-    x_bottom = (cw - bottom_r.width) // 2
-    out.alpha_composite(top_r, (x_top, y0))
-    out.alpha_composite(bottom_r, (x_bottom, y0 + top_r.height + gap))
+    lh = int(ch * glyph_height_ratio)
+    left_r = resize_glyph(left, lh)
+    right_r = resize_glyph(right, lh)
+    total_w = left_r.width + gap + right_r.width
+    x0 = max(0, (cw - total_w) // 2)
+    y0 = (ch - lh) // 2
+    out.alpha_composite(left_r, (x0, y0))
+    out.alpha_composite(right_r, (x0 + left_r.width + gap, y0))
     return out
 
 
 def build() -> None:
     ghost = trim(Image.open(GHOST).convert("RGBA"))
     pumpkin = trim(Image.open(PUMPKIN).convert("RGBA"))
-    canvas = (48, 72)
-    gap = 4
-    ratio = 0.36
-    stacks: dict[str, tuple[Image.Image, Image.Image]] = {
-        "houses": (ghost, ghost),
-        "businesses": (pumpkin, pumpkin),
-        "mixed": (ghost, pumpkin),
+    specs: dict[str, tuple[tuple[int, int], int, float, tuple[Image.Image, Image.Image]]] = {
+        "houses": ((84, 50), 8, 0.78, (ghost, ghost)),
+        "businesses": ((84, 50), 8, 0.78, (pumpkin, pumpkin)),
+        "mixed": ((92, 50), 10, 0.76, (ghost, pumpkin)),
     }
-    for key, (top, bottom) in stacks.items():
-        im = compose_stack(top, bottom, canvas, gap=gap, glyph_height_ratio=ratio)
+    for key, (canvas, gap, ratio, pair) in specs.items():
+        left, right = pair
+        im = compose_pair(left, right, canvas, gap=gap, glyph_height_ratio=ratio)
         im.save(OUT_1X[key], optimize=True)
         cw, ch = canvas
-        im2 = compose_stack(top, bottom, (cw * 2, ch * 2), gap=gap * 2, glyph_height_ratio=ratio)
+        im2 = compose_pair(
+            left,
+            right,
+            (cw * 2, ch * 2),
+            gap=gap * 2,
+            glyph_height_ratio=ratio,
+        )
         im2.save(OUT_2X[key], optimize=True)
         print("wrote", OUT_1X[key].name, OUT_2X[key].name)
 
