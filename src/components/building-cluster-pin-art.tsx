@@ -2,25 +2,27 @@ import type { BuildingClusterIconKind } from "@/lib/map-pin-building-icon";
 import { pinBuildingClusterIconHtml } from "@/lib/map-pin-building-icon";
 import type { PublicHouse } from "@/lib/types";
 
-function mockCluster(kind: BuildingClusterIconKind): PublicHouse[] {
-  const base = {
+function mockHouse(id: string, kind: "house" | "poi"): PublicHouse {
+  return {
+    id,
+    kind,
     name: "mock",
-    theme: "pumpkin" as const,
+    theme: "pumpkin",
     address: "חרוזים 8",
     arrival: "",
     description: "",
     lat: 32,
     lng: 34,
-    treats: ["candy"] as const,
-    treatStock: { candy: "plenty" as const },
-    scareLevel: "mild" as const,
+    treats: ["candy"],
+    treatStock: { candy: "plenty" },
+    scareLevel: "mild",
     openFrom: "17:00",
     openTo: "21:00",
     openHours: [{ from: "17:00", to: "21:00" }],
     notes: "",
     accessible: false,
-    visit: "come" as const,
-    decorLevel: "medium" as const,
+    visit: "come",
+    decorLevel: "medium",
     decorated: true,
     soldOut: false,
     createdAt: "",
@@ -29,22 +31,16 @@ function mockCluster(kind: BuildingClusterIconKind): PublicHouse[] {
     ownerFrozenUntil: null,
     photoUrl: "",
   };
+}
+
+function mockCluster(kind: BuildingClusterIconKind): PublicHouse[] {
   if (kind === "houses") {
-    return [
-      { ...base, id: "h1", kind: "house" },
-      { ...base, id: "h2", kind: "house" },
-    ];
+    return [mockHouse("h1", "house"), mockHouse("h2", "house")];
   }
   if (kind === "businesses") {
-    return [
-      { ...base, id: "p1", kind: "poi" },
-      { ...base, id: "p2", kind: "poi" },
-    ];
+    return [mockHouse("p1", "poi"), mockHouse("p2", "poi")];
   }
-  return [
-    { ...base, id: "h1", kind: "house" },
-    { ...base, id: "p1", kind: "poi" },
-  ];
+  return [mockHouse("h1", "house"), mockHouse("p1", "poi")];
 }
 
 /** Map + legend cluster glyph (outline ghost / pumpkin pairs). */
