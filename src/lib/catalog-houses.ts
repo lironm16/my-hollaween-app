@@ -1,8 +1,18 @@
 import { isRehearsalOn } from "@/lib/app-clock";
+import { isCatalogRemoved } from "@/lib/catalog-removed";
 import { syncCatalog } from "@/lib/catalog-sync";
 import { catalogHasRealHouses } from "@/lib/house-set";
 import { loadCatalogCacheMeta, loadCatalogCacheSync } from "@/lib/offline-db";
 import type { Catalog, CatalogCacheMeta, PublicHouse } from "@/lib/types";
+
+function catalogStamp(catalog: Pick<Catalog, "updatedAt">) {
+  const n = Date.parse(catalog.updatedAt);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function withoutCatalogRemoved(houses: PublicHouse[]) {
+  return houses.filter((house) => !isCatalogRemoved(house.id));
+}
 
 /** Authoritative count from a server payload; falls back to inline houses on legacy full loads. */
 export function resolveServerHouseCount(
@@ -96,10 +106,20 @@ export function catalogNeedsFullRefresh(
   return catalogCacheIncomplete(catalog, cacheMeta, serverCount);
 }
 
-/** Merge live catalog state with the on-device cache without dropping house ids. */
+/**
+ * Houses shown from catalog state. When live catalog is newer than device cache,
+ * use catalog rows only — merging stale cache back in resurrected deleted ids.
+ */
 export function resolveCatalogHouses(catalog: Catalog | null): PublicHouse[] {
   const cached = loadCatalogCacheSync();
-  if (!catalog?.houses.length) return cached?.houses ?? [];
-  if (!cached?.houses.length) return catalog.houses;
-  return syncCatalog(cached, catalog).houses;
+  if (!catalog?.houses.length) {
+    return withoutCatalogRemoved(cached?.houses ?? []);
+  }
+  if (!cached?.houses.length) {
+    return withoutCatalogRemoved(catalog.houses);
+  }
+  if (catalogStamp(catalog) >= catalogStamp(cached)) {
+    return withoutCatalogRemoved(catalog.houses);
+  }
+  return withoutCatalogRemoved(syncCatalog(cached, catalog).houses);
 }

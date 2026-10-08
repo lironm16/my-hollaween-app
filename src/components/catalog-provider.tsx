@@ -94,10 +94,7 @@ function isFetchTimeout(err: unknown) {
 /** Live API full catalogs may drop ids; never use for CDN snapshot bundles. */
 function syncLiveCatalog(prev: Catalog | null, incoming: CatalogDelta): Catalog {
   const normalized = normalizeCatalogDelta(incoming);
-  const opts =
-    incoming.full === true || isAuthoritativeHouseList(normalized)
-      ? { trustedCompleteList: true as const }
-      : undefined;
+  const opts = incoming.full === true ? { trustedCompleteList: true as const } : undefined;
   return syncCatalog(prev, normalized, opts);
 }
 
@@ -128,10 +125,9 @@ async function fetchFullCatalogBundle(base: Catalog | null): Promise<Catalog | n
       pushTemplates: full.pushTemplates,
       eventSettings: full.eventSettings,
     };
-    const opts = isAuthoritativeHouseList(payload)
-      ? { trustedCompleteList: true as const }
-      : undefined;
-    return withDeviceHouseOverlays(syncCatalog(base, payload, opts));
+    return withDeviceHouseOverlays(
+      syncCatalog(base, payload, { trustedCompleteList: true as const }),
+    );
   } catch {
     return null;
   }

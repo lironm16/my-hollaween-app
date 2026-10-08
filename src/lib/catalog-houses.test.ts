@@ -235,7 +235,7 @@ describe("resolveCatalogHouses", { skip: !hasLocalStorage }, () => {
     assert.deepEqual(resolveCatalogHouses(live).map((item) => item.id).sort(), ["a", "b"]);
   });
 
-  it("keeps cached ids when live catalog is a newer partial delta", () => {
+  it("drops stale cache ids when live catalog is newer (e.g. server delete)", () => {
     const cached = catalog(
       [
         house("a", { updatedAt: "2026-10-31T09:00:00.000Z" }),
@@ -252,7 +252,7 @@ describe("resolveCatalogHouses", { skip: !hasLocalStorage }, () => {
     const ids = resolveCatalogHouses(live)
       .map((item) => item.id)
       .sort();
-    assert.deepEqual(ids, ["a", "b", "c"]);
+    assert.deepEqual(ids, ["a"]);
   });
 
   it("saveCatalogCache unions with the existing device cache instead of shrinking it", async () => {
