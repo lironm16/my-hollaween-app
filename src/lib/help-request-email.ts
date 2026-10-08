@@ -85,7 +85,7 @@ async function sendViaFormSubmit(record: StoredHelpRequest, to: string[]): Promi
   }
   let ok = true;
   try {
-    const data = (await res.json()) as { success?: string };
+    const data = (await res.json()) as { success?: string | boolean };
     ok = data.success === "true" || data.success === true;
   } catch {
     ok = true;
