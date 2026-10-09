@@ -7,7 +7,6 @@ import { houseActionBarPropsFromCard, houseQuickActionPropsFromCard } from "@/co
 import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
 import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import { HouseDetails } from "@/components/house-details";
-import { HouseCardBanners } from "@/components/house-skipped-banner";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
 import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
@@ -144,13 +143,6 @@ export function HouseCard({
           <HouseCardQuickActions {...houseQuickActionPropsFromCard(cardProps)} className="min-w-0 flex-1" />
           <HouseActionBar {...houseActionBarPropsFromCard(cardProps)} />
         </div>
-        <HouseCardBanners
-          skipped={skipped}
-          skipMeta={skipMeta}
-          visited={visited}
-          onRestoreRoute={onRestoreRoute}
-          onToggleVisited={onToggleVisited}
-        />
         <HouseDetails
           house={house}
           distanceM={distanceM}
