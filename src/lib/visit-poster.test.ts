@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { fitFontSize, visitPosterHouseName, visitPosterPath } from "@/lib/visit-poster";
+import {
+  fitFontSize,
+  visitPosterHouseName,
+  visitPosterPath,
+  VISIT_POSTER_LAYOUT,
+} from "@/lib/visit-poster";
 import type { PublicHouse } from "@/lib/types";
 
 describe("visitPosterPath", () => {
@@ -36,5 +41,16 @@ describe("fitFontSize", () => {
 
   it("falls back to min when nothing fits", () => {
     assert.equal(fitFontSize({ min: 12, max: 90, fits: () => false }), 12);
+  });
+});
+
+describe("VISIT_POSTER_LAYOUT", () => {
+  it("centers name inside circle above the QR frame", () => {
+    const { name, qr } = VISIT_POSTER_LAYOUT;
+    // Name box should be horizontally centered around 50%
+    const nameCenter = name.left + name.width / 2;
+    assert.ok(Math.abs(nameCenter - 50) < 1, `name center ${nameCenter} should be ~50%`);
+    // Name box bottom should be strictly above QR top
+    assert.ok(name.top + name.height < qr.top, `name bottom should be above QR top`);
   });
 });

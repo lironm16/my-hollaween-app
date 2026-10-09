@@ -15,19 +15,41 @@ import { resolveHouseIdFromPath } from "@/lib/ids";
 import { cn } from "@/lib/utils";
 
 const PRINT_CSS = `
-@page { size: A4 portrait; margin: 8mm; }
+@page {
+  size: A4 portrait;
+  margin: 10mm 12mm;
+}
 @media print {
-  html, body { height: auto !important; overflow: visible !important; background: #fff !important; }
-  body * { visibility: hidden !important; }
-  .visit-poster-sheet, .visit-poster-sheet * { visibility: visible !important; }
-  .visit-poster-sheet {
-    position: absolute !important;
-    inset: 0 auto auto 0 !important;
-    width: 194mm !important;
-    max-width: none !important;
+  html, body {
+    width: 100% !important;
+    height: 100% !important;
     margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  .visit-poster-sheet, .visit-poster-sheet * {
+    visibility: visible !important;
+  }
+  .visit-poster-sheet {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 186mm !important;
+    max-height: 250mm !important;
+    margin: 0 auto !important;
     box-shadow: none !important;
     border-radius: 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  .visit-poster-sheet .visit-poster {
+    width: 100% !important;
+    max-height: 250mm !important;
+    height: auto !important;
+    margin: 0 auto !important;
   }
 }
 `;
@@ -77,7 +99,7 @@ export default function VisitPosterPage() {
                 נפתחת על הבית והוא מסומן «ביקרתי».{" "}
                 <Link href="/help/scan-visit" className="inline-flex items-center gap-1 text-orange-300 underline">
                   <HelpCircle className="size-4" aria-hidden />
-                  איך סורקים?
+                  איך סורקים ומדפיסים?
                 </Link>
               </p>
               <div className="visit-poster-sheet overflow-hidden rounded-xl shadow-2xl ring-1 ring-orange-500/25">

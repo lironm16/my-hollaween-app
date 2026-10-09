@@ -14,6 +14,7 @@ const OWNER_STEPS = [
   "פותחים את הבית שלכם במפה או ברשימה.",
   "לוחצים על <<פעולות>> ובוחרים <<הצג דף ביקור>>.",
   "לוחצים <<הדפסה>> ותולים את הדף ליד הדלת.",
+  "בספארי באייפון מופיעה לפעמים הודעה על חסימת הדפסה אוטומטית — לוחצים <<Allow>> (אפשר) כדי לפתוח את חלון ההדפסה כרגיל.",
 ] as const;
 
 function Steps({ steps }: { steps: readonly string[] }) {
@@ -48,6 +49,9 @@ export default function ScanVisitHelpPage() {
         <section className="space-y-4 rounded-2xl bg-[#1d1028] p-5 ring-1 ring-orange-500/25">
           <h2 className="text-xl font-semibold text-orange-200">בעלי בית — איך מדפיסים?</h2>
           <Steps steps={OWNER_STEPS} />
+          <div className="rounded-xl border border-orange-500/30 bg-orange-950/40 p-3 text-sm leading-relaxed text-orange-200">
+            <strong>הודעה בספארי באייפון?</strong> אם קופצת חלונית «This website has been blocked from automatically printing», לחצו על <strong>Allow</strong> (אפשר). זוהי הגנת אבטחה שגרתית של אפל לחלונות הדפסה מאתרים.
+          </div>
         </section>
       </div>
     </HelpShell>

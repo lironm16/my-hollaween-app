@@ -10,14 +10,15 @@ function house(id: string, boothNumber: number): PublicHouse {
     name: id,
     theme: "pumpkin",
     kind: "house",
-    description: "דוכן בביה״ס המנחיל",
-    address: "ביה״ס המנחיל",
+    description: "תרגול",
+    address: "רחוב תרגול",
     boothNumber,
     lat: 32.09,
     lng: 34.81,
     treats: ["candy"],
     scareLevel: "mild",
     visit: "come",
+    isPractice: true,
   } as PublicHouse;
 }
 
