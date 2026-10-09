@@ -1,6 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { HelpCircle, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,103 +9,76 @@ import { HouseEditModal } from "@/components/house-edit-modal";
 import { VISIT_POSTER_CSS, VisitPoster } from "@/components/visit-poster";
 import type { PublicHouse } from "@/lib/types";
 
+const PRINT_ROOT_ID = "visit-poster-print-root";
+
 /**
- * Print: visibility isolation (Chrome) + static layout (Safari rejects fixed/inset posters).
- * Refit house name in px before print (visit-poster.tsx).
+ * Printing uses a dedicated copy of the poster portaled straight under <body>, laid out
+ * off-screen at the printed size (194mm wide, stretched ~4% to fill A4). Its name fit is
+ * therefore already correct for paper, and print CSS only has to hide body's other children —
+ * no hidden-but-still-laid-out app UI to push extra pages or clip the sheet.
  */
 export const VISIT_POSTER_PRINT_CSS = `
+#${PRINT_ROOT_ID} {
+  position: fixed;
+  top: 0;
+  left: -10000px;
+  width: 194mm;
+  visibility: hidden;
+  pointer-events: none;
+}
 @page {
   size: A4 portrait;
   margin: 8mm;
 }
 @media print {
-  html {
-    color-scheme: light !important;
-  }
-  .no-print {
-    display: none !important;
-  }
   html, body {
-    width: 100% !important;
+    width: auto !important;
     height: auto !important;
     min-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow: visible !important;
     background: #fff !important;
+    color-scheme: light !important;
   }
-  [data-slot="dialog-backdrop"],
-  [data-slot="dialog-popup"],
-  [data-slot="dialog-content"],
-  .house-edit-modal,
-  .house-edit-modal-body {
+  body > *:not(#${PRINT_ROOT_ID}) {
+    display: none !important;
+  }
+  #${PRINT_ROOT_ID} {
     position: static !important;
-    inset: auto !important;
-    transform: none !important;
-    translate: none !important;
-    scale: none !important;
-    rotate: none !important;
-    overflow: visible !important;
-    max-height: none !important;
-    height: auto !important;
-    width: auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    background: transparent !important;
-  }
-  body * {
-    visibility: hidden !important;
-  }
-  .visit-poster-sheet,
-  .visit-poster-sheet * {
+    left: auto !important;
     visibility: visible !important;
-  }
-  .visit-poster-sheet {
-    position: relative !important;
-    display: block !important;
-    width: 194mm !important;
-    max-width: 194mm !important;
     margin: 0 auto !important;
-    height: auto !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    --tw-ring-shadow: 0 0 #0000 !important;
-    overflow: visible !important;
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-    page-break-after: avoid !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  .visit-poster-sheet .visit-poster {
-    width: 100% !important;
-    height: auto !important;
-    aspect-ratio: 200 / 280 !important;
-    max-height: 277mm !important;
-  }
-  .visit-poster-qr img {
-    object-fit: contain;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
 `;
 
-export function printVisitPoster() {
-  window.dispatchEvent(new Event("hw-visit-poster-refit"));
-  requestAnimationFrame(() => {
-    window.dispatchEvent(new Event("hw-visit-poster-refit"));
-    requestAnimationFrame(() => window.print());
-  });
+const noopSubscribe = () => () => {};
+
+function VisitPosterPrintRoot({ house }: { house: PublicHouse }) {
+  const mounted = useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
+  if (!mounted) return null;
+  return createPortal(
+    <div id={PRINT_ROOT_ID} aria-hidden>
+      <VisitPoster house={house} aspectRatio="200 / 280" />
+    </div>,
+    document.body,
+  );
 }
 
 function VisitPosterActions({ actions }: { actions?: ReactNode }) {
   return (
-    <div className="no-print flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <Button
         type="button"
         className="bg-orange-500 text-lg text-black hover:bg-orange-400"
-        onClick={() => printVisitPoster()}
+        onClick={() => window.print()}
       >
         <Printer className="size-5" />
         הדפסה
@@ -123,9 +97,11 @@ export function VisitPosterPanel({ house, actions }: { house: PublicHouse; actio
         <VisitPoster house={house} />
       </div>
 
+      <VisitPosterPrintRoot house={house} />
+
       <VisitPosterActions actions={actions} />
 
-      <p className="no-print text-base leading-relaxed text-violet-100">
+      <p className="text-base leading-relaxed text-violet-100">
         תלו את הדף ליד הדלת. אורחים סורקים את הקוד במצלמת הטלפון ולוחצים על הקישור — האפליקציה
         נפתחת על הבית והוא מסומן «ביקרתי».{" "}
         <Link href="/help/scan-visit" className="inline-flex items-center gap-1 text-orange-300 underline">

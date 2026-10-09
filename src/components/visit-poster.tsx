@@ -23,7 +23,7 @@ function boxStyle(box: (typeof VISIT_POSTER_LAYOUT)[keyof typeof VISIT_POSTER_LA
   };
 }
 
-/** Fits house name in px for the current poster width (screen or print). */
+/** Fits house name in px for this poster's own width. */
 function useFittedNameSize(name: string) {
   const posterRef = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -72,26 +72,9 @@ function useFittedNameSize(name: string) {
     observer.observe(poster);
     observer.observe(box);
 
-    const onBeforePrint = () => {
-      fit();
-      requestAnimationFrame(fit);
-    };
-    const onAfterPrint = () => fit();
-    const onRefit = () => fit();
-    window.addEventListener("beforeprint", onBeforePrint);
-    window.addEventListener("afterprint", onAfterPrint);
-    window.addEventListener("hw-visit-poster-refit", onRefit);
-    const printMql = window.matchMedia("print");
-    const onPrintMedia = () => fit();
-    printMql.addEventListener("change", onPrintMedia);
-
     return () => {
       cancelled = true;
       observer.disconnect();
-      window.removeEventListener("beforeprint", onBeforePrint);
-      window.removeEventListener("afterprint", onAfterPrint);
-      window.removeEventListener("hw-visit-poster-refit", onRefit);
-      printMql.removeEventListener("change", onPrintMedia);
     };
   }, [name]);
 
@@ -120,7 +103,7 @@ function useVisitQrDataUrl(house: PublicHouse) {
   return dataUrl;
 }
 
-export function VisitPoster({ house }: { house: PublicHouse }) {
+export function VisitPoster({ house, aspectRatio }: { house: PublicHouse; aspectRatio?: string }) {
   const name = visitPosterHouseName(house);
   const { posterRef, boxRef, textRef, fontSizePx } = useFittedNameSize(name);
   const qrDataUrl = useVisitQrDataUrl(house);
@@ -129,7 +112,7 @@ export function VisitPoster({ house }: { house: PublicHouse }) {
     <div
       ref={posterRef}
       className="visit-poster"
-      style={{ aspectRatio: `${VISIT_POSTER_TEMPLATE_WIDTH} / ${VISIT_POSTER_TEMPLATE_HEIGHT}` }}
+      style={{ aspectRatio: aspectRatio ?? `${VISIT_POSTER_TEMPLATE_WIDTH} / ${VISIT_POSTER_TEMPLATE_HEIGHT}` }}
       dir="rtl"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -241,13 +224,6 @@ export const VISIT_POSTER_CSS = `
 .visit-poster-name-word {
   white-space: nowrap;
 }
-@media print {
-  .visit-poster-name {
-    /* Fitted px from JS; never scale with container width in print. */
-    -webkit-text-stroke: 0.12em #3b0764;
-    text-shadow: 0.08em 0.08em 0 #fdba74;
-  }
-}
 .visit-poster-qr {
   display: flex;
   align-items: center;
@@ -259,6 +235,7 @@ export const VISIT_POSTER_CSS = `
   width: 100%;
   height: 100%;
   display: block;
+  object-fit: contain;
   image-rendering: pixelated;
 }
 `;
