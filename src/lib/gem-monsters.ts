@@ -449,7 +449,9 @@ export function gemHuntMapHouses(
 }
 
 /** @deprecated One carrier per address cluster — prefer {@link gemHousesForMap}. */
-export function gemCarrierHousesForMap<T extends Pick<PublicHouse, "id" | "address">>(
+export function gemCarrierHousesForMap<
+  T extends Pick<PublicHouse, "id" | "address" | "lat" | "lng">,
+>(
   houses: readonly T[],
 ): T[] {
   const byCluster = new Map<string, T[]>();
@@ -478,8 +480,10 @@ export type GemClusterSpread = { index: number; size: number };
 
 let gemClusterSpreadByHouseId: ReadonlyMap<string, GemClusterSpread> = new Map();
 
-function rebuildGemClusterSpread(houses: readonly Pick<PublicHouse, "id" | "address">[]) {
-  const byCluster = new Map<string, Pick<PublicHouse, "id" | "address">[]>();
+function rebuildGemClusterSpread(
+  houses: readonly Pick<PublicHouse, "id" | "address" | "lat" | "lng">[],
+) {
+  const byCluster = new Map<string, Pick<PublicHouse, "id" | "address" | "lat" | "lng">[]>();
   for (const house of houses) {
     const key = clusterAddressKeyForHouse(house);
     const list = byCluster.get(key);
