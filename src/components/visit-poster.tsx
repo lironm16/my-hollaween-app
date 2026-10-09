@@ -181,12 +181,13 @@ export const VISIT_POSTER_CSS = `
 .visit-poster-name {
   display: block;
   max-width: 100%;
-  font-family: var(--font-rubik), Rubik, sans-serif;
-  font-weight: 800;
-  line-height: 1.12;
+  font-family: var(--font-rubik-wet-paint), "Rubik Wet Paint", cursive;
+  font-weight: 400;
+  line-height: 1.18;
+  padding-bottom: 0.8cqw;
   color: #5b1a8f;
-  -webkit-text-stroke: 0.15cqw #3b0764;
-  text-shadow: 0.3cqw 0.3cqw 0 #fdba74;
+  -webkit-text-stroke: 0.18cqw #3b0764;
+  text-shadow: 0.35cqw 0.35cqw 0 #fdba74;
   text-wrap: balance;
   overflow-wrap: normal;
   word-break: keep-all;
