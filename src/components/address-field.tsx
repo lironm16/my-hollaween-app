@@ -18,6 +18,7 @@ type Props = {
   emptyHint?: boolean;
   maxLength?: number;
   onFocusChange?: (focused: boolean) => void;
+  placeholder?: string;
 };
 
 export function AddressField({
@@ -30,6 +31,7 @@ export function AddressField({
   emptyHint = true,
   maxLength,
   onFocusChange,
+  placeholder = "רחוב ומספר, או שם מוסד — למשל חרוזים 8",
 }: Props) {
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -116,7 +118,7 @@ export function AddressField({
         minLength={3}
         maxLength={maxLength}
         value={value}
-        placeholder="רחוב ומספר, או שם מוסד — למשל חרוזים 8"
+        placeholder={placeholder}
         aria-autocomplete="list"
         aria-expanded={open && hits.length > 0}
         aria-controls={listId}
