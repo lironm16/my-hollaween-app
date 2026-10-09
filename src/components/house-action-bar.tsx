@@ -24,7 +24,7 @@ import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { GEM_ACTION_FIND_HE, GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
-import { visitPosterPath } from "@/lib/visit-poster";
+import { VisitPosterDialog } from "@/components/visit-poster-panel";
 import type { PublicHouse } from "@/lib/types";
 import { appHeaderBottom, safeAreaInsetBottom } from "@/lib/viewport";
 import { cn } from "@/lib/utils";
@@ -105,6 +105,7 @@ export function HouseActionBar({
   const addressReveal = useAddressReveal();
   const [open, setOpen] = useState(false);
   const [editCodeOpen, setEditCodeOpen] = useState(false);
+  const [visitPosterOpen, setVisitPosterOpen] = useState(false);
   const [panelStyle, setPanelStyle] = useState<CSSProperties>({ visibility: "hidden" });
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -250,7 +251,7 @@ export function HouseActionBar({
         id: "visit-poster",
         label: "הצג דף ביקור",
         icon: <QrCode className={MENU_ICON_CLASS} strokeWidth={2.2} />,
-        href: visitPosterPath(house),
+        onClick: () => setVisitPosterOpen(true),
       });
     }
   }
@@ -380,6 +381,9 @@ export function HouseActionBar({
           editCode={editCode}
           onClose={() => setEditCodeOpen(false)}
         />
+      ) : null}
+      {showVisitPoster ? (
+        <VisitPosterDialog open={visitPosterOpen} house={house} onClose={() => setVisitPosterOpen(false)} />
       ) : null}
       <button
         ref={triggerRef}
