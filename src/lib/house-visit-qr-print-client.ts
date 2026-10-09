@@ -1,9 +1,13 @@
 "use client";
 
 import { toast } from "sonner";
-import { HOUSE_VISIT_QR_PRINT_PX, houseVisitQrPrintDocumentHtml } from "@/lib/house-visit-qr-print";
+import {
+  HOUSE_VISIT_QR_PRINT_PX,
+  houseVisitQrPrintDocumentForHouse,
+} from "@/lib/house-visit-qr-print";
+import type { PublicHouse } from "@/lib/types";
 
-export async function printHouseVisitQrPoster(options: { houseName: string; visitUrl: string }) {
+export async function printHouseVisitQrPoster(options: { house: PublicHouse; visitUrl: string }) {
   const QRCode = await import("qrcode");
   const dataUrl = await QRCode.toDataURL(options.visitUrl, {
     width: HOUSE_VISIT_QR_PRINT_PX,
@@ -17,8 +21,8 @@ export async function printHouseVisitQrPoster(options: { houseName: string; visi
     return;
   }
   win.document.write(
-    houseVisitQrPrintDocumentHtml({
-      houseName: options.houseName,
+    houseVisitQrPrintDocumentForHouse({
+      house: options.house,
       dataUrl,
     }),
   );

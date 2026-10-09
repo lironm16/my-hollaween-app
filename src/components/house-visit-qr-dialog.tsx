@@ -75,7 +75,7 @@ export function HouseVisitQrDialog({
             disabled={!url}
             onClick={() => {
               if (!url) return;
-              void printHouseVisitQrPoster({ houseName: title, visitUrl: url });
+              void printHouseVisitQrPoster({ house, visitUrl: url });
             }}
           >
             <Printer className="size-5" />
