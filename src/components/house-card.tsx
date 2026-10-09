@@ -102,6 +102,7 @@ export function HouseCard({
     skipMeta,
     canEdit: mayEdit,
     editCode: mayEdit ? editCode : undefined,
+    showVisitQr: mayEdit && showVisitQr,
     admin,
     onShowOnMap,
     onShowInList,

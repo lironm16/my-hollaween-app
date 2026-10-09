@@ -8,39 +8,8 @@ import { Button } from "@/components/ui/button";
 import { copyText } from "@/lib/copy-text";
 import { houseHeadline } from "@/lib/labels";
 import { houseVisitQrUrl } from "@/lib/house-visit-qr";
+import { printHouseVisitQrPoster } from "@/lib/house-visit-qr-print-client";
 import type { PublicHouse } from "@/lib/types";
-
-function printVisitQrSheet(options: { title: string; url: string; dataUrl: string }) {
-  const win = window.open("", "_blank", "noopener,noreferrer");
-  if (!win) {
-    toast.error("לא הצלחנו לפתוח חלון הדפסה");
-    return;
-  }
-  const escapedTitle = options.title.replace(/</g, "&lt;");
-  const escapedUrl = options.url.replace(/</g, "&lt;");
-  win.document.write(`<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-  <meta charset="utf-8" />
-  <title>QR ביקור — ${escapedTitle}</title>
-  <style>
-    body { font-family: system-ui, sans-serif; text-align: center; padding: 24px; margin: 0; }
-    h1 { font-size: 1.35rem; margin: 0 0 8px; }
-    p { font-size: 1rem; line-height: 1.5; max-width: 320px; margin: 0 auto 16px; color: #333; }
-    img { width: 240px; height: 240px; }
-    .url { font-size: 0.75rem; word-break: break-all; color: #666; margin-top: 12px; direction: ltr; }
-  </style>
-</head>
-<body>
-  <h1>${escapedTitle}</h1>
-  <p>סרקו עם המצלמה או מהאפליקציה — תסומנו «ביקרתי» ותראו את הבית במפה.</p>
-  <img src="${options.dataUrl}" alt="QR" width="240" height="240" />
-  <p class="url">${escapedUrl}</p>
-  <script>window.onload = function() { window.print(); };</script>
-</body>
-</html>`);
-  win.document.close();
-}
 
 export function HouseVisitQrDialog({
   open,
@@ -103,10 +72,10 @@ export function HouseVisitQrDialog({
           <Button
             type="button"
             className="min-w-0 flex-1 bg-orange-500 text-lg text-black hover:bg-orange-400"
-            disabled={!dataUrl}
+            disabled={!url}
             onClick={() => {
-              if (!dataUrl) return;
-              printVisitQrSheet({ title, url, dataUrl });
+              if (!url) return;
+              void printHouseVisitQrPoster({ houseName: title, visitUrl: url });
             }}
           >
             <Printer className="size-5" />
