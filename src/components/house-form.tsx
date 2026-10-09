@@ -172,14 +172,6 @@ export function HouseForm({
   const ownerPhoneError = ownerPhoneTouched
     ? ownerPhoneValidationError(ownerPhone, ownerPhoneRequired)
     : null;
-  const ph = {
-    addedBy: isNewHouse ? undefined : "ישראל כהן",
-    ownerPhone: isNewHouse ? undefined : "050-1234567",
-    name: isNewHouse ? undefined : "בית משפחת לוי",
-    arrival: isNewHouse ? undefined : "קומה 2, דירה 5, ימינה אחרי השער",
-    notes: isNewHouse ? undefined : "כלב, מדרגות, או משהו שלא קשור להגעה",
-    description: isNewHouse ? undefined : "קישוטים, אווירה, הפתעות בבית או בחצר…",
-  } as const;
   const now = useAppNow();
   const { admin } = useAdminSession();
   const blocked = Boolean(busy || saving);
@@ -528,7 +520,7 @@ export function HouseForm({
             minLength={isNewHouse ? HOUSE_FIELD_LIMITS.addedBy.min : undefined}
             maxLength={HOUSE_FIELD_LIMITS.addedBy.max}
             onChange={(e) => setAddedBy(e.target.value)}
-            placeholder={ph.addedBy}
+            placeholder={isNewHouse ? undefined : "ישראל כהן"}
             className="h-11 bg-[#1d1028] text-lg"
           />
         </Field>
@@ -547,7 +539,7 @@ export function HouseForm({
             onBlur={() => setOwnerPhoneTouched(true)}
             aria-invalid={ownerPhoneError ? true : undefined}
             aria-describedby={ownerPhoneError ? "owner-phone-hint owner-phone-error" : "owner-phone-hint"}
-            placeholder={ph.ownerPhone}
+            placeholder={isNewHouse ? undefined : "050-1234567"}
             className={cn(
               "h-11 bg-[#1d1028] text-lg",
               ownerPhoneError && "ring-2 ring-rose-500/70",
@@ -578,7 +570,7 @@ export function HouseForm({
               const theme = themeFromName(name) ?? form.theme;
               setForm({ ...form, name, theme });
             }}
-            placeholder={ph.name}
+            placeholder={isNewHouse ? undefined : "בית משפחת לוי"}
             className="h-11 bg-[#1d1028] text-lg"
           />
         </div>
@@ -596,7 +588,6 @@ export function HouseForm({
             disabled={blocked}
             maxLength={HOUSE_FIELD_LIMITS.address.max}
             onFocusChange={setAddressFieldActive}
-            placeholder={isNewHouse ? "" : undefined}
           />
         </Field>
         <Field label="שכונה">
@@ -675,7 +666,7 @@ export function HouseForm({
             value={form.arrival}
             maxLength={HOUSE_FIELD_LIMITS.arrival.max}
             onChange={(e) => setForm({ ...form, arrival: e.target.value })}
-            placeholder={ph.arrival}
+            placeholder="קומה 2, דירה 5, ימינה אחרי השער"
           />
         </Field>
         <Field
@@ -686,7 +677,7 @@ export function HouseForm({
             value={form.notes}
             maxLength={HOUSE_FIELD_LIMITS.notes.max}
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            placeholder={ph.notes}
+            placeholder="כלב, מדרגות, או משהו שלא קשור להגעה"
           />
           <p className="text-base text-violet-400">
             מופיעה בכרטיס בנפרד מהוראות ההגעה — למשל כלב, מדרגות, או הערה כללית.
@@ -888,7 +879,7 @@ export function HouseForm({
             value={form.description}
             maxLength={HOUSE_FIELD_LIMITS.description.max}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            placeholder={ph.description}
+            placeholder="קישוטים, אווירה, הפתעות בבית או בחצר…"
             className="min-h-24 text-lg"
           />
           <p className="text-base text-violet-400">מופיע בכרטיס — אפשר להרחיב אם הטקסט ארוך.</p>
