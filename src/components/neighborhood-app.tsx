@@ -594,27 +594,6 @@ export function NeighborhoodApp({
     return () => window.clearTimeout(timer);
   }, [gemHuntFromUrl, focusId, houses, handleToggleGemMenu, selection]);
 
-  const visitFromUrlHandledRef = useRef(false);
-  useEffect(() => {
-    if (!visitFromUrl || !focusId || visitFromUrlHandledRef.current) return;
-    const house = mapListHouses.find((item) => item.id === focusId) ?? houses.find((item) => item.id === focusId);
-    if (!house) return;
-    visitFromUrlHandledRef.current = true;
-    setView("map");
-    selection.selectOnMap(house);
-    const timer = window.setTimeout(() => {
-      if (!visits.visited(focusId)) {
-        onToggleVisited(focusId);
-      }
-      if (typeof window === "undefined") return;
-      const url = new URL(window.location.href);
-      url.searchParams.delete("visit");
-      const next = `${url.pathname}${url.search}${url.hash}`;
-      window.history.replaceState(window.history.state, "", next);
-    }, 200);
-    return () => window.clearTimeout(timer);
-  }, [visitFromUrl, focusId, houses, mapListHouses, onToggleVisited, selection, visits]);
-
   const handleClusterResetAllGems = useCallback((houses: PublicHouse[]) => {
     if (houses.length < 2) return;
     if (!houses.every((h) => gems.collected(h.id))) return;
@@ -837,6 +816,27 @@ export function NeighborhoodApp({
     },
     [houses, performToggleVisited, skips, visits],
   );
+
+  const visitFromUrlHandledRef = useRef(false);
+  const visitFromUrlLatestRef = useRef({ onToggleVisited, visited: visits.visited });
+  visitFromUrlLatestRef.current = { onToggleVisited, visited: visits.visited };
+  useEffect(() => {
+    if (!visitFromUrl || !focusId || visitFromUrlHandledRef.current) return;
+    const house = mapListHouses.find((item) => item.id === focusId) ?? houses.find((item) => item.id === focusId);
+    if (!house) return;
+    visitFromUrlHandledRef.current = true;
+    setView("map");
+    selection.selectOnMap(house);
+    // Not cleared on re-render: selecting the house changes deps, and the visit must still land.
+    window.setTimeout(() => {
+      const latest = visitFromUrlLatestRef.current;
+      if (!latest.visited(focusId)) latest.onToggleVisited(focusId);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("visit");
+      window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    }, 200);
+  }, [visitFromUrl, focusId, houses, mapListHouses, selection]);
+
   const routeListItems = useMemo(() => {
     if (!routeMode || !activeRoute) return [];
     const routeIds = routeHouseIds(activeRoute);
