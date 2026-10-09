@@ -45,6 +45,8 @@ export function HouseCard({
   /** Fetch address/story fields when the row is pin-only from device cache. */
   liveDetail = false,
   clusterBoothTag,
+  /** Parent already shows the server loading/unavailable status. */
+  hideLiveStatus = false,
   ...rest
 }: {
   house: PublicHouse;
@@ -76,6 +78,7 @@ export function HouseCard({
   className?: string;
   liveDetail?: boolean;
   clusterBoothTag?: string | null;
+  hideLiveStatus?: boolean;
 }) {
   void useCatalogRemoved(house.id);
   const mayEdit = canEdit && deviceHouseEditAllowed(house.id);
@@ -126,12 +129,12 @@ export function HouseCard({
       )}
     >
       <div className="px-3 pb-1 pt-2">
-        {shouldFetchLive && loading ? (
+        {shouldFetchLive && loading && !hideLiveStatus ? (
           <p className="mb-2 text-sm text-violet-300" role="status">
             טוען פרטי בית מהשרת…
           </p>
         ) : null}
-        {shouldFetchLive && unavailable ? (
+        {shouldFetchLive && unavailable && !hideLiveStatus ? (
           <p className="mb-2 text-sm text-orange-200" role="alert">
             הבית לא זמין במפה הציבורית.
           </p>
