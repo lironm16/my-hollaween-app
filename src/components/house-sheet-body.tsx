@@ -70,6 +70,7 @@ export function HouseSheetBody({
             className: "border-0 bg-transparent !shadow-none !ring-0",
             clusterBoothTag,
           })}
+          hideLiveStatus
         />
       )}
     </>
