@@ -55,7 +55,7 @@ export default function ScanVisitHelpPage() {
               <strong>Allow</strong> (אפשר). זוהי הגנת אבטחה שגרתית של אפל לחלונות הדפסה מאתרים.
             </p>
             <p>
-              <strong>ספארי במק?</strong> אם מופיע דף שני ריק או שהדף נחתך — בחלון ההדפסה כבו «כותרות ותחתיות» (Headers and Footers) וודאו שהגודל הוא 100%.
+              <strong>ספארי במק?</strong> בחלון ההדפסה: כבו «כותרות ותחתיות» (Headers and Footers), הפעילו «Print backgrounds» / «הדפסת רקעים», וודאו שהגודל הוא 100%.
             </p>
           </div>
         </section>

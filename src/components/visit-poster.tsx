@@ -152,7 +152,12 @@ export function VisitPoster({ house }: { house: PublicHouse }) {
 
       <div ref={boxRef} className="visit-poster-name-box" style={boxStyle(VISIT_POSTER_LAYOUT.name)}>
         <span ref={textRef} className="visit-poster-name" style={{ fontSize: `${fontSizePx}px` }}>
-          {name}
+          {name.split(/\s+/).map((word, index) => (
+            <span key={`${word}-${index}`} className="visit-poster-name-word">
+              {index > 0 ? "\u00a0" : null}
+              {word}
+            </span>
+          ))}
         </span>
       </div>
 
@@ -218,7 +223,10 @@ export const VISIT_POSTER_CSS = `
   padding: 1.2cqw 1.8cqw;
 }
 .visit-poster-name {
-  display: block;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -229,10 +237,9 @@ export const VISIT_POSTER_CSS = `
   color: #5b1a8f;
   -webkit-text-stroke: 0.18cqw #3b0764;
   text-shadow: 0.35cqw 0.35cqw 0 #fdba74;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: normal;
-  hyphens: manual;
+}
+.visit-poster-name-word {
+  white-space: nowrap;
 }
 @media print {
   .visit-poster-name {

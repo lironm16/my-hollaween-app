@@ -9,8 +9,8 @@ import { VISIT_POSTER_CSS, VisitPoster } from "@/components/visit-poster";
 import type { PublicHouse } from "@/lib/types";
 
 /**
- * Visibility-based print (Chrome + Safari). Avoids heavy `body * :has()` rules that
- * blocked Chrome's print dialog. Refit house name in px on beforeprint (visit-poster.tsx).
+ * Print: visibility isolation (Chrome) + static layout (Safari rejects fixed/inset posters).
+ * Refit house name in px before print (visit-poster.tsx).
  */
 export const VISIT_POSTER_PRINT_CSS = `
 @page {
@@ -33,6 +33,27 @@ export const VISIT_POSTER_PRINT_CSS = `
     overflow: visible !important;
     background: #fff !important;
   }
+  [data-slot="dialog-backdrop"],
+  [data-slot="dialog-popup"],
+  [data-slot="dialog-content"],
+  .house-edit-modal,
+  .house-edit-modal-body {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    translate: none !important;
+    scale: none !important;
+    rotate: none !important;
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
   body * {
     visibility: hidden !important;
   }
@@ -41,26 +62,27 @@ export const VISIT_POSTER_PRINT_CSS = `
     visibility: visible !important;
   }
   .visit-poster-sheet {
-    position: fixed !important;
-    inset: 0 !important;
-    margin: auto !important;
+    position: relative !important;
+    display: block !important;
     width: 194mm !important;
     max-width: 194mm !important;
-    max-height: 276mm !important;
+    margin: 0 auto !important;
     height: auto !important;
     box-shadow: none !important;
     border-radius: 0 !important;
     --tw-ring-shadow: 0 0 #0000 !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     page-break-after: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   .visit-poster-sheet .visit-poster {
     width: 100% !important;
     height: auto !important;
-    max-height: 276mm !important;
     aspect-ratio: 200 / 280 !important;
+    max-height: 277mm !important;
   }
   .visit-poster-qr img {
     object-fit: contain;
@@ -71,6 +93,7 @@ export const VISIT_POSTER_PRINT_CSS = `
 export function printVisitPoster() {
   window.dispatchEvent(new Event("hw-visit-poster-refit"));
   requestAnimationFrame(() => {
+    window.dispatchEvent(new Event("hw-visit-poster-refit"));
     requestAnimationFrame(() => window.print());
   });
 }
