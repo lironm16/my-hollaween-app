@@ -1,7 +1,7 @@
 importScripts("/sw-map-tiles.js");
 
-const APP_VERSION = "5.5.3";
-const CACHE = "hw-shell-5.5.3";
+const APP_VERSION = "5.5.4";
+const CACHE = "hw-shell-5.5.4";
 const TILE_CACHE = MapTileCache.TILE_CACHE;
 const PRECACHE = [
   "/offline.html",
@@ -265,6 +265,18 @@ async function navigation(request) {
   }
 
   const cache = await caches.open(CACHE);
+
+  /* QR / shared links (?focus=…&visit=1): cached "/" HTML has no query props, so the scan would be lost. */
+  if (url.search) {
+    try {
+      const res = await fetch(request);
+      if (res && res.ok) return res;
+    } catch {
+      /* offline — fall back to cached shell; the client re-reads the query from the address bar */
+    }
+    return (await cachedDocument(cache, request)) || offlineDocument(cache);
+  }
+
   const cached = await cachedDocument(cache, request);
 
   const refresh = fetch(request)

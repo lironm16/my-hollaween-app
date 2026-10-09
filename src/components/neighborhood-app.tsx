@@ -11,6 +11,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { AppHeader } from "@/components/app-header";
+import { useHomeUrlParams } from "@/hooks/use-home-url-params";
 import { CatalogMetaChip } from "@/components/catalog-meta-chip";
 import { FiltersSheet } from "@/components/filter-menu";
 import { HouseFiltersContent } from "@/components/house-filters-content";
@@ -172,10 +173,10 @@ const NO_GEM_COLLECTED_IDS: string[] = [];
 
 export function NeighborhoodApp({
   initialCatalog,
-  focusId = null,
-  routeShareParam = null,
-  gemHuntFromUrl = false,
-  visitFromUrl = false,
+  focusId: focusIdFromServer = null,
+  routeShareParam: routeShareParamFromServer = null,
+  gemHuntFromUrl: gemHuntFromServer = false,
+  visitFromUrl: visitFromServer = false,
 }: {
   initialCatalog?: Catalog | null;
   focusId?: string | null;
@@ -183,6 +184,12 @@ export function NeighborhoodApp({
   gemHuntFromUrl?: boolean;
   visitFromUrl?: boolean;
 }) {
+  const { focusId, routeShareParam, gemHuntFromUrl, visitFromUrl } = useHomeUrlParams({
+    focusId: focusIdFromServer,
+    routeShareParam: routeShareParamFromServer,
+    gemHuntFromUrl: gemHuntFromServer,
+    visitFromUrl: visitFromServer,
+  });
   const { catalog, loading, offline, unreachable, error, source, refresh } =
     useCatalog(initialCatalog);
   const catalogUpdatedAt = catalog?.updatedAt;
@@ -816,14 +823,18 @@ export function NeighborhoodApp({
     [houses, performToggleVisited, skips, visits],
   );
 
-  const visitFromUrlHandledRef = useRef(false);
+  const visitFromUrlHandledRef = useRef<string | null>(null);
   const visitFromUrlLatestRef = useRef({ onToggleVisited, visited: visits.visited });
   visitFromUrlLatestRef.current = { onToggleVisited, visited: visits.visited };
   useEffect(() => {
-    if (!visitFromUrl || !focusId || visitFromUrlHandledRef.current) return;
+    if (!visitFromUrl || !focusId) {
+      if (!visitFromUrl) visitFromUrlHandledRef.current = null;
+      return;
+    }
+    if (visitFromUrlHandledRef.current === focusId) return;
     const house = mapListHouses.find((item) => item.id === focusId) ?? houses.find((item) => item.id === focusId);
     if (!house) return;
-    visitFromUrlHandledRef.current = true;
+    visitFromUrlHandledRef.current = focusId;
     setView("map");
     selection.selectOnMap(house);
     // Not cleared on re-render: selecting the house changes deps, and the visit must still land.
