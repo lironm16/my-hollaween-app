@@ -23,12 +23,12 @@ function boxStyle(box: (typeof VISIT_POSTER_LAYOUT)[keyof typeof VISIT_POSTER_LA
   };
 }
 
-/** Font sizes are in `cqw` (percent of poster width) so screen and print match. */
+/** Fits house name in px for the current poster width (screen or print). */
 function useFittedNameSize(name: string) {
   const posterRef = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLSpanElement>(null);
-  const [sizeCqw, setSizeCqw] = useState(12);
+  const [fontSizePx, setFontSizePx] = useState(28);
 
   useLayoutEffect(() => {
     const poster = posterRef.current;
@@ -44,7 +44,7 @@ function useFittedNameSize(name: string) {
       const padY = parseFloat(computed.paddingTop || "0") + parseFloat(computed.paddingBottom || "0");
       const maxW = Math.max(10, box.clientWidth - padX);
       const maxH = Math.max(10, box.clientHeight - padY);
-      const best = fitFontSize({
+      const bestCqw = fitFontSize({
         min: 2,
         max: 14,
         precision: 0.1,
@@ -56,8 +56,11 @@ function useFittedNameSize(name: string) {
           return text.scrollWidth <= maxW + 0.5 && text.scrollHeight <= maxH + 0.5;
         },
       });
-      text.style.fontSize = `${best}cqw`;
-      setSizeCqw(best);
+      const bestPx = (bestCqw * posterWidth) / 100;
+      text.style.width = "";
+      text.style.maxWidth = "";
+      text.style.fontSize = `${bestPx}px`;
+      setFontSizePx(bestPx);
     };
 
     fit();
@@ -67,13 +70,32 @@ function useFittedNameSize(name: string) {
     });
     const observer = new ResizeObserver(fit);
     observer.observe(poster);
+    observer.observe(box);
+
+    const onBeforePrint = () => {
+      fit();
+      requestAnimationFrame(fit);
+    };
+    const onAfterPrint = () => fit();
+    const onRefit = () => fit();
+    window.addEventListener("beforeprint", onBeforePrint);
+    window.addEventListener("afterprint", onAfterPrint);
+    window.addEventListener("hw-visit-poster-refit", onRefit);
+    const printMql = window.matchMedia("print");
+    const onPrintMedia = () => fit();
+    printMql.addEventListener("change", onPrintMedia);
+
     return () => {
       cancelled = true;
       observer.disconnect();
+      window.removeEventListener("beforeprint", onBeforePrint);
+      window.removeEventListener("afterprint", onAfterPrint);
+      window.removeEventListener("hw-visit-poster-refit", onRefit);
+      printMql.removeEventListener("change", onPrintMedia);
     };
   }, [name]);
 
-  return { posterRef, boxRef, textRef, sizeCqw };
+  return { posterRef, boxRef, textRef, fontSizePx };
 }
 
 function useVisitQrDataUrl(house: PublicHouse) {
@@ -100,7 +122,7 @@ function useVisitQrDataUrl(house: PublicHouse) {
 
 export function VisitPoster({ house }: { house: PublicHouse }) {
   const name = visitPosterHouseName(house);
-  const { posterRef, boxRef, textRef, sizeCqw } = useFittedNameSize(name);
+  const { posterRef, boxRef, textRef, fontSizePx } = useFittedNameSize(name);
   const qrDataUrl = useVisitQrDataUrl(house);
 
   return (
@@ -129,7 +151,7 @@ export function VisitPoster({ house }: { house: PublicHouse }) {
       </div>
 
       <div ref={boxRef} className="visit-poster-name-box" style={boxStyle(VISIT_POSTER_LAYOUT.name)}>
-        <span ref={textRef} className="visit-poster-name" style={{ fontSize: `${sizeCqw}cqw` }}>
+        <span ref={textRef} className="visit-poster-name" style={{ fontSize: `${fontSizePx}px` }}>
           {name}
         </span>
       </div>
@@ -211,6 +233,13 @@ export const VISIT_POSTER_CSS = `
   overflow-wrap: anywhere;
   word-break: normal;
   hyphens: manual;
+}
+@media print {
+  .visit-poster-name {
+    /* Fitted px from JS; never scale with container width in print. */
+    -webkit-text-stroke: 0.12em #3b0764;
+    text-shadow: 0.08em 0.08em 0 #fdba74;
+  }
 }
 .visit-poster-qr {
   display: flex;

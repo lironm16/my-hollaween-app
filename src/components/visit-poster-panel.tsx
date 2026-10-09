@@ -9,10 +9,8 @@ import { VISIT_POSTER_CSS, VisitPoster } from "@/components/visit-poster";
 import type { PublicHouse } from "@/lib/types";
 
 /**
- * Prints only the poster, wherever it is mounted (route page or popup over the map).
- * Ancestors of the sheet are flattened so no wrapper caps its width or clips it;
- * everything else is removed from layout so nothing pushes it to a second page.
- * The poster is stretched ~4% taller than the template to fill A4 height.
+ * Visibility-based print (Chrome + Safari). Avoids heavy `body * :has()` rules that
+ * blocked Chrome's print dialog. Refit house name in px on beforeprint (visit-poster.tsx).
  */
 export const VISIT_POSTER_PRINT_CSS = `
 @page {
@@ -26,37 +24,30 @@ export const VISIT_POSTER_PRINT_CSS = `
   .no-print {
     display: none !important;
   }
-  html, body,
-  *:has(.visit-poster-sheet) {
-    display: block !important;
-    position: static !important;
-    inset: auto !important;
-    transform: none !important;
-    translate: none !important;
-    scale: none !important;
-    rotate: none !important;
-    width: auto !important;
-    max-width: none !important;
+  html, body {
+    width: 100% !important;
     height: auto !important;
     min-height: 0 !important;
-    max-height: none !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow: visible !important;
     background: #fff !important;
-    box-shadow: none !important;
-    border: 0 !important;
-    outline: 0 !important;
-    animation: none !important;
   }
-  body *:not(:has(.visit-poster-sheet)):not(.visit-poster-sheet):not(.visit-poster-sheet *) {
-    display: none !important;
+  body * {
+    visibility: hidden !important;
+  }
+  .visit-poster-sheet,
+  .visit-poster-sheet * {
+    visibility: visible !important;
   }
   .visit-poster-sheet {
-    width: 100% !important;
+    position: fixed !important;
+    inset: 0 !important;
+    margin: auto !important;
+    width: 194mm !important;
     max-width: 194mm !important;
     max-height: 276mm !important;
-    margin: 0 auto !important;
+    height: auto !important;
     box-shadow: none !important;
     border-radius: 0 !important;
     --tw-ring-shadow: 0 0 #0000 !important;
@@ -71,14 +62,18 @@ export const VISIT_POSTER_PRINT_CSS = `
     max-height: 276mm !important;
     aspect-ratio: 200 / 280 !important;
   }
-  html, body {
-    page-break-after: avoid !important;
-  }
   .visit-poster-qr img {
     object-fit: contain;
   }
 }
 `;
+
+export function printVisitPoster() {
+  window.dispatchEvent(new Event("hw-visit-poster-refit"));
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => window.print());
+  });
+}
 
 function VisitPosterActions({ actions }: { actions?: ReactNode }) {
   return (
@@ -86,7 +81,7 @@ function VisitPosterActions({ actions }: { actions?: ReactNode }) {
       <Button
         type="button"
         className="bg-orange-500 text-lg text-black hover:bg-orange-400"
-        onClick={() => window.print()}
+        onClick={() => printVisitPoster()}
       >
         <Printer className="size-5" />
         הדפסה
