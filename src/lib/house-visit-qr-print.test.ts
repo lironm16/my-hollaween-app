@@ -8,7 +8,7 @@ import {
 import type { PublicHouse } from "@/lib/types";
 
 describe("houseVisitQrPrintDocumentHtml", () => {
-  it("includes Halloween layout, Rubik cheer styling, and half-A4 QR", () => {
+  it("includes Halloween layout, Rubik styling, Scan me for visit text, and printer-friendly background", () => {
     const html = houseVisitQrPrintDocumentHtml({
       houseName: "🎃 בית משפחת כהן",
       dataUrl: "data:image/png;base64,abc",
@@ -16,12 +16,11 @@ describe("houseVisitQrPrintDocumentHtml", () => {
     });
     assert.match(html, /בית משפחת כהן/);
     assert.match(html, /דוכן 3/);
-    assert.match(html, /סרקו לביקור!/);
-    assert.match(html, /Scan to visit/);
+    assert.match(html, /סרקו אותי לביקור!/);
+    assert.match(html, /Scan me for visit/);
     assert.match(html, /fonts\.googleapis\.com.*Rubik/);
-    assert.match(html, /font-weight: 800/);
-    assert.match(html, /#059669/);
-    assert.match(html, /105mm/);
+    assert.match(html, /font-family: Rubik/);
+    assert.match(html, /background: #ffffff;/);
     assert.match(html, /size: A4/);
   });
 
