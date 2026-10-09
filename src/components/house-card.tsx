@@ -137,7 +137,10 @@ export function HouseCard({
             הבית לא זמין במפה הציבורית.
           </p>
         ) : null}
-        <div className="house-card-top-bar mb-2 flex min-w-0 items-center gap-1">
+        <div
+          className="house-card-top-bar mb-2 flex min-w-0 items-center gap-1"
+          onPointerDown={(event) => event.stopPropagation()}
+        >
           <HouseCardQuickActions {...houseQuickActionPropsFromCard(cardProps)} className="min-w-0 flex-1" />
           <HouseActionBar {...houseActionBarPropsFromCard(cardProps)} />
         </div>

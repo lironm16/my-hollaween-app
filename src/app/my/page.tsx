@@ -20,6 +20,7 @@ import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
+import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import {
   forgetPublishedHouse,
@@ -61,7 +62,7 @@ function MyCollectionsPageContent() {
   const searchParams = useSearchParams();
   const { admin } = useAdminSession();
   const now = useAppNow();
-  const { gemBagMenuVisible: showCollected, gemUiVisible: gemUi } = useGemHuntAdminUi(admin);
+  const { gemBagMenuVisible: showCollected } = useGemHuntAdminUi(admin);
   const addHouseOpen = useAddHouseOpen();
   const urlTab = parseTab(searchParams.get("tab"), showCollected);
   const [tab, setTab] = useState<PersonalMarksTab>(urlTab);
@@ -102,7 +103,9 @@ function MyCollectionsPageContent() {
     return owned
       .map((item) => {
         const fromCatalog = catalogHouses.find((house) => house.id === item.id);
-        return item.preview ?? fromCatalog ?? null;
+        const preview = item.preview ?? fromCatalog;
+        if (!preview) return null;
+        return fromCatalog ? { ...fromCatalog, ...preview } : preview;
       })
       .filter((house): house is PublicHouse => Boolean(house && ids.has(house.id)));
   }, [catalogHouses, owned]);
@@ -130,6 +133,8 @@ function MyCollectionsPageContent() {
     if (!showCollected) return [];
     return catalogHouses.filter((house) => gems.collected(house.id));
   }, [catalogHouses, gems, showCollected]);
+
+  const gemCardActionsEnabled = gemHuntVisible(admin);
 
   const housesByTab: Record<PersonalMarksTab, PublicHouse[]> = {
     mine: mineHouses,
@@ -175,12 +180,13 @@ function MyCollectionsPageContent() {
 
   const actionContext = useMemo((): HouseCardActionContext => {
     return {
+      admin,
       catalogSource: catalog ? "network" : null,
       liked: likes.liked,
       visited: visits.visited,
       skipped: skips.skipped,
-      gemCollected: gemUi ? gems.collected : undefined,
-      onToggleGem: gemUi
+      gemCollected: gemCardActionsEnabled ? gems.collected : undefined,
+      onToggleGem: gemCardActionsEnabled
         ? (house) => {
             router.push(`/?focus=${encodeURIComponent(house.id)}&gemHunt=1`);
           }
@@ -201,12 +207,12 @@ function MyCollectionsPageContent() {
       onShowOnMap: (id) => router.push(`/?focus=${encodeURIComponent(id)}`),
     };
   }, [
+    admin,
     catalog,
     likes,
     visits,
     skips,
-    showCollected,
-    gemUi,
+    gemCardActionsEnabled,
     gems,
     tab,
     editFlow.flow?.house.id,

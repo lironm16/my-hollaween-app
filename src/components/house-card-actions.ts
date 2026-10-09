@@ -31,6 +31,8 @@ export type HouseCardActionContext = {
   /** Cluster ⋮ — sequential camera session for every inner house (not per-house «מצא שדון»). */
   onClusterFindAllGems?: (houses: PublicHouse[]) => void;
   onClusterResetAllGems?: (houses: PublicHouse[]) => void;
+  /** When set, per-house gate for the card-top gem button (map/list still use full ctx.onToggleGem). */
+  gemQuickActionEligible?: (house: PublicHouse) => boolean;
   canEdit?: (id: string) => boolean;
   editCodeFor?: (id: string) => string | undefined;
   onEdit?: (house: PublicHouse) => void;
@@ -65,7 +67,10 @@ export function houseCardPropsFor(
     skipMeta: ctx.skipMetaFor?.(id),
     onToggleLike: ctx.onToggleLike ? () => ctx.onToggleLike!(id) : undefined,
     onToggleVisited: ctx.onToggleVisited ? () => ctx.onToggleVisited!(id) : undefined,
-    onToggleGem: ctx.onToggleGem ? () => ctx.onToggleGem!(house) : undefined,
+    onToggleGem:
+      ctx.onToggleGem && (ctx.gemQuickActionEligible?.(house) ?? true)
+        ? () => ctx.onToggleGem!(house)
+        : undefined,
     onSkip: ctx.onSkip && !isSkipped ? () => ctx.onSkip!(id) : undefined,
     onRestoreRoute: ctx.onRestore && isSkipped ? () => ctx.onRestore!(id) : undefined,
     onShowOnMap: ctx.onShowOnMap ? () => ctx.onShowOnMap!(id) : undefined,

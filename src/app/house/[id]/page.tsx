@@ -113,6 +113,12 @@ export default function HousePage() {
         writeHomeView("map");
         router.push(`/?focus=${encodeURIComponent(hid)}`);
       },
+      onToggleGem: gemUi
+        ? (h) => {
+            writeHomeView("map");
+            router.push(`/?focus=${encodeURIComponent(h.id)}&gemHunt=1`);
+          }
+        : undefined,
     };
   }, [
     admin,
@@ -125,6 +131,7 @@ export default function HousePage() {
     canEdit,
     editCode,
     editFlow,
+    router,
   ]);
 
   return (

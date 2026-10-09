@@ -2887,7 +2887,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 50;
+  z-index: 700;
   display: flex;
   flex-direction: column;
   height: 0;
@@ -2984,7 +2984,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .map-sheet-host {
   position: absolute;
   inset: 0;
-  z-index: 50;
+  z-index: 700;
   pointer-events: none;
 }
 
@@ -3251,6 +3251,8 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 
 .house-card-top-bar {
+  position: relative;
+  z-index: 2;
   align-items: stretch;
 }
 
@@ -3258,23 +3260,22 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   display: flex;
   min-width: 0;
   flex: 1;
-  align-items: stretch;
+  align-items: center;
   gap: 0.35rem;
 }
 
 .house-card-quick-action-btn {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.15rem;
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 48px;
+  height: 48px;
   border: 0;
   border-radius: 0.75rem;
   background: #2a1638;
-  padding: 0.35rem 0.25rem;
+  padding: 0;
   color: #ffedd5;
+  touch-action: manipulation;
 }
 
 .house-card-quick-action-btn:active {
@@ -3295,16 +3296,6 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 
 .house-card-quick-action-btn.is-active-skipped {
   color: #ddd6fe;
-}
-
-.house-card-quick-action-label {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.65rem;
-  font-weight: 700;
-  line-height: 1.1;
 }
 
 .house-action-menu {
