@@ -30,6 +30,10 @@ const QUESTIONS = [
     href: "/help/during-route",
   },
   {
+    question: "איך סורקים QR לביקור?",
+    href: "/help/scan-visit",
+  },
+  {
     question: "איך לשתף קוד עריכה?",
     href: "/help/share-edit-code",
   },
