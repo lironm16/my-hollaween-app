@@ -13,6 +13,7 @@ export function HouseEditModal({
   subtitle,
   children,
   className,
+  closeBarClassName,
   /** Keeps the sheet below the OS status bar and scrolls tall content (e.g. visit poster). */
   placement = "center",
 }: {
@@ -22,6 +23,7 @@ export function HouseEditModal({
   subtitle?: string;
   children: ReactNode;
   className?: string;
+  closeBarClassName?: string;
   placement?: "center" | "top-safe";
 }) {
   const topSafe = placement === "top-safe";
@@ -43,7 +45,7 @@ export function HouseEditModal({
           onClose={onClose}
           title={title}
           subtitle={subtitle}
-          className="border-b border-orange-500/20 pb-2"
+          className={cn("border-b border-orange-500/20", topSafe ? "pb-1" : "pb-2", closeBarClassName)}
         />
         <div
           className={cn(

@@ -3956,6 +3956,20 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   padding: 0.5rem 0.75rem 0.25rem;
 }
 
+/** Visit poster popup — safe-area top inset without extra vertical bulk. */
+.hw-overlay-close-bar--minimal-top-safe {
+  padding: calc(0.15rem + env(safe-area-inset-top, 0px)) 0.625rem 0.35rem 0.625rem;
+}
+
+.hw-overlay-close-bar--minimal-top-safe.hw-overlay-close-bar--titled {
+  gap: 0.25rem;
+}
+
+.hw-overlay-close-bar--minimal-top-safe .hw-overlay-close-bar-title > div {
+  font-size: 1.125rem;
+  line-height: 1.25;
+}
+
 .hw-overlay-close-bar--titled {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) 44px;

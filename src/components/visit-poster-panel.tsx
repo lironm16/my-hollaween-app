@@ -2,13 +2,10 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Copy, HelpCircle, Printer } from "lucide-react";
+import { HelpCircle, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HouseEditModal } from "@/components/house-edit-modal";
 import { VISIT_POSTER_CSS, VisitPoster } from "@/components/visit-poster";
-import { copyText } from "@/lib/copy-text";
-import { houseVisitQrUrl } from "@/lib/house-visit-qr";
-import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 
 /**
@@ -73,7 +70,7 @@ export const VISIT_POSTER_PRINT_CSS = `
 }
 `;
 
-function VisitPosterActions({ house, actions }: { house: PublicHouse; actions?: ReactNode }) {
+function VisitPosterActions({ actions }: { actions?: ReactNode }) {
   return (
     <div className="no-print flex flex-wrap items-center gap-2">
       <Button
@@ -83,15 +80,6 @@ function VisitPosterActions({ house, actions }: { house: PublicHouse; actions?: 
       >
         <Printer className="size-5" />
         הדפסה
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        className="text-lg"
-        onClick={() => void copyText(houseVisitQrUrl(house), "קישור הביקור הועתק")}
-      >
-        <Copy className="size-5" />
-        העתקת קישור
       </Button>
       {actions}
     </div>
@@ -107,7 +95,7 @@ export function VisitPosterPanel({ house, actions }: { house: PublicHouse; actio
         <VisitPoster house={house} />
       </div>
 
-      <VisitPosterActions house={house} actions={actions} />
+      <VisitPosterActions actions={actions} />
 
       <p className="no-print text-base leading-relaxed text-violet-100">
         תלו את הדף ליד הדלת. אורחים סורקים את הקוד במצלמת הטלפון ולוחצים על הקישור — האפליקציה
@@ -136,7 +124,7 @@ export function VisitPosterDialog({
       onClose={onClose}
       placement="top-safe"
       title="דף ביקור"
-      subtitle={houseHeadline(house)}
+      closeBarClassName="hw-overlay-close-bar--minimal-top-safe"
       className="w-[min(100%-1rem,34rem)] max-w-[calc(100vw-1rem)]"
     >
       {open ? <VisitPosterPanel house={house} /> : null}
