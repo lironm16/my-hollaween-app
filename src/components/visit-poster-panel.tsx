@@ -73,36 +73,43 @@ export const VISIT_POSTER_PRINT_CSS = `
 }
 `;
 
+function VisitPosterActions({ house, actions }: { house: PublicHouse; actions?: ReactNode }) {
+  return (
+    <div className="no-print flex flex-wrap items-center gap-2">
+      <Button
+        type="button"
+        className="bg-orange-500 text-lg text-black hover:bg-orange-400"
+        onClick={() => window.print()}
+      >
+        <Printer className="size-5" />
+        הדפסה
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        className="text-lg"
+        onClick={() => void copyText(houseVisitQrUrl(house), "קישור הביקור הועתק")}
+      >
+        <Copy className="size-5" />
+        העתקת קישור
+      </Button>
+      {actions}
+    </div>
+  );
+}
+
 export function VisitPosterPanel({ house, actions }: { house: PublicHouse; actions?: ReactNode }) {
   return (
     <div className="space-y-4">
       <style dangerouslySetInnerHTML={{ __html: VISIT_POSTER_CSS + VISIT_POSTER_PRINT_CSS }} />
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          className="bg-orange-500 text-lg text-black hover:bg-orange-400"
-          onClick={() => window.print()}
-        >
-          <Printer className="size-5" />
-          הדפסה
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="text-lg"
-          onClick={() => void copyText(houseVisitQrUrl(house), "קישור הביקור הועתק")}
-        >
-          <Copy className="size-5" />
-          העתקת קישור
-        </Button>
-        {actions}
-      </div>
 
       <div className="visit-poster-sheet overflow-hidden rounded-xl shadow-2xl ring-1 ring-orange-500/25">
         <VisitPoster house={house} />
       </div>
 
-      <p className="text-base leading-relaxed text-violet-100">
+      <VisitPosterActions house={house} actions={actions} />
+
+      <p className="no-print text-base leading-relaxed text-violet-100">
         תלו את הדף ליד הדלת. אורחים סורקים את הקוד במצלמת הטלפון ולוחצים על הקישור — האפליקציה
         נפתחת על הבית והוא מסומן «ביקרתי».{" "}
         <Link href="/help/scan-visit" className="inline-flex items-center gap-1 text-orange-300 underline">
@@ -127,9 +134,10 @@ export function VisitPosterDialog({
     <HouseEditModal
       open={open}
       onClose={onClose}
+      placement="top-safe"
       title="דף ביקור"
       subtitle={houseHeadline(house)}
-      className="max-h-[94dvh] w-[min(100%-1rem,34rem)] max-w-[calc(100vw-1rem)]"
+      className="w-[min(100%-1rem,34rem)] max-w-[calc(100vw-1rem)]"
     >
       {open ? <VisitPosterPanel house={house} /> : null}
     </HouseEditModal>
