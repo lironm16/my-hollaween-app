@@ -460,7 +460,6 @@ export function NeighborhoodApp({
       } else if (openedFrom === "map" && clusterMembers) {
         setView("map");
       }
-      setMapDiamondsVisible(true);
       let xrSession: XRSession | null = null;
       if (isAndroidLike() && webXrHitTestArCached()) {
         xrSession = await requestGemHuntWebXrSession();

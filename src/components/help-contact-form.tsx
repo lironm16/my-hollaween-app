@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { CheckCircle2, ImagePlus, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,17 +21,7 @@ import {
   type HelpRequestRole,
   type HelpRequestTopic,
 } from "@/lib/help-request-schema";
-import { isAndroidUserAgent, isIosUserAgent } from "@/lib/pwa-manifest";
 import { cn } from "@/lib/utils";
-
-function defaultPlatform(): HelpRequestPlatform {
-  if (typeof navigator === "undefined") return "other";
-  const ua = navigator.userAgent;
-  if (isAndroidUserAgent(ua)) return "android";
-  if (isIosUserAgent(ua)) return "iphone";
-  if (/mobile/i.test(ua)) return "other";
-  return "computer";
-}
 
 function ChoiceGroup<T extends string>({
   legend,
@@ -42,7 +33,7 @@ function ChoiceGroup<T extends string>({
 }: {
   legend: string;
   name: string;
-  value: T;
+  value: T | "";
   onChange: (v: T) => void;
   options: readonly T[];
   labels: Record<T, string>;
@@ -77,8 +68,8 @@ function ChoiceGroup<T extends string>({
 export function HelpContactForm() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [role, setRole] = useState<HelpRequestRole>("visitor");
-  const [platform, setPlatform] = useState<HelpRequestPlatform>(() => defaultPlatform());
+  const [role, setRole] = useState<HelpRequestRole | "">("");
+  const [platform, setPlatform] = useState<HelpRequestPlatform | "">("");
   const [topic, setTopic] = useState<HelpRequestTopic | "">("");
   const [houseHint, setHouseHint] = useState("");
   const [message, setMessage] = useState("");
@@ -121,6 +112,14 @@ export function HelpContactForm() {
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
+    if (!role) {
+      setError("נא לבחור מי אתם.");
+      return;
+    }
+    if (!platform) {
+      setError("נא לבחור איזה מכשיר.");
+      return;
+    }
     setBusy(true);
     try {
       let screenshotUrl: string | undefined;
@@ -176,6 +175,9 @@ export function HelpContactForm() {
             #{ticket}
           </p>
         </div>
+        <Link href="/" className={cn(buttonVariants({ size: "lg" }), "w-full bg-orange-500 text-black hover:bg-orange-400")}>
+          חזרה לדף הבית
+        </Link>
       </div>
     );
   }
@@ -227,7 +229,7 @@ export function HelpContactForm() {
       </div>
 
       <ChoiceGroup
-        legend="מי אתם?"
+        legend="מי אתם? *"
         name="help-role"
         value={role}
         onChange={setRole}
@@ -236,7 +238,7 @@ export function HelpContactForm() {
       />
 
       <ChoiceGroup
-        legend="איזה מכשיר?"
+        legend="איזה מכשיר? *"
         name="help-platform"
         value={platform}
         onChange={setPlatform}

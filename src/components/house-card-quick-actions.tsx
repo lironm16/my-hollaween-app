@@ -57,7 +57,7 @@ export function HouseCardQuickActions({
   if (!hasAny) return null;
 
   return (
-    <div className={cn("house-card-quick-actions", className)} dir="rtl" role="toolbar" aria-label="פעולות בית">
+    <div className={cn("house-card-quick-actions", className)} role="toolbar" aria-label="פעולות בית">
       {onToggleVisited ? (
         <button
           type="button"

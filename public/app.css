@@ -2619,9 +2619,6 @@
   .text-balance {
     text-wrap: balance;
   }
-  .text-wrap {
-    text-wrap: wrap;
-  }
   .\[overflow-wrap\:anywhere\] {
     overflow-wrap: anywhere;
   }
@@ -8156,13 +8153,16 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   min-width: 0;
   flex: 1;
   align-items: center;
-  gap: 0.35rem;
+  justify-content: space-evenly;
+  gap: 0.25rem;
 }
 .house-card-quick-action-btn {
   display: grid;
-  flex-shrink: 0;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 3.25rem;
   place-items: center;
-  width: 48px;
+  width: auto;
   height: 48px;
   border: 0;
   border-radius: 0.75rem;
