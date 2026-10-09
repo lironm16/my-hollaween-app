@@ -654,7 +654,7 @@ export function HouseForm({
               size="sm"
               variant="outline"
               onClick={useMyLocation}
-              disabled={schoolCampusPinLocked || blocked}
+              disabled={schoolCampusPinLocked || blocked || !admin}
             >
               {locating ? "מאתרים…" : "המיקום שלי"}
             </Button>
@@ -662,7 +662,9 @@ export function HouseForm({
           <p className="mb-2 text-lg text-violet-300">
             {schoolCampusPinLocked
               ? "מיקום בית הספר קבוע — לא ניתן לגרור את הסיכה."
-              : "אחרי בחירת כתובת הסיכה זזה לשם. אפשר לגרור אותה לכניסה המדויקת."}
+              : admin
+                ? "אחרי בחירת כתובת הסיכה זזה לשם. אפשר לגרור אותה לכניסה המדויקת."
+                : "המיקום נקבע לפי הכתובת שבחרתם. רק מנהל יכול לגרור את הסיכה."}
           </p>
           <div
             className={cn(
@@ -673,11 +675,11 @@ export function HouseForm({
             <HouseMapDynamic
               pickMode
               pick={{ lat: form.lat, lng: form.lng }}
-              pickDraggable={!schoolCampusPinLocked}
+              pickDraggable={admin && !schoolCampusPinLocked}
               onPick={
-                schoolCampusPinLocked
-                  ? undefined
-                  : (lat, lng) => void syncFromPin(lat, lng)
+                admin && !schoolCampusPinLocked
+                  ? (lat, lng) => void syncFromPin(lat, lng)
+                  : undefined
               }
             />
           </div>

@@ -53,7 +53,15 @@ describe("school campus cluster anchor", () => {
 });
 
 describe("clusterAddressKeyForHouse", () => {
-  it("uses house id when address is redacted", () => {
+  it("groups redacted addresses when coordinates match", () => {
+    const a = house("a", "", { lat: 32.0916477, lng: 34.8028691 });
+    const b = house("b", "", { lat: 32.0916477, lng: 34.8028691 });
+    const clusters = clusterHousesByAddress([a, b]);
+    assert.equal(clusters.length, 1);
+    assert.equal(clusters[0]!.houses.length, 2);
+  });
+
+  it("splits redacted addresses at different coordinates", () => {
     const a = house("a", "", { lat: 32.091, lng: 34.802 });
     const b = house("b", "", { lat: 32.092, lng: 34.803 });
     const clusters = clusterHousesByAddress([a, b]);
@@ -72,7 +80,7 @@ describe("clusterHousesByAddress", () => {
     const clusters = clusterHousesByAddress([
       house("a", "חרוזים 8"),
       house("b", "חרוזים 8"),
-      house("c", "חרוזים 10"),
+      house("c", "חרוזים 10", { lat: 32.0919, lng: 34.8031 }),
     ]);
     assert.equal(clusters.length, 2);
     const building = clusters.find((cluster) => cluster.houses.length === 2);

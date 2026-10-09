@@ -13,6 +13,7 @@ import { normalizePoiCategory } from "@/lib/house-kind";
 import { normalizeAddressFields } from "@/lib/address-fields";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { assertRealAddress } from "@/lib/geocode";
+import { pinCoordsForOwnerSubmit } from "@/lib/owner-map-pin";
 import { alignPublicHouseCoords } from "@/lib/house-footprint-align";
 import {
   defaultTreatStock,
@@ -126,7 +127,9 @@ export async function submitHouse(
   input: HouseInput,
   options?: { includeEndpoint?: string; addedBy?: string; admin?: boolean },
 ) {
-  await assertRealAddress(input);
+  const pin = await pinCoordsForOwnerSubmit(input, Boolean(options?.admin));
+  const submitInput = { ...input, lat: pin.lat, lng: pin.lng };
+  await assertRealAddress(submitInput);
   const practice = Boolean(options?.admin && input.isPractice);
   const kind = options?.admin && input.kind === "poi" && !practice ? "poi" : "house";
   const poiCategory = normalizePoiCategory(kind, input.poiCategory);
@@ -152,25 +155,25 @@ export async function submitHouse(
         ? input.openHours
         : houseHoursWindows(input),
     );
-    const decor = syncDecorFields({ ...input, visit });
-    const canonical = canonicalAddressForBuilding(input.address, db.houses);
+    const decor = syncDecorFields({ ...submitInput, visit });
+    const canonical = canonicalAddressForBuilding(submitInput.address, db.houses);
     const addressFields = normalizeAddressFields({
       address: canonical,
-      neighborhood: input.neighborhood,
-      lat: input.lat,
-      lng: input.lng,
+      neighborhood: submitInput.neighborhood,
+      lat: submitInput.lat,
+      lng: submitInput.lng,
     });
     const positioned = alignPublicHouseCoords({
       address: addressFields.address,
-      lat: input.lat,
-      lng: input.lng,
+      lat: submitInput.lat,
+      lng: submitInput.lng,
     });
     const boothNumber =
       isSchoolCampusAddress(addressFields.address) && !practice
         ? nextBoothNumberForAddress(db.houses, addressFields.address, "real")
         : null;
     const house: House = {
-      ...input,
+      ...submitInput,
       lat: positioned.lat,
       lng: positioned.lng,
       kind,

@@ -43,6 +43,7 @@ export async function POST(request: Request) {
     const house = await submitHouse({ ...input, ownerPhone }, {
       includeEndpoint: readIncludeEndpoint(json),
       addedBy,
+      admin,
     });
     try {
       await grantOwnerHouse(house.house.id);
