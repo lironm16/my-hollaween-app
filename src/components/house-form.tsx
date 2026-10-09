@@ -14,8 +14,6 @@ import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import {
   scareShort,
   decorShort,
-  suggestedHouseName,
-  nameMatchesTheme,
   themeFromName,
   houseKindLabels,
 } from "@/lib/labels";
@@ -36,7 +34,6 @@ import {
   schoolCampusNeighborhoodForAddress,
 } from "@/lib/school-campus";
 import {
-  HOUSE_THEMES,
   SENSITIVITY_OPTIONS,
   type DecorLevel,
   type HouseInput,
@@ -290,10 +287,6 @@ export function HouseForm({
     });
   }
 
-  function applyNameSuggestion(theme: (typeof HOUSE_THEMES)[number]) {
-    setForm((f) => ({ ...f, theme, name: suggestedHouseName(theme) }));
-  }
-
   function onAddressTyped(value: string) {
     setAddressOk(false);
     setForm((f) => ({ ...f, address: value }));
@@ -527,7 +520,7 @@ export function HouseForm({
             minLength={isNewHouse ? HOUSE_FIELD_LIMITS.addedBy.min : undefined}
             maxLength={HOUSE_FIELD_LIMITS.addedBy.max}
             onChange={(e) => setAddedBy(e.target.value)}
-            placeholder="ישראל כהן"
+            placeholder={isNewHouse ? undefined : "ישראל כהן"}
             className="h-11 bg-[#1d1028] text-lg"
           />
         </Field>
@@ -546,7 +539,7 @@ export function HouseForm({
             onBlur={() => setOwnerPhoneTouched(true)}
             aria-invalid={ownerPhoneError ? true : undefined}
             aria-describedby={ownerPhoneError ? "owner-phone-hint owner-phone-error" : "owner-phone-hint"}
-            placeholder="050-1234567"
+            placeholder={isNewHouse ? undefined : "050-1234567"}
             className={cn(
               "h-11 bg-[#1d1028] text-lg",
               ownerPhoneError && "ring-2 ring-rose-500/70",
@@ -577,29 +570,9 @@ export function HouseForm({
               const theme = themeFromName(name) ?? form.theme;
               setForm({ ...form, name, theme });
             }}
-            placeholder="בית משפחת לוי, או בחרו הצעה"
+            placeholder={isNewHouse ? undefined : "בית משפחת לוי"}
             className="h-11 bg-[#1d1028] text-lg"
           />
-          <p className="mt-2 text-lg text-violet-300">הצעות לשם — לחיצה ממלאת את השדה</p>
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {HOUSE_THEMES.map((theme) => {
-              const selected = nameMatchesTheme(form.name, theme);
-              return (
-                <button
-                  key={theme}
-                  type="button"
-                  onClick={() => applyNameSuggestion(theme)}
-                  className={
-                    selected
-                      ? "rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black"
-                      : "rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
-                  }
-                >
-                  {suggestedHouseName(theme)}
-                </button>
-              );
-            })}
-          </div>
         </div>
       </FormSection>
       <FormSection title="איפה למצוא">
