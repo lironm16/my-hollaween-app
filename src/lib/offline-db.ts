@@ -367,6 +367,14 @@ export function toggleVisited(id: string): string[] {
   return next;
 }
 
+/** Mark visited without toggling off — used for QR / visit=1 links. */
+export function markVisited(id: string): { ids: string[]; newlyMarked: boolean } {
+  if (isVisited(id)) {
+    return { ids: loadVisitedIds(), newlyMarked: false };
+  }
+  return { ids: toggleVisited(id), newlyMarked: true };
+}
+
 const SKIPPED_KEY = "hw-skipped-houses";
 const SKIPPED_META_KEY = "hw-skipped-meta";
 const SKIP_NOTES_KEY = "hw-skip-notes";

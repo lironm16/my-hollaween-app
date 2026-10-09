@@ -175,11 +175,13 @@ export function NeighborhoodApp({
   focusId = null,
   routeShareParam = null,
   gemHuntFromUrl = false,
+  visitFromUrl = false,
 }: {
   initialCatalog?: Catalog | null;
   focusId?: string | null;
   routeShareParam?: string | null;
   gemHuntFromUrl?: boolean;
+  visitFromUrl?: boolean;
 }) {
   const { catalog, loading, offline, unreachable, error, source, refresh } =
     useCatalog(initialCatalog);
@@ -814,6 +816,27 @@ export function NeighborhoodApp({
     },
     [houses, performToggleVisited, skips, visits],
   );
+
+  const visitFromUrlHandledRef = useRef(false);
+  const visitFromUrlLatestRef = useRef({ onToggleVisited, visited: visits.visited });
+  visitFromUrlLatestRef.current = { onToggleVisited, visited: visits.visited };
+  useEffect(() => {
+    if (!visitFromUrl || !focusId || visitFromUrlHandledRef.current) return;
+    const house = mapListHouses.find((item) => item.id === focusId) ?? houses.find((item) => item.id === focusId);
+    if (!house) return;
+    visitFromUrlHandledRef.current = true;
+    setView("map");
+    selection.selectOnMap(house);
+    // Not cleared on re-render: selecting the house changes deps, and the visit must still land.
+    window.setTimeout(() => {
+      const latest = visitFromUrlLatestRef.current;
+      if (!latest.visited(focusId)) latest.onToggleVisited(focusId);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("visit");
+      window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    }, 200);
+  }, [visitFromUrl, focusId, houses, mapListHouses, selection]);
+
   const routeListItems = useMemo(() => {
     if (!routeMode || !activeRoute) return [];
     const routeIds = routeHouseIds(activeRoute);

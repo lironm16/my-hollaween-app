@@ -10,6 +10,7 @@ import {
   MoreVertical,
   Navigation,
   Pencil,
+  QrCode,
   Share2,
 } from "lucide-react";
 import { ImpMenuActiveGlyph } from "@/components/imp-marker-glyph";
@@ -23,6 +24,7 @@ import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { GEM_ACTION_FIND_HE, GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
+import { visitPosterPath } from "@/lib/visit-poster";
 import type { PublicHouse } from "@/lib/types";
 import { appHeaderBottom, safeAreaInsetBottom } from "@/lib/viewport";
 import { cn } from "@/lib/utils";
@@ -70,6 +72,7 @@ export function HouseActionBar({
   skipped,
   editing,
   editCode,
+  showVisitPoster = false,
   navOnly,
   showNav = true,
   menuPlacement = "top",
@@ -91,6 +94,8 @@ export function HouseActionBar({
   editing?: boolean;
   /** Shown to owners/admins in the ⋮ menu — copy or share the 6-digit edit code. */
   editCode?: string;
+  /** Owners/admins — printable visit page with the public visit QR (never the edit code). */
+  showVisitPoster?: boolean;
   navOnly?: boolean;
   showNav?: boolean;
   /** Preferred menu direction; flips automatically if there is not enough room. */
@@ -238,6 +243,14 @@ export function HouseActionBar({
         label: "קוד עריכה",
         icon: <KeyRound className={MENU_ICON_CLASS} strokeWidth={2.2} />,
         onClick: () => setEditCodeOpen(true),
+      });
+    }
+    if (showVisitPoster) {
+      items.push({
+        id: "visit-poster",
+        label: "הצג דף ביקור",
+        icon: <QrCode className={MENU_ICON_CLASS} strokeWidth={2.2} />,
+        href: visitPosterPath(house),
       });
     }
   }
