@@ -506,7 +506,7 @@ export function HouseDetails({
               sheet && "line-clamp-2 [overflow-wrap:anywhere]",
             )}
           >
-            <HouseTitleMarkers liked={liked} gemCollected={gemCollected} />
+            {sheet ? null : <HouseTitleMarkers liked={liked} gemCollected={gemCollected} />}
             {houseHeadline(house)}
           </p>
           {headerMenu ? <div className="house-details-menu shrink-0">{headerMenu}</div> : null}
