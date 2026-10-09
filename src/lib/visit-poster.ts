@@ -12,7 +12,7 @@ type Box = { left: number; top: number; width: number; height: number };
 /** Percent of the template image (896×1200). */
 export const VISIT_POSTER_LAYOUT: { title: Box; name: Box; qr: Box } = {
   title: { left: 12.8, top: 12.2, width: 74.5, height: 8.1 },
-  name: { left: 24, top: 43.5, width: 52, height: 23.5 },
+  name: { left: 20, top: 35.8, width: 60, height: 30.2 },
   qr: { left: 37.6, top: 67.8, width: 25.2, height: 18.8 },
 };
 

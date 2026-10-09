@@ -39,13 +39,18 @@ function useFittedNameSize(name: string) {
     const fit = () => {
       const posterWidth = poster.clientWidth;
       if (!posterWidth) return;
+      const computed = window.getComputedStyle(box);
+      const padX = parseFloat(computed.paddingLeft || "0") + parseFloat(computed.paddingRight || "0");
+      const padY = parseFloat(computed.paddingTop || "0") + parseFloat(computed.paddingBottom || "0");
+      const maxW = Math.max(10, box.clientWidth - padX);
+      const maxH = Math.max(10, box.clientHeight - padY);
       const best = fitFontSize({
         min: 2,
-        max: 16,
+        max: 14,
         precision: 0.1,
         fits: (cqw) => {
           text.style.fontSize = `${(cqw * posterWidth) / 100}px`;
-          return text.scrollWidth <= box.clientWidth + 0.5 && text.scrollHeight <= box.clientHeight + 0.5;
+          return text.scrollWidth <= maxW + 0.5 && text.scrollHeight <= maxH + 0.5;
         },
       });
       text.style.fontSize = `${best}cqw`;
@@ -177,6 +182,14 @@ export const VISIT_POSTER_CSS = `
   align-items: center;
   justify-content: center;
   text-align: center;
+  background: #fdfaf6;
+  border: 0.45cqw solid #3b0764;
+  outline: 0.25cqw solid #f97316;
+  outline-offset: -0.8cqw;
+  border-radius: 1.8cqw;
+  box-shadow: 0 0.8cqw 2.5cqw rgba(20, 5, 30, 0.35);
+  box-sizing: border-box;
+  padding: 1.2cqw 1.8cqw;
 }
 .visit-poster-name {
   display: block;

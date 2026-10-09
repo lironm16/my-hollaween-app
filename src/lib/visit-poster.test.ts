@@ -45,7 +45,7 @@ describe("fitFontSize", () => {
 });
 
 describe("VISIT_POSTER_LAYOUT", () => {
-  it("centers name inside circle above the QR frame", () => {
+  it("centers name inside square card above the QR frame", () => {
     const { name, qr } = VISIT_POSTER_LAYOUT;
     // Name box should be horizontally centered around 50%
     const nameCenter = name.left + name.width / 2;

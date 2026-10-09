@@ -1,18 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { Copy, HelpCircle, Printer } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { ArrowRight, Copy, HelpCircle, Printer } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { VISIT_POSTER_CSS, VisitPoster } from "@/components/visit-poster";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { copyText } from "@/lib/copy-text";
 import { houseVisitQrUrl } from "@/lib/house-visit-qr";
-import { houseSharePath } from "@/lib/nav-links";
 import { resolveHouseIdFromPath } from "@/lib/ids";
-import { cn } from "@/lib/utils";
 
 const PRINT_CSS = `
 @page {
@@ -22,11 +20,24 @@ const PRINT_CSS = `
 @media print {
   html, body {
     width: 100% !important;
-    height: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow: visible !important;
     background: #fff !important;
+  }
+  .poster-screen-container,
+  .poster-screen-main {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .no-print {
+    display: none !important;
   }
   body * {
     visibility: hidden !important;
@@ -35,6 +46,7 @@ const PRINT_CSS = `
     visibility: visible !important;
   }
   .visit-poster-sheet {
+    display: block !important;
     position: relative !important;
     width: 100% !important;
     max-width: 186mm !important;
@@ -42,6 +54,8 @@ const PRINT_CSS = `
     margin: 0 auto !important;
     box-shadow: none !important;
     border-radius: 0 !important;
+    ring: 0 !important;
+    border: none !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
@@ -55,21 +69,32 @@ const PRINT_CSS = `
 `;
 
 export default function VisitPosterPage() {
+  const router = useRouter();
   const params = useParams<{ id: string }>();
   const id = resolveHouseIdFromPath(params.id);
   const { catalog, loading } = useCatalog();
   const owned = useOwnedHouses();
   const house = catalog?.houses.find((h) => h.id === id) ?? owned.find((item) => item.id === id)?.preview;
 
+  const handleBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(`/?focus=${encodeURIComponent(house?.id ?? id)}`);
+    }
+  };
+
   return (
-    <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
+    <div className="poster-screen-container relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <style dangerouslySetInnerHTML={{ __html: VISIT_POSTER_CSS + PRINT_CSS }} />
-      <AppHeader />
-      <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-5 pb-10">
+      <div className="no-print">
+        <AppHeader />
+      </div>
+      <main className="poster-screen-main relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-5 pb-10">
         <div className="mx-auto w-full max-w-xl space-y-4">
           {house ? (
             <>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="no-print flex flex-wrap items-center gap-2">
                 <Button
                   type="button"
                   className="bg-orange-500 text-lg text-black hover:bg-orange-400"
@@ -87,14 +112,22 @@ export default function VisitPosterPage() {
                   <Copy className="size-5" />
                   העתקת קישור
                 </Button>
-                <Link
-                  href={houseSharePath(house)}
-                  className={cn(buttonVariants({ variant: "outline" }), "text-lg")}
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="text-lg gap-1.5"
+                  onClick={handleBack}
                 >
-                  חזרה לבית
-                </Link>
+                  <ArrowRight className="size-5 shrink-0" aria-hidden />
+                  חזרה
+                </Button>
               </div>
-              <p className="text-base leading-relaxed text-violet-100">
+
+              <div className="visit-poster-sheet overflow-hidden rounded-xl shadow-2xl ring-1 ring-orange-500/25">
+                <VisitPoster house={house} />
+              </div>
+
+              <p className="no-print text-base leading-relaxed text-violet-100">
                 תלו את הדף ליד הדלת. אורחים סורקים את הקוד במצלמת הטלפון ולוחצים על הקישור — האפליקציה
                 נפתחת על הבית והוא מסומן «ביקרתי».{" "}
                 <Link href="/help/scan-visit" className="inline-flex items-center gap-1 text-orange-300 underline">
@@ -102,9 +135,6 @@ export default function VisitPosterPage() {
                   איך סורקים ומדפיסים?
                 </Link>
               </p>
-              <div className="visit-poster-sheet overflow-hidden rounded-xl shadow-2xl ring-1 ring-orange-500/25">
-                <VisitPoster house={house} />
-              </div>
             </>
           ) : (
             <p className="text-orange-200">{loading ? "טוענים…" : "הבית לא נמצא."}</p>
