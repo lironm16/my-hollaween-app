@@ -71,7 +71,7 @@ export function houseCardPropsFor(
     onShowInList: ctx.onShowInList ? () => ctx.onShowInList!(id) : undefined,
     canEdit: editAllowed,
     editCode: editAllowed ? ctx.editCodeFor?.(id) : undefined,
-    showVisitQr: editAllowed,
+    showVisitPoster: editAllowed,
     admin: ctx.admin,
     onToggleEdit: editAllowed && ctx.onEdit ? () => ctx.onEdit!(house) : undefined,
     editing: editAllowed && ctx.editingId === id,
@@ -105,7 +105,7 @@ export function houseActionBarPropsFromCard(
     skipped: card.skipped,
     editing: card.editing,
     editCode: card.editCode,
-    showVisitQr: card.showVisitQr,
+    showVisitPoster: card.showVisitPoster,
     menuPlacement: "bottom",
   };
 }

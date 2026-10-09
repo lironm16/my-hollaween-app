@@ -20,11 +20,11 @@ import { SkipOutlineIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
 import { EditCodeDialog } from "@/components/edit-code-dialog";
-import { HouseVisitQrDialog } from "@/components/house-visit-qr-dialog";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { GEM_ACTION_FIND_HE, GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
+import { visitPosterPath } from "@/lib/visit-poster";
 import type { PublicHouse } from "@/lib/types";
 import { appHeaderBottom, safeAreaInsetBottom } from "@/lib/viewport";
 import { cn } from "@/lib/utils";
@@ -72,7 +72,7 @@ export function HouseActionBar({
   skipped,
   editing,
   editCode,
-  showVisitQr = false,
+  showVisitPoster = false,
   navOnly,
   showNav = true,
   menuPlacement = "top",
@@ -94,8 +94,8 @@ export function HouseActionBar({
   editing?: boolean;
   /** Shown to owners/admins in the ⋮ menu — copy or share the 6-digit edit code. */
   editCode?: string;
-  /** Owners/admins — print a visit QR (public link, no edit code). */
-  showVisitQr?: boolean;
+  /** Owners/admins — printable visit page with the public visit QR (never the edit code). */
+  showVisitPoster?: boolean;
   navOnly?: boolean;
   showNav?: boolean;
   /** Preferred menu direction; flips automatically if there is not enough room. */
@@ -105,7 +105,6 @@ export function HouseActionBar({
   const addressReveal = useAddressReveal();
   const [open, setOpen] = useState(false);
   const [editCodeOpen, setEditCodeOpen] = useState(false);
-  const [visitQrOpen, setVisitQrOpen] = useState(false);
   const [panelStyle, setPanelStyle] = useState<CSSProperties>({ visibility: "hidden" });
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -246,12 +245,12 @@ export function HouseActionBar({
         onClick: () => setEditCodeOpen(true),
       });
     }
-    if (showVisitQr) {
+    if (showVisitPoster) {
       items.push({
-        id: "visit-qr",
-        label: "QR לביקור",
+        id: "visit-poster",
+        label: "הצג דף ביקור",
         icon: <QrCode className={MENU_ICON_CLASS} strokeWidth={2.2} />,
-        onClick: () => setVisitQrOpen(true),
+        href: visitPosterPath(house),
       });
     }
   }
@@ -381,9 +380,6 @@ export function HouseActionBar({
           editCode={editCode}
           onClose={() => setEditCodeOpen(false)}
         />
-      ) : null}
-      {showVisitQr ? (
-        <HouseVisitQrDialog open={visitQrOpen} house={house} onClose={() => setVisitQrOpen(false)} />
       ) : null}
       <button
         ref={triggerRef}
