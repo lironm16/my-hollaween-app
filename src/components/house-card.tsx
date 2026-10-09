@@ -2,7 +2,8 @@
 
 import { Card } from "@/components/ui/card";
 import { HouseActionBar } from "@/components/house-action-bar";
-import { houseActionBarPropsFromCard } from "@/components/house-card-actions";
+import { HouseCardQuickActions } from "@/components/house-card-quick-actions";
+import { houseActionBarPropsFromCard, houseQuickActionPropsFromCard } from "@/components/house-card-actions";
 import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
 import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import { HouseDetails } from "@/components/house-details";
@@ -136,6 +137,10 @@ export function HouseCard({
             הבית לא זמין במפה הציבורית.
           </p>
         ) : null}
+        <div className="house-card-top-bar mb-2 flex min-w-0 items-center gap-1">
+          <HouseCardQuickActions {...houseQuickActionPropsFromCard(cardProps)} className="min-w-0 flex-1" />
+          <HouseActionBar {...houseActionBarPropsFromCard(cardProps)} />
+        </div>
         <HouseCardBanners
           skipped={skipped}
           skipMeta={skipMeta}
@@ -160,7 +165,6 @@ export function HouseCard({
           extra={extra}
           canEdit={mayEdit}
           onToggleEdit={mayEdit ? onToggleEdit : undefined}
-          headerMenu={<HouseActionBar {...houseActionBarPropsFromCard(cardProps)} />}
         />
       </div>
     </Card>

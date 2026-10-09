@@ -5,6 +5,7 @@ import type { PublicHouse } from "@/lib/types";
 import type { ComponentProps } from "react";
 import type { HouseActionBar } from "@/components/house-action-bar";
 import type { HouseCard } from "@/components/house-card";
+import type { HouseCardQuickActions } from "@/components/house-card-quick-actions";
 
 /** Shared handlers so list, map sheet, route, search, and /my use the same ⋮ menu. */
 export type HouseCardActionContext = {
@@ -83,6 +84,22 @@ export function houseCardPropsFor(
     expanded: opts?.expanded,
     liveDetail: opts?.liveDetail,
     clusterBoothTag: opts?.clusterBoothTag,
+  };
+}
+
+export function houseQuickActionPropsFromCard(
+  card: ComponentProps<typeof HouseCard>,
+): ComponentProps<typeof HouseCardQuickActions> {
+  return {
+    liked: card.liked,
+    visited: card.visited,
+    gemCollected: card.gemCollected,
+    onToggleLike: card.onToggleLike,
+    onToggleVisited: card.onToggleVisited,
+    onToggleGem: card.onToggleGem,
+    onSkip: card.onSkip,
+    onRestoreRoute: card.onRestoreRoute,
+    skipped: card.skipped,
   };
 }
 

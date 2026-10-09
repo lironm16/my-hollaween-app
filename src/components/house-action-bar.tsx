@@ -3,7 +3,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
-  Heart,
   KeyRound,
   List,
   MapPinned,
@@ -13,16 +12,10 @@ import {
   QrCode,
   Share2,
 } from "lucide-react";
-import { ImpMenuActiveGlyph } from "@/components/imp-marker-glyph";
-import { ImpOutlineIcon } from "@/components/imp-outline-icon";
-import { SavedTrafficIcon, SkipTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
-import { SkipOutlineIcon } from "@/components/skip-icon";
-import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
 import { EditCodeDialog } from "@/components/edit-code-dialog";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
-import { GEM_ACTION_FIND_HE, GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
 import { VisitPosterDialog } from "@/components/visit-poster-panel";
 import type { PublicHouse } from "@/lib/types";
@@ -58,18 +51,18 @@ const MENU_ACTIVE_ICON_CLASS = "size-8";
 
 export function HouseActionBar({
   house,
-  liked,
-  visited,
-  onToggleLike,
-  onToggleVisited,
-  gemCollected,
-  onToggleGem,
+  liked: _liked,
+  visited: _visited,
+  onToggleLike: _onToggleLike,
+  onToggleVisited: _onToggleVisited,
+  gemCollected: _gemCollected,
+  onToggleGem: _onToggleGem,
   onToggleEdit,
   onShowOnMap,
   onShowInList,
-  onSkip,
-  onRestoreRoute,
-  skipped,
+  onSkip: _onSkip,
+  onRestoreRoute: _onRestoreRoute,
+  skipped: _skipped,
   editing,
   editCode,
   showVisitPoster = false,
@@ -175,62 +168,6 @@ export function HouseActionBar({
         });
       },
     });
-    if (onToggleLike) {
-      items.push({
-        id: "like",
-        label: "אהבתי",
-        icon: liked ? (
-          <SavedTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.35rem]" />
-        ) : (
-          <Heart className={MENU_ICON_CLASS} strokeWidth={2.2} />
-        ),
-        onClick: () => onToggleLike(),
-        active: liked,
-      });
-    }
-    if (onToggleVisited) {
-      items.push({
-        id: "visited",
-        label: "ביקרתי",
-        icon: visited ? (
-          <VisitedTrafficIcon
-            className={MENU_ACTIVE_ICON_CLASS}
-            markClassName="size-[1.35rem]"
-            markStrokeWidth={4}
-          />
-        ) : (
-          <VisitedCheck visited={false} size="lg" />
-        ),
-        onClick: () => onToggleVisited(),
-        active: visited,
-      });
-    }
-    if (onToggleGem) {
-      items.push({
-        id: "gem",
-        label: gemCollected ? GEM_FOUND_I_HE : GEM_ACTION_FIND_HE,
-        icon: gemCollected ? (
-          <ImpMenuActiveGlyph className={MENU_ICON_CLASS} />
-        ) : (
-          <ImpOutlineIcon className={MENU_ICON_CLASS} />
-        ),
-        onClick: () => onToggleGem(),
-        active: gemCollected,
-      });
-    }
-    if (onSkip || onRestoreRoute) {
-      items.push({
-        id: "skip",
-        label: skipped ? "דילגתי" : "דילוג",
-        icon: skipped ? (
-          <SkipTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.15rem]" />
-        ) : (
-          <SkipOutlineIcon className={MENU_ICON_CLASS} />
-        ),
-        onClick: skipped ? onRestoreRoute : onSkip,
-        active: skipped,
-      });
-    }
     if (onToggleEdit) {
       items.push({
         id: "edit",

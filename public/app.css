@@ -8146,11 +8146,60 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   width: auto;
   padding: 8px 12px;
 }
+.house-card-top-bar {
+  align-items: stretch;
+}
+.house-card-quick-actions {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+.house-card-quick-action-btn {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #2a1638;
+  padding: 0.35rem 0.25rem;
+  color: #ffedd5;
+}
+.house-card-quick-action-btn:active {
+  background: #3b1d4e;
+}
+.house-card-quick-action-btn.is-active-visited {
+  color: #6ee7b7;
+}
+.house-card-quick-action-btn.is-active-saved {
+  color: #fb7185;
+}
+.house-card-quick-action-btn.is-active-gem {
+  color: #fde68a;
+}
+.house-card-quick-action-btn.is-active-skipped {
+  color: #ddd6fe;
+}
+.house-card-quick-action-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
 .house-action-menu {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  flex-shrink: 0;
 }
 .house-action-menu-trigger {
   display: grid;
@@ -8964,6 +9013,16 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .hw-overlay-close-bar--compact {
   padding: 0.5rem 0.75rem 0.25rem;
+}
+.hw-overlay-close-bar--minimal-top-safe {
+  padding: calc(0.15rem + env(safe-area-inset-top, 0px)) 0.625rem 0.35rem 0.625rem;
+}
+.hw-overlay-close-bar--minimal-top-safe.hw-overlay-close-bar--titled {
+  gap: 0.25rem;
+}
+.hw-overlay-close-bar--minimal-top-safe .hw-overlay-close-bar-title > div {
+  font-size: 1.125rem;
+  line-height: 1.25;
 }
 .hw-overlay-close-bar--titled {
   display: grid;
