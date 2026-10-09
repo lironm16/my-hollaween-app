@@ -17,11 +17,14 @@ import type { PublicHouse } from "@/lib/types";
 export const VISIT_POSTER_PRINT_CSS = `
 @page {
   size: A4 portrait;
-  margin: 6mm;
+  margin: 8mm;
 }
 @media print {
   html {
     color-scheme: light !important;
+  }
+  .no-print {
+    display: none !important;
   }
   html, body,
   *:has(.visit-poster-sheet) {
@@ -51,18 +54,25 @@ export const VISIT_POSTER_PRINT_CSS = `
   }
   .visit-poster-sheet {
     width: 100% !important;
-    max-width: none !important;
+    max-width: 194mm !important;
+    max-height: 276mm !important;
     margin: 0 auto !important;
     box-shadow: none !important;
     border-radius: 0 !important;
     --tw-ring-shadow: 0 0 #0000 !important;
+    overflow: hidden !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
+    page-break-after: avoid !important;
   }
   .visit-poster-sheet .visit-poster {
     width: 100% !important;
     height: auto !important;
+    max-height: 276mm !important;
     aspect-ratio: 200 / 280 !important;
+  }
+  html, body {
+    page-break-after: avoid !important;
   }
   .visit-poster-qr img {
     object-fit: contain;

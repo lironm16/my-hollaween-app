@@ -49,6 +49,9 @@ function useFittedNameSize(name: string) {
         max: 14,
         precision: 0.1,
         fits: (cqw) => {
+          text.style.width = `${maxW}px`;
+          text.style.maxWidth = `${maxW}px`;
+          text.style.whiteSpace = "normal";
           text.style.fontSize = `${(cqw * posterWidth) / 100}px`;
           return text.scrollWidth <= maxW + 0.5 && text.scrollHeight <= maxH + 0.5;
         },
@@ -182,6 +185,7 @@ export const VISIT_POSTER_CSS = `
   align-items: center;
   justify-content: center;
   text-align: center;
+  min-width: 0;
   background: #fdfaf6;
   border: 0.45cqw solid #3b0764;
   outline: 0.25cqw solid #f97316;
@@ -193,6 +197,8 @@ export const VISIT_POSTER_CSS = `
 }
 .visit-poster-name {
   display: block;
+  width: 100%;
+  min-width: 0;
   max-width: 100%;
   font-family: var(--font-rubik-wet-paint), "Rubik Wet Paint", cursive;
   font-weight: 400;
@@ -201,9 +207,10 @@ export const VISIT_POSTER_CSS = `
   color: #5b1a8f;
   -webkit-text-stroke: 0.18cqw #3b0764;
   text-shadow: 0.35cqw 0.35cqw 0 #fdba74;
-  text-wrap: balance;
-  overflow-wrap: normal;
-  word-break: keep-all;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: manual;
 }
 .visit-poster-qr {
   display: flex;
