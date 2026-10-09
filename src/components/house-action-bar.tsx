@@ -10,8 +10,10 @@ import {
   Navigation,
   Pencil,
   QrCode,
+  ScanLine,
   Share2,
 } from "lucide-react";
+import { VisitQrScanDialog } from "@/components/visit-qr-scan-dialog";
 import { toast } from "sonner";
 import { EditCodeDialog } from "@/components/edit-code-dialog";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
@@ -99,6 +101,7 @@ export function HouseActionBar({
   const [open, setOpen] = useState(false);
   const [editCodeOpen, setEditCodeOpen] = useState(false);
   const [visitPosterOpen, setVisitPosterOpen] = useState(false);
+  const [visitQrScanOpen, setVisitQrScanOpen] = useState(false);
   const [panelStyle, setPanelStyle] = useState<CSSProperties>({ visibility: "hidden" });
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -153,6 +156,12 @@ export function HouseActionBar({
   }
 
   if (!navOnly) {
+    items.push({
+      id: "visit-qr-scan",
+      label: "סרוק QR",
+      icon: <ScanLine className={MENU_ICON_CLASS} strokeWidth={2.2} />,
+      onClick: () => setVisitQrScanOpen(true),
+    });
     items.push({
       id: "share",
       label: "שתף",
@@ -334,6 +343,7 @@ export function HouseActionBar({
       {showVisitPoster ? (
         <VisitPosterDialog open={visitPosterOpen} house={house} onClose={() => setVisitPosterOpen(false)} />
       ) : null}
+      <VisitQrScanDialog open={visitQrScanOpen} onClose={() => setVisitQrScanOpen(false)} />
       <button
         ref={triggerRef}
         type="button"
