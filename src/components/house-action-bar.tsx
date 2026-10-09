@@ -113,7 +113,9 @@ export function HouseActionBar({
 
   useEffect(() => {
     if (!open) return;
-    const onPointerDown = (event: PointerEvent) => {
+    // Use click (not pointerdown): pointerdown ran before the menu item's click and, while the
+    // panel was still visibility:hidden for layout, the event hit the map and closed the menu.
+    const onClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
       if (rootRef.current?.contains(target) || panelRef.current?.contains(target)) return;
       setOpen(false);
@@ -121,10 +123,10 @@ export function HouseActionBar({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
-    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("click", onClickOutside);
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("click", onClickOutside);
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
@@ -251,7 +253,9 @@ export function HouseActionBar({
         id: "visit-poster",
         label: "הצג דף ביקור",
         icon: <QrCode className={MENU_ICON_CLASS} strokeWidth={2.2} />,
-        onClick: () => setVisitPosterOpen(true),
+        onClick: () => {
+          queueMicrotask(() => setVisitPosterOpen(true));
+        },
       });
     }
   }
@@ -262,7 +266,15 @@ export function HouseActionBar({
     const updatePosition = () => {
       const trigger = triggerRef.current;
       const panel = panelRef.current;
-      if (!trigger || !panel) return;
+      if (!trigger || !panel) {
+        setPanelStyle((prev) => ({
+          ...prev,
+          position: "fixed",
+          zIndex: 120,
+          visibility: "visible",
+        }));
+        return;
+      }
 
       const margin = 10;
       const gap = 8;
@@ -330,7 +342,7 @@ export function HouseActionBar({
         <div
           ref={panelRef}
           className="house-action-menu-panel house-action-menu-panel--floating"
-          style={panelStyle}
+          style={open ? { ...panelStyle, visibility: "visible", pointerEvents: "auto" } : panelStyle}
           role="menu"
           dir="rtl"
         >
@@ -394,7 +406,20 @@ export function HouseActionBar({
         aria-expanded={open}
         onClick={(event) => {
           event.stopPropagation();
-          setOpen((value) => !value);
+          setOpen((value) => {
+            const next = !value;
+            if (next && triggerRef.current) {
+              const triggerRect = triggerRef.current.getBoundingClientRect();
+              setPanelStyle({
+                position: "fixed",
+                top: triggerRect.bottom + 8,
+                left: Math.max(10, triggerRect.right - 220),
+                zIndex: 120,
+                visibility: "visible",
+              });
+            }
+            return next;
+          });
         }}
       >
         <MoreVertical className="size-7" strokeWidth={2.2} />
