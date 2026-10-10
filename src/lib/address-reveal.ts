@@ -8,7 +8,18 @@ export type AddressRevealContext = {
   isAdmin: boolean;
   ownedHouseIds: ReadonlySet<string>;
   addressReveal: AddressRevealSchedule;
+  /**
+   * Night passes: `everyone` = off (legacy reveal for all), `registered` = this device holds a pass,
+   * `none` = unregistered — home addresses never open.
+   */
+  audience: AddressRevealAudience;
+  /** Businesses / schools (and homes sharing their pin) — address open to everyone. */
+  publicLocationIds: ReadonlySet<string>;
 };
+
+export type AddressRevealAudience = "everyone" | "registered" | "none";
+
+export const ADDRESS_FOR_REGISTERED_HINT_HE = "הכתובת תיחשף למשתמשים רשומים";
 
 /** Local time on event night when street addresses and arrival notes become public. */
 export function addressRevealTime(
@@ -24,8 +35,13 @@ export function isAddressRevealed(now = new Date(), schedule = mergeAddressRevea
   return now.getTime() >= addressRevealTime(schedule, now).getTime();
 }
 
-export function addressHiddenHintHe(now = new Date(), schedule = mergeAddressRevealSchedule()) {
+export function addressHiddenHintHe(
+  now = new Date(),
+  schedule = mergeAddressRevealSchedule(),
+  audience: AddressRevealAudience = "everyone",
+) {
   const { labelHe } = config.eventNight;
+  if (audience === "none") return ADDRESS_FOR_REGISTERED_HINT_HE;
   if (isAddressRevealed(now, schedule)) return "";
   return `הכתובת תיחשף ב-${labelHe}`;
 }
@@ -34,9 +50,11 @@ export function canViewHouseLocationDetails(
   houseId: string,
   ctx: AddressRevealContext,
 ): boolean {
-  if (isAddressRevealed(ctx.now, ctx.addressReveal)) return true;
+  if (ctx.publicLocationIds.has(houseId)) return true;
   if (ctx.isAdmin) return true;
-  return ctx.ownedHouseIds.has(houseId);
+  if (ctx.ownedHouseIds.has(houseId)) return true;
+  if (ctx.audience === "none") return false;
+  return isAddressRevealed(ctx.now, ctx.addressReveal);
 }
 
 export function redactHouseLocationDetails<T extends Pick<PublicHouse, "address" | "arrival">>(
@@ -69,7 +87,7 @@ export function formatDisplayAddressWithPolicy(
   if (canViewHouseLocationDetails(houseId, ctx)) {
     return formatDisplayAddress(house);
   }
-  const hint = addressHiddenHintHe(ctx.now, ctx.addressReveal);
+  const hint = addressHiddenHintHe(ctx.now, ctx.addressReveal, ctx.audience);
   const area = resolveNeighborhood(house);
   if (area && hint) return `${area} · ${hint}`;
   return hint || formatDisplayAddress(house);
@@ -94,14 +112,14 @@ export function housesWithLocationPolicy(
   ctx: AddressRevealContext,
 ): PublicHouse[] {
   return houses.map((house) =>
-    isPracticeHouse(house) || canViewHouseLocationDetails(house.id, ctx)
+    isPracticeHouse(house) || house.locationPublic || canViewHouseLocationDetails(house.id, ctx)
       ? house
       : redactHouseLocationDetails(house),
   );
 }
 
 export function houseWithLocationPolicy(house: PublicHouse, ctx: AddressRevealContext): PublicHouse {
-  return isPracticeHouse(house) || canViewHouseLocationDetails(house.id, ctx)
+  return isPracticeHouse(house) || house.locationPublic || canViewHouseLocationDetails(house.id, ctx)
     ? house
     : redactHouseLocationDetails(house);
 }
@@ -111,12 +129,16 @@ export function makeAddressRevealContext(input: {
   isAdmin?: boolean;
   ownedHouseIds?: Iterable<string>;
   addressReveal?: AddressRevealSchedule;
+  audience?: AddressRevealAudience;
+  publicLocationIds?: Iterable<string>;
 }): AddressRevealContext {
   return {
     now: input.now,
     isAdmin: Boolean(input.isAdmin),
     ownedHouseIds: new Set(input.ownedHouseIds ?? []),
     addressReveal: mergeAddressRevealSchedule(input.addressReveal),
+    audience: input.audience ?? "everyone",
+    publicLocationIds: new Set(input.publicLocationIds ?? []),
   };
 }
 
@@ -125,6 +147,7 @@ export function visitorAddressRevealContext(
   now: Date,
   ownedHouseIds?: Iterable<string>,
   addressReveal?: AddressRevealSchedule,
+  audience?: AddressRevealAudience,
 ): AddressRevealContext {
-  return makeAddressRevealContext({ now, isAdmin: false, ownedHouseIds, addressReveal });
+  return makeAddressRevealContext({ now, isAdmin: false, ownedHouseIds, addressReveal, audience });
 }

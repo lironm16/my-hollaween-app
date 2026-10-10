@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { HousePicker } from "@/components/house-picker";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { NightPassesCard } from "@/components/night-passes-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminHouses } from "@/hooks/use-admin-houses";
@@ -306,6 +307,7 @@ function EditPageContent() {
             בחרו בית מהרשימה כדי לערוך, או הוסיפו בית חדש.
           </p>
         ) : null}
+        {house && !editFlow.flow ? <NightPassesCard houseId={house.id} admin={admin} /> : null}
         </div>
       </main>
       <HouseEditFlowPanels

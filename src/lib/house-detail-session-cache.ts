@@ -14,6 +14,12 @@ export function readSessionHouseDetail(id: string): PublicHouse | null {
   return hit && houseServerDetailReady(hit) ? hit : null;
 }
 
+/** Night-pass scope changed — details fetched under the old audience must not be reused. */
+export function clearSessionHouseDetails() {
+  hydratedById.clear();
+  inflightById.clear();
+}
+
 export function rememberSessionHouseDetail(house: PublicHouse) {
   if (!houseServerDetailReady(house)) return;
   hydratedById.set(house.id, withServerHouseDetail(house));

@@ -15,6 +15,8 @@ import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
 import { adminShowsPrivateHouseFields } from "@/lib/gem-preview-as-user";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useCatalog } from "@/hooks/use-catalog";
+import { useNightPass } from "@/hooks/use-night-pass";
+import { nightPassAudience } from "@/lib/night-pass-client";
 import type { PublicHouse } from "@/lib/types";
 
 export function useAddressReveal(): AddressRevealContext & {
@@ -31,6 +33,12 @@ export function useAddressReveal(): AddressRevealContext & {
   const owned = useOwnedHouses();
   const ownedHouseIds = useMemo(() => new Set(owned.map((item) => item.id)), [owned]);
   const addressRevealFromCatalog = catalog?.eventSettings?.addressReveal;
+  const nightPass = useNightPass();
+  const audience = nightPassAudience(nightPass);
+  const publicLocationIds = useMemo(
+    () => (catalog?.houses ?? []).filter((house) => house.locationPublic).map((house) => house.id),
+    [catalog?.houses],
+  );
   const ctx = useMemo(
     () =>
       makeAddressRevealContext({
@@ -38,8 +46,10 @@ export function useAddressReveal(): AddressRevealContext & {
         isAdmin: adminShowsPrivateHouseFields(admin, previewAsUser),
         ownedHouseIds,
         addressReveal: addressRevealFromCatalog,
+        audience,
+        publicLocationIds,
       }),
-    [now, admin, previewAsUser, ownedHouseIds, addressRevealFromCatalog],
+    [now, admin, previewAsUser, ownedHouseIds, addressRevealFromCatalog, audience, publicLocationIds],
   );
 
   return useMemo(

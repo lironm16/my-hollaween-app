@@ -23,6 +23,7 @@ import { MapStats, StatsSummary } from "@/components/map-stats";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { NeighborhoodStatusBanners } from "@/components/neighborhood-status-banners";
+import { NightPassBanner } from "@/components/night-pass-banner";
 import { RouteChangeBanner, routeChangeBannerMessage } from "@/components/route-change-banner";
 import { RouteChangesSheet } from "@/components/route-changes-sheet";
 import { TempSkipRestoreAlerts } from "@/components/temp-skip-restore-alert";
@@ -1494,6 +1495,7 @@ export function NeighborhoodApp({
         error={error}
         hasCachedHouses={houses.length > 0}
       />
+      <NightPassBanner />
       <TempSkipRestoreAlerts
         alerts={tempRestoreAlerts}
         onFocusHouse={(id) => {
