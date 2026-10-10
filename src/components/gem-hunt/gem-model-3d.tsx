@@ -37,6 +37,8 @@ type Props = {
   celebrateVariant?: number;
   /** Short tap on inspect360 canvas (collect). */
   onInspectTap?: () => void;
+  /** Camera zoom (eases toward the value without rebuilding the scene). */
+  zoom?: number;
 };
 
 function frameModel(object: THREE.Object3D, scaleFactor: number) {
@@ -86,6 +88,7 @@ export function GemModel3D({
   celebrateVariant = 1,
   worldYawRad = null,
   onInspectTap,
+  zoom = 1,
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
@@ -97,6 +100,8 @@ export function GemModel3D({
   celebrateVariantRef.current = celebrateVariant;
   const worldYawRef = useRef(worldYawRad);
   worldYawRef.current = worldYawRad;
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
   const [loadFailed, setLoadFailed] = useState(false);
   const meta = gemMonsterMeta(monsterId);
 
@@ -112,6 +117,8 @@ export function GemModel3D({
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(32, width / height, 0.1, 100);
     camera.position.set(0, 0.2, 2.6);
+    camera.zoom = zoomRef.current;
+    camera.updateProjectionMatrix();
 
     const maxDpr =
       controls === "turntable" || controls === "walkaround"
@@ -191,7 +198,10 @@ export function GemModel3D({
     rim.position.set(-2, 1, -3);
     const fill = new THREE.DirectionalLight(0xfbbf24, 0.35);
     fill.position.set(0, -1, 2);
-    scene.add(ambient, key, rim, fill);
+    /** Orbit moves the camera, so the rig turns with it — otherwise the viewer sees the unlit back. */
+    const lightRig = new THREE.Group();
+    lightRig.add(key, rim, fill);
+    scene.add(ambient, lightRig);
 
     const worldGroup = new THREE.Group();
     scene.add(worldGroup);
@@ -360,6 +370,12 @@ export function GemModel3D({
         }
       } else {
         orbit?.update();
+      }
+      if (usesOrbit) lightRig.quaternion.copy(camera.quaternion);
+      const targetZoom = zoomRef.current;
+      if (Math.abs(camera.zoom - targetZoom) > 0.001) {
+        camera.zoom += (targetZoom - camera.zoom) * 0.18;
+        camera.updateProjectionMatrix();
       }
       renderer.render(scene, camera);
     };

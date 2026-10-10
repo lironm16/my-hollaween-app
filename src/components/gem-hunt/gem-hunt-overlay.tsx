@@ -73,6 +73,9 @@ import { cn } from "@/lib/utils";
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
 
+/** «גלה לי» center view — inspect360 framing leaves wide orbit margins, so zoom in. */
+const GEM_TELL_ME_CENTER_ZOOM = 1.45;
+
 function panDelta(prev: number | null, next: number) {
   if (prev == null) return 0;
   let d = Math.abs(next - prev);
@@ -924,6 +927,7 @@ export function GemHuntOverlay({
                 spinWhileCollect={false}
                 worldYawRad={gemAtCenter ? null : worldYawRad}
                 motion={gemMotion}
+                zoom={centerReveal && gemAtCenter ? GEM_TELL_ME_CENTER_ZOOM : 1}
                 celebrateVariant={collectDanceIndex}
                 onInspectTap={
                   encounterMode && encounterPhase === "encounter" && gemAtCenter
