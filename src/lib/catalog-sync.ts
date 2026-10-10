@@ -37,6 +37,8 @@ export function normalizeCatalogDelta(raw: unknown): CatalogDelta {
     pollSeconds: typeof o.pollSeconds === "number" ? o.pollSeconds : undefined,
     pushTemplates: o.pushTemplates,
     eventSettings: o.eventSettings,
+    ...(typeof o.scope === "string" ? { scope: o.scope } : {}),
+    ...(typeof o.hiddenHouseCount === "number" ? { hiddenHouseCount: o.hiddenHouseCount } : {}),
   };
 }
 
@@ -137,6 +139,8 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
   if (typeof houseCount === "number" && houseCount < mergedLen) {
     houseCount = Math.max(prev.houseCount ?? 0, mergedLen);
   }
+  const scope = delta.scope ?? prev.scope;
+  const hiddenHouseCount = delta.hiddenHouseCount ?? prev.hiddenHouseCount;
   return {
     updatedAt: delta.updatedAt,
     neighborhood: delta.neighborhood || prev.neighborhood,
@@ -144,6 +148,8 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
     houseCount,
     pushTemplates: delta.pushTemplates ?? prev.pushTemplates,
     eventSettings: delta.eventSettings ?? prev.eventSettings,
+    ...(scope ? { scope } : {}),
+    ...(typeof hiddenHouseCount === "number" ? { hiddenHouseCount } : {}),
   };
 }
 
