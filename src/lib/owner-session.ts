@@ -53,6 +53,12 @@ export async function grantOwnerHouse(id: string) {
   });
 }
 
+/** House ids this device unlocked (signed hw_owner cookie). */
+export async function ownerHouseIds(): Promise<string[]> {
+  const jar = await cookies();
+  return parseCookie(jar.get(COOKIE)?.value).map(canonicalHouseId).filter(Boolean);
+}
+
 export async function ownerMayEdit(id: string) {
   const needle = canonicalHouseId(id);
   if (!needle) return false;
