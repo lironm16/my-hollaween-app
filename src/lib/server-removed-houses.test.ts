@@ -7,6 +7,9 @@ import {
   loadServerRemovedHouseIds,
   recordLiveCatalogRemovals,
 } from "@/lib/server-removed-houses";
+import { isCatalogRemoved } from "@/lib/catalog-removed";
+import { mergeVisibleHouses } from "@/hooks/use-merged-houses";
+import { verifyOwnedHousesOnServer } from "@/lib/owned-house-check";
 
 const storage = new Map<string, string>();
 
@@ -101,5 +104,68 @@ describe("short or partial lists still never drop houses", () => {
     assert.deepEqual(loadServerRemovedHouseIds(), []);
     const shown = mergeCatalogDelta(catalog("2026-10-31T10:00:00.000Z", ["a", "b", "c"]), delta);
     assert.deepEqual(ids(shown), ["a", "b", "c"]);
+  });
+});
+
+function saveOwned(ids: string[]) {
+  storage.set(
+    "hw-my-houses",
+    JSON.stringify(ids.map((id) => ({ id, name: id, editCode: "1234", preview: row(id) }))),
+  );
+}
+
+function ownedRows() {
+  return JSON.parse(storage.get("hw-my-houses") ?? "[]");
+}
+
+function mapIds(catalogHouses: PublicHouse[], admin = false) {
+  return mergeVisibleHouses({
+    catalogHouses,
+    owned: ownedRows(),
+    admin,
+    adminHouses: [],
+    includeCatalogWhenAdmin: admin,
+  })
+    .map((house) => house.id)
+    .sort();
+}
+
+describe("owner device — house saved locally, deleted elsewhere", () => {
+  it("a deletion from any refresh path labels it and keeps the saved copy off the map", () => {
+    saveOwned(["x"]);
+    recordLiveCatalogRemovals(liveDelta({ removed: ["x"] }));
+    assert.equal(isCatalogRemoved("x"), true);
+    const catalogHouses = withDeviceHouseOverlays(catalog("t", ["a", "b"])).houses;
+    assert.deepEqual(mapIds(catalogHouses), ["a", "b"]);
+    assert.deepEqual(mapIds(catalogHouses, true), ["a", "b"]);
+  });
+
+  it("a restore clears the label", () => {
+    saveOwned(["x"]);
+    recordLiveCatalogRemovals(liveDelta({ removed: ["x"] }));
+    recordLiveCatalogRemovals(liveDelta({ houses: [row("x", "2026-10-31T12:00:00.000Z")] }));
+    assert.equal(isCatalogRemoved("x"), false);
+    assert.deepEqual(loadServerRemovedHouseIds(), []);
+  });
+
+  it("a 404 for a saved house marks it deleted; other failures and pending uploads do not", async () => {
+    saveOwned(["gone", "live", "flaky", "pending"]);
+    storage.set(
+      "hw-pending-writes",
+      JSON.stringify([{ id: "pending", method: "POST", url: "/api/houses", body: {}, house: row("pending"), createdAt: T0 }]),
+    );
+    const asked: string[] = [];
+    const gone = await verifyOwnedHousesOnServer(async (id) => {
+      asked.push(id);
+      if (id === "gone") return { ok: false, status: 404 };
+      if (id === "flaky") return { ok: false, status: 500 };
+      return { ok: true, house: row(id) };
+    });
+    assert.deepEqual(gone, ["gone"]);
+    assert.deepEqual(asked.sort(), ["flaky", "gone", "live"]);
+    assert.equal(isCatalogRemoved("gone"), true);
+    assert.equal(isCatalogRemoved("flaky"), false);
+    assert.deepEqual(loadServerRemovedHouseIds(), ["gone"]);
+    assert.deepEqual(mapIds([row("live")]).includes("gone"), false);
   });
 });

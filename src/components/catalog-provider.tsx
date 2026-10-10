@@ -54,6 +54,7 @@ import { loadOwnedHouses } from "@/lib/offline-db";
 import { isMapListSuspended, subscribeMapListSuspend } from "@/lib/map-list-suspend";
 import { trackCatalogRemovalDelta } from "@/lib/catalog-removed";
 import { recordLiveCatalogRemovals } from "@/lib/server-removed-houses";
+import { verifyOwnedHousesOnServer } from "@/lib/owned-house-check";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
 
@@ -172,6 +173,7 @@ async function recoverCatalogShortfall(
       resolveServerHouseCount(snapCatalog);
 
     const live = await fetchJson("/api/catalog", false, snap.updatedAt);
+    recordLiveCatalogRemovals(live);
     merged = withDeviceHouseOverlays(applyCatalogResponse(merged, live));
     resolvedCount = resolvedCount ?? resolveServerHouseCount(live) ?? resolveServerHouseCount(merged);
 
@@ -191,10 +193,8 @@ async function recoverCatalogShortfall(
   return merged;
 }
 
-/** Only for live `/api/catalog` payloads — never the CDN snapshot or device cache. */
 function applyCatalogResponse(prev: Catalog | null, live: CatalogDelta): Catalog {
   live = normalizeCatalogDelta(live);
-  recordLiveCatalogRemovals(live);
   if (!prev || live.full) {
     return syncLiveCatalog(prev, live);
   }
@@ -286,6 +286,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const pendingCatalogRef = useRef<Catalog | null>(null);
   const quickRetryCountRef = useRef(0);
   const quickRetryTimerRef = useRef<number | undefined>(undefined);
+  const ownedCheckedRef = useRef(false);
 
   useEffect(() => {
     catalogRef.current = catalog;
@@ -413,6 +414,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       pollSecondsRef.current = live.pollSeconds;
       setPollSeconds(live.pollSeconds);
     }
+    recordLiveCatalogRemovals(live);
     const prev = catalogRef.current;
     if (isEmptyDelta(live, prev)) {
       emptyDeltaStreakRef.current += 1;
@@ -599,6 +601,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       let merged = withDeviceHouseOverlays(syncCatalog(catalogRef.current, snap));
       try {
         const live = await fetchJson("/api/catalog", false, snap.updatedAt);
+        recordLiveCatalogRemovals(live);
         if (live.pollSeconds) {
           pollSecondsRef.current = live.pollSeconds;
           setPollSeconds(live.pollSeconds);
@@ -756,6 +759,16 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         setLoading(false);
         setReady(true);
       }
+      if (cancelled || ownedCheckedRef.current || !navigator.onLine) return;
+      ownedCheckedRef.current = true;
+      const gone = new Set(await verifyOwnedHousesOnServer());
+      if (cancelled || gone.size === 0) return;
+      setCatalog((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev, houses: prev.houses.filter((house) => !gone.has(house.id)) };
+        return publishCatalog(next, prev) ?? next;
+      });
+      window.dispatchEvent(new Event("hw-catalog-refreshed"));
     })();
 
     const onOff = () => {
@@ -808,7 +821,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("hw-catalog-changed", onChanged);
       window.removeEventListener(SERVER_SIM_EVENT, onSim);
     };
-  }, [refresh]);
+  }, [refresh, publishCatalog]);
 
   const value: CatalogContextValue = useMemo(
     () => ({
