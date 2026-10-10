@@ -188,7 +188,7 @@ export function VisitQrScanDialog({ open, onClose }: { open: boolean; onClose: (
           כוונו את המצלמה אל קוד ה-QR על דף הביקור ליד הדלת. הביקור יירשם באפליקציה הזו — מומלץ באייפון כשהאפליקציה
           מותקנת על המסך.
         </p>
-        <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-black ring-1 ring-orange-500/30">
+        <div className="relative aspect-square overflow-hidden rounded-2xl bg-black ring-1 ring-orange-500/30">
           <video
             ref={videoRef}
             className="size-full object-cover"
@@ -216,12 +216,7 @@ export function VisitQrScanDialog({ open, onClose }: { open: boolean; onClose: (
                 </button>
               ) : null}
             </div>
-          ) : (
-            <div
-              className="pointer-events-none absolute inset-8 rounded-xl border-2 border-dashed border-orange-400/80"
-              aria-hidden
-            />
-          )}
+          ) : null}
         </div>
         <canvas ref={canvasRef} className="hidden" aria-hidden />
       </div>

@@ -16,7 +16,9 @@ import {
   HelpCircle,
   Sparkles,
   Save,
+  ScanLine,
 } from "lucide-react";
+import { VisitQrScanDialog } from "@/components/visit-qr-scan-dialog";
 import { AdminHouseDownloadDialog } from "@/components/admin-house-download-dialog";
 import { ImpOutlineIcon } from "@/components/imp-outline-icon";
 import { toast } from "sonner";
@@ -57,6 +59,7 @@ export function AppHeader({
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);
   const [adminDownloadOpen, setAdminDownloadOpen] = useState(false);
+  const [visitQrScanOpen, setVisitQrScanOpen] = useState(false);
   const [helpInstallCapture, setHelpInstallCapture] = useState(false);
 
   useEffect(() => {
@@ -197,6 +200,17 @@ export function AppHeader({
                     <Home className="size-4" />
                     במכשיר שלי
                   </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeMenu();
+                      setVisitQrScanOpen(true);
+                    }}
+                    className={houseSubLinkClass}
+                  >
+                    <ScanLine className="size-4" />
+                    סרוק QR
+                  </button>
                 </div>
               ) : null}
             </div>
@@ -327,6 +341,7 @@ export function AppHeader({
       {admin ? (
         <AdminHouseDownloadDialog open={adminDownloadOpen} onOpenChange={setAdminDownloadOpen} />
       ) : null}
+      <VisitQrScanDialog open={visitQrScanOpen} onClose={() => setVisitQrScanOpen(false)} />
     </header>
   );
 }
