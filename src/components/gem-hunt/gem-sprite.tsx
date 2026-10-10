@@ -27,6 +27,7 @@ export function GemSprite({
   posterFill = false,
   worldYawRad = null,
   onInspectTap,
+  zoom,
 }: {
   /** @deprecated use house + monster id */
   variantId?: string;
@@ -45,6 +46,7 @@ export function GemSprite({
   /** World-locked yaw (radians) — walk around anchor to see different sides. */
   worldYawRad?: number | null;
   onInspectTap?: () => void;
+  zoom?: number;
 }) {
   const id = house?.id ?? houseId ?? "default";
   const monsterId = (house ? gemMonsterForHouse(house) : "dragon") as GemMonsterId;
@@ -128,6 +130,7 @@ export function GemSprite({
         celebrateVariant={celebrateVariant}
         worldYawRad={worldYawRad}
         onInspectTap={mode === "inspect360" ? onInspectTap : undefined}
+        zoom={zoom}
       />
     </div>
   );
