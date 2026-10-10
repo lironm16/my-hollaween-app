@@ -2,6 +2,7 @@ import type { Catalog, CatalogDelta, DbFile, PublicHouse, PushSubscriptionRecord
 import { isAuthoritativeHouseList } from "@/lib/catalog-houses";
 import { mergeCatalogHouseRow } from "@/lib/catalog-stub-flags";
 import { loadDeletedHouseIds } from "@/lib/deleted-houses";
+import { loadServerRemovedHouseIds } from "@/lib/server-removed-houses";
 import { config } from "@/lib/config";
 
 export type SyncCatalogOptions = {
@@ -12,15 +13,21 @@ export type SyncCatalogOptions = {
   trustedCompleteList?: boolean;
 };
 
+/** Deleted on this device or explicitly reported deleted by the live server. */
+export function loadHiddenHouseIds(): Set<string> {
+  return new Set([...loadDeletedHouseIds(), ...loadServerRemovedHouseIds()]);
+}
+
+function withoutHiddenHouses<T extends { id: string }>(houses: T[], hidden: Set<string>): T[] {
+  if (hidden.size === 0) return houses;
+  return houses.filter((house) => !hidden.has(house.id));
+}
+
 function preserveLocalHousesFromPrev(
   prev: Catalog,
   take: (house: PublicHouse) => void,
 ) {
-  const deleted = new Set(loadDeletedHouseIds());
-  for (const house of prev.houses) {
-    if (deleted.has(house.id)) continue;
-    take(house);
-  }
+  for (const house of prev.houses) take(house);
 }
 
 /** API / CDN payloads must always expose houses[] — delta polls omit the key when unchanged. */
@@ -80,6 +87,7 @@ export function syncCatalog(
   const allowAuthoritativeDrop =
     Boolean(options?.trustedCompleteList) && isAuthoritativeHouseList(next);
 
+  const hidden = loadHiddenHouseIds();
   if (nextTs >= prevTs) {
     next.houses.forEach(take);
     if (!allowAuthoritativeDrop) {
@@ -87,7 +95,7 @@ export function syncCatalog(
     }
     return {
       ...next,
-      houses: [...byId.values()],
+      houses: withoutHiddenHouses([...byId.values()], hidden),
       houseCount: next.houseCount ?? prev.houseCount,
       eventSettings: next.eventSettings ?? prev.eventSettings,
     };
@@ -97,7 +105,7 @@ export function syncCatalog(
   next.houses.forEach(take);
   return {
     ...prev,
-    houses: [...byId.values()],
+    houses: withoutHiddenHouses([...byId.values()], hidden),
     houseCount: next.houseCount ?? prev.houseCount,
     eventSettings: next.eventSettings ?? prev.eventSettings,
   };
@@ -131,7 +139,7 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
   for (const house of delta.houses) {
     byId.set(house.id, mergeCatalogHouseRow(byId.get(house.id), house));
   }
-  const houses = [...byId.values()];
+  const houses = withoutHiddenHouses([...byId.values()], loadHiddenHouseIds());
   const mergedLen = houses.length;
   let houseCount = delta.houseCount ?? prev.houseCount;
   if (typeof houseCount === "number" && houseCount < mergedLen) {

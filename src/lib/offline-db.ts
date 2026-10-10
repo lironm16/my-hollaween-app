@@ -1,8 +1,8 @@
 import type { NeighborhoodFilterId } from "@/lib/config";
 import type { SkipReasonId } from "@/lib/skip-reasons";
-import { syncCatalog } from "@/lib/catalog-sync";
+import { loadHiddenHouseIds, syncCatalog } from "@/lib/catalog-sync";
 import { clearCatalogRemoved, isCatalogRemoved } from "@/lib/catalog-removed";
-import { tombstoneHouse, loadDeletedHouseIds } from "@/lib/deleted-houses";
+import { tombstoneHouse } from "@/lib/deleted-houses";
 import { stripHouseForDeviceCache } from "@/lib/device-catalog-cache";
 import { syncDecorFields } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
@@ -38,7 +38,7 @@ function stamp(value: string) {
 }
 
 function overlayLocalHouses(catalog: Catalog): Catalog {
-  const deleted = new Set(loadDeletedHouseIds());
+  const deleted = loadHiddenHouseIds();
   const byId = new Map(
     catalog.houses.filter((house) => !deleted.has(house.id)).map((house) => [house.id, house]),
   );
