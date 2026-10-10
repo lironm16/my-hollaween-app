@@ -47,3 +47,8 @@ export function adminShowsPrivateHouseFields(admin: boolean, previewAsUser: bool
 export function adminBypassesAddHouseCutoff(admin: boolean, previewAsUser: boolean) {
   return admin && !previewAsUser;
 }
+
+/** Owner/edit flows on this device — catalog admin without תצוגת משתמש only. */
+export function adminDeviceOwnerPowers(admin: boolean, previewAsUser: boolean) {
+  return admin && !previewAsUser;
+}

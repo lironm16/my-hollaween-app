@@ -24,6 +24,5 @@ export function gemMapLegendVisible(
   },
 ) {
   if (!gemHuntVisible(isAdmin)) return false;
-  if (isAdmin && !opts.previewAsUser) return true;
   return opts.mapDiamondsVisible;
 }

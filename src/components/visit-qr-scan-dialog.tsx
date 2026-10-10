@@ -185,8 +185,7 @@ export function VisitQrScanDialog({ open, onClose }: { open: boolean; onClose: (
     >
       <div className="space-y-4">
         <p className="text-base leading-relaxed text-violet-100">
-          כוונו את המצלמה אל קוד ה-QR על דף הביקור ליד הדלת. הביקור יירשם באפליקציה הזו — מומלץ באייפון כשהאפליקציה
-          מותקנת על המסך.
+          כוונו את המצלמה אל קוד ה-QR על דף הביקור ליד הדלת. הביקור יירשם כ«ביקרתי».
         </p>
         <div className="relative aspect-square overflow-hidden rounded-2xl bg-black ring-1 ring-orange-500/30">
           <video

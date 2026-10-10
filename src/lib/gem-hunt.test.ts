@@ -200,6 +200,13 @@ describe("gem hunt gate", () => {
         previewAsUser: false,
         mapDiamondsVisible: false,
       }),
+      false,
+    );
+    assert.equal(
+      gemMapLegendVisible(true, {
+        previewAsUser: false,
+        mapDiamondsVisible: true,
+      }),
       true,
     );
     assert.equal(

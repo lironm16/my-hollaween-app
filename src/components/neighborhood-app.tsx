@@ -82,7 +82,7 @@ import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { housesWithLocationPolicy } from "@/lib/address-reveal";
-import { adminShowsPrivateHouseFields } from "@/lib/admin-preview-as-user";
+import { adminDeviceOwnerPowers, adminShowsPrivateHouseFields } from "@/lib/admin-preview-as-user";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAdminHouses } from "@/hooks/use-admin-houses";
@@ -1213,10 +1213,14 @@ export function NeighborhoodApp({
 
   function requestHouseEdit(house: PublicHouse, allowDelete = false) {
     selection.setEditing(false);
+    const deviceOwner = adminDeviceOwnerPowers(admin, gemPreviewAsUser);
+    const isOwned = owned.some((item) => item.id === house.id);
     editFlow.openEdit(house, {
-      editCode: admin ? editCodeById.get(house.id) : owned.find((item) => item.id === house.id)?.editCode,
-      admin,
-      allowDelete: allowDelete || Boolean(admin || owned.some((item) => item.id === house.id)),
+      editCode: deviceOwner
+        ? editCodeById.get(house.id)
+        : owned.find((item) => item.id === house.id)?.editCode,
+      admin: deviceOwner,
+      allowDelete: allowDelete || Boolean(deviceOwner || isOwned),
     });
   }
 
@@ -1357,17 +1361,22 @@ export function NeighborhoodApp({
       onClusterRestoreAll: applyClusterRestoreAll,
       onClusterLikeAll: applyClusterLikeAll,
       onClusterUnlikeAll: applyClusterUnlikeAll,
-      onClusterFindAllGems: admin ? openGemHuntForCluster : undefined,
-      onClusterResetAllGems: admin ? handleClusterResetAllGems : undefined,
-      canEdit: (id) => Boolean(admin || owned.some((item) => item.id === id)),
+      onClusterFindAllGems: gemAdminTools ? openGemHuntForCluster : undefined,
+      onClusterResetAllGems: gemAdminTools ? handleClusterResetAllGems : undefined,
+      canEdit: (id) =>
+        Boolean(adminDeviceOwnerPowers(admin, gemPreviewAsUser) || owned.some((item) => item.id === id)),
       editCodeFor: (id) =>
-        admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode,
+        adminDeviceOwnerPowers(admin, gemPreviewAsUser)
+          ? editCodeById.get(id)
+          : owned.find((item) => item.id === id)?.editCode,
       onEdit: (house) => requestHouseEdit(house, true),
       skipMetaFor: (id) => skips.meta(id),
       editingId: editFlow.flow?.house.id ?? null,
     };
   }, [
     admin,
+    gemPreviewAsUser,
+    gemAdminTools,
     source,
     likes.liked,
     visits.visited,

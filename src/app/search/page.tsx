@@ -24,6 +24,8 @@ import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
+import { adminDeviceOwnerPowers } from "@/lib/admin-preview-as-user";
+import { useAdminPreviewAsUser } from "@/hooks/use-admin-preview-as-user";
 import { notifyCatalogChanged, removeOwnedHouse, saveOwnedHouse } from "@/lib/offline-db";
 import { writeHomeView } from "@/lib/home-view";
 import type { PublicHouse } from "@/lib/types";
@@ -75,6 +77,8 @@ export default function SearchPage() {
     editFlow.close();
   }, [activeHouseSet, picked, editFlow.close]);
 
+  const { previewAsUser } = useAdminPreviewAsUser();
+  const deviceOwner = adminDeviceOwnerPowers(Boolean(admin), previewAsUser);
   const gemUi = gemHuntVisible(admin);
   const actionContext = useMemo((): HouseCardActionContext => {
     return {
@@ -88,16 +92,21 @@ export default function SearchPage() {
       onToggleVisited: (id) => visits.toggle(id),
       onSkip: (id) => skips.toggle(id),
       onRestore: (id) => skips.unskip(id),
-      canEdit: (id) => Boolean(admin || owned.some((item) => item.id === id)),
+      canEdit: (id) => Boolean(deviceOwner || owned.some((item) => item.id === id)),
       editCodeFor: (id) =>
-        admin
+        deviceOwner
           ? adminHouses.find((item) => item.id === id)?.editCode
           : owned.find((item) => item.id === id)?.editCode,
       onEdit: (house) => {
-        const editCode = admin
+        const isOwned = owned.some((item) => item.id === house.id);
+        const editCode = deviceOwner
           ? adminHouses.find((item) => item.id === house.id)?.editCode
           : owned.find((item) => item.id === house.id)?.editCode;
-        editFlow.openEdit(house, { editCode, admin, allowDelete: true });
+        editFlow.openEdit(house, {
+          editCode,
+          admin: deviceOwner,
+          allowDelete: deviceOwner || isOwned,
+        });
       },
       skipMetaFor: (id) => skips.meta(id),
       editingId: editFlow.flow?.house.id ?? null,
@@ -108,6 +117,7 @@ export default function SearchPage() {
     };
   }, [
     admin,
+    deviceOwner,
     source,
     likes,
     visits,

@@ -121,7 +121,10 @@ export function NeighborhoodToolbar({
             type="button"
             aria-label={gemMapVisible ? GEM_MAP_TOGGLE_HIDE_HE : GEM_MAP_TOGGLE_SHOW_HE}
             aria-pressed={gemMapVisible}
-            onClick={onToggleGemMap}
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggleGemMap();
+            }}
             className={cn(
               "app-toolbar__btn inline-flex size-10 shrink-0 items-center justify-center rounded-lg p-0.5",
               gemMapVisible
