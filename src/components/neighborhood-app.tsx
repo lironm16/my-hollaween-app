@@ -72,7 +72,7 @@ import {
 import { gemMapLegendVisible } from "@/lib/gem-hunt-enabled";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
-import { gemHousesForMap, gemHuntMapHouses, syncGemMonsterAssignment } from "@/lib/gem-monsters";
+import { mainMapGemEligibleHouses, syncGemMonsterAssignment } from "@/lib/gem-monsters";
 import {
   isGemHuntOrientationGranted,
   prepareGemHuntSensors,
@@ -415,13 +415,16 @@ export function NeighborhoodApp({
       ),
     [mapListHouses, layers, adminForHouseSet],
   );
-  const gemPracticeHouses = useMemo(() => {
-    const practiceRows = mapHouses.filter(isPracticeHouse);
-    return gemHousesForMap(gemHuntMapHouses(practiceRows, activeHouseSet));
-  }, [mapHouses, activeHouseSet]);
+  const gemMapRingHouses = useMemo(
+    () =>
+      mainMapGemEligibleHouses(mapHouses, activeHouseSet, {
+        adminGemTools: gemAdminTools,
+      }),
+    [mapHouses, activeHouseSet, gemAdminTools],
+  );
   useEffect(() => {
-    if (gemHuntActive) syncGemMonsterAssignment(gemPracticeHouses);
-  }, [gemHuntActive, gemPracticeHouses]);
+    if (gemHuntActive) syncGemMonsterAssignment(gemMapRingHouses);
+  }, [gemHuntActive, gemMapRingHouses]);
   const visible = useMemo(
     () => filterHouses(housesForFilters, filters, filterContext),
     [housesForFilters, filters, filterContext],
@@ -443,9 +446,9 @@ export function NeighborhoodApp({
   const { resetForNavigation } = selection;
 
   const gemAllCollected = useMemo(() => {
-    if (!gemHuntActive || gemPracticeHouses.length === 0) return false;
-    return gemPracticeHouses.every((h) => gems.collected(h.id));
-  }, [gemHuntActive, gemPracticeHouses, gems.collectedIds]);
+    if (!gemHuntActive || gemMapRingHouses.length === 0) return false;
+    return gemMapRingHouses.every((h) => gems.collected(h.id));
+  }, [gemHuntActive, gemMapRingHouses, gems.collectedIds]);
 
   const bootMapGemHunt = useCallback(
     async (house: PublicHouse, clusterMembers: PublicHouse[] | null) => {
@@ -1584,7 +1587,7 @@ export function NeighborhoodApp({
                       : null
                   }
                   showGemLegend={showGemMapLegend}
-                  gemAnchorHouses={gemUi ? gemPracticeHouses : []}
+                  gemAnchorHouses={gemUi ? gemMapRingHouses : []}
                   showGemPinRings={gemUi && mapDiamondsVisible}
                   isGemCollected={gems.collected}
                 />
@@ -1832,7 +1835,7 @@ export function NeighborhoodApp({
             const collectedBefore = loadGemCollected();
             const celebrate =
               options?.navigateStickerBook
-                ? gemBagCelebrateAfterCollect(gemPracticeHouses, collectedBefore, h.id, monsterId)
+                ? gemBagCelebrateAfterCollect(gemMapRingHouses, collectedBefore, h.id, monsterId)
                 : null;
             gems.collect(h.id, monsterId);
             closeMapGemHunt();

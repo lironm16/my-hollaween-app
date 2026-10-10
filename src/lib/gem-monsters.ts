@@ -604,6 +604,18 @@ export function countGemEligibleHouses(houses: PublicHouse[], houseSet: HouseSet
   return gemHousesForMap(gemHuntMapHouses(houses, houseSet)).length;
 }
 
+/** Houses on the main map that can show a gem ring / host a hunt (matches admin gem manager when tools are on). */
+export function mainMapGemEligibleHouses(
+  mapHouses: readonly PublicHouse[],
+  houseSet: HouseSet,
+  opts: { adminGemTools: boolean },
+): PublicHouse[] {
+  const huntOpts: GemHuntSetOptions | undefined = opts.adminGemTools
+    ? { includeAllHouses: true }
+    : undefined;
+  return gemHousesForMap(gemHuntMapHouses([...mapHouses], houseSet, huntOpts));
+}
+
 /** All shipped sticker slots (not deduped by hash collisions on the map). */
 export function gemAlbumStickerPool(): readonly GemCatalogEntry[] {
   return GEM_MONSTER_MODELS;
