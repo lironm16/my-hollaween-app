@@ -15,14 +15,7 @@ export function gemBagMenuVisible(isAdmin: boolean) {
   return gemHuntVisible(isAdmin);
 }
 
-/** Map legend «יהלומים» row when hunt is on for this admin session. */
-export function gemMapLegendVisible(
-  isAdmin: boolean,
-  opts: {
-    previewAsUser: boolean;
-    mapDiamondsVisible: boolean;
-  },
-) {
-  if (!gemHuntVisible(isAdmin)) return false;
-  return opts.mapDiamondsVisible;
+/** Map legend «שדונים» section — whenever gem hunt UI is enabled (independent of the pin-ring toggle). */
+export function gemMapLegendVisible(isAdmin: boolean) {
+  return gemHuntVisible(isAdmin);
 }

@@ -193,42 +193,9 @@ describe("gem hunt gate", () => {
     assert.equal(bearingClockLabelHe(180), "דרום");
   });
 
-  it("map legend gems for admin QA and when map toggle is on", async () => {
+  it("map legend שדונים follows gem hunt visibility, not the pin-ring toggle", async () => {
     const { gemMapLegendVisible } = await import("@/lib/gem-hunt-enabled");
-    assert.equal(
-      gemMapLegendVisible(true, {
-        previewAsUser: false,
-        mapDiamondsVisible: false,
-      }),
-      false,
-    );
-    assert.equal(
-      gemMapLegendVisible(true, {
-        previewAsUser: false,
-        mapDiamondsVisible: true,
-      }),
-      true,
-    );
-    assert.equal(
-      gemMapLegendVisible(true, {
-        previewAsUser: true,
-        mapDiamondsVisible: true,
-      }),
-      true,
-    );
-    assert.equal(
-      gemMapLegendVisible(true, {
-        previewAsUser: true,
-        mapDiamondsVisible: false,
-      }),
-      false,
-    );
-    assert.equal(
-      gemMapLegendVisible(false, {
-        previewAsUser: false,
-        mapDiamondsVisible: true,
-      }),
-      false,
-    );
+    assert.equal(gemMapLegendVisible(true), true);
+    assert.equal(gemMapLegendVisible(false), false);
   });
 });

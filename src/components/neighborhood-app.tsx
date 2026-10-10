@@ -231,14 +231,7 @@ export function NeighborhoodApp({
   useEffect(() => {
     invalidateMapPinIconCacheForGemRings();
   }, [mapDiamondsVisible]);
-  const showGemMapLegend = useMemo(
-    () =>
-      gemMapLegendVisible(admin, {
-        previewAsUser: gemPreviewAsUser,
-        mapDiamondsVisible,
-      }),
-    [admin, gemPreviewAsUser, mapDiamondsVisible],
-  );
+  const showGemMapLegend = gemMapLegendVisible(admin);
   const [gemResetHouse, setGemResetHouse] = useState<PublicHouse | null>(null);
   const [gemResetCluster, setGemResetCluster] = useState<PublicHouse[] | null>(null);
   const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);
