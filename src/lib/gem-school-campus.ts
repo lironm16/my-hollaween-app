@@ -5,8 +5,11 @@ import { houseMatchesSet, isStubHouse } from "@/lib/house-set";
 import { isPracticeHouse } from "@/lib/practice-house";
 import type { PublicHouse } from "@/lib/types";
 
-/** Emissive strength for hunt gems (school booths + future house gems). */
-export const GEM_HUNT_GLOW_INTENSITY = 0.38;
+/**
+ * Emissive strength for hunt gems (school booths + future house gems).
+ * Emissive is flat light on every face — higher values wash the model in its hue and hide shading.
+ */
+export const GEM_HUNT_GLOW_INTENSITY = 0.12;
 
 export type GemMonsterTint = {
   hue: number;
