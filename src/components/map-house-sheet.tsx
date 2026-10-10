@@ -96,7 +96,8 @@ export function MapHouseSheet({
   const overview = clusterShell && clusterOverview;
   const addressReveal = useAddressReveal();
   const overlaid = useAdminHouseFields(house) ?? house;
-  const { house: hydratedHouse } = useServerHouseDetail(overlaid);
+  const { house: hydratedHouse, loading: detailLoading, unavailable: detailUnavailable } =
+    useServerHouseDetail(overlaid);
   const sheetHouse = useAdminHouseFields(hydratedHouse) ?? hydratedHouse ?? overlaid;
   const address = addressReveal.formatDisplayAddress(sheetHouse);
   const clusterKey = clusterHouses.map((item) => item.id).join(",");
@@ -496,6 +497,8 @@ export function MapHouseSheet({
                   >
                     <HouseSheetBody
                       house={sheetHouse}
+                      detailLoading={detailLoading}
+                      detailUnavailable={detailUnavailable}
                       actionContext={actionContext}
                       editing={editing}
                       extra={extra}

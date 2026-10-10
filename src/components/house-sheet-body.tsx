@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { HouseCard } from "@/components/house-card";
 import { houseCardPropsFor, type HouseCardActionContext } from "@/components/house-card-actions";
 import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
+import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { FilterMismatchNotice } from "@/components/house-skipped-banner";
 import { CodesCopy } from "@/components/codes-copy";
 import { houseHeadline } from "@/lib/labels";
@@ -22,8 +23,13 @@ export function HouseSheetBody({
   index,
   hideHoursBanner,
   clusterBoothTag,
+  detailLoading,
+  detailUnavailable,
 }: {
   house: PublicHouse;
+  /** When the map sheet already fetched detail, skip a second hook + status line. */
+  detailLoading?: boolean;
+  detailUnavailable?: boolean;
   actionContext: HouseCardActionContext;
   editing?: boolean;
   extra?: ReactNode;
@@ -35,8 +41,11 @@ export function HouseSheetBody({
   clusterBoothTag?: string | null;
 }) {
   const editCode = actionContext.editCodeFor?.(house.id);
-  const { house: liveHouse, loading, unavailable } = useServerHouseDetail(house);
-  const displayHouse = liveHouse ?? house;
+  const skipFetch = detailLoading !== undefined || detailUnavailable !== undefined || houseServerDetailReady(house);
+  const fetched = useServerHouseDetail(skipFetch ? null : house);
+  const loading = detailLoading ?? fetched.loading;
+  const unavailable = detailUnavailable ?? fetched.unavailable;
+  const displayHouse = skipFetch ? house : (fetched.house ?? house);
   return (
     <>
       {loading ? (
