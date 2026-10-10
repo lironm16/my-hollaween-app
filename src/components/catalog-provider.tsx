@@ -53,6 +53,7 @@ import { readGemPreviewAsUser } from "@/lib/gem-preview-as-user";
 import { loadOwnedHouses } from "@/lib/offline-db";
 import { isMapListSuspended, subscribeMapListSuspend } from "@/lib/map-list-suspend";
 import { trackCatalogRemovalDelta } from "@/lib/catalog-removed";
+import { recordLiveCatalogRemovals } from "@/lib/server-removed-houses";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
 
@@ -117,6 +118,7 @@ async function fetchJson(url: string, force = false, since?: string): Promise<Ca
 async function fetchFullCatalogBundle(base: Catalog | null): Promise<Catalog | null> {
   try {
     const full = await fetchJson("/api/catalog", true);
+    recordLiveCatalogRemovals(full);
     const payload: Catalog = {
       updatedAt: full.updatedAt,
       neighborhood: full.neighborhood,
@@ -189,8 +191,10 @@ async function recoverCatalogShortfall(
   return merged;
 }
 
+/** Only for live `/api/catalog` payloads — never the CDN snapshot or device cache. */
 function applyCatalogResponse(prev: Catalog | null, live: CatalogDelta): Catalog {
   live = normalizeCatalogDelta(live);
+  recordLiveCatalogRemovals(live);
   if (!prev || live.full) {
     return syncLiveCatalog(prev, live);
   }
