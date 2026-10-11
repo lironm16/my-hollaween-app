@@ -22,7 +22,7 @@ import type { TreatStock, TreatId, VisitState } from "@/lib/types";
 
 const BANNER = "rounded-lg px-3 py-2 text-base font-medium leading-snug break-words";
 const CLOSED_TONE = "bg-red-900/80 text-red-50";
-const CATALOG_REMOVED_TONE = "bg-red-600 px-4 py-3 text-lg font-bold text-white shadow-md";
+const CATALOG_REMOVED_TONE = "w-fit max-w-full bg-red-950/85 text-red-50";
 
 export function HoursStatusBanner({
   house,
