@@ -191,7 +191,7 @@ export function HouseActionBar({
     if (onNightPasses) {
       items.push({
         id: "night-passes",
-        label: "כרטיסי כניסה",
+        label: "חיבור מכשירים",
         icon: <Ticket className={MENU_ICON_CLASS} strokeWidth={2.2} />,
         onClick: onNightPasses,
       });

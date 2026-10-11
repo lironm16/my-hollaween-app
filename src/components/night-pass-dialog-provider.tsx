@@ -52,9 +52,9 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
       </Suspense>
       {children}
       <Dialog open={registerOpen} onOpenChange={setRegisterOpen}>
-        <DialogContent className="max-h-[min(90dvh,640px)] overflow-y-auto border-orange-500/25 bg-[#12081a] text-violet-50">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl text-orange-300">
+        <DialogContent className="max-h-[min(90dvh,640px)] overflow-y-auto border-orange-500/25 bg-[#12081a] pt-12 text-violet-50">
+          <DialogHeader className="items-center text-center">
+            <DialogTitle className="font-display text-xl text-orange-300 pe-8">
               כרטיס כניסה לאירוע
             </DialogTitle>
           </DialogHeader>
@@ -66,10 +66,10 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
         </DialogContent>
       </Dialog>
       <Dialog open={ownerOpen} onOpenChange={setOwnerOpen}>
-        <DialogContent className="max-h-[min(92dvh,720px)] overflow-y-auto border-orange-500/25 bg-[#12081a] text-violet-50 sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl text-orange-300">
-              כרטיסי כניסה לאירוע
+        <DialogContent className="max-h-[min(92dvh,720px)] overflow-y-auto border-orange-500/25 bg-[#12081a] pt-12 text-violet-50 sm:max-w-md">
+          <DialogHeader className="items-center text-center">
+            <DialogTitle className="font-display text-xl text-orange-300 pe-8">
+              4 מכשירים לאירוע
             </DialogTitle>
           </DialogHeader>
           {ownerHouseId ? (

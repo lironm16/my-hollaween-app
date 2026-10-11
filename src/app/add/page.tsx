@@ -103,26 +103,31 @@ export default function AddPage() {
               </p>
             </div>
             <PersistNote />
-            <CodesCopy editCode={done.editCode} />
             {nightPass.enabled ? (
-              <div className="rounded-xl bg-emerald-950/40 p-3 ring-1 ring-emerald-500/25">
-                <p className="text-base text-emerald-100">
-                  יש לכם <strong>4 כרטיסי כניסה לאירוע</strong> — שתפו קוד עם מי שיבוא
-                  לבקר ויראה כתובות הבתים ביום החשיפה.
+              <section className="space-y-3 rounded-xl bg-emerald-950/40 p-4 ring-1 ring-emerald-500/25">
+                <h2 className="text-center text-lg font-medium text-emerald-100">
+                  יש לכם 4 מכשירים לאירוע
+                </h2>
+                <p className="text-center text-sm text-emerald-200/90">
+                  שתפו קוד עם מי שיבוא לבקר — יראה כתובות בתים ביום החשיפה.
                 </p>
                 <Button
                   type="button"
                   variant="outline"
-                  className="mt-3 w-full border-emerald-500/40 text-emerald-100 hover:bg-emerald-950/60"
+                  className="w-full border-emerald-500/40 text-emerald-100 hover:bg-emerald-950/60"
                   onClick={() => openOwnerPasses(done.id)}
                 >
-                  הצגת כרטיסי הכניסה
+                  חבר מכשירים
                 </Button>
-              </div>
+              </section>
             ) : null}
-            <p className="text-lg text-orange-100">
-              קוד העריכה נשמר במכשיר הזה — אפשר לערוך בלי להקליד שוב.
-            </p>
+            <section className="space-y-2 rounded-xl bg-black/35 p-4 ring-1 ring-orange-500/20">
+              <h2 className="text-center text-lg font-medium text-orange-200">קוד עריכה</h2>
+              <p className="text-center text-sm text-violet-300">
+                לעריכת הבית מהמכשיר הזה — נשמר אוטומטית אחרי ההוספה.
+              </p>
+              <CodesCopy editCode={done.editCode} />
+            </section>
             <div className="flex flex-col gap-2">
               <Link
                 href="/help/share-edit-code"
