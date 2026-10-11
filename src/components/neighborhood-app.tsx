@@ -110,7 +110,6 @@ import { setMapListSuspended } from "@/lib/map-list-suspend";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { useAppNow } from "@/hooks/use-app-clock";
 import {
-  loadCatalogCacheSync,
   notifyCatalogChanged,
   removeOwnedHouse,
   forgetPublishedHouse,
@@ -428,6 +427,8 @@ export function NeighborhoodApp({
     () => filterHouses(housesForFilters, filters, filterContext),
     [housesForFilters, filters, filterContext],
   );
+  /** Avoid SSR/client mismatch: device cache loads after hydration in CatalogProvider. */
+  const visibleForList = catalogReady ? visible : [];
   const showBootstrapSpinner =
     displayHouses.length === 0 && !catalogHasRealHouses(catalog) && loading && !catalogReady;
   const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
@@ -1685,7 +1686,7 @@ export function NeighborhoodApp({
                   />
                 ) : (
                   <HouseList
-                    houses={visible}
+                    houses={visibleForList}
                     origin={origin}
                     now={now}
                     actionContext={houseActionContext}
