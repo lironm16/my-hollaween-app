@@ -12,6 +12,7 @@ import { useNightPass } from "@/hooks/use-night-pass";
 import { config } from "@/lib/config";
 import { mergeAddressRevealSchedule } from "@/lib/event-settings";
 import {
+  disconnectNightPassOnDevice,
   notifyNightPassSlotsChanged,
   refreshNightPassState,
 } from "@/lib/night-pass-client";
@@ -44,6 +45,7 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [iosTab, setIosTab] = useState(false);
+  const [disconnectBusy, setDisconnectBusy] = useState(false);
 
   useEffect(() => {
     setCode((prev) => initialCode || prev);
@@ -134,9 +136,32 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
         ) : null}
         <p className="text-base text-violet-100">כתובות הבתים ייפתחו כאן ב-{revealLabel}.</p>
         <p className="rounded-xl bg-black/25 p-3 text-sm text-violet-200">
-          מחקתם את האפליקציה או עברתם לטלפון אחר? הזינו שוב את אותו הקוד עם אותו מספר טלפון. הכרטיס
-          יעבור למכשיר החדש, והמכשיר הקודם יתנתק.
+          «התנתקות» מסירה את הכניסה רק מהמכשיר הזה — אצל בעלי הבית הקוד עדיין מסומן כבשימוש. לכניסה
+          מחדש: אותו קוד ואותו טלפון.
         </p>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={disconnectBusy}
+          className="w-full border-violet-500/30 text-violet-200"
+          onClick={() => {
+            if (
+              !window.confirm(
+                "להתנתק מהמכשיר הזה?\n\nהקוד נשאר רשום — אפשר להיכנס שוב עם אותו קוד ואותו מספר טלפון.",
+              )
+            ) {
+              return;
+            }
+            setDisconnectBusy(true);
+            void disconnectNightPassOnDevice().then((ok) => {
+              setDisconnectBusy(false);
+              if (ok) toast.success("המכשיר התנתק.");
+              else toast.error("ההתנתקות נכשלה.");
+            });
+          }}
+        >
+          {disconnectBusy ? "מתנתק…" : "התנתקות מהמכשיר"}
+        </Button>
         {!compact ? (
           <Link
             href="/"
