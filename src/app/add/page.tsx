@@ -108,9 +108,6 @@ export default function AddPage() {
                 <h2 className="text-center text-lg font-medium text-emerald-100">
                   יש לכם 4 מכשירים לאירוע
                 </h2>
-                <p className="text-center text-sm text-emerald-200/90">
-                  שתפו קוד עם מי שיבוא לבקר — יראה כתובות בתים ביום החשיפה.
-                </p>
                 <Button
                   type="button"
                   variant="outline"
@@ -126,7 +123,7 @@ export default function AddPage() {
               <p className="text-center text-sm text-violet-300">
                 לעריכת הבית מהמכשיר הזה — נשמר אוטומטית אחרי ההוספה.
               </p>
-              <CodesCopy editCode={done.editCode} />
+              <CodesCopy editCode={done.editCode} hideLabel />
             </section>
             <div className="flex flex-col gap-2">
               <Link

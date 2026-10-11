@@ -9,6 +9,7 @@ import {
   NIGHT_PASSES_SLOTS_CHANGED_EVENT,
   notifyNightPassSlotsChanged,
 } from "@/lib/night-pass-client";
+import { formatHouseAddedAt } from "@/lib/house-meta";
 import { cn } from "@/lib/utils";
 
 type SlotView = {
@@ -32,20 +33,9 @@ type PassesResponse = {
 };
 
 function shareText(code: string) {
-  const link = `${window.location.origin}/pass?c=${code.replace("-", "")}`;
+  const plain = code.replace("-", "");
+  const link = `${window.location.origin}/?openPass=1&c=${plain}`;
   return `קוד כניסה לאירוע בשכונה: ${code}\nנרשמים כאן: ${link}\nהקוד עובד במכשיר אחד בלבד.`;
-}
-
-function formatWhen(iso: string | null) {
-  if (!iso) return "";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString("he-IL", {
-    day: "numeric",
-    month: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 function IconAction({
@@ -187,7 +177,7 @@ export function NightPassesCard({
         <p className="text-center text-sm text-amber-200">כבוי לציבור — רק מנהלים רואים עכשיו.</p>
       ) : null}
       {error ? <p className="text-sm text-red-300">{error}</p> : null}
-      <ul className="space-y-4">
+      <ul className="divide-y divide-orange-500/15 overflow-hidden rounded-xl ring-1 ring-orange-500/20">
         {data.slots.map((slot) => {
           const mine = data.thisDeviceSlot === slot.slot;
           const inUse = slot.status === "active";
@@ -195,7 +185,7 @@ export function NightPassesCard({
             inUse && (admin || (slot.resetsLeft != null && slot.resetsLeft > 0));
 
           return (
-            <li key={slot.slot} className="flex flex-col items-center gap-2 px-1">
+            <li key={slot.slot} className="flex flex-col items-center gap-2 px-3 py-3">
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <span dir="ltr" className="font-mono text-xl tracking-widest text-orange-100">
                   {slot.code}
@@ -243,7 +233,7 @@ export function NightPassesCard({
                   {mine ? <span className="text-orange-300"> · המכשיר הזה</span> : null}
                   {slot.registeredAt ? (
                     <span className="block text-sm font-normal text-violet-400">
-                      עודכן · {formatWhen(slot.registeredAt)}
+                      עודכן · {formatHouseAddedAt(slot.registeredAt)}
                     </span>
                   ) : null}
                 </p>

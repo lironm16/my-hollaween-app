@@ -14,7 +14,7 @@ import {
   notifyNightPassSlotsChanged,
   refreshNightPassState,
 } from "@/lib/night-pass-client";
-import { privateHomeAddressesRevealLine } from "@/lib/night-pass-copy";
+import { NIGHT_PASS_REVEAL_HINT } from "@/lib/night-pass-copy";
 import { cn } from "@/lib/utils";
 
 function isIosBrowserTab() {
@@ -52,8 +52,6 @@ export function NightPassRegisterPanel({
   const [iosTab, setIosTab] = useState(false);
   const [disconnectBusy, setDisconnectBusy] = useState(false);
   const [pairSuccess, setPairSuccess] = useState(false);
-
-  const revealLine = privateHomeAddressesRevealLine(catalog?.eventSettings?.addressReveal);
 
   useEffect(() => {
     setCode((prev) => initialCode || prev);
@@ -124,7 +122,6 @@ export function NightPassRegisterPanel({
   if (pairSuccess) {
     return (
       <section className="space-y-4">
-        <p className="text-base text-violet-100">{revealLine}</p>
         <Button
           type="button"
           className="h-11 w-full bg-orange-500 text-black hover:bg-orange-400"
@@ -149,7 +146,7 @@ export function NightPassRegisterPanel({
             </bdi>
           </p>
         ) : null}
-        <p className="text-base text-violet-100">{revealLine}</p>
+        <p className="text-base text-violet-100">{NIGHT_PASS_REVEAL_HINT}</p>
         <Button
           type="button"
           variant="outline"
