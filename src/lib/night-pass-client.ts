@@ -156,6 +156,14 @@ export function nightPassAudience(state: NightPassState): AddressRevealAudience 
   return "none";
 }
 
+/** Admin's full house list must stay off the map in תצוגת משתמש once night passes gate homes. */
+export function adminSeesAllHouses(
+  admin: boolean,
+  state: Pick<NightPassState, "enabled" | "viewer">,
+): boolean {
+  return admin && (!state.enabled || state.viewer === "admin");
+}
+
 export function catalogScopeKey(state: NightPassState): string {
   return state.enabled ? state.viewer : "legacy";
 }

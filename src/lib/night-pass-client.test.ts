@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { catalogScopeMismatchesResponse, catalogUrls } from "@/lib/night-pass-client";
+import {
+  adminSeesAllHouses,
+  catalogScopeMismatchesResponse,
+  catalogUrls,
+} from "@/lib/night-pass-client";
 
 describe("catalogUrls", () => {
   it("never uses static catalog.json (live API respects night-pass toggle)", () => {
@@ -59,5 +63,24 @@ describe("catalogScopeMismatchesResponse", () => {
       ),
       false,
     );
+  });
+});
+
+describe("adminSeesAllHouses", () => {
+  it("keeps the admin house list with night passes off", () => {
+    assert.equal(adminSeesAllHouses(true, { enabled: false, viewer: "legacy" }), true);
+  });
+
+  it("keeps the admin house list for the admin viewer", () => {
+    assert.equal(adminSeesAllHouses(true, { enabled: true, viewer: "admin" }), true);
+  });
+
+  it("drops it in תצוגת משתמש once night passes are on", () => {
+    assert.equal(adminSeesAllHouses(true, { enabled: true, viewer: "public" }), false);
+    assert.equal(adminSeesAllHouses(true, { enabled: true, viewer: "pass" }), false);
+  });
+
+  it("is never true for visitors", () => {
+    assert.equal(adminSeesAllHouses(false, { enabled: false, viewer: "legacy" }), false);
   });
 });

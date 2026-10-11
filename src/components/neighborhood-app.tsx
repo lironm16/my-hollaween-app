@@ -26,6 +26,7 @@ import { NeighborhoodStatusBanners } from "@/components/neighborhood-status-bann
 import { NightPassBanner } from "@/components/night-pass-banner";
 import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
 import { useNightPass } from "@/hooks/use-night-pass";
+import { adminSeesAllHouses } from "@/lib/night-pass-client";
 import { RouteChangeBanner, routeChangeBannerMessage } from "@/components/route-change-banner";
 import { RouteChangesSheet } from "@/components/route-changes-sheet";
 import { TempSkipRestoreAlerts } from "@/components/temp-skip-restore-alert";
@@ -341,7 +342,7 @@ export function NeighborhoodApp({
   const houses = useMergedHouses({
     catalogHouses,
     owned,
-    admin: adminForHouseSet,
+    admin: adminSeesAllHouses(adminForHouseSet, nightPass),
     adminHouses,
     includeCatalogWhenAdmin: true,
     restoreRedactedLocations,
