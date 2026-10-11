@@ -64,12 +64,14 @@ const GEM_HUNT_QUESTION = {
   href: "/help/gem-hunt",
 } as const;
 
+type HelpLink = { question: string; href: string };
+
 export default function HelpPage() {
   const { admin } = useAdminSession();
   const now = useAppNow();
   const { gemUiVisible: showGemHuntHelp } = useGemHuntAdminUi(admin);
   const nightPass = useNightPass();
-  let items = [...QUESTIONS];
+  let items: HelpLink[] = [...QUESTIONS];
   if (nightPass.enabled) {
     items = [...items.slice(0, 2), ...EVENT_DEVICE_QUESTIONS, ...items.slice(2)];
   }
