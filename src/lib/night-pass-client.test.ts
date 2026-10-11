@@ -13,11 +13,31 @@ describe("catalogScopeMismatchesResponse", () => {
     );
   });
 
-  it("ignores legacy / disabled night passes", () => {
+  it("flags when night passes were turned on server-side but client is still legacy", () => {
     assert.equal(
       catalogScopeMismatchesResponse(
         { enabled: false, viewer: "legacy", registered: false },
         "public",
+      ),
+      true,
+    );
+  });
+
+  it("flags when night passes were turned off server-side but client still has pass mode", () => {
+    assert.equal(
+      catalogScopeMismatchesResponse(
+        { enabled: true, viewer: "public", registered: false },
+        undefined,
+      ),
+      true,
+    );
+  });
+
+  it("allows matching legacy mode (no scope on payload)", () => {
+    assert.equal(
+      catalogScopeMismatchesResponse(
+        { enabled: false, viewer: "legacy", registered: false },
+        undefined,
       ),
       false,
     );

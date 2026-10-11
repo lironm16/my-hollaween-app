@@ -160,13 +160,19 @@ export function catalogScopeKey(state: NightPassState): string {
   return state.enabled ? state.viewer : "legacy";
 }
 
-/** API `scope` disagrees with local pass state — do not merge; refresh after /me (e.g. code stolen). */
+/**
+ * API catalog mode disagrees with local pass state — do not merge (code stolen, feature toggled, etc.).
+ * Legacy payloads omit `scope`; night-pass payloads always include it (`public`, `pass`, …).
+ */
 export function catalogScopeMismatchesResponse(
   state: NightPassState,
   responseScope: CatalogDelta["scope"],
 ): boolean {
-  if (!state.enabled || !responseScope || responseScope === "legacy") return false;
-  return responseScope !== state.viewer;
+  const scoped = Boolean(responseScope && responseScope !== "legacy");
+  if (scoped && !state.enabled) return true;
+  if (state.enabled && !scoped) return true;
+  if (state.enabled && scoped && responseScope !== state.viewer) return true;
+  return false;
 }
 
 export function readStoredCatalogScope(): string {
