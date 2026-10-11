@@ -718,30 +718,30 @@ export function HouseForm({
           ) : null}
           {hoursIssue ? <p className="text-lg text-red-300">{hoursIssue}</p> : null}
         </div>
-        {pauseCloseEnabled ? (
-          <Field label="מצב עכשיו">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <NightStatusChip
-                label="פתוח"
-                dotClass="is-open"
-                selected={nightStatus === "open"}
-                onClick={() => setNightStatus("open")}
-              />
-              <NightStatusChip
-                label="הפסקה"
-                dotClass="is-break"
-                selected={nightStatus === "pause"}
-                onClick={() => setNightStatus("pause")}
-              />
-              <NightStatusChip
-                label="סגור"
-                dotClass="is-closed"
-                selected={nightStatus === "stop"}
-                onClick={() => setNightStatus("stop")}
-              />
-            </div>
-          </Field>
-        ) : null}
+        <Field label="מצב" hint={pauseCloseEnabled ? undefined : "הפסקה וסגירה בערב האירוע"}>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <NightStatusChip
+              label="פתוח"
+              dotClass="is-open"
+              selected={nightStatus === "open"}
+              onClick={() => setNightStatus("open")}
+            />
+            <NightStatusChip
+              label="הפסקה"
+              dotClass="is-break"
+              selected={nightStatus === "pause"}
+              disabled={!pauseCloseEnabled}
+              onClick={() => setNightStatus("pause")}
+            />
+            <NightStatusChip
+              label="סגור"
+              dotClass="is-closed"
+              selected={nightStatus === "stop"}
+              disabled={!pauseCloseEnabled}
+              onClick={() => setNightStatus("stop")}
+            />
+          </div>
+        </Field>
       </FormSection>
       <FormSection title="מה יש בבית">
         <Field label="רמת פחד">
@@ -910,15 +910,17 @@ function NightStatusChip({
   label,
   dotClass,
   selected,
+  disabled,
   onClick,
 }: {
   label: string;
   dotClass: string;
   selected: boolean;
+  disabled?: boolean;
   onClick: () => void;
 }) {
   return (
-    <ChoiceChip selected={selected} onClick={onClick}>
+    <ChoiceChip selected={selected} disabled={disabled} onClick={onClick}>
       <span className={cn("night-status-dot", dotClass)} />
       {label}
     </ChoiceChip>
