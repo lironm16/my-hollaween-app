@@ -33,8 +33,8 @@ export function NightPassBanner() {
       onClick={() => passDialog?.openRegister()}
     >
       {hidden > 0
-        ? `עוד ${hidden} בתים פרטיים זמינים למשתמשים רשומים · `
-        : "כתובות בתים פרטיים זמינות למשתמשים רשומים · "}
+        ? `עוד ${hidden} בתים פרטיים זמינים למכשיר עם קוד · `
+        : "כתובות בתים פרטיים זמינות למכשיר עם קוד · "}
       <span className="font-medium text-orange-300 underline underline-offset-2">יש לי קוד</span>
     </button>
   );

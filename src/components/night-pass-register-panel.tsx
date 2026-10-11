@@ -7,7 +7,6 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminSession } from "@/hooks/use-admin-session";
-import { useCatalog } from "@/hooks/use-catalog";
 import { useNightPass } from "@/hooks/use-night-pass";
 import {
   disconnectNightPassOnDevice,
@@ -42,7 +41,6 @@ export function NightPassRegisterPanel({
 }: Props) {
   const pass = useNightPass();
   const { admin } = useAdminSession();
-  const { catalog } = useCatalog();
   const [checked, setChecked] = useState(false);
   const [code, setCode] = useState(initialCode);
   const [name, setName] = useState("");
