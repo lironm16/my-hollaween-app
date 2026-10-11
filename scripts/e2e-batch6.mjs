@@ -49,7 +49,7 @@ async function openSideMenu(page) {
 }
 
 async function fillAddHouseForm(page, { name, address = E2E_HOUSE_ADDRESS }) {
-  await page.getByPlaceholder(/בית משפחת/).fill(name);
+  await page.locator('input[maxlength="80"]').fill(name);
   const addressField = page.getByPlaceholder(/רחוב ומספר/);
   await addressField.fill("");
   await addressField.fill(address);

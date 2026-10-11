@@ -541,7 +541,6 @@ export function HouseForm({
               const theme = themeFromName(name) ?? form.theme;
               setForm({ ...form, name, theme });
             }}
-            placeholder="בית הדלעות של משפחת לוי"
             className="h-11 bg-[#1d1028] text-lg"
           />
         </Field>
@@ -554,7 +553,6 @@ export function HouseForm({
               minLength={isNewHouse ? HOUSE_FIELD_LIMITS.addedBy.min : undefined}
               maxLength={HOUSE_FIELD_LIMITS.addedBy.max}
               onChange={(e) => setAddedBy(e.target.value)}
-              placeholder="ישראל כהן"
               className="h-11 bg-[#1d1028] text-lg"
             />
           </Field>
@@ -570,7 +568,6 @@ export function HouseForm({
               onBlur={() => setOwnerPhoneTouched(true)}
               aria-invalid={ownerPhoneError ? true : undefined}
               aria-describedby={ownerPhoneError ? "owner-phone-error" : undefined}
-              placeholder="050-1234567"
               className={cn(
                 "h-11 bg-[#1d1028] text-lg",
                 ownerPhoneError && "ring-2 ring-rose-500/70",

@@ -61,9 +61,9 @@ async function fillVerifiedAddress(page, { name, address = FORM_ADDRESS }) {
   await suggestion.waitFor({ timeout: 25_000 });
   await suggestion.click();
   await page.getByText("כתובת מאומתת על המפה").waitFor();
-  await page.getByPlaceholder(/בית משפחת/).fill(name);
+  await page.locator('input[maxlength="80"]').fill(name);
   await page.getByPlaceholder(/קומה|דירה|הוראות/).fill("קומה 1");
-  await page.getByPlaceholder("ישראל כהן").fill("בדיקות E2E");
+  await page.locator('input[autocomplete="name"]').fill("בדיקות E2E");
   await page.locator('input[type="tel"]').first().fill("0501234567");
 }
 
