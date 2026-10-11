@@ -3,12 +3,11 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provider";
-import { NightPassDeviceStrip } from "@/components/night-pass-device-strip";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { NIGHT_PASS_LOST_EVENT } from "@/lib/night-pass-client";
 
-/** Map strip: unregistered → invite code; registered → same style as admin «תצוגת משתמש». */
+/** Map strip: invite code when not registered. Registered users see status only in the side menu. */
 export function NightPassBanner() {
   const pass = useNightPass();
   const { catalog } = useCatalog();
@@ -24,20 +23,7 @@ export function NightPassBanner() {
     return () => window.removeEventListener(NIGHT_PASS_LOST_EVENT, onLost);
   }, []);
 
-  if (!pass.enabled || pass.viewer === "admin") return null;
-
-  if (pass.registered) {
-    return (
-      <div className="relative z-30 px-3 py-2">
-        <NightPassDeviceStrip
-          compact
-          pass={pass}
-          showDisconnect={false}
-          onDetails={() => passDialog?.openRegister()}
-        />
-      </div>
-    );
-  }
+  if (!pass.enabled || pass.viewer === "admin" || pass.registered) return null;
 
   const hidden = catalog?.hiddenHouseCount ?? 0;
   return (

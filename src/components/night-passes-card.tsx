@@ -241,7 +241,7 @@ export function NightPassesCard({
                     </>
                   ) : null}
                   {mine ? <span className="text-orange-300"> · המכשיר הזה</span> : null}
-                  {slot.registrations > 1 ? (
+                  {slot.registeredAt ? (
                     <span className="block text-sm font-normal text-violet-400">
                       עודכן · {formatWhen(slot.registeredAt)}
                     </span>

@@ -90,11 +90,10 @@ async function dedupeSlots(rows: NightPassRecord[]) {
 
 export type RedeemOutcome =
   | { ok: true; record: NightPassRecord; token: string; reregistered: boolean }
-  | { ok: false; error: "invalid" | "phone_mismatch" };
+  | { ok: false; error: "invalid" };
 
 /**
- * Register a device on a pass. Same phone may register again (reinstall, Safari → app);
- * the new device token replaces the old one, so only the last device stays valid.
+ * Register a device on a pass. Each redeem replaces the device token — only the last device stays valid.
  */
 export async function redeemNightPass(input: {
   code: string;
@@ -104,14 +103,10 @@ export async function redeemNightPass(input: {
   const id = passIdForCode(input.code);
   const token = randomBytes(24).toString("base64url");
   const tokenHash = hashNightPassToken(token);
-  let outcome = "invalid" as "invalid" | "phone_mismatch" | "registered" | "reregistered";
+  let outcome = "invalid" as "invalid" | "registered" | "reregistered";
   const record = await updateNightPass(id, (current) => {
     if (!current || current.code !== input.code) {
       outcome = "invalid";
-      return null;
-    }
-    if (current.status === "active" && current.holderPhone !== input.phone) {
-      outcome = "phone_mismatch";
       return null;
     }
     const again = current.status === "active";
@@ -134,8 +129,8 @@ export async function redeemNightPass(input: {
       updatedAt: now,
     };
   });
-  if (outcome === "invalid" || outcome === "phone_mismatch" || !record) {
-    return { ok: false, error: outcome === "phone_mismatch" ? "phone_mismatch" : "invalid" };
+  if (outcome === "invalid" || !record) {
+    return { ok: false, error: "invalid" };
   }
   return { ok: true, record, token, reregistered: outcome === "reregistered" };
 }

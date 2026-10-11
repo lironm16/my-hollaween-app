@@ -48,13 +48,6 @@ export async function POST(request: Request) {
 
   const outcome = await redeemNightPass({ code, name, phone });
   if (!outcome.ok) {
-    if (outcome.error === "phone_mismatch") {
-      return fail(
-        409,
-        "phone_mismatch",
-        "הקוד כבר רשום למספר טלפון אחר. אם זה הקוד שלכם — הזינו את אותו מספר טלפון. אחרת בקשו קוד חדש מבעלי הבית.",
-      );
-    }
     return fail(404, "invalid", "הקוד לא נמצא. בדקו שהעתקתם את כל 8 התווים.");
   }
   await setNightPassCookie(outcome.record.id, outcome.token);

@@ -35,6 +35,7 @@ export async function disconnectNightPassOnDevice(): Promise<boolean> {
     });
     if (!res.ok) return false;
     lastFetchAt = 0;
+    suppressNextPassLostEvent = true;
     await refreshNightPassState({ force: true });
     return true;
   } catch {
@@ -88,6 +89,8 @@ export function subscribeNightPassState(onChange: () => void) {
 let inflight: Promise<NightPassState | null> | null = null;
 let lastFetchAt = 0;
 const MIN_REFETCH_MS = 10_000;
+/** Intentional «התנתקות» — do not show «pass lost» toast. */
+let suppressNextPassLostEvent = false;
 
 /** Ask the server who this device is. Network failure keeps the last known state. */
 export function refreshNightPassState(options?: { force?: boolean }): Promise<NightPassState | null> {
@@ -110,7 +113,11 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
       if (JSON.stringify(prev) !== JSON.stringify(next)) {
         writeNightPassState(next);
         if (prev.enabled && prev.registered && next.enabled && !next.registered) {
-          window.dispatchEvent(new Event(NIGHT_PASS_LOST_EVENT));
+          if (suppressNextPassLostEvent) {
+            suppressNextPassLostEvent = false;
+          } else {
+            window.dispatchEvent(new Event(NIGHT_PASS_LOST_EVENT));
+          }
         }
       }
       return next;

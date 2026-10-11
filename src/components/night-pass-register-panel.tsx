@@ -125,9 +125,9 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
           כתובות הבתים ייפתחו כאן ב-{revealLabel}.
         </p>
         <p className="rounded-xl bg-black/25 p-3 text-start text-sm text-violet-200">
-          שמרו את מספר הטלפון שהזנתם: אם תתקינו מחדש או תעברו מכשיר, תצטרכו את אותו קוד ואותו
-          טלפון כדי להיכנס שוב. «התנתקות» מסירה את הכניסה רק מהמכשיר הזה — אצל בעלי הבית הקוד
-          עדיין מסומן כבשימוש.
+          הקוד עובד במכשיר אחד — הרשמה במכשיר אחר מעבירה את הגישה לשם. «התנתקות» מסירה את
+          הכניסה רק מהמכשיר הזה; אצל בעלי הבית הקוד עדיין מסומן כבשימוש, ואפשר להירשם שוב עם
+          אותו קוד.
         </p>
         <Button
           type="button"
@@ -155,7 +155,7 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
         <p className="text-base text-violet-100">כתובות הבתים ייפתחו כאן ב-{revealLabel}.</p>
         <p className="rounded-xl bg-black/25 p-3 text-sm text-violet-200">
           «התנתקות» מסירה את הכניסה רק מהמכשיר הזה — אצל בעלי הבית הקוד עדיין מסומן כבשימוש. לכניסה
-          מחדש: אותו קוד ואותו טלפון.
+          מחדש: אותו קוד (בכל מכשיר).
         </p>
         <Button
           type="button"
@@ -165,7 +165,7 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
           onClick={() => {
             if (
               !window.confirm(
-                "להתנתק מהמכשיר הזה?\n\nהקוד נשאר רשום — אפשר להיכנס שוב עם אותו קוד ואותו מספר טלפון.",
+                "להתנתק מהמכשיר הזה?\n\nהקוד נשאר רשום — אפשר להיכנס שוב עם אותו קוד.",
               )
             ) {
               return;

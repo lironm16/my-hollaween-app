@@ -39,14 +39,19 @@ describe("night pass service (file store)", () => {
     assert.ok(await service.validNightPassForToken(first.record.id, first.token));
 
     const stranger = await service.redeemNightPass({ code, name: "יוסי", phone: "0529999999" });
-    assert.deepEqual(stranger, { ok: false, error: "phone_mismatch" });
+    assert.equal(stranger.ok, true);
+    if (!stranger.ok) return;
+    assert.equal(stranger.reregistered, true);
+    store.invalidateNightPassMem();
+    assert.equal(await service.validNightPassForToken(first.record.id, first.token), null);
+    assert.ok(await service.validNightPassForToken(stranger.record.id, stranger.token));
 
     const second = await service.redeemNightPass({ code, name: "דנה", phone: "0501234567" });
     assert.equal(second.ok, true);
     if (!second.ok) return;
     assert.equal(second.reregistered, true);
     store.invalidateNightPassMem();
-    assert.equal(await service.validNightPassForToken(first.record.id, first.token), null);
+    assert.equal(await service.validNightPassForToken(stranger.record.id, stranger.token), null);
     assert.ok(await service.validNightPassForToken(second.record.id, second.token));
   });
 
