@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Camera, ChevronDown } from "lucide-react";
+import { Camera } from "lucide-react";
 import { toast } from "sonner";
 import { compressJpegFile, type PhotoFocus } from "@/lib/compress-image";
 import { HousePhotoFrame } from "@/components/house-photo-frame";
@@ -169,11 +169,6 @@ export function HouseForm({
   const [ownerPhoneTouched, setOwnerPhoneTouched] = useState(false);
   const [hoodTouched, setHoodTouched] = useState(false);
   const existingPhoto = initial?.photoUrl ?? "";
-  const hasOptionalDetails = Boolean(
-    initial?.arrival?.trim() ||
-      initial?.notes?.trim() ||
-      existingPhoto,
-  );
   const isNewHouse = !initial?.id;
   const ownerPhoneRequired = isNewHouse || !initial?.ownerPhone?.trim();
   const ownerPhoneError = ownerPhoneTouched
@@ -546,12 +541,12 @@ export function HouseForm({
               const theme = themeFromName(name) ?? form.theme;
               setForm({ ...form, name, theme });
             }}
-            placeholder="בית משפחת לוי"
+            placeholder="בית הדלעות של משפחת לוי"
             className="h-11 bg-[#1d1028] text-lg"
           />
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="השם שלך">
+          <Field label="השם שלך" hint="לא מוצג">
             <Input
               required={isNewHouse}
               value={addedBy}
@@ -590,20 +585,6 @@ export function HouseForm({
         ) : null}
       </FormSection>
       <FormSection title="איפה">
-        <Field
-          label="כתובת"
-          charCount={{ length: form.address.length, max: HOUSE_FIELD_LIMITS.address.max }}
-        >
-          <AddressField
-            value={form.address}
-            onChange={onAddressTyped}
-            onSelect={onAddressSelect}
-            confirmed={addressOk}
-            disabled={blocked}
-            maxLength={HOUSE_FIELD_LIMITS.address.max}
-            onFocusChange={setAddressFieldActive}
-          />
-        </Field>
         <Field label="שכונה" hint={lockedSchoolHood ? "לפי בית הספר" : undefined}>
           <div className="flex flex-wrap gap-1.5" role="group" aria-label="שכונה">
             {NEIGHBORHOOD_FILTER_OPTIONS.map((choice) => (
@@ -617,6 +598,45 @@ export function HouseForm({
               </ChoiceChip>
             ))}
           </div>
+        </Field>
+        <Field
+          label="כתובת"
+          hint={HIDDEN_UNTIL_EVENT}
+          charCount={{ length: form.address.length, max: HOUSE_FIELD_LIMITS.address.max }}
+        >
+          <AddressField
+            value={form.address}
+            onChange={onAddressTyped}
+            onSelect={onAddressSelect}
+            confirmed={addressOk}
+            disabled={blocked}
+            maxLength={HOUSE_FIELD_LIMITS.address.max}
+            onFocusChange={setAddressFieldActive}
+          />
+        </Field>
+        <Field
+          label="איפה הדלת"
+          hint={HIDDEN_UNTIL_EVENT}
+          charCount={{ length: form.arrival.length, max: HOUSE_FIELD_LIMITS.arrival.max }}
+        >
+          <Input
+            value={form.arrival}
+            maxLength={HOUSE_FIELD_LIMITS.arrival.max}
+            onChange={(e) => setForm({ ...form, arrival: e.target.value })}
+            placeholder="קומה 2, דירה 5"
+          />
+        </Field>
+        <Field
+          label="הערה למבקרים"
+          hint={HIDDEN_UNTIL_EVENT}
+          charCount={{ length: form.notes.length, max: HOUSE_FIELD_LIMITS.notes.max }}
+        >
+          <Input
+            value={form.notes}
+            maxLength={HOUSE_FIELD_LIMITS.notes.max}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            placeholder="יש כלב, מדרגות…"
+          />
         </Field>
         {admin ? (
           <div>
@@ -803,93 +823,60 @@ export function HouseForm({
           />
         </Field>
       </FormSection>
-      <details
-        open={hasOptionalDetails}
-        className="group rounded-xl bg-[#1d1028]/60 ring-1 ring-orange-500/20"
-      >
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-lg font-medium text-orange-200 [&::-webkit-details-marker]:hidden">
-          <span>עוד פרטים · תמונה (לא חובה)</span>
-          <ChevronDown className="size-5 transition-transform group-open:rotate-180" />
-        </summary>
-        <div className="space-y-4 px-3 pt-1 pb-4">
-          <Field
-            label="איפה הדלת"
-            charCount={{ length: form.arrival.length, max: HOUSE_FIELD_LIMITS.arrival.max }}
-          >
-            <Input
-              value={form.arrival}
-              maxLength={HOUSE_FIELD_LIMITS.arrival.max}
-              onChange={(e) => setForm({ ...form, arrival: e.target.value })}
-              placeholder="קומה 2, דירה 5"
+      <FormSection title="תמונת קישוט">
+          {photoPreview || (existingPhoto && !clearPhoto) ? (
+            <HousePhotoFrame
+              src={photoPreview || existingPhoto}
+              focus={photoPreview ? photoFocus : { x: 50, y: 50 }}
+              onFocusChange={photoPreview ? setPhotoFocus : undefined}
             />
-          </Field>
-          <Field
-            label="הערה למבקרים"
-            charCount={{ length: form.notes.length, max: HOUSE_FIELD_LIMITS.notes.max }}
-          >
-            <Input
-              value={form.notes}
-              maxLength={HOUSE_FIELD_LIMITS.notes.max}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              placeholder="יש כלב, מדרגות…"
-            />
-          </Field>
-          <Field label="תמונת קישוט">
-            {photoPreview || (existingPhoto && !clearPhoto) ? (
-              <HousePhotoFrame
-                src={photoPreview || existingPhoto}
-                focus={photoPreview ? photoFocus : { x: 50, y: 50 }}
-                onFocusChange={photoPreview ? setPhotoFocus : undefined}
+          ) : null}
+          <div className="flex flex-wrap gap-2">
+            <label className="inline-flex cursor-pointer">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-lg text-orange-100 ring-1 ring-orange-500/40",
+                  blocked && "opacity-60",
+                )}
+              >
+                <Camera className="size-4" />
+                {photoPreview || (existingPhoto && !clearPhoto) ? "החלפת תמונה" : "העלאת תמונה"}
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                disabled={blocked}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!file) return;
+                  setPhotoFile(file);
+                  setPhotoFocus({ x: 50, y: 50 });
+                  setClearPhoto(false);
+                  const reader = new FileReader();
+                  reader.onload = () => setPhotoPreview(String(reader.result ?? ""));
+                  reader.readAsDataURL(file);
+                }}
               />
+            </label>
+            {photoPreview || (existingPhoto && !clearPhoto) ? (
+              <button
+                type="button"
+                disabled={blocked}
+                className="rounded-lg px-3 py-2 text-lg text-violet-200 ring-1 ring-orange-500/30"
+                onClick={() => {
+                  setPhotoFile(null);
+                  setPhotoPreview(null);
+                  setPhotoFocus({ x: 50, y: 50 });
+                  setClearPhoto(true);
+                }}
+              >
+                הסרת תמונה
+              </button>
             ) : null}
-            <div className="flex flex-wrap gap-2">
-              <label className="inline-flex cursor-pointer">
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-lg text-orange-100 ring-1 ring-orange-500/40",
-                    blocked && "opacity-60",
-                  )}
-                >
-                  <Camera className="size-4" />
-                  {photoPreview || (existingPhoto && !clearPhoto) ? "החלפת תמונה" : "העלאת תמונה"}
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="sr-only"
-                  disabled={blocked}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    e.target.value = "";
-                    if (!file) return;
-                    setPhotoFile(file);
-                    setPhotoFocus({ x: 50, y: 50 });
-                    setClearPhoto(false);
-                    const reader = new FileReader();
-                    reader.onload = () => setPhotoPreview(String(reader.result ?? ""));
-                    reader.readAsDataURL(file);
-                  }}
-                />
-              </label>
-              {photoPreview || (existingPhoto && !clearPhoto) ? (
-                <button
-                  type="button"
-                  disabled={blocked}
-                  className="rounded-lg px-3 py-2 text-lg text-violet-200 ring-1 ring-orange-500/30"
-                  onClick={() => {
-                    setPhotoFile(null);
-                    setPhotoPreview(null);
-                    setPhotoFocus({ x: 50, y: 50 });
-                    setClearPhoto(true);
-                  }}
-                >
-                  הסרת תמונה
-                </button>
-              ) : null}
-            </div>
-          </Field>
-        </div>
-      </details>
+          </div>
+      </FormSection>
       <div className={onCancel ? "flex gap-2" : undefined}>
         {onCancel ? (
           <Button
@@ -983,10 +970,12 @@ function Field({
   return (
     <div className="min-w-0 space-y-1.5">
       <div className="flex items-baseline justify-between gap-2">
-        <Label>
-          {label}
-          {hint ? <span className="font-normal text-violet-400"> · {hint}</span> : null}
-        </Label>
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5">
+          <Label className="whitespace-nowrap">{label}</Label>
+          {hint ? (
+            <span className="whitespace-nowrap text-base text-violet-400">· {hint}</span>
+          ) : null}
+        </div>
         {charCount ? <CharCount {...charCount} /> : null}
       </div>
       {children}
@@ -1044,6 +1033,8 @@ function CheckRow({
     </label>
   );
 }
+
+const HIDDEN_UNTIL_EVENT = "לא מוצג עד יום האירוע";
 
 const LAST_OWNER_KEY = "house-form:last-owner";
 
