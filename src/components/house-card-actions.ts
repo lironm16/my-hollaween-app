@@ -57,6 +57,7 @@ export function houseCardPropsFor(
   const id = house.id;
   const isSkipped = ctx.skipped(id);
   const editAllowed = deviceHouseEditAllowed(id) && Boolean(ctx.canEdit?.(id));
+  const viewOnlyRemoved = !deviceHouseEditAllowed(id);
   return {
     house,
     catalogSource: ctx.catalogSource,
@@ -65,16 +66,24 @@ export function houseCardPropsFor(
     gemCollected: ctx.gemCollected?.(id),
     skipped: isSkipped,
     skipMeta: ctx.skipMetaFor?.(id),
-    onToggleLike: ctx.onToggleLike ? () => ctx.onToggleLike!(id) : undefined,
-    onToggleVisited: ctx.onToggleVisited ? () => ctx.onToggleVisited!(id) : undefined,
+    onToggleLike:
+      viewOnlyRemoved || !ctx.onToggleLike ? undefined : () => ctx.onToggleLike!(id),
+    onToggleVisited:
+      viewOnlyRemoved || !ctx.onToggleVisited ? undefined : () => ctx.onToggleVisited!(id),
     onToggleGem:
-      ctx.onToggleGem && (ctx.gemQuickActionEligible?.(house) ?? true)
-        ? () => ctx.onToggleGem!(house)
-        : undefined,
-    onSkip: ctx.onSkip && !isSkipped ? () => ctx.onSkip!(id) : undefined,
-    onRestoreRoute: ctx.onRestore && isSkipped ? () => ctx.onRestore!(id) : undefined,
-    onShowOnMap: ctx.onShowOnMap ? () => ctx.onShowOnMap!(id) : undefined,
-    onShowInList: ctx.onShowInList ? () => ctx.onShowInList!(id) : undefined,
+      viewOnlyRemoved ||
+      !ctx.onToggleGem ||
+      !(ctx.gemQuickActionEligible?.(house) ?? true)
+        ? undefined
+        : () => ctx.onToggleGem!(house),
+    onSkip:
+      viewOnlyRemoved || !ctx.onSkip || isSkipped ? undefined : () => ctx.onSkip!(id),
+    onRestoreRoute:
+      viewOnlyRemoved || !ctx.onRestore || !isSkipped ? undefined : () => ctx.onRestore!(id),
+    onShowOnMap:
+      viewOnlyRemoved || !ctx.onShowOnMap ? undefined : () => ctx.onShowOnMap!(id),
+    onShowInList:
+      viewOnlyRemoved || !ctx.onShowInList ? undefined : () => ctx.onShowInList!(id),
     canEdit: editAllowed,
     editCode: editAllowed ? ctx.editCodeFor?.(id) : undefined,
     showVisitPoster: editAllowed,
