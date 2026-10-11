@@ -193,7 +193,7 @@ export function NeighborhoodApp({
     gemHuntFromUrl: gemHuntFromServer,
     visitFromUrl: visitFromServer,
   });
-  const { catalog, loading, offline, unreachable, error, source, refresh } =
+  const { catalog, loading, ready: catalogReady, offline, unreachable, error, source, refresh } =
     useCatalog(initialCatalog);
   const catalogUpdatedAt = catalog?.updatedAt;
   const { admin, ready: adminSessionReady } = useAdminSession();
@@ -378,12 +378,6 @@ export function NeighborhoodApp({
       return next;
     }
     if (lastHousesRef.current.length > 0) return lastHousesRef.current;
-    const cached = loadCatalogCacheSync()?.houses;
-    if (cached?.length) {
-      const next = applyVisitorLocations(applyAdminLocations(cached));
-      lastHousesRef.current = next;
-      return next;
-    }
     return housesForMap;
   }, [housesForMap, catalog, gemPreviewAsUser, addressReveal, adminHouses, restoreRedactedLocations]);
 
@@ -435,10 +429,7 @@ export function NeighborhoodApp({
     [housesForFilters, filters, filterContext],
   );
   const showBootstrapSpinner =
-    displayHouses.length === 0 &&
-    !catalogHasRealHouses(catalog) &&
-    !catalogHasRealHouses(loadCatalogCacheSync()) &&
-    loading;
+    displayHouses.length === 0 && !catalogHasRealHouses(catalog) && loading && !catalogReady;
   const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
   const filterDimActive = matchedIds.size < mapHouses.length;
   const matchedIdsKey = useMemo(
