@@ -237,7 +237,7 @@ export function NightPassesCard({
                 />
                 {!inUse && !data.thisDeviceRegistered ? (
                   <SlotAction
-                    label="רישום כאן"
+                    label="חבר אותי"
                     onClick={() => passDialog?.openRegister(slot.code.replace("-", ""))}
                     icon={<LogIn className="size-4 shrink-0" strokeWidth={2.2} />}
                   />

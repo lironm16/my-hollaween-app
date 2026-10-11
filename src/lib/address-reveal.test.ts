@@ -134,7 +134,7 @@ describe("address reveal", () => {
     });
     assert.equal(canViewHouseLocationDetails("בית-1001", ctx), false);
     const label = formatDisplayAddressWithPolicy(stub(), "בית-1001", ctx);
-    assert.match(label, /הכתובת תיחשף למשתמשים רשומים/u);
+    assert.match(label, /הכתובת תיחשף למכשירים רשומים/u);
     assert.doesNotMatch(label, /יהודית/u);
   });
 

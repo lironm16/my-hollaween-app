@@ -19,7 +19,7 @@ export type AddressRevealContext = {
 
 export type AddressRevealAudience = "everyone" | "registered" | "none";
 
-export const ADDRESS_FOR_REGISTERED_HINT_HE = "הכתובת תיחשף למשתמשים רשומים";
+export const ADDRESS_FOR_REGISTERED_HINT_HE = "הכתובת תיחשף למכשירים רשומים";
 
 /** Local time on event night when street addresses, arrival and visitor notes become public. */
 export function addressRevealTime(

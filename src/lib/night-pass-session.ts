@@ -42,9 +42,12 @@ export async function currentNightPass(): Promise<NightPassRecord | null> {
   const cookie = await readNightPassCookie();
   if (!cookie) return null;
   try {
-    return await validNightPassForToken(cookie.passId, cookie.token);
+    const pass = await validNightPassForToken(cookie.passId, cookie.token);
+    if (!pass) await clearNightPassCookie();
+    return pass;
   } catch (error) {
     console.error("[night-passes] pass lookup failed", error);
+    await clearNightPassCookie();
     return null;
   }
 }

@@ -113,6 +113,7 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
       if (JSON.stringify(prev) !== JSON.stringify(next)) {
         writeNightPassState(next);
         if (prev.enabled && prev.registered && next.enabled && !next.registered) {
+          void fetch("/api/night-passes/disconnect", { method: "POST", cache: "no-store" });
           if (suppressNextPassLostEvent) {
             suppressNextPassLostEvent = false;
           } else {
