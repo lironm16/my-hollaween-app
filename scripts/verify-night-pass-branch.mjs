@@ -7,7 +7,7 @@ import { execSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const EXPECTED_TIP = "5034680b";
+const EXPECTED_TIP = "e1f3c008";
 const BRANCH = "cursor/night-passes-2e72";
 
 function sh(cmd) {
