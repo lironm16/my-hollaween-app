@@ -16,6 +16,7 @@ import {
   notifyNightPassSlotsChanged,
   refreshNightPassState,
 } from "@/lib/night-pass-client";
+import { NightPassDeviceStrip } from "@/components/night-pass-device-strip";
 import { cn } from "@/lib/utils";
 
 function isIosBrowserTab() {
@@ -119,20 +120,14 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
   if (pass.registered) {
     return (
       <section className="space-y-3">
-        <p className="text-lg font-medium text-emerald-100">המכשיר הזה רשום</p>
-        <p className="text-base text-emerald-50">
-          {pass.holderName}
-          {pass.holderPhone ? (
-            <>
-              {" · "}
-              <bdi dir="ltr" className="inline-block text-emerald-200">
-                {pass.holderPhone}
-              </bdi>
-            </>
-          ) : null}
-        </p>
-        {pass.houseName ? (
-          <p className="text-base text-emerald-200">הקוד התקבל מ: {pass.houseName}</p>
+        <NightPassDeviceStrip pass={pass} showDisconnect={false} />
+        {pass.holderPhone ? (
+          <p className="text-base text-violet-300">
+            טלפון:{" "}
+            <bdi dir="ltr" className="inline-block text-orange-100">
+              {pass.holderPhone}
+            </bdi>
+          </p>
         ) : null}
         <p className="text-base text-violet-100">כתובות הבתים ייפתחו כאן ב-{revealLabel}.</p>
         <p className="rounded-xl bg-black/25 p-3 text-sm text-violet-200">

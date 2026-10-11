@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { AdminStyleStrip } from "@/components/admin-style-strip";
 import { disconnectNightPassOnDevice, type NightPassState } from "@/lib/night-pass-client";
-import { cn } from "@/lib/utils";
 
 /** Same chrome as admin «תצוגת משתמש» — registered pass on this device. */
 export function NightPassDeviceStrip({
@@ -11,6 +11,7 @@ export function NightPassDeviceStrip({
   compact = false,
   className,
   onDetails,
+  showDisconnect = true,
 }: {
   pass: Pick<NightPassState, "holderName" | "holderPhone" | "houseName">;
   compact?: boolean;
@@ -35,25 +36,15 @@ export function NightPassDeviceStrip({
     else toast.error("ההתנתקות נכשלה. נסו שוב.");
   }
 
-  return (
-    <div
-      className={cn(
-        "flex items-center justify-between gap-3 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20",
-        className,
-      )}
-    >
-      <div className="min-w-0 text-start">
-        <p className="text-base font-medium text-orange-100">מכשיר רשום לאירוע</p>
-        {!compact ? (
-          <p className="truncate text-sm text-violet-300">
-            {pass.holderName ?? "רשומים"}
-            {pass.houseName ? ` · ${pass.houseName}` : ""}
-          </p>
-        ) : (
-          <p className="truncate text-sm text-violet-400">{pass.holderName ?? "פעיל"}</p>
-        )}
-      </div>
-      <div className="flex shrink-0 flex-col items-end gap-1">
+  const subtitle = compact
+    ? pass.holderName
+      ? pass.holderName
+      : "פעיל"
+    : [pass.holderName ?? "רשומים", pass.houseName].filter(Boolean).join(" · ");
+
+  const trailing =
+    onDetails || showDisconnect ? (
+      <div className="flex flex-col items-end gap-1">
         {onDetails ? (
           <button
             type="button"
@@ -63,7 +54,7 @@ export function NightPassDeviceStrip({
             פרטים
           </button>
         ) : null}
-        {showDisconnect !== false ? (
+        {showDisconnect ? (
           <button
             type="button"
             disabled={busy}
@@ -74,6 +65,14 @@ export function NightPassDeviceStrip({
           </button>
         ) : null}
       </div>
-    </div>
+    ) : null;
+
+  return (
+    <AdminStyleStrip
+      className={className}
+      title="מכשיר רשום לאירוע"
+      subtitle={subtitle}
+      trailing={trailing}
+    />
   );
 }

@@ -30,8 +30,9 @@ export function NightPassBanner() {
     return (
       <div className="relative z-30 px-3 py-2">
         <NightPassDeviceStrip
+          compact
           pass={pass}
-          className="rounded-lg"
+          showDisconnect={false}
           onDetails={() => passDialog?.openRegister()}
         />
       </div>
