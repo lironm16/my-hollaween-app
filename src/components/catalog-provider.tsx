@@ -55,6 +55,7 @@ import { isMapListSuspended, subscribeMapListSuspend } from "@/lib/map-list-susp
 import { trackCatalogRemovalDelta } from "@/lib/catalog-removed";
 import {
   catalogScopeKey,
+  catalogScopeMismatchesResponse,
   catalogUrls,
   nightPassAudience,
   readNightPassState,
@@ -453,9 +454,12 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
 
   const applyLiveResponse = useCallback(async (live: CatalogDelta) => {
     const passState = readNightPassState();
-    const expectedScope = passState.enabled ? passState.viewer : undefined;
-    const liveScope = live.scope === "legacy" ? undefined : live.scope;
-    if (liveScope !== expectedScope) void refreshNightPassState();
+    if (catalogScopeMismatchesResponse(passState, live.scope)) {
+      await refreshNightPassState({ force: true });
+      await syncCatalogScope();
+      void refresh(true);
+      return catalogRef.current;
+    }
     if (live.pollSeconds) {
       pollSecondsRef.current = live.pollSeconds;
       setPollSeconds(live.pollSeconds);

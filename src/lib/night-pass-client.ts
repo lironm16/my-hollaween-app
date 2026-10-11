@@ -1,6 +1,6 @@
 import type { AddressRevealAudience } from "@/lib/address-reveal";
 import { readAdminPreviewAsUser } from "@/lib/admin-preview-as-user";
-import type { NightPassViewer } from "@/lib/types";
+import type { CatalogDelta, NightPassViewer } from "@/lib/types";
 
 /** Mirror of `GET /api/night-passes/me`. */
 export type NightPassState = {
@@ -126,7 +126,9 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
       const prev = readNightPassState();
       if (JSON.stringify(prev) !== JSON.stringify(next)) {
         writeNightPassState(next);
-        if (prev.enabled && prev.registered && next.enabled && !next.registered) {
+        const registrationLost =
+          prev.enabled && prev.registered && next.enabled && !next.registered;
+        if (registrationLost) {
           void fetch("/api/night-passes/disconnect", { method: "POST", cache: "no-store" });
           if (suppressNextPassLostEvent) {
             suppressNextPassLostEvent = false;
@@ -156,6 +158,15 @@ export function nightPassAudience(state: NightPassState): AddressRevealAudience 
 
 export function catalogScopeKey(state: NightPassState): string {
   return state.enabled ? state.viewer : "legacy";
+}
+
+/** API `scope` disagrees with local pass state — do not merge; refresh after /me (e.g. code stolen). */
+export function catalogScopeMismatchesResponse(
+  state: NightPassState,
+  responseScope: CatalogDelta["scope"],
+): boolean {
+  if (!state.enabled || !responseScope || responseScope === "legacy") return false;
+  return responseScope !== state.viewer;
 }
 
 export function readStoredCatalogScope(): string {
