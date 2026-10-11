@@ -12,7 +12,12 @@ import {
   type ReactNode,
 } from "react";
 import type { Catalog, CatalogDelta, PublicHouse } from "@/lib/types";
-import { mergeCatalogDelta, normalizeCatalogDelta, syncCatalog } from "@/lib/catalog-sync";
+import {
+  catalogScopeOf,
+  mergeCatalogDelta,
+  normalizeCatalogDelta,
+  syncCatalog,
+} from "@/lib/catalog-sync";
 import { config } from "@/lib/config";
 import { adaptiveCatalogPollMs, appInForeground } from "@/lib/catalog-poll";
 import {
@@ -53,13 +58,34 @@ import { readGemPreviewAsUser } from "@/lib/gem-preview-as-user";
 import { loadOwnedHouses } from "@/lib/offline-db";
 import { isMapListSuspended, subscribeMapListSuspend } from "@/lib/map-list-suspend";
 import { trackCatalogRemovalDelta } from "@/lib/catalog-removed";
+import {
+  catalogScopeKey,
+  catalogScopeMismatchesResponse,
+  catalogUrls,
+  nightPassAudience,
+  readNightPassState,
+  readStoredCatalogScope,
+  refreshNightPassState,
+  subscribeNightPassState,
+  writeStoredCatalogScope,
+} from "@/lib/night-pass-client";
+import { clearDeviceCatalogCache } from "@/lib/offline-db";
+import { clearSessionHouseDetails } from "@/lib/house-detail-session-cache";
+import { subscribeAdminPreviewAsUser } from "@/lib/admin-preview-as-user";
 import { recordLiveCatalogRemovals } from "@/lib/server-removed-houses";
 import { verifyOwnedHousesOnServer } from "@/lib/owned-house-check";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
 
-/** Static deploy bundle — zero serverless / Firestore reads on full load. */
-const SNAPSHOT_URL = "/catalog.json";
+/** Full-list source: static deploy bundle (night passes off) or the scoped catalog API. */
+function snapshotUrl() {
+  return catalogUrls().snapshot;
+}
+
+/** Live catalog / `?since=` delta source for this device's night-pass scope. */
+function catalogApiUrl() {
+  return catalogUrls().api;
+}
 const OFFLINE_FORCE_REFRESH_MS = 30 * 60 * 1000;
 
 export type CatalogState = {
@@ -105,7 +131,7 @@ async function fetchJson(url: string, force = false, since?: string): Promise<Ca
   if (force) params.set("t", String(Date.now()));
   else if (since) params.set("since", since);
   const qs = params.toString();
-  const href = qs ? `${url}?${qs}` : url;
+  const href = qs ? `${url}${url.includes("?") ? "&" : "?"}${qs}` : url;
   const res = await fetch(href, {
     cache: force || since ? "no-store" : "default",
     signal: AbortSignal.timeout(CATALOG_FETCH_TIMEOUT_MS),
@@ -115,19 +141,26 @@ async function fetchJson(url: string, force = false, since?: string): Promise<Ca
   return normalizeCatalogDelta(raw);
 }
 
+/** Response → Catalog, keeping `scope` so lists for different night-pass audiences never merge. */
+function catalogFromResponse(res: CatalogDelta): Catalog {
+  return {
+    updatedAt: res.updatedAt,
+    neighborhood: res.neighborhood,
+    houses: res.houses ?? [],
+    houseCount: res.houseCount,
+    pushTemplates: res.pushTemplates,
+    eventSettings: res.eventSettings,
+    ...(res.scope ? { scope: res.scope } : {}),
+    ...(typeof res.hiddenHouseCount === "number" ? { hiddenHouseCount: res.hiddenHouseCount } : {}),
+  };
+}
+
 /** Last resort — full live catalog (expensive on Firestore). Prefer recoverCatalogShortfall. */
 async function fetchFullCatalogBundle(base: Catalog | null): Promise<Catalog | null> {
   try {
-    const full = await fetchJson("/api/catalog", true);
+    const full = await fetchJson(catalogApiUrl(), true);
     recordLiveCatalogRemovals(full);
-    const payload: Catalog = {
-      updatedAt: full.updatedAt,
-      neighborhood: full.neighborhood,
-      houses: full.houses ?? [],
-      houseCount: full.houseCount,
-      pushTemplates: full.pushTemplates,
-      eventSettings: full.eventSettings,
-    };
+    const payload = catalogFromResponse(full);
     return withDeviceHouseOverlays(
       syncCatalog(base, payload, { trustedCompleteList: true as const }),
     );
@@ -157,22 +190,15 @@ async function recoverCatalogShortfall(
     const cached = await readDeviceCatalog();
     if (cached) merged = mergeDeviceCatalog(merged, cached);
 
-    const snap = await fetchJson(SNAPSHOT_URL, true);
-    const snapCatalog: Catalog = {
-      updatedAt: snap.updatedAt,
-      neighborhood: snap.neighborhood,
-      houses: snap.houses ?? [],
-      houseCount: snap.houseCount,
-      pushTemplates: snap.pushTemplates,
-      eventSettings: snap.eventSettings,
-    };
+    const snap = await fetchJson(snapshotUrl(), true);
+    const snapCatalog = catalogFromResponse(snap);
     merged = withDeviceHouseOverlays(syncCatalog(merged, snapCatalog));
     resolvedCount =
       resolvedCount ??
       resolveServerHouseCount(merged) ??
       resolveServerHouseCount(snapCatalog);
 
-    const live = await fetchJson("/api/catalog", false, snap.updatedAt);
+    const live = await fetchJson(catalogApiUrl(), false, snap.updatedAt);
     recordLiveCatalogRemovals(live);
     merged = withDeviceHouseOverlays(applyCatalogResponse(merged, live));
     resolvedCount = resolvedCount ?? resolveServerHouseCount(live) ?? resolveServerHouseCount(merged);
@@ -286,16 +312,35 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const pendingCatalogRef = useRef<Catalog | null>(null);
   const quickRetryCountRef = useRef(0);
   const quickRetryTimerRef = useRef<number | undefined>(undefined);
+  /** Bumped when the night-pass scope wipes the device cache — stale async reads must not land. */
+  const scopeGenRef = useRef(0);
   const ownedCheckedRef = useRef(false);
 
   useEffect(() => {
     catalogRef.current = catalog;
   }, [catalog]);
 
+  /** Night-pass audience changed (registered, pass lost, feature toggled) — drop the old list. */
+  const syncCatalogScope = useCallback(async () => {
+    const key = catalogScopeKey(readNightPassState());
+    if (readStoredCatalogScope() === key) return false;
+    scopeGenRef.current += 1;
+    writeStoredCatalogScope(key);
+    await clearDeviceCatalogCache();
+    clearSessionHouseDetails();
+    catalogRef.current = null;
+    setCatalog(null);
+    return true;
+  }, []);
+
   useLayoutEffect(() => {
     if (cacheHydratedRef.current) return;
     cacheHydratedRef.current = true;
     runCatalogBootMigrationIfNeeded();
+    if (readStoredCatalogScope() !== catalogScopeKey(readNightPassState())) {
+      setLoading(false);
+      return;
+    }
     const syncCache = loadCatalogCacheSync();
     if (!syncCache) {
       setLoading(false);
@@ -312,23 +357,25 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const syncCache = loadCatalogCacheSync();
     if (!syncCache?.houses.length || catalogHasExplicitStubFlags(syncCache)) return;
+    if (readStoredCatalogScope() !== catalogScopeKey(readNightPassState())) return;
+    const gen = scopeGenRef.current;
     let cancelled = false;
     void (async () => {
       try {
-        const snap = await fetchJson(SNAPSHOT_URL, true);
-        const snapshot: Catalog = {
-          updatedAt: snap.updatedAt,
-          neighborhood: snap.neighborhood,
-          houses: snap.houses ?? [],
-          houseCount: snap.houseCount,
-          pushTemplates: snap.pushTemplates,
-          eventSettings: snap.eventSettings,
-        };
+        const snap = await fetchJson(snapshotUrl(), true);
+        const snapshot = catalogFromResponse(snap);
+        if (catalogScopeOf(syncCache) !== catalogScopeOf(snapshot)) {
+          if (!cancelled) {
+            setLoading(false);
+            setReady(true);
+          }
+          return;
+        }
         const repaired = applySnapshotStubFlags(
           withDeviceHouseOverlays(syncCache),
           snapshot,
         );
-        if (cancelled) return;
+        if (cancelled || gen !== scopeGenRef.current) return;
         setCatalog(repaired);
         setSource("cache");
         setLoading(false);
@@ -357,9 +404,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
+    const gen = scopeGenRef.current;
     void (async () => {
       const merged = await reconcileWithDeviceCache(catalogRef.current);
-      if (cancelled || !merged) return;
+      if (cancelled || !merged || gen !== scopeGenRef.current) return;
       setCatalog(merged);
       setSource("cache");
       if (catalogHasExplicitStubFlags(merged)) {
@@ -410,6 +458,13 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const applyLiveResponse = useCallback(async (live: CatalogDelta) => {
+    const passState = readNightPassState();
+    if (catalogScopeMismatchesResponse(passState, live.scope)) {
+      await refreshNightPassState({ force: true });
+      await syncCatalogScope();
+      void refresh(true);
+      return catalogRef.current;
+    }
     if (live.pollSeconds) {
       pollSecondsRef.current = live.pollSeconds;
       setPollSeconds(live.pollSeconds);
@@ -500,7 +555,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     ) {
       try {
         if (readServerSimDown()) throw new Error("sim-down");
-        const live = await fetchJson("/api/catalog", false, since);
+        const live = await fetchJson(catalogApiUrl(), false, since);
         let current = (await applyLiveResponse(live)) ?? catalogRef.current;
         const beforeLen = localCatalogHouseCount(current);
         const reconciled = await reconcileWithDeviceCache(current);
@@ -597,10 +652,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     // Full load — shared snapshot first, then API delta for anything newer.
     try {
       if (readServerSimDown()) throw new Error("sim-down");
-      const snap = await fetchJson(SNAPSHOT_URL, force || needsFullRefresh);
+      const snap = await fetchJson(snapshotUrl(), force || needsFullRefresh);
       let merged = withDeviceHouseOverlays(syncCatalog(catalogRef.current, snap));
       try {
-        const live = await fetchJson("/api/catalog", false, snap.updatedAt);
+        const live = await fetchJson(catalogApiUrl(), false, snap.updatedAt);
         recordLiveCatalogRemovals(live);
         if (live.pollSeconds) {
           pollSecondsRef.current = live.pollSeconds;
@@ -653,7 +708,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     } catch {
       try {
         if (readServerSimDown()) throw new Error("sim-down");
-        await applyLiveResponse(await fetchJson("/api/catalog", force));
+        await applyLiveResponse(await fetchJson(catalogApiUrl(), force));
         return;
       } catch {
         const cached = await readDeviceCatalog();
@@ -717,6 +772,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           visitorAddressRevealContext(
             appNow(),
             loadOwnedHouses().map((row) => row.id),
+            undefined,
+            nightPassAudience(readNightPassState()),
           ),
         );
       }
@@ -752,6 +809,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     (async () => {
       // Let SSR seed catalog before deciding whether mount needs a network refresh.
       await Promise.resolve();
+      await withTimeout(refreshNightPassState({ force: true }), 3000);
+      await syncCatalogScope();
       if (!cancelled && !seededRef.current) {
         await refresh(false);
       }
@@ -797,6 +856,14 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     window.addEventListener("hw-catalog-changed", onChanged);
     const onSim = () => void refresh(true);
     window.addEventListener(SERVER_SIM_EVENT, onSim);
+    const unsubscribeNightPass = subscribeNightPassState(() => {
+      void (async () => {
+        if (await syncCatalogScope()) await refresh(true);
+      })();
+    });
+    const unsubscribePreview = subscribeAdminPreviewAsUser(() => {
+      void refreshNightPassState({ force: true });
+    });
 
     let pollTimer: number | undefined;
     const schedulePoll = () => {
@@ -820,8 +887,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       document.removeEventListener("visibilitychange", onVis);
       window.removeEventListener("hw-catalog-changed", onChanged);
       window.removeEventListener(SERVER_SIM_EVENT, onSim);
+      unsubscribeNightPass();
+      unsubscribePreview();
     };
-  }, [refresh, publishCatalog]);
+  }, [refresh, syncCatalogScope, publishCatalog]);
 
   const value: CatalogContextValue = useMemo(
     () => ({

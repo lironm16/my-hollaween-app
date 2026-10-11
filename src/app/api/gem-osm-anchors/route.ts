@@ -9,6 +9,8 @@ import {
 } from "@/lib/gem-osm-anchor-data";
 import { sidewalkGemAnchorForHouse } from "@/lib/gem-street-spines";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
+import { scopedHousesFromDb } from "@/lib/night-pass-catalog";
+import { resolveNightPassViewer } from "@/lib/night-pass-session";
 import { getCatalog } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -30,8 +32,12 @@ function readStaticAnchors(): Record<string, GemOsmAnchorEntry> {
  * plus live street spines when no OSRM entry exists.
  */
 export async function GET() {
+  const nightPass = await resolveNightPassViewer();
   const catalog = await getCatalog();
-  const eligible = gemHuntMapHouses(catalog.houses, "real");
+  const houses = nightPass.scope
+    ? (await scopedHousesFromDb(nightPass.scope)).houses
+    : catalog.houses;
+  const eligible = gemHuntMapHouses(houses, "real");
   const staticAnchors = readStaticAnchors();
   const anchors: Record<string, GemOsmAnchorEntry> = {};
 
@@ -56,6 +62,8 @@ export async function GET() {
   };
 
   return NextResponse.json(body, {
-    headers: { "Cache-Control": "public, max-age=60, s-maxage=120" },
+    headers: {
+      "Cache-Control": nightPass.scope ? "private, no-store" : "public, max-age=60, s-maxage=120",
+    },
   });
 }

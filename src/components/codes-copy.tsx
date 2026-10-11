@@ -14,14 +14,28 @@ async function copyText(text: string, ok: string) {
 }
 
 /** Share the family edit code — house id is not needed for in-card editing. */
-export function CodesCopy({ editCode }: { editCode?: string }) {
+export function CodesCopy({
+  editCode,
+  hideLabel = false,
+}: {
+  editCode?: string;
+  hideLabel?: boolean;
+}) {
   if (!editCode) return null;
   return (
-    <div className="space-y-2 rounded-xl bg-black/35 p-3 ring-1 ring-orange-500/20">
+    <div
+      className={
+        hideLabel
+          ? "space-y-2"
+          : "space-y-2 rounded-xl bg-black/35 p-3 ring-1 ring-orange-500/20"
+      }
+    >
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
-          <p className="text-base text-violet-300">קוד עריכה</p>
-          <p className="truncate font-mono text-lg tracking-wide text-orange-200">{editCode}</p>
+          {!hideLabel ? <p className="text-base text-violet-300">קוד עריכה</p> : null}
+          <p className="truncate text-center font-mono text-xl tracking-wide text-orange-200">
+            {editCode}
+          </p>
         </div>
         <Button
           type="button"

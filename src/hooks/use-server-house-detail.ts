@@ -14,6 +14,7 @@ import {
 import { readGemPreviewAsUser } from "@/lib/gem-preview-as-user";
 import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
 import { loadOwnedHouses } from "@/lib/offline-db";
+import { nightPassAudience, readNightPassState } from "@/lib/night-pass-client";
 import type { PublicHouse } from "@/lib/types";
 
 const LOADING_DELAY_MS = 400;
@@ -26,6 +27,8 @@ function applyPreviewPolicy(detail: PublicHouse): PublicHouse {
     visitorAddressRevealContext(
       now,
       loadOwnedHouses().map((row) => row.id),
+      undefined,
+      nightPassAudience(readNightPassState()),
     ),
   );
 }

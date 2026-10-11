@@ -10,6 +10,7 @@ import {
   primeServiceWorkerScript,
   versionsDiffer,
 } from "@/lib/sw-update";
+import { shouldSkipServiceWorker, teardownServiceWorkerForDev } from "@/lib/sw-dev";
 
 const UPDATE_POLL_MS = 4 * 60 * 1000;
 const IDLE_RELOAD_POLL_MS = 2000;
@@ -80,6 +81,11 @@ function requestShellPrecache(registration: ServiceWorkerRegistration) {
 export function ServiceWorkerRegister() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
+
+    if (shouldSkipServiceWorker()) {
+      void teardownServiceWorkerForDev();
+      return;
+    }
 
     let cancelled = false;
     let reloaded = false;

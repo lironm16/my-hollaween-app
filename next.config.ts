@@ -1,9 +1,12 @@
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { NextConfig } from "next";
 
 const appVersion = (
-  JSON.parse(readFileSync(join(__dirname, "package.json"), "utf8")) as { version?: string }
+  JSON.parse(
+    readFileSync(join(dirname(fileURLToPath(import.meta.url)), "package.json"), "utf8"),
+  ) as { version?: string }
 ).version ?? "0.0.0";
 
 const corsHeaders = [

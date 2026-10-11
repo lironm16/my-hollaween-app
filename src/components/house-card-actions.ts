@@ -36,6 +36,8 @@ export type HouseCardActionContext = {
   canEdit?: (id: string) => boolean;
   editCodeFor?: (id: string) => string | undefined;
   onEdit?: (house: PublicHouse) => void;
+  nightPassesEnabled?: boolean;
+  onNightPasses?: (house: PublicHouse) => void;
   skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
   editingId?: string | null;
 };
@@ -89,6 +91,10 @@ export function houseCardPropsFor(
     showVisitPoster: editAllowed,
     admin: ctx.admin,
     onToggleEdit: editAllowed && ctx.onEdit ? () => ctx.onEdit!(house) : undefined,
+    onNightPasses:
+      editAllowed && ctx.nightPassesEnabled && ctx.onNightPasses
+        ? () => ctx.onNightPasses!(house)
+        : undefined,
     editing: editAllowed && ctx.editingId === id,
     index: opts?.index,
     distanceM: opts?.distanceM,
@@ -133,6 +139,7 @@ export function houseActionBarPropsFromCard(
     onShowOnMap: card.onShowOnMap,
     onShowInList: card.onShowInList,
     onToggleEdit: card.canEdit ? card.onToggleEdit : undefined,
+    onNightPasses: card.onNightPasses,
     skipped: card.skipped,
     editing: card.editing,
     editCode: card.editCode,

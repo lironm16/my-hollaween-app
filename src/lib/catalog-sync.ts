@@ -44,7 +44,14 @@ export function normalizeCatalogDelta(raw: unknown): CatalogDelta {
     pollSeconds: typeof o.pollSeconds === "number" ? o.pollSeconds : undefined,
     pushTemplates: o.pushTemplates,
     eventSettings: o.eventSettings,
+    ...(typeof o.scope === "string" ? { scope: o.scope } : {}),
+    ...(typeof o.hiddenHouseCount === "number" ? { hiddenHouseCount: o.hiddenHouseCount } : {}),
   };
+}
+
+/** Audience a house list was built for — payloads without `scope` are the legacy full list. */
+export function catalogScopeOf(catalog: Pick<Catalog, "scope"> | null | undefined): string {
+  return catalog?.scope ?? "legacy";
 }
 
 function stamp(value: { updatedAt: string }) {
@@ -77,6 +84,9 @@ export function syncCatalog(
 ): Catalog {
   const next = normalizeCatalogDelta(incoming);
   if (!prev) return next;
+  // Lists built for different audiences must never union, or a smaller night-pass list keeps the
+  // homes from the old full one.
+  if (catalogScopeOf(prev) !== catalogScopeOf(next)) return next;
   const prevTs = stamp(prev);
   const nextTs = stamp(next);
   const byId = new Map<string, PublicHouse>();
@@ -114,7 +124,7 @@ export function syncCatalog(
 /** Apply a delta poll (`?since=`) onto the catalog already on the device. */
 export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta): Catalog {
   const delta = normalizeCatalogDelta(incoming);
-  if (!prev) {
+  if (!prev || catalogScopeOf(prev) !== catalogScopeOf(delta)) {
     return {
       updatedAt: delta.updatedAt,
       neighborhood: delta.neighborhood,
@@ -122,6 +132,10 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
       houseCount: delta.houseCount,
       pushTemplates: delta.pushTemplates,
       eventSettings: delta.eventSettings,
+      ...(delta.scope ? { scope: delta.scope } : {}),
+      ...(typeof delta.hiddenHouseCount === "number"
+        ? { hiddenHouseCount: delta.hiddenHouseCount }
+        : {}),
     };
   }
   if (delta.full) {
@@ -132,6 +146,10 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
       houseCount: delta.houseCount,
       pushTemplates: delta.pushTemplates ?? prev.pushTemplates,
       eventSettings: delta.eventSettings ?? prev.eventSettings,
+      ...(delta.scope ? { scope: delta.scope } : {}),
+      ...(typeof delta.hiddenHouseCount === "number"
+        ? { hiddenHouseCount: delta.hiddenHouseCount }
+        : {}),
     });
   }
   const byId = new Map(prev.houses.map((house) => [house.id, house]));
@@ -145,6 +163,8 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
   if (typeof houseCount === "number" && houseCount < mergedLen) {
     houseCount = Math.max(prev.houseCount ?? 0, mergedLen);
   }
+  const scope = delta.scope ?? prev.scope;
+  const hiddenHouseCount = delta.hiddenHouseCount ?? prev.hiddenHouseCount;
   return {
     updatedAt: delta.updatedAt,
     neighborhood: delta.neighborhood || prev.neighborhood,
@@ -152,6 +172,8 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
     houseCount,
     pushTemplates: delta.pushTemplates ?? prev.pushTemplates,
     eventSettings: delta.eventSettings ?? prev.eventSettings,
+    ...(scope ? { scope } : {}),
+    ...(typeof hiddenHouseCount === "number" ? { hiddenHouseCount } : {}),
   };
 }
 

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 620" width="390" height="620" role="img">
+<rect width="390" height="620" fill="#12081a"/>
+  <rect x="20" y="24" width="350" height="572" rx="18" fill="#1d1028" stroke="#f97316" stroke-opacity="0.25"/>
+  <text x="195" y="68" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="20" font-weight="700" text-anchor="middle">&#1502;&#1499;&#1513;&#1497;&#1512; &#1502;&#1495;&#1493;&#1489;&#1512;</text>
+  <rect x="48" y="148" width="294" height="44" rx="10" fill="#12081a" stroke="#7c3aed" stroke-opacity="0.35"/>
+  <text x="195" y="176" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="18" font-weight="700" text-anchor="middle" direction="ltr">K7QM-3XPA</text>
+  <rect x="48" y="380" width="294" height="48" rx="12" fill="#f97316"/>
+  <text x="195" y="410" fill="#1c1917" font-family="Rubik,Arial,sans-serif" font-size="17" font-weight="700" text-anchor="middle">&#1492;&#1512;&#1513;&#1502;&#1492;</text>
+</svg>

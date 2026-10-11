@@ -20,6 +20,8 @@ import { cn } from "@/lib/utils";
 import type { HouseFormExtras } from "@/components/house-form";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAddHouseOpen } from "@/hooks/use-add-house-open";
+import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
+import { useNightPass } from "@/hooks/use-night-pass";
 import { ADD_HOUSE_CLOSED_HE } from "@/lib/add-house-copy";
 
 export default function AddPage() {
@@ -27,6 +29,8 @@ export default function AddPage() {
   const { admin } = useAdminSession();
   const editFlow = useHouseEditFlow();
   const addHouseOpen = useAddHouseOpen();
+  const nightPass = useNightPass();
+  const { openOwnerPasses } = useNightPassDialog();
   const canAdd = addHouseOpen;
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{
@@ -99,10 +103,37 @@ export default function AddPage() {
               </p>
             </div>
             <PersistNote />
-            <CodesCopy editCode={done.editCode} />
-            <p className="text-lg text-orange-100">
-              קוד העריכה נשמר במכשיר הזה — אפשר לערוך בלי להקליד שוב.
-            </p>
+            {nightPass.enabled ? (
+              <section className="space-y-3 rounded-xl bg-emerald-950/40 p-4 ring-1 ring-emerald-500/25">
+                <h2 className="text-center text-lg font-medium text-emerald-100">
+                  יש לכם 4 מכשירים לאירוע
+                </h2>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-emerald-500/40 text-emerald-100 hover:bg-emerald-950/60"
+                  onClick={() => openOwnerPasses(done.id)}
+                >
+                  חבר מכשירים
+                </Button>
+                <Link
+                  href="/help/event-device-owner"
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "lg" }),
+                    "w-full text-emerald-200/90 hover:bg-emerald-950/40",
+                  )}
+                >
+                  מדריך חיבור מכשירים (עם תמונות)
+                </Link>
+              </section>
+            ) : null}
+            <section className="space-y-2 rounded-xl bg-black/35 p-4 ring-1 ring-orange-500/20">
+              <h2 className="text-center text-lg font-medium text-orange-200">קוד עריכה</h2>
+              <p className="text-center text-sm text-violet-300">
+                לעריכת הבית מהמכשיר הזה — נשמר אוטומטית אחרי ההוספה.
+              </p>
+              <CodesCopy editCode={done.editCode} hideLabel />
+            </section>
             <div className="flex flex-col gap-2">
               <Link
                 href="/help/share-edit-code"

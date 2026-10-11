@@ -2,6 +2,7 @@
 
 import { useAdminPreviewAsUser } from "@/hooks/use-admin-preview-as-user";
 import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
+import { AdminStyleStrip } from "@/components/admin-style-strip";
 import { cn } from "@/lib/utils";
 
 function Toggle({ on, onClick, label }: { on: boolean; onClick: () => void; label: string }) {
@@ -34,27 +35,25 @@ export function AdminGemUserPreviewToggle({
   const { previewAsUser, setPreviewAsUser } = useAdminPreviewAsUser();
 
   return (
-    <div
-      className={cn(
-        "flex items-center justify-between gap-3 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20",
-        className,
-      )}
-    >
-      <div className="min-w-0">
-        <p className="text-base font-medium text-orange-100">תצוגת משתמש</p>
-        {!compact ? (
-          <p className="text-base text-violet-300">
-            כמו משתמש בלילה — משחק השדונים ו{GEM_ALBUM_TITLE_HE}, בלי כלי בדיקה במפה.
-          </p>
+    <AdminStyleStrip
+      className={className}
+      title="תצוגת משתמש"
+      subtitle={
+        compact ? (
+          previewAsUser ? "פועל" : "כבוי"
         ) : (
-          <p className="text-sm text-violet-400">{previewAsUser ? "פועל" : "כבוי"}</p>
-        )}
-      </div>
-      <Toggle
-        on={previewAsUser}
-        onClick={() => setPreviewAsUser(!previewAsUser)}
-        label="תצוגת משתמש"
-      />
-    </div>
+          <span className="text-base text-violet-300">
+            כמו משתמש בלילה — משחק השדונים ו{GEM_ALBUM_TITLE_HE}, בלי כלי בדיקה במפה.
+          </span>
+        )
+      }
+      trailing={
+        <Toggle
+          on={previewAsUser}
+          onClick={() => setPreviewAsUser(!previewAsUser)}
+          label="תצוגת משתמש"
+        />
+      }
+    />
   );
 }
