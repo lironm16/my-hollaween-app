@@ -28,14 +28,19 @@ function promoteWaitingWorker(
   return true;
 }
 
-function watchForUpdate(registration: ServiceWorkerRegistration) {
+function watchForUpdate(
+  registration: ServiceWorkerRegistration,
+  onVersionBump: () => void,
+) {
   registration.addEventListener("updatefound", () => {
+    if (navigator.serviceWorker.controller) onVersionBump();
     const worker = registration.installing;
     if (!worker) return;
     worker.addEventListener("statechange", () => {
       if (
         isServiceWorkerUpdateReady(worker.state, Boolean(navigator.serviceWorker.controller))
       ) {
+        onVersionBump();
         skipWaitingWorker(worker);
       }
     });
@@ -46,25 +51,24 @@ async function checkForAppUpdate(
   registration: ServiceWorkerRegistration,
   onVersionBump: () => void,
 ) {
-  try {
-    await registration.update();
-  } catch {
-    /* offline / throttled */
-  }
-
   const published = await fetchPublishedAppVersion();
   const versionBump = Boolean(published && versionsDiffer(appVersion(), published));
-  if (!versionBump) return;
 
-  onVersionBump();
-  await primeServiceWorkerScript(published!);
+  if (versionBump) {
+    onVersionBump();
+    await primeServiceWorkerScript(published!);
+  }
+
   try {
     await registration.update();
   } catch {
     /* offline / throttled */
   }
 
+  if (!versionBump) return;
+
   promoteWaitingWorker(registration, onVersionBump);
+  if (registration.installing) onVersionBump();
 }
 
 function requestShellPrecache(registration: ServiceWorkerRegistration) {
@@ -114,7 +118,7 @@ export function ServiceWorkerRegister() {
       .register("/sw.js", { scope: "/", updateViaCache: "none" })
       .then(async (registration) => {
         if (cancelled) return;
-        watchForUpdate(registration);
+        watchForUpdate(registration, markVersionReload);
         promoteWaitingWorker(registration, markVersionReload);
         await checkForAppUpdate(registration, markVersionReload);
         requestShellPrecache(registration);
