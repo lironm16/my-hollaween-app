@@ -20,6 +20,8 @@ import { cn } from "@/lib/utils";
 import type { HouseFormExtras } from "@/components/house-form";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAddHouseOpen } from "@/hooks/use-add-house-open";
+import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
+import { useNightPass } from "@/hooks/use-night-pass";
 import { ADD_HOUSE_CLOSED_HE } from "@/lib/add-house-copy";
 
 export default function AddPage() {
@@ -27,6 +29,8 @@ export default function AddPage() {
   const { admin } = useAdminSession();
   const editFlow = useHouseEditFlow();
   const addHouseOpen = useAddHouseOpen();
+  const nightPass = useNightPass();
+  const { openOwnerPasses } = useNightPassDialog();
   const canAdd = addHouseOpen;
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{
@@ -100,6 +104,22 @@ export default function AddPage() {
             </div>
             <PersistNote />
             <CodesCopy editCode={done.editCode} />
+            {nightPass.enabled ? (
+              <div className="rounded-xl bg-emerald-950/40 p-3 ring-1 ring-emerald-500/25">
+                <p className="text-base text-emerald-100">
+                  יש לכם <strong>4 כרטיסי כניסה לאירוע</strong> — שתפו קוד עם מי שיבוא
+                  לבקר ויראה כתובות הבתים ביום החשיפה.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 w-full border-emerald-500/40 text-emerald-100 hover:bg-emerald-950/60"
+                  onClick={() => openOwnerPasses(done.id)}
+                >
+                  הצגת כרטיסי הכניסה
+                </Button>
+              </div>
+            ) : null}
             <p className="text-lg text-orange-100">
               קוד העריכה נשמר במכשיר הזה — אפשר לערוך בלי להקליד שוב.
             </p>

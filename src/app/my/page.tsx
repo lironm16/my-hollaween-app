@@ -34,6 +34,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { PublicHouse } from "@/lib/types";
 import { useAddHouseOpen } from "@/hooks/use-add-house-open";
+import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
+import { useNightPass } from "@/hooks/use-night-pass";
 
 function parseTab(raw: string | null, showCollected: boolean): PersonalMarksTab {
   if (raw === "skipped" || raw === "visited" || raw === "saved") return raw;
@@ -91,6 +93,8 @@ function MyCollectionsPageContent() {
   const geo = useUserLocation();
   const { resolved: origin } = useDistanceOrigin(geo.location);
   const editFlow = useHouseEditFlow();
+  const nightPass = useNightPass();
+  const { openOwnerPasses } = useNightPassDialog();
 
   const catalogHouses = useMemo(() => {
     const resolved = resolveCatalogHouses(catalog);
@@ -201,7 +205,12 @@ function MyCollectionsPageContent() {
             }
           : undefined,
       canEdit: tab === "mine" ? () => true : undefined,
+      editCodeFor:
+        tab === "mine" ? (id) => owned.find((item) => item.id === id)?.editCode : undefined,
       onEdit: tab === "mine" ? requestEdit : undefined,
+      nightPassesEnabled: nightPass.enabled,
+      onNightPasses:
+        tab === "mine" ? (house) => openOwnerPasses(house.id) : undefined,
       skipMetaFor: (id) => skips.meta(id),
       editingId: editFlow.flow?.house.id ?? null,
       onShowOnMap: (id) => router.push(`/?focus=${encodeURIComponent(id)}`),
@@ -216,6 +225,9 @@ function MyCollectionsPageContent() {
     gems,
     tab,
     editFlow.flow?.house.id,
+    owned,
+    nightPass.enabled,
+    openOwnerPasses,
     router,
   ]);
 

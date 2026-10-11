@@ -24,6 +24,8 @@ import { MapHouseSheet } from "@/components/map-house-sheet";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { NeighborhoodStatusBanners } from "@/components/neighborhood-status-banners";
 import { NightPassBanner } from "@/components/night-pass-banner";
+import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
+import { useNightPass } from "@/hooks/use-night-pass";
 import { RouteChangeBanner, routeChangeBannerMessage } from "@/components/route-change-banner";
 import { RouteChangesSheet } from "@/components/route-changes-sheet";
 import { TempSkipRestoreAlerts } from "@/components/temp-skip-restore-alert";
@@ -290,6 +292,8 @@ export function NeighborhoodApp({
   const visits = useVisitedHouses();
   const skips = useSkippedHouses();
   const owned = useOwnedHouses();
+  const nightPass = useNightPass();
+  const { openOwnerPasses } = useNightPassDialog();
   useEffect(() => {
     applyClockSearchParams(window.location.search);
   }, []);
@@ -1367,12 +1371,16 @@ export function NeighborhoodApp({
           ? editCodeById.get(id)
           : owned.find((item) => item.id === id)?.editCode,
       onEdit: (house) => requestHouseEdit(house, true),
+      nightPassesEnabled: nightPass.enabled,
+      onNightPasses: (house) => openOwnerPasses(house.id),
       skipMetaFor: (id) => skips.meta(id),
       editingId: editFlow.flow?.house.id ?? null,
     };
   }, [
     admin,
     gemPreviewAsUser,
+    nightPass.enabled,
+    openOwnerPasses,
     gemAdminTools,
     source,
     likes.liked,

@@ -1,242 +1,27 @@
 "use client";
 
-import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { toast } from "sonner";
-import { AppHeader } from "@/components/app-header";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAdminSession } from "@/hooks/use-admin-session";
-import { useCatalog } from "@/hooks/use-catalog";
-import { useNightPass } from "@/hooks/use-night-pass";
-import { config } from "@/lib/config";
-import { mergeAddressRevealSchedule } from "@/lib/event-settings";
-import { refreshNightPassState } from "@/lib/night-pass-client";
-import { cn } from "@/lib/utils";
+import { Suspense, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
-function isIosBrowserTab() {
-  if (typeof window === "undefined") return false;
-  const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const standalone =
-    window.matchMedia("(display-mode: standalone)").matches ||
-    (navigator as Navigator & { standalone?: boolean }).standalone === true;
-  return ios && !standalone;
+/** Deep link `/pass?c=…` → map with register dialog open. */
+function PassRedirect() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const code = searchParams.get("c")?.trim();
+    const qs = new URLSearchParams({ openPass: "1" });
+    if (code) qs.set("c", code);
+    router.replace(`/?${qs.toString()}`);
+  }, [router, searchParams]);
+
+  return null;
 }
 
 export default function PassPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-dvh items-center justify-center text-orange-200">
-          טוענים…
-        </div>
-      }
-    >
-      <PassPageContent />
+    <Suspense fallback={null}>
+      <PassRedirect />
     </Suspense>
-  );
-}
-
-function PassPageContent() {
-  const searchParams = useSearchParams();
-  const pass = useNightPass();
-  const { admin } = useAdminSession();
-  const { catalog } = useCatalog();
-  const [checked, setChecked] = useState(false);
-  const [code, setCode] = useState(() => searchParams.get("c") ?? "");
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [consent, setConsent] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [iosTab, setIosTab] = useState(false);
-
-  useEffect(() => {
-    setIosTab(isIosBrowserTab());
-    void refreshNightPassState({ force: true }).finally(() => setChecked(true));
-  }, []);
-
-  const schedule = mergeAddressRevealSchedule(
-    catalog?.eventSettings?.addressReveal,
-  );
-  const revealLabel = `${config.eventNight.labelHe} בשעה ${String(schedule.hour).padStart(2, "0")}:${String(schedule.minute).padStart(2, "0")}`;
-
-  async function submit() {
-    setBusy(true);
-    setError("");
-    try {
-      const res = await fetch("/api/night-passes/redeem", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, name, phone, consent }),
-      });
-      const json = (await res.json().catch(() => null)) as {
-        error?: string;
-        reregistered?: boolean;
-      } | null;
-      if (!res.ok) {
-        setError(json?.error ?? "ההרשמה נכשלה. נסו שוב.");
-        return;
-      }
-      toast.success(json?.reregistered ? "הכרטיס עבר למכשיר הזה" : "נרשמתם!");
-      await refreshNightPassState({ force: true });
-    } catch {
-      setError("אין חיבור לשרת. נסו שוב כשיש קליטה.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const open = pass.enabled || admin;
-
-  return (
-    <div className="relative flex min-h-dvh flex-col">
-      <AppHeader />
-      <main className="relative z-10 mx-auto w-full max-w-sm flex-1 px-4 py-6">
-        <h1 className="font-display text-2xl text-orange-300">
-          כרטיס כניסה ללילה
-        </h1>
-
-        {!checked ? (
-          <p className="mt-6 text-base text-violet-300">בודקים את המכשיר…</p>
-        ) : pass.registered ? (
-          <section className="mt-5 space-y-3 rounded-2xl bg-emerald-950/50 p-4 ring-1 ring-emerald-500/30">
-            <p className="text-lg font-medium text-emerald-100">
-              המכשיר הזה רשום
-            </p>
-            <p className="text-base text-emerald-50">
-              {pass.holderName}
-              {pass.holderPhone ? (
-                <>
-                  {" · "}
-                  <bdi dir="ltr" className="inline-block text-emerald-200">
-                    {pass.holderPhone}
-                  </bdi>
-                </>
-              ) : null}
-            </p>
-            {pass.houseName ? (
-              <p className="text-base text-emerald-200">
-                הקוד התקבל מ: {pass.houseName}
-              </p>
-            ) : null}
-            <p className="text-base text-violet-100">
-              כתובות הבתים ייפתחו כאן ב-{revealLabel}.
-            </p>
-            <p className="rounded-xl bg-black/25 p-3 text-sm text-violet-200">
-              מחקתם את האפליקציה או עברתם לטלפון אחר? הזינו שוב את אותו הקוד עם
-              אותו מספר טלפון. הכרטיס יעבור למכשיר החדש, והמכשיר הקודם יתנתק.
-            </p>
-            <Link
-              href="/"
-              className={cn(
-                buttonVariants(),
-                "w-full bg-orange-500 text-black hover:bg-orange-400",
-              )}
-            >
-              למפה
-            </Link>
-          </section>
-        ) : !open ? (
-          <p className="mt-6 rounded-2xl bg-[#1d1028] p-4 text-base text-violet-200 ring-1 ring-orange-500/25">
-            ההרשמה עם קוד עוד לא נפתחה. נסו שוב בקרוב.
-          </p>
-        ) : (
-          <form
-            className="mt-5 space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/25"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void submit();
-            }}
-          >
-            <p className="text-base text-violet-200">
-              קיבלתם קוד מבעלי בית בשכונה? הירשמו כדי לראות את כתובות הבתים בליל
-              האירוע ({revealLabel}). הקוד עובד במכשיר אחד.
-            </p>
-            {iosTab ? (
-              <p className="rounded-xl bg-amber-950/60 p-3 text-sm text-amber-100 ring-1 ring-amber-500/25">
-                באייפון: אם התקנתם את האפליקציה למסך הבית, הירשמו מתוך
-                האפליקציה. הרשמה כאן בספארי לא עוברת אליה (אפשר להירשם שוב
-                באפליקציה עם אותו קוד ואותו טלפון).
-              </p>
-            ) : null}
-            <div className="space-y-1.5">
-              <Label htmlFor="pass-code">קוד (8 תווים)</Label>
-              <Input
-                id="pass-code"
-                value={code}
-                onChange={(event) => setCode(event.target.value.toUpperCase())}
-                dir="ltr"
-                autoCapitalize="characters"
-                autoComplete="one-time-code"
-                placeholder="K7QM-3XPA"
-                maxLength={12}
-                className="h-11 bg-[#12081a] text-center font-mono text-lg tracking-widest"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="pass-name">שם</Label>
-              <Input
-                id="pass-name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                autoComplete="name"
-                maxLength={40}
-                className="h-11 bg-[#12081a]"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="pass-phone">טלפון נייד</Label>
-              <Input
-                id="pass-phone"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
-                dir="ltr"
-                inputMode="tel"
-                autoComplete="tel"
-                placeholder="050-1234567"
-                maxLength={16}
-                className="h-11 bg-[#12081a] text-left"
-              />
-              <p className="text-sm text-violet-400">
-                שמרו את המספר: אם תתקינו מחדש, תצטרכו אותו קוד ואותו טלפון.
-              </p>
-            </div>
-            <label className="flex items-start gap-2 text-sm text-violet-200">
-              <input
-                type="checkbox"
-                checked={consent}
-                onChange={(event) => setConsent(event.target.checked)}
-                className="mt-1 size-4 accent-orange-500"
-              />
-              <span>
-                השם והטלפון יוצגו לבעלי הבית שנתנו את הקוד ולמארגני האירוע,
-                וימחקו אחרי האירוע.
-              </span>
-            </label>
-            {error ? (
-              <p role="alert" className="text-sm text-red-300">
-                {error}
-              </p>
-            ) : null}
-            <Button
-              type="submit"
-              disabled={
-                busy ||
-                !code.trim() ||
-                !name.trim() ||
-                !phone.trim() ||
-                !consent
-              }
-              className="h-11 w-full bg-orange-500 text-black hover:bg-orange-400"
-            >
-              {busy ? "נרשמים…" : "הרשמה"}
-            </Button>
-          </form>
-        )}
-      </main>
-    </div>
   );
 }

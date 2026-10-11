@@ -55,7 +55,7 @@ export function AdminNightPassesSettings() {
   return (
     <div className="space-y-1 rounded-xl bg-[#12081a] px-3 py-2 ring-1 ring-orange-500/20">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-base font-medium text-orange-100">כרטיסי כניסה ללילה</p>
+        <p className="text-base font-medium text-orange-100">כרטיסי כניסה לאירוע</p>
         <span className="flex shrink-0 items-center gap-1.5">
           <span className={cn("text-base", enabled ? "text-orange-200" : "text-violet-400")}>
             {enabled === null ? "…" : enabled ? "פועל" : "כבוי"}
@@ -65,7 +65,7 @@ export function AdminNightPassesSettings() {
             dir="ltr"
             role="switch"
             aria-checked={Boolean(enabled)}
-            aria-label="כרטיסי כניסה ללילה"
+            aria-label="כרטיסי כניסה לאירוע"
             disabled={enabled === null || saving}
             onClick={() => void toggle()}
             className={cn(

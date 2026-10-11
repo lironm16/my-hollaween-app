@@ -11,6 +11,7 @@ import {
   Pencil,
   QrCode,
   Share2,
+  Ticket,
 } from "lucide-react";
 import { toast } from "sonner";
 import { EditCodeDialog } from "@/components/edit-code-dialog";
@@ -58,6 +59,7 @@ export function HouseActionBar({
   gemCollected: _gemCollected,
   onToggleGem: _onToggleGem,
   onToggleEdit,
+  onNightPasses,
   onShowOnMap,
   onShowInList,
   onSkip: _onSkip,
@@ -79,6 +81,7 @@ export function HouseActionBar({
   gemCollected?: boolean;
   onToggleGem?: () => void;
   onToggleEdit?: () => void;
+  onNightPasses?: () => void;
   onShowOnMap?: () => void;
   onShowInList?: () => void;
   onSkip?: () => void;
@@ -183,6 +186,14 @@ export function HouseActionBar({
         label: "קוד עריכה",
         icon: <KeyRound className={MENU_ICON_CLASS} strokeWidth={2.2} />,
         onClick: () => setEditCodeOpen(true),
+      });
+    }
+    if (onNightPasses) {
+      items.push({
+        id: "night-passes",
+        label: "כרטיסי כניסה",
+        icon: <Ticket className={MENU_ICON_CLASS} strokeWidth={2.2} />,
+        onClick: onNightPasses,
       });
     }
     if (showVisitPoster) {

@@ -32,8 +32,6 @@ export async function POST(request: Request) {
   const phone = normalizeIsraeliMobile(json?.phone);
   if (!name) return fail(400, "name", "נא לכתוב שם (2–40 תווים).");
   if (!phone) return fail(400, "phone", "נא לכתוב מספר נייד ישראלי, למשל 050-1234567.");
-  if (json?.consent !== true) return fail(400, "consent", "צריך לאשר את שיתוף הפרטים.");
-
   const ip = clientKey(request.headers);
   if (!(await rateLimitShared(`night-pass:${ip}`, 20, WINDOW_MS))) {
     return fail(429, "rate", "יותר מדי ניסיונות. נסו שוב בעוד כמה דקות.");

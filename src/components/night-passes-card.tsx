@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provider";
+import { Button } from "@/components/ui/button";
 
 type SlotView = {
   slot: number;
@@ -28,7 +27,7 @@ type PassesResponse = {
 
 function shareText(code: string) {
   const link = `${window.location.origin}/pass?c=${code.replace("-", "")}`;
-  return `קוד כניסה ללילה בשכונה: ${code}\nנרשמים כאן: ${link}\nהקוד עובד במכשיר אחד בלבד.`;
+  return `קוד כניסה לאירוע בשכונה: ${code}\nנרשמים כאן: ${link}\nהקוד עובד במכשיר אחד בלבד.`;
 }
 
 function formatWhen(iso: string | null) {
@@ -47,10 +46,13 @@ function formatWhen(iso: string | null) {
 export function NightPassesCard({
   houseId,
   admin,
+  embedded = false,
 }: {
   houseId: string;
   admin: boolean;
+  embedded?: boolean;
 }) {
+  const passDialog = useNightPassDialogOptional();
   const [data, setData] = useState<PassesResponse | null>(null);
   const [error, setError] = useState("");
   const [busySlot, setBusySlot] = useState<number | null>(null);
@@ -143,16 +145,22 @@ export function NightPassesCard({
     ) : null;
   if (!data.enabled && !admin) return null;
 
+  const shellClass = embedded
+    ? "space-y-3"
+    : "mt-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20";
+
   return (
-    <section className="mt-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
+    <section className={shellClass}>
       <div className="space-y-1">
-        <h2 className="text-lg font-medium text-orange-200">
-          4 כרטיסי כניסה ללילה
-        </h2>
+        {!embedded ? (
+          <h2 className="text-lg font-medium text-orange-200">
+            4 כרטיסי כניסה לאירוע
+          </h2>
+        ) : null}
         <p className="text-base text-violet-200">
-          שלחו קוד לכל מי שתרצו שיראה את כתובות הבתים בליל האירוע — עד 4
-          מכשירים. רוצים לראות בעצמכם? השתמשו באחד הקודים בטלפון הזה. גם בלי
-          כרטיס תמשיכו לראות ולעדכן את הבית שלכם.
+          שלחו קוד לכל מי שתרצו שיראה את כתובות הבתים ביום החשיפה — עד 4 מכשירים.
+          רוצים לראות בעצמכם? השתמשו באחד הקודים בטלפון הזה. גם בלי כרטיס תמשיכו
+          לראות ולעדכן את הבית שלכם.
         </p>
         {!data.enabled ? (
           <p className="text-sm text-amber-200">
@@ -220,15 +228,17 @@ export function NightPassesCard({
                   העתקה
                 </Button>
                 {slot.status === "unused" && !data.thisDeviceRegistered ? (
-                  <Link
-                    href={`/pass?c=${slot.code.replace("-", "")}`}
-                    className={cn(
-                      buttonVariants({ size: "sm", variant: "outline" }),
-                      "border-orange-400/40",
-                    )}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="border-orange-400/40"
+                    onClick={() =>
+                      passDialog?.openRegister(slot.code.replace("-", ""))
+                    }
                   >
                     להשתמש בטלפון הזה
-                  </Link>
+                  </Button>
                 ) : null}
                 <Button
                   type="button"
