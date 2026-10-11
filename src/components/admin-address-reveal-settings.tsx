@@ -26,7 +26,7 @@ function parseTimeInput(value: string): { hour: number; minute: number } | null 
   return { hour, minute };
 }
 
-export function AdminAddressRevealSettings() {
+export function AdminAddressRevealSettings({ embedded = false }: { embedded?: boolean }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -114,11 +114,16 @@ export function AdminAddressRevealSettings() {
   const defaultLabel = formatTimeInput(defaults);
 
   return (
-    <div className="space-y-2 rounded-xl bg-[#12081a] px-3 py-2 ring-1 ring-orange-500/20">
-      <p className="text-base font-medium text-orange-100">
-        חשיפת כתובות · {config.eventNight.labelHe} — שעה מקומית לפתיחת כתובות והוראות הגעה (מסונכרן,
-        נפרד משעון בדיקות)
-      </p>
+    <div
+      className={cn(
+        "space-y-2",
+        embedded ? "rounded-lg bg-[#14081c]/80 px-2.5 py-2 ring-1 ring-orange-500/10" : "rounded-xl bg-[#12081a] px-3 py-2 ring-1 ring-orange-500/20",
+      )}
+    >
+      <p className="text-sm font-medium text-orange-100">חשיפת כתובות · {config.eventNight.labelHe}</p>
+      {!embedded ? (
+        <p className="text-sm text-violet-400">שעה מקומית · מסונכרן · נפרד משעון בדיקות</p>
+      ) : null}
       <label className={cn("block space-y-1", loading && "opacity-50")}>
         <span className="text-sm text-violet-300">שעת חשיפה</span>
         <input

@@ -26,8 +26,9 @@ export default function AdminRehearsalPage() {
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <AppHeader />
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-1 py-1 sm:px-2">
-        <div className="mx-auto w-full max-w-lg space-y-1.5 pb-2">
-          <h1 className="px-0.5 font-display text-2xl text-orange-300">הגדרות מנהל</h1>
+        <div className="mx-auto w-full max-w-lg space-y-2 px-2 pb-4 pt-1">
+          <h1 className="font-display text-xl text-orange-300">הגדרות מנהל</h1>
+          <p className="text-sm text-violet-400">הרחיבו קטע כדי לערוך · הכל נשאר זמין</p>
           <AdminDryRunPanel />
         </div>
       </main>
