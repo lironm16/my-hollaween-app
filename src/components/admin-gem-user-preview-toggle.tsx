@@ -3,6 +3,7 @@
 import { useAdminPreviewAsUser } from "@/hooks/use-admin-preview-as-user";
 import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
 import { AdminStyleStrip } from "@/components/admin-style-strip";
+import { cn } from "@/lib/utils";
 
 function Toggle({ on, onClick, label }: { on: boolean; onClick: () => void; label: string }) {
   return (

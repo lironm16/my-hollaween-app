@@ -59,11 +59,10 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
             </DialogTitle>
           </DialogHeader>
           <NightPassRegisterPanel
+            key={registerOpen ? registerCode || "open" : "closed"}
             initialCode={registerCode}
             compact
-            onRegistered={() => {
-              setRegisterOpen(false);
-            }}
+            onRegistered={() => setRegisterOpen(false)}
           />
         </DialogContent>
       </Dialog>

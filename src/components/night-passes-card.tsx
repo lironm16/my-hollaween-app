@@ -132,7 +132,7 @@ export function NightPassesCard({
 
   async function copy(code: string) {
     try {
-      await navigator.clipboard.writeText(shareText(code));
+      await navigator.clipboard.writeText(code);
       toast.success("הקוד הועתק");
     } catch {
       toast.message(code);

@@ -47,6 +47,7 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
   const [error, setError] = useState("");
   const [iosTab, setIosTab] = useState(false);
   const [disconnectBusy, setDisconnectBusy] = useState(false);
+  const [pairSuccess, setPairSuccess] = useState(false);
 
   useEffect(() => {
     setCode((prev) => initialCode || prev);
@@ -100,10 +101,9 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
         setError(json?.error ?? "ההרשמה נכשלה. נסו שוב.");
         return;
       }
-      toast.success(json?.reregistered ? "הכרטיס עבר למכשיר הזה" : "נרשמתם!");
       await refreshNightPassState({ force: true });
       notifyNightPassSlotsChanged();
-      onRegistered?.();
+      setPairSuccess(true);
     } catch {
       setError("אין חיבור לשרת. נסו שוב כשיש קליטה.");
     } finally {
@@ -115,6 +115,29 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
 
   if (!checked) {
     return <p className="text-base text-violet-300">בודקים את המכשיר…</p>;
+  }
+
+  if (pairSuccess) {
+    return (
+      <section className="space-y-4 text-center">
+        <p className="font-display text-2xl text-orange-300">נרשמתם לאירוע!</p>
+        <p className="text-base text-violet-100">
+          כתובות הבתים ייפתחו כאן ב-{revealLabel}.
+        </p>
+        <p className="rounded-xl bg-black/25 p-3 text-start text-sm text-violet-200">
+          שמרו את מספר הטלפון שהזנתם: אם תתקינו מחדש או תעברו מכשיר, תצטרכו את אותו קוד ואותו
+          טלפון כדי להיכנס שוב. «התנתקות» מסירה את הכניסה רק מהמכשיר הזה — אצל בעלי הבית הקוד
+          עדיין מסומן כבשימוש.
+        </p>
+        <Button
+          type="button"
+          className="h-11 w-full bg-orange-500 text-black hover:bg-orange-400"
+          onClick={() => onRegistered?.()}
+        >
+          הבנתי
+        </Button>
+      </section>
+    );
   }
 
   if (pass.registered) {
@@ -235,9 +258,6 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
           maxLength={16}
           className="h-11 bg-[#12081a] text-left"
         />
-        <p className="text-sm text-violet-400">
-          שמרו את המספר: אם תתקינו מחדש, תצטרכו אותו קוד ואותו טלפון.
-        </p>
       </div>
       {error ? (
         <p role="alert" className="text-sm text-red-300">
