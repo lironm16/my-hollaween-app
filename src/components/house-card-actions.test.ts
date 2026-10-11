@@ -25,14 +25,14 @@ beforeEach(() => {
   };
 });
 
-const house: PublicHouse = {
+const house = {
   id: "removed-1",
   name: "בית",
   address: "רחוב",
   lat: 32,
   lng: 34,
   updatedAt: "2026-10-10T00:00:00.000Z",
-};
+} as PublicHouse;
 
 const ctx: HouseCardActionContext = {
   liked: () => false,
