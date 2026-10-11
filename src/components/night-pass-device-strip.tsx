@@ -70,7 +70,7 @@ export function NightPassDeviceStrip({
   return (
     <AdminStyleStrip
       className={className}
-      title="מכשיר רשום לאירוע"
+      title="מכשיר מחובר"
       subtitle={subtitle}
       trailing={trailing}
     />

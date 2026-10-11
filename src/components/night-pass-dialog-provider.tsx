@@ -11,10 +11,11 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { HouseEditModal } from "@/components/house-edit-modal";
 import { NightPassRegisterPanel } from "@/components/night-pass-register-panel";
 import { NightPassesCard } from "@/components/night-passes-card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { NIGHT_PASS_REGISTER_SUBTITLE } from "@/lib/night-pass-copy";
 
 type NightPassDialogContextValue = {
   openRegister: (initialCode?: string) => void;
@@ -23,14 +24,23 @@ type NightPassDialogContextValue = {
 
 const NightPassDialogContext = createContext<NightPassDialogContextValue | null>(null);
 
+type RegisterHeader = { title: string; subtitle?: string };
+
+const REGISTER_HEADER_DEFAULT: RegisterHeader = {
+  title: "מכשיר מחובר",
+  subtitle: NIGHT_PASS_REGISTER_SUBTITLE,
+};
+
 export function NightPassDialogProvider({ children }: { children: ReactNode }) {
   const { admin } = useAdminSession();
   const [registerOpen, setRegisterOpen] = useState(false);
   const [registerCode, setRegisterCode] = useState("");
+  const [registerHeader, setRegisterHeader] = useState<RegisterHeader>(REGISTER_HEADER_DEFAULT);
   const [ownerOpen, setOwnerOpen] = useState(false);
   const [ownerHouseId, setOwnerHouseId] = useState<string | null>(null);
 
   const openRegister = useCallback((initialCode = "") => {
+    setRegisterHeader(REGISTER_HEADER_DEFAULT);
     setRegisterCode(initialCode.replace(/[\s-]/g, "").toUpperCase());
     setRegisterOpen(true);
   }, []);
@@ -51,33 +61,29 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
         <PassQueryOpener openRegister={openRegister} />
       </Suspense>
       {children}
-      <Dialog open={registerOpen} onOpenChange={setRegisterOpen}>
-        <DialogContent className="max-h-[min(90dvh,640px)] overflow-y-auto border-orange-500/25 bg-[#12081a] pt-12 text-violet-50">
-          <DialogHeader className="items-center text-center">
-            <DialogTitle className="font-display text-xl text-orange-300 pe-8">
-              כרטיס כניסה לאירוע
-            </DialogTitle>
-          </DialogHeader>
-          <NightPassRegisterPanel
-            key={registerOpen ? registerCode || "open" : "closed"}
-            initialCode={registerCode}
-            compact
-            onRegistered={() => setRegisterOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
-      <Dialog open={ownerOpen} onOpenChange={setOwnerOpen}>
-        <DialogContent className="max-h-[min(92dvh,720px)] overflow-y-auto border-orange-500/25 bg-[#12081a] pt-12 text-violet-50 sm:max-w-md">
-          <DialogHeader className="items-center text-center">
-            <DialogTitle className="font-display text-xl text-orange-300 pe-8">
-              4 מכשירים לאירוע
-            </DialogTitle>
-          </DialogHeader>
-          {ownerHouseId ? (
-            <NightPassesCard houseId={ownerHouseId} admin={admin} embedded />
-          ) : null}
-        </DialogContent>
-      </Dialog>
+      <HouseEditModal
+        open={registerOpen}
+        onClose={() => setRegisterOpen(false)}
+        title={registerHeader.title}
+        subtitle={registerHeader.subtitle}
+      >
+        <NightPassRegisterPanel
+          key={registerOpen ? registerCode || "open" : "closed"}
+          initialCode={registerCode}
+          compact
+          onPairSuccess={() => setRegisterHeader({ title: "נרשמתם!" })}
+          onRegistered={() => setRegisterOpen(false)}
+        />
+      </HouseEditModal>
+      <HouseEditModal
+        open={ownerOpen}
+        onClose={() => setOwnerOpen(false)}
+        title="4 מכשירים לאירוע"
+      >
+        {ownerHouseId ? (
+          <NightPassesCard houseId={ownerHouseId} admin={admin} embedded />
+        ) : null}
+      </HouseEditModal>
     </NightPassDialogContext.Provider>
   );
 }

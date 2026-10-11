@@ -9,14 +9,12 @@ import { Label } from "@/components/ui/label";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useNightPass } from "@/hooks/use-night-pass";
-import { config } from "@/lib/config";
-import { mergeAddressRevealSchedule } from "@/lib/event-settings";
 import {
   disconnectNightPassOnDevice,
   notifyNightPassSlotsChanged,
   refreshNightPassState,
 } from "@/lib/night-pass-client";
-import { NightPassDeviceStrip } from "@/components/night-pass-device-strip";
+import { privateHomeAddressesRevealLine } from "@/lib/night-pass-copy";
 import { cn } from "@/lib/utils";
 
 function isIosBrowserTab() {
@@ -31,11 +29,17 @@ function isIosBrowserTab() {
 type Props = {
   initialCode?: string;
   onRegistered?: () => void;
+  onPairSuccess?: () => void;
   compact?: boolean;
 };
 
 /** Register or show status for the night-pass cookie — used in dialog and /pass redirect. */
-export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact }: Props) {
+export function NightPassRegisterPanel({
+  initialCode = "",
+  onRegistered,
+  onPairSuccess,
+  compact,
+}: Props) {
   const pass = useNightPass();
   const { admin } = useAdminSession();
   const { catalog } = useCatalog();
@@ -48,6 +52,8 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
   const [iosTab, setIosTab] = useState(false);
   const [disconnectBusy, setDisconnectBusy] = useState(false);
   const [pairSuccess, setPairSuccess] = useState(false);
+
+  const revealLine = privateHomeAddressesRevealLine(catalog?.eventSettings?.addressReveal);
 
   useEffect(() => {
     setCode((prev) => initialCode || prev);
@@ -81,9 +87,6 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
     void refreshNightPassState({ force: true }).finally(() => setChecked(true));
   }, []);
 
-  const schedule = mergeAddressRevealSchedule(catalog?.eventSettings?.addressReveal);
-  const revealLabel = `${config.eventNight.labelHe} בשעה ${String(schedule.hour).padStart(2, "0")}:${String(schedule.minute).padStart(2, "0")}`;
-
   async function submit() {
     setBusy(true);
     setError("");
@@ -104,6 +107,7 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
       await refreshNightPassState({ force: true });
       notifyNightPassSlotsChanged();
       setPairSuccess(true);
+      onPairSuccess?.();
     } catch {
       setError("אין חיבור לשרת. נסו שוב כשיש קליטה.");
     } finally {
@@ -119,16 +123,8 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
 
   if (pairSuccess) {
     return (
-      <section className="space-y-4 text-center">
-        <p className="font-display text-2xl text-orange-300">נרשמתם לאירוע!</p>
-        <p className="text-base text-violet-100">
-          כתובות הבתים ייפתחו כאן ב-{revealLabel}.
-        </p>
-        <p className="rounded-xl bg-black/25 p-3 text-start text-sm text-violet-200">
-          הקוד עובד במכשיר אחד — הרשמה במכשיר אחר מעבירה את הגישה לשם. «התנתקות» מסירה את
-          הכניסה רק מהמכשיר הזה; אצל בעלי הבית הקוד עדיין מסומן כבשימוש, ואפשר להירשם שוב עם
-          אותו קוד.
-        </p>
+      <section className="space-y-4">
+        <p className="text-base text-violet-100">{revealLine}</p>
         <Button
           type="button"
           className="h-11 w-full bg-orange-500 text-black hover:bg-orange-400"
@@ -143,20 +139,17 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
   if (pass.registered) {
     return (
       <section className="space-y-3">
-        <NightPassDeviceStrip pass={pass} showDisconnect={false} />
+        {pass.holderName ? (
+          <p className="text-base text-orange-100">{pass.holderName}</p>
+        ) : null}
         {pass.holderPhone ? (
           <p className="text-base text-violet-300">
-            טלפון:{" "}
             <bdi dir="ltr" className="inline-block text-orange-100">
               {pass.holderPhone}
             </bdi>
           </p>
         ) : null}
-        <p className="text-base text-violet-100">כתובות הבתים ייפתחו כאן ב-{revealLabel}.</p>
-        <p className="rounded-xl bg-black/25 p-3 text-sm text-violet-200">
-          «התנתקות» מסירה את הכניסה רק מהמכשיר הזה — אצל בעלי הבית הקוד עדיין מסומן כבשימוש. לכניסה
-          מחדש: אותו קוד (בכל מכשיר).
-        </p>
+        <p className="text-base text-violet-100">{revealLine}</p>
         <Button
           type="button"
           variant="outline"
@@ -197,7 +190,7 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
 
   if (!open) {
     return (
-      <p className="rounded-2xl bg-[#1d1028] p-4 text-base text-violet-200 ring-1 ring-orange-500/25">
+      <p className="text-base text-violet-200">
         ההרשמה עם קוד עוד לא נפתחה. נסו שוב בקרוב.
       </p>
     );
@@ -211,13 +204,9 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
         void submit();
       }}
     >
-      <p className="text-base text-violet-200">
-        קיבלתם קוד? הירשמו כדי לראות את כתובות הבתים ביום החשיפה
-      </p>
       {iosTab ? (
         <p className="rounded-xl bg-amber-950/60 p-3 text-sm text-amber-100 ring-1 ring-amber-500/25">
-          באייפון: אם התקנתם את האפליקציה למסך הבית, הירשמו מתוך האפליקציה. הרשמה כאן בספארי לא
-          עוברת אליה (אפשר להירשם שוב באפליקציה עם אותו קוד ואותו טלפון).
+          באייפון: הירשמו מתוך האפליקציה אם הוספתם אותה למסך הבית.
         </p>
       ) : null}
       <div className="space-y-1.5">
