@@ -15,6 +15,7 @@ import { HouseEditModal } from "@/components/house-edit-modal";
 import { NightPassRegisterPanel } from "@/components/night-pass-register-panel";
 import { NightPassesCard } from "@/components/night-passes-card";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { readNightPassState } from "@/lib/night-pass-client";
 import { NIGHT_PASS_REGISTER_SUBTITLE } from "@/lib/night-pass-copy";
 
 type NightPassDialogContextValue = {
@@ -24,24 +25,17 @@ type NightPassDialogContextValue = {
 
 const NightPassDialogContext = createContext<NightPassDialogContextValue | null>(null);
 
-type RegisterHeader = { title: string; subtitle?: string };
-
-const REGISTER_HEADER_DEFAULT: RegisterHeader = {
-  title: "מכשיר מחובר",
-  subtitle: NIGHT_PASS_REGISTER_SUBTITLE,
-};
-
 export function NightPassDialogProvider({ children }: { children: ReactNode }) {
   const { admin } = useAdminSession();
   const [registerOpen, setRegisterOpen] = useState(false);
   const [registerCode, setRegisterCode] = useState("");
-  const [registerHeader, setRegisterHeader] = useState<RegisterHeader>(REGISTER_HEADER_DEFAULT);
   const [ownerOpen, setOwnerOpen] = useState(false);
   const [ownerHouseId, setOwnerHouseId] = useState<string | null>(null);
 
   const openRegister = useCallback((initialCode = "") => {
-    setRegisterHeader(REGISTER_HEADER_DEFAULT);
-    setRegisterCode(initialCode.replace(/[\s-]/g, "").toUpperCase());
+    const code = initialCode.replace(/[\s-]/g, "").toUpperCase();
+    if (readNightPassState().registered && !code) return;
+    setRegisterCode(code);
     setRegisterOpen(true);
   }, []);
 
@@ -64,14 +58,13 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
       <HouseEditModal
         open={registerOpen}
         onClose={() => setRegisterOpen(false)}
-        title={registerHeader.title}
-        subtitle={registerHeader.subtitle}
+        title="מכשיר מחובר"
+        subtitle={NIGHT_PASS_REGISTER_SUBTITLE}
       >
         <NightPassRegisterPanel
           key={registerOpen ? registerCode || "open" : "closed"}
           initialCode={registerCode}
           compact
-          onPairSuccess={() => setRegisterHeader({ title: "נרשמתם!" })}
           onRegistered={() => setRegisterOpen(false)}
         />
       </HouseEditModal>

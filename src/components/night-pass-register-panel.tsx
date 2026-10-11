@@ -8,12 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useNightPass } from "@/hooks/use-night-pass";
-import {
-  disconnectNightPassOnDevice,
-  notifyNightPassSlotsChanged,
-  refreshNightPassState,
-} from "@/lib/night-pass-client";
-import { NIGHT_PASS_REVEAL_HINT } from "@/lib/night-pass-copy";
+import { notifyNightPassSlotsChanged, refreshNightPassState } from "@/lib/night-pass-client";
 import { cn } from "@/lib/utils";
 
 function isIosBrowserTab() {
@@ -28,15 +23,13 @@ function isIosBrowserTab() {
 type Props = {
   initialCode?: string;
   onRegistered?: () => void;
-  onPairSuccess?: () => void;
   compact?: boolean;
 };
 
-/** Register or show status for the night-pass cookie — used in dialog and /pass redirect. */
+/** Redeem a pass code on this device — no «פרטים» screen for already-registered devices. */
 export function NightPassRegisterPanel({
   initialCode = "",
   onRegistered,
-  onPairSuccess,
   compact,
 }: Props) {
   const pass = useNightPass();
@@ -48,8 +41,8 @@ export function NightPassRegisterPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [iosTab, setIosTab] = useState(false);
-  const [disconnectBusy, setDisconnectBusy] = useState(false);
-  const [pairSuccess, setPairSuccess] = useState(false);
+
+  const hasCode = initialCode.replace(/[\s-]/g, "").length >= 8;
 
   useEffect(() => {
     setCode((prev) => initialCode || prev);
@@ -102,8 +95,8 @@ export function NightPassRegisterPanel({
       }
       await refreshNightPassState({ force: true });
       notifyNightPassSlotsChanged();
-      setPairSuccess(true);
-      onPairSuccess?.();
+      toast.success(json?.reregistered ? "המכשיר עודכן" : "המכשיר נרשם");
+      onRegistered?.();
     } catch {
       setError("אין חיבור לשרת. נסו שוב כשיש קליטה.");
     } finally {
@@ -117,70 +110,8 @@ export function NightPassRegisterPanel({
     return <p className="text-base text-violet-300">בודקים את המכשיר…</p>;
   }
 
-  if (pairSuccess) {
-    return (
-      <section className="space-y-4">
-        <Button
-          type="button"
-          className="h-11 w-full bg-orange-500 text-black hover:bg-orange-400"
-          onClick={() => onRegistered?.()}
-        >
-          הבנתי
-        </Button>
-      </section>
-    );
-  }
-
-  if (pass.registered) {
-    return (
-      <section className="space-y-3">
-        {pass.holderName ? (
-          <p className="text-base text-orange-100">{pass.holderName}</p>
-        ) : null}
-        {pass.holderPhone ? (
-          <p className="text-base text-violet-300">
-            <bdi dir="ltr" className="inline-block text-orange-100">
-              {pass.holderPhone}
-            </bdi>
-          </p>
-        ) : null}
-        <p className="text-base text-violet-100">{NIGHT_PASS_REVEAL_HINT}</p>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={disconnectBusy}
-          className="w-full border-violet-500/30 text-violet-200"
-          onClick={() => {
-            if (
-              !window.confirm(
-                "להתנתק מהמכשיר הזה?\n\nהקוד נשאר רשום — אפשר להיכנס שוב עם אותו קוד.",
-              )
-            ) {
-              return;
-            }
-            setDisconnectBusy(true);
-            void disconnectNightPassOnDevice().then((ok) => {
-              setDisconnectBusy(false);
-              if (ok) toast.success("המכשיר התנתק.");
-              else toast.error("ההתנתקות נכשלה.");
-            });
-          }}
-        >
-          {disconnectBusy ? "מתנתק…" : "התנתקות מהמכשיר"}
-        </Button>
-        {!compact ? (
-          <Link
-            href="/"
-            className={cn(
-              buttonVariants(),
-              "w-full bg-orange-500 text-black hover:bg-orange-400",
-            )}
-          >
-            למפה
-          </Link>
-        ) : null}
-      </section>
-    );
+  if (pass.registered && !hasCode) {
+    return null;
   }
 
   if (!open) {
@@ -255,6 +186,17 @@ export function NightPassRegisterPanel({
       >
         {busy ? "נרשמים…" : "הרשמה"}
       </Button>
+      {!compact ? (
+        <Link
+          href="/"
+          className={cn(
+            buttonVariants({ variant: "outline" }),
+            "w-full border-violet-500/30 text-violet-200",
+          )}
+        >
+          למפה
+        </Link>
+      ) : null}
     </form>
   );
 }

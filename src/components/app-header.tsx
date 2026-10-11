@@ -41,7 +41,6 @@ import { appVersionLabel } from "@/lib/app-version";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { AdminGemUserPreviewToggle } from "@/components/admin-gem-user-preview-toggle";
 import { NightPassDeviceStrip } from "@/components/night-pass-device-strip";
-import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provider";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
 import { readHelpInstallCaptureFromLocation } from "@/lib/help-install-capture";
@@ -60,7 +59,6 @@ export function AppHeader({
   const { gemBagMenuVisible: showGemBag } = useGemHuntAdminUi(admin);
   const showAdminUserPreview = admin;
   const nightPass = useNightPass();
-  const passDialog = useNightPassDialogOptional();
   const showRegisteredPass =
     nightPass.enabled && nightPass.registered && nightPass.viewer !== "admin";
   const [menuOpen, setMenuOpen] = useState(false);
@@ -147,14 +145,7 @@ export function AppHeader({
             ) : null}
             {showRegisteredPass ? (
               <div className="px-1 pb-1">
-                <NightPassDeviceStrip
-                  compact
-                  pass={nightPass}
-                  onDetails={() => {
-                    closeMenu();
-                    passDialog?.openRegister();
-                  }}
-                />
+                <NightPassDeviceStrip compact pass={nightPass} />
               </div>
             ) : null}
             <Link

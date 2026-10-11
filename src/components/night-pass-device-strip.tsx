@@ -7,18 +7,16 @@ import { adminStyleStripClass } from "@/components/admin-style-strip";
 import { disconnectNightPassOnDevice, type NightPassState } from "@/lib/night-pass-client";
 import { cn } from "@/lib/utils";
 
-/** Same chrome as admin «תצוגת משתמש» — registered pass on this device. */
+/** Menu strip when this device has an active pass — disconnect only, no details popup. */
 export function NightPassDeviceStrip({
   pass,
   compact = false,
   className,
-  onDetails,
   showDisconnect = true,
 }: {
   pass: Pick<NightPassState, "holderName" | "holderPhone" | "houseName">;
   compact?: boolean;
   className?: string;
-  onDetails?: () => void;
   showDisconnect?: boolean;
 }) {
   const [busy, setBusy] = useState(false);
@@ -44,26 +42,12 @@ export function NightPassDeviceStrip({
       : "פעיל"
     : [pass.holderName ?? "רשומים", pass.houseName].filter(Boolean).join(" · ");
 
-  const titleBlock = (
-    <>
-      <p className="text-base font-medium text-orange-100">מכשיר מחובר</p>
-      <p className="truncate text-sm text-violet-400">{subtitle}</p>
-    </>
-  );
-
   return (
     <div className={cn(adminStyleStripClass(className), "items-center")}>
-      {onDetails ? (
-        <button
-          type="button"
-          onClick={onDetails}
-          className="min-w-0 flex-1 rounded-lg text-start transition hover:bg-orange-500/5 focus-visible:outline focus-visible:ring-2 focus-visible:ring-orange-500/40"
-        >
-          {titleBlock}
-        </button>
-      ) : (
-        <div className="min-w-0 flex-1 text-start">{titleBlock}</div>
-      )}
+      <div className="min-w-0 flex-1 text-start">
+        <p className="text-base font-medium text-orange-100">מכשיר מחובר</p>
+        <p className="truncate text-sm text-violet-400">{subtitle}</p>
+      </div>
       {showDisconnect ? (
         <Button
           type="button"

@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, RotateCcw, Share2, Smartphone } from "lucide-react";
+import { Copy, KeyRound, Loader2, LogIn, Share2 } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provider";
@@ -10,7 +10,6 @@ import {
   notifyNightPassSlotsChanged,
 } from "@/lib/night-pass-client";
 import { formatHouseAddedAt } from "@/lib/house-meta";
-import { cn } from "@/lib/utils";
 
 type SlotView = {
   slot: number;
@@ -38,29 +37,45 @@ function shareText(code: string) {
   return `קוד כניסה לאירוע בשכונה: ${code}\nנרשמים כאן: ${link}\nהקוד עובד במכשיר אחד בלבד.`;
 }
 
-function IconAction({
+function PassesSkeleton() {
+  return (
+    <ul className="divide-y divide-orange-500/15 overflow-hidden rounded-xl ring-1 ring-orange-500/20">
+      {[0, 1, 2, 3].map((i) => (
+        <li key={i} className="space-y-3 px-3 py-4">
+          <div className="mx-auto h-7 w-40 animate-pulse rounded-md bg-violet-950/80" />
+          <div className="flex justify-center gap-2">
+            <div className="h-9 w-16 animate-pulse rounded-lg bg-black/40" />
+            <div className="h-9 w-16 animate-pulse rounded-lg bg-black/40" />
+          </div>
+          <div className="mx-auto h-5 w-24 animate-pulse rounded-md bg-emerald-950/50" />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function SlotAction({
   label,
   onClick,
   disabled,
-  children,
+  icon,
 }: {
   label: string;
   onClick: () => void;
   disabled?: boolean;
-  children: ReactNode;
+  icon: ReactNode;
 }) {
   return (
     <Button
       type="button"
-      size="icon"
+      size="sm"
       variant="outline"
       disabled={disabled}
-      aria-label={label}
-      title={label}
-      className="size-9 shrink-0 border-orange-500/25 bg-[#1d1028] text-orange-100 hover:bg-orange-500/15"
+      className="h-9 gap-1.5 border-orange-500/25 bg-[#1d1028] px-2.5 text-orange-100 hover:bg-orange-500/15"
       onClick={onClick}
     >
-      {children}
+      {icon}
+      <span className="text-sm">{label}</span>
     </Button>
   );
 }
@@ -77,6 +92,7 @@ export function NightPassesCard({
 }) {
   const passDialog = useNightPassDialogOptional();
   const [data, setData] = useState<PassesResponse | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busySlot, setBusySlot] = useState<number | null>(null);
 
@@ -89,20 +105,28 @@ export function NightPassesCard({
       const json = (await res.json().catch(() => null)) as PassesResponse | null;
       if (!res.ok || !json) {
         setError(json?.error ?? "טעינת הקודים נכשלה.");
+        setData(null);
         return;
       }
       setData(json);
     } catch {
       setError("טעינת הקודים נכשלה.");
+      setData(null);
+    } finally {
+      setLoading(false);
     }
   }, [houseId]);
 
   useEffect(() => {
+    setLoading(true);
     void load();
   }, [load]);
 
   useEffect(() => {
-    const onChange = () => void load();
+    const onChange = () => {
+      setLoading(true);
+      void load();
+    };
     window.addEventListener(NIGHT_PASSES_SLOTS_CHANGED_EVENT, onChange);
     return () => window.removeEventListener(NIGHT_PASSES_SLOTS_CHANGED_EVENT, onChange);
   }, [load]);
@@ -161,7 +185,17 @@ export function NightPassesCard({
     }
   }
 
-  if (!data) return error && admin ? <p className="mt-4 text-sm text-red-300">{error}</p> : null;
+  if (loading && !data) {
+    return (
+      <section className={embedded ? "space-y-3" : "mt-4 space-y-3"}>
+        <PassesSkeleton />
+      </section>
+    );
+  }
+
+  if (!data) {
+    return error ? <p className="text-sm text-red-300">{error}</p> : null;
+  }
   if (!data.enabled && !admin) return null;
 
   const shellClass = embedded
@@ -183,44 +217,48 @@ export function NightPassesCard({
           const inUse = slot.status === "active";
           const canReset =
             inUse && (admin || (slot.resetsLeft != null && slot.resetsLeft > 0));
+          const resetting = busySlot === slot.slot;
 
           return (
-            <li key={slot.slot} className="flex flex-col items-center gap-2 px-3 py-3">
+            <li key={slot.slot} className="flex flex-col items-center gap-3 px-3 py-4">
+              <span dir="ltr" className="font-mono text-xl tracking-widest text-orange-100">
+                {slot.code}
+              </span>
               <div className="flex flex-wrap items-center justify-center gap-2">
-                <span dir="ltr" className="font-mono text-xl tracking-widest text-orange-100">
-                  {slot.code}
-                </span>
-                <div className="flex items-center gap-1">
-                  <IconAction label="שליחה" onClick={() => void share(slot.code)}>
-                    <Share2 className="size-4" strokeWidth={2.2} />
-                  </IconAction>
-                  <IconAction label="העתקה" onClick={() => void copy(slot.code)}>
-                    <Copy className="size-4" strokeWidth={2.2} />
-                  </IconAction>
-                  {!inUse && !data.thisDeviceRegistered ? (
-                    <IconAction
-                      label="להשתמש בטלפון הזה"
-                      onClick={() => passDialog?.openRegister(slot.code.replace("-", ""))}
-                    >
-                      <Smartphone className="size-4" strokeWidth={2.2} />
-                    </IconAction>
-                  ) : null}
-                  {canReset ? (
-                    <IconAction
-                      label="איפוס — קוד חדש"
-                      disabled={busySlot === slot.slot}
-                      onClick={() => void resetSlot(slot)}
-                    >
-                      <RotateCcw
-                        className={cn("size-4", busySlot === slot.slot && "animate-spin")}
-                        strokeWidth={2.2}
-                      />
-                    </IconAction>
-                  ) : null}
-                </div>
+                <SlotAction
+                  label="שליחה"
+                  onClick={() => void share(slot.code)}
+                  icon={<Share2 className="size-4 shrink-0" strokeWidth={2.2} />}
+                />
+                <SlotAction
+                  label="העתק"
+                  onClick={() => void copy(slot.code)}
+                  icon={<Copy className="size-4 shrink-0" strokeWidth={2.2} />}
+                />
+                {!inUse && !data.thisDeviceRegistered ? (
+                  <SlotAction
+                    label="רישום כאן"
+                    onClick={() => passDialog?.openRegister(slot.code.replace("-", ""))}
+                    icon={<LogIn className="size-4 shrink-0" strokeWidth={2.2} />}
+                  />
+                ) : null}
+                {canReset ? (
+                  <SlotAction
+                    label="קוד חדש"
+                    disabled={resetting}
+                    onClick={() => void resetSlot(slot)}
+                    icon={
+                      resetting ? (
+                        <Loader2 className="size-4 shrink-0 animate-spin" strokeWidth={2.2} />
+                      ) : (
+                        <KeyRound className="size-4 shrink-0" strokeWidth={2.2} />
+                      )
+                    }
+                  />
+                ) : null}
               </div>
               {inUse ? (
-                <p className="text-center text-lg font-medium text-violet-200">
+                <p className="text-center text-base font-medium text-violet-200">
                   {slot.holderName}
                   {slot.holderPhone ? (
                     <>
