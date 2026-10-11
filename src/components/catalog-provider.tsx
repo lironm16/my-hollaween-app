@@ -66,6 +66,8 @@ import {
 import { clearDeviceCatalogCache } from "@/lib/offline-db";
 import { clearSessionHouseDetails } from "@/lib/house-detail-session-cache";
 import { subscribeAdminPreviewAsUser } from "@/lib/admin-preview-as-user";
+import { recordLiveCatalogRemovals } from "@/lib/server-removed-houses";
+import { verifyOwnedHousesOnServer } from "@/lib/owned-house-check";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
 
@@ -137,6 +139,7 @@ async function fetchJson(url: string, force = false, since?: string): Promise<Ca
 async function fetchFullCatalogBundle(base: Catalog | null): Promise<Catalog | null> {
   try {
     const full = await fetchJson(catalogApiUrl(), true);
+    recordLiveCatalogRemovals(full);
     const payload: Catalog = {
       updatedAt: full.updatedAt,
       neighborhood: full.neighborhood,
@@ -190,6 +193,7 @@ async function recoverCatalogShortfall(
       resolveServerHouseCount(snapCatalog);
 
     const live = await fetchJson(catalogApiUrl(), false, snap.updatedAt);
+    recordLiveCatalogRemovals(live);
     merged = withDeviceHouseOverlays(applyCatalogResponse(merged, live));
     resolvedCount = resolvedCount ?? resolveServerHouseCount(live) ?? resolveServerHouseCount(merged);
 
@@ -304,6 +308,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const quickRetryTimerRef = useRef<number | undefined>(undefined);
   /** Bumped when the night-pass scope wipes the device cache — stale async reads must not land. */
   const scopeGenRef = useRef(0);
+  const ownedCheckedRef = useRef(false);
 
   useEffect(() => {
     catalogRef.current = catalog;
@@ -455,6 +460,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       pollSecondsRef.current = live.pollSeconds;
       setPollSeconds(live.pollSeconds);
     }
+    recordLiveCatalogRemovals(live);
     const prev = catalogRef.current;
     if (isEmptyDelta(live, prev)) {
       emptyDeltaStreakRef.current += 1;
@@ -641,6 +647,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       let merged = withDeviceHouseOverlays(syncCatalog(catalogRef.current, snap));
       try {
         const live = await fetchJson(catalogApiUrl(), false, snap.updatedAt);
+        recordLiveCatalogRemovals(live);
         if (live.pollSeconds) {
           pollSecondsRef.current = live.pollSeconds;
           setPollSeconds(live.pollSeconds);
@@ -802,6 +809,16 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         setLoading(false);
         setReady(true);
       }
+      if (cancelled || ownedCheckedRef.current || !navigator.onLine) return;
+      ownedCheckedRef.current = true;
+      const gone = new Set(await verifyOwnedHousesOnServer());
+      if (cancelled || gone.size === 0) return;
+      setCatalog((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev, houses: prev.houses.filter((house) => !gone.has(house.id)) };
+        return publishCatalog(next, prev) ?? next;
+      });
+      window.dispatchEvent(new Event("hw-catalog-refreshed"));
     })();
 
     const onOff = () => {
@@ -864,7 +881,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       unsubscribeNightPass();
       unsubscribePreview();
     };
-  }, [refresh, syncCatalogScope]);
+  }, [refresh, syncCatalogScope, publishCatalog]);
 
   const value: CatalogContextValue = useMemo(
     () => ({

@@ -50,8 +50,9 @@ import {
   isMemWarm,
   loadDb,
   normalizeHouse,
+  replaceMemKeepAge,
   runSyncedWrite,
-  setMem,
+  stamp,
   withLock,
 } from "./core";
 import { broadcastPush } from "./push";
@@ -62,14 +63,16 @@ function findHouseIn(houses: House[], id: string): House | undefined {
   return houses.find((house) => sameHouseId(house.id, needle));
 }
 
+/** Patch one row into an already-loaded house list. Never seeds mem: a lone row is not the catalog. */
 function upsertMemHouse(house: House, updatedAt: string) {
   const mem = getMem();
-  const db = mem ? cloneDb(mem) : { updatedAt, houses: [] as House[] };
+  if (!mem) return;
+  const db = cloneDb(mem);
   const idx = db.houses.findIndex((item) => sameHouseId(item.id, house.id));
   if (idx >= 0) db.houses[idx] = house;
   else db.houses.push(house);
-  db.updatedAt = updatedAt;
-  setMem(db);
+  if (stamp({ updatedAt }) > stamp(db)) db.updatedAt = updatedAt;
+  replaceMemKeepAge(db);
 }
 
 export async function getAllHouses(): Promise<House[]> {

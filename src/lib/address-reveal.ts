@@ -21,7 +21,7 @@ export type AddressRevealAudience = "everyone" | "registered" | "none";
 
 export const ADDRESS_FOR_REGISTERED_HINT_HE = "הכתובת תיחשף למשתמשים רשומים";
 
-/** Local time on event night when street addresses and arrival notes become public. */
+/** Local time on event night when street addresses, arrival and visitor notes become public. */
 export function addressRevealTime(
   schedule = mergeAddressRevealSchedule(),
   reference = new Date(),
@@ -57,10 +57,10 @@ export function canViewHouseLocationDetails(
   return isAddressRevealed(ctx.now, ctx.addressReveal);
 }
 
-export function redactHouseLocationDetails<T extends Pick<PublicHouse, "address" | "arrival">>(
-  house: T,
-): T {
-  return { ...house, address: "", arrival: "" };
+export function redactHouseLocationDetails<
+  T extends Pick<PublicHouse, "address" | "arrival"> & { notes?: string },
+>(house: T): T {
+  return { ...house, address: "", arrival: "", ...(house.notes !== undefined ? { notes: "" } : {}) };
 }
 
 /** Strip location fields for the public catalog before reveal time. */
@@ -106,7 +106,7 @@ export function mapsNavigationAllowed(houseId: string, ctx: AddressRevealContext
   return canViewHouseLocationDetails(houseId, ctx);
 }
 
-/** Strip address/arrival on rows the viewer may not see (e.g. admin user preview). */
+/** Strip address/arrival/notes on rows the viewer may not see (e.g. admin user preview). */
 export function housesWithLocationPolicy(
   houses: readonly PublicHouse[],
   ctx: AddressRevealContext,

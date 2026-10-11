@@ -177,7 +177,7 @@ export default function AddPage() {
           <>
             <h1 className="font-display mb-1 text-3xl text-orange-300">הוספת בית אימה</h1>
             <p className="mb-4 text-lg text-violet-200">
-              בחרו שם וכתובת אמיתית מהרשימה. אחרי שמירה מוצלחת הבית מופיע במפה.{" "}
+              שם, כתובת ושעות — וזהו.{" "}
               <Link href="/help/add-house" className="text-orange-300 underline underline-offset-2">
                 איך מוסיפים?
               </Link>

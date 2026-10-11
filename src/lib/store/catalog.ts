@@ -10,6 +10,7 @@ import {
   eventSettingsStamp,
 } from "@/lib/event-settings";
 import {
+  CATALOG_META_POLL_TTL_MS,
   firestoreConfigured,
   queryFirestoreHousesSince,
   queryRemovedHouseIdsSince,
@@ -27,6 +28,7 @@ import {
   getMem,
   isMemWarm,
   loadDb,
+  memReadAtIso,
   pushSettingsStamp,
   registerCatalogRemoval,
   registerOnMemSetHook,
@@ -54,10 +56,22 @@ export function asCatalog(db: Pick<DbFile, "houses" | "updatedAt" | "pushSetting
   return asCatalogForSnapshot(db.houses, db.updatedAt, db.pushSettings, db.eventSettings);
 }
 
+/**
+ * Devices use `updatedAt` as their next `?since=`. Writes on other instances after this instance
+ * read its house list are missing from it, so the cursor must not pass that read time.
+ */
+export function catalogCursorForMem(dbUpdatedAt: string, readAtIso: string | null): string {
+  if (!readAtIso) return dbUpdatedAt;
+  return stamp({ updatedAt: readAtIso }) < stamp({ updatedAt: dbUpdatedAt }) ? readAtIso : dbUpdatedAt;
+}
+
 export async function getCatalog(): Promise<Catalog> {
   await ensurePushSettingsGeneration();
   const db = await loadDb();
-  catalogMem = asCatalog(db);
+  const catalog = asCatalog(db);
+  catalogMem = firestoreConfigured()
+    ? { ...catalog, updatedAt: catalogCursorForMem(catalog.updatedAt, memReadAtIso()) }
+    : catalog;
   return catalogMem;
 }
 
@@ -176,8 +190,8 @@ async function resolveAuthoritativeHouseCount(): Promise<number> {
   return meta?.houseCount ?? 0;
 }
 
-async function loadDeltaContextForColdPoll(sinceMs: number) {
-  const meta = await readCatalogMeta();
+async function loadDeltaContextForPoll(sinceMs: number) {
+  const meta = await readCatalogMeta({ maxAgeMs: CATALOG_META_POLL_TTL_MS });
   const catalogUpdatedAt = meta?.updatedAt ?? new Date(0).toISOString();
   const houseCount = await resolveAuthoritativeHouseCount();
   const mem = getMem();
@@ -232,7 +246,7 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
   if (isMemWarm() && mem) {
     if (removedForSince.length > 0) return null;
     if (firestoreConfigured()) {
-      const meta = await readCatalogMeta();
+      const meta = await readCatalogMeta({ maxAgeMs: CATALOG_META_POLL_TTL_MS });
       if (meta?.updatedAt && stamp({ updatedAt: meta.updatedAt }) > sinceMs) return null;
     }
     if (
@@ -252,7 +266,7 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
   }
 
   if (firestoreConfigured()) {
-    const meta = await readCatalogMeta();
+    const meta = await readCatalogMeta({ maxAgeMs: CATALOG_META_POLL_TTL_MS });
     const pushMeta = pushAlertsEnabled() ? await readPushSettingsMeta() : null;
     const memAheadOfMeta =
       isMemWarm() &&
@@ -287,15 +301,18 @@ export async function getCatalogDelta(since: string): Promise<CatalogDelta> {
   const gated = await tryCatalogDeltaGate(since, sinceMs);
   if (gated) return gated;
 
-  const mem = getMem();
-  if (isMemWarm() && mem) {
-    const removed = await catalogRemovalsForDelta(since, sinceMs);
-    return buildCatalogDeltaFromDb(mem, since, removed);
+  // Always query Firestore for changes: warm mem lacks other instances' writes, and answering
+  // from it moved device cursors past changes they never received.
+  if (firestoreConfigured()) {
+    const context = await loadDeltaContextForPoll(sinceMs);
+    const delta = await buildCatalogDeltaFromFirestore(since, sinceMs, context);
+    const removed = mergeCatalogRemovalIds(catalogRemovalsSince(sinceMs), delta.removed ?? []);
+    return { ...delta, removed };
   }
 
-  if (firestoreConfigured()) {
-    const context = await loadDeltaContextForColdPoll(sinceMs);
-    return buildCatalogDeltaFromFirestore(since, sinceMs, context);
+  const mem = getMem();
+  if (isMemWarm() && mem) {
+    return buildCatalogDeltaFromDb(mem, since, []);
   }
 
   const db = await loadDb();

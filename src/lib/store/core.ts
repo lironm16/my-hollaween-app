@@ -560,11 +560,29 @@ export function registerOnMemSetHook(fn: () => void) {
   onMemSetHook = fn;
 }
 
-export function setMem(db: DbFile) {
+/**
+ * `memAt` is when the house list was last read from durable storage. Writes and push updates on
+ * this instance must not refresh it, or mem never reloads and keeps missing other instances' writes.
+ */
+function setMemReadAt(db: DbFile, readAt: number) {
   mem = db;
-  memAt = Date.now();
+  memAt = readAt;
   onMemSetHook?.();
   setGlobalDb(db);
+}
+
+export function setMem(db: DbFile) {
+  setMemReadAt(db, Date.now());
+}
+
+/** Swap mem contents (same full house list, edited) without extending its freshness. */
+export function replaceMemKeepAge(db: DbFile) {
+  setMemReadAt(db, mem ? memAt : 0);
+}
+
+/** ISO time mem was read from durable storage — newer writes from other instances may be missing. */
+export function memReadAtIso(): string | null {
+  return mem && memAt > 0 ? new Date(memAt).toISOString() : null;
 }
 
 async function persistPushSettings(
@@ -605,7 +623,7 @@ export async function writeDurableDb(db: DbFile, prev?: DbFile | null) {
   }
 }
 
-export async function persistDb(db: DbFile, prev?: DbFile | null) {
+export async function persistDb(db: DbFile, prev?: DbFile | null, readAt = Date.now()) {
   if (prev) syncRemovalMem(prev, db);
   const cachedPush = pickPushSettings(db, mem, getGlobalDb());
   const pushBlob = cachedPush?.templates ? null : await readPushSettingsBlob();
@@ -637,7 +655,7 @@ export async function persistDb(db: DbFile, prev?: DbFile | null) {
       } catch {
         /* memory still holds the merged houses */
       }
-      setMem(live);
+      setMemReadAt(live, Math.min(readAt, memAt || readAt));
     }
     return;
   }
@@ -667,7 +685,7 @@ export async function persistDb(db: DbFile, prev?: DbFile | null) {
       } catch {
         /* memory still holds the merged houses */
       }
-      setMem(live);
+      setMemReadAt(live, Math.min(readAt, memAt || readAt));
     }
     return;
   }
@@ -706,12 +724,12 @@ export async function persistDb(db: DbFile, prev?: DbFile | null) {
         mem.pushSubscriptions = live.pushSubscriptions;
       }
       setGlobalDb(live);
-      setMem(live);
+      setMemReadAt(live, Math.min(readAt, memAt || readAt));
     }
     return;
   }
 
-  setMem(db);
+  setMemReadAt(db, readAt);
 }
 
 async function withStaticRehearsalStubs(db: DbFile): Promise<DbFile> {
@@ -740,12 +758,13 @@ export async function loadDb(fresh = false): Promise<DbFile> {
   if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return withStaticRehearsalStubs(mem);
   return withLock(async () => {
     if (!fresh && mem && Date.now() - memAt < MEM_TTL_MS) return withStaticRehearsalStubs(mem);
+    const readAt = Date.now();
     const db = await readFileDb();
     const global = getGlobalDb();
     const chosen = pickNewest(db, global) ?? db;
     foldPushSubscriptions(chosen, mem, global);
     const merged = await withStaticRehearsalStubs(chosen);
-    setMem(merged);
+    setMemReadAt(merged, readAt);
     return merged;
   });
 }
@@ -781,21 +800,25 @@ export async function loadPushData(): Promise<DbFile> {
       }
     }
     pushMemAt = Date.now();
-    setMem(base);
-    setGlobalDb(base);
+    replaceMemKeepAge(base);
     return base;
   });
 }
 
 export async function prepareDbFromSources(): Promise<DbFile> {
+  return (await prepareDbForWrite()).db;
+}
+
+async function prepareDbForWrite(): Promise<{ db: DbFile; readAt: number }> {
   if (firestoreConfigured() && mem && Date.now() - memAt < MEM_TTL_MS) {
     const db = normalizeDb(cloneDb(mem));
     const keptPush = db.pushSettings;
     const global = getGlobalDb();
     foldPushSettings(db, asPushCandidate(keptPush), global);
     foldPushSubscriptions(db, global);
-    return db;
+    return { db, readAt: memAt };
   }
+  const readAt = Date.now();
   const db = normalizeDb(cloneDb(await readFileDb()));
   const keptPush = db.pushSettings;
   const global = getGlobalDb();
@@ -804,15 +827,16 @@ export async function prepareDbFromSources(): Promise<DbFile> {
   }
   foldPushSettings(db, asPushCandidate(keptPush), mem, global);
   foldPushSubscriptions(db, mem, global);
-  return db;
+  return { db, readAt };
 }
 
 export async function runSyncedWrite<T>(fn: (db: DbFile) => T | Promise<T>): Promise<T> {
   return withLock(async () => {
-    const db = await prepareDbFromSources();
-    const prev = mem ? cloneDb(mem) : null;
+    const { db, readAt } = await prepareDbForWrite();
+    // Diff against what this write started from: Firestore deletes are derived from prev → db.
+    const prev = cloneDb(db);
     const result = await fn(db);
-    await persistDb(db, prev);
+    await persistDb(db, prev, readAt);
     return result;
   });
 }
@@ -829,8 +853,7 @@ export function setPushSettingsGenerationChecked(value: boolean) {
 }
 
 export async function persistPushSettingsMigration(db: DbFile) {
-  setMem(db);
-  setGlobalDb(db);
+  replaceMemKeepAge(db);
   try {
     await writePushSettingsBlob(db.pushSettings);
   } catch {
@@ -857,13 +880,14 @@ export async function ensurePushSettingsGeneration() {
       pushSettingsGenerationChecked = true;
       return;
     }
+    const base = mem ?? (await loadDb());
     const migrated: DbFile = {
       updatedAt: new Date().toISOString(),
-      houses: mem?.houses ?? [],
-      pushSubscriptions: mem?.pushSubscriptions ?? [],
+      houses: base.houses,
+      pushSubscriptions: base.pushSubscriptions ?? [],
       pushSettings: settings,
-      ...(mem?.vapid ? { vapid: mem.vapid } : {}),
-      ...(mem?.eventSettings ? { eventSettings: mem.eventSettings } : {}),
+      ...(base.vapid ? { vapid: base.vapid } : {}),
+      ...(base.eventSettings ? { eventSettings: base.eventSettings } : {}),
     };
     await persistPushSettingsMigration(migrated);
     pushSettingsGenerationChecked = true;

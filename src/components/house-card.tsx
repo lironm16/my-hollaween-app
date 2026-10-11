@@ -7,6 +7,7 @@ import { houseActionBarPropsFromCard, houseQuickActionPropsFromCard } from "@/co
 import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
 import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import { HouseDetails } from "@/components/house-details";
+import { HoursStatusBanner } from "@/components/hours-status-banner";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
 import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
@@ -82,7 +83,7 @@ export function HouseCard({
   clusterBoothTag?: string | null;
   hideLiveStatus?: boolean;
 }) {
-  void useCatalogRemoved(house.id);
+  const catalogRemoved = useCatalogRemoved(house.id);
   const mayEdit = canEdit && deviceHouseEditAllowed(house.id);
   const overlaid = useAdminHouseFields(house) ?? house;
   const shouldFetchLive =
@@ -143,11 +144,21 @@ export function HouseCard({
           </p>
         ) : null}
         <div
-          className="house-card-top-bar mb-2 flex min-w-0 items-center gap-1"
+          className={cn(
+            "house-card-top-bar mb-2 flex min-w-0 items-center gap-2",
+            catalogRemoved && "justify-between",
+          )}
           onPointerDown={(event) => event.stopPropagation()}
         >
-          <HouseCardQuickActions {...houseQuickActionPropsFromCard(cardProps)} className="min-w-0 flex-1" />
-          <HouseActionBar {...houseActionBarPropsFromCard(cardProps)} />
+          {catalogRemoved ? (
+            <HoursStatusBanner house={displayHouse} className="mb-0 shrink min-w-0" />
+          ) : (
+            <HouseCardQuickActions {...houseQuickActionPropsFromCard(cardProps)} className="min-w-0 flex-1" />
+          )}
+          <HouseActionBar
+            {...houseActionBarPropsFromCard(cardProps)}
+            className={cn(catalogRemoved && "shrink-0 self-center")}
+          />
         </div>
         <HouseDetails
           house={house}
@@ -161,7 +172,7 @@ export function HouseCard({
           chrome="sheet"
           compact={!expanded}
           index={index}
-          hideHoursBanner={hideHoursBanner}
+          hideHoursBanner={hideHoursBanner || catalogRemoved}
           clusterBoothTag={clusterBoothTag}
           extra={extra}
           canEdit={mayEdit}

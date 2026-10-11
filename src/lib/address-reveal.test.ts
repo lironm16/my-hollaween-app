@@ -58,10 +58,11 @@ describe("address reveal", () => {
   });
 
   it("redacts catalog houses before reveal", () => {
-    const house = stub();
+    const house = stub({ notes: "יש כלב" });
     const redacted = publicHouseForCatalog(house, new Date(2026, 9, 31, 11, 59));
     assert.equal(redacted.address, "");
     assert.equal(redacted.arrival, "");
+    assert.equal(redacted.notes, "");
   });
 
   it("admin and owner bypass before reveal", () => {
@@ -160,8 +161,9 @@ describe("address reveal", () => {
   });
 
   it("redact helper clears fields", () => {
-    const next = redactHouseLocationDetails(stub());
+    const next = redactHouseLocationDetails(stub({ notes: "יש כלב" }));
     assert.equal(next.address, "");
     assert.equal(next.arrival, "");
+    assert.equal(next.notes, "");
   });
 });
