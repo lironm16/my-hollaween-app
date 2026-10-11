@@ -1,12 +1,7 @@
 importScripts("/sw-map-tiles.js");
 
-<<<<<<< HEAD
 const APP_VERSION = "5.6.18";
 const CACHE = "hw-shell-5.6.18";
-=======
-const APP_VERSION = "5.6.17";
-const CACHE = "hw-shell-5.6.17";
->>>>>>> origin/cursor/night-passes-2e72
 const TILE_CACHE = MapTileCache.TILE_CACHE;
 const PRECACHE = [
   "/offline.html",

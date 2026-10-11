@@ -183,12 +183,21 @@ export const VISIT_POSTER_CSS = `
   font-size: 7.8cqw;
   line-height: 1.15;
   padding-bottom: 1.2cqw;
-  background: linear-gradient(180deg, #fb923c 0%, #ea580c 42%, #7e22ce 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  /* Solid fill — gradient + background-clip:text breaks Chrome Save as PDF (rectangles). */
+  color: #fb923c;
+  -webkit-text-fill-color: #fb923c;
   -webkit-text-stroke: 0.22cqw #3b0764;
+  paint-order: stroke fill;
   white-space: nowrap;
+}
+@media print {
+  .visit-poster-drip {
+    color: #fb923c !important;
+    -webkit-text-fill-color: #fb923c !important;
+    background: none !important;
+    -webkit-background-clip: border-box !important;
+    background-clip: border-box !important;
+  }
 }
 .visit-poster-name-box {
   display: flex;
