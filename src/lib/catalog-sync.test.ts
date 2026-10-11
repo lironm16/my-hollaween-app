@@ -210,3 +210,38 @@ describe("mergePushSubscriptions", () => {
     assert.deepEqual(merged[0]?.topics, ["newHouse"]);
   });
 });
+
+describe("night-pass scope boundaries", () => {
+  const full = catalog("2026-10-01T10:00:00.000Z", [
+    publicHouse("home-1", "2026-10-01T10:00:00.000Z"),
+    publicHouse("home-2", "2026-10-01T10:00:00.000Z"),
+    publicHouse("biz-1", "2026-10-01T10:00:00.000Z"),
+  ]);
+  const publicOnly: Catalog = {
+    ...catalog("2026-10-01T09:00:00.000Z", [publicHouse("biz-1", "2026-10-01T10:00:00.000Z")]),
+    scope: "public",
+  };
+
+  it("syncCatalog replaces a legacy full list with a public list instead of unioning", () => {
+    const next = syncCatalog(full, publicOnly);
+    assert.deepEqual(next.houses.map((h) => h.id), ["biz-1"]);
+    assert.equal(next.scope, "public");
+  });
+
+  it("syncCatalog drops a pass list when the device falls back to public", () => {
+    const passList: Catalog = { ...full, scope: "pass" };
+    const next = syncCatalog(passList, publicOnly);
+    assert.deepEqual(next.houses.map((h) => h.id), ["biz-1"]);
+  });
+
+  it("mergeCatalogDelta does not fold a public delta into a legacy list", () => {
+    const next = mergeCatalogDelta(full, { ...publicOnly, houses: [] });
+    assert.equal(next.houses.length, 0);
+    assert.equal(next.scope, "public");
+  });
+
+  it("same-scope merges keep their additive behaviour", () => {
+    const next = syncCatalog({ ...full, scope: "public" }, publicOnly);
+    assert.equal(next.houses.length, 3);
+  });
+});

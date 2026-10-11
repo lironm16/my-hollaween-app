@@ -12,7 +12,12 @@ import {
   type ReactNode,
 } from "react";
 import type { Catalog, CatalogDelta, PublicHouse } from "@/lib/types";
-import { mergeCatalogDelta, normalizeCatalogDelta, syncCatalog } from "@/lib/catalog-sync";
+import {
+  catalogScopeOf,
+  mergeCatalogDelta,
+  normalizeCatalogDelta,
+  syncCatalog,
+} from "@/lib/catalog-sync";
 import { config } from "@/lib/config";
 import { adaptiveCatalogPollMs, appInForeground } from "@/lib/catalog-poll";
 import {
@@ -136,19 +141,26 @@ async function fetchJson(url: string, force = false, since?: string): Promise<Ca
   return normalizeCatalogDelta(raw);
 }
 
+/** Response → Catalog, keeping `scope` so lists for different night-pass audiences never merge. */
+function catalogFromResponse(res: CatalogDelta): Catalog {
+  return {
+    updatedAt: res.updatedAt,
+    neighborhood: res.neighborhood,
+    houses: res.houses ?? [],
+    houseCount: res.houseCount,
+    pushTemplates: res.pushTemplates,
+    eventSettings: res.eventSettings,
+    ...(res.scope ? { scope: res.scope } : {}),
+    ...(typeof res.hiddenHouseCount === "number" ? { hiddenHouseCount: res.hiddenHouseCount } : {}),
+  };
+}
+
 /** Last resort — full live catalog (expensive on Firestore). Prefer recoverCatalogShortfall. */
 async function fetchFullCatalogBundle(base: Catalog | null): Promise<Catalog | null> {
   try {
     const full = await fetchJson(catalogApiUrl(), true);
     recordLiveCatalogRemovals(full);
-    const payload: Catalog = {
-      updatedAt: full.updatedAt,
-      neighborhood: full.neighborhood,
-      houses: full.houses ?? [],
-      houseCount: full.houseCount,
-      pushTemplates: full.pushTemplates,
-      eventSettings: full.eventSettings,
-    };
+    const payload = catalogFromResponse(full);
     return withDeviceHouseOverlays(
       syncCatalog(base, payload, { trustedCompleteList: true as const }),
     );
@@ -179,14 +191,7 @@ async function recoverCatalogShortfall(
     if (cached) merged = mergeDeviceCatalog(merged, cached);
 
     const snap = await fetchJson(snapshotUrl(), true);
-    const snapCatalog: Catalog = {
-      updatedAt: snap.updatedAt,
-      neighborhood: snap.neighborhood,
-      houses: snap.houses ?? [],
-      houseCount: snap.houseCount,
-      pushTemplates: snap.pushTemplates,
-      eventSettings: snap.eventSettings,
-    };
+    const snapCatalog = catalogFromResponse(snap);
     merged = withDeviceHouseOverlays(syncCatalog(merged, snapCatalog));
     resolvedCount =
       resolvedCount ??
@@ -358,14 +363,14 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     void (async () => {
       try {
         const snap = await fetchJson(snapshotUrl(), true);
-        const snapshot: Catalog = {
-          updatedAt: snap.updatedAt,
-          neighborhood: snap.neighborhood,
-          houses: snap.houses ?? [],
-          houseCount: snap.houseCount,
-          pushTemplates: snap.pushTemplates,
-          eventSettings: snap.eventSettings,
-        };
+        const snapshot = catalogFromResponse(snap);
+        if (catalogScopeOf(syncCache) !== catalogScopeOf(snapshot)) {
+          if (!cancelled) {
+            setLoading(false);
+            setReady(true);
+          }
+          return;
+        }
         const repaired = applySnapshotStubFlags(
           withDeviceHouseOverlays(syncCache),
           snapshot,
