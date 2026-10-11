@@ -32,7 +32,9 @@ export function NightPassBanner() {
       className="relative z-30 block w-full bg-[#2a1638] px-3 py-2 text-center text-base text-orange-100 ring-1 ring-inset ring-orange-500/25"
       onClick={() => passDialog?.openRegister()}
     >
-      {hidden > 0 ? `עוד ${hidden} בתים משתתפים זמינים למשתמשים רשומים · ` : "כתובות הבתים זמינות למשתמשים רשומים · "}
+      {hidden > 0
+        ? `עוד ${hidden} בתים פרטיים זמינים למשתמשים רשומים · `
+        : "כתובות בתים פרטיים זמינות למשתמשים רשומים · "}
       <span className="font-medium text-orange-300 underline underline-offset-2">יש לי קוד</span>
     </button>
   );
