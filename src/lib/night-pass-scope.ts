@@ -64,8 +64,9 @@ export type ScopedHouses<T> = {
 /**
  * Night-pass visibility for one viewer. Input rows must be unredacted.
  * - business / school / practice: everything, always
- * - home sharing a pin with a business: listed for everyone with the address; arrival stays private
- * - other homes: pass holders + admin (address/arrival only after reveal), owners see their own
+ * - homes (even in a business's building): never sent to public visitors; pass holders + admin
+ *   see them all (address/arrival after reveal), owners see their own
+ * - home sharing a pin with a business: address open to whoever receives it; arrival stays private
  */
 export function scopeHousesForViewer<T extends ScopeRow>(
   rows: readonly T[],
@@ -82,16 +83,16 @@ export function scopeHousesForViewer<T extends ScopeRow>(
       houses.push({ ...row, locationPublic: true });
       continue;
     }
+    if (!seesAllHomes && !owned) {
+      hiddenHouseCount += 1;
+      continue;
+    }
     if (sharesPublicLocation(row, keys)) {
       houses.push({
         ...row,
         locationPublic: true,
         arrival: detailsOpen ? row.arrival : "",
       });
-      continue;
-    }
-    if (!seesAllHomes && !owned) {
-      hiddenHouseCount += 1;
       continue;
     }
     houses.push(detailsOpen ? row : { ...row, address: "", arrival: "" });

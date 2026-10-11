@@ -68,21 +68,17 @@ describe("night pass scope", () => {
     assert.equal(isPublicTierHouse(home), false);
   });
 
-  it("public visitors get businesses and pin-mates only, with home arrival hidden", () => {
+  it("public visitors get businesses only — homes in a business's building are not sent", () => {
     const scoped = scopeHousesForViewer(all, PUBLIC_NIGHT_PASS_SCOPE);
     assert.deepEqual(
       scoped.houses.map((house) => house.id),
-      ["נק-1", "בית-3"],
+      ["נק-1"],
     );
-    assert.equal(scoped.hiddenHouseCount, 2);
-    const biz = scoped.houses.find((house) => house.id === "נק-1")!;
+    assert.equal(scoped.hiddenHouseCount, 3);
+    const biz = scoped.houses[0]!;
     assert.equal(biz.address, "סוקולוב 10");
     assert.equal(biz.arrival, "כניסה מהחצר");
     assert.equal(biz.locationPublic, true);
-    const mate = scoped.houses.find((house) => house.id === "בית-3")!;
-    assert.equal(mate.address, "סוקולוב 10");
-    assert.equal(mate.arrival, "");
-    assert.equal(mate.locationPublic, true);
   });
 
   it("pass holders see every home, addresses only after reveal", () => {
@@ -101,6 +97,14 @@ describe("night pass scope", () => {
     assert.equal(after.houses.find((house) => house.id === "בית-3")!.arrival, "דירה 7");
   });
 
+  it("pass holders see a business building's homes with the address but arrival only after reveal", () => {
+    const before = scopeHousesForViewer(all, ctx({ viewer: "pass", revealed: false }));
+    const mate = before.houses.find((house) => house.id === "בית-3")!;
+    assert.equal(mate.address, "סוקולוב 10");
+    assert.equal(mate.arrival, "");
+    assert.equal(mate.locationPublic, true);
+  });
+
   it("owners without a pass see their own home plus the public set", () => {
     const scoped = scopeHousesForViewer(
       all,
@@ -108,10 +112,10 @@ describe("night pass scope", () => {
     );
     assert.deepEqual(
       scoped.houses.map((house) => house.id).sort(),
-      ["בית-2", "בית-3", "נק-1"].sort(),
+      ["בית-2", "נק-1"].sort(),
     );
     assert.equal(scoped.houses.find((house) => house.id === "בית-2")!.address, "הרצל 3");
-    assert.equal(scoped.hiddenHouseCount, 1);
+    assert.equal(scoped.hiddenHouseCount, 2);
   });
 
   it("admin sees everything with details", () => {
