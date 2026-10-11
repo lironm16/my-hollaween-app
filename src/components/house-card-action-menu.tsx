@@ -29,6 +29,8 @@ export function HouseCardActionMenu({
       <HouseActionBar
         {...props}
         onToggleEdit={undefined}
+        onShowOnMap={undefined}
+        onShowInList={undefined}
         editCode={undefined}
         editing={false}
         menuPlacement={menuPlacement}

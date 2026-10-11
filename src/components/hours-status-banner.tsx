@@ -22,6 +22,7 @@ import type { TreatStock, TreatId, VisitState } from "@/lib/types";
 
 const BANNER = "rounded-lg px-3 py-2 text-base font-medium leading-snug break-words";
 const CLOSED_TONE = "bg-red-900/80 text-red-50";
+const CATALOG_REMOVED_TONE = "bg-red-600 px-4 py-3 text-lg font-bold text-white shadow-md";
 
 export function HoursStatusBanner({
   house,
@@ -54,7 +55,7 @@ export function HoursStatusBanner({
 
   if (catalogRemoved) {
     return (
-      <p className={cn(BANNER, "bg-zinc-900/90 text-zinc-100", className)}>
+      <p className={cn(BANNER, CATALOG_REMOVED_TONE, className)} role="status">
         {catalogRemovedBannerLabel}
       </p>
     );
