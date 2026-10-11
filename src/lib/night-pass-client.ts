@@ -192,12 +192,14 @@ export function writeStoredCatalogScope(key: string) {
 }
 
 /**
- * Catalog sources for this device. Legacy keeps the static bundle; public visitors read the shared
- * (CDN) API; pass holders, owners and admin read the per-device private endpoint.
+ * Catalog sources for this device. Always prefer live `/api/catalog` for snapshots so night-pass
+ * scoping on the server is not bypassed by a stale `public/catalog.json` (built with passes off).
+ * Pass holders, owners and admin use the private endpoint.
  */
 export function catalogUrls(state = readNightPassState()): { snapshot: string; api: string } {
-  if (!state.enabled) return { snapshot: "/catalog.json", api: "/api/catalog" };
-  if (state.viewer === "public") return { snapshot: "/api/catalog", api: "/api/catalog" };
+  if (!state.enabled || state.viewer === "public") {
+    return { snapshot: "/api/catalog", api: "/api/catalog" };
+  }
   const qs = readAdminPreviewAsUser() ? "?asUser=1" : "";
   const url = `/api/catalog/private${qs}`;
   return { snapshot: url, api: url };

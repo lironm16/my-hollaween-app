@@ -23,6 +23,8 @@ function isIosBrowserTab() {
 type Props = {
   initialCode?: string;
   onRegistered?: () => void;
+  /** Close the register dialog before in-app navigation (help link). */
+  onNavigateAway?: () => void;
   compact?: boolean;
 };
 
@@ -30,6 +32,7 @@ type Props = {
 export function NightPassRegisterPanel({
   initialCode = "",
   onRegistered,
+  onNavigateAway,
   compact,
 }: Props) {
   const pass = useNightPass();
@@ -189,6 +192,7 @@ export function NightPassRegisterPanel({
       {compact ? (
         <Link
           href="/help/event-device-visitor"
+          onClick={() => onNavigateAway?.()}
           className={cn(
             buttonVariants({ variant: "ghost", size: "sm" }),
             "w-full text-violet-300 hover:text-violet-100",

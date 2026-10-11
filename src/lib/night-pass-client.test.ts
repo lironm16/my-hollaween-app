@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { catalogScopeMismatchesResponse } from "@/lib/night-pass-client";
+import { catalogScopeMismatchesResponse, catalogUrls } from "@/lib/night-pass-client";
+
+describe("catalogUrls", () => {
+  it("never uses static catalog.json (live API respects night-pass toggle)", () => {
+    const urls = catalogUrls({ enabled: false, viewer: "legacy", registered: false });
+    assert.equal(urls.snapshot, "/api/catalog");
+    assert.equal(urls.api, "/api/catalog");
+  });
+});
 
 describe("catalogScopeMismatchesResponse", () => {
   it("flags when the server scoped catalog for public but this device still thinks pass", () => {

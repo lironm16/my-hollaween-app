@@ -66,6 +66,7 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
           initialCode={registerCode}
           compact
           onRegistered={() => setRegisterOpen(false)}
+          onNavigateAway={() => setRegisterOpen(false)}
         />
       </HouseEditModal>
       <HouseEditModal
