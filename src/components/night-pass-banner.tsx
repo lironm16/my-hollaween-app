@@ -10,7 +10,7 @@ import { NIGHT_PASS_LOST_EVENT, type NightPassLostDetail } from "@/lib/night-pas
 function lostMessage(detail: NightPassLostDetail): string {
   if (detail?.reason === "taken") {
     return detail.byName
-      ? `המכשיר התנתק — ${detail.byName} נרשם/ה עם הקוד שלכם במכשיר אחר.`
+      ? `המכשיר התנתק — ${detail.byName} נרשם עם הקוד שלכם במכשיר אחר.`
       : "המכשיר התנתק — מישהו נרשם עם הקוד שלכם במכשיר אחר.";
   }
   if (detail?.reason === "reset") return "המכשיר התנתק — בעלי הבית יצרו קוד חדש.";

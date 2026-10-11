@@ -116,6 +116,15 @@ export default function AddPage() {
                 >
                   חבר מכשירים
                 </Button>
+                <Link
+                  href="/help/event-device-owner"
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "lg" }),
+                    "w-full text-emerald-200/90 hover:bg-emerald-950/40",
+                  )}
+                >
+                  מדריך חיבור מכשירים (עם תמונות)
+                </Link>
               </section>
             ) : null}
             <section className="space-y-2 rounded-xl bg-black/35 p-4 ring-1 ring-orange-500/20">

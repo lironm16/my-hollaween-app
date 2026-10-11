@@ -186,6 +186,17 @@ export function NightPassRegisterPanel({
       >
         {busy ? "נרשמים…" : "הרשמה"}
       </Button>
+      {compact ? (
+        <Link
+          href="/help/event-device-visitor"
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "sm" }),
+            "w-full text-violet-300 hover:text-violet-100",
+          )}
+        >
+          איך זה עובד?
+        </Link>
+      ) : null}
       {!compact ? (
         <Link
           href="/"

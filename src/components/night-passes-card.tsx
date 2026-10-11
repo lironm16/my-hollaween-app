@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, KeyRound, Loader2, LogIn, Share2 } from "lucide-react";
+import { Copy, KeyRound, Loader2, LogIn } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provider";
@@ -30,12 +30,6 @@ type PassesResponse = {
   thisDeviceRegistered: boolean;
   error?: string;
 };
-
-function shareText(code: string) {
-  const plain = code.replace("-", "");
-  const link = `${window.location.origin}/?openPass=1&c=${plain}`;
-  return `קוד כניסה לאירוע בשכונה: ${code}\nנרשמים כאן: ${link}\nהקוד עובד במכשיר אחד בלבד.`;
-}
 
 function PassesSkeleton() {
   return (
@@ -131,19 +125,6 @@ export function NightPassesCard({
     return () => window.removeEventListener(NIGHT_PASSES_SLOTS_CHANGED_EVENT, onChange);
   }, [load]);
 
-  async function share(code: string) {
-    const text = shareText(code);
-    if (navigator.share) {
-      try {
-        await navigator.share({ text });
-        return;
-      } catch {
-        /* fall through */
-      }
-    }
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener");
-  }
-
   async function copy(code: string) {
     try {
       await navigator.clipboard.writeText(code);
@@ -225,11 +206,6 @@ export function NightPassesCard({
                 {slot.code}
               </span>
               <div className="flex flex-wrap items-center justify-center gap-2">
-                <SlotAction
-                  label="שליחה"
-                  onClick={() => void share(slot.code)}
-                  icon={<Share2 className="size-4 shrink-0" strokeWidth={2.2} />}
-                />
                 <SlotAction
                   label="העתק"
                   onClick={() => void copy(slot.code)}
