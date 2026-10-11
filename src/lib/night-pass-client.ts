@@ -18,6 +18,18 @@ const CATALOG_SCOPE_KEY = "hw-catalog-scope";
 export const NIGHT_PASS_CHANGED_EVENT = "hw-night-pass-changed";
 /** This device's pass stopped working (re-registered elsewhere or reset by the owner). */
 export const NIGHT_PASS_LOST_EVENT = "hw-night-pass-lost";
+
+export type NightPassLostDetail = { reason: "taken" | "reset"; byName?: string } | null;
+
+function readLostDetail(value: unknown): NightPassLostDetail {
+  if (!value || typeof value !== "object") return null;
+  const raw = value as { reason?: unknown; byName?: unknown };
+  if (raw.reason !== "taken" && raw.reason !== "reset") return null;
+  return {
+    reason: raw.reason,
+    ...(typeof raw.byName === "string" && raw.byName.trim() ? { byName: raw.byName.trim() } : {}),
+  };
+}
 /** Owner codes list changed (pair, reset, re-register). */
 export const NIGHT_PASSES_SLOTS_CHANGED_EVENT = "hw-night-passes-changed";
 
@@ -107,8 +119,10 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
         signal: AbortSignal.timeout(8000),
       });
       if (!res.ok) return null;
-      const next = asState(await res.json());
+      const json = (await res.json()) as { lost?: unknown };
+      const next = asState(json);
       if (!next) return null;
+      const lost = readLostDetail(json.lost);
       const prev = readNightPassState();
       if (JSON.stringify(prev) !== JSON.stringify(next)) {
         writeNightPassState(next);
@@ -117,7 +131,9 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
           if (suppressNextPassLostEvent) {
             suppressNextPassLostEvent = false;
           } else {
-            window.dispatchEvent(new Event(NIGHT_PASS_LOST_EVENT));
+            window.dispatchEvent(
+              new CustomEvent<NightPassLostDetail>(NIGHT_PASS_LOST_EVENT, { detail: lost }),
+            );
           }
         }
       }

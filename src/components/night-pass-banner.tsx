@@ -5,7 +5,17 @@ import { toast } from "sonner";
 import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provider";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useNightPass } from "@/hooks/use-night-pass";
-import { NIGHT_PASS_LOST_EVENT } from "@/lib/night-pass-client";
+import { NIGHT_PASS_LOST_EVENT, type NightPassLostDetail } from "@/lib/night-pass-client";
+
+function lostMessage(detail: NightPassLostDetail): string {
+  if (detail?.reason === "taken") {
+    return detail.byName
+      ? `המכשיר התנתק — ${detail.byName} נרשם/ה עם הקוד שלכם במכשיר אחר.`
+      : "המכשיר התנתק — מישהו נרשם עם הקוד שלכם במכשיר אחר.";
+  }
+  if (detail?.reason === "reset") return "המכשיר התנתק — בעלי הבית יצרו קוד חדש.";
+  return "המכשיר הזה אינו רשום יותר — הקוד שוחרר או הועבר למכשיר אחר.";
+}
 
 /** Map strip: invite code when not registered. Registered users see status only in the side menu. */
 export function NightPassBanner() {
@@ -14,8 +24,8 @@ export function NightPassBanner() {
   const passDialog = useNightPassDialogOptional();
 
   useEffect(() => {
-    const onLost = () =>
-      toast.message("המכשיר הזה אינו רשום יותר — הקוד שוחרר או הועבר למכשיר אחר.", {
+    const onLost = (event: Event) =>
+      toast.message(lostMessage((event as CustomEvent<NightPassLostDetail>).detail ?? null), {
         description: "צריכים קוד חדש? פנו לבעלי הבית.",
         duration: 12_000,
       });
