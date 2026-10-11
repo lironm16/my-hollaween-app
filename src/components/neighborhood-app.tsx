@@ -23,6 +23,10 @@ import { MapStats, StatsSummary } from "@/components/map-stats";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { NeighborhoodStatusBanners } from "@/components/neighborhood-status-banners";
+import { NightPassBanner } from "@/components/night-pass-banner";
+import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
+import { useNightPass } from "@/hooks/use-night-pass";
+import { adminSeesAllHouses } from "@/lib/night-pass-client";
 import { RouteChangeBanner, routeChangeBannerMessage } from "@/components/route-change-banner";
 import { RouteChangesSheet } from "@/components/route-changes-sheet";
 import { TempSkipRestoreAlerts } from "@/components/temp-skip-restore-alert";
@@ -107,7 +111,6 @@ import { setMapListSuspended } from "@/lib/map-list-suspend";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { useAppNow } from "@/hooks/use-app-clock";
 import {
-  loadCatalogCacheSync,
   notifyCatalogChanged,
   removeOwnedHouse,
   forgetPublishedHouse,
@@ -190,7 +193,7 @@ export function NeighborhoodApp({
     gemHuntFromUrl: gemHuntFromServer,
     visitFromUrl: visitFromServer,
   });
-  const { catalog, loading, offline, unreachable, error, source, refresh } =
+  const { catalog, loading, ready: catalogReady, offline, unreachable, error, source, refresh } =
     useCatalog(initialCatalog);
   const catalogUpdatedAt = catalog?.updatedAt;
   const { admin, ready: adminSessionReady } = useAdminSession();
@@ -289,6 +292,8 @@ export function NeighborhoodApp({
   const visits = useVisitedHouses();
   const skips = useSkippedHouses();
   const owned = useOwnedHouses();
+  const nightPass = useNightPass();
+  const { openOwnerPasses } = useNightPassDialog();
   useEffect(() => {
     applyClockSearchParams(window.location.search);
   }, []);
@@ -337,7 +342,7 @@ export function NeighborhoodApp({
   const houses = useMergedHouses({
     catalogHouses,
     owned,
-    admin: adminForHouseSet,
+    admin: adminSeesAllHouses(adminForHouseSet, nightPass),
     adminHouses,
     includeCatalogWhenAdmin: true,
     restoreRedactedLocations,
@@ -373,12 +378,6 @@ export function NeighborhoodApp({
       return next;
     }
     if (lastHousesRef.current.length > 0) return lastHousesRef.current;
-    const cached = loadCatalogCacheSync()?.houses;
-    if (cached?.length) {
-      const next = applyVisitorLocations(applyAdminLocations(cached));
-      lastHousesRef.current = next;
-      return next;
-    }
     return housesForMap;
   }, [housesForMap, catalog, gemPreviewAsUser, addressReveal, adminHouses, restoreRedactedLocations]);
 
@@ -429,11 +428,10 @@ export function NeighborhoodApp({
     () => filterHouses(housesForFilters, filters, filterContext),
     [housesForFilters, filters, filterContext],
   );
+  /** Avoid SSR/client mismatch: device cache loads after hydration in CatalogProvider. */
+  const visibleForList = catalogReady ? visible : [];
   const showBootstrapSpinner =
-    displayHouses.length === 0 &&
-    !catalogHasRealHouses(catalog) &&
-    !catalogHasRealHouses(loadCatalogCacheSync()) &&
-    loading;
+    displayHouses.length === 0 && !catalogHasRealHouses(catalog) && loading && !catalogReady;
   const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
   const filterDimActive = matchedIds.size < mapHouses.length;
   const matchedIdsKey = useMemo(
@@ -1366,12 +1364,16 @@ export function NeighborhoodApp({
           ? editCodeById.get(id)
           : owned.find((item) => item.id === id)?.editCode,
       onEdit: (house) => requestHouseEdit(house, true),
+      nightPassesEnabled: nightPass.enabled,
+      onNightPasses: (house) => openOwnerPasses(house.id),
       skipMetaFor: (id) => skips.meta(id),
       editingId: editFlow.flow?.house.id ?? null,
     };
   }, [
     admin,
     gemPreviewAsUser,
+    nightPass.enabled,
+    openOwnerPasses,
     gemAdminTools,
     source,
     likes.liked,
@@ -1494,6 +1496,7 @@ export function NeighborhoodApp({
         error={error}
         hasCachedHouses={houses.length > 0}
       />
+      <NightPassBanner />
       <TempSkipRestoreAlerts
         alerts={tempRestoreAlerts}
         onFocusHouse={(id) => {
@@ -1684,7 +1687,7 @@ export function NeighborhoodApp({
                   />
                 ) : (
                   <HouseList
-                    houses={visible}
+                    houses={visibleForList}
                     origin={origin}
                     now={now}
                     actionContext={houseActionContext}

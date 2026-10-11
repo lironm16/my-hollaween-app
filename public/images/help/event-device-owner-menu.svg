@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 520" width="390" height="520" role="img">
+<rect width="390" height="520" fill="#12081a"/>
+  <rect x="16" y="48" width="358" height="200" rx="16" fill="#1d1028" stroke="#f97316" stroke-opacity="0.2"/>
+  <text x="320" y="82" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="17" font-weight="700" text-anchor="end">&#1489;&#1497;&#1514;</text>
+  <text x="50" y="111" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="16" text-anchor="middle">&#8942;</text>
+  <rect x="175" y="68" width="188" height="168" rx="14" fill="#160b20" stroke="#f97316" stroke-opacity="0.35"/>
+  <text x="269" y="187" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">&#1495;&#1497;&#1489;&#1493;&#1512; &#1502;&#1499;&#1513;&#1497;&#1512;&#1497;&#1501;</text>
+  <rect x="24" y="300" width="342" height="180" rx="16" fill="#1d1028" stroke="#a78bfa" stroke-opacity="0.25"/>
+  <text x="195" y="378" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="middle">&#1513;&#1501; + &#1496;&#1500;&#1508;&#1493;&#1503; &#1502;&#1495;&#1493;&#1489;&#1512;</text>
+  <text x="195" y="418" fill="#86efac" font-family="Rubik,Arial,sans-serif" font-size="13" text-anchor="middle">&#1508;&#1504;&#1493;&#1497;</text>
+</svg>

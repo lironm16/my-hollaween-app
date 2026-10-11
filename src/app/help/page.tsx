@@ -4,11 +4,13 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { HelpShell } from "@/components/help-shell";
 import { useAdminSession } from "@/hooks/use-admin-session";
-import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
+import { useNightPass } from "@/hooks/use-night-pass";
 import { GEM_GAME_TITLE_HE } from "@/lib/gem-hunt-copy";
 
-const QUESTIONS = [
+type HelpLink = { question: string; href: string };
+
+const QUESTIONS: HelpLink[] = [
   {
     question: "עזרה אישית — טופס ליצירת קשר",
     href: "/help/contact",
@@ -45,18 +47,31 @@ const QUESTIONS = [
     question: "איבדתי את קוד העריכה",
     href: "/help/edit-code",
   },
-] as const;
+];
 
-const GEM_HUNT_QUESTION = {
-  question: GEM_GAME_TITLE_HE,
-  href: "/help/gem-hunt",
-} as const;
+const EVENT_DEVICE_QUESTIONS: HelpLink[] = [
+  {
+    question: "חיבור מכשירים — בעלי בתים",
+    href: "/help/event-device-owner",
+  },
+  {
+    question: "יש לי קוד — אורחים",
+    href: "/help/event-device-visitor",
+  },
+];
 
 export default function HelpPage() {
   const { admin } = useAdminSession();
-  const now = useAppNow();
   const { gemUiVisible: showGemHuntHelp } = useGemHuntAdminUi(admin);
-  const items = showGemHuntHelp ? [...QUESTIONS, GEM_HUNT_QUESTION] : QUESTIONS;
+  const nightPass = useNightPass();
+
+  const items: HelpLink[] = [...QUESTIONS];
+  if (nightPass.enabled) {
+    items.splice(2, 0, ...EVENT_DEVICE_QUESTIONS);
+  }
+  if (showGemHuntHelp) {
+    items.push({ question: GEM_GAME_TITLE_HE, href: "/help/gem-hunt" });
+  }
 
   return (
     <HelpShell title="שאלות ותשובות" backHref="/" backLabel="מפה">

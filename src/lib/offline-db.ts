@@ -166,15 +166,15 @@ export function clearCatalogCacheMeta() {
 }
 
 /** Optional wipe — not run on boot (cache is needed for instant map paint). */
-export function clearDeviceCatalogCache() {
-  if (typeof window === "undefined") return;
+export function clearDeviceCatalogCache(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
   try {
     localStorage.removeItem(CATALOG_LS_KEY);
     localStorage.removeItem(CATALOG_META_LS_KEY);
   } catch {
     /* private mode */
   }
-  void (async () => {
+  return (async () => {
     try {
       const db = await openDb();
       await new Promise<void>((resolve, reject) => {

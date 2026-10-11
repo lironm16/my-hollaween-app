@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminAddHouseCutoffSettings } from "@/components/admin-add-house-cutoff-settings";
 import { AdminAddressRevealSettings } from "@/components/admin-address-reveal-settings";
 import { AdminGemOpsPanel } from "@/components/admin-gem-ops-panel";
+import { AdminNightPassesSettings } from "@/components/admin-night-passes-settings";
 import { AdminHelpDetails, AdminSection } from "@/components/admin-section";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useRehearsalScene, useServerSim } from "@/hooks/use-app-clock";
@@ -121,10 +122,11 @@ export function AdminDryRunPanel() {
         </AdminHelpDetails>
       </AdminSection>
 
-      <AdminSection title="לוח זמנים לאירוע" summary="חיתוך הוספה · חשיפת כתובות">
+      <AdminSection title="לוח זמנים לאירוע" summary="חיתוך הוספה · חשיפת כתובות · כרטיסי כניסה">
         <div className="space-y-2">
           <AdminAddHouseCutoffSettings embedded />
           <AdminAddressRevealSettings embedded />
+          <AdminNightPassesSettings embedded />
         </div>
       </AdminSection>
 

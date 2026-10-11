@@ -12,6 +12,8 @@ import { useAdminHouses } from "@/hooks/use-admin-houses";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useCatalog } from "@/hooks/use-catalog";
+import { useNightPass } from "@/hooks/use-night-pass";
+import { adminSeesAllHouses } from "@/lib/night-pass-client";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { useMergedHouses } from "@/hooks/use-merged-houses";
 import { isPreviewDeploymentClient } from "@/lib/deployment-env";
@@ -35,6 +37,7 @@ export default function SearchPage() {
   const owned = useOwnedHouses();
   const { catalog, loading: catalogLoading, source, refresh } = useCatalog();
   const { admin, ready: adminReady } = useAdminSession();
+  const nightPass = useNightPass();
   const { houseSet } = useHouseSet();
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
@@ -62,7 +65,7 @@ export default function SearchPage() {
   const merged = useMergedHouses({
     catalogHouses,
     owned,
-    admin,
+    admin: adminSeesAllHouses(admin, nightPass),
     adminHouses,
     includeCatalogWhenAdmin: true,
   });
