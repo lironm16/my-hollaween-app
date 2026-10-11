@@ -11,7 +11,10 @@ import { useCatalog } from "@/hooks/use-catalog";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { config } from "@/lib/config";
 import { mergeAddressRevealSchedule } from "@/lib/event-settings";
-import { refreshNightPassState } from "@/lib/night-pass-client";
+import {
+  notifyNightPassSlotsChanged,
+  refreshNightPassState,
+} from "@/lib/night-pass-client";
 import { cn } from "@/lib/utils";
 
 function isIosBrowserTab() {
@@ -47,6 +50,29 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
   }, [initialCode]);
 
   useEffect(() => {
+    const raw = initialCode.replace(/[\s-]/g, "");
+    if (raw.length < 8) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/night-passes/prefill?code=${encodeURIComponent(raw)}`,
+          { cache: "no-store" },
+        );
+        const json = (await res.json()) as { name?: string; phone?: string };
+        if (cancelled) return;
+        if (json.name) setName((prev) => (prev.trim() ? prev : json.name!));
+        if (json.phone) setPhone((prev) => (prev.trim() ? prev : json.phone!));
+      } catch {
+        /* optional */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialCode]);
+
+  useEffect(() => {
     setIosTab(isIosBrowserTab());
     void refreshNightPassState({ force: true }).finally(() => setChecked(true));
   }, []);
@@ -73,6 +99,7 @@ export function NightPassRegisterPanel({ initialCode = "", onRegistered, compact
       }
       toast.success(json?.reregistered ? "הכרטיס עבר למכשיר הזה" : "נרשמתם!");
       await refreshNightPassState({ force: true });
+      notifyNightPassSlotsChanged();
       onRegistered?.();
     } catch {
       setError("אין חיבור לשרת. נסו שוב כשיש קליטה.");

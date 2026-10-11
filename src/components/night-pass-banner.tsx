@@ -3,11 +3,12 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provider";
+import { NightPassDeviceStrip } from "@/components/night-pass-device-strip";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { NIGHT_PASS_LOST_EVENT } from "@/lib/night-pass-client";
 
-/** Map strip: unregistered → invite to enter a code; registered → who this device is. */
+/** Map strip: unregistered → invite code; registered → same style as admin «תצוגת משתמש». */
 export function NightPassBanner() {
   const pass = useNightPass();
   const { catalog } = useCatalog();
@@ -15,8 +16,8 @@ export function NightPassBanner() {
 
   useEffect(() => {
     const onLost = () =>
-      toast.message("הכרטיס הזה נרשם עכשיו במכשיר אחר, או שבעלי הבית החליפו אותו.", {
-        description: "זה לא אתם? פנו לבעלי הבית לקבלת קוד חדש.",
+      toast.message("המכשיר הזה אינו רשום יותר — הקוד שוחרר או הועבר למכשיר אחר.", {
+        description: "צריכים קוד חדש? פנו לבעלי הבית.",
         duration: 12_000,
       });
     window.addEventListener(NIGHT_PASS_LOST_EVENT, onLost);
@@ -27,15 +28,12 @@ export function NightPassBanner() {
 
   if (pass.registered) {
     return (
-      <div className="relative z-30 flex items-center justify-center gap-2 bg-emerald-950/80 px-3 py-1.5 text-center text-sm text-emerald-100 ring-1 ring-inset ring-emerald-500/20">
-        <span>רשומים{pass.holderName ? ` · ${pass.holderName}` : ""}</span>
-        <button
-          type="button"
-          className="underline underline-offset-2"
-          onClick={() => passDialog?.openRegister()}
-        >
-          פרטים
-        </button>
+      <div className="relative z-30 px-3 py-2">
+        <NightPassDeviceStrip
+          pass={pass}
+          className="rounded-lg"
+          onDetails={() => passDialog?.openRegister()}
+        />
       </div>
     );
   }

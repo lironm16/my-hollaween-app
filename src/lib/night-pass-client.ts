@@ -18,6 +18,13 @@ const CATALOG_SCOPE_KEY = "hw-catalog-scope";
 export const NIGHT_PASS_CHANGED_EVENT = "hw-night-pass-changed";
 /** This device's pass stopped working (re-registered elsewhere or reset by the owner). */
 export const NIGHT_PASS_LOST_EVENT = "hw-night-pass-lost";
+/** Owner codes list changed (pair, reset, re-register). */
+export const NIGHT_PASSES_SLOTS_CHANGED_EVENT = "hw-night-passes-changed";
+
+export function notifyNightPassSlotsChanged() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(NIGHT_PASSES_SLOTS_CHANGED_EVENT));
+}
 
 const LEGACY_STATE: NightPassState = { enabled: false, viewer: "legacy", registered: false };
 
