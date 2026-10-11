@@ -172,7 +172,6 @@ export function HouseForm({
   const hasOptionalDetails = Boolean(
     initial?.arrival?.trim() ||
       initial?.notes?.trim() ||
-      initial?.description?.trim() ||
       existingPhoto,
   );
   const isNewHouse = !initial?.id;
@@ -791,6 +790,18 @@ export function HouseForm({
               : null}
           </div>
         </Field>
+        <Field
+          label="מה מחכה בבית?"
+          charCount={{ length: form.description.length, max: HOUSE_FIELD_LIMITS.description.max }}
+        >
+          <Textarea
+            value={form.description}
+            maxLength={HOUSE_FIELD_LIMITS.description.max}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            placeholder="קישוטים, אווירה, הפתעות…"
+            className="min-h-20 text-lg"
+          />
+        </Field>
       </FormSection>
       <details
         open={hasOptionalDetails}
@@ -821,18 +832,6 @@ export function HouseForm({
               maxLength={HOUSE_FIELD_LIMITS.notes.max}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               placeholder="יש כלב, מדרגות…"
-            />
-          </Field>
-          <Field
-            label="מה מחכה בבית?"
-            charCount={{ length: form.description.length, max: HOUSE_FIELD_LIMITS.description.max }}
-          >
-            <Textarea
-              value={form.description}
-              maxLength={HOUSE_FIELD_LIMITS.description.max}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="קישוטים, אווירה, הפתעות…"
-              className="min-h-20 text-lg"
             />
           </Field>
           <Field label="תמונת קישוט">
