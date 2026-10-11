@@ -1,12 +1,7 @@
 importScripts("/sw-map-tiles.js");
 
-<<<<<<< HEAD
-const APP_VERSION = "5.5.12";
-const CACHE = "hw-shell-5.5.12";
-=======
-const APP_VERSION = "5.5.7";
-const CACHE = "hw-shell-5.5.7";
->>>>>>> cursor/tell-me-gem-lighting-size-a0d3
+const APP_VERSION = "5.5.13";
+const CACHE = "hw-shell-5.5.13";
 const TILE_CACHE = MapTileCache.TILE_CACHE;
 const PRECACHE = [
   "/offline.html",
