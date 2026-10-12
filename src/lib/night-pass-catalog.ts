@@ -11,6 +11,12 @@ function stamp(value?: string) {
   return Number.isFinite(n) ? n : 0;
 }
 
+/**
+ * Bump whenever {@link scopeHousesForViewer} changes what a viewer receives: devices that synced
+ * earlier get one full catalog instead of a delta that would keep their stale rows.
+ */
+export const NIGHT_PASS_SCOPE_RULES_AT = "2026-10-12T10:15:00.000Z";
+
 /** Unredacted, publicly listed rows for one viewer. */
 export async function scopedHousesFromDb(ctx: NightPassScopeContext) {
   const db = await loadDb();
@@ -31,13 +37,14 @@ export async function nightPassCatalog(
   const scoped = await scopedHousesFromDb(ctx);
   const byId = new Map(scoped.houses.map((house) => [house.id, house]));
 
-  // Reveal flips address/arrival without touching house rows — move `since` past it once.
-  let revealIso: string | null = null;
+  // Reveal and scope-rule changes flip rows without touching them — move `since` past both once.
+  let revealIso = NIGHT_PASS_SCOPE_RULES_AT;
   if (ctx.revealed && ctx.viewer !== "public") {
-    revealIso = addressRevealTime(await loadAddressRevealSchedule()).toISOString();
+    const revealAt = addressRevealTime(await loadAddressRevealSchedule()).toISOString();
+    if (stamp(revealAt) > stamp(revealIso)) revealIso = revealAt;
   }
   const sinceMs = stamp(since ?? undefined);
-  const wantsDelta = Boolean(since) && sinceMs > 0 && !(revealIso && sinceMs < stamp(revealIso));
+  const wantsDelta = Boolean(since) && sinceMs > 0 && sinceMs >= stamp(revealIso);
 
   const base: CatalogDelta = wantsDelta ? await getCatalogDelta(since!) : { ...(await getCatalog()) };
   const houses =
@@ -47,8 +54,7 @@ export async function nightPassCatalog(
           return row ? [row] : [];
         })
       : scoped.houses;
-  const updatedAt =
-    revealIso && stamp(revealIso) > stamp(base.updatedAt) ? revealIso : base.updatedAt;
+  const updatedAt = stamp(revealIso) > stamp(base.updatedAt) ? revealIso : base.updatedAt;
   // A row that changed out of this viewer's scope (e.g. business → home) must leave the device.
   const outOfScope =
     wantsDelta && !base.full ? base.houses.filter((house) => !byId.has(house.id)).map((h) => h.id) : [];
