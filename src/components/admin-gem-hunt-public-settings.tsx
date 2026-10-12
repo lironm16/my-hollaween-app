@@ -7,7 +7,7 @@ import { GEM_GAME_TITLE_HE } from "@/lib/gem-hunt-copy";
 import { notifyCatalogChanged } from "@/lib/offline-db";
 import { cn } from "@/lib/utils";
 
-/** Admin switch — gem hunt UI for all users (still gated by address reveal per house). */
+/** Feature switch — gem hunt for all users (still gated by address reveal per house). */
 export function AdminGemHuntPublicSettings({ embedded = false }: { embedded?: boolean }) {
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
@@ -27,14 +27,10 @@ export function AdminGemHuntPublicSettings({ embedded = false }: { embedded?: bo
   async function toggle() {
     if (enabled === null) return;
     const next = !enabled;
-    if (
-      next &&
-      !window.confirm(
-        `להפעיל את ${GEM_GAME_TITLE_HE} לכל המשתמשים? מי שרואה כתובת יוכל לחפש שדון; ברירת המחדל כבוי.`,
-      )
-    ) {
-      return;
-    }
+    const question = next
+      ? `להפעיל את ${GEM_GAME_TITLE_HE} באפליקציה? כל המשתמשים יראו את המשחק, ויוכלו לחפש שדון בכל מקום שהכתובת שלו גלויה להם.`
+      : `לכבות את ${GEM_GAME_TITLE_HE}? המשחק ייעלם לכל המשתמשים (מנהלים עדיין יראו אותו).`;
+    if (!window.confirm(question)) return;
     setSaving(true);
     try {
       const res = await fetch("/api/admin/event/gem-hunt", {
@@ -62,7 +58,7 @@ export function AdminGemHuntPublicSettings({ embedded = false }: { embedded?: bo
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-orange-100">{GEM_GAME_TITLE_HE} לכולם</p>
+        <p className="text-sm font-medium text-orange-100">{GEM_GAME_TITLE_HE}</p>
         <span className="flex shrink-0 items-center gap-1.5">
           <span className={cn("text-base", enabled ? "text-orange-200" : "text-violet-400")}>
             {enabled === null ? "…" : enabled ? "פועל" : "כבוי"}
@@ -72,7 +68,7 @@ export function AdminGemHuntPublicSettings({ embedded = false }: { embedded?: bo
             dir="ltr"
             role="switch"
             aria-checked={Boolean(enabled)}
-            aria-label={`${GEM_GAME_TITLE_HE} לכולם`}
+            aria-label={GEM_GAME_TITLE_HE}
             disabled={enabled === null || saving}
             onClick={() => void toggle()}
             className={cn(
@@ -86,12 +82,13 @@ export function AdminGemHuntPublicSettings({ embedded = false }: { embedded?: bo
       </div>
       {embedded ? (
         <AdminHelpDetails label="מה זה?">
-          כשהמתג דלוק, כל מי שנכנס לאפליקציה רואה את משחק השדונים (לא רק מנהל). איזה שדונים אפשר
-          לאסוף עדיין תלוי בחשיפת כתובות — בעלים, עסקים/בתי ספר, או אחרי שעת החשיפה.
+          מפעיל או מכבה את המשחק באפליקציה לכל המשתמשים. כבוי — רק מנהלים רואים אותו. דלוק — כולם
+          רואים אותו, וכל אחד יכול לחפש שדון בבית שהכתובת שלו גלויה לו: הבית שלו, עסקים ובתי ספר,
+          ואחרי שעת חשיפת הכתובות — כל הבתים.
         </AdminHelpDetails>
       ) : (
         <p className="text-sm text-violet-300">
-          ברירת מחדל כבוי (מנהלים בלבד). נשמר בשרת ומתפשט למכשירים בעדכון הבתים.
+          כבוי כברירת מחדל. ההגדרה נשמרת בשרת ומגיעה לכל המכשירים בעדכון הבתים הבא.
         </p>
       )}
     </div>
