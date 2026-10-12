@@ -1,12 +1,12 @@
 "use client";
 
-import { Heart, MapPinned } from "lucide-react";
+import { Heart } from "lucide-react";
 import { ImpMenuActiveGlyph } from "@/components/imp-marker-glyph";
 import { ImpOutlineIcon } from "@/components/imp-outline-icon";
 import { SavedTrafficIcon, SkipTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
 import { SkipOutlineIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
-import { GEM_ACTION_FIND_HE, GEM_FOUND_I_HE, GEM_PLACE_ACTION_HE } from "@/lib/gem-hunt-copy";
+import { GEM_ACTION_FIND_HE, GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 import type { PointerEvent as ReactPointerEvent } from "react";
 
@@ -36,7 +36,6 @@ export function HouseCardQuickActions({
   onToggleLike,
   onToggleVisited,
   onToggleGem,
-  onPlaceGem,
   onSkip,
   onRestoreRoute,
   skipped,
@@ -48,15 +47,13 @@ export function HouseCardQuickActions({
   onToggleLike?: () => void;
   onToggleVisited?: () => void;
   onToggleGem?: () => void;
-  /** Owner/admin — gem hiding spot settings. */
-  onPlaceGem?: () => void;
   onSkip?: () => void;
   onRestoreRoute?: () => void;
   skipped?: boolean;
   className?: string;
 }) {
   const hasSkip = Boolean(onSkip || onRestoreRoute);
-  const hasAny = Boolean(onToggleVisited || onToggleLike || onToggleGem || onPlaceGem || hasSkip);
+  const hasAny = Boolean(onToggleVisited || onToggleLike || onToggleGem || hasSkip);
   if (!hasAny) return null;
 
   return (
@@ -140,21 +137,6 @@ export function HouseCardQuickActions({
           ) : (
             <ImpOutlineIcon className={QUICK_ICON_CLASS} />
           )}
-        </button>
-      ) : null}
-      {onPlaceGem ? (
-        <button
-          type="button"
-          className={quickBtnClass(false)}
-          aria-label={GEM_PLACE_ACTION_HE}
-          title={GEM_PLACE_ACTION_HE}
-          onPointerDown={stopCardPointerBubble}
-          onClick={(event) => {
-            event.stopPropagation();
-            onPlaceGem();
-          }}
-        >
-          <MapPinned className={QUICK_ICON_CLASS} strokeWidth={2.2} />
         </button>
       ) : null}
     </div>
