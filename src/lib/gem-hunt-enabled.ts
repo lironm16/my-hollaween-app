@@ -1,6 +1,11 @@
-/** Gem hunt is admin-only until we intentionally open it for everyone. */
+/** Non-admin gem hunt UI when `NEXT_PUBLIC_GEM_HUNT=1` (local + preview testing). Default off in production. */
+export function gemHuntPublicEnvEnabled() {
+  return process.env.NEXT_PUBLIC_GEM_HUNT === "1";
+}
+
+/** Gem hunt UI — admin always; visitors when {@link gemHuntPublicEnvEnabled}. */
 export function gemHuntVisible(isAdmin: boolean) {
-  return isAdmin;
+  return isAdmin || gemHuntPublicEnvEnabled();
 }
 
 /** @deprecated Visibility uses address reveal ({@link canViewHouseLocationDetails}). */
