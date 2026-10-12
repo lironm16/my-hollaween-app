@@ -50,7 +50,7 @@ export function houseSharePayload(
 
 export function editCodeSharePayload(house: PublicHouse, editCode: string) {
   const title = `קוד עריכה — ${houseHeadline(house)}`;
-  const text = `קוד העריכה ל${houseHeadline(house)}: ${editCode}\n\nלהזנה: תפריט → בית → עריכה → בחרו את הבית → הזינו את הקוד.`;
+  const text = `קוד העריכה ל${houseHeadline(house)}: ${editCode}\n\nלהזנה: תפריט ← בית ← עריכה ← בחרו את הבית ← הזינו את הקוד.`;
   return { title, text };
 }
 

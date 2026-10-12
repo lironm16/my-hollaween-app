@@ -46,7 +46,7 @@ export function EditCodeDialog({
           <Button
             type="button"
             variant="outline"
-            className="w-full text-lg"
+            className="h-11 w-full justify-center text-base"
             onClick={() => void copyText(editCode, "קוד העריכה הועתק")}
           >
             <Copy className="size-5" />
@@ -56,7 +56,7 @@ export function EditCodeDialog({
         <div className="flex gap-2 pt-1">
           <Button
             type="button"
-            className="min-w-0 flex-1 bg-orange-500 text-lg text-black hover:bg-orange-400"
+            className="h-11 min-w-0 flex-1 justify-center bg-orange-500 text-base text-black hover:bg-orange-400"
             onClick={() => {
               void shareEditCode(house, editCode).then((result) => {
                 if (result === "shared") toast.success("קוד העריכה נשלח");
@@ -68,7 +68,12 @@ export function EditCodeDialog({
             <Share2 className="size-5" />
             שיתוף
           </Button>
-          <Button type="button" variant="outline" className="min-w-0 flex-1 text-lg" onClick={onClose}>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 min-w-0 flex-1 justify-center text-base"
+            onClick={onClose}
+          >
             סגירה
           </Button>
         </div>
