@@ -69,5 +69,6 @@ export async function nightPassCatalog(
     ...(wantsDelta && !base.full ? {} : { full: true }),
     scope: ctx.viewer,
     hiddenHouseCount: scoped.hiddenHouseCount,
+    hiddenStubHouseCount: scoped.hiddenStubHouseCount,
   };
 }

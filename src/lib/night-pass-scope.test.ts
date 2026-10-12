@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   PUBLIC_NIGHT_PASS_SCOPE,
+  hiddenHouseCountForSet,
   isPublicTierHouse,
   scopeHousesForViewer,
   type NightPassScopeContext,
@@ -129,6 +130,17 @@ describe("night pass scope", () => {
     );
     assert.equal(scoped.houses.find((house) => house.id === "בית-2")!.address, "הרצל 3");
     assert.equal(scoped.hiddenHouseCount, 2);
+  });
+
+  it("splits the hidden-home teaser by the viewer's house set", () => {
+    const stubHome = row({ id: "סטאב-1", address: "הגפן 4", isStub: true });
+    const scoped = scopeHousesForViewer([...all, stubHome], PUBLIC_NIGHT_PASS_SCOPE);
+    assert.equal(scoped.hiddenHouseCount, 4);
+    assert.equal(scoped.hiddenStubHouseCount, 1);
+    assert.equal(hiddenHouseCountForSet(scoped, "real"), 3);
+    assert.equal(hiddenHouseCountForSet(scoped, "stubs"), 1);
+    assert.equal(hiddenHouseCountForSet(scoped, "all"), 4);
+    assert.equal(hiddenHouseCountForSet({ hiddenHouseCount: 5 }, "real"), 5);
   });
 
   it("admin sees everything with details", () => {

@@ -5,7 +5,9 @@ import { toast } from "sonner";
 import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provider";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useNightPass } from "@/hooks/use-night-pass";
+import type { HouseSet } from "@/lib/house-set";
 import { NIGHT_PASS_LOST_EVENT, type NightPassLostDetail } from "@/lib/night-pass-client";
+import { hiddenHouseCountForSet } from "@/lib/night-pass-scope";
 
 function lostMessage(detail: NightPassLostDetail): string {
   if (detail?.reason === "taken") {
@@ -18,7 +20,7 @@ function lostMessage(detail: NightPassLostDetail): string {
 }
 
 /** Map strip: invite code when not registered. Registered users see status only in the side menu. */
-export function NightPassBanner() {
+export function NightPassBanner({ houseSet }: { houseSet: HouseSet }) {
   const pass = useNightPass();
   const { catalog } = useCatalog();
   const passDialog = useNightPassDialogOptional();
@@ -35,7 +37,7 @@ export function NightPassBanner() {
 
   if (!pass.enabled || pass.viewer === "admin" || pass.registered) return null;
 
-  const hidden = catalog?.hiddenHouseCount ?? 0;
+  const hidden = hiddenHouseCountForSet(catalog, houseSet);
   return (
     <button
       type="button"

@@ -224,6 +224,8 @@ export type Catalog = {
   scope?: NightPassViewer;
   /** Night passes — homes left out of this payload (shown as a teaser to unregistered visitors). */
   hiddenHouseCount?: number;
+  /** Rehearsal stubs included in {@link hiddenHouseCount}. */
+  hiddenStubHouseCount?: number;
 };
 
 /** Who the server built a catalog for. `legacy` = night passes off (everyone sees everything). */

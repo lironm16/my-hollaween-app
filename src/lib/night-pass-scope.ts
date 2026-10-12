@@ -1,5 +1,6 @@
 import { redactHouseLocationDetails } from "@/lib/address-reveal";
 import { isPoiHouse } from "@/lib/house-kind";
+import { isStubHouse, type HouseSet } from "@/lib/house-set";
 import { isPracticeHouse } from "@/lib/practice-house";
 import { isSchoolCampusAddress } from "@/lib/school-campus";
 import type { NightPassViewer, PublicHouse } from "@/lib/types";
@@ -7,7 +8,7 @@ import type { NightPassViewer, PublicHouse } from "@/lib/types";
 type ScopeRow = Pick<
   PublicHouse,
   "id" | "kind" | "address" | "arrival" | "lat" | "lng" | "isPractice"
-> & { notes?: string };
+> & { notes?: string; isStub?: boolean; deviceCacheStub?: boolean };
 
 /** Businesses and school booths — address + arrival are public for everyone. */
 export function isPublicTierHouse(house: Pick<ScopeRow, "kind" | "address" | "isPractice">) {
@@ -35,7 +36,21 @@ export type ScopedHouses<T> = {
   houses: T[];
   /** Homes the viewer cannot see at all (public visitors only). */
   hiddenHouseCount: number;
+  /** Rehearsal stubs among {@link hiddenHouseCount}. */
+  hiddenStubHouseCount: number;
 };
+
+/** Teaser count for the house set the viewer's map is showing. */
+export function hiddenHouseCountForSet(
+  counts: { hiddenHouseCount?: number; hiddenStubHouseCount?: number } | null | undefined,
+  set: HouseSet,
+): number {
+  const total = counts?.hiddenHouseCount ?? 0;
+  const stubs = Math.min(counts?.hiddenStubHouseCount ?? 0, total);
+  if (set === "all") return total;
+  if (set === "stubs") return stubs;
+  return total - stubs;
+}
 
 /**
  * Night-pass visibility for one viewer. Input rows must be unredacted.
@@ -50,6 +65,7 @@ export function scopeHousesForViewer<T extends ScopeRow>(
   const seesAllHomes = ctx.viewer === "pass" || ctx.viewer === "admin";
   const houses: T[] = [];
   let hiddenHouseCount = 0;
+  let hiddenStubHouseCount = 0;
   for (const row of rows) {
     const owned = ctx.ownedIds.has(row.id);
     const detailsOpen = owned || ctx.viewer === "admin" || (seesAllHomes && ctx.revealed);
@@ -59,9 +75,10 @@ export function scopeHousesForViewer<T extends ScopeRow>(
     }
     if (!seesAllHomes && !owned) {
       hiddenHouseCount += 1;
+      if (isStubHouse(row)) hiddenStubHouseCount += 1;
       continue;
     }
     houses.push(detailsOpen ? row : redactHouseLocationDetails(row));
   }
-  return { houses, hiddenHouseCount };
+  return { houses, hiddenHouseCount, hiddenStubHouseCount };
 }

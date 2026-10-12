@@ -14,6 +14,7 @@ import {
 import type { Catalog, CatalogDelta, PublicHouse } from "@/lib/types";
 import {
   catalogScopeOf,
+  hiddenCountFields,
   mergeCatalogDelta,
   normalizeCatalogDelta,
   syncCatalog,
@@ -152,7 +153,7 @@ function catalogFromResponse(res: CatalogDelta): Catalog {
     pushTemplates: res.pushTemplates,
     eventSettings: res.eventSettings,
     ...(res.scope ? { scope: res.scope } : {}),
-    ...(typeof res.hiddenHouseCount === "number" ? { hiddenHouseCount: res.hiddenHouseCount } : {}),
+    ...hiddenCountFields(res),
   };
 }
 

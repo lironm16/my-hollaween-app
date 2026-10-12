@@ -1515,7 +1515,7 @@ export function NeighborhoodApp({
         error={error}
         hasCachedHouses={houses.length > 0}
       />
-      <NightPassBanner />
+      <NightPassBanner houseSet={activeHouseSet} />
       <TempSkipRestoreAlerts
         alerts={tempRestoreAlerts}
         onFocusHouse={(id) => {
