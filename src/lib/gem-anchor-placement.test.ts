@@ -5,7 +5,7 @@ import {
   gemAnchorPlacementError,
   GEM_ANCHOR_PLACE_MAX_METERS,
 } from "@/lib/gem-anchor-placement";
-import { destinationPoint, gemAnchorForHouse } from "@/lib/gem-hunt";
+import { automaticGemAnchorForHouse, destinationPoint, gemAnchorForHouse } from "@/lib/gem-hunt";
 import {
   __resetPlacedGemAnchorsForTests,
   notePlacedGemAnchor,
@@ -40,6 +40,9 @@ describe("gem anchor placement", () => {
     const anchor = gemAnchorForHouse(row);
     assert.equal(anchor.placed, true);
     assert.equal(anchor.lat, spot.lat);
+    const auto = automaticGemAnchorForHouse(row);
+    assert.notEqual(auto.placed, true);
+    assert.notEqual(auto.lat, spot.lat);
   });
 
   it("keeps a just-saved placement until the catalog catches up, including a reset", () => {

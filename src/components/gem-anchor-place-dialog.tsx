@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LocateFixed } from "lucide-react";
+import { LocateFixed, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { HouseEditModal } from "@/components/house-edit-modal";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
@@ -10,13 +10,19 @@ import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { clearGemAnchorOverride } from "@/lib/gem-anchor-overrides";
 import { copyText } from "@/lib/copy-text";
 import { gemAnchorPlacementError, GEM_ANCHOR_PLACE_MAX_METERS } from "@/lib/gem-anchor-placement";
-import { gemAnchorForHouse, placedGemAnchorForHouse } from "@/lib/gem-hunt";
+import {
+  automaticGemAnchorForHouse,
+  gemAnchorForHouse,
+  placedGemAnchorForHouse,
+} from "@/lib/gem-hunt";
 import {
   GEM_PLACE_ACTION_HE,
   GEM_PLACE_HINT_HE,
   GEM_PLACE_MY_LOCATION_HE,
+  GEM_PLACE_RESET_CONFIRM_HE,
   GEM_PLACE_RESET_DONE_HE,
   GEM_PLACE_RESET_HE,
+  GEM_PLACE_RESET_HINT_HE,
   GEM_PLACE_SAVE_HE,
   GEM_PLACE_SAVED_HE,
   GEM_PLACE_STATUS_AUTO_HE,
@@ -73,6 +79,10 @@ export function GemAnchorPlaceDialog({
     const a = gemAnchorForHouse(house);
     return { lat: a.lat, lng: a.lng };
   }, [house, overrides]);
+  const auto = useMemo(() => {
+    const a = automaticGemAnchorForHouse(house);
+    return { lat: a.lat, lng: a.lng };
+  }, [house]);
   const placed = placedGemAnchorForHouse(house);
   const [point, setPoint] = useState<LatLng>(current);
   const [saving, setSaving] = useState(false);
@@ -88,6 +98,7 @@ export function GemAnchorPlaceDialog({
   const distanceM = Math.round(distanceMeters(house, point));
   const coordsText = `${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}`;
   const dirty = !samePoint(point, current);
+  const atAuto = samePoint(point, auto);
 
   async function send(method: "PUT" | "DELETE", body: Record<string, unknown>) {
     setSaving(true);
@@ -148,10 +159,15 @@ export function GemAnchorPlaceDialog({
   }
 
   async function reset() {
-    if (!window.confirm(`${GEM_PLACE_RESET_HE}?`)) return;
+    setAccuracyM(null);
+    if (!placed) {
+      setPoint(auto);
+      return;
+    }
+    if (!window.confirm(`${GEM_PLACE_RESET_HE}? ${GEM_PLACE_RESET_CONFIRM_HE}`)) return;
     if (await send("DELETE", {})) {
+      setPoint(auto);
       toast.success(GEM_PLACE_RESET_DONE_HE);
-      onClose();
     }
   }
 
@@ -195,16 +211,29 @@ export function GemAnchorPlaceDialog({
             {accuracyM != null ? ` · דיוק GPS ~${accuracyM} מ׳` : ""}
           </p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-11 w-full justify-center text-base"
-          disabled={locating || saving}
-          onClick={applyMyLocation}
-        >
-          <LocateFixed className="size-5" />
-          {locating ? "מאתרים…" : GEM_PLACE_MY_LOCATION_HE}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 min-w-0 flex-1 justify-center text-base"
+            disabled={locating || saving}
+            onClick={applyMyLocation}
+          >
+            <LocateFixed className="size-5" />
+            {locating ? "מאתרים…" : GEM_PLACE_MY_LOCATION_HE}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 min-w-0 flex-1 justify-center text-base"
+            disabled={saving || (atAuto && !placed)}
+            onClick={() => void reset()}
+          >
+            <RotateCcw className="size-5" />
+            {GEM_PLACE_RESET_HE}
+          </Button>
+        </div>
+        <p className="text-sm text-violet-400">{GEM_PLACE_RESET_HINT_HE}</p>
         {deviceOverride ? (
           <p className="text-sm text-amber-200">
             בטלפון הזה יש כיול GPS מקומי שדורס את המיקום.{" "}
@@ -235,17 +264,6 @@ export function GemAnchorPlaceDialog({
             ביטול
           </Button>
         </div>
-        {placed ? (
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full text-violet-300"
-            disabled={saving}
-            onClick={() => void reset()}
-          >
-            {GEM_PLACE_RESET_HE}
-          </Button>
-        ) : null}
       </div>
     </HouseEditModal>
   );

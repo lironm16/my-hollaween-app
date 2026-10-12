@@ -212,8 +212,16 @@ function gemClusterFanAnchor(house: GemAnchorHouse, cluster: { index: number; si
   return { ...point, bearingFromHouseDeg, offsetM, calibrated: false };
 }
 
-export function gemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
-  const override = getGemAnchorOverride(house.id);
+/** Calculated spot (cluster fan / sidewalk / hash) — ignores owner placement and device calibration. */
+export function automaticGemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
+  return gemAnchorForHouse(house, { automatic: true });
+}
+
+export function gemAnchorForHouse(
+  house: GemAnchorHouse,
+  options?: { automatic?: boolean },
+): GemAnchor {
+  const override = options?.automatic ? null : getGemAnchorOverride(house.id);
   if (override) {
     const bearingFromHouseDeg = bearingDegrees(house, override);
     const offsetM = distanceMeters(house, override);
@@ -226,7 +234,7 @@ export function gemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
     };
   }
 
-  const placed = placedGemAnchorForHouse(house);
+  const placed = options?.automatic ? null : placedGemAnchorForHouse(house);
   if (placed) {
     return {
       lat: placed.lat,

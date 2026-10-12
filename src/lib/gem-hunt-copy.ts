@@ -22,11 +22,14 @@ export const GEM_PLACE_HINT_HE =
   "כאן מסתתר השדון של הבית. אם יש מקום טוב יותר — גררו אותו, הקישו במפה בתוך העיגול, או עמדו במקום ובחרו «המיקום שלי».";
 export const GEM_PLACE_MY_LOCATION_HE = "המיקום שלי";
 export const GEM_PLACE_SAVE_HE = "שמירת מיקום";
-export const GEM_PLACE_RESET_HE = "חזרה למיקום אוטומטי";
+export const GEM_PLACE_RESET_HE = "ברירת מחדל";
+export const GEM_PLACE_RESET_HINT_HE =
+  "«ברירת מחדל» מחזירה את השדון למיקום שהאפליקציה מחשבת לבד — על המדרכה הקרובה לבית.";
+export const GEM_PLACE_RESET_CONFIRM_HE = "המיקום הידני יימחק לכולם.";
 export const GEM_PLACE_SAVED_HE = "מיקום השדון נשמר";
-export const GEM_PLACE_RESET_DONE_HE = "השדון חזר למיקום האוטומטי";
+export const GEM_PLACE_RESET_DONE_HE = "השדון חזר למיקום ברירת המחדל";
 export const GEM_PLACE_STATUS_PLACED_HE = "מיקום שנבחר ידנית";
-export const GEM_PLACE_STATUS_AUTO_HE = "מיקום אוטומטי ליד המדרכה";
+export const GEM_PLACE_STATUS_AUTO_HE = "ברירת מחדל — מחושב לפי המדרכה הקרובה";
 export const GEM_ACTION_FIND_HE = "מצא שדון";
 /** Cluster ⋮ menu — start sequential hunt for every booth/unit at the address. */
 export const GEM_CLUSTER_FIND_ALL_HE = "מצא הכל";
