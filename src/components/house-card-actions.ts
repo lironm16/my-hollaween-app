@@ -38,7 +38,7 @@ export type HouseCardActionContext = {
   onEdit?: (house: PublicHouse) => void;
   nightPassesEnabled?: boolean;
   onNightPasses?: (house: PublicHouse) => void;
-  /** Owner/admin ⋮ «מיקום השדון» — only shown on houses this device may edit. */
+  /** Owner/admin card action «מיקום השדון» — only shown on houses this device may edit. */
   onPlaceGem?: (house: PublicHouse) => void;
   skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
   editingId?: string | null;
@@ -123,6 +123,7 @@ export function houseQuickActionPropsFromCard(
     onToggleLike: card.onToggleLike,
     onToggleVisited: card.onToggleVisited,
     onToggleGem: card.onToggleGem,
+    onPlaceGem: card.onPlaceGem,
     onSkip: card.onSkip,
     onRestoreRoute: card.onRestoreRoute,
     skipped: card.skipped,
@@ -146,7 +147,6 @@ export function houseActionBarPropsFromCard(
     onShowInList: card.onShowInList,
     onToggleEdit: card.canEdit ? card.onToggleEdit : undefined,
     onNightPasses: card.onNightPasses,
-    onPlaceGem: card.onPlaceGem,
     skipped: card.skipped,
     editing: card.editing,
     editCode: card.editCode,

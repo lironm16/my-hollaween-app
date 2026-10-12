@@ -15,8 +15,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { EditCodeDialog } from "@/components/edit-code-dialog";
-import { ImpOutlineIcon } from "@/components/imp-outline-icon";
-import { GEM_PLACE_ACTION_HE } from "@/lib/gem-hunt-copy";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
@@ -62,7 +60,6 @@ export function HouseActionBar({
   onToggleGem: _onToggleGem,
   onToggleEdit,
   onNightPasses,
-  onPlaceGem,
   onShowOnMap,
   onShowInList,
   onSkip: _onSkip,
@@ -85,8 +82,6 @@ export function HouseActionBar({
   onToggleGem?: () => void;
   onToggleEdit?: () => void;
   onNightPasses?: () => void;
-  /** Owner/admin — view and drag the house gem hiding spot. */
-  onPlaceGem?: () => void;
   onShowOnMap?: () => void;
   onShowInList?: () => void;
   onSkip?: () => void;
@@ -199,14 +194,6 @@ export function HouseActionBar({
         label: "חיבור מכשירים",
         icon: <Ticket className={MENU_ICON_CLASS} strokeWidth={2.2} />,
         onClick: onNightPasses,
-      });
-    }
-    if (onPlaceGem) {
-      items.push({
-        id: "gem-place",
-        label: GEM_PLACE_ACTION_HE,
-        icon: <ImpOutlineIcon className={MENU_ICON_CLASS} />,
-        onClick: onPlaceGem,
       });
     }
     if (showVisitPoster) {

@@ -1,17 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { LocateFixed } from "lucide-react";
 import { toast } from "sonner";
 import { HouseEditModal } from "@/components/house-edit-modal";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { Button } from "@/components/ui/button";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { clearGemAnchorOverride } from "@/lib/gem-anchor-overrides";
-import { GEM_ANCHOR_PLACE_MAX_METERS } from "@/lib/gem-anchor-placement";
+import { copyText } from "@/lib/copy-text";
+import { gemAnchorPlacementError, GEM_ANCHOR_PLACE_MAX_METERS } from "@/lib/gem-anchor-placement";
 import { gemAnchorForHouse, placedGemAnchorForHouse } from "@/lib/gem-hunt";
 import {
   GEM_PLACE_ACTION_HE,
   GEM_PLACE_HINT_HE,
+  GEM_PLACE_MY_LOCATION_HE,
   GEM_PLACE_RESET_DONE_HE,
   GEM_PLACE_RESET_HE,
   GEM_PLACE_SAVE_HE,
@@ -73,6 +76,8 @@ export function GemAnchorPlaceDialog({
   const placed = placedGemAnchorForHouse(house);
   const [point, setPoint] = useState<LatLng>(current);
   const [saving, setSaving] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [accuracyM, setAccuracyM] = useState<number | null>(null);
   const wasOpen = useRef(false);
 
   useEffect(() => {
@@ -81,6 +86,7 @@ export function GemAnchorPlaceDialog({
   }, [open, current]);
 
   const distanceM = Math.round(distanceMeters(house, point));
+  const coordsText = `${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}`;
   const dirty = !samePoint(point, current);
 
   async function send(method: "PUT" | "DELETE", body: Record<string, unknown>) {
@@ -114,6 +120,33 @@ export function GemAnchorPlaceDialog({
     }
   }
 
+  function applyMyLocation() {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      toast.error("המכשיר לא תומך במיקום.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocating(false);
+        const here = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        if (gemAnchorPlacementError(house, here)) {
+          toast.error(
+            `אתם ${Math.round(distanceMeters(house, here))} מ׳ מהבית — צריך לעמוד עד ${GEM_ANCHOR_PLACE_MAX_METERS} מ׳ ממנו.`,
+          );
+          return;
+        }
+        setPoint(here);
+        setAccuracyM(Math.round(pos.coords.accuracy));
+      },
+      () => {
+        setLocating(false);
+        toast.error("לא הצלחנו לקבל מיקום. בדקו שהרשאת מיקום פתוחה.");
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+  }
+
   async function reset() {
     if (!window.confirm(`${GEM_PLACE_RESET_HE}?`)) return;
     if (await send("DELETE", {})) {
@@ -133,14 +166,45 @@ export function GemAnchorPlaceDialog({
               selectedId={house.id}
               embed
               className="h-full w-full"
-              gemAnchorEdit={{ house, point, onMove: setPoint }}
+              gemAnchorEdit={{
+                house,
+                point,
+                onMove: (next) => {
+                  setPoint(next);
+                  setAccuracyM(null);
+                },
+              }}
             />
           ) : null}
         </div>
-        <p className="text-sm text-violet-300">
-          {placed ? GEM_PLACE_STATUS_PLACED_HE : GEM_PLACE_STATUS_AUTO_HE} · {distanceM} מ׳ מהבית (עד{" "}
-          {GEM_ANCHOR_PLACE_MAX_METERS} מ׳)
-        </p>
+        <div className="space-y-1 rounded-lg bg-black/25 px-3 py-2 text-sm ring-1 ring-orange-500/15">
+          <p className="text-violet-200">
+            {placed ? GEM_PLACE_STATUS_PLACED_HE : GEM_PLACE_STATUS_AUTO_HE}
+            {dirty ? " · לא נשמר" : ""}
+          </p>
+          <button
+            type="button"
+            dir="ltr"
+            className="block font-mono text-orange-100 underline-offset-2 hover:underline"
+            onClick={() => void copyText(coordsText, "הקואורדינטות הועתקו")}
+          >
+            {coordsText}
+          </button>
+          <p className="text-violet-300">
+            {distanceM} מ׳ מהבית (עד {GEM_ANCHOR_PLACE_MAX_METERS} מ׳)
+            {accuracyM != null ? ` · דיוק GPS ~${accuracyM} מ׳` : ""}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 w-full justify-center text-base"
+          disabled={locating || saving}
+          onClick={applyMyLocation}
+        >
+          <LocateFixed className="size-5" />
+          {locating ? "מאתרים…" : GEM_PLACE_MY_LOCATION_HE}
+        </Button>
         {deviceOverride ? (
           <p className="text-sm text-amber-200">
             בטלפון הזה יש כיול GPS מקומי שדורס את המיקום.{" "}
