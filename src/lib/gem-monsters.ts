@@ -1,3 +1,7 @@
+import {
+  canViewHouseLocationDetails,
+  type AddressRevealContext,
+} from "@/lib/address-reveal";
 import { distanceMeters } from "@/lib/geo";
 import {
   GEM_HUNT_GLOW_INTENSITY,
@@ -437,7 +441,7 @@ function buildGemMonsterAssignmentSpatial(
   return assignment;
 }
 
-/** After event: all houses in the active set (see gemHuntResidentialHousesEnabled). */
+/** Every in-set row (see {@link houseMatchesGemHuntSet}); filter by address reveal for the viewer. */
 export function gemHuntMapHouses(
   houses: PublicHouse[],
   houseSet: HouseSet = "real",
@@ -598,16 +602,32 @@ export function countGemEligibleHouses(houses: PublicHouse[], houseSet: HouseSet
   return gemHousesForMap(gemHuntMapHouses(houses, houseSet)).length;
 }
 
-/** Houses on the main map that can show a gem ring / host a hunt (matches admin gem manager when tools are on). */
+/** In-set rows that can host a gem (stable assignment; independent of reveal). */
+export function gemCapableMapHouses(
+  mapHouses: readonly PublicHouse[],
+  houseSet: HouseSet = "real",
+): PublicHouse[] {
+  return gemHousesForMap(gemHuntMapHouses([...mapHouses], houseSet));
+}
+
+/** Gem rings / hunt — same rule as seeing the street address on this device. */
+export function gemVisibleMapHouses(
+  mapHouses: readonly PublicHouse[],
+  houseSet: HouseSet,
+  ctx: AddressRevealContext,
+): PublicHouse[] {
+  return gemCapableMapHouses(mapHouses, houseSet).filter((house) =>
+    canViewHouseLocationDetails(house.id, ctx),
+  );
+}
+
+/** Gem rings / hunt for this viewer — must be able to see the house address. */
 export function mainMapGemEligibleHouses(
   mapHouses: readonly PublicHouse[],
   houseSet: HouseSet,
-  opts: { adminGemTools: boolean },
+  ctx: AddressRevealContext,
 ): PublicHouse[] {
-  const huntOpts: GemHuntSetOptions | undefined = opts.adminGemTools
-    ? { includeAllHouses: true }
-    : undefined;
-  return gemHousesForMap(gemHuntMapHouses([...mapHouses], houseSet, huntOpts));
+  return gemVisibleMapHouses(mapHouses, houseSet, ctx);
 }
 
 /** All shipped sticker slots (not deduped by hash collisions on the map). */

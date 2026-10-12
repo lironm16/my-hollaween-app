@@ -3,10 +3,7 @@ export function gemHuntVisible(isAdmin: boolean) {
   return isAdmin;
 }
 
-/**
- * When false (pre-event), residential houses are excluded from the gem map until event time.
- * Map pin rings use the same eligibility list; ring styling works on every pin shape once a row has a gem.
- */
+/** @deprecated Visibility uses address reveal ({@link canViewHouseLocationDetails}). */
 export function gemHuntResidentialHousesEnabled() {
   return false;
 }

@@ -20,7 +20,7 @@ describe("gem school campus", () => {
     assert.equal(isGemSchoolCampusBooth({ address: "חרוזים 8", kind: "house" }), false);
   });
 
-  it("excludes residential and school houses pre-event unless includeAllHouses", () => {
+  it("treats every in-set row as gem-capable", () => {
     const home = {
       id: "בית-100",
       address: "חרוזים 8",
@@ -33,10 +33,8 @@ describe("gem school campus", () => {
       kind: "house" as const,
       isStub: false,
     };
-    assert.equal(houseMatchesGemHuntSet(home, "real"), false);
-    assert.equal(houseMatchesGemHuntSet(school, "real"), false);
-    assert.equal(houseMatchesGemHuntSet(home, "real", { includeAllHouses: true }), true);
-    assert.equal(houseMatchesGemHuntSet(school, "real", { includeAllHouses: true }), true);
+    assert.equal(houseMatchesGemHuntSet(home, "real"), true);
+    assert.equal(houseMatchesGemHuntSet(school, "real"), true);
   });
 
   it("excludes legacy practice rows from gem map", () => {
@@ -68,14 +66,7 @@ describe("gem school campus", () => {
     assert.equal(gemMonsterTint(boothA).glow, gemMonsterTint(boothB).glow);
   });
 
-  it("does not assign school booths to pre-event gem map", () => {
-    const stubBooth = {
-      id: "בית-9320",
-      address: "ביה״ס ניצנים",
-      kind: "house" as const,
-      isStub: true,
-      description: "דוכן QA",
-    };
+  it("includes school booths in gem-capable set", () => {
     const realBooth = {
       id: "בית-9001",
       address: "ביה״ס ניצנים",
@@ -83,10 +74,8 @@ describe("gem school campus", () => {
       isStub: false,
       description: "דוכן אמיתי",
     };
-    assert.equal(houseMatchesGemHuntSet(stubBooth, "real"), false);
-    assert.equal(houseMatchesGemHuntSet(stubBooth, "stubs"), false);
-    assert.equal(houseMatchesGemHuntSet(realBooth, "real"), false);
-    const eligible = gemHuntMapHouses([stubBooth, realBooth] as never, "real");
-    assert.deepEqual(eligible.map((h) => h.id), []);
+    assert.equal(houseMatchesGemHuntSet(realBooth, "real"), true);
+    const eligible = gemHuntMapHouses([realBooth] as never, "real");
+    assert.deepEqual(eligible.map((h) => h.id), ["בית-9001"]);
   });
 });

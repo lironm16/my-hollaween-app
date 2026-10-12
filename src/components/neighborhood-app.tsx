@@ -76,7 +76,11 @@ import {
 import { gemMapLegendVisible } from "@/lib/gem-hunt-enabled";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
-import { mainMapGemEligibleHouses, syncGemMonsterAssignment } from "@/lib/gem-monsters";
+import {
+  gemCapableMapHouses,
+  mainMapGemEligibleHouses,
+  syncGemMonsterAssignment,
+} from "@/lib/gem-monsters";
 import {
   isGemHuntOrientationGranted,
   prepareGemHuntSensors,
@@ -407,16 +411,17 @@ export function NeighborhoodApp({
       ),
     [mapListHouses, layers],
   );
+  const gemCapableHouses = useMemo(
+    () => gemCapableMapHouses(mapHouses, activeHouseSet),
+    [mapHouses, activeHouseSet],
+  );
   const gemMapRingHouses = useMemo(
-    () =>
-      mainMapGemEligibleHouses(mapHouses, activeHouseSet, {
-        adminGemTools: gemAdminTools,
-      }),
-    [mapHouses, activeHouseSet, gemAdminTools],
+    () => mainMapGemEligibleHouses(mapHouses, activeHouseSet, addressReveal),
+    [mapHouses, activeHouseSet, addressReveal],
   );
   useEffect(() => {
-    if (gemHuntActive) syncGemMonsterAssignment(gemMapRingHouses);
-  }, [gemHuntActive, gemMapRingHouses]);
+    if (gemHuntActive) syncGemMonsterAssignment(gemCapableHouses);
+  }, [gemHuntActive, gemCapableHouses]);
   const visible = useMemo(
     () => filterHouses(housesForFilters, filters, filterContext),
     [housesForFilters, filters, filterContext],
