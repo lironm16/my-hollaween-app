@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { gemHuntMapHouses, gemMonsterForHouse, gemMonsterTint } from "@/lib/gem-monsters";
+import { gemHuntMapHouses, gemMonsterTint } from "@/lib/gem-monsters";
 import {
   houseMatchesGemHuntSet,
   isGemSchoolCampusBooth,
@@ -39,7 +39,7 @@ describe("gem school campus", () => {
     assert.equal(houseMatchesGemHuntSet(school, "real", { includeAllHouses: true }), true);
   });
 
-  it("includes practice houses pre-event on the real set", () => {
+  it("excludes legacy practice rows from gem map", () => {
     const practice = {
       id: "תרגול-1001",
       address: "רחוב תרגול 1",
@@ -47,8 +47,8 @@ describe("gem school campus", () => {
       isStub: false,
       isPractice: true,
     };
-    assert.equal(houseMatchesGemHuntSet(practice, "real"), true);
-    assert.equal(gemMonsterForHouse(practice), "dragon");
+    assert.equal(houseMatchesGemHuntSet(practice, "real"), false);
+    assert.equal(gemHuntMapHouses([practice] as never, "real").length, 0);
   });
 
   it("assigns distinct dragon tints per school booth", () => {

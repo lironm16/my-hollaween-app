@@ -62,9 +62,9 @@ function ctx(overrides: Partial<NightPassScopeContext>): NightPassScopeContext {
 }
 
 describe("night pass scope", () => {
-  it("treats POIs and practice rows as public tier", () => {
+  it("treats POIs as public tier; legacy practice rows are not", () => {
     assert.equal(isPublicTierHouse(business), true);
-    assert.equal(isPublicTierHouse(row({ isPractice: true })), true);
+    assert.equal(isPublicTierHouse(row({ isPractice: true })), false);
     assert.equal(isPublicTierHouse(home), false);
   });
 

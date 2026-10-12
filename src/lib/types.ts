@@ -112,7 +112,7 @@ export type House = {
   deletedAt?: string | null;
   /** QA / rehearsal row — hidden from «אמיתיים» map and visitor counts. */
   isStub?: boolean;
-  /** Demon practice row — admin-managed; excluded from neighborhood stats/routes. */
+  /** Legacy rows only — excluded from map, stats, and routes. */
   isPractice?: boolean;
 };
 

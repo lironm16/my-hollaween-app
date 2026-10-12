@@ -1,7 +1,7 @@
 import { isStubHouse, type HouseSet, type StubFlagHouse } from "@/lib/house-set";
 import { isPracticeHouse, type PracticeFlagHouse } from "@/lib/practice-house";
 
-export type MapDisplayLayer = "real" | "stubs" | "practice";
+export type MapDisplayLayer = "real" | "stubs";
 
 export type MapDisplayLayers = Record<MapDisplayLayer, boolean>;
 
@@ -11,23 +11,21 @@ export const MAP_DISPLAY_LAYERS_EVENT = "hw-house-set";
 export const DEFAULT_MAP_DISPLAY_LAYERS: MapDisplayLayers = {
   real: true,
   stubs: false,
-  practice: false,
 };
 
 export const MAP_LAYER_LABELS: Record<MapDisplayLayer, string> = {
   real: "אמיתיים",
   stubs: "סטאבים",
-  practice: "בתי תרגול",
 };
 
-const LAYER_ORDER: MapDisplayLayer[] = ["real", "stubs", "practice"];
+const LAYER_ORDER: MapDisplayLayer[] = ["real", "stubs"];
 
 /** Stable reference for `useSyncExternalStore` — new objects every read cause React #185. */
 let cachedLayersSnapshot: MapDisplayLayers = { ...DEFAULT_MAP_DISPLAY_LAYERS };
 let cachedLayersKey = layersSnapshotKey(cachedLayersSnapshot);
 
 function layersSnapshotKey(layers: MapDisplayLayers): string {
-  return `${layers.real ? 1 : 0}${layers.stubs ? 1 : 0}${layers.practice ? 1 : 0}`;
+  return `${layers.real ? 1 : 0}${layers.stubs ? 1 : 0}`;
 }
 
 function commitLayersSnapshot(layers: MapDisplayLayers): MapDisplayLayers {
@@ -36,7 +34,6 @@ function commitLayersSnapshot(layers: MapDisplayLayers): MapDisplayLayers {
   cachedLayersSnapshot = {
     real: layers.real,
     stubs: layers.stubs,
-    practice: layers.practice,
   };
   cachedLayersKey = key;
   return cachedLayersSnapshot;
@@ -45,17 +42,18 @@ function commitLayersSnapshot(layers: MapDisplayLayers): MapDisplayLayers {
 function isLayerRecord(value: unknown): value is MapDisplayLayers {
   if (!value || typeof value !== "object") return false;
   const o = value as Record<string, unknown>;
-  return (
-    typeof o.real === "boolean" &&
-    typeof o.stubs === "boolean" &&
-    typeof o.practice === "boolean"
-  );
+  return typeof o.real === "boolean" && typeof o.stubs === "boolean";
+}
+
+/** Reads stored layers; drops retired `practice` flag from older clients. */
+function normalizeStoredLayers(parsed: { real: boolean; stubs: boolean }): MapDisplayLayers {
+  return { real: parsed.real, stubs: parsed.stubs };
 }
 
 /** Migrate legacy single-select `hw-house-set`. */
 export function layersFromLegacyHouseSet(set: HouseSet): MapDisplayLayers {
-  if (set === "stubs") return { real: false, stubs: true, practice: false };
-  if (set === "all") return { real: true, stubs: true, practice: false };
+  if (set === "stubs") return { real: false, stubs: true };
+  if (set === "all") return { real: true, stubs: true };
   return { ...DEFAULT_MAP_DISPLAY_LAYERS };
 }
 
@@ -66,11 +64,13 @@ function readMapDisplayLayersFromStorage(): MapDisplayLayers {
     if (raw) {
       const parsed = JSON.parse(raw) as unknown;
       if (isLayerRecord(parsed)) {
-        return {
-          real: parsed.real,
-          stubs: parsed.stubs,
-          practice: parsed.practice,
-        };
+        return normalizeStoredLayers(parsed);
+      }
+      if (parsed && typeof parsed === "object") {
+        const o = parsed as Record<string, unknown>;
+        if (typeof o.real === "boolean" && typeof o.stubs === "boolean") {
+          return normalizeStoredLayers({ real: o.real, stubs: o.stubs });
+        }
       }
     }
     const legacy = localStorage.getItem("hw-house-set");
@@ -91,11 +91,7 @@ export function readMapDisplayLayers(): MapDisplayLayers {
 export function writeMapDisplayLayers(next: MapDisplayLayers) {
   if (typeof window === "undefined") return;
   const current = readMapDisplayLayers();
-  if (
-    current.real === next.real &&
-    current.stubs === next.stubs &&
-    current.practice === next.practice
-  ) {
+  if (current.real === next.real && current.stubs === next.stubs) {
     return;
   }
   try {
@@ -113,7 +109,7 @@ export function toggleMapDisplayLayer(
   layer: MapDisplayLayer,
 ): MapDisplayLayers {
   const next = { ...layers, [layer]: !layers[layer] };
-  if (!next.real && !next.stubs && !next.practice) {
+  if (!next.real && !next.stubs) {
     return { ...layers, [layer]: true };
   }
   return next;
@@ -138,7 +134,7 @@ export function houseMatchesMapLayers(
   house: StubFlagHouse & PracticeFlagHouse,
   layers: MapDisplayLayers,
 ): boolean {
-  if (isPracticeHouse(house)) return layers.practice && !isStubHouse(house);
+  if (isPracticeHouse(house)) return false;
   if (isStubHouse(house)) return layers.stubs;
   return layers.real;
 }
@@ -146,12 +142,6 @@ export function houseMatchesMapLayers(
 export function houseVisibleOnMainMap(
   house: StubFlagHouse & PracticeFlagHouse,
   layers: MapDisplayLayers,
-  opts: { admin: boolean; practicePublic: boolean },
 ): boolean {
-  if (isPracticeHouse(house)) {
-    if (isStubHouse(house)) return false;
-    if (!layers.practice) return false;
-    return opts.admin || opts.practicePublic;
-  }
   return houseMatchesMapLayers(house, layers);
 }

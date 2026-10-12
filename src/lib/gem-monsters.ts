@@ -2,7 +2,6 @@ import { distanceMeters } from "@/lib/geo";
 import {
   GEM_HUNT_GLOW_INTENSITY,
   houseMatchesGemHuntSet,
-  practiceDragonTint,
   schoolCampusDragonTint,
   type GemHuntSetOptions,
   type GemMonsterTint,
@@ -10,7 +9,6 @@ import {
 export type { GemHuntSetOptions } from "@/lib/gem-school-campus";
 import { clusterAddressKeyForHouse } from "@/lib/house-clusters";
 import type { HouseSet } from "@/lib/house-set";
-import { isPracticeHouse } from "@/lib/practice-house";
 import type { PublicHouse } from "@/lib/types";
 
 export type { GemMonsterTint } from "@/lib/gem-school-campus";
@@ -439,7 +437,7 @@ function buildGemMonsterAssignmentSpatial(
   return assignment;
 }
 
-/** Pre-event: practice houses; after event: all houses in the active set (see gemHuntResidentialHousesEnabled). */
+/** After event: all houses in the active set (see gemHuntResidentialHousesEnabled). */
 export function gemHuntMapHouses(
   houses: PublicHouse[],
   houseSet: HouseSet = "real",
@@ -553,9 +551,6 @@ export function houseHasMapGem(houseId: string) {
 }
 
 export function gemMonsterForHouse(house: GemMonsterHouseRef): GemMonsterId {
-  if (isPracticeHouse(house)) {
-    return "dragon";
-  }
   if (GEM_MONSTERS_DRAGON_ONLY) {
     return GEM_MONSTER_MODELS[0]!.id;
   }
@@ -573,7 +568,6 @@ export function gemMonsterMeta(monsterId: GemMonsterId) {
 /** Per-location hue; school booths get a stable dragon tint per דוכן. */
 export function gemMonsterTint(houseOrId: string | GemMonsterHouseRef): GemMonsterTint {
   if (typeof houseOrId !== "string") {
-    if (isPracticeHouse(houseOrId)) return practiceDragonTint(houseOrId);
     const campusTint = schoolCampusDragonTint(houseOrId);
     if (campusTint) return campusTint;
   }

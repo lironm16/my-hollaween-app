@@ -44,7 +44,6 @@ export function clusterBoothLabel(
   const n = boothNumberForHouse(house);
   if (n == null) return null;
   if (!clusterIsSchoolCampus(cluster)) return null;
-  if (isPracticeHouse(house)) return `תרגול ${n}`;
   if (isStubHouse(house)) return `דוכן חזרה ${n}`;
   return `דוכן ${n}`;
 }

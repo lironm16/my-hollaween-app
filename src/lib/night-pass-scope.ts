@@ -9,9 +9,9 @@ type ScopeRow = Pick<
   "id" | "kind" | "address" | "arrival" | "lat" | "lng" | "isPractice"
 >;
 
-/** Businesses, school booths and practice rows — address + arrival are public for everyone. */
+/** Businesses and school booths — address + arrival are public for everyone. */
 export function isPublicTierHouse(house: Pick<ScopeRow, "kind" | "address" | "isPractice">) {
-  if (isPracticeHouse(house)) return true;
+  if (isPracticeHouse(house)) return false;
   if (isPoiHouse(house)) return true;
   return isSchoolCampusAddress(house.address);
 }
@@ -63,7 +63,7 @@ export type ScopedHouses<T> = {
 
 /**
  * Night-pass visibility for one viewer. Input rows must be unredacted.
- * - business / school / practice: everything, always
+ * - business / school: everything, always
  * - homes (even in a business's building): never sent to public visitors; pass holders + admin
  *   see them all (address/arrival after reveal), owners see their own
  * - home sharing a pin with a business: address open to whoever receives it; arrival stays private

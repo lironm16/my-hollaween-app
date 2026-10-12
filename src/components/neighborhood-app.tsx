@@ -131,11 +131,7 @@ import {
   houseMatchesSet,
 } from "@/lib/house-set";
 import { houseVisibleOnMainMap, formatMapDisplayLayersStatus } from "@/lib/map-display-layers";
-import {
-  isPracticeHouse,
-  practiceHousesVisibleToUsers,
-  stripPracticeHouses,
-} from "@/lib/practice-house";
+import { stripPracticeHouses } from "@/lib/practice-house";
 import { isPreviewDeploymentClient } from "@/lib/deployment-env";
 import { filterHouses, houseFilterMismatchReasons, routeHouseIds } from "@/lib/filter-houses";
 import { distanceMeters, formatDistance } from "@/lib/geo";
@@ -381,10 +377,10 @@ export function NeighborhoodApp({
     return housesForMap;
   }, [housesForMap, catalog, gemPreviewAsUser, addressReveal, adminHouses, restoreRedactedLocations]);
 
-  const housesForMapAndList = useMemo(() => {
-    if (adminForHouseSet || practiceHousesVisibleToUsers()) return displayHouses;
-    return stripPracticeHouses(displayHouses);
-  }, [displayHouses, adminForHouseSet]);
+  const housesForMapAndList = useMemo(
+    () => stripPracticeHouses(displayHouses),
+    [displayHouses],
+  );
 
   const { houses: mapListHouses, now: mapListNow } = useMapListUiLock(housesForMapAndList, now);
 
@@ -407,12 +403,9 @@ export function NeighborhoodApp({
   const mapHouses = useMemo(
     () =>
       mapListHouses.filter((house) =>
-        houseVisibleOnMainMap(house, layers, {
-          admin: Boolean(adminForHouseSet),
-          practicePublic: practiceHousesVisibleToUsers(),
-        }),
+        houseVisibleOnMainMap(house, layers),
       ),
-    [mapListHouses, layers, adminForHouseSet],
+    [mapListHouses, layers],
   );
   const gemMapRingHouses = useMemo(
     () =>

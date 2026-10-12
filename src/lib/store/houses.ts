@@ -3,7 +3,6 @@ import {
   canonicalHouseId,
   newEditCode,
   newPoiPublicId,
-  newPracticePublicId,
   newPublicId,
   sameHouseId,
 } from "@/lib/ids";
@@ -119,8 +118,8 @@ export async function getHouse(id: string): Promise<House | undefined> {
   return findHouseIn((await loadDb(true)).houses, id);
 }
 
-function nextPublicId(db: { houses: House[] }, kind: HouseInput["kind"], practice = false) {
-  const makeId = practice ? newPracticePublicId : kind === "poi" ? newPoiPublicId : newPublicId;
+function nextPublicId(db: { houses: House[] }, kind: HouseInput["kind"]) {
+  const makeId = kind === "poi" ? newPoiPublicId : newPublicId;
   let id = makeId();
   while (db.houses.some((h) => sameHouseId(h.id, id))) id = makeId();
   return id;
@@ -133,14 +132,13 @@ export async function submitHouse(
   const pin = await pinCoordsForOwnerSubmit(input, Boolean(options?.admin));
   const submitInput = { ...input, lat: pin.lat, lng: pin.lng };
   await assertRealAddress(submitInput);
-  const practice = Boolean(options?.admin && input.isPractice);
-  const kind = options?.admin && input.kind === "poi" && !practice ? "poi" : "house";
+  const kind = options?.admin && input.kind === "poi" ? "poi" : "house";
   const poiCategory = normalizePoiCategory(kind, input.poiCategory);
   let id = "";
   let editCode = "";
   const house = await runSyncedWrite((db) => {
     if (!id) {
-      id = nextPublicId(db, kind, practice);
+      id = nextPublicId(db, kind);
       editCode = newEditCode();
     }
     const already = findHouseIn(db.houses, id);
@@ -172,7 +170,7 @@ export async function submitHouse(
       lng: submitInput.lng,
     });
     const boothNumber =
-      isSchoolCampusAddress(addressFields.address) && !practice
+      isSchoolCampusAddress(addressFields.address)
         ? nextBoothNumberForAddress(db.houses, addressFields.address, "real")
         : null;
     const house: House = {
@@ -200,7 +198,7 @@ export async function submitHouse(
       updatedAt: now,
       addedBy: options?.addedBy?.trim() || null,
       ownerPhone: normalizeOwnerPhone(String(input.ownerPhone ?? "")) || null,
-      isPractice: practice,
+      isPractice: false,
       isStub: false,
     };
     db.houses.push(house);

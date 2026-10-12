@@ -55,7 +55,7 @@ function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
 }
 
 function layerSummary(layers: Record<MapDisplayLayer, boolean>) {
-  const active = (["real", "stubs", "practice"] as MapDisplayLayer[])
+  const active = (["real", "stubs"] as MapDisplayLayer[])
     .filter((id) => layers[id])
     .map((id) => MAP_LAYER_LABELS[id]);
   return active.length ? active.join(" · ") : "לא נבחרה שכבה";
@@ -99,7 +99,7 @@ export function AdminDryRunPanel() {
     <div className="space-y-2" dir="rtl">
       <AdminSection title="שכבות במפה" summary={layerSummary(layers)} defaultOpen>
         <div className="flex flex-wrap gap-1.5">
-          {(["real", "stubs", "practice"] as MapDisplayLayer[]).map((id) => (
+          {(["real", "stubs"] as MapDisplayLayer[]).map((id) => (
             <button
               key={id}
               type="button"
@@ -107,9 +107,7 @@ export function AdminDryRunPanel() {
               className={cn(
                 "rounded-full px-3 py-1.5 text-sm font-medium",
                 layers[id]
-                  ? id === "practice"
-                    ? "bg-teal-500 text-black"
-                    : "bg-orange-500 text-black"
+                  ? "bg-orange-500 text-black"
                   : "bg-[#14081c] text-orange-100 ring-1 ring-orange-500/20",
               )}
             >

@@ -7,7 +7,6 @@ const pin = customAlphabet("0123456789", 6);
 
 const HOUSE_ID_PREFIX = "בית-";
 const POI_ID_PREFIX = "נק-";
-const PRACTICE_ID_PREFIX = "תרגול-";
 
 export function newPublicId() {
   return `${HOUSE_ID_PREFIX}${digits()}`;
@@ -15,10 +14,6 @@ export function newPublicId() {
 
 export function newPoiPublicId() {
   return `${POI_ID_PREFIX}${digits()}`;
-}
-
-export function newPracticePublicId() {
-  return `${PRACTICE_ID_PREFIX}${digits()}`;
 }
 
 export function newEditCode() {

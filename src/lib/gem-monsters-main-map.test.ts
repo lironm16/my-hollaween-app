@@ -21,7 +21,7 @@ describe("mainMapGemEligibleHouses", () => {
     assert.equal(rows[0]?.id, "בית-1847");
   });
 
-  it("excludes residential stubs in תצוגת משתמש (practice-only pre-event)", () => {
+  it("excludes residential stubs in תצוגת משתמש pre-event", () => {
     const rows = mainMapGemEligibleHouses([stub("בית-1847")], "real", { adminGemTools: false });
     assert.equal(rows.length, 0);
   });

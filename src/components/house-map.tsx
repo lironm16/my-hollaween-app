@@ -57,9 +57,6 @@ import {
   type MapGemPinRingContext,
 } from "@/lib/map-gem-pin-ring";
 import { mapPinIconCacheGemRingEpoch } from "@/lib/map-pin-icon-cache";
-import { isPracticeHouse } from "@/lib/practice-house";
-import { practicePinFaceHtml } from "@/lib/practice-pin-face";
-
 function useMinuteTick() {
   const now = useAppNow();
   return Math.floor(now.getTime() / 15_000);
@@ -125,7 +122,6 @@ function pinStatusMark(house: PublicHouse, now: Date, skipped = false) {
 }
 
 function pinFaceHtml(house: PublicHouse) {
-  if (isPracticeHouse(house)) return practicePinFaceHtml();
   const level = pinFaceKind(house) === "scare" ? (house.scareLevel ?? "mild") : "mild";
   const src = pinScareSrc(house, level);
   return `<img class="pin-scare" src="${src}" alt="" />`;
@@ -185,13 +181,9 @@ function housePinHtml(
   const extraClass = extras?.extraClass ? ` ${extras.extraClass}` : "";
   const idAttr = extras?.houseId ? ` data-house-id="${attr(extras.houseId)}"` : "";
   const fill = pinBackgroundFill(house, face !== "bare");
-  const practice = isPracticeHouse(house);
-  const styleAttr = practice
-    ? ' style="background:linear-gradient(165deg,#0f766e 0%,#0d9488 55%,#14b8a6 100%)"'
-    : ` style="${extras?.extraStyle ? `${extras.extraStyle};background:${fill}` : `background:${fill}`}"`;
-  const label = practice
-    ? 'aria-label="בית תרגול"'
-    : visit === "closed"
+  const styleAttr = ` style="${extras?.extraStyle ? `${extras.extraStyle};background:${fill}` : `background:${fill}`}"`;
+  const label =
+    visit === "closed"
       ? 'aria-label="סגור"'
       : visit === "break"
         ? 'aria-label="הפסקה"'
@@ -203,8 +195,7 @@ function housePinHtml(
               ? 'aria-label="מקושט"'
               : 'aria-label="לא מקושט"';
   const poiClass = effectiveHouseKind(house) === "poi" ? " is-poi" : "";
-  const practiceClass = practice ? " is-practice" : "";
-  return `<div class="house-pin${poiClass}${practiceClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}"${styleAttr} ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, extras?.skipped)}${pinFaceHtml(house)}</div>`;
+  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}"${styleAttr} ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, extras?.skipped)}${pinFaceHtml(house)}</div>`;
 }
 
 const DIV_ICON_CACHE = new Map<string, L.DivIcon>();
