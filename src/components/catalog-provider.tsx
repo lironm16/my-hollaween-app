@@ -49,6 +49,7 @@ import { catalogHasRealHouses } from "@/lib/house-set";
 import { applySnapshotStubFlags } from "@/lib/catalog-stub-flags";
 import { catalogHasExplicitStubFlags } from "@/lib/house-set";
 import { ensureGemOsmAnchorsLoaded } from "@/lib/gem-osm-anchor-cache";
+import { syncPlacedGemAnchors } from "@/lib/gem-placed-anchors";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
 import { houseWithLocationPolicy, visitorAddressRevealContext } from "@/lib/address-reveal";
 import { appNow } from "@/lib/app-clock";
@@ -401,6 +402,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     ensureGemOsmAnchorsLoaded(catalog?.updatedAt ?? null, gemEligibleHouses);
   }, [catalog?.updatedAt, gemEligibleHouses]);
+
+  useEffect(() => {
+    if (catalog?.houses) syncPlacedGemAnchors(catalog.houses);
+  }, [catalog]);
 
   useEffect(() => {
     let cancelled = false;

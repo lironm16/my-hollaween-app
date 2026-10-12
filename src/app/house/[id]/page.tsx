@@ -25,6 +25,7 @@ import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { adminDeviceOwnerPowers } from "@/lib/admin-preview-as-user";
 import { useAdminPreviewAsUser } from "@/hooks/use-admin-preview-as-user";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { useGemAnchorPlacer } from "@/components/gem-anchor-place-dialog";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { isPreviewDeploymentClient } from "@/lib/deployment-env";
 import { activeHouseSetForSession } from "@/lib/house-set";
@@ -52,6 +53,7 @@ export default function HousePage() {
   const { gemUiVisible: gemUi } = useGemHuntAdminUi(admin);
   const addressReveal = useAddressReveal();
   const { houseSet } = useHouseSet();
+  const { open: openGemPlacer, dialog: gemPlacerDialog } = useGemAnchorPlacer();
   const geo = useUserLocation({ watch: gemUi });
   const { setWatchEnabled } = geo;
   const editFlow = useHouseEditFlow();
@@ -141,8 +143,10 @@ export default function HousePage() {
       gemQuickActionEligible: gemUi
         ? (h) => houseGemHuntUiEligible(h, activeHouseSet, addressReveal)
         : undefined,
+      onPlaceGem: gemUi ? (h) => openGemPlacer(h, editCode) : undefined,
     };
   }, [
+    openGemPlacer,
     activeHouseSet,
     addressReveal,
     admin,
@@ -225,6 +229,7 @@ export default function HousePage() {
           }}
         />
       ) : null}
+      {gemPlacerDialog}
     </div>
   );
 }

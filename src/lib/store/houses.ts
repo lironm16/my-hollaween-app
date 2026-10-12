@@ -516,6 +516,22 @@ export async function adminUpdate(
   return { house: updated, push };
 }
 
+/** Owner/admin gem hiding spot — `null` returns the gem to its automatic sidewalk anchor. */
+export async function setHouseGemAnchor(
+  id: string,
+  point: { lat: number; lng: number } | null,
+): Promise<House | null> {
+  return runSyncedWrite((db) => {
+    const house = findHouseIn(db.houses, id);
+    if (!house || isHouseDeleted(house)) return null;
+    const now = new Date().toISOString();
+    house.gemAnchor = point ? { lat: point.lat, lng: point.lng, updatedAt: now } : null;
+    house.updatedAt = now;
+    db.updatedAt = now;
+    return house;
+  });
+}
+
 export type HousePushResult = {
   kind: PushKind;
   autoSent?: boolean;

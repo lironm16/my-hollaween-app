@@ -1,5 +1,7 @@
 import { isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { getGemAnchorOverride } from "@/lib/gem-anchor-overrides";
+import { parseGemAnchorPlacement } from "@/lib/gem-anchor-placement";
+import { getPlacedGemAnchor } from "@/lib/gem-placed-anchors";
 import { getOsmGemAnchor } from "@/lib/gem-osm-anchor-cache";
 import {
   GEM_OSM_ANCHOR_MAX_PIN_DISTANCE_M,
@@ -131,14 +133,23 @@ export type GemAnchor = {
   lng: number;
   bearingFromHouseDeg: number;
   offsetM: number;
-  /** Set by admin on-site calibration (this device’s localStorage). */
+  /** Set by admin on-site calibration (this device’s localStorage) or an owner/admin map placement. */
   calibrated?: boolean;
+  /** Owner/admin dragged the gem on the map (shared with everyone). */
+  placed?: boolean;
 };
 
 /** House fields used for auto sidewalk anchor (address improves street matching). */
 export type GemAnchorHouse = Pick<PublicHouse, "id" | "lat" | "lng"> & {
   address?: string | null;
+  gemAnchor?: PublicHouse["gemAnchor"];
 };
+
+/** Shared owner/admin placement for this house, if any. */
+export function placedGemAnchorForHouse(house: GemAnchorHouse) {
+  const registered = getPlacedGemAnchor(house.id);
+  return registered !== undefined ? registered : parseGemAnchorPlacement(house.gemAnchor);
+}
 
 function hashHouseSeed(id: string, seed: string) {
   let h = 2166136261;
@@ -212,6 +223,18 @@ export function gemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
       bearingFromHouseDeg,
       offsetM,
       calibrated: true,
+    };
+  }
+
+  const placed = placedGemAnchorForHouse(house);
+  if (placed) {
+    return {
+      lat: placed.lat,
+      lng: placed.lng,
+      bearingFromHouseDeg: bearingDegrees(house, placed),
+      offsetM: distanceMeters(house, placed),
+      calibrated: true,
+      placed: true,
     };
   }
 

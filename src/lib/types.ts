@@ -114,6 +114,14 @@ export type House = {
   isStub?: boolean;
   /** Legacy rows only — excluded from map, stats, and routes. */
   isPractice?: boolean;
+  /** Gem hiding spot placed by the owner or an admin; null/absent = automatic sidewalk anchor. */
+  gemAnchor?: GemAnchorPlacement | null;
+};
+
+export type GemAnchorPlacement = {
+  lat: number;
+  lng: number;
+  updatedAt: string;
 };
 
 export type HouseInput = {

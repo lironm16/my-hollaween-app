@@ -19,6 +19,7 @@ import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { invalidateMapPinIconCacheForGemRings } from "@/lib/map-pin-icon-cache";
 import { HouseList } from "@/components/house-list";
 import type { HouseCardActionContext } from "@/components/house-card-actions";
+import { useGemAnchorPlacer } from "@/components/gem-anchor-place-dialog";
 import { MapStats, StatsSummary } from "@/components/map-stats";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
@@ -293,6 +294,7 @@ export function NeighborhoodApp({
   const skips = useSkippedHouses();
   const owned = useOwnedHouses();
   const nightPass = useNightPass();
+  const { open: openGemPlacer, dialog: gemPlacerDialog } = useGemAnchorPlacer();
   const { openOwnerPasses } = useNightPassDialog();
   useEffect(() => {
     applyClockSearchParams(window.location.search);
@@ -1372,10 +1374,20 @@ export function NeighborhoodApp({
       onEdit: (house) => requestHouseEdit(house, true),
       nightPassesEnabled: nightPass.enabled,
       onNightPasses: (house) => openOwnerPasses(house.id),
+      onPlaceGem: gemUi
+        ? (house) =>
+            openGemPlacer(
+              house,
+              adminDeviceOwnerPowers(admin, gemPreviewAsUser)
+                ? editCodeById.get(house.id)
+                : owned.find((item) => item.id === house.id)?.editCode,
+            )
+        : undefined,
       skipMetaFor: (id) => skips.meta(id),
       editingId: editFlow.flow?.house.id ?? null,
     };
   }, [
+    openGemPlacer,
     admin,
     gemPreviewAsUser,
     nightPass.enabled,
@@ -1775,6 +1787,7 @@ export function NeighborhoodApp({
           onClose={() => setClusterGemSessionSummary(null)}
         />
       ) : null}
+      {gemPlacerDialog}
       {gemResetHouse || gemResetCluster ? (
         <GemResetConfirmDialog
           open

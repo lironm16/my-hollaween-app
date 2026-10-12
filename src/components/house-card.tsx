@@ -39,6 +39,7 @@ export function HouseCard({
   editing = false,
   onToggleEdit,
   onNightPasses,
+  onPlaceGem,
   expanded = false,
   index,
   hideHoursBanner = false,
@@ -73,6 +74,7 @@ export function HouseCard({
   editing?: boolean;
   onToggleEdit?: () => void;
   onNightPasses?: () => void;
+  onPlaceGem?: () => void;
   /** Show full details inline (non-compact list layout). */
   expanded?: boolean;
   index?: number;
@@ -116,6 +118,7 @@ export function HouseCard({
     editing: mayEdit && editing,
     onToggleEdit: mayEdit ? onToggleEdit : undefined,
     onNightPasses: mayEdit ? onNightPasses : undefined,
+    onPlaceGem: mayEdit ? onPlaceGem : undefined,
     expanded,
     index,
     hideHoursBanner,

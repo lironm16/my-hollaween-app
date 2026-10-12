@@ -15,6 +15,10 @@ import {
 import L from "leaflet";
 import { LocateFixed } from "lucide-react";
 import { MapGemAnchorLayer, type GemMapAnchorVisual } from "@/components/map-gem-anchor-layer";
+import {
+  MapGemAnchorEditLayer,
+  type GemAnchorEditState,
+} from "@/components/map-gem-anchor-edit-layer";
 import { MapAddHouseFab } from "@/components/map-add-house-fab";
 import { MapLegend } from "@/components/map-legend";
 import "leaflet/dist/leaflet.css";
@@ -710,6 +714,8 @@ type Props = {
   isGemCollected?: (houseId: string) => boolean;
   /** Yellow/diamond rings on pins when the top-bar demon toggle is on. */
   showGemPinRings?: boolean;
+  /** Owner/admin gem placement — draggable demon around the selected house. */
+  gemAnchorEdit?: GemAnchorEditState | null;
 };
 
 export function HouseMap({
@@ -754,6 +760,7 @@ export function HouseMap({
   gemAnchorVisual = "admin",
   isGemCollected,
   showGemPinRings = false,
+  gemAnchorEdit = null,
 }: Props) {
   const gemHouseIds = useMemo(() => gemMapHouseIdSet(gemAnchorHouses), [gemAnchorHouses]);
   const gemPinRingCtx = useMemo(
@@ -976,7 +983,8 @@ export function HouseMap({
             />
           </>
         ) : null}
-        {!pickMode && showGemAnchors && gemAnchorHouses.length > 0 ? (
+        {!pickMode && gemAnchorEdit ? <MapGemAnchorEditLayer {...gemAnchorEdit} /> : null}
+        {!pickMode && !gemAnchorEdit && showGemAnchors && gemAnchorHouses.length > 0 ? (
           <MapGemAnchorLayer
             houses={gemAnchorHouses}
             isCollected={isGemCollected ?? (() => false)}

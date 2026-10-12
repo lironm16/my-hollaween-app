@@ -21,6 +21,7 @@ import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { useGemAnchorPlacer } from "@/components/gem-anchor-place-dialog";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { isPreviewDeploymentClient } from "@/lib/deployment-env";
 import { activeHouseSetForSession } from "@/lib/house-set";
@@ -72,6 +73,7 @@ function MyCollectionsPageContent() {
     useGemHuntAdminUi(admin);
   const addressReveal = useAddressReveal();
   const { houseSet } = useHouseSet();
+  const { open: openGemPlacer, dialog: gemPlacerDialog } = useGemAnchorPlacer();
   const addHouseOpen = useAddHouseOpen();
   const urlTab = parseTab(searchParams.get("tab"), showCollected);
   const [tab, setTab] = useState<PersonalMarksTab>(urlTab);
@@ -222,6 +224,10 @@ function MyCollectionsPageContent() {
       nightPassesEnabled: nightPass.enabled,
       onNightPasses:
         tab === "mine" ? (house) => openOwnerPasses(house.id) : undefined,
+      onPlaceGem:
+        tab === "mine" && gemCardActionsEnabled
+          ? (house) => openGemPlacer(house, owned.find((item) => item.id === house.id)?.editCode)
+          : undefined,
       skipMetaFor: (id) => skips.meta(id),
       editingId: editFlow.flow?.house.id ?? null,
       onShowOnMap: (id) => router.push(`/?focus=${encodeURIComponent(id)}`),
@@ -232,6 +238,7 @@ function MyCollectionsPageContent() {
     likes,
     visits,
     skips,
+    openGemPlacer,
     activeHouseSet,
     addressReveal,
     gemCardActionsEnabled,
@@ -370,6 +377,7 @@ function MyCollectionsPageContent() {
           void refresh(true);
         }}
       />
+      {gemPlacerDialog}
     </div>
   );
 }

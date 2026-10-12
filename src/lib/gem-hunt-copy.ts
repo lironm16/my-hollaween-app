@@ -16,6 +16,16 @@ export const GEM_MAP_TOGGLE_SHOW_HE = "הצג שדונים במפה";
 export const GEM_MAP_TOGGLE_HIDE_HE = "הסתר שדונים במפה";
 
 export const GEM_HOUSE_KICKER_HE = "שדון נסתר · גלו במצלמה";
+
+export const GEM_PLACE_ACTION_HE = "מיקום השדון";
+export const GEM_PLACE_HINT_HE =
+  "כאן מסתתר השדון של הבית. אם יש מקום טוב יותר — גררו אותו או הקישו במפה, בתוך העיגול.";
+export const GEM_PLACE_SAVE_HE = "שמירת מיקום";
+export const GEM_PLACE_RESET_HE = "חזרה למיקום אוטומטי";
+export const GEM_PLACE_SAVED_HE = "מיקום השדון נשמר";
+export const GEM_PLACE_RESET_DONE_HE = "השדון חזר למיקום האוטומטי";
+export const GEM_PLACE_STATUS_PLACED_HE = "מיקום שנבחר ידנית";
+export const GEM_PLACE_STATUS_AUTO_HE = "מיקום אוטומטי ליד המדרכה";
 export const GEM_ACTION_FIND_HE = "מצא שדון";
 /** Cluster ⋮ menu — start sequential hunt for every booth/unit at the address. */
 export const GEM_CLUSTER_FIND_ALL_HE = "מצא הכל";
