@@ -77,6 +77,7 @@ import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import {
   gemCapableMapHouses,
+  houseGemHuntUiEligible,
   mainMapGemEligibleHouses,
   syncGemMonsterAssignment,
 } from "@/lib/gem-monsters";
@@ -491,13 +492,19 @@ export function NeighborhoodApp({
     [geo, gps, selection, setWatchEnabled],
   );
 
+  const gemHouseHuntAllowed = useCallback(
+    (house: PublicHouse) => houseGemHuntUiEligible(house, activeHouseSet, addressReveal),
+    [activeHouseSet, addressReveal],
+  );
+
   const openGemHuntForHouse = useCallback(
     async (house: PublicHouse) => {
       if (gems.collected(house.id)) return;
+      if (!gemHouseHuntAllowed(house)) return;
       mapGemClusterSessionRef.current = [];
       await bootMapGemHunt(house, null);
     },
-    [bootMapGemHunt, gems],
+    [bootMapGemHunt, gemHouseHuntAllowed, gems],
   );
 
   const openGemHuntForCluster = useCallback(
@@ -567,9 +574,10 @@ export function NeighborhoodApp({
         setGemResetHouse(house);
         return;
       }
+      if (!gemHouseHuntAllowed(house)) return;
       void openGemHuntForHouse(house);
     },
-    [gems, openGemHuntForHouse],
+    [gemHouseHuntAllowed, gems, openGemHuntForHouse],
   );
 
   const gemHuntFromUrlHandledRef = useRef(false);
@@ -581,7 +589,7 @@ export function NeighborhoodApp({
     setView("map");
     selection.selectOnMap(house);
     const timer = window.setTimeout(() => {
-      handleToggleGemMenu(house);
+      if (gemHouseHuntAllowed(house)) handleToggleGemMenu(house);
       if (typeof window === "undefined") return;
       const url = new URL(window.location.href);
       url.searchParams.delete("gemHunt");
@@ -589,7 +597,7 @@ export function NeighborhoodApp({
       window.history.replaceState(window.history.state, "", next);
     }, 350);
     return () => window.clearTimeout(timer);
-  }, [gemHuntFromUrl, focusId, houses, handleToggleGemMenu, selection]);
+  }, [gemHuntFromUrl, focusId, gemHouseHuntAllowed, houses, handleToggleGemMenu, selection]);
 
   const handleClusterResetAllGems = useCallback((houses: PublicHouse[]) => {
     if (houses.length < 2) return;
@@ -1332,6 +1340,7 @@ export function NeighborhoodApp({
       onToggleLike,
       onToggleVisited,
       onToggleGem: gemUi ? handleToggleGemMenu : undefined,
+      gemQuickActionEligible: gemUi ? gemHouseHuntAllowed : undefined,
       onSkip: handleSkipHouse,
       onRestore: handleRestoreHouse,
       onShowOnMap:
@@ -1381,6 +1390,7 @@ export function NeighborhoodApp({
     gems.collected,
     onToggleLike,
     onToggleVisited,
+    gemHouseHuntAllowed,
     handleToggleGemMenu,
     openGemHuntForCluster,
     handleClusterResetAllGems,

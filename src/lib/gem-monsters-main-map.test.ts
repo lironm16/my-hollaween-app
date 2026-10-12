@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { makeAddressRevealContext } from "@/lib/address-reveal";
 import { mergeAddressRevealSchedule } from "@/lib/event-settings";
-import { mainMapGemEligibleHouses } from "@/lib/gem-monsters";
+import { houseGemHuntUiEligible, mainMapGemEligibleHouses } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 
 function stub(id: string): PublicHouse {
@@ -53,5 +53,20 @@ describe("mainMapGemEligibleHouses", () => {
     const home = realHome("בית-100");
     assert.equal(mainMapGemEligibleHouses([home], "real", before).length, 0);
     assert.equal(mainMapGemEligibleHouses([home], "real", owner).length, 1);
+  });
+
+  it("houseGemHuntUiEligible matches list membership for a single home", () => {
+    const schedule = mergeAddressRevealSchedule();
+    const before = makeAddressRevealContext({
+      now: new Date(2026, 9, 30, 12, 0, 0),
+      addressReveal: schedule,
+    });
+    const home = realHome("בית-200");
+    assert.equal(houseGemHuntUiEligible(home, "real", before), false);
+    assert.equal(
+      houseGemHuntUiEligible(home, "real", before) ===
+        mainMapGemEligibleHouses([home], "real", before).some((h) => h.id === home.id),
+      true,
+    );
   });
 });

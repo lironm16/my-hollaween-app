@@ -48,6 +48,14 @@ const ctx: HouseCardActionContext = {
 };
 
 describe("houseCardPropsFor", () => {
+  it("hides gem quick action when gemQuickActionEligible returns false", () => {
+    const props = houseCardPropsFor(house, {
+      ...ctx,
+      gemQuickActionEligible: () => false,
+    });
+    assert.equal(props.onToggleGem, undefined);
+  });
+
   it("strips map and personal marks when the house was removed from the catalog", () => {
     noteCatalogRemovals(["removed-1"], "2026-10-10T12:00:00.000Z");
     const props = houseCardPropsFor(house, ctx);

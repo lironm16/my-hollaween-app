@@ -24,7 +24,9 @@ import { writeHomeView } from "@/lib/home-view";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { adminDeviceOwnerPowers } from "@/lib/admin-preview-as-user";
 import { useAdminPreviewAsUser } from "@/hooks/use-admin-preview-as-user";
-import { gemHuntMapHouses } from "@/lib/gem-monsters";
+import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { useHouseSet } from "@/hooks/use-house-set";
+import { gemHuntMapHouses, houseGemHuntUiEligible } from "@/lib/gem-monsters";
 import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
 import { parseVisitFromSearchParams } from "@/lib/house-visit-qr";
 import { resolveHouseIdFromPath, toPublicHouse } from "@/lib/ids";
@@ -46,6 +48,8 @@ export default function HousePage() {
   const { admin } = useAdminSession();
   const now = useAppNow();
   const { gemUiVisible: gemUi } = useGemHuntAdminUi(admin);
+  const addressReveal = useAddressReveal();
+  const { activeHouseSet } = useHouseSet();
   const geo = useUserLocation({ watch: gemUi });
   const { setWatchEnabled } = geo;
   const editFlow = useHouseEditFlow();
@@ -82,6 +86,11 @@ export default function HousePage() {
     catalog?.houses.find((h) => h.id === id) ??
     (adminHouse ? (toPublicHouse(adminHouse) as PublicHouse) : undefined) ??
     ownedItem?.preview;
+
+  const gemPanelVisible = useMemo(
+    () => gemUi && Boolean(house && houseGemHuntUiEligible(house, activeHouseSet, addressReveal)),
+    [activeHouseSet, addressReveal, gemUi, house],
+  );
   const { previewAsUser } = useAdminPreviewAsUser();
   const deviceOwner = adminDeviceOwnerPowers(Boolean(admin), previewAsUser);
   const canEdit = Boolean(deviceOwner || ownedItem);
@@ -123,8 +132,13 @@ export default function HousePage() {
             router.push(`/?focus=${encodeURIComponent(h.id)}&gemHunt=1`);
           }
         : undefined,
+      gemQuickActionEligible: gemUi
+        ? (h) => houseGemHuntUiEligible(h, activeHouseSet, addressReveal)
+        : undefined,
     };
   }, [
+    activeHouseSet,
+    addressReveal,
     admin,
     deviceOwner,
     source,
@@ -152,7 +166,7 @@ export default function HousePage() {
               {...houseCardPropsFor(house, actionContext, {
                 liveDetail: true,
                 extra:
-                  gemUi ? (
+                  gemPanelVisible ? (
                     <GemHuntPanelLazy
                       house={house}
                       userLocation={geo.location}

@@ -630,6 +630,16 @@ export function mainMapGemEligibleHouses(
   return gemVisibleMapHouses(mapHouses, houseSet, ctx);
 }
 
+/** Card-top «מצא שדון» and deep links — same rule as {@link mainMapGemEligibleHouses} for one row. */
+export function houseGemHuntUiEligible(
+  house: PublicHouse,
+  houseSet: HouseSet,
+  ctx: AddressRevealContext,
+): boolean {
+  if (!houseMatchesGemHuntSet(house, houseSet)) return false;
+  return canViewHouseLocationDetails(house.id, ctx);
+}
+
 /** All shipped sticker slots (not deduped by hash collisions on the map). */
 export function gemAlbumStickerPool(): readonly GemCatalogEntry[] {
   return GEM_MONSTER_MODELS;

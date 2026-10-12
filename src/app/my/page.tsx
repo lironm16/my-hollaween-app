@@ -20,6 +20,9 @@ import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
+import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { useHouseSet } from "@/hooks/use-house-set";
+import { houseGemHuntUiEligible } from "@/lib/gem-monsters";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import {
   forgetPublishedHouse,
@@ -65,6 +68,8 @@ function MyCollectionsPageContent() {
   const now = useAppNow();
   const { gemBagMenuVisible: showCollected, gemUiVisible: gemCardActionsEnabled } =
     useGemHuntAdminUi(admin);
+  const addressReveal = useAddressReveal();
+  const { activeHouseSet } = useHouseSet();
   const addHouseOpen = useAddHouseOpen();
   const urlTab = parseTab(searchParams.get("tab"), showCollected);
   const [tab, setTab] = useState<PersonalMarksTab>(urlTab);
@@ -193,6 +198,9 @@ function MyCollectionsPageContent() {
             router.push(`/?focus=${encodeURIComponent(house.id)}&gemHunt=1`);
           }
         : undefined,
+      gemQuickActionEligible: gemCardActionsEnabled
+        ? (house) => houseGemHuntUiEligible(house, activeHouseSet, addressReveal)
+        : undefined,
       onToggleLike: (id) => likes.toggle(id),
       onToggleVisited: (id) => visits.toggle(id),
       onSkip: tab === "visited" ? (id) => skips.toggle(id) : undefined,
@@ -219,6 +227,8 @@ function MyCollectionsPageContent() {
     likes,
     visits,
     skips,
+    activeHouseSet,
+    addressReveal,
     gemCardActionsEnabled,
     gems,
     tab,
