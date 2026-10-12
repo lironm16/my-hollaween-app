@@ -169,7 +169,7 @@ export type NightPatch = {
 };
 
 export type PublicHouse = Omit<House, "editCode" | "storeId" | "ownerPhone" | "addedBy"> & {
-  /** Night passes: business / school row, or a home sharing its pin — address shown to everyone. */
+  /** Night passes: business / school row — address shown to everyone. */
   locationPublic?: boolean;
   /** True when hydrated from on-device cache — detail text/address must be fetched live. */
   deviceCachePin?: boolean;

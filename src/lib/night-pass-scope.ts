@@ -1,4 +1,4 @@
-import { clusterAddressKey, clusterCoordKey } from "@/lib/house-clusters";
+import { redactHouseLocationDetails } from "@/lib/address-reveal";
 import { isPoiHouse } from "@/lib/house-kind";
 import { isPracticeHouse } from "@/lib/practice-house";
 import { isSchoolCampusAddress } from "@/lib/school-campus";
@@ -7,37 +7,13 @@ import type { NightPassViewer, PublicHouse } from "@/lib/types";
 type ScopeRow = Pick<
   PublicHouse,
   "id" | "kind" | "address" | "arrival" | "lat" | "lng" | "isPractice"
->;
+> & { notes?: string };
 
 /** Businesses and school booths — address + arrival are public for everyone. */
 export function isPublicTierHouse(house: Pick<ScopeRow, "kind" | "address" | "isPractice">) {
   if (isPracticeHouse(house)) return false;
   if (isPoiHouse(house)) return true;
   return isSchoolCampusAddress(house.address);
-}
-
-function locationKeys(house: Pick<ScopeRow, "address" | "lat" | "lng">): string[] {
-  const keys: string[] = [];
-  if (Number.isFinite(house.lat) && Number.isFinite(house.lng)) {
-    keys.push(clusterCoordKey(house.lat, house.lng));
-  }
-  const address = house.address?.trim();
-  if (address) keys.push(`addr:${clusterAddressKey(address)}`);
-  return keys;
-}
-
-/** Pin / address keys of every public-tier row — homes sharing one become publicly located. */
-export function publicLocationKeys(houses: readonly ScopeRow[]): Set<string> {
-  const keys = new Set<string>();
-  for (const house of houses) {
-    if (!isPublicTierHouse(house)) continue;
-    for (const key of locationKeys(house)) keys.add(key);
-  }
-  return keys;
-}
-
-export function sharesPublicLocation(house: ScopeRow, keys: ReadonlySet<string>) {
-  return locationKeys(house).some((key) => keys.has(key));
 }
 
 export type NightPassScopeContext = {
@@ -65,14 +41,12 @@ export type ScopedHouses<T> = {
  * Night-pass visibility for one viewer. Input rows must be unredacted.
  * - business / school: everything, always
  * - homes (even in a business's building): never sent to public visitors; pass holders + admin
- *   see them all (address/arrival after reveal), owners see their own
- * - home sharing a pin with a business: address open to whoever receives it; arrival stays private
+ *   see them all (address/arrival/notes after reveal), owners see their own
  */
 export function scopeHousesForViewer<T extends ScopeRow>(
   rows: readonly T[],
   ctx: NightPassScopeContext,
 ): ScopedHouses<T> {
-  const keys = publicLocationKeys(rows);
   const seesAllHomes = ctx.viewer === "pass" || ctx.viewer === "admin";
   const houses: T[] = [];
   let hiddenHouseCount = 0;
@@ -87,15 +61,7 @@ export function scopeHousesForViewer<T extends ScopeRow>(
       hiddenHouseCount += 1;
       continue;
     }
-    if (sharesPublicLocation(row, keys)) {
-      houses.push({
-        ...row,
-        locationPublic: true,
-        arrival: detailsOpen ? row.arrival : "",
-      });
-      continue;
-    }
-    houses.push(detailsOpen ? row : { ...row, address: "", arrival: "" });
+    houses.push(detailsOpen ? row : redactHouseLocationDetails(row));
   }
   return { houses, hiddenHouseCount };
 }

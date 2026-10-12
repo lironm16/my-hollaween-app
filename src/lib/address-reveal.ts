@@ -12,7 +12,7 @@ export type AddressRevealContext = {
    * `none` = unregistered — home addresses never open.
    */
   audience: AddressRevealAudience;
-  /** Businesses / schools (and homes sharing their pin) — address open to everyone. */
+  /** Businesses / schools — address open to everyone. */
   publicLocationIds: ReadonlySet<string>;
 };
 

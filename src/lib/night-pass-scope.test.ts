@@ -37,7 +37,7 @@ function row(overrides: Partial<PublicHouse>): PublicHouse {
   } as PublicHouse;
 }
 
-const home = row({ id: "בית-1" });
+const home = row({ id: "בית-1", notes: "דפקו חזק" });
 const otherHome = row({ id: "בית-2", address: "הרצל 3", lat: 32.1, lng: 34.82 });
 const business = row({
   id: "נק-1",
@@ -52,6 +52,7 @@ const homeAboveBusiness = row({
   id: "בית-3",
   address: "סוקולוב 10",
   arrival: "דירה 7",
+  notes: "יש כלב",
   lat: 32.2,
   lng: 34.9,
 });
@@ -97,12 +98,24 @@ describe("night pass scope", () => {
     assert.equal(after.houses.find((house) => house.id === "בית-3")!.arrival, "דירה 7");
   });
 
-  it("pass holders see a business building's homes with the address but arrival only after reveal", () => {
+  it("a home in a business's building stays private until reveal, like any home", () => {
     const before = scopeHousesForViewer(all, ctx({ viewer: "pass", revealed: false }));
     const mate = before.houses.find((house) => house.id === "בית-3")!;
-    assert.equal(mate.address, "סוקולוב 10");
+    assert.equal(mate.address, "");
     assert.equal(mate.arrival, "");
-    assert.equal(mate.locationPublic, true);
+    assert.equal(mate.notes, "");
+    assert.notEqual(mate.locationPublic, true);
+    assert.equal(before.houses.find((house) => house.id === "נק-1")!.address, "סוקולוב 10");
+
+    const after = scopeHousesForViewer(all, ctx({ viewer: "pass", revealed: true }));
+    const mateAfter = after.houses.find((house) => house.id === "בית-3")!;
+    assert.equal(mateAfter.address, "סוקולוב 10");
+    assert.equal(mateAfter.notes, "יש כלב");
+  });
+
+  it("strips visitor notes from homes before reveal", () => {
+    const before = scopeHousesForViewer(all, ctx({ viewer: "pass", revealed: false }));
+    assert.equal(before.houses.find((house) => house.id === "בית-1")!.notes, "");
   });
 
   it("owners without a pass see their own home plus the public set", () => {
