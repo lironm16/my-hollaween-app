@@ -20,7 +20,6 @@ import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
-import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import {
   forgetPublishedHouse,
@@ -64,7 +63,8 @@ function MyCollectionsPageContent() {
   const searchParams = useSearchParams();
   const { admin } = useAdminSession();
   const now = useAppNow();
-  const { gemBagMenuVisible: showCollected } = useGemHuntAdminUi(admin);
+  const { gemBagMenuVisible: showCollected, gemUiVisible: gemCardActionsEnabled } =
+    useGemHuntAdminUi(admin);
   const addHouseOpen = useAddHouseOpen();
   const urlTab = parseTab(searchParams.get("tab"), showCollected);
   const [tab, setTab] = useState<PersonalMarksTab>(urlTab);
@@ -137,8 +137,6 @@ function MyCollectionsPageContent() {
     if (!showCollected) return [];
     return catalogHouses.filter((house) => gems.collected(house.id));
   }, [catalogHouses, gems, showCollected]);
-
-  const gemCardActionsEnabled = gemHuntVisible(admin);
 
   const housesByTab: Record<PersonalMarksTab, PublicHouse[]> = {
     mine: mineHouses,

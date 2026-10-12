@@ -73,7 +73,6 @@ import {
   gemClusterQueueHeadline,
   nextClusterGemHouse,
 } from "@/lib/gem-campus-queue";
-import { gemMapLegendVisible } from "@/lib/gem-hunt-enabled";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import {
@@ -234,7 +233,7 @@ export function NeighborhoodApp({
   useEffect(() => {
     invalidateMapPinIconCacheForGemRings();
   }, [mapDiamondsVisible]);
-  const showGemMapLegend = gemMapLegendVisible(admin);
+  const showGemMapLegend = gemFeatureOn;
   const [gemResetHouse, setGemResetHouse] = useState<PublicHouse | null>(null);
   const [gemResetCluster, setGemResetCluster] = useState<PublicHouse[] | null>(null);
   const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);

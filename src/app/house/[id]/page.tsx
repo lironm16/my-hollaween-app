@@ -21,7 +21,7 @@ import { GemHuntPanelLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import { writeHomeView } from "@/lib/home-view";
-import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
+import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { adminDeviceOwnerPowers } from "@/lib/admin-preview-as-user";
 import { useAdminPreviewAsUser } from "@/hooks/use-admin-preview-as-user";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
@@ -45,7 +45,8 @@ export default function HousePage() {
   const gems = useGemProgress();
   const { admin } = useAdminSession();
   const now = useAppNow();
-  const geo = useUserLocation({ watch: gemHuntVisible(admin) });
+  const { gemUiVisible: gemUi } = useGemHuntAdminUi(admin);
+  const geo = useUserLocation({ watch: gemUi });
   const { setWatchEnabled } = geo;
   const editFlow = useHouseEditFlow();
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
@@ -86,7 +87,6 @@ export default function HousePage() {
   const canEdit = Boolean(deviceOwner || ownedItem);
   const editCode = deviceOwner ? adminHouse?.editCode : ownedItem?.editCode;
   const missing = !loading && Boolean(catalog) && !house;
-  const gemUi = gemHuntVisible(admin);
   const mapHousesForCelebrate = useMemo(
     () => gemHuntMapHouses(resolveCatalogHouses(catalog), "real"),
     [catalog],

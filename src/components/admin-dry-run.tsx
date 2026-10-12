@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminAddHouseCutoffSettings } from "@/components/admin-add-house-cutoff-settings";
 import { AdminAddressRevealSettings } from "@/components/admin-address-reveal-settings";
 import { AdminGemOpsPanel } from "@/components/admin-gem-ops-panel";
+import { AdminGemHuntPublicSettings } from "@/components/admin-gem-hunt-public-settings";
 import { AdminNightPassesSettings } from "@/components/admin-night-passes-settings";
 import { AdminHelpDetails, AdminSection } from "@/components/admin-section";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -125,6 +126,7 @@ export function AdminDryRunPanel() {
           <AdminAddHouseCutoffSettings embedded />
           <AdminAddressRevealSettings embedded />
           <AdminNightPassesSettings embedded />
+          <AdminGemHuntPublicSettings embedded />
         </div>
       </AdminSection>
 

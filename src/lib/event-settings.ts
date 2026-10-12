@@ -89,12 +89,17 @@ export function addHouseCutoffScheduleFromDb(
   return mergeAddHouseCutoffSchedule(eventSettings?.addHouseCutoff);
 }
 
+export function gemHuntPublicFromDb(eventSettings?: DbFile["eventSettings"] | null): boolean {
+  return eventSettings?.gemHuntPublic === true;
+}
+
 export function catalogEventSettings(
   eventSettings?: DbFile["eventSettings"] | null,
 ): NonNullable<Catalog["eventSettings"]> {
   return {
     addressReveal: addressRevealScheduleFromDb(eventSettings),
     addHouseCutoff: addHouseCutoffScheduleFromDb(eventSettings),
+    gemHuntPublic: gemHuntPublicFromDb(eventSettings),
   };
 }
 

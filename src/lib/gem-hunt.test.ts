@@ -176,22 +176,15 @@ describe("gem hunt geo", () => {
 });
 
 describe("gem hunt gate", () => {
-  it("shows only for admin when NEXT_PUBLIC_GEM_HUNT is unset", async () => {
-    const prev = process.env.NEXT_PUBLIC_GEM_HUNT;
-    delete process.env.NEXT_PUBLIC_GEM_HUNT;
-    try {
-      const { writeGemPreviewAsUser } = await import("@/lib/gem-preview-as-user");
-      writeGemPreviewAsUser(false);
-      const { gemHuntVisible } = await import("@/lib/gem-hunt-enabled");
-      assert.equal(gemHuntVisible(true), true);
-      assert.equal(gemHuntVisible(false), false);
-      writeGemPreviewAsUser(true);
-      assert.equal(gemHuntVisible(true), true);
-      writeGemPreviewAsUser(false);
-    } finally {
-      if (prev === undefined) delete process.env.NEXT_PUBLIC_GEM_HUNT;
-      else process.env.NEXT_PUBLIC_GEM_HUNT = prev;
-    }
+  it("shows only for admin when gem hunt is not public", async () => {
+    const { writeGemPreviewAsUser } = await import("@/lib/gem-preview-as-user");
+    writeGemPreviewAsUser(false);
+    const { gemHuntVisible } = await import("@/lib/gem-hunt-enabled");
+    assert.equal(gemHuntVisible(true, false), true);
+    assert.equal(gemHuntVisible(false, false), false);
+    writeGemPreviewAsUser(true);
+    assert.equal(gemHuntVisible(true, false), true);
+    writeGemPreviewAsUser(false);
   });
 
   it("bearingClockLabelHe maps compass octants", () => {
@@ -201,15 +194,9 @@ describe("gem hunt gate", () => {
   });
 
   it("map legend שדונים follows gem hunt visibility, not the pin-ring toggle", async () => {
-    const prev = process.env.NEXT_PUBLIC_GEM_HUNT;
-    delete process.env.NEXT_PUBLIC_GEM_HUNT;
-    try {
-      const { gemMapLegendVisible } = await import("@/lib/gem-hunt-enabled");
-      assert.equal(gemMapLegendVisible(true), true);
-      assert.equal(gemMapLegendVisible(false), false);
-    } finally {
-      if (prev === undefined) delete process.env.NEXT_PUBLIC_GEM_HUNT;
-      else process.env.NEXT_PUBLIC_GEM_HUNT = prev;
-    }
+    const { gemMapLegendVisible } = await import("@/lib/gem-hunt-enabled");
+    assert.equal(gemMapLegendVisible(true, false), true);
+    assert.equal(gemMapLegendVisible(false, false), false);
+    assert.equal(gemMapLegendVisible(false, true), true);
   });
 });

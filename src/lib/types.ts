@@ -209,6 +209,8 @@ export type Catalog = {
   eventSettings?: {
     addressReveal: AddressRevealSchedule;
     addHouseCutoff: AddHouseCutoffSchedule;
+    /** When true, non-admin users see gem hunt UI (default false). */
+    gemHuntPublic?: boolean;
   };
   /** Night passes on — which audience this payload was built for (absent = legacy full list). */
   scope?: NightPassViewer;
@@ -270,6 +272,7 @@ export type DbFile = {
     updatedAt?: string;
     addressReveal?: AddressRevealSchedule;
     addHouseCutoff?: AddHouseCutoffSchedule;
+    gemHuntPublic?: boolean;
   };
   pushSettings?: {
     updatedAt?: string;

@@ -22,6 +22,14 @@ describe("event settings", () => {
     });
   });
 
+  it("reads gem hunt public flag from db", () => {
+    assert.equal(
+      catalogEventSettings({ gemHuntPublic: true }).gemHuntPublic,
+      true,
+    );
+    assert.equal(catalogEventSettings({}).gemHuntPublic, false);
+  });
+
   it("builds catalog payload from db override", () => {
     assert.deepEqual(
       catalogEventSettings({
@@ -37,6 +45,7 @@ describe("event settings", () => {
           hour: config.addHouseCutoff.hour,
           minute: config.addHouseCutoff.minute,
         },
+        gemHuntPublic: false,
       },
     );
   });

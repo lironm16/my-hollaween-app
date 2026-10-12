@@ -228,6 +228,7 @@ export function cloneDb(db: DbFile): DbFile {
           ...(db.eventSettings.addHouseCutoff
             ? { addHouseCutoff: { ...db.eventSettings.addHouseCutoff } }
             : {}),
+          ...(db.eventSettings.gemHuntPublic === true ? { gemHuntPublic: true as const } : {}),
         }
       : undefined,
   };
