@@ -19,7 +19,7 @@ export const GEM_HOUSE_KICKER_HE = "שדון נסתר · גלו במצלמה";
 
 export const GEM_PLACE_ACTION_HE = "מיקום השדון";
 export const GEM_PLACE_HINT_HE =
-  "כאן מסתתר השדון של הבית. אם יש מקום טוב יותר — גררו אותו, הקישו במפה בתוך העיגול, או עמדו במקום ובחרו «המיקום שלי».";
+  "הנקודה הכתומה היא הבית, והשדון מסמן איפה הוא מסתתר. אם יש מקום טוב יותר — גררו אותו, הקישו במפה בתוך העיגול, או עמדו במקום ובחרו «המיקום שלי».";
 export const GEM_PLACE_MY_LOCATION_HE = "המיקום שלי";
 export const GEM_PLACE_SAVE_HE = "שמירת מיקום";
 export const GEM_PLACE_RESET_HE = "ברירת מחדל";

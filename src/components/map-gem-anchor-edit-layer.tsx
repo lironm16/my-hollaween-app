@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Circle, Marker, Polyline, useMapEvents } from "react-leaflet";
+import { Circle, CircleMarker, Marker, Polyline, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { ImpDemonFilledIcon } from "@/components/imp-demon-reference-icon";
 import { clampGemAnchorPlacement, GEM_ANCHOR_PLACE_MAX_METERS } from "@/lib/gem-anchor-placement";
@@ -25,7 +25,7 @@ function MoveOnTap({ house, onMove }: Pick<GemAnchorEditState, "house" | "onMove
   return null;
 }
 
-/** Owner/admin gem placement — drag the demon (or tap the map) inside the allowed circle. */
+/** Owner/admin gem placement — drag the demon (or tap the map) inside the allowed circle; the house is a small dot so it never covers the demon. */
 export function MapGemAnchorEditLayer({ house, point, onMove }: GemAnchorEditState) {
   const icon = useMemo(
     () =>
@@ -63,6 +63,12 @@ export function MapGemAnchorEditLayer({ house, point, onMove }: GemAnchorEditSta
           [point.lat, point.lng],
         ]}
         pathOptions={{ color: "#34d399", weight: 2, opacity: 0.8, dashArray: "4 6", lineCap: "round" }}
+        interactive={false}
+      />
+      <CircleMarker
+        center={[house.lat, house.lng]}
+        radius={6}
+        pathOptions={{ color: "#fff7ed", weight: 2, fillColor: "#f97316", fillOpacity: 1 }}
         interactive={false}
       />
       <MoveOnTap house={house} onMove={onMove} />

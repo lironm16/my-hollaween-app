@@ -996,6 +996,7 @@ export function HouseMap({
           />
         ) : null}
         {!pickMode &&
+          !gemAnchorEdit &&
           clusters.map((cluster) => {
             const clusterFilteredOut =
               dimActive &&
