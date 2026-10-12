@@ -26,6 +26,8 @@ import { adminDeviceOwnerPowers } from "@/lib/admin-preview-as-user";
 import { useAdminPreviewAsUser } from "@/hooks/use-admin-preview-as-user";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { useHouseSet } from "@/hooks/use-house-set";
+import { isPreviewDeploymentClient } from "@/lib/deployment-env";
+import { activeHouseSetForSession } from "@/lib/house-set";
 import { gemHuntMapHouses, houseGemHuntUiEligible } from "@/lib/gem-monsters";
 import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
 import { parseVisitFromSearchParams } from "@/lib/house-visit-qr";
@@ -49,7 +51,7 @@ export default function HousePage() {
   const now = useAppNow();
   const { gemUiVisible: gemUi } = useGemHuntAdminUi(admin);
   const addressReveal = useAddressReveal();
-  const { activeHouseSet } = useHouseSet();
+  const { houseSet } = useHouseSet();
   const geo = useUserLocation({ watch: gemUi });
   const { setWatchEnabled } = geo;
   const editFlow = useHouseEditFlow();
@@ -86,6 +88,10 @@ export default function HousePage() {
     catalog?.houses.find((h) => h.id === id) ??
     (adminHouse ? (toPublicHouse(adminHouse) as PublicHouse) : undefined) ??
     ownedItem?.preview;
+
+  const activeHouseSet = activeHouseSetForSession(admin, houseSet, catalog, {
+    previewDeployment: isPreviewDeploymentClient(),
+  });
 
   const gemPanelVisible = useMemo(
     () => gemUi && Boolean(house && houseGemHuntUiEligible(house, activeHouseSet, addressReveal)),

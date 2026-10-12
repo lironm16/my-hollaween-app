@@ -22,6 +22,8 @@ import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { useHouseSet } from "@/hooks/use-house-set";
+import { isPreviewDeploymentClient } from "@/lib/deployment-env";
+import { activeHouseSetForSession } from "@/lib/house-set";
 import { houseGemHuntUiEligible } from "@/lib/gem-monsters";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import {
@@ -69,7 +71,7 @@ function MyCollectionsPageContent() {
   const { gemBagMenuVisible: showCollected, gemUiVisible: gemCardActionsEnabled } =
     useGemHuntAdminUi(admin);
   const addressReveal = useAddressReveal();
-  const { activeHouseSet } = useHouseSet();
+  const { houseSet } = useHouseSet();
   const addHouseOpen = useAddHouseOpen();
   const urlTab = parseTab(searchParams.get("tab"), showCollected);
   const [tab, setTab] = useState<PersonalMarksTab>(urlTab);
@@ -95,6 +97,9 @@ function MyCollectionsPageContent() {
   const visits = useVisitedHouses();
   const gems = useGemProgress();
   const { catalog, refresh } = useCatalog();
+  const activeHouseSet = activeHouseSetForSession(admin, houseSet, catalog, {
+    previewDeployment: isPreviewDeploymentClient(),
+  });
   const geo = useUserLocation();
   const { resolved: origin } = useDistanceOrigin(geo.location);
   const editFlow = useHouseEditFlow();
