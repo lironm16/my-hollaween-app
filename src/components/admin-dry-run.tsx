@@ -11,7 +11,6 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useRehearsalScene, useServerSim } from "@/hooks/use-app-clock";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
-import { GEM_GAME_TITLE_HE } from "@/lib/gem-hunt-copy";
 import {
   CLOCK_EVENT,
   REHEARSAL_LABELS,
@@ -99,10 +98,6 @@ export function AdminDryRunPanel() {
 
   return (
     <div className="space-y-2" dir="rtl">
-      <AdminSection title="תכונות באפליקציה" summary={GEM_GAME_TITLE_HE} defaultOpen>
-        <AdminGemHuntPublicSettings embedded />
-      </AdminSection>
-
       <AdminSection title="שכבות במפה" summary={layerSummary(layers)}>
         <div className="flex flex-wrap gap-1.5">
           {(["real", "stubs"] as MapDisplayLayer[]).map((id) => (
@@ -202,9 +197,12 @@ export function AdminDryRunPanel() {
         </AdminHelpDetails>
       </AdminSection>
 
-      {gemsOnScreen && catalogHouses.length > 0 ? (
-        <AdminSection title="שדונים במפה" summary="בחירה לפי מפלצת · מפת ניהול">
-          <AdminGemOpsPanel houses={catalogHouses} />
+      {gemsOnScreen ? (
+        <AdminSection title="שדונים במפה" summary="משחק לאפליקציה · בחירה לפי מפלצת · מפת ניהול">
+          <div className="space-y-2">
+            <AdminGemHuntPublicSettings embedded />
+            {catalogHouses.length > 0 ? <AdminGemOpsPanel houses={catalogHouses} /> : null}
+          </div>
         </AdminSection>
       ) : null}
     </div>
