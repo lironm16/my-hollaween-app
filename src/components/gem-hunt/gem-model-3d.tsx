@@ -73,6 +73,27 @@ function fitCameraToPivot(
   }
 }
 
+/** Rotation-safe framing for inspect360 auto-rotate (AABB fit clips corners when the model spins). */
+function fitCameraToBoundingSphere(
+  camera: THREE.PerspectiveCamera,
+  pivot: THREE.Object3D,
+  padding = 1.38,
+  orbit?: OrbitControls | null,
+) {
+  const box = new THREE.Box3().setFromObject(pivot);
+  const sphere = box.getBoundingSphere(new THREE.Sphere());
+  const center = sphere.center;
+  const fovRad = (camera.fov * Math.PI) / 180;
+  const dist = (sphere.radius / Math.tan(fovRad / 2)) * padding;
+  camera.position.set(center.x, center.y + sphere.radius * 0.08, center.z + dist);
+  camera.lookAt(center.x, center.y, center.z);
+  camera.updateProjectionMatrix();
+  if (orbit) {
+    orbit.target.copy(center);
+    orbit.update();
+  }
+}
+
 export function GemModel3D({
   monsterId = "dragon",
   houseId = "default",
@@ -115,7 +136,8 @@ export function GemModel3D({
     let height = host.clientHeight || (size === "fill" ? 240 : defaultPx);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(32, width / height, 0.1, 100);
+    const inspectFov = controls === "inspect360" ? 36 : 32;
+    const camera = new THREE.PerspectiveCamera(inspectFov, width / height, 0.1, 100);
     camera.position.set(0, 0.2, 2.6);
     camera.zoom = zoomRef.current;
     camera.updateProjectionMatrix();
@@ -236,7 +258,7 @@ export function GemModel3D({
         ? size === "sm"
           ? 0.55
           : size === "fill"
-            ? 2.05
+            ? 2.28
             : 1.38
         : size === "sm"
           ? 0.55
@@ -259,17 +281,20 @@ export function GemModel3D({
         });
 
         pivot.add(model);
-        if (controls === "turntable" || controls === "walkaround" || controls === "inspect360") {
+        if (controls === "inspect360") {
+          fitCameraToBoundingSphere(
+            camera,
+            pivot,
+            size === "fill" ? 1.42 : 1.48,
+            orbit,
+          );
+        } else if (controls === "turntable" || controls === "walkaround") {
           const pad =
-            controls === "inspect360"
-              ? size === "fill"
-                ? 1.56
-                : 1.62
-              : size === "sm"
-                ? 1.45
-                : size === "fill"
-                  ? 1.28
-                  : 1.32;
+            size === "sm"
+              ? 1.45
+              : size === "fill"
+                ? 1.28
+                : 1.32;
           fitCameraToPivot(camera, pivot, pad, orbit);
         } else {
           orbit?.update();
