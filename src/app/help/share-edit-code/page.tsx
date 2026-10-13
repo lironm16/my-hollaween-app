@@ -40,7 +40,14 @@ export default function ShareEditCodeHelpPage() {
       </p>
       <ol className="space-y-6">
         {STEPS.map((step, i) => (
-          <HelpStep key={step.title} index={i + 1} {...step} />
+          <HelpStep
+            key={step.title}
+            n={i + 1}
+            title={step.title}
+            body={step.body}
+            image={step.image}
+            imageAlt={step.imageAlt}
+          />
         ))}
       </ol>
     </HelpShell>

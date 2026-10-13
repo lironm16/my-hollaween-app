@@ -48,6 +48,7 @@ import { candyTone, CandySign, CANDY_TONES, type CandyTone } from "@/components/
 import { freezeExpireIso, isOwnerFrozen, resolveDecorLevel } from "@/lib/house-state";
 import { StrollerSign } from "@/components/symbols";
 import { LocationKindSign } from "@/components/location-kind-sign";
+import { PracticeLocationSign } from "@/components/practice-location-sign";
 import { ScarePumpkin, ScareSign } from "@/components/scare-glyphs";
 import { PIN_GLYPH_SCALE } from "@/lib/pin-faces";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
@@ -140,9 +141,10 @@ export function HouseForm({
   extraActions?: ReactNode;
 }) {
   const [form, setForm] = useState<HouseInput>({ ...empty, ...initial });
-  const [placeKind, setPlaceKind] = useState<"house" | "poi">(() =>
-    initial?.kind === "poi" ? "poi" : "house",
-  );
+  const [placeKind, setPlaceKind] = useState<"house" | "poi" | "practice">(() => {
+    if (initial?.isPractice) return "practice";
+    return initial?.kind === "poi" ? "poi" : "house";
+  });
   const [locating, setLocating] = useState(false);
   const [addressOk, setAddressOk] = useState(Boolean(initial?.address && initial.lat && initial.lng));
   const [addressFieldActive, setAddressFieldActive] = useState(false);
@@ -175,6 +177,7 @@ export function HouseForm({
   const now = useAppNow();
   const { admin } = useAdminSession();
   const blocked = Boolean(busy || saving);
+  const isPracticePlace = placeKind === "practice";
   const isPoi = placeKind === "poi" && isPoiHouse({ ...form, kind: "poi" });
   const scareGlyph = isPoi ? ScarePumpkin : undefined;
   const scareGlyphScale = isPoi ? PIN_GLYPH_SCALE.poi : PIN_GLYPH_SCALE.house;
@@ -438,9 +441,10 @@ export function HouseForm({
           openTo2: hours.openTo2,
           ...(admin
             ? {
-                kind: form.kind ?? "house",
-                isPractice: false,
-                poiCategory: form.kind === "poi" ? (form.poiCategory ?? "other") : null,
+                kind: isPracticePlace ? "house" : form.kind ?? "house",
+                isPractice: isPracticePlace,
+                poiCategory:
+                  !isPracticePlace && form.kind === "poi" ? (form.poiCategory ?? "other") : null,
               }
             : { kind: "house", poiCategory: null, isPractice: false }),
         };
@@ -494,7 +498,32 @@ export function HouseForm({
                 {houseKindLabels[kind]}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => {
+                setPlaceKind("practice");
+                setForm((current) => ({
+                  ...current,
+                  kind: "house",
+                  isPractice: true,
+                  poiCategory: null,
+                }));
+              }}
+              className={
+                placeKind === "practice"
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-teal-500 px-3 py-1.5 text-lg font-medium text-black"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-teal-400/40"
+              }
+            >
+              <PracticeLocationSign className="size-6" />
+              בית תרגול
+            </button>
           </div>
+          {isPracticePlace ? (
+            <p className="text-base text-teal-200/90">
+              לתרגול שדונים בלבד — לא נספר בבתים בשכונה ולא נכנס למסלול.
+            </p>
+          ) : null}
         </FormSection>
       ) : null}
       <FormSection title={isPracticePlace ? "בית תרגול" : isPoi ? "העסק" : "הבית"}>
