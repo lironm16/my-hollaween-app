@@ -522,14 +522,15 @@ export function NeighborhoodApp({
   );
 
   const openGemHuntForCluster = useCallback(
-    async (houses: PublicHouse[]) => {
+    async (clusterHouses: PublicHouse[]) => {
+      const houses = clusterHouses.filter(gemHouseHuntAllowed);
       if (houses.length < 2) return;
       const target = firstClusterGemHouseToHunt(houses, gems.collected);
       if (!target) return;
       mapGemClusterSessionRef.current = [];
       await bootMapGemHunt(target, houses);
     },
-    [bootMapGemHunt, gems.collected],
+    [bootMapGemHunt, gemHouseHuntAllowed, gems.collected],
   );
 
   const restoreAfterGemHunt = useCallback(() => {
@@ -613,12 +614,13 @@ export function NeighborhoodApp({
     return () => window.clearTimeout(timer);
   }, [gemHuntFromUrl, focusId, gemHouseHuntAllowed, houses, handleToggleGemMenu, selection]);
 
-  const handleClusterResetAllGems = useCallback((houses: PublicHouse[]) => {
+  const handleClusterResetAllGems = useCallback((clusterHouses: PublicHouse[]) => {
+    const houses = clusterHouses.filter(gemHouseHuntAllowed);
     if (houses.length < 2) return;
     if (!houses.every((h) => gems.collected(h.id))) return;
     setGemResetHouse(null);
     setGemResetCluster(houses);
-  }, [gems]);
+  }, [gemHouseHuntAllowed, gems]);
 
   const cancelGemReset = useCallback(() => {
     setGemResetHouse(null);

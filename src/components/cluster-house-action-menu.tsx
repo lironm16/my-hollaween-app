@@ -79,8 +79,9 @@ export function ClusterHouseActionMenu({
   const allSkipped = houses.length > 0 && houses.every((house) => skipped(house.id));
   const allLiked = houses.length > 0 && houses.every((house) => liked(house.id));
   const readGemCollected = gemCollected ?? (() => false);
+  const gemHouses = houses.filter((house) => addressReveal.canViewDetails(house.id));
   const allGemsCollected =
-    houses.length >= 2 && houses.every((house) => readGemCollected(house.id));
+    gemHouses.length >= 2 && gemHouses.every((house) => readGemCollected(house.id));
 
   useEffect(() => {
     if (!open) return;
@@ -141,7 +142,7 @@ export function ClusterHouseActionMenu({
       active: allVisited,
     });
   }
-  if (houses.length >= 2 && (onFindAllGems || onResetAllGems)) {
+  if (gemHouses.length >= 2 && (onFindAllGems || onResetAllGems)) {
     items.push({
       id: "gem-all",
       label: allGemsCollected ? GEM_CLUSTER_FOUND_ALL_HE : GEM_CLUSTER_FIND_ALL_HE,
