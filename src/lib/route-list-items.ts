@@ -82,7 +82,7 @@ export function buildRouteListItems(options: {
       const legM = estimateWalkingMeters(tailCursor, point);
       items.push({
         house,
-        order: 0,
+        order: routeDisplayOrder(id, 0, sessionDisplayOrders),
         hop: distanceLabel(house.id, legM),
         skipped: flags.skipped,
         visitedTail: flags.visitedTail,

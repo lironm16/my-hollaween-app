@@ -1569,6 +1569,9 @@ export function NeighborhoodApp({
                         }))
                       : null
                   }
+                  routeSessionDisplayOrders={
+                    routeMode && !originPick.originPickActive ? routeSessionDisplayOrders : null
+                  }
                   showGemLegend={showGemMapLegend}
                   gemAnchorHouses={gemUi ? gemMapRingHouses : []}
                   showGemPinRings={gemUi && mapDiamondsVisible}

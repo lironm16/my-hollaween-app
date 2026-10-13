@@ -131,6 +131,9 @@ describe("buildRouteListItems", () => {
       active.map((item) => item.order),
       [2, 3],
     );
+    const visited = items.filter((item) => item.visitedTail);
+    assert.equal(visited.length, 1);
+    assert.equal(visited[0]!.order, 1);
   });
 
   it("omits hop labels before address reveal but keeps leg slots empty", () => {

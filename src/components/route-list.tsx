@@ -123,7 +123,7 @@ export function RouteList({
               <div className="route-list-house">
                 <HouseCard
                   {...houseCardPropsFor(house, actionContext, {
-                    index: isTail ? undefined : order,
+                    index: order > 0 ? order : undefined,
                     distanceM: addressReveal.distanceAllowed(house.id) ? distanceM : undefined,
                   })}
                 />
