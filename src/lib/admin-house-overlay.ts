@@ -1,4 +1,18 @@
+import { houseUpdatedMs } from "@/lib/house-updated-at";
 import type { EditorHouse, House, PublicHouse } from "@/lib/types";
+
+function pickTextField(
+  houseValue: string | undefined,
+  adminValue: string | undefined,
+  houseUpdatedAt: string | undefined,
+  adminUpdatedAt: string | undefined,
+): string {
+  const houseText = houseValue?.trim() ?? "";
+  const adminText = adminValue?.trim() ?? "";
+  if (!adminText) return houseText;
+  if (!houseText) return adminText;
+  return houseUpdatedMs(adminUpdatedAt) > houseUpdatedMs(houseUpdatedAt) ? adminText : houseText;
+}
 
 /** Overlay catalog/redacted rows with the admin API snapshot (street, arrival, contact). */
 export function mergePublicHouseWithAdminRow(
@@ -9,8 +23,13 @@ export function mergePublicHouseWithAdminRow(
   const editor = house as EditorHouse;
   const address = house.address?.trim() ? house.address : (admin.address ?? "");
   const arrival = house.arrival?.trim() ? house.arrival : (admin.arrival ?? "");
-  const notes = house.notes?.trim() ? house.notes : admin.notes;
-  const description = house.description?.trim() ? house.description : admin.description;
+  const notes = pickTextField(house.notes, admin.notes, house.updatedAt, admin.updatedAt);
+  const description = pickTextField(
+    house.description,
+    admin.description,
+    house.updatedAt,
+    admin.updatedAt,
+  );
   const neighborhood =
     house.neighborhood !== undefined ? house.neighborhood : admin.neighborhood;
   const ownerPhone = editor.ownerPhone?.trim()

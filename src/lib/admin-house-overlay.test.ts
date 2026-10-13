@@ -49,4 +49,19 @@ describe("mergePublicHouseWithAdminRow", () => {
     assert.equal(merged.ownerPhone, "0501234567");
     assert.equal(merged.addedBy, "משפחת לוי");
   });
+
+  it("prefers newer admin description over stale catalog text", () => {
+    const pub = {
+      ...publicRow("בית-2"),
+      description: "טקסט ישן מהקטלוג",
+      updatedAt: "2026-10-01T12:00:00.000Z",
+    };
+    const admin = {
+      ...adminRow("בית-2"),
+      description: "טקסט מעודכן",
+      updatedAt: "2026-10-02T12:00:00.000Z",
+    };
+    const merged = mergePublicHouseWithAdminRow(pub, admin);
+    assert.equal(merged.description, "טקסט מעודכן");
+  });
 });

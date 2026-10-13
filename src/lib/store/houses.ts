@@ -97,21 +97,19 @@ export function houseFromWarmCaches(id: string): House | undefined {
   return undefined;
 }
 
-/** One house row — avoids full catalog load on Firestore when caches miss. */
+/** One house row — single-doc Firestore read when configured (not warm instance mem). */
 export async function getHouse(id: string): Promise<House | undefined> {
-  const cached = houseFromWarmCaches(id);
-  if (cached) return cached;
-
   const docId = canonicalHouseId(id);
   if (firestoreConfigured() && docId) {
     const remote = await readFirestoreHouse(docId);
-    if (remote) {
-      if (isHouseDeleted(remote)) return undefined;
-      upsertMemHouse(remote, remote.updatedAt);
-      return remote;
-    }
-    return undefined;
+    if (!remote) return undefined;
+    if (isHouseDeleted(remote)) return undefined;
+    upsertMemHouse(remote, remote.updatedAt);
+    return remote;
   }
+
+  const cached = houseFromWarmCaches(id);
+  if (cached) return cached;
 
   const found = findHouseIn((await loadDb()).houses, id);
   if (found) return found;

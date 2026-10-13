@@ -6,7 +6,6 @@ import { scopedHousesFromDb } from "@/lib/night-pass-catalog";
 import { resolveNightPassViewer } from "@/lib/night-pass-session";
 import { ownerPhoneHttpError } from "@/lib/owner-phone";
 import { isPubliclyListed } from "@/lib/house-state";
-import { config } from "@/lib/config";
 import { geocodeHttpError } from "@/lib/geocode";
 import { storageHttpError } from "@/lib/storage-errors";
 import { publicHouseForCatalog } from "@/lib/address-reveal";
@@ -49,19 +48,13 @@ export async function GET(
     }
     return NextResponse.json(scoped, { headers: privateHeaders });
   }
+  const privateHeaders = { "Cache-Control": "private, no-store" };
   const revealSchedule = await loadAddressRevealSchedule();
   const house =
     admin || ownerOk
       ? toEditorHouse(row)
       : publicHouseForCatalog(toPublicHouse(row), new Date(), revealSchedule);
-  return NextResponse.json(house, {
-    headers: {
-      "Cache-Control":
-        config.catalogCacheSeconds > 0
-          ? `public, max-age=0, s-maxage=${config.catalogCacheSeconds}`
-          : "no-store",
-    },
-  });
+  return NextResponse.json(house, { headers: privateHeaders });
 }
 
 export async function PATCH(
