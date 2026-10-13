@@ -36,19 +36,19 @@ export async function POST(request: Request) {
   if (!(await rateLimitShared(`night-pass:${ip}`, 20, WINDOW_MS))) {
     return fail(429, "rate", "יותר מדי ניסיונות. נסו שוב בעוד כמה דקות.");
   }
-  if (!code) return fail(404, "invalid", "הקוד לא נמצא. בדקו שהעתקתם את כל 8 התווים.");
+  if (!code) return fail(404, "invalid", "קוד הכניסה לא נמצא. בדקו שהעתקתם את כל 8 התווים.");
   if (!(await rateLimitShared(`night-pass-code:${passIdForCode(code)}`, 10, WINDOW_MS))) {
-    return fail(429, "rate", "יותר מדי ניסיונות לקוד הזה. נסו שוב מאוחר יותר.");
+    return fail(429, "rate", "יותר מדי ניסיונות לקוד הכניסה הזה. נסו שוב מאוחר יותר.");
   }
 
   const existing = await currentNightPass();
   if (existing && existing.id !== passIdForCode(code)) {
-    return fail(409, "device_has_other", "המכשיר הזה כבר רשום עם קוד אחר.");
+    return fail(409, "device_has_other", "המכשיר הזה כבר רשום עם קוד כניסה אחר.");
   }
 
   const outcome = await redeemNightPass({ code, name, phone });
   if (!outcome.ok) {
-    return fail(404, "invalid", "הקוד לא נמצא. בדקו שהעתקתם את כל 8 התווים.");
+    return fail(404, "invalid", "קוד הכניסה לא נמצא. בדקו שהעתקתם את כל 8 התווים.");
   }
   await setNightPassCookie(outcome.record.id, outcome.token);
   return NextResponse.json(

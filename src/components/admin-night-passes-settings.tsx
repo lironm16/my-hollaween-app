@@ -29,7 +29,7 @@ export function AdminNightPassesSettings({ embedded = false }: { embedded?: bool
     if (
       next &&
       !window.confirm(
-        "להפעיל כרטיסי כניסה? משתמשים בלי קוד יראו רק עסקים ובתי ספר, וכתובות הבתים ייפתחו רק למכשירים רשומים.",
+        "להפעיל קודי כניסה? משתמשים בלי קוד כניסה יראו רק עסקים ובתי ספר, וכתובות הבתים ייפתחו רק למכשירים רשומים.",
       )
     ) {
       return;
@@ -61,7 +61,7 @@ export function AdminNightPassesSettings({ embedded = false }: { embedded?: bool
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-orange-100">כרטיסי כניסה לאירוע</p>
+        <p className="text-sm font-medium text-orange-100">קודי כניסה לאירוע</p>
         <span className="flex shrink-0 items-center gap-1.5">
           <span className={cn("text-base", enabled ? "text-orange-200" : "text-violet-400")}>
             {enabled === null ? "…" : enabled ? "פועל" : "כבוי"}
@@ -71,7 +71,7 @@ export function AdminNightPassesSettings({ embedded = false }: { embedded?: bool
             dir="ltr"
             role="switch"
             aria-checked={Boolean(enabled)}
-            aria-label="כרטיסי כניסה לאירוע"
+            aria-label="קודי כניסה לאירוע"
             disabled={enabled === null || saving}
             onClick={() => void toggle()}
             className={cn(
@@ -85,12 +85,12 @@ export function AdminNightPassesSettings({ embedded = false }: { embedded?: bool
       </div>
       {embedded ? (
         <AdminHelpDetails label="מה זה?">
-          4 קודים לכל בית. בלי קוד רואים רק עסקים ובתי ספר; כתובות הבתים נפתחות בשעת החשיפה רק למכשירים
+          4 קודי כניסה לכל בית. בלי קוד כניסה רואים רק עסקים ובתי ספר; כתובות הבתים נפתחות בשעת החשיפה רק למכשירים
           רשומים. «תצוגת משתמש» מציגה את המכשיר הזה כמו מבקר.
         </AdminHelpDetails>
       ) : (
         <p className="text-sm text-violet-300">
-          4 קודים לכל בית. בלי קוד רואים רק עסקים ובתי ספר; כתובות הבתים נפתחות בשעת החשיפה רק למכשירים
+          4 קודי כניסה לכל בית. בלי קוד כניסה רואים רק עסקים ובתי ספר; כתובות הבתים נפתחות בשעת החשיפה רק למכשירים
           רשומים. «תצוגת משתמש» מציגה את המכשיר הזה כמו מבקר.
         </p>
       )}
