@@ -105,21 +105,6 @@ const files = {
   <text x="195" y="344" fill="#fde68a" font-family="${FONT}" font-size="22" font-weight="700" text-anchor="middle" letter-spacing="4">184802</text>`,
   }),
 
-  "share-edit-code-menu.svg": svg({
-    label: "תפריט פעולות עם קוד עריכה",
-    body: `${header()}
-  <rect x="16" y="56" width="358" height="220" rx="16" fill="${PANEL}" stroke="${ORANGE}" stroke-opacity="0.2"/>
-  <text x="320" y="88" fill="#fdba74" font-family="${FONT}" font-size="18" font-weight="700" text-anchor="end">${t("הפמקין שלי 🍬")}</text>
-  <rect x="36" y="98" width="28" height="28" rx="14" fill="#2a1638" stroke="${ORANGE}" stroke-opacity="0.35"/>
-  <text x="50" y="117" fill="#fde68a" font-family="${FONT}" font-size="16" text-anchor="middle">&#8942;</text>
-  <rect x="190" y="72" width="188" height="200" rx="14" fill="#160b20" stroke="${ORANGE}" stroke-opacity="0.35"/>
-  <rect x="208" y="180" width="152" height="28" rx="8" fill="${ORANGE}" fill-opacity="0.25"/>
-  <text x="284" y="199" fill="#fde68a" font-family="${FONT}" font-size="15" font-weight="700" text-anchor="middle">${t("קוד עריכה")}</text>
-  <path d="M72 120 L120 120" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrow)"/>
-  <text x="120" y="112" fill="#c4b5fd" font-family="${FONT}" font-size="13" text-anchor="end">${t("לחצו &#8942;")}</text>
-  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#a78bfa"/></marker></defs>`,
-  }),
-
   "share-edit-code-dialog.svg": svg({
     label: "חלון קוד עריכה",
     body: `${header()}
