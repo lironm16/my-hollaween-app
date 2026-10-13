@@ -9445,7 +9445,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   position: fixed;
   inset: 0;
   z-index: 12050;
-  overflow: hidden;
+  overflow: clip;
   background: #050208;
   isolation: isolate;
 }
@@ -9455,6 +9455,31 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   z-index: 2;
   pointer-events: none;
   overflow: visible;
+}
+.gem-hunt-overlay__stage.is-gem-interactive .gem-hunt-overlay__gem-hit.is-center-collect,
+.gem-hunt-overlay__stage.is-gem-interactive .gem-hunt-overlay__gem-hit.is-inspect360 {
+  overflow: visible;
+  max-height: none;
+}
+.gem-hunt-overlay__stage.is-gem-interactive .gem-hunt-overlay__gem-tap-target {
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  padding: 0;
+  margin: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  overflow: visible;
+}
+.gem-hunt-overlay__stage.is-gem-interactive .gem-hunt-overlay__gem-tap-target:disabled {
+  cursor: default;
+}
+.gem-hunt-overlay__stage.is-gem-interactive .gem-hunt-overlay__gem-tap-target .gem-model-3d,
+.gem-hunt-overlay__stage.is-gem-interactive .gem-hunt-overlay__gem-tap-target canvas {
+  pointer-events: none !important;
+  touch-action: none;
 }
 .gem-hunt-overlay__stage.is-gem-interactive {
   z-index: 9;
@@ -12298,6 +12323,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   min-height: 16rem;
 }
 .gem-hunt-webxr {
+  --gem-cam-box: min(98vw, min(36rem, calc(100dvh - 10.5rem)));
   position: fixed;
   inset: 0;
   z-index: 12050;
@@ -12306,6 +12332,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   background: #050208;
   color: #fef3c7;
   pointer-events: none;
+  overflow: clip;
 }
 .gem-hunt-webxr.is-session-active {
   background: transparent;
@@ -12420,6 +12447,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-hit.is-collect-layer {
   pointer-events: none;
+  max-height: none;
+  overflow: visible;
 }
 .gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-tap-target {
   border: none;

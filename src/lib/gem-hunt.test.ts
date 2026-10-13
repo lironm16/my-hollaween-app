@@ -148,9 +148,9 @@ describe("gem hunt geo", () => {
     assert.equal(facingHouse(user, house, target + 90, 30), false);
   });
 
-  it("mirrors turn bearing for nav hint arrow copy", () => {
-    assert.equal(navTurnBearingForUi(35), -35);
-    assert.equal(navTurnBearingForUi(-35), 35);
+  it("uses phone-relative turn bearing for nav hint arrow copy", () => {
+    assert.equal(navTurnBearingForUi(35), 35);
+    assert.equal(navTurnBearingForUi(-35), -35);
   });
 
   it("computes relative walk bearing for on-screen arrow", () => {

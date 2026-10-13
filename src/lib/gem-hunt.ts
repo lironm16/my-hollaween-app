@@ -533,12 +533,9 @@ export function relativeWalkBearingDeg(
   return rel;
 }
 
-/**
- * Hunt «רמז» arrow + שמאלה/ימינה copy — screen-space (matches gem pin left/right on camera).
- * Raw {@link relativeWalkBearingDeg} follows map/compass; UI chevron uses the mirror.
- */
+/** @deprecated Identity — arrow and walk copy use {@link relativeWalkBearingDeg} directly. */
 export function navTurnBearingForUi(turnBearingDeg: number) {
-  return -turnBearingDeg;
+  return turnBearingDeg;
 }
 
 export type GemAchievement = {

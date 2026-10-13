@@ -24,7 +24,6 @@ import {
   gemMonsterForHouse,
   GEM_WEBXR_GEO_PLACEMENT_ENABLED,
   GEM_WEBXR_HUNT_METERS,
-  navTurnBearingForUi,
   relativeWalkBearingDeg,
   type GemCampusQueueUi,
   type GemCollectFinishOptions,
@@ -424,8 +423,7 @@ export function GemHuntWebXrAr({
   const gpsBearingToAnchor =
     liveLoc != null ? bearingDegrees(liveLoc, anchor) : null;
   const huntArrowPhoneRelative = heading != null && turnBearing != null;
-  const navTurnBearing =
-    turnBearing != null ? navTurnBearingForUi(turnBearing) : null;
+  const navTurnBearing = turnBearing;
   const huntArrowDeg = huntArrowPhoneRelative ? navTurnBearing : gpsBearingToAnchor;
   const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToAnchor != null;
   const walkGuideCopy = gemWalkGuideCopy(
