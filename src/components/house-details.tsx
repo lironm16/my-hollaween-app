@@ -9,7 +9,6 @@ import { VisitedCheck } from "@/components/visited-check";
 import { buttonVariants } from "@/components/ui/button";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
 import { HouseTags } from "@/components/house-tags";
-import { useHouseEngagementCounts } from "@/hooks/use-community-engagement";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
@@ -333,7 +332,6 @@ export function HouseDetails({
   const showDistance =
     addressReveal.distanceAllowed(viewHouse.id) && distanceM !== undefined;
   const addedMeta = houseAddedMetaLine(editorHouse, { showSubmitterName: showPrivateFields });
-  const engagement = useHouseEngagementCounts(house.id);
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
   const [photoReady, setPhotoReady] = useState(false);
@@ -512,12 +510,7 @@ export function HouseDetails({
         </div>
         {pageActions}
         <div className="flex flex-wrap items-center gap-1.5">
-          <HouseTags
-            house={house}
-            large={compact}
-            likeCount={engagement?.likeCount}
-            visitCount={engagement?.visitCount}
-          />
+          <HouseTags house={house} large={compact} />
         </div>
       </div>
       {photo ? (
