@@ -1,14 +1,21 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type MutableRefObject } from "react";
 import { Circle, CircleMarker, Polyline, useMap, useMapEvents } from "react-leaflet";
-import { clampGemAnchorPlacement, GEM_ANCHOR_PLACE_MAX_METERS } from "@/lib/gem-anchor-placement";
+import {
+  clampGemAnchorPlacement,
+  gemAnchorPlacementBounds,
+  GEM_ANCHOR_PLACE_MAX_METERS,
+} from "@/lib/gem-anchor-placement";
+import { config } from "@/lib/config";
 import type { LatLng } from "@/lib/route";
 
 export type GemAnchorEditState = {
   house: LatLng;
   point: LatLng;
   onMove: (point: LatLng) => void;
+  /** Bumped when the placement dialog opens — fit the 40 m circle in view once. */
+  fitTick?: number;
 };
 
 function sameCoord(a: number, b: number) {
@@ -19,10 +26,47 @@ function samePoint(a: LatLng, b: LatLng) {
   return sameCoord(a.lat, b.lat) && sameCoord(a.lng, b.lng);
 }
 
-/** Pan the map under a fixed center pin; sync when `point` changes from controls outside the map. */
-function GemAnchorMapInteraction({ house, point, onMove }: GemAnchorEditState) {
+function FitPlacementRadius({
+  house,
+  point,
+  fitTick,
+  programmaticRef,
+}: {
+  house: LatLng;
+  point: LatLng;
+  fitTick?: number;
+  programmaticRef: MutableRefObject<boolean>;
+}) {
   const map = useMap();
-  const programmaticRef = useRef(false);
+  useEffect(() => {
+    if (!fitTick) return;
+    programmaticRef.current = true;
+    const run = () => {
+      map.invalidateSize({ animate: false });
+      map.fitBounds(gemAnchorPlacementBounds(house), {
+        padding: [28, 28],
+        maxZoom: config.map.maxZoom,
+        animate: false,
+      });
+      map.setView([point.lat, point.lng], map.getZoom(), { animate: false });
+      window.requestAnimationFrame(() => {
+        programmaticRef.current = false;
+      });
+    };
+    const timer = window.setTimeout(run, 60);
+    return () => window.clearTimeout(timer);
+  }, [map, house, point.lat, point.lng, fitTick, programmaticRef]);
+  return null;
+}
+
+/** Pan the map under a fixed center pin; sync when `point` changes from controls outside the map. */
+function GemAnchorMapInteraction({
+  house,
+  point,
+  onMove,
+  programmaticRef,
+}: GemAnchorEditState & { programmaticRef: MutableRefObject<boolean> }) {
+  const map = useMap();
 
   useEffect(() => {
     const center = map.getCenter();
@@ -68,9 +112,16 @@ function GemAnchorMapInteraction({ house, point, onMove }: GemAnchorEditState) {
 }
 
 /** Owner/admin gem placement — pan the map under the center pin inside the allowed circle. */
-export function MapGemAnchorEditLayer({ house, point, onMove }: GemAnchorEditState) {
+export function MapGemAnchorEditLayer({ house, point, onMove, fitTick }: GemAnchorEditState) {
+  const programmaticRef = useRef(false);
   return (
     <>
+      <FitPlacementRadius
+        house={house}
+        point={point}
+        fitTick={fitTick}
+        programmaticRef={programmaticRef}
+      />
       <Circle
         center={[house.lat, house.lng]}
         radius={GEM_ANCHOR_PLACE_MAX_METERS}
@@ -98,7 +149,12 @@ export function MapGemAnchorEditLayer({ house, point, onMove }: GemAnchorEditSta
         pathOptions={{ color: "#fff7ed", weight: 2, fillColor: "#f97316", fillOpacity: 1 }}
         interactive={false}
       />
-      <GemAnchorMapInteraction house={house} point={point} onMove={onMove} />
+      <GemAnchorMapInteraction
+        house={house}
+        point={point}
+        onMove={onMove}
+        programmaticRef={programmaticRef}
+      />
     </>
   );
 }

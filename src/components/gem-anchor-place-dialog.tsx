@@ -28,7 +28,6 @@ import {
   GEM_PLACE_MAP_EXPAND_HE,
   GEM_PLACE_MAP_SHRINK_HE,
   GEM_PLACE_MY_LOCATION_HE,
-  GEM_PLACE_RESET_DONE_HE,
   GEM_PLACE_RESET_HE,
   GEM_PLACE_SAVE_HE,
   GEM_PLACE_SAVED_HE,
@@ -112,6 +111,7 @@ export function GemAnchorPlaceDialog({
   const [locating, setLocating] = useState(false);
   const [accuracyM, setAccuracyM] = useState<number | null>(null);
   const [mapExpanded, setMapExpanded] = useState(false);
+  const [mapFitTick, setMapFitTick] = useState(0);
   const wasOpen = useRef(false);
   const [anchorRevision, setAnchorRevision] = useState(0);
 
@@ -133,7 +133,10 @@ export function GemAnchorPlaceDialog({
   }, [house, anchorRevision]);
 
   useEffect(() => {
-    if (open && !wasOpen.current) setPoint(resolvedCurrent);
+    if (open && !wasOpen.current) {
+      setPoint(resolvedCurrent);
+      setMapFitTick((tick) => tick + 1);
+    }
     if (!open) setMapExpanded(false);
     wasOpen.current = open;
   }, [open, resolvedCurrent]);
@@ -170,6 +173,18 @@ export function GemAnchorPlaceDialog({
   async function save() {
     const clamped = clampGemAnchorPlacement(house, point);
     if (!samePoint(clamped, point)) setPoint(clamped);
+    const backToAuto = samePoint(clamped, auto);
+    if (backToAuto) {
+      if (!placed) {
+        onClose();
+        return;
+      }
+      if (await send("DELETE", {})) {
+        toast.success(GEM_PLACE_SAVED_HE);
+        onClose();
+      }
+      return;
+    }
     if (await send("PUT", { lat: clamped.lat, lng: clamped.lng })) {
       toast.success(GEM_PLACE_SAVED_HE);
       onClose();
@@ -203,16 +218,9 @@ export function GemAnchorPlaceDialog({
     );
   }
 
-  async function reset() {
+  function reset() {
     setAccuracyM(null);
-    if (!placed) {
-      setPoint(auto);
-      return;
-    }
-    if (await send("DELETE", {})) {
-      setPoint(auto);
-      toast.success(GEM_PLACE_RESET_DONE_HE);
-    }
+    setPoint(auto);
   }
 
   return (
@@ -243,6 +251,7 @@ export function GemAnchorPlaceDialog({
                 gemAnchorEdit={{
                   house,
                   point,
+                  fitTick: mapFitTick,
                   onMove: (next) => {
                     setPoint(next);
                     setAccuracyM(null);
@@ -296,7 +305,6 @@ export function GemAnchorPlaceDialog({
         <div className="space-y-1 rounded-lg bg-black/25 px-3 py-2 text-sm ring-1 ring-orange-500/15">
           <p className="text-violet-200">
             {placed ? GEM_PLACE_STATUS_PLACED_HE : GEM_PLACE_STATUS_AUTO_HE}
-            {dirty ? " · לא נשמר" : ""}
           </p>
           <button
             type="button"
@@ -326,7 +334,7 @@ export function GemAnchorPlaceDialog({
             type="button"
             variant="outline"
             className="h-11 min-w-0 flex-1 justify-center text-base"
-            disabled={saving || (atAuto && !placed)}
+            disabled={saving || atAuto}
             onClick={() => void reset()}
           >
             <RotateCcw className="size-5" />

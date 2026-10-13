@@ -850,7 +850,7 @@ export function HouseMap({
         zoom={
           embed && focus
             ? gemAnchorEdit
-              ? config.map.maxZoom
+              ? config.map.zoom
               : config.map.maxZoom - 1
             : config.map.zoom
         }

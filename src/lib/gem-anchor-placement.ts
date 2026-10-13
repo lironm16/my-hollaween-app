@@ -48,6 +48,23 @@ export function nudgeGemAnchorPoint(
   return clampGemAnchorPlacement(house, next);
 }
 
+/** Leaflet bounds that frame the placement circle (for fitBounds on open). */
+export function gemAnchorPlacementBounds(
+  house: { lat: number; lng: number },
+  radiusM = GEM_ANCHOR_PLACE_MAX_METERS,
+  padM = 6,
+): [[number, number], [number, number]] {
+  const r = radiusM + padM;
+  const n = destinationPoint(house, 0, r);
+  const s = destinationPoint(house, 180, r);
+  const e = destinationPoint(house, 90, r);
+  const w = destinationPoint(house, 270, r);
+  return [
+    [Math.min(n.lat, s.lat, e.lat, w.lat), Math.min(n.lng, s.lng, e.lng, w.lng)],
+    [Math.max(n.lat, s.lat, e.lat, w.lat), Math.max(n.lng, s.lng, e.lng, w.lng)],
+  ];
+}
+
 /** Keep a dragged point inside the allowed circle (map drag UX). */
 export function clampGemAnchorPlacement(
   house: { lat: number; lng: number },
