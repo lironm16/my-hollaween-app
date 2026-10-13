@@ -91,6 +91,18 @@ export function formatDisplayAddressWithPolicy(
   return hint || formatDisplayAddress(house);
 }
 
+/** Cluster header — a visible member (e.g. the business) names the building even when its homes are hidden. */
+export function clusterDisplayAddressWithPolicy(
+  houses: readonly PublicHouse[],
+  fallback: PublicHouse,
+  ctx: AddressRevealContext,
+): string {
+  const open = houses.find(
+    (house) => house.address.trim() && canViewHouseLocationDetails(house.id, ctx),
+  );
+  return formatDisplayAddressWithPolicy(open ?? fallback, (open ?? fallback).id, ctx);
+}
+
 export function visibleArrivalWithPolicy(
   house: Pick<PublicHouse, "arrival">,
   houseId: string,
