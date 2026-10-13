@@ -505,22 +505,6 @@ export function GemHuntWebXrAr({
     handleCollectRef.current();
   }, [canTapTellMeCenter, encounterMode]);
 
-  const tellMeTapStartRef = useRef<{ x: number; y: number } | null>(null);
-
-  const fireTellMeTapFromPointer = useCallback(
-    (clientX: number, clientY: number) => {
-      if (!canTapTellMeCenter) return;
-      const start = tellMeTapStartRef.current;
-      tellMeTapStartRef.current = null;
-      if (!start) return;
-      const dx = clientX - start.x;
-      const dy = clientY - start.y;
-      if (dx * dx + dy * dy > 576) return;
-      onTellMeCenterTap();
-    },
-    [canTapTellMeCenter, onTellMeCenterTap],
-  );
-
   const handleClose = useCallback(() => {
     if (phase === "collecting" && !campusSession) return;
     onClose();
@@ -1167,40 +1151,18 @@ export function GemHuntWebXrAr({
               canTapTellMeCenter && "is-tap-collect-ready",
             )}
           >
-            <button
-              type="button"
-              className="gem-hunt-overlay__gem-tap-target"
-              aria-label="מציאת השדון"
-              disabled={!canTapTellMeCenter}
-              onPointerDown={(e) => {
-                if (e.button !== 0) return;
-                tellMeTapStartRef.current = { x: e.clientX, y: e.clientY };
-              }}
-              onPointerUp={(e) => {
-                if (e.button !== 0) return;
-                fireTellMeTapFromPointer(e.clientX, e.clientY);
-              }}
-              onPointerCancel={() => {
-                tellMeTapStartRef.current = null;
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                tellMeTapStartRef.current = null;
-                onTellMeCenterTap();
-              }}
-            >
-              <div className="gem-hunt-overlay__gem-dance" data-collect-dance={danceIndex}>
-                <GemSprite
-                  house={house}
-                  mode="inspect360"
-                  size="fill"
-                  spinWhileCollect={false}
-                  tapCollect
-                  celebrateVariant={danceIndex}
-                  zoom={GEM_TELL_ME_CENTER_ZOOM}
-                />
-              </div>
-            </button>
+            <div className="gem-hunt-overlay__gem-dance" data-collect-dance={danceIndex}>
+              <GemSprite
+                house={house}
+                mode="inspect360"
+                size="fill"
+                spinWhileCollect={false}
+                tapCollect={false}
+                celebrateVariant={danceIndex}
+                zoom={GEM_TELL_ME_CENTER_ZOOM}
+                onInspectTap={canTapTellMeCenter ? onTellMeCenterTap : undefined}
+              />
+            </div>
           </div>
         </div>
       ) : null}

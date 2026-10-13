@@ -883,110 +883,39 @@ export function GemHuntOverlay({
                   }
             }
           >
-            {(() => {
-              const gemSprite = (
-                <GemSprite
-                  house={house}
-                  mode={campusQuickTapGem ? "3d" : "inspect360"}
-                  size="fill"
-                  tapCollect={campusQuickTapGem || (gemAtCenter && !campusQuickTapGem)}
-                  spinWhileCollect={false}
-                  worldYawRad={gemAtCenter ? null : worldYawRad}
-                  motion={gemMotion}
-                  zoom={centerReveal && gemAtCenter ? GEM_TELL_ME_CENTER_ZOOM : 1}
-                  celebrateVariant={collectDanceIndex}
-                  onInspectTap={
-                    gemAtCenter && !campusQuickTapGem
-                      ? undefined
-                      : encounterMode && encounterPhase === "encounter" && gemAtCenter
-                        ? handleGemInspectTap
-                        : canTapCollect
-                          ? handleGemInspectTap
-                          : undefined
-                  }
-                />
-              );
-              const dance = (
-                <div
-                  className={cn(
-                    "gem-hunt-overlay__gem-dance",
-                    phase === "collecting" && "is-collecting is-collecting-3d",
-                    gemEncounterWiggle && "is-encounter-wiggle",
-                  )}
-                  data-collect-dance={collectDanceIndex}
-                >
-                  {gemSprite}
-                </div>
-              );
-              if (gemAtCenter && !campusQuickTapGem) {
-                return (
-                  <button
-                    type="button"
-                    className="gem-hunt-overlay__gem-tap-target"
-                    aria-label="מציאת השדון"
-                    disabled={!canTapCollect}
-                    onPointerDown={(e) => {
-                      if (e.button !== 0) return;
-                      gemTapStartRef.current = { x: e.clientX, y: e.clientY };
-                    }}
-                    onPointerUp={(e) => {
-                      if (!canTapCollect || e.button !== 0) return;
-                      const start = gemTapStartRef.current;
-                      gemTapStartRef.current = null;
-                      if (!start) return;
-                      const dx = e.clientX - start.x;
-                      const dy = e.clientY - start.y;
-                      if (dx * dx + dy * dy > 576) return;
-                      handleGemInspectTap();
-                    }}
-                    onPointerCancel={() => {
-                      gemTapStartRef.current = null;
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      gemTapStartRef.current = null;
-                      if (canTapCollect) handleGemInspectTap();
-                    }}
-                  >
-                    {dance}
-                  </button>
-                );
-              }
-              return (
-                <div
-                  className={cn(
-                    "gem-hunt-overlay__gem-dance",
-                    phase === "collecting" && "is-collecting is-collecting-3d",
-                    gemEncounterWiggle && "is-encounter-wiggle",
-                  )}
-                  data-collect-dance={collectDanceIndex}
-                  onPointerDown={(e) => {
-                    if (e.button !== 0) return;
-                    gemTapStartRef.current = { x: e.clientX, y: e.clientY };
-                  }}
-                  onPointerUp={(e) => {
-                    if (!canTapCollect || e.button !== 0) return;
-                    const start = gemTapStartRef.current;
-                    gemTapStartRef.current = null;
-                    if (!start) return;
-                    const dx = e.clientX - start.x;
-                    const dy = e.clientY - start.y;
-                    if (dx * dx + dy * dy > 576) return;
-                    handleGemInspectTap();
-                  }}
-                  onPointerCancel={() => {
-                    gemTapStartRef.current = null;
-                  }}
-                  onClick={(e) => {
-                    if (!campusTapCollect) return;
-                    e.stopPropagation();
-                    handleGemInspectTap();
-                  }}
-                >
-                  {gemSprite}
-                </div>
-              );
-            })()}
+            <div
+              className={cn(
+                "gem-hunt-overlay__gem-dance",
+                phase === "collecting" && "is-collecting is-collecting-3d",
+                gemEncounterWiggle && "is-encounter-wiggle",
+              )}
+              data-collect-dance={collectDanceIndex}
+              onClick={(e) => {
+                if (!campusTapCollect) return;
+                e.stopPropagation();
+                handleGemInspectTap();
+              }}
+            >
+              <GemSprite
+                house={house}
+                mode={campusQuickTapGem ? "3d" : "inspect360"}
+                size="fill"
+                tapCollect={campusQuickTapGem}
+                spinWhileCollect={false}
+                worldYawRad={gemAtCenter ? null : worldYawRad}
+                motion={gemMotion}
+                zoom={centerReveal && gemAtCenter ? GEM_TELL_ME_CENTER_ZOOM : 1}
+                celebrateVariant={collectDanceIndex}
+                onInspectTap={
+                  campusQuickTapGem
+                    ? undefined
+                    : canTapCollect ||
+                        (encounterMode && encounterPhase === "encounter" && gemAtCenter)
+                      ? handleGemInspectTap
+                      : undefined
+                }
+              />
+            </div>
           </div>
         ) : null}
       </div>

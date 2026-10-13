@@ -4340,7 +4340,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 
 .gem-hunt-overlay {
-  --gem-cam-box: min(98vw, min(36rem, calc(100dvh - 10.5rem)));
+  --gem-cam-box: min(90vw, min(30rem, calc(100dvh - 15rem)));
   position: fixed;
   inset: 0;
   z-index: 12050;
@@ -4360,25 +4360,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   overflow: visible;
   max-height: none;
 }
-.gem-hunt-overlay__stage.is-gem-interactive .gem-hunt-overlay__gem-tap-target {
-  border: none;
-  background: transparent;
-  font: inherit;
-  color: inherit;
-  padding: 0;
-  margin: 0;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  cursor: pointer;
-  overflow: visible;
-}
-.gem-hunt-overlay__stage.is-gem-interactive .gem-hunt-overlay__gem-tap-target:disabled {
-  cursor: default;
-}
-.gem-hunt-overlay__stage.is-gem-interactive .gem-hunt-overlay__gem-tap-target .gem-model-3d,
-.gem-hunt-overlay__stage.is-gem-interactive .gem-hunt-overlay__gem-tap-target canvas {
-  pointer-events: none !important;
-  touch-action: none;
+.gem-hunt-overlay--android {
+  --gem-cam-box: min(86vw, min(27rem, calc(100dvh - 16.5rem)));
 }
 .gem-hunt-overlay__stage.is-gem-interactive {
   z-index: 9;
@@ -6976,7 +6959,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 
 .gem-hunt-webxr {
-  --gem-cam-box: min(98vw, min(36rem, calc(100dvh - 10.5rem)));
+  --gem-cam-box: min(90vw, min(30rem, calc(100dvh - 15rem)));
   position: fixed;
   inset: 0;
   z-index: 12050;
@@ -7115,10 +7098,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-tap-target:disabled {
   cursor: default;
 }
-.gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-tap-target .gem-model-3d,
-.gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-tap-target canvas {
-  pointer-events: none !important;
+.gem-hunt-webxr--android {
+  --gem-cam-box: min(86vw, min(27rem, calc(100dvh - 16.5rem)));
+}
+.gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-hit.is-inspect360 .gem-hunt-overlay__gem-dance {
   touch-action: none;
+  cursor: grab;
 }
 .gem-hunt-webxr__host canvas {
   display: block;
@@ -7271,12 +7256,16 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__gem-hit.is-inspect360.is-center-collect {
   left: 50%;
   right: auto;
-  top: 34%;
+  top: clamp(38%, calc(50% - 1.25rem), 46%);
   width: var(--gem-cam-box);
   max-width: var(--gem-cam-box);
+  height: var(--gem-cam-box);
   margin-inline: 0;
   transform: translate(-50%, -50%);
   direction: ltr;
+}
+.gem-hunt-overlay--android .gem-hunt-overlay__gem-hit.is-inspect360.is-center-collect {
+  top: clamp(40%, calc(50% - 0.5rem), 45%);
 }
 .gem-hunt-overlay__tap-collect-caption {
   position: absolute;
@@ -7295,8 +7284,11 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   pointer-events: none;
 }
 .gem-hunt-overlay__gem-hit.is-inspect360 .gem-hunt-overlay__gem-dance {
-  touch-action: manipulation;
-  cursor: pointer;
+  touch-action: none;
+  cursor: grab;
+}
+.gem-hunt-overlay__gem-hit.is-inspect360 .gem-hunt-overlay__gem-dance:active {
+  cursor: grabbing;
 }
 .gem-hunt-overlay__gem-pin.is-inspect360 {
   pointer-events: auto;
@@ -7360,7 +7352,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 .gem-model-3d,
 .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 canvas {
   pointer-events: auto;
-  touch-action: manipulation;
+  touch-action: none;
 }
 .gem-sprite--inspect360 {
   width: 100%;
