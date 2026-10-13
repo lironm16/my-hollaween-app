@@ -19,7 +19,6 @@ import { useAppNow } from "@/hooks/use-app-clock";
 import { buildGemMapHouseRows, countGemsOnMapByMonster } from "@/lib/gem-admin-ops";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { houseMatchesMapLayers } from "@/lib/map-display-layers";
-import { practiceHousesVisibleToUsers } from "@/lib/practice-house";
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { clusterHousesByAddress } from "@/lib/house-clusters";
 import { gemAlbumStickerPool, gemMonsterMeta, type GemMonsterId } from "@/lib/gem-monsters";
@@ -86,16 +85,8 @@ export function AdminGemOpsPanel({ houses: housesProp }: { houses: PublicHouse[]
 
   const mapLayerHouses = useMemo(
     () =>
-      houses.filter((house) => {
-        if (house.isPractice) {
-          return (
-            layers.practice &&
-            (admin || practiceHousesVisibleToUsers())
-          );
-        }
-        return houseMatchesMapLayers(house, layers);
-      }),
-    [houses, layers, admin],
+      houses.filter((house) => houseMatchesMapLayers(house, layers)),
+    [houses, layers],
   );
 
   const rows = useMemo(

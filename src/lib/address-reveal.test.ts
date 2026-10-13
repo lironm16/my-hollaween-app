@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   addressRevealTime,
   canViewHouseLocationDetails,
+  clusterDisplayAddressWithPolicy,
   formatDisplayAddressWithPolicy,
   isAddressRevealed,
   makeAddressRevealContext,
@@ -158,6 +159,20 @@ describe("address reveal", () => {
       publicLocationIds: ["נק-1"],
     });
     assert.equal(canViewHouseLocationDetails("נק-1", ctx), true);
+  });
+
+  it("cluster header uses a visible member's address while its homes stay hidden", () => {
+    const ctx = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 10, 0),
+      audience: "registered",
+      publicLocationIds: ["נק-1"],
+    });
+    const home = stub({ id: "בית-1", address: "" });
+    const business = stub({ id: "נק-1", kind: "poi", address: "הגפן 3" });
+    assert.equal(clusterDisplayAddressWithPolicy([home, business], home, ctx), "הגפן 3, חרוזים");
+    assert.doesNotMatch(formatDisplayAddressWithPolicy(home, home.id, ctx), /הגפן/);
+    const homesOnly = clusterDisplayAddressWithPolicy([home], home, ctx);
+    assert.equal(homesOnly, formatDisplayAddressWithPolicy(home, home.id, ctx));
   });
 
   it("redact helper clears fields", () => {

@@ -3,26 +3,29 @@
 import { HelpShell, HelpStep } from "@/components/help-shell";
 import { helpImage } from "@/lib/help-images";
 
-const STEPS = [
+type ShareEditCodeStep = {
+  title: string;
+  body: string;
+  image?: string;
+  imageAlt?: string;
+};
+
+const STEPS: ShareEditCodeStep[] = [
   {
     title: "פתחו את תפריט הפעולות (⋮)",
-    body: "במפה או ברשימה, פתחו את כרטיס הבית. בפינה העליונה של הכרטיס לחצו על ⋮ (שלוש נקודות).",
-    image: helpImage("share-edit-code-menu.png"),
-    imageAlt: "תפריט פעולות — שלוש נקודות בכרטיס הבית",
+    body: "במפה או ברשימה, פתחו את כרטיס הבית. בפינה העליונה של הכרטיס לחצו על <<⋮>> (שלוש נקודות).",
   },
   {
-    title: "בחרו קוד עריכה",
-    body: "בתפריט שנפתח בחרו קוד עריכה. מופיעים רק לבעלי הבית או למנהל.",
-    image: helpImage("share-edit-code-menu.png"),
-    imageAlt: "פריט קוד עריכה בתפריט הפעולות",
+    title: "בחרו <<קוד עריכה>>",
+    body: "בתפריט שנפתח בחרו <<קוד עריכה>>. מופיעים רק לבעלי הבית או למנהל.",
   },
   {
     title: "העתיקו או שתפו",
-    body: "ייפתח חלון עם הקוד בן 6 הספרות. לחצו העתיקו או שיתוף כדי לשלוח בוואטסאפ / הודעה. מי שמקבל את הקוד מזין אותו פעם אחת ב: תפריט → בית → עריכה → בחרו את הבית → פתיחה לעריכה.",
+    body: "ייפתח חלון עם הקוד בן 6 הספרות. לחצו <<העתיקו>> או <<שיתוף>> כדי לשלוח בוואטסאפ / הודעה. מי שמקבל את הקוד מזין אותו פעם אחת ב: תפריט → בית → עריכה → בחרו את הבית → <<פתיחה לעריכה>>.",
     image: helpImage("share-edit-code-dialog.png"),
     imageAlt: "חלון קוד עריכה עם העתיקו ושיתוף",
   },
-] as const;
+];
 
 export default function ShareEditCodeHelpPage() {
   return (

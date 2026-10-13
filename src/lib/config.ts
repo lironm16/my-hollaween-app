@@ -76,7 +76,8 @@ export const config = {
     },
     zoom: 16,
     minZoom: 14,
-    maxZoom: 18,
+    /** Leaflet can zoom past tile native resolution (slightly soft) for precise pin work. */
+    maxZoom: 21,
     bounds: {
       north: centerLat + latPad,
       south: centerLat - latPad,

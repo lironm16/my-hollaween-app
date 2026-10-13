@@ -64,7 +64,7 @@ describe("night pass service (file store)", () => {
     assert.deepEqual(outcome, { ok: false, error: "invalid" });
   });
 
-  it("reset issues a new code, revokes the device, and is capped for owners", async () => {
+  it("reset issues a new code, revokes the device, and can repeat without a cap", async () => {
     const rows = await service.ensureHouseNightPasses("בית-300");
     const slot = rows[1]!;
     const redeemed = await service.redeemNightPass({
@@ -86,20 +86,16 @@ describe("night pass service (file store)", () => {
     const oldCode = await service.redeemNightPass({ code: slot.code, name: "רון", phone: "0541112222" });
     assert.deepEqual(oldCode, { ok: false, error: "invalid" });
 
-    for (let i = 1; i < service.OWNER_RESET_LIMIT; i += 1) {
+    for (let i = 0; i < 5; i += 1) {
       const next = await service.resetNightPassSlot("בית-300", slot.slot, { admin: false });
       assert.equal(next.ok, true);
     }
-    const blocked = await service.resetNightPassSlot("בית-300", slot.slot, { admin: false });
-    assert.deepEqual(blocked, { ok: false, error: "limit" });
-    const adminReset = await service.resetNightPassSlot("בית-300", slot.slot, { admin: true });
-    assert.equal(adminReset.ok, true);
 
     const view = service.nightPassSlotView(
       (await service.ensureHouseNightPasses("בית-300"))[1]!,
       false,
     );
-    assert.equal(view.resetsLeft, 0);
+    assert.equal(view.resetCount, 6);
     assert.match(plainCode(view.code), /^[A-Z2-9]{8}$/);
   });
 });

@@ -163,12 +163,10 @@ async function captureShareEditCode(page) {
     { h: house },
   );
 
+  // Dialog only — menu PNG removed from help (showed real addresses).
   const detail = await openHouseByFocus(page, BASE, house.id);
   await detail.getByRole("button", { name: "פעולות" }).click();
   await page.getByRole("menuitem", { name: "קוד עריכה" }).waitFor();
-  await page.waitForTimeout(300);
-  await shot(page, "share-edit-code-menu.png");
-
   await page.getByRole("menuitem", { name: "קוד עריכה" }).click();
   await page.getByRole("dialog").getByText("קוד עריכה", { exact: true }).waitFor();
   await page.waitForTimeout(300);

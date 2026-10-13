@@ -9,20 +9,20 @@ import { cn } from "@/lib/utils";
 
 const STEPS = [
   {
-    title: "«יש לי קוד» במפה",
-    body: "אם עדיין לא רשומים, מופיעה פס כהה בראש המפה. לחצו יש לי קוד.",
+    title: "«יש לי קוד כניסה» במפה",
+    body: "אם עדיין לא רשומים, מופיעה פס כהה בראש המפה. לחצו יש לי קוד כניסה.",
     image: helpImage("event-device-visitor-banner.png"),
-    imageAlt: "פס יש לי קוד בראש המפה",
+    imageAlt: "פס יש לי קוד כניסה בראש המפה",
   },
   {
     title: "הרשמת המכשיר",
-    body: "הזינו את הקוד בן 8 התווים (מקבלים מבעלי בית), שם וטלפון נייד. הרשמה — החלון נסגר והמפה מתעדכנת.",
+    body: "הזינו את קוד הכניסה בן 8 התווים (מקבלים מבעלי בית), שם וטלפון נייד. הרשמה — החלון נסגר והמפה מתעדכנת.",
     image: helpImage("event-device-visitor-register.png"),
-    imageAlt: "טופס הרשמת מכשיר עם קוד שם וטלפון",
+    imageAlt: "טופס הרשמת מכשיר עם קוד כניסה שם וטלפון",
   },
   {
     title: "אחרי החיבור",
-    body: `בתפריט ☰ תראו מכשיר מחובר ושם. התנתקות משחררת רק את המכשיר הזה — הקוד נשאר תקף לכניסה מחדש. ${NIGHT_PASS_REVEAL_HINT}`,
+    body: `בתפריט ☰ תראו מכשיר מחובר ושם. התנתקות משחררת רק את המכשיר הזה — קוד הכניסה נשאר תקף לכניסה מחדש. ${NIGHT_PASS_REVEAL_HINT}`,
     image: helpImage("event-device-visitor-menu.png"),
     imageAlt: "פס מכשיר מחובר בתפריט הצד",
   },
@@ -30,30 +30,23 @@ const STEPS = [
 
 export default function EventDeviceVisitorHelpPage() {
   return (
-    <HelpShell title="יש לי קוד — אורחים">
+    <HelpShell title="חיבור מכשיר — מבקרים">
       <p className="mb-4 text-lg leading-relaxed text-violet-100">
-        הקוד מיועד למכשיר אחד. אם מישהו אחר נרשם עם אותו קוד במכשיר שני — המכשיר הראשון יתנתק ויצטרך קוד חדש מבעלי הבית.
+        קוד כניסה מבעלי בית פותח כתובות ופרטי ביקור במפה במכשיר שלכם.
       </p>
-      <ol className="space-y-4">
-        {STEPS.map((step, index) => (
-          <HelpStep
-            key={step.title}
-            n={index + 1}
-            title={step.title}
-            body={step.body}
-            image={step.image}
-            imageAlt={step.imageAlt}
-          />
+      <ol className="space-y-6">
+        {STEPS.map((step, i) => (
+          <HelpStep key={step.title} n={i + 1} title={step.title} body={step.body} image={step.image} imageAlt={step.imageAlt} />
         ))}
       </ol>
       <Link
         href="/help/event-device-owner"
         className={cn(
-          buttonVariants({ variant: "outline", size: "lg" }),
-          "mt-5 block w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
+          buttonVariants({ variant: "outline" }),
+          "mt-6 w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
         )}
       >
-        מדריך לבעלי בתים
+        בעלי בתים — חיבור מכשירים
       </Link>
     </HelpShell>
   );

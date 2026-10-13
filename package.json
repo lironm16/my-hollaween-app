@@ -1,6 +1,6 @@
 {
   "name": "halloween-neighborhood",
-  "version": "5.6.20",
+  "version": "5.6.23",
   "private": true,
   "scripts": {
     "dev": "node scripts/allow-preview-origin.mjs && node scripts/build-css.mjs && next dev --webpack --hostname 0.0.0.0 --port 43127",
@@ -39,7 +39,8 @@
     "capture:help": "node scripts/capture-help-screenshots.mjs",
     "capture:install": "node scripts/capture-install-screenshots.mjs",
     "deploy:vercel": "node scripts/trigger-vercel.mjs",
-    "deploy:production": "node scripts/sync-github-deploy.mjs"
+    "deploy:production": "node scripts/sync-github-deploy.mjs",
+    "deploy:preview": "DEPLOY_TARGET=preview node scripts/sync-github-deploy.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

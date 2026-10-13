@@ -62,7 +62,7 @@ export async function publishHouse(
   const phoneIssue = ownerPhoneValidationError(String(ownerPhoneRaw), true);
   if (phoneIssue) throw new Error(phoneIssue);
   const ownerPhone = normalizeOwnerPhone(String(ownerPhoneRaw));
-  const adminCreate = Boolean(options?.admin && (body.kind === "poi" || body.isPractice));
+  const adminCreate = Boolean(options?.admin && body.kind === "poi");
   let res: Response;
   try {
     res = await fetch(adminCreate ? "/api/admin/houses" : "/api/houses", {

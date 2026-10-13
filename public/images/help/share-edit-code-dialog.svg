@@ -5,7 +5,8 @@
   <text x="195" y="32" fill="#fb923c" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">HallowHood</text>
   <rect x="40" y="200" width="310" height="280" rx="16" fill="#1d1028" stroke="#f97316" stroke-opacity="0.35"/>
   <text x="195" y="250" fill="#fdba74" font-family="Rubik,Arial,sans-serif" font-size="18" font-weight="700" text-anchor="middle">&#1511;&#1493;&#1491; &#1506;&#1512;&#1497;&#1499;&#1492;</text>
-  <text x="195" y="310" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="28" font-weight="700" text-anchor="middle" letter-spacing="4">482916</text>
+  <text x="195" y="278" fill="#c4b5fd" font-family="Rubik,Arial,sans-serif" font-size="14" text-anchor="middle">&#1492;&#1508;&#1502;&#1511;&#1497;&#1503; &#1513;&#1500;&#1497; &#55356;&#57196;</text>
+  <text x="195" y="310" fill="#fde68a" font-family="Rubik,Arial,sans-serif" font-size="28" font-weight="700" text-anchor="middle" letter-spacing="4">184802</text>
   <rect x="60" y="350" width="130" height="40" rx="10" fill="#f97316"/>
   <text x="125" y="376" fill="#000" font-family="Rubik,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">&#1492;&#1506;&#1514;&#1497;&#1511;&#1493;</text>
   <rect x="200" y="350" width="130" height="40" rx="10" fill="#261536" stroke="#f97316" stroke-opacity="0.4"/>

@@ -24,7 +24,7 @@ export function NightPassDeviceStrip({
   async function disconnect() {
     if (
       !window.confirm(
-        "להתנתק מהמכשיר הזה?\n\nהקוד נשאר רשום — אפשר להיכנס שוב עם אותו קוד. מכשיר אחר שכבר רשום לא יושפע.",
+        "להתנתק מהמכשיר הזה?\n\nקוד הכניסה נשאר רשום — אפשר להיכנס שוב עם אותו קוד כניסה. מכשיר אחר שכבר רשום לא יושפע.",
       )
     ) {
       return;
@@ -32,7 +32,7 @@ export function NightPassDeviceStrip({
     setBusy(true);
     const ok = await disconnectNightPassOnDevice();
     setBusy(false);
-    if (ok) toast.success("המכשיר התנתק. הקוד עדיין תקף לכניסה מחדש.");
+    if (ok) toast.success("המכשיר התנתק. קוד הכניסה עדיין תקף לכניסה מחדש.");
     else toast.error("ההתנתקות נכשלה. נסו שוב.");
   }
 

@@ -1,5 +1,4 @@
 import { config, formatDisplayAddress, resolveNeighborhood, type NeighborhoodId } from "@/lib/config";
-import { isPracticeHouse } from "@/lib/practice-house";
 import { mergeAddressRevealSchedule } from "@/lib/event-settings";
 import type { AddressRevealSchedule, PublicHouse } from "@/lib/types";
 
@@ -13,7 +12,7 @@ export type AddressRevealContext = {
    * `none` = unregistered — home addresses never open.
    */
   audience: AddressRevealAudience;
-  /** Businesses / schools (and homes sharing their pin) — address open to everyone. */
+  /** Businesses / schools — address open to everyone. */
   publicLocationIds: ReadonlySet<string>;
 };
 
@@ -69,7 +68,6 @@ export function publicHouseForCatalog(
   now = new Date(),
   schedule = mergeAddressRevealSchedule(),
 ): PublicHouse {
-  if (isPracticeHouse(house)) return house;
   if (isAddressRevealed(now, schedule)) return house;
   return redactHouseLocationDetails(house);
 }
@@ -93,6 +91,18 @@ export function formatDisplayAddressWithPolicy(
   return hint || formatDisplayAddress(house);
 }
 
+/** Cluster header — a visible member (e.g. the business) names the building even when its homes are hidden. */
+export function clusterDisplayAddressWithPolicy(
+  houses: readonly PublicHouse[],
+  fallback: PublicHouse,
+  ctx: AddressRevealContext,
+): string {
+  const open = houses.find(
+    (house) => house.address.trim() && canViewHouseLocationDetails(house.id, ctx),
+  );
+  return formatDisplayAddressWithPolicy(open ?? fallback, (open ?? fallback).id, ctx);
+}
+
 export function visibleArrivalWithPolicy(
   house: Pick<PublicHouse, "arrival">,
   houseId: string,
@@ -112,14 +122,14 @@ export function housesWithLocationPolicy(
   ctx: AddressRevealContext,
 ): PublicHouse[] {
   return houses.map((house) =>
-    isPracticeHouse(house) || house.locationPublic || canViewHouseLocationDetails(house.id, ctx)
+    house.locationPublic || canViewHouseLocationDetails(house.id, ctx)
       ? house
       : redactHouseLocationDetails(house),
   );
 }
 
 export function houseWithLocationPolicy(house: PublicHouse, ctx: AddressRevealContext): PublicHouse {
-  return isPracticeHouse(house) || house.locationPublic || canViewHouseLocationDetails(house.id, ctx)
+  return house.locationPublic || canViewHouseLocationDetails(house.id, ctx)
     ? house
     : redactHouseLocationDetails(house);
 }

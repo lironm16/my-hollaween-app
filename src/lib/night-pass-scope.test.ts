@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   PUBLIC_NIGHT_PASS_SCOPE,
+  hiddenHouseCountForSet,
   isPublicTierHouse,
   scopeHousesForViewer,
   type NightPassScopeContext,
@@ -37,7 +38,7 @@ function row(overrides: Partial<PublicHouse>): PublicHouse {
   } as PublicHouse;
 }
 
-const home = row({ id: "בית-1" });
+const home = row({ id: "בית-1", notes: "דפקו חזק" });
 const otherHome = row({ id: "בית-2", address: "הרצל 3", lat: 32.1, lng: 34.82 });
 const business = row({
   id: "נק-1",
@@ -52,6 +53,7 @@ const homeAboveBusiness = row({
   id: "בית-3",
   address: "סוקולוב 10",
   arrival: "דירה 7",
+  notes: "יש כלב",
   lat: 32.2,
   lng: 34.9,
 });
@@ -62,9 +64,9 @@ function ctx(overrides: Partial<NightPassScopeContext>): NightPassScopeContext {
 }
 
 describe("night pass scope", () => {
-  it("treats POIs and practice rows as public tier", () => {
+  it("treats POIs as public tier; legacy practice rows are not", () => {
     assert.equal(isPublicTierHouse(business), true);
-    assert.equal(isPublicTierHouse(row({ isPractice: true })), true);
+    assert.equal(isPublicTierHouse(row({ isPractice: true })), false);
     assert.equal(isPublicTierHouse(home), false);
   });
 
@@ -97,12 +99,24 @@ describe("night pass scope", () => {
     assert.equal(after.houses.find((house) => house.id === "בית-3")!.arrival, "דירה 7");
   });
 
-  it("pass holders see a business building's homes with the address but arrival only after reveal", () => {
+  it("a home in a business's building stays private until reveal, like any home", () => {
     const before = scopeHousesForViewer(all, ctx({ viewer: "pass", revealed: false }));
     const mate = before.houses.find((house) => house.id === "בית-3")!;
-    assert.equal(mate.address, "סוקולוב 10");
+    assert.equal(mate.address, "");
     assert.equal(mate.arrival, "");
-    assert.equal(mate.locationPublic, true);
+    assert.equal(mate.notes, "");
+    assert.notEqual(mate.locationPublic, true);
+    assert.equal(before.houses.find((house) => house.id === "נק-1")!.address, "סוקולוב 10");
+
+    const after = scopeHousesForViewer(all, ctx({ viewer: "pass", revealed: true }));
+    const mateAfter = after.houses.find((house) => house.id === "בית-3")!;
+    assert.equal(mateAfter.address, "סוקולוב 10");
+    assert.equal(mateAfter.notes, "יש כלב");
+  });
+
+  it("strips visitor notes from homes before reveal", () => {
+    const before = scopeHousesForViewer(all, ctx({ viewer: "pass", revealed: false }));
+    assert.equal(before.houses.find((house) => house.id === "בית-1")!.notes, "");
   });
 
   it("owners without a pass see their own home plus the public set", () => {
@@ -116,6 +130,17 @@ describe("night pass scope", () => {
     );
     assert.equal(scoped.houses.find((house) => house.id === "בית-2")!.address, "הרצל 3");
     assert.equal(scoped.hiddenHouseCount, 2);
+  });
+
+  it("splits the hidden-home teaser by the viewer's house set", () => {
+    const stubHome = row({ id: "סטאב-1", address: "הגפן 4", isStub: true });
+    const scoped = scopeHousesForViewer([...all, stubHome], PUBLIC_NIGHT_PASS_SCOPE);
+    assert.equal(scoped.hiddenHouseCount, 4);
+    assert.equal(scoped.hiddenStubHouseCount, 1);
+    assert.equal(hiddenHouseCountForSet(scoped, "real"), 3);
+    assert.equal(hiddenHouseCountForSet(scoped, "stubs"), 1);
+    assert.equal(hiddenHouseCountForSet(scoped, "all"), 4);
+    assert.equal(hiddenHouseCountForSet({ hiddenHouseCount: 5 }, "real"), 5);
   });
 
   it("admin sees everything with details", () => {

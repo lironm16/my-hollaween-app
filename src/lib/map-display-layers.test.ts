@@ -5,6 +5,7 @@ import {
   houseVisibleOnMainMap,
   layersFromLegacyHouseSet,
   layersToLegacyHouseSet,
+  mapDisplayLayersForSession,
   readMapDisplayLayers,
   toggleMapDisplayLayer,
 } from "@/lib/map-display-layers";
@@ -14,51 +15,54 @@ describe("map display layers", () => {
     assert.deepEqual(layersFromLegacyHouseSet("stubs"), {
       real: false,
       stubs: true,
-      practice: false,
     });
     assert.deepEqual(layersFromLegacyHouseSet("all"), {
       real: true,
       stubs: true,
-      practice: false,
     });
-    assert.equal(layersToLegacyHouseSet({ real: true, stubs: true, practice: false }), "all");
+    assert.equal(layersToLegacyHouseSet({ real: true, stubs: true }), "all");
   });
 
   it("matches houses to selected layers", () => {
     const real = { isStub: false, isPractice: false };
     const stub = { isStub: true, isPractice: false };
     const practice = { isStub: false, isPractice: true };
-    const layers = { real: true, stubs: false, practice: true };
+    const layers = { real: true, stubs: false };
     assert.equal(houseMatchesMapLayers(real, layers), true);
     assert.equal(houseMatchesMapLayers(stub, layers), false);
-    assert.equal(houseMatchesMapLayers(practice, layers), true);
+    assert.equal(houseMatchesMapLayers(practice, layers), false);
   });
 
-  it("keeps practice admin-only until public flag is on", () => {
+  it("never shows legacy practice houses on the map", () => {
     const practice = { isStub: false, isPractice: true };
-    const layersOff = { real: true, stubs: false, practice: false };
-    const layersOn = { real: false, stubs: false, practice: true };
-    assert.equal(
-      houseVisibleOnMainMap(practice, layersOff, { admin: false, practicePublic: false }),
-      false,
-    );
-    assert.equal(
-      houseVisibleOnMainMap(practice, layersOff, { admin: true, practicePublic: false }),
-      false,
-    );
-    assert.equal(
-      houseVisibleOnMainMap(practice, layersOn, { admin: true, practicePublic: false }),
-      true,
-    );
-    assert.equal(
-      houseVisibleOnMainMap(practice, layersOn, { admin: false, practicePublic: true }),
-      true,
-    );
+    const layers = { real: true, stubs: false };
+    assert.equal(houseVisibleOnMainMap(practice, layers), false);
   });
 
   it("never leaves all layers off when toggling", () => {
-    const onlyReal = { real: true, stubs: false, practice: false };
+    const onlyReal = { real: true, stubs: false };
     assert.deepEqual(toggleMapDisplayLayer(onlyReal, "real"), onlyReal);
+  });
+
+  it("enables stub pins on preview when filters include stubs", () => {
+    const layers = { real: true, stubs: false, practice: false };
+    const stubOnly = { houses: [{ id: "בית-1", isStub: true }] };
+    assert.deepEqual(
+      mapDisplayLayersForSession(layers, {
+        previewDeployment: true,
+        activeHouseSet: "all",
+        catalog: stubOnly,
+      }),
+      { real: true, stubs: true, practice: false },
+    );
+    assert.equal(
+      mapDisplayLayersForSession(layers, {
+        previewDeployment: false,
+        activeHouseSet: "all",
+        catalog: stubOnly,
+      }),
+      layers,
+    );
   });
 
   it("returns a stable snapshot reference for useSyncExternalStore", () => {

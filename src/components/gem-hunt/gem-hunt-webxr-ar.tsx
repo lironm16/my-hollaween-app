@@ -741,8 +741,8 @@ export function GemHuntWebXrAr({
     renderer.xr.enabled = true;
     host.appendChild(renderer.domElement);
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x3a3048, 0.95));
-    const key = new THREE.DirectionalLight(0xfff0dd, 1.05);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x3a3048, 1.25));
+    const key = new THREE.DirectionalLight(0xfff0dd, 0.5);
     key.position.set(2, 4, 1);
     scene.add(key);
 
@@ -764,7 +764,7 @@ export function GemHuntWebXrAr({
     const shadowMat = new THREE.MeshBasicMaterial({
       color: 0x000000,
       transparent: true,
-      opacity: 0.28,
+      opacity: 0.14,
       depthWrite: false,
     });
     const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.22, 32), shadowMat);

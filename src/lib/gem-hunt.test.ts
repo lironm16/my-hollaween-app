@@ -176,14 +176,14 @@ describe("gem hunt geo", () => {
 });
 
 describe("gem hunt gate", () => {
-  it("shows only for admin", async () => {
+  it("shows only for admin when gem hunt is not public", async () => {
     const { writeGemPreviewAsUser } = await import("@/lib/gem-preview-as-user");
     writeGemPreviewAsUser(false);
     const { gemHuntVisible } = await import("@/lib/gem-hunt-enabled");
-    assert.equal(gemHuntVisible(true), true);
-    assert.equal(gemHuntVisible(false), false);
+    assert.equal(gemHuntVisible(true, false), true);
+    assert.equal(gemHuntVisible(false, false), false);
     writeGemPreviewAsUser(true);
-    assert.equal(gemHuntVisible(true), true);
+    assert.equal(gemHuntVisible(true, false), true);
     writeGemPreviewAsUser(false);
   });
 
@@ -195,7 +195,8 @@ describe("gem hunt gate", () => {
 
   it("map legend שדונים follows gem hunt visibility, not the pin-ring toggle", async () => {
     const { gemMapLegendVisible } = await import("@/lib/gem-hunt-enabled");
-    assert.equal(gemMapLegendVisible(true), true);
-    assert.equal(gemMapLegendVisible(false), false);
+    assert.equal(gemMapLegendVisible(true, false), true);
+    assert.equal(gemMapLegendVisible(false, false), false);
+    assert.equal(gemMapLegendVisible(false, true), true);
   });
 });

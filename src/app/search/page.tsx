@@ -25,7 +25,7 @@ import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
-import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
+import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { adminDeviceOwnerPowers } from "@/lib/admin-preview-as-user";
 import { useAdminPreviewAsUser } from "@/hooks/use-admin-preview-as-user";
 import { notifyCatalogChanged, removeOwnedHouse, saveOwnedHouse } from "@/lib/offline-db";
@@ -82,7 +82,7 @@ export default function SearchPage() {
 
   const { previewAsUser } = useAdminPreviewAsUser();
   const deviceOwner = adminDeviceOwnerPowers(Boolean(admin), previewAsUser);
-  const gemUi = gemHuntVisible(admin);
+  const { gemUiVisible: gemUi } = useGemHuntAdminUi(admin);
   const actionContext = useMemo((): HouseCardActionContext => {
     return {
       admin,

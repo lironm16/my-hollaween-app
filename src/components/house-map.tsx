@@ -15,6 +15,10 @@ import {
 import L from "leaflet";
 import { LocateFixed } from "lucide-react";
 import { MapGemAnchorLayer, type GemMapAnchorVisual } from "@/components/map-gem-anchor-layer";
+import {
+  MapGemAnchorEditLayer,
+  type GemAnchorEditState,
+} from "@/components/map-gem-anchor-edit-layer";
 import { MapAddHouseFab } from "@/components/map-add-house-fab";
 import { MapLegend } from "@/components/map-legend";
 import "leaflet/dist/leaflet.css";
@@ -57,9 +61,6 @@ import {
   type MapGemPinRingContext,
 } from "@/lib/map-gem-pin-ring";
 import { mapPinIconCacheGemRingEpoch } from "@/lib/map-pin-icon-cache";
-import { isPracticeHouse } from "@/lib/practice-house";
-import { practicePinFaceHtml } from "@/lib/practice-pin-face";
-
 function useMinuteTick() {
   const now = useAppNow();
   return Math.floor(now.getTime() / 15_000);
@@ -125,7 +126,6 @@ function pinStatusMark(house: PublicHouse, now: Date, skipped = false) {
 }
 
 function pinFaceHtml(house: PublicHouse) {
-  if (isPracticeHouse(house)) return practicePinFaceHtml();
   const level = pinFaceKind(house) === "scare" ? (house.scareLevel ?? "mild") : "mild";
   const src = pinScareSrc(house, level);
   return `<img class="pin-scare" src="${src}" alt="" />`;
@@ -185,13 +185,9 @@ function housePinHtml(
   const extraClass = extras?.extraClass ? ` ${extras.extraClass}` : "";
   const idAttr = extras?.houseId ? ` data-house-id="${attr(extras.houseId)}"` : "";
   const fill = pinBackgroundFill(house, face !== "bare");
-  const practice = isPracticeHouse(house);
-  const styleAttr = practice
-    ? ' style="background:linear-gradient(165deg,#0f766e 0%,#0d9488 55%,#14b8a6 100%)"'
-    : ` style="${extras?.extraStyle ? `${extras.extraStyle};background:${fill}` : `background:${fill}`}"`;
-  const label = practice
-    ? 'aria-label="בית תרגול"'
-    : visit === "closed"
+  const styleAttr = ` style="${extras?.extraStyle ? `${extras.extraStyle};background:${fill}` : `background:${fill}`}"`;
+  const label =
+    visit === "closed"
       ? 'aria-label="סגור"'
       : visit === "break"
         ? 'aria-label="הפסקה"'
@@ -203,8 +199,7 @@ function housePinHtml(
               ? 'aria-label="מקושט"'
               : 'aria-label="לא מקושט"';
   const poiClass = effectiveHouseKind(house) === "poi" ? " is-poi" : "";
-  const practiceClass = practice ? " is-practice" : "";
-  return `<div class="house-pin${poiClass}${practiceClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}"${styleAttr} ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, extras?.skipped)}${pinFaceHtml(house)}</div>`;
+  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}"${styleAttr} ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, extras?.skipped)}${pinFaceHtml(house)}</div>`;
 }
 
 const DIV_ICON_CACHE = new Map<string, L.DivIcon>();
@@ -721,6 +716,8 @@ type Props = {
   isGemCollected?: (houseId: string) => boolean;
   /** Yellow/diamond rings on pins when the top-bar demon toggle is on. */
   showGemPinRings?: boolean;
+  /** Owner/admin gem placement — draggable demon around the selected house. */
+  gemAnchorEdit?: GemAnchorEditState | null;
 };
 
 export function HouseMap({
@@ -766,6 +763,7 @@ export function HouseMap({
   gemAnchorVisual = "admin",
   isGemCollected,
   showGemPinRings = false,
+  gemAnchorEdit = null,
 }: Props) {
   const gemHouseIds = useMemo(() => gemMapHouseIdSet(gemAnchorHouses), [gemAnchorHouses]);
   const gemPinRingCtx = useMemo(
@@ -856,11 +854,19 @@ export function HouseMap({
       <MapContainer
         key={pickMode ? "pick" : embed ? "embed" : "view"}
         center={
-          embed && focus
-            ? [focus.lat, focus.lng]
-            : [config.map.center.lat, config.map.center.lng]
+          embed && gemAnchorEdit
+            ? [gemAnchorEdit.point.lat, gemAnchorEdit.point.lng]
+            : embed && focus
+              ? [focus.lat, focus.lng]
+              : [config.map.center.lat, config.map.center.lng]
         }
-        zoom={embed && focus ? config.map.maxZoom - 1 : config.map.zoom}
+        zoom={
+          embed && focus
+            ? gemAnchorEdit
+              ? config.map.zoom
+              : config.map.maxZoom - 1
+            : config.map.zoom
+        }
         minZoom={config.map.minZoom}
         maxZoom={config.map.maxZoom}
         scrollWheelZoom
@@ -876,13 +882,13 @@ export function HouseMap({
               "subdomains" in tiles && tiles.subdomains ? tiles.subdomains : "abcd"
             }
             maxZoom={config.map.maxZoom}
-            maxNativeZoom={Math.min(tiles.maxNativeZoom, config.map.maxZoom)}
+            maxNativeZoom={tiles.maxNativeZoom}
             className="hw-basemap"
           />
         ) : null}
         <SizeSync />
         {panTick > 0 && panTo ? <PanTo lat={panTo.lat} lng={panTo.lng} tick={panTick} /> : null}
-        {embed && embedCenterOnSelect && focus ? (
+        {embed && embedCenterOnSelect && focus && !gemAnchorEdit ? (
           <CenterOnHouse lat={focus.lat} lng={focus.lng} zoom={config.map.maxZoom - 1} />
         ) : null}
         {focus && !originPickActive && !embed ? (
@@ -998,7 +1004,8 @@ export function HouseMap({
             />
           </>
         ) : null}
-        {!pickMode && showGemAnchors && gemAnchorHouses.length > 0 ? (
+        {!pickMode && gemAnchorEdit ? <MapGemAnchorEditLayer {...gemAnchorEdit} /> : null}
+        {!pickMode && !gemAnchorEdit && showGemAnchors && gemAnchorHouses.length > 0 ? (
           <MapGemAnchorLayer
             houses={gemAnchorHouses}
             isCollected={isGemCollected ?? (() => false)}
@@ -1010,6 +1017,7 @@ export function HouseMap({
           />
         ) : null}
         {!pickMode &&
+          !gemAnchorEdit &&
           clusters.map((cluster) => {
             const clusterFilteredOut =
               dimActive &&
