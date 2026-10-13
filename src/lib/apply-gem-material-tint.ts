@@ -7,12 +7,11 @@ export function applyGemMaterialTint(mat: MeshStandardMaterial, tint: GemMonster
   mat.roughness = 0.92;
   mat.flatShading = false;
   mat.color.offsetHSL(tint.hue, tint.saturation, tint.lightness);
-  const baseGlow = 0.22;
   if (tint.glow > 0) {
     mat.emissive.setHSL(tint.hue, 0.55, 0.42);
-    mat.emissiveIntensity = Math.max(tint.glow, baseGlow);
+    mat.emissiveIntensity = tint.glow;
   } else {
-    mat.emissive.copy(mat.color);
-    mat.emissiveIntensity = baseGlow;
+    mat.emissive.setRGB(0, 0, 0);
+    mat.emissiveIntensity = 0;
   }
 }
