@@ -38,24 +38,28 @@ function FitPlacementRadius({
   programmaticRef: MutableRefObject<boolean>;
 }) {
   const map = useMap();
+  const pointRef = useRef(point);
+  pointRef.current = point;
   useEffect(() => {
     if (!fitTick) return;
     programmaticRef.current = true;
     const run = () => {
+      const pin = pointRef.current;
       map.invalidateSize({ animate: false });
       map.fitBounds(gemAnchorPlacementBounds(house), {
         padding: [28, 28],
         maxZoom: config.map.maxZoom,
         animate: false,
       });
-      map.setView([point.lat, point.lng], map.getZoom(), { animate: false });
+      map.setView([pin.lat, pin.lng], map.getZoom(), { animate: false });
       window.requestAnimationFrame(() => {
         programmaticRef.current = false;
       });
     };
     const timer = window.setTimeout(run, 60);
     return () => window.clearTimeout(timer);
-  }, [map, house, point.lat, point.lng, fitTick, programmaticRef]);
+    // Only when the dialog opens — not on every pin move (that blocked pinch-zoom).
+  }, [map, house, fitTick, programmaticRef]);
   return null;
 }
 
@@ -85,6 +89,7 @@ function GemAnchorMapInteraction({
       if (programmaticRef.current) return;
       const c = map.getCenter();
       const next = clampGemAnchorPlacement(house, { lat: c.lat, lng: c.lng });
+      if (samePoint(next, point)) return;
       onMove(next);
       if (!samePoint({ lat: c.lat, lng: c.lng }, next)) {
         programmaticRef.current = true;
