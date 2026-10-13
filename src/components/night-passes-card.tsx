@@ -98,13 +98,13 @@ export function NightPassesCard({
       });
       const json = (await res.json().catch(() => null)) as PassesResponse | null;
       if (!res.ok || !json) {
-        setError(json?.error ?? "טעינת הקודים נכשלה.");
+        setError(json?.error ?? "טעינת קודי הכניסה נכשלה.");
         setData(null);
         return;
       }
       setData(json);
     } catch {
-      setError("טעינת הקודים נכשלה.");
+      setError("טעינת קודי הכניסה נכשלה.");
       setData(null);
     } finally {
       setLoading(false);
@@ -128,17 +128,31 @@ export function NightPassesCard({
   async function copy(code: string) {
     try {
       await navigator.clipboard.writeText(code);
-      toast.success("הקוד הועתק");
+      toast.success("קוד הכניסה הועתק");
     } catch {
       toast.message(code);
     }
+  }
+
+  function connectSlot(slot: SlotView, occupied: boolean) {
+    if (occupied) {
+      const who = slot.holderName ? `המכשיר של ${slot.holderName} יאבד גישה.\n\n` : "";
+      if (
+        !window.confirm(
+          `${who}המכשיר הזה יתחבר עם קוד הכניסה הזה. להמשיך?`,
+        )
+      ) {
+        return;
+      }
+    }
+    passDialog?.openRegister(slot.code.replace("-", ""));
   }
 
   async function resetSlot(slot: SlotView) {
     const who = slot.holderName ? `המכשיר של ${slot.holderName} יאבד גישה.\n\n` : "";
     if (
       !window.confirm(
-        `${who}ייווצר קוד חדש, והקוד הנוכחי לא יהיה ניתן לשימוש. להמשיך?`,
+        `${who}ייווצר קוד כניסה חדש, וקוד הכניסה הנוכחי לא יהיה ניתן לשימוש. להמשיך?`,
       )
     ) {
       return;
@@ -158,7 +172,7 @@ export function NightPassesCard({
         toast.error(json?.error ?? "האיפוס נכשל.");
         return;
       }
-      toast.success("נוצר קוד חדש");
+      toast.success("נוצר קוד כניסה חדש");
       notifyNightPassSlotsChanged();
       await load();
     } finally {
@@ -199,6 +213,7 @@ export function NightPassesCard({
           const canReset =
             inUse && (admin || (slot.resetsLeft != null && slot.resetsLeft > 0));
           const resetting = busySlot === slot.slot;
+          const showConnect = !mine && (inUse || !data.thisDeviceRegistered);
 
           return (
             <li key={slot.slot} className="flex flex-col items-center gap-3 px-3 py-4">
@@ -211,16 +226,16 @@ export function NightPassesCard({
                   onClick={() => void copy(slot.code)}
                   icon={<Copy className="size-4 shrink-0" strokeWidth={2.2} />}
                 />
-                {!inUse && !data.thisDeviceRegistered ? (
+                {showConnect ? (
                   <SlotAction
                     label="חבר אותי"
-                    onClick={() => passDialog?.openRegister(slot.code.replace("-", ""))}
+                    onClick={() => connectSlot(slot, inUse)}
                     icon={<LogIn className="size-4 shrink-0" strokeWidth={2.2} />}
                   />
                 ) : null}
                 {canReset ? (
                   <SlotAction
-                    label="קוד חדש"
+                    label="קוד כניסה חדש"
                     disabled={resetting}
                     onClick={() => void resetSlot(slot)}
                     icon={

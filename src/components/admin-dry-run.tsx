@@ -122,7 +122,7 @@ export function AdminDryRunPanel() {
         </AdminHelpDetails>
       </AdminSection>
 
-      <AdminSection title="לוח זמנים לאירוע" summary="חיתוך הוספה · חשיפת כתובות · כרטיסי כניסה">
+      <AdminSection title="לוח זמנים לאירוע" summary="חיתוך הוספה · חשיפת כתובות · קודי כניסה">
         <div className="space-y-2">
           <AdminAddHouseCutoffSettings embedded />
           <AdminAddressRevealSettings embedded />

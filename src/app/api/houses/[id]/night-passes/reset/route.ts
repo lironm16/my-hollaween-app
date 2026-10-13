@@ -19,12 +19,12 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return NextResponse.json({ error: "צריך לפתוח את הבית לעריכה." }, { status: 403, headers: NO_STORE });
   }
   if (!admin && !(await readNightPassSettings()).enabled) {
-    return NextResponse.json({ error: "הכרטיסים עוד לא פעילים." }, { status: 404, headers: NO_STORE });
+    return NextResponse.json({ error: "קודי הכניסה עוד לא פעילים." }, { status: 404, headers: NO_STORE });
   }
   const json = (await request.json().catch(() => null)) as { slot?: unknown } | null;
   const slot = Number(json?.slot);
   if (!NIGHT_PASS_SLOTS.includes(slot as NightPassSlot)) {
-    return NextResponse.json({ error: "כרטיס לא תקין." }, { status: 400, headers: NO_STORE });
+    return NextResponse.json({ error: "קוד כניסה לא תקין." }, { status: 400, headers: NO_STORE });
   }
   const house = await getHouse(id);
   if (!house) return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404, headers: NO_STORE });
@@ -34,8 +34,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       {
         error:
           outcome.error === "limit"
-            ? "הגעתם למספר האיפוסים לכרטיס הזה. פנו למארגנים."
-            : "הכרטיס לא נמצא.",
+            ? "הגעתם למספר האיפוסים לקוד הכניסה הזה. פנו למארגנים."
+            : "קוד הכניסה לא נמצא.",
       },
       { status: outcome.error === "limit" ? 429 : 404, headers: NO_STORE },
     );
