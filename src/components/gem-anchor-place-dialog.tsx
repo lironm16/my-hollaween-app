@@ -68,6 +68,27 @@ export function useGemAnchorPlacer() {
   return { open, dialog };
 }
 
+function GemAnchorPlaceHint() {
+  return (
+    <p className="text-base leading-relaxed text-violet-100" aria-label={GEM_PLACE_HINT_HE}>
+      מקמו את{" "}
+      <span className="inline-flex items-center gap-1.5 align-middle">
+        <ImpDemonFilledIcon className="size-5 shrink-0 text-emerald-400" aria-hidden />
+        <span className="font-medium text-violet-50">השדון</span>
+      </span>{" "}
+      איפה שתרצו בקרבת{" "}
+      <span className="inline-flex items-center gap-1.5 align-middle">
+        <span
+          className="inline-block size-2.5 shrink-0 rounded-full bg-orange-500 ring-2 ring-[#fff7ed]"
+          aria-hidden
+        />
+        <span className="font-medium text-violet-50">הבית</span>
+      </span>
+      .
+    </p>
+  );
+}
+
 /** Owner/admin — see where the house gem hides and drag it to a better spot (shared with everyone). */
 export function GemAnchorPlaceDialog({
   open,
@@ -184,7 +205,7 @@ export function GemAnchorPlaceDialog({
   return (
     <HouseEditModal open={open} onClose={onClose} title={GEM_PLACE_ACTION_HE} subtitle={houseHeadline(house)}>
       <div className="space-y-3">
-        <p className="text-base leading-relaxed text-violet-100">{GEM_PLACE_HINT_HE}</p>
+        <GemAnchorPlaceHint />
         <div
           className={
             mapExpanded
