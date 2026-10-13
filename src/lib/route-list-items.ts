@@ -44,15 +44,20 @@ export function buildRouteListItems(options: {
   );
 
   const activeItems = route.stops.flatMap((stop) =>
-    stop.houses.map((house, houseIndex) => ({
-      house,
-      order: stop.order,
-      hop:
-        houseIndex > 0
-          ? "אותו המיקום"
-          : distanceLabel(house.id, stop.fromPreviousMeters),
-      skipped: false,
-    })),
+    stop.houses.map((house, houseIndex) => {
+      const allowed = distanceAllowed(house.id);
+      return {
+        house,
+        order: stop.order,
+        hop:
+          !allowed
+            ? ""
+            : houseIndex > 0
+              ? "אותו המיקום"
+              : distanceLabel(house.id, stop.fromPreviousMeters),
+        skipped: false,
+      };
+    }),
   );
 
   const originPoint = { lat: origin.lat, lng: origin.lng };

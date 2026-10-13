@@ -18,11 +18,11 @@ export type RouteListItem = {
   distanceM?: number;
 };
 
-function RouteLeg({ label }: { label: string }) {
+function RouteLeg({ label }: { label?: string }) {
   return (
-    <div className="route-list-leg">
+    <div className={cn("route-list-leg", !label && "route-list-leg--line-only")}>
       <span className="route-list-leg-line" aria-hidden="true" />
-      <span className="route-list-leg-label">{label}</span>
+      {label ? <span className="route-list-leg-label">{label}</span> : null}
     </div>
   );
 }
@@ -119,7 +119,7 @@ export function RouteList({
               {showSkippedHeading ? (
                 <p className="route-list-skipped-heading">דילגתם</p>
               ) : null}
-              {hop ? <RouteLeg label={hop} /> : null}
+              <RouteLeg label={hop || undefined} />
               <div className="route-list-house">
                 <HouseCard
                   {...houseCardPropsFor(house, actionContext, {

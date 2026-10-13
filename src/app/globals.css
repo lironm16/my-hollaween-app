@@ -4140,6 +4140,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   padding-inline-start: 1.65rem;
 }
 
+.route-list-leg--line-only {
+  min-height: 1.35rem;
+}
+
 .route-list-leg-line {
   width: 3px;
   flex-shrink: 0;

@@ -101,6 +101,27 @@ describe("buildRouteListItems", () => {
     assert.equal(visitedTail[0]!.house.id, "b");
   });
 
+  it("omits hop labels before address reveal but keeps leg slots empty", () => {
+    const houses = [stub("a"), stub("b")];
+    const route = buildWalkingRouteOrdered([houses[0]!, houses[1]!], { lat: 32.09, lng: 34.81 });
+    assert.ok(route);
+
+    const items = buildRouteListItems({
+      route,
+      catalogHouses: houses,
+      houseSet: "real",
+      visitedIds: [],
+      skippedIds: [],
+      origin: { lat: 32.09, lng: 34.81 },
+      distanceLabel: (_id, m) => `${m}m`,
+      distanceAllowed: () => false,
+    });
+
+    assert.equal(items.length, 2);
+    assert.equal(items[0]!.hop, "");
+    assert.equal(items[1]!.hop, "");
+  });
+
   it("includes skipped tail houses not on the route", () => {
     const houses = [stub("a"), stub("b")];
     const route = buildWalkingRouteOrdered([houses[0]!], { lat: 32.09, lng: 34.81 });
