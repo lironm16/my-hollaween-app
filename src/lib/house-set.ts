@@ -149,8 +149,13 @@ export function resolveViewerHouseSet(
   preferred: HouseSet,
   options?: { previewDeployment?: boolean },
 ): HouseSet {
-  if (admin) return preferred;
   const preview = options?.previewDeployment === true;
+  const stubOnly =
+    Boolean(catalog?.houses.length) && catalogHasRealHouses(catalog) === false;
+  if (admin) {
+    if (preview && stubOnly && preferred === "real") return "all";
+    return preferred;
+  }
   if (preview && catalog?.houses.length) return "all";
   return "real";
 }

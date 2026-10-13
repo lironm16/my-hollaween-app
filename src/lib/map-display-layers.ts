@@ -1,4 +1,9 @@
-import { isStubHouse, type HouseSet, type StubFlagHouse } from "@/lib/house-set";
+import {
+  catalogHasRealHouses,
+  isStubHouse,
+  type HouseSet,
+  type StubFlagHouse,
+} from "@/lib/house-set";
 import { isPracticeHouse, type PracticeFlagHouse } from "@/lib/practice-house";
 
 export type MapDisplayLayer = "real" | "stubs";
@@ -137,6 +142,29 @@ export function houseMatchesMapLayers(
   if (isPracticeHouse(house)) return false;
   if (isStubHouse(house)) return layers.stubs;
   return layers.real;
+}
+
+/**
+ * Preview QA: filter context may include stubs (`activeHouseSet` all) while map layers
+ * still default to real-only — turn stubs on so pins match the list/count.
+ */
+export function mapDisplayLayersForSession(
+  layers: MapDisplayLayers,
+  options: {
+    previewDeployment?: boolean;
+    activeHouseSet: HouseSet;
+    catalog: { houses: StubFlagHouse[] } | null;
+  },
+): MapDisplayLayers {
+  if (!options.previewDeployment) return layers;
+  const stubOnly =
+    Boolean(options.catalog?.houses.length) &&
+    catalogHasRealHouses(options.catalog) === false;
+  if (stubOnly || options.activeHouseSet === "all" || options.activeHouseSet === "stubs") {
+    if (layers.stubs) return layers;
+    return { ...layers, stubs: true };
+  }
+  return layers;
 }
 
 export function houseVisibleOnMainMap(

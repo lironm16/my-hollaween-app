@@ -5,6 +5,7 @@ import {
   houseVisibleOnMainMap,
   layersFromLegacyHouseSet,
   layersToLegacyHouseSet,
+  mapDisplayLayersForSession,
   readMapDisplayLayers,
   toggleMapDisplayLayer,
 } from "@/lib/map-display-layers";
@@ -41,6 +42,27 @@ describe("map display layers", () => {
   it("never leaves all layers off when toggling", () => {
     const onlyReal = { real: true, stubs: false };
     assert.deepEqual(toggleMapDisplayLayer(onlyReal, "real"), onlyReal);
+  });
+
+  it("enables stub pins on preview when filters include stubs", () => {
+    const layers = { real: true, stubs: false, practice: false };
+    const stubOnly = { houses: [{ id: "בית-1", isStub: true }] };
+    assert.deepEqual(
+      mapDisplayLayersForSession(layers, {
+        previewDeployment: true,
+        activeHouseSet: "all",
+        catalog: stubOnly,
+      }),
+      { real: true, stubs: true, practice: false },
+    );
+    assert.equal(
+      mapDisplayLayersForSession(layers, {
+        previewDeployment: false,
+        activeHouseSet: "all",
+        catalog: stubOnly,
+      }),
+      layers,
+    );
   });
 
   it("returns a stable snapshot reference for useSyncExternalStore", () => {
