@@ -40,6 +40,11 @@ export function HouseCardQuickActions({
   onRestoreRoute,
   skipped,
   className,
+  toolbarAriaLabel = "פעולות בית",
+  visitedAriaLabel,
+  likeAriaLabel,
+  skipAriaLabel,
+  gemAriaLabel,
 }: {
   liked?: boolean;
   visited?: boolean;
@@ -51,18 +56,25 @@ export function HouseCardQuickActions({
   onRestoreRoute?: () => void;
   skipped?: boolean;
   className?: string;
+  toolbarAriaLabel?: string;
+  visitedAriaLabel?: string;
+  likeAriaLabel?: string;
+  skipAriaLabel?: string;
+  gemAriaLabel?: string;
 }) {
   const hasSkip = Boolean(onSkip || onRestoreRoute);
   const hasAny = Boolean(onToggleVisited || onToggleLike || onToggleGem || hasSkip);
   if (!hasAny) return null;
 
   return (
-    <div className={cn("house-card-quick-actions", className)} role="toolbar" aria-label="פעולות בית">
+    <div className={cn("house-card-quick-actions", className)} role="toolbar" aria-label={toolbarAriaLabel}>
       {onToggleVisited ? (
         <button
           type="button"
           className={quickBtnClass(Boolean(visited), "visited")}
-          aria-label={visited ? "סמנו כלא ביקרתי" : "ביקרתי"}
+          aria-label={
+            visitedAriaLabel ?? (visited ? "סמנו כלא ביקרתי" : "ביקרתי")
+          }
           aria-pressed={visited}
           onPointerDown={stopCardPointerBubble}
           onClick={(event) => {
@@ -85,7 +97,7 @@ export function HouseCardQuickActions({
         <button
           type="button"
           className={quickBtnClass(Boolean(liked), "saved")}
-          aria-label={liked ? "הסירו אהבתי" : "אהבתי"}
+          aria-label={likeAriaLabel ?? (liked ? "הסירו אהבתי" : "אהבתי")}
           aria-pressed={liked}
           onPointerDown={stopCardPointerBubble}
           onClick={(event) => {
@@ -104,7 +116,7 @@ export function HouseCardQuickActions({
         <button
           type="button"
           className={quickBtnClass(Boolean(skipped), "skipped")}
-          aria-label={skipped ? "דילגתי — החזרה" : "דילוג"}
+          aria-label={skipAriaLabel ?? (skipped ? "דילגתי — החזרה" : "דילוג")}
           aria-pressed={skipped}
           onPointerDown={stopCardPointerBubble}
           onClick={(event) => {
@@ -124,7 +136,7 @@ export function HouseCardQuickActions({
         <button
           type="button"
           className={quickBtnClass(Boolean(gemCollected), "gem")}
-          aria-label={gemCollected ? GEM_FOUND_I_HE : GEM_ACTION_FIND_HE}
+          aria-label={gemAriaLabel ?? (gemCollected ? GEM_FOUND_I_HE : GEM_ACTION_FIND_HE)}
           aria-pressed={gemCollected}
           onPointerDown={stopCardPointerBubble}
           onClick={(event) => {
