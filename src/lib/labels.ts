@@ -136,13 +136,13 @@ export const stockLabels: Record<StockLevel, string> = {
 
 export const houseKindLabels: Record<HouseKind, string> = {
   house: "בית",
-  poi: "נקודת עניין",
+  poi: "עסק",
 };
 
 export const locationKindFilterLabels: Record<"all" | HouseKind, string> = {
   all: "הכל",
   house: "בתים",
-  poi: "נקודות עניין",
+  poi: "עסקים",
 };
 
 export const poiCategoryLabels: Record<PoiCategory, string> = {

@@ -65,7 +65,7 @@ export default function PreviewHubPage() {
         </section>
 
         <section className="space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/20">
-          <h2 className="text-base font-medium text-orange-100">פחד — נקודת עניין (דלעת)</h2>
+          <h2 className="text-base font-medium text-orange-100">פחד — עסק (דלעת)</h2>
           <p className="text-base text-violet-300">ירוק / כתום / אדום — כמו רמת הפחד, עם דלעת.</p>
           <div className="flex flex-wrap items-end gap-4">
             <div className="flex flex-col items-center gap-1">
