@@ -161,7 +161,7 @@ export function GemAnchorPlaceDialog({
   const dirty = !samePoint(point, resolvedCurrent);
   const atAuto = samePoint(point, auto);
   const mapDistanceLine = useMemo(() => {
-    const parts = [`${distanceM} מ׳ מהבית (עד ${GEM_ANCHOR_PLACE_MAX_METERS} מ׳)`];
+    const parts = [`${distanceM} מ׳ מהבית`];
     if (accuracyM != null) parts.push(`דיוק GPS ~${accuracyM} מ׳`);
     if (dirty) parts.push("לא נשמר");
     return parts.join(" · ");
