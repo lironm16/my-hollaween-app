@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, LocateFixed, Maximize2, Minimize2, RotateCcw } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, LocateFixed, RotateCcw } from "lucide-react";
 import { ImpDemonFilledIcon } from "@/components/imp-demon-reference-icon";
 import { toast } from "sonner";
 import { HouseEditModal } from "@/components/house-edit-modal";
@@ -25,8 +25,6 @@ import {
 import {
   GEM_PLACE_ACTION_HE,
   GEM_PLACE_HINT_HE,
-  GEM_PLACE_MAP_EXPAND_HE,
-  GEM_PLACE_MAP_SHRINK_HE,
   GEM_PLACE_MY_LOCATION_HE,
   GEM_PLACE_RESET_HE,
   GEM_PLACE_SAVE_HE,
@@ -109,7 +107,6 @@ export function GemAnchorPlaceDialog({
   const [locating, setLocating] = useState(false);
   const [accuracyM, setAccuracyM] = useState<number | null>(null);
   const [myLocation, setMyLocation] = useState<LatLng | null>(null);
-  const [mapExpanded, setMapExpanded] = useState(false);
   const [mapFitTick, setMapFitTick] = useState(0);
   const wasOpen = useRef(false);
   const [anchorRevision, setAnchorRevision] = useState(0);
@@ -138,7 +135,6 @@ export function GemAnchorPlaceDialog({
       setAccuracyM(null);
       setMapFitTick((tick) => tick + 1);
     }
-    if (!open) setMapExpanded(false);
     wasOpen.current = open;
   }, [open, resolvedCurrent]);
 
@@ -232,20 +228,8 @@ export function GemAnchorPlaceDialog({
     <HouseEditModal open={open} onClose={onClose} title={GEM_PLACE_ACTION_HE} subtitle={houseHeadline(house)}>
       <div className="space-y-3">
         <GemAnchorPlaceHint />
-        <div
-          className={
-            mapExpanded
-              ? "fixed inset-0 z-[220] flex flex-col gap-2 bg-[#14091c] p-3 pt-[max(0.75rem,env(safe-area-inset-top))]"
-              : undefined
-          }
-        >
-          <div
-            className={
-              mapExpanded
-                ? "relative min-h-0 flex-1 overflow-hidden rounded-xl ring-1 ring-orange-500/25"
-                : "relative h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/25"
-            }
-          >
+        <div>
+          <div className="relative h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/25">
             {open ? (
               <HouseMapDynamic
                 houses={[house]}
@@ -276,14 +260,6 @@ export function GemAnchorPlaceDialog({
                 </span>
               </div>
             </div>
-            <button
-              type="button"
-              className="absolute end-2 top-2 z-[510] flex size-10 items-center justify-center rounded-lg bg-black/55 text-orange-100 ring-1 ring-orange-500/35"
-              aria-label={mapExpanded ? GEM_PLACE_MAP_SHRINK_HE : GEM_PLACE_MAP_EXPAND_HE}
-              onClick={() => setMapExpanded((v) => !v)}
-            >
-              {mapExpanded ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
-            </button>
             <button
               type="button"
               dir="ltr"
