@@ -4,6 +4,7 @@ import { useEffect, useRef, type MutableRefObject } from "react";
 import { Circle, CircleMarker, Polyline, useMap, useMapEvents } from "react-leaflet";
 import {
   clampGemAnchorPlacement,
+  expandBoundsToInclude,
   gemAnchorPlacementBounds,
   GEM_ANCHOR_PLACE_MAX_METERS,
 } from "@/lib/gem-anchor-placement";
@@ -16,6 +17,9 @@ export type GemAnchorEditState = {
   onMove: (point: LatLng) => void;
   /** Bumped when the placement dialog opens — fit the 40 m circle in view once. */
   fitTick?: number;
+  /** GPS «המיקום שלי» — shown even when outside the placement circle. */
+  myLocation?: LatLng | null;
+  myLocationAccuracyM?: number | null;
 };
 
 function sameCoord(a: number, b: number) {
@@ -30,11 +34,13 @@ function FitPlacementRadius({
   house,
   point,
   fitTick,
+  myLocation,
   programmaticRef,
 }: {
   house: LatLng;
   point: LatLng;
   fitTick?: number;
+  myLocation?: LatLng | null;
   programmaticRef: MutableRefObject<boolean>;
 }) {
   const map = useMap();
@@ -46,7 +52,11 @@ function FitPlacementRadius({
     const run = () => {
       const pin = pointRef.current;
       map.invalidateSize({ animate: false });
-      map.fitBounds(gemAnchorPlacementBounds(house), {
+      const bounds = expandBoundsToInclude(
+        gemAnchorPlacementBounds(house),
+        myLocation ? [myLocation] : [],
+      );
+      map.fitBounds(bounds, {
         padding: [28, 28],
         maxZoom: config.map.maxZoom,
         animate: false,
@@ -59,7 +69,7 @@ function FitPlacementRadius({
     const timer = window.setTimeout(run, 60);
     return () => window.clearTimeout(timer);
     // Only when the dialog opens — not on every pin move (that blocked pinch-zoom).
-  }, [map, house, fitTick, programmaticRef]);
+  }, [map, house, fitTick, myLocation, programmaticRef]);
   return null;
 }
 
@@ -117,14 +127,26 @@ function GemAnchorMapInteraction({
 }
 
 /** Owner/admin gem placement — pan the map under the center pin inside the allowed circle. */
-export function MapGemAnchorEditLayer({ house, point, onMove, fitTick }: GemAnchorEditState) {
+export function MapGemAnchorEditLayer({
+  house,
+  point,
+  onMove,
+  fitTick,
+  myLocation = null,
+  myLocationAccuracyM = null,
+}: GemAnchorEditState) {
   const programmaticRef = useRef(false);
+  const acc =
+    myLocationAccuracyM != null && myLocationAccuracyM > 8 && myLocationAccuracyM < 120
+      ? myLocationAccuracyM
+      : null;
   return (
     <>
       <FitPlacementRadius
         house={house}
         point={point}
         fitTick={fitTick}
+        myLocation={myLocation}
         programmaticRef={programmaticRef}
       />
       <Circle
@@ -154,6 +176,30 @@ export function MapGemAnchorEditLayer({ house, point, onMove, fitTick }: GemAnch
         pathOptions={{ color: "#fff7ed", weight: 2, fillColor: "#f97316", fillOpacity: 1 }}
         interactive={false}
       />
+      {myLocation ? (
+        <>
+          {acc != null ? (
+            <Circle
+              center={[myLocation.lat, myLocation.lng]}
+              radius={acc}
+              pathOptions={{
+                color: "#38bdf8",
+                weight: 1,
+                opacity: 0.55,
+                fillColor: "#38bdf8",
+                fillOpacity: 0.12,
+              }}
+              interactive={false}
+            />
+          ) : null}
+          <CircleMarker
+            center={[myLocation.lat, myLocation.lng]}
+            radius={7}
+            pathOptions={{ color: "#ffffff", weight: 2, fillColor: "#0ea5e9", fillOpacity: 1 }}
+            interactive={false}
+          />
+        </>
+      ) : null}
       <GemAnchorMapInteraction
         house={house}
         point={point}

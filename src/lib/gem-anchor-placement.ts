@@ -65,6 +65,24 @@ export function gemAnchorPlacementBounds(
   ];
 }
 
+export function expandBoundsToInclude(
+  bounds: [[number, number], [number, number]],
+  points: ReadonlyArray<{ lat: number; lng: number }>,
+): [[number, number], [number, number]] {
+  let [[minLat, minLng], [maxLat, maxLng]] = bounds;
+  for (const p of points) {
+    if (!Number.isFinite(p.lat) || !Number.isFinite(p.lng)) continue;
+    minLat = Math.min(minLat, p.lat);
+    minLng = Math.min(minLng, p.lng);
+    maxLat = Math.max(maxLat, p.lat);
+    maxLng = Math.max(maxLng, p.lng);
+  }
+  return [
+    [minLat, minLng],
+    [maxLat, maxLng],
+  ];
+}
+
 /** Keep a dragged point inside the allowed circle (map drag UX). */
 export function clampGemAnchorPlacement(
   house: { lat: number; lng: number },

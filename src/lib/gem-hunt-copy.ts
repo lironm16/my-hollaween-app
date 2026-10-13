@@ -27,8 +27,6 @@ export const GEM_PLACE_SAVE_HE = "שמירת מיקום";
 export const GEM_PLACE_RESET_HE = "אפס";
 export const GEM_PLACE_SAVED_HE = "מיקום השדון נשמר";
 export const GEM_PLACE_RESET_DONE_HE = "המיקום אופס";
-export const GEM_PLACE_STATUS_PLACED_HE = "מיקום שנבחר ידנית";
-export const GEM_PLACE_STATUS_AUTO_HE = "ברירת מחדל — מחושב לפי המדרכה הקרובה";
 export const GEM_ACTION_FIND_HE = "מצא שדון";
 /** Cluster ⋮ menu — start sequential hunt for every booth/unit at the address. */
 export const GEM_CLUSTER_FIND_ALL_HE = "מצא הכל";

@@ -31,8 +31,6 @@ import {
   GEM_PLACE_RESET_HE,
   GEM_PLACE_SAVE_HE,
   GEM_PLACE_SAVED_HE,
-  GEM_PLACE_STATUS_AUTO_HE,
-  GEM_PLACE_STATUS_PLACED_HE,
 } from "@/lib/gem-hunt-copy";
 import { notePlacedGemAnchor } from "@/lib/gem-placed-anchors";
 import { distanceMeters } from "@/lib/geo";
@@ -110,6 +108,7 @@ export function GemAnchorPlaceDialog({
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
   const [accuracyM, setAccuracyM] = useState<number | null>(null);
+  const [myLocation, setMyLocation] = useState<LatLng | null>(null);
   const [mapExpanded, setMapExpanded] = useState(false);
   const [mapFitTick, setMapFitTick] = useState(0);
   const wasOpen = useRef(false);
@@ -135,6 +134,8 @@ export function GemAnchorPlaceDialog({
   useEffect(() => {
     if (open && !wasOpen.current) {
       setPoint(resolvedCurrent);
+      setMyLocation(null);
+      setAccuracyM(null);
       setMapFitTick((tick) => tick + 1);
     }
     if (!open) setMapExpanded(false);
@@ -201,14 +202,17 @@ export function GemAnchorPlaceDialog({
       (pos) => {
         setLocating(false);
         const here = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        const accuracy = Math.round(pos.coords.accuracy);
+        setMyLocation(here);
+        setAccuracyM(accuracy);
+        setMapFitTick((tick) => tick + 1);
         if (gemAnchorPlacementError(house, here)) {
           toast.error(
-            `אתם ${Math.round(distanceMeters(house, here))} מ׳ מהבית — צריך לעמוד עד ${GEM_ANCHOR_PLACE_MAX_METERS} מ׳ ממנו.`,
+            `אתם ${Math.round(distanceMeters(house, here))} מ׳ מהבית — צריך לעמוד עד ${GEM_ANCHOR_PLACE_MAX_METERS} מ׳ ממנו. המיקום שלכם מסומן במפה.`,
           );
           return;
         }
         setPoint(here);
-        setAccuracyM(Math.round(pos.coords.accuracy));
       },
       () => {
         setLocating(false);
@@ -220,6 +224,7 @@ export function GemAnchorPlaceDialog({
 
   function reset() {
     setAccuracyM(null);
+    setMyLocation(null);
     setPoint(auto);
   }
 
@@ -252,6 +257,8 @@ export function GemAnchorPlaceDialog({
                   house,
                   point,
                   fitTick: mapFitTick,
+                  myLocation,
+                  myLocationAccuracyM: accuracyM,
                   onMove: (next) => {
                     setPoint(next);
                     setAccuracyM(null);
@@ -276,6 +283,14 @@ export function GemAnchorPlaceDialog({
               onClick={() => setMapExpanded((v) => !v)}
             >
               {mapExpanded ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
+            </button>
+            <button
+              type="button"
+              dir="ltr"
+              className="absolute bottom-2 start-2 z-[510] max-w-[calc(100%-1rem)] truncate rounded-lg bg-black/60 px-2.5 py-1.5 font-mono text-xs text-orange-100 ring-1 ring-orange-500/30"
+              onClick={() => void copyText(coordsText, "הקואורדינטות הועתקו")}
+            >
+              {coordsText}
             </button>
           </div>
           <div className="pointer-events-auto flex justify-center gap-1">
@@ -302,23 +317,10 @@ export function GemAnchorPlaceDialog({
             ))}
           </div>
         </div>
-        <div className="space-y-1 rounded-lg bg-black/25 px-3 py-2 text-sm ring-1 ring-orange-500/15">
-          <p className="text-violet-200">
-            {placed ? GEM_PLACE_STATUS_PLACED_HE : GEM_PLACE_STATUS_AUTO_HE}
-          </p>
-          <button
-            type="button"
-            dir="ltr"
-            className="block font-mono text-orange-100 underline-offset-2 hover:underline"
-            onClick={() => void copyText(coordsText, "הקואורדינטות הועתקו")}
-          >
-            {coordsText}
-          </button>
-          <p className="text-violet-300">
-            {distanceM} מ׳ מהבית (עד {GEM_ANCHOR_PLACE_MAX_METERS} מ׳)
-            {accuracyM != null ? ` · דיוק GPS ~${accuracyM} מ׳` : ""}
-          </p>
-        </div>
+        <p className="rounded-lg bg-black/25 px-3 py-2 text-sm text-violet-300 ring-1 ring-orange-500/15">
+          {distanceM} מ׳ מהבית (עד {GEM_ANCHOR_PLACE_MAX_METERS} מ׳)
+          {accuracyM != null ? ` · דיוק GPS ~${accuracyM} מ׳` : ""}
+        </p>
         <div className="flex gap-2">
           <Button
             type="button"
