@@ -129,13 +129,7 @@ export function HouseDetailOverlay({
       >
         {overview ? (
           <div id={labelId}>
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="map-house-sheet-kicker">
-                  {addressReveal.formatClusterAddress(clusterHouses!, house)}
-                </p>
-                <p className="map-house-sheet-sub">{clusterOverviewSubtitle(clusterHouses!)}</p>
-              </div>
+            <div className="house-card-top-bar mb-2 flex min-w-0 items-center gap-2">
               <ClusterHouseActionMenu
                 houses={clusterHouses!}
                 liked={liked ?? (() => false)}
@@ -182,7 +176,14 @@ export function HouseDetailOverlay({
                     ? () => actionContext.onClusterResetAllGems!(clusterHouses!)
                     : undefined
                 }
+                className="min-w-0 flex-1"
               />
+            </div>
+            <div className="mb-3 min-w-0">
+              <p className="map-house-sheet-kicker">
+                {addressReveal.formatClusterAddress(clusterHouses!, house)}
+              </p>
+              <p className="map-house-sheet-sub">{clusterOverviewSubtitle(clusterHouses!)}</p>
             </div>
             <div className="max-h-[min(52dvh,28rem)] overflow-y-auto overscroll-contain pe-0.5">
               <ClusterHouseList

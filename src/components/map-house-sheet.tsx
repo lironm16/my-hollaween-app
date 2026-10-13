@@ -373,13 +373,10 @@ export function MapHouseSheet({
         {overview ? (
           <div id={labelId} className="map-house-sheet-cluster flex min-h-0 flex-1 flex-col">
             <div className="map-house-sheet-cluster-head shrink-0">
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="map-house-sheet-kicker">
-                    {addressReveal.formatClusterAddress(clusterHouses, sheetHouse)}
-                  </p>
-                  <p className="map-house-sheet-sub">{clusterOverviewSubtitle(clusterHouses)}</p>
-                </div>
+              <div
+                className="house-card-top-bar mb-2 flex min-w-0 items-center gap-2"
+                onPointerDown={(event) => event.stopPropagation()}
+              >
                 <ClusterHouseActionMenu
                   houses={clusterHouses}
                   liked={liked ?? (() => false)}
@@ -426,7 +423,14 @@ export function MapHouseSheet({
                       ? () => actionContext.onClusterResetAllGems!(clusterHouses)
                       : undefined
                   }
+                  className="min-w-0 flex-1"
                 />
+              </div>
+              <div className="mb-3 min-w-0">
+                <p className="map-house-sheet-kicker">
+                  {addressReveal.formatClusterAddress(clusterHouses, sheetHouse)}
+                </p>
+                <p className="map-house-sheet-sub">{clusterOverviewSubtitle(clusterHouses)}</p>
               </div>
             </div>
             <div className="map-house-sheet-cluster-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
