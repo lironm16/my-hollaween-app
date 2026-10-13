@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Camera, MapPin } from "lucide-react";
 import { GemCheer } from "@/components/gem-cheer";
@@ -120,6 +121,14 @@ export function GemHuntPanel({
   const openCamera = useCallback(async () => {
     const gen = ++huntOpenGenRef.current;
     getGemHuntPortalRoot();
+    setHuntClusterMembers(null);
+    setHuntTargetHouse(house);
+    setHuntLocation(userLocation);
+    setBootWebXrSession(null);
+    flushSync(() => {
+      setHuntOpen(true);
+    });
+
     let xrSession: XRSession | null = null;
     if (isAndroidLike() && webXrHitTestArCached()) {
       xrSession = await requestGemHuntWebXrSession();
@@ -130,13 +139,7 @@ export function GemHuntPanel({
       return;
     }
     setBootWebXrSession(xrSession);
-    setHuntLocation(userLocation);
-    const fresh = (await onOpenHunt?.()) ?? userLocation;
-    if (gen !== huntOpenGenRef.current) {
-      void endGemHuntWebXrSession(xrSession);
-      releaseGemHuntCamera();
-      return;
-    }
+
     await prepareGemHuntSensors({
       requestCamera: !xrSession,
       requestOrientation: !isGemHuntOrientationGranted(),
@@ -146,11 +149,14 @@ export function GemHuntPanel({
       releaseGemHuntCamera();
       return;
     }
-    setHuntLocation(fresh ?? userLocation);
-    setHuntClusterMembers(null);
-    setHuntTargetHouse(house);
-    setHuntOpen(true);
-  }, [house, mapHousesForCelebrate, onOpenHunt, userLocation]);
+
+    void (async () => {
+      const fresh = (await onOpenHunt?.()) ?? userLocation;
+      if (gen === huntOpenGenRef.current) {
+        setHuntLocation(fresh ?? userLocation);
+      }
+    })();
+  }, [house, onOpenHunt, userLocation]);
 
   const huntHouse = huntTargetHouse ?? house;
 

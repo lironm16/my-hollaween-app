@@ -23,6 +23,7 @@ import {
   gemDistanceMeters,
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
+  GEM_TELL_ME_CENTER_ZOOM,
   GEM_CAMPUS_COLLECT_MS,
   GEM_COLLECT_OVERLAY_MS,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
@@ -72,9 +73,6 @@ import {
 import { cn } from "@/lib/utils";
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
-
-/** «גלה לי» center view — inspect360 framing leaves wide orbit margins, so zoom in. */
-const GEM_TELL_ME_CENTER_ZOOM = 1.45;
 
 function panDelta(prev: number | null, next: number) {
   if (prev == null) return 0;
@@ -312,6 +310,13 @@ export function GemHuntOverlay({
 
     async function attachCamera() {
       let stream = getGemHuntCameraStream();
+      const videoEarly = videoRef.current;
+      if (stream && videoEarly && !videoEarly.srcObject) {
+        videoEarly.srcObject = stream;
+        videoEarly.muted = true;
+        videoEarly.playsInline = true;
+        void videoEarly.play().catch(() => {});
+      }
       if (!stream && !cameraBootRef.current) {
         cameraBootRef.current = true;
         const prepared = await prepareGemHuntSensors({
@@ -347,7 +352,6 @@ export function GemHuntOverlay({
     return () => {
       cancelled = true;
       streamRef.current = null;
-      releaseGemHuntCamera(videoRef.current);
     };
   }, [house.id, cameraRetry, sim]);
 

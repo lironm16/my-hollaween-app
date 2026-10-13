@@ -10,6 +10,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { flushSync } from "react-dom";
 import { AppHeader } from "@/components/app-header";
 import { useHomeUrlParams } from "@/hooks/use-home-url-params";
 import { CatalogMetaChip } from "@/components/catalog-meta-chip";
@@ -462,6 +463,14 @@ export function NeighborhoodApp({
       } else if (openedFrom === "map" && clusterMembers) {
         setView("map");
       }
+      setWatchEnabled(true);
+      setMapGemWebXrSession(null);
+      setMapGemGps(gps);
+      setMapGemClusterMembers(clusterMembers);
+      flushSync(() => {
+        setMapGemHouse(house);
+      });
+
       let xrSession: XRSession | null = null;
       if (isAndroidLike() && webXrHitTestArCached()) {
         xrSession = await requestGemHuntWebXrSession();
@@ -471,13 +480,8 @@ export function NeighborhoodApp({
         releaseGemHuntCamera();
         return;
       }
-      setWatchEnabled(true);
-      const freshGps = (await geo.refresh()) ?? gps;
-      if (gen !== mapGemOpenGenRef.current) {
-        void endGemHuntWebXrSession(xrSession);
-        releaseGemHuntCamera();
-        return;
-      }
+      setMapGemWebXrSession(xrSession);
+
       await prepareGemHuntSensors({
         requestCamera: !xrSession,
         requestOrientation: !isGemHuntOrientationGranted(),
@@ -487,10 +491,13 @@ export function NeighborhoodApp({
         releaseGemHuntCamera();
         return;
       }
-      setMapGemWebXrSession(xrSession);
-      setMapGemGps(freshGps);
-      setMapGemClusterMembers(clusterMembers);
-      setMapGemHouse(house);
+
+      void (async () => {
+        const freshGps = (await geo.refresh()) ?? gps;
+        if (gen === mapGemOpenGenRef.current) {
+          setMapGemGps(freshGps);
+        }
+      })();
     },
     [geo, gps, selection, setWatchEnabled],
   );

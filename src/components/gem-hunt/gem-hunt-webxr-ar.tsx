@@ -15,6 +15,7 @@ import {
   GEM_CAMPUS_COLLECT_MS,
   GEM_COLLECT_OVERLAY_MS,
   GEM_FACING_TOLERANCE_DEG,
+  GEM_TELL_ME_CENTER_ZOOM,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
   bearingDegrees,
   gemAnchorForHouse,
@@ -491,7 +492,8 @@ export function GemHuntWebXrAr({
   const canTapTellMeCenter =
     showTellMeCenterGem &&
     (encounterMode
-      ? encounterPhase === "encounter"
+      ? encounterPhase === "encounter" ||
+        (centerReveal && encounterPhase === "approach" && (canCollectNow || simulateInRange))
       : canCollectNow || centerReveal || simulateInRange);
 
   const onTellMeCenterTap = useCallback(() => {
@@ -512,10 +514,7 @@ export function GemHuntWebXrAr({
       if (!canTapTellMeCenter) return;
       const start = tellMeTapStartRef.current;
       tellMeTapStartRef.current = null;
-      if (!start) {
-        onTellMeCenterTap();
-        return;
-      }
+      if (!start) return;
       const dx = clientX - start.x;
       const dy = clientY - start.y;
       if (dx * dx + dy * dy > 576) return;
@@ -1099,6 +1098,15 @@ export function GemHuntWebXrAr({
     if (btn) btn.hidden = !showManualStart;
   }, [showManualStart]);
 
+  /** Hunt opens before the tap-gesture WebXR session is attached (dom-overlay must not stay empty). */
+  useEffect(() => {
+    const session = initialWebXrSession;
+    if (!session) return;
+    void attachSessionRef.current?.(session);
+    setShowManualStart(false);
+    setSessionActive(true);
+  }, [initialWebXrSession]);
+
   const overlay = (
     <div
       ref={rootRef}
@@ -1157,7 +1165,7 @@ export function GemHuntWebXrAr({
           <div
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pin-collect is-revealed is-inspect360",
-              "is-ring-center is-center-collect is-collect-layer",
+              "is-ring-center is-center-collect is-collect-layer is-tell-me-center",
               canTapTellMeCenter && "is-tap-collect-ready",
             )}
           >
@@ -1191,6 +1199,7 @@ export function GemHuntWebXrAr({
                   spinWhileCollect={false}
                   tapCollect
                   celebrateVariant={danceIndex}
+                  zoom={GEM_TELL_ME_CENTER_ZOOM}
                 />
               </div>
             </button>
