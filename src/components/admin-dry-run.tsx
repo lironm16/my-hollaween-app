@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminAddHouseCutoffSettings } from "@/components/admin-add-house-cutoff-settings";
 import { AdminAddressRevealSettings } from "@/components/admin-address-reveal-settings";
 import { AdminGemOpsPanel } from "@/components/admin-gem-ops-panel";
+import { AdminGemHuntPublicSettings } from "@/components/admin-gem-hunt-public-settings";
 import { AdminNightPassesSettings } from "@/components/admin-night-passes-settings";
 import { AdminHelpDetails, AdminSection } from "@/components/admin-section";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -55,7 +56,7 @@ function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
 }
 
 function layerSummary(layers: Record<MapDisplayLayer, boolean>) {
-  const active = (["real", "stubs", "practice"] as MapDisplayLayer[])
+  const active = (["real", "stubs"] as MapDisplayLayer[])
     .filter((id) => layers[id])
     .map((id) => MAP_LAYER_LABELS[id]);
   return active.length ? active.join(" · ") : "לא נבחרה שכבה";
@@ -97,9 +98,9 @@ export function AdminDryRunPanel() {
 
   return (
     <div className="space-y-2" dir="rtl">
-      <AdminSection title="שכבות במפה" summary={layerSummary(layers)} defaultOpen>
+      <AdminSection title="שכבות במפה" summary={layerSummary(layers)}>
         <div className="flex flex-wrap gap-1.5">
-          {(["real", "stubs", "practice"] as MapDisplayLayer[]).map((id) => (
+          {(["real", "stubs"] as MapDisplayLayer[]).map((id) => (
             <button
               key={id}
               type="button"
@@ -107,9 +108,7 @@ export function AdminDryRunPanel() {
               className={cn(
                 "rounded-full px-3 py-1.5 text-sm font-medium",
                 layers[id]
-                  ? id === "practice"
-                    ? "bg-teal-500 text-black"
-                    : "bg-orange-500 text-black"
+                  ? "bg-orange-500 text-black"
                   : "bg-[#14081c] text-orange-100 ring-1 ring-orange-500/20",
               )}
             >
@@ -122,7 +121,7 @@ export function AdminDryRunPanel() {
         </AdminHelpDetails>
       </AdminSection>
 
-      <AdminSection title="לוח זמנים לאירוע" summary="חיתוך הוספה · חשיפת כתובות · כרטיסי כניסה">
+      <AdminSection title="לוח זמנים לאירוע" summary="חיתוך הוספה · חשיפת כתובות · קודי כניסה">
         <div className="space-y-2">
           <AdminAddHouseCutoffSettings embedded />
           <AdminAddressRevealSettings embedded />
@@ -198,9 +197,12 @@ export function AdminDryRunPanel() {
         </AdminHelpDetails>
       </AdminSection>
 
-      {gemsOnScreen && catalogHouses.length > 0 ? (
-        <AdminSection title="שדונים במפה" summary="בחירה לפי מפלצת · מפת ניהול">
-          <AdminGemOpsPanel houses={catalogHouses} />
+      {gemsOnScreen ? (
+        <AdminSection title="שדונים במפה" summary="משחק לאפליקציה · בחירה לפי מפלצת · מפת ניהול">
+          <div className="space-y-2">
+            <AdminGemHuntPublicSettings embedded />
+            {catalogHouses.length > 0 ? <AdminGemOpsPanel houses={catalogHouses} /> : null}
+          </div>
         </AdminSection>
       ) : null}
     </div>

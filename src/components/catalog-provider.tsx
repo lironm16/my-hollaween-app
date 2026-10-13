@@ -14,6 +14,7 @@ import {
 import type { Catalog, CatalogDelta, PublicHouse } from "@/lib/types";
 import {
   catalogScopeOf,
+  hiddenCountFields,
   mergeCatalogDelta,
   normalizeCatalogDelta,
   syncCatalog,
@@ -49,6 +50,7 @@ import { catalogHasRealHouses } from "@/lib/house-set";
 import { applySnapshotStubFlags } from "@/lib/catalog-stub-flags";
 import { catalogHasExplicitStubFlags } from "@/lib/house-set";
 import { ensureGemOsmAnchorsLoaded } from "@/lib/gem-osm-anchor-cache";
+import { syncPlacedGemAnchors } from "@/lib/gem-placed-anchors";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
 import { houseWithLocationPolicy, visitorAddressRevealContext } from "@/lib/address-reveal";
 import { appNow } from "@/lib/app-clock";
@@ -151,7 +153,7 @@ function catalogFromResponse(res: CatalogDelta): Catalog {
     pushTemplates: res.pushTemplates,
     eventSettings: res.eventSettings,
     ...(res.scope ? { scope: res.scope } : {}),
-    ...(typeof res.hiddenHouseCount === "number" ? { hiddenHouseCount: res.hiddenHouseCount } : {}),
+    ...hiddenCountFields(res),
   };
 }
 
@@ -403,6 +405,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   }, [catalog?.updatedAt, gemEligibleHouses]);
 
   useEffect(() => {
+    if (catalog?.houses) syncPlacedGemAnchors(catalog.houses);
+  }, [catalog]);
+
+  useEffect(() => {
     let cancelled = false;
     const gen = scopeGenRef.current;
     void (async () => {
@@ -478,19 +484,18 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       return prev;
     }
     emptyDeltaStreakRef.current = 0;
-    let next!: Catalog;
-    setCatalog((cur) => {
-      let merged = withDeviceHouseOverlays(applyCatalogResponse(cur, live));
-      merged = {
+    const mergeInto = (cur: Catalog | null): Catalog => {
+      const merged = withDeviceHouseOverlays(applyCatalogResponse(cur, live));
+      const withDetail: Catalog = {
         ...merged,
         houses: merged.houses.map((row) => withServerHouseDetail(row)),
       };
-      next = merged === cur ? cur : merged;
-      if (next === cur) return cur;
-      const published = publishCatalog(next, cur);
-      next = published ?? next;
-      return next;
-    });
+      return publishCatalog(withDetail, cur) ?? withDetail;
+    };
+    // React may defer a state updater to the next render, so the code below cannot read its result.
+    const next = mergeInto(prev);
+    catalogRef.current = next;
+    setCatalog((cur) => (cur === prev ? next : mergeInto(cur)));
     trackCatalogRemovalDelta(prev, next, live.removed);
     if (isMapListSuspended()) return next;
     setSource("network");
@@ -516,9 +521,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     if (!online) {
       const cached = await readDeviceCatalog();
       if (cached) {
-        let next: Catalog = cached;
         setCatalog((prev) => {
-          next = withDeviceHouseOverlays(syncCatalog(cached, prev ?? cached));
+          const next = withDeviceHouseOverlays(syncCatalog(cached, prev ?? cached));
           return publishCatalog(next, prev) ?? next;
         });
         if (isMapListSuspended()) return;
@@ -712,11 +716,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         return;
       } catch {
         const cached = await readDeviceCatalog();
-        let kept = false;
+        const kept = Boolean(catalogRef.current ?? cached);
         setCatalog((prev) => {
           const merged = prev && cached ? syncCatalog(cached, prev) : (prev ?? cached);
           const next = merged ? withDeviceHouseOverlays(merged) : merged;
-          kept = Boolean(next);
           if (next && !isMapListSuspended()) void saveCatalogCache(next);
           if (!next) return prev;
           return publishCatalog(next, prev) ?? next;

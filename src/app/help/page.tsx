@@ -55,7 +55,7 @@ const EVENT_DEVICE_QUESTIONS: HelpLink[] = [
     href: "/help/event-device-owner",
   },
   {
-    question: "יש לי קוד — אורחים",
+    question: "יש לי קוד כניסה — אורחים",
     href: "/help/event-device-visitor",
   },
 ];

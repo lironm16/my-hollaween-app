@@ -38,6 +38,8 @@ export type HouseCardActionContext = {
   onEdit?: (house: PublicHouse) => void;
   nightPassesEnabled?: boolean;
   onNightPasses?: (house: PublicHouse) => void;
+  /** Owner/admin ⋮ «מיקום השדון» — only shown on houses this device may edit. */
+  onPlaceGem?: (house: PublicHouse) => void;
   skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
   editingId?: string | null;
 };
@@ -95,6 +97,10 @@ export function houseCardPropsFor(
       editAllowed && ctx.nightPassesEnabled && ctx.onNightPasses
         ? () => ctx.onNightPasses!(house)
         : undefined,
+    onPlaceGem:
+      editAllowed && ctx.onPlaceGem && (ctx.gemQuickActionEligible?.(house) ?? true)
+        ? () => ctx.onPlaceGem!(house)
+        : undefined,
     editing: editAllowed && ctx.editingId === id,
     index: opts?.index,
     distanceM: opts?.distanceM,
@@ -140,6 +146,7 @@ export function houseActionBarPropsFromCard(
     onShowInList: card.onShowInList,
     onToggleEdit: card.canEdit ? card.onToggleEdit : undefined,
     onNightPasses: card.onNightPasses,
+    onPlaceGem: card.onPlaceGem,
     skipped: card.skipped,
     editing: card.editing,
     editCode: card.editCode,

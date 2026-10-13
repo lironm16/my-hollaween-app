@@ -10,7 +10,6 @@ import {
   clusterHouseIndex,
 } from "@/components/cluster-house-list";
 import { ClusterHouseActionMenu } from "@/components/cluster-house-action-menu";
-import { HouseSkippedBanner, HouseVisitedBanner } from "@/components/house-skipped-banner";
 import { boothNumberForHouse, clusterBoothLabel } from "@/lib/cluster-booth";
 import { clusterOverviewSubtitle, usesSchoolCampusClusterChrome } from "@/lib/school-campus";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
@@ -99,7 +98,6 @@ export function MapHouseSheet({
   const { house: hydratedHouse, loading: detailLoading, unavailable: detailUnavailable } =
     useServerHouseDetail(overlaid);
   const sheetHouse = useAdminHouseFields(hydratedHouse) ?? hydratedHouse ?? overlaid;
-  const address = addressReveal.formatDisplayAddress(sheetHouse);
   const clusterKey = clusterHouses.map((item) => item.id).join(",");
   const clusterIndex = clusterHouseIndex(clusterHouses, house.id);
   const canPrevCluster = clusterIndex != null && clusterIndex > 1;
@@ -115,13 +113,6 @@ export function MapHouseSheet({
   const clusterNow = now ?? new Date();
   const isSkipped = skippedIds ?? (() => false);
   const isFilteredOut = filteredOutIds ?? (() => false);
-  const clusterAllSkipped =
-    overview && clusterHouses.length > 0 && clusterHouses.every((item) => isSkipped(item.id));
-  const clusterAllVisited =
-    overview &&
-    clusterHouses.length > 0 &&
-    clusterHouses.every((item) => visited?.(item.id)) &&
-    !clusterAllSkipped;
   function parentH() {
     const el = sheetRef.current;
     const parent =
@@ -384,7 +375,9 @@ export function MapHouseSheet({
             <div className="map-house-sheet-cluster-head shrink-0">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="map-house-sheet-kicker">{address}</p>
+                  <p className="map-house-sheet-kicker">
+                    {addressReveal.formatClusterAddress(clusterHouses, sheetHouse)}
+                  </p>
                   <p className="map-house-sheet-sub">{clusterOverviewSubtitle(clusterHouses)}</p>
                 </div>
                 <ClusterHouseActionMenu
@@ -435,16 +428,6 @@ export function MapHouseSheet({
                   }
                 />
               </div>
-              {clusterAllSkipped && actionContext.onClusterRestoreAll ? (
-                <HouseSkippedBanner
-                  onRestore={() => actionContext.onClusterRestoreAll!(clusterHouses)}
-                />
-              ) : null}
-              {clusterAllVisited && actionContext.onClusterUnvisitAll ? (
-                <HouseVisitedBanner
-                  onRestore={() => actionContext.onClusterUnvisitAll!(clusterHouses)}
-                />
-              ) : null}
             </div>
             <div className="map-house-sheet-cluster-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
               <ClusterHouseList

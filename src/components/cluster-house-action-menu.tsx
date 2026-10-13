@@ -1,6 +1,7 @@
 "use client";
 
 import { HouseCardQuickActions } from "@/components/house-card-quick-actions";
+import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { GEM_CLUSTER_FIND_ALL_HE, GEM_CLUSTER_FOUND_ALL_HE } from "@/lib/gem-hunt-copy";
 import { clusterIsSchoolCampus } from "@/lib/school-campus";
 import type { PublicHouse } from "@/lib/types";
@@ -39,14 +40,16 @@ export function ClusterHouseActionMenu({
   menuPlacement?: "top" | "bottom";
   className?: string;
 }) {
+  const addressReveal = useAddressReveal();
   const readGemCollected = gemCollected ?? (() => false);
   const allVisited = houses.length > 0 && houses.every((house) => visited(house.id));
   const allSkipped = houses.length > 0 && houses.every((house) => skipped(house.id));
   const allLiked = houses.length > 0 && houses.every((house) => liked(house.id));
+  const gemHouses = houses.filter((house) => addressReveal.canViewDetails(house.id));
   const allGemsCollected =
-    houses.length >= 2 && houses.every((house) => readGemCollected(house.id));
+    gemHouses.length >= 2 && gemHouses.every((house) => readGemCollected(house.id));
   const showGemActions =
-    houses.length >= 2 && Boolean(onFindAllGems || onResetAllGems);
+    gemHouses.length >= 2 && Boolean(onFindAllGems || onResetAllGems);
 
   if ((houses.length <= 1 && !clusterIsSchoolCampus(houses)) || houses.length === 0) {
     return null;

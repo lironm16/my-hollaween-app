@@ -2,14 +2,12 @@
 
 import { SkipIcon } from "@/components/skip-icon";
 import { clusterPinStatus, clusterPinVisitKind } from "@/lib/cluster-pin-status";
-import { isPoiHouse } from "@/lib/house-kind";
 import { pinScareSrc } from "@/lib/pin-faces";
 import { pinBackgroundFill } from "@/lib/pin-colors";
 import { effectiveVisit, isDecorated } from "@/lib/house-state";
 import { isClosingSoon, isHoursNightOver, isOpeningSoon } from "@/lib/hours";
 import type { PublicHouse } from "@/lib/types";
-import { isPracticeHouse } from "@/lib/practice-house";
-import { PRACTICE_PIN_BAT_SRC } from "@/lib/practice-pin-face";
+import { isPoiHouse } from "@/lib/house-kind";
 import { cn } from "@/lib/utils";
 
 export function HouseMapPinIcon({
@@ -36,13 +34,11 @@ export function HouseMapPinIcon({
     effectiveVisit(house) !== "closed" &&
     !isHoursNightOver(house, now);
   const scare = house.scareLevel ?? "mild";
-  const practice = isPracticeHouse(house);
 
   return (
     <div
       className={cn(
         "house-pin cluster-list-pin relative shrink-0",
-        practice && "is-practice",
         isPoiHouse(house) && "is-poi",
         !decorated && "is-undecorated",
         closingSoon && "is-closing-soon",
@@ -51,13 +47,7 @@ export function HouseMapPinIcon({
         filteredOut && "is-filtered-out",
         className,
       )}
-      style={
-        practice
-          ? {
-              background: "linear-gradient(165deg,#0f766e 0%,#0d9488 55%,#14b8a6 100%)",
-            }
-          : { background: pinBackgroundFill(house, decorated) }
-      }
+      style={{ background: pinBackgroundFill(house, decorated) }}
       aria-hidden
     >
       {closingSoon ? <i className="pin-hours-ring is-closing" /> : null}
@@ -72,13 +62,8 @@ export function HouseMapPinIcon({
       {!skipped && (status === "plenty" || status === "low" || status === "out") ? (
         <b className={`pin-status is-${status}`} />
       ) : null}
-      {practice ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img className="pin-practice-bat-img" src={PRACTICE_PIN_BAT_SRC} alt="" aria-hidden />
-      ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img className="pin-scare" src={pinScareSrc(house, decorated ? scare : "mild")} alt="" />
-      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="pin-scare" src={pinScareSrc(house, decorated ? scare : "mild")} alt="" />
     </div>
   );
 }

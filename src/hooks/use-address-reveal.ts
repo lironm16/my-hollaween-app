@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import {
   canViewHouseLocationDetails,
+  clusterDisplayAddressWithPolicy,
   formatDisplayAddressWithPolicy,
   makeAddressRevealContext,
   mapsNavigationAllowed,
@@ -22,6 +23,7 @@ import type { PublicHouse } from "@/lib/types";
 export function useAddressReveal(): AddressRevealContext & {
   canViewDetails: (houseId: string) => boolean;
   formatDisplayAddress: (house: PublicHouse) => string;
+  formatClusterAddress: (houses: readonly PublicHouse[], fallback: PublicHouse) => string;
   visibleArrival: (house: PublicHouse) => string;
   mapsAllowed: (houseId: string) => boolean;
   distanceAllowed: (houseId: string) => boolean;
@@ -58,6 +60,8 @@ export function useAddressReveal(): AddressRevealContext & {
       canViewDetails: (houseId: string) => canViewHouseLocationDetails(houseId, ctx),
       formatDisplayAddress: (house: PublicHouse) =>
         formatDisplayAddressWithPolicy(house, house.id, ctx),
+      formatClusterAddress: (houses: readonly PublicHouse[], fallback: PublicHouse) =>
+        clusterDisplayAddressWithPolicy(houses, fallback, ctx),
       visibleArrival: (house: PublicHouse) => visibleArrivalWithPolicy(house, house.id, ctx),
       mapsAllowed: (houseId: string) => mapsNavigationAllowed(houseId, ctx),
       distanceAllowed: (houseId: string) => canViewHouseLocationDetails(houseId, ctx),

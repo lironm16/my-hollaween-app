@@ -1,5 +1,6 @@
-import { clusterAddressKey, clusterCoordKey } from "@/lib/house-clusters";
+import { redactHouseLocationDetails } from "@/lib/address-reveal";
 import { isPoiHouse } from "@/lib/house-kind";
+import { isStubHouse, type HouseSet } from "@/lib/house-set";
 import { isPracticeHouse } from "@/lib/practice-house";
 import { isSchoolCampusAddress } from "@/lib/school-campus";
 import type { NightPassViewer, PublicHouse } from "@/lib/types";
@@ -7,37 +8,13 @@ import type { NightPassViewer, PublicHouse } from "@/lib/types";
 type ScopeRow = Pick<
   PublicHouse,
   "id" | "kind" | "address" | "arrival" | "lat" | "lng" | "isPractice"
->;
+> & { notes?: string; isStub?: boolean; deviceCacheStub?: boolean };
 
-/** Businesses, school booths and practice rows — address + arrival are public for everyone. */
+/** Businesses and school booths — address + arrival are public for everyone. */
 export function isPublicTierHouse(house: Pick<ScopeRow, "kind" | "address" | "isPractice">) {
-  if (isPracticeHouse(house)) return true;
+  if (isPracticeHouse(house)) return false;
   if (isPoiHouse(house)) return true;
   return isSchoolCampusAddress(house.address);
-}
-
-function locationKeys(house: Pick<ScopeRow, "address" | "lat" | "lng">): string[] {
-  const keys: string[] = [];
-  if (Number.isFinite(house.lat) && Number.isFinite(house.lng)) {
-    keys.push(clusterCoordKey(house.lat, house.lng));
-  }
-  const address = house.address?.trim();
-  if (address) keys.push(`addr:${clusterAddressKey(address)}`);
-  return keys;
-}
-
-/** Pin / address keys of every public-tier row — homes sharing one become publicly located. */
-export function publicLocationKeys(houses: readonly ScopeRow[]): Set<string> {
-  const keys = new Set<string>();
-  for (const house of houses) {
-    if (!isPublicTierHouse(house)) continue;
-    for (const key of locationKeys(house)) keys.add(key);
-  }
-  return keys;
-}
-
-export function sharesPublicLocation(house: ScopeRow, keys: ReadonlySet<string>) {
-  return locationKeys(house).some((key) => keys.has(key));
 }
 
 export type NightPassScopeContext = {
@@ -59,23 +36,36 @@ export type ScopedHouses<T> = {
   houses: T[];
   /** Homes the viewer cannot see at all (public visitors only). */
   hiddenHouseCount: number;
+  /** Rehearsal stubs among {@link hiddenHouseCount}. */
+  hiddenStubHouseCount: number;
 };
+
+/** Teaser count for the house set the viewer's map is showing. */
+export function hiddenHouseCountForSet(
+  counts: { hiddenHouseCount?: number; hiddenStubHouseCount?: number } | null | undefined,
+  set: HouseSet,
+): number {
+  const total = counts?.hiddenHouseCount ?? 0;
+  const stubs = Math.min(counts?.hiddenStubHouseCount ?? 0, total);
+  if (set === "all") return total;
+  if (set === "stubs") return stubs;
+  return total - stubs;
+}
 
 /**
  * Night-pass visibility for one viewer. Input rows must be unredacted.
- * - business / school / practice: everything, always
+ * - business / school: everything, always
  * - homes (even in a business's building): never sent to public visitors; pass holders + admin
- *   see them all (address/arrival after reveal), owners see their own
- * - home sharing a pin with a business: address open to whoever receives it; arrival stays private
+ *   see them all (address/arrival/notes after reveal), owners see their own
  */
 export function scopeHousesForViewer<T extends ScopeRow>(
   rows: readonly T[],
   ctx: NightPassScopeContext,
 ): ScopedHouses<T> {
-  const keys = publicLocationKeys(rows);
   const seesAllHomes = ctx.viewer === "pass" || ctx.viewer === "admin";
   const houses: T[] = [];
   let hiddenHouseCount = 0;
+  let hiddenStubHouseCount = 0;
   for (const row of rows) {
     const owned = ctx.ownedIds.has(row.id);
     const detailsOpen = owned || ctx.viewer === "admin" || (seesAllHomes && ctx.revealed);
@@ -85,17 +75,10 @@ export function scopeHousesForViewer<T extends ScopeRow>(
     }
     if (!seesAllHomes && !owned) {
       hiddenHouseCount += 1;
+      if (isStubHouse(row)) hiddenStubHouseCount += 1;
       continue;
     }
-    if (sharesPublicLocation(row, keys)) {
-      houses.push({
-        ...row,
-        locationPublic: true,
-        arrival: detailsOpen ? row.arrival : "",
-      });
-      continue;
-    }
-    houses.push(detailsOpen ? row : { ...row, address: "", arrival: "" });
+    houses.push(detailsOpen ? row : redactHouseLocationDetails(row));
   }
-  return { houses, hiddenHouseCount };
+  return { houses, hiddenHouseCount, hiddenStubHouseCount };
 }

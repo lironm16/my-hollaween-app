@@ -191,12 +191,12 @@ export function GemModel3D({
       };
     }
 
-    const ambient = new THREE.AmbientLight(0xffffff, 0.95);
-    const key = new THREE.DirectionalLight(0xffe7ba, 1.2);
+    const ambient = new THREE.AmbientLight(0xffffff, 1.45);
+    const key = new THREE.DirectionalLight(0xffe7ba, 0.45);
     key.position.set(2, 3, 4);
-    const rim = new THREE.DirectionalLight(0xc4b5fd, 0.65);
+    const rim = new THREE.DirectionalLight(0xc4b5fd, 0.28);
     rim.position.set(-2, 1, -3);
-    const fill = new THREE.DirectionalLight(0xfbbf24, 0.35);
+    const fill = new THREE.DirectionalLight(0xfbbf24, 0.22);
     fill.position.set(0, -1, 2);
     /** Orbit moves the camera, so the rig turns with it — otherwise the viewer sees the unlit back. */
     const lightRig = new THREE.Group();

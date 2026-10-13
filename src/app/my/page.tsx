@@ -20,7 +20,12 @@ import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
-import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
+import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { useGemAnchorPlacer } from "@/components/gem-anchor-place-dialog";
+import { useHouseSet } from "@/hooks/use-house-set";
+import { isPreviewDeploymentClient } from "@/lib/deployment-env";
+import { activeHouseSetForSession } from "@/lib/house-set";
+import { houseGemHuntUiEligible } from "@/lib/gem-monsters";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import {
   forgetPublishedHouse,
@@ -64,7 +69,10 @@ function MyCollectionsPageContent() {
   const searchParams = useSearchParams();
   const { admin } = useAdminSession();
   const now = useAppNow();
-  const { gemBagMenuVisible: showCollected } = useGemHuntAdminUi(admin);
+  const { gemBagMenuVisible: showCollected, gemUiVisible: gemCardActionsEnabled } =
+    useGemHuntAdminUi(admin);
+  const addressReveal = useAddressReveal();
+  const { houseSet } = useHouseSet();
   const addHouseOpen = useAddHouseOpen();
   const urlTab = parseTab(searchParams.get("tab"), showCollected);
   const [tab, setTab] = useState<PersonalMarksTab>(urlTab);
@@ -90,7 +98,14 @@ function MyCollectionsPageContent() {
   const visits = useVisitedHouses();
   const gems = useGemProgress();
   const { catalog, refresh } = useCatalog();
+  const activeHouseSet = activeHouseSetForSession(admin, houseSet, catalog, {
+    previewDeployment: isPreviewDeploymentClient(),
+  });
   const geo = useUserLocation();
+  const { open: openGemPlacer, dialog: gemPlacerDialog } = useGemAnchorPlacer({
+    userLocation: geo.location,
+    refreshLocation: geo.refresh,
+  });
   const { resolved: origin } = useDistanceOrigin(geo.location);
   const editFlow = useHouseEditFlow();
   const nightPass = useNightPass();
@@ -137,8 +152,6 @@ function MyCollectionsPageContent() {
     if (!showCollected) return [];
     return catalogHouses.filter((house) => gems.collected(house.id));
   }, [catalogHouses, gems, showCollected]);
-
-  const gemCardActionsEnabled = gemHuntVisible(admin);
 
   const housesByTab: Record<PersonalMarksTab, PublicHouse[]> = {
     mine: mineHouses,
@@ -195,6 +208,9 @@ function MyCollectionsPageContent() {
             router.push(`/?focus=${encodeURIComponent(house.id)}&gemHunt=1`);
           }
         : undefined,
+      gemQuickActionEligible: gemCardActionsEnabled
+        ? (house) => houseGemHuntUiEligible(house, activeHouseSet, addressReveal)
+        : undefined,
       onToggleLike: (id) => likes.toggle(id),
       onToggleVisited: (id) => visits.toggle(id),
       onSkip: tab === "visited" ? (id) => skips.toggle(id) : undefined,
@@ -211,6 +227,10 @@ function MyCollectionsPageContent() {
       nightPassesEnabled: nightPass.enabled,
       onNightPasses:
         tab === "mine" ? (house) => openOwnerPasses(house.id) : undefined,
+      onPlaceGem:
+        tab === "mine" && gemCardActionsEnabled
+          ? (house) => openGemPlacer(house, owned.find((item) => item.id === house.id)?.editCode)
+          : undefined,
       skipMetaFor: (id) => skips.meta(id),
       editingId: editFlow.flow?.house.id ?? null,
       onShowOnMap: (id) => router.push(`/?focus=${encodeURIComponent(id)}`),
@@ -221,6 +241,9 @@ function MyCollectionsPageContent() {
     likes,
     visits,
     skips,
+    openGemPlacer,
+    activeHouseSet,
+    addressReveal,
     gemCardActionsEnabled,
     gems,
     tab,
@@ -357,6 +380,7 @@ function MyCollectionsPageContent() {
           void refresh(true);
         }}
       />
+      {gemPlacerDialog}
     </div>
   );
 }

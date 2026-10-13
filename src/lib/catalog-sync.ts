@@ -30,6 +30,19 @@ function preserveLocalHousesFromPrev(
   for (const house of prev.houses) take(house);
 }
 
+/** Night-pass teaser counts — carried together so the stub share never outlives its total. */
+export function hiddenCountFields(
+  source: Pick<Catalog, "hiddenHouseCount" | "hiddenStubHouseCount"> | null | undefined,
+): Pick<Catalog, "hiddenHouseCount" | "hiddenStubHouseCount"> {
+  if (typeof source?.hiddenHouseCount !== "number") return {};
+  return {
+    hiddenHouseCount: source.hiddenHouseCount,
+    ...(typeof source.hiddenStubHouseCount === "number"
+      ? { hiddenStubHouseCount: source.hiddenStubHouseCount }
+      : {}),
+  };
+}
+
 /** API / CDN payloads must always expose houses[] — delta polls omit the key when unchanged. */
 export function normalizeCatalogDelta(raw: unknown): CatalogDelta {
   const o = raw && typeof raw === "object" ? (raw as Partial<CatalogDelta>) : {};
@@ -45,7 +58,7 @@ export function normalizeCatalogDelta(raw: unknown): CatalogDelta {
     pushTemplates: o.pushTemplates,
     eventSettings: o.eventSettings,
     ...(typeof o.scope === "string" ? { scope: o.scope } : {}),
-    ...(typeof o.hiddenHouseCount === "number" ? { hiddenHouseCount: o.hiddenHouseCount } : {}),
+    ...hiddenCountFields(o),
   };
 }
 
@@ -133,9 +146,7 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
       pushTemplates: delta.pushTemplates,
       eventSettings: delta.eventSettings,
       ...(delta.scope ? { scope: delta.scope } : {}),
-      ...(typeof delta.hiddenHouseCount === "number"
-        ? { hiddenHouseCount: delta.hiddenHouseCount }
-        : {}),
+      ...hiddenCountFields(delta),
     };
   }
   if (delta.full) {
@@ -147,9 +158,7 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
       pushTemplates: delta.pushTemplates ?? prev.pushTemplates,
       eventSettings: delta.eventSettings ?? prev.eventSettings,
       ...(delta.scope ? { scope: delta.scope } : {}),
-      ...(typeof delta.hiddenHouseCount === "number"
-        ? { hiddenHouseCount: delta.hiddenHouseCount }
-        : {}),
+      ...hiddenCountFields(delta),
     });
   }
   const byId = new Map(prev.houses.map((house) => [house.id, house]));
@@ -164,7 +173,7 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
     houseCount = Math.max(prev.houseCount ?? 0, mergedLen);
   }
   const scope = delta.scope ?? prev.scope;
-  const hiddenHouseCount = delta.hiddenHouseCount ?? prev.hiddenHouseCount;
+  const hidden = hiddenCountFields(typeof delta.hiddenHouseCount === "number" ? delta : prev);
   return {
     updatedAt: delta.updatedAt,
     neighborhood: delta.neighborhood || prev.neighborhood,
@@ -173,7 +182,7 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
     pushTemplates: delta.pushTemplates ?? prev.pushTemplates,
     eventSettings: delta.eventSettings ?? prev.eventSettings,
     ...(scope ? { scope } : {}),
-    ...(typeof hiddenHouseCount === "number" ? { hiddenHouseCount } : {}),
+    ...hidden,
   };
 }
 
@@ -228,6 +237,7 @@ export function cloneDb(db: DbFile): DbFile {
           ...(db.eventSettings.addHouseCutoff
             ? { addHouseCutoff: { ...db.eventSettings.addHouseCutoff } }
             : {}),
+          ...(db.eventSettings.gemHuntPublic === true ? { gemHuntPublic: true as const } : {}),
         }
       : undefined,
   };

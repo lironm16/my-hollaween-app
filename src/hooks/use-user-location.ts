@@ -23,6 +23,45 @@ const freshOpts: PositionOptions = {
   timeout: 15_000,
 };
 
+/** Prefer cached fix (same as watch) — reliable in Chrome when the main map already has GPS. */
+export const GEOLOCATION_CACHED_OPTS: PositionOptions = watchOpts;
+/** Force a new high-accuracy read when cache is empty. */
+export const GEOLOCATION_FRESH_OPTS: PositionOptions = freshOpts;
+
+export function readUserLocation(options: PositionOptions = GEOLOCATION_CACHED_OPTS): Promise<UserLocation | null> {
+  return new Promise((resolve) => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      resolve(null);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) =>
+        resolve({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+        }),
+      () => resolve(null),
+      options,
+    );
+  });
+}
+
+/** Shared lookup for «המיקום שלי» — reuse app GPS, then cached, then fresh. */
+export async function resolveUserLocationForUi(input?: {
+  seed?: UserLocation | null;
+  refresh?: () => Promise<UserLocation | null>;
+}): Promise<UserLocation | null> {
+  if (input?.seed) return input.seed;
+  if (input?.refresh) {
+    const refreshed = await input.refresh();
+    if (refreshed) return refreshed;
+  }
+  const cached = await readUserLocation(GEOLOCATION_CACHED_OPTS);
+  if (cached) return cached;
+  return readUserLocation(GEOLOCATION_FRESH_OPTS);
+}
+
 async function queryGeoPermission(): Promise<"granted" | "denied" | "prompt" | "unknown"> {
   try {
     const result = await navigator.permissions?.query({ name: "geolocation" });

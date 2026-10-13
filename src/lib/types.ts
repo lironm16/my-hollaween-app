@@ -112,8 +112,16 @@ export type House = {
   deletedAt?: string | null;
   /** QA / rehearsal row — hidden from «אמיתיים» map and visitor counts. */
   isStub?: boolean;
-  /** Demon practice row — admin-managed; excluded from neighborhood stats/routes. */
+  /** Legacy rows only — excluded from map, stats, and routes. */
   isPractice?: boolean;
+  /** Gem hiding spot placed by the owner or an admin; null/absent = automatic sidewalk anchor. */
+  gemAnchor?: GemAnchorPlacement | null;
+};
+
+export type GemAnchorPlacement = {
+  lat: number;
+  lng: number;
+  updatedAt: string;
 };
 
 export type HouseInput = {
@@ -161,7 +169,7 @@ export type NightPatch = {
 };
 
 export type PublicHouse = Omit<House, "editCode" | "storeId" | "ownerPhone" | "addedBy"> & {
-  /** Night passes: business / school row, or a home sharing its pin — address shown to everyone. */
+  /** Night passes: business / school row — address shown to everyone. */
   locationPublic?: boolean;
   /** True when hydrated from on-device cache — detail text/address must be fetched live. */
   deviceCachePin?: boolean;
@@ -209,11 +217,15 @@ export type Catalog = {
   eventSettings?: {
     addressReveal: AddressRevealSchedule;
     addHouseCutoff: AddHouseCutoffSchedule;
+    /** When true, non-admin users see gem hunt UI (default false). */
+    gemHuntPublic?: boolean;
   };
   /** Night passes on — which audience this payload was built for (absent = legacy full list). */
   scope?: NightPassViewer;
   /** Night passes — homes left out of this payload (shown as a teaser to unregistered visitors). */
   hiddenHouseCount?: number;
+  /** Rehearsal stubs included in {@link hiddenHouseCount}. */
+  hiddenStubHouseCount?: number;
 };
 
 /** Who the server built a catalog for. `legacy` = night passes off (everyone sees everything). */
@@ -270,6 +282,7 @@ export type DbFile = {
     updatedAt?: string;
     addressReveal?: AddressRevealSchedule;
     addHouseCutoff?: AddHouseCutoffSchedule;
+    gemHuntPublic?: boolean;
   };
   pushSettings?: {
     updatedAt?: string;

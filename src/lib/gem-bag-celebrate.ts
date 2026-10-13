@@ -1,6 +1,6 @@
 import {
   gemAlbumStickerPool,
-  gemHuntMapHouses,
+  gemHousesForMap,
   isGemAlbumMonsterCollected,
   type GemCollectionStamp,
 } from "@/lib/gem-monsters";
@@ -15,7 +15,8 @@ export function gemBagCelebrateAfterCollect(
   houseId: string,
   gemType: string,
 ): GemBagCelebrateKind | null {
-  const huntHouses = gemHuntMapHouses(mapHouses, "real");
+  /** Callers pass the same gem-eligible map rows as pin rings (already filtered). */
+  const huntHouses = gemHousesForMap(mapHouses);
   const collectedIdsBefore = new Set(collectedBefore.map((e) => e.houseId));
   const mapCompleteAfter =
     huntHouses.length > 0 &&

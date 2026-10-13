@@ -120,7 +120,7 @@ export function NightPassRegisterPanel({
   if (!open) {
     return (
       <p className="text-base text-violet-200">
-        ההרשמה עם קוד עוד לא נפתחה. נסו שוב בקרוב.
+        ההרשמה עם קוד כניסה עוד לא נפתחה. נסו שוב בקרוב.
       </p>
     );
   }
@@ -139,7 +139,7 @@ export function NightPassRegisterPanel({
         </p>
       ) : null}
       <div className="space-y-1.5">
-        <Label htmlFor="pass-code">קוד (8 תווים)</Label>
+        <Label htmlFor="pass-code">קוד כניסה (8 תווים)</Label>
         <Input
           id="pass-code"
           value={code}

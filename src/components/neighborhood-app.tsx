@@ -19,6 +19,7 @@ import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { invalidateMapPinIconCacheForGemRings } from "@/lib/map-pin-icon-cache";
 import { HouseList } from "@/components/house-list";
 import type { HouseCardActionContext } from "@/components/house-card-actions";
+import { useGemAnchorPlacer } from "@/components/gem-anchor-place-dialog";
 import { MapStats, StatsSummary } from "@/components/map-stats";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
@@ -52,7 +53,6 @@ import {
   type GemClusterSessionCatch,
 } from "@/components/gem-cluster-session-summary";
 import { GemResetConfirmDialog } from "@/components/gem-reset-confirm-dialog";
-import { GemMapCompleteBanner } from "@/components/gem-map-complete-banner";
 import {
   GemHuntExperienceLazy,
   preloadGemHuntChunks,
@@ -75,10 +75,14 @@ import {
   gemClusterQueueHeadline,
   nextClusterGemHouse,
 } from "@/lib/gem-campus-queue";
-import { gemMapLegendVisible } from "@/lib/gem-hunt-enabled";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
-import { mainMapGemEligibleHouses, syncGemMonsterAssignment } from "@/lib/gem-monsters";
+import {
+  gemCapableMapHouses,
+  houseGemHuntUiEligible,
+  mainMapGemEligibleHouses,
+  syncGemMonsterAssignment,
+} from "@/lib/gem-monsters";
 import {
   isGemHuntOrientationGranted,
   prepareGemHuntSensors,
@@ -132,12 +136,12 @@ import {
   countLikedInSet,
   houseMatchesSet,
 } from "@/lib/house-set";
-import { houseVisibleOnMainMap, formatMapDisplayLayersStatus } from "@/lib/map-display-layers";
 import {
-  isPracticeHouse,
-  practiceHousesVisibleToUsers,
-  stripPracticeHouses,
-} from "@/lib/practice-house";
+  houseVisibleOnMainMap,
+  formatMapDisplayLayersStatus,
+  mapDisplayLayersForSession,
+} from "@/lib/map-display-layers";
+import { stripPracticeHouses } from "@/lib/practice-house";
 import { isPreviewDeploymentClient } from "@/lib/deployment-env";
 import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
 import { formatDistance } from "@/lib/geo";
@@ -235,7 +239,7 @@ export function NeighborhoodApp({
   useEffect(() => {
     invalidateMapPinIconCacheForGemRings();
   }, [mapDiamondsVisible]);
-  const showGemMapLegend = gemMapLegendVisible(admin);
+  const showGemMapLegend = gemFeatureOn;
   const [gemResetHouse, setGemResetHouse] = useState<PublicHouse | null>(null);
   const [gemResetCluster, setGemResetCluster] = useState<PublicHouse[] | null>(null);
   const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);
@@ -262,9 +266,19 @@ export function NeighborhoodApp({
   const { layers, houseSet: legacyHouseSetFromLayers } = useHouseSet();
   const houseSet = legacyHouseSetFromLayers;
   const adminForHouseSet = adminSessionReady && admin;
+  const previewDeployment = isPreviewDeploymentClient();
   const activeHouseSet = resolveViewerHouseSet(catalog, adminForHouseSet, houseSet, {
-    previewDeployment: isPreviewDeploymentClient(),
+    previewDeployment,
   });
+  const mapLayers = useMemo(
+    () =>
+      mapDisplayLayersForSession(layers, {
+        previewDeployment,
+        activeHouseSet,
+        catalog,
+      }),
+    [layers, previewDeployment, activeHouseSet, catalog],
+  );
   const view = useSyncExternalStore(
     (onStoreChange) => {
       window.addEventListener("hw-home-view", onStoreChange);
@@ -294,6 +308,10 @@ export function NeighborhoodApp({
   const skips = useSkippedHouses();
   const owned = useOwnedHouses();
   const nightPass = useNightPass();
+  const { open: openGemPlacer, dialog: gemPlacerDialog } = useGemAnchorPlacer({
+    userLocation: gps,
+    refreshLocation: geo.refresh,
+  });
   const { openOwnerPasses } = useNightPassDialog();
   useEffect(() => {
     applyClockSearchParams(window.location.search);
@@ -382,10 +400,10 @@ export function NeighborhoodApp({
     return housesForMap;
   }, [housesForMap, catalog, gemPreviewAsUser, addressReveal, adminHouses, restoreRedactedLocations]);
 
-  const housesForMapAndList = useMemo(() => {
-    if (adminForHouseSet || practiceHousesVisibleToUsers()) return displayHouses;
-    return stripPracticeHouses(displayHouses);
-  }, [displayHouses, adminForHouseSet]);
+  const housesForMapAndList = useMemo(
+    () => stripPracticeHouses(displayHouses),
+    [displayHouses],
+  );
 
   const { houses: mapListHouses, now: mapListNow } = useMapListUiLock(housesForMapAndList, now);
 
@@ -407,24 +425,20 @@ export function NeighborhoodApp({
 
   const mapHouses = useMemo(
     () =>
-      mapListHouses.filter((house) =>
-        houseVisibleOnMainMap(house, layers, {
-          admin: Boolean(adminForHouseSet),
-          practicePublic: practiceHousesVisibleToUsers(),
-        }),
-      ),
-    [mapListHouses, layers, adminForHouseSet],
+      mapListHouses.filter((house) => houseVisibleOnMainMap(house, mapLayers)),
+    [mapListHouses, mapLayers],
+  );
+  const gemCapableHouses = useMemo(
+    () => gemCapableMapHouses(mapHouses, activeHouseSet),
+    [mapHouses, activeHouseSet],
   );
   const gemMapRingHouses = useMemo(
-    () =>
-      mainMapGemEligibleHouses(mapHouses, activeHouseSet, {
-        adminGemTools: gemAdminTools,
-      }),
-    [mapHouses, activeHouseSet, gemAdminTools],
+    () => mainMapGemEligibleHouses(mapHouses, activeHouseSet, addressReveal),
+    [mapHouses, activeHouseSet, addressReveal],
   );
   useEffect(() => {
-    if (gemHuntActive) syncGemMonsterAssignment(gemMapRingHouses);
-  }, [gemHuntActive, gemMapRingHouses]);
+    if (gemHuntActive) syncGemMonsterAssignment(gemCapableHouses);
+  }, [gemHuntActive, gemCapableHouses]);
   const visible = useMemo(
     () => filterHouses(housesForFilters, filters, filterContext),
     [housesForFilters, filters, filterContext],
@@ -443,11 +457,6 @@ export function NeighborhoodApp({
 
   const selection = useHouseSelection({ focusId, visible, houses: mapListHouses, clusterHouses: mapHouses });
   const { resetForNavigation } = selection;
-
-  const gemAllCollected = useMemo(() => {
-    if (!gemHuntActive || gemMapRingHouses.length === 0) return false;
-    return gemMapRingHouses.every((h) => gems.collected(h.id));
-  }, [gemHuntActive, gemMapRingHouses, gems.collectedIds]);
 
   const bootMapGemHunt = useCallback(
     async (house: PublicHouse, clusterMembers: PublicHouse[] | null) => {
@@ -495,24 +504,31 @@ export function NeighborhoodApp({
     [geo, gps, selection, setWatchEnabled],
   );
 
+  const gemHouseHuntAllowed = useCallback(
+    (house: PublicHouse) => houseGemHuntUiEligible(house, activeHouseSet, addressReveal),
+    [activeHouseSet, addressReveal],
+  );
+
   const openGemHuntForHouse = useCallback(
     async (house: PublicHouse) => {
       if (gems.collected(house.id)) return;
+      if (!gemHouseHuntAllowed(house)) return;
       mapGemClusterSessionRef.current = [];
       await bootMapGemHunt(house, null);
     },
-    [bootMapGemHunt, gems],
+    [bootMapGemHunt, gemHouseHuntAllowed, gems],
   );
 
   const openGemHuntForCluster = useCallback(
-    async (houses: PublicHouse[]) => {
+    async (clusterHouses: PublicHouse[]) => {
+      const houses = clusterHouses.filter(gemHouseHuntAllowed);
       if (houses.length < 2) return;
       const target = firstClusterGemHouseToHunt(houses, gems.collected);
       if (!target) return;
       mapGemClusterSessionRef.current = [];
       await bootMapGemHunt(target, houses);
     },
-    [bootMapGemHunt, gems.collected],
+    [bootMapGemHunt, gemHouseHuntAllowed, gems.collected],
   );
 
   const restoreAfterGemHunt = useCallback(() => {
@@ -571,9 +587,10 @@ export function NeighborhoodApp({
         setGemResetHouse(house);
         return;
       }
+      if (!gemHouseHuntAllowed(house)) return;
       void openGemHuntForHouse(house);
     },
-    [gems, openGemHuntForHouse],
+    [gemHouseHuntAllowed, gems, openGemHuntForHouse],
   );
 
   const gemHuntFromUrlHandledRef = useRef(false);
@@ -585,7 +602,7 @@ export function NeighborhoodApp({
     setView("map");
     selection.selectOnMap(house);
     const timer = window.setTimeout(() => {
-      handleToggleGemMenu(house);
+      if (gemHouseHuntAllowed(house)) handleToggleGemMenu(house);
       if (typeof window === "undefined") return;
       const url = new URL(window.location.href);
       url.searchParams.delete("gemHunt");
@@ -593,14 +610,15 @@ export function NeighborhoodApp({
       window.history.replaceState(window.history.state, "", next);
     }, 350);
     return () => window.clearTimeout(timer);
-  }, [gemHuntFromUrl, focusId, houses, handleToggleGemMenu, selection]);
+  }, [gemHuntFromUrl, focusId, gemHouseHuntAllowed, houses, handleToggleGemMenu, selection]);
 
-  const handleClusterResetAllGems = useCallback((houses: PublicHouse[]) => {
+  const handleClusterResetAllGems = useCallback((clusterHouses: PublicHouse[]) => {
+    const houses = clusterHouses.filter(gemHouseHuntAllowed);
     if (houses.length < 2) return;
     if (!houses.every((h) => gems.collected(h.id))) return;
     setGemResetHouse(null);
     setGemResetCluster(houses);
-  }, [gems]);
+  }, [gemHouseHuntAllowed, gems]);
 
   const cancelGemReset = useCallback(() => {
     setGemResetHouse(null);
@@ -1296,6 +1314,7 @@ export function NeighborhoodApp({
       onToggleLike,
       onToggleVisited,
       onToggleGem: gemUi ? handleToggleGemMenu : undefined,
+      gemQuickActionEligible: gemUi ? gemHouseHuntAllowed : undefined,
       onSkip: handleSkipHouse,
       onRestore: handleRestoreHouse,
       onShowOnMap:
@@ -1327,10 +1346,20 @@ export function NeighborhoodApp({
       onEdit: (house) => requestHouseEdit(house, true),
       nightPassesEnabled: nightPass.enabled,
       onNightPasses: (house) => openOwnerPasses(house.id),
+      onPlaceGem: gemUi
+        ? (house) =>
+            openGemPlacer(
+              house,
+              adminDeviceOwnerPowers(admin, gemPreviewAsUser)
+                ? editCodeById.get(house.id)
+                : owned.find((item) => item.id === house.id)?.editCode,
+            )
+        : undefined,
       skipMetaFor: (id) => skips.meta(id),
       editingId: editFlow.flow?.house.id ?? null,
     };
   }, [
+    openGemPlacer,
     admin,
     gemPreviewAsUser,
     nightPass.enabled,
@@ -1345,6 +1374,7 @@ export function NeighborhoodApp({
     gems.collected,
     onToggleLike,
     onToggleVisited,
+    gemHouseHuntAllowed,
     handleToggleGemMenu,
     openGemHuntForCluster,
     handleClusterResetAllGems,
@@ -1472,7 +1502,7 @@ export function NeighborhoodApp({
         error={error}
         hasCachedHouses={houses.length > 0}
       />
-      <NightPassBanner />
+      <NightPassBanner houseSet={activeHouseSet} />
       <TempSkipRestoreAlerts
         alerts={tempRestoreAlerts}
         onFocusHouse={(id) => {
@@ -1577,9 +1607,6 @@ export function NeighborhoodApp({
                   showGemPinRings={gemUi && mapDiamondsVisible}
                   isGemCollected={gems.collected}
                 />
-              {view === "map" && gemHuntActive && gemAllCollected && !originPick.originPickActive ? (
-                <GemMapCompleteBanner />
-              ) : null}
               {view === "map" && originPick.originPickActive ? (
                   <div className="origin-pick-bar">
                     <p className="origin-pick-label">{originPick.originDraftLabel}</p>
@@ -1751,6 +1778,7 @@ export function NeighborhoodApp({
           onClose={() => setClusterGemSessionSummary(null)}
         />
       ) : null}
+      {gemPlacerDialog}
       {gemResetHouse || gemResetCluster ? (
         <GemResetConfirmDialog
           open

@@ -17,7 +17,6 @@ import {
   PIN_SCHOOL_CAMPUS_INK_SRC,
   PIN_SCHOOL_CAMPUS_INK_SRC_2X,
 } from "@/lib/map-pin-school-icon";
-import { PRACTICE_PIN_BAT_SRC } from "@/lib/practice-pin-face";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -31,7 +30,6 @@ function SwatchPin({
   multi,
   multiClusterKind,
   school,
-  practice,
   visited,
   skipped,
   gemRing,
@@ -46,7 +44,6 @@ function SwatchPin({
   multi?: boolean;
   multiClusterKind?: BuildingClusterIconKind;
   school?: boolean;
-  practice?: boolean;
   visited?: boolean;
   skipped?: boolean;
   gemRing?: "sparkle" | "diamond";
@@ -61,7 +58,6 @@ function SwatchPin({
         multi && "is-building",
         multi && multiClusterKind && buildingClusterPinClass(multiClusterKind),
         school && "is-school-campus is-school-list-pin",
-        practice && "is-practice",
         !gemRing && hours === "closing" && "is-closing-soon",
         !gemRing && hours === "opening" && "is-opening-soon",
         gemRing === "sparkle" && "is-gem-ring-sparkle",
@@ -73,10 +69,8 @@ function SwatchPin({
         multi && multiClusterKind
           ? undefined
           : {
-              background: school || practice
-                ? practice
-                  ? "linear-gradient(165deg,#0f766e 0%,#0d9488 55%,#14b8a6 100%)"
-                  : undefined
+              background: school
+                ? undefined
                 : bare
                   ? poi
                     ? PIN_BACKGROUND.poi.undecorated
@@ -105,11 +99,7 @@ function SwatchPin({
       ) : null}
       {!gemRing && hours === "closing" ? <i className="pin-hours-ring is-closing" /> : null}
       {!gemRing && hours === "opening" ? <i className="pin-hours-ring is-opening" /> : null}
-      {practice ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img className="pin-practice-bat-img" src={PRACTICE_PIN_BAT_SRC} alt="" aria-hidden />
-      ) : null}
-      {!practice && (scare || bare) ? (
+      {scare || bare ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img className="pin-scare" src={scareSrc} alt="" />
       ) : null}
@@ -162,7 +152,6 @@ const BASE_GROUPS: { title: string; items: { key: string; label: string; node: R
         label: "מעורב",
         node: <SwatchPin multi multiClusterKind="mixed" />,
       },
-      { key: "practice-kind", label: "בית תרגול", node: <SwatchPin practice /> },
     ],
   },
   {

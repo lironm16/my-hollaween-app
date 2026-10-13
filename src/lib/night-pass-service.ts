@@ -16,8 +16,6 @@ import {
   type NightPassSlot,
 } from "@/lib/night-pass-store";
 
-/** Owner resets per slot; admin is unlimited. Resets are the only way to hand a slot to someone else. */
-export const OWNER_RESET_LIMIT = 3;
 const HISTORY_MAX = 20;
 
 function withEvent(history: NightPassEvent[], event: NightPassEvent) {
@@ -137,18 +135,17 @@ export async function redeemNightPass(input: {
 
 export type ResetOutcome =
   | { ok: true; record: NightPassRecord }
-  | { ok: false; error: "missing" | "limit" };
+  | { ok: false; error: "missing" };
 
 /** New code for a slot; the device registered on the old code loses access on its next sync. */
 export async function resetNightPassSlot(
   houseId: string,
   slot: NightPassSlot,
-  options: { admin: boolean },
+  _options: { admin: boolean },
 ): Promise<ResetOutcome> {
   const rows = await ensureHouseNightPasses(houseId);
   const current = rows.find((row) => row.slot === slot);
   if (!current) return { ok: false, error: "missing" };
-  if (!options.admin && current.resetCount >= OWNER_RESET_LIMIT) return { ok: false, error: "limit" };
   const record = await createPass(houseId, slot, {
     resetCount: current.resetCount + 1,
     history: withEvent(current.history, {
@@ -185,11 +182,9 @@ export type NightPassSlotView = {
   registeredAt: string | null;
   registrations: number;
   resetCount: number;
-  /** null = unlimited (admin). */
-  resetsLeft: number | null;
 };
 
-export function nightPassSlotView(record: NightPassRecord, admin: boolean): NightPassSlotView {
+export function nightPassSlotView(record: NightPassRecord, _admin: boolean): NightPassSlotView {
   return {
     slot: record.slot,
     code: formatNightPassCode(record.code),
@@ -199,6 +194,5 @@ export function nightPassSlotView(record: NightPassRecord, admin: boolean): Nigh
     registeredAt: record.registeredAt,
     registrations: record.registrations,
     resetCount: record.resetCount,
-    resetsLeft: admin ? null : Math.max(0, OWNER_RESET_LIMIT - record.resetCount),
   };
 }

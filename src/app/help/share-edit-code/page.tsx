@@ -3,7 +3,14 @@
 import { HelpShell, HelpStep } from "@/components/help-shell";
 import { helpImage } from "@/lib/help-images";
 
-const STEPS = [
+type ShareEditCodeStep = {
+  title: string;
+  body: string;
+  image?: string;
+  imageAlt?: string;
+};
+
+const STEPS: ShareEditCodeStep[] = [
   {
     title: "פתחו את תפריט הפעולות (⋮)",
     body: "במפה או ברשימה, פתחו את כרטיס הבית. בפינה העליונה של הכרטיס לחצו על ⋮ (שלוש נקודות).",
@@ -22,7 +29,7 @@ const STEPS = [
     image: helpImage("share-edit-code-dialog.png"),
     imageAlt: "חלון קוד עריכה עם העתיקו ושיתוף",
   },
-] as const;
+];
 
 export default function ShareEditCodeHelpPage() {
   return (
@@ -31,16 +38,9 @@ export default function ShareEditCodeHelpPage() {
         קוד עריכה מאפשר למישהו אחר לעדכן את הבית שלכם. הדרך המהירה: מתוך כרטיס הבית → ⋮ → קוד
         עריכה.
       </p>
-      <ol className="space-y-4">
-        {STEPS.map((step, index) => (
-          <HelpStep
-            key={step.title}
-            n={index + 1}
-            title={step.title}
-            body={step.body}
-            image={step.image}
-            imageAlt={step.imageAlt}
-          />
+      <ol className="space-y-6">
+        {STEPS.map((step, i) => (
+          <HelpStep key={step.title} index={i + 1} {...step} />
         ))}
       </ol>
     </HelpShell>
