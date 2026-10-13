@@ -130,7 +130,11 @@ import {
   countLikedInSet,
   houseMatchesSet,
 } from "@/lib/house-set";
-import { houseVisibleOnMainMap, formatMapDisplayLayersStatus } from "@/lib/map-display-layers";
+import {
+  houseVisibleOnMainMap,
+  formatMapDisplayLayersStatus,
+  mapDisplayLayersForSession,
+} from "@/lib/map-display-layers";
 import {
   isPracticeHouse,
   practiceHousesVisibleToUsers,
@@ -261,9 +265,19 @@ export function NeighborhoodApp({
   const { layers, houseSet: legacyHouseSetFromLayers } = useHouseSet();
   const houseSet = legacyHouseSetFromLayers;
   const adminForHouseSet = adminSessionReady && admin;
+  const previewDeployment = isPreviewDeploymentClient();
   const activeHouseSet = resolveViewerHouseSet(catalog, adminForHouseSet, houseSet, {
-    previewDeployment: isPreviewDeploymentClient(),
+    previewDeployment,
   });
+  const mapLayers = useMemo(
+    () =>
+      mapDisplayLayersForSession(layers, {
+        previewDeployment,
+        activeHouseSet,
+        catalog,
+      }),
+    [layers, previewDeployment, activeHouseSet, catalog],
+  );
   const view = useSyncExternalStore(
     (onStoreChange) => {
       window.addEventListener("hw-home-view", onStoreChange);
@@ -407,12 +421,12 @@ export function NeighborhoodApp({
   const mapHouses = useMemo(
     () =>
       mapListHouses.filter((house) =>
-        houseVisibleOnMainMap(house, layers, {
+        houseVisibleOnMainMap(house, mapLayers, {
           admin: Boolean(adminForHouseSet),
           practicePublic: practiceHousesVisibleToUsers(),
         }),
       ),
-    [mapListHouses, layers, adminForHouseSet],
+    [mapListHouses, mapLayers, adminForHouseSet],
   );
   const gemMapRingHouses = useMemo(
     () =>

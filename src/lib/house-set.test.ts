@@ -109,4 +109,15 @@ describe("resolveViewerHouseSet", () => {
   it("respects admin house-set preference", () => {
     assert.equal(resolveViewerHouseSet(stubsOnly, true, "stubs"), "stubs");
   });
+
+  it("falls back to all for admin on preview when the catalog is stub-only", () => {
+    assert.equal(
+      resolveViewerHouseSet(stubsOnly, true, "real", { previewDeployment: true }),
+      "all",
+    );
+    assert.equal(
+      resolveViewerHouseSet(stubsOnly, true, "stubs", { previewDeployment: true }),
+      "stubs",
+    );
+  });
 });
