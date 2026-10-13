@@ -184,7 +184,7 @@ async function main() {
           el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
         });
         await page
-          .getByText(/בתים בכתובת זו|\d+ בתים/)
+          .getByText(/בתים בכתובת זו|דוכנים בבית הספר|דוכן אחד בבית הספר|\d+ בתים/)
           .first()
           .waitFor({ timeout: 5000 });
         pass("MAP-03 cluster pin opens multi-unit address overview");

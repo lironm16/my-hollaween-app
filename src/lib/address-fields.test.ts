@@ -115,6 +115,13 @@ describe("address fields", () => {
     }
   });
 
+  it("surfaces curated school names in address search", async () => {
+    const { searchPreparedAddresses } = await import("@/lib/address-fields");
+    const hits = await searchPreparedAddresses("ניצנים");
+    assert.ok(hits.some((h) => h.label.includes("ביה״ס ניצנים")));
+    assert.ok(hits[0]!.lat > 32 && hits[0]!.lng > 34);
+  });
+
   it("snaps Jabotinsky 105 to footprint and dedupes autocomplete hits", () => {
     const wrongSide: AddressHit = {
       id: "p-1",

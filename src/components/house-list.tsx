@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { ListSortSelect } from "@/components/list-sort-select";
 import { LIST_SORT_EVENT, readListSort, sortHousesForList } from "@/lib/list-sort";
+import { clusterBoothLabel } from "@/lib/cluster-booth";
+import { clusterMembersForHouse } from "@/lib/house-clusters";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -63,8 +65,13 @@ export function HouseList({
 
   useEffect(() => {
     if (!focusId) return;
-    focusRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [focusId]);
+    const scrollToFocus = () => {
+      focusRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+    scrollToFocus();
+    const t = window.setTimeout(scrollToFocus, 120);
+    return () => window.clearTimeout(t);
+  }, [focusId, filtered.length]);
 
   if (houses.length === 0) {
     return (
@@ -145,6 +152,7 @@ export function HouseList({
       {filtered.map(({ house: h, distanceM: d }, i) => (
         <div
           key={h.id}
+          data-list-house-id={h.id}
           ref={h.id === focusId ? focusRef : undefined}
           dir={selection ? "rtl" : undefined}
           className={cn(
@@ -168,6 +176,7 @@ export function HouseList({
               {...houseCardPropsFor(h, actionContext, {
                 index: i + 1,
                 distanceM: addressReveal.distanceAllowed(h.id) ? d : undefined,
+                clusterBoothTag: clusterBoothLabel(h, clusterMembersForHouse(houses, h.id)),
               })}
             />
             {showPerCardRemove ? (

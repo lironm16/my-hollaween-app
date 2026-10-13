@@ -39,13 +39,15 @@ function house(patch: Partial<PublicHouse> = {}): PublicHouse {
 
 describe("device catalog cache", () => {
   it("strips location and story fields and marks pin rows", () => {
-    const stripped = stripHouseForDeviceCache(house());
+    const stripped = stripHouseForDeviceCache(house({ isStub: false }));
     assert.equal(stripped.address, "");
     assert.equal(stripped.arrival, "");
     assert.equal(stripped.notes, "");
     assert.equal(stripped.description, "");
     assert.equal(stripped.photoUrl, "");
     assert.equal(stripped.lat, 32.09);
+    assert.equal(stripped.isStub, false);
+    assert.equal(stripped.deviceCacheStub, undefined);
     assert.equal(isDeviceCachePinHouse(stripped), true);
   });
 
@@ -53,10 +55,12 @@ describe("device catalog cache", () => {
     const stripped = stripHouseForDeviceCache(
       house({
         id: "בית-1847",
-        description: "סטאב לחזרה — דלעות על המדרגה.",
+        isStub: true,
+        description: "דלעות על המדרגה.",
         photoUrl: "/images/stubs/pumpkin-porch.jpg",
       }),
     );
+    assert.equal(stripped.isStub, true);
     assert.equal(stripped.deviceCacheStub, true);
     assert.equal(stripped.photoUrl, "");
   });

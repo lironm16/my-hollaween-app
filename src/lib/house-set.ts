@@ -1,6 +1,3 @@
-import { isE2eTestHouse } from "@/lib/e2e-houses";
-import { isKnownRehearsalStubId } from "@/lib/rehearsal-stub-ids";
-
 export const HOUSE_SET_KEY = "hw-house-set";
 export const HOUSE_SET_EVENT = "hw-house-set";
 
@@ -19,24 +16,25 @@ export const HOUSE_SET_STATUS: Record<HouseSet, string> = {
   all: "מציגים הכל",
 };
 
-const STUB_ID = /^(?:בית|נק)-931\d$/;
-
-export function isStubHouse(house: {
-  id?: string;
-  name?: string;
-  description?: string;
-  address?: string;
-  photoUrl?: string;
-  /** Pin-only device cache shell (no server detail yet). */
-  deviceCachePin?: boolean;
+/** Stub/real filter reads only `isStub` / `deviceCacheStub`; other house fields are ignored. */
+export type StubFlagHouse = {
+  isStub?: boolean;
+  /** @deprecated Offline cache before `isStub` was persisted on strip. */
   deviceCacheStub?: boolean;
-}) {
-  if (house.deviceCachePin || house.deviceCacheStub) return true;
-  if (isKnownRehearsalStubId(house.id)) return true;
-  if (house.id && STUB_ID.test(house.id)) return true;
-  if (isE2eTestHouse(house)) return true;
-  if (house.photoUrl?.includes("/images/stubs/")) return true;
-  return Boolean(house.description?.includes("סטאב לחזרה"));
+  id?: string;
+  deviceCachePin?: boolean;
+};
+
+export function isStubHouse(house: StubFlagHouse | null | undefined) {
+  if (!house) return false;
+  if (house.isStub === true) return true;
+  if (house.deviceCacheStub === true) return true;
+  return false;
+}
+
+/** Drop legacy QA rows still marked `isStub` in Firestore or old exports. */
+export function stripStubHouses<T extends StubFlagHouse>(houses: readonly T[]): T[] {
+  return houses.filter((house) => !isStubHouse(house));
 }
 
 function isHouseSet(value: string | null | undefined): value is HouseSet {
@@ -67,7 +65,7 @@ export function writeHouseSet(next: HouseSet) {
 
 export function countIdsInSet(
   ids: readonly string[],
-  houses: readonly { id: string; description?: string }[],
+  houses: readonly { id: string; isStub?: boolean; deviceCacheStub?: boolean }[],
   set: HouseSet,
 ): number {
   const byId = new Map(houses.map((house) => [house.id, house]));
@@ -83,16 +81,15 @@ export function countIdsInSet(
     return ids.length;
   }
 
-  // Stubs rehearsal: count every stub id, even when the id only exists in catalog.
   return ids.filter((id) => {
     const house = byId.get(id);
-    return house ? isStubHouse(house) : STUB_ID.test(id);
+    return house ? isStubHouse(house) : false;
   }).length;
 }
 
 export function countLikedInSet(
   likedIds: readonly string[],
-  houses: readonly { id: string; description?: string }[],
+  houses: readonly { id: string; isStub?: boolean; deviceCacheStub?: boolean }[],
   set: HouseSet,
 ): number {
   return countIdsInSet(likedIds, houses, set);
@@ -100,7 +97,7 @@ export function countLikedInSet(
 
 export function countSkippedInSet(
   skippedIds: readonly string[],
-  houses: readonly { id: string; description?: string }[],
+  houses: readonly { id: string; isStub?: boolean; deviceCacheStub?: boolean }[],
   set: HouseSet,
 ): number {
   return countIdsInSet(skippedIds, houses, set);
@@ -108,37 +105,58 @@ export function countSkippedInSet(
 
 export function countVisitedInSet(
   visitedIds: readonly string[],
-  houses: readonly { id: string; description?: string }[],
+  houses: readonly { id: string; isStub?: boolean; deviceCacheStub?: boolean }[],
   set: HouseSet,
 ): number {
   return countIdsInSet(visitedIds, houses, set);
 }
 
-export function houseMatchesSet(house: { id?: string; description?: string }, set: HouseSet) {
+export function houseMatchesSet(
+  house: StubFlagHouse & { isPractice?: boolean },
+  set: HouseSet,
+) {
   if (set === "all") return true;
   const stub = isStubHouse(house);
-  return set === "stubs" ? stub : !stub;
+  const practice = house.isPractice === true;
+  if (set === "stubs") return stub;
+  return !stub && !practice;
 }
 
-export function catalogHasRealHouses(catalog: { houses: { id?: string; description?: string }[] } | null) {
+/** Device cache rows must carry `isStub` (or legacy deviceCacheStub) so real/stub filters work offline. */
+export function catalogHasExplicitStubFlags(
+  catalog: { houses: readonly StubFlagHouse[] } | null,
+): boolean {
   if (!catalog?.houses.length) return false;
+  return catalog.houses.every(
+    (house) => typeof house.isStub === "boolean" || house.deviceCacheStub === true,
+  );
+}
+
+export function catalogHasRealHouses(catalog: { houses: readonly StubFlagHouse[] } | null) {
+  if (!catalog?.houses.length) return false;
+  if (!catalogHasExplicitStubFlags(catalog)) return false;
   return catalog.houses.some((house) => !isStubHouse(house));
 }
 
 /**
- * Non-admins normally see only real houses. On preview deployments only, when the
- * loaded catalog is stub-only, show all snapshot houses so the map is not empty.
- * Production never uses this fallback — visitors keep the real-only filter.
+ * Non-admins normally see only real houses. On Vercel Preview deployments, show
+ * rehearsal stubs too (real + stubs) so QA can test schools and edge cases.
+ * Production visitors always stay on real-only.
  */
 export function resolveViewerHouseSet(
-  catalog: { houses: { id?: string; description?: string }[] } | null,
+  catalog: { houses: { isStub?: boolean; deviceCacheStub?: boolean }[] } | null,
   admin: boolean,
   preferred: HouseSet,
   options?: { previewDeployment?: boolean },
 ): HouseSet {
-  if (admin) return preferred;
   const preview = options?.previewDeployment === true;
-  if (preview && catalog?.houses.length && !catalogHasRealHouses(catalog)) return "all";
+  const stubOnly =
+    Boolean(catalog?.houses.length) && catalogHasRealHouses(catalog) === false;
+  if (admin) {
+    if (preview && stubOnly && preferred === "real") return "all";
+    return preferred;
+  }
+  if (preview && catalog?.houses.length) return "all";
   return "real";
 }
 
@@ -146,7 +164,7 @@ export function resolveViewerHouseSet(
 export function activeHouseSetForSession(
   admin: boolean,
   houseSet: HouseSet,
-  catalog: { houses: { id?: string; description?: string; photoUrl?: string }[] } | null,
+  catalog: { houses: { isStub?: boolean; deviceCacheStub?: boolean }[] } | null,
   options?: { previewDeployment?: boolean },
 ): HouseSet {
   if (admin) return houseSet;

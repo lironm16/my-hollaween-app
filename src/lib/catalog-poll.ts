@@ -12,12 +12,9 @@ export function catalogPollMs(seconds?: number) {
   return Math.max(30, n) * 1000;
 }
 
-/** Server-suggested poll interval — longer overnight (#11). */
-export function effectiveCatalogPollSeconds(now = new Date()) {
-  const base = readCatalogPollSeconds();
-  const hour = now.getHours();
-  if (hour >= 22 || hour < 8) return Math.max(base, 600);
-  return base;
+/** Server-suggested poll interval (same day and night — catalog deletes must reach peers quickly). */
+export function effectiveCatalogPollSeconds(_now = new Date()) {
+  return readCatalogPollSeconds();
 }
 
 const ADAPTIVE_POLL_MAX_SECONDS = 900;

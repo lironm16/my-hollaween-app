@@ -4,13 +4,15 @@ import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-ce
 import { gemMonsterForHouse, syncGemMonsterAssignment } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 
-function house(id: string): PublicHouse {
+function house(id: string, boothNumber: number): PublicHouse {
   return {
     id,
     name: id,
     theme: "pumpkin",
+    kind: "house",
+    description: "בית",
     address: "חרוזים 8",
-    lat: 32.09,
+    lat: 32.09 + boothNumber * 0.0001,
     lng: 34.81,
     treats: ["candy"],
     scareLevel: "mild",
@@ -20,7 +22,7 @@ function house(id: string): PublicHouse {
 
 describe("gem bag celebrate", () => {
   it("detects map complete on last house", () => {
-    const map = [house("a"), house("b")];
+    const map = [house("a", 1), house("b", 2)];
     syncGemMonsterAssignment(map);
     const gemA = gemMonsterForHouse(map[0]!);
     const gemB = gemMonsterForHouse(map[1]!);

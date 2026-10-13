@@ -3,6 +3,8 @@ import { describe, it, beforeEach, afterEach } from "node:test";
 import {
   catalogCacheIncomplete,
   catalogNeedsFullRefresh,
+  catalogServerCountMismatch,
+  catalogServerCountSatisfied,
   isAuthoritativeHouseList,
   localCatalogHouseCount,
   resolveCatalogHouses,
@@ -88,6 +90,31 @@ describe("resolveServerHouseCount", () => {
   });
 });
 
+describe("catalogServerCountMismatch", () => {
+  it("detects when inline houses differ from server houseCount", () => {
+    const partial = catalog([house("a")], "2026-10-31T10:00:00.000Z");
+    assert.equal(catalogServerCountMismatch(partial, 88), true);
+    assert.equal(catalogServerCountMismatch(partial, 1), false);
+  });
+});
+
+describe("catalogServerCountSatisfied", () => {
+  it("accepts inline rows above real-only houseCount metadata", () => {
+    const full = catalog(
+      Array.from({ length: 151 }, (_, index) => house(`house-${index}`)),
+      "2026-10-31T10:00:00.000Z",
+      { houseCount: 91 },
+    );
+    assert.equal(catalogServerCountSatisfied(full, 91), true);
+    assert.equal(catalogServerCountSatisfied(full, 151), true);
+  });
+
+  it("rejects partial caches below server houseCount", () => {
+    const partial = catalog([house("a"), house("b")], "2026-10-31T10:00:00.000Z", { houseCount: 2 });
+    assert.equal(catalogServerCountSatisfied(partial, 91), false);
+  });
+});
+
 describe("catalogCacheIncomplete", () => {
   it("flags inflated local caches above server houseCount", () => {
     const inflated = catalog(
@@ -113,17 +140,17 @@ describe("catalogCacheIncomplete", () => {
       "2026-10-31T10:00:00.000Z",
       { houseCount: 25 },
     );
-    const meta: CatalogCacheMeta = { complete: true, houseCount: 25 };
+    const meta: CatalogCacheMeta = { houseCount: 25 };
     assert.equal(catalogCacheIncomplete(full, meta, 25), false);
   });
 
-  it("requires completeness metadata for legacy caches without server count", () => {
+  it("requires a count hint for legacy caches without server houseCount", () => {
     const full = catalog(
       Array.from({ length: 25 }, (_, index) => house(`house-${index}`)),
       "2026-10-31T10:00:00.000Z",
     );
     assert.equal(catalogCacheIncomplete(full, null), true);
-    assert.equal(catalogCacheIncomplete(full, { complete: true, houseCount: 25 }), false);
+    assert.equal(catalogCacheIncomplete(full, { houseCount: 25 }), false);
   });
 });
 
@@ -139,7 +166,7 @@ describe("catalogNeedsFullRefresh", () => {
   it("forces refresh for stub-only cached snapshot outside rehearsal", () => {
     writeRehearsalScene("off");
     const stubs = catalog(
-      [house("בית-9311", { description: "סטאב לחזרה" })],
+      [house("בית-9311", { isStub: true })],
       "2026-10-31T10:00:00.000Z",
     );
     assert.equal(catalogNeedsFullRefresh(stubs), true);
@@ -150,7 +177,7 @@ describe("catalogNeedsFullRefresh", () => {
   }, () => {
     writeRehearsalScene("open");
     const stubs = catalog(
-      [house("בית-9311", { description: "סטאב לחזרה" })],
+      [house("בית-9311", { isStub: true })],
       "2026-10-31T10:00:00.000Z",
     );
     assert.equal(catalogNeedsFullRefresh(stubs), false);
@@ -159,11 +186,13 @@ describe("catalogNeedsFullRefresh", () => {
 
   it("skips full refresh when cache meta matches server houseCount", () => {
     const full = catalog(
-      Array.from({ length: 25 }, (_, index) => house(`house-${index}`)),
+      Array.from({ length: 25 }, (_, index) =>
+        house(`house-${index}`, { isStub: false }),
+      ),
       "2026-10-31T10:00:00.000Z",
       { houseCount: 25 },
     );
-    const meta: CatalogCacheMeta = { complete: true, houseCount: 25 };
+    const meta: CatalogCacheMeta = { houseCount: 25 };
     assert.equal(catalogNeedsFullRefresh(full, meta, 25), false);
   });
 });
@@ -206,7 +235,7 @@ describe("resolveCatalogHouses", { skip: !hasLocalStorage }, () => {
     assert.deepEqual(resolveCatalogHouses(live).map((item) => item.id).sort(), ["a", "b"]);
   });
 
-  it("keeps cached ids when live catalog is a newer partial delta", () => {
+  it("drops stale cache ids when live catalog is newer (e.g. server delete)", () => {
     const cached = catalog(
       [
         house("a", { updatedAt: "2026-10-31T09:00:00.000Z" }),
@@ -223,7 +252,7 @@ describe("resolveCatalogHouses", { skip: !hasLocalStorage }, () => {
     const ids = resolveCatalogHouses(live)
       .map((item) => item.id)
       .sort();
-    assert.deepEqual(ids, ["a", "b", "c"]);
+    assert.deepEqual(ids, ["a"]);
   });
 
   it("saveCatalogCache unions with the existing device cache instead of shrinking it", async () => {
@@ -243,10 +272,9 @@ describe("resolveCatalogHouses", { skip: !hasLocalStorage }, () => {
     assert.deepEqual(ids, ["a", "b", "c"]);
   });
 
-  it("persists cache completeness metadata separately from catalog payload", () => {
-    saveCatalogCacheMeta({ complete: true, houseCount: 25, verifiedAt: "2026-10-31T10:00:00.000Z" });
+  it("persists last verified count separately from catalog payload", () => {
+    saveCatalogCacheMeta({ houseCount: 25, verifiedAt: "2026-10-31T10:00:00.000Z" });
     assert.deepEqual(loadCatalogCacheMeta(), {
-      complete: true,
       houseCount: 25,
       verifiedAt: "2026-10-31T10:00:00.000Z",
     });

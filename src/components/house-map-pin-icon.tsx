@@ -2,12 +2,12 @@
 
 import { SkipIcon } from "@/components/skip-icon";
 import { clusterPinStatus, clusterPinVisitKind } from "@/lib/cluster-pin-status";
-import { isPoiHouse } from "@/lib/house-kind";
 import { pinScareSrc } from "@/lib/pin-faces";
 import { pinBackgroundFill } from "@/lib/pin-colors";
 import { effectiveVisit, isDecorated } from "@/lib/house-state";
 import { isClosingSoon, isHoursNightOver, isOpeningSoon } from "@/lib/hours";
 import type { PublicHouse } from "@/lib/types";
+import { isPoiHouse } from "@/lib/house-kind";
 import { cn } from "@/lib/utils";
 
 export function HouseMapPinIcon({

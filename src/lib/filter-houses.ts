@@ -5,7 +5,7 @@ import {
   resolveNeighborhood,
 } from "@/lib/config";
 import { isStubHouse } from "@/lib/house-set";
-import { scareShort, treatLabels } from "@/lib/labels";
+import { houseKindLabels, scareShort, treatLabels } from "@/lib/labels";
 import { resolveVisitWindow } from "@/lib/visit-window";
 import {
   hasValidVisitWindow,
@@ -110,7 +110,7 @@ export function houseFilterMismatchReasons(
   }
   const kindFilter = locationKindFilter ?? "all";
   if (!houseMatchesLocationKind(house, kindFilter)) {
-    reasons.push(kindFilter === "house" ? "נקודת עניין" : "בית");
+    reasons.push(kindFilter === "house" ? houseKindLabels.poi : houseKindLabels.house);
   }
   if (accessibleOnly && !house.accessible) reasons.push("לא נגיש");
   if (candyFilterActive(filters)) {

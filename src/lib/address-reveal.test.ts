@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   addressRevealTime,
   canViewHouseLocationDetails,
+  clusterDisplayAddressWithPolicy,
   formatDisplayAddressWithPolicy,
   isAddressRevealed,
   makeAddressRevealContext,
@@ -58,10 +59,11 @@ describe("address reveal", () => {
   });
 
   it("redacts catalog houses before reveal", () => {
-    const house = stub();
+    const house = stub({ notes: "יש כלב" });
     const redacted = publicHouseForCatalog(house, new Date(2026, 9, 31, 11, 59));
     assert.equal(redacted.address, "");
     assert.equal(redacted.arrival, "");
+    assert.equal(redacted.notes, "");
   });
 
   it("admin and owner bypass before reveal", () => {
@@ -125,9 +127,58 @@ describe("address reveal", () => {
     assert.doesNotMatch(label, /יהודית/u);
   });
 
+  it("night passes: unregistered never opens homes and gets the registered-users hint", () => {
+    const ctx = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 20, 0),
+      isAdmin: false,
+      audience: "none",
+    });
+    assert.equal(canViewHouseLocationDetails("בית-1001", ctx), false);
+    const label = formatDisplayAddressWithPolicy(stub(), "בית-1001", ctx);
+    assert.match(label, /הכתובת תיחשף למכשירים רשומים/u);
+    assert.doesNotMatch(label, /יהודית/u);
+  });
+
+  it("night passes: registered keeps the event-night hint, then opens", () => {
+    const before = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 10, 0),
+      audience: "registered",
+    });
+    assert.match(formatDisplayAddressWithPolicy(stub(), "בית-1001", before), /31 באוקטובר/u);
+    const after = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 20, 0),
+      audience: "registered",
+    });
+    assert.equal(canViewHouseLocationDetails("בית-1001", after), true);
+  });
+
+  it("night passes: businesses / schools open for everyone", () => {
+    const ctx = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 10, 0),
+      audience: "none",
+      publicLocationIds: ["נק-1"],
+    });
+    assert.equal(canViewHouseLocationDetails("נק-1", ctx), true);
+  });
+
+  it("cluster header uses a visible member's address while its homes stay hidden", () => {
+    const ctx = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 10, 0),
+      audience: "registered",
+      publicLocationIds: ["נק-1"],
+    });
+    const home = stub({ id: "בית-1", address: "" });
+    const business = stub({ id: "נק-1", kind: "poi", address: "הגפן 3" });
+    assert.equal(clusterDisplayAddressWithPolicy([home, business], home, ctx), "הגפן 3, חרוזים");
+    assert.doesNotMatch(formatDisplayAddressWithPolicy(home, home.id, ctx), /הגפן/);
+    const homesOnly = clusterDisplayAddressWithPolicy([home], home, ctx);
+    assert.equal(homesOnly, formatDisplayAddressWithPolicy(home, home.id, ctx));
+  });
+
   it("redact helper clears fields", () => {
-    const next = redactHouseLocationDetails(stub());
+    const next = redactHouseLocationDetails(stub({ notes: "יש כלב" }));
     assert.equal(next.address, "");
     assert.equal(next.arrival, "");
+    assert.equal(next.notes, "");
   });
 });

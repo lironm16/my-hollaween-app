@@ -119,7 +119,8 @@ describe("mergeVisibleHouses", () => {
   it("keeps stub identity when admin API row drops rehearsal description", () => {
     const catalogStub: PublicHouse = {
       ...publicHouse("בית-1847", "2026-10-31T10:00:00.000Z"),
-      description: "סטאב לחזרה — דלעות על המדרגה.",
+      isStub: true,
+      description: "דלעות על המדרגה.",
       photoUrl: "/images/stubs/pumpkin-porch.jpg",
       address: "",
     };

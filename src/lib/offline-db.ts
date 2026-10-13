@@ -1,10 +1,8 @@
 import type { NeighborhoodFilterId } from "@/lib/config";
 import type { SkipReasonId } from "@/lib/skip-reasons";
-import { isAuthoritativeHouseList } from "@/lib/catalog-houses";
-import { syncCatalog } from "@/lib/catalog-sync";
-import { loadGemLabStubs } from "@/lib/gem-lab-stubs";
+import { loadHiddenHouseIds, syncCatalog } from "@/lib/catalog-sync";
 import { clearCatalogRemoved, isCatalogRemoved } from "@/lib/catalog-removed";
-import { tombstoneHouse, loadDeletedHouseIds } from "@/lib/deleted-houses";
+import { tombstoneHouse } from "@/lib/deleted-houses";
 import { stripHouseForDeviceCache } from "@/lib/device-catalog-cache";
 import { syncDecorFields } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
@@ -40,7 +38,7 @@ function stamp(value: string) {
 }
 
 function overlayLocalHouses(catalog: Catalog): Catalog {
-  const deleted = new Set(loadDeletedHouseIds());
+  const deleted = loadHiddenHouseIds();
   const byId = new Map(
     catalog.houses.filter((house) => !deleted.has(house.id)).map((house) => [house.id, house]),
   );
@@ -56,9 +54,6 @@ function overlayLocalHouses(catalog: Catalog): Catalog {
   }
   for (const pending of loadPendingWritesSync()) {
     take(pending.house);
-  }
-  for (const gemLab of loadGemLabStubs()) {
-    take(gemLab);
   }
   return { ...catalog, houses: [...byId.values()] };
 }
@@ -113,13 +108,13 @@ export function loadCatalogCacheSync(): Catalog | null {
 
 function asCatalogCacheMeta(value: unknown): CatalogCacheMeta | null {
   if (!value || typeof value !== "object") return null;
-  const meta = value as CatalogCacheMeta;
-  if (typeof meta.complete !== "boolean") return null;
-  const houseCount = Number(meta.houseCount);
+  const raw = value as Record<string, unknown>;
+  const houseCount = Number(raw.houseCount);
+  const verifiedAt = typeof raw.verifiedAt === "string" ? raw.verifiedAt : undefined;
+  if (!Number.isFinite(houseCount) || houseCount < 0) return null;
   return {
-    complete: meta.complete,
-    ...(Number.isFinite(houseCount) && houseCount >= 0 ? { houseCount } : {}),
-    ...(typeof meta.verifiedAt === "string" ? { verifiedAt: meta.verifiedAt } : {}),
+    houseCount,
+    ...(verifiedAt ? { verifiedAt } : {}),
   };
 }
 
@@ -151,31 +146,35 @@ function serverHouseCountFromCatalog(catalog: Catalog): number | undefined {
   return undefined;
 }
 
-/** Mark cache complete after a verified full snapshot load. */
-export function markCatalogCacheComplete(catalog: Catalog) {
+/** Remember last verified server count — hint only; sync gates use live API counts. */
+export function recordCatalogCacheVerified(catalog: Catalog) {
   const houseCount = serverHouseCountFromCatalog(catalog);
   if (houseCount == null) return;
   saveCatalogCacheMeta({
-    complete: true,
     houseCount,
     verifiedAt: catalog.updatedAt,
   });
 }
 
-export function clearCatalogCacheComplete() {
-  saveCatalogCacheMeta({ complete: false });
+export function clearCatalogCacheMeta() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(CATALOG_META_LS_KEY);
+  } catch {
+    /* private mode */
+  }
 }
 
 /** Optional wipe — not run on boot (cache is needed for instant map paint). */
-export function clearDeviceCatalogCache() {
-  if (typeof window === "undefined") return;
+export function clearDeviceCatalogCache(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
   try {
     localStorage.removeItem(CATALOG_LS_KEY);
     localStorage.removeItem(CATALOG_META_LS_KEY);
   } catch {
     /* private mode */
   }
-  void (async () => {
+  return (async () => {
     try {
       const db = await openDb();
       await new Promise<void>((resolve, reject) => {
@@ -197,11 +196,7 @@ export function clearDeviceCatalogCache() {
  */
 export async function saveCatalogCache(catalog: Catalog) {
   const existing = readLocalCatalog();
-  const merged = isAuthoritativeHouseList(catalog)
-    ? catalog
-    : existing
-      ? syncCatalog(existing, catalog)
-      : catalog;
+  const merged = existing ? syncCatalog(existing, catalog) : catalog;
   const forDevice: Catalog = {
     ...merged,
     houses: merged.houses.map(stripHouseForDeviceCache),
@@ -370,6 +365,14 @@ export function toggleVisited(id: string): string[] {
     window.dispatchEvent(new Event("hw-visited-changed"));
   }
   return next;
+}
+
+/** Mark visited without toggling off — used for QR / visit=1 links. */
+export function markVisited(id: string): { ids: string[]; newlyMarked: boolean } {
+  if (isVisited(id)) {
+    return { ids: loadVisitedIds(), newlyMarked: false };
+  }
+  return { ids: toggleVisited(id), newlyMarked: true };
 }
 
 const SKIPPED_KEY = "hw-skipped-houses";

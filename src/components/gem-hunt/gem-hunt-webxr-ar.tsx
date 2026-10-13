@@ -12,8 +12,10 @@ import { useDeviceHeading } from "@/hooks/use-device-heading";
 import { useGemHuntLocation } from "@/hooks/use-gem-hunt-location";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import {
+  GEM_CAMPUS_COLLECT_MS,
   GEM_COLLECT_OVERLAY_MS,
   GEM_FACING_TOLERANCE_DEG,
+  GEM_TELL_ME_CENTER_ZOOM,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
   bearingDegrees,
   gemAnchorForHouse,
@@ -22,8 +24,8 @@ import {
   gemMonsterForHouse,
   GEM_WEBXR_GEO_PLACEMENT_ENABLED,
   GEM_WEBXR_HUNT_METERS,
-  navTurnBearingForUi,
   relativeWalkBearingDeg,
+  type GemCampusQueueUi,
   type GemCollectFinishOptions,
 } from "@/lib/gem-hunt";
 import {
@@ -39,6 +41,7 @@ import { isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
 import { requestGemHuntOrientationPermission } from "@/lib/gem-hunt-sensors";
 import { gemWalkGuideCopy } from "@/lib/gem-hunt-walk-guide";
 import { formatDistance } from "@/lib/geo";
+import { applyGemMaterialTint } from "@/lib/apply-gem-material-tint";
 import { gemMonsterMeta, gemMonsterTint, type GemMonsterId } from "@/lib/gem-monsters";
 import { gemCollectDanceIndex } from "@/lib/gem-collect-dance";
 import { googleMapsNavigateUrl } from "@/lib/route";
@@ -62,6 +65,7 @@ import { gemTellMeInRange } from "@/lib/gem-tell-me-gate";
 import {
   GEM_AR_LOCATING_HE,
   GEM_COLLECT_NEW_HE,
+  GEM_FOUND_CHEER_HE,
   GEM_WALK_MAPS_ARIA_HE,
   GEM_WALK_MAPS_LINK_HE,
 } from "@/lib/gem-hunt-copy";
@@ -136,7 +140,15 @@ export function GemHuntWebXrAr({
   onClose,
   onCollect,
   onFallbackCamera,
-}: Props) {
+  campusQueue,
+  onCollectPersist,
+  onCampusStepComplete,
+}: Props & {
+  campusQueue?: GemCampusQueueUi;
+  onCollectPersist?: (monsterId: GemMonsterId) => void;
+  onCampusStepComplete?: (monsterId: GemMonsterId) => void;
+}) {
+  const campusSession = Boolean(campusQueue && onCampusStepComplete && onCollectPersist);
   const monsterId = gemMonsterForHouse(house);
   const meta = gemMonsterMeta(monsterId);
   const danceIndex = gemCollectDanceIndex(house.id, monsterId);
@@ -205,6 +217,8 @@ export function GemHuntWebXrAr({
 
   const attachSessionRef = useRef<((session: XRSession) => Promise<void>) | null>(null);
   const collectingRef = useRef(false);
+  const webXrClusterApiRef = useRef<{ advanceClusterHouse: () => void } | null>(null);
+  const clusterAdvanceHouseIdRef = useRef(house.id);
 
   const [error, setError] = useState<string | null>(null);
   const [showManualStart, setShowManualStart] = useState(!initialWebXrSession);
@@ -216,6 +230,10 @@ export function GemHuntWebXrAr({
   onCollectRef.current = onCollect;
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const onCollectPersistRef = useRef(onCollectPersist);
+  onCollectPersistRef.current = onCollectPersist;
+  const onCampusStepCompleteRef = useRef(onCampusStepComplete);
+  onCampusStepCompleteRef.current = onCampusStepComplete;
 
   const effectiveLoc = simulateInRange
     ? { lat: house.lat, lng: house.lng, accuracy: 5 }
@@ -245,6 +263,23 @@ export function GemHuntWebXrAr({
   const useFloat = floatBias > 0.62;
   const floatHeight = useFloat ? 0.22 + floatBias * 0.18 : 0;
 
+  const houseVisualRef = useRef({
+    houseId: house.id,
+    glbPath: meta.glbPath,
+    floatHeight,
+    danceIndex,
+    lat: house.lat,
+    lng: house.lng,
+  });
+  houseVisualRef.current = {
+    houseId: house.id,
+    glbPath: meta.glbPath,
+    floatHeight,
+    danceIndex,
+    lat: house.lat,
+    lng: house.lng,
+  };
+
   const handleCollect = useCallback(() => {
     if (phase === "collecting") return;
     const inBand =
@@ -256,17 +291,29 @@ export function GemHuntWebXrAr({
     if (!placed && !tellMeCenter) return;
     const entries = loadGemCollected();
     const newAlbumFriend = !repeatVisit && !isGemTypeInCollection(monsterId, entries);
+    if (campusSession) {
+      onCollectPersistRef.current?.(monsterId);
+    }
     collectingRef.current = true;
     setPhase("collecting");
-    setAlbumRevealNewFriend(newAlbumFriend);
+    setAlbumRevealNewFriend(campusSession ? true : newAlbumFriend);
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate([20, 40, 60]);
     }
     if (collectFinishRef.current != null) window.clearTimeout(collectFinishRef.current);
-    const overlayMs =
-      encounterMode && repeatVisit ? GEM_ENCOUNTER_CELEBRATE_MS : GEM_COLLECT_OVERLAY_MS;
+    const overlayMs = campusSession
+      ? GEM_CAMPUS_COLLECT_MS
+      : encounterMode && repeatVisit
+        ? GEM_ENCOUNTER_CELEBRATE_MS
+        : GEM_COLLECT_OVERLAY_MS;
     collectFinishRef.current = window.setTimeout(() => {
       collectFinishRef.current = null;
+      if (campusSession) {
+        collectingRef.current = false;
+        setPhase("placed");
+        onCampusStepCompleteRef.current?.(monsterId);
+        return;
+      }
       if (newAlbumFriend) {
         if (GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED) {
           /* WebXR has no in-camera album — same as overlay fallback */
@@ -279,8 +326,10 @@ export function GemHuntWebXrAr({
       onCloseRef.current();
     }, overlayMs);
   }, [
+    campusSession,
     canCollectNow,
     encounterMode,
+    inWebXrHuntBand,
     monsterId,
     phase,
     placed,
@@ -307,6 +356,7 @@ export function GemHuntWebXrAr({
     onTreatMiss,
   } = useGemEncounterPhase({
     enabled: encounterMode && sessionActive,
+    sessionKey: house.id,
     repeatVisit,
     collectEnabled: canCollectNow || centerReveal || simulateInRange,
     petRevealed: petRevealedForEncounter,
@@ -373,8 +423,7 @@ export function GemHuntWebXrAr({
   const gpsBearingToAnchor =
     liveLoc != null ? bearingDegrees(liveLoc, anchor) : null;
   const huntArrowPhoneRelative = heading != null && turnBearing != null;
-  const navTurnBearing =
-    turnBearing != null ? navTurnBearingForUi(turnBearing) : null;
+  const navTurnBearing = turnBearing;
   const huntArrowDeg = huntArrowPhoneRelative ? navTurnBearing : gpsBearingToAnchor;
   const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToAnchor != null;
   const walkGuideCopy = gemWalkGuideCopy(
@@ -441,7 +490,8 @@ export function GemHuntWebXrAr({
   const canTapTellMeCenter =
     showTellMeCenterGem &&
     (encounterMode
-      ? encounterPhase === "encounter"
+      ? encounterPhase === "encounter" ||
+        (centerReveal && encounterPhase === "approach" && (canCollectNow || simulateInRange))
       : canCollectNow || centerReveal || simulateInRange);
 
   const onTellMeCenterTap = useCallback(() => {
@@ -455,29 +505,10 @@ export function GemHuntWebXrAr({
     handleCollectRef.current();
   }, [canTapTellMeCenter, encounterMode]);
 
-  const tellMeTapStartRef = useRef<{ x: number; y: number } | null>(null);
-
-  const fireTellMeTapFromPointer = useCallback(
-    (clientX: number, clientY: number) => {
-      if (!canTapTellMeCenter) return;
-      const start = tellMeTapStartRef.current;
-      tellMeTapStartRef.current = null;
-      if (!start) {
-        onTellMeCenterTap();
-        return;
-      }
-      const dx = clientX - start.x;
-      const dy = clientY - start.y;
-      if (dx * dx + dy * dy > 576) return;
-      onTellMeCenterTap();
-    },
-    [canTapTellMeCenter, onTellMeCenterTap],
-  );
-
   const handleClose = useCallback(() => {
-    if (phase === "collecting") return;
+    if (phase === "collecting" && !campusSession) return;
     onClose();
-  }, [onClose, phase]);
+  }, [campusSession, onClose, phase]);
 
   const toggleHintPanel = useCallback(async () => {
     if (hintPanel === "nav") {
@@ -544,9 +575,11 @@ export function GemHuntWebXrAr({
 
   const collectBanner =
     phase === "collecting"
-      ? albumRevealNewFriend
-        ? GEM_COLLECT_NEW_HE
-        : `מצאתם שוב את ${gemLabelHe(monsterId)}`
+      ? campusSession
+        ? GEM_FOUND_CHEER_HE
+        : albumRevealNewFriend
+          ? GEM_COLLECT_NEW_HE
+          : `מצאתם שוב את ${gemLabelHe(monsterId)}`
       : null;
 
   useEffect(() => {
@@ -690,8 +723,8 @@ export function GemHuntWebXrAr({
     renderer.xr.enabled = true;
     host.appendChild(renderer.domElement);
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x3a3048, 0.95));
-    const key = new THREE.DirectionalLight(0xfff0dd, 1.05);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x3a3048, 1.25));
+    const key = new THREE.DirectionalLight(0xfff0dd, 0.5);
     key.position.set(2, 4, 1);
     scene.add(key);
 
@@ -713,7 +746,7 @@ export function GemHuntWebXrAr({
     const shadowMat = new THREE.MeshBasicMaterial({
       color: 0x000000,
       transparent: true,
-      opacity: 0.28,
+      opacity: 0.14,
       depthWrite: false,
     });
     const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.22, 32), shadowMat);
@@ -722,38 +755,90 @@ export function GemHuntWebXrAr({
     pivot.add(shadow);
     let footShadowScale = 1;
 
-    const tint = gemMonsterTint(house.id);
     const loader = new GLTFLoader();
-    loader.load(
-      meta.glbPath,
-      (gltf) => {
-        if (disposed) return;
-        const model = gltf.scene;
-        frameModel(model, MODEL_SCALE);
-        model.traverse((obj) => {
-          if (!(obj instanceof THREE.Mesh)) return;
-          const mat = obj.material;
-          if (!(mat instanceof THREE.MeshStandardMaterial)) return;
-          mat.metalness = 0.06;
-          mat.roughness = 0.52;
-          mat.color.offsetHSL(tint.hue, tint.saturation, tint.lightness);
-        });
-        pivot.add(model);
-        placeGroundShadow(shadow, model);
-        footShadowScale = shadow.scale.x;
-        pivot.position.y = floatHeight;
 
-        const clip = pickIdleClip(gltf.animations);
-        if (clip) {
-          mixer = new THREE.AnimationMixer(model);
-          const action = mixer.clipAction(clip);
-          action.loop = THREE.LoopRepeat;
-          action.play();
-        }
+    const clearPivotModel = () => {
+      for (let i = pivot.children.length - 1; i >= 0; i -= 1) {
+        const child = pivot.children[i];
+        if (child !== shadow) pivot.remove(child);
+      }
+      if (mixer) {
+        mixer.stopAllAction();
+        mixer = null;
+      }
+    };
+
+    const repositionToGeoTarget = () => {
+      worldAnchor?.delete?.();
+      worldAnchor = null;
+      const target = geoTargetRef.current;
+      const loc = liveLocRef.current;
+      if (simulateInRangeRef.current) {
+        const vis = houseVisualRef.current;
+        const simUser = { lat: vis.lat, lng: vis.lng, accuracy: 3 };
+        const h = headingRef.current ?? bearingDegrees(simUser, target);
+        const off = viewerLocalOffsetMeters(simUser, target, h);
+        anchorGroup.position.set(off.x, 0, off.z);
+      } else if (loc) {
+        const h = headingRef.current ?? bearingDegrees(loc, target);
+        const off = viewerLocalOffsetMeters(loc, target, h);
+        anchorGroup.position.set(off.x, 0, off.z);
+      }
+      anchorGroup.visible = !centerRevealRef.current;
+      isPlaced = true;
+      setPlaced(true);
+      setPhase("placed");
+      setGeoLockModeRef.current("local");
+    };
+
+    const loadModelForHouse = (onLoaded?: () => void) => {
+      const vis = houseVisualRef.current;
+      const tint = gemMonsterTint(house);
+      loader.load(
+        vis.glbPath,
+        (gltf) => {
+          if (disposed) return;
+          const model = gltf.scene;
+          frameModel(model, MODEL_SCALE);
+          model.traverse((obj) => {
+            if (!(obj instanceof THREE.Mesh)) return;
+            const mat = obj.material;
+            if (!(mat instanceof THREE.MeshStandardMaterial)) return;
+            applyGemMaterialTint(mat, tint);
+          });
+          pivot.add(model);
+          placeGroundShadow(shadow, model);
+          footShadowScale = shadow.scale.x;
+          pivot.position.y = vis.floatHeight;
+
+          const clip = pickIdleClip(gltf.animations);
+          if (clip) {
+            mixer = new THREE.AnimationMixer(model);
+            const action = mixer.clipAction(clip);
+            action.loop = THREE.LoopRepeat;
+            action.play();
+          }
+          onLoaded?.();
+        },
+        undefined,
+        () => setError("לא הצלחנו לטעון את הדמות"),
+      );
+    };
+
+    loadModelForHouse();
+
+    webXrClusterApiRef.current = {
+      advanceClusterHouse: () => {
+        if (disposed) return;
+        clearPivotModel();
+        loadModelForHouse(() => {
+          repositionToGeoTarget();
+          collectingRef.current = false;
+          encounterCollectLatchedRef.current = false;
+          setUserDismissedCenterGem(false);
+        });
       },
-      undefined,
-      () => setError("לא הצלחנו לטעון את הדמות"),
-    );
+    };
 
     const placeFromReticle = () => {
       if (!inWebXrHuntBandRef.current || !reticle.visible) return;
@@ -835,7 +920,7 @@ export function GemHuntWebXrAr({
         const t = (performance.now() - startTime) / 1000;
         const delta = lastFrameMs > 0 ? Math.min(0.05, (_t - lastFrameMs) / 1000) : 1 / 60;
         lastFrameMs = _t;
-        const dancePhase = danceIndex * 0.37;
+        const dancePhase = houseVisualRef.current.danceIndex * 0.37;
 
         if (isPlaced && worldAnchor) {
           syncAnchorGroupToWorldAnchor(frame, ref);
@@ -961,6 +1046,7 @@ export function GemHuntWebXrAr({
 
     return () => {
       disposed = true;
+      webXrClusterApiRef.current = null;
       attachSessionRef.current = null;
       window.removeEventListener("resize", onResize);
       renderer.xr.removeEventListener("sessionstart", onSessionStart);
@@ -979,12 +1065,29 @@ export function GemHuntWebXrAr({
       hitTestSource?.cancel?.();
       mixer = null;
     };
-  }, [danceIndex, encounterMode, floatHeight, house.id, meta.glbPath, onFallbackCamera, useFloat]);
+  }, [encounterMode, onFallbackCamera]);
+
+  /** Cluster queue — swap GLB + sidewalk anchor without ending the WebXR session. */
+  useEffect(() => {
+    if (!campusSession || !sessionActive) return;
+    if (clusterAdvanceHouseIdRef.current === house.id) return;
+    clusterAdvanceHouseIdRef.current = house.id;
+    webXrClusterApiRef.current?.advanceClusterHouse();
+  }, [campusSession, house.id, sessionActive]);
 
   useEffect(() => {
     const btn = startBtnHostRef.current?.querySelector(".gem-hunt-webxr__start") as HTMLElement | null;
     if (btn) btn.hidden = !showManualStart;
   }, [showManualStart]);
+
+  /** Hunt opens before the tap-gesture WebXR session is attached (dom-overlay must not stay empty). */
+  useEffect(() => {
+    const session = initialWebXrSession;
+    if (!session) return;
+    void attachSessionRef.current?.(session);
+    setShowManualStart(false);
+    setSessionActive(true);
+  }, [initialWebXrSession]);
 
   const overlay = (
     <div
@@ -1000,8 +1103,22 @@ export function GemHuntWebXrAr({
       )}
       dir="rtl"
     >
-      <header className="gem-hunt-webxr__bar gem-hunt-webxr__bar--close-only" dir="ltr">
-        <OverlayCloseButton label="סגירה" onClick={handleClose} className="gem-hunt-webxr__close-btn" />
+      <header
+        className={cn(
+          "gem-hunt-webxr__bar",
+          campusQueue ? "gem-hunt-overlay__header--title" : "gem-hunt-webxr__bar--close-only",
+        )}
+        dir={campusQueue ? "rtl" : "ltr"}
+      >
+        {campusQueue ? (
+          <div className="gem-hunt-overlay__header-text pointer-events-none" dir="rtl">
+            <p className="gem-hunt-overlay__title--hero text-orange-50">{campusQueue.boothTitle}</p>
+            {campusQueue.boothSubtitle ? (
+              <p className="mt-0.5 text-sm font-semibold text-amber-200/95">{campusQueue.boothSubtitle}</p>
+            ) : null}
+          </div>
+        ) : null}
+        <OverlayCloseButton label="סגירה" onClick={handleClose} className="gem-hunt-webxr__close-btn pointer-events-auto" />
       </header>
 
       {collectBanner ? (
@@ -1030,43 +1147,22 @@ export function GemHuntWebXrAr({
           <div
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pin-collect is-revealed is-inspect360",
-              "is-ring-center is-center-collect is-collect-layer",
+              "is-ring-center is-center-collect is-collect-layer is-tell-me-center",
               canTapTellMeCenter && "is-tap-collect-ready",
             )}
           >
-            <button
-              type="button"
-              className="gem-hunt-overlay__gem-tap-target"
-              aria-label="מציאת השדון"
-              disabled={!canTapTellMeCenter}
-              onPointerDown={(e) => {
-                if (e.button !== 0) return;
-                tellMeTapStartRef.current = { x: e.clientX, y: e.clientY };
-              }}
-              onPointerUp={(e) => {
-                if (e.button !== 0) return;
-                fireTellMeTapFromPointer(e.clientX, e.clientY);
-              }}
-              onPointerCancel={() => {
-                tellMeTapStartRef.current = null;
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                tellMeTapStartRef.current = null;
-                onTellMeCenterTap();
-              }}
-            >
-              <div className="gem-hunt-overlay__gem-dance" data-collect-dance={danceIndex}>
-                <GemSprite
-                  house={house}
-                  mode="inspect360"
-                  size="fill"
-                  spinWhileCollect={false}
-                  tapCollect
-                  celebrateVariant={danceIndex}
-                />
-              </div>
-            </button>
+            <div className="gem-hunt-overlay__gem-dance" data-collect-dance={danceIndex}>
+              <GemSprite
+                house={house}
+                mode="inspect360"
+                size="fill"
+                spinWhileCollect={false}
+                tapCollect={false}
+                celebrateVariant={danceIndex}
+                zoom={GEM_TELL_ME_CENTER_ZOOM}
+                onInspectTap={canTapTellMeCenter ? onTellMeCenterTap : undefined}
+              />
+            </div>
           </div>
         </div>
       ) : null}
@@ -1130,6 +1226,11 @@ export function GemHuntWebXrAr({
               {showEncounterFooter && encounterPhase === "encounter" ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
                   סובבו את החיה באצבע. למציאה — הקישו עליה.
+                </p>
+              ) : null}
+              {campusSession && placed && phase !== "collecting" && !encounterMode ? (
+                <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
+                  לחצו על החיה במרחב (או «גלה לי») כדי לאסוף — ואז הדוכן הבא.
                 </p>
               ) : null}
               {showSessionFooter && hintPanel === "nav" ? (

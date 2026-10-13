@@ -148,9 +148,9 @@ describe("gem hunt geo", () => {
     assert.equal(facingHouse(user, house, target + 90, 30), false);
   });
 
-  it("mirrors turn bearing for nav hint arrow copy", () => {
-    assert.equal(navTurnBearingForUi(35), -35);
-    assert.equal(navTurnBearingForUi(-35), 35);
+  it("uses phone-relative turn bearing for nav hint arrow copy", () => {
+    assert.equal(navTurnBearingForUi(35), 35);
+    assert.equal(navTurnBearingForUi(-35), -35);
   });
 
   it("computes relative walk bearing for on-screen arrow", () => {
@@ -176,16 +176,14 @@ describe("gem hunt geo", () => {
 });
 
 describe("gem hunt gate", () => {
-  it("shows only for admin", async () => {
+  it("shows only for admin when gem hunt is not public", async () => {
     const { writeGemPreviewAsUser } = await import("@/lib/gem-preview-as-user");
     writeGemPreviewAsUser(false);
-    const { gemHuntVisible, gemHuntFabVisible } = await import("@/lib/gem-hunt-enabled");
-    assert.equal(gemHuntVisible(true), true);
-    assert.equal(gemHuntVisible(false), false);
-    const huntEvening = new Date(2026, 9, 31, 18, 0, 0, 0);
+    const { gemHuntVisible } = await import("@/lib/gem-hunt-enabled");
+    assert.equal(gemHuntVisible(true, false), true);
+    assert.equal(gemHuntVisible(false, false), false);
     writeGemPreviewAsUser(true);
-    assert.equal(gemHuntVisible(true), true);
-    assert.equal(gemHuntFabVisible(true, huntEvening), true);
+    assert.equal(gemHuntVisible(true, false), true);
     writeGemPreviewAsUser(false);
   });
 
@@ -195,73 +193,10 @@ describe("gem hunt gate", () => {
     assert.equal(bearingClockLabelHe(180), "דרום");
   });
 
-  it("fab and house treasure hide during add-house hours", async () => {
-    const { gemHuntFabVisible } = await import("@/lib/gem-hunt-enabled");
-    const huntEvening = new Date(2026, 9, 31, 18, 0, 0, 0);
-    const beforeAddCutoff = new Date(2026, 9, 29, 12, 0, 0, 0);
-    assert.equal(gemHuntFabVisible(true, huntEvening), true);
-    assert.equal(gemHuntFabVisible(true, beforeAddCutoff), false);
-    assert.equal(gemHuntFabVisible(false, huntEvening), false);
-  });
-
-  it("map legend gems for admin QA and when map toggle is on", async () => {
+  it("map legend שדונים follows gem hunt visibility, not the pin-ring toggle", async () => {
     const { gemMapLegendVisible } = await import("@/lib/gem-hunt-enabled");
-    const huntEvening = new Date(2026, 9, 31, 18, 0, 0, 0);
-    const beforeAddCutoff = new Date(2026, 9, 29, 12, 0, 0, 0);
-    const afterAddCutoff = new Date(2026, 9, 31, 16, 30, 0, 0);
-    assert.equal(
-      gemMapLegendVisible(true, {
-        now: beforeAddCutoff,
-        previewAsUser: false,
-        mapDiamondsVisible: false,
-        mapAdminCharactersVisible: false,
-      }),
-      true,
-    );
-    assert.equal(
-      gemMapLegendVisible(true, {
-        now: beforeAddCutoff,
-        previewAsUser: true,
-        mapDiamondsVisible: true,
-        mapAdminCharactersVisible: false,
-      }),
-      true,
-    );
-    assert.equal(
-      gemMapLegendVisible(true, {
-        now: beforeAddCutoff,
-        previewAsUser: true,
-        mapDiamondsVisible: false,
-        mapAdminCharactersVisible: false,
-      }),
-      false,
-    );
-    assert.equal(
-      gemMapLegendVisible(true, {
-        now: afterAddCutoff,
-        previewAsUser: true,
-        mapDiamondsVisible: false,
-        mapAdminCharactersVisible: false,
-      }),
-      true,
-    );
-    assert.equal(
-      gemMapLegendVisible(true, {
-        now: huntEvening,
-        previewAsUser: true,
-        mapDiamondsVisible: false,
-        mapAdminCharactersVisible: false,
-      }),
-      true,
-    );
-    assert.equal(
-      gemMapLegendVisible(false, {
-        now: huntEvening,
-        previewAsUser: false,
-        mapDiamondsVisible: true,
-        mapAdminCharactersVisible: false,
-      }),
-      false,
-    );
+    assert.equal(gemMapLegendVisible(true, false), true);
+    assert.equal(gemMapLegendVisible(false, false), false);
+    assert.equal(gemMapLegendVisible(false, true), true);
   });
 });

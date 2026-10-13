@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { clusterHousesByAddress, clusterMembersForHouse } from "@/lib/house-clusters";
+import { usesSchoolCampusClusterChrome } from "@/lib/school-campus";
 import type { PublicHouse } from "@/lib/types";
 
 export type SelectedId = string | "closed" | null;
@@ -89,8 +90,10 @@ export function useHouseSelection({
       const cluster = clusterHousesByAddress(clustersFor).find((item) =>
         item.houses.some((itemHouse) => itemHouse.id === house.id),
       );
-      const isMulti = (cluster?.houses.length ?? 0) > 1;
-      setClusterOverview(Boolean(opts?.clusterOverview && isMulti));
+      const clusterShell =
+        (cluster?.houses.length ?? 0) > 1 ||
+        usesSchoolCampusClusterChrome(cluster?.houses ?? []);
+      setClusterOverview(Boolean(opts?.clusterOverview && clusterShell));
       setSelectedListIndex(undefined);
       setSelectedId(house.id);
     },

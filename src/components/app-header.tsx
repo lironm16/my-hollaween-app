@@ -16,9 +16,11 @@ import {
   HelpCircle,
   Sparkles,
   Save,
+  ScanLine,
 } from "lucide-react";
+import { VisitQrScanDialog } from "@/components/visit-qr-scan-dialog";
 import { AdminHouseDownloadDialog } from "@/components/admin-house-download-dialog";
-import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
+import { ImpOutlineIcon } from "@/components/imp-outline-icon";
 import { toast } from "sonner";
 import { BrandTitle } from "@/components/brand-title";
 import { NeighborhoodMarquee } from "@/components/neighborhood-marquee";
@@ -38,7 +40,8 @@ import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import { appVersionLabel } from "@/lib/app-version";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { AdminGemUserPreviewToggle } from "@/components/admin-gem-user-preview-toggle";
-import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
+import { NightPassDeviceStrip } from "@/components/night-pass-device-strip";
+import { useNightPass } from "@/hooks/use-night-pass";
 import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
 import { readHelpInstallCaptureFromLocation } from "@/lib/help-install-capture";
 import { useAddHouseOpen } from "@/hooks/use-add-house-open";
@@ -53,11 +56,15 @@ export function AppHeader({
   const { admin, logout } = useAdminSession();
   const addHouseOpen = useAddHouseOpen();
   const now = useAppNow();
-  const { gemBagMenuVisible: showGemBag } = useGemHuntAdminUi(admin, now);
-  const showAdminUserPreview = admin && gemHuntVisible(admin);
+  const { gemBagMenuVisible: showGemBag } = useGemHuntAdminUi(admin);
+  const showAdminUserPreview = admin;
+  const nightPass = useNightPass();
+  const showRegisteredPass =
+    nightPass.enabled && nightPass.registered && nightPass.viewer !== "admin";
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);
   const [adminDownloadOpen, setAdminDownloadOpen] = useState(false);
+  const [visitQrScanOpen, setVisitQrScanOpen] = useState(false);
   const [helpInstallCapture, setHelpInstallCapture] = useState(false);
 
   useEffect(() => {
@@ -136,6 +143,11 @@ export function AppHeader({
                 <AdminGemUserPreviewToggle compact />
               </div>
             ) : null}
+            {showRegisteredPass ? (
+              <div className="px-1 pb-1">
+                <NightPassDeviceStrip compact pass={nightPass} />
+              </div>
+            ) : null}
             <Link
               href="/"
               onClick={(event) => {
@@ -198,6 +210,17 @@ export function AppHeader({
                     <Home className="size-4" />
                     במכשיר שלי
                   </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeMenu();
+                      setVisitQrScanOpen(true);
+                    }}
+                    className={houseSubLinkClass}
+                  >
+                    <ScanLine className="size-4" />
+                    סרוק QR
+                  </button>
                 </div>
               ) : null}
             </div>
@@ -222,11 +245,7 @@ export function AppHeader({
                   "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
                 )}
               >
-                <ImpMarkerGlyph
-                  variant="solid"
-                  className="size-[1.35rem] shrink-0 text-current"
-                  aria-hidden
-                />
+                <ImpOutlineIcon className="size-4 shrink-0" />
                 {GEM_ALBUM_TITLE_HE}
               </Link>
             ) : null}
@@ -240,6 +259,17 @@ export function AppHeader({
             >
               <HelpCircle className="size-4" />
               שאלות ותשובות
+            </Link>
+            <Link
+              href="/help/contact"
+              onClick={closeMenu}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "lg" }),
+                "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+              )}
+            >
+              <HelpCircle className="size-4" />
+              עזרה אישית
             </Link>
             {admin ? (
               <>
@@ -321,6 +351,7 @@ export function AppHeader({
       {admin ? (
         <AdminHouseDownloadDialog open={adminDownloadOpen} onOpenChange={setAdminDownloadOpen} />
       ) : null}
+      <VisitQrScanDialog open={visitQrScanOpen} onClose={() => setVisitQrScanOpen(false)} />
     </header>
   );
 }

@@ -114,7 +114,7 @@ describe("availableTemporaryRestoreOptions", () => {
       baseFilters,
     );
     assert.deepEqual(options, [
-      { id: "not-open", label: "החזר את הבית כאשר הוא פתוח" },
+      { id: "not-open", label: "החזר את הבית כאשר הוא נפתח" },
     ]);
   });
 
@@ -136,6 +136,18 @@ describe("availableTemporaryRestoreOptions", () => {
     assert.equal(houseLacksCandy(low), false);
   });
 
+  it("offers both restore options when the house is closed and out of candy", () => {
+    const options = availableTemporaryRestoreOptions(
+      stub({ visit: "closed", soldOut: true, treatStock: { candy: "out" } }),
+      evening,
+      baseFilters,
+    );
+    assert.deepEqual(options, [
+      { id: "not-open", label: "החזר את הבית כאשר הוא נפתח" },
+      { id: "candy-out", label: "החזר את הבית כאשר יש ממתקים" },
+    ]);
+  });
+
   it("prefers open restore when the house is closed and out of candy", () => {
     const option = primaryTemporaryRestoreOption(
       stub({ visit: "closed", soldOut: true, treatStock: { candy: "out" } }),
@@ -144,7 +156,7 @@ describe("availableTemporaryRestoreOptions", () => {
     );
     assert.deepEqual(option, {
       id: "not-open",
-      label: "החזר את הבית כאשר הוא פתוח",
+      label: "החזר את הבית כאשר הוא נפתח",
     });
   });
 
@@ -156,7 +168,7 @@ describe("availableTemporaryRestoreOptions", () => {
     const option = primaryTemporaryRestoreOption(onBreakLow, evening, baseFilters);
     assert.deepEqual(option, {
       id: "not-open",
-      label: "החזר את הבית כאשר הוא פתוח",
+      label: "החזר את הבית כאשר הוא נפתח",
     });
   });
 
@@ -168,7 +180,7 @@ describe("availableTemporaryRestoreOptions", () => {
     const option = primaryTemporaryRestoreOption(onBreakOut, evening, baseFilters);
     assert.deepEqual(option, {
       id: "not-open",
-      label: "החזר את הבית כאשר הוא פתוח",
+      label: "החזר את הבית כאשר הוא נפתח",
     });
   });
 });

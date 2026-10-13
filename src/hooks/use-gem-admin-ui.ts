@@ -1,28 +1,28 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import {
-  gemBagMenuVisible,
-  gemHuntFabVisible,
-  gemHuntVisible,
-} from "@/lib/gem-hunt-enabled";
-import { readGemPreviewAsUser, subscribeGemPreviewAsUser } from "@/lib/gem-preview-as-user";
+import { gemBagMenuVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
+import { readAdminPreviewAsUser, subscribeAdminPreviewAsUser } from "@/lib/admin-preview-as-user";
+import { useCatalog } from "@/hooks/use-catalog";
 
-/** Re-renders when תפריט → «תצוגת משתמש (יהלומים)» toggles. */
-export function useGemHuntAdminUi(isAdmin: boolean, now = new Date()) {
+/** Re-renders when תפריט → «תצוגת משתמש» toggles. */
+export function useGemHuntAdminUi(isAdmin: boolean) {
+  const { catalog } = useCatalog();
+  const gemHuntPublic = catalog?.eventSettings?.gemHuntPublic === true;
   const previewAsUser = useSyncExternalStore(
-    subscribeGemPreviewAsUser,
-    readGemPreviewAsUser,
+    subscribeAdminPreviewAsUser,
+    readAdminPreviewAsUser,
     () => false,
   );
   const gemAdminToolsVisible = isAdmin && !previewAsUser;
-  const fabOn = gemHuntFabVisible(isAdmin, now);
+  const huntOn = gemHuntVisible(isAdmin, gemHuntPublic);
   return {
     previewAsUser,
-    gemHuntVisible: gemHuntVisible(isAdmin),
-    gemFabVisible: fabOn,
-    gemBagMenuVisible: gemBagMenuVisible(isAdmin, now),
-    /** Admin-only QA (anchors, reset, simulate in range) — off in user preview. */
+    gemHuntPublic,
+    gemHuntVisible: huntOn,
+    /** Admin gem hunt UI (map markers, filters, panels) — same as {@link gemHuntVisible}. */
+    gemUiVisible: huntOn,
+    gemBagMenuVisible: gemBagMenuVisible(isAdmin, gemHuntPublic),
     gemAdminToolsVisible,
   };
 }

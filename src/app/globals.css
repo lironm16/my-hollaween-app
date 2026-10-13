@@ -599,7 +599,13 @@
 
 .pumpkin-pin-icon.is-closing-soon,
 .pumpkin-pin-icon.is-opening-soon,
-.pumpkin-pin-icon.pumpkin-pin-fan {
+.pumpkin-pin-icon.is-gem-ring-sparkle,
+.pumpkin-pin-icon.is-gem-ring-diamond,
+.pumpkin-pin-icon.pumpkin-pin-fan,
+.pumpkin-pin-icon.pumpkin-pin-building.is-closing-soon,
+.pumpkin-pin-icon.pumpkin-pin-building.is-opening-soon,
+.pumpkin-pin-icon.pumpkin-pin-building.is-gem-ring-sparkle,
+.pumpkin-pin-icon.pumpkin-pin-building.is-gem-ring-diamond {
   overflow: visible !important;
 }
 
@@ -793,9 +799,122 @@
   max-height: 88% !important;
 }
 
-.house-pin.is-building {
+.house-pin.is-practice {
+  background: linear-gradient(165deg, #0f766e 0%, #0d9488 55%, #14b8a6 100%) !important;
+  box-shadow:
+    0 0 0 3px #134e4a,
+    0 0 0 6px dashed rgba(165, 243, 252, 0.92);
+  overflow: visible;
+}
+
+.house-pin.is-practice .pin-practice-bat-img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 88%;
+  height: 88%;
+  max-width: 88%;
+  max-height: 88%;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+}
+
+.house-pin.is-gem-ring-sparkle.is-practice .pin-practice-bat-img,
+.house-pin.is-gem-ring-diamond.is-practice .pin-practice-bat-img {
+  z-index: 2;
+}
+
+.house-pin.is-school-campus {
+  width: 76px;
+  height: 76px;
+  background: linear-gradient(165deg, #5b21b6 0%, #6d28d9 55%, #7c3aed 100%) !important;
+  overflow: visible;
+}
+
+.house-pin.is-school-list-pin {
+  width: 56px;
+  height: 56px;
+}
+
+.house-pin.is-school-list-pin.is-school-campus {
+  width: 62px;
+  height: 62px;
+}
+
+.pin-school-art {
+  position: relative;
+  z-index: 1;
   display: grid;
   place-items: center;
+  width: 94%;
+  height: 94%;
+  pointer-events: none;
+}
+
+.house-pin.is-school-list-pin .pin-school-art {
+  width: 90%;
+  height: 90%;
+}
+
+.pin-school-castle-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  transform: scale(1.08);
+  transform-origin: center center;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 25%));
+}
+
+.pin-school-castle-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 35%));
+}
+
+.house-pin.is-school-campus .pin-school-art {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 999px;
+  z-index: 1;
+}
+
+.house-pin.is-school-campus .pin-apt-dots {
+  z-index: 6;
+}
+
+.house-pin.is-school-campus .pin-school-castle-img {
+  display: block;
+  width: 84%;
+  height: 84%;
+  max-width: 84%;
+  max-height: 84%;
+  object-fit: contain;
+  object-position: center center;
+  transform: translateY(-6%);
+  transform-origin: center center;
+}
+
+.house-pin.is-school-campus .pin-school-castle-svg {
+  width: 84%;
+  max-height: 84%;
+  transform: translateY(-5%) scale(1.06);
+  transform-origin: center center;
+}
+
+.pin-school-twin {
+  width: 92%;
+  height: 92%;
 }
 
 .pin-cluster-icon {
@@ -811,14 +930,67 @@
   pointer-events: none;
 }
 
-.pin-cluster-icon svg {
+.pin-cluster-icon.pin-cluster-duo {
+  width: 36px;
+  height: 28px;
+  top: 44%;
+}
+
+/* Multi-listing circle — between house (56px) and school campus (76px). */
+.house-pin.is-cluster-ellipse {
+  width: 66px;
+  height: 66px;
+  margin-top: -10px;
+  border-radius: 999px;
+}
+
+.house-pin.is-building.is-cluster-ellipse {
+  margin-left: -2px;
+}
+
+.house-pin.is-legend.is-cluster-ellipse {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.house-pin.is-cluster-houses {
+  background: #6d28d9 !important;
+}
+
+.house-pin.is-cluster-businesses {
+  background: #f97316 !important;
+}
+
+.house-pin.is-cluster-mixed {
+  background: linear-gradient(
+    to right,
+    #6d28d9 0%,
+    #6d28d9 50%,
+    #f97316 50%,
+    #f97316 100%
+  ) !important;
+}
+
+.house-pin.is-cluster-ellipse .pin-cluster-icon.pin-cluster-duo {
+  width: 58px;
+  height: 58px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.pin-cluster-icon svg,
+.pin-cluster-icon .pin-cluster-art {
   display: block;
   width: 100%;
   height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  overflow: visible;
 }
 
-.house-pin span,
-.pumpkin-pin span {
+.house-pin span:not(.pin-apt-dots):not(.pin-cluster-icon):not(.pin-school-art):not(.pin-gem-sparkles),
+.pumpkin-pin span:not(.pin-apt-dots):not(.pin-cluster-icon):not(.pin-school-art):not(.pin-gem-sparkles) {
   font-size: 26px;
   line-height: 1;
   filter: none;
@@ -1013,12 +1185,21 @@
   box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.28), 0 0 12px rgba(34, 211, 238, 0.4);
 }
 
-.house-pin.is-closing-soon span,
-.house-pin.is-opening-soon span,
-.pumpkin-pin.is-closing-soon span,
-.pumpkin-pin.is-opening-soon span {
+.house-pin.is-closing-soon .pin-scare,
+.house-pin.is-opening-soon .pin-scare,
+.pumpkin-pin.is-closing-soon .pin-scare,
+.pumpkin-pin.is-opening-soon .pin-scare {
   position: relative;
   z-index: 1;
+}
+
+.house-pin.is-closing-soon .pin-cluster-icon,
+.house-pin.is-opening-soon .pin-cluster-icon,
+.pumpkin-pin.is-closing-soon .pin-cluster-icon,
+.pumpkin-pin.is-opening-soon .pin-cluster-icon,
+.house-pin.is-gem-ring-sparkle .pin-cluster-icon,
+.house-pin.is-gem-ring-diamond .pin-cluster-icon {
+  z-index: 6;
 }
 
 @keyframes pin-hours-fade {
@@ -1033,6 +1214,147 @@
     opacity: 0.85;
   }
 }
+
+.house-pin .pin-gem-ring,
+.pumpkin-pin .pin-gem-ring {
+  position: absolute;
+  inset: -9px;
+  z-index: 0;
+  display: block;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.house-pin .pin-gem-ring.is-sparkle {
+  border: 3px solid #fde047;
+  box-shadow:
+    0 0 0 2px rgba(250, 204, 21, 0.35),
+    0 0 14px rgba(251, 191, 36, 0.75),
+    0 0 22px rgba(253, 224, 71, 0.45);
+  animation: pin-gem-sparkle 2.2s ease-in-out infinite;
+}
+
+.house-pin .pin-gem-ring.is-diamond {
+  border: 3px solid #fbbf24;
+  box-shadow:
+    0 0 0 2px rgba(251, 191, 36, 0.45),
+    0 0 16px rgba(245, 158, 11, 0.85),
+    inset 0 0 10px rgba(255, 255, 255, 0.35);
+  animation: pin-gem-diamond-pulse 2.6s ease-in-out infinite;
+  transform: rotate(45deg);
+  border-radius: 4px;
+}
+
+.house-pin.is-gem-ring-sparkle .pin-scare,
+.house-pin.is-gem-ring-diamond .pin-scare,
+.house-pin.is-gem-ring-sparkle .pin-practice-bat-img,
+.house-pin.is-gem-ring-diamond .pin-practice-bat-img {
+  position: relative;
+  z-index: 1;
+}
+
+.pin-gem-sparkles {
+  position: absolute;
+  inset: -14px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.pin-gem-sparkles i {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  background: #a855f7;
+  clip-path: polygon(50% 0, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0 50%, 39% 35%);
+  box-shadow: 0 0 0 1.5px #5b21b6;
+  filter: drop-shadow(0 0 4px rgba(91, 33, 182, 0.95));
+  opacity: 0;
+  animation: pin-gem-sparkle-twinkle 2.4s ease-in-out infinite;
+}
+
+.pin-gem-sparkles i:nth-child(1) {
+  top: 4%;
+  left: 50%;
+  margin-left: -4px;
+  animation-delay: 0s;
+}
+.pin-gem-sparkles i:nth-child(2) {
+  top: 22%;
+  right: 6%;
+  animation-delay: 0.35s;
+}
+.pin-gem-sparkles i:nth-child(3) {
+  bottom: 18%;
+  right: 10%;
+  animation-delay: 0.7s;
+}
+.pin-gem-sparkles i:nth-child(4) {
+  bottom: 4%;
+  left: 50%;
+  margin-left: -4px;
+  animation-delay: 1.05s;
+}
+.pin-gem-sparkles i:nth-child(5) {
+  bottom: 20%;
+  left: 8%;
+  animation-delay: 1.4s;
+}
+.pin-gem-sparkles i:nth-child(6) {
+  top: 28%;
+  left: 4%;
+  animation-delay: 1.75s;
+}
+
+@keyframes pin-gem-sparkle-twinkle {
+  0%,
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  12%,
+  28% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pin-gem-sparkle {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes pin-gem-diamond-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .house-pin .pin-gem-ring.is-sparkle,
+  .house-pin .pin-gem-ring.is-diamond {
+    animation: none;
+    opacity: 0.92;
+  }
+  .house-pin .pin-gem-ring.is-diamond {
+    transform: rotate(45deg);
+  }
+  .pin-gem-sparkles i {
+    animation: none;
+    opacity: 0.85;
+    transform: scale(1);
+  }
+}
+
 .house-pin .pin-status,
 .pumpkin-pin .pin-status {
   position: absolute;
@@ -2286,8 +2608,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
 }
 
-.map-add-house-fab,
-.map-gem-hunt-fab {
+.map-add-house-fab {
   position: absolute;
   left: 2.15rem;
   z-index: 1100;
@@ -2296,25 +2617,13 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   border: 0;
 }
 
-.map-gem-hunt-fab {
-  isolation: isolate;
+.gem-anchor-place-map__pin {
+  width: 44px;
+  height: 44px;
 }
-.map-gem-hunt-fab__pulse {
-  position: absolute;
-  inset: -6px;
-  border-radius: 9999px;
-  opacity: 0;
-  pointer-events: none;
-}
-.map-gem-hunt-fab.is-near {
-  animation: gem-fab-glow 1.25s ease-in-out infinite;
-  background: linear-gradient(145deg, rgb(109 40 217) 0%, rgb(76 29 149) 100%);
-  color: #fef3c7;
-  box-shadow:
-    0 0 0 3px rgb(251 191 36 / 0.85),
-    0 0 28px rgb(251 191 36 / 0.95),
-    0 0 48px rgb(167 139 250 / 0.55),
-    0 8px 24px rgb(0 0 0 / 0.5);
+
+.gem-anchor-place-map__footer {
+  white-space: nowrap;
 }
 .map-gem-diamond-leaflet-icon {
   background: transparent;
@@ -2359,6 +2668,10 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   width: 28px;
   height: 28px;
 }
+/* The demon svg sizes off this box, so a caller's display utility must not collapse it. */
+.imp-glyph-box {
+  display: inline-flex !important;
+}
 .imp-marker-glyph {
   display: inline-block;
   vertical-align: middle;
@@ -2371,21 +2684,20 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   -webkit-mask-position: center;
 }
 .map-gem-imp-marker__glyph {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
   max-width: 32px;
   max-height: 32px;
   margin: auto;
-  background-color: currentColor;
-  mask-image: url(/icons/imp-marker.png);
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url(/icons/imp-marker.png);
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
+  color: currentColor;
+}
+.map-gem-imp-marker__glyph .map-gem-imp-marker__svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
 }
 .map-gem-diamond-marker--admin .map-gem-imp-marker__glyph {
   max-width: 30px;
@@ -2501,94 +2813,6 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   color: #a8a29e;
 }
 
-.map-gem-hunt-fab.is-near .map-gem-hunt-fab__pulse {
-  animation: gem-fab-ring 1.25s ease-out infinite;
-  border: 2px solid rgb(251 191 36 / 0.75);
-}
-.map-gem-hunt-fab.is-hunt {
-  animation: gem-fab-glow-hunt 0.85s ease-in-out infinite;
-  background: linear-gradient(145deg, rgb(245 158 11) 0%, rgb(180 83 9) 45%, rgb(109 40 217) 100%);
-  color: #fffbeb;
-  box-shadow:
-    0 0 36px rgb(251 191 36 / 1),
-    0 0 64px rgb(251 146 60 / 0.85),
-    0 0 12px rgb(255 255 255 / 0.35) inset,
-    0 10px 28px rgb(0 0 0 / 0.55);
-  transform: scale(1.06);
-}
-.map-gem-hunt-fab.is-hunt .map-gem-hunt-fab__pulse {
-  animation: gem-fab-ring-hunt 0.85s ease-out infinite;
-  border: 3px solid rgb(255 251 235 / 0.9);
-}
-
-@keyframes gem-fab-glow {
-  0%,
-  100% {
-    filter: brightness(1.05);
-    transform: scale(1);
-  }
-  50% {
-    filter: brightness(1.45);
-    transform: scale(1.1);
-  }
-}
-@keyframes gem-fab-glow-hunt {
-  0%,
-  100% {
-    filter: brightness(1.15);
-    transform: scale(1.06);
-  }
-  50% {
-    filter: brightness(1.65);
-    transform: scale(1.14);
-  }
-}
-@keyframes gem-fab-ring {
-  0% {
-    opacity: 0.85;
-    transform: scale(0.92);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.55);
-  }
-}
-@keyframes gem-fab-ring-hunt {
-  0% {
-    opacity: 1;
-    transform: scale(0.88);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.75);
-  }
-}
-
-.map-gem-hunt-fab.is-complete {
-  animation: gem-fab-complete 1.4s ease-in-out infinite;
-  background: linear-gradient(145deg, rgb(251 191 36) 0%, rgb(217 119 6) 40%, rgb(109 40 217) 100%);
-  color: #fffbeb;
-  box-shadow:
-    0 0 28px rgb(251 191 36 / 0.95),
-    0 0 48px rgb(167 139 250 / 0.45),
-    0 8px 24px rgb(0 0 0 / 0.5);
-}
-.map-gem-hunt-fab.is-complete .map-gem-hunt-fab__pulse {
-  animation: gem-fab-ring 1.4s ease-out infinite;
-  border: 2px solid rgb(255 251 235 / 0.85);
-}
-@keyframes gem-fab-complete {
-  0%,
-  100% {
-    filter: brightness(1.1);
-    transform: scale(1.02) rotate(-3deg);
-  }
-  50% {
-    filter: brightness(1.35);
-    transform: scale(1.1) rotate(3deg);
-  }
-}
-
 .gem-map-complete__card {
   display: flex;
   align-items: center;
@@ -2641,8 +2865,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   }
 }
 
-.is-origin-pick .map-add-house-fab,
-.is-origin-pick .map-gem-hunt-fab {
+.is-origin-pick .map-add-house-fab {
   bottom: calc(8.25rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
 }
 
@@ -2656,9 +2879,15 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   height: 60px;
 }
 
-.house-pin.is-legend .pin-cluster-icon {
+.house-pin.is-legend.is-school-campus {
+  width: 62px;
+  height: 62px;
+}
+
+.house-pin.is-legend:not(.is-cluster-ellipse) .pin-cluster-icon {
+  top: 50%;
   width: 36px;
-  height: 32px;
+  height: 28px;
 }
 
 .map-house-sheet {
@@ -2666,7 +2895,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 50;
+  z-index: 700;
   display: flex;
   flex-direction: column;
   height: 0;
@@ -2763,7 +2992,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .map-sheet-host {
   position: absolute;
   inset: 0;
-  z-index: 50;
+  z-index: 700;
   pointer-events: none;
 }
 
@@ -3029,11 +3258,63 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   padding: 8px 12px;
 }
 
+.house-card-top-bar {
+  position: relative;
+  z-index: 2;
+  align-items: stretch;
+}
+
+.house-card-quick-actions {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 0.25rem;
+}
+
+.house-card-quick-action-btn {
+  display: grid;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 3.25rem;
+  place-items: center;
+  width: auto;
+  height: 48px;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #2a1638;
+  padding: 0;
+  color: #ffedd5;
+  touch-action: manipulation;
+}
+
+.house-card-quick-action-btn:active {
+  background: #3b1d4e;
+}
+
+.house-card-quick-action-btn.is-active-visited {
+  color: #6ee7b7;
+}
+
+.house-card-quick-action-btn.is-active-saved {
+  color: #fb7185;
+}
+
+.house-card-quick-action-btn.is-active-gem {
+  color: #fde68a;
+}
+
+.house-card-quick-action-btn.is-active-skipped {
+  color: #ddd6fe;
+}
+
 .house-action-menu {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .house-action-menu-trigger {
@@ -3100,6 +3381,44 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   color: #fde68a;
 }
 
+.gem-cluster-session-summary__slot {
+  animation: gem-cluster-summary-pop 520ms ease-out both;
+}
+
+.gem-cluster-session-summary__poster {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 0.65rem;
+  background: rgb(251 191 36 / 0.08);
+  box-shadow:
+    inset 0 0 0 1px rgb(251 191 36 / 0.28),
+    0 4px 14px rgb(0 0 0 / 0.35);
+}
+
+.gem-cluster-session-summary__poster-img {
+  width: 3.75rem;
+  height: 3.75rem;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgb(0 0 0 / 0.45));
+}
+
+@keyframes gem-cluster-summary-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.house-action-menu-item.is-active-skipped {
+  color: #ddd6fe;
+}
+
 .house-action-menu-item.is-disabled,
 .house-action-menu-item:disabled {
   cursor: not-allowed;
@@ -3116,6 +3435,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .house-action-menu-label {
@@ -3696,6 +4016,20 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   padding: 0.5rem 0.75rem 0.25rem;
 }
 
+/** Visit poster popup — safe-area top inset without extra vertical bulk. */
+.hw-overlay-close-bar--minimal-top-safe {
+  padding: calc(0.15rem + env(safe-area-inset-top, 0px)) 0.625rem 0.35rem 0.625rem;
+}
+
+.hw-overlay-close-bar--minimal-top-safe.hw-overlay-close-bar--titled {
+  gap: 0.25rem;
+}
+
+.hw-overlay-close-bar--minimal-top-safe .hw-overlay-close-bar-title > div {
+  font-size: 1.125rem;
+  line-height: 1.25;
+}
+
 .hw-overlay-close-bar--titled {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) 44px;
@@ -3814,6 +4148,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   padding-inline-start: 1.65rem;
 }
 
+.route-list-leg--line-only {
+  min-height: 1.35rem;
+}
+
 .route-list-leg-line {
   width: 3px;
   flex-shrink: 0;
@@ -3863,8 +4201,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-house-found-hero__gem-wrap {
   display: grid;
   place-items: center;
-  width: 3.75rem;
-  height: 3.75rem;
+  width: 3rem;
+  height: 3rem;
   margin: 0;
   border-radius: 9999px;
   background: rgb(251 191 36 / 0.14);
@@ -3873,10 +4211,16 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
     0 0 20px rgb(251 191 36 / 0.35);
 }
 .gem-house-found-hero__gem-icon {
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 1.9rem !important;
+  height: 1.9rem !important;
+  max-width: 1.9rem;
+  max-height: 1.9rem;
   color: #fde68a;
   filter: drop-shadow(0 0 16px rgb(251 191 36 / 0.75));
+}
+.gem-house-found-hero__gem-icon svg {
+  width: 1.65rem;
+  height: 1.65rem;
 }
 .gem-house-found-hero__kicker {
   margin: 0.35rem 0 0;
@@ -3996,10 +4340,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 
 .gem-hunt-overlay {
+  --gem-cam-w: min(90vw, 29rem);
+  --gem-cam-h: min(68vw, calc(100dvh - 9rem), 37rem);
   position: fixed;
   inset: 0;
   z-index: 12050;
-  overflow: hidden;
+  overflow: visible;
   background: #050208;
   isolation: isolate;
 }
@@ -4009,6 +4355,11 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   z-index: 2;
   pointer-events: none;
   overflow: visible;
+}
+.gem-hunt-overlay__stage.is-gem-interactive .gem-hunt-overlay__gem-hit.is-center-collect,
+.gem-hunt-overlay__stage.is-gem-interactive .gem-hunt-overlay__gem-hit.is-inspect360 {
+  overflow: visible;
+  max-height: none;
 }
 .gem-hunt-overlay__stage.is-gem-interactive {
   z-index: 9;
@@ -4024,6 +4375,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   height: 100%;
   object-fit: cover;
   background: #050208;
+  overflow: hidden;
 }
 .gem-hunt-overlay__video--behind-fallback {
   opacity: 0;
@@ -4742,8 +5094,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   left: 50%;
   right: auto;
   top: 38%;
-  width: min(72vw, 16.5rem);
-  max-width: min(72vw, 16.5rem);
+  width: var(--gem-cam-w);
+  max-width: var(--gem-cam-w);
   padding: 0;
   transform: translate(-50%, -50%);
   z-index: 6;
@@ -4767,7 +5119,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   justify-content: center;
   width: 100%;
   height: 100%;
-  min-height: min(78vw, 22rem);
+  min-height: var(--gem-cam-h);
   cursor: pointer;
   pointer-events: auto;
   -webkit-tap-highlight-color: transparent;
@@ -4788,8 +5140,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__gem-hit.is-center-collect .gem-hunt-overlay__gem-dance,
 .gem-hunt-overlay__gem-hit.is-center-collect .gem-sprite--hunt {
-  width: min(72vw, 16.5rem);
-  height: min(72vw, 16.5rem);
+  width: var(--gem-cam-w);
+  height: var(--gem-cam-h);
   margin-inline: auto;
 }
 .gem-hunt-overlay__gem-hit.is-center-collect .gem-sprite--hunt {
@@ -4804,11 +5156,17 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   max-width: 100%;
   max-height: 100%;
   margin: 0 auto;
+  overflow: visible;
+}
+.gem-hunt-overlay__gem-hit.is-inspect360 .gem-sprite,
+.gem-hunt-overlay__gem-hit.is-inspect360 .gem-sprite--inspect360,
+.gem-hunt-overlay__gem-hit.is-inspect360 canvas {
+  overflow: visible;
 }
 .gem-hunt-overlay__gem-hit.is-center-collect.is-collecting .gem-sprite--hunt,
 .gem-hunt-overlay__gem-hit.is-center-collect.is-collecting .gem-hunt-overlay__gem-dance {
-  width: min(88vw, 22rem);
-  height: min(88vw, 22rem);
+  width: var(--gem-cam-w);
+  height: var(--gem-cam-h);
   transform: scale(1);
 }
 .gem-hunt-overlay__gem-hit.is-center-collect.is-collecting canvas {
@@ -4840,9 +5198,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__gem-hit .gem-sprite--hunt,
 .gem-hunt-overlay__gem-hit .gem-sprite--fill {
-  width: min(84vw, 21rem);
-  height: min(84vw, 21rem);
+  width: var(--gem-cam-w);
+  height: var(--gem-cam-h);
   overflow: visible;
+}
+.gem-hunt-overlay .gem-sprite__glow {
+  display: none;
 }
 .gem-hunt-overlay__gem-pin .gem-sprite--poster {
   width: 4.75rem;
@@ -4861,12 +5222,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__gem-pin.is-revealed .gem-sprite--hunt,
 .gem-hunt-overlay__gem-pin.is-revealed .gem-sprite--fill,
 .gem-hunt-overlay__gem-pin.is-center-fallback.is-revealed .gem-sprite {
-  width: min(86vw, 21.5rem);
-  height: min(86vw, 21.5rem);
+  width: var(--gem-cam-w);
+  height: var(--gem-cam-h);
 }
 .gem-hunt-overlay__gem-hit .gem-model-3d--poster-fallback {
-  width: min(84vw, 21rem);
-  height: min(84vw, 21rem);
+  width: var(--gem-cam-w);
+  height: var(--gem-cam-h);
   overflow: visible;
   background: transparent;
 }
@@ -4894,19 +5255,13 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__gem-dance.is-collecting.is-collecting-3d {
   animation: none;
-  filter: drop-shadow(0 0 24px rgb(251 191 36 / 0.9));
+  filter: drop-shadow(0 10px 16px rgb(0 0 0 / 0.5));
 }
 .gem-hunt-overlay__gem-dance.is-collecting.is-collecting-3d .gem-sprite.is-celebrating .gem-sprite__glow {
-  animation: gem-celebrate-aura 0.65s ease-in-out infinite;
-  background: radial-gradient(
-    circle,
-    rgb(251 191 36 / 0.75) 0%,
-    rgb(244 114 182 / 0.35) 42%,
-    transparent 70%
-  );
+  display: none;
 }
 .gem-hunt-overlay__gem-dance.is-collecting.is-collecting-3d .gem-model-3d.is-celebrating {
-  filter: drop-shadow(0 12px 20px rgb(0 0 0 / 0.45)) drop-shadow(0 0 22px rgb(251 191 36 / 0.85));
+  filter: drop-shadow(0 12px 20px rgb(0 0 0 / 0.45));
 }
 @keyframes gem-celebrate-aura {
   0%,
@@ -5466,6 +5821,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   border: 1px solid rgb(251 191 36 / 0.55);
   box-shadow: 0 16px 48px rgb(0 0 0 / 0.5);
   animation: gem-cheer-pop 5.5s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+}
+.gem-collect-cheer__gem-icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  flex-shrink: 0;
+  animation: gem-cheer-gem 1.35s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
 }
 .gem-collect-cheer__gem.gem-sprite--poster {
   width: min(78vw, 14rem);
@@ -6609,6 +6970,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 
 .gem-hunt-webxr {
+  --gem-cam-w: min(90vw, 29rem);
+  --gem-cam-h: min(68vw, calc(100dvh - 9rem), 37rem);
   position: fixed;
   inset: 0;
   z-index: 12050;
@@ -6617,6 +6980,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   background: #050208;
   color: #fef3c7;
   pointer-events: none;
+  overflow: clip;
 }
 .gem-hunt-webxr.is-session-active {
   background: transparent;
@@ -6732,6 +7096,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-hit.is-collect-layer {
   pointer-events: none;
+  max-height: none;
+  overflow: visible;
 }
 .gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-tap-target {
   border: none;
@@ -6744,10 +7110,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-tap-target:disabled {
   cursor: default;
 }
-.gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-tap-target .gem-model-3d,
-.gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-tap-target canvas {
-  pointer-events: none !important;
+.gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-hit.is-inspect360 .gem-hunt-overlay__gem-dance {
   touch-action: none;
+  cursor: grab;
 }
 .gem-hunt-webxr__host canvas {
   display: block;
@@ -6900,12 +7265,19 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__gem-hit.is-inspect360.is-center-collect {
   left: 50%;
   right: auto;
-  top: 34%;
-  width: min(88vw, 26rem);
-  max-width: min(88vw, 26rem);
+  top: clamp(44%, calc(50% + 0.25rem), 48%);
+  width: var(--gem-cam-w);
+  max-width: var(--gem-cam-w);
+  height: var(--gem-cam-h);
   margin-inline: 0;
   transform: translate(-50%, -50%);
   direction: ltr;
+}
+.gem-hunt-overlay--android .gem-hunt-overlay__gem-hit.is-inspect360.is-center-collect {
+  top: clamp(45%, calc(50% + 0.35rem), 49%);
+}
+.gem-hunt-overlay--ios .gem-hunt-overlay__gem-hit.is-inspect360.is-center-collect {
+  top: clamp(45%, calc(50% + 0.5rem), 49%);
 }
 .gem-hunt-overlay__tap-collect-caption {
   position: absolute;
@@ -6924,21 +7296,61 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   pointer-events: none;
 }
 .gem-hunt-overlay__gem-hit.is-inspect360 .gem-hunt-overlay__gem-dance {
-  touch-action: manipulation;
-  cursor: pointer;
+  touch-action: none;
+  cursor: grab;
+}
+.gem-hunt-overlay__gem-hit.is-inspect360 .gem-hunt-overlay__gem-dance:active {
+  cursor: grabbing;
 }
 .gem-hunt-overlay__gem-pin.is-inspect360 {
   pointer-events: auto;
   cursor: grab;
 }
 .gem-hunt-overlay__gem-hit.is-inspect360 .gem-hunt-overlay__gem-dance {
-  width: min(88vw, 26rem);
-  height: min(88vw, 26rem);
+  width: var(--gem-cam-w);
+  height: var(--gem-cam-h);
   overflow: visible;
 }
 .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 .gem-hunt-overlay__gem-dance {
-  width: min(88vw, 26rem);
-  height: min(88vw, 26rem);
+  width: var(--gem-cam-w);
+  height: var(--gem-cam-h);
+}
+.gem-hunt-overlay.is-campus-queue .gem-hunt-overlay__collect-banner {
+  top: calc(42% - min(44vw, 13rem) - 0.35rem);
+  font-size: clamp(1.1rem, 4.5vw, 1.45rem);
+}
+.gem-hunt-overlay__gem-hit.is-tell-me-center.is-inspect360 .gem-hunt-overlay__gem-dance,
+.gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360.is-tell-me-center {
+  width: var(--gem-cam-w);
+  max-width: var(--gem-cam-w);
+}
+.gem-hunt-overlay__gem-hit.is-tell-me-center.is-inspect360 .gem-hunt-overlay__gem-dance {
+  height: var(--gem-cam-h);
+}
+.gem-hunt-overlay__gem-hit.is-campus-tap.is-center-collect {
+  top: 40%;
+  width: min(72vw, 13rem);
+  max-width: min(72vw, 13rem);
+}
+.gem-hunt-overlay__gem-hit.is-campus-tap.is-center-collect .gem-hunt-overlay__gem-dance {
+  width: min(72vw, 13rem);
+  height: min(72vw, 13rem);
+}
+.gem-hunt-overlay__campus-save-btn {
+  display: block;
+  width: min(92vw, 20rem);
+  margin: 0.35rem auto 0;
+  border-radius: 9999px;
+  border: 0;
+  padding: 0.85rem 1.25rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1c0a00;
+  background: linear-gradient(180deg, #fcd34d 0%, #f59e0b 100%);
+  box-shadow: 0 4px 18px rgb(0 0 0 / 0.45);
+}
+.gem-hunt-overlay__campus-save-btn:disabled {
+  opacity: 0.45;
 }
 .gem-hunt-overlay__gem-hit.is-inspect360 .gem-model-3d,
 .gem-hunt-overlay__gem-hit.is-inspect360 canvas {
@@ -6952,7 +7364,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 .gem-model-3d,
 .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 canvas {
   pointer-events: auto;
-  touch-action: manipulation;
+  touch-action: none;
 }
 .gem-sprite--inspect360 {
   width: 100%;

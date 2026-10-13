@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Camera } from "lucide-react";
 import { toast } from "sonner";
 import { compressJpegFile, type PhotoFocus } from "@/lib/compress-image";
-import { HOUSE_CARD_PHOTO_BOX, HousePhotoFrame } from "@/components/house-photo-frame";
+import { HousePhotoFrame } from "@/components/house-photo-frame";
 import { AddressField, reversePin } from "@/components/address-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +14,6 @@ import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import {
   scareShort,
   decorShort,
-  suggestedHouseName,
-  nameMatchesTheme,
   themeFromName,
   houseKindLabels,
 } from "@/lib/labels";
@@ -26,13 +24,17 @@ import {
   houseNeighborhoodChoiceToStored,
   NEIGHBORHOOD_FILTER_OPTIONS,
   neighborhoodFromAddress,
+  neighborhoodLabelForPin,
   storedToHouseNeighborhoodChoice,
   type HouseNeighborhoodChoice,
 } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
 import {
-  HOUSE_THEMES,
+  isSchoolCampusAddress,
+  schoolCampusNeighborhoodForAddress,
+} from "@/lib/school-campus";
+import {
   SENSITIVITY_OPTIONS,
   type DecorLevel,
   type HouseInput,
@@ -46,6 +48,7 @@ import { candyTone, CandySign, CANDY_TONES, type CandyTone } from "@/components/
 import { freezeExpireIso, isOwnerFrozen, resolveDecorLevel } from "@/lib/house-state";
 import { StrollerSign } from "@/components/symbols";
 import { LocationKindSign } from "@/components/location-kind-sign";
+import { PracticeLocationSign } from "@/components/practice-location-sign";
 import { ScarePumpkin, ScareSign } from "@/components/scare-glyphs";
 import { PIN_GLYPH_SCALE } from "@/lib/pin-faces";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
@@ -138,6 +141,10 @@ export function HouseForm({
   extraActions?: ReactNode;
 }) {
   const [form, setForm] = useState<HouseInput>({ ...empty, ...initial });
+  const [placeKind, setPlaceKind] = useState<"house" | "poi" | "practice">(() => {
+    if (initial?.isPractice) return "practice";
+    return initial?.kind === "poi" ? "poi" : "house";
+  });
   const [locating, setLocating] = useState(false);
   const [addressOk, setAddressOk] = useState(Boolean(initial?.address && initial.lat && initial.lng));
   const [addressFieldActive, setAddressFieldActive] = useState(false);
@@ -160,6 +167,7 @@ export function HouseForm({
   const [addedBy, setAddedBy] = useState(() => initial?.addedBy?.trim() ?? "");
   const [ownerPhone, setOwnerPhone] = useState(() => initial?.ownerPhone?.trim() ?? "");
   const [ownerPhoneTouched, setOwnerPhoneTouched] = useState(false);
+  const [hoodTouched, setHoodTouched] = useState(false);
   const existingPhoto = initial?.photoUrl ?? "";
   const isNewHouse = !initial?.id;
   const ownerPhoneRequired = isNewHouse || !initial?.ownerPhone?.trim();
@@ -169,7 +177,8 @@ export function HouseForm({
   const now = useAppNow();
   const { admin } = useAdminSession();
   const blocked = Boolean(busy || saving);
-  const isPoi = isPoiHouse(form);
+  const isPracticePlace = placeKind === "practice";
+  const isPoi = placeKind === "poi" && isPoiHouse({ ...form, kind: "poi" });
   const scareGlyph = isPoi ? ScarePumpkin : undefined;
   const scareGlyphScale = isPoi ? PIN_GLYPH_SCALE.poi : PIN_GLYPH_SCALE.house;
 
@@ -227,8 +236,9 @@ export function HouseForm({
   }, [pauseCloseEnabled, nightStatus]);
 
   useEffect(() => {
-    setAddedBy(initial?.addedBy?.trim() ?? "");
-    setOwnerPhone(initial?.ownerPhone?.trim() ?? "");
+    const remembered = initial?.id ? null : readLastOwner();
+    setAddedBy(initial?.addedBy?.trim() || remembered?.addedBy || "");
+    setOwnerPhone(initial?.ownerPhone?.trim() || remembered?.ownerPhone || "");
     setOwnerPhoneTouched(false);
   }, [initial?.id, initial?.addedBy, initial?.ownerPhone]);
 
@@ -244,10 +254,36 @@ export function HouseForm({
     });
   }, [initial?.id, initial?.neighborhood, initial?.address]);
 
-  const hoodChoice = storedToHouseNeighborhoodChoice(form.neighborhood);
+  const lockedSchoolHood = useMemo(
+    () => schoolCampusNeighborhoodForAddress(form.address),
+    [form.address],
+  );
+  const schoolCampusPinLocked = useMemo(
+    () => isSchoolCampusAddress(form.address),
+    [form.address],
+  );
+
+  useEffect(() => {
+    if (!lockedSchoolHood) return;
+    setForm((f) => (f.neighborhood === lockedSchoolHood ? f : { ...f, neighborhood: lockedSchoolHood }));
+  }, [lockedSchoolHood]);
+
+  const hoodChoice = storedToHouseNeighborhoodChoice(
+    lockedSchoolHood ?? form.neighborhood,
+  );
 
   function setHoodChoice(choice: HouseNeighborhoodChoice) {
+    if (lockedSchoolHood) return;
+    setHoodTouched(true);
     setForm((f) => ({ ...f, neighborhood: houseNeighborhoodChoiceToStored(choice) }));
+  }
+
+  function guessedHood(address: string, lat: number, lng: number) {
+    return (
+      schoolCampusNeighborhoodForAddress(address) ??
+      neighborhoodLabelForPin(lat, lng) ??
+      neighborhoodFromAddress(address)
+    );
   }
 
   function pickScare(level: ScareLevel) {
@@ -263,21 +299,21 @@ export function HouseForm({
     });
   }
 
-  function applyNameSuggestion(theme: (typeof HOUSE_THEMES)[number]) {
-    setForm((f) => ({ ...f, theme, name: suggestedHouseName(theme) }));
-  }
-
   function onAddressTyped(value: string) {
     setAddressOk(false);
     setForm((f) => ({ ...f, address: value }));
   }
 
   function onAddressSelect(hit: AddressHit) {
+    const address = displayAddressFromHit(hit);
+    const campusHood = schoolCampusNeighborhoodForAddress(address);
+    const hood = campusHood ?? (hoodTouched ? null : guessedHood(address, hit.lat, hit.lng));
     setForm((f) => ({
       ...f,
-      address: displayAddressFromHit(hit),
+      address,
       lat: hit.lat,
       lng: hit.lng,
+      ...(hood !== null ? { neighborhood: hood } : {}),
     }));
     setAddressOk(true);
     if (!hit.precise) {
@@ -293,11 +329,14 @@ export function HouseForm({
       toast.error("לא מצאנו כתובת בנקודה הזו. הזינו רחוב ומספר מהרשימה.");
       return;
     }
+    const address = displayAddressFromHit(hit);
+    const hood = hoodTouched ? null : guessedHood(address, hit.lat, hit.lng);
     setForm((f) => ({
       ...f,
       lat: hit.lat,
       lng: hit.lng,
-      address: displayAddressFromHit(hit),
+      address,
+      ...(hood !== null ? { neighborhood: hood } : {}),
     }));
     setAddressOk(true);
     if (!hit.precise) {
@@ -385,6 +424,7 @@ export function HouseForm({
           toast.error(hoursIssue);
           return;
         }
+        if (isNewHouse) rememberLastOwner({ addedBy: submitter, ownerPhone: phone });
         const hours = syncHoursFields(windows);
         const payload: HouseInput = {
           ...form,
@@ -401,10 +441,12 @@ export function HouseForm({
           openTo2: hours.openTo2,
           ...(admin
             ? {
-                kind: form.kind ?? "house",
-                poiCategory: form.kind === "poi" ? (form.poiCategory ?? "other") : null,
+                kind: isPracticePlace ? "house" : form.kind ?? "house",
+                isPractice: isPracticePlace,
+                poiCategory:
+                  !isPracticePlace && form.kind === "poi" ? (form.poiCategory ?? "other") : null,
               }
-            : { kind: "house", poiCategory: null }),
+            : { kind: "house", poiCategory: null, isPractice: false }),
         };
         setSaving(true);
         void (async () => {
@@ -437,15 +479,17 @@ export function HouseForm({
               <button
                 key={kind}
                 type="button"
-                onClick={() =>
+                onClick={() => {
+                  setPlaceKind(kind);
                   setForm((current) => ({
                     ...current,
                     kind,
+                    isPractice: false,
                     poiCategory: kind === "poi" ? current.poiCategory ?? "other" : null,
-                  }))
-                }
+                  }));
+                }}
                 className={
-                  (form.kind ?? "house") === kind
+                  placeKind === kind
                     ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black"
                     : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
                 }
@@ -454,60 +498,39 @@ export function HouseForm({
                 {houseKindLabels[kind]}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => {
+                setPlaceKind("practice");
+                setForm((current) => ({
+                  ...current,
+                  kind: "house",
+                  isPractice: true,
+                  poiCategory: null,
+                }));
+              }}
+              className={
+                placeKind === "practice"
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-teal-500 px-3 py-1.5 text-lg font-medium text-black"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-teal-400/40"
+              }
+            >
+              <PracticeLocationSign className="size-6" />
+              בית תרגול
+            </button>
           </div>
-        </FormSection>
-      ) : null}
-      <FormSection title={isPoi ? "נקודת העניין" : "הבית"}>
-        <Field
-          label="מי מוסיף את המקום?"
-          charCount={{ length: addedBy.length, max: HOUSE_FIELD_LIMITS.addedBy.max }}
-        >
-          <Input
-            required={isNewHouse}
-            value={addedBy}
-            minLength={isNewHouse ? HOUSE_FIELD_LIMITS.addedBy.min : undefined}
-            maxLength={HOUSE_FIELD_LIMITS.addedBy.max}
-            onChange={(e) => setAddedBy(e.target.value)}
-            placeholder="ישראל כהן"
-            className="h-11 bg-[#1d1028] text-lg"
-          />
-        </Field>
-        <Field
-          label="טלפון ליצירת קשר (פנימי)"
-          charCount={{ length: ownerPhone.length, max: HOUSE_FIELD_LIMITS.ownerPhone.max }}
-        >
-          <Input
-            required={ownerPhoneRequired}
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            value={ownerPhone}
-            maxLength={HOUSE_FIELD_LIMITS.ownerPhone.max}
-            onChange={(e) => setOwnerPhone(e.target.value)}
-            onBlur={() => setOwnerPhoneTouched(true)}
-            aria-invalid={ownerPhoneError ? true : undefined}
-            aria-describedby={ownerPhoneError ? "owner-phone-hint owner-phone-error" : "owner-phone-hint"}
-            placeholder="050-1234567"
-            className={cn(
-              "h-11 bg-[#1d1028] text-lg",
-              ownerPhoneError && "ring-2 ring-rose-500/70",
-            )}
-          />
-          {ownerPhoneError ? (
-            <p id="owner-phone-error" className="mt-1.5 text-base text-rose-300" role="alert">
-              {ownerPhoneError}
+          {isPracticePlace ? (
+            <p className="text-base text-teal-200/90">
+              לתרגול שדונים בלבד — לא נספר בבתים בשכונה ולא נכנס למסלול.
             </p>
           ) : null}
-          <p id="owner-phone-hint" className="mt-1.5 text-base leading-snug text-violet-300">
-            לשימוש מנהל האירוע בלבד — לא מוצג למבקרים. משמש ליצירת קשר לפני או במהלך
-            הערב אם צריך.
-          </p>
-        </Field>
-        <div>
-          <div className="mb-2 flex items-baseline justify-between gap-2">
-            <p className="text-lg font-medium">{isPoi ? "שם המקום" : "שם הבית"}</p>
-            <CharCount length={form.name.length} max={HOUSE_FIELD_LIMITS.name.max} />
-          </div>
+        </FormSection>
+      ) : null}
+      <FormSection title={isPracticePlace ? "בית תרגול" : isPoi ? "העסק" : "הבית"}>
+        <Field
+          label={isPoi ? "שם המקום" : "שם הבית"}
+          charCount={{ length: form.name.length, max: HOUSE_FIELD_LIMITS.name.max }}
+        >
           <Input
             required
             value={form.name}
@@ -518,34 +541,64 @@ export function HouseForm({
               const theme = themeFromName(name) ?? form.theme;
               setForm({ ...form, name, theme });
             }}
-            placeholder="בית משפחת לוי, או בחרו הצעה"
             className="h-11 bg-[#1d1028] text-lg"
           />
-          <p className="mt-2 text-lg text-violet-300">הצעות לשם — לחיצה ממלאת את השדה</p>
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {HOUSE_THEMES.map((theme) => {
-              const selected = nameMatchesTheme(form.name, theme);
-              return (
-                <button
-                  key={theme}
-                  type="button"
-                  onClick={() => applyNameSuggestion(theme)}
-                  className={
-                    selected
-                      ? "rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black"
-                      : "rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
-                  }
-                >
-                  {suggestedHouseName(theme)}
-                </button>
-              );
-            })}
-          </div>
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="השם שלך" hint="לא מוצג">
+            <Input
+              required={isNewHouse}
+              value={addedBy}
+              autoComplete="name"
+              minLength={isNewHouse ? HOUSE_FIELD_LIMITS.addedBy.min : undefined}
+              maxLength={HOUSE_FIELD_LIMITS.addedBy.max}
+              onChange={(e) => setAddedBy(e.target.value)}
+              className="h-11 bg-[#1d1028] text-lg"
+            />
+          </Field>
+          <Field label="טלפון" hint="לא מוצג">
+            <Input
+              required={ownerPhoneRequired}
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              value={ownerPhone}
+              maxLength={HOUSE_FIELD_LIMITS.ownerPhone.max}
+              onChange={(e) => setOwnerPhone(e.target.value)}
+              onBlur={() => setOwnerPhoneTouched(true)}
+              aria-invalid={ownerPhoneError ? true : undefined}
+              aria-describedby={ownerPhoneError ? "owner-phone-error" : undefined}
+              className={cn(
+                "h-11 bg-[#1d1028] text-lg",
+                ownerPhoneError && "ring-2 ring-rose-500/70",
+              )}
+            />
+          </Field>
         </div>
+        {ownerPhoneError ? (
+          <p id="owner-phone-error" className="-mt-2 text-base text-rose-300" role="alert">
+            {ownerPhoneError}
+          </p>
+        ) : null}
       </FormSection>
-      <FormSection title="איפה למצוא">
+      <FormSection title="איפה">
+        <Field label="שכונה" hint={lockedSchoolHood ? "לפי בית הספר" : undefined}>
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="שכונה">
+            {NEIGHBORHOOD_FILTER_OPTIONS.map((choice) => (
+              <ChoiceChip
+                key={choice}
+                selected={hoodChoice === choice}
+                disabled={Boolean(blocked || lockedSchoolHood)}
+                onClick={() => setHoodChoice(choice)}
+              >
+                {choice}
+              </ChoiceChip>
+            ))}
+          </div>
+        </Field>
         <Field
           label="כתובת"
+          hint={HIDDEN_UNTIL_EVENT}
           charCount={{ length: form.address.length, max: HOUSE_FIELD_LIMITS.address.max }}
         >
           <AddressField
@@ -558,122 +611,97 @@ export function HouseForm({
             onFocusChange={setAddressFieldActive}
           />
         </Field>
-        <Field label="שכונה">
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="שכונה">
-            {NEIGHBORHOOD_FILTER_OPTIONS.map((choice) => {
-              const selected = hoodChoice === choice;
-              return (
-                <button
-                  key={choice}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => setHoodChoice(choice)}
-                  className={
-                    selected
-                      ? "rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black"
-                      : "rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
-                  }
-                >
-                  {choice}
-                </button>
-              );
-            })}
-          </div>
-        </Field>
-        <div>
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="text-lg font-medium">סיכה על המפה</p>
-            <Button type="button" size="sm" variant="outline" onClick={useMyLocation}>
-              {locating ? "מאתרים…" : "המיקום שלי"}
-            </Button>
-          </div>
-          <p className="mb-2 text-lg text-violet-300">
-            אחרי בחירת כתובת הסיכה זזה לשם. אפשר לגרור אותה לכניסה המדויקת.
-          </p>
-          <div
-            className={cn(
-              "relative z-0 isolate h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/30",
-              addressFieldActive && "hidden sm:block",
-            )}
-          >
-            <HouseMapDynamic
-              pickMode
-              pick={{ lat: form.lat, lng: form.lng }}
-              onPick={(lat, lng) => void syncFromPin(lat, lng)}
-            />
-          </div>
-          <p className="mt-1 text-lg text-violet-300">
-            מיקום: {form.lat.toFixed(5)}, {form.lng.toFixed(5)}
-          </p>
-        </div>
         <Field
-          label="איפה הדלת (קומה, דירה)"
+          label="איפה הדלת"
+          hint={HIDDEN_UNTIL_EVENT}
           charCount={{ length: form.arrival.length, max: HOUSE_FIELD_LIMITS.arrival.max }}
         >
           <Input
             value={form.arrival}
             maxLength={HOUSE_FIELD_LIMITS.arrival.max}
             onChange={(e) => setForm({ ...form, arrival: e.target.value })}
-            placeholder="קומה 2, דירה 5, ימינה אחרי השער"
+            placeholder="קומה 2, דירה 5"
           />
         </Field>
         <Field
           label="הערה למבקרים"
+          hint={HIDDEN_UNTIL_EVENT}
           charCount={{ length: form.notes.length, max: HOUSE_FIELD_LIMITS.notes.max }}
         >
           <Input
             value={form.notes}
             maxLength={HOUSE_FIELD_LIMITS.notes.max}
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            placeholder="כלב, מדרגות, או משהו שלא קשור להגעה"
+            placeholder="יש כלב, מדרגות…"
           />
-          <p className="text-base text-violet-400">
-            מופיעה בכרטיס בנפרד מהוראות ההגעה — למשל כלב, מדרגות, או הערה כללית.
-          </p>
         </Field>
-      </FormSection>
-      <FormSection title="מתי פתוחים">
-        <div className="space-y-3">
-          <p className="text-lg font-medium">שעות ב־31 באוקטובר</p>
-          <p className="text-lg text-violet-300">
-            הבתים פתוחים רק בליל האלווין. אפשר כמה חלונות בערב (למשל 17:00–18:00, 19:00–20:00) אם
-            יוצאים באמצע לטריק-אור-טריט.
-          </p>
-          {hourWindows.map((window, index) => (
+        {admin ? (
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-lg font-medium">סיכה על המפה</p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={useMyLocation}
+                disabled={schoolCampusPinLocked || blocked}
+              >
+                {locating ? "מאתרים…" : "המיקום שלי"}
+              </Button>
+            </div>
             <div
-              key={`hours-${index}`}
-              className="min-w-0 space-y-2 overflow-hidden rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20"
+              className={cn(
+                "relative z-0 isolate h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/30",
+                addressFieldActive && "hidden sm:block",
+              )}
             >
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-lg font-medium text-orange-100">
-                  {hourWindows.length === 1 ? "חלון שעות" : `חלון ${index + 1}`}
-                </p>
-                {hourWindows.length > 1 ? (
-                  <button
-                    type="button"
-                    className="text-lg text-violet-300 underline-offset-2 hover:underline"
-                    onClick={() => removeHourWindow(index)}
-                  >
-                    הסרה
-                  </button>
-                ) : null}
+              <HouseMapDynamic
+                pickMode
+                pick={{ lat: form.lat, lng: form.lng }}
+                pickDraggable={!schoolCampusPinLocked}
+                onPick={
+                  !schoolCampusPinLocked ? (lat, lng) => void syncFromPin(lat, lng) : undefined
+                }
+              />
+            </div>
+            <p className="mt-1 text-base text-violet-300">
+              {form.lat.toFixed(5)}, {form.lng.toFixed(5)}
+              {schoolCampusPinLocked ? " · מיקום בית הספר קבוע" : null}
+            </p>
+          </div>
+        ) : null}
+      </FormSection>
+      <FormSection title="שעות ב־31 באוקטובר">
+        <div className="space-y-2">
+          {hourWindows.map((window, index) => (
+            <div key={`hours-${index}`} className="flex min-w-0 items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <TimeField
+                  required
+                  ariaLabel={`פתיחה ${index + 1}`}
+                  value={window.from}
+                  onChange={(from) => updateHourWindow(index, { from })}
+                />
               </div>
-              <div className="grid min-w-0 grid-cols-1 gap-3">
-                <Field label="פתיחה">
-                  <TimeField
-                    required
-                    value={window.from}
-                    onChange={(from) => updateHourWindow(index, { from })}
-                  />
-                </Field>
-                <Field label="סגירה">
-                  <TimeField
-                    required
-                    value={window.to}
-                    onChange={(to) => updateHourWindow(index, { to })}
-                  />
-                </Field>
+              <span className="text-lg text-violet-300">–</span>
+              <div className="min-w-0 flex-1">
+                <TimeField
+                  required
+                  ariaLabel={`סגירה ${index + 1}`}
+                  value={window.to}
+                  onChange={(to) => updateHourWindow(index, { to })}
+                />
               </div>
+              {hourWindows.length > 1 ? (
+                <button
+                  type="button"
+                  aria-label="הסרת חלון שעות"
+                  className="px-1 text-xl text-violet-300 hover:text-orange-200"
+                  onClick={() => removeHourWindow(index)}
+                >
+                  ×
+                </button>
+              ) : null}
             </div>
           ))}
           {hourWindows.length < MAX_HOUR_WINDOWS ? (
@@ -682,18 +710,12 @@ export function HouseForm({
               className="text-lg font-medium text-orange-300 underline-offset-2 hover:underline"
               onClick={addHourWindow}
             >
-              + הוספת חלון שעות
+              + עוד חלון שעות
             </button>
           ) : null}
           {hoursIssue ? <p className="text-lg text-red-300">{hoursIssue}</p> : null}
         </div>
-        <div className="space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
-          <p className="text-lg font-medium text-orange-100">סגירה או הפסקה ידנית בערב האירוע</p>
-          {!pauseCloseEnabled ? (
-            <p className="text-lg text-violet-300">
-              האפשרות לסמן סגירה או הפסקה תתאפשר בערב האירוע
-            </p>
-          ) : null}
+        <Field label="מצב" hint={pauseCloseEnabled ? undefined : "הפסקה וסגירה בערב האירוע"}>
           <div className="flex flex-wrap items-center gap-1.5">
             <NightStatusChip
               label="פתוח"
@@ -701,46 +723,27 @@ export function HouseForm({
               selected={nightStatus === "open"}
               onClick={() => setNightStatus("open")}
             />
-            {pauseCloseEnabled ? (
-              <>
-                <NightStatusChip
-                  label="הפסקה"
-                  dotClass="is-break"
-                  selected={nightStatus === "pause"}
-                  onClick={() => setNightStatus("pause")}
-                />
-                <NightStatusChip
-                  label="סגור"
-                  dotClass="is-closed"
-                  selected={nightStatus === "stop"}
-                  onClick={() => setNightStatus("stop")}
-                />
-              </>
-            ) : (
-              <div
-                className="flex flex-wrap items-center gap-1.5 rounded-xl border border-dashed border-white/15 bg-black/25 px-2 py-1.5"
-                aria-hidden
-              >
-                <NightStatusChip label="הפסקה" dotClass="is-break" locked />
-                <NightStatusChip label="סגור" dotClass="is-closed" locked />
-              </div>
-            )}
+            <NightStatusChip
+              label="הפסקה"
+              dotClass="is-break"
+              selected={nightStatus === "pause"}
+              disabled={!pauseCloseEnabled}
+              onClick={() => setNightStatus("pause")}
+            />
+            <NightStatusChip
+              label="סגור"
+              dotClass="is-closed"
+              selected={nightStatus === "stop"}
+              disabled={!pauseCloseEnabled}
+              onClick={() => setNightStatus("stop")}
+            />
           </div>
-        </div>
+        </Field>
       </FormSection>
-      <FormSection title="מה יפגשו בבית">
-        <div>
-          <p className="mb-2 text-lg font-medium">רמת פחד</p>
+      <FormSection title="מה יש בבית">
+        <Field label="רמת פחד">
           <div className="flex flex-wrap gap-1.5">
-            <button
-              type="button"
-              onClick={() => setDecorLevel("none")}
-              className={
-                undecorated
-                  ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black"
-                  : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
-              }
-            >
+            <ChoiceChip selected={undecorated} onClick={() => setDecorLevel("none")}>
               <ScareSign
                 Glyph={scareGlyph}
                 level="none"
@@ -748,17 +751,12 @@ export function HouseForm({
                 glyphClassName={scareGlyphScale}
               />
               {decorShort.none}
-            </button>
+            </ChoiceChip>
             {(["mild", "medium", "spicy"] as ScareLevel[]).map((level) => (
-              <button
+              <ChoiceChip
                 key={level}
-                type="button"
+                selected={!undecorated && form.scareLevel === level}
                 onClick={() => pickScare(level)}
-                className={
-                  !undecorated && form.scareLevel === level
-                    ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black"
-                    : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
-                }
               >
                 <ScareSign
                   Glyph={scareGlyph}
@@ -767,58 +765,48 @@ export function HouseForm({
                   glyphClassName={scareGlyphScale}
                 />
                 {scareShort[level]}
-              </button>
+              </ChoiceChip>
             ))}
           </div>
-        </div>
-        <div>
-          <p className="mb-2 text-lg font-medium">ממתקים</p>
+        </Field>
+        <Field label="ממתקים">
           <div className="flex flex-wrap gap-1.5">
             {CANDY_TONES.map((tone) => (
-              <button
+              <ChoiceChip
                 key={tone.id}
-                type="button"
+                selected={candy === tone.id}
                 onClick={() => pickCandy(tone.id)}
-                className={
-                  candy === tone.id
-                    ? "inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1.5 text-lg font-medium text-black"
-                    : "inline-flex items-center gap-1.5 rounded-full bg-[#1d1028] px-3 py-1.5 text-lg text-orange-100 ring-1 ring-orange-500/30"
-                }
               >
                 <CandySign tone={tone.id} className="size-6" />
                 {tone.label}
-              </button>
+              </ChoiceChip>
             ))}
           </div>
-        </div>
-        <div
-          className={
-            candyOffered
-              ? "space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20"
-              : "space-y-2 rounded-xl bg-[#1d1028] p-3 opacity-45 ring-1 ring-orange-500/15"
-          }
-        >
-          <p className="text-lg font-medium text-orange-100">רגישויות והתאמות</p>
-          <p className="text-lg text-violet-300">
+        </Field>
+        <Field label="סמנו מה מתאים">
+          <div className="space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
+            <CheckRow
+              checked={form.accessible}
+              onChange={(accessible) => setForm({ ...form, accessible })}
+            >
+              <span className="inline-flex items-center gap-2">
+                <StrollerSign />
+                נגיש (בלי מדרגות)
+              </span>
+            </CheckRow>
             {candyOffered
-              ? "סמנו מה יש בבית לילדים עם רגישויות"
-              : "בחרו יש או מעט ממתקים כדי לסמן רגישויות"}
-          </p>
-          <div className="space-y-2">
-            {SENSITIVITY_OPTIONS.map((id) => (
-              <label key={id} className="flex items-center gap-2 text-lg text-orange-50">
-                <input
-                  type="checkbox"
-                  className="size-5 accent-orange-500"
-                  disabled={!candyOffered}
-                  checked={candyOffered && form.treats.includes(id)}
-                  onChange={(e) => setTreat(id, e.target.checked)}
-                />
-                <SensitivityMark labeled kind={id} />
-              </label>
-            ))}
+              ? SENSITIVITY_OPTIONS.map((id) => (
+                  <CheckRow
+                    key={id}
+                    checked={form.treats.includes(id)}
+                    onChange={(on) => setTreat(id, on)}
+                  >
+                    <SensitivityMark labeled kind={id} />
+                  </CheckRow>
+                ))
+              : null}
           </div>
-        </div>
+        </Field>
         <Field
           label="מה מחכה בבית?"
           charCount={{ length: form.description.length, max: HOUSE_FIELD_LIMITS.description.max }}
@@ -827,97 +815,64 @@ export function HouseForm({
             value={form.description}
             maxLength={HOUSE_FIELD_LIMITS.description.max}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            placeholder="קישוטים, אווירה, הפתעות בבית או בחצר…"
-            className="min-h-24 text-lg"
+            placeholder="קישוטים, אווירה, הפתעות…"
+            className="min-h-20 text-lg"
           />
-          <p className="text-base text-violet-400">מופיע בכרטיס — אפשר להרחיב אם הטקסט ארוך.</p>
         </Field>
       </FormSection>
-      <FormSection title="הכניסה">
-        <label className="flex items-start gap-2 rounded-xl bg-[#1d1028] p-3 text-lg ring-1 ring-orange-500/20">
-          <input
-            type="checkbox"
-            className="mt-1 size-5 accent-orange-500"
-            checked={form.accessible}
-            onChange={(e) => setForm({ ...form, accessible: e.target.checked })}
-          />
-          <span>
-            <span className="inline-flex items-center gap-2 font-medium text-orange-100">
-              <StrollerSign />
-              נגיש
-            </span>
-            <span className="block text-lg text-violet-300">
-              בלי מדרגות בכניסה, מתאים לעגלה או לכיסא גלגלים
-            </span>
-          </span>
-        </label>
-      </FormSection>
       <FormSection title="תמונת קישוט">
-        <p className="text-lg text-violet-300">אפשר גם להעלות אחרי שתקשטו את הבית.</p>
-        {photoPreview || (existingPhoto && !clearPhoto) ? (
-          <div className="mb-2 space-y-2">
+          {photoPreview || (existingPhoto && !clearPhoto) ? (
             <HousePhotoFrame
               src={photoPreview || existingPhoto}
               focus={photoPreview ? photoFocus : { x: 50, y: 50 }}
               onFocusChange={photoPreview ? setPhotoFocus : undefined}
             />
-            {photoPreview ? (
-              <p className="text-lg text-violet-300">גררו את התמונה כדי לבחור את המרכז שיופיע בכרטיס</p>
+          ) : null}
+          <div className="flex flex-wrap gap-2">
+            <label className="inline-flex cursor-pointer">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-lg text-orange-100 ring-1 ring-orange-500/40",
+                  blocked && "opacity-60",
+                )}
+              >
+                <Camera className="size-4" />
+                {photoPreview || (existingPhoto && !clearPhoto) ? "החלפת תמונה" : "העלאת תמונה"}
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                disabled={blocked}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!file) return;
+                  setPhotoFile(file);
+                  setPhotoFocus({ x: 50, y: 50 });
+                  setClearPhoto(false);
+                  const reader = new FileReader();
+                  reader.onload = () => setPhotoPreview(String(reader.result ?? ""));
+                  reader.readAsDataURL(file);
+                }}
+              />
+            </label>
+            {photoPreview || (existingPhoto && !clearPhoto) ? (
+              <button
+                type="button"
+                disabled={blocked}
+                className="rounded-lg px-3 py-2 text-lg text-violet-200 ring-1 ring-orange-500/30"
+                onClick={() => {
+                  setPhotoFile(null);
+                  setPhotoPreview(null);
+                  setPhotoFocus({ x: 50, y: 50 });
+                  setClearPhoto(true);
+                }}
+              >
+                הסרת תמונה
+              </button>
             ) : null}
           </div>
-        ) : (
-          <div
-            className={`${HOUSE_CARD_PHOTO_BOX} mb-2 flex items-center justify-center bg-[#1d1028] text-center text-lg text-violet-400`}
-          >
-            אין תמונה עדיין
-          </div>
-        )}
-        <div className="flex flex-wrap gap-2">
-          <label className="inline-flex cursor-pointer">
-            <span
-              className={
-                blocked
-                  ? "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-lg font-medium text-white opacity-60"
-                  : "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-lg font-medium text-white"
-              }
-            >
-              <Camera className="size-3.5" />
-              {photoPreview || (existingPhoto && !clearPhoto) ? "החלפת תמונה" : "העלאת תמונה"}
-            </span>
-            <input
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              disabled={blocked}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                e.target.value = "";
-                if (!file) return;
-                setPhotoFile(file);
-                setPhotoFocus({ x: 50, y: 50 });
-                setClearPhoto(false);
-                const reader = new FileReader();
-                reader.onload = () => setPhotoPreview(String(reader.result ?? ""));
-                reader.readAsDataURL(file);
-              }}
-            />
-          </label>
-          {photoPreview || (existingPhoto && !clearPhoto) ? (
-            <button
-              type="button"
-              disabled={blocked}
-              className="rounded-lg px-3 py-2 text-lg text-violet-200 ring-1 ring-orange-500/30"
-              onClick={() => {
-                setPhotoFile(null);
-                setPhotoPreview(null);
-                setPhotoFocus({ x: 50, y: 50 });
-                setClearPhoto(true);
-              }}
-            >
-              הסרת תמונה
-            </button>
-          ) : null}
-        </div>
       </FormSection>
       <div className={onCancel ? "flex gap-2" : undefined}>
         {onCancel ? (
@@ -951,39 +906,21 @@ export function HouseForm({
 function NightStatusChip({
   label,
   dotClass,
-  selected = false,
-  locked = false,
+  selected,
+  disabled,
   onClick,
 }: {
   label: string;
   dotClass: string;
-  selected?: boolean;
-  locked?: boolean;
-  onClick?: () => void;
+  selected: boolean;
+  disabled?: boolean;
+  onClick: () => void;
 }) {
-  const className = cn(
-    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-lg font-medium",
-    locked
-      ? "cursor-not-allowed text-violet-400/55 ring-1 ring-white/10"
-      : selected
-        ? "bg-orange-500 text-black"
-        : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/30",
-  );
-
-  if (locked) {
-    return (
-      <span className={className}>
-        <span className={cn("night-status-dot opacity-40", dotClass)} />
-        {label}
-      </span>
-    );
-  }
-
   return (
-    <button type="button" onClick={onClick} className={className}>
+    <ChoiceChip selected={selected} disabled={disabled} onClick={onClick}>
       <span className={cn("night-status-dot", dotClass)} />
       {label}
-    </button>
+    </ChoiceChip>
   );
 }
 
@@ -1020,17 +957,24 @@ function CharCount({ length, max }: { length: number; max: number }) {
 
 function Field({
   label,
+  hint,
   children,
   charCount,
 }: {
   label: string;
+  hint?: string;
   children: ReactNode;
   charCount?: { length: number; max: number };
 }) {
   return (
     <div className="min-w-0 space-y-1.5">
       <div className="flex items-baseline justify-between gap-2">
-        <Label>{label}</Label>
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5">
+          <Label className="whitespace-nowrap">{label}</Label>
+          {hint ? (
+            <span className="whitespace-nowrap text-base text-violet-400">· {hint}</span>
+          ) : null}
+        </div>
         {charCount ? <CharCount {...charCount} /> : null}
       </div>
       {children}
@@ -1038,19 +982,94 @@ function Field({
   );
 }
 
+function ChoiceChip({
+  selected,
+  disabled,
+  onClick,
+  children,
+}: {
+  selected: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-lg",
+        selected
+          ? "bg-orange-500 font-medium text-black disabled:opacity-100"
+          : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/30 disabled:opacity-40",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function CheckRow({
+  checked,
+  onChange,
+  children,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  children: ReactNode;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-2 text-lg text-orange-50">
+      <input
+        type="checkbox"
+        className="size-5 accent-orange-500"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      {children}
+    </label>
+  );
+}
+
+const HIDDEN_UNTIL_EVENT = "לא מוצג עד יום האירוע";
+
+const LAST_OWNER_KEY = "house-form:last-owner";
+
+function readLastOwner(): { addedBy?: string; ownerPhone?: string } | null {
+  try {
+    const raw = window.localStorage.getItem(LAST_OWNER_KEY);
+    return raw ? (JSON.parse(raw) as { addedBy?: string; ownerPhone?: string }) : null;
+  } catch {
+    return null;
+  }
+}
+
+function rememberLastOwner(owner: { addedBy: string; ownerPhone: string }) {
+  try {
+    window.localStorage.setItem(LAST_OWNER_KEY, JSON.stringify(owner));
+  } catch {
+    // Private mode / storage full — prefill is best-effort.
+  }
+}
+
 function TimeField({
   value,
   onChange,
   required,
+  ariaLabel,
 }: {
   value: string;
   onChange: (value: string) => void;
   required?: boolean;
+  ariaLabel?: string;
 }) {
   return (
     <div className="time-field-wrap">
       <input
         type="time"
+        aria-label={ariaLabel}
         required={required}
         dir="ltr"
         lang="he-IL"

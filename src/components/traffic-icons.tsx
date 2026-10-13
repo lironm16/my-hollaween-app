@@ -1,5 +1,6 @@
 import { Check, Heart, Save } from "lucide-react";
 import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
+import { SkipIcon } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
 
 /** Pink heart in ring — matches house-card traffic pills (icon only). */
@@ -67,7 +68,7 @@ export function GemMenuDiscIcon({
       aria-hidden
     >
       <ImpMarkerGlyph
-        variant="solid"
+        variant="eyes"
         className={cn("size-[1.55rem] max-h-full max-w-full text-current", markClassName)}
       />
     </span>
@@ -92,6 +93,28 @@ export function SaveExportTrafficIcon({
       aria-hidden
     >
       <Save className={cn("size-[1.15rem] text-violet-100", markClassName)} strokeWidth={2.25} />
+    </span>
+  );
+}
+
+/** Skip disc — ⋮ menu when דילגתי (same as card banner SkipSign). */
+export function SkipTrafficIcon({
+  className,
+  markClassName,
+}: {
+  className?: string;
+  markClassName?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#64748b] text-white shadow-[0_1px_2px_rgba(0,0,0,0.45)]",
+        className,
+      )}
+      title="דילגתי"
+      aria-label="דילגתי"
+    >
+      <SkipIcon className={cn("size-5", markClassName)} />
     </span>
   );
 }

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { ownerPatchSchema } from "@/lib/schema";
 import { deleteByEditCode, getHouse, loadAddressRevealSchedule, updateByEditCode } from "@/lib/store";
-import { canonicalHouseId, toEditorHouse, toPublicHouse } from "@/lib/ids";
+import { canonicalHouseId, sameHouseId, toEditorHouse, toPublicHouse } from "@/lib/ids";
+import { scopedHousesFromDb } from "@/lib/night-pass-catalog";
+import { resolveNightPassViewer } from "@/lib/night-pass-session";
 import { ownerPhoneHttpError } from "@/lib/owner-phone";
 import { isPubliclyListed } from "@/lib/house-state";
 import { config } from "@/lib/config";
@@ -10,6 +12,7 @@ import { storageHttpError } from "@/lib/storage-errors";
 import { publicHouseForCatalog } from "@/lib/address-reveal";
 import { grantOwnerHouse, ownerMayEdit } from "@/lib/owner-session";
 import { isAdmin } from "@/lib/admin";
+import { stripDisallowedOwnerPinPatch } from "@/lib/owner-map-pin";
 import { readIncludeEndpoint } from "@/lib/push";
 import { clientKey } from "@/lib/rate-limit";
 import { rateLimitShared } from "@/lib/rate-limit-store";
@@ -34,6 +37,18 @@ export async function GET(
   }
   const admin = await isAdmin();
   const ownerOk = await ownerMayEdit(id);
+  const nightPass = await resolveNightPassViewer();
+  if (nightPass.scope) {
+    const privateHeaders = { "Cache-Control": "private, no-store" };
+    if (admin || ownerOk) return NextResponse.json(toEditorHouse(row), { headers: privateHeaders });
+    const scoped = (await scopedHousesFromDb(nightPass.scope)).houses.find((house) =>
+      sameHouseId(house.id, id),
+    );
+    if (!scoped) {
+      return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404, headers: privateHeaders });
+    }
+    return NextResponse.json(scoped, { headers: privateHeaders });
+  }
   const revealSchedule = await loadAddressRevealSchedule();
   const house =
     admin || ownerOk
@@ -69,7 +84,7 @@ export async function PATCH(
   if (!existing) {
     return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404 });
   }
-  const { editCode, ...patch } = parsed.data;
+  const { editCode, ...rawPatch } = parsed.data;
   const admin = await isAdmin();
   const ownerOk = await ownerMayEdit(id);
   const code = admin || ownerOk ? existing.editCode : (editCode?.trim() || "");
@@ -83,6 +98,7 @@ export async function PATCH(
     }
     return NextResponse.json({ error: "קוד העריכה שגוי." }, { status: 403 });
   }
+  const patch = stripDisallowedOwnerPinPatch(existing, rawPatch, admin);
   try {
     const result = await updateByEditCode(id, existing.editCode, patch, {
       includeEndpoint: readIncludeEndpoint(json),

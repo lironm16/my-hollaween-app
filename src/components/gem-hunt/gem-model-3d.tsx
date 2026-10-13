@@ -5,12 +5,20 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { gemMonsterMeta, gemMonsterTint, type GemMonsterId } from "@/lib/gem-monsters";
+import { applyGemMaterialTint } from "@/lib/apply-gem-material-tint";
+import {
+  gemMonsterMeta,
+  gemMonsterTint,
+  type GemMonsterHouseRef,
+  type GemMonsterId,
+} from "@/lib/gem-monsters";
 import { cn } from "@/lib/utils";
 
 type Props = {
   monsterId?: GemMonsterId;
   houseId?: string;
+  /** When set, POI practice dragons use neighborhood color (not hash-only). */
+  tintHouse?: GemMonsterHouseRef;
   size?: "sm" | "lg" | "fill";
   className?: string;
   collected?: boolean;
@@ -29,6 +37,8 @@ type Props = {
   celebrateVariant?: number;
   /** Short tap on inspect360 canvas (collect). */
   onInspectTap?: () => void;
+  /** Camera zoom (eases toward the value without rebuilding the scene). */
+  zoom?: number;
 };
 
 function frameModel(object: THREE.Object3D, scaleFactor: number) {
@@ -63,9 +73,31 @@ function fitCameraToPivot(
   }
 }
 
+/** Rotation-safe framing for inspect360 auto-rotate (AABB fit clips corners when the model spins). */
+function fitCameraToBoundingSphere(
+  camera: THREE.PerspectiveCamera,
+  pivot: THREE.Object3D,
+  padding = 1.38,
+  orbit?: OrbitControls | null,
+) {
+  const box = new THREE.Box3().setFromObject(pivot);
+  const sphere = box.getBoundingSphere(new THREE.Sphere());
+  const center = sphere.center;
+  const fovRad = (camera.fov * Math.PI) / 180;
+  const dist = (sphere.radius / Math.tan(fovRad / 2)) * padding;
+  camera.position.set(center.x, center.y + sphere.radius * 0.08, center.z + dist);
+  camera.lookAt(center.x, center.y, center.z);
+  camera.updateProjectionMatrix();
+  if (orbit) {
+    orbit.target.copy(center);
+    orbit.update();
+  }
+}
+
 export function GemModel3D({
   monsterId = "dragon",
   houseId = "default",
+  tintHouse,
   size = "lg",
   className,
   collected = false,
@@ -77,6 +109,7 @@ export function GemModel3D({
   celebrateVariant = 1,
   worldYawRad = null,
   onInspectTap,
+  zoom = 1,
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
@@ -88,6 +121,8 @@ export function GemModel3D({
   celebrateVariantRef.current = celebrateVariant;
   const worldYawRef = useRef(worldYawRad);
   worldYawRef.current = worldYawRad;
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
   const [loadFailed, setLoadFailed] = useState(false);
   const meta = gemMonsterMeta(monsterId);
 
@@ -101,8 +136,11 @@ export function GemModel3D({
     let height = host.clientHeight || (size === "fill" ? 240 : defaultPx);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(32, width / height, 0.1, 100);
+    const inspectFov = controls === "inspect360" ? 36 : 32;
+    const camera = new THREE.PerspectiveCamera(inspectFov, width / height, 0.1, 100);
     camera.position.set(0, 0.2, 2.6);
+    camera.zoom = zoomRef.current;
+    camera.updateProjectionMatrix();
 
     const maxDpr =
       controls === "turntable" || controls === "walkaround"
@@ -175,14 +213,17 @@ export function GemModel3D({
       };
     }
 
-    const ambient = new THREE.AmbientLight(0xffffff, 0.95);
-    const key = new THREE.DirectionalLight(0xffe7ba, 1.2);
+    const ambient = new THREE.AmbientLight(0xffffff, 1.45);
+    const key = new THREE.DirectionalLight(0xffe7ba, 0.45);
     key.position.set(2, 3, 4);
-    const rim = new THREE.DirectionalLight(0xc4b5fd, 0.65);
+    const rim = new THREE.DirectionalLight(0xc4b5fd, 0.28);
     rim.position.set(-2, 1, -3);
-    const fill = new THREE.DirectionalLight(0xfbbf24, 0.35);
+    const fill = new THREE.DirectionalLight(0xfbbf24, 0.22);
     fill.position.set(0, -1, 2);
-    scene.add(ambient, key, rim, fill);
+    /** Orbit moves the camera, so the rig turns with it — otherwise the viewer sees the unlit back. */
+    const lightRig = new THREE.Group();
+    lightRig.add(key, rim, fill);
+    scene.add(ambient, lightRig);
 
     const worldGroup = new THREE.Group();
     scene.add(worldGroup);
@@ -208,7 +249,7 @@ export function GemModel3D({
     }
 
     let model: THREE.Object3D | null = null;
-    const tint = gemMonsterTint(houseId);
+    const tint = gemMonsterTint(tintHouse ?? { id: houseId });
     const loader = new GLTFLoader();
     let disposed = false;
 
@@ -217,7 +258,7 @@ export function GemModel3D({
         ? size === "sm"
           ? 0.55
           : size === "fill"
-            ? 1.78
+            ? 2.28
             : 1.38
         : size === "sm"
           ? 0.55
@@ -236,23 +277,24 @@ export function GemModel3D({
           if (!(obj instanceof THREE.Mesh)) return;
           const mat = obj.material;
           if (!(mat instanceof THREE.MeshStandardMaterial)) return;
-          mat.metalness = 0.05;
-          mat.roughness = 0.55;
-          mat.color.offsetHSL(tint.hue, tint.saturation, tint.lightness);
+          applyGemMaterialTint(mat, tint);
         });
 
         pivot.add(model);
-        if (controls === "turntable" || controls === "walkaround" || controls === "inspect360") {
+        if (controls === "inspect360") {
+          fitCameraToBoundingSphere(
+            camera,
+            pivot,
+            size === "fill" ? 1.42 : 1.48,
+            orbit,
+          );
+        } else if (controls === "turntable" || controls === "walkaround") {
           const pad =
-            controls === "inspect360"
-              ? size === "fill"
-                ? 1.92
-                : 1.62
-              : size === "sm"
-                ? 1.45
-                : size === "fill"
-                  ? 1.28
-                  : 1.32;
+            size === "sm"
+              ? 1.45
+              : size === "fill"
+                ? 1.28
+                : 1.32;
           fitCameraToPivot(camera, pivot, pad, orbit);
         } else {
           orbit?.update();
@@ -353,6 +395,12 @@ export function GemModel3D({
         }
       } else {
         orbit?.update();
+      }
+      if (usesOrbit) lightRig.quaternion.copy(camera.quaternion);
+      const targetZoom = zoomRef.current;
+      if (Math.abs(camera.zoom - targetZoom) > 0.001) {
+        camera.zoom += (targetZoom - camera.zoom) * 0.18;
+        camera.updateProjectionMatrix();
       }
       renderer.render(scene, camera);
     };

@@ -14,10 +14,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const catalogPath = process.env.CATALOG_JSON?.trim() || join(root, "data/gem-live-catalog.json");
 const outPath = join(root, "public/gem-osm-anchors.json");
 
-const STUB_ID = /^(?:בית|נק)-931\d$/;
 function isStubHouse(house) {
-  if (house.id && STUB_ID.test(house.id)) return true;
-  return Boolean(house.description?.includes("סטאב לחזרה"));
+  return house?.isStub === true;
 }
 
 const OSRM_NEAREST = [

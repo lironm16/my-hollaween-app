@@ -2,7 +2,12 @@
 
 import Image from "next/image";
 import { GemModel3D } from "@/components/gem-hunt/gem-model-3d";
-import { gemMonsterForHouse, gemMonsterMeta, type GemMonsterId } from "@/lib/gem-monsters";
+import {
+  gemMonsterForHouse,
+  gemMonsterMeta,
+  type GemMonsterHouseRef,
+  type GemMonsterId,
+} from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -22,11 +27,12 @@ export function GemSprite({
   posterFill = false,
   worldYawRad = null,
   onInspectTap,
+  zoom,
 }: {
   /** @deprecated use house + monster id */
   variantId?: string;
   houseId?: string;
-  house?: Pick<PublicHouse, "id" | "theme" | "kind">;
+  house?: GemMonsterHouseRef & Pick<Partial<PublicHouse>, "theme">;
   collected?: boolean;
   className?: string;
   size?: "sm" | "lg" | "fill";
@@ -40,6 +46,7 @@ export function GemSprite({
   /** World-locked yaw (radians) — walk around anchor to see different sides. */
   worldYawRad?: number | null;
   onInspectTap?: () => void;
+  zoom?: number;
 }) {
   const id = house?.id ?? houseId ?? "default";
   const monsterId = (house ? gemMonsterForHouse(house) : "dragon") as GemMonsterId;
@@ -108,10 +115,13 @@ export function GemSprite({
         className,
       )}
     >
-      <span className="gem-sprite__glow" aria-hidden />
+      {mode !== "3d" && mode !== "inspect360" ? (
+        <span className="gem-sprite__glow" aria-hidden />
+      ) : null}
       <GemModel3D
         monsterId={monsterId}
         houseId={id}
+        tintHouse={house}
         size={mode === "orbit" || mode === "inspect360" ? "fill" : size === "fill" ? "fill" : size}
         collected={collected}
         interactive={mode === "inspect360" ? true : !tapCollect}
@@ -122,6 +132,7 @@ export function GemSprite({
         celebrateVariant={celebrateVariant}
         worldYawRad={worldYawRad}
         onInspectTap={mode === "inspect360" ? onInspectTap : undefined}
+        zoom={zoom}
       />
     </div>
   );

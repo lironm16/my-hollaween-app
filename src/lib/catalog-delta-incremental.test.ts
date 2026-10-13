@@ -1,21 +1,25 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { buildCatalogDeltaFromDb } from "@/lib/store/catalog";
+import { buildCatalogDeltaFromDb, catalogCursorForMem } from "@/lib/store/catalog";
+import { normalizeHouse } from "@/lib/store/core";
 import type { DbFile, House } from "@/lib/types";
 
-function house(id: string, updatedAt: string, patch: Partial<House> = {}): House {
-  return {
+function house(id: string, updatedAt: string): House {
+  return normalizeHouse({
     id,
-    name: `בית ${id}`,
+    storeId: id,
+    name: "test",
     theme: "pumpkin",
-    address: "חרוזים 1",
+    address: "street",
     arrival: "",
     description: "",
     lat: 32.09,
     lng: 34.81,
-    treats: ["candy"],
-    treatStock: { candy: "plenty" },
+    createdAt: updatedAt,
+    updatedAt,
     visit: "come",
+    treatStock: { candy: "plenty" },
+    treats: ["candy"],
     scareLevel: "mild",
     openFrom: "17:00",
     openTo: "21:00",
@@ -25,11 +29,9 @@ function house(id: string, updatedAt: string, patch: Partial<House> = {}): House
     adminFrozen: false,
     ownerFrozenUntil: null,
     photoUrl: "",
-    editCode: "edit",
-    createdAt: updatedAt,
-    updatedAt,
-    ...patch,
-  };
+    editCode: "123456",
+    kind: "house",
+  });
 }
 
 describe("buildCatalogDeltaFromDb", () => {
@@ -46,5 +48,22 @@ describe("buildCatalogDeltaFromDb", () => {
     assert.equal(delta.houses.length, 1);
     assert.equal(delta.houses[0]?.id, "b");
     assert.deepEqual(delta.removed, []);
+  });
+});
+
+describe("catalogCursorForMem", () => {
+  it("never moves the device cursor past when this instance read its house list", () => {
+    assert.equal(
+      catalogCursorForMem("2026-10-31T12:10:00.000Z", "2026-10-31T12:00:00.000Z"),
+      "2026-10-31T12:00:00.000Z",
+    );
+  });
+
+  it("keeps the catalog stamp when it is older than the read", () => {
+    assert.equal(
+      catalogCursorForMem("2026-10-31T11:00:00.000Z", "2026-10-31T12:00:00.000Z"),
+      "2026-10-31T11:00:00.000Z",
+    );
+    assert.equal(catalogCursorForMem("2026-10-31T11:00:00.000Z", null), "2026-10-31T11:00:00.000Z");
   });
 });

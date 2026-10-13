@@ -61,15 +61,13 @@ export function ScareSpider() {
   );
 }
 
-/** 4 — Bat. */
+const BAT_GLYPH = "/icons/scare-bat-mild.png";
+
+/** 4 — Bat (cream art from preview row 4). */
 export function ScareBat() {
   return (
-    <Icon>
-      <path
-        fill="currentColor"
-        d="M12 9.2c1.4-2.6 3.6-4.8 6.6-5.6-1.1 2.2-.6 4.3.8 6.2 1.6 2.1 3.4 3.3 4.4 3.2-2.2 1.1-4.1.6-6.2-.4L12 20.4 6.4 12.6c-2.1 1-4 .8-6.2-.4 1-.1 2.8-1.1 4.4-3.2 1.4-1.9 1.9-4 .8-6.2 3 .8 5.2 3 6.6 5.6Z"
-      />
-    </Icon>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={BAT_GLYPH} alt="" aria-hidden className="block h-full w-full object-contain object-center" />
   );
 }
 

@@ -3,26 +3,24 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
-  Heart,
   KeyRound,
   List,
   MapPinned,
   MoreVertical,
   Navigation,
   Pencil,
+  QrCode,
   Share2,
-  Undo2,
+  Ticket,
 } from "lucide-react";
-import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
-import { GemTrafficIcon, SavedTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
-import { SkipIcon } from "@/components/skip-icon";
-import { VisitedCheck } from "@/components/visited-check";
 import { toast } from "sonner";
 import { EditCodeDialog } from "@/components/edit-code-dialog";
+import { ImpOutlineIcon } from "@/components/imp-outline-icon";
+import { GEM_PLACE_ACTION_HE } from "@/lib/gem-hunt-copy";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
-import { GEM_ACTION_FIND_HE, GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
+import { VisitPosterDialog } from "@/components/visit-poster-panel";
 import type { PublicHouse } from "@/lib/types";
 import { appHeaderBottom, safeAreaInsetBottom } from "@/lib/viewport";
 import { cn } from "@/lib/utils";
@@ -56,20 +54,23 @@ const MENU_ACTIVE_ICON_CLASS = "size-8";
 
 export function HouseActionBar({
   house,
-  liked,
-  visited,
-  onToggleLike,
-  onToggleVisited,
-  gemCollected,
-  onToggleGem,
+  liked: _liked,
+  visited: _visited,
+  onToggleLike: _onToggleLike,
+  onToggleVisited: _onToggleVisited,
+  gemCollected: _gemCollected,
+  onToggleGem: _onToggleGem,
   onToggleEdit,
+  onNightPasses,
+  onPlaceGem,
   onShowOnMap,
   onShowInList,
-  onSkip,
-  onRestoreRoute,
-  skipped,
+  onSkip: _onSkip,
+  onRestoreRoute: _onRestoreRoute,
+  skipped: _skipped,
   editing,
   editCode,
+  showVisitPoster = false,
   navOnly,
   showNav = true,
   menuPlacement = "top",
@@ -83,6 +84,9 @@ export function HouseActionBar({
   gemCollected?: boolean;
   onToggleGem?: () => void;
   onToggleEdit?: () => void;
+  onNightPasses?: () => void;
+  /** Owner/admin — view and move the house gem hiding spot. */
+  onPlaceGem?: () => void;
   onShowOnMap?: () => void;
   onShowInList?: () => void;
   onSkip?: () => void;
@@ -91,6 +95,8 @@ export function HouseActionBar({
   editing?: boolean;
   /** Shown to owners/admins in the ⋮ menu — copy or share the 6-digit edit code. */
   editCode?: string;
+  /** Owners/admins — printable visit page with the public visit QR (never the edit code). */
+  showVisitPoster?: boolean;
   navOnly?: boolean;
   showNav?: boolean;
   /** Preferred menu direction; flips automatically if there is not enough room. */
@@ -100,6 +106,7 @@ export function HouseActionBar({
   const addressReveal = useAddressReveal();
   const [open, setOpen] = useState(false);
   const [editCodeOpen, setEditCodeOpen] = useState(false);
+  const [visitPosterOpen, setVisitPosterOpen] = useState(false);
   const [panelStyle, setPanelStyle] = useState<CSSProperties>({ visibility: "hidden" });
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -107,7 +114,9 @@ export function HouseActionBar({
 
   useEffect(() => {
     if (!open) return;
-    const onPointerDown = (event: PointerEvent) => {
+    // Use click (not pointerdown): pointerdown ran before the menu item's click and, while the
+    // panel was still visibility:hidden for layout, the event hit the map and closed the menu.
+    const onClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
       if (rootRef.current?.contains(target) || panelRef.current?.contains(target)) return;
       setOpen(false);
@@ -115,10 +124,10 @@ export function HouseActionBar({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
-    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("click", onClickOutside);
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("click", onClickOutside);
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
@@ -167,65 +176,6 @@ export function HouseActionBar({
         });
       },
     });
-    if (onToggleLike) {
-      items.push({
-        id: "like",
-        label: "אהבתי",
-        icon: liked ? (
-          <SavedTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.35rem]" />
-        ) : (
-          <Heart className={MENU_ICON_CLASS} strokeWidth={2.2} />
-        ),
-        onClick: () => onToggleLike(),
-        active: liked,
-      });
-    }
-    if (onToggleVisited) {
-      items.push({
-        id: "visited",
-        label: "ביקרתי",
-        icon: visited ? (
-          <VisitedTrafficIcon
-            className={MENU_ACTIVE_ICON_CLASS}
-            markClassName="size-[1.35rem]"
-            markStrokeWidth={4}
-          />
-        ) : (
-          <VisitedCheck visited={false} size="lg" />
-        ),
-        onClick: () => onToggleVisited(),
-        active: visited,
-      });
-    }
-    if (onToggleGem) {
-      items.push({
-        id: "gem",
-        label: gemCollected ? GEM_FOUND_I_HE : GEM_ACTION_FIND_HE,
-        icon: gemCollected ? (
-          <GemTrafficIcon className={MENU_ACTIVE_ICON_CLASS} markClassName="size-[1.55rem]" />
-        ) : (
-          <ImpMarkerGlyph variant="solid" className={cn(MENU_ICON_CLASS, "text-current")} />
-        ),
-        onClick: () => onToggleGem(),
-        active: gemCollected,
-      });
-    }
-    if (onSkip && !skipped) {
-      items.push({
-        id: "skip",
-        label: "דילוג על בית",
-        icon: <SkipIcon className={MENU_ICON_CLASS} />,
-        onClick: onSkip,
-      });
-    }
-    if (onRestoreRoute && skipped) {
-      items.push({
-        id: "restore",
-        label: "החזרה",
-        icon: <Undo2 className={MENU_ICON_CLASS} strokeWidth={2.2} />,
-        onClick: onRestoreRoute,
-      });
-    }
     if (onToggleEdit) {
       items.push({
         id: "edit",
@@ -243,6 +193,32 @@ export function HouseActionBar({
         onClick: () => setEditCodeOpen(true),
       });
     }
+    if (onNightPasses) {
+      items.push({
+        id: "night-passes",
+        label: "חיבור מכשירים",
+        icon: <Ticket className={MENU_ICON_CLASS} strokeWidth={2.2} />,
+        onClick: onNightPasses,
+      });
+    }
+    if (onPlaceGem) {
+      items.push({
+        id: "gem-place",
+        label: GEM_PLACE_ACTION_HE,
+        icon: <ImpOutlineIcon className={MENU_ICON_CLASS} />,
+        onClick: onPlaceGem,
+      });
+    }
+    if (showVisitPoster) {
+      items.push({
+        id: "visit-poster",
+        label: "הצג דף ביקור",
+        icon: <QrCode className={MENU_ICON_CLASS} strokeWidth={2.2} />,
+        onClick: () => {
+          queueMicrotask(() => setVisitPosterOpen(true));
+        },
+      });
+    }
   }
 
   useLayoutEffect(() => {
@@ -251,7 +227,15 @@ export function HouseActionBar({
     const updatePosition = () => {
       const trigger = triggerRef.current;
       const panel = panelRef.current;
-      if (!trigger || !panel) return;
+      if (!trigger || !panel) {
+        setPanelStyle((prev) => ({
+          ...prev,
+          position: "fixed",
+          zIndex: 120,
+          visibility: "visible",
+        }));
+        return;
+      }
 
       const margin = 10;
       const gap = 8;
@@ -310,6 +294,7 @@ export function HouseActionBar({
       item.active && item.id === "like" && "is-active-saved",
       item.active && item.id === "visited" && "is-active-visited",
       item.active && item.id === "gem" && "is-active-gem",
+      item.active && item.id === "skip" && "is-active-skipped",
     );
   }
 
@@ -318,7 +303,7 @@ export function HouseActionBar({
         <div
           ref={panelRef}
           className="house-action-menu-panel house-action-menu-panel--floating"
-          style={panelStyle}
+          style={open ? { ...panelStyle, visibility: "visible", pointerEvents: "auto" } : panelStyle}
           role="menu"
           dir="rtl"
         >
@@ -370,6 +355,9 @@ export function HouseActionBar({
           onClose={() => setEditCodeOpen(false)}
         />
       ) : null}
+      {showVisitPoster ? (
+        <VisitPosterDialog open={visitPosterOpen} house={house} onClose={() => setVisitPosterOpen(false)} />
+      ) : null}
       <button
         ref={triggerRef}
         type="button"
@@ -379,7 +367,20 @@ export function HouseActionBar({
         aria-expanded={open}
         onClick={(event) => {
           event.stopPropagation();
-          setOpen((value) => !value);
+          setOpen((value) => {
+            const next = !value;
+            if (next && triggerRef.current) {
+              const triggerRect = triggerRef.current.getBoundingClientRect();
+              setPanelStyle({
+                position: "fixed",
+                top: triggerRect.bottom + 8,
+                left: Math.max(10, triggerRect.right - 220),
+                zIndex: 120,
+                visibility: "visible",
+              });
+            }
+            return next;
+          });
         }}
       >
         <MoreVertical className="size-7" strokeWidth={2.2} />

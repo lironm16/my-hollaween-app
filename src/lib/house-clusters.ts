@@ -1,5 +1,11 @@
+import { boothNumberForHouse } from "@/lib/cluster-booth";
 import { parseStreetAndNumber } from "@/lib/address-text";
+import { namedPlaceForCampusAddress } from "@/lib/named-address-places";
+import { clusterIsSchoolCampus, isSchoolCampusAddress } from "@/lib/school-campus";
 import type { PublicHouse } from "@/lib/types";
+
+/** ~1.1 m — map pins at the same building share one cluster key. */
+export const CLUSTER_COORD_DECIMALS = 5;
 
 export type HouseCluster = {
   key: string;
@@ -40,23 +46,52 @@ export function clusterAddressKey(address: string) {
   return normalizeAddress(address);
 }
 
-/** Map pin grouping — per-house when address is redacted (empty street text). */
-export function clusterAddressKeyForHouse(house: Pick<PublicHouse, "id" | "address">) {
+export function clusterCoordKey(lat: number, lng: number) {
+  return `coord:${lat.toFixed(CLUSTER_COORD_DECIMALS)},${lng.toFixed(CLUSTER_COORD_DECIMALS)}`;
+}
+
+/**
+ * Map / route / gem grouping — same pin when lat/lng match (works before address reveal).
+ * School campuses keep address key so booths with offset coords still cluster.
+ */
+export function clusterAddressKeyForHouse(
+  house: Pick<PublicHouse, "id" | "address" | "lat" | "lng">,
+) {
   const trimmed = house.address?.trim() ?? "";
-  if (!trimmed) return `id:${house.id}`;
-  return clusterAddressKey(trimmed);
+  if (trimmed && isSchoolCampusAddress(trimmed)) {
+    return `campus:${clusterAddressKey(trimmed)}`;
+  }
+  if (Number.isFinite(house.lat) && Number.isFinite(house.lng)) {
+    return clusterCoordKey(house.lat, house.lng);
+  }
+  if (trimmed) return clusterAddressKey(trimmed);
+  return `id:${house.id}`;
 }
 
 function sortHouses(houses: PublicHouse[]) {
-  return [...houses].sort((a, b) =>
-    (a.arrival || a.name).localeCompare(b.arrival || b.name, "he"),
-  );
+  return [...houses].sort((a, b) => {
+    const an = boothNumberForHouse(a);
+    const bn = boothNumberForHouse(b);
+    if (an != null && bn != null && an !== bn) return an - bn;
+    if (an != null && bn == null) return -1;
+    if (an == null && bn != null) return 1;
+    const created = a.createdAt.localeCompare(b.createdAt);
+    if (created !== 0) return created;
+    return (a.arrival || a.name).localeCompare(b.arrival || b.name, "he");
+  });
 }
 
 function clusterFromHouses(key: string, houses: PublicHouse[]): HouseCluster {
   const housesSorted = sortHouses(houses);
-  const lat = housesSorted.reduce((sum, h) => sum + h.lat, 0) / housesSorted.length;
-  const lng = housesSorted.reduce((sum, h) => sum + h.lng, 0) / housesSorted.length;
+  const campusPlace = clusterIsSchoolCampus(housesSorted)
+    ? namedPlaceForCampusAddress(housesSorted[0]!.address)
+    : null;
+  const lat =
+    campusPlace?.lat ??
+    housesSorted.reduce((sum, h) => sum + h.lat, 0) / housesSorted.length;
+  const lng =
+    campusPlace?.lng ??
+    housesSorted.reduce((sum, h) => sum + h.lng, 0) / housesSorted.length;
   return {
     key,
     address: housesSorted[0]!.address,
@@ -66,7 +101,7 @@ function clusterFromHouses(key: string, houses: PublicHouse[]): HouseCluster {
   };
 }
 
-/** Group houses that share the same street address into one map pin. */
+/** Group houses that share the same map pin key (coordinates, or campus address). */
 export function clusterHousesByAddress(houses: PublicHouse[]): HouseCluster[] {
   const byKey = new Map<string, PublicHouse[]>();
   for (const house of houses) {
@@ -79,10 +114,7 @@ export function clusterHousesByAddress(houses: PublicHouse[]): HouseCluster[] {
   return [...byKey.entries()].map(([key, group]) => clusterFromHouses(key, group));
 }
 
-/**
- * Group houses that share the same street address into one map pin.
- * Nearby houses on a different address keep their own pin.
- */
+/** Group houses for the map — same coordinates (or school campus) → one pin. */
 export function clusterHousesForMap(houses: PublicHouse[]): HouseCluster[] {
   return clusterHousesByAddress(houses);
 }

@@ -34,9 +34,9 @@ import {
   loadPushData,
   persistPushSettingsMigration,
   prepareDbFromSources,
+  replaceMemKeepAge,
   runSyncedWrite,
   setGlobalDb,
-  setMem,
   setMemPushSubscriptions,
   setPushMemAt,
   setPushSettingsGenerationChecked,
@@ -124,8 +124,7 @@ export async function getVapidPublicKey() {
     if (firestoreConfigured()) {
       await writeFirestoreVapid(vapid);
     }
-    setMem(db);
-    setGlobalDb(db);
+    replaceMemKeepAge(db);
     return vapid.publicKey;
   });
 }
@@ -155,8 +154,7 @@ export async function savePushSubscription(sub: Omit<PushSubscriptionRecord, "cr
       list.push(next);
     }
     db.pushSubscriptions = list;
-    setMem(db);
-    setGlobalDb(db);
+    replaceMemKeepAge(db);
     setPushMemAt(Date.now());
     await writePushSubsBlob(list);
     if (firestoreConfigured()) {

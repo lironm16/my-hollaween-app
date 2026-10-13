@@ -1,24 +1,31 @@
 import type { CSSProperties } from "react";
 import {
-  IMP_MARKER_EYES_MASK_URL,
-  IMP_MARKER_MASK_URL,
-} from "@/lib/gem-diamond-visual";
+  ImpDemonFilledIcon,
+  ImpDemonOutlineIcon,
+} from "@/components/imp-demon-reference-icon";
 import { cn } from "@/lib/utils";
 
-function maskStyleFor(url: string) {
-  return {
-    maskImage: `url(${url})`,
-    WebkitMaskImage: `url(${url})`,
-    maskSize: "contain",
-    WebkitMaskSize: "contain",
-    maskRepeat: "no-repeat",
-    WebkitMaskRepeat: "no-repeat",
-    maskPosition: "center",
-    WebkitMaskPosition: "center",
-  } as const;
+/** Collected demon in ⋮ menu — yellow fill, no ring (matches outline scale). */
+export function ImpMenuActiveGlyph({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "imp-glyph-box inline-flex size-8 shrink-0 items-center justify-center overflow-hidden",
+        className,
+      )}
+      aria-hidden
+    >
+      <ImpDemonFilledIcon className="size-[1.55rem] text-amber-300" />
+    </span>
+  );
 }
 
-/** Imp silhouette (mask PNG) — tint via `color` / `currentColor`. */
+/**
+ * Universal demon vector glyph.
+ * Uses exact vector curves from reference:
+ * - variant "solid" -> ImpDemonFilledIcon
+ * - variant "eyes" -> ImpDemonOutlineIcon
+ */
 export function ImpMarkerGlyph({
   className,
   style,
@@ -26,15 +33,34 @@ export function ImpMarkerGlyph({
 }: {
   className?: string;
   style?: CSSProperties;
-  /** `eyes` = slits only (small controls); `solid` = full imp. */
+  /** `eyes` = outline stroke; `solid` = full filled demon. */
   variant?: "solid" | "eyes";
 }) {
-  const url = variant === "eyes" ? IMP_MARKER_EYES_MASK_URL : IMP_MARKER_MASK_URL;
+  if (variant === "eyes") {
   return (
     <span
-      className={cn("imp-marker-glyph aspect-square shrink-0 bg-current", className)}
-      style={{ ...maskStyleFor(url), ...style }}
+      className={cn(
+        "imp-glyph-box inline-flex size-7 aspect-square shrink-0 items-center justify-center overflow-hidden",
+        className,
+      )}
+      style={style}
       aria-hidden
-    />
+    >
+      <ImpDemonOutlineIcon className="size-[88%]" />
+    </span>
+  );
+  }
+
+  return (
+    <span
+      className={cn(
+        "imp-glyph-box inline-flex size-7 aspect-square shrink-0 items-center justify-center overflow-hidden",
+        className,
+      )}
+      style={style}
+      aria-hidden
+    >
+      <ImpDemonFilledIcon className="size-[88%]" />
+    </span>
   );
 }

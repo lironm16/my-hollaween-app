@@ -2,11 +2,12 @@
 
 import { Card } from "@/components/ui/card";
 import { HouseActionBar } from "@/components/house-action-bar";
-import { houseActionBarPropsFromCard } from "@/components/house-card-actions";
+import { HouseCardQuickActions } from "@/components/house-card-quick-actions";
+import { houseActionBarPropsFromCard, houseQuickActionPropsFromCard } from "@/components/house-card-actions";
 import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
 import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import { HouseDetails } from "@/components/house-details";
-import { HouseCardBanners } from "@/components/house-skipped-banner";
+import { HoursStatusBanner } from "@/components/hours-status-banner";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
 import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
@@ -30,12 +31,15 @@ export function HouseCard({
   skipMeta,
   canEdit = false,
   editCode,
+  showVisitPoster = false,
   admin = false,
   onShowOnMap,
   onShowInList,
   onToggleGem,
   editing = false,
   onToggleEdit,
+  onNightPasses,
+  onPlaceGem,
   expanded = false,
   index,
   hideHoursBanner = false,
@@ -43,6 +47,9 @@ export function HouseCard({
   className,
   /** Fetch address/story fields when the row is pin-only from device cache. */
   liveDetail = false,
+  clusterBoothTag,
+  /** Parent already shows the server loading/unavailable status. */
+  hideLiveStatus = false,
   ...rest
 }: {
   house: PublicHouse;
@@ -59,12 +66,15 @@ export function HouseCard({
   skipMeta?: SkippedHouseMeta;
   canEdit?: boolean;
   editCode?: string;
+  showVisitPoster?: boolean;
   admin?: boolean;
   onShowOnMap?: () => void;
   onShowInList?: () => void;
   onToggleGem?: () => void;
   editing?: boolean;
   onToggleEdit?: () => void;
+  onNightPasses?: () => void;
+  onPlaceGem?: () => void;
   /** Show full details inline (non-compact list layout). */
   expanded?: boolean;
   index?: number;
@@ -72,8 +82,10 @@ export function HouseCard({
   extra?: ReactNode;
   className?: string;
   liveDetail?: boolean;
+  clusterBoothTag?: string | null;
+  hideLiveStatus?: boolean;
 }) {
-  void useCatalogRemoved(house.id);
+  const catalogRemoved = useCatalogRemoved(house.id);
   const mayEdit = canEdit && deviceHouseEditAllowed(house.id);
   const overlaid = useAdminHouseFields(house) ?? house;
   const shouldFetchLive =
@@ -98,12 +110,15 @@ export function HouseCard({
     skipMeta,
     canEdit: mayEdit,
     editCode: mayEdit ? editCode : undefined,
+    showVisitPoster: mayEdit && showVisitPoster,
     admin,
     onShowOnMap,
     onShowInList,
     onToggleGem,
     editing: mayEdit && editing,
     onToggleEdit: mayEdit ? onToggleEdit : undefined,
+    onNightPasses: mayEdit ? onNightPasses : undefined,
+    onPlaceGem: mayEdit ? onPlaceGem : undefined,
     expanded,
     index,
     hideHoursBanner,
@@ -121,23 +136,33 @@ export function HouseCard({
       )}
     >
       <div className="px-3 pb-1 pt-2">
-        {shouldFetchLive && loading ? (
+        {shouldFetchLive && loading && !hideLiveStatus ? (
           <p className="mb-2 text-sm text-violet-300" role="status">
             טוען פרטי בית מהשרת…
           </p>
         ) : null}
-        {shouldFetchLive && unavailable ? (
+        {shouldFetchLive && unavailable && !hideLiveStatus ? (
           <p className="mb-2 text-sm text-orange-200" role="alert">
             הבית לא זמין במפה הציבורית.
           </p>
         ) : null}
-        <HouseCardBanners
-          skipped={skipped}
-          skipMeta={skipMeta}
-          visited={visited}
-          onRestoreRoute={onRestoreRoute}
-          onToggleVisited={onToggleVisited}
-        />
+        <div
+          className={cn(
+            "house-card-top-bar mb-2 flex min-w-0 items-center gap-2",
+            catalogRemoved && "justify-between",
+          )}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          {catalogRemoved ? (
+            <HoursStatusBanner house={displayHouse} className="mb-0 shrink min-w-0" />
+          ) : (
+            <HouseCardQuickActions {...houseQuickActionPropsFromCard(cardProps)} className="min-w-0 flex-1" />
+          )}
+          <HouseActionBar
+            {...houseActionBarPropsFromCard(cardProps)}
+            className={cn(catalogRemoved && "shrink-0 self-center")}
+          />
+        </div>
         <HouseDetails
           house={house}
           distanceM={distanceM}
@@ -150,11 +175,11 @@ export function HouseCard({
           chrome="sheet"
           compact={!expanded}
           index={index}
-          hideHoursBanner={hideHoursBanner}
+          hideHoursBanner={hideHoursBanner || catalogRemoved}
+          clusterBoothTag={clusterBoothTag}
           extra={extra}
           canEdit={mayEdit}
           onToggleEdit={mayEdit ? onToggleEdit : undefined}
-          headerMenu={<HouseActionBar {...houseActionBarPropsFromCard(cardProps)} />}
         />
       </div>
     </Card>

@@ -380,10 +380,27 @@ def extract_pumpkin_glyphs() -> None:
         print(f"wrote {pin.name} (POI pin face)")
 
 
+def extract_bat_mild() -> None:
+    """Row 4 (עטלף) green disc — preview/scare option #4, mild tone."""
+    preview = ROOT.parent / "preview" / "scare-icon-options.png"
+    src = Image.open(preview)
+    cx, cy = 457, 598
+    size = 230
+    disc = src.crop((cx - size // 2, cy - size // 2, cx + size // 2, cy + size // 2))
+    keyed = chroma_key(disc, (3, 111, 69), thresh=62)
+    keyed = chroma_key(keyed, (3, 111, 69), thresh=54, softness=16)
+    blob = keep_cream_blob(keyed)
+    glyph = recenter_glyph(trim(blob, pad=4))
+    dest = ROOT / "scare-bat-mild.png"
+    glyph.save(dest)
+    print(f"wrote {dest.name}")
+
+
 def main() -> None:
     extract_disc_glyph(ROOT / "scare-ghost-disc-mild.png", ROOT / "scare-ghost-mild.png", (3, 111, 69), 62)
     extract_medium_ghost()
     extract_disc_glyph(ROOT / "scare-ghost-disc-spicy.png", ROOT / "scare-ghost-spicy.png", (164, 15, 19), 62)
+    extract_bat_mild()
     extract_pumpkin_glyphs()
     terracotta = (158, 65, 13)
     extract_sensitivity(ROOT / "sensitivity-gluten.png", ROOT / "sensitivity-gluten-glyph.png", terracotta)

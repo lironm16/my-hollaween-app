@@ -41,8 +41,27 @@ function house(id: string, address: string, patch: Partial<PublicHouse> = {}): P
   };
 }
 
+describe("school campus cluster anchor", () => {
+  it("uses curated map coords instead of averaging booth offsets", () => {
+    const a = house("a", "ביה״ס ניצנים", { lat: 32.09, lng: 34.81 });
+    const b = house("b", "ביה״ס ניצנים", { lat: 32.091, lng: 34.811 });
+    const [cluster] = clusterHousesByAddress([a, b]);
+    assert.ok(cluster);
+    assert.equal(cluster!.lat, 32.093264);
+    assert.equal(cluster!.lng, 34.81124);
+  });
+});
+
 describe("clusterAddressKeyForHouse", () => {
-  it("uses house id when address is redacted", () => {
+  it("groups redacted addresses when coordinates match", () => {
+    const a = house("a", "", { lat: 32.0916477, lng: 34.8028691 });
+    const b = house("b", "", { lat: 32.0916477, lng: 34.8028691 });
+    const clusters = clusterHousesByAddress([a, b]);
+    assert.equal(clusters.length, 1);
+    assert.equal(clusters[0]!.houses.length, 2);
+  });
+
+  it("splits redacted addresses at different coordinates", () => {
     const a = house("a", "", { lat: 32.091, lng: 34.802 });
     const b = house("b", "", { lat: 32.092, lng: 34.803 });
     const clusters = clusterHousesByAddress([a, b]);
@@ -61,7 +80,7 @@ describe("clusterHousesByAddress", () => {
     const clusters = clusterHousesByAddress([
       house("a", "חרוזים 8"),
       house("b", "חרוזים 8"),
-      house("c", "חרוזים 10"),
+      house("c", "חרוזים 10", { lat: 32.0919, lng: 34.8031 }),
     ]);
     assert.equal(clusters.length, 2);
     const building = clusters.find((cluster) => cluster.houses.length === 2);
@@ -84,9 +103,9 @@ describe("clusterMembersForHouse", () => {
       house("r1", "חרוזים 8"),
       house("r2", "חרוזים 8"),
       house("r3", "חרוזים 8"),
-      house("בית-9310", "חרוזים 8", { description: "סטאב לחזרה" }),
-      house("בית-9311", "חרוזים 8", { description: "סטאב לחזרה" }),
-      house("בית-9312", "חרוזים 8", { description: "סטאב לחזרה" }),
+      house("בית-9310", "חרוזים 8", { isStub: true }),
+      house("בית-9311", "חרוזים 8", { isStub: true }),
+      house("בית-9312", "חרוזים 8", { isStub: true }),
     ];
     const realOnly = all.filter((item) => !isStubHouse(item));
     assert.equal(clusterMembersForHouse(all, "r1").length, 6);

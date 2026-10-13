@@ -57,9 +57,18 @@ let eventSettingsMetaMemAt = 0;
 
 let pushSubsCountMem: { count: number; at: number } | null = null;
 
-/** Cheap catalog revision stamp — one doc read for idle delta polls. */
-export async function readCatalogMeta(): Promise<{ updatedAt: string; houseCount?: number } | null> {
-  if (catalogMetaMem && Date.now() - catalogMetaMemAt < CATALOG_META_MEM_TTL_MS) {
+/** Delta polls re-read meta this often so other instances' writes surface within one poll. */
+export const CATALOG_META_POLL_TTL_MS = 20_000;
+
+/**
+ * Cheap catalog revision stamp — one doc read for idle delta polls.
+ * Writes pass `maxAgeMs: 0`: a cached houseCount from before another instance's write corrupts the count.
+ */
+export async function readCatalogMeta(options?: {
+  maxAgeMs?: number;
+}): Promise<{ updatedAt: string; houseCount?: number } | null> {
+  const maxAgeMs = options?.maxAgeMs ?? CATALOG_META_MEM_TTL_MS;
+  if (catalogMetaMem && Date.now() - catalogMetaMemAt < maxAgeMs) {
     return catalogMetaMem;
   }
   if (!firestoreConfigured()) return null;
@@ -104,15 +113,38 @@ export async function readPushSettingsMeta(): Promise<{ updatedAt: string } | nu
   }
 }
 
+function isPublishedCatalogHouse(house: House | null | undefined): boolean {
+  return Boolean(house && !isStubHouse(house) && !isHouseDeleted(house) && isPubliclyListed(house));
+}
+
+async function nextCatalogHouseCountAfterListingChange(
+  existing: House | null,
+  next: House,
+): Promise<number | undefined> {
+  const meta = await readCatalogMeta({ maxAgeMs: 0 });
+  const base = meta?.houseCount;
+  if (typeof base !== "number" || base < 0) return undefined;
+  const was = isPublishedCatalogHouse(existing);
+  const now = isPublishedCatalogHouse(next);
+  if (!was && now) return base + 1;
+  if (was && !now) return Math.max(0, base - 1);
+  return base;
+}
+
 export async function bumpCatalogMeta(updatedAt: string, houseCount?: number) {
   if (!firestoreConfigured() || !updatedAt) return;
-  catalogMetaMem = {
+  const payload = {
     updatedAt,
     ...(typeof houseCount === "number" && houseCount >= 0 ? { houseCount } : {}),
   };
+  const keptCount = payload.houseCount ?? catalogMetaMem?.houseCount;
+  catalogMetaMem = {
+    updatedAt,
+    ...(typeof keptCount === "number" ? { houseCount: keptCount } : {}),
+  };
   catalogMetaMemAt = Date.now();
   await resolveAdminFirestore();
-  await metaDoc("catalog").set(catalogMetaMem, { merge: true });
+  await metaDoc("catalog").set(payload, { merge: true });
 }
 
 /** Event schedule revision for delta polls (address reveal / add-house cutoff). */
@@ -226,17 +258,28 @@ export async function writeFirestoreHouse(house: House) {
   } catch {
     /* tombstone may already be gone */
   }
-  await bumpCatalogMeta(house.updatedAt);
+  const houseCount = await nextCatalogHouseCountAfterListingChange(existing, toWrite);
+  await bumpCatalogMeta(house.updatedAt, houseCount);
 }
 
 export async function deleteFirestoreHouse(id: string, options?: { skipCatalogMeta?: boolean }) {
   if (!firestoreConfigured()) return;
   await resolveAdminFirestore();
   const docId = canonicalHouseId(id);
+  const existingSnap = await housesCollection().doc(docId).get();
+  const existing = existingSnap.exists
+    ? rowToHouse(existingSnap.id, existingSnap.data() as House)
+    : null;
   const now = new Date().toISOString();
   await housesCollection().doc(docId).set({ deletedAt: now, updatedAt: now }, { merge: true });
   await removedHousesCollection().doc(docId).set({ id: docId, deletedAt: now });
-  if (!options?.skipCatalogMeta) await bumpCatalogMeta(now);
+  if (!options?.skipCatalogMeta) {
+    let houseCount = (await readCatalogMeta({ maxAgeMs: 0 }))?.houseCount;
+    if (isPublishedCatalogHouse(existing) && typeof houseCount === "number") {
+      houseCount = Math.max(0, houseCount - 1);
+    }
+    await bumpCatalogMeta(now, houseCount);
+  }
 }
 
 export async function restoreFirestoreHouse(id: string): Promise<boolean> {
@@ -254,7 +297,12 @@ export async function restoreFirestoreHouse(id: string): Promise<boolean> {
   } catch {
     /* tombstone may already be gone */
   }
-  await bumpCatalogMeta(now);
+  const restored = rowToHouse(snap.id, { ...row, deletedAt: null, updatedAt: now } as House);
+  let houseCount = (await readCatalogMeta({ maxAgeMs: 0 }))?.houseCount;
+  if (isPublishedCatalogHouse(restored) && typeof houseCount === "number") {
+    houseCount = houseCount + 1;
+  }
+  await bumpCatalogMeta(now, houseCount);
   return true;
 }
 
@@ -470,6 +518,31 @@ function removedHouseIds(prev: House[], next: House[]) {
     .filter((id) => id && !nextIds.has(id));
 }
 
+/**
+ * Adjust the stored count by this batch's listing changes. Recounting the instance's house list
+ * is wrong whenever that list lacks houses written by other instances.
+ */
+async function catalogHouseCountAfterBatch(
+  prevHouses: House[],
+  dirtyHouses: House[],
+  removals: string[],
+): Promise<number | undefined> {
+  const base = (await readCatalogMeta({ maxAgeMs: 0 }))?.houseCount;
+  if (typeof base !== "number" || base < 0) return undefined;
+  const before = new Map(prevHouses.map((house) => [canonicalHouseId(house.id), house]));
+  let delta = 0;
+  for (const house of dirtyHouses) {
+    const was = isPublishedCatalogHouse(before.get(canonicalHouseId(house.id)));
+    const now = isPublishedCatalogHouse(house);
+    if (!was && now) delta += 1;
+    if (was && !now) delta -= 1;
+  }
+  for (const id of removals) {
+    if (isPublishedCatalogHouse(before.get(id))) delta -= 1;
+  }
+  return Math.max(0, base + delta);
+}
+
 function pushSettingsChanged(
   prev: DbFile["pushSettings"] | undefined,
   next: DbFile["pushSettings"] | undefined,
@@ -555,7 +628,10 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
   }
 
   if (housesChanged || removals.length > 0) {
-    await bumpCatalogMeta(db.updatedAt, countPublishedHouses(houses));
+    const houseCount = prevHouses
+      ? await catalogHouseCountAfterBatch(prevHouses, dirtyHouses, removals)
+      : countPublishedHouses(houses);
+    await bumpCatalogMeta(db.updatedAt, houseCount);
   } else if (eventChanged) {
     await bumpCatalogMeta(db.eventSettings?.updatedAt ?? db.updatedAt);
   }

@@ -3,12 +3,14 @@ import {
   addressRevealScheduleFromDb,
   defaultAddHouseCutoffSchedule,
   defaultAddressRevealSchedule,
+  gemHuntPublicFromDb,
   mergeAddressRevealSchedule,
   normalizeAddHouseCutoffSchedule,
   normalizeAddressRevealSchedule,
 } from "@/lib/event-settings";
+import { firestoreConfigured, readFirestoreEventSettings } from "@/lib/firestore-db";
 import type { AddHouseCutoffSchedule, AddressRevealSchedule } from "@/lib/types";
-import { loadDb, runSyncedWrite } from "./core";
+import { getGlobalDb, getMem, loadDb, runSyncedWrite } from "./core";
 
 export type AdminAddressRevealSettings = {
   addressReveal: AddressRevealSchedule;
@@ -50,7 +52,7 @@ export async function clearAdminAddressRevealSchedule(): Promise<AdminAddressRev
     const prev = db.eventSettings ?? {};
     const { addressReveal: _drop, ...keep } = prev;
     db.eventSettings =
-      keep.addHouseCutoff || Object.keys(keep).length > 1
+      keep.addHouseCutoff || keep.gemHuntPublic === true || Object.keys(keep).length > 1
         ? { ...keep, updatedAt: new Date().toISOString() }
         : { updatedAt: new Date().toISOString() };
     db.updatedAt = new Date().toISOString();
@@ -101,7 +103,7 @@ export async function clearAdminAddHouseCutoffSchedule(): Promise<AdminAddHouseC
     const prev = db.eventSettings ?? {};
     const { addHouseCutoff: _drop, ...keep } = prev;
     db.eventSettings =
-      keep.addressReveal || Object.keys(keep).length > 1
+      keep.addressReveal || keep.gemHuntPublic === true || Object.keys(keep).length > 1
         ? { ...keep, updatedAt: new Date().toISOString() }
         : { updatedAt: new Date().toISOString() };
     db.updatedAt = new Date().toISOString();
@@ -109,8 +111,44 @@ export async function clearAdminAddHouseCutoffSchedule(): Promise<AdminAddHouseC
   return getAdminAddHouseCutoffSettings();
 }
 
+export type AdminGemHuntPublicSettings = {
+  enabled: boolean;
+  updatedAt?: string;
+};
+
+export async function getAdminGemHuntPublicSettings(): Promise<AdminGemHuntPublicSettings> {
+  const db = await loadDb();
+  return {
+    enabled: gemHuntPublicFromDb(db.eventSettings),
+    updatedAt: db.eventSettings?.updatedAt,
+  };
+}
+
+export async function saveAdminGemHuntPublicSettings(enabled: boolean): Promise<AdminGemHuntPublicSettings> {
+  await runSyncedWrite((db) => {
+    db.eventSettings = {
+      ...(db.eventSettings ?? {}),
+      updatedAt: new Date().toISOString(),
+      gemHuntPublic: enabled,
+    };
+    db.updatedAt = new Date().toISOString();
+  });
+  return getAdminGemHuntPublicSettings();
+}
+
 /** Convenience for server routes that redact a single house row. */
 export async function loadAddressRevealSchedule(): Promise<AddressRevealSchedule> {
-  const db = await loadDb();
-  return mergeAddressRevealSchedule(db.eventSettings?.addressReveal);
+  const mem = getMem();
+  if (mem?.eventSettings?.addressReveal) {
+    return mergeAddressRevealSchedule(mem.eventSettings.addressReveal);
+  }
+  const global = getGlobalDb();
+  if (global?.eventSettings?.addressReveal) {
+    return mergeAddressRevealSchedule(global.eventSettings.addressReveal);
+  }
+  if (firestoreConfigured()) {
+    const remote = await readFirestoreEventSettings();
+    if (remote?.addressReveal) return mergeAddressRevealSchedule(remote.addressReveal);
+  }
+  return mergeAddressRevealSchedule();
 }

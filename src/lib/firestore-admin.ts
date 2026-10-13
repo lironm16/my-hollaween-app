@@ -110,9 +110,20 @@ export function pushSubscriptionsCollection() {
 }
 
 export function metaDoc(
-  name: "pushSettings" | "vapid" | "catalog" | "pushSubs" | "rehearsalStubs" | "eventSettings",
+  name:
+    | "pushSettings"
+    | "vapid"
+    | "catalog"
+    | "pushSubs"
+    | "rehearsalStubs"
+    | "eventSettings"
+    | "nightPasses",
 ) {
   return neighborhoodRoot().collection("meta").doc(name);
+}
+
+export function nightPassesCollection() {
+  return neighborhoodRoot().collection("nightPasses");
 }
 
 export function pushEndpointDocId(endpoint: string) {

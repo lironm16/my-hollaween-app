@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { HouseCard } from "@/components/house-card";
@@ -21,17 +21,27 @@ import { GemHuntPanelLazy } from "@/components/gem-hunt/gem-hunt-lazy";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import { writeHomeView } from "@/lib/home-view";
-import { gemHuntFabVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
-import { gemHuntMapHouses } from "@/lib/gem-monsters";
+import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
+import { adminDeviceOwnerPowers } from "@/lib/admin-preview-as-user";
+import { useAdminPreviewAsUser } from "@/hooks/use-admin-preview-as-user";
+import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { useGemAnchorPlacer } from "@/components/gem-anchor-place-dialog";
+import { useHouseSet } from "@/hooks/use-house-set";
+import { isPreviewDeploymentClient } from "@/lib/deployment-env";
+import { activeHouseSetForSession } from "@/lib/house-set";
+import { gemHuntMapHouses, houseGemHuntUiEligible } from "@/lib/gem-monsters";
 import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
+import { parseVisitFromSearchParams } from "@/lib/house-visit-qr";
 import { resolveHouseIdFromPath, toPublicHouse } from "@/lib/ids";
 import type { House, PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export default function HousePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const params = useParams<{ id: string }>();
   const id = resolveHouseIdFromPath(params.id);
+  const visitFromUrl = parseVisitFromSearchParams(searchParams);
   const { catalog, loading, error, source, refresh } = useCatalog();
   const owned = useOwnedHouses();
   const likes = useLikedHouses();
@@ -40,10 +50,23 @@ export default function HousePage() {
   const gems = useGemProgress();
   const { admin } = useAdminSession();
   const now = useAppNow();
-  const geo = useUserLocation({ watch: gemHuntVisible(admin) });
+  const { gemUiVisible: gemUi } = useGemHuntAdminUi(admin);
+  const addressReveal = useAddressReveal();
+  const { houseSet } = useHouseSet();
+  const geo = useUserLocation({ watch: gemUi });
+  const { open: openGemPlacer, dialog: gemPlacerDialog } = useGemAnchorPlacer({
+    userLocation: geo.location,
+    refreshLocation: geo.refresh,
+  });
   const { setWatchEnabled } = geo;
   const editFlow = useHouseEditFlow();
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
+
+  useEffect(() => {
+    if (!visitFromUrl || !id) return;
+    const params = new URLSearchParams({ focus: id, visit: "1" });
+    router.replace(`/?${params.toString()}`);
+  }, [visitFromUrl, id, router]);
 
   useEffect(() => {
     if (!admin) {
@@ -70,10 +93,20 @@ export default function HousePage() {
     catalog?.houses.find((h) => h.id === id) ??
     (adminHouse ? (toPublicHouse(adminHouse) as PublicHouse) : undefined) ??
     ownedItem?.preview;
-  const canEdit = Boolean(admin || ownedItem);
-  const editCode = admin ? adminHouse?.editCode : ownedItem?.editCode;
+
+  const activeHouseSet = activeHouseSetForSession(admin, houseSet, catalog, {
+    previewDeployment: isPreviewDeploymentClient(),
+  });
+
+  const gemPanelVisible = useMemo(
+    () => gemUi && Boolean(house && houseGemHuntUiEligible(house, activeHouseSet, addressReveal)),
+    [activeHouseSet, addressReveal, gemUi, house],
+  );
+  const { previewAsUser } = useAdminPreviewAsUser();
+  const deviceOwner = adminDeviceOwnerPowers(Boolean(admin), previewAsUser);
+  const canEdit = Boolean(deviceOwner || ownedItem);
+  const editCode = deviceOwner ? adminHouse?.editCode : ownedItem?.editCode;
   const missing = !loading && Boolean(catalog) && !house;
-  const gemUi = gemHuntFabVisible(admin, now);
   const mapHousesForCelebrate = useMemo(
     () => gemHuntMapHouses(resolveCatalogHouses(catalog), "real"),
     [catalog],
@@ -96,7 +129,7 @@ export default function HousePage() {
       onEdit: (h) =>
         editFlow.openEdit(h, {
           editCode,
-          admin,
+          admin: deviceOwner,
         }),
       skipMetaFor: (hid) => skips.meta(hid),
       editingId: editFlow.flow?.house.id ?? null,
@@ -104,9 +137,23 @@ export default function HousePage() {
         writeHomeView("map");
         router.push(`/?focus=${encodeURIComponent(hid)}`);
       },
+      onToggleGem: gemUi
+        ? (h) => {
+            writeHomeView("map");
+            router.push(`/?focus=${encodeURIComponent(h.id)}&gemHunt=1`);
+          }
+        : undefined,
+      gemQuickActionEligible: gemUi
+        ? (h) => houseGemHuntUiEligible(h, activeHouseSet, addressReveal)
+        : undefined,
+      onPlaceGem: gemUi ? (h) => openGemPlacer(h, editCode) : undefined,
     };
   }, [
+    openGemPlacer,
+    activeHouseSet,
+    addressReveal,
     admin,
+    deviceOwner,
     source,
     likes,
     visits,
@@ -116,6 +163,7 @@ export default function HousePage() {
     canEdit,
     editCode,
     editFlow,
+    router,
   ]);
 
   return (
@@ -131,7 +179,7 @@ export default function HousePage() {
               {...houseCardPropsFor(house, actionContext, {
                 liveDetail: true,
                 extra:
-                  gemUi ? (
+                  gemPanelVisible ? (
                     <GemHuntPanelLazy
                       house={house}
                       userLocation={geo.location}
@@ -184,6 +232,7 @@ export default function HousePage() {
           }}
         />
       ) : null}
+      {gemPlacerDialog}
     </div>
   );
 }

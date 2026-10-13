@@ -4,6 +4,7 @@
  * Vercel is wired to github.com/lironm16/my-hollaween-app (not Origin).
  *
  *   GITHUB_TOKEN=... VERCEL_TOKEN=... npm run deploy:production
+ *   DEPLOY_BRANCH=cursor/my-branch DEPLOY_TARGET=preview npm run deploy:preview
  *
  * Optional: GITHUB_REPO=lironm16/my-hollaween-app
  */
@@ -27,6 +28,11 @@ if (!vercelToken) {
 }
 
 const branch = process.env.DEPLOY_BRANCH?.trim() || "main";
+const deployTarget = (process.env.DEPLOY_TARGET?.trim() || "production").toLowerCase();
+if (deployTarget !== "production" && deployTarget !== "preview") {
+  console.error("DEPLOY_TARGET must be production or preview");
+  process.exit(1);
+}
 const sha = execSync(`git rev-parse ${branch}`, { encoding: "utf8" }).trim();
 const [org, repo] = githubRepo.split("/");
 if (!org || !repo) {
@@ -44,7 +50,6 @@ deployUrl.searchParams.set("teamId", vercelTeamId);
 const body = {
   name: vercelProjectName,
   project: vercelProjectId,
-  target: "production",
   gitSource: {
     type: "github",
     org,
@@ -53,8 +58,9 @@ const body = {
     sha,
   },
 };
+if (deployTarget === "production") body.target = "production";
 
-console.log("Triggering Vercel production deployment…");
+console.log(`Triggering Vercel ${deployTarget} deployment…`);
 const res = await fetch(deployUrl, {
   method: "POST",
   headers: {
@@ -69,4 +75,8 @@ if (!res.ok) {
   process.exit(1);
 }
 console.log("Vercel deployment:", json.url ?? json.id ?? json);
-console.log("Production:", "https://my-hollaween-app.vercel.app");
+if (deployTarget === "production") {
+  console.log("Production:", "https://my-hollaween-app.vercel.app");
+} else if (json.url) {
+  console.log("Preview URL:", json.url);
+}

@@ -5,6 +5,7 @@ import type { PublicHouse } from "@/lib/types";
 import type { ComponentProps } from "react";
 import type { HouseActionBar } from "@/components/house-action-bar";
 import type { HouseCard } from "@/components/house-card";
+import type { HouseCardQuickActions } from "@/components/house-card-quick-actions";
 
 /** Shared handlers so list, map sheet, route, search, and /my use the same ⋮ menu. */
 export type HouseCardActionContext = {
@@ -21,9 +22,24 @@ export type HouseCardActionContext = {
   onRestore?: (id: string) => void;
   onShowOnMap?: (id: string) => void;
   onShowInList?: (id: string) => void;
+  onClusterVisitAll?: (houses: PublicHouse[]) => void;
+  onClusterUnvisitAll?: (houses: PublicHouse[]) => void;
+  onClusterSkipAll?: (houses: PublicHouse[]) => void;
+  onClusterRestoreAll?: (houses: PublicHouse[]) => void;
+  onClusterLikeAll?: (houses: PublicHouse[]) => void;
+  onClusterUnlikeAll?: (houses: PublicHouse[]) => void;
+  /** Cluster ⋮ — sequential camera session for every inner house (not per-house «מצא שדון»). */
+  onClusterFindAllGems?: (houses: PublicHouse[]) => void;
+  onClusterResetAllGems?: (houses: PublicHouse[]) => void;
+  /** When set, per-house gate for the card-top gem button (map/list still use full ctx.onToggleGem). */
+  gemQuickActionEligible?: (house: PublicHouse) => boolean;
   canEdit?: (id: string) => boolean;
   editCodeFor?: (id: string) => string | undefined;
   onEdit?: (house: PublicHouse) => void;
+  nightPassesEnabled?: boolean;
+  onNightPasses?: (house: PublicHouse) => void;
+  /** Owner/admin ⋮ «מיקום השדון» — only shown on houses this device may edit. */
+  onPlaceGem?: (house: PublicHouse) => void;
   skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
   editingId?: string | null;
 };
@@ -39,11 +55,13 @@ export function houseCardPropsFor(
     className?: string;
     expanded?: boolean;
     liveDetail?: boolean;
+    clusterBoothTag?: string | null;
   },
 ): ComponentProps<typeof HouseCard> {
   const id = house.id;
   const isSkipped = ctx.skipped(id);
   const editAllowed = deviceHouseEditAllowed(id) && Boolean(ctx.canEdit?.(id));
+  const viewOnlyRemoved = !deviceHouseEditAllowed(id);
   return {
     house,
     catalogSource: ctx.catalogSource,
@@ -52,17 +70,37 @@ export function houseCardPropsFor(
     gemCollected: ctx.gemCollected?.(id),
     skipped: isSkipped,
     skipMeta: ctx.skipMetaFor?.(id),
-    onToggleLike: ctx.onToggleLike ? () => ctx.onToggleLike!(id) : undefined,
-    onToggleVisited: ctx.onToggleVisited ? () => ctx.onToggleVisited!(id) : undefined,
-    onToggleGem: ctx.onToggleGem ? () => ctx.onToggleGem!(house) : undefined,
-    onSkip: ctx.onSkip && !isSkipped ? () => ctx.onSkip!(id) : undefined,
-    onRestoreRoute: ctx.onRestore && isSkipped ? () => ctx.onRestore!(id) : undefined,
-    onShowOnMap: ctx.onShowOnMap ? () => ctx.onShowOnMap!(id) : undefined,
-    onShowInList: ctx.onShowInList ? () => ctx.onShowInList!(id) : undefined,
+    onToggleLike:
+      viewOnlyRemoved || !ctx.onToggleLike ? undefined : () => ctx.onToggleLike!(id),
+    onToggleVisited:
+      viewOnlyRemoved || !ctx.onToggleVisited ? undefined : () => ctx.onToggleVisited!(id),
+    onToggleGem:
+      viewOnlyRemoved ||
+      !ctx.onToggleGem ||
+      !(ctx.gemQuickActionEligible?.(house) ?? true)
+        ? undefined
+        : () => ctx.onToggleGem!(house),
+    onSkip:
+      viewOnlyRemoved || !ctx.onSkip || isSkipped ? undefined : () => ctx.onSkip!(id),
+    onRestoreRoute:
+      viewOnlyRemoved || !ctx.onRestore || !isSkipped ? undefined : () => ctx.onRestore!(id),
+    onShowOnMap:
+      viewOnlyRemoved || !ctx.onShowOnMap ? undefined : () => ctx.onShowOnMap!(id),
+    onShowInList:
+      viewOnlyRemoved || !ctx.onShowInList ? undefined : () => ctx.onShowInList!(id),
     canEdit: editAllowed,
     editCode: editAllowed ? ctx.editCodeFor?.(id) : undefined,
+    showVisitPoster: editAllowed,
     admin: ctx.admin,
     onToggleEdit: editAllowed && ctx.onEdit ? () => ctx.onEdit!(house) : undefined,
+    onNightPasses:
+      editAllowed && ctx.nightPassesEnabled && ctx.onNightPasses
+        ? () => ctx.onNightPasses!(house)
+        : undefined,
+    onPlaceGem:
+      editAllowed && ctx.onPlaceGem && (ctx.gemQuickActionEligible?.(house) ?? true)
+        ? () => ctx.onPlaceGem!(house)
+        : undefined,
     editing: editAllowed && ctx.editingId === id,
     index: opts?.index,
     distanceM: opts?.distanceM,
@@ -71,6 +109,23 @@ export function houseCardPropsFor(
     className: opts?.className,
     expanded: opts?.expanded,
     liveDetail: opts?.liveDetail,
+    clusterBoothTag: opts?.clusterBoothTag,
+  };
+}
+
+export function houseQuickActionPropsFromCard(
+  card: ComponentProps<typeof HouseCard>,
+): ComponentProps<typeof HouseCardQuickActions> {
+  return {
+    liked: card.liked,
+    visited: card.visited,
+    gemCollected: card.gemCollected,
+    onToggleLike: card.onToggleLike,
+    onToggleVisited: card.onToggleVisited,
+    onToggleGem: card.onToggleGem,
+    onSkip: card.onSkip,
+    onRestoreRoute: card.onRestoreRoute,
+    skipped: card.skipped,
   };
 }
 
@@ -90,9 +145,12 @@ export function houseActionBarPropsFromCard(
     onShowOnMap: card.onShowOnMap,
     onShowInList: card.onShowInList,
     onToggleEdit: card.canEdit ? card.onToggleEdit : undefined,
+    onNightPasses: card.onNightPasses,
+    onPlaceGem: card.onPlaceGem,
     skipped: card.skipped,
     editing: card.editing,
     editCode: card.editCode,
+    showVisitPoster: card.showVisitPoster,
     menuPlacement: "bottom",
   };
 }

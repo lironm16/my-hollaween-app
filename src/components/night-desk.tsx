@@ -7,6 +7,10 @@ import { HouseForm, type HouseFormExtras } from "@/components/house-form";
 import { PushNotice } from "@/components/push-notice";
 import { Button } from "@/components/ui/button";
 import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
+import {
+  catalogRemovedEditBlockedToast,
+  catalogRemovedViewOnlyNotice,
+} from "@/lib/labels";
 import { notifyCatalogChanged, applyLocalHousePatch, queueHouseWrite, rememberPublishedHouse, forgetPublishedHouse, saveOwnedHouse } from "@/lib/offline-db";
 import { publishHousePhoto } from "@/lib/house-photo";
 import { readApiJson } from "@/lib/api-json";
@@ -60,7 +64,7 @@ export function NightDesk({
     },
   ) {
     if (editLocked) {
-      toast.message("הבית הוסר מהמדריך — אי אפשר לערוך");
+      toast.message(catalogRemovedEditBlockedToast);
       return { house, pendingPushOffer: false };
     }
     const next = applyLocalHousePatch(house, patch);
@@ -92,7 +96,7 @@ export function NightDesk({
     },
   ): Promise<SaveResult | null> {
     if (editLocked) {
-      toast.message("הבית הוסר מהמדריך — אי אפשר לערוך");
+      toast.message(catalogRemovedEditBlockedToast);
       return null;
     }
     setBusy(true);
@@ -253,7 +257,7 @@ export function NightDesk({
     <div className="space-y-4">
       {editLocked ? (
         <p className="rounded-lg bg-zinc-900/90 px-3 py-2 text-base text-zinc-100" role="status">
-          הבית הוסר מהמדריך — צפייה בלבד. אפשר להסיר את הכרטיס מ«במכשיר שלי».
+          {catalogRemovedViewOnlyNotice}
         </p>
       ) : null}
       {notice ? (

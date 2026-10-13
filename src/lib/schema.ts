@@ -76,6 +76,7 @@ const houseFields = z.object({
     .min(HOUSE_FIELD_LIMITS.address.min)
     .max(HOUSE_FIELD_LIMITS.address.max),
   arrival: z.string().trim().max(HOUSE_FIELD_LIMITS.arrival.max),
+  boothNumber: z.number().int().min(1).optional().nullable(),
   description: z.string().trim().max(HOUSE_FIELD_LIMITS.description.max),
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
@@ -145,6 +146,7 @@ export const ownerPatchSchema = houseFields.partial().extend({
 
 export const adminPatchSchema = houseFields.partial().extend({
   kind: z.enum(HOUSE_KINDS).optional(),
+  isPractice: z.boolean().optional(),
   poiCategory: z.enum(POI_CATEGORIES).nullable().optional(),
   soldOut: z.boolean().optional(),
   ownerFrozenUntil: z.string().nullable().optional(),
@@ -157,4 +159,5 @@ export const adminPatchSchema = houseFields.partial().extend({
 export const adminSubmitSchema = houseSubmitSchema.extend({
   kind: z.enum(HOUSE_KINDS).default("house"),
   poiCategory: z.enum(POI_CATEGORIES).nullable().optional(),
+  isPractice: z.boolean().optional(),
 });

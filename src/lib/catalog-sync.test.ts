@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  mergeCatalogDelta,
   mergeHouses,
   mergePushSubscriptions,
   normalizeCatalogDelta,
@@ -87,9 +88,55 @@ describe("syncCatalog", () => {
         publicHouse(`live-${index}`, "2026-10-31T12:00:00.000Z"),
       ),
     };
-    const merged = syncCatalog(prev, incoming);
+    const merged = syncCatalog(prev, incoming, {
+      trustedCompleteList: true,
+    });
     assert.equal(merged.houses.length, 75);
     assert.equal(merged.houseCount, 75);
+  });
+
+  it("keeps local rows on live full catalog when not explicitly trusted", () => {
+    const prev = catalog("2026-10-31T10:00:00.000Z", [
+      publicHouse("keep-a", "2026-10-31T10:00:00.000Z"),
+      publicHouse("keep-b", "2026-10-31T10:00:00.000Z"),
+    ]);
+    const incoming: Catalog = {
+      updatedAt: "2026-10-31T12:00:00.000Z",
+      neighborhood: "שכונה",
+      houseCount: 1,
+      houses: [publicHouse("server-only", "2026-10-31T12:00:00.000Z")],
+    };
+    const merged = syncCatalog(prev, incoming);
+    assert.deepEqual(merged.houses.map((house) => house.id).sort(), ["keep-a", "keep-b", "server-only"]);
+  });
+
+  it("keeps local rows when a stale authoritative snapshot is shorter", () => {
+    const prev = catalog("2026-10-31T10:00:00.000Z", [
+      ...Array.from({ length: 90 }, (_, index) =>
+        publicHouse(`keep-${index}`, "2026-10-31T10:00:00.000Z"),
+      ),
+    ]);
+    const incoming: Catalog = {
+      updatedAt: "2026-10-31T12:00:00.000Z",
+      neighborhood: "שכונה",
+      houseCount: 85,
+      houses: Array.from({ length: 85 }, (_, index) =>
+        publicHouse(`snap-${index}`, "2026-10-31T12:00:00.000Z"),
+      ),
+    };
+    const merged = syncCatalog(prev, incoming);
+    assert.equal(merged.houses.length, 175);
+  });
+
+  it("preserves isStub when a newer live row omits stub flags", () => {
+    const prev = catalog("2026-09-06T19:50:00.000Z", [
+      publicHouse("בית-9310", "2026-09-06T19:50:00.000Z", { isStub: true }),
+    ]);
+    const incoming = catalog("2026-10-31T12:00:00.000Z", [
+      publicHouse("בית-9310", "2026-10-31T12:00:00.000Z", { address: "חרוזים 8" }),
+    ]);
+    const merged = syncCatalog(prev, incoming);
+    assert.equal(merged.houses.find((h) => h.id === "בית-9310")?.isStub, true);
   });
 
   it("keeps cached houses when incoming catalog is newer but omits them", () => {
@@ -99,11 +146,36 @@ describe("syncCatalog", () => {
     ]);
     const incoming = catalog("2026-09-06T19:50:00.000Z", [
       publicHouse("stub-1", "2026-09-05T05:50:00.000Z", {
-        description: "סטאב לחזרה — נפתח בקרוב.",
+        isStub: true,
+        description: "נפתח בקרוב.",
       }),
     ]);
     const merged = syncCatalog(prev, incoming);
     assert.deepEqual(merged.houses.map((house) => house.id).sort(), ["real-1", "real-2", "stub-1"]);
+  });
+});
+
+describe("mergeCatalogDelta", () => {
+  it("applies explicit removed ids from delta polls", () => {
+    const prev: Catalog = {
+      updatedAt: "2026-10-31T10:00:00.000Z",
+      neighborhood: "שכונה",
+      houseCount: 3,
+      houses: [
+        publicHouse("a", "2026-10-31T10:00:00.000Z"),
+        publicHouse("b", "2026-10-31T10:00:00.000Z"),
+        publicHouse("c", "2026-10-31T10:00:00.000Z"),
+      ],
+    };
+    const merged = mergeCatalogDelta(prev, {
+      updatedAt: "2026-10-31T12:00:00.000Z",
+      neighborhood: "שכונה",
+      houses: [],
+      removed: ["b"],
+      houseCount: 2,
+    });
+    assert.deepEqual(merged.houses.map((house) => house.id).sort(), ["a", "c"]);
+    assert.equal(merged.houseCount, 2);
   });
 });
 
@@ -136,5 +208,40 @@ describe("mergePushSubscriptions", () => {
     assert.equal(merged.length, 1);
     assert.equal(merged[0]?.keys.p256dh, "c");
     assert.deepEqual(merged[0]?.topics, ["newHouse"]);
+  });
+});
+
+describe("night-pass scope boundaries", () => {
+  const full = catalog("2026-10-01T10:00:00.000Z", [
+    publicHouse("home-1", "2026-10-01T10:00:00.000Z"),
+    publicHouse("home-2", "2026-10-01T10:00:00.000Z"),
+    publicHouse("biz-1", "2026-10-01T10:00:00.000Z"),
+  ]);
+  const publicOnly: Catalog = {
+    ...catalog("2026-10-01T09:00:00.000Z", [publicHouse("biz-1", "2026-10-01T10:00:00.000Z")]),
+    scope: "public",
+  };
+
+  it("syncCatalog replaces a legacy full list with a public list instead of unioning", () => {
+    const next = syncCatalog(full, publicOnly);
+    assert.deepEqual(next.houses.map((h) => h.id), ["biz-1"]);
+    assert.equal(next.scope, "public");
+  });
+
+  it("syncCatalog drops a pass list when the device falls back to public", () => {
+    const passList: Catalog = { ...full, scope: "pass" };
+    const next = syncCatalog(passList, publicOnly);
+    assert.deepEqual(next.houses.map((h) => h.id), ["biz-1"]);
+  });
+
+  it("mergeCatalogDelta does not fold a public delta into a legacy list", () => {
+    const next = mergeCatalogDelta(full, { ...publicOnly, houses: [] });
+    assert.equal(next.houses.length, 0);
+    assert.equal(next.scope, "public");
+  });
+
+  it("same-scope merges keep their additive behaviour", () => {
+    const next = syncCatalog({ ...full, scope: "public" }, publicOnly);
+    assert.equal(next.houses.length, 3);
   });
 });

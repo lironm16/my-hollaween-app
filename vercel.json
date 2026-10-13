@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/rollup-engagement",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/30 * * * *"
     }
   ],
   "headers": [

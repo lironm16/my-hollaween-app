@@ -1,9 +1,18 @@
 import { canonicalAddressForBuilding } from "@/lib/house-clusters";
-import { canonicalHouseId, newEditCode, newPoiPublicId, newPublicId, sameHouseId } from "@/lib/ids";
+import {
+  canonicalHouseId,
+  newEditCode,
+  newPoiPublicId,
+  newPublicId,
+  sameHouseId,
+} from "@/lib/ids";
+import { nextBoothNumberForAddress } from "@/lib/cluster-booth";
+import { isSchoolCampusAddress } from "@/lib/school-campus";
 import { normalizePoiCategory } from "@/lib/house-kind";
 import { normalizeAddressFields } from "@/lib/address-fields";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { assertRealAddress } from "@/lib/geocode";
+import { pinCoordsForOwnerSubmit } from "@/lib/owner-map-pin";
 import { alignPublicHouseCoords } from "@/lib/house-footprint-align";
 import {
   defaultTreatStock,
@@ -35,11 +44,14 @@ import {
   writeFirestoreHouse,
 } from "@/lib/firestore-db";
 import {
+  getGlobalDb,
   getMem,
+  isMemWarm,
   loadDb,
   normalizeHouse,
+  replaceMemKeepAge,
   runSyncedWrite,
-  setMem,
+  stamp,
   withLock,
 } from "./core";
 import { broadcastPush } from "./push";
@@ -50,14 +62,16 @@ function findHouseIn(houses: House[], id: string): House | undefined {
   return houses.find((house) => sameHouseId(house.id, needle));
 }
 
+/** Patch one row into an already-loaded house list. Never seeds mem: a lone row is not the catalog. */
 function upsertMemHouse(house: House, updatedAt: string) {
   const mem = getMem();
-  const db = mem ? cloneDb(mem) : { updatedAt, houses: [] as House[] };
+  if (!mem) return;
+  const db = cloneDb(mem);
   const idx = db.houses.findIndex((item) => sameHouseId(item.id, house.id));
   if (idx >= 0) db.houses[idx] = house;
   else db.houses.push(house);
-  db.updatedAt = updatedAt;
-  setMem(db);
+  if (stamp({ updatedAt }) > stamp(db)) db.updatedAt = updatedAt;
+  replaceMemKeepAge(db);
 }
 
 export async function getAllHouses(): Promise<House[]> {
@@ -68,9 +82,26 @@ export async function getDbSnapshot() {
   return loadDb();
 }
 
+/** @internal exported for tests */
+export function houseFromWarmCaches(id: string): House | undefined {
+  const mem = getMem();
+  if (isMemWarm() && mem) {
+    const found = findHouseIn(mem.houses, id);
+    if (found) return found;
+  }
+  const global = getGlobalDb();
+  if (global) {
+    const found = findHouseIn(global.houses, id);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+/** One house row — avoids full catalog load on Firestore when caches miss. */
 export async function getHouse(id: string): Promise<House | undefined> {
-  const found = findHouseIn((await loadDb()).houses, id);
-  if (found) return found;
+  const cached = houseFromWarmCaches(id);
+  if (cached) return cached;
+
   const docId = canonicalHouseId(id);
   if (firestoreConfigured() && docId) {
     const remote = await readFirestoreHouse(docId);
@@ -81,6 +112,9 @@ export async function getHouse(id: string): Promise<House | undefined> {
     }
     return undefined;
   }
+
+  const found = findHouseIn((await loadDb()).houses, id);
+  if (found) return found;
   return findHouseIn((await loadDb(true)).houses, id);
 }
 
@@ -95,7 +129,9 @@ export async function submitHouse(
   input: HouseInput,
   options?: { includeEndpoint?: string; addedBy?: string; admin?: boolean },
 ) {
-  await assertRealAddress(input);
+  const pin = await pinCoordsForOwnerSubmit(input, Boolean(options?.admin));
+  const submitInput = { ...input, lat: pin.lat, lng: pin.lng };
+  await assertRealAddress(submitInput);
   const kind = options?.admin && input.kind === "poi" ? "poi" : "house";
   const poiCategory = normalizePoiCategory(kind, input.poiCategory);
   let id = "";
@@ -120,25 +156,30 @@ export async function submitHouse(
         ? input.openHours
         : houseHoursWindows(input),
     );
-    const decor = syncDecorFields({ ...input, visit });
-    const canonical = canonicalAddressForBuilding(input.address, db.houses);
+    const decor = syncDecorFields({ ...submitInput, visit });
+    const canonical = canonicalAddressForBuilding(submitInput.address, db.houses);
     const addressFields = normalizeAddressFields({
       address: canonical,
-      neighborhood: input.neighborhood,
-      lat: input.lat,
-      lng: input.lng,
+      neighborhood: submitInput.neighborhood,
+      lat: submitInput.lat,
+      lng: submitInput.lng,
     });
     const positioned = alignPublicHouseCoords({
       address: addressFields.address,
-      lat: input.lat,
-      lng: input.lng,
+      lat: submitInput.lat,
+      lng: submitInput.lng,
     });
+    const boothNumber =
+      isSchoolCampusAddress(addressFields.address)
+        ? nextBoothNumberForAddress(db.houses, addressFields.address, "real")
+        : null;
     const house: House = {
-      ...input,
+      ...submitInput,
       lat: positioned.lat,
       lng: positioned.lng,
       kind,
       poiCategory,
+      boothNumber,
       address: addressFields.address,
       neighborhood: addressFields.neighborhood,
       treats,
@@ -157,6 +198,8 @@ export async function submitHouse(
       updatedAt: now,
       addedBy: options?.addedBy?.trim() || null,
       ownerPhone: normalizeOwnerPhone(String(input.ownerPhone ?? "")) || null,
+      isPractice: false,
+      isStub: false,
     };
     db.houses.push(house);
     db.updatedAt = now;
@@ -471,6 +514,22 @@ export async function adminUpdate(
   if (!updated) return null;
   const push = await dispatchHousePush(prev, updated, undefined, patch, options?.includeEndpoint);
   return { house: updated, push };
+}
+
+/** Owner/admin gem hiding spot — `null` returns the gem to its automatic sidewalk anchor. */
+export async function setHouseGemAnchor(
+  id: string,
+  point: { lat: number; lng: number } | null,
+): Promise<House | null> {
+  return runSyncedWrite((db) => {
+    const house = findHouseIn(db.houses, id);
+    if (!house || isHouseDeleted(house)) return null;
+    const now = new Date().toISOString();
+    house.gemAnchor = point ? { lat: point.lat, lng: point.lng, updatedAt: now } : null;
+    house.updatedAt = now;
+    db.updatedAt = now;
+    return house;
+  });
 }
 
 export type HousePushResult = {

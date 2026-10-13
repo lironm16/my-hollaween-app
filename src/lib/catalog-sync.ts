@@ -1,7 +1,47 @@
 import type { Catalog, CatalogDelta, DbFile, PublicHouse, PushSubscriptionRecord } from "@/lib/types";
 import { isAuthoritativeHouseList } from "@/lib/catalog-houses";
+import { mergeCatalogHouseRow } from "@/lib/catalog-stub-flags";
 import { loadDeletedHouseIds } from "@/lib/deleted-houses";
+import { loadServerRemovedHouseIds } from "@/lib/server-removed-houses";
 import { config } from "@/lib/config";
+
+export type SyncCatalogOptions = {
+  /**
+   * Live full catalog (`GET /api/catalog` or `delta.full`) — inline list may replace local ids.
+   * Snapshots and CDN bundles must omit this so stale shorter lists cannot drop rows.
+   */
+  trustedCompleteList?: boolean;
+};
+
+/** Deleted on this device or explicitly reported deleted by the live server. */
+export function loadHiddenHouseIds(): Set<string> {
+  return new Set([...loadDeletedHouseIds(), ...loadServerRemovedHouseIds()]);
+}
+
+function withoutHiddenHouses<T extends { id: string }>(houses: T[], hidden: Set<string>): T[] {
+  if (hidden.size === 0) return houses;
+  return houses.filter((house) => !hidden.has(house.id));
+}
+
+function preserveLocalHousesFromPrev(
+  prev: Catalog,
+  take: (house: PublicHouse) => void,
+) {
+  for (const house of prev.houses) take(house);
+}
+
+/** Night-pass teaser counts — carried together so the stub share never outlives its total. */
+export function hiddenCountFields(
+  source: Pick<Catalog, "hiddenHouseCount" | "hiddenStubHouseCount"> | null | undefined,
+): Pick<Catalog, "hiddenHouseCount" | "hiddenStubHouseCount"> {
+  if (typeof source?.hiddenHouseCount !== "number") return {};
+  return {
+    hiddenHouseCount: source.hiddenHouseCount,
+    ...(typeof source.hiddenStubHouseCount === "number"
+      ? { hiddenStubHouseCount: source.hiddenStubHouseCount }
+      : {}),
+  };
+}
 
 /** API / CDN payloads must always expose houses[] — delta polls omit the key when unchanged. */
 export function normalizeCatalogDelta(raw: unknown): CatalogDelta {
@@ -17,7 +57,14 @@ export function normalizeCatalogDelta(raw: unknown): CatalogDelta {
     pollSeconds: typeof o.pollSeconds === "number" ? o.pollSeconds : undefined,
     pushTemplates: o.pushTemplates,
     eventSettings: o.eventSettings,
+    ...(typeof o.scope === "string" ? { scope: o.scope } : {}),
+    ...hiddenCountFields(o),
   };
+}
+
+/** Audience a house list was built for — payloads without `scope` are the legacy full list. */
+export function catalogScopeOf(catalog: Pick<Catalog, "scope"> | null | undefined): string {
+  return catalog?.scope ?? "legacy";
 }
 
 function stamp(value: { updatedAt: string }) {
@@ -43,29 +90,35 @@ export function mergeHouses<T extends { id: string; updatedAt: string }>(
  * Fold a fetched catalog into what the phone already shows.
  * A stale CDN copy cannot drop a house that was just published.
  */
-export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
+export function syncCatalog(
+  prev: Catalog | null,
+  incoming: Catalog,
+  options?: SyncCatalogOptions,
+): Catalog {
   const next = normalizeCatalogDelta(incoming);
   if (!prev) return next;
+  // Lists built for different audiences must never union, or a smaller night-pass list keeps the
+  // homes from the old full one.
+  if (catalogScopeOf(prev) !== catalogScopeOf(next)) return next;
   const prevTs = stamp(prev);
   const nextTs = stamp(next);
   const byId = new Map<string, PublicHouse>();
   const take = (house: PublicHouse) => {
-    const current = byId.get(house.id);
-    if (!current || stamp(house) >= stamp(current)) byId.set(house.id, house);
+    byId.set(house.id, mergeCatalogHouseRow(byId.get(house.id), house));
   };
 
+  const allowAuthoritativeDrop =
+    Boolean(options?.trustedCompleteList) && isAuthoritativeHouseList(next);
+
+  const hidden = loadHiddenHouseIds();
   if (nextTs >= prevTs) {
     next.houses.forEach(take);
-    if (!isAuthoritativeHouseList(next)) {
-      const deleted = new Set(loadDeletedHouseIds());
-      for (const house of prev.houses) {
-        if (deleted.has(house.id)) continue;
-        if (!byId.has(house.id)) take(house);
-      }
+    if (!allowAuthoritativeDrop) {
+      preserveLocalHousesFromPrev(prev, take);
     }
     return {
       ...next,
-      houses: [...byId.values()],
+      houses: withoutHiddenHouses([...byId.values()], hidden),
       houseCount: next.houseCount ?? prev.houseCount,
       eventSettings: next.eventSettings ?? prev.eventSettings,
     };
@@ -75,7 +128,7 @@ export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
   next.houses.forEach(take);
   return {
     ...prev,
-    houses: [...byId.values()],
+    houses: withoutHiddenHouses([...byId.values()], hidden),
     houseCount: next.houseCount ?? prev.houseCount,
     eventSettings: next.eventSettings ?? prev.eventSettings,
   };
@@ -84,7 +137,7 @@ export function syncCatalog(prev: Catalog | null, incoming: Catalog): Catalog {
 /** Apply a delta poll (`?since=`) onto the catalog already on the device. */
 export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta): Catalog {
   const delta = normalizeCatalogDelta(incoming);
-  if (!prev) {
+  if (!prev || catalogScopeOf(prev) !== catalogScopeOf(delta)) {
     return {
       updatedAt: delta.updatedAt,
       neighborhood: delta.neighborhood,
@@ -92,6 +145,8 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
       houseCount: delta.houseCount,
       pushTemplates: delta.pushTemplates,
       eventSettings: delta.eventSettings,
+      ...(delta.scope ? { scope: delta.scope } : {}),
+      ...hiddenCountFields(delta),
     };
   }
   if (delta.full) {
@@ -102,21 +157,32 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
       houseCount: delta.houseCount,
       pushTemplates: delta.pushTemplates ?? prev.pushTemplates,
       eventSettings: delta.eventSettings ?? prev.eventSettings,
+      ...(delta.scope ? { scope: delta.scope } : {}),
+      ...hiddenCountFields(delta),
     });
   }
   const byId = new Map(prev.houses.map((house) => [house.id, house]));
   for (const id of delta.removed ?? []) byId.delete(id);
   for (const house of delta.houses) {
-    const current = byId.get(house.id);
-    if (!current || stamp(house) >= stamp(current)) byId.set(house.id, house);
+    byId.set(house.id, mergeCatalogHouseRow(byId.get(house.id), house));
   }
+  const houses = withoutHiddenHouses([...byId.values()], loadHiddenHouseIds());
+  const mergedLen = houses.length;
+  let houseCount = delta.houseCount ?? prev.houseCount;
+  if (typeof houseCount === "number" && houseCount < mergedLen) {
+    houseCount = Math.max(prev.houseCount ?? 0, mergedLen);
+  }
+  const scope = delta.scope ?? prev.scope;
+  const hidden = hiddenCountFields(typeof delta.hiddenHouseCount === "number" ? delta : prev);
   return {
     updatedAt: delta.updatedAt,
     neighborhood: delta.neighborhood || prev.neighborhood,
-    houses: [...byId.values()],
-    houseCount: delta.houseCount ?? prev.houseCount,
+    houses,
+    houseCount,
     pushTemplates: delta.pushTemplates ?? prev.pushTemplates,
     eventSettings: delta.eventSettings ?? prev.eventSettings,
+    ...(scope ? { scope } : {}),
+    ...hidden,
   };
 }
 
@@ -171,6 +237,7 @@ export function cloneDb(db: DbFile): DbFile {
           ...(db.eventSettings.addHouseCutoff
             ? { addHouseCutoff: { ...db.eventSettings.addHouseCutoff } }
             : {}),
+          ...(db.eventSettings.gemHuntPublic === true ? { gemHuntPublic: true as const } : {}),
         }
       : undefined,
   };

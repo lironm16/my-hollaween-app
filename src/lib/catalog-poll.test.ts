@@ -26,11 +26,11 @@ describe("catalog poll interval", () => {
     }
   });
 
-  it("uses a longer interval overnight", () => {
+  it("uses the same interval overnight as during the day", () => {
     const base = readCatalogPollSeconds();
     const night = new Date("2026-10-30T23:00:00");
     const day = new Date("2026-10-30T12:00:00");
-    assert.equal(effectiveCatalogPollSeconds(night), Math.max(base, 600));
+    assert.equal(effectiveCatalogPollSeconds(night), base);
     assert.equal(effectiveCatalogPollSeconds(day), base);
   });
 

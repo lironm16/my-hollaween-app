@@ -2,7 +2,7 @@
 
 import { GemDiamondIcon } from "@/components/gem-diamond-icon";
 import { GEM_MAP_TOGGLE_HIDE_HE, GEM_MAP_TOGGLE_SHOW_HE } from "@/lib/gem-hunt-copy";
-import { List, MapPinned, Route, Sparkles } from "lucide-react";
+import { List, MapPinned, Route } from "lucide-react";
 import { FilterTrigger } from "@/components/filter-menu";
 import { OriginTrigger } from "@/components/origin-picker";
 import { PingPongMarquee } from "@/components/neighborhood-marquee";
@@ -64,9 +64,6 @@ export function NeighborhoodToolbar({
   gemMapToggleEnabled = false,
   gemMapVisible = false,
   onToggleGemMap,
-  adminCharacterMapToggleEnabled = false,
-  adminCharacterMapVisible = false,
-  onToggleAdminCharacterMap,
 }: {
   view: HomeView;
   onViewChange: (view: HomeView) => void;
@@ -89,10 +86,6 @@ export function NeighborhoodToolbar({
   gemMapToggleEnabled?: boolean;
   gemMapVisible?: boolean;
   onToggleGemMap?: () => void;
-  /** Admin QA — poster pins for every gem friend (replaces diamond toggle). */
-  adminCharacterMapToggleEnabled?: boolean;
-  adminCharacterMapVisible?: boolean;
-  onToggleAdminCharacterMap?: () => void;
 }) {
   return (
     <div
@@ -128,7 +121,10 @@ export function NeighborhoodToolbar({
             type="button"
             aria-label={gemMapVisible ? GEM_MAP_TOGGLE_HIDE_HE : GEM_MAP_TOGGLE_SHOW_HE}
             aria-pressed={gemMapVisible}
-            onClick={onToggleGemMap}
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggleGemMap();
+            }}
             className={cn(
               "app-toolbar__btn inline-flex size-10 shrink-0 items-center justify-center rounded-lg p-0.5",
               gemMapVisible
@@ -136,31 +132,7 @@ export function NeighborhoodToolbar({
                 : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
             )}
           >
-            <GemDiamondIcon active={gemMapVisible} className="size-8 max-h-full max-w-full" />
-          </button>
-        ) : null}
-        {adminCharacterMapToggleEnabled && onToggleAdminCharacterMap ? (
-          <button
-            type="button"
-            aria-label={
-              adminCharacterMapVisible ? "הסתר חברים במפה" : "הצג את כל החברים במפה"
-            }
-            aria-pressed={adminCharacterMapVisible}
-            onClick={onToggleAdminCharacterMap}
-            className={cn(
-              "app-toolbar__btn inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
-              adminCharacterMapVisible
-                ? "bg-orange-500 text-white"
-                : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
-            )}
-          >
-            <Sparkles
-              className={cn(
-                "size-5",
-                adminCharacterMapVisible ? "fill-none text-white" : "text-orange-100",
-              )}
-              strokeWidth={2.1}
-            />
+            <GemDiamondIcon active={gemMapVisible} className="size-6 max-h-full max-w-full" />
           </button>
         ) : null}
         <button

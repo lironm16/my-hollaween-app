@@ -29,7 +29,7 @@ export default function GemBagPage() {
   const { catalog, loading } = useCatalog();
   const gems = useGemProgress();
   const now = useAppNow();
-  const { gemBagMenuVisible: visible } = useGemHuntAdminUi(admin, now);
+  const { gemBagMenuVisible: visible } = useGemHuntAdminUi(admin);
   const { houseSet } = useHouseSet();
   const adminForHouseSet = Boolean(admin && !previewAsUser);
   const activeHouseSet = resolveViewerHouseSet(catalog, adminForHouseSet, houseSet, {

@@ -1,8 +1,18 @@
 import { isRehearsalOn } from "@/lib/app-clock";
+import { isCatalogRemoved } from "@/lib/catalog-removed";
 import { syncCatalog } from "@/lib/catalog-sync";
 import { catalogHasRealHouses } from "@/lib/house-set";
 import { loadCatalogCacheMeta, loadCatalogCacheSync } from "@/lib/offline-db";
 import type { Catalog, CatalogCacheMeta, PublicHouse } from "@/lib/types";
+
+function catalogStamp(catalog: Pick<Catalog, "updatedAt">) {
+  const n = Date.parse(catalog.updatedAt);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function withoutCatalogRemoved(houses: PublicHouse[]) {
+  return houses.filter((house) => !isCatalogRemoved(house.id));
+}
 
 /** Authoritative count from a server payload; falls back to inline houses on legacy full loads. */
 export function resolveServerHouseCount(
@@ -20,6 +30,24 @@ export function localCatalogHouseCount(catalog: Catalog | null): number {
   return catalog?.houses.length ?? 0;
 }
 
+/** True when the server says the public catalog size differs from what we are showing. */
+export function catalogServerCountMismatch(
+  catalog: Catalog | null,
+  serverCount: number | undefined | null,
+): boolean {
+  if (serverCount == null || serverCount < 0) return false;
+  return localCatalogHouseCount(catalog) !== serverCount;
+}
+
+/** Recovery succeeded — meta may count real houses only while inline rows include rehearsal stubs. */
+export function catalogServerCountSatisfied(
+  catalog: Catalog | null,
+  serverCount: number | undefined | null,
+): boolean {
+  if (serverCount == null || serverCount < 0) return true;
+  return localCatalogHouseCount(catalog) >= serverCount;
+}
+
 /** Server sent a full inline list matching explicit `houseCount` — safe to drop stale local-only ids. */
 export function isAuthoritativeHouseList(
   catalog: Pick<Catalog, "houseCount" | "houses"> | null | undefined,
@@ -29,7 +57,20 @@ export function isAuthoritativeHouseList(
   return typeof count === "number" && count >= 0 && catalog.houses.length === count;
 }
 
-/** True when the on-device list is shorter than the server says the catalog should be. */
+function explicitCatalogHouseCount(
+  catalog: Catalog | null,
+  meta: CatalogCacheMeta | null,
+  serverCount?: number | null,
+): number | undefined {
+  if (typeof serverCount === "number" && serverCount >= 0) return serverCount;
+  if (typeof catalog?.houseCount === "number" && catalog.houseCount >= 0) {
+    return catalog.houseCount;
+  }
+  if (typeof meta?.houseCount === "number" && meta.houseCount >= 0) return meta.houseCount;
+  return undefined;
+}
+
+/** True when the on-device list does not match a known server/catalog count. */
 export function catalogCacheIncomplete(
   catalog: Catalog | null,
   cacheMeta?: CatalogCacheMeta | null,
@@ -37,13 +78,16 @@ export function catalogCacheIncomplete(
 ): boolean {
   const localCount = localCatalogHouseCount(catalog);
   const meta = cacheMeta ?? loadCatalogCacheMeta();
-  const authoritative = serverCount ?? resolveServerHouseCount(catalog) ?? meta?.houseCount;
-
-  if (typeof authoritative === "number" && localCount < authoritative) return true;
-  if (typeof authoritative === "number" && localCount > authoritative) return true;
-  if (!meta?.complete) return true;
-  if (typeof meta.houseCount === "number" && localCount > meta.houseCount) return true;
-  if (typeof meta.houseCount === "number" && localCount < meta.houseCount) return true;
+  const expected = explicitCatalogHouseCount(catalog, meta, serverCount);
+  if (expected == null) return true;
+  if (localCount < expected) return true;
+  if (localCount > expected) {
+    const stubInflated =
+      typeof catalog?.houseCount === "number" &&
+      catalog.houseCount === expected &&
+      catalogServerCountSatisfied(catalog, expected);
+    if (!stubInflated) return true;
+  }
   return false;
 }
 
@@ -62,11 +106,20 @@ export function catalogNeedsFullRefresh(
   return catalogCacheIncomplete(catalog, cacheMeta, serverCount);
 }
 
-/** Merge live catalog state with the on-device cache without dropping house ids. */
+/**
+ * Houses shown from catalog state. When live catalog is newer than device cache,
+ * use catalog rows only — merging stale cache back in resurrected deleted ids.
+ */
 export function resolveCatalogHouses(catalog: Catalog | null): PublicHouse[] {
   const cached = loadCatalogCacheSync();
-  if (!catalog?.houses.length) return cached?.houses ?? [];
-  if (isAuthoritativeHouseList(catalog)) return catalog.houses;
-  if (!cached?.houses.length) return catalog.houses;
-  return syncCatalog(cached, catalog).houses;
+  if (!catalog?.houses.length) {
+    return withoutCatalogRemoved(cached?.houses ?? []);
+  }
+  if (!cached?.houses.length) {
+    return withoutCatalogRemoved(catalog.houses);
+  }
+  if (catalogStamp(catalog) >= catalogStamp(cached)) {
+    return withoutCatalogRemoved(catalog.houses);
+  }
+  return withoutCatalogRemoved(syncCatalog(cached, catalog).houses);
 }

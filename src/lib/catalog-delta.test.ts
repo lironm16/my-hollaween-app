@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   buildCatalogDeltaFromDb,
   catalogRemovalsSinceIso,
+  mergeCatalogRemovalIds,
   recordCatalogRemoval,
 } from "@/lib/store";
 import type { DbFile, House } from "@/lib/types";
@@ -72,6 +73,12 @@ describe("buildCatalogDeltaFromDb", () => {
     ]);
     const delta = buildCatalogDeltaFromDb(snapshot, "2026-10-31T11:00:00.000Z");
     assert.equal(delta.houseCount, 2);
+  });
+});
+
+describe("mergeCatalogRemovalIds", () => {
+  it("dedupes local and remote removal ids", () => {
+    assert.deepEqual(mergeCatalogRemovalIds(["a", "b"], ["b", "c"]), ["a", "b", "c"]);
   });
 });
 

@@ -46,7 +46,7 @@ function labelSchedule(schedule: AddHouseCutoffSchedule) {
   return `${formatDateInput(schedule).split("-").reverse().join("/")} ${formatTimeInput(schedule)}`;
 }
 
-export function AdminAddHouseCutoffSettings() {
+export function AdminAddHouseCutoffSettings({ embedded = false }: { embedded?: boolean }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -143,10 +143,16 @@ export function AdminAddHouseCutoffSettings() {
   }
 
   return (
-    <div className="space-y-2 rounded-xl bg-[#12081a] px-3 py-2 ring-1 ring-orange-500/20">
-      <p className="text-base font-medium text-orange-100">
-        חיתוך הוספת בתים — אחרי המועד מבקרים לא מוסיפים בית (מנהלים כן), מסונכרן לכל המכשירים
-      </p>
+    <div
+      className={cn(
+        "space-y-2",
+        embedded ? "rounded-lg bg-[#14081c]/80 px-2.5 py-2 ring-1 ring-orange-500/10" : "rounded-xl bg-[#12081a] px-3 py-2 ring-1 ring-orange-500/20",
+      )}
+    >
+      <p className="text-sm font-medium text-orange-100">סגירת הוספה למבקרים</p>
+      {!embedded ? (
+        <p className="text-sm text-violet-400">מנהלים ממשיכים להוסיף · מסונכרן לכל המכשירים</p>
+      ) : null}
       <div className={cn("grid gap-2 sm:grid-cols-2", loading && "opacity-50")}>
         <label className="block space-y-1">
           <span className="text-sm text-violet-300">תאריך</span>

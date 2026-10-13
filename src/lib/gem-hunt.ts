@@ -1,5 +1,7 @@
 import { isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { getGemAnchorOverride } from "@/lib/gem-anchor-overrides";
+import { parseGemAnchorPlacement } from "@/lib/gem-anchor-placement";
+import { getPlacedGemAnchor } from "@/lib/gem-placed-anchors";
 import { getOsmGemAnchor } from "@/lib/gem-osm-anchor-cache";
 import {
   GEM_OSM_ANCHOR_MAX_PIN_DISTANCE_M,
@@ -16,6 +18,7 @@ import {
   buildGemMonsterAssignment,
   countGemEligibleHouses,
   gemAlbumStickerPool,
+  gemClusterSpreadForHouse,
   gemFamilyForHouse,
   gemHuntMapHouses,
   gemLabelHe,
@@ -62,6 +65,8 @@ export const GEM_STILL_SECONDS = 0;
 export const GEM_FACING_TOLERANCE_DEG = 60;
 /** Guaranteed gem reveal after this many seconds of panning in range. */
 export const GEM_SCAN_REVEAL_SECONDS = 5;
+/** «גלה לי» center view — inspect360 framing leaves wide orbit margins, so zoom in (iOS + Android DOM overlay). */
+export const GEM_TELL_ME_CENTER_ZOOM = 1.45;
 /** Guaranteed gem reveal after this much pan rotation (degrees). */
 export const GEM_SCAN_PAN_DEGREES = 180;
 /** Show "can't see it?" help after this many seconds in hunt mode. */
@@ -84,6 +89,9 @@ export const GEM_SCAN_RING_COLLECT_RADIUS = 54;
 /** Ground-level offset from the map pin (no floor height — see gemAnchorForHouse). */
 export const GEM_ANCHOR_MIN_METERS = 2;
 export const GEM_ANCHOR_MAX_METERS = 10;
+/** Shared-building clusters — fan gems around the pin so markers stay tappable. */
+export const GEM_CLUSTER_ANCHOR_MIN_METERS = 8;
+export const GEM_CLUSTER_ANCHOR_MAX_METERS = 28;
 /**
  * When reported distance to pin/anchor is this small, trust on-site GPS despite noisy accuracy.
  * (Avoids «2 m away» but still «far» when accuracy is 60–100 m.)
@@ -92,6 +100,9 @@ export const GEM_ONSITE_TRUST_METERS = 12;
 
 /** Camera collect — per-gem choreography (see gem-collect-dance.ts / CSS). */
 export const GEM_COLLECT_OVERLAY_MS = 5000;
+/** Multi-house cluster queue — one short dance per house, then next. */
+export const GEM_CAMPUS_COLLECT_MS = 2400;
+/** @deprecated alias */ export const GEM_CLUSTER_COLLECT_MS = GEM_CAMPUS_COLLECT_MS;
 /** After collect dance — sticker flies into the album before closing the camera. */
 export const GEM_STICKER_REVEAL_MS = 3200;
 /** In-camera mini sticker book (off → navigate to /gem-bag?fly= after collect). */
@@ -101,6 +112,15 @@ export type GemCollectFinishOptions = {
   cheer?: boolean;
   navigateStickerBook?: boolean;
 };
+
+/** Header on camera when hunting several houses at one address in one session. */
+export type GemClusterQueueUi = {
+  boothTitle: string;
+  boothSubtitle: string;
+};
+
+/** @deprecated Use {@link GemClusterQueueUi}. */
+export type GemCampusQueueUi = GemClusterQueueUi;
 /** Map toast after collect — matches visit/like cheer (~1.6s). */
 export const GEM_CHEER_MS = 1400;
 /** @deprecated use GEM_CHEER_MS */
@@ -115,14 +135,23 @@ export type GemAnchor = {
   lng: number;
   bearingFromHouseDeg: number;
   offsetM: number;
-  /** Set by admin on-site calibration (this device’s localStorage). */
+  /** Set by admin on-site calibration (this device’s localStorage) or an owner/admin map placement. */
   calibrated?: boolean;
+  /** Owner/admin dragged the gem on the map (shared with everyone). */
+  placed?: boolean;
 };
 
 /** House fields used for auto sidewalk anchor (address improves street matching). */
 export type GemAnchorHouse = Pick<PublicHouse, "id" | "lat" | "lng"> & {
   address?: string | null;
+  gemAnchor?: PublicHouse["gemAnchor"];
 };
+
+/** Shared owner/admin placement for this house, if any. */
+export function placedGemAnchorForHouse(house: GemAnchorHouse) {
+  const registered = getPlacedGemAnchor(house.id);
+  return registered !== undefined ? registered : parseGemAnchorPlacement(house.gemAnchor);
+}
 
 function hashHouseSeed(id: string, seed: string) {
   let h = 2166136261;
@@ -171,8 +200,30 @@ export function gemDistanceMeters(
   return distanceMeters(user, anchor);
 }
 
-export function gemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
-  const override = getGemAnchorOverride(house.id);
+function gemClusterFanAnchor(house: GemAnchorHouse, cluster: { index: number; size: number }): GemAnchor {
+  const h = hashHouseSeed(house.id, "gem-cluster-spread");
+  const slotDeg = (360 / cluster.size) * cluster.index;
+  const jitter = (h % 15) - 7;
+  const bearingFromHouseDeg = slotDeg + jitter;
+  const ring = Math.floor(cluster.index / 10);
+  const span = GEM_CLUSTER_ANCHOR_MAX_METERS - GEM_CLUSTER_ANCHOR_MIN_METERS;
+  const offsetM =
+    GEM_CLUSTER_ANCHOR_MIN_METERS +
+    Math.min(span, ring * 5 + ((h >>> 8) % 1000) / (1000 / Math.max(span - ring * 5, 4)));
+  const point = destinationPoint(house, bearingFromHouseDeg, offsetM);
+  return { ...point, bearingFromHouseDeg, offsetM, calibrated: false };
+}
+
+/** Calculated spot (cluster fan / sidewalk / hash) — ignores owner placement and device calibration. */
+export function automaticGemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
+  return gemAnchorForHouse(house, { automatic: true });
+}
+
+export function gemAnchorForHouse(
+  house: GemAnchorHouse,
+  options?: { automatic?: boolean },
+): GemAnchor {
+  const override = options?.automatic ? null : getGemAnchorOverride(house.id);
   if (override) {
     const bearingFromHouseDeg = bearingDegrees(house, override);
     const offsetM = distanceMeters(house, override);
@@ -183,6 +234,23 @@ export function gemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
       offsetM,
       calibrated: true,
     };
+  }
+
+  const placed = options?.automatic ? null : placedGemAnchorForHouse(house);
+  if (placed) {
+    return {
+      lat: placed.lat,
+      lng: placed.lng,
+      bearingFromHouseDeg: bearingDegrees(house, placed),
+      offsetM: distanceMeters(house, placed),
+      calibrated: true,
+      placed: true,
+    };
+  }
+
+  const cluster = gemClusterSpreadForHouse(house.id);
+  if (cluster && cluster.size > 1) {
+    return gemClusterFanAnchor(house, cluster);
   }
 
   const osm = getOsmGemAnchor(house.id);
@@ -465,12 +533,9 @@ export function relativeWalkBearingDeg(
   return rel;
 }
 
-/**
- * Hunt «רמז» arrow + שמאלה/ימינה copy — screen-space (matches gem pin left/right on camera).
- * Raw {@link relativeWalkBearingDeg} follows map/compass; UI chevron uses the mirror.
- */
+/** @deprecated Identity — arrow and walk copy use {@link relativeWalkBearingDeg} directly. */
 export function navTurnBearingForUi(turnBearingDeg: number) {
-  return -turnBearingDeg;
+  return turnBearingDeg;
 }
 
 export type GemAchievement = {

@@ -36,10 +36,12 @@ export async function POST(request: Request) {
     console.error("[admin/houses] validation failed", parsed.error.flatten());
     return NextResponse.json({ error: "נתונים לא תקינים." }, { status: 400 });
   }
-  const { addedBy, ownerPhone, kind, poiCategory, ...input } = parsed.data;
+  const { addedBy, ownerPhone, kind, poiCategory, isPractice: _legacyPractice, ...input } =
+    parsed.data;
+  void _legacyPractice;
   try {
     const result = await submitHouse(
-      { ...input, ownerPhone, kind, poiCategory },
+      { ...input, ownerPhone, kind, poiCategory, isPractice: false },
       {
         includeEndpoint: readIncludeEndpoint(json),
         addedBy,

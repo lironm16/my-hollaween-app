@@ -12,6 +12,8 @@ import { useAdminHouses } from "@/hooks/use-admin-houses";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useCatalog } from "@/hooks/use-catalog";
+import { useNightPass } from "@/hooks/use-night-pass";
+import { adminSeesAllHouses } from "@/lib/night-pass-client";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { useMergedHouses } from "@/hooks/use-merged-houses";
 import { isPreviewDeploymentClient } from "@/lib/deployment-env";
@@ -23,7 +25,9 @@ import { useLikedHouses } from "@/hooks/use-liked-houses";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useSkippedHouses } from "@/hooks/use-skipped-houses";
 import { useVisitedHouses } from "@/hooks/use-visited-houses";
-import { gemHuntFabVisible } from "@/lib/gem-hunt-enabled";
+import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
+import { adminDeviceOwnerPowers } from "@/lib/admin-preview-as-user";
+import { useAdminPreviewAsUser } from "@/hooks/use-admin-preview-as-user";
 import { notifyCatalogChanged, removeOwnedHouse, saveOwnedHouse } from "@/lib/offline-db";
 import { writeHomeView } from "@/lib/home-view";
 import type { PublicHouse } from "@/lib/types";
@@ -33,6 +37,7 @@ export default function SearchPage() {
   const owned = useOwnedHouses();
   const { catalog, loading: catalogLoading, source, refresh } = useCatalog();
   const { admin, ready: adminReady } = useAdminSession();
+  const nightPass = useNightPass();
   const { houseSet } = useHouseSet();
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
@@ -60,7 +65,7 @@ export default function SearchPage() {
   const merged = useMergedHouses({
     catalogHouses,
     owned,
-    admin,
+    admin: adminSeesAllHouses(admin, nightPass),
     adminHouses,
     includeCatalogWhenAdmin: true,
   });
@@ -75,7 +80,9 @@ export default function SearchPage() {
     editFlow.close();
   }, [activeHouseSet, picked, editFlow.close]);
 
-  const gemUi = gemHuntFabVisible(admin, now);
+  const { previewAsUser } = useAdminPreviewAsUser();
+  const deviceOwner = adminDeviceOwnerPowers(Boolean(admin), previewAsUser);
+  const { gemUiVisible: gemUi } = useGemHuntAdminUi(admin);
   const actionContext = useMemo((): HouseCardActionContext => {
     return {
       admin,
@@ -88,16 +95,21 @@ export default function SearchPage() {
       onToggleVisited: (id) => visits.toggle(id),
       onSkip: (id) => skips.toggle(id),
       onRestore: (id) => skips.unskip(id),
-      canEdit: (id) => Boolean(admin || owned.some((item) => item.id === id)),
+      canEdit: (id) => Boolean(deviceOwner || owned.some((item) => item.id === id)),
       editCodeFor: (id) =>
-        admin
+        deviceOwner
           ? adminHouses.find((item) => item.id === id)?.editCode
           : owned.find((item) => item.id === id)?.editCode,
       onEdit: (house) => {
-        const editCode = admin
+        const isOwned = owned.some((item) => item.id === house.id);
+        const editCode = deviceOwner
           ? adminHouses.find((item) => item.id === house.id)?.editCode
           : owned.find((item) => item.id === house.id)?.editCode;
-        editFlow.openEdit(house, { editCode, admin, allowDelete: true });
+        editFlow.openEdit(house, {
+          editCode,
+          admin: deviceOwner,
+          allowDelete: deviceOwner || isOwned,
+        });
       },
       skipMetaFor: (id) => skips.meta(id),
       editingId: editFlow.flow?.house.id ?? null,
@@ -108,6 +120,7 @@ export default function SearchPage() {
     };
   }, [
     admin,
+    deviceOwner,
     source,
     likes,
     visits,

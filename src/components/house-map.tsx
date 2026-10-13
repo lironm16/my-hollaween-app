@@ -15,6 +15,10 @@ import {
 import L from "leaflet";
 import { LocateFixed } from "lucide-react";
 import { MapGemAnchorLayer, type GemMapAnchorVisual } from "@/components/map-gem-anchor-layer";
+import {
+  MapGemAnchorEditLayer,
+  type GemAnchorEditState,
+} from "@/components/map-gem-anchor-edit-layer";
 import { MapAddHouseFab } from "@/components/map-add-house-fab";
 import { MapLegend } from "@/components/map-legend";
 import "leaflet/dist/leaflet.css";
@@ -35,9 +39,28 @@ import { pinScareSrc } from "@/lib/pin-faces";
 import { effectiveHouseKind } from "@/lib/house-kind";
 import { pinBackgroundFill } from "@/lib/pin-colors";
 import { clusterBadgeHouses, clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
+import {
+  buildingClusterIconKind,
+  buildingClusterPinClass,
+  pinBuildingClusterIconHtml,
+} from "@/lib/map-pin-building-icon";
+import { pinSchoolClusterIconHtml } from "@/lib/map-pin-school-icon";
+import {
+  clusterIsSchoolCampus,
+  clusterPinAriaLabel,
+  mapCoordsForHouse,
+  usesSchoolCampusClusterChrome,
+} from "@/lib/school-campus";
 import { SKIP_ICON_SVG } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
-
+import {
+  gemMapHouseIdSet,
+  clusterGemRingCacheKey,
+  mapPinRingDecorForCluster,
+  mapPinRingDecorForHouse,
+  type MapGemPinRingContext,
+} from "@/lib/map-gem-pin-ring";
+import { mapPinIconCacheGemRingEpoch } from "@/lib/map-pin-icon-cache";
 function useMinuteTick() {
   const now = useAppNow();
   return Math.floor(now.getTime() / 15_000);
@@ -65,6 +88,7 @@ function wrapRoutePin(html: string, routeOrder?: number) {
 }
 
 const PIN_BOX = 62;
+const SCHOOL_CAMPUS_PIN_BOX = 88;
 
 function attr(value: string) {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -101,40 +125,14 @@ function pinStatusMark(house: PublicHouse, now: Date, skipped = false) {
   return `<b class="pin-status is-${dot}" aria-label="${label}"></b>`;
 }
 
-function hoursRingHtml(house: PublicHouse, now: Date) {
-  if (isClosingSoon(house, now) && !pinVisitKind(house, now)) {
-    return `<i class="pin-hours-ring is-closing" aria-hidden="true"></i>`;
-  }
-  if (
-    isOpeningSoon(house, now) &&
-    effectiveVisit(house) !== "closed" &&
-    !isHoursNightOver(house, now)
-  ) {
-    return `<i class="pin-hours-ring is-opening" aria-hidden="true"></i>`;
-  }
-  return "";
-}
-
-function hoursPinClass(house: PublicHouse, now: Date) {
-  if (isClosingSoon(house, now) && !pinVisitKind(house, now)) return " is-closing-soon";
-  if (
-    isOpeningSoon(house, now) &&
-    effectiveVisit(house) !== "closed" &&
-    !isHoursNightOver(house, now)
-  ) {
-    return " is-opening-soon";
-  }
-  return "";
-}
-
 function pinFaceHtml(house: PublicHouse) {
   const level = pinFaceKind(house) === "scare" ? (house.scareLevel ?? "mild") : "mild";
   const src = pinScareSrc(house, level);
   return `<img class="pin-scare" src="${src}" alt="" />`;
 }
 
-function pinClusterIconHtml() {
-  return `<span class="pin-cluster-icon" aria-hidden="true"><svg viewBox="0 0 32 28" width="32" height="28" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="12" width="13" height="15" rx="1.5" fill="#ffedd5"/><path d="M1 12 L7.5 5.5 L14 12 Z" fill="#ffedd5"/><rect x="14" y="8" width="13" height="19" rx="1.5" fill="#fb923c"/><path d="M14 8 L20.5 1.5 L27 8 Z" fill="#fb923c"/></svg></span>`;
+function pinClusterIconHtml(houses: PublicHouse[]) {
+  return pinBuildingClusterIconHtml(houses);
 }
 
 function clusterAptDotsHtml(
@@ -142,8 +140,10 @@ function clusterAptDotsHtml(
   now: Date,
   matchedIds?: ReadonlySet<string>,
   skippedIds?: ReadonlySet<string>,
+  /** School campus shows candy/skip even for a single booth. */
+  showWhenSingle = false,
 ) {
-  if (houses.length <= 1) return "";
+  if (houses.length <= 1 && !showWhenSingle) return "";
   const dots = clusterBadgeHouses(houses)
     .map((house) => {
       const filteredClass =
@@ -164,6 +164,7 @@ function clusterAptDotsHtml(
 function housePinHtml(
   house: PublicHouse,
   now: Date,
+  gemCtx: MapGemPinRingContext,
   extras?: {
     selected?: boolean;
     houseId?: string;
@@ -176,7 +177,7 @@ function housePinHtml(
 ) {
   const selectedClass = extras?.selected ? " is-selected" : "";
   const filteredClass = extras?.filteredOut ? " is-filtered-out" : "";
-  const hoursClass = hoursPinClass(house, now);
+  const { hoursSoonClass: hoursClass, ringHtml } = mapPinRingDecorForHouse(house, now, gemCtx);
   const face = pinFaceKind(house);
   const visit = pinVisitKind(house, now);
   const bareClass = face === "bare" ? " is-undecorated" : "";
@@ -184,7 +185,7 @@ function housePinHtml(
   const extraClass = extras?.extraClass ? ` ${extras.extraClass}` : "";
   const idAttr = extras?.houseId ? ` data-house-id="${attr(extras.houseId)}"` : "";
   const fill = pinBackgroundFill(house, face !== "bare");
-  const style = extras?.extraStyle ? `${extras.extraStyle};background:${fill}` : `background:${fill}`;
+  const styleAttr = ` style="${extras?.extraStyle ? `${extras.extraStyle};background:${fill}` : `background:${fill}`}"`;
   const label =
     visit === "closed"
       ? 'aria-label="סגור"'
@@ -198,16 +199,17 @@ function housePinHtml(
               ? 'aria-label="מקושט"'
               : 'aria-label="לא מקושט"';
   const poiClass = effectiveHouseKind(house) === "poi" ? " is-poi" : "";
-  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}" style="${style}" ${label}${idAttr}>${hoursRingHtml(house, now)}${pinStatusMark(house, now, extras?.skipped)}${pinFaceHtml(house)}</div>`;
+  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}"${styleAttr} ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, extras?.skipped)}${pinFaceHtml(house)}</div>`;
 }
 
 const DIV_ICON_CACHE = new Map<string, L.DivIcon>();
 
 function cachedDivIcon(key: string, build: () => L.DivIcon) {
-  const hit = DIV_ICON_CACHE.get(key);
+  const scopedKey = `${mapPinIconCacheGemRingEpoch()}|${key}`;
+  const hit = DIV_ICON_CACHE.get(scopedKey);
   if (hit) return hit;
   const icon = build();
-  DIV_ICON_CACHE.set(key, icon);
+  DIV_ICON_CACHE.set(scopedKey, icon);
   return icon;
 }
 
@@ -215,6 +217,7 @@ function clusterIcon(
   cluster: HouseCluster,
   selectedId: string | null | undefined,
   now: Date,
+  gemCtx: MapGemPinRingContext,
   routeOrder?: number,
   visitedIds: string[] = [],
   filteredOut = false,
@@ -227,19 +230,27 @@ function clusterIcon(
   const selectedClass = selectedHere ? " is-selected" : "";
   const filterClass = filteredOut ? " is-filtered-out" : "";
   const allVisited = houses.length > 0 && houses.every((house) => visitedIds.includes(house.id));
-  const allSkipped = houses.length > 0 && houses.every((house) => skippedIds?.has(house.id));
 
-  if (!only || houses.length <= 1) {
-    const hoursClass = only ? hoursPinClass(only, now) : "";
+  if (!only) {
+    const wrapped = wrapRoutePin("", routeOrder);
+    return L.divIcon({
+      className: `pumpkin-pin-icon${selectedClass}${filterClass}`,
+      html: wrapped.html,
+      iconSize: [PIN_BOX, PIN_BOX + 4 + wrapped.extraH],
+      iconAnchor: [PIN_BOX / 2, PIN_BOX + wrapped.extraH],
+    });
+  }
+
+  const schoolCampus = clusterIsSchoolCampus(houses);
+  if (houses.length <= 1 && !schoolCampus) {
+    const { hoursSoonClass: hoursClass } = mapPinRingDecorForHouse(only, now, gemCtx);
     const wrapped = wrapRoutePin(
-      only
-        ? housePinHtml(only, now, {
-            selected: selectedHere,
-            visited: visitedIds.includes(only.id),
-            filteredOut: matchedIds ? !matchedIds.has(only.id) : false,
-            skipped: skippedIds?.has(only.id),
-          })
-        : "",
+      housePinHtml(only, now, gemCtx, {
+        selected: selectedHere,
+        visited: visitedIds.includes(only.id),
+        filteredOut: matchedIds ? !matchedIds.has(only.id) : false,
+        skipped: skippedIds?.has(only.id),
+      }),
       routeOrder,
     );
     return L.divIcon({
@@ -250,15 +261,28 @@ function clusterIcon(
     });
   }
 
+  const clusterKind = schoolCampus ? null : buildingClusterIconKind(houses);
+  const clusterIconHtml = schoolCampus ? pinSchoolClusterIconHtml() : pinClusterIconHtml(houses);
+  const campusClass = schoolCampus ? " is-school-campus" : "";
+  const clusterKindClass = clusterKind ? ` ${buildingClusterPinClass(clusterKind)}` : "";
+  const clusterLabel = attr(clusterPinAriaLabel(houses));
+  const pinFill = "#6d28d9";
+  const clusterRing = mapPinRingDecorForCluster(houses, now, gemCtx);
+  const pinStyleAttr = schoolCampus ? ` style="background:${pinFill}"` : "";
   const wrapped = wrapRoutePin(
-    `<div class="house-pin is-building${allVisited ? " is-visited" : ""}" style="background:#6d28d9" role="img" aria-label="${houses.length} דירות">${allSkipped ? pinSkippedMark() : ""}${pinClusterIconHtml()}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds)}</div>`,
+    `<div class="house-pin is-building${clusterKindClass}${campusClass}${allVisited ? " is-visited" : ""}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds, schoolCampus)}</div>`,
     routeOrder,
   );
+  const pinBox = schoolCampus ? SCHOOL_CAMPUS_PIN_BOX : PIN_BOX;
+  const pinLeafletH = schoolCampus ? pinBox + 22 : PIN_BOX + 4;
   return L.divIcon({
-    className: `pumpkin-pin-icon pumpkin-pin-building${selectedClass}${filterClass}`,
+    className: `pumpkin-pin-icon pumpkin-pin-building${schoolCampus ? " pumpkin-pin-school" : ""}${selectedClass}${filterClass}${clusterRing.hoursSoonClass}`,
     html: wrapped.html,
-    iconSize: [PIN_BOX, PIN_BOX + 20 + wrapped.extraH],
-    iconAnchor: [PIN_BOX / 2, PIN_BOX + 16 + wrapped.extraH],
+    iconSize: [pinBox, pinLeafletH + wrapped.extraH],
+    iconAnchor: [
+      pinBox / 2,
+      schoolCampus ? pinBox + 18 + wrapped.extraH : PIN_BOX + wrapped.extraH,
+    ],
   });
 }
 
@@ -342,26 +366,55 @@ function KeepSelectedVisible({
 
   useEffect(() => {
     if (!enabled) return;
-    const pan = () => {
+
+    const adjustForSheet = () => {
       const raw = getComputedStyle(document.documentElement).getPropertyValue("--map-sheet-h");
       const sheetH = Number.parseFloat(raw);
-      if (!Number.isFinite(sheetH) || sheetH < 80) return;
       const size = map.getSize();
+      if (size.x < 40 || size.y < 40) return;
       const topChrome = 72;
+      const point = map.latLngToContainerPoint(L.latLng(lat, lng));
+      point.x += offsetX;
+      point.y += offsetY;
+
+      if (!Number.isFinite(sheetH) || sheetH < 80) {
+        const dx = point.x - size.x / 2;
+        const dy = point.y - size.y * 0.42;
+        if (Math.abs(dx) >= 8 || Math.abs(dy) >= 8) {
+          map.panBy([dx, dy], { animate: true, duration: 0.28 });
+        }
+        return;
+      }
+
       const visibleBottom = size.y - sheetH;
       const usable = visibleBottom - topChrome;
       if (usable < 40) return;
       const visibleMidY = topChrome + usable * 0.62;
-      const point = map.latLngToContainerPoint(L.latLng(lat, lng));
-      point.x += offsetX;
-      point.y += offsetY;
       const dx = point.x - size.x / 2;
       const dy = point.y - visibleMidY;
       if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
       map.panBy([dx, dy], { animate: true, duration: 0.28 });
     };
-    const onSheet = () => pan();
-    const timer = window.setTimeout(pan, 70);
+
+    const ensureOnMap = () => {
+      map.invalidateSize({ animate: false });
+      const size = map.getSize();
+      if (size.x < 40 || size.y < 40) return;
+      const point = map.latLngToContainerPoint(L.latLng(lat, lng));
+      const margin = 56;
+      const offScreen =
+        point.x < margin ||
+        point.x > size.x - margin ||
+        point.y < margin ||
+        point.y > size.y - margin;
+      if (offScreen) {
+        map.panTo([lat, lng], { animate: false });
+      }
+      adjustForSheet();
+    };
+
+    const onSheet = () => ensureOnMap();
+    const timer = window.setTimeout(ensureOnMap, 70);
     window.addEventListener("hw-map-sheet", onSheet);
     return () => {
       window.clearTimeout(timer);
@@ -470,6 +523,7 @@ const ClusterMarker = memo(function ClusterMarker({
   filteredOut,
   matchedIds,
   matchedIdsKey,
+  gemPinRingCtx,
 }: {
   cluster: HouseCluster;
   selectedId?: string | null;
@@ -482,6 +536,7 @@ const ClusterMarker = memo(function ClusterMarker({
   filteredOut?: boolean;
   matchedIds?: ReadonlySet<string>;
   matchedIdsKey?: string;
+  gemPinRingCtx: MapGemPinRingContext;
 }) {
   const tick = useMinuteTick();
   const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
@@ -496,6 +551,10 @@ const ClusterMarker = memo(function ClusterMarker({
     () => cluster.houses.map((house) => (skippedIds?.has(house.id) ? "1" : "0")).join(""),
     [cluster.houses, skippedIds],
   );
+  const gemRingKey = useMemo(
+    () => clusterGemRingCacheKey(cluster.houses, gemPinRingCtx),
+    [cluster.houses, gemPinRingCtx],
+  );
   const icon = useMemo(() => {
     const cacheKey = [
       cluster.key,
@@ -506,12 +565,14 @@ const ClusterMarker = memo(function ClusterMarker({
       skippedKey,
       filteredOut ? "1" : "0",
       matchedIdsKey ?? "",
+      gemRingKey,
     ].join("|");
     return cachedDivIcon(cacheKey, () =>
       clusterIcon(
         cluster,
         selectedId,
         now,
+        gemPinRingCtx,
         routeOrder,
         visitedIds,
         filteredOut,
@@ -532,13 +593,16 @@ const ClusterMarker = memo(function ClusterMarker({
     visitedIds,
     skippedIds,
     now,
+    gemPinRingCtx,
+    gemRingKey,
   ]);
 
   const onMarkerClick = useCallback(
     (event: L.LeafletMouseEvent) => {
       L.DomEvent.stopPropagation(event.originalEvent);
       const isMulti = cluster.houses.length > 1;
-      if (isMulti) {
+      const clusterShell = isMulti || usesSchoolCampusClusterChrome(cluster.houses);
+      if (clusterShell) {
         if (selectedHere && clusterOverview) {
           onClose?.();
           return;
@@ -600,6 +664,8 @@ type Props = {
   pickMode?: boolean;
   pick?: { lat: number; lng: number } | null;
   onPick?: (lat: number, lng: number) => void;
+  /** Add-house: allow drag / map tap to move pin (off for fixed campuses). */
+  pickDraggable?: boolean;
   className?: string;
   /** @deprecated Use followSelection — kept so call sites can still pass active. */
   active?: boolean;
@@ -614,6 +680,8 @@ type Props = {
   onLocate?: () => void;
   routeLine?: LatLng[] | null;
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
+  /** Pinned stop numbers for visited/skipped houses still shown on the map in route mode. */
+  routeSessionDisplayOrders?: Map<string, number> | null;
   /** Walking-route start (GPS / custom / neighborhood) for the dashed approach. */
   routeStart?: LatLng | null;
   routeStartedFrom?: "gps" | "neighborhood" | "custom" | null;
@@ -639,13 +707,17 @@ type Props = {
   embedCenterOnSelect?: boolean;
   /** Tap gem anchor marker (admin QA posters). */
   onGemAnchorSelect?: (house: PublicHouse) => void;
-  /** Show gem diamond markers (controlled by top-bar toggle). */
+  /** @deprecated Separate gem markers — use {@link showGemPinRings} on house pins. */
   showGemAnchors?: boolean;
   /** Map legend «יהלומים» section — when gem hunt UI is on (independent of anchor toggle). */
   showGemLegend?: boolean;
   gemAnchorHouses?: PublicHouse[];
   gemAnchorVisual?: GemMapAnchorVisual;
   isGemCollected?: (houseId: string) => boolean;
+  /** Yellow/diamond rings on pins when the top-bar demon toggle is on. */
+  showGemPinRings?: boolean;
+  /** Owner/admin gem placement — draggable demon around the selected house. */
+  gemAnchorEdit?: GemAnchorEditState | null;
 };
 
 export function HouseMap({
@@ -657,6 +729,7 @@ export function HouseMap({
   pickMode,
   pick,
   onPick,
+  pickDraggable = true,
   className,
   active = true,
   followSelection = active,
@@ -665,6 +738,7 @@ export function HouseMap({
   onLocate,
   routeLine = null,
   routeStops = null,
+  routeSessionDisplayOrders = null,
   routeStart = null,
   routeStartedFrom = null,
   visitedIds = [],
@@ -688,7 +762,18 @@ export function HouseMap({
   gemAnchorHouses = [],
   gemAnchorVisual = "admin",
   isGemCollected,
+  showGemPinRings = false,
+  gemAnchorEdit = null,
 }: Props) {
+  const gemHouseIds = useMemo(() => gemMapHouseIdSet(gemAnchorHouses), [gemAnchorHouses]);
+  const gemPinRingCtx = useMemo(
+    (): MapGemPinRingContext => ({
+      showGemRings: showGemPinRings,
+      gemHouseIds,
+      isCollected: isGemCollected ?? (() => true),
+    }),
+    [showGemPinRings, gemHouseIds, isGemCollected],
+  );
   const clusters = useMemo(
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
     [houses, pickMode],
@@ -697,8 +782,18 @@ export function HouseMap({
   const routeOrderById = useMemo(() => {
     const map = new Map<string, number>();
     for (const stop of routeStops ?? []) map.set(stop.id, stop.order);
+    if (routeSessionDisplayOrders) {
+      for (const id of visitedIds) {
+        const order = routeSessionDisplayOrders.get(id);
+        if (order !== undefined) map.set(id, order);
+      }
+      for (const id of skippedIds) {
+        const order = routeSessionDisplayOrders.get(id);
+        if (order !== undefined) map.set(id, order);
+      }
+    }
     return map;
-  }, [routeStops]);
+  }, [routeStops, routeSessionDisplayOrders, visitedIds, skippedIds]);
   const skippedIdSet = useMemo(() => new Set(skippedIds), [skippedIds]);
   const lineRenderer = useMemo(() => L.canvas({ padding: 0.5 }), []);
   const focus = useMemo(() => {
@@ -706,7 +801,9 @@ export function HouseMap({
     const cluster = clusters.find((item) => item.houses.some((house) => house.id === selectedId));
     if (!cluster) {
       const house = houses.find((item) => item.id === selectedId);
-      return house ? { lat: house.lat, lng: house.lng, offsetX: 0, offsetY: 0 } : null;
+      if (!house) return null;
+      const coords = mapCoordsForHouse(house);
+      return { lat: coords.lat, lng: coords.lng, offsetX: 0, offsetY: 0 };
     }
     return { lat: cluster.lat, lng: cluster.lng, offsetX: 0, offsetY: 0 };
   }, [clusters, houses, pickMode, selectedId]);
@@ -757,11 +854,19 @@ export function HouseMap({
       <MapContainer
         key={pickMode ? "pick" : embed ? "embed" : "view"}
         center={
-          embed && focus
-            ? [focus.lat, focus.lng]
-            : [config.map.center.lat, config.map.center.lng]
+          embed && gemAnchorEdit
+            ? [gemAnchorEdit.point.lat, gemAnchorEdit.point.lng]
+            : embed && focus
+              ? [focus.lat, focus.lng]
+              : [config.map.center.lat, config.map.center.lng]
         }
-        zoom={embed && focus ? config.map.maxZoom - 1 : config.map.zoom}
+        zoom={
+          embed && focus
+            ? gemAnchorEdit
+              ? config.map.zoom
+              : config.map.maxZoom - 1
+            : config.map.zoom
+        }
         minZoom={config.map.minZoom}
         maxZoom={config.map.maxZoom}
         scrollWheelZoom
@@ -777,13 +882,13 @@ export function HouseMap({
               "subdomains" in tiles && tiles.subdomains ? tiles.subdomains : "abcd"
             }
             maxZoom={config.map.maxZoom}
-            maxNativeZoom={Math.min(tiles.maxNativeZoom, config.map.maxZoom)}
+            maxNativeZoom={tiles.maxNativeZoom}
             className="hw-basemap"
           />
         ) : null}
         <SizeSync />
         {panTick > 0 && panTo ? <PanTo lat={panTo.lat} lng={panTo.lng} tick={panTick} /> : null}
-        {embed && embedCenterOnSelect && focus ? (
+        {embed && embedCenterOnSelect && focus && !gemAnchorEdit ? (
           <CenterOnHouse lat={focus.lat} lng={focus.lng} zoom={config.map.maxZoom - 1} />
         ) : null}
         {focus && !originPickActive && !embed ? (
@@ -799,14 +904,15 @@ export function HouseMap({
           <MapDismiss enabled={Boolean(selectedId)} onDismiss={onClose} />
         ) : null}
         {pickMode && pick ? <FollowPick lat={pick.lat} lng={pick.lng} /> : null}
-        {pickMode && onPick ? <ClickCatcher onPick={onPick} /> : null}
+        {pickMode && onPick && pickDraggable ? <ClickCatcher onPick={onPick} /> : null}
         {pickMode && pick ? (
           <Marker
             position={[pick.lat, pick.lng]}
             icon={pickIcon}
-            draggable={Boolean(onPick)}
+            draggable={Boolean(onPick && pickDraggable)}
             eventHandlers={{
               dragend: (event) => {
+                if (!pickDraggable) return;
                 const latlng = event.target.getLatLng();
                 onPick?.(latlng.lat, latlng.lng);
               },
@@ -898,7 +1004,8 @@ export function HouseMap({
             />
           </>
         ) : null}
-        {!pickMode && showGemAnchors && gemAnchorHouses.length > 0 ? (
+        {!pickMode && gemAnchorEdit ? <MapGemAnchorEditLayer {...gemAnchorEdit} /> : null}
+        {!pickMode && !gemAnchorEdit && showGemAnchors && gemAnchorHouses.length > 0 ? (
           <MapGemAnchorLayer
             houses={gemAnchorHouses}
             isCollected={isGemCollected ?? (() => false)}
@@ -910,6 +1017,7 @@ export function HouseMap({
           />
         ) : null}
         {!pickMode &&
+          !gemAnchorEdit &&
           clusters.map((cluster) => {
             const clusterFilteredOut =
               dimActive &&
@@ -918,7 +1026,7 @@ export function HouseMap({
                 : !matchedIds?.has(cluster.houses[0]!.id));
             return (
               <ClusterMarker
-                key={cluster.key}
+                key={`${cluster.key}|gem-rings:${showGemPinRings ? 1 : 0}`}
                 cluster={cluster}
                 selectedId={selectedId}
                 clusterOverview={clusterOverview}
@@ -929,6 +1037,7 @@ export function HouseMap({
                 filteredOut={clusterFilteredOut}
                 matchedIds={matchedIds}
                 matchedIdsKey={matchedIdsKey}
+                gemPinRingCtx={gemPinRingCtx}
                 routeOrder={cluster.houses.reduce<number | undefined>(
                   (found, house) => found ?? routeOrderById.get(house.id),
                   undefined,

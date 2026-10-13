@@ -7,9 +7,20 @@ export type AddressRevealContext = {
   isAdmin: boolean;
   ownedHouseIds: ReadonlySet<string>;
   addressReveal: AddressRevealSchedule;
+  /**
+   * Night passes: `everyone` = off (legacy reveal for all), `registered` = this device holds a pass,
+   * `none` = unregistered — home addresses never open.
+   */
+  audience: AddressRevealAudience;
+  /** Businesses / schools — address open to everyone. */
+  publicLocationIds: ReadonlySet<string>;
 };
 
-/** Local time on event night when street addresses and arrival notes become public. */
+export type AddressRevealAudience = "everyone" | "registered" | "none";
+
+export const ADDRESS_FOR_REGISTERED_HINT_HE = "הכתובת תיחשף למכשירים רשומים";
+
+/** Local time on event night when street addresses, arrival and visitor notes become public. */
 export function addressRevealTime(
   schedule = mergeAddressRevealSchedule(),
   reference = new Date(),
@@ -23,8 +34,13 @@ export function isAddressRevealed(now = new Date(), schedule = mergeAddressRevea
   return now.getTime() >= addressRevealTime(schedule, now).getTime();
 }
 
-export function addressHiddenHintHe(now = new Date(), schedule = mergeAddressRevealSchedule()) {
+export function addressHiddenHintHe(
+  now = new Date(),
+  schedule = mergeAddressRevealSchedule(),
+  audience: AddressRevealAudience = "everyone",
+) {
   const { labelHe } = config.eventNight;
+  if (audience === "none") return ADDRESS_FOR_REGISTERED_HINT_HE;
   if (isAddressRevealed(now, schedule)) return "";
   return `הכתובת תיחשף ב-${labelHe}`;
 }
@@ -33,15 +49,17 @@ export function canViewHouseLocationDetails(
   houseId: string,
   ctx: AddressRevealContext,
 ): boolean {
-  if (isAddressRevealed(ctx.now, ctx.addressReveal)) return true;
+  if (ctx.publicLocationIds.has(houseId)) return true;
   if (ctx.isAdmin) return true;
-  return ctx.ownedHouseIds.has(houseId);
+  if (ctx.ownedHouseIds.has(houseId)) return true;
+  if (ctx.audience === "none") return false;
+  return isAddressRevealed(ctx.now, ctx.addressReveal);
 }
 
-export function redactHouseLocationDetails<T extends Pick<PublicHouse, "address" | "arrival">>(
-  house: T,
-): T {
-  return { ...house, address: "", arrival: "" };
+export function redactHouseLocationDetails<
+  T extends Pick<PublicHouse, "address" | "arrival"> & { notes?: string },
+>(house: T): T {
+  return { ...house, address: "", arrival: "", ...(house.notes !== undefined ? { notes: "" } : {}) };
 }
 
 /** Strip location fields for the public catalog before reveal time. */
@@ -67,10 +85,22 @@ export function formatDisplayAddressWithPolicy(
   if (canViewHouseLocationDetails(houseId, ctx)) {
     return formatDisplayAddress(house);
   }
-  const hint = addressHiddenHintHe(ctx.now, ctx.addressReveal);
+  const hint = addressHiddenHintHe(ctx.now, ctx.addressReveal, ctx.audience);
   const area = resolveNeighborhood(house);
   if (area && hint) return `${area} · ${hint}`;
   return hint || formatDisplayAddress(house);
+}
+
+/** Cluster header — a visible member (e.g. the business) names the building even when its homes are hidden. */
+export function clusterDisplayAddressWithPolicy(
+  houses: readonly PublicHouse[],
+  fallback: PublicHouse,
+  ctx: AddressRevealContext,
+): string {
+  const open = houses.find(
+    (house) => house.address.trim() && canViewHouseLocationDetails(house.id, ctx),
+  );
+  return formatDisplayAddressWithPolicy(open ?? fallback, (open ?? fallback).id, ctx);
 }
 
 export function visibleArrivalWithPolicy(
@@ -86,18 +116,22 @@ export function mapsNavigationAllowed(houseId: string, ctx: AddressRevealContext
   return canViewHouseLocationDetails(houseId, ctx);
 }
 
-/** Strip address/arrival on rows the viewer may not see (e.g. admin user preview). */
+/** Strip address/arrival/notes on rows the viewer may not see (e.g. admin user preview). */
 export function housesWithLocationPolicy(
   houses: readonly PublicHouse[],
   ctx: AddressRevealContext,
 ): PublicHouse[] {
   return houses.map((house) =>
-    canViewHouseLocationDetails(house.id, ctx) ? house : redactHouseLocationDetails(house),
+    house.locationPublic || canViewHouseLocationDetails(house.id, ctx)
+      ? house
+      : redactHouseLocationDetails(house),
   );
 }
 
 export function houseWithLocationPolicy(house: PublicHouse, ctx: AddressRevealContext): PublicHouse {
-  return canViewHouseLocationDetails(house.id, ctx) ? house : redactHouseLocationDetails(house);
+  return house.locationPublic || canViewHouseLocationDetails(house.id, ctx)
+    ? house
+    : redactHouseLocationDetails(house);
 }
 
 export function makeAddressRevealContext(input: {
@@ -105,12 +139,16 @@ export function makeAddressRevealContext(input: {
   isAdmin?: boolean;
   ownedHouseIds?: Iterable<string>;
   addressReveal?: AddressRevealSchedule;
+  audience?: AddressRevealAudience;
+  publicLocationIds?: Iterable<string>;
 }): AddressRevealContext {
   return {
     now: input.now,
     isAdmin: Boolean(input.isAdmin),
     ownedHouseIds: new Set(input.ownedHouseIds ?? []),
     addressReveal: mergeAddressRevealSchedule(input.addressReveal),
+    audience: input.audience ?? "everyone",
+    publicLocationIds: new Set(input.publicLocationIds ?? []),
   };
 }
 
@@ -119,6 +157,7 @@ export function visitorAddressRevealContext(
   now: Date,
   ownedHouseIds?: Iterable<string>,
   addressReveal?: AddressRevealSchedule,
+  audience?: AddressRevealAudience,
 ): AddressRevealContext {
-  return makeAddressRevealContext({ now, isAdmin: false, ownedHouseIds, addressReveal });
+  return makeAddressRevealContext({ now, isAdmin: false, ownedHouseIds, addressReveal, audience });
 }

@@ -10,17 +10,25 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { flushSync } from "react-dom";
 import { AppHeader } from "@/components/app-header";
+import { useHomeUrlParams } from "@/hooks/use-home-url-params";
 import { CatalogMetaChip } from "@/components/catalog-meta-chip";
 import { FiltersSheet } from "@/components/filter-menu";
 import { HouseFiltersContent } from "@/components/house-filters-content";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
+import { invalidateMapPinIconCacheForGemRings } from "@/lib/map-pin-icon-cache";
 import { HouseList } from "@/components/house-list";
 import type { HouseCardActionContext } from "@/components/house-card-actions";
+import { useGemAnchorPlacer } from "@/components/gem-anchor-place-dialog";
 import { MapStats, StatsSummary } from "@/components/map-stats";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { NeighborhoodStatusBanners } from "@/components/neighborhood-status-banners";
+import { NightPassBanner } from "@/components/night-pass-banner";
+import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
+import { useNightPass } from "@/hooks/use-night-pass";
+import { adminSeesAllHouses } from "@/lib/night-pass-client";
 import { RouteChangeBanner, routeChangeBannerMessage } from "@/components/route-change-banner";
 import { RouteChangesSheet } from "@/components/route-changes-sheet";
 import { TempSkipRestoreAlerts } from "@/components/temp-skip-restore-alert";
@@ -32,31 +40,50 @@ import { EventCountdownGate } from "@/components/event-countdown-gate";
 import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
 import { RouteShareImportDialog } from "@/components/route-share-import-dialog";
 import { OriginPickerSheet } from "@/components/origin-picker";
-import { RouteList, type RouteListItem } from "@/components/route-list";
+import { RouteList } from "@/components/route-list";
+import { buildRouteListItems } from "@/lib/route-list-items";
+import { routeDisplayOrder } from "@/lib/route-display-order";
 import { SkipHouseDialog } from "@/components/skip-house-dialog";
 import { VisitSkipConflictDialog } from "@/components/visit-skip-conflict-dialog";
 import { LikeCheer } from "@/components/like-cheer";
 import { RouteCompleteCheer } from "@/components/route-complete-cheer";
 import { VisitCheer } from "@/components/visit-cheer";
 import { GemCheer } from "@/components/gem-cheer";
+import {
+  GemClusterSessionSummary,
+  type GemClusterSessionCatch,
+} from "@/components/gem-cluster-session-summary";
 import { GemResetConfirmDialog } from "@/components/gem-reset-confirm-dialog";
-import { GemMapCompleteBanner } from "@/components/gem-map-complete-banner";
 import {
   GemHuntExperienceLazy,
   preloadGemHuntChunks,
 } from "@/components/gem-hunt/gem-hunt-lazy";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
-import { isAndroidLike, supportsWebXrHitTestAr, webXrHitTestArCached } from "@/lib/gem-hunt-ar-platform";
+import {
+  isAndroidLike,
+  isIosLike,
+  supportsWebXrHitTestAr,
+  webXrHitTestArCached,
+} from "@/lib/gem-hunt-ar-platform";
 import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import { endGemHuntWebXrSession, requestGemHuntWebXrSession } from "@/lib/gem-hunt-webxr-session";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
-import { loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
+import { isGemTypeInCollection, loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
 import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
-import { gemMapLegendVisible } from "@/lib/gem-hunt-enabled";
+import {
+  firstClusterGemHouseToHunt,
+  gemClusterQueueHeadline,
+  nextClusterGemHouse,
+} from "@/lib/gem-campus-queue";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
-import { gemCarrierHousesForMap, syncGemMonsterAssignment } from "@/lib/gem-monsters";
+import {
+  gemCapableMapHouses,
+  houseGemHuntUiEligible,
+  mainMapGemEligibleHouses,
+  syncGemMonsterAssignment,
+} from "@/lib/gem-monsters";
 import {
   isGemHuntOrientationGranted,
   prepareGemHuntSensors,
@@ -66,7 +93,7 @@ import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { housesWithLocationPolicy } from "@/lib/address-reveal";
-import { adminShowsPrivateHouseFields } from "@/lib/gem-preview-as-user";
+import { adminDeviceOwnerPowers, adminShowsPrivateHouseFields } from "@/lib/admin-preview-as-user";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAdminHouses } from "@/hooks/use-admin-houses";
@@ -91,7 +118,6 @@ import { setMapListSuspended } from "@/lib/map-list-suspend";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { useAppNow } from "@/hooks/use-app-clock";
 import {
-  loadCatalogCacheSync,
   notifyCatalogChanged,
   removeOwnedHouse,
   forgetPublishedHouse,
@@ -105,17 +131,21 @@ import {
 import { isAuthoritativeHouseList, resolveCatalogHouses } from "@/lib/catalog-houses";
 import {
   catalogHasRealHouses,
-  HOUSE_SET_LABELS,
   resolveViewerHouseSet,
   countSkippedInSet,
   countVisitedInSet,
   countLikedInSet,
   houseMatchesSet,
 } from "@/lib/house-set";
+import {
+  houseVisibleOnMainMap,
+  formatMapDisplayLayersStatus,
+  mapDisplayLayersForSession,
+} from "@/lib/map-display-layers";
+import { stripPracticeHouses } from "@/lib/practice-house";
 import { isPreviewDeploymentClient } from "@/lib/deployment-env";
-import { filterHouses, houseFilterMismatchReasons, routeHouseIds } from "@/lib/filter-houses";
-import { distanceMeters, formatDistance } from "@/lib/geo";
-import { estimateWalkingMeters } from "@/lib/walk-distance-estimate";
+import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
+import { formatDistance } from "@/lib/geo";
 import { buildWalkingRouteOrdered } from "@/lib/route";
 import { isRouteFullyVisited } from "@/lib/route-completion";
 import {
@@ -152,16 +182,24 @@ const NO_GEM_COLLECTED_IDS: string[] = [];
 
 export function NeighborhoodApp({
   initialCatalog,
-  focusId = null,
-  routeShareParam = null,
-  gemHuntFromUrl = false,
+  focusId: focusIdFromServer = null,
+  routeShareParam: routeShareParamFromServer = null,
+  gemHuntFromUrl: gemHuntFromServer = false,
+  visitFromUrl: visitFromServer = false,
 }: {
   initialCatalog?: Catalog | null;
   focusId?: string | null;
   routeShareParam?: string | null;
   gemHuntFromUrl?: boolean;
+  visitFromUrl?: boolean;
 }) {
-  const { catalog, loading, offline, unreachable, error, source, refresh } =
+  const { focusId, routeShareParam, gemHuntFromUrl, visitFromUrl } = useHomeUrlParams({
+    focusId: focusIdFromServer,
+    routeShareParam: routeShareParamFromServer,
+    gemHuntFromUrl: gemHuntFromServer,
+    visitFromUrl: visitFromServer,
+  });
+  const { catalog, loading, ready: catalogReady, offline, unreachable, error, source, refresh } =
     useCatalog(initialCatalog);
   const catalogUpdatedAt = catalog?.updatedAt;
   const { admin, ready: adminSessionReady } = useAdminSession();
@@ -174,10 +212,10 @@ export function NeighborhoodApp({
   );
   const {
     gemHuntVisible: gemFeatureOn,
-    gemFabVisible: gemUi,
+    gemUiVisible: gemUi,
     gemAdminToolsVisible: gemAdminTools,
     previewAsUser: gemPreviewAsUser,
-  } = useGemHuntAdminUi(admin, now);
+  } = useGemHuntAdminUi(admin);
   const gemHuntActive = gemFeatureOn && gemUi;
   useEffect(() => {
     if (!gemHuntActive || !isAndroidLike()) return;
@@ -188,6 +226,8 @@ export function NeighborhoodApp({
   const gps = geo.location;
   const gems = useGemProgress();
   const [mapGemHouse, setMapGemHouse] = useState<PublicHouse | null>(null);
+  /** Sorted cluster houses when gem camera runs as one multi-unit session. */
+  const [mapGemClusterMembers, setMapGemClusterMembers] = useState<PublicHouse[] | null>(null);
   const [mapGemGps, setMapGemGps] = useState<UserLocation | null>(null);
   const [mapGemWebXrSession, setMapGemWebXrSession] = useState<XRSession | null>(null);
   const gemBadgePendingRef = useRef(false);
@@ -197,21 +237,19 @@ export function NeighborhoodApp({
   );
   /** Toolbar toggle — diamonds hidden on map until user taps the top-bar gem control. */
   const [mapDiamondsVisible, setMapDiamondsVisible] = useState(false);
-  const [mapAdminCharactersVisible, setMapAdminCharactersVisible] = useState(false);
-  const showGemMapLegend = useMemo(
-    () =>
-      gemMapLegendVisible(admin, {
-        now,
-        previewAsUser: gemPreviewAsUser,
-        mapDiamondsVisible,
-        mapAdminCharactersVisible,
-      }),
-    [admin, now, gemPreviewAsUser, mapDiamondsVisible, mapAdminCharactersVisible],
-  );
+  useEffect(() => {
+    invalidateMapPinIconCacheForGemRings();
+  }, [mapDiamondsVisible]);
+  const showGemMapLegend = gemFeatureOn;
   const [gemResetHouse, setGemResetHouse] = useState<PublicHouse | null>(null);
+  const [gemResetCluster, setGemResetCluster] = useState<PublicHouse[] | null>(null);
   const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);
   const [mapGemCheerMonster, setMapGemCheerMonster] = useState<GemMonsterId | null>(null);
   const mapGemCheerTimerRef = useRef<number | null>(null);
+  const mapGemClusterSessionRef = useRef<GemClusterSessionCatch[]>([]);
+  const [clusterGemSessionSummary, setClusterGemSessionSummary] = useState<
+    GemClusterSessionCatch[] | null
+  >(null);
   const gemHuntOpenedFromViewRef = useRef<HomeView>("map");
   const listScrollRef = useRef<HTMLDivElement | null>(null);
   const savedListScrollTopRef = useRef(0);
@@ -226,11 +264,22 @@ export function NeighborhoodApp({
   }, [gemHuntActive, mapGemHouse, geo.refresh, setWatchEnabled]);
 
   const { choice: originChoice, resolved: origin, setChoice: setOriginChoice } = useDistanceOrigin(gps);
-  const { houseSet } = useHouseSet();
+  const { layers, houseSet: legacyHouseSetFromLayers } = useHouseSet();
+  const houseSet = legacyHouseSetFromLayers;
   const adminForHouseSet = adminSessionReady && admin;
+  const previewDeployment = isPreviewDeploymentClient();
   const activeHouseSet = resolveViewerHouseSet(catalog, adminForHouseSet, houseSet, {
-    previewDeployment: isPreviewDeploymentClient(),
+    previewDeployment,
   });
+  const mapLayers = useMemo(
+    () =>
+      mapDisplayLayersForSession(layers, {
+        previewDeployment,
+        activeHouseSet,
+        catalog,
+      }),
+    [layers, previewDeployment, activeHouseSet, catalog],
+  );
   const view = useSyncExternalStore(
     (onStoreChange) => {
       window.addEventListener("hw-home-view", onStoreChange);
@@ -249,14 +298,22 @@ export function NeighborhoodApp({
   const [askedLocation, setAskedLocation] = useState(false);
   const [skipDialogHouse, setSkipDialogHouse] = useState<PublicHouse | null>(null);
   const [visitSkipConflict, setVisitSkipConflict] = useState<{
-    kind: "visit" | "skip";
+    kind: "visit" | "skip" | "visit-all" | "skip-all";
     house: PublicHouse;
+    cluster?: boolean;
+    clusterHouses?: PublicHouse[];
   } | null>(null);
   const { alerts: tempRestoreAlerts, dismiss: dismissTempRestoreAlert } = useTempSkipRestoreAlerts();
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
   const skips = useSkippedHouses();
   const owned = useOwnedHouses();
+  const nightPass = useNightPass();
+  const { open: openGemPlacer, dialog: gemPlacerDialog } = useGemAnchorPlacer({
+    userLocation: gps,
+    refreshLocation: geo.refresh,
+  });
+  const { openOwnerPasses } = useNightPassDialog();
   useEffect(() => {
     applyClockSearchParams(window.location.search);
   }, []);
@@ -305,7 +362,7 @@ export function NeighborhoodApp({
   const houses = useMergedHouses({
     catalogHouses,
     owned,
-    admin: adminForHouseSet,
+    admin: adminSeesAllHouses(adminForHouseSet, nightPass),
     adminHouses,
     includeCatalogWhenAdmin: true,
     restoreRedactedLocations,
@@ -341,16 +398,17 @@ export function NeighborhoodApp({
       return next;
     }
     if (lastHousesRef.current.length > 0) return lastHousesRef.current;
-    const cached = loadCatalogCacheSync()?.houses;
-    if (cached?.length) {
-      const next = applyVisitorLocations(applyAdminLocations(cached));
-      lastHousesRef.current = next;
-      return next;
-    }
     return housesForMap;
   }, [housesForMap, catalog, gemPreviewAsUser, addressReveal, adminHouses, restoreRedactedLocations]);
 
-  const { houses: mapListHouses, now: mapListNow } = useMapListUiLock(displayHouses, now);
+  const housesForMapAndList = useMemo(
+    () => stripPracticeHouses(displayHouses),
+    [displayHouses],
+  );
+
+  const { houses: mapListHouses, now: mapListNow } = useMapListUiLock(housesForMapAndList, now);
+
+  const housesForFilters = useMemo(() => stripPracticeHouses(mapListHouses), [mapListHouses]);
 
   const housesForSkipCount = displayHouses;
 
@@ -367,22 +425,29 @@ export function NeighborhoodApp({
   );
 
   const mapHouses = useMemo(
-    () => mapListHouses.filter((house) => houseMatchesSet(house, activeHouseSet)),
-    [mapListHouses, activeHouseSet],
+    () =>
+      mapListHouses.filter((house) => houseVisibleOnMainMap(house, mapLayers)),
+    [mapListHouses, mapLayers],
   );
-  const mapGemHouses = useMemo(() => gemCarrierHousesForMap(mapHouses), [mapHouses]);
+  const gemCapableHouses = useMemo(
+    () => gemCapableMapHouses(mapHouses, activeHouseSet),
+    [mapHouses, activeHouseSet],
+  );
+  const gemMapRingHouses = useMemo(
+    () => mainMapGemEligibleHouses(mapHouses, activeHouseSet, addressReveal),
+    [mapHouses, activeHouseSet, addressReveal],
+  );
   useEffect(() => {
-    if (gemHuntActive) syncGemMonsterAssignment(mapHouses);
-  }, [gemHuntActive, mapHouses]);
+    if (gemHuntActive) syncGemMonsterAssignment(gemCapableHouses);
+  }, [gemHuntActive, gemCapableHouses]);
   const visible = useMemo(
-    () => filterHouses(mapListHouses, filters, filterContext),
-    [mapListHouses, filters, filterContext],
+    () => filterHouses(housesForFilters, filters, filterContext),
+    [housesForFilters, filters, filterContext],
   );
+  /** Avoid SSR/client mismatch: device cache loads after hydration in CatalogProvider. */
+  const visibleForList = catalogReady ? visible : [];
   const showBootstrapSpinner =
-    displayHouses.length === 0 &&
-    !catalogHasRealHouses(catalog) &&
-    !catalogHasRealHouses(loadCatalogCacheSync()) &&
-    loading;
+    displayHouses.length === 0 && !catalogHasRealHouses(catalog) && loading && !catalogReady;
   const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
   const filterDimActive = matchedIds.size < mapHouses.length;
   const matchedIdsKey = useMemo(
@@ -394,24 +459,27 @@ export function NeighborhoodApp({
   const selection = useHouseSelection({ focusId, visible, houses: mapListHouses, clusterHouses: mapHouses });
   const { resetForNavigation } = selection;
 
-  const gemAllCollected = useMemo(() => {
-    if (!gemHuntActive || mapGemHouses.length === 0) return false;
-    return mapGemHouses.every((h) => gems.collected(h.id));
-  }, [gemHuntActive, mapGemHouses, gems.collectedIds]);
-
-  const openGemHuntForHouse = useCallback(
-    async (house: PublicHouse) => {
-      if (gems.collected(house.id)) return;
+  const bootMapGemHunt = useCallback(
+    async (house: PublicHouse, clusterMembers: PublicHouse[] | null) => {
       const gen = ++mapGemOpenGenRef.current;
       preloadGemHuntChunks();
       getGemHuntPortalRoot();
       const openedFrom = readHomeView();
       gemHuntOpenedFromViewRef.current = openedFrom;
-      if (openedFrom === "map") {
+      if (openedFrom === "map" && !clusterMembers) {
         setView("map");
         selection.selectOnMap(house);
+      } else if (openedFrom === "map" && clusterMembers) {
+        setView("map");
       }
-      setMapDiamondsVisible(true);
+      setWatchEnabled(true);
+      setMapGemWebXrSession(null);
+      setMapGemGps(gps);
+      setMapGemClusterMembers(clusterMembers);
+      flushSync(() => {
+        setMapGemHouse(house);
+      });
+
       let xrSession: XRSession | null = null;
       if (isAndroidLike() && webXrHitTestArCached()) {
         xrSession = await requestGemHuntWebXrSession();
@@ -421,13 +489,8 @@ export function NeighborhoodApp({
         releaseGemHuntCamera();
         return;
       }
-      setWatchEnabled(true);
-      const freshGps = (await geo.refresh()) ?? gps;
-      if (gen !== mapGemOpenGenRef.current) {
-        void endGemHuntWebXrSession(xrSession);
-        releaseGemHuntCamera();
-        return;
-      }
+      setMapGemWebXrSession(xrSession);
+
       await prepareGemHuntSensors({
         requestCamera: !xrSession,
         requestOrientation: !isGemHuntOrientationGranted(),
@@ -437,11 +500,42 @@ export function NeighborhoodApp({
         releaseGemHuntCamera();
         return;
       }
-      setMapGemWebXrSession(xrSession);
-      setMapGemGps(freshGps);
-      setMapGemHouse(house);
+
+      void (async () => {
+        const freshGps = (await geo.refresh()) ?? gps;
+        if (gen === mapGemOpenGenRef.current) {
+          setMapGemGps(freshGps);
+        }
+      })();
     },
-    [gems, geo, gps, selection, setWatchEnabled],
+    [geo, gps, selection, setWatchEnabled],
+  );
+
+  const gemHouseHuntAllowed = useCallback(
+    (house: PublicHouse) => houseGemHuntUiEligible(house, activeHouseSet, addressReveal),
+    [activeHouseSet, addressReveal],
+  );
+
+  const openGemHuntForHouse = useCallback(
+    async (house: PublicHouse) => {
+      if (gems.collected(house.id)) return;
+      if (!gemHouseHuntAllowed(house)) return;
+      mapGemClusterSessionRef.current = [];
+      await bootMapGemHunt(house, null);
+    },
+    [bootMapGemHunt, gemHouseHuntAllowed, gems],
+  );
+
+  const openGemHuntForCluster = useCallback(
+    async (clusterHouses: PublicHouse[]) => {
+      const houses = clusterHouses.filter(gemHouseHuntAllowed);
+      if (houses.length < 2) return;
+      const target = firstClusterGemHouseToHunt(houses, gems.collected);
+      if (!target) return;
+      mapGemClusterSessionRef.current = [];
+      await bootMapGemHunt(target, houses);
+    },
+    [bootMapGemHunt, gemHouseHuntAllowed, gems.collected],
   );
 
   const restoreAfterGemHunt = useCallback(() => {
@@ -449,6 +543,22 @@ export function NeighborhoodApp({
     setView("list");
     selection.closeSelection();
   }, [selection]);
+
+  const closeMapGemHunt = useCallback(() => {
+    mapGemOpenGenRef.current += 1;
+    releaseGemHuntCamera();
+    void endGemHuntWebXrSession(mapGemWebXrSession);
+    setMapGemWebXrSession(null);
+    setMapGemHouse(null);
+    setMapGemClusterMembers(null);
+    setMapGemGps(null);
+    restoreAfterGemHunt();
+  }, [mapGemWebXrSession, restoreAfterGemHunt]);
+
+  const mapGemClusterQueueUi = useMemo(() => {
+    if (!mapGemHouse || !mapGemClusterMembers) return undefined;
+    return gemClusterQueueHeadline(mapGemHouse, mapGemClusterMembers);
+  }, [mapGemHouse, mapGemClusterMembers]);
 
   useEffect(() => {
     if (!gemBadgePendingRef.current) {
@@ -480,12 +590,14 @@ export function NeighborhoodApp({
   const handleToggleGemMenu = useCallback(
     (house: PublicHouse) => {
       if (gems.collected(house.id)) {
+        setGemResetCluster(null);
         setGemResetHouse(house);
         return;
       }
+      if (!gemHouseHuntAllowed(house)) return;
       void openGemHuntForHouse(house);
     },
-    [gems, openGemHuntForHouse],
+    [gemHouseHuntAllowed, gems, openGemHuntForHouse],
   );
 
   const gemHuntFromUrlHandledRef = useRef(false);
@@ -497,7 +609,7 @@ export function NeighborhoodApp({
     setView("map");
     selection.selectOnMap(house);
     const timer = window.setTimeout(() => {
-      handleToggleGemMenu(house);
+      if (gemHouseHuntAllowed(house)) handleToggleGemMenu(house);
       if (typeof window === "undefined") return;
       const url = new URL(window.location.href);
       url.searchParams.delete("gemHunt");
@@ -505,15 +617,36 @@ export function NeighborhoodApp({
       window.history.replaceState(window.history.state, "", next);
     }, 350);
     return () => window.clearTimeout(timer);
-  }, [gemHuntFromUrl, focusId, houses, handleToggleGemMenu, selection]);
+  }, [gemHuntFromUrl, focusId, gemHouseHuntAllowed, houses, handleToggleGemMenu, selection]);
+
+  const handleClusterResetAllGems = useCallback((clusterHouses: PublicHouse[]) => {
+    const houses = clusterHouses.filter(gemHouseHuntAllowed);
+    if (houses.length < 2) return;
+    if (!houses.every((h) => gems.collected(h.id))) return;
+    setGemResetHouse(null);
+    setGemResetCluster(houses);
+  }, [gemHouseHuntAllowed, gems]);
+
+  const cancelGemReset = useCallback(() => {
+    setGemResetHouse(null);
+    setGemResetCluster(null);
+  }, []);
 
   const confirmGemReset = useCallback(() => {
+    const cluster = gemResetCluster;
+    if (cluster && cluster.length >= 2) {
+      for (const h of cluster) gems.resetHouse(h.id);
+      gemBadgePendingRef.current = false;
+      setMapGemBadgeCount(loadGemCollectedIds().length);
+      setGemResetCluster(null);
+      return;
+    }
     const house = gemResetHouse;
     if (!house) return;
     gems.resetHouse(house.id);
     gemBadgePendingRef.current = false;
     setGemResetHouse(null);
-  }, [gemResetHouse, gems]);
+  }, [gemResetCluster, gemResetHouse, gems]);
   const editFlow = useHouseEditFlow();
 
   const {
@@ -526,6 +659,7 @@ export function NeighborhoodApp({
     exitRouteMode,
     pendingRouteGps,
     clearPendingRouteGps,
+    routeSessionDisplayOrders,
   } = useNeighborhoodRoute({
     houses,
     filters,
@@ -709,72 +843,56 @@ export function NeighborhoodApp({
     },
     [houses, performToggleVisited, skips, visits],
   );
+
+  const visitFromUrlHandledRef = useRef<string | null>(null);
+  const visitFromUrlLatestRef = useRef({ onToggleVisited, visited: visits.visited });
+  visitFromUrlLatestRef.current = { onToggleVisited, visited: visits.visited };
+  useEffect(() => {
+    if (!visitFromUrl || !focusId) {
+      if (!visitFromUrl) visitFromUrlHandledRef.current = null;
+      return;
+    }
+    if (visitFromUrlHandledRef.current === focusId) return;
+    const house = mapListHouses.find((item) => item.id === focusId) ?? houses.find((item) => item.id === focusId);
+    if (!house) return;
+    visitFromUrlHandledRef.current = focusId;
+    setView("map");
+    selection.selectOnMap(house);
+    // Not cleared on re-render: selecting the house changes deps, and the visit must still land.
+    window.setTimeout(() => {
+      const latest = visitFromUrlLatestRef.current;
+      if (!latest.visited(focusId)) latest.onToggleVisited(focusId);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("visit");
+      window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    }, 200);
+  }, [visitFromUrl, focusId, houses, mapListHouses, selection]);
+
   const routeListItems = useMemo(() => {
     if (!routeMode || !activeRoute) return [];
-    const routeIds = routeHouseIds(activeRoute);
-    const skippedSet = new Set(skips.skippedIds);
-    const activeItems = activeRoute.stops.flatMap((stop) =>
-      stop.houses.map((house, houseIndex) => ({
-        house,
-        order: stop.order,
-        hop:
-          houseIndex > 0
-            ? "אותו בניין"
-            : distanceLabel(house.id, stop.fromPreviousMeters),
-        skipped: false,
-      })),
-    );
-    const visibleById = new Map(visible.map((house) => [house.id, house]));
-    const originPoint = { lat: origin.lat, lng: origin.lng };
-    const lastStop = activeRoute.stops[activeRoute.stops.length - 1];
-    let tailCursor = lastStop
-      ? { lat: lastStop.house.lat, lng: lastStop.house.lng }
-      : originPoint;
-
-    function appendTail(
-      ids: string[],
-      flags: { skipped: boolean; visitedTail?: boolean },
-    ) {
-      const items: RouteListItem[] = [];
-      for (const id of ids) {
-        const house = visibleById.get(id);
-        if (!house) continue;
-        const point = { lat: house.lat, lng: house.lng };
-        const legM = estimateWalkingMeters(tailCursor, point);
-        items.push({
-          house,
-          order: 0,
-          hop: distanceLabel(house.id, legM),
-          skipped: flags.skipped,
-          visitedTail: flags.visitedTail,
-          distanceM: addressReveal.distanceAllowed(house.id)
-            ? distanceMeters(originPoint, point)
-            : undefined,
-        });
-        tailCursor = point;
-      }
-      return items;
-    }
-
-    const visitedTail = appendTail(
-      visits.visitedIds.filter((id) => !routeIds.has(id) && !skippedSet.has(id)),
-      { skipped: false, visitedTail: true },
-    );
-    const skippedTail = appendTail(
-      skips.skippedIds.filter((id) => !routeIds.has(id)),
-      { skipped: true },
-    );
-    return [...activeItems, ...visitedTail, ...skippedTail];
+    return buildRouteListItems({
+      route: activeRoute,
+      catalogHouses: mapListHouses,
+      houseSet: activeHouseSet,
+      visitedIds: visits.visitedIds,
+      skippedIds: skips.skippedIds,
+      origin: { lat: origin.lat, lng: origin.lng },
+      distanceLabel,
+      distanceAllowed: addressReveal.distanceAllowed,
+      sessionDisplayOrders: routeSessionDisplayOrders,
+    });
   }, [
     routeMode,
     activeRoute,
     skips.skippedIds,
     visits.visitedIds,
-    visible,
+    mapListHouses,
+    activeHouseSet,
     origin.lat,
     origin.lng,
     addressReveal,
     distanceLabel,
+    routeSessionDisplayOrders,
   ]);
 
   function applyRouteAfterSkipChange(
@@ -887,11 +1005,89 @@ export function NeighborhoodApp({
     proceedWithSkipHouse(house);
   }
 
+  function applyClusterSkipAll(houses: PublicHouse[]) {
+    for (const item of houses) {
+      if (skips.skipped(item.id)) continue;
+      applySkipHouse(item, "other", false);
+    }
+  }
+
+  function applyClusterVisitAll(houses: PublicHouse[]) {
+    for (const item of houses) {
+      if (visits.visited(item.id)) continue;
+      performToggleVisited(item.id);
+    }
+  }
+
+  function applyClusterLikeAll(houses: PublicHouse[]) {
+    for (const item of houses) {
+      if (likes.liked(item.id)) continue;
+      onToggleLike(item.id);
+    }
+  }
+
+  function applyClusterUnlikeAll(houses: PublicHouse[]) {
+    for (const item of houses) {
+      if (!likes.liked(item.id)) continue;
+      onToggleLike(item.id);
+    }
+  }
+
+  function applyClusterRestoreAll(houses: PublicHouse[]) {
+    for (const item of houses) {
+      if (skips.skipped(item.id)) handleRestoreHouse(item.id);
+    }
+  }
+
+  function applyClusterUnvisitAll(houses: PublicHouse[]) {
+    for (const item of houses) {
+      if (visits.visited(item.id)) performToggleVisited(item.id);
+    }
+  }
+
+  function handleClusterSkipAll(houses: PublicHouse[]) {
+    const pending = houses.filter((item) => !skips.skipped(item.id));
+    if (pending.length === 0) return;
+    if (pending.some((item) => visits.visited(item.id)) && shouldAskVisitSkipConflict()) {
+      setVisitSkipConflict({
+        kind: "skip-all",
+        house: pending[0]!,
+        cluster: true,
+        clusterHouses: houses,
+      });
+      return;
+    }
+    applyClusterSkipAll(pending);
+  }
+
+  function handleClusterVisitAll(houses: PublicHouse[]) {
+    const pending = houses.filter((item) => !visits.visited(item.id));
+    if (pending.length === 0) return;
+    if (pending.some((item) => skips.skipped(item.id)) && shouldAskVisitSkipConflict()) {
+      setVisitSkipConflict({
+        kind: "visit-all",
+        house: pending[0]!,
+        cluster: true,
+        clusterHouses: houses,
+      });
+      return;
+    }
+    applyClusterVisitAll(pending);
+  }
+
   function confirmVisitSkipConflict(dismissFuture: boolean) {
     const pending = visitSkipConflict;
     setVisitSkipConflict(null);
     if (!pending) return;
     if (dismissFuture) dismissVisitSkipConflictPrompt();
+    if (pending.kind === "visit-all") {
+      applyClusterVisitAll(pending.clusterHouses ?? [pending.house]);
+      return;
+    }
+    if (pending.kind === "skip-all") {
+      applyClusterSkipAll(pending.clusterHouses ?? [pending.house]);
+      return;
+    }
     if (pending.kind === "visit") {
       performToggleVisited(pending.house.id);
       return;
@@ -997,10 +1193,14 @@ export function NeighborhoodApp({
 
   function requestHouseEdit(house: PublicHouse, allowDelete = false) {
     selection.setEditing(false);
+    const deviceOwner = adminDeviceOwnerPowers(admin, gemPreviewAsUser);
+    const isOwned = owned.some((item) => item.id === house.id);
     editFlow.openEdit(house, {
-      editCode: admin ? editCodeById.get(house.id) : owned.find((item) => item.id === house.id)?.editCode,
-      admin,
-      allowDelete: allowDelete || Boolean(admin || owned.some((item) => item.id === house.id)),
+      editCode: deviceOwner
+        ? editCodeById.get(house.id)
+        : owned.find((item) => item.id === house.id)?.editCode,
+      admin: deviceOwner,
+      allowDelete: allowDelete || Boolean(deviceOwner || isOwned),
     });
   }
 
@@ -1009,7 +1209,7 @@ export function NeighborhoodApp({
       houses.find((item) => item.id === id) ??
       visible.find((item) => item.id === id) ??
       mapListHouses.find((item) => item.id === id);
-    if (house) selection.selectOnMap(house);
+    if (house) selection.selectOnMap(house, { clusterOverview: false });
     else selection.showOnMap(id);
     setView("map");
   }
@@ -1088,6 +1288,21 @@ export function NeighborhoodApp({
     });
   }, [listContentObscured, view, routeMode, visible.length, gems.collectedIds.length]);
 
+  useEffect(() => {
+    const focusId = selection.listFocusId;
+    if (view !== "list" || !focusId || listContentObscured) return;
+    const scrollToHouse = () => {
+      const root = listScrollRef.current;
+      const row = root?.querySelector(`[data-list-house-id="${CSS.escape(focusId)}"]`);
+      if (row instanceof HTMLElement) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    };
+    scrollToHouse();
+    const t = window.setTimeout(scrollToHouse, 150);
+    return () => window.clearTimeout(t);
+  }, [view, selection.listFocusId, listContentObscured, visible.length]);
+
   const selectedFilterReasons = selected
     ? (() => {
         const reasons = houseFilterMismatchReasons(selected, filters, filterContext);
@@ -1102,10 +1317,11 @@ export function NeighborhoodApp({
       liked: likes.liked,
       visited: visits.visited,
       skipped: skips.skipped,
-      gemCollected: gemUi ? gems.collected : undefined,
+      gemCollected: admin ? gems.collected : undefined,
       onToggleLike,
       onToggleVisited,
       onToggleGem: gemUi ? handleToggleGemMenu : undefined,
+      gemQuickActionEligible: gemUi ? gemHouseHuntAllowed : undefined,
       onSkip: handleSkipHouse,
       onRestore: handleRestoreHouse,
       onShowOnMap:
@@ -1120,24 +1336,55 @@ export function NeighborhoodApp({
               setView("list");
             }
           : undefined,
-      canEdit: (id) => Boolean(admin || owned.some((item) => item.id === id)),
+      onClusterVisitAll: handleClusterVisitAll,
+      onClusterUnvisitAll: applyClusterUnvisitAll,
+      onClusterSkipAll: handleClusterSkipAll,
+      onClusterRestoreAll: applyClusterRestoreAll,
+      onClusterLikeAll: applyClusterLikeAll,
+      onClusterUnlikeAll: applyClusterUnlikeAll,
+      onClusterFindAllGems: gemAdminTools ? openGemHuntForCluster : undefined,
+      onClusterResetAllGems: gemAdminTools ? handleClusterResetAllGems : undefined,
+      canEdit: (id) =>
+        Boolean(adminDeviceOwnerPowers(admin, gemPreviewAsUser) || owned.some((item) => item.id === id)),
       editCodeFor: (id) =>
-        admin ? editCodeById.get(id) : owned.find((item) => item.id === id)?.editCode,
+        adminDeviceOwnerPowers(admin, gemPreviewAsUser)
+          ? editCodeById.get(id)
+          : owned.find((item) => item.id === id)?.editCode,
       onEdit: (house) => requestHouseEdit(house, true),
+      nightPassesEnabled: nightPass.enabled,
+      onNightPasses: (house) => openOwnerPasses(house.id),
+      onPlaceGem: gemUi
+        ? (house) =>
+            openGemPlacer(
+              house,
+              adminDeviceOwnerPowers(admin, gemPreviewAsUser)
+                ? editCodeById.get(house.id)
+                : owned.find((item) => item.id === house.id)?.editCode,
+            )
+        : undefined,
       skipMetaFor: (id) => skips.meta(id),
       editingId: editFlow.flow?.house.id ?? null,
     };
   }, [
+    openGemPlacer,
     admin,
+    gemPreviewAsUser,
+    nightPass.enabled,
+    openOwnerPasses,
+    gemAdminTools,
     source,
     likes.liked,
     visits.visited,
     skips,
     gemUi,
+    gemFeatureOn,
     gems.collected,
     onToggleLike,
     onToggleVisited,
+    gemHouseHuntAllowed,
     handleToggleGemMenu,
+    openGemHuntForCluster,
+    handleClusterResetAllGems,
     handleSkipHouse,
     handleRestoreHouse,
     view,
@@ -1152,11 +1399,26 @@ export function NeighborhoodApp({
     ? {
         house: selected,
         actionContext: houseActionContext,
-        index: selection.selectedListIndex,
+        index:
+          routeMode && activeRoute && routeSessionDisplayOrders
+            ? (() => {
+                const stop = activeRoute.stops.find((item) =>
+                  item.houses.some((h) => h.id === selected.id),
+                );
+                if (!stop) {
+                  return routeSessionDisplayOrders.get(selected.id) ?? selection.selectedListIndex;
+                }
+                return routeDisplayOrder(
+                  selected.id,
+                  stop.order,
+                  routeSessionDisplayOrders,
+                );
+              })()
+            : selection.selectedListIndex,
         onClose: selection.closeSelection,
         liked: likes.liked,
         visited: visits.visited,
-        gemCollected: gemUi ? gems.collected : undefined,
+        gemCollected: admin ? gems.collected : undefined,
         clusterOverview: selection.clusterOverview,
         openedFromList: selection.openedFromList,
         clusterHouses: selection.selectedCluster,
@@ -1203,12 +1465,9 @@ export function NeighborhoodApp({
             onOpenRouteUpdates={
               routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
             }
-            gemMapToggleEnabled={gemUi && !gemAdminTools}
+            gemMapToggleEnabled={gemUi}
             gemMapVisible={mapDiamondsVisible}
             onToggleGemMap={() => setMapDiamondsVisible((on) => !on)}
-            adminCharacterMapToggleEnabled={gemUi && gemAdminTools}
-            adminCharacterMapVisible={mapAdminCharactersVisible}
-            onToggleAdminCharacterMap={() => setMapAdminCharactersVisible((on) => !on)}
           />
         </div>
       ) : null}
@@ -1250,6 +1509,7 @@ export function NeighborhoodApp({
         error={error}
         hasCachedHouses={houses.length > 0}
       />
+      <NightPassBanner houseSet={activeHouseSet} />
       <TempSkipRestoreAlerts
         alerts={tempRestoreAlerts}
         onFocusHouse={(id) => {
@@ -1336,30 +1596,24 @@ export function NeighborhoodApp({
                     routeMode && activeRoute && !originPick.originPickActive
                       ? activeRoute.stops.map((stop) => ({
                           id: stop.house.id,
-                          order: stop.order,
+                          order: routeDisplayOrder(
+                            stop.house.id,
+                            stop.order,
+                            routeSessionDisplayOrders,
+                          ),
                           lat: stop.house.lat,
                           lng: stop.house.lng,
                         }))
                       : null
                   }
-                  showGemAnchors={
-                    gemUi &&
-                    (gemAdminTools ? mapAdminCharactersVisible : mapDiamondsVisible)
+                  routeSessionDisplayOrders={
+                    routeMode && !originPick.originPickActive ? routeSessionDisplayOrders : null
                   }
                   showGemLegend={showGemMapLegend}
-                  gemAnchorHouses={gemUi ? mapGemHouses : []}
-                  gemAnchorVisual={
-                    gemAdminTools && mapAdminCharactersVisible
-                      ? "characters"
-                      : gemAdminTools
-                        ? "admin"
-                        : "compact"
-                  }
+                  gemAnchorHouses={gemUi ? gemMapRingHouses : []}
+                  showGemPinRings={gemUi && mapDiamondsVisible}
                   isGemCollected={gems.collected}
                 />
-              {view === "map" && gemHuntActive && gemAllCollected && !originPick.originPickActive ? (
-                <GemMapCompleteBanner />
-              ) : null}
               {view === "map" && originPick.originPickActive ? (
                   <div className="origin-pick-bar">
                     <p className="origin-pick-label">{originPick.originDraftLabel}</p>
@@ -1381,10 +1635,16 @@ export function NeighborhoodApp({
                 ) : null}
                 <CatalogMetaChip
                   hidden={view !== "map" || (Boolean(selection.selected) && !originPick.originPickActive)}
-                  houseSetLabel={adminForHouseSet ? HOUSE_SET_LABELS[activeHouseSet] : null}
+                  houseSetLabel={
+                    adminForHouseSet ? formatMapDisplayLayersStatus(layers) : null
+                  }
                 />
           </div>
-          {view === "map" && mapSheetHouse && houseDetailCommon && !originPick.originPickActive ? (
+          {view === "map" &&
+          mapSheetHouse &&
+          houseDetailCommon &&
+          !mapGemHouse &&
+          !originPick.originPickActive ? (
                 <div className="map-sheet-host" aria-hidden={false}>
                   <MapHouseSheet
                     {...houseDetailCommon}
@@ -1444,7 +1704,7 @@ export function NeighborhoodApp({
                   />
                 ) : (
                   <HouseList
-                    houses={visible}
+                    houses={visibleForList}
                     origin={origin}
                     now={now}
                     actionContext={houseActionContext}
@@ -1502,6 +1762,8 @@ export function NeighborhoodApp({
           open
           kind={visitSkipConflict.kind}
           house={visitSkipConflict.house}
+          cluster={visitSkipConflict.cluster}
+          clusterHouses={visitSkipConflict.clusterHouses}
           onConfirm={confirmVisitSkipConflict}
           onCancel={() => setVisitSkipConflict(null)}
         />
@@ -1516,12 +1778,22 @@ export function NeighborhoodApp({
         onUpdated={handleHouseUpdated}
         onDeleted={handleHouseDeleted}
       />
-      {gemResetHouse ? (
+      {clusterGemSessionSummary ? (
+        <GemClusterSessionSummary
+          open
+          catches={clusterGemSessionSummary}
+          onClose={() => setClusterGemSessionSummary(null)}
+        />
+      ) : null}
+      {gemPlacerDialog}
+      {gemResetHouse || gemResetCluster ? (
         <GemResetConfirmDialog
           open
-          house={gemResetHouse}
+          house={gemResetHouse ?? gemResetCluster?.[0] ?? null}
+          cluster={Boolean(gemResetCluster && gemResetCluster.length >= 2)}
+          clusterHouses={gemResetCluster ?? undefined}
           onConfirm={confirmGemReset}
-          onCancel={() => setGemResetHouse(null)}
+          onCancel={cancelGemReset}
         />
       ) : null}
       {mapGemHouse ? (
@@ -1538,27 +1810,56 @@ export function NeighborhoodApp({
           )}
           initialWebXrSession={mapGemWebXrSession}
           tellMeHuntRadiusEnforced={gemTellMeHuntRadiusEnforced(admin, gemPreviewAsUser)}
-          onClose={() => {
-            mapGemOpenGenRef.current += 1;
-            releaseGemHuntCamera();
-            void endGemHuntWebXrSession(mapGemWebXrSession);
-            setMapGemWebXrSession(null);
-            setMapGemHouse(null);
-            setMapGemGps(null);
-            restoreAfterGemHunt();
-          }}
+          encounterMode={!mapGemClusterMembers || isIosLike()}
+          campusQueue={mapGemClusterQueueUi}
+          onCollectPersist={
+            mapGemClusterMembers
+              ? (monsterId) => {
+                  const h = mapGemHouse;
+                  const before = loadGemCollected();
+                  const isNew =
+                    !gems.collected(h.id) && !isGemTypeInCollection(monsterId, before);
+                  mapGemClusterSessionRef.current.push({
+                    house: h,
+                    monsterId,
+                    isNew,
+                  });
+                  gems.collect(h.id, monsterId);
+                  celebrateGemCollect();
+                }
+              : undefined
+          }
+          onCampusStepComplete={
+            mapGemClusterMembers
+              ? () => {
+                  const h = mapGemHouse;
+                  const members = mapGemClusterMembers;
+                  const next = nextClusterGemHouse(members, gems.collected, h.id);
+                  if (next) {
+                    setMapGemHouse(next);
+                    return;
+                  }
+                  const session = [...mapGemClusterSessionRef.current];
+                  mapGemClusterSessionRef.current = [];
+                  closeMapGemHunt();
+                  if (session.length > 0 && members.length >= 2) {
+                    setClusterGemSessionSummary(session);
+                  } else if (session.length === 1) {
+                    showMapGemCheer(session[0]!.house, session[0]!.monsterId);
+                  }
+                }
+              : undefined
+          }
+          onClose={closeMapGemHunt}
           onCollect={(monsterId, options) => {
             const h = mapGemHouse;
             const collectedBefore = loadGemCollected();
             const celebrate =
               options?.navigateStickerBook
-                ? gemBagCelebrateAfterCollect(mapHouses, collectedBefore, h.id, monsterId)
+                ? gemBagCelebrateAfterCollect(gemMapRingHouses, collectedBefore, h.id, monsterId)
                 : null;
             gems.collect(h.id, monsterId);
-            releaseGemHuntCamera();
-            setMapGemHouse(null);
-            setMapGemGps(null);
-            restoreAfterGemHunt();
+            closeMapGemHunt();
             celebrateGemCollect();
             if (options?.navigateStickerBook) {
               router.push(gemBagCollectHref(monsterId, celebrate));

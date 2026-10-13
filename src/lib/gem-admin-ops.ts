@@ -1,12 +1,13 @@
 import { gemAnchorForHouse } from "@/lib/gem-hunt";
 import { distanceMeters } from "@/lib/geo";
 import {
-  gemCarrierHousesForMap,
+  gemHousesForMap,
   gemHuntMapHouses,
   gemLabelHe,
   gemMonsterForHouse,
   gemSpeciesLabelHe,
   syncGemMonsterAssignment,
+  type GemHuntSetOptions,
   type GemMonsterId,
 } from "@/lib/gem-monsters";
 import type { HouseSet } from "@/lib/house-set";
@@ -19,13 +20,7 @@ export type GemMapHouseRow = {
   speciesHe: string;
 };
 
-export function buildGemMapHouseRows(
-  houses: PublicHouse[],
-  houseSet: HouseSet = "real",
-): GemMapHouseRow[] {
-  const eligible = gemHuntMapHouses(houses, houseSet);
-  syncGemMonsterAssignment(eligible);
-  const onMap = gemCarrierHousesForMap(eligible);
+function rowsFromGemHouses(onMap: PublicHouse[]): GemMapHouseRow[] {
   return onMap.map((house) => {
     const monsterId = gemMonsterForHouse(house);
     return {
@@ -35,6 +30,21 @@ export function buildGemMapHouseRows(
       speciesHe: gemSpeciesLabelHe(monsterId),
     };
   });
+}
+
+export function buildGemMapHouseRows(
+  houses: PublicHouse[],
+  houseSet: HouseSet = "real",
+  options?: GemHuntSetOptions,
+): GemMapHouseRow[] {
+  const eligible = gemHuntMapHouses(houses, houseSet, options);
+  syncGemMonsterAssignment(eligible);
+  return rowsFromGemHouses(gemHousesForMap(eligible));
+}
+
+/** @deprecated Use {@link buildGemMapHouseRows} with map-layer-filtered houses. */
+export function buildAdminGemMapRows(houses: PublicHouse[]): GemMapHouseRow[] {
+  return buildGemMapHouseRows(houses, "all", { includeAllHouses: true });
 }
 
 export function countGemsOnMapByMonster(rows: GemMapHouseRow[]) {

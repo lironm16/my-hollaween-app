@@ -5,6 +5,8 @@ import { toEditorHouse } from "@/lib/ids";
 import { isCatalogRemoved } from "@/lib/catalog-removed";
 import { loadDeletedHouseIds } from "@/lib/deleted-houses";
 import { loadPendingWrites } from "@/lib/offline-db";
+import { loadServerRemovedHouseIds } from "@/lib/server-removed-houses";
+import { isPracticeHouse } from "@/lib/practice-house";
 import { isStubHouse } from "@/lib/house-set";
 import { mergePublicHouseWithAdminRow } from "@/lib/admin-house-overlay";
 import type { EditorHouse, House, PublicHouse } from "@/lib/types";
@@ -27,13 +29,13 @@ function mergeIncomingHouse(
   if (current && isStubHouse(current) && !isStubHouse(merged)) {
     merged = {
       ...merged,
-      description: merged.description?.includes("סטאב לחזרה")
-        ? merged.description
-        : current.description || merged.description,
-      photoUrl: current.photoUrl?.includes("/images/stubs/")
-        ? current.photoUrl
-        : merged.photoUrl,
+      isStub: true,
+      description: merged.description?.trim() ? merged.description : current.description,
+      photoUrl: merged.photoUrl?.trim() ? merged.photoUrl : current.photoUrl,
     };
+  }
+  if (isPracticeHouse(current) || isPracticeHouse(merged)) {
+    merged = { ...merged, isPractice: true };
   }
   return merged;
 }
@@ -57,6 +59,8 @@ export function mergeVisibleHouses({
 }): PublicHouse[] {
   const restoreLocations = restoreRedactedLocations ?? admin;
   const deleted = new Set(loadDeletedHouseIds());
+  // Device copies (saved / pending) must not re-add a house the server confirmed deleted — admins too.
+  const serverRemoved = new Set(loadServerRemovedHouseIds());
   const byId = new Map<string, PublicHouse>();
   if (!admin || includeCatalogWhenAdmin) {
     for (const house of catalogHouses) {
@@ -72,7 +76,7 @@ export function mergeVisibleHouses({
     }
   }
   for (const item of owned) {
-    if (!item.preview || deleted.has(item.id)) continue;
+    if (!item.preview || deleted.has(item.id) || serverRemoved.has(item.id)) continue;
     if (!admin && isCatalogRemoved(item.id)) continue;
     const current = byId.get(item.id);
     if (!current || Date.parse(item.preview.updatedAt) >= Date.parse(current.updatedAt || "")) {
@@ -80,7 +84,7 @@ export function mergeVisibleHouses({
     }
   }
   for (const pending of loadPendingWrites()) {
-    if (deleted.has(pending.id)) continue;
+    if (deleted.has(pending.id) || serverRemoved.has(pending.id)) continue;
     if (!admin && isCatalogRemoved(pending.id)) continue;
     const current = byId.get(pending.id);
     if (!current || Date.parse(pending.house.updatedAt) >= Date.parse(current.updatedAt || "")) {

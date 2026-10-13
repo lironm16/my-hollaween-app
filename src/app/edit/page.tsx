@@ -3,11 +3,11 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMergedHouses } from "@/hooks/use-merged-houses";
-import Link from "next/link";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { HousePicker } from "@/components/house-picker";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { NightPassesCard } from "@/components/night-passes-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminHouses } from "@/hooks/use-admin-houses";
@@ -19,12 +19,10 @@ import { activeHouseSetForSession, houseMatchesSet } from "@/lib/house-set";
 import { saveOwnedHouse, removeOwnedHouse, forgetPublishedHouse, notifyCatalogChanged } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
-import { Plus } from "lucide-react";
 import { PersistNote } from "@/components/persist-note";
 import { readApiJson } from "@/lib/api-json";
-import { cn } from "@/lib/utils";
-import { useAddHouseOpen } from "@/hooks/use-add-house-open";
 import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
+import { catalogRemovedViewOnlyEditPage } from "@/lib/labels";
 
 export default function EditPage() {
   return (
@@ -57,7 +55,6 @@ function EditPageContent() {
   const [busy, setBusy] = useState(false);
   const [, setPrefilled] = useState(false);
   const editFlow = useHouseEditFlow();
-  const addHouseOpen = useAddHouseOpen();
   const pickedIdRef = useRef<string | null>(null);
   const autoOpenedIdRef = useRef<string | null>(null);
   pickedIdRef.current = picked?.id ?? null;
@@ -232,29 +229,9 @@ function EditPageContent() {
               loading={catalogLoading || (admin && !adminReady)}
             />
           </div>
-          <div className="flex flex-wrap items-center gap-2 border-t border-orange-500/15 pt-3">
-            {addHouseOpen ? (
-              <Link
-                href="/add"
-                className={cn(
-                  buttonVariants({ size: "sm", variant: "outline" }),
-                  "inline-flex items-center gap-1.5 border-orange-400/40 text-orange-100",
-                )}
-              >
-                <Plus className="size-4" />
-                הוספת בית חדש
-              </Link>
-            ) : null}
-            <span className="text-base text-violet-400">
-              {addHouseOpen ? "או חפשו בית קיים למעלה" : "חפשו בית קיים למעלה"}
-            </span>
-          </div>
           {needsCode ? (
             <div className="space-y-1.5 border-t border-orange-500/15 pt-3">
               <Label htmlFor="edit-code">קוד עריכה</Label>
-              <p className="text-base text-violet-300">
-                מישהו אחר מזין את קוד העריכה שקיבל מי שהוסיף את הבית.
-              </p>
               <Input
                 id="edit-code"
                 value={editCode}
@@ -267,6 +244,7 @@ function EditPageContent() {
               />
               <Button
                 type="button"
+                className="h-11 w-full justify-center bg-orange-500 text-base text-black hover:bg-orange-400"
                 onClick={() => {
                   if (picked) void unlockWith(picked, editCode.trim());
                 }}
@@ -289,22 +267,19 @@ function EditPageContent() {
         {house && !editFlow.flow ? (
           pickedRemovedFromCatalog && !admin ? (
             <p className="rounded-xl bg-zinc-900/90 px-3 py-3 text-center text-base text-zinc-100 ring-1 ring-white/10">
-              הבית הוסר מהמדריך — צפייה בלבד. להסרה מהמכשיר: «במכשיר שלי» → «הסר מהמכשיר».
+              {catalogRemovedViewOnlyEditPage}
             </p>
           ) : (
             <Button
               type="button"
-              className="w-full bg-orange-500 text-black hover:bg-orange-400"
+              className="h-11 w-full justify-center whitespace-normal bg-orange-500 text-center text-base text-black hover:bg-orange-400"
               onClick={() => openHouseEdit(house)}
             >
               עריכת הבית
             </Button>
           )
-        ) : !house ? (
-          <p className="rounded-xl bg-[#1d1028]/60 px-3 py-4 text-center text-base text-violet-300 ring-1 ring-orange-500/15">
-            בחרו בית מהרשימה כדי לערוך, או הוסיפו בית חדש.
-          </p>
         ) : null}
+        {house && !editFlow.flow ? <NightPassesCard houseId={house.id} admin={admin} /> : null}
         </div>
       </main>
       <HouseEditFlowPanels

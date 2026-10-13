@@ -2,6 +2,7 @@
 
 import { useEffect, useId, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { ClusterHouseActionMenu } from "@/components/cluster-house-action-menu";
 import { HouseCardActionMenu } from "@/components/house-card-action-menu";
 import type { HouseCardActionContext } from "@/components/house-card-actions";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
@@ -14,6 +15,8 @@ import {
 } from "@/components/cluster-house-list";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseHeadline } from "@/lib/labels";
+import { clusterBoothLabel } from "@/lib/cluster-booth";
+import { clusterOverviewSubtitle, usesSchoolCampusClusterChrome } from "@/lib/school-campus";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -66,7 +69,11 @@ export function HouseDetailOverlay({
 }) {
   const labelId = useId();
   const multi = !openedFromList && (clusterHouses?.length ?? 0) > 1;
-  const overview = Boolean(multi && clusterOverview);
+  const clusterShell =
+    !openedFromList &&
+    ((clusterHouses?.length ?? 0) > 1 ||
+      usesSchoolCampusClusterChrome(clusterHouses ?? []));
+  const overview = Boolean(clusterShell && clusterOverview);
   const clusterIndex = clusterHouses ? clusterHouseIndex(clusterHouses, house.id) : null;
   const canPrevCluster = clusterIndex != null && clusterIndex > 1;
   const canNextCluster =
@@ -85,6 +92,8 @@ export function HouseDetailOverlay({
     };
   }, [house.id]);
 
+  const clusterBoothTag = clusterShell ? clusterBoothLabel(house, clusterHouses!) : null;
+
   const sheetBody = (
     <HouseSheetBody
       house={house}
@@ -95,6 +104,7 @@ export function HouseDetailOverlay({
       skipMeta={skipMeta}
       onRestoreRoute={onRestoreRoute}
       index={index}
+      clusterBoothTag={clusterBoothTag}
     />
   );
 
@@ -112,7 +122,7 @@ export function HouseDetailOverlay({
       <div
         className={cn(
           "house-detail-overlay-body min-h-0 flex-1 px-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]",
-          multi && !overview
+          clusterShell && !overview
             ? "flex flex-col overflow-hidden"
             : "overflow-y-auto overscroll-contain",
         )}
@@ -121,10 +131,58 @@ export function HouseDetailOverlay({
           <div id={labelId}>
             <div className="mb-3 flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <p className="map-house-sheet-kicker">{addressReveal.formatDisplayAddress(house)}</p>
-                <p className="map-house-sheet-sub">{clusterHouses!.length} בתים בכתובת זו</p>
+                <p className="map-house-sheet-kicker">
+                  {addressReveal.formatClusterAddress(clusterHouses!, house)}
+                </p>
+                <p className="map-house-sheet-sub">{clusterOverviewSubtitle(clusterHouses!)}</p>
               </div>
-              {actionMenu}
+              <ClusterHouseActionMenu
+                houses={clusterHouses!}
+                liked={liked ?? (() => false)}
+                visited={visited ?? (() => false)}
+                skipped={skippedIds ?? (() => false)}
+                onVisitAll={
+                  actionContext.onClusterVisitAll
+                    ? () => actionContext.onClusterVisitAll!(clusterHouses!)
+                    : undefined
+                }
+                onUnvisitAll={
+                  actionContext.onClusterUnvisitAll
+                    ? () => actionContext.onClusterUnvisitAll!(clusterHouses!)
+                    : undefined
+                }
+                onSkipAll={
+                  actionContext.onClusterSkipAll
+                    ? () => actionContext.onClusterSkipAll!(clusterHouses!)
+                    : undefined
+                }
+                onRestoreAll={
+                  actionContext.onClusterRestoreAll
+                    ? () => actionContext.onClusterRestoreAll!(clusterHouses!)
+                    : undefined
+                }
+                onLikeAll={
+                  actionContext.onClusterLikeAll
+                    ? () => actionContext.onClusterLikeAll!(clusterHouses!)
+                    : undefined
+                }
+                onUnlikeAll={
+                  actionContext.onClusterUnlikeAll
+                    ? () => actionContext.onClusterUnlikeAll!(clusterHouses!)
+                    : undefined
+                }
+                gemCollected={actionContext.gemCollected}
+                onFindAllGems={
+                  actionContext.onClusterFindAllGems
+                    ? () => actionContext.onClusterFindAllGems!(clusterHouses!)
+                    : undefined
+                }
+                onResetAllGems={
+                  actionContext.onClusterResetAllGems
+                    ? () => actionContext.onClusterResetAllGems!(clusterHouses!)
+                    : undefined
+                }
+              />
             </div>
             <div className="max-h-[min(52dvh,28rem)] overflow-y-auto overscroll-contain pe-0.5">
               <ClusterHouseList
@@ -140,7 +198,7 @@ export function HouseDetailOverlay({
               />
             </div>
           </div>
-        ) : multi ? (
+        ) : clusterShell ? (
           <div className="flex min-h-0 flex-1 flex-col">
             {clusterIndex != null ? (
               <div className="shrink-0 pb-2">

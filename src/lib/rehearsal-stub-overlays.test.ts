@@ -10,7 +10,8 @@ function stub(id: string, updatedAt: string, candy: "plenty" | "out" = "plenty")
     theme: "ghost",
     address: "חרוזים 10",
     arrival: "",
-    description: "סטאב לחזרה — בדיקה.",
+    isStub: true,
+    description: "בדיקה.",
     lat: 32.09,
     lng: 34.8,
     treats: ["candy"],
@@ -51,6 +52,7 @@ describe("changedRehearsalStubs", () => {
 
   it("ignores real house edits", () => {
     const real = stub("real-1", "2026-10-31T18:00:00.000Z");
+    real.isStub = false;
     real.description = "בית אמיתי";
     const prev: DbFile = { updatedAt: real.updatedAt, houses: [real] };
     const next: DbFile = {

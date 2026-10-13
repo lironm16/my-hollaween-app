@@ -1,6 +1,6 @@
 {
   "name": "halloween-neighborhood",
-  "version": "5.4.24",
+  "version": "5.6.28",
   "private": true,
   "scripts": {
     "dev": "node scripts/allow-preview-origin.mjs && node scripts/build-css.mjs && next dev --webpack --hostname 0.0.0.0 --port 43127",
@@ -24,6 +24,7 @@
     "gem-osm-anchors:live": "node scripts/build-gem-osm-anchors-live.mjs",
     "stub-images": "node scripts/generate-stub-images.mjs",
     "poi-pin-icons": "python3 scripts/extract-badge-glyphs.py",
+    "pin-cluster-icons": "python3 scripts/build-pin-cluster-icons.py",
     "app-icons": "node scripts/generate-app-icons.mjs",
     "gem-monster-posters": "node scripts/render-gem-monster-posters.mjs",
     "gem-monsters:ingest": "node scripts/ingest-akochan-pets.mjs && node scripts/write-gem-monsters-shipped.mjs",
@@ -38,7 +39,8 @@
     "capture:help": "node scripts/capture-help-screenshots.mjs",
     "capture:install": "node scripts/capture-install-screenshots.mjs",
     "deploy:vercel": "node scripts/trigger-vercel.mjs",
-    "deploy:production": "node scripts/sync-github-deploy.mjs"
+    "deploy:production": "node scripts/sync-github-deploy.mjs",
+    "deploy:preview": "DEPLOY_TARGET=preview node scripts/sync-github-deploy.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -47,12 +49,15 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "firebase-admin": "^13.10.0",
+    "jsqr": "^1.4.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.39.0",
     "marked": "^18.0.13",
     "nanoid": "^6.0.1",
     "next": "16.3.4",
     "next-themes": "^0.4.6",
+    "nodemailer": "^10.0.16",
+    "qrcode": "^1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-leaflet": "^5.0.0",
@@ -70,6 +75,8 @@
     "@tailwindcss/postcss": "^4",
     "@types/leaflet": "^1.9.22",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.2",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.186.0",

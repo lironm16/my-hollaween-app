@@ -295,6 +295,8 @@ export function HouseDetails({
   distanceM,
   index,
   hideHoursBanner = false,
+  /** Stable «דוכן N» on school campus clusters. */
+  clusterBoothTag,
 }: {
   house: PublicHouse;
   extra?: ReactNode;
@@ -318,6 +320,7 @@ export function HouseDetails({
   index?: number;
   /** Route tail / visited-skipped cards: no opening-date or hours banners. */
   hideHoursBanner?: boolean;
+  clusterBoothTag?: string | null;
 }) {
   const addressReveal = useAddressReveal();
   const { admin } = useAdminSession();
@@ -503,11 +506,14 @@ export function HouseDetails({
               sheet && "line-clamp-2 [overflow-wrap:anywhere]",
             )}
           >
-            <HouseTitleMarkers liked={liked} gemCollected={gemCollected} />
+            {sheet ? null : <HouseTitleMarkers liked={liked} gemCollected={gemCollected} />}
             {houseHeadline(house)}
           </p>
           {headerMenu ? <div className="house-details-menu shrink-0">{headerMenu}</div> : null}
         </div>
+        {clusterBoothTag ? (
+          <p className="text-base font-semibold text-orange-200">{clusterBoothTag}</p>
+        ) : null}
         {pageActions}
         <div className="flex flex-wrap items-center gap-1.5">
           <HouseTags house={house} large={compact} />

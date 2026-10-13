@@ -100,6 +100,25 @@ async function main() {
   else pass("MAP-07 like saves to localStorage");
 
   const visitedBefore = await readStorageIds(page, "hw-visited-houses");
+  await page.evaluate((id) => {
+    const raw = localStorage.getItem("hw-visited-houses");
+    const ids = raw ? JSON.parse(raw) : [];
+    localStorage.setItem("hw-visited-houses", JSON.stringify(ids.filter((item) => item !== id)));
+    window.dispatchEvent(new Event("hw-visited-changed"));
+  }, focusId);
+  await page.goto(
+    `${BASE}/?rehearsal=open&focus=${encodeURIComponent(focusId)}&visit=1`,
+    { waitUntil: "domcontentloaded" },
+  );
+  await waitForCatalog(page);
+  await page.getByText("כל הכבוד!").waitFor();
+  const visitedFromQr = await readStorageIds(page, "hw-visited-houses");
+  if (!visitedFromQr.includes(focusId)) fail("MAP-10 visit=1 link should mark house visited");
+  else pass("MAP-10 visit=1 link marks visited (browser or PWA)");
+  if (page.url().includes("visit=1")) fail("MAP-10 visit param should be cleared from URL");
+  else pass("MAP-10 visit query is removed after handling");
+
+  detail = await openHouseByFocus(page, BASE, focusId);
   await detail.getByRole("button", { name: "פעולות" }).click();
   await page.getByRole("menuitem", { name: "ביקרתי" }).click();
   await page.getByText("כל הכבוד!").waitFor();
