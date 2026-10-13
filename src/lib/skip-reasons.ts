@@ -24,7 +24,7 @@ export type TemporaryRestoreTriggerId = "not-open" | "candy-out";
 
 /** Fixed restore triggers shown in the skip dialog. */
 export const TEMPORARY_RESTORE_OPTIONS: SkipReasonOption[] = [
-  { id: "not-open", label: "החזר את הבית כאשר הוא פתוח" },
+  { id: "not-open", label: "החזר את הבית כאשר הוא נפתח" },
   { id: "candy-out", label: "החזר את הבית כאשר יש ממתקים" },
 ];
 
@@ -90,14 +90,20 @@ export function primaryTemporaryRestoreOption(
   return null;
 }
 
-/** @deprecated Use primaryTemporaryRestoreOption — returns 0 or 1 option. */
+/** Restore triggers that apply to the house's current state (0–2 checkboxes in skip dialog). */
 export function availableTemporaryRestoreOptions(
   house: PublicHouse,
   now: Date,
   filters: HouseFiltersState,
 ): SkipReasonOption[] {
-  const option = primaryTemporaryRestoreOption(house, now, filters);
-  return option ? [option] : [];
+  const options: SkipReasonOption[] = [];
+  if (!isHouseOpenForSkip(house, now, filters)) {
+    options.push(TEMPORARY_RESTORE_OPTIONS[0]!);
+  }
+  if (houseLacksCandy(house)) {
+    options.push(TEMPORARY_RESTORE_OPTIONS[1]!);
+  }
+  return options;
 }
 
 /** Whether one temporary restore trigger is now met. */
