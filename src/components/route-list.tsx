@@ -54,8 +54,9 @@ export function RouteList({
     focusRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [focusId]);
 
+  const waitingForGpsOrigin = startedFrom === "gps" && !hasGps;
   const gpsAction =
-    !hasGps && onRequestLocation ? (
+    waitingForGpsOrigin && onRequestLocation ? (
       <Button type="button" size="sm" variant="outline" className="mt-2" onClick={onRequestLocation}>
         <Navigation className="size-3.5" />
         הפעילו מיקום
