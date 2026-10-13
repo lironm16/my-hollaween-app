@@ -3,19 +3,32 @@ import { describe, it } from "node:test";
 import { buildCatalogDeltaFromDb } from "@/lib/store/catalog";
 import type { DbFile, House } from "@/lib/types";
 
-function house(id: string, updatedAt: string): House {
+function house(id: string, updatedAt: string, patch: Partial<House> = {}): House {
   return {
     id,
-    storeId: id,
-    name: "test",
-    address: "street",
+    name: `בית ${id}`,
+    theme: "pumpkin",
+    address: "חרוזים 1",
+    arrival: "",
+    description: "",
     lat: 32.09,
     lng: 34.81,
+    treats: ["candy"],
+    treatStock: { candy: "plenty" },
+    visit: "come",
+    scareLevel: "mild",
+    openFrom: "17:00",
+    openTo: "21:00",
+    notes: "",
+    accessible: false,
+    soldOut: false,
+    adminFrozen: false,
+    ownerFrozenUntil: null,
+    photoUrl: "",
+    editCode: "edit",
+    createdAt: updatedAt,
     updatedAt,
-    visit: "open",
-    treatStock: "full",
-    treats: { regular: true },
-    kind: "house",
+    ...patch,
   };
 }
 

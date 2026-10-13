@@ -67,6 +67,9 @@ export function toPublicHouse<
     storeId?: string;
     ownerPhone?: string | null;
     addedBy?: string | null;
+    likeCount?: number;
+    visitCount?: number;
+    engagementAt?: string;
     address?: string;
     lat?: number;
     lng?: number;
