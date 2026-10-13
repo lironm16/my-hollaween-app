@@ -28,6 +28,26 @@ export function gemAnchorPlacementError(
   return null;
 }
 
+export type GemAnchorNudge = "north" | "south" | "east" | "west";
+
+/** Fine-tune placement by about one meter (center-pin nudge pad). */
+export function nudgeGemAnchorPoint(
+  house: { lat: number; lng: number },
+  point: { lat: number; lng: number },
+  direction: GemAnchorNudge,
+  meters = 1,
+): { lat: number; lng: number } {
+  const cosLat = Math.cos((point.lat * Math.PI) / 180);
+  const dLat = meters / 111_320;
+  const dLng = meters / (111_320 * Math.max(0.2, Math.abs(cosLat)));
+  let next = point;
+  if (direction === "north") next = { lat: point.lat + dLat, lng: point.lng };
+  if (direction === "south") next = { lat: point.lat - dLat, lng: point.lng };
+  if (direction === "east") next = { lat: point.lat, lng: point.lng + dLng };
+  if (direction === "west") next = { lat: point.lat, lng: point.lng - dLng };
+  return clampGemAnchorPlacement(house, next);
+}
+
 /** Keep a dragged point inside the allowed circle (map drag UX). */
 export function clampGemAnchorPlacement(
   house: { lat: number; lng: number },

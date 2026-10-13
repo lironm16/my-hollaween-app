@@ -1,14 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-import { Circle, CircleMarker, Marker, Polyline, useMapEvents } from "react-leaflet";
-import L from "leaflet";
-import { ImpDemonFilledIcon } from "@/components/imp-demon-reference-icon";
+import { useEffect, useRef } from "react";
+import { Circle, CircleMarker, Polyline, useMap, useMapEvents } from "react-leaflet";
 import { clampGemAnchorPlacement, GEM_ANCHOR_PLACE_MAX_METERS } from "@/lib/gem-anchor-placement";
 import type { LatLng } from "@/lib/route";
-
-const ICON_SIZE = 44;
 
 export type GemAnchorEditState = {
   house: LatLng;
@@ -16,32 +11,63 @@ export type GemAnchorEditState = {
   onMove: (point: LatLng) => void;
 };
 
-function MoveOnTap({ house, onMove }: Pick<GemAnchorEditState, "house" | "onMove">) {
+function sameCoord(a: number, b: number) {
+  return Math.abs(a - b) < 1e-7;
+}
+
+function samePoint(a: LatLng, b: LatLng) {
+  return sameCoord(a.lat, b.lat) && sameCoord(a.lng, b.lng);
+}
+
+/** Pan the map under a fixed center pin; sync when `point` changes from controls outside the map. */
+function GemAnchorMapInteraction({ house, point, onMove }: GemAnchorEditState) {
+  const map = useMap();
+  const programmaticRef = useRef(false);
+
+  useEffect(() => {
+    const center = map.getCenter();
+    if (samePoint({ lat: center.lat, lng: center.lng }, point)) return;
+    programmaticRef.current = true;
+    map.setView([point.lat, point.lng], map.getZoom(), { animate: false });
+    const id = window.requestAnimationFrame(() => {
+      programmaticRef.current = false;
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [map, point]);
+
   useMapEvents({
+    moveend() {
+      if (programmaticRef.current) return;
+      const c = map.getCenter();
+      const next = clampGemAnchorPlacement(house, { lat: c.lat, lng: c.lng });
+      onMove(next);
+      if (!samePoint({ lat: c.lat, lng: c.lng }, next)) {
+        programmaticRef.current = true;
+        map.setView([next.lat, next.lng], map.getZoom(), { animate: false });
+        window.requestAnimationFrame(() => {
+          programmaticRef.current = false;
+        });
+      }
+    },
     click(event) {
-      onMove(clampGemAnchorPlacement(house, { lat: event.latlng.lat, lng: event.latlng.lng }));
+      const next = clampGemAnchorPlacement(house, {
+        lat: event.latlng.lat,
+        lng: event.latlng.lng,
+      });
+      onMove(next);
+      programmaticRef.current = true;
+      map.setView([next.lat, next.lng], map.getZoom(), { animate: true });
+      window.requestAnimationFrame(() => {
+        programmaticRef.current = false;
+      });
     },
   });
+
   return null;
 }
 
-/** Owner/admin gem placement — drag the demon (or tap the map) inside the allowed circle; the house is a small dot so it never covers the demon. */
+/** Owner/admin gem placement — pan the map under the center pin inside the allowed circle. */
 export function MapGemAnchorEditLayer({ house, point, onMove }: GemAnchorEditState) {
-  const icon = useMemo(
-    () =>
-      L.divIcon({
-        className: "map-gem-diamond-leaflet-icon",
-        html: `<div class="map-gem-diamond-marker map-gem-diamond-marker--admin is-calibrated is-editing" aria-hidden="true">
-          <span class="map-gem-imp-marker__glyph">${renderToStaticMarkup(
-            <ImpDemonFilledIcon className="map-gem-imp-marker__svg size-full" />,
-          )}</span>
-        </div>`,
-        iconSize: [ICON_SIZE, ICON_SIZE],
-        iconAnchor: [ICON_SIZE / 2, ICON_SIZE / 2],
-      }),
-    [],
-  );
-
   return (
     <>
       <Circle
@@ -71,22 +97,7 @@ export function MapGemAnchorEditLayer({ house, point, onMove }: GemAnchorEditSta
         pathOptions={{ color: "#fff7ed", weight: 2, fillColor: "#f97316", fillOpacity: 1 }}
         interactive={false}
       />
-      <MoveOnTap house={house} onMove={onMove} />
-      <Marker
-        position={[point.lat, point.lng]}
-        icon={icon}
-        draggable
-        zIndexOffset={9500}
-        eventHandlers={{
-          dragend: (event) => {
-            const marker = event.target as L.Marker;
-            const raw = marker.getLatLng();
-            const next = clampGemAnchorPlacement(house, { lat: raw.lat, lng: raw.lng });
-            marker.setLatLng([next.lat, next.lng]);
-            onMove(next);
-          },
-        }}
-      />
+      <GemAnchorMapInteraction house={house} point={point} onMove={onMove} />
     </>
   );
 }

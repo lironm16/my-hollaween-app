@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LocateFixed, RotateCcw } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, LocateFixed, Maximize2, Minimize2, RotateCcw } from "lucide-react";
+import { ImpDemonFilledIcon } from "@/components/imp-demon-reference-icon";
 import { toast } from "sonner";
 import { HouseEditModal } from "@/components/house-edit-modal";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
@@ -9,7 +10,12 @@ import { Button } from "@/components/ui/button";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { clearGemAnchorOverride } from "@/lib/gem-anchor-overrides";
 import { copyText } from "@/lib/copy-text";
-import { gemAnchorPlacementError, GEM_ANCHOR_PLACE_MAX_METERS } from "@/lib/gem-anchor-placement";
+import {
+  gemAnchorPlacementError,
+  GEM_ANCHOR_PLACE_MAX_METERS,
+  nudgeGemAnchorPoint,
+  type GemAnchorNudge,
+} from "@/lib/gem-anchor-placement";
 import {
   automaticGemAnchorForHouse,
   gemAnchorForHouse,
@@ -18,6 +24,8 @@ import {
 import {
   GEM_PLACE_ACTION_HE,
   GEM_PLACE_HINT_HE,
+  GEM_PLACE_MAP_EXPAND_HE,
+  GEM_PLACE_MAP_SHRINK_HE,
   GEM_PLACE_MY_LOCATION_HE,
   GEM_PLACE_RESET_CONFIRM_HE,
   GEM_PLACE_RESET_DONE_HE,
@@ -88,10 +96,12 @@ export function GemAnchorPlaceDialog({
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
   const [accuracyM, setAccuracyM] = useState<number | null>(null);
+  const [mapExpanded, setMapExpanded] = useState(false);
   const wasOpen = useRef(false);
 
   useEffect(() => {
     if (open && !wasOpen.current) setPoint(current);
+    if (!open) setMapExpanded(false);
     wasOpen.current = open;
   }, [open, current]);
 
@@ -175,23 +185,78 @@ export function GemAnchorPlaceDialog({
     <HouseEditModal open={open} onClose={onClose} title={GEM_PLACE_ACTION_HE} subtitle={houseHeadline(house)}>
       <div className="space-y-3">
         <p className="text-base leading-relaxed text-violet-100">{GEM_PLACE_HINT_HE}</p>
-        <div className="h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/25">
-          {open ? (
-            <HouseMapDynamic
-              houses={[house]}
-              selectedId={house.id}
-              embed
-              className="h-full w-full"
-              gemAnchorEdit={{
-                house,
-                point,
-                onMove: (next) => {
-                  setPoint(next);
+        <div
+          className={
+            mapExpanded
+              ? "fixed inset-0 z-[220] flex flex-col gap-2 bg-[#14091c] p-3 pt-[max(0.75rem,env(safe-area-inset-top))]"
+              : undefined
+          }
+        >
+          <div
+            className={
+              mapExpanded
+                ? "relative min-h-0 flex-1 overflow-hidden rounded-xl ring-1 ring-orange-500/25"
+                : "relative h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/25"
+            }
+          >
+            {open ? (
+              <HouseMapDynamic
+                houses={[house]}
+                selectedId={house.id}
+                embed
+                className="h-full w-full"
+                gemAnchorEdit={{
+                  house,
+                  point,
+                  onMove: (next) => {
+                    setPoint(next);
+                    setAccuracyM(null);
+                  },
+                }}
+              />
+            ) : null}
+            <div
+              className="pointer-events-none absolute inset-0 z-[500] flex items-center justify-center"
+              aria-hidden
+            >
+              <div className="map-gem-diamond-marker map-gem-diamond-marker--admin is-calibrated is-editing gem-anchor-place-map__pin">
+                <span className="map-gem-imp-marker__glyph">
+                  <ImpDemonFilledIcon className="map-gem-imp-marker__svg size-full" />
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="absolute end-2 top-2 z-[510] flex size-10 items-center justify-center rounded-lg bg-black/55 text-orange-100 ring-1 ring-orange-500/35"
+              aria-label={mapExpanded ? GEM_PLACE_MAP_SHRINK_HE : GEM_PLACE_MAP_EXPAND_HE}
+              onClick={() => setMapExpanded((v) => !v)}
+            >
+              {mapExpanded ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
+            </button>
+          </div>
+          <div className="pointer-events-auto flex justify-center gap-1">
+            {(
+              [
+                ["north", ArrowUp],
+                ["west", ArrowLeft],
+                ["east", ArrowRight],
+                ["south", ArrowDown],
+              ] as const
+            ).map(([dir, Icon]) => (
+              <button
+                key={dir}
+                type="button"
+                className="flex size-9 items-center justify-center rounded-lg bg-black/40 text-orange-100 ring-1 ring-orange-500/25"
+                aria-label={`${dir} 1m`}
+                onClick={() => {
+                  setPoint((prev) => nudgeGemAnchorPoint(house, prev, dir as GemAnchorNudge));
                   setAccuracyM(null);
-                },
-              }}
-            />
-          ) : null}
+                }}
+              >
+                <Icon className="size-4" />
+              </button>
+            ))}
+          </div>
         </div>
         <div className="space-y-1 rounded-lg bg-black/25 px-3 py-2 text-sm ring-1 ring-orange-500/15">
           <p className="text-violet-200">

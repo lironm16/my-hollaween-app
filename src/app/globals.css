@@ -2617,6 +2617,10 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   border: 0;
 }
 
+.gem-anchor-place-map__pin {
+  width: 44px;
+  height: 44px;
+}
 .map-gem-diamond-leaflet-icon {
   background: transparent;
   border: none;

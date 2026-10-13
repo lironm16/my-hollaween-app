@@ -845,7 +845,13 @@ export function HouseMap({
             ? [focus.lat, focus.lng]
             : [config.map.center.lat, config.map.center.lng]
         }
-        zoom={embed && focus ? config.map.maxZoom - 1 : config.map.zoom}
+        zoom={
+          embed && focus
+            ? gemAnchorEdit
+              ? config.map.maxZoom
+              : config.map.maxZoom - 1
+            : config.map.zoom
+        }
         minZoom={config.map.minZoom}
         maxZoom={config.map.maxZoom}
         scrollWheelZoom
@@ -861,7 +867,7 @@ export function HouseMap({
               "subdomains" in tiles && tiles.subdomains ? tiles.subdomains : "abcd"
             }
             maxZoom={config.map.maxZoom}
-            maxNativeZoom={Math.min(tiles.maxNativeZoom, config.map.maxZoom)}
+            maxNativeZoom={tiles.maxNativeZoom}
             className="hw-basemap"
           />
         ) : null}
