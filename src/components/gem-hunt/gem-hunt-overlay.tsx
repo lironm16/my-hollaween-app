@@ -693,8 +693,8 @@ export function GemHuntOverlay({
     }
     encounterCollectLatchedRef.current = true;
     markEncounterTutorialSeen();
-    onTreatSuccess();
-  }, [encounterPhase, onTreatSuccess]);
+    handleCollect();
+  }, [encounterPhase, handleCollect]);
 
   const handleGemInspectTap = useCallback(() => {
     if (encounterMode && encounterPhase === "encounter" && gemAtCenter) {

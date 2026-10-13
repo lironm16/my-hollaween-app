@@ -474,11 +474,10 @@ export function GemHuntWebXrAr({
     }
     encounterCollectLatchedRef.current = true;
     markEncounterTutorialSeen();
-    onTreatSuccess();
+    handleCollectRef.current();
   }, [
     canCollectNow,
     encounterPhase,
-    onTreatSuccess,
     placed,
     showArGem,
     simulateInRange,
@@ -499,7 +498,7 @@ export function GemHuntWebXrAr({
     if (encounterMode) {
       encounterCollectLatchedRef.current = true;
       markEncounterTutorialSeen();
-      onTreatSuccessRef.current();
+      handleCollectRef.current();
       return;
     }
     handleCollectRef.current();

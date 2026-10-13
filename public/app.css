@@ -9441,7 +9441,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   text-align: center;
 }
 .gem-hunt-overlay {
-  --gem-cam-box: min(90vw, min(30rem, calc(100dvh - 15rem)));
+  --gem-cam-w: min(84vw, 26rem);
+  --gem-cam-h: min(62vw, calc(100dvh - 10.5rem), 34rem);
   position: fixed;
   inset: 0;
   z-index: 12050;
@@ -9462,7 +9463,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   max-height: none;
 }
 .gem-hunt-overlay--android {
-  --gem-cam-box: min(86vw, min(27rem, calc(100dvh - 16.5rem)));
+  --gem-cam-w: min(82vw, 24.5rem);
+  --gem-cam-h: min(60vw, calc(100dvh - 11.5rem), 32rem);
+}
+.gem-hunt-overlay--ios {
+  --gem-cam-w: min(78vw, 23rem);
+  --gem-cam-h: min(58vw, calc(100dvh - 11.5rem), 31rem);
 }
 .gem-hunt-overlay__stage.is-gem-interactive {
   z-index: 9;
@@ -10191,8 +10197,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   left: 50%;
   right: auto;
   top: 38%;
-  width: var(--gem-cam-box);
-  max-width: var(--gem-cam-box);
+  width: var(--gem-cam-w);
+  max-width: var(--gem-cam-w);
   padding: 0;
   transform: translate(-50%, -50%);
   z-index: 6;
@@ -10216,7 +10222,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   justify-content: center;
   width: 100%;
   height: 100%;
-  min-height: var(--gem-cam-box);
+  min-height: var(--gem-cam-h);
   cursor: pointer;
   pointer-events: auto;
   -webkit-tap-highlight-color: transparent;
@@ -10237,8 +10243,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__gem-hit.is-center-collect .gem-hunt-overlay__gem-dance,
 .gem-hunt-overlay__gem-hit.is-center-collect .gem-sprite--hunt {
-  width: var(--gem-cam-box);
-  height: var(--gem-cam-box);
+  width: var(--gem-cam-w);
+  height: var(--gem-cam-h);
   margin-inline: auto;
 }
 .gem-hunt-overlay__gem-hit.is-center-collect .gem-sprite--hunt {
@@ -10254,8 +10260,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__gem-hit.is-center-collect.is-collecting .gem-sprite--hunt,
 .gem-hunt-overlay__gem-hit.is-center-collect.is-collecting .gem-hunt-overlay__gem-dance {
-  width: var(--gem-cam-box);
-  height: var(--gem-cam-box);
+  width: var(--gem-cam-w);
+  height: var(--gem-cam-h);
   transform: scale(1);
 }
 .gem-hunt-overlay__gem-hit.is-center-collect.is-collecting canvas {
@@ -10287,8 +10293,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__gem-hit .gem-sprite--hunt,
 .gem-hunt-overlay__gem-hit .gem-sprite--fill {
-  width: var(--gem-cam-box);
-  height: var(--gem-cam-box);
+  width: var(--gem-cam-w);
+  height: var(--gem-cam-h);
   overflow: visible;
 }
 .gem-hunt-overlay .gem-sprite__glow {
@@ -10311,12 +10317,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__gem-pin.is-revealed .gem-sprite--hunt,
 .gem-hunt-overlay__gem-pin.is-revealed .gem-sprite--fill,
 .gem-hunt-overlay__gem-pin.is-center-fallback.is-revealed .gem-sprite {
-  width: var(--gem-cam-box);
-  height: var(--gem-cam-box);
+  width: var(--gem-cam-w);
+  height: var(--gem-cam-h);
 }
 .gem-hunt-overlay__gem-hit .gem-model-3d--poster-fallback {
-  width: var(--gem-cam-box);
-  height: var(--gem-cam-box);
+  width: var(--gem-cam-w);
+  height: var(--gem-cam-h);
   overflow: visible;
   background: transparent;
 }
@@ -10923,6 +10929,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   border: 1px solid rgb(251 191 36 / 0.55);
   box-shadow: 0 16px 48px rgb(0 0 0 / 0.5);
   animation: gem-cheer-pop 5.5s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+}
+.gem-collect-cheer__gem-icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  flex-shrink: 0;
+  animation: gem-cheer-gem 1.35s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
 }
 .gem-collect-cheer__gem.gem-sprite--poster {
   width: min(78vw, 14rem);
@@ -12306,7 +12318,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   min-height: 16rem;
 }
 .gem-hunt-webxr {
-  --gem-cam-box: min(90vw, min(30rem, calc(100dvh - 15rem)));
+  --gem-cam-w: min(84vw, 26rem);
+  --gem-cam-h: min(62vw, calc(100dvh - 10.5rem), 34rem);
   position: fixed;
   inset: 0;
   z-index: 12050;
@@ -12445,7 +12458,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   cursor: default;
 }
 .gem-hunt-webxr--android {
-  --gem-cam-box: min(86vw, min(27rem, calc(100dvh - 16.5rem)));
+  --gem-cam-w: min(82vw, 24.5rem);
+  --gem-cam-h: min(60vw, calc(100dvh - 11.5rem), 32rem);
+}
+.gem-hunt-webxr--ios {
+  --gem-cam-w: min(78vw, 23rem);
+  --gem-cam-h: min(58vw, calc(100dvh - 11.5rem), 31rem);
 }
 .gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-hit.is-inspect360 .gem-hunt-overlay__gem-dance {
   touch-action: none;
@@ -12601,16 +12619,19 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__gem-hit.is-inspect360.is-center-collect {
   left: 50%;
   right: auto;
-  top: clamp(38%, calc(50% - 1.25rem), 46%);
-  width: var(--gem-cam-box);
-  max-width: var(--gem-cam-box);
-  height: var(--gem-cam-box);
+  top: clamp(44%, calc(50% + 0.25rem), 48%);
+  width: var(--gem-cam-w);
+  max-width: var(--gem-cam-w);
+  height: var(--gem-cam-h);
   margin-inline: 0;
   transform: translate(-50%, -50%);
   direction: ltr;
 }
 .gem-hunt-overlay--android .gem-hunt-overlay__gem-hit.is-inspect360.is-center-collect {
-  top: clamp(40%, calc(50% - 0.5rem), 45%);
+  top: clamp(45%, calc(50% + 0.35rem), 49%);
+}
+.gem-hunt-overlay--ios .gem-hunt-overlay__gem-hit.is-inspect360.is-center-collect {
+  top: clamp(45%, calc(50% + 0.5rem), 49%);
 }
 .gem-hunt-overlay__tap-collect-caption {
   position: absolute;
@@ -12640,13 +12661,13 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   cursor: grab;
 }
 .gem-hunt-overlay__gem-hit.is-inspect360 .gem-hunt-overlay__gem-dance {
-  width: var(--gem-cam-box);
-  height: var(--gem-cam-box);
+  width: var(--gem-cam-w);
+  height: var(--gem-cam-h);
   overflow: visible;
 }
 .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 .gem-hunt-overlay__gem-dance {
-  width: var(--gem-cam-box);
-  height: var(--gem-cam-box);
+  width: var(--gem-cam-w);
+  height: var(--gem-cam-h);
 }
 .gem-hunt-overlay.is-campus-queue .gem-hunt-overlay__collect-banner {
   top: calc(42% - min(44vw, 13rem) - 0.35rem);
@@ -12654,11 +12675,11 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__gem-hit.is-tell-me-center.is-inspect360 .gem-hunt-overlay__gem-dance,
 .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360.is-tell-me-center {
-  width: var(--gem-cam-box);
-  max-width: var(--gem-cam-box);
+  width: var(--gem-cam-w);
+  max-width: var(--gem-cam-w);
 }
 .gem-hunt-overlay__gem-hit.is-tell-me-center.is-inspect360 .gem-hunt-overlay__gem-dance {
-  height: var(--gem-cam-box);
+  height: var(--gem-cam-h);
 }
 .gem-hunt-overlay__gem-hit.is-campus-tap.is-center-collect {
   top: 40%;
