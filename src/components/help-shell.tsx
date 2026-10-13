@@ -120,8 +120,8 @@ export function HelpStep({
   body: ReactNode;
   /** When true (default for string bodies), `body` is parsed for <<ui-label>> chips only. */
   parseBody?: boolean;
-  image: string;
-  imageAlt: string;
+  image?: string;
+  imageAlt?: string;
   action?: ReactNode;
 }) {
   const renderedTitle = typeof title === "string" ? renderHelpText(title) : title;
@@ -141,7 +141,7 @@ export function HelpStep({
       </div>
       <div className="text-lg leading-relaxed text-orange-50">{renderedBody}</div>
       {action}
-      <HelpShot src={image} alt={imageAlt} />
+      {image ? <HelpShot src={image} alt={imageAlt ?? ""} /> : null}
     </li>
   );
 }
