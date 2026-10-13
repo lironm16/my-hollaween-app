@@ -38,7 +38,8 @@ import { EventCountdownGate } from "@/components/event-countdown-gate";
 import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
 import { RouteShareImportDialog } from "@/components/route-share-import-dialog";
 import { OriginPickerSheet } from "@/components/origin-picker";
-import { RouteList, type RouteListItem } from "@/components/route-list";
+import { RouteList } from "@/components/route-list";
+import { buildRouteListItems } from "@/lib/route-list-items";
 import { SkipHouseDialog } from "@/components/skip-house-dialog";
 import { VisitSkipConflictDialog } from "@/components/visit-skip-conflict-dialog";
 import { LikeCheer } from "@/components/like-cheer";
@@ -137,9 +138,8 @@ import {
   stripPracticeHouses,
 } from "@/lib/practice-house";
 import { isPreviewDeploymentClient } from "@/lib/deployment-env";
-import { filterHouses, houseFilterMismatchReasons, routeHouseIds } from "@/lib/filter-houses";
-import { distanceMeters, formatDistance } from "@/lib/geo";
-import { estimateWalkingMeters } from "@/lib/walk-distance-estimate";
+import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
+import { formatDistance } from "@/lib/geo";
 import { buildWalkingRouteOrdered } from "@/lib/route";
 import { isRouteFullyVisited } from "@/lib/route-completion";
 import {
@@ -843,66 +843,23 @@ export function NeighborhoodApp({
 
   const routeListItems = useMemo(() => {
     if (!routeMode || !activeRoute) return [];
-    const routeIds = routeHouseIds(activeRoute);
-    const skippedSet = new Set(skips.skippedIds);
-    const activeItems = activeRoute.stops.flatMap((stop) =>
-      stop.houses.map((house, houseIndex) => ({
-        house,
-        order: stop.order,
-        hop:
-          houseIndex > 0
-            ? "אותו המיקום"
-            : distanceLabel(house.id, stop.fromPreviousMeters),
-        skipped: false,
-      })),
-    );
-    const visibleById = new Map(visible.map((house) => [house.id, house]));
-    const originPoint = { lat: origin.lat, lng: origin.lng };
-    const lastStop = activeRoute.stops[activeRoute.stops.length - 1];
-    let tailCursor = lastStop
-      ? { lat: lastStop.house.lat, lng: lastStop.house.lng }
-      : originPoint;
-
-    function appendTail(
-      ids: string[],
-      flags: { skipped: boolean; visitedTail?: boolean },
-    ) {
-      const items: RouteListItem[] = [];
-      for (const id of ids) {
-        const house = visibleById.get(id);
-        if (!house) continue;
-        const point = { lat: house.lat, lng: house.lng };
-        const legM = estimateWalkingMeters(tailCursor, point);
-        items.push({
-          house,
-          order: 0,
-          hop: distanceLabel(house.id, legM),
-          skipped: flags.skipped,
-          visitedTail: flags.visitedTail,
-          distanceM: addressReveal.distanceAllowed(house.id)
-            ? distanceMeters(originPoint, point)
-            : undefined,
-        });
-        tailCursor = point;
-      }
-      return items;
-    }
-
-    const visitedTail = appendTail(
-      visits.visitedIds.filter((id) => !routeIds.has(id) && !skippedSet.has(id)),
-      { skipped: false, visitedTail: true },
-    );
-    const skippedTail = appendTail(
-      skips.skippedIds.filter((id) => !routeIds.has(id)),
-      { skipped: true },
-    );
-    return [...activeItems, ...visitedTail, ...skippedTail];
+    return buildRouteListItems({
+      route: activeRoute,
+      catalogHouses: mapListHouses,
+      houseSet: activeHouseSet,
+      visitedIds: visits.visitedIds,
+      skippedIds: skips.skippedIds,
+      origin: { lat: origin.lat, lng: origin.lng },
+      distanceLabel,
+      distanceAllowed: addressReveal.distanceAllowed,
+    });
   }, [
     routeMode,
     activeRoute,
     skips.skippedIds,
     visits.visitedIds,
-    visible,
+    mapListHouses,
+    activeHouseSet,
     origin.lat,
     origin.lng,
     addressReveal,
